@@ -142,8 +142,8 @@ files["tests/ui_client.lua"] = {
 	std = "+luajit",
 	allow_defined_top = true,
 	ignore = { "2", "43" },
-	-- ui_map.lua defines WorldFrame; Blizzard_SharedXML/Spinner.lua defines SpinnerMixin.
-	read_globals = { "SpinnerMixin", "WorldFrame" },
+	-- Blizzard_SharedXML/Spinner.lua defines SpinnerMixin.
+	read_globals = { "SpinnerMixin" },
 }
 -- ui_map.lua continues ui_client.lua's chunk, so its "globals" are ui_client.lua's locals.
 files["tests/ui_map.lua"] = { std = "+luajit", ignore = { "1", "2", "43" } }

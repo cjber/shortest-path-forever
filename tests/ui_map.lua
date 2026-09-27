@@ -190,9 +190,6 @@ _G.WorldMapFrame = setmetatable({
 	GetMapID = function()
 		return mapID
 	end,
-	GetCanvasContainer = function()
-		return {}
-	end,
 }, mt)
 _G.ObjectiveTrackerManager = setmetatable({
 	GetContainerForModule = function()
@@ -201,17 +198,6 @@ _G.ObjectiveTrackerManager = setmetatable({
 }, mt)
 _G.ObjectiveTrackerFrame = {}
 _G.UIParent = {}
-_G.WorldFrame = stubframe()
-WorldFrame.width, WorldFrame.height = 1920, 1080
-function WorldFrame:GetCenter()
-	return 960, 540
-end
-_G.C_CVar = {
-	GetCVar = function(name)
-		return cvars[name]
-	end,
-}
-cvars.cameraFov = "90"
 _G.hooksecurefunc = function(t, name, f)
 	if type(t) ~= "table" then
 		return
@@ -241,22 +227,10 @@ _G.GameTooltip = setmetatable({
 		self.owner = nil
 	end,
 }, mt)
-local mouseOverMap = true
-map.ScrollContainer = {
-	IsMouseOver = function()
-		return mouseOverMap
-	end,
-}
 local nativeProvider = CreateFromMixins(FlightPointDataProviderMixin)
 WorldMapFrame:AddDataProvider(nativeProvider)
--- In combat GetUnitSpeed returns secret values; arithmetic on one raises, like this table does.
-local SECRET = setmetatable({}, {
-	__lt = function()
-		error("secret number")
-	end,
-})
-_G.canaccessvalue = function(v)
-	return v ~= SECRET
+_G.canaccessvalue = function()
+	return true
 end
 -- Use Blizzard's acquisition and event paths so pin visibility tests also cover pooled frames.
 _G.SlashCommandUtil = { CheckAddSlashCommand = noop }
@@ -280,23 +254,6 @@ do
 	end
 end
 waypointProvider:OnShow()
-Enum.SuperTrackingType = { Quest = "Quest", UserWaypoint = "UserWaypoint" }
--- SuperTrackedFrame.lua:228: the native icon per super-tracking type.
-_G.SuperTrackedFrame = { Icon = {
-	SetAtlas = function(icon, atlas)
-		icon.atlas = atlas
-	end,
-} }
-function SuperTrackedFrame:UpdateIconSize()
-	self.sized = self.Icon.atlas
-end
-function SuperTrackedFrame:UpdateIcon()
-	self.Icon:SetAtlas(
-		C_SuperTrack.GetHighestPrioritySuperTrackingType() == "UserWaypoint" and "Waypoint-MapPin-Tracked"
-			or "Navigation-Tracked-Icon"
-	)
-	self:UpdateIconSize()
-end
 WorldMapFrame:AddDataProvider(waypointProvider)
 local ns = {}
 for line in io.lines("ShortestPathForever.toc") do
@@ -306,12 +263,6 @@ for line in io.lines("ShortestPathForever.toc") do
 end
 local actualPath = ns.Path
 ns.Path = nil -- Terrain scheduling is exercised with controlled callbacks below.
-local pointArrow = ns.PointGuideArrow
-ns.PointGuideArrow = function(points, placeBend, stop, goal)
-	arrowPoints = points
-	arrowCalls = arrowCalls + 1
-	pointArrow(points, placeBend, stop, goal)
-end
 fireEvent("ADDON_LOADED", "ShortestPathForever")
 fireEvent("PLAYER_ENTERING_WORLD")
 assert(#errors == 0, table.concat(errors, "\n"))

@@ -5,12 +5,9 @@ local BLIZZARD_UI = (os.getenv("SPF_BLIZZARD_UI") or "tools/.cache/blizzard-ui")
 local T, frames, tickers = 0, {}, {}
 local uiScale = 1
 local shiftDown, mouseFoci = true, {}
-local arrowFrame, arrowPoints, navigationFrame, trailFrame
-local mouselook = false
-local arrowCalls = 0
+local arrowFrame, navigationFrame
 local posX, posY, posMap = -1005.6, -3841.6, 1
 local posZ = 0
-local sent = {}
 local errors, lineCreations, waypointCalls = {}, 0, 0
 local waypoint, supertracked, cleared = nil, false, 0
 local trackedQuest, playerUiMap = 0, nil
@@ -198,19 +195,7 @@ local function stubframe()
 		self.text = v
 	end
 	function f:SetAllPoints(owner)
-		if owner == WorldFrame then
-			trailFrame = f
-		end
 		self.width, self.height = owner:GetWidth(), owner:GetHeight()
-	end
-	function f:CreateMaskTexture()
-		return setmetatable({}, mt)
-	end
-	function f:SetWidth(w)
-		self.width = w
-	end
-	function f:SetHeight(h)
-		self.height = h
 	end
 	function f:GetWidth()
 		return self.width
@@ -432,19 +417,7 @@ _G.C_Navigation = {
 	GetFrame = function()
 		return navigationFrame
 	end,
-	HasValidScreenPosition = function()
-		return navigationFrame and navigationFrame.GetCenter ~= nil
-	end,
-	WasClampedToScreen = function()
-		return false
-	end,
 }
-_G.GetCameraZoom = function()
-	return 15
-end
-_G.IsMouselooking = function()
-	return mouselook
-end
 _G.GetMinimapShape = function()
 	return minimapShape
 end
@@ -481,9 +454,6 @@ local function color(r, g, b)
 		GetRGBA = function()
 			return r, g, b, 1
 		end,
-		GetRGB = function()
-			return r, g, b
-		end,
 		WrapTextInColorCode = function(_, s)
 			return s
 		end,
@@ -492,16 +462,12 @@ end
 _G.OBJECTIVE_TRACKER_COLOR = { Normal = {}, NormalHighlight = {}, Header = {} }
 _G.CreateColor = color
 _G.NORMAL_FONT_COLOR = color(1, 0.82, 0)
-_G.LIGHTBLUE_FONT_COLOR = color(0.53, 0.67, 0.93)
 _G.ORANGE_FONT_COLOR = color(1, 0.5, 0)
-_G.EPIC_PURPLE_COLOR = color(0.64, 0.21, 0.93)
 _G.AM_PIN_SCALE_STYLE_WITH_TERRAIN = 3
 _G.GRAY_FONT_COLOR = _G.NORMAL_FONT_COLOR
 _G.HIGHLIGHT_FONT_COLOR = color(1, 1, 1)
 _G.ChatTypeInfo = { RAID_WARNING = {} }
-_G.RaidWarningFrame = {}
 _G.RaidWarningUtil = { AddMessage = noop }
-_G.RaidNotice_AddMessage = noop
 _G.PlaySound = noop
 _G.PlaySoundFile = noop
 -- A character with a hearthstone and no recorded bind point: no teleport edges, as after a fresh install.
@@ -558,7 +524,6 @@ _G.POIButtonUtil = { Style = { Waypoint = 1 }, Type = { Quest = 1, Content = 2, 
 _G.GetTaxiMapID = function()
 	return nil
 end
-local taxiReports = {}
 _G.C_Texture = {
 	GetAtlasInfo = function()
 		return { width = 36, height = 44 }
@@ -569,7 +534,7 @@ _G.C_TaxiMap = {
 		return false
 	end,
 	GetTaxiNodesForMap = function(id)
-		return taxiReports[id] or {}
+		return {}
 	end,
 	GetAllTaxiNodes = function()
 		return {}
@@ -621,9 +586,6 @@ _G.C_SuperTrack = {
 		supertracked = false
 		fireEvent("SUPER_TRACKING_CHANGED")
 	end,
-	IsSuperTrackingAnything = function()
-		return supertracked or trackedQuest ~= 0
-	end,
 }
 _G.UiMapPoint = {
 	CreateFromCoordinates = function(m, x, y, z)
@@ -638,12 +600,9 @@ _G.Enum = {
 	FlightPathState = { Current = 0, Reachable = 1, Unreachable = 2 },
 	UIMapType = { Continent = 2, Zone = 3 },
 	SendAddonMessageResult = {
-		Success = 0,
 		InvalidPrefix = 1,
-		AddonMessageThrottle = 3,
 		InvalidChatType = 4,
 		InvalidChannel = 7,
-		ChannelThrottle = 8,
 	},
 }
 _G.CreateVector2D = function(x, y)
@@ -733,8 +692,7 @@ _G.C_Timer = {
 }
 _G.C_ChatInfo = {
 	RegisterAddonMessagePrefix = noop,
-	SendAddonMessage = function(p, m, c)
-		sent[#sent + 1] = c .. " " .. m
+	SendAddonMessage = function()
 		return 0
 	end,
 }
@@ -768,12 +726,7 @@ local menus, context = {}, {}
 _G.MenuUtil = {
 	CreateContextMenu = function(owner, generator)
 		context = {}
-		local tag
 		local root = {
-			SetTag = function(_, v)
-				tag = v
-			end,
-			CreateTitle = noop,
 			CreateCheckbox = function(_, text, get, set)
 				context[text] = { get = get, click = set }
 			end,
@@ -783,17 +736,10 @@ _G.MenuUtil = {
 			end,
 		}
 		generator(owner, root)
-		if menus[tag] then
-			menus[tag](owner, root)
-		end
 		return stubframe()
 	end,
 }
-local openedMap, openCalls
-_G.OpenWorldMap = function(id)
-	openedMap = id
-	openCalls = (openCalls or 0) + 1
-end
+_G.OpenWorldMap = noop
 _G.Menu = {
 	ModifyMenu = function(tag, fn)
 		menus[tag] = fn
