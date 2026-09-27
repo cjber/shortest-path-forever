@@ -154,6 +154,16 @@ local env = setmetatable({
 		end,
 	},
 }, { __index = _G })
+-- The shared art helpers the compass draws with: ns.FitAtlas and ns.SetTransportIcon.
+env.CreateFromMixins, env.MapCanvasPinMixin, env.FlightPointPinMixin = function()
+	return {}
+end, {}, {}
+ns.Init = function() end
+local stubs = { DockKind = ns.DockKind, DockPoint = ns.DockPoint }
+for _, file in ipairs({ "Looks.lua", "Map.lua" }) do
+	setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
+end
+ns.Init, ns.DockKind, ns.DockPoint = nil, stubs.DockKind, stubs.DockPoint
 setfenv(assert(loadfile(source)), env)("ShortestPathForever", ns)
 local function close(actual, expected, tolerance)
 	assert(math.abs(actual - expected) < (tolerance or 1e-6), tostring(actual) .. " ~= " .. tostring(expected))
@@ -281,6 +291,8 @@ for _, kind in ipairs({ "boat", "lift", "tram", "portal", "zeppelin", "boat" }) 
 	ns.RefreshCompass()
 	local ratio = (kind == "lift" or kind == "tram") and 13 / 14 or 1
 	close(strip.Stop.width / strip.Stop.height, ratio)
+	-- The floor arrows fill their box where the ferry has a margin, so they draw smaller, as on the map.
+	close(strip.Stop.height, (kind == "lift" or kind == "tram") and 18 * 15 / 20 or 18)
 end
 stop = { kind = "taxi", id = 26, map = 1, x = 0, y = -100 }
 ns.RefreshCompass()
