@@ -16,6 +16,7 @@ Detour stores vertices as (worldY, worldZ, worldX). Output is in UnitPosition's 
 y grows west (world Y).
 """
 
+import argparse
 import glob
 import heapq
 import math
@@ -889,23 +890,19 @@ def encode_floors(grid, k, lnode):
     return "".join(out)
 
 
-def opt(args, name, n):
-    if name not in args:
-        return None
-    i = args.index(name)
-    vals = args[i + 1 : i + 1 + n]
-    del args[i : i + 1 + n]
-    return vals
-
-
 def main():
-    args = sys.argv[1:]
-    map_id = int((opt(args, "--map", 1) or [os.environ.get("NAV_MAP", "0")])[0])
-    name = (opt(args, "--name", 1) or [f"map {map_id}"])[0]
-    rows, cols = opt(args, "--rows", 2), opt(args, "--cols", 2)
-    jobs = int((opt(args, "--jobs", 1) or [os.environ.get("NAV_JOBS", "6")])[0])
-    out = args[0] if args else f"Nav{map_id}.lua"
-    configure(map_id, rows and tuple(map(int, rows)), cols and tuple(map(int, cols)))
+    parser = argparse.ArgumentParser(description="Bake a map's walking-route data as an addon Lua file.")
+    parser.add_argument("out", nargs="?", help="output file (default Nav<map>.lua)")
+    parser.add_argument("--map", type=int, required=True)
+    parser.add_argument("--name")
+    parser.add_argument("--rows", nargs=2, type=int)
+    parser.add_argument("--cols", nargs=2, type=int)
+    parser.add_argument("--jobs", type=int, default=int(os.environ.get("NAV_JOBS", "6")))
+    args = parser.parse_args()
+    map_id, jobs = args.map, args.jobs
+    name = args.name or f"map {map_id}"
+    out = args.out or f"Nav{map_id}.lua"
+    configure(map_id, args.rows, args.cols)
     print(
         f"map {map_id}: {len(TILES)} tiles, rows {ROWS.start}-{ROWS.stop - 1}, cols {COLS.start}-{COLS.stop - 1}, "
         f"grid {GW}x{GH}",

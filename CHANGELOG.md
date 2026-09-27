@@ -11,6 +11,10 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **The corpse run says why it has no path.** When the walk back to your body can't be found, the tracker now gives
+  the same reason a journey would: no walking map for the zone, the search failing, or no walking path at all.
+  Before, it always said there was no walking path.
+
 ## [1.4.0] - 2026-09-25
 
 - **Ready for translation.** Every line the addon writes, from the settings to the tracker and the map's tooltips,

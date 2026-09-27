@@ -16,6 +16,14 @@ local STEP = {
 	passage = L["Go through to %s"],
 	teleport = L["Teleport to %s"],
 }
+-- Why a walk has no path, keyed by Path's failure reason; the journey and the corpse run word it the same way.
+ns.WalkFailure = {
+	unreachable = L["no walking path"],
+	offmesh = L["no walking path"],
+	outside = L["no walking path"],
+	nodata = L["walking map unavailable"],
+	error = L["walking search failed"],
+}
 
 -- A place with no kind is the destination point as clicked or picked from a quest.
 ---@param node SPFPoint|SPFPlace

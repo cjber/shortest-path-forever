@@ -63,6 +63,43 @@ class CoverageTests(unittest.TestCase):
             self.assertFalse((root / "Nav1_floor.lua").exists())
 
 
+class ToolArgumentTests(unittest.TestCase):
+    tools = Path(__file__).parents[1] / "tools"
+
+    def test_pack_rejects_an_explicit_split_part(self):
+        with tempfile.TemporaryDirectory(prefix="spf-pack-") as directory:
+            part = Path(directory) / "Nav1_floor.lua"
+            part.write_text(PACK.PART_HEADER)
+            result = subprocess.run(
+                [sys.executable, str(self.tools / "pack_nav.py"), str(part)],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Nav1_floor.lua", result.stderr)
+
+    def test_gen_nav_rejects_a_missing_map_and_unknown_flags(self):
+        with tempfile.TemporaryDirectory(prefix="spf-nav-") as directory:
+            for args in (
+                ["out.lua", "--mapp", "1"],
+                ["out.lua"],
+                ["out.lua", "--map"],
+                ["a.lua", "b.lua", "--map", "1"],
+            ):
+                result = subprocess.run(
+                    [sys.executable, str(self.tools / "baker/gen_nav.py"), *args],
+                    cwd=directory,
+                    env={"NAV_MM": directory, "PATH": ""},
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                self.assertEqual(result.returncode, 2, f"{args}: {result.stderr}")
+                self.assertIn("usage:", result.stderr)
+            self.assertEqual(list(Path(directory).iterdir()), [])
+
+
 class MultivalueTests(unittest.TestCase):
     def test_expansion(self):
         for source in (

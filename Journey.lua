@@ -50,13 +50,7 @@ local WATER_SPELLS = { 546, 1706 }
 -- Yards over water worth casting for.
 local WATER_HINT = 20
 local waterMode
-local WALK_FAILURE = {
-	unreachable = L["no walking path"],
-	offmesh = L["no walking path"],
-	outside = L["no walking path"],
-	nodata = L["walking map unavailable"],
-	error = L["walking search failed"],
-}
+local WALK_FAILURE = ns.WalkFailure
 
 -- While you are a ghost, Corpse.lua's run borrows the route drawing, the tracker and Guide; the journey waits.
 local function CorpseRun()

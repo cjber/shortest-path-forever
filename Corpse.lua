@@ -144,7 +144,7 @@ function Corpse.Info()
 	local leg = run.leg
 	local text = "1. " .. ns.LegStep(leg)
 	if leg.walkError then
-		text = text .. " (" .. L["no walking path"] .. ")"
+		text = text .. " (" .. (ns.WalkFailure[leg.walkError] or L["walking search failed"]) .. ")"
 	end
 	return TITLE, { { key = 1, text = text .. "   " .. ns.LegTime(leg), current = true } }, run.plan, 1, false
 end

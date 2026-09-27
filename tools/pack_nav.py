@@ -70,6 +70,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("files", nargs="*", type=Path)
     args = parser.parse_args()
-    for path in args.files or sorted(Path(".").glob("ShortestPathForever_Nav*/Nav*.lua")):
-        if re.fullmatch(r"Nav\d+\.lua", path.name):
-            write_map(path)
+    base = re.compile(r"Nav\d+\.lua")
+    for path in args.files:
+        if not base.fullmatch(path.name):
+            parser.error(f"{path} is not a base walking map (NavN.lua); pass the base map to repack its parts")
+    maps = sorted(Path(".").glob("ShortestPathForever_Nav*/Nav*.lua"))
+    for path in args.files or [path for path in maps if base.fullmatch(path.name)]:
+        write_map(path)
