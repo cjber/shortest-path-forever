@@ -292,10 +292,11 @@
       "what": "Corpse.Info maps every leg.walkError to \"no walking path\", discarding the actual reason: Search sets walkError = \"nodata\" when the zone has no walking map (Corpse.lua:69-70) and the Find callback can deliver \"error\" (PathJobs.lua:74,125).",
       "why": "A failed walk search must reach the player as its reason. Journey.lua's WALK_FAILURE (Journey.lua:53-59) already maps nodata -> \"walking map unavailable\" and error -> \"walking search failed\"; the corpse run tells a ghost with no walking map or a crashed search that no path exists. Fix: share WALK_FAILURE (e.g. export it next to ns.OnWalk) and index it by leg.walkError here. corpse_spec.lua:135 only asserts the \"outside\" case, which keeps its wording.",
       "confidence": "high",
-      "status": "bug",
-      "reason": "BUG: A LuaJIT probe using tests/journey_driver.lua confirmed that HasData=false and a callback returning 'error' both make ns.JourneyInfo() display 'no walking path', despite retaining distinct failure reasons internally. NEEDS OWNER: Should corpse-run messages use Journey's wording, 'walking map unavailable' for nodata and 'walking search failed' for error?",
+      "status": "fixed",
+      "reason": "Corpse.Info words walkError through ns.WalkFailure, the mapping Journey used, now in JourneySteps.lua; guarded by tests/corpse_spec.lua.",
       "first_seen": "2026-09-27",
-      "updated": "2026-09-27"
+      "updated": "2026-09-27",
+      "guard": "lens-only: corpse_spec asserts the search-failed and map-unavailable wording, and both runs share one mapping"
     },
     {
       "id": "e33daf50c6",
@@ -305,10 +306,11 @@
       "what": "BUG: Corpse.Info restates the walk-failure-to-text mapping with a single hard-coded string, drifting from Journey.lua's WALK_FAILURE (Journey.lua:53-59), the canonical map.",
       "why": "Corpse.lua:70 sets walkError = \"nodata\" and Path can return \"error\" (Corpse.lua:82 stores the reason); Journey shows those as \"walking map unavailable\" / \"walking search failed\", while the corpse run shows \"no walking path\" for every reason. Accidental drift: the same row format (\"text (reason)\") is built in both. Exporting WALK_FAILURE (or a ns.WalkFailureText(reason)) fixes both.",
       "confidence": "medium",
-      "status": "dismissed",
-      "reason": "Same producer as 7dd9e1e451 (Corpse.lua:147 walk failure text), reported there as a bug.",
+      "status": "fixed",
+      "reason": "Corpse.Info words walkError through ns.WalkFailure, the mapping Journey used, now in JourneySteps.lua; guarded by tests/corpse_spec.lua.",
       "first_seen": "2026-09-27",
-      "updated": "2026-09-27"
+      "updated": "2026-09-27",
+      "guard": "lens-only: corpse_spec asserts the search-failed and map-unavailable wording, and both runs share one mapping"
     },
     {
       "id": "02a07aaa8d",
@@ -1658,10 +1660,11 @@
       "what": "Undocumented NAV_MAP environment fallback (default map 0) for --map, which every caller passes",
       "why": "The docstring usage and tools/baker/README.md both give --map as required; bake.sh always passes --map \"$m\"; rg finds NAV_MAP nowhere else in the repo. A silent default of map 0 when --map is forgotten would bake Eastern Kingdoms under the wrong name. Collapsed form: require --map (argparse or opt(...) with an error). Same shape as the out-path default `Nav{map_id}.lua` on line 907 that the usage line also marks required.",
       "confidence": "low",
-      "status": "dismissed",
-      "reason": "Same producer as a8d9c66695 (gen_nav.py:903 map fallback), reported there as a bug.",
+      "status": "fixed",
+      "reason": "gen_nav.py parses with argparse: --map is a required int, unknown flags and extra positionals exit 2, and the NAV_MAP fallback is gone; guarded by test_typecheck.py test_gen_nav_rejects_a_missing_map_and_unknown_flags.",
       "first_seen": "2026-09-27",
-      "updated": "2026-09-27"
+      "updated": "2026-09-27",
+      "guard": "lens-only: a regression test requires usage errors for a missing or mistyped --map"
     },
     {
       "id": "6baa359600",
@@ -1699,10 +1702,11 @@
       "what": "opt() and main() hand-roll command-line parsing (flag lookup, value slicing, deletion, positional leftover); argparse, which every other generator here uses (gen_routes, gen_transit, pack_nav), does this with nargs=2 for --rows/--cols and env-var defaults.",
       "why": "Behaviour to keep: NAV_MAP / NAV_JOBS environment defaults, the optional positional output defaulting to Nav<map>.lua, and --rows/--cols taking two ints. opt() also silently ignores unknown flags and missing values (they become the output path), which argparse would reject: an improvement, but a behaviour change.",
       "confidence": "high",
-      "status": "decide",
-      "reason": "BUG: A stubbed main() probe accepted --bogus as the output filename and silently defaulted a valueless --map; standard-library argparse handled the documented valid arguments and rejected both malformed cases. NEEDS OWNER: Should argparse reject unknown flags and missing values while preserving documented arguments and environment defaults?",
+      "status": "fixed",
+      "reason": "gen_nav.py parses with argparse: --map is a required int, unknown flags and extra positionals exit 2, and the NAV_MAP fallback is gone; guarded by test_typecheck.py test_gen_nav_rejects_a_missing_map_and_unknown_flags.",
       "first_seen": "2026-09-27",
-      "updated": "2026-09-27"
+      "updated": "2026-09-27",
+      "guard": "lens-only: a regression test requires usage errors for a missing or mistyped --map"
     },
     {
       "id": "a8d9c66695",
@@ -1712,10 +1716,11 @@
       "what": "A missing --map silently falls back to NAV_MAP or map 0 (Eastern Kingdoms), and any unrecognised argument left in args becomes the output path via `out = args[0] if args else f\"Nav{map_id}.lua\"`.",
       "why": "The module docstring's usage line shows `<out.lua> --map <id>` as required, and NAV_MAP is documented nowhere (grep of tools/, README.md, tools/baker/README.md, tests/). A mistyped flag (e.g. `--job 4` or `--mapp 1`) bakes map 0 into a file named after the typo after a multi-minute run instead of erroring; the hand-rolled opt() parser never rejects leftovers. argparse with a required --map would fail loudly. bake.sh always passes --map, so only hand runs are affected.",
       "confidence": "medium",
-      "status": "bug",
-      "reason": "BUG: An in-memory run with synthetic tile input accepted `--mapp 1`, selected map 0 and emitted to an output named `--mapp`; its progress log did not diagnose invalid arguments. NEEDS OWNER: Should missing or valueless --map, unknown flags and extra positional arguments fail before baking, replacing the current fallback behavior?",
+      "status": "fixed",
+      "reason": "gen_nav.py parses with argparse: --map is a required int, unknown flags and extra positionals exit 2, and the NAV_MAP fallback is gone; guarded by test_typecheck.py test_gen_nav_rejects_a_missing_map_and_unknown_flags.",
       "first_seen": "2026-09-27",
-      "updated": "2026-09-27"
+      "updated": "2026-09-27",
+      "guard": "lens-only: a regression test requires usage errors for a missing or mistyped --map"
     },
     {
       "id": "abe3e8b057",
@@ -1862,10 +1867,11 @@
       "what": "An explicitly passed file that is not a base NavNNN.lua (e.g. a split part Nav0_grid.lua) is skipped with no message.",
       "why": "When `args.files` is given the user named the file; skipping it silently exits 0 with nothing packed. The filter is only needed for the default glob; for explicit files an error (or a 'skipping' line) would surface the mistake.",
       "confidence": "low",
-      "status": "bug",
-      "reason": "BUG: Direct CLI execution with the existing Nav1_floor.lua exited 0 with empty stdout/stderr; neither --help nor tools/baker/README.md documents silently ignoring explicit files. NEEDS OWNER: Should explicitly supplied non-base filenames cause a nonzero exit or produce a skip diagnostic?",
+      "status": "fixed",
+      "reason": "Explicit files that are not a base NavN.lua now fail with a usage error (exit 2); guarded by test_typecheck.py test_pack_rejects_an_explicit_split_part.",
       "first_seen": "2026-09-27",
-      "updated": "2026-09-27"
+      "updated": "2026-09-27",
+      "guard": "lens-only: a regression test runs pack_nav.py on a split part and requires a non-zero exit"
     },
     {
       "id": "50afbf6935",
