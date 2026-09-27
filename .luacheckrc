@@ -1,7 +1,6 @@
 std = "lua51"
 max_line_length = 120
 exclude_files = { ".claude/**", "tools/.cache/**", ".types/**", "types/**", ".release/**", "ShortestPathForever_Nav*/**" }
-ignore = { "212/_.*" } -- unused args prefixed with _
 globals = {
 	"ShortestPathForever",
 	"ShortestPathForeverCharDB",
@@ -95,7 +94,7 @@ read_globals = {
 	"GetMinimapShape",
 	"C_Minimap",
 }
-files["tests/"] = { std = "+luajit", globals = { "arg" } }
+files["tests/"] = { std = "+luajit" }
 
 -- Native flight pins, tracker colours and context menus.
 globals[#globals + 1] = "ShortestPathForeverFlightPinMixin"
@@ -113,7 +112,7 @@ read_globals[#read_globals + 1] = "GetQuestUiMapID"
 read_globals[#read_globals + 1] = "GetMouseFoci"
 read_globals[#read_globals + 1] = "MapCanvasMixin"
 read_globals[#read_globals + 1] = "POIButtonUtil"
--- Path.lua: its per-frame CPU clock, and the per-continent walking-map addons it loads on demand.
+-- PathGrid.lua: its per-frame CPU clock, and the per-continent walking-map addons it loads on demand.
 read_globals[#read_globals + 1] = "debugprofilestop"
 read_globals[#read_globals + 1] = "ShortestPathForeverPathData"
 read_globals[#read_globals + 1] = "C_AddOns"
@@ -123,6 +122,7 @@ read_globals[#read_globals + 1] = "WaypointLocationDataProviderMixin"
 read_globals[#read_globals + 1] = "C_UnitAuras"
 read_globals[#read_globals + 1] = "IsPlayerSpell"
 read_globals[#read_globals + 1] = "C_Spell"
+-- Route.lua: the cursor over the minimap.
 read_globals[#read_globals + 1] = "GetCursorPosition"
 
 read_globals[#read_globals + 1] = "IsPlayerMoving"
@@ -136,13 +136,12 @@ read_globals[#read_globals + 1] = "C_SpellBook"
 read_globals[#read_globals + 1] = "GetBindLocation"
 
 -- tests/ui_client.lua and tests/ui_map.lua are one chunk defining the client for the UI checks, which append code
--- reading their locals. 13x/2xx: globals, locals and arguments only the appended checks use; 43x: stub methods named
--- like the client's.
+-- reading their locals. 2xx: locals and arguments only the appended checks use; 43x: stub methods named like the
+-- client's.
 files["tests/ui_client.lua"] = {
 	std = "+luajit",
 	allow_defined_top = true,
-	ignore = { "13", "2", "43" },
-	globals = { "Enum", "math" },
+	ignore = { "2", "43" },
 	-- ui_map.lua defines WorldFrame; Blizzard_SharedXML/Spinner.lua defines SpinnerMixin.
 	read_globals = { "SpinnerMixin", "WorldFrame" },
 }

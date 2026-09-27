@@ -101,7 +101,7 @@ Used by my other Forever addons when both are installed:
 ```sh
 tools/typecheck.sh                  # strict LuaLS + multi-value lint (requires LuaLS 3.19.1, git, Python 3)
 python3 tools/gen_routes.py          # regenerate Data/Routes.lua for the pinned build
-python3 tools/gen_transit.py         # regenerate Data/Transports.lua, Data/Taxi.lua and Data/Portals.lua
+python3 tools/gen_transit.py         # regenerate Data/Transports.lua, Data/Taxi.lua, Data/Portals.lua and Data/Teleports.lua
 tools/draw_zeppelin.py               # redraw media/zeppelin.tga (the game has no zeppelin map icon)
 (for s in tests/*_spec.lua; do luajit "$s" || exit 1; done)  # the headless specs
 luajit -joff tests/journey_bench.lua  # searches, rounds and frames at the 3 ms budget

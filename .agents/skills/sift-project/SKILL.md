@@ -154,16 +154,38 @@ Audit slices from lowest to highest risk:
   are excluded.
 - Lenses: none yet.
 
+## Settled
+
+Shapes that look like defects here but are not. Reviewers and verifiers read this before raising a
+finding; audits add an entry when verifiers keep dismissing the same shape for the same reason.
+
+- **walk progress per surface**: `Arrow.lua` (`ns.RefreshGuideStops`), `Tracker.lua` (`JourneyDistance`) and
+  Journey's `OnWalk` each project the player onto a walk, but for different contracts (arrow stop advance, tracker
+  yards, planner replanning); they are not one fact.
+- **WalkPlaces provenance**: `ns.WalkPlaces` in the shipped `Data/Walks.lua` is read only by `planner_spec.lua`,
+  which checks the baked walks were built from the current places; CI consumes it, so it is live.
+- **Blizzard-called handlers**: `tools/fetch_blizzard_ui.sh` does not pin the ObjectiveTracker Block/Module
+  files, so a handler such as `OnBlockHeaderClick` (called by `Blizzard_ObjectiveTrackerBlock.lua`) has no caller
+  in the tree and is still live.
+
 ## Anti-patterns
 
 Shapes this codebase keeps producing. Check new code against them.
 
-- A comment left behind when the code it explains moves (`comment-narration`): `Route.lua` GoalPin atlas note
-  after #27; `gen_nav.py` naming the wrong setter for its globals.
-- A closed set passed around as bare strings with `string` types (`stringly-typed`): Path failure reasons
-  (`Journey.lua` `WALK_FAILURE`), sighting `source` `"you"|"player"` (`Model.lua`), crossing modes in `Route.lua`.
-- A second copy of another module's fact (`parallel-implementations`): Compass's `transportIcons` beside
-  `ns.SetTransportIcon`; walk progress in `Arrow.lua`, `Tracker.lua` and Journey's `OnWalk`; `bakedBound`
-  (`Journey.lua`) re-deriving Planner's Walks.lua keys.
-- Spec and bench stubs outliving the production field they stood in for (`dead-code`): `owner.loading` in
-  `memory_bench.lua`, a `NewTicker` stub in `sync_spec.lua`.
+- **orphaned comment**: a comment left behind when the code it explains moves (`comment-narration`): `Route.lua`
+  GoalPin atlas note after #27; `gen_nav.py` naming the wrong setter for its globals; `.luacheckrc` group comments
+  naming `Path.lua` after the `PathGrid.lua` split.
+- **bare-string closed set**: a closed set passed around as bare strings with `string` types (`stringly-typed`):
+  Path failure reasons (`Journey.lua` `WALK_FAILURE`), sighting `source` `"you"|"player"` (`Model.lua`), crossing
+  modes in `Route.lua`.
+- **second copy of a fact**: another module's fact restated (`parallel-implementations`): Compass's
+  `transportIcons` beside `ns.SetTransportIcon`; `bakedBound` (`JourneyCosts.lua`) re-deriving Planner's
+  Walks.lua keys; the TaxiPathNode stop flag as a literal in `gen_transit.py`.
+- **stale spec stub**: spec, bench and UI-harness stubs outliving the production field they stood in for
+  (`dead-code`): `owner.loading` in `memory_bench.lua`, a `NewTicker` stub in `sync_spec.lua`, client stubs in
+  `tests/ui_client.lua` and `tests/ui_map.lua`.
+- **dead lint config**: `.luacheckrc` ignores and globals no file needs any more; delete them when the code they
+  covered goes.
+- **docs missing a new file**: README, AGENTS.md and `docs/` lists that miss a generated table or check added later.
+- **guard on a defined function**: `if ns.X then` around a function or table defined unconditionally earlier in the
+  TOC (`Itinerary.lua`, `RouteTransports.lua`).
