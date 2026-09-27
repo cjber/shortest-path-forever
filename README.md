@@ -33,7 +33,9 @@ Each feature has more detail in [docs/features.md](docs/features.md).
   ![Auberdine’s piers on the minimap, with the dotted route and Guide’s native waypoint](docs/screenshots/minimap.png)
 - **Flight map guidance.** At the flight master, your journey's next flight is drawn with the game's own route
   lines, and its final destination lights up. Hovering another flight point shows its route as usual; moving away
-  brings your journey's route back. Turn it off in `/path`.
+  brings your journey's route back. Turn it off in `/path`. Flight lines on the world map and minimap curve smoothly.
+
+  ![A smooth flight line leaving Stormwind](docs/screenshots/flight.png)
 - **Optional compass.** A slim strip at the top of the screen marks Guide's next two turns, the next stop and your
   destination. Turn it on in `/path`.
   ![The optional compass strip with the next turns and destination](docs/screenshots/compass.png)

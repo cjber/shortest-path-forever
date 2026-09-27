@@ -11,6 +11,10 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **Clearer route pins.** Route circles have a muted blue tint. Grouped stops keep their action icon instead of a `+N` count; the tooltip lists every stop.
+
+- **Smoother flight lines.** Flight routes curve gently on the world map and minimap, retaining their endpoints and loading boundaries.
+
 ## [1.4.2] - 2026-09-27
 
 - **The compass draws transport icons as the map does.** Lift and tram arrows sit smaller beside the ferry, as they
