@@ -42,12 +42,12 @@ end
 
 -- The journey's own searches (the current leg) always come first.
 local function Settling()
-	return ns.JourneyStatus and ns.JourneyStatus() == true
+	return ns.JourneyStatus() == true
 end
 
 -- So does its timed replan, which plans in the frame like a hop does.
 local function Replanning()
-	return ns.JourneyReplanning and ns.JourneyReplanning()
+	return ns.JourneyReplanning()
 end
 
 ---@param hop SPFHop
@@ -114,7 +114,7 @@ end
 Step = function()
 	scheduled = false
 	local points, index = ns.JourneyStops()
-	if not (points and index and ns.db and ns.charDB) then
+	if not (points and index) then
 		return
 	end
 	if InCombatLockdown() then

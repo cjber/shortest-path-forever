@@ -1,4 +1,4 @@
-# The Python under tools/ generates the addon's data; it is run by hand, never shipped (.pkgmeta ignores tools).
+# The Python under tools/ generates the addon's data and runs CI's checks; it is never shipped (.pkgmeta ignores tools).
 line-length = 120
 target-version = "py310"
 

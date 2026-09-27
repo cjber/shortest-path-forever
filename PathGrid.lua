@@ -838,7 +838,6 @@ end
 ---@class SPFPathGrid
 ns.PathGrid = {
 	clock = clock,
-	slice = slice,
 	tick = tick,
 	Deadline = Deadline,
 	Expansions = Expansions,

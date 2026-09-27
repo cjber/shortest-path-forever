@@ -17,7 +17,7 @@ python3 tools/changelog.py --check
 python3 .sift/gate.py --base origin/main && python3 .sift/agents.py check
 ```
 
-The same gate CI runs, plus shellcheck and shfmt on `tools/`, actionlint and zizmor on the workflows, gitleaks on
+The same gate CI runs, plus the UI checks (`tests/ui.sh`), shellcheck and shfmt on `tools/`, actionlint and zizmor on the workflows, gitleaks on
 the history, and the pinned sift checks. Every version needs a `CHANGELOG.md` entry (prose, bold-lead bullets)
 before its `v*` tag, since the release publishes it as the notes.
 

@@ -112,8 +112,6 @@ local function Differs(a, b)
 	return false
 end
 
--- The reason tells a caller whether asking again later can help: after combat, never for bad input, or when the
--- player's known flight paths or boat timings change.
 -- The planner options from here and now; a changed context drops every cached estimate.
 ---@param from SPFPoint
 ---@param to SPFPoint
@@ -215,6 +213,8 @@ local function Answer(from, to, key)
 	return nil, "unreachable"
 end
 
+-- The reason tells a caller whether asking again later can help: "combat" after combat, "invalid" never for bad
+-- input (only if the addon had not loaded yet), "unreachable" when known flight paths or boat timings change.
 local function Lookup(fromMap, fromX, fromY, toMap, toX, toY)
 	if not Ready() then
 		return nil, InCombatLockdown() and "combat" or "invalid"

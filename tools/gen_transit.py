@@ -13,7 +13,7 @@ import urllib.request
 from collections import defaultdict
 from itertools import pairwise
 
-from gen_routes import BUILD, CACHE, ROOT, db2, download
+from gen_routes import BUILD, CACHE, ROOT, STOP, db2, download
 
 DB_REV = "22b51464f1625f6ef6275771de1f5466c6f5d19e"
 DB_URL = f"https://github.com/cmangos/classic-db/raw/{DB_REV}/Full_DB/ClassicDB_1_12_1_z2815.sql.gz"
@@ -57,7 +57,7 @@ def classicdb(refresh=False, offline=False):
         temporary.write_bytes(data)
         temporary.replace(path)
     spawns, teleports, positions = defaultdict(list), {}, {}
-    # These two tables have one INSERT per line; quoted SQL strings may contain commas and parentheses.
+    # These three tables have one INSERT per line; quoted SQL strings may contain commas and parentheses.
     tuples = re.compile(r"\(((?:'(?:\\.|[^'\\])*'|[^()'])*)\)")
     with gzip.open(path, "rt", encoding="utf-8") as stream:
         for line in stream:
@@ -296,7 +296,7 @@ def taxis(node_rows, path_rows, geometry, durations):
         start, end = int(row["FromTaxiNode"]), int(row["ToTaxiNode"])
         track = sorted(by_path[int(row["ID"])], key=lambda r: int(r["NodeIndex"]))
         # Missing/zero endpoints, geometry-less path 472 and stopped passenger transports are not flights.
-        if start not in nodes or end not in nodes or len(track) < 2 or any(int(r["Flags"]) & 2 for r in track):
+        if start not in nodes or end not in nodes or len(track) < 2 or any(int(r["Flags"]) & STOP for r in track):
             continue
         if (start, end) in seen:
             continue

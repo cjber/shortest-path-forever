@@ -556,7 +556,10 @@ def stop_pin(canvas, x, y, number, badge, later, others=0):
 
 
 def render_stops(ui):
-    """Loch Modan around Thelsamar with a three-stop route another addon asked for, cropped to the stops."""
+    """Loch Modan around Thelsamar with a four-stop route (three places) another addon asked for.
+
+    Cropped to the stops.
+    """
     map_id = 1432
     base, rects = map_base(ui, map_id)
     canvas = ui.canvas(base.width, base.height)
@@ -596,7 +599,7 @@ def render_stops(ui):
     return scene(ui, [(crop, 0, 0)])
 
 
-def tracker_canvas(ui, seconds=0, settling=False):
+def tracker_canvas(ui, seconds=0):
     # Reference 21 is a captured itinerary, not a new optimality claim for these timings.
     rows = [
         colored(f"1. Walk to {dock_title(10)}   {countdown(120 - seconds)}", WHITE),
@@ -605,8 +608,9 @@ def tracker_canvas(ui, seconds=0, settling=False):
         "4. Boat to Dustwallow Marsh   leaves in about 2:45 · 1:44",
         "5. Walk to Silithus   33:02",
     ]
-    title = "Journey to Silithus" + (" · finding the fastest way..." if settling else "")
-    module = TrackerModule(f"Journey  {countdown(2687 - seconds)} · 9.2k yd", [TrackerBlock(title, rows)])
+    module = TrackerModule(
+        f"Journey  {countdown(2687 - seconds)} · 9.2k yd", [TrackerBlock("Journey to Silithus", rows)]
+    )
     return objective_tracker(ui, [module], container=False)[0]
 
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fetch the Blizzard UI source tests/harness_ui.lua runs against, pinned and checksummed, into tools/.cache.
+# Fetch the Blizzard UI source tests/ui_client.lua runs against, pinned and checksummed, into tools/.cache.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."

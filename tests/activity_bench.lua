@@ -9,7 +9,7 @@ end
 source = source:gsub(
 	"local ns = {}",
 	[[
-local costs = { positions = 0, dirty = 0, layouts = 0, texts = 0, callbacks = 0, cpu = 0 }
+local costs = { positions = 0, dirty = 0, layouts = 0, callbacks = 0, cpu = 0 }
 local position = UnitPosition
 _G.UnitPosition = function(...) costs.positions = costs.positions + 1 return position(...) end
 local create = CreateFrame

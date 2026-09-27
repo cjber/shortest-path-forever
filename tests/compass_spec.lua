@@ -18,7 +18,6 @@ local methods = {
 	EnableMouse = noop,
 	SetFrameStrata = noop,
 	SetColorTexture = noop,
-	SetVertexColor = noop,
 	SetBackdropColor = noop,
 	SetBackdropBorderColor = noop,
 	ClearAllPoints = noop,
