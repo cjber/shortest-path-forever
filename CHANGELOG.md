@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+## [1.4.2] - 2026-09-27
+
 - **The compass draws transport icons as the map does.** Lift and tram arrows sit smaller beside the ferry, as they
   do on the world map and minimap, and the boat icon in the minimap's tracking menu keeps its own shape.
 - **The departure dot can be translated.** The "·" between a dock's status and its departure time is now part of a
