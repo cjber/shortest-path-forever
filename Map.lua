@@ -532,6 +532,7 @@ local function Clusters(map, docks)
 end
 
 function ProviderMixin:RefreshAllData()
+	ns.JourneyGuide.RefreshWaypointPins()
 	local map = self:GetMap()
 	local mapID = map:GetMapID()
 	-- A map never opened has no zoom levels yet; opening it refreshes every provider anyway.

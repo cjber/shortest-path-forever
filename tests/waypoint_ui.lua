@@ -27,7 +27,19 @@ local function record()
  local saved = assert(ns.charDB.guideWaypoint, "Guide must persist ownership of its last write")
  assert(saved.uiMapID == waypoint.uiMapID and saved.x == waypoint.position.x and saved.y == waypoint.position.y)
 end
+local function nextFrame()
+ local queued = pending
+ pending = {}
+ for _, timer in ipairs(queued) do
+  if timer.at <= T then timer.fn() else pending[#pending + 1] = timer end
+ end
+end
+local function refreshMap()
+ -- MapCanvas refreshes every provider; native provider ordering must not matter.
+ for provider in pairs(WorldMapFrame.dataProviders) do provider:RefreshAllData() end
+end
 local function pin(shown)
+ nextFrame()
  assert(waypointProvider.pin and waypointProvider.pin:IsShown() == shown, "native pin visibility")
 end
 local function manual()
@@ -234,15 +246,15 @@ check(
 	"",
 	[[
 manual() start() pin(false)
-waypointProvider:RefreshAllData() pin(false)
+refreshMap() pin(false)
 mapID = 1415
 waypointProvider:OnMapChanged()
 assert(not waypointProvider.pin, "a map with no projection has no pin")
 mapID = 1414
-waypointProvider:OnMapChanged() pin(false)
+refreshMap() pin(false)
 waypointProvider:OnHide()
 waypointProvider:RefreshAllData(true)
-waypointProvider:OnShow() pin(false)
+waypointProvider:OnShow() refreshMap() pin(false)
 ns.ToggleJourneyGuide() restored()
 start()
 waypointProvider:OnHide()

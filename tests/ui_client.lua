@@ -676,6 +676,11 @@ _G.C_Map = {
 		fireEvent("USER_WAYPOINT_UPDATED")
 	end,
 }
+_G.EventUtil = {
+	ContinueAfterAllEvents = function(fn)
+		fn()
+	end,
+}
 local pending = {}
 _G.C_Timer = {
 	After = function(s, fn)

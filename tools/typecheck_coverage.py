@@ -23,12 +23,17 @@ def runtime_files(root):
                     visit(path.parent / element.attrib["file"].replace("\\", "/"))
 
     for toc in root.rglob("*.toc"):
-        if any(part.startswith(".") for part in toc.relative_to(root).parts):
+        if any(part.startswith(".") or part == "node_modules" for part in toc.relative_to(root).parts):
             continue
         for line in toc.read_text().splitlines():
             line = line.strip()
             if line and not line.startswith("#"):
                 visit(toc.parent / line.replace("\\", "/"))
+    # These directories contain shipped runtime Lua in this addon family, never checker fixtures.
+    for folder in (root, root / "Data", root / "Locales", root / "UI", root / "Transport"):
+        for path in folder.rglob("*.lua") if folder != root else root.glob("*.lua"):
+            if path.resolve() not in files:
+                raise ValueError(f"Runtime Lua is not loaded by a TOC/XML: {path.relative_to(root)}")
     return sorted(path for path in files if path.suffix.lower() == ".lua")
 
 
@@ -51,7 +56,7 @@ def main():
             raise ValueError(f"Runtime file exceeds workspace.preloadFileSize: {relative}")
     if len(files) > config["workspace.maxPreload"]:
         raise ValueError("Runtime files exceed workspace.maxPreload")
-    print(f"LuaLS coverage: {len(files)} TOC-loaded Lua files, including generated data and every walking-map addon")
+    print(f"LuaLS coverage: {len(files)} TOC-loaded Lua files, including generated data and child addons")
     return 0
 
 

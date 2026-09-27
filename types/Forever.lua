@@ -184,3 +184,8 @@ Settings = nil
 ---@field CreateFromCoordinates fun(uiMapID: number, x: number, y: number, z?: number): UiMapPoint
 ---@type SPFUiMapPointFactory
 UiMapPoint = nil
+
+EventUtil = {}
+---@param callback function
+---@param ... string
+function EventUtil.ContinueAfterAllEvents(callback, ...) end

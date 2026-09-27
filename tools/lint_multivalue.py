@@ -41,7 +41,7 @@ class Token:
     line: int
 
 
-def tokenize(source):
+def tokenize(source, comments=None):
     tokens, allowances = [], set()
     pos, line = 0, 1
     while pos < len(source):
@@ -60,6 +60,8 @@ def tokenize(source):
         elif comment:
             end = source.find("\n", pos)
             pos = len(source) if end < 0 else end
+            if comments is not None:
+                comments[line] = source[start + 2 : pos].strip()
             if re.fullmatch(r"--\s*multi-value:\s*\S.*", source[start:pos].rstrip()):
                 allowances.add(line)
         elif char.isspace():
