@@ -84,7 +84,7 @@ def data():
     program = r"""
 local ns = {}
 local files = { "Locales/enUS", "Data/Routes", "Data/Transports", "Data/Portals", "Data/Taxi" }
-for _, name in ipairs({ "Model", "PathGrid", "Path", "Planner" }) do
+for _, name in ipairs({ "Model", "PathGrid", "Path", "Planner", "FlightLines" }) do
 	files[#files + 1] = name
 end
 for _, name in ipairs(files) do
@@ -133,7 +133,12 @@ local function json(value)
 	end
 	return "{" .. table.concat(parts, ",") .. "}"
 end
-print(json({ portals = ns.Portals, docks = ns.Docks, taxis = ns.TaxiNodes, routes = ns.Routes, hovered = hovered,
+local taxi = ns.TaxiPaths[1]
+local flight = ns.Planner.LegPoints({mode = "flight",
+    from = ns.TaxiNodes[taxi.from], to = ns.TaxiNodes[taxi.to], hops = {taxi}}, ns.Routes)
+flight = ns.FlightLinePoints({mode = "flight", points = flight})
+print(json({ flight = flight, portals = ns.Portals, docks = ns.Docks,
+    taxis = ns.TaxiNodes, routes = ns.Routes, hovered = hovered,
 	walk = walk(1, start, ns.Docks[10]), boat = boat,
 	theramore = theramore, silithus = walk(1, ns.Docks[6], ns.TaxiNodes[73]),
 	wetlands = walk(0, ns.Docks[9], goal), darkshore = walk(1, start, darkshore),
@@ -332,6 +337,7 @@ def map_base(ui, map_id):
         947: ("World",),
         1414: ("World", "Kalimdor"),
         1439: ("World", "Kalimdor", "Darkshore"),
+        1429: ("World", "Eastern Kingdoms", "Elwynn Forest"),
         1432: ("World", "Eastern Kingdoms", "Loch Modan"),
     }
     return world_map_frame(ui, art, names[map_id], arrows=names[map_id][1:])
@@ -524,31 +530,17 @@ STOP_SIZE = 20
 NUMBER_ICONS = "interface/worldmap/ui-questpoi-numbericons.blp"
 
 
-def stop_pin(canvas, x, y, number, badge, later, others=0):
-    """StopPin.lua's numbered stop: the map's quest button (UI-QuestPoi-QuestNumber, 32 units on a 20-unit pin) over
-    its own black silhouette, and the numbered quest button's yellow numeral from UI-QuestPoi-NumberIcons over it. The
-    stop's kind hangs as a 16-unit badge 4 units off the pin's lower right. A button shared by several stops shows the
-    first's number and, in the badge's place, how many more (NumberFontNormal, BOTTOMRIGHT at 4, -4). Later stops fade
-    all but the silhouette."""
+def stop_pin(canvas, x, y, number, badge, later):
+    """StopPin.lua: stock quest art desaturated and tinted blue, with the action badge always visible."""
     alpha = 0.55 if later else 1
-    button = canvas.ui.atlas("UI-QuestPoi-QuestNumber")
+    button = canvas.ui.atlas("UI-QuestPoi-QuestNumber").image
     canvas.draw(button, x - 16, y - 16, 32, 32, (0, 0, 0, 1))
-    canvas.draw(button, x - 16, y - 16, 32, 32, (1, 1, 1, alpha))
+    canvas.draw(button.convert("LA").convert("RGBA"), x - 16, y - 16, 32, 32, (0.6, 0.85, 1, alpha))
     cell = number - 1
     left, top = cell % 8 * 0.125, 0.5 + cell // 8 * 0.125
     numeral = crop_coords(canvas.ui.texture(NUMBER_ICONS), left, left + 0.125, top, top + 0.125)
-    canvas.draw(numeral, x - 16, y - 16, 32, 32, (1, 1, 1, alpha))
+    canvas.draw(numeral.convert("LA").convert("RGBA"), x - 16, y - 16, 32, 32, (0.6, 0.85, 1, alpha))
     edge = STOP_SIZE / 2 + 4
-    if others:
-        font = FONTS["NumberFontNormal"]
-        text = f"+{others}"
-        w = canvas.text_width(text, font)
-        piece = canvas.ui.canvas(w + 2, font.height + 2)
-        piece.text(1, 1, text, font)
-        faded = piece.image
-        faded.putalpha(faded.getchannel("A").point(lambda a: round(a * alpha)))
-        canvas.composite(faded, canvas.px(x + edge - w - 1), canvas.px(y + edge - font.height - 1))
-        return
     art = canvas.ui.atlas(badge)
     factor = 16 / max(art.width, art.height)
     w, h = art.width * factor, art.height * factor
@@ -585,8 +577,8 @@ def render_stops(ui):
     canvas.paste(route, mx, my)
     map_landmarks(canvas, map_id, rects["map"])
     for (px, py), numbers in reversed(rings.items()):
-        badge = STOP_BADGES[numbers[0] - 1] if len(numbers) == 1 else None
-        stop_pin(canvas, mx + px, my + py, numbers[0], badge, numbers[0] > 1, len(numbers) - 1)
+        badge = STOP_BADGES[numbers[0] - 1]
+        stop_pin(canvas, mx + px, my + py, numbers[0], badge, numbers[0] > 1)
     sx, sy = point(THELSAMAR)
     icon(canvas, "UI-WorldMapArrow", mx + sx, my + sy, 27)
     xs = [point(p)[0] for p in (*ends, THELSAMAR)]
@@ -754,7 +746,22 @@ def render_demo():
     return buffer.getvalue()
 
 
+def render_flight(ui):
+    base, rects = map_base(ui, 1429)
+    mx, my, mw, mh = rects["map"]
+    route = ui.canvas(mw, mh)
+    points = ordered(data()["flight"])
+    for a, b in zip(points, points[1:], strict=False):
+        pa, pb = projection(ui, a, 1429), projection(ui, b, 1429)
+        if pa and pb:
+            segment(route, (pa[0] * mw, pa[1] * mh), (pb[0] * mw, pb[1] * mh), (0.2, 1, 0.35), False, 1)
+    flush_strokes(route)
+    base.paste(route, mx, my)
+    return scene(ui, [(base, 0, 0)])
+
+
 SCENES = {
+    "flight": render_flight,
     "kalimdor": lambda ui: render_map(ui, 1414),
     "darkshore": lambda ui: render_map(ui, 1439),
     "docks": render_docks,

@@ -505,9 +505,10 @@ function ShortestPathForeverRoutePinMixin:Draw()
 		self.pathAlpha = pathIndex > current and LATER_ALPHA or nil
 		self.walked = 0
 		local previous, px, py
+		local points = ns.FlightLinePoints(path)
 		local crossing = OverviewCrossing(self, path, color)
-		for index = 1, crossing and 0 or #path.points do
-			local point = path.points[index]
+		for index = 1, crossing and 0 or #points do
+			local point = points[index]
 			local x, y = MapPosition(point, map:GetMapID())
 			if path.mode == "portal" or path.mode == "passage" then
 				self:Mark(x, y, color)
@@ -785,8 +786,9 @@ local function DrawMinimap(self)
 		for _, path in ipairs(paths) do
 			self.walked = 0
 			if path.mode ~= "portal" and path.mode ~= "passage" then
-				for index = 2, #path.points do
-					local a, b = path.points[index - 1], path.points[index]
+				local points = ns.FlightLinePoints(path)
+				for index = 2, #points do
+					local a, b = points[index - 1], points[index]
 					if a.map == map and b.map == map and not a.jump then
 						local ax, ay = Project(a, x, y, radius, cosine, sine)
 						local bx, by = Project(b, x, y, radius, cosine, sine)

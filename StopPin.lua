@@ -17,12 +17,6 @@ local LATER_STOP_ALPHA = 0.55
 -- Route.lua groups stops by the button's size.
 ns.GoalAtlas, ns.StopSize = GOAL_ATLAS, STOP_SIZE
 
--- A shared button's corner count: how many more stops it holds past the first, whose number the button shows.
----@param numbers integer[]
-local function StopCount(numbers)
-	return #numbers > 1 and "+" .. (#numbers - 1) or ""
-end
-
 ---@class SPFGoalPin : SPFMapPin
 ---@field Texture Texture
 ---@field Icon Texture
@@ -31,7 +25,6 @@ end
 ---@field Glow Texture
 ---@field Numeral Texture
 ---@field Number FontString
----@field Count FontString
 ---@field stopTitles? string[]
 ShortestPathForeverGoalPinMixin = CreateFromMixins(MapCanvasPinMixin)
 
@@ -44,15 +37,17 @@ function ShortestPathForeverGoalPinMixin:OnLoad()
 	self.Disc:SetVertexColor(0, 0, 0)
 	self.Number = self:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	self.Number:SetPoint("CENTER")
-	-- The item stack count's font, where the kind badge would hang.
-	self.Count = self:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
-	self.Count:SetPoint("BOTTOMRIGHT", BADGE_OFFSET, -BADGE_OFFSET)
+	self.Number:SetTextColor(0.6, 0.85, 1)
+	for _, texture in ipairs({ self.Button, self.Numeral }) do
+		texture:SetDesaturated(true)
+		texture:SetVertexColor(0.6, 0.85, 1)
+	end
 	self:SetScript("OnHide", self.OnMouseLeave)
 end
 
 -- A lone destination wears the waypoint pin; a numbered stop wears the map's quest button with its number. Stops
 -- whose buttons would overlap, a place visited twice among them, share one: it shows the first stop's number with the
--- count of the rest (+2) where a badge would hang, and its tooltip names each.
+-- action badge intact, and its tooltip names each.
 -- A numbered stop whose caller said what stands there wears that mark as a badge on the button's lower right, so the
 -- pin reads as step 3 at the quest giver or flight master; a lone one wears the mark alone, full size.
 ---@param numbers integer[]? the stops this pin marks, in order; nil for a lone destination
@@ -66,15 +61,13 @@ function ShortestPathForeverGoalPinMixin:OnAcquired(x, y, numbers, titles, later
 	self.Icon:SetAlpha(alpha)
 	self.Numeral:SetAlpha(alpha)
 	self.Number:SetAlpha(alpha)
-	self.Count:SetAlpha(alpha)
-	self.Count:SetText(numbers and StopCount(numbers) or "")
 	self.stopTitles = titles[1] and titles or nil
 	local marked = look ~= nil and ns.SetStopLook(self.Icon, look, numbers and BADGE_SIZE or LOOK_SIZE)
 	local badge = marked and numbers ~= nil
 	self.Icon:SetShown(marked)
 	self.Icon:ClearAllPoints()
 	self.Icon:SetPoint(badge and "BOTTOMRIGHT" or "CENTER", badge and BADGE_OFFSET or 0, badge and -BADGE_OFFSET or 0)
-	local corner = (badge or numbers ~= nil and #numbers > 1) and -BADGE_OFFSET or 0
+	local corner = badge and -BADGE_OFFSET or 0
 	self:SetHitRectInsets(0, corner, 0, corner)
 	self.Texture:SetShown(not marked and numbers == nil)
 	self.Disc:SetShown(numbers ~= nil)

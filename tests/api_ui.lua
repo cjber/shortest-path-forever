@@ -84,7 +84,7 @@ assert(api.CurrentStop("Test") == nil and not ns.HasJourney())
 assert(#active[goalTemplate] == 0 and #active[lineTemplate] == 0)
 assert(not ShortestPathForeverMinimapRoute.scripts.OnUpdate)
 assert(not ShortestPathForeverJourneyDriver:IsShown() and not arrowFrame:IsShown())
--- Stops whose rings would overlap at this zoom share one ring, showing the first stop's number with a +N corner count
+-- Stops whose rings would overlap at this zoom share one ring, showing the first stop's number with its action badge
 -- and naming each stop in order. A ring holding the stop being guided to sits on that stop at full strength; the rest
 -- sit at their middle.
 local routeProvider
@@ -113,7 +113,7 @@ local function rings(expected)
    assert(pin.stopTitles[j] == expected, "the tooltip names each stop in order")
   end
   assert(numeral(pin) == want.stops[1] and pin.Number.text == "")
-  assert(pin.Count.text == (#want.stops == 1 and "" or "+" .. #want.stops - 1), tostring(pin.Count.text))
+  assert(rawget(pin, "Count") == nil, "no text over the action badge")
   if #want.stops > 1 then
    local x = 0
    for _, n in ipairs(want.stops) do x = x + close[n].x end
@@ -155,9 +155,9 @@ posX, posY = arrive.x, arrive.y
 tick()
 assert(api.CurrentStop("Test") == 2)
 local pins = active[goalTemplate]
-assert(#pins == 3 and numeral(pins[1]) == 2 and pins[1].Count.text == "+2")
+assert(#pins == 3 and numeral(pins[1]) == 2)
 assert(pins[1].Numeral.alpha == 1 and #pins[1].stopTitles == 3)
-assert(pins[1].x == close[2].x and pins[2].Count.text == "+1" and pins[2].Numeral.alpha == 0.55)
+assert(pins[1].x == close[2].x and pins[2].Numeral.alpha == 0.55)
 api.Cancel("Test")
 zoom = 1
 posX, posY = 0, 0
@@ -232,8 +232,8 @@ local line = active[lineTemplate][1]
 -- They share two rings, one per row; the current stop's row sits on it.
 local pins = active[goalTemplate]
 assert(#pins == 2 and #line.paths[#line.paths].points == 64)
-assert(pins[1].Count.text == "+31" and pins[1].Numeral.alpha == 1 and #pins[1].stopTitles == 32)
-assert(pins[2].Count.text == "+31" and numeral(pins[2]) == 2 and #pins[2].stopTitles == 32)
+assert(pins[1].Numeral.alpha == 1 and #pins[1].stopTitles == 32)
+assert(numeral(pins[2]) == 2 and #pins[2].stopTitles == 32)
 local drawCPU, drawWorst = 0, 0
 for _=1,30 do
  started = os.clock()
