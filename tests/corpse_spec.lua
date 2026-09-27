@@ -168,4 +168,21 @@ assert(#jobs == 2 and jobs[1].cancelled ~= true, "strayed: searched again from h
 ghost = false
 event("PLAYER_UNGHOST")
 assert(jobs[2].cancelled and not ns.Corpse.Active() and destination == nil)
+-- A walk that fails says why, in Journey's words, rather than always "no walking path".
+ghost = true
+event("PLAYER_ALIVE")
+jobs[#jobs].callback(nil, "error")
+rows = select(2, ns.JourneyInfo())
+assert(rows[1].text:find("walking search failed", 1, true), rows[1].text)
+ghost = false
+event("PLAYER_UNGHOST")
+ns.Path.HasData = function()
+	return false
+end
+ghost = true
+event("PLAYER_ALIVE")
+rows = select(2, ns.JourneyInfo())
+assert(rows[1].text:find("walking map unavailable", 1, true), rows[1].text)
+ghost = false
+event("PLAYER_UNGHOST")
 print("corpse: ok")
