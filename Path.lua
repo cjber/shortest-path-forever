@@ -274,8 +274,8 @@ local function pointNode(st, point)
 	return k, node, not node and "offmesh" or nil
 end
 
--- Fixed places recur in both batches and in later journeys. Keep their small entrance-cost vectors, not the
--- grid trees; cap the cache so moving start positions cannot grow it for the entire play session.
+-- Fixed places recur in both batches and in later journeys. Keep their small entrance-cost vectors and only the
+-- last eight grid trees; cap the cache so moving start positions cannot grow it for the entire play session.
 local function connect(st, swim, k, node)
 	nodesOf(st, k)
 	local key = k .. ":" .. node .. ":" .. swim

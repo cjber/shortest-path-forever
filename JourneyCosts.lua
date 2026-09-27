@@ -13,7 +13,7 @@ local startBatch, goalBatch, startAt, refreshedAt
 local startCosts, goalCosts = {}, {}
 refreshedAt = 0
 local pendingCosts, settleRound = 0, 0
-local costError, goalError
+local costError
 local costsWaiting
 
 local function SamePlace(a, b)
@@ -285,7 +285,7 @@ local function RefreshCosts(includeGoal, forced)
 		end
 		slices, lastRevision = 0, revision
 		startCosts, goalCosts = walks(startBatch), walks(goalBatch)
-		goalError = goalBatch.reason
+		local goalError = goalBatch.reason
 		costError = startBatch.reason == "error" and "error" or goalError == "error" and "error" or nil
 		-- An invalid goal also rules out the direct start -> goal edge without searching toward it.
 		if goalError and goalError ~= "nodata" then
@@ -471,7 +471,7 @@ end
 -- A new goal starts from no measured walks, keeping the batches a repeated journey may reuse.
 function Costs.Clear()
 	costsWaiting = nil
-	settleRound, costError, goalError = 0, nil, nil
+	settleRound, costError = 0, nil
 	startCosts, goalCosts, startAt = {}, {}, nil
 end
 
