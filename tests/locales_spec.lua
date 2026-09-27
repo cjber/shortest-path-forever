@@ -67,6 +67,15 @@ for _, file in ipairs(shipped) do
 end
 assert(#found == 0, "\n" .. table.concat(found, "\n"))
 
+-- The middle dot joins two phrases; outside L a translation could not change it, so it goes through "%s · %s".
+local joins = {}
+for _, file in ipairs(shipped) do
+	if not file:match("^Data/") and read(file):gsub("%-%-[^\n]*", ""):find('"%s*·%s*"') then
+		joins[#joins + 1] = file .. ': a bare " · " (join through L["%s · %s"])'
+	end
+end
+assert(#joins == 0, "\n" .. table.concat(joins, "\n"))
+
 -- The guard itself still sees a bare literal.
 local probe = 'GameTooltip_AddInstructionLine(GameTooltip, "Click to go")'
 assert(probe:match(SINKS[11]) == "Click to go")

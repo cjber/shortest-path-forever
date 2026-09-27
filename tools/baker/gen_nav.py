@@ -710,6 +710,13 @@ def encode_map(nodes, edges, grid, cuts):
     return graph, grids, heights, floors, len(roots)
 
 
+def heights_header():
+    """The emitted header's height entry, from encode_heights' docstring so the format is written down once."""
+    doc = " ".join(cast(str, encode_heights.__doc__).split())
+    first, *rest = wrap("height[k + 1]: " + doc[0].lower() + doc[1:], 110)
+    return ["-- " + first, *("--   " + line for line in rest)]
+
+
 def emit(nodes, edges, grid, cuts, out, name):
     graph, grids, heights, floors, components = encode_map(nodes, edges, grid, cuts)
     lines = [
@@ -725,9 +732,7 @@ def emit(nodes, edges, grid, cuts, out, name):
         "--   flags 1/2 close the step to the +x/+y neighbour, 4/8 open the +x+y/+x-y",
         "--   diagonal (otherwise a diagonal is open when either L-shaped detour is). A symbol >= 48 repeats the",
         "--   previous cell (symbol - 47) more times. Nodes are local cells, then floors from cells * cells on.",
-        "-- height[k + 1]: base heights of the walkable cells in cell order, in zstep yards, each against its -y",
-        "--   neighbour (else its -x neighbour, else the previous cell): symbols 0-46 add -23..23, 47 is followed by",
-        "--   an absolute value + 2048 (2), a symbol >= 48 repeats the previous difference (symbol - 47) more times.",
+        *heights_header(),
         "-- floor[k + 1]: surfaces above or below the base one, numbered from cells * cells in order.",
         *("--   " + line for line in wrap(" ".join(cast(str, encode_floors.__doc__).split(": ", 1)[1].split()), 110)),
         "ShortestPathForeverPathData = ShortestPathForeverPathData or {}",
@@ -798,9 +803,9 @@ def assemble_floors(floors, links):
 
 
 def encode_heights(grid, k):
-    """Base heights of a cluster's walkable cells in cell order, in ZQ steps, each against its -y neighbour (else
-    its -x neighbour, else the previous cell): symbols 0-46 add -23..23, 47 is followed by an absolute value + 2048
-    (2), and a symbol >= 48 repeats the previous difference (symbol - 47) more times."""
+    """Base heights of a cluster's walkable cells in cell order, in zstep yards, each against its -y neighbour
+    (else its -x neighbour, else the previous cell): symbols 0-46 add -23..23, 47 is followed by an absolute value
+    + 2048 (2), and a symbol >= 48 repeats the previous difference (symbol - 47) more times."""
     kx, ky = divmod(k, NY)
     q, items, last = {}, [], 0
     for i in range(CELLS):

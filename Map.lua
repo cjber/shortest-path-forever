@@ -47,9 +47,9 @@ function ns.DepartureStatus(departure)
 			)
 		or string.format(L["leaves %s"], ns.FormatCountdown(departure.departIn))
 	if departure.docked then
-		return HERE[departure.kind] .. " · " .. leaves
+		return string.format(L["%s · %s"], HERE[departure.kind], leaves)
 	end
-	return string.format(L["arrives %s"], ns.FormatCountdown(departure.arriveIn)) .. " · " .. leaves
+	return string.format(L["%s · %s"], string.format(L["arrives %s"], ns.FormatCountdown(departure.arriveIn)), leaves)
 end
 
 -- The stock ferry for boats. There is no zeppelin map icon in the game (only top-down vehicle sprites), so

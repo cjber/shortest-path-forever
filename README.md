@@ -16,14 +16,16 @@ The route, pins and tracker use the game's own art, so it looks like it came wit
 
 ![Eight-second demo of a route settling, the countdown and the optional compass](docs/screenshots/demo.gif)
 
+Planning a journey from the map: the route settles, the next boat counts down in the tracker and the compass turns
+with you.
+
 ## Features
 
 Each feature has more detail in [docs/features.md](docs/features.md).
 
-- **Journey planner.** Shift-click the map or minimap, or choose *Plan journey* on a quest, for the fastest way there:
-  walking through tunnels and city levels, known flight points, boats, zeppelins, lifts, the tram, portals, and your
-  hearthstone or class teleports when they are ready. The route is drawn on both maps and its steps sit in the objective tracker. It replans as you move, switching only for a
-  clearly faster way.
+- **Journey planner.** Shift-click the map or minimap, or choose *Plan journey* on a quest, for the fastest way there
+  on foot, by flight, boat, zeppelin, lift, tram, portal or teleport. The route is drawn on both maps, its steps sit in
+  the objective tracker, and it replans as you move.
   ![Journey steps from Auberdine to Silithus with time and distance remaining](docs/screenshots/tracker.png)
 - **Guide.** The game's own waypoint marker leads you to where each step ends, the next boat, lift, flight master or
   your destination, and hands your tracked quest back when you arrive. Turn off *Guide marks only where each step
@@ -53,6 +55,8 @@ Each feature has more detail in [docs/features.md](docs/features.md).
   quietly over guild, party and yell at the docks; turn sharing off in the settings.
 
 ![A journey from Auberdine through Menethil and Theramore to Silithus](docs/screenshots/kalimdor.png)
+
+A longer trip: Auberdine to Menethil, then Theramore, then Silithus.
 
 ## Install
 

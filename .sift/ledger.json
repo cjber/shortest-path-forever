@@ -173,8 +173,8 @@
       "what": "Differs is a shallow two-way table comparison, and Options (API.lua:125-128) hand-copies `known` into knownSnapshot; FrameXML SharedXML provides `tCompare(a, b)` (negated) and `CopyTable(t, true)` for exactly this.",
       "why": "Semantics match for the flat known-taxi-node table (tCompare checks lhs values then rhs-only keys). Using them needs `tCompare`/`CopyTable` added to .luacheckrc read_globals and stubs in the specs that load API.lua, since the project uses no FrameXML table helpers yet; the saving is small.",
       "confidence": "low",
-      "status": "decide",
-      "reason": "Confirmed offline: Forever 1.60.1 ships tCompare/CopyTable in TOC-loaded TableUtil.lua and 503 API checks pass with them. NEEDS OWNER: adopt them? Host availability needs a /reload check the audit cannot run.",
+      "status": "dismissed",
+      "reason": "owner-delegated 2026-09-27: wontfix: FrameXML helper swaps need game checks for little gain.",
       "first_seen": "2026-09-27",
       "updated": "2026-09-27"
     },
@@ -227,10 +227,11 @@
       "what": "Compass keeps its own transport icon table (Compass.lua:44-50), taxi faction atlases (Compass.lua:51, 87) and atlas-fit sizing (SetIcon, Compass.lua:62-80) beside the canonical ns.SetTransportIcon + TRANSPORT_ATLASES (Map.lua:12-17, 61-73), Map.lua's taxinode_<faction> derivation (Map.lua:726) and ns.FitAtlas (Looks.lua:91). Canonical home: ns.SetTransportIcon / ns.FitAtlas (and ns.SetStopLook's flightmaster art).",
       "why": "Still the listed anti-pattern 'Compass's transportIcons beside ns.SetTransportIcon'. Drift already present: SetTransportIcon draws lift/tram floor arrows at ARROW_SIZE/PIN_SIZE (0.75) of the box because they fill it where the ferry has a margin; Compass draws them at full marker size, so the compass's lift/tram icons are visibly larger relative to the ferry than on the world map and minimap. The zeppelin special case (square texture) is restated. The cached `atlases` table exists only to avoid GetAtlasInfo allocation, but SetIcon already runs only when the icon changes, so FitAtlas's per-call lookup costs nothing extra. SetIcon's change detection could key on kind instead of the icon string.",
       "confidence": "high",
-      "status": "decide",
-      "reason": "BUG: Comparing the real renderers in memory reproduces lift/tram heights of 18 in Compass versus 13.5 through SetTransportIcon; sharing helpers still passes compass_spec, including its allocation check. Taxi faction/discovery selection has a distinct contract; NEEDS OWNER: Should consolidation adopt the shared lift/tram sizing and missing-atlas fallback, or preserve Compass\u2019s current behavior?",
+      "status": "fixed",
+      "reason": "Compass draws transports through ns.SetTransportIcon and other atlases through ns.FitAtlas; its own icon table and atlas cache are gone, so lift/tram arrows get the shared 0.75 sizing and a missing atlas leaves the texture alone.",
       "first_seen": "2026-09-27",
-      "updated": "2026-09-27"
+      "updated": "2026-09-27",
+      "guard": "settled:second copy of a fact"
     },
     {
       "id": "d89e2cfdd3",
@@ -240,8 +241,8 @@
       "what": "Hand-rolled clamps where FrameXML's Clamp/Saturate (SharedXML MathUtil, already used by Map.lua's Clusters via Saturate/Lerp) exist: Compass.lua:110, 128; Arrow.lua:49, 114; Tracker.lua:136.",
       "why": "Identical behaviour (Saturate(x) = Clamp(x, 0, 1)); the project already relies on these helpers in Map.lua on this client, so availability in Interface 16001 is established. Purely readability; the specs' stubs would need Clamp/Saturate where they load these files.",
       "confidence": "low",
-      "status": "decide",
-      "reason": "Confirmed offline: the pinned Blizzard UI defines Clamp/Saturate as math.clamp/math.saturate aliases. NEEDS OWNER: adopt them? Host availability needs a /reload check the audit cannot run.",
+      "status": "dismissed",
+      "reason": "owner-delegated 2026-09-27: wontfix: FrameXML helper swaps need game checks for little gain.",
       "first_seen": "2026-09-27",
       "updated": "2026-09-27"
     },
@@ -253,8 +254,8 @@
       "what": "WFA-2: the compass is off by default although it does not act for the player",
       "why": "WFA-2: 'Anything off by default is off because it acts for the player.' The compass is a passive display strip (Compass.lua, 360x60) that only shows Guide's turns and stops; it takes no action. Either default it on or record in AGENTS.md why it is waived (e.g. screen clutter), which the pack allows. Every other display feature in DEFAULTS is on.",
       "confidence": "medium",
-      "status": "decide",
-      "reason": "README.md:35\u201336 and commit 78c05dc confirm deliberate opt-in, but this passive display still violates the pinned WFA-2; neither AGENTS.md nor Settled provides an exception, and the compass spec passes. NEEDS OWNER: Should the compass default to on, or should AGENTS.md waive WFA-2 with a reason for retaining opt-in?",
+      "status": "dismissed",
+      "reason": "owner-delegated 2026-09-27: settled: the compass is a new HUD element, so it stays opt-in; owner decision 2026-09-27 (WFA-2 waiver in AGENTS.md).",
       "first_seen": "2026-09-27",
       "updated": "2026-09-27"
     },
@@ -266,8 +267,8 @@
       "what": "Core.lua mixes six responsibilities: settings defaults + SavedVariables bootstrap and module start (1-59, 312-340); server clock (61-71); the sighting store (73-110); world-point location and dock naming (112-178); nearest dock and departures timetable queries (180-310: NearestDock, RouteShown, KindShown, DockVisits, DockDepartures, ByDestination, NextStop); the shared travel ticker (342-400).",
       "why": "The parts separate cleanly: bootstrap/Init/OnChange/clock stay in Core; sightings plus departures/NextStop/ByDestination form a timetable-state module beside Model's pure arithmetic; Locate/Dock* naming could live with Map's dock naming (ns.DockPierName, ns.DockKind already in Map.lua); the travel ticker is its own scheduler. A change to departures never touches the ticker or bootstrap. Not a split to perform in the audit.",
       "confidence": "medium",
-      "status": "decide",
-      "reason": "Confirmed: the travel-tick scheduler shares no private state with settings or timetable code. NEEDS OWNER: split Core.lua into settings, scheduler and timetable modules (new TOC files)?",
+      "status": "dismissed",
+      "reason": "owner-delegated 2026-09-27: deferred: do when that file is next substantially changed (gen_nav before it reaches 1000 lines).",
       "first_seen": "2026-09-27",
       "updated": "2026-09-27"
     },
@@ -388,8 +389,8 @@
       "what": "Journey.lua is at the 1000-line gate and mixes: water-walking capability (80-98); position/Near (100-119); lifecycle end/clear/start/suspend/resume (121-146, 857-936); leg progress (157-201); tracker rows JourneyInfo (236-291); walk-projection geometry OnWalk/Remaining (293-356); route drawing Refresh (320-350); walk-geometry search and LRU cache WalkKey/CacheWalk/FindWalk/PrepareWalks (368-458); route replacement policy SameJourney/Retime/EstimateKept/FinishSearch/Render (460-662); planner input Plan (664-730); the 113-line Update frame driver (742-855); Costs binding and events (938-1000).",
       "why": "Separable: the walk-geometry cache and OnWalk/Remaining (\u2248150 lines) into a JourneyWalks.lua bound like JourneyCosts; JourneyInfo's row formatting into JourneySteps.lua, which already owns step wording (and would host WALK_FAILURE for Corpse too). The replacement policy and driver stay. Any growth is currently blocked by file-size-no-growth, so every fix here must first delete lines. Not performed in audit.",
       "confidence": "medium",
-      "status": "decide",
-      "reason": "Commit e3accdf changes row presentation independently of planning, and a headless probe exercises OnWalk without an active journey, supporting separate presentation and geometry responsibilities beyond size alone. NEEDS OWNER: Should sharing WALK_FAILURE with Corpse.Info preserve its uniform 'no walking path' message, or introduce 'walking map unavailable' and 'walking search failed'?",
+      "status": "dismissed",
+      "reason": "owner-delegated 2026-09-27: settled: resolved by PR #63 (corpse reasons share the journey's walk-failure wording).",
       "first_seen": "2026-09-27",
       "updated": "2026-09-27"
     },
@@ -442,8 +443,8 @@
       "what": "RefreshCosts is one 312-line function (100-412) holding ten closures: targets, reuse, create, fixedPlace, bakedBound, walks, active, consider (112 lines, nested probe callback), attach/update, plus batch setup.",
       "why": "Only `consider` carries a stated reason to stay a closure (line 259: splitting adds calls/upvalues on every frontier update). targets, reuse, create, fixedPlace, bakedBound, walks and active depend only on a batch plus module state (places, faction, teleports, J) and could be file-level functions taking those as arguments, leaving RefreshCosts as setup + consider + attach. Not performed in audit.",
       "confidence": "low",
-      "status": "decide",
-      "reason": "Confirmed: fixedPlace, bakedBound, walks and active capture no search-specific state. NEEDS OWNER: lift them to file-level helpers in JourneyCosts.lua (planner hot path, needs the bench)?",
+      "status": "dismissed",
+      "reason": "owner-delegated 2026-09-27: deferred: do when that file is next substantially changed (gen_nav before it reaches 1000 lines).",
       "first_seen": "2026-09-27",
       "updated": "2026-09-27"
     },
@@ -537,10 +538,11 @@
       "what": "A middle dot (U+00B7) is hard-coded as the separator in the player-visible departure status (Map.lua:50 and :52, also shown in the tracker via Tracker.lua:48). It sits outside ns.L, so a translation cannot change it.",
       "why": "Proposal for the owner: either keep the dot as a deliberate UI separator and move the joined phrase into a locale key (for example L[\"%s, %s\"]), or use a separator the stock UI uses. This is user-facing copy, so it is decide-only.",
       "confidence": "low",
-      "status": "decide",
-      "reason": "A headless LuaJIT probe with translated ns.L values retained the hard-coded middle dot in both docked and arriving statuses; unlike Tracker.lua\u2019s journey format, this join cannot be translated, and no Settled entry exempts it. NEEDS OWNER: Should departure statuses retain the middle dot inside a translatable format, or use a different separator?",
+      "status": "fixed",
+      "reason": "Map.lua's departure status and JourneySteps' leg time join through L[\"%s \u00b7 %s\"], listed in Locales/phrases.txt.",
       "first_seen": "2026-09-27",
-      "updated": "2026-09-27"
+      "updated": "2026-09-27",
+      "guard": "lens-only: locales_spec fails on a bare middle-dot literal in any shipped file"
     },
     {
       "id": "fb98b32e35",
@@ -550,8 +552,8 @@
       "what": "Map.lua (807 lines) mixes: (1) shared dock and departure facts consumed across the addon: DepartureDestination/DepartureStatus (26-53, used by Tracker, Alert), SetTransportIcon (55-73, used by Looks, MinimapPins), DockKind (75-88), DockPierName (190-218, used by Core.lua:177), AddDockTooltip/AddPortalTooltip (222-266, 599-606, used by MinimapPins), DockShown/PortalShown (370-379, 627-630), OverlapGroups (472-509, used by Route.lua); (2) the dock pin mixin and provider (138-575); (3) the portal pin and provider (579-654); (4) the replacement flight-master provider (656-737) with its taxi event frame (778-792); (5) the Map Filter menu (751-767).",
       "why": "The flight-master provider shares nothing with docks beyond MapPosition/IsDockMap and changes for different reasons (Taxi.lua known-set, native FlightPointDataProviderMixin). Group (1) is the part other modules depend on; hiding it in the world-map file is how second copies of its facts arise (Compass's transportIcons, the taxi atlas names in Looks/Compass). Proposed split: the shared dock/departure/transport-icon facts into their own file loaded before Map.lua (it has no world-map dependency except OverlapGroups, which could move to Route's side or stay), and the flight provider into its own file; Map.lua keeps the dock and portal providers and the filter menu. Split only in its own reviewed change.",
       "confidence": "low",
-      "status": "decide",
-      "reason": "Confirmed: history shows transport-icon helpers and flight-provider logic change independently. NEEDS OWNER: split Map.lua's shared dock/icon facts from the world-map pins (new TOC file)?",
+      "status": "dismissed",
+      "reason": "owner-delegated 2026-09-27: deferred: do when that file is next substantially changed (gen_nav before it reaches 1000 lines).",
       "first_seen": "2026-09-27",
       "updated": "2026-09-27"
     },
@@ -576,10 +578,11 @@
       "what": "The minimap tracking-menu checkbox restates the boat atlas name (third copy after Map.lua:13 and Compass.lua:45) and sizes it to a 20x20 square instead of calling ns.SetTransportIcon(icon, \"boat\", 20) (Map.lua:61), which fits the atlas at its native aspect.",
       "why": "If the ferry icon changes it must change here too; SetAtlas without useAtlasSize followed by SetSize(20, 20) also squares the atlas, which the project's never-stretch rule forbids unless the atlas is already square (not verified offline).",
       "confidence": "low",
-      "status": "decide",
-      "reason": "A LuaJIT probe showed that changing Map.lua\u2019s boat mapping leaves the tracking-menu atlas unchanged, although its texture supports SetTransportIcon; duplicated icon selection is confirmed, but current stretching is not established. NEEDS OWNER: Should the menu also inherit FitAtlas\u2019s behavior of leaving the texture untouched when GetAtlasInfo returns nil?",
+      "status": "fixed",
+      "reason": "The tracking-menu checkbox icon is drawn with ns.SetTransportIcon(icon, \"boat\", 20), which fits the atlas through ns.FitAtlas.",
       "first_seen": "2026-09-27",
-      "updated": "2026-09-27"
+      "updated": "2026-09-27",
+      "guard": "settled:second copy of a fact"
     },
     {
       "id": "804b243991",
@@ -684,8 +687,8 @@
       "what": "Planner.Plan is 433 lines (321-754) with five separable stages: topology cache check and build (322-484), per-plan dynamic edges for ride/teleports/walk pairs (486-532), backward Dijkstra lower bound (536-570), the bounded label search (571-698), and leg reconstruction/flight merging (699-754).",
       "why": "The stated reason (line 320: splitting adds hot-path upvalues) covers the label search and its heap only. The topology build runs on a cache miss, the lower bound is a pure function of edges and goal, and leg reconstruction runs once per plan over labels/nodes; extracting BuildTopology(options), LowerBounds(edges, goal, ...) and Legs(labels, nodes, finishAt) adds no call inside the search loop. Proposal only; the split must keep the 3 ms benchmark (AGF_BENCH/journey_bench) unchanged.",
       "confidence": "medium",
-      "status": "decide",
-      "reason": "Confirmed: stages evolve independently and can be local helpers keeping heap locals. NEEDS OWNER: split Planner.Plan, accepting the per-call overhead the strict bench must then clear?",
+      "status": "dismissed",
+      "reason": "owner-delegated 2026-09-27: wontfix: Planner.Plan stays one function for speed.",
       "first_seen": "2026-09-27",
       "updated": "2026-09-27"
     },
@@ -711,8 +714,8 @@
       "what": "WFA-25: the kalimdor.png screenshot closing Features has no line under it",
       "why": "WFA-25: line 55 is followed directly by '## Install'. The store page gives the same image a caption ('A longer trip: Auberdine to Menethil, then Theramore, then Silithus.'); the README should carry one too.",
       "confidence": "high",
-      "status": "decide",
-      "reason": "CommonMark parsing places the Install heading immediately after kalimdor.png, violating pinned WFA-25; check_copy.py does not detect this missing caption. NEEDS OWNER: May the README reuse the caption from docs/curseforge.md?",
+      "status": "dismissed",
+      "reason": "owner-delegated 2026-09-27: done: README's kalimdor.png now has the store page's caption under it; the quoted image line stays by design.",
       "first_seen": "2026-09-27",
       "updated": "2026-09-27"
     },
@@ -738,8 +741,8 @@
       "what": "WFA-25: the README's lead demo.gif has no line under it saying what to look at",
       "why": "WFA-25: each image gets a line under it in plain words, not its alt text. Line 17 is followed directly by '## Features'. Fix: add a caption line under it, as docs/curseforge.md does for its screenshots.",
       "confidence": "high",
-      "status": "decide",
-      "reason": "CommonMark parsing places the Features heading immediately after demo.gif, with no caption required by pinned WFA-25; the pack checker reports no hit. NEEDS OWNER: What plain-language caption should appear beneath the demo?",
+      "status": "dismissed",
+      "reason": "owner-delegated 2026-09-27: done: one plain caption now sits under demo.gif in README and docs/curseforge.md; the quoted image line stays by design.",
       "first_seen": "2026-09-27",
       "updated": "2026-09-27"
     },
@@ -764,10 +767,11 @@
       "what": "WFA-10: the Journey planner feature bullet runs to about 72 words, over the pack's ~60-word cap per feature bullet",
       "why": "WFA-10 caps a README feature at one bold-led bullet of at most ~60 words, with depth moved to docs/. This bullet (lines 23-26, image excluded) is ~72 words; the hearthstone/teleport list and the replanning sentence are already in docs/features.md. Proposal (store copy, owner's voice): trim to the what and move the rest to features.md. Other bullets are 27-62 words.",
       "confidence": "medium",
-      "status": "decide",
-      "reason": "Parsed prose contains 71 words, or 69 excluding the bold label and image, exceeding WFA-10's approximately 60-word limit; no waiver or Settled entry applies. NEEDS OWNER: May this bullet be shortened while retaining the teleport and replanning details in docs/features.md?",
+      "status": "fixed",
+      "reason": "Journey planner README bullet cut to about 45 words; teleports and replanning detail stay in docs/features.md.",
       "first_seen": "2026-09-27",
-      "updated": "2026-09-27"
+      "updated": "2026-09-27",
+      "guard": "lens-only: WFA-10 bullet length is reviewed before every store paste"
     },
     {
       "id": "bd3d06a3c2",
@@ -830,8 +834,8 @@
       "what": "Sync re-parses the route ID out of Model.Encode's formatted \"<route>:<seen>:<phase>\" strings to key them by route, restating Model's entry format (Model.lua:172-183) outside its owner; Model.Encode then sorts a list whose order Sync discards by rekeying into a hash (Flush iterates with pairs).",
       "why": "If the entry layout in Model.Encode changes (a field ahead of the route ID), Sync.lua:111 keys entries wrongly with no test covering it beyond the round-trip. Encode returning `{[routeID] = entry}` would keep the format in Model alone; the sort only serves tests/model_spec.lua's concatenation. The wire format itself is the persisted contract and is not changed by this.",
       "confidence": "medium",
-      "status": "decide",
-      "reason": "Model.Encode already has route IDs; an in-memory route-keyed return eliminated Sync.lua:111\u2019s format-dependent parsing, passed sync_spec, and preserved all 24 encoded entries. NEEDS OWNER: May this refactor change sighting ordering and packet grouping, given that the comparison regrouped entries in 40 of 162 packets?",
+      "status": "dismissed",
+      "reason": "owner-delegated 2026-09-27: wontfix: would change sync packet grouping between players.",
       "first_seen": "2026-09-27",
       "updated": "2026-09-27"
     },
@@ -883,8 +887,8 @@
       "what": "WFA-25: the lead demo.gif on the store page has no line under it saying what to look at",
       "why": "WFA-25 requires each image to get a plain-words line under it. Every other store image has one (lines 18, 22, 26, 30, 34); the demo.gif is followed directly by '## Features'. Fix: add one caption line after line 3. check_copy.py passes because it only flags stacked pairs.",
       "confidence": "high",
-      "status": "decide",
-      "reason": "Rendered Markdown places the Features heading immediately after demo.gif, without the caption required by pinned WFA-25; check_copy.py passes because it checks stacked images only. NEEDS OWNER: What caption should appear beneath the demo?",
+      "status": "dismissed",
+      "reason": "owner-delegated 2026-09-27: done: one plain caption now sits under demo.gif in README and docs/curseforge.md; the quoted image line stays by design.",
       "first_seen": "2026-09-27",
       "updated": "2026-09-27"
     },
@@ -896,10 +900,11 @@
       "what": "WFA-11: the store description is about 630 words of prose, over the pack's 600-word budget",
       "why": "WFA-11 requires docs/curseforge.md under 600 words. Counting prose only (image markdown, link URLs and HTML stripped) gives ~632 words. The longest bullet (Guide, ~64 words) and the Usage paragraph that repeats the filter-menu layers are the natural trims. Proposal only: store copy is pasted by hand after the owner edits it.",
       "confidence": "medium",
-      "status": "decide",
-      "reason": "Rendered text contains 617 words even excluding headings, image alt text, URL attributes and punctuation-only tokens; commits 45ca39e and fa82c9c increased this count from 578, exceeding WFA-11's under-600 requirement. NEEDS OWNER: Which store wording should be shortened to meet the budget?",
+      "status": "fixed",
+      "reason": "docs/curseforge.md trimmed to about 597 prose words by cutting repeated lines and captions; no feature dropped.",
       "first_seen": "2026-09-27",
-      "updated": "2026-09-27"
+      "updated": "2026-09-27",
+      "guard": "lens-only: the WFA-11 word budget is checked before every store paste"
     },
     {
       "id": "5819b3a902",
@@ -1582,8 +1587,8 @@
       "what": "The set of maps with walking data {0, 1, 2991} is restated as literals in tools/bake_walks.lua:19, tools/gen_transit.py:31 (MAPS), tools/baker/bake.sh:11 (MAPS default) and :21 (TITLE), and Settings.lua:41, plus many tests. pack_nav.py already discovers the maps by globbing ShortestPathForever_Nav*/, which bake_walks could do too.",
       "why": "Adding a walking map needs every copy updated; missing bake_walks or gen_transit silently omits its walks or makes its teleports 'unsourced' with no error.",
       "confidence": "medium",
-      "status": "decide",
-      "reason": "An in-memory gen_transit.py fixture excluded a sourced teleport on a new map until MAPS was extended, while PathGrid.lua discovers arbitrary Nav<map> addons; the repeated support lists have no shared authority. NEEDS OWNER: Should discovering a walking-map addon automatically enable its map for baking and transit generation, or should support remain explicitly allowlisted?",
+      "status": "dismissed",
+      "reason": "owner-delegated 2026-09-27: wontfix: walking maps stay an explicit allowlist.",
       "first_seen": "2026-09-27",
       "updated": "2026-09-27"
     },
@@ -1621,10 +1626,11 @@
       "what": "The height encoding is documented twice: in the emitted header (lines 727-729) and in encode_heights.__doc__ (lines 800-802). The floor entry just below (line 731) derives its header text from encode_floors.__doc__; the height entry should do the same.",
       "why": "The two texts already differ in wording ('zstep yards' vs 'ZQ steps', ', and a symbol'), so they are maintained separately. Emitted text is generated data: changing it rewrites the Nav headers, so this is report-only.",
       "confidence": "medium",
-      "status": "decide",
-      "reason": "Normalizing the header and docstring leaves identical format rules; their only differences are the cluster wording, ZQ versus zstep, conjunction and wrapping, while emit() explicitly writes zstep = ZQ. NEEDS OWNER: May consolidation change emitted Nav header text?",
+      "status": "fixed",
+      "reason": "The emitted height header is built from encode_heights.__doc__ (heights_header), like the floor entry; the shipped Nav headers pick up the new wording at the next bake, which needs the mmtiles.",
       "first_seen": "2026-09-27",
-      "updated": "2026-09-27"
+      "updated": "2026-09-27",
+      "guard": "lens-only: the header text now has one source, encode_heights' docstring"
     },
     {
       "id": "3d2ce402cd",
@@ -1647,8 +1653,8 @@
       "what": "gen_nav.py (940 lines, just under the 1000-line gate) holds: Detour mmtile parsing (96-190), poly-component union-find (192-228), rasterization and step cuts (230-450), movement rules (452-527), floor assembly (764-796), HPA graph (529-628), the Base64 data encoding (91-93, 631-709, 799-889) and the Lua emitter (712-761), plus CLI (892-936), all sharing mutable module globals.",
       "why": "The data-format side (enc, B64, encode_map/encode_heights/encode_floors, emit) changes independently of the geometry/graph build and could live in its own module; the mmtile reader is a third separable part. Low confidence: it is one coherent pipeline and cannot be regression-checked without the mmtiles.",
       "confidence": "low",
-      "status": "decide",
-      "reason": "Confirmed separable (tile parsing, grid, HPA, encoders, CLI). NEEDS OWNER: split gen_nav.py along those seams? Preservation needs the mmtiles bake, which the audit cannot run.",
+      "status": "dismissed",
+      "reason": "owner-delegated 2026-09-27: deferred: do when that file is next substantially changed (gen_nav before it reaches 1000 lines).",
       "first_seen": "2026-09-27",
       "updated": "2026-09-27"
     },

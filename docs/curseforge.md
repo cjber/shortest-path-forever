@@ -2,14 +2,16 @@ I wanted a proper "get me there" for WoW: Forever, so Shortest Path Forever find
 
 ![Eight-second demo of a route settling, the countdown and compass](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/demo.gif)
 
+Planning a journey from the map: the route settles, the next boat counts down in the tracker and the compass turns with you.
+
 ## Features
 
 - **A journey from where you stand.** Walking paths go around walls, hills and water, and through tunnels. The planner uses the flight points you know and can walk you to an undiscovered flight master when that saves time. Boat waits count towards the arrival time.
 - **Directions on the map and minimap.** Walking legs are round breadcrumb dots, transport legs have their own colours, and a waypoint pin marks your destination. The Group Finder spinner turns while a new journey is checked.
-- **Guide, on with every journey.** The game's own waypoint marker leads you to the next boat, lift, flight master or your destination, or round each turn of the walk if you prefer. Click the Journey header to toggle Guide, or right-click it to show the destination on the map or clear the journey. An optional compass marks your next turns, stop and destination.
+- **Guide, on with every journey.** The game's own waypoint marker leads you to the next boat, lift, flight master or your destination, or round each turn if you prefer. Click the Journey header to toggle it; right-click to show the destination or clear the journey. An optional compass marks your next turns, stop and destination.
 - **Back to your corpse.** As a ghost, a red dotted path in your tombstone's colour leads back to your body, and your journey picks up again once you are alive.
-- **Live departures.** Hover a dock, on the world map or the minimap, to see where its boats go, when they arrive and when they leave. Destination docks light up; click one to open the map at the other end. Nearby departures appear in the objective tracker; aboard a timed boat, it shows the next stop.
-- **Lifts, trams and portals.** Landings and stations have their own countdowns. Portals show where they lead, and clicking one opens that map. All three can be part of a journey.
+- **Live departures.** Hover a dock on the world map or minimap to see where its boats go, and when they arrive and leave. Destination docks light up; click one to open the map at the other end. Nearby departures appear in the objective tracker; aboard a timed boat, it shows the next stop.
+- **Lifts, trams and portals.** Landings and stations have their own countdowns. Portals show where they lead, and clicking one opens that map.
 - **Schedules learned from real rides.** Ride once to sync a transport. Sightings are shared quietly with your guild, party and nearby players. Unsynced services say “no sighting yet”, and a journey shows their guessed wait as “leaves in about”.
 - **Arrival alerts.** A banner, the ship's own bell and a flashing taskbar icon warn when your boat is due, for when you're AFK. Zeppelins sound their horn instead.
 
@@ -19,15 +21,15 @@ The journey in the objective tracker, step by step, with time and distance left.
 
 ![Auberdine’s piers on the minimap, with the dotted route and Guide’s native waypoint](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/minimap.png)
 
-On the minimap, the route in dots and Guide using the game's own waypoint.
+The route on the minimap in dots, with Guide's waypoint.
 
 ![Hovering Auberdine’s piers shows departures and lights destination docks](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/docks.png)
 
-Hover a dock to see where its boats go and when.
+Auberdine's piers and their departures.
 
 ![The optional compass strip with the next turns and destination](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/compass.png)
 
-The optional compass, for your next turns and destination.
+The optional compass.
 
 ![A journey from Auberdine through Menethil and Theramore to Silithus](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/kalimdor.png)
 
@@ -41,9 +43,9 @@ Shift-click the world map or minimap to plan a journey. For a quest, choose **Pl
 - `/path perf` prints the addon's CPU time and memory use.
 - `/path debug` enables a saved trace for reporting a ride that did not sync.
 
-Every feature has its own switch in the settings. The world map's filter menu hides flight masters, docks, lifts, the tram, portals and the other faction's routes.
+Every feature has its own switch in the settings, and the world map's filter menu hides each kind of pin and the other faction's routes.
 
-It's in English for now. Translations are welcome as a pull request, or pasted into an issue, on [GitHub](https://github.com/cjber/shortest-path-forever/tree/main/Locales).
+It's in English for now; translations are welcome on [GitHub](https://github.com/cjber/shortest-path-forever/tree/main/Locales).
 
 Used by my other Forever addons when both are installed: [Adventure Guide Forever](https://www.curseforge.com/wow/addons/adventure-guide-forever), [SkillUp Forever](https://www.curseforge.com/wow/addons/skillup-forever), [Legacy Forever](https://www.curseforge.com/wow/addons/legacy-forever) and [Tweaks Forever](https://www.curseforge.com/wow/addons/tweaks-forever).
 

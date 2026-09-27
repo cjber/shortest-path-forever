@@ -28,26 +28,7 @@ local OVERLAP = 6
 ---@type SPFCompassFrame
 local frame
 local OnUpdate
----@type table<string, AtlasInfo|false>
-local atlases = {
-	["Waypoint-MapPin-Tracked"] = false,
-	["Navigation-Tracked-Icon"] = false,
-	flightmasterferry = false,
-	["poi-door-arrow-up"] = false,
-	["poi-door-arrow-down"] = false,
-	["map-icon-suramardoor.tga"] = false,
-	taxinode_alliance = false,
-	taxinode_horde = false,
-	taxinode_neutral = false,
-	taxinode_undiscovered = false,
-}
-local transportIcons = {
-	boat = "flightmasterferry",
-	zeppelin = "Interface\\AddOns\\ShortestPathForever\\media\\zeppelin",
-	lift = "poi-door-arrow-up",
-	tram = "poi-door-arrow-down",
-	portal = "map-icon-suramardoor.tga",
-}
+local TRANSPORTS = { boat = true, zeppelin = true, lift = true, tram = true, portal = true }
 local taxiIcons = { Alliance = "taxinode_alliance", Horde = "taxinode_horde", Neutral = "taxinode_neutral" }
 
 local function Difference(angle, facing)
@@ -59,29 +40,24 @@ local function Offset(angle, facing)
 	return -Difference(angle, facing) * WIDTH / math.pi
 end
 
+-- The icon is a transport kind (drawn as the map draws it) or an atlas name.
 local function SetIcon(marker, icon)
 	if marker.icon == icon then
 		return false
 	end
 	marker.icon = icon
-	if icon == transportIcons.zeppelin then
-		marker:SetTexture(icon)
-		-- Our zeppelin texture is a square, unlike several of the stock marker atlases.
-		marker:SetSize(marker.size, marker.size)
+	if TRANSPORTS[icon] then
+		ns.SetTransportIcon(marker, icon, marker.size)
 	else
-		marker:SetAtlas(icon, true)
-		local info = atlases[icon]
-		if info then
-			local scale = marker.size / math.max(info.width, info.height)
-			marker:SetSize(info.width * scale, info.height * scale)
-		end
+		ns.FitAtlas(marker, icon, marker.size, marker.size)
 	end
 	return true
 end
 
 local function StopIcon(stop)
 	if stop and stop.kind == "dock" then
-		return transportIcons[ns.DockKind(stop.id)] or "Waypoint-MapPin-Tracked", true
+		local kind = ns.DockKind(stop.id)
+		return TRANSPORTS[kind] and kind or "Waypoint-MapPin-Tracked", true
 	elseif stop and stop.kind == "taxi" then
 		local taxi = ns.TaxiNodes[stop.id]
 		return stop.undiscovered and "taxinode_undiscovered" or taxiIcons[taxi and taxi.faction] or taxiIcons.Neutral,
@@ -247,10 +223,6 @@ local function OnHide()
 end
 
 local function Create()
-	-- Read atlas dimensions once: GetAtlasInfo returns a fresh table.
-	for atlas in pairs(atlases) do
-		atlases[atlas] = C_Texture.GetAtlasInfo(atlas) or false
-	end
 	local compass = CreateFrame("Frame", "ShortestPathForeverCompass", UIParent, "BackdropTemplate")
 	---@cast compass SPFCompassFrame
 	frame = compass
