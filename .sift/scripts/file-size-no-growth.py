@@ -21,6 +21,8 @@ EXCLUDE = (
     "*-lock.yaml",
     ".sift/gate.py",
     ".sift/agents.py",
+    # Generated JSON ledger that cannot carry an inline marker; excluded with the user's approval, 2026-09-27.
+    ".sift/ledger.json",
     "Data/*.lua",
     "ShortestPathForever_Nav*/*.lua",
 )
