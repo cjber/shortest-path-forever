@@ -74,7 +74,7 @@ function ns.LegTime(leg)
 		local lead = leg.mode == "teleport" and L["ready in %s"]
 			or leg.estimated and SCHEDULED[leg.mode] and L["leaves in about %s"]
 			or L["leaves in %s"]
-		text = string.format(lead, ns.FormatCountdown(leg.wait)) .. " · " .. text
+		text = string.format(L["%s · %s"], string.format(lead, ns.FormatCountdown(leg.wait)), text)
 	end
 	return text
 end

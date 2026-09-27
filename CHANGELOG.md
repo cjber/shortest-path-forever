@@ -11,6 +11,11 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **The compass draws transport icons as the map does.** Lift and tram arrows sit smaller beside the ferry, as they
+  do on the world map and minimap, and the boat icon in the minimap's tracking menu keeps its own shape.
+- **The departure dot can be translated.** The "·" between a dock's status and its departure time is now part of a
+  phrase a translation can change.
+
 ## [1.4.1] - 2026-09-27
 
 - **The corpse run says why it has no path.** When the walk back to your body can't be found, the tracker now gives
