@@ -61,3 +61,8 @@ before its `v*` tag, since the release publishes it as the notes.
 
 - `wow-forever-addon` — https://github.com/cjber/skills/tree/c587d4c74fcc27c97f73f2f7cb3d70cccebeb34e/wow-forever-addon (UI look,
   icon, README and store page, CI and release requirements shared by every WoW: Forever addon)
+
+## Waivers
+
+- WFA-2 (off by default only when it acts for the player): the compass is a new HUD element, so it stays opt-in;
+  owner decision 2026-09-27.
