@@ -324,12 +324,9 @@ ns.Init(function()
 			end
 		end
 	end)
-	-- The manager's Init is deferred through a closure; AddContainer remains hookable.
-	hooksecurefunc(ObjectiveTrackerManager, "AddContainer", function(_, container)
-		if container == ObjectiveTrackerFrame then
-			Attach()
-		end
-	end)
+	EventUtil.ContinueAfterAllEvents(function()
+		C_Timer.After(0, Attach)
+	end, "PLAYER_ENTERING_WORLD", "VARIABLES_LOADED")
 	Attach()
 	ns.OnChange(ns.RefreshTracker)
 	ns.OnTravelTick(RefreshTracker)

@@ -189,3 +189,5 @@ Shapes this codebase keeps producing. Check new code against them.
 - **docs missing a new file**: README, AGENTS.md and `docs/` lists that miss a generated table or check added later.
 - **guard on a defined function**: `if ns.X then` around a function or table defined unconditionally earlier in the
   TOC (`Itinerary.lua`, `RouteTransports.lua`).
+
+The type gate also runs `python3 -m tools.lint_taint` and `python3 tools/typecheck_coverage.py`: native-method hooks, shared UI-state writes and omitted runtime type coverage fail CI. Tracker initialization follows both native load events, deferred one frame; AddContainer hooks are retired.

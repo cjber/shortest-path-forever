@@ -11,6 +11,10 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+## [1.4.3] - 2026-09-27
+
+- **Native UI methods stay untouched.** Tracker registration waits for the game to finish loading, and route waypoint pins refresh through map and tracking events.
+
 - **Clearer route pins.** Route circles have a muted blue tint. Grouped stops keep their action icon instead of a `+N` count; the tooltip lists every stop.
 
 - **Smoother flight lines.** Flight routes curve gently on the world map and minimap, retaining their endpoints and loading boundaries.

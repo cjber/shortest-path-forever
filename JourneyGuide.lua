@@ -41,15 +41,19 @@ local function HideGuideWaypointPin(provider)
 	end
 end
 
+local refreshPending = false
 local function RefreshWaypointPins()
-	-- Events may be deferred; a closed map is unsubscribed and may not have initialized its canvas yet.
-	for _, provider in ipairs(waypointProviders) do
-		if provider:GetMap():IsVisible() then
-			provider:RefreshAllData()
-		else
-			provider:RemoveAllData()
-		end
+	if refreshPending or #waypointProviders == 0 then
+		return
 	end
+	refreshPending = true
+	-- The native provider recreates its pin during the same event/map refresh.
+	C_Timer.After(0, function()
+		refreshPending = false
+		for _, provider in ipairs(waypointProviders) do
+			HideGuideWaypointPin(provider)
+		end
+	end)
 end
 
 local function ClearOrphanWaypoint()
@@ -262,6 +266,7 @@ function Guide.QuestGone(questID)
 end
 
 function Guide.TrackingChanged(event)
+	RefreshWaypointPins()
 	if not guide or guide.writing then
 		return
 	end
@@ -274,13 +279,13 @@ end
 
 Guide.Stop = StopGuide
 Guide.ClearOrphan = ClearOrphanWaypoint
+Guide.RefreshWaypointPins = RefreshWaypointPins
 Guide.RefreshTracker = RefreshTracker
 
 ns.Init(function()
 	for provider in pairs(WorldMapFrame.dataProviders) do
 		if provider.RefreshAllData == WaypointLocationDataProviderMixin.RefreshAllData then
 			waypointProviders[#waypointProviders + 1] = provider
-			hooksecurefunc(provider, "RefreshAllData", HideGuideWaypointPin)
 		end
 	end
 end)
