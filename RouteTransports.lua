@@ -40,9 +40,6 @@ function ns.HoverTransportRoutes(owner, routes)
 end
 
 function ShortestPathForeverTransportPinMixin:OnReleased()
-	if not dockHover then
-		highlightedRoutes = nil
-	end
 	MapCanvasPinMixin.OnReleased(self)
 end
 
