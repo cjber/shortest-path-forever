@@ -19,6 +19,14 @@ local TRANSPORT_ATLASES = {
 local EDGE = 0.015
 -- Docks closer than this many pins apart merge into one.
 local OVERLAP = 0.8
+
+local function ActivePins(template)
+	local count = 0
+	for _ in WorldMapFrame:EnumeratePinsByTemplate(template) do
+		count = count + 1
+	end
+	return count
+end
 local provider
 
 ---@param departure SPFDeparture
@@ -340,6 +348,10 @@ end
 -- The stock map ping (MapCanvasDataProviderMixin:PingPin), at a point rather than a pin: a portal's far end
 -- has none, and a dock's may be filtered out.
 function ProviderMixin:Ping(x, y)
+	if InCombatLockdown() then
+		ns.QueueMapRefresh()
+		return
+	end
 	if not self.ping then
 		self.ping = self:GetMap():AcquirePin(PING_TEMPLATE)
 		self.ping:UseFrameLevelType("PIN_FRAME_LEVEL_QUEST_PING")
@@ -532,6 +544,10 @@ local function Clusters(map, docks)
 end
 
 function ProviderMixin:RefreshAllData()
+	if InCombatLockdown() then
+		ns.QueueMapRefresh()
+		return
+	end
 	ns.JourneyGuide.RefreshWaypointPins()
 	local map = self:GetMap()
 	local mapID = map:GetMapID()
@@ -574,6 +590,10 @@ function ProviderMixin:RefreshAllData()
 end
 
 function ProviderMixin:OnCanvasScaleChanged()
+	if InCombatLockdown() then
+		ns.QueueMapRefresh()
+		return
+	end
 	self:RefreshAllData()
 end
 
@@ -638,11 +658,22 @@ function PortalProviderMixin:RemoveAllData()
 end
 
 function PortalProviderMixin:RefreshAllData()
-	self:RemoveAllData()
-	local mapID = self:GetMap():GetMapID()
-	if not (mapID and ns.db.portals and self:GetMap():IsVisible()) then
+	if InCombatLockdown() then
+		ns.QueueMapRefresh()
 		return
 	end
+	local mapID = self:GetMap():GetMapID()
+	if not (mapID and ns.db.portals and self:GetMap():IsVisible()) then
+		self:RemoveAllData()
+		self.mapID = nil
+		return
+	end
+	local signature = mapID .. ":" .. tostring(ns.db.portals) .. ":" .. tostring(ns.db.otherFaction)
+	if self.signature == signature and ActivePins(PORTAL_TEMPLATE) >= (self.pinCount or 0) then
+		return
+	end
+	self:RemoveAllData()
+	self.signature = signature
 	for _, portal in ipairs(ns.Portals) do
 		local location = ns.PortalShown(portal) and ns.Locate(portal.from)
 		if location and IsDockMap(location, mapID) then
@@ -652,6 +683,7 @@ function PortalProviderMixin:RefreshAllData()
 			end
 		end
 	end
+	self.pinCount = ActivePins(PORTAL_TEMPLATE)
 end
 
 -- Reuse the native flight-point template and acquisition (atlas size, nudging and supertracking).
@@ -692,12 +724,24 @@ function FlightProviderMixin:RemoveAllData()
 end
 
 function FlightProviderMixin:RefreshAllData()
-	self:RemoveAllData()
+	if InCombatLockdown() then
+		ns.QueueMapRefresh()
+		return
+	end
 	local map = self:GetMap()
 	local mapID = map:GetMapID()
 	if not (ns.db.mapFlightMasters and mapID and map:IsVisible()) then
+		self:RemoveAllData()
+		self.signature = nil
 		return
 	end
+	local signature = mapID .. ":" .. tostring(ns.db.mapFlightMasters) .. ":" .. tostring(ns.db.otherFaction)
+	if self.signature == signature and not self.force and ActivePins(FLIGHT_TEMPLATE) >= (self.pinCount or 0) then
+		return
+	end
+	self.force = nil
+	self:RemoveAllData()
+	self.signature = signature
 	local known, faction = ns.KnownTaxiNodes(), UnitFactionGroup("player")
 	local queried, reported = {}, {}
 	local function Query(id)
@@ -735,11 +779,42 @@ function FlightProviderMixin:RefreshAllData()
 			end
 		end
 	end
+	self.pinCount = ActivePins(FLIGHT_TEMPLATE)
 end
 
 local portalProvider, flightProvider
 
+local MAP_TEMPLATES = {
+	PIN_TEMPLATE,
+	PING_TEMPLATE,
+	PORTAL_TEMPLATE,
+	FLIGHT_TEMPLATE,
+	"ShortestPathForeverRoutePinTemplate",
+	"ShortestPathForeverGoalPinTemplate",
+	"ShortestPathForeverTransportPinTemplate",
+}
+
+function ns.HideMapPins()
+	for _, template in ipairs(MAP_TEMPLATES) do
+		for pin in WorldMapFrame:EnumeratePinsByTemplate(template) do
+			pin:Hide()
+		end
+	end
+end
+
+function ns.ShowMapPins()
+	for _, template in ipairs(MAP_TEMPLATES) do
+		for pin in WorldMapFrame:EnumeratePinsByTemplate(template) do
+			pin:Show()
+		end
+	end
+end
+
 function ns.RefreshMap()
+	if InCombatLockdown() then
+		ns.QueueMapRefresh()
+		return
+	end
 	if provider then
 		provider:RefreshAllData()
 		portalProvider:RefreshAllData()
@@ -768,6 +843,23 @@ local function AddFilters(_, rootDescription)
 end
 
 ns.Init(function()
+	local combat = CreateFrame("Frame")
+	combat:RegisterEvent("PLAYER_REGEN_ENABLED")
+	combat:RegisterEvent("PLAYER_REGEN_DISABLED")
+	combat:SetScript("OnEvent", function()
+		if InCombatLockdown() then
+			ns.mapRefreshPending = true
+			ns.HideMapPins()
+			ns.HideMinimapPins()
+		elseif ns.mapRefreshPending then
+			ns.mapRefreshPending = nil
+			ns.RefreshMap()
+			ns.ShowMapPins()
+		end
+	end)
+	function ns.QueueMapRefresh()
+		ns.mapRefreshPending = true
+	end
 	-- Replace only this map's stock provider, avoiding duplicates if the native gate starts returning true.
 	for existing in pairs(WorldMapFrame.dataProviders) do
 		if existing.RefreshAllData == FlightPointDataProviderMixin.RefreshAllData then
@@ -788,6 +880,7 @@ ns.Init(function()
 		-- Let Taxi.lua finish updating the known-set before recolouring the pins.
 		C_Timer.After(0, function()
 			taxiPending = nil
+			flightProvider.force = true
 			flightProvider:RefreshAllData()
 		end)
 	end)

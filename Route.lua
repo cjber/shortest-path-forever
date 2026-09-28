@@ -601,6 +601,10 @@ function ProviderMixin:RemoveAllData()
 end
 
 function ProviderMixin:RefreshAllData()
+	if InCombatLockdown() then
+		ns.QueueMapRefresh()
+		return
+	end
 	self:RemoveAllData()
 	local map = self:GetMap()
 	-- Before the map's first show its zoom levels are unset.
@@ -671,6 +675,10 @@ function ProviderMixin:RefreshStops()
 end
 
 function ProviderMixin:OnCanvasScaleChanged()
+	if InCombatLockdown() then
+		ns.QueueMapRefresh()
+		return
+	end
 	self:RefreshStops()
 end
 

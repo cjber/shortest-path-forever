@@ -11,6 +11,10 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **Keep map pins safe and responsive in combat.** World-map and minimap pin refreshes now wait until combat ends,
+  while static portal, flight and transport layers reuse unchanged results and recover cleanly if the map releases
+  their pooled pins.
+
 ## [1.4.5] - 2026-09-28
 
 - **Keep route stops legible.** Numbered stops use warm gold rings instead of dim blue, and later stops retain stronger contrast. Pickup and turn-in badges remain visible on shared stops.

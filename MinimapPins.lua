@@ -135,6 +135,9 @@ local function Acquire(entry)
 end
 
 local function Draw()
+	if InCombatLockdown() then
+		return false
+	end
 	local x, y, _, map = ns.JourneyPosition()
 	---@type number?, number?
 	local radius, facing = ns.MinimapView()
@@ -212,6 +215,14 @@ local function Wake()
 	end
 end
 
+function ns.HideMinimapPins()
+	for _, pin in ipairs(pins) do
+		pin:Hide()
+	end
+	frame:SetScript("OnUpdate", nil)
+	lastX, lastY, lastMap, lastRadius, lastFacing, lastWidth, lastSquare = nil, nil, nil, nil, nil, nil, nil
+end
+
 -- Filters and the minimap switch: rebuild the place list and redraw now.
 function ns.RefreshMinimapPins()
 	if not frame then
@@ -246,7 +257,15 @@ ns.Init(function()
 	frame:EnableMouse(false)
 	-- Zooming changes the view without moving; the travel clock covers movement and arrival.
 	frame:RegisterEvent("MINIMAP_UPDATE_ZOOM")
-	frame:SetScript("OnEvent", Wake)
+	frame:RegisterEvent("PLAYER_REGEN_DISABLED")
+	frame:RegisterEvent("PLAYER_REGEN_ENABLED")
+	frame:SetScript("OnEvent", function(_, event)
+		if event == "PLAYER_REGEN_DISABLED" then
+			frame:SetScript("OnUpdate", nil)
+		else
+			Wake()
+		end
+	end)
 	ns.OnTravelTick(Wake)
 	Menu.ModifyMenu("MENU_MINIMAP_TRACKING", AddTracking)
 	ns.RefreshMinimapPins()

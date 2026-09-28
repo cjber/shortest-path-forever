@@ -135,6 +135,32 @@ assert(acquisitions == 0, "sightings must not rebuild unrelated map layers")
 map.AcquirePin = acquire
 visible, WorldMapFrame.shown = false, false
 
+-- MapCanvas pin creation touches protected mouse-routing methods. A combat refresh must leave the
+-- existing pins alone and replay the complete provider refresh exactly once after combat.
+visible, WorldMapFrame.shown = true, true
+local mapAcquire = map.AcquirePin
+local combatAcquires = 0
+map.AcquirePin = function(self, ...)
+	combatAcquires = combatAcquires + 1
+	assert(not combat, "map providers must not acquire pins in combat")
+	return mapAcquire(self, ...)
+end
+combat = true
+fireEvent("PLAYER_REGEN_DISABLED")
+ns.RefreshMap()
+ns.RefreshMinimapPins()
+for _, mapProvider in ipairs(providers) do
+	if mapProvider.Ping then
+		mapProvider:Ping(0.5, 0.5)
+	end
+end
+assert(combatAcquires == 0, "combat map refresh must defer protected pin creation")
+combat = false
+fireEvent("PLAYER_REGEN_ENABLED")
+assert(active[template][1]:IsShown(), "deferred map refresh must restore hidden pins after combat")
+map.AcquirePin = mapAcquire
+visible, WorldMapFrame.shown = false, false
+
 -- A queued walking search must sleep in combat and resume from the single regen event.
 ns.Path = actualPath
 local nextFrame
