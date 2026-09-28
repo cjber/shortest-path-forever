@@ -270,7 +270,7 @@ local function Pulse(owner)
 	end
 end
 
--- One alpha animation covers all strokes and outlines, beneath the minimap's separate arrival fade.
+-- One loading animation covers all strokes and outlines.
 local function StrokeLayer(owner)
 	---@class SPFStrokeLayer : Frame
 	local layer = CreateFrame("Frame", nil, owner)

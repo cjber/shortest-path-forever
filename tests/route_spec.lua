@@ -318,5 +318,13 @@ ns.SetJourneyRoute(
 	{ legs = { { mode = "walk", points = { player, first, { map = 0, x = 0.35, y = 0.5 } } } } }
 )
 check(minimap.alpha == 1, "minimap route remains visible near arrival")
+local visible = 0
+for i = 1, minimap.used do
+	local stroke = minimap.lines[i]
+	if stroke.shown and stroke.alpha > 0 then
+		visible = visible + 1
+	end
+end
+check(visible > 0, "near arrival keeps rendered route strokes visible")
 
 print(string.format("route_spec: %d checks ok", checks))
