@@ -39,8 +39,8 @@ local function check(index, count)
   -- Stops up to 25 wear the numbered quest button's numeral on the map's quest button; later stops use the font.
   assert(numeral(pin) == index+i-1, "remaining pins retain original stop numbers")
   assert(pin.Number.text == "")
-  assert(not pin.Button.hidden and pin.Button.alpha == (i == 1 and 1 or 0.55))
-  assert(pin.Numeral.alpha == (i == 1 and 1 or 0.55), "only the stop being guided to is at full strength")
+  assert(not pin.Button.hidden and pin.Button.alpha == (i == 1 and 1 or 0.9))
+  assert(pin.Numeral.alpha == (i == 1 and 1 or 0.9), "only the stop being guided to is at full strength")
   assert(pin.alpha == nil and pin.Disc.alpha == nil, "the disc stays opaque over the POI beneath")
   assert(pin.frameLevelType == "PIN_FRAME_LEVEL_WAYPOINT_LOCATION", "stops draw above quest POIs")
   assert(pin.stopTitles[1] == string.format("Stop %d of %d: %s", index+i-1, count, stops[index+i-1].title))
@@ -105,7 +105,7 @@ local function rings(expected)
  assert(#pins == #expected, "one ring per group: " .. #pins)
  for i, want in ipairs(expected) do
   local pin = pins[i]
-  assert(pin.Numeral.alpha == (i == 1 and 1 or 0.55), "only the current stop's ring is at full strength")
+  assert(pin.Numeral.alpha == (i == 1 and 1 or 0.9), "only the current stop's ring is at full strength")
   assert(pin.alpha == nil and pin.Disc.alpha == nil, "a faded ring's disc still hides the POI beneath")
   assert(#pin.stopTitles == #want.stops)
   for j, n in ipairs(want.stops) do
@@ -157,7 +157,7 @@ assert(api.CurrentStop("Test") == 2)
 local pins = active[goalTemplate]
 assert(#pins == 3 and numeral(pins[1]) == 2)
 assert(pins[1].Numeral.alpha == 1 and #pins[1].stopTitles == 3)
-assert(pins[1].x == close[2].x and pins[2].Numeral.alpha == 0.55)
+assert(pins[1].x == close[2].x and pins[2].Numeral.alpha == 0.9)
 api.Cancel("Test")
 zoom = 1
 posX, posY = 0, 0

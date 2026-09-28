@@ -11,6 +11,10 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+## [1.4.5] - 2026-09-28
+
+- **Keep route stops legible.** Numbered stops use warm gold rings instead of dim blue, and later stops retain stronger contrast. Pickup and turn-in badges remain visible on shared stops.
+
 ## [1.4.4] - 2026-09-28
 
 - **Separate addon tracking from Blizzard’s layout.** Addon sections now use their own frame pools and sit beside the quest tracker, avoiding the shared tracker registration implicated in Edit Mode aura errors.

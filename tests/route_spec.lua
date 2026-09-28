@@ -267,7 +267,7 @@ check(
 )
 check(rings[1].stopTitles[1] == stops[1].routeTitle and rings[1].stopTitles[2] == stops[3].routeTitle)
 check(numeral(rings[2], 0.125, 0.5) and rawget(rings[2], "Count") == nil, "a single visit has no corner text")
-check(rings[2].Button.alpha == 0.55 and rings[2].Disc.alpha == nil, "a later stop fades over its opaque shadow")
+check(rings[2].Button.alpha == 0.9 and rings[2].Disc.alpha == nil, "a later stop fades over its opaque shadow")
 
 -- Dot centres, in the owner's units.
 local function dots(owner)

@@ -13,7 +13,7 @@ local NUMERAL_CELL, NUMERAL_YELLOW, NUMERALS_PER_ROW, MAX_NUMERAL = 0.125, 0.5, 
 -- pin's hit rect reaches out over the badge.
 local LOOK_SIZE, BADGE_SIZE, BADGE_OFFSET = 22, 16, 4
 -- Later stops stay stronger than Route.lua's later lines so their numbers remain legible.
-local LATER_STOP_ALPHA = 0.55
+local LATER_STOP_ALPHA = 0.9
 -- Route.lua groups stops by the button's size.
 ns.GoalAtlas, ns.StopSize = GOAL_ATLAS, STOP_SIZE
 
@@ -37,10 +37,10 @@ function ShortestPathForeverGoalPinMixin:OnLoad()
 	self.Disc:SetVertexColor(0, 0, 0)
 	self.Number = self:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	self.Number:SetPoint("CENTER")
-	self.Number:SetTextColor(0.6, 0.85, 1)
+	self.Number:SetTextColor(1, 0.82, 0.25)
 	for _, texture in ipairs({ self.Button, self.Numeral }) do
-		texture:SetDesaturated(true)
-		texture:SetVertexColor(0.6, 0.85, 1)
+		texture:SetDesaturated(false)
+		texture:SetVertexColor(1, 0.9, 0.7)
 	end
 	self:SetScript("OnHide", self.OnMouseLeave)
 end

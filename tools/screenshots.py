@@ -531,15 +531,15 @@ NUMBER_ICONS = "interface/worldmap/ui-questpoi-numbericons.blp"
 
 
 def stop_pin(canvas, x, y, number, badge, later):
-    """StopPin.lua: stock quest art desaturated and tinted blue, with the action badge always visible."""
-    alpha = 0.55 if later else 1
+    """StopPin.lua: warm gold stock quest art, with the action badge always visible."""
+    alpha = 0.9 if later else 1
     button = canvas.ui.atlas("UI-QuestPoi-QuestNumber").image
     canvas.draw(button, x - 16, y - 16, 32, 32, (0, 0, 0, 1))
-    canvas.draw(button.convert("LA").convert("RGBA"), x - 16, y - 16, 32, 32, (0.6, 0.85, 1, alpha))
+    canvas.draw(button, x - 16, y - 16, 32, 32, (1, 0.9, 0.7, alpha))
     cell = number - 1
     left, top = cell % 8 * 0.125, 0.5 + cell // 8 * 0.125
     numeral = crop_coords(canvas.ui.texture(NUMBER_ICONS), left, left + 0.125, top, top + 0.125)
-    canvas.draw(numeral.convert("LA").convert("RGBA"), x - 16, y - 16, 32, 32, (0.6, 0.85, 1, alpha))
+    canvas.draw(numeral, x - 16, y - 16, 32, 32, (1, 0.9, 0.7, alpha))
     edge = STOP_SIZE / 2 + 4
     art = canvas.ui.atlas(badge)
     factor = 16 / max(art.width, art.height)
