@@ -65,7 +65,7 @@ The detail behind each feature in the [README](../README.md).
   Tram* and *Portals* turn each layer off; *Other Faction's Routes* hides the
   boats and zeppelins run by the other faction (anyone can ride them, so they show by default).
 - **The next departures in the objective tracker.** Walk up to a dock, lift or tram station and a section
-  appears above your quests, counting down to the next arrival and departure of everything that calls there.
+  appears beside your quests, counting down to the next arrival and departure of everything that calls there.
   On board, it shows where the boat calls next and when it arrives.
 - **A heads-up when your boat is due.** A raid-warning banner, a sound and a flashing taskbar icon, half a
   minute before a timed boat reaches your dock and just before your own boat docks, for anyone waiting AFK.

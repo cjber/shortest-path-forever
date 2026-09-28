@@ -327,6 +327,15 @@ _G.CreateFrame = function(_, name, parent, template)
 	end
 	if template == "ObjectiveTrackerModuleTemplate" then
 		f.liveBlocks, f.layoutOrder = {}, {}
+		function f:SetContainer(container)
+			self.parentContainer = container
+		end
+		function f:Update()
+			self:MarkDirty()
+		end
+		function f:GetContentsHeight()
+			return #self.layoutOrder > 0 and 25 + #self.layoutOrder * 40 or 0
+		end
 		f.Header.Text = font()
 		function f:SetHeader(text)
 			self.Header.Text:SetText(text)

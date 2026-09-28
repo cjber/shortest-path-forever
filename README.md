@@ -49,7 +49,7 @@ Each feature has more detail in [docs/features.md](docs/features.md).
 - **Lifts, the Deeprun Tram and portals** count down like the boats; portals are marked with where they go, and
   clicking a station or portal opens the map where it comes out. Docks, lifts, stations and portals show on the
   minimap too, with the same tooltips; *Transport* in the minimap's tracking menu turns them off there.
-- **Next departures.** At a dock, lift or tram station, a tracker section above your quests counts down to every
+- **Next departures.** At a dock, lift or tram station, a tracker section beside your quests counts down to every
   arrival and departure; on board, it shows the next call.
 - **Arrival alerts.** A raid-warning banner, the ship's own bell (the horn for a zeppelin, the tram pulling in
   for the tram) and a flashing taskbar icon half a minute before your boat arrives, for anyone waiting AFK.

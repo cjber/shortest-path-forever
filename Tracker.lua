@@ -288,13 +288,11 @@ function ns.RefreshTracker()
 end
 
 local function Attach()
-	if ObjectiveTrackerManager:GetContainerForModule(module) ~= ObjectiveTrackerFrame then
-		ObjectiveTrackerManager:SetModuleContainer(module, ObjectiveTrackerFrame)
-	end
+	ns.TrackerHost.Attach(module)
 end
 
 ns.Init(function()
-	if not (ObjectiveTrackerManager and ObjectiveTrackerFrame) then
+	if not ns.TrackerHost then
 		ns.Print(L["The objective tracker is unavailable."])
 		return
 	end
@@ -312,7 +310,7 @@ ns.Init(function()
 	module.Spinner:Hide()
 	module.section = ModuleMixin.headerText
 	module:SetHeader(ModuleMixin.headerText)
-	-- Above quests, below SkillUp Forever (-2) and Legacy Forever (0, -1): each needs its own slot.
+	-- The private host orders Shortest Path before SkillUp and Legacy.
 	module.uiOrder = -3
 	module.Header:EnableMouse(true)
 	module.Header:SetScript("OnMouseUp", function(_, button)

@@ -1,5 +1,6 @@
 local addonName = ...
 ---@class SPFNamespace
+---@field TrackerHost ForeverTrackerHostAPI
 local ns = select(2, ...)
 
 local Model = ns.Model

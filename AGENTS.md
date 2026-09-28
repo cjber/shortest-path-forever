@@ -71,7 +71,9 @@ before its `v*` tag, since the release publishes it as the notes.
 
 `tools/typecheck.sh` checks the TOC/XML load graph, LuaLS coverage and `tools/lint_taint.py`.
 Do not hook Blizzard object methods: use events, `HookScript` or a supported callback registry.
-Register tracker sections after `PLAYER_ENTERING_WORLD` and `VARIABLES_LOADED`, deferred one frame
-so Blizzard finishes its own initialization. This supersedes WFA-5's AddContainer hook guidance.
+Keep addon tracker sections and pools in `TrackerHost.lua`, outside Blizzard's registry.
+Render only after `PLAYER_ENTERING_WORLD` and `VARIABLES_LOADED`, deferred one frame.
+This supersedes WFA-5's native registration guidance. CI exercises the host against checksum-pinned
+Forever tracker source; native manager access is forbidden in the integration harness.
 A `taint-ok` exception must identify an addon-owned object or a verified safe contract; it cannot
 excuse hooking a native frame. Test event ordering and reuse, not just method existence.

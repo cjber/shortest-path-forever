@@ -191,13 +191,22 @@ _G.WorldMapFrame = setmetatable({
 		return mapID
 	end,
 }, mt)
-_G.ObjectiveTrackerManager = setmetatable({
-	GetContainerForModule = function()
-		return nil
+_G.ObjectiveTrackerManager = setmetatable({}, {
+	__index = function(_, key)
+		error("addon entered native tracker manager: " .. key)
 	end,
-}, mt)
-_G.ObjectiveTrackerFrame = {}
-_G.UIParent = {}
+})
+_G.UIParent = CreateFrame("Frame")
+_G.UIParent:SetSize(1920, 1080)
+_G.ObjectiveTrackerFrame = CreateFrame("Frame", nil, UIParent)
+_G.ObjectiveTrackerFrame:SetSize(250, 600)
+_G.CreateFramePoolCollection = function()
+	return {
+		GetOrCreatePool = function()
+			error("native pooling is exercised by tracker_host_spec")
+		end,
+	}
+end
 _G.hooksecurefunc = function(t, name, f)
 	if type(t) ~= "table" then
 		return
