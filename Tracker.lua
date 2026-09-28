@@ -292,9 +292,7 @@ local function Attach()
 		ForeverTrackerHost.Attach(module)
 		return
 	end
-	if ObjectiveTrackerManager:GetContainerForModule(module) ~= ObjectiveTrackerFrame then
-		ObjectiveTrackerManager:SetModuleContainer(module, ObjectiveTrackerFrame)
-	end
+	-- The shared private host is optional; stay inert until it loads.
 end
 
 ns.Init(function()
