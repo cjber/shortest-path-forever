@@ -149,10 +149,15 @@ combat = true
 fireEvent("PLAYER_REGEN_DISABLED")
 ns.RefreshMap()
 ns.RefreshMinimapPins()
+for _, mapProvider in ipairs(providers) do
+	if mapProvider.Ping then
+		mapProvider:Ping(0.5, 0.5)
+	end
+end
 assert(combatAcquires == 0, "combat map refresh must defer protected pin creation")
 combat = false
 fireEvent("PLAYER_REGEN_ENABLED")
-assert(combatAcquires > 0, "deferred map refresh must replay after combat")
+assert(active[template][1]:IsShown(), "deferred map refresh must restore hidden pins after combat")
 map.AcquirePin = mapAcquire
 visible, WorldMapFrame.shown = false, false
 

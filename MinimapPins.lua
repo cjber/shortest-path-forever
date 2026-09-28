@@ -215,6 +215,14 @@ local function Wake()
 	end
 end
 
+function ns.HideMinimapPins()
+	for _, pin in ipairs(pins) do
+		pin:Hide()
+	end
+	frame:SetScript("OnUpdate", nil)
+	lastX, lastY, lastMap, lastRadius, lastFacing, lastWidth, lastSquare = nil, nil, nil, nil, nil, nil, nil
+end
+
 -- Filters and the minimap switch: rebuild the place list and redraw now.
 function ns.RefreshMinimapPins()
 	if not frame then

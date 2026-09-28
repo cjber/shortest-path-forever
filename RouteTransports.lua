@@ -57,11 +57,19 @@ function TransportProviderMixin:RefreshAllData()
 		ns.QueueMapRefresh()
 		return
 	end
-	self:RemoveAllData()
 	local map = self:GetMap()
-	if not (ns.db.mapRoutes and map:GetMapID() and map:IsVisible()) then
+	local mapID = map:GetMapID()
+	if not (ns.db.mapRoutes and mapID and map:IsVisible()) then
+		self:RemoveAllData()
+		self.signature = nil
 		return
 	end
+	local signature = mapID .. ":" .. tostring(ns.db.mapRoutes) .. ":" .. tostring(ns.db.otherFaction)
+	if self.signature == signature then
+		return
+	end
+	self:RemoveAllData()
+	self.signature = signature
 	if geometryRoutes ~= ns.Routes or geometryDocks ~= ns.Docks then
 		transportGeometry, geometryRoutes, geometryDocks = {}, ns.Routes, ns.Docks
 	end
