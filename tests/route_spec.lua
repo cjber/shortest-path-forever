@@ -1,6 +1,9 @@
 -- The journey's breadcrumbs stop a little short of each stop's mark, on the world map at any zoom and on the minimap,
 -- and a place the route visits twice shows one button: the first visit's number with its action badge.
 local checks = 0
+_G.InCombatLockdown = _G.InCombatLockdown or function()
+	return false
+end
 local function check(value, label)
 	checks = checks + 1
 	assert(value, label)

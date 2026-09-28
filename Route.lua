@@ -601,7 +601,7 @@ function ProviderMixin:RemoveAllData()
 end
 
 function ProviderMixin:RefreshAllData()
-	if InCombatLockdown and InCombatLockdown() then
+	if InCombatLockdown() then
 		ns.QueueMapRefresh()
 		return
 	end
@@ -675,7 +675,7 @@ function ProviderMixin:RefreshStops()
 end
 
 function ProviderMixin:OnCanvasScaleChanged()
-	if InCombatLockdown and InCombatLockdown() then
+	if InCombatLockdown() then
 		ns.QueueMapRefresh()
 		return
 	end

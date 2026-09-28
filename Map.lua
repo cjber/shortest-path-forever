@@ -348,7 +348,7 @@ end
 -- The stock map ping (MapCanvasDataProviderMixin:PingPin), at a point rather than a pin: a portal's far end
 -- has none, and a dock's may be filtered out.
 function ProviderMixin:Ping(x, y)
-	if InCombatLockdown and InCombatLockdown() then
+	if InCombatLockdown() then
 		ns.QueueMapRefresh()
 		return
 	end
@@ -544,7 +544,7 @@ local function Clusters(map, docks)
 end
 
 function ProviderMixin:RefreshAllData()
-	if InCombatLockdown and InCombatLockdown() then
+	if InCombatLockdown() then
 		ns.QueueMapRefresh()
 		return
 	end
@@ -590,7 +590,7 @@ function ProviderMixin:RefreshAllData()
 end
 
 function ProviderMixin:OnCanvasScaleChanged()
-	if InCombatLockdown and InCombatLockdown() then
+	if InCombatLockdown() then
 		ns.QueueMapRefresh()
 		return
 	end
@@ -658,7 +658,7 @@ function PortalProviderMixin:RemoveAllData()
 end
 
 function PortalProviderMixin:RefreshAllData()
-	if InCombatLockdown and InCombatLockdown() then
+	if InCombatLockdown() then
 		ns.QueueMapRefresh()
 		return
 	end
@@ -724,7 +724,7 @@ function FlightProviderMixin:RemoveAllData()
 end
 
 function FlightProviderMixin:RefreshAllData()
-	if InCombatLockdown and InCombatLockdown() then
+	if InCombatLockdown() then
 		ns.QueueMapRefresh()
 		return
 	end
@@ -847,7 +847,7 @@ ns.Init(function()
 	combat:RegisterEvent("PLAYER_REGEN_ENABLED")
 	combat:RegisterEvent("PLAYER_REGEN_DISABLED")
 	combat:SetScript("OnEvent", function()
-		if InCombatLockdown and InCombatLockdown() then
+		if InCombatLockdown() then
 			ns.mapRefreshPending = true
 			ns.HideMapPins()
 			ns.HideMinimapPins()
