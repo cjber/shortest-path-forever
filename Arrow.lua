@@ -21,6 +21,7 @@ local PASSED = 25
 local frame
 local source, path, index, target, placeTarget, native
 local stepEnd, destination
+local revision = 0
 
 -- Counter-clockwise from north, like GetPlayerFacing: UnitPosition's first value grows north, its second west.
 local function Bearing(x, y)
@@ -28,6 +29,11 @@ local function Bearing(x, y)
 end
 
 local function Update()
+	-- The client may already have queued this tick when another callback stopped guidance.
+	if not path or not target then
+		return
+	end
+	local updating = revision
 	local x, y, _, map = ns.JourneyPosition()
 	local facing = GetPlayerFacing()
 	if not x or not canaccessvalue(facing) then
@@ -48,11 +54,12 @@ local function Update()
 	then
 		alpha = math.max(0, math.min(1, (math.sqrt((target.x - x) ^ 2 + (target.y - y) ^ 2) - 15) / 25))
 	end
-	native = placeTarget and placeTarget(target, alpha < 1)
-	-- A manual waypoint replacement can stop Guide inside placeTarget.
-	if not path then
+	local placed = placeTarget and placeTarget(target, alpha < 1)
+	-- Waypoint callbacks can stop or replace guidance synchronously.
+	if revision ~= updating then
 		return
 	end
+	native = placed
 	if not (facing and map == target.map) or (native and C_Navigation.GetFrame()) then
 		frame:SetAlpha(0)
 		return
@@ -101,6 +108,7 @@ end
 
 -- Guide leads bend by bend, or straight to the walk's end when set to mark only where each step ends.
 function ns.RefreshGuideStops()
+	revision = revision + 1
 	path = source and (ns.db.guideStops and { source[#source] } or source)
 	index = 1
 	local x, y, _, map = ns.JourneyPosition()
@@ -127,6 +135,7 @@ end
 ---@param stop SPFPlace?
 ---@param goal SPFPoint?
 function ns.PointGuideArrow(points, placeBend, stop, goal)
+	revision = revision + 1
 	if points and #points == 0 then
 		points = nil
 	end
@@ -136,8 +145,12 @@ function ns.PointGuideArrow(points, placeBend, stop, goal)
 	end
 	placeTarget = placeBend
 	stepEnd, destination = stop, goal
+	local updating = revision
 	if ns.RefreshCompass then
 		ns.RefreshCompass()
+	end
+	if revision ~= updating then
+		return
 	end
 	if not points then
 		native = nil
