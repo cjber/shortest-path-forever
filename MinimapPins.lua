@@ -135,7 +135,7 @@ local function Acquire(entry)
 end
 
 local function Draw()
-	if InCombatLockdown() then
+	if InCombatLockdown and InCombatLockdown() then
 		return false
 	end
 	local x, y, _, map = ns.JourneyPosition()

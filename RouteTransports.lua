@@ -61,7 +61,7 @@ function TransportProviderMixin:RemoveAllData()
 end
 
 function TransportProviderMixin:RefreshAllData()
-	if InCombatLockdown() then
+	if InCombatLockdown and InCombatLockdown() then
 		ns.QueueMapRefresh()
 		return
 	end
