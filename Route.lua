@@ -652,7 +652,10 @@ function ProviderMixin:RefreshStops()
 	for _, group in ipairs(groups) do
 		local x, y, numbers, titles, details = 0, 0, {}, {}, {}
 		for i, mark in ipairs(group) do
-			x, y, numbers[i], titles[i], details[i] = x + mark.x, y + mark.y, mark.index, mark.title, mark.detail
+			x, y, numbers[i], titles[i] = x + mark.x, y + mark.y, mark.index, mark.title
+			if mark.detail then
+				details[#details + 1] = mark.detail
+			end
 		end
 		local lead = group[1]
 		-- A shared button stands for several places, so only a stop on its own wears its badge.
