@@ -19,6 +19,14 @@ local TRANSPORT_ATLASES = {
 local EDGE = 0.015
 -- Docks closer than this many pins apart merge into one.
 local OVERLAP = 0.8
+
+local function ActivePins(template)
+	local count = 0
+	for _ in WorldMapFrame:EnumeratePinsByTemplate(template) do
+		count = count + 1
+	end
+	return count
+end
 local provider
 
 ---@param departure SPFDeparture
@@ -661,7 +669,7 @@ function PortalProviderMixin:RefreshAllData()
 		return
 	end
 	local signature = mapID .. ":" .. tostring(ns.db.portals) .. ":" .. tostring(ns.db.otherFaction)
-	if self.signature == signature then
+	if self.signature == signature and ActivePins(PORTAL_TEMPLATE) >= (self.pinCount or 0) then
 		return
 	end
 	self:RemoveAllData()
@@ -675,6 +683,7 @@ function PortalProviderMixin:RefreshAllData()
 			end
 		end
 	end
+	self.pinCount = ActivePins(PORTAL_TEMPLATE)
 end
 
 -- Reuse the native flight-point template and acquisition (atlas size, nudging and supertracking).
@@ -727,7 +736,7 @@ function FlightProviderMixin:RefreshAllData()
 		return
 	end
 	local signature = mapID .. ":" .. tostring(ns.db.mapFlightMasters) .. ":" .. tostring(ns.db.otherFaction)
-	if self.signature == signature and not self.force then
+	if self.signature == signature and not self.force and ActivePins(FLIGHT_TEMPLATE) >= (self.pinCount or 0) then
 		return
 	end
 	self.force = nil
@@ -770,6 +779,7 @@ function FlightProviderMixin:RefreshAllData()
 			end
 		end
 	end
+	self.pinCount = ActivePins(FLIGHT_TEMPLATE)
 end
 
 local portalProvider, flightProvider

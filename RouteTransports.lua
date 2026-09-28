@@ -48,6 +48,14 @@ local TransportProviderMixin = CreateFromMixins(MapCanvasDataProviderMixin)
 local transportGeometry = {}
 local geometryRoutes, geometryDocks
 
+local function ActiveTransportPins()
+	local count = 0
+	for _ in WorldMapFrame:EnumeratePinsByTemplate(TRANSPORT_TEMPLATE) do
+		count = count + 1
+	end
+	return count
+end
+
 function TransportProviderMixin:RemoveAllData()
 	self:GetMap():RemoveAllPinsByTemplate(TRANSPORT_TEMPLATE)
 end
@@ -65,7 +73,7 @@ function TransportProviderMixin:RefreshAllData()
 		return
 	end
 	local signature = mapID .. ":" .. tostring(ns.db.mapRoutes) .. ":" .. tostring(ns.db.otherFaction)
-	if self.signature == signature then
+	if self.signature == signature and ActiveTransportPins() >= (self.pinCount or 0) then
 		return
 	end
 	self:RemoveAllData()
@@ -112,6 +120,7 @@ function TransportProviderMixin:RefreshAllData()
 		end
 	end
 	map:AcquirePin(TRANSPORT_TEMPLATE, geometry)
+	self.pinCount = ActiveTransportPins()
 end
 
 function ns.RefreshTransportRoutes()
