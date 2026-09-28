@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **Stop the arrow cleanly.** Cancelling or replacing guidance no longer lets a queued arrow update read a cleared path or revive the previous destination.
+
 ## [1.4.6] - 2026-09-28
 
 - **Keep map pins safe and responsive in combat.** World-map and minimap pin refreshes now wait until combat ends,
