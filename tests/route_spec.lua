@@ -311,12 +311,14 @@ check(minimap.Goal.shown, "the stop shows on the minimap")
 -- The stop is 0.2 north of the player in a 0.5 view radius: 0.4 of the way from centre to rim.
 clears(minimap, MINIMAP / 2, -MINIMAP / 2 + 0.4 * MINIMAP / 2, 16 / 2, UI_SCALE, "minimap")
 
--- Arrival never hides the route: keep its final segment visible inside the old 15-yard fade radius.
-player = { map = 0, x = 0.25, y = 0.5 }
-ns.SetJourneyRoute(
-	stops[1],
-	{ legs = { { mode = "walk", points = { player, first, { map = 0, x = 0.35, y = 0.5 } } } } }
-)
+-- A ten-yard approach still draws visible dots outside the destination icon.
+env.C_Minimap.GetViewRadius = function()
+	return 30
+end
+player = { map = 0, x = 0, y = 0 }
+local nearGoal = { map = 0, x = 10, y = 0 }
+stops = nil
+ns.SetJourneyRoute(nearGoal, { legs = { { mode = "walk", points = { player, nearGoal } } } })
 check(minimap.alpha == 1, "minimap route remains visible near arrival")
 local visible = 0
 for i = 1, minimap.used do
