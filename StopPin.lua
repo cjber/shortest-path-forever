@@ -26,6 +26,7 @@ ns.GoalAtlas, ns.StopSize = GOAL_ATLAS, STOP_SIZE
 ---@field Numeral Texture
 ---@field Number FontString
 ---@field stopTitles? string[]
+---@field stopDetails? string[]
 ShortestPathForeverGoalPinMixin = CreateFromMixins(MapCanvasPinMixin)
 
 function ShortestPathForeverGoalPinMixin:OnLoad()
@@ -53,7 +54,8 @@ end
 ---@param numbers integer[]? the stops this pin marks, in order; nil for a lone destination
 ---@param titles string[]
 ---@param look? SPFAPIStopKind
-function ShortestPathForeverGoalPinMixin:OnAcquired(x, y, numbers, titles, later, look)
+---@param details? string[]
+function ShortestPathForeverGoalPinMixin:OnAcquired(x, y, numbers, titles, later, look, details)
 	self:SetPosition(x, y)
 	-- The disc's shadow stays opaque, so a faded button still hides the POI beneath it.
 	local alpha = later and LATER_STOP_ALPHA or 1
@@ -62,6 +64,7 @@ function ShortestPathForeverGoalPinMixin:OnAcquired(x, y, numbers, titles, later
 	self.Numeral:SetAlpha(alpha)
 	self.Number:SetAlpha(alpha)
 	self.stopTitles = titles[1] and titles or nil
+	self.stopDetails = details and details[1] and details or nil
 	local marked = look ~= nil and ns.SetStopLook(self.Icon, look, numbers and BADGE_SIZE or LOOK_SIZE)
 	local badge = marked and numbers ~= nil
 	self.Icon:SetShown(marked)
@@ -106,6 +109,9 @@ function ShortestPathForeverGoalPinMixin:OnMouseEnter()
 	for i = 2, #stopTitles do
 		GameTooltip_AddColoredLine(GameTooltip, stopTitles[i], HIGHLIGHT_FONT_COLOR)
 	end
+	for _, detail in ipairs(self.stopDetails or {}) do
+		GameTooltip_AddNormalLine(GameTooltip, detail)
+	end
 	for _, row in ipairs(not stopTitles[1] and rows or {}) do
 		GameTooltip_AddColoredLine(GameTooltip, row.text, row.current and HIGHLIGHT_FONT_COLOR or NORMAL_FONT_COLOR)
 	end
@@ -134,5 +140,6 @@ end
 function ShortestPathForeverGoalPinMixin:OnReleased()
 	self:OnMouseLeave()
 	self.stopTitles = nil
+	self.stopDetails = nil
 	MapCanvasPinMixin.OnReleased(self)
 end

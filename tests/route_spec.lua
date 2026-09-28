@@ -310,4 +310,9 @@ check(minimap.Goal.shown, "the stop shows on the minimap")
 -- The stop is 0.2 north of the player in a 0.5 view radius: 0.4 of the way from centre to rim.
 clears(minimap, MINIMAP / 2, -MINIMAP / 2 + 0.4 * MINIMAP / 2, 16 / 2, UI_SCALE, "minimap")
 
+-- Arrival never hides the route: keep its final segment visible inside the old 15-yard fade radius.
+player = { map = 0, x = 0.299, y = 0.5 }
+ns.SetJourneyRoute(stops[1], { legs = { { mode = "walk", points = { player, first } } } })
+check(minimap.alpha == 1, "minimap route remains visible near arrival")
+
 print(string.format("route_spec: %d checks ok", checks))

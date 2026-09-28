@@ -57,10 +57,6 @@ local provider, goal, paths, worldPaths, stops, stopIndex
 ---@field lastScale? number
 ---@field lastSquare? boolean
 ---@field revision? number
----@field fadeX? number
----@field fadeY? number
----@field fadeScaleX? number
----@field fadeScaleY? number
 ---@type SPFMinimapRoute
 local minimap
 local geometryRevision = 0
@@ -150,11 +146,6 @@ local function Stroke(owner, x1, y1, x2, y2, color, scale, dot)
 	end
 	Paint(owner, owner.used, dot or false)
 	local alpha = (owner.strokeAlpha or 1) * (owner.pathAlpha or 1)
-	if owner.fadeX then
-		local dx = ((x1 + x2) / 2 - owner.fadeX) * owner.fadeScaleX
-		local dy = ((y1 + y2) / 2 - owner.fadeY) * owner.fadeScaleY
-		alpha = alpha * math.min(1, math.sqrt(dx * dx + dy * dy) / 30)
-	end
 	-- A dot's rim reaches RIM past it on every side, so its underline is longer as well as thicker.
 	local ux, uy = 0, 0
 	if dot then
@@ -633,7 +624,14 @@ function ProviderMixin:RefreshStops()
 		local point = stops and stops[index] or goal
 		local x, y = MapPosition(point, mapID)
 		if x and x >= 0 and x <= 1 and y >= 0 and y <= 1 then
-			marks[#marks + 1] = { x = x, y = y, index = index, title = point.routeTitle, look = point.look }
+			marks[#marks + 1] = {
+				x = x,
+				y = y,
+				index = index,
+				title = point.routeTitle,
+				detail = point.tooltip,
+				look = point.look,
+			}
 		end
 	end
 	-- Groups keep their marks in order, so the current stop leads its group.
@@ -652,9 +650,9 @@ function ProviderMixin:RefreshStops()
 	map:RemoveAllPinsByTemplate(GOAL_TEMPLATE)
 	self.stopMarks = {}
 	for _, group in ipairs(groups) do
-		local x, y, numbers, titles = 0, 0, {}, {}
+		local x, y, numbers, titles, details = 0, 0, {}, {}, {}
 		for i, mark in ipairs(group) do
-			x, y, numbers[i], titles[i] = x + mark.x, y + mark.y, mark.index, mark.title
+			x, y, numbers[i], titles[i], details[i] = x + mark.x, y + mark.y, mark.index, mark.title, mark.detail
 		end
 		local lead = group[1]
 		-- A shared button stands for several places, so only a stop on its own wears its badge.
@@ -665,7 +663,7 @@ function ProviderMixin:RefreshStops()
 		else
 			x, y, numbered = lead.x, lead.y, stops and numbers
 		end
-		local pin = map:AcquirePin(GOAL_TEMPLATE, x, y, numbered, titles, later, look)
+		local pin = map:AcquirePin(GOAL_TEMPLATE, x, y, numbered, titles, later, look, details)
 		self.stopMarks[#self.stopMarks + 1] = { x = x, y = y, radius = pin:GetWidth() / 2 }
 	end
 	for pin in WorldMapFrame:EnumeratePinsByTemplate(LINE_TEMPLATE) do
@@ -768,7 +766,6 @@ local function DrawMinimap(self)
 	self.lastWidth, self.lastHeight, self.lastScale, self.lastSquare = width, height, scale, square
 	self.revision = geometryRevision
 	self.used = 0
-	self.fadeX = nil
 	self:SetAlpha(1)
 	self.Goal:Hide()
 	local circles = {}
@@ -784,11 +781,6 @@ local function DrawMinimap(self)
 				circles[1], circles[2] = (gx + 1) * width / 2, (gy - 1) * height / 2
 				circles[3] = (goal.look and MINIMAP_RING or MINIMAP_GOAL) / 2 + DotMargin(self, scale)
 			end
-			self.fadeX, self.fadeY = (gx + 1) * width / 2, (gy - 1) * height / 2
-			self.fadeScaleX, self.fadeScaleY = 2 * radius / width, 2 * radius / height
-			local distance = math.sqrt((goal.x - x) ^ 2 + (goal.y - y) ^ 2)
-			-- Fade the line near arrival so it does not obscure the goal.
-			self:SetAlpha(math.max(0, math.min(1, (distance - 15) / 25)))
 		end
 		local inset = 1 - border / math.min(width, height)
 		for _, path in ipairs(paths) do
