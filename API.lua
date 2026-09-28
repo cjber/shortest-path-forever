@@ -288,6 +288,7 @@ function API.NavigateRoute(owner, stops)
 		if
 			type(stop) ~= "table"
 			or (stop.title ~= nil and not (canaccessvalue(stop.title) and type(stop.title) == "string"))
+			or (stop.tooltip ~= nil and not (canaccessvalue(stop.tooltip) and type(stop.tooltip) == "string"))
 		then
 			return false
 		end
@@ -296,6 +297,7 @@ function API.NavigateRoute(owner, stops)
 			return false
 		end
 		point.label = stop.title
+		point.tooltip = stop.tooltip
 		-- An unknown kind is dropped, not refused: a caller written for a later vocabulary still gets its route.
 		point.look = ns.StopKind(stop.kind)
 		if count > 1 then

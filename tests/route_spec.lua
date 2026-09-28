@@ -247,7 +247,7 @@ player = { map = 0, x = 0.1, y = 0.5 }
 stops = {
 	{ map = 0, x = 0.3, y = 0.5, routeTitle = "Stop 1 of 3: Quest giver" },
 	{ map = 0, x = 0.5, y = 0.5, routeTitle = "Stop 2 of 3: Camp" },
-	{ map = 0, x = 0.3, y = 0.5, routeTitle = "Stop 3 of 3: Quest giver" },
+	{ map = 0, x = 0.3, y = 0.5, routeTitle = "Stop 3 of 3: Quest giver", tooltip = "Quest detail" },
 }
 preview = { { mode = "walk", points = { first, second, first } } }
 ns.SetJourneyRoute(stops[1], { legs = { { mode = "walk", points = { player, first } } } })
@@ -269,6 +269,7 @@ check(
 	"shared stop keeps its number without corner text"
 )
 check(rings[1].stopTitles[1] == stops[1].routeTitle and rings[1].stopTitles[2] == stops[3].routeTitle)
+check(rings[1].stopDetails[1] == "Quest detail", "shared stop keeps a later detail when the lead has none")
 check(numeral(rings[2], 0.125, 0.5) and rawget(rings[2], "Count") == nil, "a single visit has no corner text")
 check(rings[2].Button.alpha == 0.9 and rings[2].Disc.alpha == nil, "a later stop fades over its opaque shadow")
 
@@ -309,5 +310,23 @@ local minimap = named.ShortestPathForeverMinimapRoute
 check(minimap.Goal.shown, "the stop shows on the minimap")
 -- The stop is 0.2 north of the player in a 0.5 view radius: 0.4 of the way from centre to rim.
 clears(minimap, MINIMAP / 2, -MINIMAP / 2 + 0.4 * MINIMAP / 2, 16 / 2, UI_SCALE, "minimap")
+
+-- A ten-yard approach still draws visible dots outside the destination icon.
+env.C_Minimap.GetViewRadius = function()
+	return 30
+end
+player = { map = 0, x = 0, y = 0 }
+local nearGoal = { map = 0, x = 10, y = 0 }
+stops = nil
+ns.SetJourneyRoute(nearGoal, { legs = { { mode = "walk", points = { player, nearGoal } } } })
+check(minimap.alpha == 1, "minimap route remains visible near arrival")
+local visible = 0
+for i = 1, minimap.used do
+	local stroke = minimap.lines[i]
+	if stroke.shown and stroke.alpha > 0 then
+		visible = visible + 1
+	end
+end
+check(visible > 0, "near arrival keeps rendered route strokes visible")
 
 print(string.format("route_spec: %d checks ok", checks))

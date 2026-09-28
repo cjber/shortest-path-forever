@@ -44,17 +44,7 @@ local function Update()
 		index = index + 1
 		target = path[index]
 	end
-	local alpha = 1
-	if
-		destination
-		and map == destination.map
-		and target.map == destination.map
-		and target.x == destination.x
-		and target.y == destination.y
-	then
-		alpha = math.max(0, math.min(1, (math.sqrt((target.x - x) ^ 2 + (target.y - y) ^ 2) - 15) / 25))
-	end
-	local placed = placeTarget and placeTarget(target, alpha < 1)
+	local placed = placeTarget and placeTarget(target, false)
 	-- Waypoint callbacks can stop or replace guidance synchronously.
 	if revision ~= updating then
 		return
@@ -64,7 +54,7 @@ local function Update()
 		frame:SetAlpha(0)
 		return
 	end
-	frame:SetAlpha(alpha)
+	frame:SetAlpha(1)
 	local angle = Bearing(x, y) - facing
 	frame.Arrow:SetRotation(angle)
 	frame.Arrow:SetPoint("CENTER", frame.Icon, "CENTER", -math.sin(angle) * RADIUS, math.cos(angle) * RADIUS)

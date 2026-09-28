@@ -43,4 +43,11 @@ queued(frame, 0.1)
 assert(frame.hidden, "empty routes leave no active arrow")
 ns.PointGuideArrow(replacement, place)
 assert(not frame.hidden and ns.GuideTargets() == replacement[1], "guidance can restart after cancellation")
-print("arrow_spec: 7 checks passed")
+local near = { { map = 1, x = 10, y = 0 } }
+local nativeHidden
+ns.PointGuideArrow(near, function(_, hidden)
+	nativeHidden = hidden
+	return false
+end)
+assert(frame.alpha == 1 and nativeHidden == false, "arrow remains visible at the destination")
+print("arrow_spec: 8 checks passed")
