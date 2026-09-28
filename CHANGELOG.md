@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+## [1.4.6] - 2026-09-28
+
 - **Keep map pins safe and responsive in combat.** World-map and minimap pin refreshes now wait until combat ends,
   while static portal, flight and transport layers reuse unchanged results and recover cleanly if the map releases
   their pooled pins.
