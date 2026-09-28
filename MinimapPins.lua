@@ -135,6 +135,9 @@ local function Acquire(entry)
 end
 
 local function Draw()
+	if InCombatLockdown() then
+		return false
+	end
 	local x, y, _, map = ns.JourneyPosition()
 	---@type number?, number?
 	local radius, facing = ns.MinimapView()
@@ -246,7 +249,15 @@ ns.Init(function()
 	frame:EnableMouse(false)
 	-- Zooming changes the view without moving; the travel clock covers movement and arrival.
 	frame:RegisterEvent("MINIMAP_UPDATE_ZOOM")
-	frame:SetScript("OnEvent", Wake)
+	frame:RegisterEvent("PLAYER_REGEN_DISABLED")
+	frame:RegisterEvent("PLAYER_REGEN_ENABLED")
+	frame:SetScript("OnEvent", function(_, event)
+		if event == "PLAYER_REGEN_DISABLED" then
+			frame:SetScript("OnUpdate", nil)
+		else
+			Wake()
+		end
+	end)
 	ns.OnTravelTick(Wake)
 	Menu.ModifyMenu("MENU_MINIMAP_TRACKING", AddTracking)
 	ns.RefreshMinimapPins()

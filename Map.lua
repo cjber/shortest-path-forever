@@ -532,6 +532,10 @@ local function Clusters(map, docks)
 end
 
 function ProviderMixin:RefreshAllData()
+	if InCombatLockdown() then
+		ns.QueueMapRefresh()
+		return
+	end
 	ns.JourneyGuide.RefreshWaypointPins()
 	local map = self:GetMap()
 	local mapID = map:GetMapID()
@@ -574,6 +578,10 @@ function ProviderMixin:RefreshAllData()
 end
 
 function ProviderMixin:OnCanvasScaleChanged()
+	if InCombatLockdown() then
+		ns.QueueMapRefresh()
+		return
+	end
 	self:RefreshAllData()
 end
 
@@ -638,6 +646,10 @@ function PortalProviderMixin:RemoveAllData()
 end
 
 function PortalProviderMixin:RefreshAllData()
+	if InCombatLockdown() then
+		ns.QueueMapRefresh()
+		return
+	end
 	self:RemoveAllData()
 	local mapID = self:GetMap():GetMapID()
 	if not (mapID and ns.db.portals and self:GetMap():IsVisible()) then
@@ -692,6 +704,10 @@ function FlightProviderMixin:RemoveAllData()
 end
 
 function FlightProviderMixin:RefreshAllData()
+	if InCombatLockdown() then
+		ns.QueueMapRefresh()
+		return
+	end
 	self:RemoveAllData()
 	local map = self:GetMap()
 	local mapID = map:GetMapID()
@@ -740,6 +756,10 @@ end
 local portalProvider, flightProvider
 
 function ns.RefreshMap()
+	if InCombatLockdown() then
+		ns.QueueMapRefresh()
+		return
+	end
 	if provider then
 		provider:RefreshAllData()
 		portalProvider:RefreshAllData()
@@ -768,6 +788,17 @@ local function AddFilters(_, rootDescription)
 end
 
 ns.Init(function()
+	local combat = CreateFrame("Frame")
+	combat:RegisterEvent("PLAYER_REGEN_ENABLED")
+	combat:SetScript("OnEvent", function()
+		if ns.mapRefreshPending then
+			ns.mapRefreshPending = nil
+			ns.RefreshMap()
+		end
+	end)
+	function ns.QueueMapRefresh()
+		ns.mapRefreshPending = true
+	end
 	-- Replace only this map's stock provider, avoiding duplicates if the native gate starts returning true.
 	for existing in pairs(WorldMapFrame.dataProviders) do
 		if existing.RefreshAllData == FlightPointDataProviderMixin.RefreshAllData then

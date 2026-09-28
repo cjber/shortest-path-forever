@@ -53,6 +53,10 @@ function TransportProviderMixin:RemoveAllData()
 end
 
 function TransportProviderMixin:RefreshAllData()
+	if InCombatLockdown() then
+		ns.QueueMapRefresh()
+		return
+	end
 	self:RemoveAllData()
 	local map = self:GetMap()
 	if not (ns.db.mapRoutes and map:GetMapID() and map:IsVisible()) then
