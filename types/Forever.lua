@@ -162,6 +162,12 @@ ObjectiveTrackerFrame = nil
 ---@type SPFTrackerManager
 ObjectiveTrackerManager = nil
 
+---@class ForeverTrackerHostAPI
+---@field Attach fun(module: Frame)
+---@field IsAttached fun(module: Frame?): boolean
+---@type ForeverTrackerHostAPI?
+ForeverTrackerHost = nil
+
 ---@class SPFSetting
 ---@field SetValue fun(self: SPFSetting, value: boolean)
 ---@field SetValueChangedCallback fun(self: SPFSetting, callback: fun(setting: SPFSetting, value: boolean))
