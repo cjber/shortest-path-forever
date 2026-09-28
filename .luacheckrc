@@ -1,7 +1,7 @@
 std = "lua51"
 max_line_length = 120
 exclude_files = { ".claude/**", "tools/.cache/**", ".types/**", "types/**", ".release/**", "ShortestPathForever_Nav*/**" }
-globals = {
+globals = { "ForeverTrackerHost",
     "EventUtil",
 	"ShortestPathForever",
 	"ShortestPathForeverCharDB",
@@ -15,7 +15,7 @@ globals = {
 	"SLASH_SHORTESTPATHFOREVER2",
 	"SlashCmdList",
 }
-read_globals = {
+read_globals = { "CreateFramePoolCollection", "C_XMLUtil",
 	"AM_PIN_SCALE_STYLE_WITH_TERRAIN",
 	"Ambiguate",
 	"C_ChatInfo",

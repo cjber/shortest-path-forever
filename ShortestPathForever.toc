@@ -31,6 +31,7 @@ Teleports.lua
 Map.lua
 Looks.lua
 MinimapPins.lua
+TrackerHost.lua
 Tracker.lua
 Arrow.lua
 Compass.lua

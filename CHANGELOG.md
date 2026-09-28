@@ -11,6 +11,11 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+## [1.4.4] - 2026-09-28
+
+- **Separate addon tracking from Blizzard’s layout.** Addon sections now use their own frame pools and sit beside the quest tracker, avoiding the shared tracker registration implicated in Edit Mode aura errors.
+- **Check the client integration in CI.** Regression checks run against pinned Forever tracker source and reject native tracker registration.
+
 ## [1.4.3] - 2026-09-27
 
 - **Native UI methods stay untouched.** Tracker registration waits for the game to finish loading, and route waypoint pins refresh through map and tracking events.

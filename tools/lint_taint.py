@@ -20,6 +20,7 @@ OWN = re.compile(
 # Blizzard functions that must only run from Blizzard's code: layout that writes its frames' state, lazy caches
 # built on first call, and links other Blizzard code reads.
 CALLS = {
+    "SetModuleContainer": "registering addon modules taints Blizzard tracker layout",
     "UpdateFrameSize": "bag layout writes the bag's state",
     "UpdateItemLayout": "bag layout builds the bag's item cache",
     "UpdateContainerFrameAnchors": "bag anchoring builds the shown-bags cache",

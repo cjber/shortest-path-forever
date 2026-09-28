@@ -2,7 +2,7 @@
 local checks = 0
 local function noop() end
 for _, readyAtLoad in ipairs({ false, true }) do
-	local ready, callbacks, timers, modules, owners = readyAtLoad, {}, {}, {}, {}
+	local callbacks, timers, modules, owners = {}, {}, {}, {}
 	local native = {}
 	local function region()
 		return {
@@ -16,16 +16,11 @@ for _, readyAtLoad in ipairs({ false, true }) do
 	end
 	local env = setmetatable({
 		ObjectiveTrackerFrame = native,
-		ObjectiveTrackerManager = {
-			SetModuleContainer = function(_, module, container)
-				if ready then
-					owners[module] = container
-				end
+		ObjectiveTrackerManager = setmetatable({}, {
+			__index = function()
+				error("must not register with native manager")
 			end,
-			GetContainerForModule = function(_, module)
-				return owners[module]
-			end,
-		},
+		}),
 		CreateFrame = function(_, name)
 			local frame = region()
 			if name then
@@ -63,6 +58,14 @@ for _, readyAtLoad in ipairs({ false, true }) do
 		end,
 	}, { __index = _G })
 	local ns = {
+		TrackerHost = {
+			Attach = function(module)
+				owners[module] = native
+			end,
+			IsAttached = function(module)
+				return owners[module] == native
+			end,
+		},
 		L = setmetatable({}, {
 			__index = function(_, key)
 				return key
@@ -82,17 +85,16 @@ for _, readyAtLoad in ipairs({ false, true }) do
 	}
 	setfenv(assert(loadfile("Tracker.lua")), env)("Addon", ns)
 	if not readyAtLoad then
-		assert(owners[modules[1]] == nil, "early registration waits for Blizzard")
+		assert(owners[modules[1]] == native, "private host attachment is independent of Blizzard")
 		for _, fn in ipairs(callbacks) do
 			fn()
 		end
-		assert(owners[modules[1]] == nil, "must wait until all native callbacks finish")
-		ready = true
+		assert(owners[modules[1]] == native, "native callbacks cannot change private ownership")
 	end
 	for _, fn in ipairs(timers) do
 		fn()
 	end
-	assert(owners[modules[1]] == native, "module attaches after initialization, including late loading")
+	assert(owners[modules[1]] == native, "private ownership survives initialization and late loading")
 	checks = checks + 1
 end
 print("tracker_lifecycle_spec: " .. checks .. " load-order cases passed")
