@@ -188,6 +188,12 @@ local function stubframe()
 	function f:SetSize(w, h)
 		self.width, self.height = w, h
 	end
+	function f:SetWidth(value)
+		self.width = value
+	end
+	function f:SetHeight(value)
+		self.height = value
+	end
 	function f:EnableMouse(value)
 		self.mouseEnabled = value
 	end
@@ -202,6 +208,12 @@ local function stubframe()
 	end
 	function f:GetHeight()
 		return self.height
+	end
+	function f:GetTop()
+		return self.top or (self.parent and self.parent.GetHeight and self.parent:GetHeight()) or 0
+	end
+	function f:GetBottom()
+		return self:GetTop() - (self:GetHeight() or 0)
 	end
 	function f:SetPoint(...)
 		self.anchor = { ... }
