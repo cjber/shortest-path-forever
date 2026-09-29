@@ -11,6 +11,10 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+## [1.4.7] - 2026-09-29
+
+- **Keep quest destinations visible.** Adventure Guide can hold a stop until the quest interaction changes, without the normal arrival radius clearing its guidance.
+- **Keep one tracker column.** Addon sections stack above the quest tracker regardless of which companion addon loads first.
 - **Stop the arrow cleanly.** Cancelling or replacing guidance no longer lets a queued arrow update read a cleared path or revive the previous destination.
 
 ## [1.4.6] - 2026-09-28

@@ -93,3 +93,46 @@ function ns.JourneyTime(legs, index)
 	end
 	return seconds * 1000
 end
+
+-- Advance legs that can be completed from the player's current position. Keeping this
+-- state machine beside the step vocabulary keeps the journey driver focused on refreshes.
+function ns.AdvanceJourneyProgress(legs, progress, goal, riding, flying, near, guide)
+	while progress.index <= #legs do
+		local leg = legs[progress.index]
+		local nextLeg = legs[progress.index + 1]
+		if
+			leg.mode == "walk"
+			and nextLeg
+			and ((nextLeg.route and riding == nextLeg.route) or (nextLeg.mode == "flight" and flying))
+		then
+			progress.index = progress.index + 1
+			leg = nextLeg
+		end
+		local aboard = leg.aboard
+			or leg.mode == "teleport"
+			or (leg.route and riding == leg.route)
+			or (leg.mode == "flight" and flying)
+		if leg.mode ~= "walk" and not progress.departed then
+			if aboard or near(leg.from) then
+				progress.departed = true
+			else
+				guide.To(leg.from, nil, goal)
+				return true
+			end
+		end
+		if leg.mode == "teleport" and not near(leg.to) then
+			guide.Cast(leg)
+			return true
+		end
+		if not near(leg.to) or (leg.mode == "flight" and flying) then
+			guide.To(leg.to, leg.walkPoints, goal)
+			return true
+		end
+		if goal.hold and leg.mode == "walk" and not nextLeg then
+			guide.To(leg.to, leg.walkPoints, goal)
+			return true
+		end
+		progress.index, progress.departed = progress.index + 1, false
+	end
+	return goal.hold
+end
