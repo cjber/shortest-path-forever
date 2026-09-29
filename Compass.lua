@@ -2,10 +2,14 @@
 local ns = select(2, ...)
 local L = ns.L
 
+-- A thin ribbon of the game's own parchment ticks across the top of the screen: no panel, no border, the
+-- ticks and their letters fading out towards its ends, the destination drawn as the game's own waypoint pin.
 local WIDTH, HEIGHT, POLL_EVERY = 360, 60, 0.1
 local TURN, EASE, SETTLED = 2 * math.pi, 18, 0.001
 local OVERLAP = 6
----@class SPFCompassFrame : Frame, BackdropTemplate
+-- Pixels over which a tick fades from full strength to nothing at the ribbon's end.
+local FADE = 80
+---@class SPFCompassFrame : Frame
 ---@field ticks SPFCompassTick[]
 ---@field markers SPFCompassMarker[]
 ---@field Goal SPFCompassMarker
@@ -101,7 +105,9 @@ local function Render(x, y, map)
 	for _, tick in ipairs(frame.ticks) do
 		local offset = Offset(tick.angle, frame.facing)
 		local visible = math.abs(offset) <= WIDTH / 2
-		local alpha = math.max(0, math.min(1, (WIDTH / 2 - math.abs(offset)) / 18))
+		-- A smooth ramp rather than a cutoff: the ribbon has no edges of its own, so it dissolves into the world.
+		local edge = math.max(0, math.min(1, (WIDTH / 2 - math.abs(offset)) / FADE))
+		local alpha = edge * edge * (tick.major and 0.85 or 0.5)
 		tick:SetShown(visible)
 		if visible then
 			tick:SetPoint("TOP", frame, "TOP", offset, -6)
@@ -223,35 +229,29 @@ local function OnHide()
 end
 
 local function Create()
-	local compass = CreateFrame("Frame", "ShortestPathForeverCompass", UIParent, "BackdropTemplate")
+	local compass = CreateFrame("Frame", "ShortestPathForeverCompass", UIParent)
 	---@cast compass SPFCompassFrame
 	frame = compass
 	frame:SetSize(WIDTH, HEIGHT)
 	frame:SetPoint("TOP", 0, -42)
 	frame:SetFrameStrata("LOW")
 	frame:EnableMouse(false)
-	-- The stock tooltip art keeps the edge soft and legible over bright terrain.
-	frame:SetBackdrop({
-		bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-		edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-		tile = true,
-		tileSize = 16,
-		edgeSize = 12,
-		insets = { left = 3, right = 3, top = 3, bottom = 3 },
-	})
-	frame:SetBackdropColor(0.06, 0.06, 0.06, 0.7)
-	frame:SetBackdropBorderColor(0.55, 0.52, 0.46, 0.65)
 	frame.ticks = {}
 	local directions = { L["N"], L["W"], L["S"], L["E"] }
 	for index = 0, 23 do
 		---@class SPFCompassTick : Texture
 		---@field angle number
+		---@field major boolean
 		---@field label? FontString
 		local tick = frame:CreateTexture(nil, "ARTWORK")
 		tick.angle = index * TURN / 24
+		tick.major = index % 6 == 0
+		-- The parchment gold the map's own marks are drawn in, faint enough to read as a compass, not a UI.
 		tick:SetColorTexture(0.72, 0.67, 0.55, 0.7)
-		tick:SetSize(1, index % 6 == 0 and 5 or 3)
-		if index % 6 == 0 then
+		tick:SetSize(1, tick.major and 5 or 3)
+		if tick.major then
+			-- The game's own label font: the parchment gold of its map labels, with the shadow that keeps
+			-- them legible over snow or sand, instead of a panel behind them (FontStyles.xml).
 			tick.label = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 			tick.label:SetText(directions[index / 6 + 1])
 			tick.label:SetPoint("TOP", tick, "BOTTOM", 0, -1)
@@ -259,6 +259,7 @@ local function Create()
 		frame.ticks[#frame.ticks + 1] = tick
 	end
 	frame.Center = frame:CreateTexture(nil, "OVERLAY")
+	-- Straight ahead of you, in the gold the game marks your own place in the world with.
 	frame.Center:SetColorTexture(1, 0.82, 0, 0.85)
 	frame.Center:SetSize(1, 6)
 	frame.Center:SetPoint("TOP", frame, "TOP", 0, -3)
@@ -276,9 +277,10 @@ local function Create()
 		SetIcon(marker, name == "Goal" and "Waypoint-MapPin-Tracked" or "Navigation-Tracked-Icon")
 		frame[name] = marker
 	end
-	frame.Goal:SetAlpha(0.85)
-	frame.Stop:SetAlpha(0.9)
-	frame.Next:SetAlpha(0.45)
+	-- The game's own pins and arrow at full strength; a turn still ahead of the stop is the only dim one.
+	frame.Goal:SetAlpha(1)
+	frame.Stop:SetAlpha(1)
+	frame.Next:SetAlpha(0.5)
 	frame.markers = { frame.Goal, frame.Stop, frame.Bend, frame.Next }
 	frame.Distance = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	frame.idle = 0

@@ -26,8 +26,8 @@ pixels never enter product media.
 | `docks.png` | Auberdine's clustered piers; arrivals/departures and destination glows |
 | `stops.png` | A three-stop API route through Thelsamar: flight master, quest giver, hand-in badges on the map's numbered quest buttons |
 | `tracker.png` | Capture 21's five Auberdine → Silithus steps, with the current totals header |
-| `minimap.png` | Auberdine's piers as minimap pins, the last dotted stretch to the south pier, native Guide waypoint |
-| `compass.png` | Current optional compass, enabled for this scene |
+| `minimap.png` | Auberdine's piers as minimap pins, the last dotted stretch to the south pier, native Guide waypoint, the route button gold at the lower right |
+| `compass.png` | The compass: the game's own ticks and gold letters fading out at each end, its waypoint pin and the yards under it, no panel (on by default) |
 | `demo.gif` | Eight-second montage: route pulse/settle, tracker countdown and gliding compass; under 0.5 MB |
 
 The static images render at two pixels per UI unit; the GIF renders at its final
@@ -61,9 +61,12 @@ remains 8,000 ms. The animation uses fixed time steps, never the wall clock.
   putting the top edge inside the frame. Blizzard `Backdrop.lua`'s `textureUVs`
   maps the strip's left edge to the top; clockwise rotation joins all four corners.
   Shared `tooltip_backdrop` implements that mapping. World-map frames also now
-  apply Camelot's metal-corner offsets.
-- `Tracker.lua`, `JourneyGuide.lua`, `Arrow.lua` and `Compass.lua` supply the text,
-  Guide's 25-yard bend threshold, marker proportions, stock fonts and heading easing.
+  apply Camelot's metal-corner offsets. The compass itself draws no panel since
+  2026-09-29: `RouteButton.lua`'s plate is the client's own `ui-hud-minimap-button`
+  atlas (20 by 18), and `Compass.lua` fills no background at all.
+- `Tracker.lua`, `JourneyGuide.lua`, `Arrow.lua`, `Compass.lua` and `RouteButton.lua`
+  supply the text, Guide's 25-yard bend threshold, marker proportions, stock fonts,
+  the ribbon's fade ramp and its gold active state, and heading easing.
   Blizzard's ObjectiveTracker templates, WorldMap frame, WaypointLocationDataProvider,
   Minimap XML, Camelot Skin/Diel and Backdrop sources supply the surrounding widgets.
 
@@ -74,10 +77,10 @@ comparison sheets cover world map (14), Kalimdor (11), Darkshore (13), minimap (
 tracker (21), compass (20), dock pins/glow and sampled animation frames.
 
 The current source differs from these older captures: thinner physical route strokes,
-curved overview crossings, a soft 360×60 compass with proportioned markers and white
-distance text, and Journey totals in the section header. Selected starts, facing,
-goals and schedules differ; the compass's 780-yard bearings are a separate scene
-fixture. The animation is a montage, not one continuously recorded journey.
+curved overview crossings, a 360×60 compass ribbon with no panel whose ticks and gold
+letters fade out at each end, and Journey totals in the section header. Selected starts,
+facing, goals and schedules differ; the compass's 780-yard bearings are a separate
+scene fixture. The animation is a montage, not one continuously recorded journey.
 
 Remaining approximations: Pillow font baselines/rasterization differ by a few pixels;
 engine pin nudging and native minimap marker sizing are approximated. The minimap
@@ -97,4 +100,5 @@ python3 tools/screenshots.py --refs /path/to/refs --tooltip-ref /tmp/tooltip-ref
 
 Live timings, engine rendering and interaction remain unverified in game, by design.
 The UI checks (`tests/ui.sh`) check route pixel sizing, overview/edge
-curves, native waypoints, tracker totals/countdowns and compass bearings.
+curves, native waypoints, tracker totals/countdowns, compass bearings and the route
+button's gold state.

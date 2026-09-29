@@ -35,6 +35,7 @@ TrackerHost.lua
 Tracker.lua
 Arrow.lua
 Compass.lua
+RouteButton.lua
 PathGrid.lua
 Path.lua
 PathJobs.lua

@@ -11,6 +11,13 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **A route button on the minimap.** A round button in the game's own minimap button art starts and stops the
+  route in one click, and turns gold while a route is on. Right-click opens `/path`; *Show a route button on the
+  minimap* turns it off.
+- **The compass looks like the game and is on by default.** The dark box and its border are gone: the ribbon is
+  the game's own parchment ticks and gold letters, fading out at each end, with the destination drawn as the
+  game's own waypoint pin. *Show a compass while Guide is on* in `/path` still turns it off.
+
 ## [1.4.7] - 2026-09-29
 
 - **Keep quest destinations visible.** Adventure Guide can hold a stop until the quest interaction changes, without the normal arrival radius clearing its guidance.

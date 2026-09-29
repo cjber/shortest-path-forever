@@ -12,6 +12,14 @@ function ns.SetOption(key, value)
 	settings[key]:SetValue(value)
 end
 
+local category
+
+-- The settings category is the addon's one options surface: the slash command, the compartment entry and the
+-- route button's right-click all open it.
+function ns.OpenSettings()
+	Settings.OpenToCategory(category:GetID())
+end
+
 local function Perf()
 	local profiler, metrics = C_AddOnProfiler, Enum.AddOnProfilerMetric
 	if profiler and profiler.GetAddOnMetric and metrics and (not profiler.IsEnabled or profiler.IsEnabled()) then
@@ -56,7 +64,7 @@ end
 -- Settings.CreateCheckbox inserts from our code instead, and the settings search reads every layout, so that
 -- tainted it: a restricted button in the results (Social's Discord Sign In) was then blocked and blamed on us.
 ns.Init(function()
-	local category = Settings.RegisterVerticalLayoutCategory("Shortest Path Forever")
+	category = Settings.RegisterVerticalLayoutCategory("Shortest Path Forever")
 	local function Checkbox(key, name, tooltip, onChanged)
 		local setting = Settings.RegisterAddOnSetting(
 			category,
@@ -146,6 +154,12 @@ ns.Init(function()
 		ns.RefreshCompass
 	)
 	Checkbox(
+		"routeButton",
+		L["Show a route button on the minimap"],
+		L["Starts and stops the route in one click. It turns gold while a route is on; right-click opens these settings."],
+		ns.RefreshRouteButton
+	)
+	Checkbox(
 		"share",
 		L["Share departure times with other players"],
 		L["Sends and receives sighting times over guild, party and at the dock. No chat messages are shown."]
@@ -169,9 +183,9 @@ ns.Init(function()
 			ns.Print("debug " .. (ns.db.debug and "on" or "off"))
 			return
 		end
-		Settings.OpenToCategory(category:GetID())
+		ns.OpenSettings()
 	end
 	ShortestPathForever_OnAddonCompartmentClick = function()
-		Settings.OpenToCategory(category:GetID())
+		ns.OpenSettings()
 	end
 end)

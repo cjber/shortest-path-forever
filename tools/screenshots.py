@@ -50,7 +50,6 @@ from wowmock import (
     rgba255,
     scene,
     tooltip,
-    tooltip_backdrop,
     world_map_frame,
 )
 
@@ -615,20 +614,25 @@ def render_tracker(ui):
 
 
 def compass_canvas(ui, facing=math.pi - 0.2, distance=780):
+    # Compass.lua's ribbon: no panel and no border. Its ticks and their letters fade out towards the ends, so
+    # the compass dissolves into the world, and the destination is the game's own waypoint pin.
     canvas = ui.canvas(360, 65)
-    tooltip_backdrop(canvas, 0, 0, 360, 60, background=(0.06, 0.06, 0.06, 0.7), border=(0.55, 0.52, 0.46, 0.65))
 
     def offset(angle):
         return -((angle - facing + math.pi) % (2 * math.pi) - math.pi) * 360 / math.pi
 
+    # Compass.lua's FADE, the ramp a tick dissolves over at each end, and its major/minor strengths.
+    fade, major_alpha, minor_alpha = 80, 0.85, 0.5
     for index in range(24):
         x = offset(index * math.pi / 12)
         if abs(x) > 180:
             continue
-        alpha = min(1, (180 - abs(x)) / 18)
-        height = 5 if index % 6 == 0 else 3
+        major = index % 6 == 0
+        edge = min(1, max(0, (180 - abs(x)) / fade))
+        alpha = edge * edge * (major_alpha if major else minor_alpha)
+        height = 5 if major else 3
         canvas.fill(180 + x - 0.5, 6, 1, height, (0.72, 0.67, 0.55, 0.7 * alpha))
-        if index % 6 == 0:
+        if major:
             canvas.text(
                 180 + x - 10,
                 12,
@@ -641,9 +645,9 @@ def compass_canvas(ui, facing=math.pi - 0.2, distance=780):
     canvas.fill(179.5, 3, 1, 6, (1, 0.82, 0, 0.85))
     # Chosen bearings reproduce reference 20, using the current proportion-preserving atlas sizes.
     for angle, name, size, alpha, bend in (
-        (math.pi + 0.9, "Waypoint-MapPin-Tracked", 18, 0.85, False),
+        (math.pi + 0.9, "Waypoint-MapPin-Tracked", 18, 1, False),
         (math.pi, "Navigation-Tracked-Icon", 18, 1, True),
-        (math.pi + 0.15, "Navigation-Tracked-Icon", 12, 0.45, False),
+        (math.pi + 0.15, "Navigation-Tracked-Icon", 12, 0.5, False),
     ):
         x = 180 + max(-180, min(180, offset(angle)))
         icon(canvas, name, x, 36, size, alpha)
@@ -658,6 +662,18 @@ def compass_canvas(ui, facing=math.pi - 0.2, distance=780):
 
 def render_compass(ui):
     return scene(ui, [(compass_canvas(ui), 0, 0)])
+
+
+def route_button(canvas, x, y, active=True):
+    """RouteButton.lua: the game's own minimap button plate, the addon's icon in it, gold while a route is on.
+
+    The plate is the atlas the client's own addon compartment wears (20 by 18), drawn at its native size."""
+    plate = canvas.ui.atlas("ui-hud-minimap-button")
+    tint = (1, 0.82, 0, 1) if active else (1, 1, 1, 1)
+    canvas.draw(plate, x - plate.width / 2, y - plate.height / 2, plate.width, plate.height, tint)
+    icon_art = Image.open(ROOT / "media/Icon.tga").convert("RGBA")
+    side = 14.4  # 24 * 0.6, the button's box for the addon's square icon
+    canvas.draw(icon_art, x - side / 2, y - side / 2, side, side)
 
 
 def render_minimap(ui):
@@ -694,6 +710,10 @@ def render_minimap(ui):
     # Camelot Diel.lua: indicator is 63 right and 72 up from the cluster center.
     icon(canvas, "UI-HUD-Minimap-NightCycle", cx + 63, cy - 72)
     icon(canvas, "UI-HUD-Minimap-Frame-Cycle", cx + 63, cy - 72)
+    # RouteButton.lua: 315 degrees round the minimap from its right edge, six units past its rim, gold here
+    # because this scene has a journey running.
+    radius = size / 2 + 6
+    route_button(canvas, cx + math.cos(math.radians(315)) * radius, cy - math.sin(math.radians(315)) * radius)
     icon(canvas, "MinimapArrow", cx, cy, 16)
     bend = next(p for p in points[1:] if math.hypot(p["x"] - here["x"], p["y"] - here["y"]) > 25)
     x, y = project(bend)

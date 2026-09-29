@@ -21,7 +21,8 @@ local DEFAULTS = {
 	teleports = true,
 	share = true,
 	guideStops = true,
-	compass = false,
+	compass = true,
+	routeButton = true,
 	corpse = true,
 	whatsNew = true,
 }

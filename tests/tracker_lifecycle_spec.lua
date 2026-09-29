@@ -82,6 +82,7 @@ for _, readyAtLoad in ipairs({ false, true }) do
 		OnChange = noop,
 		OnTravelTick = noop,
 		NearestDock = noop,
+		RefreshRouteButton = noop,
 	}
 	env.ForeverTrackerHost = ns.TrackerHost
 	setfenv(assert(loadfile("Tracker.lua")), env)("Addon", ns)

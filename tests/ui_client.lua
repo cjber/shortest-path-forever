@@ -152,6 +152,9 @@ local function stubframe()
 		function texture:SetAlpha(v)
 			self.alpha = v
 		end
+		function texture:SetVertexColor(...)
+			self.color = { ... }
+		end
 		function texture:SetShown(v)
 			self.hidden = not v
 		end

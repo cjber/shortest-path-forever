@@ -48,11 +48,11 @@ local env = setmetatable({
 	SlashCmdList = {},
 }, { __index = _G })
 
-local refreshed, taxiRefreshed = 0, 0
--- Core.lua's defaults: every row on except the compass.
+local refreshed, taxiRefreshed, buttonRefreshed = 0, 0, 0
+-- Core.lua's defaults: every row on.
 local ns = {
 	db = {},
-	Defaults = setmetatable({ compass = false }, {
+	Defaults = setmetatable({}, {
 		__index = function()
 			return true
 		end,
@@ -66,11 +66,14 @@ local ns = {
 	RefreshTaxiRoute = function()
 		taxiRefreshed = taxiRefreshed + 1
 	end,
+	RefreshRouteButton = function()
+		buttonRefreshed = buttonRefreshed + 1
+	end,
 }
 assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", ns)
 setfenv(assert(loadfile("Settings.lua")), env)("ShortestPathForever", ns)
 
-assert(#registered == 18, #registered)
+assert(#registered == 19, #registered)
 for index, initializer in ipairs(registered) do
 	assert(initializer.setting == settings[index], "rows keep their setting and order")
 end
@@ -82,7 +85,13 @@ assert(registered[14].tooltip:find("flight master", 1, true))
 registered[14].setting.onChanged()
 assert(taxiRefreshed == 1, "flight route updates when its setting changes")
 assert(registered[15].setting.key == "corpse" and registered[15].setting.default == true)
-assert(registered[18].setting.key == "whatsNew" and registered[18].setting.default == true)
+-- The compass is on by default: it is the game's own palette rather than a panel on the screen.
+assert(registered[16].setting.key == "compass" and registered[16].setting.default == true)
+assert(registered[17].setting.key == "routeButton" and registered[17].setting.default == true)
+assert(registered[17].tooltip:find("gold", 1, true), "the route button says what its colour means")
+registered[17].setting.onChanged()
+assert(buttonRefreshed == 1, "the minimap button follows its setting")
+assert(registered[19].setting.key == "whatsNew" and registered[18].setting.default == true)
 registered[1].setting.onChanged()
 assert(refreshed == 1, "value callbacks still fire")
 print("settings: ok")
