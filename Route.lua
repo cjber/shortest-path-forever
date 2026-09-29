@@ -527,6 +527,7 @@ function ShortestPathForeverRoutePinMixin:Draw()
 		end
 	end
 	self.pathAlpha = nil
+
 	HideUnused(self)
 	Pulse(self)
 	if self.hits then
@@ -812,6 +813,14 @@ local function DrawMinimap(self)
 						)
 					end
 				end
+			end
+		end
+		-- Keep the final few yards visible when the goal ring covers every breadcrumb.
+		if goal and goal.hold and goal.map == map and self.used == 0 then
+			local gx, gy = Project(goal, x, y, radius, cosine, sine)
+			local distance = gx * gx + gy * gy
+			if distance > 0 and distance < 0.25 then
+				Stroke(self, width / 2, -height / 2, (gx + 1) * width / 2, (gy - 1) * height / 2, COLORS.walk, scale)
 			end
 		end
 	end

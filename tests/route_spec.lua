@@ -54,10 +54,15 @@ end
 function region:GetEffectiveScale()
 	return self.scale or UI_SCALE
 end
+local function finite(value)
+	return type(value) == "number" and value == value and math.abs(value) < math.huge
+end
 function region:SetStartPoint(_, _, x, y)
+	assert(finite(x) and finite(y), "route start coordinates must be finite")
 	self.start = { x, y }
 end
 function region:SetEndPoint(_, _, x, y)
+	assert(finite(x) and finite(y), "route end coordinates must be finite")
 	self.finish = { x, y }
 end
 function region:Show()
@@ -328,5 +333,27 @@ for i = 1, minimap.used do
 	end
 end
 check(visible > 0, "near arrival keeps rendered route strokes visible")
+
+-- Held interaction stops must keep one marker even when the remaining span is
+-- shorter than the normal breadcrumb spacing.
+player = { map = 0, x = 0, y = 0 }
+ns.SetJourneyRoute({ map = 0, x = 1, y = 0, hold = true }, {
+	legs = { { mode = "walk", points = { player, { map = 0, x = 1, y = 0 } } } },
+})
+check(minimap.used > 0, "held near stop keeps a visible route marker")
+for i = 1, minimap.used do
+	local stroke = minimap.lines[i]
+	check(stroke.start and stroke.finish, "held near marker has finite endpoints")
+	check(stroke.start[1] == stroke.start[1] and stroke.finish[1] == stroke.finish[1], "held near marker has no NaN")
+end
+
+ns.SetJourneyRoute({ map = 0, x = 1, y = 0 }, {
+	legs = { { mode = "walk", points = { player, { map = 0, x = 1, y = 0 } } } },
+})
+check(minimap.used == 0, "ordinary near stop preserves the goal ring breadcrumb gap")
+ns.SetJourneyRoute({ map = 0, x = 0, y = 0, hold = true }, {
+	legs = { { mode = "walk", points = { player, player } } },
+})
+check(minimap.used == 0, "exact held destination does not create a zero-length stroke")
 
 print(string.format("route_spec: %d checks ok", checks))

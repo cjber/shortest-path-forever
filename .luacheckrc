@@ -135,6 +135,7 @@ read_globals[#read_globals + 1] = "GetAddOnMemoryUsage"
 read_globals[#read_globals + 1] = "C_Item"
 read_globals[#read_globals + 1] = "C_SpellBook"
 read_globals[#read_globals + 1] = "GetBindLocation"
+read_globals[#read_globals + 1] = "EditModeManagerFrame"
 
 -- tests/ui_client.lua and tests/ui_map.lua are one chunk defining the client for the UI checks, which append code
 -- reading their locals. 2xx: locals and arguments only the appended checks use; 43x: stub methods named like the
@@ -148,3 +149,5 @@ files["tests/ui_client.lua"] = {
 }
 -- ui_map.lua continues ui_client.lua's chunk, so its "globals" are ui_client.lua's locals.
 files["tests/ui_map.lua"] = { std = "+luajit", ignore = { "1", "2", "43" } }
+read_globals[#read_globals + 1] = "EventRegistry"
+read_globals[#read_globals + 1] = "EditModeManagerFrame"

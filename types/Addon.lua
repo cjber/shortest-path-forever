@@ -26,6 +26,7 @@
 ---@field label? string
 ---@field tooltip? string
 ---@field routeTitle? string
+---@field hold? boolean -- remain visible at the destination until the caller submits an updated route
 ---@field look? SPFAPIStopKind -- what the caller said stands there (API.lua)
 ---@field questID? number
 ---@field corpse? boolean -- where your corpse lies (Corpse.lua)

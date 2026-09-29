@@ -152,44 +152,13 @@ local function UpdateProgress()
 	if not (goal and result) or nextPoint or CorpseRun() then
 		return
 	end
-	if Near(goal) then
+	if not goal.hold and Near(goal) then
 		Arrive()
 		return
 	end
 	local riding, flying = ns.CurrentRide(), UnitOnTaxi("player")
-	while progress.index <= #result.legs do
-		local leg = result.legs[progress.index]
-		local nextLeg = result.legs[progress.index + 1]
-		if
-			leg.mode == "walk"
-			and nextLeg
-			and ((nextLeg.route and riding == nextLeg.route) or (nextLeg.mode == "flight" and flying))
-		then
-			progress.index = progress.index + 1
-			leg = nextLeg
-		end
-		-- A teleport is cast from wherever you are.
-		local aboard = leg.aboard
-			or leg.mode == "teleport"
-			or (leg.route and riding == leg.route)
-			or (leg.mode == "flight" and flying)
-		if leg.mode ~= "walk" and not progress.departed then
-			if aboard or Near(leg.from) then
-				progress.departed = true
-			else
-				Guide.To(leg.from, nil, goal)
-				return
-			end
-		end
-		if leg.mode == "teleport" and not Near(leg.to) then
-			Guide.Cast(leg)
-			return
-		end
-		if not Near(leg.to) or (leg.mode == "flight" and flying) then
-			Guide.To(leg.to, leg.walkPoints, goal)
-			return
-		end
-		progress.index, progress.departed = progress.index + 1, false
+	if ns.AdvanceJourneyProgress(result.legs, progress, goal, riding, flying, Near, Guide) then
+		return
 	end
 	Arrive()
 end

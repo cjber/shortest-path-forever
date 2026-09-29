@@ -7,6 +7,7 @@ end
 local function noop() end
 local timers, ready, frames, releases = {}, nil, {}, {}
 local combat = false
+local parent
 local function frame()
 	local f = { width = 250, height = 0, scripts = {} }
 	function f:SetPoint(...)
@@ -27,20 +28,24 @@ local function frame()
 	function f.GetTop(_self)
 		return 640
 	end
+	function f.GetPoint(_self)
+		return "TOPRIGHT", parent, "TOPRIGHT", 0, -100
+	end
 	function f:SetScript(event, fn)
 		self.scripts[event] = fn
 	end
 	function f:HookScript(event, fn)
 		self.scripts[event] = fn
 	end
-	function f:SetParent(parent)
-		self.parent = parent
+	function f:SetParent(owner)
+		self.parent = owner
 	end
 	f.ClearAllPoints, f.RegisterEvent, f.Show, f.Hide = noop, noop, noop, noop
 	frames[#frames + 1] = f
 	return f
 end
-local native, parent = frame(), frame()
+local native = frame()
+parent = frame()
 local ns = {}
 local forbidden = setmetatable({}, {
 	__index = function(_, key)
@@ -172,6 +177,10 @@ local function drain()
 end
 drain()
 check(first.point[5] == 0 and second.point[5] == -90, "sections follow uiOrder")
+check(
+	native.point and native.point[1] == "TOPRIGHT" and native.point[2] == host and native.point[3] == "BOTTOMRIGHT",
+	"native quests stack below the addon sections"
+)
 check(second.available == 510, "remaining space follows screen geometry")
 check(ns.TrackerHost.IsAttached(first) and not ns.TrackerHost.IsAttached(nil), "ownership lookup")
 ns.TrackerHost.Attach(first)

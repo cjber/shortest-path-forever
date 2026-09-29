@@ -202,6 +202,8 @@ for _, invalid in ipairs({
 	{ stops[1], false },
 	{ stops[1], { map = 1, x = 2, y = 0.5 } },
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, title = {} } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, hold = "true" } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, hold = driver.secret } },
 	{ [1] = stops[1], [100] = stops[2] },
 }) do
 	equal(API.NavigateRoute("AGF", invalid), false, "invalid route")
@@ -250,6 +252,55 @@ equal(API.Ended("AGF"), "arrived", "final arrival")
 equal(ns.HasJourney(), false, "final arrival ends journey")
 equal(driver.waypoint(), nil, "final arrival clears guidance")
 
+-- A held stop remains visible at its destination until the owner refreshes its route.
+driver.move({ map = 1, x = 0, y = -400 })
+equal(
+	API.NavigateRoute("AGF", {
+		{ map = 1, x = 0.502, y = 0.5, title = "Interaction", hold = true },
+		{ map = 1, x = 0.6, y = 0.5, title = "Later" },
+	}),
+	true,
+	"held stop starts"
+)
+equal(ns.JourneyStops()[1].hold, true, "held stop is carried into the journey")
+for _ = 1, 200 do
+	driver.update(0.1)
+	if not select(1, ns.JourneyStatus()) then
+		break
+	end
+end
+driver.move({ map = 1, x = 0, y = -86 })
+driver.update(0.1)
+equal(API.CurrentStop("AGF"), 1, "held stop stays active at destination")
+assert(ns.HasJourney() and driver.shown(), "held destination keeps the journey and guidance visible")
+local _, _, heldPlan, heldIndex = ns.JourneyInfo()
+assert(heldPlan and #heldPlan.legs > 0, "held destination retains its final route leg")
+assert(heldIndex and heldIndex <= #heldPlan.legs, "held destination keeps a renderable current leg")
+assert(
+	heldPlan.legs[1].to and (heldPlan.legs[1].to.x ~= 0 or heldPlan.legs[1].to.y ~= -86),
+	"held destination retains positive remaining distance"
+)
+for _ = 1, 10 do
+	driver.update(0.1)
+end
+equal(API.CurrentStop("AGF"), 1, "settled held stop stays active")
+assert(driver.shown(), "settled held destination keeps guidance visible")
+equal(
+	API.NavigateRoute("AGF", {
+		{ map = 1, x = 0.502, y = 0.5, title = "Interaction" },
+		{ map = 1, x = 0.6, y = 0.5, title = "Later" },
+	}),
+	true,
+	"caller can release a held stop and submit the next stop"
+)
+driver.update(0.1)
+for _ = 1, 500 do
+	driver.update(0.1)
+	if API.CurrentStop("AGF") == 2 then
+		break
+	end
+end
+equal(API.CurrentStop("AGF"), 2, "resubmitted route advances to the next stop")
 driver.move({ map = 1, x = 0, y = 0 })
 for _, startRoute in ipairs({
 	function()
