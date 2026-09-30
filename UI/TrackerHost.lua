@@ -279,6 +279,32 @@ local function SidePoint(point)
 	return point:find("LEFT", 1, true) and "LEFT" or "RIGHT"
 end
 
+local function PlaceAlongsideNative(point)
+	local nativeLeft, nativeRight = ObjectiveTrackerFrame:GetLeft(), ObjectiveTrackerFrame:GetRight()
+	local nativeTop = ObjectiveTrackerFrame:GetTop()
+	local nativeScale = ObjectiveTrackerFrame.GetEffectiveScale and ObjectiveTrackerFrame:GetEffectiveScale() or 1
+	local screenScale = UIParent.GetEffectiveScale and UIParent:GetEffectiveScale() or 1
+	local hostScale = host.GetEffectiveScale and host:GetEffectiveScale() or 1
+	local screenWidth, screenHeight = UIParent:GetWidth(), UIParent:GetHeight()
+	if not (nativeLeft and nativeRight and nativeTop and screenWidth and screenHeight) then
+		return false
+	end
+	local scale = nativeScale / screenScale
+	local left, right, top = nativeLeft * scale, nativeRight * scale, nativeTop * scale
+	local width = host:GetWidth() * hostScale / screenScale
+	local gap = 8
+	if SidePoint(point) == "LEFT" then
+		left = right + gap
+	else
+		right = left - gap
+		left = right - width
+	end
+	left = math.max(0, math.min(left, screenWidth - width))
+	host:ClearAllPoints()
+	host:SetPoint("TOPLEFT", UIParent, "TOPLEFT", left, top - screenHeight)
+	return true
+end
+
 local function LayoutModules(width, available, height)
 	table.sort(modules, function(a, b)
 		return a.uiOrder < b.uiOrder
@@ -357,7 +383,14 @@ local function Layout()
 		-- before that restore, the native frame still points at us; use the saved slot instead
 		-- to avoid creating an anchor cycle.
 		local point = ObjectiveTrackerFrame:GetPoint()
-		if point and select(2, ObjectiveTrackerFrame:GetPoint()) ~= host then
+		local nativeRelativeTo = point and select(2, ObjectiveTrackerFrame:GetPoint())
+		if nativeRelativeTo == host then
+			-- Edit Mode may clamp the protected frame after it was anchored to us. In
+			-- that state the reported anchor is stale: use its actual screen side so
+			-- the private column cannot be placed back inside the native objectives.
+			PlaceAlongsideNative(nativeAnchor and nativeAnchor.point or "TOPRIGHT")
+			AvoidMinimap(nativeAnchor and nativeAnchor.point or "TOPRIGHT")
+		elseif point then
 			local nativePoint, hostPoint = StackPoints(point)
 			-- If there is no room above the restored tracker, use the side away from its
 			-- anchored edge. This keeps the private column visible without moving or
