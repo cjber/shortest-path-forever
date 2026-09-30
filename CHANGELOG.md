@@ -11,7 +11,11 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
-- Organise runtime modules into Core, Routing, Journey, Transport and UI folders. Update the manifest, developer tools and tests while preserving client load order and runtime behaviour.
+## [1.6.1] - 2026-09-30
+
+- **Move the shared tracker.** Turn off Attach to quest tracker in Settings to drag all Forever sections together. The position survives `/reload`.
+
+- **Organise the source.** Group runtime modules into Core, Routing, Journey, Transport and UI folders. Update the manifest, developer tools and tests while preserving client load order and runtime behaviour.
 
 ## [1.6.0] - 2026-09-30
 

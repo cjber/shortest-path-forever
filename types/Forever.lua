@@ -165,6 +165,11 @@ ObjectiveTrackerManager = nil
 ---@class ForeverTrackerHostAPI
 ---@field Attach fun(module: Frame)
 ---@field IsAttached fun(module: Frame?): boolean
+---@field IsAttachedToQuestTracker fun(): boolean
+---@field SetAttached fun(attached: boolean)
+---@field GetSettings fun(): ForeverTrackerSettings
+---@field OnAttachmentChanged fun(callback: fun(attached: boolean))
+---@field SavePosition fun(x: number, y: number)
 ---@type ForeverTrackerHostAPI?
 ForeverTrackerHost = nil
 
@@ -178,6 +183,8 @@ ForeverTrackerHost = nil
 ---@field VarType {Boolean: string}
 ---@field RegisterVerticalLayoutCategory fun(name: string): SPFSettingsCategory
 ---@field RegisterVerticalLayoutSubcategory fun(parent: SPFSettingsCategory, name: string): SPFSettingsCategory
+---@field RegisterProxySetting fun(category: SPFSettingsCategory, variable: string, variableType: string, name: string, default: boolean, getter: (fun(): boolean), setter: (fun(value: boolean))): SPFSetting
+---@field NotifyUpdate fun(variable: string)
 ---@field RegisterAddOnSetting fun(category: SPFSettingsCategory, variable: string, key: string, storage: SPFDatabase, variableType: string, name: string, default: boolean): SPFSetting
 ---@field CreateCheckboxInitializer fun(setting: SPFSetting, options?: table, tooltip?: string): SPFSettingsInitializer
 ---@field RegisterInitializer fun(category: SPFSettingsCategory, initializer: SPFSettingsInitializer)
@@ -205,3 +212,13 @@ EventUtil = {}
 ---@param callback function
 ---@param ... string
 function EventUtil.ContinueAfterAllEvents(callback, ...) end
+
+---@class ForeverTrackerSettings
+---@field attached boolean
+---@field x? number
+---@field y? number
+
+---@class ForeverTrackerNamespace
+---@field TrackerHost? ForeverTrackerHostAPI
+---@field TrackerHostSettings? fun(): ForeverTrackerSettings
+---@field L table<string, string>

@@ -67,6 +67,19 @@ local function frame()
 		self.point = nil
 	end
 	f.RegisterEvent = noop
+	f.SetMovable, f.SetClampedToScreen, f.RegisterForDrag = noop, noop, noop
+	function f.CreateFontString(_)
+		return { SetPoint = noop, SetText = noop }
+	end
+	function f:SetShown(value)
+		self.shown = value
+	end
+	function f:StartMoving()
+		self.moving = true
+	end
+	function f:StopMovingOrSizing()
+		self.moving = false
+	end
 	f.Show = function(self)
 		self.shown = true
 	end
@@ -80,11 +93,20 @@ local native = frame()
 local minimap = frame()
 minimap.left, minimap.right, minimap.top, minimap.bottom, minimap.shown = 900, 1100, 700, 500, false
 parent = frame()
+parent.width = 1200
 native.point = { nativeAnchorPoint, parent, nativeAnchorPoint, 0, -100 }
 native.height = 300
 parent:SetHeight(1080)
 native.effectiveScale, parent.effectiveScale = 1.25, 1
-local ns = {}
+local ns = { L = setmetatable({}, {
+	__index = function(_, key)
+		return key
+	end,
+}) }
+local hostSettings = { attached = true }
+function ns.TrackerHostSettings()
+	return hostSettings
+end
 local forbidden = setmetatable({}, {
 	__index = function(_, key)
 		error("native manager accessed: " .. key)
@@ -219,6 +241,7 @@ for index = 2, #hostPaths do
 	check(#frames == count, "companion must not create a second host")
 end
 local host = frames[4]
+local grip = frames[5]
 local function module(order)
 	local m = frame()
 	m.uiOrder, m.ContentsFrame, m.lineTemplate = order, frame(), "Line"
@@ -279,6 +302,42 @@ check(
 	"native objectives follow private sections"
 )
 check(ns.TrackerHost.IsAttached(first) and not ns.TrackerHost.IsAttached(nil), "ownership lookup")
+local attachmentChanges = 0
+ns.TrackerHost.OnAttachmentChanged(function(value)
+	attachmentChanges = attachmentChanges + 1
+	check(value == false or value == true, "attachment callback receives desired state")
+end)
+local nativeHeightBeforeDetach = native:GetHeight()
+local requestedHeightBeforeDetach = 700
+local firstUpdatesBeforeDetach, secondUpdatesBeforeDetach = first.updates, second.updates
+ns.TrackerHost.SetAttached(false)
+drain()
+check(native.point[2] ~= host, "detach restores native parent anchor")
+check(
+	native:GetHeight() == requestedHeightBeforeDetach and native:GetHeight() >= nativeHeightBeforeDetach,
+	"detach restores native requested height"
+)
+check(
+	first.updates > firstUpdatesBeforeDetach and second.updates > secondUpdatesBeforeDetach,
+	"detach lays out every shared module"
+)
+check(grip.shown and first.point[5] == -24, "detached grip reserves space above modules")
+grip.scripts.OnDragStart(grip)
+check(host.moving, "detached grip starts moving")
+host.left, host.top = 96, 880
+grip.scripts.OnDragStop(grip)
+drain()
+check(not host.moving and hostSettings.x == 96 and hostSettings.y == -200, "drag stop saves screen coordinates")
+check(not ns.TrackerHost.IsAttachedToQuestTracker(), "all modules detach from the native tracker")
+ns.TrackerHost.SavePosition(80, -120)
+drain()
+check(host.point[1] == "TOPLEFT" and host.point[4] == 80 and host.point[5] == -120, "detached position persists")
+ns.TrackerHost.SetAttached(true)
+drain()
+check(
+	ns.TrackerHost.IsAttachedToQuestTracker() and attachmentChanges == 2,
+	"reattach restores the shared native column"
+)
 local updatesBeforeDuplicateAttach = first.updates
 ns.TrackerHost.Attach(first)
 host:MarkDirty()
@@ -299,12 +358,43 @@ native.ClearAllPoints = function(self)
 	assert(not combat, "combat must never clear the protected native tracker anchors")
 	return nativeClear(self)
 end
+local clampedBeforeCombatDetach = native:GetHeight()
 combat = true
+nativeSetPoint(native, "TOPRIGHT", parent, "TOPRIGHT", 0, 0)
+ns.TrackerHost.SetAttached(false)
+check(not ns.TrackerHost.IsAttachedToQuestTracker(), "desired attachment changes during combat")
+combat = false
+host.scripts.OnEvent(host, "PLAYER_REGEN_ENABLED")
+drain()
+check(not ns.TrackerHost.IsAttachedToQuestTracker(), "deferred attachment applies after combat")
+check(
+	native:GetHeight() == 700 and native:GetHeight() > clampedBeforeCombatDetach,
+	"post-combat detach restores height even after native anchor was restored"
+)
+local detachedUpdates = first.updates
+combat = true
+host:MarkDirty()
+drain()
+check(first.updates > detachedUpdates, "detached modules refresh in combat without native writes")
+grip.scripts.OnDragStart(grip)
+check(not host.moving, "combat blocks dragging")
+ns.TrackerHost.SetAttached(true)
+drain()
+check(host.point[2] == parent and grip.shown, "reattach stays physically detached until combat ends")
+combat = false
+host.scripts.OnEvent(host, "PLAYER_REGEN_ENABLED")
+drain()
+check(native.point[2] == host and not grip.shown, "combat exit applies reattachment")
+
+ns.TrackerHost.SetAttached(true)
+drain()
+combat = true
+local updatesBeforeCombat = first.updates
 native.top = 500
 nativeSetPoint(native, "TOPRIGHT", parent, "TOPRIGHT", 0, -100)
 host.scripts.OnEvent(host, "PLAYER_REGEN_DISABLED")
 drain()
-check(first.updates == updatesBeforeDuplicateAttach + 1, "combat defers layout")
+check(first.updates == updatesBeforeCombat, "combat defers layout")
 -- In combat the protected native tracker cannot be restacked, so our column moves above its saved slot instead.
 check(
 	host.point[1] == "BOTTOMRIGHT" and host.point[2] == native and host.point[3] == "TOPRIGHT",
@@ -313,18 +403,30 @@ check(
 combat = false
 host.scripts.OnEvent(host, "PLAYER_REGEN_ENABLED")
 drain()
-check(first.updates == updatesBeforeDuplicateAttach + 2, "leaving combat flushes deferred changes")
+check(first.updates == updatesBeforeCombat + 1, "leaving combat flushes deferred changes")
 combat = true
 native.top = 10000
+native.left, native.right = 900, 1150
 nativeSetPoint(native, "TOPRIGHT", parent, "TOPRIGHT", 0, -100)
 host.scripts.OnEvent(host, "PLAYER_REGEN_DISABLED")
 drain()
 check(
 	host.point[1] == "TOPRIGHT" and host.point[2] == native and host.point[3] == "TOPLEFT",
-	"combat uses the clear side when there is no room above"
+	"combat uses the screen-left side when the native tracker is on the right"
+)
+native.left, native.right = 0, 250
+nativeSetPoint(native, "CENTER", parent, "CENTER", 0, -100)
+host:MarkDirty()
+drain()
+check(
+	host.point[1] == "TOPLEFT" and host.point[2] == native and host.point[3] == "TOPRIGHT",
+	"combat uses the screen-right side when a centered native tracker is moved left"
 )
 -- Blizzard's combat restore can temporarily point the protected frame at our host.
 -- Collision avoidance must use the saved Edit Mode slot rather than create an anchor cycle.
+nativeSetPoint(native, "TOPRIGHT", parent, "TOPRIGHT", 0, -100)
+host:MarkDirty()
+drain()
 minimap.shown = true
 host.left, host.right, host.top, host.bottom = 700, 950, 640, 300
 minimap.left, minimap.right, minimap.top, minimap.bottom = 700, 1100, 900, 0
@@ -442,4 +544,48 @@ if nativeRoot then
 	animated:OnAnimFinished()
 	check(first.dirty and animated.alpha == 0 and not animated.activeAnim, "native animation completes without manager")
 end
+-- A fresh host after /reload resolves persisted owner settings only after load events.
+combat = false
+nativeSetPoint(native, "TOPLEFT", parent, "TOPLEFT", 0, -100)
+hostSettings = { attached = false, x = 140, y = -180 }
+local beforeReload = #frames
+ns = {
+	L = ns.L,
+	TrackerHostSettings = function()
+		return hostSettings
+	end,
+}
+env.ForeverTrackerHost = nil
+combat = true
+loadHost(ns, hostPaths[1])
+local reloadedHost, reloadedGrip = frames[beforeReload + 1], frames[beforeReload + 2]
+local coldModule = module(1)
+check(coldModule.updates == nil, "saved detached tracker waits for player readiness")
+ready()
+drain()
+check(
+	reloadedHost.point[2] == parent and reloadedHost.point[4] == 140 and reloadedHost.point[5] == -180,
+	"reload restores saved detached position"
+)
+check(
+	native.point[2] == parent and reloadedGrip.shown and coldModule.updates == 1,
+	"saved detached bootstrap renders module without moving native tracker"
+)
+combat = false
+reloadedHost.effectiveScale = 1.5
+hostSettings.x, hostSettings.y = 150, -180
+reloadedHost:MarkDirty()
+drain()
+check(reloadedHost.point[4] == 100 and reloadedHost.point[5] == -120, "saved offsets divide by effective UI scale")
+reloadedGrip.scripts.OnDragStart(reloadedGrip)
+reloadedHost.left, reloadedHost.top = 100, 600
+reloadedGrip.scripts.OnDragStop(reloadedGrip)
+drain()
+check(hostSettings.x == 150 and hostSettings.y == -180, "scaled drag round trip preserves screen offsets")
+hostSettings.x, hostSettings.y = math.huge, 0 / 0
+reloadedHost:MarkDirty()
+drain()
+check(hostSettings.x == nil and hostSettings.y == nil, "non-finite saved coordinates normalize")
+hostSettings.attached = "bad"
+check(ns.TrackerHost.GetSettings().attached == true, "malformed attachment defaults to attached")
 print("tracker_host_spec: " .. checks .. " checks passed")
