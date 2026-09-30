@@ -16,6 +16,7 @@ local HERE = 15
 local CONTEXT_KEYS = {
 	"walkSpeed",
 	"faction",
+	"otherFaction",
 	"waterWalking",
 	"docks",
 	"routes",
@@ -156,6 +157,7 @@ local function Options(from, to)
 		now = now,
 		walkSpeed = Number(speed) and math.max(speed, 7) or 7,
 		faction = UnitFactionGroup("player"),
+		otherFaction = ns.db and ns.db.otherFaction or false,
 		taxiKnown = known,
 		anchors = anchors,
 		docks = ns.Docks,

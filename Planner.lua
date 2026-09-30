@@ -310,6 +310,7 @@ local CACHE_KEYS = {
 	"landmasses",
 	"baked",
 	"faction",
+	"otherFaction",
 	"waterWalking",
 	"walkSpeed",
 	"revision",
@@ -403,7 +404,7 @@ function Planner.Plan(options)
 		for _, id in ipairs(Keys(options.routes or {})) do
 			local route = options.routes[id]
 			for index, stop in ipairs(route.stops) do
-				if docks[stop.dock] then
+				if docks[stop.dock] and (options.otherFaction ~= false or Eligible(route, options)) then
 					for offset = 1, #route.stops - 1 do
 						local onward = route.stops[(index + offset - 1) % #route.stops + 1]
 						if docks[onward.dock] and onward.dock ~= stop.dock then

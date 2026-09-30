@@ -13,6 +13,8 @@ verbatim rather than rewritten as the addon moves.
 
 ## [1.6.0] - 2026-09-30
 
+- **Avoid hostile transport landings by default.** New installs leave opposing-faction boat and zeppelin routes off. Journey planning and travel estimates respect that choice; players who opted in keep their setting.
+
 - **Development disclosure.** This release was developed with AI assistance. Changes were reviewed and checked with automated tests, linting and type checks; live verification remains ongoing.
 
 - **Find nearby services.** Middle-click the route button or use `/spfnear` to open the nearby-services submenu in the world-map tracking dropdown. Route to a friendly class trainer, profession trainer, repairer, reagent vendor, innkeeper, bank, auctioneer, flight master or stable master. Trainers and vendors can be selected by specialty. Locations come from installed QuestieDB; class trainers use Tweaks Forever’s current-class list.

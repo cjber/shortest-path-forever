@@ -74,6 +74,8 @@ Install it from [CurseForge](https://www.curseforge.com/wow/addons/shortest-path
 
 ## Usage
 
+Open a flight master’s map once after installing to sync the flight points you already know. Opposing-faction boat and zeppelin routes are off by default; you can opt in through settings.
+
 | Command | What it does |
 |---|---|
 | `/path` | Open the settings (also in Settings → AddOns, or from the addon compartment on the minimap) |
