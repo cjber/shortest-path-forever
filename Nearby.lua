@@ -13,8 +13,11 @@ local SERVICES = {
 	{ key = "flight", flag = "FLIGHT_MASTER", label = L["Flight master"] },
 	{ key = "stable", flag = "STABLEMASTER", label = L["Stable master"] },
 }
-local index, state, panel, rows = {}, "idle", nil, {}
+local index, state, menuOpen = {}, "idle", false
 local Open
+local function Close()
+	menuOpen = false
+end
 local function Table(source)
 	local chunk = type(source) == "string" and loadstring(source)
 	if not chunk then
@@ -160,7 +163,7 @@ local function Build()
 			end
 			if coroutine.status(co) == "dead" then
 				state = "ready"
-				if panel and panel:IsShown() then
+				if menuOpen and not InCombatLockdown() then
 					Open()
 				end
 				return
@@ -177,87 +180,101 @@ local function PlayerWorld()
 		return ns.WorldPoint(map, point:GetXY()) -- multi-value: x and y
 	end
 end
-Open = function(key)
-	Build()
-	if not panel then
-		panel = CreateFrame("Frame", "ShortestPathForeverNearby", UIParent, "BasicFrameTemplateWithInset")
-		panel:SetSize(380, 400)
-		panel:SetPoint("CENTER")
-		panel:SetFrameStrata("DIALOG")
-		panel:SetClampedToScreen(true)
-		panel.TitleText:SetText(L["Nearby services"])
-		panel:EnableKeyboard(true)
-		panel:SetScript("OnKeyDown", function(self, pressed)
-			self:SetPropagateKeyboardInput(pressed ~= "ESCAPE")
-			if pressed == "ESCAPE" then
-				self:Hide()
-			end
-		end)
-		local scroll = CreateFrame("ScrollFrame", nil, panel, "ScrollFrameTemplate")
-		scroll:SetPoint("TOPLEFT", 20, -36)
-		scroll:SetPoint("BOTTOMRIGHT", -36, 18)
-		local content = CreateFrame("Frame", nil, scroll)
-		content:SetWidth(320)
-		scroll:SetScrollChild(content)
-		panel.content, panel.scroll = content, scroll
-	end
-	for _, row in ipairs(rows) do
-		row:Hide()
-	end
-	local world, items = PlayerWorld(), {}
-	if key then
-		items[1] = { label = L["Back"], back = true }
-		local titles = {}
-		for _, place in ipairs(index[key] or {}) do
-			if world and place.world.map == world.map and place.specialty then
-				titles[place.specialty] = true
-			end
-		end
-		local names = {}
-		for title in pairs(titles) do
-			names[#names + 1] = title
-		end
-		table.sort(names)
-		for _, title in ipairs(names) do
-			items[#items + 1] = { label = title, key = key, specialty = title }
-		end
-	else
-		for _, service in ipairs(SERVICES) do
-			items[#items + 1] = service
+local function SpecialtyNames(key, world)
+	local names = {}
+	for _, place in ipairs(index[key] or {}) do
+		if world and place.world.map == world.map and place.specialty then
+			names[place.specialty] = true
 		end
 	end
-	for i, item in ipairs(items) do
-		local row = rows[i]
-		if not row then
-			row = CreateFrame("Button", nil, panel.content, "UIPanelButtonTemplate")
-			row:SetSize(320, 26)
-			rows[i] = row
-		end
-		row:SetPoint("TOPLEFT", 0, -(i - 1) * 30)
-		local place = world and Nearest(item.key, world, item.specialty)
-		local text = item.label
-		if state == "building" then
-			text = L["%s — loading QuestieDB"]:format(text)
-		elseif not item.back and not place then
-			text = L["%s — unavailable here"]:format(text)
-		end
-		row:SetText(text)
-		row:SetEnabled(item.back or (state == "ready" and place ~= nil))
-		row:SetScript("OnClick", function()
-			if item.back then
-				Open()
-			elseif not item.specialty and (item.key == "trainer" or item.key == "vendor") then
-				Open(item.key)
-			elseif Navigate(item.key, place) then
-				panel:Hide()
-			end
-		end)
-		row:Show()
+	local result = {}
+	for name in pairs(names) do
+		result[#result + 1] = name
 	end
-	panel.content:SetHeight(math.max(1, #items * 30))
-	panel.scroll:SetVerticalScroll(0)
-	panel:Show()
+	table.sort(result)
+	return result
 end
+
+local function AddService(root, service, world)
+	local place = world and Nearest(service.key, world)
+	local hasSpecialties = service.key == "trainer" or service.key == "vendor"
+	if hasSpecialties then
+		local submenu = root:CreateButton(service.label)
+		for _, specialty in ipairs(SpecialtyNames(service.key, world)) do
+			local specialist = Nearest(service.key, world, specialty)
+			submenu:CreateButton(specialty, function()
+				if Navigate(service.key, specialist) then
+					Close()
+					MenuUtil.CloseAllMenus()
+				end
+			end)
+		end
+		if place then
+			submenu:CreateButton(L["Nearest"], function()
+				if Navigate(service.key, place) then
+					Close()
+					MenuUtil.CloseAllMenus()
+				end
+			end)
+		end
+		return
+	end
+	local label = place and service.label or L["%s — unavailable here"]:format(service.label)
+	local entry = root:CreateButton(label, function()
+		if Navigate(service.key, place) then
+			Close()
+			MenuUtil.CloseAllMenus()
+		end
+	end)
+	entry:SetEnabled(place ~= nil)
+end
+
+local function AddWorldMapTrackingEntry(_, root)
+	Build()
+	local world = PlayerWorld()
+	local submenu = root:CreateButton(L["Nearby services"])
+	if not world then
+		submenu:CreateTitle(L["Your position is unavailable"])
+		return
+	end
+	if state ~= "ready" then
+		submenu:CreateTitle(state == "building" and L["Loading QuestieDB…"] or L["Nearby services unavailable"])
+		return
+	end
+	for _, service in ipairs(SERVICES) do
+		AddService(submenu, service, world)
+	end
+end
+
+Open = function()
+	if InCombatLockdown() then
+		return
+	end
+	menuOpen = true
+	Build()
+	OpenWorldMap()
+	local world = PlayerWorld()
+	MenuUtil.CreateContextMenu(WorldMapFrame or UIParent, function(_, root)
+		root:AddMenuReleasedCallback(Close)
+		root:CreateTitle(L["Nearby services"])
+		if state == "building" then
+			root:CreateTitle(L["Loading QuestieDB…"])
+			return
+		end
+		if state ~= "ready" then
+			root:CreateTitle(L["Nearby services unavailable"])
+			return
+		end
+		if not world then
+			root:CreateTitle(L["Your position is unavailable"])
+			return
+		end
+		for _, service in ipairs(SERVICES) do
+			AddService(root, service, world)
+		end
+	end)
+end
+
 ---@class SPFNearbyServices
 ---@field Build fun()
 ---@field Nearest fun(key: string, world: SPFPoint, specialty?: string): SPFNearbyPlace?
@@ -287,6 +304,13 @@ ns.NearbyServices = {
 }
 ns.OpenNearby = Open
 ns.Init(function()
+	Build()
+	if WorldMapFrame and WorldMapFrame.HookScript then
+		WorldMapFrame:HookScript("OnHide", Close)
+	end
+	if Menu and Menu.ModifyMenu then
+		Menu.ModifyMenu("MENU_WORLD_MAP_TRACKING", AddWorldMapTrackingEntry)
+	end
 	SLASH_SPFNEAR1 = "/spfnear"
 	SlashCmdList.SPFNEAR = function(message)
 		local key = string.lower((message or ""):match("^%s*(.-)%s*$"))
