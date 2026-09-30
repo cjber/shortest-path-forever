@@ -290,6 +290,7 @@ function API.NavigateRoute(owner, stops)
 			or (stop.title ~= nil and not (canaccessvalue(stop.title) and type(stop.title) == "string"))
 			or (stop.tooltip ~= nil and not (canaccessvalue(stop.tooltip) and type(stop.tooltip) == "string"))
 			or (stop.hold ~= nil and not (canaccessvalue(stop.hold) and type(stop.hold) == "boolean"))
+			or (stop.radius ~= nil and (not Number(stop.radius) or stop.radius < 0))
 		then
 			return false
 		end
@@ -303,6 +304,7 @@ function API.NavigateRoute(owner, stops)
 		-- player completes an interaction at this location. It resubmits the route after
 		-- that state changes; ordinary API stops retain automatic arrival.
 		point.hold = stop.hold == true
+		point.radius = stop.radius
 		-- An unknown kind is dropped, not refused: a caller written for a later vocabulary still gets its route.
 		point.look = ns.StopKind(stop.kind)
 		if count > 1 then

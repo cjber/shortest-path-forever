@@ -28,6 +28,7 @@ pixels never enter product media.
 | `tracker.png` | Capture 21's five Auberdine → Silithus steps, with the current totals header |
 | `minimap.png` | Auberdine's piers as minimap pins, the last dotted stretch to the south pier, native Guide waypoint, the route button gold at the lower right |
 | `compass.png` | The compass: the game's own ticks and gold letters fading out at each end, its waypoint pin and the yards under it, no panel (on by default) |
+| `services.png` | Nearby.lua’s 380×400 BasicFrameTemplateWithInset and ten service buttons; example character with every category available |
 | `demo.gif` | Eight-second montage: route pulse/settle, tracker countdown and gliding compass; under 0.5 MB |
 
 The static images render at two pixels per UI unit; the GIF renders at its final

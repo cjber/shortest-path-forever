@@ -42,6 +42,8 @@ Each feature has more detail in [docs/features.md](docs/features.md).
   ![The compass strip with the next turns and destination](docs/screenshots/compass.png)
 - **A route button.** A round button on the minimap in the game's own minimap button art starts and stops the
   route in one click and turns gold while a route is on. Right-click opens `/path`.
+- **Nearby services.** Middle-click the route button or use `/spfnear` to find a class or profession trainer, repairs, reagents, vendors, an inn, bank, auction house, flight master or stable. Choose trainers and vendors by specialty. Uses installed QuestieDB and Tweaks Forever for your class trainers.
+  ![Nearby services in the stock game panel](docs/screenshots/services.png)
 - **Back to your corpse.** Once you release as a ghost, a red dotted path in the colour of your corpse's tombstone
   leads back to it on both maps, with Guide and the time in the tracker. Your journey waits and comes back when you
   are alive again. *Show the way back to your corpse* in `/path` turns it off.

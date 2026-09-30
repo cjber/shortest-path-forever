@@ -152,6 +152,10 @@ local function UpdateProgress()
 	if not (goal and result) or nextPoint or CorpseRun() then
 		return
 	end
+	if goal.hold and goal.radius and Near(goal, goal.radius) then
+		Guide.Pause()
+		return
+	end
 	if not goal.hold and Near(goal) then
 		Arrive()
 		return
@@ -202,7 +206,7 @@ function ns.JourneyInfo()
 	if CorpseRun() then
 		return ns.Corpse.Info()
 	end
-	if not goal then
+	if not goal or Guide.Paused() then
 		return nil
 	end
 	local title = goal.routeTitle or string.format(L["Journey to %s"], ns.PlaceLabel(goal))
@@ -703,7 +707,17 @@ end
 ---@param elapsed number
 -- One throttled frame step; keeping its gates together preserves the search/draw cadence
 local function Update(self, elapsed)
-	if InCombatLockdown() or CorpseRun() then
+	if CorpseRun() then
+		return
+	end
+	if InCombatLockdown() then
+		self.progressElapsed = self.progressElapsed + elapsed
+		if self.progressElapsed >= 0.1 then
+			self.progressElapsed = 0
+			if goal and goal.hold and goal.radius and Near(goal, goal.radius) then
+				Guide.Pause()
+			end
+		end
 		return
 	end
 	if not ns.db.journey then
@@ -944,7 +958,7 @@ ns.Init(function()
 	driver:SetScript("OnEvent", function(self, event, questID)
 		if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
 			Guide.ClearOrphan()
-		elseif event == "PLAYER_REGEN_DISABLED" then
+		elseif event == "PLAYER_REGEN_DISABLED" and not (goal and goal.hold and goal.radius) then
 			self:Hide()
 		elseif event == "PLAYER_REGEN_ENABLED" and goal then
 			self:Show()

@@ -2,6 +2,7 @@
 
 -- The TOC passes one namespace table to every module; reopening SPFNamespace joins their APIs.
 ---@class SPFNamespace
+---@field OpenNearby fun()
 ---@field Docks table<number, SPFDock>
 ---@field Routes table<number, SPFRoute>
 ---@field TaxiNodes table<number, SPFTaxiNode>
@@ -14,6 +15,7 @@
 ---@field db SPFDatabase
 ---@field charDB SPFCharacterDatabase
 ---@field Defaults table<string, boolean>
+---@field NearbyServices SPFNearbyServices
 
 ---@alias SPFMode 'walk'|'flight'|'boat'|'zeppelin'|'lift'|'tram'|'portal'|'passage'|'teleport'
 ---@alias SPFKind 'start'|'goal'|'dock'|'taxi'|'portal'|'teleport'
@@ -27,6 +29,7 @@
 ---@field tooltip? string
 ---@field routeTitle? string
 ---@field hold? boolean -- remain visible at the destination until the caller submits an updated route
+---@field radius? number -- yards around a held stop where travel cues pause; finite and nonnegative
 ---@field look? SPFAPIStopKind -- what the caller said stands there (API.lua)
 ---@field questID? number
 ---@field corpse? boolean -- where your corpse lies (Corpse.lua)

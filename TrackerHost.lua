@@ -8,6 +8,7 @@ local _, ns = ...
 ---@class ForeverTrackerHostAPI
 ---@field Attach fun(module: Frame)
 ---@field IsAttached fun(module: Frame?): boolean
+---@field Debug fun(): string the tracker stack's anchors, heights and in-combat state, for /agf tracker
 
 -- Sharing the native tracker collection also shares its Edit Mode execution path.
 -- Keep our sections and their frame pools entirely outside that collection.
@@ -61,7 +62,6 @@ host:SetHeight(1)
 local modules, queued, ready = {}, false, false
 local requestedNativeHeight
 local appliedNativeHeight
-local editModeManager = EditModeManagerFrame
 local pools = CreateFramePoolCollection()
 
 local function Acquire(parent, template)
@@ -161,12 +161,99 @@ function Module.GetContextMenuParent(_)
 	return host
 end
 
+local function OverlapsMinimap()
+	local minimap = _G.Minimap
+	if not minimap or not minimap.IsShown or not minimap:IsShown() then
+		return false
+	end
+	local left, right, top, bottom = host:GetLeft(), host:GetRight(), host:GetTop(), host:GetBottom()
+	local ml, mr, mt, mb = minimap:GetLeft(), minimap:GetRight(), minimap:GetTop(), minimap:GetBottom()
+	local hostScale = host.GetEffectiveScale and host:GetEffectiveScale() or 1
+	local mapScale = minimap.GetEffectiveScale and minimap:GetEffectiveScale() or 1
+	local screen = UIParent.GetEffectiveScale and UIParent:GetEffectiveScale() or 1
+	if not (left and right and top and bottom and ml and mr and mt and mb) then
+		return false
+	end
+	left, right, top, bottom =
+		left * hostScale / screen, right * hostScale / screen, top * hostScale / screen, bottom * hostScale / screen
+	ml, mr, mt, mb = ml * mapScale / screen, mr * mapScale / screen, mt * mapScale / screen, mb * mapScale / screen
+	return left < mr and right > ml and bottom < mt and top > mb
+end
+
+local function AvoidMinimap(point)
+	if not OverlapsMinimap() then
+		return
+	end
+	host:ClearAllPoints()
+	-- Blizzard can temporarily leave the protected frame anchored to our host. Never
+	-- anchor back to it in that state: use the saved Edit Mode slot to avoid a cycle.
+	local _, relativeTo = ObjectiveTrackerFrame:GetPoint()
+	if relativeTo == host and nativeAnchor then
+		local direction = point:find("RIGHT", 1, true) and -1 or 1
+		host:SetPoint(
+			nativeAnchor.point,
+			nativeAnchor.relativeTo,
+			nativeAnchor.relativePoint,
+			nativeAnchor.x + direction * (host:GetWidth() + 8),
+			nativeAnchor.y
+		)
+	elseif point:find("LEFT", 1, true) then
+		host:SetPoint("TOPLEFT", ObjectiveTrackerFrame, "TOPRIGHT", 0, 0)
+	else
+		host:SetPoint("TOPRIGHT", ObjectiveTrackerFrame, "TOPLEFT", 0, 0)
+	end
+end
+
 local function Layout()
 	queued = false
-	if
-		InCombatLockdown()
-		or (editModeManager and editModeManager.IsEditModeActive and editModeManager:IsEditModeActive())
-	then
+	if InCombatLockdown() then
+		-- The native tracker is protected: in combat it cannot be restacked below our column, and Blizzard returns it
+		-- to its saved Edit Mode slot. Move our private column above or beside the native frame, keeping clear of
+		-- the minimap, and resume the full reflow on PLAYER_REGEN_ENABLED.
+		CaptureNativeAnchor()
+		host:SetWidth(ObjectiveTrackerFrame:GetWidth())
+		host:ClearAllPoints()
+		-- Once Blizzard has restored the protected frame to its saved slot, anchor our private
+		-- column to the native frame's actual top edge. This follows CENTER/BOTTOM anchors,
+		-- offsets and UI scale without writing the protected frame. During the brief window
+		-- before that restore, the native frame still points at us; use the saved slot instead
+		-- to avoid creating an anchor cycle.
+		local point = ObjectiveTrackerFrame:GetPoint()
+		if point and select(2, ObjectiveTrackerFrame:GetPoint()) ~= host then
+			local nativePoint, hostPoint = StackPoints(point)
+			-- If there is no room above the restored tracker, use the side away from its
+			-- anchored edge. This keeps the private column visible without moving or
+			-- overlapping the protected frame.
+			local nativeTop = ObjectiveTrackerFrame:GetTop() or 0
+			local screenTop = UIParent:GetHeight() or nativeTop
+			local hostScale = host.GetEffectiveScale and host:GetEffectiveScale() or 1
+			local screenScale = UIParent.GetEffectiveScale and UIParent:GetEffectiveScale() or 1
+			local nativeScale = ObjectiveTrackerFrame.GetEffectiveScale and ObjectiveTrackerFrame:GetEffectiveScale()
+				or 1
+			local room = screenTop * screenScale - nativeTop * nativeScale
+			if room >= math.max(host:GetHeight() or 0, 1) * hostScale then
+				host:SetPoint(hostPoint, ObjectiveTrackerFrame, nativePoint, 0, 0)
+			elseif point:find("LEFT", 1, true) then
+				host:SetPoint("TOPLEFT", ObjectiveTrackerFrame, "TOPRIGHT", 0, 0)
+			else
+				host:SetPoint("TOPRIGHT", ObjectiveTrackerFrame, "TOPLEFT", 0, 0)
+			end
+			AvoidMinimap(point)
+		elseif nativeAnchor then
+			local _, hostPoint = StackPoints(nativeAnchor.point)
+			host:SetPoint(
+				hostPoint,
+				nativeAnchor.relativeTo,
+				nativeAnchor.relativePoint,
+				nativeAnchor.x,
+				nativeAnchor.y
+			)
+		end
+		AvoidMinimap(nativeAnchor and nativeAnchor.point or "TOPRIGHT")
+		return
+	end
+	-- Read the global each time, not once at load: Blizzard_EditMode is load-on-demand, so it may appear later.
+	if EditModeManagerFrame and EditModeManagerFrame.IsEditModeActive and EditModeManagerFrame:IsEditModeActive() then
 		return
 	end
 	table.sort(modules, function(a, b)
@@ -288,6 +375,7 @@ function api.IsAttached(module)
 	return module ~= nil and module.parentContainer == host
 end
 host:RegisterEvent("PLAYER_REGEN_ENABLED")
+host:RegisterEvent("PLAYER_REGEN_DISABLED")
 host:RegisterEvent("DISPLAY_SIZE_CHANGED")
 host:RegisterEvent("UI_SCALE_CHANGED")
 host:SetScript("OnEvent", function()
@@ -300,7 +388,9 @@ end)
 -- on those events instead of polling the native frame every frame.
 if EventRegistry and EventRegistry.RegisterCallback then
 	local function OnEditModeChanged()
-		local editing = editModeManager and editModeManager.IsEditModeActive and editModeManager:IsEditModeActive()
+		local editing = EditModeManagerFrame
+			and EditModeManagerFrame.IsEditModeActive
+			and EditModeManagerFrame:IsEditModeActive()
 		if editing then
 			host:Hide()
 		else
@@ -312,6 +402,33 @@ if EventRegistry and EventRegistry.RegisterCallback then
 	EventRegistry:RegisterCallback("EditMode.Exit", OnEditModeChanged, host)
 	EventRegistry:RegisterCallback("EditMode.SavedLayouts", OnEditModeChanged, host)
 end
+-- A developer diagnostic for the tracker stack (/agf tracker). The combat overlap is otherwise invisible headlessly: it
+-- prints both frames' anchors, heights and who each is anchored to.
+---@return string
+function api.Debug()
+	-- Raw literals on purpose: this host is shared with the companion addons, whose ns.L has no AGF keys, and
+	-- lint_copy only rejects literals passed straight to Print/SetText (this returns a string instead).
+	local function point(frame)
+		local p = { frame:GetPoint() }
+		local relative = p[2] == host and "host" or tostring(p[2])
+		return ("%s rel %s %s %.1f,%.1f"):format(
+			tostring(p[1]),
+			relative,
+			tostring(p[3]),
+			tonumber(p[4]) or 0,
+			tonumber(p[5]) or 0
+		)
+	end
+	return ("combat=%s shown=%s hostH=%.1f host[%s] nativeH=%.1f native[%s]"):format(
+		tostring(InCombatLockdown()),
+		tostring(host:IsShown()),
+		host:GetHeight() or -1,
+		point(host),
+		ObjectiveTrackerFrame:GetHeight() or -1,
+		point(ObjectiveTrackerFrame)
+	)
+end
+
 ForeverTrackerHost = api -- taint-ok: addon-owned companion tracker registry
 ns.TrackerHost = api
 

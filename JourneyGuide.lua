@@ -213,10 +213,35 @@ function Guide.To(node, points, goal)
 	if not guide or (guide.target == node and guide.points == points) then
 		return
 	end
+	if guide.paused then
+		guide.paused = nil
+		RefreshTracker()
+	end
 	guide.points = points
 	guide.target = node
 	local point = node.kind == "dock" and ns.DockPoint(node.id) or node
 	ns.PointGuideArrow(points or { point }, GuideWaypoint, node, goal)
+end
+
+-- Keep the owner's stop while it waits for quest progress, without directions to a place already reached.
+function Guide.Pause()
+	if not guide then
+		return
+	end
+	local changed = not guide.paused
+	guide.paused = true
+	guide.points, guide.target, guide.bend = nil, nil, nil
+	ns.PointGuideArrow(nil)
+	if not InCombatLockdown() and guide.waypoint and OwnsWaypoint() then
+		ClearGuideWaypoint()
+	end
+	if changed then
+		RefreshTracker()
+	end
+end
+
+function Guide.Paused()
+	return guide ~= nil and guide.paused == true
 end
 
 -- A teleport is cast where you stand: nothing to walk toward until you land, so no arrow or marker.

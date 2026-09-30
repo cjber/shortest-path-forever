@@ -14,6 +14,8 @@ globals = { "ForeverTrackerHost",
 	"SLASH_SHORTESTPATHFOREVER1",
 	"SLASH_SHORTESTPATHFOREVER2",
 	"SlashCmdList",
+	"bit",
+	"SLASH_SPFNEAR1",
 }
 read_globals = { "CreateFramePoolCollection", "C_XMLUtil",
 	"AM_PIN_SCALE_STYLE_WITH_TERRAIN",

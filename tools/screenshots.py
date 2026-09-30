@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 """Reproduce Shortest Path Forever with Pillow and the pinned client's own art.
-
     python3 tools/screenshots.py
     python3 tools/screenshots.py --scenes tracker minimap
     python3 tools/screenshots.py --verify --refs /path/to/refs
-
 WOWMOCK overrides ~/.claude/skills/wow-mock-screenshots. First use downloads assets
 from wago.tools; subsequent runs use its build-specific cache. Never reads the game
 installation or SavedVariables. See docs/screenshots.md for source and scene notes.
@@ -29,7 +27,6 @@ WOWMOCK = Path(os.environ.get("WOWMOCK", Path.home() / ".claude/skills/wow-mock-
 if not (WOWMOCK / "wowmock.py").is_file():
     sys.exit(f"wowmock.py not found in {WOWMOCK}; set WOWMOCK to its directory")
 sys.path.insert(0, str(WOWMOCK))
-
 from wowmock import (
     BUILD,
     FONTS,
@@ -664,16 +661,16 @@ def render_compass(ui):
     return scene(ui, [(compass_canvas(ui), 0, 0)])
 
 
-def route_button(canvas, x, y, active=True):
-    """RouteButton.lua: the game's own minimap button plate, the addon's icon in it, gold while a route is on.
+def render_services(ui):
+    from screenshots_services import render
 
-    The plate is the atlas the client's own addon compartment wears (20 by 18), drawn at its native size."""
-    plate = canvas.ui.atlas("ui-hud-minimap-button")
-    tint = (1, 0.82, 0, 1) if active else (1, 1, 1, 1)
-    canvas.draw(plate, x - plate.width / 2, y - plate.height / 2, plate.width, plate.height, tint)
-    icon_art = Image.open(ROOT / "media/Icon.tga").convert("RGBA")
-    side = 14.4  # 24 * 0.6, the button's box for the addon's square icon
-    canvas.draw(icon_art, x - side / 2, y - side / 2, side, side)
+    return render(ui)
+
+
+def route_button(canvas, x, y, active=True):
+    from screenshots_services import route_button as draw
+
+    draw(canvas, x, y, ROOT / "media/Icon.tga", active)
 
 
 def render_minimap(ui):
@@ -789,6 +786,7 @@ SCENES = {
     "tracker": render_tracker,
     "minimap": render_minimap,
     "compass": render_compass,
+    "services": render_services,
 }
 
 
