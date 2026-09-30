@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-09-30
+
 - **A route button on the minimap.** A round button in the game's own minimap button art starts and stops the
   route in one click, and turns gold while a route is on. Right-click opens `/path`; *Show a route button on the
   minimap* turns it off.
