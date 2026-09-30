@@ -302,7 +302,7 @@ local function stubframe()
 end
 _G.CreateFrame = function(_, name, parent, template)
 	local f = stubframe()
-	f.parent, f.template = parent, template
+	f.name, f.parent, f.template = name, parent, template
 	if parent then
 		parent.children = parent.children or {}
 		parent.children[#parent.children + 1] = f
@@ -431,8 +431,10 @@ end
 _G.UnitOnTaxi = function()
 	return onTaxi
 end
+-- A ghost, for the corpse-run state; a UI check sets it directly when it drives dead play.
+local ghost = false
 _G.UnitIsGhost = function()
-	return false
+	return ghost
 end
 _G.GetPlayerFacing = function()
 	return facing
@@ -445,6 +447,13 @@ _G.C_Navigation = {
 _G.GetMinimapShape = function()
 	return minimapShape
 end
+-- The corpse's map position while ghost is true; nil is the ordinary living case.
+local corpsePosition
+_G.C_DeathInfo = {
+	GetCorpseMapPosition = function()
+		return corpsePosition
+	end,
+}
 _G.GetCVar = function(k)
 	return cvars[k]
 end
@@ -525,6 +534,11 @@ _G.GetUnitSpeed = function()
 end
 _G.IsShiftKeyDown = function()
 	return shiftDown
+end
+-- Any modifier, for the map pin's Ends menu; separate from shift so a caller can tell the two apart.
+local modifierDown = false
+_G.IsModifierKeyDown = function()
+	return modifierDown
 end
 _G.GetMouseFoci = function()
 	return mouseFoci
@@ -725,27 +739,33 @@ _G.C_ChatInfo = {
 		return 0
 	end,
 }
+-- The settings surface, recorded so a UI check can drive the real rows and index buttons: each option's own
+-- value-changed callback, and each subpage button's OpenToCategory target.
+local addonSettings, settingsRows, settingsButtons, openedCategories = {}, {}, {}, {}
 _G.Settings = setmetatable({
 	VarType = {},
-	RegisterVerticalLayoutCategory = function()
+	RegisterVerticalLayoutCategory = function(name)
 		return {
-			GetID = function()
-				return 1
+			name = name,
+			GetID = function(self)
+				return self.name
 			end,
 		}
 	end,
-	RegisterVerticalLayoutSubcategory = function()
+	RegisterVerticalLayoutSubcategory = function(parent, name)
 		return {
-			GetID = function()
-				return 2
+			name = name,
+			parent = parent,
+			GetID = function(self)
+				return self.name
 			end,
 		}
 	end,
-	RegisterAddOnSetting = function(_, _, key, db, _, _, default)
+	RegisterAddOnSetting = function(category, variable, key, db, _, name, default)
 		if db[key] == nil then
 			db[key] = default
 		end
-		local st = {}
+		local st = { category = category, variable = variable, key = key, name = name, default = default }
 		function st:SetValueChangedCallback(fn)
 			st.cb = fn
 		end
@@ -755,11 +775,32 @@ _G.Settings = setmetatable({
 				st.cb()
 			end
 		end
+		addonSettings[#addonSettings + 1] = st
 		return st
 	end,
+	CreateCheckboxInitializer = function(setting, options, tooltip)
+		return { kind = "checkbox", setting = setting, options = options, tooltip = tooltip }
+	end,
+	RegisterInitializer = function(target, initializer)
+		if initializer and initializer.kind == "button" then
+			settingsButtons[#settingsButtons + 1] = { target = target, initializer = initializer }
+		else
+			settingsRows[#settingsRows + 1] = { target = target, initializer = initializer }
+		end
+	end,
+	OpenToCategory = function(id)
+		openedCategories[#openedCategories + 1] = id
+	end,
 }, mt)
-_G.CreateSettingsButtonInitializer = function()
-	return {}
+_G.CreateSettingsButtonInitializer = function(name, description, callback, tags, addSearchTags)
+	return {
+		kind = "button",
+		name = name,
+		description = description,
+		callback = callback,
+		tags = tags,
+		addSearchTags = addSearchTags,
+	}
 end
 local menus, context = {}, {}
 _G.MenuUtil = {

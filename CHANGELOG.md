@@ -19,6 +19,8 @@ verbatim rather than rewritten as the addon moves.
   game's own waypoint pin. *Show a compass while Guide is on* in `/path` still turns it off.
 - **Settings, grouped.** `/path` opens a short index of Map marks, Transport, Guidance, Alerts and Interface
   instead of one long list, with each group on its own page. Every option is where it was.
+- **A dock pin's tooltip survives a filter change.** A pin whose cluster still held a pier the filter had just
+  hidden no longer reads an empty departure list and raises a Lua error.
 
 ## [1.4.7] - 2026-09-29
 

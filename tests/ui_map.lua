@@ -62,8 +62,12 @@ function map:AcquirePin(template, ...)
 			self.atlas = atlas
 		end
 		pin.Disc, pin.Button, pin.Numeral = pin:CreateTexture(), pin:CreateTexture(), pin:CreateTexture()
-		for k, v in pairs(_G[template:gsub("Template$", "Mixin")]) do
-			pin[k] = v
+		-- A template with no mixin of its own (the ping pin) inherits the client's MapPinPingTemplate instead.
+		local mixin = _G[template:gsub("Template$", "Mixin")]
+		if mixin then
+			for k, v in pairs(mixin) do
+				pin[k] = v
+			end
 		end
 		pin:OnLoad()
 	end
