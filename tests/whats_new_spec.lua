@@ -31,7 +31,7 @@ local ns = {
 	end,
 }
 assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", ns)
-setfenv(assert(loadfile("WhatsNew.lua")), env)("ShortestPathForever", ns)
+setfenv(assert(loadfile("UI/WhatsNew.lua")), env)("ShortestPathForever", ns)
 assert(type(ns.WHATS_NEW) == "string" and ns.WHATS_NEW:find("%.$"), "one sentence")
 
 local function login(db)

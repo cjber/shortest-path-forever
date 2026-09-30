@@ -1,8 +1,8 @@
 -- Cache reuse must agree with a fresh topology after every dynamic input change.
 local ns = {}
 for _, file in ipairs({
-	"Model.lua",
-	"Planner.lua",
+	"Transport/Model.lua",
+	"Routing/Planner.lua",
 	"Data/Routes.lua",
 	"Data/Transports.lua",
 	"Data/Taxi.lua",
@@ -78,7 +78,7 @@ env.C_AddOns.LoadAddOn = function()
 	loaded = loaded + 1
 	assert(loadfile("tools/load_nav.lua"))(0, nil, env)
 end
-for _, file in ipairs({ "PathGrid.lua", "Path.lua", "PathJobs.lua" }) do
+for _, file in ipairs({ "Routing/PathGrid.lua", "Routing/Path.lua", "Routing/PathJobs.lua" }) do
 	setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
 end
 local path = ns.Path

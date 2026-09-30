@@ -104,7 +104,7 @@ end
 function ns.Planner.LegPoints(leg)
 	return leg.points
 end
--- Map.lua's grouping, reduced to what this route needs: marks at one place share a ring.
+-- UI/Map.lua's grouping, reduced to what this route needs: marks at one place share a ring.
 function ns.OverlapGroups(_, marks)
 	local groups, at = {}, {}
 	for _, mark in ipairs(marks) do
@@ -236,7 +236,7 @@ local env = setmetatable({
 	end,
 }, { __index = _G })
 env.NORMAL_FONT_COLOR, env.ORANGE_FONT_COLOR = env.CreateColor(1, 0.82, 0), env.CreateColor(1, 0.5, 0.25)
-for _, file in ipairs({ "StopPin.lua", "FlightLines.lua", "Route.lua" }) do
+for _, file in ipairs({ "UI/StopPin.lua", "UI/FlightLines.lua", "UI/Route.lua" }) do
 	setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
 end
 for key, value in pairs(env) do

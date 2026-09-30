@@ -26,13 +26,13 @@ env.CreateColor = function(r, g, b)
 end
 ns.db.corpse = true
 for _, file in ipairs({
-	"PathGrid.lua",
-	"Path.lua",
-	"PathJobs.lua",
-	"Looks.lua",
-	"API.lua",
-	"Itinerary.lua",
-	"Corpse.lua",
+	"Routing/PathGrid.lua",
+	"Routing/Path.lua",
+	"Routing/PathJobs.lua",
+	"UI/Looks.lua",
+	"Core/API.lua",
+	"Journey/Itinerary.lua",
+	"Journey/Corpse.lua",
 }) do
 	driver.load(file)
 end

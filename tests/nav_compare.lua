@@ -24,9 +24,9 @@ end
 local function loader(root)
 	local env = setmetatable({}, { __index = _G })
 	local ns = {}
-	-- A baseline from before the split has Path.lua alone.
-	for _, file in ipairs({ "PathGrid.lua", "Path.lua", "PathJobs.lua" }) do
-		local chunk = loadfile(root .. "/" .. file)
+	-- Historical baselines may have flat paths and Path.lua alone.
+	for _, file in ipairs({ "Routing/PathGrid.lua", "Routing/Path.lua", "Routing/PathJobs.lua" }) do
+		local chunk = loadfile(root .. "/" .. file) or loadfile(root .. "/" .. file:match("[^/]+$"))
 		if chunk then
 			setfenv(chunk, env)("ShortestPathForever", ns)
 		end

@@ -23,10 +23,10 @@ Run in order from the repository root. All must pass before and after any audit 
 |---|---|---|
 | Format (Lua) | `stylua --check .` | exit 0 (StyLua 2.5.2) |
 | Format (Python) | `ruff format --check .` | exit 0 (ruff 0.16.8, `ruff.toml`) |
-| Format (shell) | `shfmt -d tools/baker/bake.sh tools/typecheck.sh` | no diff |
+| Format (shell) | `shfmt -d tools/baker/bake.sh tools/typecheck.sh tools/fetch_blizzard_ui.sh tests/ui.sh` | no diff |
 | Lint (Lua) | `luacheck .` | `0 warnings / 0 errors` |
 | Lint (Python) | `ruff check .` | `All checks passed!` |
-| Lint (shell) | `shellcheck tools/baker/bake.sh tools/typecheck.sh` | exit 0 |
+| Lint (shell) | `shellcheck tools/baker/bake.sh tools/typecheck.sh tools/fetch_blizzard_ui.sh tests/ui.sh` | exit 0 |
 | Types (Lua) | `tools/typecheck.sh` | zero diagnostics at Information level; multi-value lint and gate regression tests pass |
 | Tests | `for s in tests/*_spec.lua; do luajit "$s" \|\| exit 1; done` | every spec prints `…: ok`; ~25 s total |
 | Workflows | `actionlint && zizmor --offline .github` | exit 0 / "No findings" |
@@ -62,17 +62,18 @@ On-demand tools for audits. Output is candidates, never verdicts.
 Things reached indirectly. The dead-code lens must treat these as referenced.
 
 - `ShortestPathForever.toc` file list — load order; every listed file runs at login.
-- `Map.xml` templates name the global mixins (`ShortestPathForever*PinMixin`); Blizzard's map canvas calls
+- `UI/Map.xml` templates name the global mixins (`ShortestPathForever*PinMixin`); Blizzard's map canvas calls
   their `OnLoad`, `OnAcquired`, `OnReleased`, `OnMouseEnter`/`OnMouseLeave`, `OnClick`,
   `OnCanvasScaleChanged`, `OnCanvasSizeChanged` by name. Data-provider mixins' `RefreshAllData`,
   `RemoveAllData`, `OnAdded`, `OnRemoved`, `OnMapChanged` likewise.
-- ObjectiveTracker module methods (Tracker.lua) are called by `ObjectiveTrackerManager`.
+- Tracker module methods (`UI/Tracker.lua`) are called by the addon-owned `ForeverTrackerHost` in
+  `UI/TrackerHost.lua`; this host never registers the module with `ObjectiveTrackerManager`.
 - `ns.X` / `function ns.X` exports are the cross-file API; a symbol defined in one file is used in another
   (and by specs via `loadfile(...)("ShortestPathForever", ns)`). Search every `.lua`, not just the file.
-- `C_AddOns.LoadAddOn("ShortestPathForever_Nav" .. map)` (PathGrid.lua) loads the walking maps by built name.
-- SavedVariables `ShortestPathForeverDB` / `ShortestPathForeverCharDB`: keys (settings in Core.lua
+- `C_AddOns.LoadAddOn("ShortestPathForever_Nav" .. map)` (Routing/PathGrid.lua) loads the walking maps by built name.
+- SavedVariables `ShortestPathForeverDB` / `ShortestPathForeverCharDB`: keys (settings in Core/Core.lua
   `DEFAULTS`, `anchors`, debug trace) persist in players' saved files.
-- Sync wire format (Sync.lua, prefix `ShortPath1`): other players run older versions; message fields are
+- Sync wire format (Transport/Sync.lua, prefix `ShortPath1`): other players run older versions; message fields are
   a compatibility contract.
 - Slash commands `/path`, `/shortestpath` (`SLASH_SHORTESTPATHFOREVER*`, `SlashCmdList`).
 - `tools/*.py` are run by hand (README) and `tools/changelog.py` by `.github/workflows/release.yml`;
@@ -85,7 +86,7 @@ Things reached indirectly. The dead-code lens must treat these as referenced.
   debug-gated write there is a live output, not residue.
 - `tests/journey_driver.lua` is a helper loaded by the journey specs; `journey_bench.lua` and
   `walk_sim.lua` are run by hand (README).
-- `tests/api_ui.lua` rebinds `ns.Routes`/`ns.Docks` after load, which keeps Route.lua's geometry-cache
+- `tests/api_ui.lua` rebinds `ns.Routes`/`ns.Docks` after load, which keeps UI/Route.lua's geometry-cache
   identity reset and the `ns.JourneyStops` guard live. `Path.decodes` exists for `runtime_bench.lua`.
 - `tools/pack_nav.py`'s chunk-table `pack()` converts older shipped maps; `tools/baker/README.md` documents it,
   so it is live even though current bakes never need it.
@@ -118,7 +119,7 @@ How each part of the tree is reviewed. Unlisted paths are `production`.
   tables; locals cache `ns.Model` etc. at file top. Globals only where WoW requires them (mixins,
   SavedVariables, slash commands) — all listed in `.luacheckrc`.
 - Modules start via `ns.Init(fn)` after `ADDON_LOADED`, each under `xpcall` so one failure does not stop
-  the rest (Core.lua `Start`).
+  the rest (Core/Core.lua `Start`).
 - Comments explain why, in full sentences, often citing the Blizzard source file and line a behaviour
   depends on; they are the project's documentation style, not narration.
 - Specs are plain LuaJIT scripts with `assert`, stubbing WoW APIs and loading production files by
@@ -129,7 +130,7 @@ How each part of the tree is reviewed. Unlisted paths are `production`.
 - The route and transit data regenerate byte-identically offline once `tools/.cache` is filled
   (`gen_routes.py --offline`, `gen_transit.py`), so a generator refactor is provable by an empty
   `git diff Data`. `gen_nav.py` needs the mmtiles and cannot be checked that way.
-- Settings defaults live once, in Core.lua `DEFAULTS` (exported as `ns.Defaults`); the panel reads them.
+- Settings defaults live once, in Core/Core.lua `DEFAULTS` (exported as `ns.Defaults`); the panel reads them.
 - The BigWigs packager already drops dotfiles and git-ignored paths from the zip; `.pkgmeta` `ignore`
   only needs visible, tracked files (e.g. `ruff.toml`, `tools/`, `tests/`).
 
@@ -140,12 +141,12 @@ Audit slices from lowest to highest risk:
 1. docs + config (`README.md`, `tools/baker/README.md`, `tests/journey_performance.md`, config files)
 2. `tools/` — offline generators; output is checked in, so a change is visible as a data diff
 3. `tests/`
-4. UI leaves: `Alert.lua`, `Arrow.lua`, `Compass.lua`, `Settings.lua`, `Taxi.lua`, `Tracker.lua`, `MinimapPins.lua`
-5. Map layers: `Map.lua`, `Map.xml`, `Route.lua`, `RouteTransports.lua`, `Looks.lua`
-6. State and wire: `Model.lua`, `Core.lua`, `Observer.lua`, `Sync.lua`, `API.lua` (SavedVariables, wire format,
+4. UI leaves: `UI/Alert.lua`, `UI/Arrow.lua`, `UI/Compass.lua`, `UI/Settings.lua`, `Transport/Taxi.lua`, `UI/Tracker.lua`, `UI/TrackerHost.lua`, `UI/MinimapPins.lua`, `UI/Nearby.lua`, `UI/WhatsNew.lua`
+5. Map layers: `UI/Map.lua`, `UI/Map.xml`, `UI/Route.lua`, `UI/RouteTransports.lua`, `UI/Looks.lua`, `UI/RouteButton.lua`, `UI/StopPin.lua`, `UI/FlightLines.lua`
+6. State and wire: `Transport/Model.lua`, `Core/Core.lua`, `Transport/Observer.lua`, `Transport/Sync.lua`, `Core/API.lua` (SavedVariables, wire format,
    public API)
-7. Planning core: `Planner.lua`, `Path*.lua`, `Journey*.lua`, `Corpse.lua` (performance-tuned, 3 ms frame budget;
-   Corpse.lua suspends and resumes the journey)
+7. Planning core: `Routing/Planner.lua`, `Routing/Path*.lua`, `Journey/Journey*.lua`, `Journey/Corpse.lua` (performance-tuned, 3 ms frame budget;
+   Journey/Corpse.lua suspends and resumes the journey)
 
 ## Project rules and lenses
 
@@ -159,7 +160,7 @@ Audit slices from lowest to highest risk:
 Shapes that look like defects here but are not. Reviewers and verifiers read this before raising a
 finding; audits add an entry when verifiers keep dismissing the same shape for the same reason.
 
-- **walk progress per surface**: `Arrow.lua` (`ns.RefreshGuideStops`), `Tracker.lua` (`JourneyDistance`) and
+- **walk progress per surface**: `UI/Arrow.lua` (`ns.RefreshGuideStops`), `UI/Tracker.lua` (`JourneyDistance`) and
   Journey's `OnWalk` each project the player onto a walk, but for different contracts (arrow stop advance, tracker
   yards, planner replanning); they are not one fact.
 - **WalkPlaces provenance**: `ns.WalkPlaces` in the shipped `Data/Walks.lua` is read only by `planner_spec.lua`,
@@ -172,14 +173,14 @@ finding; audits add an entry when verifiers keep dismissing the same shape for t
 
 Shapes this codebase keeps producing. Check new code against them.
 
-- **orphaned comment**: a comment left behind when the code it explains moves (`comment-narration`): `Route.lua`
+- **orphaned comment**: a comment left behind when the code it explains moves (`comment-narration`): `UI/Route.lua`
   GoalPin atlas note after #27; `gen_nav.py` naming the wrong setter for its globals; `.luacheckrc` group comments
-  naming `Path.lua` after the `PathGrid.lua` split.
+  naming `Routing/Path.lua` after the `Routing/PathGrid.lua` split.
 - **bare-string closed set**: a closed set passed around as bare strings with `string` types (`stringly-typed`):
-  Path failure reasons (`Journey.lua` `WALK_FAILURE`), sighting `source` `"you"|"player"` (`Model.lua`), crossing
-  modes in `Route.lua`.
+  Path failure reasons (`Journey/Journey.lua` `WALK_FAILURE`), sighting `source` `"you"|"player"` (`Transport/Model.lua`), crossing
+  modes in `UI/Route.lua`.
 - **second copy of a fact**: another module's fact restated (`parallel-implementations`): Compass's
-  `transportIcons` beside `ns.SetTransportIcon`; `bakedBound` (`JourneyCosts.lua`) re-deriving Planner's
+  `transportIcons` beside `ns.SetTransportIcon`; `bakedBound` (`Journey/JourneyCosts.lua`) re-deriving Planner's
   Walks.lua keys; the TaxiPathNode stop flag as a literal in `gen_transit.py`.
 - **stale spec stub**: spec, bench and UI-harness stubs outliving the production field they stood in for
   (`dead-code`): `owner.loading` in `memory_bench.lua`, a `NewTicker` stub in `sync_spec.lua`, client stubs in
@@ -188,6 +189,6 @@ Shapes this codebase keeps producing. Check new code against them.
   covered goes.
 - **docs missing a new file**: README, AGENTS.md and `docs/` lists that miss a generated table or check added later.
 - **guard on a defined function**: `if ns.X then` around a function or table defined unconditionally earlier in the
-  TOC (`Itinerary.lua`, `RouteTransports.lua`).
+  TOC (`Journey/Itinerary.lua`, `UI/RouteTransports.lua`).
 
 The type gate also runs `python3 -m tools.lint_taint` and `python3 tools/typecheck_coverage.py`: native-method hooks, shared UI-state writes and omitted runtime type coverage fail CI. TrackerHost owns addon sections and pools outside Blizzard's registry; first rendering follows both native load events, deferred one frame. CI runs the private host against pinned Forever module/block/animation source.

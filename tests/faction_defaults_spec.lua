@@ -29,7 +29,7 @@ local function loadCore(saved)
 		end,
 	}, { __index = _G })
 	local ns = { Model = { MAX_AGE = 86400 } }
-	local chunk = assert(loadfile("Core.lua"))
+	local chunk = assert(loadfile("Core/Core.lua"))
 	setfenv(chunk, env)("ShortestPathForever", ns)
 	frames[1]:OnEvent("ADDON_LOADED", "ShortestPathForever")
 	return ns

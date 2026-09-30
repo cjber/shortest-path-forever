@@ -27,10 +27,12 @@ before its `v*` tag, since the release publishes it as the notes.
   hand-edit.
 - `ShortestPathForever_Nav*/` — load-on-demand walking maps built by `tools/baker/`; loaded only when a
   route needs them.
-- `Planner.lua`, `Path*.lua`, `Journey*.lua` — the search; `tests/journey_performance.md` records its
-  budgets. `PathGrid.lua` decodes the walking maps, `Path.lua` searches them, `PathJobs.lua` slices the
-  searches over frames. `Journey.lua` runs the journey, `JourneyCosts.lua` its endpoint costs and
-  `JourneyGuide.lua` the arrow and native waypoint.
+- `Core/` — addon lifecycle, defaults and the public API.
+- `Routing/` — transport search and walking-map decoding, search and frame scheduling.
+- `Journey/` — journey state, steps, costs, guidance and corpse recovery; performance budgets live in
+  `tests/journey_performance.md`.
+- `Transport/` — learned connections, observation, synchronisation, taxis and teleports.
+- `UI/` — map overlays, nearby services, tracker, compass, menus and settings.
 - `Locales/` — `Locales/enUS.lua` makes `L`, whose English phrases are their own keys; a translation is a
   `Locales/<locale>.lua` listed after it (`Locales/README.md`). After changing a phrase,
   `python3 tools/phrases.py > Locales/phrases.txt`. No packager localization keyword: CurseForge no longer serves translations.
@@ -73,7 +75,7 @@ before its `v*` tag, since the release publishes it as the notes.
 
 `tools/typecheck.sh` checks the TOC/XML load graph, LuaLS coverage and `tools/lint_taint.py`.
 Do not hook Blizzard object methods: use events, `HookScript` or a supported callback registry.
-Keep addon tracker sections and pools in `TrackerHost.lua`, outside Blizzard's registry.
+Keep addon tracker sections and pools in `UI/TrackerHost.lua`, outside Blizzard's registry.
 Render only after `PLAYER_ENTERING_WORLD` and `VARIABLES_LOADED`, deferred one frame.
 This supersedes WFA-5's native registration guidance. CI exercises the host against checksum-pinned
 Forever tracker source; native manager access is forbidden in the integration harness.

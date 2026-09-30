@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- Organise runtime modules into Core, Routing, Journey, Transport and UI folders. Update the manifest, developer tools and tests while preserving client load order and runtime behaviour.
+
 ## [1.6.0] - 2026-09-30
 
 - **Avoid hostile transport landings by default.** New installs leave opposing-faction boat and zeppelin routes off. Journey planning and travel estimates respect that choice; players who opted in keep their setting.

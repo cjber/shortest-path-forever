@@ -1,6 +1,6 @@
 local ns = {}
 assert(loadfile("tools/load_nav.lua"))(0)
-for _, file in ipairs({ "PathGrid.lua", "Path.lua", "PathJobs.lua" }) do
+for _, file in ipairs({ "Routing/PathGrid.lua", "Routing/Path.lua", "Routing/PathJobs.lua" }) do
 	assert(loadfile(file))("ShortestPathForever", ns)
 end
 local Path = ns.Path
@@ -128,7 +128,7 @@ rawset(_G, "geterrorhandler", previousHandler)
 assert(reported and failure == failed and recovered, "errors must not strand Journey's pending count")
 
 -- Coordinates: the navmesh stands where the addon's pins stand (UnitPosition frame, x north, y west).
--- Taxi.lua Stormwind flight master and Transports.lua tram pin, each with a nearby street point.
+-- Transport/Taxi.lua Stormwind flight master and Transports.lua tram pin, each with a nearby street point.
 for _, pin in ipairs({ { -8840.56, 489.7, 0, -20 }, { -8346.46, 514.031, 8, 0 } }) do
 	local p = Path.FindSync(0, { x = pin[1], y = pin[2] }, { x = pin[1] + pin[3], y = pin[2] + pin[4] })
 	assert(p, "no mesh at pin " .. pin[1] .. "," .. pin[2])

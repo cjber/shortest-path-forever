@@ -1,5 +1,5 @@
 local ns = {}
-for _, file in ipairs({ "PathGrid.lua", "Path.lua", "PathJobs.lua" }) do
+for _, file in ipairs({ "Routing/PathGrid.lua", "Routing/Path.lua", "Routing/PathJobs.lua" }) do
 	assert(loadfile(file))("ShortestPathForever", ns)
 end
 assert(loadfile("Data/Taxi.lua"))("ShortestPathForever", ns)
@@ -148,7 +148,7 @@ print(string.format("path_many_spec: %d exact forward/reverse comparisons, queue
 -- Every published frontier bounds every still-unsettled target, even while another map's local grid
 -- search owns the scratch heap. Pausing one batch must leave its peer and a geometry search runnable.
 local isolated = {}
-for _, file in ipairs({ "PathGrid.lua", "Path.lua", "PathJobs.lua" }) do
+for _, file in ipairs({ "Routing/PathGrid.lua", "Routing/Path.lua", "Routing/PathJobs.lua" }) do
 	assert(loadfile(file))("ShortestPathForever", isolated)
 end
 Path = isolated.Path

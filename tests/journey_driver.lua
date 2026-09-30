@@ -185,13 +185,13 @@ ns.FormatCountdown = tostring
 ns.SetJourneyRoute = function(_, route)
 	shown = route
 end
-load("Model.lua")
-load("Planner.lua")
-load("JourneySteps.lua")
-load("JourneyCosts.lua")
-load("JourneyGuide.lua")
-load("Journey.lua")
-load("JourneyInput.lua")
+load("Transport/Model.lua")
+load("Routing/Planner.lua")
+load("Journey/JourneySteps.lua")
+load("Journey/JourneyCosts.lua")
+load("Journey/JourneyGuide.lua")
+load("Journey/Journey.lua")
+load("Journey/JourneyInput.lua")
 
 local map = {
 	GetMapID = function()

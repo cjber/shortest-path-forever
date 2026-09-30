@@ -1,5 +1,5 @@
 local ns = {}
-assert(loadfile("FlightLines.lua"))("ShortestPathForever", ns)
+assert(loadfile("UI/FlightLines.lua"))("ShortestPathForever", ns)
 local a, b, c = { map = 0, x = 0, y = 0 }, { map = 0, x = 1, y = 0 }, { map = 0, x = 1, y = 1 }
 local path = { mode = "flight", points = { a, b, c } }
 local points = ns.FlightLinePoints(path)

@@ -1,5 +1,5 @@
 -- Exercise the real compass against allocation-free UI spies, including a stopped OnUpdate.
-local source = arg[1] or "Compass.lua"
+local source = arg[1] or "UI/Compass.lua"
 local calls = { text = 0, atlas = 0, info = 0, objects = 0, points = 0, panels = 0, colors = 0 }
 local stripTemplate
 local atlasSizes = {
@@ -170,7 +170,7 @@ env.CreateFromMixins, env.MapCanvasPinMixin, env.FlightPointPinMixin = function(
 end, {}, {}
 ns.Init = function() end
 local stubs = { DockKind = ns.DockKind, DockPoint = ns.DockPoint }
-for _, file in ipairs({ "Looks.lua", "Map.lua" }) do
+for _, file in ipairs({ "UI/Looks.lua", "UI/Map.lua" }) do
 	setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
 end
 ns.Init, ns.DockKind, ns.DockPoint = nil, stubs.DockKind, stubs.DockPoint

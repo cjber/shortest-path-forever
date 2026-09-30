@@ -1,8 +1,10 @@
 std = "lua51"
 max_line_length = 120
-exclude_files = { ".claude/**", "tools/.cache/**", ".types/**", "types/**", ".release/**", "ShortestPathForever_Nav*/**" }
-globals = { "ForeverTrackerHost",
-    "EventUtil",
+exclude_files =
+	{ ".claude/**", "tools/.cache/**", ".types/**", "types/**", ".release/**", "ShortestPathForever_Nav*/**" }
+globals = {
+	"ForeverTrackerHost",
+	"EventUtil",
 	"ShortestPathForever",
 	"ShortestPathForeverCharDB",
 	"ShortestPathForeverDB",
@@ -17,7 +19,9 @@ globals = { "ForeverTrackerHost",
 	"bit",
 	"SLASH_SPFNEAR1",
 }
-read_globals = { "CreateFramePoolCollection", "C_XMLUtil",
+read_globals = {
+	"CreateFramePoolCollection",
+	"C_XMLUtil",
 	"AM_PIN_SCALE_STYLE_WITH_TERRAIN",
 	"Ambiguate",
 	"C_ChatInfo",
@@ -144,13 +148,11 @@ read_globals[#read_globals + 1] = "EditModeManagerFrame"
 -- reading their locals. 2xx: locals and arguments only the appended checks use; 43x: stub methods named like the
 -- client's.
 files["tests/ui_client.lua"] = {
-	std = "+luajit",
 	allow_defined_top = true,
 	ignore = { "2", "43" },
 	-- Blizzard_SharedXML/Spinner.lua defines SpinnerMixin.
 	read_globals = { "SpinnerMixin" },
 }
 -- ui_map.lua continues ui_client.lua's chunk, so its "globals" are ui_client.lua's locals.
-files["tests/ui_map.lua"] = { std = "+luajit", ignore = { "1", "2", "43" } }
+files["tests/ui_map.lua"] = { ignore = { "1", "2", "43" } }
 read_globals[#read_globals + 1] = "EventRegistry"
-read_globals[#read_globals + 1] = "EditModeManagerFrame"

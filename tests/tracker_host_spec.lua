@@ -204,11 +204,11 @@ if nativeRoot then
 end
 
 local function loadHost(namespace, path)
-	path = path or "TrackerHost.lua"
+	path = path or "UI/TrackerHost.lua"
 	setfenv(assert(loadfile(path)), env)("Test", namespace)
 end
 local hostPaths = {}
-for path in (os.getenv("AGF_TRACKER_HOSTS") or "TrackerHost.lua"):gmatch("[^\n]+") do
+for path in (os.getenv("AGF_TRACKER_HOSTS") or "UI/TrackerHost.lua"):gmatch("[^\n]+") do
 	hostPaths[#hostPaths + 1] = path
 end
 loadHost(ns, hostPaths[1])

@@ -42,13 +42,13 @@ remains 8,000 ms. The animation uses fixed time steps, never the wall clock.
   supplies boat geometry: route 295, docks 10 → 9, and route 292, docks 5 → 6.
   The final Silithus destination is Alliance taxi node 73 from `Data/Taxi.lua`.
   Timings in the tracker reproduce capture 21, not a new optimality measurement.
-- `Route.lua` supplies 2-pixel cores in 4-pixel outlines, 4-pixel walk dots in 6-pixel rims 9 apart, colours,
+- `UI/Route.lua` supplies 2-pixel cores in 4-pixel outlines, 4-pixel walk dots in 6-pixel rims 9 apart, colours,
   overview curves, fading continent-edge curves and the 1.2-second settling pulse.
   Outlines render below all cores. The destination uses the native pin at 0.8 scale.
-- `Map.lua` / `Map.xml` supply 20-unit ferry pins, transitive dock clustering,
+- `UI/Map.lua` / `UI/Map.xml` supply 20-unit ferry pins, transitive dock clustering,
   18-unit glow outsets, hover highlighting and tooltip wording. Default map layers
   include zeppelins, lifts, trams, portals and undiscovered Alliance flight points.
-  Loading `Map.lua` with LuaJIT stubs confirms `DockPierName(8)` returns
+  Loading `UI/Map.lua` with LuaJIT stubs confirms `DockPierName(8)` returns
   `Auberdine northeast pier`; the earlier mock hardcoded `north pier`. Hover
   labels use projected cluster coordinates, so dock 24 is `northwest pier` there
   while its world-coordinate tracker title is `west pier`.
@@ -63,9 +63,9 @@ remains 8,000 ms. The animation uses fixed time steps, never the wall clock.
   maps the strip's left edge to the top; clockwise rotation joins all four corners.
   Shared `tooltip_backdrop` implements that mapping. World-map frames also now
   apply Camelot's metal-corner offsets. The compass itself draws no panel since
-  2026-09-29: `RouteButton.lua`'s plate is the client's own `ui-hud-minimap-button`
-  atlas (20 by 18), and `Compass.lua` fills no background at all.
-- `Tracker.lua`, `JourneyGuide.lua`, `Arrow.lua`, `Compass.lua` and `RouteButton.lua`
+  2026-09-29: `UI/RouteButton.lua`'s plate is the client's own `ui-hud-minimap-button`
+  atlas (20 by 18), and `UI/Compass.lua` fills no background at all.
+- `UI/Tracker.lua`, `Journey/JourneyGuide.lua`, `UI/Arrow.lua`, `UI/Compass.lua` and `UI/RouteButton.lua`
   supply the text, Guide's 25-yard bend threshold, marker proportions, stock fonts,
   the ribbon's fade ramp and its gold active state, and heading easing.
   Blizzard's ObjectiveTracker templates, WorldMap frame, WaypointLocationDataProvider,
@@ -91,7 +91,7 @@ other tracked content in the captures are absent. The Journey tracker retains it
 `DockPierName`’s current “Auberdine northeast pier” label; the older mock said “north”.
 
 No supplied capture shows the dock tooltip or Boats countdown. Tooltip text/anchors
-were checked against `Map.lua`; the stock frame was compared with the skill's real
+were checked against `UI/Map.lua`; the stock frame was compared with the skill's real
 SkillUp tooltip capture, obtainable without changing either repository:
 
 ```sh

@@ -189,7 +189,10 @@ def write_strict_fixture(root, fixture):
     # Real namespace exports and generated headers must keep their type information too.
     for source in root.glob("*.lua"):
         shutil.copy2(source, fixture / source.name)
-    for source in [root / "types", root / "Data", *root.glob("ShortestPathForever_Nav*")]:
+    for source in [
+        *(root / name for name in ("Core", "Routing", "Journey", "Transport", "UI", "types", "Data")),
+        *root.glob("ShortestPathForever_Nav*"),
+    ]:
         shutil.copytree(source, fixture / source.name)
     for name, mistake in (("Data/Routes.lua", "ns.Routes[241].period = false"),):
         with (fixture / name).open("a") as output:

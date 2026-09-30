@@ -23,8 +23,8 @@ assert(not bySpell[1297659], "Teleport: Dalaran has no sourced destination")
 assert(not bySpell[23442], "the Everlook ripper is not a personal teleport")
 
 -- The planner: a teleport is an edge from where you stand, its remaining cooldown a wait.
-assert(loadfile("Model.lua"))("ShortestPathForever", ns)
-assert(loadfile("Planner.lua"))("ShortestPathForever", ns)
+assert(loadfile("Transport/Model.lua"))("ShortestPathForever", ns)
+assert(loadfile("Routing/Planner.lua"))("ShortestPathForever", ns)
 local Plan = ns.Planner.Plan
 
 -- 7000 yards on foot is 1000 s; the hearth lands 70 yards short of the goal (10 s) after a 10 s cast.
@@ -123,7 +123,7 @@ do
 			}
 		end,
 	}, { __index = _G })
-	setfenv(assert(loadfile("Teleports.lua")), env)("ShortestPathForever", runtime)
+	setfenv(assert(loadfile("Transport/Teleports.lua")), env)("ShortestPathForever", runtime)
 	local Usable = runtime.UsableTeleports
 
 	local places, ready = Usable(5000)

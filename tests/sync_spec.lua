@@ -1,5 +1,5 @@
 local ns = { db = { share = true } }
-for _, file in ipairs({ "Data/Routes.lua", "Data/Transports.lua", "Model.lua" }) do
+for _, file in ipairs({ "Data/Routes.lua", "Data/Transports.lua", "Transport/Model.lua" }) do
 	assert(loadfile(file))("ShortestPathForever", ns)
 end
 local now, timers, sent, handler = 0, {}, {}
@@ -69,7 +69,7 @@ ns.FreshAnchors = function()
 	return anchors
 end
 ns.Sighted = noop
-setfenv(assert(loadfile("Sync.lua")), env)("ShortestPathForever", ns)
+setfenv(assert(loadfile("Transport/Sync.lua")), env)("ShortestPathForever", ns)
 local function advance(seconds)
 	local untilTime = now + seconds
 	while true do
