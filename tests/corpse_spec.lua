@@ -32,10 +32,10 @@ end
 ns.SetJourneyRoute = function(point, route)
 	destination, drawn = point, route
 end
-driver.load("Looks.lua")
-driver.load("API.lua")
-driver.load("Itinerary.lua")
-driver.load("Corpse.lua")
+driver.load("UI/Looks.lua")
+driver.load("Core/API.lua")
+driver.load("Journey/Itinerary.lua")
+driver.load("Journey/Corpse.lua")
 local API = env.ShortestPathForever.API
 
 local function event(name)

@@ -36,7 +36,7 @@ local env = setmetatable({
 		end,
 	},
 }, { __index = _G })
-setfenv(assert(loadfile("Looks.lua")), env)("ShortestPathForever", ns)
+setfenv(assert(loadfile("UI/Looks.lua")), env)("ShortestPathForever", ns)
 
 local function texture()
 	local t = {}

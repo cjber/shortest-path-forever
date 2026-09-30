@@ -1,6 +1,6 @@
 local ns = {}
 assert(loadfile("Data/Routes.lua"))("ShortestPathForever", ns)
-assert(loadfile("Model.lua"))("ShortestPathForever", ns)
+assert(loadfile("Transport/Model.lua"))("ShortestPathForever", ns)
 local Model, Routes = ns.Model, ns.Routes
 
 local function near(actual, expected, tolerance, label)

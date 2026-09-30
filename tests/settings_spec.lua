@@ -75,7 +75,7 @@ local env = setmetatable({
 }, { __index = _G })
 
 local refreshed, taxiRefreshed, buttonRefreshed = 0, 0, 0
--- Core.lua's defaults: every row on.
+-- Core/Core.lua's defaults: every row on.
 local ns = {
 	db = {},
 	Defaults = setmetatable({}, {
@@ -97,7 +97,7 @@ local ns = {
 	end,
 }
 assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", ns)
-setfenv(assert(loadfile("Settings.lua")), env)("ShortestPathForever", ns)
+setfenv(assert(loadfile("UI/Settings.lua")), env)("ShortestPathForever", ns)
 
 -- The index page is one button per group; each opens that group's page. The groups divide the old flat list, and
 -- every row keeps its key, default, tooltip and callback.

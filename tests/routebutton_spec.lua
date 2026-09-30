@@ -2,7 +2,7 @@
 -- stopping the route through Journey's own Guide toggle rather than a route of its own, gold while a route is
 -- on, and never built at all for a player who turned the setting off.
 --
--- The toggle path here is Journey's, with Tracker.lua's refresh paint modelled as one call; the end-to-end
+-- The toggle path here is Journey's, with UI/Tracker.lua's refresh paint modelled as one call; the end-to-end
 -- journey, click and paint are in tests/routebutton_ui.lua.
 local atlasSizes = { ["ui-hud-minimap-button"] = { width = 20, height = 18 } }
 
@@ -80,7 +80,7 @@ local function boot(options)
 		IsJourneyGuided = function()
 			return state.guided
 		end,
-		-- Journey's own toggle; its refresh runs through Tracker.lua, which paints the button.
+		-- Journey's own toggle; its refresh runs through UI/Tracker.lua, which paints the button.
 		ToggleJourneyGuide = function()
 			state.toggles = state.toggles + 1
 			state.guided = not state.guided
@@ -128,9 +128,9 @@ local function boot(options)
 			tip[#tip + 1] = "  " .. text
 		end,
 	}, { __index = _G })
-	-- FitAtlas is Looks.lua's, so the plate is fitted the way the addon fits every atlas.
-	setfenv(assert(loadfile("Looks.lua")), env)("ShortestPathForever", ns)
-	setfenv(assert(loadfile("RouteButton.lua")), env)("ShortestPathForever", ns)
+	-- FitAtlas is UI/Looks.lua's, so the plate is fitted the way the addon fits every atlas.
+	setfenv(assert(loadfile("UI/Looks.lua")), env)("ShortestPathForever", ns)
+	setfenv(assert(loadfile("UI/RouteButton.lua")), env)("ShortestPathForever", ns)
 	handle.ns, handle.minimap, handle.tip, handle.state = ns, minimap, tip, state
 	return handle
 end

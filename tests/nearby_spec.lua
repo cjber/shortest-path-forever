@@ -219,7 +219,7 @@ local ns = {
 	},
 }
 setfenv(assert(loadfile("Locales/enUS.lua")), env)("ShortestPathForever", ns)
-setfenv(assert(loadfile("Nearby.lua")), env)("ShortestPathForever", ns)
+setfenv(assert(loadfile("UI/Nearby.lua")), env)("ShortestPathForever", ns)
 for _, fn in ipairs(initializers) do
 	fn()
 end

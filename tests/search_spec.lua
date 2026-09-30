@@ -1,7 +1,7 @@
 local function scenario(oldSeconds, newSeconds)
 	local driver = assert(loadfile("tests/journey_driver.lua"))()
 	local ns = driver.ns
-	driver.load("Arrow.lua")
+	driver.load("UI/Arrow.lua")
 	local batches, jobs, draws = {}, {}, {}
 	local choice, exact = "A", false
 	local from, goal = { map = 1, x = 0, y = 0 }, { map = 1, x = 1000, y = 0 }

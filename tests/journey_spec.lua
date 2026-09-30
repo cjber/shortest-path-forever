@@ -291,10 +291,10 @@ for _, destination in ipairs({ { map = 1, x = 6400, y = 100 }, { map = 0, x = 22
 		"Data/Taxi.lua",
 		"Data/Portals.lua",
 		"Data/Walks.lua",
-		"PathGrid.lua",
-		"Path.lua",
-		"PathJobs.lua",
-		"Arrow.lua",
+		"Routing/PathGrid.lua",
+		"Routing/Path.lua",
+		"Routing/PathJobs.lua",
+		"UI/Arrow.lua",
 	}) do
 		live.load(file)
 	end
@@ -406,9 +406,9 @@ for _, destination in ipairs({ { map = 1, x = 6400, y = 100 }, { map = 0, x = 22
 	assert(not addon.IsJourneyGuided() and live.waypoint() == manual)
 	addon.ClearJourney()
 	-- A fresh engine ensures the recovery test cannot pass using an already settled endpoint cache.
-	live.load("PathGrid.lua")
-	live.load("Path.lua")
-	live.load("PathJobs.lua")
+	live.load("Routing/PathGrid.lua")
+	live.load("Routing/Path.lua")
+	live.load("Routing/PathJobs.lua")
 	addon.Path.after = function(fn)
 		nextFrame = fn
 	end

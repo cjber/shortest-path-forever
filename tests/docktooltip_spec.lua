@@ -1,6 +1,6 @@
 -- Run from the repository root: luajit tests/docktooltip_spec.lua
 -- The dock tooltip must tolerate a cluster whose docks have no departures left. A pin's cluster can outlive the
--- filter that built it for a frame (a refresh queued in combat), and Map.lua's shared title then indexed the first
+-- filter that built it for a frame (a refresh queued in combat), and UI/Map.lua's shared title then indexed the first
 -- departure of an empty group and raised. The smoke sweep names this crash; this pins the fix.
 local dir = arg[0]:match("^(.*)/") or "tests"
 

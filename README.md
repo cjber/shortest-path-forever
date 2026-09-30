@@ -133,7 +133,7 @@ pinned WoW API annotations, local declarations and intentional multi-value calls
 security reports.
 
 **Releasing:** move the `[Unreleased]` notes in `CHANGELOG.md` under `## [X.Y.Z] - YYYY-MM-DD`, set
-`ns.WHATS_NEW` in `WhatsNew.lua` to that entry's headline in one sentence, then
+`ns.WHATS_NEW` in `UI/WhatsNew.lua` to that entry's headline in one sentence, then
 `git tag -s vX.Y.Z && git push --tags`. The [BigWigs packager](https://github.com/BigWigsMods/packager) builds the zip
 and uploads it to GitHub Releases, CurseForge and Wago.
 

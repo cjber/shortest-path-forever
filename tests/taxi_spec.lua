@@ -170,7 +170,7 @@ env.TaxiFrame:SetScript("OnShow", function()
 	env.DrawOneHopLines()
 end)
 
-setfenv(assert(loadfile("Taxi.lua")), env)("ShortestPathForever", ns)
+setfenv(assert(loadfile("Transport/Taxi.lua")), env)("ShortestPathForever", ns)
 local flight = {
 	mode = "flight",
 	from = { id = 101 },

@@ -8,12 +8,12 @@ for _, file in ipairs({
 	"Data/Taxi.lua",
 	"Data/Portals.lua",
 	"Data/Walks.lua",
-	"PathGrid.lua",
-	"Path.lua",
-	"PathJobs.lua",
-	"Looks.lua",
-	"API.lua",
-	"Itinerary.lua",
+	"Routing/PathGrid.lua",
+	"Routing/Path.lua",
+	"Routing/PathJobs.lua",
+	"UI/Looks.lua",
+	"Core/API.lua",
+	"Journey/Itinerary.lua",
 }) do
 	driver.load(file)
 end
@@ -74,7 +74,7 @@ local find = ns.Path.Find
 local walked = {}
 ns.Path.Find = function(map, from, to, callback, waterWalking)
 	searched = searched + 1
-	if not debug.traceback():find("Itinerary.lua", 1, true) then
+	if not debug.traceback():find("Journey/Itinerary.lua", 1, true) then
 		return find(map, from, to, callback, waterWalking)
 	end
 	local entry = { queued = frame }
@@ -87,7 +87,7 @@ end
 -- Redrawing every later hop is a frame's work of its own: never inside a search slice's callback, nor after a plan.
 ns.RefreshJourneyPreview = function()
 	refreshed = refreshed + 1
-	check(not debug.traceback():find("Path.lua", 1, true), "no redraw inside a search callback")
+	check(not debug.traceback():find("Routing/Path.lua", 1, true), "no redraw inside a search callback")
 	check(plannedIn ~= frame, "no redraw in a hop plan's frame")
 end
 ns.faction, ns.speed, ns.known = "Alliance", 7, {}
@@ -196,7 +196,7 @@ check(#planned == plans + 1, "only the changed hop is planned again")
 local jobs = {}
 ns.Path.Find = function(...)
 	local job = find(...)
-	if debug.traceback():find("Itinerary.lua", 1, true) then
+	if debug.traceback():find("Journey/Itinerary.lua", 1, true) then
 		jobs[#jobs + 1] = job
 	end
 	return job

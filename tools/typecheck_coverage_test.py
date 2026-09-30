@@ -78,3 +78,12 @@ class CoverageTest(unittest.TestCase):
         self.write("Forgotten.lua", "local missing = true")
         with self.assertRaisesRegex(ValueError, "not loaded"):
             self.run_gate()
+
+    def test_orphaned_grouped_runtime_files_fail(self):
+        for folder in ("Core", "Routing", "Journey", "Transport", "UI"):
+            with self.subTest(folder=folder):
+                path = self.root / folder / "Forgotten.lua"
+                self.write(str(path.relative_to(self.root)), "local missing = true")
+                with self.assertRaisesRegex(ValueError, "not loaded"):
+                    self.run_gate()
+                path.unlink()
