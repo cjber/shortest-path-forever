@@ -20,6 +20,7 @@
 ---@field tooltip? string -- optional destination detail shown on the stop pin tooltip, never used as the arrow label
 ---@field kind? SPFAPIStopKind -- any other value is ignored and the stop keeps the plain pin
 ---@field hold? boolean -- keep guidance at this stop until the caller submits an updated route
+---@field radius? number -- yards around a held stop where travel cues pause; finite and nonnegative
 
 ---@class SPFAPILeg
 ---@field mode SPFAPIMode

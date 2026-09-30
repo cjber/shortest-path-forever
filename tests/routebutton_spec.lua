@@ -69,7 +69,8 @@ local function boot(options)
 			self:Hide()
 		end
 	end
-	local state = { guided = options.guided == true, journey = options.journey ~= false, toggles = 0, opened = 0 }
+	local state =
+		{ guided = options.guided == true, journey = options.journey ~= false, toggles = 0, opened = 0, nearby = 0 }
 	local ns
 	ns = {
 		db = { routeButton = options.routeButton ~= false },
@@ -84,6 +85,9 @@ local function boot(options)
 			state.toggles = state.toggles + 1
 			state.guided = not state.guided
 			ns.RefreshRouteButton()
+		end,
+		OpenNearby = function()
+			state.nearby = state.nearby + 1
 		end,
 		OpenSettings = function()
 			state.opened = state.opened + 1
@@ -182,6 +186,9 @@ assert(run.state.toggles == 2 and run.state.guided, "and started it again")
 close(button.Plate.vertex[2], 0.82)
 
 -- Right-click opens the addon's settings category instead of touching the route.
+button.scripts.OnClick(button, "MiddleButton")
+assert(run.state.nearby == 1, "middle-click opens nearby services")
+assert(run.state.toggles == 2 and run.state.opened == 0, "service click only opens the finder")
 button.scripts.OnClick(button, "RightButton")
 assert(run.state.opened == 1 and run.state.toggles == 2, "right-click leaves the route alone")
 

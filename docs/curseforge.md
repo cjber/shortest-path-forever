@@ -4,12 +4,17 @@ I wanted a proper "get me there" for WoW: Forever, so Shortest Path Forever find
 
 Planning a journey from the map: the route settles, the next boat counts down in the tracker and the compass turns with you.
 
+![Nearby services](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/services.png)
+
+Middle-click the route button to find a trainer, repairs or another nearby service.
+
 ## Features
 
 - **A journey from where you stand.** Walking paths go around walls, hills and water, and through tunnels. The planner uses the flight points you know and can walk you to an undiscovered flight master when that saves time. Boat waits count towards the arrival time.
 - **Directions on the map and minimap.** Walking legs are round breadcrumb dots, transport legs have their own colours, and a waypoint pin marks your destination. The Group Finder spinner turns while a new journey is checked.
 - **Guide, on with every journey.** The game's own waypoint marker leads you to the next boat, lift, flight master or your destination, or round each turn if you prefer. Click the Journey header to toggle it; right-click to show the destination or clear the journey. A compass in the game's own parchment gold marks your next turns, stop and destination.
 - **A route button on the minimap.** A round button in the game's own minimap button art starts and stops the route in one click, and turns gold while a route is on. Right-click opens `/path`.
+- **Nearby services.** Middle-click the route button or use `/spfnear` to find trainers, repairs, reagents and other services. Choose trainers and vendors by specialty. Uses installed QuestieDB and Tweaks Forever for your class trainers.
 - **Back to your corpse.** As a ghost, a red dotted path in your tombstone's colour leads back to your body, and your journey picks up again once you are alive.
 - **Live departures.** Hover a dock on the world map or minimap to see where its boats go, and when they arrive and leave. Destination docks light up; click one to open the map at the other end. Nearby departures appear in the objective tracker; aboard a timed boat, it shows the next stop.
 - **Lifts, trams and portals.** Landings and stations have their own countdowns. Portals show where they lead, and clicking one opens that map.

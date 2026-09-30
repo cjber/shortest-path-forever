@@ -66,8 +66,8 @@ before its `v*` tag, since the release publishes it as the notes.
 
 - WFA-3 (no minimap button): the route button is a minimap button by owner request, and it is an action, not a
   second options surface. Every option still lives in the settings page, which the slash command, the compartment
-  entry and the button's right-click open; the button starts and stops the route, nothing else. Owner decision
-  2026-09-29.
+  entry and the button's right-click open; the button starts and stops the route; middle-click opens the service finder. Owner decisions
+  2026-09-29 and 2026-09-30.
 
 ## Secure UI regression checks
 

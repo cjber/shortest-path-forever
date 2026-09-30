@@ -41,12 +41,17 @@ local function Tooltip(self)
 	else
 		GameTooltip_AddInstructionLine(GameTooltip, L["Click to start the route."])
 	end
+	GameTooltip_AddInstructionLine(GameTooltip, L["Middle-click for nearby services."])
 	GameTooltip:Show()
 end
 
 local function OnClick(_, mouseButton)
 	if mouseButton == "RightButton" then
 		ns.OpenSettings()
+		return
+	end
+	if mouseButton == "MiddleButton" then
+		ns.OpenNearby()
 		return
 	end
 	ns.ToggleJourneyGuide()
@@ -70,7 +75,7 @@ local function Create()
 	button = frame
 	frame:SetSize(SIZE, SIZE)
 	frame:SetFrameStrata("MEDIUM")
-	frame:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+	frame:RegisterForClicks("LeftButtonUp", "RightButtonUp", "MiddleButtonUp")
 	local plate = frame:CreateTexture(nil, "BACKGROUND")
 	ns.FitAtlas(plate, PLATE, PLATE_WIDTH, PLATE_HEIGHT)
 	plate:SetPoint("CENTER")

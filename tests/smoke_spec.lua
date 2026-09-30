@@ -827,10 +827,14 @@ local function Fuzz(label)
 		end
 	elseif action == 6 then
 		Run(label .. " plan", function()
-			ShortestPathForever.API.NavigateRoute({
+			local started = ShortestPathForever.API.NavigateRoute(
 				"Fuzz",
-				{ { map = 1, x = Pick(100) / 100, y = Pick(100) / 100, title = "Fuzz" } },
-			})
+				{ { map = 1, x = Pick(100) / 100, y = Pick(100) / 100, title = "Fuzz" } }
+			)
+			assert(started == (not combat and ns.db.journey == true), "fuzz route honours combat and journey setting")
+			if started then
+				assert(ShortestPathForever.API.CurrentStop("Fuzz") == 1, "fuzz route takes ownership")
+			end
 			Flush()
 		end)
 	elseif action == 7 then

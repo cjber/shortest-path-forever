@@ -204,6 +204,11 @@ for _, invalid in ipairs({
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, title = {} } },
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, hold = "true" } },
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, hold = driver.secret } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, radius = -1 } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, radius = math.huge } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, radius = 0 / 0 } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, radius = "30" } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, radius = driver.secret } },
 	{ [1] = stops[1], [100] = stops[2] },
 }) do
 	equal(API.NavigateRoute("AGF", invalid), false, "invalid route")
@@ -251,6 +256,55 @@ equal(API.CurrentStop("AGF"), nil, "final arrival releases ownership")
 equal(API.Ended("AGF"), "arrived", "final arrival")
 equal(ns.HasJourney(), false, "final arrival ends journey")
 equal(driver.waypoint(), nil, "final arrival clears guidance")
+
+-- Objective-area arrival hides travel cues without completing or abandoning the owner's held route.
+local originalArrow = ns.PointGuideArrow
+local areaArrow
+ns.PointGuideArrow = function(points, callback)
+	areaArrow = points
+	if points and callback then
+		callback(points[#points], false)
+	end
+end
+assert(API.NavigateRoute("AGF", {
+	{ map = 1, x = 0.502, y = 0.5, title = "Working area", kind = "objective", hold = true, radius = 60 },
+	{ map = 1, x = 0.6, y = 0.5, title = "Later" },
+}))
+for _ = 1, 200 do
+	driver.update(0.1)
+	if not select(1, ns.JourneyStatus()) then
+		break
+	end
+end
+assert(ns.JourneyInfo() and driver.waypoint(), "outside the area has walking directions")
+driver.move({ map = 1, x = 0, y = -50 })
+driver.update(0.1)
+equal(API.CurrentStop("AGF"), 1, "entering the area holds quest progress")
+equal(ns.JourneyInfo(), nil, "inside the area hides the journey tracker")
+equal(areaArrow, nil, "inside the area hides the private compass and arrow")
+equal(driver.waypoint(), nil, "inside the area clears owned travel waypoint")
+assert(ns.HasJourney() and ns.IsJourneyGuided(), "area arrival keeps owner and route")
+driver.move({ map = 1, x = 0, y = -20 })
+driver.update(0.1)
+assert(ns.JourneyInfo() and driver.waypoint(), "leaving the area resumes walking directions")
+env.InCombatLockdown = function()
+	return true
+end
+driver.fire("PLAYER_REGEN_DISABLED")
+local combatWaypoint = driver.waypoint()
+driver.move({ map = 1, x = 0, y = -50 })
+driver.update(0.1)
+equal(ns.JourneyInfo(), nil, "area arrival hides private cues in combat")
+equal(driver.waypoint(), combatWaypoint, "combat defers native waypoint writes")
+equal(API.CurrentStop("AGF"), 1, "combat preserves held route progress")
+env.InCombatLockdown = function()
+	return false
+end
+driver.fire("PLAYER_REGEN_ENABLED")
+driver.update(0.1)
+equal(driver.waypoint(), nil, "combat end clears the deferred waypoint")
+API.Cancel("AGF")
+ns.PointGuideArrow = originalArrow
 
 -- A held stop remains visible at its destination until the owner refreshes its route.
 driver.move({ map = 1, x = 0, y = -400 })
