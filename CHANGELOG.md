@@ -17,6 +17,8 @@ verbatim rather than rewritten as the addon moves.
 - **The compass looks like the game and is on by default.** The dark box and its border are gone: the ribbon is
   the game's own parchment ticks and gold letters, fading out at each end, with the destination drawn as the
   game's own waypoint pin. *Show a compass while Guide is on* in `/path` still turns it off.
+- **Settings, grouped.** `/path` opens a short index of Map marks, Transport, Guidance, Alerts and Interface
+  instead of one long list, with each group on its own page. Every option is where it was.
 
 ## [1.4.7] - 2026-09-29
 

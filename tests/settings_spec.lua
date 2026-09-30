@@ -1,28 +1,43 @@
 -- Settings rows must reach their layout only through Settings.RegisterInitializer, which inserts them from
 -- Blizzard's secure attribute delegate. Settings.CreateCheckbox inserts from the caller instead, which taints
 -- the settings search, and a restricted button in its results (Social's Discord Sign In) is then blocked and
--- blamed on this addon.
-local registered, settings = {}, {}
-
-local category = {
-	GetID = function()
-		return 1
-	end,
-}
+-- blamed on this addon. The index buttons go through RegisterInitializer too, and keep themselves out of search.
+local rows, buttons, settings = {}, {}, {}
+local opened = {}
 
 local env = setmetatable({
 	Settings = {
 		VarType = { Boolean = "boolean" },
-		RegisterVerticalLayoutCategory = function()
-			return category,
-				{
-					AddInitializer = function()
-						error("addon code inserted a row into a settings layout; use Settings.RegisterInitializer")
-					end,
-				}
+		RegisterVerticalLayoutCategory = function(name)
+			return {
+				name = name,
+				GetID = function(self)
+					return self.name
+				end,
+			}, {
+				AddInitializer = function()
+					error("addon code inserted a row into a settings layout; use Settings.RegisterInitializer")
+				end,
+			}
 		end,
-		RegisterAddOnSetting = function(_, variable, key, _, varType, _, default)
-			local setting = { variable = variable, key = key, varType = varType, default = default }
+		RegisterVerticalLayoutSubcategory = function(parent, name)
+			return {
+				name = name,
+				parent = parent,
+				GetID = function(self)
+					return self.name
+				end,
+			}
+		end,
+		RegisterAddOnSetting = function(category, variable, key, _, varType, name, default)
+			local setting = {
+				category = category,
+				variable = variable,
+				key = key,
+				varType = varType,
+				name = name,
+				default = default,
+			}
 			function setting:SetValueChangedCallback(callback)
 				self.onChanged = callback
 			end
@@ -34,17 +49,28 @@ local env = setmetatable({
 		end,
 		CreateCheckboxInitializer = function(setting, options, tooltip)
 			assert(setting.varType == "boolean" and options == nil)
-			return { setting = setting, tooltip = tooltip }
+			return { kind = "checkbox", setting = setting, tooltip = tooltip }
 		end,
 		RegisterInitializer = function(target, initializer)
-			assert(target == category)
-			registered[#registered + 1] = initializer
+			if initializer.kind == "button" then
+				buttons[#buttons + 1] = { target = target, initializer = initializer }
+			else
+				assert(initializer.setting.category == target, "a row sits on the page Blizzard is told about")
+				rows[#rows + 1] = { target = target, initializer = initializer }
+			end
 		end,
 		RegisterAddOnCategory = function(target)
-			assert(target == category and #registered == #settings, "every row registers before the category")
+			assert(target.name == "Shortest Path Forever", "the index page is the addon's category")
+			assert(#rows == #settings, "every row registers before the category")
 		end,
-		OpenToCategory = function() end,
+		OpenToCategory = function(id)
+			opened[#opened + 1] = id
+		end,
 	},
+	CreateSettingsButtonInitializer = function(name, description, callback, tags, addSearchTags)
+		assert(tags == nil and addSearchTags == false, "index buttons stay out of the settings search")
+		return { kind = "button", name = name, description = description, callback = callback }
+	end,
 	SlashCmdList = {},
 }, { __index = _G })
 
@@ -73,25 +99,58 @@ local ns = {
 assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", ns)
 setfenv(assert(loadfile("Settings.lua")), env)("ShortestPathForever", ns)
 
-assert(#registered == 19, #registered)
-for index, initializer in ipairs(registered) do
-	assert(initializer.setting == settings[index], "rows keep their setting and order")
+-- The index page is one button per group; each opens that group's page. The groups divide the old flat list, and
+-- every row keeps its key, default, tooltip and callback.
+local groups = {
+	["Map marks"] = { "pins", "transit", "portals", "mapFlightMasters", "minimapPins" },
+	Transport = { "mapRoutes", "otherFaction", "tracker", "share" },
+	Guidance = { "journey", "teleports", "guideStops", "taxiRoute", "corpse" },
+	Alerts = { "alerts", "alertSound" },
+	Interface = { "compass", "routeButton", "whatsNew" },
+}
+local order = { "Map marks", "Transport", "Guidance", "Alerts", "Interface" }
+
+assert(#buttons == #order, "one index button per group")
+assert(#rows == 19, #rows)
+local cursor = 0
+for index, name in ipairs(order) do
+	local button = buttons[index].initializer
+	assert(buttons[index].target.name == "Shortest Path Forever", "index buttons sit on the index page")
+	assert(button.name == name and button.description == "Open", "the button is named for its group")
+	button.callback()
+	assert(opened[#opened] == name, "the button opens that group's page")
+	for _, key in ipairs(groups[name]) do
+		cursor = cursor + 1
+		local row = rows[cursor]
+		assert(row.target.name == name and row.initializer.setting.key == key, "rows stay in their group, in order")
+	end
 end
-assert(registered[1].setting.variable == "ShortestPathForever_pins" and registered[1].setting.default)
-assert(registered[5].tooltip == "Also under Transport in the minimap's tracking menu.")
-assert(registered[13].setting.key == "guideStops" and registered[13].setting.default == true)
-assert(registered[14].setting.key == "taxiRoute" and registered[14].setting.default == true)
-assert(registered[14].tooltip:find("flight master", 1, true))
-registered[14].setting.onChanged()
+assert(cursor == #rows, "every row belongs to a group")
+
+-- The rows themselves are unchanged: keys, defaults, tooltips and callbacks.
+local function Row(key)
+	for _, row in ipairs(rows) do
+		if row.initializer.setting.key == key then
+			return row.initializer
+		end
+	end
+	error("no row for " .. key)
+end
+assert(Row("pins").setting.variable == "ShortestPathForever_pins" and Row("pins").setting.default)
+assert(Row("minimapPins").tooltip == "Also under Transport in the minimap's tracking menu.")
+assert(Row("guideStops").setting.default == true)
+assert(Row("taxiRoute").setting.default == true)
+assert(Row("taxiRoute").tooltip:find("flight master", 1, true))
+Row("taxiRoute").setting.onChanged()
 assert(taxiRefreshed == 1, "flight route updates when its setting changes")
-assert(registered[15].setting.key == "corpse" and registered[15].setting.default == true)
+assert(Row("corpse").setting.default == true)
 -- The compass is on by default: it is the game's own palette rather than a panel on the screen.
-assert(registered[16].setting.key == "compass" and registered[16].setting.default == true)
-assert(registered[17].setting.key == "routeButton" and registered[17].setting.default == true)
-assert(registered[17].tooltip:find("gold", 1, true), "the route button says what its colour means")
-registered[17].setting.onChanged()
+assert(Row("compass").setting.default == true)
+assert(Row("routeButton").setting.default == true)
+assert(Row("routeButton").tooltip:find("gold", 1, true), "the route button says what its colour means")
+Row("routeButton").setting.onChanged()
 assert(buttonRefreshed == 1, "the minimap button follows its setting")
-assert(registered[19].setting.key == "whatsNew" and registered[18].setting.default == true)
-registered[1].setting.onChanged()
+assert(Row("whatsNew").setting.default == true)
+Row("pins").setting.onChanged()
 assert(refreshed == 1, "value callbacks still fire")
 print("settings: ok")

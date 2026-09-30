@@ -734,6 +734,13 @@ _G.Settings = setmetatable({
 			end,
 		}
 	end,
+	RegisterVerticalLayoutSubcategory = function()
+		return {
+			GetID = function()
+				return 2
+			end,
+		}
+	end,
 	RegisterAddOnSetting = function(_, _, key, db, _, _, default)
 		if db[key] == nil then
 			db[key] = default
@@ -751,6 +758,9 @@ _G.Settings = setmetatable({
 		return st
 	end,
 }, mt)
+_G.CreateSettingsButtonInitializer = function()
+	return {}
+end
 local menus, context = {}, {}
 _G.MenuUtil = {
 	CreateContextMenu = function(owner, generator)
