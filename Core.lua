@@ -211,7 +211,7 @@ local function SoonestFirst(a, b)
 	return (a.departIn or 0) < (b.departIn or 0) or (a.departIn == b.departIn and a.route < b.route)
 end
 
--- Anyone can ride either faction's boats when the player opts into those routes.
+-- Opposing-faction landings can be hostile; showing and using those routes is opt-in.
 ---@param route SPFRoute
 ---@return boolean
 function ns.RouteShown(route)

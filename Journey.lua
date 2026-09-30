@@ -676,6 +676,7 @@ local function Plan(preview)
 		ride = ride,
 		walkSpeed = math.max(lastRunSpeed, 7),
 		faction = UnitFactionGroup("player"),
+		otherFaction = ns.db and ns.db.otherFaction or false,
 		taxiKnown = ns.KnownTaxiNodes(),
 		anchors = anchors,
 		docks = ns.Docks,

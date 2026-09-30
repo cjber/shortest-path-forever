@@ -451,6 +451,13 @@ end
 local beforeEviction = calls
 API.Estimate(1, 0.5, 0.5, 1, 0.4001, 0.5)
 equal(calls, beforeEviction + 1, "bounded cache evicts oldest destination")
+local beforeFactionSetting = calls
+ns.db.otherFaction = true
+API.Estimate(1, 0.5, 0.5, 1, 0.4001, 0.5)
+equal(calls, beforeFactionSetting + 1, "opposing transport setting invalidates estimates")
+ns.db.otherFaction = false
+API.Estimate(1, 0.5, 0.5, 1, 0.4001, 0.5)
+equal(calls, beforeFactionSetting + 2, "disabling opposing transport invalidates estimates")
 ns.speed, ns.water, ns.faction = nil, nil, "Alliance"
 ns.Planner.Plan = planner
 

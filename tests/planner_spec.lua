@@ -137,6 +137,26 @@ near(ride.wait, 30000)
 near(ride.arrive, 41000)
 assert(ride.estimated)
 
+-- Opposing transport landings are opt-in, including after a cached route was allowed.
+boat.cache = {}
+for _, player in ipairs({ "Alliance", "Horde" }) do
+	boat.faction = player
+	boat.routes[7].faction = player == "Alliance" and "Horde" or "Alliance"
+	boat.otherFaction = false
+	assert(not Plan(boat), "opposing boat must not join separated landmasses")
+	boat.otherFaction = true
+	assert(only(Plan(boat), "boat").route == 7, "explicit opt-in permits the crossing")
+	boat.otherFaction = false
+	assert(not Plan(boat), "turning opt-in off invalidates cached transport topology")
+	boat.routes[7].faction = player
+	boat.cache = {}
+	assert(only(Plan(boat), "boat").route == 7, "own-faction crossing remains available")
+	boat.routes[7].faction = nil
+	boat.cache = {}
+	assert(only(Plan(boat), "boat").route == 7, "neutral crossing remains available")
+end
+boat.faction, boat.otherFaction, boat.cache = "Alliance", nil, nil
+
 -- A lift's landings share a spot on the map: only height and the measured walk between them tell them apart.
 do
 	local lift = options()

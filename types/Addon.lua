@@ -219,6 +219,7 @@ ShortestPathForeverPathData = nil
 ---@field cost number|false
 ---@field estimated? boolean
 ---@class SPFPlanOptions : SPFPlaceOptions
+---@field otherFaction? boolean
 ---@field from SPFPoint
 ---@field to SPFPoint
 ---@field now number
