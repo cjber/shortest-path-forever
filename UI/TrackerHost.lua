@@ -1,4 +1,4 @@
----@type string, { TrackerHost?: ForeverTrackerHostAPI }
+---@type string, ForeverTrackerNamespace
 local _, ns = ...
 
 ---@class ForeverTrackerModule : Frame
@@ -22,6 +22,26 @@ if ForeverTrackerHost then
 end
 
 local host = CreateFrame("Frame", "ForeverTrackerCompanion", UIParent)
+---@class ForeverTrackerHostAPI
+local api = {}
+local fallbackSettings = { attached = true }
+local function Coordinate(value)
+	if type(value) == "number" and value == value and math.abs(value) ~= math.huge then
+		return value
+	end
+end
+---@return ForeverTrackerSettings
+local function Settings()
+	local settings = ns.TrackerHostSettings and ns.TrackerHostSettings() or fallbackSettings
+	if type(settings.attached) ~= "boolean" then
+		settings.attached = true
+	end
+	settings.x, settings.y = Coordinate(settings.x), Coordinate(settings.y)
+	return settings
+end
+local attached
+local dragging = false
+local attachmentCallbacks = {}
 -- Preserve Blizzard's edit-mode placement for the combined column. The
 -- private host takes the native frame's original slot; the native frame is
 -- placed below it after the private content has laid out. This keeps every
@@ -59,10 +79,53 @@ end
 MatchNativeScale()
 host:SetWidth(ObjectiveTrackerFrame:GetWidth())
 host:SetHeight(1)
+host:SetMovable(true)
+host:SetClampedToScreen(true)
+local grip = CreateFrame("Button", nil, host)
+grip:SetPoint("TOPLEFT", host, "TOPLEFT", 0, 0)
+grip:SetPoint("TOPRIGHT", host, "TOPRIGHT", 0, 0)
+grip:SetHeight(24)
+grip:RegisterForDrag("LeftButton")
+local label = grip:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+label:SetPoint("CENTER", grip, "CENTER", 0, 0)
+local dragTitle = rawget(ns.L, "TRACKER_DRAG_TITLE") or ns.L["Forever tracker"]
+local dragTooltip = rawget(ns.L, "TRACKER_DRAG_TOOLTIP") or ns.L["Drag to move"]
+label:SetText(dragTitle)
+grip:SetScript("OnEnter", function(self)
+	GameTooltip:SetOwner(self, "ANCHOR_TOP")
+	GameTooltip:SetText(dragTooltip)
+	GameTooltip:Show()
+end)
+grip:SetScript("OnLeave", function()
+	GameTooltip:Hide()
+end)
+grip:SetScript("OnDragStart", function()
+	if attached or InCombatLockdown() then
+		return
+	end
+	dragging = true
+	host:StartMoving()
+end)
+grip:SetScript("OnDragStop", function()
+	if not dragging then
+		return
+	end
+	dragging = false
+	host:StopMovingOrSizing()
+	local scale = host:GetEffectiveScale() / UIParent:GetEffectiveScale()
+	api.SavePosition((host:GetLeft() or 0) * scale, (host:GetTop() or 0) * scale - UIParent:GetHeight())
+end)
+grip:Hide()
 local modules, queued, ready = {}, false, false
 local requestedNativeHeight
 local appliedNativeHeight
 local pools = CreateFramePoolCollection()
+
+local function NotifyAttachment(value)
+	for _, callback in ipairs(attachmentCallbacks) do
+		callback(value)
+	end
+end
 
 local function Acquire(parent, template)
 	local info = C_XMLUtil.GetTemplateInfo(template)
@@ -204,9 +267,84 @@ local function AvoidMinimap(point)
 	end
 end
 
+local function SidePoint(point)
+	local left, right = ObjectiveTrackerFrame:GetLeft(), ObjectiveTrackerFrame:GetRight()
+	local screen = UIParent:GetWidth()
+	local nativeScale = ObjectiveTrackerFrame.GetEffectiveScale and ObjectiveTrackerFrame:GetEffectiveScale() or 1
+	local screenScale = UIParent.GetEffectiveScale and UIParent:GetEffectiveScale() or 1
+	if left and right and screen and nativeScale > 0 and screenScale > 0 then
+		local nativeCenter = (left + right) * nativeScale / (2 * screenScale)
+		return nativeCenter <= screen / 2 and "LEFT" or "RIGHT"
+	end
+	return point:find("LEFT", 1, true) and "LEFT" or "RIGHT"
+end
+
+local function LayoutModules(width, available, height)
+	table.sort(modules, function(a, b)
+		return a.uiOrder < b.uiOrder
+	end)
+	for _, module in ipairs(modules) do
+		module:SetWidth(width)
+		module:ClearAllPoints()
+		module:SetPoint("TOPLEFT", host, "TOPLEFT", 0, -height)
+		module:Update(math.max(0, available - height))
+		local used = module:GetContentsHeight()
+		if used > 0 then
+			height = height + used + 10
+		end
+	end
+	host:SetHeight(math.max(1, height))
+end
 local function Layout()
 	queued = false
-	if InCombatLockdown() then
+	local settings = Settings()
+	local desired = settings.attached ~= false
+	if attached == nil then
+		attached = desired
+	elseif not InCombatLockdown() and desired ~= attached then
+		if not desired then
+			if nativeAnchor and select(2, ObjectiveTrackerFrame:GetPoint()) == host then
+				ObjectiveTrackerFrame:ClearAllPoints()
+				ObjectiveTrackerFrame:SetPoint(
+					nativeAnchor.point,
+					nativeAnchor.relativeTo,
+					nativeAnchor.relativePoint,
+					nativeAnchor.x,
+					nativeAnchor.y
+				)
+			end
+			if appliedNativeHeight and requestedNativeHeight then
+				local current = ObjectiveTrackerFrame:GetHeight()
+				if math.abs(current - appliedNativeHeight) <= 0.5 then
+					ObjectiveTrackerFrame:SetHeight(requestedNativeHeight)
+				end
+			end
+			appliedNativeHeight = nil
+		end
+		attached = desired
+	end
+	grip:SetShown(not attached)
+	if not attached then
+		MatchNativeScale()
+		local scale = host:GetEffectiveScale() / UIParent:GetEffectiveScale()
+		local screenWidth, screenHeight = UIParent:GetWidth() / scale, UIParent:GetHeight() / scale
+		local width = math.min(ObjectiveTrackerFrame:GetWidth(), screenWidth)
+		host:SetWidth(width)
+		if dragging then
+			return
+		end
+		local x, y = (settings.x or 0) / scale, (settings.y or -40) / scale
+		x = math.max(0, math.min(x, math.max(0, screenWidth - width)))
+		y = math.min(0, math.max(y, 24 - screenHeight))
+		host:ClearAllPoints()
+		host:SetPoint("TOPLEFT", UIParent, "TOPLEFT", x, y)
+		LayoutModules(width, math.max(24, screenHeight + y - 24), 24)
+		y = math.min(0, math.max(y, math.min(host:GetHeight(), screenHeight) - screenHeight))
+		host:ClearAllPoints()
+		host:SetPoint("TOPLEFT", UIParent, "TOPLEFT", x, y)
+		return
+	end
+	if InCombatLockdown() and attached then
 		-- The native tracker is protected: in combat it cannot be restacked below our column, and Blizzard returns it
 		-- to its saved Edit Mode slot. Move our private column above or beside the native frame, keeping clear of
 		-- the minimap, and resume the full reflow on PLAYER_REGEN_ENABLED.
@@ -233,7 +371,7 @@ local function Layout()
 			local room = screenTop * screenScale - nativeTop * nativeScale
 			if room >= math.max(host:GetHeight() or 0, 1) * hostScale then
 				host:SetPoint(hostPoint, ObjectiveTrackerFrame, nativePoint, 0, 0)
-			elseif point:find("LEFT", 1, true) then
+			elseif SidePoint(point) == "LEFT" then
 				host:SetPoint("TOPLEFT", ObjectiveTrackerFrame, "TOPRIGHT", 0, 0)
 			else
 				host:SetPoint("TOPRIGHT", ObjectiveTrackerFrame, "TOPLEFT", 0, 0)
@@ -280,18 +418,7 @@ local function Layout()
 	local layoutMargin = 40 * layoutScreenScale / layoutScale
 	local available = math.max(0, (host:GetTop() or UIParent:GetHeight()) - layoutMargin)
 	host:SetWidth(width)
-	local height = 0
-	for _, module in ipairs(modules) do
-		module:SetWidth(width)
-		module:ClearAllPoints()
-		module:SetPoint("TOPLEFT", host, "TOPLEFT", 0, -height)
-		module:Update(math.max(0, available - height))
-		local used = module:GetContentsHeight()
-		if used > 0 then
-			height = height + used + 10
-		end
-	end
-	host:SetHeight(math.max(1, height))
+	LayoutModules(width, available, 0)
 	-- If the combined column would run below the screen, move the whole
 	-- column upward from its saved edit-mode slot.  The offset is calculated
 	-- from the original point each pass, so repeated refreshes never drift.
@@ -358,8 +485,33 @@ function host:ForceExpand()
 	self:MarkDirty()
 end
 
----@class ForeverTrackerHostAPI
-local api = {}
+function api.GetSettings()
+	return Settings()
+end
+function api.IsAttachedToQuestTracker()
+	return Settings().attached ~= false
+end
+function api.SetAttached(value)
+	value = not not value
+	local settings = Settings()
+	if settings.attached == value then
+		return
+	end
+	settings.attached = value
+	NotifyAttachment(value)
+	host:MarkDirty()
+end
+function api.OnAttachmentChanged(callback)
+	attachmentCallbacks[#attachmentCallbacks + 1] = callback
+end
+function api.SavePosition(x, y)
+	if attached or type(x) ~= "number" or type(y) ~= "number" then
+		return
+	end
+	local settings = Settings()
+	settings.x, settings.y = x, y
+	host:MarkDirty()
+end
 function api.Attach(module)
 	---@cast module ForeverTrackerModule
 	if module.parentContainer == host then
@@ -391,7 +543,7 @@ if EventRegistry and EventRegistry.RegisterCallback then
 		local editing = EditModeManagerFrame
 			and EditModeManagerFrame.IsEditModeActive
 			and EditModeManagerFrame:IsEditModeActive()
-		if editing then
+		if editing and attached then
 			host:Hide()
 		else
 			host:Show()

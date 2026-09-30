@@ -761,6 +761,21 @@ _G.Settings = setmetatable({
 			end,
 		}
 	end,
+	RegisterProxySetting = function(category, variable, _, name, default, get, set)
+		local st = {
+			category = category,
+			variable = variable,
+			key = "trackerAttached",
+			name = name,
+			default = default,
+			GetValue = get,
+			SetValue = function(_, value)
+				set(value)
+			end,
+		}
+		addonSettings[#addonSettings + 1] = st
+		return st
+	end,
 	RegisterAddOnSetting = function(category, variable, key, db, _, name, default)
 		if db[key] == nil then
 			db[key] = default
@@ -768,6 +783,9 @@ _G.Settings = setmetatable({
 		local st = { category = category, variable = variable, key = key, name = name, default = default }
 		function st:SetValueChangedCallback(fn)
 			st.cb = fn
+		end
+		function st:GetValue()
+			return db[key]
 		end
 		function st:SetValue(v)
 			db[key] = v

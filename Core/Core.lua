@@ -28,6 +28,14 @@ local DEFAULTS = {
 }
 ns.Defaults = DEFAULTS
 
+---@return ForeverTrackerSettings
+function ns.TrackerHostSettings()
+	if type(ns.db.trackerHost) ~= "table" then
+		ns.db.trackerHost = { attached = true }
+	end
+	return ns.db.trackerHost
+end
+
 ---@param message string
 function ns.Print(message)
 	print(NORMAL_FONT_COLOR:WrapTextInColorCode("Shortest Path Forever:") .. " " .. message)

@@ -370,10 +370,7 @@ local function DriveSettings(label)
 		for _, value in ipairs({ true, false }) do
 			stats.rows = stats.rows + 1
 			Run(("%s settings row %s=%s"):format(label, setting.key, tostring(value)), function()
-				ns.db[setting.key] = value
-				if setting.cb then
-					setting.cb()
-				end
+				setting:SetValue(value)
 				Flush()
 			end)
 		end
@@ -394,7 +391,7 @@ local function DriveSettingsPages(label)
 		local setting = assert(row.initializer and row.initializer.setting, "a settings row is a checkbox")
 		stats.rows = stats.rows + 1
 		Run(("%s settings page %s"):format(label, setting.key), function()
-			setting:SetValue(not ns.db[setting.key])
+			setting:SetValue(not setting:GetValue())
 			Flush()
 		end)
 	end

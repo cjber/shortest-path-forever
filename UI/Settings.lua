@@ -142,6 +142,34 @@ ns.Init(function()
 
 	-- Guidance: how a journey is planned and led.
 	Page(L["Guidance"])
+	local host = ns.TrackerHost
+	if host and host.GetSettings and host.SetAttached and host.OnAttachmentChanged then
+		local variable = "ShortestPathForever_trackerAttached"
+		local attachment = Settings.RegisterProxySetting(
+			page,
+			variable,
+			Settings.VarType.Boolean,
+			L["Attach to quest tracker"],
+			true,
+			function()
+				return host.GetSettings().attached
+			end,
+			function(value)
+				host.SetAttached(value)
+			end
+		)
+		Settings.RegisterInitializer(
+			page,
+			Settings.CreateCheckboxInitializer(
+				attachment,
+				nil,
+				L["Turn this off to drag the shared Forever tracker anywhere on screen."]
+			)
+		)
+		host.OnAttachmentChanged(function()
+			Settings.NotifyUpdate(variable)
+		end)
+	end
 	Checkbox("journey", L["Plan journeys with Shift-click on the world map or minimap"], nil, function()
 		if not ns.db.journey then
 			ns.ClearJourney()

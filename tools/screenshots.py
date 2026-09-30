@@ -27,6 +27,7 @@ WOWMOCK = Path(os.environ.get("WOWMOCK", Path.home() / ".claude/skills/wow-mock-
 if not (WOWMOCK / "wowmock.py").is_file():
     sys.exit(f"wowmock.py not found in {WOWMOCK}; set WOWMOCK to its directory")
 sys.path.insert(0, str(WOWMOCK))
+from screenshots_tracker import detached_tracker
 from wowmock import (
     BUILD,
     FONTS,
@@ -784,6 +785,7 @@ SCENES = {
     "docks": render_docks,
     "stops": render_stops,
     "tracker": render_tracker,
+    "detached": lambda ui: detached_tracker(ui, tracker_canvas(ui)),
     "minimap": render_minimap,
     "compass": render_compass,
     "services": render_services,

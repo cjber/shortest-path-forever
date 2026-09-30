@@ -120,6 +120,7 @@
 ---@field grey? boolean
 
 ---@class SPFDatabase
+---@field trackerHost? ForeverTrackerSettings
 ---@field pins? boolean
 ---@field transit? boolean
 ---@field portals? boolean

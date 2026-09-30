@@ -5,8 +5,29 @@
 local rows, buttons, settings = {}, {}, {}
 local opened = {}
 
+local attachmentNotified, attachmentChanged
+local trackerState = { attached = true }
 local env = setmetatable({
 	Settings = {
+		RegisterProxySetting = function(category, variable, varType, name, default, get, set)
+			local setting = {
+				category = category,
+				variable = variable,
+				key = "trackerAttached",
+				varType = varType,
+				name = name,
+				default = default,
+				GetValue = get,
+				SetValue = function(_, value)
+					set(value)
+				end,
+			}
+			settings[#settings + 1] = setting
+			return setting
+		end,
+		NotifyUpdate = function(variable)
+			attachmentNotified = variable
+		end,
 		VarType = { Boolean = "boolean" },
 		RegisterVerticalLayoutCategory = function(name)
 			return {
@@ -77,6 +98,18 @@ local env = setmetatable({
 local refreshed, taxiRefreshed, buttonRefreshed = 0, 0, 0
 -- Core/Core.lua's defaults: every row on.
 local ns = {
+	TrackerHost = {
+		GetSettings = function()
+			return trackerState
+		end,
+		SetAttached = function(value)
+			trackerState.attached = value
+			attachmentChanged()
+		end,
+		OnAttachmentChanged = function(callback)
+			attachmentChanged = callback
+		end,
+	},
 	db = {},
 	Defaults = setmetatable({}, {
 		__index = function()
@@ -104,14 +137,14 @@ setfenv(assert(loadfile("UI/Settings.lua")), env)("ShortestPathForever", ns)
 local groups = {
 	["Map marks"] = { "pins", "transit", "portals", "mapFlightMasters", "minimapPins" },
 	Transport = { "mapRoutes", "otherFaction", "tracker", "share" },
-	Guidance = { "journey", "teleports", "guideStops", "taxiRoute", "corpse" },
+	Guidance = { "trackerAttached", "journey", "teleports", "guideStops", "taxiRoute", "corpse" },
 	Alerts = { "alerts", "alertSound" },
 	Interface = { "compass", "routeButton", "whatsNew" },
 }
 local order = { "Map marks", "Transport", "Guidance", "Alerts", "Interface" }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 19, #rows)
+assert(#rows == 20, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -154,3 +187,12 @@ assert(Row("whatsNew").setting.default == true)
 Row("pins").setting.onChanged()
 assert(refreshed == 1, "value callbacks still fire")
 print("settings: ok")
+
+local attachment = Row("trackerAttached").setting
+assert(attachment:GetValue() == true, "tracker starts attached")
+attachment:SetValue(false)
+assert(not attachment:GetValue(), "toggle changes shared host")
+assert(attachmentNotified == "ShortestPathForever_trackerAttached", "proxy notified")
+trackerState.attached = true
+attachmentChanged()
+assert(attachment:GetValue(), "external reattach updates proxy")
