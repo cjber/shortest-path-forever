@@ -143,9 +143,9 @@ Audit slices from lowest to highest risk:
 3. `tests/`
 4. UI leaves: `UI/Alert.lua`, `UI/Arrow.lua`, `UI/Compass.lua`, `UI/Settings.lua`, `Transport/Taxi.lua`, `UI/Tracker.lua`, `UI/TrackerHost.lua`, `UI/MinimapPins.lua`, `UI/Nearby.lua`, `UI/WhatsNew.lua`
 5. Map layers: `UI/Map.lua`, `UI/Map.xml`, `UI/Route.lua`, `UI/RouteTransports.lua`, `UI/Looks.lua`, `UI/RouteButton.lua`, `UI/StopPin.lua`, `UI/FlightLines.lua`
-6. State and wire: `Transport/Model.lua`, `Core/Core.lua`, `Transport/Observer.lua`, `Transport/Sync.lua`, `Core/API.lua` (SavedVariables, wire format,
+6. State and wire: `Transport/Model.lua`, `Core/Core.lua`, `Transport/Observer.lua`, `Transport/Sync.lua`, `Transport/Teleports.lua`, `Core/API.lua` (SavedVariables, wire format,
    public API)
-7. Planning core: `Routing/Planner.lua`, `Routing/Path*.lua`, `Journey/Journey*.lua`, `Journey/Corpse.lua` (performance-tuned, 3 ms frame budget;
+7. Planning core: `Routing/Planner.lua`, `Routing/Path*.lua`, `Journey/Journey*.lua`, `Journey/Itinerary.lua`, `Journey/Corpse.lua` (performance-tuned, 3 ms frame budget;
    Journey/Corpse.lua suspends and resumes the journey)
 
 ## Project rules and lenses
