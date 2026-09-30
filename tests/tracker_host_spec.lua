@@ -320,7 +320,7 @@ check(native:GetHeight() < 700, "native viewport clamps after an external resize
 native:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
 eventRegistry:TriggerEvent("EditMode.SavedLayouts")
 drain()
-check(native.point[2] == host and native.point[3] == "BOTTOMRIGHT", "private host repairs native reanchor")
+check(native.point[1] == "TOPLEFT" and native.point[2] == parent, "private host repairs native reanchor independently")
 editMode.active = true
 eventRegistry:TriggerEvent("EditMode.Enter")
 check(host.shown == false, "private tracker hides while Edit Mode owns native slot")
@@ -328,10 +328,7 @@ editMode.active = false
 eventRegistry:TriggerEvent("EditMode.Exit")
 drain()
 check(host.shown == true, "private tracker returns after Edit Mode")
-check(
-	native.point[1] == "TOPRIGHT" and native.point[2] == host and native.point[3] == "BOTTOMRIGHT",
-	"native objectives follow private sections"
-)
+check(native.point[1] == "TOPLEFT" and native.point[2] == parent, "native objectives stay independently anchored")
 check(ns.TrackerHost.IsAttached(first) and not ns.TrackerHost.IsAttached(nil), "ownership lookup")
 local attachmentChanges = 0
 ns.TrackerHost.OnAttachmentChanged(function(value)

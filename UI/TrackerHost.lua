@@ -48,6 +48,15 @@ local attachmentCallbacks = {}
 -- section in one column without registering our frames with Blizzard's
 -- secure module collection.
 local nativeAnchor
+local appliedNativeAnchor
+local function IsAppliedNativeAnchor(point, relativeTo, relativePoint, x, y)
+	return appliedNativeAnchor
+		and appliedNativeAnchor.point == point
+		and appliedNativeAnchor.relativeTo == relativeTo
+		and appliedNativeAnchor.relativePoint == relativePoint
+		and math.abs(appliedNativeAnchor.x - (x or 0)) <= 0.5
+		and math.abs(appliedNativeAnchor.y - (y or 0)) <= 0.5
+end
 local function StackPoints(point)
 	if point == "CENTER" or point == "TOP" or point == "BOTTOM" then
 		return "TOP", "BOTTOM"
@@ -57,7 +66,7 @@ local function StackPoints(point)
 end
 local function CaptureNativeAnchor()
 	local point, relativeTo, relativePoint, x, y = ObjectiveTrackerFrame:GetPoint()
-	if nativeAnchor and relativeTo == host then
+	if nativeAnchor and (relativeTo == host or IsAppliedNativeAnchor(point, relativeTo, relativePoint, x, y)) then
 		return
 	end
 	nativeAnchor = {
@@ -279,32 +288,6 @@ local function SidePoint(point)
 	return point:find("LEFT", 1, true) and "LEFT" or "RIGHT"
 end
 
-local function PlaceAlongsideNative(point)
-	local nativeLeft, nativeRight = ObjectiveTrackerFrame:GetLeft(), ObjectiveTrackerFrame:GetRight()
-	local nativeTop = ObjectiveTrackerFrame:GetTop()
-	local nativeScale = ObjectiveTrackerFrame.GetEffectiveScale and ObjectiveTrackerFrame:GetEffectiveScale() or 1
-	local screenScale = UIParent.GetEffectiveScale and UIParent:GetEffectiveScale() or 1
-	local hostScale = host.GetEffectiveScale and host:GetEffectiveScale() or 1
-	local screenWidth, screenHeight = UIParent:GetWidth(), UIParent:GetHeight()
-	if not (nativeLeft and nativeRight and nativeTop and screenWidth and screenHeight) then
-		return false
-	end
-	local scale = nativeScale / screenScale
-	local left, right, top = nativeLeft * scale, nativeRight * scale, nativeTop * scale
-	local width = host:GetWidth() * hostScale / screenScale
-	local gap = 8
-	if SidePoint(point) == "LEFT" then
-		left = right + gap
-	else
-		right = left - gap
-		left = right - width
-	end
-	left = math.max(0, math.min(left, screenWidth - width))
-	host:ClearAllPoints()
-	host:SetPoint("TOPLEFT", UIParent, "TOPLEFT", left, top - screenHeight)
-	return true
-end
-
 local function LayoutModules(width, available, height)
 	table.sort(modules, function(a, b)
 		return a.uiOrder < b.uiOrder
@@ -329,7 +312,15 @@ local function Layout()
 		attached = desired
 	elseif not InCombatLockdown() and desired ~= attached then
 		if not desired then
-			if nativeAnchor and select(2, ObjectiveTrackerFrame:GetPoint()) == host then
+			local currentPoint, currentRelative, currentRelativePoint, currentX, currentY =
+				ObjectiveTrackerFrame:GetPoint()
+			if
+				nativeAnchor
+				and (
+					currentRelative == host
+					or IsAppliedNativeAnchor(currentPoint, currentRelative, currentRelativePoint, currentX, currentY)
+				)
+			then
 				ObjectiveTrackerFrame:ClearAllPoints()
 				ObjectiveTrackerFrame:SetPoint(
 					nativeAnchor.point,
@@ -338,6 +329,7 @@ local function Layout()
 					nativeAnchor.x,
 					nativeAnchor.y
 				)
+				appliedNativeAnchor = nil
 			end
 			if appliedNativeHeight and requestedNativeHeight then
 				local current = ObjectiveTrackerFrame:GetHeight()
@@ -388,7 +380,15 @@ local function Layout()
 			-- Edit Mode may clamp the protected frame after it was anchored to us. In
 			-- that state the reported anchor is stale: use its actual screen side so
 			-- the private column cannot be placed back inside the native objectives.
-			PlaceAlongsideNative(nativeAnchor and nativeAnchor.point or "TOPRIGHT")
+			if nativeAnchor then
+				host:SetPoint(
+					nativeAnchor.point,
+					nativeAnchor.relativeTo,
+					nativeAnchor.relativePoint,
+					nativeAnchor.x,
+					nativeAnchor.y
+				)
+			end
 			AvoidMinimap(nativeAnchor and nativeAnchor.point or "TOPRIGHT")
 		elseif point then
 			local nativePoint, hostPoint = StackPoints(point)
@@ -482,9 +482,29 @@ local function Layout()
 		nativeAnchor.x,
 		nativeAnchor.y + shift
 	)
-	local stackPoint, stackRelativePoint = StackPoints(nativeAnchor.point)
+	local nativeScale = ObjectiveTrackerFrame.GetEffectiveScale and ObjectiveTrackerFrame:GetEffectiveScale() or 1
+	local hostScale = host.GetEffectiveScale and host:GetEffectiveScale() or 1
+	local hostLeft = (host:GetLeft() or 0) * hostScale / screenScale
+	local hostWidth = host:GetWidth() * hostScale / screenScale
+	local nativeWidth = ObjectiveTrackerFrame:GetWidth() * nativeScale / screenScale
+	local nativeLeft = hostLeft
+	if nativeAnchor.point:find("RIGHT", 1, true) then
+		nativeLeft = hostLeft + hostWidth - nativeWidth
+	elseif nativeAnchor.point == "CENTER" then
+		nativeLeft = hostLeft + (hostWidth - nativeWidth) / 2
+	end
+	local nativeY = (host:GetBottom() or 0) * hostScale / screenScale - UIParent:GetHeight()
 	ObjectiveTrackerFrame:ClearAllPoints()
-	ObjectiveTrackerFrame:SetPoint(stackPoint, host, stackRelativePoint, 0, 0)
+	local nativeX = nativeLeft * screenScale / nativeScale
+	local nativeOffsetY = nativeY * screenScale / nativeScale
+	ObjectiveTrackerFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", nativeX, nativeOffsetY)
+	appliedNativeAnchor = {
+		point = "TOPLEFT",
+		relativeTo = UIParent,
+		relativePoint = "TOPLEFT",
+		x = nativeX,
+		y = nativeOffsetY,
+	}
 	local currentNativeHeight = ObjectiveTrackerFrame:GetHeight() or requestedNativeHeight
 	if
 		(appliedNativeHeight and math.abs(currentNativeHeight - appliedNativeHeight) > 0.5)
@@ -604,13 +624,25 @@ function api.Debug()
 			tonumber(p[5]) or 0
 		)
 	end
-	return ("combat=%s shown=%s hostH=%.1f host[%s] nativeH=%.1f native[%s]"):format(
+	local function geometry(frame)
+		return ("%.1f,%.1f-%.1f,%.1f s%.2f"):format(
+			frame:GetLeft() or -1,
+			frame:GetTop() or -1,
+			frame:GetRight() or -1,
+			frame:GetBottom() or -1,
+			frame.GetEffectiveScale and frame:GetEffectiveScale() or 1
+		)
+	end
+	return ("combat=%s shown=%s hostH=%.1f host[%s] g[%s] nativeH=%.1f native[%s] g[%s] uiS%.2f"):format(
 		tostring(InCombatLockdown()),
 		tostring(host:IsShown()),
 		host:GetHeight() or -1,
 		point(host),
+		geometry(host),
 		ObjectiveTrackerFrame:GetHeight() or -1,
-		point(ObjectiveTrackerFrame)
+		point(ObjectiveTrackerFrame),
+		geometry(ObjectiveTrackerFrame),
+		UIParent.GetEffectiveScale and UIParent:GetEffectiveScale() or 1
 	)
 end
 
