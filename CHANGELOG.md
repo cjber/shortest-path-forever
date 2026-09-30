@@ -13,7 +13,9 @@ verbatim rather than rewritten as the addon moves.
 
 ## [1.6.0] - 2026-09-30
 
-- **Find nearby services.** Middle-click the route button or use `/spfnear` to route to a friendly class trainer, profession trainer, repairer, reagent vendor, innkeeper, bank, auctioneer, flight master or stable master. Trainers and vendors can be selected by specialty. Locations come from installed QuestieDB; class trainers use Tweaks Forever’s current-class list.
+- **Development disclosure.** This release was developed with AI assistance. Changes were reviewed and checked with automated tests, linting and type checks; live verification remains ongoing.
+
+- **Find nearby services.** Middle-click the route button or use `/spfnear` to open the nearby-services submenu in the world-map tracking dropdown. Route to a friendly class trainer, profession trainer, repairer, reagent vendor, innkeeper, bank, auctioneer, flight master or stable master. Trainers and vendors can be selected by specialty. Locations come from installed QuestieDB; class trainers use Tweaks Forever’s current-class list.
 - **Hide walking directions inside quest areas.** Adventure Guide can hold an objective stop while its arrow and Journey lines step aside. Directions return if you leave the area.
 - **Keep the tracker legible in combat.** Companion sections stay in one column without moving protected quest-tracker frames.
 

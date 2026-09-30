@@ -68,6 +68,39 @@ local flags = {
 	STABLEMASTER = 8192,
 }
 local calls = 0
+
+local menuEntries, closedMenus, releaseMenu, trackingMenu = {}, 0, nil, nil
+local function menuNode()
+	local node = {}
+	function node.CreateTitle(_self, text)
+		menuEntries[#menuEntries + 1] = { text = text, title = true }
+	end
+	function node.CreateButton(_self, text, callback)
+		local entry = { text = text, callback = callback, children = {} }
+		function entry.CreateButton(_entry, childText, childCallback)
+			local child = { text = childText, callback = childCallback, children = {}, SetEnabled = function() end }
+			function child.CreateButton(c, childText2, childCallback2)
+				local grandchild = { text = childText2, callback = childCallback2, SetEnabled = function() end }
+				c.children[#c.children + 1] = grandchild
+				return grandchild
+			end
+			entry.children[#entry.children + 1] = child
+			return child
+		end
+		function entry.SetEnabled(_entry, enabled)
+			entry.enabled = enabled
+		end
+		function entry.CreateTitle(_entry, titleText)
+			entry.children[#entry.children + 1] = { text = titleText, title = true }
+		end
+		for _, child in ipairs(entry.children) do
+			child.SetEnabled = function() end
+		end
+		menuEntries[#menuEntries + 1] = entry
+		return entry
+	end
+	return node
+end
 local lib = {
 	RequireContract = function(v)
 		assert(v == 2)
@@ -103,6 +136,26 @@ local env = setmetatable({
 		},
 	},
 	CreateFrame = frame,
+	OpenWorldMap = function() end,
+	Menu = {
+		ModifyMenu = function(tag, callback)
+			assert(tag == "MENU_WORLD_MAP_TRACKING")
+			trackingMenu = callback
+		end,
+	},
+	MenuUtil = {
+		CreateContextMenu = function(_, callback)
+			menuEntries = {}
+			local root = menuNode()
+			root.AddMenuReleasedCallback = function(_, callbackFn)
+				releaseMenu = callbackFn
+			end
+			callback(nil, root)
+		end,
+		CloseAllMenus = function()
+			closedMenus = closedMenus + 1
+		end,
+	},
 	UIParent = {},
 	UnitFactionGroup = function()
 		return "Alliance"
@@ -172,13 +225,23 @@ for _, fn in ipairs(initializers) do
 end
 ns.OpenNearby()
 assert(ns.NearbyServices.State() == "building" and calls == 0, "index does not block click")
-local panel
-for _, f in ipairs(frames) do
-	if f.name == "ShortestPathForeverNearby" then
-		panel = f
+assert(trackingMenu, "registers the native world-map tracking dropdown")
+trackingMenu(nil, menuNode())
+local loadingEntry
+for _, item in ipairs(menuEntries) do
+	if item.text == "Nearby services" then
+		loadingEntry = item
 	end
 end
-assert(panel and panel.shown and panel.point[1] == "CENTER")
+assert(
+	loadingEntry and loadingEntry.children and loadingEntry.children[1].text == "Loading QuestieDB…",
+	"tracking menu reports loading"
+)
+ns.OpenNearby()
+assert(#menuEntries > 0 and menuEntries[1].title, "nearby opens an addon-owned map menu")
+local dismissedMenuCount = #menuEntries
+assert(releaseMenu, "native menu release callback is registered")
+releaseMenu()
 local function pump()
 	local fn = table.remove(timers, 1)
 	assert(fn)
@@ -196,6 +259,13 @@ while #timers > 0 do
 	pump()
 end
 assert(ns.NearbyServices.State() == "ready")
+assert(#menuEntries == dismissedMenuCount, "dismissed menu does not reopen after async loading")
+menuEntries = {}
+trackingMenu(nil, menuNode())
+local tracking = menuEntries[1]
+assert(#tracking.children == 10, "tracking menu exposes all service categories")
+tracking.children[3].callback()
+assert(navigated[#navigated][5] == "Neutral repairs", "tracking repair action routes nearest")
 local places = ns.NearbyServices.Index()
 assert(#places.vendor == 2, "hostile,wrong faction,unknown and malformed spawns excluded")
 assert(#places.reagents == 1, "reagent title required; general vendor is not labelled reagents")
@@ -205,38 +275,44 @@ assert(ns.NearbyServices.Nearest("vendor", here).id == 1)
 assert(ns.NearbyServices.Nearest("trainer", here, "Alchemy Trainer").id == 8)
 assert(ns.NearbyServices.Nearest("vendor", { map = 2, x = 100, y = 100 }) == nil)
 assert(places.repair[1].map == 100, "subzone uses parent map")
-local function row(text)
-	for _, f in ipairs(frames) do
-		if f.shown and f.text == text then
-			return f
+local function entry(text)
+	for _, item in ipairs(menuEntries) do
+		if item.text == text then
+			return item
 		end
 	end
-	error("no visible row: " .. text)
+	error("no menu entry: " .. text)
 end
-row("Class trainer").scripts.OnClick()
-assert(navigated[#navigated][5] == "Mage trainer" and not panel.shown)
 ns.OpenNearby()
-row("Trainers by specialty").scripts.OnClick()
-row("Alchemy Trainer").scripts.OnClick()
+entry("Class trainer").callback()
+assert(navigated[#navigated][5] == "Mage trainer", "class action routes nearest class trainer")
+ns.OpenNearby()
+local trainers = entry("Trainers by specialty")
+assert(#trainers.children > 0, "trainer category has specialty submenu")
+for _, child in ipairs(trainers.children) do
+	if child.text == "Alchemy Trainer" then
+		child.callback()
+	end
+end
 assert(navigated[#navigated][5] == "Alchemy trainer", "specialty picker sends actual chosen trainer")
 ns.OpenNearby()
-row("Reagents").scripts.OnClick()
+entry("Reagents").callback()
 assert(navigated[#navigated][5] == "Far vendor", "reagents ignores closer general vendor")
+assert(closedMenus > 0, "successful menu actions close the map menu")
 local before = calls
 for _ = 1, 20 do
 	ns.OpenNearby()
 end
 assert(calls == before, "opening does not rebuild DB")
-local count = #frames
-ns.OpenNearby()
-assert(#frames == count, "panel reuses rows")
-panel.scripts.OnKeyDown(panel, "A")
-assert(panel.propagate)
-panel.scripts.OnKeyDown(panel, "ESCAPE")
-assert(not panel.shown and not panel.propagate)
+local beforeMenus = #menuEntries
+for _ = 1, 20 do
+	ns.OpenNearby()
+end
+assert(calls == before, "opening does not rebuild DB")
+assert(#menuEntries == beforeMenus, "menu rebuilds without creating frames")
 env.SlashCmdList.SPFNEAR("repair")
 assert(navigated[#navigated][5] == "Neutral repairs")
 print(
 	"nearby: installed QuestieDB contract, sliced loading, faction/class/specialty, "
-		.. "real panel callbacks and UI-coordinate dispatch: ok"
+		.. "real map-menu callbacks and UI-coordinate dispatch: ok"
 )

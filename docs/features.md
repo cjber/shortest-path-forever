@@ -46,9 +46,10 @@ The detail behind each feature in the [README](../README.md).
   route in one click, and turns gold while a route is on. Right-click opens `/path`; *Show a route button on the
   minimap* turns it off.
 
-- **Find nearby services.** Middle-click the route button or use `/spfnear` to find class and profession trainers,
-  repairs, reagents, vendors, innkeepers, banks, auction houses, flight masters and stable masters. Pick a trainer
-  or vendor specialty to route to the nearest friendly location in your installed QuestieDB.
+- **Find nearby services.** Middle-click the route button or use `/spfnear` to open an addon-owned menu on the world
+  map. It lists class and profession trainers, repairs, reagents, vendors, innkeepers, banks, auction houses, flight
+  masters and stable masters. Pick a trainer or vendor specialty to route to the nearest friendly location in your
+  installed QuestieDB.
 
 - **Back to your corpse.** Release as a ghost and a red-orange dotted path, the colour of your corpse's tombstone,
   walks you back to it on the world map and minimap, round walls like any walk. Guide leads the way and the tracker
