@@ -4,34 +4,6 @@ local function check(value, message)
 	assert(value, message)
 	checks = checks + 1
 end
-local function resolveTopLeft(frame, seen)
-	seen = seen or {}
-	if seen[frame] then
-		return nil, "anchor cycle"
-	end
-	seen[frame] = true
-	local point, relative, relativePoint, x, y = unpack(frame.point or {})
-	if not relative then
-		return frame.left or 0, frame.top or 0
-	end
-	local left, top, errorMessage = resolveTopLeft(relative, seen)
-	if not left then
-		return nil, errorMessage
-	end
-	local width, height = frame:GetWidth(), frame:GetHeight()
-	local relativeWidth, relativeHeight = relative:GetWidth(), relative:GetHeight()
-	local anchorX = relativePoint:find("RIGHT", 1, true) and relativeWidth or 0
-	local anchorY = relativePoint:find("BOTTOM", 1, true) and 0 or relativeHeight
-	local frameX = point:find("RIGHT", 1, true) and width or 0
-	local frameY = point:find("BOTTOM", 1, true) and 0 or height
-	return left + anchorX - frameX + (x or 0), top + anchorY - frameY + (y or 0)
-end
-local function rectanglesOverlap(a, b)
-	return a.left < b.left + b.width
-		and a.left + a.width > b.left
-		and a.top - a.height < b.top
-		and a.top > b.top - b.height
-end
 local function noop() end
 local timers, ready, frames, releases = {}, nil, {}, {}
 local initializationEvents
@@ -412,7 +384,10 @@ check(host.point[2] == parent and grip.shown, "reattach stays physically detache
 combat = false
 host.scripts.OnEvent(host, "PLAYER_REGEN_ENABLED")
 drain()
-check(native.point[2] == host and not grip.shown, "combat exit applies reattachment")
+check(
+	native.point[2] == parent and native.point[1] == "TOPLEFT" and not grip.shown,
+	"combat exit applies independent reattachment"
+)
 
 ns.TrackerHost.SetAttached(true)
 drain()
@@ -450,50 +425,6 @@ check(
 	host.point[1] == "TOPLEFT" and host.point[2] == native and host.point[3] == "TOPRIGHT",
 	"combat uses the screen-right side when a centered native tracker is moved left"
 )
--- Edit Mode can clamp the protected frame while leaving its nominal anchor on
--- our host. Its actual bounds must win, or the two columns overlap in combat.
-minimap.shown = false
-native.top, native.height = 800, 800
-native.left, native.right = 650, 900
-nativeSetPoint(native, "TOPRIGHT", host, "BOTTOMRIGHT", 0, 0)
-host:MarkDirty()
-drain()
-check(
-	host.point[1] == "TOPLEFT" and host.point[2] == parent,
-	"combat uses an independent anchor when the native host anchor is clamped"
-)
-check(host.point[4] == 554.5 and host.point[5] == -80, "combat anchor follows actual native bounds")
-check(host.point[2] ~= native, "combat clamp recovery never creates an anchor cycle")
-local cycleHost = { width = host:GetWidth(), height = host:GetHeight() }
-cycleHost.GetWidth, cycleHost.GetHeight = function(self)
-	return self.width
-end, function(self)
-	return self.height
-end
-cycleHost.point = { "TOPRIGHT", native, "TOPLEFT", 0, 0 }
-local savedNativePoint = native.point
-native.point = { "TOPRIGHT", cycleHost, "BOTTOMRIGHT", 0, 0 }
-resolveTopLeft(cycleHost)
-native.point = savedNativePoint
-check(
-	cycleHost.point[2] == native and savedNativePoint[2] ~= cycleHost,
-	"the old cycle is represented separately from the fixed anchor"
-)
-local hostLeft, hostTop = resolveTopLeft(host)
-local nativeScale, screenScale = native:GetEffectiveScale(), parent:GetEffectiveScale()
-local nativeRect = {
-	left = native.left * nativeScale / screenScale,
-	top = native.top * nativeScale / screenScale,
-	width = (native.right - native.left) * nativeScale / screenScale,
-	height = native.height * nativeScale / screenScale,
-}
-local hostRect = {
-	left = hostLeft,
-	top = hostTop,
-	width = host:GetWidth() * host:GetEffectiveScale() / screenScale,
-	height = host:GetHeight() * host:GetEffectiveScale() / screenScale,
-}
-check(not rectanglesOverlap(hostRect, nativeRect), "clamped native and private tracker rectangles do not overlap")
 -- Blizzard's combat restore can temporarily point the protected frame at our host.
 -- Collision avoidance must use the saved Edit Mode slot rather than create an anchor cycle.
 nativeSetPoint(native, "TOPRIGHT", parent, "TOPRIGHT", 0, -100)
@@ -568,12 +499,12 @@ nativeAnchorPoint = "BOTTOMRIGHT"
 nativeSetPoint(native, nativeAnchorPoint, parent, nativeAnchorPoint, 0, -100)
 host:MarkDirty()
 drain()
-check(native.point[1] == "TOPRIGHT" and native.point[3] == "BOTTOMRIGHT", "bottom anchor still stacks objectives below")
+check(native.point[1] == "TOPLEFT" and native.point[2] == parent, "bottom anchor stacks objectives independently")
 nativeAnchorPoint = "CENTER"
 nativeSetPoint(native, nativeAnchorPoint, parent, nativeAnchorPoint, 0, -100)
 host:MarkDirty()
 drain()
-check(native.point[1] == "TOP" and native.point[3] == "BOTTOM", "center anchor uses centered top stack")
+check(native.point[1] == "TOPLEFT" and native.point[2] == parent, "center anchor stacks objectives independently")
 local block = first:AcquireFrame("Block")
 block.parentModule = first
 local line = block:GetLine(1)

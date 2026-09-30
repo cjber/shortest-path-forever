@@ -377,9 +377,8 @@ local function Layout()
 		local point = ObjectiveTrackerFrame:GetPoint()
 		local nativeRelativeTo = point and select(2, ObjectiveTrackerFrame:GetPoint())
 		if nativeRelativeTo == host then
-			-- Edit Mode may clamp the protected frame after it was anchored to us. In
-			-- that state the reported anchor is stale: use its actual screen side so
-			-- the private column cannot be placed back inside the native objectives.
+			-- Preserve the saved slot if a legacy host-relative anchor is restored.
+			-- Moving relative to that protected child would create an anchor cycle.
 			if nativeAnchor then
 				host:SetPoint(
 					nativeAnchor.point,
@@ -485,17 +484,9 @@ local function Layout()
 	local nativeScale = ObjectiveTrackerFrame.GetEffectiveScale and ObjectiveTrackerFrame:GetEffectiveScale() or 1
 	local hostScale = host.GetEffectiveScale and host:GetEffectiveScale() or 1
 	local hostLeft = (host:GetLeft() or 0) * hostScale / screenScale
-	local hostWidth = host:GetWidth() * hostScale / screenScale
-	local nativeWidth = ObjectiveTrackerFrame:GetWidth() * nativeScale / screenScale
-	local nativeLeft = hostLeft
-	if nativeAnchor.point:find("RIGHT", 1, true) then
-		nativeLeft = hostLeft + hostWidth - nativeWidth
-	elseif nativeAnchor.point == "CENTER" then
-		nativeLeft = hostLeft + (hostWidth - nativeWidth) / 2
-	end
 	local nativeY = (host:GetBottom() or 0) * hostScale / screenScale - UIParent:GetHeight()
 	ObjectiveTrackerFrame:ClearAllPoints()
-	local nativeX = nativeLeft * screenScale / nativeScale
+	local nativeX = hostLeft * screenScale / nativeScale
 	local nativeOffsetY = nativeY * screenScale / nativeScale
 	ObjectiveTrackerFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", nativeX, nativeOffsetY)
 	appliedNativeAnchor = {
