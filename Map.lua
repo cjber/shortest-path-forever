@@ -232,9 +232,12 @@ function ns.AddDockTooltip(cluster)
 	local groups = {}
 	for _, dock in ipairs(cluster.docks) do
 		local departures = ns.ByDestination(ns.DockDepartures(dock.id))
-		groups[#groups + 1] = { dock = dock, departures = departures }
-		for _, departure in ipairs(departures) do
-			all[#all + 1] = departure
+		-- A dock whose shown route a filter has since hidden has no departures; a stale cluster must not index one.
+		if #departures > 0 then
+			groups[#groups + 1] = { dock = dock, departures = departures }
+			for _, departure in ipairs(departures) do
+				all[#all + 1] = departure
+			end
 		end
 	end
 	if #all == 1 then
@@ -244,8 +247,9 @@ function ns.AddDockTooltip(cluster)
 		GameTooltip_AddColoredLine(GameTooltip, status, StatusColor(departure))
 	else
 		local titles = {}
+		local kinds = cluster.kinds or {}
 		for _, kind in ipairs(ORDER) do
-			if cluster.kinds[kind] then
+			if kinds[kind] then
 				titles[#titles + 1] = KINDS[kind]
 			end
 		end

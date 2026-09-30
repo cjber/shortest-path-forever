@@ -12,6 +12,14 @@ function ns.SetOption(key, value)
 	settings[key]:SetValue(value)
 end
 
+local category
+
+-- The settings category is the addon's one options surface: the slash command, the compartment entry and the
+-- route button's right-click all open it.
+function ns.OpenSettings()
+	Settings.OpenToCategory(category:GetID())
+end
+
 local function Perf()
 	local profiler, metrics = C_AddOnProfiler, Enum.AddOnProfilerMetric
 	if profiler and profiler.GetAddOnMetric and metrics and (not profiler.IsEnabled or profiler.IsEnabled()) then
@@ -56,10 +64,26 @@ end
 -- Settings.CreateCheckbox inserts from our code instead, and the settings search reads every layout, so that
 -- tainted it: a restricted button in the results (Social's Discord Sign In) was then blocked and blamed on us.
 ns.Init(function()
-	local category = Settings.RegisterVerticalLayoutCategory("Shortest Path Forever")
+	category = Settings.RegisterVerticalLayoutCategory("Shortest Path Forever")
+
+	-- Topic → AddOns → Shortest Path Forever: a short index page of buttons, then a stock subpage per group so no
+	-- page grows tall. The index buttons stay out of the settings search (the last argument) so it finds the
+	-- settings themselves.
+	local page
+	local function Page(name)
+		local subcategory = Settings.RegisterVerticalLayoutSubcategory(category, name)
+		page = subcategory
+		Settings.RegisterInitializer(
+			category,
+			CreateSettingsButtonInitializer(name, L["Open"], function()
+				Settings.OpenToCategory(subcategory:GetID())
+			end, nil, false)
+		)
+	end
+
 	local function Checkbox(key, name, tooltip, onChanged)
 		local setting = Settings.RegisterAddOnSetting(
-			category,
+			page,
 			"ShortestPathForever_" .. key,
 			key,
 			ns.db,
@@ -70,10 +94,12 @@ ns.Init(function()
 		if onChanged then
 			setting:SetValueChangedCallback(onChanged)
 		end
-		Settings.RegisterInitializer(category, Settings.CreateCheckboxInitializer(setting, nil, tooltip))
+		Settings.RegisterInitializer(page, Settings.CreateCheckboxInitializer(setting, nil, tooltip))
 		settings[key] = setting
 	end
 
+	-- Map marks: what the world map and the minimap draw.
+	Page(L["Map marks"])
 	Checkbox("pins", L["Show boats and zeppelins on the world map"], nil, ns.RefreshMap)
 	Checkbox("transit", L["Show lifts and the Deeprun Tram on the world map"], nil, ns.RefreshMap)
 	Checkbox("portals", L["Show portals on the world map"], nil, ns.RefreshMap)
@@ -84,6 +110,9 @@ ns.Init(function()
 		L["Also under Transport in the minimap's tracking menu."],
 		ns.RefreshMinimapPins
 	)
+
+	-- Transport: routes and departure times.
+	Page(L["Transport"])
 	Checkbox(
 		"mapRoutes",
 		L["Show boat and zeppelin routes on the world map"],
@@ -106,11 +135,13 @@ ns.Init(function()
 		ns.RefreshTracker
 	)
 	Checkbox(
-		"alerts",
-		L["Alert when a boat is about to arrive"],
-		L["While you wait at a dock or ride a timed boat: a warning on screen and a flashing taskbar icon."]
+		"share",
+		L["Share departure times with other players"],
+		L["Sends and receives sighting times over guild, party and at the dock. No chat messages are shown."]
 	)
-	Checkbox("alertSound", L["Play a sound with arrival alerts"], L["Plays even with the game in the background."])
+
+	-- Guidance: how a journey is planned and led.
+	Page(L["Guidance"])
 	Checkbox("journey", L["Plan journeys with Shift-click on the world map or minimap"], nil, function()
 		if not ns.db.journey then
 			ns.ClearJourney()
@@ -139,6 +170,18 @@ ns.Init(function()
 		L["While you are a ghost, a red dotted path leads to your body. Your journey waits until you are alive again."],
 		ns.RefreshCorpseRun
 	)
+
+	-- Alerts: the arrival warning.
+	Page(L["Alerts"])
+	Checkbox(
+		"alerts",
+		L["Alert when a boat is about to arrive"],
+		L["While you wait at a dock or ride a timed boat: a warning on screen and a flashing taskbar icon."]
+	)
+	Checkbox("alertSound", L["Play a sound with arrival alerts"], L["Plays even with the game in the background."])
+
+	-- Interface: what the addon puts on screen.
+	Page(L["Interface"])
 	Checkbox(
 		"compass",
 		L["Show a compass while Guide is on"],
@@ -146,15 +189,17 @@ ns.Init(function()
 		ns.RefreshCompass
 	)
 	Checkbox(
-		"share",
-		L["Share departure times with other players"],
-		L["Sends and receives sighting times over guild, party and at the dock. No chat messages are shown."]
+		"routeButton",
+		L["Show a route button on the minimap"],
+		L["Starts and stops the route in one click. It turns gold while a route is on; right-click opens these settings."],
+		ns.RefreshRouteButton
 	)
 	Checkbox(
 		"whatsNew",
 		L["Tell me what's new after an update"],
 		L["One line in chat the first time you log in after an update."]
 	)
+
 	Settings.RegisterAddOnCategory(category)
 	SLASH_SHORTESTPATHFOREVER1 = "/path"
 	SLASH_SHORTESTPATHFOREVER2 = "/shortestpath"
@@ -169,9 +214,9 @@ ns.Init(function()
 			ns.Print("debug " .. (ns.db.debug and "on" or "off"))
 			return
 		end
-		Settings.OpenToCategory(category:GetID())
+		ns.OpenSettings()
 	end
 	ShortestPathForever_OnAddonCompartmentClick = function()
-		Settings.OpenToCategory(category:GetID())
+		ns.OpenSettings()
 	end
 end)

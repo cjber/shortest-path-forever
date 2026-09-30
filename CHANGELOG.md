@@ -11,6 +11,19 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-09-30
+
+- **A route button on the minimap.** A round button in the game's own minimap button art starts and stops the
+  route in one click, and turns gold while a route is on. Right-click opens `/path`; *Show a route button on the
+  minimap* turns it off.
+- **The compass looks like the game and starts on for new installs.** The dark box and its border are gone: the ribbon is
+  the game's own parchment ticks and gold letters, fading out at each end, with the destination drawn as the
+  game's own waypoint pin. Existing compass preferences are kept. *Show a compass while Guide is on* in `/path` still turns it off.
+- **Settings, grouped.** `/path` opens a short index of Map marks, Transport, Guidance, Alerts and Interface
+  instead of one long list, with each group on its own page. Every option is where it was.
+- **A dock pin's tooltip survives a filter change.** A pin whose cluster still held a pier the filter had just
+  hidden no longer reads an empty departure list and raises a Lua error.
+
 ## [1.4.7] - 2026-09-29
 
 - **Keep quest destinations visible.** Adventure Guide can hold a stop until the quest interaction changes, without the normal arrival radius clearing its guidance.

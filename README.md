@@ -14,7 +14,7 @@ walks you there with the game's own navigation marker. Walking maps cover Easter
 they come in the same download and load only when a route needs them.
 The route, pins and tracker use the game's own art, so it looks like it came with the game.
 
-![Eight-second demo of a route settling, the countdown and the optional compass](docs/screenshots/demo.gif)
+![Eight-second demo of a route settling, the countdown and the compass](docs/screenshots/demo.gif)
 
 Planning a journey from the map: the route settles, the next boat counts down in the tracker and the compass turns
 with you.
@@ -36,9 +36,12 @@ Each feature has more detail in [docs/features.md](docs/features.md).
   brings your journey's route back. Turn it off in `/path`. Flight lines on the world map and minimap curve smoothly.
 
   ![A smooth flight line leaving Stormwind](docs/screenshots/flight.png)
-- **Optional compass.** A slim strip at the top of the screen marks Guide's next two turns, the next stop and your
-  destination. Turn it on in `/path`.
-  ![The optional compass strip with the next turns and destination](docs/screenshots/compass.png)
+- **Compass.** A slim strip at the top of the screen marks Guide's next two turns, the next stop and your
+  destination, in the game's own ticks, gold letters and waypoint pin. *Show a compass while Guide is on* in
+  `/path` turns it off.
+  ![The compass strip with the next turns and destination](docs/screenshots/compass.png)
+- **A route button.** A round button on the minimap in the game's own minimap button art starts and stops the
+  route in one click and turns gold while a route is on. Right-click opens `/path`.
 - **Back to your corpse.** Once you release as a ghost, a red dotted path in the colour of your corpse's tombstone
   leads back to it on both maps, with Guide and the time in the tracker. Your journey waits and comes back when you
   are alive again. *Show the way back to your corpse* in `/path` turns it off.

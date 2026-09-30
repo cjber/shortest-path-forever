@@ -177,6 +177,7 @@ ForeverTrackerHost = nil
 ---@class SPFSettings
 ---@field VarType {Boolean: string}
 ---@field RegisterVerticalLayoutCategory fun(name: string): SPFSettingsCategory
+---@field RegisterVerticalLayoutSubcategory fun(parent: SPFSettingsCategory, name: string): SPFSettingsCategory
 ---@field RegisterAddOnSetting fun(category: SPFSettingsCategory, variable: string, key: string, storage: SPFDatabase, variableType: string, name: string, default: boolean): SPFSetting
 ---@field CreateCheckboxInitializer fun(setting: SPFSetting, options?: table, tooltip?: string): SPFSettingsInitializer
 ---@field RegisterInitializer fun(category: SPFSettingsCategory, initializer: SPFSettingsInitializer)
@@ -184,6 +185,15 @@ ForeverTrackerHost = nil
 ---@field OpenToCategory fun(id: number)
 ---@type SPFSettings
 Settings = nil
+
+-- Blizzard's settings button initializer, absent from the pinned annotations (Ketho/vscode-wow-api).
+---@param name string
+---@param description string
+---@param callback function
+---@param searchTags? table
+---@param addSearchTags? boolean
+---@return SPFSettingsInitializer
+function CreateSettingsButtonInitializer(name, description, callback, searchTags, addSearchTags) end
 
 ---@class SPFUiMapPointFactory
 ---@field CreateFromVector2D fun(uiMapID: number, position: Vector2DMixin): UiMapPoint

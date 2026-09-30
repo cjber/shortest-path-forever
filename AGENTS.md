@@ -64,8 +64,10 @@ before its `v*` tag, since the release publishes it as the notes.
 
 ## Waivers
 
-- WFA-2 (off by default only when it acts for the player): the compass is a new HUD element, so it stays opt-in;
-  owner decision 2026-09-27.
+- WFA-3 (no minimap button): the route button is a minimap button by owner request, and it is an action, not a
+  second options surface. Every option still lives in the settings page, which the slash command, the compartment
+  entry and the button's right-click open; the button starts and stops the route, nothing else. Owner decision
+  2026-09-29.
 
 ## Secure UI regression checks
 

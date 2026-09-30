@@ -1,6 +1,7 @@
 -- Exercise the real compass against allocation-free UI spies, including a stopped OnUpdate.
 local source = arg[1] or "Compass.lua"
-local calls = { text = 0, atlas = 0, info = 0, objects = 0, points = 0 }
+local calls = { text = 0, atlas = 0, info = 0, objects = 0, points = 0, panels = 0, colors = 0 }
+local stripTemplate
 local atlasSizes = {
 	["Waypoint-MapPin-Tracked"] = { width = 30, height = 30 },
 	["Navigation-Tracked-Icon"] = { width = 23, height = 35 },
@@ -17,11 +18,22 @@ local function noop() end
 local methods = {
 	EnableMouse = noop,
 	SetFrameStrata = noop,
-	SetColorTexture = noop,
-	SetBackdropColor = noop,
-	SetBackdropBorderColor = noop,
 	ClearAllPoints = noop,
 }
+function methods.SetColorTexture(region, ...)
+	calls.colors = calls.colors + 1
+	region.color = { ... }
+end
+function methods.SetBackdrop(region, ...)
+	calls.panels = calls.panels + 1
+	region.backdrop = { ... }
+end
+function methods.SetBackdropColor()
+	calls.panels = calls.panels + 1
+end
+function methods.SetBackdropBorderColor()
+	calls.panels = calls.panels + 1
+end
 local function object()
 	calls.objects = calls.objects + 1
 	return setmetatable({ scripts = {}, events = {} }, { __index = methods })
@@ -74,9 +86,6 @@ function methods:Hide()
 		self.scripts.OnHide(self)
 	end
 end
-function methods:SetBackdrop(backdrop)
-	self.backdrop = backdrop
-end
 function methods:SetScript(name, fn)
 	self.scripts[name] = fn
 end
@@ -123,7 +132,8 @@ local ns = {
 assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", ns)
 local env = setmetatable({
 	UIParent = {},
-	CreateFrame = function()
+	CreateFrame = function(_, _, _, template)
+		stripTemplate = template
 		strip = object()
 		return strip
 	end,
@@ -195,7 +205,47 @@ close(strip.Bend.width / strip.Bend.height, 23 / 35)
 close(strip.Next.width / strip.Next.height, 23 / 35)
 close(strip.Goal.width / strip.Goal.height, 1)
 assert(strip.Distance.font == "GameFontHighlightSmall")
-assert(strip.backdrop.bgFile == "Interface\\Tooltips\\UI-Tooltip-Background")
+
+-- No panel, no border, no backdrop template: the compass is the world's own palette on the screen.
+assert(stripTemplate == nil, "the compass asks for no frame template: " .. tostring(stripTemplate))
+assert(calls.panels == 0, "no background or border is ever drawn: " .. calls.panels)
+assert(strip.backdrop == nil)
+-- The words wear the game's own fonts: the highlight font for the yards, the gold label font for the letters.
+
+-- Ticks are the game's parchment gold, major ones longer, and they fade out towards the ribbon's ends.
+local labels, faded = 0, false
+for index, tick in ipairs(strip.ticks) do
+	assert(tick.color, "every tick is a colour texture")
+	assert(tick.major == (index % 6 == 1), "every fourth tick is a major one")
+	assert(tick.height == (tick.major and 5 or 3), "major ticks are the longer ones")
+	if tick.major then
+		labels = labels + 1
+		-- FontStyles.xml: GameFontNormalSmall is Friz 10 in NORMAL_FONT_COLOR's gold with a (1, -1) shadow.
+		assert(tick.label.font == "GameFontNormalSmall", "the game's own small font, its gold and shadow built in")
+	end
+	-- Facing north, the ticks run from the centre to the edge of the ribbon.
+	close(tick.color[1], 0.72)
+	close(tick.color[2], 0.67)
+	close(tick.color[3], 0.55)
+	if tick.alpha and tick.alpha < 0.05 then
+		faded = true
+	end
+	if index == 1 then
+		close(tick.alpha, 0.85)
+	end
+	if index == 5 then
+		assert(tick.alpha > 0.2 and tick.alpha < 0.4, "a tick past the middle of the ribbon is already fainter")
+	end
+end
+assert(labels == 4, "the four directions, as every compass has")
+assert(faded, "the ribbon dissolves at its ends instead of stopping at a border")
+close(strip.Center.color[1], 1)
+close(strip.Center.color[2], 0.82)
+close(strip.Center.color[3], 0)
+-- The game's own marks: the destination pin and the stop at full strength, the turn ahead of it dimmer.
+close(strip.Goal.alpha, 1)
+close(strip.Stop.alpha, 1)
+close(strip.Next.alpha, 0.5)
 
 -- The old 10 Hz gate leaves this first 60 Hz frame stationary.
 facing = math.pi / 4

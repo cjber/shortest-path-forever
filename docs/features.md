@@ -34,11 +34,17 @@ The detail behind each feature in the [README](../README.md).
   or flight master you are heading for.
   ![A walking route around the terrain south of Auberdine](screenshots/darkshore.png)
 
-  ![Eight-second demo of a route settling, the countdown and the optional compass](screenshots/demo.gif)
+  ![Eight-second demo of a route settling, the countdown and the compass](screenshots/demo.gif)
 
-- **An optional compass.** A slim strip at the top of the screen follows your facing and marks Guide's next
-  two turns, the next stop and your destination. Turn it on in `/path`.
-  ![The optional compass strip with the next turns and destination](screenshots/compass.png)
+- **A compass that looks like the game.** A slim strip at the top of the screen follows your facing and marks
+  Guide's next two turns, the next stop and your destination, in the map's own parchment ticks and gold letters,
+  fading out at each end, with your destination drawn as the game's own waypoint pin. On by default; *Show a
+  compass while Guide is on* in `/path` turns it off.
+  ![The compass strip with the next turns and destination](screenshots/compass.png)
+
+- **A route button on the minimap.** A round button in the game's own minimap button art starts and stops the
+  route in one click, and turns gold while a route is on. Right-click opens `/path`; *Show a route button on the
+  minimap* turns it off.
 
 - **Back to your corpse.** Release as a ghost and a red-orange dotted path, the colour of your corpse's tombstone,
   walks you back to it on the world map and minimap, round walls like any walk. Guide leads the way and the tracker
