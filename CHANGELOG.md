@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **The other faction's routes are hidden by default.** New installs no longer suggest journeys through opposing faction docks. You can still enable them in Settings; saved choices are kept.
+
 ## [1.6.0] - 2026-09-30
 
 - **Development disclosure.** This release was developed with AI assistance. Changes were reviewed and checked with automated tests, linting and type checks; live verification remains ongoing.
