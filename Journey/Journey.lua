@@ -452,7 +452,7 @@ function ns.StartJourney(point)
 	if ns.JourneyChanged then
 		ns.JourneyChanged(point)
 	end
-	result = previous
+	result = previous or nil
 	progress.index, progress.departed = previous and index or 1, previous and departed or false
 	driver.elapsed, driver.progressElapsed = 0, 0
 	if not InCombatLockdown() then

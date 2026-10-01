@@ -65,8 +65,8 @@ local function CancelPaths()
 	end
 	Walks.Cancel()
 	for _, batch in pairs({ start = startBatch, goal = goalBatch }) do
-		if batch.job and batch.path.Pause then
-			batch.path.Pause(batch.job)
+		if batch.job then
+			ns.Path.Pause(batch.job)
 		end
 	end
 	pendingCosts = 0
@@ -215,8 +215,8 @@ end
 -- A proved journey keeps exact endpoint vectors and their lower bounds, never suspended search stacks.
 local function ReleaseCosts()
 	for _, batch in pairs({ start = startBatch, goal = goalBatch }) do
-		if batch.job and batch.path.ReleaseMany then
-			batch.path.ReleaseMany(batch.job)
+		if batch.job then
+			ns.Path.ReleaseMany(batch.job)
 		end
 	end
 end
@@ -308,9 +308,8 @@ local function Render(planned, forced)
 	FinishSearch()
 end
 
----@param preview? boolean
 ---@return SPFPlan?
-local function Plan(preview)
+local function Plan()
 	local here = Here()
 	if not (here and goal) then
 		return nil
@@ -324,7 +323,7 @@ local function Plan(preview)
 	end
 	local anchors = ns.FreshAnchors()
 	local teleports, ready = ns.UsableTeleports(now)
-	local walks = preview and {} or MeasuredWalks(here)
+	local walks = MeasuredWalks(here)
 	for _, walk in ipairs(Walks.Landings(teleports, waterMode)) do
 		walks[#walks + 1] = walk
 	end
@@ -376,7 +375,7 @@ local function Plan(preview)
 		waterWalking = waterMode,
 	})
 	if planned then
-		planned.now, planned.preview, planned.waterMode = now, preview, waterMode
+		planned.now, planned.preview, planned.waterMode = now, nil, waterMode
 	end
 	return planned
 end
@@ -386,10 +385,6 @@ end
 local function RefreshCosts(includeGoal, forced)
 	local here = Here()
 	if not (here and goal) then
-		return
-	end
-	if not ns.Path then
-		Render(Plan(), forced)
 		return
 	end
 	CancelPaths()
@@ -417,37 +412,26 @@ local function RefreshCosts(includeGoal, forced)
 		return list
 	end
 	local function reuse(batch, point, reverse)
-		if
-			not batch
-			or batch.path ~= ns.Path
-			or batch.water ~= waterMode
-			or batch.faction ~= faction
-			or batch.teleports ~= teleports
-		then
+		if not batch or batch.water ~= waterMode or batch.faction ~= faction or batch.teleports ~= teleports then
 			return false
 		end
 		if not reverse and not SamePlace(batch.goal, goal) then
 			return false
 		end
-		return ns.Path.Resume
-			and (
-				SamePlace(batch.point, point)
-				or (not reverse and ns.Path.ReuseMany and ns.Path.ReuseMany(batch.job, point))
-			)
+		return SamePlace(batch.point, point) or (not reverse and ns.Path.ReuseMany(batch.job, point))
 	end
 	local function create(previous, point, reverse)
 		if reuse(previous, point, reverse) then
 			return previous
 		end
 		if previous and previous.job then
-			previous.path.Cancel(previous.job)
+			ns.Path.Cancel(previous.job)
 		end
 		return {
 			point = point,
 			goal = goal,
 			targets = targets(point, not reverse),
 			reverse = reverse,
-			path = ns.Path,
 			water = waterMode,
 			faction = faction,
 			teleports = teleports,
@@ -465,7 +449,7 @@ local function RefreshCosts(includeGoal, forced)
 	end
 	local slices, lastRevision, probeCPU = 0, -1, 0
 	local function fixedPlace(batch)
-		if batch.fixedChecked or not (batch.job and batch.job.valid and ns.Path.ReuseMany) then
+		if batch.fixedChecked or not (batch.job and batch.job.valid) then
 			return
 		end
 		batch.fixedChecked = true
@@ -512,7 +496,7 @@ local function RefreshCosts(includeGoal, forced)
 			end
 			local estimated = cost == nil
 			if estimated then
-				local lower = ns.Path.LowerBound and ns.Path.LowerBound(batch.point.map, batch.point, target) or 0
+				local lower = ns.Path.LowerBound(batch.point.map, batch.point, target)
 				cost = math.max(lower, radius, bakedBound(batch, target))
 			end
 			list[#list + 1] = {
@@ -525,16 +509,14 @@ local function RefreshCosts(includeGoal, forced)
 		return list
 	end
 	local function active(batch, needed)
-		if ns.Path.Pause then
-			if needed then
-				ns.Path.Resume(batch.job)
-			else
-				ns.Path.Pause(batch.job)
-			end
+		if needed then
+			ns.Path.Resume(batch.job)
+		else
+			ns.Path.Pause(batch.job)
 		end
 	end
 	local preview
-	if not followed and ns.Path.LowerBound then
+	if not followed then
 		startCosts, goalCosts = walks(startBatch), walks(goalBatch)
 		preview = Plan()
 		if preview then
@@ -584,7 +566,7 @@ local function RefreshCosts(includeGoal, forced)
 		-- Short A* cost probes let easy routes prove themselves before expanding a wide frontier. Bound
 		-- their total work, then let shared Dijkstras settle harder alternatives. Finish an active probe:
 		-- abandoning it near completion would make the batch repeat its work.
-		if ns.Path.FindCost and probeCPU < PROBE_BUDGET then
+		if probeCPU < PROBE_BUDGET then
 			local probes = {}
 			for _, leg in ipairs(planned and planned.pendingWalks or {}) do
 				local batch = leg.from.kind == "start" and startBatch or goalBatch
@@ -663,7 +645,7 @@ local function RefreshCosts(includeGoal, forced)
 				return
 			end
 			batch.costs, batch.reason, batch.job = costs or {}, reason, job
-			if job.done or not ns.Path.Pause then
+			if job.done then
 				batch.done = true
 				for i = 1, #batch.targets do
 					if batch.costs[i] == nil then
@@ -686,7 +668,7 @@ local function RefreshCosts(includeGoal, forced)
 		consider(true)
 	end)
 	-- Existing settled costs can prove a repeated journey without advancing either frontier.
-	if ns.Path.Pause and (startBatch.job.valid or startBatch.done) and (goalBatch.job.valid or goalBatch.done) then
+	if (startBatch.job.valid or startBatch.done) and (goalBatch.job.valid or goalBatch.done) then
 		consider(true)
 	end
 end
@@ -719,15 +701,13 @@ function Search.Reset()
 	Search.Clear(false)
 	for _, batch in pairs({ start = startBatch, goal = goalBatch }) do
 		if batch.job then
-			batch.path.Cancel(batch.job)
+			ns.Path.Cancel(batch.job)
 		end
 	end
 	startBatch, goalBatch = nil, nil
 	search = nil
 	plannerCache = {}
-	if ns.Path and ns.Path.ClearCaches then
-		ns.Path.ClearCaches()
-	end
+	ns.Path.ClearCaches()
 	goal, followed = nil, nil
 end
 
@@ -742,14 +722,7 @@ function Search.Start(point, route, state, listener)
 	goal, followed, progress, publish = point, route, state, listener
 	search = nil
 	waterMode = (ns.JourneyWaterWalking())
-	if ns.Path then
-		RefreshCosts(true, false)
-		if search and not search.candidate and not ns.Path.LowerBound then
-			search.candidate = Plan(true)
-		end
-	else
-		Render(Plan())
-	end
+	RefreshCosts(true, false)
 end
 
 -- Once per driver frame with a readable position: restarts a search whose inputs changed or whose callbacks waited
@@ -763,7 +736,7 @@ function Search.Poll(changed)
 	local stale = not startAt or costsWaiting
 	costsWaiting = nil
 	-- Search callbacks may finish while position is unavailable; resume from readable endpoints.
-	if stale and ns.Path then
+	if stale then
 		RefreshCosts(true, true)
 	end
 	if
@@ -819,13 +792,12 @@ function Search.Replan(riding, flying, changedRide)
 			and startAt
 			and moved
 			and (not followed or (leg and leg.walkError) or here.map ~= startAt.map)
-		if ns.Path and not flying and not riding and (off or retry or GetTime() - refreshedAt >= REFRESH_EVERY) then
+		if not flying and not riding and (off or retry or GetTime() - refreshedAt >= REFRESH_EVERY) then
 			RefreshCosts(false, off or retry)
 		else
 			local planned = Plan()
 			if
 				planned
-				and ns.Path
 				and (
 					(planned.needsStart and here and ns.Path.HasData(here.map))
 					or (planned.needsGoal and ns.Path.HasData(goal.map))

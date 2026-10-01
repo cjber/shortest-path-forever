@@ -1,202 +1,387 @@
-local function scenario(oldSeconds, newSeconds)
+-- The journey search across its own interface: the real planner, the walking search answered by the spec, and a
+-- listener standing where Journey does.
+local SPEED = 7
+local function at(a, b)
+	return a.map == b.map and a.x == b.x and a.y == b.y
+end
+---@param yards fun(from: table, to: table): number|false running yards between two places, false when unwalkable
+---@param bound? fun(from: table, to: table): number what the walking search can promise before it has searched
+local function harness(yards, bound)
 	local driver = assert(loadfile("tests/journey_driver.lua"))()
-	local ns = driver.ns
-	driver.load("UI/Arrow.lua")
-	local batches, jobs, draws = {}, {}, {}
-	local choice, exact = "A", false
+	local ns, walking = driver.ns, driver.path
+	local Search = ns.JourneySearch
+	walking.auto = false
+	walking.bound = bound and function(_, from, to)
+		return bound(from, to)
+	end
+	local h = { ns = ns, driver = driver, walking = walking, Search = Search, news = {}, progress = { index = 1 } }
+	local function listen(route, what)
+		h.news[#h.news + 1] = what
+		if what == "route" then
+			h.route, h.progress.index, h.progress.departed = route, 1, false
+		end
+	end
+	-- Journey's StartJourney: a repeated goal keeps its route.
+	function h.start(from, goal)
+		driver.move(from)
+		local previous = Search.Clear(h.goal and Search.SamePlace(h.goal, goal)) and h.route
+		h.goal, h.route = goal, previous or nil
+		if not previous then
+			h.progress.index, h.progress.departed = 1, false
+		end
+		Search.Start(goal, h.route, h.progress, listen)
+	end
+	function h.clear()
+		Search.Reset()
+		h.goal, h.route = nil, nil
+	end
+	-- A frame `seconds` later, and with replan Journey's timed replan in it.
+	function h.frame(seconds, replan)
+		driver.update(seconds)
+		Search.Poll()
+		if replan then
+			Search.Replan(nil, nil, false)
+		end
+	end
+	-- Ends the endpoint searches still running with every target's cost.
+	function h.costs()
+		for _, batch in ipairs(walking.waiting(walking.batches)) do
+			local costs = {}
+			for i, target in ipairs(batch.targets) do
+				if batch.reverse then
+					costs[i] = yards(target, batch.from)
+				else
+					costs[i] = yards(batch.from, target)
+				end
+			end
+			walking.finish(batch, costs)
+		end
+	end
+	-- Ends the leg searches still running with their drawn points, or without any for a leg `fail` picks.
+	function h.geometry(fail)
+		for _, job in ipairs(walking.waiting(walking.finds)) do
+			if fail and fail(job) then
+				walking.finish(job, nil, "unreachable")
+			else
+				walking.finish(job, { job.from, job.to }, yards(job.from, job.to))
+			end
+		end
+	end
+	-- The news since the last call, as one string.
+	function h.heard()
+		local heard = table.concat(h.news, " ")
+		h.news = {}
+		return heard
+	end
+	function h.status()
+		local pending, _, _, loading = Search.Status()
+		return pending, loading
+	end
+	return h
+end
+
+-- Two passages come out at the goal, entered from A and from B. A takes oldSeconds to walk to and B newSeconds,
+-- once open: the planner prefers whichever the walking search has made faster.
+local function scenario(oldSeconds, newSeconds)
 	local from, goal = { map = 1, x = 0, y = 0 }, { map = 1, x = 1000, y = 0 }
-	local via = { A = { map = 1, x = 500, y = 100 }, B = { map = 1, x = 500, y = 200 } }
-	ns.Path = {
-		HasData = function()
-			return true
-		end,
-		LowerBound = function()
-			return 0
-		end,
-		FindMany = function(_, _, targets, callback)
-			local job = { targets = targets, callback = callback }
-			batches[#batches + 1] = job
-			return job
-		end,
-		Find = function(_, a, b, callback)
-			local job = { from = a, to = b, callback = callback }
-			jobs[#jobs + 1] = job
-			return job
-		end,
-		Cancel = function(job)
-			job.cancelled = true
-		end,
+	local enter = { A = { map = 1, x = 500, y = 100 }, B = { map = 1, x = 500, y = 200 } }
+	local open = false
+	local h = harness(function(a, b)
+		if at(b, enter.A) then
+			return oldSeconds * SPEED
+		elseif at(b, enter.B) then
+			return open and newSeconds * SPEED
+		end
+		return at(a, b) and 0
+	end, function(a, b)
+		if at(a, goal) then
+			return at(a, b) and 0 or 1000 * SPEED
+		end
+		return at(b, enter.A) and 100 * SPEED or at(b, enter.B) and 150 * SPEED or 1000 * SPEED
+	end)
+	h.ns.Portals = {
+		{ name = "Passage to A", kind = "passage", from = enter.A, to = goal, seconds = 5 },
+		{ name = "Passage to B", kind = "passage", from = enter.B, to = goal, seconds = 5 },
 	}
-	local draw = ns.SetJourneyRoute
-	ns.SetJourneyRoute = function(g, r)
-		draws[#draws + 1] = r or false
-		draw(g, r)
+	h.enter = enter
+	local costs = h.costs
+	function h.costs(choice)
+		open = choice == "B"
+		costs()
 	end
-	ns.Planner.Plan = function(o)
-		local seconds = choice == "A" and (exact and oldSeconds or 100) or newSeconds
-		return {
-			arrive = o.now + seconds * 1000,
-			needsStart = not exact,
-			needsGoal = not exact,
-			legs = {
-				{
-					mode = "walk",
-					from = o.from,
-					to = via[choice],
-					yards = seconds * 7,
-					depart = o.now,
-					arrive = o.now + seconds * 1000,
-				},
-				{
-					mode = "passage",
-					from = via[choice],
-					to = o.to,
-					depart = o.now + seconds * 1000,
-					arrive = o.now + seconds * 1000,
-				},
-			},
-		}
+	function h.via()
+		return h.route and (at(h.route.legs[1].to, enter.A) and "A" or at(h.route.legs[1].to, enter.B) and "B")
 	end
-	local function costs(nextChoice)
-		choice, exact = nextChoice, true
-		for _, batch in ipairs(batches) do
-			if not batch.done and not batch.cancelled then
-				batch.done = true
-				batch.callback({}, nil, batch)
-			end
-		end
+	-- A minute on, the timed replan searches again from `point`, or from a little further along the way to A.
+	local along = 0
+	function h.refresh(point)
+		along = along + 1
+		h.driver.move(point or { map = 1, x = 50 * along, y = 10 * along })
+		h.frame(60, true)
 	end
-	local function geometry(fail)
-		for _, job in ipairs(jobs) do
-			if not job.done and not job.cancelled then
-				job.done = true
-				local failed = fail == true or fail == "A" and job.to == via.A
-				job.callback(
-					not failed and { job.from, job.to } or nil,
-					failed and "unreachable" or (job.to == via.A and oldSeconds or newSeconds) * 7,
-					job
-				)
-			end
-		end
-	end
-	driver.begin(from, goal)
-	return driver,
-		ns,
-		draws,
-		costs,
-		geometry,
-		function()
-			return #jobs
-		end,
-		function()
-			exact = false
-			driver.update(60)
-		end
+	h.start(from, goal)
+	return h
 end
 
--- Both cost and geometry callbacks must finish before the single visible commit.
+-- Both the costs and the geometry must be in before the one route is given.
 do
-	local driver, ns, draws, costs, geometry = scenario(300, 200)
-	local title, rows, route, _, loading = ns.JourneyInfo()
-	assert(title == "Journey to Test" and rows[1].text == "Finding the fastest way…" and rows[1].grey)
-	assert(not route and loading and not driver.shown() and not driver.waypoint())
-	local count = #draws
-	driver.update(1)
-	costs("B")
-	assert(#draws == count and not driver.shown() and not driver.waypoint())
-	geometry()
-	assert(#draws == count + 1 and driver.shown() and not ns.JourneyStatus())
-	driver.update(0.1)
-	assert(driver.waypoint() and not select(5, ns.JourneyInfo()))
-	ns.ClearJourney()
+	local h = scenario(300, 200)
+	assert(h.heard() == "searching" and not h.route and select(2, h.status()))
+	h.frame(1)
+	h.costs("B")
+	assert(h.heard() == "" and not h.route)
+	h.geometry()
+	local pending, loading = h.status()
+	assert(h.heard() == "route" and h.via() == "B" and pending == 0 and not loading)
+	h.frame(0.1)
+	assert(h.heard() == "")
+	h.clear()
 end
 
-for _, case in ipairs({ { 300, 275, false }, { 600, 560, false }, { 200, 175, false }, { 300, 270, true } }) do
-	local driver, ns, draws, costs, geometry = scenario(case[1], case[2])
-	driver.update(2.9)
-	assert(not driver.shown())
-	driver.update(0.1)
-	local committed = assert(driver.shown()).legs[1].to
-	assert(select(5, ns.JourneyInfo()), "grace commit retains the spinner")
-	for _, row in ipairs((select(2, ns.JourneyInfo()))) do
-		assert(not row.text:find("finding walking", 1, true) and not row.text:find("   ", 1, true))
+-- A search outlasting the grace period shows its candidate, then swaps at most once, and only for a real gain.
+for _, case in ipairs({ { 300, 275, false }, { 600, 560, false }, { 200, 175, false }, { 270, 240, true } }) do
+	local h = scenario(case[1], case[2])
+	h.frame(2.9)
+	assert(h.heard() == "searching" and not h.route)
+	h.frame(0.1)
+	assert(h.heard() == "route" and h.via() == "A" and select(2, h.status()), "a grace route is still loading")
+	for _, leg in ipairs(h.route.legs) do
+		assert(leg.mode ~= "walk" or #leg.walkPoints == 2, "a grace route draws every walk")
 	end
-	local count = #draws
-	geometry()
-	assert(#draws == count, "measuring a grace route cannot redraw it")
-	costs("B")
-	assert(#draws == count, "a different bounded plan cannot redraw the grace route")
-	geometry()
-	assert((driver.shown().legs[1].to ~= committed) == case[3], "both switch thresholds use settled old legs")
-	assert(#draws == count + 1 and not select(5, ns.JourneyInfo()))
-	geometry()
-	assert(#draws == count + 1, "at most one settled swap per search")
-	ns.ClearJourney()
+	h.geometry()
+	assert(h.heard() == "", "nothing measures a grace route before its proof")
+	h.costs("B")
+	assert(h.heard() == "", "a different bounded plan cannot replace the grace route")
+	h.geometry()
+	assert(h.heard() == (case[3] and "route" or "walks"), "both switch thresholds use settled old legs")
+	assert(h.via() == (case[3] and "B" or "A") and not select(2, h.status()))
+	h.geometry()
+	h.frame(0.1)
+	assert(h.heard() == "", "at most one settled swap per search")
+	h.clear()
 end
 
--- Timed background work never publishes a loading state or intermediate plan.
+-- Timed background work never reports a search or an intermediate plan.
 do
-	local driver, ns, draws, costs, geometry, _, refresh = scenario(300, 275)
-	costs("A")
-	geometry()
-	local route, count = driver.shown(), #draws
-	refresh()
-	assert(not select(5, ns.JourneyInfo()) and driver.shown() == route)
-	costs("B")
-	geometry()
-	assert(#draws == count and driver.shown() == route and not ns.JourneyStatus())
-	ns.ClearJourney()
+	local h = scenario(300, 275)
+	h.costs("A")
+	h.geometry()
+	local route = h.route
+	assert(h.heard() == "searching route")
+	h.refresh()
+	assert(not select(2, h.status()) and h.status() > 0)
+	h.costs("B")
+	h.geometry()
+	assert(h.heard() == "times" and h.route == route and h.status() == 0, "a rejected route still ends the search")
+	h.clear()
 end
 
 -- A geometry failure invalidates the grace route even if the replacement misses the margin.
 do
-	local driver, ns, _, costs, geometry = scenario(300, 295)
-	driver.update(3)
-	local old = driver.shown().legs[1].to
-	costs("B")
-	geometry("A")
-	assert(driver.shown().legs[1].to ~= old and not ns.JourneyStatus())
-	ns.ClearJourney()
+	local h = scenario(300, 295)
+	h.frame(3)
+	assert(h.via() == "A")
+	h.costs("B")
+	h.geometry(function(job)
+		return at(job.to, h.enter.A)
+	end)
+	assert(h.via() == "B" and h.status() == 0)
+	h.clear()
 end
 
+-- A background search that finds a real gain swaps once its geometry is in.
 do
-	local driver, ns, draws, costs, geometry, _, refresh = scenario(300, 200)
-	costs("A")
-	geometry()
-	local route, count = driver.shown(), #draws
-	refresh()
-	costs("B")
-	assert(driver.shown() == route and #draws == count and not select(5, ns.JourneyInfo()))
-	geometry()
-	assert(driver.shown().legs[1].to ~= route.legs[1].to and #draws == count + 1)
-	ns.ClearJourney()
+	local h = scenario(300, 200)
+	h.costs("A")
+	h.geometry()
+	h.heard()
+	h.refresh()
+	h.costs("B")
+	assert(h.heard() == "" and h.via() == "A" and not select(2, h.status()))
+	h.geometry()
+	assert(h.heard() == "route" and h.via() == "B")
+	h.clear()
 end
 
 -- Moving through many origins must evict old walks; clearing also discards a still-reusable recent walk.
 do
-	local driver, ns, _, costs, geometry, jobCount = scenario(300, 275)
-	costs("A")
-	geometry()
+	local h = scenario(300, 275)
+	local goal = h.goal
+	h.costs("A")
+	h.geometry()
 	for i = 1, 70 do
-		driver.move({ map = 1, x = 0, y = -i * 50 })
-		driver.update(60)
-		costs("A")
-		geometry()
+		h.refresh({ map = 1, x = 0, y = -i * 50 })
+		h.costs("A")
+		h.geometry()
 	end
-	local count = jobCount()
-	driver.move({ map = 1, x = 0, y = 0 })
-	driver.update(60)
-	costs("A")
-	geometry()
-	assert(jobCount() == count + 1, "the oldest origin's geometry must have been evicted")
-	ns.ClearJourney()
-	driver.begin({ map = 1, x = 0, y = 0 }, { map = 1, x = 1000, y = 0 })
-	costs("A")
-	geometry()
-	assert(jobCount() == count + 2, "clear must release even the most recent walk")
-	ns.ClearJourney()
+	local count = #h.walking.finds
+	h.refresh({ map = 1, x = 0, y = 0 })
+	h.costs("A")
+	h.geometry()
+	assert(#h.walking.finds == count + 1, "the oldest origin's geometry must have been evicted")
+	h.clear()
+	h.start({ map = 1, x = 0, y = 0 }, goal)
+	h.costs("A")
+	h.geometry()
+	assert(#h.walking.finds == count + 2, "clear must release even the most recent walk")
+	h.clear()
+end
+
+-- One walk, straight to the goal: what each search asks of the walking search, and what its answers may change.
+do
+	local here, target = { map = 1, x = 0, y = 0 }, { map = 1, x = 1200, y = 0 }
+	local h = harness(function()
+		return 1400
+	end)
+	local ns, walking = h.ns, h.walking
+	local batches, finds, logs = walking.batches, walking.finds, {}
+	ns.db.debug = true
+	ns.Print = function(message)
+		logs[#logs + 1] = message
+	end
+	local function begin()
+		h.clear()
+		h.start(here, target)
+	end
+	local function move(point)
+		here = point
+		h.driver.move(point)
+	end
+	local function round()
+		return (select(2, h.Search.Status()))
+	end
+	local function drawn()
+		return h.route.legs[1].walkPoints
+	end
+
+	-- Neither a frame nor the first batch to finish can choose a route before both batches have.
+	begin()
+	assert(h.heard() == "searching" and h.status() == 2 and round() == 0 and #batches == 2 and #finds == 0)
+	h.frame(0.6, true)
+	for _ = 1, 3 do
+		h.frame(0.5, true)
+	end
+	walking.costs(batches[2], 1400)
+	assert(h.heard() == "" and #finds == 0 and #batches == 2)
+	walking.costs(batches[1], 1400)
+	assert(h.heard() == "" and h.status() == 1 and round() == 1 and #finds == 1, "wait for the chosen geometry")
+	local first = finds[1]
+	local points = { first.from, { map = 1, x = 600, y = 300 }, first.to }
+	-- Even a disagreement only logs; geometry cannot start another plan.
+	walking.finish(first, points, 2100)
+	assert(h.heard() == "route" and #finds == 1 and #logs == 1 and drawn()[2] == points[2] and h.status() == 0)
+
+	-- The rest of the walk you are on is its own cost, retimed without shrinking it again.
+	move({ map = 1, x = 600, y = 300 })
+	for _ = 1, 2 do
+		h.frame(5, true)
+		assert(h.heard() == "times" and #batches == 2 and #finds == 1)
+		assert(math.abs(h.route.legs[1].yards - 700) < 0.01, "retiming must not repeatedly shrink the cost basis")
+	end
+	assert(drawn()[#drawn()] == first.to)
+	-- A minute refreshes only the start batch, in the background; geometry stays as it is.
+	h.frame(60, true)
+	assert(#batches == 3 and not batches[3].reverse and #finds == 1 and #drawn() == 3)
+	walking.costs(batches[3], 1300)
+	assert(h.heard() == "times" and #finds == 1 and h.status() == 0)
+
+	-- An off-route refresh keeps the old points while its costs and its replacement geometry are pending.
+	move({ map = 1, x = 600, y = -100 })
+	h.frame(5, true)
+	assert(#batches == 4 and not batches[4].reverse and #finds == 1)
+	walking.costs(batches[4], 1500)
+	assert(#finds == 2 and drawn()[2] == points[2])
+	walking.finish(finds[2], nil, "unreachable")
+	assert(h.heard() == "route" and drawn()[2] == points[2] and h.status() == 0, "a failed refresh keeps the points")
+
+	-- Starting another journey or ending this one cancels both kinds of search; a late answer changes nothing.
+	begin()
+	local stale = batches[#batches]
+	begin()
+	local current = batches[#batches]
+	walking.costs(stale, 1400)
+	assert(stale.cancelled and h.status() == 2)
+	h.costs()
+	local stalePoints = finds[#finds]
+	h.clear()
+	h.heard()
+	walking.costs(current, 1400)
+	walking.finish(stalePoints, points, 1400)
+	assert(stalePoints.cancelled and h.heard() == "" and h.status() == 0)
+
+	-- A blocked endpoint is settled once, and a move retries the start without repeating the goal batch.
+	move({ map = 1, x = 0, y = 0 })
+	begin()
+	walking.costs(batches[#batches], false)
+	walking.costs(batches[#batches - 1], false)
+	assert(h.heard() == "searching route" and not h.route and h.status() == 0)
+	local count = #batches
+	h.frame(5, true)
+	assert(#batches == count)
+	move({ map = 1, x = 1, y = 0 })
+	h.frame(5, true)
+	assert(#batches == count + 1 and not batches[#batches].reverse)
+	h.costs()
+	walking.finish(finds[#finds], nil, "error")
+	assert(#drawn() == 0, "a terminal failure cannot keep a straight estimate")
+	count = #finds
+	move({ map = 1, x = 2, y = 0 })
+	h.frame(5, true)
+	h.costs()
+	assert(#finds == count + 1, "moving after a failed point search must search the replacement geometry")
+	h.geometry()
+
+	-- Changing the water mode searches both batches and the points again, keeping what is drawn until then.
+	begin()
+	h.costs()
+	first = finds[#finds]
+	points = { first.from, { map = 1, x = 600, y = 300 }, first.to }
+	walking.finish(first, points, 1400)
+	count = #batches
+	ns.water = true
+	h.frame(5, true)
+	assert(#batches == count + 2 and batches[#batches].water)
+	h.costs()
+	assert(finds[#finds].water and drawn()[2] == points[2])
+	walking.finish(finds[#finds], points, 1400)
+
+	-- Cancelling a pending replacement must keep the drawing it inherited from an earlier completed search.
+	ns.water = nil
+	move({ map = 1, x = 0, y = 0 })
+	begin()
+	h.costs()
+	first = finds[#finds]
+	points = { first.from, { map = 1, x = 600, y = 300 }, first.to }
+	walking.finish(first, points, 1400)
+	move({ map = 1, x = 600, y = -100 })
+	h.frame(5, true)
+	h.costs()
+	local cancelled = finds[#finds]
+	ns.water = true
+	h.frame(5, true)
+	assert(cancelled.cancelled)
+	h.costs()
+	assert(drawn()[2] == points[2], "a second replacement cannot reset drawn geometry")
+	walking.finish(cancelled, nil, "error")
+	assert(h.status() > 0, "a cancelled search's answer cannot finish the current replacement")
+	h.geometry()
+	assert(h.status() == 0)
+
+	-- A searched two-point path is still genuine geometry, and survives a failed off-route replacement.
+	ns.water = nil
+	move({ map = 1, x = 0, y = 0 })
+	begin()
+	h.costs()
+	first = finds[#finds]
+	walking.finish(first, { first.from, first.to }, 1400)
+	move({ map = 1, x = 600, y = -100 })
+	h.frame(5, true)
+	h.costs()
+	walking.finish(finds[#finds], nil, "error")
+	assert(#drawn() == 2 and drawn()[2] == first.to)
+	h.clear()
 end
 
 print(
-	"search_spec: hidden previews, atomic commit, grace thresholds, one swap, invalid route and silent background: ok"
+	"search_spec: one commit, grace thresholds, one swap, silent background, batch reuse, cancellation, kept geometry: ok"
 )

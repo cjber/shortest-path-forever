@@ -78,8 +78,9 @@ Things reached indirectly. The dead-code lens must treat these as referenced.
 - Slash commands `/path`, `/shortestpath` (`SLASH_SHORTESTPATHFOREVER*`, `SlashCmdList`).
 - `tools/*.py` are run by hand (README) and `tools/changelog.py` by `.github/workflows/release.yml`;
   `tools/bake_walks.lua` writes `Data/Walks.lua`; `tools/baker/bake.sh` drives `gen_nav.py` and the C# baker.
-- Test seams: `Path.after`, `Path.clock` and `Path.budget` are replaced by specs; Journey's `ns.Path == nil`
-  branches serve specs that load Journey without Path. Guards around them are not dead. Planner.Plan's
+- Test seams: `Path.after`, `Path.clock` and `Path.budget` are replaced by specs. Specs that load Journey without
+  the walking search get `tests/path_fake.lua`, the whole `ns.Path` surface Journey calls; Journey has no
+  branch for a missing or partial `ns.Path`. Planner.Plan's
   `exactMaps` option has no runtime caller; planner_spec and journey_optimal_spec use it for exact-cost
   plans, so it stays.
 - The `taxiLog` / debug trace in SavedVariables is read by a human after `/path debug`; a bounded,

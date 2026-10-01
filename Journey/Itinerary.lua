@@ -183,8 +183,7 @@ function ns.ItineraryChanged(invalidate)
 		end
 	end
 	hops = kept
-	-- Specs of the public API alone run without the walking search.
-	if points and ns.Path then
+	if points then
 		Schedule()
 	end
 end

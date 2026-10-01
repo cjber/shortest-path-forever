@@ -30,6 +30,7 @@ local function tick()
  T = T + 0.1
  local driver = ShortestPathForeverJourneyDriver
  driver.scripts.OnUpdate(driver, 0.1)
+ settle()
 end
 local function check(index, count)
  assert(api.CurrentStop("Test") == index)
@@ -64,6 +65,7 @@ local function check(index, count)
  return line
 end
 assert(api.NavigateRoute("Test", stops))
+settle()
 local first = check(1, 4)
 -- Map closure/reopening and canvas resizes keep the full itinerary, without reallocating pins.
 local created = lineCreations
@@ -129,6 +131,7 @@ local function rings(expected)
 end
 posX, posY = 0, 0
 assert(api.NavigateRoute("Test", close))
+settle()
 zoom = 0
 routeProvider:OnCanvasScaleChanged()
 -- The current stop's ring takes the later stops overlapping it, rather than drawing over them.
@@ -164,6 +167,7 @@ posX, posY = 0, 0
 
 -- Pooled numbered pins must revert to the ordinary waypoint for a single destination.
 assert(api.Navigate("Test", 1414, 0.51, 0.5, "Only"))
+settle()
 assert(#active[goalTemplate] == 1 and active[goalTemplate][1].Number.text == "")
 assert(active[goalTemplate][1].Texture.atlas == "Waypoint-MapPin-Tracked")
 assert(active[goalTemplate][1].stopTitles == nil and arrowFrame.Progress.text == "")
@@ -178,6 +182,7 @@ mt.__index = function(t, k)
  return stubIndex(t, k)
 end
 assert(api.NavigateRoute("Test", {{map=1414,x=0.51,y=0.5,title="Hand in",kind="turnin"}, stops[4]}))
+settle()
 local marked, plain = active[goalTemplate][1], active[goalTemplate][2]
 assert(marked.Icon.atlas == "QuestTurnin" and not marked.Icon.hidden and math.abs(marked.Icon.height - 16) < 1e-9)
 assert(marked.Icon.anchor[1] == "BOTTOMRIGHT" and marked.Icon.anchor[2] == 4 and marked.Icon.anchor[3] == -4)
@@ -188,6 +193,7 @@ assert(numeral(plain) == 2)
 assert(ShortestPathForeverMinimapRoute.Goal.atlas == "adventureguide-ring")
 assert(api.Cancel("Test"))
 assert(api.Navigate("Test", 1414, 0.51, 0.5, "Trainer", "trainer"))
+settle()
 -- The trainer's tracking icon is a file, which the harness does not record; a lone stop has no number or button.
 local lone = active[goalTemplate][1]
 assert(not lone.Icon.hidden and lone.Icon.width == 22 and lone.Icon.anchor[1] == "CENTER")
@@ -195,17 +201,20 @@ assert(lone.Texture.hidden and lone.Button.hidden and lone.Number.text == "")
 mt.__index = stubIndex
 assert(api.Cancel("Test"))
 assert(api.Navigate("Test", 1414, 0.51, 0.5, "Only"))
+settle()
 assert(active[goalTemplate][1].Icon.hidden and active[goalTemplate][1].Texture.atlas == "Waypoint-MapPin-Tracked")
 assert(ShortestPathForeverMinimapRoute.Goal.atlas == "Waypoint-MapPin-Tracked")
 assert(api.Cancel("Test"))
 posX, posY = 0, 0
 assert(api.NavigateRoute("Test", stops))
+settle()
 assert(not api.Cancel("Other") and #active[goalTemplate] == 4)
 active[goalTemplate][3]:OnMouseClickAction("RightButton")
 assert(not api.CurrentStop("Test") and #active[goalTemplate] == 0)
 
 -- Previews can cross continents on an overview map when both endpoints project there.
 assert(api.NavigateRoute("Test", {stops[1], {map=1415,x=0.52,y=0.5,title="Across the sea"}}))
+settle()
 local overview = active[lineTemplate][1]
 local project = C_Map.GetMapPosFromWorldPos
 C_Map.GetMapPosFromWorldPos = function(_, point, targetMap)
@@ -222,11 +231,15 @@ local many = {}
 for i=1,64 do
  many[i] = {map=1414,x=0.2+i/1000,y=i%2 == 0 and 0.3 or 0.7,title=tostring(i)}
 end
-local plan, calls = ns.Planner.Plan, 0
-ns.Planner.Plan = function(options) calls=calls+1 return plan(options) end
+local plan, planned, calls = ns.Planner.Plan, {}, 0
+ns.Planner.Plan = function(options)
+ if not planned[options.to] then planned[options.to], calls = true, calls+1 end
+ return plan(options)
+end
 local started = os.clock()
 assert(api.NavigateRoute("Test", many))
 local startMS = (os.clock()-started)*1000
+settle()
 assert(calls == 1, "only the current stop is planned")
 local line = active[lineTemplate][1]
 -- They share two rings, one per row; the current stop's row sits on it.

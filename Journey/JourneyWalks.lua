@@ -99,7 +99,7 @@ function Walks.Prepare(planned, drawn, water, done)
 				if planned.preview and entry.cost then
 					leg.walkCost, leg.yards = entry.cost, entry.cost
 				end
-			elseif ns.Path and leg.from.map == leg.to.map and ns.Path.HasData(leg.from.map) then
+			elseif leg.from.map == leg.to.map and ns.Path.HasData(leg.from.map) then
 				-- A replacement may itself still be pending while drawing an older result; preserve that too.
 				for _, previous in ipairs(drawn or {}) do
 					if previous.mode == "walk" and SamePlace(previous.to, leg.to) and previous.walkDrawn then
@@ -108,10 +108,8 @@ function Walks.Prepare(planned, drawn, water, done)
 					end
 				end
 				FindWalk(planned, leg, key, water, done)
-			elseif ns.Path then
-				leg.walkPoints, leg.walkError = {}, "nodata"
 			else
-				leg.walkPoints = ns.Planner.WalkPoints(leg.from, leg.to)
+				leg.walkPoints, leg.walkError = {}, "nodata"
 			end
 		end
 	end
@@ -151,7 +149,7 @@ local landings = {}
 ---@param water boolean?
 ---@return {targets: SPFPlace[], costs?: (number|false)[], waiting?: fun()[]}?
 local function Landing(place, water)
-	if not (ns.Path and place.bind and ns.Path.HasData(place.map)) then
+	if not (place.bind and ns.Path.HasData(place.map)) then
 		return nil
 	end
 	local key = string.format("%d:%.17g:%.17g:%s", place.map, place.x, place.y, tostring(water))
