@@ -34,6 +34,15 @@ jobs:
       - run: pipx run --spec shellcheck-py==0.11.0.1 shellcheck tools/baker/bake.sh tools/typecheck.sh tools/fetch_blizzard_ui.sh tests/ui.sh
       - run: pipx run --spec shfmt-py==4.2.0 shfmt -d tools/baker/bake.sh tools/typecheck.sh tools/fetch_blizzard_ui.sh tests/ui.sh
 
+  generated:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: sudo apt-get update && sudo apt-get install -y luajit
+      - run: python3 tools/check_generated.py
+
   typecheck:
     runs-on: ubuntu-latest
     steps:

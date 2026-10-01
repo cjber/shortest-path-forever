@@ -14,6 +14,7 @@ tools/typecheck.sh                  # LuaLS 3.19.1 + multi-value lint; first run
 for s in tests/*_spec.lua; do luajit "$s" || exit 1; done
 luajit -joff tests/journey_bench.lua   # after touching the planner: frames stay under 3 ms
 luajit -joff tests/hearth_savings_bench.lua
+python3 tools/check_generated.py --offline # omit --offline to fetch missing pinned inputs
 python3 tools/changelog.py --check
 python3 .sift/gate.py --base origin/main && python3 .sift/agents.py check
 ```
