@@ -655,9 +655,10 @@ local function Plan(options)
 					break
 				end
 				local flying, walked = state > count and state <= count * 2, state > count * 2
+				local canLeaveUnknown = not flying or not nodes[node].undiscovered
 				for _, edge in ipairs(edges[node]) do
 					-- Unknown nodes may be learned on foot or crossed in flight, but never used to land.
-					local canLeave = not flying or not nodes[node].undiscovered or edge.mode == "flight"
+					local canLeave = canLeaveUnknown or edge.mode == "flight"
 					if withoutHearth and edge.teleport and edge.teleport.item == 6948 then
 						canLeave = false
 					end
