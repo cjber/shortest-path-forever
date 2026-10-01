@@ -424,13 +424,23 @@ local function Plan(options)
 			end
 		end
 		-- Fixed baked edges and the remaining dynamic pairs share one topology build.
-		local pairs = {}
+		local pairs, groups = {}, {}
+		for index = 3, #nodes do
+			local map, mass = nodes[index].map, masses[index] or 0
+			groups[map] = groups[map] or {}
+			local group = groups[map][mass] or {}
+			groups[map][mass] = group
+			group[#group + 1] = index
+		end
 		for from = 1, #nodes do
 			checkpoint()
-			for to = from + 1, #nodes do
-				if from <= 2 then
+			local endpoint = from <= 2
+			local targets = endpoint and nodes or groups[nodes[from].map][masses[from] or 0]
+			for index = endpoint and from + 1 or 1, #targets do
+				local to = endpoint and index or targets[index]
+				if endpoint then
 					pairs[#pairs + 1], pairs[#pairs + 2] = from, to
-				elseif nodes[from].map == nodes[to].map and masses[from] == masses[to] then
+				elseif to > from then
 					local baked, yards, reverse = BakedCost(options, nodes[from], nodes[to])
 					if not baked then
 						pairs[#pairs + 1], pairs[#pairs + 2] = from, to
@@ -521,8 +531,11 @@ local function Plan(options)
 			for direction = 1, 2 do
 				local first, last = direction == 1 and from or to, direction == 1 and to or from
 				local origin, destination = nodes[first], nodes[last]
-				local yards, estimated = WalkCost(options, origin, destination, walkIndex)
-				if yards and first ~= goal and last ~= start then
+				local yards, estimated
+				if first ~= goal and last ~= start then
+					yards, estimated = WalkCost(options, origin, destination, walkIndex)
+				end
+				if yards then
 					Edge(first, last, {
 						mode = "walk",
 						duration = yards / speed * 1000,
