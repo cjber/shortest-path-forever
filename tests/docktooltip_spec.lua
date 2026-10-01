@@ -29,7 +29,7 @@ local cluster = {
 	docks = { { id = 999998, x = 0, y = 0 }, { id = 999999, x = 0, y = 0 } },
 	kinds = { boat = true, lift = true },
 }
-assert(#ns.DockVisits(999998) == 0 and #ns.DockDepartures(999998) == 0, "the dock has no departures to draw")
+assert(#ns.Timetable.Departures(999998) == 0, "the dock has no departures to draw")
 ns.AddDockTooltip(cluster)
 assert(#errors == 0, table.concat(errors, "\n"))
 

@@ -38,12 +38,7 @@ local dock = ns.Docks[ratchet.stops[1].dock]
 ns.CurrentRide = function()
 	return 241
 end
-ns.FreshAnchors = function()
-	return { [241] = { epoch = 0 } }
-end
-ns.NextStop = function()
-	return ratchet.stops[2].dock, ratchet.stops[2].arrive - ns.NowMs()
-end
+ns.Timetable.Sighted(241, { epoch = 0, seen = 0 })
 here = { map = dock.map, x = dock.x, y = dock.y, z = dock.z }
 ns.NowMs = function()
 	return ratchet.stops[1].arrive + 1000

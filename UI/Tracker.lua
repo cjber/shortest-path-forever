@@ -45,7 +45,7 @@ function ModuleMixin:OnBlockHeaderClick(block, button)
 end
 
 local function DepartureText(departure)
-	local text = ns.DockLabel(departure.to[1]) .. "   " .. ns.DepartureStatus(departure)
+	local text = ns.DockLabel(departure.to[1]) .. "   " .. ns.Timetable.Status(departure)
 	return departure.known and text or GRAY_FONT_COLOR:WrapTextInColorCode(text)
 end
 
@@ -71,7 +71,7 @@ end
 
 -- Waiting at a dock: its departures, one line per destination.
 local function DockRows(dockID)
-	local departures = ns.ByDestination(ns.DockDepartures(dockID))
+	local departures = ns.Timetable.ByDestination(dockID)
 	local rows = {}
 	for _, departure in ipairs(departures) do
 		rows[#rows + 1] = { key = departure.route, text = DepartureText(departure) }
@@ -81,7 +81,7 @@ end
 
 -- On board, out of sight of any dock: where the boat calls next.
 local function RideRows(routeID)
-	local dockID, arriveIn = ns.NextStop(routeID)
+	local dockID, arriveIn = ns.Timetable.NextStop(routeID)
 	if not dockID or not arriveIn then
 		return nil
 	end
@@ -215,14 +215,14 @@ local function RefreshTracker(dockID, yards)
 		and module.riding == riding
 		and module.second == second
 		and module.journeyVersion == ns.journeyVersion
-		and module.sightingVersion == ns.sightingVersion
+		and module.sightingVersion == ns.Timetable.Version()
 		and module.tracker == ns.db.tracker
 		and module.otherFaction == ns.db.otherFaction
 	then
 		return
 	end
 	module.riding, module.second = riding, second
-	module.journeyVersion, module.sightingVersion = ns.journeyVersion, ns.sightingVersion
+	module.journeyVersion, module.sightingVersion = ns.journeyVersion, ns.Timetable.Version()
 	module.tracker, module.otherFaction = ns.db.tracker, ns.db.otherFaction
 	if dockID then
 		rows, kind = DockRows(dockID)
@@ -333,7 +333,7 @@ ns.Init(function()
 		C_Timer.After(0, Attach)
 	end, "PLAYER_ENTERING_WORLD", "VARIABLES_LOADED")
 	Attach()
-	ns.OnChange(ns.RefreshTracker)
+	ns.Timetable.OnChange(ns.RefreshTracker)
 	ns.OnTravelTick(RefreshTracker)
 	ns.RefreshTracker()
 end)

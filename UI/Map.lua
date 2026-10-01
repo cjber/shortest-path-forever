@@ -29,37 +29,6 @@ local function ActivePins(template)
 end
 local provider
 
----@param departure SPFDeparture
----@return string
-function ns.DepartureDestination(departure)
-	local text
-	for _, dockID in ipairs(departure.to) do
-		text = text and string.format(L["%s, then %s"], text, ns.DockLabel(dockID)) or ns.DockLabel(dockID)
-	end
-	return text or ""
-end
-
-local HERE = { boat = L["docked"], zeppelin = L["docked"], lift = L["here"], tram = L["boarding"] }
-
----@param departure SPFDeparture
----@return string
-function ns.DepartureStatus(departure)
-	if not departure.known then
-		return L["no sighting yet"]
-	end
-	local leaves = departure.thenIn
-			and string.format(
-				L["leaves %s, then %s"],
-				ns.FormatCountdown(departure.departIn),
-				ns.FormatCountdown(departure.thenIn)
-			)
-		or string.format(L["leaves %s"], ns.FormatCountdown(departure.departIn))
-	if departure.docked then
-		return string.format(L["%s · %s"], HERE[departure.kind], leaves)
-	end
-	return string.format(L["%s · %s"], string.format(L["arrives %s"], ns.FormatCountdown(departure.arriveIn)), leaves)
-end
-
 -- The stock ferry for boats. There is no zeppelin map icon in the game (only top-down vehicle sprites), so
 -- zeppelins use our own, drawn to match the ferry (tools/draw_zeppelin.py). Lifts and the tram take the stock
 -- map's floor-change arrows; portals its arcane door.
@@ -135,8 +104,8 @@ local function AddDepartureLines(departures)
 	for _, departure in ipairs(departures) do
 		GameTooltip_AddColoredDoubleLine(
 			GameTooltip,
-			string.format(L["to %s"], ns.DepartureDestination(departure)),
-			ns.DepartureStatus(departure),
+			string.format(L["to %s"], ns.Timetable.Destination(departure)),
+			ns.Timetable.Status(departure),
 			NORMAL_FONT_COLOR,
 			StatusColor(departure)
 		)
@@ -231,7 +200,7 @@ function ns.AddDockTooltip(cluster)
 	local all = {}
 	local groups = {}
 	for _, dock in ipairs(cluster.docks) do
-		local departures = ns.ByDestination(ns.DockDepartures(dock.id))
+		local departures = ns.Timetable.ByDestination(dock.id)
 		-- A dock whose shown route a filter has since hidden has no departures; a stale cluster must not index one.
 		if #departures > 0 then
 			groups[#groups + 1] = { dock = dock, departures = departures }
@@ -242,8 +211,8 @@ function ns.AddDockTooltip(cluster)
 	end
 	if #all == 1 then
 		local departure = all[1]
-		GameTooltip_SetTitle(GameTooltip, string.format(TO[departure.kind], ns.DepartureDestination(departure)))
-		local status = ns.DepartureStatus(departure):gsub("^%l", string.upper)
+		GameTooltip_SetTitle(GameTooltip, string.format(TO[departure.kind], ns.Timetable.Destination(departure)))
+		local status = ns.Timetable.Status(departure):gsub("^%l", string.upper)
 		GameTooltip_AddColoredLine(GameTooltip, status, StatusColor(departure))
 	else
 		local titles = {}
@@ -286,7 +255,7 @@ end
 function ShortestPathForeverDockPinMixin:OnMouseEnter()
 	local routes = {}
 	for _, dock in ipairs(self.cluster.docks) do
-		for _, departure in ipairs(ns.DockDepartures(dock.id)) do
+		for _, departure in ipairs(ns.Timetable.Departures(dock.id)) do
 			routes[departure.route] = true
 		end
 	end
@@ -338,7 +307,7 @@ end
 -- Where the hovered pin's boats go, glowing like the map legend's related pins.
 function ProviderMixin:ShowDestinations(pin)
 	for _, dock in ipairs(pin.cluster.docks) do
-		for _, departure in ipairs(ns.DockDepartures(dock.id)) do
+		for _, departure in ipairs(ns.Timetable.Departures(dock.id)) do
 			for _, destination in ipairs(departure.to) do
 				local target = self.pinOf[destination]
 				if target and target ~= pin then
@@ -385,7 +354,7 @@ end
 
 -- Whether a dock has any route the filters still show.
 function ns.DockShown(dockID)
-	for _, visit in ipairs(ns.DockVisits(dockID)) do
+	for _, visit in ipairs(ns.Timetable.Visits(dockID)) do
 		local route = ns.Routes[visit.route]
 		if ns.RouteShown(route) and ns.KindShown(route.kind) then
 			return true
@@ -453,7 +422,7 @@ end
 function ShortestPathForeverDockPinMixin:GetEnds()
 	local candidates = {}
 	for _, dock in ipairs(self.cluster.docks) do
-		for _, departure in ipairs(ns.DockDepartures(dock.id)) do
+		for _, departure in ipairs(ns.Timetable.Departures(dock.id)) do
 			for _, dockID in ipairs(departure.to) do
 				candidates[#candidates + 1] = { kind = departure.kind, point = ns.DockPoint(dockID) }
 			end
@@ -893,7 +862,7 @@ ns.Init(function()
 	WorldMapFrame:AddDataProvider(provider)
 	WorldMapFrame:AddDataProvider(portalProvider)
 	Menu.ModifyMenu("MENU_WORLD_MAP_TRACKING", AddFilters)
-	ns.OnChange(function()
+	ns.Timetable.OnChange(function()
 		-- Sightings change countdowns, never the set of docks, portals, flights or route geometry.
 		for _, pin in pairs(provider.pins or {}) do
 			if GameTooltip:IsOwned(pin) and GameTooltip:IsShown() then

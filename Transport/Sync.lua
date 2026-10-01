@@ -117,7 +117,7 @@ end
 
 ---@param routeID number
 function ns.Share(routeID)
-	local anchor = ns.FreshAnchors()[routeID]
+	local anchor = ns.Timetable.Anchor(routeID)
 	if ns.db.share and anchor then
 		SendSightings({ [routeID] = anchor }, Distributions(true))
 	end
@@ -135,7 +135,7 @@ local function Ask(routeIDs, chatTypes)
 end
 
 local function Untimed()
-	local fresh, routeIDs = ns.FreshAnchors(), {}
+	local fresh, routeIDs = ns.Timetable.Anchors(), {}
 	for routeID in pairs(ns.Routes) do
 		if not fresh[routeID] then
 			routeIDs[#routeIDs + 1] = routeID
@@ -173,7 +173,7 @@ local function OnMessage(prefix, message, chatType, sender)
 		C_Timer.After(1 + math.random() * 4, function()
 			requests[chatType] = nil
 			local reply = {}
-			for routeID, anchor in pairs(ns.FreshAnchors()) do
+			for routeID, anchor in pairs(ns.Timetable.Anchors()) do
 				if wanted[routeID] and GetTime() - Answered(chatType, routeID) >= REPLY_EVERY then
 					reply[routeID] = anchor
 					MarkAnswered(chatType, routeID)
@@ -185,7 +185,7 @@ local function OnMessage(prefix, message, chatType, sender)
 		for routeID, anchor in pairs(Model.Decode(message:sub(2), ns.Routes, GetServerTime())) do
 			MarkAnswered(chatType, routeID)
 			anchor.source = "player"
-			ns.Sighted(routeID, anchor)
+			ns.Timetable.Sighted(routeID, anchor)
 		end
 	end
 end
@@ -199,7 +199,7 @@ local function AskAtDock(dockID, yards)
 		return
 	end
 	local routeIDs = {}
-	for _, departure in ipairs(ns.DockDepartures(dockID)) do
+	for _, departure in ipairs(ns.Timetable.Departures(dockID)) do
 		if not departure.known then
 			routeIDs[#routeIDs + 1] = departure.route
 		end

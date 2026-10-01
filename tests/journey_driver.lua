@@ -57,6 +57,13 @@ local function vector(x, y)
 end
 local env = setmetatable({
 	CreateFrame = frame,
+	GetRealmName = function()
+		return "Test"
+	end,
+	-- ns.serverTime: the server clock sightings age by.
+	GetServerTime = function()
+		return ns.serverTime or 0
+	end,
 	-- A search that throws fails the spec with its own message.
 	geterrorhandler = function()
 		return function(message)
@@ -169,10 +176,8 @@ ns.NowMs = function()
 	return now
 end
 ns.CurrentRide, ns.RefreshTracker, ns.PointGuideArrow, ns.Print = noop, noop, noop, noop
-ns.KnownTaxiNodes, ns.FreshAnchors = function()
+ns.KnownTaxiNodes = function()
 	return ns.known or {}
-end, function()
-	return {}
 end
 ns.Locate = function()
 	return { zone = "Test" }
@@ -188,8 +193,10 @@ end
 -- Until a spec says otherwise the walking search answers at once, with the straight line.
 local path = assert(loadfile(root .. "/tests/path_fake.lua"))()()
 ns.Path = path.Path
-load("Core/PlanContext.lua")
 load("Transport/Model.lua")
+-- The real timetable, with no sightings until a spec records one.
+load("Transport/Timetable.lua")
+load("Core/PlanContext.lua")
 load("Routing/Planner.lua")
 load("Journey/JourneySteps.lua")
 load("Journey/JourneySearch.lua")

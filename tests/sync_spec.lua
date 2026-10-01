@@ -1,5 +1,5 @@
 local ns = { db = { share = true } }
-for _, file in ipairs({ "Data/Routes.lua", "Data/Transports.lua", "Transport/Model.lua" }) do
+for _, file in ipairs({ "Locales/enUS.lua", "Data/Routes.lua", "Data/Transports.lua", "Transport/Model.lua" }) do
 	assert(loadfile(file))("ShortestPathForever", ns)
 end
 local now, timers, sent, handler = 0, {}, {}
@@ -12,6 +12,9 @@ local env = setmetatable({
 		return 1790000000 + math.floor(now)
 	end,
 	GetNormalizedRealmName = function()
+		return "Test"
+	end,
+	GetRealmName = function()
 		return "Test"
 	end,
 	UnitName = function()
@@ -61,14 +64,11 @@ ns.OnTravelTick = noop
 ns.Init = function(fn)
 	fn()
 end
-ns.FreshAnchors = function()
-	local anchors = {}
-	for id in pairs(ns.Routes) do
-		anchors[id] = { epoch = 1790000000000, seen = env.GetServerTime() }
-	end
-	return anchors
+-- Every route timed, through the real timetable Sync shares from and records into.
+setfenv(assert(loadfile("Transport/Timetable.lua")), env)("ShortestPathForever", ns)
+for id in pairs(ns.Routes) do
+	ns.Timetable.Sighted(id, { epoch = 1790000000000, seen = env.GetServerTime() })
 end
-ns.Sighted = noop
 setfenv(assert(loadfile("Transport/Sync.lua")), env)("ShortestPathForever", ns)
 local function advance(seconds)
 	local untilTime = now + seconds

@@ -47,7 +47,7 @@ local function Check(dockID, yards)
 	local riding = ns.CurrentRide()
 	if riding then
 		local kind = ns.Routes[riding].kind
-		local nextDock, arriveIn = ns.NextStop(riding)
+		local nextDock, arriveIn = ns.Timetable.NextStop(riding)
 		if ARRIVES[kind] and nextDock and arriveIn and Due(arriveIn, ON_BOARD) then
 			Alert(
 				riding .. ":" .. nextDock,
@@ -60,11 +60,11 @@ local function Check(dockID, yards)
 	if not dockID or yards > RADIUS then
 		return
 	end
-	for _, departure in ipairs(ns.DockDepartures(dockID)) do
+	for _, departure in ipairs(ns.Timetable.Departures(dockID)) do
 		local arrives = ARRIVES[departure.kind]
 		if arrives and departure.known and not departure.docked and Due(departure.arriveIn, AT_DOCK) then
 			local text =
-				string.format(arrives, ns.DepartureDestination(departure), ns.FormatCountdown(departure.arriveIn))
+				string.format(arrives, ns.Timetable.Destination(departure), ns.FormatCountdown(departure.arriveIn))
 			Alert(departure.route .. ":" .. dockID, departure.kind, text)
 		end
 	end
