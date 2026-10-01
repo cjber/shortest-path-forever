@@ -551,10 +551,12 @@ local function Plan(options)
 	-- Ignoring arrival modes and revisits gives an admissible remaining-time bound. It keeps the extra
 	-- labels needed for correctness from exploring unrelated routes before reaching the destination.
 	local backward, lower, done = {}, { [goal] = 0 }, {}
+	---@type table<number, SPFAnchor>?
+	local anchors = options.anchors
 	for from, adjacent in ipairs(edges) do
 		for _, edge in ipairs(adjacent) do
 			local duration = edge.duration
-			if edge.route and not edge.aboard and not (options.anchors or {})[edge.route] then
+			if edge.route and not edge.aboard and not (anchors and anchors[edge.route]) then
 				duration = duration + options.routes[edge.route].period / 2
 			end
 			backward[edge.to] = backward[edge.to] or {}
@@ -662,30 +664,31 @@ local function Plan(options)
 					if walked and edge.mode == "walk" and edge.yards > 0 then
 						canLeave = false
 					end
-					local wait, estimated = 0, edge.estimated or false
-					if edge.route and not edge.aboard then
-						local route = options.routes[edge.route]
-						local anchor = (options.anchors or {})[edge.route]
-						if anchor then
-							local _, _, departIn =
-								Model.Visit(route, edge.stop, (earliest - anchor.epoch) % route.period)
-							wait = departIn
-						else
-							wait, estimated = route.period / 2, true
-						end
-					elseif edge.ready then
-						wait = math.max(0, edge.ready - earliest)
-					end
-					local depart = earliest + wait
-					local finish = depart + edge.duration
-					if edge.mode == "flight" and not flying then
-						finish = finish + BOARDING
-					end
-					local target = edge.to + (edge.mode == "flight" and count or 0)
-					if edge.mode == "walk" and (walked or edge.yards > 0) then
-						target = edge.to + count * 2
-					end
 					if canLeave and lower[edge.to] and not Revisits(labels, current, edge.to) then
+						local wait, estimated = 0, edge.estimated or false
+						if edge.route and not edge.aboard then
+							local route = options.routes[edge.route]
+							---@type SPFAnchor?
+							local anchor = anchors and anchors[edge.route]
+							if anchor then
+								local _, _, departIn =
+									Model.Visit(route, edge.stop, (earliest - anchor.epoch) % route.period)
+								wait = departIn
+							else
+								wait, estimated = route.period / 2, true
+							end
+						elseif edge.ready then
+							wait = math.max(0, edge.ready - earliest)
+						end
+						local depart = earliest + wait
+						local finish = depart + edge.duration
+						if edge.mode == "flight" and not flying then
+							finish = finish + BOARDING
+						end
+						local target = edge.to + (edge.mode == "flight" and count or 0)
+						if edge.mode == "walk" and (walked or edge.yards > 0) then
+							target = edge.to + count * 2
+						end
 						local peers = states[target] or {}
 						local dominated = false
 						for _, peer in ipairs(peers) do
