@@ -174,18 +174,20 @@ ObjectiveTrackerManager = nil
 ForeverTrackerHost = nil
 
 ---@class SPFSetting
----@field SetValue fun(self: SPFSetting, value: boolean)
----@field SetValueChangedCallback fun(self: SPFSetting, callback: fun(setting: SPFSetting, value: boolean))
+---@field SetValue fun(self: SPFSetting, value: boolean|number)
+---@field SetValueChangedCallback fun(self: SPFSetting, callback: fun(setting: SPFSetting, value: boolean|number))
 ---@class SPFSettingsCategory
 ---@field GetID fun(self: SPFSettingsCategory): number
 ---@class SPFSettingsInitializer
 ---@class SPFSettings
----@field VarType {Boolean: string}
+---@field VarType {Boolean: string, Number: string}
 ---@field RegisterVerticalLayoutCategory fun(name: string): SPFSettingsCategory
 ---@field RegisterVerticalLayoutSubcategory fun(parent: SPFSettingsCategory, name: string): SPFSettingsCategory
 ---@field RegisterProxySetting fun(category: SPFSettingsCategory, variable: string, variableType: string, name: string, default: boolean, getter: (fun(): boolean), setter: (fun(value: boolean))): SPFSetting
 ---@field NotifyUpdate fun(variable: string)
----@field RegisterAddOnSetting fun(category: SPFSettingsCategory, variable: string, key: string, storage: SPFDatabase, variableType: string, name: string, default: boolean): SPFSetting
+---@field RegisterAddOnSetting fun(category: SPFSettingsCategory, variable: string, key: string, storage: SPFDatabase, variableType: string, name: string, default: boolean|number): SPFSetting
+---@field CreateSliderOptions fun(minimum: number, maximum: number, step: number): table
+---@field CreateSliderInitializer fun(setting: SPFSetting, options: table, tooltip?: string): SPFSettingsInitializer
 ---@field CreateCheckboxInitializer fun(setting: SPFSetting, options?: table, tooltip?: string): SPFSettingsInitializer
 ---@field RegisterInitializer fun(category: SPFSettingsCategory, initializer: SPFSettingsInitializer)
 ---@field RegisterAddOnCategory fun(category: SPFSettingsCategory)

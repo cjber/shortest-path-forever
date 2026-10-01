@@ -467,6 +467,12 @@ ns.teleportReady = { ns.NowMs() }
 driver.move({ map = 1, x = 0, y = 0 })
 near(API.Estimate(1, 0.5, 0.5, 1, 0.4, 0.5), 10 + 10 / 7, "hearth from here")
 near(API.Estimate(1, 0.49, 0.5, 1, 0.4, 0.5), 4500 / 7, "no hearth on a later leg")
+ns.db.hearthMinimumSavings = 300
+near(API.Estimate(1, 0.5, 0.5, 1, 0.43, 0.5), 500, "minimum saving prefers the walk")
+equal(API.EstimateDetail(1, 0.5, 0.5, 1, 0.43, 0.5).legs[1].mode, "walk", "route detail applies the same minimum")
+ns.db.hearthMinimumSavings = 270
+near(API.Estimate(1, 0.5, 0.5, 1, 0.43, 0.5), 10 + 1490 / 7, "changing minimum invalidates cached estimate")
+ns.db.hearthMinimumSavings = 0
 ns.teleportReady = {}
 near(API.Estimate(1, 0.5, 0.5, 1, 0.39, 0.5), 5500 / 7, "no hearth while it cannot be cast")
 ns.teleports, ns.teleportReady = nil, nil

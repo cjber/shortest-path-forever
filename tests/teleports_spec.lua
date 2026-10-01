@@ -29,7 +29,7 @@ local Plan = ns.Planner.Plan
 
 -- 7000 yards on foot is 1000 s; the hearth lands 70 yards short of the goal (10 s) after a 10 s cast.
 local hearths = { { map = 1, x = 6930, y = 0, spell = 8690, item = 6948, cast = 10000, label = "Goldshire" } }
-local function trip(ready, cache)
+local function trip(ready, cache, minimum)
 	return Plan({
 		cache = cache,
 		from = { map = 1, x = 0, y = 0 },
@@ -38,6 +38,7 @@ local function trip(ready, cache)
 		walkSpeed = 7,
 		teleports = hearths,
 		teleportReady = ready and { ready } or nil,
+		hearthMinimumSavings = minimum,
 	})
 end
 
@@ -60,6 +61,22 @@ assert(trip(1000, cache).legs[1].mode == "teleport")
 local topology = cache.topology
 assert(trip(1000 + 2000000, cache).legs[1].mode == "walk" and cache.topology == topology)
 assert(trip(1000, cache).legs[1].mode == "teleport" and cache.topology == topology)
+assert(trip(1000, cache, 980).legs[1].mode == "teleport", "saving exactly the threshold allows Hearthstone")
+assert(trip(1000, cache, 981).legs[1].mode == "walk", "a smaller saving preserves Hearthstone")
+assert(cache.topology == topology, "the non-hearth comparison reuses topology")
+assert(trip(301000, cache, 680).legs[1].mode == "teleport", "the threshold includes cooldown waiting")
+assert(trip(301000, cache, 681).legs[1].mode == "walk", "cooldown can push savings below the threshold")
+local alternatives = Plan({
+	from = { map = 1, x = 0, y = 0 },
+	to = { map = 1, x = 7000, y = 0 },
+	now = 0,
+	walkSpeed = 7,
+	teleports = { hearths[1], { map = 1, x = 7000, y = 0, spell = 3566, cast = 30000 } },
+	teleportReady = { 0, 0 },
+	hearthMinimumSavings = 11,
+})
+assert(alternatives.legs[1].teleport.spell == 3566, "class teleports remain an alternative to Hearthstone")
+assert(alternatives.arrive == 30000, "no invented savings penalty enters the ETA")
 -- A new set of destinations (a new bind point) is a new topology.
 hearths = { { map = 1, x = -700, y = 0, spell = 8690, item = 6948, cast = 10000 } }
 assert(trip(1000, cache).legs[1].mode == "walk" and cache.topology ~= topology)
@@ -73,6 +90,15 @@ local far = Plan({
 	teleportReady = { 0 },
 })
 assert(#far.legs == 1 and far.legs[1].arrive == 15000)
+local onlyHearth = Plan({
+	from = { map = 0, x = 0, y = 0 },
+	to = { map = 1, x = 7000, y = 0 },
+	now = 0,
+	teleports = { { map = 1, x = 7000, y = 0, spell = 8690, item = 6948, cast = 10000 } },
+	teleportReady = { 0 },
+	hearthMinimumSavings = 600,
+})
+assert(onlyHearth and onlyHearth.arrive == 15000, "retain Hearthstone when no alternative reaches the destination")
 
 -- What this character can cast, read from the client.
 do

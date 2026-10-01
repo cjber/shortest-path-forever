@@ -788,6 +788,7 @@ _G.Settings = setmetatable({
 			return db[key]
 		end
 		function st:SetValue(v)
+			assert(type(v) == type(default), "a setting value matches its registered type")
 			db[key] = v
 			if st.cb then
 				st.cb()
@@ -798,6 +799,12 @@ _G.Settings = setmetatable({
 	end,
 	CreateCheckboxInitializer = function(setting, options, tooltip)
 		return { kind = "checkbox", setting = setting, options = options, tooltip = tooltip }
+	end,
+	CreateSliderOptions = function(minimum, maximum, step)
+		return { minValue = minimum, maxValue = maximum, step = step }
+	end,
+	CreateSliderInitializer = function(setting, options, tooltip)
+		return { kind = "slider", setting = setting, options = options, tooltip = tooltip }
 	end,
 	RegisterInitializer = function(target, initializer)
 		if initializer and initializer.kind == "button" then

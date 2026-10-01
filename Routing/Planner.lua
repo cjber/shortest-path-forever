@@ -319,7 +319,7 @@ local CACHE_KEYS = {
 ---@param options SPFPlanOptions
 ---@return SPFPlan?
 -- Bounded label search shares topology and heap locals; splitting adds hot-path upvalues
-function Planner.Plan(options)
+local function Plan(options)
 	local cache = options.cache
 	local topology = cache and cache.topology
 	if topology then
@@ -752,4 +752,31 @@ function Planner.Plan(options)
 		needsGoal = needsGoal,
 		pendingWalks = pendingWalks,
 	}
+end
+
+---@param options SPFPlanOptions
+---@return SPFPlan?
+function Planner.Plan(options)
+	local planned = Plan(options)
+	local minimum = options.hearthMinimumSavings or 0
+	if not planned or minimum <= 0 then
+		return planned
+	end
+	for _, leg in ipairs(planned.legs) do
+		if leg.mode == "teleport" and leg.teleport and leg.teleport.item == 6948 then
+			local ready = {}
+			for index, teleport in ipairs(options.teleports or {}) do
+				if teleport.item ~= 6948 then
+					ready[index] = (options.teleportReady or {})[index]
+				end
+			end
+			-- Keep the topology and actual travel times; only prevent casting the Hearthstone.
+			local baseline = Plan(setmetatable({ teleportReady = ready }, { __index = options }))
+			if baseline and baseline.arrive - planned.arrive < minimum * 1000 then
+				return baseline
+			end
+			break
+		end
+	end
+	return planned
 end

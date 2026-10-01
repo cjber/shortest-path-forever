@@ -43,6 +43,9 @@ A longer trip: Auberdine to Menethil, then Theramore, then Silithus.
 
 ## Usage
 
+Settings → Guidance has **Minimum Hearthstone saving (seconds)**, from zero to ten minutes.
+Zero keeps the current fastest-route behaviour; higher values reserve the Hearthstone for bigger savings.
+
 Shift-click the world map or minimap to plan a journey. For a quest, choose **Plan journey** from its right-click menu in the quest log or objective tracker, or Shift-click its map marker. Completed quests route to their turn-in.
 
 - `/path` opens settings, also under **Options → AddOns → Shortest Path Forever**.

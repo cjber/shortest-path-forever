@@ -7,7 +7,7 @@ local settings = {}
 
 -- Change an option from anywhere (the map's filter menu) with the settings panel kept in step.
 ---@param key string
----@param value boolean
+---@param value boolean|number
 function ns.SetOption(key, value)
 	settings[key]:SetValue(value)
 end
@@ -179,6 +179,26 @@ ns.Init(function()
 		"teleports",
 		L["Use your hearthstone and teleports"],
 		L["Journeys, and other addons' estimates from where you stand, can start with one, counting its cooldown."]
+	)
+	local hearth = Settings.RegisterAddOnSetting(
+		page,
+		"ShortestPathForever_hearthMinimumSavings",
+		"hearthMinimumSavings",
+		ns.db,
+		Settings.VarType.Number,
+		L["Minimum Hearthstone saving (seconds)"],
+		ns.Defaults.hearthMinimumSavings
+	)
+	hearth:SetValueChangedCallback(ns.WakeTravel)
+	settings.hearthMinimumSavings = hearth
+	local hearthOptions = Settings.CreateSliderOptions(0, 600, 30)
+	Settings.RegisterInitializer(
+		page,
+		Settings.CreateSliderInitializer(
+			hearth,
+			hearthOptions,
+			L["Only use the Hearthstone when it saves at least this much time."]
+		)
 	)
 	Checkbox(
 		"guideStops",

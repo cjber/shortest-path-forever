@@ -686,6 +686,7 @@ local function Plan(preview)
 		portals = ns.Portals,
 		teleports = teleports,
 		teleportReady = ready,
+		hearthMinimumSavings = ns.db and ns.db.hearthMinimumSavings or 0,
 		landmasses = ns.Landmasses,
 		walks = walks,
 		baked = ns.Walks,

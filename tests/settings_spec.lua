@@ -28,7 +28,7 @@ local env = setmetatable({
 		NotifyUpdate = function(variable)
 			attachmentNotified = variable
 		end,
-		VarType = { Boolean = "boolean" },
+		VarType = { Boolean = "boolean", Number = "number" },
 		RegisterVerticalLayoutCategory = function(name)
 			return {
 				name = name,
@@ -72,6 +72,13 @@ local env = setmetatable({
 			assert(setting.varType == "boolean" and options == nil)
 			return { kind = "checkbox", setting = setting, tooltip = tooltip }
 		end,
+		CreateSliderOptions = function(minimum, maximum, step)
+			return { minValue = minimum, maxValue = maximum, step = step }
+		end,
+		CreateSliderInitializer = function(setting, options, tooltip)
+			assert(setting.varType == "number" and options)
+			return { kind = "slider", setting = setting, options = options, tooltip = tooltip }
+		end,
 		RegisterInitializer = function(target, initializer)
 			if initializer.kind == "button" then
 				buttons[#buttons + 1] = { target = target, initializer = initializer }
@@ -111,7 +118,7 @@ local ns = {
 		end,
 	},
 	db = {},
-	Defaults = setmetatable({}, {
+	Defaults = setmetatable({ hearthMinimumSavings = 0 }, {
 		__index = function()
 			return true
 		end,
@@ -137,14 +144,22 @@ setfenv(assert(loadfile("UI/Settings.lua")), env)("ShortestPathForever", ns)
 local groups = {
 	["Map marks"] = { "pins", "transit", "portals", "mapFlightMasters", "minimapPins" },
 	Transport = { "mapRoutes", "otherFaction", "tracker", "share" },
-	Guidance = { "trackerAttached", "journey", "teleports", "guideStops", "taxiRoute", "corpse" },
+	Guidance = {
+		"trackerAttached",
+		"journey",
+		"teleports",
+		"hearthMinimumSavings",
+		"guideStops",
+		"taxiRoute",
+		"corpse",
+	},
 	Alerts = { "alerts", "alertSound" },
 	Interface = { "compass", "routeButton", "whatsNew" },
 }
 local order = { "Map marks", "Transport", "Guidance", "Alerts", "Interface" }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 20, #rows)
+assert(#rows == 21, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -173,6 +188,9 @@ assert(Row("pins").setting.variable == "ShortestPathForever_pins" and Row("pins"
 assert(Row("minimapPins").tooltip == "Also under Transport in the minimap's tracking menu.")
 assert(Row("guideStops").setting.default == true)
 assert(Row("taxiRoute").setting.default == true)
+local hearth = Row("hearthMinimumSavings")
+assert(hearth.kind == "slider" and hearth.setting.default == 0)
+assert(hearth.options.minValue == 0 and hearth.options.maxValue == 600 and hearth.options.step == 30)
 assert(Row("taxiRoute").tooltip:find("flight master", 1, true))
 Row("taxiRoute").setting.onChanged()
 assert(taxiRefreshed == 1, "flight route updates when its setting changes")

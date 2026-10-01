@@ -26,6 +26,7 @@ local CONTEXT_KEYS = {
 	"teleports",
 	"landmasses",
 	"baked",
+	"hearthMinimumSavings",
 }
 
 local function Number(value)
@@ -169,6 +170,7 @@ local function Options(from, to)
 		teleportReady = ready,
 		landmasses = ns.Landmasses,
 		baked = ns.Walks,
+		hearthMinimumSavings = ns.db and ns.db.hearthMinimumSavings or 0,
 		waterWalking = ns.JourneyWaterWalking(),
 	}
 	for _, name in ipairs(CONTEXT_KEYS) do
