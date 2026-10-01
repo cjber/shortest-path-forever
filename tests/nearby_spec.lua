@@ -154,6 +154,11 @@ local env = setmetatable({
 		end,
 		CloseAllMenus = function()
 			closedMenus = closedMenus + 1
+			if releaseMenu then
+				local released = releaseMenu
+				releaseMenu = nil
+				released()
+			end
 		end,
 	},
 	UIParent = {},

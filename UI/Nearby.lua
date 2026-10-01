@@ -250,11 +250,11 @@ Open = function()
 	if InCombatLockdown() then
 		return
 	end
-	menuOpen = true
-	Build()
 	-- A map tracking or another SPF menu may still own the menu pool.
 	-- Release it before acquiring the nearby-services context menu.
 	MenuUtil.CloseAllMenus()
+	menuOpen = true
+	Build()
 	OpenWorldMap()
 	local world = PlayerWorld()
 	MenuUtil.CreateContextMenu(WorldMapFrame or UIParent, function(_, root)
