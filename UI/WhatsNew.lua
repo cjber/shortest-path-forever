@@ -5,7 +5,7 @@ local L = ns.L
 
 -- One sentence on what the latest release changed, printed once after an update. Each release refreshes it from
 -- its CHANGELOG entry.
-ns.WHATS_NEW = L["Middle-click the route button to find nearby trainers, repairs, vendors and other services."]
+ns.WHATS_NEW = L["Routes follow your movement speed, and Guidance can save your Hearthstone for bigger time savings."]
 
 -- Once per new version, after an update: never on a first install, nor in a checkout, whose TOC still holds the
 -- packager's version keyword (matched by its "@", as the packager would rewrite the whole keyword here too).

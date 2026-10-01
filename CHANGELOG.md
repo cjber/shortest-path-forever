@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-10-01
+
 - **Follow your movement speed.** Mounted speeds, boosts and slows affect route choices and arrival times, including while standing still. A speed change updates the active journey promptly.
 
 - **Keep guides clear of quests in combat.** Companion sections stay clear when the quest list grows during a fight. Detaching restores the quest tracker’s original Edit Mode position.
