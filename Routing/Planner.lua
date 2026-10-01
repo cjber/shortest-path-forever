@@ -13,12 +13,6 @@ local BOARDING = 3000
 -- A teleport to another continent shows a loading screen: the same allowance as a portal's.
 local LOADING = 5000
 
-local function checkpoint()
-	if ns.Path and ns.Path.Checkpoint then
-		ns.Path.Checkpoint()
-	end
-end
-
 local function QuestPointValid(point)
 	return point
 		and type(point.uiMapID) == "number"
@@ -322,6 +316,8 @@ local CACHE_KEYS = {
 ---@return SPFPlan?
 -- Bounded label search shares topology and heap locals; splitting adds hot-path upvalues
 local function Plan(options)
+	-- Path loads after Planner; resolve its yield hook when each plan starts.
+	local checkpoint = ns.Path and ns.Path.Checkpoint
 	local cache = options.cache
 	local topology = cache and cache.topology
 	if topology then
@@ -433,7 +429,9 @@ local function Plan(options)
 			group[#group + 1] = index
 		end
 		for from = 1, #nodes do
-			checkpoint()
+			if checkpoint then
+				checkpoint()
+			end
 			local endpoint = from <= 2
 			local targets = endpoint and nodes or groups[nodes[from].map][masses[from] or 0]
 			for index = endpoint and from + 1 or 1, #targets do
@@ -565,7 +563,9 @@ local function Plan(options)
 		end
 	end
 	for _ = 1, count do
-		checkpoint()
+		if checkpoint then
+			checkpoint()
+		end
 		local current, best
 		for node, cost in pairs(lower) do
 			if not done[node] and (not best or cost < best) then
@@ -638,7 +638,9 @@ local function Plan(options)
 		end
 		local finishAt
 		while #heap > 0 do
-			checkpoint()
+			if checkpoint then
+				checkpoint()
+			end
 			local current = pop()
 			if cutoff and labels.key[current] >= cutoff then
 				return nil
