@@ -482,7 +482,7 @@ local function EstimateKept(now)
 			return nil
 		end
 		local duration, wait = leg.arrive - leg.depart, leg.wait or 0
-		local yards = leg.yards or duration / 1000 * math.max(lastRunSpeed, 7)
+		local yards = leg.yards or duration / 1000 * lastRunSpeed
 		if leg.walkError then
 			return nil
 		end
@@ -501,7 +501,7 @@ local function EstimateKept(now)
 			else
 				yards = basis
 			end
-			duration, wait = yards / math.max(lastRunSpeed, 7) * 1000, 0
+			duration, wait = yards / lastRunSpeed * 1000, 0
 		elseif leg.route and not leg.aboard then
 			local route, anchor = ns.Routes[leg.route], anchors[leg.route]
 			if anchor and leg.boarding then
@@ -642,11 +642,7 @@ local function Plan(preview)
 	if not (here and goal) then
 		return nil
 	end
-	local _, runSpeed = GetUnitSpeed("player")
-	-- In combat the client returns unit speed as a secret value; keep the last one it let us read.
-	if canaccessvalue(runSpeed) then
-		lastRunSpeed = runSpeed
-	end
+	lastRunSpeed = ns.RunSpeed()
 	local now = ns.NowMs()
 	-- Taxi paths cannot be interrupted; retain their chosen destination until landing.
 	if result and UnitOnTaxi("player") then
@@ -683,7 +679,7 @@ local function Plan(preview)
 		to = goal,
 		now = now,
 		ride = ride,
-		walkSpeed = math.max(lastRunSpeed, 7),
+		walkSpeed = lastRunSpeed,
 		faction = UnitFactionGroup("player"),
 		otherFaction = ns.db and ns.db.otherFaction or false,
 		taxiKnown = ns.KnownTaxiNodes(),
@@ -793,7 +789,7 @@ local function Update(self, elapsed)
 	local riding, flying = ns.CurrentRide(), UnitOnTaxi("player")
 	local changedRide = riding ~= self.riding or flying ~= self.flying
 	self.riding, self.flying = riding, flying
-	if self.elapsed >= REPLAN_EVERY or changedRide then
+	if self.elapsed >= REPLAN_EVERY or changedRide or ns.RunSpeed() ~= lastRunSpeed then
 		self.elapsed, self.replannedAt = 0, GetTime()
 		local mode = WaterWalking()
 		if mode ~= waterMode then
