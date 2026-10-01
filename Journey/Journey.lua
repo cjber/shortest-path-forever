@@ -380,7 +380,7 @@ local function Update(self, elapsed)
 	self.riding, self.flying = riding, flying
 	-- Edge-triggered like the ride: comparing against the last planned speed would retrigger every frame
 	-- while a search is still settling and no plan has run.
-	local speed = ns.RunSpeed()
+	local speed = ns.PlanContext.RunSpeed()
 	local changedSpeed = speed ~= (self.speed or Search.Speed())
 	self.speed = speed
 	if self.elapsed >= REPLAN_EVERY or changedRide or changedSpeed then

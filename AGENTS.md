@@ -29,7 +29,8 @@ before its `v*` tag, since the release publishes it as the notes.
   hand-edit.
 - `ShortestPathForever_Nav*/` — load-on-demand walking maps built by `tools/baker/`; loaded only when a
   route needs them.
-- `Core/` — addon lifecycle, defaults and the public API.
+- `Core/` — addon lifecycle, defaults, the planning context (the live and static inputs every plan starts from)
+  and the public API.
 - `Routing/` — transport search and walking-map decoding, search and frame scheduling.
 - `Journey/` — journey state, steps, costs, guidance and corpse recovery; performance budgets live in
   `tests/journey_performance.md`.

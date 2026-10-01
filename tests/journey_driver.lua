@@ -188,7 +188,7 @@ end
 -- Until a spec says otherwise the walking search answers at once, with the straight line.
 local path = assert(loadfile(root .. "/tests/path_fake.lua"))()()
 ns.Path = path.Path
-load("Core/Speed.lua")
+load("Core/PlanContext.lua")
 load("Transport/Model.lua")
 load("Routing/Planner.lua")
 load("Journey/JourneySteps.lua")

@@ -11,6 +11,7 @@ local REFRESH_EVERY, SEARCH_GRACE = 60, 3
 -- the infrequent batches, except for Remaining() along the walk you are following.
 local SWITCH_GAIN, SWITCH_SHARE = 30000, 0.1
 
+local Context = ns.PlanContext
 ---@class SPFJourneySearch
 local Search = {}
 ns.JourneySearch = Search
@@ -314,66 +315,21 @@ local function Plan()
 	if not (here and goal) then
 		return nil
 	end
-	lastRunSpeed = ns.RunSpeed()
-	local now = ns.NowMs()
 	-- Taxi paths cannot be interrupted; retain their chosen destination until landing.
 	if followed and UnitOnTaxi("player") then
-		followed.now = now
+		lastRunSpeed, followed.now = Context.RunSpeed(), ns.NowMs()
 		return followed
 	end
-	local anchors = ns.FreshAnchors()
-	local teleports, ready = ns.UsableTeleports(now)
+	local options = Context.Options(here, goal)
+	local now = options.now
+	lastRunSpeed = options.walkSpeed
 	local walks = MeasuredWalks(here)
-	for _, walk in ipairs(Walks.Landings(teleports, waterMode)) do
+	for _, walk in ipairs(Walks.Landings(options.teleports, waterMode)) do
 		walks[#walks + 1] = walk
 	end
-	local ride, routeID = nil, ns.CurrentRide()
-	if routeID and anchors[routeID] then
-		local route = ns.Routes[routeID]
-		local phase = (now - anchors[routeID].epoch) % route.period
-		for _, stop in ipairs(route.stops) do
-			-- The observer retains a ride for 30 seconds after disembarking, enough to run 210 yards away.
-			local dock = ns.Docks[stop.dock]
-			if
-				ns.Model.Visit(route, stop, phase)
-				and here.map == dock.map
-				and (here.x - dock.x) ^ 2 + (here.y - dock.y) ^ 2 <= 250 ^ 2
-			then
-				routeID = nil
-				break
-			end
-		end
-	end
-	if routeID then
-		local dock, arriveIn = ns.NextStop(routeID)
-		if dock then
-			ride = { route = routeID, dock = dock, arrive = now + arriveIn }
-		end
-	end
-	local planned = ns.Planner.Plan({
-		cache = plannerCache,
-		from = here,
-		to = goal,
-		now = now,
-		ride = ride,
-		walkSpeed = lastRunSpeed,
-		faction = UnitFactionGroup("player"),
-		otherFaction = ns.db and ns.db.otherFaction or false,
-		taxiKnown = ns.KnownTaxiNodes(),
-		anchors = anchors,
-		docks = ns.Docks,
-		routes = ns.Routes,
-		taxiNodes = ns.TaxiNodes,
-		taxiPaths = ns.TaxiPaths,
-		portals = ns.Portals,
-		teleports = teleports,
-		teleportReady = ready,
-		hearthMinimumSavings = ns.db and ns.db.hearthMinimumSavings or 0,
-		landmasses = ns.Landmasses,
-		walks = walks,
-		baked = ns.Walks,
-		waterWalking = waterMode,
-	})
+	options.cache, options.walks, options.waterWalking = plannerCache, walks, waterMode
+	options.ride = Context.Ride(options)
+	local planned = ns.Planner.Plan(options)
 	if planned then
 		planned.now, planned.preview, planned.waterMode = now, nil, waterMode
 	end
@@ -389,24 +345,18 @@ local function RefreshCosts(includeGoal, forced)
 	end
 	CancelPaths()
 	search = { started = GetTime(), initial = not followed, forced = forced }
-	local version, faction = pathVersion, UnitFactionGroup("player")
+	local version = pathVersion
 	local teleports = ns.UsableTeleports(ns.NowMs())
-	local places = ns.Planner.Places({
-		docks = ns.Docks,
-		taxiNodes = ns.TaxiNodes,
-		portals = ns.Portals,
-		teleports = teleports,
-		faction = faction,
-	})
+	local places, faction = Context.Places(teleports)
 	local function targets(point, withGoal)
 		local list = {}
-		local mass = ns.Planner.Landmass(point, ns.Landmasses or {})
+		local mass = Context.Landmass(point)
 		for _, place in ipairs(places) do
-			if place.map == point.map and ns.Planner.Landmass(place, ns.Landmasses or {}) == mass then
+			if place.map == point.map and Context.Landmass(place) == mass then
 				list[#list + 1] = place
 			end
 		end
-		if withGoal and goal.map == point.map and ns.Planner.Landmass(goal, ns.Landmasses or {}) == mass then
+		if withGoal and goal.map == point.map and Context.Landmass(goal) == mass then
 			list[#list + 1] = goal
 		end
 		return list

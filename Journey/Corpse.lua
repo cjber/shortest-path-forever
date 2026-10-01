@@ -111,7 +111,7 @@ function Corpse.Steer()
 		end
 	end
 	yards = yards or math.sqrt((point.x - here.x) ^ 2 + (point.y - here.y) ^ 2)
-	local speed = ns.RunSpeed()
+	local speed = ns.PlanContext.RunSpeed()
 	leg.depart = ns.NowMs()
 	leg.arrive = leg.depart + yards / speed * 1000
 	run.plan.arrive = leg.arrive

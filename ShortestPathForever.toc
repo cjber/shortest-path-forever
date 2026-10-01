@@ -24,7 +24,7 @@ Data\Walks.lua
 Transport\Model.lua
 Routing\Planner.lua
 Core\Core.lua
-Core\Speed.lua
+Core\PlanContext.lua
 UI\Nearby.lua
 Transport\Observer.lua
 Transport\Sync.lua

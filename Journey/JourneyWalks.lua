@@ -8,6 +8,7 @@ local WALK_CACHE_LIMIT = 64
 ---@class SPFJourneyWalks
 local Walks = ns.JourneySearch.Walks
 local SamePlace = ns.JourneySearch.SamePlace
+local Context = ns.PlanContext
 
 -- A finished leg search: the path it found (or the one it failed to replace), why it failed, its running yards.
 ---@class SPFMeasuredWalk
@@ -155,15 +156,10 @@ local function Landing(place, water)
 	local key = string.format("%d:%.17g:%.17g:%s", place.map, place.x, place.y, tostring(water))
 	local entry = landings[key]
 	if not entry then
-		local mass, targets = ns.Planner.Landmass(place, ns.Landmasses or {}), {}
-		local places = ns.Planner.Places({
-			docks = ns.Docks,
-			taxiNodes = ns.TaxiNodes,
-			portals = ns.Portals,
-			faction = UnitFactionGroup("player"),
-		})
-		for _, target in ipairs(places) do
-			if target.map == place.map and ns.Planner.Landmass(target, ns.Landmasses or {}) == mass then
+		local mass, targets = Context.Landmass(place), {}
+		-- Without the teleports' own destinations: a landing walks on to docks, flight points and portals.
+		for _, target in ipairs((Context.Places())) do
+			if target.map == place.map and Context.Landmass(target) == mass then
 				targets[#targets + 1] = target
 			end
 		end
