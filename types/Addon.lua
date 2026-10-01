@@ -37,6 +37,7 @@
 ---@field kind SPFKind
 ---@field id? number
 ---@field pointKey? string
+---@field bakedKey? string
 ---@field undiscovered? boolean
 ---@class SPFDock : SPFPoint
 ---@field pin? SPFPoint
