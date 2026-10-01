@@ -51,9 +51,6 @@ local function frame()
 	function f.GetBottom(self)
 		return self.bottom or self:GetTop() - self:GetHeight()
 	end
-	function f:GetTopLeft()
-		return self:GetLeft(), self:GetTop()
-	end
 	function f:IsShown()
 		return self.shown ~= false
 	end

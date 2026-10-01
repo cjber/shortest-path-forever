@@ -374,8 +374,7 @@ local function Layout()
 		-- offsets and UI scale without writing the protected frame. During the brief window
 		-- before that restore, the native frame still points at us; use the saved slot instead
 		-- to avoid creating an anchor cycle.
-		local point = ObjectiveTrackerFrame:GetPoint()
-		local nativeRelativeTo = point and select(2, ObjectiveTrackerFrame:GetPoint())
+		local point, nativeRelativeTo = ObjectiveTrackerFrame:GetPoint()
 		if nativeRelativeTo == host then
 			-- Preserve the saved slot if a legacy host-relative anchor is restored.
 			-- Moving relative to that protected child would create an anchor cycle.
@@ -388,7 +387,6 @@ local function Layout()
 					nativeAnchor.y
 				)
 			end
-			AvoidMinimap(nativeAnchor and nativeAnchor.point or "TOPRIGHT")
 		elseif point then
 			local nativePoint, hostPoint = StackPoints(point)
 			-- If there is no room above the restored tracker, use the side away from its
