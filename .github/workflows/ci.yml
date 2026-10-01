@@ -36,11 +36,17 @@ jobs:
 
   generated:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - run: sudo apt-get update && sudo apt-get install -y luajit
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: tools/.cache
+          key: regeneration-${{ runner.os }}-${{ hashFiles('tools/gen_*.py', 'tools/db2.py', 'tools/diff_forever.py') }}
+          restore-keys: regeneration-${{ runner.os }}-
       - run: python3 tools/check_generated.py
 
   typecheck:

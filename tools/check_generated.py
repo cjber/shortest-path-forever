@@ -70,6 +70,8 @@ def main():
             shutil.copytree(cache, scratch / "tools/.cache", dirs_exist_ok=True)
         expected = outputs(scratch)
         regenerate(scratch, args.offline)
+        if not args.offline:
+            shutil.copytree(scratch / "tools/.cache", ROOT / "tools/.cache", dirs_exist_ok=True)
         generated = outputs(scratch)
         compare(expected, generated, "Stale generated files; run the canonical generators")
         regenerate(scratch, True)
