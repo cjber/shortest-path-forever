@@ -12,6 +12,9 @@ ns.Planner = Planner
 local BOARDING = 3000
 -- A teleport to another continent shows a loading screen: the same allowance as a portal's.
 local LOADING = 5000
+-- A journey that would be one walk of at least LONG_WALK takes a ride instead when that arrives within RIDE_MARGIN
+-- of the walk's time.
+local LONG_WALK, RIDE_MARGIN = 600000, 1.1
 
 local function QuestPointValid(point)
 	return point
@@ -586,7 +589,7 @@ local function Plan(options)
 			end
 		end
 	end
-	local function Search(withoutHearth, cutoff)
+	local function Search(withoutHearth, cutoff, ridden)
 		local labels = topology.labels
 			or {
 				node = {},
@@ -663,6 +666,9 @@ local function Plan(options)
 						canLeave = false
 					end
 					if walked and edge.mode == "walk" and edge.yards > 0 then
+						canLeave = false
+					end
+					if ridden and node == start and edge.to == goal then
 						canLeave = false
 					end
 					if canLeave and lower[edge.to] and not Revisits(labels, current, edge.to) then
@@ -783,6 +789,19 @@ local function Plan(options)
 		}
 	end
 	local planned = Search(false)
+	-- A long way on foot is one line with nothing to follow through whatever lies between, so a ride nearly as quick
+	-- wins. It never spends the hearthstone: that would trade a cooldown for a slower arrival.
+	if
+		planned
+		and #planned.legs == 1
+		and planned.legs[1].mode == "walk"
+		and planned.arrive - options.now >= LONG_WALK
+	then
+		local ridden = Search(true, options.now + (planned.arrive - options.now) * RIDE_MARGIN, true)
+		if ridden then
+			return ridden
+		end
+	end
 	local minimum = options.hearthMinimumSavings or 0
 	if planned and minimum > 0 then
 		for _, leg in ipairs(planned.legs) do

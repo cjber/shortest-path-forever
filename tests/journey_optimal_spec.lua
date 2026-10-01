@@ -296,3 +296,21 @@ do
 	ns.teleports, ns.teleportReady, driver.env.C_Item = nil, nil, nil
 end
 print("hearth journey: the first step, named by the game: ok")
+
+-- A half-hour walk gives way to boats that arrive within a tenth of its time; a clearly quicker walk does not.
+ns.faction, ns.water, ns.speed, ns.known = "Alliance", false, 7, {}
+local ironforge = { map = 0, x = -4918, y = -940 }
+driver.begin(ironforge, { map = 0, x = 2260, y = 290 })
+drain()
+local boats = {}
+for _, leg in ipairs(driver.shown().legs) do
+	boats[#boats + 1] = leg.mode == "boat" and leg.route or nil
+end
+assert(boats[1] == 11616 and boats[2] == 11167, "Ironforge to Tirisfal sails from Stormwind and Auberdine")
+ns.ClearJourney()
+driver.begin(ironforge, { map = 0, x = -2600, y = -2400 })
+drain()
+local afoot = driver.shown()
+assert(#afoot.legs == 1 and afoot.legs[1].mode == "walk" and afoot.arrive - 123456 > 600000)
+ns.ClearJourney()
+print("long walks: a ride nearly as quick replaces one; a quicker walk stays: ok")
