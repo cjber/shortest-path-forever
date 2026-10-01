@@ -83,6 +83,8 @@ Open a flight master’s map once after installing to sync the flight points you
 | `/path debug` | Keep a trace of your position and ride matching, for reporting a ride that did not sync |
 
 Every feature has its own switch in the settings. Searches and tracker updates wait until combat ends.
+In Guidance, **Minimum Hearthstone saving (seconds)** lets you keep your Hearthstone for bigger time savings.
+It defaults to zero; class teleports still count as alternatives.
 
 It's in English for now. Translations are welcome as a pull request, or pasted into an issue, on
 [GitHub](https://github.com/cjber/shortest-path-forever/tree/main/Locales).

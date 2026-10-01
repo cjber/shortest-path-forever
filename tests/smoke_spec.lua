@@ -354,10 +354,14 @@ local function DrivePins(label)
 	end
 end
 
+local function SettingValues(default)
+	return type(default) == "number" and { 0, 600 } or { true, false }
+end
+
 local function DriveSettings(label)
 	-- Every key, both values, through the public setter (the map's filter menu uses it too).
 	for _, key in ipairs(SortedKeys(ns.Defaults)) do
-		for _, value in ipairs({ true, false }) do
+		for _, value in ipairs(SettingValues(ns.Defaults[key])) do
 			stats.settings = stats.settings + 1
 			Run(("%s setting %s=%s"):format(label, key, tostring(value)), function()
 				ns.SetOption(key, value)
@@ -367,7 +371,7 @@ local function DriveSettings(label)
 	end
 	-- The real settings row callback, as the checkbox fires it: the saved value, then the addon's onChanged.
 	for _, setting in ipairs(addonSettings) do
-		for _, value in ipairs({ true, false }) do
+		for _, value in ipairs(SettingValues(setting.default)) do
 			stats.rows = stats.rows + 1
 			Run(("%s settings row %s=%s"):format(label, setting.key, tostring(value)), function()
 				setting:SetValue(value)
@@ -388,10 +392,11 @@ local function DriveSettingsPages(label)
 		end)
 	end
 	for _, row in ipairs(settingsRows) do
-		local setting = assert(row.initializer and row.initializer.setting, "a settings row is a checkbox")
+		local setting = assert(row.initializer and row.initializer.setting, "a settings row has a setting")
 		stats.rows = stats.rows + 1
 		Run(("%s settings page %s"):format(label, setting.key), function()
-			setting:SetValue(not setting:GetValue())
+			local value = setting:GetValue()
+			setting:SetValue(type(value) == "number" and (value == 0 and 600 or 0) or not value)
 			Flush()
 		end)
 	end
@@ -774,7 +779,9 @@ end
 
 local function RandomSetting()
 	local keys = SortedKeys(ns.Defaults)
-	return keys[Pick(#keys)], Pick(2) == 1
+	local key = keys[Pick(#keys)]
+	local values = SettingValues(ns.Defaults[key])
+	return key, values[Pick(#values)]
 end
 
 local function Fuzz(label)

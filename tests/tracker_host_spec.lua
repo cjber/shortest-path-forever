@@ -289,7 +289,7 @@ check(native:GetHeight() < 700, "native viewport clamps after an external resize
 native:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
 eventRegistry:TriggerEvent("EditMode.SavedLayouts")
 drain()
-check(native.point[2] == host and native.point[3] == "BOTTOMRIGHT", "private host repairs native reanchor")
+check(native.point[1] == "TOPLEFT" and native.point[2] == parent, "private host repairs native reanchor independently")
 editMode.active = true
 eventRegistry:TriggerEvent("EditMode.Enter")
 check(host.shown == false, "private tracker hides while Edit Mode owns native slot")
@@ -297,10 +297,7 @@ editMode.active = false
 eventRegistry:TriggerEvent("EditMode.Exit")
 drain()
 check(host.shown == true, "private tracker returns after Edit Mode")
-check(
-	native.point[1] == "TOPRIGHT" and native.point[2] == host and native.point[3] == "BOTTOMRIGHT",
-	"native objectives follow private sections"
-)
+check(native.point[1] == "TOPLEFT" and native.point[2] == parent, "native objectives stay independently anchored")
 check(ns.TrackerHost.IsAttached(first) and not ns.TrackerHost.IsAttached(nil), "ownership lookup")
 local attachmentChanges = 0
 ns.TrackerHost.OnAttachmentChanged(function(value)
@@ -384,7 +381,10 @@ check(host.point[2] == parent and grip.shown, "reattach stays physically detache
 combat = false
 host.scripts.OnEvent(host, "PLAYER_REGEN_ENABLED")
 drain()
-check(native.point[2] == host and not grip.shown, "combat exit applies reattachment")
+check(
+	native.point[2] == parent and native.point[1] == "TOPLEFT" and not grip.shown,
+	"combat exit applies independent reattachment"
+)
 
 ns.TrackerHost.SetAttached(true)
 drain()
@@ -496,12 +496,12 @@ nativeAnchorPoint = "BOTTOMRIGHT"
 nativeSetPoint(native, nativeAnchorPoint, parent, nativeAnchorPoint, 0, -100)
 host:MarkDirty()
 drain()
-check(native.point[1] == "TOPRIGHT" and native.point[3] == "BOTTOMRIGHT", "bottom anchor still stacks objectives below")
+check(native.point[1] == "TOPLEFT" and native.point[2] == parent, "bottom anchor stacks objectives independently")
 nativeAnchorPoint = "CENTER"
 nativeSetPoint(native, nativeAnchorPoint, parent, nativeAnchorPoint, 0, -100)
 host:MarkDirty()
 drain()
-check(native.point[1] == "TOP" and native.point[3] == "BOTTOM", "center anchor uses centered top stack")
+check(native.point[1] == "TOPLEFT" and native.point[2] == parent, "center anchor stacks objectives independently")
 local block = first:AcquireFrame("Block")
 block.parentModule = first
 local line = block:GetLine(1)

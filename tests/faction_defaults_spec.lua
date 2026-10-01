@@ -36,6 +36,12 @@ local function loadCore(saved)
 end
 local fresh = loadCore(nil)
 assert(fresh.db.otherFaction == false, "new installs avoid opposing-faction transport")
+assert(fresh.db.hearthMinimumSavings == 0, "new installs preserve the fastest Hearthstone routing")
+assert(loadCore({}).db.hearthMinimumSavings == 0, "old saves acquire the numeric default")
+assert(
+	loadCore({ hearthMinimumSavings = 300 }).db.hearthMinimumSavings == 300,
+	"saved savings threshold survives reload"
+)
 assert(not fresh.RouteShown({ faction = "Horde" }), "hostile route hidden by default")
 assert(fresh.RouteShown({ faction = "Alliance" }), "own faction route remains available")
 assert(fresh.RouteShown({}), "neutral transport remains available")

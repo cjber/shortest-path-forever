@@ -14,7 +14,7 @@
 ---@field WalkPlaces table<number, table<string, number[]>>
 ---@field db SPFDatabase
 ---@field charDB SPFCharacterDatabase
----@field Defaults table<string, boolean>
+---@field Defaults table<string, boolean|number>
 ---@field NearbyServices SPFNearbyServices
 
 ---@alias SPFMode 'walk'|'flight'|'boat'|'zeppelin'|'lift'|'tram'|'portal'|'passage'|'teleport'
@@ -37,6 +37,7 @@
 ---@field kind SPFKind
 ---@field id? number
 ---@field pointKey? string
+---@field bakedKey? string
 ---@field undiscovered? boolean
 ---@class SPFDock : SPFPoint
 ---@field pin? SPFPoint
@@ -134,6 +135,7 @@
 ---@field journey? boolean
 ---@field taxiRoute? boolean
 ---@field teleports? boolean
+---@field hearthMinimumSavings? number -- seconds the Hearthstone must save over the best non-hearth plan
 ---@field share? boolean
 ---@field guideStops? boolean
 ---@field compass? boolean
@@ -220,6 +222,7 @@ ShortestPathForeverPathData = nil
 ---@field cost number|false
 ---@field estimated? boolean
 ---@class SPFPlanOptions : SPFPlaceOptions
+---@field hearthMinimumSavings? number
 ---@field otherFaction? boolean
 ---@field from SPFPoint
 ---@field to SPFPoint

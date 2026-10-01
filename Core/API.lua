@@ -26,6 +26,7 @@ local CONTEXT_KEYS = {
 	"teleports",
 	"landmasses",
 	"baked",
+	"hearthMinimumSavings",
 }
 
 local function Number(value)
@@ -126,7 +127,6 @@ local function Options(from, to)
 			knownSnapshot[id] = value
 		end
 	end
-	local _, speed = GetUnitSpeed("player")
 	local now = ns.NowMs()
 	local anchors = ns.FreshAnchors()
 	local teleports, ready = ns.UsableTeleports(now)
@@ -155,7 +155,7 @@ local function Options(from, to)
 		from = from,
 		to = to,
 		now = now,
-		walkSpeed = Number(speed) and math.max(speed, 7) or 7,
+		walkSpeed = ns.RunSpeed(),
 		faction = UnitFactionGroup("player"),
 		otherFaction = ns.db and ns.db.otherFaction or false,
 		taxiKnown = known,
@@ -169,6 +169,7 @@ local function Options(from, to)
 		teleportReady = ready,
 		landmasses = ns.Landmasses,
 		baked = ns.Walks,
+		hearthMinimumSavings = ns.db and ns.db.hearthMinimumSavings or 0,
 		waterWalking = ns.JourneyWaterWalking(),
 	}
 	for _, name in ipairs(CONTEXT_KEYS) do

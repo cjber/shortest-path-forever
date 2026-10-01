@@ -163,13 +163,14 @@ Step = function()
 end
 
 -- The route was replaced, advanced or cancelled: keep only the hops still ahead, dropping a search for any other.
-function ns.ItineraryChanged()
+---@param invalidate? boolean
+function ns.ItineraryChanged(invalidate)
 	local points, index = ns.JourneyStops()
 	local kept = {}
 	if points and index then
 		for stop = index, #points - 1 do
 			local key = Key(points[stop], points[stop + 1])
-			kept[key] = hops[key] or { from = points[stop], to = points[stop + 1], walks = {} }
+			kept[key] = not invalidate and hops[key] or { from = points[stop], to = points[stop + 1], walks = {} }
 		end
 	end
 	local owner = searching

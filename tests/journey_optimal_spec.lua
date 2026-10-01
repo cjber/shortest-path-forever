@@ -230,6 +230,15 @@ do
 	drain()
 	local shown, exact = driver.shown(), full(options)
 	assert(shown.legs[1].mode == "teleport" and math.abs(shown.arrive - exact.arrive) < 1e-5)
+	ns.db.hearthMinimumSavings = 100000
+	ns.TravelPolicyChanged()
+	driver.update(0.2)
+	drain()
+	assert(driver.shown().legs[1].mode ~= "teleport", "a hearth below the minimum saving is rejected")
+	ns.db.hearthMinimumSavings = 0
+	ns.TravelPolicyChanged()
+	driver.update(0.2)
+	drain()
 	local rows = select(2, ns.JourneyInfo())
 	assert(rows[1].text:find("^1%. |T134414:0|t Use Hearthstone"), rows[1].text)
 	-- An icon the client cannot give leaves the plain words.

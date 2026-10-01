@@ -6,7 +6,7 @@
 local _, ns = ...
 
 -- InFlight: https://github.com/LudiusMaximus/InFlight/tree/310f5fa167c6171ec2858561077ec441989541ae
--- Measured durations: 266/288 (92.4%); remaining paths estimated at 32 yd/s.
+-- Measured durations: 266/286 (93.0%); remaining paths estimated at 32 yd/s.
 -- Speed: cmangos/mangos-classic src/game/MotionGenerators/PathMovementGenerator.cpp, TAXI_FLIGHT_SPEED.
 -- Only ordinary, unrestricted flight-map nodes; quest/test/transport/PvP/druid-only paths excluded.
 -- Path points: flattened map/x/y triples, simplified within 20 yd in XY, rounded to 0.1 yd.
@@ -498,14 +498,6 @@ ns.TaxiNodes = {
 		faction = "Horde",
 	},
 	[3242] = { map = 1, x = 4393.52, y = -2836.35, z = 1108.13, name = "Tainted Foothills, Mount Hyjal" },
-	[3275] = {
-		map = 0,
-		x = -8180.05,
-		y = -5616.26,
-		z = 4.065,
-		name = "Powderfuse Port, Riverglades",
-		faction = "Alliance",
-	},
 	[3276] = {
 		map = 0,
 		x = -9104.1,
@@ -3898,28 +3890,6 @@ ns.TaxiPaths = {
 			0, -7047.7, -3420.1, 0, -7425.1, -3442.5, 0, -7550.8, -3396.5, 0, -7671.2, -3434.6, 0, -7763.2, -3525.4,
 			0, -7857.9, -3719.1, 0, -7959.2, -4105.1, 0, -8125.7, -4389.2, 0, -8057, -4738.4, 0, -8024.5, -4776.4,
 			0, -7923.8, -4782.6,
-		},
-	},
-	{
-		from = 3275,
-		to = 3276,
-		estimated = true,
-		seconds = 50.8,
-		points = {
-			0, -8179.6, -5615.7, 0, -8155.7, -5653.4, 0, -8190.5, -5712.2, 0, -8255.1, -5732, 0, -8363.2, -5667.9,
-			0, -8639.7, -5659.3, 0, -8696.6, -5626.9, 0, -8868.1, -5470.9, 0, -8940.5, -5297.6, 0, -8933.4, -5016.3,
-			0, -9103.3, -4830.9,
-		},
-	},
-	{
-		from = 3276,
-		to = 3275,
-		estimated = true,
-		seconds = 63.4,
-		points = {
-			0, -9103.3, -4830.9, 0, -9025.8, -4775.5, 0, -8977, -4822.5, 0, -8921, -5109.8, 0, -8971.8, -5217.1,
-			0, -8748.4, -5591.9, 0, -8530.9, -5623, 0, -8141.1, -5791.1, 0, -8060.5, -5742.3, 0, -8043, -5667.7,
-			0, -8086.5, -5611.6, 0, -8179.6, -5615.7,
 		},
 	},
 	{

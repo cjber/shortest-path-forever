@@ -272,10 +272,9 @@ def taxis(node_rows, path_rows, geometry, durations):
         node_id, flags = int(row["ID"]), int(row["Flags"])
         # Bits 1/2 advertise ordinary Alliance/Horde flight-map nodes. This drops transport endpoints,
         # quest/test/obsolete paths, battleground taxis and nodes with unmodelled visibility conditions.
-        # Powderfuse's new Alliance node 3275 lacks the UI bits, but has ordinary paid paths 11582/11583.
         if (
             node_id in RESTRICTED_NODES
-            or (not flags & 3 and node_id != 3275)
+            or not flags & 3
             or int(row["ContinentID"]) not in MAPS
             or row["Name_lang"].startswith(("zzOLD", "Quest "))
             or int(row["ConditionID"])

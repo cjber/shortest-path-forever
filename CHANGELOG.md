@@ -11,6 +11,16 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-10-01
+
+- **Follow your movement speed.** Mounted speeds, boosts and slows affect route choices and arrival times, including while standing still. A speed change updates the active journey promptly.
+
+- **Keep guides clear of quests in combat.** Companion sections stay clear when the quest list grows during a fight. Detaching restores the quest tracker’s original Edit Mode position.
+
+- **Remove the Powderfuse Port flight path.** It no longer appears as a flight master or a route stop; its client data lacks the ordinary flight-map flags.
+
+- **Set a minimum Hearthstone saving.** Journeys still consider the Hearthstone by default, or you can require a chosen number of seconds saved over the fastest route without it; class teleports remain eligible.
+
 ## [1.6.1] - 2026-09-30
 
 - **Move the shared tracker.** Turn off Attach to quest tracker in Settings to drag all Forever sections together. The position survives `/reload`.

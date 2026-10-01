@@ -19,6 +19,7 @@ local DEFAULTS = {
 	journey = true,
 	taxiRoute = true,
 	teleports = true,
+	hearthMinimumSavings = 0,
 	share = true,
 	guideStops = true,
 	compass = true,

@@ -185,6 +185,7 @@ ns.FormatCountdown = tostring
 ns.SetJourneyRoute = function(_, route)
 	shown = route
 end
+load("Core/Speed.lua")
 load("Transport/Model.lua")
 load("Routing/Planner.lua")
 load("Journey/JourneySteps.lua")

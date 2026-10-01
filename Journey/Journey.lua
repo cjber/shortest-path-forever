@@ -14,6 +14,7 @@ local USE_ITEM, CAST_SPELL = L["Use %s"], L["Cast %s"]
 local ICON = "|T%d:0|t "
 
 local goal, result
+local policyChanged
 local nextPoint
 local search, FinishSearch
 local plannerCache = {}
@@ -23,6 +24,7 @@ local progress = { index = 1 }
 ---@class SPFJourneyDriver : Frame
 ---@field elapsed number
 ---@field replannedAt? number GetTime of the last timed replan
+---@field speed? number run speed seen on the last frame
 ---@field progressElapsed number
 ---@field riding? number
 ---@field flying? boolean
@@ -60,6 +62,14 @@ end
 ---@return boolean
 function ns.HasJourney()
 	return goal ~= nil or CorpseRun()
+end
+
+function ns.TravelPolicyChanged()
+	policyChanged = true
+	if ns.ItineraryChanged then
+		ns.ItineraryChanged(true)
+	end
+	ns.WakeTravel()
 end
 
 local function CancelPaths()
@@ -473,7 +483,7 @@ local function EstimateKept(now)
 			return nil
 		end
 		local duration, wait = leg.arrive - leg.depart, leg.wait or 0
-		local yards = leg.yards or duration / 1000 * math.max(lastRunSpeed, 7)
+		local yards = leg.yards or duration / 1000 * lastRunSpeed
 		if leg.walkError then
 			return nil
 		end
@@ -492,7 +502,7 @@ local function EstimateKept(now)
 			else
 				yards = basis
 			end
-			duration, wait = yards / math.max(lastRunSpeed, 7) * 1000, 0
+			duration, wait = yards / lastRunSpeed * 1000, 0
 		elseif leg.route and not leg.aboard then
 			local route, anchor = ns.Routes[leg.route], anchors[leg.route]
 			if anchor and leg.boarding then
@@ -633,11 +643,7 @@ local function Plan(preview)
 	if not (here and goal) then
 		return nil
 	end
-	local _, runSpeed = GetUnitSpeed("player")
-	-- In combat the client returns unit speed as a secret value; keep the last one it let us read.
-	if canaccessvalue(runSpeed) then
-		lastRunSpeed = runSpeed
-	end
+	lastRunSpeed = ns.RunSpeed()
 	local now = ns.NowMs()
 	-- Taxi paths cannot be interrupted; retain their chosen destination until landing.
 	if result and UnitOnTaxi("player") then
@@ -674,7 +680,7 @@ local function Plan(preview)
 		to = goal,
 		now = now,
 		ride = ride,
-		walkSpeed = math.max(lastRunSpeed, 7),
+		walkSpeed = lastRunSpeed,
 		faction = UnitFactionGroup("player"),
 		otherFaction = ns.db and ns.db.otherFaction or false,
 		taxiKnown = ns.KnownTaxiNodes(),
@@ -686,6 +692,7 @@ local function Plan(preview)
 		portals = ns.Portals,
 		teleports = teleports,
 		teleportReady = ready,
+		hearthMinimumSavings = ns.db and ns.db.hearthMinimumSavings or 0,
 		landmasses = ns.Landmasses,
 		walks = walks,
 		baked = ns.Walks,
@@ -735,6 +742,10 @@ local function Update(self, elapsed)
 	if not x then
 		return
 	end
+	if policyChanged then
+		policyChanged = nil
+		Costs.Refresh(true, true)
+	end
 	if Costs.Stale() then
 		-- Search callbacks may finish while position is unavailable; resume from readable endpoints.
 		if ns.Path then
@@ -779,7 +790,12 @@ local function Update(self, elapsed)
 	local riding, flying = ns.CurrentRide(), UnitOnTaxi("player")
 	local changedRide = riding ~= self.riding or flying ~= self.flying
 	self.riding, self.flying = riding, flying
-	if self.elapsed >= REPLAN_EVERY or changedRide then
+	-- Edge-triggered like the ride: comparing against the last planned speed would retrigger every frame
+	-- while a search is still settling and no plan has run.
+	local speed = ns.RunSpeed()
+	local changedSpeed = speed ~= (self.speed or lastRunSpeed)
+	self.speed = speed
+	if self.elapsed >= REPLAN_EVERY or changedRide or changedSpeed then
 		self.elapsed, self.replannedAt = 0, GetTime()
 		local mode = WaterWalking()
 		if mode ~= waterMode then
