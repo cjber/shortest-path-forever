@@ -308,6 +308,17 @@ for _, leg in ipairs(driver.shown().legs) do
 end
 assert(boats[1] == 11616 and boats[2] == 11167, "Ironforge to Tirisfal sails from Stormwind and Auberdine")
 ns.ClearJourney()
+-- A flight master standing where the journey starts is no ride: the walk on from it is still the bare walk.
+local master
+for _, node in pairs(ns.TaxiNodes) do
+	if node.map == 0 and (node.x - ironforge.x) ^ 2 + (node.y - ironforge.y) ^ 2 < 250000 then
+		master = node
+	end
+end
+driver.begin({ map = 0, x = master.x, y = master.y, z = master.z }, { map = 0, x = 2260, y = 290 })
+drain()
+assert(#driver.shown().legs > 1, "a start on a flight master still sails")
+ns.ClearJourney()
 driver.begin(ironforge, { map = 0, x = -2600, y = -2400 })
 drain()
 local afoot = driver.shown()
