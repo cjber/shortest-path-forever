@@ -204,7 +204,7 @@ def dock_title(dock_id):
 
 
 def segment(canvas, a, b, color, dashed=False, alpha=1):
-    """Route.lua Segment/Stroke: lengths in UI units at an effective scale of 1, whatever the frame's own scale."""
+    """Strokes.lua Segment/Stroke: lengths in UI units at an effective scale of 1, whatever the frame's own scale."""
     ax, ay = (n * canvas.ui.scale for n in a)
     bx, by = (n * canvas.ui.scale for n in b)
     if (ax, ay) == (bx, by):
@@ -215,7 +215,7 @@ def segment(canvas, a, b, color, dashed=False, alpha=1):
 
 
 def walk_dots(strokes, spacing):
-    """Route.lua's breadcrumbs: a dot every SPACING along each walk, carried across the joins between its segments."""
+    """Strokes.lua's breadcrumbs: a dot every SPACING along each walk, carried across the joins between its segments."""
     dots, walked, end = [], 0.0, None
     for (ax, ay, bx, by), color, alpha, dashed in strokes:
         if not dashed:
@@ -235,11 +235,11 @@ def flush_strokes(canvas, small=False, marks=()):
     # ARTWORK sublevel -1 puts every outline and rim beneath every core, including at bends and crossings.
     # Sizes in UI units draw at that many units' worth of pixels at every UI scale, so they widen with the render
     # scale like everything else: 2-unit lines in 4-unit outlines, and dots in rims one unit wider on every side:
-    # 4-unit dots 9 apart, or 3-unit dots 7 apart on world and continent maps (Route.lua's SMALL_DOT).
+    # 4-unit dots 9 apart, or 3-unit dots 7 apart on world and continent maps (Strokes.lua's SMALL_DOT).
     k = canvas.ui.scale
     dot, spacing = (3, 7) if small else (4, 9)
     strokes = getattr(canvas, "strokes", [])
-    # Route.lua's STOP_GAP: a dot whose rim would come within 2 units of a stop's mark (x, y, radius) is left out.
+    # Strokes.lua's STOP_GAP: a dot whose rim would come within 2 units of a stop's mark (x, y, radius) is left out.
     dots = [
         (x, y, color, alpha)
         for x, y, color, alpha in walk_dots(strokes, spacing * k)
@@ -427,7 +427,7 @@ def map_canvas(ui, map_id=947, alpha=1, hover=False):
                         projection(ui, before, map_id) if before["map"] == a["map"] else None,
                     )
                     continue
-                # Route.lua EdgeCurve carries a loading-screen crossing out to sea, fading at the edge.
+                # Strokes.lua EdgeCurve carries a loading-screen crossing out to sea, fading at the edge.
                 for end, neighbor in ((a, before), (b, points[index + 2] if index + 2 < len(points) else points[1])):
                     p, n = projection(ui, end, map_id), projection(ui, neighbor, map_id)
                     if not p or not n or end["map"] != neighbor["map"]:
@@ -565,7 +565,7 @@ def render_stops(ui):
     rings = {}
     for number, end in enumerate(ends, 1):
         rings.setdefault(tuple(point(end)), []).append(number)
-    # Route.lua: everything past the stop being guided to recedes to LATER_ALPHA.
+    # Strokes.lua: everything past the stop being guided to recedes to LATER_ALPHA.
     for index, walk in enumerate(ordered(data()["stops"])):
         points = [point(p) for p in ordered(walk)]
         for a, b in zip(points, points[1:], strict=False):
@@ -721,7 +721,7 @@ def render_minimap(ui):
 
 
 def render_demo():
-    # Route.lua fixes stroke widths in physical pixels; render at the GIF's final size.
+    # Strokes.lua fixes stroke widths in physical pixels; render at the GIF's final size.
     ui = Art(scale=1)
     frames = []
     for index in range(80):

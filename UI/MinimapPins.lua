@@ -171,7 +171,7 @@ local function Draw()
 			local dx, dy = math.abs(entry.x - x), math.abs(entry.y - y)
 			near = near or entry.map == map and dx < radius + MARGIN and dy < radius + MARGIN
 			if entry.map == map and dx < radius and dy < radius then
-				local px, py = ns.MinimapProject(entry, x, y, radius, cosine, sine)
+				local px, py = ns.Strokes.Project(entry, x, y, radius, cosine, sine)
 				local inside
 				if square then
 					inside = math.abs(px) <= reach and math.abs(py) <= reach
