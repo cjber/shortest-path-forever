@@ -236,6 +236,22 @@ ns.Init(function()
 		L["Your next turns, the next stop and your destination across the top of the screen."],
 		ns.RefreshCompass
 	)
+	Settings.RegisterInitializer(
+		page,
+		Settings.CreateCheckboxInitializer(
+			Settings.RegisterProxySetting(
+				page,
+				"ShortestPathForever_compassMove",
+				Settings.VarType.Boolean,
+				L["Move the compass"],
+				false,
+				ns.CompassMoving,
+				ns.MoveCompass
+			),
+			nil,
+			L["Shows the compass so you can drag it anywhere on screen. Right-click it to put it back."]
+		)
+	)
 	Checkbox(
 		"routeButton",
 		L["Show a route button on the minimap"],

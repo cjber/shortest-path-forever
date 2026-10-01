@@ -16,10 +16,21 @@ local atlasSizes = {
 }
 local function noop() end
 local methods = {
-	EnableMouse = noop,
 	SetFrameStrata = noop,
 	ClearAllPoints = noop,
+	SetClampedToScreen = noop,
+	SetMovable = noop,
+	RegisterForDrag = noop,
+	StartMoving = noop,
+	StopMovingOrSizing = noop,
+	SetAllPoints = noop,
 }
+function methods:EnableMouse(enabled)
+	self.mouse = enabled
+end
+function methods:GetCenter()
+	return self.centerX, self.centerY
+end
 function methods.SetColorTexture(region, ...)
 	calls.colors = calls.colors + 1
 	region.color = { ... }
@@ -52,6 +63,8 @@ end
 function methods:SetPoint(point, owner, relativePoint, x, y)
 	calls.points = calls.points + 1
 	self.anchorPoint, self.owner, self.relativePoint, self.x, self.y = point, owner, relativePoint, x, y
+	-- The compass keeps the player's position in its own x and y.
+	self.atX, self.atY = x, y
 end
 function methods:SetText(text)
 	calls.text = calls.text + 1
@@ -403,3 +416,27 @@ guided = false
 step()
 assert(strip.hidden and not strip.scripts.OnUpdate and not strip.ticker)
 print("compass: smooth frames, wrap, frame rates, deduplication, atlas aspect, sleep/wake and visibility: ok")
+
+-- Placing it: shown without a journey, dragged anywhere, kept across sessions and put back by a right-click.
+local function at(point, relativePoint, left, up)
+	return strip.anchorPoint == point and strip.relativePoint == relativePoint and strip.atX == left and strip.atY == up
+end
+assert(at("TOP", "TOP", 0, -42) and not strip.mouse, "stock place, click-through")
+ns.MoveCompass(true)
+assert(not strip.hidden and strip.mouse and not strip.Mover.hidden and not strip.scripts.OnUpdate)
+step()
+assert(not strip.hidden, "polling keeps an unguided compass up while it is being placed")
+strip.centerX, strip.centerY = 240, 300
+strip.scripts.OnDragStop(strip)
+assert(ns.db.compassX == 240 and ns.db.compassY == 300)
+assert(at("CENTER", "BOTTOMLEFT", 240, 300))
+ns.MoveCompass(false)
+assert(strip.hidden and not strip.mouse and strip.Mover.hidden and not ns.CompassMoving())
+guided = true
+ns.RefreshCompass()
+assert(not strip.hidden and at("CENTER", "BOTTOMLEFT", 240, 300), "a guided compass stays where it was put")
+strip.scripts.OnMouseUp(strip, "LeftButton")
+assert(ns.db.compassX == 240)
+strip.scripts.OnMouseUp(strip, "RightButton")
+assert(ns.db.compassX == nil and ns.db.compassY == nil and at("TOP", "TOP", 0, -42))
+print("compass: placing, saving and resetting its position: ok")

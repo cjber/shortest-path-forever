@@ -139,6 +139,8 @@
 ---@field share? boolean
 ---@field guideStops? boolean
 ---@field compass? boolean
+---@field compassX? number the compass's centre from the screen's bottom left, once dragged
+---@field compassY? number
 ---@field routeButton? boolean
 ---@field corpse? boolean
 ---@field whatsNew? boolean

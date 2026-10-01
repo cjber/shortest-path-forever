@@ -13,7 +13,7 @@ local env = setmetatable({
 			local setting = {
 				category = category,
 				variable = variable,
-				key = "trackerAttached",
+				key = variable:match("_(%a+)$"),
 				varType = varType,
 				name = name,
 				default = default,
@@ -103,6 +103,7 @@ local env = setmetatable({
 }, { __index = _G })
 
 local refreshed, taxiRefreshed, buttonRefreshed, policyChanged = 0, 0, 0, 0
+local compassMoving = false
 -- Core/Core.lua's defaults: every row on.
 local ns = {
 	TrackerHost = {
@@ -138,6 +139,12 @@ local ns = {
 	RefreshRouteButton = function()
 		buttonRefreshed = buttonRefreshed + 1
 	end,
+	CompassMoving = function()
+		return compassMoving
+	end,
+	MoveCompass = function(value)
+		compassMoving = value
+	end,
 }
 assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", ns)
 setfenv(assert(loadfile("UI/Settings.lua")), env)("ShortestPathForever", ns)
@@ -157,12 +164,12 @@ local groups = {
 		"corpse",
 	},
 	Alerts = { "alerts", "alertSound" },
-	Interface = { "compass", "routeButton", "whatsNew" },
+	Interface = { "compass", "compassMove", "routeButton", "whatsNew" },
 }
 local order = { "Map marks", "Transport", "Guidance", "Alerts", "Interface" }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 21, #rows)
+assert(#rows == 22, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -202,6 +209,10 @@ assert(taxiRefreshed == 1, "flight route updates when its setting changes")
 assert(Row("corpse").setting.default == true)
 -- The compass is on by default: it is the game's own palette rather than a panel on the screen.
 assert(Row("compass").setting.default == true)
+local mover = Row("compassMove").setting
+assert(mover.default == false and mover:GetValue() == false, "the compass starts locked")
+mover:SetValue(true)
+assert(compassMoving == true and mover:GetValue() == true, "the row unlocks the compass for dragging")
 assert(Row("routeButton").setting.default == true)
 assert(Row("routeButton").tooltip:find("gold", 1, true), "the route button says what its colour means")
 Row("routeButton").setting.onChanged()
