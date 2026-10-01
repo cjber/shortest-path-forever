@@ -286,6 +286,17 @@ local function Revisits(labels, current, target)
 	return false
 end
 
+-- Whether anything but walking led here: a place standing where the journey starts is no ride.
+local function Rode(labels, current)
+	while labels.parent[current] do
+		if labels.edge[current].mode ~= "walk" then
+			return true
+		end
+		current = labels.parent[current]
+	end
+	return false
+end
+
 local function Subset(labels, first, second, target)
 	while first do
 		local node = labels.node[first]
@@ -668,7 +679,7 @@ local function Plan(options)
 					if walked and edge.mode == "walk" and edge.yards > 0 then
 						canLeave = false
 					end
-					if ridden and node == start and edge.to == goal then
+					if ridden and edge.to == goal and edge.mode == "walk" and not Rode(labels, current) then
 						canLeave = false
 					end
 					if canLeave and lower[edge.to] and not Revisits(labels, current, edge.to) then
@@ -789,6 +800,19 @@ local function Plan(options)
 		}
 	end
 	local planned = Search(false)
+	local minimum = options.hearthMinimumSavings or 0
+	if planned and minimum > 0 then
+		for _, leg in ipairs(planned.legs) do
+			if leg.teleport and leg.teleport.item == 6948 then
+				-- The admissible bound can prove the saving before the full alternative settles.
+				local baseline = Search(true, planned.arrive + minimum * 1000)
+				if baseline and baseline.arrive - planned.arrive < minimum * 1000 then
+					planned = baseline
+				end
+				break
+			end
+		end
+	end
 	-- A long way on foot is one line with nothing to follow through whatever lies between, so a ride nearly as quick
 	-- wins. It never spends the hearthstone: that would trade a cooldown for a slower arrival.
 	if
@@ -799,20 +823,8 @@ local function Plan(options)
 	then
 		local ridden = Search(true, options.now + (planned.arrive - options.now) * RIDE_MARGIN, true)
 		if ridden then
+			ridden.preferred = true
 			return ridden
-		end
-	end
-	local minimum = options.hearthMinimumSavings or 0
-	if planned and minimum > 0 then
-		for _, leg in ipairs(planned.legs) do
-			if leg.teleport and leg.teleport.item == 6948 then
-				-- The admissible bound can prove the saving before the full alternative settles.
-				local baseline = Search(true, planned.arrive + minimum * 1000)
-				if baseline and baseline.arrive - planned.arrive < minimum * 1000 then
-					return baseline
-				end
-				break
-			end
 		end
 	end
 	return planned

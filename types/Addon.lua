@@ -218,6 +218,7 @@ ShortestPathForeverPathData = nil
 ---@field preview? boolean
 ---@field prepared? boolean
 ---@field waterMode? boolean
+---@field preferred? boolean a ride the planner chose over a slightly quicker long walk
 ---@class SPFWalkCost
 ---@field from SPFPoint
 ---@field to SPFPoint
