@@ -24,6 +24,7 @@ local progress = { index = 1 }
 ---@class SPFJourneyDriver : Frame
 ---@field elapsed number
 ---@field replannedAt? number GetTime of the last timed replan
+---@field speed? number run speed seen on the last frame
 ---@field progressElapsed number
 ---@field riding? number
 ---@field flying? boolean
@@ -789,7 +790,12 @@ local function Update(self, elapsed)
 	local riding, flying = ns.CurrentRide(), UnitOnTaxi("player")
 	local changedRide = riding ~= self.riding or flying ~= self.flying
 	self.riding, self.flying = riding, flying
-	if self.elapsed >= REPLAN_EVERY or changedRide or ns.RunSpeed() ~= lastRunSpeed then
+	-- Edge-triggered like the ride: comparing against the last planned speed would retrigger every frame
+	-- while a search is still settling and no plan has run.
+	local speed = ns.RunSpeed()
+	local changedSpeed = speed ~= (self.speed or lastRunSpeed)
+	self.speed = speed
+	if self.elapsed >= REPLAN_EVERY or changedRide or changedSpeed then
 		self.elapsed, self.replannedAt = 0, GetTime()
 		local mode = WaterWalking()
 		if mode ~= waterMode then
