@@ -180,7 +180,7 @@ Shapes this codebase keeps producing. Check new code against them.
   Path failure reasons (`Journey/Journey.lua` `WALK_FAILURE`), sighting `source` `"you"|"player"` (`Transport/Model.lua`), crossing
   modes in `UI/Route.lua`.
 - **second copy of a fact**: another module's fact restated (`parallel-implementations`): Compass's
-  `transportIcons` beside `ns.SetTransportIcon`; `bakedBound` (`Journey/JourneyCosts.lua`) re-deriving Planner's
+  `transportIcons` beside `ns.SetTransportIcon`; `bakedBound` (`Journey/JourneySearch.lua`) re-deriving Planner's
   Walks.lua keys; the TaxiPathNode stop flag as a literal in `gen_transit.py`.
 - **stale spec stub**: spec, bench and UI-harness stubs outliving the production field they stood in for
   (`dead-code`): `owner.loading` in `memory_bench.lua`, a `NewTicker` stub in `sync_spec.lua`, client stubs in

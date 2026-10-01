@@ -205,6 +205,8 @@ ShortestPathForeverPathData = nil
 ---@field walkError? string
 ---@field wet? number
 ---@field measured? boolean
+---@field walkCost? number -- the walk's running yards as searched, where water keeps its weight
+---@field walkDrawn? boolean -- walkPoints came from a search, not a straight placeholder
 ---@field color? ColorMixin -- drawn in this colour rather than its mode's
 ---@class SPFPlan
 ---@field arrive number
