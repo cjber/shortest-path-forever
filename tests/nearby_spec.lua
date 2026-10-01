@@ -239,6 +239,7 @@ assert(
 )
 ns.OpenNearby()
 assert(#menuEntries > 0 and menuEntries[1].title, "nearby opens an addon-owned map menu")
+assert(closedMenus > 0, "nearby releases an already-open context menu before acquiring one")
 local dismissedMenuCount = #menuEntries
 assert(releaseMenu, "native menu release callback is registered")
 releaseMenu()
