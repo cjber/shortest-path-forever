@@ -157,6 +157,7 @@ local function Update(elapsed)
 	local bend, nextBend, stop, goal = ns.GuideTargets()
 	if not (ns.db.compass and ns.db.journey and ns.IsJourneyGuided() and bend) then
 		frame:SetShown(moving)
+		frame:SetAlpha(1)
 		SetUpdating(false)
 		return
 	end
@@ -237,8 +238,9 @@ end
 -- on screen, so a place saved at another resolution or scale cannot strand it.
 local function Anchor()
 	frame:ClearAllPoints()
-	if ns.db.compassX and ns.db.compassY then
-		frame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", ns.db.compassX, ns.db.compassY)
+	local x, y = ns.db.compassX, ns.db.compassY
+	if type(x) == "number" and type(y) == "number" then
+		frame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x, y)
 	else
 		frame:SetPoint("TOP", UIParent, "TOP", 0, -42)
 	end
@@ -255,7 +257,9 @@ local function Create()
 	frame:EnableMouse(false)
 	frame:SetMovable(true)
 	frame:RegisterForDrag("LeftButton")
-	frame:SetScript("OnDragStart", frame.StartMoving)
+	frame:SetScript("OnDragStart", function()
+		frame:StartMoving()
+	end)
 	frame:SetScript("OnDragStop", function()
 		frame:StopMovingOrSizing()
 		ns.db.compassX, ns.db.compassY = frame:GetCenter()
