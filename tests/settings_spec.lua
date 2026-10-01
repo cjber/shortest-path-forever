@@ -102,7 +102,7 @@ local env = setmetatable({
 	SlashCmdList = {},
 }, { __index = _G })
 
-local refreshed, taxiRefreshed, buttonRefreshed = 0, 0, 0
+local refreshed, taxiRefreshed, buttonRefreshed, policyChanged = 0, 0, 0, 0
 -- Core/Core.lua's defaults: every row on.
 local ns = {
 	TrackerHost = {
@@ -117,6 +117,9 @@ local ns = {
 			attachmentChanged = callback
 		end,
 	},
+	TravelPolicyChanged = function()
+		policyChanged = policyChanged + 1
+	end,
 	db = {},
 	Defaults = setmetatable({ hearthMinimumSavings = 0 }, {
 		__index = function()
@@ -190,6 +193,8 @@ assert(Row("guideStops").setting.default == true)
 assert(Row("taxiRoute").setting.default == true)
 local hearth = Row("hearthMinimumSavings")
 assert(hearth.kind == "slider" and hearth.setting.default == 0)
+hearth.setting.onChanged()
+assert(policyChanged == 1, "changing Hearthstone savings invalidates the current travel policy")
 assert(hearth.options.minValue == 0 and hearth.options.maxValue == 600 and hearth.options.step == 30)
 assert(Row("taxiRoute").tooltip:find("flight master", 1, true))
 Row("taxiRoute").setting.onChanged()

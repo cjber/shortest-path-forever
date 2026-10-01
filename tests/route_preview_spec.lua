@@ -192,6 +192,16 @@ check(ns.JourneyPreview()[1] == drawn[1], "the unchanged hops are reused")
 drain()
 check(#planned == plans + 1, "only the changed hop is planned again")
 
+-- A changed travel policy invalidates even hops whose coordinates stayed the same.
+local previous = ns.JourneyPreview()[1]
+local policyPlans = #planned
+ns.db.hearthMinimumSavings = 600
+ns.TravelPolicyChanged()
+driver.update(0.2)
+drain()
+check(#planned >= policyPlans + 3, "every later hop replans after Hearthstone savings changes")
+check(ns.JourneyPreview()[1] ~= previous, "a cached hop cannot survive a travel policy change")
+
 -- Cancelling mid-search drops the in-flight walk and every hop.
 local jobs = {}
 ns.Path.Find = function(...)

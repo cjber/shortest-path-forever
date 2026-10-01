@@ -14,6 +14,7 @@ local USE_ITEM, CAST_SPELL = L["Use %s"], L["Cast %s"]
 local ICON = "|T%d:0|t "
 
 local goal, result
+local policyChanged
 local nextPoint
 local search, FinishSearch
 local plannerCache = {}
@@ -60,6 +61,14 @@ end
 ---@return boolean
 function ns.HasJourney()
 	return goal ~= nil or CorpseRun()
+end
+
+function ns.TravelPolicyChanged()
+	policyChanged = true
+	if ns.ItineraryChanged then
+		ns.ItineraryChanged(true)
+	end
+	ns.WakeTravel()
 end
 
 local function CancelPaths()
@@ -735,6 +744,10 @@ local function Update(self, elapsed)
 	local x, y, _, map = ns.JourneyPosition()
 	if not x then
 		return
+	end
+	if policyChanged then
+		policyChanged = nil
+		Costs.Refresh(true, true)
 	end
 	if Costs.Stale() then
 		-- Search callbacks may finish while position is unavailable; resume from readable endpoints.

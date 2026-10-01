@@ -189,7 +189,7 @@ ns.Init(function()
 		L["Minimum Hearthstone saving (seconds)"],
 		ns.Defaults.hearthMinimumSavings
 	)
-	hearth:SetValueChangedCallback(ns.WakeTravel)
+	hearth:SetValueChangedCallback(ns.TravelPolicyChanged)
 	settings.hearthMinimumSavings = hearth
 	local hearthOptions = Settings.CreateSliderOptions(0, 600, 30)
 	Settings.RegisterInitializer(
