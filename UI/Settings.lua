@@ -268,7 +268,7 @@ ns.Init(function()
 	)
 	Checkbox(
 		"whatsNew",
-		L["Show what's new after updates"],
+		L["What's new after an update"],
 		L["One line in chat the first time you log in after an update."]
 	)
 
