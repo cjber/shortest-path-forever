@@ -22,6 +22,8 @@ class TaintTest(unittest.TestCase):
             "initializer:SetParentInitializer(parent)": "taint-blizzard-call",
             "OpenWorldMap(uiMapID)": "taint-blizzard-call",
             "OpenQuestLog(uiMapID)": "taint-blizzard-call",
+            "_G.OpenWorldMap(uiMapID)": "taint-blizzard-call",
+            "QuestMapFrame_ShowQuestDetails(questID)": "taint-blizzard-call",
             "if not WorldMapFrame:IsShown() then ToggleWorldMap() end": "taint-blizzard-call",
             "WorldMapFrame:SetMapID(uiMapID)": "taint-blizzard-call",
             "local map = pin:GetMap(); map:SetMapID(uiMapID)": "taint-blizzard-call",
