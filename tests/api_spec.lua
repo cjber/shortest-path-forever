@@ -85,6 +85,7 @@ do
 	ns.StartJourney = start
 end
 equal(API.Navigate("AGF", 1, 0.6, 0.5, "Quest giver"), true, "start guidance")
+driver.path.settle()
 equal(API.Ended("AGF"), nil, "running")
 equal(ns.IsJourneyGuided(), true, "arrow enabled")
 equal(ns.JourneyInfo(), "Journey to Quest giver", "title propagated")
@@ -402,6 +403,7 @@ for i = 1, 64 do
 end
 many[65] = nil
 equal(API.NavigateRoute("AGF", many), true, "coincident stops accepted")
+driver.path.settle()
 equal(API.CurrentStop("AGF"), 1, "coincident route does not recurse on start")
 driver.update(0.1)
 equal(API.CurrentStop("AGF"), 2, "at most one coincident stop starts per update")
@@ -430,16 +432,13 @@ equal(calls, 4, "water walking invalidates cache")
 ns.faction = "Horde"
 API.Estimate(1, 0.5, 0.5, 1, 0.61, 0.5)
 equal(calls, 5, "faction invalidates cache")
-local anchors = { [1] = { epoch = 10 } }
-ns.FreshAnchors = function()
-	return anchors
-end
+ns.Timetable.Sighted(1, { epoch = 10, seen = 0 })
 API.Estimate(1, 0.5, 0.5, 1, 0.61, 0.5)
 equal(calls, 6, "new transport timing invalidates cache")
-anchors[1].epoch = 20
+ns.Timetable.Sighted(1, { epoch = 20, seen = 1 })
 API.Estimate(1, 0.5, 0.5, 1, 0.61, 0.5)
-equal(calls, 7, "in-place transport timing update invalidates cache")
-anchors[1] = nil
+equal(calls, 7, "a newer transport timing invalidates cache")
+ns.serverTime = ns.Model.MAX_AGE + 2
 API.Estimate(1, 0.5, 0.5, 1, 0.61, 0.5)
 equal(calls, 8, "expired transport timing invalidates cache")
 driver.update(5)

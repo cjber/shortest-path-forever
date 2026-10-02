@@ -13,22 +13,11 @@ mapID, cursorX, cursorY, shiftDown = 1414, 0.5, 0.496, true
 ns.db.tracker, ns.db.compass = false, true
 -- Zoomed in on a zone-sized canvas, so the dots between here and a 100-yard goal clear the stop gaps (#51).
 zoom, canvas.width, canvas.height = 1, 10000, 7000
-local batches, jobs = {}, {}
+-- This check answers the walking search itself.
+path.auto = false
+local function batches() return path.waiting(path.batches) end
+local function jobs() return path.waiting(path.finds) end
 local splitRoute = false
-ns.Path = {
- HasData = function() return true end,
- FindMany = function(_, _, targets, callback)
-  local job = {targets=targets, callback=callback}
-  batches[#batches+1] = job
-  return job
- end,
- Find = function(_, from, to, callback)
-  local job = {from=from, to=to, callback=callback}
-  jobs[#jobs+1] = job
-  return job
- end,
- Cancel = function(job) job.cancelled=true end,
-}
 ns.Planner.Plan = function(o)
  if splitRoute then
   local mid = {map=1, x=50, y=40}
@@ -92,18 +81,14 @@ local function tick(seconds)
  driver.scripts.OnUpdate(driver, seconds)
 end
 local function ready()
- for _, batch in ipairs(batches) do
-  local costs = {}
-  for i=1,#batch.targets do costs[i] = 1400 end
-  batch.callback(costs, nil, batch)
- end
+ for _, batch in ipairs(batches()) do path.costs(batch, 1400) end
 end
 local function finish()
- for _, job in ipairs(jobs) do job.callback({job.from, job.to}, 1400, job) end
+ for _, job in ipairs(jobs()) do path.finish(job, {job.from, job.to}, 1400) end
 end
 local function begin()
  ns.ClearJourney()
- batches, jobs, splitRoute = {}, {}, false
+ splitRoute = false
  assert(clickHandlers[1](map, "LeftButton"))
 end
 local function hiddenRoute()
@@ -120,15 +105,12 @@ local function hiddenRoute()
  pulse(mini, false)
 end
 hiddenRoute()
-for _, batch in ipairs(batches) do
- local costs = {}
- for i=1,#batch.targets do costs[i] = 1400 end
- batch.callback(costs, nil, batch)
+for _, batch in ipairs(batches()) do
+ path.costs(batch, 1400)
  hiddenRoute()
 end
-assert(#jobs == 1)
-local job = jobs[1]
-job.callback({job.from, job.to}, 1400, job)
+assert(#jobs() == 1)
+finish()
 drawn(false)
 assert(tracker.blocks[1].rows[1].key == 1 and tracker.Header.Text:GetText():find("yd",1,true))
 assert(not spinner.Anim:IsPlaying() and spinner.hidden)
@@ -161,20 +143,19 @@ for _, replace in ipairs({false, true}) do
  splitRoute = replace
  ready()
  drawn(true)
- assert(#jobs > 0)
+ assert(#jobs() > 0)
  finish()
  drawn(false)
  assert(not ns.JourneyStatus())
  assert((select(3, ns.JourneyInfo()) ~= grace) == replace)
 
  -- Background replans keep the existing route steady, including while replacement walks are pending.
- batches, jobs = {}, {}
  posY = 60
  tick(5)
- assert(ns.JourneyStatus() and #batches > 0)
+ assert(ns.JourneyStatus() and #batches() > 0)
  drawn(false)
  ready()
- assert(ns.JourneyStatus() and #jobs > 0)
+ assert(ns.JourneyStatus() and #jobs() > 0)
  drawn(false)
  finish()
  assert(not ns.JourneyStatus())

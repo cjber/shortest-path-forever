@@ -29,11 +29,13 @@ before its `v*` tag, since the release publishes it as the notes.
   hand-edit.
 - `ShortestPathForever_Nav*/` — load-on-demand walking maps built by `tools/baker/`; loaded only when a
   route needs them.
-- `Core/` — addon lifecycle, defaults and the public API.
+- `Core/` — addon lifecycle, defaults, the planning context (the live and static inputs every plan starts from)
+  and the public API.
 - `Routing/` — transport search and walking-map decoding, search and frame scheduling.
 - `Journey/` — journey state, steps, costs, guidance and corpse recovery; performance budgets live in
   `tests/journey_performance.md`.
-- `Transport/` — learned connections, observation, synchronisation, taxis and teleports.
+- `Transport/` — the live timetable (sightings, departures and their wording), observation, synchronisation,
+  taxis and teleports.
 - `UI/` — map overlays, nearby services, tracker, compass, menus and settings.
 - `Locales/` — `Locales/enUS.lua` makes `L`, whose English phrases are their own keys; a translation is a
   `Locales/<locale>.lua` listed after it (`Locales/README.md`). After changing a phrase,

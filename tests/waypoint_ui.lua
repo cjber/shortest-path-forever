@@ -14,13 +14,14 @@ ns.Planner.Plan = function(o)
  return {now=o.now, arrive=o.now+200000, legs={{mode="walk", from=o.from, to=o.to,
   yards=1400, depart=o.now, arrive=o.now+200000}}}
 end
-ns.Planner.WalkPoints = function(a, b)
+path.draw = function(a, b)
  return {a, {map=1,x=100,y=100}, {map=1,x=300,y=100}, b}
 end
 local function start()
  posX, posY, posMap = 0, 0, 1
  mapID, cursorX, cursorY = 1414, 0.5, 0.452
  assert(clickHandlers[1](map, "LeftButton"))
+ settle()
  assert(ns.IsJourneyGuided() and waypoint and supertracked)
 end
 local function record()

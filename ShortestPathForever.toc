@@ -24,7 +24,8 @@ Data\Walks.lua
 Transport\Model.lua
 Routing\Planner.lua
 Core\Core.lua
-Core\Speed.lua
+Transport\Timetable.lua
+Core\PlanContext.lua
 UI\Nearby.lua
 Transport\Observer.lua
 Transport\Sync.lua
@@ -43,7 +44,8 @@ Routing\PathGrid.lua
 Routing\Path.lua
 Routing\PathJobs.lua
 Journey\JourneySteps.lua
-Journey\JourneyCosts.lua
+Journey\JourneySearch.lua
+Journey\JourneyWalks.lua
 Journey\JourneyGuide.lua
 Journey\Journey.lua
 Journey\JourneyInput.lua

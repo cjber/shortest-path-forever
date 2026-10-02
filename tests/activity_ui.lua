@@ -57,7 +57,7 @@ assert(activeTickers() == 0)
 local dock = ns.Docks[1]
 posX, posY, posZ, posMap = dock.x, dock.y, dock.z or 0, dock.map
 fireEvent("ZONE_CHANGED")
-ns.Sighted(241, { epoch = ns.NowMs(), seen = GetServerTime(), source = "you" })
+ns.Timetable.Sighted(241, { epoch = ns.NowMs(), seen = GetServerTime(), source = "you" })
 advance(2)
 assert(activeTickers() == 1 and tracker.blocks[1].key == "dock1")
 local block = tracker:GetExistingBlock("dock1")
@@ -130,7 +130,7 @@ ns.RefreshMap()
 assert(#active[template] > 0 and active[template][1].cluster, "reacquire after external pin release")
 local acquisitions, acquire = 0, map.AcquirePin
 map.AcquirePin = function(self, ...) acquisitions = acquisitions + 1 return acquire(self, ...) end
-ns.Sighted(241, { epoch = ns.NowMs(), seen = GetServerTime(), source = "you" })
+ns.Timetable.Sighted(241, { epoch = ns.NowMs(), seen = GetServerTime(), source = "you" })
 assert(acquisitions == 0, "sightings must not rebuild unrelated map layers")
 map.AcquirePin = acquire
 visible, WorldMapFrame.shown = false, false

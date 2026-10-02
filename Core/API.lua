@@ -118,7 +118,8 @@ end
 ---@param from SPFPoint
 ---@param to SPFPoint
 local function Options(from, to)
-	local known = ns.KnownTaxiNodes()
+	local options = ns.PlanContext.Options(from, to)
+	local known, now, anchors = options.taxiKnown, options.now, options.anchors
 	-- Discovery updates the same saved table in place; topology identity alone cannot detect it.
 	local changed = Differs(known, knownSnapshot)
 	if changed then
@@ -127,12 +128,9 @@ local function Options(from, to)
 			knownSnapshot[id] = value
 		end
 	end
-	local now = ns.NowMs()
-	local anchors = ns.FreshAnchors()
-	local teleports, ready = ns.UsableTeleports(now)
 	local x, y, _, map = ns.JourneyPosition()
 	if not (x and map == from.map and (x - from.x) ^ 2 + (y - from.y) ^ 2 <= HERE ^ 2) then
-		ready = {}
+		options.teleportReady = {}
 	end
 	for id, anchor in pairs(anchors) do
 		if anchorSnapshot[id] ~= anchor.epoch then
@@ -150,28 +148,7 @@ local function Options(from, to)
 	-- JIT compilation can make the first call ~4 ms. Callers should make at most one uncached call per
 	-- frame; AGF fetches its card estimates one per frame while its panel is open. Results are cached, 256
 	-- (origin rounded to 0.0001, exact destination) for at most five seconds; cached calls measured ~0.003 ms.
-	local options = {
-		cache = plannerCache,
-		from = from,
-		to = to,
-		now = now,
-		walkSpeed = ns.RunSpeed(),
-		faction = UnitFactionGroup("player"),
-		otherFaction = ns.db and ns.db.otherFaction or false,
-		taxiKnown = known,
-		anchors = anchors,
-		docks = ns.Docks,
-		routes = ns.Routes,
-		taxiNodes = ns.TaxiNodes,
-		taxiPaths = ns.TaxiPaths,
-		portals = ns.Portals,
-		teleports = teleports,
-		teleportReady = ready,
-		landmasses = ns.Landmasses,
-		baked = ns.Walks,
-		hearthMinimumSavings = ns.db and ns.db.hearthMinimumSavings or 0,
-		waterWalking = ns.JourneyWaterWalking(),
-	}
+	options.cache, options.waterWalking = plannerCache, ns.JourneyWaterWalking()
 	for _, name in ipairs(CONTEXT_KEYS) do
 		if context[name] ~= options[name] then
 			changed = true
