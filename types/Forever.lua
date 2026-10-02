@@ -35,8 +35,6 @@ function Saturate(value) end
 ---@param amount number
 ---@return number
 function Lerp(start, finish, amount) end
----@param uiMapID? number
-function OpenWorldMap(uiMapID) end
 
 -- LibDBIcon and minimap addons supply this optional shared shape query.
 ---@type (fun(): string)?
@@ -72,7 +70,6 @@ function GameTooltip_AddColoredDoubleLine(tooltip, left, right, leftColor, right
 ---@field AddDataProvider fun(self: SPFMapCanvas, provider: SPFMapProvider)
 ---@field RemoveDataProvider fun(self: SPFMapCanvas, provider: SPFMapProvider)
 ---@field GetMapID fun(self: SPFMapCanvas): number
----@field SetMapID fun(self: SPFMapCanvas, mapID: number)
 ---@field GetCanvas fun(self: SPFMapCanvas): Frame
 ---@field GetGlobalPinScale fun(self: SPFMapCanvas): number
 ---@field GetCanvasScale fun(self: SPFMapCanvas): number

@@ -20,6 +20,11 @@ class TaintTest(unittest.TestCase):
             "UpdateContainerFrameAnchors()": "taint-blizzard-call",
             "local n = frame:GetBagSize()": "taint-blizzard-call",
             "initializer:SetParentInitializer(parent)": "taint-blizzard-call",
+            "OpenWorldMap(uiMapID)": "taint-blizzard-call",
+            "OpenQuestLog(uiMapID)": "taint-blizzard-call",
+            "if not WorldMapFrame:IsShown() then ToggleWorldMap() end": "taint-blizzard-call",
+            "WorldMapFrame:SetMapID(uiMapID)": "taint-blizzard-call",
+            "local map = pin:GetMap(); map:SetMapID(uiMapID)": "taint-blizzard-call",
             "StaticPopupDialogs.TF_CONFIRM = {}": "taint-blizzard-write",
             'StaticPopupDialogs["TF_CONFIRM"] = {}': "taint-blizzard-write",
             "WorldMapFrame.tfPins = {}": "taint-blizzard-write",
@@ -53,6 +58,9 @@ class TaintTest(unittest.TestCase):
             "local function UpdateAnchors() end\nlocal Model = {}\nfunction Model.GetRows() end",
             "WorldMapFrame.tf = 1 -- taint-ok: our own field, read only by this addon",
             "bag:UpdateFrameSize() -- taint-ok: run from a secure delegate",
+            "C_Map.OpenWorldMap(uiMapID)",
+            "C_Map.OpenWorldMap()",
+            "canvas:SetMapID(uiMapID) -- taint-ok: a map canvas this addon created",
         ]
         for source in cases:
             with self.subTest(source=source):

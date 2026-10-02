@@ -22,7 +22,7 @@ local HEADER = { boat = L["Boats"], zeppelin = L["Boats"], lift = L["Lifts"], tr
 
 local function OpenDockMap(dockID)
 	local location = dockID and ns.DockLocation(dockID)
-	OpenWorldMap(location and location.uiMap)
+	C_Map.OpenWorldMap(location and location.uiMap)
 end
 
 function ModuleMixin:OnBlockHeaderClick(block, button)

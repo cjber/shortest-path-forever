@@ -33,7 +33,12 @@ CALLS = {
     "SetParentInitializer": "the settings search reads this link",
     "AddMaskableTexture": "writes into the map canvas's texture list",
     "UpdateAnchors": "nameplate layout writes the plate's state",
+    "SetMapID": "retargeting a map from addon code taints its map fields; use C_Map.OpenWorldMap",
 }
+
+# Blizzard globals that open the world map. Run from addon code they taint the map's fields until a reload, so its
+# pins are blocked in combat. C_Map.OpenWorldMap asks the game to open it from its own code.
+MAP_OPENERS = {"OpenWorldMap", "OpenQuestLog", "ToggleWorldMap"}
 
 
 def flagged(comments: dict[int, str], line: int) -> bool:
@@ -120,6 +125,8 @@ def check(source: str) -> list[tuple[int, str]]:
                 report(token.line, "taint-method-hook: hooksecurefunc on an object; hook a script or an event")
         elif token.value in CALLS and tokens[index + 1].value == "(" and previous != "function":
             report(token.line, f"taint-blizzard-call: {token.value} ({CALLS[token.value]})")
+        elif token.value in MAP_OPENERS and tokens[index + 1].value == "(" and previous not in {".", ":", "function"}:
+            report(token.line, f"taint-blizzard-call: {token.value} (taints the world map; use C_Map.OpenWorldMap)")
         elif previous not in {".", ":"} and token.value not in names and not OWN.fullmatch(token.value):
             end = chain_end(tokens, index)
             if end > index + 1 and tokens[end].value == "=":
