@@ -100,14 +100,14 @@ ns.Init(function()
 
 	-- Map marks: what the world map and the minimap draw.
 	Page(L["Map marks"])
-	Checkbox("pins", L["Show boats and zeppelins on the world map"], nil, ns.RefreshMap)
-	Checkbox("transit", L["Show lifts and the Deeprun Tram on the world map"], nil, ns.RefreshMap)
-	Checkbox("portals", L["Show portals on the world map"], nil, ns.RefreshMap)
-	Checkbox("mapFlightMasters", L["Show flight masters on the world map"], nil, ns.RefreshMap)
+	Checkbox("pins", L["Show boats and zeppelins"], L["On the world map."], ns.RefreshMap)
+	Checkbox("transit", L["Show lifts and the tram"], L["Lifts and the Deeprun Tram, on the world map."], ns.RefreshMap)
+	Checkbox("portals", L["Show portals"], L["On the world map."], ns.RefreshMap)
+	Checkbox("mapFlightMasters", L["Show flight masters"], L["On the world map."], ns.RefreshMap)
 	Checkbox(
 		"minimapPins",
-		L["Show docks, lifts, the tram and portals on the minimap"],
-		L["Also under Transport in the minimap's tracking menu."],
+		L["Show marks on the minimap"],
+		L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."],
 		ns.RefreshMinimapPins
 	)
 
@@ -115,13 +115,13 @@ ns.Init(function()
 	Page(L["Transport"])
 	Checkbox(
 		"mapRoutes",
-		L["Show boat and zeppelin routes on the world map"],
-		L["Drawn while you point at a dock."],
+		L["Show routes on the world map"],
+		L["Boat and zeppelin routes, drawn while you point at a dock."],
 		ns.RefreshMap
 	)
 	Checkbox(
 		"otherFaction",
-		L["Show the other faction's routes"],
+		L["Show other faction's routes"],
 		L["Either faction can ride any boat or zeppelin."],
 		function()
 			ns.RefreshMap()
@@ -130,13 +130,13 @@ ns.Init(function()
 	)
 	Checkbox(
 		"tracker",
-		L["Show the next departures in the objective tracker near a dock, lift or tram"],
-		nil,
+		L["Show the next departures"],
+		L["In the objective tracker while you are near a dock, lift or tram."],
 		ns.RefreshTracker
 	)
 	Checkbox(
 		"share",
-		L["Share departure times with other players"],
+		L["Share departure times"],
 		L["Sends and receives sighting times over guild, party and at the dock. No chat messages are shown."]
 	)
 
@@ -170,15 +170,20 @@ ns.Init(function()
 			Settings.NotifyUpdate(variable)
 		end)
 	end
-	Checkbox("journey", L["Plan journeys with Shift-click on the world map or minimap"], nil, function()
-		if not ns.db.journey then
-			ns.ClearJourney()
+	Checkbox(
+		"journey",
+		L["Shift-click to plan journeys"],
+		L["Shift-click the world map or the minimap to plan a journey there."],
+		function()
+			if not ns.db.journey then
+				ns.ClearJourney()
+			end
 		end
-	end)
+	)
 	Checkbox(
 		"teleports",
-		L["Use your hearthstone and teleports"],
-		L["Journeys, and other addons' estimates from where you stand, can start with one, counting its cooldown."]
+		L["Use hearth and teleports"],
+		L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."]
 	)
 	local hearth = Settings.RegisterAddOnSetting(
 		page,
@@ -205,19 +210,19 @@ ns.Init(function()
 	)
 	Checkbox(
 		"guideStops",
-		L["Guide marks only where each step ends"],
-		L["The next boat, lift, flight master or your destination, rather than each turn of the walk on the way."],
+		L["Mark only where steps end"],
+		L["Guide marks the next boat, lift, flight master or your destination, not each turn of the walk on the way."],
 		ns.RefreshGuideStops
 	)
 	Checkbox(
 		"taxiRoute",
-		L["Show the flight to take on the flight map"],
+		L["Show the flight to take"],
 		L["Your journey's next flight is drawn on the flight master's map, with its destination lit up."],
 		ns.RefreshTaxiRoute
 	)
 	Checkbox(
 		"corpse",
-		L["Show the way back to your corpse"],
+		L["Show the way to your corpse"],
 		L["While you are a ghost, a red dotted path leads to your body. Your journey waits until you are alive again."],
 		ns.RefreshCorpseRun
 	)
@@ -226,17 +231,17 @@ ns.Init(function()
 	Page(L["Alerts"])
 	Checkbox(
 		"alerts",
-		L["Alert when a boat is about to arrive"],
+		L["Alert before a boat arrives"],
 		L["While you wait at a dock or ride a timed boat: a warning on screen and a flashing taskbar icon."]
 	)
-	Checkbox("alertSound", L["Play a sound with arrival alerts"], L["Plays even with the game in the background."])
+	Checkbox("alertSound", L["Play a sound with alerts"], L["Plays even with the game in the background."])
 
 	-- Interface: what the addon puts on screen.
 	Page(L["Interface"])
 	Checkbox(
 		"compass",
-		L["Show a compass while Guide is on"],
-		L["Your next turns, the next stop and your destination across the top of the screen."],
+		L["Show the compass"],
+		L["While Guide is on: your next turns, the next stop and your destination across the top of the screen."],
 		ns.RefreshCompass
 	)
 	Settings.RegisterInitializer(
@@ -257,13 +262,13 @@ ns.Init(function()
 	)
 	Checkbox(
 		"routeButton",
-		L["Show a route button on the minimap"],
+		L["Show a minimap route button"],
 		L["Starts and stops the route in one click. It turns gold while a route is on; right-click opens these settings."],
 		ns.RefreshRouteButton
 	)
 	Checkbox(
 		"whatsNew",
-		L["Tell me what's new after an update"],
+		L["Show what's new after updates"],
 		L["One line in chat the first time you log in after an update."]
 	)
 

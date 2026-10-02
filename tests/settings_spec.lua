@@ -207,7 +207,10 @@ local function Row(key)
 	error("no row for " .. key)
 end
 assert(Row("pins").setting.variable == "ShortestPathForever_pins" and Row("pins").setting.default)
-assert(Row("minimapPins").tooltip == "Also under Transport in the minimap's tracking menu.")
+assert(
+	Row("minimapPins").tooltip
+		== "Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."
+)
 assert(Row("guideStops").setting.default == true)
 assert(Row("taxiRoute").setting.default == true)
 local hearth = Row("hearthMinimumSavings")
