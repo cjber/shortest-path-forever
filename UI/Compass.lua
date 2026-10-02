@@ -29,9 +29,13 @@ local FADE = 80
 ---@field dirty? boolean
 ---@field idle number
 ---@field ticker? FunctionContainer
+---@field Mover Texture
+---@field MoverHint FontString
 ---@type SPFCompassFrame
 local frame
 local OnUpdate
+-- Being placed (Settings: Move the compass): shown without a journey and taking the mouse it otherwise ignores.
+local moving = false
 local TRANSPORTS = { boat = true, zeppelin = true, lift = true, tram = true, portal = true }
 local taxiIcons = { Alliance = "taxinode_alliance", Horde = "taxinode_horde", Neutral = "taxinode_neutral" }
 
@@ -152,7 +156,9 @@ end
 local function Update(elapsed)
 	local bend, nextBend, stop, goal = ns.GuideTargets()
 	if not (ns.db.compass and ns.db.journey and ns.IsJourneyGuided() and bend) then
-		frame:Hide()
+		frame:SetShown(moving)
+		frame:SetAlpha(1)
+		SetUpdating(false)
 		return
 	end
 	local x, y, _, map = UnitPosition("player")
@@ -228,14 +234,51 @@ local function OnHide()
 	frame.facing = nil
 end
 
+-- Where the player dragged it, else the stock place under the top of the screen. The client keeps a clamped frame
+-- on screen, so a place saved at another resolution or scale cannot strand it.
+local function Anchor()
+	frame:ClearAllPoints()
+	local x, y = ns.db.compassX, ns.db.compassY
+	if type(x) == "number" and type(y) == "number" then
+		frame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x, y)
+	else
+		frame:SetPoint("TOP", UIParent, "TOP", 0, -42)
+	end
+end
+
 local function Create()
 	local compass = CreateFrame("Frame", "ShortestPathForeverCompass", UIParent)
 	---@cast compass SPFCompassFrame
 	frame = compass
 	frame:SetSize(WIDTH, HEIGHT)
-	frame:SetPoint("TOP", 0, -42)
+	frame:SetClampedToScreen(true)
+	Anchor()
 	frame:SetFrameStrata("LOW")
 	frame:EnableMouse(false)
+	frame:SetMovable(true)
+	frame:RegisterForDrag("LeftButton")
+	frame:SetScript("OnDragStart", function()
+		frame:StartMoving()
+	end)
+	frame:SetScript("OnDragStop", function()
+		frame:StopMovingOrSizing()
+		ns.db.compassX, ns.db.compassY = frame:GetCenter()
+		Anchor()
+	end)
+	frame:SetScript("OnMouseUp", function(_, button)
+		if button == "RightButton" then
+			ns.db.compassX, ns.db.compassY = nil, nil
+			Anchor()
+		end
+	end)
+	frame.Mover = frame:CreateTexture(nil, "BACKGROUND")
+	frame.Mover:SetAllPoints()
+	frame.Mover:SetColorTexture(0, 0, 0, 0.5)
+	frame.Mover:Hide()
+	frame.MoverHint = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	frame.MoverHint:SetPoint("BOTTOM", frame, "BOTTOM", 0, 4)
+	frame.MoverHint:SetText(L["Drag to move. Right-click to reset."])
+	frame.MoverHint:Hide()
 	frame.ticks = {}
 	local directions = { L["N"], L["W"], L["S"], L["E"] }
 	for index = 0, 23 do
@@ -291,7 +334,7 @@ local function Create()
 end
 
 function ns.RefreshCompass()
-	if ns.db.compass and ns.db.journey and ns.IsJourneyGuided() and ns.GuideTargets() then
+	if moving or (ns.db.compass and ns.db.journey and ns.IsJourneyGuided() and ns.GuideTargets()) then
 		if not frame then
 			Create()
 		end
@@ -300,5 +343,21 @@ function ns.RefreshCompass()
 		Update(0)
 	elseif frame then
 		frame:Hide()
+	end
+end
+
+---@return boolean
+function ns.CompassMoving()
+	return moving
+end
+
+---@param value boolean
+function ns.MoveCompass(value)
+	moving = value
+	ns.RefreshCompass()
+	if frame then
+		frame:EnableMouse(moving)
+		frame.Mover:SetShown(moving)
+		frame.MoverHint:SetShown(moving)
 	end
 end

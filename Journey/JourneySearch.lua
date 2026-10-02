@@ -227,11 +227,17 @@ FinishSearch = function()
 	local estimate = EstimateKept(planned and planned.now or ns.NowMs())
 	local same = SameJourney(planned, followed)
 	local gain = estimate and planned and estimate.arrive - planned.arrive
+	-- A ride the planner preferred to a long walk is later than that walk by design, so its gain cannot argue for it
+	-- against the walk already shown.
+	local overWalk = planned
+		and planned.preferred
+		and followed
+		and #followed.legs == 1
+		and followed.legs[1].mode == "walk"
 	local better = estimate
 		and planned
 		and gain
-		and gain >= SWITCH_GAIN
-		and gain >= (estimate.arrive - planned.now) * SWITCH_SHARE
+		and (overWalk or gain >= SWITCH_GAIN and gain >= (estimate.arrive - planned.now) * SWITCH_SHARE)
 	local valid = true
 	for _, leg in ipairs(planned and planned.legs or {}) do
 		if leg.walkError then

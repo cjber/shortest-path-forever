@@ -11,6 +11,10 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **Long walks take the boat.** A journey that would be one walk of ten minutes or more now takes boats, trams or flights when they arrive nearly as soon, such as the Stormwind and Menethil boats from Ironforge to Tirisfal Glades.
+
+- **Move the compass.** Settings → Interface → Move the compass lets you drag it anywhere on screen; right-click it to put it back. The journey tracker already moves: turn off Attach to quest tracker and drag it.
+
 ## [1.7.0] - 2026-10-01
 
 - **Follow your movement speed.** Mounted speeds, boosts and slows affect route choices and arrival times, including while standing still. A speed change updates the active journey promptly.

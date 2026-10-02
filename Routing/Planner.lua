@@ -12,6 +12,9 @@ ns.Planner = Planner
 local BOARDING = 3000
 -- A teleport to another continent shows a loading screen: the same allowance as a portal's.
 local LOADING = 5000
+-- A journey that would be one walk of at least LONG_WALK takes a ride instead when that arrives within RIDE_MARGIN
+-- of the walk's time.
+local LONG_WALK, RIDE_MARGIN = 600000, 1.1
 
 local function QuestPointValid(point)
 	return point
@@ -276,6 +279,17 @@ end
 local function Revisits(labels, current, target)
 	while current do
 		if labels.node[current] == target then
+			return true
+		end
+		current = labels.parent[current]
+	end
+	return false
+end
+
+-- Whether anything but walking led here: a place standing where the journey starts is no ride.
+local function Rode(labels, current)
+	while labels.parent[current] do
+		if labels.edge[current].mode ~= "walk" then
 			return true
 		end
 		current = labels.parent[current]
@@ -586,7 +600,7 @@ local function Plan(options)
 			end
 		end
 	end
-	local function Search(withoutHearth, cutoff)
+	local function Search(withoutHearth, cutoff, ridden)
 		local labels = topology.labels
 			or {
 				node = {},
@@ -663,6 +677,9 @@ local function Plan(options)
 						canLeave = false
 					end
 					if walked and edge.mode == "walk" and edge.yards > 0 then
+						canLeave = false
+					end
+					if ridden and edge.to == goal and edge.mode == "walk" and not Rode(labels, current) then
 						canLeave = false
 					end
 					if canLeave and lower[edge.to] and not Revisits(labels, current, edge.to) then
@@ -790,10 +807,24 @@ local function Plan(options)
 				-- The admissible bound can prove the saving before the full alternative settles.
 				local baseline = Search(true, planned.arrive + minimum * 1000)
 				if baseline and baseline.arrive - planned.arrive < minimum * 1000 then
-					return baseline
+					planned = baseline
 				end
 				break
 			end
+		end
+	end
+	-- A long way on foot is one line with nothing to follow through whatever lies between, so a ride nearly as quick
+	-- wins. It never spends the hearthstone: that would trade a cooldown for a slower arrival.
+	if
+		planned
+		and #planned.legs == 1
+		and planned.legs[1].mode == "walk"
+		and planned.arrive - options.now >= LONG_WALK
+	then
+		local ridden = Search(true, options.now + (planned.arrive - options.now) * RIDE_MARGIN, true)
+		if ridden then
+			ridden.preferred = true
+			return ridden
 		end
 	end
 	return planned

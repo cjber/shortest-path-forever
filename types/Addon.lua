@@ -139,6 +139,8 @@
 ---@field share? boolean
 ---@field guideStops? boolean
 ---@field compass? boolean
+---@field compassX? number the compass's centre from the screen's bottom left, once dragged
+---@field compassY? number
 ---@field routeButton? boolean
 ---@field corpse? boolean
 ---@field whatsNew? boolean
@@ -218,6 +220,7 @@ ShortestPathForeverPathData = nil
 ---@field preview? boolean
 ---@field prepared? boolean
 ---@field waterMode? boolean
+---@field preferred? boolean a ride the planner chose over a slightly quicker long walk
 ---@class SPFWalkCost
 ---@field from SPFPoint
 ---@field to SPFPoint

@@ -38,7 +38,7 @@ Each feature has more detail in [docs/features.md](docs/features.md).
   ![A smooth flight line leaving Stormwind](docs/screenshots/flight.png)
 - **Compass.** A slim strip at the top of the screen marks Guide's next two turns, the next stop and your
   destination, in the game's own ticks, gold letters and waypoint pin. *Show a compass while Guide is on* in
-  `/path` turns it off.
+  `/path` turns it off; *Move the compass* lets you drag it anywhere.
   ![The compass strip with the next turns and destination](docs/screenshots/compass.png)
 - **A route button.** A round button on the minimap in the game's own minimap button art starts and stops the
   route in one click and turns gold while a route is on. Right-click opens `/path`.
