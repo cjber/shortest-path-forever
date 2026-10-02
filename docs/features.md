@@ -8,7 +8,7 @@ The detail behind each feature in the [README](../README.md).
   tunnels and between a city's levels, such as Dun Algaz and the Undercity, and walks keep out of water, which is slow and risky, unless you have Water Walking or Levitate (the step asks you to cast it). The route is drawn
   on the map and minimap, walking legs dotted, and the steps sit in the objective tracker like a tracked
   quest. It replans as you move but only switches to a clearly faster way (at least 30 seconds and a tenth of the time left), and stays aboard if you are already riding. **Guide**, on from the start
-  of every journey (click the tracker header to turn it off), moves the game's own waypoint marker to where each step ends, the next boat, lift or flight master (or, with *Guide marks only where each step ends* off in `/path`, along the route turn by turn, round walls), and hands your tracked quest back when you finish. To head for a quest, pick **Plan journey** from its right-click menu in the objective
+  of every journey (click the tracker header to turn it off), moves the game's own waypoint marker to where each step ends, the next boat, lift or flight master (or, with *Mark only where steps end* off in `/path`, along the route turn by turn, round walls), and hands your tracked quest back when you finish. To head for a quest, pick **Plan journey** from its right-click menu in the objective
   tracker or quest log, or Shift-click its marker on the map; a finished quest routes to its turn-in.
   A journey can start with your Hearthstone, a mage's city teleport (with a Rune of Teleportation), a shaman's
   Astral Recall or a druid's Teleport: Moonglade, after its own icon and named in your game's language:
@@ -17,7 +17,7 @@ The detail behind each feature in the [README](../README.md).
   bound at an innkeeper with the addon on; bound anywhere else since, the hearth is left out until you bind
   again. It is kept with the addon's saved settings, which the WoW: Forever client does not load yet, so after a
   `/reload` or relog the hearth is left out until you next bind. Class teleports need no bind point. Turn this
-  off with *Use your hearthstone and teleports* in `/path`.
+  off with *Use hearth and teleports* in `/path`.
   ![Journey steps from Auberdine to Silithus with time and distance remaining](screenshots/tracker.png)
 
   ![Auberdine’s piers on the minimap, with the dotted route and Guide’s native waypoint](screenshots/minimap.png)
@@ -38,8 +38,8 @@ The detail behind each feature in the [README](../README.md).
 
 - **A compass that looks like the game.** A slim strip at the top of the screen follows your facing and marks
   Guide's next two turns, the next stop and your destination, in the map's own parchment ticks and gold letters,
-  fading out at each end, with your destination drawn as the game's own waypoint pin. On by default; *Show a
-  compass while Guide is on* in `/path` turns it off.
+  fading out at each end, with your destination drawn as the game's own waypoint pin. On by default; *Show the
+  compass* in `/path` turns it off.
   ![The compass strip with the next turns and destination](screenshots/compass.png)
 
 - **A route button on the minimap.** A round button in the game's own minimap button art starts and stops the
@@ -56,7 +56,7 @@ The detail behind each feature in the [README](../README.md).
   reads *Return to your corpse* with the time and distance left. Your journey, or one another addon asks for while
   you are a ghost, waits and plans again from wherever you come back to life: at your corpse, at the spirit healer
   or from another player's resurrection. A corpse in another world map, such as a dungeon, gets no path. *Show the
-  way back to your corpse* in `/path` turns it off.
+  way to your corpse* in `/path` turns it off.
 
 - **Docks on the world map.** Each pier gets the stock ferry icon and each zeppelin tower a matching
   zeppelin, on its zone and continent map. Hover one to see where each boat goes next, when it arrives and

@@ -28,8 +28,8 @@ Each feature has more detail in [docs/features.md](docs/features.md).
   the objective tracker, and it replans as you move.
   ![Journey steps from Auberdine to Silithus with time and distance remaining](docs/screenshots/tracker.png)
 - **Guide.** The game's own waypoint marker leads you to where each step ends, the next boat, lift, flight master or
-  your destination, and hands your tracked quest back when you arrive. Turn off *Guide marks only where each step
-  ends* in `/path` and it leads you turn by turn instead, round walls. Click the tracker header to turn Guide off.
+  your destination, and hands your tracked quest back when you arrive. Turn off *Mark only where steps end*
+  in `/path` and it leads you turn by turn instead, round walls. Click the tracker header to turn Guide off.
   ![Auberdine’s piers on the minimap, with the dotted route and Guide’s native waypoint](docs/screenshots/minimap.png)
 - **Flight map guidance.** At the flight master, your journey's next flight is drawn with the game's own route
   lines, and its final destination lights up. Hovering another flight point shows its route as usual; moving away
@@ -37,7 +37,7 @@ Each feature has more detail in [docs/features.md](docs/features.md).
 
   ![A smooth flight line leaving Stormwind](docs/screenshots/flight.png)
 - **Compass.** A slim strip at the top of the screen marks Guide's next two turns, the next stop and your
-  destination, in the game's own ticks, gold letters and waypoint pin. *Show a compass while Guide is on* in
+  destination, in the game's own ticks, gold letters and waypoint pin. *Show the compass* in
   `/path` turns it off; *Move the compass* lets you drag it anywhere.
   ![The compass strip with the next turns and destination](docs/screenshots/compass.png)
 - **A route button.** A round button on the minimap in the game's own minimap button art starts and stops the
@@ -46,7 +46,7 @@ Each feature has more detail in [docs/features.md](docs/features.md).
   ![Nearby services in the world-map menu](docs/screenshots/services.png)
 - **Back to your corpse.** Once you release as a ghost, a red dotted path in the colour of your corpse's tombstone
   leads back to it on both maps, with Guide and the time in the tracker. Your journey waits and comes back when you
-  are alive again. *Show the way back to your corpse* in `/path` turns it off.
+  are alive again. *Show the way to your corpse* in `/path` turns it off.
 - **Docks on the world map.** Piers and zeppelin towers get the stock ferry icon and a matching zeppelin. Hover one for
   where each boat goes next and when; the docks it sails to light up and its routes are drawn. Click one to open the
   map at the other end, where a ping marks the dock; one with several destinations asks which.
@@ -83,7 +83,7 @@ Open a flight master’s map once after installing to sync the flight points you
 | `/path debug` | Keep a trace of your position and ride matching, for reporting a ride that did not sync |
 
 Every feature has its own switch in the settings. Searches and tracker updates wait until combat ends.
-In Guidance, **Minimum Hearthstone saving (seconds)** lets you keep your Hearthstone for bigger time savings.
+In Guidance, **Minimum Hearthstone saving** lets you keep your Hearthstone for bigger time savings.
 It defaults to zero; class teleports still count as alternatives.
 
 It's in English for now. Translations are welcome as a pull request, or pasted into an issue, on

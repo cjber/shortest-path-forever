@@ -67,7 +67,14 @@ local function frame()
 		self.point = nil
 	end
 	f.RegisterEvent = noop
-	f.SetMovable, f.SetClampedToScreen, f.RegisterForDrag = noop, noop, noop
+	f.SetMovable, f.RegisterForDrag = noop, noop
+	f.clamped = true
+	function f:SetClampedToScreen(value)
+		self.clamped = value
+	end
+	function f:IsClampedToScreen()
+		return self.clamped
+	end
 	function f.CreateFontString(_)
 		return { SetPoint = noop, SetText = noop }
 	end
@@ -293,10 +300,12 @@ check(native.point[1] == "TOPLEFT" and native.point[2] == parent, "private host 
 editMode.active = true
 eventRegistry:TriggerEvent("EditMode.Enter")
 check(host.shown == false, "private tracker hides while Edit Mode owns native slot")
+check(native.clamped == true, "Edit Mode gets the native frame's screen clamp back")
 editMode.active = false
 eventRegistry:TriggerEvent("EditMode.Exit")
 drain()
 check(host.shown == true, "private tracker returns after Edit Mode")
+check(native.clamped == false, "restacking after Edit Mode unclamps the native frame again")
 check(native.point[1] == "TOPLEFT" and native.point[2] == parent, "native objectives stay independently anchored")
 check(ns.TrackerHost.IsAttached(first) and not ns.TrackerHost.IsAttached(nil), "ownership lookup")
 local attachmentChanges = 0
@@ -388,7 +397,15 @@ check(
 
 ns.TrackerHost.SetAttached(true)
 drain()
+check(
+	native.clamped == false,
+	"stacking unclamps the native frame so its restored height cannot push it over our column"
+)
 combat = true
+local stackedPoint = host.point
+host.scripts.OnEvent(host, "PLAYER_REGEN_DISABLED")
+drain()
+check(host.point == stackedPoint, "combat leaves our column alone while the native frame stays stacked below it")
 local updatesBeforeCombat = first.updates
 native.top = 500
 nativeSetPoint(native, "TOPRIGHT", parent, "TOPRIGHT", 0, -100)

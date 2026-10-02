@@ -49,6 +49,16 @@ local attachmentCallbacks = {}
 -- secure module collection.
 local nativeAnchor
 local appliedNativeAnchor
+-- Whether the native frame was clamped to the screen before we stacked it below our column.
+local nativeClamped
+
+-- Hands the native frame's screen clamp back whenever it stops being stacked under our column.
+local function RestoreNativeClamp()
+	if nativeClamped then
+		ObjectiveTrackerFrame:SetClampedToScreen(true)
+	end
+	nativeClamped = nil
+end
 local function IsAppliedNativeAnchor(point, relativeTo, relativePoint, x, y)
 	return appliedNativeAnchor
 		and appliedNativeAnchor.point == point
@@ -338,6 +348,7 @@ local function Layout()
 				end
 			end
 			appliedNativeHeight = nil
+			RestoreNativeClamp()
 		end
 		attached = desired
 	end
@@ -366,6 +377,10 @@ local function Layout()
 		-- The native tracker is protected: in combat it cannot be restacked below our column, and Blizzard returns it
 		-- to its saved Edit Mode slot. Move our private column above or beside the native frame, keeping clear of
 		-- the minimap, and resume the full reflow on PLAYER_REGEN_ENABLED.
+		if appliedNativeAnchor and IsAppliedNativeAnchor(ObjectiveTrackerFrame:GetPoint()) then
+			-- Still stacked where the last reflow left both frames: nothing to move.
+			return
+		end
 		CaptureNativeAnchor()
 		host:SetWidth(ObjectiveTrackerFrame:GetWidth())
 		host:ClearAllPoints()
@@ -483,6 +498,15 @@ local function Layout()
 	local hostScale = host.GetEffectiveScale and host:GetEffectiveScale() or 1
 	local hostLeft = (host:GetLeft() or 0) * hostScale / screenScale
 	local nativeY = (host:GetBottom() or 0) * hostScale / screenScale - UIParent:GetHeight()
+	-- Blizzard restores the native frame's own height whenever it updates, and in combat we cannot shorten it
+	-- again. Clamped to the screen, the taller frame would be pushed up over our column; unclamped it only runs
+	-- off the bottom edge until combat ends.
+	if ObjectiveTrackerFrame.IsClampedToScreen then
+		if nativeClamped == nil then
+			nativeClamped = ObjectiveTrackerFrame:IsClampedToScreen() and true or false
+		end
+		ObjectiveTrackerFrame:SetClampedToScreen(false)
+	end
 	ObjectiveTrackerFrame:ClearAllPoints()
 	local nativeX = hostLeft * screenScale / nativeScale
 	local nativeOffsetY = nativeY * screenScale / nativeScale
@@ -586,6 +610,8 @@ if EventRegistry and EventRegistry.RegisterCallback then
 			and EditModeManagerFrame.IsEditModeActive
 			and EditModeManagerFrame:IsEditModeActive()
 		if editing and attached then
+			-- Edit Mode drags the native frame itself, so it needs its own edge-of-screen clamp back.
+			RestoreNativeClamp()
 			host:Hide()
 		else
 			host:Show()
@@ -622,7 +648,8 @@ function api.Debug()
 			frame.GetEffectiveScale and frame:GetEffectiveScale() or 1
 		)
 	end
-	return ("combat=%s shown=%s hostH=%.1f host[%s] g[%s] nativeH=%.1f native[%s] g[%s] uiS%.2f"):format(
+	local form = "combat=%s shown=%s hostH=%.1f host[%s] g[%s] nativeH=%.1f native[%s] g[%s] uiS%.2f"
+	return (form .. " stacked=%s clamped=%s"):format(
 		tostring(InCombatLockdown()),
 		tostring(host:IsShown()),
 		host:GetHeight() or -1,
@@ -631,7 +658,9 @@ function api.Debug()
 		ObjectiveTrackerFrame:GetHeight() or -1,
 		point(ObjectiveTrackerFrame),
 		geometry(ObjectiveTrackerFrame),
-		UIParent.GetEffectiveScale and UIParent:GetEffectiveScale() or 1
+		UIParent.GetEffectiveScale and UIParent:GetEffectiveScale() or 1,
+		tostring(IsAppliedNativeAnchor(ObjectiveTrackerFrame:GetPoint()) and true or false),
+		tostring(ObjectiveTrackerFrame.IsClampedToScreen and ObjectiveTrackerFrame:IsClampedToScreen())
 	)
 end
 

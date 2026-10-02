@@ -17,6 +17,10 @@ ChatTypeInfo = nil
 RaidWarningUtil = nil
 ---@type {Normal: ColorMixin, NormalHighlight: ColorMixin, Header: ColorMixin}
 OBJECTIVE_TRACKER_COLOR = nil
+---@type string
+OFF = nil
+---@type {Label: {Right: integer}}
+MinimalSliderWithSteppersMixin = nil
 
 ---@param value number
 ---@param minimum number
