@@ -139,27 +139,15 @@ event("ZONE_CHANGED_NEW_AREA")
 assert(not ns.Corpse.Active() and destination == nil, "no journey to restore")
 
 -- With a walking map, the run follows the searched path, walking on water as a ghost does.
-local jobs = {}
-ns.Path = {
-	HasData = function()
-		return true
-	end,
-	Find = function(_, from, to, callback, water)
-		local job = { from = from, to = to, callback = callback, water = water }
-		jobs[#jobs + 1] = job
-		return job
-	end,
-	Cancel = function(job)
-		job.cancelled = true
-	end,
-}
+local walking, jobs = driver.path, {}
+walking.auto, walking.finds = false, jobs
 driver.move({ map = 1, x = 300, y = 0 })
 corpseAt(0, 0)
 event("PLAYER_ALIVE")
 assert(#jobs == 1 and jobs[1].water == true, "one search, over water")
 assert(#drawn.legs[1].walkPoints == 2, "a straight line until it is found")
 local path = { { map = 1, x = 300, y = 0 }, { map = 1, x = 150, y = 60 }, { map = 1, x = 0, y = 0 } }
-jobs[1].callback(path, 330)
+walking.finish(jobs[1], path, 330)
 assert(drawn.legs[1].walkPoints[2] == path[2] and red(drawn.legs[1]), "the found path, in red-orange")
 -- Straying from it searches again, at most every five seconds.
 driver.move({ map = 1, x = 300, y = 200 })
@@ -171,14 +159,12 @@ assert(jobs[2].cancelled and not ns.Corpse.Active() and destination == nil)
 -- A walk that fails says why, in Journey's words, rather than always "no walking path".
 ghost = true
 event("PLAYER_ALIVE")
-jobs[#jobs].callback(nil, "error")
+walking.finish(jobs[#jobs], nil, "error")
 rows = select(2, ns.JourneyInfo())
 assert(rows[1].text:find("walking search failed", 1, true), rows[1].text)
 ghost = false
 event("PLAYER_UNGHOST")
-ns.Path.HasData = function()
-	return false
-end
+walking.data = false
 ghost = true
 event("PLAYER_ALIVE")
 rows = select(2, ns.JourneyInfo())

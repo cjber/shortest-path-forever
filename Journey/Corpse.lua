@@ -66,7 +66,7 @@ local function Search(current, here)
 	leg.walkPoints = ns.Planner.WalkPoints(here, current.point)
 	if here.map ~= current.point.map then
 		leg.walkPoints, leg.walkError = {}, "outside"
-	elseif not (ns.Path and ns.Path.HasData(here.map)) then
+	elseif not ns.Path.HasData(here.map) then
 		leg.walkError = "nodata"
 	else
 		local job

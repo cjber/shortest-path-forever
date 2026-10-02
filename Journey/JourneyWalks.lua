@@ -1,0 +1,221 @@
+---@class SPFNamespace
+local ns = select(2, ...)
+
+-- The walks a journey's search has measured, kept behind JourneySearch.lua: the drawn path of each walking leg,
+-- searched once and shared by every plan that walks it, and the walks on from a bind point.
+local WALK_CACHE_LIMIT = 64
+
+---@class SPFJourneyWalks
+local Walks = ns.JourneySearch.Walks
+local SamePlace = ns.JourneySearch.SamePlace
+
+-- A finished leg search: the path it found (or the one it failed to replace), why it failed, its running yards.
+---@class SPFMeasuredWalk
+---@field points? SPFWalkPoints
+---@field reason? string
+---@field cost? number
+
+---@type table<string, SPFMeasuredWalk>
+local walkCache = {}
+local walkOrder, walkPending = {}, {}
+local pathJobs, pathVersion = {}, 0
+local pendingWalks = 0
+
+local function WalkKey(from, to)
+	return table.concat({ from.map, from.x, from.y, from.z or "", to.x, to.y, to.z or "" }, ":")
+end
+
+local function CacheWalk(key, entry)
+	if not walkCache[key] then
+		walkOrder[#walkOrder + 1] = key
+		if #walkOrder > WALK_CACHE_LIMIT then
+			walkCache[table.remove(walkOrder, 1)] = nil
+		end
+	end
+	walkCache[key] = entry
+end
+
+local function FindWalk(planned, leg, key, water, done)
+	local version, previous = pathVersion, leg.walkPoints
+	leg.walkDrawn = previous ~= nil
+	leg.walkPoints = previous or ns.Planner.WalkPoints(leg.from, leg.to)
+	local function apply(points, cost)
+		leg.walkError = not points and cost or nil
+		leg.walkPoints = points or previous or {}
+		if points then
+			leg.measured, leg.walkDrawn, leg.wet = true, true, points.wet
+			if planned.preview then
+				leg.walkCost, leg.yards = cost, cost
+			end
+		end
+	end
+	if walkPending[key] then
+		walkPending[key][#walkPending[key] + 1] = apply
+		return
+	end
+	local waiting = { apply }
+	walkPending[key] = waiting
+	pendingWalks = pendingWalks + 1
+	local job = ns.Path.Find(leg.from.map, leg.from, leg.to, function(points, cost, finished)
+		pathJobs[finished] = nil
+		if version ~= pathVersion then
+			return
+		end
+		pendingWalks = pendingWalks - 1
+		walkPending[key] = nil
+		for _, callback in ipairs(waiting) do
+			callback(points, cost)
+		end
+		CacheWalk(key, { points = points or previous, reason = not points and cost or nil, cost = points and cost })
+		if ns.db.debug and ns.Planner.WalkContradicts(leg, points and cost) then
+			ns.Print(string.format("walking cost mismatch: planned %.1f, found %s", leg.yards, tostring(cost)))
+		end
+		done()
+	end, water)
+	pathJobs[job] = true
+end
+
+-- Gives each of a plan's walking legs its path: the measured one, or the best drawing there is while a search for
+-- it runs. drawn are the legs on show, whose paths stand in for the walks that replace them. done runs after each
+-- search lands, once its legs are updated.
+---@param planned SPFPlan?
+---@param drawn SPFLeg[]?
+---@param water boolean? whether walks may cross water
+---@param done fun()
+function Walks.Prepare(planned, drawn, water, done)
+	if not planned or planned.prepared then
+		return
+	end
+	planned.prepared = true
+	for _, leg in ipairs(planned.legs) do
+		if leg.mode == "walk" then
+			local key = WalkKey(leg.from, leg.to)
+			local entry = walkCache[key]
+			leg.measured, leg.walkError, leg.walkCost = false, nil, leg.yards
+			if entry then
+				leg.walkPoints, leg.measured = entry.points or {}, entry.reason == nil
+				leg.walkDrawn = entry.points ~= nil
+				leg.wet, leg.walkError = entry.points and entry.points.wet, entry.reason
+				if planned.preview and entry.cost then
+					leg.walkCost, leg.yards = entry.cost, entry.cost
+				end
+			elseif leg.from.map == leg.to.map and ns.Path.HasData(leg.from.map) then
+				-- A replacement may itself still be pending while drawing an older result; preserve that too.
+				for _, previous in ipairs(drawn or {}) do
+					if previous.mode == "walk" and SamePlace(previous.to, leg.to) and previous.walkDrawn then
+						leg.walkPoints = previous.walkPoints
+						break
+					end
+				end
+				FindWalk(planned, leg, key, water, done)
+			else
+				leg.walkPoints, leg.walkError = {}, "nodata"
+			end
+		end
+	end
+end
+
+-- What the search for a leg's walk found, once it has landed.
+---@param leg SPFLeg
+---@return SPFMeasuredWalk?
+function Walks.Measured(leg)
+	return walkCache[WalkKey(leg.from, leg.to)]
+end
+
+-- Leg searches still running.
+---@return number
+function Walks.Pending()
+	return pendingWalks
+end
+
+-- Stops the leg searches in flight; their legs keep what they drew.
+function Walks.Cancel()
+	pathVersion = pathVersion + 1
+	for job in pairs(pathJobs) do
+		ns.Path.Cancel(job)
+	end
+	pathJobs, walkPending, pendingWalks = {}, {}, 0
+end
+
+-- Measured in another water mode, or for a journey that is over.
+function Walks.Clear()
+	walkCache, walkOrder = {}, {}
+end
+
+-- The bind point moves, so its walks on to the fixed places cannot be baked like a class teleport's: each is searched
+-- once per bind point and water mode, alongside the journey's own endpoint searches.
+local landings = {}
+---@param place SPFTeleportPlace
+---@param water boolean?
+---@return {targets: SPFPlace[], costs?: (number|false)[], waiting?: fun()[]}?
+local function Landing(place, water)
+	if not (place.bind and ns.Path.HasData(place.map)) then
+		return nil
+	end
+	local key = string.format("%d:%.17g:%.17g:%s", place.map, place.x, place.y, tostring(water))
+	local entry = landings[key]
+	if not entry then
+		local mass, targets = ns.Planner.Landmass(place, ns.Landmasses or {}), {}
+		local places = ns.Planner.Places({
+			docks = ns.Docks,
+			taxiNodes = ns.TaxiNodes,
+			portals = ns.Portals,
+			faction = UnitFactionGroup("player"),
+		})
+		for _, target in ipairs(places) do
+			if target.map == place.map and ns.Planner.Landmass(target, ns.Landmasses or {}) == mass then
+				targets[#targets + 1] = target
+			end
+		end
+		entry = { targets = targets, waiting = {} }
+		landings[key] = entry
+		ns.Path.FindMany(place.map, place, targets, function(costs)
+			local waiting = entry.waiting or {}
+			entry.costs, entry.waiting = costs, nil
+			for _, callback in ipairs(waiting) do
+				callback()
+			end
+		end, water)
+	end
+	return entry
+end
+
+-- Whether a bind point's walks are still being searched; callback, when given, runs once each search ends. With
+-- ready, only a teleport castable before `before` counts: one ready later cannot beat a route arriving then.
+---@param teleports SPFTeleportPlace[]?
+---@param water boolean?
+---@param callback? fun()
+---@param ready? table<number, number>
+---@param before? number
+---@return boolean
+function Walks.LandingPending(teleports, water, callback, ready, before)
+	local pending = false
+	for index, place in ipairs(teleports or {}) do
+		local entry = Landing(place, water)
+		if entry and entry.waiting and (not ready or (ready[index] and ready[index] < before)) then
+			pending = true
+			if callback then
+				entry.waiting[#entry.waiting + 1] = callback
+			end
+		end
+	end
+	return pending
+end
+
+-- The measured walks on from each usable bind point.
+---@param teleports SPFTeleportPlace[]?
+---@param water boolean?
+---@return SPFWalkCost[]
+function Walks.Landings(teleports, water)
+	local walks = {}
+	for _, place in ipairs(teleports or {}) do
+		local entry = Landing(place, water)
+		local costs = entry and entry.costs
+		if entry and costs then
+			for i, target in ipairs(entry.targets) do
+				walks[#walks + 1] = { from = place, to = target, cost = costs[i] }
+			end
+		end
+	end
+	return walks
+end

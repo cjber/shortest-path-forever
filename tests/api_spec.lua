@@ -85,6 +85,7 @@ do
 	ns.StartJourney = start
 end
 equal(API.Navigate("AGF", 1, 0.6, 0.5, "Quest giver"), true, "start guidance")
+driver.path.settle()
 equal(API.Ended("AGF"), nil, "running")
 equal(ns.IsJourneyGuided(), true, "arrow enabled")
 equal(ns.JourneyInfo(), "Journey to Quest giver", "title propagated")
@@ -402,6 +403,7 @@ for i = 1, 64 do
 end
 many[65] = nil
 equal(API.NavigateRoute("AGF", many), true, "coincident stops accepted")
+driver.path.settle()
 equal(API.CurrentStop("AGF"), 1, "coincident route does not recurse on start")
 driver.update(0.1)
 equal(API.CurrentStop("AGF"), 2, "at most one coincident stop starts per update")

@@ -78,8 +78,9 @@ Things reached indirectly. The dead-code lens must treat these as referenced.
 - Slash commands `/path`, `/shortestpath` (`SLASH_SHORTESTPATHFOREVER*`, `SlashCmdList`).
 - `tools/*.py` are run by hand (README) and `tools/changelog.py` by `.github/workflows/release.yml`;
   `tools/bake_walks.lua` writes `Data/Walks.lua`; `tools/baker/bake.sh` drives `gen_nav.py` and the C# baker.
-- Test seams: `Path.after`, `Path.clock` and `Path.budget` are replaced by specs; Journey's `ns.Path == nil`
-  branches serve specs that load Journey without Path. Guards around them are not dead. Planner.Plan's
+- Test seams: `Path.after`, `Path.clock` and `Path.budget` are replaced by specs. Specs that load Journey without
+  the walking search get `tests/path_fake.lua`, the whole `ns.Path` surface Journey calls; Journey has no
+  branch for a missing or partial `ns.Path`. Planner.Plan's
   `exactMaps` option has no runtime caller; planner_spec and journey_optimal_spec use it for exact-cost
   plans, so it stays.
 - The `taxiLog` / debug trace in SavedVariables is read by a human after `/path debug`; a bounded,
@@ -180,7 +181,7 @@ Shapes this codebase keeps producing. Check new code against them.
   Path failure reasons (`Journey/Journey.lua` `WALK_FAILURE`), sighting `source` `"you"|"player"` (`Transport/Model.lua`), crossing
   modes in `UI/Route.lua`.
 - **second copy of a fact**: another module's fact restated (`parallel-implementations`): Compass's
-  `transportIcons` beside `ns.SetTransportIcon`; `bakedBound` (`Journey/JourneyCosts.lua`) re-deriving Planner's
+  `transportIcons` beside `ns.SetTransportIcon`; `bakedBound` (`Journey/JourneySearch.lua`) re-deriving Planner's
   Walks.lua keys; the TaxiPathNode stop flag as a literal in `gen_transit.py`.
 - **stale spec stub**: spec, bench and UI-harness stubs outliving the production field they stood in for
   (`dead-code`): `owner.loading` in `memory_bench.lua`, a `NewTicker` stub in `sync_spec.lua`, client stubs in

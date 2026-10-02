@@ -185,11 +185,15 @@ ns.FormatCountdown = tostring
 ns.SetJourneyRoute = function(_, route)
 	shown = route
 end
+-- Until a spec says otherwise the walking search answers at once, with the straight line.
+local path = assert(loadfile(root .. "/tests/path_fake.lua"))()()
+ns.Path = path.Path
 load("Core/Speed.lua")
 load("Transport/Model.lua")
 load("Routing/Planner.lua")
 load("Journey/JourneySteps.lua")
-load("Journey/JourneyCosts.lua")
+load("Journey/JourneySearch.lua")
+load("Journey/JourneyWalks.lua")
 load("Journey/JourneyGuide.lua")
 load("Journey/Journey.lua")
 load("Journey/JourneyInput.lua")
@@ -211,6 +215,7 @@ ns.DockPoint = function(id)
 end
 return {
 	ns = ns,
+	path = path,
 	env = env,
 	secret = secret,
 	fire = fire,
@@ -221,6 +226,7 @@ return {
 	begin = function(from, to)
 		here, target = from, to
 		assert(click(map, "LeftButton"))
+		path.settle()
 	end,
 	move = function(point)
 		here = point
@@ -237,6 +243,7 @@ return {
 				f:OnUpdate(seconds)
 			end
 		end
+		path.settle()
 	end,
 	shown = function()
 		return shown
