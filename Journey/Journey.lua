@@ -181,7 +181,7 @@ end
 function ns.ShowJourneyMap()
 	local place = CorpseRun() and ns.Corpse.Point() or goal
 	local location = place and ns.Locate(place)
-	OpenWorldMap(location and location.uiMap)
+	C_Map.OpenWorldMap(location and location.uiMap)
 end
 
 -- Shared by the tracker and the goal pin, including on a fullscreen map.

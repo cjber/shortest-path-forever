@@ -13,6 +13,7 @@ local waypoint, supertracked, cleared = nil, false, 0
 local trackedQuest, playerUiMap = 0, nil
 local onTaxi, facing, minimapShape = false, 0, nil
 local moving, combat = false, false
+local mapOpens = 0
 _G.IsPlayerMoving = function()
 	return moving
 end
@@ -653,6 +654,9 @@ _G.CreateVector2D = function(x, y)
 	}
 end
 _G.C_Map = {
+	OpenWorldMap = function()
+		mapOpens = mapOpens + 1
+	end,
 	GetBestMapForUnit = function()
 		return playerUiMap or (posMap == 0 and 1415 or 1414)
 	end,
@@ -856,7 +860,6 @@ _G.MenuUtil = {
 		return stubframe()
 	end,
 }
-_G.OpenWorldMap = noop
 _G.Menu = {
 	ModifyMenu = function(tag, fn)
 		menus[tag] = fn

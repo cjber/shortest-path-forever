@@ -63,7 +63,6 @@ read_globals = {
 	"NORMAL_FONT_COLOR",
 	"ObjectiveTrackerFrame",
 	"ObjectiveTrackerManager",
-	"OpenWorldMap",
 	"ORANGE_FONT_COLOR",
 	"Settings",
 	"MinimalSliderWithSteppersMixin",

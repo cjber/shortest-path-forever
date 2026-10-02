@@ -14,6 +14,7 @@ verbatim rather than rewritten as the addon moves.
 ## [1.8.0] - 2026-10-02
 
 - **Long walks take the boat.** A journey that would be one walk of ten minutes or more now takes boats, trams or flights when they arrive nearly as soon, such as the Stormwind and Menethil boats from Ironforge to Tirisfal Glades.
+- **Opening the map no longer breaks it in a fight.** After Show on map, a dock or portal pin, or the nearby services menu had opened the world map, every later look at the map in combat raised a blocked-action warning and lost its quest markers until a reload. The map now opens cleanly and keeps its markers in combat.
 - **The Hearthstone slider shows its value.** Minimum Hearthstone saving now reads out the time it is set to, and its name is no longer cut short.
 - **The guides stay put in a fight.** In combat the game stretches its quest tracker and nudges it back on screen, which shoved the Forever sections sideways across the screen until the fight ended. They now stay stacked above the quest list.
 - **Move the compass.** Settings → Interface → Move the compass lets you drag it anywhere on screen; right-click it to put it back. The journey tracker already moves: turn off Attach to quest tracker and drag it.

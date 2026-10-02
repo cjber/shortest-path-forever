@@ -391,8 +391,9 @@ local function Ends(mapID, candidates)
 	return ends
 end
 
-local function ShowEnd(map, target)
-	map:SetMapID(target.uiMap)
+-- The pins live only on the world map, and the game's own handler for this request retargets it.
+local function ShowEnd(target)
+	C_Map.OpenWorldMap(target.uiMap)
 	local x, y = MapPosition(target.point, target.uiMap)
 	if x then
 		provider:Ping(x, y)
@@ -405,14 +406,14 @@ local function OpenEnds(pin, button)
 	if button ~= "LeftButton" or IsModifierKeyDown() then
 		return
 	end
-	local map, ends = pin:GetMap(), pin:GetEnds()
+	local ends = pin:GetEnds()
 	if #ends == 1 then
-		ShowEnd(map, ends[1])
+		ShowEnd(ends[1])
 	elseif #ends > 1 then
 		MenuUtil.CreateContextMenu(pin, function(_, root)
 			for _, target in ipairs(ends) do
 				root:CreateButton(string.format(TO[target.kind], target.zone), function()
-					ShowEnd(map, target)
+					ShowEnd(target)
 				end)
 			end
 		end)

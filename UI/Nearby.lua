@@ -252,7 +252,7 @@ Open = function()
 	end
 	menuOpen = true
 	Build()
-	OpenWorldMap()
+	C_Map.OpenWorldMap()
 	local world = PlayerWorld()
 	MenuUtil.CreateContextMenu(WorldMapFrame or UIParent, function(_, root)
 		root:AddMenuReleasedCallback(Close)

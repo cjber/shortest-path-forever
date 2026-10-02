@@ -70,6 +70,7 @@ local flags = {
 local calls = 0
 
 local menuEntries, closedMenus, releaseMenu, trackingMenu = {}, 0, nil, nil
+local mapOpens = 0
 local function menuNode()
 	local node = {}
 	function node.CreateTitle(_self, text)
@@ -136,7 +137,6 @@ local env = setmetatable({
 		},
 	},
 	CreateFrame = frame,
-	OpenWorldMap = function() end,
 	Menu = {
 		ModifyMenu = function(tag, callback)
 			assert(tag == "MENU_WORLD_MAP_TRACKING")
@@ -161,6 +161,10 @@ local env = setmetatable({
 		return "Alliance"
 	end,
 	C_Map = {
+		OpenWorldMap = function(uiMapID)
+			assert(uiMapID == nil, "the menu opens the map where the player is")
+			mapOpens = mapOpens + 1
+		end,
 		GetBestMapForUnit = function()
 			return 100
 		end,
@@ -224,6 +228,7 @@ for _, fn in ipairs(initializers) do
 	fn()
 end
 ns.OpenNearby()
+assert(mapOpens == 1, "opening the menu asks the game to open the map")
 assert(ns.NearbyServices.State() == "building" and calls == 0, "index does not block click")
 assert(trackingMenu, "registers the native world-map tracking dropdown")
 trackingMenu(nil, menuNode())
