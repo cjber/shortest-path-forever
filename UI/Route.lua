@@ -3,25 +3,16 @@ local ns = select(2, ...)
 
 local LINE_TEMPLATE = "ShortestPathForeverRoutePinTemplate"
 local GOAL_TEMPLATE = "ShortestPathForeverGoalPinTemplate"
--- A solid colour line with a slim dark border, so it reads on parchment and minimap alike; the taxi line
--- atlas is mostly transparent and turned into a thin core inside a heavy border. Walks are round breadcrumbs, each
--- a dot-textured line one diameter long over a slightly larger dark dot, spaced evenly across the walk's bends.
-local THICKNESS, DOT, RIM, SPACING = 2, 4, 1, 9
--- Continent and world maps show a whole journey at a fraction of a zone's scale, so their dots are smaller.
-local SMALL_DOT, SMALL_SPACING = 3, 7
+-- The route's painters: the world map's pin and the minimap's frame copy Strokes.lua's strokes onto pooled lines,
+-- each a core over a dark outline. RouteTransports.lua's pin paints the same way.
+local Strokes = ns.Strokes
 local DOT_TEXTURE = "Interface\\AddOns\\ShortestPathForever\\media\\Dot"
-local UNDER_THICKNESS, UNDER_ALPHA = THICKNESS + 2, 0.5
+local UNDER_ALPHA = 0.5
 -- RouteTransports.lua fades its outlines with the same share.
 ns.RouteUnderAlpha = UNDER_ALPHA
 -- StopPin.lua's marks. On the minimap a hollow ring circles the game's own icon at a stop with a known mark.
 local GOAL_ATLAS, RING_ATLAS, STOP_SIZE = ns.GoalAtlas, "adventureguide-ring", ns.StopSize
 local MINIMAP_GOAL, MINIMAP_RING = 16, 22
--- Everything past the stop being guided to recedes, so the way ahead reads first. Later lines keep their colour
--- but drop well back against parchment; StopPin.lua's later stops stay a little stronger.
-local LATER_ALPHA = 0.4
--- Breadcrumbs stop short of each stop's mark, so the way runs up to a stop rather than under it: a dot is left out when
--- its rim would come within STOP_GAP of the mark, on screen, at either end of a leg.
-local STOP_GAP = 2
 local COLORS = {
 	walk = NORMAL_FONT_COLOR,
 	flight = CreateColor(0.2, 1, 0.35),
@@ -34,17 +25,14 @@ local COLORS = {
 	teleport = CreateColor(0.85, 0.35, 1),
 }
 local provider, goal, paths, worldPaths, stops, stopIndex
+-- The journey's strokes are painted as soon as they are made, so the map pin and the minimap share one buffer.
+local journeyStrokes = Strokes.New()
 ---@class SPFMinimapRoute : Frame
 ---@field lines Line[]
 ---@field underlines Line[]
 ---@field dots boolean[]
----@field walked number
----@field dot number
----@field spacing number
 ---@field used number
 ---@field Goal Texture
----@field circles number[]
----@field near number[]
 ---@field strokeLayer SPFStrokeLayer
 ---@field elapsed number
 ---@field lastX? number
@@ -95,23 +83,24 @@ local function MapPosition(point, mapID)
 	end
 end
 
--- Clip segments, not vertices: a line can cross a zone with both endpoints outside it.
-local function ClipAxis(start, delta, low, high, minimum, maximum)
-	if delta == 0 then
-		if start < minimum or start > maximum then
-			return nil
-		end
-	else
-		local a, b = (minimum - start) / delta, (maximum - start) / delta
-		low, high = math.max(low, math.min(a, b)), math.min(high, math.max(a, b))
-	end
-	if low < high then
-		return low, high
-	end
-end
+-- What Strokes.lua draws through, refilled for each drawing rather than rebuilt.
+---@type SPFMapView
+local mapView = {
+	mapID = 0,
+	position = MapPosition,
+	width = 0,
+	height = 0,
+	scale = 1,
+	zoom = 1,
+	small = false,
+	current = 0,
+	colors = COLORS,
+}
+---@type SPFMinimapView
+local minimapView = { width = 0, height = 0, scale = 1, goalRadius = 0, colors = COLORS }
 
 -- Pooled lines swap between a flat colour and the dot texture only when their use changes.
-local function Paint(owner, index, dot)
+local function Texture(owner, index, dot)
 	if owner.dots[index] == dot then
 		return
 	end
@@ -125,129 +114,6 @@ local function Paint(owner, index, dot)
 		line:SetColorTexture(1, 1, 1, 1)
 		underline:SetColorTexture(0.04, 0.04, 0.04, 1)
 		underline:SetVertexColor(1, 1, 1)
-	end
-end
-
-local function Stroke(owner, x1, y1, x2, y2, color, scale, dot)
-	-- Client regions cannot be destroyed. Bound each reusable pool even after extreme map zooms.
-	if owner.used >= 4096 then
-		return
-	end
-	owner.used = owner.used + 1
-	local line = owner.lines[owner.used]
-	local underline = owner.underlines[owner.used]
-	if not line then
-		local layer = owner.strokeLayer or owner
-		underline = layer:CreateLine(nil, "ARTWORK", nil, -1)
-		underline:SetColorTexture(0.04, 0.04, 0.04, 1)
-		line = layer:CreateLine(nil, "ARTWORK")
-		owner.lines[owner.used] = line
-		owner.underlines[owner.used] = underline
-	end
-	Paint(owner, owner.used, dot or false)
-	local alpha = (owner.strokeAlpha or 1) * (owner.pathAlpha or 1)
-	-- A dot's rim reaches RIM past it on every side, so its underline is longer as well as thicker.
-	local ux, uy = 0, 0
-	if dot then
-		local length = math.sqrt((x2 - x1) ^ 2 + (y2 - y1) ^ 2)
-		ux, uy = (x2 - x1) / length * RIM / scale, (y2 - y1) / length * RIM / scale
-	end
-	underline:SetAlpha(alpha * UNDER_ALPHA)
-	underline:SetThickness((dot and owner.dot + RIM * 2 or UNDER_THICKNESS) / scale)
-	underline:SetStartPoint("TOPLEFT", owner, x1 - ux, y1 - uy)
-	underline:SetEndPoint("TOPLEFT", owner, x2 + ux, y2 + uy)
-	underline:Show()
-	line:SetVertexColor(color:GetRGBA())
-	line:SetAlpha(alpha)
-	line:SetThickness((dot and owner.dot or THICKNESS) / scale)
-	line:SetStartPoint("TOPLEFT", owner, x1, y1)
-	line:SetEndPoint("TOPLEFT", owner, x2, y2)
-	line:Show()
-	if owner.hits then
-		owner.hits[owner.used] = { route = owner.drawingRoute, fade = owner.strokeAlpha or 1 }
-	end
-end
-
--- The stop marks this segment passes near, copied from owner.circles (x, y and reach, flat) into owner.near; returns
--- the length copied.
-local function Near(owner, x1, y1, x2, y2)
-	local circles, near, count = owner.circles, owner.near, 0
-	local dx, dy = x2 - x1, y2 - y1
-	local lengthSquared = dx * dx + dy * dy
-	for i = 1, #circles, 3 do
-		local cx, cy, reach = circles[i], circles[i + 1], circles[i + 2]
-		local t = math.max(0, math.min(1, ((cx - x1) * dx + (cy - y1) * dy) / lengthSquared))
-		local ex, ey = x1 + t * dx - cx, y1 + t * dy - cy
-		if ex * ex + ey * ey < reach * reach then
-			near[count + 1], near[count + 2], near[count + 3] = cx, cy, reach
-			count = count + 3
-		end
-	end
-	return count
-end
-
-local function Clear(near, count, x, y)
-	for i = 1, count, 3 do
-		local dx, dy = x - near[i], y - near[i + 1]
-		if dx * dx + dy * dy < near[i + 2] * near[i + 2] then
-			return false
-		end
-	end
-	return true
-end
-
--- Clip before subdividing: even continent-sized walks need only the visible breadcrumbs. Dots sit at every SPACING
--- along the whole walk, owner.walked carrying the distance across segment joins so bends never bunch them.
-local function Segment(owner, x1, y1, x2, y2, low, high, color, dashed, scale)
-	local dx, dy = x2 - x1, y2 - y1
-	local length = math.sqrt(dx * dx + dy * dy) * scale
-	if length == 0 then
-		return
-	end
-	if not dashed then
-		owner.walked = 0
-		if low then
-			Stroke(owner, x1 + low * dx, y1 + low * dy, x1 + high * dx, y1 + high * dy, color, scale)
-		end
-		return
-	end
-	local start = owner.walked
-	owner.walked = start + length
-	if not low then
-		return
-	end
-	-- The caller clipped a walk a dot's reach inside its frame, so every rim fits and joints need no trim, which
-	-- would drop the dots at each bend. A dot on a joint belongs to the later segment: both ends share a tolerance,
-	-- so rounding in the running total cannot push it out of both.
-	local half, spacing = owner.dot / 2 / length, owner.spacing
-	local first = math.ceil((start + low * length - 0.001) / spacing) * spacing - start
-	local near = Near(owner, x1, y1, x2, y2)
-	for distance = first, high * length - 0.001, spacing do
-		local t = distance / length
-		if near == 0 or Clear(owner.near, near, x1 + t * dx, y1 + t * dy) then
-			Stroke(
-				owner,
-				x1 + (t - half) * dx,
-				y1 + (t - half) * dy,
-				x1 + (t + half) * dx,
-				y1 + (t + half) * dy,
-				color,
-				scale,
-				true
-			)
-		end
-	end
-end
-
--- How far past a mark's own radius (in the owner's units) a dot must sit to leave STOP_GAP on screen.
-local function DotMargin(owner, scale)
-	return (STOP_GAP + owner.dot / 2 + RIM) / scale
-end
-
-local function HideUnused(owner)
-	for index = owner.used + 1, #owner.lines do
-		owner.lines[index]:Hide()
-		owner.underlines[index]:Hide()
 	end
 end
 
@@ -268,6 +134,43 @@ local function Pulse(owner)
 	else
 		StopPulse(layer)
 	end
+end
+
+-- Each stroke on its own pooled pair of lines, the outline under the core; pairs left over are hidden.
+---@param owner SPFRoutePin|SPFMinimapRoute
+---@param strokes SPFStrokes
+local function Paint(owner, strokes)
+	local lines, underlines = owner.lines, owner.underlines
+	for index = 1, strokes.n do
+		local line, underline = lines[index], underlines[index]
+		if not line then
+			local layer = owner.strokeLayer or owner
+			underline = layer:CreateLine(nil, "ARTWORK", nil, -1)
+			underline:SetColorTexture(0.04, 0.04, 0.04, 1)
+			line = layer:CreateLine(nil, "ARTWORK")
+			lines[index], underlines[index] = line, underline
+		end
+		Texture(owner, index, strokes.dot[index])
+		local x1, y1, x2, y2 = strokes.x1[index], strokes.y1[index], strokes.x2[index], strokes.y2[index]
+		local ux, uy, alpha = strokes.ux[index], strokes.uy[index], strokes.alpha[index]
+		underline:SetAlpha(alpha * UNDER_ALPHA)
+		underline:SetThickness(strokes.under[index])
+		underline:SetStartPoint("TOPLEFT", owner, x1 - ux, y1 - uy)
+		underline:SetEndPoint("TOPLEFT", owner, x2 + ux, y2 + uy)
+		underline:Show()
+		line:SetVertexColor(strokes.color[index]:GetRGBA())
+		line:SetAlpha(alpha)
+		line:SetThickness(strokes.width[index])
+		line:SetStartPoint("TOPLEFT", owner, x1, y1)
+		line:SetEndPoint("TOPLEFT", owner, x2, y2)
+		line:Show()
+	end
+	for index = strokes.n + 1, #lines do
+		lines[index]:Hide()
+		underlines[index]:Hide()
+	end
+	owner.used = strokes.n
+	Pulse(owner)
 end
 
 -- One loading animation covers all strokes and outlines.
@@ -307,14 +210,12 @@ function ns.RefreshJourneyPulse(shown)
 end
 
 ---@class SPFRoutePin : SPFMapPin
+---@field lines Line[]
+---@field underlines Line[]
 ---@field dots boolean[]
----@field walked number
----@field dot number
----@field spacing number
+---@field used number
 ---@field strokeLayer? SPFStrokeLayer
----@field circles number[]
----@field near number[]
----@field pathAlpha? number
+---@field strokes? SPFStrokes -- a pin that keeps its strokes between draws (RouteTransports.lua) has its own buffer
 ---@field UpdateAlpha? fun(self: SPFRoutePin)
 ShortestPathForeverRoutePinMixin = CreateFromMixins(MapCanvasPinMixin)
 
@@ -322,146 +223,7 @@ function ShortestPathForeverRoutePinMixin:OnLoad()
 	self:UseFrameLevelType("PIN_FRAME_LEVEL_QUEST_BLOB")
 	self:SetIgnoreGlobalPinScale(true)
 	self:SetScaleStyle(AM_PIN_SCALE_STYLE_WITH_TERRAIN)
-	self.lines, self.underlines, self.dots, self.walked = {}, {}, {}, 0
-	self.dot, self.spacing, self.circles, self.near = DOT, SPACING, {}, {}
-end
-
-function ShortestPathForeverRoutePinMixin:Line(x1, y1, x2, y2, color, dashed)
-	local scale = self:GetEffectiveScale()
-	local reach = self.dot / 2 + RIM
-	local mx = dashed and reach / scale / self:GetWidth() or 0
-	local my = dashed and reach / scale / self:GetHeight() or 0
-	local low, high = ClipAxis(x1, x2 - x1, 0, 1, mx, 1 - mx)
-	if low then
-		low, high = ClipAxis(y1, y2 - y1, low, high, my, 1 - my)
-	end
-	Segment(
-		self,
-		x1 * self:GetWidth(),
-		-y1 * self:GetHeight(),
-		x2 * self:GetWidth(),
-		-y2 * self:GetHeight(),
-		low,
-		high,
-		color,
-		dashed,
-		scale
-	)
-end
-
-function ShortestPathForeverRoutePinMixin:Mark(x, y, color)
-	if x and x >= 0 and x <= 1 and y >= 0 and y <= 1 then
-		local size = 4 / self:GetEffectiveScale()
-		local dx, dy = size / self:GetWidth(), size / self:GetHeight()
-		self:Line(x - dx, y, x + dx, y, color)
-		self:Line(x, y - dy, x, y + dy, color)
-	end
-end
-
--- Smooth loading-screen bridges. The control follows the last sampled direction of travel.
-local function Curve(pin, ax, ay, bx, by, cx, cy, color, fade)
-	local px, py = ax, ay
-	for step = 1, 12 do
-		local t = step / 12
-		local x = (1 - t) ^ 2 * ax + 2 * (1 - t) * t * cx + t ^ 2 * bx
-		local y = (1 - t) ^ 2 * ay + 2 * (1 - t) * t * cy + t ^ 2 * by
-		pin.strokeAlpha = fade and (1 - (step - 0.5) / 12) or 1
-		pin:Line(px, py, x, y, color)
-		px, py = x, y
-	end
-	pin.strokeAlpha = nil
-end
-
-local function CrossingCurve(pin, ax, ay, bx, by, color, px, py)
-	local dx, dy = bx - ax, by - ay
-	local cx, cy = (ax + bx) / 2 - dy * 0.25, (ay + by) / 2 + dx * 0.25
-	if px then
-		local tx, ty = ax - px, ay - py
-		local length = math.sqrt(tx * tx + ty * ty)
-		if length > 0 then
-			local reach = math.sqrt(dx * dx + dy * dy) * 0.6 / length
-			cx, cy = ax + tx * reach, ay + ty * reach
-		end
-	else
-		-- Overview crossings arc toward open sea to the north, identically in either travel direction.
-		local side = dx < 0 and -1 or 1
-		cx, cy = (ax + bx) / 2 + dy * side * 0.6, (ay + by) / 2 - dx * side * 0.6
-	end
-	if math.abs((cx - ax) * dy - (cy - ay) * dx) < (dx * dx + dy * dy) * 0.1 then
-		cx, cy = (ax + bx) / 2 - dy * 0.25, (ay + by) / 2 + dx * 0.25
-	end
-	Curve(pin, ax, ay, bx, by, cx, cy, color)
-end
-
-local function EdgeCurve(pin, x, y, nx, ny, color)
-	if not nx then
-		return
-	end
-	local dx, dy = x - nx, y - ny
-	local length = math.sqrt(dx * dx + dy * dy)
-	if length < 0.000001 then
-		return
-	end
-	dx, dy = dx / length, dy / length
-	-- Bend gently out to sea while retaining the sampled tangent at the loading point.
-	local ex, ey = dx - dy * 0.3, dy + dx * 0.3
-	local distance = math.huge
-	if ex ~= 0 then
-		distance = math.min(distance, ((ex > 0 and 1 or 0) - x) / ex)
-	end
-	if ey ~= 0 then
-		distance = math.min(distance, ((ey > 0 and 1 or 0) - y) / ey)
-	end
-	if distance > 0 and distance < math.huge then
-		Curve(
-			pin,
-			x,
-			y,
-			x + ex * distance,
-			y + ey * distance,
-			x + dx * distance * 0.55,
-			y + dy * distance * 0.55,
-			color,
-			true
-		)
-	end
-end
-
-local function Bridge(pin, points, index, ax, ay, bx, by, color)
-	local mapID = pin:GetMap():GetMapID()
-	local before, after = points[index - 2] or points[#points - 1], points[index + 1] or points[2]
-	local px, py, nx, ny
-	if before and before.map == points[index - 1].map then
-		px, py = MapPosition(before, mapID)
-	end
-	if after and after.map == points[index].map then
-		nx, ny = MapPosition(after, mapID)
-	end
-	if ax and bx then
-		CrossingCurve(pin, ax, ay, bx, by, color, px, py)
-	elseif ax then
-		EdgeCurve(pin, ax, ay, px, py, color)
-	elseif bx then
-		EdgeCurve(pin, bx, by, nx, ny, color)
-	end
-end
-
-local function OverviewCrossing(pin, path, color)
-	if path.mode ~= "boat" and path.mode ~= "zeppelin" then
-		return false
-	end
-	local first, last = path.points[1], path.points[#path.points]
-	if not first or first.map == last.map then
-		return false
-	end
-	local mapID = pin:GetMap():GetMapID()
-	local ax, ay = MapPosition(first, mapID)
-	local bx, by = MapPosition(last, mapID)
-	if ax and bx then
-		CrossingCurve(pin, ax, ay, bx, by, color)
-		return true
-	end
-	return false
+	self.lines, self.underlines, self.dots, self.used = {}, {}, {}, 0
 end
 
 function ShortestPathForeverRoutePinMixin:Draw()
@@ -472,65 +234,17 @@ function ShortestPathForeverRoutePinMixin:Draw()
 	self:SetSize(canvas:GetWidth(), canvas:GetHeight())
 	self:SetPosition(0.5, 0.5)
 	local info = C_Map.GetMapInfo(map:GetMapID())
-	local small = info and info.mapType <= Enum.UIMapType.Continent
-	self.dot, self.spacing = small and SMALL_DOT or DOT, small and SMALL_SPACING or SPACING
-	self.used = 0
-	-- The journey's stop pins keep their size on screen while the canvas zooms under them (MapCanvasPinMixin's
-	-- ApplyCurrentScale sets 1 / canvas scale), so their reach in canvas units grows as the map zooms out.
-	local circles, marks = {}, self.paths == worldPaths and provider and provider.stopMarks or {}
-	local margin, zoom = DotMargin(self, self:GetEffectiveScale()), map:GetCanvasScale()
-	for _, mark in ipairs(marks) do
-		circles[#circles + 1] = mark.x * self:GetWidth()
-		circles[#circles + 1] = -mark.y * self:GetHeight()
-		circles[#circles + 1] = mark.radius / zoom + margin
-	end
-	self.circles = circles
-	if self.hits then
-		self.hits = {}
-	end
+	local journey = self.paths == worldPaths
+	mapView.mapID = map:GetMapID()
+	mapView.width, mapView.height, mapView.scale = self:GetWidth(), self:GetHeight(), self:GetEffectiveScale()
+	mapView.zoom, mapView.small = map:GetCanvasScale(), info and info.mapType <= Enum.UIMapType.Continent
+	mapView.marks = journey and provider and provider.stopMarks or nil
 	-- The journey's own paths come first; the later hops Itinerary.lua adds after them recede.
-	local current = self.paths == worldPaths and #paths or math.huge
-	for pathIndex, path in ipairs(self.paths) do
-		local color = path.color or COLORS[path.mode]
-		self.drawingRoute = path.route
-		self.pathAlpha = pathIndex > current and LATER_ALPHA or nil
-		self.walked = 0
-		local previous, px, py
-		local points = ns.FlightLinePoints(path)
-		local crossing = OverviewCrossing(self, path, color)
-		for index = 1, crossing and 0 or #points do
-			local point = points[index]
-			local x, y = MapPosition(point, map:GetMapID())
-			if path.mode == "portal" or path.mode == "passage" then
-				self:Mark(x, y, color)
-			elseif previous then
-				if path.preview then
-					-- A hop still planning has no geometry to draw; a straight line would cross the sea.
-					if previous.map ~= point.map then
-						self:Mark(px, py, color)
-						self:Mark(x, y, color)
-					elseif px and x then
-						self:Line(px, py, x, y, color, true)
-					end
-				elseif previous.jump or previous.map ~= point.map then
-					if path.mode == "boat" or path.mode == "zeppelin" then
-						Bridge(self, path.points, index, px, py, x, y, color)
-					else
-						self:Mark(px, py, color)
-						self:Mark(x, y, color)
-					end
-				elseif px and x then
-					self:Line(px, py, x, y, color, path.mode == "walk")
-				end
-			end
-			previous, px, py = point, x, y
-		end
-	end
-	self.pathAlpha = nil
-
-	HideUnused(self)
-	Pulse(self)
-	if self.hits then
+	mapView.current = journey and #paths or math.huge
+	local strokes = self.strokes or journeyStrokes
+	Strokes.Map(strokes, self.paths, mapView)
+	Paint(self, strokes)
+	if self.strokes then
 		self:UpdateAlpha()
 	end
 end
@@ -545,10 +259,10 @@ function ShortestPathForeverRoutePinMixin:OnReleased()
 end
 
 function ShortestPathForeverRoutePinMixin:OnAcquired(geometry)
-	if not self.hits and not self.strokeLayer then
+	if not self.strokes and not self.strokeLayer then
 		StrokeLayer(self)
 	end
-	local same = self.hits and self.paths and #self.paths == #geometry
+	local same = self.strokes and self.paths and #self.paths == #geometry
 	if same then
 		for i, path in ipairs(geometry) do
 			if self.paths[i] ~= path then
@@ -684,32 +398,6 @@ function ProviderMixin:OnCanvasScaleChanged()
 	self:RefreshStops()
 end
 
-local function ClipMinimap(x, y, dx, dy, inset, square)
-	if square then
-		local low, high = ClipAxis(x, dx, 0, 1, -inset, inset)
-		if low then
-			return ClipAxis(y, dy, low, high, -inset, inset)
-		end
-		return nil
-	end
-	local a, b, c = dx * dx + dy * dy, x * dx + y * dy, x * x + y * y - inset * inset
-	local discriminant = b * b - a * c
-	if a == 0 or discriminant <= 0 then
-		return nil
-	end
-	local root = math.sqrt(discriminant)
-	local low, high = math.max(0, (-b - root) / a), math.min(1, (-b + root) / a)
-	if low < high then
-		return low, high
-	end
-end
-
-local function Project(point, x, y, radius, cosine, sine)
-	-- UnitPosition's X is north, Y is west; minimap X is right, Y is up.
-	local east, north = y - point.y, point.x - x
-	return (east * cosine + north * sine) / radius, (north * cosine - east * sine) / radius
-end
-
 -- The minimap's view radius in yards, and how far it is turned from north-up.
 local function MinimapView()
 	-- Blizzard_APIDocumentationGenerated/MinimapDocumentation.lua:127 (yards).
@@ -720,10 +408,10 @@ local function MinimapView()
 	return radius, 0
 end
 
--- The minimap's transport pins share the route's projection.
-ns.MinimapView, ns.MinimapProject = MinimapView, Project
+-- The minimap's transport pins look through the same view.
+ns.MinimapView = MinimapView
 
--- The world point under the cursor on the minimap, undoing Project; nil off its face.
+-- The world point under the cursor on the minimap, undoing Strokes.Project; nil off its face.
 function ns.MinimapPoint()
 	local x, y, _, map = ns.JourneyPosition()
 	---@type number?, number?
@@ -769,63 +457,19 @@ local function DrawMinimap(self)
 	self.lastX, self.lastY, self.lastMap, self.lastRadius, self.lastFacing = x, y, map, radius, facing
 	self.lastWidth, self.lastHeight, self.lastScale, self.lastSquare = width, height, scale, square
 	self.revision = geometryRevision
-	self.used = 0
 	self:SetAlpha(1)
 	self.Goal:Hide()
-	local circles = {}
-	self.circles = circles
-	local border = UNDER_THICKNESS / scale
-	if x and facing and radius and radius > 0 and width > border and height > border then
-		local cosine, sine = math.cos(facing), math.sin(facing)
-		if goal and goal.map == map then
-			local gx, gy = Project(goal, x, y, radius, cosine, sine)
-			if not goal.corpse and math.abs(gx) <= 1 and math.abs(gy) <= 1 and (square or gx * gx + gy * gy <= 1) then
-				self.Goal:SetPoint("CENTER", self, "CENTER", gx * width / 2, gy * height / 2)
-				self.Goal:Show()
-				circles[1], circles[2] = (gx + 1) * width / 2, (gy - 1) * height / 2
-				circles[3] = (goal.look and MINIMAP_RING or MINIMAP_GOAL) / 2 + DotMargin(self, scale)
-			end
-		end
-		local inset = 1 - border / math.min(width, height)
-		for _, path in ipairs(paths) do
-			self.walked = 0
-			if path.mode ~= "portal" and path.mode ~= "passage" then
-				local points = ns.FlightLinePoints(path)
-				for index = 2, #points do
-					local a, b = points[index - 1], points[index]
-					if a.map == map and b.map == map and not a.jump then
-						local ax, ay = Project(a, x, y, radius, cosine, sine)
-						local bx, by = Project(b, x, y, radius, cosine, sine)
-						local walk = path.mode == "walk"
-						local within = walk and inset - (self.dot + RIM * 2) / scale / math.min(width, height) or inset
-						local low, high = ClipMinimap(ax, ay, bx - ax, by - ay, within, square)
-						Segment(
-							self,
-							(ax + 1) * width / 2,
-							(ay - 1) * height / 2,
-							(bx + 1) * width / 2,
-							(by - 1) * height / 2,
-							low,
-							high,
-							path.color or COLORS[path.mode],
-							walk,
-							scale
-						)
-					end
-				end
-			end
-		end
-		-- Keep the final few yards visible when the goal ring covers every breadcrumb.
-		if goal and goal.hold and goal.map == map and self.used == 0 then
-			local gx, gy = Project(goal, x, y, radius, cosine, sine)
-			local distance = gx * gx + gy * gy
-			if distance > 0 and distance < 0.25 then
-				Stroke(self, width / 2, -height / 2, (gx + 1) * width / 2, (gy - 1) * height / 2, COLORS.walk, scale)
-			end
-		end
+	local view = minimapView
+	view.x, view.y, view.map, view.radius, view.facing = x, y, map, radius, facing
+	view.width, view.height, view.scale, view.square = width, height, scale, square
+	-- A goal with a known mark wears the wider ring (ns.SetJourneyRoute).
+	view.goal, view.goalRadius = goal, (goal and goal.look and MINIMAP_RING or MINIMAP_GOAL) / 2
+	local gx, gy = Strokes.Minimap(journeyStrokes, paths, view)
+	if gx then
+		self.Goal:SetPoint("CENTER", self, "CENTER", gx * width / 2, gy * height / 2)
+		self.Goal:Show()
 	end
-	HideUnused(self)
-	Pulse(self)
+	Paint(self, journeyStrokes)
 end
 
 ---@param self SPFMinimapRoute
@@ -917,8 +561,7 @@ ns.Init(function()
 	minimap = minimapRoute
 	minimap:SetAllPoints(Minimap)
 	minimap:EnableMouse(false)
-	minimap.lines, minimap.underlines, minimap.dots, minimap.walked, minimap.used = {}, {}, {}, 0, 0
-	minimap.dot, minimap.spacing, minimap.circles, minimap.near = DOT, SPACING, {}, {}
+	minimap.lines, minimap.underlines, minimap.dots, minimap.used = {}, {}, {}, 0
 	StrokeLayer(minimap)
 	minimap.Goal = Minimap:CreateTexture(nil, "OVERLAY")
 	minimap.Goal:SetAtlas(GOAL_ATLAS)

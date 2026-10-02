@@ -147,7 +147,7 @@ release("pooled stroke Lua bookkeeping (UI region storage is client-owned)", fun
 	local pools = upvalue(map.RemoveAllPinsByTemplate, "pools")
 	local active = upvalue(map.RemoveAllPinsByTemplate, "active")
 	local function strokes(owner)
-		owner.lines, owner.underlines, owner.hits = nil, nil, nil
+		owner.lines, owner.underlines, owner.strokes = nil, nil, nil
 	end
 	for _, list in ipairs({ pools, active }) do
 		for _, pins in pairs(list) do
@@ -157,6 +157,7 @@ release("pooled stroke Lua bookkeeping (UI region storage is client-owned)", fun
 		end
 	end
 	strokes(_G.ShortestPathForeverMinimapRoute)
+	wipe(upvalue(ns.SetJourneyRoute, "journeyStrokes"))
 end)
 print(
 	string.format("  remaining fixture/metadata: %.1f KB excluding packed maps and base", collected() - packed - base)
