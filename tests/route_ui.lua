@@ -23,6 +23,7 @@ assert(api.NavigateRoute("Test", {
  {map=1414,x=0.55,y=0.5,title="Camp"},
  {map=1414,x=0.51,y=0.5,title="Quest giver",tooltip="Quest detail"},
 }))
+settle()
 local rings = active[goalTemplate]
 assert(#rings == 2, "the place visited twice shares one button")
 assert(not rings[1].Button.hidden and not rings[1].Disc.hidden and rings[1].width == 20, "the map's quest button")
@@ -54,6 +55,7 @@ assert(pin.used > 0 and mini.used > 0)
 -- A shorter route hides the pairs it no longer needs and creates none: on the map its few dots fall under the stop.
 local longest, created = pin.used, lineCreations
 assert(api.NavigateRoute("Test", {{map=1414,x=0.5,y=0.4976,title="Near"}}))
+settle()
 pin = active[lineTemplate][1]
 assert(pin.used < longest and #pin.lines == longest and lineCreations == created, "pairs are pooled, not recreated")
 painted(pin, "shorter route")
