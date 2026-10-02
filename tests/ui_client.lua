@@ -742,6 +742,11 @@ _G.C_ChatInfo = {
 -- The settings surface, recorded so a UI check can drive the real rows and index buttons: each option's own
 -- value-changed callback, and each subpage button's OpenToCategory target.
 local addonSettings, settingsRows, settingsButtons, openedCategories = {}, {}, {}, {}
+_G.MinimalSliderWithSteppersMixin = { Label = { Right = 1 } }
+_G.OFF = _G.OFF or "Off"
+_G.SecondsToTime = _G.SecondsToTime or function(seconds)
+	return seconds .. " Sec"
+end
 _G.Settings = setmetatable({
 	VarType = {},
 	RegisterVerticalLayoutCategory = function(name)
@@ -801,7 +806,14 @@ _G.Settings = setmetatable({
 		return { kind = "checkbox", setting = setting, options = options, tooltip = tooltip }
 	end,
 	CreateSliderOptions = function(minimum, maximum, step)
-		return { minValue = minimum, maxValue = maximum, step = step }
+		return {
+			minValue = minimum,
+			maxValue = maximum,
+			step = step,
+			SetLabelFormatter = function(self, _, format)
+				self.format = format
+			end,
+		}
 	end,
 	CreateSliderInitializer = function(setting, options, tooltip)
 		return { kind = "slider", setting = setting, options = options, tooltip = tooltip }

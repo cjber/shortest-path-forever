@@ -96,6 +96,9 @@ local function scenario(anchor, scale, uiScale)
 		function f:SetClampedToScreen(value)
 			self.clamped, self.screen = value, screen
 		end
+		function f:IsClampedToScreen()
+			return self.clamped
+		end
 		function f:SetScript(event, fn)
 			self.scripts[event] = fn
 		end

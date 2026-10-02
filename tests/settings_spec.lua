@@ -8,6 +8,11 @@ local opened = {}
 local attachmentNotified, attachmentChanged
 local trackerState = { attached = true }
 local env = setmetatable({
+	MinimalSliderWithSteppersMixin = { Label = { Right = 1 } },
+	OFF = "Off",
+	SecondsToTime = function(seconds)
+		return seconds .. " Sec"
+	end,
 	Settings = {
 		RegisterProxySetting = function(category, variable, varType, name, default, get, set)
 			local setting = {
@@ -73,7 +78,14 @@ local env = setmetatable({
 			return { kind = "checkbox", setting = setting, tooltip = tooltip }
 		end,
 		CreateSliderOptions = function(minimum, maximum, step)
-			return { minValue = minimum, maxValue = maximum, step = step }
+			return {
+				minValue = minimum,
+				maxValue = maximum,
+				step = step,
+				SetLabelFormatter = function(self, _, format)
+					self.format = format
+				end,
+			}
 		end,
 		CreateSliderInitializer = function(setting, options, tooltip)
 			assert(setting.varType == "number" and options)
@@ -200,6 +212,7 @@ assert(Row("guideStops").setting.default == true)
 assert(Row("taxiRoute").setting.default == true)
 local hearth = Row("hearthMinimumSavings")
 assert(hearth.kind == "slider" and hearth.setting.default == 0)
+assert(hearth.options.format(0) == "Off" and hearth.options.format(90) == "90 Sec", "the slider shows its value")
 hearth.setting.onChanged()
 assert(policyChanged == 1, "changing Hearthstone savings invalidates the current travel policy")
 assert(hearth.options.minValue == 0 and hearth.options.maxValue == 600 and hearth.options.step == 30)

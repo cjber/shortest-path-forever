@@ -186,12 +186,15 @@ ns.Init(function()
 		"hearthMinimumSavings",
 		ns.db,
 		Settings.VarType.Number,
-		L["Minimum Hearthstone saving (seconds)"],
+		L["Minimum Hearthstone saving"],
 		ns.Defaults.hearthMinimumSavings
 	)
 	hearth:SetValueChangedCallback(ns.TravelPolicyChanged)
 	settings.hearthMinimumSavings = hearth
 	local hearthOptions = Settings.CreateSliderOptions(0, 600, 30)
+	hearthOptions:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
+		return value > 0 and SecondsToTime(value) or OFF
+	end)
 	Settings.RegisterInitializer(
 		page,
 		Settings.CreateSliderInitializer(
