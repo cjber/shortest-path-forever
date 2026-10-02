@@ -97,7 +97,7 @@ local function JourneyDistance(result, index)
 		local total = 0
 		for legIndex = #result.legs, index, -1 do
 			local leg = result.legs[legIndex]
-			local points = ns.Planner.LegPoints(leg, ns.Routes)
+			local points = ns.PlanContext.LegPoints(leg)
 			local after, lengths = {}, {}
 			local yards = 0
 			for pointIndex = #points, 1, -1 do

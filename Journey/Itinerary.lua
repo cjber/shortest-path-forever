@@ -56,7 +56,7 @@ local function PlanHop(hop)
 	hop.paths = legs and {} or false
 	for index, leg in ipairs(legs or {}) do
 		local walk = leg.mode == "walk"
-		local path = { mode = leg.mode, points = ns.Planner.LegPoints(leg, ns.Routes), preview = walk or nil }
+		local path = { mode = leg.mode, points = ns.PlanContext.LegPoints(leg), preview = walk or nil }
 		hop.paths[index] = path
 		if walk and leg.from.map == leg.to.map and ns.Path.HasData(leg.from.map) then
 			hop.walks[#hop.walks + 1] = { path = path, leg = leg }
