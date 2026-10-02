@@ -44,7 +44,7 @@ function Context.Options(from, to)
 		faction = UnitFactionGroup("player"),
 		otherFaction = ns.db and ns.db.otherFaction or false,
 		taxiKnown = ns.KnownTaxiNodes(),
-		anchors = ns.FreshAnchors(),
+		anchors = ns.Timetable.Anchors(),
 		docks = ns.Docks,
 		routes = ns.Routes,
 		taxiNodes = ns.TaxiNodes,
@@ -62,19 +62,17 @@ end
 ---@param options SPFContextOptions from Options, planned from where you stand
 ---@return {route: number, dock: number, arrive: number}?
 function Context.Ride(options)
-	local here, now, anchors = options.from, options.now, options.anchors
+	local here, now = options.from, options.now
 	local routeID = ns.CurrentRide()
 	if not routeID then
 		return nil
 	end
-	if anchors[routeID] then
-		local route = ns.Routes[routeID]
-		local phase = (now - anchors[routeID].epoch) % route.period
-		for _, stop in ipairs(route.stops) do
+	if ns.Timetable.Anchor(routeID) then
+		for _, stop in ipairs(ns.Routes[routeID].stops) do
 			-- The observer retains a ride for 30 seconds after disembarking, enough to run 210 yards away.
 			local dock = ns.Docks[stop.dock]
 			if
-				ns.Model.Visit(route, stop, phase)
+				ns.Timetable.Visit(routeID, stop, now)
 				and here.map == dock.map
 				and (here.x - dock.x) ^ 2 + (here.y - dock.y) ^ 2 <= 250 ^ 2
 			then
@@ -82,7 +80,7 @@ function Context.Ride(options)
 			end
 		end
 	end
-	local dock, arriveIn = ns.NextStop(routeID)
+	local dock, arriveIn = ns.Timetable.NextStop(routeID)
 	return dock and { route = routeID, dock = dock, arrive = now + arriveIn } or nil
 end
 

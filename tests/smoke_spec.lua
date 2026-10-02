@@ -889,7 +889,7 @@ Run("stale dock cluster tooltip", function()
 		docks = { { id = 999998 }, { id = 999999 } },
 		kinds = { boat = true, lift = true },
 	}
-	assert(#ns.DockDepartures(999998) == 0 and #ns.DockDepartures(999999) == 0,
+	assert(#ns.Timetable.Departures(999998) == 0 and #ns.Timetable.Departures(999999) == 0,
 		"the stale cluster has no remaining departures")
 	ns.AddDockTooltip(cluster)
 end)

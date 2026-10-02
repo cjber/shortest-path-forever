@@ -48,10 +48,10 @@ local function Record()
 		return
 	end
 	local now = GetServerTime()
-	local held = ns.FreshAnchor(routeID)
+	local held = ns.Timetable.Anchor(routeID)
 	local routine = held and held.source == "you" and now - held.seen < QUIET
 	ride.announced = routeID
-	if ns.Sighted(routeID, { epoch = fits[routeID].epoch, seen = now, source = "you" }) and not routine then
+	if ns.Timetable.Sighted(routeID, { epoch = fits[routeID].epoch, seen = now, source = "you" }) and not routine then
 		local route = ns.Routes[routeID]
 		ns.Print(string.format(L["synced the %s schedule from your ride."], route.site or KIND[route.kind]))
 		ns.Share(routeID)

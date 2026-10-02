@@ -72,7 +72,7 @@ Things reached indirectly. The dead-code lens must treat these as referenced.
   (and by specs via `loadfile(...)("ShortestPathForever", ns)`). Search every `.lua`, not just the file.
 - `C_AddOns.LoadAddOn("ShortestPathForever_Nav" .. map)` (Routing/PathGrid.lua) loads the walking maps by built name.
 - SavedVariables `ShortestPathForeverDB` / `ShortestPathForeverCharDB`: keys (settings in Core/Core.lua
-  `DEFAULTS`, `anchors`, debug trace) persist in players' saved files.
+  `DEFAULTS`, `anchors` owned by Transport/Timetable.lua, debug trace) persist in players' saved files.
 - Sync wire format (Transport/Sync.lua, prefix `ShortPath1`): other players run older versions; message fields are
   a compatibility contract.
 - Slash commands `/path`, `/shortestpath` (`SLASH_SHORTESTPATHFOREVER*`, `SlashCmdList`).
@@ -144,7 +144,7 @@ Audit slices from lowest to highest risk:
 3. `tests/`
 4. UI leaves: `UI/Alert.lua`, `UI/Arrow.lua`, `UI/Compass.lua`, `UI/Settings.lua`, `Transport/Taxi.lua`, `UI/Tracker.lua`, `UI/TrackerHost.lua`, `UI/MinimapPins.lua`, `UI/Nearby.lua`, `UI/WhatsNew.lua`
 5. Map layers: `UI/Map.lua`, `UI/Map.xml`, `UI/Route.lua`, `UI/RouteTransports.lua`, `UI/Looks.lua`, `UI/RouteButton.lua`, `UI/StopPin.lua`, `UI/FlightLines.lua`
-6. State and wire: `Transport/Model.lua`, `Core/Core.lua`, `Transport/Observer.lua`, `Transport/Sync.lua`, `Transport/Teleports.lua`, `Core/API.lua` (SavedVariables, wire format,
+6. State and wire: `Transport/Model.lua`, `Transport/Timetable.lua`, `Core/Core.lua`, `Transport/Observer.lua`, `Transport/Sync.lua`, `Transport/Teleports.lua`, `Core/API.lua` (SavedVariables, wire format,
    public API)
 7. Planning core: `Routing/Planner.lua`, `Routing/Path*.lua`, `Journey/Journey*.lua`, `Journey/Itinerary.lua`, `Journey/Corpse.lua` (performance-tuned, 3 ms frame budget;
    Journey/Corpse.lua suspends and resumes the journey)

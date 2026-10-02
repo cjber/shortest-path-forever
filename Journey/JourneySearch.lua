@@ -151,7 +151,7 @@ local function EstimateKept(now)
 	if not followed then
 		return nil
 	end
-	local here, anchors = Here(), ns.FreshAnchors()
+	local here = Here()
 	local estimate = { now = now, arrive = now, legs = {} }
 	for index = progress.index, #followed.legs do
 		local leg = followed.legs[index]
@@ -180,13 +180,10 @@ local function EstimateKept(now)
 			end
 			duration, wait = yards / lastRunSpeed * 1000, 0
 		elseif leg.route and not leg.aboard then
-			local route, anchor = ns.Routes[leg.route], anchors[leg.route]
-			if anchor and leg.boarding then
-				local _, _, departIn =
-					ns.Model.Visit(route, leg.boarding, (estimate.arrive - anchor.epoch) % route.period)
-				wait = departIn
-			else
-				wait = route.period / 2
+			wait = ns.Routes[leg.route].period / 2
+			if leg.boarding then
+				local _, _, departIn = ns.Timetable.Visit(leg.route, leg.boarding, estimate.arrive)
+				wait = departIn or wait
 			end
 		elseif index == progress.index and leg.aboard then
 			duration, wait = math.max(0, leg.arrive - now), 0

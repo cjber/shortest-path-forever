@@ -505,7 +505,7 @@ def render_docks(ui):
         [
             TooltipLine("Boats"),
             TooltipLine(labels[8]),
-            # Map.lua DepartureStatus: a boat already in port has no arrival count, only "docked".
+            # Timetable.Status: a boat already in port has no arrival count, only "docked".
             TooltipLine("to Teldrassil", NORMAL, "docked · leaves 0:47"),
             TooltipLine(labels[10]),
             TooltipLine("to Wetlands", NORMAL, "arrives 3:23 · leaves 4:23"),

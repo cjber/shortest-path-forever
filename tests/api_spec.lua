@@ -432,16 +432,13 @@ equal(calls, 4, "water walking invalidates cache")
 ns.faction = "Horde"
 API.Estimate(1, 0.5, 0.5, 1, 0.61, 0.5)
 equal(calls, 5, "faction invalidates cache")
-local anchors = { [1] = { epoch = 10 } }
-ns.FreshAnchors = function()
-	return anchors
-end
+ns.Timetable.Sighted(1, { epoch = 10, seen = 0 })
 API.Estimate(1, 0.5, 0.5, 1, 0.61, 0.5)
 equal(calls, 6, "new transport timing invalidates cache")
-anchors[1].epoch = 20
+ns.Timetable.Sighted(1, { epoch = 20, seen = 1 })
 API.Estimate(1, 0.5, 0.5, 1, 0.61, 0.5)
-equal(calls, 7, "in-place transport timing update invalidates cache")
-anchors[1] = nil
+equal(calls, 7, "a newer transport timing invalidates cache")
+ns.serverTime = ns.Model.MAX_AGE + 2
 API.Estimate(1, 0.5, 0.5, 1, 0.61, 0.5)
 equal(calls, 8, "expired transport timing invalidates cache")
 driver.update(5)

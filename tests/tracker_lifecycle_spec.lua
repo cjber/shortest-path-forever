@@ -79,7 +79,12 @@ for _, readyAtLoad in ipairs({ false, true }) do
 		Init = function(fn)
 			fn()
 		end,
-		OnChange = noop,
+		Timetable = {
+			OnChange = noop,
+			Version = function()
+				return 0
+			end,
+		},
 		OnTravelTick = noop,
 		NearestDock = noop,
 		RefreshRouteButton = noop,

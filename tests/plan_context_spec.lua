@@ -6,8 +6,7 @@ local secret = setmetatable({}, {
 	end,
 })
 local client = { speed = 7, moving = 0, faction = "Alliance", now = 100000 }
-local known, anchors, teleports, ready =
-	{ [1] = true }, {}, { { spell = 5, map = 1, x = 0, y = 0, cast = 10000 } }, { 0 }
+local known, teleports, ready = { [1] = true }, { { spell = 5, map = 1, x = 0, y = 0, cast = 10000 } }, { 0 }
 local ns = {
 	db = { otherFaction = true, hearthMinimumSavings = 90 },
 	Docks = {
@@ -35,9 +34,12 @@ local ns = {
 	KnownTaxiNodes = function()
 		return known
 	end,
-	FreshAnchors = function()
-		return anchors
-	end,
+	L = setmetatable({}, {
+		__index = function(_, key)
+			return key
+		end,
+	}),
+	Init = function() end,
 	UsableTeleports = function(now)
 		assert(now == client.now, "teleport readiness is read at the plan's own time")
 		return teleports, ready
@@ -56,8 +58,19 @@ local env = setmetatable({
 	UnitFactionGroup = function()
 		return client.faction
 	end,
+	GetRealmName = function()
+		return "Test"
+	end,
+	GetServerTime = function()
+		return 0
+	end,
 }, { __index = _G })
-for _, file in ipairs({ "Transport/Model.lua", "Routing/Planner.lua", "Core/PlanContext.lua" }) do
+for _, file in ipairs({
+	"Transport/Model.lua",
+	"Transport/Timetable.lua",
+	"Routing/Planner.lua",
+	"Core/PlanContext.lua",
+}) do
 	setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
 end
 local Context = ns.PlanContext
@@ -86,7 +99,6 @@ local expected = {
 	faction = "Alliance",
 	otherFaction = true,
 	taxiKnown = known,
-	anchors = anchors,
 	docks = ns.Docks,
 	routes = ns.Routes,
 	taxiNodes = ns.TaxiNodes,
@@ -102,14 +114,23 @@ for name, value in pairs(expected) do
 	assert(options[name] == value, name)
 end
 for name in pairs(options) do
-	assert(expected[name] ~= nil, name .. " belongs to one caller, not the shared context")
+	assert(expected[name] ~= nil or name == "anchors", name .. " belongs to one caller, not the shared context")
 end
+assert(next(options.anchors) == nil, "no sightings yet")
 assert(Context.Options(from, to) ~= options, "each plan gets its own table to add to")
 assert(ns.Planner.Plan(options).arrive == client.now + 10000, "the planner takes it as gathered")
+-- Before the saved file loads the timetable has nothing to read; the settings fall back to their defaults.
+local db, timetable = ns.db, ns.Timetable
 client.speed, client.faction, ns.db = secret, "Horde", nil
+ns.Timetable = {
+	Anchors = function()
+		return {}
+	end,
+}
 options = Context.Options(from, to)
 assert(options.walkSpeed == 7 and options.faction == "Horde", "speed in combat and faction are read per plan")
 assert(options.otherFaction == false and options.hearthMinimumSavings == 0, "settings default before the db loads")
+ns.db, ns.Timetable = db, timetable
 -- Specs and the UI harness rebind the data tables after load.
 local routes = ns.Routes
 ns.Routes = {}
@@ -121,7 +142,8 @@ local function ride(here)
 end
 assert(ride(from) == nil, "on foot")
 client.ride = 9
-ns.NextStop = function(routeID)
+local nextStop = ns.Timetable.NextStop
+ns.Timetable.NextStop = function(routeID)
 	assert(routeID == 9)
 	return client.next, client.next and 30000
 end
@@ -130,16 +152,20 @@ client.next = 2
 local aboard = ride(from)
 assert(aboard.route == 9 and aboard.dock == 2 and aboard.arrive == client.now + 30000, "unsighted ride")
 -- Sighted so the boat is docked at dock 1 now.
-anchors[9] = { epoch = client.now - 10000 }
+ns.Timetable.Sighted(9, { epoch = client.now - 10000, seen = 0 })
+assert(Context.Options(from, to).anchors[9].epoch == client.now - 10000, "plans take the fresh sightings")
 assert(ride(from) == nil, "standing at the dock the boat is at: disembarked, the ride lingers 30 s")
 assert(ride({ map = 1, x = 300, y = 0 }) ~= nil, "250 yards clear of that dock")
 assert(ride({ map = 2, x = 0, y = 0 }) ~= nil, "another map")
-anchors[9].epoch = client.now - 30000
+ns.Timetable.Sighted(9, { epoch = client.now - 30000, seen = 1 })
 aboard = ride(from)
 assert(aboard and aboard.dock == 2, "the boat has sailed: aboard at the same spot")
 client.next = nil
 assert(ride(from) == nil, "no next stop")
-client.ride, anchors[9] = nil, nil
+ns.Timetable.NextStop = nextStop
+aboard = ride(from)
+assert(aboard.dock == 2 and aboard.arrive == client.now + 20000, "the timetable names the next stop")
+client.ride = nil
 
 local function kinds(places)
 	local list = {}
@@ -202,7 +228,7 @@ assert(planned.walkSpeed == 7, "dismounting or expiring slow replans the active 
 
 fixture.known = {}
 fixture.teleports, fixture.teleportReady = { { spell = 5, map = 1, x = 600, y = 0, cast = 10000 } }, { 0 }
-fixture.CurrentRide, fixture.NextStop = function()
+fixture.CurrentRide, fixture.Timetable.NextStop = function()
 	return 9
 end, function()
 	return 1, 30000
