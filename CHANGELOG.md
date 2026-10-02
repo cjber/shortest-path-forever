@@ -11,14 +11,12 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
-- **The Hearthstone slider shows its value.** Minimum Hearthstone saving now reads out the time it is set to, and its name is no longer cut short.
-
-- **The guides stay put in a fight.** In combat the game stretches its quest tracker and nudges it back on screen, which shoved the Forever sections sideways across the screen until the fight ended. They now stay stacked above the quest list.
+## [1.8.0] - 2026-10-02
 
 - **Long walks take the boat.** A journey that would be one walk of ten minutes or more now takes boats, trams or flights when they arrive nearly as soon, such as the Stormwind and Menethil boats from Ironforge to Tirisfal Glades.
-
+- **The Hearthstone slider shows its value.** Minimum Hearthstone saving now reads out the time it is set to, and its name is no longer cut short.
+- **The guides stay put in a fight.** In combat the game stretches its quest tracker and nudges it back on screen, which shoved the Forever sections sideways across the screen until the fight ended. They now stay stacked above the quest list.
 - **Move the compass.** Settings → Interface → Move the compass lets you drag it anywhere on screen; right-click it to put it back. The journey tracker already moves: turn off Attach to quest tracker and drag it.
-
 - **Setting names fit the panel.** The settings are renamed with shorter names, so none is cut off in the settings panel. Each tooltip carries the detail the name leaves out.
 
 ## [1.7.0] - 2026-10-01
