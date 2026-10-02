@@ -68,9 +68,16 @@ local function full(o)
 	return plan(o)
 end
 local reachable, findCost = 0, ns.Path.FindCost
+-- A probe that learns nothing and spends the whole probe budget: the endpoint searches must prove the route alone.
+local function spent(map, from, to, callback, water)
+	return findCost(map, from, to, function(_, _, job)
+		job.cpu = math.huge
+		callback(nil, "spent", job)
+	end, water)
+end
 for i = 1, 30 do
 	local map = i % 2
-	ns.Path.FindCost = i % 3 ~= 0 and findCost or nil
+	ns.Path.FindCost = i % 3 ~= 0 and findCost or spent
 	ns.faction, ns.water, ns.speed = i % 3 == 0 and "Horde" or "Alliance", i % 4 < 2, i % 3 == 0 and 14 or 7
 	local points = {}
 	for _, point in ipairs(ns.Planner.Places({ docks = ns.Docks, taxiNodes = ns.TaxiNodes, faction = ns.faction })) do

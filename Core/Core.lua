@@ -57,18 +57,6 @@ function ns.Init(fn)
 	end
 end
 
-local listeners = {}
----@param fn fun()
-function ns.OnChange(fn)
-	listeners[#listeners + 1] = fn
-end
-
-local function Changed()
-	for _, fn in ipairs(listeners) do
-		fn()
-	end
-end
-
 -- Server time in ms. GetServerTime has whole seconds; it floors the true time, so its largest lead over
 -- GetTime is the offset between the two clocks (reset if the clocks jump).
 local offset
@@ -79,45 +67,6 @@ function ns.NowMs()
 		offset = lead
 	end
 	return (GetTime() + offset) * 1000
-end
-
-local function Anchors()
-	return ns.db.anchors[GetRealmName()]
-end
-
--- Record a sighting ({ epoch = server ms at phase 0, seen = server s, source = "you"|"player" }) unless the
--- one held should stand.
----@param routeID number
----@param anchor SPFAnchor
----@return boolean
-function ns.Sighted(routeID, anchor)
-	local anchors = Anchors()
-	if not Model.Newer(anchor, anchors[routeID], GetServerTime()) then
-		return false
-	end
-	anchors[routeID] = { epoch = anchor.epoch, seen = anchor.seen, source = anchor.source }
-	ns.sightingVersion = (ns.sightingVersion or 0) + 1
-	Changed()
-	return true
-end
-
----@param routeID number
----@return SPFAnchor?
-function ns.FreshAnchor(routeID)
-	local anchor = Anchors()[routeID]
-	return anchor and GetServerTime() - anchor.seen <= Model.MAX_AGE and anchor or nil
-end
-
--- Sightings still fresh enough to count down from (and to share).
----@return table<number, SPFAnchor>
-function ns.FreshAnchors()
-	local fresh, now = {}, GetServerTime()
-	for routeID, anchor in pairs(Anchors()) do
-		if now - anchor.seen <= Model.MAX_AGE then
-			fresh[routeID] = anchor
-		end
-	end
-	return fresh
 end
 
 -- The zone map a world point ({ map, x, y }) sits on. GetMapPosFromWorldPos may answer with the continent, so
@@ -213,13 +162,6 @@ function ns.NearestDock()
 	return nearest, yards
 end
 
-local function SoonestFirst(a, b)
-	if a.known ~= b.known then
-		return a.known
-	end
-	return (a.departIn or 0) < (b.departIn or 0) or (a.departIn == b.departIn and a.route < b.route)
-end
-
 -- Opposing-faction landings can be hostile; showing and using those routes is opt-in.
 ---@param route SPFRoute
 ---@return boolean
@@ -233,91 +175,6 @@ local FILTER = { boat = "pins", zeppelin = "pins", lift = "transit", tram = "tra
 ---@return boolean?
 function ns.KindShown(kind)
 	return ns.db[FILTER[kind] or error("unknown route kind " .. tostring(kind))]
-end
-
--- Timetable topology never changes with sightings; build it only when a dock first needs it.
-local dockVisits = {}
----@param dockID number
-function ns.DockVisits(dockID)
-	if not dockVisits[dockID] then
-		local visits = {}
-		for routeID, route in pairs(ns.Routes) do
-			for index, stop in ipairs(route.stops) do
-				if stop.dock == dockID then
-					visits[#visits + 1] = { route = routeID, stop = stop, to = Model.Onward(route, index) }
-				end
-			end
-		end
-		dockVisits[dockID] = visits
-	end
-	return dockVisits[dockID]
-end
-
----@param dockID number
----@return SPFDeparture[]
-function ns.DockDepartures(dockID)
-	local departures, now = {}, ns.NowMs()
-	for _, visit in ipairs(ns.DockVisits(dockID)) do
-		local routeID = visit.route
-		local route = ns.Routes[routeID]
-		if ns.RouteShown(route) then
-			local anchor = ns.FreshAnchor(routeID)
-			local departure = { route = routeID, kind = route.kind, to = visit.to, known = false }
-			if anchor then
-				local phase = (now - anchor.epoch) % route.period
-				departure.known = true
-				departure.docked, departure.arriveIn, departure.departIn = Model.Visit(route, visit.stop, phase)
-				departure.seen = GetServerTime() - anchor.seen
-				departure.source = anchor.source
-			end
-			departures[#departures + 1] = departure
-		end
-	end
-	table.sort(departures, SoonestFirst)
-	return departures
-end
-
--- Boats sharing a lane (Auberdine's two Menethil boats, a lift's two cars) read as one line: the soonest,
--- with when the one after it leaves once both are timed. Departures arrive soonest first.
----@param departures SPFDeparture[]
----@return SPFDeparture[]
-function ns.ByDestination(departures)
-	local merged, first = {}, {}
-	for _, departure in ipairs(departures) do
-		local labels = {}
-		for _, dockID in ipairs(departure.to) do
-			labels[#labels + 1] = ns.DockLabel(dockID)
-		end
-		local key = table.concat(labels, ",")
-		local lead = first[key]
-		if not lead then
-			first[key] = departure
-			merged[#merged + 1] = departure
-		elseif lead.known and departure.known and not lead.thenIn then
-			lead.thenIn = departure.departIn
-		end
-	end
-	return merged
-end
-
--- Where the route being ridden calls next, and in how many ms, when its schedule is known.
----@param routeID number
----@return number? dockID, number? arriveIn
-function ns.NextStop(routeID)
-	local anchor = ns.FreshAnchor(routeID)
-	if not anchor then
-		return nil
-	end
-	local route = ns.Routes[routeID]
-	local phase = (ns.NowMs() - anchor.epoch) % route.period
-	local dockID, soonest
-	for _, stop in ipairs(route.stops) do
-		local docked, arriveIn = Model.Visit(route, stop, phase)
-		if not docked and (not soonest or arriveIn < soonest) then
-			dockID, soonest = stop.dock, arriveIn
-		end
-	end
-	return dockID, soonest
 end
 
 ns.FormatCountdown = Model.FormatCountdown
@@ -334,13 +191,6 @@ frame:SetScript("OnEvent", function(self, _, name)
 	for key, value in pairs(DEFAULTS) do
 		if ns.db[key] == nil then
 			ns.db[key] = value
-		end
-	end
-	ns.db.anchors = ns.db.anchors or {}
-	ns.db.anchors[GetRealmName()] = ns.db.anchors[GetRealmName()] or {}
-	for routeID, anchor in pairs(ns.db.anchors[GetRealmName()]) do
-		if GetServerTime() - anchor.seen > Model.MAX_AGE then
-			ns.db.anchors[GetRealmName()][routeID] = nil
 		end
 	end
 	ready = true

@@ -72,14 +72,15 @@ Things reached indirectly. The dead-code lens must treat these as referenced.
   (and by specs via `loadfile(...)("ShortestPathForever", ns)`). Search every `.lua`, not just the file.
 - `C_AddOns.LoadAddOn("ShortestPathForever_Nav" .. map)` (Routing/PathGrid.lua) loads the walking maps by built name.
 - SavedVariables `ShortestPathForeverDB` / `ShortestPathForeverCharDB`: keys (settings in Core/Core.lua
-  `DEFAULTS`, `anchors`, debug trace) persist in players' saved files.
+  `DEFAULTS`, `anchors` owned by Transport/Timetable.lua, debug trace) persist in players' saved files.
 - Sync wire format (Transport/Sync.lua, prefix `ShortPath1`): other players run older versions; message fields are
   a compatibility contract.
 - Slash commands `/path`, `/shortestpath` (`SLASH_SHORTESTPATHFOREVER*`, `SlashCmdList`).
 - `tools/*.py` are run by hand (README) and `tools/changelog.py` by `.github/workflows/release.yml`;
   `tools/bake_walks.lua` writes `Data/Walks.lua`; `tools/baker/bake.sh` drives `gen_nav.py` and the C# baker.
-- Test seams: `Path.after`, `Path.clock` and `Path.budget` are replaced by specs; Journey's `ns.Path == nil`
-  branches serve specs that load Journey without Path. Guards around them are not dead. Planner.Plan's
+- Test seams: `Path.after`, `Path.clock` and `Path.budget` are replaced by specs. Specs that load Journey without
+  the walking search get `tests/path_fake.lua`, the whole `ns.Path` surface Journey calls; Journey has no
+  branch for a missing or partial `ns.Path`. Planner.Plan's
   `exactMaps` option has no runtime caller; planner_spec and journey_optimal_spec use it for exact-cost
   plans, so it stays.
 - The `taxiLog` / debug trace in SavedVariables is read by a human after `/path debug`; a bounded,
@@ -142,8 +143,8 @@ Audit slices from lowest to highest risk:
 2. `tools/` — offline generators; output is checked in, so a change is visible as a data diff
 3. `tests/`
 4. UI leaves: `UI/Alert.lua`, `UI/Arrow.lua`, `UI/Compass.lua`, `UI/Settings.lua`, `Transport/Taxi.lua`, `UI/Tracker.lua`, `UI/TrackerHost.lua`, `UI/MinimapPins.lua`, `UI/Nearby.lua`, `UI/WhatsNew.lua`
-5. Map layers: `UI/Map.lua`, `UI/Map.xml`, `UI/Route.lua`, `UI/RouteTransports.lua`, `UI/Looks.lua`, `UI/RouteButton.lua`, `UI/StopPin.lua`, `UI/FlightLines.lua`
-6. State and wire: `Transport/Model.lua`, `Core/Core.lua`, `Transport/Observer.lua`, `Transport/Sync.lua`, `Transport/Teleports.lua`, `Core/API.lua` (SavedVariables, wire format,
+5. Map layers: `UI/Map.lua`, `UI/Map.xml`, `UI/Route.lua`, `UI/Strokes.lua`, `UI/RouteTransports.lua`, `UI/Looks.lua`, `UI/RouteButton.lua`, `UI/StopPin.lua`, `UI/FlightLines.lua`
+6. State and wire: `Transport/Model.lua`, `Transport/Timetable.lua`, `Core/Core.lua`, `Transport/Observer.lua`, `Transport/Sync.lua`, `Transport/Teleports.lua`, `Core/API.lua` (SavedVariables, wire format,
    public API)
 7. Planning core: `Routing/Planner.lua`, `Routing/Path*.lua`, `Journey/Journey*.lua`, `Journey/Itinerary.lua`, `Journey/Corpse.lua` (performance-tuned, 3 ms frame budget;
    Journey/Corpse.lua suspends and resumes the journey)
@@ -180,7 +181,7 @@ Shapes this codebase keeps producing. Check new code against them.
   Path failure reasons (`Journey/Journey.lua` `WALK_FAILURE`), sighting `source` `"you"|"player"` (`Transport/Model.lua`), crossing
   modes in `UI/Route.lua`.
 - **second copy of a fact**: another module's fact restated (`parallel-implementations`): Compass's
-  `transportIcons` beside `ns.SetTransportIcon`; `bakedBound` (`Journey/JourneyCosts.lua`) re-deriving Planner's
+  `transportIcons` beside `ns.SetTransportIcon`; `bakedBound` (`Journey/JourneySearch.lua`) re-deriving Planner's
   Walks.lua keys; the TaxiPathNode stop flag as a literal in `gen_transit.py`.
 - **stale spec stub**: spec, bench and UI-harness stubs outliving the production field they stood in for
   (`dead-code`): `owner.loading` in `memory_bench.lua`, a `NewTicker` stub in `sync_spec.lua`, client stubs in

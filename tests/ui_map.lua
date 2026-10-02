@@ -268,6 +268,9 @@ do
 end
 waypointProvider:OnShow()
 WorldMapFrame:AddDataProvider(waypointProvider)
+-- The walking search answers with the straight line when a check calls settle().
+local path = assert(loadfile("tests/path_fake.lua"))()()
+local settle = path.settle
 local ns = {}
 for line in io.lines("ShortestPathForever.toc") do
 	if line:match("%.lua$") then
@@ -275,7 +278,7 @@ for line in io.lines("ShortestPathForever.toc") do
 	end
 end
 local actualPath = ns.Path
-ns.Path = nil -- Terrain scheduling is exercised with controlled callbacks below.
+ns.Path = path.Path
 fireEvent("ADDON_LOADED", "ShortestPathForever")
 fireEvent("PLAYER_ENTERING_WORLD")
 assert(#errors == 0, table.concat(errors, "\n"))

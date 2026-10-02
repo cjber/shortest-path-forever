@@ -1,7 +1,7 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
--- Boat and zeppelin routes on the world map, drawn with Route.lua's strokes and shown while their dock is hovered.
+-- Boat and zeppelin routes on the world map, drawn by Route.lua's painter and shown while their dock is hovered.
 local TRANSPORT_TEMPLATE = "ShortestPathForeverTransportPinTemplate"
 local UNDER_ALPHA = ns.RouteUnderAlpha
 local transportProvider, dockHover, highlightedRoutes
@@ -14,14 +14,16 @@ function ShortestPathForeverTransportPinMixin:OnLoad()
 	ShortestPathForeverRoutePinMixin.OnLoad(self)
 	self:UseFrameLevelType("PIN_FRAME_LEVEL_FOG_OF_WAR")
 	self:EnableMouse(false)
-	self.hits = {}
+	-- Its strokes outlive the draw: hovering a dock shows and hides them by route.
+	self.strokes = ns.Strokes.New()
 end
 
 function ShortestPathForeverTransportPinMixin:UpdateAlpha()
-	for index, hit in ipairs(self.hits) do
-		local alpha = highlightedRoutes and highlightedRoutes[hit.route] and 1 or 0
-		self.lines[index]:SetAlpha(alpha * hit.fade)
-		self.underlines[index]:SetAlpha(alpha * hit.fade * UNDER_ALPHA)
+	local strokes = self.strokes
+	for index = 1, strokes.n do
+		local alpha = highlightedRoutes and highlightedRoutes[strokes.route[index]] and 1 or 0
+		self.lines[index]:SetAlpha(alpha * strokes.alpha[index])
+		self.underlines[index]:SetAlpha(alpha * strokes.alpha[index] * UNDER_ALPHA)
 	end
 end
 

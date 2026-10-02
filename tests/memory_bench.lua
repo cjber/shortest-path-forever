@@ -102,21 +102,21 @@ end
 -- Destructive attribution runs only after the scenario, in this disposable LuaJIT process.
 release("FindMany frontiers", function()
 	for _, key in ipairs({ "startBatch", "goalBatch" }) do
-		local batch = upvalue(ns.ClearJourney, key)
+		local batch = upvalue(ns.JourneySearch.Reset, key)
 		if batch and batch.job then
 			ns.Path.Cancel(batch.job)
 		end
 	end
 end)
 release("endpoint costs/results", function()
-	wipe(upvalue(ns.ClearJourney, "startCosts"))
-	wipe(upvalue(ns.ClearJourney, "goalCosts"))
+	wipe(upvalue(ns.JourneySearch.Clear, "startCosts"))
+	wipe(upvalue(ns.JourneySearch.Clear, "goalCosts"))
 	for _, key in ipairs({ "startBatch", "goalBatch" }) do
-		wipe(upvalue(ns.ClearJourney, key))
+		wipe(upvalue(ns.JourneySearch.Reset, key))
 	end
 end)
 release("walkCache (shared drawing excluded)", function()
-	wipe(upvalue(ns.ClearJourney, "walkCache"))
+	wipe(upvalue(ns.JourneySearch.Walks.Clear, "walkCache"))
 end)
 release("planner topology", function()
 	wipe(topologyCache)
@@ -147,7 +147,7 @@ release("pooled stroke Lua bookkeeping (UI region storage is client-owned)", fun
 	local pools = upvalue(map.RemoveAllPinsByTemplate, "pools")
 	local active = upvalue(map.RemoveAllPinsByTemplate, "active")
 	local function strokes(owner)
-		owner.lines, owner.underlines, owner.hits = nil, nil, nil
+		owner.lines, owner.underlines, owner.strokes = nil, nil, nil
 	end
 	for _, list in ipairs({ pools, active }) do
 		for _, pins in pairs(list) do
@@ -157,6 +157,7 @@ release("pooled stroke Lua bookkeeping (UI region storage is client-owned)", fun
 		end
 	end
 	strokes(_G.ShortestPathForeverMinimapRoute)
+	wipe(upvalue(ns.SetJourneyRoute, "journeyStrokes"))
 end)
 print(
 	string.format("  remaining fixture/metadata: %.1f KB excluding packed maps and base", collected() - packed - base)

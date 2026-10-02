@@ -66,7 +66,7 @@ local function Search(current, here)
 	leg.walkPoints = ns.Planner.WalkPoints(here, current.point)
 	if here.map ~= current.point.map then
 		leg.walkPoints, leg.walkError = {}, "outside"
-	elseif not (ns.Path and ns.Path.HasData(here.map)) then
+	elseif not ns.Path.HasData(here.map) then
 		leg.walkError = "nodata"
 	else
 		local job
@@ -111,7 +111,7 @@ function Corpse.Steer()
 		end
 	end
 	yards = yards or math.sqrt((point.x - here.x) ^ 2 + (point.y - here.y) ^ 2)
-	local speed = ns.RunSpeed()
+	local speed = ns.PlanContext.RunSpeed()
 	leg.depart = ns.NowMs()
 	leg.arrive = leg.depart + yards / speed * 1000
 	run.plan.arrive = leg.arrive

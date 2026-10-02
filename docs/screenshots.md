@@ -42,7 +42,7 @@ remains 8,000 ms. The animation uses fixed time steps, never the wall clock.
   supplies boat geometry: route 295, docks 10 → 9, and route 292, docks 5 → 6.
   The final Silithus destination is Alliance taxi node 73 from `Data/Taxi.lua`.
   Timings in the tracker reproduce capture 21, not a new optimality measurement.
-- `UI/Route.lua` supplies 2-pixel cores in 4-pixel outlines, 4-pixel walk dots in 6-pixel rims 9 apart, colours,
+- `UI/Strokes.lua` and `UI/Route.lua` supply 2-pixel cores in 4-pixel outlines, 4-pixel walk dots in 6-pixel rims 9 apart, colours,
   overview curves, fading continent-edge curves and the 1.2-second settling pulse.
   Outlines render below all cores. The destination uses the native pin at 0.8 scale.
 - `UI/Map.lua` / `UI/Map.xml` supply 20-unit ferry pins, transitive dock clustering,
