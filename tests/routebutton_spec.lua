@@ -59,16 +59,6 @@ local function boot(options)
 	function methods:Hide()
 		self.hidden = true
 	end
-	function methods:IsShown()
-		return not self.hidden
-	end
-	function methods:SetShown(shown)
-		if shown then
-			self:Show()
-		else
-			self:Hide()
-		end
-	end
 	local state =
 		{ guided = options.guided == true, journey = options.journey ~= false, toggles = 0, opened = 0, nearby = 0 }
 	local ns

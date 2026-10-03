@@ -3,8 +3,7 @@
 -- itself, settle() answers every search with the straight-line cost and the straight line, or the points the
 -- spec's `draw(from, to)` gives.
 return function()
-	-- deferred: what Path.after left for the next frame, for a spec to run.
-	local fake = { finds = {}, probes = {}, batches = {}, deferred = {}, data = true, auto = true }
+	local fake = { finds = {}, probes = {}, batches = {}, data = true, auto = true }
 	local Path = {}
 	fake.Path = Path
 
@@ -12,7 +11,7 @@ return function()
 		return a.map == b.map and math.sqrt((a.x - b.x) ^ 2 + (a.y - b.y) ^ 2)
 	end
 	local function job(list, map, from, callback, water)
-		local new = { map = map, from = from, callback = callback, water = water, frames = 0, cpu = 0 }
+		local new = { map = map, from = from, callback = callback, water = water, cpu = 0 }
 		list[#list + 1] = new
 		return new
 	end
@@ -60,9 +59,7 @@ return function()
 	function Path.Busy()
 		return false
 	end
-	function Path.after(fn)
-		fake.deferred[#fake.deferred + 1] = fn
-	end
+	function Path.after() end
 
 	-- Ends a search with what it found: Find's (points, cost) or (nil, reason), FindCost's (cost, reason), FindMany's
 	-- (costs, reason). A spec may end a cancelled search to prove its late answer is ignored.

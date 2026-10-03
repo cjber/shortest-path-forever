@@ -5,13 +5,13 @@ local BLIZZARD_UI = (os.getenv("SPF_BLIZZARD_UI") or "tools/.cache/blizzard-ui")
 local T, frames, tickers = 0, {}, {}
 local uiScale = 1
 local shiftDown, mouseFoci = true, {}
-local arrowFrame, navigationFrame
+local arrowFrame
 local posX, posY, posMap = -1005.6, -3841.6, 1
 local posZ = 0
 local errors, lineCreations, waypointCalls = {}, 0, 0
-local waypoint, supertracked, cleared = nil, false, 0
+local waypoint, supertracked = nil, false
 local trackedQuest, playerUiMap = 0, nil
-local onTaxi, facing, minimapShape = false, 0, nil
+local onTaxi, facing = false, 0
 local moving, combat = false, false
 local mapOpens = 0
 _G.IsPlayerMoving = function()
@@ -94,11 +94,6 @@ local fontmt = {
 		if k == "SetFormattedText" then
 			return function(self, fmt, ...)
 				self.text = string.format(fmt, ...)
-			end
-		end
-		if k == "GetStringHeight" then
-			return function()
-				return 12
 			end
 		end
 		if k == "SetText" then
@@ -294,9 +289,6 @@ local function stubframe()
 	f.Header = {
 		SetScript = noop,
 		EnableMouse = noop,
-		CreateTexture = function()
-			return f:CreateTexture()
-		end,
 	}
 	frames[#frames + 1] = f
 	return f
@@ -440,14 +432,8 @@ end
 _G.GetPlayerFacing = function()
 	return facing
 end
-_G.C_Navigation = {
-	GetFrame = function()
-		return navigationFrame
-	end,
-}
-_G.GetMinimapShape = function()
-	return minimapShape
-end
+_G.C_Navigation = { GetFrame = noop }
+_G.GetMinimapShape = noop
 -- The corpse's map position while ghost is true; nil is the ordinary living case.
 local corpsePosition
 _G.C_DeathInfo = {
@@ -522,7 +508,7 @@ _G.C_Item = {
 	end,
 }
 _G.FlashClientIcon = noop
-_G.SOUNDKIT = { RAID_WARNING = 1 }
+_G.SOUNDKIT = {}
 _G.UNKNOWN = "Unknown"
 _G.geterrorhandler = function()
 	return function(e)
@@ -559,7 +545,7 @@ _G.C_QuestLog = {
 	end,
 }
 _G.MapCanvasMixin = { MouseAction = { Up = 1, Down = 2, Click = 3 } }
-_G.POIButtonUtil = { Style = { Waypoint = 1 }, Type = { Quest = 1, Content = 2, AreaPOI = 3, Vignette = 4 } }
+_G.POIButtonUtil = { Style = { Waypoint = 1 } }
 _G.GetTaxiMapID = function()
 	return nil
 end
@@ -591,15 +577,10 @@ local function fireEvent(event, ...)
 		end
 	end
 end
--- Water walking: which buff is up and which spells are known.
-waterAura, knownSpell = nil, nil
-_G.C_UnitAuras = {
-	GetPlayerAuraBySpellID = function(id)
-		return id == waterAura and {} or nil
-	end,
-}
-_G.IsPlayerSpell = function(id)
-	return id == knownSpell
+-- Water walking: no buff is up and no spell is known.
+_G.C_UnitAuras = { GetPlayerAuraBySpellID = noop }
+_G.IsPlayerSpell = function()
+	return false
 end
 _G.C_Spell = {
 	GetSpellName = function(id)
@@ -714,7 +695,6 @@ _G.C_Map = {
 	end,
 	ClearUserWaypoint = function()
 		waypoint = nil
-		cleared = cleared + 1
 		fireEvent("USER_WAYPOINT_UPDATED")
 	end,
 }

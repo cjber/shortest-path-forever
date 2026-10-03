@@ -62,20 +62,12 @@ for _, readyAtLoad in ipairs({ false, true }) do
 			Attach = function(module)
 				owners[module] = native
 			end,
-			IsAttached = function(module)
-				return owners[module] == native
-			end,
 		},
 		L = setmetatable({}, {
 			__index = function(_, key)
 				return key
 			end,
 		}),
-		Live = { OnChange = noop },
-		Integrations = { OnTravelChange = noop, OnGuidanceChange = noop },
-		Asides = { OnChange = noop },
-		Moments = { OnChange = noop },
-		OnRouteChange = noop,
 		Init = function(fn)
 			fn()
 		end,

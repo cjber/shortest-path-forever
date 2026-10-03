@@ -107,7 +107,7 @@ local function Name(frame)
 	end
 	if not name then
 		local parent = frame.parent
-		name = (frame.objectType or "Frame") .. "@" .. tostring(parent and (parent.name or parent.objectType) or "?")
+		name = "Frame@" .. tostring(parent and parent.name or "?")
 	end
 	return name
 end
@@ -126,7 +126,7 @@ end
 
 local function Interactive(frame)
 	local scripts = frame.scripts
-	return (scripts and (scripts.OnClick or scripts.OnMouseUp or scripts.OnMouseDown)) or frame.mouseUpHandler ~= nil
+	return scripts and (scripts.OnClick or scripts.OnMouseUp or scripts.OnMouseDown)
 end
 
 local function Hoverable(frame)
@@ -141,9 +141,6 @@ local function ClickFrame(frame, button)
 	end
 	if scripts.OnMouseUp then
 		scripts.OnMouseUp(frame, button)
-	end
-	if frame.mouseUpHandler then
-		frame.mouseUpHandler(frame, button, true)
 	end
 	if scripts.OnMouseDown then
 		scripts.OnMouseDown(frame, button)
@@ -191,10 +188,6 @@ local function MenuRoot()
 		local record = entry(text)
 		record.click = click
 		return { SetEnabled = noop }
-	end
-	function root:CreateRadio(text, get, set)
-		local record = entry(text)
-		record.get, record.click = get, set
 	end
 	function root:CreateDivider() end
 	function root:CreateTitle(text)
@@ -568,7 +561,7 @@ local function DrivePaths(label)
 	end)
 end
 
---[[ Profiles: the representative states the task names, applied to the one live fixture. ]]
+--[[ Profiles: representative client states, applied to the one live fixture. ]]
 local function Reset()
 	if ghost then
 		ghost, corpsePosition = false, nil
@@ -744,7 +737,6 @@ for _, profile in ipairs(profiles) do
 	Run(label .. " pins after settings", function()
 		DrivePins(label .. " after")
 	end)
-	Run(label .. " final", function() end)
 end
 
 --[[ A deterministic fuzz over the same objects: random settings, frames, pins, journeys and states, replayed

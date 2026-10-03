@@ -1,7 +1,7 @@
 -- Both searches fit the unchanged 3 ms planner budget, including a cold topology. CI asserts the plan only;
 -- SPF_BENCH_STRICT=1 also asserts the budget, which shared runners are too slow and noisy to hold.
 local strict = os.getenv("SPF_BENCH_STRICT") == "1"
-local ns = { Docks = {}, Routes = {} }
+local ns = {}
 for _, file in ipairs({
 	"Transport/Model.lua",
 	"Data/Routes.lua",

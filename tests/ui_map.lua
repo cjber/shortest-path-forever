@@ -1,7 +1,7 @@
 -- Continues tests/ui_client.lua: the world map, Blizzard's own map providers, and the addon loaded in TOC order.
 local zoom, mapID, visible = 0, 1414, false
 cursorX, cursorY = 0.5, 0.5
-local pins, pools, active, providers = {}, {}, {}, {}
+local pools, active, providers = {}, {}, {}
 local canvas = { width = 1000, height = 700 }
 function canvas:GetWidth()
 	return self.width
@@ -43,12 +43,6 @@ function map:RemoveAllPinsByTemplate(template)
 		pools[template][#pools[template] + 1] = pin
 	end
 	active[template] = {}
-	if template:match("Dock") then
-		pins = active[template]
-	end
-	if template:match("Portal") then
-		portalPins = active[template]
-	end
 end
 function map:AcquirePin(template, ...)
 	pools[template], active[template] = pools[template] or {}, active[template] or {}
@@ -56,7 +50,6 @@ function map:AcquirePin(template, ...)
 	if not pin then
 		pin = stubframe()
 		pin.Icon = pin:CreateTexture()
-		pin.Label = setmetatable({}, fontmt)
 		pin.Glow, pin.Texture, pin.HighlightTexture = setmetatable({}, mt), setmetatable({}, mt), setmetatable({}, mt)
 		function pin.Texture:SetAtlas(atlas)
 			self.atlas = atlas
@@ -72,12 +65,6 @@ function map:AcquirePin(template, ...)
 		pin:OnLoad()
 	end
 	active[template][#active[template] + 1] = pin
-	if template:match("Dock") then
-		pins = active[template]
-	end
-	if template:match("Portal") then
-		portalPins = active[template]
-	end
 	pin:Show()
 	pin:OnAcquired(...)
 	if template:match("Transport") then
@@ -85,7 +72,6 @@ function map:AcquirePin(template, ...)
 	end
 	return pin
 end
-portalPins = {}
 _G.MapCanvasPinMixin = {
 	OnReleased = noop,
 	-- MapCanvas_DataProviderBase.lua:233/284: clicks reach OnMouseClickAction; right clicks pass through to zoom out.
