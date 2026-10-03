@@ -55,6 +55,15 @@ local function Cooldown(teleport)
 	return start and duration and start > 0 and math.max(0, start + duration - GetTime()) or 0
 end
 
+-- The cast time the client reports for the spell now, in ms; the shipped one when it reports none.
+---@param teleport SPFTeleport
+---@return number
+local function CastTime(teleport)
+	local info = C_Spell.GetSpellInfo(teleport.spell)
+	local cast = info and info.castTime
+	return canaccessvalue(cast) and cast and cast > 0 and cast or teleport.cast
+end
+
 -- The places keep their identity while the set is unchanged, so the planner keeps its topology; only readiness
 -- ([index] = server ms when it can be cast) is read afresh.
 ---@param now number server ms
@@ -84,7 +93,7 @@ function ns.UsableTeleports(now)
 				bind = teleport.bind,
 				spell = teleport.spell,
 				item = teleport.item,
-				cast = teleport.cast,
+				cast = CastTime(teleport),
 			}
 		end
 	end

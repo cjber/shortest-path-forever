@@ -5,7 +5,7 @@ end
 
 local current, reachable, unreachable = 0, 1, 2
 local mapNodes = {
-	{ nodeID = 103, slotIndex = 1, state = reachable },
+	{ nodeID = 103, slotIndex = 1, state = reachable, name = "Sturmwind" },
 	{ nodeID = 101, slotIndex = 3, state = current },
 	{ nodeID = 102, slotIndex = 4, state = reachable },
 }
@@ -188,7 +188,7 @@ assert(ns.TaxiDestination({ { mode = "boat" }, flight }, 101) == nil, "do not sk
 assert(ns.TaxiDestination(nil, 101) == nil and ns.TaxiDestination({}, 101) == nil)
 
 ns.db = { taxiRoute = true }
-ns.TaxiNodes = { [101] = {}, [102] = {}, [103] = {} }
+ns.TaxiNodes = { [101] = { name = "Ironforge" }, [102] = {}, [103] = { name = "Stormwind" } }
 ns.SetJourneyRoute = function() end
 ns.JourneyChanged = function() end
 ns.init()
@@ -211,8 +211,17 @@ end
 local target = env.TaxiButton1
 publish()
 assert(routeQueries == 0, "a closed map does no route work")
+-- A flight point reads by its shipped name until a flight map has named it, in the game's language.
+ns.L = setmetatable({}, {
+	__index = function(_, phrase)
+		return phrase
+	end,
+})
+assert(loadfile("Journey/JourneySteps.lua"))("ShortestPathForever", ns)
+assert(ns.PlaceLabel({ kind = "taxi", id = 103 }) == "Stormwind")
 event("TAXIMAP_OPENED")
 env.TaxiFrame:Show()
+assert(ns.PlaceLabel({ kind = "taxi", id = 103 }) == "Sturmwind" and ns.TaxiName(101) == "Ironforge")
 assert(
 	visibleLines() == 2 and target.locked and not tooltip,
 	"opening draws all hops and lights the destination without a tooltip"

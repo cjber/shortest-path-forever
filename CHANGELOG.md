@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **Flight points in your game's language.** Once you have opened a flight map, journey steps and map pins name its flight points as the game does, rather than always in English.
+
 ## [1.8.1] - 2026-10-03
 
 - **A journey you cannot walk to says why.** When you stand somewhere the walking map cannot place, and no flight, boat or spell gets you there either, the tracker now reads no walking path instead of No way there from here.
