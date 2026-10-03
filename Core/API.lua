@@ -144,10 +144,6 @@ local function Options(from, to)
 	end
 	-- Same multimodal planner and baked walks as the arrow's initial plan. Endpoint terrain searches
 	-- are asynchronous and deliberately omitted: this is an estimate, not a settled walking path.
-	-- Uncached, LuaJIT -joff: Auberdine -> Eastern Plaguelands 2.45 ms cold / 0.51 ms warm;
-	-- JIT compilation can make the first call ~4 ms. Callers should make at most one uncached call per
-	-- frame; AGF fetches its card estimates one per frame while its panel is open. Results are cached, 256
-	-- (origin rounded to 0.0001, exact destination) for at most five seconds; cached calls measured ~0.003 ms.
 	options.cache, options.waterWalking = plannerCache, ns.JourneyWaterWalking()
 	for _, name in ipairs(CONTEXT_KEYS) do
 		if context[name] ~= options[name] then
@@ -164,6 +160,10 @@ local function Options(from, to)
 	return options, now
 end
 
+-- Behind API.Estimate and EstimateDetail. Uncached, LuaJIT -joff: Auberdine -> Eastern Plaguelands 2.45 ms cold /
+-- 0.51 ms warm; JIT compilation can make the first call ~4 ms. Callers should make at most one uncached call per
+-- frame; AGF fetches its card estimates one per frame while its panel is open. Results are cached, 256 (origin
+-- rounded to 0.0001, exact destination) for at most five seconds; cached calls measured ~0.003 ms.
 ---@param from SPFPoint
 ---@param to SPFPoint
 ---@param key string
