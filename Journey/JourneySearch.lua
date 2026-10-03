@@ -507,7 +507,12 @@ local function RefreshCosts(includeGoal, forced)
 		slices, lastRevision = 0, revision
 		startCosts, goalCosts = walks(startBatch), walks(goalBatch)
 		local goalError = goalBatch.reason
-		costError = startBatch.reason == "error" and "error" or goalError == "error" and "error" or nil
+		-- Why an endpoint has no walk at all, a failed search first. A missing map is not one: its walks are estimated.
+		local startError = startBatch.reason ~= "nodata" and startBatch.reason or nil
+		costError = (startError == "error" or goalError == "error") and "error"
+			or startError
+			or goalError ~= "nodata" and goalError
+			or nil
 		-- An invalid goal also rules out the direct start -> goal edge without searching toward it.
 		if goalError and goalError ~= "nodata" then
 			startCosts[#startCosts + 1] = { from = here, to = goal, cost = false }

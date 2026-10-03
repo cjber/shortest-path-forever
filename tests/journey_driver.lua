@@ -1,7 +1,7 @@
 local root = ... or "."
 local ns = { db = { journey = true }, charDB = {} }
 assert(loadfile(root .. "/Locales/enUS.lua"))("ShortestPathForever", ns)
-local now, here, target, shown, click = 0, { map = 1, x = 0, y = 0, z = 0 }
+local now, here, target, shown, click, minimapClick = 0, { map = 1, x = 0, y = 0, z = 0 }
 local function noop() end
 local frames, events, waypoint, tracked, quest = {}, {}, nil, false, 0
 local secret = setmetatable({}, {
@@ -162,7 +162,11 @@ local env = setmetatable({
 		end,
 		AddGlobalPinMouseActionHandler = noop,
 	},
-	Minimap = { HookScript = noop },
+	Minimap = {
+		HookScript = function(_, _, fn)
+			minimapClick = fn
+		end,
+	},
 	Menu = { ModifyMenu = noop },
 }, { __index = _G })
 local function load(file)
@@ -234,6 +238,10 @@ return {
 		here, target = from, to
 		assert(click(map, "LeftButton"))
 		path.settle()
+	end,
+	-- A shift-click on the minimap, as its mouse-up hook sees it.
+	minimap = function()
+		minimapClick(env.Minimap, "LeftButton")
 	end,
 	move = function(point)
 		here = point

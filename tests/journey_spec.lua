@@ -30,6 +30,32 @@ assert(trimmed[1].x == 300 and trimmed[1].y == 150 and trimmed[2] == points[2], 
 ns.ClearJourney()
 assert(not driver.shown() and not ns.JourneyInfo() and not ns.JourneyStatus())
 
+-- A start the walking map cannot place, with no other way there, says the walk is why.
+driver.begin({ map = 1, x = 40, y = 0, z = 0 }, { map = 1, x = 900, y = 0 })
+local endpoints = walking.waiting(walking.batches)
+assert(#endpoints == 2 and not endpoints[1].reverse and endpoints[2].reverse)
+walking.costs(endpoints[2], 860)
+walking.costs(endpoints[1], false, "offmesh")
+local _, rows, planned = ns.JourneyInfo()
+assert(not planned and #rows == 1 and rows[1].text == ns.WalkFailure.offmesh, rows[1].text)
+ns.ClearJourney()
+
+-- A shift-click the minimap cannot place says so, as the same click on the world map does.
+local said = {}
+ns.Print = function(message)
+	said[#said + 1] = message
+end
+ns.MinimapPoint = function() end
+driver.minimap()
+assert(#said == 1 and said[1] == ns.L["no journey can be planned to that spot."] and not ns.JourneyInfo())
+ns.MinimapPoint = function()
+	return { map = 1, x = 900, y = 0 }
+end
+driver.minimap()
+assert(#said == 1 and ns.JourneyInfo(), "a placed minimap click starts the journey")
+ns.ClearJourney()
+ns.Print = function() end
+
 -- A recent ride remains observed after disembarking; a docked boat must not force a round trip.
 walking.auto = true
 driver.load("Data/Routes.lua")
