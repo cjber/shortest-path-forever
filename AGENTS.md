@@ -65,7 +65,7 @@ before its `v*` tag, since the release publishes it as the notes.
 
 ## Standards
 
-- `wow-forever-addon` — https://github.com/cjber/skills/tree/38f085e8a1025413d4a7031ab957cd5f2280a120/wow-forever-addon (UI look,
+- `wow-forever-addon` — https://github.com/cjber/skills/tree/19082fc10bf90cbb466b8129bddc4a7f32334756/wow-forever-addon (UI look,
   icon, README and store page, CI and release requirements shared by every WoW: Forever addon)
 
 ## Waivers
@@ -74,6 +74,25 @@ before its `v*` tag, since the release publishes it as the notes.
   second options surface. Every option still lives in the settings page, which the slash command, the compartment
   entry and the button's right-click open; the button starts and stops the route; middle-click opens the service finder. Owner decisions
   2026-09-29 and 2026-09-30.
+- WFA-28: `Data/Routes.lua` (boat and zeppelin routes, docks, periods): wago.tools `TaxiPathNode` for the pinned
+  build, timed by the CMaNGOS mangos-classic transport model and stretched onto classic-db `transports.period`;
+  QuestieDB's object `waypoints` field is empty in its Forever store and AtlasLoot has no travel data. Live
+  sightings set each route's phase.
+- WFA-28: `Data/Transports.lua` (lifts and the Deeprun Tram): wago.tools `TransportAnimation` placed at classic-db
+  `gameobject` spawns, with hand-curated site names and car pairings; QuestieDB holds none of these fifteen
+  objects, and its spawns are zone fractions with no height. Live sightings set each car's phase.
+- WFA-28: `Data/Taxi.lua` (flight points, flight paths, durations, island bounds): wago.tools `TaxiNodes`,
+  `TaxiPath`, `TaxiPathNode`, `UiMapAssignment` and `Map`, durations from the InFlight addon's defaults, two
+  hand-drawn Feralas island boxes; QuestieDB has flight masters' spawns but no flight point IDs, paths or times.
+  Which points you know, their names and the flight to take are read from the flight map.
+- WFA-28: `Data/Portals.lua` (public portals and passages): wago.tools `AreaTrigger` with classic-db
+  `areatrigger_teleport` destinations, six hand-picked and named; neither database holds area triggers.
+- WFA-28: `Data/Teleports.lua` (class teleports and bind items): wago.tools spell and item tables with classic-db
+  `spell_target_position` landings; neither database holds spell effects or landings. Known spells, reagent
+  counts, cooldowns, cast times and the bind point are read from the client.
+- WFA-28: `Data/Walks.lua` and `ShortestPathForever_Nav*/` (walking costs and walking maps): baked by
+  `tools/bake_walks.lua` and `tools/baker/` from a local client install's terrain; neither database holds
+  terrain. A walk you are on is searched live on the walking map.
 
 ## Secure UI regression checks
 

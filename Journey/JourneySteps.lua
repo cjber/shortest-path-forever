@@ -25,6 +25,14 @@ ns.WalkFailure = {
 	error = L["walking search failed"],
 }
 
+-- A flight point by the name its flight map last gave it, or the shipped English one until a flight map has.
+---@param id number
+---@return string
+function ns.TaxiName(id)
+	local names = ns.charDB.taxiNames
+	return names and names[id] or ns.TaxiNodes[id].name
+end
+
 -- A place with no kind is the destination point as clicked or picked from a quest.
 ---@param node SPFPoint|SPFPlace
 ---@param mode? SPFMode
@@ -35,7 +43,7 @@ function ns.PlaceLabel(node, mode)
 	elseif node.kind == "dock" then
 		return (mode == "boat" or mode == "zeppelin") and ns.DockLabel(node.id) or ns.DockTitle(node.id)
 	elseif node.kind == "taxi" then
-		return ns.TaxiNodes[node.id].name
+		return ns.TaxiName(node.id)
 	elseif node.kind == "portal" then
 		return node.label
 	elseif node.kind == "teleport" or node.kind == "goal" or node.kind == nil then

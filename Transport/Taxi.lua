@@ -206,7 +206,8 @@ local function Log(key, uiMap, nodes)
 	}
 end
 
--- At a flight master, every node it can fly to is known (absence never unlearns one).
+-- At a flight master, every node it can fly to is known (absence never unlearns one), by the name the client gives
+-- it there, which is in the game's language.
 local function ScanFlightMaster()
 	local uiMap = GetTaxiMapID and GetTaxiMapID()
 	local nodes = uiMap and C_TaxiMap.GetAllTaxiNodes(uiMap) or {}
@@ -215,8 +216,13 @@ local function ScanFlightMaster()
 		Log("master", uiMap, nodes)
 	end
 	for _, node in ipairs(nodes) do
-		if node.state ~= Enum.FlightPathState.Unreachable and ns.TaxiNodes[node.nodeID] then
-			ns.charDB.taxi[node.nodeID] = true
+		if ns.TaxiNodes[node.nodeID] then
+			if node.state ~= Enum.FlightPathState.Unreachable then
+				ns.charDB.taxi[node.nodeID] = true
+			end
+			if node.name and node.name ~= "" then
+				ns.charDB.taxiNames[node.nodeID] = node.name
+			end
 		end
 	end
 end
@@ -271,6 +277,7 @@ ns.Init(function()
 	if ns.charDB.taxiVersion ~= KNOWN_VERSION then
 		ns.charDB.taxi, ns.charDB.taxiScanned, ns.charDB.taxiVersion = {}, nil, KNOWN_VERSION
 	end
+	ns.charDB.taxiNames = ns.charDB.taxiNames or {}
 	local frame = CreateFrame("Frame")
 	frame:RegisterEvent("TAXIMAP_OPENED")
 	-- Learning a node fires this while the flight master's map is open.

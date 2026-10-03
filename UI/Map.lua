@@ -728,10 +728,11 @@ function FlightProviderMixin:RefreshAllData()
 			Query(location.uiMap)
 			local unknown = known ~= nil and not known[id]
 			local native = reported[id]
-			-- The API's nodeID is the TaxiNodes DB2 key, also used by Taxi.lua; no name/position guessing.
+			-- The API's nodeID is the TaxiNodes DB2 key, also used by Taxi.lua; no name/position guessing. Its name is
+			-- the client's own; its position is on whichever map was asked, so the shipped world point places the pin.
 			local info = {
 				nodeID = id,
-				name = node.name,
+				name = native and native.name ~= "" and native.name or ns.TaxiName(id),
 				position = CreateVector2D(x, y),
 				isUndiscovered = unknown,
 				faction = Enum.FlightPathFaction[node.faction or "Neutral"],

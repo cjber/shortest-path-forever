@@ -103,7 +103,7 @@ assert(onlyHearth and onlyHearth.arrive == 15000, "retain Hearthstone when no al
 -- What this character can cast, read from the client.
 do
 	local secret = {}
-	local items, spells, cooldowns, itemCooldowns = {}, {}, {}, {}
+	local items, spells, cooldowns, itemCooldowns, casts = {}, {}, {}, {}, {}
 	local bindName, position, onEvent = "Goldshire", { 10, 20, 30, 0 }, nil
 	local runtime = { db = { teleports = true }, charDB = {}, Teleports = ns.Teleports }
 	runtime.Init = function(fn)
@@ -127,6 +127,9 @@ do
 			end,
 		},
 		C_Spell = {
+			GetSpellInfo = function(id)
+				return casts[id] and { castTime = casts[id] }
+			end,
 			GetSpellCooldown = function(id)
 				return cooldowns[id] or { startTime = 0, duration = 0 }
 			end,
@@ -168,6 +171,15 @@ do
 	cooldowns[3561] = { startTime = secret, duration = secret }
 	assert(not select(2, Usable(5000))[1], "a secret cooldown is never guessed")
 	cooldowns[3561], spells[3561] = nil, nil
+	-- The cast time is the client's own where it reports one, and the shipped one where it does not.
+	assert(places[1].cast == 10000, "the shipped cast time")
+	casts[3562], spells[3562] = 8500, true
+	assert(Usable(5000)[1].cast == 8500, "the client's cast time")
+	casts[3562] = secret
+	spells[3561] = true
+	places = Usable(5000)
+	assert(places[2].spell == 3562 and places[2].cast == 10000, "a secret cast time is never used")
+	casts[3562], spells[3561], spells[3562] = nil, nil, nil
 
 	items[6948] = 1
 	assert(#Usable(5000) == 0, "no hearth before a bind point is recorded")

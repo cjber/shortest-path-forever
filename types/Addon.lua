@@ -151,6 +151,7 @@
 ---@field taxiLog? table<string, {seen: number, showsNodes: boolean, nodes: string[]}>
 ---@class SPFCharacterDatabase
 ---@field taxi table<number, boolean>
+---@field taxiNames? table<number, string> -- flight points by the name a flight map gave them
 ---@field taxiVersion number
 ---@field taxiScanned? boolean
 ---@field guideWaypoint? {uiMapID: number, x: number, y: number}

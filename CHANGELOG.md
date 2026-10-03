@@ -16,6 +16,7 @@ verbatim rather than rewritten as the addon moves.
 - **A map click on open sea tells you.** Shift-clicking the world map where no zone lies, such as the sea on a continent map or the gap between continents, now prints that no journey can be planned to that spot instead of starting a journey to nowhere.
 - **Nearby services says what is wrong.** Without QuestieDB installed the menu now reads Nearby services need the QuestieDB addon, and when QuestieDB is installed but cannot be read it says so, instead of listing every service as unavailable here.
 - **No empty trainer and vendor menus.** Where a zone has no trainers or vendors, Trainers by specialty and Vendors by specialty now read as unavailable here like the other services, instead of opening an empty list.
+- **Flight points in your game's language.** Once you have opened a flight map, journey steps and map pins name its flight points as the game does, rather than always in English.
 
 ## [1.8.1] - 2026-10-03
 
