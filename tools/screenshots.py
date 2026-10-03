@@ -27,6 +27,8 @@ WOWMOCK = Path(os.environ.get("WOWMOCK", Path.home() / ".claude/skills/wow-mock-
 if not (WOWMOCK / "wowmock.py").is_file():
     sys.exit(f"wowmock.py not found in {WOWMOCK}; set WOWMOCK to its directory")
 sys.path.insert(0, str(WOWMOCK))
+from screenshots_services import render as render_services
+from screenshots_services import route_button
 from screenshots_tracker import detached_tracker
 from wowmock import (
     BUILD,
@@ -662,18 +664,6 @@ def render_compass(ui):
     return scene(ui, [(compass_canvas(ui), 0, 0)])
 
 
-def render_services(ui):
-    from screenshots_services import render
-
-    return render(ui)
-
-
-def route_button(canvas, x, y, active=True):
-    from screenshots_services import route_button as draw
-
-    draw(canvas, x, y, ROOT / "media/Icon.tga", active)
-
-
 def render_minimap(ui):
     canvas = ui.canvas(300, 285)
     cx, cy, size, radius = 150, 155, 198, 233 + 1 / 3
@@ -711,7 +701,12 @@ def render_minimap(ui):
     # RouteButton.lua: 315 degrees round the minimap from its right edge, six units past its rim, gold here
     # because this scene has a journey running.
     radius = size / 2 + 6
-    route_button(canvas, cx + math.cos(math.radians(315)) * radius, cy - math.sin(math.radians(315)) * radius)
+    route_button(
+        canvas,
+        cx + math.cos(math.radians(315)) * radius,
+        cy - math.sin(math.radians(315)) * radius,
+        ROOT / "media/Icon.tga",
+    )
     icon(canvas, "MinimapArrow", cx, cy, 16)
     bend = next(p for p in points[1:] if math.hypot(p["x"] - here["x"], p["y"] - here["y"]) > 25)
     x, y = project(bend)

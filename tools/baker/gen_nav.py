@@ -1,6 +1,6 @@
 """Build a map's walking-route data (HPA* graph + per-cluster 8 yd grids) as an addon Lua file.
 
-usage: gen_nav.py <out.lua> --map <id> [--name "<title>"] [--rows r0 r1 --cols c0 c1] [--jobs n]
+usage: gen_nav.py [<out.lua>] --map <id> [--name "<title>"] [--rows r0 r1 --cols c0 c1] [--jobs n]
 
 Reads our own bake of the local client (Mappster, TrinityCore mmtile layout <mm>/MMMM_RR_CC.mmtile, one Detour tile
 per ADT) from NAV_MM. The tile bounding box comes from the .mmtile files present (optionally cut to --rows/--cols).
@@ -233,7 +233,7 @@ def load_window(tiles):
     polys, adj, portal, border = {}, defaultdict(set), {}, defaultdict(list)
     for rc in sorted(tiles, key=ORD.__getitem__):
         tp, links, edges = read_tile(rc)
-        base, k = BASE[rc], cluster_of_tile(*rc)
+        base = BASE[rc]
         kept = set()
         for n, (i, pts, water) in enumerate(tp):
             if SIZE[base + n] < MIN_COMPONENT:
@@ -242,7 +242,7 @@ def load_window(tiles):
             nv = len(pts)
             c = tuple(sum(p[a] for p in pts) / nv for a in range(3))
             polys[gid(rc, i)] = dict(
-                c=c, water=water, k=k, size=SIZE[base + n], pts=[(p[0], p[1]) for p in pts], plane=plane(pts, c)
+                c=c, water=water, size=SIZE[base + n], pts=[(p[0], p[1]) for p in pts], plane=plane(pts, c)
             )
         for i, j, p1, p2 in links:
             if i in kept and j in kept:
