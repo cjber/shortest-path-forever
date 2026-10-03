@@ -457,7 +457,6 @@ local function DrawMinimap(self)
 	self.lastX, self.lastY, self.lastMap, self.lastRadius, self.lastFacing = x, y, map, radius, facing
 	self.lastWidth, self.lastHeight, self.lastScale, self.lastSquare = width, height, scale, square
 	self.revision = geometryRevision
-	self:SetAlpha(1)
 	self.Goal:Hide()
 	local view = minimapView
 	view.x, view.y, view.map, view.radius, view.facing = x, y, map, radius, facing

@@ -106,7 +106,7 @@ read_globals = {
 }
 files["tests/"] = { std = "+luajit" }
 
--- Native flight pins, tracker colours and context menus.
+-- Native flight pins and tracker colours.
 globals[#globals + 1] = "ShortestPathForeverFlightPinMixin"
 globals[#globals + 1] = "ShortestPathForeverTransportPinMixin"
 read_globals[#read_globals + 1] = "FlightPointPinMixin"
@@ -122,11 +122,13 @@ read_globals[#read_globals + 1] = "GetQuestUiMapID"
 read_globals[#read_globals + 1] = "GetMouseFoci"
 read_globals[#read_globals + 1] = "MapCanvasMixin"
 read_globals[#read_globals + 1] = "POIButtonUtil"
--- PathGrid.lua: its per-frame CPU clock, and the per-continent walking-map addons it loads on demand.
+-- PathGrid.lua: its per-frame CPU clock and the per-continent walking-map addons it loads on demand.
 read_globals[#read_globals + 1] = "debugprofilestop"
 read_globals[#read_globals + 1] = "ShortestPathForeverPathData"
 read_globals[#read_globals + 1] = "C_AddOns"
+-- Whether a value the client may hold secret can be read: checked across Core, Journey, Transport and UI.
 read_globals[#read_globals + 1] = "canaccessvalue"
+-- JourneyGuide.lua: picks out the map's own waypoint data provider.
 read_globals[#read_globals + 1] = "WaypointLocationDataProviderMixin"
 -- Journey.lua: water walking from its buffs, or a spell to cast.
 read_globals[#read_globals + 1] = "C_UnitAuras"
@@ -144,6 +146,7 @@ read_globals[#read_globals + 1] = "GetAddOnMemoryUsage"
 read_globals[#read_globals + 1] = "C_Item"
 read_globals[#read_globals + 1] = "C_SpellBook"
 read_globals[#read_globals + 1] = "GetBindLocation"
+-- TrackerHost.lua: whether Edit Mode is open.
 read_globals[#read_globals + 1] = "EditModeManagerFrame"
 
 -- tests/ui_client.lua and tests/ui_map.lua are one chunk defining the client for the UI checks, which append code

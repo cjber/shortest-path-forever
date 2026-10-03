@@ -2,9 +2,6 @@ local function loadCore(saved)
 	local frames = {}
 	local env = setmetatable({
 		ShortestPathForeverDB = saved,
-		GetRealmName = function()
-			return "Test realm"
-		end,
 		GetServerTime = function()
 			return 100
 		end,
@@ -28,7 +25,7 @@ local function loadCore(saved)
 			return frame
 		end,
 	}, { __index = _G })
-	local ns = { Model = { MAX_AGE = 86400 } }
+	local ns = { Model = {} }
 	local chunk = assert(loadfile("Core/Core.lua"))
 	setfenv(chunk, env)("ShortestPathForever", ns)
 	frames[1]:OnEvent("ADDON_LOADED", "ShortestPathForever")

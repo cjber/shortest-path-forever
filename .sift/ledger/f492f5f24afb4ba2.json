@@ -2,312 +2,6 @@
   "schema_version": 1,
   "items": [
     {
-      "id": "556de6e66a",
-      "lens": "session-residue",
-      "file": "tests/smoke_spec.lua",
-      "quote": "\tRun(label .. \" final\", function() end)",
-      "what": "empty Run per profile: an xpcall of a no-op can never add an error or throw, so it only inflates the printed checks count",
-      "why": "Run() records failures only for errors raised or appended during fn; an empty fn does neither. Removing it changes nothing but the reported count.",
-      "confidence": "medium",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "71980ca581",
-      "lens": "dead-code",
-      "file": "tests/smoke_spec.lua",
-      "quote": "\t\tname = (frame.objectType or \"Frame\") .. \"@\" .. tostring(parent and (parent.name or parent.objectType) or \"?\")",
-      "what": "stale spec stub read: frame.objectType is never set, so both reads always fall through ('Frame', parent.name or '?'); fully dead field",
-      "why": "tests/ui_client.lua CreateFrame(_, name, parent, template) discards the frame type and only sets name/parent/template; grep objectType across tests/ and all .lua finds only this line; no in-flight branch sets it.",
-      "confidence": "medium",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "9a208b390c",
-      "lens": "dead-code",
-      "file": "tests/smoke_spec.lua",
-      "quote": "\treturn (scripts and (scripts.OnClick or scripts.OnMouseUp or scripts.OnMouseDown)) or frame.mouseUpHandler ~= nil",
-      "what": "stale spec stub: frame.mouseUpHandler is read by Interactive() and ClickFrame() (lines 129, 145-147) but nothing ever assigns it; fully dead, delete the field test and the ClickFrame branch",
-      "why": "grep -rn mouseUpHandler over the whole repo (all .lua, tests/ui_client.lua, tests/ui_map.lua, tools/) finds only these three smoke_spec lines; the pinned Blizzard UI under tools/.cache/blizzard-ui has no mouseUpHandler/SetMouseUpHandler; git grep on the six in-flight branches finds only the same smoke_spec copy (spf-combat-tracker-151, spf-smoke-integration-20260930). Not string-built, not registered, not a production seam.",
-      "confidence": "high",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "c7fe4b1125",
-      "lens": "parallel-implementations",
-      "file": "tests/smoke_spec.lua",
-      "quote": "local function Advance(seconds)",
-      "what": "The client-clock pump (advance T at 60 Hz, fire due tickers, drain pending C_Timer.After entries, run shown frames' OnUpdate) is a second copy of tests/activity_ui.lua:13-25 `advance`. Both reach into ui_client.lua's private C_Timer stub shape (`pending[i].at/fn`, `ticker.next/every/cancelled/fn`, `frames[i].scripts.OnUpdate`) defined at tests/ui_client.lua:722-735. Canonical home: tests/ui_client.lua, next to the C_Timer stub it drains.",
-      "why": "Read both: identical loop structure and field names; the only difference is activity_ui counting callbacks (intentional, it asserts idle cost). A change to the C_Timer/ticker stub fields in ui_client.lua must be mirrored in both drivers. Other UI checks (search_ui.lua:89, api_ui.lua:29, tracker_ui.lua:38, waypoint_ui.lua:30) write their own narrower ticks, so ui_client provides no shared pump today.",
-      "confidence": "medium",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "af73041658",
-      "lens": "test-plumbing",
-      "file": "tests/sync_spec.lua",
-      "quote": "\tassert(pending <= #distributions * 2 * routes, \"queued routes must be deduplicated\")",
-      "what": "The dedupe assertion cannot fail: Sync.lua's queue items key entries by routeID, so each batch holds at most `routes` entries, and line 131 has already asserted #queue <= 10 = #distributions * 2. The bound follows arithmetically from the previous assert, so route deduplication is never observed.",
-      "why": "Mutation probe (in memory, via a loadfile wrapper): replacing `pending.entries[routeID] = entry` in Send with a unique non-route key (no dedupe) leaves `luajit tests/sync_spec.lua` printing `sync_spec: ok`. Queue boundedness stays covered by the #queue and #timers asserts; per-route deduplication is uncovered and needs a real check, e.g. that after N Share(id) calls for one route a batch holds one entry for it, or that the total sent entries match the distinct routes.",
-      "confidence": "high",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "1c93e7fdaa",
-      "lens": "test-plumbing",
-      "file": "tests/tracker_host_spec.lua",
-      "quote": "\t\tContinueAfterAllEvents = function(fn)\n\t\t\tready = fn\n\t\tend,",
-      "what": "The stub throws away the event names, so 'must not render before player and saved data are ready' holds whichever events production waits on. AGENTS.md requires rendering after both PLAYER_ENTERING_WORLD and VARIABLES_LOADED, and this check does not enforce it.",
-      "why": "In-memory mutation: removing \"VARIABLES_LOADED\" from TrackerHost.lua:398 still gives 32 checks passed. AGENTS.md 'Secure UI regression checks': 'Render only after PLAYER_ENTERING_WORLD and VARIABLES_LOADED' and 'Test event ordering ... not just method existence'.",
-      "confidence": "high",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "2bf578c463",
-      "lens": "test-plumbing",
-      "file": "tests/tracker_host_spec.lua",
-      "quote": "\tf.RegisterEvent = noop",
-      "what": "RegisterEvent is a no-op and the spec calls host.scripts.OnEvent directly, so the combat steps ('combat defers layout', 'leaving combat flushes deferred changes') pass even if the host stops registering PLAYER_REGEN_ENABLED/DISABLED. In game, the deferred reflow after combat would then never run.",
-      "why": "In-memory mutation: deleting TrackerHost.lua:337 `host:RegisterEvent(\"PLAYER_REGEN_ENABLED\")` still gives 32 checks passed. taxi_spec shows the pattern that would catch this: its event() helper asserts eventFrame.events[name] before dispatching.",
-      "confidence": "medium",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "41f657b022",
-      "lens": "dead-code",
-      "file": "tests/tracker_host_spec.lua",
-      "quote": "for path in (os.getenv(\"AGF_TRACKER_HOSTS\") or \"TrackerHost.lua\"):gmatch(\"[^\\n]+\") do",
-      "what": "AGF_TRACKER_HOSTS multi-host path (and the index 2..#hostPaths companion loop below) is never exercised: nothing sets the variable",
-      "why": "grep over this repo incl. .github/workflows/ci.yml (which sets only TRACKER_UI_ROOT) and tools/ finds no setter; in-flight branches only carry the same read; sibling checkouts sharing this spec (/tmp/agf-release-063, ~/.worktrees/legacy-combat-release-066) also only read it, with no CI/tools setter. Low confidence: the spec is shared across addon repos and may be run by hand with the variable; the in-process shared-host check at line 355 already covers joining.",
-      "confidence": "low",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "a71f1ddf7b",
-      "lens": "test-plumbing",
-      "file": "tests/tracker_host_spec.lua",
-      "quote": "\teventRegistry:TriggerEvent(\"EditMode.Enter\")\n\tcheck(host.shown == false, \"private tracker hides while Edit Mode owns native slot\")",
-      "what": "The Edit Mode step checks only that the host hides. It never drains the Layout queued by EditMode.Enter while Edit Mode is still active, so Layout's Edit Mode guard (which stops the host from restacking or resizing ObjectiveTrackerFrame while Edit Mode owns it) is never exercised.",
-      "why": "In-memory mutation: replacing TrackerHost.lua:216 `if EditModeManagerFrame and ... IsEditModeActive() then` with `if false then` still gives `tracker_host_spec: 32 checks passed`. The timer queued on Enter only runs after editMode.active=false and EditMode.Exit, so the guarded branch is never reached. A drain() with a native.point/height assertion between Enter and Exit would cover it.",
-      "confidence": "high",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "280a571af8",
-      "lens": "dead-code",
-      "file": "tests/tracker_lifecycle_spec.lua",
-      "quote": "\t\tLive = { OnChange = noop },\n\t\tIntegrations = { OnTravelChange = noop, OnGuidanceChange = noop },\n\t\tAsides = { OnChange = noop },\n\t\tMoments = { OnChange = noop },\n\t\tOnRouteChange = noop,",
-      "what": "stale spec stub, fully dead: ns.Live, ns.Integrations (OnTravelChange/OnGuidanceChange), ns.Asides, ns.Moments and ns.OnRouteChange stand in for APIs the loaded Tracker.lua never reads; delete the five fields",
-      "why": "The spec loads only Tracker.lua. rg over every .lua/.xml/.md/.py in the repo finds these names only in this spec; git grep over all six in-flight branches finds them only in the same spec. `git log -S Moments/Asides` shows they arrived with the spec itself in 6e50a89 (#68) and never existed in production, so they were born stale. The ns.* names Tracker.lua reads (listed via rg) do not include them. No string-built lookup: Tracker.lua indexes ns only by literal names. Not a test seam (nothing in production checks for them).",
-      "confidence": "high",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "387c927b36",
-      "lens": "dead-code",
-      "file": "tests/tracker_lifecycle_spec.lua",
-      "quote": "\t\t\tIsAttached = function(module)\n\t\t\t\treturn owners[module] == native\n\t\t\tend,",
-      "what": "stale spec stub, fully dead: the IsAttached stub on the fake host is never called; Tracker.lua only calls ForeverTrackerHost.Attach and the spec asserts on owners[] directly",
-      "why": "grep -c IsAttached Tracker.lua = 0; Tracker.lua's only host use is `ForeverTrackerHost.Attach(module)` (line ~295). The spec's own assertions read `owners[modules[1]]`, never IsAttached. The real api.IsAttached lives in TrackerHost.lua, which this spec does not load. Same in every in-flight branch.",
-      "confidence": "high",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "522c490d0c",
-      "lens": "test-plumbing",
-      "file": "tests/tracker_lifecycle_spec.lua",
-      "quote": "\tassert(owners[modules[1]] == native, \"native callbacks cannot change private ownership\")",
-      "what": "The post-event and post-timer assertions cannot fail: the TrackerHost stub only ever writes `native`, and Tracker.lua already attached synchronously in ns.Init, so the deferred PLAYER_ENTERING_WORLD/VARIABLES_LOADED + one-frame attach AGENTS.md requires is never observed.",
-      "why": "Mutations in memory, both still print '2 load-order cases passed': removing `C_Timer.After(0, Attach)` from Tracker.lua; doubling `ForeverTrackerHost.Attach(module)`. Only the first assert (immediate Attach) is live. Fix: count Attach calls per phase (e.g. zero from the callback until the timer runs, one after), or drop the two unfalsifiable asserts. Same shape at line 99 ('private ownership survives initialization and late loading').",
-      "confidence": "medium",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "005ca4881d",
-      "lens": "dead-code",
-      "file": "tests/ui_client.lua",
-      "quote": "\t\tCreateTexture = function()\n\t\t\treturn f:CreateTexture()\n\t\tend,",
-      "what": "stale spec stub: the tracker Header stub's CreateTexture (fully dead). Tracker.lua called module.Header:CreateTexture for a texture spinner until #15 (ec05e01) swapped it for a SpinnerTemplate frame; Tracker.lua now only calls Header:EnableMouse/SetScript and parents the spinner frame to Header.",
-      "why": "git show ec05e01 removes `module.Spinner = module.Header:CreateTexture(nil, \"OVERLAY\")`; no `Header:CreateTexture` or Header texture call in any TOC Lua, Map.xml, the three loaded Blizzard files (Spinner.lua, FlightPointDataProvider.lua, WaypointLocationDataProvider.lua), tests/ (smoke_spec, benches) or the six listed branches. Not string-built or registered; Header is a plain table so no mixin dispatch.",
-      "confidence": "high",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "01b8c7658f",
-      "lens": "dead-code",
-      "file": "tests/ui_client.lua",
-      "quote": "_G.GetCameraZoom = function()",
-      "what": "GetCameraZoom stub has no reader (fully dead)",
-      "why": "The harness files are loaded only by tests/*_ui.lua and the benches (loadstring of ui_client.lua+ui_map.lua); no string-built names reach this (the only dynamic lookups are _G[template:gsub('Template$','Mixin')] in AcquirePin and Taxi.lua's TaxiButton/TaxiRoute names). Searched every root .lua/.xml, Locales/, types/, tests/*_ui.lua, tests/*_bench.lua and the three Blizzard files the harness actually loads (Spinner.lua/.xml, FlightPointDataProvider.lua, WaypointLocationDataProvider.lua from tools/.cache/blizzard-ui); QuestMapFrame.lua etc. are fetched but never loaded. No manifest, CI, doc or open branch names it. Name appears once in the repository (this definition); no production or loaded Blizzard code calls it.",
-      "confidence": "high",
-      "status": "fixed",
-      "reason": "Removed; specs, tests/ui.sh and all four benches pass unchanged.",
-      "first_seen": "2026-09-27",
-      "updated": "2026-09-27",
-      "guard": "settled:stale spec stub"
-    },
-    {
-      "id": "1b3490934f",
-      "lens": "dead-code",
-      "file": "tests/ui_client.lua",
-      "quote": "_G.EPIC_PURPLE_COLOR = color(0.64, 0.21, 0.93)",
-      "what": "EPIC_PURPLE_COLOR stub has no reader (fully dead)",
-      "why": "The harness files are loaded only by tests/*_ui.lua and the benches (loadstring of ui_client.lua+ui_map.lua); no string-built names reach this (the only dynamic lookups are _G[template:gsub('Template$','Mixin')] in AcquirePin and Taxi.lua's TaxiButton/TaxiRoute names). Searched every root .lua/.xml, Locales/, types/, tests/*_ui.lua, tests/*_bench.lua and the three Blizzard files the harness actually loads (Spinner.lua/.xml, FlightPointDataProvider.lua, WaypointLocationDataProvider.lua from tools/.cache/blizzard-ui); QuestMapFrame.lua etc. are fetched but never loaded. No manifest, CI, doc or open branch names it. Zero references outside this line.",
-      "confidence": "high",
-      "status": "fixed",
-      "reason": "Removed; specs, tests/ui.sh and all four benches pass unchanged.",
-      "first_seen": "2026-09-27",
-      "updated": "2026-09-27",
-      "guard": "settled:stale spec stub"
-    },
-    {
-      "id": "216a800523",
-      "lens": "dead-code",
-      "file": "tests/ui_client.lua",
-      "quote": "-- Translation files (Locales/<locale>.lua) ask for the client's language.\n_G.GetLocale = function()\n\treturn \"enUS\"\nend",
-      "what": "stub for a caller that does not exist: the TOC loads only Locales/enUS.lua, which never calls GetLocale; no translation file ships. Speculative rather than stale; may be kept deliberately so a future Locales/<locale>.lua in the TOC does not break the harness.",
-      "why": "grep GetLocale over TOC-listed Lua and loaded Blizzard files: 0 hits; only Locales/phrases.txt (a template, not loaded) and tests/locales_spec.lua (stubs its own). Branches only repeat this line and locales_spec. Added in #56 alongside the locale system with no translation file ever committed (`git log --all -- 'Locales/*.lua'`).",
-      "confidence": "low",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "2234be6788",
-      "lens": "dead-code",
-      "file": "tests/ui_client.lua",
-      "quote": "\tfunction f:SetWidth(w)",
-      "what": "stubframe:SetWidth has no caller (fully dead)",
-      "why": "The harness files are loaded only by tests/*_ui.lua and the benches (loadstring of ui_client.lua+ui_map.lua); no string-built names reach this (the only dynamic lookups are _G[template:gsub('Template$','Mixin')] in AcquirePin and Taxi.lua's TaxiButton/TaxiRoute names). Searched every root .lua/.xml, Locales/, types/, tests/*_ui.lua, tests/*_bench.lua and the three Blizzard files the harness actually loads (Spinner.lua/.xml, FlightPointDataProvider.lua, WaypointLocationDataProvider.lua from tools/.cache/blizzard-ui); QuestMapFrame.lua etc. are fetched but never loaded. No manifest, CI, doc or open branch names it. The only SetWidth calls in the tree are in the fetched-but-never-loaded QuestMapFrame.lua; production sizes frames with SetSize. No check reads a width that only SetWidth would write.",
-      "confidence": "high",
-      "status": "fixed",
-      "reason": "Removed; specs, tests/ui.sh and all four benches pass unchanged.",
-      "first_seen": "2026-09-27",
-      "updated": "2026-09-27",
-      "guard": "settled:stale spec stub"
-    },
-    {
-      "id": "29d6a99d5a",
-      "lens": "dead-code",
-      "file": "tests/ui_client.lua",
-      "quote": "local sent = {}",
-      "what": "`sent` is appended to by the SendAddonMessage stub and never read (dead recording)",
-      "why": "The harness files are loaded only by tests/*_ui.lua and the benches (loadstring of ui_client.lua+ui_map.lua); no string-built names reach this (the only dynamic lookups are _G[template:gsub('Template$','Mixin')] in AcquirePin and Taxi.lua's TaxiButton/TaxiRoute names). Searched every root .lua/.xml, Locales/, types/, tests/*_ui.lua, tests/*_bench.lua and the three Blizzard files the harness actually loads (Spinner.lua/.xml, FlightPointDataProvider.lua, WaypointLocationDataProvider.lua from tools/.cache/blizzard-ui); QuestMapFrame.lua etc. are fetched but never loaded. No manifest, CI, doc or open branch names it. No check or bench reads `sent`; the stub can just return 0.",
-      "confidence": "medium",
-      "status": "fixed",
-      "reason": "Removed; specs, tests/ui.sh and all four benches pass unchanged.",
-      "first_seen": "2026-09-27",
-      "updated": "2026-09-27",
-      "guard": "settled:stale spec stub"
-    },
-    {
-      "id": "2d047ad857",
-      "lens": "dead-code",
-      "file": "tests/ui_client.lua",
-      "quote": "\tif owner == WorldFrame then\n\t\ttrailFrame = f\n\tend",
-      "what": "trailFrame capture in SetAllPoints (and the `trailFrame` local, line 8) is dead: nothing calls SetAllPoints(WorldFrame) and nothing reads trailFrame",
-      "why": "The harness files are loaded only by tests/*_ui.lua and the benches (loadstring of ui_client.lua+ui_map.lua); no string-built names reach this (the only dynamic lookups are _G[template:gsub('Template$','Mixin')] in AcquirePin and Taxi.lua's TaxiButton/TaxiRoute names). Searched every root .lua/.xml, Locales/, types/, tests/*_ui.lua, tests/*_bench.lua and the three Blizzard files the harness actually loads (Spinner.lua/.xml, FlightPointDataProvider.lua, WaypointLocationDataProvider.lua from tools/.cache/blizzard-ui); QuestMapFrame.lua etc. are fetched but never loaded. No manifest, CI, doc or open branch names it. Production SetAllPoints callers pass Minimap or a route owner (MinimapPins.lua:246, Route.lua:287/904); WorldFrame has zero production references. trailFrame is assigned here only and never read by any check. See the matching WorldFrame stub in ui_map.lua.",
-      "confidence": "high",
-      "status": "fixed",
-      "reason": "Removed; specs, tests/ui.sh and all four benches pass unchanged.",
-      "first_seen": "2026-09-27",
-      "updated": "2026-09-27",
-      "guard": "settled:stale spec stub"
-    },
-    {
-      "id": "36747c0eb8",
-      "lens": "dead-code",
-      "file": "tests/ui_client.lua",
-      "quote": "\t\tGetRGB = function()",
-      "what": "color():GetRGB has no caller (fully dead)",
-      "why": "The harness files are loaded only by tests/*_ui.lua and the benches (loadstring of ui_client.lua+ui_map.lua); no string-built names reach this (the only dynamic lookups are _G[template:gsub('Template$','Mixin')] in AcquirePin and Taxi.lua's TaxiButton/TaxiRoute names). Searched every root .lua/.xml, Locales/, types/, tests/*_ui.lua, tests/*_bench.lua and the three Blizzard files the harness actually loads (Spinner.lua/.xml, FlightPointDataProvider.lua, WaypointLocationDataProvider.lua from tools/.cache/blizzard-ui); QuestMapFrame.lua etc. are fetched but never loaded. No manifest, CI, doc or open branch names it. Production reads GetRGBA and WrapTextInColorCode only; GetRGB is never called.",
-      "confidence": "medium",
-      "status": "fixed",
-      "reason": "Removed; specs, tests/ui.sh and all four benches pass unchanged.",
-      "first_seen": "2026-09-27",
-      "updated": "2026-09-27",
-      "guard": "settled:stale spec stub"
-    },
-    {
-      "id": "4237f962fb",
-      "lens": "dead-code",
-      "file": "tests/ui_client.lua",
-      "quote": "_G.POIButtonUtil = { Style = { Waypoint = 1 }, Type = { Quest = 1, Content = 2, AreaPOI = 3, Vignette = 4 } }",
-      "what": "stale spec stub: POIButtonUtil.Type (Quest/Content/AreaPOI/Vignette) is fully dead; only POIButtonUtil.Style.Waypoint is read (JourneyInput.lua:91, waypoint_ui.lua:234). Fix keeps `Style` and drops `Type`.",
-      "why": "`git log -S AreaPOI` / `-G Type\\.(Content|AreaPOI|Vignette)` over all history: only 3312095 (#54), which copied the stubs from an out-of-repo scratch harness; no production file ever read it. No hit in TOC Lua, the three Blizzard files the harness loads (QuestDataProvider/POIButton that use POIButtonUtil are not loaded), smoke_spec, benches or the six branches.",
-      "confidence": "high",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "4cf373971e",
-      "lens": "dead-code",
-      "file": "tests/ui_client.lua",
-      "quote": "\t\tif k == \"GetStringHeight\" then\n\t\t\treturn function()\n\t\t\t\treturn 12\n\t\t\tend\n\t\tend",
-      "what": "stale spec stub: fontmt's GetStringHeight branch is fully dead; nothing calls GetStringHeight on a font string (Tracker uses GetHeight/GetStringWidth).",
-      "why": "grep GetStringHeight over all .lua (excluding the Blizzard cache) and the loaded Blizzard files: only this line; `git log -S GetStringHeight --all` shows only 3312095 (the scratch-harness import); absent from the six branches. Removing it falls through to the noop default.",
-      "confidence": "high",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "65fbc4e499",
-      "lens": "dead-code",
-      "file": "tests/ui_client.lua",
-      "quote": "_G.RaidNotice_AddMessage = noop",
-      "what": "RaidNotice_AddMessage stub has no caller (fully dead)",
-      "why": "The harness files are loaded only by tests/*_ui.lua and the benches (loadstring of ui_client.lua+ui_map.lua); no string-built names reach this (the only dynamic lookups are _G[template:gsub('Template$','Mixin')] in AcquirePin and Taxi.lua's TaxiButton/TaxiRoute names). Searched every root .lua/.xml, Locales/, types/, tests/*_ui.lua, tests/*_bench.lua and the three Blizzard files the harness actually loads (Spinner.lua/.xml, FlightPointDataProvider.lua, WaypointLocationDataProvider.lua from tools/.cache/blizzard-ui); QuestMapFrame.lua etc. are fetched but never loaded. No manifest, CI, doc or open branch names it. Zero references outside this line; production uses RaidWarningUtil.AddMessage.",
-      "confidence": "high",
-      "status": "fixed",
-      "reason": "Removed; specs, tests/ui.sh and all four benches pass unchanged.",
-      "first_seen": "2026-09-27",
-      "updated": "2026-09-27",
-      "guard": "settled:stale spec stub"
-    },
-    {
       "id": "72f3f64355",
       "lens": "dead-code",
       "file": "tests/ui_client.lua",
@@ -320,6 +14,20 @@
       "first_seen": "2026-09-27",
       "updated": "2026-09-27",
       "guard": "settled:stale spec stub"
+    },
+    {
+      "id": "75e9bcae6c",
+      "lens": "dead-code",
+      "file": "tests/ui_client.lua",
+      "quote": "local arrowFrame, navigationFrame",
+      "what": "`navigationFrame` is never assigned, so the C_Navigation.GetFrame stub always returns nil",
+      "why": "The local is declared here and read once in GetFrame; no line in the harness or in any appended check writes it (searched tests/ for the name: two hits, both in this file). The harness came from an out-of-repo scratch file (commit 3312095) and no in-repo check ever drove this knob. GetFrame can be noop.",
+      "confidence": "medium",
+      "status": "fixed",
+      "reason": "",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03",
+      "guard": "lens-only: an unread table field, stub or export is invisible to luacheck, only a repository-wide search shows it has no reader"
     },
     {
       "id": "7e8082f82d",
@@ -350,6 +58,20 @@
       "guard": "settled:stale spec stub"
     },
     {
+      "id": "a43db2d515",
+      "lens": "dead-code",
+      "file": "tests/ui_client.lua",
+      "quote": "waterAura, knownSpell = nil, nil",
+      "what": "`waterAura` and `knownSpell` are globals no check ever sets, so both stubs are constant",
+      "why": "Assigned nil once here and read by the GetPlayerAuraBySpellID and IsPlayerSpell stubs; no file under tests/ writes either name, on this branch or at the commit that introduced them (3312095). They are also implicit globals, unlike the harness's other state. The stubs stay (Journey/Journey.lua calls both APIs); the knobs go.",
+      "confidence": "medium",
+      "status": "fixed",
+      "reason": "",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03",
+      "guard": "lens-only: an unread table field, stub or export is invisible to luacheck, only a repository-wide search shows it has no reader"
+    },
+    {
       "id": "ac4b26a0ea",
       "lens": "dead-code",
       "file": "tests/ui_client.lua",
@@ -375,6 +97,20 @@
       "reason": "Removed; specs, tests/ui.sh and all four benches pass unchanged.",
       "first_seen": "2026-09-27",
       "updated": "2026-09-27",
+      "guard": "settled:stale spec stub"
+    },
+    {
+      "id": "bab3a39ee2",
+      "lens": "dead-code",
+      "file": "tests/ui_client.lua",
+      "quote": "_G.SOUNDKIT = { RAID_WARNING = 1 }",
+      "what": "SOUNDKIT.RAID_WARNING is a stale stub key: UI/Alert.lua no longer reads SOUNDKIT",
+      "why": "No production file references SOUNDKIT (UI/Alert.lua plays its sound with PlaySoundFile); the only RAID_WARNING read left is ChatTypeInfo.RAID_WARNING. The loaded WaypointLocationDataProvider.lua reads SOUNDKIT.UI_MAP_WAYPOINT_* keys, so the table must exist but this key has no reader. Branches still holding `PlaySound(SOUNDKIT.RAID_WARNING` are pre-restructure (root-level Alert.lua).",
+      "confidence": "high",
+      "status": "fixed",
+      "reason": "",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03",
       "guard": "settled:stale spec stub"
     },
     {
@@ -432,6 +168,20 @@
       "first_seen": "2026-09-27",
       "updated": "2026-09-27",
       "guard": "settled:stale spec stub"
+    },
+    {
+      "id": "d16ae294e3",
+      "lens": "dead-code",
+      "file": "tests/ui_client.lua",
+      "quote": "local onTaxi, facing, minimapShape = false, 0, nil",
+      "what": "`minimapShape` is never assigned, so GetMinimapShape always returns nil",
+      "why": "Declared nil here, returned by the GetMinimapShape stub, written by no check (searched tests/: only these two lines). A fixture knob with no user; the stub itself is live (UI/MinimapPins.lua, UI/Route.lua call GetMinimapShape) and can return nil directly.",
+      "confidence": "medium",
+      "status": "fixed",
+      "reason": "",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03",
+      "guard": "lens-only: an unread table field, stub or export is invisible to luacheck, only a repository-wide search shows it has no reader"
     },
     {
       "id": "ddc9aeb8ed",
@@ -497,10 +247,11 @@
       "what": "stale spec stub: pooled map pins get a Label font string no pin mixin reads (fully dead).",
       "why": "`Label` appears in no TOC Lua, Map.xml (no parentKey=\"Label\"), the loaded Blizzard providers, other tests or the six branches; `git log -G 'self\\.Label|pin\\.Label' --all` and `-S parentKey=\"Label\"` find no production use ever; it arrived with the #54 scratch-harness import.",
       "confidence": "high",
-      "status": "open",
+      "status": "fixed",
       "reason": "",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03",
+      "guard": "settled:stale spec stub"
     },
     {
       "id": "635ea4ebd4",
@@ -573,6 +324,34 @@
       "guard": "settled:stale spec stub"
     },
     {
+      "id": "cfab293f59",
+      "lens": "dead-code",
+      "file": "tests/ui_map.lua",
+      "quote": "portalPins = {}",
+      "what": "the global `portalPins` is write-only: three assignments, no reader",
+      "why": "Assigned here and in RemoveAllPinsByTemplate/AcquirePin (lines 50, 79); no check, bench or production file reads the name (searched tests/ and all branches). Remove the global and both `if template:match(\"Portal\")` blocks.",
+      "confidence": "high",
+      "status": "fixed",
+      "reason": "",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03",
+      "guard": "lens-only: an unread table field, stub or export is invisible to luacheck, only a repository-wide search shows it has no reader"
+    },
+    {
+      "id": "d7c5f2a04e",
+      "lens": "dead-code",
+      "file": "tests/ui_map.lua",
+      "quote": "\tif template:match(\"Dock\") then\n\t\tpins = active[template]\n\tend",
+      "what": "the harness local `pins` is write-only: assigned on every Dock acquire/release, never read",
+      "why": "Declared on line 4 and assigned at lines 47 and 76; every check that uses a `pins` name declares its own local first (api_ui.lua, minimap_ui.lua) and the rest never read it (searched all files that load ui_map.lua). luacheck is silenced for 2xx here. Both `if template:match(\"Dock\")` blocks and the declaration can go.",
+      "confidence": "high",
+      "status": "fixed",
+      "reason": "",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03",
+      "guard": "lens-only: an unread table field, stub or export is invisible to luacheck, only a repository-wide search shows it has no reader"
+    },
+    {
       "id": "e88f251c39",
       "lens": "dead-code",
       "file": "tests/ui_map.lua",
@@ -585,6 +364,32 @@
       "first_seen": "2026-09-27",
       "updated": "2026-09-27",
       "guard": "settled:stale spec stub"
+    },
+    {
+      "id": "5bc70a8e96",
+      "lens": "parallel-implementations",
+      "file": "tests/walk_sim.lua",
+      "quote": "\t{ \"Auberdine -> Tanaris\", 26, 39, \"Alliance\" },\n\t{ \"Auberdine -> Eastern Plaguelands\", 26, 67, \"Alliance\" },\n\t{ \"Crossroads -> Thunder Bluff\", 25, 22, \"Horde\" },\n\t{ \"Ironforge -> Menethil\", 6, 7, \"Alliance\" },",
+      "what": "The four benchmark journeys (taxi node pairs 26-39, 26-67, 25-22, 6-7 and each one's faction) are restated in four files: tests/walk_sim.lua:3-8, tests/journey_bench.lua:3-8, tests/journey_optimal_spec.lua:168-170 and tests/memory_bench.lua:18-23. Canonical home: tests/journey_bench.lua, the bench README and the performance docs name and that journey_spec.lua:231 runs.",
+      "why": "walk_sim and journey_bench hold the same table and the same three name-check lines (walk_sim.lua:26-28, journey_bench.lua:26-28) verbatim. journey_optimal_spec and memory_bench keep only the id pairs and re-derive the faction by special case (pair[1] == 25 and \"Horde\"; arg[1] == \"thunder\" and \"Horde\"), which is accidental drift: adding or swapping a Horde route in one list silently plans it as Alliance in those two. README.md:130 and tests/journey_performance.md describe them as one set of four routes.",
+      "confidence": "low",
+      "status": "dismissed",
+      "reason": "Test fixtures, which the lens exempts: each table is the input list of an independent harness (journey_bench with a baseline root, walk_sim, the optimality proof at journey_optimal_spec.lua:168, memory_bench's name-keyed CLI scenarios which also take felwood), and no copy stops being correct when another changes. The faction special cases sit on the same lines as the id lists they serve, so they drift only with their own file.",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "7b92e9a279",
+      "lens": "parallel-implementations",
+      "file": "tests/walk_sim.lua",
+      "quote": "\t\t\"Data/Routes.lua\",\n\t\t\"Data/Transports.lua\",\n\t\t\"Data/Taxi.lua\",\n\t\t\"Data/Portals.lua\",\n\t\t\"Data/Walks.lua\",\n\t\t\"Routing/PathGrid.lua\",\n\t\t\"Routing/Path.lua\",\n\t\t\"Routing/PathJobs.lua\",",
+      "what": "The real-engine preamble (five Data files, the three Routing/Path files, then tools/load_nav.lua per map) is written out in six test files: tests/walk_sim.lua:11-25, tests/journey_bench.lua:11-25, tests/journey_optimal_spec.lua:4-18, tests/journey_slices_spec.lua:5-17, tests/journey_spec.lua:72-87 and tests/route_preview_spec.lua:5-21. Canonical home: tests/journey_driver.lua, which all six already load and which owns the rest of the load order (journey_driver.lua:196-206).",
+      "why": "It is one fact, the TOC's data and walking-search files (ShortestPathForever.toc:18-23, 43-45), not six independent fixtures: the Routing/PathGrid.lua and Routing/PathJobs.lua split had to be applied to every copy, and the next file added to the walking search needs the same edit in each. Differences are all intentional and small: journey_slices_spec and route_preview_spec load only map 1, journey_spec appends UI/Arrow.lua, route_preview_spec appends UI/Looks.lua, Core/API.lua and Journey/Itinerary.lua, journey_bench passes a baseline root. A driver method taking the map list would cover all of them. The bare three-file Routing triple is restated again in tests/path_spec.lua:3, tests/path_many_spec.lua:2 and :151, tests/runtime_spec.lua:81, tests/replan_spec.lua:29-31, tests/journey_spec.lua:193-195 and tests/nav_compare.lua:28 (nav_compare's copy is deliberately tolerant of old flat layouts). The project skill lists these preambles as a jscpd false positive; with six copies and a shared driver already in place that no longer holds.",
+      "confidence": "medium",
+      "status": "dismissed",
+      "reason": "Same producer as b44db70d9f: one defect, recorded once there. Verifier found it real: The eight-file list is identical in walk_sim.lua:12-19, journey_bench.lua:12-19, journey_optimal_spec.lua:5-12, journey_slices_spec.lua:6-13, journey_spec.lua:73-80 and route_preview_spec.lua:6-13, differing only in appended files and the nav map list, and all six already load journey_driver.lua, wh",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
     },
     {
       "id": "d88c44ea8b",
@@ -600,6 +405,19 @@
       "updated": "2026-09-27"
     },
     {
+      "id": "720a5f4741",
+      "lens": "parallel-implementations",
+      "file": "tests/waypoint_ui.lua",
+      "quote": "for _, part in ipairs({ \"ui_client.lua\", \"ui_map.lua\" }) do",
+      "what": "The UI harness loader (resolve dir from arg[0], read ui_client.lua then ui_map.lua, concatenate into `source`) is written out in 12 files: tests/waypoint_ui.lua:2, tests/api_ui.lua:2, tests/activity_ui.lua:2, tests/search_ui.lua:2, tests/minimap_ui.lua:2, tests/tracker_ui.lua:2, tests/activity_bench.lua:2, tests/route_ui.lua:3, tests/routebutton_ui.lua:3, tests/runtime_bench.lua:3, tests/docktooltip_spec.lua:5 and 19, tests/smoke_spec.lua:9 and 24. No shared helper exists; the canonical home is one small loader beside the harness (for example a file that returns the concatenated source) which each check loads.",
+      "why": "The copies are token-identical today, so no drift yet, but the list of harness parts is one fact: ui_client.lua's header says ui_map.lua follows it in one chunk, and adding or renaming a part means editing all 12 files. This 7-line preamble is the only real clone behind the jscpd whole-file hits among tests/*_ui.lua; everything after it is each check's own long-string body, which is not duplicated.",
+      "confidence": "medium",
+      "status": "dismissed",
+      "reason": "Same producer as e72d57e235: one defect, recorded once there. Verifier found it real: Hashing the 7-line loader in each of the 12 files gives one identical digest and one identical `dir` line, nothing in tests/ shares it, and ui_client.lua line 1 states the part list is one fact, so a new or renamed part needs all 12 edits; no constraint forces the copies since each already resolves ",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
+    },
+    {
       "id": "248bf4a2e5",
       "lens": "parallel-implementations",
       "file": "tools/bake_walks.lua",
@@ -607,10 +425,10 @@
       "what": "bake_walks restates the baked-walk place-key scheme (kind .. id; portal ends id*2-1 / id*2; teleport .. spell) that Planner.lua owns in Planner.Places (Planner.lua:236-270) and PlaceKey (Planner.lua:213-217). A third copy sits in tests/planner_spec.lua:425-437. Canonical home: Planner (PlaceKey, exported or reached through Planner.Places).",
       "why": "bake_walks already loads Planner.lua (line 15) but builds its own keys. If Planner's key or portal-end numbering changes, Data/Walks.lua keeps the old keys and BakedCost (Planner.lua:224) and JourneyCosts.lua:211 quietly miss and fall back to straight-line estimates. planner_spec checks Walks against its own copy of the scheme, not against Planner's, so it would not catch that drift. The copies differ on purpose in one way: Planner.Places filters by faction (Eligible) and skips portals with `requires`, while the bake needs every place. Any fix has to keep that, for example by exporting PlaceKey instead of calling Places. This matches the profile's 'second copy of a fact' anti-pattern (bakedBound re-deriving Planner's Walks.lua keys).",
       "confidence": "high",
-      "status": "open",
-      "reason": "",
+      "status": "decide",
+      "reason": "Unify these copies behind one home, and where should that home live? Defect: bake_walks restates the baked-walk place-key scheme (kind .. id; portal ends id*2-1 / id*2; teleport .. spell) that Planner.lua owns in Planner.Places (Planner.lua:236-270) and PlaceKey (Planner.lua:213-217). A third copy sits in tests/planner_spec.lua:425-437. Canonical home: Planner (PlaceKey, exported or reached through Planner.Places). Evidence: Routing/Planner.lua:210 PlaceKey (kind .. id) and Planner.Places:236-270 (portal ends id*2-1 and id*2, teleport by spell) own the key scheme, and tools/bake_walks.lua:29-44 rebuilds the same keys by hand although it loads Planner.lua at line 15; rg for the key prefixes finds only these two plus the spec copy at tests/planner_spec.lua:445-457, which checks Walks against its own copy. Nothing forces the copy (PlaceKey ",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "2cb9e15c4e",
@@ -646,10 +464,24 @@
       "what": "The five pre-created empty tables are fully dead initialisers; `local ns = {}` behaves identically.",
       "why": "The first file loaded, Data/Routes.lua, assigns `ns.Docks =` and `ns.Routes =` outright; Data/Taxi.lua assigns `ns.TaxiNodes =`/`ns.TaxiPaths =` and Data/Portals.lua `ns.Portals =` (grep of top-level `ns.X =`/`ns.X[` in the five Data files). Only Data/Transports.lua indexes into Docks/Routes, and it loads after Routes.lua. Every loadfile is asserted, so no path runs with a missing data file. No string-built names, registration or persisted data involved; every other harness (tests/*_spec.lua, tools/screenshots.py) starts from `local ns = {}`.",
       "confidence": "high",
-      "status": "open",
+      "status": "fixed",
       "reason": "",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03",
+      "guard": "lens-only: an unread table field, stub or export is invisible to luacheck, only a repository-wide search shows it has no reader"
+    },
+    {
+      "id": "88f722e352",
+      "lens": "parallel-implementations",
+      "file": "tools/bake_walks.lua",
+      "quote": "for _, map in ipairs({ 0, 1, 2991 }) do",
+      "what": "The set of continents that have a walking map (0, 1, 2991) is restated as a literal in tools/bake_walks.lua:19, tools/gen_transit.py:31 (MAPS), tools/baker/bake.sh:11 and 21 (MAPS default and TITLE), and outside the slice in UI/Settings.lua:49 and about ten test files. There is no canonical home; the fact itself is the set of ShortestPathForever_Nav<map> directories.",
+      "why": "Adding a walking map needs every copy edited and the misses are silent: bake_walks would bake no walks for the new map, and gen_transit would drop its flight nodes and class-teleport landings (the MAPS filters at tools/gen_transit.py:278 and 397) without an error. The copies are identical today, so nothing marks any of them as an intentional subset.",
+      "confidence": "medium",
+      "status": "decide",
+      "reason": "Unify these copies behind one home, and where should that home live? Defect: The set of continents that have a walking map (0, 1, 2991) is restated as a literal in tools/bake_walks.lua:19, tools/gen_transit.py:31 (MAPS), tools/baker/bake.sh:11 and 21 (MAPS default and TITLE), and outside the slice in UI/Settings.lua:49 and about ten test files. There is no canonical home; the fact itself is the set of ShortestPathForever_Nav<map> directories. Evidence: rg 2991 shows the set { 0, 1, 2991 } as a literal in tools/bake_walks.lua:19, UI/Settings.lua:49, tools/gen_transit.py:31 and tools/baker/bake.sh:11/21, with no runtime constant (Routing/PathGrid.lua only builds the addon name from a map id), and bake_walks.lua:48 drops a map without data silently. The Python and bash copies cannot import a Lua one and the spec copies are fixtures, but bake_walks loads the runtime fi",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
     },
     {
       "id": "89905def3d",
@@ -659,10 +491,10 @@
       "what": "The five pre-created tables are overwritten before anything reads them: Data/Routes.lua:10 and :42 assign ns.Docks and ns.Routes, Data/Taxi.lua:37 and :520 assign ns.TaxiNodes and ns.TaxiPaths, and Data/Portals.lua:17 assigns ns.Portals. Those files load first in the loop just below. `local ns = {}` behaves the same.",
       "why": "Checked each Data file's top-level `ns.X = {` assignment (grep '^ns\\.[A-Za-z]* = '). None of PathGrid.lua, Path.lua or PathJobs.lua reads these tables at load time. Data/Transports.lua indexes ns.Docks/ns.Routes only after Data/Routes.lua has created them.",
       "confidence": "medium",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Same producer as 6c1407f1f6: the identical line 5 of tools/bake_walks.lua and the identical defect (five initialisers overwritten before any read), raised under a second lens.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "9097147b7b",
@@ -692,6 +524,33 @@
       "guard": "lens-only: the header text now has one source, encode_heights' docstring"
     },
     {
+      "id": "20768b8e3c",
+      "lens": "parallel-implementations",
+      "file": "tools/baker/gen_nav.py",
+      "quote": "            out.append(B64[48 + n - 1])",
+      "what": "The run-length rule of the nav format (a symbol >= 48 repeats the previous one up to 16 more times) is coded twice: in encode_map for grid cells (tools/baker/gen_nav.py:694-705) and in encode_heights for height differences (828-835), each with its own run scan and its own literals 48 and 16. Canonical home: one run-length helper both encoders call.",
+      "why": "Both loops must stay byte-compatible with the runtime decoder in Routing/PathGrid.lua (which tests sym >= 48 and adds sym - 47). The two copies differ only in the list they append to and the symbol they emit first, so the duplication is accidental. A change to the repeat base or cap made in one encoder would produce a file the runtime half-decodes, and gen_nav output cannot be regression-checked without the mmtiles.",
+      "confidence": "medium",
+      "status": "dismissed",
+      "reason": "Same producer as af1e4a483a: both findings are the one duplicated repeat-run emitter at gen_nav.py:700-704 and 831-835.",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "3aa2e9f009",
+      "lens": "dead-code",
+      "file": "tools/baker/gen_nav.py",
+      "quote": "                c=c, water=water, k=k, size=SIZE[base + n], pts=[(p[0], p[1]) for p in pts], plane=plane(pts, c)",
+      "what": "load_window stores a cluster id under key k in every poly dict, and nothing reads it: fully dead (with it, the k computed by cluster_of_tile(*rc) on the line `base, k = BASE[rc], cluster_of_tile(*rc)`)",
+      "why": "The poly dicts are read only in this file as p[\"water\"], p[\"pts\"], p[\"size\"], p[\"c\"] and p[\"plane\"] (height, rasterize_layers, rasterize_tile.linked); `rg '\\[\"k\"\\]'` over tools finds no read, and the dict never leaves rasterize_tile (its return value carries only vals, zs, floors, links, cuts), so no string-built key, registry, serialised name or other runtime can reach it. No other file imports gen_nav (bake.sh runs it as a script). Checked local and remote branches for a `[\"k\"]` read: none. Removing the key and the local changes no emitted byte.",
+      "confidence": "high",
+      "status": "fixed",
+      "reason": "",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03",
+      "guard": "lens-only: an unread table field, stub or export is invisible to luacheck, only a repository-wide search shows it has no reader"
+    },
+    {
       "id": "3d2ce402cd",
       "lens": "speculative-abstraction",
       "file": "tools/baker/gen_nav.py",
@@ -700,9 +559,9 @@
       "why": "rg over the whole repo (py, sh, md, lua, .github) finds NAV_SOURCE only here; bake.sh sets NAV_MM and NAV_JOBS but not NAV_SOURCE, and tools/baker/README.md documents NAV_MM, NAV_DBD, ROWS, MAP_NAME but not it. git log -S shows it arrived with the initial commit. All three shipped Nav*.lua headers carry the default string. Collapsed form: SOURCE = \"own bake of ...\" (a plain constant); the emitted header string is unchanged, so no data diff.",
       "confidence": "medium",
       "status": "unproven",
-      "reason": "bake.sh supports a documented PRODUCT override and inherits NAV_SOURCE; an in-memory generation confirmed that NAV_SOURCE changes the emitted provenance header. An owner must establish whether manual bakes use this override before repository-only absence can establish that it is unused.",
+      "reason": "rg and git grep over every local and remote ref find no setter of NAV_SOURCE, but gen_nav.py is a hand-run tool (tools/baker/README.md step 4 has the user set NAV_MM by hand) and bake.sh documents a PRODUCT override under which the default 'wow_classic_beta' provenance text would be wrong, so NAV_SOURCE may be set in a shell for manual bakes. Only the owner can say whether it is; removing it also removes an input that changes the emitted header.",
       "first_seen": "2026-09-27",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "5614b7030e",
@@ -725,10 +584,11 @@
       "what": "The docstring usage shows <out.lua> as required, but argparse declares `out` with nargs=\"?\" and a default of Nav<map>.lua (line 900).",
       "why": "main(): `parser.add_argument(\"out\", nargs=\"?\", help=\"output file (default Nav<map>.lua)\")` and `out = args.out or f\"Nav{map_id}.lua\"`. The docstring is never passed to argparse, so --help does not show it. Suggested fix: `[<out.lua>]`.",
       "confidence": "low",
-      "status": "open",
+      "status": "fixed",
       "reason": "",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03",
+      "guard": "lens-only: a stale sentence in prose or a comment reads the same to a linter as a current one"
     },
     {
       "id": "67d9238e6a",
@@ -752,11 +612,10 @@
       "what": "The run-length repeat encoding (symbols 48-63 repeat the previous item 1-16 more times) is implemented twice: encode_heights here (lines 825-829) and the grid encoder in encode_map (lines 699-703). Canonical home: one helper beside enc().",
       "why": "Identical today; both feed the same runtime decoder, so a change to the repeat alphabet must land in both or one table decodes wrong.",
       "confidence": "medium",
-      "status": "confirmed",
-      "reason": "PathGrid.lua has separate grid and height decoders, contrary to the finding, but both interpret repeat symbols as symbol minus 47. The emission loops differ only in destination list, and synthetic runs across the 16-repeat boundary produced identical repeat suffixes.",
+      "status": "decide",
+      "reason": "Unify these copies behind one home, and where should that home live? Defect: The run-length repeat encoding (symbols 48-63 repeat the previous item 1-16 more times) is implemented twice: encode_heights here (lines 825-829) and the grid encoder in encode_map (lines 699-703). Canonical home: one helper beside enc(). Evidence: PathGrid.lua has separate grid and height decoders, contrary to the finding, but both interpret repeat symbols as symbol minus 47. The emission loops differ only in destination list, and synthetic runs across the 16-repeat boundary produced identical repeat suffixes.",
       "first_seen": "2026-09-27",
-      "updated": "2026-09-27",
-      "guard": "settled:second copy of a fact"
+      "updated": "2026-10-03"
     },
     {
       "id": "8548d192e3",
@@ -766,11 +625,10 @@
       "what": "Cell values 0 blocked / 1 ground / 2 water are bare numbers: produced here and on line 334, compared as `== 2` on lines 342, 511, 516, 588, and tested for truthiness as 'walkable' throughout. Named constants (e.g. BLOCKED, GROUND, WATER) would make the set searchable; the file already names AREA_* and FLAG_* this way.",
       "why": "A typo such as `== 1` for water would pass silently. The values are part of the emitted data format (header line 723), so the constants' values must stay the same.",
       "confidence": "medium",
-      "status": "confirmed",
-      "reason": "An in-memory moves() probe showed that these codes control internal behavior before serialization: 0 blocks movement, 1 costs one yard, and 2 costs three. The literals therefore extend beyond the wire boundary, with no named internal representation.",
+      "status": "decide",
+      "reason": "Name this closed set once (a LuaLS alias or a constants table) and use it at every site? Defect: Cell values 0 blocked / 1 ground / 2 water are bare numbers: produced here and on line 334, compared as `== 2` on lines 342, 511, 516, 588, and tested for truthiness as 'walkable' throughout. Named constants (e.g. BLOCKED, GROUND, WATER) would make the set searchable; the file already names AREA_* and FLAG_* this way. Evidence: An in-memory moves() probe showed that these codes control internal behavior before serialization: 0 blocks movement, 1 costs one yard, and 2 costs three. The literals therefore extend beyond the wire boundary, with no named internal representation.",
       "first_seen": "2026-09-27",
-      "updated": "2026-09-30",
-      "guard": "settled:bare-string closed set"
+      "updated": "2026-10-03"
     },
     {
       "id": "9b026e4613",
@@ -808,11 +666,10 @@
       "what": "MOVES (lines 475-484) restates the eight directions of DIRS (line 47) in the same order, adding only the step length. MOVES could be derived from DIRS (length sqrt(2) when both dx and dy are set).",
       "why": "The order matters: DIRS' codes are the emitted direction numbers and moves() iterates MOVES; they agree today, but reordering one without the other would not fail loudly.",
       "confidence": "low",
-      "status": "confirmed",
-      "reason": "Deriving MOVES from DIRS produced an exactly equal tuple and preserved the synthetic movement sequence and costs, with no constraint requiring separate definitions. Direction codes come from explicit DIRS values rather than MOVES positions, so the finding overstates the ordering dependency but correctly identifies the duplicated direction set.",
+      "status": "decide",
+      "reason": "Unify these copies behind one home, and where should that home live? Defect: MOVES (lines 475-484) restates the eight directions of DIRS (line 47) in the same order, adding only the step length. MOVES could be derived from DIRS (length sqrt(2) when both dx and dy are set). Evidence: Deriving MOVES from DIRS produced an exactly equal tuple and preserved the synthetic movement sequence and costs, with no constraint requiring separate definitions. Direction codes come from explicit DIRS values rather than MOVES positions, so the finding overstates the ordering dependency but correctly identifies the duplicated direction set.",
       "first_seen": "2026-09-27",
-      "updated": "2026-09-27",
-      "guard": "settled:second copy of a fact"
+      "updated": "2026-10-03"
     },
     {
       "id": "af1e4a483a",
@@ -822,10 +679,10 @@
       "what": "The repeat-run encoder (symbols 48-63 mean 'repeat 1-16 more times') is written out twice: in encode_heights (lines 831-835) and in encode_map's grid encoder (lines 700-704). Canonical home: one helper, for example repeats(count), shared by both.",
       "why": "The two copies are identical and both are decoded by the same rule in PathGrid.lua (lines 255-256 and 331-336). A change to the run limit or the symbol base would have to land in both, or the runtime would misdecode one table. No difference between them is intended.",
       "confidence": "medium",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Same producer as 6baa359600: one defect, recorded once there. Verifier found it real: Read both copies (gen_nav.py:700-704 and 831-835): the four-line repeat loop is identical apart from the list name (syms against out), the literals 48 and 16 occur exactly twice (counted with python3), and Routing/PathGrid.lua decodes both tables by the same sym >= 48 rule (lines 255-256 and 331-336",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "45b8f6237d",
@@ -849,10 +706,10 @@
       "what": "Second fetcher for the same pinned Gethe/wow-ui-source revision: tools/fetch_tracker_ui.py (Python, into tools/.cache/tracker-ui) beside tools/fetch_blizzard_ui.sh:7-17 (bash, into tools/.cache/blizzard-ui), both download raw files at 70ef1b2... and verify sha256. Canonical home: fetch_blizzard_ui.sh, whose FILES heredoc could list the three Blizzard_ObjectiveTracker files.",
       "why": "Bumping the client source revision needs both edited in step. Differences: language, cache root (CI passes TRACKER_UI_ROOT=tools/.cache/tracker-ui, .github/workflows/ci.yml:23-24, so that path would change), Python verifies before writing and has a 30 s timeout, bash verifies after writing to .tmp; all incidental. The project profile's Settled entry says fetch_blizzard_ui.sh does not pin the tracker Block/Module files, which fetch_tracker_ui.py now does.",
       "confidence": "medium",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "tools/check_shared_tracker.py:7-8 lists tools/fetch_tracker_ui.py as a file that must be byte-identical across four addon repositories, enforced daily by .github/workflows/shared-tracker.yml, so it cannot be folded into this repository's own fetch_blizzard_ui.sh: a cross-repository contract forces the separate copy. It also writes a flat layout under tools/.cache/tracker-ui that ci.yml:25 passes as TRACKER_UI_ROOT.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "48612338ae",
@@ -875,10 +732,10 @@
       "what": "'Is this TaxiPathNode a stop' is tested two ways: equality `int(Flags) == STOP` in gen_routes.py (line 127 and line 199), and a bit test `int(Flags) & STOP` in gen_transit.py:299. Line 119 of this file treats Flags as a bitmask (`& TELEPORT`). Canonical home: one predicate (bit test) in gen_routes, imported by gen_transit.",
       "why": "Flags is a bitfield. A node with STOP and another bit set (for example 3) counts as a stop in gen_transit, so that path is dropped as a flight, but not in gen_routes, so it is neither a route stop nor a transport path. I could not check the cached TaxiPathNode CSV because tools/.cache has no DB2 exports here, so I do not know whether any row hits this.",
       "confidence": "low",
-      "status": "open",
-      "reason": "",
+      "status": "decide",
+      "reason": "Unify these copies behind one home, and where should that home live? Defect: 'Is this TaxiPathNode a stop' is tested two ways: equality `int(Flags) == STOP` in gen_routes.py (line 127 and line 199), and a bit test `int(Flags) & STOP` in gen_transit.py:299. Line 119 of this file treats Flags as a bitmask (`& TELEPORT`). Canonical home: one predicate (bit test) in gen_routes, imported by gen_transit. Evidence: tools/gen_routes.py:127 and :199 test Flags == STOP while tools/gen_transit.py:298 tests Flags & STOP on the same TaxiPathNode rows, and nothing forces the difference since gen_transit already imports STOP from gen_routes. Not a bug today: the cached tools/.cache/TaxiPathNode-1.60.1.69913.csv holds only Flags 0, 1, 2, 8 and 9, and both predicates pick the same 14 paths, but choosing one predicate changes a condition ",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "9b29192706",
@@ -892,6 +749,151 @@
       "reason": "Endpoint-only STOP mutations reproduce empty stops, but tests/model_spec.lua:13 rejects both with the offending route ID; .github/workflows/ci.yml:20 runs this assertion in CI, so the required gate exposes the fallback. The pinned input regenerates byte-identically with 13 routes, each having at least two stops.",
       "first_seen": "2026-09-27",
       "updated": "2026-09-27"
+    },
+    {
+      "id": "023df31a89",
+      "lens": "comment-narration",
+      "file": "tools/gen_transit.py",
+      "quote": "    # These two tables have one INSERT per line; quoted SQL strings may contain commas and parentheses.",
+      "what": "Stale comment: says 'these two tables' but the loop below parses three (gameobject, areatrigger_teleport, spell_target_position).",
+      "why": "classicdb() matches INSERT lines for `gameobject`, `areatrigger_teleport` and `spell_target_position` (lines 64, 77, 82) with the same `tuples` regex; spell_target_position was added without updating the count. Suggested: 'Each of these tables has one INSERT per line; quoted SQL strings may contain commas and parentheses.'",
+      "confidence": "high",
+      "status": "fixed",
+      "reason": "Comment corrected to match the code.",
+      "first_seen": "2026-09-27",
+      "updated": "2026-09-27",
+      "guard": "settled:orphaned comment"
+    },
+    {
+      "id": "3425edf735",
+      "lens": "parallel-implementations",
+      "file": "tools/gen_transit.py",
+      "quote": "                frame[\"dock\"] = 1101 if frame[\"pos\"][1] < 1200 else 1102\n                entrance = triggers[2166 if frame[\"dock\"] == 1101 else 2171]",
+      "what": "The Deeprun Tram station facts are written twice in transports(): the Ironforge/Stormwind split by `pos[1] < 1200` (line 181 and line 196), and the dock-to-trigger pairing (1101/2175, 1102/2173 at line 177; 1101/2166, 1102/2171 here). Canonical home: one station table (dock id, name, pin trigger, entrance trigger, side test) used by both loops.",
+      "why": "Both loops walk the same track frames with the same side test, and the dock ids and triggers are paired by position in two different literal tuples. If the threshold or a trigger changes in one loop and not the other, the dock pins and the stops the trains bind to disagree. No reason for the split is stated.",
+      "confidence": "medium",
+      "status": "dismissed",
+      "reason": "Same producer as daf3f4aa24: one defect, recorded once there. Verifier found it real: Read both tram loops in transports(): the side test `pos[1] < 1200` and the pairing Ironforge = 1101, Stormwind = 1102 are written at line 181 (via the tuple on 177) and again at line 196, with nothing forcing the split, so a changed threshold or dock id must be edited twice. The trigger pairs are n",
+      "first_seen": "2026-09-30",
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "451c261cbf",
+      "lens": "defensive-noise",
+      "file": "tools/gen_transit.py",
+      "quote": "    except (OSError, ValueError, KeyError, urllib.error.URLError) as error:",
+      "what": "The top-level handler catches KeyError from the whole of main() and prints only the missing key",
+      "why": "The generator's own checks raise ValueError with a message; a KeyError comes from an unguarded lookup (names[spell], casts[cast_index[spell]], tracks[template], triggers[key], a renamed DB2 column such as row[\"Flags\"]). The handler turns it into `error: 'Flags'` with exit 1 and no traceback, hiding which table and which lookup failed, exactly when a pinned source changed shape. gen_routes.py catches only OSError, ValueError and URLError. Drop KeyError from the tuple so the traceback surfaces.",
+      "confidence": "medium",
+      "status": "decide",
+      "reason": "Remove this handling so the failure shows in full? Defect: The top-level handler catches KeyError from the whole of main() and prints only the missing key Evidence: No raise KeyError exists in gen_transit.py or gen_routes.py (rg KeyError finds only line 587), so the handler only catches unguarded lookups such as row[\"Flags\"], names[spell], casts[cast_index[spell]] or triggers[key], and str(KeyError) prints just the quoted key, which drops the table and line a traceback would give; gen_routes.py:310 catches OSError, ValueError and URLError only, and git log -S shows KeyError came",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "4912ac9d42",
+      "lens": "stale-docs",
+      "file": "tools/gen_transit.py",
+      "quote": "        \"-- Zephras (map 2991) has two ferry docks and no ordinary flight nodes in this build.\",",
+      "what": "The header comment emitted into Data/Taxi.lua says \"Zephras (map 2991) has two ferry docks\", but both docks on map 2991 are zeppelin stops",
+      "why": "Data/Routes.lua has exactly two docks on map 2991 (21 and 23, z 642.7 and 659.9) and their only routes are 11398 and 11457, both kind = \"zeppelin\" (gen_routes.py ZEPPELINS: the Dalaran-Valanaar skyship and the Thunder Bluff-Zephras zeppelin). The sentence is a hardcoded literal, not derived from the data, so it does not follow the routes. Say \"two zeppelin docks\" or derive the count and kind. The string is generated data, so the fix is a data diff in Data/Taxi.lua.",
+      "confidence": "medium",
+      "status": "decide",
+      "reason": "The header is emitted into Data/Taxi.lua by the generator: change \"two ferry docks\" to zeppelin stops and regenerate? Defect: The header comment emitted into Data/Taxi.lua says \"Zephras (map 2991) has two ferry docks\", but both docks on map 2991 are zeppelin stops Evidence: Data/Routes.lua has exactly two docks on map 2991 (lines 31 and 33, docks 21 and 23) and `rg 'dock = (21|23),'` finds them only in routes 11398 and 11457, both kind = \"zeppelin\" (gen_routes.py ZEPPELINS), while the project uses ferry for boats (UI/Map.lua:13, README.md:50), so the hardcoded sentence at gen_transit.py:535 is wrong. It is an emitted string, not a code comment, and the fix is a data diff in Data/Taxi.lu",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "5231c1d575",
+      "lens": "parallel-implementations",
+      "file": "tools/gen_transit.py",
+      "quote": "        if start not in nodes or end not in nodes or len(track) < 2 or any(int(r[\"Flags\"]) & 2 for r in track):",
+      "what": "The TaxiPathNode stop flag is restated as the literal 2 here, while gen_routes.py:56 defines STOP = 2 for the same flag (and gen_transit already imports from gen_routes). Canonical home: gen_routes.STOP.",
+      "why": "The copies also drift in semantics: gen_routes tests `int(Flags) == STOP` (lines 127, 199) while this line tests the bit `& 2`, so a node with Flags 3 is a transport stop to gen_transit but not to gen_routes. Whether the two should agree is unverified; the magic number hides the question.",
+      "confidence": "medium",
+      "status": "fixed",
+      "reason": "gen_transit.py imports STOP from gen_routes.py.",
+      "first_seen": "2026-09-27",
+      "updated": "2026-09-27",
+      "guard": "settled:second copy of a fact"
+    },
+    {
+      "id": "598988b190",
+      "lens": "parallel-implementations",
+      "file": "tools/gen_transit.py",
+      "quote": "            \"remaining paths estimated at 32 yd/s.\",",
+      "what": "Emitted header comments restate generator constants as literals: '32 yd/s' (TAXI_SPEED, line 23), 'within 20 yd' (line 527, TAXI_POINT_ERROR, line 24), 'Loading-screen allowance: 5 s' (line 541) beside the `\"seconds\": 5` literal (line 353); gen_routes.py:253 likewise writes '30 yd/s, 1 yd/s\u00b2' beside SPEED, ACCEL = 30.0, 1.0 (line 25). Canonical home: the constants, interpolated into the f-strings.",
+      "why": "If a constant changes, the checked-in Data/Taxi.lua, Data/Portals.lua and Data/Routes.lua headers keep describing the old value with no error. The strings are generated data, so a fix is reported, not applied (output must stay byte-identical; it does as long as the values are unchanged).",
+      "confidence": "medium",
+      "status": "decide",
+      "reason": "Unify these copies behind one home, and where should that home live? Defect: Emitted header comments restate generator constants as literals: '32 yd/s' (TAXI_SPEED, line 23), 'within 20 yd' (line 527, TAXI_POINT_ERROR, line 24), 'Loading-screen allowance: 5 s' (line 541) beside the `\"seconds\": 5` literal (line 353); gen_routes.py:253 likewise writes '30 yd/s, 1 yd/s\u00b2' beside SPEED, ACCEL = 30.0, 1.0 (line 25). Canonical home: the constants, interpolated into the f-strings. Evidence: Changing TAXI_SPEED and TAXI_POINT_ERROR in memory left the emitted headers describing 32 yd/s and 20 yd. Interpolating the taxi, portal and boat constants preserved the current captured header bytes; the duplicated literals belong to handwritten generator source.",
+      "first_seen": "2026-09-27",
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "62a6ec0edc",
+      "lens": "parallel-implementations",
+      "file": "tools/gen_transit.py",
+      "quote": "                if template in (20649, 20652, 20655)",
+      "what": "The lift template set is restated three times in transports(): LIFTS (line 25), the `sites` table (lines 129-137) and the fit selection here (UC templates 20649/20652/20655 and TB templates 4170/4171/47296/47297 on line 167). Canonical home: the `sites` table (a per-site fit entry), from which LIFTS can be derived.",
+      "why": "Adding or re-identifying a lift requires three consistent edits; forgetting the fit branch silently gives it the Great Lift fit (samples 5, speed 8) with no error. The copies agree today.",
+      "confidence": "medium",
+      "status": "decide",
+      "reason": "Unify these copies behind one home, and where should that home live? Defect: The lift template set is restated three times in transports(): LIFTS (line 25), the `sites` table (lines 129-137) and the fit selection here (UC templates 20649/20652/20655 and TB templates 4170/4171/47296/47297 on line 167). Canonical home: the `sites` table (a per-site fit entry), from which LIFTS can be derived. Evidence: Reidentifying an Undercity template in memory while updating LIFTS, sites and source rows silently changed its fit from 3 samples/2000 ms to 5 samples/4000 ms. The site templates exactly match LIFTS, confirming that the filter, site table and fit branches repeat linked identities.",
+      "first_seen": "2026-09-27",
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "b115757f84",
+      "lens": "parallel-implementations",
+      "file": "tools/gen_transit.py",
+      "quote": "    if refresh or not path.exists():\n        if offline:\n            raise ValueError(f\"Missing cached source: {path}\")\n        request = urllib.request.Request(DB_URL, headers={\"User-Agent\": \"ShortestPathForever/1.0\"})\n        with urllib.request.urlopen(request, timeout=60) as response:\n            data = response.read()",
+      "what": "classicdb() has its own copy of gen_routes.download() (gen_routes.py:63-79): the cache check, the offline error, the same User-Agent and timeout, and the temp-file-then-replace write. gen_transit already imports download from gen_routes. Canonical home: gen_routes.download, with a binary/validator option.",
+      "why": "Intended differences: classicdb keeps bytes (gzip) and checks them with gzip.decompress, while download decodes text and rejects HTML. Accidental drift: the temp name is built as path.with_suffix('.tmp') here but path.suffix + '.tmp' in download, and the User-Agent string is duplicated. A change to caching or headers (a new UA, retries, a different timeout) would have to be made in both.",
+      "confidence": "medium",
+      "status": "decide",
+      "reason": "Make classicdb() call gen_routes.download() instead of its own copy of the cache, offline and write logic? Defect: classicdb() has its own copy of gen_routes.download() (gen_routes.py:63-79): the cache check, the offline error, the same User-Agent and timeout, and the temp-file-then-replace write. gen_transit already imports download from gen_routes. Canonical home: gen_routes.download, with a binary/validator option. Evidence: Compared classicdb() lines 47-58 with gen_routes.download() lines 63-79: same cache test, offline ValueError text, User-Agent, 60 s timeout and temp-then-replace write, and gen_transit already imports download, so nothing forces the copy. Only bytes versus text and the validator (gzip.decompress versus the HTML check) differ by contract; the temp name drifted (python3 probe: with_suffix('.tmp') gives classicdb-22b514",
+      "first_seen": "2026-09-30",
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "b62249e6b4",
+      "lens": "parallel-implementations",
+      "file": "tools/gen_transit.py",
+      "quote": "        request = urllib.request.Request(DB_URL, headers={\"User-Agent\": \"ShortestPathForever/1.0\"})",
+      "what": "classicdb() re-implements the cached-download routine of gen_routes.download() (tools/gen_routes.py:63-79): cache path under CACHE, refresh/offline switch, 'Missing cached source' error, the same User-Agent literal, urlopen with timeout 60, temp-file-then-replace. gen_transit already imports download from gen_routes; download is the canonical home (e.g. give it a binary/validate hook).",
+      "why": "Differences: classicdb stores bytes and validates with gzip.decompress (download decodes UTF-8 and rejects HTML), and its temp suffix is '.tmp' instead of '<suffix>.tmp'. Both are intentional per-format validations that a validator parameter would keep; the rest (UA string, offline/refresh semantics, atomic write) is copied and would need any fix twice.",
+      "confidence": "high",
+      "status": "dismissed",
+      "reason": "The functions serve different format and return contracts: download() returns decoded UTF-8 text, while classicdb() retains compressed bytes and streams SQL into parsed tables. Passing the real cached gzip file through download() raises UnicodeDecodeError while classicdb() succeeds, supporting the lens's different-contract exception.",
+      "first_seen": "2026-09-27",
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "b6a33d48d9",
+      "lens": "parallel-implementations",
+      "file": "tools/gen_transit.py",
+      "quote": "MAPS = (0, 1, 2991)",
+      "what": "The set of continents with walking maps is restated as a literal in gen_transit.py:31, tools/bake_walks.lua:19, tools/baker/bake.sh:11 (MAPS) and :21 (TITLE), Settings.lua:49, tests/test_typecheck.py:197 and several specs. Canonical home: the shipped ShortestPathForever_Nav<map>/ directories, which pack_nav.py:77 already discovers with a glob.",
+      "why": "Baking a fourth continent means changing every copy by hand. If gen_transit's copy is missed, that continent's flight nodes and teleports are dropped (taxis() and personal_teleports() filter on MAPS). bake_walks already filters with Path.HasData, so it could list maps from the directories as well.",
+      "confidence": "medium",
+      "status": "dismissed",
+      "reason": "Same producer as 88f722e352: one defect, recorded once there. Verifier found it real: rg 2991 shows the list (0, 1, 2991) as a literal in gen_transit.py:31, tools/bake_walks.lua:19, bake.sh:11 and :21, UI/Settings.lua:49 and the specs, and gen_transit filters flight nodes and teleports on it (lines 278, 397), so a fourth continent needs this copy edited or its data is dropped; this i",
+      "first_seen": "2026-09-30",
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "daf3f4aa24",
+      "lens": "parallel-implementations",
+      "file": "tools/gen_transit.py",
+      "quote": "                if frame[\"depart\"] > frame[\"arrive\"] and (frame[\"pos\"][1] < 1200) == (station == \"Ironforge\"):",
+      "what": "The Deeprun Tram station side test (y < 1200 is Ironforge / dock 1101) is written twice: here (line 181, by station name) and on line 196 (`1101 if frame[\"pos\"][1] < 1200 else 1102`), with the dock/trigger pairing also restated (1101/2175/2166 vs 1102/2173/2171 on lines 177 and 197). Canonical home: one station table keyed by dock id.",
+      "why": "Both copies must change together if the threshold or dock ids change; they agree today.",
+      "confidence": "low",
+      "status": "decide",
+      "reason": "Unify these copies behind one home, and where should that home live? Defect: The Deeprun Tram station side test (y < 1200 is Ironforge / dock 1101) is written twice: here (line 181, by station name) and on line 196 (`1101 if frame[\"pos\"][1] < 1200 else 1102`), with the dock/trigger pairing also restated (1101/2175/2166 vs 1102/2173/2171 on lines 177 and 197). Canonical home: one station table keyed by dock id. Evidence: Changing only Ironforge's dock ID in the in-memory station table produced routes referencing nonexistent dock 1101 without a validation failure. Cached AreaTrigger rows justify separate exterior/interior trigger IDs, but their station association and the repeated side classification must remain synchronized.",
+      "first_seen": "2026-09-27",
+      "updated": "2026-10-03"
     }
   ]
 }

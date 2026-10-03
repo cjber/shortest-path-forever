@@ -421,7 +421,7 @@ local function RefreshCosts(includeGoal, forced)
 	local function bakedBound(batch, target)
 		local first = batch.fixedKey
 		local last = target.kind and target.kind .. target.id or target == goal and goalBatch.fixedKey
-		local baked = first and last and ns.Walks and ns.Walks[batch.point.map]
+		local baked = first and last and ns.Walks[batch.point.map]
 		if not baked then
 			return 0
 		end

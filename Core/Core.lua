@@ -215,8 +215,8 @@ local function TravelTick()
 		fn(dockID, yards)
 	end
 	local near = yards and yards <= 200
-	local observing = ns.IsObservingRide and ns.IsObservingRide()
-	local journey = ns.HasJourney and ns.HasJourney()
+	local observing = ns.IsObservingRide()
+	local journey = ns.HasJourney()
 	probes = math.max(0, probes - 1)
 	local active = near or observing or journey or ns.db.debug or moving or probes > 0
 	if not active and travelTicker then

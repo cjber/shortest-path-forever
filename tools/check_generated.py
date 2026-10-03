@@ -52,6 +52,14 @@ def compare(expected, actual, label):
         raise SystemExit(f"{label}:\n" + "\n".join(changed))
 
 
+def input_cache():
+    """The main checkout's tools/.cache, so every git worktree of the repository shares one set of inputs."""
+    common = subprocess.check_output(
+        ["git", "rev-parse", "--path-format=absolute", "--git-common-dir"], cwd=ROOT, text=True
+    ).strip()
+    return Path(common).parent / "tools" / ".cache"
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--offline", action="store_true", help="require existing tools/.cache inputs")
@@ -65,13 +73,13 @@ def main():
                 target = scratch / name
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(source, target)
-        cache = ROOT / "tools/.cache"
+        cache = input_cache()
         if cache.exists():
             shutil.copytree(cache, scratch / "tools/.cache", dirs_exist_ok=True)
         expected = outputs(scratch)
         regenerate(scratch, args.offline)
         if not args.offline:
-            shutil.copytree(scratch / "tools/.cache", ROOT / "tools/.cache", dirs_exist_ok=True)
+            shutil.copytree(scratch / "tools/.cache", cache, dirs_exist_ok=True)
         generated = outputs(scratch)
         compare(expected, generated, "Stale generated files; run the canonical generators")
         regenerate(scratch, True)

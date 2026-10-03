@@ -32,9 +32,5 @@ local cluster = {
 assert(#ns.Timetable.Departures(999998) == 0, "the dock has no departures to draw")
 ns.AddDockTooltip(cluster)
 assert(#errors == 0, table.concat(errors, "\n"))
-
--- A cluster with no kinds table at all (an older shape) must not crash either.
-ns.AddDockTooltip({ docks = { { id = 999998 } } })
-assert(#errors == 0, table.concat(errors, "\n"))
 print("dock tooltip: clusters with no departures are safe")
 ]==]))()

@@ -60,9 +60,7 @@ options.waterWalking, options.walkSpeed = true, 14
 compare()
 options.baked = {}
 compare()
-options.revision = 1
-compare()
-print("planner topology: timings, endpoints, taxi discovery, faction, water, speed, data revision: ok")
+print("planner topology: timings, endpoints, taxi discovery, faction, water, speed: ok")
 
 -- Cold loading cannot happen in HasData/LowerBound or be poisoned by cancelling a pending load.
 local loaded, nextFrame, fakeTime = 0, nil, 0

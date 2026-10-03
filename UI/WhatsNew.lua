@@ -12,7 +12,7 @@ ns.WHATS_NEW = L["Long walks now take the boat, and the compass can be moved."]
 function ns.CheckWhatsNew()
 	local db = ns.db
 	local version = C_AddOns.GetAddOnMetadata(addonName, "Version")
-	if not db or not version or version:find("^@") then
+	if not version or version:find("^@") then
 		return
 	end
 	local seen = db.seenVersion

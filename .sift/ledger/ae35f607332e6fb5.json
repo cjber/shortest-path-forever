@@ -2,128 +2,6 @@
   "schema_version": 1,
   "items": [
     {
-      "id": "023df31a89",
-      "lens": "comment-narration",
-      "file": "tools/gen_transit.py",
-      "quote": "    # These two tables have one INSERT per line; quoted SQL strings may contain commas and parentheses.",
-      "what": "Stale comment: says 'these two tables' but the loop below parses three (gameobject, areatrigger_teleport, spell_target_position).",
-      "why": "classicdb() matches INSERT lines for `gameobject`, `areatrigger_teleport` and `spell_target_position` (lines 64, 77, 82) with the same `tuples` regex; spell_target_position was added without updating the count. Suggested: 'Each of these tables has one INSERT per line; quoted SQL strings may contain commas and parentheses.'",
-      "confidence": "high",
-      "status": "fixed",
-      "reason": "Comment corrected to match the code.",
-      "first_seen": "2026-09-27",
-      "updated": "2026-09-27",
-      "guard": "settled:orphaned comment"
-    },
-    {
-      "id": "3425edf735",
-      "lens": "parallel-implementations",
-      "file": "tools/gen_transit.py",
-      "quote": "                frame[\"dock\"] = 1101 if frame[\"pos\"][1] < 1200 else 1102\n                entrance = triggers[2166 if frame[\"dock\"] == 1101 else 2171]",
-      "what": "The Deeprun Tram station facts are written twice in transports(): the Ironforge/Stormwind split by `pos[1] < 1200` (line 181 and line 196), and the dock-to-trigger pairing (1101/2175, 1102/2173 at line 177; 1101/2166, 1102/2171 here). Canonical home: one station table (dock id, name, pin trigger, entrance trigger, side test) used by both loops.",
-      "why": "Both loops walk the same track frames with the same side test, and the dock ids and triggers are paired by position in two different literal tuples. If the threshold or a trigger changes in one loop and not the other, the dock pins and the stops the trains bind to disagree. No reason for the split is stated.",
-      "confidence": "medium",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "5231c1d575",
-      "lens": "parallel-implementations",
-      "file": "tools/gen_transit.py",
-      "quote": "        if start not in nodes or end not in nodes or len(track) < 2 or any(int(r[\"Flags\"]) & 2 for r in track):",
-      "what": "The TaxiPathNode stop flag is restated as the literal 2 here, while gen_routes.py:56 defines STOP = 2 for the same flag (and gen_transit already imports from gen_routes). Canonical home: gen_routes.STOP.",
-      "why": "The copies also drift in semantics: gen_routes tests `int(Flags) == STOP` (lines 127, 199) while this line tests the bit `& 2`, so a node with Flags 3 is a transport stop to gen_transit but not to gen_routes. Whether the two should agree is unverified; the magic number hides the question.",
-      "confidence": "medium",
-      "status": "fixed",
-      "reason": "gen_transit.py imports STOP from gen_routes.py.",
-      "first_seen": "2026-09-27",
-      "updated": "2026-09-27",
-      "guard": "settled:second copy of a fact"
-    },
-    {
-      "id": "598988b190",
-      "lens": "parallel-implementations",
-      "file": "tools/gen_transit.py",
-      "quote": "            \"remaining paths estimated at 32 yd/s.\",",
-      "what": "Emitted header comments restate generator constants as literals: '32 yd/s' (TAXI_SPEED, line 23), 'within 20 yd' (line 527, TAXI_POINT_ERROR, line 24), 'Loading-screen allowance: 5 s' (line 541) beside the `\"seconds\": 5` literal (line 353); gen_routes.py:253 likewise writes '30 yd/s, 1 yd/s\u00b2' beside SPEED, ACCEL = 30.0, 1.0 (line 25). Canonical home: the constants, interpolated into the f-strings.",
-      "why": "If a constant changes, the checked-in Data/Taxi.lua, Data/Portals.lua and Data/Routes.lua headers keep describing the old value with no error. The strings are generated data, so a fix is reported, not applied (output must stay byte-identical; it does as long as the values are unchanged).",
-      "confidence": "medium",
-      "status": "confirmed",
-      "reason": "Changing TAXI_SPEED and TAXI_POINT_ERROR in memory left the emitted headers describing 32 yd/s and 20 yd. Interpolating the taxi, portal and boat constants preserved the current captured header bytes; the duplicated literals belong to handwritten generator source.",
-      "first_seen": "2026-09-27",
-      "updated": "2026-09-30",
-      "guard": "settled:second copy of a fact"
-    },
-    {
-      "id": "62a6ec0edc",
-      "lens": "parallel-implementations",
-      "file": "tools/gen_transit.py",
-      "quote": "                if template in (20649, 20652, 20655)",
-      "what": "The lift template set is restated three times in transports(): LIFTS (line 25), the `sites` table (lines 129-137) and the fit selection here (UC templates 20649/20652/20655 and TB templates 4170/4171/47296/47297 on line 167). Canonical home: the `sites` table (a per-site fit entry), from which LIFTS can be derived.",
-      "why": "Adding or re-identifying a lift requires three consistent edits; forgetting the fit branch silently gives it the Great Lift fit (samples 5, speed 8) with no error. The copies agree today.",
-      "confidence": "medium",
-      "status": "confirmed",
-      "reason": "Reidentifying an Undercity template in memory while updating LIFTS, sites and source rows silently changed its fit from 3 samples/2000 ms to 5 samples/4000 ms. The site templates exactly match LIFTS, confirming that the filter, site table and fit branches repeat linked identities.",
-      "first_seen": "2026-09-27",
-      "updated": "2026-09-27",
-      "guard": "settled:second copy of a fact"
-    },
-    {
-      "id": "b115757f84",
-      "lens": "parallel-implementations",
-      "file": "tools/gen_transit.py",
-      "quote": "    if refresh or not path.exists():\n        if offline:\n            raise ValueError(f\"Missing cached source: {path}\")\n        request = urllib.request.Request(DB_URL, headers={\"User-Agent\": \"ShortestPathForever/1.0\"})\n        with urllib.request.urlopen(request, timeout=60) as response:\n            data = response.read()",
-      "what": "classicdb() has its own copy of gen_routes.download() (gen_routes.py:63-79): the cache check, the offline error, the same User-Agent and timeout, and the temp-file-then-replace write. gen_transit already imports download from gen_routes. Canonical home: gen_routes.download, with a binary/validator option.",
-      "why": "Intended differences: classicdb keeps bytes (gzip) and checks them with gzip.decompress, while download decodes text and rejects HTML. Accidental drift: the temp name is built as path.with_suffix('.tmp') here but path.suffix + '.tmp' in download, and the User-Agent string is duplicated. A change to caching or headers (a new UA, retries, a different timeout) would have to be made in both.",
-      "confidence": "medium",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "b62249e6b4",
-      "lens": "parallel-implementations",
-      "file": "tools/gen_transit.py",
-      "quote": "        request = urllib.request.Request(DB_URL, headers={\"User-Agent\": \"ShortestPathForever/1.0\"})",
-      "what": "classicdb() re-implements the cached-download routine of gen_routes.download() (tools/gen_routes.py:63-79): cache path under CACHE, refresh/offline switch, 'Missing cached source' error, the same User-Agent literal, urlopen with timeout 60, temp-file-then-replace. gen_transit already imports download from gen_routes; download is the canonical home (e.g. give it a binary/validate hook).",
-      "why": "Differences: classicdb stores bytes and validates with gzip.decompress (download decodes UTF-8 and rejects HTML), and its temp suffix is '.tmp' instead of '<suffix>.tmp'. Both are intentional per-format validations that a validator parameter would keep; the rest (UA string, offline/refresh semantics, atomic write) is copied and would need any fix twice.",
-      "confidence": "high",
-      "status": "dismissed",
-      "reason": "The functions serve different format and return contracts: download() returns decoded UTF-8 text, while classicdb() retains compressed bytes and streams SQL into parsed tables. Passing the real cached gzip file through download() raises UnicodeDecodeError while classicdb() succeeds, supporting the lens's different-contract exception.",
-      "first_seen": "2026-09-27",
-      "updated": "2026-09-27"
-    },
-    {
-      "id": "b6a33d48d9",
-      "lens": "parallel-implementations",
-      "file": "tools/gen_transit.py",
-      "quote": "MAPS = (0, 1, 2991)",
-      "what": "The set of continents with walking maps is restated as a literal in gen_transit.py:31, tools/bake_walks.lua:19, tools/baker/bake.sh:11 (MAPS) and :21 (TITLE), Settings.lua:49, tests/test_typecheck.py:197 and several specs. Canonical home: the shipped ShortestPathForever_Nav<map>/ directories, which pack_nav.py:77 already discovers with a glob.",
-      "why": "Baking a fourth continent means changing every copy by hand. If gen_transit's copy is missed, that continent's flight nodes and teleports are dropped (taxis() and personal_teleports() filter on MAPS). bake_walks already filters with Path.HasData, so it could list maps from the directories as well.",
-      "confidence": "medium",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "daf3f4aa24",
-      "lens": "parallel-implementations",
-      "file": "tools/gen_transit.py",
-      "quote": "                if frame[\"depart\"] > frame[\"arrive\"] and (frame[\"pos\"][1] < 1200) == (station == \"Ironforge\"):",
-      "what": "The Deeprun Tram station side test (y < 1200 is Ironforge / dock 1101) is written twice: here (line 181, by station name) and on line 196 (`1101 if frame[\"pos\"][1] < 1200 else 1102`), with the dock/trigger pairing also restated (1101/2175/2166 vs 1102/2173/2171 on lines 177 and 197). Canonical home: one station table keyed by dock id.",
-      "why": "Both copies must change together if the threshold or dock ids change; they agree today.",
-      "confidence": "low",
-      "status": "confirmed",
-      "reason": "Changing only Ironforge's dock ID in the in-memory station table produced routes referencing nonexistent dock 1101 without a validation failure. Cached AreaTrigger rows justify separate exterior/interior trigger IDs, but their station association and the repeated side classification must remain synchronized.",
-      "first_seen": "2026-09-27",
-      "updated": "2026-09-27",
-      "guard": "settled:second copy of a fact"
-    },
-    {
       "id": "daf93086a2",
       "lens": "parallel-implementations",
       "file": "tools/gen_transit.py",
@@ -131,10 +9,10 @@
       "what": "The fit per lift restates, by template id, which cars belong to Undercity and Thunder Bluff. That grouping already lives in the `sites` list (lines 129-137) and LIFTS (line 25). Canonical home: a fit field on each `sites` entry.",
       "why": "A new lift site added to `sites` and LIFTS would silently get the default Great Lift fit unless someone also edits this template tuple. The fit is emitted into Data/Transports.lua, so any change is a data diff.",
       "confidence": "low",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Same producer as 62a6ec0edc: one defect, recorded once there. Verifier found it real: The tuples at lines 166-167 list exactly the car templates of the three Undercity entries (sites lines 134-136) and the two Thunder Bluff entries (lines 132-133), and every car of a site gets the same fit because `template = group[0][0]`, so the grouping is the sites table restated by id and a new s",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "43caf02f85",
@@ -158,10 +36,11 @@
       "what": "The split-part preamble is built twice: once in split() (line 26) to write a part, and again here in write_map() (line 46) to parse one. Canonical home: one part_prefix(map_id, field) helper.",
       "why": "write_map only works if its prefix is byte-identical to what split() wrote. A change to one side makes repacking fail with 'Malformed generated part' or silently skip content.",
       "confidence": "low",
-      "status": "open",
+      "status": "fixed",
       "reason": "",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03",
+      "guard": "settled:second copy of a fact"
     },
     {
       "id": "00b5a533d4",
@@ -171,10 +50,25 @@
       "what": "render_services only forwards to screenshots_services.render; its only use is the SCENES entry.",
       "why": "rg render_services: defined line 664, used only at SCENES line 789. Collapsed form: render the services scene in screenshots.py beside the other render_* functions (it is ~18 lines), or register screenshots_services.render directly. Same file-size-gate motive as the route_button split.",
       "confidence": "low",
-      "status": "open",
+      "status": "fixed",
       "reason": "",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03",
+      "guard": "lens-only: a forwarding wrapper is legal code, only a reader sees it adds nothing"
+    },
+    {
+      "id": "01594a614a",
+      "lens": "speculative-abstraction",
+      "file": "tools/screenshots.py",
+      "quote": "def route_button(canvas, x, y, active=True):",
+      "what": "route_button is a forwarding wrapper with one caller (render_minimap), and its `active` flag, like `active` and `icon_path` on screenshots_services.route_button behind it, is passed identically by every caller",
+      "why": "The only call is `route_button(canvas, cx + ..., cy - ...)` in render_minimap, so active is always True and the white-tint branch in screenshots_services.route_button never runs; icon_path is always ROOT / \"media/Icon.tga\". The function-local import adds nothing: screenshots_services needs only PIL and wowmock, both importable at module top where screenshots_tracker is already imported, and it does not import screenshots back. Collapsed form: import route_button at the top beside detached_tracker and call it from render_minimap with the icon path, dropping the wrapper and the unused inactive state.",
+      "confidence": "medium",
+      "status": "fixed",
+      "reason": "",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03",
+      "guard": "lens-only: a forwarding wrapper is legal code, only a reader sees it adds nothing"
     },
     {
       "id": "266df2e999",
@@ -184,10 +78,36 @@
       "what": "995 lines against the 1000-line gate, with separable responsibilities: Lua data bridge (:77-150), projection/dock naming (:153-202), stroke rendering (:205-266), world-map scenes (:269-587), tracker/compass/minimap scenes (:590-719), demo GIF encoding (:722-763), reference comparison sheets (:801-961), CLI (:964-995).",
       "why": "This change shrank the file 997->995 by deleting docstring/blank lines (git diff :3,:7,:30) and moved route_button, a minimap-scene helper for RouteButton.lua, into the new tools/screenshots_services.py (a Nearby-panel module), leaving pass-through wrappers route_button (:670-673) and render_services (:664-667) here. That is gate avoidance, not a split along responsibilities. Proposed split: move the --refs comparison code (:801-961, review-only, ~160 lines) into tools/screenshots_compare.py, and return route_button to the minimap scene; screenshots_services.py then holds only the services scene.",
       "confidence": "medium",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "same producer as 460b1922ed: one oversized-file defect on tools/screenshots.py. This copy also describes a 995-line working diff that is not in the tree (wc -l gives 997, git status shows tools/ unmodified), so its line ranges are off by two.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "460b1922ed",
+      "lens": "oversized-modules",
+      "file": "tools/screenshots.py",
+      "quote": "def compare_references(refs, tooltip_ref=None):",
+      "what": "tools/screenshots.py is 997 lines against the 1000-line gate and holds separable responsibilities: route data extraction through an embedded Lua program (78-151), projection and dock naming (154-203), the Strokes.lua mirror (206-260), world-map scenes (270-519), the stops scene (522-588), tracker, compass, minimap, demo and flight scenes (591-778), the reference comparison sheets for --refs (803-963) and the CLI (966-997).",
+      "why": "The comparison sheets (comparison_sheet, enlarged, compare_map_references, compare_references, about 160 lines) are a review artifact that only consumes the scene functions and changes for different reasons (owner captures, crop boxes), so they separate cleanly into their own module. The file is already shedding fragments to stay under the gate rather than along a boundary: route_button, a minimap helper from RouteButton.lua, lives in tools/screenshots_services.py:47 behind a forwarding wrapper with a lazy import (tools/screenshots.py:671-674), render_services is a second forwarding wrapper (665-668), and tools/screenshots_tracker.py is a 10-line module with one function. A split is a design choice for the owner; removing the duplicated route-layer setup first buys headroom.",
+      "confidence": "medium",
+      "status": "decide",
+      "reason": "Split this along the named seams, and into which files? Defect: tools/screenshots.py is 997 lines against the 1000-line gate and holds separable responsibilities: route data extraction through an embedded Lua program (78-151), projection and dock naming (154-203), the Strokes.lua mirror (206-260), world-map scenes (270-519), the stops scene (522-588), tracker, compass, minimap, demo and flight scenes (591-778), the reference comparison sheets for --refs (803-963) and the CLI (966 Evidence: wc -l gives 997 against the 1000-line file-size-no-growth rule, and the --refs comparison code (comparison_sheet to compare_references, :803-963) only consumes scene functions and is reached solely from main under args.refs, so it separates cleanly. The gate pressure is visible: route_button, a RouteButton.lua minimap helper, sits in the Nearby-services module behind a forwarding wrapper, and screenshots_tracker.py i",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "4e24ef0a46",
+      "lens": "session-residue",
+      "file": "tools/screenshots.py",
+      "quote": "                \"Current source: 360x60, soft border, stock fonts (2x)\",",
+      "what": "the --refs compass comparison label describes an earlier compass, not the one compass_canvas draws",
+      "why": "compass_canvas builds `ui.canvas(360, 65)` and its comment says \"no panel and no border\", so the label's \"360x60, soft border\" is a leftover from the design it was written against. It is printed only onto the git-ignored docs/verification/compass.png review sheet; correcting it (or dropping the size and border claim) changes nothing shipped.",
+      "confidence": "low",
+      "status": "dismissed",
+      "reason": "same producer as 6954fd4104: the identical label line at tools/screenshots.py:923, kept under stale-docs.",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
     },
     {
       "id": "50afbf6935",
@@ -211,10 +131,10 @@
       "what": "route_button is now a forwarding wrapper around screenshots_services.route_button, which gained an icon_path parameter only so the wrapper can pass ROOT/media/Icon.tga; the minimap button drawing has nothing to do with the services scene. The `active` parameter is also never passed by its only caller (render_minimap, line 713).",
       "why": "git diff shows the body moved out of screenshots.py (997 lines at HEAD, 995 now; the same diff also drops three blank lines from the docstring/imports), i.e. the split exists to keep screenshots.py under the file-size-no-growth 1000-line limit, not along a responsibility. Only caller of both route_button functions: screenshots.py:713 (rg over tools/tests/docs/.github). Collapsed form: keep the 6-line body in screenshots.py (or move a coherent chunk such as the compare_* verification code out) and drop icon_path/active. Side effect: because the wrapper imports screenshots_services, and that module imports a nonexistent wowmock.basic_panel, the minimap scene now fails too (see notes).",
       "confidence": "medium",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "same producer as 01594a614a: the route_button forwarding wrapper at tools/screenshots.py:671-674. Its side-effect claim does not hold in the current tree: screenshots_services.py imports no wowmock.basic_panel and a python3 probe imported it without error.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "6954fd4104",
@@ -224,10 +144,10 @@
       "what": "The compass comparison-sheet label describes the current compass as having a 'soft border'.",
       "why": "Compass.lua:5 says 'no panel, no border', and compass_canvas in the same file (tools/screenshots.py:614-615) says 'no panel and no border' and draws none. The canvas is 360x65, not 360x60, though Compass.lua WIDTH, HEIGHT = 360, 60 matches the size. Suggested label: 'Current source: 360x60 ribbon, no border, stock fonts (2x)'.",
       "confidence": "medium",
-      "status": "open",
-      "reason": "",
+      "status": "decide",
+      "reason": "The label is drawn into a generated comparison sheet: drop \"soft border\" from it? Defect: The compass comparison-sheet label describes the current compass as having a 'soft border'. Evidence: git log -S'soft border' shows the label dates from the first commit 78c05dc, when Compass.lua set a tooltip-border backdrop; UI/Compass.lua:5 now says no panel, no border, and compass_canvas (:614-617) draws none on a 360x65 canvas, so the label misdescribes what the sheet shows. The label is drawn onto the git-ignored docs/verification/compass.png (git check-ignore confirms), so the fix changes an output string but ",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "7f3262699a",
@@ -250,10 +170,10 @@
       "what": "The scene's chosen positions exist twice: Python START/GOAL/DARKSHORE_GOAL (tools/screenshots.py:56-58) and THELSAMAR (:521), and again as literals inside the embedded Lua program (:96-99). Canonical home: the Python constants, formatted into the Lua source as table literals, or passed in and echoed back by the Lua program.",
       "why": "The Lua copies choose where the walks start and end (walk(1, start, ...), walk(0, thelsamar, ...)); the Python copies place the player arrow, goal pin and crop box (map_canvas :469-484, render_stops :578-581, render_minimap :683). Values are identical today; changing one side silently draws the arrow/goal away from the routed walk. No stated reason for the duplication.",
       "confidence": "medium",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Same producer as 8a0d378e42: one defect, recorded once there. Verifier found it real: Compared tools/screenshots.py:57-59 and :522 with the embedded Lua at :97-100: the four positions are the same values written twice, the Lua copies drive the walks and the Python copies place the arrow, goal pin, bend test and crop, so a change to one side needs the other. Nothing forces the copy, s",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "8a0d378e42",
@@ -263,11 +183,23 @@
       "what": "The scene's character positions are defined twice: Python START/GOAL/DARKSHORE_GOAL (tools/screenshots.py:60-62) and THELSAMAR (:519), and again as literals inside the embedded Lua program (tools/screenshots.py:100-103). Canonical home: the Python constants, serialised into the Lua program (e.g. via json/format) instead of restated.",
       "why": "Python draws the player arrow, goal pin and bend (map_canvas lines 467-482, render_stops 587-590) at the Python constants, while the walks those markers sit on are computed in Lua from its own copies. Editing one copy moves the marker off its route with no error. The values currently agree (6341.38/557.68/16.29, -3263/-1353, 4990/170, -5640/-2760); nothing states a reason for the duplication.",
       "confidence": "medium",
-      "status": "confirmed",
-      "reason": "The coordinate copies differ only in table syntax and integer/float spelling; running the embedded Lua with serialized Python constants produced identical output, character-for-character. Python supplies the Lua program through subprocess input, so the process boundary does not require duplicate coordinates.",
+      "status": "decide",
+      "reason": "Unify these copies behind one home, and where should that home live? Defect: The scene's character positions are defined twice: Python START/GOAL/DARKSHORE_GOAL (tools/screenshots.py:60-62) and THELSAMAR (:519), and again as literals inside the embedded Lua program (tools/screenshots.py:100-103). Canonical home: the Python constants, serialised into the Lua program (e.g. via json/format) instead of restated. Evidence: The coordinate copies differ only in table syntax and integer/float spelling; running the embedded Lua with serialized Python constants produced identical output, character-for-character. Python supplies the Lua program through subprocess input, so the process boundary does not require duplicate coordinates.",
       "first_seen": "2026-09-27",
-      "updated": "2026-09-27",
-      "guard": "settled:second copy of a fact"
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "90eedf4d3e",
+      "lens": "speculative-abstraction",
+      "file": "tools/screenshots.py",
+      "quote": "def render_services(ui):",
+      "what": "render_services forwards to screenshots_services.render and adds nothing; its single user is the SCENES table",
+      "why": "The body is a function-local import and `return render(ui)`. The sibling split-out module is imported at the top (`from screenshots_tracker import detached_tracker`) and used directly in SCENES, and nothing makes the services import need deferring (no cycle, same dependencies). Collapsed form: a top-level `from screenshots_services import render as render_services` (or the name directly in SCENES).",
+      "confidence": "medium",
+      "status": "dismissed",
+      "reason": "Same producer as 00b5a533d4: one defect, recorded once there. Verifier found it real: tools/screenshots.py:665-668 is only a function-local import and `return render(ui)`, its one user is SCENES at :791 (rg render_services), and screenshots_services.py imports only PIL and wowmock, so there is no cycle and ruff.toml already exempts this file from E402 for the sibling top-level `from ",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
     },
     {
       "id": "9517362036",
@@ -291,10 +223,23 @@
       "what": "render_stops (:551-560) restates map_canvas's setup (:398-407): map_base, canvas copy of base image, rects['map'] unpack, route canvas, and a point() projector. jscpd hit is real but small; a shared helper returning (canvas, route, rect, point) would be the canonical home. render_flight (:767-769) repeats the first half again.",
       "why": "Only difference: render_stops' point() drops map_canvas's None guard (projection returns None off-map), accidental drift that would raise TypeError instead of skipping if a stop left the map. The rest is identical; a change to how scenes build their base (e.g. the base copy) would need all copies. Low value, six lines.",
       "confidence": "low",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "The shared part is five lines of glue over the already shared map_base (screenshots.py:400-404 vs :553-557), a small idiom under the lens's Do not flag, and the one difference is forced by a different contract: render_stops unpacks, tuples and takes min/max of every point() for its rings and crop (:567, :579-582), so it cannot take map_canvas's None-returning projector, and its fixture stops are fixed on map 1432.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "d430a4cda3",
+      "lens": "defensive-noise",
+      "file": "tools/screenshots.py",
+      "quote": "        except Exception as error:",
+      "what": "Catch-all `except Exception` around each scene prints the exception type and message, then continues",
+      "why": "The run still exits non-zero with the failed scene names, so the failure is not lost, but the traceback is. Several failure points in the scenes are bare asserts with no message (`assert near[0][0] < 1000`, `assert pin`), which this handler reports as `docks: AssertionError: ` with no location. Keep the continue-and-report behaviour but print the traceback (traceback.print_exc()) instead of the one-line summary.",
+      "confidence": "low",
+      "status": "decide",
+      "reason": "Remove this handling so the failure shows in full? Defect: Catch-all `except Exception` around each scene prints the exception type and message, then continues Evidence: The handler at screenshots.py:987-989 keeps the scene name and the non-zero exit (:992-993) but drops the traceback, and the bare asserts at :178 and :496 carry no message: a python3 -c probe of the same format string prints `docks: AssertionError: ` with no location. The fix changes what the tool writes to stderr on every failure.",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
     },
     {
       "id": "d6730f1830",
@@ -310,6 +255,19 @@
       "updated": "2026-09-27"
     },
     {
+      "id": "f550809183",
+      "lens": "defensive-noise",
+      "file": "tools/screenshots.py",
+      "quote": "        if p and portal[\"kind\"] == \"portal\" and portal.get(\"faction\", \"Alliance\") == \"Alliance\":",
+      "what": "portal.get(\"faction\", \"Alliance\") defaults a field no portal has",
+      "why": "gen_transit.py portals() emits only name, kind, from, to and seconds, and Data/Portals.lua contains no faction key, so the default always fires and the comparison is always true: the condition reduces to portal[\"kind\"] == \"portal\". The guard reads as a faction filter that does not exist. UI/Map.lua:624 has the matching read (`not portal.faction or ...`), outside this slice.",
+      "confidence": "medium",
+      "status": "dismissed",
+      "reason": "No shipped portal has the field (rg -c faction Data/Portals.lua is 0, gen_transit.py:343-356 emits none), but faction is a declared optional field of the data contract the mock reads from a generated file: types/Addon.lua:72 `faction? string` on SPFPortal, Planner.lua:168 Eligible honours it, planner_spec.lua:306-308 exercises a portal with a faction, and the mock mirrors UI/Map.lua:624, so the read is the contract's own optional field, not a guard against an impossible state.",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
+    },
+    {
       "id": "2bd7ef914e",
       "lens": "parallel-implementations",
       "file": "tools/screenshots_services.py",
@@ -317,10 +275,37 @@
       "what": "The ten service labels and their order restate Nearby.lua SERVICES (Nearby.lua:4-15); panel size 380x400, row 320x26 and 30 spacing restate Nearby.lua:184, :197, :233, :236. Canonical home: Nearby.lua SERVICES.",
       "why": "Identical today. A renamed, added or reordered service in Nearby.lua leaves the store screenshot stale with nothing failing; screenshots.py already runs production Lua via luajit in data() for exactly this reason, and the labels could be read from SERVICES the same way (or with the L[\"...\"] regex tools/phrases.py uses). Layout numbers are the normal mock-screenshot restatement and could stay with a source comment.",
       "confidence": "low",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Relocated, not refuted: the quoted code changed and the same defect is recorded against the current code as 89db8aa669 in tools/screenshots_services.py.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "86594805f2",
+      "lens": "stale-docs",
+      "file": "tools/screenshots_services.py",
+      "quote": "\"\"\"Nearby services in the stock world-map tracking menu.\"\"\"",
+      "what": "The module docstring describes the file as the Nearby services menu scene only, but the module also holds route_button, the RouteButton.lua minimap-button drawing used by screenshots.py's minimap scene.",
+      "why": "The docstring was reworded to 'Nearby services in the stock world-map tracking menu.' but the module still holds route_button (line 47), the RouteButton.lua minimap-button drawing that screenshots.py:671-673 imports for the minimap scene, so the module summary still leaves out half of what the file is.",
+      "confidence": "high",
+      "status": "fixed",
+      "reason": "",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03",
+      "guard": "lens-only: a stale sentence in prose or a comment reads the same to a linter as a current one"
+    },
+    {
+      "id": "89db8aa669",
+      "lens": "parallel-implementations",
+      "file": "tools/screenshots_services.py",
+      "quote": "            MenuButton(\"Class trainer\"),",
+      "what": "The ten Nearby service labels and their order in render()'s child menu (tools/screenshots_services.py:23-32) restate UI/Nearby.lua SERVICES (lines 5-14). Canonical home: Nearby.lua SERVICES.",
+      "why": "The 380x400 panel and its layout numbers went when the scene became the world-map tracking submenu, but the ten service labels are still retyped in the same order as UI/Nearby.lua SERVICES (lines 5-14 against screenshots_services.py lines 23-32), and nothing fails if they drift. SERVICES is a file-local behind L[...], and every other scene in screenshots.py also hand-writes its UI strings, so deriving the labels is a design choice for the owner, not a mechanical edit.",
+      "confidence": "high",
+      "status": "decide",
+      "reason": "Unify these copies behind one home, and where should that home live? Defect: The ten Nearby service labels and their order in render()'s child menu (tools/screenshots_services.py:23-32) restate UI/Nearby.lua SERVICES (lines 5-14). Canonical home: Nearby.lua SERVICES. Evidence: The 380x400 panel and its layout numbers went when the scene became the world-map tracking submenu, but the ten service labels are still retyped in the same order as UI/Nearby.lua SERVICES (lines 5-14 against screenshots_services.py lines 23-32), and nothing fails if they drift. SERVICES is a file-local behind L[...], and every other scene in screenshots.py also hand-writes its UI strings, so deriving the labels is a",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
     },
     {
       "id": "baf1c3d7df",
@@ -330,10 +315,10 @@
       "what": "The module docstring describes the file as Nearby.lua's panel only, but the module also holds route_button, the RouteButton.lua minimap-button drawing.",
       "why": "The working-tree diff of tools/screenshots.py moved route_button's body (plate atlas, gold tint, 14.4 icon box) into this file. It is called from screenshots.py:671-673 for the minimap scene, which has nothing to do with Nearby services. Either widen the docstring (e.g. 'Nearby.lua's services panel and RouteButton.lua's minimap button') or keep route_button in screenshots.py.",
       "confidence": "medium",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Relocated, not refuted: the quoted code changed and the same defect is recorded against the current code as 86594805f2 in tools/screenshots_services.py.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "72fcc560ba",
@@ -343,10 +328,24 @@
       "what": "Stale: says the stop pin becomes the mark 'in a gold ring'.",
       "why": "Written with #44 (3fcb02b); since #51/#67 StopPin.lua:12,52,68-72 draws the mark as a badge on the numbered button's lower right (a lone stop shows the mark alone), which docs/api.md:35-36 describes correctly. The two public descriptions disagree; reword to match docs/api.md.",
       "confidence": "medium",
-      "status": "open",
+      "status": "fixed",
       "reason": "",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03",
+      "guard": "settled:orphaned comment"
+    },
+    {
+      "id": "bd302efb26",
+      "lens": "stale-docs",
+      "file": "types/API.lua",
+      "quote": "-- What stands at a stop. Its pin on the world map becomes that mark (a quest's \"!\" or \"?\", a trainer, a flight\n-- master, a dock) in a gold ring, and the minimap rings the spot instead of covering the game's own icon there.",
+      "what": "Comment says a stop's pin 'becomes that mark ... in a gold ring'",
+      "why": "UI/StopPin.lua:11-13 and 52-53: a numbered stop keeps its quest button and wears the mark as a badge on the lower right; a lone stop wears the mark alone. docs/api.md 'Stop kinds' describes the badge. The gold-ring wording is the 1.2.0 look that 1.3.0 replaced.",
+      "confidence": "high",
+      "status": "dismissed",
+      "reason": "same producer as 72fcc560ba: the identical comment lines in types/API.lua, and stale-docs Do not flag gives comments in code to comment-narration.",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
     },
     {
       "id": "a3b1aeccde",
@@ -356,10 +355,24 @@
       "what": "ns.NearbyServices (typed here, defined in Nearby.lua:276) is test-only. No runtime file reads it. tests/nearby_spec.lua reads only State, Index and Nearest. Build, Navigate and Services are read nowhere. Fate: test-only. Delete the export, or narrow it to what the spec needs.",
       "why": "`grep -rn NearbyServices` over the whole repository finds only Nearby.lua (its class and definition), tests/nearby_spec.lua and this field. `git grep NearbyServices` finds no hit on any of the six in-flight branches. Nearby.lua calls Build, Nearest and Navigate through locals, not through this table. It is not a stub seam: the spec reads it and never replaces it. Not string-built and not registered. Nearby.lua is new and uncommitted, so there is no public consumer yet.",
       "confidence": "medium",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Same producer as ceaabad0b9: one defect, recorded once there. Verifier found it real: rg over the tree finds ns.NearbyServices read only in tests/nearby_spec.lua (State, Index, Nearest); no ns[key] dynamic access exists and ns is a file-local namespace no other addon can reach. A scratch copy of UI/Nearby.lua without the Build, Navigate and Services fields passes a scratch copy of ne",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "551561fc54",
+      "lens": "dead-code",
+      "file": "types/Forever.lua",
+      "quote": "---@field GetContainerForModule fun(self: SPFTrackerManager, module: SPFTrackerModule): Frame?\n---@field SetModuleContainer fun(self: SPFTrackerManager, module: SPFTrackerModule, container: Frame)",
+      "what": "SPFTrackerManager fields GetContainerForModule and SetModuleContainer declare native tracker calls the addon no longer makes: fully dead, delete both fields",
+      "why": "No runtime Lua, XML or spec calls either method; the only runtime use of ObjectiveTrackerManager is the existence test at UI/Tracker.lua:302. tools/lint_taint.py lists SetModuleContainer as a forbidden call ('registering addon modules taints Blizzard tracker layout') and tests/tracker_host_spec.lua replaces the manager with a 'forbidden' table, so the declarations describe a call the gate rejects. Hard stops do not apply: no string-built method names on the manager, a type declaration is not persisted or public (types/ never ships). Paths checked: dynamic dispatch (rg for both names and for ObjectiveTrackerManager[ across the tree), manifests and ops (only lint_taint and its test mention the name, as a banned pattern), cross-boundary (the companion host API is ForeverTrackerHost, a different class), open work (only branches still on the old root-level Tracker.lua layout call them; origin/main and the branches on the current layout do not).",
+      "confidence": "high",
+      "status": "fixed",
+      "reason": "",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03",
+      "guard": "lens-only: an unread table field, stub or export is invisible to luacheck, only a repository-wide search shows it has no reader"
     },
     {
       "id": "99cc50eee2",
@@ -369,10 +382,11 @@
       "what": "Second declaration of ForeverTrackerHostAPI that disagrees with the one in TrackerHost.lua",
       "why": "TrackerHost.lua lines 8-11 declare the same class with Attach, IsAttached and Debug (api.Debug defined at TrackerHost.lua:368); the types/ copy omits Debug, so the contract is described twice and differently",
       "confidence": "low",
-      "status": "open",
+      "status": "fixed",
       "reason": "",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03",
+      "guard": "lens-only: a stale sentence in prose or a comment reads the same to a linter as a current one"
     }
   ]
 }

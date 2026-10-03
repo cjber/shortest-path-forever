@@ -94,9 +94,6 @@ local function menuNode()
 		function entry.CreateTitle(_entry, titleText)
 			entry.children[#entry.children + 1] = { text = titleText, title = true }
 		end
-		for _, child in ipairs(entry.children) do
-			child.SetEnabled = function() end
-		end
 		menuEntries[#menuEntries + 1] = entry
 		return entry
 	end
@@ -305,16 +302,12 @@ entry("Reagents").callback()
 assert(navigated[#navigated][5] == "Far vendor", "reagents ignores closer general vendor")
 assert(closedMenus > 0, "successful menu actions close the map menu")
 local before = calls
-for _ = 1, 20 do
-	ns.OpenNearby()
-end
-assert(calls == before, "opening does not rebuild DB")
 local beforeMenus = #menuEntries
 for _ = 1, 20 do
 	ns.OpenNearby()
 end
-assert(calls == before, "opening does not rebuild DB")
 assert(#menuEntries == beforeMenus, "menu rebuilds without creating frames")
+assert(calls == before, "opening does not rebuild DB")
 env.SlashCmdList.SPFNEAR("repair")
 assert(navigated[#navigated][5] == "Neutral repairs")
 print(

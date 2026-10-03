@@ -1,8 +1,8 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
--- Coroutine-sliced walking searches: Path.lua's searches share one frame budget, and cancelled or paused jobs
--- release their scratch.
+-- Coroutine-sliced walking searches: Path.lua's searches share one frame budget. Cancelled and released jobs give up
+-- their scratch; a paused job keeps it.
 ---@class SPFPath
 local Path = ns.Path
 local Grid, Search = ns.PathGrid, ns.PathSearch

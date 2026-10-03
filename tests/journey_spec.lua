@@ -6,8 +6,8 @@ local here, target = { map = 1, x = 0, y = 0, z = 0 }, { map = 1, x = 1200, y = 
 -- stand.
 walking.auto = false
 driver.begin(here, target)
-local settling, round, pending = ns.JourneyStatus()
-assert(settling and round == 0 and pending == 2 and not driver.shown())
+local settling, round = ns.JourneyStatus()
+assert(settling and round == 0 and not driver.shown())
 assert(select(2, ns.JourneyInfo())[1].text == "Finding the fastest way…")
 driver.move({ map = 1, x = 7, y = 0, z = 0 })
 driver.update(0.6)

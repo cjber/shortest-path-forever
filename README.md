@@ -81,6 +81,7 @@ Open a flight master’s map once after installing to sync the flight points you
 | `/path` | Open the settings (also in Settings → AddOns, or from the addon compartment on the minimap) |
 | `/path perf` | Print this addon's CPU averages and peaks from the client's profiler, and its memory after a full collection |
 | `/path debug` | Keep a trace of your position and ride matching, for reporting a ride that did not sync |
+| `/spfnear` | Open the nearby services menu on the world map; add `class`, `trainer`, `repair`, `reagents`, `vendor`, `innkeeper`, `bank`, `auction`, `flight` or `stable` to route to the nearest one |
 
 Every feature has its own switch in the settings. Searches and tracker updates wait until combat ends.
 In Guidance, **Minimum Hearthstone saving** lets you keep your Hearthstone for bigger time savings.
