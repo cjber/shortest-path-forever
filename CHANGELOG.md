@@ -11,6 +11,9 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **A journey you cannot walk to says why.** When you stand somewhere the walking map cannot place, and no flight, boat or spell gets you there either, the tracker now reads no walking path instead of No way there from here.
+- **A minimap click that goes nowhere tells you.** Shift-clicking a spot on the minimap that cannot be turned into a place, such as the corner of a square minimap, now prints that no journey can be planned to that spot, as the same click on the world map does.
+
 ## [1.8.0] - 2026-10-02
 
 - **Long walks take the boat.** A journey that would be one walk of ten minutes or more now takes boats, trams or flights when they arrive nearly as soon, such as the Stormwind and Menethil boats from Ironforge to Tirisfal Glades.

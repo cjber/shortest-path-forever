@@ -71,6 +71,8 @@ local function OnMinimapClick(_, button)
 	local point = ns.MinimapPoint()
 	if point then
 		ns.StartJourney(point)
+	else
+		ns.Print(L["no journey can be planned to that spot."])
 	end
 end
 
