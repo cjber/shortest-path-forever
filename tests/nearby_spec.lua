@@ -310,6 +310,57 @@ assert(#menuEntries == beforeMenus, "menu rebuilds without creating frames")
 assert(calls == before, "opening does not rebuild DB")
 env.SlashCmdList.SPFNEAR("repair")
 assert(navigated[#navigated][5] == "Neutral repairs")
+
+-- A fresh copy of the menu over another QuestieDB, read to the end, then opened here or on another continent.
+local function fresh(questie, away)
+	local elsewhere = false
+	env.LibQuestieDB = questie
+	local starts = {}
+	local copy = {
+		L = ns.L,
+		Path = ns.Path,
+		Init = function(fn)
+			starts[#starts + 1] = fn
+		end,
+		WorldPoint = function(_, x, y)
+			return { map = elsewhere and 2 or 1, x = x * 1000, y = y * 1000 }
+		end,
+	}
+	setfenv(assert(loadfile("UI/Nearby.lua")), env)("ShortestPathForever", copy)
+	for _, fn in ipairs(starts) do
+		fn()
+	end
+	while #timers > 0 do
+		pump()
+	end
+	elsewhere = away
+	copy.OpenNearby()
+	return copy
+end
+-- A zone QuestieDB has nothing for: every service, the two with specialties too, reads as unavailable here.
+assert(fresh(lib, true).NearbyServices.State() == "ready" and #menuEntries == 11)
+for position = 2, #menuEntries do
+	local item = menuEntries[position]
+	assert(item.text:find("unavailable here", 1, true) and item.enabled == false and #item.children == 0, item.text)
+end
+-- No QuestieDB, and one whose zone tables do not read, each say so in a line of their own.
+assert(fresh(nil).NearbyServices.State() == "missing")
+assert(#menuEntries == 2 and menuEntries[2].text == "Nearby services need the QuestieDB addon.")
+local broken = setmetatable({}, { __index = lib })
+for _, private in ipairs({
+	{ areaIdToUiMapId = { [10] = 100 }, subZoneToParentZone = "return {[11]=10}" },
+	{ areaIdToUiMapId = "return {[10]=100}", subZoneToParentZone = "return {" },
+	{ areaIdToUiMapId = "error('gone')", subZoneToParentZone = "return {[11]=10}" },
+}) do
+	broken.Support = {
+		Get = function()
+			return { private = private }
+		end,
+	}
+	assert(fresh(broken).NearbyServices.State() == "failed")
+	assert(#menuEntries == 2 and menuEntries[2].text == "Nearby services could not read QuestieDB.")
+end
+env.LibQuestieDB = lib
 print(
 	"nearby: installed QuestieDB contract, sliced loading, faction/class/specialty, "
 		.. "real map-menu callbacks and UI-coordinate dispatch: ok"

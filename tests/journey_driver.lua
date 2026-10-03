@@ -102,6 +102,10 @@ local env = setmetatable({
 		GetWorldPosFromMapPos = function(map, point)
 			return map, vector((0.5 - point.y) * 50000, (0.5 - point.x) * 50000)
 		end,
+		-- Map 1 is a zone and map 10 its continent.
+		GetMapInfo = function(uiMap)
+			return { mapType = uiMap == 10 and 2 or 3 }
+		end,
 		GetBestMapForUnit = function()
 			return here.map
 		end,
@@ -128,6 +132,7 @@ local env = setmetatable({
 		end,
 	},
 	CreateVector2D = vector,
+	Enum = { UIMapType = { Continent = 2 } },
 	UiMapPoint = {
 		CreateFromVector2D = function(map, point)
 			return { uiMapID = map, position = point }
@@ -169,6 +174,10 @@ local env = setmetatable({
 	},
 	Menu = { ModifyMenu = noop },
 }, { __index = _G })
+-- A spec with a ghost sets UnitIsGhost; dead or ghost follows it.
+env.UnitIsDeadOrGhost = function()
+	return env.UnitIsGhost ~= nil and env.UnitIsGhost()
+end
 local function load(file)
 	setfenv(assert(loadfile(root .. "/" .. file)), env)("ShortestPathForever", ns)
 end
@@ -183,8 +192,9 @@ ns.CurrentRide, ns.RefreshTracker, ns.PointGuideArrow, ns.Print = noop, noop, no
 ns.KnownTaxiNodes = function()
 	return ns.known or {}
 end
+-- ns.located: where a spec puts the next points; a zone's map by default.
 ns.Locate = function()
-	return { zone = "Test" }
+	return ns.located or { uiMap = 1, x = 0.5, y = 0.5, zone = "Test" }
 end
 -- ns.teleports: the usable places; ns.teleportReady: [index] = when each can be cast.
 ns.UsableTeleports = function()
@@ -238,6 +248,11 @@ return {
 		here, target = from, to
 		assert(click(map, "LeftButton"))
 		path.settle()
+	end,
+	-- A shift-click on the world map at a world point, with no search settled.
+	click = function(to)
+		target = to
+		return click(map, "LeftButton")
 	end,
 	-- A shift-click on the minimap, as its mouse-up hook sees it.
 	minimap = function()

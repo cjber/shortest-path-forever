@@ -51,12 +51,25 @@ local function PlanQuest(questID, clickedMap, isWaypoint)
 	ns.StartJourney(point)
 end
 
+-- The World map between its continents and a continent's open sea still give a world position, on no zone: the
+-- client answers with a spot off the map it names, or with the continent and no zone under the spot.
+---@param point SPFPoint
+---@return boolean
+local function OnZone(point)
+	local location = ns.Locate(point)
+	if not location or location.x < 0 or location.x > 1 or location.y < 0 or location.y > 1 then
+		return false
+	end
+	local info = C_Map.GetMapInfo(location.uiMap)
+	return not info or info.mapType > Enum.UIMapType.Continent
+end
+
 local function OnCanvasClick(map, button)
 	if not ns.db.journey or button ~= "LeftButton" or not IsShiftKeyDown() then
 		return false
 	end
 	local point = ns.WorldPoint(map:GetMapID(), map:GetNormalizedCursorPosition())
-	if point then
+	if point and OnZone(point) then
 		ns.StartJourney(point)
 	else
 		ns.Print(L["no journey can be planned to that spot."])
