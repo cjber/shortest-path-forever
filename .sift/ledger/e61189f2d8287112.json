@@ -2,271 +2,6 @@
   "schema_version": 1,
   "items": [
     {
-      "id": "7855125981",
-      "lens": "stringly-typed",
-      "file": "JourneySteps.lua",
-      "quote": "ns.WalkFailure = {",
-      "what": "Path failure reasons {\"unreachable\",\"offmesh\",\"outside\",\"nodata\",\"error\"} are bare strings typed `string` (types/Addon.lua:201 `walkError? string`). Produced in Path.lua:271/274/358/368/372/594 and Corpse.lua:68 (\"outside\") / :70 (\"nodata\"), Journey.lua:415 (\"nodata\"); compared in JourneyCosts.lua:222, :291, :329; keyed here in ns.WalkFailure; enumerated in prose only in PathJobs.lua:125. Canonical home: an `---@alias SPFWalkFailure` beside PathJobs/Path, used for walkError and the WalkFailure keys.",
-      "why": "No alias or constant table for the set exists (grep SPFWalkFailure/SPFPathFailure: none). A new reason or a typo at any producer (e.g. Corpse writing \"no data\") compiles, then falls through to the `or L[\"walking search failed\"]` fallback in Journey.lua:238 and Corpse.lua:147 or skips JourneyCosts' reason checks. Named in the profile anti-patterns (Path failure reasons).",
-      "confidence": "medium",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "be1543787e",
-      "lens": "speculative-abstraction",
-      "file": "JourneySteps.lua",
-      "quote": "function ns.AdvanceJourneyProgress(legs, progress, goal, riding, flying, near, guide)",
-      "what": "Journey's progress state machine exported as ns.AdvanceJourneyProgress with injected near/guide parameters; its single caller is Journey.lua:160 (UpdateProgress), which always passes its own locals Near and Guide.",
-      "why": "Moved out of Journey.lua in f9b651c. grep over all .lua/tests/tools and git grep on all six in-flight branches: only Journey.lua:160 calls it, no spec calls it directly. It uses none of JourneySteps' vocabulary (STEP, labels, WalkFailure), contrary to its comment. Collapsed form: a local function in Journey.lua closing over Near/Guide/progress/result, dropping the ns export and the two injected parameters. Not public API (not on ShortestPathForever.API). Low: the move may have been deliberate to keep Journey.lua smaller.",
-      "confidence": "low",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "dee4da60d9",
-      "lens": "parallel-implementations",
-      "file": "JourneySteps.lua",
-      "quote": "local SCHEDULED = { boat = true, zeppelin = true, lift = true, tram = true }",
-      "what": "SCHEDULED restates the set of timetabled route kinds, which is the fact \"this leg rides a route\" that the planner already carries as leg.route (Planner.lua:714; wait = period/2 with estimated=true only for `edge.route`, Planner.lua:641-648). The same kind set is also restated in Core.lua:222 FILTER, Observer.lua:7 KIND, Map.lua:105-109, Tracker.lua:21. Canonical: test `leg.route` in LegTime.",
-      "why": "In Planner only route edges get a timetable wait with estimated; walk legs have wait 0 and teleports are handled first, so `leg.estimated and leg.route` selects the same legs today. A new route kind would need adding here too, and unlike Core FILTER (which errors on an unknown kind) this silently drops \"about\" from the step. Low: the other tables map kinds to distinct labels and are legitimately per-kind.",
-      "confidence": "low",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "2605dd9fbb",
-      "lens": "parallel-implementations",
-      "file": "Looks.lua",
-      "quote": "\t\tlocal atlas = art --[[@as {atlas: string, width: number, height: number}]]\n\t\ttexture:SetAtlas(atlas.atlas)\n\t\tlocal scale = size / math.max(atlas.width, atlas.height)\n\t\ttexture:SetSize(atlas.width * scale, atlas.height * scale)",
-      "what": "SetStopLook's atlas branch (Looks.lua:119-122) re-implements ns.FitAtlas (Looks.lua:91-100, same file) for a size-by-size box: size/max(w,h) == min(size/w, size/h). Canonical: ns.FitAtlas(texture, art.atlas, size, size).",
-      "why": "Both set the atlas and fit native width/height into the box without stretching (the AGENTS.md never-stretch rule). Only difference: FitAtlas re-queries C_Texture.GetAtlasInfo while Art() cached it; Art already proved the atlas exists, so FitAtlas cannot return false here. A change to the fit rule (e.g. pixel snapping) would land in one copy only.",
-      "confidence": "high",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "a77780bbcc",
-      "lens": "parallel-implementations",
-      "file": "Looks.lua",
-      "quote": "\t\tlocal atlas = art --[[@as {atlas: string, width: number, height: number}]]\n\t\ttexture:SetAtlas(atlas.atlas)\n\t\tlocal scale = size / math.max(atlas.width, atlas.height)",
-      "what": "SetStopLook's atlas branch (Looks.lua:119-122) re-implements ns.FitAtlas, defined 20 lines above in the same file (Looks.lua:91-100), for a size-by-size box. Canonical home: ns.FitAtlas; the branch becomes ns.FitAtlas(texture, art.atlas, size, size). Compass.lua SetIcon (Compass.lua:70-76) is a third copy of the same fit.",
-      "why": "size / max(w, h) equals min(size / w, size / h), so both produce the same width and height; the only difference is that Art() caches the atlas dimensions while FitAtlas calls C_Texture.GetAtlasInfo again (a cheap lookup, and Art already proved the atlas exists, so FitAtlas cannot return false here). The fit is the 'never stretch art' rule the project enforces; a fix to it (rounding, a minimum size) would have to land in each copy. tests/looks_spec.lua checks both SetStopLook and FitAtlas sizes and would cover the change.",
-      "confidence": "high",
-      "status": "dismissed",
-      "reason": "The existing looks_spec.lua passes, but the proposed replacement, tested entirely in memory, fails 'art looked up once per kind'. SetStopLook uses cached dimensions while FitAtlas performs fresh lookups, establishing a tested constraint supporting the lens's performance-specialization exception.",
-      "first_seen": "2026-09-27",
-      "updated": "2026-09-27"
-    },
-    {
-      "id": "aef2c41f9a",
-      "lens": "parallel-implementations",
-      "file": "Looks.lua",
-      "quote": "local TRANSPORTS = { boat = true, zeppelin = true, lift = true, tram = true, portal = true }",
-      "what": "Looks.lua:24 restates the set of kinds ns.SetTransportIcon can draw (Map.lua:12-17 TRANSPORT_ATLASES keys plus the zeppelin branch at Map.lua:64). Compass.lua:44-50 transportIcons is a third copy (already a listed anti-pattern). Canonical home: Map.lua's TRANSPORT_ATLASES/SetTransportIcon, which could expose a membership test (or a table including zeppelin) for Looks and Compass to read.",
-      "why": "Adding or removing a transport kind in SetTransportIcon needs the same edit in Looks.lua's TRANSPORTS (else the API's stop kind is silently rejected by ns.StopKind or SetTransportIcon raises 'unknown route kind' from ns.SetStopLook) and in Compass's icon table. The comment above it ('The map's own dock, lift, tram and portal icons (Map.lua)') already names Map.lua as the owner; nothing keeps the copies in step. No intentional divergence: all three list the same five kinds today.",
-      "confidence": "medium",
-      "status": "confirmed",
-      "reason": "Headless probes confirmed the same five transport kinds across Looks, Map and Compass; their validation, sizing and fallback differences do not require separate membership or asset definitions. Renaming Map's boat atlas in memory updated Looks through delegation but left Compass using its independent old mapping; TOC order permits sharing Map's definition.",
-      "first_seen": "2026-09-27",
-      "updated": "2026-09-30",
-      "guard": "settled:second copy of a fact"
-    },
-    {
-      "id": "d65db79e1c",
-      "lens": "parallel-implementations",
-      "file": "Looks.lua",
-      "quote": "local TAXI = { Alliance = \"taxinode_alliance\", Horde = \"taxinode_horde\" }",
-      "what": "The faction-to-flight-point-atlas mapping exists three times: Looks.lua:25 TAXI (with a taxinode_neutral fallback at :70), Map.lua:726 (\"taxinode_\" .. faction:lower(), built by concatenation), and Compass.lua:51 taxiIcons. One shared table (e.g. next to the flight provider in Map.lua) would serve all three.",
-      "why": "Each copy encodes the same fact (the Forever build's taxinode_<faction> atlas names, cited from UiTextureAtlasMember in Map.lua and Looks.lua). Differences: Map.lua derives the name by lowercasing so it is not greppable by atlas name and also handles taxinode_undiscovered; Looks.lua keys by the player's faction and falls back to neutral via GetAtlasInfo; Compass keys by the node's faction. The fallback behaviour is intentional per caller; the name mapping itself is accidental duplication, and an atlas rename in a Forever build would need all three found.",
-      "confidence": "medium",
-      "status": "confirmed",
-      "reason": "gen_transit.py produces Alliance, Horde or absent factions, and headless probes confirmed identical base-atlas mappings across all three callers for those inputs. Player-versus-node selection, missing-art fallback, undiscovered status and native atlas overrides are caller-specific behavior that can remain unchanged around one shared mapping.",
-      "first_seen": "2026-09-27",
-      "updated": "2026-09-30",
-      "guard": "settled:second copy of a fact"
-    },
-    {
-      "id": "ee99a44199",
-      "lens": "defensive-noise",
-      "file": "Looks.lua",
-      "quote": "\t\t\tfor _, atlas in ipairs(candidates or {}) do",
-      "what": "`candidates or {}` guards an unknown kind, but Art's else branch only runs for ATLASES keys or flightmaster (which assigns candidates on line 70). Every look comes through ns.StopKind (API.lua:307), and that accepts only the `kinds` set built from ATLASES, FILES, TRANSPORTS and flightmaster.",
-      "why": "rg '\\.look\\b|look =' shows the only producer is API.lua:307 via ns.StopKind. Check that tools/typecheck.sh still passes without the `or {}` before removing it.",
-      "confidence": "low",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "1610abf19c",
-      "lens": "copy-slop",
-      "file": "Map.lua",
-      "quote": "\t\treturn HERE[departure.kind] .. \" \u00b7 \" .. leaves",
-      "what": "A middle dot (U+00B7) is hard-coded as the separator in the player-visible departure status (Map.lua:50 and :52, also shown in the tracker via Tracker.lua:48). It sits outside ns.L, so a translation cannot change it.",
-      "why": "Proposal for the owner: either keep the dot as a deliberate UI separator and move the joined phrase into a locale key (for example L[\"%s, %s\"]), or use a separator the stock UI uses. This is user-facing copy, so it is decide-only.",
-      "confidence": "low",
-      "status": "fixed",
-      "reason": "Map.lua's departure status and JourneySteps' leg time join through L[\"%s \u00b7 %s\"], listed in Locales/phrases.txt.",
-      "first_seen": "2026-09-27",
-      "updated": "2026-09-27",
-      "guard": "lens-only: locales_spec fails on a bare middle-dot literal in any shipped file"
-    },
-    {
-      "id": "670e7c40ea",
-      "lens": "defensive-noise",
-      "file": "Map.lua",
-      "quote": "\t\tlocal kinds = cluster.kinds or {}",
-      "what": "Guards against a cluster with no kinds table, but both producers always set one: Map.lua Clusters (540-541) for every cluster, which has at least one dock, and MinimapPins.lua Place (kinds = { [kind] = true } at :49, added to at :39).",
-      "why": "rg 'kinds' finds no other cluster constructor. The only caller without it is tests/docktooltip_spec.lua:36-37, which feeds 'a cluster with no kinds table at all (an older shape)'. That shape no longer exists in production, so the spec is stale too. The verifier should decide whether to drop the guard and that spec case together.",
-      "confidence": "medium",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "82bf78a323",
-      "lens": "reinvented-wheel",
-      "file": "Map.lua",
-      "quote": "local function ActivePins(template)",
-      "what": "ActivePins (Map.lua:23-29) counts active pins by walking WorldMapFrame:EnumeratePinsByTemplate; MapCanvasMixin:GetNumActivePinsByTemplate(template) returns the same count from the pool (pinPools[t]:GetNumActive(), 0 when no pool).",
-      "why": "Pinned FrameXML at Gethe/wow-ui-source 70ef1b2 (1.60.1.69913, the revision tools/fetch_blizzard_ui.sh pins) Blizzard_MapCanvas.lua:380-385 defines GetNumActivePinsByTemplate next to EnumeratePinsByTemplate (373). Same semantics (EnumerateActive vs GetNumActive, both 0/nop for a missing pool). Callers Map.lua:676,690,743,786. Check: tests/ui_map.lua:167 and tests/route_spec.lua:202 stub only EnumeratePinsByTemplate, so the stubs would need the method too.",
-      "confidence": "medium",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "8f94df676a",
-      "lens": "defensive-noise",
-      "file": "Map.lua",
-      "quote": "function ProviderMixin:OnCanvasScaleChanged()\n\tif InCombatLockdown() then\n\t\tns.QueueMapRefresh()\n\t\treturn\n\tend",
-      "what": "The dock provider's OnCanvasScaleChanged repeats the combat guard that its only call, ProviderMixin:RefreshAllData (Map.lua:550-554), already runs first with the same queue-and-return. The body can be just self:RefreshAllData().",
-      "why": "Map.lua:596-602 only delegates to RefreshAllData, and that function begins with the same InCombatLockdown/QueueMapRefresh guard. Route.lua:679's guard is different and needed, because RefreshStops has no guard of its own.",
-      "confidence": "high",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "906b7074a7",
-      "lens": "oversized-modules",
-      "file": "Map.lua",
-      "quote": "---@class SPFNamespace",
-      "what": "Map.lua (905 lines) holds five separable responsibilities: departure/landing text and dock tooltips shared with the minimap (32-278), the dock pin + clustering provider (146-602, incl. generic ns.OverlapGroups 488-525 also used by Route.lua), the portal pin/provider (604-691), a replacement for Blizzard's flight-point provider (693-787, 868-890), and map-wide pin visibility, combat queue, filter menu and init (789-905).",
-      "why": "The flight-master provider shares nothing with docks except MapPosition/IsDockMap/ActivePins; the text helpers are consumed by MinimapPins.lua. Proposed split: FlightPins.lua (flight provider + taxi events), Docks text (DepartureStatus/DockPierName/AddDockTooltip) into its own file, leaving Map.lua as dock/portal pins and the map glue. Near the 1000-line file-size-no-growth limit, so the next feature will force it.",
-      "confidence": "low",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "dc62e0de66",
-      "lens": "parallel-implementations",
-      "file": "Map.lua",
-      "quote": "\t\"ShortestPathForeverRoutePinTemplate\",\n\t\"ShortestPathForeverGoalPinTemplate\",\n\t\"ShortestPathForeverTransportPinTemplate\",",
-      "what": "MAP_TEMPLATES (Map.lua:791-799) restates the route, goal and transport template names that Route.lua:4-5 (LINE_TEMPLATE, GOAL_TEMPLATE) and RouteTransports.lua:5 (TRANSPORT_TEMPLATE) own; Map.xml defines them.",
-      "why": "The list decides which pins ns.HideMapPins hides in combat. A new pin template added in Map.xml/Route files is not hidden unless also added here, and a renamed one silently drops out (EnumeratePinsByTemplate returns nop for an unknown template, so no error). Low: the names are the XML contract and rarely change.",
-      "confidence": "low",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
-      "id": "fb98b32e35",
-      "lens": "oversized-modules",
-      "file": "Map.lua",
-      "quote": "local PIN_TEMPLATE = \"ShortestPathForeverDockPinTemplate\"",
-      "what": "Map.lua (807 lines) mixes: (1) shared dock and departure facts consumed across the addon: DepartureDestination/DepartureStatus (26-53, used by Tracker, Alert), SetTransportIcon (55-73, used by Looks, MinimapPins), DockKind (75-88), DockPierName (190-218, used by Core.lua:177), AddDockTooltip/AddPortalTooltip (222-266, 599-606, used by MinimapPins), DockShown/PortalShown (370-379, 627-630), OverlapGroups (472-509, used by Route.lua); (2) the dock pin mixin and provider (138-575); (3) the portal pin and provider (579-654); (4) the replacement flight-master provider (656-737) with its taxi event frame (778-792); (5) the Map Filter menu (751-767).",
-      "why": "The flight-master provider shares nothing with docks beyond MapPosition/IsDockMap and changes for different reasons (Taxi.lua known-set, native FlightPointDataProviderMixin). Group (1) is the part other modules depend on; hiding it in the world-map file is how second copies of its facts arise (Compass's transportIcons, the taxi atlas names in Looks/Compass). Proposed split: the shared dock/departure/transport-icon facts into their own file loaded before Map.lua (it has no world-map dependency except OverlapGroups, which could move to Route's side or stay), and the flight provider into its own file; Map.lua keeps the dock and portal providers and the filter menu. Split only in its own reviewed change.",
-      "confidence": "low",
-      "status": "dismissed",
-      "reason": "owner-delegated 2026-09-27: deferred: do when that file is next substantially changed (gen_nav before it reaches 1000 lines).",
-      "first_seen": "2026-09-27",
-      "updated": "2026-09-27"
-    },
-    {
-      "id": "2343580595",
-      "lens": "parallel-implementations",
-      "file": "MinimapPins.lua",
-      "quote": "\t\tlocal cluster = {\n\t\t\tdocks = { { id = dockID, x = -point.y, y = -point.x } },",
-      "what": "MinimapPins builds dock clusters (docks/x/y/kind/kinds) for ns.AddDockTooltip itself (MinimapPins.lua:30-52), beside Map.lua Clusters (Map.lua:512-531), which builds the same shape. Canonical home: Map.lua, e.g. a shared cluster builder taking the grouped docks.",
-      "why": "The grouping rule differs on purpose (fixed 20 yd vs zoom-dependent pin overlap), but the cluster record ns.AddDockTooltip consumes is assembled twice: kind = first dock's kind, kinds set, dock x/y orientation. Differences: Map's has `key` and averaged x/y; MinimapPins' x/y is the first dock's. A new tooltip field would need adding in both; the comment at MinimapPins.lua:22-23 already records the coupling.",
-      "confidence": "low",
-      "status": "dismissed",
-      "reason": "A LuaJIT probe confirmed different contracts: Map.lua retains projected points, computes a centroid and keys pin identity; MinimapPins.lua converts world coordinates and retains the first-anchor center without a key. Beyond the intentionally different grouping, the shared implementation is first-kind selection and kind-set insertion, covered by the lens\u2019s small-idiom exception.",
-      "first_seen": "2026-09-27",
-      "updated": "2026-09-27"
-    },
-    {
-      "id": "75abb8ef6b",
-      "lens": "parallel-implementations",
-      "file": "MinimapPins.lua",
-      "quote": "\t\ticon:SetAtlas(\"flightmasterferry\")",
-      "what": "The minimap tracking-menu checkbox restates the boat atlas name (third copy after Map.lua:13 and Compass.lua:45) and sizes it to a 20x20 square instead of calling ns.SetTransportIcon(icon, \"boat\", 20) (Map.lua:61), which fits the atlas at its native aspect.",
-      "why": "If the ferry icon changes it must change here too; SetAtlas without useAtlasSize followed by SetSize(20, 20) also squares the atlas, which the project's never-stretch rule forbids unless the atlas is already square (not verified offline).",
-      "confidence": "low",
-      "status": "fixed",
-      "reason": "The tracking-menu checkbox icon is drawn with ns.SetTransportIcon(icon, \"boat\", 20), which fits the atlas through ns.FitAtlas.",
-      "first_seen": "2026-09-27",
-      "updated": "2026-09-27",
-      "guard": "settled:second copy of a fact"
-    },
-    {
-      "id": "804b243991",
-      "lens": "stringly-typed",
-      "file": "Model.lua",
-      "quote": "\tif held.source == \"you\" and incoming.source ~= \"you\" and now - held.seen < OWN_TRUST then",
-      "what": "Sighting source is the closed set \"you\"|\"player\" typed as bare `string` (types/Addon.lua SPFAnchor.source and SPFDeparture.source) and compared by literal at Model.lua:220 (twice), Observer.lua:52, Map.lua:261; written as literals at Observer.lua:54 and Sync.lua:187; restated in the Core.lua:77 comment.",
-      "why": "Persisted in SavedVariables (anchors), so the literals must stay, but nothing names the set once: a typo such as `\"You\"` at any read site type-checks and silently makes every sighting look like another player's (losing OWN_TRUST and the 'by you' tooltip). A `---@alias SPFSightingSource \"you\"|\"player\"` on both fields (or named constants) lets LuaLS catch it. Listed in the project skill Anti-patterns.",
-      "confidence": "high",
-      "status": "confirmed",
-      "reason": "Sync.lua assigns source locally after decoding, and Core.lua propagates it into both string-typed fields without conversion; an in-memory comparison typo bypassed OWN_TRUST. An optional literal-union annotation preserves existing saved values and nil handling, so the persistence exception does not excuse the untyped internal set.",
-      "first_seen": "2026-09-27",
-      "updated": "2026-09-30",
-      "guard": "settled:bare-string closed set"
-    },
-    {
-      "id": "896eb4cfb5",
-      "lens": "parallel-implementations",
-      "file": "Model.lua",
-      "quote": "\tlocal agree = route.kind == \"lift\" and 2000 or AGREE",
-      "what": "Per-route fit tuning lives in two homes: the generated `route.fit` table (samples, span, speed; tools/gen_transit.py:164, Data/Transports.lua) and hard-coded `route.kind == \"lift\"` overrides in Model.lua:89 (near radius 10) and Model.lua:123 (agree window 2000). Canonical home: `route.fit`, which Model.FitEpoch and Observer already read.",
-      "why": "Both copies encode the same fact (lifts, especially UC's 3.5 s ride, need tighter fitting; the generator comment and Model's comment both cite it). Retuning one lift, or adding a kind that needs the narrow window (e.g. a tram car), means editing the generator and Model separately; Model's override also applies to every lift while the generator already distinguishes UC from TB/Great Lift. Accidental drift, not a stated hot-path specialisation.",
-      "confidence": "medium",
-      "status": "dismissed",
-      "reason": "gen_transit.py sets per-route minimum sample count, observation span and speed; Model.lua sets spatial proximity and epoch-offset clustering tolerances, which are separate contracts with no duplicated parameter. The model spec passed, and in-memory probes demonstrated that sample/span thresholds change acceptance independently of proximity and clustering, supporting the lens's coincidental-similarity exclusion.",
-      "first_seen": "2026-09-27",
-      "updated": "2026-09-27"
-    },
-    {
-      "id": "35e8cb6a22",
-      "lens": "oversized-modules",
-      "file": "Nearby.lua",
-      "quote": "local function Build()",
-      "what": "Build (Nearby.lua:49-172, about 125 lines, nested about 12 levels deep) mixes four things: finding and checking the LibQuestieDB contract (:53-64), reading the TweaksForever class-trainer API (:73-85), turning NPC flags and spawns into indexed places, including zone/parent-zone to uiMap resolution (:86-146), and the frame-sliced coroutine pump with combat/Path.Busy deferral (:148-171).",
-      "why": "Suggested split: a zone-to-uiMap resolver, a per-NPC `Places(id, values)` function, and a generic sliced-job pump. The pump restates the frame-slicing idea PathJobs.lua owns, so it is worth checking whether that one can be reused. Audits do not split code.",
-      "confidence": "low",
-      "status": "open",
-      "reason": "",
-      "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
-    },
-    {
       "id": "36d4b2ca01",
       "lens": "silent-fallbacks",
       "file": "Nearby.lua",
@@ -274,10 +9,11 @@
       "what": "When Build sets state = \"unavailable\" (QuestieDB missing, RequireContract(2) false, ZoneDB/npcFlags/Npc missing, or the build coroutine errored), index stays empty and every service row reads \"<service> \u2014 unavailable here\" and is disabled.",
       "why": "Nearby.lua:54-63 and :157 set state \"unavailable\"; Open (:239-243) only distinguishes \"building\", so a missing optional dependency is shown as a location fact. The player sees every service 'unavailable here' in Stormwind with no hint that QuestieDB is required (README.md:45 says it uses installed QuestieDB). The degradation is not visible as such; a distinct row text or panel line for state == \"unavailable\" would make it so. User-facing copy: decide.",
       "confidence": "medium",
-      "status": "open",
-      "reason": "",
+      "status": "fixed",
+      "reason": "The panel rows were replaced by a MenuUtil menu: UI/Nearby.lua:240-243 and :264-267 now show the title 'Nearby services unavailable' whenever state is not ready, so AddService (and its per-row 'unavailable here' label at :222) only runs when the index is ready and the label is then a true location fact.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03",
+      "guard": "lens-only: the hand-built panel was replaced by the stock menu, a new custom panel needs a reviewer to notice"
     },
     {
       "id": "385e6e4802",
@@ -287,10 +23,10 @@
       "what": "ns.NearbyServices export (and its SPFNearbyServices type / types/Addon.lua field) is test-only: only tests/nearby_spec.lua reads State(), Index() and Nearest(); its Build, Navigate and Services fields have no reader anywhere. Fate: test-only; delete the table and type, and have the spec assert through the panel rows and ns.OpenNearby/`/spfnear` it already drives.",
       "why": "rg over all .lua/.xml/.toc/tools/tests/docs: readers only tests/nearby_spec.lua:174-206; types/Addon.lua:18 declares it. No string-built ns lookup (_G/ns[key]) targets it; not a SavedVariables key, slash command or Blizzard-called handler; the public API is ShortestPathForever.API (API.lua), not ns; git grep on all six in-flight branches finds no NearbyServices. Not a host-stub seam: the spec reads internals rather than injecting a dependency. File is new/uncommitted.",
       "confidence": "medium",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Not a verdict on the defect: the file moved to UI/Nearby.lua in the module reorganisation, and the item is carried forward as ceaabad0b9.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "426c4da376",
@@ -300,10 +36,10 @@
       "what": "A second way to get the player's world point: C_Map.GetBestMapForUnit, then GetPlayerMapPosition, then ns.WorldPoint. ns.JourneyPosition (Journey.lua:97) already returns world x/y/map in the same SPFPoint frame that Journey compares against ns.WorldPoint destinations. Canonical home: ns.JourneyPosition.",
       "why": "Nearest() compares PlayerWorld's result with ns.WorldPoint-derived places. JourneyPosition gives the same continent-frame point without two map lookups, and it keeps the secret-value gate. Difference: GetBestMapForUnit can be nil (instances, some transports) where UnitPosition still answers, so the two can disagree on when services are 'unavailable here'.",
       "confidence": "medium",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Not a verdict on the defect: the file moved to UI/Nearby.lua in the module reorganisation, and the item is carried forward as 3c08716e0a.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "559ad4726a",
@@ -313,10 +49,10 @@
       "what": "Nearby finds flight masters from QuestieDB NPC flags. ns.TaxiNodes (Data/Taxi.lua, generated) already holds every flight-master node with position and faction, and Map.lua/Taxi.lua use it for flight-master pins.",
       "why": "There are now two sources for 'where the flight masters are'. They can disagree: QuestieDB gives the NPC spawn, TaxiNodes gives the node position, and QuestieDB's faction filter works differently from TaxiNodes.faction. This may be deliberate so that all services come from one index, so confidence is low.",
       "confidence": "low",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Not a verdict on the defect: the file moved to UI/Nearby.lua in the module reorganisation, and the item is carried forward as cf114ad92e.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "659355cf88",
@@ -326,10 +62,10 @@
       "what": "The index lifecycle is a closed set, 'idle'|'building'|'ready'|'unavailable', assigned and compared as bare strings at :50, :55, :62, :66, :157, :162, :239, :245 and :294, and exported as `State fun(): string` (Nearby.lua:266). tests/nearby_spec.lua:174/:198 compare it by literal too.",
       "why": "There is no ---@alias for the set, so LuaLS cannot catch a typo such as 'buliding'. The project's convention is an alias in types/Addon.lua (for example SPFMode and SPFKind).",
       "confidence": "low",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Relocated, not refuted: the quoted code changed and the same defect is recorded against the current code as c6d845b12d in UI/Nearby.lua.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "7a07a54b7a",
@@ -339,10 +75,11 @@
       "what": "Em dash (U+2014) as a separator in user-facing row text; with :242 these are the only two em-dash phrases in Locales/phrases.txt.",
       "why": "No other L phrase uses an em dash, so it is not house style. Owner's call (e.g. \"%s (loading QuestieDB)\" / \"%s: none nearby\").",
       "confidence": "low",
-      "status": "open",
-      "reason": "",
+      "status": "fixed",
+      "reason": "The phrase '%s [U+2014] loading QuestieDB' no longer exists: rg for U+2014 across Lua and Locales finds only '%s [U+2014] unavailable here' (UI/Nearby.lua:222, Locales/phrases.txt:19), which finding 0cdcdeb073 covers. Its replacement L[\"Loading QuestieDB[U+2026]\"] (:241, :261) uses the ellipsis character U+2026, a different tell this finding did not raise.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03",
+      "guard": "lens-only: the hand-built panel was replaced by the stock menu, a new custom panel needs a reviewer to notice"
     },
     {
       "id": "819e04497a",
@@ -352,10 +89,11 @@
       "what": "WFA-4/WFA-1: the service picker is a standalone centred dialog of red UIPanelButtonTemplate rows rather than a MenuUtil menu from the button that opens it",
       "why": "WFA-4 names MenuUtil menus as the stock picker; WFA-1 wants actions where the player already looks. A two-level choice (service, then specialty) opened from the minimap button is what retail does with MenuUtil.CreateContextMenu (as the dock pin's destination picker does per README). The dialog uses stock templates, so this is a judgment call.",
       "confidence": "low",
-      "status": "open",
-      "reason": "",
+      "status": "fixed",
+      "reason": "The BasicFrameTemplateWithInset dialog is removed (rg finds CreateFrame and the template only in a tests/nearby_spec.lua stub); Open now builds MenuUtil.CreateContextMenu (UI/Nearby.lua:257) and a MENU_WORLD_MAP_TRACKING submenu via Menu.ModifyMenu (:312), which is the stock picker WFA-4 names.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03",
+      "guard": "lens-only: the hand-built panel was replaced by the stock menu, a new custom panel needs a reviewer to notice"
     },
     {
       "id": "8341ff8c7d",
@@ -365,10 +103,10 @@
       "what": "WFA-2: the new Nearby services feature only works with QuestieDB installed (class trainers also need Tweaks Forever API v2)",
       "why": "WFA-2: 'Every feature works out of the box: no required settings, extra downloads or companion installs.' Build() sets state='unavailable' without LibQuestieDB, and every row then reads '%s \u2014 unavailable here', which also misstates the cause (the missing addon, not the place). Middle-click on the route button and /spfnear are advertised in the tooltip and WhatsNew regardless. Fix: ship the service locations (generated Data, as routes are) or hide/label the entry point when QuestieDB is absent; owner decision.",
       "confidence": "high",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Not a verdict on the defect: the file moved to UI/Nearby.lua in the module reorganisation, and the item is carried forward as 5ef3bc2f47.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "da46779716",
@@ -378,10 +116,10 @@
       "what": "Service keys (class, trainer, repair, reagents, vendor, innkeeper, bank, auction, flight, stable) are defined once in SERVICES but compared as bare literals elsewhere in the file: :43-45 (key to API stop kind, which also emits the SPFAPIStopKind literals trainer/innkeeper/flightmaster), :96 \"reagents\", :105 \"class\" and :249 \"trainer\"/\"vendor\" (which keys have a specialty submenu). The fix is a stopKind/submenu field on each SERVICES entry.",
       "why": "The literals bypass the project's constants table. A typo in a stop kind is dropped silently by ns.StopKind (Looks.lua:41), so the pin just loses its icon. Adding a service with specialties needs edits in three places that no search on SERVICES finds. NearbyServices.Nearest/Navigate are typed `key: string`, so LuaLS cannot catch it either.",
       "confidence": "medium",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Not a verdict on the defect: the file moved to UI/Nearby.lua in the module reorganisation, and the item is carried forward as 2044a98bc0.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "e942ba3af4",
@@ -391,10 +129,10 @@
       "what": "Table() turns a non-string source, a loadstring failure, a runtime error or a non-table result from QuestieDB's ZoneDB private maps into {} with no signal.",
       "why": "Build (:61) checks only that zones.private exists, then (:68-71) decodes areaIdToUiMapId etc. through Table(). If QuestieDB changes that private shape (e.g. ships a table rather than a string, which the type(source) == \"string\" test rejects), every spawn's map resolves to nil (:110), index stays empty, state still becomes \"ready\" (:162), and the panel reports every service 'unavailable here'. The boundary is another addon's private field, so the guard is justified, but the failure is silent; setting state = \"unavailable\" (or geterrorhandler) when the area table decodes empty would surface it.",
       "confidence": "medium",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Not a verdict on the defect: the file moved to UI/Nearby.lua in the module reorganisation, and the item is carried forward as cf58ad04c1.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "f97eae70ef",
@@ -404,10 +142,11 @@
       "what": "Escape-to-close is hand-rolled with OnKeyDown and SetPropagateKeyboardInput. FrameXML's UISpecialFrames (tinsert(UISpecialFrames, \"ShortestPathForeverNearby\"); the panel is already named) does this.",
       "why": "UISpecialFrames is listed in Ketho's pinned globals (.types/vscode-wow-api/src/data/globals.ts:44399). It is a vanilla-era UIParent.lua global, but the pinned tools/.cache/blizzard-ui does not include UIParent.lua, so a verifier should confirm it on Forever. Behaviour to check: an insecure frame calling SetPropagateKeyboardInput in combat can be blocked on modern clients, and UISpecialFrames also closes the panel through CloseAllWindows. tests/nearby_spec.lua:233-235 exercises OnKeyDown and would need updating.",
       "confidence": "medium",
-      "status": "open",
-      "reason": "",
+      "status": "fixed",
+      "reason": "No panel and no OnKeyDown handler remain: rg for 'OnKeyDown|SetPropagateKeyboardInput|UISpecialFrames' finds nothing outside a leftover stub at tests/nearby_spec.lua:34, and closing is now left to Blizzard's menu (MenuUtil.CloseAllMenus, AddMenuReleasedCallback at UI/Nearby.lua:258).",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03",
+      "guard": "lens-only: the hand-built panel was replaced by the stock menu, a new custom panel needs a reviewer to notice"
     },
     {
       "id": "790a8599b9",
@@ -444,11 +183,10 @@
       "what": "Walking-search failure reasons \"nodata\", \"outside\", \"offmesh\", \"unreachable\" (Path.lua:271,274,358,368,372,410,469,594) and \"error\" (PathJobs.lua:74) are bare strings, typed only as string/number|string (PathJobs.lua:129,147,163; types/Addon.lua:196 walkError). They are compared at JourneyCosts.lua:222,289,291,329, mapped in Journey.lua:53-59 WALK_FAILURE, set again by Corpse.lua:68,70 and Journey.lua:452, and listed in prose at PathJobs.lua:125.",
       "why": "Listed project anti-pattern. The set is closed and owned by Path, yet nothing enumerates it: a typo in a comparison (JourneyCosts.lua:329 must list every 'no route' reason) or a new reason missing from WALK_FAILURE falls through silently to the generic text. A ---@alias SPFWalkFailure in types/ (as SPFMode/SPFKind already are) on the callback, run/runMany returns and SPFLeg.walkError lets LuaLS check the literals; the mode and kind sets show the project convention.",
       "confidence": "high",
-      "status": "confirmed",
-      "reason": "Both path specs pass, including exception tests showing PathJobs normalizes arbitrary errors to \"error\", confirming these reasons form a closed internal set. PathJobs callbacks and SPFLeg.walkError remain broadly string-typed without a shared alias or constants; adding literal annotations can preserve all existing values and behavior.",
+      "status": "dismissed",
+      "reason": "Not a verdict on the defect: the file moved to Routing/Path.lua in the module reorganisation, and the item is carried forward as 1470525d9d.",
       "first_seen": "2026-09-27",
-      "updated": "2026-09-27",
-      "guard": "settled:bare-string closed set"
+      "updated": "2026-10-03"
     },
     {
       "id": "cd8de7fd4b",
@@ -471,10 +209,10 @@
       "what": "A same-cluster abstract hop (ka == kb) whose grid search fails falls into the cross-border branch and is refined as two bare entrance points, i.e. a straight segment between entrances anywhere in the cluster.",
       "why": "The else is written (and commented) for adjacent entrances across a cluster border; for ka == kb the baked graph says the entrances connect, so a failed search means graph/grid disagreement (e.g. evicted or mismatched data). The route is still returned with the graph cost and the drawn walk cuts straight through the cluster, with no reason or log. Separating the ka == kb failure (error or 'unreachable') from the border case would surface it. Cannot prove the failure is reachable with shipped data, hence medium.",
       "confidence": "medium",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Not a verdict on the defect: the file moved to Routing/Path.lua in the module reorganisation, and the item is carried forward as 7fba59d716.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "43d801dac6",
@@ -484,10 +222,10 @@
       "what": "The graph node-record layout (header n(2), then 7-char records cell(3) layer(1) component(2) degree(1)) is restated as independent magic offsets in three places: decodeGraph (PathGrid.lua:500-508, pos = 3, pos + 6, pos + 7), metadata (528-529, 3 + (id % 4096) * 7, pos + 3, pos + 4) and adjacent (541, the precomputed 9 + i * 7 for the degree byte). Canonical home: metadata's record position (one RECORD = 7 / header offset), with adjacent reusing it (pos + 6).",
       "why": "The encoder is the spec: tools/baker/gen_nav.py:677-679 writes enc(len, 2) then enc(cell,3)+enc(layer,1)+enc(comp,2)+enc(degree,1), documented in the generated header (gen_nav.py:738-739). Cross-language restatement in the decoder is unavoidable; the intra-file restatement is not: '9' folds header + degree offset into one literal that no longer reads as either, so a record-width or header change to the encoder must be found in three decoder sites. Not a hot-loop inline: adjacent decodes once per entrance and caches (549).",
       "confidence": "low",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Not a verdict on the defect: the file moved to Routing/PathGrid.lua in the module reorganisation, and the item is carried forward as eda635f6ea.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "4eb12d3436",
@@ -497,10 +235,10 @@
       "what": "Orphaned header from before the Path.lua/PathGrid.lua split: it describes the HPA* search and FindMany's Dijkstra, which live in Path.lua, and repeats Path.lua's own header (lines 4-5, same 'HPA* between ADT-tile clusters, an 8 yd grid inside them' wording) and Path.lua:578 ('Smoothing only changes drawing').",
       "why": "PathGrid.lua lines 10-11 already state what this file holds (decoded maps, memory ceilings, slicing, string-pulling). Suggested replacement: keep lines 7-11 and a one-line note that smooth() string-pulls the drawn line; drop the search description. Matches the profile's 'orphaned comment ... after the PathGrid.lua split' anti-pattern.",
       "confidence": "medium",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Not a verdict on the defect: the file moved to Routing/PathGrid.lua in the module reorganisation, and the item is carried forward as bbd7e0d926.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "831f546bdc",
@@ -524,10 +262,10 @@
       "what": "The 'data flags of global cell (ax, ay)' lookup is copied verbatim in stepOpen (PathGrid.lua:647-648) and diagonalOpen (PathGrid.lua:675-676), each preceded by the same value()/water guard (644-646 vs 672-674). The global-cell -> (cluster, local cell) formula it embeds is also restated in locate (578), value (633-634) and neighbour (691). Canonical home: one local helper (e.g. flagsAt(st, gx, gy)) beside value(), or value() returning the flags too.",
       "why": "jscpd hit 644-649/672-677 read in full: identical tokens, no stated divergence. These are the smoothing fallbacks, not the search loop: neighbour's fast path (695-717, comment at 695-696) serves most string-pulling steps and search() in Path.lua never calls them, so the 3 ms inline rationale (Path.lua:69, 354) does not cover them. A change to the flags packing (m[i] = moves + 16 * flags, line 342) or cluster indexing must land in both copies. The only difference is the bit test after the lookup (orthogonal f % 2 / f % 4 vs diagonal f % 8 / f >= 8), which is intentional and stays at the call sites.",
       "confidence": "medium",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Not a verdict on the defect: the file moved to Routing/PathGrid.lua in the module reorganisation, and the item is carried forward as af8d66be3d.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "917a2b8f0e",
@@ -537,10 +275,10 @@
       "what": "Walk failure reasons are a closed set (\"nodata\", \"outside\", \"offmesh\", \"unreachable\", \"error\") passed as bare strings typed `string`: produced at Path.lua:358, 368, 372, 410, 469, 594 (failed(\"nodata\")), 271/274 (pointNode), PathJobs.lua:74 (\"error\"), Corpse.lua:68, 70 and Journey.lua:415; compared by literal at JourneyCosts.lua:222, 289, 291, 329; mapped in ns.WalkFailure (JourneySteps.lua:20-26); listed in prose at PathJobs.lua:125. The Find/FindCost/FindMany callback types (PathJobs.lua:129, 147, 163) and types/Addon.lua:201 (walkError? string) declare string.",
       "why": "No ---@alias for the set exists (grep 'alias SPFPath' finds none; types/API.lua has a separate SPFAPINoRoute alias, showing the project pattern). A typo such as \"off-mesh\" at a producer or JourneyCosts.lua:329 comparison type-checks and silently falls through WalkFailure to the generic 'walking search failed'. The project profile lists exactly this ('Path failure reasons (Journey.lua WALK_FAILURE)') under Anti-patterns. Fix: an SPFPathFailure literal-union alias used in these annotations and walkError; no runtime change.",
       "confidence": "medium",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Not a verdict on the defect: the file moved to Routing/PathJobs.lua in the module reorganisation, and the item is carried forward as 468ad35561.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "0d43693900",
@@ -563,11 +301,10 @@
       "what": "The cached-topology branch (Planner.lua:468-480) rebuilds start/goal nodes with its own copy of the node shape and landmass lookup that Add (Planner.lua:356-364) owns. Canonical home: a Node(kind, id, point) constructor used by both.",
       "why": "A field added to Add's node (as pointKey was) must be repeated here or cached plans get start/goal nodes without it, which only shows on the second plan. Differences today: none in fields; the branch intentionally creates fresh tables (line 467) and does not reset edges[i], which a constructor preserves.",
       "confidence": "low",
-      "status": "confirmed",
-      "reason": "runtime_spec.lua and a read-only LuaJIT probe passed, confirming identical fresh/cached endpoint fields and landmasses while preserving earlier endpoint objects and cached edge arrays. The differences\u2014append versus replacement, generic versus endpoint arguments, omitted nil id, pointKey assignment placement and edge initialization\u2014do not require duplicate node construction.",
+      "status": "dismissed",
+      "reason": "Not a verdict on the defect: the file moved to Routing/Planner.lua in the module reorganisation, and the item is carried forward as 53ebeca80e.",
       "first_seen": "2026-09-27",
-      "updated": "2026-09-27",
-      "guard": "settled:second copy of a fact"
+      "updated": "2026-10-03"
     },
     {
       "id": "d188177500",
@@ -577,10 +314,23 @@
       "what": "test-only: the `revision` topology cache key (and the 'or advancing revision' clause of the comment above CACHE_KEYS) is set by no production caller; delete it with tests/runtime_spec.lua lines 63-64 (`options.revision = 1` / compare()) and the `---@field revision? number` on SPFPlanOptions in types/Addon.lua:226",
       "why": "Only two production callers pass `cache` to Planner.Plan: Journey.lua Plan (options table at 667-688) and API.lua Options (152-171); neither sets `revision`. tools/bake_walks.lua loads Planner but never calls Plan with a cache. rg 'revision' over all .lua finds only tests/runtime_spec.lua:63 as a setter; other hits are unrelated (Arrow local, PathJobs job.revision, Route geometry revision, SPFPathJob type). Same result via git grep on all six in-flight branches. Hard stops: not string-built (CACHE_KEYS is a literal list read by ipairs), not persisted (topology lives in a per-session cache table), not wire/public (API.Estimate builds its own options; external callers cannot pass options), no non-source caller. Without the key a spec that swaps data tables still invalidates via the identity-compared data keys.",
       "confidence": "high",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Not a verdict on the defect: the file moved to Routing/Planner.lua in the module reorganisation, and the item is carried forward as df642d8fac.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "1a4ecef2fb",
+      "lens": "standards",
+      "file": "README.md",
+      "quote": "Turn off **Attach to quest tracker** in Settings to drag the shared Forever column. Its position survives `/reload`; turn the setting back on to attach it above your quests.",
+      "what": "WFA-10: README is about 1,340 words of prose against a 1,200-word budget",
+      "why": "WFA-10 caps the README under 1,200 words, with depth moved to docs/. Counting prose only (images, link targets, HTML and the Development code block removed) the file is 1,343 words; 1,426 with the code block. The quoted detached-tracker paragraph and its screenshot also sit under 'How the times work', which they are not about. Fix: move the detached-tracker block and the two 'How the times work' data-provenance paragraphs into docs/features.md (or a docs page) and trim the Development prose until the README is under budget. Published copy: a decide item.",
+      "confidence": "high",
+      "status": "decide",
+      "reason": "Meet this family standard, or record a waiver for it in AGENTS.md? Defect: WFA-10: README is about 1,340 words of prose against a 1,200-word budget Evidence: A python3 count of README.md with images, link targets, HTML and the code block stripped gives 1,304 words (1,526 raw), over WFA-10's 1,200; check_copy.py exits 0 and has no word-count rule, .sift/scripts holds only file-size-no-growth, and AGENTS.md Waivers covers WFA-3 only. Which copy to cut or move to docs/ is the owner's choice.",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
     },
     {
       "id": "2a2b5c39bb",
@@ -594,6 +344,32 @@
       "reason": "owner-delegated 2026-09-27: done: README's kalimdor.png now has the store page's caption under it; the quoted image line stays by design.",
       "first_seen": "2026-09-27",
       "updated": "2026-09-27"
+    },
+    {
+      "id": "3eddf144f1",
+      "lens": "wall-of-text",
+      "file": "README.md",
+      "quote": "Turn off **Attach to quest tracker** in Settings to drag the shared Forever column. Its position survives `/reload`; turn the setting back on to attach it above your quests.",
+      "what": "Mixed modes: the detached-tracker screenshot, caption and how-to (lines 105 to 108) sit inside '## How the times work'",
+      "why": "That section explains where transport timings come from; the tracker passage is unrelated to it and a skimming reader will not find it there. Move the three lines to the Features list or Usage. README is copy users see, so this is for the owner to decide.",
+      "confidence": "medium",
+      "status": "decide",
+      "reason": "Move or cut this text? It is copy that readers or agents see. Defect: Mixed modes: the detached-tracker screenshot, caption and how-to (lines 105 to 108) sit inside '## How the times work' Evidence: README.md lines 105 to 108 (detached.png, its caption and the Attach to quest tracker how-to) sit at the end of '## How the times work', whose other paragraphs (lines 94 to 103) are only about gen_routes.py and gen_transit.py data provenance; no heading or Features bullet covers the detached tracker. Where the passage moves to is the owner's choice of published copy.",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "452799f521",
+      "lens": "standards",
+      "file": "README.md",
+      "quote": "  ![Journey steps from Auberdine to Silithus with time and distance remaining](docs/screenshots/tracker.png)",
+      "what": "WFA-25: six README feature screenshots have no line under them saying what to look at",
+      "why": "WFA-25: each image gets a line under it saying what to look at in plain words, not a copy of its alt text. The images inside the feature bullets (tracker.png, minimap.png, flight.png, compass.png, services.png, docks.png) are followed straight by the next bullet; only demo.gif, kalimdor.png and detached.png have a caption. check_copy.py only flags a stacked pair, so it passes. docs/curseforge.md already captions the same files. Fix: add a one-line caption under each (the store page's captions can be reused). Published copy: a decide item.",
+      "confidence": "medium",
+      "status": "decide",
+      "reason": "Meet this family standard, or record a waiver for it in AGENTS.md? Defect: WFA-25: six README feature screenshots have no line under them saying what to look at Evidence: README.md lines 29, 33, 38, 42, 46 and 53 (tracker, minimap, flight, compass, services, docks) are each followed directly by the next bullet with no line under them, while WFA-25 asks for a line under each image; check_copy.py only tests stacked pairs and exits 0, and AGENTS.md has no WFA-25 waiver. docs/curseforge.md lines 24 to 38 caption the same files; added captions push further past the WFA-10 budget, so this i",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
     },
     {
       "id": "649a2d1867",
@@ -617,10 +393,10 @@
       "what": "The Usage command table lacks the new `/spfnear` slash command (a row belongs after this one).",
       "why": "Nearby.lua lines 290-291 define SLASH_SPFNEAR1 = \"/spfnear\" and SlashCmdList.SPFNEAR; CHANGELOG 1.6.0 advertises '/spfnear'. README's table lists only /path, /path perf, /path debug.",
       "confidence": "high",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Corrected in commit f961de8: a /spfnear row was added to the README Usage table beside the quoted row, which is itself correct and stays, so the ledger cannot record this as fixed.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "8070eb2300",
@@ -643,10 +419,10 @@
       "what": "The route-button feature bullet omits middle-click, which opens the nearby-services panel.",
       "why": "RouteButton.lua line 53: mouseButton == \"MiddleButton\" calls ns.OpenNearby(); line 44 tooltip 'Middle-click for nearby services.'; line 78 registers MiddleButtonUp. AGENTS.md waiver and CHANGELOG 1.6.0 describe it; WhatsNew.lua's ns.WHATS_NEW is this feature. README (the feature list the store copy mirrors) never mentions nearby services.",
       "confidence": "high",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "The claim that README never mentions nearby services is false now: README.md line 45, the bullet straight after the route-button one, reads 'Middle-click the route button or use `/spfnear` to open the service menu on the world map', matching UI/RouteButton.lua line 53.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "ac620404c3",
@@ -683,10 +459,10 @@
       "what": "WFA-10: Usage table does not list the new /spfnear slash command",
       "why": "WFA-10 README shape has 'Usage (slash commands)'. Nearby.lua registers SLASH_SPFNEAR1 = \"/spfnear\" (with service keys as arguments); README and docs/curseforge.md Usage list only /path, /path perf, /path debug. Fix: add a /spfnear row (or fold it under /path, e.g. /path near, to keep one command family per WFA-3).",
       "confidence": "medium",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Same producer as 6f7e820b53: the missing /spfnear row in the README Usage table. WFA-10 only requires a 'Usage (slash commands)' section, which exists, so the gap is the stale-docs finding's.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "bd3d06a3c2",
@@ -702,6 +478,19 @@
       "updated": "2026-09-27"
     },
     {
+      "id": "c853140b22",
+      "lens": "standards",
+      "file": "README.md",
+      "quote": "The route, pins and tracker use the game's own art, so it looks like it came with the game.",
+      "what": "WFA-23: neither the README pitch nor the store description says the addon steps aside for addons you already run",
+      "why": "WFA-23 requires the pitch to say it looks like it came with the game, backed by something concrete, 'then that it steps aside for addons you already run'; WFA-1 wants the same said under 'Works alongside'. The README pitch and docs/curseforge.md line 1 make the first promise only, and README 'Works alongside' covers the public API and the family addons, with no line on what it leaves to other addons (it reads QuestieDB and Tweaks Forever for nearby services, and has no code that detects or yields to another navigation addon). Fix: add one true sentence to both pitches and to 'Works alongside' on how it coexists with what the player already runs, or record a waiver in AGENTS.md if there is nothing it steps aside for (see the pack feedback note). Published copy: a decide item.",
+      "confidence": "medium",
+      "status": "decide",
+      "reason": "Meet this family standard, or record a waiver for it in AGENTS.md? Defect: WFA-23: neither the README pitch nor the store description says the addon steps aside for addons you already run Evidence: rg for 'aside' and 'alongside' over README.md and docs/curseforge.md finds only the 'Works alongside' heading: the pitch (README line 15, curseforge line 1) makes the first WFA-23 promise only, 'Works alongside' (lines 112 to 117) covers the API and family addons, and AGENTS.md waives WFA-3 alone. No Lua file detects or yields to another navigation addon (rg IsAddOnLoaded, TomTom: no runtime hits), so whether to add ",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
+    },
+    {
       "id": "ee19f39814",
       "lens": "standards",
       "file": "README.md",
@@ -709,10 +498,10 @@
       "what": "WFA-9/WFA-10: README omits the new Nearby services feature and its generated screenshot docs/screenshots/services.png",
       "why": "The new feature (middle-click route button, /spfnear, CHANGELOG 1.6.0 headline, WhatsNew line) appears only in docs/features.md. tools/screenshots.py renders 'services' into docs/screenshots/services.png, but neither README nor docs/curseforge.md references it (grep). WFA-9: one screenshot per headline feature, and README/store use the same docs/screenshots files; WFA-10: a feature is one bullet in Features. Fix: add middle-click to this bullet (or its own bullet) with services.png and a caption.",
       "confidence": "medium",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "The feature and its screenshot are in both files now: README.md lines 45 and 46 carry a 'Nearby services' bullet with docs/screenshots/services.png, and docs/curseforge.md lines 7, 9 and 17 show services.png with a caption and the same bullet.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "2cbd249d11",
@@ -722,10 +511,10 @@
       "what": "String-compares a boolean CVar; GetCVarBool(\"rotateMinimap\") is the client's boolean accessor.",
       "why": "GetCVarBool is used by the pinned FrameXML (Blizzard_MapCanvas/MapCanvas_DataProviderBase.lua:172, QuestDataProvider.lua:122). No behaviour lost; GetCVarBool also accepts other truthy encodings. Only call site in the tree.",
       "confidence": "low",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Not a verdict on the defect: the file moved to UI/Route.lua in the module reorganisation, and the item is carried forward as bd96ed3065.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "be0ca63646",
@@ -748,10 +537,11 @@
       "what": "Hand-rolled clamp to [0, 1]; FrameXML's Saturate (MathUtil.lua, present in the Classic-era client and already used by Map.lua:513) does exactly this.",
       "why": "Saturate(x) is math.min(math.max(x, 0), 1): identical for finite inputs. The same shape at Route.lua:188 (inside Near, per segment per stop) is on the stroke hot path and is better left inline; Route.lua:782 runs once per minimap redraw, so the swap costs nothing. Tiny gain; low priority.",
       "confidence": "low",
-      "status": "unproven",
-      "reason": "An in-memory replacement passed route_spec\u2019s 17 checks and nine additional fade cases, but exercised only tests/ui_client.lua\u2019s Saturate stub. Verifying the supported client\u2019s implementation remains incomplete: curl fetching pinned MathUtil.lua failed with 'Could not resolve host: raw.githubusercontent.com', and web retrieval also failed.",
+      "status": "fixed",
+      "reason": "Commit 80ab22e deleted the distance fade and its clamp; rg over UI/Route.lua finds no math.max(0, math.min(1 left, and the one remaining in UI/Strokes.lua:153 is the per-segment projection on the stroke hot path that the finding itself excluded.",
       "first_seen": "2026-09-27",
-      "updated": "2026-09-27"
+      "updated": "2026-10-03",
+      "guard": "lens-only: the distance fade was deleted outright, a reintroduced copy of the formula needs a reader to spot"
     },
     {
       "id": "958dda7d1c",
@@ -761,10 +551,10 @@
       "what": "A hand-rolled copy of NORMAL_FONT_COLOR (1, 0.82, 0), which the comment calls 'the game's own gold'. Compass.lua:263 repeats it (`SetColorTexture(1, 0.82, 0, 0.85)`). Use NORMAL_FONT_COLOR:GetRGB().",
       "why": "NORMAL_FONT_COLOR exists on this client: Core.lua:33, Map.lua:140, Route.lua:26 and StopPin.lua:116 already use it. Behaviour is the same, since SetVertexColor takes the same r,g,b.",
       "confidence": "medium",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Not a verdict on the defect: the file moved to UI/RouteButton.lua in the module reorganisation, and the item is carried forward as 59f906015e.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "448c3472ca",
@@ -774,10 +564,10 @@
       "what": "Removes cached geometry for routes missing from ns.Routes, but no production code removes a route from ns.Routes: it is generated static data (Data/Routes.lua:42, Data/Transports.lua). When the table is rebound (tests/api_ui.lua:15), the identity check just above already clears the cache.",
       "why": "rg 'Routes\\[..\\] = nil' finds nothing in the tree or in the listed branches. Specs that mutate Routes in place could rely on this loop, so a verifier should run tests/ui.sh before removing it.",
       "confidence": "low",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Not a verdict on the defect: the file moved to UI/RouteTransports.lua in the module reorganisation, and the item is carried forward as 4fb5c6e8a4.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "6ac388080d",
@@ -801,10 +591,10 @@
       "what": "Second hand-rolled pin counter (RouteTransports.lua:51-57), identical to Map.lua:23 ActivePins; both replace WorldMapFrame:GetNumActivePinsByTemplate(TRANSPORT_TEMPLATE).",
       "why": "Blizzard_MapCanvas.lua:380 at the pinned 1.60.1 revision provides GetNumActivePinsByTemplate; callers RouteTransports.lua:76,123. No behaviour difference; harness stubs (tests/ui_map.lua:167) need the method added.",
       "confidence": "medium",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Not a verdict on the defect: the file moved to UI/RouteTransports.lua in the module reorganisation, and the item is carried forward as e448759b1e.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "bd388ed7bc",
@@ -814,10 +604,169 @@
       "what": "Per-id prune of transportGeometry is unreachable in effect: fully dead, delete the loop (the identity reset just above stays).",
       "why": "The cache is emptied whenever ns.Routes or ns.Docks is rebound (the reset tests/api_ui.lua keeps live), so the prune only matters if a key is removed from the same ns.Routes table. Searched all .lua (excluding generated walking maps) and the six in-flight branches for `Routes[...] = nil` or any key removal: none; ns.Routes is only populated by Data/Transports.lua and tests/tracker_ui.lua:89 (adds id 123 with no kind, filtered out as not boat/zeppelin). No string-built access, no registry, not persisted, not public API. The companion `cached.route ~= route` check is similarly only reachable by replacing a boat/zeppelin entry in place, which nothing does; the verifier may fold it into the same removal.",
       "confidence": "medium",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Not a verdict on the defect: the file moved to UI/RouteTransports.lua in the module reorganisation, and the item is carried forward as 3478d7daf6.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "1470525d9d",
+      "lens": "stringly-typed",
+      "file": "Routing/Path.lua",
+      "quote": "\t\treturn nil, \"nodata\"",
+      "what": "Walking-search failure reasons \"nodata\", \"outside\", \"offmesh\", \"unreachable\" (Path.lua:271,274,358,368,372,410,469,594) and \"error\" (PathJobs.lua:74) are bare strings, typed only as string/number|string (PathJobs.lua:129,147,163; types/Addon.lua:196 walkError). They are compared at JourneyCosts.lua:222,289,291,329, mapped in Journey.lua:53-59 WALK_FAILURE, set again by Corpse.lua:68,70 and Journey.lua:452, and listed in prose at PathJobs.lua:125.",
+      "why": "Listed project anti-pattern. The set is closed and owned by Path, yet nothing enumerates it: a typo in a comparison (JourneyCosts.lua:329 must list every 'no route' reason) or a new reason missing from WALK_FAILURE falls through silently to the generic text. A ---@alias SPFWalkFailure in types/ (as SPFMode/SPFKind already are) on the callback, run/runMany returns and SPFLeg.walkError lets LuaLS check the literals; the mode and kind sets show the project convention.",
+      "confidence": "high",
+      "status": "decide",
+      "reason": "Name this closed set once (a LuaLS alias or a constants table) and use it at every site? Defect: Walking-search failure reasons \"nodata\", \"outside\", \"offmesh\", \"unreachable\" (Path.lua:271,274,358,368,372,410,469,594) and \"error\" (PathJobs.lua:74) are bare strings, typed only as string/number|string (PathJobs.lua:129,147,163; types/Addon.lua:196 walkError). They are compared at JourneyCosts.lua:222,289,291,329, mapped in Journey.lua:53-59 WALK_FAILURE, set again by Corpse.lua:68,70 and Journey.lua:452, and listed Evidence: Both path specs pass, including exception tests showing PathJobs normalizes arbitrary errors to \"error\", confirming these reasons form a closed internal set. PathJobs callbacks and SPFLeg.walkError remain broadly string-typed without a shared alias or constants; adding literal annotations can preserve all existing values and behavior.",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "2698c14d3e",
+      "lens": "parallel-implementations",
+      "file": "Routing/Path.lua",
+      "quote": "\tlocal sk, sc = locate(st, from.x, from.y)\n\tlocal gk, gc = locate(st, to.x, to.y)\n\tif not sk or not gk then\n\t\treturn nil, \"outside\"\n\tend\n\tsc, gc = snap(st, sk, sc, from.x, from.y, from.z), snap(st, gk, gc, to.x, to.y, to.z)\n\tif not sc or not gc then\n\t\treturn nil, \"offmesh\"\n\tend",
+      "what": "run (Routing/Path.lua:365-373) restates pointNode (Routing/Path.lua:268-275) for both endpoints: locate, then snap, with \"outside\" and \"offmesh\" as the reasons. Canonical home: pointNode, which runMany (:596, :604, :649) and Path.ReuseMany (:772) already use.",
+      "why": "Same rule for turning a point into a cluster and node, so a change to snapping (for example a different snap radius argument or a new failure reason) must be made in both. Only difference: run locates both endpoints before snapping either, so an outside goal is reported before an off-mesh start; calling pointNode per endpoint would report the start's reason first. That ordering looks accidental, no caller distinguishes it (JourneySearch.lua:550 treats both alike), but a verifier should confirm. This is setup before the search, not the hot loop.",
+      "confidence": "medium",
+      "status": "decide",
+      "reason": "Unify these copies behind one home, and where should that home live? Defect: run (Routing/Path.lua:365-373) restates pointNode (Routing/Path.lua:268-275) for both endpoints: locate, then snap, with \"outside\" and \"offmesh\" as the reasons. Canonical home: pointNode, which runMany (:596, :604, :649) and Path.ReuseMany (:772) already use. Evidence: run and pointNode both locate then snap endpoints with the same arguments and reasons, and runMany and ReuseMany already call pointNode. run checks both locations before either snap, so straightforward endpoint-by-endpoint reuse changes outside-versus-offmesh precedence, which is observable through Path.FindSync and Path.Find callbacks.",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "7fba59d716",
+      "lens": "silent-fallbacks",
+      "file": "Routing/Path.lua",
+      "quote": "if ka == kb and search(st, ka, swim, ea, R, eb) then\nlocal nodes = trace(R, eb, {})\naddAll(ka, nodes, #nodes, 1, -1)\nelse -- neighbouring entrances across a cluster border",
+      "what": "A same-cluster abstract hop (ka == kb) whose grid search fails falls into the cross-border branch and is refined as two bare entrance points, i.e. a straight segment between entrances anywhere in the cluster.",
+      "why": "The else is written (and commented) for adjacent entrances across a cluster border; for ka == kb the baked graph says the entrances connect, so a failed search means graph/grid disagreement (e.g. evicted or mismatched data). The route is still returned with the graph cost and the drawn walk cuts straight through the cluster, with no reason or log. Separating the ka == kb failure (error or 'unreachable') from the border case would surface it. Cannot prove the failure is reachable with shipped data, hence medium.",
+      "confidence": "medium",
+      "status": "unproven",
+      "reason": "Path.lua would add bare entrance points if a same-cluster search failed, but gen_nav.py grid_hpa creates intra-cluster edges only after a successful grid Dijkstra using the corresponding movement rules. luajit tests/path_spec.lua passes, and no reachable graph-grid disagreement was established, so confirming a runtime defect requires a shipped-data counterexample or a proven decoder mismatch.",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "af8d66be3d",
+      "lens": "parallel-implementations",
+      "file": "Routing/PathGrid.lua",
+      "quote": "\tlocal f = floor(st.moves[floor(ax / C) * st.ny + floor(ay / C)][(ax % C) * C + ay % C + 1] / 16)\n\tif up then",
+      "what": "The 'data flags of global cell (ax, ay)' lookup is copied verbatim in stepOpen (PathGrid.lua:647-648) and diagonalOpen (PathGrid.lua:675-676), each preceded by the same value()/water guard (644-646 vs 672-674). The global-cell -> (cluster, local cell) formula it embeds is also restated in locate (578), value (633-634) and neighbour (691). Canonical home: one local helper (e.g. flagsAt(st, gx, gy)) beside value(), or value() returning the flags too.",
+      "why": "jscpd hit 644-649/672-677 read in full: identical tokens, no stated divergence. These are the smoothing fallbacks, not the search loop: neighbour's fast path (695-717, comment at 695-696) serves most string-pulling steps and search() in Path.lua never calls them, so the 3 ms inline rationale (Path.lua:69, 354) does not cover them. A change to the flags packing (m[i] = moves + 16 * flags, line 342) or cluster indexing must land in both copies. The only difference is the bit test after the lookup (orthogonal f % 2 / f % 4 vs diagonal f % 8 / f >= 8), which is intentional and stays at the call sites.",
+      "confidence": "medium",
+      "status": "decide",
+      "reason": "Unify these copies behind one home, and where should that home live? Defect: The 'data flags of global cell (ax, ay)' lookup is copied verbatim in stepOpen (PathGrid.lua:647-648) and diagonalOpen (PathGrid.lua:675-676), each preceded by the same value()/water guard (644-646 vs 672-674). The global-cell -> (cluster, local cell) formula it embeds is also restated in locate (578), value (633-634) and neighbour (691). Canonical home: one local helper (e.g. flagsAt(st, gx, gy)) beside value(), or  Evidence: Comparing stepOpen and diagonalOpen with decodeGrid shows the same packed data-flags lookup, with only intentional orthogonal versus diagonal bit tests varying. The neighbour fast path handles decoded moves separately, so one flags lookup helper can own this packing rule without merging the distinct step contracts.",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "bbd7e0d926",
+      "lens": "comment-narration",
+      "file": "Routing/PathGrid.lua",
+      "quote": "-- Walking routes over a continent's collision map: HPA* between ADT-tile clusters, an 8 yd grid inside them,\n-- then string-pulling so the drawn line is not jagged. FindMany resolves costs in one abstract Dijkstra.\n-- Costs use the graph and local grid weights; smoothing changes only the drawing.",
+      "what": "Orphaned header from before the Path.lua/PathGrid.lua split: it describes the HPA* search and FindMany's Dijkstra, which live in Path.lua, and repeats Path.lua's own header (lines 4-5, same 'HPA* between ADT-tile clusters, an 8 yd grid inside them' wording) and Path.lua:578 ('Smoothing only changes drawing').",
+      "why": "PathGrid.lua lines 10-11 already state what this file holds (decoded maps, memory ceilings, slicing, string-pulling). Suggested replacement: keep lines 7-11 and a one-line note that smooth() string-pulls the drawn line; drop the search description. Matches the profile's 'orphaned comment ... after the PathGrid.lua split' anti-pattern.",
+      "confidence": "medium",
+      "status": "dismissed",
+      "reason": "PathGrid.lua lines 10-11 explicitly assign searches to Path.lua, and the opening describes the combined walking subsystem accurately rather than claiming this file implements FindMany. The comment-narration documentation-convention exception covers this overview and its non-obvious invariant that smoothing does not change costs.",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "eda635f6ea",
+      "lens": "parallel-implementations",
+      "file": "Routing/PathGrid.lua",
+      "quote": "\t\tfor e = 1, B64[byte(s, 9 + (id % 4096) * 7)] do",
+      "what": "The graph node-record layout (header n(2), then 7-char records cell(3) layer(1) component(2) degree(1)) is restated as independent magic offsets in three places: decodeGraph (PathGrid.lua:500-508, pos = 3, pos + 6, pos + 7), metadata (528-529, 3 + (id % 4096) * 7, pos + 3, pos + 4) and adjacent (541, the precomputed 9 + i * 7 for the degree byte). Canonical home: metadata's record position (one RECORD = 7 / header offset), with adjacent reusing it (pos + 6).",
+      "why": "The encoder is the spec: tools/baker/gen_nav.py:677-679 writes enc(len, 2) then enc(cell,3)+enc(layer,1)+enc(comp,2)+enc(degree,1), documented in the generated header (gen_nav.py:738-739). Cross-language restatement in the decoder is unavoidable; the intra-file restatement is not: '9' folds header + degree offset into one literal that no longer reads as either, so a record-width or header change to the encoder must be found in three decoder sites. Not a hot-loop inline: adjacent decodes once per entrance and caches (549).",
+      "confidence": "low",
+      "status": "decide",
+      "reason": "Unify these copies behind one home, and where should that home live? Defect: The graph node-record layout (header n(2), then 7-char records cell(3) layer(1) component(2) degree(1)) is restated as independent magic offsets in three places: decodeGraph (PathGrid.lua:500-508, pos = 3, pos + 6, pos + 7), metadata (528-529, 3 + (id % 4096) * 7, pos + 3, pos + 4) and adjacent (541, the precomputed 9 + i * 7 for the degree byte). Canonical home: metadata's record position (one RECORD = 7 / header of Evidence: Comparing decodeGraph, metadata and adjacent against tools/baker/gen_nav.py shows three independent encodings of the same seven-character node record and two-character header. Sequential versus random access and eager degree versus lazy edge decoding differ intentionally, but none requires separate record-width and degree-position facts.",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "468ad35561",
+      "lens": "stringly-typed",
+      "file": "Routing/PathJobs.lua",
+      "quote": "---@param callback fun(cost: number?, reason: string?, job: SPFPathJob)",
+      "what": "Walk failure reasons are a closed set (\"nodata\", \"outside\", \"offmesh\", \"unreachable\", \"error\") passed as bare strings typed `string`: produced at Path.lua:358, 368, 372, 410, 469, 594 (failed(\"nodata\")), 271/274 (pointNode), PathJobs.lua:74 (\"error\"), Corpse.lua:68, 70 and Journey.lua:415; compared by literal at JourneyCosts.lua:222, 289, 291, 329; mapped in ns.WalkFailure (JourneySteps.lua:20-26); listed in prose at PathJobs.lua:125. The Find/FindCost/FindMany callback types (PathJobs.lua:129, 147, 163) and types/Addon.lua:201 (walkError? string) declare string.",
+      "why": "No ---@alias for the set exists (grep 'alias SPFPath' finds none; types/API.lua has a separate SPFAPINoRoute alias, showing the project pattern). A typo such as \"off-mesh\" at a producer or JourneyCosts.lua:329 comparison type-checks and silently falls through WalkFailure to the generic 'walking search failed'. The project profile lists exactly this ('Path failure reasons (Journey.lua WALK_FAILURE)') under Anti-patterns. Fix: an SPFPathFailure literal-union alias used in these annotations and walkError; no runtime change.",
+      "confidence": "medium",
+      "status": "dismissed",
+      "reason": "Same producer as 1470525d9d: one defect, recorded once there. Verifier found it real: Current producers in Routing/Path.lua and PathJobs.lua emit the five closed failure values, while JourneySearch.lua compares them and JourneySteps.lua maps them to wording. Types declare callback reasons and walkError as string, and the alias search finds SPFMode and SPFKind but no path-failure unio",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "5c6e69f3d5",
+      "lens": "comment-narration",
+      "file": "Routing/PathJobs.lua",
+      "quote": "-- Coroutine-sliced walking searches: Path.lua's searches share one frame budget, and cancelled or paused jobs\n-- release their scratch.",
+      "what": "stale header: it says paused jobs release their scratch, and Path.Pause keeps it",
+      "why": "Path.Pause (Routing/PathJobs.lua:185) only sets job.paused and removes the job from the queue; job.scratch and job.co stay, which is what the comment at line 183 says (\"Paused batches retain their settled costs and frontier\"). Scratch is dropped by a finished job (line 71), Path.ReleaseMany (line 210) and Path.Cancel (line 225). Shorter replacement: \"... share one frame budget, and finished, released or cancelled jobs release their scratch.\"",
+      "confidence": "medium",
+      "status": "fixed",
+      "reason": "",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03",
+      "guard": "settled:orphaned comment"
+    },
+    {
+      "id": "4a490f80fd",
+      "lens": "defensive-noise",
+      "file": "Routing/Planner.lua",
+      "quote": "\t\t\tfor i = 1, #(hop.points or {}), 3 do",
+      "what": "nil fallback on SPFTaxiPath.points, which types/Addon.lua:66 declares non-optional (`---@field points number[]`) and all 286 generated paths in Data/Taxi.lua carry",
+      "why": "a flight leg's hops are the planner's own taxi edges (Routing/Planner.lua:766, `edge.path and { edge.path }`), each a row of the generated ns.TaxiPaths. A path without points would draw a flight with no line and nobody would hear of it. Every tests/*_spec.lua passes with `#hop.points` (scratch copy); tests/ui.sh was not run. The `leg.hops or {}` one line up is left out: SPFLeg.hops is optional (types/Addon.lua:202), so the type gate may need it.",
+      "confidence": "medium",
+      "status": "fixed",
+      "reason": "",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03",
+      "guard": "settled:guard on a defined function"
+    },
+    {
+      "id": "53ebeca80e",
+      "lens": "parallel-implementations",
+      "file": "Routing/Planner.lua",
+      "quote": "\t\t\t\tkind = i == 1 and \"start\" or \"goal\",",
+      "what": "The cached-topology branch (Planner.lua:468-480) rebuilds start/goal nodes with its own copy of the node shape and landmass lookup that Add (Planner.lua:356-364) owns. Canonical home: a Node(kind, id, point) constructor used by both.",
+      "why": "A field added to Add's node (as pointKey was) must be repeated here or cached plans get start/goal nodes without it, which only shows on the second plan. Differences today: none in fields; the branch intentionally creates fresh tables (line 467) and does not reset edges[i], which a constructor preserves.",
+      "confidence": "low",
+      "status": "decide",
+      "reason": "Unify these copies behind one home, and where should that home live? Defect: The cached-topology branch (Planner.lua:468-480) rebuilds start/goal nodes with its own copy of the node shape and landmass lookup that Add (Planner.lua:356-364) owns. Canonical home: a Node(kind, id, point) constructor used by both. Evidence: runtime_spec.lua and a read-only LuaJIT probe passed, confirming identical fresh/cached endpoint fields and landmasses while preserving earlier endpoint objects and cached edge arrays. The differences[U+2014]append versus replacement, generic versus endpoint arguments, omitted nil id, pointKey assignment placement and edge initialization[U+2014]do not require duplicate node construction.",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "df642d8fac",
+      "lens": "dead-code",
+      "file": "Routing/Planner.lua",
+      "quote": "\t\"revision\",",
+      "what": "test-only: the `revision` topology cache key (and the 'or advancing revision' clause of the comment above CACHE_KEYS) is set by no production caller; delete it with tests/runtime_spec.lua lines 63-64 (`options.revision = 1` / compare()) and the `---@field revision? number` on SPFPlanOptions in types/Addon.lua:226",
+      "why": "Only two production callers pass `cache` to Planner.Plan: Journey.lua Plan (options table at 667-688) and API.lua Options (152-171); neither sets `revision`. tools/bake_walks.lua loads Planner but never calls Plan with a cache. rg 'revision' over all .lua finds only tests/runtime_spec.lua:63 as a setter; other hits are unrelated (Arrow local, PathJobs job.revision, Route geometry revision, SPFPathJob type). Same result via git grep on all six in-flight branches. Hard stops: not string-built (CACHE_KEYS is a literal list read by ipairs), not persisted (topology lives in a per-session cache table), not wire/public (API.Estimate builds its own options; external callers cannot pass options), no non-source caller. Without the key a spec that swaps data tables still invalidates via the identity-compared data keys.",
+      "confidence": "high",
+      "status": "fixed",
+      "reason": "",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03",
+      "guard": "lens-only: an unread table field, stub or export is invisible to luacheck, only a repository-wide search shows it has no reader"
+    },
+    {
+      "id": "f990788dd1",
+      "lens": "oversized-modules",
+      "file": "Routing/Planner.lua",
+      "quote": "function Planner.QuestDestination(questID, title, complete, uiMapID, pois, waypoint)",
+      "what": "Routing/Planner.lua (833 lines against a 1000-line gate) holds four responsibilities: picking a quest's destination from native POIs (:19-58, needs the locale table), leg drawing geometry (:60-148, WalkPoints, WalkContradicts, LegPoints), the fixed places and their baked-walk keys (:150-275), and the label search itself (:277-833).",
+      "why": "The first two never change with the search: QuestDestination's only runtime caller is Journey/JourneyInput.lua:36 and it is the reason this file loads ns.L; LegPoints is called from UI/Route.lua:525, UI/RouteTransports.lua:117 and Core/PlanContext.lua:111. They sit here as pure functions for planner_spec. QuestDestination would live in Journey/JourneyInput.lua and the geometry in its own file next to PlanContext, leaving Planner with places and search. Plan itself is one 500-line function (:332-831) with a stated hot-path reason for not splitting, so it is not part of this finding.",
+      "confidence": "low",
+      "status": "decide",
+      "reason": "Split this along the named seams, and into which files? Defect: Routing/Planner.lua (833 lines against a 1000-line gate) holds four responsibilities: picking a quest's destination from native POIs (:19-58, needs the locale table), leg drawing geometry (:60-148, WalkPoints, WalkContradicts, LegPoints), the fixed places and their baked-walk keys (:150-275), and the label search itself (:277-833). Evidence: JourneyInput.lua consumes QuestDestination to interpret native quest POIs, while PlanContext.lua and the route UI consume LegPoints for drawing, independently of the topology and label search. Quest selection and leg geometry separate cleanly from places and planning, but choosing and moving those module boundaries requires a reviewed design change.",
+      "first_seen": "2026-10-03",
+      "updated": "2026-10-03"
     },
     {
       "id": "775affa655",
@@ -827,10 +776,10 @@
       "what": "`/path perf` hard-codes the list of shipped walking-map addons and rebuilds their names (addonName .. \"_Nav\" .. map). PathGrid.lua:93/:834 own the \"ShortestPathForever_Nav\" .. map naming, and the shipped set is the ShortestPathForever_Nav* directories plus .pkgmeta.",
       "why": "No other runtime Lua lists {0,1,2991}. If a new continent map is baked, the perf memory total silently leaves it out. This is a debug path, so the impact is low.",
       "confidence": "low",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Not a verdict on the defect: the file moved to UI/Settings.lua in the module reorganisation, and the item is carried forward as c825826136.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "80731148d2",
@@ -840,10 +789,10 @@
       "what": "`not C_AddOns` guards a namespace the addon uses unconditionally (WhatsNew.lua:14 C_AddOns.GetAddOnMetadata, PathGrid.lua:93 C_AddOns.LoadAddOn).",
       "why": "If C_AddOns were absent the walking maps could not load at all. The DoesAddOnExist existence check mirrors PathGrid.lua:833 and can stay; only the `not C_AddOns or` clause is noise.",
       "confidence": "low",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Not a verdict on the defect: the file moved to UI/Settings.lua in the module reorganisation, and the item is carried forward as cb8007de3d.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "a88328cb6c",
@@ -853,10 +802,10 @@
       "what": "The route-button setting's help lists left- and right-click but not the new middle-click for nearby services.",
       "why": "RouteButton.lua:53-55 opens ns.OpenNearby on MiddleButton and its tooltip (:44) says so; README.md:45 and AGENTS.md waiver list it. The settings help now describes the button incompletely. User-facing copy: decide.",
       "confidence": "low",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Not a verdict on the defect: the file moved to UI/Settings.lua in the module reorganisation, and the item is carried forward as 9c41bbb482.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "986a95ab59",
@@ -866,10 +815,10 @@
       "what": "Repetition: the same badge-versus-lone-mark rule is stated three times, at StopPin.lua:11-13 (on LOOK_SIZE/BADGE_SIZE), here above OnAcquired, and in Map.xml:28-30. The first line of the OnAcquired comment (49-51) already covers the pin's shapes.",
       "why": "Deleting 52-53 loses nothing: lines 11-13 give the badge placement and the lone-mark size where those constants live. Alternatively, trim the Map.xml copy and keep this one.",
       "confidence": "low",
-      "status": "open",
-      "reason": "",
+      "status": "dismissed",
+      "reason": "Not a verdict on the defect: the file moved to UI/StopPin.lua in the module reorganisation, and the item is carried forward as 3b66904e11.",
       "first_seen": "2026-09-30",
-      "updated": "2026-09-30"
+      "updated": "2026-10-03"
     },
     {
       "id": "a0510a89f1",
@@ -883,6 +832,58 @@
       "reason": "owner-delegated 2026-09-27: wontfix: would change sync packet grouping between players.",
       "first_seen": "2026-09-27",
       "updated": "2026-09-27"
+    },
+    {
+      "id": "e9751de6f6",
+      "lens": "defensive-noise",
+      "file": "Taxi.lua",
+      "quote": "\tlocal uiMap = GetTaxiMapID and GetTaxiMapID()",
+      "what": "Existence guard on GetTaxiMapID, a global API present in every client flavor (Ketho's pinned annotations, src/data/flavor.ts: `[\"GetTaxiMapID\"]: 0xF`), and called only while a flight master's map is open.",
+      "why": "The same file calls NumTaxiNodes, TaxiNodeGetType, GetNumRoutes and TaxiGetNodeSlot unguarded; the specs (taxi_spec, ui_client) stub GetTaxiMapID. With the guard removed all specs, UI checks and typecheck pass. If the API were ever missing, the guard would silently leave every character with no known flight points (the planner then never flies) instead of erroring. Use `local uiMap = GetTaxiMapID()`.",
+      "confidence": "medium",
+      "status": "dismissed",
+      "reason": "Not a verdict on the defect: the file moved to Transport/Taxi.lua in the module reorganisation, and the item is carried forward as 37a31610e5.",
+      "first_seen": "2026-09-27",
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "b335967fb9",
+      "lens": "parallel-implementations",
+      "file": "Tracker.lua",
+      "quote": "\t\t\t\t\tt = math.max(0, math.min(1, ((x - a.x) * dx + (y - a.y) * dy) / length ^ 2))",
+      "what": "Tracker's JourneyDistance projects the player onto each leg's points to get yards remaining (Tracker.lua:129-148), a third copy of ns.OnWalk (Journey.lua:295-317; canonical) and Arrow.lua:109-120.",
+      "why": "Differences: Tracker caches per-leg lengths/after (intentional, avoids recomputation per tick), has no off-path reach limit, applies it to active boat/flight legs as well as walks, and adds the off-path distance only for walks (intentional). The projection/after arithmetic itself is identical and would need the same fix in each copy; OnWalk could take precomputed lengths, or expose the projection as a shared helper.",
+      "confidence": "medium",
+      "status": "dismissed",
+      "reason": "These serve different contracts: Tracker caches discontinuous, multimodal geometry, excludes jumps and continent gaps, and adds off-path distance only for walks; tests/tracker_ui.lua:98\u2013106 requires those exclusions, and executing the unchanged functions produced 200 yards versus OnWalk\u2019s 1000 for the jump fixture. OnWalk instead supplies reach-limited walking progress, while Arrow selects a bend without calculating remaining yards; the shared clamped projection is a small mathematical idiom, covered by the lens\u2019s exclusions.",
+      "first_seen": "2026-09-27",
+      "updated": "2026-09-27"
+    },
+    {
+      "id": "bf6fca77ff",
+      "lens": "comment-narration",
+      "file": "Tracker.lua",
+      "quote": "\t-- The shared private host is optional; stay inert until it loads.",
+      "what": "Stale comment: the host is not optional here and does not load later.",
+      "why": "TrackerHost.lua is in ShortestPathForever.toc before Tracker.lua and, whenever ObjectiveTrackerFrame exists (the same condition Tracker's Init checks at :302), sets the global ForeverTrackerHost at file load (TrackerHost.lua:19-22 or :392). So by Init it is always defined; nothing 'loads' afterwards. The `if ForeverTrackerHost then` branch exists for LuaLS narrowing (types/Forever.lua:168 declares it optional); ns.TrackerHost (typed non-optional in Core.lua:3) would remove both the guard and the comment. Suggest deleting the comment, or replacing it with the narrowing reason.",
+      "confidence": "medium",
+      "status": "dismissed",
+      "reason": "Not a verdict on the defect: the file moved to UI/Tracker.lua in the module reorganisation, and the item is carried forward as e1410150ed.",
+      "first_seen": "2026-09-30",
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "e9a8fb114f",
+      "lens": "dead-code",
+      "file": "Tracker.lua",
+      "quote": "\tmodule.hasDisplayPriority = journeyTitle ~= nil",
+      "what": "hasDisplayPriority write is fully dead: it was read by Blizzard's native tracker container, but the module now attaches only to the private ForeverTrackerHost, whose Layout sorts by uiOrder and never reads it.",
+      "why": "rg: no reader in the repo besides the types/Forever.lua field; TrackerHost.lua Layout/Module never touch it; tracker_lifecycle_spec forbids native ObjectiveTrackerManager access, so the native container never sees this module. Not SavedVariables or a string-built key. Medium, not high: Blizzard_ObjectiveTrackerModule/Container source is not pinned (tools/fetch_blizzard_ui.sh), so a verifier should confirm ObjectiveTrackerModuleMixin itself does not read hasDisplayPriority.",
+      "confidence": "medium",
+      "status": "dismissed",
+      "reason": "Not a verdict on the defect: the file moved to UI/Tracker.lua in the module reorganisation, and the item is carried forward as 43a49411aa.",
+      "first_seen": "2026-09-30",
+      "updated": "2026-10-03"
     }
   ]
 }
