@@ -171,4 +171,52 @@ rows = select(2, ns.JourneyInfo())
 assert(rows[1].text:find("walking map unavailable", 1, true), rows[1].text)
 ghost = false
 event("PLAYER_UNGHOST")
+
+-- The client places the corpse a moment after you release, and tells no one: the run looks again until it can start.
+local timers = {}
+env.C_Timer = {
+	After = function(delay, fn)
+		timers[#timers + 1] = { at = env.GetTime() + delay, fn = fn }
+	end,
+}
+local function wait(seconds)
+	for _ = 1, seconds / 0.5 do
+		driver.update(0.5)
+		local due = timers
+		timers = {}
+		for _, timer in ipairs(due) do
+			if timer.at <= env.GetTime() then
+				timer.fn()
+			else
+				timers[#timers + 1] = timer
+			end
+		end
+	end
+end
+walking.data, walking.auto = true, true
+assert(API.NavigateRoute("AGF", { { map = 1, x = 0.5, y = 0.49, title = "Turn in" }, { map = 1, x = 0.5, y = 0.48 } }))
+corpse = nil
+event("PLAYER_DEAD")
+ghost = true
+driver.fire("PLAYER_ALIVE")
+wait(2)
+assert(not ns.Corpse.Active() and ns.JourneyInfo() ~= "Return to your corpse", "no corpse to walk to yet")
+corpseAt(0, 0)
+wait(1)
+assert(ns.Corpse.Active() and ns.JourneyInfo() == "Return to your corpse", "the run starts once the corpse is placed")
+assert(destination.corpse and API.CurrentStop("AGF") == 1, "and the caller's route waits behind it")
+ghost = false
+event("PLAYER_UNGHOST")
+wait(2)
+assert(not ns.Corpse.Active() and #timers == 0, "alive again, nothing looks for a corpse")
+-- A corpse the client never places is looked for ten times, then left until the next event.
+ghost, corpse = true, nil
+driver.fire("PLAYER_ALIVE")
+wait(9)
+assert(#timers == 1, "still looking")
+wait(3)
+assert(#timers == 0 and not ns.Corpse.Active(), "the looks run out")
+ghost = false
+event("PLAYER_UNGHOST")
+ns.ClearJourney()
 print("corpse: ok")

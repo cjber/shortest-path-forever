@@ -328,6 +328,25 @@ check(
 	"detach lays out every shared module"
 )
 check(grip.shown and first.point[5] == -24, "detached grip reserves space above modules")
+-- Until it is dragged, a detached column sits beside the native tracker, never over it.
+local nativeLeft, nativeRight, nativeTop
+local function besideNative()
+	local scale = native:GetEffectiveScale() / host:GetEffectiveScale()
+	nativeLeft, nativeRight, nativeTop = native:GetLeft() * scale, native:GetRight() * scale, native:GetTop() * scale
+	local left, right = host.point[4], host.point[4] + host:GetWidth()
+	return host.point[1] == "TOPLEFT"
+		and host.point[2] == parent
+		and left >= 0
+		and right <= parent:GetWidth()
+		and (right <= nativeLeft or left >= nativeRight)
+end
+check(besideNative() and host.point[4] >= nativeRight, "an undragged detached column sits right of a left-side tracker")
+check(host.point[5] == nativeTop - parent:GetHeight(), "an undragged detached column is level with the tracker")
+native.left, native.right = 700, 950
+host:MarkDirty()
+drain()
+check(besideNative() and host.point[4] < nativeLeft, "an undragged detached column sits left of a right-side tracker")
+native.left, native.right = nil, nil
 grip.scripts.OnDragStart(grip)
 check(host.moving, "detached grip starts moving")
 host.left, host.top = 96, 880

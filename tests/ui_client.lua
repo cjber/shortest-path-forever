@@ -429,6 +429,7 @@ local ghost = false
 _G.UnitIsGhost = function()
 	return ghost
 end
+_G.UnitIsDeadOrGhost = _G.UnitIsGhost
 _G.GetPlayerFacing = function()
 	return facing
 end
@@ -647,16 +648,17 @@ _G.C_Map = {
 	GetMapPosFromWorldPos = function(cont, v, override)
 		local x, y = v:GetXY()
 		local m = cont == 0 and 1415 or 1414
-		if override and override ~= m then
+		-- Each continent is covered by one zone, numbered 1400 below it, with the continent's own fractions.
+		if override and override ~= m and override ~= m - 1400 then
 			return nil
 		end
-		return m, CreateVector2D(0.5 - y / 25000, 0.5 - x / 25000)
+		return override or m, CreateVector2D(0.5 - y / 25000, 0.5 - x / 25000)
 	end,
 	GetMapInfo = function(id)
 		return { mapID = id, mapType = id >= 1400 and 2 or 3, parentMapID = 0, name = "Map" .. id }
 	end,
-	GetMapInfoAtPosition = function()
-		return nil
+	GetMapInfoAtPosition = function(id)
+		return id >= 1400 and C_Map.GetMapInfo(id - 1400) or nil
 	end,
 	GetWorldPosFromMapPos = function(m, v)
 		local x, y = v:GetXY()

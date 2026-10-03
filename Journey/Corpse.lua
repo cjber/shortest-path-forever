@@ -8,6 +8,9 @@ local L = ns.L
 local COLOR = CreateColor(192 / 255, 76 / 255, 24 / 255)
 local TITLE, LABEL = L["Return to your corpse"], L["your corpse"]
 local STEP_EVERY, SEARCH_EVERY = 0.5, 5
+-- The client learns where the corpse lies a moment after you die, with no event to say so: a ghost with no corpse to
+-- show looks again each second, this many times after each event.
+local LOOK_EVERY, LOOKS = 1, 10
 -- The client reports the corpse in map fractions, so reading it again can move it a hair.
 local SAME = 1
 local Guide = ns.JourneyGuide
@@ -188,6 +191,20 @@ local function Stop()
 	ns.ResumeJourney()
 end
 
+local looks, looking = 0, false
+
+-- Dead with no corpse placed yet: one more look, until the looks since the last event run out.
+local function LookAgain()
+	if looking or looks >= LOOKS or not (ns.db.corpse and UnitIsDeadOrGhost("player")) then
+		return
+	end
+	looks, looking = looks + 1, true
+	C_Timer.After(LOOK_EVERY, function()
+		looking = false
+		ns.RefreshCorpseRun()
+	end)
+end
+
 -- Released, with a corpse to find: the run starts, follows the corpse, and ends when you live again.
 function ns.RefreshCorpseRun()
 	local point = ns.db.corpse and UnitIsGhost("player") and CorpsePoint() or nil
@@ -195,6 +212,7 @@ function ns.RefreshCorpseRun()
 		if run then
 			Stop()
 		end
+		LookAgain()
 		return
 	end
 	if not run then
@@ -235,6 +253,7 @@ ns.Init(function()
 		events:RegisterEvent(event)
 	end
 	events:SetScript("OnEvent", function()
+		looks = 0
 		ns.RefreshCorpseRun()
 		-- Releasing moves you to a graveyard, and the map you are on may settle a moment later.
 		C_Timer.After(1, ns.RefreshCorpseRun)

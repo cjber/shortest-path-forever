@@ -11,6 +11,11 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **A detached tracker keeps clear of your quests.** With Attach to quest tracker off, the Forever column could open on top of the quest list. Until you drag it, it now sits beside the quest tracker, level with its top; once dragged, it stays where you put it.
+- **The way to your corpse starts on every death.** Releasing your spirit sometimes left your journey on screen instead of the red path back to your body, until the setting was switched off and on. The path now appears as soon as the game knows where your corpse lies.
+- **A map click on open sea tells you.** Shift-clicking the world map where no zone lies, such as the sea on a continent map or the gap between continents, now prints that no journey can be planned to that spot instead of starting a journey to nowhere.
+- **Nearby services says what is wrong.** Without QuestieDB installed the menu now reads Nearby services need the QuestieDB addon, and when QuestieDB is installed but cannot be read it says so, instead of listing every service as unavailable here.
+- **No empty trainer and vendor menus.** Where a zone has no trainers or vendors, Trainers by specialty and Vendors by specialty now read as unavailable here like the other services, instead of opening an empty list.
 - **Flight points in your game's language.** Once you have opened a flight map, journey steps and map pins name its flight points as the game does, rather than always in English.
 
 ## [1.8.1] - 2026-10-03

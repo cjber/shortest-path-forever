@@ -298,6 +298,23 @@ local function SidePoint(point)
 	return point:find("LEFT", 1, true) and "LEFT" or "RIGHT"
 end
 
+-- Where a detached column sits until the player drags it: beside the native tracker and level with its top, so
+-- neither draws over the other. To its left when the column fits there, otherwise to its right. Offsets are from
+-- UIParent's top left corner in the host's own scale; the caller keeps them on screen.
+local function BesideNative(width, screenHeight)
+	local left, right, top =
+		ObjectiveTrackerFrame:GetLeft(), ObjectiveTrackerFrame:GetRight(), ObjectiveTrackerFrame:GetTop()
+	if not (left and right and top) then
+		return 0, -40
+	end
+	local toHost = ObjectiveTrackerFrame:GetEffectiveScale() / host:GetEffectiveScale()
+	local x = left * toHost - 8 - width
+	if x < 0 then
+		x = right * toHost + 8
+	end
+	return x, top * toHost - screenHeight
+end
+
 local function LayoutModules(width, available, height)
 	table.sort(modules, function(a, b)
 		return a.uiOrder < b.uiOrder
@@ -362,7 +379,12 @@ local function Layout()
 		if dragging then
 			return
 		end
-		local x, y = (settings.x or 0) / scale, (settings.y or -40) / scale
+		local x, y
+		if settings.x and settings.y then
+			x, y = settings.x / scale, settings.y / scale
+		else
+			x, y = BesideNative(width, screenHeight)
+		end
 		x = math.max(0, math.min(x, math.max(0, screenWidth - width)))
 		y = math.min(0, math.max(y, 24 - screenHeight))
 		host:ClearAllPoints()
