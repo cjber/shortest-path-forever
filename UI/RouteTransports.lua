@@ -83,11 +83,6 @@ function TransportProviderMixin:RefreshAllData()
 	if geometryRoutes ~= ns.Routes or geometryDocks ~= ns.Docks then
 		transportGeometry, geometryRoutes, geometryDocks = {}, ns.Routes, ns.Docks
 	end
-	for id in pairs(transportGeometry) do
-		if not ns.Routes[id] then
-			transportGeometry[id] = nil
-		end
-	end
 	local geometry = {}
 	local ids = {}
 	for id, route in pairs(ns.Routes) do
