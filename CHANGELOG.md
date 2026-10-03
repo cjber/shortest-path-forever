@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+## [1.8.2] - 2026-10-03
+
 - **A detached tracker keeps clear of your quests.** With Attach to quest tracker off, the Forever column could open on top of the quest list. Until you drag it, it now sits beside the quest tracker, level with its top; once dragged, it stays where you put it.
 - **The way to your corpse starts on every death.** Releasing your spirit sometimes left your journey on screen instead of the red path back to your body, until the setting was switched off and on. The path now appears as soon as the game knows where your corpse lies.
 - **A map click on open sea tells you.** Shift-clicking the world map where no zone lies, such as the sea on a continent map or the gap between continents, now prints that no journey can be planned to that spot instead of starting a journey to nowhere.
