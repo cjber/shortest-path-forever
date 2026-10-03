@@ -276,12 +276,9 @@ Open = function()
 end
 
 ---@class SPFNearbyServices
----@field Build fun()
 ---@field Nearest fun(key: string, world: SPFPoint, specialty?: string): SPFNearbyPlace?
----@field Navigate fun(key: string, place: SPFNearbyPlace?): boolean
 ---@field Index fun(): table<string, SPFNearbyPlace[]>
 ---@field State fun(): string
----@field Services table[]
 ---@class SPFNearbyPlace
 ---@field id integer
 ---@field name string
@@ -291,10 +288,7 @@ end
 ---@field y number
 ---@field world SPFPoint
 ns.NearbyServices = {
-	Build = Build,
 	Nearest = Nearest,
-	Navigate = Navigate,
-	Services = SERVICES,
 	Index = function()
 		return index
 	end,
@@ -308,9 +302,7 @@ ns.Init(function()
 	if WorldMapFrame and WorldMapFrame.HookScript then
 		WorldMapFrame:HookScript("OnHide", Close)
 	end
-	if Menu and Menu.ModifyMenu then
-		Menu.ModifyMenu("MENU_WORLD_MAP_TRACKING", AddWorldMapTrackingEntry)
-	end
+	Menu.ModifyMenu("MENU_WORLD_MAP_TRACKING", AddWorldMapTrackingEntry)
 	SLASH_SPFNEAR1 = "/spfnear"
 	SlashCmdList.SPFNEAR = function(message)
 		local key = string.lower((message or ""):match("^%s*(.-)%s*$"))

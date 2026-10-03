@@ -242,7 +242,6 @@ local function RefreshTracker(dockID, yards)
 		blocks[#blocks + 1] = { key = blockKey, title = title, rows = rows }
 	end
 	module.dockID, module.mapDock = dockID, mapDock
-	module.hasDisplayPriority = journeyTitle ~= nil
 	local section = journeyTitle and L["Journey"] or kind and HEADER[kind] or ModuleMixin.headerText
 	local header = journeyTitle and JourneyHeader(journeyResult, journeyIndex, loading) or section
 	if not journeyTitle then
@@ -291,11 +290,7 @@ function ns.RefreshTracker()
 end
 
 local function Attach()
-	if ForeverTrackerHost then
-		ForeverTrackerHost.Attach(module)
-		return
-	end
-	-- The shared private host is optional; stay inert until it loads.
+	ForeverTrackerHost.Attach(module)
 end
 
 ns.Init(function()
@@ -317,7 +312,7 @@ ns.Init(function()
 	module.Spinner:Hide()
 	module.section = ModuleMixin.headerText
 	module:SetHeader(ModuleMixin.headerText)
-	-- Above quests, below SkillUp Forever (-2) and Legacy Forever (0, -1): each needs its own slot.
+	-- Above quests, SkillUp Forever (-2) and Legacy Forever (0, -1): each needs its own slot.
 	module.uiOrder = -3
 	module.Header:EnableMouse(true)
 	module.Header:SetScript("OnMouseUp", function(_, button)

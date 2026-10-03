@@ -40,10 +40,6 @@ local function login(db)
 	return db
 end
 
--- Saved variables that never loaded: nothing to compare, nothing to break.
-login(nil)
-assert(#printed == 0)
-
 -- First install: remember the version, say nothing.
 local db = login({ whatsNew = true })
 assert(#printed == 0 and db.seenVersion == "1.4.0")

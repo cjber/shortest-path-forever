@@ -114,7 +114,7 @@ local function Acquire(entry)
 		pin = CreateFrame("Frame", nil, frame)
 		pin:SetSize(SIZE, SIZE)
 		pin:EnableMouse(true)
-		-- Shift-click through a pin still plans a journey there (Journey.lua's minimap handler).
+		-- Shift-click through a pin still plans a journey there (JourneyInput.lua's minimap handler).
 		pin:SetPropagateMouseClicks(true)
 		pin.Texture = pin:CreateTexture(nil, "ARTWORK")
 		pin.Texture:SetPoint("CENTER")
