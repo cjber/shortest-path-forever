@@ -52,7 +52,7 @@ On-demand tools for audits. Output is candidates, never verdicts.
 | Dead code (Python) | `uvx vulture tools --min-confidence 60` | clean today |
 | Types (Python) | `uvx --with pillow ty check --extra-search-path tools --python-version 3.10 tools` | 5 inference errors in `gen_nav.py` (tuple unpacking, `dict.get` keys) + Pillow `Image.LANCZOS` — not bugs |
 | Large files | `python3 .sift/gate.py --rule file-size-no-growth --all` | lists files over 1000 lines; none remain, so any listed file is a regression |
-| Duplication | `npx --yes jscpd@4 --silent --reporters json --output .sift/runs/jscpd --ignore '**/ShortestPathForever_Nav*/**,**/Data/**,**/.sift/**,**/media/**,LICENSE' .` | the test harness preambles (`walk_sim`, `journey_bench`, `journey_optimal_spec`) repeat stub setup; whole-file clones among `tests/*_ui.lua` are their long-string bodies |
+| Duplication | `npx --yes jscpd@4 --silent --reporters json --output .sift/runs/jscpd --ignore '**/ShortestPathForever_Nav*/**,**/Data/**,**/.sift/**,**/media/**,LICENSE' .` | whole-file clones among `tests/*_ui.lua` are their long-string bodies |
 | Unread `ns` members | the `ns-defined`/`ns-once` pipeline in the sift skill's `languages/lua.md` | its regex has no word boundary, so `options.revision` reads as `ns.revision` |
 | Standards pack | `SIFT_STANDARDS_PATH=$HOME/skills python3 <sift>/scripts/agents.py standards` | `wow-forever-addon` lives in `~/skills`, which the default search path misses |
 | Live roots (Lua) | `rg -n 'RegisterEvent\|SetScript\|hooksecurefunc\|SLASH_\|SlashCmdList\|LoadAddOn\|SendAddonMessage' -g '*.lua'` | — |
@@ -75,8 +75,12 @@ Things reached indirectly. The dead-code lens must treat these as referenced.
   `DEFAULTS`, `anchors` owned by Transport/Timetable.lua, debug trace) persist in players' saved files.
 - Sync wire format (Transport/Sync.lua, prefix `ShortPath1`): other players run older versions; message fields are
   a compatibility contract.
-- Slash commands `/path`, `/shortestpath` (`SLASH_SHORTESTPATHFOREVER*`, `SlashCmdList`).
-- `tools/*.py` are run by hand (README) and `tools/changelog.py` by `.github/workflows/release.yml`;
+- Slash commands `/path`, `/shortestpath` (`SLASH_SHORTESTPATHFOREVER*`, `SlashCmdList`) and `/spfnear`
+  (`SLASH_SPFNEAR1`, `SlashCmdList.SPFNEAR`, UI/Nearby.lua).
+- UI/Nearby.lua reads two optional globals other addons define: `LibQuestieDB` and `TweaksForever.API`.
+- `tools/*.py` are run by hand (README), except those a workflow runs: `ci.yml` runs `check_generated.py`,
+  `changelog.py --check`, `fetch_tracker_ui.py` and `typecheck.sh`; `release.yml` runs `release_check.py` and
+  `changelog.py`; `shared-tracker.yml` runs `check_shared_tracker.py`.
   `tools/bake_walks.lua` writes `Data/Walks.lua`; `tools/baker/bake.sh` drives `gen_nav.py` and the C# baker.
 - Test seams: `Path.after`, `Path.clock` and `Path.budget` are replaced by specs. Specs that load Journey without
   the walking search get `tests/path_fake.lua`, the whole `ns.Path` surface Journey calls; Journey has no
@@ -86,7 +90,9 @@ Things reached indirectly. The dead-code lens must treat these as referenced.
 - The `taxiLog` / debug trace in SavedVariables is read by a human after `/path debug`; a bounded,
   debug-gated write there is a live output, not residue.
 - `tests/journey_driver.lua` is a helper loaded by the journey specs; `journey_bench.lua` and
-  `walk_sim.lua` are run by hand (README).
+  `walk_sim.lua` are run by hand (README), `memory_bench.lua` and `nav_compare.lua` likewise
+  (`tests/*_performance.md`). `journey_bench.lua` reads `job.frames` and `settleRound`, and specs replace
+  `Path.clusters`, `Path.cacheKB` and `Path.graphKB`, so those stay.
 - `tests/api_ui.lua` rebinds `ns.Routes`/`ns.Docks` after load, which keeps UI/Route.lua's geometry-cache
   identity reset and the `ns.JourneyStops` guard live. `Path.decodes` exists for `runtime_bench.lua`.
 - `tools/pack_nav.py`'s chunk-table `pack()` converts older shipped maps; `tools/baker/README.md` documents it,
@@ -100,7 +106,7 @@ How each part of the tree is reviewed. Unlisted paths are `production`.
 
 | Path | Zone | Reason |
 |---|---|---|
-| `Data/Routes.lua`, `Data/Taxi.lua`, `Data/Transports.lua`, `Data/Portals.lua` | generated | `tools/gen_*.py`, "do not edit" header |
+| `Data/Routes.lua`, `Data/Taxi.lua`, `Data/Transports.lua`, `Data/Portals.lua`, `Data/Teleports.lua` | generated | `tools/gen_*.py`, "do not edit" header |
 | `Data/Walks.lua` | generated | `luajit tools/bake_walks.lua > Data/Walks.lua` |
 | `ShortestPathForever_Nav*/` | generated | `tools/baker/gen_nav.py` + `bake.sh`; excluded from luacheck/stylua/gitleaks |
 | `tools/` | script | offline data generators, never shipped |
@@ -142,9 +148,9 @@ Audit slices from lowest to highest risk:
 1. docs + config (`README.md`, `tools/baker/README.md`, `tests/journey_performance.md`, config files)
 2. `tools/` — offline generators; output is checked in, so a change is visible as a data diff
 3. `tests/`
-4. UI leaves: `UI/Alert.lua`, `UI/Arrow.lua`, `UI/Compass.lua`, `UI/Settings.lua`, `Transport/Taxi.lua`, `UI/Tracker.lua`, `UI/TrackerHost.lua`, `UI/MinimapPins.lua`, `UI/Nearby.lua`, `UI/WhatsNew.lua`
+4. UI leaves: `UI/Alert.lua`, `UI/Arrow.lua`, `UI/Compass.lua`, `UI/Settings.lua`, `Transport/Taxi.lua`, `UI/Tracker.lua`, `UI/TrackerHost.lua`, `UI/MinimapPins.lua`, `UI/Nearby.lua`, `UI/WhatsNew.lua`, `Locales/enUS.lua`
 5. Map layers: `UI/Map.lua`, `UI/Map.xml`, `UI/Route.lua`, `UI/Strokes.lua`, `UI/RouteTransports.lua`, `UI/Looks.lua`, `UI/RouteButton.lua`, `UI/StopPin.lua`, `UI/FlightLines.lua`
-6. State and wire: `Transport/Model.lua`, `Transport/Timetable.lua`, `Core/Core.lua`, `Transport/Observer.lua`, `Transport/Sync.lua`, `Transport/Teleports.lua`, `Core/API.lua` (SavedVariables, wire format,
+6. State and wire: `Transport/Model.lua`, `Transport/Timetable.lua`, `Core/Core.lua`, `Core/PlanContext.lua`, `Transport/Observer.lua`, `Transport/Sync.lua`, `Transport/Teleports.lua`, `Core/API.lua` (SavedVariables, wire format,
    public API)
 7. Planning core: `Routing/Planner.lua`, `Routing/Path*.lua`, `Journey/Journey*.lua`, `Journey/Itinerary.lua`, `Journey/Corpse.lua` (performance-tuned, 3 ms frame budget;
    Journey/Corpse.lua suspends and resumes the journey)
@@ -169,6 +175,15 @@ finding; audits add an entry when verifiers keep dismissing the same shape for t
 - **Blizzard-called handlers**: `tools/fetch_blizzard_ui.sh` does not pin the ObjectiveTracker Block/Module
   files, so a handler such as `OnBlockHeaderClick` (called by `Blizzard_ObjectiveTrackerBlock.lua`) has no caller
   in the tree and is still live.
+- **partial-load guard**: a nil check on `ns.db`, `ns.Teleports`, `ns.Landmasses` or `C_AddOns` that a spec or
+  UI check needs because it loads the module without the rest of the addon (`Core/PlanContext.lua` under
+  `tests/plan_context_spec.lua`, `/path perf` in `UI/Settings.lua` under `tests/activity_ui.lua`).
+- **byte-shared tracker files**: `UI/TrackerHost.lua`, `tools/fetch_tracker_ui.py` and
+  `tests/tracker_host_spec.lua` are held byte-identical across four addon repositories by
+  `tools/check_shared_tracker.py`. An export, comment or override that nothing here uses can have a reader in a
+  sibling repository, and a copy of this repository's own helper there cannot be folded in.
+- **middle dot join**: `tests/locales_spec.lua` requires two joined phrases to go through `L["%s · %s"]`, so the
+  middle dot in shown text is the project's join form.
 
 ## Anti-patterns
 

@@ -9,14 +9,15 @@ Addons can use `ShortestPathForever.API` (`version = 1`) with uiMapIDs and norma
   from anywhere else it leaves them out.
 - `EstimateDetail` takes the same arguments and cache and returns `{seconds, legs}`, each leg a fresh
   `{mode, to, seconds, wait?, newFlightPath?}`.
-- `NavigateRoute(owner, stops)` guides through 1–64 `{map, x, y, title}` stops in order, advancing on arrival
+- `NavigateRoute(owner, stops)` guides through 1 to 64 `{map, x, y, title, tooltip}` stops in order, advancing on arrival
   and ending after the last. Remaining stops have numbered map pins, and the way between them is drawn as
   planned, walks along the walking map, once worked out behind the current leg; the tracker and arrow show
   “Stop 2 of 4: …”.
 - `Navigate(owner, map, x, y, title, kind)` is the one-stop form.
 
   Both return a boolean; invalid input, combat or disabled Journeys return `false` without replacing guidance.
-  Titles are optional. A stop with `hold = true` waits for its owner to replace or cancel the route rather
+  Titles are optional, as is `tooltip`, a destination detail shown on the stop pin's tooltip and never used as
+  the arrow label. A stop with `hold = true` waits for its owner to replace or cancel the route rather
   than advancing on arrival. For held objective areas, optional `radius` (yards, finite and non-negative)
   hides walking directions inside the area while preserving ownership and the current stop. Directions
   resume outside it.

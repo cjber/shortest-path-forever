@@ -2,7 +2,7 @@
 -- ends, class teleports' landings), searched once here rather than guessed as straight lines and measured in game.
 -- Run from the repo root after rebaking a walking map or changing the places:
 -- luajit tools/bake_walks.lua > Data/Walks.lua
-local ns = { Docks = {}, Routes = {}, TaxiNodes = {}, TaxiPaths = {}, Portals = {} }
+local ns = {}
 for _, file in ipairs({
 	"Data/Routes.lua",
 	"Data/Transports.lua",

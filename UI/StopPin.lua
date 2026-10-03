@@ -12,7 +12,7 @@ local NUMERAL_CELL, NUMERAL_YELLOW, NUMERALS_PER_ROW, MAX_NUMERAL = 0.125, 0.5, 
 -- the mark as a badge over the button's lower right, as Legacy Forever's entrance pins wear the Legacy shield; the
 -- pin's hit rect reaches out over the badge.
 local LOOK_SIZE, BADGE_SIZE, BADGE_OFFSET = 22, 16, 4
--- Later stops stay stronger than Route.lua's later lines so their numbers remain legible.
+-- Later stops stay stronger than Strokes.lua's later lines so their numbers remain legible.
 local LATER_STOP_ALPHA = 0.9
 -- Route.lua groups stops by the button's size.
 ns.GoalAtlas, ns.StopSize = GOAL_ATLAS, STOP_SIZE

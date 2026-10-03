@@ -43,8 +43,8 @@ The detail behind each feature in the [README](../README.md).
   ![The compass strip with the next turns and destination](screenshots/compass.png)
 
 - **A route button on the minimap.** A round button in the game's own minimap button art starts and stops the
-  route in one click, and turns gold while a route is on. Right-click opens `/path`; *Show a route button on the
-  minimap* turns it off.
+  route in one click, and turns gold while a route is on. Right-click opens `/path`; *Show a minimap route
+  button* turns it off.
 
 - **Find nearby services.** Middle-click the route button or use `/spfnear` to open an addon-owned menu on the world
   map. It lists class and profession trainers, repairs, reagents, vendors, innkeepers, banks, auction houses, flight
@@ -73,8 +73,8 @@ The detail behind each feature in the [README](../README.md).
   tram shows at its Stormwind and Ironforge entrances. Portals are marked with where they go.
 - **Flight masters on the world map**, known and undiscovered, with the game's own flight point icons.
 - **In the map's filter menu.** *Flight Masters*, *Boat and Zeppelin Routes*, *Boats & Zeppelins*, *Lifts &
-  Tram* and *Portals* turn each layer off; *Other Faction's Routes* hides the
-  boats and zeppelins run by the other faction (anyone can ride them, so they show by default).
+  Tram* and *Portals* turn each layer off; *Other Faction's Routes* shows the
+  boats and zeppelins run by the other faction (anyone can ride them, but they are hidden by default).
 - **The next departures in the objective tracker.** Walk up to a dock, lift or tram station and a section
   appears beside your quests, counting down to the next arrival and departure of everything that calls there.
   On board, it shows where the boat calls next and when it arrives.

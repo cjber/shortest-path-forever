@@ -69,7 +69,7 @@ local function Art(kind)
 			if kind == "flightmaster" then
 				candidates = { TAXI[UnitFactionGroup("player")] or "taxinode_neutral", "taxinode_neutral" }
 			end
-			for _, atlas in ipairs(candidates or {}) do
+			for _, atlas in ipairs(candidates) do
 				local info = C_Texture.GetAtlasInfo(atlas)
 				if info then
 					found[kind] = { atlas = atlas, width = info.width, height = info.height }

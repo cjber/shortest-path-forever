@@ -21,15 +21,20 @@ pixels never enter product media.
 
 | File in `screenshots/` | Content |
 | --- | --- |
+| `flight.png` | A smooth flight line leaving Stormwind on the Elwynn Forest map |
 | `kalimdor.png` | Auberdine → Menethil → Theramore → Cenarion Hold, Silithus |
 | `darkshore.png` | A measured walk south from Auberdine to the Grove of the Ancients |
 | `docks.png` | Auberdine's clustered piers; arrivals/departures and destination glows |
 | `stops.png` | A three-stop API route through Thelsamar: flight master, quest giver, hand-in badges on the map's numbered quest buttons |
 | `tracker.png` | Capture 21's five Auberdine → Silithus steps, with the current totals header |
+| `detached.png` | The Journey tracker detached from the quest tracker, under its draggable "Forever tracker" heading |
 | `minimap.png` | Auberdine's piers as minimap pins, the last dotted stretch to the south pier, native Guide waypoint, the route button gold at the lower right |
 | `compass.png` | The compass: the game's own ticks and gold letters fading out at each end, its waypoint pin and the yards under it, no panel (on by default) |
 | `services.png` | The addon-owned nearby-services menu opened over the world map, with trainer and vendor specialty categories |
 | `demo.gif` | Eight-second montage: route pulse/settle, tracker countdown and gliding compass; under 0.5 MB |
+
+`tools/screenshots_services.py` draws the services scene and the route button, and
+`tools/screenshots_tracker.py` the detached tracker's heading.
 
 The static images render at two pixels per UI unit; the GIF renders at its final
 760×555 size to retain the route's physical pixel widths. A shared palette reserves
@@ -62,9 +67,8 @@ remains 8,000 ms. The animation uses fixed time steps, never the wall clock.
   putting the top edge inside the frame. Blizzard `Backdrop.lua`'s `textureUVs`
   maps the strip's left edge to the top; clockwise rotation joins all four corners.
   Shared `tooltip_backdrop` implements that mapping. World-map frames also now
-  apply Camelot's metal-corner offsets. The compass itself draws no panel since
-  2026-09-29: `UI/RouteButton.lua`'s plate is the client's own `ui-hud-minimap-button`
-  atlas (20 by 18), and `UI/Compass.lua` fills no background at all.
+  apply Camelot's metal-corner offsets. The compass (`UI/Compass.lua`) draws no panel.
+  `UI/RouteButton.lua`'s plate is the client's own `ui-hud-minimap-button` atlas (20 by 18).
 - `UI/Tracker.lua`, `Journey/JourneyGuide.lua`, `UI/Arrow.lua`, `UI/Compass.lua` and `UI/RouteButton.lua`
   supply the text, Guide's 25-yard bend threshold, marker proportions, stock fonts,
   the ribbon's fade ramp and its gold active state, and heading easing.
@@ -87,8 +91,7 @@ Remaining approximations: Pillow font baselines/rasterization differ by a few pi
 engine pin nudging and native minimap marker sizing are approximated. The minimap
 uses a selected 233⅓-yard radius and omits unrelated tracking POIs and the engine's
 navigation beam. Backgrounds use the skill's neutral backdrop. Quest markers from
-other tracked content in the captures are absent. The Journey tracker retains its previously verified bytes. Boats now uses
-`DockPierName`’s current “Auberdine northeast pier” label; the older mock said “north”.
+other tracked content in the captures are absent.
 
 No supplied capture shows the dock tooltip or Boats countdown. Tooltip text/anchors
 were checked against `UI/Map.lua`; the stock frame was compared with the skill's real

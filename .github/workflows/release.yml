@@ -10,19 +10,19 @@ jobs:
   release:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      actions: read # the packager creates the GitHub release
+      contents: write # the packager creates the GitHub release
+      actions: read # release_check.py reads the tagged commit's CI runs
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
-      # The release notes are this version's CHANGELOG entry, not the whole file;
-      # a tag without one fails here rather than shipping empty notes.
       - name: Verify full CI on the tagged commit
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python3 tools/release_check.py
+      # The release notes are this version's CHANGELOG entry, not the whole file;
+      # a tag without one fails here rather than shipping empty notes.
       - name: Release notes
         run: python3 tools/changelog.py "$GITHUB_REF_NAME" > .release-notes.md
       - uses: BigWigsMods/packager@e50a250f8705041e40f2fa1ddcb280a686d65aa0 # v2.6.1

@@ -216,9 +216,8 @@ function ns.AddDockTooltip(cluster)
 		GameTooltip_AddColoredLine(GameTooltip, status, StatusColor(departure))
 	else
 		local titles = {}
-		local kinds = cluster.kinds or {}
 		for _, kind in ipairs(ORDER) do
-			if kinds[kind] then
+			if cluster.kinds[kind] then
 				titles[#titles + 1] = KINDS[kind]
 			end
 		end
@@ -564,10 +563,6 @@ function ProviderMixin:RefreshAllData()
 end
 
 function ProviderMixin:OnCanvasScaleChanged()
-	if InCombatLockdown() then
-		ns.QueueMapRefresh()
-		return
-	end
 	self:RefreshAllData()
 end
 
@@ -639,7 +634,6 @@ function PortalProviderMixin:RefreshAllData()
 	local mapID = self:GetMap():GetMapID()
 	if not (mapID and ns.db.portals and self:GetMap():IsVisible()) then
 		self:RemoveAllData()
-		self.mapID = nil
 		return
 	end
 	local signature = mapID .. ":" .. tostring(ns.db.portals) .. ":" .. tostring(ns.db.otherFaction)

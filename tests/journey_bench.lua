@@ -57,13 +57,11 @@ for _, case in ipairs({
 	end
 	for _, method in ipairs({ "Find", "FindMany" }) do
 		local find = ns.Path[method]
-		if find then
-			ns.Path[method] = function(...)
-				local job = find(...)
-				job.method = method
-				jobs[#jobs + 1] = job
-				return job
-			end
+		ns.Path[method] = function(...)
+			local job = find(...)
+			job.method = method
+			jobs[#jobs + 1] = job
+			return job
 		end
 	end
 	ns.Path.after = function(fn)
@@ -109,9 +107,7 @@ for _, case in ipairs({
 			resets
 		)
 	)
-	if ns.Path.FindMany then
-		assert(many == 2 and round == 1 and rounds >= 2, "one committed route")
-		assert(resets == 0, "drawn walks cannot revert to straight lines")
-	end
+	assert(many == 2 and round == 1 and rounds >= 2, "one committed route")
+	assert(resets == 0, "drawn walks cannot revert to straight lines")
 	ns.ClearJourney()
 end

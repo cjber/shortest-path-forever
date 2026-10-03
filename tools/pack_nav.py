@@ -13,6 +13,10 @@ PART_TYPE = "---@type string[]\n-- stylua: ignore\n"
 MAX_BYTES = 8 * 1024 * 1024
 
 
+def part_prefix(map_id, field):
+    return PART_HEADER + PART_TYPE + f"ShortestPathForeverPathData[{map_id}].{field} = {{\n"
+
+
 def pack(source):
     return ENTRY.sub(lambda m: f'\t\t[{m[1]}] = "' + "".join(re.findall(r'"([^"]*)"', m[2])) + '",', source)
 
@@ -23,7 +27,7 @@ def split(source, map_id, limit=MAX_BYTES):
         if len(source.encode()) <= limit:
             break
         field, entries = section.groups()
-        part = PART_HEADER + PART_TYPE + f"ShortestPathForeverPathData[{map_id}].{field} = {{\n{entries}}}\n"
+        part = part_prefix(map_id, field) + f"{entries}}}\n"
         if len(part.encode()) > limit:
             raise ValueError(f"Map {map_id} field {field} needs splitting below {limit} bytes")
         parts[field] = part
@@ -43,7 +47,7 @@ def write_map(path, limit=MAX_BYTES):
         if not content.startswith(PART_HEADER):
             raise ValueError(f"Refusing to overwrite an unrecognized generated part: {part}")
         field = part.stem.removeprefix(path.stem + "_")
-        prefix = PART_HEADER + PART_TYPE + f"ShortestPathForeverPathData[{map_id}].{field} = {{\n"
+        prefix = part_prefix(map_id, field)
         if not content.startswith(prefix) or not content.endswith("}\n"):
             raise ValueError(f"Malformed generated part: {part}")
         # Repacking an already split map must be identical to packing the original bake.

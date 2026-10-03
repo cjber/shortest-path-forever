@@ -158,7 +158,7 @@ end
 
 function ns.JourneyStatus()
 	local pending, settleRound = Search.Status()
-	return pending > 0, settleRound, pending
+	return pending > 0, settleRound
 end
 
 local function StartGuide()
@@ -329,7 +329,7 @@ end
 -- GetTime is fixed). A corpse run holds the replan, so a route queued behind it plans its hops meanwhile.
 ---@return boolean
 function ns.JourneyReplanning()
-	return driver ~= nil and not CorpseRun() and (driver.elapsed >= REPLAN_DUE or driver.replannedAt == GetTime())
+	return not CorpseRun() and (driver.elapsed >= REPLAN_DUE or driver.replannedAt == GetTime())
 end
 
 ---@param self SPFJourneyDriver
