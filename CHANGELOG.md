@@ -11,6 +11,11 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **The way to your corpse starts on every death.** Releasing your spirit sometimes left your journey on screen instead of the red path back to your body, until the setting was switched off and on. The path now appears as soon as the game knows where your corpse lies.
+- **A map click on open sea tells you.** Shift-clicking the world map where no zone lies, such as the sea on a continent map or the gap between continents, now prints that no journey can be planned to that spot instead of starting a journey to nowhere.
+- **Nearby services says what is wrong.** Without QuestieDB installed the menu now reads Nearby services need the QuestieDB addon, and when QuestieDB is installed but cannot be read it says so, instead of listing every service as unavailable here.
+- **No empty trainer and vendor menus.** Where a zone has no trainers or vendors, Trainers by specialty and Vendors by specialty now read as unavailable here like the other services, instead of opening an empty list.
+
 ## [1.8.1] - 2026-10-03
 
 - **A journey you cannot walk to says why.** When you stand somewhere the walking map cannot place, and no flight, boat or spell gets you there either, the tracker now reads no walking path instead of No way there from here.

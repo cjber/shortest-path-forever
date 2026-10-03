@@ -94,6 +94,7 @@ read_globals = {
 	"UnitName",
 	"UnitOnTaxi",
 	"UnitPosition",
+	"UnitIsDeadOrGhost",
 	"UnitIsGhost",
 	"C_DeathInfo",
 	"UNKNOWN",

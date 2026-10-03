@@ -54,6 +54,16 @@ end
 driver.minimap()
 assert(#said == 1 and ns.JourneyInfo(), "a placed minimap click starts the journey")
 ns.ClearJourney()
+-- So does a world map click no zone covers: off the map the client names, or on a continent with no zone there.
+for _, located in ipairs({ { uiMap = 10, x = 1.2, y = 0.5 }, { uiMap = 10, x = 0.5, y = 0.5 } }) do
+	ns.located = located
+	assert(driver.click({ map = 1, x = 900, y = 0 }), "the click is still taken from the map")
+	assert(said[#said] == ns.L["no journey can be planned to that spot."] and not ns.JourneyInfo())
+end
+assert(#said == 3)
+ns.located = nil
+assert(driver.click({ map = 1, x = 900, y = 0 }) and #said == 3 and ns.JourneyInfo(), "a click on a zone plans")
+ns.ClearJourney()
 ns.Print = function() end
 
 -- A recent ride remains observed after disembarking; a docked boat must not force a round trip.

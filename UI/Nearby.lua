@@ -18,14 +18,23 @@ local Open
 local function Close()
 	menuOpen = false
 end
+-- What the menu says in place of the services: QuestieDB is still being read, is not installed, or could not be read.
+local STATUS = {
+	building = L["Loading QuestieDB…"],
+	missing = L["Nearby services need the QuestieDB addon."],
+	failed = L["Nearby services could not read QuestieDB."],
+}
+-- One of QuestieDB's zone tables, which it keeps as Lua source; nil when it does not read as a table.
+---@param source any
+---@return table?
 local function Table(source)
 	local chunk = type(source) == "string" and loadstring(source)
 	if not chunk then
-		return {}
+		return nil
 	end
 	setfenv(chunk, {})
 	local ok, value = pcall(chunk)
-	return ok and type(value) == "table" and value or {}
+	return ok and type(value) == "table" and value or nil
 end
 local function Nearest(key, world, specialty)
 	local best, distance
@@ -54,24 +63,27 @@ local function Build()
 		return
 	end
 	local lib = rawget(_G, "LibQuestieDB")
-	if not lib or not lib.RequireContract or not lib.RequireContract(2) then
-		state = "unavailable"
+	if not lib then
+		state = "missing"
 		return
 	end
-	local zones = lib.Support.Get("ZoneDB")
+	local zones = lib.RequireContract and lib.RequireContract(2) and lib.Support.Get("ZoneDB")
 	local expansion = lib.Enum and lib.Enum.byExpansion and lib.Enum.byExpansion.Classic
 	local constants = expansion and expansion.npcFlags
-	if not zones or not zones.private or not constants or not lib.Npc then
-		state = "unavailable"
+	-- Without the two zone tables no spawn has a map, which would read as no service anywhere.
+	local private = zones and zones.private
+	local area = private and Table(private.areaIdToUiMapId)
+	local parents = private and Table(private.subZoneToParentZone)
+	if not (area and parents and constants and lib.Npc) then
+		state = "failed"
 		return
 	end
 	index = {}
 	state = "building"
 	local co = coroutine.create(function()
-		local area = Table(zones.private.areaIdToUiMapId)
-		local override = Table(zones.private.areaIdToUiMapIdOverride)
-		local parents = Table(zones.private.subZoneToParentZone)
-		local parentOverride = Table(zones.private.subZoneToParentZoneOverride)
+		-- QuestieDB's own corrections to those two, which a flavour may leave out.
+		local override = Table(private.areaIdToUiMapIdOverride) or {}
+		local parentOverride = Table(private.subZoneToParentZoneOverride) or {}
 		local faction = UnitFactionGroup("player") == "Alliance" and "A" or "H"
 		local tweaks = rawget(_G, "TweaksForever")
 		local classIds = {}
@@ -157,7 +169,7 @@ local function Build()
 		repeat
 			local ok, err = coroutine.resume(co)
 			if not ok then
-				state = "unavailable"
+				state = "failed"
 				geterrorhandler()(err)
 				return
 			end
@@ -198,7 +210,7 @@ end
 local function AddService(root, service, world)
 	local place = world and Nearest(service.key, world)
 	local hasSpecialties = service.key == "trainer" or service.key == "vendor"
-	if hasSpecialties then
+	if hasSpecialties and place then
 		local submenu = root:CreateButton(service.label)
 		for _, specialty in ipairs(SpecialtyNames(service.key, world)) do
 			local specialist = Nearest(service.key, world, specialty)
@@ -209,14 +221,12 @@ local function AddService(root, service, world)
 				end
 			end)
 		end
-		if place then
-			submenu:CreateButton(L["Nearest"], function()
-				if Navigate(service.key, place) then
-					Close()
-					MenuUtil.CloseAllMenus()
-				end
-			end)
-		end
+		submenu:CreateButton(L["Nearest"], function()
+			if Navigate(service.key, place) then
+				Close()
+				MenuUtil.CloseAllMenus()
+			end
+		end)
 		return
 	end
 	local label = place and service.label or L["%s — unavailable here"]:format(service.label)
@@ -238,7 +248,7 @@ local function AddWorldMapTrackingEntry(_, root)
 		return
 	end
 	if state ~= "ready" then
-		submenu:CreateTitle(state == "building" and L["Loading QuestieDB…"] or L["Nearby services unavailable"])
+		submenu:CreateTitle(STATUS[state])
 		return
 	end
 	for _, service in ipairs(SERVICES) do
@@ -257,12 +267,8 @@ Open = function()
 	MenuUtil.CreateContextMenu(WorldMapFrame or UIParent, function(_, root)
 		root:AddMenuReleasedCallback(Close)
 		root:CreateTitle(L["Nearby services"])
-		if state == "building" then
-			root:CreateTitle(L["Loading QuestieDB…"])
-			return
-		end
 		if state ~= "ready" then
-			root:CreateTitle(L["Nearby services unavailable"])
+			root:CreateTitle(STATUS[state])
 			return
 		end
 		if not world then
