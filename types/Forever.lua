@@ -158,14 +158,10 @@ FlightPointPinMixin = nil
 ---@type Frame
 ObjectiveTrackerFrame = nil
 ---@class SPFTrackerManager
----@field GetContainerForModule fun(self: SPFTrackerManager, module: SPFTrackerModule): Frame?
----@field SetModuleContainer fun(self: SPFTrackerManager, module: SPFTrackerModule, container: Frame)
 ---@type SPFTrackerManager
 ObjectiveTrackerManager = nil
 
 ---@class ForeverTrackerHostAPI
----@field Attach fun(module: Frame)
----@field IsAttached fun(module: Frame?): boolean
 ---@field IsAttachedToQuestTracker fun(): boolean
 ---@field SetAttached fun(attached: boolean)
 ---@field GetSettings fun(): ForeverTrackerSettings

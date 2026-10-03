@@ -8,8 +8,9 @@
 
 ---@alias SPFAPIEnded "arrived"|"cleared"|"replaced"|"cancelled" -- reached the last stop; the player cleared it; another journey took over; the owner's own Cancel
 
--- What stands at a stop. Its pin on the world map becomes that mark (a quest's "!" or "?", a trainer, a flight
--- master, a dock) in a gold ring, and the minimap rings the spot instead of covering the game's own icon there.
+-- What stands at a stop. Its numbered pin on the world map wears that mark (a quest's "!" or "?", a trainer, a
+-- flight master, a dock) as a small badge on its lower right, a lone stop shows the mark alone, and the minimap
+-- rings the spot instead of covering the game's own icon there.
 ---@alias SPFAPIStopKind "pickup"|"turnin"|"objective"|"trainer"|"innkeeper"|"flightmaster"|"battlemaster"|"dungeon"|"boat"|"zeppelin"|"lift"|"tram"|"portal"
 
 ---@class SPFAPIStop
