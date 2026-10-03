@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+## [1.8.1] - 2026-10-03
+
 - **A journey you cannot walk to says why.** When you stand somewhere the walking map cannot place, and no flight, boat or spell gets you there either, the tracker now reads no walking path instead of No way there from here.
 - **A minimap click that goes nowhere tells you.** Shift-clicking a spot on the minimap that cannot be turned into a place, such as the corner of a square minimap, now prints that no journey can be planned to that spot, as the same click on the world map does.
 
