@@ -234,7 +234,6 @@ ShortestPathForeverPathData = nil
 ---@field now number
 ---@field walkSpeed? number
 ---@field waterWalking? boolean
----@field revision? number
 ---@field ride? {route: number, dock: number, arrive: number}
 -- [teleport index] = server ms when it can be cast; absent when it cannot.
 ---@field teleportReady? table<number, number>

@@ -45,11 +45,6 @@ local function Settling()
 	return ns.JourneyStatus() == true
 end
 
--- So does its timed replan, which plans in the frame like a hop does.
-local function Replanning()
-	return ns.JourneyReplanning()
-end
-
 ---@param hop SPFHop
 local function PlanHop(hop)
 	local legs = ns.EstimateLegs(hop.from, hop.to)
@@ -140,16 +135,15 @@ Step = function()
 		Schedule()
 		return
 	end
-	if ns.Path.Busy() or Settling() or Replanning() then
+	-- The journey's timed replan also comes first: it plans in the frame like a hop does.
+	if ns.Path.Busy() or Settling() or ns.JourneyReplanning() then
 		Schedule()
 		return
 	end
 	local hop, plan = Next()
 	if dirty and (DrawDue() or not hop) then
 		dirty, drawnAt = false, GetTime()
-		if ns.RefreshJourneyPreview then
-			ns.RefreshJourneyPreview()
-		end
+		ns.RefreshJourneyPreview()
 		Schedule()
 	elseif plan then
 		---@cast hop -?

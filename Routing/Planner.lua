@@ -92,7 +92,7 @@ function Planner.LegPoints(leg, routes)
 	local points = { { map = leg.from.map, x = leg.from.x, y = leg.from.y } }
 	if leg.mode == "flight" then
 		for _, hop in ipairs(leg.hops or {}) do
-			for i = 1, #(hop.points or {}), 3 do
+			for i = 1, #hop.points, 3 do
 				points[#points + 1] = { map = hop.points[i], x = hop.points[i + 1], y = hop.points[i + 2] }
 			end
 		end
@@ -308,7 +308,7 @@ local function Subset(labels, first, second, target)
 	return true
 end
 
--- Only callers with immutable data tables opt in; replacing data or advancing revision rebuilds topology.
+-- Only callers with immutable data tables opt in; replacing data rebuilds topology.
 -- Taxi discovery is read each plan because the client mutates its known-node set in place.
 local CACHE_KEYS = {
 	"docks",
@@ -323,7 +323,6 @@ local CACHE_KEYS = {
 	"otherFaction",
 	"waterWalking",
 	"walkSpeed",
-	"revision",
 }
 
 ---@param options SPFPlanOptions
