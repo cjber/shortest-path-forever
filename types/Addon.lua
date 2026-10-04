@@ -133,6 +133,7 @@
 ---@field alerts? boolean
 ---@field alertSound? boolean
 ---@field journey? boolean
+---@field tomtom? boolean -- answer third-party guides' TomTom waypoints with a journey while TomTom is absent
 ---@field taxiRoute? boolean
 ---@field teleports? boolean
 ---@field hearthMinimumSavings? number -- seconds the Hearthstone must save over the best non-hearth plan

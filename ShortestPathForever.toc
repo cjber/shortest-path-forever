@@ -60,3 +60,4 @@ UI\Settings.lua
 UI\WhatsNew.lua
 Core\API.lua
 Journey\Itinerary.lua
+Core\TomTom.lua

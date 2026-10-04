@@ -11,6 +11,7 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **A guide that sets a TomTom waypoint can plan the journey here.** With TomTom not installed, Questie and other guides that set a waypoint through it now start a Shortest Path journey instead, carrying the guide's title; *Let guides set TomTom waypoints* in `/path` turns it off.
 - **The stop you are travelling to stands out on the map.** Its numbered button is lit the way the game lights the quest it tracks, and the later stops keep the plain button.
 - **The journey list holds still.** A step whose countdown sat right at the edge of the tracker gained and lost a second line as the time ticked, which shook the whole column up and down each second. A step that has taken a second line now keeps it until the steps themselves change.
 - **Stormwind's flight point matches the current game build.** The game moved Stormwind's flight point about fourteen yards, so journeys through Stormwind now lead to the new spot and flights out of Stormwind are drawn from it.
