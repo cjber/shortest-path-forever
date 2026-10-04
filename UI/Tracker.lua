@@ -162,7 +162,8 @@ local function JourneyHeader(result, index, loading)
 end
 
 local function RefreshBlockText(blocks)
-	-- Countdown ticks reuse Blizzard's lines; only changed wrapping needs a new layout.
+	-- Countdown ticks reuse Blizzard's lines; only a row that outgrows its line needs a new layout. A row whose
+	-- timer sits at the wrapping width would otherwise gain and lose a line each second and shake the column.
 	local resized = false
 	for _, entry in ipairs(blocks) do
 		local block = module:GetExistingBlock(entry.key)
@@ -182,7 +183,7 @@ local function RefreshBlockText(blocks)
 				local line = block:GetExistingLine(row.key)
 				if line and line.used and line.Text:GetText() ~= row.text then
 					local height = block:SetStringText(line.Text, row.text, true, RowColor(row), block.isHighlighted)
-					resized = resized or height ~= line:GetHeight()
+					resized = resized or height > line:GetHeight() + 0.5
 				end
 			end
 		end
