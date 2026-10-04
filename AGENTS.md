@@ -19,8 +19,8 @@ python3 tools/changelog.py --check
 python3 .sift/gate.py --base origin/main && python3 .sift/agents.py check
 ```
 
-The same gate CI runs, plus the UI checks (`tests/ui.sh`), shellcheck and shfmt on `tools/`, actionlint and zizmor on the workflows, gitleaks on
-the history, and the pinned sift checks. Every version needs a `CHANGELOG.md` entry (prose, bold-lead bullets)
+CI runs the same gate, plus the UI checks (`tests/ui.sh`), shellcheck and shfmt on the shell scripts, actionlint and zizmor on the workflows,
+and gitleaks on the history. Every version needs a `CHANGELOG.md` entry (prose, bold-lead bullets)
 before its `v*` tag, since the release publishes it as the notes.
 
 ## Layout
@@ -72,8 +72,7 @@ before its `v*` tag, since the release publishes it as the notes.
 
 - WFA-3 (no minimap button): the route button is a minimap button by owner request, and it is an action, not a
   second options surface. Every option still lives in the settings page, which the slash command, the compartment
-  entry and the button's right-click open; the button starts and stops the route; middle-click opens the service finder. Owner decisions
-  2026-09-29 and 2026-09-30.
+  entry and the button's right-click open; the button starts and stops the route; middle-click opens the service finder.
 - WFA-28: `Data/Routes.lua` (boat and zeppelin routes, docks, periods): wago.tools `TaxiPathNode` for the pinned
   build, timed by the CMaNGOS mangos-classic transport model and stretched onto classic-db `transports.period`;
   QuestieDB's object `waypoints` field is empty in its Forever store and AtlasLoot has no travel data. Live
