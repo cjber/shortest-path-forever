@@ -190,6 +190,11 @@ _G.UIParent = CreateFrame("Frame")
 _G.UIParent:SetSize(1920, 1080)
 _G.ObjectiveTrackerFrame = CreateFrame("Frame", nil, UIParent)
 _G.ObjectiveTrackerFrame:SetSize(250, 600)
+-- The shared stub gives every frame a bare Header table; the real tracker header is a frame, and the host asks
+-- whether it is shown before it moves it. A hidden header keeps the smoke run off the native layout path.
+_G.ObjectiveTrackerFrame.Header.IsShown = function()
+	return false
+end
 _G.CreateFramePoolCollection = function()
 	return {
 		GetOrCreatePool = function()

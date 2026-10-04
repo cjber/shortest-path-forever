@@ -10,6 +10,15 @@ local _, ns = ...
 ---@field IsAttached fun(module: Frame?): boolean
 ---@field Debug fun(): string the tracker stack's anchors, heights and in-combat state, for /agf tracker
 
+---@class ForeverNativeTrackerHeader : Frame
+---@field Text FontString
+---@field MinimizeButton Button
+
+---@class ForeverNativeTrackerFrame : Frame
+---@field Header ForeverNativeTrackerHeader
+---@field NineSlice Frame?
+---@field isCollapsed? boolean
+
 -- Sharing the native tracker collection also shares its Edit Mode execution path.
 -- Keep our sections and their frame pools entirely outside that collection.
 if not ObjectiveTrackerFrame then
@@ -315,21 +324,110 @@ local function BesideNative(width, screenHeight)
 	return x, top * toHost - screenHeight
 end
 
-local function LayoutModules(width, available, height)
+-- The native "All Objectives" header sits at the top of the shared column. Blizzard's trackers re-anchor it to
+-- the native frame at the end of every update (ObjectiveTrackerFrameMixin:UpdateHeaderPosition), so our anchor is
+-- re-applied right after with a secure post-hook. Only SetPoint and ClearAllPoints are called on the unprotected
+-- header; no field on a Blizzard frame or table is written, and the protected native frame is never moved in
+-- combat.
+local HEADER_TOP_PADDING = 38
+local nativeHeader = ObjectiveTrackerFrame.Header --[[@as ForeverNativeTrackerHeader?]]
+local headerAdopted = false
+---@type { point: string, relativeTo: ScriptRegion, relativePoint: string, x: number, y: number }?
+local nativeHeaderAnchor
+
+local function NativeHeaderShown()
+	return nativeHeader ~= nil and nativeHeader:IsShown() and ObjectiveTrackerFrame:IsShown()
+end
+
+local function NativeCollapsed()
+	return ObjectiveTrackerFrame.isCollapsed == true
+end
+
+local function CaptureNativeHeaderAnchor()
+	if nativeHeaderAnchor or not nativeHeader then
+		return
+	end
+	local point, relativeTo, relativePoint, x, y = nativeHeader:GetPoint()
+	nativeHeaderAnchor = {
+		point = point or "TOPLEFT",
+		relativeTo = relativeTo or ObjectiveTrackerFrame,
+		relativePoint = relativePoint or "TOPLEFT",
+		x = x or 0,
+		y = y or 0,
+	}
+end
+
+local function AdoptNativeHeader()
+	if not nativeHeader then
+		return
+	end
+	if not headerAdopted then
+		CaptureNativeHeaderAnchor()
+		headerAdopted = true
+	end
+	nativeHeader:ClearAllPoints()
+	nativeHeader:SetPoint("TOPLEFT", host, "TOPLEFT", 0, 0)
+end
+
+local function RestoreNativeHeader()
+	if not headerAdopted or not nativeHeader then
+		return
+	end
+	local anchor = nativeHeaderAnchor
+	if not anchor then
+		return
+	end
+	nativeHeader:ClearAllPoints()
+	nativeHeader:SetPoint(anchor.point, anchor.relativeTo, anchor.relativePoint, anchor.x, anchor.y)
+	headerAdopted = false
+end
+
+-- Blizzard's trackers put their own header anchor back at the end of every update, after any content that changed
+-- it, so ours is re-applied right after. The same update restores the native frame's own anchor through the
+-- managed frame containers, so the host is marked dirty too: the frame came back to the saved slot and only a
+-- fresh reflow restacks it below the column. This is a secure post-hook: it moves the unprotected header only and
+-- reads no Blizzard state, so the protected tracker's Edit Mode and combat paths stay clean.
+local function OnNativeLayout()
+	if headerAdopted then
+		AdoptNativeHeader()
+	end
+	if host.MarkDirty then
+		host:MarkDirty()
+	end
+end
+hooksecurefunc(ObjectiveTrackerFrame, "UpdateHeaderPosition", OnNativeLayout) -- taint-ok: unprotected header
+-- The managed frame containers re-anchor the native frame from their own Layout and then report the new height;
+-- no header update follows that path, so it marks the host dirty on its own.
+hooksecurefunc(ObjectiveTrackerFrame, "UpdateHeight", OnNativeLayout) -- taint-ok: unprotected header
+
+-- Lays every section out from the host's top, leaving `reserve` pixels for the native header. Returns whether any
+-- section drew, which decides if the header moves and the native frame leaves its title room.
+local function LayoutModules(width, available, reserve)
 	table.sort(modules, function(a, b)
 		return a.uiOrder < b.uiOrder
 	end)
-	for _, module in ipairs(modules) do
+	local heights, total = {}, 0
+	for index, module in ipairs(modules) do
 		module:SetWidth(width)
+		module:Update(math.max(0, available - total))
+		local used = module:GetContentsHeight()
+		heights[index] = used
+		if used > 0 then
+			total = total + used + 10
+		end
+	end
+	local hasSections = total > 0
+	local height = hasSections and reserve or 0
+	for index, module in ipairs(modules) do
 		module:ClearAllPoints()
 		module:SetPoint("TOPLEFT", host, "TOPLEFT", 0, -height)
-		module:Update(math.max(0, available - height))
-		local used = module:GetContentsHeight()
+		local used = heights[index]
 		if used > 0 then
 			height = height + used + 10
 		end
 	end
 	host:SetHeight(math.max(1, height))
+	return hasSections
 end
 local function Layout()
 	queued = false
@@ -371,6 +469,8 @@ local function Layout()
 	end
 	grip:SetShown(not attached)
 	if not attached then
+		RestoreNativeHeader()
+		host:Show()
 		MatchNativeScale()
 		local scale = host:GetEffectiveScale() / UIParent:GetEffectiveScale()
 		local screenWidth, screenHeight = UIParent:GetWidth() / scale, UIParent:GetHeight() / scale
@@ -396,9 +496,9 @@ local function Layout()
 		return
 	end
 	if InCombatLockdown() and attached then
-		-- The native tracker is protected: in combat it cannot be restacked below our column, and Blizzard returns it
-		-- to its saved Edit Mode slot. Move our private column above or beside the native frame, keeping clear of
-		-- the minimap, and resume the full reflow on PLAYER_REGEN_ENABLED.
+		-- The native tracker is protected: in combat it cannot be restacked below our column. The header is not
+		-- protected and nothing protected anchors to it, so it stays at the top of our column. Only Blizzard moving
+		-- the native frame itself sends us to the one-column fallback below its content.
 		if appliedNativeAnchor and IsAppliedNativeAnchor(ObjectiveTrackerFrame:GetPoint()) then
 			-- Still stacked where the last reflow left both frames: nothing to move.
 			return
@@ -426,9 +526,28 @@ local function Layout()
 			end
 		elseif point then
 			local nativePoint, hostPoint = StackPoints(point)
-			-- If there is no room above the restored tracker, use the side away from its
-			-- anchored edge. This keeps the private column visible without moving or
-			-- overlapping the protected frame.
+			-- First choice: one column. The header goes back to the native frame and our sections sit directly below
+			-- the native tracker's visible content, measured from its own content region, so the column reads the
+			-- header, the game's modules, then the Forever sections. The protected frame stays where Blizzard put it.
+			local nineSlice = ObjectiveTrackerFrame.NineSlice
+			local nativeBottom = ObjectiveTrackerFrame:GetBottom()
+			local contentBottom = nineSlice and ObjectiveTrackerFrame:IsShown() and nineSlice:GetBottom()
+				or nativeBottom
+			local contentGap = (nativeBottom and contentBottom) and (contentBottom - nativeBottom) or 0
+			RestoreNativeHeader()
+			host:SetPoint("TOP", ObjectiveTrackerFrame, "BOTTOM", 0, contentGap)
+			local layoutScale = host.GetEffectiveScale and host:GetEffectiveScale() or 1
+			local layoutScreenScale = UIParent.GetEffectiveScale and UIParent:GetEffectiveScale() or layoutScale
+			local layoutMargin = 24 * layoutScreenScale / layoutScale
+			contentBottom = contentBottom or 0
+			LayoutModules(host:GetWidth(), math.max(0, contentBottom - layoutMargin), 0)
+			if contentBottom - (host:GetHeight() or 0) >= layoutMargin then
+				return
+			end
+			-- The one-column placement would run off the bottom of the screen. If there is no room above the restored
+			-- tracker, use the side away from its anchored edge. This keeps the private column visible without moving
+			-- or overlapping the protected frame.
+			host:ClearAllPoints()
 			local nativeTop = ObjectiveTrackerFrame:GetTop() or 0
 			local screenTop = UIParent:GetHeight() or nativeTop
 			local hostScale = host.GetEffectiveScale and host:GetEffectiveScale() or 1
@@ -459,6 +578,7 @@ local function Layout()
 	end
 	-- Read the global each time, not once at load: Blizzard_EditMode is load-on-demand, so it may appear later.
 	if EditModeManagerFrame and EditModeManagerFrame.IsEditModeActive and EditModeManagerFrame:IsEditModeActive() then
+		RestoreNativeHeader()
 		return
 	end
 	table.sort(modules, function(a, b)
@@ -485,7 +605,27 @@ local function Layout()
 	local layoutMargin = 40 * layoutScreenScale / layoutScale
 	local available = math.max(0, (host:GetTop() or UIParent:GetHeight()) - layoutMargin)
 	host:SetWidth(width)
-	LayoutModules(width, available, 0)
+	-- The native "All Objectives" header rides at the top of the shared column whenever both it and a section are
+	-- shown, so its title stays above the Forever rows. A hidden or collapsed header leaves the host as it was,
+	-- with no reserved gap.
+	local collapsed = NativeCollapsed()
+	local headerCandidate = not collapsed and NativeHeaderShown()
+	local hasSections = false
+	if collapsed then
+		RestoreNativeHeader()
+		host:SetHeight(1)
+		host:Hide()
+	else
+		host:Show()
+		local reserve = headerCandidate and HEADER_TOP_PADDING or 0
+		hasSections = LayoutModules(width, math.max(0, available - reserve), reserve)
+		if hasSections and headerCandidate then
+			AdoptNativeHeader()
+		else
+			RestoreNativeHeader()
+		end
+	end
+	local headerReserve = hasSections and headerCandidate and HEADER_TOP_PADDING or 0
 	-- If the combined column would run below the screen, move the whole
 	-- column upward from its saved edit-mode slot.  The offset is calculated
 	-- from the original point each pass, so repeated refreshes never drift.
@@ -519,7 +659,9 @@ local function Layout()
 	local nativeScale = ObjectiveTrackerFrame.GetEffectiveScale and ObjectiveTrackerFrame:GetEffectiveScale() or 1
 	local hostScale = host.GetEffectiveScale and host:GetEffectiveScale() or 1
 	local hostLeft = (host:GetLeft() or 0) * hostScale / screenScale
-	local nativeY = (host:GetBottom() or 0) * hostScale / screenScale - UIParent:GetHeight()
+	-- The header no longer sits inside the native frame's slot, so the frame moves up by exactly the room its
+	-- title used to take; its first module then starts where the private host ends.
+	local nativeY = ((host:GetBottom() or 0) + headerReserve) * hostScale / screenScale - UIParent:GetHeight()
 	-- Blizzard restores the native frame's own height whenever it updates, and in combat we cannot shorten it
 	-- again. Clamped to the screen, the taller frame would be pushed up over our column; unclamped it only runs
 	-- off the bottom edge until combat ends.
@@ -552,7 +694,7 @@ local function Layout()
 		requestedNativeHeight = currentNativeHeight
 	end
 	local bottom = host.GetBottom and host:GetBottom() or ((host:GetTop() or 0) - host:GetHeight())
-	local remaining = math.max(1, bottom - margin)
+	local remaining = math.max(1, bottom + headerReserve - margin)
 	local nativeHeight = math.min(requestedNativeHeight or remaining, remaining)
 	if math.abs(currentNativeHeight - nativeHeight) > 0.5 then
 		ObjectiveTrackerFrame:SetHeight(nativeHeight)
@@ -567,7 +709,7 @@ function host.MarkDirty(_)
 	end
 end
 function host.IsCollapsed(_)
-	return false
+	return attached == true and NativeCollapsed()
 end
 function host:ForceExpand()
 	self:MarkDirty()
@@ -624,6 +766,14 @@ end)
 ObjectiveTrackerFrame:HookScript("OnSizeChanged", function()
 	host:MarkDirty()
 end)
+-- Collapsing "All Objectives" hides the shared sections too. Mark the host dirty on the click that flips it; the
+-- native collapse method itself stays unhooked and untouched, and the native header keeps its parent so its button
+-- resolves the native container normally.
+if nativeHeader and nativeHeader.MinimizeButton then
+	nativeHeader.MinimizeButton:HookScript("OnClick", function()
+		host:MarkDirty()
+	end)
+end
 -- Edit Mode restores Blizzard's saved anchor through its public callbacks. Reflow
 -- on those events instead of polling the native frame every frame.
 if EventRegistry and EventRegistry.RegisterCallback then
