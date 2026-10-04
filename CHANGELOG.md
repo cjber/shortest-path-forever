@@ -11,6 +11,7 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **Flight times come from your own rides.** A flight you take is timed from take-off to landing, and that time is used the next time a journey plans the same route. While you are in the air the tracker counts the leg down from how far along the drawn route you are, so a slow or fast ride no longer makes its arrival time drift.
 - **The stop you are travelling to stands out on the map.** Its numbered button is lit the way the game lights the quest it tracks, and the later stops keep the plain button.
 - **The journey list holds still.** A step whose countdown sat right at the edge of the tracker gained and lost a second line as the time ticked, which shook the whole column up and down each second. A step that has taken a second line now keeps it until the steps themselves change.
 - **Stormwind's flight point matches the current game build.** The game moved Stormwind's flight point about fourteen yards, so journeys through Stormwind now lead to the new spot and flights out of Stormwind are drawn from it.

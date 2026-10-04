@@ -83,5 +83,8 @@ The detail behind each feature in the [README](../README.md).
 - **Times from real rides.** Each route's loop time comes from the game's own path data, so one ride tells
   the addon where that boat is for hours. Ride a boat, lift or tram once and its schedule syncs. Until then
   its dock says *no sighting yet*, and a journey counts half a loop as its wait, shown as *leaves in about 2:45*.
+  A flight is timed from take-off to landing, and that time is preferred over the shipped estimate from then on. A
+  flight's remaining time counts down from how far along the drawn route you are, so it holds steady on a slow or
+  fast ride.
 - **Shared between players.** Sightings are passed on quietly over guild, party and yell at the docks, so
   someone else's ride can time your boat. No chat messages are shown; turn it off in the settings.

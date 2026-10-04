@@ -319,6 +319,7 @@ local CACHE_KEYS = {
 	"teleports",
 	"landmasses",
 	"baked",
+	"taxiTimes",
 	"faction",
 	"otherFaction",
 	"waterWalking",
@@ -412,11 +413,13 @@ local function Plan(options)
 		end
 		for _, path in ipairs(options.taxiPaths or {}) do
 			if taxis[path.from] and taxis[path.to] then
+				-- A ride this character has flown overrides the shipped estimate for that directed path.
+				local measured = options.taxiTimes and options.taxiTimes[path.from .. ":" .. path.to]
 				Edge(taxis[path.from], taxis[path.to], {
 					mode = "flight",
 					path = path,
-					duration = path.seconds * 1000,
-					estimated = path.estimated,
+					duration = (measured or path.seconds) * 1000,
+					estimated = not measured and path.estimated,
 				})
 			end
 		end

@@ -216,9 +216,11 @@ local function TravelTick()
 	end
 	local near = yards and yards <= 200
 	local observing = ns.IsObservingRide()
+	-- A taxi takes control without movement events, so its own flag keeps the clock sampling.
+	local taxi = UnitOnTaxi("player")
 	local journey = ns.HasJourney()
 	probes = math.max(0, probes - 1)
-	local active = near or observing or journey or ns.db.debug or moving or probes > 0
+	local active = near or observing or taxi or journey or ns.db.debug or moving or probes > 0
 	if not active and travelTicker then
 		travelTicker:Cancel()
 		travelTicker = nil
@@ -243,6 +245,7 @@ ns.Init(function()
 		"ZONE_CHANGED_NEW_AREA",
 		"PLAYER_STARTED_MOVING",
 		"PLAYER_STOPPED_MOVING",
+		"PLAYER_CONTROL_LOST",
 		"PLAYER_REGEN_ENABLED",
 	}) do
 		travel:RegisterEvent(event)

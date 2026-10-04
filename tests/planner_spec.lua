@@ -279,6 +279,12 @@ near(flying.arrive, 14000)
 -- Taxis leave at once: the flight master's boarding time is part of the flight, never a wait.
 near(flying.wait, 0)
 near(flying.arrive - flying.depart, 13000)
+-- A ride measured over that directed path replaces the shipped estimate and is no longer a guess.
+flight.taxiTimes = { ["1:2"] = 4 }
+flying = only(Plan(flight), "flight")
+near(flying.arrive - flying.depart, 7000)
+assert(not flying.estimated, "a measured flight is no longer estimated")
+flight.taxiTimes = nil
 flight.taxiKnown = { [1] = true }
 only(Plan(flight), "walk")
 flight.taxiKnown = { [2] = true }

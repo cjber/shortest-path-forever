@@ -25,6 +25,7 @@ Transport\Model.lua
 Routing\Planner.lua
 Core\Core.lua
 Transport\Timetable.lua
+Transport\TaxiTimes.lua
 Core\PlanContext.lua
 UI\Nearby.lua
 Transport\Observer.lua

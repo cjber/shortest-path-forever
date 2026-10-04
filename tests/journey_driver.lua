@@ -185,6 +185,7 @@ ns.Init = function(fn)
 	fn()
 end
 ns.WakeTravel = noop
+ns.OnTravelTick = noop
 ns.NowMs = function()
 	return now
 end
@@ -210,6 +211,7 @@ ns.Path = path.Path
 load("Transport/Model.lua")
 -- The real timetable, with no sightings until a spec records one.
 load("Transport/Timetable.lua")
+load("Transport/TaxiTimes.lua")
 load("Core/PlanContext.lua")
 load("Routing/Planner.lua")
 load("Journey/JourneySteps.lua")

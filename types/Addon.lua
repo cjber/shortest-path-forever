@@ -147,6 +147,7 @@
 ---@field seenVersion? string -- the version last loaded, for the line after an update (WhatsNew.lua)
 ---@field debug? boolean
 ---@field anchors table<string, table<number, SPFAnchor>>
+---@field taxiTimes? table<string, number> -- measured seconds per directed flight path, "from:to"
 ---@field trace? (number|string)[][]
 ---@field taxiLog? table<string, {seen: number, showsNodes: boolean, nodes: string[]}>
 ---@class SPFCharacterDatabase
@@ -244,6 +245,7 @@ ShortestPathForeverPathData = nil
 ---@field routes? table<number, SPFRoute>
 ---@field taxiNodes? table<number, SPFTaxiNode>
 ---@field taxiPaths? SPFTaxiPath[]
+---@field taxiTimes? table<string, number> -- measured seconds by directed path, overriding the shipped estimate
 ---@field taxiKnown? table<number, boolean>
 ---@field portals? SPFPortal[]
 ---@field teleports? SPFTeleportPlace[]
