@@ -155,9 +155,15 @@ local eventRegistry = {
 		end
 	end,
 }
-local editMode = { active = false }
+local editMode = { active = false, shown = false, scripts = {} }
 function editMode:IsEditModeActive()
 	return self.active
+end
+function editMode:IsShown()
+	return self.shown
+end
+function editMode:HookScript(kind, fn)
+	self.scripts[kind] = fn
 end
 local env
 env = setmetatable({
@@ -329,11 +335,17 @@ native:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
 eventRegistry:TriggerEvent("EditMode.SavedLayouts")
 drain()
 check(native.point[1] == "TOPLEFT" and native.point[2] == parent, "private host repairs native reanchor independently")
-editMode.active = true
+editMode.active, editMode.shown = true, true
 eventRegistry:TriggerEvent("EditMode.Enter")
 check(host.shown == false, "private tracker hides while Edit Mode owns native slot")
 check(native.clamped == true, "Edit Mode gets the native frame's screen clamp back")
-editMode.active = false
+-- CheckHideAndLockEditMode hides the manager without exiting it: active stays true and no EditMode.Exit runs.
+check(editMode.scripts.OnHide ~= nil, "private tracker follows the Edit Mode manager's own hide")
+editMode.shown = false
+editMode.scripts.OnHide(editMode)
+drain()
+check(host.shown == true, "private tracker returns when a locked Edit Mode hides its manager")
+editMode.active, editMode.shown = false, false
 eventRegistry:TriggerEvent("EditMode.Exit")
 drain()
 check(host.shown == true, "private tracker returns after Edit Mode")
