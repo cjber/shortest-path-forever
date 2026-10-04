@@ -16,6 +16,7 @@ local _, ns = ...
 
 ---@class ForeverNativeTrackerFrame : Frame
 ---@field Header ForeverNativeTrackerHeader
+---@field NineSlice Frame?
 ---@field isCollapsed? boolean
 
 -- Sharing the native tracker collection also shares its Edit Mode execution path.
@@ -329,8 +330,7 @@ end
 -- header; no field on a Blizzard frame or table is written, and the protected native frame is never moved in
 -- combat.
 local HEADER_TOP_PADDING = 38
----@type ForeverNativeTrackerHeader?
-local nativeHeader = ObjectiveTrackerFrame.Header
+local nativeHeader = ObjectiveTrackerFrame.Header --[[@as ForeverNativeTrackerHeader?]]
 local headerAdopted = false
 ---@type { point: string, relativeTo: ScriptRegion, relativePoint: string, x: number, y: number }?
 local nativeHeaderAnchor
@@ -383,14 +383,22 @@ local function RestoreNativeHeader()
 end
 
 -- Blizzard's trackers put their own header anchor back at the end of every update, after any content that changed
--- it, so ours is re-applied right after. This is a secure post-hook: it moves the unprotected header only and reads
--- no Blizzard state, so the protected tracker's Edit Mode and combat paths stay clean.
-local function ReapplyNativeHeader()
+-- it, so ours is re-applied right after. The same update restores the native frame's own anchor through the
+-- managed frame containers, so the host is marked dirty too: the frame came back to the saved slot and only a
+-- fresh reflow restacks it below the column. This is a secure post-hook: it moves the unprotected header only and
+-- reads no Blizzard state, so the protected tracker's Edit Mode and combat paths stay clean.
+local function OnNativeLayout()
 	if headerAdopted then
 		AdoptNativeHeader()
 	end
+	if host.MarkDirty then
+		host:MarkDirty()
+	end
 end
-hooksecurefunc(ObjectiveTrackerFrame, "UpdateHeaderPosition", ReapplyNativeHeader) -- taint-ok: unprotected header only
+hooksecurefunc(ObjectiveTrackerFrame, "UpdateHeaderPosition", OnNativeLayout) -- taint-ok: unprotected header
+-- The managed frame containers re-anchor the native frame from their own Layout and then report the new height;
+-- no header update follows that path, so it marks the host dirty on its own.
+hooksecurefunc(ObjectiveTrackerFrame, "UpdateHeight", OnNativeLayout) -- taint-ok: unprotected header
 
 -- Lays every section out from the host's top, leaving `reserve` pixels for the native header. Returns whether any
 -- section drew, which decides if the header moves and the native frame leaves its title room.
@@ -488,10 +496,9 @@ local function Layout()
 		return
 	end
 	if InCombatLockdown() and attached then
-		RestoreNativeHeader()
-		-- The native tracker is protected: in combat it cannot be restacked below our column, and Blizzard returns it
-		-- to its saved Edit Mode slot. Move our private column above or beside the native frame, keeping clear of
-		-- the minimap, and resume the full reflow on PLAYER_REGEN_ENABLED.
+		-- The native tracker is protected: in combat it cannot be restacked below our column. The header is not
+		-- protected and nothing protected anchors to it, so it stays at the top of our column. Only Blizzard moving
+		-- the native frame itself sends us to the one-column fallback below its content.
 		if appliedNativeAnchor and IsAppliedNativeAnchor(ObjectiveTrackerFrame:GetPoint()) then
 			-- Still stacked where the last reflow left both frames: nothing to move.
 			return
@@ -519,9 +526,28 @@ local function Layout()
 			end
 		elseif point then
 			local nativePoint, hostPoint = StackPoints(point)
-			-- If there is no room above the restored tracker, use the side away from its
-			-- anchored edge. This keeps the private column visible without moving or
-			-- overlapping the protected frame.
+			-- First choice: one column. The header goes back to the native frame and our sections sit directly below
+			-- the native tracker's visible content, measured from its own content region, so the column reads the
+			-- header, the game's modules, then the Forever sections. The protected frame stays where Blizzard put it.
+			local nineSlice = ObjectiveTrackerFrame.NineSlice
+			local nativeBottom = ObjectiveTrackerFrame:GetBottom()
+			local contentBottom = nineSlice and ObjectiveTrackerFrame:IsShown() and nineSlice:GetBottom()
+				or nativeBottom
+			local contentGap = (nativeBottom and contentBottom) and (contentBottom - nativeBottom) or 0
+			RestoreNativeHeader()
+			host:SetPoint("TOP", ObjectiveTrackerFrame, "BOTTOM", 0, contentGap)
+			local layoutScale = host.GetEffectiveScale and host:GetEffectiveScale() or 1
+			local layoutScreenScale = UIParent.GetEffectiveScale and UIParent:GetEffectiveScale() or layoutScale
+			local layoutMargin = 24 * layoutScreenScale / layoutScale
+			contentBottom = contentBottom or 0
+			LayoutModules(host:GetWidth(), math.max(0, contentBottom - layoutMargin), 0)
+			if contentBottom - (host:GetHeight() or 0) >= layoutMargin then
+				return
+			end
+			-- The one-column placement would run off the bottom of the screen. If there is no room above the restored
+			-- tracker, use the side away from its anchored edge. This keeps the private column visible without moving
+			-- or overlapping the protected frame.
+			host:ClearAllPoints()
 			local nativeTop = ObjectiveTrackerFrame:GetTop() or 0
 			local screenTop = UIParent:GetHeight() or nativeTop
 			local hostScale = host.GetEffectiveScale and host:GetEffectiveScale() or 1

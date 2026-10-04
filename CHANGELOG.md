@@ -14,7 +14,7 @@ verbatim rather than rewritten as the addon moves.
 - **The stop you are travelling to stands out on the map.** Its numbered button is lit the way the game lights the quest it tracks, and the later stops keep the plain button.
 - **The journey list holds still.** A step whose countdown sat right at the edge of the tracker gained and lost a second line as the time ticked, which shook the whole column up and down each second. A step that has taken a second line now keeps it until the steps themselves change.
 - **Stormwind's flight point matches the current game build.** The game moved Stormwind's flight point about fourteen yards, so journeys through Stormwind now lead to the new spot and flights out of Stormwind are drawn from it.
-- **The tracker reads in game order.** The game's All Objectives header now leads the shared column, the Forever sections follow it, and your quests stay below them, instead of the Forever sections sitting above the header.
+- **The tracker reads in game order.** The game's All Objectives header leads the shared column, the Forever sections follow it, and your quests stay below them. In combat the game keeps its quest list in its own slot, so the header and quests stay together and the Forever sections sit directly below them, keeping the tracker to one column.
 
 ## [1.8.2] - 2026-10-03
 
