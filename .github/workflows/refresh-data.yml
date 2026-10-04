@@ -98,7 +98,7 @@ jobs:
           if [[ -n "$number" ]]; then
             gh issue comment "$number" --repo "$GITHUB_REPOSITORY" --body "Failed again: $RUN_URL"
           else
-            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" \
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --assignee "$GITHUB_REPOSITORY_OWNER" \
               --body "The scheduled data refresh failed, so the bundled travel data may be behind the client: $RUN_URL
 
           \`AGENTS.md\` describes the refresh. Close this once a run passes."
