@@ -1,0 +1,105 @@
+name: Refresh game data
+
+# Opens a PR with regenerated travel data when wago.tools lists a newer Forever build or the InFlight addon
+# publishes new flight times. CI on a PR opened with GITHUB_TOKEN waits for a maintainer's approval, so the
+# route specs run here first and the ci job dispatches the full CI on the PR's branch.
+# Daily: beta builds have shipped several times a week. A failed run on main reports itself as an issue.
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      branch: ${{ steps.pr.outputs.pull-request-branch }}
+      operation: ${{ steps.pr.outputs.pull-request-operation }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Pin the newest Forever build and InFlight flight times
+        id: pins
+        run: python3 tools/refresh_pins.py
+      - if: steps.pins.outputs.changed == 'true'
+        run: sudo apt-get update && sudo apt-get install -y luajit lua-check
+      - name: Regenerate
+        if: steps.pins.outputs.changed == 'true'
+        run: |
+          python3 tools/gen_routes.py
+          python3 tools/gen_transit.py
+          luajit tools/bake_walks.lua > "$RUNNER_TEMP/Walks.lua"
+          mv "$RUNNER_TEMP/Walks.lua" Data/Walks.lua
+          python3 tools/pack_nav.py
+          python3 tools/phrases.py > "$RUNNER_TEMP/phrases.txt"
+          mv "$RUNNER_TEMP/phrases.txt" Locales/phrases.txt
+      - if: steps.pins.outputs.changed == 'true'
+        run: python3 tools/check_generated.py --offline
+      - name: Lua checks, route specs and the hearth plan
+        if: steps.pins.outputs.changed == 'true'
+        run: |
+          luacheck .
+          for spec in tests/*_spec.lua; do luajit "$spec" || exit 1; done
+          luajit -joff tests/hearth_savings_bench.lua
+      - if: steps.pins.outputs.changed == 'true'
+        uses: JohnnyMorganz/stylua-action@76fd70c03e6340ceaf673366712db9b20560b402 # v5.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: 2.5.2
+          args: --check .
+      - if: steps.pins.outputs.changed == 'true'
+        id: pr
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          branch: data/refresh
+          title: "data: refresh travel data"
+          commit-message: "data: refresh travel data (${{ steps.pins.outputs.summary }})"
+          body: |
+            Regenerated `Data/*.lua` after moving the pins: ${{ steps.pins.outputs.summary }}.
+
+            Before merging, read the diffs of `Data/Routes.lua` and `Data/Transports.lua` for boats, zeppelins, lifts or trams that appeared, moved or dropped out, `Data/Taxi.lua` for flight points and flight times, and `Data/Portals.lua` and `Data/Teleports.lua` for entries that dropped out. The route specs passed on this data, so a changed journey would have failed the run. Add a `CHANGELOG.md` line under Unreleased saying what a player would notice.
+
+            CI is dispatched on this branch straight away; approve the pending workflows on this PR too, since only those count as its required checks.
+
+  ci:
+    needs: refresh
+    if: needs.refresh.outputs.operation == 'created' || needs.refresh.outputs.operation == 'updated'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - run: gh workflow run ci.yml --repo "$GITHUB_REPOSITORY" --ref "$BRANCH"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ needs.refresh.outputs.branch }}
+
+  # One open issue at most: a later failure comments on it instead of opening another.
+  report:
+    needs: [refresh, ci]
+    if: failure() && github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Data refresh failed"
+          number=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "in:title \"$title\"" \
+            --json number,title --jq "[.[] | select(.title == \"$title\")][0].number // empty")
+          if [[ -n "$number" ]]; then
+            gh issue comment "$number" --repo "$GITHUB_REPOSITORY" --body "Failed again: $RUN_URL"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" \
+              --body "The scheduled data refresh failed, so the bundled travel data may be behind the client: $RUN_URL
+
+          \`AGENTS.md\` describes the refresh. Close this once a run passes."
+          fi

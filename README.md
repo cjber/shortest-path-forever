@@ -123,6 +123,7 @@ Developed with AI assistance. Changes are reviewed and checked with automated te
 
 ```sh
 tools/typecheck.sh                  # strict LuaLS + multi-value lint (requires LuaLS 3.19.1, git, Python 3)
+python3 tools/refresh_pins.py        # pin the newest client build and flight times (a daily workflow does this)
 python3 tools/gen_routes.py          # regenerate Data/Routes.lua for the pinned build
 python3 tools/gen_transit.py         # regenerate Data/Transports.lua, Data/Taxi.lua, Data/Portals.lua and Data/Teleports.lua
 tools/draw_zeppelin.py               # redraw media/zeppelin.tga (the game has no zeppelin map icon)
