@@ -178,6 +178,7 @@ local function scenario(anchor, scale, uiScale)
 				target[key] = value
 			end
 		end,
+		hooksecurefunc = function() end,
 		CreateFramePoolCollection = function()
 			return {}
 		end,
