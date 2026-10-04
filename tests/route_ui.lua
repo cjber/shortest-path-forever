@@ -66,6 +66,39 @@ assert(not mini.Goal.hidden and mini.Goal.anchor[2] == mini and mini.Goal.anchor
 assert(math.abs(mini.Goal.anchor[5] - 30) < 1e-9, "three tenths of the way to the rim")
 assert(api.Cancel("Test"))
 
+-- Standing in the held stop's objective area: no stop button and no line, an outline in the guide's yellow instead,
+-- on the world map and the minimap (Adventure Guide holds an objective stop while the player works there).
+posX, posY, posMap, facing = 0, 0, 1, 0
+assert(api.NavigateRoute("Test", {
+ { map = 1414, x = 0.5, y = 0.5, title = "Area", kind = "objective", hold = true, radius = 10,
+  shapes = { { map = 1414, x = 0.5, y = 0.5, radius = 60 } } },
+}))
+settle()
+for _, provider in ipairs(providers) do provider:RefreshAllData() end
+local areaPin = active[lineTemplate][1]
+assert(areaPin and areaPin.area and #areaPin.area == 1, "the map pin carries the objective shape")
+assert(#(active[goalTemplate] or {}) == 0, "no stop button inside the area")
+assert(areaPin.used > 0, "the map draws the outline: " .. areaPin.used)
+for i = 1, areaPin.used do
+ local line = areaPin.lines[i]
+ assert(line.textureColor, "an area stroke is a solid line, not a breadcrumb")
+ assert(math.abs(line.color[1] - 1) < 1e-6, "the map's outline is the guide's yellow")
+ assert(math.abs(line.color[2] - 0.82) < 1e-6, "the map's outline is the guide's yellow")
+ assert(math.abs(line.color[3] - 0.25) < 1e-6, "the map's outline is the guide's yellow")
+end
+assert(mini.Goal.hidden, "the minimap's stop ring hides inside the area")
+assert(mini.used > 0, "the minimap draws the outline: " .. mini.used)
+for i = 1, mini.used do
+ assert(mini.lines[i].textureColor, "the minimap's outline is solid, with no breadcrumbs")
+end
+-- Stepping out restores the stop button and the line.
+posX = 100
+for _, provider in ipairs(providers) do provider:RefreshAllData() end
+assert(#(active[goalTemplate] or {}) == 1, "the stop button is back outside the area")
+mini.scripts.OnUpdate(mini, 0.2)
+assert(not mini.Goal.hidden, "and the minimap's stop ring is back")
+assert(api.Cancel("Test"))
+
 -- Boat and zeppelin routes are painted hidden and shown by route while a dock is hovered, outlines at half strength.
 local transport = active.ShortestPathForeverTransportPinTemplate[1]
 assert(transport.used > 0 and not transport.strokeLayer, "transport routes are drawn, without the journey's pulse")

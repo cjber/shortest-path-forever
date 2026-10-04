@@ -102,6 +102,26 @@ local function Near(node, reach)
 	return x and map == node.map and (x - node.x) ^ 2 + (y - node.y) ^ 2 <= (reach or ARRIVAL) ^ 2
 end
 
+-- Whether the player stands in a held stop's objective area: inside one of its shapes, or within its own radius
+-- when it has none. The stop and its line step aside there, and its areas are outlined instead.
+---@param point SPFPoint?
+---@return boolean
+function ns.StopInside(point)
+	local x, y, _, map = ns.JourneyPosition()
+	if not (point and point.hold and x and map == point.map) then
+		return false
+	end
+	if point.shapes then
+		for _, shape in ipairs(point.shapes) do
+			if shape.map == map and (x - shape.x) ^ 2 + (y - shape.y) ^ 2 <= shape.radius ^ 2 then
+				return true
+			end
+		end
+		return false
+	end
+	return point.radius ~= nil and (x - point.x) ^ 2 + (y - point.y) ^ 2 <= point.radius ^ 2
+end
+
 ---@param reason "arrived"|"cleared"
 local function EndJourney(reason)
 	Search.Reset()
@@ -136,7 +156,7 @@ local function UpdateProgress()
 	if not (goal and result) or nextPoint or CorpseRun() then
 		return
 	end
-	if goal.hold and goal.radius and Near(goal, goal.radius) then
+	if goal.hold and ns.StopInside(goal) then
 		Guide.Pause()
 		return
 	end
@@ -343,7 +363,7 @@ local function Update(self, elapsed)
 		self.progressElapsed = self.progressElapsed + elapsed
 		if self.progressElapsed >= 0.1 then
 			self.progressElapsed = 0
-			if goal and goal.hold and goal.radius and Near(goal, goal.radius) then
+			if goal and ns.StopInside(goal) then
 				Guide.Pause()
 			end
 		end
@@ -485,7 +505,7 @@ ns.Init(function()
 	driver:SetScript("OnEvent", function(self, event, questID)
 		if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
 			Guide.ClearOrphan()
-		elseif event == "PLAYER_REGEN_DISABLED" and not (goal and goal.hold and goal.radius) then
+		elseif event == "PLAYER_REGEN_DISABLED" and not (goal and goal.hold and (goal.radius or goal.shapes)) then
 			self:Hide()
 		elseif event == "PLAYER_REGEN_ENABLED" and goal then
 			self:Show()

@@ -30,9 +30,12 @@
 ---@field routeTitle? string
 ---@field hold? boolean -- remain visible at the destination until the caller submits an updated route
 ---@field radius? number -- yards around a held stop where travel cues pause; finite and nonnegative
+---@field shapes? SPFAreaShape[] -- objective areas the stop stands for, in world coordinates
 ---@field look? SPFAPIStopKind -- what the caller said stands there (API.lua)
 ---@field questID? number
 ---@field corpse? boolean -- where your corpse lies (Corpse.lua)
+---@class SPFAreaShape : SPFPoint
+---@field radius number -- yards
 ---@class SPFPlace : SPFPoint
 ---@field kind SPFKind
 ---@field id? number

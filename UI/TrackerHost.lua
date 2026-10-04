@@ -324,6 +324,31 @@ local function BesideNative(width, screenHeight)
 	return x, top * toHost - screenHeight
 end
 
+-- Blizzard's Edit Mode owns the native slot while its manager is on screen. The manager can also be hidden and locked
+-- without exiting (CheckHideAndLockEditMode), which leaves editModeActive true with no EditMode.Exit: a hidden manager
+-- is not editing, and its own show and hide reflow, or the column would stay hidden after the lock.
+local managerHooked = false
+local function HookEditMode()
+	local manager = EditModeManagerFrame
+	if managerHooked or not (manager and manager.HookScript) then
+		return
+	end
+	managerHooked = true
+	manager:HookScript("OnShow", host.MarkDirty)
+	manager:HookScript("OnHide", host.MarkDirty)
+end
+
+local function Editing()
+	local manager = EditModeManagerFrame
+	return not not (
+		manager
+		and manager.IsEditModeActive
+		and manager:IsEditModeActive()
+		and manager.IsShown
+		and manager:IsShown()
+	)
+end
+
 -- The native "All Objectives" header sits at the top of the shared column. Blizzard's trackers re-anchor it to
 -- the native frame at the end of every update (ObjectiveTrackerFrameMixin:UpdateHeaderPosition), so our anchor is
 -- re-applied right after with a secure post-hook. Only SetPoint and ClearAllPoints are called on the unprotected
@@ -576,11 +601,14 @@ local function Layout()
 		AvoidMinimap(nativeAnchor and nativeAnchor.point or "TOPRIGHT")
 		return
 	end
-	-- Read the global each time, not once at load: Blizzard_EditMode is load-on-demand, so it may appear later.
-	if EditModeManagerFrame and EditModeManagerFrame.IsEditModeActive and EditModeManagerFrame:IsEditModeActive() then
+	-- Read the global each time, not once at load: Blizzard_EditMode is load-on-demand, so it may appear later. A
+	-- manager hidden while still active is a locked Edit Mode, which owns nothing on screen, so the column shows.
+	HookEditMode()
+	if Editing() then
 		RestoreNativeHeader()
 		return
 	end
+	host:Show()
 	table.sort(modules, function(a, b)
 		return a.uiOrder < b.uiOrder
 	end)
@@ -778,10 +806,8 @@ end
 -- on those events instead of polling the native frame every frame.
 if EventRegistry and EventRegistry.RegisterCallback then
 	local function OnEditModeChanged()
-		local editing = EditModeManagerFrame
-			and EditModeManagerFrame.IsEditModeActive
-			and EditModeManagerFrame:IsEditModeActive()
-		if editing and attached then
+		HookEditMode()
+		if Editing() and attached then
 			-- Edit Mode drags the native frame itself, so it needs its own edge-of-screen clamp back.
 			RestoreNativeClamp()
 			host:Hide()

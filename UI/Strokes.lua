@@ -49,6 +49,8 @@ local LIMIT = 4096
 ---@field marks? {x: number, y: number, radius: number}[] -- stop marks the dots leave a gap around
 ---@field current number -- paths after this many belong to later hops
 ---@field colors table<SPFMode, colorRGBA>
+---@field area? SPFAreaShape[] -- objective areas the player stands in, drawn as rings in place of the journey
+---@field areaColor? colorRGBA
 
 -- The minimap around the player. radius and facing are nil while the client withholds them.
 ---@class SPFMinimapView
@@ -64,9 +66,28 @@ local LIMIT = 4096
 ---@field goal SPFPoint?
 ---@field goalRadius number -- the goal mark's radius on the minimap
 ---@field colors table<SPFMode, colorRGBA>
+---@field area? SPFAreaShape[] -- objective areas the player stands in, drawn as rings in place of the journey
+---@field areaColor? colorRGBA
 
 ---@class SPFStrokeGeometry
 local Strokes = {}
+
+-- An objective area's circles in the view being drawn: centres and the two radii. Reused between draws.
+local AREA_STEPS = 48
+local areaX, areaY, areaW, areaH = {}, {}, {}, {}
+
+-- Whether a point of circle `own` lies inside another of the first `count` circles.
+local function AreaCovers(count, own, x, y)
+	for index = 1, count do
+		if index ~= own then
+			local dx, dy = (x - areaX[index]) / areaW[index], (y - areaY[index]) / areaH[index]
+			if dx * dx + dy * dy < 0.98 then
+				return true
+			end
+		end
+	end
+	return false
+end
 ns.Strokes = Strokes
 
 -- One drawing at a time: the buffer being filled and the pen's state.
@@ -346,6 +367,37 @@ function Strokes.Map(buffer, paths, view)
 		end
 	end
 	local mapID, position = view.mapID, view.position
+	-- A held stop's objective area: each circle in world yards is an ellipse of map fractions (world x runs north and
+	-- world y west, so the two world radii give the map's two axes). Only the arcs outside every other circle are
+	-- drawn, which leaves the outline of the whole area.
+	if view.area then
+		local color = view.areaColor or view.colors.walk
+		local count = 0
+		for _, shape in ipairs(view.area) do
+			local cx, cy = position(shape, mapID)
+			if cx then
+				local ex = position({ map = shape.map, x = shape.x, y = shape.y + shape.radius }, mapID)
+				local nx, ny = position({ map = shape.map, x = shape.x + shape.radius, y = shape.y }, mapID)
+				if ex and nx then
+					count = count + 1
+					areaX[count], areaY[count] = cx, cy
+					areaW[count], areaH[count] = math.abs(ex - cx), math.abs(ny - cy)
+				end
+			end
+		end
+		for index = 1, count do
+			local cx, cy, rx, ry = areaX[index], areaY[index], areaW[index], areaH[index]
+			local px, py = cx + rx, cy
+			for step = 1, AREA_STEPS do
+				local angle = step / AREA_STEPS * 2 * math.pi
+				local x, y = cx + rx * math.cos(angle), cy + ry * math.sin(angle)
+				if not AreaCovers(count, index, (px + x) / 2, (py + y) / 2) then
+					Line(px, py, x, y, color)
+				end
+				px, py = x, y
+			end
+		end
+	end
 	for pathIndex, path in ipairs(paths) do
 		local color = path.color or view.colors[path.mode]
 		route = path.route
@@ -440,6 +492,45 @@ function Strokes.Minimap(buffer, paths, view)
 		end
 	end
 	local inset = 1 - border / math.min(width, height)
+	-- A held stop's objective area: circles in yards around the player, their radii in the view's own units. As on
+	-- the map, only the arcs outside every other circle are drawn.
+	if view.area then
+		local color = view.areaColor or view.colors.walk
+		local count = 0
+		for _, shape in ipairs(view.area) do
+			if shape.map == map then
+				local gx, gy = Project(shape, x, y, radius, cosine, sine)
+				local reach = shape.radius / radius
+				if math.abs(gx) <= 1 + reach and math.abs(gy) <= 1 + reach then
+					count = count + 1
+					areaX[count], areaY[count], areaW[count], areaH[count] = gx, gy, reach, reach
+				end
+			end
+		end
+		for index = 1, count do
+			local gx, gy, reach = areaX[index], areaY[index], areaW[index]
+			local px, py = gx + reach, gy
+			for step = 1, AREA_STEPS do
+				local angle = step / AREA_STEPS * 2 * math.pi
+				local ax, ay = gx + reach * math.cos(angle), gy + reach * math.sin(angle)
+				if not AreaCovers(count, index, (px + ax) / 2, (py + ay) / 2) then
+					local low, high = ClipMinimap(px, py, ax - px, ay - py, inset, square)
+					if low then
+						Segment(
+							(px + 1) * width / 2,
+							(py - 1) * height / 2,
+							(ax + 1) * width / 2,
+							(ay - 1) * height / 2,
+							low,
+							high,
+							color
+						)
+					end
+				end
+				px, py = ax, ay
+			end
+		end
+	end
 	for _, path in ipairs(paths) do
 		walked = 0
 		if path.mode ~= "portal" and path.mode ~= "passage" then

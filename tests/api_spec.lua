@@ -210,6 +210,12 @@ for _, invalid in ipairs({
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, radius = 0 / 0 } },
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, radius = "30" } },
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, radius = driver.secret } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, shapes = "one" } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, shapes = {} } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, shapes = { { map = 1, x = 2, y = 0.5, radius = 5 } } } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, shapes = { { map = 1, x = 0.5, y = 0.5, radius = -1 } } } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, shapes = { { map = 1, x = 0.5, y = 0.5 } } } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, shapes = { [2] = { map = 1, x = 0.5, y = 0.5, radius = 5 } } } },
 	{ [1] = stops[1], [100] = stops[2] },
 }) do
 	equal(API.NavigateRoute("AGF", invalid), false, "invalid route")
@@ -306,6 +312,34 @@ driver.update(0.1)
 equal(driver.waypoint(), nil, "combat end clears the deferred waypoint")
 API.Cancel("AGF")
 ns.PointGuideArrow = originalArrow
+
+-- A held stop's objective shapes define its area: standing in one that its point's radius would not reach holds the
+-- route, and the shapes are copied to world coordinates.
+driver.move({ map = 1, x = 0, y = -8000 })
+local shaped = { map = 1, x = 0.5, y = 0.5, title = "Area", kind = "objective", hold = true, radius = 10 }
+shaped.shapes = { { map = 1, x = 0.55, y = 0.5, radius = 5000 } }
+assert(API.NavigateRoute("AGF", { shaped, { map = 1, x = 0.6, y = 0.5, title = "Later" } }), "shaped route starts")
+for _ = 1, 200 do
+	driver.update(0.1)
+	if not select(1, ns.JourneyStatus()) then
+		break
+	end
+end
+local copied = ns.JourneyStops()[1].shapes
+assert(type(copied) == "table" and #copied == 1, "the objective shape is carried into the journey")
+near(copied[1].x, 0, "shape copied to world x")
+near(copied[1].y, -2500, "shape copied to world y")
+near(copied[1].radius, 5000, "shape keeps its yard radius")
+shaped.shapes[1].radius = 1
+equal(copied[1].radius, 5000, "the caller's later edit changes nothing")
+driver.move({ map = 1, x = 0, y = -4000 })
+driver.update(0.1)
+equal(API.CurrentStop("AGF"), 1, "inside a shape holds the route")
+equal(ns.JourneyInfo(), nil, "inside a shape hides the journey tracker")
+driver.move({ map = 1, x = 0, y = -8000 })
+driver.update(0.1)
+assert(ns.JourneyInfo(), "leaving the shape resumes directions")
+equal(API.Cancel("AGF"), true, "shaped route cancels")
 
 -- A held stop remains visible at its destination until the owner refreshes its route.
 driver.move({ map = 1, x = 0, y = -400 })
