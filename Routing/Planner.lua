@@ -322,7 +322,6 @@ local CACHE_KEYS = {
 	"faction",
 	"otherFaction",
 	"waterWalking",
-	"walkSpeed",
 }
 
 ---@param options SPFPlanOptions
@@ -341,6 +340,8 @@ local function Plan(options)
 			end
 		end
 	end
+	local speed = options.walkSpeed or 7
+	assert(speed > 0, "walkSpeed must be positive")
 	local nodes, edges, masses = {}, {}, {}
 	local docks, taxis, portals, teleports = {}, {}, {}, {}
 	if topology then
@@ -349,6 +350,15 @@ local function Plan(options)
 		for index, adjacent in ipairs(edges) do
 			for i = #adjacent, topology.counts[index] + 1, -1 do
 				adjacent[i] = nil
+			end
+		end
+		-- The graph is the same for every run speed; only a walking edge's duration scales. Rewriting the
+		-- cached edges keeps a speed change from rebuilding the topology its identity did not depend on.
+		for _, adjacent in ipairs(edges) do
+			for _, edge in ipairs(adjacent) do
+				if edge.yards and edge.mode == "walk" then
+					edge.duration = edge.yards / speed * 1000
+				end
 			end
 		end
 	end
@@ -362,9 +372,6 @@ local function Plan(options)
 			walkIndex[from][to] = walk
 		end
 	end
-	local speed = options.walkSpeed or 7
-	assert(speed > 0, "walkSpeed must be positive")
-
 	local function Add(kind, id, point)
 		local index = #nodes + 1
 		nodes[index] =
