@@ -17,6 +17,7 @@ local DEFAULTS = {
 	alerts = true,
 	alertSound = true,
 	journey = true,
+	tomtom = true,
 	taxiRoute = true,
 	teleports = true,
 	hearthMinimumSavings = 0,

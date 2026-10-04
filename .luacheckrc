@@ -13,6 +13,7 @@ globals = {
 	"ShortestPathForever_OnAddonCompartmentClick",
 	"ShortestPathForeverPortalPinMixin",
 	"ShortestPathForeverRoutePinMixin",
+	"TomTom",
 	"SLASH_SHORTESTPATHFOREVER1",
 	"SLASH_SHORTESTPATHFOREVER2",
 	"SlashCmdList",
