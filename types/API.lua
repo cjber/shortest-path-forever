@@ -13,6 +13,14 @@
 -- rings the spot instead of covering the game's own icon there.
 ---@alias SPFAPIStopKind "pickup"|"turnin"|"objective"|"trainer"|"innkeeper"|"flightmaster"|"battlemaster"|"dungeon"|"boat"|"zeppelin"|"lift"|"tram"|"portal"
 
+--- An objective area a held stop stands for: a circle on one map. The guide draws its outline, and its stop and
+-- line step aside, while the player stands inside.
+---@class SPFAPIShape
+---@field map integer -- uiMapID
+---@field x number -- normalized 0-1
+---@field y number -- normalized 0-1
+---@field radius number -- yards, finite and nonnegative
+
 ---@class SPFAPIStop
 ---@field map integer -- uiMapID
 ---@field x number -- normalized 0-1
@@ -22,6 +30,7 @@
 ---@field kind? SPFAPIStopKind -- any other value is ignored and the stop keeps the plain pin
 ---@field hold? boolean -- keep guidance at this stop until the caller submits an updated route
 ---@field radius? number -- yards around a held stop where travel cues pause; finite and nonnegative
+---@field shapes? SPFAPIShape[] -- objective areas a held stop stands for; their outlines are drawn while the player is inside one
 
 ---@class SPFAPILeg
 ---@field mode SPFAPIMode

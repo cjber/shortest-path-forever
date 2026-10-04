@@ -318,6 +318,67 @@ Strokes.Minimap(
 )
 check(strokes.n == 0, "an exact held destination has no zero-length stroke")
 
+-- The objective area the player stands in is a ring in the guide's yellow, on the map and the minimap, in place of
+-- the journey (Adventure Guide holds an objective stop inside its area). World x runs north and world y west, so a
+-- circle's world radii give the map's two axes.
+local swapped = mapView({
+	area = { { map = 0, x = 0.5, y = 0.5, radius = 0.1 } },
+	areaColor = "area",
+	position = function(spot, mapID)
+		if spot.map == mapID then
+			return spot.y, spot.x
+		end
+	end,
+})
+Strokes.Map(strokes, {}, swapped)
+check(strokes.n == 48, "a map ring is drawn as a closed circle: " .. strokes.n)
+for i = 1, strokes.n do
+	check(strokes.color[i] == "area" and not strokes.dot[i] and strokes.alpha[i] == 1, "a solid yellow ring")
+	check(
+		strokes.x1[i] >= 400 and strokes.x2[i] <= 600 and strokes.y1[i] >= -600 and strokes.y2[i] <= -400,
+		"the ring stays on its shape"
+	)
+end
+check(
+	close(strokes.x1[1], 600) and close(strokes.y1[1], -500) and close(strokes.x2[strokes.n], 600),
+	"from the first vertex round to the last"
+)
+-- Two overlapping circles draw one outline: the arcs inside the other circle are left out.
+local pair = mapView({
+	area = { { map = 0, x = 0.5, y = 0.5, radius = 0.1 }, { map = 0, x = 0.5, y = 0.6, radius = 0.1 } },
+	areaColor = "area",
+	position = swapped.position,
+})
+Strokes.Map(strokes, {}, pair)
+check(strokes.n > 48 and strokes.n < 96, "overlapping circles share one outline: " .. strokes.n)
+-- A shape the view cannot place draws nothing.
+Strokes.Map(strokes, {}, mapView({ area = { { map = 9, x = 0.5, y = 0.5, radius = 0.1 } }, areaColor = "area" }))
+check(strokes.n == 0, "no ring for a shape the view cannot place")
+
+-- The minimap ring is the same circle around the player, its radius in the view's own units, clipped to the face.
+local areaView = minimapView(player, {
+	area = { { map = 0, x = 0.3, y = 0.5, radius = 0.05 } },
+	areaColor = "area",
+})
+check(Strokes.Minimap(strokes, {}, areaView) == nil, "no goal mark while inside the area")
+check(strokes.n > 0, "the area's ring is drawn: " .. strokes.n)
+for i = 1, strokes.n do
+	check(strokes.color[i] == "area" and not strokes.dot[i], "a solid yellow ring on the minimap")
+end
+local inside = true
+for i = 1, strokes.n do
+	local x, y = strokes.x1[i] - MINIMAP / 2, strokes.y1[i] + MINIMAP / 2
+	inside = inside and math.sqrt(x * x + y * y) <= MINIMAP / 2 + 1e-6
+end
+check(inside, "the ring is clipped to the round face")
+-- A shape on another continent is not drawn on this one.
+Strokes.Minimap(
+	strokes,
+	{},
+	minimapView(player, { area = { { map = 9, x = 0.3, y = 0.5, radius = 0.05 } }, areaColor = "area" })
+)
+check(strokes.n == 0, "only the player's own map's areas draw")
+
 -- The minimap redraws ten times a second, so a redraw into a grown buffer allocates nothing. Measured in the
 -- interpreter, as in the game: JIT traces allocate on their own schedule.
 local walk = { mode = "walk", points = {} }

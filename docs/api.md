@@ -20,7 +20,10 @@ Addons can use `ShortestPathForever.API` (`version = 1`) with uiMapIDs and norma
   the arrow label. A stop with `hold = true` waits for its owner to replace or cancel the route rather
   than advancing on arrival. For held objective areas, optional `radius` (yards, finite and non-negative)
   hides walking directions inside the area while preserving ownership and the current stop. Directions
-  resume outside it.
+  resume outside it. Optional `shapes` names the areas themselves: 1 or more `{map, x, y, radius}` circles, each
+  on the map it names with its `radius` in yards. While the player stands in one, Shortest Path draws that area's
+  outline in the route's own yellow in place of the stop pin and its line, on the world map and the minimap;
+  leaving the area restores them.
 - `CurrentStop(owner)` returns the current 1-based stop or `nil`.
 - `Cancel(owner)` returns `true` only when it clears that owner's whole route.
 - `Active()` says whether any journey is guiding, yours or another addon's.
