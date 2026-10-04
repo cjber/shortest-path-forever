@@ -11,6 +11,7 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **The stop you are travelling to stands out on the map.** Its numbered button is lit the way the game lights the quest it tracks, and the later stops keep the plain button.
 - **Stormwind's flight point matches the current game build.** The game moved Stormwind's flight point about fourteen yards, so journeys through Stormwind now lead to the new spot and flights out of Stormwind are drawn from it.
 
 ## [1.8.2] - 2026-10-03
