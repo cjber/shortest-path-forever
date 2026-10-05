@@ -33,6 +33,7 @@ Transport\Sync.lua
 UI\Map.xml
 Transport\Taxi.lua
 Transport\Teleports.lua
+UI\Art.lua
 UI\Map.lua
 UI\Looks.lua
 UI\MinimapPins.lua

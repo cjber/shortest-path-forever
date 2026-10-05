@@ -3,10 +3,11 @@
   "source": {
     "repository": "https://github.com/cjber/skills",
     "path": "wow-forever-addon/tooling/forever_tools",
-    "revision": "5d37f7887f86cbf66642494a4fecc975475586f5"
+    "revision": "12cd75ace752a0ffce20d9c3a3fce786b5c31e0f"
   },
   "files": {
     "__init__.py": "845dbed90ad519817771603e96839d1ba970007d5a6d997a4a13fef416b8bcd1",
+    "art.py": "d644ab5c898036de7247cd88c5825b7d46f5b5474e5c4f69edbde125d443ff81",
     "changelog.py": "d5cafddab4710c3632919bf882cde79164624a83688806359e743aadf44b8683",
     "csvtable.py": "afcfd1ce82104d3c0094eb9b07eb19d544b689d2284fb22b6a4a5c12229fca05",
     "fsio.py": "a6af0c5ce14823f67f00553dde5c3c014be596e2e4e0b12aaa902349c173e41c",

@@ -40,10 +40,9 @@ function ns.SetTransportIcon(texture, kind, size)
 	size = (size or PIN_SIZE) * ((kind == "lift" or kind == "tram") and ARROW_SIZE / PIN_SIZE or 1)
 	if kind == "zeppelin" then
 		-- Square (64 by 64), like the ferry.
-		texture:SetTexture("Interface\\AddOns\\ShortestPathForever\\media\\zeppelin")
-		texture:SetSize(size, size)
+		ns.Art.Icon(texture, "Interface\\AddOns\\ShortestPathForever\\media\\zeppelin", size)
 	elseif TRANSPORT_ATLASES[kind] then
-		ns.FitAtlas(texture, TRANSPORT_ATLASES[kind], size, size)
+		ns.Art.Fit(texture, TRANSPORT_ATLASES[kind], size, size)
 	else
 		error("unknown route kind " .. tostring(kind))
 	end
