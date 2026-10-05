@@ -357,6 +357,7 @@ end
 local HEADER_TOP_PADDING = 38
 local nativeHeader = ObjectiveTrackerFrame.Header --[[@as ForeverNativeTrackerHeader?]]
 local headerAdopted = false
+local movingNative = false
 ---@type { point: string, relativeTo: ScriptRegion, relativePoint: string, x: number, y: number }?
 local nativeHeaderAnchor
 
@@ -424,6 +425,14 @@ hooksecurefunc(ObjectiveTrackerFrame, "UpdateHeaderPosition", OnNativeLayout) --
 -- The managed frame containers re-anchor the native frame from their own Layout and then report the new height;
 -- no header update follows that path, so it marks the host dirty on its own.
 hooksecurefunc(ObjectiveTrackerFrame, "UpdateHeight", OnNativeLayout) -- taint-ok: unprotected header
+-- Anything else that moves the native frame (the managed frame containers lay it out again when a neighbour shows
+-- or hides, as on death) reaches it through SetPoint with no update of its own. The post-hook only marks the host
+-- dirty; the host's own moves are skipped so a reflow does not queue another.
+hooksecurefunc(ObjectiveTrackerFrame, "SetPoint", function() -- taint-ok: marks the private host dirty only
+	if not movingNative and host.MarkDirty then
+		host:MarkDirty()
+	end
+end)
 
 -- Lays every section out from the host's top, leaving `reserve` pixels for the native header. Returns whether any
 -- section drew, which decides if the header moves and the native frame leaves its title room.
@@ -471,6 +480,7 @@ local function Layout()
 					or IsAppliedNativeAnchor(currentPoint, currentRelative, currentRelativePoint, currentX, currentY)
 				)
 			then
+				movingNative = true
 				ObjectiveTrackerFrame:ClearAllPoints()
 				ObjectiveTrackerFrame:SetPoint(
 					nativeAnchor.point,
@@ -479,6 +489,7 @@ local function Layout()
 					nativeAnchor.x,
 					nativeAnchor.y
 				)
+				movingNative = false
 				appliedNativeAnchor = nil
 			end
 			if appliedNativeHeight and requestedNativeHeight then
@@ -699,10 +710,12 @@ local function Layout()
 		end
 		ObjectiveTrackerFrame:SetClampedToScreen(false)
 	end
+	movingNative = true
 	ObjectiveTrackerFrame:ClearAllPoints()
 	local nativeX = hostLeft * screenScale / nativeScale
 	local nativeOffsetY = nativeY * screenScale / nativeScale
 	ObjectiveTrackerFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", nativeX, nativeOffsetY)
+	movingNative = false
 	appliedNativeAnchor = {
 		point = "TOPLEFT",
 		relativeTo = UIParent,
