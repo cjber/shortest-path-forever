@@ -11,7 +11,7 @@ description: "Project profile for sift in Shortest Path Forever: the exact quali
 A World of Warcraft: Forever (Classic, `## Interface: 16001`) addon that plans journeys (walking, flights,
 boats, lifts, tram, portals) and draws them on the map. Runtime is the WoW client's Lua 5.1 sandbox; files
 load in `.toc` order and share one namespace table (`local addonName, ns = ...`). It ships through
-BigWigs packager (`.pkgmeta`) to CurseForge/Wago/GitHub as one zip that also carries three load-on-demand
+BigWigs packager (`.pkgmeta`) to CurseForge/Wago/GitHub as one zip that also carries load-on-demand
 walking-map addons. The specs run headless under LuaJIT with stubbed WoW APIs. Python, shell scripts and
 C# under `tools/` generate the data offline; `.pkgmeta` keeps `tools/` and `tests/` out of the zip.
 

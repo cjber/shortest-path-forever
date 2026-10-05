@@ -12,6 +12,7 @@ verbatim rather than rewritten as the addon moves.
 ## [Unreleased]
 
 - **Stormwind's flight point matches the current game build.** The game moved Stormwind's flight point about fourteen yards, so journeys through Stormwind now lead to the new spot and flights out of Stormwind are drawn from it.
+- **Starting a journey loads only the ground it needs.** Walking maps load in small parts as the search reaches them. A fixed walk on another continent keeps its measured cost and waits to draw its detailed line until you arrive there.
 
 ## [1.8.2] - 2026-10-03
 

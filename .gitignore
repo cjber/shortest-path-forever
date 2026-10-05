@@ -9,3 +9,7 @@ docs/verification/
 
 .types/
 .claude/
+
+# Local .NET builds of the navigation baker and provenance checks.
+tools/baker/**/bin/
+tools/baker/**/obj/

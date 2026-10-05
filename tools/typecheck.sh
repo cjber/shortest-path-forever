@@ -25,6 +25,7 @@ if [[ $(lua-language-server --version) != 3.19.1 ]]; then
 	exit 1
 fi
 
+python3 tools/forever_tools/sync.py check
 python3 tools/typecheck_coverage.py
 python3 -m unittest discover -s tests -p 'test_typecheck.py'
 python3 -m unittest discover -s tools -p '*_test.py'
