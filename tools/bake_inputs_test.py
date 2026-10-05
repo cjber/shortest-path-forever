@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from tools.baker import trinity
 from tools.baker.inputs import arguments, complete, source_label
+from tools.pack_nav import read_packed, write_bundle
 
 
 class BakeInputTest(unittest.TestCase):
@@ -124,26 +125,54 @@ class TrinityDriverTest(unittest.TestCase):
             patch.write_text("changed patch")
             self.assertNotEqual(second, trinity.recipe(args, "1.60.1.70205", commands)[0])
 
-    def test_publish_addons_replaces_helpers_and_refuses_unrecognised_files(self):
+    def raw(self, path, map_id, grid):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            "ShortestPathForeverPathData = ShortestPathForeverPathData or {}\n"
+            f"-- stylua: ignore\nShortestPathForeverPathData[{map_id}] = {{\n"
+            '\tcells = 67,\n\tgraph = {\n\t\t[1] = "AAA",\n\t},\n'
+            f'\tgrid = {{\n\t\t[1] = "{grid}",\n\t}},\n'
+            '\theight = {\n\t\t[1] = "EEE",\n\t},\n\tfloor = {\n\t},\n}\n'
+        )
+        return path
+
+    def test_bundle_is_staged_whole_before_it_replaces_the_published_one(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            staged, output = root / "staged", root / "output"
-            base = "ShortestPathForever_Nav0"
-            (staged / base).mkdir(parents=True)
-            (staged / base / "Nav0.lua").write_text("new manifest")
-            (output / (base + "_2")).mkdir(parents=True)
-            stale = output / (base + "_2")
-            (stale / "Data.lua").write_text("old data")
-            (stale / (stale.name + ".toc")).write_text("old toc")
-            trinity.publish_addons(staged, output, 0)
+            output = root / "output"
+            write_bundle(
+                output, [self.raw(root / "raw/Nav0.lua", 0, "ABCD"), self.raw(root / "raw/Nav1.lua", 1, "EFGH")]
+            )
+            stale = output / "Nav/Nav1_9.lua"
+            stale.write_text("left by an interrupted publish")
+            staged = root / "staged"
+            trinity.stage_bundle(staged, output)
+            self.assertFalse((staged / "Nav" / stale.name).exists())
+            write_bundle(staged, [self.raw(root / "raw/Nav0.lua", 0, "IJKL")])
+            self.assertEqual(read_packed(output / "Nav/Nav0.lua", 0)[1]["grid"], {1: "ABCD"})
+            trinity.publish_bundle(staged, output)
             self.assertFalse(stale.exists())
-            trinity.publish_addons(staged, output, 0)
-            self.assertEqual((output / base / "Nav0.lua").read_text(), "new manifest")
-            (output / base / "personal.txt").write_text("keep")
-            (staged / base / "Nav0.lua").write_text("changed")
-            with self.assertRaisesRegex(ValueError, "Unrecognised"):
-                trinity.publish_addons(staged, output, 0)
-            self.assertEqual((output / base / "Nav0.lua").read_text(), "new manifest")
+            self.assertEqual(read_packed(output / "Nav/Nav0.lua", 0)[1]["grid"], {1: "IJKL"})
+            self.assertEqual(read_packed(output / "Nav/Nav1.lua", 1)[1]["grid"], {1: "EFGH"})
+            self.assertEqual((output / "Nav/Nav.xml").read_text().count("<Script"), 4)
+
+    def test_bundle_publish_refuses_unrecognised_and_incomplete_output(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output, staged = root / "output", root / "staged"
+            write_bundle(output, [self.raw(root / "raw/Nav0.lua", 0, "ABCD")])
+            before = {p.name: p.read_bytes() for p in (output / "Nav").iterdir()}
+            (staged / "Nav").mkdir(parents=True)
+            (staged / "Nav/Nav0.lua").write_text("metadata without an index")
+            with self.assertRaisesRegex(ValueError, "no Nav.xml"):
+                trinity.publish_bundle(staged, output)
+            (staged / "Nav/Nav.xml").write_text("<Ui/>")
+            (output / "Nav/personal.txt").write_text("keep")
+            for step in (trinity.publish_bundle, trinity.stage_bundle):
+                with self.assertRaisesRegex(ValueError, "Unrecognised"):
+                    step(staged, output)
+            (output / "Nav/personal.txt").unlink()
+            self.assertEqual(before, {p.name: p.read_bytes() for p in (output / "Nav").iterdir()})
 
     def test_source_label_uses_manifest_and_preserves_historical_default(self):
         manifest = {

@@ -134,7 +134,10 @@ local function stubframe()
 			self.width, self.height = w, h
 		end
 		function texture:SetAllPoints(owner)
-			self.allPoints = owner
+			self.allPoints = owner or self.parent
+		end
+		function texture:ClearAllPoints()
+			self.allPoints, self.anchor = nil, nil
 		end
 		function texture:SetBlendMode(value)
 			self.blendMode = value

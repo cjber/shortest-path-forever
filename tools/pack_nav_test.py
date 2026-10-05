@@ -1,60 +1,76 @@
+import base64
+import re
 import tempfile
 import unittest
+import zlib
 from pathlib import Path
 
-from tools.pack_nav import PART_BYTES, read_map, update_package, write_map
+from tools.pack_nav import BLOCK_BYTES, read_map, read_packed, write_bundle
 
 
 class NavigationPackingTest(unittest.TestCase):
-    def test_partition_preserves_data_and_is_stable(self):
+    def source(self, root):
+        directory = root / "ShortestPathForever_Nav0"
+        directory.mkdir()
+        path = directory / "Nav0.lua"
+        path.write_text(
+            "ShortestPathForeverPathData = ShortestPathForeverPathData or {}\n"
+            "-- stylua: ignore\nShortestPathForeverPathData[0] = {\n"
+            '\tcells = 67,\n\tgraph = {\n\t\t[1] = "AAA",\n\t},\n'
+            '\tgrid = {\n\t\t[1] = "' + "ABCD" * 9000 + '",\n\t},\n'
+            '\theight = {\n\t\t[1] = "EEE",\n\t},\n'
+            '\tfloor = {\n\t\t[2] = "GGG",\n\t},\n}\n'
+        )
+        (directory / "ShortestPathForever_Nav0.toc").write_text("## LoadOnDemand: 1\n\nNav0.lua\n")
+        return path
+
+    def test_bundle_preserves_data_and_is_stable(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            directory = root / "ShortestPathForever_Nav0"
-            directory.mkdir()
-            path = directory / "Nav0.lua"
-            path.write_text(
-                "ShortestPathForeverPathData = ShortestPathForeverPathData or {}\n"
-                "-- stylua: ignore\nShortestPathForeverPathData[0] = {\n"
-                '\tcells = 67,\n\tgraph = {\n\t\t[1] = "AAA",\n\t\t[2] = "BBB",\n\t},\n'
-                '\tgrid = {\n\t\t[1] = "CCC",\n\t\t[2] = "DDD",\n\t},\n'
-                '\theight = {\n\t\t[1] = "EEE",\n\t\t[2] = "FFF",\n\t},\n'
-                '\tfloor = {\n\t\t[2] = "GGG",\n\t},\n}\n'
-            )
-            (directory / "ShortestPathForever_Nav0.toc").write_text("## LoadOnDemand: 1\n\nNav0.lua\n")
-            (root / ".pkgmeta").write_text("move-folders:\n\nignore:\n  - tools\n")
+            path = self.source(root)
             before = read_map(path, 0)[1]
-            write_map(path, limit=360)
-            update_package(root)
-            self.assertEqual(before, read_map(path, 0)[1])
+            write_bundle(root, [path])
+            bundled = root / "Nav/Nav0.lua"
+            self.assertEqual(before, read_packed(bundled, 0)[1])
+            for part in (root / "Nav").glob("Nav0_*.lua"):
+                for block in re.findall(r'"([A-Za-z0-9+/=]+)"', part.read_text()):
+                    self.assertLessEqual(len(zlib.decompress(base64.b64decode(block))), BLOCK_BYTES)
+            self.assertFalse(list(root.glob("ShortestPathForever_Nav*")))
             first = {p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()}
-            write_map(path, limit=360)
-            update_package(root)
-            second = {p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()}
-            self.assertEqual(first, second)
-            self.assertTrue((root / "ShortestPathForever_Nav0_2").is_dir())
-            write_map(path, limit=PART_BYTES)
-            self.assertFalse((root / "ShortestPathForever_Nav0_2").exists())
-            self.assertEqual(before, read_map(path, 0)[1])
-            self.assertIn("ShortestPathForever_Nav0_1", (root / ".pkgmeta").read_text())
-            self.assertTrue(
-                all(p.stat().st_size <= PART_BYTES for p in root.glob("ShortestPathForever_Nav0_*/Data.lua"))
-            )
-            part = root / "ShortestPathForever_Nav0_1/Data.lua"
-            part.write_text(part.read_text().replace('data.graph[1] = "AAA"\n', ""))
-            with self.assertRaisesRegex(ValueError, "graph inventory"):
-                write_map(path)
+            write_bundle(root, [bundled])
+            self.assertEqual(first, {p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()})
 
-    def test_oversized_cluster_leaves_input_untouched(self):
+    def test_replacing_one_map_preserves_other_maps(self):
         with tempfile.TemporaryDirectory() as temporary:
-            directory = Path(temporary) / "ShortestPathForever_Nav0"
-            directory.mkdir()
-            path = directory / "Nav0.lua"
-            source = 'ShortestPathForeverPathData[0] = {\n\tgrid = {\n\t\t[1] = "' + "A" * 1000 + '",\n\t},\n}\n'
-            path.write_text(source)
-            (directory / "ShortestPathForever_Nav0.toc").write_text("Nav0.lua\n")
+            root = Path(temporary)
+            source = self.source(root)
+            other = root / "Nav1.lua"
+            other.write_text(source.read_text().replace("PathData[0]", "PathData[1]"))
+            write_bundle(root, [source, other])
+            before = read_packed(root / "Nav/Nav1.lua", 1)[1]
+            write_bundle(root, [root / "Nav/Nav0.lua"])
+            self.assertEqual(before, read_packed(root / "Nav/Nav1.lua", 1)[1])
+            self.assertIn("Nav1.lua", (root / "Nav/Nav.xml").read_text())
+
+    def test_missing_compressed_file_fails_before_repacking(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            write_bundle(root, [self.source(root)])
+            (root / "Nav/Nav0_1.lua").unlink()
+            metadata = (root / "Nav/Nav0.lua").read_bytes()
+            with self.assertRaisesRegex(ValueError, "inventory"):
+                write_bundle(root, [root / "Nav/Nav0.lua"])
+            self.assertEqual(metadata, (root / "Nav/Nav0.lua").read_bytes())
+
+    def test_bad_input_leaves_previous_layout_untouched(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            path = self.source(root)
+            source = path.read_bytes()
             with self.assertRaises(ValueError):
-                write_map(path, limit=400)
-            self.assertEqual(source, path.read_text())
+                write_bundle(root, [path], limit=128)
+            self.assertEqual(source, path.read_bytes())
+            self.assertFalse((root / "Nav").exists())
 
 
 if __name__ == "__main__":

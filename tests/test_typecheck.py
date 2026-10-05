@@ -171,18 +171,17 @@ def write_strict_fixture(root, fixture):
     for source in root.glob("*.lua"):
         shutil.copy2(source, fixture / source.name)
     for source in [
-        *(root / name for name in ("Core", "Routing", "Journey", "Transport", "UI", "types", "Data")),
-        *root.glob("ShortestPathForever_Nav*"),
+        *(root / name for name in ("Core", "Routing", "Journey", "Transport", "UI", "types", "Data", "Nav")),
     ]:
         shutil.copytree(source, fixture / source.name)
     for name, mistake in (("Data/Routes.lua", "ns.Routes[241].period = false"),):
         with (fixture / name).open("a") as output:
             output.write("\n" + mistake + "\n")
     for map_id in (0, 1, 2991):
-        path = fixture / f"ShortestPathForever_Nav{map_id}/Nav{map_id}.lua"
+        path = fixture / f"Nav/Nav{map_id}.lua"
         path.write_text(path.read_text().replace("\tcells = 67,", '\tcells = "bad",'))
-    path = fixture / "ShortestPathForever_Nav1_1/Data.lua"
-    path.write_text(path.read_text() + "\ndata.floor[1] = false\n")
+    path = fixture / "Nav/Nav1_1.lua"
+    path.write_text(path.read_text() + "\ndata.packed.floor[1] = false\n")
     (fixture / ".luarc.json").write_text(json.dumps(config))
     (fixture / "probe.lua").write_text("""
 C_ClassColor.GetClassColor("MAGE", 1)
@@ -301,10 +300,10 @@ class LuaLSGateTests(unittest.TestCase):
             self.assertIn("probe.lua:26: param-type-mismatch:", printer.stdout)
             for name in (
                 "Data/Routes.lua",
-                "ShortestPathForever_Nav0/Nav0.lua",
-                "ShortestPathForever_Nav1/Nav1.lua",
-                "ShortestPathForever_Nav1_1/Data.lua",
-                "ShortestPathForever_Nav2991/Nav2991.lua",
+                "Nav/Nav0.lua",
+                "Nav/Nav1.lua",
+                "Nav/Nav1_1.lua",
+                "Nav/Nav2991.lua",
             ):
                 codes = {d["code"] for d in diagnostics_by_file.get((fixture / name).as_uri(), [])}
                 self.assertIn("assign-type-mismatch", codes, f"Types lost or file skipped: {name}")

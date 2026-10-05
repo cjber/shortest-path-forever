@@ -36,7 +36,7 @@ local ALLOWED = {
 	["Memory accounting is unavailable on this client."] = true,
 	["Ticks over 5 ms: %d"] = true,
 	["CPU %s: %.3f ms"] = true,
-	["Memory (collected): %.1f KB addon + %.1f KB walking maps = %.1f KB"] = true,
+	["Memory (collected): %.1f KB"] = true,
 	["debug "] = true,
 	["walking cost mismatch: planned %.1f, found %s"] = true,
 	["map %s at %s, %s; ride: %s"] = true,

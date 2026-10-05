@@ -17,6 +17,20 @@ local api = ShortestPathForever.API
 local lineTemplate, goalTemplate = "ShortestPathForeverRoutePinTemplate", "ShortestPathForeverGoalPinTemplate"
 local DOT = "Interface\\AddOns\\ShortestPathForever\\media\\Dot"
 
+local clicked = assert(ns.WorldPoint(1414, 0.52, 0.5))
+clicked.label, clicked.pinBadge = "Flight master", true
+ns.StartJourney(clicked)
+settle()
+local badgePin = active[goalTemplate][1]
+assert(badgePin.Texture.anchor[3] == "BOTTOMRIGHT", "a clicked icon keeps its destination tag at the corner")
+assert(badgePin.Texture.width <= 16 and badgePin.Texture.height <= 16 and not badgePin.Texture.hidden,
+ "the corner tag stays small without stretching")
+ns.ClearJourney()
+ns.StartJourney(assert(ns.WorldPoint(1414, 0.53, 0.5)))
+settle()
+assert(active[goalTemplate][1].Texture.allPoints == active[goalTemplate][1], "reused pin restores full size")
+ns.ClearJourney()
+
 -- Stop 3 goes back to stop 1's place: one button, the first visit's number, both titles and the later detail.
 assert(api.NavigateRoute("Test", {
  {map=1414,x=0.51,y=0.5,title="Quest giver"},

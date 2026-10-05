@@ -32,6 +32,7 @@
 ---@field shapes? SPFAreaShape[] -- objective areas the stop stands for, in world coordinates
 ---@field look? SPFAPIStopKind -- what the caller said stands there (API.lua)
 ---@field questID? number
+---@field pinBadge? boolean -- destination marker beside an existing map icon
 ---@field questIDs? number[] -- the quests whose client areas a held stop stands for (API.lua)
 ---@field corpse? boolean -- where your corpse lies (Corpse.lua)
 ---@class SPFAreaShape : SPFPoint
@@ -180,8 +181,8 @@ ShortestPathForeverCharDB = nil
 ---@field graph string[]
 ---@field height string[]
 ---@field floor string[]
----@field parts? table<number, number> cluster index to load-on-demand terrain addon
----@field loadedParts? table<number, boolean>
+---@field counts? table<string, number> generated entry counts for repacking integrity
+---@field packed? table<string, table<number, string[]>> compressed blocks indexed by field and cluster
 ---@type table<number, SPFNavData>
 ShortestPathForeverPathData = nil
 
@@ -219,6 +220,7 @@ ShortestPathForeverPathData = nil
 ---@field walkDrawn? boolean -- walkPoints came from a search, not a straight placeholder
 ---@field color? ColorMixin -- drawn in this colour rather than its mode's
 ---@class SPFPlan
+---@field provisional? boolean
 ---@field arrive number
 ---@field legs SPFLeg[]
 ---@field needsStart boolean
@@ -235,6 +237,9 @@ ShortestPathForeverPathData = nil
 ---@field cost number|false
 ---@field estimated? boolean
 ---@class SPFPlanOptions : SPFPlaceOptions
+---@field feasibleOnly? boolean
+---@field incumbent? number
+---@field incumbentPlan? SPFPlan
 ---@field hearthMinimumSavings? number
 ---@field otherFaction? boolean
 ---@field from SPFPoint

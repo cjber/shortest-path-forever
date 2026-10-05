@@ -50,7 +50,7 @@ function map:AcquirePin(template, ...)
 	if not pin then
 		pin = stubframe()
 		pin.Icon = pin:CreateTexture()
-		pin.Glow, pin.Texture, pin.HighlightTexture = setmetatable({}, mt), setmetatable({}, mt), setmetatable({}, mt)
+		pin.Glow, pin.Texture, pin.HighlightTexture = setmetatable({}, mt), pin:CreateTexture(), setmetatable({}, mt)
 		function pin.Texture:SetAtlas(atlas)
 			self.atlas = atlas
 		end

@@ -95,6 +95,7 @@ POIButtonUtil = nil
 ---@field SetIgnoreGlobalPinScale fun(self: SPFMapPin, ignore: boolean)
 ---@field SetScaleStyle fun(self: SPFMapPin, style: number)
 ---@field SetPosition fun(self: SPFMapPin, x: number, y: number)
+---@field GetGlobalPosition fun(self: SPFMapPin): number?, number?
 ---@field UseFrameLevelType fun(self: SPFMapPin, frameLevelType: string)
 ---@field SetScalingLimits fun(self: SPFMapPin, style: number, minScale: number, maxScale: number)
 ---@field SetNumLoops fun(self: SPFMapPin, loops: number)

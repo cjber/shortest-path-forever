@@ -19,6 +19,7 @@ local function batches() return path.waiting(path.batches) end
 local function jobs() return path.waiting(path.finds) end
 local splitRoute = false
 ns.Planner.Plan = function(o)
+ if o.feasibleOnly then return nil end
  if splitRoute then
   local mid = {map=1, x=50, y=40}
   return {now=o.now, arrive=o.now+100000, legs={
@@ -115,39 +116,19 @@ drawn(false)
 assert(tracker.blocks[1].rows[1].key == 1 and tracker.Header.Text:GetText():find("yd",1,true))
 assert(not spinner.Anim:IsPlaying() and spinner.hidden)
 
--- A grace route pulses with the spinner, whether the settled candidate keeps or replaces it.
+-- Even a long search keeps guessed geometry private until the first walk is measured.
 for _, replace in ipairs({false, true}) do
  begin()
  hiddenRoute()
  tick(3.1)
- local pin = drawn(true)
- local grace = select(3, ns.JourneyInfo())
- assert(tracker.Header.Text:GetText() == "Journey")
- -- Redrawing or polling unchanged geometry must not restart the native pulse.
- local mapPlays, miniPlays = pin.strokeLayer.animation.plays, mini.strokeLayer.animation.plays
- pin:Draw()
- mini.scripts.OnUpdate(mini, 0.1)
- assert(pin.strokeLayer.animation.plays == mapPlays and mini.strokeLayer.animation.plays == miniPlays)
- -- Both effects stop while hidden and resume only for the active visible search.
- spinner:Hide()
- assert(not spinner.Anim:IsPlaying())
- spinner:Show()
- assert(spinner.Anim:IsPlaying())
- pin:Hide()
- mini:Hide()
- pulse(pin, false)
- pulse(mini, false)
- pin:Show()
- mini:Show()
- drawn(true)
+ hiddenRoute()
  splitRoute = replace
  ready()
- drawn(true)
+ hiddenRoute()
  assert(#jobs() > 0)
  finish()
  drawn(false)
  assert(not ns.JourneyStatus())
- assert((select(3, ns.JourneyInfo()) ~= grace) == replace)
 
  -- Background replans keep the existing route steady, including while replacement walks are pending.
  posY = 60
@@ -163,18 +144,19 @@ for _, replace in ipairs({false, true}) do
  posY = 0
 end
 
--- A repeated destination cancels an initial search but keeps its grace route without pulsing.
+-- A repeated destination keeps an unfinished search private.
 begin()
 tick(3.1)
-drawn(true)
+hiddenRoute()
 assert(clickHandlers[1](map, "LeftButton"))
 assert(ns.JourneyStatus())
-drawn(false)
+hiddenRoute()
 
--- Clearing a pulsing journey releases hidden world-map pins and stops both animations.
+-- Clearing a measured journey releases hidden world-map pins and stops animations.
 begin()
-tick(3.1)
-local released = drawn(true)
+ready()
+finish()
+local released = drawn(false)
 visible, WorldMapFrame.shown = false, false
 ns.ClearJourney()
 assert(released.paths == nil, "clearing while the map is closed releases pooled journey geometry")
@@ -184,5 +166,5 @@ assert(not spinner.Anim:IsPlaying() and not spinner:IsShown())
 assert(mini.Goal.hidden and not ns.GuideTargets())
 assert(not mini.scripts.OnUpdate)
 assert(#errors == 0, table.concat(errors, "\n"))
-print("search_ui: Group Finder spinner, both-map grace pulses, keep/swap settlement and silent replans: ok")
+print("search_ui: Group Finder spinner, private guesses, measured guidance and silent replans: ok")
 ]]))()

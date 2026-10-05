@@ -47,7 +47,7 @@ local function PlanQuest(questID, clickedMap, isWaypoint)
 		ns.Print(L["No location for that quest yet."])
 		return
 	end
-	point.label, point.questID = location.label, questID
+	point.label, point.questID, point.pinBadge = location.label, questID, clickedMap ~= nil
 	ns.StartJourney(point)
 end
 
@@ -105,6 +105,34 @@ local function OnPinClick(map, action, button)
 		if pin.pinTemplate == "QuestPinTemplate" and pin:GetMap() == map and pin:GetQuestID() then
 			PlanQuest(pin:GetQuestID(), map:GetMapID(), pin:GetStyle() == POIButtonUtil.Style.Waypoint)
 			return true
+		end
+		---@cast pin SPFFlightPin
+		if
+			pin.pinTemplate
+			and pin.pinTemplate ~= "ShortestPathForeverGoalPinTemplate"
+			and pin.pinTemplate ~= "QuestPinTemplate"
+			and pin.GetMap
+			and pin:GetMap() == map
+		then
+			local info = pin.poiInfo
+			local flight = pin.pinTemplate == "FlightPointPinTemplate"
+				or pin.pinTemplate == "ShortestPathForeverFlightPinTemplate"
+			local node = flight and info and ns.TaxiNodes[info.nodeID]
+			local point
+			if node then
+				point = { map = node.map, x = node.x, y = node.y, z = node.z }
+			elseif pin.GetGlobalPosition then
+				local x, y = pin:GetGlobalPosition()
+				if x and y then
+					point = ns.WorldPoint(map:GetMapID(), x, y)
+				end
+			end
+			if point and OnZone(point) then
+				point.label = info and info.name
+				point.pinBadge = true
+				ns.StartJourney(point)
+				return true
+			end
 		end
 	end
 	return false

@@ -1,15 +1,18 @@
-local function runtime(failParts)
+local function runtime(corrupt)
 	_G.ShortestPathForeverPathData = nil
-	local counts, frames, ns = {}, {}, {}
-	_G.C_AddOns = {
-		DoesAddOnExist = function(name)
-			return name == "ShortestPathForever_Nav0"
+	assert(loadfile("tools/load_nav.lua"))(0, nil, nil, true)
+	local data, ns, frames, decodes = ShortestPathForeverPathData[0], {}, {}, 0
+	local native = C_EncodingUtil.DecompressString
+	_G.C_EncodingUtil = {
+		DecodeBase64 = C_EncodingUtil.DecodeBase64,
+		DecompressString = function(source, method)
+			decodes = decodes + 1
+			return not corrupt and native(source, method) or nil
 		end,
-		LoadAddOn = function(name)
-			counts[name] = (counts[name] or 0) + 1
-			if not failParts or name == "ShortestPathForever_Nav0" then
-				assert(loadfile("tools/load_nav.lua"))(0, nil, nil, name)
-			end
+	}
+	_G.C_AddOns = {
+		LoadAddOn = function()
+			error("terrain must not load a helper addon")
 		end,
 	}
 	for _, file in ipairs({ "Routing/PathGrid.lua", "Routing/Path.lua", "Routing/PathJobs.lua" }) do
@@ -26,36 +29,70 @@ local function runtime(failParts)
 			assert(n < 1000, "navigation loader did not settle")
 		end
 	end
-	return ns.Path, counts, drain
+	return ns.Path,
+		data,
+		drain,
+		function()
+			return decodes
+		end,
+		function()
+			local fn = table.remove(frames, 1)
+			if fn then
+				fn()
+			end
+		end
 end
 
 local from, to = { x = -9459, y = 43 }, { x = -8840.56, y = 489.7 }
-local Path, counts, drain = runtime(false)
+local Path, data, drain, count = runtime(false)
+assert(Path.HasData(0) and not Path.IsLoaded(0))
 local cancelled = Path.Find(0, from, to, function()
 	error("cancelled search notified its owner")
 end)
 Path.Cancel(cancelled)
 drain()
-assert(next(counts) == nil, "cancelled search loaded navigation data")
+assert(count() == 0, "cancelled search decompressed terrain")
 local result, cost
 Path.Find(0, from, to, function(points, yards)
 	result, cost = points, yards
 end)
 drain()
 assert(result and cost > 1000 and cost < 1300)
-assert(counts.ShortestPathForever_Nav0 == 1)
-local loaded = 0
-for name, count in pairs(counts) do
-	assert(count == 1, name .. " loaded repeatedly")
-	if name ~= "ShortestPathForever_Nav0" then
-		loaded = loaded + 1
-	end
-end
-assert(loaded > 0 and loaded < 16, "short walk loaded the whole continent")
+assert(count() > 0 and count() < 100, "short walk decompressed the whole continent")
+assert(
+	next(data.grid) == nil and next(data.height) == nil and next(data.floor) == nil,
+	"decoded grids retained raw strings"
+)
 local sync, syncCost = Path.FindSync(0, from, to)
 assert(sync and syncCost == cost, "sliced navigation changed the walking cost")
 
-Path, counts, drain = runtime(true)
+local calls = 0
+Path.Find(0, from, to, function(points, yards)
+	assert(points and yards == cost)
+	calls = calls + 1
+end)
+Path.Find(0, from, to, function(points, yards)
+	assert(points and yards == cost)
+	calls = calls + 1
+end)
+drain()
+assert(calls == 2, "concurrent decodes changed a route or lost a callback")
+
+local step
+Path, data, drain, count, step = runtime(false)
+local mid = Path.Find(0, from, to, function()
+	error("mid-search cancellation notified its owner")
+end)
+step()
+step()
+local beforeCancel = count()
+assert(beforeCancel > 0, "cancellation did not reach decoding")
+Path.Cancel(mid)
+drain()
+assert(count() == beforeCancel, "cancelled job continued decoding")
+assert(next(data.grid) == nil and next(data.height) == nil, "idle cancellation retained raw terrain")
+
+Path, data, drain = runtime(true)
 local failure
 Path.Find(0, from, to, function(points, reason)
 	assert(points == nil)
@@ -63,7 +100,5 @@ Path.Find(0, from, to, function(points, reason)
 end)
 drain()
 assert(failure == "offmesh", tostring(failure))
-for name, count in pairs(counts) do
-	assert(count == 1, name .. " retried indefinitely")
-end
-print("nav_loading_spec: cancellation, bounded loading, exact costs and missing parts pass")
+assert(next(data.grid) == nil, "failed decompression published terrain")
+print("nav_loading_spec: bundled decoding, cancellation, exact costs and corrupt blocks pass")

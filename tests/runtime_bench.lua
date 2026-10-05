@@ -11,7 +11,8 @@ local driver = assert(loadstring(source .. [[
 ns.Path = actualPath
 ns.db.debug = false
 WorldMapFrame.shown = false
-local nextFrame, displayed
+local nextFrame, displayed, ticks, usable = nil, nil, 0, nil
+local terrainCPU, terrainKB = 0, 0
 local plannerStats = { calls = 0, cpu = 0, worst = 0, kb = 0 }
 local plan = ns.Planner.Plan
 ns.Planner.Plan = function(options)
@@ -23,20 +24,25 @@ ns.Planner.Plan = function(options)
  plannerStats.kb = plannerStats.kb + collectgarbage("count") - before
  return result
 end
-if arg[1] == "cold" then _G.C_AddOns = {
- DoesAddOnExist = function(name) return name:match("Nav[01]$") ~= nil end,
- LoadAddOn = function(name)
-  local map = assert(name:match("Nav(%d+)"))
-  assert(loadfile("tools/load_nav.lua"))(map, nil, nil, name)
- end,
-} end
+if arg[1] == "cold" then
+ local started, memory = os.clock(), collectgarbage("count")
+ for _, map in ipairs({0, 1, 2991}) do assert(loadfile("tools/load_nav.lua"))(map, nil, nil, true) end
+ terrainCPU, terrainKB = (os.clock() - started) * 1000, collectgarbage("count") - memory
+end
 local miniEnabled = true
 actualPath.after = function(fn) nextFrame = fn end
 local draw = ns.SetJourneyRoute
-ns.SetJourneyRoute = function(g, r) displayed = r draw(g, r) end
+ns.SetJourneyRoute = function(g, r)
+ displayed = r
+ local first = r and r.legs[1]
+ if usable == nil and first and (first.mode ~= "walk" or first.measured) then usable = ticks end
+ draw(g, r)
+end
 return {
  ns = ns,
  stats = plannerStats,
+ terrain = function() return terrainCPU, terrainKB end,
+ usable = function() return usable end,
  move = function(point) posX, posY, posMap = point.x, point.y, point.map end,
  wake = function() fireEvent("PLAYER_ENTERING_WORLD") end,
  moving = function() moving = true fireEvent("PLAYER_STARTED_MOVING") end,
@@ -48,6 +54,7 @@ return {
   shiftDown = false
  end,
  frame = function()
+  ticks = ticks + 1
   T = T + 1/60
   local fn = nextFrame nextFrame = nil if fn then fn() end
   for _, f in ipairs(frames) do
@@ -125,7 +132,13 @@ if scenario == "tanaris" or scenario == "cross" or scenario == "cold" then
 		measure(driver.frame)
 		assert(frames < 20000)
 	end
-	print(string.format("click %.3f ms", click))
+	print(
+		string.format("click %.3f ms, first usable frame %s, proof frame %d", click, tostring(driver.usable()), frames)
+	)
+	if scenario == "cold" then
+		local startupCPU, startupKB = driver.terrain()
+		print(string.format("bundled terrain startup: %.3f ms, %.1f KB before collection", startupCPU, startupKB))
+	end
 elseif scenario == "closed" or scenario == "open" or scenario == "minimap" or scenario == "stationary" then
 	if scenario ~= "stationary" then
 		driver.move({ map = 1, x = 6341.38, y = 557.68 })

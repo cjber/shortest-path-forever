@@ -77,48 +77,34 @@ local function Expansions(count)
 	return expansions
 end
 
--- Collision maps ship as one load-on-demand addon per continent (ShortestPathForever_Nav<map>), so only players who
--- walk there pay for them. A separate addon cannot share `ns`, hence the global.
-local tried = {}
----@param map number
----@return SPFNavData?
+-- Compressed terrain is bundled with the main addon; decoded clusters stay lazy.
 local function Data(map)
-	if not (ShortestPathForeverPathData and ShortestPathForeverPathData[map]) and not tried[map] and C_AddOns then
-		-- LoadAddOn itself is atomic in the client. Give it its own frame before the first decode.
-		if deadline < huge then
-			yield("load")
-		end
-		if not tried[map] and not (ShortestPathForeverPathData and ShortestPathForeverPathData[map]) then
-			tried[map] = true
-			C_AddOns.LoadAddOn("ShortestPathForever_Nav" .. map)
-		end
-		if deadline < huge then
-			yield("load")
-		end
-	end
 	return ShortestPathForeverPathData and ShortestPathForeverPathData[map]
 end
 
--- Per-map state; clusters are decoded on first use.
 local states = {}
 
-local function LoadPart(st, k)
-	local part = st.D.parts and st.D.parts[k + 1]
-	if not part or (st.D.loadedParts and st.D.loadedParts[part]) or st.triedParts[part] then
-		return
+local function unpackField(data, field, key)
+	if data[field][key] or not data.packed then
+		return data[field][key]
 	end
-	if deadline < huge then
-		yield("load")
+	local blocks = data.packed[field][key]
+	if not blocks then
+		return nil
 	end
-	if not (st.D.loadedParts and st.D.loadedParts[part]) and not st.triedParts[part] then
-		st.triedParts[part] = true
-		if C_AddOns then
-			C_AddOns.LoadAddOn("ShortestPathForever_Nav" .. st.map .. "_" .. part)
+	local chunks = {}
+	for i, block in ipairs(blocks) do
+		slice()
+		local compressed = C_EncodingUtil.DecodeBase64(block)
+		local raw = compressed and C_EncodingUtil.DecompressString(compressed, Enum.CompressionMethod.Zlib)
+		if not raw then
+			return nil
 		end
+		chunks[i] = raw
 	end
-	if deadline < huge then
-		yield("load")
-	end
+	local raw = table.concat(chunks)
+	data[field][key] = raw
+	return raw
 end
 
 local function State(map)
@@ -135,7 +121,6 @@ local function State(map)
 		st = {
 			D = D,
 			map = map,
-			triedParts = {},
 			C = C,
 			ny = D.ny,
 			GX = D.nx * C,
@@ -252,8 +237,8 @@ local function addLink(links, node, d, layer)
 	l[#l + 1] = d + 8 * (layer + 1)
 end
 
-local function decodeHeights(st, k, val, z)
-	local s, C, step = st.D.height[k + 1], st.C, st.zstep
+local function decodeHeights(st, val, z, s)
+	local C, step = st.C, st.zstep
 	local pos, rep, delta, last = 1, 0, 0, 0
 	for i = 1, C * C do
 		if i % 256 == 0 then
@@ -284,9 +269,8 @@ local function decodeHeights(st, k, val, z)
 	end
 end
 
-local function decodeFloors(st, k, val, z)
+local function decodeFloors(st, k, val, z, chunks)
 	local at, links = {}, {}
-	local chunks = st.D.floor[k + 1]
 	if not chunks then
 		return at, links
 	end
@@ -335,14 +319,23 @@ local function decodeFloors(st, k, val, z)
 end
 
 local function decodeGrid(st, k)
-	LoadPart(st, k)
 	Path.decodes = (Path.decodes or 0) + 1
-	local chunks = st.D.grid[k + 1]
+	local chunks = unpackField(st.D, "grid", k + 1)
 	if not chunks then
 		st.val[k] = false
 		return false
 	end
 	local s, C = chunks, st.C
+	local height = unpackField(st.D, "height", k + 1)
+	if not height then
+		st.val[k] = false
+		return false
+	end
+	local floors = unpackField(st.D, "floor", k + 1)
+	if st.D.packed and st.D.packed.floor[k + 1] and not floors then
+		st.val[k] = false
+		return false
+	end
 	local val, m = {}, {}
 	local n, valueCode, moveCode = 0, 0, 0
 	for i = 1, #s do
@@ -401,8 +394,8 @@ local function decodeGrid(st, k)
 		end
 	end
 	local z = {}
-	decodeHeights(st, k, val, z)
-	local at, links = decodeFloors(st, k, val, z)
+	decodeHeights(st, val, z, height)
+	local at, links = decodeFloors(st, k, val, z, floors)
 	return val, m, z, at, links
 end
 
@@ -467,6 +460,9 @@ local function grid(st, k)
 		st.val[k], st.moves[k], st.z[k], st.at[k], st.links[k] = val, m, z, at, links
 		st.sizes[k], st.decoded, decodedKB = size, st.decoded + 1, decodedKB + size
 		decodedCount = decodedCount + 1
+		if st.D.packed then
+			st.D.grid[k + 1], st.D.height[k + 1], st.D.floor[k + 1] = nil, nil, nil
+		end
 	end
 	if val then
 		useClock = useClock + 1
@@ -501,27 +497,32 @@ local function trimGraphs()
 		for _, id in ipairs(owner.nodes[oldest]) do
 			owner.ncell[id], owner.nlayer[id], owner.ncomp[id], owner.nadj[id] = nil, nil, nil, nil
 		end
+		if owner.D.packed then
+			owner.D.graph[oldest + 1] = nil
+		end
 		graphKB = graphKB - owner.graphSize[oldest]
 		owner.nodes[oldest], owner.graphUsed[oldest], owner.graphSize[oldest] = nil, nil, nil
 	end
 end
 
 local function decodeGraph(st, k)
-	LoadPart(st, k)
 	slice()
 	if st.nodes[k] then
 		return st.nodes[k]
 	end
 	trimGraphs()
+	local chunks = unpackField(st.D, "graph", k + 1)
+	if st.nodes[k] then
+		return st.nodes[k]
+	end
 	local ids = {}
 	st.nodes[k] = ids
-	local chunks = st.D.graph[k + 1]
 	if not chunks then
 		return ids
 	end
 	local s = chunks
 	local n, pos = num(s, 1, 2), 3
-	st.graphSize[k] = (n * 288 + 128) / 1024
+	st.graphSize[k] = (n * 288 + 128 + (st.D.packed and #s or 0)) / 1024
 	graphKB = graphKB + st.graphSize[k]
 	local degree = {}
 	for i = 0, n - 1 do
@@ -836,11 +837,19 @@ local function Idle()
 		for k in pairs(st.used) do
 			evict(st, k)
 		end
+		if st.D.packed then
+			st.D.grid, st.D.height, st.D.floor = {}, {}, {}
+		end
 	end
 	trimGraphs()
 end
 
 local function Reset()
+	for _, st in pairs(states) do
+		if st.D.packed then
+			st.D.graph, st.D.grid, st.D.height, st.D.floor = {}, {}, {}, {}
+		end
+	end
 	states = {}
 	decodedKB, decodedCount, graphKB = 0, 0, 0
 end
@@ -848,20 +857,16 @@ end
 ---@param map number
 ---@return boolean
 function Path.HasData(map)
-	if ShortestPathForeverPathData and ShortestPathForeverPathData[map] then
-		return true
-	end
-	return not tried[map]
-			and C_AddOns
-			and C_AddOns.DoesAddOnExist
-			and C_AddOns.DoesAddOnExist("ShortestPathForever_Nav" .. map)
-		or false
+	return Data(map) ~= nil
 end
 
 ---@param map number
 ---@return boolean
 function Path.IsLoaded(map)
-	return ShortestPathForeverPathData ~= nil and ShortestPathForeverPathData[map] ~= nil
+	local data = Data(map)
+	local state = states[map]
+	return (state ~= nil and (state.decoded > 0 or next(state.graphUsed) ~= nil))
+		or (data ~= nil and data.packed == nil)
 end
 
 ---@class SPFPathGrid

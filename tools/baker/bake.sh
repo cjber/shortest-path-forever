@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Bake local client terrain with pinned TrinityCore tools. All output stays under OUT.
+# Bake local client terrain with pinned TrinityCore tools and bundle it, compressed, for the main addon.
+# All output stays under OUT.
 set -euo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
 OUT=$(realpath -m "${OUT:-$HERE/work}")

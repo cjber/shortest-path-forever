@@ -41,6 +41,7 @@ UI\TrackerHost.lua
 UI\Tracker.lua
 UI\Arrow.lua
 UI\Compass.lua
+Nav\Nav.xml
 Routing\PathGrid.lua
 Routing\Path.lua
 Routing\PathJobs.lua
