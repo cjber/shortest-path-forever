@@ -210,6 +210,10 @@ for _, invalid in ipairs({
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, radius = 0 / 0 } },
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, radius = "30" } },
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, radius = driver.secret } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, questID = 0 } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, questID = 1.5 } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, questID = "7" } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, questID = driver.secret } },
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, shapes = "one" } },
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, shapes = {} } },
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, shapes = { { map = 1, x = 2, y = 0.5, radius = 5 } } } },
@@ -316,7 +320,8 @@ ns.PointGuideArrow = originalArrow
 -- A held stop's objective shapes define its area: standing in one that its point's radius would not reach holds the
 -- route, and the shapes are copied to world coordinates.
 driver.move({ map = 1, x = 0, y = -8000 })
-local shaped = { map = 1, x = 0.5, y = 0.5, title = "Area", kind = "objective", hold = true, radius = 10 }
+local shaped =
+	{ map = 1, x = 0.5, y = 0.5, title = "Area", kind = "objective", hold = true, radius = 10, questID = 4242 }
 shaped.shapes = { { map = 1, x = 0.55, y = 0.5, radius = 5000 } }
 assert(API.NavigateRoute("AGF", { shaped, { map = 1, x = 0.6, y = 0.5, title = "Later" } }), "shaped route starts")
 for _ = 1, 200 do
@@ -325,6 +330,7 @@ for _ = 1, 200 do
 		break
 	end
 end
+equal(ns.JourneyStops()[1].questID, 4242, "the stop's quest is carried into the journey")
 local copied = ns.JourneyStops()[1].shapes
 assert(type(copied) == "table" and #copied == 1, "the objective shape is carried into the journey")
 near(copied[1].x, 0, "shape copied to world x")

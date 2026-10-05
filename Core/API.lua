@@ -296,6 +296,7 @@ function API.NavigateRoute(owner, stops)
 			or (stop.tooltip ~= nil and not (canaccessvalue(stop.tooltip) and type(stop.tooltip) == "string"))
 			or (stop.hold ~= nil and not (canaccessvalue(stop.hold) and type(stop.hold) == "boolean"))
 			or (stop.radius ~= nil and (not Number(stop.radius) or stop.radius < 0))
+			or (stop.questID ~= nil and (not Number(stop.questID) or stop.questID % 1 ~= 0 or stop.questID < 1))
 			or (stop.shapes ~= nil and (type(stop.shapes) ~= "table" or not Shapes(stop.shapes)))
 		then
 			return false
@@ -311,6 +312,8 @@ function API.NavigateRoute(owner, stops)
 		-- that state changes; ordinary API stops retain automatic arrival.
 		point.hold = stop.hold == true
 		point.radius = stop.radius
+		-- The single quest whose client blob the stop stands for; StopInside prefers the client's own answer for it.
+		point.questID = stop.questID
 		-- The areas are copied to world points too: the caller cannot redirect a journey they no longer own.
 		if stop.shapes then
 			point.shapes = {}

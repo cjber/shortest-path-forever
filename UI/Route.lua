@@ -100,7 +100,7 @@ local mapView = {
 	areaColor = AREA_COLOR,
 }
 ---@type SPFMinimapView
-local minimapView = { width = 0, height = 0, scale = 1, goalRadius = 0, colors = COLORS, areaColor = AREA_COLOR }
+local minimapView = { width = 0, height = 0, scale = 1, goalRadius = 0, colors = COLORS }
 
 -- Pooled lines swap between a flat colour and the dot texture only when their use changes.
 local function Texture(owner, index, dot)
@@ -485,9 +485,10 @@ local function DrawMinimap(self)
 	local view = minimapView
 	view.x, view.y, view.map, view.radius, view.facing = x, y, map, radius, facing
 	view.width, view.height, view.scale, view.square = width, height, scale, square
-	-- Standing in the held stop's objective area: its outline replaces the stop's ring and the line to it.
-	local area = goal and not goal.corpse and ns.StopInside(goal) and goal.shapes or nil
-	view.area = area
+	-- Standing in the held stop's objective area: the game's own blob wears the guide's gold there, and the stop's
+	-- ring and the line to it step aside. The client draws the area, so no outline of ours is drawn on the minimap.
+	local area = goal and not goal.corpse and (goal.shapes ~= nil or goal.questID ~= nil) and ns.StopInside(goal)
+	ns.SetAreaBlob(area == true)
 	-- A goal with a known mark wears the wider ring (ns.SetJourneyRoute).
 	view.goal, view.goalRadius = not area and goal or nil, (goal and goal.look and MINIMAP_RING or MINIMAP_GOAL) / 2
 	local gx, gy = Strokes.Minimap(journeyStrokes, area and {} or paths, view)
@@ -575,6 +576,7 @@ function ns.SetJourneyRoute(destination, route)
 			minimap.Goal:Hide()
 			minimap:SetScript("OnUpdate", nil)
 			minimap:Hide()
+			ns.SetAreaBlob(false)
 		end
 	end
 end
@@ -593,5 +595,13 @@ ns.Init(function()
 	minimap.Goal:SetAtlas(GOAL_ATLAS)
 	minimap.Goal:SetSize(MINIMAP_GOAL, MINIMAP_GOAL)
 	minimap.Goal:Hide()
+	-- The client's own "inside the quest's area" state, the one it paints the blob from, drives the tint at once.
+	minimap:RegisterEvent("PLAYER_INSIDE_QUEST_BLOB_STATE_CHANGED")
+	minimap:SetScript("OnEvent", function(self)
+		if goal then
+			self.revision = nil
+			DrawMinimap(self)
+		end
+	end)
 	minimap:Hide()
 end)
