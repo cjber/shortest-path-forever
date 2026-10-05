@@ -12,6 +12,7 @@ verbatim rather than rewritten as the addon moves.
 ## [Unreleased]
 
 - **A zeppelin's icon is always drawn whole.** A map pin, minimap pin, compass marker or stop badge that had last shown a boat, lift, portal or quest mark could show only a corner of the zeppelin icon.
+- **The world map shows the game's own quest area.** While you stand in the area of a quest a guide's stop names, the world map draws that quest's real area in gold, as the minimap does, in place of a circle of ours. A stop can stand for several quests at once, and one that names no quest keeps its pin and line.
 
 ## [1.9.0] - 2026-10-05
 

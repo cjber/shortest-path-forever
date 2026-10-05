@@ -33,6 +33,7 @@
 ---@field shapes? SPFAreaShape[] -- objective areas the stop stands for, in world coordinates
 ---@field look? SPFAPIStopKind -- what the caller said stands there (API.lua)
 ---@field questID? number
+---@field questIDs? number[] -- the quests whose client areas a held stop stands for (API.lua)
 ---@field corpse? boolean -- where your corpse lies (Corpse.lua)
 ---@class SPFAreaShape : SPFPoint
 ---@field radius number -- yards

@@ -214,6 +214,14 @@ for _, invalid in ipairs({
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, questID = 1.5 } },
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, questID = "7" } },
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, questID = driver.secret } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, questIDs = 7 } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, questIDs = {} } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, questIDs = { 7, 0 } } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, questIDs = { 7, 1.5 } } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, questIDs = { "7" } } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, questIDs = { driver.secret } } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, questIDs = { [2] = 7 } } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, questIDs = { 7, quest = 8 } } },
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, shapes = "one" } },
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, shapes = {} } },
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, shapes = { { map = 1, x = 2, y = 0.5, radius = 5 } } } },
@@ -330,7 +338,7 @@ for _ = 1, 200 do
 		break
 	end
 end
-equal(ns.JourneyStops()[1].questID, 4242, "the stop's quest is carried into the journey")
+equal(ns.JourneyStops()[1].questIDs[1], 4242, "the stop's quest is carried into the journey")
 local copied = ns.JourneyStops()[1].shapes
 assert(type(copied) == "table" and #copied == 1, "the objective shape is carried into the journey")
 near(copied[1].x, 0, "shape copied to world x")
@@ -346,6 +354,35 @@ driver.move({ map = 1, x = 0, y = -8000 })
 driver.update(0.1)
 assert(ns.JourneyInfo(), "leaving the shape resumes directions")
 equal(API.Cancel("AGF"), true, "shaped route cancels")
+
+-- A held stop can stand for several quests: the list is copied beside a lone questID, once each, and the client's
+-- own answer for any of them decides inside. The shapes decide only while the client answers for none of them.
+local answers = {}
+_G.C_Minimap = {
+	IsInsideQuestBlob = function(questID)
+		return answers[questID]
+	end,
+}
+local shared = { map = 1, x = 0.5, y = 0.5, title = "Area", kind = "objective", hold = true, questID = 11 }
+shared.questIDs, shared.shapes = { 12, 11, 13 }, { { map = 1, x = 0.5, y = 0.5, radius = 100 } }
+driver.move({ map = 1, x = 0, y = -4000 })
+assert(API.NavigateRoute("AGF", { shared, { map = 1, x = 0.6, y = 0.5 } }), "several-quest route starts")
+local held = ns.JourneyStops()[1]
+equal(table.concat(held.questIDs, ","), "11,12,13", "the quests are carried into the journey, once each")
+shared.questIDs[1] = 99
+equal(held.questIDs[2], 12, "the caller's later edit changes nothing")
+answers[11], answers[12], answers[13] = false, driver.secret, true
+equal(ns.StopInside(held), true, "inside any named quest's area")
+equal(ns.StopInQuestArea(held), true, "and the client is the one saying so")
+answers[13] = false
+equal(ns.StopInside(held), false, "outside them all by the client's answer, whatever it withholds for one")
+answers[11], answers[13] = driver.secret, driver.secret
+equal(ns.StopInside(held), false, "no answer for any: the shapes decide, and the player is outside them")
+driver.move({ map = 1, x = 0, y = 0 })
+equal(ns.StopInside(held), true, "no answer for any: inside a shape")
+equal(ns.StopInQuestArea(held), false, "which is not the client's own area")
+_G.C_Minimap = nil
+equal(API.Cancel("AGF"), true, "several-quest route cancels")
 
 -- A held stop remains visible at its destination until the owner refreshes its route.
 driver.move({ map = 1, x = 0, y = -400 })
