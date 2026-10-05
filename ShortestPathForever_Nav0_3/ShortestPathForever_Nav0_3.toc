@@ -1,0 +1,9 @@
+## Interface: 16001
+## Title: Shortest Path Forever - Walking map 0, part 3
+## Notes: Walking terrain loaded when a route needs it.
+## LoadOnDemand: 1
+## Dependencies: ShortestPathForever_Nav0
+## X-License: GPL-3.0-or-later
+## IconTexture: Interface\AddOns\ShortestPathForever\media\Icon
+
+Data.lua

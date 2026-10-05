@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **Starting a journey loads only the ground it needs.** Walking maps load in small parts as the search reaches them. A fixed walk on another continent keeps its measured cost and waits to draw its detailed line until you arrive there.
+
 ## [1.8.2] - 2026-10-03
 
 - **A detached tracker keeps clear of your quests.** With Attach to quest tracker off, the Forever column could open on top of the quest list. Until you drag it, it now sits beside the quest tracker, level with its top; once dragged, it stays where you put it.

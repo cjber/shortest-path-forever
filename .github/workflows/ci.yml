@@ -18,6 +18,7 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y luajit lua-check
       - run: luacheck .
       - run: for spec in tests/*_spec.lua; do luajit "$spec" || exit 1; done
+      - run: luajit -joff tests/runtime_bench.lua cold
       - run: luajit -joff tests/hearth_savings_bench.lua
       - name: Native tracker integration
         run: |
@@ -33,6 +34,17 @@ jobs:
       - run: pipx run ruff==0.16.8 format --check .
       - run: pipx run --spec shellcheck-py==0.11.0.1 shellcheck tools/baker/bake.sh tools/typecheck.sh tools/fetch_blizzard_ui.sh tests/ui.sh
       - run: pipx run --spec shfmt-py==4.2.0 shfmt -d tools/baker/bake.sh tools/typecheck.sh tools/fetch_blizzard_ui.sh tests/ui.sh
+
+  bake-provenance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          dotnet-version: 10.0.401
+      - run: dotnet run --project tools/baker/tests/Provenance.csproj -c Release
 
   generated:
     runs-on: ubuntu-latest

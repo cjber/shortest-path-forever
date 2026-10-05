@@ -13,7 +13,7 @@ local ns = select(2, ...)
 local Path = {}
 ns.Path = Path
 
-Path.budget = 3 -- milliseconds of CPU per frame, shared by Find and FindMany
+Path.budget = 2 -- milliseconds of path work, leaving headroom under the 3 ms frame ceiling
 Path.clusters = 64 -- secondary count ceiling per map (at least 4)
 Path.graphKB = 4096 -- decoded entrances/edges across all maps
 Path.cacheKB = 24576 -- decoded grids across all maps; active coroutine locals are additional
@@ -102,6 +102,25 @@ end
 -- Per-map state; clusters are decoded on first use.
 local states = {}
 
+local function LoadPart(st, k)
+	local part = st.D.parts and st.D.parts[k + 1]
+	if not part or (st.D.loadedParts and st.D.loadedParts[part]) or st.triedParts[part] then
+		return
+	end
+	if deadline < huge then
+		yield("load")
+	end
+	if not (st.D.loadedParts and st.D.loadedParts[part]) and not st.triedParts[part] then
+		st.triedParts[part] = true
+		if C_AddOns then
+			C_AddOns.LoadAddOn("ShortestPathForever_Nav" .. st.map .. "_" .. part)
+		end
+	end
+	if deadline < huge then
+		yield("load")
+	end
+end
+
 local function State(map)
 	local st = states[map]
 	if st == nil then
@@ -115,6 +134,8 @@ local function State(map)
 		local C = D.cells
 		st = {
 			D = D,
+			map = map,
+			triedParts = {},
 			C = C,
 			ny = D.ny,
 			GX = D.nx * C,
@@ -314,6 +335,7 @@ local function decodeFloors(st, k, val, z)
 end
 
 local function decodeGrid(st, k)
+	LoadPart(st, k)
 	Path.decodes = (Path.decodes or 0) + 1
 	local chunks = st.D.grid[k + 1]
 	if not chunks then
@@ -485,6 +507,7 @@ local function trimGraphs()
 end
 
 local function decodeGraph(st, k)
+	LoadPart(st, k)
 	slice()
 	if st.nodes[k] then
 		return st.nodes[k]
@@ -833,6 +856,12 @@ function Path.HasData(map)
 			and C_AddOns.DoesAddOnExist
 			and C_AddOns.DoesAddOnExist("ShortestPathForever_Nav" .. map)
 		or false
+end
+
+---@param map number
+---@return boolean
+function Path.IsLoaded(map)
+	return ShortestPathForeverPathData ~= nil and ShortestPathForeverPathData[map] ~= nil
 end
 
 ---@class SPFPathGrid

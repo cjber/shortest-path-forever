@@ -280,7 +280,11 @@ end
 local function Render(planned, forced)
 	search = search or { started = GetTime(), initial = not followed }
 	search.candidate, search.forced = planned, forced
-	search.refine = followed and not followed.prepared
+	local resume = Walks.NeedsPrepare(followed)
+	search.refine = followed and (not followed.prepared or resume)
+	if resume then
+		PrepareWalks(followed)
+	end
 	-- Measure the grace route's own legs only after the proof finishes, so presentation never
 	-- competes with the bounded search for its frame budget.
 	if search.grace then

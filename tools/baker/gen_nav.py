@@ -16,7 +16,6 @@ Detour stores vertices as (worldY, worldZ, worldX). Output is in UnitPosition's 
 y grows west (world Y).
 """
 
-import argparse
 import glob
 import heapq
 import math
@@ -25,10 +24,17 @@ import os
 import re
 import struct
 import sys
+import time
 from array import array
 from collections import defaultdict
+from pathlib import Path
 from textwrap import wrap
 from typing import cast
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from baker.inputs import arguments  # noqa: E402
+from baker.measure import record, tile_hashes  # noqa: E402
+from forever_tools.fsio import atomic_write  # noqa: E402
 
 MM = os.environ.get("NAV_MM", "mm")
 T = 1600 / 3
@@ -595,7 +601,8 @@ def grid_hpa(grid, cuts):
         cells = nodes[k]
         box = cluster_box(k)
         dists = []
-        for w in WEIGHTS:
+        adjacency = {}
+        for mode in range(len(WEIGHTS)):
             dist = {}
             for s in cells:
                 gd, pq, left = {s: 0.0}, [(0.0, s)], len(cells) - 1
@@ -606,7 +613,13 @@ def grid_hpa(grid, cuts):
                     if u != s and u in cells:
                         left -= 1
                         dist[(s, u)] = du
-                    for v, c in moves(g, grid, cuts, u, box, w):
+                    if u not in adjacency:
+                        adjacency[u] = tuple(
+                            (v, tuple(c * (weight if value_of(grid, v) == 2 else 1) for weight in WEIGHTS))
+                            for v, c in moves(g, grid, cuts, u, box, 1)
+                        )
+                    for v, costs in adjacency[u]:
+                        c = costs[mode]
                         if du + c < gd.get(v, 1e18):
                             gd[v] = du + c
                             heapq.heappush(pq, (du + c, v))
@@ -755,8 +768,7 @@ def emit(nodes, edges, grid, cuts, out, name):
         lines.append("\t},")
     lines.append("}")
     src = "\n".join(lines) + "\n"
-    with open(out, "w") as f:
-        f.write(src)
+    atomic_write(Path(out), src)
     gb, rb = sum(map(len, graph.values())), sum(map(len, grids.values()))
     zb, fb = sum(map(len, heights.values())), sum(map(len, floors.values()))
     print(f"emit: heights {zb / 1e3:.1f} KB, floors {fb / 1e3:.1f} KB", flush=True)
@@ -896,14 +908,10 @@ def encode_floors(grid, k, lnode):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Bake a map's walking-route data as an addon Lua file.")
-    parser.add_argument("out", nargs="?", help="output file (default Nav<map>.lua)")
-    parser.add_argument("--map", type=int, required=True)
-    parser.add_argument("--name")
-    parser.add_argument("--rows", nargs=2, type=int)
-    parser.add_argument("--cols", nargs=2, type=int)
-    parser.add_argument("--jobs", type=int, default=int(os.environ.get("NAV_JOBS", "6")))
-    args = parser.parse_args()
+    args, provenance = arguments(Path(MM))
+    started = time.perf_counter()
+    phases = {}
+    checkpoint = started
     map_id, jobs = args.map, args.jobs
     name = args.name or f"map {map_id}"
     out = args.out or f"Nav{map_id}.lua"
@@ -913,7 +921,11 @@ def main():
         f"grid {GW}x{GH}",
         flush=True,
     )
+    inputs = tile_hashes(TILES.values()) if args.metrics else {}
+    code = tile_hashes(Path(__file__).parent.glob("*.py")) if args.metrics else {}
     components()
+    phases["components"] = time.perf_counter() - checkpoint
+    checkpoint = time.perf_counter()
     grid, cuts = bytearray(GW * GH), set()
     BASE_Z.frombytes(bytes(4 * GW * GH))
     floors, links = [], []
@@ -933,9 +945,36 @@ def main():
             if (n + 1) % 100 == 0:
                 print(f"  rasterized {n + 1}/{len(order)} tiles", flush=True)
     print(f"grid {GW}x{GH}: ground {grid.count(1)}, water {grid.count(2)}, cut steps {len(cuts)}", flush=True)
+    phases["raster"] = time.perf_counter() - checkpoint
+    checkpoint = time.perf_counter()
     assemble_floors(floors, links)
+    phases["floors"] = time.perf_counter() - checkpoint
+    checkpoint = time.perf_counter()
     nodes, edges = grid_hpa(grid, cuts)
+    phases["graph"] = time.perf_counter() - checkpoint
+    checkpoint = time.perf_counter()
     emit(nodes, edges, grid, cuts, out, name)
+    phases["emit"] = time.perf_counter() - checkpoint
+    if args.metrics:
+        record(
+            args.metrics,
+            phases,
+            started,
+            out,
+            {
+                "map": map_id,
+                "build": args.build,
+                "extractor": provenance,
+                "source": SOURCE,
+                "jobs": jobs,
+                "rows": [ROWS.start, ROWS.stop - 1],
+                "cols": [COLS.start, COLS.stop - 1],
+                "tiles": inputs,
+                "code_sha256": code,
+                "nodes": sum(map(len, nodes.values())),
+                "clusters": len(TILES),
+            },
+        )
 
 
 if __name__ == "__main__":
