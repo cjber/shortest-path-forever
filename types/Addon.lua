@@ -33,6 +33,7 @@
 ---@field shapes? SPFAreaShape[] -- objective areas the stop stands for, in world coordinates
 ---@field look? SPFAPIStopKind -- what the caller said stands there (API.lua)
 ---@field questID? number
+---@field pinBadge? boolean -- destination marker beside an existing map icon
 ---@field corpse? boolean -- where your corpse lies (Corpse.lua)
 ---@class SPFAreaShape : SPFPoint
 ---@field radius number -- yards

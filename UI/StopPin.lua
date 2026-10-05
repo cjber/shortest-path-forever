@@ -58,7 +58,8 @@ end
 ---@param titles string[]
 ---@param look? SPFAPIStopKind
 ---@param details? string[]
-function ShortestPathForeverGoalPinMixin:OnAcquired(x, y, numbers, titles, later, look, details)
+---@param pinBadge? boolean
+function ShortestPathForeverGoalPinMixin:OnAcquired(x, y, numbers, titles, later, look, details, pinBadge)
 	self:SetPosition(x, y)
 	-- The disc's shadow stays opaque, so a faded button still hides the POI beneath it.
 	local alpha = later and LATER_STOP_ALPHA or 1
@@ -100,6 +101,15 @@ function ShortestPathForeverGoalPinMixin:OnAcquired(x, y, numbers, titles, later
 		local atlas = C_Texture.GetAtlasInfo(GOAL_ATLAS)
 		self:SetSize(atlas.width * GOAL_SCALE, atlas.height * GOAL_SCALE)
 		self.Texture:SetAtlas(GOAL_ATLAS) -- art-ok: fills the pin, sized above from the atlas's own shape
+	end
+	self.Texture:ClearAllPoints()
+	if pinBadge and not numbers and not marked then
+		self:SetSize(LOOK_SIZE, LOOK_SIZE)
+		ns.Art.Fit(self.Texture, GOAL_ATLAS, BADGE_SIZE, BADGE_SIZE)
+		self.Texture:SetPoint("CENTER", self, "BOTTOMRIGHT", 0, 0)
+		self:SetHitRectInsets(0, -BADGE_SIZE / 2, 0, -BADGE_SIZE / 2)
+	else
+		self.Texture:SetAllPoints()
 	end
 end
 

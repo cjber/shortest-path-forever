@@ -360,6 +360,7 @@ function ProviderMixin:RefreshStops()
 				title = point.routeTitle,
 				detail = point.tooltip,
 				look = point.look,
+				pinBadge = point.pinBadge,
 			}
 		end
 	end
@@ -395,7 +396,7 @@ function ProviderMixin:RefreshStops()
 		else
 			x, y, numbered = lead.x, lead.y, stops and numbers
 		end
-		local pin = map:AcquirePin(GOAL_TEMPLATE, x, y, numbered, titles, later, look, details)
+		local pin = map:AcquirePin(GOAL_TEMPLATE, x, y, numbered, titles, later, look, details, lead.pinBadge)
 		self.stopMarks[#self.stopMarks + 1] = { x = x, y = y, radius = pin:GetWidth() / 2 }
 	end
 	for pin in WorldMapFrame:EnumeratePinsByTemplate(LINE_TEMPLATE) do
