@@ -193,12 +193,23 @@ _G.collectgarbage = function(action)
  return gc(action)
 end
 _G.UpdateAddOnMemoryUsage = function() assert(collected, "collect before addon accounting") updates = updates + 1 end
-_G.GetAddOnMemoryUsage = function(name) return name == "ShortestPathForever" and 100 or 20 end
+local navData = ShortestPathForeverPathData
+_G.ShortestPathForeverPathData = {
+ [0]={loadedParts={[1]=true,[2]=true,[3]=false}},
+ [1]={loadedParts={[1]=true}},
+}
+local memory = {
+ ShortestPathForever=100,
+ ShortestPathForever_Nav0=20,ShortestPathForever_Nav1=20,ShortestPathForever_Nav2991=20,
+ ShortestPathForever_Nav0_1=30,ShortestPathForever_Nav0_2=40,ShortestPathForever_Nav1_1=50,
+}
+_G.GetAddOnMemoryUsage = function(name) return assert(memory[name], "unexpected memory lookup: " .. name) end
 SlashCmdList.SHORTESTPATHFOREVER("perf")
 assert(updates == 1 and #messages == 6 and messages[1]:find("0.123 ms", 1, true))
 _G.collectgarbage = gc
 assert(messages[6]:find("collected", 1, true))
-assert(messages[6]:find("160.0 KB", 1, true), "include all loaded nav addons in memory")
+assert(messages[6]:find("280.0 KB", 1, true), "include loaded cluster addons exactly once in memory")
+_G.ShortestPathForeverPathData = navData
 assert(#errors == 0, table.concat(errors, "\n"))
 print("activity_ui: idle sleep, tracker, combat, passive rides, pin pools and profiler ok")
 ]]))()

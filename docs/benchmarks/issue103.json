@@ -1,0 +1,911 @@
+{
+  "baseline_commit": "150e7039b4231699b5a155cf84edd5a2b6322637",
+  "crops_file": "crops.json",
+  "environment": {
+    "cpu": "AMD Ryzen 7 9700X, 8 cores/16 logical CPUs",
+    "load_average_snapshot": [
+      21.34,
+      18.97,
+      16.96
+    ],
+    "platform": "Linux-6.18.54-2-lts-x86_64-with-glibc2.44",
+    "python": "3.14.7",
+    "ram_gib": 30,
+    "resource_measurement": "Fresh subprocess, monotonic wall clock and Linux wait4 resource accounting; CPU includes waited descendants, RSS is largest process peak, not aggregate memory.",
+    "workload": "Other desktop, game and agent processes remained active; no benchmark runs overlapped one another."
+  },
+  "input_build": "1.60.1.69913",
+  "input_provenance": "Historical extraction logs only; no complete-inventory manifest exists for these cached tiles.",
+  "optimized_commit": "ccaffdd3f3bb75f78bfe7c4af1ee2b80d56309aa",
+  "runs": [
+    {
+      "jobs": 1,
+      "repeat": 1,
+      "resources": {
+        "largest_process_rss_kib": 66600,
+        "system_seconds": 0.092073,
+        "user_seconds": 7.195463,
+        "wall_seconds": 7.580408176989295
+      },
+      "sample": "city-stormwind",
+      "script_sha256": "2dfeae8ab21cc948f2d3d2dfe78add933fb20b6dbada1bba46bfa5f8eca7c5f1",
+      "started_unix": 1791192366.4249544,
+      "variant": "baseline"
+    },
+    {
+      "jobs": 1,
+      "largest_worker_rss_kib": 69140,
+      "parent_max_rss_kib": 61600,
+      "phases": {
+        "components": 0.2193424029974267,
+        "emit": 0.11411525300354697,
+        "floors": 0.03993887497927062,
+        "graph": 0.9505258300050627,
+        "raster": 4.908902925992152
+      },
+      "repeat": 1,
+      "resources": {
+        "largest_process_rss_kib": 69140,
+        "system_seconds": 0.08284,
+        "user_seconds": 6.131264,
+        "wall_seconds": 6.347512562002521
+      },
+      "sample": "city-stormwind",
+      "script_sha256": "eba2d4ddd235494eed6d27d8611710e295d91fe8cbcc0e724aa5fa3f9d6d2482",
+      "started_unix": 1791192374.049772,
+      "variant": "optimized"
+    },
+    {
+      "jobs": 6,
+      "repeat": 1,
+      "resources": {
+        "largest_process_rss_kib": 67016,
+        "system_seconds": 0.07579999999999999,
+        "user_seconds": 7.184368,
+        "wall_seconds": 6.146687290980481
+      },
+      "sample": "city-stormwind",
+      "script_sha256": "2dfeae8ab21cc948f2d3d2dfe78add933fb20b6dbada1bba46bfa5f8eca7c5f1",
+      "started_unix": 1791192380.4348755,
+      "variant": "baseline"
+    },
+    {
+      "jobs": 6,
+      "largest_worker_rss_kib": 68676,
+      "parent_max_rss_kib": 61340,
+      "phases": {
+        "components": 0.252083462983137,
+        "emit": 0.10241329000564292,
+        "floors": 0.06065152899827808,
+        "graph": 1.0100160999863874,
+        "raster": 3.545909712003777
+      },
+      "repeat": 1,
+      "resources": {
+        "largest_process_rss_kib": 68676,
+        "system_seconds": 0.076623,
+        "user_seconds": 6.19938,
+        "wall_seconds": 5.0882560110185295
+      },
+      "sample": "city-stormwind",
+      "script_sha256": "eba2d4ddd235494eed6d27d8611710e295d91fe8cbcc0e724aa5fa3f9d6d2482",
+      "started_unix": 1791192386.6217,
+      "variant": "optimized"
+    },
+    {
+      "jobs": 1,
+      "largest_worker_rss_kib": 68484,
+      "parent_max_rss_kib": 61592,
+      "phases": {
+        "components": 0.22443775300052948,
+        "emit": 0.11328950600000098,
+        "floors": 0.04277543802163564,
+        "graph": 0.9392112200148404,
+        "raster": 4.939835588011192
+      },
+      "repeat": 2,
+      "resources": {
+        "largest_process_rss_kib": 68484,
+        "system_seconds": 0.049441,
+        "user_seconds": 6.09624,
+        "wall_seconds": 6.3636464629962575
+      },
+      "sample": "city-stormwind",
+      "script_sha256": "eba2d4ddd235494eed6d27d8611710e295d91fe8cbcc0e724aa5fa3f9d6d2482",
+      "started_unix": 1791192391.754351,
+      "variant": "optimized"
+    },
+    {
+      "jobs": 1,
+      "repeat": 2,
+      "resources": {
+        "largest_process_rss_kib": 66544,
+        "system_seconds": 0.059579999999999994,
+        "user_seconds": 6.946172,
+        "wall_seconds": 7.149243474996183
+      },
+      "sample": "city-stormwind",
+      "script_sha256": "2dfeae8ab21cc948f2d3d2dfe78add933fb20b6dbada1bba46bfa5f8eca7c5f1",
+      "started_unix": 1791192398.162526,
+      "variant": "baseline"
+    },
+    {
+      "jobs": 6,
+      "largest_worker_rss_kib": 69076,
+      "parent_max_rss_kib": 61624,
+      "phases": {
+        "components": 0.23751318399445154,
+        "emit": 0.08883226098259911,
+        "floors": 0.04476204700767994,
+        "graph": 0.8109761939849705,
+        "raster": 3.6451870710006915
+      },
+      "repeat": 2,
+      "resources": {
+        "largest_process_rss_kib": 69076,
+        "system_seconds": 0.06940199999999999,
+        "user_seconds": 6.053943,
+        "wall_seconds": 4.915353963995585
+      },
+      "sample": "city-stormwind",
+      "script_sha256": "eba2d4ddd235494eed6d27d8611710e295d91fe8cbcc0e724aa5fa3f9d6d2482",
+      "started_unix": 1791192405.3543086,
+      "variant": "optimized"
+    },
+    {
+      "jobs": 6,
+      "repeat": 2,
+      "resources": {
+        "largest_process_rss_kib": 66568,
+        "system_seconds": 0.10562099999999999,
+        "user_seconds": 6.411788,
+        "wall_seconds": 5.3506065900146496
+      },
+      "sample": "city-stormwind",
+      "script_sha256": "2dfeae8ab21cc948f2d3d2dfe78add933fb20b6dbada1bba46bfa5f8eca7c5f1",
+      "started_unix": 1791192410.3080525,
+      "variant": "baseline"
+    },
+    {
+      "jobs": 1,
+      "repeat": 3,
+      "resources": {
+        "largest_process_rss_kib": 66552,
+        "system_seconds": 0.062415,
+        "user_seconds": 6.895478,
+        "wall_seconds": 7.241034258011496
+      },
+      "sample": "city-stormwind",
+      "script_sha256": "2dfeae8ab21cc948f2d3d2dfe78add933fb20b6dbada1bba46bfa5f8eca7c5f1",
+      "started_unix": 1791192415.7198546,
+      "variant": "baseline"
+    },
+    {
+      "jobs": 1,
+      "largest_worker_rss_kib": 69372,
+      "parent_max_rss_kib": 61356,
+      "phases": {
+        "components": 0.23078180401353166,
+        "emit": 0.10750801101676188,
+        "floors": 0.04902742602280341,
+        "graph": 0.9561748950218316,
+        "raster": 5.3600848840142135
+      },
+      "repeat": 3,
+      "resources": {
+        "largest_process_rss_kib": 69372,
+        "system_seconds": 0.070399,
+        "user_seconds": 6.3779959999999996,
+        "wall_seconds": 6.8164706810202915
+      },
+      "sample": "city-stormwind",
+      "script_sha256": "eba2d4ddd235494eed6d27d8611710e295d91fe8cbcc0e724aa5fa3f9d6d2482",
+      "started_unix": 1791192423.0019708,
+      "variant": "optimized"
+    },
+    {
+      "jobs": 6,
+      "repeat": 3,
+      "resources": {
+        "largest_process_rss_kib": 66544,
+        "system_seconds": 0.082657,
+        "user_seconds": 7.277168,
+        "wall_seconds": 6.13080554199405
+      },
+      "sample": "city-stormwind",
+      "script_sha256": "2dfeae8ab21cc948f2d3d2dfe78add933fb20b6dbada1bba46bfa5f8eca7c5f1",
+      "started_unix": 1791192429.8625112,
+      "variant": "baseline"
+    },
+    {
+      "jobs": 6,
+      "largest_worker_rss_kib": 68428,
+      "parent_max_rss_kib": 61344,
+      "phases": {
+        "components": 0.2363759680010844,
+        "emit": 0.10013055399758741,
+        "floors": 0.044425894011510536,
+        "graph": 0.9544634599878918,
+        "raster": 3.439676320995204
+      },
+      "repeat": 3,
+      "resources": {
+        "largest_process_rss_kib": 68428,
+        "system_seconds": 0.10112499999999999,
+        "user_seconds": 5.974209,
+        "wall_seconds": 4.879089869005838
+      },
+      "sample": "city-stormwind",
+      "script_sha256": "eba2d4ddd235494eed6d27d8611710e295d91fe8cbcc0e724aa5fa3f9d6d2482",
+      "started_unix": 1791192436.0338297,
+      "variant": "optimized"
+    },
+    {
+      "jobs": 1,
+      "repeat": 1,
+      "resources": {
+        "largest_process_rss_kib": 60556,
+        "system_seconds": 0.052882,
+        "user_seconds": 8.681078,
+        "wall_seconds": 8.918206260015722
+      },
+      "sample": "open-westfall",
+      "script_sha256": "2dfeae8ab21cc948f2d3d2dfe78add933fb20b6dbada1bba46bfa5f8eca7c5f1",
+      "started_unix": 1791192440.9542685,
+      "variant": "baseline"
+    },
+    {
+      "jobs": 1,
+      "largest_worker_rss_kib": 61684,
+      "parent_max_rss_kib": 51180,
+      "phases": {
+        "components": 0.1400479009898845,
+        "emit": 0.07083152400446124,
+        "floors": 0.022733163001248613,
+        "graph": 2.9238118280190974,
+        "raster": 2.6867804329958744
+      },
+      "repeat": 1,
+      "resources": {
+        "largest_process_rss_kib": 61684,
+        "system_seconds": 0.06878,
+        "user_seconds": 5.802402,
+        "wall_seconds": 5.966322110005422
+      },
+      "sample": "open-westfall",
+      "script_sha256": "eba2d4ddd235494eed6d27d8611710e295d91fe8cbcc0e724aa5fa3f9d6d2482",
+      "started_unix": 1791192449.9105213,
+      "variant": "optimized"
+    },
+    {
+      "jobs": 6,
+      "repeat": 1,
+      "resources": {
+        "largest_process_rss_kib": 60536,
+        "system_seconds": 0.051962999999999995,
+        "user_seconds": 9.002774,
+        "wall_seconds": 7.889255715010222
+      },
+      "sample": "open-westfall",
+      "script_sha256": "2dfeae8ab21cc948f2d3d2dfe78add933fb20b6dbada1bba46bfa5f8eca7c5f1",
+      "started_unix": 1791192455.9205296,
+      "variant": "baseline"
+    },
+    {
+      "jobs": 6,
+      "largest_worker_rss_kib": 61500,
+      "parent_max_rss_kib": 51260,
+      "phases": {
+        "components": 0.15522399501060136,
+        "emit": 0.06434006098425016,
+        "floors": 0.03065220298594795,
+        "graph": 3.130671502003679,
+        "raster": 1.4260227459890302
+      },
+      "repeat": 1,
+      "resources": {
+        "largest_process_rss_kib": 61500,
+        "system_seconds": 0.066908,
+        "user_seconds": 5.838393,
+        "wall_seconds": 4.911233799008187
+      },
+      "sample": "open-westfall",
+      "script_sha256": "eba2d4ddd235494eed6d27d8611710e295d91fe8cbcc0e724aa5fa3f9d6d2482",
+      "started_unix": 1791192463.8526993,
+      "variant": "optimized"
+    },
+    {
+      "jobs": 1,
+      "largest_worker_rss_kib": 62104,
+      "parent_max_rss_kib": 51184,
+      "phases": {
+        "components": 0.13592563700512983,
+        "emit": 0.06989547799457796,
+        "floors": 0.026524382003117353,
+        "graph": 2.9892443849821575,
+        "raster": 2.7296286530036014
+      },
+      "repeat": 2,
+      "resources": {
+        "largest_process_rss_kib": 62104,
+        "system_seconds": 0.062095,
+        "user_seconds": 5.882939,
+        "wall_seconds": 6.0428765029937495
+      },
+      "sample": "open-westfall",
+      "script_sha256": "eba2d4ddd235494eed6d27d8611710e295d91fe8cbcc0e724aa5fa3f9d6d2482",
+      "started_unix": 1791192468.8042037,
+      "variant": "optimized"
+    },
+    {
+      "jobs": 1,
+      "repeat": 2,
+      "resources": {
+        "largest_process_rss_kib": 59952,
+        "system_seconds": 0.039566,
+        "user_seconds": 8.494501,
+        "wall_seconds": 8.73253807099536
+      },
+      "sample": "open-westfall",
+      "script_sha256": "2dfeae8ab21cc948f2d3d2dfe78add933fb20b6dbada1bba46bfa5f8eca7c5f1",
+      "started_unix": 1791192474.8854392,
+      "variant": "baseline"
+    },
+    {
+      "jobs": 6,
+      "largest_worker_rss_kib": 61732,
+      "parent_max_rss_kib": 51728,
+      "phases": {
+        "components": 0.14130104400101118,
+        "emit": 0.07262329998775385,
+        "floors": 0.02379959699464962,
+        "graph": 3.038068409980042,
+        "raster": 1.5249475620221347
+      },
+      "repeat": 2,
+      "resources": {
+        "largest_process_rss_kib": 61732,
+        "system_seconds": 0.09543499999999999,
+        "user_seconds": 5.918484,
+        "wall_seconds": 4.89727249200223
+      },
+      "sample": "open-westfall",
+      "script_sha256": "eba2d4ddd235494eed6d27d8611710e295d91fe8cbcc0e724aa5fa3f9d6d2482",
+      "started_unix": 1791192483.6622102,
+      "variant": "optimized"
+    },
+    {
+      "jobs": 6,
+      "repeat": 2,
+      "resources": {
+        "largest_process_rss_kib": 60164,
+        "system_seconds": 0.065941,
+        "user_seconds": 8.802212,
+        "wall_seconds": 7.839549429016188
+      },
+      "sample": "open-westfall",
+      "script_sha256": "2dfeae8ab21cc948f2d3d2dfe78add933fb20b6dbada1bba46bfa5f8eca7c5f1",
+      "started_unix": 1791192488.6076198,
+      "variant": "baseline"
+    },
+    {
+      "jobs": 1,
+      "repeat": 3,
+      "resources": {
+        "largest_process_rss_kib": 60288,
+        "system_seconds": 0.049579,
+        "user_seconds": 8.633823,
+        "wall_seconds": 8.852396492002299
+      },
+      "sample": "open-westfall",
+      "script_sha256": "2dfeae8ab21cc948f2d3d2dfe78add933fb20b6dbada1bba46bfa5f8eca7c5f1",
+      "started_unix": 1791192496.504437,
+      "variant": "baseline"
+    },
+    {
+      "jobs": 1,
+      "largest_worker_rss_kib": 61188,
+      "parent_max_rss_kib": 51060,
+      "phases": {
+        "components": 0.14134296900010668,
+        "emit": 0.0681936759792734,
+        "floors": 0.024277229997096583,
+        "graph": 2.9592919790011365,
+        "raster": 2.653695679997327
+      },
+      "repeat": 3,
+      "resources": {
+        "largest_process_rss_kib": 61188,
+        "system_seconds": 0.08877399999999999,
+        "user_seconds": 5.771346,
+        "wall_seconds": 5.9372605819953606
+      },
+      "sample": "open-westfall",
+      "script_sha256": "eba2d4ddd235494eed6d27d8611710e295d91fe8cbcc0e724aa5fa3f9d6d2482",
+      "started_unix": 1791192505.3975084,
+      "variant": "optimized"
+    },
+    {
+      "jobs": 6,
+      "repeat": 3,
+      "resources": {
+        "largest_process_rss_kib": 60512,
+        "system_seconds": 0.081122,
+        "user_seconds": 8.586612,
+        "wall_seconds": 7.599252250016434
+      },
+      "sample": "open-westfall",
+      "script_sha256": "2dfeae8ab21cc948f2d3d2dfe78add933fb20b6dbada1bba46bfa5f8eca7c5f1",
+      "started_unix": 1791192511.374551,
+      "variant": "baseline"
+    },
+    {
+      "jobs": 6,
+      "largest_worker_rss_kib": 61304,
+      "parent_max_rss_kib": 52080,
+      "phases": {
+        "components": 0.15678004099754617,
+        "emit": 0.0751020789903123,
+        "floors": 0.027604554983554408,
+        "graph": 3.0416199830069672,
+        "raster": 1.6102916630043183
+      },
+      "repeat": 3,
+      "resources": {
+        "largest_process_rss_kib": 61304,
+        "system_seconds": 0.11434599999999999,
+        "user_seconds": 6.061758,
+        "wall_seconds": 5.008446730993455
+      },
+      "sample": "open-westfall",
+      "script_sha256": "eba2d4ddd235494eed6d27d8611710e295d91fe8cbcc0e724aa5fa3f9d6d2482",
+      "started_unix": 1791192519.0137143,
+      "variant": "optimized"
+    },
+    {
+      "jobs": 1,
+      "repeat": 1,
+      "resources": {
+        "largest_process_rss_kib": 52960,
+        "system_seconds": 0.056000999999999995,
+        "user_seconds": 5.757072,
+        "wall_seconds": 5.966094350005733
+      },
+      "sample": "water-wetlands",
+      "script_sha256": "2dfeae8ab21cc948f2d3d2dfe78add933fb20b6dbada1bba46bfa5f8eca7c5f1",
+      "started_unix": 1791192524.064466,
+      "variant": "baseline"
+    },
+    {
+      "jobs": 1,
+      "largest_worker_rss_kib": 54444,
+      "parent_max_rss_kib": 47316,
+      "phases": {
+        "components": 0.10125633698771708,
+        "emit": 0.05895822000456974,
+        "floors": 0.029608005977934226,
+        "graph": 1.6994256350153591,
+        "raster": 2.2615827310073655
+      },
+      "repeat": 1,
+      "resources": {
+        "largest_process_rss_kib": 54444,
+        "system_seconds": 0.075448,
+        "user_seconds": 4.032355,
+        "wall_seconds": 4.24769938501413
+      },
+      "sample": "water-wetlands",
+      "script_sha256": "eba2d4ddd235494eed6d27d8611710e295d91fe8cbcc0e724aa5fa3f9d6d2482",
+      "started_unix": 1791192530.0719714,
+      "variant": "optimized"
+    },
+    {
+      "jobs": 6,
+      "repeat": 1,
+      "resources": {
+        "largest_process_rss_kib": 52656,
+        "system_seconds": 0.052275999999999996,
+        "user_seconds": 5.564649,
+        "wall_seconds": 4.706854919000762
+      },
+      "sample": "water-wetlands",
+      "script_sha256": "2dfeae8ab21cc948f2d3d2dfe78add933fb20b6dbada1bba46bfa5f8eca7c5f1",
+      "started_unix": 1791192534.3623936,
+      "variant": "baseline"
+    },
+    {
+      "jobs": 6,
+      "largest_worker_rss_kib": 55280,
+      "parent_max_rss_kib": 47316,
+      "phases": {
+        "components": 0.10338961600791663,
+        "emit": 0.054212015005759895,
+        "floors": 0.01975771799334325,
+        "graph": 1.5969273879891261,
+        "raster": 1.2326398550067097
+      },
+      "repeat": 1,
+      "resources": {
+        "largest_process_rss_kib": 55280,
+        "system_seconds": 0.06330899999999999,
+        "user_seconds": 3.9732089999999998,
+        "wall_seconds": 3.1082719289988745
+      },
+      "sample": "water-wetlands",
+      "script_sha256": "eba2d4ddd235494eed6d27d8611710e295d91fe8cbcc0e724aa5fa3f9d6d2482",
+      "started_unix": 1791192539.1174939,
+      "variant": "optimized"
+    },
+    {
+      "jobs": 1,
+      "largest_worker_rss_kib": 54432,
+      "parent_max_rss_kib": 47348,
+      "phases": {
+        "components": 0.10490812399075367,
+        "emit": 0.06823106500087306,
+        "floors": 0.021502274001250044,
+        "graph": 1.6610475849884097,
+        "raster": 2.461610243015457
+      },
+      "repeat": 2,
+      "resources": {
+        "largest_process_rss_kib": 54432,
+        "system_seconds": 0.059942999999999996,
+        "user_seconds": 4.141261,
+        "wall_seconds": 4.404989410017151
+      },
+      "sample": "water-wetlands",
+      "script_sha256": "eba2d4ddd235494eed6d27d8611710e295d91fe8cbcc0e724aa5fa3f9d6d2482",
+      "started_unix": 1791192542.268439,
+      "variant": "optimized"
+    },
+    {
+      "jobs": 1,
+      "repeat": 2,
+      "resources": {
+        "largest_process_rss_kib": 52768,
+        "system_seconds": 0.053273,
+        "user_seconds": 5.599734,
+        "wall_seconds": 5.964956729992991
+      },
+      "sample": "water-wetlands",
+      "script_sha256": "2dfeae8ab21cc948f2d3d2dfe78add933fb20b6dbada1bba46bfa5f8eca7c5f1",
+      "started_unix": 1791192546.7116451,
+      "variant": "baseline"
+    },
+    {
+      "jobs": 6,
+      "largest_worker_rss_kib": 54444,
+      "parent_max_rss_kib": 47132,
+      "phases": {
+        "components": 0.1081002689898014,
+        "emit": 0.05128243999206461,
+        "floors": 0.01844745100243017,
+        "graph": 1.5964128240011632,
+        "raster": 1.2993716929922812
+      },
+      "repeat": 2,
+      "resources": {
+        "largest_process_rss_kib": 54444,
+        "system_seconds": 0.104809,
+        "user_seconds": 3.983046,
+        "wall_seconds": 3.1744924210070167
+      },
+      "sample": "water-wetlands",
+      "script_sha256": "eba2d4ddd235494eed6d27d8611710e295d91fe8cbcc0e724aa5fa3f9d6d2482",
+      "started_unix": 1791192552.7216659,
+      "variant": "optimized"
+    },
+    {
+      "jobs": 6,
+      "repeat": 2,
+      "resources": {
+        "largest_process_rss_kib": 52920,
+        "system_seconds": 0.082134,
+        "user_seconds": 5.446573,
+        "wall_seconds": 4.668450922996271
+      },
+      "sample": "water-wetlands",
+      "script_sha256": "2dfeae8ab21cc948f2d3d2dfe78add933fb20b6dbada1bba46bfa5f8eca7c5f1",
+      "started_unix": 1791192555.9450586,
+      "variant": "baseline"
+    },
+    {
+      "jobs": 1,
+      "repeat": 3,
+      "resources": {
+        "largest_process_rss_kib": 52912,
+        "system_seconds": 0.060504999999999996,
+        "user_seconds": 5.634939,
+        "wall_seconds": 6.077185231988551
+      },
+      "sample": "water-wetlands",
+      "script_sha256": "2dfeae8ab21cc948f2d3d2dfe78add933fb20b6dbada1bba46bfa5f8eca7c5f1",
+      "started_unix": 1791192560.6645188,
+      "variant": "baseline"
+    },
+    {
+      "jobs": 1,
+      "largest_worker_rss_kib": 54148,
+      "parent_max_rss_kib": 46948,
+      "phases": {
+        "components": 0.13242349599022418,
+        "emit": 0.051897903002100065,
+        "floors": 0.02139043400529772,
+        "graph": 1.6743948980001733,
+        "raster": 2.7834100170002785
+      },
+      "repeat": 3,
+      "resources": {
+        "largest_process_rss_kib": 54148,
+        "system_seconds": 0.052799,
+        "user_seconds": 4.066187,
+        "wall_seconds": 4.775695284013636
+      },
+      "sample": "water-wetlands",
+      "script_sha256": "eba2d4ddd235494eed6d27d8611710e295d91fe8cbcc0e724aa5fa3f9d6d2482",
+      "started_unix": 1791192566.802922,
+      "variant": "optimized"
+    },
+    {
+      "jobs": 6,
+      "repeat": 3,
+      "resources": {
+        "largest_process_rss_kib": 52668,
+        "system_seconds": 0.060197,
+        "user_seconds": 5.348313,
+        "wall_seconds": 4.449421244004043
+      },
+      "sample": "water-wetlands",
+      "script_sha256": "2dfeae8ab21cc948f2d3d2dfe78add933fb20b6dbada1bba46bfa5f8eca7c5f1",
+      "started_unix": 1791192571.630877,
+      "variant": "baseline"
+    },
+    {
+      "jobs": 6,
+      "largest_worker_rss_kib": 54800,
+      "parent_max_rss_kib": 47012,
+      "phases": {
+        "components": 0.12155453200102784,
+        "emit": 0.05193794198567048,
+        "floors": 0.013064524013316259,
+        "graph": 1.5951881910150405,
+        "raster": 0.9475400700175669
+      },
+      "repeat": 3,
+      "resources": {
+        "largest_process_rss_kib": 54800,
+        "system_seconds": 0.059625,
+        "user_seconds": 3.614054,
+        "wall_seconds": 2.833351284993114
+      },
+      "sample": "water-wetlands",
+      "script_sha256": "eba2d4ddd235494eed6d27d8611710e295d91fe8cbcc0e724aa5fa3f9d6d2482",
+      "started_unix": 1791192576.1210191,
+      "variant": "optimized"
+    },
+    {
+      "jobs": 1,
+      "repeat": 1,
+      "resources": {
+        "largest_process_rss_kib": 57264,
+        "system_seconds": 0.052621999999999995,
+        "user_seconds": 6.572872,
+        "wall_seconds": 6.8564019040204585
+      },
+      "sample": "floors-ironforge",
+      "script_sha256": "2dfeae8ab21cc948f2d3d2dfe78add933fb20b6dbada1bba46bfa5f8eca7c5f1",
+      "started_unix": 1791192579.0007532,
+      "variant": "baseline"
+    },
+    {
+      "jobs": 1,
+      "largest_worker_rss_kib": 58544,
+      "parent_max_rss_kib": 67164,
+      "phases": {
+        "components": 0.1277490800130181,
+        "emit": 0.16190076601924375,
+        "floors": 0.06560151898884214,
+        "graph": 1.3589778040186502,
+        "raster": 3.341408054024214
+      },
+      "repeat": 1,
+      "resources": {
+        "largest_process_rss_kib": 67164,
+        "system_seconds": 0.06866599999999999,
+        "user_seconds": 4.922595,
+        "wall_seconds": 5.16446139200707
+      },
+      "sample": "floors-ironforge",
+      "script_sha256": "eba2d4ddd235494eed6d27d8611710e295d91fe8cbcc0e724aa5fa3f9d6d2482",
+      "started_unix": 1791192585.8966022,
+      "variant": "optimized"
+    },
+    {
+      "jobs": 6,
+      "repeat": 1,
+      "resources": {
+        "largest_process_rss_kib": 56956,
+        "system_seconds": 0.096574,
+        "user_seconds": 6.149991,
+        "wall_seconds": 4.897438692016294
+      },
+      "sample": "floors-ironforge",
+      "script_sha256": "2dfeae8ab21cc948f2d3d2dfe78add933fb20b6dbada1bba46bfa5f8eca7c5f1",
+      "started_unix": 1791192591.108264,
+      "variant": "baseline"
+    },
+    {
+      "jobs": 6,
+      "largest_worker_rss_kib": 59360,
+      "parent_max_rss_kib": 67444,
+      "phases": {
+        "components": 0.1103906650096178,
+        "emit": 0.1762971340212971,
+        "floors": 0.0656229589949362,
+        "graph": 1.483635526994476,
+        "raster": 1.6143878340080846
+      },
+      "repeat": 1,
+      "resources": {
+        "largest_process_rss_kib": 67444,
+        "system_seconds": 0.07220599999999999,
+        "user_seconds": 4.7851479999999995,
+        "wall_seconds": 3.5625510530080646
+      },
+      "sample": "floors-ironforge",
+      "script_sha256": "eba2d4ddd235494eed6d27d8611710e295d91fe8cbcc0e724aa5fa3f9d6d2482",
+      "started_unix": 1791192596.0435698,
+      "variant": "optimized"
+    },
+    {
+      "jobs": 1,
+      "largest_worker_rss_kib": 58316,
+      "parent_max_rss_kib": 67264,
+      "phases": {
+        "components": 0.1378523489984218,
+        "emit": 0.16428833501413465,
+        "floors": 0.06623056999524124,
+        "graph": 1.3107050939870533,
+        "raster": 3.338809316017432
+      },
+      "repeat": 2,
+      "resources": {
+        "largest_process_rss_kib": 67264,
+        "system_seconds": 0.05565,
+        "user_seconds": 5.000651,
+        "wall_seconds": 5.134003405983094
+      },
+      "sample": "floors-ironforge",
+      "script_sha256": "eba2d4ddd235494eed6d27d8611710e295d91fe8cbcc0e724aa5fa3f9d6d2482",
+      "started_unix": 1791192599.64792,
+      "variant": "optimized"
+    },
+    {
+      "jobs": 1,
+      "repeat": 2,
+      "resources": {
+        "largest_process_rss_kib": 56652,
+        "system_seconds": 0.07538099999999999,
+        "user_seconds": 6.357341,
+        "wall_seconds": 6.551266102003865
+      },
+      "sample": "floors-ironforge",
+      "script_sha256": "2dfeae8ab21cc948f2d3d2dfe78add933fb20b6dbada1bba46bfa5f8eca7c5f1",
+      "started_unix": 1791192604.8215954,
+      "variant": "baseline"
+    },
+    {
+      "jobs": 6,
+      "largest_worker_rss_kib": 59576,
+      "parent_max_rss_kib": 67420,
+      "phases": {
+        "components": 0.11849158300901763,
+        "emit": 0.16430929498164915,
+        "floors": 0.06718655498116277,
+        "graph": 1.3684936490026303,
+        "raster": 1.7730585169920232
+      },
+      "repeat": 2,
+      "resources": {
+        "largest_process_rss_kib": 67420,
+        "system_seconds": 0.097218,
+        "user_seconds": 5.049591,
+        "wall_seconds": 3.597089588001836
+      },
+      "sample": "floors-ironforge",
+      "script_sha256": "eba2d4ddd235494eed6d27d8611710e295d91fe8cbcc0e724aa5fa3f9d6d2482",
+      "started_unix": 1791192611.4113693,
+      "variant": "optimized"
+    },
+    {
+      "jobs": 6,
+      "repeat": 2,
+      "resources": {
+        "largest_process_rss_kib": 57140,
+        "system_seconds": 0.10162199999999999,
+        "user_seconds": 6.423063,
+        "wall_seconds": 4.950275915005477
+      },
+      "sample": "floors-ironforge",
+      "script_sha256": "2dfeae8ab21cc948f2d3d2dfe78add933fb20b6dbada1bba46bfa5f8eca7c5f1",
+      "started_unix": 1791192615.0452714,
+      "variant": "baseline"
+    },
+    {
+      "jobs": 1,
+      "repeat": 3,
+      "resources": {
+        "largest_process_rss_kib": 57040,
+        "system_seconds": 0.066134,
+        "user_seconds": 5.8541360000000005,
+        "wall_seconds": 6.060228814021684
+      },
+      "sample": "floors-ironforge",
+      "script_sha256": "2dfeae8ab21cc948f2d3d2dfe78add933fb20b6dbada1bba46bfa5f8eca7c5f1",
+      "started_unix": 1791192620.035308,
+      "variant": "baseline"
+    },
+    {
+      "jobs": 1,
+      "largest_worker_rss_kib": 59744,
+      "parent_max_rss_kib": 67524,
+      "phases": {
+        "components": 0.11870326200732961,
+        "emit": 0.18427025701384991,
+        "floors": 0.0858921030012425,
+        "graph": 1.4297479850065429,
+        "raster": 3.4520464010129217
+      },
+      "repeat": 3,
+      "resources": {
+        "largest_process_rss_kib": 67524,
+        "system_seconds": 0.046022999999999994,
+        "user_seconds": 5.254953,
+        "wall_seconds": 5.376096038002288
+      },
+      "sample": "floors-ironforge",
+      "script_sha256": "eba2d4ddd235494eed6d27d8611710e295d91fe8cbcc0e724aa5fa3f9d6d2482",
+      "started_unix": 1791192626.1380544,
+      "variant": "optimized"
+    },
+    {
+      "jobs": 6,
+      "repeat": 3,
+      "resources": {
+        "largest_process_rss_kib": 57004,
+        "system_seconds": 0.064527,
+        "user_seconds": 6.813222,
+        "wall_seconds": 5.335447915975237
+      },
+      "sample": "floors-ironforge",
+      "script_sha256": "2dfeae8ab21cc948f2d3d2dfe78add933fb20b6dbada1bba46bfa5f8eca7c5f1",
+      "started_unix": 1791192631.558863,
+      "variant": "baseline"
+    },
+    {
+      "jobs": 6,
+      "largest_worker_rss_kib": 59432,
+      "parent_max_rss_kib": 67616,
+      "phases": {
+        "components": 0.14556050099781714,
+        "emit": 0.1974885399977211,
+        "floors": 0.0784929069923237,
+        "graph": 1.369569603994023,
+        "raster": 1.9556325140001718
+      },
+      "repeat": 3,
+      "resources": {
+        "largest_process_rss_kib": 67616,
+        "system_seconds": 0.093345,
+        "user_seconds": 5.296063,
+        "wall_seconds": 3.8611273739952594
+      },
+      "sample": "floors-ironforge",
+      "script_sha256": "eba2d4ddd235494eed6d27d8611710e295d91fe8cbcc0e724aa5fa3f9d6d2482",
+      "started_unix": 1791192636.9489293,
+      "variant": "optimized"
+    }
+  ],
+  "schema": 1
+}

@@ -1,0 +1,105 @@
+{
+  "crops": {
+    "city-stormwind": {
+      "cols": [
+        30,
+        31
+      ],
+      "extra_floors": 3796,
+      "floor_cells": 3369,
+      "graph_edges": 228,
+      "graph_nodes": 111,
+      "ground_cells": 10372,
+      "location": "Stormwind City and Elwynn edge",
+      "output_sha256": "52663d8a01886e5ba8b2c8e640d8e671633c0c487c663ff45b63655d98772c94",
+      "rows": [
+        48,
+        49
+      ],
+      "tiles": {
+        "0000_48_30.mmtile": "cf4bb9c751bf39b418f6dacf3c8b644226d6991341ad834f71f8541ba130e073",
+        "0000_48_31.mmtile": "6b3e1ff135657bc8b3cc7700569247688697b8454738c421063f8d234fb4eb11",
+        "0000_49_30.mmtile": "eb15bf7db06f7b63946958802fcbaa44a2ca4e2f524d774b72c391344a363c1a",
+        "0000_49_31.mmtile": "c86fb77f7112e664878d9f916552c230c84be3ace59bdcaa3222c050abdc4afa"
+      },
+      "walkable_polygons": 32293,
+      "water_cells": 946
+    },
+    "floors-ironforge": {
+      "cols": [
+        34,
+        35
+      ],
+      "extra_floors": 4570,
+      "floor_cells": 3515,
+      "graph_edges": 183,
+      "graph_nodes": 97,
+      "ground_cells": 10333,
+      "location": "Ironforge and Dun Morogh overlapping floors",
+      "output_sha256": "fd2f48931b8355bc93280418b3985f7876478ded6db8f5c5c4bf6da0509656c8",
+      "rows": [
+        40,
+        41
+      ],
+      "tiles": {
+        "0000_40_34.mmtile": "0e4480dd3378db4c8793a4eab694b3d568a44c50e36001d7f025cde944cb71e2",
+        "0000_40_35.mmtile": "41bff2eae21cb105f9479e3c081b5687c11c53b42c46fa1ccbcc7c555141cf28",
+        "0000_41_34.mmtile": "ea31b6c2e83f563fc2a36e7e8343a43fc492e3eaedbdae5870df4ed0f0687858",
+        "0000_41_35.mmtile": "1618966e11567ad7a6f7e39d9c67011df88130dad60e5f6790509cc5f54667da"
+      },
+      "walkable_polygons": 17806,
+      "water_cells": 0
+    },
+    "open-westfall": {
+      "cols": [
+        30,
+        31
+      ],
+      "extra_floors": 1810,
+      "floor_cells": 1640,
+      "graph_edges": 326,
+      "graph_nodes": 106,
+      "ground_cells": 16065,
+      "location": "Westfall ground near Sentinel Hill",
+      "output_sha256": "a81559889ecad90ec64aff981eb43b6077d7f55b5b97391df0fdff3db7e19489",
+      "rows": [
+        51,
+        52
+      ],
+      "tiles": {
+        "0000_51_30.mmtile": "f9062628efba5646b19099d300fe3fe610d6cac7c7a79018bcbef25ac9a93f00",
+        "0000_51_31.mmtile": "a108e9a4f83b5be6954d4621bcf94fcdf18545303801fb61c0f24f1038557571",
+        "0000_52_30.mmtile": "e4cb0f05eb0ba957dd566fea6bae82b2ccd7593af70425f02de83ab729e81453",
+        "0000_52_31.mmtile": "4798f88927d8956abe2469f58114a0979f04176e569205c3e05c9841bf4be65f"
+      },
+      "walkable_polygons": 19842,
+      "water_cells": 1309
+    },
+    "water-wetlands": {
+      "cols": [
+        33,
+        34
+      ],
+      "extra_floors": 1304,
+      "floor_cells": 1140,
+      "graph_edges": 336,
+      "graph_nodes": 100,
+      "ground_cells": 6939,
+      "location": "Wetlands and Menethil shore",
+      "output_sha256": "271933603a796a132b752858817bc9ce239ce14cf8e8ddd308c3eca8243a5cf3",
+      "rows": [
+        38,
+        39
+      ],
+      "tiles": {
+        "0000_38_33.mmtile": "d6f49a64227249a6e6b4928ac921354c6395c61cd4e320b0eeb74a3db134a14d",
+        "0000_38_34.mmtile": "ec47a200054ca75d390d632ae572beec7071dea227ff0dbeab2e8b0686a0f62a",
+        "0000_39_33.mmtile": "9cde9696afb3613469db61235d81c36eff2b96c9c1ce53d40df8c03211fdb2f4",
+        "0000_39_34.mmtile": "9a5603d6bcbe873a6da0a1e1222c1ec154e8d26cadd8120b44819ab785f8a5e0"
+      },
+      "walkable_polygons": 15702,
+      "water_cells": 6646
+    }
+  },
+  "input_build": "1.60.1.69913"
+}
