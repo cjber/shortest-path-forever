@@ -79,7 +79,6 @@ for _, readyAtLoad in ipairs({ false, true }) do
 		},
 		OnTravelTick = noop,
 		NearestDock = noop,
-		RefreshRouteButton = noop,
 	}
 	env.ForeverTrackerHost = ns.TrackerHost
 	setfenv(assert(loadfile("UI/Tracker.lua")), env)("Addon", ns)

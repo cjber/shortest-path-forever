@@ -69,7 +69,7 @@ local flags = {
 }
 local calls = 0
 
-local menuEntries, closedMenus, releaseMenu, trackingMenu = {}, 0, nil, nil
+local menuEntries, closedMenus, releaseMenu, trackingMenus = {}, 0, nil, {}
 local mapOpens = 0
 local function menuNode()
 	local node = {}
@@ -136,8 +136,7 @@ local env = setmetatable({
 	CreateFrame = frame,
 	Menu = {
 		ModifyMenu = function(tag, callback)
-			assert(tag == "MENU_WORLD_MAP_TRACKING")
-			trackingMenu = callback
+			trackingMenus[tag] = callback
 		end,
 	},
 	MenuUtil = {
@@ -224,10 +223,11 @@ setfenv(assert(loadfile("UI/Nearby.lua")), env)("ShortestPathForever", ns)
 for _, fn in ipairs(initializers) do
 	fn()
 end
-ns.OpenNearby()
+env.SlashCmdList.SPFNEAR("")
 assert(mapOpens == 1, "opening the menu asks the game to open the map")
 assert(ns.NearbyServices.State() == "building" and calls == 0, "index does not block click")
-assert(trackingMenu, "registers the native world-map tracking dropdown")
+local trackingMenu = assert(trackingMenus.MENU_WORLD_MAP_TRACKING, "registers the native world-map tracking dropdown")
+local minimapMenu = assert(trackingMenus.MENU_MINIMAP_TRACKING, "registers the native minimap tracking dropdown")
 trackingMenu(nil, menuNode())
 local loadingEntry
 for _, item in ipairs(menuEntries) do
@@ -239,7 +239,7 @@ assert(
 	loadingEntry and loadingEntry.children and loadingEntry.children[1].text == "Loading QuestieDB…",
 	"tracking menu reports loading"
 )
-ns.OpenNearby()
+env.SlashCmdList.SPFNEAR("")
 assert(#menuEntries > 0 and menuEntries[1].title, "nearby opens an addon-owned map menu")
 local dismissedMenuCount = #menuEntries
 assert(releaseMenu, "native menu release callback is registered")
@@ -268,6 +268,13 @@ local tracking = menuEntries[1]
 assert(#tracking.children == 10, "tracking menu exposes all service categories")
 tracking.children[3].callback()
 assert(navigated[#navigated][5] == "Neutral repairs", "tracking repair action routes nearest")
+menuEntries = {}
+local opensBefore = mapOpens
+minimapMenu(nil, menuNode())
+assert(#menuEntries[1].children == 10, "the minimap's tracking menu carries the same services")
+menuEntries[1].children[1].callback()
+assert(navigated[#navigated][5] == "Mage trainer", "a service chosen from the minimap routes to the nearest")
+assert(mapOpens == opensBefore, "the minimap's menu routes without opening the world map")
 local places = ns.NearbyServices.Index()
 assert(#places.vendor == 2, "hostile,wrong faction,unknown and malformed spawns excluded")
 assert(#places.reagents == 1, "reagent title required; general vendor is not labelled reagents")
@@ -285,10 +292,10 @@ local function entry(text)
 	end
 	error("no menu entry: " .. text)
 end
-ns.OpenNearby()
+env.SlashCmdList.SPFNEAR("")
 entry("Class trainer").callback()
 assert(navigated[#navigated][5] == "Mage trainer", "class action routes nearest class trainer")
-ns.OpenNearby()
+env.SlashCmdList.SPFNEAR("")
 local trainers = entry("Trainers by specialty")
 assert(#trainers.children > 0, "trainer category has specialty submenu")
 for _, child in ipairs(trainers.children) do
@@ -297,14 +304,14 @@ for _, child in ipairs(trainers.children) do
 	end
 end
 assert(navigated[#navigated][5] == "Alchemy trainer", "specialty picker sends actual chosen trainer")
-ns.OpenNearby()
+env.SlashCmdList.SPFNEAR("")
 entry("Reagents").callback()
 assert(navigated[#navigated][5] == "Far vendor", "reagents ignores closer general vendor")
 assert(closedMenus > 0, "successful menu actions close the map menu")
 local before = calls
 local beforeMenus = #menuEntries
 for _ = 1, 20 do
-	ns.OpenNearby()
+	env.SlashCmdList.SPFNEAR("")
 end
 assert(#menuEntries == beforeMenus, "menu rebuilds without creating frames")
 assert(calls == before, "opening does not rebuild DB")
@@ -334,7 +341,7 @@ local function fresh(questie, away)
 		pump()
 	end
 	elsewhere = away
-	copy.OpenNearby()
+	env.SlashCmdList.SPFNEAR("")
 	return copy
 end
 -- A zone QuestieDB has nothing for: every service, the two with specialties too, reads as unavailable here.

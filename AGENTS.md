@@ -78,9 +78,6 @@ before its `v*` tag, since the release publishes it as the notes.
 
 ## Waivers
 
-- WFA-3 (no minimap button): the route button is a minimap button by owner request, and it is an action, not a
-  second options surface. Every option still lives in the settings page, which the slash command, the compartment
-  entry and the button's right-click open; the button starts and stops the route; middle-click opens the service finder.
 - WFA-28: `Data/Routes.lua` (boat and zeppelin routes, docks, periods): wago.tools `TaxiPathNode` for the pinned
   build, timed by the CMaNGOS mangos-classic transport model and stretched onto classic-db `transports.period`;
   QuestieDB's object `waypoints` field is empty in its Forever store and AtlasLoot has no travel data. Live
