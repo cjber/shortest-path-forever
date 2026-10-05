@@ -41,27 +41,6 @@ class CoverageTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("hard 10 MiB limit: Map.lua", result.stderr)
 
-    def test_packing_preserves_all_fields_and_is_repeatable(self):
-        source = "ShortestPathForeverPathData[1] = {\n\tcells = 4,\n"
-        source += "".join(f'\t{field} = {{\n\t\t[1] = "' + "a" * 250 + '",\n\t},\n' for field in ("grid", "floor"))
-        source += "}\n"
-        with tempfile.TemporaryDirectory(prefix="spf-pack-") as directory:
-            root = Path(directory)
-            path = root / "Nav1.lua"
-            path.write_text(source)
-            toc = root / "ShortestPathForever_Nav1.toc"
-            toc.write_text("## LoadOnDemand: 1\n\nNav1.lua\n")
-            PACK.write_map(path, 500)
-            once = {file.name: file.read_text() for file in root.iterdir()}
-            self.assertIn("Nav1_floor.lua", once)
-            self.assertIn("\tfloor = {},", once["Nav1.lua"])
-            PACK.write_map(path, 500)
-            self.assertEqual(once, {file.name: file.read_text() for file in root.iterdir()})
-            # Rejoining for a larger limit must recover the original source exactly.
-            PACK.write_map(path)
-            self.assertEqual(path.read_text(), source)
-            self.assertFalse((root / "Nav1_floor.lua").exists())
-
 
 class ToolArgumentTests(unittest.TestCase):
     tools = Path(__file__).parents[1] / "tools"
@@ -113,7 +92,7 @@ class MultivalueTests(unittest.TestCase):
             with self.subTest(source=source):
                 if source.endswith("end"):
                     source = "do " + source
-                self.assertEqual(len(LINT.lint(source)), 1)
+                self.assertEqual(len(LINT.check(source)), 1)
 
     def test_single_result_contexts(self):
         for source in (
@@ -132,7 +111,7 @@ class MultivalueTests(unittest.TestCase):
             "f(lib:select(2, g()))",
         ):
             with self.subTest(source=source):
-                self.assertEqual(LINT.lint(source), [])
+                self.assertEqual(LINT.check(source), [])
 
     def test_lexical_boundaries(self):
         source = r"""-- f(select(2, g()))
@@ -144,7 +123,9 @@ local v = 2.5e-3 + 0xff + .5
 f(select -- ignored delimiter: )
 (2, g()))
 """
-        self.assertEqual(LINT.lint(source), [(7, "last call argument")])
+        hits = LINT.check(source)
+        self.assertEqual([line for line, _ in hits], [7])
+        self.assertIn("last call argument", hits[0][1])
 
     def test_nested_functions_and_blocks(self):
         source = """local function run(...)
@@ -159,7 +140,7 @@ while ready do ready = false end
 end
 function object.method:call() return 1 end
 """
-        self.assertEqual(len(LINT.lint(source)), 3)
+        self.assertEqual(len(LINT.check(source)), 3)
 
     def test_reason_is_required_and_scoped(self):
         for source in (
@@ -167,7 +148,7 @@ function object.method:call() return 1 end
             "return select(2, g()); -- multi-value: forward the tail",
             "local t = {select(2, g())} -- multi-value: retain all results",
         ):
-            self.assertEqual(LINT.lint(source), [])
+            self.assertEqual(LINT.check(source), [])
         for source in (
             "f(select(2, g())) -- multi-value:",
             "f(select(2, g())) -- multi-value:   ",
@@ -175,12 +156,12 @@ function object.method:call() return 1 end
             'local s = "-- multi-value: fake"; f(select(2, g()))',
             "f(select(2, g())) --[=[ multi-value: fake ]=]",
         ):
-            self.assertEqual(len(LINT.lint(source)), 1)
+            self.assertEqual(len(LINT.check(source)), 1)
 
     def test_bad_input_fails_closed(self):
         for source in ("f(select(2, g())", "local s = 'oops", "--[=[oops", "end", "local = 1"):
             with self.subTest(source=source), self.assertRaises(ValueError):
-                LINT.lint(source)
+                LINT.check(source)
 
 
 def write_strict_fixture(root, fixture):
@@ -200,8 +181,8 @@ def write_strict_fixture(root, fixture):
     for map_id in (0, 1, 2991):
         path = fixture / f"ShortestPathForever_Nav{map_id}/Nav{map_id}.lua"
         path.write_text(path.read_text().replace("\tcells = 67,", '\tcells = "bad",'))
-    path = fixture / "ShortestPathForever_Nav1/Nav1_floor.lua"
-    path.write_text(path.read_text().replace(".floor = {", ".floor = { false,", 1))
+    path = fixture / "ShortestPathForever_Nav1_1/Data.lua"
+    path.write_text(path.read_text() + "\ndata.floor[1] = false\n")
     (fixture / ".luarc.json").write_text(json.dumps(config))
     (fixture / "probe.lua").write_text("""
 C_ClassColor.GetClassColor("MAGE", 1)
@@ -322,7 +303,7 @@ class LuaLSGateTests(unittest.TestCase):
                 "Data/Routes.lua",
                 "ShortestPathForever_Nav0/Nav0.lua",
                 "ShortestPathForever_Nav1/Nav1.lua",
-                "ShortestPathForever_Nav1/Nav1_floor.lua",
+                "ShortestPathForever_Nav1_1/Data.lua",
                 "ShortestPathForever_Nav2991/Nav2991.lua",
             ):
                 codes = {d["code"] for d in diagnostics_by_file.get((fixture / name).as_uri(), [])}

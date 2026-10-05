@@ -8,14 +8,18 @@ and braking, the stop's delay at each stop). Checked against the sniffed periods
 """
 
 import argparse
-import csv
-import io
 import math
 import sys
 import urllib.error
-import urllib.request
 from collections import defaultdict
 from pathlib import Path
+
+try:
+    from tools.forever_tools import wago
+    from tools.forever_tools.fsio import atomic_write
+except ModuleNotFoundError:
+    from forever_tools import wago
+    from forever_tools.fsio import atomic_write
 
 BUILD = "1.60.1.69913"
 ROOT = Path(__file__).resolve().parent.parent
@@ -61,30 +65,32 @@ CATMULL_ROM = ((-0.5, 1.5, -1.5, 0.5), (1.0, -2.5, 2.0, -0.5), (-0.5, 0.0, 0.5, 
 
 
 def download(url, filename, refresh=False, offline=False):
-    path = CACHE / filename
-    if path.exists() and not refresh:
-        return path.read_text(encoding="utf-8-sig")
-    if offline:
-        raise ValueError(f"Missing cached source: {path}")
-    request = urllib.request.Request(url, headers={"User-Agent": "ShortestPathForever/1.0"})
-    with urllib.request.urlopen(request, timeout=60) as response:
-        data = response.read()
-    content = data.decode("utf-8-sig")
-    if content.lstrip().startswith("<"):
-        raise ValueError(f"Expected data, received HTML from {url}")
-    CACHE.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_bytes(data)
-    temporary.replace(path)
-    return content
+    def validate(data):
+        if data.decode("utf-8-sig").lstrip().startswith("<"):
+            raise ValueError(f"Expected data, received HTML from {url}")
+
+    return wago.fetch(
+        url,
+        CACHE / filename,
+        user_agent="ShortestPathForever/1.0",
+        refresh=refresh,
+        offline=offline,
+        timeout=60,
+        validate=validate,
+    ).decode("utf-8-sig")
 
 
 def db2(name, refresh=False, offline=False):
-    content = download(f"https://wago.tools/db2/{name}/csv?build={BUILD}", f"{name}-{BUILD}.csv", refresh, offline)
-    rows = list(csv.DictReader(io.StringIO(content)))
-    if not rows:
-        raise ValueError(f"{name}: empty DB2 export for {BUILD}")
-    return rows
+    return wago.db2_rows(
+        name,
+        BUILD,
+        CACHE,
+        user_agent="ShortestPathForever/1.0",
+        refresh=refresh,
+        offline=offline,
+        timeout=60,
+        required=("ID",),
+    )
 
 
 def evaluate(points, t):
@@ -300,7 +306,7 @@ def main():
     args = parser.parse_args()
     routes, docks = generate(db2("TaxiPathNode", args.refresh, args.offline))
     OUTPUT.parent.mkdir(exist_ok=True)
-    OUTPUT.write_text(render(routes, docks), encoding="utf-8")
+    atomic_write(OUTPUT, render(routes, docks))
     print(f"Wrote {OUTPUT.relative_to(ROOT)}: {len(routes)} routes, {len(docks)} docks")
 
 

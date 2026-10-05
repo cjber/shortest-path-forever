@@ -1,7 +1,7 @@
 # AGENTS.md
 
 Shortest Path Forever is a WoW: Forever addon (Interface 16001) that plans and guides journeys by foot,
-flight, boat, lift, tram and portal. The BigWigs packager ships it, with three load-on-demand walking-map
+flight, boat, lift, tram and portal. The BigWigs packager ships it, with load-on-demand walking-map
 addons, as one zip on a `v*` tag.
 
 ## Commands
@@ -92,6 +92,12 @@ before its `v*` tag, since the release publishes it as the notes.
 - WFA-28: `Data/Walks.lua` and `ShortestPathForever_Nav*/` (walking costs and walking maps): baked by
   `tools/bake_walks.lua` and `tools/baker/` from a local client install's terrain; neither database holds
   terrain. A walk you are on is searched live on the walking map.
+
+## Shared tooling
+
+`tools/forever_tools/` vendors the Python tooling from cjber/skills, `wow-forever-addon/tooling`.
+`python3 tools/forever_tools/sync.py check` verifies it offline. Edit the producer and run
+`sync.py update --source <checkout>` to refresh it. `tools/data_report.py --base REV` reports keyed data changes.
 
 ## Secure UI regression checks
 

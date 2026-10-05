@@ -27,7 +27,7 @@ Steps, each reusable on its own:
 
 1. `NavBaker --maps <install> <product>` lists every map with its tile count.
 2. `NavBaker --continent <install> <product> <map> <outDir> [threads]` streams the map a row of ADTs at a time. It is
-   resumable: every tile gets `status/<map>_<x>_<y>` (`ok`, `empty` or `FAILED`) and a line in `tiles.log`. A tile
+   resumable within one client build, extractor recipe and tile inventory: every tile gets `status/<map>_<x>_<y>` (`ok`, `empty` or `FAILED`) and a line in `tiles.log`. A tile
    whose Recast bake throws is retried with the LAYERS partitioner, then MONOTONE, then with coarser detail sampling (2x, then 4x). The
    retry is recorded. A tile that runs out of memory is baked again alone with the same settings, so the output does
    not depend on memory pressure. `ROWS="a b"` limits the rows.
@@ -41,10 +41,24 @@ Steps, each reusable on its own:
 
 Each cluster field is emitted as one base64 string. `PathGrid.lua` reads this format directly. When the original
 `.mmtile` inputs are unavailable, `python3 tools/pack_nav.py` from the repo root converts older shipped chunk
-tables deterministically, without rebaking or reading a client install. It also splits large maps by field into
-files under 8 MiB and updates their TOCs, because LuaLS silently skips files over 10 MiB. `bake.sh` runs this
-packaging step automatically; offline tools use `tools/load_nav.lua` to follow the same TOC load order.
+tables deterministically, without rebaking or reading a client install. It groups whole clusters into helper
+addons whose Lua payload is at most 512 KiB, and writes the cluster manifest and package move entries. The base
+addon holds metadata; an asynchronous search yields before and after loading a needed part. Every helper ships
+in the same zip. Offline tools use `tools/load_nav.lua` to load the complete map in TOC order.
 Running the packer again leaves the data unchanged.
+
+For repeatable timing, add `--metrics report.json --build <input-client-build>` to `gen_nav.py`. The report records
+input tile SHA256 hashes, crop bounds, jobs, phase wall times, parent and worker CPU, output SHA256 and Linux
+getrusage peak RSS. The worker RSS is the largest individual worker, not the total concurrent process memory.
+Use a separate output file, the same tiles and build, and repeat both single-worker and parallel runs on an idle
+machine. A crop's global component pruning differs from a full continent, so compare identical crops and use a
+full-map run to check scale. `bake.sh` requires `source.json` from the extractor and checks every expected tile's `ok` or `empty` status
+against its file before publishing. Cached tiles without provenance, changed builds or changed extractor recipes
+require a fresh output directory. `--require-complete` enables this check for a direct `gen_nav.py` invocation;
+metrics from old caches without it describe the files supplied and do not prove extraction completeness.
+
+The graph builder reuses each cluster's legal adjacency for entrance searches and both water modes. It preserves
+directed costs: entering water changes the destination step's cost. It needs no native extension or extra runtime.
 
 `NAV_DBD` points NavBaker at a directory holding `Map.dbd` and `LiquidType.dbd`. bake.sh fetches them from a pinned
 WoWDBDefs commit and checks their sha256.

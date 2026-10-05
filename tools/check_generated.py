@@ -1,11 +1,14 @@
 """Regenerate pinned data in a scratch tree and reject stale or unstable output."""
 
 import argparse
-import shutil
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
+
+try:
+    from tools.forever_tools.generated import check_generated
+except ModuleNotFoundError:
+    from forever_tools.generated import check_generated
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = (
@@ -28,7 +31,7 @@ def run(root, *command, output=None):
 
 
 def outputs(root):
-    files = set(DATA)
+    files = {*DATA, ".pkgmeta"}
     files.update(str(path.relative_to(root)) for path in (root / "Data").glob("*.lua"))
     files.update(str(path.relative_to(root)) for path in root.glob("ShortestPathForever_Nav*/*.lua"))
     files.update(str(path.relative_to(root)) for path in root.glob("**/*.toc"))
@@ -46,45 +49,18 @@ def regenerate(root, offline):
     run(root, sys.executable, "tools/phrases.py", output="Locales/phrases.txt")
 
 
-def compare(expected, actual, label):
-    changed = sorted(name for name in expected.keys() | actual.keys() if expected.get(name) != actual.get(name))
-    if changed:
-        raise SystemExit(f"{label}:\n" + "\n".join(changed))
-
-
-def input_cache():
-    """The main checkout's tools/.cache, so every git worktree of the repository shares one set of inputs."""
-    common = subprocess.check_output(
-        ["git", "rev-parse", "--path-format=absolute", "--git-common-dir"], cwd=ROOT, text=True
-    ).strip()
-    return Path(common).parent / "tools" / ".cache"
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--offline", action="store_true", help="require existing tools/.cache inputs")
     args = parser.parse_args()
-    tracked = subprocess.check_output(["git", "ls-files", "-z"], cwd=ROOT).decode().split("\0")
-    with tempfile.TemporaryDirectory(prefix="spf-regenerate-") as temporary:
-        scratch = Path(temporary)
-        for name in filter(None, tracked):
-            source = ROOT / name
-            if source.is_file():
-                target = scratch / name
-                target.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(source, target)
-        cache = input_cache()
-        if cache.exists():
-            shutil.copytree(cache, scratch / "tools/.cache", dirs_exist_ok=True)
-        expected = outputs(scratch)
-        regenerate(scratch, args.offline)
-        if not args.offline:
-            shutil.copytree(scratch / "tools/.cache", cache, dirs_exist_ok=True)
-        generated = outputs(scratch)
-        compare(expected, generated, "Stale generated files; run the canonical generators")
-        regenerate(scratch, True)
-        compare(generated, outputs(scratch), "Regeneration is not byte-for-byte reproducible")
-    print("Generated data, walking costs, nav packing and phrases are current and reproducible.")
+    check_generated(
+        ROOT,
+        outputs=outputs,
+        regenerate=regenerate,
+        offline=args.offline,
+        success="Generated data, walking costs, nav packing and phrases are current and reproducible.",
+        prefix="spf-regenerate-",
+    )
 
 
 if __name__ == "__main__":

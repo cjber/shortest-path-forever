@@ -111,6 +111,7 @@ public static class Program
                 if (byPos.TryGetValue((x, y), out var t)) soups[(x, y)] = s.Ex.BuildTile(t);
         Console.WriteLine($"extracted {soups.Count} ADTs in {sw.Elapsed.TotalSeconds:F1}s");
         var targets = soups.Keys.Where(k => k.Item1 >= r0 && k.Item1 <= r1 && k.Item2 >= c0 && k.Item2 <= c1).ToList();
+        InputManifest.Prepare(outDir, a[1], s.Build, mapId, targets);
         var job = new BakeRun(outDir, mapId, resume: false);
         Parallel.ForEach(targets, new ParallelOptions { MaxDegreeOfParallelism = threads }, k => job.BakeOne(k, soups));
         job.Summary(sw);
@@ -135,6 +136,7 @@ public static class Program
         }
         Console.WriteLine($"{a[1]} {s.Build} map {mapId} \"{name}\": {all.Count} ADTs in rows {rows.First()}-{rows.Last()} " +
                           $"(opened in {sw.Elapsed.TotalSeconds:F1}s)");
+        InputManifest.Prepare(outDir, a[1], s.Build, mapId, all.Where(t => rows.Contains(t.X)).Select(t => (t.X, t.Y)));
         var job = new BakeRun(outDir, mapId, resume: true);
         var soups = new Dictionary<(int, int), Extractor.Soup>();
         foreach (int x in rows)
