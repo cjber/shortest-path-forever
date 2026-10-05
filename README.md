@@ -23,7 +23,7 @@ with you.
 
 Each feature has more detail in [docs/features.md](docs/features.md).
 
-- **Journey planner.** Shift-click the map or minimap, or choose *Plan journey* on a quest, for the fastest way there
+- **Journey planner.** Shift-click the map, minimap or a map icon, or choose *Plan journey* on a quest, for the fastest way there
   on foot, by flight, boat, zeppelin, lift, tram, portal or teleport. The route is drawn on both maps, its steps sit in
   the objective tracker, and it replans as you move.
   ![Journey steps from Auberdine to Silithus with time and distance remaining](docs/screenshots/tracker.png)

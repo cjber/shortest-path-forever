@@ -14,7 +14,7 @@ Nearby services sits in the minimap's tracking menu and the world map's.
 - **Journeys from your guides.** With TomTom not installed, Questie and other guides that set a TomTom waypoint start a journey here instead, carrying the guide's title. Turn it off with *Let guides set TomTom waypoints* in `/path`.
 - **Quest areas the game draws itself.** A stop that marks a quest's area is drawn by the client while you are inside it: the game's own area for that quest turns gold on the minimap and is drawn in gold on the world map, instead of a pin and a line.
 - **Directions on the map and minimap.** Walking legs are round breadcrumb dots, transport legs have their own colours, and a waypoint pin marks your destination. The Group Finder spinner turns while a new journey is checked.
-- **Guide, on with every journey.** The game's own waypoint marker leads you to the next boat, lift, flight master or your destination, or round each turn if you prefer. Click the Journey header to toggle it; right-click to show the destination or clear the journey. A compass in the game's own parchment gold marks your next turns, stop and destination.
+- **Guide, on with every journey.** The game's own waypoint marker leads you to the next boat, lift, flight master or your destination, or round each turn if you prefer. Click the Journey header to toggle it; right-click for *Guide me*, *Show on map* or *Clear journey*. A compass in the game's own parchment gold marks your next turns, stop and destination.
 - **Nearby services.** Open the minimap's tracking menu or the world map's and pick *Nearby services* for trainers, repairs, reagents and other services. Choose trainers and vendors by specialty. Uses installed QuestieDB and Tweaks Forever for your class trainers.
 - **Back to your corpse.** As a ghost, a red dotted path in your tombstone's colour leads back to your body, and your journey picks up again once you are alive.
 - **Live departures.** Hover a dock on the world map or minimap to see where its boats go, and when they arrive and leave. Destination docks light up; click one to open the map at the other end. Nearby departures appear in the objective tracker; aboard a timed boat, it shows the next stop.
@@ -55,12 +55,12 @@ A longer trip: Auberdine to Menethil, then Theramore, then Silithus.
 Settings → Guidance has **Minimum Hearthstone saving**, from zero to ten minutes.
 Zero keeps the current fastest-route behaviour; higher values reserve the Hearthstone for bigger savings.
 
-Shift-click the world map or minimap to plan a journey. For a quest, choose **Plan journey** from its right-click menu in the quest log or objective tracker, or Shift-click its map marker. Completed quests route to their turn-in.
+Shift-click the world map or minimap to plan a journey. Shift-click a flight master or another map icon to travel there; the destination tag sits at its lower right. For a quest, choose **Plan journey** from its right-click menu in the quest log or objective tracker, or Shift-click its map marker. Completed quests route to their turn-in.
 
 - `/path` opens settings, also under **Options → AddOns → Shortest Path Forever**.
 - `/path perf` prints the addon's CPU time and memory use, terrain included.
 - `/path debug` enables a saved trace for reporting a ride that did not sync.
-- `/spfnear` opens the nearby-services menu on the world map, or routes to the nearest trainer, repair, reagent vendor, innkeeper, bank, auction house, flight master or stable you name.
+- `/spfnear` opens the nearby-services menu on the world map, or routes to the nearest class trainer, trainer, repair, reagent vendor, vendor, innkeeper, bank, auction house, flight master or stable you name.
 
 Every feature has its own switch in the settings; the world map's filter menu and the minimap's tracking menu hide
 each kind of mark, and the other faction's routes are hidden until you ask for them.
