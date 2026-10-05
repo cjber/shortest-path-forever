@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-10-05
+
 - **Flight times come from your own rides.** A flight you take is timed from take-off to landing, and that time is used the next time a journey plans the same route. While you are in the air the tracker counts the leg down from how far along the drawn route you are, so a slow or fast ride no longer makes its arrival time drift.
 - **A guide that sets a TomTom waypoint can plan the journey here.** With TomTom not installed, Questie and other guides that set a waypoint through it now start a Shortest Path journey instead, carrying the guide's title; *Let guides set TomTom waypoints* in `/path` turns it off.
 - **A quest area you are standing in is drawn by the game itself.** A held objective stop can name the areas it stands for; while you are inside one, the minimap recolours the game's own quest area to gold instead of drawing a circle of ours, the world map keeps the route's yellow outline, and the stop's pin and line step aside. The client's own inside-area state decides inside where the area names one quest.
