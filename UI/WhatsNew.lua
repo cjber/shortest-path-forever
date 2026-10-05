@@ -5,7 +5,8 @@ local L = ns.L
 
 -- One sentence on what the latest release changed, printed once after an update. Each release refreshes it from
 -- its CHANGELOG entry.
-ns.WHATS_NEW = L["Flight times from your own rides, and quest areas tinted on the minimap."]
+ns.WHATS_NEW =
+	L["Walking maps stay inside one addon, flight masters accept shift-clicks, and journey counts stay current."]
 
 -- Once per new version, after an update: never on a first install, nor in a checkout, whose TOC still holds the
 -- packager's version keyword (matched by its "@", as the packager would rewrite the whole keyword here too).
