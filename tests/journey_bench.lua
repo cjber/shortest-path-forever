@@ -31,9 +31,14 @@ for _, case in ipairs({
 		error(message)
 	end
 	local jobs, nextFrame, rounds, resets, plannerCPU = {}, nil, 0, 0, 0
+	local frames, usable, worst = 0, nil, 0
 	local drawn = {}
 	local draw = ns.SetJourneyRoute
 	ns.SetJourneyRoute = function(g, r)
+		local first = r and r.legs[1]
+		if usable == nil and first and (first.mode ~= "walk" or first.measured) then
+			usable = frames
+		end
 		for _, leg in ipairs(r and r.legs or {}) do
 			if leg.mode == "walk" then
 				local key = table.concat({ leg.from.map, leg.from.x, leg.from.y, leg.to.x, leg.to.y }, ":")
@@ -68,13 +73,14 @@ for _, case in ipairs({
 		nextFrame = fn
 	end
 	driver.begin(ns.TaxiNodes[case[2]], ns.TaxiNodes[case[3]])
-	local frames = 0
 	while nextFrame do
 		local fn = nextFrame
 		nextFrame = nil
-		fn()
 		frames = frames + 1
+		local started = os.clock()
+		fn()
 		driver.update(1 / 60)
+		worst = math.max(worst, (os.clock() - started) * 1000)
 		assert(frames < 20000, "journey did not settle")
 	end
 	local cpu, many, probes = 0, 0, 0
@@ -94,7 +100,7 @@ for _, case in ipairs({
 	print(
 		string.format(
 			"%s: %d searches (%d many, %d probes), %d planner calls, %d settle rounds, %d frames, "
-				.. "%.1f ms search, %.1f ms planner, %d straight resets",
+				.. "%.1f ms search, %.1f ms planner, %d straight resets, usable frame %s, %.3f ms worst frame",
 			case[1],
 			#jobs,
 			many,
@@ -104,7 +110,9 @@ for _, case in ipairs({
 			frames,
 			cpu,
 			plannerCPU,
-			resets
+			resets,
+			tostring(usable),
+			worst
 		)
 	)
 	assert(many == 2 and round == 1 and rounds >= 2, "one committed route")

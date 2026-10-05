@@ -45,22 +45,7 @@ local function Perf()
 	if UpdateAddOnMemoryUsage and GetAddOnMemoryUsage then
 		collectgarbage("collect")
 		UpdateAddOnMemoryUsage()
-		local base, nav = GetAddOnMemoryUsage(addonName) or 0, 0
-		for _, map in ipairs({ 0, 1, 2991 }) do
-			local name = addonName .. "_Nav" .. map
-			if not C_AddOns or not C_AddOns.DoesAddOnExist or C_AddOns.DoesAddOnExist(name) then
-				nav = nav + (GetAddOnMemoryUsage(name) or 0)
-			end
-			local data = ShortestPathForeverPathData and ShortestPathForeverPathData[map]
-			for part, loaded in pairs(data and data.loadedParts or {}) do
-				if loaded then
-					nav = nav + (GetAddOnMemoryUsage(name .. "_" .. part) or 0)
-				end
-			end
-		end
-		ns.Print(
-			string.format("Memory (collected): %.1f KB addon + %.1f KB walking maps = %.1f KB", base, nav, base + nav)
-		)
+		ns.Print(string.format("Memory (collected): %.1f KB", GetAddOnMemoryUsage(addonName) or 0))
 	else
 		ns.Print("Memory accounting is unavailable on this client.")
 	end

@@ -1,8 +1,8 @@
 # AGENTS.md
 
 Shortest Path Forever is a WoW: Forever addon (Interface 16001) that plans and guides journeys by foot,
-flight, boat, lift, tram and portal. The BigWigs packager ships it, with load-on-demand walking-map
-addons, as one zip on a `v*` tag.
+flight, boat, lift, tram and portal. The BigWigs packager ships it with bundled compressed terrain
+as one addon on a `v*` tag.
 
 ## Commands
 
@@ -33,8 +33,8 @@ before its `v*` tag, since the release publishes it as the notes.
   main opens or comments on the issue "Data refresh failed". Moved by hand: `DB_REV` (classic-db, frozen under
   the WFA-28 waivers), `REVISION` in `tools/fetch_tracker_ui.py` (shared with the companion addons), the
   checksummed UI source in `tools/fetch_blizzard_ui.sh`, and the walking maps, which need a local client install.
-- `ShortestPathForever_Nav*/` — load-on-demand walking maps built by `tools/baker/`; loaded only when a
-  route needs them.
+- `Nav/` - compressed walking maps built by `tools/baker/` and `tools/pack_nav.py`; terrain is decoded
+  only when a route needs it.
 - `Core/` — addon lifecycle, defaults, the planning context (the live and static inputs every plan starts from)
   and the public API.
 - `Routing/` — transport search and walking-map decoding, search and frame scheduling.
@@ -95,7 +95,7 @@ before its `v*` tag, since the release publishes it as the notes.
 - WFA-28: `Data/Teleports.lua` (class teleports and bind items): wago.tools spell and item tables with classic-db
   `spell_target_position` landings; neither database holds spell effects or landings. Known spells, reagent
   counts, cooldowns, cast times and the bind point are read from the client.
-- WFA-28: `Data/Walks.lua` and `ShortestPathForever_Nav*/` (walking costs and walking maps): baked by
+- WFA-28: `Data/Walks.lua` and `Nav/` (walking costs and walking maps): baked by
   `tools/bake_walks.lua` and `tools/baker/` from a local client install's terrain; neither database holds
   terrain. A walk you are on is searched live on the walking map.
 

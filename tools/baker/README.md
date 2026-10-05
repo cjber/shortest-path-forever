@@ -1,7 +1,7 @@
 # Shortest Path Forever baker
 
-Bakes the walkable ground of a WoW map from a local client install and packages it as the load-on-demand addon
-`ShortestPathForever_Nav<map>`, whose TOC-ordered Lua files set `ShortestPathForeverPathData[map]` for `PathGrid.lua`.
+Bakes the walkable ground of a WoW map from a local client install. `tools/pack_nav.py` compresses it into
+`Nav/` inside the main addon. `PathGrid.lua` uses the client's native zlib decoder on demand, in blocks of at most 16 KB.
 
 ## Extraction source availability
 
@@ -51,12 +51,11 @@ Steps, each reusable on its own:
    same cell (lake and sea beds) are dropped. Every graph edge carries two costs: one where a swum yard counts as
    `SWIM` (3) running yards, so walks keep out of water, and one for a player walking on water, where it counts as 1.
 
-Each cluster field is emitted as one base64 string. `PathGrid.lua` reads this format directly. When the original
-`.mmtile` inputs are unavailable, `python3 tools/pack_nav.py` from the repo root converts older shipped chunk
-tables deterministically, without rebaking or reading a client install. It groups whole clusters into helper
-addons whose Lua payload is at most 512 KiB, and writes the cluster manifest and package move entries. The base
-addon holds metadata; an asynchronous search yields before and after loading a needed part. Every helper ships
-in the same zip. Offline tools use `tools/load_nav.lua` to load the complete map in TOC order.
+The baker emits raw base64 cluster fields. `python3 tools/pack_nav.py` compresses them with zlib into blocks
+that expand to at most 16 KiB and bundles them under `Nav/`, with each Lua file at most 512 KiB. The main
+addon's XML loads the compressed strings; `PathGrid.lua` uses the client's native encoding API to decode
+fields on demand, with asynchronous checkpoints between blocks. Older shipped tables can be converted
+without rebaking or reading a client install. Offline tools load the same bundle through `tools/load_nav.lua`.
 Running the packer again leaves the data unchanged.
 
 For repeatable timing, add `--metrics report.json --build <input-client-build>` to `gen_nav.py`. The report records

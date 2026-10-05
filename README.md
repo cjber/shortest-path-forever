@@ -11,7 +11,7 @@ The fastest way anywhere in WoW: Forever, on foot, by air, by sea and through po
 Shift-click the world map or minimap, or pick a quest, and it plans the route: walking paths round walls and hills,
 the flight points you know, boats and zeppelins with their live departure times, lifts, the tram and portals. Then it
 walks you there with the game's own navigation marker. Walking maps cover Eastern Kingdoms, Kalimdor and Zephras Isle;
-they come in the same download and load in small parts as a route reaches them.
+they are compressed inside the addon and decoded as a route reaches them.
 The route, pins and tracker use the game's own art, so it looks like it came with the game.
 
 ![Eight-second demo of a route settling, the countdown and the compass](docs/screenshots/demo.gif)
@@ -87,7 +87,7 @@ Open a flight master’s map once after installing to sync the flight points you
 | Command | What it does |
 |---|---|
 | `/path` | Open the settings (also in Settings → AddOns, or from the addon compartment on the minimap) |
-| `/path perf` | Print this addon's CPU averages and peaks from the client's profiler, and its memory after a full collection, walking-map parts included |
+| `/path perf` | Print this addon's CPU averages and peaks from the client's profiler, and its memory after a full collection, terrain included |
 | `/path debug` | Keep a trace of your position and ride matching, for reporting a ride that did not sync |
 | `/spfnear` | Open the nearby services menu on the world map; add `class`, `trainer`, `repair`, `reagents`, `vendor`, `innkeeper`, `bank`, `auction`, `flight` or `stable` to route to the nearest one |
 

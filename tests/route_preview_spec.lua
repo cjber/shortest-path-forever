@@ -17,16 +17,13 @@ for _, file in ipairs({
 }) do
 	driver.load(file)
 end
--- Kalimdor's walking map is loaded up front; the Eastern Kingdoms' loads only when a later hop walks there.
-assert(loadfile("tools/load_nav.lua"))(1)
-local loaded = {}
+-- Both maps are bundled at startup; neither is decoded until a walk needs it.
+for _, map in ipairs({ 0, 1 }) do
+	assert(loadfile("tools/load_nav.lua"))(map, nil, env, true)
+end
 env.C_AddOns = {
-	DoesAddOnExist = function()
-		return true
-	end,
-	LoadAddOn = function(name)
-		loaded[#loaded + 1] = name
-		assert(loadfile("tools/load_nav.lua"))(tonumber(name:match("%d+$")))
+	LoadAddOn = function()
+		error("bundled terrain must not load helper addons")
 	end,
 }
 local function check(value, label)
@@ -37,17 +34,14 @@ local frames = {}
 ns.Path.after = function(fn)
 	frames[#frames + 1] = fn
 end
--- The walking map's own load is one atomic client call the search gives a frame of its own; it is left out.
 local slowest, frame = 0, 0
 local function step()
-	local due, started, loads = frames, os.clock(), #loaded
+	local due, started = frames, os.clock()
 	frames, frame = {}, frame + 1
 	for _, fn in ipairs(due) do
 		fn()
 	end
-	if #loaded == loads then
-		slowest = math.max(slowest, (os.clock() - started) * 1000)
-	end
+	slowest = math.max(slowest, (os.clock() - started) * 1000)
 	return #due > 0
 end
 local function drain()
@@ -167,7 +161,7 @@ end
 check(refreshed == 2, "within a second, drawn once for the first hop and once when every hop is ready")
 check(not first.preview and #first.points > 2, "the placeholder is replaced by the walking-map path")
 check(ns.JourneyPreview()[1] == first, "the planned hop draws in place of its placeholder")
-check(#loaded == 1 and loaded[1] == "ShortestPathForever_Nav0", "Redridge's walks load their walking map on demand")
+check(ns.Path.IsLoaded(0), "Redridge's walks decode bundled terrain on demand")
 local walks
 boats, straight, placeholders, walks = count(ns.JourneyPreview())
 check(straight == 0, "no preview segment spans continents")

@@ -1,50 +1,5 @@
 package-as: ShortestPathForever
 
-# The walking maps are separate load-on-demand addons in the same download, so nobody installs them by hand.
-move-folders:
-  ShortestPathForever/ShortestPathForever_Nav0: ShortestPathForever_Nav0
-  ShortestPathForever/ShortestPathForever_Nav0_1: ShortestPathForever_Nav0_1
-  ShortestPathForever/ShortestPathForever_Nav0_10: ShortestPathForever_Nav0_10
-  ShortestPathForever/ShortestPathForever_Nav0_11: ShortestPathForever_Nav0_11
-  ShortestPathForever/ShortestPathForever_Nav0_12: ShortestPathForever_Nav0_12
-  ShortestPathForever/ShortestPathForever_Nav0_13: ShortestPathForever_Nav0_13
-  ShortestPathForever/ShortestPathForever_Nav0_14: ShortestPathForever_Nav0_14
-  ShortestPathForever/ShortestPathForever_Nav0_15: ShortestPathForever_Nav0_15
-  ShortestPathForever/ShortestPathForever_Nav0_16: ShortestPathForever_Nav0_16
-  ShortestPathForever/ShortestPathForever_Nav0_2: ShortestPathForever_Nav0_2
-  ShortestPathForever/ShortestPathForever_Nav0_3: ShortestPathForever_Nav0_3
-  ShortestPathForever/ShortestPathForever_Nav0_4: ShortestPathForever_Nav0_4
-  ShortestPathForever/ShortestPathForever_Nav0_5: ShortestPathForever_Nav0_5
-  ShortestPathForever/ShortestPathForever_Nav0_6: ShortestPathForever_Nav0_6
-  ShortestPathForever/ShortestPathForever_Nav0_7: ShortestPathForever_Nav0_7
-  ShortestPathForever/ShortestPathForever_Nav0_8: ShortestPathForever_Nav0_8
-  ShortestPathForever/ShortestPathForever_Nav0_9: ShortestPathForever_Nav0_9
-  ShortestPathForever/ShortestPathForever_Nav1: ShortestPathForever_Nav1
-  ShortestPathForever/ShortestPathForever_Nav1_1: ShortestPathForever_Nav1_1
-  ShortestPathForever/ShortestPathForever_Nav1_10: ShortestPathForever_Nav1_10
-  ShortestPathForever/ShortestPathForever_Nav1_11: ShortestPathForever_Nav1_11
-  ShortestPathForever/ShortestPathForever_Nav1_12: ShortestPathForever_Nav1_12
-  ShortestPathForever/ShortestPathForever_Nav1_13: ShortestPathForever_Nav1_13
-  ShortestPathForever/ShortestPathForever_Nav1_14: ShortestPathForever_Nav1_14
-  ShortestPathForever/ShortestPathForever_Nav1_15: ShortestPathForever_Nav1_15
-  ShortestPathForever/ShortestPathForever_Nav1_16: ShortestPathForever_Nav1_16
-  ShortestPathForever/ShortestPathForever_Nav1_17: ShortestPathForever_Nav1_17
-  ShortestPathForever/ShortestPathForever_Nav1_18: ShortestPathForever_Nav1_18
-  ShortestPathForever/ShortestPathForever_Nav1_19: ShortestPathForever_Nav1_19
-  ShortestPathForever/ShortestPathForever_Nav1_2: ShortestPathForever_Nav1_2
-  ShortestPathForever/ShortestPathForever_Nav1_20: ShortestPathForever_Nav1_20
-  ShortestPathForever/ShortestPathForever_Nav1_21: ShortestPathForever_Nav1_21
-  ShortestPathForever/ShortestPathForever_Nav1_22: ShortestPathForever_Nav1_22
-  ShortestPathForever/ShortestPathForever_Nav1_3: ShortestPathForever_Nav1_3
-  ShortestPathForever/ShortestPathForever_Nav1_4: ShortestPathForever_Nav1_4
-  ShortestPathForever/ShortestPathForever_Nav1_5: ShortestPathForever_Nav1_5
-  ShortestPathForever/ShortestPathForever_Nav1_6: ShortestPathForever_Nav1_6
-  ShortestPathForever/ShortestPathForever_Nav1_7: ShortestPathForever_Nav1_7
-  ShortestPathForever/ShortestPathForever_Nav1_8: ShortestPathForever_Nav1_8
-  ShortestPathForever/ShortestPathForever_Nav1_9: ShortestPathForever_Nav1_9
-  ShortestPathForever/ShortestPathForever_Nav2991: ShortestPathForever_Nav2991
-  ShortestPathForever/ShortestPathForever_Nav2991_1: ShortestPathForever_Nav2991_1
-
 manual-changelog:
   filename: .release-notes.md
   markup-type: markdown

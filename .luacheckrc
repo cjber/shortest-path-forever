@@ -1,7 +1,7 @@
 std = "lua51"
 max_line_length = 120
 exclude_files =
-	{ ".claude/**", "tools/.cache/**", ".types/**", "types/**", ".release/**", "ShortestPathForever_Nav*/**" }
+	{ ".claude/**", "tools/.cache/**", ".types/**", "types/**", ".release/**", "Nav/**" }
 globals = {
 	"ForeverTrackerHost",
 	"EventUtil",
@@ -163,3 +163,5 @@ files["tests/ui_client.lua"] = {
 -- ui_map.lua continues ui_client.lua's chunk, so its "globals" are ui_client.lua's locals.
 files["tests/ui_map.lua"] = { ignore = { "1", "2", "43" } }
 read_globals[#read_globals + 1] = "EventRegistry"
+
+read_globals[#read_globals + 1] = "C_EncodingUtil"

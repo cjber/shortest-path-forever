@@ -181,8 +181,8 @@ ShortestPathForeverCharDB = nil
 ---@field graph string[]
 ---@field height string[]
 ---@field floor string[]
----@field parts? table<number, number> cluster index to load-on-demand terrain addon
----@field loadedParts? table<number, boolean>
+---@field counts? table<string, number> generated entry counts for repacking integrity
+---@field packed? table<string, table<number, string[]>> compressed blocks indexed by field and cluster
 ---@type table<number, SPFNavData>
 ShortestPathForeverPathData = nil
 
@@ -220,6 +220,7 @@ ShortestPathForeverPathData = nil
 ---@field walkDrawn? boolean -- walkPoints came from a search, not a straight placeholder
 ---@field color? ColorMixin -- drawn in this colour rather than its mode's
 ---@class SPFPlan
+---@field provisional? boolean
 ---@field arrive number
 ---@field legs SPFLeg[]
 ---@field needsStart boolean
@@ -236,6 +237,8 @@ ShortestPathForeverPathData = nil
 ---@field cost number|false
 ---@field estimated? boolean
 ---@class SPFPlanOptions : SPFPlaceOptions
+---@field feasibleOnly? boolean
+---@field incumbent? number
 ---@field hearthMinimumSavings? number
 ---@field otherFaction? boolean
 ---@field from SPFPoint

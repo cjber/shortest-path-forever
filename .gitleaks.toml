@@ -5,4 +5,4 @@ useDefault = true
 # [A-Za-z0-9+/] match the generic key patterns hundreds of times and can hold no secret.
 [[allowlists]]
 description = "generated walking-map data"
-paths = ['''^ShortestPathForever_Nav\d+(?:_\d+)?/(?:Nav\d+|Data)\.lua$''']
+paths = ['''^Nav/Nav\d+(?:_\d+)?\.lua$''']

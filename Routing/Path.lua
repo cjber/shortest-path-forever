@@ -305,7 +305,9 @@ end
 local function connectPoint(st, swim, k, node, h)
 	local nodes = { node }
 	if not h then
-		local C, val, z, at = st.C, st.val[k], st.z[k], st.at[k]
+		local values = grid(st, k)
+		assert(values)
+		local C, val, z, at = st.C, values, st.z[k], st.at[k]
 		local cell = cellOf(st, k, node)
 		local lx, ly = floor(cell / C), cell % C
 		local function consider(n, r)

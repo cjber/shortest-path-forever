@@ -1,5 +1,4 @@
--- A slow frame cuts the search into ten times as many slices, so it outlasts the grace period and shows a candidate
--- whose walks are still lower bounds. Measuring them must not read as a mismatch, and the proof still commits.
+-- Slow slices must never publish unmeasured walking guidance. The search still settles to a reachable route.
 local driver = assert(loadfile("tests/journey_driver.lua"))()
 local ns = driver.ns
 for _, file in ipairs({
@@ -29,10 +28,10 @@ local nextFrame
 ns.Path.after = function(fn)
 	nextFrame = fn
 end
-local graced
 local commit = ns.SetJourneyRoute
 ns.SetJourneyRoute = function(g, route)
-	graced = graced or (route ~= nil and ns.JourneyStatus())
+	local first = route and route.legs[1]
+	assert(not first or first.mode ~= "walk" or first.measured, "guidance requires measured geometry")
 	commit(g, route)
 end
 driver.begin(ns.TaxiNodes[25], ns.TaxiNodes[22])
@@ -45,10 +44,12 @@ while nextFrame do
 	driver.update(1 / 60)
 	assert(frames < 20000, "journey did not settle")
 end
-assert(graced, "the search should outlast the grace period")
 assert(not ns.JourneyStatus())
 local route = assert(driver.shown(), "expected a reachable journey")
 for _, leg in ipairs(route.legs) do
-	assert(leg.mode ~= "walk" or leg.measured and not leg.walkError, "the committed route's walks are proven")
+	assert(
+		leg.mode ~= "walk" or (leg.measured or leg.walkDeferred) and not leg.walkError,
+		"the committed route's walks are proven"
+	)
 end
 print("journey_slices_spec: ok")

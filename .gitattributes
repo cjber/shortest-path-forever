@@ -2,4 +2,4 @@
 
 # Written by the generators under tools/ (each file's header names its own); never hand-edit.
 Data/*.lua linguist-generated=true
-ShortestPathForever_Nav*/*.lua linguist-generated=true
+Nav/*.lua linguist-generated=true

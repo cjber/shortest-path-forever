@@ -11,6 +11,9 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **Walking maps stay inside one addon.** Terrain is compressed and decoded only where a journey needs it, keeping the addon list clear of walking-map parts.
+- **Journeys prepare the walk you need first.** Later walking legs wait until they are next, and the search can offer a measured route while checking for a faster one.
+
 ## [1.9.0] - 2026-10-05
 
 - **Flight times come from your own rides.** A flight you take is timed from take-off to landing, and that time is used the next time a journey plans the same route. While you are in the air the tracker counts the leg down from how far along the drawn route you are, so a slow or fast ride no longer makes its arrival time drift.

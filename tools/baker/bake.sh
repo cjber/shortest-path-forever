@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Shortest Path Forever: bake walkable ground for whole maps from a local WoW client and package ShortestPathForever_Nav<map>.
+# Shortest Path Forever: bake walkable ground for whole maps from a local WoW client and bundle compressed terrain in the main addon.
 # Reads the install read-only (CASC local storage only, no CDN) and writes everything under $OUT.
 #   WOW=<install root holding .build.info> MAPS="0 1 2991" ./bake.sh
 # Resumable: a rerun skips tiles that already have a status file under $OUT/mm<map>/status.
@@ -62,20 +62,8 @@ for m in $MAPS; do
 		exit 1
 	fi
 	name=${TITLE[$m]:-${MAP_NAME:?set MAP_NAME for map $m}}
-	addon=$OUT/addons/ShortestPathForever_Nav$m
-	mkdir -p "$addon"
-	NAV_MM=$OUT/mm$m NAV_JOBS=$JOBS python3 "$HERE/gen_nav.py" "$addon/Nav$m.lua" --map "$m" --name "$name" \
+	mkdir -p "$OUT/raw"
+	NAV_MM=$OUT/mm$m NAV_JOBS=$JOBS python3 "$HERE/gen_nav.py" "$OUT/raw/Nav$m.lua" --map "$m" --name "$name" \
 		--require-complete --metrics "$OUT/nav$m.metrics.json"
-	cat >"$addon/ShortestPathForever_Nav$m.toc" <<TOC
-## Interface: 16001
-## Title: Shortest Path Forever - Walking map ($name)
-## Notes: Walkable ground for Shortest Path Forever's walking routes on $name. Loaded when a route needs it.
-## LoadOnDemand: 1
-## Dependencies: ShortestPathForever
-## X-License: GPL-3.0-or-later
-## IconTexture: Interface\AddOns\ShortestPathForever\media\Icon
-
-Nav$m.lua
-TOC
-	python3 "$HERE/../pack_nav.py" "$addon/Nav$m.lua"
 done
+python3 "$HERE/../pack_nav.py" --root "$OUT/addons/ShortestPathForever" "$OUT"/raw/Nav*.lua

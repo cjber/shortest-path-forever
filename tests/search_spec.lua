@@ -132,32 +132,29 @@ do
 	assert(h.heard() == "" and not h.route)
 	h.geometry()
 	local pending, loading = h.status()
-	assert(h.heard() == "route" and h.via() == "B" and pending == 0 and not loading)
+	local news = h.heard()
+	assert((news == "route" or news == "route times") and h.via() == "B" and pending == 0 and not loading)
 	h.frame(0.1)
 	assert(h.heard() == "")
 	h.clear()
 end
 
--- A search outlasting the grace period shows its candidate, then swaps at most once, and only for a real gain.
-for _, case in ipairs({ { 300, 275, false }, { 600, 560, false }, { 200, 175, false }, { 270, 240, true } }) do
+-- Long initial searches keep lower-bound guesses private and settle to the faster route.
+for _, case in ipairs({ { 300, 275 }, { 600, 560 }, { 200, 175 }, { 270, 240 } }) do
 	local h = scenario(case[1], case[2])
 	h.frame(2.9)
 	assert(h.heard() == "searching" and not h.route)
 	h.frame(0.1)
-	assert(h.heard() == "route" and h.via() == "A" and select(2, h.status()), "a grace route is still loading")
-	for _, leg in ipairs(h.route.legs) do
-		assert(leg.mode ~= "walk" or #leg.walkPoints == 2, "a grace route draws every walk")
-	end
-	h.geometry()
-	assert(h.heard() == "", "nothing measures a grace route before its proof")
+	assert(h.heard() == "" and not h.route, "elapsed time cannot validate a guessed walk")
 	h.costs("B")
-	assert(h.heard() == "", "a different bounded plan cannot replace the grace route")
+	assert(h.heard() == "" and not h.route)
 	h.geometry()
-	assert(h.heard() == (case[3] and "route" or "walks"), "both switch thresholds use settled old legs")
-	assert(h.via() == (case[3] and "B" or "A") and not select(2, h.status()))
+	assert(h.via() == "B" and not select(2, h.status()))
+	assert(h.route.legs[1].measured)
+	h.heard()
 	h.geometry()
 	h.frame(0.1)
-	assert(h.heard() == "", "at most one settled swap per search")
+	assert(h.heard() == "", "settled geometry does not publish another route")
 	h.clear()
 end
 
@@ -167,25 +164,12 @@ do
 	h.costs("A")
 	h.geometry()
 	local route = h.route
-	assert(h.heard() == "searching route")
+	assert(h.heard():gsub(" times", "") == "searching route")
 	h.refresh()
 	assert(not select(2, h.status()) and h.status() > 0)
 	h.costs("B")
 	h.geometry()
 	assert(h.heard() == "times" and h.route == route and h.status() == 0, "a rejected route still ends the search")
-	h.clear()
-end
-
--- A geometry failure invalidates the grace route even if the replacement misses the margin.
-do
-	local h = scenario(300, 295)
-	h.frame(3)
-	assert(h.via() == "A")
-	h.costs("B")
-	h.geometry(function(job)
-		return at(job.to, h.enter.A)
-	end)
-	assert(h.via() == "B" and h.status() == 0)
 	h.clear()
 end
 
@@ -276,7 +260,7 @@ do
 	for _ = 1, 2 do
 		h.frame(5, true)
 		assert(h.heard() == "times" and #batches == 2 and #finds == 1)
-		assert(math.abs(h.route.legs[1].yards - 700) < 0.01, "retiming must not repeatedly shrink the cost basis")
+		assert(math.abs(h.route.legs[1].yards - 1050) < 0.01, "retiming must not repeatedly shrink the cost basis")
 	end
 	assert(drawn()[#drawn()] == first.to)
 	-- A minute refreshes only the start batch, in the background; geometry stays as it is.
@@ -382,6 +366,4 @@ do
 	h.clear()
 end
 
-print(
-	"search_spec: one commit, grace thresholds, one swap, silent background, batch reuse, cancellation, kept geometry: ok"
-)
+print("search_spec: measured guidance, private guesses, background replans, reuse and cancellation: ok")

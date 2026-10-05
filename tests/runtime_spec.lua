@@ -62,19 +62,22 @@ options.baked = {}
 compare()
 print("planner topology: timings, endpoints, taxi discovery, faction, water, speed: ok")
 
--- Cold loading cannot happen in HasData/LowerBound or be poisoned by cancelling a pending load.
-local loaded, nextFrame, fakeTime = 0, nil, 0
+-- Cold decoding cannot happen in HasData/LowerBound or be poisoned by cancellation.
+local decoded, nextFrame, fakeTime = 0, nil, 0
 local env = setmetatable({
+	ShortestPathForeverPathData = {},
+	Enum = {},
 	C_AddOns = {
-		DoesAddOnExist = function(name)
-			return name == "ShortestPathForever_Nav0"
+		LoadAddOn = function()
+			error("terrain must not load a helper addon")
 		end,
 	},
 }, { __index = _G })
--- Lua 5.1 locals enter scope after their initializer.
-env.C_AddOns.LoadAddOn = function()
-	loaded = loaded + 1
-	assert(loadfile("tools/load_nav.lua"))(0, nil, env)
+assert(loadfile("tools/load_nav.lua"))(0, nil, env, true)
+local decompress = env.C_EncodingUtil.DecompressString
+env.C_EncodingUtil.DecompressString = function(...)
+	decoded = decoded + 1
+	return decompress(...)
 end
 for _, file in ipairs({ "Routing/PathGrid.lua", "Routing/Path.lua", "Routing/PathJobs.lua" }) do
 	setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
@@ -90,12 +93,12 @@ end
 path.budget, path.cacheKB, path.graphKB = 0.01, 512, 64
 local from, to = { x = -9459, y = 43 }, { x = -8914, y = -135 }
 assert(path.HasData(0) and not path.HasData(1))
-assert(path.LowerBound(0, from, to) == 0 and loaded == 0)
+assert(path.LowerBound(0, from, to) > 0 and decoded == 0)
 local cancelled = path.Find(0, from, to, function()
 	error("cancelled callback")
 end)
 nextFrame()
-assert(loaded == 0)
+assert(decoded == 0)
 path.Cancel(cancelled)
 assert(cancelled.co == nil and cancelled.scratch == nil)
 local checkpoints, callbacks = 0, 0
@@ -115,7 +118,7 @@ while nextFrame do
 	frames = frames + 1
 	assert(frames < 20000)
 end
-assert(loaded == 1 and frames > 20 and checkpoints == 10 and callbacks == 1)
+assert(decoded > 0 and frames > 20 and checkpoints == 10 and callbacks == 1)
 assert(job.co == nil and job.scratch == nil, "finished handles must release coroutine locals")
 -- Cancelling a callback while it is suspended must prevent its remaining work.
 local began, ended = false, false
@@ -137,4 +140,4 @@ while nextFrame do
 	fn()
 end
 assert(not ended)
-print("resumable decoding/callbacks, cold-load cancellation and released coroutine state: ok")
+print("resumable decoding/callbacks, cold-decode cancellation and released coroutine state: ok")

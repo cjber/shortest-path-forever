@@ -11,8 +11,7 @@ description: "Project profile for sift in Shortest Path Forever: the exact quali
 A World of Warcraft: Forever (Classic, `## Interface: 16001`) addon that plans journeys (walking, flights,
 boats, lifts, tram, portals) and draws them on the map. Runtime is the WoW client's Lua 5.1 sandbox; files
 load in `.toc` order and share one namespace table (`local addonName, ns = ...`). It ships through
-BigWigs packager (`.pkgmeta`) to CurseForge/Wago/GitHub as one zip that also carries load-on-demand
-walking-map addons. The specs run headless under LuaJIT with stubbed WoW APIs. Python, shell scripts and
+BigWigs packager (`.pkgmeta`) to CurseForge/Wago/GitHub as one zip with compressed walking maps bundled under `Nav/`. The specs run headless under LuaJIT with stubbed WoW APIs. Python, shell scripts and
 C# under `tools/` generate the data offline; `.pkgmeta` keeps `tools/` and `tests/` out of the zip.
 
 ## Gate
@@ -70,7 +69,7 @@ Things reached indirectly. The dead-code lens must treat these as referenced.
   `UI/TrackerHost.lua`; this host never registers the module with `ObjectiveTrackerManager`.
 - `ns.X` / `function ns.X` exports are the cross-file API; a symbol defined in one file is used in another
   (and by specs via `loadfile(...)("ShortestPathForever", ns)`). Search every `.lua`, not just the file.
-- `C_AddOns.LoadAddOn("ShortestPathForever_Nav" .. map)` (Routing/PathGrid.lua) loads the walking maps by built name.
+- `Nav/Nav.xml` loads compressed walking-map fields; `Routing/PathGrid.lua` decodes them on demand.
 - SavedVariables `ShortestPathForeverDB` / `ShortestPathForeverCharDB`: keys (settings in Core/Core.lua
   `DEFAULTS`, `anchors` owned by Transport/Timetable.lua, debug trace) persist in players' saved files.
 - Sync wire format (Transport/Sync.lua, prefix `ShortPath1`): other players run older versions; message fields are

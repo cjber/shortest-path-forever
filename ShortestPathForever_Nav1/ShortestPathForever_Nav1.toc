@@ -1,9 +1,0 @@
-## Interface: 16001
-## Title: Shortest Path Forever - Walking map (Kalimdor)
-## Notes: Walkable ground for Shortest Path Forever's walking routes on Kalimdor. Loaded when a route needs it.
-## LoadOnDemand: 1
-## Dependencies: ShortestPathForever
-## X-License: GPL-3.0-or-later
-## IconTexture: Interface\AddOns\ShortestPathForever\media\Icon
-
-Nav1.lua

@@ -18,7 +18,7 @@ local Context = ns.PlanContext
 
 ---@type table<string, SPFMeasuredWalk>
 local walkCache = {}
-local walkOrder, walkPending = {}, {}
+local walkOrder, walkPending, walkJobs = {}, {}, {}
 local pathJobs, pathVersion = {}, 0
 local pendingWalks = 0
 
@@ -44,28 +44,28 @@ local function FindWalk(planned, leg, key, water, done)
 		leg.walkError = not points and cost or nil
 		leg.walkPoints = points or previous or {}
 		if points then
-			leg.measured, leg.walkDrawn, leg.wet = true, true, points.wet
+			leg.measured, leg.walkDrawn, leg.wet, leg.walkCost = true, true, points.wet, cost
 			if planned.preview then
-				leg.walkCost, leg.yards = cost, cost
+				leg.yards = cost
 			end
 		end
 	end
 	if walkPending[key] then
-		walkPending[key][#walkPending[key] + 1] = apply
+		walkPending[key][#walkPending[key] + 1] = { plan = planned, apply = apply }
 		return
 	end
-	local waiting = { apply }
+	local waiting = { { plan = planned, apply = apply } }
 	walkPending[key] = waiting
 	pendingWalks = pendingWalks + 1
 	local job = ns.Path.Find(leg.from.map, leg.from, leg.to, function(points, cost, finished)
 		pathJobs[finished] = nil
-		if version ~= pathVersion then
+		if version ~= pathVersion or finished.cancelled then
 			return
 		end
 		pendingWalks = pendingWalks - 1
-		walkPending[key] = nil
-		for _, callback in ipairs(waiting) do
-			callback(points, cost)
+		walkPending[key], walkJobs[key] = nil, nil
+		for _, entry in ipairs(waiting) do
+			entry.apply(points, cost)
 		end
 		CacheWalk(key, { points = points or previous, reason = not points and cost or nil, cost = points and cost })
 		if ns.db.debug and ns.Planner.WalkContradicts(leg, points and cost) then
@@ -73,37 +73,70 @@ local function FindWalk(planned, leg, key, water, done)
 		end
 		done()
 	end, water)
-	pathJobs[job] = true
+	pathJobs[job], walkJobs[key] = true, job
 end
 
----@param planned SPFPlan?
----@return boolean
-function Walks.NeedsPrepare(planned)
-	local _, _, _, map = ns.JourneyPosition()
-	for _, leg in ipairs(planned and planned.legs or {}) do
-		if leg.walkDeferred and leg.from.map == map then
-			return true
+-- A plan that will not be followed: the searches only it waited for stop.
+---@param planned SPFPlan
+function Walks.Drop(planned)
+	for key, waiting in pairs(walkPending) do
+		for at = #waiting, 1, -1 do
+			if waiting[at].plan == planned then
+				table.remove(waiting, at)
+			end
+		end
+		if #waiting == 0 then
+			local job = walkJobs[key]
+			pathJobs[job], walkPending[key], walkJobs[key] = nil, nil, nil
+			pendingWalks = pendingWalks - 1
+			ns.Path.Cancel(job)
 		end
 	end
-	return false
+end
+
+-- The walk to draw now: the first one at or after the leg being followed. Costs prove every other walk, and its
+-- drawing waits until it is the next one on foot.
+---@param planned SPFPlan
+---@param index integer?
+---@return integer?
+local function ActiveWalk(planned, index)
+	for at = index or 1, #planned.legs do
+		if planned.legs[at].mode == "walk" then
+			return at
+		end
+	end
+end
+
+-- Whether the walk to draw now was put off until you could reach it.
+---@param planned SPFPlan?
+---@param index integer? the leg being followed
+---@return boolean
+function Walks.NeedsPrepare(planned, index)
+	local _, _, _, map = ns.JourneyPosition()
+	local at = planned and ActiveWalk(planned, index)
+	local leg = planned and at and planned.legs[at]
+	return leg ~= nil and leg.walkDeferred == true and leg.from.map == map
 end
 
 -- Gives each of a plan's walking legs its path: the measured one, or the best drawing there is while a search for
--- it runs. drawn are the legs on show, whose paths stand in for the walks that replace them. done runs after each
--- search lands, once its legs are updated.
+-- it runs. Only the walk being followed (or next) is searched; a later walk with a known cost, like one on a
+-- continent not yet loaded, is put off until it is that walk. drawn are the legs on show, whose paths stand in for
+-- the walks that replace them. done runs after each search lands, once its legs are updated.
 ---@param planned SPFPlan?
 ---@param drawn SPFLeg[]?
 ---@param water boolean? whether walks may cross water
 ---@param done fun()
-function Walks.Prepare(planned, drawn, water, done)
-	if not planned or (planned.prepared and not Walks.NeedsPrepare(planned)) then
+---@param index integer? the leg being followed
+function Walks.Prepare(planned, drawn, water, done, index)
+	if not planned or (planned.prepared and not Walks.NeedsPrepare(planned, index)) then
 		return
 	end
 	local resume = planned.prepared
 	planned.prepared = true
 	local _, _, _, map = ns.JourneyPosition()
-	for _, leg in ipairs(planned.legs) do
-		if leg.mode == "walk" and (not resume or leg.walkDeferred and leg.from.map == map) then
+	local active = ActiveWalk(planned, index)
+	for at, leg in ipairs(planned.legs) do
+		if leg.mode == "walk" and (not resume or at == active and leg.walkDeferred and leg.from.map == map) then
 			leg.walkDeferred = nil
 			local key = WalkKey(leg.from, leg.to)
 			local entry = walkCache[key]
@@ -112,11 +145,17 @@ function Walks.Prepare(planned, drawn, water, done)
 				leg.walkPoints, leg.measured = entry.points or {}, entry.reason == nil
 				leg.walkDrawn = entry.points ~= nil
 				leg.wet, leg.walkError = entry.points and entry.points.wet, entry.reason
-				if planned.preview and entry.cost then
-					leg.walkCost, leg.yards = entry.cost, entry.cost
+				if entry.cost then
+					leg.walkCost = entry.cost
+					if planned.preview then
+						leg.yards = entry.cost
+					end
 				end
-			elseif map and leg.from.map ~= map and not leg.estimated and not ns.Path.IsLoaded(leg.from.map) then
-				-- Exact costs already prove this leg; resume its drawing when the player reaches this continent.
+			elseif
+				not leg.estimated
+				and (at ~= active or map and leg.from.map ~= map and not ns.Path.IsLoaded(leg.from.map))
+			then
+				-- Exact costs already prove this leg; draw it once it is the walk to follow, or its continent loads.
 				leg.walkDeferred = true
 				leg.walkPoints, leg.walkDrawn = ns.Planner.WalkPoints(leg.from, leg.to), false
 			elseif leg.from.map == leg.to.map and ns.Path.HasData(leg.from.map) then
@@ -154,7 +193,7 @@ function Walks.Cancel()
 	for job in pairs(pathJobs) do
 		ns.Path.Cancel(job)
 	end
-	pathJobs, walkPending, pendingWalks = {}, {}, 0
+	pathJobs, walkPending, walkJobs, pendingWalks = {}, {}, {}, 0
 end
 
 -- Measured in another water mode, or for a journey that is over.

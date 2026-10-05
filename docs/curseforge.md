@@ -10,7 +10,7 @@ Middle-click the route button to open the nearby-services menu on the world map.
 
 ## Features
 
-- **A journey from where you stand.** Walking paths go around walls, hills and water, and through tunnels. The planner uses the flight points you know and can walk you to an undiscovered flight master when that saves time. Boat waits count towards the arrival time. Walking maps load in small parts as a journey reaches them.
+- **A journey from where you stand.** Walking paths go around walls, hills and water, and through tunnels. The planner uses the flight points you know and can walk you to an undiscovered flight master when that saves time. Boat waits count towards the arrival time. Walking maps are compressed inside the addon and decoded as a journey reaches them.
 - **Journeys from your guides.** With TomTom not installed, Questie and other guides that set a TomTom waypoint start a journey here instead, carrying the guide's title. Turn it off with *Let guides set TomTom waypoints* in `/path`.
 - **Quest areas the game draws itself.** A stop that marks a quest area is drawn by the client while you are inside it: the game's own area on the minimap turns gold, and the world map outlines it in the route's yellow instead of a pin and a line.
 - **Directions on the map and minimap.** Walking legs are round breadcrumb dots, transport legs have their own colours, and a waypoint pin marks your destination. The Group Finder spinner turns while a new journey is checked.
@@ -59,7 +59,7 @@ Zero keeps the current fastest-route behaviour; higher values reserve the Hearth
 Shift-click the world map or minimap to plan a journey. For a quest, choose **Plan journey** from its right-click menu in the quest log or objective tracker, or Shift-click its map marker. Completed quests route to their turn-in.
 
 - `/path` opens settings, also under **Options → AddOns → Shortest Path Forever**.
-- `/path perf` prints the addon's CPU time and memory use, walking-map parts included.
+- `/path perf` prints the addon's CPU time and memory use, terrain included.
 - `/path debug` enables a saved trace for reporting a ride that did not sync.
 - `/spfnear` opens the nearby-services menu on the world map, or routes to the nearest trainer, repair, reagent vendor, innkeeper, bank, auction house, flight master or stable you name.
 

@@ -198,9 +198,13 @@ local function WalkCost(options, a, b, index)
 	local from = index[a.pointKey]
 	local walk = from and from[b.pointKey]
 	if walk then
+		-- A feasible-only plan keeps just the walks that are known: a lower bound is no route to follow.
+		if options.feasibleOnly and walk.estimated then
+			return false, false
+		end
 		return walk.cost, walk.estimated or false
 	end
-	if options.exactMaps and options.exactMaps[a.map] then
+	if options.feasibleOnly or (options.exactMaps and options.exactMaps[a.map]) then
 		return false, false
 	end
 	return Gap(a, b), true
@@ -717,15 +721,21 @@ local function Plan(options)
 							target = edge.to + count * 2
 						end
 						local peers = states[target] or {}
-						local dominated = false
-						for _, peer in ipairs(peers) do
-							if
-								not labels.discarded[peer]
-								and labels.time[peer] <= finish
-								and Subset(labels, peer, current, edge.to)
-							then
-								dominated = true
-								break
+						-- A label that cannot arrive before the cutoff leads nowhere, and dominates nothing that could: a peer
+						-- at the same node has the same remaining bound.
+						local dominated = cutoff ~= nil and finish + lower[edge.to] >= cutoff
+						if not dominated then
+							-- The first offer only needs a valid incumbent. The exact proof retains the visited-set
+							-- alternatives that this preliminary search can discard.
+							for _, peer in ipairs(peers) do
+								if
+									not labels.discarded[peer]
+									and labels.time[peer] <= finish
+									and (options.feasibleOnly or Subset(labels, peer, current, edge.to))
+								then
+									dominated = true
+									break
+								end
 							end
 						end
 						if not dominated then
@@ -739,7 +749,7 @@ local function Plan(options)
 								if
 									not labels.discarded[peer]
 									and finish <= labels.time[peer]
-									and Subset(labels, id, peer)
+									and (options.feasibleOnly or Subset(labels, id, peer))
 								then
 									labels.discarded[peer] = true
 								end
@@ -808,7 +818,9 @@ local function Plan(options)
 			pendingWalks = pendingWalks,
 		}
 	end
-	local planned = Search(false)
+	-- options.incumbent, an arrival already in hand, ends the search for anything that cannot beat it: no route
+	-- then means the incumbent stands.
+	local planned = Search(false, options.incumbent)
 	local minimum = options.hearthMinimumSavings or 0
 	if planned and minimum > 0 then
 		for _, leg in ipairs(planned.legs) do

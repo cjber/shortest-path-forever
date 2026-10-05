@@ -31,9 +31,9 @@ def run(root, *command, output=None):
 
 
 def outputs(root):
-    files = {*DATA, ".pkgmeta"}
+    files = {*DATA, ".pkgmeta", "Nav/Nav.xml"}
     files.update(str(path.relative_to(root)) for path in (root / "Data").glob("*.lua"))
-    files.update(str(path.relative_to(root)) for path in root.glob("ShortestPathForever_Nav*/*.lua"))
+    files.update(str(path.relative_to(root)) for path in root.glob("Nav/*.lua"))
     files.update(str(path.relative_to(root)) for path in root.glob("**/*.toc"))
     return {name: (root / name).read_bytes() for name in sorted(files)}
 
