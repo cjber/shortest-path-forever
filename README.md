@@ -11,7 +11,7 @@ The fastest way anywhere in WoW: Forever, on foot, by air, by sea and through po
 Shift-click the world map or minimap, or pick a quest, and it plans the route: walking paths round walls and hills,
 the flight points you know, boats and zeppelins with their live departure times, lifts, the tram and portals. Then it
 walks you there with the game's own navigation marker. Walking maps cover Eastern Kingdoms, Kalimdor and Zephras Isle;
-they come in the same download and load only when a route needs them.
+they come in the same download and load in small parts as a route reaches them.
 The route, pins and tracker use the game's own art, so it looks like it came with the game.
 
 ![Eight-second demo of a route settling, the countdown and the compass](docs/screenshots/demo.gif)
@@ -27,6 +27,13 @@ Each feature has more detail in [docs/features.md](docs/features.md).
   on foot, by flight, boat, zeppelin, lift, tram, portal or teleport. The route is drawn on both maps, its steps sit in
   the objective tracker, and it replans as you move.
   ![Journey steps from Auberdine to Silithus with time and distance remaining](docs/screenshots/tracker.png)
+- **Journeys from your guides.** With TomTom not installed, Questie and other guides that set a TomTom waypoint
+  start a journey here instead, carrying the guide's title. *Let guides set TomTom waypoints* in `/path` turns it off.
+  ![A guide's route through Thelsamar, its current stop lit like the tracked quest](docs/screenshots/stops.png)
+- **Quest areas the game draws itself.** A stop that marks a quest area is drawn by the client while you are
+  inside it: the game's own area on the minimap turns gold and the world map outlines it in the route's yellow, in
+  place of a pin and a line of ours.
+  ![A quest area another addon named, outlined in the route's yellow on the world map](docs/screenshots/area.png)
 - **Guide.** The game's own waypoint marker leads you to where each step ends, the next boat, lift, flight master or
   your destination, and hands your tracked quest back when you arrive. Turn off *Mark only where steps end*
   in `/path` and it leads you turn by turn instead, round walls. Click the tracker header to turn Guide off.
@@ -80,11 +87,12 @@ Open a flight master’s map once after installing to sync the flight points you
 | Command | What it does |
 |---|---|
 | `/path` | Open the settings (also in Settings → AddOns, or from the addon compartment on the minimap) |
-| `/path perf` | Print this addon's CPU averages and peaks from the client's profiler, and its memory after a full collection |
+| `/path perf` | Print this addon's CPU averages and peaks from the client's profiler, and its memory after a full collection, walking-map parts included |
 | `/path debug` | Keep a trace of your position and ride matching, for reporting a ride that did not sync |
 | `/spfnear` | Open the nearby services menu on the world map; add `class`, `trainer`, `repair`, `reagents`, `vendor`, `innkeeper`, `bank`, `auction`, `flight` or `stable` to route to the nearest one |
 
-Every feature has its own switch in the settings. Searches and tracker updates wait until combat ends.
+Every feature has its own switch in the settings; the world map's filter menu and the minimap's tracking menu hide
+each kind of mark. Searches and tracker updates wait until combat ends.
 In Guidance, **Minimum Hearthstone saving** lets you keep your Hearthstone for bigger time savings.
 It defaults to zero; class teleports still count as alternatives.
 
@@ -112,8 +120,9 @@ Turn off **Attach to quest tracker** in Settings to drag the shared Forever colu
 ## Works alongside
 
 Other addons can plan and guide journeys through `ShortestPathForever.API`: travel-time estimates, and routes of
-up to 64 stops that wear the game's own quest, flight master or boat marks. [docs/api.md](docs/api.md) has the
-calls and what they return.
+up to 64 stops that wear the game's own quest, flight master or boat marks. While TomTom is not installed, the
+addon answers TomTom's waypoint calls, and a held stop can name the quest area it stands for. [docs/api.md](docs/api.md)
+has the calls and what they return.
 
 Used by my other Forever addons when both are installed:
 [Adventure Guide Forever](https://www.curseforge.com/wow/addons/adventure-guide-forever), [SkillUp Forever](https://www.curseforge.com/wow/addons/skillup-forever), [Legacy Forever](https://www.curseforge.com/wow/addons/legacy-forever) and [Tweaks Forever](https://www.curseforge.com/wow/addons/tweaks-forever).

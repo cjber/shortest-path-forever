@@ -10,7 +10,9 @@ Middle-click the route button to open the nearby-services menu on the world map.
 
 ## Features
 
-- **A journey from where you stand.** Walking paths go around walls, hills and water, and through tunnels. The planner uses the flight points you know and can walk you to an undiscovered flight master when that saves time. Boat waits count towards the arrival time.
+- **A journey from where you stand.** Walking paths go around walls, hills and water, and through tunnels. The planner uses the flight points you know and can walk you to an undiscovered flight master when that saves time. Boat waits count towards the arrival time. Walking maps load in small parts as a journey reaches them.
+- **Journeys from your guides.** With TomTom not installed, Questie and other guides that set a TomTom waypoint start a journey here instead, carrying the guide's title. Turn it off with *Let guides set TomTom waypoints* in `/path`.
+- **Quest areas the game draws itself.** A stop that marks a quest area is drawn by the client while you are inside it: the game's own area on the minimap turns gold, and the world map outlines it in the route's yellow instead of a pin and a line.
 - **Directions on the map and minimap.** Walking legs are round breadcrumb dots, transport legs have their own colours, and a waypoint pin marks your destination. The Group Finder spinner turns while a new journey is checked.
 - **Guide, on with every journey.** The game's own waypoint marker leads you to the next boat, lift, flight master or your destination, or round each turn if you prefer. Click the Journey header to toggle it; right-click to show the destination or clear the journey. A compass in the game's own parchment gold marks your next turns, stop and destination.
 - **A route button on the minimap.** A round button in the game's own minimap button art starts and stops the route in one click, and turns gold while a route is on. Right-click opens `/path`.
@@ -18,7 +20,7 @@ Middle-click the route button to open the nearby-services menu on the world map.
 - **Back to your corpse.** As a ghost, a red dotted path in your tombstone's colour leads back to your body, and your journey picks up again once you are alive.
 - **Live departures.** Hover a dock on the world map or minimap to see where its boats go, and when they arrive and leave. Destination docks light up; click one to open the map at the other end. Nearby departures appear in the objective tracker; aboard a timed boat, it shows the next stop.
 - **Lifts, trams and portals.** Landings and stations have their own countdowns. Portals show where they lead, and clicking one opens that map.
-- **Schedules learned from real rides.** Ride once to sync a transport. Sightings are shared quietly with your guild, party and nearby players. Unsynced services say “no sighting yet”, and a journey shows their guessed wait as “leaves in about”.
+- **Schedules learned from real rides.** Ride once to sync a transport. A flight is timed from take-off to landing, so the next journey plans it from your own ride. Sightings are shared quietly with your guild, party and nearby players. Unsynced services say “no sighting yet”, and a journey shows their guessed wait as “leaves in about”.
 - **Arrival alerts.** A banner, the ship's own bell and a flashing taskbar icon warn when your boat is due, for when you're AFK. Zeppelins sound their horn instead.
 
 ![Journey steps from Auberdine to Silithus, with time and distance remaining](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/tracker.png)
@@ -28,6 +30,14 @@ The journey in the objective tracker, step by step, with time and distance left.
 ![Auberdine’s piers on the minimap, with the dotted route and Guide’s native waypoint](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/minimap.png)
 
 The route on the minimap in dots, with Guide's waypoint.
+
+![A guide's route through Thelsamar, its current stop lit like the tracked quest](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/stops.png)
+
+A route another addon handed over: three places through Thelsamar, the stop you are travelling to lit like the tracked quest.
+
+![A quest area another addon named, outlined in the route's yellow on the world map](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/area.png)
+
+Standing in a quest area: the world map outlines it in the route's yellow, in place of the stop's pin and its line.
 
 ![Hovering Auberdine’s piers shows departures and lights destination docks](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/docks.png)
 
@@ -49,10 +59,12 @@ Zero keeps the current fastest-route behaviour; higher values reserve the Hearth
 Shift-click the world map or minimap to plan a journey. For a quest, choose **Plan journey** from its right-click menu in the quest log or objective tracker, or Shift-click its map marker. Completed quests route to their turn-in.
 
 - `/path` opens settings, also under **Options → AddOns → Shortest Path Forever**.
-- `/path perf` prints the addon's CPU time and memory use.
+- `/path perf` prints the addon's CPU time and memory use, walking-map parts included.
 - `/path debug` enables a saved trace for reporting a ride that did not sync.
+- `/spfnear` opens the nearby-services menu on the world map, or routes to the nearest trainer, repair, reagent vendor, innkeeper, bank, auction house, flight master or stable you name.
 
-Every feature has its own switch in the settings, and the world map's filter menu hides each kind of pin and the other faction's routes.
+Every feature has its own switch in the settings; the world map's filter menu and the minimap's tracking menu hide
+each kind of mark, and the other faction's routes are hidden until you ask for them.
 
 It's in English for now; translations are welcome on [GitHub](https://github.com/cjber/shortest-path-forever/tree/main/Locales).
 
