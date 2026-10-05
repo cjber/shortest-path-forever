@@ -29,7 +29,6 @@ if not (WOWMOCK / "wowmock.py").is_file():
 sys.path.insert(0, str(WOWMOCK))
 from screenshots_area import render as render_area_art
 from screenshots_services import render as render_services
-from screenshots_services import route_button
 from screenshots_tracker import detached_tracker
 from wowmock import (
     BUILD,
@@ -700,15 +699,6 @@ def render_minimap(ui):
     # Camelot Diel.lua: indicator is 63 right and 72 up from the cluster center.
     icon(canvas, "UI-HUD-Minimap-NightCycle", cx + 63, cy - 72)
     icon(canvas, "UI-HUD-Minimap-Frame-Cycle", cx + 63, cy - 72)
-    # RouteButton.lua: 315 degrees round the minimap from its right edge, six units past its rim, gold here
-    # because this scene has a journey running.
-    radius = size / 2 + 6
-    route_button(
-        canvas,
-        cx + math.cos(math.radians(315)) * radius,
-        cy - math.sin(math.radians(315)) * radius,
-        ROOT / "media/Icon.tga",
-    )
     icon(canvas, "MinimapArrow", cx, cy, 16)
     bend = next(p for p in points[1:] if math.hypot(p["x"] - here["x"], p["y"] - here["y"]) > 25)
     x, y = project(bend)

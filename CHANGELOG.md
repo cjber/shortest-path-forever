@@ -11,6 +11,7 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **The minimap route button is gone, and what it did lives in the game's own menus.** Nearby services is in the minimap's tracking menu as well as the world map's, and a click on the tracker's Journey header starts and stops the route, so the addon adds no button of its own to the minimap.
 - **A zeppelin's icon is always drawn whole.** A map pin, minimap pin, compass marker or stop badge that had last shown a boat, lift, portal or quest mark could show only a corner of the zeppelin icon.
 
 ## [1.9.0] - 2026-10-05

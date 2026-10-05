@@ -239,7 +239,9 @@ local function AddService(root, service, world)
 	entry:SetEnabled(place ~= nil)
 end
 
-local function AddWorldMapTrackingEntry(_, root)
+-- The world map's tracking menu and the minimap's (Blizzard_Minimap/Mainline/Minimap.lua:645, Gethe/wow-ui-source
+-- branch forever, tags it MENU_MINIMAP_TRACKING) both carry this submenu.
+local function AddTrackingEntry(_, root)
 	Build()
 	local world = PlayerWorld()
 	local submenu = root:CreateButton(L["Nearby services"])
@@ -302,13 +304,13 @@ ns.NearbyServices = {
 		return state
 	end,
 }
-ns.OpenNearby = Open
 ns.Init(function()
 	Build()
 	if WorldMapFrame and WorldMapFrame.HookScript then
 		WorldMapFrame:HookScript("OnHide", Close)
 	end
-	Menu.ModifyMenu("MENU_WORLD_MAP_TRACKING", AddWorldMapTrackingEntry)
+	Menu.ModifyMenu("MENU_WORLD_MAP_TRACKING", AddTrackingEntry)
+	Menu.ModifyMenu("MENU_MINIMAP_TRACKING", AddTrackingEntry)
 	SLASH_SPFNEAR1 = "/spfnear"
 	SlashCmdList.SPFNEAR = function(message)
 		local key = string.lower((message or ""):match("^%s*(.-)%s*$"))

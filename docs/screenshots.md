@@ -29,12 +29,12 @@ pixels never enter product media.
 | `area.png` | Elwynn Forest, standing in a held objective area: the world map outlines it in the route's own yellow, with no stop pin or line, cropped to the area |
 | `tracker.png` | Capture 21's five Auberdine → Silithus steps, with the current totals header |
 | `detached.png` | The Journey tracker detached from the quest tracker, under its draggable "Forever tracker" heading |
-| `minimap.png` | Auberdine's piers as minimap pins, the last dotted stretch to the south pier, native Guide waypoint, the route button gold at the lower right |
+| `minimap.png` | Auberdine's piers as minimap pins, the last dotted stretch to the south pier, native Guide waypoint |
 | `compass.png` | The compass: the game's own ticks and gold letters fading out at each end, its waypoint pin and the yards under it, no panel (on by default) |
-| `services.png` | The addon-owned nearby-services menu opened over the world map, with trainer and vendor specialty categories |
+| `services.png` | The Nearby services submenu in the world map's tracking menu, with trainer and vendor specialty categories |
 | `demo.gif` | Eight-second montage: route pulse/settle, tracker countdown and gliding compass; under 0.5 MB |
 
-`tools/screenshots_services.py` draws the services scene and the route button,
+`tools/screenshots_services.py` draws the services scene,
 `tools/screenshots_tracker.py` the detached tracker's heading, and `tools/screenshots_area.py`
 the objective-area outline.
 
@@ -76,8 +76,7 @@ remains 8,000 ms. The animation uses fixed time steps, never the wall clock.
   maps the strip's left edge to the top; clockwise rotation joins all four corners.
   Shared `tooltip_backdrop` implements that mapping. World-map frames also now
   apply Camelot's metal-corner offsets. The compass (`UI/Compass.lua`) draws no panel.
-  `UI/RouteButton.lua`'s plate is the client's own `ui-hud-minimap-button` atlas (20 by 18).
-- `UI/Tracker.lua`, `Journey/JourneyGuide.lua`, `UI/Arrow.lua`, `UI/Compass.lua` and `UI/RouteButton.lua`
+- `UI/Tracker.lua`, `Journey/JourneyGuide.lua`, `UI/Arrow.lua` and `UI/Compass.lua`
   supply the text, Guide's 25-yard bend threshold, marker proportions, stock fonts,
   the ribbon's fade ramp and its gold active state, and heading easing.
   Blizzard's ObjectiveTracker templates, WorldMap frame, WaypointLocationDataProvider,
