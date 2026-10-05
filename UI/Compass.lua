@@ -57,7 +57,7 @@ local function SetIcon(marker, icon)
 	if TRANSPORTS[icon] then
 		ns.SetTransportIcon(marker, icon, marker.size)
 	else
-		ns.FitAtlas(marker, icon, marker.size, marker.size)
+		ns.Art.Fit(marker, icon, marker.size, marker.size)
 	end
 	return true
 end

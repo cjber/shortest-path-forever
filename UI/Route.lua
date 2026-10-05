@@ -110,8 +110,8 @@ local function Texture(owner, index, dot)
 	owner.dots[index] = dot
 	local line, underline = owner.lines[index], owner.underlines[index]
 	if dot then
-		line:SetTexture(DOT_TEXTURE)
-		underline:SetTexture(DOT_TEXTURE)
+		line:SetTexture(DOT_TEXTURE) -- art-ok: a route line segment, its dots along a Line
+		underline:SetTexture(DOT_TEXTURE) -- art-ok: the same segment's dark underline
 		underline:SetVertexColor(0.04, 0.04, 0.04)
 	else
 		line:SetColorTexture(1, 1, 1, 1)
@@ -565,8 +565,8 @@ function ns.SetJourneyRoute(destination, route)
 		-- Addon textures draw over the minimap's own icons, so a stop with a known mark (a "?", a flight master) is only
 		-- circled there: the game's icon shows through the ring.
 		local ringed = destination and destination.look ~= nil
-		minimap.Goal:SetAtlas(ringed and RING_ATLAS or GOAL_ATLAS)
-		minimap.Goal:SetSize(ringed and MINIMAP_RING or MINIMAP_GOAL, ringed and MINIMAP_RING or MINIMAP_GOAL)
+		local size = ringed and MINIMAP_RING or MINIMAP_GOAL
+		ns.Art.Fit(minimap.Goal, ringed and RING_ATLAS or GOAL_ATLAS, size, size)
 		if destination then
 			minimap.elapsed = 0
 			minimap:SetScript("OnUpdate", UpdateMinimap)
@@ -592,8 +592,7 @@ ns.Init(function()
 	minimap.lines, minimap.underlines, minimap.dots, minimap.used = {}, {}, {}, 0
 	StrokeLayer(minimap)
 	minimap.Goal = Minimap:CreateTexture(nil, "OVERLAY")
-	minimap.Goal:SetAtlas(GOAL_ATLAS)
-	minimap.Goal:SetSize(MINIMAP_GOAL, MINIMAP_GOAL)
+	ns.Art.Fit(minimap.Goal, GOAL_ATLAS, MINIMAP_GOAL, MINIMAP_GOAL)
 	minimap.Goal:Hide()
 	-- The client's own "inside the quest's area" state, the one it paints the blob from, drives the tint at once.
 	minimap:RegisterEvent("PLAYER_INSIDE_QUEST_BLOB_STATE_CHANGED")

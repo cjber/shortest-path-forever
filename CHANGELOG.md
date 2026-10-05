@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **A zeppelin's icon is always drawn whole.** A map pin, minimap pin, compass marker or stop badge that had last shown a boat, lift, portal or quest mark could show only a corner of the zeppelin icon.
+
 ## [1.9.0] - 2026-10-05
 
 - **Flight times come from your own rides.** A flight you take is timed from take-off to landing, and that time is used the next time a journey plans the same route. While you are in the air the tracker counts the leg down from how far along the drawn route you are, so a slow or fast ride no longer makes its arrival time drift.
