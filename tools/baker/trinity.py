@@ -2,7 +2,9 @@
 
 Per map: mapextractor, vmap4extractor and vmap4assembler fill a new scratch directory, the expected tile list the
 patched mapextractor wrote (maps/<map>.expected) becomes source.json, mmaps_generator builds the targets into a
-durable per-map output, and only a complete output reaches gen_nav and pack_nav. The game install is read only.
+durable per-map output, and only a complete output reaches gen_nav and pack_nav. pack_nav stages the whole bundle
+of compressed walking maps, laid out as the main addon's Nav directory, before it replaces the one under the output.
+The game install is read only.
 """
 
 import argparse
@@ -10,6 +12,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -22,6 +25,8 @@ from forever_tools.fsio import atomic_write, publish  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 LOCALE = "enUS"
+ADDON = "ShortestPathForever"
+BUNDLED = re.compile(r"Nav\.xml|Nav\d+(?:_\d+)?\.lua")
 TILE = re.compile(r"(\d{4})_(\d{2})_(\d{2})")
 
 
@@ -174,30 +179,38 @@ def extract(args, map_id: int, commands: dict, run: Path, log: Path) -> dict:
     }
 
 
-def publish_addons(staged: Path, destination: Path, map_id: int) -> None:
-    """Publish the packed replacement before retiring its obsolete, recognised helper files."""
-    base = f"ShortestPathForever_Nav{map_id}"
-    old = []
-    directories = [destination / base, *destination.glob(base + "_*")]
-    for directory in directories:
-        if not directory.exists():
-            continue
-        helper = re.fullmatch(re.escape(base) + r"_\d+", directory.name)
-        if not directory.is_dir() or (directory.name != base and not helper):
-            raise ValueError(f"Unrecognised generated addon: {directory}")
-        allowed = {"Data.lua", directory.name + ".toc"} if helper else {f"Nav{map_id}.lua", base + ".toc"}
-        files = list(directory.iterdir())
-        if any(not p.is_file() or p.name not in allowed for p in files):
-            raise ValueError(f"Unrecognised files in generated addon: {directory}")
-        old.extend(files)
-    outputs = {destination / p.relative_to(staged): p.read_bytes() for p in staged.rglob("*") if p.is_file()}
+def bundled(root: Path) -> list[Path]:
+    """The walking-map files under an addon root's Nav directory; anything else there is refused."""
+    nav = root / "Nav"
+    files = sorted(nav.iterdir()) if nav.is_dir() else []
+    for path in files:
+        if not path.is_file() or not BUNDLED.fullmatch(path.name):
+            raise ValueError(f"Unrecognised file in the walking-map bundle: {path}")
+    return files
+
+
+def stage_bundle(staged: Path, destination: Path) -> None:
+    """Copy the maps the published Nav.xml lists, so pack_nav validates them and carries them into the new bundle."""
+    index = destination / "Nav" / "Nav.xml"
+    bundled(destination)
+    (staged / "Nav").mkdir(parents=True)
+    if index.is_file():
+        for name in ("Nav.xml", *re.findall(r'<Script file="([^"]+)"/>', index.read_text())):
+            if not BUNDLED.fullmatch(name):
+                raise ValueError(f"Unrecognised file listed in {index}: {name}")
+            shutil.copyfile(index.with_name(name), staged / "Nav" / name)
+
+
+def publish_bundle(staged: Path, destination: Path) -> None:
+    """Replace the published bundle with the complete staged one, then remove the files it leaves out."""
+    old = bundled(destination)
+    outputs = {destination / p.relative_to(staged): p.read_bytes() for p in bundled(staged)}
+    if destination / "Nav" / "Nav.xml" not in outputs:
+        raise ValueError(f"Staged walking-map bundle has no Nav.xml: {staged}")
     publish(outputs)
     for path in old:
         if path not in outputs:
             path.unlink()
-    for directory in directories:
-        if directory.is_dir() and not any(directory.iterdir()):
-            directory.rmdir()
 
 
 def bake_map(args, map_id: int, build: str) -> None:
@@ -243,10 +256,8 @@ def bake_map(args, map_id: int, build: str) -> None:
     complete(mmaps, map_id)
 
     name = args.names.get(map_id) or os.environ.get("MAP_NAME") or f"map {map_id}"
-    staged = run / "addons"
-    addon = staged / f"ShortestPathForever_Nav{map_id}"
-    addon.mkdir(parents=True, exist_ok=True)
-    lua = addon / f"Nav{map_id}.lua"
+    lua = run / "raw" / f"Nav{map_id}.lua"
+    lua.parent.mkdir()
     gen = [sys.executable, str(HERE / "gen_nav.py"), str(lua), "--map", str(map_id), "--name", name]
     gen += ["--require-complete", "--metrics", str(root / f"nav{map_id}.metrics.json")]
     for flag, bounds in (("--rows", args.rows), ("--cols", args.cols)):
@@ -262,15 +273,11 @@ def bake_map(args, map_id: int, build: str) -> None:
             "NAV_SOURCE": f"local {args.product} {build}, TrinityCore {args.rev}, recipe {digest}",
         },
     )
-    atomic_write(
-        addon / f"ShortestPathForever_Nav{map_id}.toc",
-        f"## Interface: 16001\n## Title: Shortest Path Forever - Walking map ({name})\n"
-        f"## Notes: Walking routes on {name}. Loaded when a route needs it.\n"
-        "## LoadOnDemand: 1\n## Dependencies: ShortestPathForever\n## X-License: GPL-3.0-or-later\n"
-        f"## IconTexture: Interface\\AddOns\\ShortestPathForever\\media\\Icon\n\nNav{map_id}.lua\n",
-    )
-    metrics["stages"]["pack_nav"] = measured([sys.executable, str(HERE.parent / "pack_nav.py"), str(lua)], HERE, log)
-    publish_addons(staged, root / "addons", map_id)
+    staged, destination = run / "addons" / ADDON, root / "addons" / ADDON
+    stage_bundle(staged, destination)
+    pack = [sys.executable, str(HERE.parent / "pack_nav.py"), "--root", str(staged), str(lua)]
+    metrics["stages"]["pack_nav"] = measured(pack, HERE, log)
+    publish_bundle(staged, destination)
     atomic_write(root / f"trinity{map_id}.metrics.json", json.dumps(metrics, indent=2, sort_keys=True) + "\n")
 
 
@@ -287,7 +294,7 @@ def main() -> None:
     parser.add_argument("--cols", nargs=2, type=int)
     parser.add_argument("--rev", required=True, help="pinned TrinityCore commit the binaries were built from")
     parser.add_argument("--patch", type=Path, action="append", required=True, help="each patch applied to that commit")
-    parser.add_argument("--name", action="append", default=[], metavar="MAP=TITLE", help="addon title for a map")
+    parser.add_argument("--name", action="append", default=[], metavar="MAP=TITLE", help="name of a map")
     args = parser.parse_args()
     if min(args.threads, args.jobs) < 1:
         parser.error("--threads and --jobs must be positive")

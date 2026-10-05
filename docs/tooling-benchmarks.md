@@ -48,9 +48,10 @@ status and file. Use a fresh output directory for unproven old tiles or changed 
 [Raw measurements](benchmarks/trinitycore-crop.json) record a fresh Stormwind crop, rows 48-49 and columns 30-31,
 from local `wow_classic_beta` build `1.60.1.70205`. The pinned TrinityCore tools build from scratch, extract
 neighbouring terrain and static models, generate all four expected navigation tiles and package the resulting
-walking addon. Single-tile Kalimdor and Zephras Isle smoke bakes also pass extraction through packaging.
+walking map. Single-tile Kalimdor and Zephras Isle smoke bakes also pass extraction through packaging.
 The manifest records source, patches, exact binaries, DB2 hashes and tile inventory; the report
-includes tile and package hashes. Ten compiled fixtures check lava/slime overlap and safe bridges.
+includes tile and package hashes. The run packaged each map as separate walking-map addons, so its package
+hashes and packaging time describe that layout, not the compressed bundle under `Nav/`. Ten compiled fixtures check lava/slime overlap and safe bridges.
 
 | Stage | Wall seconds | CPU seconds | Peak RSS MiB |
 |---|---:|---:|---:|
@@ -67,9 +68,10 @@ tiles are generated sequentially. Source download and compilation are excluded f
 
 Three encrypted Map-table sections are inaccessible with local keys and are recorded as skipped in the manifest.
 Selected-map metadata and WDT-listed terrain must exist; missing required geometry or liquid tables fail the bake.
-The tools never fetch client data or keys. The unavailable Mappster source prevents an extractor comparison, so
-these measurements establish a working native pipeline, not a speedup or terrain equivalence. Historical tiles
-still produce byte-identical Python output with the new reader. Shipped walking maps remain unchanged.
+The tools never fetch client data or keys. The source of the Mappster extractor that baked the historical tiles
+is unavailable, which prevents an extractor comparison, so these measurements establish a working native
+pipeline, not a speedup or terrain equivalence. Historical tiles produce byte-identical Python output with the
+TrinityCore-era reader. The shipped walking maps were not rebaked.
 
 ## Classified crop comparison
 
@@ -135,9 +137,12 @@ These timings use `luajit -joff tests/runtime_bench.lua cold`. The harness execu
 navigation code with client API stubs. Atomic loading of the original continent required roughly 20-26 ms in one
 frame; splitting files in that same addon did not add a scheduling boundary.
 
-The packaged data now loads in whole-cluster helper addons with at most 512 KiB of Lua each. Repeated cold-route
-runs measured 2.43 and 2.54 ms worst active frames, with approximately 5 MiB resident memory including the harness,
-compared with approximately 18.4 MiB before. One run under concurrent workloads reached 3.03 ms. The 2 ms search
+The figures in this section were measured with the terrain split into whole-cluster load-on-demand addons of at
+most 512 KiB of Lua each. Repeated cold-route runs measured 2.43 and 2.54 ms worst active frames, with
+approximately 5 MiB resident memory including the harness, compared with approximately 18.4 MiB for the atomic
+load. One run under concurrent workloads reached 3.03 ms. The addon ships its terrain as compressed blocks
+under `Nav/`, decoded on demand; [journey performance](../tests/journey_performance.md) describes that runtime
+and how to measure it. The 2 ms search
 allowance reserves scheduler headroom; it is not a hard total-frame deadline.
 
 The journey benchmark covers four representative journeys and keeps exact route costs, with no straight-line
@@ -151,4 +156,3 @@ build and distribution work before establishing an additional benefit. Lua remai
 
 [Live verification](live-navigation-verification.md) remains pending for a cold cross-continent journey, landing,
 cancellation and combat recovery. Headless tests do not reproduce the client's loading cost or secure UI.
-The `/path perf` memory regression now tests that loaded helpers are included once and unloaded helpers are excluded.
