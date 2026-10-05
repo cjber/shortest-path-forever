@@ -239,6 +239,7 @@ ShortestPathForeverPathData = nil
 ---@class SPFPlanOptions : SPFPlaceOptions
 ---@field feasibleOnly? boolean
 ---@field incumbent? number
+---@field incumbentPlan? SPFPlan
 ---@field hearthMinimumSavings? number
 ---@field otherFaction? boolean
 ---@field from SPFPoint

@@ -372,9 +372,9 @@ local function Render(planned, forced)
 	FinishSearch()
 end
 
--- feasible plans only over walks already measured; incumbent, an arrival in hand, leaves only a route that beats it.
+-- Feasible plans use known walks; the incumbent bounds the exact search while preserving journey preferences.
 ---@param feasible boolean?
----@param incumbent number?
+---@param incumbent SPFPlan?
 ---@return SPFPlan?
 local function Plan(feasible, incumbent)
 	local here = Here()
@@ -394,7 +394,8 @@ local function Plan(feasible, incumbent)
 		walks[#walks + 1] = walk
 	end
 	options.cache, options.walks, options.waterWalking = plannerCache, walks, waterMode
-	options.feasibleOnly, options.incumbent = feasible, incumbent
+	options.feasibleOnly = feasible
+	options.incumbent, options.incumbentPlan = incumbent and incumbent.arrive, incumbent
 	options.ride = Context.Ride(options)
 	local planned = ns.Planner.Plan(options)
 	if planned then
@@ -586,7 +587,7 @@ local function RefreshCosts(includeGoal, forced)
 		local feasible = Plan(true)
 		local bound = feasible and feasible.arrive
 		local function best()
-			return Plan(false, bound) or feasible
+			return Plan(false, feasible)
 		end
 		-- Reuse the bounded preview once for probes; commit only after planning with current exact costs.
 		local previewed = preview

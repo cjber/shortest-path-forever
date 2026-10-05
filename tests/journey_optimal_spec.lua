@@ -30,7 +30,7 @@ ns.Planner.Plan = function(o)
 	for key, value in pairs(o) do
 		options[key] = value
 	end
-	options.feasibleOnly, options.incumbent = nil, nil
+	options.feasibleOnly, options.incumbent, options.incumbentPlan = nil, nil, nil
 	return plan(o)
 end
 -- Every route the search hands Journey: a route shown before the proof ends is a settled one, with its first walk

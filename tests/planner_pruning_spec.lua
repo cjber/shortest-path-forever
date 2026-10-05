@@ -130,6 +130,29 @@ do
 	assert(Plan(o).arrive == walked.arrive)
 end
 
+-- An equal incumbent still passes through the journey's preference for a nearly as quick ride.
+do
+	local from, to = point(0), point(7000)
+	local o = {
+		from = from,
+		to = to,
+		now = 0,
+		walkSpeed = 7,
+		exactMaps = { [1] = true },
+		taxiNodes = { from, to },
+		taxiPaths = {},
+		walks = { walk(from, to, 7000), walk(from, from, 0), walk(to, to, 0) },
+	}
+	local incumbent = assert(Plan(o))
+	assert(modes(incumbent) == "walk")
+	o.taxiPaths = { { from = 1, to = 2, seconds = 1020 } }
+	local preferred = assert(Plan(o))
+	assert(preferred.preferred and preferred.arrive > incumbent.arrive)
+	o.incumbent, o.incumbentPlan = incumbent.arrive, incumbent
+	local bounded = assert(Plan(o))
+	assert(bounded.preferred and bounded.arrive == preferred.arrive and modes(bounded) == modes(preferred))
+end
+
 -- A cached topology and an incumbent compose: feasible, full and bounded plans share one cache.
 do
 	local o = line(8)
