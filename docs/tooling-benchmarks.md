@@ -21,6 +21,7 @@ The original full bake completed in 1,264.6 seconds wall time and 1,663 seconds 
 getrusage largest-process peak was reported as 1,086 MB, not aggregate concurrent memory. A fresh merged
 full bake records 955.21 seconds internally, 822.28 seconds parent CPU and 529.20 seconds worker CPU
 (1,351.48 seconds combined). Its parent peak is 1,083.0 MiB and largest-worker peak 162.2 MiB.
+[Raw full-map measurements](benchmarks/full-map.json) retain input hashes and resource counts.
 Both Lua outputs have SHA256 `a53a3d3fea642dbec294e4516e794a0e7dfbdd65653fe2c7af8a8c4003bf53e0`.
 
 The full map has 29,813 graph nodes and 168,860 edges. The merged repeat's component phase takes 21.17 seconds,
@@ -49,8 +50,9 @@ substitute for one.
 
 ## Classified crop comparison
 
-[Raw measurements](benchmarks/issue103.json) contain all 48 runs, tile and output hashes, source commits,
-phase times for the merged baker and resource accounting. The baseline is the original source above; the
+[Raw measurements](benchmarks/issue103.json) contain all 48 runs, source commits,
+phase times for the merged baker and resource accounting. [Crop definitions](benchmarks/crops.json) contain
+the bounds, tile hashes, output hashes and terrain counts. The baseline is the original source above; the
 merged source is `ccaffdd3f3bb75f78bfe7c4af1ee2b80d56309aa`. Each crop is four adjacent tiles, with three
 fresh-process repeats per version and per worker count. Version order alternates between repeats.
 All twelve runs for each crop produce identical Lua. Input hashes remain identical across those runs.
