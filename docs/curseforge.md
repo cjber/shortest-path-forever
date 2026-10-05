@@ -12,7 +12,7 @@ Nearby services sits in the minimap's tracking menu and the world map's.
 
 - **A journey from where you stand.** Walking paths go around walls, hills and water, and through tunnels. The planner uses the flight points you know and can walk you to an undiscovered flight master when that saves time. Boat waits count towards the arrival time. Walking maps load in small parts as a journey reaches them.
 - **Journeys from your guides.** With TomTom not installed, Questie and other guides that set a TomTom waypoint start a journey here instead, carrying the guide's title. Turn it off with *Let guides set TomTom waypoints* in `/path`.
-- **Quest areas the game draws itself.** A stop that marks a quest area is drawn by the client while you are inside it: the game's own area on the minimap turns gold, and the world map outlines it in the route's yellow instead of a pin and a line.
+- **Quest areas the game draws itself.** A stop that marks a quest's area is drawn by the client while you are inside it: the game's own area for that quest turns gold on the minimap and is drawn in gold on the world map, instead of a pin and a line.
 - **Directions on the map and minimap.** Walking legs are round breadcrumb dots, transport legs have their own colours, and a waypoint pin marks your destination. The Group Finder spinner turns while a new journey is checked.
 - **Guide, on with every journey.** The game's own waypoint marker leads you to the next boat, lift, flight master or your destination, or round each turn if you prefer. Click the Journey header to toggle it; right-click to show the destination or clear the journey. A compass in the game's own parchment gold marks your next turns, stop and destination.
 - **Nearby services.** Open the minimap's tracking menu or the world map's and pick *Nearby services* for trainers, repairs, reagents and other services. Choose trainers and vendors by specialty. Uses installed QuestieDB and Tweaks Forever for your class trainers.
@@ -34,9 +34,9 @@ The route on the minimap in dots, with Guide's waypoint.
 
 A route another addon handed over: three places through Thelsamar, the stop you are travelling to lit like the tracked quest.
 
-![A quest area another addon named, outlined in the route's yellow on the world map](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/area.png)
+![A quest's own area in gold on the world map, with no stop pin or line](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/area.png)
 
-Standing in a quest area: the world map outlines it in the route's yellow, in place of the stop's pin and its line.
+Standing in a quest's area: the world map draws the game's own area in gold, in place of the stop's pin and its line.
 
 ![Hovering Auberdine’s piers shows departures and lights destination docks](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/docks.png)
 

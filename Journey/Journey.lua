@@ -103,7 +103,37 @@ local function Near(node, reach)
 	return x and map == node.map and (x - node.x) ^ 2 + (y - node.y) ^ 2 <= (reach or ARRIVAL) ^ 2
 end
 
--- Whether the player stands in a held stop's objective area. A stop that names the one quest it stands for is
+-- The client's own answer for the quests a held stop names: true inside any of their areas, false outside them
+-- all, nil when the stop names none or the client has or shares no answer for any of them.
+---@param point SPFPoint
+---@return boolean?
+local function InsideQuestArea(point)
+	local insideQuestBlob = C_Minimap and C_Minimap.IsInsideQuestBlob
+	if not (point.questIDs and insideQuestBlob) then
+		return nil
+	end
+	local answer
+	for _, questID in ipairs(point.questIDs) do
+		local inside = insideQuestBlob(questID)
+		if canaccessvalue(inside) then
+			if inside == true then
+				return true
+			end
+			answer = false
+		end
+	end
+	return answer
+end
+
+-- Whether the client itself places the player in the area of a quest the held stop names. Only then is there an
+-- area of the game's own to show in the stop's place.
+---@param point SPFPoint?
+---@return boolean
+function ns.StopInQuestArea(point)
+	return point ~= nil and point.hold == true and InsideQuestArea(point) == true
+end
+
+-- Whether the player stands in a held stop's objective area. A stop that names the quests it stands for is
 -- answered by the client's own blob state, which is what its minimap draws and the player sees; a client that
 -- withholds or does not have it, and a stop the guide only has circles for, falls back to the shapes and radius.
 ---@param point SPFPoint?
@@ -112,12 +142,9 @@ function ns.StopInside(point)
 	if not (point and point.hold) then
 		return false
 	end
-	local insideQuestBlob = C_Minimap and C_Minimap.IsInsideQuestBlob
-	if point.questID and insideQuestBlob then
-		local inside = insideQuestBlob(point.questID)
-		if canaccessvalue(inside) then
-			return inside == true
-		end
+	local inside = InsideQuestArea(point)
+	if inside ~= nil then
+		return inside
 	end
 	local x, y, _, map = ns.JourneyPosition()
 	if not (x and map == point.map) then
@@ -517,7 +544,10 @@ ns.Init(function()
 	driver:SetScript("OnEvent", function(self, event, questID)
 		if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
 			Guide.ClearOrphan()
-		elseif event == "PLAYER_REGEN_DISABLED" and not (goal and goal.hold and (goal.radius or goal.shapes)) then
+		elseif
+			event == "PLAYER_REGEN_DISABLED"
+			and not (goal and goal.hold and (goal.radius or goal.shapes or goal.questIDs))
+		then
 			self:Hide()
 		elseif event == "PLAYER_REGEN_ENABLED" and goal then
 			self:Show()

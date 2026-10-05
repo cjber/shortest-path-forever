@@ -337,6 +337,7 @@ def map_base(ui, map_id):
         1414: ("World", "Kalimdor"),
         1439: ("World", "Kalimdor", "Darkshore"),
         1429: ("World", "Eastern Kingdoms", "Elwynn Forest"),
+        1436: ("World", "Eastern Kingdoms", "Westfall"),
         1432: ("World", "Eastern Kingdoms", "Loch Modan"),
     }
     return world_map_frame(ui, art, names[map_id], arrows=names[map_id][1:])
@@ -770,7 +771,7 @@ def render_flight(ui):
 
 SCENES = {
     "flight": render_flight,
-    "area": lambda ui: render_area_art(ui, map_base, projection, segment, flush_strokes, map_landmarks, icon),
+    "area": lambda ui: render_area_art(ui, map_base, projection, map_landmarks, icon),
     "kalimdor": lambda ui: render_map(ui, 1414),
     "darkshore": lambda ui: render_map(ui, 1439),
     "docks": render_docks,

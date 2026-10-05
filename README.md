@@ -30,10 +30,10 @@ Each feature has more detail in [docs/features.md](docs/features.md).
 - **Journeys from your guides.** With TomTom not installed, Questie and other guides that set a TomTom waypoint
   start a journey here instead, carrying the guide's title. *Let guides set TomTom waypoints* in `/path` turns it off.
   ![A guide's route through Thelsamar, its current stop lit like the tracked quest](docs/screenshots/stops.png)
-- **Quest areas the game draws itself.** A stop that marks a quest area is drawn by the client while you are
-  inside it: the game's own area on the minimap turns gold and the world map outlines it in the route's yellow, in
+- **Quest areas the game draws itself.** A stop that marks a quest's area is drawn by the client while you are
+  inside it: the game's own area for that quest turns gold on the minimap and is drawn in gold on the world map, in
   place of a pin and a line of ours.
-  ![A quest area another addon named, outlined in the route's yellow on the world map](docs/screenshots/area.png)
+  ![A quest's own area in gold on the world map, with no stop pin or line](docs/screenshots/area.png)
 - **Guide.** The game's own waypoint marker leads you to where each step ends, the next boat, lift, flight master or
   your destination, and hands your tracked quest back when you arrive. Turn off *Mark only where steps end*
   in `/path` and it leads you turn by turn instead, round walls. Click the tracker header to turn Guide off.

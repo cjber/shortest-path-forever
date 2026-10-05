@@ -20,13 +20,15 @@ Addons can use `ShortestPathForever.API` (`version = 1`) with uiMapIDs and norma
   the arrow label. A stop with `hold = true` waits for its owner to replace or cancel the route rather
   than advancing on arrival. For held objective areas, optional `radius` (yards, finite and non-negative)
   hides walking directions inside the area while preserving ownership and the current stop. Directions
-  resume outside it. Optional `shapes` names the areas themselves: 1 or more `{map, x, y, radius}` circles, each
-  on the map it names with its `radius` in yards. Optional `questID` names the one quest a held area stands for.
-  While the player stands in an area, Shortest Path hides the stop pin and its line: the world map draws the
-  circles' outline in the route's own yellow, and the minimap recolours the game's own quest blob with the stock
-  bonus objective textures, so the minimap shows the client's real area instead of a circle of ours. Leaving the
-  area, the stop changing and the journey ending all restore the stock map and minimap. Inside is the client's own
-  inside-area state for `questID` when it is given, and the circles otherwise.
+  resume outside it. Optional `questID` names the quest a held area stands for, and optional `questIDs` every
+  quest it stands for when there are several: an array of 1 or more quest IDs, given with or without `questID`.
+  While the player stands in the area of any named quest, by the client's own inside-area state, the game's own
+  area takes the place of the stop pin and its line: the world map draws each named quest's area with the
+  client's own blob, the minimap's own quest blob is recoloured, and both wear the stock bonus objective gold.
+  Leaving the area, the stop changing and the journey ending all restore the stock map and minimap. Optional
+  `shapes` names the area as 1 or more `{map, x, y, radius}` circles, each on the map it names with its `radius`
+  in yards. Circles are never drawn. They decide inside only for a stop that names no quest, or while the client
+  has no answer for any quest it names, and such a stop keeps its pin and line.
 - `CurrentStop(owner)` returns the current 1-based stop or `nil`.
 - `Cancel(owner)` returns `true` only when it clears that owner's whole route.
 - `Active()` says whether any journey is guiding, yours or another addon's.

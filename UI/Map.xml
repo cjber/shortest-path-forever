@@ -21,6 +21,8 @@
 		mixin="ShortestPathForeverFlightPinMixin" virtual="true"/>
 	<Frame name="ShortestPathForeverTransportPinTemplate" mixin="ShortestPathForeverTransportPinMixin" virtual="true"/>
 	<Frame name="ShortestPathForeverRoutePinTemplate" mixin="ShortestPathForeverRoutePinMixin" virtual="true"/>
+	<!-- The client's own blob widget, as QuestBlobPinTemplate (QuestBlobDataProvider.xml) is one. -->
+	<QuestPOIFrame name="ShortestPathForeverAreaPinTemplate" mixin="ShortestPathForeverAreaPinMixin" virtual="true"/>
 	<Frame name="ShortestPathForeverGoalPinTemplate" mixin="ShortestPathForeverGoalPinMixin" enableMouse="true" virtual="true">
 		<Layers>
 			<!-- A numbered stop of a multi-stop journey is the map's own quest button (POIButtonTemplate in

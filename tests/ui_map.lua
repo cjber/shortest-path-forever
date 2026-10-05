@@ -55,6 +55,27 @@ function map:AcquirePin(template, ...)
 			self.atlas = atlas
 		end
 		pin.Disc, pin.Button, pin.Numeral = pin:CreateTexture(), pin:CreateTexture(), pin:CreateTexture()
+		-- The blob widget's own methods (FrameAPIBlob), recorded: the quests drawn since the last DrawNone, and on
+		-- which map.
+		if template:match("AreaPin") then
+			assert(blobWidget, "no QuestPOIFrame on this client")
+			function pin:SetFillTexture(texture)
+				self.fill = texture
+			end
+			function pin:SetBorderTexture(texture)
+				self.border = texture
+			end
+			function pin:SetMapID(id)
+				self.blobMap = id
+			end
+			function pin:DrawNone()
+				self.blobs = {}
+			end
+			function pin:DrawBlob(questID, draw)
+				assert(draw == true)
+				self.blobs[#self.blobs + 1] = questID
+			end
+		end
 		-- A template with no mixin of its own (the ping pin) inherits the client's MapPinPingTemplate instead.
 		local mixin = _G[template:gsub("Template$", "Mixin")]
 		if mixin then

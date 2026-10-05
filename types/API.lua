@@ -13,8 +13,8 @@
 -- rings the spot instead of covering the game's own icon there.
 ---@alias SPFAPIStopKind "pickup"|"turnin"|"objective"|"trainer"|"innkeeper"|"flightmaster"|"battlemaster"|"dungeon"|"boat"|"zeppelin"|"lift"|"tram"|"portal"
 
---- An objective area a held stop stands for: a circle on one map. The guide draws its outline, and its stop and
--- line step aside, while the player stands inside.
+--- An objective area a held stop stands for: a circle on one map. Circles are never drawn: they decide whether the
+-- player stands in the area when the stop names no quest, or the client has no answer for the quests it names.
 ---@class SPFAPIShape
 ---@field map integer -- uiMapID
 ---@field x number -- normalized 0-1
@@ -30,8 +30,9 @@
 ---@field kind? SPFAPIStopKind -- any other value is ignored and the stop keeps the plain pin
 ---@field hold? boolean -- keep guidance at this stop until the caller submits an updated route
 ---@field radius? number -- yards around a held stop where travel cues pause; finite and nonnegative
----@field questID? number -- the one quest this held stop's area belongs to; the client's own "inside the area" state for it decides inside
----@field shapes? SPFAPIShape[] -- objective areas a held stop stands for; their outlines are drawn on the world map while the player is inside one
+---@field questID? number -- the quest this held stop's area belongs to; the client's own "inside the area" state for it decides inside, and the client's own area for it is shown while the player is inside
+---@field questIDs? number[] -- every quest the area belongs to, when it has several: 1 or more positive integers; inside any of them is inside, and each one's area is shown. May be given with or without questID
+---@field shapes? SPFAPIShape[] -- objective areas a held stop stands for; they decide inside when no quest is named or the client has no answer, and are never drawn
 
 ---@class SPFAPILeg
 ---@field mode SPFAPIMode

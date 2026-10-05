@@ -12,6 +12,7 @@ globals = {
 	"ShortestPathForeverGoalPinMixin",
 	"ShortestPathForever_OnAddonCompartmentClick",
 	"ShortestPathForeverPortalPinMixin",
+	"ShortestPathForeverAreaPinMixin",
 	"ShortestPathForeverRoutePinMixin",
 	"TomTom",
 	"SLASH_SHORTESTPATHFOREVER1",
@@ -103,6 +104,7 @@ read_globals = {
 	"Minimap",
 	"GetPlayerFacing",
 	"GetCVar",
+	"GetCVarBool",
 	"GetMinimapShape",
 	"C_Minimap",
 }
