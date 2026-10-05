@@ -181,6 +181,8 @@ ShortestPathForeverCharDB = nil
 ---@field graph string[]
 ---@field height string[]
 ---@field floor string[]
+---@field parts? table<number, number> cluster index to load-on-demand terrain addon
+---@field loadedParts? table<number, boolean>
 ---@type table<number, SPFNavData>
 ShortestPathForeverPathData = nil
 
@@ -214,6 +216,7 @@ ShortestPathForeverPathData = nil
 ---@field wet? number
 ---@field measured? boolean
 ---@field walkCost? number -- the walk's running yards as searched, where water keeps its weight
+---@field walkDeferred? boolean -- exact geometry waiting for arrival on its continent
 ---@field walkDrawn? boolean -- walkPoints came from a search, not a straight placeholder
 ---@field color? ColorMixin -- drawn in this colour rather than its mode's
 ---@class SPFPlan
