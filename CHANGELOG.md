@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **Quest progress stays current in the Journey tracker.** Updating a stop refreshes its walking-step text while keeping the measured route.
+
 - **Shift-click a flight master to plan a journey there.** Map icons keep their own art, with the destination tag at the lower right.
 
 - **Walking maps stay inside one addon.** Terrain is compressed and decoded only where a journey needs it, keeping the addon list clear of walking-map parts.

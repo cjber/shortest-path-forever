@@ -263,6 +263,20 @@ driver.move({ map = 0, x = -8876.2, y = 610.9, z = 0 })
 local x, _, z, map = ns.JourneyPosition()
 assert(x == -8876.2 and z == nil and map == 0, "the placeholder height reached the planner")
 
+-- Updating a stop at the same coordinates keeps its measured walk and refreshes its objective text.
+local relabel = assert(loadfile("tests/journey_driver.lua"))()
+relabel.path.auto = true
+relabel.begin({ map = 1, x = 0, y = 0, z = 0 }, { map = 1, x = 1200, y = 0, z = 0 })
+relabel.ns.StartJourney({ map = 1, x = 1200, y = 0, z = 0, label = "Collect 1/6" })
+relabel.path.settle()
+local measured = relabel.shown().legs[1].walkPoints
+relabel.ns.StartJourney({ map = 1, x = 1200, y = 0, z = 0, label = "Collect 5/6" })
+assert(select(2, relabel.ns.JourneyInfo())[1].text:find("Collect 5/6", 1, true), "reused walk has stale progress")
+assert(relabel.shown().legs[1].walkPoints == measured, "a text update discarded the measured walk")
+relabel.path.settle()
+assert(select(2, relabel.ns.JourneyInfo())[1].text:find("Collect 5/6", 1, true), "settled walk has stale progress")
+relabel.ns.ClearJourney()
+
 -- The durable long-route regression uses real Journey, Path and all three nav maps.
 assert(loadfile("tests/journey_bench.lua"))()
 print("journey_spec: ok")
