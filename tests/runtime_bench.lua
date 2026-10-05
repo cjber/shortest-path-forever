@@ -26,8 +26,8 @@ end
 if arg[1] == "cold" then _G.C_AddOns = {
  DoesAddOnExist = function(name) return name:match("Nav[01]$") ~= nil end,
  LoadAddOn = function(name)
-  local map = assert(name:match("Nav(%d+)$"))
-  assert(loadfile("tools/load_nav.lua"))(map)
+  local map = assert(name:match("Nav(%d+)"))
+  assert(loadfile("tools/load_nav.lua"))(map, nil, nil, name)
  end,
 } end
 local miniEnabled = true
