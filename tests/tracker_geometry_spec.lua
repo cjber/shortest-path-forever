@@ -183,6 +183,7 @@ local function scenario(anchor, scale, uiScale)
 				ready = fn
 			end,
 		},
+		EventRegistry = { RegisterCallback = noop },
 		Mixin = function(target, mixin)
 			for key, value in pairs(mixin) do
 				target[key] = value
