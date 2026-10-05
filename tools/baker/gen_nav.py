@@ -2,7 +2,7 @@
 
 usage: gen_nav.py [<out.lua>] --map <id> [--name "<title>"] [--rows r0 r1 --cols c0 c1] [--jobs n]
 
-Reads our own bake of the local client (Mappster, TrinityCore mmtile layout <mm>/MMMM_RR_CC.mmtile, one Detour tile
+Reads our own bake of the local client (TrinityCore mmtile layout <mm>/MMMM_RR_CC.mmtile, one Detour tile
 per ADT) from NAV_MM. The tile bounding box comes from the .mmtile files present (optionally cut to --rows/--cols).
 Every tile with walkable data becomes a cluster; poly components under MIN_COMPONENT polys (rooftops, treetops,
 props) are dropped over the whole map.
@@ -22,7 +22,6 @@ import math
 import multiprocessing
 import os
 import re
-import struct
 import sys
 import time
 from array import array
@@ -34,6 +33,7 @@ from typing import cast
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from baker.inputs import arguments  # noqa: E402
 from baker.measure import record, tile_hashes  # noqa: E402
+from baker.tiles import load_tile  # noqa: E402
 from forever_tools.fsio import atomic_write  # noqa: E402
 
 MM = os.environ.get("NAV_MM", "mm")
@@ -98,25 +98,6 @@ def configure(map_id, rows=None, cols=None):
 def enc(v, width):
     assert 0 <= v < 64**width, (v, width)
     return "".join(B64[(v >> (6 * (width - 1 - i))) & 63] for i in range(width))
-
-
-def load_tile(path):
-    """Detour tile -> (verts, [(vertex ids, neighbour refs, flags, area, type)])."""
-    b = open(path, "rb").read()
-    o = 20
-    h = struct.unpack_from("<4s14i3f3ff", b, o)
-    assert h[0] == b"VAND", path
-    poly_count, vert_count = h[6], h[7]
-    o += 100
-    verts = struct.unpack_from(f"<{vert_count * 3}f", b, o)
-    o += vert_count * 12
-    polys = []
-    for _ in range(poly_count):
-        _, *rest = struct.unpack_from("<I6H6HHBB", b, o)
-        o += 32
-        pv, pn, flags, nv, at = rest[0:6], rest[6:12], rest[12], rest[13], rest[14]
-        polys.append((pv[:nv], pn[:nv], flags, at & 0x3F, at >> 6))
-    return verts, polys
 
 
 def plane(pts, c):

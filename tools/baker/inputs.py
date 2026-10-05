@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import re
 from pathlib import Path
 
 
@@ -16,10 +17,12 @@ def complete(directory: Path, map_id: int) -> dict:
     actual = {p.stem for p in directory.glob(f"{map_id:04d}_??_??.mmtile")}
     populated = set()
     for tile in sorted(expected):
-        if not tile.startswith(f"{map_id:04d}_") or Path(tile).name != tile:
+        match = re.fullmatch(rf"{map_id:04d}_(\d{{2}})_(\d{{2}})", tile)
+        if not match or max(map(int, match.groups())) > 63:
             raise ValueError(f"Invalid tile identifier: {tile}")
         path = directory / "status" / tile
-        status = path.read_text().split()[0] if path.is_file() else "missing"
+        words = path.read_text().split() if path.is_file() else []
+        status = words[0] if words else "missing"
         if status == "ok":
             populated.add(tile)
         elif status != "empty":

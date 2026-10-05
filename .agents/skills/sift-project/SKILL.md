@@ -12,8 +12,7 @@ A World of Warcraft: Forever (Classic, `## Interface: 16001`) addon that plans j
 boats, lifts, tram, portals) and draws them on the map. Runtime is the WoW client's Lua 5.1 sandbox; files
 load in `.toc` order and share one namespace table (`local addonName, ns = ...`). It ships through
 BigWigs packager (`.pkgmeta`) to CurseForge/Wago/GitHub as one zip that also carries load-on-demand
-walking-map addons. The specs run headless under LuaJIT with stubbed WoW APIs. Python, shell scripts and
-C# under `tools/` generate the data offline; `.pkgmeta` keeps `tools/` and `tests/` out of the zip.
+walking-map addons. The specs run headless under LuaJIT with stubbed WoW APIs. Python and shell scripts under `tools/` generate the data offline; `.pkgmeta` keeps `tools/` and `tests/` out of the zip.
 
 ## Gate
 
@@ -81,7 +80,8 @@ Things reached indirectly. The dead-code lens must treat these as referenced.
 - `tools/*.py` are run by hand (README), except those a workflow runs: `ci.yml` runs `check_generated.py`,
   `changelog.py --check`, `fetch_tracker_ui.py` and `typecheck.sh`; `release.yml` runs `release_check.py` and
   `changelog.py`; `shared-tracker.yml` runs `check_shared_tracker.py`.
-  `tools/bake_walks.lua` writes `Data/Walks.lua`; `tools/baker/bake.sh` drives `gen_nav.py` and the C# baker.
+  `tools/bake_walks.lua` writes `Data/Walks.lua`; `tools/baker/bake.sh` builds pinned TrinityCore tools
+  and runs `trinity.py`, `gen_nav.py` and `pack_nav.py`.
 - Test seams: `Path.after`, `Path.clock` and `Path.budget` are replaced by specs. Specs that load Journey without
   the walking search get `tests/path_fake.lua`, the whole `ns.Path` surface Journey calls; Journey has no
   branch for a missing or partial `ns.Path`. Planner.Plan's
@@ -110,7 +110,7 @@ How each part of the tree is reviewed. Unlisted paths are `production`.
 | `Data/Walks.lua` | generated | `luajit tools/bake_walks.lua > Data/Walks.lua` |
 | `ShortestPathForever_Nav*/` | generated | `tools/baker/gen_nav.py` + `bake.sh`; excluded from luacheck/stylua/gitleaks |
 | `tools/` | script | offline data generators, never shipped |
-| `tools/baker/mappster.patch` | vendor | patch against upstream Mappster |
+| `tools/baker/trinitycore*.patch` | vendor | client, extraction and navigation patches against pinned TrinityCore |
 | `tests/` | test | headless LuaJIT specs, harnesses and a bench |
 | `tests/*_ui.lua`, `tests/activity_bench.lua`, `tests/runtime_bench.lua` | test | load `tests/ui_client.lua` and `tests/ui_map.lua`; the UI checks run in CI, the benches locally |
 | `tests/*_performance.md`, `README.md`, `docs/*.md`, `types/README.md`, `tools/baker/README.md` | docs | `docs/curseforge.md` is store copy: proposals only |
