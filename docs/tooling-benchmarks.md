@@ -43,10 +43,33 @@ phase wall time, CPU and Linux getrusage peaks. The largest worker's RSS is not 
 `bake.sh` additionally requires the extractor's build, recipe and expected-tile manifest, and verifies every tile
 status and file. Use a fresh output directory for unproven old tiles or changed extraction inputs.
 
-The pinned Mappster upstream currently returns Repository not found, preventing a fresh extractor/Recast timing
-and full extractor build. The new provenance module compiles and passes its standalone .NET 10 regression test.
-Restore the pinned source before claiming a complete extraction benchmark; historical extractor logs are not a
-substitute for one.
+## Fresh TrinityCore extraction
+
+[Raw measurements](benchmarks/trinitycore-crop.json) record a fresh Stormwind crop, rows 48-49 and columns 30-31,
+from local `wow_classic_beta` build `1.60.1.70205`. The pinned TrinityCore tools build from scratch, extract
+neighbouring terrain and static models, generate all four expected navigation tiles and package the resulting
+walking addon. Single-tile Kalimdor and Zephras Isle smoke bakes also pass extraction through packaging.
+The manifest records source, patches, exact binaries, DB2 hashes and tile inventory; the report
+includes tile and package hashes. Ten compiled fixtures check lava/slime overlap and safe bridges.
+
+| Stage | Wall seconds | CPU seconds | Peak RSS MiB |
+|---|---:|---:|---:|
+| Terrain extraction | 8.26 | 8.07 | 522.2 |
+| Static model extraction | 6.08 | 5.83 | 522.2 |
+| Model assembly | 1.23 | 0.28 | 93.6 |
+| Recast, four tiles combined | 43.68 | 42.86 | 126.2 |
+| Python navigation generation | 5.21 | 6.59 | 65.6 |
+| Packaging | 0.05 | 0.04 | 26.9 |
+
+These are single fresh-process measurements with two native threads and two Python workers on a shared machine.
+CPU includes waited children; peak RSS is the largest process, not aggregate concurrent memory. Crop navigation
+tiles are generated sequentially. Source download and compilation are excluded from stage timings.
+
+Three encrypted Map-table sections are inaccessible with local keys and are recorded as skipped in the manifest.
+Selected-map metadata and WDT-listed terrain must exist; missing required geometry or liquid tables fail the bake.
+The tools never fetch client data or keys. The unavailable Mappster source prevents an extractor comparison, so
+these measurements establish a working native pipeline, not a speedup or terrain equivalence. Historical tiles
+still produce byte-identical Python output with the new reader. Shipped walking maps remain unchanged.
 
 ## Classified crop comparison
 

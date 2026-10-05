@@ -1,113 +1,109 @@
 # Shortest Path Forever baker
 
-Bakes the walkable ground of a WoW map from a local client install and packages it as the load-on-demand addon
-`ShortestPathForever_Nav<map>`, whose TOC-ordered Lua files set `ShortestPathForeverPathData[map]` for `PathGrid.lua`.
-
-## Extraction source availability
-
-Fresh extraction requires Mappster revision `d93fd3b347d8c63663cff536955e3cae97fa28a6`.
-Its pinned upstream returns 404, and no matching public repository, revision archive or local source copy has
-been recovered. The two public repositories named Mappster are unrelated applications. Keep this pin until an
-identical licensed source tree is recovered and `mappster.patch` applies cleanly; a similarly named repository
-cannot establish compatible client formats or output.
-
-Python generation and packing still work with existing terrain inputs. Historical inputs without `source.json`
-remain suitable for comparing generator output, but cannot prove extraction completeness. See
-[the benchmark report](../../docs/tooling-benchmarks.md) and [issue #103](https://github.com/cjber/shortest-path-forever/issues/103).
+Bakes walking maps from a local WoW: Forever client and packages load-on-demand addons for
+`PathGrid.lua`. The extractor is TrinityCore, pinned to
+`e3916b2adcf2f8a70ae33817fc57b6c0266e2fb0`, with three patches: `trinitycore-client.patch` for Forever tables and local CASC reads,
+`trinitycore.patch` for bounded terrain and model extraction, and `trinitycore-nav.patch` for navigation
+completeness and liquid hazards.
 
 ## Usage
 
 ```sh
-WOW="$HOME/Games/battlenet/drive_c/Program Files (x86)/World of Warcraft" MAPS="0 1 2991" ./bake.sh
+WOW="$HOME/Games/battlenet/drive_c/Program Files (x86)/World of Warcraft" MAPS="0 1 2991" tools/baker/bake.sh
 ```
 
-Requires git, curl, cmake, a C++ compiler, python3 (3.10+, standard library only) and about 10 GB of free RAM at
-`THREADS=8`. The .NET 10 SDK is installed under `$OUT` if `$DOTNET_ROOT` holds none. Everything is written under
-`$OUT` (default `./work`): nothing is written inside the game install and nothing is fetched from Blizzard's CDN. A
-file that local storage cannot supply fails the bake.
+Requires Linux, git, CMake, Ninja, a C++ compiler, Python 3.10+, and TrinityCore's development dependencies:
+Boost, OpenSSL, zlib, bzip2 and readline. On Debian/Ubuntu install `build-essential cmake ninja-build git
+libboost-all-dev libssl-dev zlib1g-dev libbz2-dev libreadline-dev`. The tools build without the server,
+scripts, database or jemalloc. Python uses only the standard library.
+
+The client install is read only. CASC reads use local storage and built-in keys. Missing required geometry, files or liquid-table keys
+fail extraction. Inaccessible Map table sections are skipped and logged; the selected map and its parent
+metadata must still exist. Build sources come from GitHub, but client files and encryption keys are never downloaded.
+All sources, builds, logs and output stay under `OUT`, which must be outside the game install.
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `WOW` | the Lutris/Wine path above | install root holding `.build.info` |
-| `PRODUCT` | `wow_classic_beta` | product in `.build.info` (WoW Forever) |
-| `MAPS` | `0 1 2991` | Map IDs to bake. Other maps need `MAP_NAME`. |
-| `THREADS` | `8` | tiles baked in parallel |
-| `JOBS` | `6` | gen_nav rasterizer processes |
-| `OUT` | `./work` | scratch and output |
+| `WOW` | the Wine path above | install root holding `.build.info` |
+| `PRODUCT` | `wow_classic_beta` | active product in `.build.info` |
+| `MAPS` | `0 1 2991` | space-separated map IDs |
+| `MAP_NAME` | known map title | title for an additional map |
+| `THREADS` | `8` | native extraction and navigation workers |
+| `JOBS` | `6` | build and Python rasterizer workers |
+| `OUT` | `tools/baker/work` | sources, builds, extraction scratch and output |
+| `ROWS`, `COLS` | whole map | inclusive tile bounds, each written as `"lo hi"` |
+| `BUILD_ONLY` | `0` | `1` builds tools without requiring a client, as CI does |
 
-Steps, each reusable on its own:
+A small crop, with neighbouring tiles extracted for collision at its edges:
 
-1. `NavBaker --maps <install> <product>` lists every map with its tile count.
-2. `NavBaker --continent <install> <product> <map> <outDir> [threads]` streams the map a row of ADTs at a time. It is
-   resumable within one client build, extractor recipe and tile inventory: every tile gets `status/<map>_<x>_<y>` (`ok`, `empty` or `FAILED`) and a line in `tiles.log`. A tile
-   whose Recast bake throws is retried with the LAYERS partitioner, then MONOTONE, then with coarser detail sampling (2x, then 4x). The
-   retry is recorded. A tile that runs out of memory is baked again alone with the same settings, so the output does
-   not depend on memory pressure. `ROWS="a b"` limits the rows.
-3. `NavBaker --region <install> <product> <map> <outDir> <row0> <row1> <col0> <col1> [threads]` bakes a rectangle.
-4. `NAV_MM=<outDir> python3 gen_nav.py <out.lua> --map <map> --name <name> [--jobs n]` turns TrinityCore-layout `.mmtile`
-   files into the addon's HPA* graph and 8-yard grids. The output is deterministic. Each cell keeps one base surface
-   and its height (2-yard steps); where walkable surfaces overlap (a tunnel under a pass, a city under a city), the
-   others are kept as floors, each linked to the neighbouring surfaces it actually joins. Floors under water in the
-   same cell (lake and sea beds) are dropped. Every graph edge carries two costs: one where a swum yard counts as
-   `SWIM` (3) running yards, so walks keep out of water, and one for a player walking on water, where it counts as 1.
+```sh
+OUT=/tmp/spf-terrain MAPS=0 ROWS="48 49" COLS="30 31" THREADS=2 JOBS=2 tools/baker/bake.sh
+```
 
-Each cluster field is emitted as one base64 string. `PathGrid.lua` reads this format directly. When the original
-`.mmtile` inputs are unavailable, `python3 tools/pack_nav.py` from the repo root converts older shipped chunk
-tables deterministically, without rebaking or reading a client install. It groups whole clusters into helper
-addons whose Lua payload is at most 512 KiB, and writes the cluster manifest and package move entries. The base
-addon holds metadata; an asynchronous search yields before and after loading a needed part. Every helper ships
-in the same zip. Offline tools use `tools/load_nav.lua` to load the complete map in TOC order.
-Running the packer again leaves the data unchanged.
+The stages are `mapextractor`, `vmap4extractor`, `vmap4assembler`, `mmaps_generator`, `gen_nav.py` and
+`pack_nav.py`. Each extraction gets a fresh `extract<map>-*` scratch directory. Navigation tiles live in
+`trinity<map>/mmaps`; packages live under `addons/`. Scratch directories are retained for inspection and
+can be removed after a successful bake. The script never copies output into the game or the repository.
 
-For repeatable timing, add `--metrics report.json --build <input-client-build>` to `gen_nav.py`. The report records
-input tile SHA256 hashes, crop bounds, jobs, phase wall times, parent and worker CPU, output SHA256 and Linux
-getrusage peak RSS. The worker RSS is the largest individual worker, not the total concurrent process memory.
-Use a separate output file, the same tiles and build, and repeat both single-worker and parallel runs on an idle
-machine. A crop's global component pruning differs from a full continent, so compare identical crops and use a
-full-map run to check scale. `bake.sh` requires `source.json` from the extractor and checks every expected tile's `ok` or `empty` status
-against its file before publishing. Cached tiles without provenance, changed builds or changed extractor recipes
-require a fresh output directory. `--require-complete` enables this check for a direct `gen_nav.py` invocation;
-metrics from old caches without it describe the files supplied and do not prove extraction completeness.
+## Completeness and repeatability
 
-The graph builder reuses each cluster's legal adjacency for entrance searches and both water modes. It preserves
-directed costs: entering water changes the destination step's cost. It needs no native extension or extra runtime.
+The map extractor inventories selected tiles from the WDT before converting their ADTs. `trinity.py` records
+the active client version, product, pinned source, patch and binary hashes, commands, crop and expected tiles
+in `source.json` before navigation generation. Every expected tile needs a terminal `ok` or `empty` status;
+missing and failed statuses block Python generation. The tile files must exactly match the `ok` statuses.
+The portable recipe hashes source, patches, build and commands. Exact binary hashes remain in provenance,
+so rebuilt executables still require a fresh `OUT`. Worker counts can change when resuming.
+A different build, recipe or crop requires a fresh `OUT`. Files without provenance cannot be resumed.
 
-`NAV_DBD` points NavBaker at a directory holding `Map.dbd` and `LiquidType.dbd`. bake.sh fetches them from a pinned
-WoWDBDefs commit and checks their sha256.
+A rerun extracts inputs afresh and resumes navigation tiles with terminal statuses. It verifies completeness
+before generating or packing an addon. Generation and packing use fresh staging directories, then publish the
+complete replacement and retire obsolete helpers. Native stages record fresh-process wall time, CPU and Linux largest-process
+peak RSS in `trinity<map>.metrics.json`; `nav<map>.metrics.json` adds Python phase timings and input/output hashes.
+Peak RSS does not measure aggregate concurrent memory. `bake<map>.log` retains commands and stage output.
 
-## Files
+To generate from existing terrain independently:
 
-- `bake.sh`: the pipeline above, with every upstream pinned to a commit.
-- `mappster.patch`: applied to Mappster. It puts the extractor behind an `IFileSource` interface, lets the
-  model caches be cleared, and makes the Recast partitioner a setting.
-- `src/`: `NavBaker.csproj`, which compiles Mappster's `Extractor/` and `Nav/` but not its GUI or its CASC library;
-  `Program.cs` for the headless commands; and `ZezulaCasc.cs`, the P/Invoke `IFileSource` over Zezula's CascLib.
-- `gen_nav.py`.
+```sh
+NAV_MM=/path/to/mmaps python3 tools/baker/gen_nav.py /tmp/Nav0.lua --map 0 --name "Eastern Kingdoms" \
+  --require-complete --metrics /tmp/nav0.json
+```
 
-## Walks between fixed places
+An existing source manifest is always validated and supplies the source label, including for direct generator runs.
+Historical Mappster tiles use the same pinned Detour layout. They remain usable without `--require-complete`,
+but lack an authoritative tile inventory and cannot prove extraction completeness. The generator keeps their
+original source label by default; new TrinityCore bakes supply their own source and recipe label.
+Neither historical terrain nor shipped navigation addons are regenerated by this tooling change.
 
-After rebaking a walking map, or when docks, flight masters or portals change, rebake the walking costs between
-them from the repo root (`tests/planner_spec.lua` fails on a stale key):
+## Walking maps
+
+The Python generator builds HPA* graphs and 8-yard grids from Detour polygons. It keeps overlapping walkable
+floors, drops underwater floors, and stores directed costs for ordinary swimming and walking on water.
+Small disconnected components such as rooftops are removed over the supplied crop or map. A crop therefore
+has different global pruning from a continent; compare identical bounds when measuring.
+
+`pack_nav.py` groups clusters into helper addons with at most 512 KiB of Lua each, preserving the runtime's
+bounded loading. It can also repack older shipped chunk tables without terrain inputs. Offline Lua tools use
+`tools/load_nav.lua` to load a complete map in TOC order.
+
+After intentionally replacing shipped terrain, rebake fixed-place walking costs from the repository root:
 
 ```sh
 luajit tools/bake_walks.lua > Data/Walks.lua
 ```
 
-The walk baker uses `Path.FindManySync` once per source and water mode. Its costs match the abstract graph
-and local endpoint costs returned by `Path.Find`; smoothing the displayed line does not change them.
-Pairs with different local forward/reverse costs store both directions.
+TrinityCore replaces terrain extraction only. Route timings, lifts, portals and teleport destinations still
+use the separately pinned CMaNGOS sources documented in `AGENTS.md`.
 
 ## Licences
 
-| Component | Licence | How it is used |
+| Component | Licence | Use |
 |---|---|---|
-| Shortest Path Forever baker (these files) | GPL-3.0-or-later | committed |
-| [Mappster](https://github.com/F0RSV1NNA/Mappster) `d93fd3b` | MIT | cloned and patched at build time, not committed |
-| [CascLib](https://github.com/ladislav-zezula/CascLib) (Ladislav Zezula) `2a280f5` | MIT | cloned and built at build time |
-| [DotRecast](https://github.com/ikpil/DotRecast) 2026.3.1 | zlib | NuGet |
-| [DBCD, DBCD.IO, DBDefsLib](https://github.com/wowdev/DBCD) 2.3.0 | MIT | NuGet |
-| [WoWDBDefs](https://github.com/wowdev/WoWDBDefs) `7539907` (Map.dbd, LiquidType.dbd) | CC BY-SA 4.0 | fetched at build time, never committed |
-| .NET 10 SDK/runtime | MIT | installed at build time |
-| Generated `Nav<map>.lua` | shipped under the addon's GPL-3.0-or-later | derived geometry (walkable cells), not client files, but Blizzard's EULA applies to the source data |
+| This baker | GPL-3.0-or-later | committed tools, excluded from the addon zip |
+| [TrinityCore](https://github.com/TrinityCore/TrinityCore/tree/e3916b2adcf2f8a70ae33817fc57b6c0266e2fb0) | GPL-2.0-or-later | fetched and patched at build time, not shipped |
+| CascLib | MIT | TrinityCore's pinned vendored dependency |
+| Recast/Detour | zlib | TrinityCore's pinned vendored dependency |
+| [WoWDBDefs](https://github.com/wowdev/WoWDBDefs/tree/7539907c14f9ac88c6db20f5fa699425ad35ac84) | CC BY-SA 4.0 | reference for supported Forever table layouts |
+| Generated navigation Lua | GPL-3.0-or-later | derived walkable cells; Blizzard's EULA applies to client source data |
 
-Mappster's `ThirdParty/CascLib` submodule (WoW-Tools CascLib, which has no licence) is never fetched or compiled.
+See [the benchmark report](../../docs/tooling-benchmarks.md) for measurements and
+[live verification](../../docs/live-navigation-verification.md) for checks requiring the client.

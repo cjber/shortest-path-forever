@@ -1,0 +1,813 @@
+diff --git a/src/common/mmaps_common/Generator/TerrainBuilder.cpp b/src/common/mmaps_common/Generator/TerrainBuilder.cpp
+index 449a5cb7557f33af0252f3160592981e89b6d43a..a82b37fe577adf7a27257881ad16c194dc19593b 100644
+--- a/src/common/mmaps_common/Generator/TerrainBuilder.cpp
++++ b/src/common/mmaps_common/Generator/TerrainBuilder.cpp
+@@ -27,4 +27,8 @@
+ #include "VMapManager.h"
++#include <fstream>
+ #include <unordered_map>
+ 
++// Records the failure and leaves the enclosing bool function at once: a malformed file is never used half read.
++#define SPF_FAIL(...) do { TC_LOG_ERROR("maps.mmapgen", __VA_ARGS__); m_failed = true; return false; } while (false)
++
+ namespace MMAP
+@@ -33,2 +37,13 @@ namespace MMAP
+ 
++    bool TerrainBuilder::isExpectedTile(uint32 mapID, uint32 tileX, uint32 tileY) const
++    {
++        std::ifstream expected(m_inputDirectory / "maps" / Trinity::StringFormat("{:04}.expected", mapID));
++        std::string wanted = Trinity::StringFormat("{:04}_{:02}_{:02}", mapID, tileX, tileY);
++        for (std::string line; std::getline(expected, line);)
++            if (line == wanted)
++                return true;
++
++        return false;
++    }
++
+     TerrainBuilder::TerrainBuilder(boost::filesystem::path const& inputDirectory, bool skipLiquid) :
+@@ -102,3 +117,9 @@ namespace MMAP
+         if (!mapFile)
++        {
++            // a tile the WDT lists must have its terrain; any other tile may simply have none
++            if (isExpectedTile(mapID, tileX, tileY))
++                SPF_FAIL("TerrainBuilder::loadMap: {} is listed by the extractor but has no .map file", mapFileName);
++
+             return false;
++        }
+ 
+@@ -108,4 +129,3 @@ namespace MMAP
+         {
+-            TC_LOG_ERROR("maps.mmapgen", "{} is the wrong version, please extract new .map files", mapFileName);
+-            return false;
++            SPF_FAIL("{} is unreadable or the wrong version, please extract new .map files", mapFileName);
+         }
+@@ -122,2 +142,6 @@ namespace MMAP
+         }
++        else
++        {
++            SPF_FAIL("TerrainBuilder::loadMap: Failed to read the height header of {}", mapFileName);
++        }
+ 
+@@ -149,3 +173,3 @@ namespace MMAP
+                 if (count != expected)
+-                    TC_LOG_ERROR("maps.mmapgen", "TerrainBuilder::loadMap: Failed to read {} height data expected {}, read {}", mapFileName, expected, count);
++                    SPF_FAIL("TerrainBuilder::loadMap: Failed to read {} height data expected {}, read {}", mapFileName, expected, count);
+ 
+@@ -167,3 +191,3 @@ namespace MMAP
+                 if (count != expected)
+-                    TC_LOG_ERROR("maps.mmapgen", "TerrainBuilder::loadMap: Failed to read {} height data expected {}, read {}", mapFileName, expected, count);
++                    SPF_FAIL("TerrainBuilder::loadMap: Failed to read {} height data expected {}, read {}", mapFileName, expected, count);
+ 
+@@ -183,3 +207,3 @@ namespace MMAP
+                 if (count != expected)
+-                    TC_LOG_ERROR("maps.mmapgen", "TerrainBuilder::loadMap: Failed to read {} height data expected {}, read {}", mapFileName, expected, count);
++                    SPF_FAIL("TerrainBuilder::loadMap: Failed to read {} height data expected {}, read {}", mapFileName, expected, count);
+             }
+@@ -192,3 +216,3 @@ namespace MMAP
+                 if (fread(holes, fheader.holesSize, 1, mapFile.get()) != 1)
+-                    TC_LOG_ERROR("maps.mmapgen", "TerrainBuilder::loadMap: Failed to read {} holes data expected {}, read {}", mapFileName, 1, 0);
++                    SPF_FAIL("TerrainBuilder::loadMap: Failed to read {} holes data expected {}, read {}", mapFileName, 1, 0);
+             }
+@@ -233,3 +257,3 @@ namespace MMAP
+             if (fread(&lheader, sizeof(map_liquidHeader), 1, mapFile.get()) != 1)
+-                TC_LOG_ERROR("maps.mmapgen", "TerrainBuilder::loadMap: Failed to read {} liquid header expected {}, read {}", mapFileName, 1, 0);
++                SPF_FAIL("TerrainBuilder::loadMap: Failed to read {} liquid header expected {}, read {}", mapFileName, 1, 0);
+ 
+@@ -240,5 +264,5 @@ namespace MMAP
+                 if (fread(liquid_entry, sizeof(liquid_entry), 1, mapFile.get()) != 1)
+-                    TC_LOG_ERROR("maps.mmapgen", "TerrainBuilder::loadMap: Failed to read {} liquid id expected {}, read {}", mapFileName, 1, 0);
++                    SPF_FAIL("TerrainBuilder::loadMap: Failed to read {} liquid id expected {}, read {}", mapFileName, 1, 0);
+                 if (fread(liquid_flags, sizeof(liquid_flags), 1, mapFile.get()) != 1)
+-                    TC_LOG_ERROR("maps.mmapgen", "TerrainBuilder::loadMap: Failed to read {} liquid flags expected {}, read {}", mapFileName, 1, 0);
++                    SPF_FAIL("TerrainBuilder::loadMap: Failed to read {} liquid flags expected {}, read {}", mapFileName, 1, 0);
+             }
+@@ -255,6 +279,3 @@ namespace MMAP
+                 if (fread(liquid_map.get(), sizeof(float), toRead, mapFile.get()) != toRead)
+-                {
+-                    TC_LOG_ERROR("maps.mmapgen", "TerrainBuilder::loadMap: Failed to read {} liquid header expected {}, read {}", mapFileName, toRead, 0);
+-                    liquid_map = nullptr;
+-                }
++                    SPF_FAIL("TerrainBuilder::loadMap: Failed to read {} liquid heights expected {}", mapFileName, toRead);
+             }
+@@ -573,3 +594,9 @@ namespace MMAP
+         if (result != VMAP::LoadResult::Success)
++        {
++            // a tile without objects has no vmtile; an unreadable or mismatched one would drop its collision
++            if (result != VMAP::LoadResult::FileNotFound)
++                SPF_FAIL("TerrainBuilder::loadVMap: map {:04} tile [{:02},{:02}] cannot be loaded", mapID, tileX, tileY);
++
+             return false;
++        }
+ 
+diff --git a/src/common/mmaps_common/Generator/TerrainBuilder.h b/src/common/mmaps_common/Generator/TerrainBuilder.h
+index a16d1669425eec2d87ebf283079d1acbefa96bc1..9ce24c7113ecbb34cf92f26d07f9ac62d7c0fd90 100644
+--- a/src/common/mmaps_common/Generator/TerrainBuilder.h
++++ b/src/common/mmaps_common/Generator/TerrainBuilder.h
+@@ -94,2 +94,6 @@ namespace MMAP
+ 
++            /// Set when a source file that must exist could not be read; the tile cannot then be called empty.
++            void clearFailure() { m_failed = false; }
++            bool failed() const { return m_failed; }
++
+             // vert and triangle methods
+@@ -112,2 +116,7 @@ namespace MMAP
+ 
++            bool m_failed = false;
++
++            /// True when maps/<map>.expected, written by the extractor from the WDT, lists the tile
++            bool isExpectedTile(uint32 mapID, uint32 tileX, uint32 tileY) const;
++
+             /// Get the vector coordinate for a specific position
+diff --git a/src/common/mmaps_common/Generator/TileBuilder.cpp b/src/common/mmaps_common/Generator/TileBuilder.cpp
+index 31ec90a83da290e58acdff60d1efae02363dcb52..a1d54fa0347ae1410ca55c59df0c984128c673b7 100644
+--- a/src/common/mmaps_common/Generator/TileBuilder.cpp
++++ b/src/common/mmaps_common/Generator/TileBuilder.cpp
+@@ -25,2 +25,8 @@
+ #include <DetourNavMeshBuilder.h>
++#include <boost/filesystem/operations.hpp>
++#include <algorithm>
++#include <cfloat>
++#include <cmath>
++#include <fstream>
++#include <unordered_map>
+ 
+@@ -47,4 +53,52 @@ namespace
+ 
++// A tile's outcome is recorded in mmaps/status/MMMM_RR_CC: FAILED from before any work until the tile is proven,
++// then "ok bytes=N" once its mmtile is fully saved or "empty" when it legitimately has nothing to walk on.
++namespace
++{
++    constexpr uint8 NAV_FLAG_UNDER_HAZARD = 0x80; // ground below magma or slime; gen_nav treats it as not walkable
++
++    boost::filesystem::path TileStatusPath(boost::filesystem::path const& outputDirectory, uint32 mapID, uint32 tileX, uint32 tileY)
++    {
++        return outputDirectory / "mmaps" / "status" / Trinity::StringFormat("{:04}_{:02}_{:02}", mapID, tileX, tileY);
++    }
++
++    bool WriteTileStatus(boost::filesystem::path const& path, std::string_view text)
++    {
++        boost::system::error_code error;
++        boost::filesystem::create_directories(path.parent_path(), error);
++        boost::filesystem::path partial = path.string() + ".partial";
++        {
++            std::ofstream out(partial.string(), std::ios::binary | std::ios::trunc);
++            out << text << '\n';
++            out.flush();
++            if (!out)
++            {
++                TC_LOG_ERROR("maps.mmapgen", "Failed to write the tile status {}", partial.string());
++                return false;
++            }
++        }
++
++        boost::filesystem::rename(partial, path, error);
++        if (error)
++        {
++            TC_LOG_ERROR("maps.mmapgen", "Failed to publish the tile status {}: {}", path.string(), error.message());
++            return false;
++        }
++
++        return true;
++    }
++
++    std::string ReadTileStatus(boost::filesystem::path const& path)
++    {
++        std::ifstream in(path.string());
++        std::string word;
++        in >> word;
++        return word;
++    }
++}
++
+ namespace MMAP
+ {
++    std::atomic<uint32> FailedTiles = 0;
++
+     struct TileConfig
+@@ -97,2 +151,22 @@ namespace MMAP
+ 
++        // FAILED stands until the tile is proven, and no earlier mmtile can outlive a rebuild
++        boost::filesystem::path const statusPath = TileStatusPath(m_outputDirectory, mapID, tileX, tileY);
++        boost::filesystem::path const tilePath = m_outputDirectory / "mmaps" / Trinity::StringFormat("{:04}_{:02}_{:02}.mmtile", mapID, tileX, tileY);
++        boost::system::error_code removeError;
++        boost::filesystem::remove(tilePath, removeError);
++        if (removeError || !WriteTileStatus(statusPath, "FAILED"))
++        {
++            ++FailedTiles;
++            OnTileDone();
++            return;
++        }
++
++        auto finish = [&](std::string_view status, bool failed)
++        {
++            if (failed || !WriteTileStatus(statusPath, status))
++                ++FailedTiles;
++
++            OnTileDone();
++        };
++
+         MeshData meshData;
+@@ -100,2 +174,3 @@ namespace MMAP
+         std::unique_ptr<VMAP::VMapManager> vmapManager = CreateVMapManager(mapID);
++        m_terrainBuilder.clearFailure();
+ 
+@@ -107,8 +182,8 @@ namespace MMAP
+ 
++        if (m_terrainBuilder.failed())
++            return finish("FAILED", true);
++
+         // if there is no data, give up now
+         if (meshData.solidVerts.empty() && meshData.liquidVerts.empty())
+-        {
+-            OnTileDone();
+-            return;
+-        }
++            return finish("empty", false);
+ 
+@@ -119,6 +194,3 @@ namespace MMAP
+         if (meshData.liquidVerts.empty() && meshData.solidVerts.empty())
+-        {
+-            OnTileDone();
+-            return;
+-        }
++            return finish("empty", false);
+ 
+@@ -138,8 +210,181 @@ namespace MMAP
+         TileResult tileResult = buildMoveMapTile(mapID, tileX, tileY, meshData, bmin, bmax, navMesh->getParams());
+-        if (tileResult.data)
+-            saveMoveMapTileToFile(mapID, tileX, tileY, navMesh, tileResult);
++        if (tileResult.failed)
++            return finish("FAILED", true);
++
++        if (!tileResult.data)
++            return finish("empty", false);
++
++        if (!saveMoveMapTileToFile(mapID, tileX, tileY, navMesh, tileResult))
++            return finish("FAILED", true);
++
++        finish(Trinity::StringFormat("ok bytes={}", tileResult.size), false);
++    }
++
++
++    // SPF-HAZARD-BEGIN
++    struct HazardPoint { float x, y, z; };
++
++    // Sutherland-Hodgman clip of a convex polygon against the XZ projection of a triangle. Each vertex carries the
++    // ground height and the hazard height at its position, interpolated along the clipped edges.
++    struct HazardClipVertex { float x, z, ground, hazard; };
++
++    static float HazardCross(float ax, float az, float bx, float bz, float px, float pz)
++    {
++        return (bx - ax) * (pz - az) - (bz - az) * (px - ax);
++    }
++
++    // Does any part of the ground triangle g lying under the hazard triangle h sit lower than it by more than minDrop?
++    static bool GroundTriangleUnderHazard(HazardPoint const (&g)[3], HazardPoint const (&h)[3], float minDrop)
++    {
++        float const gDet = HazardCross(g[0].x, g[0].z, g[1].x, g[1].z, g[2].x, g[2].z);
++        float const hDet = HazardCross(h[0].x, h[0].z, h[1].x, h[1].z, h[2].x, h[2].z);
++        if (std::fabs(gDet) < 1e-9f || std::fabs(hDet) < 1e-9f)
++            return false;
++
++        auto heightAt = [](HazardPoint const (&t)[3], float det, float x, float z)
++        {
++            float l0 = HazardCross(x, z, t[1].x, t[1].z, t[2].x, t[2].z) / det;
++            float l1 = HazardCross(t[0].x, t[0].z, x, z, t[2].x, t[2].z) / det;
++            float l2 = 1.0f - l0 - l1;
++            return l0 * t[0].y + l1 * t[1].y + l2 * t[2].y;
++        };
++
++        // the polygon being clipped is the ground triangle, the clip edges are the hazard triangle's, wound counter-clockwise
++        float const sign = hDet > 0.0f ? 1.0f : -1.0f;
++        std::vector<HazardClipVertex> poly, next;
++        for (HazardPoint const& p : g)
++            poly.push_back({ p.x, p.z, p.y, heightAt(h, hDet, p.x, p.z) });
++
++        for (int e = 0; e < 3 && !poly.empty(); ++e)
++        {
++            HazardPoint const& ea = h[e];
++            HazardPoint const& eb = h[(e + 1) % 3];
++            auto side = [&](HazardClipVertex const& v) { return sign * HazardCross(ea.x, ea.z, eb.x, eb.z, v.x, v.z); };
++
++            next.clear();
++            for (std::size_t i = 0; i < poly.size(); ++i)
++            {
++                HazardClipVertex const& cur = poly[i];
++                HazardClipVertex const& prev = poly[(i + poly.size() - 1) % poly.size()];
++                float sc = side(cur), sp = side(prev);
++                if ((sc >= 0.0f) != (sp >= 0.0f))
++                {
++                    float t = sp / (sp - sc);
++                    next.push_back({ prev.x + (cur.x - prev.x) * t, prev.z + (cur.z - prev.z) * t,
++                        prev.ground + (cur.ground - prev.ground) * t, prev.hazard + (cur.hazard - prev.hazard) * t });
++                }
++                if (sc >= 0.0f)
++                    next.push_back(cur);
++            }
++            poly.swap(next);
++        }
++
++        if (poly.size() < 3)
++            return false;
+ 
+-        OnTileDone();
++        // an overlap that is only a shared edge or a corner is not "under"
++        float area = 0.0f;
++        for (std::size_t i = 0; i < poly.size(); ++i)
++        {
++            HazardClipVertex const& a = poly[i];
++            HazardClipVertex const& b = poly[(i + 1) % poly.size()];
++            area += a.x * b.z - b.x * a.z;
++        }
++        if (std::fabs(area) * 0.5f < 1e-4f)
++            return false;
++
++        // both heights are linear over the overlap, so their difference is extreme at a vertex
++        for (HazardClipVertex const& v : poly)
++            if (v.hazard - v.ground > minDrop)
++                return true;
++
++        return false;
+     }
+ 
++    // Terrain is dropped where a quad's liquid lies wholly above it, but model floors and partly submerged quads keep
++    // ground below the surface. Under water gen_nav discards that bed itself; under magma or slime the polygon must be
++    // flagged here, because ground is the area recast prefers over the liquid it sits in. Every ground polygon is
++    // clipped against every hazard triangle over it, so a small hazard inside a large polygon is found as well.
++    static void MarkGroundUnderHazard(rcPolyMesh& mesh, float const* lVerts, int const* lTris, uint8 const* lTriFlags, int lTriCount)
++    {
++        constexpr float CELL = 8.0f;
++        std::unordered_map<uint64, std::vector<int>> buckets;
++        auto key = [](int cx, int cz) { return (uint64(uint32(cx)) << 32) | uint64(uint32(cz)); };
++        for (int t = 0; t < lTriCount; ++t)
++        {
++            if (lTriFlags[t] != NAV_AREA_MAGMA_SLIME)
++                continue;
++
++            float const* a = &lVerts[lTris[t * 3 + 0] * 3];
++            float const* b = &lVerts[lTris[t * 3 + 1] * 3];
++            float const* c = &lVerts[lTris[t * 3 + 2] * 3];
++            int x0 = int(std::floor(std::min({ a[0], b[0], c[0] }) / CELL)), x1 = int(std::floor(std::max({ a[0], b[0], c[0] }) / CELL));
++            int z0 = int(std::floor(std::min({ a[2], b[2], c[2] }) / CELL)), z1 = int(std::floor(std::max({ a[2], b[2], c[2] }) / CELL));
++            for (int cx = x0; cx <= x1; ++cx)
++                for (int cz = z0; cz <= z1; ++cz)
++                    buckets[key(cx, cz)].push_back(t);
++        }
++
++        if (buckets.empty())
++            return;
++
++        int const nvp = mesh.nvp;
++        std::vector<int> candidates;
++        for (int i = 0; i < mesh.npolys; ++i)
++        {
++            if ((mesh.areas[i] & NAV_AREA_ALL_MASK) != NAV_AREA_GROUND)
++                continue;
++
++            unsigned short const* poly = &mesh.polys[i * nvp * 2];
++            std::vector<HazardPoint> pts;
++            float minX = FLT_MAX, maxX = -FLT_MAX, minZ = FLT_MAX, maxZ = -FLT_MAX;
++            for (int j = 0; j < nvp && poly[j] != RC_MESH_NULL_IDX; ++j)
++            {
++                unsigned short const* v = &mesh.verts[poly[j] * 3];
++                HazardPoint p = { mesh.bmin[0] + v[0] * mesh.cs, mesh.bmin[1] + v[1] * mesh.ch, mesh.bmin[2] + v[2] * mesh.cs };
++                minX = std::min(minX, p.x);
++                maxX = std::max(maxX, p.x);
++                minZ = std::min(minZ, p.z);
++                maxZ = std::max(maxZ, p.z);
++                pts.push_back(p);
++            }
++
++            if (pts.size() < 3)
++                continue;
++
++            candidates.clear();
++            for (int cx = int(std::floor(minX / CELL)); cx <= int(std::floor(maxX / CELL)); ++cx)
++                for (int cz = int(std::floor(minZ / CELL)); cz <= int(std::floor(maxZ / CELL)); ++cz)
++                {
++                    auto bucket = buckets.find(key(cx, cz));
++                    if (bucket != buckets.end())
++                        candidates.insert(candidates.end(), bucket->second.begin(), bucket->second.end());
++                }
++
++            std::ranges::sort(candidates);
++            candidates.erase(std::ranges::unique(candidates).begin(), candidates.end());
++
++            bool under = false;
++            for (int t : candidates)
++            {
++                float const* a = &lVerts[lTris[t * 3 + 0] * 3];
++                float const* b = &lVerts[lTris[t * 3 + 1] * 3];
++                float const* c = &lVerts[lTris[t * 3 + 2] * 3];
++                HazardPoint const h[3] = { { a[0], a[1], a[2] }, { b[0], b[1], b[2] }, { c[0], c[1], c[2] } };
++                for (std::size_t k = 1; k + 1 < pts.size() && !under; ++k)
++                {
++                    HazardPoint const g[3] = { pts[0], pts[k], pts[k + 1] };
++                    under = GroundTriangleUnderHazard(g, h, mesh.ch * 0.5f);
++                }
++
++                if (under)
++                    break;
++            }
++
++            if (under)
++                mesh.flags[i] |= NAV_FLAG_UNDER_HAZARD;
++        }
++    }
++    // SPF-HAZARD-END
++
+     /**************************************************************************/
+@@ -211,2 +456,3 @@ namespace MMAP
+                     TC_LOG_ERROR("maps.mmapgen", "{} Failed building heightfield!", tileString);
++                    tileResult.failed = true;
+                     continue;
+@@ -240,2 +486,3 @@ namespace MMAP
+                     TC_LOG_ERROR("maps.mmapgen", "{} Failed compacting heightfield!", tileString);
++                    tileResult.failed = true;
+                     continue;
+@@ -247,2 +494,3 @@ namespace MMAP
+                     TC_LOG_ERROR("maps.mmapgen", "{} Failed eroding area!", tileString);
++                    tileResult.failed = true;
+                     continue;
+@@ -253,2 +501,3 @@ namespace MMAP
+                     TC_LOG_ERROR("maps.mmapgen", "{} Failed filtering area!", tileString);
++                    tileResult.failed = true;
+                     continue;
+@@ -259,2 +508,3 @@ namespace MMAP
+                     TC_LOG_ERROR("maps.mmapgen", "{} Failed building distance field!", tileString);
++                    tileResult.failed = true;
+                     continue;
+@@ -265,2 +515,3 @@ namespace MMAP
+                     TC_LOG_ERROR("maps.mmapgen", "{} Failed building regions!", tileString);
++                    tileResult.failed = true;
+                     continue;
+@@ -272,2 +523,3 @@ namespace MMAP
+                     TC_LOG_ERROR("maps.mmapgen", "{} Failed building contours!", tileString);
++                    tileResult.failed = true;
+                     continue;
+@@ -280,2 +532,3 @@ namespace MMAP
+                     TC_LOG_ERROR("maps.mmapgen", "{} Failed building polymesh!", tileString);
++                    tileResult.failed = true;
+                     continue;
+@@ -287,2 +540,3 @@ namespace MMAP
+                     TC_LOG_ERROR("maps.mmapgen", "{} Failed building polymesh detail!", tileString);
++                    tileResult.failed = true;
+                     continue;
+@@ -310,5 +564,14 @@ namespace MMAP
+             TC_LOG_ERROR("maps.mmapgen", "{} alloc iv.polyMesh FAILED!", tileString);
++            tileResult.failed = true;
++            return tileResult;
++        }
++        if (tileResult.failed)
++            return tileResult;
++
++        if (!rcMergePolyMeshes(&m_rcContext, pmmerge.get(), nmerge, *iv.polyMesh))
++        {
++            TC_LOG_ERROR("maps.mmapgen", "{} Failed merging polymeshes!", tileString);
++            tileResult.failed = true;
+             return tileResult;
+         }
+-        rcMergePolyMeshes(&m_rcContext, pmmerge.get(), nmerge, *iv.polyMesh);
+ 
+@@ -318,5 +581,11 @@ namespace MMAP
+             TC_LOG_ERROR("maps.mmapgen", "{} alloc m_dmesh FAILED!", tileString);
++            tileResult.failed = true;
++            return tileResult;
++        }
++        if (!rcMergePolyMeshDetails(&m_rcContext, dmmerge.get(), nmerge, *iv.polyMeshDetail))
++        {
++            TC_LOG_ERROR("maps.mmapgen", "{} Failed merging polymesh details!", tileString);
++            tileResult.failed = true;
+             return tileResult;
+         }
+-        rcMergePolyMeshDetails(&m_rcContext, dmmerge.get(), nmerge, *iv.polyMeshDetail);
+ 
+@@ -340,2 +609,4 @@ namespace MMAP
+ 
++        MarkGroundUnderHazard(*iv.polyMesh, lVerts, lTris, lTriFlags, lTriCount);
++
+         // setup mesh parameters
+@@ -399,2 +670,3 @@ namespace MMAP
+             TC_LOG_ERROR("maps.mmapgen", "{} Invalid verts-per-polygon value!", tileString);
++            tileResult.failed = true;
+             return tileResult;
+@@ -405,2 +677,3 @@ namespace MMAP
+             TC_LOG_ERROR("maps.mmapgen", "{} Too many vertices!", tileString);
++            tileResult.failed = true;
+             return tileResult;
+@@ -429,2 +702,3 @@ namespace MMAP
+             TC_LOG_ERROR("maps.mmapgen", "{} No detail mesh to build tile!", tileString);
++            tileResult.failed = true;
+             return tileResult;
+@@ -436,2 +710,3 @@ namespace MMAP
+             TC_LOG_ERROR("maps.mmapgen", "{} Failed building navmesh tile!", tileString);
++            tileResult.failed = true;
+             return tileResult;
+@@ -443,3 +718,3 @@ namespace MMAP
+ 
+-    void TileBuilder::saveMoveMapTileToFile(uint32 mapID, uint32 tileX, uint32 tileY, dtNavMesh* navMesh,
++    bool TileBuilder::saveMoveMapTileToFile(uint32 mapID, uint32 tileX, uint32 tileY, dtNavMesh* navMesh,
+         TileResult const& tileResult, std::string_view fileNameSuffix)
+@@ -461,3 +736,3 @@ namespace MMAP
+                 TC_LOG_ERROR("maps.mmapgen", "[Map {:04}] [{:02},{:02}]: Failed adding tile to navmesh!", mapID, tileX, tileY);
+-                return;
++                return false;
+             }
+@@ -469,3 +744,3 @@ namespace MMAP
+         std::string fileName = Trinity::StringFormat("{}/mmaps/{:04}_{:02}_{:02}{}.mmtile", m_outputDirectory.generic_string(), mapID, tileX, tileY, fileNameSuffix);
+-        auto file = Trinity::make_unique_ptr_with_deleter<&::fclose>(fopen(fileName.c_str(), "wb"));
++        FILE* file = fopen(fileName.c_str(), "wb");
+         if (!file)
+@@ -473,3 +748,3 @@ namespace MMAP
+             TC_LOG_ERROR("maps.mmapgen", "[Map {:04}] [{:02},{:02}]: {}: Failed to open {} for writing!", mapID, tileX, tileY, strerror(errno), fileName);
+-            return;
++            return false;
+         }
+@@ -482,6 +757,15 @@ namespace MMAP
+         header.size = uint32(tileResult.size);
+-        fwrite(&header, sizeof(MmapTileHeader), 1, file.get());
++        bool written = fwrite(&header, sizeof(MmapTileHeader), 1, file) == 1;
+ 
+         // write data
+-        fwrite(tileResult.data.get(), sizeof(unsigned char), tileResult.size, file.get());
++        written = written && fwrite(tileResult.data.get(), sizeof(unsigned char), tileResult.size, file) == std::size_t(tileResult.size);
++        written = fclose(file) == 0 && written;
++        if (!written)
++        {
++            TC_LOG_ERROR("maps.mmapgen", "[Map {:04}] [{:02},{:02}]: Failed to write {}!", mapID, tileX, tileY, fileName);
++            boost::system::error_code ignored;
++            boost::filesystem::remove(fileName, ignored);
++        }
++
++        return written;
+     }
+@@ -508,3 +792,3 @@ namespace MMAP
+     /**************************************************************************/
+-    bool TileBuilder::shouldSkipTile(uint32 /*mapID*/, uint32 /*tileX*/, uint32 /*tileY*/) const
++    bool TileBuilder::shouldSkipTile(uint32 mapID, uint32 tileX, uint32 tileY) const
+     {
+@@ -513,3 +797,45 @@ namespace MMAP
+ 
+-        return true;
++        // only a tile recorded as proven is skipped; anything else, including a bare mmtile, is rebuilt
++        std::string const status = ReadTileStatus(TileStatusPath(m_outputDirectory, mapID, tileX, tileY));
++        if (status == "empty")
++            return true;
++
++        if (status != "ok")
++            return false;
++
++        return mmtileIsComplete(mapID, tileX, tileY);
++    }
++
++    bool TileBuilder::mmtileIsComplete(uint32 mapID, uint32 tileX, uint32 tileY) const
++    {
++        std::string fileName = Trinity::StringFormat("{}/mmaps/{:04}_{:02}_{:02}.mmtile", m_outputDirectory.generic_string(), mapID, tileX, tileY);
++        auto file = Trinity::make_unique_ptr_with_deleter<&::fclose>(fopen(fileName.c_str(), "rb"));
++        if (!file)
++            return false;
++
++        MmapTileHeader header;
++        if (fread(&header, sizeof(MmapTileHeader), 1, file.get()) != 1)
++            return false;
++
++        if (header.mmapMagic != MMAP_MAGIC || header.dtVersion != uint32(DT_NAVMESH_VERSION) || header.mmapVersion != MMAP_VERSION)
++            return false;
++
++        boost::system::error_code error;
++        return boost::filesystem::file_size(fileName, error) == sizeof(MmapTileHeader) + header.size && !error;
++    }
++
++    // The recorded outcome and the files on disk must agree: "ok" needs a complete mmtile, "empty" needs none.
++    bool TileBuilder::tileOutcomeConsistent(uint32 mapID, uint32 tileX, uint32 tileY) const
++    {
++        std::string const status = ReadTileStatus(TileStatusPath(m_outputDirectory, mapID, tileX, tileY));
++        if (status == "ok")
++            return mmtileIsComplete(mapID, tileX, tileY);
++
++        if (status == "empty")
++        {
++            boost::system::error_code error;
++            return !boost::filesystem::exists(m_outputDirectory / "mmaps" / Trinity::StringFormat("{:04}_{:02}_{:02}.mmtile", mapID, tileX, tileY), error);
++        }
++
++        return false;
+     }
+diff --git a/src/common/mmaps_common/Generator/TileBuilder.h b/src/common/mmaps_common/Generator/TileBuilder.h
+index f3492e51a2e55803ba7934fd28d79281678ab4a7..a1c1f05238d97173afbb710ab894e5d5747e36fe 100644
+--- a/src/common/mmaps_common/Generator/TileBuilder.h
++++ b/src/common/mmaps_common/Generator/TileBuilder.h
+@@ -26,2 +26,3 @@
+ #include <Recast.h>
++#include <atomic>
+ 
+@@ -31,2 +32,5 @@ struct TileConfig;
+ 
++/// Tiles that ended FAILED in this process.
++TC_MMAPS_COMMON_API extern std::atomic<uint32> FailedTiles;
++
+ using detour_unique_ptr = std::unique_ptr<unsigned char, decltype(Trinity::unique_ptr_deleter<unsigned char*, &::dtFree>())>;
+@@ -60,2 +64,3 @@ public:
+         int size = 0;
++        bool failed = false; ///< no data because of an error, not because the tile has nothing to walk on
+     };
+@@ -70,3 +75,3 @@ public:
+ 
+-    void saveMoveMapTileToFile(uint32 mapID, uint32 tileX, uint32 tileY, dtNavMesh* navMesh,
++    bool saveMoveMapTileToFile(uint32 mapID, uint32 tileX, uint32 tileY, dtNavMesh* navMesh,
+         TileResult const& tileResult, std::string_view fileNameSuffix = ""sv);
+@@ -74,2 +79,4 @@ public:
+     virtual bool shouldSkipTile(uint32 mapID, uint32 tileX, uint32 tileY) const;
++    bool mmtileIsComplete(uint32 mapID, uint32 tileX, uint32 tileY) const;
++    bool tileOutcomeConsistent(uint32 mapID, uint32 tileX, uint32 tileY) const;
+ 
+diff --git a/src/tools/mmaps_generator/MapBuilder.cpp b/src/tools/mmaps_generator/MapBuilder.cpp
+index 65a41d7216c972fb8969c020ab3d5a55c719c622..c222de8141450a4c5ee714b456ecb9a65d7b0ada 100644
+--- a/src/tools/mmaps_generator/MapBuilder.cpp
++++ b/src/tools/mmaps_generator/MapBuilder.cpp
+@@ -28,2 +28,5 @@
+ #include <boost/filesystem/directory.hpp>
++#include <fstream>
++#include <set>
++#include <stdexcept>
+ 
+@@ -175,2 +178,27 @@ namespace MMAP
+ 
++        // World models can span tiles without terrain. Bake only the extractor's authoritative WDT inventory.
++        m_totalTiles = 0;
++        for (auto& [mapId, tiles] : m_tiles)
++        {
++            std::ifstream inventory((m_inputDirectory / "maps" / Trinity::StringFormat("{:04}.expected", mapId)).string());
++            if (!inventory)
++                throw std::runtime_error("Missing expected tile inventory");
++
++            std::set<uint32> expected;
++            for (std::string line; std::getline(inventory, line);)
++            {
++                uint32 id, row, col;
++                char tail;
++                if (sscanf(line.c_str(), "%u_%u_%u%c", &id, &row, &col, &tail) != 3 || id != mapId || row > 63 || col > 63)
++                    throw std::runtime_error("Invalid expected tile inventory");
++                expected.insert(VMAP::StaticMapTree::packTileID(row, col));
++            }
++            Trinity::Containers::FlatSet<uint32> selected;
++            for (uint32 tile : tiles)
++                if (expected.contains(tile))
++                    selected.insert(tile);
++            tiles = std::move(selected);
++            m_totalTiles += tiles.size();
++        }
++
+         TC_LOG_INFO("maps.mmapgen", "Discovering maps... found {}.", m_tiles.size());
+@@ -241,3 +269,4 @@ namespace MMAP
+                 dtFreeNavMesh(navMesh);
+-                return;
++                ++FailedTiles;
++                continue;
+             }
+@@ -287,3 +316,6 @@ namespace MMAP
+         if (!file)
++        {
++            ++FailedTiles;
+             return;
++        }
+ 
+@@ -291,10 +323,10 @@ namespace MMAP
+         int tileX, tileY, mapId;
+-        if (fread(&mapId, sizeof(int), 1, file.get()) != 1)
+-            return;
+-
+-        if (fread(&tileX, sizeof(int), 1, file.get()) != 1)
+-            return;
+-
+-        if (fread(&tileY, sizeof(int), 1, file.get()) != 1)
++        uint32 verticesCount, indicesCount;
++        if (fread(&mapId, sizeof(int), 1, file.get()) != 1 ||
++            fread(&tileX, sizeof(int), 1, file.get()) != 1 ||
++            fread(&tileY, sizeof(int), 1, file.get()) != 1)
++        {
++            ++FailedTiles;
+             return;
++        }
+ 
+@@ -305,2 +337,3 @@ namespace MMAP
+             TC_LOG_ERROR("maps.mmapgen", "Failed creating navmesh!");
++            ++FailedTiles;
+             return;
+@@ -308,18 +341,18 @@ namespace MMAP
+ 
+-        uint32 verticesCount, indicesCount;
+-        if (fread(&verticesCount, sizeof(uint32), 1, file.get()) != 1)
+-            return;
+-
+-        if (fread(&indicesCount, sizeof(uint32), 1, file.get()) != 1)
+-            return;
+-
+         MeshData data;
+-
+-        data.solidVerts.resize(verticesCount);
+-        if (fread(data.solidVerts.data(), sizeof(float), verticesCount, file.get()) != verticesCount)
++        if (fread(&verticesCount, sizeof(uint32), 1, file.get()) != 1 ||
++            fread(&indicesCount, sizeof(uint32), 1, file.get()) != 1)
++        {
++            ++FailedTiles;
+             return;
++        }
+ 
++        data.solidVerts.resize(verticesCount);
+         data.solidTris.resize(indicesCount);
+-        if (fread(data.solidTris.data(), sizeof(int), indicesCount, file.get()) != indicesCount)
++        if (fread(data.solidVerts.data(), sizeof(float), verticesCount, file.get()) != verticesCount ||
++            fread(data.solidTris.data(), sizeof(int), indicesCount, file.get()) != indicesCount)
++        {
++            ++FailedTiles;
+             return;
++        }
+ 
+@@ -334,4 +367,4 @@ namespace MMAP
+         TileBuilder::TileResult tileResult = tileBuilder.buildMoveMapTile(mapId, tileX, tileY, data, bmin, bmax, navMesh->getParams());
+-        if (tileResult.data)
+-            tileBuilder.saveMoveMapTileToFile(mapId, tileX, tileY, navMesh, tileResult);
++        if (tileResult.failed || (tileResult.data && !tileBuilder.saveMoveMapTileToFile(mapId, tileX, tileY, navMesh, tileResult)))
++            ++FailedTiles;
+     }
+@@ -346,2 +379,3 @@ namespace MMAP
+             TC_LOG_ERROR("maps.mmapgen", "Failed creating navmesh!");
++            ++FailedTiles;
+             return;
+@@ -356,2 +390,8 @@ namespace MMAP
+ 
++        if (!FailedTiles && !tileBuilder.tileOutcomeConsistent(mapID, tileX, tileY))
++        {
++            TC_LOG_ERROR("maps.mmapgen", "[Map {:04}] Tile [{:02},{:02}] ended without a consistent ok or empty outcome", mapID, tileX, tileY);
++            ++FailedTiles;
++        }
++
+         _cancelationToken = true;
+@@ -375,2 +415,3 @@ namespace MMAP
+                 m_totalTilesProcessed += tiles.size();
++                ++FailedTiles;
+                 return;
+@@ -573,18 +614,2 @@ namespace MMAP
+     {
+-        std::string fileName = Trinity::StringFormat("{}/mmaps/{:04}_{:02}_{:02}.mmtile", m_outputDirectory.generic_string(), mapID, tileX, tileY);
+-        auto file = Trinity::make_unique_ptr_with_deleter<&::fclose>(fopen(fileName.c_str(), "rb"));
+-        if (!file)
+-            return false;
+-
+-        MmapTileHeader header;
+-        int count = fread(&header, sizeof(MmapTileHeader), 1, file.get());
+-        if (count != 1)
+-            return false;
+-
+-        if (header.mmapMagic != MMAP_MAGIC || header.dtVersion != uint32(DT_NAVMESH_VERSION))
+-            return false;
+-
+-        if (header.mmapVersion != MMAP_VERSION)
+-            return false;
+-
+         return TileBuilder::shouldSkipTile(mapID, tileX, tileY);
+diff --git a/src/tools/mmaps_generator/PathGenerator.cpp b/src/tools/mmaps_generator/PathGenerator.cpp
+index ff9f1a7a2d21e6c487acddf78dcb022b90320193..5db8fc39cc5e6becadf68a8a8db5df5308d67356 100644
+--- a/src/tools/mmaps_generator/PathGenerator.cpp
++++ b/src/tools/mmaps_generator/PathGenerator.cpp
+@@ -27,2 +27,3 @@
+ #include "PathCommon.h"
++#include "TileBuilder.h"
+ #include "Timer.h"
+@@ -30,2 +31,4 @@
+ #include "VMapManager.h"
++#include "StringFormat.h"
++#include <algorithm>
+ #include <boost/filesystem/operations.hpp>
+@@ -90,3 +93,3 @@ void SetupLogging(Trinity::Asio::IoContext* ioContext)
+ bool checkDirectories(boost::filesystem::path const& inputDirectory, boost::filesystem::path const& outputDirectory,
+-    bool debugOutput, std::vector<std::string>& dbcLocales)
++    int mapnum, bool debugOutput, std::vector<std::string>& dbcLocales)
+ {
+@@ -106,6 +109,9 @@ bool checkDirectories(boost::filesystem::path const& inputDirectory, boost::file
+ 
++    // the vmap tree of the map being built; without a map, the only check is that some map has one
++    std::string const treeMap = Trinity::StringFormat("{:04}", mapnum >= 0 ? mapnum : 0);
+     dirFiles.clear();
+-    if (MMAP::getDirContents(dirFiles, inputDirectory / "vmaps" / "0000", boost::filesystem::regular_file, "*.vmtree") == MMAP::LISTFILE_DIRECTORY_NOT_FOUND || dirFiles.empty())
++    if (MMAP::getDirContents(dirFiles, inputDirectory / "vmaps" / treeMap, boost::filesystem::regular_file, "*.vmtree") == MMAP::LISTFILE_DIRECTORY_NOT_FOUND || dirFiles.empty()
++        || (mapnum >= 0 && std::ranges::find(dirFiles, treeMap + ".vmtree") == dirFiles.end()))
+     {
+-        TC_LOG_ERROR("tool.mmapgen", "'vmaps' directory is empty or does not exist");
++        TC_LOG_ERROR("tool.mmapgen", "'vmaps/{}/{}.vmtree' does not exist", treeMap, treeMap);
+         return false;
+@@ -135,3 +141,2 @@ int finish(char const* message, int returnValue)
+     TC_LOG_FATAL("tool.mmapgen.commandline", "{}", message);
+-    getchar(); // Wait for user input
+     return returnValue;
+@@ -483,3 +488,3 @@ int main(int argc, char** argv)
+     std::vector<std::string> dbcLocales;
+-    if (!checkDirectories(inputDirectory, outputDirectory, debugOutput, dbcLocales))
++    if (!checkDirectories(inputDirectory, outputDirectory, mapnum, debugOutput, dbcLocales))
+         return silent ? -3 : finish("Press ENTER to close...", -3);
+@@ -508,3 +513,3 @@ int main(int argc, char** argv)
+ 
+-    return 0;
++    return MMAP::FailedTiles ? 1 : 0;
+ }
