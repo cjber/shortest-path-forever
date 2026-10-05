@@ -13,6 +13,7 @@ verbatim rather than rewritten as the addon moves.
 
 - **Walking maps stay inside one addon.** Terrain is compressed and decoded only where a journey needs it, keeping the addon list clear of walking-map parts.
 - **Journeys prepare the walk you need first.** Later walking legs wait until they are next, and the search can offer a measured route while checking for a faster one.
+- **A zeppelin's icon is always drawn whole.** A map pin, minimap pin, compass marker or stop badge that had last shown a boat, lift, portal or quest mark could show only a corner of the zeppelin icon.
 
 ## [1.9.0] - 2026-10-05
 

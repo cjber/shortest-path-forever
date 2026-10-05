@@ -77,15 +77,15 @@ local function Create()
 	frame:SetFrameStrata("MEDIUM")
 	frame:RegisterForClicks("LeftButtonUp", "RightButtonUp", "MiddleButtonUp")
 	local plate = frame:CreateTexture(nil, "BACKGROUND")
-	ns.FitAtlas(plate, PLATE, PLATE_WIDTH, PLATE_HEIGHT)
+	ns.Art.Fit(plate, PLATE, PLATE_WIDTH, PLATE_HEIGHT)
 	plate:SetPoint("CENTER")
 	frame.Plate = plate
 	local icon = frame:CreateTexture(nil, "ARTWORK")
-	icon:SetTexture(ICON)
-	icon:SetSize(SIZE * 0.6, SIZE * 0.6)
+	ns.Art.Icon(icon, ICON, SIZE * 0.6)
 	icon:SetPoint("CENTER")
 	frame.Icon = icon
 	-- The game's own hover glow, as its minimap buttons wear.
+	-- art-ok: a square glow over the whole of a square button
 	frame:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
 	frame:SetScript("OnClick", OnClick)
 	frame:SetScript("OnEnter", Tooltip)

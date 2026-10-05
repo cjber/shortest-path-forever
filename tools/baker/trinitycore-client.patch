@@ -1,0 +1,268 @@
+diff --git a/src/tools/extractor_common/CascHandles.cpp b/src/tools/extractor_common/CascHandles.cpp
+index 5903bc2882abbd77043dc8e115ea075e756a68dd..a9f7dd887849e728ca66fddb99989f0e854f42d0 100644
+--- a/src/tools/extractor_common/CascHandles.cpp
++++ b/src/tools/extractor_common/CascHandles.cpp
+@@ -18,11 +18,3 @@
+ #include "CascHandles.h"
+-#include "IoContext.h"
+-#include "Resolver.h"
+-#include "Socket.h"
+ #include <CascLib.h>
+-#include <boost/asio/streambuf.hpp>
+-#include <boost/asio/read.hpp>
+-#include <boost/asio/read_until.hpp>
+-#include <boost/asio/write.hpp>
+-#include <boost/asio/ssl/stream.hpp>
+ #include <boost/filesystem/operations.hpp>
+@@ -57,97 +49,2 @@ namespace
+ {
+-    Optional<std::string> DownloadFile(std::string const& serverName, int16 port, std::string const& getCommand)
+-    {
+-        boost::system::error_code error;
+-        Trinity::Asio::IoContext ioContext;
+-        boost::asio::ssl::context sslContext(boost::asio::ssl::context::sslv23);
+-        sslContext.set_options(boost::asio::ssl::context::no_sslv2, error);
+-        sslContext.set_options(boost::asio::ssl::context::no_sslv3, error);
+-        sslContext.set_options(boost::asio::ssl::context::no_tlsv1, error);
+-        sslContext.set_options(boost::asio::ssl::context::no_tlsv1_1, error);
+-        sslContext.set_default_verify_paths(error);
+-
+-        Trinity::Net::Resolver resolver(ioContext);
+-
+-        Optional<boost::asio::ip::tcp::endpoint> endpoint = resolver.Resolve(boost::asio::ip::tcp::v4(), serverName, std::to_string(port));
+-        if (!endpoint)
+-            return {};
+-
+-        boost::asio::ssl::stream<Trinity::Net::IoContextTcpSocket> socket(ioContext, sslContext);
+-        socket.set_verify_mode(boost::asio::ssl::verify_none, error);
+-        if (error)
+-            return {};
+-
+-        socket.lowest_layer().connect(*endpoint, error);
+-        if (error)
+-            return {};
+-
+-        if (!SSL_set_tlsext_host_name(socket.native_handle(), serverName.c_str()))
+-            return {};
+-
+-        socket.handshake(boost::asio::ssl::stream_base::client, error);
+-        if (error)
+-            return {};
+-
+-        boost::asio::streambuf request;
+-        std::ostream request_stream(&request);
+-
+-        request_stream << "GET " << getCommand << " HTTP/1.0\r\n";
+-        request_stream << "Host: " << serverName << "\r\n";
+-        request_stream << "Connection: close\r\n\r\n";
+-
+-        // Send the request.
+-        boost::asio::write(socket, request);
+-
+-        // Read the response status line.
+-        boost::asio::streambuf response;
+-        boost::asio::read_until(socket, response, "\r\n", error);
+-        if (error)
+-        {
+-            printf("Downloading tact key list failed to read HTTP response status %s", error.message().c_str());
+-            return {};
+-        }
+-
+-        // Check that response is OK.
+-        std::string http_version;
+-        uint32 status_code;
+-        std::string status_message;
+-        std::istream response_stream(&response);
+-
+-        response_stream >> http_version;
+-        response_stream >> status_code;
+-        std::getline(response_stream, status_message);
+-
+-        if (status_code != 200)
+-        {
+-            printf("Downloading tact key list failed with server response %u %s", status_code, status_message.c_str());
+-            return {};
+-        }
+-
+-        // Read the response headers, which are terminated by a blank line.
+-        boost::asio::read_until(socket, response, "\r\n\r\n");
+-        if (error)
+-        {
+-            printf("Downloading tact key list failed to read HTTP response headers %s", error.message().c_str());
+-            return {};
+-        }
+-
+-        // Process the response headers.
+-        std::string header;
+-        while (std::getline(response_stream, header) && header != "\r")
+-        {
+-        }
+-
+-        std::stringstream rawBody;
+-
+-        // Write whatever content we already have to output.
+-        if (response.size() > 0)
+-            rawBody << &response;
+-
+-        // Read until EOF, writing data to output as we go.
+-        while (boost::asio::read(socket, response, boost::asio::transfer_at_least(1), error))
+-            rawBody << &response;
+-
+-        return rawBody.str();
+-    }
+-
+     template<typename T>
+@@ -169,10 +66,2 @@ Storage::Storage(HANDLE handle) : _handle(handle)
+ 
+-bool Storage::LoadOnlineTactKeys()
+-{
+-    // attempt to download only once, not every storage opening
+-    static Optional<std::string> const tactKeys = DownloadFile("raw.githubusercontent.com", 443, "/wowdev/TACTKeys/master/WoW.txt");
+-
+-    return tactKeys && CascImportKeysFromString(_handle, tactKeys->c_str());
+-}
+-
+ Storage::~Storage()
+@@ -202,48 +91,11 @@ Storage* Storage::Open(boost::filesystem::path const& path, uint32 localeMask, c
+     printf("Opened casc storage '%s'\n", path.string().c_str());
+-    Storage* storage = new Storage(handle);
+-
+-    if (!storage->LoadOnlineTactKeys())
+-        printf("Failed to load additional online encryption keys, some files might not be extracted.\n");
+-
+-    return storage;
++    return new Storage(handle);
+ }
+ 
+-Storage* Storage::OpenRemote(boost::filesystem::path const& path, uint32 localeMask, char const* product, char const* region)
++Storage* Storage::OpenRemote(boost::filesystem::path const& /*path*/, uint32 /*localeMask*/, char const* /*product*/, char const* /*region*/)
+ {
+-    CASCStringType strPath = path.template string<CASCStringType>();
+-    CASCStringType strProduct(product, product + strlen(product)); // dumb conversion from char to wchar, always ascii
+-    CASCStringType strRegion(region, region + strlen(region)); // dumb conversion from char to wchar, always ascii
+-    CASC_OPEN_STORAGE_ARGS args = {};
+-    args.Size = sizeof(CASC_OPEN_STORAGE_ARGS);
+-    args.szLocalPath = strPath.c_str();
+-    args.szCodeName = strProduct.c_str();
+-    args.szRegion = strRegion.c_str();
+-    args.dwLocaleMask = localeMask;
+-
+-    HANDLE handle = nullptr;
+-    if (!::CascOpenStorageEx(nullptr, &args, true, &handle))
+-    {
+-        DWORD lastError = GetCascError(); // support checking error set by *Open* call, not the next *Close*
+-        printf("Error opening remote casc storage: %s\n", HumanReadableCASCError(lastError));
+-        CascCloseStorage(handle);
+-        SetCascError(lastError);
+-        return nullptr;
+-    }
+-
+-    DWORD features = 0;
+-    if (!GetStorageInfo(handle, CascStorageFeatures, &features) || !(features & CASC_FEATURE_ONLINE))
+-    {
+-        printf("Local casc storage detected in cache path \"%s\" (or its parent directory). Remote storage not opened!\n", path.string().c_str());
+-        CascCloseStorage(handle);
+-        SetCascError(ERROR_FILE_OFFLINE);
+-        return nullptr;
+-    }
+-
+-    printf("Opened remote casc storage '%s'\n", path.string().c_str());
+-    Storage* storage = new Storage(handle);
+-
+-    if (!storage->LoadOnlineTactKeys())
+-        printf("Failed to load additional online encryption keys, some files might not be extracted.\n");
+-
+-    return storage;
++    // Forever extraction reads the local install only and never downloads files or keys.
++    printf("Remote CASC is disabled in this build\n");
++    SetCascError(ERROR_NOT_SUPPORTED);
++    return nullptr;
+ }
+diff --git a/src/tools/extractor_common/CascHandles.h b/src/tools/extractor_common/CascHandles.h
+index fcd890f59b638b450f89a466ce9bb4e55bc84587..dc84eff768176da0da4aadcf6f698978b21f4b9e 100644
+--- a/src/tools/extractor_common/CascHandles.h
++++ b/src/tools/extractor_common/CascHandles.h
+@@ -55,4 +55,2 @@ namespace CASC
+ 
+-        bool LoadOnlineTactKeys();
+-
+         HANDLE _handle;
+diff --git a/src/tools/extractor_common/DB2CascFileSource.cpp b/src/tools/extractor_common/DB2CascFileSource.cpp
+index 658893728ac145b138176ef8d007968d01586db2..915ca5bccc723062b4967199e8d783e481402c33 100644
+--- a/src/tools/extractor_common/DB2CascFileSource.cpp
++++ b/src/tools/extractor_common/DB2CascFileSource.cpp
+@@ -20,2 +20,6 @@
+ #include <CascLib.h>
++#include <cstdio>
++#include <stdexcept>
++
++static constexpr uint32 MapFileDataId = 1349477;
+ 
+@@ -24,3 +28,5 @@ DB2CascFileSource::DB2CascFileSource(std::shared_ptr<CASC::Storage const> storag
+     _storageHandle = storage;
+-    _fileHandle.reset(storage->OpenFile(fileDataId, CASC_LOCALE_NONE, printErrors, true));
++    // Only Map.db2 may open with zero-filled encrypted sections; every other table fails to open instead.
++    _fileHandle.reset(storage->OpenFile(fileDataId, CASC_LOCALE_NONE, printErrors, fileDataId == MapFileDataId));
++    _fileId = fileDataId;
+     _fileName = Trinity::StringFormat("FileDataId: {}", fileDataId);
+@@ -68,5 +74,14 @@ DB2EncryptedSectionHandling DB2CascFileSource::HandleEncryptedSection(DB2Section
+ {
+-    if (std::shared_ptr<CASC::Storage const> storage = _storageHandle.lock())
+-        return storage->HasTactKey(sectionHeader.TactId) ? DB2EncryptedSectionHandling::Process : DB2EncryptedSectionHandling::Skip;
++    std::shared_ptr<CASC::Storage const> storage = _storageHandle.lock();
++    if (storage && storage->HasTactKey(sectionHeader.TactId))
++        return DB2EncryptedSectionHandling::Process;
++
++    // Map.db2 is the only file opened with zero-filled encrypted parts, and its inaccessible sections hold other maps.
++    // Any other table with a missing key is incomplete data (liquid definitions, say), so it fails instead of skipping.
++    if (_fileId != MapFileDataId)
++    {
++        throw std::runtime_error(Trinity::StringFormat("{} section key {:016X} ({} records) is not available", _fileName, sectionHeader.TactId, sectionHeader.RecordCount));
++    }
+ 
++    fprintf(stderr, "SPF-DB2-SKIPPED-SECTION %s key=%016llX records=%u\n", _fileName.c_str(), static_cast<unsigned long long>(sectionHeader.TactId), sectionHeader.RecordCount);
+     return DB2EncryptedSectionHandling::Skip;
+diff --git a/src/tools/extractor_common/DB2CascFileSource.h b/src/tools/extractor_common/DB2CascFileSource.h
+index 27e5b58011eab94ee87b2d51ed202157e9799689..ca81d156e1c5dd75d5eef9fb8cc9e4b54accf7da 100644
+--- a/src/tools/extractor_common/DB2CascFileSource.h
++++ b/src/tools/extractor_common/DB2CascFileSource.h
+@@ -47,2 +47,3 @@ private:
+     std::string _fileName;
++    uint32 _fileId = 0;
+ };
+diff --git a/src/tools/extractor_common/ExtractorDB2LoadInfo.h b/src/tools/extractor_common/ExtractorDB2LoadInfo.h
+index 4aff83b9a4b78d9c200a9f25c5f60f09f2906014..ffcfcafe4d612e44db0f98c4b1edb2dc507e312b 100644
+--- a/src/tools/extractor_common/ExtractorDB2LoadInfo.h
++++ b/src/tools/extractor_common/ExtractorDB2LoadInfo.h
+@@ -296,3 +296,3 @@ struct MapLoadInfo
+ {
+-    static constexpr DB2MetaField MetaFields[25] =
++    static constexpr DB2MetaField MetaFields[26] =
+     {
+@@ -322,2 +322,3 @@ struct MapLoadInfo
+         { .Type = FT_INT,                  .ArraySize =  1, .IsSigned =  true },
++        { .Type = FT_INT,                  .ArraySize =  1, .IsSigned =  true },
+         { .Type = FT_INT,                  .ArraySize =  3, .IsSigned =  true },
+@@ -330,5 +331,5 @@ struct MapLoadInfo
+         .ParentIndexField   = -1,
+-        .FieldCount         = 25,
+-        .FileFieldCount     = 25,
+-        .LayoutHash         = 0x75863E23,
++        .FieldCount         = 26,
++        .FileFieldCount     = 26,
++        .LayoutHash         = 0xD43AFAC3,
+         .Fields             = MetaFields
+@@ -336,3 +337,3 @@ struct MapLoadInfo
+ 
+-    static constexpr DB2FieldMeta Fields[29] =
++    static constexpr DB2FieldMeta Fields[30] =
+     {
+@@ -362,2 +363,3 @@ struct MapLoadInfo
+         { .IsSigned = true, .Type = FT_INT, .Name = "WdtFileDataID" },
++        { .IsSigned = true, .Type = FT_INT, .Name = "OceanLiquidTypeID" },
+         { .IsSigned = true, .Type = FT_INT, .Name = "NavigationMaxDistance" },
+@@ -369,3 +371,3 @@ struct MapLoadInfo
+ 
+-    static constexpr DB2FileLoadInfo Instance{ Fields, 29, &MetaInstance };
++    static constexpr DB2FileLoadInfo Instance{ Fields, 30, &MetaInstance };
+ };

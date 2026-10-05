@@ -43,10 +43,22 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+      - run: python3 -m unittest tools.bake_inputs_test tools.bake_tiles_test
+
+  bake-native:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          dotnet-version: 10.0.401
-      - run: dotnet run --project tools/baker/tests/Provenance.csproj -c Release
+          persist-credentials: false
+      - run: sudo apt-get update && sudo apt-get install -y ninja-build libboost-all-dev libssl-dev zlib1g-dev libbz2-dev libreadline-dev
+      - name: Build pinned terrain tools without a game install
+        env:
+          BUILD_ONLY: 1
+          OUT: ${{ runner.temp }}/terrain
+          JOBS: 2
+        run: tools/baker/bake.sh
 
   generated:
     runs-on: ubuntu-latest

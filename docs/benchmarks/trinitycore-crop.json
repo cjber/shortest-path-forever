@@ -1,0 +1,312 @@
+{
+  "default_map_smokes": [
+    {
+      "build": "1.60.1.70205",
+      "cols": [
+        31,
+        31
+      ],
+      "map": 1,
+      "packaged_sha256": {
+        "ShortestPathForever_Nav1/Nav1.lua": "92f1af636f6058114ba19d19c4e2540cb091207e81b611ac6f6826c0802c1ee2",
+        "ShortestPathForever_Nav1/ShortestPathForever_Nav1.toc": "c138d5ac48a5d015310ddd5286fffc73ed48794f66d82b7a60b83a5be9380fd4",
+        "ShortestPathForever_Nav1_1/Data.lua": "d8d576bc6f1fc51002be799dd1bd7b774fe57520140e36c7cb9485cb707a915e",
+        "ShortestPathForever_Nav1_1/ShortestPathForever_Nav1_1.toc": "6dbd434f7ec4b6ecfe767c84c331882fadcb203f7f56bb2688ddae49fc9e403b"
+      },
+      "rows": [
+        31,
+        31
+      ],
+      "statuses": {
+        "0001_31_31": "ok bytes=759580"
+      },
+      "tiles": [
+        "0001_31_31"
+      ]
+    },
+    {
+      "build": "1.60.1.70205",
+      "cols": [
+        28,
+        28
+      ],
+      "map": 2991,
+      "packaged_sha256": {
+        "ShortestPathForever_Nav2991/Nav2991.lua": "eb515048d1939e6e7fb71b15e6193e1b0d6722e06be4bc0126f569ef3087e97d",
+        "ShortestPathForever_Nav2991/ShortestPathForever_Nav2991.toc": "e027b4730b98f33c97c8ce4f14e43af23b8cc0cf8ebf451d1cc5651f358bf3b0",
+        "ShortestPathForever_Nav2991_1/Data.lua": "7994e2cd162d47bde5c6ca9467da383bfec719da211011a00579a0416e3c733b",
+        "ShortestPathForever_Nav2991_1/ShortestPathForever_Nav2991_1.toc": "1527c4ebd704b335f815a15846c0e71262a536066496bc4dca46f2257435a22e"
+      },
+      "rows": [
+        25,
+        25
+      ],
+      "statuses": {
+        "2991_25_28": "ok bytes=580972"
+      },
+      "tiles": [
+        "2991_25_28"
+      ]
+    }
+  ],
+  "description": "Fresh Stormwind crop from locally installed Forever client, one run, no Mappster performance comparison",
+  "logical_cpus": 16,
+  "machine": "Linux-6.18.54-2-lts-x86_64-with-glibc2.44",
+  "native_threads": 2,
+  "navigation": {
+    "build": "1.60.1.70205",
+    "clusters": 4,
+    "code_sha256": {
+      "check_hazards.py": "1a3f3ef9671bbfac58e46d521b06ff08e50652292907892f48a2be999ac071e7",
+      "gen_nav.py": "1f3a1c89e7f23c080bcabf86cddb0b2636ebbea55bd184e0be35e34daba65e78",
+      "inputs.py": "8d4932c4c29c4f525ea0cc729da852dad9146d896efd3144b7cc044c285279d2",
+      "measure.py": "fd260fde084b35328341cba26892f49622da124f095f63ff53721e705fb7c1fb",
+      "tiles.py": "f0c0807fd93f6ad9c88d932bb0215c62427a52b1ab90bb5ca0e0d7c68aae6148",
+      "trinity.py": "d980e17601b7775b36e96023f6b6a93dcb8237c7b7517121250185c5815a350a"
+    },
+    "cols": [
+      30,
+      31
+    ],
+    "extractor": {
+      "build": "1.60.1.70205",
+      "cols": [
+        30,
+        31
+      ],
+      "db2_sha256": {
+        "LiquidMaterial.db2": "a9b3d9f69a6309984ee8cb1480a5c87adbcb798fa6d3a732801d7d7c4428943c",
+        "LiquidObject.db2": "fdc85b244ac021611788425304bc27509a24856662052d6c2458d686f46e5c43",
+        "LiquidType.db2": "4a6a06883c7fbea14b7093885e638d8f5f813f61fb31513d6f26f44802c95be6",
+        "Map.db2": "fe534678ef7bb007cc156b74648b7489c8c07b1f79bd33b010b984e12879ccab"
+      },
+      "map": 0,
+      "product": "wow_classic_beta",
+      "provenance": {
+        "binaries": {
+          "mapextractor": "02343ea8800aeae50ac1dd6083cd4c9dafba6c322c165220bc2398903b10ecee",
+          "mmaps_generator": "6cf56e46cd38c7d56e3229155d0177550cae30cf050f2ed3c2c743f50ea92820",
+          "vmap4assembler": "22f06138124e2c15be84f03998d4e784b4dc98c371ffb77d7759fb3c741d98af",
+          "vmap4extractor": "53037548967f547e48309204509ad56d12655e38c5ad3d3ae8b9d88596779094"
+        },
+        "build": "1.60.1.70205",
+        "code": {
+          "patches": {
+            "trinitycore-client.patch": "3474b4839b1a14fb1a481ec8f032bb89cd8e13a1e65cc6e9818a45569260760c",
+            "trinitycore-nav.patch": "09f0bc97da5a902af215feaa4f5ccf2ec73a6e1cf9af423ced87d3bea4be7bff",
+            "trinitycore.patch": "7cb9571aea9a335321a6d4dbdfa28e7d550781f3eeb75bd5bee0326afac97294"
+          },
+          "trinitycore": "e3916b2adcf2f8a70ae33817fc57b6c0266e2fb0"
+        },
+        "commands": {
+          "mapextractor": [
+            "mapextractor",
+            "-i",
+            "$WOW",
+            "-o",
+            "$RUN",
+            "-p",
+            "wow_classic_beta",
+            "-l",
+            "enUS",
+            "-e",
+            "3",
+            "-f",
+            "0"
+          ],
+          "mmaps_generator": [
+            "mmaps_generator",
+            "--input",
+            "$RUN",
+            "--output",
+            "$OUT",
+            "--threads",
+            "$THREADS",
+            "--skipJunkMaps",
+            "false",
+            "--bigBaseUnit",
+            "true",
+            "0"
+          ],
+          "vmap4assembler": [
+            "vmap4assembler",
+            "--threads",
+            "$THREADS",
+            "$RUN/Buildings",
+            "$RUN/vmaps"
+          ],
+          "vmap4extractor": [
+            "vmap4extractor",
+            "-d",
+            "$WOW",
+            "-p",
+            "wow_classic_beta",
+            "-dl",
+            "enUS",
+            "-l",
+            "--threads",
+            "$THREADS"
+          ]
+        },
+        "product": "wow_classic_beta"
+      },
+      "recipe": "2ab5479cef55984099a314079c910650c8c5f11f55a2ed10f521a818c2264f3a",
+      "rows": [
+        48,
+        49
+      ],
+      "schema": 1,
+      "skipped_map_sections": [
+        {
+          "key": "0DA4670DB36FB2A9",
+          "records": 2
+        },
+        {
+          "key": "D2C028CB7AC14D0B",
+          "records": 5
+        },
+        {
+          "key": "DA0E7785727A0A65",
+          "records": 1
+        }
+      ],
+      "tiles": [
+        "0000_48_30",
+        "0000_48_31",
+        "0000_49_30",
+        "0000_49_31"
+      ]
+    },
+    "jobs": 2,
+    "largest_worker_rss_kib": 66944,
+    "map": 0,
+    "nodes": 130,
+    "output_sha256": "4917c898d614d550ea19aad39c9deeb0ecf3bcb8be129c15b211e62ea746e2b4",
+    "parent_cpu_seconds": 2.1534969999999998,
+    "parent_max_rss_kib": 67132,
+    "platform": "Linux-6.18.54-2-lts-x86_64-with-glibc2.44",
+    "python": "3.14.7",
+    "rows": [
+      48,
+      49
+    ],
+    "rss_measurement": "Linux getrusage peaks, not concurrent aggregate process memory",
+    "seconds": {
+      "components": 0.19155319000128657,
+      "emit": 0.13389444397762418,
+      "floors": 0.062357380986213684,
+      "graph": 1.697025636996841,
+      "raster": 3.013061824021861
+    },
+    "source": "local wow_classic_beta 1.60.1.70205, TrinityCore e3916b2adcf2f8a70ae33817fc57b6c0266e2fb0, recipe 2ab5479cef55984099a314079c910650c8c5f11f55a2ed10f521a818c2264f3a",
+    "tiles": {
+      "0000_48_30.mmtile": "2b85ad0b47d40e0bf00cbcc01a427a5ae8e8e6e963b80035ac99236daa916097",
+      "0000_48_31.mmtile": "48c63db0a967a71c039f740e547d873e41788449acbf01a4b66fdd634096f69a",
+      "0000_49_30.mmtile": "720fe82cadb1d657eed64fe0222105c3f591fdef0e4296d24c93a3e52551a6c4",
+      "0000_49_31.mmtile": "d2901c6f5cfaff75c95dcde6b5c8bf3c01880e3893d0d20036abd1080b18de1f"
+    },
+    "total_seconds": 5.098946331010666,
+    "worker_cpu_seconds": 4.40157
+  },
+  "packaged_sha256": {
+    "ShortestPathForever_Nav0/Nav0.lua": "79c364591c3c82d3da007a0e0bb54f387865eae0c299855d54d54ec073a70ad6",
+    "ShortestPathForever_Nav0/ShortestPathForever_Nav0.toc": "d7e4409b1af4f4fbce6bea10ce190c62f92f39e19bf214903fe50eb3b615b795",
+    "ShortestPathForever_Nav0_1/Data.lua": "99b0e46124cc09d0da4a7780508b88585ead567579c190ee573204868083e6d1",
+    "ShortestPathForever_Nav0_1/ShortestPathForever_Nav0_1.toc": "7cbbcd538c9e3e6f859fec76595d26cf8cc3f1cef5a7bbe0d8ab260b65572670"
+  },
+  "python_jobs": 2,
+  "resources": {
+    "build": "1.60.1.70205",
+    "map": 0,
+    "stages": {
+      "gen_nav": {
+        "cpu_seconds": 6.592376,
+        "max_rss_kib": 67132,
+        "skipped_map_sections": [],
+        "wall_seconds": 5.214205133001087
+      },
+      "mapextractor": {
+        "cpu_seconds": 8.069068,
+        "max_rss_kib": 534692,
+        "skipped_map_sections": [
+          {
+            "key": "0DA4670DB36FB2A9",
+            "records": 2
+          },
+          {
+            "key": "D2C028CB7AC14D0B",
+            "records": 5
+          },
+          {
+            "key": "DA0E7785727A0A65",
+            "records": 1
+          }
+        ],
+        "wall_seconds": 8.263983259006636
+      },
+      "mmaps_generator": [
+        {
+          "cpu_seconds": 11.564043999999999,
+          "max_rss_kib": 127820,
+          "skipped_map_sections": [],
+          "wall_seconds": 11.806811966991518
+        },
+        {
+          "cpu_seconds": 10.188852,
+          "max_rss_kib": 125252,
+          "skipped_map_sections": [],
+          "wall_seconds": 10.324373417999595
+        },
+        {
+          "cpu_seconds": 9.878663,
+          "max_rss_kib": 128716,
+          "skipped_map_sections": [],
+          "wall_seconds": 10.029532757995185
+        },
+        {
+          "cpu_seconds": 11.22432,
+          "max_rss_kib": 129236,
+          "skipped_map_sections": [],
+          "wall_seconds": 11.514285771001596
+        }
+      ],
+      "pack_nav": {
+        "cpu_seconds": 0.044184999999999995,
+        "max_rss_kib": 27532,
+        "skipped_map_sections": [],
+        "wall_seconds": 0.045493398007238284
+      },
+      "vmap4assembler": {
+        "cpu_seconds": 0.27595,
+        "max_rss_kib": 95796,
+        "skipped_map_sections": [],
+        "wall_seconds": 1.2271379040030297
+      },
+      "vmap4extractor": {
+        "cpu_seconds": 5.830568,
+        "max_rss_kib": 534744,
+        "skipped_map_sections": [
+          {
+            "key": "0DA4670DB36FB2A9",
+            "records": 2
+          },
+          {
+            "key": "D2C028CB7AC14D0B",
+            "records": 5
+          },
+          {
+            "key": "DA0E7785727A0A65",
+            "records": 1
+          }
+        ],
+        "wall_seconds": 6.077328168001259
+      }
+    }
+  },
+  "resume": {
+    "native_threads": 3,
+    "packaged_hashes_unchanged": true,
+    "rebuilt_tiles": 0,
+    "staged_packaging": true
+  }
+}

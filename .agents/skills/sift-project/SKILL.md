@@ -11,8 +11,9 @@ description: "Project profile for sift in Shortest Path Forever: the exact quali
 A World of Warcraft: Forever (Classic, `## Interface: 16001`) addon that plans journeys (walking, flights,
 boats, lifts, tram, portals) and draws them on the map. Runtime is the WoW client's Lua 5.1 sandbox; files
 load in `.toc` order and share one namespace table (`local addonName, ns = ...`). It ships through
-BigWigs packager (`.pkgmeta`) to CurseForge/Wago/GitHub as one zip with compressed walking maps bundled under `Nav/`. The specs run headless under LuaJIT with stubbed WoW APIs. Python, shell scripts and
-C# under `tools/` generate the data offline; `.pkgmeta` keeps `tools/` and `tests/` out of the zip.
+BigWigs packager (`.pkgmeta`) to CurseForge/Wago/GitHub as one zip with compressed walking maps bundled under
+`Nav/`. The specs run headless under LuaJIT with stubbed WoW APIs. Python and shell scripts under `tools/`
+generate the data offline; `.pkgmeta` keeps `tools/` and `tests/` out of the zip.
 
 ## Gate
 
@@ -51,7 +52,7 @@ On-demand tools for audits. Output is candidates, never verdicts.
 | Dead code (Python) | `uvx vulture tools --min-confidence 60` | clean today |
 | Types (Python) | `uvx --with pillow ty check --extra-search-path tools --python-version 3.10 tools` | 5 inference errors in `gen_nav.py` (tuple unpacking, `dict.get` keys) + Pillow `Image.LANCZOS` — not bugs |
 | Large files | `python3 .sift/gate.py --rule file-size-no-growth --all` | lists files over 1000 lines; none remain, so any listed file is a regression |
-| Duplication | `npx --yes jscpd@4 --silent --reporters json --output .sift/runs/jscpd --ignore '**/ShortestPathForever_Nav*/**,**/Data/**,**/.sift/**,**/media/**,LICENSE' .` | whole-file clones among `tests/*_ui.lua` are their long-string bodies |
+| Duplication | `npx --yes jscpd@4 --silent --reporters json --output .sift/runs/jscpd --ignore '**/Nav/**,**/Data/**,**/.sift/**,**/media/**,LICENSE' .` | whole-file clones among `tests/*_ui.lua` are their long-string bodies |
 | Unread `ns` members | the `ns-defined`/`ns-once` pipeline in the sift skill's `languages/lua.md` | its regex has no word boundary, so `options.revision` reads as `ns.revision` |
 | Standards pack | `SIFT_STANDARDS_PATH=$HOME/skills python3 <sift>/scripts/agents.py standards` | `wow-forever-addon` lives in `~/skills`, which the default search path misses |
 | Live roots (Lua) | `rg -n 'RegisterEvent\|SetScript\|hooksecurefunc\|SLASH_\|SlashCmdList\|LoadAddOn\|SendAddonMessage' -g '*.lua'` | — |
@@ -80,7 +81,8 @@ Things reached indirectly. The dead-code lens must treat these as referenced.
 - `tools/*.py` are run by hand (README), except those a workflow runs: `ci.yml` runs `check_generated.py`,
   `changelog.py --check`, `fetch_tracker_ui.py` and `typecheck.sh`; `release.yml` runs `release_check.py` and
   `changelog.py`; `shared-tracker.yml` runs `check_shared_tracker.py`.
-  `tools/bake_walks.lua` writes `Data/Walks.lua`; `tools/baker/bake.sh` drives `gen_nav.py` and the C# baker.
+  `tools/bake_walks.lua` writes `Data/Walks.lua`; `tools/baker/bake.sh` builds pinned TrinityCore tools
+  and runs `trinity.py`, `gen_nav.py` and `pack_nav.py`.
 - Test seams: `Path.after`, `Path.clock` and `Path.budget` are replaced by specs. Specs that load Journey without
   the walking search get `tests/path_fake.lua`, the whole `ns.Path` surface Journey calls; Journey has no
   branch for a missing or partial `ns.Path`. Planner.Plan's
@@ -107,9 +109,9 @@ How each part of the tree is reviewed. Unlisted paths are `production`.
 |---|---|---|
 | `Data/Routes.lua`, `Data/Taxi.lua`, `Data/Transports.lua`, `Data/Portals.lua`, `Data/Teleports.lua` | generated | `tools/gen_*.py`, "do not edit" header |
 | `Data/Walks.lua` | generated | `luajit tools/bake_walks.lua > Data/Walks.lua` |
-| `ShortestPathForever_Nav*/` | generated | `tools/baker/gen_nav.py` + `bake.sh`; excluded from luacheck/stylua/gitleaks |
+| `Nav/` | generated | `tools/baker/bake.sh` (`trinity.py`, `gen_nav.py`) + `tools/pack_nav.py`; excluded from luacheck/stylua/gitleaks |
 | `tools/` | script | offline data generators, never shipped |
-| `tools/baker/mappster.patch` | vendor | patch against upstream Mappster |
+| `tools/baker/trinitycore*.patch` | vendor | client, extraction and navigation patches against pinned TrinityCore |
 | `tests/` | test | headless LuaJIT specs, harnesses and a bench |
 | `tests/*_ui.lua`, `tests/activity_bench.lua`, `tests/runtime_bench.lua` | test | load `tests/ui_client.lua` and `tests/ui_map.lua`; the UI checks run in CI, the benches locally |
 | `tests/*_performance.md`, `README.md`, `docs/*.md`, `types/README.md`, `tools/baker/README.md` | docs | `docs/curseforge.md` is store copy: proposals only |
@@ -157,7 +159,7 @@ Audit slices from lowest to highest risk:
 ## Project rules and lenses
 
 - Rules: `file-size-no-growth` (`.sift/scripts/`, from the sift catalog) fails a change that adds
-  a file over 1000 lines or grows one. Generated `Data/*.lua` and `ShortestPathForever_Nav*/*.lua`
+  a file over 1000 lines or grows one. Generated `Data/*.lua` and `Nav/*.lua`
   are excluded.
 - Lenses: none yet.
 

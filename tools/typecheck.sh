@@ -31,6 +31,7 @@ python3 -m unittest discover -s tests -p 'test_typecheck.py'
 python3 -m unittest discover -s tools -p '*_test.py'
 python3 -m tools.lint_taint
 python3 tools/lint_multivalue.py
+python3 tools/lint_art.py
 # An interrupted check must never leave a stale report looking like this run's result.
 report=.types/diagnostics.json
 rm -f "$report"

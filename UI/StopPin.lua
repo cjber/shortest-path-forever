@@ -83,6 +83,7 @@ function ShortestPathForeverGoalPinMixin:OnAcquired(x, y, numbers, titles, later
 	self.Numeral:SetShown(numeral)
 	self.Number:SetText(number and not numeral and tostring(number) or "")
 	local current = numbers ~= nil and not later
+	-- art-ok: both quest buttons are 32 by 32, in Map.xml's 32 by 32 box
 	self.Button:SetAtlas(current and CURRENT_ATLAS or STOP_ATLAS)
 	self.Number:SetTextColor(unpack(current and NUMBER_DARK or NUMBER_YELLOW))
 	if numeral then
@@ -98,7 +99,7 @@ function ShortestPathForeverGoalPinMixin:OnAcquired(x, y, numbers, titles, later
 		-- The native waypoint pin (SuperTrackedFrame.lua:219) that Guide's marker wears, so map and marker agree.
 		local atlas = C_Texture.GetAtlasInfo(GOAL_ATLAS)
 		self:SetSize(atlas.width * GOAL_SCALE, atlas.height * GOAL_SCALE)
-		self.Texture:SetAtlas(GOAL_ATLAS)
+		self.Texture:SetAtlas(GOAL_ATLAS) -- art-ok: fills the pin, sized above from the atlas's own shape
 	end
 end
 

@@ -56,8 +56,15 @@ function methods:SetAtlas(atlas)
 	assert(atlasSizes[atlas], "unverified atlas: " .. atlas)
 	calls.atlas = calls.atlas + 1
 	self.atlas, self.texture = atlas, nil
+	-- The client leaves the atlas's place on its sheet as the texture's coordinates until they are set again.
+	self.atlasCrop = atlas
+end
+function methods:SetTexCoord()
+	self.atlasCrop = nil
 end
 function methods:SetTexture(texture)
+	-- A file over an atlas's crop draws a corner of the file: Art.Icon resets the coordinates first.
+	assert(not self.atlasCrop, "SetTexture over the crop " .. tostring(self.atlasCrop) .. " left: use Art.Icon")
 	self.texture, self.atlas = texture, nil
 end
 function methods:SetPoint(point, owner, relativePoint, x, y)
@@ -177,13 +184,13 @@ local env = setmetatable({
 		end,
 	},
 }, { __index = _G })
--- The shared art helpers the compass draws with: ns.FitAtlas and ns.SetTransportIcon.
+-- The shared art helpers the compass draws with: ns.Art.Fit and ns.SetTransportIcon.
 env.CreateFromMixins, env.MapCanvasPinMixin, env.FlightPointPinMixin = function()
 	return {}
 end, {}, {}
 ns.Init = function() end
 local stubs = { DockKind = ns.DockKind, DockPoint = ns.DockPoint }
-for _, file in ipairs({ "UI/Looks.lua", "UI/Map.lua" }) do
+for _, file in ipairs({ "UI/Art.lua", "UI/Looks.lua", "UI/Map.lua" }) do
 	setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
 end
 ns.Init, ns.DockKind, ns.DockPoint = nil, stubs.DockKind, stubs.DockPoint

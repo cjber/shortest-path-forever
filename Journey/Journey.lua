@@ -11,6 +11,7 @@ local DRAW_EVERY = 0.5
 -- A teleport step, by the item's or spell's own name in the game's language, after its own icon at the font's
 -- height: the one step you act on from your bags or spellbook stands out from the travel around it.
 local USE_ITEM, CAST_SPELL = L["Use %s"], L["Cast %s"]
+-- art-ok: a square item or spell icon, square at the font's height (size 0)
 local ICON = "|T%d:0|t "
 
 local goal, result

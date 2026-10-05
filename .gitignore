@@ -10,6 +10,5 @@ docs/verification/
 .types/
 .claude/
 
-# Local .NET builds of the navigation baker and provenance checks.
-tools/baker/**/bin/
-tools/baker/**/obj/
+# Local terrain extraction, native builds and generated navigation packages.
+tools/baker/work/

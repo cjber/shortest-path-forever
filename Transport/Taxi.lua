@@ -171,6 +171,7 @@ function ns.RefreshTaxiRoute()
 		local line = lines[index]
 		if not line then
 			line = TaxiRouteMap:CreateTexture(nil, "BACKGROUND")
+			-- art-ok: the flight map's own route line, a segment DrawLine lays between two nodes
 			line:SetTexture("Interface\\TaxiFrame\\UI-Taxi-Line")
 			lines[index] = line
 		end

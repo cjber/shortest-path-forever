@@ -64,8 +64,10 @@ before its `v*` tag, since the release publishes it as the notes.
 - Quality: load `.agents/skills/sift-project/SKILL.md` before cleanup, dead-code or refactoring
   work.
 - Searches and tracker updates wait until combat ends; no idle `OnUpdate`.
-- Never stretch art: an icon, atlas or texture is drawn at its native aspect (size it from
-  `C_Texture.GetAtlasInfo`, fit inside the box); only nine-slice pieces, bars and fills stretch by design.
+- Never stretch art: an icon, atlas or texture is drawn at its native aspect, through `UI/Art.lua` (`Art.Fit`,
+  `Art.Icon`); only nine-slice pieces, bars and fills stretch by design. `tools/lint_art.py` refuses a raw
+  `SetAtlas`, `SetTexture`, button atlas or `|A`/`|T` markup anywhere else unless its line says why its shape is
+  right (`-- art-ok: reason`).
 - Store copy, README and posts pitch the addon as looking like it came with the game, in cjber's
   own voice, never AI marketing: `wow-forever-addon` WFA-23/24, checked before every store paste.
 
