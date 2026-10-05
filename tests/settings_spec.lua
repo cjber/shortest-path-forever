@@ -114,7 +114,7 @@ local env = setmetatable({
 	SlashCmdList = {},
 }, { __index = _G })
 
-local refreshed, taxiRefreshed, buttonRefreshed, policyChanged, tomtomRefreshed = 0, 0, 0, 0, 0
+local refreshed, taxiRefreshed, policyChanged, tomtomRefreshed = 0, 0, 0, 0
 local compassMoving = false
 -- Core/Core.lua's defaults: every row on.
 local ns = {
@@ -151,9 +151,6 @@ local ns = {
 	RefreshTaxiRoute = function()
 		taxiRefreshed = taxiRefreshed + 1
 	end,
-	RefreshRouteButton = function()
-		buttonRefreshed = buttonRefreshed + 1
-	end,
 	CompassMoving = function()
 		return compassMoving
 	end,
@@ -180,12 +177,12 @@ local groups = {
 		"corpse",
 	},
 	Alerts = { "alerts", "alertSound" },
-	Interface = { "compass", "compassMove", "routeButton", "whatsNew" },
+	Interface = { "compass", "compassMove", "whatsNew" },
 }
 local order = { "Map marks", "Transport", "Guidance", "Alerts", "Interface" }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 23, #rows)
+assert(#rows == 22, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -237,10 +234,6 @@ assert(Row("tomtom").setting.default == true)
 assert(Row("tomtom").tooltip:find("TomTom", 1, true), "the row names the addon it answers")
 Row("tomtom").setting.onChanged()
 assert(tomtomRefreshed == 1, "the shim follows its setting")
-assert(Row("routeButton").setting.default == true)
-assert(Row("routeButton").tooltip:find("gold", 1, true), "the route button says what its colour means")
-Row("routeButton").setting.onChanged()
-assert(buttonRefreshed == 1, "the minimap button follows its setting")
 assert(Row("whatsNew").setting.default == true)
 Row("pins").setting.onChanged()
 assert(refreshed == 1, "value callbacks still fire")

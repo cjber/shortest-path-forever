@@ -1,6 +1,6 @@
 -- Run from the repository root: luajit tests/smoke_spec.lua
 -- The whole interactive surface, headless: every saved setting driven through its own value-changed callback and
--- through ns.SetOption, the minimap route button, the compass, the tracker's headers and context menus, the world
+-- through ns.SetOption, the compass, the tracker's headers and context menus, the world
 -- map's pins and their Ends menu, the planning paths, and the settings index with its subpages, across
 -- representative profiles. Every action asserts no Lua error was added, and a crash is reported as
 -- "<profile> <screen/frame/setting> <verb>: <error>", attributable to the setting, frame or screen that raised it.
@@ -43,7 +43,6 @@ local stats = {
 	buttons = 0,
 	paths = 0,
 	compass = 0,
-	routeButton = 0,
 }
 
 local function SortedKeys(t)
@@ -496,20 +495,16 @@ local function DriveHoveredSetting(label)
 	end)
 end
 
--- The re-render a setting change drives, with the compass and route button live for this profile's state.
+-- The re-render a setting change drives, with the compass live for this profile's state.
 local function DrivePrime(label)
 	Run(label .. " prime", function()
 		ns.RefreshTracker()
 		ns.RefreshMap()
 		ns.RefreshMinimapPins()
 		ns.RefreshCompass()
-		ns.RefreshRouteButton()
 		Flush()
 		if ShortestPathForeverCompass and not ShortestPathForeverCompass.hidden then
 			stats.compass = stats.compass + 1
-		end
-		if ShortestPathForeverRouteButton and not ShortestPathForeverRouteButton.hidden then
-			stats.routeButton = stats.routeButton + 1
 		end
 	end)
 	Run(label .. " prime tick", function()
@@ -528,15 +523,11 @@ local function DrivePaths(label)
 		ns.RefreshMap()
 		ns.RefreshMinimapPins()
 		ns.RefreshCompass()
-		ns.RefreshRouteButton()
 		ns.RefreshTaxiRoute()
 		ns.RefreshGuideStops()
 		Flush()
 		if ShortestPathForeverCompass and not ShortestPathForeverCompass.hidden then
 			stats.compass = stats.compass + 1
-		end
-		if ShortestPathForeverRouteButton and not ShortestPathForeverRouteButton.hidden then
-			stats.routeButton = stats.routeButton + 1
 		end
 	end)
 	Run(label .. " guide toggle", function()
@@ -727,7 +718,6 @@ for _, profile in ipairs(profiles) do
 		ns.RefreshTracker()
 		ns.RefreshMap()
 		ns.RefreshCompass()
-		ns.RefreshRouteButton()
 		ns.RefreshMinimapPins()
 		Advance(0.2)
 	end)
@@ -901,8 +891,7 @@ for key, value in pairs(stats) do
 end
 
 print(("smoke_spec: %d checks passed; %d profile runs, %d frames, %d clicks, %d hovers, %d menus, %d pins, "
-	.. "%d setting writes, %d settings rows, %d index buttons, %d planning paths, %d compass renders, "
-	.. "%d route-button renders"):format(checks, stats.profiles, stats.frames, stats.clicks, stats.hovers,
-	stats.menus, stats.pins, stats.settings, stats.rows, stats.buttons, stats.paths, stats.compass,
-	stats.routeButton))
+	.. "%d setting writes, %d settings rows, %d index buttons, %d planning paths, %d compass renders"):format(
+	checks, stats.profiles, stats.frames, stats.clicks, stats.hovers, stats.menus, stats.pins, stats.settings,
+	stats.rows, stats.buttons, stats.paths, stats.compass))
 ]==]))()

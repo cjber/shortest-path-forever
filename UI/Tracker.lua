@@ -285,9 +285,6 @@ end
 
 function ns.RefreshTracker()
 	RefreshTracker(ns.NearestDock())
-	-- The route button wears whether a route is on, and journey changes reach this (Journey.lua's Guide start
-	-- and stop both refresh the tracker).
-	ns.RefreshRouteButton()
 end
 
 local function Attach()

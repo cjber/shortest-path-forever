@@ -2,7 +2,6 @@
 
 -- The TOC passes one namespace table to every module; reopening SPFNamespace joins their APIs.
 ---@class SPFNamespace
----@field OpenNearby fun()
 ---@field Docks table<number, SPFDock>
 ---@field Routes table<number, SPFRoute>
 ---@field TaxiNodes table<number, SPFTaxiNode>
@@ -146,7 +145,6 @@
 ---@field compass? boolean
 ---@field compassX? number the compass's centre from the screen's bottom left, once dragged
 ---@field compassY? number
----@field routeButton? boolean
 ---@field corpse? boolean
 ---@field whatsNew? boolean
 ---@field seenVersion? string -- the version last loaded, for the line after an update (WhatsNew.lua)

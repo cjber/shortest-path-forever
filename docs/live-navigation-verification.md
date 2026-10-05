@@ -16,7 +16,7 @@ with the results in [issue #103](https://github.com/cjber/shortest-path-forever/
 
 ## Cancellation and combat
 
-1. `/reload`, start the same cold journey, then left-click the route button while its search is still pending.
+1. `/reload`, start the same cold journey, then click the tracker's Journey header while its search is still pending.
 2. Confirm the tracker and route disappear and do not return when the pending work completes.
 3. Start a journey, open and close the map out of combat, then enter ordinary combat and open the map again.
 4. Confirm there is no blocked-action message, no protected pin creation and no repeated search work during combat.

@@ -24,7 +24,6 @@ local DEFAULTS = {
 	share = true,
 	guideStops = true,
 	compass = true,
-	routeButton = true,
 	corpse = true,
 	whatsNew = true,
 }
