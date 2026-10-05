@@ -503,6 +503,13 @@ function ns.StartJourney(point)
 		return true
 	end
 	local previous = Search.Clear(goal and SamePlace(goal, point)) and result
+	if previous then
+		for _, leg in ipairs(previous.legs) do
+			if leg.to.kind == "goal" then
+				leg.to.label = point.label
+			end
+		end
+	end
 	local index, departed = progress.index, progress.departed
 	if Guide.Active() then
 		StopGuide()
