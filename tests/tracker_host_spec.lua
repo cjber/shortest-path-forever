@@ -638,6 +638,13 @@ check(
 	native.point[1] == "TOPLEFT" and native.point[2] == parent,
 	"a managed frame update re-stacks the native frame below the shared column"
 )
+-- A neighbour showing or hiding makes the container lay the native frame out again with no update of its own.
+native:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, -100)
+drain()
+check(
+	native.point[1] == "TOPLEFT" and native.point[2] == parent,
+	"a managed frame update re-stacks the native frame below the shared column"
+)
 check(nativeHeader.point[2] == host, "the header stays at the top of the column after a managed frame update")
 first.GetContentsHeight = function()
 	return 0
