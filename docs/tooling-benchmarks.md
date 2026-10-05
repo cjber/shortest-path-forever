@@ -15,7 +15,12 @@ The identical output SHA256 is `292984c5f0f51b9a7e65ca77409d4460e935b30811a4c525
 |---|---:|---:|---|
 | Rows 30-32, columns 30-32 | 8.51 s | 3.30 s | Byte-identical Lua |
 | Rows 47-49, columns 29-31 | 6.37 s | 3.71 s | Byte-identical Lua |
-| Full map 0 | Baseline comparison pending | 593.85 s | All encoded fields equal the shipped map |
+| Full map 0 | Graph phase not timed separately | 593.85 s | Byte-identical Lua to the original full bake |
+
+The original full bake completed in 1,264.6 seconds wall time and 1,663 seconds CPU time. Its
+getrusage largest-process peak was reported as 1,086 MB, not aggregate concurrent memory. The optimized
+full run did not capture total wall time, so these totals cannot establish an end-to-end speedup.
+Both full Lua files are byte-identical.
 
 The full map has 29,813 graph nodes and 168,860 edges. Its component phase took 19.54 seconds, floor assembly
 3.56 seconds and emission 8.54 seconds. Parent-only cProfile misses the rasterizer workers; separate worker
