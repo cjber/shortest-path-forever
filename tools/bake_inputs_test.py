@@ -3,9 +3,10 @@ import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
 
 from tools.baker import trinity
-from tools.baker.inputs import complete
+from tools.baker.inputs import arguments, complete, source_label
 
 
 class BakeInputTest(unittest.TestCase):
@@ -143,3 +144,32 @@ class TrinityDriverTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "Unrecognised"):
                 trinity.publish_addons(staged, output, 0)
             self.assertEqual((output / base / "Nav0.lua").read_text(), "new manifest")
+
+    def test_source_label_uses_manifest_and_preserves_historical_default(self):
+        manifest = {
+            "product": "wow_classic_beta",
+            "build": "1.60.1.70205",
+            "recipe": "digest",
+            "provenance": {"code": {"trinitycore": "pinned"}},
+        }
+        with patch.dict("os.environ", {}, clear=True):
+            self.assertEqual(
+                source_label(manifest), "local wow_classic_beta 1.60.1.70205, TrinityCore pinned, recipe digest"
+            )
+            self.assertIn("Mappster/DotRecast", source_label(None))
+        with patch.dict("os.environ", {"NAV_SOURCE": "explicit source"}):
+            self.assertEqual(source_label(manifest), "explicit source")
+
+    def test_direct_generator_validates_an_existing_manifest(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest = {"schema": 1, "map": 0, "build": "1.60.1.70205", "recipe": "digest", "tiles": ["0000_48_30"]}
+            (root / "source.json").write_text(json.dumps(manifest))
+            with patch("sys.argv", ["gen_nav.py", "--map", "0"]):
+                with self.assertRaisesRegex(ValueError, "missing"):
+                    arguments(root)
+                (root / "status").mkdir()
+                (root / "status/0000_48_30").write_text("empty")
+                args, provenance = arguments(root)
+                self.assertEqual(args.build, manifest["build"])
+                self.assertEqual(provenance, manifest)

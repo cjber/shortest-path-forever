@@ -31,7 +31,7 @@ from textwrap import wrap
 from typing import cast
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from baker.inputs import arguments  # noqa: E402
+from baker.inputs import arguments, source_label  # noqa: E402
 from baker.measure import record, tile_hashes  # noqa: E402
 from baker.tiles import load_tile  # noqa: E402
 from forever_tools.fsio import atomic_write  # noqa: E402
@@ -54,7 +54,7 @@ ZQ = 2  # base heights are stored to this step (yd)
 DIRS = {(1, 0): 0, (-1, 0): 1, (0, 1): 2, (0, -1): 3, (1, 1): 4, (1, -1): 5, (-1, 1): 6, (-1, -1): 7}
 AREA_GROUND, AREA_WATER, AREA_OCEAN = 11, 9, 6
 FLAG_UNDER_HAZARD = 0x80  # Mappster: ground under magma or slime
-SOURCE = os.environ.get("NAV_SOURCE", "own bake of the World of Warcraft client (wow_classic_beta), Mappster/DotRecast")
+SOURCE = source_label(None)
 B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
 # Set by configure(): the map, its tiles and the global grid.
@@ -889,7 +889,9 @@ def encode_floors(grid, k, lnode):
 
 
 def main():
+    global SOURCE
     args, provenance = arguments(Path(MM))
+    SOURCE = source_label(provenance)
     started = time.perf_counter()
     phases = {}
     checkpoint = started

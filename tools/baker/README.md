@@ -68,6 +68,7 @@ NAV_MM=/path/to/mmaps python3 tools/baker/gen_nav.py /tmp/Nav0.lua --map 0 --nam
   --require-complete --metrics /tmp/nav0.json
 ```
 
+An existing source manifest is always validated and supplies the source label, including for direct generator runs.
 Historical Mappster tiles use the same pinned Detour layout. They remain usable without `--require-complete`,
 but lack an authoritative tile inventory and cannot prove extraction completeness. The generator keeps their
 original source label by default; new TrinityCore bakes supply their own source and recipe label.
