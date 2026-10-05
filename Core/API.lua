@@ -50,6 +50,31 @@ local function Point(map, x, y)
 	return ns.WorldPoint(map, x, y)
 end
 
+-- An objective area list: one or more places on a map, each with a yard radius. Every entry must be one this
+-- client can place.
+---@param shapes table
+---@return boolean
+local function Shapes(shapes)
+	local count = #shapes
+	if count < 1 then
+		return false
+	end
+	for key, shape in pairs(shapes) do
+		if not Number(key) or key % 1 ~= 0 or key < 1 or key > count then
+			return false
+		end
+		if
+			type(shape) ~= "table"
+			or not Point(shape.map, shape.x, shape.y)
+			or not Number(shape.radius)
+			or shape.radius < 0
+		then
+			return false
+		end
+	end
+	return true
+end
+
 local function Ready()
 	return ns.db and ns.charDB and not InCombatLockdown()
 end
@@ -271,6 +296,8 @@ function API.NavigateRoute(owner, stops)
 			or (stop.tooltip ~= nil and not (canaccessvalue(stop.tooltip) and type(stop.tooltip) == "string"))
 			or (stop.hold ~= nil and not (canaccessvalue(stop.hold) and type(stop.hold) == "boolean"))
 			or (stop.radius ~= nil and (not Number(stop.radius) or stop.radius < 0))
+			or (stop.questID ~= nil and (not Number(stop.questID) or stop.questID % 1 ~= 0 or stop.questID < 1))
+			or (stop.shapes ~= nil and (type(stop.shapes) ~= "table" or not Shapes(stop.shapes)))
 		then
 			return false
 		end
@@ -285,6 +312,17 @@ function API.NavigateRoute(owner, stops)
 		-- that state changes; ordinary API stops retain automatic arrival.
 		point.hold = stop.hold == true
 		point.radius = stop.radius
+		-- The single quest whose client blob the stop stands for; StopInside prefers the client's own answer for it.
+		point.questID = stop.questID
+		-- The areas are copied to world points too: the caller cannot redirect a journey they no longer own.
+		if stop.shapes then
+			point.shapes = {}
+			for _, shape in ipairs(stop.shapes) do
+				local at = Point(shape.map, shape.x, shape.y) --[[@as SPFAreaShape]]
+				at.radius = shape.radius
+				point.shapes[#point.shapes + 1] = at
+			end
+		end
 		-- An unknown kind is dropped, not refused: a caller written for a later vocabulary still gets its route.
 		point.look = ns.StopKind(stop.kind)
 		if count > 1 then

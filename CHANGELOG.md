@@ -11,6 +11,16 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-10-05
+
+- **Flight times come from your own rides.** A flight you take is timed from take-off to landing, and that time is used the next time a journey plans the same route. While you are in the air the tracker counts the leg down from how far along the drawn route you are, so a slow or fast ride no longer makes its arrival time drift.
+- **A guide that sets a TomTom waypoint can plan the journey here.** With TomTom not installed, Questie and other guides that set a waypoint through it now start a Shortest Path journey instead, carrying the guide's title; *Let guides set TomTom waypoints* in `/path` turns it off.
+- **A quest area you are standing in is drawn by the game itself.** A held objective stop can name the areas it stands for; while you are inside one, the minimap recolours the game's own quest area to gold instead of drawing a circle of ours, the world map keeps the route's yellow outline, and the stop's pin and line step aside. The client's own inside-area state decides inside where the area names one quest.
+- **The tracker returns after Edit Mode is locked.** Hiding and locking Edit Mode without leaving it no longer keeps the Forever sections hidden.
+- **The stop you are travelling to stands out on the map.** Its numbered button is lit the way the game lights the quest it tracks, and the later stops keep the plain button.
+- **The journey list holds still.** A step whose countdown sat right at the edge of the tracker gained and lost a second line as the time ticked, which shook the whole column up and down each second. A step that has taken a second line now keeps it until the steps themselves change.
+- **Stormwind's flight point matches the current game build.** The game moved Stormwind's flight point about fourteen yards, so journeys through Stormwind now lead to the new spot and flights out of Stormwind are drawn from it.
+- **The tracker reads in game order.** The game's All Objectives header leads the shared column, the Forever sections follow it, and your quests stay below them. In combat the game keeps its quest list in its own slot, so the header and quests stay together and the Forever sections sit directly below them, keeping the tracker to one column.
 - **The performance report includes every loaded walking-map part.** `/path perf` counts the small terrain addons as well as their base maps, so its memory total covers the data used by a journey.
 
 - **Starting a journey loads only the ground it needs.** Walking maps load in small parts as the search reaches them. A fixed walk on another continent keeps its measured cost and waits to draw its detailed line until you arrive there.

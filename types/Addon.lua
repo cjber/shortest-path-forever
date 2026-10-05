@@ -30,9 +30,12 @@
 ---@field routeTitle? string
 ---@field hold? boolean -- remain visible at the destination until the caller submits an updated route
 ---@field radius? number -- yards around a held stop where travel cues pause; finite and nonnegative
+---@field shapes? SPFAreaShape[] -- objective areas the stop stands for, in world coordinates
 ---@field look? SPFAPIStopKind -- what the caller said stands there (API.lua)
 ---@field questID? number
 ---@field corpse? boolean -- where your corpse lies (Corpse.lua)
+---@class SPFAreaShape : SPFPoint
+---@field radius number -- yards
 ---@class SPFPlace : SPFPoint
 ---@field kind SPFKind
 ---@field id? number
@@ -133,6 +136,7 @@
 ---@field alerts? boolean
 ---@field alertSound? boolean
 ---@field journey? boolean
+---@field tomtom? boolean -- answer third-party guides' TomTom waypoints with a journey while TomTom is absent
 ---@field taxiRoute? boolean
 ---@field teleports? boolean
 ---@field hearthMinimumSavings? number -- seconds the Hearthstone must save over the best non-hearth plan
@@ -147,6 +151,7 @@
 ---@field seenVersion? string -- the version last loaded, for the line after an update (WhatsNew.lua)
 ---@field debug? boolean
 ---@field anchors table<string, table<number, SPFAnchor>>
+---@field taxiTimes? table<string, number> -- measured seconds per directed flight path, "from:to"
 ---@field trace? (number|string)[][]
 ---@field taxiLog? table<string, {seen: number, showsNodes: boolean, nodes: string[]}>
 ---@class SPFCharacterDatabase
@@ -247,6 +252,7 @@ ShortestPathForeverPathData = nil
 ---@field routes? table<number, SPFRoute>
 ---@field taxiNodes? table<number, SPFTaxiNode>
 ---@field taxiPaths? SPFTaxiPath[]
+---@field taxiTimes? table<string, number> -- measured seconds by directed path, overriding the shipped estimate
 ---@field taxiKnown? table<number, boolean>
 ---@field portals? SPFPortal[]
 ---@field teleports? SPFTeleportPlace[]

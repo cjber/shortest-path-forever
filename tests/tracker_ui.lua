@@ -14,14 +14,14 @@ tracker.MarkDirty = function(self) dirty = dirty + 1 markDirty(self) end
 tracker.SetHeader = function(self, text) headers = headers + 1 self.Header.text = text end
 ns.Planner.LegPoints = function(...) geometry = geometry + 1 return legPoints(...) end
 ns.db.tracker = false
-local route, index, settling
+local route, index, settling, suffix
 ns.HasJourney = function() return route ~= nil end
 ns.CurrentRide = function() return onTaxi and 123 end
 ns.JourneyInfo = function()
  if not route then return end
  local title = "Journey to Silithus"
  local rows = {}
- for i = index, #route.legs do rows[#rows + 1] = {key=i, text="Step " .. i, current=i==index} end
+ for i = index, #route.legs do rows[#rows + 1] = {key=i, text="Step " .. i .. (suffix or ""), current=i==index} end
  return title, rows, route, index, settling
 end
 local function point(x, y, map, z) return {x=x, y=y or 0, map=map or 1, z=z} end
@@ -69,6 +69,22 @@ assert(tick() == "Journey  44:47 · 9.1k yd", "mid-walk progress updates between
 posX, posY = 200, 300
 assert(tick() == "Journey  44:47 · 8.7k yd", "passed bends are removed from the total")
 assert(dirty == marks)
+-- A timer at the wrapping width: the row takes a second line once, then keeps it while the text ticks.
+local setText, tall = block.SetStringText, 24
+block.SetStringText = function(self, ...) setText(self, ...) return tall end
+suffix = " 1:00"
+tick()
+assert(dirty == marks + 1, "a row that outgrows its line is laid out again")
+line = block:GetExistingLine(1)
+for _, row in pairs(block.lines) do row.GetHeight = function() return 24 end end
+marks, tall, suffix = dirty, 12, " 0:59"
+tick()
+tall, suffix = 24, " 0:58"
+tick()
+assert(dirty == marks, "a row that fits in fewer lines keeps its place, so a ticking timer cannot shake the column")
+block.SetStringText, suffix = setText, nil
+tick()
+for _, row in pairs(block.lines) do row.GetHeight = function() return 12 end end
 index, onTaxi = 2, true
 assert(refresh(true) == "Journey  44:00 · 8.5k yd")
 assert(dirty == marks + 1 and not block:GetExistingLine(1), "leg changes still relayout rows")

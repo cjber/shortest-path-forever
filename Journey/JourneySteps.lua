@@ -72,12 +72,21 @@ local function Seconds(ms)
 	return math.max(0, math.ceil(ms / 1000))
 end
 
+-- A leg's remaining milliseconds: the observed progress along a flight being flown, else the planned span.
+-- Counting an air leg down from the path rather than the clock keeps its time steady on a slow or fast ride.
+---@param leg SPFLeg
+---@return number
+function ns.LegSpan(leg)
+	local observed = ns.TaxiTimes and ns.TaxiTimes.Remaining(leg)
+	return observed or (leg.arrive - leg.depart)
+end
+
 -- Only a timed transport's departure and a teleport's cooldown make a step wait; a flight leaves at once. A
 -- transport nobody has timed yet waits half its round trip on average; "about" marks that guess.
 ---@param leg SPFLeg
 ---@return string
 function ns.LegTime(leg)
-	local text = ns.FormatCountdown(leg.arrive - leg.depart)
+	local text = ns.FormatCountdown(ns.LegSpan(leg))
 	if leg.wait and leg.wait > 0 then
 		local lead = leg.mode == "teleport" and L["ready in %s"]
 			or leg.estimated and SCHEDULED[leg.mode] and L["leaves in about %s"]
@@ -97,7 +106,7 @@ function ns.JourneyTime(legs, index)
 	local seconds = 0
 	for legIndex = index, #legs do
 		local leg = legs[legIndex]
-		seconds = seconds + Seconds(leg.arrive - leg.depart) + Seconds(leg.wait or 0)
+		seconds = seconds + Seconds(ns.LegSpan(leg)) + Seconds(leg.wait or 0)
 	end
 	return seconds * 1000
 end

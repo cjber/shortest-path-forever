@@ -58,8 +58,9 @@ Each feature has more detail in [docs/features.md](docs/features.md).
   arrival and departure; on board, it shows the next call.
 - **Arrival alerts.** A raid-warning banner, the ship's own bell (the horn for a zeppelin, the tram pulling in
   for the tram) and a flashing taskbar icon half a minute before your boat arrives, for anyone waiting AFK.
-- **Times from real rides, shared.** One ride, yours or another player's, times a boat for hours. Sightings pass
-  quietly over guild, party and yell at the docks; turn sharing off in the settings.
+- **Times from real rides, shared.** One ride, yours or another player's, times a boat for hours, and a flight is
+  timed from take-off to landing so the next journey plans it from your own ride. Sightings pass quietly over guild,
+  party and yell at the docks; turn sharing off in the settings.
 
 ![A journey from Auberdine through Menethil and Theramore to Silithus](docs/screenshots/kalimdor.png)
 
@@ -123,6 +124,7 @@ Developed with AI assistance. Changes are reviewed and checked with automated te
 
 ```sh
 tools/typecheck.sh                  # strict LuaLS + multi-value lint (requires LuaLS 3.19.1, git, Python 3)
+python3 tools/refresh_pins.py        # pin the newest client build and flight times (a daily workflow does this)
 python3 tools/gen_routes.py          # regenerate Data/Routes.lua for the pinned build
 python3 tools/gen_transit.py         # regenerate Data/Transports.lua, Data/Taxi.lua, Data/Portals.lua and Data/Teleports.lua
 tools/draw_zeppelin.py               # redraw media/zeppelin.tga (the game has no zeppelin map icon)

@@ -1,3 +1,34 @@
+# Route entry points and the planner graph - 2026-10-04
+
+A route or a travel time comes from four places. All figures are `luajit -joff`, simulated 60 Hz frames, the
+shipped data and this host; the search slice budget is 3 ms.
+
+| Entry point | Driven by | One frame | Measured |
+| --- | --- | --- | ---: |
+| `Search.Start` (`StartJourney`, `API.NavigateRoute`) | the click or map event | no: one preview plan in the click frame, then `FindMany`/`Find` slices | click 1.2 ms, then 3.0 ms a frame |
+| `Search.Replan` (every 5 s, or a ride, flight or run-speed change) | `Journey.Update` `OnUpdate` | the plan is synchronous, the endpoint batches are sliced | plan 0.47 ms warm |
+| Itinerary later hops | `Path.after(Step)` on a free frame | one hop plan or one walk search a frame | hop plan 0.40 ms cold |
+| `API.Estimate` / `API.EstimateDetail` | an external addon's call | yes, the answer is a number | 2.35 ms cold, 0.016 ms warm |
+| `ns.EstimateLegs` | `Itinerary.PlanHop` | yes, one hop a frame | 0.40 ms cold, 0.46 ms warm |
+| `UI/Map` and tracker refresh | map events and the 1 s and 0.5 s timers | drawing only | full refresh 0.018 ms mean |
+
+A warm route's search frames are 3.0 to 3.2 ms, at the shared 3 ms budget. The only frame over the 5 ms bar is the
+walking map's own load: `C_AddOns.LoadAddOn` parses the 11 MB `Nav1` Lua in one atomic client call, 12 to 23 ms in
+the harness. It is why the first route after login can hitch. The addon gives the load a frame of its own (it
+yields before and after `Data`), but the client's parse cannot be sliced from Lua. Splitting the packed maps into
+smaller load-on-demand addons would need the client install the baker reads, so it is not done here.
+
+The planner's graph is built once per context and reused. A run-speed change only scales a walking edge's
+duration, so `Planner.Plan` rewrites the cached walking edges instead of rebuilding the graph whose structure did
+not depend on the speed. `tests/planner_speed_bench.lua <baseline>` measures the first plan after a speed change
+against a warm same-speed plan; `tests/planner_speed_spec.lua` checks the reuse and that the plan matches a
+rebuilt one.
+
+| Route | Rebuild | Rescale | Warm |
+| --- | ---: | ---: | ---: |
+| Auberdine -> Gadgetzan | 0.985 ms | 0.568 ms | 0.486 ms |
+| Auberdine -> Eastern Plaguelands | 0.983 ms | 0.543 ms | 0.584 ms |
+
 # Later hops of a route — 2026-09-23
 
 `Itinerary.lua` draws each later hop of a `NavigateRoute` journey as planned: the estimate's planner (no endpoint

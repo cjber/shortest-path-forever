@@ -187,6 +187,14 @@ ns.Init(function()
 		end
 	)
 	Checkbox(
+		"tomtom",
+		L["Let guides set TomTom waypoints"],
+		L["While TomTom is not installed, a guide that sets a TomTom waypoint starts a journey here instead."],
+		function()
+			ns.RefreshTomTom()
+		end
+	)
+	Checkbox(
 		"teleports",
 		L["Use hearth and teleports"],
 		L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."]

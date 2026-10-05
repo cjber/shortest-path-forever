@@ -102,6 +102,37 @@ local function Near(node, reach)
 	return x and map == node.map and (x - node.x) ^ 2 + (y - node.y) ^ 2 <= (reach or ARRIVAL) ^ 2
 end
 
+-- Whether the player stands in a held stop's objective area. A stop that names the one quest it stands for is
+-- answered by the client's own blob state, which is what its minimap draws and the player sees; a client that
+-- withholds or does not have it, and a stop the guide only has circles for, falls back to the shapes and radius.
+---@param point SPFPoint?
+---@return boolean
+function ns.StopInside(point)
+	if not (point and point.hold) then
+		return false
+	end
+	local insideQuestBlob = C_Minimap and C_Minimap.IsInsideQuestBlob
+	if point.questID and insideQuestBlob then
+		local inside = insideQuestBlob(point.questID)
+		if canaccessvalue(inside) then
+			return inside == true
+		end
+	end
+	local x, y, _, map = ns.JourneyPosition()
+	if not (x and map == point.map) then
+		return false
+	end
+	if point.shapes then
+		for _, shape in ipairs(point.shapes) do
+			if shape.map == map and (x - shape.x) ^ 2 + (y - shape.y) ^ 2 <= shape.radius ^ 2 then
+				return true
+			end
+		end
+		return false
+	end
+	return point.radius ~= nil and (x - point.x) ^ 2 + (y - point.y) ^ 2 <= point.radius ^ 2
+end
+
 ---@param reason "arrived"|"cleared"
 local function EndJourney(reason)
 	Search.Reset()
@@ -136,7 +167,7 @@ local function UpdateProgress()
 	if not (goal and result) or nextPoint or CorpseRun() then
 		return
 	end
-	if goal.hold and goal.radius and Near(goal, goal.radius) then
+	if goal.hold and ns.StopInside(goal) then
 		Guide.Pause()
 		return
 	end
@@ -343,7 +374,7 @@ local function Update(self, elapsed)
 		self.progressElapsed = self.progressElapsed + elapsed
 		if self.progressElapsed >= 0.1 then
 			self.progressElapsed = 0
-			if goal and goal.hold and goal.radius and Near(goal, goal.radius) then
+			if goal and ns.StopInside(goal) then
 				Guide.Pause()
 			end
 		end
@@ -485,7 +516,7 @@ ns.Init(function()
 	driver:SetScript("OnEvent", function(self, event, questID)
 		if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
 			Guide.ClearOrphan()
-		elseif event == "PLAYER_REGEN_DISABLED" and not (goal and goal.hold and goal.radius) then
+		elseif event == "PLAYER_REGEN_DISABLED" and not (goal and goal.hold and (goal.radius or goal.shapes)) then
 			self:Hide()
 		elseif event == "PLAYER_REGEN_ENABLED" and goal then
 			self:Show()
