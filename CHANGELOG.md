@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **The performance report includes every loaded walking-map part.** `/path perf` counts the small terrain addons as well as their base maps, so its memory total covers the data used by a journey.
+
 - **Starting a journey loads only the ground it needs.** Walking maps load in small parts as the search reaches them. A fixed walk on another continent keeps its measured cost and waits to draw its detailed line until you arrive there.
 
 ## [1.8.2] - 2026-10-03

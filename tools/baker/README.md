@@ -3,6 +3,18 @@
 Bakes the walkable ground of a WoW map from a local client install and packages it as the load-on-demand addon
 `ShortestPathForever_Nav<map>`, whose TOC-ordered Lua files set `ShortestPathForeverPathData[map]` for `PathGrid.lua`.
 
+## Extraction source availability
+
+Fresh extraction requires Mappster revision `d93fd3b347d8c63663cff536955e3cae97fa28a6`.
+Its pinned upstream returns 404, and no matching public repository, revision archive or local source copy has
+been recovered. The two public repositories named Mappster are unrelated applications. Keep this pin until an
+identical licensed source tree is recovered and `mappster.patch` applies cleanly; a similarly named repository
+cannot establish compatible client formats or output.
+
+Python generation and packing still work with existing terrain inputs. Historical inputs without `source.json`
+remain suitable for comparing generator output, but cannot prove extraction completeness. See
+[the benchmark report](../../docs/tooling-benchmarks.md) and [issue #103](https://github.com/cjber/shortest-path-forever/issues/103).
+
 ## Usage
 
 ```sh
