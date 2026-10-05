@@ -14,8 +14,7 @@ end
 
 local category
 
--- The settings category is the addon's one options surface: the slash command, the compartment entry and the
--- route button's right-click all open it.
+-- The settings category is the addon's one options surface: the slash command and the compartment entry open it.
 function ns.OpenSettings()
 	Settings.OpenToCategory(category:GetID())
 end
@@ -258,12 +257,6 @@ ns.Init(function()
 			nil,
 			L["Shows the compass so you can drag it anywhere on screen. Right-click it to put it back."]
 		)
-	)
-	Checkbox(
-		"routeButton",
-		L["Show a minimap route button"],
-		L["Starts and stops the route in one click. It turns gold while a route is on; right-click opens these settings."],
-		ns.RefreshRouteButton
 	)
 	Checkbox(
 		"whatsNew",

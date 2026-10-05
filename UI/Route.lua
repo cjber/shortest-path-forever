@@ -3,6 +3,7 @@ local ns = select(2, ...)
 
 local LINE_TEMPLATE = "ShortestPathForeverRoutePinTemplate"
 local GOAL_TEMPLATE = "ShortestPathForeverGoalPinTemplate"
+local AREA_TEMPLATE = "ShortestPathForeverAreaPinTemplate"
 -- The route's painters: the world map's pin and the minimap's frame copy Strokes.lua's strokes onto pooled lines,
 -- each a core over a dark outline. RouteTransports.lua's pin paints the same way.
 local Strokes = ns.Strokes
@@ -24,9 +25,10 @@ local COLORS = {
 	passage = CreateColor(0.85, 0.35, 1),
 	teleport = CreateColor(0.85, 0.35, 1),
 }
--- The objective area the player stands in wears the guide's own yellow, not a travel mode's colour.
-local AREA_COLOR = CreateColor(1, 0.82, 0.25)
 local provider, goal, paths, worldPaths, stops, stopIndex
+-- Whether this client has the blob widget QuestBlob.lua's pin is; nil until the first area is wanted.
+---@type boolean?
+local areaSupported
 -- The journey's strokes are painted as soon as they are made, so the map pin and the minimap share one buffer.
 local journeyStrokes = Strokes.New()
 ---@class SPFMinimapRoute : Frame
@@ -97,7 +99,6 @@ local mapView = {
 	small = false,
 	current = 0,
 	colors = COLORS,
-	areaColor = AREA_COLOR,
 }
 ---@type SPFMinimapView
 local minimapView = { width = 0, height = 0, scale = 1, goalRadius = 0, colors = COLORS }
@@ -242,8 +243,6 @@ function ShortestPathForeverRoutePinMixin:Draw()
 	mapView.width, mapView.height, mapView.scale = self:GetWidth(), self:GetHeight(), self:GetEffectiveScale()
 	mapView.zoom, mapView.small = map:GetCanvasScale(), info and info.mapType <= Enum.UIMapType.Continent
 	mapView.marks = journey and provider and provider.stopMarks or nil
-	-- The objective area the player stands in is drawn in place of the journey; the pin carries it between draws.
-	mapView.area = self.area
 	-- The journey's own paths come first; the later hops Itinerary.lua adds after them recede.
 	mapView.current = journey and #paths or math.huge
 	local strokes = self.strokes or journeyStrokes
@@ -259,17 +258,16 @@ function ShortestPathForeverRoutePinMixin:OnReleased()
 		StopPulse(self.strokeLayer)
 	end
 	-- Released journey pins must not keep the last route alive through the client's pin pool.
-	self.paths, self.area = nil, nil
+	self.paths = nil
 	MapCanvasPinMixin.OnReleased(self)
 end
 
 ---@param geometry SPFDrawPath[]
----@param area? SPFAreaShape[]
-function ShortestPathForeverRoutePinMixin:OnAcquired(geometry, area)
+function ShortestPathForeverRoutePinMixin:OnAcquired(geometry)
 	if not self.strokes and not self.strokeLayer then
 		StrokeLayer(self)
 	end
-	local same = self.strokes and self.paths and #self.paths == #geometry and self.area == area
+	local same = self.strokes and self.paths and #self.paths == #geometry
 	if same then
 		for i, path in ipairs(geometry) do
 			if self.paths[i] ~= path then
@@ -278,7 +276,7 @@ function ShortestPathForeverRoutePinMixin:OnAcquired(geometry, area)
 			end
 		end
 	end
-	self.paths, self.area = geometry, area
+	self.paths = geometry
 	local map, canvas = self:GetMap(), self:GetMap():GetCanvas()
 	local width, height, scale = canvas:GetWidth(), canvas:GetHeight(), self:GetEffectiveScale()
 	if
@@ -304,13 +302,43 @@ function ShortestPathForeverRoutePinMixin:OnCanvasSizeChanged()
 	self:Draw()
 end
 
+-- Standing in the area of a quest the held stop names, on a map that shows it: the game's own area is drawn there
+-- in the stop's place. The client's own conditions hold (QuestBlobPinMixin:Refresh): quest objectives are shown,
+-- and the map is a zone or smaller (MapUtil.ShouldMapTypeShowQuests). A client without the widget draws none.
+---@param map SPFMapCanvas
+---@return boolean
+local function DrawArea(map)
+	local mapID = map:GetMapID()
+	if areaSupported == false or goal.corpse or not ns.StopInQuestArea(goal) or not GetCVarBool("questPOI") then
+		return false
+	end
+	local x, y = MapPosition(goal, mapID)
+	local info = C_Map.GetMapInfo(mapID)
+	if not (x and x >= 0 and x <= 1 and y >= 0 and y <= 1 and info and info.mapType > Enum.UIMapType.Continent) then
+		return false
+	end
+	if areaSupported == nil then
+		areaSupported = C_XMLUtil.GetTemplateInfo(AREA_TEMPLATE) ~= nil
+		if not areaSupported then
+			return false
+		end
+	end
+	local pin = map:AcquirePin(AREA_TEMPLATE, goal.questIDs) --[[@as SPFAreaPin]]
+	if not pin.blob then
+		map:RemoveAllPinsByTemplate(AREA_TEMPLATE)
+		areaSupported = false
+	end
+	return areaSupported
+end
+
 ---@class SPFRouteProvider : SPFMapProvider
 local ProviderMixin = CreateFromMixins(MapCanvasDataProviderMixin)
 
 function ProviderMixin:RemoveAllData()
 	self:GetMap():RemoveAllPinsByTemplate(LINE_TEMPLATE)
 	self:GetMap():RemoveAllPinsByTemplate(GOAL_TEMPLATE)
-	self.stopsKey, self.stopMarks = nil, nil
+	self:GetMap():RemoveAllPinsByTemplate(AREA_TEMPLATE)
+	self.stopsKey, self.stopMarks, self.area = nil, nil, nil
 end
 
 function ProviderMixin:RefreshAllData()
@@ -324,11 +352,9 @@ function ProviderMixin:RefreshAllData()
 	if not (map:GetMapID() and map:IsVisible() and goal and (ns.db.journey or goal.corpse)) then
 		return
 	end
-	-- Standing in the held stop's objective area: its outline replaces the stop and the line to it, on the map that
-	-- shows the area. Another zone the player browses keeps its own stops.
-	local mapID = map:GetMapID()
-	if not goal.corpse and MapPosition(goal, mapID) and ns.StopInside(goal) and goal.shapes then
-		map:AcquirePin(LINE_TEMPLATE, {}, goal.shapes)
+	-- The area replaces the stop and the line to it. Another zone the player browses keeps its own stops.
+	self.area = DrawArea(map)
+	if self.area then
 		return
 	end
 	-- The stops go first: the line leaves a gap at each.
@@ -410,14 +436,8 @@ function ProviderMixin:OnCanvasScaleChanged()
 		ns.QueueMapRefresh()
 		return
 	end
-	-- The area pin redraws itself from the route pin's own canvas-size hook; there are no stops to regroup.
-	if
-		goal
-		and not goal.corpse
-		and MapPosition(goal, self:GetMap():GetMapID())
-		and ns.StopInside(goal)
-		and goal.shapes
-	then
+	-- The area pin redraws itself; there are no stops to regroup.
+	if self.area then
 		return
 	end
 	self:RefreshStops()
@@ -486,10 +506,10 @@ local function DrawMinimap(self)
 	local view = minimapView
 	view.x, view.y, view.map, view.radius, view.facing = x, y, map, radius, facing
 	view.width, view.height, view.scale, view.square = width, height, scale, square
-	-- Standing in the held stop's objective area: the game's own blob wears the guide's gold there, and the stop's
-	-- ring and the line to it step aside. The client draws the area, so no outline of ours is drawn on the minimap.
-	local area = goal and not goal.corpse and (goal.shapes ~= nil or goal.questID ~= nil) and ns.StopInside(goal)
-	ns.SetAreaBlob(area == true)
+	-- Standing in the area of a quest the held stop names: the game's own blob wears the guide's gold there, and the
+	-- stop's ring and the line to it step aside. A stop with no quest has no blob, so it keeps its ring and line.
+	local area = goal ~= nil and not goal.corpse and ns.StopInQuestArea(goal)
+	ns.SetAreaBlob(area)
 	-- A goal with a known mark wears the wider ring (ns.SetJourneyRoute).
 	view.goal, view.goalRadius = not area and goal or nil, (goal and goal.look and MINIMAP_RING or MINIMAP_GOAL) / 2
 	local gx, gy = Strokes.Minimap(journeyStrokes, area and {} or paths, view)
@@ -601,6 +621,9 @@ ns.Init(function()
 		if goal then
 			self.revision = nil
 			DrawMinimap(self)
+			if WorldMapFrame:IsShown() then
+				provider:RefreshAllData()
+			end
 		end
 	end)
 	minimap:Hide()

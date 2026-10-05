@@ -50,6 +50,10 @@ local function Point(map, x, y)
 	return ns.WorldPoint(map, x, y)
 end
 
+local function QuestID(questID)
+	return Number(questID) and questID % 1 == 0 and questID >= 1
+end
+
 -- An objective area list: one or more places on a map, each with a yard radius. Every entry must be one this
 -- client can place.
 ---@param shapes table
@@ -69,6 +73,22 @@ local function Shapes(shapes)
 			or not Number(shape.radius)
 			or shape.radius < 0
 		then
+			return false
+		end
+	end
+	return true
+end
+
+-- The quests a held area stands for: one or more quest IDs, in order.
+---@param quests table
+---@return boolean
+local function Quests(quests)
+	local count = #quests
+	if count < 1 then
+		return false
+	end
+	for key, questID in pairs(quests) do
+		if not Number(key) or key % 1 ~= 0 or key < 1 or key > count or not QuestID(questID) then
 			return false
 		end
 	end
@@ -296,7 +316,8 @@ function API.NavigateRoute(owner, stops)
 			or (stop.tooltip ~= nil and not (canaccessvalue(stop.tooltip) and type(stop.tooltip) == "string"))
 			or (stop.hold ~= nil and not (canaccessvalue(stop.hold) and type(stop.hold) == "boolean"))
 			or (stop.radius ~= nil and (not Number(stop.radius) or stop.radius < 0))
-			or (stop.questID ~= nil and (not Number(stop.questID) or stop.questID % 1 ~= 0 or stop.questID < 1))
+			or (stop.questID ~= nil and not QuestID(stop.questID))
+			or (stop.questIDs ~= nil and (type(stop.questIDs) ~= "table" or not Quests(stop.questIDs)))
 			or (stop.shapes ~= nil and (type(stop.shapes) ~= "table" or not Shapes(stop.shapes)))
 		then
 			return false
@@ -312,8 +333,16 @@ function API.NavigateRoute(owner, stops)
 		-- that state changes; ordinary API stops retain automatic arrival.
 		point.hold = stop.hold == true
 		point.radius = stop.radius
-		-- The single quest whose client blob the stop stands for; StopInside prefers the client's own answer for it.
 		point.questID = stop.questID
+		-- The quests whose client blobs the stop stands for, copied; StopInside prefers the client's own answer for them.
+		if stop.questID or stop.questIDs then
+			point.questIDs = { stop.questID }
+			for _, questID in ipairs(stop.questIDs or {}) do
+				if questID ~= stop.questID then
+					point.questIDs[#point.questIDs + 1] = questID
+				end
+			end
+		end
 		-- The areas are copied to world points too: the caller cannot redirect a journey they no longer own.
 		if stop.shapes then
 			point.shapes = {}

@@ -25,10 +25,11 @@ The detail behind each feature in the [README](../README.md).
 - **Journeys from your guides.** While TomTom is not installed, the addon answers its waypoint calls, so Questie,
   Zygor and other guides that set a waypoint plan a journey here instead, titled with the guide's own text. Every
   waypoint belongs to one owner, so a fresh one replaces the journey rather than queueing; *Let guides set TomTom
-  waypoints* off in `/path` removes the shim and clears the journey it started. A held stop can name the quest areas
-  it stands for: standing in one, the client draws its own quest blob on the minimap in the bonus objective's gold,
-  the world map outlines the area in the route's yellow, and the stop's pin and line step aside until you leave.
-  Inside is the client's own inside-area state for the quest the stop names, and the named circles otherwise.
+  waypoints* off in `/path` removes the shim and clears the journey it started. A held stop can name the quests
+  whose area it stands for: standing in one, the client draws its own quest blob in the bonus objective's gold on
+  the minimap and on the world map, and the stop's pin and line step aside until you leave. Inside is the client's
+  own inside-area state for the quests the stop names. A stop that names circles and no quest uses the circles to
+  tell when you have arrived, and keeps its pin and line.
 
 - **Finding the fastest way.** While a new journey is checked, the map shows only its destination pin and the
   tracker the Group Finder spinner; the route, steps and totals then appear together. A search that takes more than
@@ -52,12 +53,8 @@ The detail behind each feature in the [README](../README.md).
   compass* in `/path` turns it off.
   ![The compass strip with the next turns and destination](screenshots/compass.png)
 
-- **A route button on the minimap.** A round button in the game's own minimap button art starts and stops the
-  route in one click, and turns gold while a route is on. Right-click opens `/path`; *Show a minimap route
-  button* turns it off.
-
-- **Find nearby services.** Middle-click the route button or use `/spfnear` to open an addon-owned menu on the world
-  map. It lists class and profession trainers, repairs, reagents, vendors, innkeepers, banks, auction houses, flight
+- **Find nearby services.** Open the minimap's tracking menu or the world map's and pick *Nearby services*, or use
+  `/spfnear`. It lists class and profession trainers, repairs, reagents, vendors, innkeepers, banks, auction houses, flight
   masters and stable masters. Pick a trainer or vendor specialty to route to the nearest friendly location in your
   installed QuestieDB.
 

@@ -20,7 +20,7 @@ end
 _G.InCombatLockdown = function()
 	return combat
 end
-local cvars = { rotateMinimap = "0" }
+local cvars = { rotateMinimap = "0", questPOI = "1" }
 local function noop() end
 local mt = {
 	__index = function(t, k)
@@ -448,6 +448,20 @@ _G.C_DeathInfo = {
 _G.GetCVar = function(k)
 	return cvars[k]
 end
+_G.GetCVarBool = function(k)
+	return cvars[k] == "1"
+end
+-- Whether this client has the QuestPOIFrame widget the world map's area pin is; a check body may turn it off before
+-- the first area is wanted.
+local blobWidget = true
+_G.C_XMLUtil = {
+	GetTemplateInfo = function(template)
+		if template == "ShortestPathForeverAreaPinTemplate" and not blobWidget then
+			return nil
+		end
+		return { type = "Frame" }
+	end,
+}
 _G.Minimap = stubframe()
 Minimap:SetSize(200, 200)
 -- The minimap's own quest blob textures, which the addon swaps while the player stands in an objective area.

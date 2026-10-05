@@ -26,17 +26,17 @@ pixels never enter product media.
 | `darkshore.png` | A measured walk south from Auberdine to the Grove of the Ancients |
 | `docks.png` | Auberdine's clustered piers; arrivals/departures and destination glows |
 | `stops.png` | A four-stop API route through Thelsamar (three places): the current stop lit like the tracked quest and the later ones plain, action badges on the map's numbered quest buttons |
-| `area.png` | Elwynn Forest, standing in a held objective area: the world map outlines it in the route's own yellow, with no stop pin or line, cropped to the area |
+| `area.png` | Westfall, standing in a quest's area: the world map draws the game's own area for the quest in gold, with no stop pin or line, cropped to the area |
 | `tracker.png` | Capture 21's five Auberdine → Silithus steps, with the current totals header |
 | `detached.png` | The Journey tracker detached from the quest tracker, under its draggable "Forever tracker" heading |
-| `minimap.png` | Auberdine's piers as minimap pins, the last dotted stretch to the south pier, native Guide waypoint, the route button gold at the lower right |
+| `minimap.png` | Auberdine's piers as minimap pins, the last dotted stretch to the south pier, native Guide waypoint |
 | `compass.png` | The compass: the game's own ticks and gold letters fading out at each end, its waypoint pin and the yards under it, no panel (on by default) |
-| `services.png` | The addon-owned nearby-services menu opened over the world map, with trainer and vendor specialty categories |
+| `services.png` | The Nearby services submenu in the world map's tracking menu, with trainer and vendor specialty categories |
 | `demo.gif` | Eight-second montage: route pulse/settle, tracker countdown and gliding compass; under 0.5 MB |
 
-`tools/screenshots_services.py` draws the services scene and the route button,
+`tools/screenshots_services.py` draws the services scene,
 `tools/screenshots_tracker.py` the detached tracker's heading, and `tools/screenshots_area.py`
-the objective-area outline.
+the quest's area.
 
 The static images render at two pixels per UI unit; the GIF renders at its final
 760×555 size to retain the route's physical pixel widths. A shared palette reserves
@@ -55,9 +55,13 @@ remains 8,000 ms. The animation uses fixed time steps, never the wall clock.
 - `UI/StopPin.lua` gives the current stop the tracked quest's `UI-QuestPoi-QuestNumber-SuperTracked` button and the
   grid's dark numeral, and every later stop the plain `UI-QuestPoi-QuestNumber` button and its yellow numeral, at the
   0.9 alpha later lines share. Each button keeps the caller's action badge over its lower right.
-- `area.png`'s centre is a real `QuestPOIBlob` on Elwynn Forest (`QuestPOIPoint` -8808, 328), projected through
-  `UiMapAssignment`. The area's radius comes from the addon that named it, so 140 yards is a scene fixture; the
-  addon draws the ellipse itself in `Strokes.lua`'s area colour, and the client's own minimap blob is not mocked.
+- `area.png` draws the client's own areas for quest 92744's objective 0 on Westfall: its three `QuestPOIBlob`
+  rows and their `QuestPOIPoint` corners, projected through `UiMapAssignment`, with the player in blob 575423.
+  The border is `Interface\Minimap\UI-BonusObjectiveBlob-Outside`, the texture `UI/QuestBlob.lua` gives the
+  blob widget, at the stock border alpha of 192; that set's fill texture is clear, so the area is not filled.
+  The widget's drawing is engine-side, so three things are assumptions: a closed Catmull-Rom curve through
+  the corners, a border as wide as the texture is tall (16 units), and the border laid inward from the edge with
+  its brightest row on the edge. The client's own minimap blob is not mocked.
 - `UI/Map.lua` / `UI/Map.xml` supply 20-unit ferry pins, transitive dock clustering,
   18-unit glow outsets, hover highlighting and tooltip wording. Default map layers
   include zeppelins, lifts, trams, portals and undiscovered Alliance flight points.
@@ -76,8 +80,7 @@ remains 8,000 ms. The animation uses fixed time steps, never the wall clock.
   maps the strip's left edge to the top; clockwise rotation joins all four corners.
   Shared `tooltip_backdrop` implements that mapping. World-map frames also now
   apply Camelot's metal-corner offsets. The compass (`UI/Compass.lua`) draws no panel.
-  `UI/RouteButton.lua`'s plate is the client's own `ui-hud-minimap-button` atlas (20 by 18).
-- `UI/Tracker.lua`, `Journey/JourneyGuide.lua`, `UI/Arrow.lua`, `UI/Compass.lua` and `UI/RouteButton.lua`
+- `UI/Tracker.lua`, `Journey/JourneyGuide.lua`, `UI/Arrow.lua` and `UI/Compass.lua`
   supply the text, Guide's 25-yard bend threshold, marker proportions, stock fonts,
   the ribbon's fade ramp and its gold active state, and heading easing.
   Blizzard's ObjectiveTracker templates, WorldMap frame, WaypointLocationDataProvider,

@@ -41,7 +41,6 @@ UI\TrackerHost.lua
 UI\Tracker.lua
 UI\Arrow.lua
 UI\Compass.lua
-UI\RouteButton.lua
 Nav\Nav.xml
 Routing\PathGrid.lua
 Routing\Path.lua
