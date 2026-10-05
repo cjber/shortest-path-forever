@@ -66,8 +66,9 @@ assert(not mini.Goal.hidden and mini.Goal.anchor[2] == mini and mini.Goal.anchor
 assert(math.abs(mini.Goal.anchor[5] - 30) < 1e-9, "three tenths of the way to the rim")
 assert(api.Cancel("Test"))
 
--- Standing in the held stop's objective area: no stop button and no line, an outline in the guide's yellow instead,
--- on the world map and the minimap (Adventure Guide holds an objective stop while the player works there).
+-- Standing in the held stop's objective area: no stop button, no line and no ring of ours. The world map keeps its
+-- drawn outline, and the game's own minimap blob wears the bonus objective's gold in place of its quest blue
+-- (Adventure Guide holds an objective stop while the player works there).
 posX, posY, posMap, facing = 0, 0, 1, 0
 assert(api.NavigateRoute("Test", {
  { map = 1414, x = 0.5, y = 0.5, title = "Area", kind = "objective", hold = true, radius = 10,
@@ -87,16 +88,53 @@ for i = 1, areaPin.used do
  assert(math.abs(line.color[3] - 0.25) < 1e-6, "the map's outline is the guide's yellow")
 end
 assert(mini.Goal.hidden, "the minimap's stop ring hides inside the area")
-assert(mini.used > 0, "the minimap draws the outline: " .. mini.used)
-for i = 1, mini.used do
- assert(mini.lines[i].textureColor, "the minimap's outline is solid, with no breadcrumbs")
-end
--- Stepping out restores the stop button and the line.
+assert(mini.used == 0, "the minimap draws no outline of ours: the game draws the area")
+assert(
+ Minimap.questBlobInside == "Interface\\Minimap\\UI-BonusObjectiveBlob-Inside"
+  and Minimap.questBlobOutside == "Interface\\Minimap\\UI-BonusObjectiveBlob-Outside"
+  and Minimap.questBlobRing == "Interface\\Minimap\\UI-BonusObjectiveBlob-MinimapRing",
+ "the game's own blob wears the bonus objective's gold inside the area"
+)
+-- Stepping out restores the stop button, the line and the stock blue blob.
 posX = 100
 for _, provider in ipairs(providers) do provider:RefreshAllData() end
 assert(#(active[goalTemplate] or {}) == 1, "the stop button is back outside the area")
 mini.scripts.OnUpdate(mini, 0.2)
 assert(not mini.Goal.hidden, "and the minimap's stop ring is back")
+assert(
+ Minimap.questBlobOutside == "Interface\\Minimap\\UI-QuestBlobMinimap-Outside",
+ "the stock quest blue comes back outside the area"
+)
+-- Clearing the journey while still inside hands the blue back too.
+posX = 0
+for _, provider in ipairs(providers) do provider:RefreshAllData() end
+mini.scripts.OnUpdate(mini, 0.2)
+assert(
+ Minimap.questBlobOutside == "Interface\\Minimap\\UI-BonusObjectiveBlob-Outside",
+ "back inside, the blob is gold again"
+)
+assert(api.Cancel("Test"))
+assert(
+ Minimap.questBlobOutside == "Interface\\Minimap\\UI-QuestBlobMinimap-Outside",
+ "clearing the journey leaves the minimap's quest blue"
+)
+
+-- The client's own inside-area state is preferred when the stop names the one quest it stands for: it holds from
+-- outside the guide's circle, and lets go from inside it.
+insideQuestBlob[7] = true
+posX, posY = 100, 0
+assert(api.NavigateRoute("Test", {
+ { map = 1414, x = 0.5, y = 0.5, title = "Area", kind = "objective", hold = true, questID = 7,
+  shapes = { { map = 1414, x = 0.5, y = 0.5, radius = 60 } } },
+}))
+settle()
+for _, provider in ipairs(providers) do provider:RefreshAllData() end
+assert(#(active[goalTemplate] or {}) == 0, "the client's inside answer holds the route outside the circle")
+insideQuestBlob[7] = false
+posX, posY = 0, 0
+for _, provider in ipairs(providers) do provider:RefreshAllData() end
+assert(#(active[goalTemplate] or {}) == 1, "the client's outside answer releases it inside the circle")
+insideQuestBlob[7] = nil
 assert(api.Cancel("Test"))
 
 -- Boat and zeppelin routes are painted hidden and shown by route while a dock is hovered, outlines at half strength.

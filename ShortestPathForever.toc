@@ -53,6 +53,7 @@ Journey\Corpse.lua
 UI\StopPin.lua
 UI\FlightLines.lua
 UI\Strokes.lua
+UI\QuestBlob.lua
 UI\Route.lua
 UI\RouteTransports.lua
 UI\Alert.lua

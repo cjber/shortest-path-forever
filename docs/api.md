@@ -21,9 +21,12 @@ Addons can use `ShortestPathForever.API` (`version = 1`) with uiMapIDs and norma
   than advancing on arrival. For held objective areas, optional `radius` (yards, finite and non-negative)
   hides walking directions inside the area while preserving ownership and the current stop. Directions
   resume outside it. Optional `shapes` names the areas themselves: 1 or more `{map, x, y, radius}` circles, each
-  on the map it names with its `radius` in yards. While the player stands in one, Shortest Path draws that area's
-  outline in the route's own yellow in place of the stop pin and its line, on the world map and the minimap;
-  leaving the area restores them.
+  on the map it names with its `radius` in yards. Optional `questID` names the one quest a held area stands for.
+  While the player stands in an area, Shortest Path hides the stop pin and its line: the world map draws the
+  circles' outline in the route's own yellow, and the minimap recolours the game's own quest blob with the stock
+  bonus objective textures, so the minimap shows the client's real area instead of a circle of ours. Leaving the
+  area, the stop changing and the journey ending all restore the stock map and minimap. Inside is the client's own
+  inside-area state for `questID` when it is given, and the circles otherwise.
 - `CurrentStop(owner)` returns the current 1-based stop or `nil`.
 - `Cancel(owner)` returns `true` only when it clears that owner's whole route.
 - `Active()` says whether any journey is guiding, yours or another addon's.

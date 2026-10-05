@@ -102,13 +102,24 @@ local function Near(node, reach)
 	return x and map == node.map and (x - node.x) ^ 2 + (y - node.y) ^ 2 <= (reach or ARRIVAL) ^ 2
 end
 
--- Whether the player stands in a held stop's objective area: inside one of its shapes, or within its own radius
--- when it has none. The stop and its line step aside there, and its areas are outlined instead.
+-- Whether the player stands in a held stop's objective area. A stop that names the one quest it stands for is
+-- answered by the client's own blob state, which is what its minimap draws and the player sees; a client that
+-- withholds or does not have it, and a stop the guide only has circles for, falls back to the shapes and radius.
 ---@param point SPFPoint?
 ---@return boolean
 function ns.StopInside(point)
+	if not (point and point.hold) then
+		return false
+	end
+	local insideQuestBlob = C_Minimap and C_Minimap.IsInsideQuestBlob
+	if point.questID and insideQuestBlob then
+		local inside = insideQuestBlob(point.questID)
+		if canaccessvalue(inside) then
+			return inside == true
+		end
+	end
 	local x, y, _, map = ns.JourneyPosition()
-	if not (point and point.hold and x and map == point.map) then
+	if not (x and map == point.map) then
 		return false
 	end
 	if point.shapes then

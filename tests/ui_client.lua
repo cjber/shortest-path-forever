@@ -447,9 +447,20 @@ _G.GetCVar = function(k)
 end
 _G.Minimap = stubframe()
 Minimap:SetSize(200, 200)
+-- The minimap's own quest blob textures, which the addon swaps while the player stands in an objective area.
+for _, key in ipairs({ "Inside", "Outside", "Ring" }) do
+	rawset(Minimap, "SetQuestBlob" .. key .. "Texture", function(self, texture)
+		self["questBlob" .. key] = texture
+	end)
+end
+-- The client's own answer for each quest, which the check bodies set directly.
+local insideQuestBlob = {}
 _G.C_Minimap = {
 	GetViewRadius = function()
 		return 200
+	end,
+	IsInsideQuestBlob = function(questID)
+		return insideQuestBlob[questID] == true
 	end,
 }
 _G.UnitName = function()
