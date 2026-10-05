@@ -9,11 +9,17 @@ import math
 import re
 import sys
 import urllib.error
-import urllib.request
 from collections import defaultdict
 from itertools import pairwise
 
 from gen_routes import BUILD, CACHE, ROOT, STOP, db2, download
+
+try:
+    from tools.forever_tools.fsio import publish
+    from tools.forever_tools.wago import fetch
+except ModuleNotFoundError:
+    from forever_tools.fsio import publish
+    from forever_tools.wago import fetch
 
 DB_REV = "22b51464f1625f6ef6275771de1f5466c6f5d19e"
 DB_URL = f"https://github.com/cmangos/classic-db/raw/{DB_REV}/Full_DB/ClassicDB_1_12_1_z2815.sql.gz"
@@ -45,17 +51,15 @@ PORTAL_NAMES = {
 
 def classicdb(refresh=False, offline=False):
     path = CACHE / f"classicdb-{DB_REV[:8]}.sql.gz"
-    if refresh or not path.exists():
-        if offline:
-            raise ValueError(f"Missing cached source: {path}")
-        request = urllib.request.Request(DB_URL, headers={"User-Agent": "ShortestPathForever/1.0"})
-        with urllib.request.urlopen(request, timeout=60) as response:
-            data = response.read()
-        gzip.decompress(data)  # Do not cache an HTTP error page.
-        CACHE.mkdir(parents=True, exist_ok=True)
-        temporary = path.with_suffix(".tmp")
-        temporary.write_bytes(data)
-        temporary.replace(path)
+    fetch(
+        DB_URL,
+        path,
+        user_agent="ShortestPathForever/1.0",
+        refresh=refresh,
+        offline=offline,
+        timeout=60,
+        validate=gzip.decompress,
+    )
     spawns, teleports, positions = defaultdict(list), {}, {}
     # These three tables have one INSERT per line; quoted SQL strings may contain commas and parentheses.
     tuples = re.compile(r"\(((?:'(?:\\.|[^'\\])*'|[^()'])*)\)")
@@ -567,13 +571,15 @@ def main():
     for name, entry in personal:
         teleport_lines += [f"\t-- {name}", "\t" + render(entry, 1) + ","]
     teleport_lines += ["}", ""]
+    outputs = {}
     for name, lines in (
         ("Transports", transport_lines),
         ("Taxi", taxi_lines),
         ("Portals", portal_lines),
         ("Teleports", teleport_lines),
     ):
-        (ROOT / "Data" / f"{name}.lua").write_text("\n".join(lines), encoding="utf-8")
+        outputs[ROOT / "Data" / f"{name}.lua"] = "\n".join(lines)
+    publish(outputs)
     print(
         f"Transports: {len(routes)} routes, {len(docks)} docks; Taxi: {len(nodes)} nodes, {len(paths)} paths, "
         f"{covered / len(paths):.1%} measured; {len(islands)} landmasses; Portals: {len(passages)} directed entries; "

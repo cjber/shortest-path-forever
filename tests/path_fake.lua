@@ -19,6 +19,9 @@ return function()
 	function Path.HasData()
 		return fake.data
 	end
+	function Path.IsLoaded()
+		return fake.data
+	end
 	function Path.LowerBound(map, from, to)
 		return fake.bound and fake.bound(map, from, to) or 0
 	end

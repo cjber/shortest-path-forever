@@ -64,7 +64,8 @@ for m in $MAPS; do
 	name=${TITLE[$m]:-${MAP_NAME:?set MAP_NAME for map $m}}
 	addon=$OUT/addons/ShortestPathForever_Nav$m
 	mkdir -p "$addon"
-	NAV_MM=$OUT/mm$m NAV_JOBS=$JOBS python3 "$HERE/gen_nav.py" "$addon/Nav$m.lua" --map "$m" --name "$name"
+	NAV_MM=$OUT/mm$m NAV_JOBS=$JOBS python3 "$HERE/gen_nav.py" "$addon/Nav$m.lua" --map "$m" --name "$name" \
+		--require-complete --metrics "$OUT/nav$m.metrics.json"
 	cat >"$addon/ShortestPathForever_Nav$m.toc" <<TOC
 ## Interface: 16001
 ## Title: Shortest Path Forever - Walking map ($name)

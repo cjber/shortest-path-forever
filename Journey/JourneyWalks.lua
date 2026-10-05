@@ -76,6 +76,18 @@ local function FindWalk(planned, leg, key, water, done)
 	pathJobs[job] = true
 end
 
+---@param planned SPFPlan?
+---@return boolean
+function Walks.NeedsPrepare(planned)
+	local _, _, _, map = ns.JourneyPosition()
+	for _, leg in ipairs(planned and planned.legs or {}) do
+		if leg.walkDeferred and leg.from.map == map then
+			return true
+		end
+	end
+	return false
+end
+
 -- Gives each of a plan's walking legs its path: the measured one, or the best drawing there is while a search for
 -- it runs. drawn are the legs on show, whose paths stand in for the walks that replace them. done runs after each
 -- search lands, once its legs are updated.
@@ -84,12 +96,15 @@ end
 ---@param water boolean? whether walks may cross water
 ---@param done fun()
 function Walks.Prepare(planned, drawn, water, done)
-	if not planned or planned.prepared then
+	if not planned or (planned.prepared and not Walks.NeedsPrepare(planned)) then
 		return
 	end
+	local resume = planned.prepared
 	planned.prepared = true
+	local _, _, _, map = ns.JourneyPosition()
 	for _, leg in ipairs(planned.legs) do
-		if leg.mode == "walk" then
+		if leg.mode == "walk" and (not resume or leg.walkDeferred and leg.from.map == map) then
+			leg.walkDeferred = nil
 			local key = WalkKey(leg.from, leg.to)
 			local entry = walkCache[key]
 			leg.measured, leg.walkError, leg.walkCost = false, nil, leg.yards
@@ -100,6 +115,10 @@ function Walks.Prepare(planned, drawn, water, done)
 				if planned.preview and entry.cost then
 					leg.walkCost, leg.yards = entry.cost, entry.cost
 				end
+			elseif map and leg.from.map ~= map and not leg.estimated and not ns.Path.IsLoaded(leg.from.map) then
+				-- Exact costs already prove this leg; resume its drawing when the player reaches this continent.
+				leg.walkDeferred = true
+				leg.walkPoints, leg.walkDrawn = ns.Planner.WalkPoints(leg.from, leg.to), false
 			elseif leg.from.map == leg.to.map and ns.Path.HasData(leg.from.map) then
 				-- A replacement may itself still be pending while drawing an older result; preserve that too.
 				for _, previous in ipairs(drawn or {}) do

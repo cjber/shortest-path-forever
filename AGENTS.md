@@ -1,7 +1,7 @@
 # AGENTS.md
 
 Shortest Path Forever is a WoW: Forever addon (Interface 16001) that plans and guides journeys by foot,
-flight, boat, lift, tram and portal. The BigWigs packager ships it, with three load-on-demand walking-map
+flight, boat, lift, tram and portal. The BigWigs packager ships it, with load-on-demand walking-map
 addons, as one zip on a `v*` tag.
 
 ## Commands
@@ -19,8 +19,8 @@ python3 tools/changelog.py --check
 python3 .sift/gate.py --base origin/main && python3 .sift/agents.py check
 ```
 
-The same gate CI runs, plus the UI checks (`tests/ui.sh`), shellcheck and shfmt on `tools/`, actionlint and zizmor on the workflows, gitleaks on
-the history, and the pinned sift checks. Every version needs a `CHANGELOG.md` entry (prose, bold-lead bullets)
+CI runs the same gate, plus the UI checks (`tests/ui.sh`), shellcheck and shfmt on the shell scripts, actionlint and zizmor on the workflows,
+and gitleaks on the history. Every version needs a `CHANGELOG.md` entry (prose, bold-lead bullets)
 before its `v*` tag, since the release publishes it as the notes.
 
 ## Layout
@@ -78,8 +78,7 @@ before its `v*` tag, since the release publishes it as the notes.
 
 - WFA-3 (no minimap button): the route button is a minimap button by owner request, and it is an action, not a
   second options surface. Every option still lives in the settings page, which the slash command, the compartment
-  entry and the button's right-click open; the button starts and stops the route; middle-click opens the service finder. Owner decisions
-  2026-09-29 and 2026-09-30.
+  entry and the button's right-click open; the button starts and stops the route; middle-click opens the service finder.
 - WFA-28: `Data/Routes.lua` (boat and zeppelin routes, docks, periods): wago.tools `TaxiPathNode` for the pinned
   build, timed by the CMaNGOS mangos-classic transport model and stretched onto classic-db `transports.period`;
   QuestieDB's object `waypoints` field is empty in its Forever store and AtlasLoot has no travel data. Live
@@ -99,6 +98,12 @@ before its `v*` tag, since the release publishes it as the notes.
 - WFA-28: `Data/Walks.lua` and `ShortestPathForever_Nav*/` (walking costs and walking maps): baked by
   `tools/bake_walks.lua` and `tools/baker/` from a local client install's terrain; neither database holds
   terrain. A walk you are on is searched live on the walking map.
+
+## Shared tooling
+
+`tools/forever_tools/` vendors the Python tooling from cjber/skills, `wow-forever-addon/tooling`.
+`python3 tools/forever_tools/sync.py check` verifies it offline. Edit the producer and run
+`sync.py update --source <checkout>` to refresh it. `tools/data_report.py --base REV` reports keyed data changes.
 
 ## Secure UI regression checks
 
