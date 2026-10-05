@@ -25,6 +25,7 @@ Transport\Model.lua
 Routing\Planner.lua
 Core\Core.lua
 Transport\Timetable.lua
+Transport\TaxiTimes.lua
 Core\PlanContext.lua
 UI\Nearby.lua
 Transport\Observer.lua
@@ -32,6 +33,7 @@ Transport\Sync.lua
 UI\Map.xml
 Transport\Taxi.lua
 Transport\Teleports.lua
+UI\Art.lua
 UI\Map.lua
 UI\Looks.lua
 UI\MinimapPins.lua
@@ -53,6 +55,7 @@ Journey\Corpse.lua
 UI\StopPin.lua
 UI\FlightLines.lua
 UI\Strokes.lua
+UI\QuestBlob.lua
 UI\Route.lua
 UI\RouteTransports.lua
 UI\Alert.lua
@@ -60,3 +63,4 @@ UI\Settings.lua
 UI\WhatsNew.lua
 Core\API.lua
 Journey\Itinerary.lua
+Core\TomTom.lua

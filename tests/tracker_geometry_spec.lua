@@ -45,6 +45,12 @@ local function overlaps(a, b)
 	local bl, bt, bw, _, bb = bounds(b)
 	return al < bl + bw and al + aw > bl and ab < bt and at > bb
 end
+-- Touching edges (a column that starts at the content's bottom) are clear, floating point included.
+local function clears(a, b)
+	local al, at, aw, _, ab = bounds(a)
+	local bl, bt, bw, _, bb = bounds(b)
+	return not (al < bl + bw - 0.01 and al + aw > bl + 0.01 and ab < bt - 0.01 and at > bb + 0.01)
+end
 local function scenario(anchor, scale, uiScale)
 	local frames, timers, ready, combat = {}, {}, nil, false
 	local screen
@@ -132,6 +138,10 @@ local function scenario(anchor, scale, uiScale)
 	local x = anchor:find("LEFT", 1, true) and 24 or anchor:find("RIGHT", 1, true) and -24 or 0
 	local y = anchor:find("BOTTOM", 1, true) and 180 or -100
 	native:SetPoint(anchor, screen, anchor, x, y)
+	local nineSlice = frame(nil, "nineSlice", native)
+	nineSlice.width, nineSlice.height, nineSlice.scale = 250, 1, 1
+	nineSlice:SetPoint("TOP", native, "TOP", 0, -300)
+	native.NineSlice = nineSlice
 	local rawPoint, rawClear, rawHeight = native.SetPoint, native.ClearAllPoints, native.SetHeight
 	function native:SetPoint(...)
 		assert(not combat, "protected combat reposition")
@@ -173,18 +183,20 @@ local function scenario(anchor, scale, uiScale)
 				ready = fn
 			end,
 		},
+		EventRegistry = { RegisterCallback = noop },
 		Mixin = function(target, mixin)
 			for key, value in pairs(mixin) do
 				target[key] = value
 			end
 		end,
+		hooksecurefunc = function() end,
 		CreateFramePoolCollection = function()
 			return {}
 		end,
 	}, { __index = _G })
 	env._G = env
 	setfenv(assert(loadfile(os.getenv("TRACKER_HOST_SOURCE") or "UI/TrackerHost.lua")), env)("Test", ns)
-	local host = frames[3]
+	local host = frames[4]
 	local module = frame()
 	module.uiOrder = -1
 	module.SetContainer, module.Update = noop, noop
@@ -240,6 +252,30 @@ local function scenario(anchor, scale, uiScale)
 		"moving guide cannot move native tracker"
 	)
 	check(not overlaps(host, native), "repeated combat refresh stays separated")
+	-- Blizzard restores the protected frame to its saved slot in combat. The header goes back to the native frame
+	-- and the private host sits directly below the native content, out of the game's way.
+	native.point = { anchor, screen, anchor, x, y }
+	host:MarkDirty()
+	drain()
+	local _, _, _, _, sliceBottom = bounds(nineSlice)
+	local _, columnTop = bounds(host)
+	check(
+		math.abs(columnTop - sliceBottom) < 0.01,
+		"combat puts the private column below the native content: " .. anchor .. " scale " .. scale .. " ui " .. uiScale
+	)
+	check(
+		clears(host, nineSlice),
+		"the one column clears the native content: " .. anchor .. " scale " .. scale .. " ui " .. uiScale
+	)
+	-- When that column would run off the bottom of the screen, the fallback still clears the native content.
+	nineSlice.point = { "BOTTOM", native, "BOTTOM", 0, 0 }
+	host:MarkDirty()
+	drain()
+	check(
+		clears(host, nineSlice),
+		"the off-screen fallback clears the native content: " .. anchor .. " scale " .. scale .. " ui " .. uiScale
+	)
+	nineSlice.point = { "TOP", native, "TOP", 0, -300 }
 	combat = false
 	host.scripts.OnEvent(host, "PLAYER_REGEN_ENABLED")
 	drain()

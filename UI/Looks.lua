@@ -47,8 +47,6 @@ end
 
 ---@class SPFStopArt
 ---@field atlas? string
----@field width? number
----@field height? number
 ---@field file? string
 ---@field transport? boolean
 
@@ -70,33 +68,14 @@ local function Art(kind)
 				candidates = { TAXI[UnitFactionGroup("player")] or "taxinode_neutral", "taxinode_neutral" }
 			end
 			for _, atlas in ipairs(candidates) do
-				local info = C_Texture.GetAtlasInfo(atlas)
-				if info then
-					found[kind] = { atlas = atlas, width = info.width, height = info.height }
+				if ns.Art.Info(atlas) then
+					found[kind] = { atlas = atlas }
 					break
 				end
 			end
 		end
 	end
 	return found[kind] or nil
-end
-
--- Art is never stretched: `atlas` at its native shape, as large as fits in maxWidth by maxHeight. The caller anchors
--- the texture by one point, so it stays centred in its box. False, leaving the texture alone, when the client lacks it.
----@param texture Texture
----@param atlas string
----@param maxWidth number
----@param maxHeight number
----@return boolean
-function ns.FitAtlas(texture, atlas, maxWidth, maxHeight)
-	local info = C_Texture.GetAtlasInfo(atlas)
-	if not info then
-		return false
-	end
-	texture:SetAtlas(atlas)
-	local scale = math.min(maxWidth / info.width, maxHeight / info.height)
-	texture:SetSize(info.width * scale, info.height * scale)
-	return true
 end
 
 -- Draws the kind on `texture`, fitted into a `size` square; false, leaving the texture alone, when the client has
@@ -112,14 +91,9 @@ function ns.SetStopLook(texture, kind, size)
 	elseif art.transport then
 		ns.SetTransportIcon(texture, kind --[[@as SPFMode]], size)
 	elseif art.file then
-		texture:SetTexture(art.file)
-		texture:SetTexCoord(0, 1, 0, 1)
-		texture:SetSize(size, size)
+		ns.Art.Icon(texture, art.file, size)
 	else
-		local atlas = art --[[@as {atlas: string, width: number, height: number}]]
-		texture:SetAtlas(atlas.atlas)
-		local scale = size / math.max(atlas.width, atlas.height)
-		texture:SetSize(atlas.width * scale, atlas.height * scale)
+		ns.Art.Fit(texture, art.atlas --[[@as string]], size, size)
 	end
 	return true
 end

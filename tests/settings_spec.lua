@@ -114,7 +114,7 @@ local env = setmetatable({
 	SlashCmdList = {},
 }, { __index = _G })
 
-local refreshed, taxiRefreshed, buttonRefreshed, policyChanged = 0, 0, 0, 0
+local refreshed, taxiRefreshed, buttonRefreshed, policyChanged, tomtomRefreshed = 0, 0, 0, 0, 0
 local compassMoving = false
 -- Core/Core.lua's defaults: every row on.
 local ns = {
@@ -132,6 +132,9 @@ local ns = {
 	},
 	TravelPolicyChanged = function()
 		policyChanged = policyChanged + 1
+	end,
+	RefreshTomTom = function()
+		tomtomRefreshed = tomtomRefreshed + 1
 	end,
 	db = {},
 	Defaults = setmetatable({ hearthMinimumSavings = 0 }, {
@@ -169,6 +172,7 @@ local groups = {
 	Guidance = {
 		"trackerAttached",
 		"journey",
+		"tomtom",
 		"teleports",
 		"hearthMinimumSavings",
 		"guideStops",
@@ -181,7 +185,7 @@ local groups = {
 local order = { "Map marks", "Transport", "Guidance", "Alerts", "Interface" }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 22, #rows)
+assert(#rows == 23, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -229,6 +233,10 @@ local mover = Row("compassMove").setting
 assert(mover.default == false and mover:GetValue() == false, "the compass starts locked")
 mover:SetValue(true)
 assert(compassMoving == true and mover:GetValue() == true, "the row unlocks the compass for dragging")
+assert(Row("tomtom").setting.default == true)
+assert(Row("tomtom").tooltip:find("TomTom", 1, true), "the row names the addon it answers")
+Row("tomtom").setting.onChanged()
+assert(tomtomRefreshed == 1, "the shim follows its setting")
 assert(Row("routeButton").setting.default == true)
 assert(Row("routeButton").tooltip:find("gold", 1, true), "the route button says what its colour means")
 Row("routeButton").setting.onChanged()

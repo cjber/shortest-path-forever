@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
+  # The data refresh dispatches CI on the branch of the PR it opens.
+  workflow_dispatch:
 
 permissions:
   contents: read

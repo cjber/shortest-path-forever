@@ -34,6 +34,7 @@ local function boot(options)
 		calls.atlases = calls.atlases + 1
 		self.atlas, self.file = atlas, nil
 	end
+	methods.SetTexCoord = noop
 	function methods:SetTexture(file)
 		self.file, self.atlas = file, nil
 	end
@@ -118,8 +119,8 @@ local function boot(options)
 			tip[#tip + 1] = "  " .. text
 		end,
 	}, { __index = _G })
-	-- FitAtlas is UI/Looks.lua's, so the plate is fitted the way the addon fits every atlas.
-	setfenv(assert(loadfile("UI/Looks.lua")), env)("ShortestPathForever", ns)
+	-- Art.Fit is UI/Art.lua's, so the plate is fitted the way the addon fits every atlas.
+	setfenv(assert(loadfile("UI/Art.lua")), env)("ShortestPathForever", ns)
 	setfenv(assert(loadfile("UI/RouteButton.lua")), env)("ShortestPathForever", ns)
 	handle.ns, handle.minimap, handle.tip, handle.state = ns, minimap, tip, state
 	return handle

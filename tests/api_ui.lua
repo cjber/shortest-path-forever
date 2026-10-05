@@ -16,9 +16,10 @@ ns.Docks, ns.Routes, ns.TaxiNodes, ns.TaxiPaths, ns.Portals, ns.Landmasses = {},
 local api = ShortestPathForever.API
 local lineTemplate, goalTemplate = "ShortestPathForeverRoutePinTemplate", "ShortestPathForeverGoalPinTemplate"
 -- UI-QuestPoi-NumberIcons' yellow numerals fill its lower half in eighths, eight to a row.
-local function numeral(pin)
+-- The stop being travelled to takes the dark numeral from the upper half instead.
+local function numeral(pin, current)
  local left, _, top = unpack(pin.Numeral.coords)
- return (top - 0.5) * 64 + left * 8 + 1
+ return (top - (current and 0 or 0.5)) * 64 + left * 8 + 1
 end
 local stops = {
  {map=1414,x=0.51,y=0.5,title="First"},
@@ -38,7 +39,9 @@ local function check(index, count)
  assert(#pins == count-index+1)
  for i, pin in ipairs(pins) do
   -- Stops up to 25 wear the numbered quest button's numeral on the map's quest button; later stops use the font.
-  assert(numeral(pin) == index+i-1, "remaining pins retain original stop numbers")
+  assert(numeral(pin, i == 1) == index+i-1, "remaining pins retain original stop numbers")
+  assert(pin.Button.atlas == (i == 1 and "UI-QuestPoi-QuestNumber-SuperTracked" or "UI-QuestPoi-QuestNumber"),
+   "only the stop being guided to wears the tracked quest button")
   assert(pin.Number.text == "")
   assert(not pin.Button.hidden and pin.Button.alpha == (i == 1 and 1 or 0.9))
   assert(pin.Numeral.alpha == (i == 1 and 1 or 0.9), "only the stop being guided to is at full strength")
@@ -114,7 +117,7 @@ local function rings(expected)
    local expected = string.format("Stop %d of 7: %s", n, close[n].title)
    assert(pin.stopTitles[j] == expected, "the tooltip names each stop in order")
   end
-  assert(numeral(pin) == want.stops[1] and pin.Number.text == "")
+  assert(numeral(pin, i == 1) == want.stops[1] and pin.Number.text == "")
   assert(rawget(pin, "Count") == nil, "no text over the action badge")
   if #want.stops > 1 then
    local x = 0
@@ -158,7 +161,7 @@ posX, posY = arrive.x, arrive.y
 tick()
 assert(api.CurrentStop("Test") == 2)
 local pins = active[goalTemplate]
-assert(#pins == 3 and numeral(pins[1]) == 2)
+assert(#pins == 3 and numeral(pins[1], true) == 2)
 assert(pins[1].Numeral.alpha == 1 and #pins[1].stopTitles == 3)
 assert(pins[1].x == close[2].x and pins[2].Numeral.alpha == 0.9)
 api.Cancel("Test")
@@ -187,7 +190,7 @@ local marked, plain = active[goalTemplate][1], active[goalTemplate][2]
 assert(marked.Icon.atlas == "QuestTurnin" and not marked.Icon.hidden and math.abs(marked.Icon.height - 16) < 1e-9)
 assert(marked.Icon.anchor[1] == "BOTTOMRIGHT" and marked.Icon.anchor[2] == 4 and marked.Icon.anchor[3] == -4)
 assert(marked.Texture.hidden and not marked.Button.hidden and not marked.Disc.hidden)
-assert(not marked.Numeral.hidden and numeral(marked) == 1 and marked.Number.text == "")
+assert(not marked.Numeral.hidden and numeral(marked, true) == 1 and marked.Number.text == "")
 assert(plain.Icon.hidden and plain.Texture.hidden and not plain.Button.hidden and not plain.Disc.hidden)
 assert(numeral(plain) == 2)
 assert(ShortestPathForeverMinimapRoute.Goal.atlas == "adventureguide-ring")

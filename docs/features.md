@@ -22,13 +22,23 @@ The detail behind each feature in the [README](../README.md).
 
   ![Auberdine’s piers on the minimap, with the dotted route and Guide’s native waypoint](screenshots/minimap.png)
 
+- **Journeys from your guides.** While TomTom is not installed, the addon answers its waypoint calls, so Questie,
+  Zygor and other guides that set a waypoint plan a journey here instead, titled with the guide's own text. Every
+  waypoint belongs to one owner, so a fresh one replaces the journey rather than queueing; *Let guides set TomTom
+  waypoints* off in `/path` removes the shim and clears the journey it started. A held stop can name the quest areas
+  it stands for: standing in one, the client draws its own quest blob on the minimap in the bonus objective's gold,
+  the world map outlines the area in the route's yellow, and the stop's pin and line step aside until you leave.
+  Inside is the client's own inside-area state for the quest the stop names, and the named circles otherwise.
+
 - **Finding the fastest way.** While a new journey is checked, the map shows only its destination pin and the
   tracker the Group Finder spinner; the route, steps and totals then appear together. A search that takes more than
   three seconds shows its best route so far, and changes it only for one at least 30 seconds and 10% faster, or if
   it stops working. The drawn route pulses gently on the world map and minimap while the spinner turns, then
   becomes steady as soon as the search finishes. Later checks run quietly without a spinner or pulsing.
   Nearby walks can settle immediately; longer searches stop as soon as no unchecked alternative can beat the chosen route. Only that route gets
-  walking geometry, and drawn paths stay visible during refreshes, and clearing a journey releases its search caches. Your position's costs refresh when you leave
+  walking geometry, and drawn paths stay visible during refreshes, and clearing a journey releases its search caches. Walking
+  maps load in small parts as the search reaches them, and a fixed walk on another continent keeps its measured cost
+  and waits to draw its detailed line until you arrive there. Your position's costs refresh when you leave
   the path or once a minute. Repeating a destination reuses its costs; standing still or moving within the same
   walking-map cell by at most three yards also reuses your position's costs. Walk steps name the dock, pier, lift
   or flight master you are heading for.
@@ -83,5 +93,8 @@ The detail behind each feature in the [README](../README.md).
 - **Times from real rides.** Each route's loop time comes from the game's own path data, so one ride tells
   the addon where that boat is for hours. Ride a boat, lift or tram once and its schedule syncs. Until then
   its dock says *no sighting yet*, and a journey counts half a loop as its wait, shown as *leaves in about 2:45*.
+  A flight is timed from take-off to landing, and that time is preferred over the shipped estimate from then on. A
+  flight's remaining time counts down from how far along the drawn route you are, so it holds steady on a slow or
+  fast ride.
 - **Shared between players.** Sightings are passed on quietly over guild, party and yell at the docks, so
   someone else's ride can time your boat. No chat messages are shown; turn it off in the settings.

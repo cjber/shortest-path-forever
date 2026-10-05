@@ -8,6 +8,10 @@ local STOP_SIZE = 20
 -- The numbered quest button's numerals (QuestPOI_CalculateNumericTexCoords): an 8 by 8 grid whose lower half holds
 -- the yellow numbers 1 to 25; later stops use the font.
 local NUMERAL_CELL, NUMERAL_YELLOW, NUMERALS_PER_ROW, MAX_NUMERAL = 0.125, 0.5, 8, 25
+-- The stop being travelled to wears the button of the quest the game tracks (POIButton.lua): the lit disc with the
+-- dark numeral from the grid's upper half. Every other stop wears the plain button with the yellow numeral.
+local STOP_ATLAS, CURRENT_ATLAS = "UI-QuestPoi-QuestNumber", "UI-QuestPoi-QuestNumber-SuperTracked"
+local NUMBER_YELLOW, NUMBER_DARK = { 1, 0.82, 0.25 }, { 0.1, 0.05, 0 }
 -- A lone stop's own mark stands alone at the size of the map's quest marks. A numbered one keeps its button and wears
 -- the mark as a badge over the button's lower right, as Legacy Forever's entrance pins wear the Legacy shield; the
 -- pin's hit rect reaches out over the badge.
@@ -38,7 +42,6 @@ function ShortestPathForeverGoalPinMixin:OnLoad()
 	self.Disc:SetVertexColor(0, 0, 0)
 	self.Number = self:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	self.Number:SetPoint("CENTER")
-	self.Number:SetTextColor(1, 0.82, 0.25)
 	for _, texture in ipairs({ self.Button, self.Numeral }) do
 		texture:SetDesaturated(false)
 		texture:SetVertexColor(1, 0.9, 0.7)
@@ -79,9 +82,13 @@ function ShortestPathForeverGoalPinMixin:OnAcquired(x, y, numbers, titles, later
 	local numeral = number ~= nil and number <= MAX_NUMERAL
 	self.Numeral:SetShown(numeral)
 	self.Number:SetText(number and not numeral and tostring(number) or "")
+	local current = numbers ~= nil and not later
+	-- art-ok: both quest buttons are 32 by 32, in Map.xml's 32 by 32 box
+	self.Button:SetAtlas(current and CURRENT_ATLAS or STOP_ATLAS)
+	self.Number:SetTextColor(unpack(current and NUMBER_DARK or NUMBER_YELLOW))
 	if numeral then
 		local left = (number - 1) % NUMERALS_PER_ROW * NUMERAL_CELL
-		local top = NUMERAL_YELLOW + math.floor((number - 1) / NUMERALS_PER_ROW) * NUMERAL_CELL
+		local top = (current and 0 or NUMERAL_YELLOW) + math.floor((number - 1) / NUMERALS_PER_ROW) * NUMERAL_CELL
 		self.Numeral:SetTexCoord(left, left + NUMERAL_CELL, top, top + NUMERAL_CELL)
 	end
 	if numbers then
@@ -92,7 +99,7 @@ function ShortestPathForeverGoalPinMixin:OnAcquired(x, y, numbers, titles, later
 		-- The native waypoint pin (SuperTrackedFrame.lua:219) that Guide's marker wears, so map and marker agree.
 		local atlas = C_Texture.GetAtlasInfo(GOAL_ATLAS)
 		self:SetSize(atlas.width * GOAL_SCALE, atlas.height * GOAL_SCALE)
-		self.Texture:SetAtlas(GOAL_ATLAS)
+		self.Texture:SetAtlas(GOAL_ATLAS) -- art-ok: fills the pin, sized above from the atlas's own shape
 	end
 end
 

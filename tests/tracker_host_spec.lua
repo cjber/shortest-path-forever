@@ -105,6 +105,30 @@ native.point = { nativeAnchorPoint, parent, nativeAnchorPoint, 0, -100 }
 native.height = 300
 parent:SetHeight(1080)
 native.effectiveScale, parent.effectiveScale = 1.25, 1
+local nativeHeader = frame()
+nativeHeader.shown = false
+nativeHeader.point = { "TOPLEFT", native, "TOPLEFT", 0, 0 }
+local minimizeButton = frame()
+nativeHeader.MinimizeButton = minimizeButton
+native.Header = nativeHeader
+-- The native container anchors this to the bottom of its last shown module; scenarios set it to the content bottom.
+native.NineSlice = {
+	bottom = 0,
+	GetBottom = function(self)
+		return self.bottom
+	end,
+}
+-- Blizzard's tracker re-anchors its header at the end of every update.
+function native.UpdateHeaderPosition()
+	nativeHeader:SetPoint("TOPLEFT", native, "TOPLEFT", 0, 0)
+end
+-- The managed-frame layout calls this after it re-anchors the frame to its saved slot.
+function native.UpdateHeight() end
+-- A native tracker update re-anchors the frame to its saved slot and finishes at the header.
+function native.RestoreSavedAnchor()
+	native:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, -100)
+	native:UpdateHeaderPosition()
+end
 local ns = { L = setmetatable({}, {
 	__index = function(_, key)
 		return key
@@ -131,9 +155,15 @@ local eventRegistry = {
 		end
 	end,
 }
-local editMode = { active = false }
+local editMode = { active = false, shown = false, scripts = {} }
 function editMode:IsEditModeActive()
 	return self.active
+end
+function editMode:IsShown()
+	return self.shown
+end
+function editMode:HookScript(kind, fn)
+	self.scripts[kind] = fn
 end
 local env
 env = setmetatable({
@@ -166,6 +196,14 @@ env = setmetatable({
 	Mixin = function(target, mixin)
 		for key, value in pairs(mixin) do
 			target[key] = value
+		end
+	end,
+	hooksecurefunc = function(target, name, callback)
+		local original = target[name]
+		target[name] = function(...)
+			local result = original(...)
+			callback(...)
+			return result
 		end
 	end,
 	CreateFramePoolCollection = function()
@@ -247,8 +285,8 @@ for index = 2, #hostPaths do
 	check(joining.TrackerHost == ns.TrackerHost, "companion joins the first loaded host")
 	check(#frames == count, "companion must not create a second host")
 end
-local host = frames[4]
-local grip = frames[5]
+local host = frames[6]
+local grip = frames[7]
 local function module(order)
 	local m = frame()
 	m.uiOrder, m.ContentsFrame, m.lineTemplate = order, frame(), "Line"
@@ -297,11 +335,17 @@ native:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
 eventRegistry:TriggerEvent("EditMode.SavedLayouts")
 drain()
 check(native.point[1] == "TOPLEFT" and native.point[2] == parent, "private host repairs native reanchor independently")
-editMode.active = true
+editMode.active, editMode.shown = true, true
 eventRegistry:TriggerEvent("EditMode.Enter")
 check(host.shown == false, "private tracker hides while Edit Mode owns native slot")
 check(native.clamped == true, "Edit Mode gets the native frame's screen clamp back")
-editMode.active = false
+-- CheckHideAndLockEditMode hides the manager without exiting it: active stays true and no EditMode.Exit runs.
+check(editMode.scripts.OnHide ~= nil, "private tracker follows the Edit Mode manager's own hide")
+editMode.shown = false
+editMode.scripts.OnHide(editMode)
+drain()
+check(host.shown == true, "private tracker returns when a locked Edit Mode hides its manager")
+editMode.active, editMode.shown = false, false
 eventRegistry:TriggerEvent("EditMode.Exit")
 drain()
 check(host.shown == true, "private tracker returns after Edit Mode")
@@ -426,20 +470,31 @@ host.scripts.OnEvent(host, "PLAYER_REGEN_DISABLED")
 drain()
 check(host.point == stackedPoint, "combat leaves our column alone while the native frame stays stacked below it")
 local updatesBeforeCombat = first.updates
+-- Blizzard restores the protected frame to its saved slot in combat. The header goes back to the native frame and
+-- our sections sit directly below the native content, so the column reads header, native modules, then ours.
 native.top = 500
+native.NineSlice.bottom = 420
 nativeSetPoint(native, "TOPRIGHT", parent, "TOPRIGHT", 0, -100)
 host.scripts.OnEvent(host, "PLAYER_REGEN_DISABLED")
 drain()
-check(first.updates == updatesBeforeCombat, "combat defers layout")
--- In combat the protected native tracker cannot be restacked, so our column moves above its saved slot instead.
+check(first.updates == updatesBeforeCombat + 1, "combat re-lays our sections below the native content")
+check(
+	host.point[1] == "TOP" and host.point[2] == native and host.point[3] == "BOTTOM",
+	"combat puts our column directly below the native content"
+)
+check(nativeHeader.point[2] == native, "the one column hands the header back to the native frame")
+-- When that column would run off the bottom of the screen, it falls back above the native frame.
+native.NineSlice.bottom = 0
+host:MarkDirty()
+drain()
 check(
 	host.point[1] == "BOTTOMRIGHT" and host.point[2] == native and host.point[3] == "TOPRIGHT",
-	"combat lifts our column above the native frame"
+	"an off-screen one column falls back above the native frame"
 )
 combat = false
 host.scripts.OnEvent(host, "PLAYER_REGEN_ENABLED")
 drain()
-check(first.updates == updatesBeforeCombat + 1, "leaving combat flushes deferred changes")
+check(first.updates == updatesBeforeCombat + 3, "leaving combat flushes deferred changes")
 combat = true
 native.top = 10000
 native.left, native.right = 900, 1150
@@ -538,6 +593,129 @@ nativeSetPoint(native, nativeAnchorPoint, parent, nativeAnchorPoint, 0, -100)
 host:MarkDirty()
 drain()
 check(native.point[1] == "TOPLEFT" and native.point[2] == parent, "center anchor stacks objectives independently")
+-- The native header leads the shared column: header, then the Forever sections, then the game's modules.
+minimap.shown = false
+host.top, host.bottom, host.left, host.right = nil, nil, nil, nil
+native.top, native.left, native.right, native.bottom = nil, nil, nil, nil
+native.effectiveScale, parent.effectiveScale = 1, 1
+nativeSetPoint(native, "TOPRIGHT", parent, "TOPRIGHT", 0, -100)
+host:MarkDirty()
+drain()
+local function nativeOffset(reserve)
+	return host:GetBottom() + reserve - parent:GetHeight()
+end
+check(
+	nativeHeader.point[2] == native and native.point[5] == nativeOffset(0),
+	"a hidden header leaves the host as it was"
+)
+nativeHeader:Show()
+host:MarkDirty()
+drain()
+check(
+	nativeHeader.point[2] == host and nativeHeader.point[1] == "TOPLEFT",
+	"the native header moves to the top of the shared column"
+)
+check(nativeHeader.point[4] == 0 and nativeHeader.point[5] == 0, "the header sits flush with the host top")
+check(first.point[5] == -38, "the first section leaves the header its room")
+check(second.point[5] == -128, "sections keep their order below the header")
+check(native.point[5] == nativeOffset(38), "the native frame moves up by the header it no longer holds")
+-- Blizzard re-anchors the header at the end of each update; the secure post-hook puts it back on the host.
+native:UpdateHeaderPosition()
+check(nativeHeader.point[2] == host, "the header is re-anchored after a native tracker update")
+-- A native update that restores the frame's saved slot must mark the host so it restacks below the column.
+native.RestoreSavedAnchor()
+drain()
+check(
+	native.point[1] == "TOPLEFT" and native.point[2] == parent,
+	"a native restore re-stacks the native frame below the shared column"
+)
+check(nativeHeader.point[2] == host, "the header stays at the top of the column after a native restore")
+-- The managed frame containers re-anchor through their own layout and report the new height for it.
+native:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, -100)
+native:UpdateHeight()
+drain()
+check(
+	native.point[1] == "TOPLEFT" and native.point[2] == parent,
+	"a managed frame update re-stacks the native frame below the shared column"
+)
+-- A neighbour showing or hiding makes the container lay the native frame out again with no update of its own.
+native:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, -100)
+drain()
+check(
+	native.point[1] == "TOPLEFT" and native.point[2] == parent,
+	"a managed frame update re-stacks the native frame below the shared column"
+)
+check(nativeHeader.point[2] == host, "the header stays at the top of the column after a managed frame update")
+first.GetContentsHeight = function()
+	return 0
+end
+second.GetContentsHeight = function()
+	return 0
+end
+host:MarkDirty()
+drain()
+check(
+	nativeHeader.point[2] == native and native.point[5] == nativeOffset(0),
+	"an empty host gives the header back to the native frame"
+)
+check(host:GetHeight() == 1 and host.shown ~= false, "an empty host keeps no reserved gap")
+first.GetContentsHeight = function()
+	return 80
+end
+second.GetContentsHeight = function()
+	return 80
+end
+host:MarkDirty()
+drain()
+check(nativeHeader.point[2] == host, "sections bring the header back to the shared column")
+ns.TrackerHost.SetAttached(false)
+drain()
+check(
+	nativeHeader.point[2] == native and native.point[2] == parent,
+	"detaching returns the header and the native frame exactly"
+)
+ns.TrackerHost.SetAttached(true)
+drain()
+check(nativeHeader.point[2] == host, "reattaching returns the header to the shared column")
+combat = true
+host.scripts.OnEvent(host, "PLAYER_REGEN_DISABLED")
+drain()
+check(nativeHeader.point[2] == host, "combat keeps the header at the top of the shared column")
+check(nativeHeader.point[4] == 0 and nativeHeader.point[5] == 0, "the header stays flush with the host top in combat")
+check(
+	native.point[1] == "TOPLEFT" and native.point[2] == parent,
+	"combat never re-anchors the protected native frame for the header"
+)
+native.top = 500
+native.NineSlice.bottom = 420
+nativeSetPoint(native, "TOPRIGHT", parent, "TOPRIGHT", 0, -100)
+host.scripts.OnEvent(host, "PLAYER_REGEN_DISABLED")
+drain()
+check(nativeHeader.point[2] == native, "a native move in combat hands the header back to the native frame")
+check(
+	host.point[1] == "TOP" and host.point[2] == native and host.point[3] == "BOTTOM",
+	"a native move in combat puts our column below the native content"
+)
+check(first.point[5] == 0, "the one column drops the header's reserved room")
+native.top = nil
+combat = false
+host.scripts.OnEvent(host, "PLAYER_REGEN_ENABLED")
+drain()
+check(nativeHeader.point[2] == host, "the header returns to the shared column after combat")
+check(first.point[5] == -38, "leaving combat restores the header's room")
+native.isCollapsed = true
+minimizeButton.scripts.OnClick(minimizeButton)
+drain()
+check(host.shown == false, "collapsing All Objectives hides the shared sections")
+check(
+	nativeHeader.point[2] == native and native.point[5] == nativeOffset(0),
+	"collapsing returns the header and its room to the native frame"
+)
+native.isCollapsed = false
+minimizeButton.scripts.OnClick(minimizeButton)
+drain()
+check(host.shown == true, "expanding shows the shared sections again")
+check(nativeHeader.point[2] == host and first.point[5] == -38, "expanding returns the header and the header's room")
 local block = first:AcquireFrame("Block")
 block.parentModule = first
 local line = block:GetLine(1)

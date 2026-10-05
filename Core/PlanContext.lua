@@ -49,6 +49,7 @@ function Context.Options(from, to)
 		routes = ns.Routes,
 		taxiNodes = ns.TaxiNodes,
 		taxiPaths = ns.TaxiPaths,
+		taxiTimes = ns.TaxiTimes and ns.TaxiTimes.Snapshot(),
 		portals = ns.Portals,
 		teleports = teleports,
 		teleportReady = ready,

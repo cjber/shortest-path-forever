@@ -27,6 +27,7 @@ WOWMOCK = Path(os.environ.get("WOWMOCK", Path.home() / ".claude/skills/wow-mock-
 if not (WOWMOCK / "wowmock.py").is_file():
     sys.exit(f"wowmock.py not found in {WOWMOCK}; set WOWMOCK to its directory")
 sys.path.insert(0, str(WOWMOCK))
+from screenshots_area import render as render_area_art
 from screenshots_services import render as render_services
 from screenshots_services import route_button
 from screenshots_tracker import detached_tracker
@@ -530,13 +531,14 @@ NUMBER_ICONS = "interface/worldmap/ui-questpoi-numbericons.blp"
 
 
 def stop_pin(canvas, x, y, number, badge, later):
-    """StopPin.lua: warm gold stock quest art, with the action badge always visible."""
+    """StopPin.lua: the current stop wears the tracked quest's lit button and dark numeral, the rest the plain
+    button and yellow numeral; the action badge stays visible."""
     alpha = 0.9 if later else 1
-    button = canvas.ui.atlas("UI-QuestPoi-QuestNumber").image
+    button = canvas.ui.atlas("UI-QuestPoi-QuestNumber" if later else "UI-QuestPoi-QuestNumber-SuperTracked").image
     canvas.draw(button, x - 16, y - 16, 32, 32, (0, 0, 0, 1))
     canvas.draw(button, x - 16, y - 16, 32, 32, (1, 0.9, 0.7, alpha))
     cell = number - 1
-    left, top = cell % 8 * 0.125, 0.5 + cell // 8 * 0.125
+    left, top = cell % 8 * 0.125, (0.5 if later else 0) + cell // 8 * 0.125
     numeral = crop_coords(canvas.ui.texture(NUMBER_ICONS), left, left + 0.125, top, top + 0.125)
     canvas.draw(numeral, x - 16, y - 16, 32, 32, (1, 0.9, 0.7, alpha))
     edge = STOP_SIZE / 2 + 4
@@ -761,6 +763,9 @@ def render_demo():
 
 def render_flight(ui):
     base, rects = map_base(ui, 1429)
+    # Copy the cached frame: another scene with the same map must not inherit this route.
+    canvas = ui.canvas(base.width, base.height)
+    canvas.image = base.image.copy()
     mx, my, mw, mh = rects["map"]
     route = ui.canvas(mw, mh)
     points = ordered(data()["flight"])
@@ -769,12 +774,13 @@ def render_flight(ui):
         if pa and pb:
             segment(route, (pa[0] * mw, pa[1] * mh), (pb[0] * mw, pb[1] * mh), (0.2, 1, 0.35), False, 1)
     flush_strokes(route)
-    base.paste(route, mx, my)
-    return scene(ui, [(base, 0, 0)])
+    canvas.paste(route, mx, my)
+    return scene(ui, [(canvas, 0, 0)])
 
 
 SCENES = {
     "flight": render_flight,
+    "area": lambda ui: render_area_art(ui, map_base, projection, segment, flush_strokes, map_landmarks, icon),
     "kalimdor": lambda ui: render_map(ui, 1414),
     "darkshore": lambda ui: render_map(ui, 1439),
     "docks": render_docks,

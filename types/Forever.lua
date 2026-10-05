@@ -155,7 +155,7 @@ FlightPointPinMixin = nil
 ---@field MarkDirty fun(self: SPFTrackerModule)
 ---@field IsDirty fun(self: SPFTrackerModule): boolean
 ---@field GetContextMenuParent fun(self: SPFTrackerModule): Frame
----@type Frame
+---@type ForeverNativeTrackerFrame
 ObjectiveTrackerFrame = nil
 ---@class SPFTrackerManager
 ---@type SPFTrackerManager
