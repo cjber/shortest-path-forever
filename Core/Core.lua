@@ -101,12 +101,12 @@ function ns.Locate(point)
 	return locations[point] or nil
 end
 
--- Where a dock is drawn: the tram's stations are on a map with no world map, so they show at the city entrance.
+-- Boat boarding points stand on the pier; tram stations also have a city-entrance map pin.
 ---@param dockID number
 ---@return SPFPoint
 function ns.DockPoint(dockID)
 	local dock = ns.Docks[dockID]
-	return dock.pin or dock
+	return dock.pin or dock.walk or dock
 end
 
 ---@param dockID number

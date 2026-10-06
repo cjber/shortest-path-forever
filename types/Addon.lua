@@ -44,6 +44,7 @@
 ---@field bakedKey? string
 ---@field undiscovered? boolean
 ---@class SPFDock : SPFPoint
+---@field walk? SPFPoint -- walking endpoint on the boarding platform
 ---@field pin? SPFPoint
 ---@field site? string
 ---@field name? string

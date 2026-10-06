@@ -23,7 +23,7 @@ local function frame(seconds)
 end
 
 -- Beside Rut'theran Village's pier: its ferry shows, and nothing a continent away does.
-local dock = ns.Docks[7]
+local dock = ns.Docks[7].walk or ns.Docks[7]
 posX, posY, posZ, posMap = dock.x + 60, dock.y, dock.z or 0, dock.map
 ns.RefreshMinimapPins()
 local pins = shown()

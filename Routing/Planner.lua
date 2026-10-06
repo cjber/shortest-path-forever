@@ -250,7 +250,8 @@ function Planner.Places(options)
 		}
 	end
 	for _, id in ipairs(Keys(options.docks or {})) do
-		add("dock", id, options.docks[id])
+		local dock = options.docks[id]
+		add("dock", id, dock.walk or dock)
 	end
 	for _, id in ipairs(Keys(options.taxiNodes or {})) do
 		local node = options.taxiNodes[id]
