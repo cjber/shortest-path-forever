@@ -11,6 +11,10 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+## [1.11.1] - 2026-10-06
+
+- **Walk along the pier to your boat.** Boat journeys use a dry boarding point for the walking route instead of the boat's position at water level, fixing paths that cut across the water at Auberdine and other docks. The compass and dock pins use the same boarding point. Boat schedules keep their original positions.
+
 ## [1.11.0] - 2026-10-06
 
 - **Continuous flight routes.** Flight lines retain connected segments at default world-map zoom, with finer detail when you zoom in.
