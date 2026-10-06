@@ -43,6 +43,8 @@ Each feature has more detail in [docs/features.md](docs/features.md).
   brings your journey's route back. Turn it off in `/path`. Flight lines on the world map and minimap curve smoothly.
 
   ![A smooth flight line leaving Stormwind](docs/screenshots/flight.png)
+- **Hearthstone and teleport prompts.** When it is time to cast, the item or spell icon and name appear on screen. The prompt clears as your journey continues.
+  ![The current Hearthstone action](docs/screenshots/cast_prompt.png)
 - **Compass.** A slim strip at the top of the screen marks Guide's next two turns, the next stop and your
   destination, in the game's own ticks, gold letters and waypoint pin. *Show the compass* in
   `/path` turns it off; *Move the compass* lets you drag it anywhere.

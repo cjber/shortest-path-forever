@@ -243,6 +243,17 @@ function ns.ShowJourneyMap()
 	C_Map.OpenWorldMap(location and location.uiMap)
 end
 
+-- The tracker and screen prompt name the same item or spell in the client's language.
+---@param teleport SPFTeleportPlace
+---@return string action, number? icon
+function ns.TeleportAction(teleport)
+	local name = teleport.item and C_Item.GetItemNameByID(teleport.item)
+		or C_Spell.GetSpellName(teleport.spell)
+		or UNKNOWN
+	local icon = teleport.item and C_Item.GetItemIconByID(teleport.item) or (C_Spell.GetSpellTexture(teleport.spell))
+	return (teleport.item and USE_ITEM or CAST_SPELL):format(name), icon
+end
+
 -- Shared by the tracker and the goal pin, including on a fullscreen map.
 ---@return string? title, SPFRow[]? rows, SPFPlan? plan, number? index, boolean? loading
 function ns.JourneyInfo()
@@ -264,17 +275,8 @@ function ns.JourneyInfo()
 			local text
 			local teleport = leg.teleport
 			if teleport then
-				local name = teleport.item and C_Item.GetItemNameByID(teleport.item)
-					or C_Spell.GetSpellName(teleport.spell)
-					or UNKNOWN
-				local icon = teleport.item and C_Item.GetItemIconByID(teleport.item)
-					or (C_Spell.GetSpellTexture(teleport.spell))
-				text = string.format(
-					"%d. %s" .. (teleport.item and USE_ITEM or CAST_SPELL),
-					index,
-					icon and ICON:format(icon) or "",
-					name
-				)
+				local action, icon = ns.TeleportAction(teleport)
+				text = string.format("%d. %s%s", index, icon and ICON:format(icon) or "", action)
 			else
 				text = string.format("%d. %s", index, ns.LegStep(leg))
 			end

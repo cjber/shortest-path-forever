@@ -15,7 +15,7 @@ local NUMBER_YELLOW, NUMBER_DARK = { 1, 0.82, 0.25 }, { 0.1, 0.05, 0 }
 -- A lone stop's own mark stands alone at the size of the map's quest marks. A numbered one keeps its button and wears
 -- the mark as a badge over the button's lower right, as Legacy Forever's entrance pins wear the Legacy shield; the
 -- pin's hit rect reaches out over the badge.
-local LOOK_SIZE, BADGE_SIZE, BADGE_OFFSET = 22, 11, 5
+local LOOK_SIZE, BADGE_SIZE, BADGE_OFFSET, TAG_SIZE = 22, 16, 4, 11
 -- Later stops stay stronger than Strokes.lua's later lines so their numbers remain legible.
 local LATER_STOP_ALPHA = 0.9
 -- Route.lua groups stops by the button's size.
@@ -105,9 +105,9 @@ function ShortestPathForeverGoalPinMixin:OnAcquired(x, y, numbers, titles, later
 	self.Texture:ClearAllPoints()
 	if pinBadge and not numbers and not marked then
 		self:SetSize(LOOK_SIZE, LOOK_SIZE)
-		ns.Art.Fit(self.Texture, GOAL_ATLAS, BADGE_SIZE, BADGE_SIZE)
+		ns.Art.Fit(self.Texture, GOAL_ATLAS, TAG_SIZE, TAG_SIZE)
 		self.Texture:SetPoint("CENTER", self, "BOTTOMRIGHT", 0, 0)
-		self:SetHitRectInsets(0, -BADGE_SIZE / 2, 0, -BADGE_SIZE / 2)
+		self:SetHitRectInsets(0, -TAG_SIZE / 2, 0, -TAG_SIZE / 2)
 	else
 		self.Texture:SetAllPoints()
 	end

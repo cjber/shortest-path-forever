@@ -189,7 +189,7 @@ ns.OnTravelTick = noop
 ns.NowMs = function()
 	return now
 end
-ns.CurrentRide, ns.RefreshTracker, ns.PointGuideArrow, ns.Print = noop, noop, noop, noop
+ns.CurrentRide, ns.RefreshTracker, ns.PointGuideArrow, ns.PointCastPrompt, ns.Print = noop, noop, noop, noop, noop
 ns.KnownTaxiNodes = function()
 	return ns.known or {}
 end

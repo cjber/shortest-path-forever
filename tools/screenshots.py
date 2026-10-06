@@ -666,6 +666,15 @@ def render_compass(ui):
     return scene(ui, [(compass_canvas(ui), 0, 0)])
 
 
+def render_cast_prompt(ui):
+    # UI/Arrow.lua: 36-unit item icon, GameFontNormalLarge action 6 units below.
+    canvas = ui.canvas(320, 70)
+    hearth = ui.item(6948)
+    canvas.draw(ui.texture(hearth.icon), 142, 0, 36, 36)
+    canvas.text(0, 42, f"Use {hearth.name}", FONTS["GameFontNormalLarge"], justify="CENTER", width=320)
+    return scene(ui, [(canvas, 0, 0)])
+
+
 def render_minimap(ui):
     canvas = ui.canvas(300, 285)
     cx, cy, size, radius = 150, 155, 198, 233 + 1 / 3
@@ -780,6 +789,7 @@ SCENES = {
     "detached": lambda ui: detached_tracker(ui, tracker_canvas(ui)),
     "minimap": render_minimap,
     "compass": render_compass,
+    "cast_prompt": render_cast_prompt,
     "services": render_services,
 }
 

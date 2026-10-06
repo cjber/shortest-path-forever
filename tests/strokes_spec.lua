@@ -87,6 +87,34 @@ local function clears(strokes, cx, cy, radius, scale, label)
 	check(nearest < reach + SPACING / scale, label .. ": the dots stop well short of the mark")
 end
 
+-- Dense flight smoothing must not become subpixel native lines at default map zoom.
+do
+	local source = {}
+	for index = 0, 150 do
+		source[#source + 1] = { map = 0, x = 0.1 + index * 0.005, y = 0.4 + math.sin(index / 15) * 0.02 }
+	end
+	local path = { mode = "flight", points = source }
+	local low, high = Strokes.New(), Strokes.New()
+	Strokes.Map(low, { path }, mapView({ scale = 0.3 }))
+	Strokes.Map(high, { path }, mapView({ scale = 4 }))
+	for index = 1, low.n - 1 do
+		check(length(low, index) * 0.3 >= 3 - 1e-6, "flight segments remain drawable at low zoom")
+		check(
+			close(low.x2[index], low.x1[index + 1]) and close(low.y2[index], low.y1[index + 1]),
+			"flight segments remain connected"
+		)
+	end
+	check(
+		close(low.x1[1], source[1].x * CANVAS) and close(low.y1[1], -source[1].y * CANVAS),
+		"low zoom keeps departure exact"
+	)
+	check(
+		close(low.x2[low.n], source[#source].x * CANVAS) and close(low.y2[low.n], -source[#source].y * CANVAS),
+		"low zoom keeps arrival exact"
+	)
+	check(low.n < high.n, "flight detail adapts to screen scale")
+end
+
 local strokes = Strokes.New()
 
 -- A walk is round breadcrumbs: each a dot one diameter long with a rim all round, evenly spaced through a bend (#22,

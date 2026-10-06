@@ -11,7 +11,11 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
-- **Smaller map badges.** Route actions and shift-click destination tags sit at the lower-right corner, leaving the original map icon and stop number readable.
+- **Continuous flight routes.** Flight lines retain connected segments at default world-map zoom, with finer detail when you zoom in.
+
+- **Clear travel actions.** When your current step needs a Hearthstone or teleport, its icon and item or spell name appear on screen. The prompt clears when you continue walking or stop guidance.
+
+- **Readable map badges.** Numbered route actions keep their original size and lower-right position. Shift-click destination tags remain tucked beside the original map icon.
 
 ## [1.10.0] - 2026-10-05
 

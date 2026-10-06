@@ -72,3 +72,7 @@ Used by my other Forever addons when both are installed: [Adventure Guide Foreve
 Source code and issues: [github.com/cjber/shortest-path-forever](https://github.com/cjber/shortest-path-forever) (GPL-3.0).
 
 Developed with AI assistance. Changes are reviewed and checked with automated tests, linting and type checks. Live verification is ongoing.
+
+![The current Hearthstone action](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/cast_prompt.png)
+
+When it is time to use your Hearthstone or cast a teleport, its icon and name appear on screen. The prompt clears as your journey continues.

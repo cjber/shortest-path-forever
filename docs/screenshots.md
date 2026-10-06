@@ -30,6 +30,7 @@ pixels never enter product media.
 | `tracker.png` | Capture 21's five Auberdine → Silithus steps, with the current totals header |
 | `detached.png` | The Journey tracker detached from the quest tracker, under its draggable "Forever tracker" heading |
 | `minimap.png` | Auberdine's piers as minimap pins, the last dotted stretch to the south pier, native Guide waypoint |
+| `cast_prompt.png` | The current Hearthstone action, using the same icon, label and spacing as the screen prompt |
 | `compass.png` | The compass: the game's own ticks and gold letters fading out at each end, its waypoint pin and the yards under it, no panel (on by default) |
 | `services.png` | The Nearby services submenu in the world map's tracking menu, with trainer and vendor specialty categories |
 | `demo.gif` | Eight-second montage: route pulse/settle, tracker countdown and gliding compass; under 0.5 MB |
