@@ -101,7 +101,7 @@ function ns.Locate(point)
 	return locations[point] or nil
 end
 
--- Boat boarding points stand on the pier; tram stations also have a city-entrance map pin.
+-- Boat boarding points stand on the pier. A tram station on an internal map uses its city-entrance pin for display.
 ---@param dockID number
 ---@return SPFPoint
 function ns.DockPoint(dockID)

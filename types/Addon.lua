@@ -45,7 +45,7 @@
 ---@field undiscovered? boolean
 ---@class SPFDock : SPFPoint
 ---@field walk? SPFPoint -- walking endpoint on the boarding platform
----@field pin? SPFPoint
+---@field pin? SPFPoint -- map-visible substitute for an internal-map station
 ---@field site? string
 ---@field name? string
 ---@class SPFStop
