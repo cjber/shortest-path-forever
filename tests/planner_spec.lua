@@ -423,7 +423,7 @@ for index = 1, #ratchet.frames - 1 do
 		break
 	end
 end
-real.to = ns.Docks[2]
+real.to = ns.Docks[2].walk or ns.Docks[2]
 real.ride = { route = 241, dock = 2, arrive = ratchet.stops[2].arrive }
 ride = only(Plan(real), "boat")
 assert(ride.aboard and ride.route == 241)
@@ -450,7 +450,7 @@ assert(loadfile("Data/Teleports.lua"))("ShortestPathForever", ns)
 assert(loadfile("Data/Walks.lua"))("ShortestPathForever", ns)
 local places = {}
 for id, dock in pairs(ns.Docks) do
-	places["dock" .. id] = dock
+	places["dock" .. id] = dock.walk or dock
 end
 for id, node in pairs(ns.TaxiNodes) do
 	places["taxi" .. id] = node

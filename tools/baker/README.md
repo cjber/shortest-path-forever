@@ -92,9 +92,12 @@ are kept. The main addon's TOC loads `Nav/Nav.xml`; `PathGrid.lua` decodes field
 checkpoints between blocks. Packing a bundle again leaves it unchanged. Offline Lua tools load the same
 bundle through `tools/load_nav.lua`.
 
-After intentionally replacing shipped terrain, rebake fixed-place walking costs from the repository root:
+Boat and zeppelin walking endpoints are generated from nearby dry boarding surfaces in the bundled map. Transport coordinates remain the boat or airship position for timetable calculations.
+
+After intentionally replacing shipped terrain, regenerate boarding endpoints and fixed-place walking costs from the repository root:
 
 ```sh
+python3 tools/gen_routes.py --offline
 luajit tools/bake_walks.lua > Data/Walks.lua
 ```
 

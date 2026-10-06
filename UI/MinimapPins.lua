@@ -53,7 +53,7 @@ local function Entries()
 	for _, dockID in ipairs(ids) do
 		if ns.DockKind(dockID) and ns.DockShown(dockID) then
 			local dock = ns.Docks[dockID]
-			Place(dockID, dock)
+			Place(dockID, dock.walk or dock)
 			-- A tram station also shows at its city entrance, as it does on the world map.
 			if dock.pin then
 				Place(dockID, dock.pin)

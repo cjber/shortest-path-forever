@@ -27,7 +27,7 @@ local function Add(key, point)
 	table.insert(places[point.map], { key = key, point = point })
 end
 for id, dock in pairs(ns.Docks) do
-	Add("dock" .. id, dock)
+	Add("dock" .. id, dock.walk or dock)
 end
 for id, node in pairs(ns.TaxiNodes) do
 	Add("taxi" .. id, node)
