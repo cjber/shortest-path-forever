@@ -244,14 +244,19 @@ function Guide.Paused()
 	return guide ~= nil and guide.paused == true
 end
 
--- A teleport is cast where you stand: nothing to walk toward until you land, so no arrow or marker.
+-- A teleport is cast where you stand: show the item or spell to use, with no walking arrow.
 ---@param leg SPFLeg
 function Guide.Cast(leg)
 	if not guide or guide.target == leg then
 		return
 	end
+	local casting = guide
 	guide.points, guide.target = nil, leg
 	ns.PointGuideArrow(nil)
+	if guide ~= casting or guide.target ~= leg then
+		return
+	end
+	ns.PointCastPrompt(leg.teleport)
 	if guide.waypoint then
 		ClearGuideWaypoint()
 	end
@@ -259,6 +264,7 @@ end
 
 -- The next Guide.To re-points the arrow even at the same target.
 function Guide.Retarget()
+	ns.PointCastPrompt(nil)
 	if guide then
 		guide.target = nil
 	end

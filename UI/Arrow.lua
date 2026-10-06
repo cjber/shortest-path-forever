@@ -125,6 +125,7 @@ end
 ---@param stop SPFPlace?
 ---@param goal SPFPoint?
 function ns.PointGuideArrow(points, placeBend, stop, goal)
+	ns.PointCastPrompt(nil)
 	revision = revision + 1
 	if points and #points == 0 then
 		points = nil
@@ -162,4 +163,52 @@ function ns.GuideTargets()
 	if path then
 		return target, path[index + 1], stepEnd, destination
 	end
+end
+
+---@class SPFCastPromptFrame : Frame
+---@field Icon Texture
+---@field Action FontString
+---@type SPFCastPromptFrame?
+local castPrompt
+---@type SPFTeleportPlace?
+local castTarget
+
+local function RenderCastPrompt()
+	if not castPrompt or not castTarget then
+		return
+	end
+	local action, icon = ns.TeleportAction(castTarget)
+	castPrompt.Action:SetText(action)
+	ns.Art.Icon(castPrompt.Icon, icon or 134400, 36)
+end
+
+-- Casting needs an action rather than a bearing, shown in the arrow's usual place.
+---@param teleport? SPFTeleportPlace
+function ns.PointCastPrompt(teleport)
+	castTarget = teleport
+	if not teleport then
+		if castPrompt then
+			castPrompt:UnregisterAllEvents()
+			castPrompt:Hide()
+		end
+		return
+	end
+	if not castPrompt then
+		local created = CreateFrame("Frame", nil, UIParent)
+		---@cast created SPFCastPromptFrame
+		castPrompt = created
+		created:SetSize(320, 70)
+		created:SetPoint("TOP", UIParent, "TOP", 0, -120)
+		created:SetFrameStrata("MEDIUM")
+		created.Icon = created:CreateTexture(nil, "ARTWORK")
+		created.Icon:SetPoint("TOP", created, "TOP")
+		created.Action = created:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+		created.Action:SetPoint("TOP", created.Icon, "BOTTOM", 0, -6)
+		created.Action:SetWidth(320)
+		created:SetScript("OnEvent", RenderCastPrompt)
+	end
+	castPrompt:RegisterEvent("GET_ITEM_INFO_RECEIVED")
+	castPrompt:RegisterEvent("SPELLS_CHANGED")
+	RenderCastPrompt()
+	castPrompt:Show()
 end
