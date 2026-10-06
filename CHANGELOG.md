@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **Continuous flight routes.** Flight lines retain connected segments at default world-map zoom, with finer detail when you zoom in.
+
 - **Clear travel actions.** When your current step needs a Hearthstone or teleport, its icon and item or spell name appear on screen. The prompt clears when you continue walking or stop guidance.
 
 - **Smaller map badges.** Route actions and shift-click destination tags sit at the lower-right corner, leaving the original map icon and stop number readable.

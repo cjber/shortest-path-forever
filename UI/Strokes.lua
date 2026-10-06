@@ -357,29 +357,47 @@ function Strokes.Map(buffer, paths, view)
 		for index = 1, crossing and 0 or #points do
 			local point = points[index]
 			local x, y = position(point, mapID)
-			if path.mode == "portal" or path.mode == "passage" then
-				Mark(x, y, color)
-			elseif previous then
-				if path.preview then
-					-- A hop still planning has no geometry to draw; a straight line would cross the sea.
-					if previous.map ~= point.map then
-						Mark(px, py, color)
-						Mark(x, y, color)
+			local after = points[index + 1]
+			-- Smoothed flight points can be less than a pixel apart when the map is zoomed out.
+			-- Keep longer connected strokes, retaining endpoints and loading boundaries.
+			local short = path.mode == "flight"
+				and not path.preview
+				and after
+				and previous
+				and not previous.jump
+				and not point.jump
+				and previous.map == point.map
+				and after.map == point.map
+				and px
+				and py
+				and x
+				and y
+				and ((x - px) * width) ^ 2 + ((y - py) * height) ^ 2 < (3 / scale) ^ 2
+			if not short then
+				if path.mode == "portal" or path.mode == "passage" then
+					Mark(x, y, color)
+				elseif previous then
+					if path.preview then
+						-- A hop still planning has no geometry to draw; a straight line would cross the sea.
+						if previous.map ~= point.map then
+							Mark(px, py, color)
+							Mark(x, y, color)
+						elseif px and x then
+							Line(px, py, x, y, color, true)
+						end
+					elseif previous.jump or previous.map ~= point.map then
+						if path.mode == "boat" or path.mode == "zeppelin" then
+							Bridge(view, path.points, index, px, py, x, y, color)
+						else
+							Mark(px, py, color)
+							Mark(x, y, color)
+						end
 					elseif px and x then
-						Line(px, py, x, y, color, true)
+						Line(px, py, x, y, color, path.mode == "walk")
 					end
-				elseif previous.jump or previous.map ~= point.map then
-					if path.mode == "boat" or path.mode == "zeppelin" then
-						Bridge(view, path.points, index, px, py, x, y, color)
-					else
-						Mark(px, py, color)
-						Mark(x, y, color)
-					end
-				elseif px and x then
-					Line(px, py, x, y, color, path.mode == "walk")
 				end
+				previous, px, py = point, x, y
 			end
-			previous, px, py = point, x, y
 		end
 	end
 end
