@@ -61,6 +61,7 @@ before its `v*` tag, since the release publishes it as the notes.
   frame types current; generated annotations belong in the generator. Intentional trailing `select(...)`
   expansion needs `-- multi-value: <reason>`; otherwise use parentheses or a local.
 - Commits are signed (`git commit -S`) with the personal email.
+- Release: load `.agents/skills/release/SKILL.md` when preparing or publishing a release.
 - Quality: load `.agents/skills/sift-project/SKILL.md` before cleanup, dead-code or refactoring
   work.
 - Searches and tracker updates wait until combat ends; no idle `OnUpdate`.
