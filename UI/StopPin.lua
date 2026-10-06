@@ -15,7 +15,7 @@ local NUMBER_YELLOW, NUMBER_DARK = { 1, 0.82, 0.25 }, { 0.1, 0.05, 0 }
 -- A lone stop's own mark stands alone at the size of the map's quest marks. A numbered one keeps its button and wears
 -- the mark as a badge over the button's lower right, as Legacy Forever's entrance pins wear the Legacy shield; the
 -- pin's hit rect reaches out over the badge.
-local LOOK_SIZE, BADGE_SIZE, BADGE_OFFSET = 22, 16, 4
+local LOOK_SIZE, BADGE_SIZE, BADGE_OFFSET = 22, 11, 5
 -- Later stops stay stronger than Strokes.lua's later lines so their numbers remain legible.
 local LATER_STOP_ALPHA = 0.9
 -- Route.lua groups stops by the button's size.
