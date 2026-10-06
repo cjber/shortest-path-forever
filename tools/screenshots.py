@@ -541,9 +541,9 @@ def stop_pin(canvas, x, y, number, badge, later):
     left, top = cell % 8 * 0.125, (0.5 if later else 0) + cell // 8 * 0.125
     numeral = crop_coords(canvas.ui.texture(NUMBER_ICONS), left, left + 0.125, top, top + 0.125)
     canvas.draw(numeral, x - 16, y - 16, 32, 32, (1, 0.9, 0.7, alpha))
-    edge = STOP_SIZE / 2 + 4
+    edge = STOP_SIZE / 2 + 5
     art = canvas.ui.atlas(badge)
-    factor = 16 / max(art.width, art.height)
+    factor = 11 / max(art.width, art.height)
     w, h = art.width * factor, art.height * factor
     canvas.draw(art, x + edge - w, y + edge - h, w, h, (1, 1, 1, alpha))
 

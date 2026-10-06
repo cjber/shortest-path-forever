@@ -187,8 +187,8 @@ end
 assert(api.NavigateRoute("Test", {{map=1414,x=0.51,y=0.5,title="Hand in",kind="turnin"}, stops[4]}))
 settle()
 local marked, plain = active[goalTemplate][1], active[goalTemplate][2]
-assert(marked.Icon.atlas == "QuestTurnin" and not marked.Icon.hidden and math.abs(marked.Icon.height - 16) < 1e-9)
-assert(marked.Icon.anchor[1] == "BOTTOMRIGHT" and marked.Icon.anchor[2] == 4 and marked.Icon.anchor[3] == -4)
+assert(marked.Icon.atlas == "QuestTurnin" and not marked.Icon.hidden and math.abs(marked.Icon.height - 11) < 1e-9)
+assert(marked.Icon.anchor[1] == "BOTTOMRIGHT" and marked.Icon.anchor[2] == 5 and marked.Icon.anchor[3] == -5)
 assert(marked.Texture.hidden and not marked.Button.hidden and not marked.Disc.hidden)
 assert(not marked.Numeral.hidden and numeral(marked, true) == 1 and marked.Number.text == "")
 assert(plain.Icon.hidden and plain.Texture.hidden and not plain.Button.hidden and not plain.Disc.hidden)

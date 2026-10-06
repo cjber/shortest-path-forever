@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **Smaller map badges.** Route actions and shift-click destination tags sit at the lower-right corner, leaving the original map icon and stop number readable.
+
 ## [1.10.0] - 2026-10-05
 
 - **Quest progress stays current in the Journey tracker.** Updating a stop refreshes its walking-step text while keeping the measured route.

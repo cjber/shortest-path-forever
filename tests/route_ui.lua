@@ -23,7 +23,7 @@ ns.StartJourney(clicked)
 settle()
 local badgePin = active[goalTemplate][1]
 assert(badgePin.Texture.anchor[3] == "BOTTOMRIGHT", "a clicked icon keeps its destination tag at the corner")
-assert(badgePin.Texture.width <= 16 and badgePin.Texture.height <= 16 and not badgePin.Texture.hidden,
+assert(badgePin.Texture.width <= 11 and badgePin.Texture.height <= 11 and not badgePin.Texture.hidden,
  "the corner tag stays small without stretching")
 ns.ClearJourney()
 ns.StartJourney(assert(ns.WorldPoint(1414, 0.53, 0.5)))
