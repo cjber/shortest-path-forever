@@ -11,6 +11,10 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+## [1.11.2] - 2026-10-07
+
+- **Data checked against Forever 1.60.1.70245.** The bundled game data is unchanged.
+
 ## [1.11.1] - 2026-10-06
 
 - **Walk along the pier to your boat.** Boat journeys use a dry boarding point for the walking route instead of the boat's position at water level, fixing paths that cut across the water at Auberdine and other docks. The compass and dock pins use the same boarding point. Boat schedules keep their original positions.
