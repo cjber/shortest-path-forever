@@ -154,6 +154,12 @@ assert(not API.CurrentStop("RestedXP"), "AGF's integrated frontend does not star
 assert(not frame.texture.shown and not frame.mouse, "the integrated frontend suppresses the native arrow")
 rxp.UpdateMap()
 assert(not API.CurrentStop("RestedXP"), "engine updates keep navigation with the frontend")
+ns.db.restedxp = false
+ns.RefreshRestedXP()
+assert(not frame.texture.shown, "AGF suppresses RXP arrow even with standalone integration disabled")
+ns.JourneyChanged()
+assert(not frame.texture.shown, "journey changes retain AGF arrow suppression")
+ns.db.restedxp = true
 integrated = false
 ns.RefreshRestedXP()
 driver.path.settle()

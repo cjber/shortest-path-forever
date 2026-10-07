@@ -47,15 +47,15 @@ local function Sync()
 	if not hooked or not ns.db then
 		return
 	end
-	if not ns.db.restedxp or not ns.db.journey then
-		Clear()
-		return
-	end
 	local frontend = AdventureGuideForever and AdventureGuideForever.API
 	if frontend and type(frontend.RestedXPIntegrated) == "function" and frontend.RestedXPIntegrated() then
 		API.Cancel(OWNER)
 		target = nil
 		Suppress()
+		return
+	end
+	if not ns.db.restedxp or not ns.db.journey then
+		Clear()
 		return
 	end
 	local frame = hooked.arrowFrame
@@ -142,8 +142,6 @@ hooksecurefunc(ns, "JourneyChanged", function()
 		if
 			hooked
 			and ns.db
-			and ns.db.restedxp
-			and ns.db.journey
 			and frontend
 			and type(frontend.RestedXPIntegrated) == "function"
 			and frontend.RestedXPIntegrated()
