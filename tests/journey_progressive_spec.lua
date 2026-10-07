@@ -40,10 +40,14 @@ local function yards(a, b)
 end
 
 local news, route, progress = {}, nil, { index = 1 }
+local onRoute
 local function listen(planned, what)
 	news[#news + 1] = what
 	if what == "route" then
 		route, progress.index, progress.departed = planned, 1, false
+		if onRoute then
+			onRoute()
+		end
 	end
 end
 local function heard()
@@ -251,5 +255,17 @@ geometry()
 assert(route == settled and progress.index == #settled.legs, "progress is kept")
 assert(last.measured and not last.walkDeferred and #last.walkPoints >= 2)
 assert(heard():find("walks") and Search.Status() == 0)
+Search.Reset()
+-- A route listener can end the journey immediately, including a provisional route starting at a passage.
+from = enter.A
+for _, stop in ipairs({ Search.Reset, Search.Cancel }) do
+	onRoute = stop
+	begin()
+	heard()
+	half()
+	geometry()
+	assert(Search.Status() == 0, "a listener's cancellation leaves no endpoint searches running")
+end
+onRoute = nil
 Search.Reset()
 print("journey_progressive_spec: settled walks offer one route, the optimum replaces it once, later walks wait: ok")
