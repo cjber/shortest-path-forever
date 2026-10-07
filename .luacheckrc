@@ -1,7 +1,6 @@
 std = "lua51"
 max_line_length = 120
-exclude_files =
-	{ ".claude/**", "tools/.cache/**", ".types/**", "types/**", ".release/**", "Nav/**" }
+exclude_files = { ".claude/**", "tools/.cache/**", ".types/**", "types/**", ".release/**", "Nav/**" }
 globals = {
 	"ForeverTrackerHost",
 	"EventUtil",
@@ -169,3 +168,5 @@ read_globals[#read_globals + 1] = "EventRegistry"
 read_globals[#read_globals + 1] = "C_EncodingUtil"
 
 read_globals[#read_globals + 1] = "RXP"
+
+read_globals[#read_globals + 1] = "AdventureGuideForever"

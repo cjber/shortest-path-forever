@@ -11,7 +11,13 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+## [1.12.1] - 2026-10-07
+
+- **Guide navigation no longer fails when a route ends during planning.** A cancelled search stops its callback before touching cleared walking batches.
+
 - **RestedXP journeys start automatically.** Follow the guide's current target when RestedXP is installed, with no setup needed. A saved choice to disable *Follow RestedXP guides* remains unchanged.
+
+- **Shared Adventure Guide navigation.** When Adventure Guide displays RestedXP instructions, its existing journey handles travel and Stop. The direct RestedXP adapter defers to it instead of starting a competing route.
 
 ## [1.12.0] - 2026-10-07
 

@@ -30,3 +30,6 @@
 
 ---@type SPFRestedXP?
 RXP = nil
+
+---@type {API: {RestedXPIntegrated?: fun(): boolean}}?
+AdventureGuideForever = nil
