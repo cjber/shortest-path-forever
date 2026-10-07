@@ -27,6 +27,7 @@ Each feature has more detail in [docs/features.md](docs/features.md).
   on foot, by flight, boat, zeppelin, lift, tram, portal or teleport. The route is drawn on both maps, its steps sit in
   the objective tracker, and it replans as you move.
   ![Journey steps from Auberdine to Silithus with time and distance remaining](docs/screenshots/tracker.png)
+- **RestedXP journeys.** Turn on *Follow RestedXP guides* in `/path` to plan travel to the guide's current target. It follows step changes and hides RestedXP's arrow while guiding you. No TomTom or bridge addon needed.
 - **Journeys from your guides.** With TomTom not installed, Questie and other guides that set a TomTom waypoint
   start a journey here instead, carrying the guide's title. *Let guides set TomTom waypoints* in `/path` turns it off.
   ![A guide's route through Thelsamar, its current stop lit like the tracked quest](docs/screenshots/stops.png)
@@ -123,6 +124,9 @@ Other addons can plan and guide journeys through `ShortestPathForever.API`: trav
 up to 64 stops that wear the game's own quest, flight master or boat marks. While TomTom is not installed, the
 addon answers TomTom's waypoint calls, and a held stop can name the quest area it stands for. [docs/api.md](docs/api.md)
 has the calls and what they return.
+
+RestedXP can pass its current target directly with *Follow RestedXP guides* in `/path`. Leave
+RestedXP TomTom disabled when using this option, so only one addon follows the guide.
 
 Used by my other Forever addons when both are installed:
 [Adventure Guide Forever](https://www.curseforge.com/wow/addons/adventure-guide-forever), [SkillUp Forever](https://www.curseforge.com/wow/addons/skillup-forever), [Legacy Forever](https://www.curseforge.com/wow/addons/legacy-forever) and [Tweaks Forever](https://www.curseforge.com/wow/addons/tweaks-forever).

@@ -4,7 +4,7 @@
 ## Author: cjber
 ## Version: @project-version@
 ## Category: Map
-## OptionalDeps: QuestieDB, TweaksForever
+## OptionalDeps: QuestieDB, TweaksForever, RXPGuides
 ## X-License: GPL-3.0-or-later
 ## X-Website: https://github.com/cjber/shortest-path-forever
 ## X-Curse-Project-ID: 1708599
@@ -64,3 +64,4 @@ UI\WhatsNew.lua
 Core\API.lua
 Journey\Itinerary.lua
 Core\TomTom.lua
+Core\RestedXP.lua

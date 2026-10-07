@@ -11,6 +11,10 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-10-07
+
+- **Follow RestedXP guides with planned journeys.** Turn on *Follow RestedXP guides* in `/path` to use the guide's current target for walking, flights and transport. RestedXP's arrow hides while the journey is active and returns when you stop. No TomTom or RestedXP TomTom addon is needed.
+
 ## [1.11.2] - 2026-10-07
 
 - **Data checked against Forever 1.60.1.70245.** The bundled game data is unchanged.
