@@ -31,5 +31,9 @@
 ---@type SPFRestedXP?
 RXP = nil
 
----@type {API: {RestedXPIntegrated?: fun(): boolean}}?
+---@class SPFRestedXPFrontendAPI
+---@field RestedXPIntegrated? fun(): boolean
+---@field RestedXPNativeUI? fun(): boolean
+
+---@type {API: SPFRestedXPFrontendAPI}?
 AdventureGuideForever = nil

@@ -48,6 +48,10 @@ local function Sync()
 		return
 	end
 	local frontend = AdventureGuideForever and AdventureGuideForever.API
+	if frontend and type(frontend.RestedXPNativeUI) == "function" and frontend.RestedXPNativeUI() then
+		Clear()
+		return
+	end
 	if frontend and type(frontend.RestedXPIntegrated) == "function" and frontend.RestedXPIntegrated() then
 		API.Cancel(OWNER)
 		target = nil

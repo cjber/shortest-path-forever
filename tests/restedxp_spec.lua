@@ -164,4 +164,13 @@ integrated = false
 ns.RefreshRestedXP()
 driver.path.settle()
 assert(API.CurrentStop("RestedXP"), "native guide navigation resumes when the frontend is disabled")
+env.AdventureGuideForever.API.RestedXPNativeUI = function()
+	return true
+end
+ns.RefreshRestedXP()
+assert(
+	not API.CurrentStop("RestedXP") and frame.texture.shown and frame.text.shown,
+	"the native UI choice restores RXP navigation without changing standalone preferences"
+)
+assert(ns.db.restedxp, "display choice preserves the standalone preference")
 print("restedxp: ok")

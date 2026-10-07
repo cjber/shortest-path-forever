@@ -17,6 +17,8 @@ verbatim rather than rewritten as the addon moves.
 
 - **RestedXP journeys start automatically.** Follow the guide's current target when RestedXP is installed, with no setup needed. A saved choice to disable *Follow RestedXP guides* remains unchanged.
 
+- **Keep RestedXP navigation when you choose its display.** Adventure Guide's display choice also controls whether Shortest Path replaces the RestedXP arrow. Your standalone navigation preference is preserved.
+
 - **Shared Adventure Guide navigation.** When Adventure Guide displays RestedXP instructions, its existing journey handles travel and Stop. The direct RestedXP adapter defers to it instead of starting a competing route.
 
 ## [1.12.0] - 2026-10-07
