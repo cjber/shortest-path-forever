@@ -27,7 +27,7 @@ Each feature has more detail in [docs/features.md](docs/features.md).
   on foot, by flight, boat, zeppelin, lift, tram, portal or teleport. The route is drawn on both maps, its steps sit in
   the objective tracker, and it replans as you move.
   ![Journey steps from Auberdine to Silithus with time and distance remaining](docs/screenshots/tracker.png)
-- **RestedXP journeys.** Turn on *Follow RestedXP guides* in `/path` to plan travel to the guide's current target. It follows step changes and hides RestedXP's arrow while guiding you. No TomTom or bridge addon needed.
+- **RestedXP journeys.** When RestedXP is installed, journeys to the guide's current target are enabled by default. It follows step changes and hides RestedXP's arrow while guiding you. No TomTom or bridge addon needed.
 - **Journeys from your guides.** With TomTom not installed, Questie and other guides that set a TomTom waypoint
   start a journey here instead, carrying the guide's title. *Let guides set TomTom waypoints* in `/path` turns it off.
   ![A guide's route through Thelsamar, its current stop lit like the tracked quest](docs/screenshots/stops.png)
@@ -125,7 +125,7 @@ up to 64 stops that wear the game's own quest, flight master or boat marks. Whil
 addon answers TomTom's waypoint calls, and a held stop can name the quest area it stands for. [docs/api.md](docs/api.md)
 has the calls and what they return.
 
-RestedXP can pass its current target directly with *Follow RestedXP guides* in `/path`. Leave
+RestedXP passes its current target directly by default. Toggle *Follow RestedXP guides* in `/path`. Leave
 RestedXP TomTom disabled when using this option, so only one addon follows the guide.
 
 Used by my other Forever addons when both are installed:

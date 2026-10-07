@@ -610,7 +610,12 @@ local function RefreshCosts(includeGoal, forced)
 			PrepareWalks(feasible)
 		end
 		-- Drawing the offer's first walk takes the frame budget until it lands, then the proof goes on.
-		if Offer() and planned and (planned.needsStart or planned.needsGoal) then
+		local offering = Offer()
+		-- Publishing an offer can synchronously stop or replace this journey.
+		if version ~= pathVersion then
+			return
+		end
+		if offering and planned and (planned.needsStart or planned.needsGoal) then
 			active(startBatch, false)
 			active(goalBatch, false)
 			search.resume = function()

@@ -145,8 +145,6 @@ grip:SetScript("OnDragStop", function()
 end)
 grip:Hide()
 local modules, queued, ready = {}, false, false
-local requestedNativeHeight
-local appliedNativeHeight
 local pools = CreateFramePoolCollection()
 
 local function NotifyAttachment(value)
@@ -485,13 +483,6 @@ local function ApplyAttachment()
 				movingNative = false
 				appliedNativeAnchor = nil
 			end
-			if appliedNativeHeight and requestedNativeHeight then
-				local current = ObjectiveTrackerFrame:GetHeight()
-				if math.abs(current - appliedNativeHeight) <= 0.5 then
-					ObjectiveTrackerFrame:SetHeight(requestedNativeHeight)
-				end
-			end
-			appliedNativeHeight = nil
 			RestoreNativeClamp()
 		end
 		attached = desired
@@ -614,9 +605,6 @@ local function LayoutAttached()
 	-- The native frame may only receive its final Edit Mode anchor after the
 	-- player and saved variables are ready. Capture it before our first reflow.
 	CaptureNativeAnchor()
-	if not requestedNativeHeight and (ObjectiveTrackerFrame:GetHeight() or 0) > 0 then
-		requestedNativeHeight = ObjectiveTrackerFrame:GetHeight()
-	end
 	local width = ObjectiveTrackerFrame:GetWidth()
 	MatchNativeScale()
 	host:ClearAllPoints()
@@ -689,9 +677,8 @@ local function LayoutAttached()
 	-- The header no longer sits inside the native frame's slot, so the frame moves up by exactly the room its
 	-- title used to take; its first module then starts where the private host ends.
 	local nativeY = ((host:GetBottom() or 0) + headerReserve) * hostScale / screenScale - UIParent:GetHeight()
-	-- Blizzard restores the native frame's own height whenever it updates, and in combat we cannot shorten it
-	-- again. Clamped to the screen, the taller frame would be pushed up over our column; unclamped it only runs
-	-- off the bottom edge until combat ends.
+	-- The native container owns its height. Screen clamping would pull it up over the
+	-- companion column, so preserve its size and let its scrolling content extend below us.
 	if nativeClamped == nil then
 		nativeClamped = ObjectiveTrackerFrame:IsClampedToScreen() and true or false
 	end
@@ -709,24 +696,8 @@ local function LayoutAttached()
 		x = nativeX,
 		y = nativeOffsetY,
 	}
-	local currentNativeHeight = ObjectiveTrackerFrame:GetHeight() or requestedNativeHeight
-	if
-		(appliedNativeHeight and math.abs(currentNativeHeight - appliedNativeHeight) > 0.5)
-		or (
-			not appliedNativeHeight
-			and requestedNativeHeight
-			and math.abs(currentNativeHeight - requestedNativeHeight) > 0.5
-		)
-	then
-		requestedNativeHeight = currentNativeHeight
-	end
-	local bottom = host:GetBottom() or ((host:GetTop() or 0) - host:GetHeight())
-	local remaining = math.max(1, bottom + headerReserve - margin)
-	local nativeHeight = math.min(requestedNativeHeight or remaining, remaining)
-	if math.abs(currentNativeHeight - nativeHeight) > 0.5 then
-		ObjectiveTrackerFrame:SetHeight(nativeHeight)
-		appliedNativeHeight = nativeHeight
-	end
+	-- Resizing the managed container schedules a native layout that restores its Edit Mode
+	-- anchor. Leave its height alone so the host and native tracker can settle in one pass.
 end
 
 local function Layout()

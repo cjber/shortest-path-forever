@@ -330,7 +330,7 @@ check(native:GetHeight() == 420, "native viewport adopts an external resize befo
 native:SetHeight(700)
 native.scripts.OnSizeChanged(native)
 drain()
-check(native:GetHeight() < 700, "native viewport clamps after an external resize")
+check(native:GetHeight() == 700, "native container keeps its externally sized height")
 native:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
 eventRegistry:TriggerEvent("EditMode.SavedLayouts")
 drain()
@@ -437,8 +437,8 @@ host.scripts.OnEvent(host, "PLAYER_REGEN_ENABLED")
 drain()
 check(not ns.TrackerHost.IsAttachedToQuestTracker(), "deferred attachment applies after combat")
 check(
-	native:GetHeight() == 700 and native:GetHeight() > clampedBeforeCombatDetach,
-	"post-combat detach restores height even after native anchor was restored"
+	native:GetHeight() == 700 and native:GetHeight() == clampedBeforeCombatDetach,
+	"post-combat detach preserves the native container height"
 )
 local detachedUpdates = first.updates
 combat = true
@@ -574,7 +574,7 @@ native:SetHeight(500)
 host:MarkDirty()
 drain()
 check(host.point[5] > 0, "oversized column shifts upward into the visible viewport")
-check(native:GetHeight() < 500, "native height is clamped to the visible remainder")
+check(native:GetHeight() == 500, "native container owns its height below the companion column")
 first.GetContentsHeight = function()
 	return 80
 end
@@ -758,6 +758,28 @@ if nativeRoot then
 	animated:OnAnimFinished()
 	check(first.dirty and animated.alpha == 0 and not animated.activeAnim, "native animation completes without manager")
 end
+-- A native resize schedules the managed container to restore its Edit Mode anchor next frame.
+local rawNativeSetHeight = native.SetHeight
+function native:SetHeight(value)
+	rawNativeSetHeight(self, value)
+	timers[#timers + 1] = function()
+		rawNativeSetHeight(native, 900)
+		native:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, -26)
+		native:UpdateHeight()
+	end
+end
+combat = false
+native:SetHeight(900)
+host:MarkDirty()
+for _ = 1, 10 do
+	drain()
+end
+check(
+	native.point[1] == "TOPLEFT" and native.point[2] == parent,
+	"attached tracker settles below the host after a managed resize"
+)
+native.SetHeight = rawNativeSetHeight
+
 -- A fresh host after /reload resolves persisted owner settings only after load events.
 combat = false
 nativeSetPoint(native, "TOPLEFT", parent, "TOPLEFT", 0, -100)

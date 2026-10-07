@@ -29,8 +29,33 @@ local function Clear()
 	Restore()
 end
 
+local function Suppress()
+	if not hooked then
+		return
+	end
+	local frame = hooked.arrowFrame
+	if textureShown == nil then
+		textureShown, textShown = frame.texture:IsShown(), frame.text:IsShown()
+		mouseEnabled = frame:IsMouseEnabled()
+	end
+	frame.texture:Hide()
+	frame.text:Hide()
+	frame:EnableMouse(false)
+end
+
 local function Sync()
 	if not hooked or not ns.db then
+		return
+	end
+	local frontend = AdventureGuideForever and AdventureGuideForever.API
+	if frontend and type(frontend.RestedXPNativeUI) == "function" and frontend.RestedXPNativeUI() then
+		Clear()
+		return
+	end
+	if frontend and type(frontend.RestedXPIntegrated) == "function" and frontend.RestedXPIntegrated() then
+		API.Cancel(OWNER)
+		target = nil
+		Suppress()
 		return
 	end
 	if not ns.db.restedxp or not ns.db.journey then
@@ -90,14 +115,7 @@ local function Sync()
 		target = key
 	end
 	if API.CurrentStop(OWNER) then
-		if textureShown == nil then
-			textureShown, textShown = frame.texture:IsShown(), frame.text:IsShown()
-			mouseEnabled = frame:IsMouseEnabled()
-		end
-		-- Preserve the frame's visibility and alpha: RestedXP updates both during guidance.
-		frame.texture:Hide()
-		frame.text:Hide()
-		frame:EnableMouse(false)
+		Suppress()
 	else
 		Restore()
 	end
@@ -124,7 +142,18 @@ end
 
 hooksecurefunc(ns, "JourneyChanged", function()
 	if not API.CurrentStop(OWNER) then
-		Restore()
+		local frontend = AdventureGuideForever and AdventureGuideForever.API
+		if
+			hooked
+			and ns.db
+			and frontend
+			and type(frontend.RestedXPIntegrated) == "function"
+			and frontend.RestedXPIntegrated()
+		then
+			Suppress()
+		else
+			Restore()
+		end
 	end
 end)
 

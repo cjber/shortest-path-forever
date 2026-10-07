@@ -138,4 +138,39 @@ assert(
 	not API.CurrentStop("RestedXP") and frame.texture.shown and frame.text.shown,
 	"unloading the guide clears stale target"
 )
+local integrated = true
+env.AdventureGuideForever = { API = {
+	RestedXPIntegrated = function()
+		return integrated
+	end,
+} }
+rxp.currentGuide = {}
+rxp.settings.profile.showEnabled = true
+rxp.activeWaypoints = { frame.element }
+frame.element.hidden, frame.element.completed, frame.element.skip = false, false, false
+frame.element.arrow = true
+rxp.UpdateMap()
+assert(not API.CurrentStop("RestedXP"), "AGF's integrated frontend does not start a competing route")
+assert(not frame.texture.shown and not frame.mouse, "the integrated frontend suppresses the native arrow")
+rxp.UpdateMap()
+assert(not API.CurrentStop("RestedXP"), "engine updates keep navigation with the frontend")
+ns.db.restedxp = false
+ns.RefreshRestedXP()
+assert(not frame.texture.shown, "AGF suppresses RXP arrow even with standalone integration disabled")
+ns.JourneyChanged()
+assert(not frame.texture.shown, "journey changes retain AGF arrow suppression")
+ns.db.restedxp = true
+integrated = false
+ns.RefreshRestedXP()
+driver.path.settle()
+assert(API.CurrentStop("RestedXP"), "native guide navigation resumes when the frontend is disabled")
+env.AdventureGuideForever.API.RestedXPNativeUI = function()
+	return true
+end
+ns.RefreshRestedXP()
+assert(
+	not API.CurrentStop("RestedXP") and frame.texture.shown and frame.text.shown,
+	"the native UI choice restores RXP navigation without changing standalone preferences"
+)
+assert(ns.db.restedxp, "display choice preserves the standalone preference")
 print("restedxp: ok")
