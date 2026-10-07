@@ -113,13 +113,10 @@ function ns.RefreshRestedXP()
 		and type(rxp.UpdateGotoSteps) == "function"
 	then
 		hooked = rxp
-		-- taint-ok: RestedXP owns this addon table; no Blizzard object methods are hooked.
-		hooksecurefunc(rxp, "UpdateMap", Sync)
-		-- taint-ok: RestedXP owns this addon table; no Blizzard object methods are hooked.
-		hooksecurefunc(rxp, "UpdateGotoSteps", Sync)
+		hooksecurefunc(rxp, "UpdateMap", Sync) -- taint-ok: RestedXP owns this addon table.
+		hooksecurefunc(rxp, "UpdateGotoSteps", Sync) -- taint-ok: RestedXP owns this addon table.
 		if type(rxp.ResetArrowPosition) == "function" then
-			-- taint-ok: RestedXP owns this addon table.
-			hooksecurefunc(rxp, "ResetArrowPosition", Sync)
+			hooksecurefunc(rxp, "ResetArrowPosition", Sync) -- taint-ok: RestedXP owns this addon table.
 		end
 	end
 	Sync()
