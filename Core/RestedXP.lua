@@ -30,6 +30,9 @@ local function Clear()
 end
 
 local function Suppress()
+	if not hooked then
+		return
+	end
 	local frame = hooked.arrowFrame
 	if textureShown == nil then
 		textureShown, textShown = frame.texture:IsShown(), frame.text:IsShown()
