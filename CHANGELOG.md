@@ -15,6 +15,8 @@ verbatim rather than rewritten as the addon moves.
 
 - **Guide navigation no longer fails when a route ends during planning.** A cancelled search stops its callback before touching cleared walking batches.
 
+- **Quest objectives stay below the Forever tracker after reload.** The shared tracker no longer resizes Blizzard's quest container, which could move it over the addon sections.
+
 - **RestedXP journeys start automatically.** Follow the guide's current target when RestedXP is installed, with no setup needed. A saved choice to disable *Follow RestedXP guides* remains unchanged.
 
 - **Keep RestedXP navigation when you choose its display.** Adventure Guide's display choice also controls whether Shortest Path replaces the RestedXP arrow. Your standalone navigation preference is preserved.
