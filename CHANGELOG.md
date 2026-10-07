@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **RestedXP journeys start automatically.** Follow the guide's current target when RestedXP is installed, with no setup needed. A saved choice to disable *Follow RestedXP guides* remains unchanged.
+
 ## [1.12.0] - 2026-10-07
 
 - **Follow RestedXP guides with planned journeys.** Turn on *Follow RestedXP guides* in `/path` to use the guide's current target for walking, flights and transport. RestedXP's arrow hides while the journey is active and returns when you stop. No TomTom or RestedXP TomTom addon is needed.

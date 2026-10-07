@@ -11,7 +11,7 @@ Nearby services sits in the minimap's tracking menu and the world map's.
 ## Features
 
 - **A journey from where you stand.** Walking paths go around walls, hills and water, and through tunnels. The planner uses the flight points you know and can walk you to an undiscovered flight master when that saves time. Boat waits count towards the arrival time. Walking maps are compressed inside the addon and decoded as a journey reaches them.
-- **RestedXP journeys.** Turn on *Follow RestedXP guides* in `/path` to plan travel to the guide's current target. It follows step changes and hides RestedXP's arrow while guiding you. No TomTom or bridge addon needed.
+- **RestedXP journeys.** When RestedXP is installed, journeys to the guide's current target are enabled by default. It follows step changes and hides RestedXP's arrow while guiding you. No TomTom or bridge addon needed.
 - **Journeys from your guides.** With TomTom not installed, Questie and other guides that set a TomTom waypoint start a journey here instead, carrying the guide's title. Turn it off with *Let guides set TomTom waypoints* in `/path`.
 - **Quest areas the game draws itself.** A stop that marks a quest's area is drawn by the client while you are inside it: the game's own area for that quest turns gold on the minimap and is drawn in gold on the world map, instead of a pin and a line.
 - **Directions on the map and minimap.** Walking legs are round breadcrumb dots, transport legs have their own colours, and a waypoint pin marks your destination. The Group Finder spinner turns while a new journey is checked.

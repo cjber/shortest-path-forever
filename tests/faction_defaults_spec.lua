@@ -32,6 +32,9 @@ local function loadCore(saved)
 	return ns
 end
 local fresh = loadCore(nil)
+assert(fresh.db.restedxp == true, "new installs follow RestedXP when available")
+assert(loadCore({}).db.restedxp == true, "saves without a RestedXP preference acquire the default")
+assert(loadCore({ restedxp = false }).db.restedxp == false, "saved RestedXP opt-out survives reload")
 assert(fresh.db.otherFaction == false, "new installs avoid opposing-faction transport")
 assert(fresh.db.hearthMinimumSavings == 0, "new installs preserve the fastest Hearthstone routing")
 assert(loadCore({}).db.hearthMinimumSavings == 0, "old saves acquire the numeric default")
