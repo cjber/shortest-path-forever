@@ -179,6 +179,14 @@ ns.Init(function()
 		end
 	)
 	Checkbox(
+		"restedxp",
+		L["Follow RestedXP guides"],
+		L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."],
+		function()
+			ns.RefreshRestedXP()
+		end
+	)
+	Checkbox(
 		"teleports",
 		L["Use hearth and teleports"],
 		L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."]

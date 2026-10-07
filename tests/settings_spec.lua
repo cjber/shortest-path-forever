@@ -133,11 +133,12 @@ local ns = {
 	TravelPolicyChanged = function()
 		policyChanged = policyChanged + 1
 	end,
+	RefreshRestedXP = function() end,
 	RefreshTomTom = function()
 		tomtomRefreshed = tomtomRefreshed + 1
 	end,
 	db = {},
-	Defaults = setmetatable({ hearthMinimumSavings = 0 }, {
+	Defaults = setmetatable({ hearthMinimumSavings = 0, restedxp = false }, {
 		__index = function()
 			return true
 		end,
@@ -170,6 +171,7 @@ local groups = {
 		"trackerAttached",
 		"journey",
 		"tomtom",
+		"restedxp",
 		"teleports",
 		"hearthMinimumSavings",
 		"guideStops",
@@ -182,7 +184,7 @@ local groups = {
 local order = { "Map marks", "Transport", "Guidance", "Alerts", "Interface" }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 22, #rows)
+assert(#rows == 23, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -230,6 +232,7 @@ local mover = Row("compassMove").setting
 assert(mover.default == false and mover:GetValue() == false, "the compass starts locked")
 mover:SetValue(true)
 assert(compassMoving == true and mover:GetValue() == true, "the row unlocks the compass for dragging")
+assert(Row("restedxp").setting.default == false, "RestedXP journeys require opting in")
 assert(Row("tomtom").setting.default == true)
 assert(Row("tomtom").tooltip:find("TomTom", 1, true), "the row names the addon it answers")
 Row("tomtom").setting.onChanged()

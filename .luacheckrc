@@ -167,3 +167,5 @@ files["tests/ui_map.lua"] = { ignore = { "1", "2", "43" } }
 read_globals[#read_globals + 1] = "EventRegistry"
 
 read_globals[#read_globals + 1] = "C_EncodingUtil"
+
+read_globals[#read_globals + 1] = "RXP"
