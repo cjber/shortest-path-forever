@@ -11,6 +11,10 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+## [1.13.0] - 2026-10-08
+
+- **Shorter addon descriptions.** The README and store pages explain the features directly and keep the author and licence credits.
+
 - **Quest text stays on screen when the Forever tracker is smaller.** The native quest column and its header keep their full width at the edge of the screen.
 
 - **Resize the tracker and compass separately.** The Interface settings have scale sliders from 50% to 200%. Tracker scale applies to the shared Forever sections and waits until combat ends when attached to the quest tracker.
