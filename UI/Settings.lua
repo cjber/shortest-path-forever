@@ -145,7 +145,7 @@ ns.Init(function()
 				return host.GetSettings().attached
 			end,
 			function(value)
-				host.SetAttached(value)
+				host.SetAttached(value == true)
 			end
 		)
 		Settings.RegisterInitializer(
@@ -264,6 +264,60 @@ ns.Init(function()
 			),
 			nil,
 			L["Shows the compass so you can drag it anywhere on screen. Right-click it to put it back."]
+		)
+	)
+	if host and host.GetScale and host.SetScale then
+		local scale = Settings.RegisterProxySetting(
+			page,
+			"ShortestPathForever_trackerScale",
+			Settings.VarType.Number,
+			L["Tracker scale"],
+			100,
+			function()
+				return math.floor(host.GetScale() * 100 + 0.5)
+			end,
+			function(value)
+				host.SetScale(value / 100)
+			end
+		)
+		local scaleOptions = Settings.CreateSliderOptions(50, 200, 10)
+		scaleOptions:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
+			return value .. "%"
+		end)
+		Settings.RegisterInitializer(
+			page,
+			Settings.CreateSliderInitializer(
+				scale,
+				scaleOptions,
+				L["Scales the shared Forever tracker. 100% matches the game's own tracker."]
+			)
+		)
+	end
+	local compassScale = Settings.RegisterAddOnSetting(
+		page,
+		"ShortestPathForever_compassScale",
+		"compassScale",
+		ns.db,
+		Settings.VarType.Number,
+		L["Compass scale"],
+		ns.Defaults.compassScale
+	)
+	compassScale:SetValueChangedCallback(function(_, value)
+		if type(value) == "number" then
+			ns.SetCompassScale(value)
+		end
+	end)
+	settings.compassScale = compassScale
+	local compassOptions = Settings.CreateSliderOptions(50, 200, 10)
+	compassOptions:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
+		return value .. "%"
+	end)
+	Settings.RegisterInitializer(
+		page,
+		Settings.CreateSliderInitializer(
+			compassScale,
+			compassOptions,
+			L["Scales the compass. 100% matches the game's own art."]
 		)
 	)
 	Checkbox(

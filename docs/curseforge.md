@@ -1,4 +1,4 @@
-I wanted a proper "get me there" for WoW: Forever, so Shortest Path Forever finds the fastest way across the world. Shift-click a destination on the map, or pick a quest, and it joins walking paths, flight paths, boats, zeppelins, lifts, the Deeprun Tram, portals and your hearthstone or class teleports into one journey. Directions use the game's own waypoint marker, map pins and objective tracker, so it looks like it came with the game. Walking maps for Eastern Kingdoms, Kalimdor and Zephras Isle come in the same download.
+Shift-click the world map or minimap, or choose a quest, to plan a journey. Shortest Path Forever gives directions in the objective tracker and on both maps.
 
 ![Eight-second demo of a route settling, the countdown and compass](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/demo.gif)
 
@@ -72,8 +72,8 @@ Used by my other Forever addons when both are installed: [Adventure Guide Foreve
 
 Source code and issues: [github.com/cjber/shortest-path-forever](https://github.com/cjber/shortest-path-forever) (GPL-3.0).
 
-Developed with AI assistance. Changes are reviewed and checked with automated tests, linting and type checks. Live verification is ongoing.
-
 ![The current Hearthstone action](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/cast_prompt.png)
 
 When it is time to use your Hearthstone or cast a teleport, its icon and name appear on screen. The prompt clears as your journey continues.
+
+Built with AI assistance.

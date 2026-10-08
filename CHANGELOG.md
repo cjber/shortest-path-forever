@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **Resize the tracker and compass separately.** The Interface settings have scale sliders from 50% to 200%. Tracker scale applies to the shared Forever sections and waits until combat ends when attached to the quest tracker.
+
 ## [1.12.1] - 2026-10-07
 
 - **Guide navigation no longer fails when a route ends during planning.** A cancelled search stops its callback before touching cleared walking batches.

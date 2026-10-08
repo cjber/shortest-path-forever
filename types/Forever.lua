@@ -166,6 +166,8 @@ ObjectiveTrackerManager = nil
 ---@field IsAttachedToQuestTracker fun(): boolean
 ---@field SetAttached fun(attached: boolean)
 ---@field GetSettings fun(): ForeverTrackerSettings
+---@field GetScale fun(): number
+---@field SetScale fun(scale: number)
 ---@field OnAttachmentChanged fun(callback: fun(attached: boolean))
 ---@field SavePosition fun(x: number, y: number)
 ---@type ForeverTrackerHostAPI?
@@ -181,7 +183,7 @@ ForeverTrackerHost = nil
 ---@field VarType {Boolean: string, Number: string}
 ---@field RegisterVerticalLayoutCategory fun(name: string): SPFSettingsCategory
 ---@field RegisterVerticalLayoutSubcategory fun(parent: SPFSettingsCategory, name: string): SPFSettingsCategory
----@field RegisterProxySetting fun(category: SPFSettingsCategory, variable: string, variableType: string, name: string, default: boolean, getter: (fun(): boolean), setter: (fun(value: boolean))): SPFSetting
+---@field RegisterProxySetting fun(category: SPFSettingsCategory, variable: string, variableType: string, name: string, default: boolean|number, getter: (fun(): boolean|number), setter: (fun(value: boolean|number))): SPFSetting
 ---@field NotifyUpdate fun(variable: string)
 ---@field RegisterAddOnSetting fun(category: SPFSettingsCategory, variable: string, key: string, storage: SPFDatabase, variableType: string, name: string, default: boolean|number): SPFSetting
 ---@field CreateSliderOptions fun(minimum: number, maximum: number, step: number): table
@@ -215,6 +217,7 @@ function EventUtil.ContinueAfterAllEvents(callback, ...) end
 
 ---@class ForeverTrackerSettings
 ---@field attached boolean
+---@field scale? number tracker size, 1 is the stock size
 ---@field x? number
 ---@field y? number
 

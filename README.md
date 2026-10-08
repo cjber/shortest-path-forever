@@ -8,11 +8,7 @@ The fastest way anywhere in WoW: Forever, on foot, by air, by sea and through po
 <a href="https://github.com/cjber/shortest-path-forever/releases/latest"><img src="https://img.shields.io/github/v/release/cjber/shortest-path-forever" alt="Latest release"></a>
 </p>
 
-Shift-click the world map or minimap, or pick a quest, and it plans the route: walking paths round walls and hills,
-the flight points you know, boats and zeppelins with their live departure times, lifts, the tram and portals. Then it
-walks you there with the game's own navigation marker. Walking maps cover Eastern Kingdoms, Kalimdor and Zephras Isle;
-they are compressed inside the addon and decoded as a route reaches them.
-The route, pins and tracker use the game's own art, so it looks like it came with the game.
+Shift-click the world map or minimap, or choose a quest, to plan a journey. Shortest Path Forever gives directions in the objective tracker and on both maps.
 
 ![Eight-second demo of a route settling, the countdown and the compass](docs/screenshots/demo.gif)
 
@@ -133,8 +129,6 @@ Used by my other Forever addons when both are installed:
 
 ## Development
 
-Developed with AI assistance. Changes are reviewed and checked with automated tests, linting, type checks and performance budgets.
-
 ```sh
 tools/typecheck.sh                  # strict LuaLS + multi-value lint (requires LuaLS 3.19.1, git, Python 3)
 python3 tools/refresh_pins.py        # pin the newest client build and flight times (a daily workflow does this)
@@ -167,3 +161,5 @@ GPL-3.0-or-later. Routes, lifts, the tram and flight paths come from the game's 
 flight times from [InFlight](https://github.com/LudiusMaximus/InFlight) (MIT).
 
 Made by Cillian Berragan · [cillian.dev](https://cillian.dev) · [GitHub](https://github.com/cjber) · [Twitter](https://twitter.com/cjberragan)
+
+Built with AI assistance.

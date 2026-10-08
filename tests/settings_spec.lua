@@ -7,6 +7,7 @@ local opened = {}
 
 local attachmentNotified, attachmentChanged
 local trackerState = { attached = true }
+local trackerScale, compassScaled = 1, nil
 local env = setmetatable({
 	MinimalSliderWithSteppersMixin = { Label = { Right = 1 } },
 	OFF = "Off",
@@ -129,6 +130,12 @@ local ns = {
 		OnAttachmentChanged = function(callback)
 			attachmentChanged = callback
 		end,
+		GetScale = function()
+			return trackerScale
+		end,
+		SetScale = function(value)
+			trackerScale = value
+		end,
 	},
 	TravelPolicyChanged = function()
 		policyChanged = policyChanged + 1
@@ -138,7 +145,7 @@ local ns = {
 		tomtomRefreshed = tomtomRefreshed + 1
 	end,
 	db = {},
-	Defaults = setmetatable({ hearthMinimumSavings = 0 }, {
+	Defaults = setmetatable({ hearthMinimumSavings = 0, compassScale = 100 }, {
 		__index = function()
 			return true
 		end,
@@ -157,6 +164,9 @@ local ns = {
 	end,
 	MoveCompass = function(value)
 		compassMoving = value
+	end,
+	SetCompassScale = function(value)
+		compassScaled = value
 	end,
 }
 assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", ns)
@@ -179,12 +189,12 @@ local groups = {
 		"corpse",
 	},
 	Alerts = { "alerts", "alertSound" },
-	Interface = { "compass", "compassMove", "whatsNew" },
+	Interface = { "compass", "compassMove", "trackerScale", "compassScale", "whatsNew" },
 }
 local order = { "Map marks", "Transport", "Guidance", "Alerts", "Interface" }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 23, #rows)
+assert(#rows == 25, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -238,6 +248,18 @@ assert(Row("tomtom").tooltip:find("TomTom", 1, true), "the row names the addon i
 Row("tomtom").setting.onChanged()
 assert(tomtomRefreshed == 1, "the shim follows its setting")
 assert(Row("whatsNew").setting.default == true)
+local trackerSlider = Row("trackerScale")
+assert(trackerSlider.kind == "slider" and trackerSlider.setting.default == 100, "tracker scale defaults to 100%")
+assert(trackerSlider.options.minValue == 50 and trackerSlider.options.maxValue == 200, "tracker scale is a percentage")
+assert(trackerSlider.options.format(150) == "150%", "the tracker slider shows a percent")
+assert(trackerSlider.setting:GetValue() == 100, "the tracker slider reads the shared host")
+trackerSlider.setting:SetValue(150)
+assert(trackerScale == 1.5, "the tracker slider drives the shared host scale")
+local compassSlider = Row("compassScale")
+assert(compassSlider.kind == "slider" and compassSlider.setting.default == 100, "compass scale defaults to 100%")
+assert(compassSlider.options.format(150) == "150%", "the compass slider shows a percent")
+compassSlider.setting.onChanged(nil, 150)
+assert(compassScaled == 150, "the compass slider rescales the compass")
 Row("pins").setting.onChanged()
 assert(refreshed == 1, "value callbacks still fire")
 print("settings: ok")
