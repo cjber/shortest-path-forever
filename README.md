@@ -79,6 +79,8 @@ Install it from [CurseForge](https://www.curseforge.com/wow/addons/shortest-path
 
 ## Usage
 
+In **Interface** settings, set **Forever tracker size** and **Compass size** separately from 50% to 200%. The tracker setting applies to the shared Forever column.
+
 Open a flight master’s map once after installing to sync the flight points you already know. Opposing-faction boat and zeppelin routes are off by default; you can opt in through settings.
 
 | Command | What it does |

@@ -53,6 +53,8 @@ A longer trip: Auberdine to Menethil, then Theramore, then Silithus.
 
 ## Usage
 
+In **Interface** settings, set **Forever tracker size** and **Compass size** separately from 50% to 200%. The tracker setting applies to the shared Forever column.
+
 Settings → Guidance has **Minimum Hearthstone saving**, from zero to ten minutes.
 Zero keeps the current fastest-route behaviour; higher values reserve the Hearthstone for bigger savings.
 
