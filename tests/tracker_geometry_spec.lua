@@ -213,7 +213,11 @@ local function scenario(anchor, scale, uiScale, userScale)
 	end
 	ready()
 	drain()
-	local left, top = bounds(native)
+	local left, top, nativeWidth = bounds(native)
+	check(
+		left >= -0.01 and left + nativeWidth <= screen.width * screen:GetEffectiveScale() + 0.01,
+		"native quests stay horizontally on screen when scaling the private column"
+	)
 	local _, hostTop, _, hostHeight = bounds(host)
 	check(math.abs(top - (hostTop - hostHeight)) < 0.01, "native starts below guide at effective scale")
 	for _ = 1, 3 do

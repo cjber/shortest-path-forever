@@ -405,7 +405,8 @@ local function AdoptNativeHeader()
 		headerAdopted = true
 	end
 	nativeHeader:ClearAllPoints()
-	nativeHeader:SetPoint("TOPLEFT", host, "TOPLEFT", 0, 0)
+	local point = StackPoints(nativeAnchor and nativeAnchor.point or "TOPRIGHT")
+	nativeHeader:SetPoint(point, host, point, 0, 0)
 end
 
 local function RestoreNativeHeader()
@@ -718,6 +719,9 @@ local function LayoutAttached()
 	ObjectiveTrackerFrame:SetClampedToScreen(false)
 	movingNative = true
 	ObjectiveTrackerFrame:ClearAllPoints()
+	local nativeWidth = ObjectiveTrackerFrame:GetWidth() * nativeScale / screenScale
+	-- A smaller private column must not push the full-width native quests beyond the screen edge.
+	hostLeft = math.max(0, math.min(hostLeft, UIParent:GetWidth() - nativeWidth))
 	local nativeX = hostLeft * screenScale / nativeScale
 	local nativeOffsetY = nativeY * screenScale / nativeScale
 	ObjectiveTrackerFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", nativeX, nativeOffsetY)

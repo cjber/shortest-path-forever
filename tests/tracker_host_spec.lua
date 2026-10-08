@@ -616,8 +616,8 @@ nativeHeader:Show()
 host:MarkDirty()
 drain()
 check(
-	nativeHeader.point[2] == host and nativeHeader.point[1] == "TOPLEFT",
-	"the native header moves to the top of the shared column"
+	nativeHeader.point[2] == host and nativeHeader.point[1] == "TOPRIGHT" and nativeHeader.point[3] == "TOPRIGHT",
+	"the native header keeps the right edge of the shared column"
 )
 check(nativeHeader.point[4] == 0 and nativeHeader.point[5] == 0, "the header sits flush with the host top")
 check(first.point[5] == -38, "the first section leaves the header its room")
