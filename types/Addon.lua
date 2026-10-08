@@ -146,6 +146,7 @@
 ---@field share? boolean
 ---@field guideStops? boolean
 ---@field compass? boolean
+---@field compassScale? number percent, 100 is the stock size
 ---@field compassX? number the compass's centre from the screen's bottom left, once dragged
 ---@field compassY? number
 ---@field corpse? boolean

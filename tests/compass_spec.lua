@@ -31,6 +31,15 @@ end
 function methods:GetCenter()
 	return self.centerX, self.centerY
 end
+function methods:SetScale(value)
+	self.scale = value
+end
+function methods:GetScale()
+	return self.scale or 1
+end
+function methods:GetEffectiveScale()
+	return self.scale or 1
+end
 function methods.SetColorTexture(region, ...)
 	calls.colors = calls.colors + 1
 	region.color = { ... }
@@ -151,7 +160,11 @@ local ns = {
 }
 assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", ns)
 local env = setmetatable({
-	UIParent = {},
+	UIParent = {
+		GetEffectiveScale = function()
+			return 1
+		end,
+	},
 	CreateFrame = function(_, _, _, template)
 		stripTemplate = template
 		strip = object()
@@ -447,3 +460,17 @@ assert(ns.db.compassX == 240)
 strip.scripts.OnMouseUp(strip, "RightButton")
 assert(ns.db.compassX == nil and ns.db.compassY == nil and at("TOP", "TOP", 0, -42))
 print("compass: placing, saving and resetting its position: ok")
+
+-- Scaling: ticks, labels and offsets scale with the frame, and a dragged place is saved in screen pixels.
+ns.SetCompassScale(150)
+close(strip:GetScale(), 1.5)
+close(strip.atY, -42 / 1.5)
+strip.centerX, strip.centerY = 240, 300
+strip.scripts.OnDragStop(strip)
+assert(ns.db.compassX == 360 and ns.db.compassY == 450, "a scaled compass saves its place in screen pixels")
+assert(at("CENTER", "BOTTOMLEFT", 240, 300), "the saved screen place round-trips back into frame units")
+ns.SetCompassScale(100)
+close(strip:GetScale(), 1)
+strip.scripts.OnMouseUp(strip, "RightButton")
+assert(ns.db.compassX == nil and at("TOP", "TOP", 0, -42), "reset still restores the stock offset at 100%")
+print("compass: scaling keeps offsets and saved places consistent: ok")

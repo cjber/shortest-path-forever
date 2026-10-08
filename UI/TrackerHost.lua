@@ -33,7 +33,9 @@ end
 local host = CreateFrame("Frame", "ForeverTrackerCompanion", UIParent)
 ---@class ForeverTrackerHostAPI
 local api = {}
-local fallbackSettings = { attached = true }
+local MIN_SCALE, MAX_SCALE = 0.5, 2
+local fallbackSettings = { attached = true, scale = 1 }
+local ready = false
 local function Coordinate(value)
 	if type(value) == "number" and value == value and math.abs(value) ~= math.huge then
 		return value
@@ -44,6 +46,12 @@ local function Settings()
 	local settings = ns.TrackerHostSettings and ns.TrackerHostSettings() or fallbackSettings
 	if type(settings.attached) ~= "boolean" then
 		settings.attached = true
+	end
+	local scale = settings.scale
+	if type(scale) ~= "number" or scale ~= scale then
+		settings.scale = 1
+	else
+		settings.scale = math.max(MIN_SCALE, math.min(MAX_SCALE, scale))
 	end
 	settings.x, settings.y = Coordinate(settings.x), Coordinate(settings.y)
 	return settings
@@ -101,10 +109,22 @@ local function MatchNativeScale()
 	local parentScale = UIParent:GetEffectiveScale()
 	local nativeScale = ObjectiveTrackerFrame:GetEffectiveScale()
 	if parentScale and nativeScale and parentScale > 0 then
-		host:SetScale(nativeScale / parentScale)
+		-- Saved variables, and with them the user's scale, are not ready while the files load.
+		local userScale = ready and Settings().scale or 1
+		host:SetScale(nativeScale / parentScale * userScale)
 	end
 end
 MatchNativeScale()
+-- The native tracker's saved offsets are in its own scale. The private host carries the user's tracker
+-- scale on top of that, so convert them to keep the same screen placement and only scale the content.
+local function NativeRatio()
+	local nativeScale = ObjectiveTrackerFrame:GetEffectiveScale()
+	local hostScale = host:GetEffectiveScale()
+	if nativeScale and hostScale and hostScale > 0 then
+		return nativeScale / hostScale
+	end
+	return 1
+end
 host:SetWidth(ObjectiveTrackerFrame:GetWidth())
 host:SetHeight(1)
 host:SetMovable(true)
@@ -144,7 +164,7 @@ grip:SetScript("OnDragStop", function()
 	api.SavePosition((host:GetLeft() or 0) * scale, (host:GetTop() or 0) * scale - UIParent:GetHeight())
 end)
 grip:Hide()
-local modules, queued, ready = {}, false, false
+local modules, queued = {}, false
 local pools = CreateFramePoolCollection()
 
 local function NotifyAttachment(value)
@@ -279,12 +299,13 @@ local function AvoidMinimap(point)
 	local _, relativeTo = ObjectiveTrackerFrame:GetPoint()
 	if relativeTo == host and nativeAnchor then
 		local direction = point:find("RIGHT", 1, true) and -1 or 1
+		local ratio = NativeRatio()
 		host:SetPoint(
 			nativeAnchor.point,
 			nativeAnchor.relativeTo,
 			nativeAnchor.relativePoint,
-			nativeAnchor.x + direction * (host:GetWidth() + 8),
-			nativeAnchor.y
+			nativeAnchor.x * ratio + direction * (host:GetWidth() + 8),
+			nativeAnchor.y * ratio
 		)
 	elseif point:find("LEFT", 1, true) then
 		host:SetPoint("TOPLEFT", ObjectiveTrackerFrame, "TOPRIGHT", 0, 0)
@@ -384,7 +405,8 @@ local function AdoptNativeHeader()
 		headerAdopted = true
 	end
 	nativeHeader:ClearAllPoints()
-	nativeHeader:SetPoint("TOPLEFT", host, "TOPLEFT", 0, 0)
+	local point = StackPoints(nativeAnchor and nativeAnchor.point or "TOPRIGHT")
+	nativeHeader:SetPoint(point, host, point, 0, 0)
 end
 
 local function RestoreNativeHeader()
@@ -540,16 +562,18 @@ local function LayoutInCombat()
 		-- Preserve the saved slot if a legacy host-relative anchor is restored.
 		-- Moving relative to that protected child would create an anchor cycle.
 		if nativeAnchor then
+			local ratio = NativeRatio()
 			host:SetPoint(
 				nativeAnchor.point,
 				nativeAnchor.relativeTo,
 				nativeAnchor.relativePoint,
-				nativeAnchor.x,
-				nativeAnchor.y
+				nativeAnchor.x * ratio,
+				nativeAnchor.y * ratio
 			)
 		end
 	elseif point then
 		local nativePoint, hostPoint = StackPoints(point)
+		local ratio = NativeRatio()
 		-- First choice: one column. The header goes back to the native frame and our sections sit directly below
 		-- the native tracker's visible content, measured from its own content region, so the column reads the
 		-- header, the game's modules, then the Forever sections. The protected frame stays where Blizzard put it.
@@ -558,11 +582,11 @@ local function LayoutInCombat()
 		local contentBottom = nineSlice and ObjectiveTrackerFrame:IsShown() and nineSlice:GetBottom() or nativeBottom
 		local contentGap = (nativeBottom and contentBottom) and (contentBottom - nativeBottom) or 0
 		RestoreNativeHeader()
-		host:SetPoint("TOP", ObjectiveTrackerFrame, "BOTTOM", 0, contentGap)
+		host:SetPoint("TOP", ObjectiveTrackerFrame, "BOTTOM", 0, contentGap * ratio)
 		local layoutScale = host:GetEffectiveScale()
 		local layoutScreenScale = UIParent:GetEffectiveScale()
 		local layoutMargin = 24 * layoutScreenScale / layoutScale
-		contentBottom = contentBottom or 0
+		contentBottom = (contentBottom or 0) * ratio
 		LayoutModules(host:GetWidth(), math.max(0, contentBottom - layoutMargin), 0)
 		if contentBottom - (host:GetHeight() or 0) >= layoutMargin then
 			return
@@ -587,7 +611,14 @@ local function LayoutInCombat()
 		AvoidMinimap(point)
 	elseif nativeAnchor then
 		local _, hostPoint = StackPoints(nativeAnchor.point)
-		host:SetPoint(hostPoint, nativeAnchor.relativeTo, nativeAnchor.relativePoint, nativeAnchor.x, nativeAnchor.y)
+		local ratio = NativeRatio()
+		host:SetPoint(
+			hostPoint,
+			nativeAnchor.relativeTo,
+			nativeAnchor.relativePoint,
+			nativeAnchor.x * ratio,
+			nativeAnchor.y * ratio
+		)
 	end
 	AvoidMinimap(nativeAnchor and nativeAnchor.point or "TOPRIGHT")
 end
@@ -607,16 +638,19 @@ local function LayoutAttached()
 	CaptureNativeAnchor()
 	local width = ObjectiveTrackerFrame:GetWidth()
 	MatchNativeScale()
+	local ratio = NativeRatio()
 	host:ClearAllPoints()
 	host:SetPoint(
 		nativeAnchor.point,
 		nativeAnchor.relativeTo,
 		nativeAnchor.relativePoint,
-		nativeAnchor.x,
-		nativeAnchor.y
+		nativeAnchor.x * ratio,
+		nativeAnchor.y * ratio
 	)
 	local layoutScale = host:GetEffectiveScale()
 	local layoutScreenScale = UIParent:GetEffectiveScale()
+	-- The user's scale enlarges the column; keep it on screen the way the detached column already is.
+	width = math.min(width, UIParent:GetWidth() * layoutScreenScale / layoutScale)
 	local layoutMargin = 40 * layoutScreenScale / layoutScale
 	local available = math.max(0, (host:GetTop() or UIParent:GetHeight()) - layoutMargin)
 	host:SetWidth(width)
@@ -650,8 +684,8 @@ local function LayoutAttached()
 		nativeAnchor.point,
 		nativeAnchor.relativeTo,
 		nativeAnchor.relativePoint,
-		nativeAnchor.x,
-		nativeAnchor.y
+		nativeAnchor.x * ratio,
+		nativeAnchor.y * ratio
 	)
 	local screenHeight = UIParent:GetHeight()
 	local top = host:GetTop()
@@ -668,8 +702,8 @@ local function LayoutAttached()
 		nativeAnchor.point,
 		nativeAnchor.relativeTo,
 		nativeAnchor.relativePoint,
-		nativeAnchor.x,
-		nativeAnchor.y + shift
+		nativeAnchor.x * ratio,
+		nativeAnchor.y * ratio + shift
 	)
 	local nativeScale = ObjectiveTrackerFrame:GetEffectiveScale()
 	local hostScale = host:GetEffectiveScale()
@@ -685,6 +719,9 @@ local function LayoutAttached()
 	ObjectiveTrackerFrame:SetClampedToScreen(false)
 	movingNative = true
 	ObjectiveTrackerFrame:ClearAllPoints()
+	local nativeWidth = ObjectiveTrackerFrame:GetWidth() * nativeScale / screenScale
+	-- A smaller private column must not push the full-width native quests beyond the screen edge.
+	hostLeft = math.max(0, math.min(hostLeft, UIParent:GetWidth() - nativeWidth))
 	local nativeX = hostLeft * screenScale / nativeScale
 	local nativeOffsetY = nativeY * screenScale / nativeScale
 	ObjectiveTrackerFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", nativeX, nativeOffsetY)
@@ -730,6 +767,25 @@ end
 
 function api.GetSettings()
 	return Settings()
+end
+---@return number
+function api.GetScale()
+	return Settings().scale or 1
+end
+-- The attached host must not restack the protected native tracker during combat, so a scale change waits for
+-- the reflow on PLAYER_REGEN_ENABLED. Detached, the host owns its frames and scales straight away.
+---@param value number
+function api.SetScale(value)
+	if type(value) ~= "number" or value ~= value then
+		return
+	end
+	local settings = Settings()
+	local scale = math.max(MIN_SCALE, math.min(MAX_SCALE, value))
+	if settings.scale == scale then
+		return
+	end
+	settings.scale = scale
+	host:MarkDirty()
 end
 function api.IsAttachedToQuestTracker()
 	return Settings().attached ~= false

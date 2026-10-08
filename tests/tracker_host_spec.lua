@@ -34,7 +34,10 @@ local function frame()
 		return (self:GetTop() or 0) - self:GetHeight()
 	end
 	function f:GetEffectiveScale()
-		return self.effectiveScale or 1
+		return self.effectiveScale or (self.scale or 1)
+	end
+	function f:GetScale()
+		return self.scale or 1
 	end
 	function f:SetScale(value)
 		self.scale = value
@@ -321,7 +324,7 @@ local function drain()
 end
 drain()
 check(first.point[5] == 0 and second.point[5] == -90, "sections follow uiOrder")
-check(second.available == 510, "remaining space follows screen geometry")
+check(second.available == 518, "remaining space follows screen geometry")
 check(native:GetHeight() == 300, "native viewport preserves an externally sized height before clamping")
 native:SetHeight(420)
 native.scripts.OnSizeChanged(native)
@@ -385,7 +388,8 @@ local function besideNative()
 		and (right <= nativeLeft or left >= nativeRight)
 end
 check(besideNative() and host.point[4] >= nativeRight, "an undragged detached column sits right of a left-side tracker")
-check(host.point[5] == nativeTop - parent:GetHeight(), "an undragged detached column is level with the tracker")
+local screenHeight = parent:GetHeight() * parent:GetEffectiveScale() / host:GetEffectiveScale()
+check(host.point[5] == nativeTop - screenHeight, "an undragged detached column is level with the tracker")
 native.left, native.right = 700, 950
 host:MarkDirty()
 drain()
@@ -396,11 +400,11 @@ check(host.moving, "detached grip starts moving")
 host.left, host.top = 96, 880
 grip.scripts.OnDragStop(grip)
 drain()
-check(not host.moving and hostSettings.x == 96 and hostSettings.y == -200, "drag stop saves screen coordinates")
+check(not host.moving and hostSettings.x == 120 and hostSettings.y == 20, "drag stop saves screen coordinates")
 check(not ns.TrackerHost.IsAttachedToQuestTracker(), "all modules detach from the native tracker")
 ns.TrackerHost.SavePosition(80, -120)
 drain()
-check(host.point[1] == "TOPLEFT" and host.point[4] == 80 and host.point[5] == -120, "detached position persists")
+check(host.point[1] == "TOPLEFT" and host.point[4] == 64 and host.point[5] == -96, "detached position persists")
 ns.TrackerHost.SetAttached(true)
 drain()
 check(
@@ -519,7 +523,7 @@ nativeSetPoint(native, "TOPRIGHT", parent, "TOPRIGHT", 0, -100)
 host:MarkDirty()
 drain()
 minimap.shown = true
-host.left, host.right, host.top, host.bottom = 700, 950, 640, 300
+host.left, host.right, host.top, host.bottom = 560, 760, 640, 300
 minimap.left, minimap.right, minimap.top, minimap.bottom = 700, 1100, 900, 0
 nativeSetPoint(native, "TOPRIGHT", host, "BOTTOMRIGHT", 0, 0)
 host:MarkDirty()
@@ -612,8 +616,8 @@ nativeHeader:Show()
 host:MarkDirty()
 drain()
 check(
-	nativeHeader.point[2] == host and nativeHeader.point[1] == "TOPLEFT",
-	"the native header moves to the top of the shared column"
+	nativeHeader.point[2] == host and nativeHeader.point[1] == "TOPRIGHT" and nativeHeader.point[3] == "TOPRIGHT",
+	"the native header keeps the right edge of the shared column"
 )
 check(nativeHeader.point[4] == 0 and nativeHeader.point[5] == 0, "the header sits flush with the host top")
 check(first.point[5] == -38, "the first section leaves the header its room")
@@ -780,8 +784,39 @@ check(
 )
 native.SetHeight = rawNativeSetHeight
 
+-- The tracker scale rides on the shared host settings: one stored value, read by whichever addon loaded the
+-- host first. It enlarges the private column only, converting the native slot's offsets so the placement stays
+-- put, and the attached restack waits for combat to end rather than moving the protected frame while locked.
+native.effectiveScale, parent.effectiveScale = 1.25, 1
+host:MarkDirty()
+drain()
+check(host.scale == 1.25, "companion matches native effective scale")
+local nativeAnchorY = host.point[5]
+ns.TrackerHost.SetScale(1.5)
+drain()
+check(host.scale == 1.875, "tracker scale multiplies the native scale")
+check(hostSettings.scale == 1.5, "tracker scale persists on the shared host settings")
+check(ns.TrackerHost.GetScale() == 1.5, "tracker scale reads back from the shared host")
+check(
+	host.point[5] == nativeAnchorY * (1.25 / 1.875),
+	"attached offsets convert from the native scale to the scaled host"
+)
+combat = true
+ns.TrackerHost.SetScale(0.75)
+drain()
+check(host.scale == 1.875, "tracker scale waits while the native tracker is locked")
+check(hostSettings.scale == 0.75, "the requested scale is saved immediately")
+combat = false
+host.scripts.OnEvent(host, "PLAYER_REGEN_ENABLED")
+drain()
+check(host.scale == 0.9375, "tracker scale applies after combat")
+ns.TrackerHost.SetScale(1)
+drain()
+check(host.scale == 1.25, "tracker scale returns to the native size")
+
 -- A fresh host after /reload resolves persisted owner settings only after load events.
 combat = false
+native.effectiveScale, parent.effectiveScale = 1, 1
 nativeSetPoint(native, "TOPLEFT", parent, "TOPLEFT", 0, -100)
 hostSettings = { attached = false, x = 140, y = -180 }
 local beforeReload = #frames

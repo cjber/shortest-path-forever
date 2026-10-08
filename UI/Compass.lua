@@ -235,15 +235,26 @@ local function OnHide()
 end
 
 -- Where the player dragged it, else the stock place under the top of the screen. The client keeps a clamped frame
--- on screen, so a place saved at another resolution or scale cannot strand it.
+-- on screen, so a place saved at another resolution or scale cannot strand it. Saved points and the stock offset
+-- are in screen pixels, so both are converted into the scaled frame's own units.
+local function RelativeScale()
+	local scale = frame:GetEffectiveScale() / UIParent:GetEffectiveScale()
+	return scale > 0 and scale or 1
+end
+
 local function Anchor()
 	frame:ClearAllPoints()
+	local scale = RelativeScale()
 	local x, y = ns.db.compassX, ns.db.compassY
 	if type(x) == "number" and type(y) == "number" then
-		frame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x, y)
+		frame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x / scale, y / scale)
 	else
-		frame:SetPoint("TOP", UIParent, "TOP", 0, -42)
+		frame:SetPoint("TOP", UIParent, "TOP", 0, -42 / scale)
 	end
+end
+
+local function ApplyScale()
+	frame:SetScale((ns.db.compassScale or 100) / 100)
 end
 
 local function Create()
@@ -251,6 +262,7 @@ local function Create()
 	---@cast compass SPFCompassFrame
 	frame = compass
 	frame:SetSize(WIDTH, HEIGHT)
+	ApplyScale()
 	frame:SetClampedToScreen(true)
 	Anchor()
 	frame:SetFrameStrata("LOW")
@@ -262,7 +274,9 @@ local function Create()
 	end)
 	frame:SetScript("OnDragStop", function()
 		frame:StopMovingOrSizing()
-		ns.db.compassX, ns.db.compassY = frame:GetCenter()
+		local scale = RelativeScale()
+		local x, y = frame:GetCenter()
+		ns.db.compassX, ns.db.compassY = x * scale, y * scale
 		Anchor()
 	end)
 	frame:SetScript("OnMouseUp", function(_, button)
@@ -349,6 +363,18 @@ end
 ---@return boolean
 function ns.CompassMoving()
 	return moving
+end
+
+---@param value number
+function ns.SetCompassScale(value)
+	if type(value) == "number" then
+		ns.db.compassScale = value
+	end
+	if frame then
+		ApplyScale()
+		Anchor()
+	end
+	ns.RefreshCompass()
 end
 
 ---@param value boolean
