@@ -156,6 +156,7 @@ ns.Init(function()
 			not ns.db.journey
 			or button ~= "LeftButton"
 			or not IsAltKeyDown()
+			or IsShiftKeyDown()
 			or not WorldMapFrame:IsShown()
 			or not WorldMapFrame.ScrollContainer:IsMouseOver()
 		then

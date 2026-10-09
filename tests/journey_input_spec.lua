@@ -119,12 +119,16 @@ assert(not handler(map, 3, "LeftButton") and destination == nil, "non-point pins
 print("journey input ok")
 
 -- The global mouse event still fires over a Questie-owned icon that swallowed canvas clicks.
-alt, destination = true, nil
+alt, shift, destination = true, false, nil
 mouseEvent(nil, "GLOBAL_MOUSE_DOWN", "LeftButton")
 assert(
 	destination and destination.x == 0.25 and destination.y == 0.75,
 	"Alt-click uses the exact map cursor over icons"
 )
+shift, destination = true, nil
+mouseEvent(nil, "GLOBAL_MOUSE_DOWN", "LeftButton")
+assert(destination == nil, "Shift with Alt leaves journey handling to the existing Shift-click path")
+shift = false
 for _, state in ipairs({ { false, true, true }, { true, false, true }, { true, true, false } }) do
 	alt, overMap, shown = unpack(state)
 	destination = nil
