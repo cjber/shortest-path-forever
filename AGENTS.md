@@ -79,6 +79,8 @@ before its `v*` tag, since the release publishes it as the notes.
 
 ## Waivers
 
+- WFA-3: an optional stock button below the minimap opens the existing Settings page, for players who request minimap access. It is off by default.
+
 - WFA-28: `Data/Routes.lua` (boat and zeppelin routes, docks, periods): wago.tools `TaxiPathNode` for the pinned
   build, timed by the CMaNGOS mangos-classic transport model and stretched onto classic-db `transports.period`;
   QuestieDB's object `waypoints` field is empty in its Forever store and AtlasLoot has no travel data. Live

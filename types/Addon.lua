@@ -146,6 +146,13 @@
 ---@field share? boolean
 ---@field guideStops? boolean
 ---@field compass? boolean
+---@field mapPinScale? number
+---@field flightPinScale? number
+---@field minimapPinScale? number
+---@field journeyTracker? boolean
+---@field arrow? boolean
+---@field metres? boolean
+---@field minimapButton? boolean
 ---@field compassScale? number percent, 100 is the stock size
 ---@field compassX? number the compass's centre from the screen's bottom left, once dragged
 ---@field compassY? number
@@ -240,6 +247,7 @@ ShortestPathForeverPathData = nil
 ---@field cost number|false
 ---@field estimated? boolean
 ---@class SPFPlanOptions : SPFPlaceOptions
+---@field withoutHearth? boolean
 ---@field feasibleOnly? boolean
 ---@field incumbent? number
 ---@field incumbentPlan? SPFPlan

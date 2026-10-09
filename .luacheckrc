@@ -21,6 +21,7 @@ globals = {
 	"SLASH_SPFNEAR1",
 }
 read_globals = {
+	"IsAltKeyDown",
 	"CreateFramePoolCollection",
 	"C_XMLUtil",
 	"AM_PIN_SCALE_STYLE_WITH_TERRAIN",

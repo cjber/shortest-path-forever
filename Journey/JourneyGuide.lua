@@ -131,6 +131,7 @@ local function ClearGuideWaypoint()
 	C_Map.ClearUserWaypoint()
 	C_SuperTrack.SetSuperTrackedUserWaypoint(false)
 	guide.waypoint, guide.expectedWaypoint = nil, nil
+	guide.bend, guide.uiMap, guide.fading = nil, nil, nil
 	ns.charDB.guideWaypoint = nil
 	RememberTracking(guide)
 	guide.writing = nil
@@ -216,6 +217,12 @@ function Guide.To(node, points, goal)
 	if guide.paused then
 		guide.paused = nil
 		RefreshTracker()
+	end
+	if ns.db.arrow == false and guide.waypoint then
+		if not OwnsWaypoint() then
+			return
+		end
+		ClearGuideWaypoint()
 	end
 	guide.points = points
 	guide.target = node

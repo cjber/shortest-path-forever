@@ -2,6 +2,20 @@
 
 The detail behind each feature in the [README](../README.md).
 
+## Guidance controls
+
+Alt-click the world map to place a destination directly over a Questie icon. Shift-click remains available on the map, minimap and Shortest Path icons.
+
+In **Map marks**, scale transport, flight master and minimap icons separately from 25% to 200%. Right-click a flight master icon to mark its path as known or unknown; opening a flight master's map also syncs paths reported by the client.
+
+In **Interface**, turn **Show journey in tracker** and **Show direction arrow** off independently, leaving the map route visible. Choose yards or metres, resize the tracker and compass, or enable the optional minimap settings button. Turn off **Attach to quest tracker** in Guidance to drag the Forever column by its heading.
+
+Click the current journey step and choose **Complete this step** to advance it. Skipping a Hearthstone leaves it out of plans for that journey. Other steps may return if your actual position still requires them.
+
+With RestedXP installed, **Resume guide** in Guidance or the Journey header menu resumes its current target after another journey. Adventure Guide owns this action when its RestedXP display is enabled; update both addons to use the integrated resume control.
+
+## Routes and map marks
+
 - **Journey planner.** Shift-click anywhere on the world map or minimap for the fastest way there from where you
   stand: walking, the flight points you know, boats and zeppelins with their live waits, lifts, the tram and
   portals, including a flight master you haven't found yet if walking to it pays off. Walks go through
@@ -15,10 +29,11 @@ The detail behind each feature in the [README](../README.md).
   *1. Use Hearthstone*. A cooldown counts as waiting, and a jump to another continent adds a few seconds for
   the loading screen. The client does not say where your bind point is, so it is where you stood when you last
   bound at an innkeeper with the addon on; bound anywhere else since, the hearth is left out until you bind
-  again. It is kept with the addon's saved settings, which the WoW: Forever client does not load yet, so after a
-  `/reload` or relog the hearth is left out until you next bind. Class teleports need no bind point. Turn this
+  again. The recorded bind position is saved per character and checked against the current bind name. Class teleports need no bind point. Turn this
   off with *Use hearth and teleports* in `/path`.
   ![Journey steps from Auberdine to Silithus with time and distance remaining](screenshots/tracker.png)
+
+  The tracker shows each travel step, with time and distance remaining.
 
   ![Auberdine’s piers on the minimap, with the dotted route and Guide’s native waypoint](screenshots/minimap.png)
 
@@ -44,6 +59,8 @@ The detail behind each feature in the [README](../README.md).
   walking-map cell by at most three yards also reuses your position's costs. Walk steps name the dock, pier, lift
   or flight master you are heading for.
   ![A walking route around the terrain south of Auberdine](screenshots/darkshore.png)
+
+  Walking legs follow the terrain instead of a straight line to the destination.
 
   ![Eight-second demo of a route settling, the countdown and the compass](screenshots/demo.gif)
 

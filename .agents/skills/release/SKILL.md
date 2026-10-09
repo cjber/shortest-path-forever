@@ -6,7 +6,7 @@ description: "Prepare, publish and verify a complete Shortest Path Forever relea
 # Release Shortest Path Forever
 
 Run from the repository root. Read `AGENTS.md`, then the installed
-`wow-forever-addon` and `wow-addon-publish` skills. For images, also read
+`wow-forever-addon`, `wow-addon-publish` and `copywriting` skills. For images, also read
 `wow-mock-screenshots`. These supply the shared standards and store procedures;
 this checklist supplies the release completion criteria. Use the user's existing
 authorization. A preparation-only request ends before tags or uploads.
@@ -30,7 +30,9 @@ authorization. A preparation-only request ends before tags or uploads.
 
 ## Refresh every presentation surface
 
-4. Compare `README.md`, `docs/curseforge.md`, linked documentation, defaults,
+4. Use `copywriting` to review the release notes, update notice, README and store
+   description together. Ground claims in the shipped behaviour and keep shared
+   feature names, defaults and companion requirements consistent. Compare `README.md`, `docs/curseforge.md`, linked documentation, defaults,
    commands and companion requirements with the behaviour being released. Remove
    stale claims and broken links. Run the shared `wow-forever-addon/check_copy.py`
    on both copy files. Keep README/store copy within the shared length limits.

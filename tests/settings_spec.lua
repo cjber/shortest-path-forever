@@ -94,7 +94,9 @@ local env = setmetatable({
 		end,
 		RegisterInitializer = function(target, initializer)
 			if initializer.kind == "button" then
-				buttons[#buttons + 1] = { target = target, initializer = initializer }
+				if target.name == "Shortest Path Forever" then
+					buttons[#buttons + 1] = { target = target, initializer = initializer }
+				end
 			else
 				assert(initializer.setting.category == target, "a row sits on the page Blizzard is told about")
 				rows[#rows + 1] = { target = target, initializer = initializer }
@@ -175,7 +177,16 @@ setfenv(assert(loadfile("UI/Settings.lua")), env)("ShortestPathForever", ns)
 -- The index page is one button per group; each opens that group's page. The groups divide the old flat list, and
 -- every row keeps its key, default, tooltip and callback.
 local groups = {
-	["Map marks"] = { "pins", "transit", "portals", "mapFlightMasters", "minimapPins" },
+	["Map marks"] = {
+		"pins",
+		"transit",
+		"portals",
+		"mapFlightMasters",
+		"minimapPins",
+		"mapPinScale",
+		"flightPinScale",
+		"minimapPinScale",
+	},
 	Transport = { "mapRoutes", "otherFaction", "tracker", "share" },
 	Guidance = {
 		"trackerAttached",
@@ -189,12 +200,22 @@ local groups = {
 		"corpse",
 	},
 	Alerts = { "alerts", "alertSound" },
-	Interface = { "compass", "compassMove", "trackerScale", "compassScale", "whatsNew" },
+	Interface = {
+		"journeyTracker",
+		"arrow",
+		"metres",
+		"minimapButton",
+		"compass",
+		"compassMove",
+		"trackerScale",
+		"compassScale",
+		"whatsNew",
+	},
 }
 local order = { "Map marks", "Transport", "Guidance", "Alerts", "Interface" }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 25, #rows)
+assert(#rows == 32, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer

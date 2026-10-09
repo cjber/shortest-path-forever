@@ -189,9 +189,22 @@ assert(ns.TaxiDestination(nil, 101) == nil and ns.TaxiDestination({}, 101) == ni
 
 ns.db = { taxiRoute = true }
 ns.TaxiNodes = { [101] = { name = "Ironforge" }, [102] = {}, [103] = { name = "Stormwind" } }
+ns.TaxiNodes[101].faction, ns.TaxiNodes[103].faction = "Alliance", "Horde"
 ns.SetJourneyRoute = function() end
 ns.JourneyChanged = function() end
 ns.init()
+env.ShortestPathForeverCharDB.taxi = {}
+env.ShortestPathForeverCharDB.taxiNames = {}
+ns.charDB = env.ShortestPathForeverCharDB
+env.UnitFactionGroup = function()
+	return "Alliance"
+end
+assert(ns.SetTaxiKnown(101, true), "manual toggle accepts a valid faction node")
+assert(ns.KnownTaxiNodes()[101], "manual toggle persists the known node")
+assert(ns.SetTaxiKnown(101, false), "manual toggle clears a valid node")
+assert(not ns.KnownTaxiNodes()[101], "manual clear removes the node")
+assert(not ns.SetTaxiKnown(103, true), "manual toggle rejects the opposing faction")
+assert(not ns.SetTaxiKnown(999, true), "manual toggle rejects an unknown node")
 local function event(name)
 	assert(eventFrame.events[name])
 	eventFrame:Run("OnEvent", name)

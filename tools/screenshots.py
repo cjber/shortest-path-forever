@@ -27,11 +27,11 @@ WOWMOCK = Path(os.environ.get("WOWMOCK", Path.home() / ".claude/skills/wow-mock-
 if not (WOWMOCK / "wowmock.py").is_file():
     sys.exit(f"wowmock.py not found in {WOWMOCK}; set WOWMOCK to its directory")
 sys.path.insert(0, str(WOWMOCK))
+from gen_routes import BUILD
 from screenshots_area import render as render_area_art
 from screenshots_services import render as render_services
 from screenshots_tracker import detached_tracker
 from wowmock import (
-    BUILD,
     FONTS,
     NORMAL,
     WHITE,
@@ -719,7 +719,7 @@ def render_minimap(ui):
 
 def render_demo():
     # Strokes.lua fixes stroke widths in physical pixels; render at the GIF's final size.
-    ui = Art(scale=1)
+    ui = Art(build=BUILD, scale=1)
     frames = []
     for index in range(80):
         t = index / 10
@@ -882,7 +882,7 @@ def compare_map_references(ui, refs):
 
 def compare_references(refs, tooltip_ref=None):
     """Keep reference pixels out of product media; this sheet is a review artifact only."""
-    ui, art = Art(scale=1.2), Art(scale=2)
+    ui, art = Art(build=BUILD, scale=1.2), Art(build=BUILD, scale=2)
     # Reuse the cached 2x atlas at the capture's UI scale; never switch the art set for this comparison.
     ui.atlas = art.atlas
     panel = tracker_canvas(ui)
@@ -972,14 +972,14 @@ def main():
     parser.add_argument("--refs", type=Path, help="write enlarged comparisons against the owner's captures")
     parser.add_argument("--tooltip-ref", type=Path, help="optional real stock tooltip capture; absent from refs 11-21")
     args = parser.parse_args()
-    ui = Art(scale=2)
+    ui = Art(build=BUILD, scale=2)
     OUT.mkdir(parents=True, exist_ok=True)
     failed = []
     for name in args.scenes:
         try:
             content, suffix = encode(ui, name)
             if args.verify:
-                assert content == encode(Art(scale=2), name)[0], f"{name}: nondeterministic bytes"
+                assert content == encode(Art(build=BUILD, scale=2), name)[0], f"{name}: nondeterministic bytes"
             path = OUT / (name + suffix)
             path.write_bytes(content)
             print(

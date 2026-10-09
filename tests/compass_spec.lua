@@ -203,7 +203,7 @@ env.CreateFromMixins, env.MapCanvasPinMixin, env.FlightPointPinMixin = function(
 end, {}, {}
 ns.Init = function() end
 local stubs = { DockKind = ns.DockKind, DockPoint = ns.DockPoint }
-for _, file in ipairs({ "UI/Art.lua", "UI/Looks.lua", "UI/Map.lua" }) do
+for _, file in ipairs({ "Core/Distance.lua", "UI/Art.lua", "UI/Looks.lua", "UI/Map.lua" }) do
 	setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
 end
 ns.Init, ns.DockKind, ns.DockPoint = nil, stubs.DockKind, stubs.DockPoint
@@ -233,6 +233,12 @@ close(strip.Bend.x, 0)
 close(strip.Next.x, -90)
 close(strip.Stop.x, 180)
 assert(strip.Goal.hidden, "clamped markers at the same edge must collapse")
+assert(strip.Distance.text == "100 yd")
+ns.db.metres = true
+ns.RefreshCompass()
+assert(strip.Distance.text == "91 m", "stationary compass refreshes its distance units")
+ns.db.metres = false
+ns.RefreshCompass()
 assert(strip.Distance.text == "100 yd")
 close(strip.Bend.width / strip.Bend.height, 23 / 35)
 close(strip.Next.width / strip.Next.height, 23 / 35)

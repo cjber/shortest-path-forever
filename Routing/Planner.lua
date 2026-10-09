@@ -821,7 +821,7 @@ local function Plan(options)
 	end
 	-- options.incumbent, an arrival already in hand, ends the search for anything that cannot beat it: no route
 	-- then means the incumbent stands. Its plan still passes through hearth and long-walk preferences below.
-	local planned = Search(false, options.incumbent) or options.incumbentPlan
+	local planned = Search(options.withoutHearth == true, options.incumbent) or options.incumbentPlan
 	local minimum = options.hearthMinimumSavings or 0
 	if planned and minimum > 0 then
 		for _, leg in ipairs(planned.legs) do

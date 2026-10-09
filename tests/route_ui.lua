@@ -13,6 +13,18 @@ posX, posY, posMap, facing = 0, 0, 1, 0
 mapID, zoom = 1414, 1
 ns.db.mapRoutes = true
 for _, provider in ipairs(providers) do provider:RefreshAllData() end
+ns.db.flightPinScale = 50
+local flightPin = map:AcquirePin("ShortestPathForeverFlightPinTemplate", {
+ nodeID = 32, name = "Stormwind", position = CreateVector2D(0.5, 0.5),
+ faction = Enum.FlightPathFaction.Alliance, atlasName = "taxinode_alliance",
+})
+assert(flightPin.startScale == 0.5 and flightPin.endScale == 0.6, "flight icons use the selected scale")
+flightPin:OnClick("RightButton")
+local knownToggle = assert(context["Flight path known"], "right-click opens the flight ownership menu")
+local wasKnown = knownToggle.get() == true
+knownToggle.click()
+assert(ns.KnownTaxiNodes()[flightPin.poiInfo.nodeID] == (not wasKnown or nil),
+ "the menu changes persisted flight ownership")
 local api = ShortestPathForever.API
 local lineTemplate, goalTemplate = "ShortestPathForeverRoutePinTemplate", "ShortestPathForeverGoalPinTemplate"
 local DOT = "Interface\\AddOns\\ShortestPathForever\\media\\Dot"

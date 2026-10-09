@@ -129,6 +129,8 @@ end
 -- commas }: one dock, or several too close to tell apart.
 function ShortestPathForeverDockPinMixin:OnAcquired(cluster)
 	self.cluster = cluster
+	local scale = (ns.db.mapPinScale or 100) / 100
+	self:SetScalingLimits(1, scale, scale * 1.2)
 	ns.SetTransportIcon(self.Texture, cluster.kind)
 	ns.SetTransportIcon(self.HighlightTexture, cluster.kind)
 	self:SetPosition(cluster.x, cluster.y)
@@ -580,6 +582,8 @@ end
 
 function ShortestPathForeverPortalPinMixin:OnAcquired(portal, x, y)
 	self.portal = portal
+	local scale = (ns.db.mapPinScale or 100) / 100
+	self:SetScalingLimits(1, scale, scale * 1.2)
 	ns.SetTransportIcon(self.Texture, "portal")
 	ns.SetTransportIcon(self.HighlightTexture, "portal")
 	self:SetPosition(x, y)
@@ -635,7 +639,13 @@ function PortalProviderMixin:RefreshAllData()
 		self:RemoveAllData()
 		return
 	end
-	local signature = mapID .. ":" .. tostring(ns.db.portals) .. ":" .. tostring(ns.db.otherFaction)
+	local signature = mapID
+		.. ":"
+		.. tostring(ns.db.portals)
+		.. ":"
+		.. tostring(ns.db.otherFaction)
+		.. ":"
+		.. tostring(ns.db.mapPinScale)
 	if self.signature == signature and ActivePins(PORTAL_TEMPLATE) >= (self.pinCount or 0) then
 		return
 	end
@@ -661,6 +671,34 @@ function ShortestPathForeverFlightPinMixin:OnLoad()
 	FlightPointPinMixin.OnLoad(self)
 	-- Closing the map hides the pin without an OnMouseLeave.
 	self:SetScript("OnHide", self.OnMouseLeave)
+end
+
+function ShortestPathForeverFlightPinMixin:OnAcquired(info)
+	FlightPointPinMixin.OnAcquired(self, info)
+	local scale = (ns.db.flightPinScale or 100) / 100
+	self:SetScalingLimits(1, scale, scale * 1.2)
+end
+
+function ShortestPathForeverFlightPinMixin.ShouldMouseButtonBePassthrough()
+	return false
+end
+
+function ShortestPathForeverFlightPinMixin:OnMouseClickAction(button)
+	if button == "RightButton" then
+		MenuUtil.CreateContextMenu(self, function(_, root)
+			root:CreateCheckbox(L["Flight path known"], function()
+				local known = ns.KnownTaxiNodes()
+				return known and known[self.poiInfo.nodeID] == true
+			end, function()
+				local known = ns.KnownTaxiNodes()
+				ns.SetTaxiKnown(self.poiInfo.nodeID, not (known and known[self.poiInfo.nodeID]))
+				ns.RefreshMap()
+			end)
+		end)
+		return true
+	elseif FlightPointPinMixin.OnMouseClickAction then
+		return FlightPointPinMixin.OnMouseClickAction(self, button)
+	end
 end
 
 function ShortestPathForeverFlightPinMixin:OnMouseEnter()
@@ -702,7 +740,13 @@ function FlightProviderMixin:RefreshAllData()
 		self.signature = nil
 		return
 	end
-	local signature = mapID .. ":" .. tostring(ns.db.mapFlightMasters) .. ":" .. tostring(ns.db.otherFaction)
+	local signature = mapID
+		.. ":"
+		.. tostring(ns.db.mapFlightMasters)
+		.. ":"
+		.. tostring(ns.db.otherFaction)
+		.. ":"
+		.. tostring(ns.db.flightPinScale)
 	if self.signature == signature and not self.force and ActivePins(FLIGHT_TEMPLATE) >= (self.pinCount or 0) then
 		return
 	end
@@ -784,8 +828,10 @@ function ns.RefreshMap()
 		return
 	end
 	if provider then
+		provider:RemoveAllData()
 		provider:RefreshAllData()
 		portalProvider:RefreshAllData()
+		flightProvider.force = true
 		flightProvider:RefreshAllData()
 		ns.RefreshTransportRoutes()
 	end

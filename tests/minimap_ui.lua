@@ -39,6 +39,13 @@ for _, pin in ipairs(pins) do
  assert(pin.entry.map == posMap and math.abs(pin.entry.x - posX) < 200, "only places in view")
 end
 
+ns.db.minimapPinScale = 50
+ns.RefreshMinimapPins()
+assert(ferry:GetWidth() == 8 and math.abs(ferry.anchor[5] + 30) < 0.01,
+ "smaller minimap icons retain their projected position")
+ns.db.minimapPinScale = 100
+ns.RefreshMinimapPins()
+
 -- The world map's tooltip, refreshed each second while hovered.
 ferry.scripts.OnEnter(ferry)
 assert(GameTooltip:IsOwned(ferry) and tip[1]:find("Boat to", 1, true), "the dock's departures tooltip")
