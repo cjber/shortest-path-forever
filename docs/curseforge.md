@@ -34,7 +34,18 @@ Hover a dock to see its services and destinations.
 - In **Guidance**, turn off **Attach to quest tracker** to drag the shared column. **Resume guide** returns to RestedXP; **Minimum Hearthstone saving** reserves it for larger savings.
 - `/spfnear` opens nearby services. `/path perf` reports performance; `/path debug` enables a saved ride trace.
 
-Works alongside Adventure Guide Forever, SkillUp Forever, Legacy Forever and Tweaks Forever. More details and issues: [GitHub](https://github.com/cjber/shortest-path-forever). Licence: GPL-3.0-or-later.
+## With my other Forever addons
+
+Each one is optional and works alone. Installed with Shortest Path Forever, they send it their destinations:
+
+- [Adventure Guide Forever](https://www.curseforge.com/wow/addons/adventure-guide-forever) suggests quests and journeys for your level. Pick one and Shortest Path leads you to each stop, including RestedXP steps.
+- [SkillUp Forever](https://www.curseforge.com/wow/addons/skillup-forever) plans profession levelling. Click a trainer or vendor in its route to travel there. It picks the nearest one by travel time.
+- [Legacy Forever](https://www.curseforge.com/wow/addons/legacy-forever) puts unfinished Legacy challenges on the world map. Click a dungeon or raid pin to travel there.
+- [Tweaks Forever](https://www.curseforge.com/wow/addons/tweaks-forever) adds dungeon and raid entrances to the map. Click one to travel there.
+
+Journey steps share one tracker column with the Adventure Guide, SkillUp and Legacy sections, above your quests. Scale the column in **Interface**, or turn off **Attach to quest tracker** to drag it.
+
+More details and issues: [GitHub](https://github.com/cjber/shortest-path-forever). Licence: GPL-3.0-or-later.
 
 Made by Cillian Berragan · [cillian.dev](https://cillian.dev/) · [GitHub](https://github.com/cjber) · [Twitter](https://twitter.com/cjberragan)
 
