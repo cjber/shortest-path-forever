@@ -1,81 +1,41 @@
 Shift-click the world map or minimap, or choose a quest, to plan a journey. Shortest Path Forever gives directions in the objective tracker and on both maps.
 
-![Eight-second demo of a route settling, the countdown and compass](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/demo.gif)
+![A route settling, the departure countdown and compass](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/demo.gif)
 
-Planning a journey from the map: the route settles, the next boat counts down in the tracker and the compass turns with you.
-
-![Nearby services](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/services.png)
-
-Nearby services sits in the minimap's tracking menu and the world map's.
+The route settles, the next boat counts down and the compass turns with you.
 
 ## Features
 
-- **A journey from where you stand.** Walking paths go around walls, hills and water, and through tunnels. The planner uses the flight points you know and can walk you to an undiscovered flight master when that saves time. Boat waits count towards the arrival time. Walking maps are compressed inside the addon and decoded as a journey reaches them.
-- **RestedXP journeys.** When RestedXP is installed, journeys to the guide's current target are enabled by default. It follows step changes and hides RestedXP's arrow while guiding you. No TomTom or bridge addon needed.
-- **Journeys from your guides.** With TomTom not installed, Questie and other guides that set a TomTom waypoint start a journey here instead, carrying the guide's title. Turn it off with *Let guides set TomTom waypoints* in `/path`.
-- **Quest areas the game draws itself.** A stop that marks a quest's area is drawn by the client while you are inside it: the game's own area for that quest turns gold on the minimap and is drawn in gold on the world map, instead of a pin and a line.
-- **Directions on the map and minimap.** Walking legs are round breadcrumb dots, transport legs have their own colours, and a waypoint pin marks your destination. The Group Finder spinner turns while a new journey is checked.
-- **Guide, on with every journey.** The game's own waypoint marker leads you to the next boat, lift, flight master or your destination, or round each turn if you prefer. Click the Journey header to toggle it; right-click for *Guide me*, *Show on map* or *Clear journey*. A compass in the game's own parchment gold marks your next turns, stop and destination.
-- **Nearby services.** Open the minimap's tracking menu or the world map's and pick *Nearby services* for trainers, repairs, reagents and other services. Choose trainers and vendors by specialty. Uses installed QuestieDB and Tweaks Forever for your class trainers.
-- **Back to your corpse.** As a ghost, a red dotted path in your tombstone's colour leads back to your body, and your journey picks up again once you are alive.
-- **Live departures.** Hover a dock on the world map or minimap to see where its boats go, and when they arrive and leave. Destination docks light up; click one to open the map at the other end. Nearby departures appear in the objective tracker; aboard a timed boat, it shows the next stop.
-- **Lifts, trams and portals.** Landings and stations have their own countdowns. Portals show where they lead, and clicking one opens that map.
-- **Schedules learned from real rides.** Ride once to sync a transport. A flight is timed from take-off to landing, so the next journey plans it from your own ride. Sightings are shared quietly with your guild, party and nearby players. Unsynced services say “no sighting yet”, and a journey shows their guessed wait as “leaves in about”.
-- **Arrival alerts.** A banner, the ship's own bell and a flashing taskbar icon warn when your boat is due, for when you're AFK. Zeppelins sound their horn instead.
+- **Plan the trip.** Combine walking, known flights, boats, zeppelins, lifts, the tram, portals and teleports. Walking routes go around walls, hills and water. Routes replan as you move.
+- **Follow your guide.** RestedXP journeys are enabled by default, without TomTom or a bridge addon. With TomTom absent, other guides can also pass waypoints to Shortest Path. Adventure Guide handles navigation when its RestedXP display is enabled.
+- **Choose what you see.** Hide Journey steps or the direction arrow while keeping the map route. Use yards or metres, resize icons separately and optionally add a minimap settings button.
+- **Complete a step.** Click the current journey step and choose *Complete this step*. Skipping a Hearthstone leaves it out for that journey; later plans follow your actual position.
+- **Find services and departures.** Map tracking menus offer nearby trainers, repairs, vendors and other services using installed QuestieDB. Dock tooltips show destinations and times. Flight maps highlight the flight to take; ride times improve estimates.
+- **Travel prompts.** Hearthstone and teleport steps show what to cast. Transport sounds and a taskbar flash warn before a boat arrives. A compass marks your turns; a red corpse route guides ghosts back to their bodies.
 
-![Journey steps from Auberdine to Silithus, with time and distance remaining](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/tracker.png)
+![Journey steps with time and distance remaining](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/tracker.png)
 
-The journey in the objective tracker, step by step, with time and distance left.
+The tracker shows the trip one step at a time.
 
-![Auberdine’s piers on the minimap, with the dotted route and Guide’s native waypoint](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/minimap.png)
+![Route and waypoint on the minimap](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/minimap.png)
 
-The route on the minimap in dots, with Guide's waypoint.
+Walking breadcrumbs and the native waypoint lead to the next step.
 
-![A guide's route through Thelsamar, its current stop lit like the tracked quest](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/stops.png)
+![Dock destinations and departures](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/docks.png)
 
-A route another addon handed over: three places through Thelsamar, the stop you are travelling to lit like the tracked quest.
-
-![A quest's own area in gold on the world map, with no stop pin or line](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/area.png)
-
-Standing in a quest's area: the world map draws the game's own area in gold, in place of the stop's pin and its line.
-
-![Hovering Auberdine’s piers shows departures and lights destination docks](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/docks.png)
-
-Auberdine's piers and their departures.
-
-![The compass strip with the next turns and destination](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/compass.png)
-
-The compass: the game's own ticks, gold letters and waypoint pin, no panel.
-
-![A journey from Auberdine through Menethil and Theramore to Silithus](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/kalimdor.png)
-
-A longer trip: Auberdine to Menethil, then Theramore, then Silithus.
+Hover a dock to see its services and destinations.
 
 ## Usage
 
-In **Interface** settings, set **Forever tracker size** and **Compass size** separately from 50% to 200%. The tracker setting applies to the shared Forever column.
+- `/path` opens settings under **Options → AddOns → Shortest Path Forever**.
+- Alt-click the world map to choose a destination directly over a Questie icon. Shift-click the map, minimap or a Shortest Path icon; for quests, choose **Plan journey** in the right-click menu.
+- In **Map marks**, scale transport, flight master and minimap icons from 25% to 200%. Right-click a flight master icon to correct whether its path is known. Open a flight master's map to sync known paths.
+- In **Interface**, choose tracker and arrow visibility, metres and the optional minimap button. Resize the tracker and compass separately.
+- In **Guidance**, turn off **Attach to quest tracker** to drag the shared column. **Resume guide** returns to RestedXP; **Minimum Hearthstone saving** reserves it for larger savings.
+- `/spfnear` opens nearby services. `/path perf` reports performance; `/path debug` enables a saved ride trace.
 
-Settings → Guidance has **Minimum Hearthstone saving**, from zero to ten minutes.
-Zero keeps the current fastest-route behaviour; higher values reserve the Hearthstone for bigger savings.
+Works alongside Adventure Guide Forever, SkillUp Forever, Legacy Forever and Tweaks Forever. More details and issues: [GitHub](https://github.com/cjber/shortest-path-forever). Licence: GPL-3.0-or-later.
 
-Shift-click the world map or minimap to plan a journey. Shift-click a flight master or another map icon to travel there; the destination tag sits at its lower right. For a quest, choose **Plan journey** from its right-click menu in the quest log or objective tracker, or Shift-click its map marker. Completed quests route to their turn-in.
-
-- `/path` opens settings, also under **Options → AddOns → Shortest Path Forever**.
-- `/path perf` prints the addon's CPU time and memory use, terrain included.
-- `/path debug` enables a saved trace for reporting a ride that did not sync.
-- `/spfnear` opens the nearby-services menu on the world map, or routes to the nearest class trainer, trainer, repair, reagent vendor, vendor, innkeeper, bank, auction house, flight master or stable you name.
-
-Every feature has its own switch in the settings; the world map's filter menu and the minimap's tracking menu hide
-each kind of mark, and the other faction's routes are hidden until you ask for them.
-
-It's in English for now; translations are welcome on [GitHub](https://github.com/cjber/shortest-path-forever/tree/main/Locales).
-
-Used by my other Forever addons when both are installed: [Adventure Guide Forever](https://www.curseforge.com/wow/addons/adventure-guide-forever), [SkillUp Forever](https://www.curseforge.com/wow/addons/skillup-forever), [Legacy Forever](https://www.curseforge.com/wow/addons/legacy-forever) and [Tweaks Forever](https://www.curseforge.com/wow/addons/tweaks-forever).
-
-Source code and issues: [github.com/cjber/shortest-path-forever](https://github.com/cjber/shortest-path-forever) (GPL-3.0).
-
-![The current Hearthstone action](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/cast_prompt.png)
-
-When it is time to use your Hearthstone or cast a teleport, its icon and name appear on screen. The prompt clears as your journey continues.
+Made by Cillian Berragan · [cillian.dev](https://cillian.dev/) · [GitHub](https://github.com/cjber) · [Twitter](https://twitter.com/cjberragan)
 
 Built with AI assistance.

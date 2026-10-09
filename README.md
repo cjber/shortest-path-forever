@@ -3,7 +3,7 @@
 <h1 align="center">Shortest Path Forever</h1>
 
 <p align="center">
-The fastest way anywhere in WoW: Forever, on foot, by air, by sea and through portals.<br>
+Plan journeys in WoW: Forever, on foot, by air, by sea and through portals.<br>
 <a href="https://github.com/cjber/shortest-path-forever/actions/workflows/ci.yml"><img src="https://github.com/cjber/shortest-path-forever/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 <a href="https://github.com/cjber/shortest-path-forever/releases/latest"><img src="https://img.shields.io/github/v/release/cjber/shortest-path-forever" alt="Latest release"></a>
 </p>
@@ -17,58 +17,33 @@ with you.
 
 ## Features
 
-Each feature has more detail in [docs/features.md](docs/features.md).
-
-- **Journey planner.** Shift-click the map, minimap or a map icon, or choose *Plan journey* on a quest, for the fastest way there
-  on foot, by flight, boat, zeppelin, lift, tram, portal or teleport. The route is drawn on both maps, its steps sit in
-  the objective tracker, and it replans as you move.
-  ![Journey steps from Auberdine to Silithus with time and distance remaining](docs/screenshots/tracker.png)
-- **RestedXP journeys.** When RestedXP is installed, journeys to the guide's current target are enabled by default. It follows step changes and hides RestedXP's arrow while guiding you. No TomTom or bridge addon needed.
-- **Journeys from your guides.** With TomTom not installed, Questie and other guides that set a TomTom waypoint
-  start a journey here instead, carrying the guide's title. *Let guides set TomTom waypoints* in `/path` turns it off.
-  ![A guide's route through Thelsamar, its current stop lit like the tracked quest](docs/screenshots/stops.png)
-- **Quest areas the game draws itself.** A stop that marks a quest's area is drawn by the client while you are
-  inside it: the game's own area for that quest turns gold on the minimap and is drawn in gold on the world map, in
-  place of a pin and a line of ours.
-  ![A quest's own area in gold on the world map, with no stop pin or line](docs/screenshots/area.png)
-- **Guide.** The game's own waypoint marker leads you to where each step ends, the next boat, lift, flight master or
-  your destination, and hands your tracked quest back when you arrive. Turn off *Mark only where steps end*
-  in `/path` and it leads you turn by turn instead, round walls. Click the tracker header to turn Guide off.
-  ![Auberdine’s piers on the minimap, with the dotted route and Guide’s native waypoint](docs/screenshots/minimap.png)
-- **Flight map guidance.** At the flight master, your journey's next flight is drawn with the game's own route
-  lines, and its final destination lights up. Hovering another flight point shows its route as usual; moving away
-  brings your journey's route back. Turn it off in `/path`. Flight lines on the world map and minimap curve smoothly.
-
+- **Plan a journey.** Shift-click the world map or minimap, or choose *Plan journey* on a quest. Routes combine walking, flights, boats, zeppelins, lifts, the tram, portals and teleports, and replan as you move.
+  ![Journey steps from Auberdine to Silithus](docs/screenshots/tracker.png)
+  The tracker shows each step, with time and distance remaining.
+- **Follow RestedXP.** Journeys follow its current target by default, without TomTom or a bridge addon. In Guidance settings, *Resume guide* returns to RestedXP after another journey. Adventure Guide handles navigation when its RestedXP display is enabled.
+- **Use another guide's waypoints.** With TomTom absent, guides that call its waypoint API can start journeys here. *Let guides set TomTom waypoints* controls this.
+  ![A guide route through Thelsamar](docs/screenshots/stops.png)
+  The current stop lights up like a tracked quest.
+- **Choose your guidance.** Keep the route on both maps while hiding the Journey tracker or direction arrow. Show distances in yards or metres. Click the current step to complete it manually; skipping a Hearthstone leaves it out for that journey.
+  ![Route and native waypoint on the minimap](docs/screenshots/minimap.png)
+  Breadcrumbs show the walking route; the waypoint leads to the next step.
+- **See flights and departures.** Flight maps highlight your next flight. Dock tooltips show destinations and departure times; nearby services count down in the tracker. Ride times improve estimates and can be shared with your guild, party and nearby players.
   ![A smooth flight line leaving Stormwind](docs/screenshots/flight.png)
-- **Hearthstone and teleport prompts.** When it is time to cast, the item or spell icon and name appear on screen. The prompt clears as your journey continues.
+  Flight lines follow the route between flight points.
+- **Find nearby services.** The map and minimap tracking menus offer trainers, repairs, reagents, vendors, inns, banks, auction houses, flight masters and stables. Requires installed QuestieDB; class trainers also use Tweaks Forever.
+  ![Nearby services in the map menu](docs/screenshots/services.png)
+  Choose a service to plan the trip there.
+- **Travel prompts and alerts.** Hearthstone and teleport steps show the item or spell to use. A banner, transport sound and taskbar flash warn before your boat arrives.
   ![The current Hearthstone action](docs/screenshots/cast_prompt.png)
-- **Compass.** A slim strip at the top of the screen marks Guide's next two turns, the next stop and your
-  destination, in the game's own ticks, gold letters and waypoint pin. *Show the compass* in
-  `/path` turns it off; *Move the compass* lets you drag it anywhere.
-  ![The compass strip with the next turns and destination](docs/screenshots/compass.png)
-- **Nearby services.** Open the minimap's tracking menu or the world map's and pick *Nearby services*. Find a class or profession trainer, repairs, reagents, vendors, an inn, bank, auction house, flight master or stable. Choose trainers and vendors by specialty. Uses installed QuestieDB and Tweaks Forever for your class trainers.
-  ![Nearby services in the world-map menu](docs/screenshots/services.png)
-- **Back to your corpse.** Once you release as a ghost, a red dotted path in the colour of your corpse's tombstone
-  leads back to it on both maps, with Guide and the time in the tracker. Your journey waits and comes back when you
-  are alive again. *Show the way to your corpse* in `/path` turns it off.
-- **Docks on the world map.** Piers and zeppelin towers get the stock ferry icon and a matching zeppelin. Hover one for
-  where each boat goes next and when; the docks it sails to light up and its routes are drawn. Click one to open the
-  map at the other end, where a ping marks the dock; one with several destinations asks which.
-  ![Hovering Auberdine’s piers shows departures and lights destination docks](docs/screenshots/docks.png)
-- **Lifts, the Deeprun Tram and portals** count down like the boats; portals are marked with where they go, and
-  clicking a station or portal opens the map where it comes out. Docks, lifts, stations and portals show on the
-  minimap too, with the same tooltips; *Transport* in the minimap's tracking menu turns them off there.
-- **Next departures.** At a dock, lift or tram station, a tracker section above your quests counts down to every
-  arrival and departure; on board, it shows the next call.
-- **Arrival alerts.** A raid-warning banner, the ship's own bell (the horn for a zeppelin, the tram pulling in
-  for the tram) and a flashing taskbar icon half a minute before your boat arrives, for anyone waiting AFK.
-- **Times from real rides, shared.** One ride, yours or another player's, times a boat for hours, and a flight is
-  timed from take-off to landing so the next journey plans it from your own ride. Sightings pass quietly over guild,
-  party and yell at the docks; turn sharing off in the settings.
+  The prompt clears as the journey continues.
+- **Compass and corpse routes.** The compass marks turns, stops and your destination. As a ghost, a red route leads to your body; your journey resumes when you are alive.
+  ![The compass with turns and destination](docs/screenshots/compass.png)
+  The strip can be moved and resized separately from the tracker.
+- **Quest areas.** Inside a quest's area, the client draws it in gold instead of a stop pin and line.
+  ![A quest area on the world map](docs/screenshots/area.png)
+  The highlighted area is the game's own quest boundary.
 
-![A journey from Auberdine through Menethil and Theramore to Silithus](docs/screenshots/kalimdor.png)
-
-A longer trip: Auberdine to Menethil, then Theramore, then Silithus.
+More detail: [features](docs/features.md) and [API](docs/api.md).
 
 ## Install
 
@@ -108,23 +83,13 @@ It defaults to zero; class teleports still count as alternatives.
 It's in English for now. Translations are welcome as a pull request, or pasted into an issue, on
 [GitHub](https://github.com/cjber/shortest-path-forever/tree/main/Locales).
 
-## How the times work
+## Move the tracker
 
-Routes, docks and each boat's timetable are generated by `tools/gen_routes.py` from the client's
-`TaxiPathNode` table: the transport paths with stops, timed with the server's transport model (CMaNGOS
-`TransportMgr`). The eight classic routes match their sniffed loop times to within 0.07%, and those eight routes
-are stretched onto their measured periods; the rest use the mean correction. What the data cannot know is
-where in its loop a boat is right now; that is what a ride (yours or another player's) supplies.
+Turn off **Attach to quest tracker** in Guidance settings, then drag the shared Forever column by its heading. Its position survives `/reload`; turn the setting back on to attach it above your quests.
 
-Lifts and the tram come from the client's `TransportAnimation` table placed at their CMaNGOS spawns, flight
-paths from `TaxiNodes`/`TaxiPath` (with InFlight's recorded flight times where it has them), and portals
-from CMaNGOS's teleport triggers; `tools/gen_transit.py` builds all three. The planner uses discovered flight
-points, and may walk to an undiscovered flight master when learning it makes the journey faster.
+![Detached Forever tracker](docs/screenshots/detached.png)
 
-![Detached Forever tracker with a draggable heading](docs/screenshots/detached.png)
-The heading moves the whole column; your quests keep their own position.
-
-Turn off **Attach to quest tracker** in Settings to drag the shared Forever column. Its position survives `/reload`; turn the setting back on to attach it above your quests.
+The heading moves the Forever sections; your quests keep their own position.
 
 ## Works alongside
 
@@ -141,30 +106,11 @@ Used by my other Forever addons when both are installed:
 
 ## Development
 
-```sh
-tools/typecheck.sh                  # strict LuaLS + multi-value lint (requires LuaLS 3.19.1, git, Python 3)
-python3 tools/refresh_pins.py        # pin the newest client build and flight times (a daily workflow does this)
-python3 tools/gen_routes.py          # regenerate Data/Routes.lua for the pinned build
-python3 tools/gen_transit.py         # regenerate Data/Transports.lua, Data/Taxi.lua, Data/Portals.lua and Data/Teleports.lua
-tools/draw_zeppelin.py               # redraw media/zeppelin.tga (the game has no zeppelin map icon)
-(for s in tests/*_spec.lua; do luajit "$s" || exit 1; done)  # the headless specs
-luajit -joff tests/journey_bench.lua  # searches, rounds and frames at the 3 ms budget
-luajit tests/walk_sim.lua            # follow four real routes; assert zero route flips
-```
+Run `tools/typecheck.sh` for LuaLS and static checks, and `luajit tests/<name>_spec.lua` for a focused check. CI runs the full suite. [Performance notes](tests/search_performance.md) and [type declarations](types/README.md) describe the checks.
 
-CI runs luacheck, the specs, LuaLS, StyLua, ruff, shellcheck, shfmt, actionlint, zizmor, gitleaks and sift on pull
-requests and pushes to main. The benches and their budgets are in [tests/journey_performance.md](tests/journey_performance.md)
-and [tests/search_performance.md](tests/search_performance.md); [type-checking notes](types/README.md) cover the
-pinned WoW API annotations, local declarations and intentional multi-value calls.
+For releases, follow [.agents/skills/release/SKILL.md](.agents/skills/release/SKILL.md). Signed tags publish the version's changelog to GitHub, CurseForge and Wago after main CI passes.
 
-**Contributing:** [CONTRIBUTING.md](https://github.com/cjber/.github/blob/main/CONTRIBUTING.md), this repository's
-[AGENTS.md](AGENTS.md), and [SECURITY.md](https://github.com/cjber/.github/blob/main/SECURITY.md) for private
-security reports.
-
-**Releasing:** move the `[Unreleased]` notes in `CHANGELOG.md` under `## [X.Y.Z] - YYYY-MM-DD`, set
-`ns.WHATS_NEW` in `UI/WhatsNew.lua` to that entry's headline in one sentence, then
-`git tag -s vX.Y.Z && git push --tags`. The [BigWigs packager](https://github.com/BigWigsMods/packager) builds the zip
-and uploads it to GitHub Releases, CurseForge and Wago.
+[Contributing](https://github.com/cjber/.github/blob/main/CONTRIBUTING.md), [AGENTS.md](AGENTS.md) and [security reports](https://github.com/cjber/.github/blob/main/SECURITY.md).
 
 ## Licence
 
