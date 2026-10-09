@@ -1,0 +1,28 @@
+name: Retry a failed data refresh
+
+# Re-runs a failed data refresh once, ten minutes later, before anything is reported: most failures are an
+# upstream download timing out, and the refresh only opens the "Data refresh failed" issue when the re-run
+# fails too. It checks out nothing and runs nothing from the failed run.
+on:
+  workflow_run: # zizmor: ignore[dangerous-triggers] reads only the run id and re-runs it
+    workflows: ["Refresh game data"]
+    types: [completed]
+
+permissions: {}
+
+jobs:
+  retry:
+    if: >-
+      github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.run_attempt == 1 &&
+      github.event.workflow_run.head_branch == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      actions: write
+    steps:
+      - run: |
+          sleep 600
+          gh run rerun "$RUN_ID" --failed --repo "$GITHUB_REPOSITORY"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}

@@ -30,7 +30,8 @@ before its `v*` tag, since the release publishes it as the notes.
 - Pins: `BUILD` in `tools/gen_routes.py` (the client build, read by both generators) and `INFLIGHT_REV` in
   `tools/gen_transit.py` (flight times) follow upstream: `.github/workflows/refresh-data.yml` runs
   `tools/refresh_pins.py` daily, regenerates, runs the specs and opens a `data/refresh` PR; a failed run on
-  main opens or comments on the issue "Data refresh failed". Moved by hand: `DB_REV` (classic-db, frozen under
+  main is re-run once ten minutes later by `.github/workflows/retry-refresh.yml`, and one that fails again opens or comments on
+  the issue "Data refresh failed". Moved by hand: `DB_REV` (classic-db, frozen under
   the WFA-28 waivers), `REVISION` in `tools/fetch_tracker_ui.py` (shared with the companion addons), the
   checksummed UI source in `tools/fetch_blizzard_ui.sh`, and the walking maps, which need a local client install.
 - `Nav/` - compressed walking maps built by `tools/baker/` and `tools/pack_nav.py`; terrain is decoded
