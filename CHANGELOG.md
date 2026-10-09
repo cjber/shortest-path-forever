@@ -11,6 +11,20 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-10-09
+
+- **Choose the guidance you see.** Hide the Journey steps or direction arrow independently while retaining the map route, display distances in metres, and optionally open settings from a button below the minimap.
+
+- **Resize map icons separately.** Transport, flight master and minimap icons have sliders from 25% to 200%. Right-click a flight master to correct whether its flight path is known.
+
+- **Plan directly over Questie icons.** Alt-click the world map to use the exact cursor position without replacing Questie's click actions. Guidance settings and the tracker menu can resume RestedXP after choosing another journey.
+
+- **Complete journey steps manually.** Click the current step and choose *Complete this step*. Skipping a Hearthstone keeps it out of later plans for that journey; other plans continue from your actual position.
+
+- **Refresh the tracker without changing Blizzard's layout methods.** Journey sections update from quest and player events and wait until combat ends to move.
+
+- **Data checked against Forever 1.60.1.70291.** Transport, flight, portal and teleport data are unchanged.
+
 ## [1.13.0] - 2026-10-08
 
 - **Shorter addon descriptions.** The README and store pages explain the features directly and keep the author and licence credits.

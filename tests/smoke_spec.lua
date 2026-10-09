@@ -376,10 +376,12 @@ end
 local function DriveSettingsPages(label)
 	for _, button in ipairs(settingsButtons) do
 		stats.buttons = stats.buttons + 1
-		Run(("%s settings index %s"):format(label, button.initializer.name), function()
+		Run(("%s settings button %s"):format(label, button.initializer.name), function()
 			local before = #openedCategories
 			button.initializer.callback()
-			assert(#openedCategories > before, "an index button opens its page")
+			if not button.target.parent then
+				assert(#openedCategories > before, "an index button opens its page")
+			end
 			Flush()
 		end)
 	end

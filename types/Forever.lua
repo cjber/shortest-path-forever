@@ -66,6 +66,7 @@ function GameTooltip_AddColoredLine(tooltip, text, color, wrap) end
 function GameTooltip_AddColoredDoubleLine(tooltip, left, right, leftColor, rightColor) end
 
 ---@class SPFMapCanvas : Frame
+---@field ScrollContainer Frame
 ---@field dataProviders table<SPFMapProvider, boolean>
 ---@field AddDataProvider fun(self: SPFMapCanvas, provider: SPFMapProvider)
 ---@field RemoveDataProvider fun(self: SPFMapCanvas, provider: SPFMapProvider)
@@ -116,6 +117,8 @@ WaypointLocationDataProviderMixin = nil
 ---@type SPFFlightProvider
 FlightPointDataProviderMixin = nil
 ---@class SPFFlightPin : SPFMapPin
+---@field OnAcquired fun(self: SPFFlightPin, info: TaxiNodeInfo)
+---@field OnMouseClickAction fun(self: SPFFlightPin, button: string)
 ---@field name string
 ---@field poiInfo {nodeID: number, name: string, isUndiscovered: boolean}
 ---@type SPFFlightPin
@@ -139,7 +142,7 @@ FlightPointPinMixin = nil
 ---@field isHighlighted boolean
 ---@field used boolean
 ---@field SetHeader fun(self: SPFTrackerBlock, text: string)
----@field AddObjective fun(self: SPFTrackerBlock, id: number|string, text: string, template?: string, wrap?: boolean, dashStyle?: number, color?: ColorMixin)
+---@field AddObjective fun(self: SPFTrackerBlock, id: number|string, text: string, template?: string, wrap?: boolean, dashStyle?: number, color?: ColorMixin): SPFTrackerLine
 ---@field GetExistingLine fun(self: SPFTrackerBlock, id: number|string): SPFTrackerLine?
 ---@field SetStringText fun(self: SPFTrackerBlock, font: FontString, text: string, wrap: boolean?, color: ColorMixin, highlight?: boolean): number
 ---@class SPFTrackerHeader : Frame

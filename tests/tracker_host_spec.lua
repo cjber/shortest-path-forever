@@ -202,6 +202,7 @@ env = setmetatable({
 		end
 	end,
 	hooksecurefunc = function(target, name, callback)
+		assert(target ~= env.ObjectiveTrackerFrame, "native tracker methods must remain secure")
 		local original = target[name]
 		target[name] = function(...)
 			local result = original(...)
@@ -623,11 +624,14 @@ check(nativeHeader.point[4] == 0 and nativeHeader.point[5] == 0, "the header sit
 check(first.point[5] == -38, "the first section leaves the header its room")
 check(second.point[5] == -128, "sections keep their order below the header")
 check(native.point[5] == nativeOffset(38), "the native frame moves up by the header it no longer holds")
--- Blizzard re-anchors the header at the end of each update; the secure post-hook puts it back on the host.
+-- Objective updates wake the private host without hooking native methods.
 native:UpdateHeaderPosition()
+host.scripts.OnEvent(host, "QUEST_LOG_UPDATE")
+drain()
 check(nativeHeader.point[2] == host, "the header is re-anchored after a native tracker update")
 -- A native update that restores the frame's saved slot must mark the host so it restacks below the column.
 native.RestoreSavedAnchor()
+host.scripts.OnEvent(host, "QUEST_LOG_UPDATE")
 drain()
 check(
 	native.point[1] == "TOPLEFT" and native.point[2] == parent,
@@ -637,6 +641,7 @@ check(nativeHeader.point[2] == host, "the header stays at the top of the column 
 -- The managed frame containers re-anchor through their own layout and report the new height for it.
 native:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, -100)
 native:UpdateHeight()
+host.scripts.OnEvent(host, "QUEST_LOG_UPDATE")
 drain()
 check(
 	native.point[1] == "TOPLEFT" and native.point[2] == parent,
@@ -644,6 +649,7 @@ check(
 )
 -- A neighbour showing or hiding makes the container lay the native frame out again with no update of its own.
 native:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, -100)
+host.scripts.OnEvent(host, "PLAYER_DEAD")
 drain()
 check(
 	native.point[1] == "TOPLEFT" and native.point[2] == parent,

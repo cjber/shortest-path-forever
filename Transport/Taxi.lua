@@ -234,6 +234,28 @@ function ns.KnownTaxiNodes()
 	return ns.charDB.taxi
 end
 
+---@param nodeID number
+---@param known boolean
+---@return boolean
+function ns.SetTaxiKnown(nodeID, known)
+	local node = ns.TaxiNodes[nodeID]
+	if not node or type(known) ~= "boolean" then
+		return false
+	end
+	local faction = UnitFactionGroup("player")
+	if node.faction and node.faction ~= faction then
+		return false
+	end
+	ns.charDB.taxi[nodeID] = known or nil
+	if not known then
+		ns.charDB.taxiNames[nodeID] = nil
+	end
+	if ns.TravelPolicyChanged then
+		ns.TravelPolicyChanged()
+	end
+	return true
+end
+
 local function Closed()
 	hovered, mapNodes = nil, {}
 	ClearRoute(false)

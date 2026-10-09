@@ -362,15 +362,11 @@ local function Editing()
 	return not not (manager and manager:IsEditModeActive() and manager:IsShown())
 end
 
--- The native "All Objectives" header sits at the top of the shared column. Blizzard's trackers re-anchor it to
--- the native frame at the end of every update (ObjectiveTrackerFrameMixin:UpdateHeaderPosition), so our anchor is
--- re-applied right after with a secure post-hook. Only SetPoint and ClearAllPoints are called on the unprotected
--- header; no field on a Blizzard frame or table is written, and the protected native frame is never moved in
--- combat.
+-- Keep the native header above the shared column, reflowed after objective and layout events.
+-- Native methods remain untouched so controller and combat paths retain their secure execution.
 local HEADER_TOP_PADDING = 38
 local nativeHeader = ObjectiveTrackerFrame.Header --[[@as ForeverNativeTrackerHeader?]]
 local headerAdopted = false
-local movingNative = false
 ---@type { point: string, relativeTo: ScriptRegion, relativePoint: string, x: number, y: number }?
 local nativeHeaderAnchor
 
@@ -422,30 +418,6 @@ local function RestoreNativeHeader()
 	headerAdopted = false
 end
 
--- Blizzard's trackers put their own header anchor back at the end of every update, after any content that changed
--- it, so ours is re-applied right after. The same update restores the native frame's own anchor through the
--- managed frame containers, so the host is marked dirty too: the frame came back to the saved slot and only a
--- fresh reflow restacks it below the column. This is a secure post-hook: it moves the unprotected header only and
--- reads no Blizzard state, so the protected tracker's Edit Mode and combat paths stay clean.
-local function OnNativeLayout()
-	if headerAdopted then
-		AdoptNativeHeader()
-	end
-	host:MarkDirty()
-end
-hooksecurefunc(ObjectiveTrackerFrame, "UpdateHeaderPosition", OnNativeLayout) -- taint-ok: unprotected header
--- The managed frame containers re-anchor the native frame from their own Layout and then report the new height;
--- no header update follows that path, so it marks the host dirty on its own.
-hooksecurefunc(ObjectiveTrackerFrame, "UpdateHeight", OnNativeLayout) -- taint-ok: unprotected header
--- Anything else that moves the native frame (the managed frame containers lay it out again when a neighbour shows
--- or hides, as on death) reaches it through SetPoint with no update of its own. The post-hook only marks the host
--- dirty; the host's own moves are skipped so a reflow does not queue another.
-hooksecurefunc(ObjectiveTrackerFrame, "SetPoint", function() -- taint-ok: marks the private host dirty only
-	if not movingNative then
-		host:MarkDirty()
-	end
-end)
-
 -- Lays every section out from the host's top, leaving `reserve` pixels for the native header. Returns whether any
 -- section drew, which decides if the header moves and the native frame leaves its title room.
 local function LayoutModules(width, available, reserve)
@@ -493,7 +465,6 @@ local function ApplyAttachment()
 					or IsAppliedNativeAnchor(currentPoint, currentRelative, currentRelativePoint, currentX, currentY)
 				)
 			then
-				movingNative = true
 				ObjectiveTrackerFrame:ClearAllPoints()
 				ObjectiveTrackerFrame:SetPoint(
 					nativeAnchor.point,
@@ -502,7 +473,6 @@ local function ApplyAttachment()
 					nativeAnchor.x,
 					nativeAnchor.y
 				)
-				movingNative = false
 				appliedNativeAnchor = nil
 			end
 			RestoreNativeClamp()
@@ -717,7 +687,6 @@ local function LayoutAttached()
 		nativeClamped = ObjectiveTrackerFrame:IsClampedToScreen() and true or false
 	end
 	ObjectiveTrackerFrame:SetClampedToScreen(false)
-	movingNative = true
 	ObjectiveTrackerFrame:ClearAllPoints()
 	local nativeWidth = ObjectiveTrackerFrame:GetWidth() * nativeScale / screenScale
 	-- A smaller private column must not push the full-width native quests beyond the screen edge.
@@ -725,7 +694,6 @@ local function LayoutAttached()
 	local nativeX = hostLeft * screenScale / nativeScale
 	local nativeOffsetY = nativeY * screenScale / nativeScale
 	ObjectiveTrackerFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", nativeX, nativeOffsetY)
-	movingNative = false
 	appliedNativeAnchor = {
 		point = "TOPLEFT",
 		relativeTo = UIParent,
@@ -829,6 +797,19 @@ host:RegisterEvent("PLAYER_REGEN_ENABLED")
 host:RegisterEvent("PLAYER_REGEN_DISABLED")
 host:RegisterEvent("DISPLAY_SIZE_CHANGED")
 host:RegisterEvent("UI_SCALE_CHANGED")
+-- Native objective changes and managed-frame transitions can restore the tracker anchor.
+-- Observe their events; wrapping its methods taints controller and secure layout paths.
+for _, event in ipairs({
+	"QUEST_LOG_UPDATE",
+	"QUEST_WATCH_UPDATE",
+	"QUEST_WATCH_LIST_CHANGED",
+	"PLAYER_ALIVE",
+	"PLAYER_DEAD",
+	"PLAYER_UNGHOST",
+	"ZONE_CHANGED_NEW_AREA",
+}) do
+	host:RegisterEvent(event)
+end
 host:SetScript("OnEvent", function()
 	host:MarkDirty()
 end)

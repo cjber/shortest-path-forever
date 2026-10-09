@@ -24,6 +24,7 @@ Data\Walks.lua
 Transport\Model.lua
 Routing\Planner.lua
 Core\Core.lua
+Core\Distance.lua
 Transport\Timetable.lua
 Transport\TaxiTimes.lua
 Core\PlanContext.lua

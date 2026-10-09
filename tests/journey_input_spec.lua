@@ -1,4 +1,5 @@
-local handler, destination
+local handler, destination, mouseEvent
+local alt, overMap, shown = false, true, true
 local map = {
 	GetMapID = function()
 		return 1440
@@ -27,7 +28,32 @@ local ns = {
 	end,
 }
 local env = setmetatable({
+	CreateFrame = function()
+		return {
+			RegisterEvent = function() end,
+			SetScript = function(_, _, fn)
+				mouseEvent = fn
+			end,
+		}
+	end,
+	IsAltKeyDown = function()
+		return alt
+	end,
 	WorldMapFrame = {
+		IsShown = function()
+			return shown
+		end,
+		ScrollContainer = {
+			IsMouseOver = function()
+				return overMap
+			end,
+		},
+		GetMapID = function()
+			return 1440
+		end,
+		GetNormalizedCursorPosition = function()
+			return 0.25, 0.75
+		end,
 		AddCanvasClickHandler = function() end,
 		AddGlobalPinMouseActionHandler = function(_, fn)
 			handler = fn
@@ -91,3 +117,21 @@ pin.GetGlobalPosition = function() end
 destination = nil
 assert(not handler(map, 3, "LeftButton") and destination == nil, "non-point pins cannot start journeys")
 print("journey input ok")
+
+-- The global mouse event still fires over a Questie-owned icon that swallowed canvas clicks.
+alt, shift, destination = true, false, nil
+mouseEvent(nil, "GLOBAL_MOUSE_DOWN", "LeftButton")
+assert(
+	destination and destination.x == 0.25 and destination.y == 0.75,
+	"Alt-click uses the exact map cursor over icons"
+)
+shift, destination = true, nil
+mouseEvent(nil, "GLOBAL_MOUSE_DOWN", "LeftButton")
+assert(destination == nil, "Shift with Alt leaves journey handling to the existing Shift-click path")
+shift = false
+for _, state in ipairs({ { false, true, true }, { true, false, true }, { true, true, false } }) do
+	alt, overMap, shown = unpack(state)
+	destination = nil
+	mouseEvent(nil, "GLOBAL_MOUSE_DOWN", "LeftButton")
+	assert(destination == nil, "ordinary clicks and clicks outside the visible map remain untouched")
+end

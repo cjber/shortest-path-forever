@@ -73,6 +73,11 @@ rxp.UpdateMap()
 assert(starts == 0, "unchanged targets do not replan")
 API.Cancel("RestedXP")
 assert(frame.texture.shown and frame.text.shown, "cancellation restores the original regions")
+ns.ResumeRestedXP()
+driver.path.settle()
+assert(API.CurrentStop("RestedXP") == 1, "resume invalidates the held target and takes control back")
+API.Cancel("RestedXP")
+starts = 0
 frame.element.title = "|cffffffffRestedXP target|r"
 rxp.UpdateGotoSteps()
 assert(not API.CurrentStop("RestedXP"), "title colour changes respect cancellation")
@@ -152,6 +157,13 @@ frame.element.arrow = true
 rxp.UpdateMap()
 assert(not API.CurrentStop("RestedXP"), "AGF's integrated frontend does not start a competing route")
 assert(not frame.texture.shown and not frame.mouse, "the integrated frontend suppresses the native arrow")
+local resumed = 0
+env.AdventureGuideForever.API.ResumeRestedXP = function()
+	resumed = resumed + 1
+	return true
+end
+ns.ResumeRestedXP()
+assert(resumed == 1 and not API.CurrentStop("RestedXP"), "resume delegates to the integrated navigation owner")
 rxp.UpdateMap()
 assert(not API.CurrentStop("RestedXP"), "engine updates keep navigation with the frontend")
 ns.db.restedxp = false
