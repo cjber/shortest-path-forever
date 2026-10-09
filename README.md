@@ -101,8 +101,14 @@ has the calls and what they return.
 RestedXP passes its current target directly by default. Toggle *Follow RestedXP guides* in `/path`. Leave
 RestedXP TomTom disabled when using this option, so only one addon follows the guide.
 
-Used by my other Forever addons when both are installed:
-[Adventure Guide Forever](https://www.curseforge.com/wow/addons/adventure-guide-forever), [SkillUp Forever](https://www.curseforge.com/wow/addons/skillup-forever), [Legacy Forever](https://www.curseforge.com/wow/addons/legacy-forever) and [Tweaks Forever](https://www.curseforge.com/wow/addons/tweaks-forever).
+My other Forever addons send it their destinations when both are installed:
+
+- [Adventure Guide Forever](https://www.curseforge.com/wow/addons/adventure-guide-forever): pick a quest journey or RestedXP step and Shortest Path leads you to each stop.
+- [SkillUp Forever](https://www.curseforge.com/wow/addons/skillup-forever): click a trainer or vendor in a levelling route. SkillUp picks the nearest one by travel time.
+- [Legacy Forever](https://www.curseforge.com/wow/addons/legacy-forever): click a dungeon or raid pin.
+- [Tweaks Forever](https://www.curseforge.com/wow/addons/tweaks-forever): click a dungeon or raid entrance.
+
+Journey steps share one tracker column with the Adventure Guide, SkillUp and Legacy sections, above your quests.
 
 ## Development
 
