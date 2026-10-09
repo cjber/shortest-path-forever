@@ -366,8 +366,8 @@ local function Refresh()
 	RefreshTracker()
 end
 
--- Skip only the leg currently being shown. The next search starts at the player's actual position,
--- so manually refusing a stop never changes a saved destination or advances another owner's itinerary.
+-- Advance only the current leg. A refused Hearthstone stays out of this journey's later plans,
+-- which still start at the player's actual position.
 ---@param index integer?
 ---@return boolean
 function ns.SkipJourneyStep(index)
@@ -392,7 +392,6 @@ function ns.SkipJourneyStep(index)
 		UpdateProgress()
 	end
 	Refresh()
-	RefreshTracker()
 	return true
 end
 

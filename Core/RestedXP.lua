@@ -123,6 +123,16 @@ end
 
 -- Let the player hand control back after pausing a guide, without waiting for its next native update.
 function ns.ResumeRestedXP()
+	local frontend = AdventureGuideForever and AdventureGuideForever.API
+	if
+		frontend
+		and type(frontend.RestedXPIntegrated) == "function"
+		and frontend.RestedXPIntegrated()
+		and type(frontend.ResumeRestedXP) == "function"
+	then
+		frontend.ResumeRestedXP()
+		return
+	end
 	target = nil
 	Sync()
 end

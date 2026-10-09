@@ -32,6 +32,7 @@
 RXP = nil
 
 ---@class SPFRestedXPFrontendAPI
+---@field ResumeRestedXP? fun(): boolean
 ---@field RestedXPIntegrated? fun(): boolean
 ---@field RestedXPNativeUI? fun(): boolean
 
