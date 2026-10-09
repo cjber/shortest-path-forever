@@ -387,6 +387,9 @@ local function Plan(feasible, incumbent)
 		return followed
 	end
 	local options = Context.Options(here, goal)
+	-- This is a manual refusal for the active journey only. Keep it out of Context.Options so
+	-- public estimates and nearby-service planning retain the normal Hearthstone policy.
+	options.withoutHearth = ns.JourneyWithoutHearth and ns.JourneyWithoutHearth() or false
 	local now = options.now
 	lastRunSpeed = options.walkSpeed
 	local walks = MeasuredWalks(here)

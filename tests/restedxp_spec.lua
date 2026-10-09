@@ -73,6 +73,12 @@ rxp.UpdateMap()
 assert(starts == 0, "unchanged targets do not replan")
 API.Cancel("RestedXP")
 assert(frame.texture.shown and frame.text.shown, "cancellation restores the original regions")
+frame.element.x = 65
+ns.ResumeRestedXP()
+driver.path.settle()
+assert(API.CurrentStop("RestedXP") == 1, "resume invalidates the held target and takes control back")
+API.Cancel("RestedXP")
+starts = 0
 frame.element.title = "|cffffffffRestedXP target|r"
 rxp.UpdateGotoSteps()
 assert(not API.CurrentStop("RestedXP"), "title colour changes respect cancellation")

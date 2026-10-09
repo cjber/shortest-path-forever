@@ -18,6 +18,7 @@ local goal, result
 local policyChanged
 local nextPoint
 local progress = { index = 1 }
+local withoutHearth = false
 ---@class SPFJourneyDriver : Frame
 ---@field elapsed number
 ---@field replannedAt? number GetTime of the last timed replan
@@ -52,6 +53,10 @@ end
 ---@return boolean
 function ns.HasJourney()
 	return goal ~= nil or CorpseRun()
+end
+
+function ns.JourneyWithoutHearth()
+	return withoutHearth
 end
 
 function ns.TravelPolicyChanged()
@@ -165,6 +170,7 @@ end
 local function EndJourney(reason)
 	Search.Reset()
 	goal, result, nextPoint = nil, nil, nil
+	withoutHearth = false
 	if ns.JourneyChanged then
 		ns.JourneyChanged(nil, reason)
 	end
@@ -360,6 +366,36 @@ local function Refresh()
 	RefreshTracker()
 end
 
+-- Skip only the leg currently being shown. The next search starts at the player's actual position,
+-- so manually refusing a stop never changes a saved destination or advances another owner's itinerary.
+---@param index integer?
+---@return boolean
+function ns.SkipJourneyStep(index)
+	if not goal or not result or CorpseRun() or InCombatLockdown() then
+		return false
+	end
+	local current = progress.index
+	if index ~= nil and index ~= current then
+		return false
+	end
+	if not result.legs[current] then
+		return false
+	end
+	if result.legs[current].teleport and result.legs[current].teleport.item == 6948 then
+		withoutHearth = true
+	end
+	progress.index = current + 1
+	progress.departed = false
+	if progress.index > #result.legs then
+		Arrive()
+	else
+		UpdateProgress()
+	end
+	Refresh()
+	RefreshTracker()
+	return true
+end
+
 local SamePlace = Search.SamePlace
 
 -- Everything the search changes about what to follow arrives here, possibly while it is being started or stepped.
@@ -494,6 +530,7 @@ function ns.StartJourney(point)
 		-- Queued behind the corpse run, which ResumeJourney plans from where you come back to life.
 		if not (goal and SamePlace(goal, point)) then
 			result = nil
+			withoutHearth = false
 			Search.Clear(false)
 			progress.index, progress.departed = 1, false
 		end
@@ -505,6 +542,7 @@ function ns.StartJourney(point)
 		return true
 	end
 	local previous = Search.Clear(goal and SamePlace(goal, point)) and result
+	withoutHearth = false
 	if previous then
 		for _, leg in ipairs(previous.legs) do
 			if leg.to.kind == "goal" then

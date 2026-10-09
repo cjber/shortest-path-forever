@@ -147,6 +147,25 @@ local function AddQuestMenuEntry(root, questID)
 end
 
 ns.Init(function()
+	-- Questie owns Shift-click on its icons. Alt-click observes the map cursor
+	-- through our own event frame, including icons that swallow canvas clicks.
+	local clicks = CreateFrame("Frame")
+	clicks:RegisterEvent("GLOBAL_MOUSE_DOWN")
+	clicks:SetScript("OnEvent", function(_, _, button)
+		if
+			not ns.db.journey
+			or button ~= "LeftButton"
+			or not IsAltKeyDown()
+			or not WorldMapFrame:IsShown()
+			or not WorldMapFrame.ScrollContainer:IsMouseOver()
+		then
+			return
+		end
+		local point = ns.WorldPoint(WorldMapFrame:GetMapID(), WorldMapFrame:GetNormalizedCursorPosition())
+		if point and OnZone(point) then
+			ns.StartJourney(point)
+		end
+	end)
 	WorldMapFrame:AddCanvasClickHandler(OnCanvasClick)
 	WorldMapFrame:AddGlobalPinMouseActionHandler(OnPinClick)
 	-- The stock handler still pings the spot, which marks where the journey goes for your group too.

@@ -121,6 +121,12 @@ local function Sync()
 	end
 end
 
+-- Let the player hand control back after pausing a guide, without waiting for its next native update.
+function ns.ResumeRestedXP()
+	target = nil
+	Sync()
+end
+
 function ns.RefreshRestedXP()
 	local rxp = RXP
 	if
