@@ -79,6 +79,16 @@ Install it from [CurseForge](https://www.curseforge.com/wow/addons/shortest-path
 
 ## Usage
 
+Alt-click the world map to choose a destination directly over a Questie icon. Shift-click remains available on empty map space and Shortest Path icons.
+
+In **Map marks**, scale transport, flight master and minimap icons separately from 25% to 200%. Right-click a flight master icon to mark its flight path as known if a flight map missed it.
+
+In **Interface**, hide **Show journey in tracker** and **Show direction arrow** independently while keeping the route on both maps, choose metres, or enable the **Show options button on minimap**.
+
+Click the current journey step and choose **Complete this step** to advance it manually. Completing a Hearthstone step plans without it for the rest of that journey. Later plans still follow your actual position.
+
+In **Guidance**, choose **Resume guide** to return to RestedXP after selecting another journey.
+
 In **Interface** settings, set **Forever tracker size** and **Compass size** separately from 50% to 200%. The tracker setting applies to the shared Forever column.
 
 Open a flight master’s map once after installing to sync the flight points you already know. Opposing-faction boat and zeppelin routes are off by default; you can opt in through settings.

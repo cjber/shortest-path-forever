@@ -94,6 +94,14 @@ assert(tick() == "Journey  44:00 · 4.3k yd", "flight progresses along its drawn
 onTaxi, posX, posY = false, 0, 0
 assert(start({leg("walk", {point(0), point(850)}, 60)}) == "Journey  1:00 · 850 yd")
 assert(start({leg("walk", {point(0), point(999.6)}, 60)}) == "Journey  1:00 · 1.0k yd")
+ns.db.metres = true
+assert(refresh() == "Journey  1:00 · 914 m", "changing units refreshes a stationary header")
+assert(start({leg("walk", {point(0), point(2000)}, 60)}) == "Journey  1:00 · 1.8 km")
+ns.db.journeyTracker = false
+refresh()
+assert(#tracker.blocks == 0, "hiding journey steps removes the journey block")
+assert(route ~= nil, "hiding the tracker keeps the active journey")
+ns.db.journeyTracker, ns.db.metres = true, false
 assert(start({leg("walk", {point(0), point(0)}, 0)}) == "Journey  0:00 · 0 yd")
 posX = nil
 assert(tick() == "Journey  0:00 · 0 yd", "missing positions are safe")

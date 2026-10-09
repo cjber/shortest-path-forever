@@ -5,6 +5,8 @@ local L = ns.L
 ---@type SPFTracker
 local module
 ---@class SPFTracker : SPFTrackerModule
+---@field journeyTracker? boolean
+---@field metres? boolean
 ---@field distance? SPFDistanceCache
 ---@field riding? number|false
 ---@field second number
@@ -33,6 +35,9 @@ function ModuleMixin:OnBlockHeaderClick(block, button)
 			MenuUtil.CreateContextMenu(block, function(_, root)
 				root:CreateCheckbox(L["Guide me"], ns.IsJourneyGuided, ns.ToggleJourneyGuide)
 				root:CreateButton(L["Show on map"], ns.ShowJourneyMap)
+				root:CreateButton(L["Resume RestedXP guide"], function()
+					ns.ResumeRestedXP()
+				end)
 				-- A corpse run ends only when you live again.
 				if not ns.Corpse.Active() then
 					root:CreateButton(L["Clear journey"], ns.ClearJourney)
@@ -61,7 +66,22 @@ function ModuleMixin:LayoutContents()
 		block:SetHeader(entry.title)
 		block.headerHeight = block.HeaderText:GetHeight()
 		for _, row in ipairs(entry.rows) do
-			block:AddObjective(row.key, row.text, nil, true, nil, RowColor(row))
+			local line = block:AddObjective(row.key, row.text, nil, true, nil, RowColor(row))
+			local clickable = entry.key == "journey" and row.current and not ns.Corpse.Active()
+			line:EnableMouse(clickable == true)
+			line:SetScript("OnMouseUp", clickable and function(_, button)
+				if button ~= "LeftButton" then
+					return
+				end
+				MenuUtil.CreateContextMenu(line, function(_, root)
+					root:CreateButton(L["Complete this step"], function()
+						local index = row.key
+						if type(index) == "number" then
+							ns.SkipJourneyStep(index)
+						end
+					end)
+				end)
+			end or nil)
 		end
 		if not self:LayoutBlock(block) then
 			return
@@ -156,8 +176,7 @@ local function JourneyHeader(result, index, loading)
 		return L["Journey"]
 	end
 	local yards = JourneyDistance(result, index)
-	local distance = yards >= 999.5 and string.format(L["%.1fk yd"], yards / 1000)
-		or string.format(L["%d yd"], math.floor(yards + 0.5))
+	local distance = ns.FormatDistance(yards, true)
 	return string.format(L["Journey  %s · %s"], ns.FormatCountdown(ns.JourneyTime(result.legs, index)), distance)
 end
 
@@ -207,7 +226,7 @@ local function RefreshTracker(dockID, yards)
 		dockID = nil
 	end
 	local riding = ns.db.tracker and ns.CurrentRide()
-	local journey = ns.HasJourney()
+	local journey = ns.HasJourney() and ns.db.journeyTracker ~= false
 	local second = (dockID or riding or journey) and math.floor(GetTime()) or 0
 	-- Compare scalar render inputs before allocating blocks or formatting rows. Unrelated tracker
 	-- layouts can replay the saved blocks; they never need to query timetables or rebuild the model.
@@ -219,12 +238,15 @@ local function RefreshTracker(dockID, yards)
 		and module.sightingVersion == ns.Timetable.Version()
 		and module.tracker == ns.db.tracker
 		and module.otherFaction == ns.db.otherFaction
+		and module.journeyTracker == ns.db.journeyTracker
+		and module.metres == ns.db.metres
 	then
 		return
 	end
 	module.riding, module.second = riding, second
 	module.journeyVersion, module.sightingVersion = ns.journeyVersion, ns.Timetable.Version()
 	module.tracker, module.otherFaction = ns.db.tracker, ns.db.otherFaction
+	module.journeyTracker, module.metres = ns.db.journeyTracker, ns.db.metres
 	if dockID then
 		rows, kind = DockRows(dockID)
 		title, blockKey, mapDock = ns.DockTitle(dockID), "dock" .. dockID, dockID
@@ -236,6 +258,9 @@ local function RefreshTracker(dockID, yards)
 	end
 	local blocks = {}
 	local journeyTitle, journeyRows, journeyResult, journeyIndex, loading = ns.JourneyInfo()
+	if not journey then
+		journeyTitle = nil
+	end
 	if journeyTitle then
 		blocks[#blocks + 1] = { key = "journey", title = journeyTitle, rows = journeyRows }
 	end

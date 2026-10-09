@@ -365,6 +365,12 @@ _G.CreateFrame = function(_, name, parent, template)
 				end
 				function b:AddObjective(key, text, template, full, dash, color)
 					local line = {
+						EnableMouse = function(self, value)
+							self.mouseEnabled = value
+						end,
+						SetScript = function(self, name, callback)
+							self[name] = callback
+						end,
 						Text = font(),
 						used = true,
 						GetHeight = function()

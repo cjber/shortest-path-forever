@@ -19,6 +19,29 @@ function ns.OpenSettings()
 	Settings.OpenToCategory(category:GetID())
 end
 
+local optionsButton
+function ns.RefreshOptionsButton()
+	if ns.db.minimapButton and not optionsButton then
+		optionsButton = CreateFrame("Button", nil, Minimap, "UIPanelButtonTemplate")
+		optionsButton:SetSize(70, 22)
+		optionsButton:SetPoint("TOP", Minimap, "BOTTOM", 0, -2)
+		optionsButton:SetText(L["Journey"])
+		optionsButton:SetScript("OnClick", ns.OpenSettings)
+		optionsButton:SetScript("OnEnter", function(self)
+			GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+			GameTooltip_SetTitle(GameTooltip, "Shortest Path Forever")
+			GameTooltip_AddNormalLine(GameTooltip, L["Open settings."])
+			GameTooltip:Show()
+		end)
+		optionsButton:SetScript("OnLeave", function()
+			GameTooltip:Hide()
+		end)
+	end
+	if optionsButton then
+		optionsButton:SetShown(ns.db.minimapButton)
+	end
+end
+
 local function Perf()
 	local profiler, metrics = C_AddOnProfiler, Enum.AddOnProfilerMetric
 	if profiler and profiler.GetAddOnMetric and metrics and (not profiler.IsEnabled or profiler.IsEnabled()) then
@@ -88,6 +111,25 @@ ns.Init(function()
 		settings[key] = setting
 	end
 
+	local function Scale(key, name, tooltip, refresh)
+		local setting = Settings.RegisterAddOnSetting(
+			page,
+			"ShortestPathForever_" .. key,
+			key,
+			ns.db,
+			Settings.VarType.Number,
+			name,
+			ns.Defaults[key]
+		)
+		setting:SetValueChangedCallback(refresh)
+		settings[key] = setting
+		local options = Settings.CreateSliderOptions(25, 200, 5)
+		options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
+			return value .. "%"
+		end)
+		Settings.RegisterInitializer(page, Settings.CreateSliderInitializer(setting, options, tooltip))
+	end
+
 	-- Map marks: what the world map and the minimap draw.
 	Page(L["Map marks"])
 	Checkbox("pins", L["Show boats and zeppelins"], L["On the world map."], ns.RefreshMap)
@@ -100,6 +142,20 @@ ns.Init(function()
 		L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."],
 		ns.RefreshMinimapPins
 	)
+
+	Scale(
+		"mapPinScale",
+		L["Transport icon size"],
+		L["Sizes boat, lift, tram and portal icons on the world map."],
+		ns.RefreshMap
+	)
+	Scale(
+		"flightPinScale",
+		L["Flight master icon size"],
+		L["Sizes flight master icons on the world map."],
+		ns.RefreshMap
+	)
+	Scale("minimapPinScale", L["Minimap icon size"], L["Sizes transport icons on the minimap."], ns.RefreshMinimapPins)
 
 	-- Transport: routes and departure times.
 	Page(L["Transport"])
@@ -233,6 +289,13 @@ ns.Init(function()
 		ns.RefreshCorpseRun
 	)
 
+	Settings.RegisterInitializer(
+		page,
+		CreateSettingsButtonInitializer(L["RestedXP guide"], L["Resume guide"], function()
+			ns.ResumeRestedXP()
+		end, nil, false)
+	)
+
 	-- Alerts: the arrival warning.
 	Page(L["Alerts"])
 	Checkbox(
@@ -244,6 +307,32 @@ ns.Init(function()
 
 	-- Interface: what the addon puts on screen.
 	Page(L["Interface"])
+	Checkbox(
+		"journeyTracker",
+		L["Show journey in tracker"],
+		L["Keep the route on the map when the journey list is hidden."],
+		ns.RefreshTracker
+	)
+	Checkbox(
+		"arrow",
+		L["Show direction arrow"],
+		L["Show the next direction and the game's navigation marker."],
+		function()
+			ns.JourneyGuide.Retarget()
+			ns.WakeTravel()
+		end
+	)
+	Checkbox("metres", L["Distances in metres"], L["Show metres and kilometres instead of yards."], function()
+		ns.RefreshCompass()
+		ns.RefreshTracker()
+		ns.WakeTravel()
+	end)
+	Checkbox(
+		"minimapButton",
+		L["Show options button on minimap"],
+		L["Open these settings from the minimap."],
+		ns.RefreshOptionsButton
+	)
 	Checkbox(
 		"compass",
 		L["Show the compass"],
@@ -327,6 +416,7 @@ ns.Init(function()
 	)
 
 	Settings.RegisterAddOnCategory(category)
+	ns.RefreshOptionsButton()
 	SLASH_SHORTESTPATHFOREVER1 = "/path"
 	SLASH_SHORTESTPATHFOREVER2 = "/shortestpath"
 	SlashCmdList.SHORTESTPATHFOREVER = function(message)

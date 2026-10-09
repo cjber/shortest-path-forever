@@ -123,12 +123,15 @@ local function Acquire(entry)
 		pin:SetScript("OnHide", OnLeave)
 		pins[used] = pin
 	end
-	if pin.entry ~= entry then
+	local size = SIZE * (ns.db.minimapPinScale or 100) / 100
+	if pin.entry ~= entry or pin.size ~= size then
 		if GameTooltip:IsOwned(pin) then
 			OnLeave(pin)
 		end
 		pin.entry = entry
-		ns.SetTransportIcon(pin.Texture, entry.kind, SIZE)
+		pin.size = size
+		pin:SetSize(size, size)
+		ns.SetTransportIcon(pin.Texture, entry.kind, size)
 	end
 	pin:Show()
 	return pin
@@ -165,7 +168,7 @@ local function Draw()
 	if x and radius and facing and width > SIZE then
 		local cosine, sine = math.cos(facing), math.sin(facing)
 		-- The whole icon stays inside the rim.
-		local reach = 1 - SIZE / width
+		local reach = 1 - SIZE * (ns.db.minimapPinScale or 100) / 100 / width
 		for _, entry in ipairs(entries) do
 			-- Most places are a continent away; skip them before any projection.
 			local dx, dy = math.abs(entry.x - x), math.abs(entry.y - y)

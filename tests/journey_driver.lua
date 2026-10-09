@@ -209,6 +209,7 @@ end
 local path = assert(loadfile(root .. "/tests/path_fake.lua"))()()
 ns.Path = path.Path
 load("Transport/Model.lua")
+load("Core/Distance.lua")
 -- The real timetable, with no sightings until a spec records one.
 load("Transport/Timetable.lua")
 load("Transport/TaxiTimes.lua")

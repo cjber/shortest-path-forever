@@ -24,6 +24,7 @@ local FADE = 80
 ---@field x? number
 ---@field y? number
 ---@field map? number
+---@field metres? boolean
 ---@field distance? number
 ---@field distanceOwner? SPFCompassMarker
 ---@field dirty? boolean
@@ -130,9 +131,10 @@ local function Render(x, y, map)
 	local point = bend.point
 	if owner and point then
 		local distance = math.floor(math.sqrt((point.x - x) ^ 2 + (point.y - y) ^ 2))
-		if distance ~= frame.distance then
+		if distance ~= frame.distance or frame.metres ~= ns.db.metres then
+			frame.metres = ns.db.metres
 			frame.distance = distance
-			frame.Distance:SetFormattedText(L["%d yd"], distance)
+			frame.Distance:SetText(ns.FormatDistance(distance))
 		end
 		-- A merged bend keeps its distance under the surviving destination or transport icon.
 		if owner ~= frame.distanceOwner then

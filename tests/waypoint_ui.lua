@@ -394,4 +394,23 @@ assert(trackedQuest == 71 and not ns.charDB.guideWaypoint)
 ]]
 )
 
+check(
+	"hidden arrow releases native guidance without ending journey",
+	"",
+	[[
+start()
+ns.db.arrow = false
+ns.JourneyGuide.Retarget()
+ShortestPathForeverJourneyDriver.scripts.OnUpdate(ShortestPathForeverJourneyDriver, 0.1)
+settle()
+assert(not waypoint and not supertracked, "hidden directions must remove the native navigation marker")
+assert(ns.HasJourney() and ns.IsJourneyGuided(), "hidden directions preserve the journey")
+ns.db.arrow = true
+ns.JourneyGuide.Retarget()
+ShortestPathForeverJourneyDriver.scripts.OnUpdate(ShortestPathForeverJourneyDriver, 0.1)
+settle()
+assert(waypoint and supertracked, "showing directions resumes the native marker")
+]]
+)
+
 assert(#failures == 0, table.concat(failures, "\n"))
