@@ -22,7 +22,7 @@ except ModuleNotFoundError:
     from forever_tools import wago
     from forever_tools.fsio import atomic_write
 
-BUILD = "1.60.1.70291"
+BUILD = "1.60.1.70338"
 ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / "tools" / ".cache"
 OUTPUT = ROOT / "Data" / "Routes.lua"
