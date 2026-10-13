@@ -48,7 +48,8 @@ local function Zones()
 	return found
 end
 
--- The map a zone name means: its exact name, or the one zone it begins. An error says why there is none.
+-- The map a zone name means: its exact name, the one zone it begins, or else the one zone it is part of, as TomTom
+-- reads "barrens" as The Barrens. An error says why there is none.
 ---@param name string
 ---@return integer? map, string? error
 local function ZoneMap(name)
@@ -57,9 +58,15 @@ local function ZoneMap(name)
 		return list[key].mapID
 	end
 	local matches = {}
-	for folded, info in pairs(list) do
-		if key ~= "" and folded:sub(1, #key) == key then
-			matches[#matches + 1] = info.name
+	for _, inside in ipairs({ false, true }) do
+		for folded, info in pairs(list) do
+			local at = key ~= "" and folded:find(key, 1, true)
+			if at and (inside or at == 1) then
+				matches[#matches + 1] = info.name
+			end
+		end
+		if matches[1] then
+			break
 		end
 	end
 	if #matches == 1 then
@@ -75,7 +82,8 @@ end
 ---@param token string?
 ---@return number?
 local function Percent(token)
-	local value = token and token:match("^%d+%.?%d*$") and tonumber(token)
+	-- "45", "45.5", "45." and ".5", as TomTom's tonumber reads them.
+	local value = token and (token:match("^%d+%.?%d*$") or token:match("^%.%d+$")) and tonumber(token)
 	if value and value >= 0 and value <= 100 then
 		return value
 	end
