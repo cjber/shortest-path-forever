@@ -193,6 +193,16 @@ ns.RefreshTomTom()
 equal(env.TomTom, nil, "a loaded TomTom keeps its own global")
 disabled, loaded = false, false
 ns.RefreshTomTom()
+-- A client with no answer for the enable state errs towards TomTom, as before the state was read.
+local enableState = env.C_AddOns.GetAddOnEnableState
+env.C_AddOns.GetAddOnEnableState = function() end
+disabled = true
+ns.RefreshTomTom()
+equal(env.TomTom, nil, "no enable state reads as an enabled TomTom")
+env.C_AddOns.GetAddOnEnableState = enableState
+disabled = false
+ns.RefreshTomTom()
+equal(type(env.TomTom.AddWaypoint), "function", "the shim returns once TomTom is gone")
 
 -- TomTom loading later replaces the global; the shim stands down and clears what it started.
 local late = env.TomTom:AddWaypoint(1, 0.6, 0.5, { title = "Late" })
