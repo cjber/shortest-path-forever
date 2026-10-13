@@ -124,6 +124,9 @@ read_globals[#read_globals + 1] = "CreateColor"
 read_globals[#read_globals + 1] = "C_QuestLog"
 read_globals[#read_globals + 1] = "GetQuestUiMapID"
 read_globals[#read_globals + 1] = "GetMouseFoci"
+-- Shift+click on the map defers to an open chat box.
+read_globals[#read_globals + 1] = "ChatEdit_GetActiveWindow"
+read_globals[#read_globals + 1] = "ChatFrameUtil"
 read_globals[#read_globals + 1] = "MapCanvasMixin"
 read_globals[#read_globals + 1] = "POIButtonUtil"
 -- PathGrid.lua: its per-frame CPU clock and the per-continent walking-map addons it loads on demand.
