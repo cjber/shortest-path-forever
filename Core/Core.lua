@@ -21,6 +21,7 @@ local DEFAULTS = {
 	alertSound = true,
 	journey = true,
 	tomtom = true,
+	tomtomFollow = false,
 	restedxp = true,
 	taxiRoute = true,
 	teleports = true,

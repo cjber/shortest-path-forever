@@ -46,6 +46,14 @@ With RestedXP installed, **Resume guide** in Guidance or the Journey header menu
   own inside-area state for the quests the stop names. A stop that names circles and no quest uses the circles to
   tell when you have arrived, and keeps its pin and line.
 
+- **Typed waypoints.** `/way [zone] x y [title]` plans a journey to that spot, read as TomTom reads it: x and y are
+  percentages of the map, `#1429` names a map by its ID, a zone can be shortened to the start of its name
+  (`/way elwynn 42 65 Goldshire`), and a decimal comma works. Without a zone the spot is on the map you stand on.
+  `/way` is registered only when TomTom isn't loaded and no other addon has claimed it; `/path way` takes the same
+  line and always works. With TomTom installed, *Follow TomTom's arrow* in Guidance (off by default) plans a journey
+  to each waypoint its arrow takes, from `/way`, a guide or the waypoint you pick, and removing that waypoint in
+  TomTom ends the journey.
+
 - **Finding the fastest way.** While a new journey is checked, the map shows only its destination pin and the
   tracker the Group Finder spinner; the route, steps and totals then appear together. A search that takes more than
   three seconds shows its best route so far, and changes it only for one at least 30 seconds and 10% faster, or if

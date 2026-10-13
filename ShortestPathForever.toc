@@ -65,4 +65,5 @@ UI\WhatsNew.lua
 Core\API.lua
 Journey\Itinerary.lua
 Core\TomTom.lua
+Core\Way.lua
 Core\RestedXP.lua

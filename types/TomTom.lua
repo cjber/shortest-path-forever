@@ -1,7 +1,8 @@
 ---@meta
 
 -- Third-party guides set waypoints through TomTom's API. While TomTom is not installed, Core/TomTom.lua answers
--- those calls with a Shortest Path journey, and this is the shape the guides expect to find.
+-- those calls with a Shortest Path journey, and this is the shape the guides expect to find. While TomTom is installed,
+-- the same file can follow its arrow through TomTom's own SetCrazyArrow.
 
 ---@class TomTomWaypointOptions
 ---@field title? string -- what the waypoint is for, used as the journey's title
@@ -26,6 +27,7 @@
 ---@field AddMFWaypoint fun(self: TomTom, map: integer, floor: number?, x: number, y: number, opts?: TomTomWaypointOptions): TomTomWaypoint? -- the map and the same 0-1 point
 ---@field AddZWaypoint fun(self: TomTom, continent: number?, zone: number, x: number, y: number, desc?: string, persistent?: boolean, minimap?: boolean, world?: boolean, callbacks?: table|false, silent?: boolean, crazy?: boolean): TomTomWaypoint? -- 0-100 coordinates
 ---@field RemoveWaypoint fun(self: TomTom, waypoint: TomTomWaypoint): boolean -- true when it cleared this shim's own waypoint
+---@field SetCrazyArrow? fun(self: TomTom, waypoint: TomTomWaypoint, arrival?: number, title?: string) -- TomTom's own: points its arrow at a waypoint
 
 ---@type TomTom?
 TomTom = nil

@@ -72,16 +72,28 @@ local function ChatBoxOpen()
 	return active ~= nil and active() ~= nil
 end
 
+-- A spot on a map, as a Shift-click on the world map or /way names it, with what to call it if anything.
+---@param uiMapID integer
+---@param x number
+---@param y number
+---@param label? string
+---@return boolean
+function ns.JourneyToMapPoint(uiMapID, x, y, label)
+	local point = ns.WorldPoint(uiMapID, x, y)
+	if not (point and OnZone(point)) then
+		ns.Print(L["no journey can be planned to that spot."])
+		return false
+	end
+	point.label = label
+	ns.StartJourney(point)
+	return true
+end
+
 local function OnCanvasClick(map, button)
 	if not ns.db.journey or button ~= "LeftButton" or not IsShiftKeyDown() or ChatBoxOpen() then
 		return false
 	end
-	local point = ns.WorldPoint(map:GetMapID(), map:GetNormalizedCursorPosition())
-	if point and OnZone(point) then
-		ns.StartJourney(point)
-	else
-		ns.Print(L["no journey can be planned to that spot."])
-	end
+	ns.JourneyToMapPoint(map:GetMapID(), map:GetNormalizedCursorPosition())
 	return true
 end
 

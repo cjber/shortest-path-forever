@@ -229,22 +229,106 @@ function ns.RefreshTomTom()
 	end
 end
 
+-- With TomTom installed, a journey can follow the waypoint its arrow points to, when the player opts in. TomTom
+-- calls its own SetCrazyArrow whenever the arrow takes a waypoint (its /way, a guide's waypoint, or one the player
+-- picks), and RemoveWaypoint when one is cleared. Both are hooked on TomTom's own table, never a Blizzard object.
+-- The shim above has stood down by then, so the journey has the same owner.
+---@type TomTom?
+local hooked
+-- The waypoint the journey follows, and one that waits for combat to end.
+---@type TomTomWaypoint?
+local following
+---@type TomTomWaypoint?
+local waiting
+-- TomTom restores saved waypoints as it loads; following starts once the world is up, so a reload keeps the journey
+-- you had.
+local live = false
+local watcher = CreateFrame("Frame")
+
+---@param uid any
+local function Follow(uid)
+	if not (live and ns.db and ns.db.tomtomFollow and ns.db.journey) or type(uid) ~= "table" then
+		return
+	end
+	if uid == following and API.CurrentStop(OWNER) then
+		return
+	end
+	if InCombatLockdown() then
+		waiting = uid
+		watcher:RegisterEvent("PLAYER_REGEN_ENABLED")
+		return
+	end
+	waiting = nil
+	-- API.Navigate checks the map and point; TomTom's waypoint is a uiMapID and a 0-1 point, as the shim's is.
+	if API.Navigate(OWNER, uid[1], uid[2], uid[3], Text(uid.title) and uid.title or nil) then
+		following = uid
+	end
+end
+
+---@param uid any
+local function Unfollow(uid)
+	if uid == waiting then
+		waiting = nil
+	end
+	if uid ~= nil and uid == following then
+		following = nil
+		API.Cancel(OWNER)
+	end
+end
+
+-- The settings checkbox, TomTom loading and the addon's own load all call this.
+function ns.RefreshTomTomFollow()
+	local tomtom = TomTom
+	if
+		not hooked
+		and tomtom
+		and tomtom ~= shim
+		and type(tomtom.SetCrazyArrow) == "function"
+		and type(tomtom.RemoveWaypoint) == "function"
+	then
+		hooked = tomtom
+		hooksecurefunc(tomtom, "SetCrazyArrow", function(_, uid) -- taint-ok: TomTom owns this addon table.
+			Follow(uid)
+		end)
+		hooksecurefunc(tomtom, "RemoveWaypoint", function(_, uid) -- taint-ok: TomTom owns this addon table.
+			Unfollow(uid)
+		end)
+	end
+	if not (ns.db and ns.db.tomtomFollow) then
+		Unfollow(following)
+		waiting = nil
+	end
+end
+
 -- A journey that ends, or is replaced by the player or another addon, leaves no waypoint behind.
 hooksecurefunc(ns, "JourneyChanged", function()
-	if active and not API.CurrentStop(OWNER) then
-		current = nil
-		Forget()
+	if not API.CurrentStop(OWNER) then
+		following = nil
+		if active then
+			current = nil
+			Forget()
+		end
 	end
 end)
 
 ns.Init(function()
-	local watcher = CreateFrame("Frame")
 	watcher:RegisterEvent("ADDON_LOADED")
-	watcher:SetScript("OnEvent", function(self, _, name)
-		if name == "TomTom" then
+	watcher:RegisterEvent("PLAYER_ENTERING_WORLD")
+	watcher:SetScript("OnEvent", function(self, event, name)
+		if event == "PLAYER_REGEN_ENABLED" then
+			self:UnregisterEvent(event)
+			Follow(waiting)
+		elseif event == "PLAYER_ENTERING_WORLD" then
+			self:UnregisterEvent(event)
+			C_Timer.After(0, function()
+				live = true
+			end)
+		elseif name == "TomTom" then
 			StandDown()
 			self:UnregisterEvent("ADDON_LOADED")
+			ns.RefreshTomTomFollow()
 		end
 	end)
 	ns.RefreshTomTom()
+	ns.RefreshTomTomFollow()
 end)

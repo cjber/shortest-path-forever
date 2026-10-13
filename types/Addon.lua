@@ -140,6 +140,7 @@
 ---@field journey? boolean
 ---@field restedxp? boolean -- follow RestedXP guide targets
 ---@field tomtom? boolean -- answer third-party guides' TomTom waypoints with a journey while TomTom is absent
+---@field tomtomFollow? boolean -- with TomTom installed, a journey follows the waypoint its arrow points to
 ---@field taxiRoute? boolean
 ---@field teleports? boolean
 ---@field hearthMinimumSavings? number -- seconds the Hearthstone must save over the best non-hearth plan

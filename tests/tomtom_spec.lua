@@ -31,6 +31,24 @@ env.hooksecurefunc = function(target, key, hook)
 	end
 end
 ns.db.tomtom = true
+-- One frame later, as the client runs C_Timer.After(0, ...).
+local timers = {}
+env.C_Timer = {
+	After = function(_, fn)
+		timers[#timers + 1] = fn
+	end,
+}
+local function nextFrame()
+	local due = timers
+	timers = {}
+	for _, fn in ipairs(due) do
+		fn()
+	end
+end
+local combat = false
+env.InCombatLockdown = function()
+	return combat
+end
 
 -- The shim's ADDON_LOADED watcher, to hand it TomTom loading later.
 local created = {}
@@ -179,5 +197,95 @@ env.TomTom = real
 watcher:OnEvent("ADDON_LOADED", "TomTom")
 equal(env.TomTom, real, "the real TomTom's global is left alone")
 equal(ns.HasJourney(), false, "the shim's journey is cleared when TomTom arrives")
+
+-- With TomTom installed, a journey can follow its arrow: its own SetCrazyArrow and RemoveWaypoint, hooked on its table.
+local arrow
+local tomtom = {
+	AddWaypoint = function(self, map, x, y, opts)
+		local point = { map, x, y, title = opts and opts.title }
+		self:SetCrazyArrow(point, 15, point.title)
+		return point
+	end,
+	SetCrazyArrow = function(_, point)
+		arrow = point
+	end,
+	RemoveWaypoint = function(_, point)
+		if arrow == point then
+			arrow = nil
+		end
+	end,
+}
+env.TomTom = tomtom
+ns.RefreshTomTomFollow()
+equal(env.TomTom, tomtom, "TomTom keeps its own table")
+-- Off by default: TomTom's own waypoints plan nothing.
+local restored = tomtom:AddWaypoint(1, 0.4, 0.4, { title = "Restored" })
+equal(arrow, restored, "TomTom's own arrow still takes the waypoint")
+equal(ns.HasJourney(), false, "the arrow is not followed while the setting is off")
+ns.db.tomtomFollow = true
+ns.RefreshTomTomFollow()
+-- TomTom restores its saved waypoints as it loads; only waypoints after the world is up are followed.
+tomtom:AddWaypoint(1, 0.4, 0.4, { title = "Restored" })
+equal(ns.HasJourney(), false, "a waypoint TomTom restores at login plans nothing")
+watcher:OnEvent("PLAYER_ENTERING_WORLD")
+tomtom:AddWaypoint(1, 0.4, 0.4, { title = "Too soon" })
+equal(ns.HasJourney(), false, "nor one in the same frame as the world coming up")
+nextFrame()
+local way = tomtom:AddWaypoint(1, 0.6, 0.5, { title = "Goldshire" })
+driver.path.settle()
+equal(API.CurrentStop("TomTom"), 1, "the arrow's waypoint starts a journey")
+equal(ns.JourneyInfo(), "Journey to Goldshire", "with TomTom's title")
+-- The same waypoint again keeps the journey; a new one replaces it.
+tomtom:SetCrazyArrow(way)
+equal(API.CurrentStop("TomTom"), 1, "the arrow re-pointed at the same waypoint keeps the journey")
+local other = tomtom:AddWaypoint(1, 0.7, 0.5, { title = "Inn" })
+driver.path.settle()
+equal(ns.JourneyInfo(), "Journey to Inn", "a new arrow waypoint replaces the journey")
+-- Removing another waypoint leaves the journey; removing the followed one ends it.
+tomtom:RemoveWaypoint(way)
+equal(API.CurrentStop("TomTom"), 1, "removing a waypoint not followed keeps the journey")
+tomtom:RemoveWaypoint(other)
+equal(ns.HasJourney(), false, "removing the followed waypoint ends the journey")
+-- A bad waypoint is refused as the API refuses it.
+tomtom:SetCrazyArrow({ 1, 2, 0.5 })
+tomtom:SetCrazyArrow("uid")
+equal(ns.HasJourney(), false, "bad points start nothing")
+tomtom:SetCrazyArrow({ 1, 0.55, 0.5, title = 7 })
+driver.path.settle()
+equal(ns.JourneyInfo(), "Journey to Test", "a bad title is dropped, the point kept")
+ns.ClearJourney()
+-- In combat the waypoint waits, then is followed once combat ends.
+combat = true
+local fight = tomtom:AddWaypoint(1, 0.6, 0.5, { title = "After the fight" })
+equal(ns.HasJourney(), false, "nothing is planned in combat")
+combat = false
+watcher:OnEvent("PLAYER_REGEN_ENABLED")
+driver.path.settle()
+equal(ns.JourneyInfo(), "Journey to After the fight", "the waiting waypoint is followed after combat")
+-- A journey of the player's own replaces it; the next arrow change is followed again.
+ns.ClearJourney()
+tomtom:SetCrazyArrow(fight)
+driver.path.settle()
+equal(API.CurrentStop("TomTom"), 1, "the arrow is followed again after another journey")
+-- Turning the setting off ends the followed journey and follows nothing more.
+ns.db.tomtomFollow = false
+ns.RefreshTomTomFollow()
+equal(ns.HasJourney(), false, "the setting ends the followed journey")
+tomtom:AddWaypoint(1, 0.6, 0.5, { title = "Off" })
+equal(ns.HasJourney(), false, "and follows nothing more")
+-- The hooks are added once, however often the setting changes.
+ns.db.tomtomFollow = true
+ns.RefreshTomTomFollow()
+ns.RefreshTomTomFollow()
+local seen = 0
+local navigate = API.Navigate
+API.Navigate = function(...)
+	seen = seen + 1
+	return navigate(...)
+end
+tomtom:AddWaypoint(1, 0.65, 0.5, { title = "Once" })
+API.Navigate = navigate
+equal(seen, 1, "one hook per TomTom call")
+ns.ClearJourney()
 
 print("tomtom: ok, " .. checks .. " checks")
