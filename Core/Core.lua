@@ -160,7 +160,7 @@ local dockX, dockY, dockMap, nearestDock, nearestYards
 ---@return number? dockID, number? yards
 function ns.NearestDock()
 	-- The player's height is unknown (UnitPosition's is a placeholder 0), so a lift's landings tie on the map.
-	local x, y, _, map = UnitPosition("player")
+	local x, y, _, map = ns.JourneyPosition()
 	if not x then
 		return nil
 	end

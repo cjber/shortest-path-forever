@@ -12,6 +12,7 @@ verbatim rather than rewritten as the addon moves.
 ## [Unreleased]
 
 - **No "Division by zero" error on a walk measured at no cost.** Retiming the route you are following uses the share of the walk still ahead, so a walk the search measured as free no longer breaks the timed replan.
+- **Position reads wait for a readable position everywhere.** The nearest dock, ride detection, compass, tracker distances and flight timing skip a frame whose position the client withholds, as the journey already did, instead of erroring.
 
 ## [1.14.1] - 2026-10-13
 

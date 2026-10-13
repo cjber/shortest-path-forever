@@ -163,7 +163,7 @@ local function Update(elapsed)
 		SetUpdating(false)
 		return
 	end
-	local x, y, _, map = UnitPosition("player")
+	local x, y, _, map = ns.JourneyPosition()
 	local facing = GetPlayerFacing()
 	if not (x and y and map and canaccessvalue(facing) and facing) then
 		frame:SetAlpha(0)

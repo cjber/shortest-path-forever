@@ -28,6 +28,10 @@ ns.TaxiPaths = {
 	{ from = 2, to = 3, seconds = 30, points = { 1, 1000, 0, 1, 1500, 0, 1, 2000, 0 } },
 }
 local now, onTaxi, map, x, y = 0, false, 1, 0, 0
+-- Journey.lua's guarded read of UnitPosition.
+ns.JourneyPosition = function()
+	return x, y, nil, map
+end
 local tick
 ns.OnTravelTick = function(fn)
 	tick = fn
@@ -35,9 +39,6 @@ end
 local env = setmetatable({
 	GetTime = function()
 		return now
-	end,
-	UnitPosition = function()
-		return x, y, 0, map
 	end,
 	UnitOnTaxi = function()
 		return onTaxi

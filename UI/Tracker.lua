@@ -145,7 +145,7 @@ local function JourneyDistance(result, index)
 		or (leg.route and ns.CurrentRide() == leg.route)
 		or (leg.mode == "flight" and UnitOnTaxi("player"))
 	if active and leg.mode ~= "portal" then
-		local x, y, _, map = UnitPosition("player")
+		local x, y, _, map = ns.JourneyPosition()
 		local nearest
 		for pointIndex, a in ipairs(path.points) do
 			if x and map == a.map then
