@@ -96,12 +96,23 @@ local function CaptureNativeAnchor()
 	if nativeAnchor and (relativeTo == host or IsAppliedNativeAnchor(point, relativeTo, relativePoint, x, y)) then
 		return
 	end
+	point, y = point or "TOPRIGHT", y or 0
+	local saved = { point = point, relativeTo = relativeTo or UIParent, relativePoint = relativePoint or "TOPRIGHT" }
+	saved.x, saved.y = x or 0, y
+	-- The column stacks downward from this anchor, so it must be the tracker's top edge. A tracker Edit Mode placed
+	-- by its centre or bottom edge would otherwise start the column at that point and push everything off below it.
+	if not point:find("TOP", 1, true) then
+		local height = ObjectiveTrackerFrame:GetHeight() or 0
+		y = y + (point:find("BOTTOM", 1, true) and height or height / 2)
+		point = StackPoints(point)
+	end
 	nativeAnchor = {
-		point = point or "TOPRIGHT",
+		point = point,
 		relativeTo = relativeTo or UIParent,
 		relativePoint = relativePoint or "TOPRIGHT",
 		x = x or 0,
-		y = y or 0,
+		y = y,
+		saved = saved,
 	}
 end
 host:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", 0, 0)
@@ -466,13 +477,8 @@ local function ApplyAttachment()
 				)
 			then
 				ObjectiveTrackerFrame:ClearAllPoints()
-				ObjectiveTrackerFrame:SetPoint(
-					nativeAnchor.point,
-					nativeAnchor.relativeTo,
-					nativeAnchor.relativePoint,
-					nativeAnchor.x,
-					nativeAnchor.y
-				)
+				local saved = nativeAnchor.saved
+				ObjectiveTrackerFrame:SetPoint(saved.point, saved.relativeTo, saved.relativePoint, saved.x, saved.y)
 				appliedNativeAnchor = nil
 			end
 			RestoreNativeClamp()
