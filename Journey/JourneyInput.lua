@@ -65,8 +65,11 @@ local function OnZone(point)
 end
 
 -- Shift+click inserts a link into an open chat box; leave that click to Blizzard's own handlers.
+-- Both globals may be absent (older builds, the headless harness); guard the call so a missing
+-- one never errors inside a click handler.
 local function ChatBoxOpen()
-	return (ChatFrameUtil and ChatFrameUtil.GetActiveWindow or ChatEdit_GetActiveWindow)() ~= nil
+	local active = (ChatFrameUtil and ChatFrameUtil.GetActiveWindow) or ChatEdit_GetActiveWindow
+	return active ~= nil and active() ~= nil
 end
 
 local function OnCanvasClick(map, button)
