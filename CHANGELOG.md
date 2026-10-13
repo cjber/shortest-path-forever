@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **No "Division by zero" error on a walk measured at no cost.** Retiming the route you are following uses the share of the walk still ahead, so a walk the search measured as free no longer breaks the timed replan.
+
 ## [1.14.1] - 2026-10-13
 
 - **Data checked against Forever 1.60.1.70338.** The travel data is unchanged apart from its build pin.
