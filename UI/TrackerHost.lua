@@ -510,7 +510,11 @@ local function LayoutDetached(settings)
 	y = math.min(0, math.max(y, 24 - screenHeight))
 	host:ClearAllPoints()
 	host:SetPoint("TOPLEFT", UIParent, "TOPLEFT", x, y)
-	LayoutModules(width, math.max(24, screenHeight + y - 24), 24)
+	-- With no section to show, the column hides entirely, its title too; the next layout with content shows it again.
+	if not LayoutModules(width, math.max(24, screenHeight + y - 24), 24) then
+		host:Hide()
+		return
+	end
 	y = math.min(0, math.max(y, math.min(host:GetHeight(), screenHeight) - screenHeight))
 	host:ClearAllPoints()
 	host:SetPoint("TOPLEFT", UIParent, "TOPLEFT", x, y)

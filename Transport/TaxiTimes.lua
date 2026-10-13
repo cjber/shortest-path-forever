@@ -208,8 +208,8 @@ local function TaxiSample()
 		end
 		return
 	end
-	local x, y, _, map = UnitPosition("player")
-	if not x then
+	local x, y, _, map = ns.JourneyPosition()
+	if not (x and y and map) then
 		return
 	end
 	if not flight then
@@ -334,8 +334,8 @@ function TaxiTimes.Remaining(leg)
 	if not UnitOnTaxi("player") then
 		return nil
 	end
-	local x, y, _, map = UnitPosition("player")
-	if not x then
+	local x, y, _, map = ns.JourneyPosition()
+	if not (x and y and map) then
 		return nil
 	end
 	local index

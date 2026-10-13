@@ -19,6 +19,7 @@ globals = {
 	"SlashCmdList",
 	"bit",
 	"SLASH_SPFNEAR1",
+	"SLASH_SHORTESTPATHFOREVERWAY1",
 }
 read_globals = {
 	"IsAltKeyDown",

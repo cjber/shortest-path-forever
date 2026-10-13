@@ -157,6 +157,10 @@ local ns = {
 	DockKind = function()
 		return dockKind
 	end,
+	-- Journey.lua's guarded read of UnitPosition.
+	JourneyPosition = function()
+		return x, y, nil, map
+	end,
 }
 assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", ns)
 local env = setmetatable({
@@ -169,9 +173,6 @@ local env = setmetatable({
 		stripTemplate = template
 		strip = object()
 		return strip
-	end,
-	UnitPosition = function()
-		return x, y, 0, map
 	end,
 	GetPlayerFacing = function()
 		return facing

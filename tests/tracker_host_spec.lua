@@ -406,6 +406,23 @@ check(not ns.TrackerHost.IsAttachedToQuestTracker(), "all modules detach from th
 ns.TrackerHost.SavePosition(80, -120)
 drain()
 check(host.point[1] == "TOPLEFT" and host.point[4] == 64 and host.point[5] == -96, "detached position persists")
+-- A detached column with nothing to show hides entirely, its title too, and returns where it was with its content.
+local function emptyContents()
+	return 0
+end
+local filledContents = first.GetContentsHeight
+first.GetContentsHeight, second.GetContentsHeight = emptyContents, emptyContents
+host:MarkDirty()
+drain()
+check(host.shown == false, "an empty detached column hides with its title")
+first.GetContentsHeight = filledContents
+host:MarkDirty()
+drain()
+check(host.shown == true and grip.shown, "a detached column returns with its title when content returns")
+check(host.point[4] == 64 and host.point[5] == -96, "a returning detached column keeps its saved position")
+second.GetContentsHeight = filledContents
+host:MarkDirty()
+drain()
 ns.TrackerHost.SetAttached(true)
 drain()
 check(

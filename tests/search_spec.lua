@@ -366,4 +366,23 @@ do
 	h.clear()
 end
 
+-- A walk measured at no cost keeps the kept route's estimate finite on the timed replan: the rest of it is a share of
+-- its basis, never a division by its zero cost (the client raises "Division by zero"; LuaJIT would make it NaN).
+do
+	local h = scenario(300, 200)
+	h.costs("A")
+	local first = h.walking.waiting(h.walking.finds)[1]
+	h.walking.finish(first, { first.from, first.to }, 0)
+	h.geometry()
+	assert(h.via() == "A" and h.route.legs[1].measured and h.route.legs[1].walkCost == 0)
+	h.heard()
+	h.refresh()
+	h.costs("B")
+	h.geometry()
+	for _, leg in ipairs(h.route.legs) do
+		assert(leg.yards == leg.yards and leg.arrive == leg.arrive, "a zero-cost walk retimes to finite costs")
+	end
+	h.clear()
+end
+
 print("search_spec: measured guidance, private guesses, background replans, reuse and cancellation: ok")

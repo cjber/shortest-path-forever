@@ -74,10 +74,18 @@ local function CancelPaths()
 	probeJobs = {}
 end
 
+-- How much of the chosen walk is still ahead of here, from 0 to 1, or nil when here is off it.
+local function RemainingShare(leg, here)
+	local found, _, after, total = ns.OnWalk(leg.walkPoints, here)
+	if found and total > 0 then
+		return after / total
+	end
+end
+
 -- The rest of the chosen walk in its own running yards, so water keeps its search weight.
 local function Remaining(leg, here)
-	local found, _, after, total = ns.OnWalk(leg.walkPoints, here)
-	return found and total > 0 and (leg.walkCost or leg.yards) * after / total
+	local share = RemainingShare(leg, here)
+	return share and (leg.walkCost or leg.yards) * share
 end
 
 -- The measured walks from where the batch started, moved to here, and back from the goal, with the rest of the walk
@@ -183,11 +191,12 @@ local function EstimateKept(now)
 			end
 			local basis = entry and entry.cost or leg.walkCost or yards
 			if index == progress.index and leg.measured then
-				local rest = Remaining(leg, here)
-				if not rest then
+				-- A share of the basis, never divided by the walk's own cost, which a measured walk may put at 0.
+				local share = RemainingShare(leg, here)
+				if not share then
 					return nil
 				end
-				yards = rest * basis / (leg.walkCost or leg.yards)
+				yards = basis * share
 			else
 				yards = basis
 			end

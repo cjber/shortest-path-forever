@@ -19,9 +19,10 @@ with you.
 
 - **Plan a journey.** Shift-click the world map or minimap, or choose *Plan journey* on a quest. Routes combine walking, flights, boats, zeppelins, lifts, the tram, portals and teleports, and replan as you move.
   ![Journey steps from Auberdine to Silithus](docs/screenshots/tracker.png)
-  The tracker shows each step, with time and distance remaining.
+  The tracker shows each step, with time and distance remaining. Hover the destination's pin on the world map for the same steps.
 - **Follow RestedXP.** Journeys follow its current target by default, without TomTom or a bridge addon. In Guidance settings, *Resume guide* returns to RestedXP after another journey. Adventure Guide handles navigation when its RestedXP display is enabled.
 - **Use another guide's waypoints.** With TomTom absent, guides that call its waypoint API can start journeys here. *Let guides set TomTom waypoints* controls this.
+- **Type a waypoint.** `/way [zone] x y [title]` plans a journey there, written as for TomTom. `/way` is only taken while TomTom and other addons leave it free; `/path way` always works. With TomTom installed, turn on *Follow TomTom's arrow* in Guidance and journeys go wherever its arrow points.
   ![A guide route through Thelsamar](docs/screenshots/stops.png)
   The current stop lights up like a tracked quest.
 - **Choose your guidance.** Keep the route on both maps while hiding the Journey tracker or direction arrow. Show distances in yards or metres. Click the current step to complete it manually; skipping a Hearthstone leaves it out for that journey.
@@ -95,7 +96,8 @@ The heading moves the Forever sections; your quests keep their own position.
 
 Other addons can plan and guide journeys through `ShortestPathForever.API`: travel-time estimates, and routes of
 up to 64 stops that wear the game's own quest, flight master or boat marks. While TomTom is not installed, the
-addon answers TomTom's waypoint calls, and a held stop can name the quest area it stands for. [docs/api.md](docs/api.md)
+addon answers TomTom's waypoint calls and takes `/way`; with it installed, *Follow TomTom's arrow* follows its
+waypoints. A held stop can name the quest area it stands for. [docs/api.md](docs/api.md)
 has the calls and what they return.
 
 RestedXP passes its current target directly by default. Toggle *Follow RestedXP guides* in `/path`. Leave

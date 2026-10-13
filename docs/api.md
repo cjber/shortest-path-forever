@@ -69,3 +69,7 @@ TomTom is installed or loads later.
 
 Every waypoint belongs to one owner, so a newer one replaces the journey rather than queueing. Turning the
 setting off removes the global and clears any journey it started.
+
+With TomTom installed, *Follow TomTom's arrow* (off by default) works the other way round: Shortest Path hooks
+TomTom's own `SetCrazyArrow` and `RemoveWaypoint` with `hooksecurefunc` on TomTom's table and plans a journey, owned
+by `"TomTom"`, to each waypoint the arrow takes after login. Removing that waypoint cancels the journey.

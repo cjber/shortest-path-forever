@@ -87,14 +87,22 @@ end
 -- Read-only capability query shared by the public estimator and the guided planner.
 ns.JourneyWaterWalking = WaterWalking
 
--- A missing/secret sample is not evidence that the journey is unreachable. Planning, Guide and lines share this gate.
--- UnitPosition's third value is a placeholder, always 0, so the player's height is unknown: never a floor.
----@return number? x, number? y, nil z, number? map
-function ns.JourneyPosition()
-	local x, y, _, map = UnitPosition("player")
+-- A missing/secret sample is not evidence that the journey is unreachable. Every read of the player's position goes
+-- through this gate; ride observation alone also takes the client's height, nil while it is secret.
+---@return number? x, number? y, number? z, number? map
+function ns.PlayerPosition()
+	local x, y, z, map = UnitPosition("player")
 	if not (canaccessvalue(x) and canaccessvalue(y) and canaccessvalue(map)) or not (x and y and map) then
 		return nil
 	end
+	return x, y, canaccessvalue(z) and z or nil, map
+end
+
+-- Planning, Guide and lines share this gate. UnitPosition's third value is no floor to plan from, so the player's
+-- height is unknown here.
+---@return number? x, number? y, nil z, number? map
+function ns.JourneyPosition()
+	local x, y, _, map = ns.PlayerPosition()
 	return x, y, nil, map
 end
 

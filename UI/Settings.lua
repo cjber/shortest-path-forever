@@ -235,6 +235,14 @@ ns.Init(function()
 		end
 	)
 	Checkbox(
+		"tomtomFollow",
+		L["Follow TomTom's arrow"],
+		L["With TomTom installed, a journey here follows the waypoint its arrow points to."],
+		function()
+			ns.RefreshTomTomFollow()
+		end
+	)
+	Checkbox(
 		"restedxp",
 		L["Follow RestedXP guides"],
 		L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."],
@@ -420,7 +428,12 @@ ns.Init(function()
 	SLASH_SHORTESTPATHFOREVER1 = "/path"
 	SLASH_SHORTESTPATHFOREVER2 = "/shortestpath"
 	SlashCmdList.SHORTESTPATHFOREVER = function(message)
-		if message == "perf" then
+		-- TomTom's /way line, which works whether or not /way itself is free.
+		local way = message == "way" and "" or message:match("^way%s+(.*)$")
+		if way then
+			ns.Way(way)
+			return
+		elseif message == "perf" then
 			Perf()
 			return
 		elseif message == "debug" then

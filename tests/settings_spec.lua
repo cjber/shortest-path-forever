@@ -119,6 +119,7 @@ local env = setmetatable({
 
 local refreshed, taxiRefreshed, policyChanged, tomtomRefreshed = 0, 0, 0, 0
 local compassMoving = false
+local tomtomFollowRefreshed, ways = 0, {}
 -- Core/Core.lua's defaults: every row on.
 local ns = {
 	TrackerHost = {
@@ -146,8 +147,14 @@ local ns = {
 	RefreshTomTom = function()
 		tomtomRefreshed = tomtomRefreshed + 1
 	end,
+	RefreshTomTomFollow = function()
+		tomtomFollowRefreshed = tomtomFollowRefreshed + 1
+	end,
+	Way = function(message)
+		ways[#ways + 1] = message
+	end,
 	db = {},
-	Defaults = setmetatable({ hearthMinimumSavings = 0, compassScale = 100 }, {
+	Defaults = setmetatable({ hearthMinimumSavings = 0, compassScale = 100, tomtomFollow = false }, {
 		__index = function()
 			return true
 		end,
@@ -192,6 +199,7 @@ local groups = {
 		"trackerAttached",
 		"journey",
 		"tomtom",
+		"tomtomFollow",
 		"restedxp",
 		"teleports",
 		"hearthMinimumSavings",
@@ -215,7 +223,7 @@ local groups = {
 local order = { "Map marks", "Transport", "Guidance", "Alerts", "Interface" }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 32, #rows)
+assert(#rows == 33, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -268,6 +276,16 @@ assert(Row("tomtom").setting.default == true)
 assert(Row("tomtom").tooltip:find("TomTom", 1, true), "the row names the addon it answers")
 Row("tomtom").setting.onChanged()
 assert(tomtomRefreshed == 1, "the shim follows its setting")
+-- Following TomTom's own arrow is opt-in.
+assert(Row("tomtomFollow").setting.default == false, "following TomTom's arrow is off by default")
+assert(Row("tomtomFollow").tooltip:find("TomTom", 1, true), "the row names the addon it follows")
+Row("tomtomFollow").setting.onChanged()
+assert(tomtomFollowRefreshed == 1, "the follower follows its setting")
+-- /path way takes TomTom's /way line, whether or not /way itself is free.
+env.SlashCmdList.SHORTESTPATHFOREVER("way Elwynn Forest 42.1 65.3 Goldshire")
+assert(ways[1] == "Elwynn Forest 42.1 65.3 Goldshire", "/path way hands on the rest of the line")
+env.SlashCmdList.SHORTESTPATHFOREVER("way")
+assert(ways[2] == "", "a bare /path way still answers, with its usage")
 assert(Row("whatsNew").setting.default == true)
 local trackerSlider = Row("trackerScale")
 assert(trackerSlider.kind == "slider" and trackerSlider.setting.default == 100, "tracker scale defaults to 100%")
