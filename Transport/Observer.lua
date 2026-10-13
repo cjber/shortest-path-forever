@@ -84,10 +84,8 @@ local phaseScratch = {}
 
 local function Sample()
 	local now = ns.NowMs()
-	-- UnitPosition's height is a placeholder 0 (ns.JourneyPosition), which speeds and fits have always used.
-	local x, y, _, map = ns.JourneyPosition()
-	local z = 0
-	local speed = x and y and map and not UnitOnTaxi("player") and Speed(now, x, y, z, map) or 0
+	local x, y, z, map = ns.PlayerPosition()
+	local speed = x and y and map and not UnitOnTaxi("player") and Speed(now, x, y, z or 0, map) or 0
 	if speed > 0 and x and y and map then
 		for routeID, route in pairs(ns.Routes) do
 			local phases = speed >= (route.fit and route.fit.speed or MIN_SPEED)
