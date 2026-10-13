@@ -40,11 +40,6 @@ local function bounds(frame, seen)
 	seen[frame] = nil
 	return left, top, width, height, bottom
 end
-local function overlaps(a, b)
-	local al, at, aw, _, ab = bounds(a)
-	local bl, bt, bw, _, bb = bounds(b)
-	return al < bl + bw and al + aw > bl and ab < bt and at > bb
-end
 -- Touching edges (a column that starts at the content's bottom) are clear, floating point included.
 local function clears(a, b)
 	local al, at, aw, _, ab = bounds(a)
@@ -211,6 +206,7 @@ local function scenario(anchor, scale, uiScale, userScale)
 			fn()
 		end
 	end
+	local _, slotTop = bounds(native)
 	ready()
 	drain()
 	local left, top, nativeWidth = bounds(native)
@@ -219,6 +215,15 @@ local function scenario(anchor, scale, uiScale, userScale)
 		"native quests stay horizontally on screen when scaling the private column"
 	)
 	local _, hostTop, _, hostHeight = bounds(host)
+	check(
+		math.abs(hostTop - slotTop) < 0.01,
+		"the shared column starts at the top of the tracker's Edit Mode slot, not its anchor point: "
+			.. anchor
+			.. " scale "
+			.. scale
+			.. " ui "
+			.. uiScale
+	)
 	check(math.abs(top - (hostTop - hostHeight)) < 0.01, "native starts below guide at effective scale")
 	for _ = 1, 3 do
 		host:MarkDirty()
@@ -231,7 +236,7 @@ local function scenario(anchor, scale, uiScale, userScale)
 	host.scripts.OnEvent(host, "PLAYER_REGEN_DISABLED")
 	drain()
 	check(
-		not overlaps(host, native),
+		clears(host, native),
 		"combat height clamp must not overlap guide and objectives: "
 			.. anchor
 			.. " scale "
@@ -255,7 +260,7 @@ local function scenario(anchor, scale, uiScale, userScale)
 		math.abs(nl - settledLeft) < 0.01 and math.abs(nt - settledTop) < 0.01,
 		"moving guide cannot move native tracker"
 	)
-	check(not overlaps(host, native), "repeated combat refresh stays separated")
+	check(clears(host, native), "repeated combat refresh stays separated")
 	-- Blizzard restores the protected frame to its saved slot in combat. The header goes back to the native frame
 	-- and the private host sits directly below the native content, out of the game's way.
 	native.point = { anchor, screen, anchor, x, y }
