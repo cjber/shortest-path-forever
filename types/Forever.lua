@@ -13,6 +13,12 @@ AM_PIN_SCALE_STYLE_WITH_TERRAIN = nil
 SlashCmdList = nil
 ---@type table<string, {r: number, g: number, b: number}>
 ChatTypeInfo = nil
+
+-- ChatFrame.lua in the Forever UI source: the edit box a Shift+click map link would land in.
+---@type (fun(): Frame?)?
+ChatEdit_GetActiveWindow = nil
+---@type {GetActiveWindow: fun(): Frame?}?
+ChatFrameUtil = nil
 ---@type {AddMessage: fun(message: string, color: {r: number, g: number, b: number})}
 RaidWarningUtil = nil
 ---@type {Normal: ColorMixin, NormalHighlight: ColorMixin, Header: ColorMixin}
