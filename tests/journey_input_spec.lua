@@ -13,6 +13,7 @@ local pin = {
 	poiInfo = { nodeID = 26, name = "Astranaar" },
 }
 local shift = true
+local chatBox
 local ns = {
 	db = { journey = true },
 	L = {},
@@ -81,6 +82,9 @@ local env = setmetatable({
 	IsShiftKeyDown = function()
 		return shift
 	end,
+	ChatEdit_GetActiveWindow = function()
+		return chatBox
+	end,
 	GetMouseFoci = function()
 		return { pin }
 	end,
@@ -135,3 +139,7 @@ for _, state in ipairs({ { false, true, true }, { true, false, true }, { true, t
 	mouseEvent(nil, "GLOBAL_MOUSE_DOWN", "LeftButton")
 	assert(destination == nil, "ordinary clicks and clicks outside the visible map remain untouched")
 end
+chatBox = {}
+destination = nil
+assert(not handler(map, 3, "LeftButton") and destination == nil, "Shift+click must share to an open chat box")
+chatBox = nil

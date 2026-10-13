@@ -11,6 +11,7 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **Shift+click shares to chat again.** With a chat box open, Shift+clicking a map pin or the map itself now inserts the link as Blizzard intends instead of starting a journey. With no chat box open it still plans a journey.
 - **How the Forever addons work together.** The README and store page list each of the other Forever addons and what it adds when installed alongside this one.
 
 ## [1.14.0] - 2026-10-09

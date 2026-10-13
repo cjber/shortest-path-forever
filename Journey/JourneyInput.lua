@@ -64,8 +64,13 @@ local function OnZone(point)
 	return not info or info.mapType > Enum.UIMapType.Continent
 end
 
+-- Shift+click inserts a link into an open chat box; leave that click to Blizzard's own handlers.
+local function ChatBoxOpen()
+	return (ChatFrameUtil and ChatFrameUtil.GetActiveWindow or ChatEdit_GetActiveWindow)() ~= nil
+end
+
 local function OnCanvasClick(map, button)
-	if not ns.db.journey or button ~= "LeftButton" or not IsShiftKeyDown() then
+	if not ns.db.journey or button ~= "LeftButton" or not IsShiftKeyDown() or ChatBoxOpen() then
 		return false
 	end
 	local point = ns.WorldPoint(map:GetMapID(), map:GetNormalizedCursorPosition())
@@ -95,6 +100,7 @@ local function OnPinClick(map, action, button)
 		or action ~= MapCanvasMixin.MouseAction.Click
 		or button ~= "LeftButton"
 		or not IsShiftKeyDown()
+		or ChatBoxOpen()
 	then
 		return false
 	end
