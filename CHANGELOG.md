@@ -13,6 +13,7 @@ verbatim rather than rewritten as the addon moves.
 
 - **Type `/way` to plan a journey.** `/way [zone] x y [title]` takes TomTom's line, map IDs and decimal commas included, and plans a journey to that spot, as a Shift-click on the map does. It is only taken while TomTom and other addons leave `/way` free; `/path way` always works.
 - **Follow TomTom's arrow.** With TomTom installed, turn on *Follow TomTom's arrow* in Guidance and each waypoint its arrow takes, from its `/way`, a guide or your own choice, becomes a journey here. Removing the waypoint in TomTom ends it. It is off by default.
+- **The destination pin lists the steps.** Hovering the pin you are heading for on the world map shows the time and distance left and every step there, worded as in the tracker, including on a guide's numbered stop.
 - **No "Division by zero" error on a walk measured at no cost.** Retiming the route you are following uses the share of the walk still ahead, so a walk the search measured as free no longer breaks the timed replan.
 - **Position reads wait for a readable position everywhere.** The nearest dock, ride detection, compass, tracker distances and flight timing skip a frame whose position the client withholds, as the journey already did, instead of erroring.
 - **Connecting flights only through flight points you know.** A route no longer offers a flight that passes through an undiscovered flight point, which the flight master would not let you take, such as a Horde flight out of Moonglade through an unvisited Everlook or Bloodvenom Post.

@@ -54,6 +54,9 @@ With RestedXP installed, **Resume guide** in Guidance or the Journey header menu
   to each waypoint its arrow takes, from `/way`, a guide or the waypoint you pick, and removing that waypoint in
   TomTom ends the journey.
 
+- **The destination pin.** Hover the pin you are heading for on the world map to see the time and distance left and
+  each step, worded as the tracker words them, with the current one lit. A later stop's pin names only that stop.
+
 - **Finding the fastest way.** While a new journey is checked, the map shows only its destination pin and the
   tracker the Group Finder spinner; the route, steps and totals then appear together. A search that takes more than
   three seconds shows its best route so far, and changes it only for one at least 30 seconds and 10% faster, or if

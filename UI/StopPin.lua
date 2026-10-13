@@ -31,6 +31,7 @@ ns.GoalAtlas, ns.StopSize = GOAL_ATLAS, STOP_SIZE
 ---@field Number FontString
 ---@field stopTitles? string[]
 ---@field stopDetails? string[]
+---@field current? boolean -- marks the stop being travelled to, whose steps the tooltip lists
 ShortestPathForeverGoalPinMixin = CreateFromMixins(MapCanvasPinMixin)
 
 function ShortestPathForeverGoalPinMixin:OnLoad()
@@ -69,6 +70,7 @@ function ShortestPathForeverGoalPinMixin:OnAcquired(x, y, numbers, titles, later
 	self.Number:SetAlpha(alpha)
 	self.stopTitles = titles[1] and titles or nil
 	self.stopDetails = details and details[1] and details or nil
+	self.current = not later
 	local marked = look ~= nil and ns.SetStopLook(self.Icon, look, numbers and BADGE_SIZE or LOOK_SIZE)
 	local badge = marked and numbers ~= nil
 	self.Icon:SetShown(marked)
@@ -129,8 +131,16 @@ function ShortestPathForeverGoalPinMixin:OnMouseEnter()
 	for _, detail in ipairs(self.stopDetails or {}) do
 		GameTooltip_AddNormalLine(GameTooltip, detail)
 	end
-	for _, row in ipairs(not stopTitles[1] and rows or {}) do
-		GameTooltip_AddColoredLine(GameTooltip, row.text, row.current and HIGHLIGHT_FONT_COLOR or NORMAL_FONT_COLOR)
+	-- The pin you are travelling to lists the steps there, as the tracker does, under the time and distance left.
+	if self.current then
+		local time, distance = ns.JourneyLeft()
+		if time then
+			GameTooltip_AddColoredLine(GameTooltip, string.format(L["%s · %s"], time, distance), HIGHLIGHT_FONT_COLOR)
+		end
+		for _, row in ipairs(rows) do
+			local color = row.current and HIGHLIGHT_FONT_COLOR or row.grey and GRAY_FONT_COLOR or NORMAL_FONT_COLOR
+			GameTooltip_AddColoredLine(GameTooltip, row.text, color)
+		end
 	end
 	GameTooltip_AddNormalLine(GameTooltip, L["Right-click to clear"])
 	GameTooltip:Show()
@@ -158,5 +168,6 @@ function ShortestPathForeverGoalPinMixin:OnReleased()
 	self:OnMouseLeave()
 	self.stopTitles = nil
 	self.stopDetails = nil
+	self.current = nil
 	MapCanvasPinMixin.OnReleased(self)
 end

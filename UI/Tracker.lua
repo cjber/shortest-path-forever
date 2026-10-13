@@ -7,7 +7,6 @@ local module
 ---@class SPFTracker : SPFTrackerModule
 ---@field journeyTracker? boolean
 ---@field metres? boolean
----@field distance? SPFDistanceCache
 ---@field riding? number|false
 ---@field second number
 ---@field journeyVersion? number
@@ -110,8 +109,13 @@ local function RideRows(routeID)
 	return { { key = routeID, text = text } }, kind, dockID
 end
 
+-- The yards left along the journey's legs, kept until the journey or its route changes. The tracker's header and
+-- the destination pin's tooltip (StopPin.lua) both read it.
+---@type SPFDistanceCache?
+local distanceCache
+
 local function JourneyDistance(result, index)
-	local cache = module.distance
+	local cache = distanceCache
 	if not cache or cache.result ~= result or cache.version ~= ns.journeyVersion then
 		cache = { result = result, version = ns.journeyVersion, legs = {} }
 		local total = 0
@@ -133,7 +137,7 @@ local function JourneyDistance(result, index)
 			cache.legs[legIndex] = { points = points, after = after, lengths = lengths, yards = yards, later = total }
 			total = total + yards
 		end
-		module.distance = cache
+		distanceCache = cache
 	end
 	local leg, path = result.legs[index], cache.legs[index]
 	if not path then
@@ -170,14 +174,29 @@ local function JourneyDistance(result, index)
 	return math.max(0, yards + path.later)
 end
 
-local function JourneyHeader(result, index, loading)
+-- The time and distance left, as the tracker's header shows them; nil while the journey is still being planned.
+---@return string? time, string? distance
+local function JourneyLeft(result, index, loading)
 	if not result or loading then
-		module.distance = nil
+		distanceCache = nil
+		return nil
+	end
+	local distance = ns.FormatDistance(JourneyDistance(result, index), true)
+	return ns.FormatCountdown(ns.JourneyTime(result.legs, index)), distance
+end
+
+---@return string? time, string? distance
+function ns.JourneyLeft()
+	local _, _, result, index, loading = ns.JourneyInfo()
+	return JourneyLeft(result, index, loading)
+end
+
+local function JourneyHeader(result, index, loading)
+	local time, distance = JourneyLeft(result, index, loading)
+	if not time then
 		return L["Journey"]
 	end
-	local yards = JourneyDistance(result, index)
-	local distance = ns.FormatDistance(yards, true)
-	return string.format(L["Journey  %s · %s"], ns.FormatCountdown(ns.JourneyTime(result.legs, index)), distance)
+	return string.format(L["Journey  %s · %s"], time, distance)
 end
 
 local function RefreshBlockText(blocks)
@@ -271,7 +290,7 @@ local function RefreshTracker(dockID, yards)
 	local section = journeyTitle and L["Journey"] or kind and HEADER[kind] or ModuleMixin.headerText
 	local header = journeyTitle and JourneyHeader(journeyResult, journeyIndex, loading) or section
 	if not journeyTitle then
-		module.distance = nil
+		distanceCache = nil
 	end
 	-- The section's identity affects layout; its live totals only change the header's single text line.
 	local changed = #blocks ~= #module.blocks or section ~= module.section

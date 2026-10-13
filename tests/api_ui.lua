@@ -174,6 +174,15 @@ settle()
 assert(#active[goalTemplate] == 1 and active[goalTemplate][1].Number.text == "")
 assert(active[goalTemplate][1].Texture.atlas == "Waypoint-MapPin-Tracked")
 assert(active[goalTemplate][1].stopTitles == nil and arrowFrame.Progress.text == "")
+-- The destination's pin names the journey, the time and distance left, and each step as the tracker words it.
+active[goalTemplate][1]:OnMouseEnter()
+local _, rows = ns.JourneyInfo()
+local left, far = ns.JourneyLeft()
+assert(tip[1] == "# Journey to Only", tip[1])
+assert(left and tip[2] == "  " .. left .. " · " .. far, tip[2])
+assert(#rows > 0 and tip[3] == "  " .. rows[1].text and tip[3]:find("^  1%. "), tip[3])
+assert(#tip == #rows + 3 and tip[#tip] == "  Right-click to clear", "every step, then how to clear")
+active[goalTemplate][1]:OnMouseLeave()
 assert(api.Cancel("Test"))
 -- A numbered stop that says what stands there keeps its numbered button and wears that mark as a small badge over the
 -- button's lower right; a lone one wears the mark alone. The minimap only rings it. Pooled pins go back to plain.
@@ -212,6 +221,13 @@ posX, posY = 0, 0
 assert(api.NavigateRoute("Test", stops))
 settle()
 assert(not api.Cancel("Other") and #active[goalTemplate] == 4)
+-- The stop being travelled to lists the steps there under its own title; a later stop names only itself.
+active[goalTemplate][1]:OnMouseEnter()
+assert(tip[1] == "# Stop 1 of 4: First" and tip[3] and tip[3]:find("^  1%. "), tip[3])
+active[goalTemplate][1]:OnMouseLeave()
+active[goalTemplate][2]:OnMouseEnter()
+assert(tip[1] == "# Stop 2 of 4: Second" and tip[2] == "  Right-click to clear" and #tip == 2)
+active[goalTemplate][2]:OnMouseLeave()
 active[goalTemplate][3]:OnMouseClickAction("RightButton")
 assert(not api.CurrentStop("Test") and #active[goalTemplate] == 0)
 
