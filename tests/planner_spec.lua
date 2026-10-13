@@ -335,10 +335,17 @@ near(points[6].x, 10500)
 near(points[6].y, -200)
 near(points[8].x, 14000)
 
--- Unknown connections can be crossed, but cannot end a flight even with a zero-length walk to the goal.
+-- A connecting flight needs every stop known: an unknown connection can neither be crossed nor end a flight, even
+-- with a zero-length walk to the goal. Walking to it learns it, and the flight goes on from there.
 flight.taxiKnown = { [1] = true, [3] = true }
+result = Plan(flight)
+for _, part in ipairs(result.legs) do
+	assert(part.mode ~= "flight" or part.from.id == 2, "cannot fly through an unknown connection")
+end
+flight.taxiKnown = { [1] = true, [2] = true, [3] = true }
 flying = only(Plan(flight), "flight")
-assert(#flying.hops == 2 and flying.to.id == 3)
+assert(#flying.hops == 2 and flying.to.id == 3, "known connections still merge into one flight")
+flight.taxiKnown = { [1] = true, [3] = true }
 flight.to = point(1, 7000)
 result = Plan(flight)
 for _, part in ipairs(result.legs) do

@@ -13,6 +13,7 @@ verbatim rather than rewritten as the addon moves.
 
 - **No "Division by zero" error on a walk measured at no cost.** Retiming the route you are following uses the share of the walk still ahead, so a walk the search measured as free no longer breaks the timed replan.
 - **Position reads wait for a readable position everywhere.** The nearest dock, ride detection, compass, tracker distances and flight timing skip a frame whose position the client withholds, as the journey already did, instead of erroring.
+- **Connecting flights only through flight points you know.** A route no longer offers a flight that passes through an undiscovered flight point, which the flight master would not let you take, such as a Horde flight out of Moonglade through an unvisited Everlook or Bloodvenom Post.
 
 ## [1.14.1] - 2026-10-13
 
