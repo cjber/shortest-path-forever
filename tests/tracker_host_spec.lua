@@ -339,6 +339,21 @@ native:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
 eventRegistry:TriggerEvent("EditMode.SavedLayouts")
 drain()
 check(native.point[1] == "TOPLEFT" and native.point[2] == parent, "private host repairs native reanchor independently")
+-- The managed frame layout or a UI addon can put the native frame back in its saved slot with no event at all.
+local probe
+for _, f in ipairs(frames) do
+	if f.point and f.point[2] == native and f.scripts.OnSizeChanged then
+		probe = f
+	end
+end
+check(probe ~= nil and probe ~= host, "an addon-owned probe follows the native frame's top left corner")
+native:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, -100)
+probe.scripts.OnSizeChanged(probe)
+check(#timers == 1, "a silent native reanchor reflows the column")
+drain()
+check(native.point[1] == "TOPLEFT" and native.point[2] == parent, "the silent reanchor is restacked below the column")
+probe.scripts.OnSizeChanged(probe)
+check(#timers == 0, "the host's own restack does not queue another reflow")
 editMode.active, editMode.shown = true, true
 eventRegistry:TriggerEvent("EditMode.Enter")
 check(host.shown == false, "private tracker hides while Edit Mode owns native slot")

@@ -481,3 +481,11 @@ close(strip:GetScale(), 1)
 strip.scripts.OnMouseUp(strip, "RightButton")
 assert(ns.db.compassX == nil and at("TOP", "TOP", 0, -42), "reset still restores the stock offset at 100%")
 print("compass: scaling keeps offsets and saved places consistent: ok")
+
+-- Background: none by default; the setting darkens a band behind the marks and turns it off again.
+assert(strip.Backdrop.hidden, "the compass floats with no background by default")
+ns.SetCompassBackground(40)
+assert(not strip.Backdrop.hidden and strip.Backdrop.color[4] == 0.4, "the background darkens at the chosen opacity")
+ns.SetCompassBackground(0)
+assert(strip.Backdrop.hidden, "0% removes the background")
+print("compass: optional background: ok")

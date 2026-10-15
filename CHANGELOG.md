@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **The quests stay below the Journey with EllesmereUI and other UI suites.** When the game, Edit Mode or a UI addon put the quest tracker back in its saved spot, the Forever sections waited for the next quest event to restack, so your quests sat over the Journey until then. The column now follows the quest tracker as soon as it moves, as 1.13 did, still without touching the game's own tracker code.
+- **A background for the compass.** *Compass background* in Interface darkens the ground behind the compass, from 0% (none, the default) to 80%, so its marks stay readable over snow, sand or a bright zone.
 - **Type `/way` to plan a journey.** `/way [zone] x y [title]` takes TomTom's line, map IDs and decimal commas included, and plans a journey to that spot, as a Shift-click on the map does. It is only taken while TomTom and other addons leave `/way` free; `/path way` always works.
 - **Follow TomTom's arrow.** With TomTom installed, turn on *Follow TomTom's arrow* in Guidance and each waypoint its arrow takes, from its `/way`, a guide or your own choice, becomes a journey here. Removing the waypoint in TomTom ends it. It is off by default.
 - **The destination pin lists the steps.** Hovering the pin you are heading for on the world map shows the time and distance left and every step there, worded as in the tracker, including on a guide's numbered stop.
