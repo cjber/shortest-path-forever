@@ -705,11 +705,14 @@ end
 local FLIGHTS_SHOWN = 8
 
 ---@param nodeID number
-local function AddFlights(nodeID)
+---@param undiscovered? boolean the hovered point itself is not known yet: nothing flies from it for you
+local function AddFlights(nodeID, undiscovered)
 	local known, faction = ns.KnownTaxiNodes(), UnitFactionGroup("player")
+	-- The flight points the planner flies to (Planner.lua's Eligible): neutral ones and your faction's, whatever the
+	-- boat and zeppelin setting says.
 	local flights = ns.TaxiTimes.FlightsFrom(nodeID, function(to)
 		local node = ns.TaxiNodes[to]
-		return node ~= nil and (ns.db.otherFaction or not node.faction or node.faction == faction)
+		return node ~= nil and (not node.faction or node.faction == faction)
 	end)
 	if not flights[1] then
 		return
@@ -722,8 +725,8 @@ local function AddFlights(nodeID)
 		if flight.estimated then
 			time = string.format(L["about %s"], time)
 		end
-		-- Flight points you have not found yet are grey, as on the flight map.
-		local color = known and not known[flight.to] and GRAY_FONT_COLOR or HIGHLIGHT_FONT_COLOR
+		-- Flight points you have not found yet are grey, as on the flight map; all are from one you have not found.
+		local color = (undiscovered or not known[flight.to]) and GRAY_FONT_COLOR or HIGHLIGHT_FONT_COLOR
 		GameTooltip_AddColoredDoubleLine(GameTooltip, ns.TaxiName(flight.to), time, color, color)
 	end
 	if #flights > FLIGHTS_SHOWN then
@@ -737,7 +740,7 @@ function ShortestPathForeverFlightPinMixin:OnMouseEnter()
 	if self.poiInfo.isUndiscovered then
 		GameTooltip_AddNormalLine(GameTooltip, L["Not discovered"])
 	end
-	AddFlights(self.poiInfo.nodeID)
+	AddFlights(self.poiInfo.nodeID, self.poiInfo.isUndiscovered)
 	GameTooltip:Show()
 end
 

@@ -138,4 +138,5 @@ flights = TaxiTimes.FlightsFrom(1, function()
 	return true
 end)
 assert(flights[1].to == 3 and flights[2].to == 2, "measured flights quickest first")
+assert(not flights[1].estimated, "a flight you timed is no longer an estimate")
 print("taxitimes_spec: flights from a point ok")
