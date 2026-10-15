@@ -3,28 +3,95 @@ name: Release
 on:
   push:
     tags: ["v*"]
+  # A cloud agent session cannot push tags, so it releases from here: this run tags a main commit that passed full
+  # CI and publishes it itself, since a tag created with GITHUB_TOKEN starts no workflow of its own.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to release, as CHANGELOG.md names it (for example 1.15.0)
+        required: true
+        type: string
+      commit:
+        description: Full SHA of the main commit to release; main's head when empty
+        required: false
+        type: string
 
 permissions: {}
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
   release:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # the packager creates the GitHub release
-      actions: read # release_check.py reads the tagged commit's CI runs
+      contents: write # the packager creates the GitHub release; a manual release creates its tag
+      actions: read # release_check.py reads the commit's CI runs
     steps:
+      - name: Choose the tag and commit
+        id: target
+        env:
+          VERSION: ${{ inputs.version }}
+          COMMIT: ${{ inputs.commit }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" != workflow_dispatch ]; then
+            echo "tag=$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
+            echo "commit=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$GITHUB_REF" != refs/heads/main ]; then
+            echo "::error::Manual releases run from main."
+            exit 1
+          fi
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::The version must look like 1.2.3."
+            exit 1
+          fi
+          commit=${COMMIT:-$GITHUB_SHA}
+          if ! printf '%s' "$commit" | grep -Eq '^[0-9a-f]{40}$'; then
+            echo "::error::The commit must be a full 40-character SHA."
+            exit 1
+          fi
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ steps.target.outputs.commit }}
           fetch-depth: 0
           persist-credentials: false
-      - name: Verify full CI on the tagged commit
+      # release_check.py passes only a commit whose full CI push run on main succeeded, so a manual release cannot
+      # publish a branch, a pull request or an unchecked commit.
+      - name: Verify full CI on the commit
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python3 tools/release_check.py
+          RELEASE_COMMIT: ${{ steps.target.outputs.commit }}
+        run: |
+          python3 -c 'import os; os.environ["GITHUB_SHA"] = os.environ["RELEASE_COMMIT"]
+          from tools.release_check import main
+          main()'
       # The release notes are this version's CHANGELOG entry, not the whole file;
       # a tag without one fails here rather than shipping empty notes.
       - name: Release notes
-        run: python3 tools/changelog.py "$GITHUB_REF_NAME" > .release-notes.md
+        env:
+          RELEASE_TAG: ${{ steps.target.outputs.tag }}
+        run: python3 tools/changelog.py "$RELEASE_TAG" > .release-notes.md
+      - name: Tag a manual release
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ steps.target.outputs.tag }}
+          RELEASE_COMMIT: ${{ steps.target.outputs.commit }}
+        run: |
+          existing=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG" --jq .object.sha 2>/dev/null || true)
+          if [ -z "$existing" ]; then
+            gh api "repos/$GITHUB_REPOSITORY/git/refs" -f "ref=refs/tags/$RELEASE_TAG" -f "sha=$RELEASE_COMMIT" > /dev/null
+          elif [ "$existing" != "$RELEASE_COMMIT" ]; then
+            echo "::error::$RELEASE_TAG already names $existing."
+            exit 1
+          fi
+          # The packager reads the version from the tag on the checked-out commit.
+          git tag "$RELEASE_TAG" "$RELEASE_COMMIT"
       - uses: BigWigsMods/packager@e50a250f8705041e40f2fa1ddcb280a686d65aa0 # v2.6.1
         env:
           CF_API_KEY: ${{ secrets.CF_API_KEY }}
