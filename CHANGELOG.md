@@ -12,6 +12,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Less work while you stand still.** The journey's line on the minimap stops redrawing every frame once nothing has changed for a second, and picks up again as you move, turn, zoom or ride. The direction arrow already rests the same way.
 - **The arrow eases round and moves.** The direction arrow swings smoothly to each new bearing, as the compass does, instead of stepping, and rests when you stand still. *Move the arrow* and *Arrow scale* in Interface place and size it, and the cast prompt that stands in its place.
 - **Place the compass and the arrow to the pixel.** Shift-drag either one while moving it to move it a quarter as far as the mouse.
 - **More guides' waypoints work without TomTom.** The TomTom stand-in now answers the rest of the waypoint calls guides make: checking or clearing a waypoint, clearing them all, asking for the closest one and its distance, pointing the arrow at one, and adding one on the map you are on.
