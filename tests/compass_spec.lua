@@ -1,7 +1,7 @@
 -- Exercise the real compass against allocation-free UI spies, including a stopped OnUpdate.
 local source = arg[1] or "UI/Compass.lua"
 local calls = { text = 0, atlas = 0, info = 0, objects = 0, points = 0, panels = 0, colors = 0 }
-local stripTemplate
+local stripTemplate, moverFrame
 local atlasSizes = {
 	["Waypoint-MapPin-Tracked"] = { width = 30, height = 30 },
 	["Navigation-Tracked-Icon"] = { width = 23, height = 35 },
@@ -169,7 +169,12 @@ local env = setmetatable({
 			return 1
 		end,
 	},
-	CreateFrame = function(_, _, _, template)
+	CreateFrame = function(_, name, _, template)
+		-- Mover.lua's own frame for a fine drag is not the compass.
+		if name ~= "ShortestPathForeverCompass" then
+			moverFrame = object()
+			return moverFrame
+		end
 		stripTemplate = template
 		strip = object()
 		return strip
@@ -204,7 +209,7 @@ env.CreateFromMixins, env.MapCanvasPinMixin, env.FlightPointPinMixin = function(
 end, {}, {}
 ns.Init = function() end
 local stubs = { DockKind = ns.DockKind, DockPoint = ns.DockPoint }
-for _, file in ipairs({ "Core/Distance.lua", "UI/Art.lua", "UI/Looks.lua", "UI/Map.lua" }) do
+for _, file in ipairs({ "Core/Distance.lua", "UI/Art.lua", "UI/Looks.lua", "UI/Map.lua", "UI/Mover.lua" }) do
 	setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
 end
 ns.Init, ns.DockKind, ns.DockPoint = nil, stubs.DockKind, stubs.DockPoint
@@ -466,6 +471,57 @@ strip.scripts.OnMouseUp(strip, "LeftButton")
 assert(ns.db.compassX == 240)
 strip.scripts.OnMouseUp(strip, "RightButton")
 assert(ns.db.compassX == nil and ns.db.compassY == nil and at("TOP", "TOP", 0, -42))
+function methods:IsVisible()
+	return not self.hidden
+end
+env.IsMouseButtonDown = function()
+	return true
+end
+-- A Shift-drag moves it a quarter as far as the cursor, for placing it to the pixel, then saves it as a drag does.
+local cursorX, cursorY, shift = 1000, 500, true
+env.GetCursorPosition = function()
+	return cursorX, cursorY
+end
+env.IsShiftKeyDown = function()
+	return shift
+end
+strip.centerX, strip.centerY = 240, 300
+strip.scripts.OnDragStart(strip)
+cursorX, cursorY = 1040, 480
+-- The client's centre follows where the fine drag put the frame.
+local getCenter = methods.GetCenter
+methods.GetCenter = function(self)
+	return self.atX, self.atY
+end
+strip.scripts.OnDragStop(strip)
+methods.GetCenter = getCenter
+assert(ns.db.compassX == 250 and ns.db.compassY == 295, "a Shift-drag moves a quarter of the cursor's way")
+assert(at("CENTER", "BOTTOMLEFT", 250, 295))
+local started = false
+local startMoving = methods.StartMoving
+methods.StartMoving = function()
+	started = true
+end
+shift = false
+strip.scripts.OnDragStart(strip)
+assert(started, "a plain drag follows the cursor")
+methods.StartMoving = startMoving
+-- A fine drag that loses its button (a loading screen, Alt-Z) ends there and is saved, rather than following on.
+shift = true
+strip.scripts.OnMouseUp(strip, "RightButton")
+strip.centerX, strip.centerY = 240, 300
+strip.scripts.OnDragStart(strip)
+env.IsMouseButtonDown = function()
+	return false
+end
+cursorX, cursorY = 1080, 500
+methods.GetCenter = function(self)
+	return self.atX, self.atY
+end
+moverFrame.scripts.OnUpdate(moverFrame, 1 / 60)
+methods.GetCenter = getCenter
+assert(ns.db.compassX == 250 and not moverFrame.scripts.OnUpdate, "a lost fine drag stops and saves")
+strip.scripts.OnMouseUp(strip, "RightButton")
 print("compass: placing, saving and resetting its position: ok")
 
 -- Scaling: ticks, labels and offsets scale with the frame, and a dragged place is saved in screen pixels.

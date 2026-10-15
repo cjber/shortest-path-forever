@@ -29,6 +29,10 @@ local function frame()
 	function f:SetAlpha(value)
 		self.alpha = value
 	end
+	-- Unscaled, as UIParent is at the default UI scale.
+	f.GetEffectiveScale = function()
+		return 1
+	end
 	function f:CreateTexture()
 		return setmetatable({}, getmetatable(self))
 	end
@@ -57,6 +61,7 @@ local function vector(x, y)
 end
 local env = setmetatable({
 	CreateFrame = frame,
+	UIParent = frame(),
 	GetRealmName = function()
 		return "Test"
 	end,

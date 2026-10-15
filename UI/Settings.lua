@@ -343,6 +343,45 @@ ns.Init(function()
 			ns.WakeTravel()
 		end
 	)
+	Settings.RegisterInitializer(
+		page,
+		Settings.CreateCheckboxInitializer(
+			Settings.RegisterProxySetting(
+				page,
+				"ShortestPathForever_arrowMove",
+				Settings.VarType.Boolean,
+				L["Move the arrow"],
+				false,
+				ns.ArrowMoving,
+				ns.MoveArrow
+			),
+			nil,
+			L["Shows the arrow so you can drag it anywhere on screen; Shift-drag nudges it. Right-click it to put it back."]
+		)
+	)
+	local arrowScale = Settings.RegisterAddOnSetting(
+		page,
+		"ShortestPathForever_arrowScale",
+		"arrowScale",
+		ns.db,
+		Settings.VarType.Number,
+		L["Arrow scale"],
+		ns.Defaults.arrowScale
+	)
+	arrowScale:SetValueChangedCallback(function(_, value)
+		if type(value) == "number" then
+			ns.SetArrowScale(value)
+		end
+	end)
+	settings.arrowScale = arrowScale
+	local arrowOptions = Settings.CreateSliderOptions(50, 200, 10)
+	arrowOptions:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
+		return value .. "%"
+	end)
+	Settings.RegisterInitializer(
+		page,
+		Settings.CreateSliderInitializer(arrowScale, arrowOptions, L["Scales the arrow and the cast prompt."])
+	)
 	Checkbox("metres", L["Distances in metres"], L["Show metres and kilometres instead of yards."], function()
 		ns.RefreshCompass()
 		ns.RefreshTracker()
@@ -379,7 +418,7 @@ ns.Init(function()
 				ns.MoveCompass
 			),
 			nil,
-			L["Shows the compass so you can drag it anywhere on screen. Right-click it to put it back."]
+			L["Shows the compass so you can drag it anywhere on screen; Shift-drag nudges it. Right-click it to put it back."]
 		)
 	)
 	if host and host.GetScale and host.SetScale then
