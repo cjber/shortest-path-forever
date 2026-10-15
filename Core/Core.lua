@@ -34,6 +34,7 @@ local DEFAULTS = {
 	minimapButton = false,
 	compass = true,
 	compassScale = 100,
+	compassBackground = 0,
 	corpse = true,
 	whatsNew = true,
 }

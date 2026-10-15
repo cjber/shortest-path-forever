@@ -11,8 +11,15 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
-- **Type `/way` to plan a journey.** `/way [zone] x y [title]` takes TomTom's line, map IDs and decimal commas included, and plans a journey to that spot, as a Shift-click on the map does. It is only taken while TomTom and other addons leave `/way` free; `/path way` always works.
-- **Follow TomTom's arrow.** With TomTom installed, turn on *Follow TomTom's arrow* in Guidance and each waypoint its arrow takes, from its `/way`, a guide or your own choice, becomes a journey here. Removing the waypoint in TomTom ends it. It is off by default.
+## [1.15.0] - 2026-10-15
+
+- **Data checked against Forever 1.60.1.70374.** The travel data and flight times are unchanged apart from their source pins.
+
+- **The quests stay below the Journey with EllesmereUI and other UI suites.** When the game, Edit Mode or a UI addon put the quest tracker back in its saved spot, the Forever sections waited for the next quest event to restack, so your quests sat over the Journey until then. The column now follows the quest tracker as soon as it moves, as 1.13 did, still without touching the game's own tracker code.
+- **A background for the compass.** *Compass background* in Interface darkens the ground behind the compass, from 0% (none, the default) to 80%, so its marks stay readable over snow, sand or a bright zone.
+- **Type `/way` to plan a journey.** `/way [zone] x y [title]` takes TomTom's line, map IDs, part of a zone's name and decimal commas included, and plans a journey to that spot, as a Shift-click on the map does. It is only taken while TomTom and other addons leave `/way` free; `/path way` always works.
+- **Follow TomTom's arrow.** With TomTom installed, turn on *Follow TomTom's arrow* in Guidance and each waypoint its arrow takes, from its `/way`, a guide or your own choice, becomes a journey here, including the waypoint it points to after a `/reload`. Removing the waypoint in TomTom, or all of them at once, ends it. TomTom's corpse arrow is left to the corpse run, so dying keeps the journey you were on. It is off by default.
+- **Guides' waypoints work with TomTom switched off.** A TomTom that is installed but turned off in the AddOns list no longer stops guides that set TomTom waypoints from planning journeys here.
 - **The destination pin lists the steps.** Hovering the pin you are heading for on the world map shows the time and distance left and every step there, worded as in the tracker, including on a guide's numbered stop.
 - **No "Division by zero" error on a walk measured at no cost.** Retiming the route you are following uses the share of the walk still ahead, so a walk the search measured as free no longer breaks the timed replan.
 - **Position reads wait for a readable position everywhere.** The nearest dock, ride detection, compass, tracker distances and flight timing skip a frame whose position the client withholds, as the journey already did, instead of erroring.

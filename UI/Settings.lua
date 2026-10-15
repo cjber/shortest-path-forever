@@ -417,6 +417,33 @@ ns.Init(function()
 			L["Scales the compass. 100% matches the game's own art."]
 		)
 	)
+	local compassBackground = Settings.RegisterAddOnSetting(
+		page,
+		"ShortestPathForever_compassBackground",
+		"compassBackground",
+		ns.db,
+		Settings.VarType.Number,
+		L["Compass background"],
+		ns.Defaults.compassBackground
+	)
+	compassBackground:SetValueChangedCallback(function(_, value)
+		if type(value) == "number" then
+			ns.SetCompassBackground(value)
+		end
+	end)
+	settings.compassBackground = compassBackground
+	local backgroundOptions = Settings.CreateSliderOptions(0, 80, 10)
+	backgroundOptions:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
+		return value .. "%"
+	end)
+	Settings.RegisterInitializer(
+		page,
+		Settings.CreateSliderInitializer(
+			compassBackground,
+			backgroundOptions,
+			L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."]
+		)
+	)
 	Checkbox(
 		"whatsNew",
 		L["What's new after an update"],

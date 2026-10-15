@@ -65,7 +65,7 @@ Click the current journey step and choose **Complete this step** to advance it m
 
 In **Guidance**, choose **Resume guide** to return to RestedXP after selecting another journey.
 
-In **Interface** settings, set **Forever tracker size** and **Compass size** separately from 50% to 200%. The tracker setting applies to the shared Forever column.
+In **Interface** settings, set **Forever tracker size** and **Compass size** separately from 50% to 200%. The tracker setting applies to the shared Forever column. **Compass background** puts a dark band behind the compass where snow or sand drowns its marks.
 
 Open a flight master’s map once after installing to sync the flight points you already know. Opposing-faction boat and zeppelin routes are off by default; you can opt in through settings.
 

@@ -826,6 +826,18 @@ end)
 ObjectiveTrackerFrame:HookScript("OnSizeChanged", function()
 	host:MarkDirty()
 end)
+-- The game's managed frame layout, Edit Mode and UI addons such as EllesmereUI put the native frame back in its saved
+-- slot with no event of their own, which left the quests drawn over the Forever sections until the next quest event.
+-- An addon-owned probe spans from the screen's bottom left corner to the native frame's top left corner, so any move
+-- of the native frame resizes the probe and its OnSizeChanged reflows the column. Our own restack is skipped.
+local probe = CreateFrame("Frame", nil, UIParent)
+probe:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", 0, 0)
+probe:SetPoint("TOPRIGHT", ObjectiveTrackerFrame, "TOPLEFT", 0, 0)
+probe:SetScript("OnSizeChanged", function()
+	if not IsAppliedNativeAnchor(ObjectiveTrackerFrame:GetPoint()) then
+		host:MarkDirty()
+	end
+end)
 -- Collapsing "All Objectives" hides the shared sections too. Mark the host dirty on the click that flips it; the
 -- native collapse method itself stays unhooked and untouched, and the native header keeps its parent so its button
 -- resolves the native container normally.

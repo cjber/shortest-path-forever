@@ -8,7 +8,7 @@ Alt-click the world map to place a destination directly over a Questie icon. Shi
 
 In **Map marks**, scale transport, flight master and minimap icons separately from 25% to 200%. Right-click a flight master icon to mark its path as known or unknown; opening a flight master's map also syncs paths reported by the client.
 
-In **Interface**, turn **Show journey in tracker** and **Show direction arrow** off independently, leaving the map route visible. Choose yards or metres, resize the tracker and compass, or enable the optional minimap settings button. Turn off **Attach to quest tracker** in Guidance to drag the Forever column by its heading.
+In **Interface**, turn **Show journey in tracker** and **Show direction arrow** off independently, leaving the map route visible. Choose yards or metres, resize the tracker and compass, give the compass a background, or enable the optional minimap settings button. Turn off **Attach to quest tracker** in Guidance to drag the Forever column by its heading.
 
 Click the current journey step and choose **Complete this step** to advance it. Skipping a Hearthstone leaves it out of plans for that journey. Other steps may return if your actual position still requires them.
 
@@ -47,12 +47,13 @@ With RestedXP installed, **Resume guide** in Guidance or the Journey header menu
   tell when you have arrived, and keeps its pin and line.
 
 - **Typed waypoints.** `/way [zone] x y [title]` plans a journey to that spot, read as TomTom reads it: x and y are
-  percentages of the map, `#1429` names a map by its ID, a zone can be shortened to the start of its name
-  (`/way elwynn 42 65 Goldshire`), and a decimal comma works. Without a zone the spot is on the map you stand on.
+  percentages of the map, `#1429` names a map by its ID, a zone can be shortened to any part of its name
+  (`/way elwynn 42 65 Goldshire`, `/way hinterlands 14 44`), and a decimal comma works. Without a zone the spot is on the map you stand on.
   `/way` is registered only when TomTom isn't loaded and no other addon has claimed it; `/path way` takes the same
   line and always works. With TomTom installed, *Follow TomTom's arrow* in Guidance (off by default) plans a journey
-  to each waypoint its arrow takes, from `/way`, a guide or the waypoint you pick, and removing that waypoint in
-  TomTom ends the journey.
+  to each waypoint its arrow takes, from `/way`, a guide or the waypoint you pick, including the one it points to
+  after a `/reload`, and removing that waypoint in TomTom, one at a time or all at once, ends the journey. Its corpse
+  arrow is left to the corpse run, so dying keeps the journey you were on.
 
 - **The destination pin.** Hover the pin you are heading for on the world map to see the time and distance left and
   each step, worded as the tracker words them, with the current one lit. A later stop's pin names only that stop.

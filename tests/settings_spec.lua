@@ -7,7 +7,7 @@ local opened = {}
 
 local attachmentNotified, attachmentChanged
 local trackerState = { attached = true }
-local trackerScale, compassScaled = 1, nil
+local trackerScale, compassScaled, compassBackdrop = 1, nil, nil
 local env = setmetatable({
 	MinimalSliderWithSteppersMixin = { Label = { Right = 1 } },
 	OFF = "Off",
@@ -154,11 +154,14 @@ local ns = {
 		ways[#ways + 1] = message
 	end,
 	db = {},
-	Defaults = setmetatable({ hearthMinimumSavings = 0, compassScale = 100, tomtomFollow = false }, {
-		__index = function()
-			return true
-		end,
-	}),
+	Defaults = setmetatable(
+		{ hearthMinimumSavings = 0, compassScale = 100, compassBackground = 0, tomtomFollow = false },
+		{
+			__index = function()
+				return true
+			end,
+		}
+	),
 	Init = function(fn)
 		fn()
 	end,
@@ -176,6 +179,9 @@ local ns = {
 	end,
 	SetCompassScale = function(value)
 		compassScaled = value
+	end,
+	SetCompassBackground = function(value)
+		compassBackdrop = value
 	end,
 }
 assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", ns)
@@ -217,13 +223,14 @@ local groups = {
 		"compassMove",
 		"trackerScale",
 		"compassScale",
+		"compassBackground",
 		"whatsNew",
 	},
 }
 local order = { "Map marks", "Transport", "Guidance", "Alerts", "Interface" }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 33, #rows)
+assert(#rows == 34, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -299,6 +306,14 @@ assert(compassSlider.kind == "slider" and compassSlider.setting.default == 100, 
 assert(compassSlider.options.format(150) == "150%", "the compass slider shows a percent")
 compassSlider.setting.onChanged(nil, 150)
 assert(compassScaled == 150, "the compass slider rescales the compass")
+local backgroundSlider = Row("compassBackground")
+assert(backgroundSlider.kind == "slider" and backgroundSlider.setting.default == 0, "no compass background by default")
+assert(
+	backgroundSlider.options.minValue == 0 and backgroundSlider.options.format(40) == "40%",
+	"background is a percent"
+)
+backgroundSlider.setting.onChanged(nil, 40)
+assert(compassBackdrop == 40, "the background slider darkens the compass")
 Row("pins").setting.onChanged()
 assert(refreshed == 1, "value callbacks still fire")
 print("settings: ok")

@@ -30,6 +30,7 @@ local FADE = 80
 ---@field dirty? boolean
 ---@field idle number
 ---@field ticker? FunctionContainer
+---@field Backdrop Texture
 ---@field Mover Texture
 ---@field MoverHint FontString
 ---@type SPFCompassFrame
@@ -259,6 +260,13 @@ local function ApplyScale()
 	frame:SetScale((ns.db.compassScale or 100) / 100)
 end
 
+-- A dark band behind the marks for ground whose colours swallow them; none by default, so the compass floats.
+local function ApplyBackground()
+	local opacity = math.max(0, math.min(100, tonumber(ns.db.compassBackground) or 0))
+	frame.Backdrop:SetColorTexture(0, 0, 0, opacity / 100)
+	frame.Backdrop:SetShown(opacity > 0)
+end
+
 local function Create()
 	local compass = CreateFrame("Frame", "ShortestPathForeverCompass", UIParent)
 	---@cast compass SPFCompassFrame
@@ -287,6 +295,9 @@ local function Create()
 			Anchor()
 		end
 	end)
+	frame.Backdrop = frame:CreateTexture(nil, "BACKGROUND", nil, -1)
+	frame.Backdrop:SetAllPoints()
+	ApplyBackground()
 	frame.Mover = frame:CreateTexture(nil, "BACKGROUND")
 	frame.Mover:SetAllPoints()
 	frame.Mover:SetColorTexture(0, 0, 0, 0.5)
@@ -377,6 +388,16 @@ function ns.SetCompassScale(value)
 		Anchor()
 	end
 	ns.RefreshCompass()
+end
+
+---@param value number
+function ns.SetCompassBackground(value)
+	if type(value) == "number" then
+		ns.db.compassBackground = value
+	end
+	if frame then
+		ApplyBackground()
+	end
 end
 
 ---@param value boolean
