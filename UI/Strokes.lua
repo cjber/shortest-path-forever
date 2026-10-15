@@ -434,11 +434,11 @@ end
 local Project = Strokes.Project
 
 -- The paths on the player's own map as the minimap shows them, clipped to its face. Returns where the goal's mark
--- sits when it is on the face, as Project gives it; the dots leave a gap around it.
+-- sits, as Project gives it: on the face (the dots leave a gap around it), or on the rim towards a goal off it.
 ---@param buffer SPFStrokes
 ---@param paths SPFDrawPath[]
 ---@param view SPFMinimapView
----@return number?, number?
+---@return number? x, number? y, boolean? edge the goal is off the minimap and its mark waits on the rim
 function Strokes.Minimap(buffer, paths, view)
 	Begin(buffer, view.scale)
 	local x, y, map, radius, facing = view.x, view.y, view.map, view.radius, view.facing
@@ -449,12 +449,20 @@ function Strokes.Minimap(buffer, paths, view)
 		return nil
 	end
 	local cosine, sine = math.cos(facing), math.sin(facing)
-	local markX, markY
-	if goal and goal.map == map then
+	local markX, markY, edge
+	if goal and goal.map == map and not goal.corpse then
 		local gx, gy = Project(goal, x, y, radius, cosine, sine)
-		if not goal.corpse and math.abs(gx) <= 1 and math.abs(gy) <= 1 and (square or gx * gx + gy * gy <= 1) then
+		if math.abs(gx) <= 1 and math.abs(gy) <= 1 and (square or gx * gx + gy * gy <= 1) then
 			markX, markY = gx, gy
 			Circle((gx + 1) * width / 2, (gy - 1) * height / 2, view.goalRadius)
+		else
+			-- Off the minimap: the mark waits on its rim in the goal's direction, its ring inside the face. The dots
+			-- run to the rim on their own, so there is no gap to keep for it.
+			local rim = 1 - view.goalRadius / (math.min(width, height) / 2)
+			local reach = square and math.max(math.abs(gx), math.abs(gy)) or math.sqrt(gx * gx + gy * gy)
+			if rim > 0 and reach > 0 then
+				markX, markY, edge = gx * rim / reach, gy * rim / reach, true
+			end
 		end
 	end
 	local inset = 1 - border / math.min(width, height)
@@ -493,5 +501,5 @@ function Strokes.Minimap(buffer, paths, view)
 			Stroke(width / 2, -height / 2, (gx + 1) * width / 2, (gy - 1) * height / 2, view.colors.walk)
 		end
 	end
-	return markX, markY
+	return markX, markY, edge
 end

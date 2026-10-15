@@ -14,6 +14,8 @@ ns.RouteUnderAlpha = UNDER_ALPHA
 -- StopPin.lua's marks. On the minimap a hollow ring circles the game's own icon at a stop with a known mark.
 local GOAL_ATLAS, RING_ATLAS, STOP_SIZE = ns.GoalAtlas, "adventureguide-ring", ns.StopSize
 local MINIMAP_GOAL, MINIMAP_RING = 16, 22
+-- How strongly the goal's mark shows when it waits on the minimap's rim, off its face.
+local EDGE_ALPHA = 0.6
 local COLORS = {
 	walk = NORMAL_FONT_COLOR,
 	flight = CreateColor(0.2, 1, 0.35),
@@ -512,9 +514,11 @@ local function DrawMinimap(self)
 	ns.SetAreaBlob(area)
 	-- A goal with a known mark wears the wider ring (ns.SetJourneyRoute).
 	view.goal, view.goalRadius = not area and goal or nil, (goal and goal.look and MINIMAP_RING or MINIMAP_GOAL) / 2
-	local gx, gy = Strokes.Minimap(journeyStrokes, area and {} or paths, view)
+	local gx, gy, edge = Strokes.Minimap(journeyStrokes, area and {} or paths, view)
 	if gx then
 		self.Goal:SetPoint("CENTER", self, "CENTER", gx * width / 2, gy * height / 2)
+		-- On the rim it only shows the way, a little faded, as the game's own tracked pin is at the minimap's edge.
+		self.Goal:SetAlpha(edge and EDGE_ALPHA or 1)
 		self.Goal:Show()
 	end
 	Paint(self, journeyStrokes)
