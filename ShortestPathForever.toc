@@ -42,6 +42,7 @@ UI\Looks.lua
 UI\MinimapPins.lua
 UI\TrackerHost.lua
 UI\Tracker.lua
+UI\Mover.lua
 UI\Arrow.lua
 UI\Compass.lua
 Nav\Nav.xml

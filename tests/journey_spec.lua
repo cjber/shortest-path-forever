@@ -114,6 +114,7 @@ for _, destination in ipairs({ { map = 1, x = 6400, y = 100 }, { map = 0, x = 22
 		"Routing/PathGrid.lua",
 		"Routing/Path.lua",
 		"Routing/PathJobs.lua",
+		"UI/Mover.lua",
 		"UI/Arrow.lua",
 	}) do
 		live.load(file)
@@ -167,6 +168,8 @@ for _, destination in ipairs({ { map = 1, x = 6400, y = 100 }, { map = 0, x = 22
 		frame()
 	end
 	local travelled, changes, previous = 0, 0, live.waypoint()
+	-- Setting off wakes the arrow's every-frame update, as the client's movement event does.
+	live.fire("PLAYER_STARTED_MOVING")
 	for i = 2, #path do
 		local a, b = path[i - 1], path[i]
 		local length = math.sqrt((b.x - a.x) ^ 2 + (b.y - a.y) ^ 2)

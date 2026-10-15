@@ -37,6 +37,7 @@ local DEFAULTS = {
 	compass = true,
 	compassTime = false,
 	compassScale = 100,
+	arrowScale = 100,
 	compassBackground = 0,
 	corpse = true,
 	whatsNew = true,
