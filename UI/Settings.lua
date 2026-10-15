@@ -350,7 +350,7 @@ ns.Init(function()
 	Checkbox(
 		"compassTime",
 		L["Show the time left under the compass"],
-		L["The whole journey's time left, under the distance to your next turn."],
+		L["The journey's time left, as the tracker shows it, beside the distance to your next turn."],
 		ns.RefreshCompass
 	)
 	Settings.RegisterInitializer(

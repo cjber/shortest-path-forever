@@ -152,21 +152,25 @@ local function Render(x, y, map)
 	end
 end
 
--- Under the distance, with "Show the time left" on: the whole journey's time left, as the tracker's header gives it.
--- Read at most once a second, so a turning compass costs nothing; written only when it changes.
-local function RenderTime()
+-- Beside the distance, with "Show the time left" on: the time left exactly as the tracker's header gives it (the corpse
+-- run's while you run back, none while a plan is being worked out). Read once per second of GetTime, the header's own
+-- tick, or when the journey changes; written only when it changes, so a turning compass costs nothing.
+local function HideTime()
+	frame.Time:Hide()
+	frame.timeText, frame.timeAt = nil, nil
+end
+
+local function RenderTime(changed)
 	if not (ns.db.compassTime and frame.Distance:IsShown()) then
-		frame.Time:Hide()
-		frame.timeText = nil
+		HideTime()
 		return
 	end
-	local now = GetTime()
-	if frame.timeText and now - (frame.timeAt or 0) < 1 then
+	local second = math.floor(GetTime())
+	if not changed and second == frame.timeAt then
 		return
 	end
-	frame.timeAt = now
-	local plan, index = ns.JourneyPlan()
-	local text = plan and ns.FormatCountdown(ns.JourneyTime(plan.legs, index)) or nil
+	frame.timeAt = second
+	local text = ns.JourneyLeft()
 	if text ~= frame.timeText then
 		frame.timeText = text
 		if text then
@@ -186,6 +190,7 @@ end
 local function Update(elapsed)
 	local bend, nextBend, stop, goal = ns.GuideTargets()
 	if not (ns.db.compass and ns.db.journey and ns.IsJourneyGuided() and bend) then
+		HideTime()
 		frame:SetShown(moving)
 		frame:SetAlpha(1)
 		SetUpdating(false)
@@ -225,7 +230,7 @@ local function Update(elapsed)
 	if moved or changed or delta ~= 0 then
 		Render(x, y, map)
 	end
-	RenderTime()
+	RenderTime(changed)
 	frame.dirty = false
 	frame.idle = moved and 0 or frame.idle + elapsed
 	SetUpdating(easing or frame.idle < 0.15)
@@ -263,6 +268,7 @@ local function OnHide()
 	end
 	frame:UnregisterAllEvents()
 	frame.facing = nil
+	HideTime()
 end
 
 -- Where the player dragged it, else the stock place under the top of the screen. The client keeps a clamped frame
@@ -382,7 +388,8 @@ local function Create()
 	frame.markers = { frame.Goal, frame.Stop, frame.Bend, frame.Next }
 	frame.Distance = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	frame.Time = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-	frame.Time:SetPoint("TOP", frame.Distance, "BOTTOM", 0, -1)
+	-- Beside the distance rather than under it, inside the compass's band and its clamp to the screen.
+	frame.Time:SetPoint("LEFT", frame.Distance, "RIGHT", 6, 0)
 	frame.Time:Hide()
 	frame.idle = 0
 	frame:SetScript("OnShow", OnShow)
