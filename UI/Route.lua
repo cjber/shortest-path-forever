@@ -14,6 +14,8 @@ ns.RouteUnderAlpha = UNDER_ALPHA
 -- StopPin.lua's marks. On the minimap a hollow ring circles the game's own icon at a stop with a known mark.
 local GOAL_ATLAS, RING_ATLAS, STOP_SIZE = ns.GoalAtlas, "adventureguide-ring", ns.StopSize
 local MINIMAP_GOAL, MINIMAP_RING = 16, 22
+-- How strongly the goal's mark shows when it waits on the minimap's rim, off its face.
+local EDGE_ALPHA = 0.6
 local COLORS = {
 	walk = NORMAL_FONT_COLOR,
 	flight = CreateColor(0.2, 1, 0.35),
@@ -39,6 +41,7 @@ local journeyStrokes = Strokes.New()
 ---@field Goal Texture
 ---@field strokeLayer SPFStrokeLayer
 ---@field elapsed number
+---@field goalEdge? boolean the goal's mark waits on the rim, off the minimap
 ---@field idle number seconds the minimap has drawn nothing new
 ---@field ticker? FunctionContainer the slow poll while the every-frame update rests
 ---@field lastX? number
@@ -514,9 +517,18 @@ local function DrawMinimap(self)
 	ns.SetAreaBlob(area)
 	-- A goal with a known mark wears the wider ring (ns.SetJourneyRoute).
 	view.goal, view.goalRadius = not area and goal or nil, (goal and goal.look and MINIMAP_RING or MINIMAP_GOAL) / 2
-	local gx, gy = Strokes.Minimap(journeyStrokes, area and {} or paths, view)
+	local gx, gy, edge = Strokes.Minimap(journeyStrokes, area and {} or paths, view)
 	if gx then
 		self.Goal:SetPoint("CENTER", self, "CENTER", gx * width / 2, gy * height / 2)
+		-- Off the minimap it only shows the way, a little faded, as the game's own tracked pin is at the minimap's
+		-- edge, and always as the goal pin: a ring for a known mark would circle nothing there.
+		self.Goal:SetAlpha(edge and EDGE_ALPHA or 1)
+		if (edge or false) ~= (self.goalEdge or false) then
+			self.goalEdge = edge
+			local ringed = not edge and goal and goal.look ~= nil
+			local size = ringed and MINIMAP_RING or MINIMAP_GOAL
+			ns.Art.Fit(self.Goal, ringed and RING_ATLAS or GOAL_ATLAS, size, size)
+		end
 		self.Goal:Show()
 	end
 	Paint(self, journeyStrokes)
@@ -628,6 +640,7 @@ function ns.SetJourneyRoute(destination, route)
 		local ringed = destination and destination.look ~= nil
 		local size = ringed and MINIMAP_RING or MINIMAP_GOAL
 		ns.Art.Fit(minimap.Goal, ringed and RING_ATLAS or GOAL_ATLAS, size, size)
+		minimap.goalEdge = nil
 		if destination then
 			minimap:Show()
 			DrawMinimap(minimap)
