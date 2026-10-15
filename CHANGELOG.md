@@ -12,6 +12,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **The time left under the compass.** Turn on *Show the time left under the compass* in Interface and the whole journey's time left sits under the distance to your next turn, as the tracker's header gives it. It is off by default.
 - **The Hearthstone works on a new install.** The bind point used to be learned only when you bound at an inn with the addon running. Casting Hearthstone or Astral Recall now records where it sets you down, so the next journey can use it without a rebind.
 - **A journey started again to the same place no longer stalls.** If a guide such as Adventure Guide resent its route, or you clicked the same spot again, while the first walking search was still running, that search stayed paused or lost its answer. The journey stuck on "Finding the fastest way" and never reached its stop. The search now carries on, or uses the answer it already found.
 - **`/path report` gives you something to paste into a bug report.** It opens a small window with the text already selected: your addon and game versions, your character and where you are, your journey with each of its steps, your ride, the ride trace when `/path debug` is on, any errors caught this session, and your other addons. Press Ctrl+C and paste it. It fits in one message, and you don't need a /reload or a saved-variables file.

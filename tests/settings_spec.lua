@@ -154,14 +154,17 @@ local ns = {
 		ways[#ways + 1] = message
 	end,
 	db = {},
-	Defaults = setmetatable(
-		{ hearthMinimumSavings = 0, compassScale = 100, compassBackground = 0, tomtomFollow = false },
-		{
-			__index = function()
-				return true
-			end,
-		}
-	),
+	Defaults = setmetatable({
+		hearthMinimumSavings = 0,
+		compassScale = 100,
+		compassBackground = 0,
+		tomtomFollow = false,
+		compassTime = false,
+	}, {
+		__index = function()
+			return true
+		end,
+	}),
 	Init = function(fn)
 		fn()
 	end,
@@ -220,6 +223,7 @@ local groups = {
 		"metres",
 		"minimapButton",
 		"compass",
+		"compassTime",
 		"compassMove",
 		"trackerScale",
 		"compassScale",
@@ -230,7 +234,7 @@ local groups = {
 local order = { "Map marks", "Transport", "Guidance", "Alerts", "Interface" }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 34, #rows)
+assert(#rows == 35, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -311,6 +315,7 @@ ns.ReportLines = function()
 end
 env.SlashCmdList.SHORTESTPATHFOREVER("report")
 assert(shownReport == "Report lines failed: broke", "failing lines are said in their place")
+assert(Row("compassTime").setting.default == false, "the compass shows no time unless asked")
 -- /path way takes TomTom's /way line, whether or not /way itself is free.
 env.SlashCmdList.SHORTESTPATHFOREVER("way Elwynn Forest 42.1 65.3 Goldshire")
 assert(ways[1] == "Elwynn Forest 42.1 65.3 Goldshire", "/path way hands on the rest of the line")

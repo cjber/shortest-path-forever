@@ -138,6 +138,7 @@
 ---@field alerts? boolean
 ---@field alertSound? boolean
 ---@field journey? boolean
+---@field compassTime? boolean -- the whole journey's time left under the compass distance (Compass.lua)
 ---@field restedxp? boolean -- follow RestedXP guide targets
 ---@field tomtom? boolean -- answer third-party guides' TomTom waypoints with a journey while TomTom is absent
 ---@field tomtomFollow? boolean -- with TomTom installed, a journey follows the waypoint its arrow points to

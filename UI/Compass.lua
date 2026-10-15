@@ -18,6 +18,9 @@ local FADE = 80
 ---@field Bend SPFCompassMarker
 ---@field Center Texture
 ---@field Distance FontString
+---@field Time FontString
+---@field timeAt? number
+---@field timeText? string
 ---@field updating? boolean
 ---@field facing? number
 ---@field rawFacing? number
@@ -149,6 +152,30 @@ local function Render(x, y, map)
 	end
 end
 
+-- Under the distance, with "Show the time left" on: the whole journey's time left, as the tracker's header gives it.
+-- Read at most once a second, so a turning compass costs nothing; written only when it changes.
+local function RenderTime()
+	if not (ns.db.compassTime and frame.Distance:IsShown()) then
+		frame.Time:Hide()
+		frame.timeText = nil
+		return
+	end
+	local now = GetTime()
+	if frame.timeText and now - (frame.timeAt or 0) < 1 then
+		return
+	end
+	frame.timeAt = now
+	local plan, index = ns.JourneyPlan()
+	local text = plan and ns.FormatCountdown(ns.JourneyTime(plan.legs, index)) or nil
+	if text ~= frame.timeText then
+		frame.timeText = text
+		if text then
+			frame.Time:SetText(text)
+		end
+	end
+	frame.Time:SetShown(text ~= nil)
+end
+
 local function SetUpdating(running)
 	if frame.updating ~= running then
 		frame.updating = running
@@ -198,6 +225,7 @@ local function Update(elapsed)
 	if moved or changed or delta ~= 0 then
 		Render(x, y, map)
 	end
+	RenderTime()
 	frame.dirty = false
 	frame.idle = moved and 0 or frame.idle + elapsed
 	SetUpdating(easing or frame.idle < 0.15)
@@ -353,6 +381,9 @@ local function Create()
 	frame.Next:SetAlpha(0.5)
 	frame.markers = { frame.Goal, frame.Stop, frame.Bend, frame.Next }
 	frame.Distance = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	frame.Time = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	frame.Time:SetPoint("TOP", frame.Distance, "BOTTOM", 0, -1)
+	frame.Time:Hide()
 	frame.idle = 0
 	frame:SetScript("OnShow", OnShow)
 	frame:SetScript("OnHide", OnHide)

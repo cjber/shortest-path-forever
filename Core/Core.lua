@@ -33,6 +33,7 @@ local DEFAULTS = {
 	metres = false,
 	minimapButton = false,
 	compass = true,
+	compassTime = false,
 	compassScale = 100,
 	compassBackground = 0,
 	corpse = true,

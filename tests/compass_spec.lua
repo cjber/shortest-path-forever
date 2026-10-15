@@ -489,3 +489,48 @@ assert(not strip.Backdrop.hidden and strip.Backdrop.color[4] == 0.4, "the backgr
 ns.SetCompassBackground(0)
 assert(strip.Backdrop.hidden, "0% removes the background")
 print("compass: optional background: ok")
+
+-- Time left: off by default; on, the whole journey's time under the distance, read at most once a second.
+function methods:IsShown()
+	return not self.hidden
+end
+local clock, reads = 100, 0
+env.GetTime = function()
+	return clock
+end
+local legs = { { arrive = 0 } }
+ns.JourneyPlan = function()
+	reads = reads + 1
+	return { legs = legs }, 1
+end
+ns.JourneyTime = function(timed, index)
+	assert(timed == legs and index == 1)
+	return 754000
+end
+ns.FormatCountdown = function(ms)
+	return string.format("%d:%02d", math.floor(ms / 60000), ms / 1000 % 60)
+end
+ns.RefreshCompass()
+assert(strip.Time.hidden and reads == 0, "no time line, and nothing read, by default")
+ns.db.compassTime = true
+ns.RefreshCompass()
+assert(not strip.Time.hidden and strip.Time.text == "12:34", "the journey's time left under the distance")
+assert(strip.Time.font == "GameFontNormalSmall", "in the map's label gold")
+ns.JourneyTime = function()
+	return 753000
+end
+ns.RefreshCompass()
+assert(strip.Time.text == "12:34" and reads == 1, "read at most once a second")
+clock = clock + 1
+ns.RefreshCompass()
+assert(strip.Time.text == "12:33" and reads == 2, "and updated after it")
+ns.JourneyPlan = function()
+	return nil
+end
+clock = clock + 1
+ns.RefreshCompass()
+assert(strip.Time.hidden, "no plan yet: no time")
+ns.db.compassTime = false
+ns.RefreshCompass()
+assert(strip.Time.hidden, "turned off")
+print("compass: optional time left: ok")
