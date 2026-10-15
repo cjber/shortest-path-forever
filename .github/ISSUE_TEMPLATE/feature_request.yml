@@ -1,0 +1,28 @@
+name: Feature request
+description: Suggest a new option or behaviour for an addon.
+labels: [enhancement]
+body:
+  - type: input
+    id: addon
+    attributes:
+      label: Addon
+      placeholder: Skillup Forever
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What you are trying to do in game, and what gets in the way today.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: How you would like the addon to handle it. Name any addon that already does this.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Workarounds or other approaches you have considered.
