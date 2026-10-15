@@ -107,46 +107,53 @@ function ns.UsableTeleports(now)
 	return places, ready
 end
 
--- A bind teleport's landing: after the cast, the first position this far from where it was cast (or on another
--- map) is the bind point. Looked for each second, and on the loading screen's end, until it gives up.
-local LANDED_YARDS, LOOK_EVERY, LOOKS = 50, 1, 30
-local bindSpells, landing = {}, nil
+-- A bind teleport's landing: after the cast, the travel clock samples where you are, and the first jump faster than
+-- any mount (or onto another map, or out of an instance with no position) is where it set you down. A loading
+-- screen's end looks again; the wait ends a minute after the cast, or after the loading screen it ends in.
+local JUMP_YARDS, JUMP_SPEED, WAIT, AFTER_LOADING = 100, 20, 60, 10
+local bindSpells = {}
+---@type {name: string, map?: number, x?: number, y?: number, at: number, deadline: number}?
+local landing
 
-local function Record(name, map, x, y, z)
-	ns.charDB.bind = { name = name, map = map, x = x, y = y, z = z }
-end
-
-local function LookForLanding()
-	if not landing then
+local function Record(name, map, x, y)
+	local bind = ns.charDB.bind
+	-- The same inn, already known beside its innkeeper or from an earlier landing: kept, so its places stand.
+	if bind and bind.name == name and bind.map == map and (bind.x - x) ^ 2 + (bind.y - y) ^ 2 <= JUMP_YARDS ^ 2 then
 		return
 	end
-	local x, y, z, map = ns.JourneyPosition()
+	ns.charDB.bind = { name = name, map = map, x = x, y = y }
+end
+
+local function Sample()
+	local wait = landing
+	if not wait then
+		return
+	end
+	local now = GetTime()
+	if now > wait.deadline then
+		landing = nil
+		return
+	end
 	local name = GetBindLocation()
-	if not (canaccessvalue(name) and name == landing.name) then
+	if not canaccessvalue(name) then
+		return
+	end
+	if name ~= wait.name then
 		landing = nil
 		return
 	end
-	if x and y and map and (map ~= landing.map or (x - landing.x) ^ 2 + (y - landing.y) ^ 2 > LANDED_YARDS ^ 2) then
-		landing = nil
-		Record(name, map, x, y, z)
-	end
-end
-
-local function Look(token)
-	if not landing or landing.token ~= token then
+	local x, y, _, map = ns.JourneyPosition()
+	if not (x and y and map) then
+		wait.map, wait.x, wait.y = nil, nil, nil
 		return
 	end
-	LookForLanding()
-	if landing then
-		landing.looks = landing.looks - 1
-		if landing.looks <= 0 then
-			landing = nil
-		else
-			C_Timer.After(LOOK_EVERY, function()
-				Look(token)
-			end)
-		end
+	local limit = JUMP_YARDS + JUMP_SPEED * (now - wait.at)
+	if not wait.map or map ~= wait.map or (x - wait.x) ^ 2 + (y - wait.y) ^ 2 > limit ^ 2 then
+		landing = nil
+		Record(name, map, x, y)
+		return
 	end
+	wait.map, wait.x, wait.y, wait.at = map, x, y, now
 end
 
 ns.Init(function()
@@ -155,28 +162,37 @@ ns.Init(function()
 			bindSpells[teleport.spell] = true
 		end
 	end
+	ns.OnTravelTick(Sample)
 	local frame = CreateFrame("Frame")
 	frame:RegisterEvent("HEARTHSTONE_BOUND")
 	frame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
 	frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 	frame:SetScript("OnEvent", function(_, event, _, _, spell)
 		if event == "PLAYER_ENTERING_WORLD" then
-			LookForLanding()
+			if landing then
+				landing.deadline = GetTime() + AFTER_LOADING
+				Sample()
+			end
 			return
 		end
-		local x, y, z, map = ns.JourneyPosition()
+		if event == "UNIT_SPELLCAST_SUCCEEDED" and not (canaccessvalue(spell) and bindSpells[spell]) then
+			return
+		end
+		local x, y, _, map = ns.JourneyPosition()
 		local name = GetBindLocation()
 		if event == "UNIT_SPELLCAST_SUCCEEDED" then
-			if canaccessvalue(spell) and bindSpells[spell] and x and y and map and canaccessvalue(name) and name then
-				local token = {}
-				landing = { name = name, map = map, x = x, y = y, looks = LOOKS, token = token }
-				C_Timer.After(LOOK_EVERY, function()
-					Look(token)
-				end)
+			if canaccessvalue(name) and name then
+				local now = GetTime()
+				-- Inside an instance there is no position: the first one outside is the landing.
+				landing = { name = name, map = map, x = x, y = y, at = now, deadline = now + WAIT }
+				if not (x and y) then
+					landing.map = nil
+				end
+				ns.WakeTravel()
 			end
 		elseif x and y and map and canaccessvalue(name) then
 			landing = nil
-			Record(name, map, x, y, z)
+			ns.charDB.bind = { name = name, map = map, x = x, y = y }
 		else
 			landing = nil
 			ns.charDB.bind = nil

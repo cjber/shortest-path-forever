@@ -105,21 +105,25 @@ do
 	local secret = {}
 	local items, spells, cooldowns, itemCooldowns, casts = {}, {}, {}, {}, {}
 	local bindName, position, onEvent = "Goldshire", { 10, 20, 30, 0 }, nil
-	local timers, registered = {}, {}
-	-- Runs the timers due now; the ones they schedule wait for the next tick.
+	local registered, clock, travelTick, wakes = {}, 100, nil, 0
+	-- One second on the travel clock, as Core's ticker samples it.
 	local function tick()
-		local due = timers
-		timers = {}
-		for _, fn in ipairs(due) do
-			fn()
-		end
+		clock = clock + 1
+		travelTick()
 	end
 	local runtime = { db = { teleports = true }, charDB = {}, Teleports = ns.Teleports }
 	runtime.Init = function(fn)
 		fn()
 	end
+	-- Journey.lua's own: no height.
 	runtime.JourneyPosition = function()
-		return unpack(position)
+		return position[1], position[2], nil, position[4]
+	end
+	runtime.OnTravelTick = function(fn)
+		travelTick = fn
+	end
+	runtime.WakeTravel = function()
+		wakes = wakes + 1
 	end
 	local env = setmetatable({
 		C_Item = {
@@ -147,16 +151,11 @@ do
 			return bindName
 		end,
 		GetTime = function()
-			return 100
+			return clock
 		end,
 		canaccessvalue = function(value)
 			return value ~= secret
 		end,
-		C_Timer = {
-			After = function(_, fn)
-				timers[#timers + 1] = fn
-			end,
-		},
 		CreateFrame = function()
 			return {
 				RegisterEvent = function(_, event)
@@ -205,7 +204,7 @@ do
 	assert(#Usable(5000) == 0, "no hearth before a bind point is recorded")
 	onEvent(nil, "HEARTHSTONE_BOUND")
 	local bind = runtime.charDB.bind
-	assert(bind.name == "Goldshire" and bind.map == 0 and bind.x == 10 and bind.y == 20 and bind.z == 30)
+	assert(bind.name == "Goldshire" and bind.map == 0 and bind.x == 10 and bind.y == 20 and bind.z == nil)
 	places, ready = Usable(5000)
 	assert(#places == 1 and places[1].item == 6948 and places[1].x == 10 and places[1].label == "Goldshire")
 	assert(ready[1] == 5000)
@@ -223,53 +222,93 @@ do
 
 	-- A new install never saw the rebind: the Hearthstone's landing is the bind point.
 	assert(registered.UNIT_SPELLCAST_SUCCEEDED and registered.PLAYER_ENTERING_WORLD and registered.HEARTHSTONE_BOUND)
-	bindName, position = "Razor Hill", { 100, 100, 5, 1 }
-	onEvent(nil, "UNIT_SPELLCAST_SUCCEEDED", "player", "cast-1", 8690)
+	local function castBind(spell)
+		onEvent(nil, "UNIT_SPELLCAST_SUCCEEDED", "player", "cast", spell)
+	end
+	bindName, position = "Razor Hill", { 100, 100, nil, 1 }
+	castBind(8690)
+	assert(wakes == 1, "the cast wakes the travel clock")
 	assert(runtime.charDB.bind == nil, "not landed yet")
 	tick()
 	assert(runtime.charDB.bind == nil, "still where it was cast")
-	position = { 300, 900, 12, 1 }
+	position = { 3000, 900, nil, 1 }
 	tick()
 	bind = runtime.charDB.bind
-	assert(bind and bind.name == "Razor Hill" and bind.map == 1 and bind.x == 300 and bind.y == 900 and bind.z == 12)
-	assert(#timers == 0, "landed: no more looks")
-	assert(#Usable(5000) == 1 and Usable(5000)[1].x == 300, "the hearth goes where it landed")
+	assert(bind and bind.name == "Razor Hill" and bind.map == 1 and bind.x == 3000 and bind.y == 900)
+	assert(#Usable(5000) == 1 and Usable(5000)[1].x == 3000, "the hearth goes where it landed")
+	position = { 3000, 1500, nil, 1 }
+	tick()
+	assert(runtime.charDB.bind.y == 900, "landed: later moves are not landings")
 
-	-- Another continent: the loading screen's end finds the landing.
-	runtime.charDB.bind = nil
-	position = { 300, 900, 12, 1 }
-	onEvent(nil, "UNIT_SPELLCAST_SUCCEEDED", "player", "cast-2", 556)
-	position = { 300, 900, 12, 0 }
+	-- Hearthing home again keeps the inn already known; a few yards off is the same place.
+	castBind(8690)
+	position = { 3010, 905, nil, 1 }
 	onEvent(nil, "PLAYER_ENTERING_WORLD")
-	assert(runtime.charDB.bind and runtime.charDB.bind.map == 0, "Astral Recall to another continent")
-	tick()
-	assert(#timers == 0)
+	assert(runtime.charDB.bind == bind, "the same inn stands")
 
-	-- Other spells, a bind point renamed mid-flight and a landing that never comes record nothing.
+	-- Walking or riding away is no landing, however far it goes in the minute.
 	runtime.charDB.bind = nil
-	onEvent(nil, "UNIT_SPELLCAST_SUCCEEDED", "player", "cast-3", 3561)
-	assert(#timers == 0, "not a bind teleport")
-	onEvent(nil, "UNIT_SPELLCAST_SUCCEEDED", "player", "cast-4", secret)
-	assert(#timers == 0, "a secret spell is never guessed")
-	onEvent(nil, "UNIT_SPELLCAST_SUCCEEDED", "player", "cast-5", 8690)
-	bindName, position = "Goldshire", { 5000, 5000, 0, 0 }
-	tick()
-	assert(runtime.charDB.bind == nil and #timers == 0, "bound elsewhere since the cast")
-	position = { 300, 900, 12, 0 }
-	onEvent(nil, "UNIT_SPELLCAST_SUCCEEDED", "player", "cast-6", 8690)
-	for _ = 1, 40 do
+	position = { 0, 0, nil, 1 }
+	castBind(8690)
+	for step = 1, 70 do
+		position = { step * 14, 0, nil, 1 }
 		tick()
 	end
-	assert(runtime.charDB.bind == nil and #timers == 0, "it gives up when nothing moves")
-	position = { 9000, 9000, 0, 0 }
+	assert(runtime.charDB.bind == nil, "a mount's pace is never a jump")
+
+	-- Another continent: the loading screen's end finds the landing, however long it took.
+	position = { 300, 900, nil, 1 }
+	castBind(556)
+	clock = clock + 300
+	position = { 300, 900, nil, 0 }
 	onEvent(nil, "PLAYER_ENTERING_WORLD")
-	assert(runtime.charDB.bind == nil, "a later move is not a landing")
+	assert(runtime.charDB.bind and runtime.charDB.bind.map == 0, "Astral Recall to another continent")
+
+	-- Out of an instance, which has no position: the first position outside.
+	runtime.charDB.bind = nil
+	position = {}
+	castBind(8690)
+	tick()
+	position = { 500, 500, nil, 0 }
+	onEvent(nil, "PLAYER_ENTERING_WORLD")
+	assert(runtime.charDB.bind and runtime.charDB.bind.x == 500, "hearthing out of a dungeon")
+
+	-- A secret bind name waits for the next look rather than giving up.
+	runtime.charDB.bind = nil
+	position = { 500, 500, nil, 0 }
+	castBind(8690)
+	bindName, position = secret, { 4000, 500, nil, 0 }
+	tick()
+	assert(runtime.charDB.bind == nil, "a secret name is never guessed")
+	bindName = "Razor Hill"
+	tick()
+	assert(runtime.charDB.bind and runtime.charDB.bind.x == 4000, "and the next look finds it")
+
+	-- Other spells, a bind point renamed meanwhile and a landing that never comes record nothing.
+	runtime.charDB.bind = nil
+	local wakesBefore = wakes
+	castBind(3561)
+	castBind(secret)
+	assert(wakes == wakesBefore, "not a bind teleport, or a secret spell: not even a look")
+	position = { 0, 0, nil, 0 }
+	castBind(8690)
+	bindName, position = "Goldshire", { 5000, 5000, nil, 0 }
+	tick()
+	assert(runtime.charDB.bind == nil, "bound elsewhere since the cast")
+	bindName, position = "Razor Hill", { 0, 0, nil, 0 }
+	castBind(8690)
+	clock = clock + 61
+	position = { 9000, 9000, nil, 0 }
+	tick()
+	assert(runtime.charDB.bind == nil, "the wait ends a minute after the cast")
+	onEvent(nil, "PLAYER_ENTERING_WORLD")
+	assert(runtime.charDB.bind == nil, "a later loading screen is not a landing")
 
 	-- A real rebind while a landing is awaited wins.
-	position = { 300, 900, 12, 0 }
-	onEvent(nil, "UNIT_SPELLCAST_SUCCEEDED", "player", "cast-7", 8690)
+	position = { 300, 900, nil, 0 }
+	castBind(8690)
 	onEvent(nil, "HEARTHSTONE_BOUND")
-	position = { 9000, 9000, 0, 0 }
+	position = { 9000, 9000, nil, 0 }
 	tick()
 	assert(runtime.charDB.bind.x == 300, "the rebind stands")
 	items[6948] = 0
