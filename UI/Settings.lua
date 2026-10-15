@@ -320,6 +320,11 @@ ns.Init(function()
 		L["While you wait at a dock or ride a timed boat: a warning on screen and a flashing taskbar icon."]
 	)
 	Checkbox("alertSound", L["Play a sound with alerts"], L["Plays even with the game in the background."])
+	Checkbox(
+		"arrivalSound",
+		L["Play a sound when you reach the goal"],
+		L["The map's ping when a journey you planned reaches its goal, even with the game in the background."]
+	)
 
 	-- Interface: what the addon puts on screen.
 	Page(L["Interface"])

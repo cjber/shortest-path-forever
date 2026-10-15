@@ -159,6 +159,7 @@ local ns = {
 		compassScale = 100,
 		compassBackground = 0,
 		tomtomFollow = false,
+		arrivalSound = false,
 		resumeJourney = false,
 	}, {
 		__index = function()
@@ -217,7 +218,7 @@ local groups = {
 		"taxiRoute",
 		"corpse",
 	},
-	Alerts = { "alerts", "alertSound" },
+	Alerts = { "alerts", "alertSound", "arrivalSound" },
 	Interface = {
 		"journeyTracker",
 		"arrow",
@@ -234,7 +235,7 @@ local groups = {
 local order = { "Map marks", "Transport", "Guidance", "Alerts", "Interface" }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 35, #rows)
+assert(#rows == 36, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -292,6 +293,7 @@ assert(Row("tomtomFollow").setting.default == false, "following TomTom's arrow i
 assert(Row("tomtomFollow").tooltip:find("TomTom", 1, true), "the row names the addon it follows")
 Row("tomtomFollow").setting.onChanged()
 assert(tomtomFollowRefreshed == 1, "the follower follows its setting")
+assert(Row("arrivalSound").setting.default == false, "the arrival sound is off by default")
 -- Keeping your own journey across a reload is opt-in; turning it off forgets the one kept.
 assert(Row("resumeJourney").setting.default == false, "keeping journeys after a reload is off by default")
 local keepChanged = 0
