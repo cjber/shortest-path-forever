@@ -75,14 +75,17 @@ end
 local function Update(elapsed)
 	-- The client may already have queued this tick when another callback stopped guidance.
 	if not path or not target then
+		SetUpdating(false)
 		return
 	end
 	local updating = revision
 	local x, y, _, map = ns.JourneyPosition()
 	local facing = GetPlayerFacing()
 	if not x or not canaccessvalue(facing) then
-		frame:SetAlpha(0)
+		-- No position to point from (an instance): nothing drawn, only the slow poll runs.
+		frame:SetAlpha(moving and 1 or 0)
 		frame.angle = nil
+		SetUpdating(false)
 		return
 	end
 	local moved = x ~= frame.x or y ~= frame.y or map ~= frame.map or facing ~= frame.facing
@@ -98,10 +101,10 @@ local function Update(elapsed)
 	end
 	native = placed
 	if not (facing and map == target.map) or (native and C_Navigation.GetFrame()) then
-		-- The native marker leads; nothing to draw, so only the slow poll runs.
+		-- The native marker leads; nothing to draw, so only the slow poll runs, moving or not.
 		frame:SetAlpha(moving and 1 or 0)
 		frame.angle = nil
-		Settle(elapsed, false, moved)
+		SetUpdating(false)
 		return
 	end
 	frame:SetAlpha(1)
@@ -298,7 +301,7 @@ function ns.MoveArrow(value)
 	if moving then
 		frame:SetAlpha(1)
 		frame:Show()
-	elseif not path then
+	elseif not path or ns.db.arrow == false then
 		frame:Hide()
 	end
 end
@@ -314,7 +317,6 @@ function ns.SetArrowScale(value)
 	end
 	if castPrompt then
 		castPrompt:SetScale((ns.db.arrowScale or 100) / 100)
-		Anchor(castPrompt)
 	end
 end
 
@@ -352,12 +354,18 @@ function ns.PointCastPrompt(teleport)
 		return
 	end
 	if not castPrompt then
+		-- The arrow's frame first: the prompt stands in its place.
+		if not frame then
+			Create()
+		end
 		local created = CreateFrame("Frame", nil, UIParent)
 		---@cast created SPFCastPromptFrame
 		castPrompt = created
 		created:SetSize(320, 70)
 		created:SetScale((ns.db.arrowScale or 100) / 100)
-		Anchor(created)
+		-- In the arrow's place, wherever it was dragged, and kept on screen though it is wider.
+		created:SetPoint("TOP", frame, "TOP")
+		created:SetClampedToScreen(true)
 		created:SetFrameStrata("MEDIUM")
 		created.Icon = created:CreateTexture(nil, "ARTWORK")
 		created.Icon:SetPoint("TOP", created, "TOP")

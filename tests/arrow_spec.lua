@@ -111,4 +111,15 @@ frame.OnMouseUp(frame, "RightButton")
 assert(ns.db.arrowX == nil and frame.point[1] == "TOP", "right-click puts it back")
 ns.MoveArrow(false)
 assert(not ns.ArrowMoving())
+-- With the arrow turned off, finishing moving it hides it again even mid-journey.
+ns.db.arrow = false
+ns.PointGuideArrow({ { map = 1, x = 0, y = 200 } }, place)
+ns.MoveArrow(true)
+ns.MoveArrow(false)
+assert(frame.hidden, "a turned-off arrow goes away after moving it")
+ns.db.arrow = true
+-- No route: no every-frame update.
+ns.PointGuideArrow(nil)
+frame.OnUpdate(frame, 1 / 60)
+assert(rawget(frame, "OnUpdate") == nil, "nothing to point at, nothing every frame")
 print("arrow_spec: ok")

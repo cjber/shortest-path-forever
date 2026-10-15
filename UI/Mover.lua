@@ -13,14 +13,11 @@ ns.Mover = Mover
 
 ---@type Frame?
 local driver
----@type {frame: Frame, cx: number, cy: number, x: number, y: number, scale: number}?
+---@type {frame: Frame, placed: fun(frame: Frame), cx: number, cy: number, x: number, y: number, scale: number}?
 local fine
 
-local function Follow()
-	local drag = fine
-	if not drag then
-		return
-	end
+-- Puts the dragged frame a quarter of the cursor's way from where the drag began.
+local function Move(drag)
 	local cx, cy = GetCursorPosition()
 	drag.frame:ClearAllPoints()
 	drag.frame:SetPoint(
@@ -30,6 +27,35 @@ local function Follow()
 		drag.x + (cx - drag.cx) / drag.scale * FINE,
 		drag.y + (cy - drag.cy) / drag.scale * FINE
 	)
+end
+
+-- The fine drag ends with its drag, or when the button is let go or the frame hidden without one (a loading screen,
+-- Alt-Z): saved where it was left either way.
+local function Finish()
+	local drag = fine
+	if not drag then
+		return
+	end
+	fine = nil
+	if driver then
+		driver:SetScript("OnUpdate", nil)
+	end
+	if drag.frame:IsVisible() then
+		Move(drag)
+	end
+	drag.placed(drag.frame)
+end
+
+local function Follow()
+	local drag = fine
+	if not drag then
+		return
+	end
+	if not (drag.frame:IsVisible() and IsMouseButtonDown("LeftButton")) then
+		Finish()
+		return
+	end
+	Move(drag)
 end
 
 -- Makes `frame` draggable while its mouse is enabled; `placed(frame)` runs when a drag ends, to save the place.
@@ -42,7 +68,7 @@ function Mover.Attach(frame, placed)
 		if IsShiftKeyDown() then
 			local cx, cy = GetCursorPosition()
 			local x, y = self:GetCenter()
-			fine = { frame = self, cx = cx, cy = cy, x = x, y = y, scale = self:GetEffectiveScale() }
+			fine = { frame = self, placed = placed, cx = cx, cy = cy, x = x, y = y, scale = self:GetEffectiveScale() }
 			if not driver then
 				driver = CreateFrame("Frame")
 			end
@@ -52,13 +78,11 @@ function Mover.Attach(frame, placed)
 		end
 	end)
 	frame:SetScript("OnDragStop", function(self)
-		if fine and fine.frame == self and driver then
-			Follow()
-			fine = nil
-			driver:SetScript("OnUpdate", nil)
+		if fine and fine.frame == self then
+			Finish()
 		else
 			self:StopMovingOrSizing()
+			placed(self)
 		end
-		placed(self)
 	end)
 end
