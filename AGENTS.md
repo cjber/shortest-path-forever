@@ -7,6 +7,7 @@ as one addon on a `v*` tag.
 ## Commands
 
 ```sh
+python3 tools/doctor.py   # first on a new machine: every tool pin below, with a fix for each problem
 stylua --check .
 ruff format --check . && ruff check .
 luacheck .
@@ -16,8 +17,13 @@ luajit -joff tests/journey_bench.lua   # after touching the planner: frames stay
 SPF_BENCH_STRICT=1 luajit -joff tests/hearth_savings_bench.lua   # CI checks the plan; the 3 ms budget is local
 python3 tools/check_generated.py --offline # omit --offline to fetch missing pinned inputs
 python3 tools/changelog.py --check
+python3 tools/check_screenshots.py   # an image older than its sources; --record after tools/screenshots.py
 python3 .sift/gate.py --base origin/main && python3 .sift/agents.py check
 ```
+
+CI's `package` job builds the zip with the release's packager without uploading (`-d -z`) and runs
+`python3 tools/check_package.py` on its output: every loaded file ships, no development folder does, and the
+specs pass on the packaged files.
 
 CI runs the same gate, plus the UI checks (`tests/ui.sh`), shellcheck and shfmt on the shell scripts, actionlint and zizmor on the workflows,
 and gitleaks on the history. Every version needs a `CHANGELOG.md` entry (prose, bold-lead bullets)
@@ -77,7 +83,7 @@ before its `v*` tag, since the release publishes it as the notes.
 
 ## Standards
 
-- `wow-forever-addon` — https://github.com/cjber/skills/tree/19082fc10bf90cbb466b8129bddc4a7f32334756/wow-forever-addon (UI look,
+- `wow-forever-addon` — https://github.com/cjber/skills/tree/ceffa4d79857540c0592fa6540e535ebbedad03e/wow-forever-addon (UI look,
   icon, README and store page, CI and release requirements shared by every WoW: Forever addon)
 
 ## Waivers
@@ -112,7 +118,7 @@ before its `v*` tag, since the release publishes it as the notes.
 
 ## Secure UI regression checks
 
-`tools/typecheck.sh` checks the TOC/XML load graph, LuaLS coverage and `tools/lint_taint.py`.
+`tools/typecheck.sh` checks the TOC/XML load graph, LuaLS coverage, `tools/lint_taint.py`, `tools/lint_secret.py` (secret values through `ns.Readable`, tooltip hooks behind `ns.Usable`) and `tools/check_editorconfig.py`.
 Do not hook Blizzard object methods: use events, `HookScript` or a supported callback registry.
 Keep addon tracker sections and pools in `UI/TrackerHost.lua`, outside Blizzard's registry.
 Render only after `PLAYER_ENTERING_WORLD` and `VARIABLES_LOADED`, deferred one frame.
