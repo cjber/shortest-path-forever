@@ -45,6 +45,11 @@ def read_manifest(directory: Path) -> dict:
     return json.loads((directory / MANIFEST).read_text(encoding="utf-8"))
 
 
+# gitleaks' generic-api-key reads `"<name>": "<64 hex>"` as a credential when the name holds one of these, and every
+# addon's CI runs gitleaks over the vendored MANIFEST.json.
+SECRET_WORDS = re.compile(r"access|auth|api|credential|creds|key|passw|pwd|secret|token", re.IGNORECASE)
+
+
 def write_manifest(directory: Path, revision: str) -> None:
     manifest = {
         "package": "forever_tools",
@@ -149,6 +154,9 @@ def main(argv: list[str] | None = None) -> int:
         return pin(args.revision)
     if (PACKAGE / MANIFEST).exists() and read_manifest(PACKAGE)["source"]["revision"] != UNPINNED:
         raise SystemExit("this is a pinned vendored copy; edit the producer and run update")
+    flagged = [path.name for path in sources(PACKAGE) if SECRET_WORDS.search(path.stem)]
+    if flagged:
+        raise SystemExit(f"rename {', '.join(flagged)}: gitleaks reads its MANIFEST.json hash as a credential")
     write_manifest(PACKAGE, UNPINNED)
     return 0
 

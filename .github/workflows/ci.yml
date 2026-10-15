@@ -20,6 +20,8 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y luajit lua-check
       - run: luacheck .
       - run: for spec in tests/*_spec.lua; do luajit "$spec" || exit 1; done
+      # A screenshot older than the code it is drawn from (docs/screenshots/scenes.sha256).
+      - run: python3 tools/check_screenshots.py
       - run: luajit -joff tests/runtime_bench.lua cold
       - run: luajit -joff tests/hearth_savings_bench.lua
       - name: Native tracker integration
@@ -131,3 +133,20 @@ jobs:
           persist-credentials: false
       - run: pipx run --spec actionlint-py==1.7.12.25 actionlint
       - run: pipx run zizmor==1.30.1 --offline .github
+
+  # What a tag would ship, checked before it ships: the release workflow's packager without uploading or zipping,
+  # then tools/check_package.py on .release/ (every loaded file present, no development folders, specs pass on it).
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - run: sudo apt-get update && sudo apt-get install -y luajit
+      # .pkgmeta's manual changelog, which the release fills with the version's entry.
+      - run: printf 'Package check\n' > .release-notes.md
+      - uses: BigWigsMods/packager@e50a250f8705041e40f2fa1ddcb280a686d65aa0 # v2.6.1
+        with:
+          args: -d -z
+      - run: python3 tools/check_package.py
