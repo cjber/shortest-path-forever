@@ -55,6 +55,12 @@ function ns.HasJourney()
 	return goal ~= nil or CorpseRun()
 end
 
+-- The plan being followed and the step under way, whatever the tracker shows (paused or behind a corpse run).
+---@return SPFPlan? plan, integer index
+function ns.JourneyPlan()
+	return result, progress.index
+end
+
 -- Where the journey goes, also while it waits behind a corpse run; nil with no journey.
 ---@return SPFPoint?
 function ns.JourneyGoal()

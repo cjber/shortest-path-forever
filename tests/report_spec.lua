@@ -133,9 +133,6 @@ end
 env.UnitLevel = function()
 	return 24
 end
-env.strtrim = function(text)
-	return (text:gsub("^%s+", ""):gsub("%s+$", ""))
-end
 env.C_Map.GetPlayerMapPosition = function()
 	return env.CreateVector2D(0.421, 0.653)
 end
@@ -232,6 +229,38 @@ has(text, "Ride trace (last 5 of 7):", "the trace")
 has(text, "  1007 0 70.0, 5.0, 2.0 at 7 3:12/14*", "the newest sample, with its fits")
 lacks(text, "  1002 ", "older samples left out")
 ns.db.debug, ns.db.trace = nil, nil
+
+-- Each step's own time with its wait apart, as the tracker shows them; the trace comes before the steps, so a long
+-- plan is what the cap cuts; a corpse run shows its walk, and the journey that waits behind it.
+do
+	local plan, journeyPlan, journeyGoal =
+		{
+			legs = {
+				{ mode = "walk", depart = 0, arrive = 60000, to = { label = "Ratchet dock" } },
+				{ mode = "boat", depart = 360000, arrive = 480000, wait = 300000, to = { label = "Booty Bay" } },
+			},
+		}, ns.JourneyPlan, ns.JourneyGoal
+	ns.JourneyPlan = function()
+		return plan, 2
+	end
+	ns.JourneyGoal = function()
+		return { map = 1, x = 0, y = 0, label = "Booty Bay" }
+	end
+	ns.db.debug, ns.db.trace = true, { { 1, 0, 1, 2, 3, 7, "" } }
+	ns.Corpse = {
+		Info = function()
+			local leg = { mode = "walk", depart = 0, arrive = 0, walkError = "offmesh", to = { label = "Your corpse" } }
+			return "Corpse run", {}, { legs = { leg } }, 1
+		end,
+	}
+	text = Report()
+	has(text, "  1. walk to Ratchet dock, 60s\n", "a walk's time")
+	has(text, "> 2. boat to Booty Bay, 120s, waits 300s", "a boat's own time, its wait apart, under way")
+	equal(text:find("Ride trace", 1, true) < text:find("1. walk to Ratchet", 1, true), true, "the trace first")
+	has(text, "Corpse run: the journey waits behind it", "the corpse run before the journey")
+	has(text, "1. walk to Your corpse, 0s, walk failed: offmesh", "its walk and why it failed")
+	ns.JourneyPlan, ns.JourneyGoal, ns.Corpse, ns.db.debug, ns.db.trace = journeyPlan, journeyGoal, nil, nil, nil
+end
 
 -- SafeCall: pcall's answers, failures kept and forwarded.
 local ok, a, b, c = ns.SafeCall("test", function(x)

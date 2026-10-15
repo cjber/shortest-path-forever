@@ -1,5 +1,6 @@
 local driver = assert(loadfile("tests/journey_driver.lua"))()
 local ns, env, checks = driver.ns, driver.env, 0
+driver.load("Core/SafeCall.lua")
 driver.load("UI/Looks.lua")
 driver.load("Core/API.lua")
 driver.load("Journey/Itinerary.lua")
@@ -556,6 +557,8 @@ do
 	equal(#heard.first, 1, "one call for the burst")
 	only(heard.first[1], "a route starts", "started", "stop", "active")
 	equal(#errors, 1, "the broken callback reaches the error handler")
+	local caught = ns.CaughtErrors()
+	equal(caught[#caught].label, "Subscribe callback", "and is kept for /path report")
 	equal(#heard.last, 1, "and the subscriber after it is still called")
 	equal(heard.first[1] ~= heard.last[1], true, "each subscriber gets its own table")
 	heard.first[1].started = false
