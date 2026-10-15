@@ -60,8 +60,17 @@ local function Trace(lines)
 		lines[#lines + 1] = "Ride trace: off (/path debug keeps one)"
 		return
 	end
-	lines[#lines + 1] = ("Ride trace (last %d of %d):"):format(math.min(TRACE_SHOWN, #trace), #trace)
-	for position = math.max(1, #trace - TRACE_SHOWN + 1), #trace do
+	-- The last samples taken aboard, which carry the ride's fits: a report taken after getting off still has them.
+	local last = #trace
+	for position = #trace, 1, -1 do
+		if trace[position][7] and trace[position][7] ~= "" then
+			last = position
+			break
+		end
+	end
+	local first = math.max(1, last - TRACE_SHOWN + 1)
+	lines[#lines + 1] = ("Ride trace (%d to %d of %d):"):format(first, last, #trace)
+	for position = first, last do
 		local sample = trace[position]
 		lines[#lines + 1] = ("  %s %s %.1f, %.1f, %.1f at %s %s"):format(
 			tostring(sample[1]),
@@ -118,8 +127,12 @@ function ns.ReportLines()
 		OnOff(ns.IsJourneyGuided())
 	)
 	lines[#lines + 1] = "Goal: " .. Place(goal)
-	local pending, rounds = ns.JourneyStatus()
-	lines[#lines + 1] = ("Search: %s, %d settle rounds"):format(pending and "under way" or "settled", rounds or 0)
+	local pending, rounds, costError = ns.JourneyStatus()
+	lines[#lines + 1] = ("Search: %s, %d settle rounds%s"):format(
+		pending and "under way" or "settled",
+		rounds or 0,
+		costError and (", walk failed: %s"):format(costError) or ""
+	)
 	local plan, index = ns.JourneyPlan()
 	if plan then
 		Steps(lines, plan.legs, index)

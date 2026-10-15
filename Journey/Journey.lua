@@ -241,9 +241,10 @@ function ns.IsJourneyGuided()
 	return Guide.Active()
 end
 
+---@return boolean pending, integer settleRound, string? costError why no walk could be measured, if one could not
 function ns.JourneyStatus()
-	local pending, settleRound = Search.Status()
-	return pending > 0, settleRound
+	local pending, settleRound, costError = Search.Status()
+	return pending > 0, settleRound, costError
 end
 
 local function StartGuide()

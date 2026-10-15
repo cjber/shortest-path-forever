@@ -220,14 +220,18 @@ ns.db.debug, ns.db.trace = true, {}
 for index = 1, 7 do
 	ns.db.trace[index] = { 1000 + index, 0, index * 10, 5, 2, 7, index == 7 and "3:12/14*" or "" }
 end
+-- Then off the boat, on the dock: samples with no ride.
+ns.db.trace[8] = { 1008, 0, 80, 5, 2, 0, "" }
+ns.db.trace[9] = { 1009, 0, 80, 5, 2, 0, "" }
 ns.CurrentRide = function()
 	return 3
 end
 text = Report()
 has(text, "Ride: route 3", "the ride")
-has(text, "Ride trace (last 5 of 7):", "the trace")
+has(text, "Ride trace (3 to 7 of 9):", "the trace up to the last sample aboard")
 has(text, "  1007 0 70.0, 5.0, 2.0 at 7 3:12/14*", "the newest sample, with its fits")
 lacks(text, "  1002 ", "older samples left out")
+lacks(text, "  1009 ", "dock samples after the ride left out")
 ns.db.debug, ns.db.trace = nil, nil
 
 -- Each step's own time with its wait apart, as the tracker shows them; the trace comes before the steps, so a long
@@ -247,6 +251,10 @@ do
 		return { map = 1, x = 0, y = 0, label = "Booty Bay" }
 	end
 	ns.db.debug, ns.db.trace = true, { { 1, 0, 1, 2, 3, 7, "" } }
+	local status = ns.JourneyStatus
+	ns.JourneyStatus = function()
+		return false, 2, "offmesh"
+	end
 	ns.Corpse = {
 		Info = function()
 			local leg = { mode = "walk", depart = 0, arrive = 0, walkError = "offmesh", to = { label = "Your corpse" } }
@@ -259,6 +267,8 @@ do
 	equal(text:find("Ride trace", 1, true) < text:find("1. walk to Ratchet", 1, true), true, "the trace first")
 	has(text, "Corpse run: the journey waits behind it", "the corpse run before the journey")
 	has(text, "1. walk to Your corpse, 0s, walk failed: offmesh", "its walk and why it failed")
+	has(text, "Search: settled, 2 settle rounds, walk failed: offmesh", "why the search found no walk")
+	ns.JourneyStatus = status
 	ns.JourneyPlan, ns.JourneyGoal, ns.Corpse, ns.db.debug, ns.db.trace = journeyPlan, journeyGoal, nil, nil, nil
 end
 
