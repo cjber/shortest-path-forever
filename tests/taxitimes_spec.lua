@@ -115,3 +115,27 @@ local second = TaxiTimes.Snapshot()
 assert(second ~= first, "a new measurement is a fresh snapshot")
 equal(second["1:2"], 9, "the fresh snapshot carries the measured time")
 assert(TaxiTimes.Remaining(leg) == nil, "no remaining time once landed")
+
+-- A flight point's direct flights for its tooltip: your own timings first, then the shipped, quickest first, only
+-- to the points the caller allows.
+ns.TaxiPaths[2].estimated = true
+local flights = TaxiTimes.FlightsFrom(1, function()
+	return true
+end)
+equal(#flights, 2, "both flights from A")
+assert(flights[1].to == 2 and flights[1].measured and flights[1].seconds == 9, "the measured flight first")
+assert(flights[2].to == 3 and not flights[2].measured and flights[2].seconds == 60, "then the shipped time")
+assert(flights[2].estimated and not flights[1].estimated, "a shipped time worked out from length says so")
+flights = TaxiTimes.FlightsFrom(1, function(to)
+	return to ~= 2
+end)
+assert(#flights == 1 and flights[1].to == 3, "only the points allowed")
+assert(#TaxiTimes.FlightsFrom(3, function()
+	return true
+end) == 0, "no flights from a dead end")
+ns.db.taxiTimes["1:3"] = 5
+flights = TaxiTimes.FlightsFrom(1, function()
+	return true
+end)
+assert(flights[1].to == 3 and flights[2].to == 2, "measured flights quickest first")
+print("taxitimes_spec: flights from a point ok")
