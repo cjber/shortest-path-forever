@@ -31,6 +31,12 @@
 ---@field SetCrazyArrow? fun(self: TomTom, waypoint: TomTomWaypoint, arrival?: number, title?: string) -- TomTom's own: points its arrow at a waypoint
 ---@field ClearWaypoint? fun(self: TomTom, waypoint: TomTomWaypoint) -- TomTom's own: takes a waypoint off the maps; every removal goes through it
 ---@field IsValidWaypoint? fun(self: TomTom, waypoint: TomTomWaypoint): boolean -- TomTom's own: whether the waypoint is still set
+---@field WaypointExists? fun(self: TomTom, map: integer, x: number, y: number, desc?: string): boolean -- a waypoint with this map, point and title is set
+---@field ClearAllWaypoints? fun(self: TomTom) -- every waypoint off; the shim cancels its journey
+---@field GetClosestWaypoint? fun(self: TomTom): TomTomWaypoint? -- the shim keeps one, so it is the closest
+---@field SetClosestWaypoint? fun(self: TomTom): TomTomWaypoint? -- points at the closest; the shim's journey already goes there
+---@field GetDistanceToWaypoint? fun(self: TomTom, waypoint: TomTomWaypoint): number? -- yards from you, on your continent
+---@field AddWaypointToCurrentZone? fun(self: TomTom, x: number, y: number, desc?: string): TomTomWaypoint? -- 0-100 coordinates on the map you are on
 
 ---@type TomTom?
 TomTom = nil
