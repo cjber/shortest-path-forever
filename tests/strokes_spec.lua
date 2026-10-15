@@ -285,6 +285,25 @@ clears(strokes, MINIMAP / 2, -MINIMAP / 2 + 0.4 * MINIMAP / 2, 8, 1, "minimap")
 for i = 1, strokes.n do
 	check(strokes.alpha[i] == 1, "the minimap route stays at full strength")
 end
+-- A goal off the minimap: its mark waits on the rim in its direction, its ring inside the face.
+local far = point(1.4, 0.5)
+local ex, ey, edge =
+	Strokes.Minimap(strokes, { { mode = "walk", points = { player, far } } }, minimapView(player, { goal = far }))
+local ringRim = 1 - minimapView(player).goalRadius / (MINIMAP / 2)
+check(edge and close(ex, 0) and close(ey, ringRim), "due north, on the rim")
+clears(strokes, MINIMAP / 2, -MINIMAP / 2 + ringRim * MINIMAP / 2, 8, 1, "the rim mark")
+-- Still on the face but too near its rim for the whole ring: pulled in onto the rim at full strength, not an edge.
+local close_rim = point(0.1 + 0.5 * 0.95, 0.5)
+ex, ey, edge = Strokes.Minimap(strokes, {}, minimapView(player, { goal = close_rim }))
+check(not edge and close(ex, 0) and close(ey, ringRim), "near the rim: on it, not an edge")
+local eastward = point(0.1, -0.5)
+ex, ey, edge = Strokes.Minimap(strokes, {}, minimapView(player, { goal = eastward, square = true }))
+check(edge and close(ex, ringRim) and close(ey, 0), "on a square face's side")
+check(
+	select(3, Strokes.Minimap(strokes, approach, minimapView(player, { goal = first }))) == nil,
+	"on the face: no edge"
+)
+check(Strokes.Minimap(strokes, {}, minimapView(player, { goal = point(1.4, 0.5, 9) })) == nil, "another map: no mark")
 -- A corpse wears the game's own tombstone: no mark, and the dots run right up to it.
 local ghost = minimapView(player, { goal = { map = 0, x = first.x, y = first.y, corpse = true } })
 check(Strokes.Minimap(strokes, approach, ghost) == nil, "no mark for a corpse")

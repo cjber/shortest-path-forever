@@ -202,7 +202,18 @@ assert(marked.Texture.hidden and not marked.Button.hidden and not marked.Disc.hi
 assert(not marked.Numeral.hidden and numeral(marked, true) == 1 and marked.Number.text == "")
 assert(plain.Icon.hidden and plain.Texture.hidden and not plain.Button.hidden and not plain.Disc.hidden)
 assert(numeral(plain) == 2)
-assert(ShortestPathForeverMinimapRoute.Goal.atlas == "adventureguide-ring")
+-- The stop is off the minimap here, so its mark waits on the rim as the goal pin: a ring would circle nothing.
+local miniRoute = ShortestPathForeverMinimapRoute
+assert(miniRoute.goalEdge and miniRoute.Goal.atlas == "Waypoint-MapPin-Tracked")
+-- Standing beside it, the minimap rings the game's own icon there again.
+do
+ local _, at = C_Map.GetWorldPosFromMapPos(1414, CreateVector2D(0.51, 0.5))
+ posX, posY = at:GetXY()
+ posX = posX - 20
+ miniRoute.scripts.OnUpdate(miniRoute, 0.2)
+ assert(not miniRoute.goalEdge and miniRoute.Goal.atlas == "adventureguide-ring")
+ posX, posY = 0, 0
+end
 assert(api.Cancel("Test"))
 assert(api.Navigate("Test", 1414, 0.51, 0.5, "Trainer", "trainer"))
 settle()
