@@ -1,16 +1,18 @@
 -- The goal pin's line on the other faction's transport (Journey/FactionHint.lua, #162): time only, only with
--- "Other Faction's Routes" off, only for two minutes or more.
+-- "Other Faction's Routes" off, only for two minutes or more over the plan being followed.
 local driver = assert(loadfile("tests/journey_driver.lua"))()
 local ns, env = driver.ns, driver.env
 driver.load("Journey/FactionHint.lua")
-ns.Routes = { [1] = { faction = "Horde" }, [2] = { faction = "Alliance" }, [3] = {} }
--- The two plans as the spec sets them: the journey's own policy, and with the other faction's routes allowed.
-local plans, calls = {}, {}
+ns.Routes =
+	{ [1] = { faction = "Horde", stops = {} }, [2] = { faction = "Alliance", stops = {} }, [3] = { stops = {} } }
+ns.IsObservingRide, ns.JourneyWithoutHearth = function() end, ns.JourneyWithoutHearth or function() end
+-- The plan with the other faction's routes allowed, as the spec sets it; the journey plans as usual.
+local other, calls = nil, {}
 local plan = ns.Planner.Plan
 ns.Planner.Plan = function(options)
-	calls[#calls + 1] = { otherFaction = options.otherFaction, cache = options.cache }
-	if options.cache and options.from and options.otherFaction ~= nil and options.to == ns.JourneyGoal() then
-		return plans[options.otherFaction]
+	if options.otherFaction == true then
+		calls[#calls + 1] = { cache = options.cache, withoutHearth = options.withoutHearth }
+		return other
 	end
 	return plan(options)
 end
@@ -19,62 +21,96 @@ local clock = 0
 ns.NowMs = function()
 	return clock
 end
-local function Plan(arrive, route)
+local function Other(arrive, route)
 	return { arrive = arrive, legs = { { mode = route and "boat" or "walk", route = route } } }
 end
 
 assert(ns.OtherFactionHint() == nil, "no journey, no line")
 driver.begin({ map = 1, x = 0, y = 0 }, { map = 1, x = 2000, y = 0 })
-calls = {}
-plans[false], plans[true] = Plan(600000), Plan(360000, 1)
+local _, _, own = ns.JourneyInfo()
+local arrive = own.arrive
+other = Other(arrive - 240000, 1)
 assert(ns.OtherFactionHint() == "Through Horde transport: about 4 min faster", "four minutes through Horde transport")
-assert(#calls == 2 and calls[1].otherFaction == false and calls[2].otherFaction == true, "both policies planned")
-assert(calls[1].cache ~= calls[2].cache, "each with its own topology")
-assert(ns.OtherFactionHint() and #calls == 2, "the comparison stands a while")
+assert(#calls == 1, "one plan: the journey's own is the other side")
+assert(ns.OtherFactionHint() and #calls == 1, "the comparison stands a while")
 
 -- Under two minutes is no line: the comparison can be out by about that much.
 clock = clock + 31000
-plans[true] = Plan(600000 - 119000, 1)
+other = Other(arrive - 119000, 1)
 assert(ns.OtherFactionHint() == nil, "119 seconds is not worth a line")
 clock = clock + 31000
-plans[true] = Plan(600000 - 120000, 1)
+other = Other(arrive - 120000, 1)
 assert(ns.OtherFactionHint() == "Through Horde transport: about 2 min faster", "two minutes is")
 
 -- Faster without any of the other faction's transport (a neutral boat, or the player's own) is no line either.
 clock = clock + 31000
-plans[true] = Plan(100000, 3)
+other = Other(arrive - 600000, 3)
 assert(ns.OtherFactionHint() == nil, "a neutral route is not the other faction's")
 clock = clock + 31000
-plans[true] = Plan(100000, 2)
+other = Other(arrive - 600000, 2)
 assert(ns.OtherFactionHint() == nil, "the player's own faction's route")
 
--- No way at all without it: the line says there is one, and nothing about safety.
+-- Moving on compares again before the half minute is up.
 clock = clock + 31000
-plans[false], plans[true] = nil, Plan(100000, 1)
-assert(ns.OtherFactionHint() == "Through Horde transport, there is a way", "a way only through it")
-clock = clock + 31000
-plans[true] = nil
-assert(ns.OtherFactionHint() == nil, "no way either way")
-
--- Moving on, or a new goal, compares again before the half minute is up.
-plans[false], plans[true] = Plan(600000), Plan(300000, 1)
-clock = clock + 31000
+other = Other(arrive - 300000, 1)
 assert(ns.OtherFactionHint() == "Through Horde transport: about 5 min faster")
-plans[true] = Plan(600000, 1)
+other = Other(arrive, 1)
 driver.move({ map = 1, x = 0, y = 100 })
 assert(ns.OtherFactionHint() == nil, "a new place is compared again")
+driver.move({ map = 1, x = 0, y = 0 })
 
--- The setting on (those routes already planned with) or combat: no line, and no planning.
-plans[true] = Plan(300000, 1)
+-- On a ride, a flight or a corpse run, in combat or with the setting on: no line, and no planning.
+other = Other(arrive - 300000, 1)
 clock = clock + 31000
-ns.db.otherFaction = true
 calls = {}
-assert(ns.OtherFactionHint() == nil and #calls == 0, "the setting on")
-ns.db.otherFaction = false
+local function quiet(label)
+	assert(ns.OtherFactionHint() == nil and #calls == 0, label)
+end
+ns.CurrentRide = function()
+	return 1
+end
+quiet("aboard a boat")
+ns.CurrentRide = function() end
+env.UnitOnTaxi = function()
+	return true
+end
+quiet("on a flight")
+env.UnitOnTaxi = function() end
+ns.Corpse = {
+	Info = function()
+		return "Corpse run", {}, {}, 1
+	end,
+}
+quiet("during a corpse run")
+ns.Corpse = nil
 env.InCombatLockdown = function()
 	return true
 end
-assert(ns.OtherFactionHint() == nil and #calls == 0, "in combat")
+quiet("in combat")
 env.InCombatLockdown = function() end
+ns.db.otherFaction = true
+quiet("the setting on")
+ns.db.otherFaction = false
+local faction = env.UnitFactionGroup
+env.UnitFactionGroup = function() end
+assert(ns.OtherFactionHint() == nil, "no faction yet (loading)")
+env.UnitFactionGroup = faction
+clock = clock + 31000
+assert(ns.OtherFactionHint() == "Through Horde transport: about 5 min faster", "and back")
+assert(calls[#calls].withoutHearth == ns.JourneyWithoutHearth(), "a refused Hearthstone stays refused")
+
+-- No way for the journey: the line says there is one through the other faction's transport.
+ns.ClearJourney()
+driver.path.auto = false
+driver.click({ map = 2, x = 500, y = 0 })
+driver.path.auto = true
+driver.update(0.1)
+local _, _, none, _, loading = ns.JourneyInfo()
+assert(none == nil and not loading, "the journey found no way")
+clock = clock + 31000
+assert(ns.OtherFactionHint() == "Through Horde transport, there is a way", "a way only through it")
+other = nil
+clock = clock + 31000
+assert(ns.OtherFactionHint() == nil, "no way either way")
 
 print("faction_hint_spec: ok")
