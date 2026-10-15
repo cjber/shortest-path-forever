@@ -55,6 +55,7 @@ Journey\JourneyGuide.lua
 Journey\Journey.lua
 Journey\JourneyInput.lua
 Journey\Corpse.lua
+Journey\FactionHint.lua
 UI\StopPin.lua
 UI\FlightLines.lua
 UI\Strokes.lua
