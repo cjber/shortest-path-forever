@@ -711,24 +711,37 @@ local function RefreshCosts(includeGoal, forced)
 			search.candidate = planned
 		end
 	end
+	-- A finished batch's answer: its costs, why it found none, and false for each target it never reached.
+	local function settle(batch, costs, reason, job)
+		batch.costs, batch.reason, batch.job = costs or {}, reason, job
+		if job.done then
+			batch.done = true
+			for i = 1, #batch.targets do
+				if batch.costs[i] == nil then
+					batch.costs[i] = false
+				end
+			end
+		end
+	end
 	local function attach(batch)
 		local function update(costs, reason, job)
 			if version ~= pathVersion or not goal then
 				return
 			end
-			batch.costs, batch.reason, batch.job = costs or {}, reason, job
-			if job.done then
-				batch.done = true
-				for i = 1, #batch.targets do
-					if batch.costs[i] == nil then
-						batch.costs[i] = false
-					end
-				end
-			end
+			settle(batch, costs, reason, job)
 			consider(batch.done)
 		end
-		if batch.job then
-			batch.job.callback, batch.job.progress = update, update
+		local job = batch.job
+		if job then
+			job.callback, job.progress = update, update
+			-- Reused from the search this one replaces, which paused it (CancelPaths). One that finished meanwhile
+			-- lost its queued answer to the pause, so it is taken from the job; one never yet valid runs again, or
+			-- nothing would ever answer. A valid one waits for consider, which resumes it only if it is needed.
+			if job.done and not batch.done then
+				settle(batch, job.costs, job.reason, job)
+			elseif not job.valid and not batch.done then
+				ns.Path.Resume(job)
+			end
 		else
 			batch.job =
 				ns.Path.FindMany(batch.point.map, batch.point, batch.targets, update, waterMode, batch.reverse, update)

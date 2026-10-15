@@ -134,7 +134,7 @@ local active = false
 local heardActive = false
 
 -- Each subscriber gets its own copy, from a copy of the list, so a callback may unsubscribe or change what it was
--- given; an error goes to the game's error handler without stopping the others.
+-- given; an error goes to the game's error handler, and to /path report, without stopping the others.
 local function Flush()
 	local changes = pending
 	pending = nil
@@ -154,14 +154,13 @@ local function Flush()
 	for index, subscription in ipairs(subscriptions) do
 		current[index] = subscription
 	end
-	local handler = geterrorhandler()
 	for _, subscription in ipairs(current) do
 		if subscription.active and subscription.after ~= changes then
 			local copy = {}
 			for key, value in pairs(changes) do
 				copy[key] = value
 			end
-			xpcall(subscription.callback, handler, copy)
+			ns.SafeCall("Subscribe callback", subscription.callback, copy)
 		end
 	end
 end
@@ -226,6 +225,12 @@ function ns.JourneyChanged(point, reason)
 	end
 	Settle()
 	ns.ItineraryChanged()
+end
+
+-- Which addon owns the journey under way, if one does (Resume.lua keeps only the player's own).
+---@return string?
+function ns.JourneyOwner()
+	return route and route.owner
 end
 
 ---@param point SPFPoint

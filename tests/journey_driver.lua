@@ -82,6 +82,10 @@ local env = setmetatable({
 	canaccessvalue = function(value)
 		return value ~= secret
 	end,
+	-- The client's string trim, which SafeCall.lua uses on stack lines.
+	strtrim = function(text)
+		return (text:gsub("^%s+", ""):gsub("%s+$", ""))
+	end,
 	GetPlayerFacing = function()
 		return 0
 	end,
