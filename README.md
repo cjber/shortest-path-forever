@@ -82,8 +82,8 @@ each kind of mark. Searches and tracker updates wait until combat ends.
 In Guidance, **Minimum Hearthstone saving** lets you keep your Hearthstone for bigger time savings.
 It defaults to zero; class teleports still count as alternatives.
 
-It's in English for now. Translations are welcome as a pull request, or pasted into an issue, on
-[GitHub](https://github.com/cjber/shortest-path-forever/tree/main/Locales).
+It's in English for now. Translations are welcome: see [Ways to help](#ways-to-help), or open a pull request as
+[Locales/README.md](Locales/README.md) describes.
 
 ## Move the tracker
 
@@ -118,7 +118,7 @@ Journey steps share one tracker column with the Adventure Guide, SkillUp and Leg
 No code needed:
 
 - **A wrong route:** type `/path report` while the journey is on screen and paste it into a [Wrong route issue](https://github.com/cjber/shortest-path-forever/issues/new?template=wrong_route.yml).
-- **An error:** paste `/path report` into a [bug report](https://github.com/cjber/shortest-path-forever/issues/new?template=bug_report.yml).
+- **An error:** open a [bug report](https://github.com/cjber/shortest-path-forever/issues/new?template=bug_report.yml) with the error's text, and paste `/path report` under its steps.
 - **A translation:** translate [Locales/phrases.txt](Locales/phrases.txt) and paste it into a [translation issue](https://github.com/cjber/shortest-path-forever/issues/new?template=translation.yml).
 
 ## Development
