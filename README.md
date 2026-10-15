@@ -72,6 +72,7 @@ Open a flight master’s map once after installing to sync the flight points you
 | Command | What it does |
 |---|---|
 | `/path` | Open the settings (also in Settings → AddOns, or from the addon compartment on the minimap) |
+| `/path report` | Show a report to copy into a bug report: versions, your journey and its steps, your ride, recent errors |
 | `/path perf` | Print this addon's CPU averages and peaks from the client's profiler, and its memory after a full collection, terrain included |
 | `/path debug` | Keep a trace of your position and ride matching, for reporting a ride that did not sync |
 | `/spfnear` | Open the nearby services menu on the world map; add `class`, `trainer`, `repair`, `reagents`, `vendor`, `innkeeper`, `bank`, `auction`, `flight` or `stable` to route to the nearest one |

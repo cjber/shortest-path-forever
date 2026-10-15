@@ -13,6 +13,9 @@ AM_PIN_SCALE_STYLE_WITH_TERRAIN = nil
 SlashCmdList = nil
 ---@type table<string, {r: number, g: number, b: number}>
 ChatTypeInfo = nil
+-- UIParent.lua: the frame names Escape closes like a panel (UI/Report.lua lists its own window).
+---@type string[]
+UISpecialFrames = nil
 
 -- ChatFrame.lua in the Forever UI source: the edit box a Shift+click map link would land in.
 ---@type (fun(): Frame?)?

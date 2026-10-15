@@ -65,7 +65,13 @@ local function login(saved)
 			},
 		},
 	}
-	for _, file in ipairs({ "Locales/enUS.lua", "Transport/Model.lua", "Core/Core.lua", "Transport/Timetable.lua" }) do
+	for _, file in ipairs({
+		"Locales/enUS.lua",
+		"Core/SafeCall.lua",
+		"Transport/Model.lua",
+		"Core/Core.lua",
+		"Transport/Timetable.lua",
+	}) do
 		setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
 	end
 	frames[1]:OnEvent("ADDON_LOADED", "ShortestPathForever")

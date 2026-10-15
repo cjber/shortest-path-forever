@@ -26,8 +26,9 @@ local function loadCore(saved)
 		end,
 	}, { __index = _G })
 	local ns = { Model = {} }
-	local chunk = assert(loadfile("Core/Core.lua"))
-	setfenv(chunk, env)("ShortestPathForever", ns)
+	for _, file in ipairs({ "Core/SafeCall.lua", "Core/Core.lua" }) do
+		setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
+	end
 	frames[1]:OnEvent("ADDON_LOADED", "ShortestPathForever")
 	return ns
 end
