@@ -1,0 +1,40 @@
+# Editor defaults for the WoW: Forever addons (cjber/skills wow-forever-addon/tooling, forever_tools.editorconfig).
+# StyLua and ruff still format Lua and Python; tools/check_editorconfig.py keeps these sections in step with them.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# .luacheckrc is Lua and .pkgmeta is YAML, neither with the extension.
+[{*.lua,.luacheckrc}]
+indent_style = tab
+indent_size = 4
+max_line_length = 120
+
+[*.py]
+indent_style = space
+indent_size = 4
+max_line_length = 120
+
+[*.{toc,xml}]
+indent_style = tab
+indent_size = 4
+
+[{*.yml,*.yaml,*.json,.pkgmeta}]
+indent_style = space
+indent_size = 2
+
+[*.md]
+indent_style = space
+indent_size = 2
+# A Markdown line break is two trailing spaces.
+trim_trailing_whitespace = false
+
+[*.{png,gif,tga,blp,ttf}]
+charset = unset
+end_of_line = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset

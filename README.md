@@ -124,7 +124,7 @@ For releases, follow [.agents/skills/release/SKILL.md](.agents/skills/release/SK
 
 GPL-3.0-or-later. Routes, lifts, the tram and flight paths come from the game's data via
 [wago.tools](https://wago.tools); transport timing and portals from [CMaNGOS](https://github.com/cmangos); recorded
-flight times from [InFlight](https://github.com/LudiusMaximus/InFlight) (MIT).
+flight times from [InFlight](https://github.com/LudiusMaximus/InFlight) (MIT). Every input, its pin and licence, and what ships: [THIRD_PARTY.md](THIRD_PARTY.md).
 
 Made by Cillian Berragan · [cillian.dev](https://cillian.dev) · [GitHub](https://github.com/cjber) · [Twitter](https://twitter.com/cjberragan)
 
