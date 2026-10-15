@@ -119,6 +119,7 @@ local env = setmetatable({
 
 local refreshed, taxiRefreshed, policyChanged, tomtomRefreshed = 0, 0, 0, 0
 local compassMoving = false
+local arrowMoving, arrowScaled = false, nil
 local tomtomFollowRefreshed, ways = 0, {}
 -- Core/Core.lua's defaults: every row on.
 local ns = {
@@ -157,6 +158,7 @@ local ns = {
 	Defaults = setmetatable({
 		hearthMinimumSavings = 0,
 		compassScale = 100,
+		arrowScale = 100,
 		compassBackground = 0,
 		tomtomFollow = false,
 		compassTime = false,
@@ -184,6 +186,15 @@ local ns = {
 	end,
 	SetCompassScale = function(value)
 		compassScaled = value
+	end,
+	ArrowMoving = function()
+		return arrowMoving
+	end,
+	MoveArrow = function(value)
+		arrowMoving = value
+	end,
+	SetArrowScale = function(value)
+		arrowScaled = value
 	end,
 	SetCompassBackground = function(value)
 		compassBackdrop = value
@@ -223,6 +234,8 @@ local groups = {
 	Interface = {
 		"journeyTracker",
 		"arrow",
+		"arrowMove",
+		"arrowScale",
 		"metres",
 		"minimapButton",
 		"compass",
@@ -237,7 +250,7 @@ local groups = {
 local order = { "Map marks", "Transport", "Guidance", "Alerts", "Interface" }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 37, #rows)
+assert(#rows == 39, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -346,6 +359,14 @@ assert(compassSlider.kind == "slider" and compassSlider.setting.default == 100, 
 assert(compassSlider.options.format(150) == "150%", "the compass slider shows a percent")
 compassSlider.setting.onChanged(nil, 150)
 assert(compassScaled == 150, "the compass slider rescales the compass")
+local arrowSlider = Row("arrowScale")
+assert(arrowSlider.kind == "slider" and arrowSlider.setting.default == 100, "arrow scale defaults to 100%")
+arrowSlider.setting.onChanged(nil, 150)
+assert(arrowScaled == 150, "the arrow slider rescales the arrow")
+local arrowMover = Row("arrowMove").setting
+arrowMover:SetValue(true)
+assert(arrowMoving == true and arrowMover:GetValue() == true, "the row lets the arrow be dragged")
+arrowMover:SetValue(false)
 local backgroundSlider = Row("compassBackground")
 assert(backgroundSlider.kind == "slider" and backgroundSlider.setting.default == 0, "no compass background by default")
 assert(
