@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **`/path report` gives you something to paste into a bug report.** It opens a small window with the text already selected: your addon and game versions, your character and where you are, your journey with each of its steps, your ride, the ride trace when `/path debug` is on, any errors caught this session, and your other addons. Press Ctrl+C and paste it. It fits in one message, and you don't need a /reload or a saved-variables file.
+
 - **For addon authors: `Subscribe` to journey changes.** `ShortestPathForever.API.Subscribe(callback)` calls back once per burst of changes, on the next frame, when a journey starts, heads somewhere new, ends, or an addon's route moves on to its next stop, so callers no longer poll `Ended`. A failing callback cannot stop the others. The API stays version 1 and gains `minor = 1`; see `docs/api.md`.
 
 ## [1.15.0] - 2026-10-15

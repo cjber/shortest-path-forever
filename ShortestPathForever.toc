@@ -15,6 +15,7 @@
 ## AddonCompartmentFunc: ShortestPathForever_OnAddonCompartmentClick
 
 Locales\enUS.lua
+Core\SafeCall.lua
 Data\Routes.lua
 Data\Transports.lua
 Data\Taxi.lua
@@ -35,6 +36,7 @@ UI\Map.xml
 Transport\Taxi.lua
 Transport\Teleports.lua
 UI\Art.lua
+UI\Report.lua
 UI\Map.lua
 UI\Looks.lua
 UI\MinimapPins.lua
@@ -63,6 +65,7 @@ UI\Alert.lua
 UI\Settings.lua
 UI\WhatsNew.lua
 Core\API.lua
+Core\Report.lua
 Journey\Itinerary.lua
 Core\TomTom.lua
 Core\Way.lua

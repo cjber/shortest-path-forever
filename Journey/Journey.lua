@@ -55,6 +55,12 @@ function ns.HasJourney()
 	return goal ~= nil or CorpseRun()
 end
 
+-- Where the journey goes, also while it waits behind a corpse run; nil with no journey.
+---@return SPFPoint?
+function ns.JourneyGoal()
+	return goal
+end
+
 function ns.JourneyWithoutHearth()
 	return withoutHearth
 end
