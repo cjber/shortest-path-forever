@@ -1,0 +1,39 @@
+name: Wrong route
+description: A journey goes the wrong way, misses a faster way, waits for the wrong boat, or can't find a way at all.
+labels: [bug]
+body:
+  - type: textarea
+    id: report
+    attributes:
+      label: /path report
+      description: >-
+        While the journey is still on screen, type `/path report`, press Ctrl+C (Cmd+C on a Mac) and paste it here.
+        It has your versions, where you are, the journey with each of its steps, your ride and any errors. For a boat,
+        zeppelin, lift or tram that was wrongly timed, turn on `/path debug` first, ride it, then take the report: it
+        adds the last samples of the ride trace. On a version without `/path report`, say where you started and
+        where you were going instead.
+      render: text
+    validations:
+      required: true
+  - type: dropdown
+    id: problem
+    attributes:
+      label: What's wrong
+      options:
+        - It walks into a wall, off a cliff or through water it shouldn't
+        - There's a faster way it doesn't take
+        - It takes a flight, boat, portal or teleport I can't use
+        - The departure time or wait is wrong
+        - It says there's no way there
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+      description: >-
+        The way you would have gone, or what the time should be. Map coordinates (from `/way` or a map addon) help
+        for a spot where the walk goes wrong.
+    validations:
+      required: true
