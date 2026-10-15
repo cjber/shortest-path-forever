@@ -94,6 +94,19 @@ end
 assert(mini.scripts.OnUpdate == nil, "a still minimap rests")
 mini.scripts.OnEvent(mini, "PLAYER_STARTED_MOVING")
 assert(mini.scripts.OnUpdate, "moving wakes it")
+for _ = 1, 8 do
+ mini.scripts.OnUpdate(mini, 0.1)
+end
+assert(mini.scripts.OnUpdate, "not before a second has passed")
+for _ = 1, 4 do
+ if mini.scripts.OnUpdate then mini.scripts.OnUpdate(mini, 0.1) end
+end
+assert(mini.scripts.OnUpdate == nil and mini.ticker, "resting, with the poll running")
+mini.ticker.fn()
+assert(mini.scripts.OnUpdate == nil, "a poll that finds nothing new leaves it resting")
+mini.lastX = nil -- as if a mouse turn or a boat had moved the minimap with no event
+mini.ticker.fn()
+assert(mini.scripts.OnUpdate, "a poll that finds a change wakes it")
 -- The minimap marks the stop where the strokes' geometry puts it: 60 yards north of the player in a 200-yard view.
 assert(not mini.Goal.hidden and mini.Goal.anchor[2] == mini and mini.Goal.anchor[4] == 0, "the stop, straight ahead")
 assert(math.abs(mini.Goal.anchor[5] - 30) < 1e-9, "three tenths of the way to the rim")

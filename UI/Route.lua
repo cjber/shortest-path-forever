@@ -523,8 +523,9 @@ local function DrawMinimap(self)
 	return true
 end
 
--- The minimap redraws ten times a second while you move or turn, ride, or its zoom changes. Once nothing has changed
--- for a second it drops its every-frame script, and a quarter-second poll (a mouse turn sends no event) wakes it.
+-- The minimap redraws ten times a second while you move or turn or its zoom changes. Once nothing has changed for a
+-- second it drops its every-frame script, and a quarter-second poll wakes it: a mouse turn, a boat or a flight moves
+-- the minimap with no event to say so.
 local REDRAW_EVERY, POLL_EVERY, REST_AFTER = 0.1, 0.25, 1
 local UpdateMinimap
 
@@ -551,9 +552,7 @@ UpdateMinimap = function(self, elapsed)
 	end
 	local step = self.elapsed
 	self.elapsed = 0
-	-- Aboard a boat, a lift or a flight the minimap moves with no event to say so.
-	local riding = ns.CurrentRide() or ns.IsObservingRide() or UnitOnTaxi("player")
-	if DrawMinimap(self) or riding then
+	if DrawMinimap(self) then
 		self.idle = 0
 	else
 		self.idle = self.idle + step
@@ -563,9 +562,15 @@ UpdateMinimap = function(self, elapsed)
 	end
 end
 
----@param self SPFMinimapRoute
-local function PollMinimap(self)
-	if goal and not self:GetScript("OnUpdate") and DrawMinimap(self) then
+local function PollMinimap()
+	local self = minimap
+	if not self or self:GetScript("OnUpdate") then
+		return
+	end
+	if not (goal and (ns.db.journey or goal.corpse)) then
+		self.Goal:Hide()
+		self:Hide()
+	elseif DrawMinimap(self) then
 		WakeMinimap(self)
 	end
 end
@@ -629,7 +634,6 @@ function ns.SetJourneyRoute(destination, route)
 			WakeMinimap(minimap)
 		else
 			minimap.Goal:Hide()
-			minimap:SetScript("OnUpdate", nil)
 			minimap:Hide()
 			ns.SetAreaBlob(false)
 		end
@@ -652,10 +656,6 @@ ns.Init(function()
 	minimap.Goal:Hide()
 	-- The client's own "inside the quest's area" state, the one it paints the blob from, drives the tint at once.
 	minimap:RegisterEvent("PLAYER_INSIDE_QUEST_BLOB_STATE_CHANGED")
-	-- Moving, turning or zooming the minimap wakes the every-frame redraw.
-	minimap:RegisterEvent("PLAYER_STARTED_MOVING")
-	minimap:RegisterEvent("PLAYER_STARTED_TURNING")
-	minimap:RegisterEvent("MINIMAP_UPDATE_ZOOM")
 	minimap:SetScript("OnEvent", function(self, event)
 		if not goal then
 			return
@@ -670,16 +670,25 @@ ns.Init(function()
 			provider:RefreshAllData()
 		end
 	end)
+	-- While shown: the poll, and moving, turning or zooming the minimap wake the every-frame redraw.
 	minimap:SetScript("OnShow", function(self)
-		self.ticker = C_Timer.NewTicker(POLL_EVERY, function()
-			PollMinimap(self)
-		end)
+		if self.ticker then
+			self.ticker:Cancel()
+		end
+		self.ticker = C_Timer.NewTicker(POLL_EVERY, PollMinimap)
+		self:RegisterEvent("PLAYER_STARTED_MOVING")
+		self:RegisterEvent("PLAYER_STARTED_TURNING")
+		self:RegisterEvent("MINIMAP_UPDATE_ZOOM")
+		WakeMinimap(self)
 	end)
 	minimap:SetScript("OnHide", function(self)
 		if self.ticker then
 			self.ticker:Cancel()
 			self.ticker = nil
 		end
+		self:UnregisterEvent("PLAYER_STARTED_MOVING")
+		self:UnregisterEvent("PLAYER_STARTED_TURNING")
+		self:UnregisterEvent("MINIMAP_UPDATE_ZOOM")
 		self:SetScript("OnUpdate", nil)
 	end)
 	minimap:Hide()
