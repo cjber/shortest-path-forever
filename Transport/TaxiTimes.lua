@@ -264,6 +264,42 @@ function TaxiTimes.Seconds(from, to)
 	return store and store[Key(from, to)]
 end
 
+---@class SPFFlightFrom
+---@field to number the flight point it lands at
+---@field seconds number measured on a ride of yours, else the shipped time
+---@field measured boolean
+---@field estimated? boolean the shipped time is worked out from the path's length, not timed
+
+-- The direct flights from a flight point to the ones `eligible` allows: your own timings first, then the shipped,
+-- each group quickest first.
+---@param from number
+---@param eligible fun(to: number): boolean
+---@return SPFFlightFrom[]
+function TaxiTimes.FlightsFrom(from, eligible)
+	local flights = {}
+	for _, path in ipairs(byFrom[from] or {}) do
+		if eligible(path.to) then
+			local measured = TaxiTimes.Seconds(from, path.to)
+			flights[#flights + 1] = {
+				to = path.to,
+				seconds = measured or path.seconds,
+				measured = measured ~= nil,
+				estimated = not measured and path.estimated or nil,
+			}
+		end
+	end
+	table.sort(flights, function(a, b)
+		if a.measured ~= b.measured then
+			return a.measured
+		end
+		if a.seconds ~= b.seconds then
+			return a.seconds < b.seconds
+		end
+		return a.to < b.to
+	end)
+	return flights
+end
+
 -- The measured seconds as the planner's plain data, a fresh table only when a ride has added one.
 ---@return table<string, number>
 function TaxiTimes.Snapshot()

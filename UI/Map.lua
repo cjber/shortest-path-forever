@@ -701,12 +701,46 @@ function ShortestPathForeverFlightPinMixin:OnMouseClickAction(button)
 	end
 end
 
+-- A flight point's tooltip lists where you can fly from it, as many as fit.
+local FLIGHTS_SHOWN = 8
+
+---@param nodeID number
+---@param undiscovered? boolean the hovered point itself is not known yet: nothing flies from it for you
+local function AddFlights(nodeID, undiscovered)
+	local known, faction = ns.KnownTaxiNodes(), UnitFactionGroup("player")
+	-- The flight points the planner flies to (Planner.lua's Eligible): neutral ones and your faction's, whatever the
+	-- boat and zeppelin setting says.
+	local flights = ns.TaxiTimes.FlightsFrom(nodeID, function(to)
+		local node = ns.TaxiNodes[to]
+		return node ~= nil and (not node.faction or node.faction == faction)
+	end)
+	if not flights[1] then
+		return
+	end
+	GameTooltip_AddNormalLine(GameTooltip, L["Flights from here"])
+	for index = 1, math.min(#flights, FLIGHTS_SHOWN) do
+		local flight = flights[index]
+		local time = ns.FormatCountdown(flight.seconds * 1000)
+		-- A time worked out from the path's length, not timed by anyone, says so.
+		if flight.estimated then
+			time = string.format(L["about %s"], time)
+		end
+		-- Flight points you have not found yet are grey, as on the flight map; all are from one you have not found.
+		local color = (undiscovered or not known[flight.to]) and GRAY_FONT_COLOR or HIGHLIGHT_FONT_COLOR
+		GameTooltip_AddColoredDoubleLine(GameTooltip, ns.TaxiName(flight.to), time, color, color)
+	end
+	if #flights > FLIGHTS_SHOWN then
+		GameTooltip_AddNormalLine(GameTooltip, string.format(L["and %d more"], #flights - FLIGHTS_SHOWN))
+	end
+end
+
 function ShortestPathForeverFlightPinMixin:OnMouseEnter()
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 	GameTooltip_SetTitle(GameTooltip, self.poiInfo.name)
 	if self.poiInfo.isUndiscovered then
 		GameTooltip_AddNormalLine(GameTooltip, L["Not discovered"])
 	end
+	AddFlights(self.poiInfo.nodeID, self.poiInfo.isUndiscovered)
 	GameTooltip:Show()
 end
 
