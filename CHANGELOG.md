@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **For addon authors: `Subscribe` to journey changes.** `ShortestPathForever.API.Subscribe(callback)` calls back once per burst of changes, on the next frame, when a journey starts, heads somewhere new, ends, or an addon's route moves on to its next stop, so callers no longer poll `Ended`. A failing callback cannot stop the others. The API stays version 1 and gains `minor = 1`; see `docs/api.md`.
+
 ## [1.15.0] - 2026-10-15
 
 - **Data checked against Forever 1.60.1.70374.** The travel data and flight times are unchanged apart from their source pins.

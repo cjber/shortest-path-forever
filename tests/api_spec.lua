@@ -489,6 +489,118 @@ driver.update(0.1)
 equal(API.CurrentStop("AGF"), nil, "cancel discards pending advancement")
 equal(ns.HasJourney(), false, "pending advancement stays cancelled")
 
+-- Subscribe: one call per burst of guidance changes, on the next frame, each subscriber isolated from the others.
+do
+	equal(API.minor, 1, "Subscribe raises minor, not version")
+	equal(pcall(API.Subscribe, "callback"), false, "a callback must be a function")
+	local timers, route =
+		{}, {
+			{ map = 1, x = 0.502, y = 0.5, title = "First" },
+			{ map = 1, x = 0.504, y = 0.5, title = "Second" },
+			{ map = 1, x = 0.506, y = 0.5, title = "Third" },
+		}
+	env.C_Timer = {
+		After = function(delay, fn)
+			equal(delay, 0, "the next frame")
+			timers[#timers + 1] = fn
+		end,
+	}
+	local function frameEnd()
+		local due = timers
+		timers = {}
+		for _, fn in ipairs(due) do
+			fn()
+		end
+	end
+	ns.ClearJourney()
+	frameEnd()
+	equal(#timers, 0, "nobody subscribed: nothing scheduled")
+	driver.move({ map = 1, x = 0, y = 0 })
+	equal(API.NavigateRoute("AGF", route), true, "a route before any subscriber")
+	ns.ClearJourney()
+	equal(#timers, 0, "changes before a subscriber are not queued")
+
+	local heard, errors = {}, {}
+	local handler = env.geterrorhandler
+	env.geterrorhandler = function()
+		return function(message)
+			errors[#errors + 1] = message
+		end
+	end
+	local function listen(name)
+		heard[name] = {}
+		return function(changes)
+			local list = heard[name]
+			list[#list + 1] = changes
+		end
+	end
+	local unsubscribeFirst = API.Subscribe(listen("first"))
+	local unsubscribeBroken = API.Subscribe(function()
+		error("broken subscriber")
+	end)
+	local unsubscribeLast = API.Subscribe(listen("last"))
+
+	equal(API.NavigateRoute("AGF", route), true, "start a route")
+	equal(#heard.first, 0, "not called during the change")
+	equal(#timers, 1, "one frame scheduled")
+	frameEnd()
+	equal(#heard.first, 1, "one call for the burst")
+	equal(heard.first[1].started, true, "started")
+	equal(heard.first[1].ended, nil, "nothing ended")
+	equal(heard.first[1].stop, nil, "no stop moved on")
+	equal(#errors, 1, "the broken callback reaches the error handler")
+	equal(#heard.last, 1, "and the subscriber after it is still called")
+	equal(heard.first[1] ~= heard.last[1], true, "each subscriber gets its own table")
+	heard.first[1].started = false
+	equal(heard.last[1].started, true, "a subscriber's edit reaches no other")
+
+	driver.update(0.1)
+	driver.move({ map = 1, x = 0, y = -100 })
+	driver.update(0.1)
+	equal(API.CurrentStop("AGF"), 2, "arrival moves on")
+	frameEnd()
+	local moved = heard.last[2]
+	equal(moved.stop and moved.changed and not moved.started and not moved.ended, true, "next stop: changed and stop")
+
+	equal(#errors, 2, "the broken callback is called each burst")
+	unsubscribeBroken()
+	unsubscribeBroken()
+	equal(API.Navigate("OtherAddon", 1, 0.7, 0.5), true, "another addon replaces it")
+	frameEnd()
+	equal(#errors, 2, "an unsubscribed callback is never called again, and unsubscribing twice is safe")
+	local replaced = heard.last[3]
+	equal(replaced.changed and not replaced.stop and not replaced.started, true, "a replacement is a change")
+	equal(API.Ended("AGF"), "replaced", "Ended agrees when the callback runs")
+
+	ns.ClearJourney()
+	frameEnd()
+	equal(heard.last[4].ended and not heard.last[4].changed, true, "ended")
+	ns.ClearJourney()
+	equal(#timers, 0, "clearing nothing changes nothing")
+
+	-- A callback may unsubscribe itself; a start and end in one burst arrive together.
+	local unsubscribeSelf
+	local selfCalls = 0
+	unsubscribeSelf = API.Subscribe(function()
+		selfCalls = selfCalls + 1
+		unsubscribeSelf()
+	end)
+	API.Navigate("AGF", 1, 0.6, 0.5)
+	ns.ClearJourney()
+	equal(#timers, 1, "two changes, one frame")
+	frameEnd()
+	equal(heard.last[5].started and heard.last[5].ended, true, "a start and an end in one burst")
+	equal(#heard.first, 5, "every remaining subscriber is called")
+	API.Navigate("AGF", 1, 0.6, 0.5)
+	frameEnd()
+	equal(selfCalls, 1, "a callback unsubscribed itself")
+	unsubscribeFirst()
+	unsubscribeLast()
+	ns.ClearJourney()
+	equal(#timers, 0, "no subscribers left: nothing scheduled")
+	env.geterrorhandler, env.C_Timer = handler, nil
+end
+
 local planner, calls = ns.Planner.Plan, 0
 ns.Planner.Plan = function(options)
 	calls = calls + 1

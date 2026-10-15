@@ -1,7 +1,7 @@
 ---@meta
 
 -- Public addon-to-addon interface. Coordinates are uiMapID and normalized 0-1 x/y, not world yards.
--- Additions keep version 1: a caller checks optional members with type(api.Name) == "function".
+-- Additions keep version 1 and raise minor: a caller checks optional members with type(api.Name) == "function".
 
 ---@alias SPFAPIMode "walk"|"flight"|"boat"|"zeppelin"|"lift"|"tram"|"portal"|"passage"|"teleport"
 ---@alias SPFAPINoRoute "combat"|"invalid"|"unreachable" -- retry after combat; never for bad input; unreachable with what this character knows
@@ -45,8 +45,17 @@
 ---@field seconds number -- equal to Estimate's answer
 ---@field legs SPFAPILeg[] -- fresh copies on every call, never SPF's own tables
 
+--- What happened to guidance since the subscriber was last called; each field is true or absent. Several can be
+--- true together, from one burst of changes.
+---@class SPFAPIChanges
+---@field started? boolean -- a journey began where none was under way
+---@field changed? boolean -- the journey under way now heads somewhere else: replaced by a new one, or on to its next stop
+---@field ended? boolean -- the journey under way ended, with nothing after it
+---@field stop? boolean -- an addon's route moved on to its next stop (CurrentStop changed)
+
 ---@class SPFPublicAPI
----@field version integer -- 1
+---@field version integer -- 1; a breaking change would raise it
+---@field minor integer -- 1 from Subscribe; absent before
 ---@field Estimate fun(fromMap: integer, fromX: number, fromY: number, toMap: integer, toX: number, toY: number): seconds: number?, reason: SPFAPINoRoute? -- travel seconds; nil comes with the reason
 ---@field Navigate fun(owner: string, map: integer, x: number, y: number, title?: string, kind?: SPFAPIStopKind): boolean -- starts/replaces guidance outside combat when journeys are enabled
 ---@field NavigateRoute fun(owner: string, stops: SPFAPIStop[]): boolean -- starts/replaces guidance through 1-64 stops in order; false leaves the current journey intact
@@ -55,6 +64,7 @@
 ---@field EstimateDetail fun(fromMap: integer, fromX: number, fromY: number, toMap: integer, toX: number, toY: number): detail: SPFAPIDetail?, reason: SPFAPINoRoute? -- Estimate leg by leg, sharing its cache
 ---@field Active fun(): boolean -- true while any journey is guiding, whoever started it
 ---@field Ended fun(owner: string): reason: SPFAPIEnded?, at: number? -- why owner's last journey ended and its GetTime(); nil while it runs, before any, or after a reload
+---@field Subscribe fun(callback: fun(changes: SPFAPIChanges)): unsubscribe: fun() -- calls back at most once per burst of journey changes, the next frame; errors go to the game's error handler
 
 ---@class SPFPublicAddon
 ---@field API SPFPublicAPI

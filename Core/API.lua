@@ -111,14 +111,69 @@ local MAX_STOPS = 64
 ---@type table<string, {reason: SPFAPIEnded, at: number}>
 local ended = {}
 
+-- Subscribe's callbacks: told once per burst what happened to guidance, after every change in it has landed.
+---@class SPFSubscription
+---@field callback fun(changes: SPFAPIChanges)
+---@field active boolean
+
+---@type SPFSubscription[]
+local subscriptions = {}
+---@type SPFAPIChanges?
+local pending
+-- The destination guidance last had, to tell a start from a change.
+---@type SPFPoint?
+local guided
+
+-- Each subscriber gets its own copy, from a copy of the list, so a callback may unsubscribe or change what it was
+-- given; an error goes to the game's error handler without stopping the others.
+local function Flush()
+	local changes = pending
+	pending = nil
+	if not changes then
+		return
+	end
+	local current = {}
+	for index, subscription in ipairs(subscriptions) do
+		current[index] = subscription
+	end
+	for _, subscription in ipairs(current) do
+		if subscription.active then
+			local copy = {}
+			for key, value in pairs(changes) do
+				copy[key] = value
+			end
+			xpcall(function()
+				subscription.callback(copy)
+			end, geterrorhandler())
+		end
+	end
+end
+
+---@param kind "started"|"changed"|"ended"|"stop"
+local function Notify(kind)
+	if not subscriptions[1] then
+		return
+	end
+	if not pending then
+		pending = {}
+		C_Timer.After(0, Flush)
+	end
+	pending[kind] = true
+end
+
 ---@param point SPFPoint?
 ---@param reason? "arrived"|"cleared" -- why a nil point ended the journey
 function ns.JourneyChanged(point, reason)
+	if point ~= guided then
+		Notify(not point and "ended" or guided and "changed" or "started")
+		guided = point
+	end
 	if not route then
 		return
 	end
 	if point and point == route.points[route.index + 1] then
 		route.index = route.index + 1
+		Notify("stop")
 	elseif not point or point ~= route.points[route.index] then
 		ended[route.owner] = { reason = point and "replaced" or reason or "cleared", at = GetTime() }
 		route = nil
@@ -143,7 +198,7 @@ function ns.JourneyStops()
 end
 
 ---@class SPFPublicAPI
-local API = { version = 1 }
+local API = { version = 1, minor = 1 }
 
 local function Differs(a, b)
 	for key, value in pairs(a) do
@@ -396,6 +451,24 @@ function API.Ended(owner)
 	local entry = Owner(owner) and ended[owner]
 	if entry then
 		return entry.reason, entry.at
+	end
+end
+
+function API.Subscribe(callback)
+	if type(callback) ~= "function" then
+		error("ShortestPathForever.API.Subscribe: callback must be a function", 2)
+	end
+	---@type SPFSubscription
+	local subscription = { callback = callback, active = true }
+	subscriptions[#subscriptions + 1] = subscription
+	return function()
+		subscription.active = false
+		for index, other in ipairs(subscriptions) do
+			if other == subscription then
+				table.remove(subscriptions, index)
+				return
+			end
+		end
 	end
 end
 
