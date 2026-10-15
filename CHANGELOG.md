@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **A guide resending its route no longer stalls the journey.** If an addon such as Adventure Guide sent the same route again while the first walking search was still running, that search stayed paused, so the journey never got a route and never reached its stop. The search now carries on.
+
 - **For addon authors: `Subscribe` to journey changes.** `ShortestPathForever.API.Subscribe(callback)` calls back once per burst of changes, on the next frame, when a journey starts, heads somewhere new, ends, or an addon's route moves on to its next stop, so callers no longer poll `Ended`. A failing callback cannot stop the others. The API stays version 1 and gains `minor = 1`; see `docs/api.md`.
 
 ## [1.15.0] - 2026-10-15

@@ -729,6 +729,11 @@ local function RefreshCosts(includeGoal, forced)
 		end
 		if batch.job then
 			batch.job.callback, batch.job.progress = update, update
+			-- A reused batch was paused when the last search was cancelled. One still unsettled must run again, or
+			-- nothing ever answers this search; once valid, consider pauses it again if it is not needed.
+			if not batch.done then
+				ns.Path.Resume(batch.job)
+			end
 		else
 			batch.job =
 				ns.Path.FindMany(batch.point.map, batch.point, batch.targets, update, waterMode, batch.reverse, update)

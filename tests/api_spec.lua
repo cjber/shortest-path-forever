@@ -489,6 +489,24 @@ driver.update(0.1)
 equal(API.CurrentStop("AGF"), nil, "cancel discards pending advancement")
 equal(ns.HasJourney(), false, "pending advancement stays cancelled")
 
+-- The same route sent again before its first walking search settles: the paused search runs on and the route arrives.
+do
+	local resend = {
+		{ map = 1, x = 0.502, y = 0.5, title = "First" },
+		{ map = 1, x = 0.504, y = 0.5, title = "Second" },
+	}
+	driver.move({ map = 1, x = 0, y = 0 })
+	equal(API.NavigateRoute("AGF", resend), true, "a route")
+	equal(API.NavigateRoute("AGF", resend), true, "the same route, before its search settles")
+	driver.update(0.1)
+	local _, _, resent = ns.JourneyInfo()
+	equal(resent ~= nil, true, "the resent route is planned")
+	driver.move({ map = 1, x = 0, y = -100 })
+	driver.update(0.1)
+	equal(API.CurrentStop("AGF"), 2, "and arrives")
+	API.Cancel("AGF")
+end
+
 -- Subscribe: one call per burst of guidance changes, on the next frame, each subscriber isolated from the others.
 do
 	equal(API.minor, 1, "Subscribe raises minor, not version")
