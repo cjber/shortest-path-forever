@@ -159,6 +159,8 @@ local ns = {
 		compassScale = 100,
 		compassBackground = 0,
 		tomtomFollow = false,
+		compassTime = false,
+		arrivalSound = false,
 		resumeJourney = false,
 	}, {
 		__index = function()
@@ -217,13 +219,14 @@ local groups = {
 		"taxiRoute",
 		"corpse",
 	},
-	Alerts = { "alerts", "alertSound" },
+	Alerts = { "alerts", "alertSound", "arrivalSound" },
 	Interface = {
 		"journeyTracker",
 		"arrow",
 		"metres",
 		"minimapButton",
 		"compass",
+		"compassTime",
 		"compassMove",
 		"trackerScale",
 		"compassScale",
@@ -234,7 +237,7 @@ local groups = {
 local order = { "Map marks", "Transport", "Guidance", "Alerts", "Interface" }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 35, #rows)
+assert(#rows == 37, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -292,6 +295,7 @@ assert(Row("tomtomFollow").setting.default == false, "following TomTom's arrow i
 assert(Row("tomtomFollow").tooltip:find("TomTom", 1, true), "the row names the addon it follows")
 Row("tomtomFollow").setting.onChanged()
 assert(tomtomFollowRefreshed == 1, "the follower follows its setting")
+assert(Row("arrivalSound").setting.default == false, "the arrival sound is off by default")
 -- Keeping your own journey across a reload is opt-in; turning it off forgets the one kept.
 assert(Row("resumeJourney").setting.default == false, "keeping journeys after a reload is off by default")
 local keepChanged = 0
@@ -323,6 +327,7 @@ ns.ReportLines = function()
 end
 env.SlashCmdList.SHORTESTPATHFOREVER("report")
 assert(shownReport == "Report lines failed: broke", "failing lines are said in their place")
+assert(Row("compassTime").setting.default == false, "the compass shows no time unless asked")
 -- /path way takes TomTom's /way line, whether or not /way itself is free.
 env.SlashCmdList.SHORTESTPATHFOREVER("way Elwynn Forest 42.1 65.3 Goldshire")
 assert(ways[1] == "Elwynn Forest 42.1 65.3 Goldshire", "/path way hands on the rest of the line")

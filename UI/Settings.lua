@@ -320,6 +320,11 @@ ns.Init(function()
 		L["While you wait at a dock or ride a timed boat: a warning on screen and a flashing taskbar icon."]
 	)
 	Checkbox("alertSound", L["Play a sound with alerts"], L["Plays even with the game in the background."])
+	Checkbox(
+		"arrivalSound",
+		L["Play a sound when you reach the goal"],
+		L["The map's ping when a journey you planned reaches its goal, even with the game in the background."]
+	)
 
 	-- Interface: what the addon puts on screen.
 	Page(L["Interface"])
@@ -353,6 +358,12 @@ ns.Init(function()
 		"compass",
 		L["Show the compass"],
 		L["While Guide is on: your next turns, the next stop and your destination across the top of the screen."],
+		ns.RefreshCompass
+	)
+	Checkbox(
+		"compassTime",
+		L["Show the time left under the compass"],
+		L["The journey's time left, as the tracker shows it, beside the distance to your next turn."],
 		ns.RefreshCompass
 	)
 	Settings.RegisterInitializer(
