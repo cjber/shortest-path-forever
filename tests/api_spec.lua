@@ -539,61 +539,90 @@ do
 		error("broken subscriber")
 	end)
 	local unsubscribeLast = API.Subscribe(listen("last"))
+	local function only(changes, label, ...)
+		local want = {}
+		for _, kind in ipairs({ ... }) do
+			want[kind] = true
+		end
+		for _, kind in ipairs({ "started", "changed", "ended", "stop", "active" }) do
+			equal(changes[kind], want[kind], label .. ": " .. kind)
+		end
+	end
 
 	equal(API.NavigateRoute("AGF", route), true, "start a route")
 	equal(#heard.first, 0, "not called during the change")
-	equal(#timers, 1, "one frame scheduled")
+	equal(#timers, 1, "one frame for the whole burst")
 	frameEnd()
 	equal(#heard.first, 1, "one call for the burst")
-	equal(heard.first[1].started, true, "started")
-	equal(heard.first[1].ended, nil, "nothing ended")
-	equal(heard.first[1].stop, nil, "no stop moved on")
+	only(heard.first[1], "a route starts", "started", "stop", "active")
 	equal(#errors, 1, "the broken callback reaches the error handler")
 	equal(#heard.last, 1, "and the subscriber after it is still called")
 	equal(heard.first[1] ~= heard.last[1], true, "each subscriber gets its own table")
 	heard.first[1].started = false
 	equal(heard.last[1].started, true, "a subscriber's edit reaches no other")
 
+	-- Sending the same route again changes nothing a caller reads, so nobody is called.
+	driver.update(0.1)
+	equal(API.NavigateRoute("AGF", route), true, "the same route again")
+	frameEnd()
+	equal(#heard.last, 1, "the same destination is no change")
+
 	driver.update(0.1)
 	driver.move({ map = 1, x = 0, y = -100 })
 	driver.update(0.1)
 	equal(API.CurrentStop("AGF"), 2, "arrival moves on")
 	frameEnd()
-	local moved = heard.last[2]
-	equal(moved.stop and moved.changed and not moved.started and not moved.ended, true, "next stop: changed and stop")
+	only(heard.last[2], "the next stop", "changed", "stop")
 
-	equal(#errors, 2, "the broken callback is called each burst")
+	-- The player turning guidance off and on again.
+	ns.ToggleJourneyGuide()
+	frameEnd()
+	only(heard.last[3], "guidance off", "active")
+	equal(API.Active(), false, "Active agrees")
+	ns.ToggleJourneyGuide()
+	frameEnd()
+	only(heard.last[4], "guidance on", "active")
+
+	equal(#errors, 4, "the broken callback is called each burst")
 	unsubscribeBroken()
 	unsubscribeBroken()
 	equal(API.Navigate("OtherAddon", 1, 0.7, 0.5), true, "another addon replaces it")
 	frameEnd()
-	equal(#errors, 2, "an unsubscribed callback is never called again, and unsubscribing twice is safe")
-	local replaced = heard.last[3]
-	equal(replaced.changed and not replaced.stop and not replaced.started, true, "a replacement is a change")
+	equal(#errors, 4, "an unsubscribed callback is never called again, and unsubscribing twice is safe")
+	only(heard.last[5], "a replacement", "changed", "stop")
 	equal(API.Ended("AGF"), "replaced", "Ended agrees when the callback runs")
 
 	ns.ClearJourney()
 	frameEnd()
-	equal(heard.last[4].ended and not heard.last[4].changed, true, "ended")
+	only(heard.last[6], "the end", "ended", "stop", "active")
 	ns.ClearJourney()
-	equal(#timers, 0, "clearing nothing changes nothing")
+	frameEnd()
+	equal(#heard.last, 6, "clearing nothing changes nothing")
 
-	-- A callback may unsubscribe itself; a start and end in one burst arrive together.
-	local unsubscribeSelf
-	local selfCalls = 0
-	unsubscribeSelf = API.Subscribe(function()
-		selfCalls = selfCalls + 1
-		unsubscribeSelf()
-	end)
+	-- A start and an end in one burst arrive together; the guide's on and off cancel out.
 	API.Navigate("AGF", 1, 0.6, 0.5)
 	ns.ClearJourney()
 	equal(#timers, 1, "two changes, one frame")
 	frameEnd()
-	equal(heard.last[5].started and heard.last[5].ended, true, "a start and an end in one burst")
-	equal(#heard.first, 5, "every remaining subscriber is called")
+	only(heard.last[7], "start and end", "started", "ended", "stop")
+
+	-- A callback may unsubscribe itself, and one subscribing mid-burst hears only later bursts.
+	local unsubscribeSelf
+	local selfCalls = 0
+	API.Navigate("AGF", 1, 0.6, 0.5)
+	unsubscribeSelf = API.Subscribe(function()
+		selfCalls = selfCalls + 1
+		unsubscribeSelf()
+	end)
+	frameEnd()
+	equal(selfCalls, 0, "not told of the burst it subscribed in")
+	equal(#heard.first, 8, "the others are")
+	ns.ClearJourney()
+	frameEnd()
+	equal(selfCalls, 1, "told of the next one")
 	API.Navigate("AGF", 1, 0.6, 0.5)
 	frameEnd()
-	equal(selfCalls, 1, "a callback unsubscribed itself")
+	equal(selfCalls, 1, "and it unsubscribed itself")
 	unsubscribeFirst()
 	unsubscribeLast()
 	ns.ClearJourney()

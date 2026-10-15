@@ -41,10 +41,13 @@ calling it. The full types are in [`types/API.lua`](../types/API.lua).
 - `Subscribe(callback)` calls `callback(changes)` on the frame after guidance changes, at most once per burst of
   changes, whoever made them. `changes` is a new table each call with any of these set to `true`: `started` (a
   journey began where none was under way), `changed` (the journey under way now heads somewhere else, replaced or
-  on to its next stop), `ended` (it ended with nothing after it) and `stop` (an addon's route moved on to its next
-  stop). Several can be set together, so read `CurrentStop`, `Ended` and `Active` again rather than replaying them.
-  It returns a function that unsubscribes, safe to call twice. An error in one callback goes to the game's error
-  handler without stopping the others. A non-function callback is an error.
+  on to its next stop; sending the same destination again is no change), `ended` (it ended with nothing after it),
+  `stop` (what `CurrentStop` answers changed: an addon's route started, moved on or ended) and `active` (what
+  `Active` answers changed, including the player turning guidance off or a corpse run guiding after a journey
+  ends). Several can be set together, so read `CurrentStop`, `Ended` and `Active` again rather than replaying
+  them. A callback is not told about a burst already under way when it subscribed. It returns a function that
+  unsubscribes, safe to call twice. An error in one callback goes to the game's error handler without stopping
+  the others. A non-function callback is an error.
 
 Use your addon's name as `owner`; starting another journey replaces ownership.
 

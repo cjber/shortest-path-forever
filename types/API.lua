@@ -51,7 +51,8 @@
 ---@field started? boolean -- a journey began where none was under way
 ---@field changed? boolean -- the journey under way now heads somewhere else: replaced by a new one, or on to its next stop
 ---@field ended? boolean -- the journey under way ended, with nothing after it
----@field stop? boolean -- an addon's route moved on to its next stop (CurrentStop changed)
+---@field stop? boolean -- what CurrentStop answers changed: an addon's route started, moved on to another stop or ended
+---@field active? boolean -- what Active answers changed
 
 ---@class SPFPublicAPI
 ---@field version integer -- 1; a breaking change would raise it
