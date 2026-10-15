@@ -111,10 +111,108 @@ local MAX_STOPS = 64
 ---@type table<string, {reason: SPFAPIEnded, at: number}>
 local ended = {}
 
+-- Subscribe's callbacks: told once per burst what happened to guidance, after every change in it has landed.
+---@class SPFSubscription
+---@field callback fun(changes: SPFAPIChanges)
+---@field active boolean
+---@field after? SPFAPIChanges -- the burst under way when it subscribed, which it is not told about
+
+---@type SPFSubscription[]
+local subscriptions = {}
+---@type SPFAPIChanges?
+local pending
+-- What subscribers were last told about, kept whether or not anyone listens: the destination (to tell a start from
+-- a change), the owner and stop CurrentStop answers for, and Active().
+---@type SPFPoint?
+local guided
+---@type string?
+local stopOwner
+---@type integer?
+local stopIndex
+local active = false
+-- Active() as subscribers were last told it.
+local heardActive = false
+
+-- Each subscriber gets its own copy, from a copy of the list, so a callback may unsubscribe or change what it was
+-- given; an error goes to the game's error handler without stopping the others.
+local function Flush()
+	local changes = pending
+	pending = nil
+	if not changes then
+		return
+	end
+	-- The guide can stop and start again within a burst (a replaced journey): only a different answer counts.
+	if changes.active then
+		local now = ns.IsJourneyGuided() == true
+		changes.active = now ~= heardActive or nil
+		heardActive = now
+		if not next(changes) then
+			return
+		end
+	end
+	local current = {}
+	for index, subscription in ipairs(subscriptions) do
+		current[index] = subscription
+	end
+	local handler = geterrorhandler()
+	for _, subscription in ipairs(current) do
+		if subscription.active and subscription.after ~= changes then
+			local copy = {}
+			for key, value in pairs(changes) do
+				copy[key] = value
+			end
+			xpcall(subscription.callback, handler, copy)
+		end
+	end
+end
+
+---@param kind "started"|"changed"|"ended"|"stop"|"active"
+local function Notify(kind)
+	if not subscriptions[1] then
+		return
+	end
+	if not pending then
+		-- Scheduled first: a failure leaves nothing half-queued to swallow later bursts.
+		C_Timer.After(0, Flush)
+		pending = {}
+	end
+	pending[kind] = true
+end
+
+---@param a SPFPoint?
+---@param b SPFPoint?
+local function SamePlace(a, b)
+	return a == b or (a and b and a.map == b.map and a.x == b.x and a.y == b.y) or false
+end
+
+-- The stop and guide state as callers read them, compared with what subscribers last heard.
+local function Settle()
+	local owner, index = route and route.owner, route and route.index
+	if owner ~= stopOwner or index ~= stopIndex then
+		stopOwner, stopIndex = owner, index
+		Notify("stop")
+	end
+	local now = ns.IsJourneyGuided() == true
+	if now ~= active then
+		active = now
+		Notify("active")
+	end
+end
+
+-- JourneyGuide.lua: the guide started or stopped, which Active() reports.
+function ns.GuideChanged()
+	Settle()
+end
+
 ---@param point SPFPoint?
 ---@param reason? "arrived"|"cleared" -- why a nil point ended the journey
 function ns.JourneyChanged(point, reason)
+	if not SamePlace(point, guided) then
+		Notify(not point and "ended" or guided and "changed" or "started")
+	end
+	guided = point
 	if not route then
+		Settle()
 		return
 	end
 	if point and point == route.points[route.index + 1] then
@@ -123,8 +221,10 @@ function ns.JourneyChanged(point, reason)
 		ended[route.owner] = { reason = point and "replaced" or reason or "cleared", at = GetTime() }
 		route = nil
 	else
+		Settle()
 		return
 	end
+	Settle()
 	ns.ItineraryChanged()
 end
 
@@ -143,7 +243,7 @@ function ns.JourneyStops()
 end
 
 ---@class SPFPublicAPI
-local API = { version = 1 }
+local API = { version = 1, minor = 1 }
 
 local function Differs(a, b)
 	for key, value in pairs(a) do
@@ -396,6 +496,24 @@ function API.Ended(owner)
 	local entry = Owner(owner) and ended[owner]
 	if entry then
 		return entry.reason, entry.at
+	end
+end
+
+function API.Subscribe(callback)
+	if type(callback) ~= "function" then
+		error("ShortestPathForever.API.Subscribe: callback must be a function", 2)
+	end
+	---@type SPFSubscription
+	local subscription = { callback = callback, active = true, after = pending }
+	subscriptions[#subscriptions + 1] = subscription
+	return function()
+		subscription.active = false
+		for index, other in ipairs(subscriptions) do
+			if other == subscription then
+				table.remove(subscriptions, index)
+				return
+			end
+		end
 	end
 end
 

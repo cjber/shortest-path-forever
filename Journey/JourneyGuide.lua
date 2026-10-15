@@ -89,6 +89,9 @@ local function StopGuide()
 	ns.PointGuideArrow(nil)
 	if previous then
 		ns.charDB.guideWaypoint = nil
+		if ns.GuideChanged then
+			ns.GuideChanged()
+		end
 	end
 	if
 		not previous
@@ -294,6 +297,9 @@ function Guide.Start()
 		previousTrackedWaypoint = saved ~= nil and C_SuperTrack.IsSuperTrackingUserWaypoint(),
 	}
 	RememberTracking(guide)
+	if ns.GuideChanged then
+		ns.GuideChanged()
+	end
 end
 
 -- A quest the player tracked before the journey is gone; never restore its tracking.
