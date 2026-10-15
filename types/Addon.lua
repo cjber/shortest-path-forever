@@ -139,6 +139,7 @@
 ---@field alertSound? boolean
 ---@field journey? boolean
 ---@field compassTime? boolean -- the whole journey's time left under the compass distance (Compass.lua)
+---@field arrivalSound? boolean -- the map ping when a journey the player planned reaches its goal (Alert.lua)
 ---@field resumeJourney? boolean -- start the player's own journey again after a reload or relog (Resume.lua)
 ---@field restedxp? boolean -- follow RestedXP guide targets
 ---@field tomtom? boolean -- answer third-party guides' TomTom waypoints with a journey while TomTom is absent

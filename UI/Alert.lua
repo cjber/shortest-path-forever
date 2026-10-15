@@ -70,6 +70,31 @@ local function Check(dockID, yards)
 	end
 end
 
+-- Arriving: the map's own ping (sound/interface/mapping.ogg) when a journey you planned yourself reaches its goal.
+-- Not when it is cleared or replaced. A guide's journeys (Adventure Guide, RestedXP, a guide's TomTom waypoints) are
+-- left quiet: they hold at each stop and move on, and the guide gives its own cues.
+local ARRIVAL_SOUND = 567416
+-- Nearby services starts its journeys through the API under this addon's own name: those are the player's too.
+local OWN = "Shortest Path Forever"
+-- Who owned the journey under way, read when it started: API.lua has forgotten the owner by the time it ends.
+local owner
+
+---@param point SPFPoint?
+---@param reason? "arrived"|"cleared"
+local function Arrived(point, reason)
+	if point then
+		owner = ns.JourneyOwner()
+		return
+	end
+	local ended = owner
+	owner = nil
+	if reason == "arrived" and ns.db.arrivalSound and (ended == nil or ended == OWN) then
+		PlaySoundFile(ARRIVAL_SOUND, "Master")
+	end
+end
+
 ns.Init(function()
 	ns.OnTravelTick(Check)
+	-- After every file has loaded, so API.lua's ns.JourneyChanged exists to hook.
+	hooksecurefunc(ns, "JourneyChanged", Arrived) -- taint-ok: ns is this addon's own namespace table.
 end)
