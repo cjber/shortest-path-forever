@@ -121,6 +121,17 @@ while frame do
 	fn()
 end
 assert(not called and done == job and job.frames > 1)
+assert(job.reason == nil, "a found batch keeps no reason")
+-- A finished batch keeps its answer on the job, for a caller whose queued callback a pause dropped.
+local nodata = Path.FindMany(999, { x = 0, y = 0 }, { { x = 1, y = 1 } }, function() end)
+Path.Pause(nodata)
+Path.Resume(nodata)
+while frame do
+	local fn = frame
+	frame = nil
+	fn()
+end
+assert(nodata.done and nodata.reason == "nodata" and nodata.costs[1] == false, "the job says why it found nothing")
 -- An invalid job reports one terminal error and leaves a geometry job behind it runnable.
 local previousHandler, reported, failures = rawget(_G, "geterrorhandler"), nil, 0
 rawset(_G, "geterrorhandler", function()

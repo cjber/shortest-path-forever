@@ -13,6 +13,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 ## [Unreleased]
 
 - **The Hearthstone works on a new install.** The bind point used to be learned only when you bound at an inn with the addon running. Casting Hearthstone or Astral Recall now records where it sets you down, so the next journey can use it without a rebind.
+- **A journey started again to the same place no longer stalls.** If a guide such as Adventure Guide resent its route, or you clicked the same spot again, while the first walking search was still running, that search stayed paused or lost its answer. The journey stuck on "Finding the fastest way" and never reached its stop. The search now carries on, or uses the answer it already found.
 - **Keep journeys after a reload.** Turn on *Keep journeys after a reload* in Guidance and a journey you planned yourself (a map click, `/way`, a quest or Nearby services) starts again after a `/reload`, or when you log back in within 30 minutes. Guides and other addons start their own again, and one that does so first wins. It is off by default.
 - **For addon authors: `Subscribe` to journey changes.** `ShortestPathForever.API.Subscribe(callback)` calls back once per burst of changes, on the next frame, when a journey starts, heads somewhere new, ends, or an addon's route moves on to its next stop, so callers no longer poll `Ended`. A failing callback cannot stop the others. The API stays version 1 and gains `minor = 1`; see `docs/api.md`.
 

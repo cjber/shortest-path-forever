@@ -341,6 +341,7 @@ ShortestPathForeverPathData = nil
 ---@field cancelled? boolean
 ---@field paused? boolean
 ---@field done? boolean
+---@field reason? string -- why a finished job found nothing, kept for a caller that missed its callback
 ---@field frames number
 ---@field cpu number
 ---@field expansions? number
