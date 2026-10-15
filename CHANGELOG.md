@@ -12,6 +12,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Less work while you stand still.** The journey's line on the minimap stops redrawing every frame once nothing has changed for a second, and picks up again as you move, turn, zoom or ride. The direction arrow already rests the same way.
 - **The goal stays on the minimap's edge.** When the place you're heading for is off the minimap, its mark now waits on the rim in its direction, a little faded, instead of disappearing. Boat, zeppelin and flight marks are unchanged.
 - **The arrow eases round and moves.** The direction arrow swings smoothly to each new bearing, as the compass does, instead of stepping, and rests when you stand still. *Move the arrow* and *Arrow scale* in Interface place and size it, and the cast prompt that stands in its place.
 - **Place the compass and the arrow to the pixel.** Shift-drag either one while moving it to move it a quarter as far as the mouse.
