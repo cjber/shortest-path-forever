@@ -8,7 +8,7 @@ Alt-click the world map to place a destination directly over a Questie icon. Shi
 
 In **Map marks**, scale transport, flight master and minimap icons separately from 25% to 200%. Right-click a flight master icon to mark its path as known or unknown; opening a flight master's map also syncs paths reported by the client.
 
-In **Interface**, turn **Show journey in tracker** and **Show direction arrow** off independently, leaving the map route visible. Choose yards or metres, resize the tracker and compass, or enable the optional minimap settings button. Turn off **Attach to quest tracker** in Guidance to drag the Forever column by its heading.
+In **Interface**, turn **Show journey in tracker** and **Show direction arrow** off independently, leaving the map route visible. Choose yards or metres, resize the tracker and compass, give the compass a background, or enable the optional minimap settings button. Turn off **Attach to quest tracker** in Guidance to drag the Forever column by its heading.
 
 Click the current journey step and choose **Complete this step** to advance it. Skipping a Hearthstone leaves it out of plans for that journey. Other steps may return if your actual position still requires them.
 
