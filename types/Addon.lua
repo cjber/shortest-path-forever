@@ -139,6 +139,7 @@
 ---@field alertSound? boolean
 ---@field journey? boolean
 ---@field arrivalSound? boolean -- the map ping when a journey the player planned reaches its goal (Alert.lua)
+---@field resumeJourney? boolean -- start the player's own journey again after a reload or relog (Resume.lua)
 ---@field restedxp? boolean -- follow RestedXP guide targets
 ---@field tomtom? boolean -- answer third-party guides' TomTom waypoints with a journey while TomTom is absent
 ---@field tomtomFollow? boolean -- with TomTom installed, a journey follows the waypoint its arrow points to
@@ -173,7 +174,18 @@
 ---@field taxiVersion number
 ---@field taxiScanned? boolean
 ---@field guideWaypoint? {uiMapID: number, x: number, y: number}
+---@field journey? SPFKeptJourney -- the player's own journey, kept across a reload (Resume.lua)
 ---@field bind? SPFBindPoint
+-- A journey's goal as Resume.lua keeps it, with the GetServerTime() it was planned.
+---@class SPFKeptJourney
+---@field map number
+---@field x number
+---@field y number
+---@field z? number
+---@field label? string
+---@field questID? number
+---@field pinBadge? boolean
+---@field at number
 -- Where the character stood when it last bound at an inn, with GetBindLocation's name then.
 ---@class SPFBindPoint : SPFPoint
 ---@field name string

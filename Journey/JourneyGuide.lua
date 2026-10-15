@@ -61,7 +61,8 @@ local function ClearOrphanWaypoint()
 	if guide or not saved then
 		return
 	end
-	-- Journeys do not survive reloads, but the client saves user waypoints independently of this addon.
+	-- The guide does not survive a reload (Resume.lua may start the journey again, with a new guide), but the client
+	-- saves user waypoints independently of this addon.
 	ns.charDB.guideWaypoint = nil
 	local point = UiMapPoint.CreateFromCoordinates(saved.uiMapID, saved.x, saved.y)
 	if SameWaypoint(C_Map.GetUserWaypoint(), point) then

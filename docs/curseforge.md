@@ -34,6 +34,7 @@ Hover a dock to see its services and destinations.
 - In **Guidance**, turn off **Attach to quest tracker** to drag the shared column. **Resume guide** returns to RestedXP; **Minimum Hearthstone saving** reserves it for larger savings.
 - `/way [zone] x y [title]` plans a journey there while TomTom is not installed; `/path way` always works. With TomTom installed, **Follow TomTom's arrow** in Guidance follows its waypoints.
 - `/spfnear` opens nearby services. `/path perf` reports performance; `/path debug` enables a saved ride trace.
+- For a bug report, type `/path report` and paste what it shows.
 
 ## With my other Forever addons
 

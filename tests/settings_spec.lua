@@ -160,6 +160,7 @@ local ns = {
 		compassBackground = 0,
 		tomtomFollow = false,
 		arrivalSound = false,
+		resumeJourney = false,
 	}, {
 		__index = function()
 			return true
@@ -207,6 +208,7 @@ local groups = {
 	Guidance = {
 		"trackerAttached",
 		"journey",
+		"resumeJourney",
 		"tomtom",
 		"tomtomFollow",
 		"restedxp",
@@ -233,7 +235,7 @@ local groups = {
 local order = { "Map marks", "Transport", "Guidance", "Alerts", "Interface" }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 35, #rows)
+assert(#rows == 36, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -292,6 +294,37 @@ assert(Row("tomtomFollow").tooltip:find("TomTom", 1, true), "the row names the a
 Row("tomtomFollow").setting.onChanged()
 assert(tomtomFollowRefreshed == 1, "the follower follows its setting")
 assert(Row("arrivalSound").setting.default == false, "the arrival sound is off by default")
+-- Keeping your own journey across a reload is opt-in; turning it off forgets the one kept.
+assert(Row("resumeJourney").setting.default == false, "keeping journeys after a reload is off by default")
+local keepChanged = 0
+ns.KeepJourneyChanged = function()
+	keepChanged = keepChanged + 1
+end
+Row("resumeJourney").setting.onChanged()
+assert(keepChanged == 1, "the kept journey follows its setting")
+-- /path report shows the report, its lines run through SafeCall; lines that fail still show the rest.
+local shownReport
+ns.SafeCall = function(_, fn, ...)
+	return pcall(fn, ...)
+end
+ns.Report = {
+	Text = function(lines)
+		return table.concat(lines, "\n")
+	end,
+	Show = function(text)
+		shownReport = text
+	end,
+}
+ns.ReportLines = function()
+	return { "Journey: none" }
+end
+env.SlashCmdList.SHORTESTPATHFOREVER("report")
+assert(shownReport == "Journey: none", "/path report shows the report")
+ns.ReportLines = function()
+	error("broke", 0)
+end
+env.SlashCmdList.SHORTESTPATHFOREVER("report")
+assert(shownReport == "Report lines failed: broke", "failing lines are said in their place")
 -- /path way takes TomTom's /way line, whether or not /way itself is free.
 env.SlashCmdList.SHORTESTPATHFOREVER("way Elwynn Forest 42.1 65.3 Goldshire")
 assert(ways[1] == "Elwynn Forest 42.1 65.3 Goldshire", "/path way hands on the rest of the line")

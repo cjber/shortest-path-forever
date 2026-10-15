@@ -227,6 +227,14 @@ ns.Init(function()
 		end
 	)
 	Checkbox(
+		"resumeJourney",
+		L["Keep journeys after a reload"],
+		L["Your own journey starts again after a /reload, or logging back in within 30 minutes. Guides start theirs."],
+		function()
+			ns.KeepJourneyChanged()
+		end
+	)
+	Checkbox(
 		"tomtom",
 		L["Let guides set TomTom waypoints"],
 		L["While TomTom is not installed, a guide that sets a TomTom waypoint starts a journey here instead."],
@@ -467,6 +475,11 @@ ns.Init(function()
 			return
 		elseif message == "perf" then
 			Perf()
+			return
+		elseif message == "report" then
+			-- The lines can fail in the very state being reported: the header and caught errors still show.
+			local ok, lines = ns.SafeCall("report lines", ns.ReportLines)
+			ns.Report.Show(ns.Report.Text(ok and lines or { "Report lines failed: " .. tostring(lines) }))
 			return
 		elseif message == "debug" then
 			ns.db.debug = not ns.db.debug
