@@ -32,12 +32,6 @@ indent_size = 2
 # A Markdown line break is two trailing spaces.
 trim_trailing_whitespace = false
 
-[*.{png,gif,tga,blp,ttf}]
-charset = unset
-end_of_line = unset
-insert_final_newline = unset
-trim_trailing_whitespace = unset
-
 # Lua and YAML files without the extension.
 [.luacheckrc]
 indent_style = tab
@@ -46,3 +40,9 @@ indent_size = 4
 [.pkgmeta]
 indent_style = space
 indent_size = 2
+
+[*.{png,gif,tga,blp,ttf}]
+charset = unset
+end_of_line = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset
