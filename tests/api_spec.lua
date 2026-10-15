@@ -489,6 +489,147 @@ driver.update(0.1)
 equal(API.CurrentStop("AGF"), nil, "cancel discards pending advancement")
 equal(ns.HasJourney(), false, "pending advancement stays cancelled")
 
+-- Subscribe: one call per burst of guidance changes, on the next frame, each subscriber isolated from the others.
+do
+	equal(API.minor, 1, "Subscribe raises minor, not version")
+	equal(pcall(API.Subscribe, "callback"), false, "a callback must be a function")
+	local timers, route =
+		{}, {
+			{ map = 1, x = 0.502, y = 0.5, title = "First" },
+			{ map = 1, x = 0.504, y = 0.5, title = "Second" },
+			{ map = 1, x = 0.506, y = 0.5, title = "Third" },
+		}
+	env.C_Timer = {
+		After = function(delay, fn)
+			equal(delay, 0, "the next frame")
+			timers[#timers + 1] = fn
+		end,
+	}
+	local function frameEnd()
+		local due = timers
+		timers = {}
+		for _, fn in ipairs(due) do
+			fn()
+		end
+	end
+	ns.ClearJourney()
+	frameEnd()
+	equal(#timers, 0, "nobody subscribed: nothing scheduled")
+	driver.move({ map = 1, x = 0, y = 0 })
+	equal(API.NavigateRoute("AGF", route), true, "a route before any subscriber")
+	ns.ClearJourney()
+	equal(#timers, 0, "changes before a subscriber are not queued")
+
+	local heard, errors = {}, {}
+	local handler = env.geterrorhandler
+	env.geterrorhandler = function()
+		return function(message)
+			errors[#errors + 1] = message
+		end
+	end
+	local function listen(name)
+		heard[name] = {}
+		return function(changes)
+			local list = heard[name]
+			list[#list + 1] = changes
+		end
+	end
+	local unsubscribeFirst = API.Subscribe(listen("first"))
+	local unsubscribeBroken = API.Subscribe(function()
+		error("broken subscriber")
+	end)
+	local unsubscribeLast = API.Subscribe(listen("last"))
+	local function only(changes, label, ...)
+		local want = {}
+		for _, kind in ipairs({ ... }) do
+			want[kind] = true
+		end
+		for _, kind in ipairs({ "started", "changed", "ended", "stop", "active" }) do
+			equal(changes[kind], want[kind], label .. ": " .. kind)
+		end
+	end
+
+	equal(API.NavigateRoute("AGF", route), true, "start a route")
+	equal(#heard.first, 0, "not called during the change")
+	equal(#timers, 1, "one frame for the whole burst")
+	frameEnd()
+	equal(#heard.first, 1, "one call for the burst")
+	only(heard.first[1], "a route starts", "started", "stop", "active")
+	equal(#errors, 1, "the broken callback reaches the error handler")
+	equal(#heard.last, 1, "and the subscriber after it is still called")
+	equal(heard.first[1] ~= heard.last[1], true, "each subscriber gets its own table")
+	heard.first[1].started = false
+	equal(heard.last[1].started, true, "a subscriber's edit reaches no other")
+
+	-- Sending the same route again changes nothing a caller reads, so nobody is called.
+	driver.update(0.1)
+	equal(API.NavigateRoute("AGF", route), true, "the same route again")
+	frameEnd()
+	equal(#heard.last, 1, "the same destination is no change")
+
+	driver.update(0.1)
+	driver.move({ map = 1, x = 0, y = -100 })
+	driver.update(0.1)
+	equal(API.CurrentStop("AGF"), 2, "arrival moves on")
+	frameEnd()
+	only(heard.last[2], "the next stop", "changed", "stop")
+
+	-- The player turning guidance off and on again.
+	ns.ToggleJourneyGuide()
+	frameEnd()
+	only(heard.last[3], "guidance off", "active")
+	equal(API.Active(), false, "Active agrees")
+	ns.ToggleJourneyGuide()
+	frameEnd()
+	only(heard.last[4], "guidance on", "active")
+
+	equal(#errors, 4, "the broken callback is called each burst")
+	unsubscribeBroken()
+	unsubscribeBroken()
+	equal(API.Navigate("OtherAddon", 1, 0.7, 0.5), true, "another addon replaces it")
+	frameEnd()
+	equal(#errors, 4, "an unsubscribed callback is never called again, and unsubscribing twice is safe")
+	only(heard.last[5], "a replacement", "changed", "stop")
+	equal(API.Ended("AGF"), "replaced", "Ended agrees when the callback runs")
+
+	ns.ClearJourney()
+	frameEnd()
+	only(heard.last[6], "the end", "ended", "stop", "active")
+	ns.ClearJourney()
+	frameEnd()
+	equal(#heard.last, 6, "clearing nothing changes nothing")
+
+	-- A start and an end in one burst arrive together; the guide's on and off cancel out.
+	API.Navigate("AGF", 1, 0.6, 0.5)
+	ns.ClearJourney()
+	equal(#timers, 1, "two changes, one frame")
+	frameEnd()
+	only(heard.last[7], "start and end", "started", "ended", "stop")
+
+	-- A callback may unsubscribe itself, and one subscribing mid-burst hears only later bursts.
+	local unsubscribeSelf
+	local selfCalls = 0
+	API.Navigate("AGF", 1, 0.6, 0.5)
+	unsubscribeSelf = API.Subscribe(function()
+		selfCalls = selfCalls + 1
+		unsubscribeSelf()
+	end)
+	frameEnd()
+	equal(selfCalls, 0, "not told of the burst it subscribed in")
+	equal(#heard.first, 8, "the others are")
+	ns.ClearJourney()
+	frameEnd()
+	equal(selfCalls, 1, "told of the next one")
+	API.Navigate("AGF", 1, 0.6, 0.5)
+	frameEnd()
+	equal(selfCalls, 1, "and it unsubscribed itself")
+	unsubscribeFirst()
+	unsubscribeLast()
+	ns.ClearJourney()
+	equal(#timers, 0, "no subscribers left: nothing scheduled")
+	env.geterrorhandler, env.C_Timer = handler, nil
+end
+
 local planner, calls = ns.Planner.Plan, 0
 ns.Planner.Plan = function(options)
 	calls = calls + 1

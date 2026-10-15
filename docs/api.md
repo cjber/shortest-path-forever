@@ -1,6 +1,8 @@
 # Addon API
 
-Addons can use `ShortestPathForever.API` (`version = 1`) with uiMapIDs and normalized 0–1 coordinates.
+Addons can use `ShortestPathForever.API` (`version = 1`) with uiMapIDs and normalized 0–1 coordinates. Additions
+keep `version` at 1 and raise `minor` (1 from `Subscribe`, absent before); check that a function exists before
+calling it. The full types are in [`types/API.lua`](../types/API.lua).
 
 - `Estimate(fromMap, fromX, fromY, toMap, toX, toY)` returns travel seconds, or `nil` and why (`"combat"`,
   `"invalid"` or `"unreachable"`), without changing guidance. It omits endpoint terrain searches and caches
@@ -35,8 +37,17 @@ Addons can use `ShortestPathForever.API` (`version = 1`) with uiMapIDs and norma
 - `Ended(owner)` says why that owner's last journey ended: `"arrived"` after its last stop, `"cleared"` by the
   player (or by turning Journeys off), `"replaced"` by another addon's or the player's journey, or `"cancelled"`
   by the owner's own `Cancel`; its second return is the `GetTime()` it ended. It is `nil` while the journey runs,
-  before the owner's first, and after a reload. Poll it: Shortest Path fires no event of its own when a journey
-  ends.
+  before the owner's first, and after a reload. `Subscribe` says when to read it again.
+- `Subscribe(callback)` calls `callback(changes)` on the frame after guidance changes, at most once per burst of
+  changes, whoever made them. `changes` is a new table each call with any of these set to `true`: `started` (a
+  journey began where none was under way), `changed` (the journey under way now heads somewhere else, replaced or
+  on to its next stop; sending the same destination again is no change), `ended` (it ended with nothing after it),
+  `stop` (what `CurrentStop` answers changed: an addon's route started, moved on or ended) and `active` (what
+  `Active` answers changed, including the player turning guidance off or a corpse run guiding after a journey
+  ends). Several can be set together, so read `CurrentStop`, `Ended` and `Active` again rather than replaying
+  them. A callback is not told about a burst already under way when it subscribed. It returns a function that
+  unsubscribes, safe to call twice. An error in one callback goes to the game's error handler without stopping
+  the others. A non-function callback is an error.
 
 Use your addon's name as `owner`; starting another journey replaces ownership.
 
