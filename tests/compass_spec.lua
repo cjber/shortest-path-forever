@@ -489,3 +489,53 @@ assert(not strip.Backdrop.hidden and strip.Backdrop.color[4] == 0.4, "the backgr
 ns.SetCompassBackground(0)
 assert(strip.Backdrop.hidden, "0% removes the background")
 print("compass: optional background: ok")
+
+-- Time left: off by default; on, the time left exactly as the tracker's header gives it, beside the distance, read
+-- once per second of GetTime or when the journey changes.
+function methods:IsShown()
+	return not self.hidden
+end
+local clock, reads, left = 100.2, 0, "12:34"
+env.GetTime = function()
+	return clock
+end
+ns.JourneyLeft = function()
+	reads = reads + 1
+	return left
+end
+local function tick()
+	strip.scripts.OnUpdate(strip, 0)
+end
+ns.RefreshCompass()
+assert(strip.Time.hidden and reads == 0, "no time line, and nothing read, by default")
+ns.db.compassTime = true
+ns.RefreshCompass()
+assert(not strip.Time.hidden and strip.Time.text == "12:34", "the header's time left beside the distance")
+assert(strip.Time.font == "GameFontNormalSmall", "in the map's label gold")
+assert(strip.Time.anchorPoint == "LEFT" and strip.Time.owner == strip.Distance, "beside the distance, inside the band")
+local readBefore = reads
+left = "12:33"
+clock = 100.9
+tick()
+assert(strip.Time.text == "12:34" and reads == readBefore, "not read again within the same second")
+clock = 101.05
+tick()
+assert(strip.Time.text == "12:33", "read on the header's next second")
+left = "0:45"
+ns.RefreshCompass()
+assert(strip.Time.text == "0:45", "a changed journey is read at once")
+left = nil
+clock = 102.1
+tick()
+assert(strip.Time.hidden, "no time while the plan is worked out")
+left = "1:00"
+guided = false
+ns.RefreshCompass()
+assert(strip.Time.hidden, "hidden with the compass's guidance")
+guided = true
+ns.RefreshCompass()
+assert(strip.Time.text == "1:00", "and back at once, with no stale time")
+ns.db.compassTime = false
+ns.RefreshCompass()
+assert(strip.Time.hidden, "turned off")
+print("compass: optional time left: ok")

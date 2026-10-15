@@ -360,6 +360,12 @@ ns.Init(function()
 		L["While Guide is on: your next turns, the next stop and your destination across the top of the screen."],
 		ns.RefreshCompass
 	)
+	Checkbox(
+		"compassTime",
+		L["Show the time left under the compass"],
+		L["The journey's time left, as the tracker shows it, beside the distance to your next turn."],
+		ns.RefreshCompass
+	)
 	Settings.RegisterInitializer(
 		page,
 		Settings.CreateCheckboxInitializer(
