@@ -73,6 +73,8 @@ pump = function()
 				geterrorhandler()(points)
 				points, cost = nil, "error"
 			end
+			-- A pause drops the queued answer; a batch's costs are already on the job, and this keeps why.
+			job.reason = type(cost) == "string" and cost or nil
 			if not job.cancelled then
 				notify(job, job.callback, points, cost)
 			end
