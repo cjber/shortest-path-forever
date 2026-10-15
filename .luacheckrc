@@ -175,3 +175,12 @@ read_globals[#read_globals + 1] = "C_EncodingUtil"
 read_globals[#read_globals + 1] = "RXP"
 
 read_globals[#read_globals + 1] = "AdventureGuideForever"
+-- SafeCall.lua and Report.lua (the report window shared with the other Forever addons).
+read_globals[#read_globals + 1] = "debugstack"
+read_globals[#read_globals + 1] = "strtrim"
+read_globals[#read_globals + 1] = "GetBuildInfo"
+read_globals[#read_globals + 1] = "GetLocale"
+read_globals[#read_globals + 1] = "UnitClass"
+read_globals[#read_globals + 1] = "UnitRace"
+read_globals[#read_globals + 1] = "UnitLevel"
+read_globals[#read_globals + 1] = "UISpecialFrames"

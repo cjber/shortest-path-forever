@@ -471,6 +471,11 @@ ns.Init(function()
 		elseif message == "perf" then
 			Perf()
 			return
+		elseif message == "report" then
+			-- The lines can fail in the very state being reported: the header and caught errors still show.
+			local ok, lines = ns.SafeCall("report lines", ns.ReportLines)
+			ns.Report.Show(ns.Report.Text(ok and lines or { "Report lines failed: " .. tostring(lines) }))
+			return
 		elseif message == "debug" then
 			ns.db.debug = not ns.db.debug
 			ns.db.trace = ns.db.debug and {} or nil

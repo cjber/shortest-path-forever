@@ -64,9 +64,10 @@ function ns.Print(message)
 	print(NORMAL_FONT_COLOR:WrapTextInColorCode("Shortest Path Forever:") .. " " .. message)
 end
 
--- Each module starts on its own, so one that fails (reported as usual) does not stop the rest.
+-- Each module starts on its own, so one that fails (reported as usual, and kept for /path report) does not stop
+-- the rest.
 local function Start(fn)
-	xpcall(fn, geterrorhandler())
+	ns.SafeCall("module start", fn)
 end
 
 local pending, ready = {}, false
