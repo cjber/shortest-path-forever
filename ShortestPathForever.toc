@@ -63,6 +63,7 @@ UI\Alert.lua
 UI\Settings.lua
 UI\WhatsNew.lua
 Core\API.lua
+Journey\Resume.lua
 Journey\Itinerary.lua
 Core\TomTom.lua
 Core\Way.lua

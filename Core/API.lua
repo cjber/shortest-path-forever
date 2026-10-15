@@ -228,6 +228,12 @@ function ns.JourneyChanged(point, reason)
 	ns.ItineraryChanged()
 end
 
+-- Which addon owns the journey under way, if one does (Resume.lua keeps only the player's own).
+---@return string?
+function ns.JourneyOwner()
+	return route and route.owner
+end
+
 ---@param point SPFPoint
 ---@return SPFPoint?
 function ns.NextJourneyStop(point)
