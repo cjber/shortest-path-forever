@@ -55,7 +55,7 @@ stop keeps the plain pin.
 
 While TomTom is not installed and *Let guides set TomTom waypoints* is on, Shortest Path provides the global
 `TomTom` table guides know, so Questie, Zygor and others route here instead. The global is never defined when
-TomTom is installed or loads later.
+TomTom is enabled or loads later; a TomTom switched off in the AddOns list leaves the shim in place.
 
 - `TomTom:AddWaypoint(map, x, y, opts)` starts a journey to that uiMapID and 0-1 point and returns the waypoint
   table: `[1]` the map, `[2]` and `[3]` the point, `title` and `from` from `opts`. The other `opts` fields
@@ -71,5 +71,8 @@ Every waypoint belongs to one owner, so a newer one replaces the journey rather 
 setting off removes the global and clears any journey it started.
 
 With TomTom installed, *Follow TomTom's arrow* (off by default) works the other way round: Shortest Path hooks
-TomTom's own `SetCrazyArrow` and `RemoveWaypoint` with `hooksecurefunc` on TomTom's table and plans a journey, owned
-by `"TomTom"`, to each waypoint the arrow takes after login. Removing that waypoint cancels the journey.
+TomTom's own `SetCrazyArrow`, `RemoveWaypoint` and `ClearWaypoint` with `hooksecurefunc` on TomTom's table and plans a
+journey, owned by `"TomTom"`, to each waypoint the arrow takes. At login, once the world is up, it follows the
+waypoint TomTom's arrow was restored to, unless a journey is already under way. Removing that waypoint, including
+through TomTom's *Remove all waypoints* or `/way reset all`, cancels the journey. TomTom's corpse arrow is not
+followed: the corpse run does that job and keeps the journey you were on.

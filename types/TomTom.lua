@@ -20,6 +20,7 @@
 ---@field [integer] number -- map, then x and y in 0-1
 ---@field title? string
 ---@field from? string
+---@field corpse? boolean -- TomTom's own corpse waypoint (TomTom_Corpse.lua)
 
 ---@class TomTom
 ---@field waypoints table<integer, table<string, TomTomWaypoint>> -- by map, then by key; this shim keeps one at a time
@@ -28,6 +29,8 @@
 ---@field AddZWaypoint fun(self: TomTom, continent: number?, zone: number, x: number, y: number, desc?: string, persistent?: boolean, minimap?: boolean, world?: boolean, callbacks?: table|false, silent?: boolean, crazy?: boolean): TomTomWaypoint? -- 0-100 coordinates
 ---@field RemoveWaypoint fun(self: TomTom, waypoint: TomTomWaypoint): boolean -- true when it cleared this shim's own waypoint
 ---@field SetCrazyArrow? fun(self: TomTom, waypoint: TomTomWaypoint, arrival?: number, title?: string) -- TomTom's own: points its arrow at a waypoint
+---@field ClearWaypoint? fun(self: TomTom, waypoint: TomTomWaypoint) -- TomTom's own: takes a waypoint off the maps; every removal goes through it
+---@field IsValidWaypoint? fun(self: TomTom, waypoint: TomTomWaypoint): boolean -- TomTom's own: whether the waypoint is still set
 
 ---@type TomTom?
 TomTom = nil

@@ -190,16 +190,24 @@ function shim.RemoveWaypoint(_, waypoint)
 	return true
 end
 
--- TomTom owns this global; another addon's TomTom, or one that loads later, is left alone.
+-- TomTom owns this global; another addon's TomTom, or one that loads later, is left alone. A TomTom switched off in
+-- the AddOns list never loads, so the shim answers in its place.
 ---@return boolean
 local function Installed()
 	if TomTom ~= nil and TomTom ~= shim then
 		return true
 	end
-	if C_AddOns and C_AddOns.DoesAddOnExist and C_AddOns.DoesAddOnExist("TomTom") then
+	if C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded("TomTom") then
 		return true
 	end
-	return C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded("TomTom") or false
+	if not (C_AddOns and C_AddOns.DoesAddOnExist and C_AddOns.DoesAddOnExist("TomTom")) then
+		return false
+	end
+	if C_AddOns.GetAddOnEnableState then
+		local state = C_AddOns.GetAddOnEnableState("TomTom", UnitName("player"))
+		return state == nil or state > 0
+	end
+	return true
 end
 
 local function StandDown()
@@ -230,9 +238,11 @@ function ns.RefreshTomTom()
 end
 
 -- With TomTom installed, a journey can follow the waypoint its arrow points to, when the player opts in. TomTom
--- calls its own SetCrazyArrow whenever the arrow takes a waypoint (its /way, a guide's waypoint, or one the player
--- picks), and RemoveWaypoint when one is cleared. Both are hooked on TomTom's own table, never a Blizzard object.
--- The shim above has stood down by then, so the journey has the same owner.
+-- calls its own SetCrazyArrow whenever the arrow takes a waypoint (its /way, a guide's waypoint, one the player
+-- picks, or the closest one left after another is removed), and ClearWaypoint whenever one goes: RemoveWaypoint
+-- calls it, and so do "Remove all waypoints", /way reset all and a profile change, which never call RemoveWaypoint.
+-- All are hooked on TomTom's own table, never a Blizzard object. The shim above has stood down by then, so the
+-- journey has the same owner.
 ---@type TomTom?
 local hooked
 -- The waypoint the journey follows, and one that waits for combat to end.
@@ -240,14 +250,24 @@ local hooked
 local following
 ---@type TomTomWaypoint?
 local waiting
--- TomTom restores saved waypoints as it loads; following starts once the world is up, so a reload keeps the journey
--- you had.
+-- TomTom restores its saved waypoints at PLAYER_LOGIN, pointing the arrow at each in turn. Nothing is planned before
+-- the world is up; then the waypoint the arrow was left on is followed, as a journey does not outlive a reload.
 local live = false
+---@type TomTomWaypoint?
+local restored
 local watcher = CreateFrame("Frame")
 
 ---@param uid any
 local function Follow(uid)
-	if not (live and ns.db and ns.db.tomtomFollow and ns.db.journey) or type(uid) ~= "table" then
+	-- TomTom's corpse arrow is left to the corpse run (Journey/Corpse.lua), which keeps the journey you were on.
+	if type(uid) ~= "table" or uid.corpse then
+		return
+	end
+	if not live then
+		restored = uid
+		return
+	end
+	if not (ns.db and ns.db.tomtomFollow and ns.db.journey) then
 		return
 	end
 	if uid == following and API.CurrentStop(OWNER) then
@@ -269,6 +289,9 @@ end
 local function Unfollow(uid)
 	if uid == waiting then
 		waiting = nil
+	end
+	if uid == restored then
+		restored = nil
 	end
 	if uid ~= nil and uid == following then
 		following = nil
@@ -293,6 +316,11 @@ function ns.RefreshTomTomFollow()
 		hooksecurefunc(tomtom, "RemoveWaypoint", function(_, uid) -- taint-ok: TomTom owns this addon table.
 			Unfollow(uid)
 		end)
+		if type(tomtom.ClearWaypoint) == "function" then
+			hooksecurefunc(tomtom, "ClearWaypoint", function(_, uid) -- taint-ok: TomTom owns this addon table.
+				Unfollow(uid)
+			end)
+		end
 	end
 	if not (ns.db and ns.db.tomtomFollow) then
 		Unfollow(following)
@@ -322,6 +350,16 @@ ns.Init(function()
 			self:UnregisterEvent(event)
 			C_Timer.After(0, function()
 				live = true
+				local uid = restored
+				restored = nil
+				-- A journey already planned (a guide's, or the player's own) is not replaced by an old waypoint.
+				local tomtom = hooked
+				if uid and tomtom and not ns.HasJourney() then
+					local valid = tomtom.IsValidWaypoint
+					if type(valid) ~= "function" or valid(tomtom, uid) then
+						Follow(uid)
+					end
+				end
 			end)
 		elseif name == "TomTom" then
 			StandDown()

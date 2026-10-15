@@ -9,7 +9,7 @@ local function equal(actual, expected, label)
 end
 
 -- A world (1) holding a continent (10) whose zones are Elwynn Forest (1) and Westfall (2), plus a city that shares
--- its name with a micro map, and two zones with a common start.
+-- its name with a micro map, two zones with a common start, and a zone whose name starts with "The".
 local maps = {
 	[1] = { mapID = 1, name = "Elwynn Forest", mapType = 3, parentMapID = 10 },
 	[2] = { mapID = 2, name = "Westfall", mapType = 3, parentMapID = 10 },
@@ -17,6 +17,7 @@ local maps = {
 	[4] = { mapID = 4, name = "Stormwind City", mapType = 3, parentMapID = 10 },
 	[5] = { mapID = 5, name = "Duskwood", mapType = 3, parentMapID = 10 },
 	[6] = { mapID = 6, name = "Dun Morogh", mapType = 3, parentMapID = 10 },
+	[7] = { mapID = 7, name = "The Hinterlands", mapType = 3, parentMapID = 10 },
 	[10] = { mapID = 10, name = "Eastern Kingdoms", mapType = 2, parentMapID = 100 },
 	[100] = { mapID = 100, name = "Azeroth", mapType = 1, parentMapID = 0 },
 }
@@ -104,6 +105,16 @@ equal(childrenAsked, 1, "the zone list is built once")
 way = parse("Du 50 50")
 equal(way.map, nil, "a name two zones begin is refused")
 equal(way.err, "Du could be Dun Morogh, Duskwood.", "and both are named")
+-- As TomTom reads it (TomTom.lua:1480-1486), a name may be any part of the zone's: "hinterlands" is The Hinterlands.
+equal(parse("hinterlands 30 40").map, 7, "a name inside the zone's own")
+equal(parse("The Hinterlands 30 40").map, 7, "the zone's full name")
+equal(parse("west 30 40").map, 2, "a name a zone begins wins over one inside another's")
+way = parse("or 30 40")
+equal(way.map, nil, "a name inside several zones is refused")
+equal(way.err, "or could be Dun Morogh, Elwynn Forest, Stormwind City.", "and each is named")
+way = parse(".5 50.")
+equal(way.x, 0.005, "a leading point reads as TomTom's tonumber reads it")
+equal(way.y, 0.5, "a trailing point too")
 way = parse("Atlantis 50 50")
 equal(way.map, nil, "an unknown zone is refused")
 equal(way.err, "no zone called Atlantis.", "and said so")
