@@ -83,12 +83,14 @@ jobs:
           RELEASE_TAG: ${{ steps.target.outputs.tag }}
           RELEASE_COMMIT: ${{ steps.target.outputs.commit }}
         run: |
-          existing=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG" --jq .object.sha 2>/dev/null || true)
-          if [ -z "$existing" ]; then
+          # A missing tag answers 404 with its error body on stdout, so branch on the exit status, not the output.
+          if existing=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG" --jq .object.sha 2>/dev/null); then
+            if [ "$existing" != "$RELEASE_COMMIT" ]; then
+              echo "::error::$RELEASE_TAG already names $existing."
+              exit 1
+            fi
+          else
             gh api "repos/$GITHUB_REPOSITORY/git/refs" -f "ref=refs/tags/$RELEASE_TAG" -f "sha=$RELEASE_COMMIT" > /dev/null
-          elif [ "$existing" != "$RELEASE_COMMIT" ]; then
-            echo "::error::$RELEASE_TAG already names $existing."
-            exit 1
           fi
           # The packager reads the version from the tag on the checked-out commit.
           git tag "$RELEASE_TAG" "$RELEASE_COMMIT"
