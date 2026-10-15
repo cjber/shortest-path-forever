@@ -12,6 +12,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **More guides' waypoints work without TomTom.** The TomTom stand-in now answers the rest of the waypoint calls guides make: checking or clearing a waypoint, clearing them all, asking for the closest one and its distance, pointing the arrow at one, and adding one on the map you are on.
 - **See what the other faction's boats would save.** With *Other Faction's Routes* off, hovering the pin you're heading for adds one line when the other faction's boats or zeppelins would get you there at least two minutes sooner, such as "Through Horde transport: about 4 min faster". It says nothing about how safe that is: turn the routes on if you want to take them.
 - **A sound when you arrive.** Turn on *Play a sound when you reach the goal* in Alerts and the map's ping plays when a journey you planned yourself (a map click, `/way`, a quest or Nearby services) gets there, even with the game in the background. Clearing a journey stays quiet, and guides keep their own cues. It is off by default.
 - **The time left under the compass.** Turn on *Show the time left under the compass* in Interface and the journey's time left sits beside the distance to your next turn, as the tracker's header gives it. It is off by default.

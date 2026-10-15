@@ -77,6 +77,13 @@ TomTom is enabled or loads later; a TomTom switched off in the AddOns list leave
   indices have no client mapping on this build, so the zone is used when it names a uiMapID and the continent
   otherwise.
 - `TomTom:RemoveWaypoint(waypoint)` cancels the journey only when that waypoint is the one this shim set.
+  `TomTom:ClearWaypoint(waypoint)` does the same, and `TomTom:ClearAllWaypoints()` removes the shim's waypoint.
+- `TomTom:AddWaypointToCurrentZone(x, y, desc)` takes 0-100 coordinates on the map you are on.
+- `TomTom:IsValidWaypoint(waypoint)` and `TomTom:WaypointExists(map, x, y, desc)` say whether that waypoint is the
+  one set. `TomTom:GetClosestWaypoint()` and `TomTom:SetClosestWaypoint()` return it, as the only one there is.
+  `TomTom:GetDistanceToWaypoint(waypoint)` gives its yards from you, on your continent, or `nil`.
+- `TomTom:SetCrazyArrow(waypoint, arrival, title)` on a waypoint table that isn't the current one starts a journey
+  to it.
 
 Every waypoint belongs to one owner, so a newer one replaces the journey rather than queueing. Turning the
 setting off removes the global and clears any journey it started.

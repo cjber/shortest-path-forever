@@ -190,6 +190,93 @@ function shim.RemoveWaypoint(_, waypoint)
 	return true
 end
 
+-- The rest of TomTom's waypoint calls that guides make, answered for the one waypoint the shim keeps. Each is checked
+-- like the calls above, and a waypoint that is not the shim's own is never touched.
+
+---@param waypoint any
+---@return boolean
+function shim.IsValidWaypoint(_, waypoint)
+	return Same(waypoint, current)
+end
+
+-- Whether a waypoint at this map and point, with this title, is the one set.
+---@param map any
+---@param x any
+---@param y any
+---@param desc any
+---@return boolean
+function shim.WaypointExists(_, map, x, y, desc)
+	return current ~= nil and current[1] == map and current[2] == x and current[3] == y and current.title == desc
+end
+
+-- TomTom takes a waypoint off the maps through this, and so may a guide.
+---@param waypoint any
+---@return boolean
+function shim.ClearWaypoint(self, waypoint)
+	return shim.RemoveWaypoint(self, waypoint)
+end
+
+function shim.ClearAllWaypoints(self)
+	if current then
+		shim.RemoveWaypoint(self, current)
+	end
+end
+
+-- There is only one waypoint, so the closest is it; the journey already goes there.
+---@return TomTomWaypoint?
+function shim.GetClosestWaypoint()
+	return current
+end
+
+---@return TomTomWaypoint?
+function shim.SetClosestWaypoint()
+	return current
+end
+
+-- Pointing TomTom's arrow at a waypoint the shim set elsewhere starts that journey; its own is already followed.
+---@param waypoint any
+---@param title? string the third argument; the second, the arrival distance, Guide decides itself
+function shim.SetCrazyArrow(_, waypoint, _, title)
+	if type(waypoint) ~= "table" or Same(waypoint, current) then
+		return
+	end
+	local map, x, y = waypoint[1], waypoint[2], waypoint[3]
+	if Number(map) and Number(x) and Number(y) and Text(title) then
+		Start(map, x, y, title or (Text(waypoint.title) and waypoint.title or nil), nil)
+	end
+end
+
+-- Yards from where you stand to the waypoint, when it is the shim's and on your continent.
+---@param waypoint any
+---@return number?
+function shim.GetDistanceToWaypoint(_, waypoint)
+	if not Same(waypoint, current) then
+		return nil
+	end
+	local point = ns.WorldPoint(waypoint[1], waypoint[2], waypoint[3])
+	local x, y, _, map = ns.JourneyPosition()
+	if not (point and x and map == point.map) then
+		return nil
+	end
+	return math.sqrt((point.x - x) ^ 2 + (point.y - y) ^ 2)
+end
+
+-- A waypoint on the map you are on, with 0-100 coordinates.
+---@param x number
+---@param y number
+---@param desc? string
+---@return TomTomWaypoint?
+function shim.AddWaypointToCurrentZone(_, x, y, desc)
+	if not (Number(x) and Number(y) and Text(desc)) then
+		return nil
+	end
+	local map = C_Map.GetBestMapForUnit("player")
+	if not (map and Number(map) and map > 0) then
+		return nil
+	end
+	return Start(map, x / 100, y / 100, desc, nil)
+end
+
 -- TomTom owns this global; another addon's TomTom, or one that loads later, is left alone. A TomTom switched off in
 -- the AddOns list never loads, so the shim answers in its place.
 ---@return boolean
