@@ -452,17 +452,15 @@ function Strokes.Minimap(buffer, paths, view)
 	local markX, markY, edge
 	if goal and goal.map == map and not goal.corpse then
 		local gx, gy = Project(goal, x, y, radius, cosine, sine)
-		if math.abs(gx) <= 1 and math.abs(gy) <= 1 and (square or gx * gx + gy * gy <= 1) then
-			markX, markY = gx, gy
-			Circle((gx + 1) * width / 2, (gy - 1) * height / 2, view.goalRadius)
-		else
-			-- Off the minimap: the mark waits on its rim in the goal's direction, its ring inside the face. The dots
-			-- run to the rim on their own, so there is no gap to keep for it.
-			local rim = 1 - view.goalRadius / (math.min(width, height) / 2)
-			local reach = square and math.max(math.abs(gx), math.abs(gy)) or math.sqrt(gx * gx + gy * gy)
-			if rim > 0 and reach > 0 then
-				markX, markY, edge = gx * rim / reach, gy * rim / reach, true
-			end
+		-- The mark's whole ring stays inside the face: nearer the rim than that, it waits on the rim in the goal's
+		-- direction, and past the rim (off the minimap) it says so with `edge`. The dots leave a gap around it
+		-- wherever it sits.
+		local rim = 1 - view.goalRadius / (math.min(width, height) / 2)
+		local reach = square and math.max(math.abs(gx), math.abs(gy)) or math.sqrt(gx * gx + gy * gy)
+		if rim > 0 then
+			local pull = reach > rim and rim / reach or 1
+			markX, markY, edge = gx * pull, gy * pull, reach > 1 or nil
+			Circle((markX + 1) * width / 2, (markY - 1) * height / 2, view.goalRadius)
 		end
 	end
 	local inset = 1 - border / math.min(width, height)

@@ -41,6 +41,7 @@ local journeyStrokes = Strokes.New()
 ---@field Goal Texture
 ---@field strokeLayer SPFStrokeLayer
 ---@field elapsed number
+---@field goalEdge? boolean the goal's mark waits on the rim, off the minimap
 ---@field lastX? number
 ---@field lastY? number
 ---@field lastMap? number
@@ -517,8 +518,15 @@ local function DrawMinimap(self)
 	local gx, gy, edge = Strokes.Minimap(journeyStrokes, area and {} or paths, view)
 	if gx then
 		self.Goal:SetPoint("CENTER", self, "CENTER", gx * width / 2, gy * height / 2)
-		-- On the rim it only shows the way, a little faded, as the game's own tracked pin is at the minimap's edge.
+		-- Off the minimap it only shows the way, a little faded, as the game's own tracked pin is at the minimap's
+		-- edge, and always as the goal pin: a ring for a known mark would circle nothing there.
 		self.Goal:SetAlpha(edge and EDGE_ALPHA or 1)
+		if (edge or false) ~= (self.goalEdge or false) then
+			self.goalEdge = edge
+			local ringed = not edge and goal and goal.look ~= nil
+			local size = ringed and MINIMAP_RING or MINIMAP_GOAL
+			ns.Art.Fit(self.Goal, ringed and RING_ATLAS or GOAL_ATLAS, size, size)
+		end
 		self.Goal:Show()
 	end
 	Paint(self, journeyStrokes)
@@ -592,6 +600,7 @@ function ns.SetJourneyRoute(destination, route)
 		local ringed = destination and destination.look ~= nil
 		local size = ringed and MINIMAP_RING or MINIMAP_GOAL
 		ns.Art.Fit(minimap.Goal, ringed and RING_ATLAS or GOAL_ATLAS, size, size)
+		minimap.goalEdge = nil
 		if destination then
 			minimap.elapsed = 0
 			minimap:SetScript("OnUpdate", UpdateMinimap)
