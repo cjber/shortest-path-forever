@@ -1,0 +1,35 @@
+name: Translation
+description: Paste a translated Locales file and I'll add it.
+labels: [enhancement]
+body:
+  - type: dropdown
+    id: locale
+    attributes:
+      label: Locale
+      options:
+        - deDE
+        - esES
+        - esMX
+        - frFR
+        - itIT
+        - koKR
+        - ptBR
+        - ruRU
+        - zhCN
+        - zhTW
+    validations:
+      required: true
+  - type: textarea
+    id: file
+    attributes:
+      label: Locales file
+      description: >-
+        Your copy of `Locales/phrases.txt` with the right-hand sides translated. Lines you leave out stay in English.
+      render: lua
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Anything worth knowing, such as phrases you weren't sure about.

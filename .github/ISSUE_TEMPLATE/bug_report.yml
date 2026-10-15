@@ -1,0 +1,40 @@
+name: Bug report
+description: Something in the addon is broken or throws a Lua error.
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Addon and version
+      description: The version is shown in the in-game AddOns list or the addon's .toc file.
+      placeholder: Tweaks Forever 1.0.0
+    validations:
+      required: true
+  - type: input
+    id: build
+    attributes:
+      label: "WoW: Forever client build"
+      description: Run `/dump GetBuildInfo()` in chat and paste the result.
+    validations:
+      required: true
+  - type: textarea
+    id: addons
+    attributes:
+      label: Other addons
+      description: Other enabled addons. Does the bug still happen with only this addon enabled?
+  - type: textarea
+    id: error
+    attributes:
+      label: Lua error
+      description: The exact error text, including the stack, from BugSack or the in-game error frame.
+      render: text
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: What you did, what you expected, and what happened instead.
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
