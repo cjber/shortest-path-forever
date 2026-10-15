@@ -37,3 +37,12 @@ charset = unset
 end_of_line = unset
 insert_final_newline = unset
 trim_trailing_whitespace = unset
+
+# Lua and YAML files without the extension.
+[.luacheckrc]
+indent_style = tab
+indent_size = 4
+
+[.pkgmeta]
+indent_style = space
+indent_size = 2
