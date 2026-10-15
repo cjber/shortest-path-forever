@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Reject unguarded reads of values the client may keep secret, and tooltip hooks that touch a forbidden tooltip
 (forever_tools.readable). Read them through `ns.Readable`; start a tooltip hook with `if not ns.Usable(tooltip)`.
 """
