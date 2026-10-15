@@ -314,8 +314,8 @@ ns.Init(function()
 	Checkbox("alertSound", L["Play a sound with alerts"], L["Plays even with the game in the background."])
 	Checkbox(
 		"arrivalSound",
-		L["Play a sound on arrival"],
-		L["The map's ping when a journey reaches its last stop, even with the game in the background."]
+		L["Play a sound when you reach the goal"],
+		L["The map's ping when a journey you planned reaches its goal, even with the game in the background."]
 	)
 
 	-- Interface: what the addon puts on screen.

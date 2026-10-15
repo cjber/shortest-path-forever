@@ -28,7 +28,6 @@ assert(not ns.HasJourney() and #played == 0, "off: arrived in silence")
 
 -- On: the ping, on the Master channel, when the journey reaches its goal.
 ns.db.arrivalSound = true
-driver.update(11)
 driver.begin({ map = 1, x = 100, y = 0 }, { map = 1, x = 300, y = 0 })
 ns.ClearJourney()
 assert(#played == 0, "clearing a journey is no arrival")
@@ -39,22 +38,31 @@ driver.move({ map = 1, x = 500, y = 0 })
 driver.update(0.1)
 assert(#played == 1 and played[1].file == 567416 and played[1].channel == "Master", "the map's ping on arrival")
 
--- A guide's route: its stops pass in silence, its last stop pings.
-driver.update(11)
+-- A guide's route, or a guide's TomTom waypoint: quiet, at every stop and at the last; the guide has its own cues.
 driver.move({ map = 1, x = 0, y = 0 })
 assert(API.NavigateRoute("AGF", { { map = 1, x = 0.502, y = 0.5 }, { map = 1, x = 0.504, y = 0.5 } }))
 driver.update(0.1)
 driver.move({ map = 1, x = 0, y = -100 })
 driver.update(0.1)
-assert(API.CurrentStop("AGF") == 2 and #played == 1, "a guide's next stop is no arrival")
+assert(API.CurrentStop("AGF") == 2 and #played == 1, "a guide's next stop is quiet")
 driver.move({ map = 1, x = 0, y = -200 })
 driver.update(0.1)
-assert(API.CurrentStop("AGF") == nil and #played == 2, "its last stop is")
-
--- Never twice for one arrival: another within ten seconds stays quiet.
-driver.begin({ map = 1, x = 0, y = -200 }, { map = 1, x = 0, y = -260 })
-driver.move({ map = 1, x = 0, y = -260 })
+assert(API.CurrentStop("AGF") == nil and not ns.HasJourney() and #played == 1, "and so is its last")
+assert(API.Navigate("TomTom", 1, 0.506, 0.5))
 driver.update(0.1)
-assert(not ns.HasJourney() and #played == 2, "a second arrival straight after stays quiet")
+driver.move({ map = 1, x = 0, y = -300 })
+driver.update(0.1)
+assert(not ns.HasJourney() and #played == 1, "a guide's waypoint is quiet")
+
+-- Nearby services' journeys are the player's own: they ping, and a second arrival straight after pings again.
+assert(API.Navigate("Shortest Path Forever", 1, 0.508, 0.5, "Innkeeper", "innkeeper"))
+driver.update(0.1)
+driver.move({ map = 1, x = 0, y = -400 })
+driver.update(0.1)
+assert(not ns.HasJourney() and #played == 2, "a Nearby journey pings")
+driver.begin({ map = 1, x = 0, y = -400 }, { map = 1, x = 0, y = -460 })
+driver.move({ map = 1, x = 0, y = -460 })
+driver.update(0.1)
+assert(not ns.HasJourney() and #played == 3, "every arrival of your own pings")
 
 print("alert_spec: ok")

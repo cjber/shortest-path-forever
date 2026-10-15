@@ -138,7 +138,7 @@
 ---@field alerts? boolean
 ---@field alertSound? boolean
 ---@field journey? boolean
----@field arrivalSound? boolean -- the map ping when a journey reaches its last stop (Alert.lua)
+---@field arrivalSound? boolean -- the map ping when a journey the player planned reaches its goal (Alert.lua)
 ---@field restedxp? boolean -- follow RestedXP guide targets
 ---@field tomtom? boolean -- answer third-party guides' TomTom waypoints with a journey while TomTom is absent
 ---@field tomtomFollow? boolean -- with TomTom installed, a journey follows the waypoint its arrow points to
