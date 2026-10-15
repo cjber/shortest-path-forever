@@ -8,7 +8,8 @@ end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
 
-[*.lua]
+# .luacheckrc is Lua and .pkgmeta is YAML, neither with the extension.
+[{*.lua,.luacheckrc}]
 indent_style = tab
 indent_size = 4
 max_line_length = 120
@@ -22,7 +23,7 @@ max_line_length = 120
 indent_style = tab
 indent_size = 4
 
-[*.{yml,yaml,json}]
+[{*.yml,*.yaml,*.json,.pkgmeta}]
 indent_style = space
 indent_size = 2
 
@@ -31,15 +32,6 @@ indent_style = space
 indent_size = 2
 # A Markdown line break is two trailing spaces.
 trim_trailing_whitespace = false
-
-# Lua and YAML files without the extension.
-[.luacheckrc]
-indent_style = tab
-indent_size = 4
-
-[.pkgmeta]
-indent_style = space
-indent_size = 2
 
 [*.{png,gif,tga,blp,ttf}]
 charset = unset
