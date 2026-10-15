@@ -113,9 +113,17 @@ My other Forever addons send it their destinations when both are installed:
 
 Journey steps share one tracker column with the Adventure Guide, SkillUp and Legacy sections, above your quests.
 
+## Ways to help
+
+No code needed:
+
+- **A wrong route:** type `/path report` while the journey is on screen and paste it into a [Wrong route issue](https://github.com/cjber/shortest-path-forever/issues/new?template=wrong_route.yml).
+- **An error:** paste `/path report` into a [bug report](https://github.com/cjber/shortest-path-forever/issues/new?template=bug_report.yml).
+- **A translation:** translate [Locales/phrases.txt](Locales/phrases.txt) and paste it into a [translation issue](https://github.com/cjber/shortest-path-forever/issues/new?template=translation.yml).
+
 ## Development
 
-Run `tools/typecheck.sh` for LuaLS and static checks, and `luajit tests/<name>_spec.lua` for a focused check. CI runs the full suite. [Performance notes](tests/search_performance.md) and [type declarations](types/README.md) describe the checks.
+Run `tools/typecheck.sh` for LuaLS and static checks, and `luajit tests/<name>_spec.lua` for a focused check. CI runs the full suite. [tests/README.md](tests/README.md) describes the test layers and the journey driver; [performance notes](tests/search_performance.md) and [type declarations](types/README.md) describe the rest.
 
 For releases, follow [.agents/skills/release/SKILL.md](.agents/skills/release/SKILL.md). Signed tags publish the version's changelog to GitHub, CurseForge and Wago after main CI passes.
 
