@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **See what the other faction's boats would save.** With *Other Faction's Routes* off, hovering the pin you're heading for adds one line when the other faction's boats or zeppelins would get you there at least two minutes sooner, such as "Through Horde transport: about 4 min faster". It says nothing about how safe that is: turn the routes on if you want to take them.
+
 - **The Hearthstone works on a new install.** The bind point used to be learned only when you bound at an inn with the addon running. Casting Hearthstone or Astral Recall now records where it sets you down, so the next journey can use it without a rebind.
 - **For addon authors: `Subscribe` to journey changes.** `ShortestPathForever.API.Subscribe(callback)` calls back once per burst of changes, on the next frame, when a journey starts, heads somewhere new, ends, or an addon's route moves on to its next stop, so callers no longer poll `Ended`. A failing callback cannot stop the others. The API stays version 1 and gains `minor = 1`; see `docs/api.md`.
 
