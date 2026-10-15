@@ -69,7 +69,7 @@ return function()
 	function fake.finish(ended, found, detail)
 		ended.done = true
 		if ended.targets then
-			ended.costs, ended.valid = found, detail == nil
+			ended.costs, ended.valid, ended.reason = found, detail == nil, detail
 		end
 		if ended.callback then
 			ended.callback(found, detail, ended)

@@ -505,6 +505,33 @@ do
 	driver.update(0.1)
 	equal(API.CurrentStop("AGF"), 2, "and arrives")
 	API.Cancel("AGF")
+
+	-- Resent after a frame in which the walking searches finished but the pause dropped their queued answers.
+	local fake = driver.path
+	driver.move({ map = 1, x = 0, y = 0 })
+	fake.auto = false
+	local before = #fake.batches
+	equal(API.NavigateRoute("AGF", resend), true, "a route")
+	equal(#fake.batches, before + 2, "both endpoints searched")
+	-- The start's search measured its walks; the goal's found no walking map there, which is no walk at all.
+	local startJob, goalJob = fake.batches[before + 1], fake.batches[before + 2]
+	startJob.done, startJob.valid = true, true
+	for i, target in ipairs(startJob.targets) do
+		startJob.costs[i] = math.sqrt((target.x - startJob.from.x) ^ 2 + (target.y - startJob.from.y) ^ 2)
+	end
+	goalJob.done, goalJob.reason = true, "nodata"
+	for i = 1, #goalJob.targets do
+		goalJob.costs[i] = false
+	end
+	equal(API.NavigateRoute("AGF", resend), true, "resent with the answers unread")
+	fake.auto = true
+	driver.update(0.1)
+	equal(ns.JourneyStatus(), false, "the answers are read from the finished searches")
+	equal(#fake.batches, before + 2, "without searching again")
+	driver.move({ map = 1, x = 0, y = -100 })
+	driver.update(0.1)
+	equal(API.CurrentStop("AGF"), 2, "and the route arrives")
+	API.Cancel("AGF")
 end
 
 -- Subscribe: one call per burst of guidance changes, on the next frame, each subscriber isolated from the others.
