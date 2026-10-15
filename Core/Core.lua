@@ -19,6 +19,7 @@ local DEFAULTS = {
 	tracker = true,
 	alerts = true,
 	alertSound = true,
+	arrivalSound = false,
 	journey = true,
 	tomtom = true,
 	tomtomFollow = false,

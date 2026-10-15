@@ -154,14 +154,17 @@ local ns = {
 		ways[#ways + 1] = message
 	end,
 	db = {},
-	Defaults = setmetatable(
-		{ hearthMinimumSavings = 0, compassScale = 100, compassBackground = 0, tomtomFollow = false },
-		{
-			__index = function()
-				return true
-			end,
-		}
-	),
+	Defaults = setmetatable({
+		hearthMinimumSavings = 0,
+		compassScale = 100,
+		compassBackground = 0,
+		tomtomFollow = false,
+		arrivalSound = false,
+	}, {
+		__index = function()
+			return true
+		end,
+	}),
 	Init = function(fn)
 		fn()
 	end,
@@ -213,7 +216,7 @@ local groups = {
 		"taxiRoute",
 		"corpse",
 	},
-	Alerts = { "alerts", "alertSound" },
+	Alerts = { "alerts", "alertSound", "arrivalSound" },
 	Interface = {
 		"journeyTracker",
 		"arrow",
@@ -230,7 +233,7 @@ local groups = {
 local order = { "Map marks", "Transport", "Guidance", "Alerts", "Interface" }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 34, #rows)
+assert(#rows == 35, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -288,6 +291,7 @@ assert(Row("tomtomFollow").setting.default == false, "following TomTom's arrow i
 assert(Row("tomtomFollow").tooltip:find("TomTom", 1, true), "the row names the addon it follows")
 Row("tomtomFollow").setting.onChanged()
 assert(tomtomFollowRefreshed == 1, "the follower follows its setting")
+assert(Row("arrivalSound").setting.default == false, "the arrival sound is off by default")
 -- /path way takes TomTom's /way line, whether or not /way itself is free.
 env.SlashCmdList.SHORTESTPATHFOREVER("way Elwynn Forest 42.1 65.3 Goldshire")
 assert(ways[1] == "Elwynn Forest 42.1 65.3 Goldshire", "/path way hands on the rest of the line")

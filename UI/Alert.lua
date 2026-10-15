@@ -70,6 +70,24 @@ local function Check(dockID, yards)
 	end
 end
 
+-- Arriving: the map's own ping (sound/interface/mapping.ogg), once, when a journey reaches its last stop. Not when
+-- it is cleared, replaced or moves on to a guide's next stop, and never twice for one arrival.
+local ARRIVAL_SOUND = 567416
+local ARRIVAL_GAP = 10
+local arrivedAt = -math.huge
+
+---@param point SPFPoint?
+---@param reason? "arrived"|"cleared"
+local function Arrived(point, reason)
+	if point or reason ~= "arrived" or not ns.db.arrivalSound or GetTime() - arrivedAt < ARRIVAL_GAP then
+		return
+	end
+	arrivedAt = GetTime()
+	PlaySoundFile(ARRIVAL_SOUND, "Master")
+end
+
 ns.Init(function()
 	ns.OnTravelTick(Check)
+	-- After every file has loaded, so API.lua's ns.JourneyChanged exists to hook.
+	hooksecurefunc(ns, "JourneyChanged", Arrived) -- taint-ok: ns is this addon's own namespace table.
 end)
