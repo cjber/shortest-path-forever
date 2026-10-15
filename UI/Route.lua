@@ -39,6 +39,8 @@ local journeyStrokes = Strokes.New()
 ---@field Goal Texture
 ---@field strokeLayer SPFStrokeLayer
 ---@field elapsed number
+---@field idle number seconds the minimap has drawn nothing new
+---@field ticker? FunctionContainer the slow poll while the every-frame update rests
 ---@field lastX? number
 ---@field lastY? number
 ---@field lastMap? number
@@ -497,7 +499,7 @@ local function DrawMinimap(self)
 		and self.lastSquare == square
 		and self.revision == geometryRevision
 	then
-		return
+		return false
 	end
 	self.lastX, self.lastY, self.lastMap, self.lastRadius, self.lastFacing = x, y, map, radius, facing
 	self.lastWidth, self.lastHeight, self.lastScale, self.lastSquare = width, height, scale, square
@@ -518,20 +520,53 @@ local function DrawMinimap(self)
 		self.Goal:Show()
 	end
 	Paint(self, journeyStrokes)
+	return true
+end
+
+-- The minimap redraws ten times a second while you move or turn, ride, or its zoom changes. Once nothing has changed
+-- for a second it drops its every-frame script, and a quarter-second poll (a mouse turn sends no event) wakes it.
+local REDRAW_EVERY, POLL_EVERY, REST_AFTER = 0.1, 0.25, 1
+local UpdateMinimap
+
+---@param self SPFMinimapRoute
+local function WakeMinimap(self)
+	self.idle = 0
+	if not self:GetScript("OnUpdate") then
+		self.elapsed = 0
+		self:SetScript("OnUpdate", UpdateMinimap)
+	end
 end
 
 ---@param self SPFMinimapRoute
 ---@param elapsed number
-local function UpdateMinimap(self, elapsed)
+UpdateMinimap = function(self, elapsed)
 	if not (goal and (ns.db.journey or goal.corpse)) then
 		self.Goal:Hide()
 		self:Hide()
 		return
 	end
 	self.elapsed = self.elapsed + elapsed
-	if self.elapsed >= 0.1 then
-		self.elapsed = 0
-		DrawMinimap(self)
+	if self.elapsed < REDRAW_EVERY then
+		return
+	end
+	local step = self.elapsed
+	self.elapsed = 0
+	-- Aboard a boat, a lift or a flight the minimap moves with no event to say so.
+	local riding = ns.CurrentRide() or ns.IsObservingRide() or UnitOnTaxi("player")
+	if DrawMinimap(self) or riding then
+		self.idle = 0
+	else
+		self.idle = self.idle + step
+		if self.idle >= REST_AFTER then
+			self:SetScript("OnUpdate", nil)
+		end
+	end
+end
+
+---@param self SPFMinimapRoute
+local function PollMinimap(self)
+	if goal and not self:GetScript("OnUpdate") and DrawMinimap(self) then
+		WakeMinimap(self)
 	end
 end
 
@@ -589,10 +624,9 @@ function ns.SetJourneyRoute(destination, route)
 		local size = ringed and MINIMAP_RING or MINIMAP_GOAL
 		ns.Art.Fit(minimap.Goal, ringed and RING_ATLAS or GOAL_ATLAS, size, size)
 		if destination then
-			minimap.elapsed = 0
-			minimap:SetScript("OnUpdate", UpdateMinimap)
 			minimap:Show()
 			DrawMinimap(minimap)
+			WakeMinimap(minimap)
 		else
 			minimap.Goal:Hide()
 			minimap:SetScript("OnUpdate", nil)
@@ -611,20 +645,42 @@ ns.Init(function()
 	minimap:SetAllPoints(Minimap)
 	minimap:EnableMouse(false)
 	minimap.lines, minimap.underlines, minimap.dots, minimap.used = {}, {}, {}, 0
+	minimap.elapsed, minimap.idle = 0, 0
 	StrokeLayer(minimap)
 	minimap.Goal = Minimap:CreateTexture(nil, "OVERLAY")
 	ns.Art.Fit(minimap.Goal, GOAL_ATLAS, MINIMAP_GOAL, MINIMAP_GOAL)
 	minimap.Goal:Hide()
 	-- The client's own "inside the quest's area" state, the one it paints the blob from, drives the tint at once.
 	minimap:RegisterEvent("PLAYER_INSIDE_QUEST_BLOB_STATE_CHANGED")
-	minimap:SetScript("OnEvent", function(self)
-		if goal then
-			self.revision = nil
-			DrawMinimap(self)
-			if WorldMapFrame:IsShown() then
-				provider:RefreshAllData()
-			end
+	-- Moving, turning or zooming the minimap wakes the every-frame redraw.
+	minimap:RegisterEvent("PLAYER_STARTED_MOVING")
+	minimap:RegisterEvent("PLAYER_STARTED_TURNING")
+	minimap:RegisterEvent("MINIMAP_UPDATE_ZOOM")
+	minimap:SetScript("OnEvent", function(self, event)
+		if not goal then
+			return
 		end
+		if event ~= "PLAYER_INSIDE_QUEST_BLOB_STATE_CHANGED" then
+			WakeMinimap(self)
+			return
+		end
+		self.revision = nil
+		DrawMinimap(self)
+		if WorldMapFrame:IsShown() then
+			provider:RefreshAllData()
+		end
+	end)
+	minimap:SetScript("OnShow", function(self)
+		self.ticker = C_Timer.NewTicker(POLL_EVERY, function()
+			PollMinimap(self)
+		end)
+	end)
+	minimap:SetScript("OnHide", function(self)
+		if self.ticker then
+			self.ticker:Cancel()
+			self.ticker = nil
+		end
+		self:SetScript("OnUpdate", nil)
 	end)
 	minimap:Hide()
 end)

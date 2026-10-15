@@ -87,6 +87,13 @@ assert(pin.used < longest and #pin.lines == longest and lineCreations == created
 painted(pin, "shorter route")
 painted(mini, "shorter route on the minimap")
 assert(mini.used > 0, "the minimap still leads to the stop")
+-- Standing still, the minimap drops its every-frame redraw after a second; moving, turning or zooming wakes it.
+for _ = 1, 12 do
+ if mini.scripts.OnUpdate then mini.scripts.OnUpdate(mini, 0.1) end
+end
+assert(mini.scripts.OnUpdate == nil, "a still minimap rests")
+mini.scripts.OnEvent(mini, "PLAYER_STARTED_MOVING")
+assert(mini.scripts.OnUpdate, "moving wakes it")
 -- The minimap marks the stop where the strokes' geometry puts it: 60 yards north of the player in a 200-yard view.
 assert(not mini.Goal.hidden and mini.Goal.anchor[2] == mini and mini.Goal.anchor[4] == 0, "the stop, straight ahead")
 assert(math.abs(mini.Goal.anchor[5] - 30) < 1e-9, "three tenths of the way to the rim")

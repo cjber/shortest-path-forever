@@ -12,6 +12,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Less work while you stand still.** The journey's line on the minimap stops redrawing every frame once nothing has changed for a second, and picks up again as you move, turn, zoom or ride. The direction arrow already rests the same way.
 - **The arrow eases round and moves.** The direction arrow swings smoothly to each new bearing, as the compass does, instead of stepping, and rests when you stand still. *Move the arrow* and *Arrow scale* in Interface place and size it, and the cast prompt that stands in its place.
 - **Place the compass and the arrow to the pixel.** Shift-drag either one while moving it to move it a quarter as far as the mouse.
 - **See what the other faction's boats would save.** With *Other Faction's Routes* off, hovering the pin you're heading for adds one line when the other faction's boats or zeppelins would get you there at least two minutes sooner, such as "Through Horde transport: about 4 min faster". It says nothing about how safe that is: turn the routes on if you want to take them.
