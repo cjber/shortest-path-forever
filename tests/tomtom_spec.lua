@@ -135,8 +135,14 @@ equal(env.TomTom:IsValidWaypoint({ 1, 0.6, 0.5, title = "Other" }), false, "anot
 equal(env.TomTom:IsValidWaypoint("uid"), false, "nor is a non-table")
 equal(env.TomTom:WaypointExists(1, 0.6, 0.5, "RestedXP"), true, "the waypoint exists")
 equal(env.TomTom:WaypointExists(1, 0.6, 0.5, "Other"), false, "under its own title only")
+equal(env.TomTom:WaypointExists(1, 60 / 100 + 1e-12, 0.5, "RestedXP"), true, "the same point worked out another way")
+equal(env.TomTom:WaypointExists(1, driver.secret, 0.5, "RestedXP"), false, "a secret point is never compared")
+driver.move({ map = 1, x = 0, y = 0 })
 equal(env.TomTom:GetClosestWaypoint(), set, "the closest is the only one")
 equal(env.TomTom:SetClosestWaypoint(), set, "and setting it changes nothing")
+driver.move({ map = 0, x = 0, y = 0 })
+equal(env.TomTom:GetClosestWaypoint(), nil, "none on another continent")
+equal(env.TomTom:GetDistanceToWaypoint(set), nil, "and no distance to it")
 equal(API.CurrentStop("TomTom"), 1, "the journey runs on")
 driver.move({ map = 1, x = 0, y = 0 })
 local yards = env.TomTom:GetDistanceToWaypoint(set)
@@ -144,12 +150,16 @@ equal(type(yards) == "number" and math.abs(yards - 5000) < 1e-6, true, "its yard
 equal(env.TomTom:GetDistanceToWaypoint({ 1, 0.6, 0.5 }), nil, "no distance to another")
 env.TomTom:SetCrazyArrow(set, 15, "RestedXP")
 equal(env.TomTom:IsValidWaypoint(set), true, "pointing at the current one keeps it")
-env.TomTom:SetCrazyArrow({ 1, 0.7, 0.5, title = "Next step" }, 15)
+local held = { 1, 0.7, 0.5, title = "Next step", from = "Guide" }
+env.TomTom:SetCrazyArrow(held, 15, "Step 3: Next step")
 driver.path.settle()
-equal(ns.JourneyInfo(), "Journey to Next step", "pointing at another starts its journey")
+equal(ns.JourneyInfo(), "Journey to Next step", "pointing at another starts its journey, under its own title")
+equal(env.TomTom:IsValidWaypoint(held), true, "and the table the guide holds is the one set")
+equal(env.TomTom:GetClosestWaypoint().from, "Guide", "with its own fields")
 equal(env.TomTom:ClearWaypoint(set), false, "clearing a replaced waypoint does nothing")
 env.TomTom:ClearAllWaypoints()
 equal(ns.HasJourney(), false, "clearing all ends the journey")
+local bestMap = env.C_Map.GetBestMapForUnit
 env.C_Map.GetBestMapForUnit = function()
 	return 1
 end
@@ -158,6 +168,7 @@ driver.path.settle()
 equal(type(here) == "table" and here[1] == 1 and here[2] == 0.6, true, "a waypoint on the map you are on")
 equal(env.TomTom:ClearWaypoint(here), true, "cleared like a removal")
 equal(env.TomTom:AddWaypointToCurrentZone("60", 50), nil, "bad coordinates are refused")
+env.C_Map.GetBestMapForUnit = bestMap
 
 -- Every argument is checked like the public API's own.
 for _, bad in ipairs({ { 0, 0.5, 0.5 }, { 1, 2, 0.5 }, { 1, 0.5, -0.1 }, { 1, 0.5, "0.5" }, { 1, 0 / 0, 0.5 } }) do
