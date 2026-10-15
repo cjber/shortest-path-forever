@@ -2,9 +2,9 @@
 local ns = select(2, ...)
 
 -- The personal teleports this character can cast now, for the planner. The client names the bind point but has no
--- position for it, so it is where you stood when you bound (beside the innkeeper), kept with that name. Bound
--- anywhere else since (before this addon, or on another client), the names disagree: no bind teleport until you
--- bind again.
+-- position for it, so it is where you stood when you bound (beside the innkeeper), or where a Hearthstone or Astral
+-- Recall last set you down, kept with that name. Bound anywhere else since (before this addon, or on another
+-- client), the names disagree: no bind teleport until you bind or hearth again.
 
 local places, placesKey, sources = {}, nil, {}
 -- The setting off: no teleports for any caller.
@@ -107,15 +107,78 @@ function ns.UsableTeleports(now)
 	return places, ready
 end
 
+-- A bind teleport's landing: after the cast, the first position this far from where it was cast (or on another
+-- map) is the bind point. Looked for each second, and on the loading screen's end, until it gives up.
+local LANDED_YARDS, LOOK_EVERY, LOOKS = 50, 1, 30
+local bindSpells, landing = {}, nil
+
+local function Record(name, map, x, y, z)
+	ns.charDB.bind = { name = name, map = map, x = x, y = y, z = z }
+end
+
+local function LookForLanding()
+	if not landing then
+		return
+	end
+	local x, y, z, map = ns.JourneyPosition()
+	local name = GetBindLocation()
+	if not (canaccessvalue(name) and name == landing.name) then
+		landing = nil
+		return
+	end
+	if x and y and map and (map ~= landing.map or (x - landing.x) ^ 2 + (y - landing.y) ^ 2 > LANDED_YARDS ^ 2) then
+		landing = nil
+		Record(name, map, x, y, z)
+	end
+end
+
+local function Look(token)
+	if not landing or landing.token ~= token then
+		return
+	end
+	LookForLanding()
+	if landing then
+		landing.looks = landing.looks - 1
+		if landing.looks <= 0 then
+			landing = nil
+		else
+			C_Timer.After(LOOK_EVERY, function()
+				Look(token)
+			end)
+		end
+	end
+end
+
 ns.Init(function()
+	for _, teleport in ipairs(ns.Teleports) do
+		if teleport.bind then
+			bindSpells[teleport.spell] = true
+		end
+	end
 	local frame = CreateFrame("Frame")
 	frame:RegisterEvent("HEARTHSTONE_BOUND")
-	frame:SetScript("OnEvent", function()
+	frame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
+	frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+	frame:SetScript("OnEvent", function(_, event, _, _, spell)
+		if event == "PLAYER_ENTERING_WORLD" then
+			LookForLanding()
+			return
+		end
 		local x, y, z, map = ns.JourneyPosition()
 		local name = GetBindLocation()
-		if x and y and map and canaccessvalue(name) then
-			ns.charDB.bind = { name = name, map = map, x = x, y = y, z = z }
+		if event == "UNIT_SPELLCAST_SUCCEEDED" then
+			if canaccessvalue(spell) and bindSpells[spell] and x and y and map and canaccessvalue(name) and name then
+				local token = {}
+				landing = { name = name, map = map, x = x, y = y, looks = LOOKS, token = token }
+				C_Timer.After(LOOK_EVERY, function()
+					Look(token)
+				end)
+			end
+		elseif x and y and map and canaccessvalue(name) then
+			landing = nil
+			Record(name, map, x, y, z)
 		else
+			landing = nil
 			ns.charDB.bind = nil
 		end
 	end)

@@ -105,6 +105,15 @@ do
 	local secret = {}
 	local items, spells, cooldowns, itemCooldowns, casts = {}, {}, {}, {}, {}
 	local bindName, position, onEvent = "Goldshire", { 10, 20, 30, 0 }, nil
+	local timers, registered = {}, {}
+	-- Runs the timers due now; the ones they schedule wait for the next tick.
+	local function tick()
+		local due = timers
+		timers = {}
+		for _, fn in ipairs(due) do
+			fn()
+		end
+	end
 	local runtime = { db = { teleports = true }, charDB = {}, Teleports = ns.Teleports }
 	runtime.Init = function(fn)
 		fn()
@@ -143,9 +152,20 @@ do
 		canaccessvalue = function(value)
 			return value ~= secret
 		end,
+		C_Timer = {
+			After = function(_, fn)
+				timers[#timers + 1] = fn
+			end,
+		},
 		CreateFrame = function()
 			return {
-				RegisterEvent = function() end,
+				RegisterEvent = function(_, event)
+					registered[event] = true
+				end,
+				RegisterUnitEvent = function(_, event, unit)
+					assert(unit == "player")
+					registered[event] = true
+				end,
 				SetScript = function(_, _, fn)
 					onEvent = fn
 				end,
@@ -183,7 +203,7 @@ do
 
 	items[6948] = 1
 	assert(#Usable(5000) == 0, "no hearth before a bind point is recorded")
-	onEvent()
+	onEvent(nil, "HEARTHSTONE_BOUND")
 	local bind = runtime.charDB.bind
 	assert(bind.name == "Goldshire" and bind.map == 0 and bind.x == 10 and bind.y == 20 and bind.z == 30)
 	places, ready = Usable(5000)
@@ -198,8 +218,60 @@ do
 	bindName = "Razor Hill"
 	assert(#Usable(5000) == 0, "bound elsewhere since: no bind teleport")
 	position = {}
-	onEvent()
+	onEvent(nil, "HEARTHSTONE_BOUND")
 	assert(runtime.charDB.bind == nil, "no position, no bind point")
+
+	-- A new install never saw the rebind: the Hearthstone's landing is the bind point.
+	assert(registered.UNIT_SPELLCAST_SUCCEEDED and registered.PLAYER_ENTERING_WORLD and registered.HEARTHSTONE_BOUND)
+	bindName, position = "Razor Hill", { 100, 100, 5, 1 }
+	onEvent(nil, "UNIT_SPELLCAST_SUCCEEDED", "player", "cast-1", 8690)
+	assert(runtime.charDB.bind == nil, "not landed yet")
+	tick()
+	assert(runtime.charDB.bind == nil, "still where it was cast")
+	position = { 300, 900, 12, 1 }
+	tick()
+	bind = runtime.charDB.bind
+	assert(bind and bind.name == "Razor Hill" and bind.map == 1 and bind.x == 300 and bind.y == 900 and bind.z == 12)
+	assert(#timers == 0, "landed: no more looks")
+	assert(#Usable(5000) == 1 and Usable(5000)[1].x == 300, "the hearth goes where it landed")
+
+	-- Another continent: the loading screen's end finds the landing.
+	runtime.charDB.bind = nil
+	position = { 300, 900, 12, 1 }
+	onEvent(nil, "UNIT_SPELLCAST_SUCCEEDED", "player", "cast-2", 556)
+	position = { 300, 900, 12, 0 }
+	onEvent(nil, "PLAYER_ENTERING_WORLD")
+	assert(runtime.charDB.bind and runtime.charDB.bind.map == 0, "Astral Recall to another continent")
+	tick()
+	assert(#timers == 0)
+
+	-- Other spells, a bind point renamed mid-flight and a landing that never comes record nothing.
+	runtime.charDB.bind = nil
+	onEvent(nil, "UNIT_SPELLCAST_SUCCEEDED", "player", "cast-3", 3561)
+	assert(#timers == 0, "not a bind teleport")
+	onEvent(nil, "UNIT_SPELLCAST_SUCCEEDED", "player", "cast-4", secret)
+	assert(#timers == 0, "a secret spell is never guessed")
+	onEvent(nil, "UNIT_SPELLCAST_SUCCEEDED", "player", "cast-5", 8690)
+	bindName, position = "Goldshire", { 5000, 5000, 0, 0 }
+	tick()
+	assert(runtime.charDB.bind == nil and #timers == 0, "bound elsewhere since the cast")
+	position = { 300, 900, 12, 0 }
+	onEvent(nil, "UNIT_SPELLCAST_SUCCEEDED", "player", "cast-6", 8690)
+	for _ = 1, 40 do
+		tick()
+	end
+	assert(runtime.charDB.bind == nil and #timers == 0, "it gives up when nothing moves")
+	position = { 9000, 9000, 0, 0 }
+	onEvent(nil, "PLAYER_ENTERING_WORLD")
+	assert(runtime.charDB.bind == nil, "a later move is not a landing")
+
+	-- A real rebind while a landing is awaited wins.
+	position = { 300, 900, 12, 0 }
+	onEvent(nil, "UNIT_SPELLCAST_SUCCEEDED", "player", "cast-7", 8690)
+	onEvent(nil, "HEARTHSTONE_BOUND")
+	position = { 9000, 9000, 0, 0 }
+	tick()
+	assert(runtime.charDB.bind.x == 300, "the rebind stands")
 	items[6948] = 0
 end
 

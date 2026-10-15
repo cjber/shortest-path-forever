@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves.
 
 ## [Unreleased]
 
+- **The Hearthstone works on a new install.** The bind point used to be learned only when you bound at an inn with the addon running. Casting Hearthstone or Astral Recall now records where it sets you down, so the next journey can use it without a rebind.
+
 ## [1.15.0] - 2026-10-15
 
 - **Data checked against Forever 1.60.1.70374.** The travel data and flight times are unchanged apart from their source pins.
