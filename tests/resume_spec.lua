@@ -145,6 +145,53 @@ do
 	ns.ClearJourney()
 end
 
+-- Nearby services' journeys go through the API under this addon's own name: they are the player's.
+assert(API.Navigate("Shortest Path Forever", 1, 0.6, 0.5, "Innkeeper", "innkeeper"))
+assert(ns.charDB.journey and ns.charDB.journey.label == "Innkeeper", "a Nearby journey is kept")
+ns.ClearJourney()
+
+-- Turned on during a journey: that journey is kept straight away.
+ns.db.resumeJourney = false
+driver.begin({ map = 1, x = 0, y = 0 }, { map = 1, x = 2000, y = 0 })
+assert(ns.charDB.journey == nil)
+ns.db.resumeJourney = true
+ns.KeepJourneyChanged()
+assert(ns.charDB.journey and near(ns.charDB.journey.x, 2000), "turning it on keeps the journey under way")
+ns.db.resumeJourney = false
+ns.KeepJourneyChanged()
+assert(ns.charDB.journey == nil, "turning it off forgets it")
+ns.db.resumeJourney = true
+ns.ClearJourney()
+
+-- Half an hour from the reload or logout, not from planning: a long journey survives.
+driver.begin({ map = 1, x = 0, y = 0 }, { map = 1, x = 2000, y = 0 })
+ns.serverTime = ns.serverTime + 45 * 60
+driver.fire("PLAYER_LOGOUT")
+assert(ns.charDB.journey.at == ns.serverTime, "the logout restamps it")
+local saved = ns.charDB.journey
+ns.ClearJourney()
+ns.charDB.journey = saved
+ns.serverTime = ns.serverTime + 10
+reload()
+driver.fire("PLAYER_ENTERING_WORLD")
+runTimers()
+assert(ns.HasJourney(), "a journey planned 45 minutes ago starts again after its reload")
+ns.ClearJourney()
+
+-- A journey started and ended while the owners have their moment: the kept one is not brought back.
+keep({ map = 1, x = 2000, y = 0, at = ns.serverTime })
+reload()
+driver.fire("PLAYER_ENTERING_WORLD")
+ns.StartJourney({ map = 1, x = 500, y = 0, label = "Brief" })
+ns.ClearJourney()
+runTimers()
+assert(not ns.HasJourney(), "the player moved on from the kept journey")
+
+-- Infinite coordinates from a damaged file are refused.
+assert(not resumes(function()
+	ns.charDB.journey.x = math.huge
+end), "an infinite coordinate")
+
 -- In combat it waits for combat to end.
 keep({ map = 1, x = 2000, y = 0, at = ns.serverTime })
 reload()
@@ -155,6 +202,15 @@ assert(not ns.HasJourney() and ns.charDB.journey, "kept through the fight")
 combat = false
 driver.fire("PLAYER_REGEN_ENABLED")
 assert(ns.HasJourney(), "and started once it ends")
+ns.ClearJourney()
+-- Combat ending before the owners' moment is over still waits for it.
+keep({ map = 1, x = 2000, y = 0, at = ns.serverTime })
+reload()
+driver.fire("PLAYER_ENTERING_WORLD")
+driver.fire("PLAYER_REGEN_ENABLED")
+assert(not ns.HasJourney(), "not before the owners have had their moment")
+runTimers()
+assert(ns.HasJourney(), "then it starts")
 ns.ClearJourney()
 driver.fire("PLAYER_REGEN_ENABLED")
 assert(not ns.HasJourney(), "only once")

@@ -294,10 +294,12 @@ Row("tomtomFollow").setting.onChanged()
 assert(tomtomFollowRefreshed == 1, "the follower follows its setting")
 -- Keeping your own journey across a reload is opt-in; turning it off forgets the one kept.
 assert(Row("resumeJourney").setting.default == false, "keeping journeys after a reload is off by default")
-ns.charDB = { journey = { map = 0, x = 1, y = 2, at = 0 } }
-ns.db.resumeJourney = false
+local keepChanged = 0
+ns.KeepJourneyChanged = function()
+	keepChanged = keepChanged + 1
+end
 Row("resumeJourney").setting.onChanged()
-assert(ns.charDB.journey == nil, "turning it off forgets the kept journey")
+assert(keepChanged == 1, "the kept journey follows its setting")
 -- /path way takes TomTom's /way line, whether or not /way itself is free.
 env.SlashCmdList.SHORTESTPATHFOREVER("way Elwynn Forest 42.1 65.3 Goldshire")
 assert(ways[1] == "Elwynn Forest 42.1 65.3 Goldshire", "/path way hands on the rest of the line")

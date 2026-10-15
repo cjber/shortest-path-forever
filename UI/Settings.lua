@@ -231,9 +231,7 @@ ns.Init(function()
 		L["Keep journeys after a reload"],
 		L["Your own journey starts again after a /reload, or logging back in within 30 minutes. Guides start theirs."],
 		function()
-			if not ns.db.resumeJourney then
-				ns.charDB.journey = nil
-			end
+			ns.KeepJourneyChanged()
 		end
 	)
 	Checkbox(
