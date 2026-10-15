@@ -20,6 +20,7 @@ local DEFAULTS = {
 	alerts = true,
 	alertSound = true,
 	journey = true,
+	resumeJourney = false,
 	tomtom = true,
 	tomtomFollow = false,
 	restedxp = true,
