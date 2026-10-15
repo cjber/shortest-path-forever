@@ -27,6 +27,8 @@ authorization. A preparation-only request ends before tags or uploads.
    into `## [X.Y.Z] - YYYY-MM-DD` using the UTC release date. Keep the TOC version
    as `@project-version@`. Run `python3 tools/changelog.py --check X.Y.Z` and
    `python3 tools/changelog.py --check`; inspect the extracted version notes.
+   Public API changes go under an optional `### For addon authors` subsection after the
+   player bullets; the release notes carry it as written.
 
 ## Refresh every presentation surface
 

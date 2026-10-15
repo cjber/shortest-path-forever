@@ -285,6 +285,8 @@ local path = assert(loadfile("tests/path_fake.lua"))()()
 local settle = path.settle
 local ns = {}
 for line in io.lines("ShortestPathForever.toc") do
+	-- The packager writes CRLF; tools/check_package.py runs this on its output.
+	line = line:gsub("\r$", "")
 	if line:match("%.lua$") then
 		assert(loadfile((line:gsub("\\", "/"))))("ShortestPathForever", ns)
 	end
