@@ -55,6 +55,7 @@ Journey\JourneyGuide.lua
 Journey\Journey.lua
 Journey\JourneyInput.lua
 Journey\Corpse.lua
+Journey\FactionHint.lua
 UI\StopPin.lua
 UI\FlightLines.lua
 UI\Strokes.lua
@@ -65,6 +66,7 @@ UI\Alert.lua
 UI\Settings.lua
 UI\WhatsNew.lua
 Core\API.lua
+Journey\Resume.lua
 Core\Report.lua
 Journey\Itinerary.lua
 Core\TomTom.lua

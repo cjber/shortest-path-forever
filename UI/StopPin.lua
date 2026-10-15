@@ -137,6 +137,10 @@ function ShortestPathForeverGoalPinMixin:OnMouseEnter()
 		if time then
 			GameTooltip_AddColoredLine(GameTooltip, string.format(L["%s · %s"], time, distance), HIGHLIGHT_FONT_COLOR)
 		end
+		local hint = ns.OtherFactionHint()
+		if hint then
+			GameTooltip_AddNormalLine(GameTooltip, hint)
+		end
 		for _, row in ipairs(rows) do
 			local color = row.current and HIGHLIGHT_FONT_COLOR or row.grey and GRAY_FONT_COLOR or NORMAL_FONT_COLOR
 			GameTooltip_AddColoredLine(GameTooltip, row.text, color)

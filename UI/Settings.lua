@@ -227,6 +227,14 @@ ns.Init(function()
 		end
 	)
 	Checkbox(
+		"resumeJourney",
+		L["Keep journeys after a reload"],
+		L["Your own journey starts again after a /reload, or logging back in within 30 minutes. Guides start theirs."],
+		function()
+			ns.KeepJourneyChanged()
+		end
+	)
+	Checkbox(
 		"tomtom",
 		L["Let guides set TomTom waypoints"],
 		L["While TomTom is not installed, a guide that sets a TomTom waypoint starts a journey here instead."],
