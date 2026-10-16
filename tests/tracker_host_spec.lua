@@ -705,8 +705,12 @@ check(
 	"an empty host hands the native frame back to its saved slot"
 )
 check(native.clamped == true, "an empty host hands back the native frame's screen clamp")
+probe.scripts.OnSizeChanged(probe)
+check(#timers == 0, "the host's own handback does not queue another reflow")
 -- A move by Edit Mode or a UI addon while the host is empty stays where they put it.
 native:SetPoint("CENTER", parent, "CENTER", 40, 20)
+probe.scripts.OnSizeChanged(probe)
+check(#timers == 1, "a move after the handback still reflows the column")
 host.scripts.OnEvent(host, "QUEST_LOG_UPDATE")
 drain()
 check(
@@ -767,6 +771,8 @@ check(
 	nativeHeader.point[2] == native and native.point[2] == parent,
 	"detaching returns the header and the native frame exactly"
 )
+probe.scripts.OnSizeChanged(probe)
+check(#timers == 1, "a detached column still follows the native frame, even in the slot detaching gave back")
 ns.TrackerHost.SetAttached(true)
 drain()
 check(nativeHeader.point[2] == host, "reattaching returns the header to the shared column")
@@ -796,6 +802,49 @@ host.scripts.OnEvent(host, "PLAYER_REGEN_ENABLED")
 drain()
 check(nativeHeader.point[2] == host, "the header returns to the shared column after combat")
 check(first.point[5] == -38, "leaving combat restores the header's room")
+-- In combat with the column still stacked, the sections keep following their content and All Objectives without the
+-- native frame moving: they redraw within the room they already have, and collapsing or emptying hides them at once.
+combat = true
+host.scripts.OnEvent(host, "PLAYER_REGEN_DISABLED")
+drain()
+local stackedNative, stackedHeight, stackedUpdates = native.point, host:GetHeight(), first.updates
+local room = stackedHeight - 38 - 10
+-- Section heights for a redraw; true fills all the room a section is offered.
+local function contents(a, b)
+	first.GetContentsHeight = function(self)
+		return a == true and self.available or a
+	end
+	second.GetContentsHeight = function()
+		return b
+	end
+	host:MarkDirty()
+	drain()
+end
+contents(80, 80)
+check(first.updates == stackedUpdates + 1 and first.available == room, "stacked combat redraws within the stack's room")
+check(host:GetHeight() == stackedHeight and native.point == stackedNative, "a redraw keeps the stack, no native writes")
+-- Shrinking and growing again in one fight keeps the full room: it comes from the stack, not the last redraw.
+contents(40, 80)
+contents(80, 80)
+check(first.available == room and host:GetHeight() == stackedHeight, "a section that shrank can grow back in combat")
+contents(true, 0)
+check(host:GetHeight() <= stackedHeight, "a section filling its room never runs past the stacked column")
+native.isCollapsed = true
+minimizeButton.scripts.OnClick(minimizeButton)
+drain()
+check(host.shown == false and nativeHeader.point[2] == native and native.point == stackedNative, "collapse in combat")
+native.isCollapsed = false
+minimizeButton.scripts.OnClick(minimizeButton)
+drain()
+check(host.shown == true and nativeHeader.point[2] == host, "expanding in combat shows them, the header on top")
+contents(0, 0)
+check(host.shown == false and nativeHeader.point[2] == native, "sections emptied in combat hide, header back")
+contents(80, 80)
+check(host.shown and first.available == room and nativeHeader.point[2] == host, "refilled sections get the full room")
+combat = false
+host.scripts.OnEvent(host, "PLAYER_REGEN_ENABLED")
+drain()
+check(host.shown and nativeHeader.point[2] == host and first.point[5] == -38, "leaving combat restacks with the header")
 native.isCollapsed = true
 minimizeButton.scripts.OnClick(minimizeButton)
 drain()
