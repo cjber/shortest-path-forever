@@ -112,6 +112,10 @@ for _, readyAtLoad in ipairs({ false, true }) do
 	ns.TrackerHost.SetAttached = function(value)
 		attached = value
 	end
+	local combat = false
+	env.InCombatLockdown = function()
+		return combat
+	end
 	modules[1]:OnBlockHeaderClick({ id = "journey" }, "RightButton")
 	local row = assert(entries["Attach to quest tracker"], "the Journey menu offers to move the tracker")
 	assert(row.get() == true)
@@ -119,6 +123,14 @@ for _, readyAtLoad in ipairs({ false, true }) do
 	assert(attached == false and row.get() == false, "unticking lets the column be dragged")
 	row.set()
 	assert(attached == true, "ticking attaches it again")
+	-- In combat the host cannot switch, so the menu leaves the choice out; so does a shared host without it.
+	entries, combat = {}, true
+	modules[1]:OnBlockHeaderClick({ id = "journey" }, "RightButton")
+	assert(entries["Attach to quest tracker"] == nil, "no attach choice in combat")
+	combat = false
+	ns.TrackerHost.SetAttached = nil
+	modules[1]:OnBlockHeaderClick({ id = "journey" }, "RightButton")
+	assert(entries["Attach to quest tracker"] == nil, "an older shared host without the call offers none")
 	checks = checks + 1
 end
 print("tracker_lifecycle_spec: " .. checks .. " load-order cases passed")
