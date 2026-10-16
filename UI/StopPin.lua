@@ -145,6 +145,7 @@ function ShortestPathForeverGoalPinMixin:OnMouseEnter()
 			local color = row.current and HIGHLIGHT_FONT_COLOR or row.grey and GRAY_FONT_COLOR or NORMAL_FONT_COLOR
 			GameTooltip_AddColoredLine(GameTooltip, row.text, color)
 		end
+		ns.FamilyHints.AddEntranceLine(GameTooltip)
 	end
 	GameTooltip_AddNormalLine(GameTooltip, L["Right-click to clear"])
 	GameTooltip:Show()
