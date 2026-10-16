@@ -354,25 +354,47 @@ local function connectPoint(st, swim, k, node, h)
 	end
 	return ends, merged, via
 end
--- Sliced A* and refinement share scratch trees; splitting adds hot-path calls and upvalues
--- Whether the drawn segment from path entry j's cell centre to point stays on the walkable surface: the walk
--- reaches the point's own cell, on the surface it stands on when it has a height, or runs on only into cells with no
--- surface at all, towards a point the grid has none for.
-local function clearEnd(st, P, j, point, water)
-	local tx, ty = (point.x - st.x0) / st.cs, (point.y - st.y0) / st.cs
-	local k, node = toward(st, P.k[j], P.n[j], P.x[j], P.y[j], tx, ty, water)
-	if not k then
-		return node == true
-	end
-	if point.z == nil then
-		return true
-	end
-	local pk, lc = locate(st, point.x, point.y)
-	grid(st, pk)
-	local own, gap = surface(st, pk, lc, -1, point.z)
-	return not own or gap > ZTOL or (pk == k and own == node)
+-- A point's position in global cells, and the node it stands on in its own cell: within ZTOL of its height, or the
+-- base surface when it has none.
+local function own(st, point)
+	local fx, fy = (point.x - st.x0) / st.cs, (point.y - st.y0) / st.cs
+	local k, lc = locate(st, point.x, point.y)
+	local node, gap = standing(st, k, lc, point.z)
+	return fx, fy, k, (node and gap <= ZTOL) and node or nil
 end
 
+-- The string is pulled between node centres, but the line is drawn from the endpoints themselves. Whether the drawn
+-- segment between point and path entry j's cell centre stays on the walkable surface, walked in the direction it is
+-- travelled (outbound from the start, inbound to the goal). A point standing on a surface must be reached on it, or
+-- leave from it; one with no surface in its cell (inside rock or a building the grid has none for) passes when the
+-- segment runs on into it only across cells with no surface at all.
+local function clearEnd(st, P, j, point, outbound, water)
+	local fx, fy, k, node = own(st, point)
+	local cx, cy = P.x[j] + 0.5, P.y[j] + 0.5
+	if outbound and node then
+		local tk, tn = toward(st, k, node, fx, fy, cx, cy, water)
+		return tk == P.k[j] and tn == P.n[j]
+	end
+	local tk, tn = toward(st, P.k[j], P.n[j], cx, cy, fx, fy, water)
+	if not tk then
+		return tn == true
+	end
+	return not node or (tk == k and tn == node)
+end
+
+-- With no pulled vertex between them, the line is the one chord between the two points: walked whole from a start
+-- that stands on a surface to the goal's cell, on the goal's own surface when it has one.
+local function clearChord(st, from, to, water)
+	local fx, fy, k, node = own(st, from)
+	if not node then
+		return false
+	end
+	local tx, ty, gk, goal = own(st, to)
+	local tk, tn = toward(st, k, node, fx, fy, tx, ty, water)
+	return tk ~= nil and (not goal or (tk == gk and tn == goal))
+end
+
+-- Sliced A* and refinement share scratch trees; splitting adds hot-path calls and upvalues
 local function run(map, from, to, waterWalking, costOnly)
 	local st = State(map)
 	if not st then
@@ -577,21 +599,27 @@ local function run(map, from, to, waterWalking, costOnly)
 		keep[2] = keep[1]
 	end
 	local n = #P.x
-	-- The string was pulled between node centres, but the line is drawn from the endpoints themselves. Each end
-	-- segment gets its own walk from the vertex beside it to the point; one that fails is drawn through the end
-	-- node's centre first, from where the pulled string already holds.
-	local inner = #keep > 2
-	local startDetour = not clearEnd(st, P, inner and keep[2] or n, from, P.w[inner and keep[2] or n] > 0)
-	local goalVia = inner and keep[#keep - 1] or 1
-	local goalDetour = not clearEnd(st, P, goalVia, to, P.w[n] - (P.w[goalVia - 1] or 0) > 0)
+	-- An end segment that fails is drawn through its end node's centre first: the string was pulled from there, so the
+	-- rest of the line holds as it did. A chord that fails tries each end that way.
+	local startVia, goalVia = #keep > 2 and keep[2] or n, #keep > 2 and keep[#keep - 1] or 1
+	local startDetour, goalDetour = false, false
+	if #keep > 2 or not clearChord(st, from, to, P.w[n] > 0) then
+		startDetour = not clearEnd(st, P, startVia, from, true, P.w[startVia] > 0)
+		-- A chord whose start detoured now reaches the goal from the start node's centre.
+		if startDetour and #keep <= 2 then
+			goalVia = 1
+		end
+		goalDetour = not clearEnd(st, P, goalVia, to, false, P.w[n] - (P.w[goalVia - 1] or 0) > 0)
+	end
 	local drawn = { 1 }
 	if startDetour then
-		drawn[2] = 1
+		drawn[#drawn + 1] = 1
 	end
 	for i = 2, #keep - 1 do
 		drawn[#drawn + 1] = keep[i]
 	end
-	if goalDetour and drawn[#drawn] ~= n then
+	-- Both ends on one node already pass through its centre once the start has detoured.
+	if goalDetour and not (startDetour and n == 1) then
 		drawn[#drawn + 1] = n
 	end
 	drawn[#drawn + 1] = n
@@ -610,7 +638,8 @@ local function run(map, from, to, waterWalking, costOnly)
 	local wetYards = 0
 	for i = 2, #points do
 		local p, q = drawn[i - 1], drawn[i]
-		local wet = q > p and (P.w[q] - P.w[p]) / (q - p) or 0
+		-- A segment to or from an end node's own centre is as wet as that node.
+		local wet = q > p and (P.w[q] - P.w[p]) / (q - p) or P.w[q] - (P.w[q - 1] or 0)
 		local length = sqrt((points[i].x - points[i - 1].x) ^ 2 + (points[i].y - points[i - 1].y) ^ 2)
 		wetYards = wetYards + length * wet
 	end

@@ -211,9 +211,7 @@ assert(tower.z and pts and pts[2].z > 25, "boards from the beach")
 local Grid = ns.PathGrid
 local function bare(map, x, y)
 	local st = Grid.State(map)
-	local k, lc = Grid.locate(st, x, y)
-	local val = k and Grid.grid(st, k)
-	return not val or (val[lc + 1] == 0 and st.at[k][-(lc + 1)] == nil)
+	return Grid.bare(st, math.floor((x - st.x0) / st.cs), math.floor((y - st.y0) / st.cs))
 end
 local function bareEnds(map, points)
 	local yards = 0

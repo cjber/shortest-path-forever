@@ -799,29 +799,33 @@ end
 
 -- No surface of any height on global cell (gx, gy): no base surface and no floor. Off the map counts as none.
 local function bare(st, gx, gy)
+	if value(st, gx, gy) ~= 0 then
+		return false
+	end
 	if gx < 0 or gy < 0 or gx >= st.GX or gy >= st.GY then
 		return true
 	end
 	local C = st.C
-	local k, lc = floor(gx / C) * st.ny + floor(gy / C), (gx % C) * C + gy % C
-	local val = grid(st, k)
-	return not val or (val[lc + 1] == 0 and st.at[k][-(lc + 1)] == nil)
+	local k = floor(gx / C) * st.ny + floor(gy / C)
+	local at = st.at[k]
+	return not at or at[-((gx % C) * C + gy % C + 1)] == nil
 end
 
--- A drawn line's end segment runs from a path node's cell centre to the endpoint itself, off any centre. Walk the
--- cells that segment really crosses, from node of cluster k on global cell (gx, gy) towards the fractional cell
--- position (tx, ty), following the surface as sight does. Returns the cluster and node it reaches in the end's
--- cell; or, when a step is closed, nil and whether every cell from the closed one to the end has no surface at
--- all (the line only runs on into a point the grid has no surface for).
-local function toward(st, k, node, gx, gy, tx, ty, water)
-	local ex, ey = floor(tx), floor(ty)
-	local dx, dy = tx - (gx + 0.5), ty - (gy + 0.5)
+-- A drawn line's end segments run off cell centres: from an endpoint itself, or to one. Walk the cells such a
+-- segment really crosses, from node of cluster k at the fractional global cell position (fx, fy) to (tx, ty),
+-- following the surface as sight does. Returns the cluster and node it reaches in the end's cell; or, when a step is
+-- closed, nil and whether every cell from the closed one to the end has no surface at all (the line only runs on
+-- into a point the grid has no surface for).
+local function toward(st, k, node, fx, fy, tx, ty, water)
+	local x, y, ex, ey = floor(fx), floor(fy), floor(tx), floor(ty)
+	local dx, dy = tx - fx, ty - fy
 	local sx, sy = dx > 0 and 1 or -1, dy > 0 and 1 or -1
 	-- Distance along the segment, in segment lengths, to the next x and y cell boundary and between boundaries.
 	local stepX, stepY = dx ~= 0 and 1 / abs(dx) or huge, dy ~= 0 and 1 / abs(dy) or huge
-	local nextX, nextY = 0.5 * stepX, 0.5 * stepY
-	local x, y, closed = gx, gy, false
-	for _ = 1, 2 * (abs(ex - gx) + abs(ey - gy)) + 2 do
+	local nextX = (sx > 0 and x + 1 - fx or fx - x) * stepX
+	local nextY = (sy > 0 and y + 1 - fy or fy - y) * stepY
+	local closed = false
+	for _ = 1, 2 * (abs(ex - x) + abs(ey - y)) + 2 do
 		if x == ex and y == ey then
 			break
 		end
@@ -956,6 +960,7 @@ ns.PathGrid = {
 	snap = snap,
 	smooth = smooth,
 	toward = toward,
+	bare = bare,
 	Idle = Idle,
 	Reset = Reset,
 	TILE = TILE,
