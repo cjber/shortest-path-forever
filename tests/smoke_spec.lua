@@ -879,6 +879,33 @@ Run("stale dock cluster tooltip", function()
 		"the stale cluster has no remaining departures")
 	ns.AddDockTooltip(cluster)
 end)
+-- The Forever family footer (UI/FamilyHints.lua): after an arrival with Adventure Guide missing, a grey line under
+-- the finished journey, drawn with Blizzard's tracker code; clicking it opens the shared link window.
+Reset()
+Run("forever family arrival footer", function()
+	_G.C_AddOns = {
+		IsAddOnLoaded = function()
+			return false
+		end,
+		DoesAddOnExist = function()
+			return false
+		end,
+	}
+	ns.JourneyChanged({ map = 1, x = 0.5, y = 0.5, label = "Footer" })
+	ns.JourneyChanged(nil, "arrived")
+	Flush()
+	assert(ns.FamilyHints.Footer(), "the footer shows after arriving")
+	local tracker = _G.ShortestPathForeverObjectiveTracker
+	local block = tracker:GetExistingBlock("family")
+	assert(block and block.used, "the tracker draws the footer's block")
+	tracker:OnBlockHeaderClick(block, "LeftButton")
+	Flush()
+	assert(_G.ForeverFamilyLink and _G.ForeverFamilyLink:IsShown(), "clicking it opens the link window")
+	assert(not ns.FamilyHints.Footer(), "and takes the footer away")
+	_G.ForeverFamilyLink:Hide()
+	_G.C_AddOns = nil
+end)
+_G.C_AddOns = nil
 stats.profiles = stats.profiles + 1
 for step = 1, 400 do
 	Fuzz(("fuzz %d"):format(step))

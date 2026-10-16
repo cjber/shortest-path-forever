@@ -10,6 +10,7 @@ local module
 ---@field riding? number|false
 ---@field second number
 ---@field journeyVersion? number
+---@field familyVersion? integer
 ---@field sightingVersion? number
 ---@field tracker? boolean
 ---@field otherFaction? boolean
@@ -51,6 +52,10 @@ function ModuleMixin:OnBlockHeaderClick(block, button)
 				end
 			end)
 		end
+	elseif block.id == "family" then
+		if button == "LeftButton" then
+			ns.FamilyHints.OpenFooter()
+		end
 	elseif button == "LeftButton" then
 		OpenDockMap(self.mapDock)
 	end
@@ -74,10 +79,14 @@ function ModuleMixin:LayoutContents()
 		block.headerHeight = block.HeaderText:GetHeight()
 		for _, row in ipairs(entry.rows) do
 			local line = block:AddObjective(row.key, row.text, nil, true, nil, RowColor(row))
-			local clickable = entry.key == "journey" and row.current and not ns.Corpse.Active()
+			local family = entry.key == "family"
+			local clickable = family or entry.key == "journey" and row.current and not ns.Corpse.Active()
 			line:EnableMouse(clickable == true)
 			line:SetScript("OnMouseUp", clickable and function(_, button)
 				if button ~= "LeftButton" then
+					return
+				elseif family then
+					ns.FamilyHints.OpenFooter()
 					return
 				end
 				MenuUtil.CreateContextMenu(line, function(_, root)
@@ -255,6 +264,8 @@ local function RefreshTracker(dockID, yards)
 	local riding = ns.db.tracker and ns.CurrentRide()
 	local journey = ns.HasJourney() and ns.db.journeyTracker ~= false
 	local second = (dockID or riding or journey) and math.floor(GetTime()) or 0
+	-- After a journey arrives, Hints.Footer (UI/FamilyHints.lua) may add a grey line under it.
+	local familyBlock = ns.FamilyHints.Footer()
 	-- Compare scalar render inputs before allocating blocks or formatting rows. Unrelated tracker
 	-- layouts can replay the saved blocks; they never need to query timetables or rebuild the model.
 	if
@@ -262,6 +273,7 @@ local function RefreshTracker(dockID, yards)
 		and module.riding == riding
 		and module.second == second
 		and module.journeyVersion == ns.journeyVersion
+		and module.familyVersion == ns.FamilyHints.Version()
 		and module.sightingVersion == ns.Timetable.Version()
 		and module.tracker == ns.db.tracker
 		and module.otherFaction == ns.db.otherFaction
@@ -272,6 +284,7 @@ local function RefreshTracker(dockID, yards)
 	end
 	module.riding, module.second = riding, second
 	module.journeyVersion, module.sightingVersion = ns.journeyVersion, ns.Timetable.Version()
+	module.familyVersion = ns.FamilyHints.Version()
 	module.tracker, module.otherFaction = ns.db.tracker, ns.db.otherFaction
 	module.journeyTracker, module.metres = ns.db.journeyTracker, ns.db.metres
 	if dockID then
@@ -290,12 +303,14 @@ local function RefreshTracker(dockID, yards)
 	end
 	if journeyTitle then
 		blocks[#blocks + 1] = { key = "journey", title = journeyTitle, rows = journeyRows }
+	elseif familyBlock then
+		blocks[#blocks + 1] = familyBlock
 	end
 	if blockKey then
 		blocks[#blocks + 1] = { key = blockKey, title = title, rows = rows }
 	end
 	module.dockID, module.mapDock = dockID, mapDock
-	local section = journeyTitle and L["Journey"] or kind and HEADER[kind] or ModuleMixin.headerText
+	local section = (journeyTitle or familyBlock) and L["Journey"] or kind and HEADER[kind] or ModuleMixin.headerText
 	local header = journeyTitle and JourneyHeader(journeyResult, journeyIndex, loading) or section
 	if not journeyTitle then
 		distanceCache = nil
@@ -369,6 +384,8 @@ ns.Init(function()
 		if button == "LeftButton" then
 			if ns.JourneyInfo() then
 				ns.ToggleJourneyGuide()
+			elseif ns.FamilyHints.Footer() then
+				ns.FamilyHints.OpenFooter()
 			else
 				OpenDockMap(module.mapDock)
 			end
