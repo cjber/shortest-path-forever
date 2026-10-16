@@ -131,6 +131,21 @@ for _, readyAtLoad in ipairs({ false, true }) do
 	ns.TrackerHost.SetAttached = nil
 	modules[1]:OnBlockHeaderClick({ id = "journey" }, "RightButton")
 	assert(entries["Attach to quest tracker"] == nil, "an older shared host without the call offers none")
+	-- The grey footer after a journey arrives (UI/FamilyHints.lua) opens its link on a left click.
+	local opened = 0
+	ns.FamilyHints = {
+		OpenFooter = function()
+			opened = opened + 1
+		end,
+		Footer = noop,
+		Version = function()
+			return 0
+		end,
+	}
+	modules[1]:OnBlockHeaderClick({ id = "family" }, "RightButton")
+	assert(opened == 0, "a right click on the footer does nothing")
+	modules[1]:OnBlockHeaderClick({ id = "family" }, "LeftButton")
+	assert(opened == 1, "a left click on the footer's title opens its link")
 	checks = checks + 1
 end
 print("tracker_lifecycle_spec: " .. checks .. " load-order cases passed")

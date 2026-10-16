@@ -336,6 +336,16 @@ _G.CreateFrame = function(_, name, parent, template)
 		f:SetScript("OnHide", f.OnHide)
 		f:OnShow()
 	end
+	if template == "PortraitFrameTemplate" then
+		-- The members of SharedUIPanelTemplates.xml's portrait frame that addon windows use.
+		local portrait = f:CreateTexture()
+		function f.GetPortrait()
+			return portrait
+		end
+		function f:SetTitle(title)
+			self.title = title
+		end
+	end
 	if template == "ObjectiveTrackerModuleTemplate" then
 		f.liveBlocks, f.layoutOrder = {}, {}
 		function f:SetContainer(container)
@@ -763,6 +773,8 @@ _G.C_ChatInfo = {
 -- value-changed callback, and each subpage button's OpenToCategory target.
 local addonSettings, settingsRows, settingsButtons, openedCategories = {}, {}, {}, {}
 _G.MinimalSliderWithSteppersMixin = { Label = { Right = 1 } }
+-- The frames Escape closes (UIParent.lua); the report and Forever family windows add themselves.
+_G.UISpecialFrames = _G.UISpecialFrames or {}
 _G.OFF = _G.OFF or "Off"
 _G.SecondsToTime = _G.SecondsToTime or function(seconds)
 	return seconds .. " Sec"

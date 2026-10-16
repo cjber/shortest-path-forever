@@ -192,6 +192,7 @@ local function AddQuestMenuEntry(root, questID)
 		root:CreateButton(L["Plan journey"], function()
 			PlanQuest(questID)
 		end)
+		ns.FamilyHints.AddQuestMenu(root)
 	end
 end
 
