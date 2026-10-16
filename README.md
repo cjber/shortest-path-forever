@@ -75,7 +75,7 @@ It's in English for now; [Ways to help](#ways-to-help) says how to translate it.
 
 ## Move the tracker
 
-Turn off **Attach to quest tracker** in Guidance, then drag the shared Forever column by its heading. Turn it back on to attach the column above your quests.
+Turn off **Attach to quest tracker** in Guidance, or right-click the tracker's "Journey to …" line and untick it there, then drag the shared Forever column by its heading. The column and its heading hide while nothing is tracked; turn the setting back on in Guidance to attach it above your quests again.
 
 ![Detached Forever tracker](docs/screenshots/detached.png)
 
