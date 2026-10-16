@@ -35,7 +35,7 @@ function Hints.AddQuestMenu(root)
 		root:CreateButton(
 			GRAY_FONT_COLOR:WrapTextInColorCode(L["Suggest quests for my level: Adventure Guide Forever"]),
 			function()
-				ns.Family.ShowLink(ns.db, QUEST_MENU, ADVENTURE)
+				ns.Family.ShowLink(ns.db, QUEST_MENU, ADVENTURE, nil, L)
 			end
 		)
 	end
@@ -99,7 +99,7 @@ function Hints.OpenFooter()
 	if not footer then
 		return
 	end
-	if ns.Family.ShowLink(ns.db, ARRIVAL, ADVENTURE) then
+	if ns.Family.ShowLink(ns.db, ARRIVAL, ADVENTURE, nil, L) then
 		footer = nil
 		version = version + 1
 		ns.RefreshTracker()
