@@ -103,6 +103,11 @@ before its `v*` tag, since the release publishes it as the notes.
   Which points you know, their names and the flight to take are read from the flight map.
 - WFA-28: `Data/Portals.lua` (public portals and passages): wago.tools `AreaTrigger` with classic-db
   `areatrigger_teleport` destinations, six hand-picked and named; neither database holds area triggers.
+- WFA-28: `Data/Portals.lua` `ns.Entrances` (instance entrances, extending the AreaTrigger waiver; owner decision
+  2026-10-16, delegated): a goal on a dungeon or raid map is planned to its door. The door is the wago.tools
+  `AreaTrigger` that classic-db `areatrigger_teleport` sends into the instance, or, where this build has no such
+  trigger, the instance's corpse point in wago.tools `Map` (already a `Data/Taxi.lua` source); neither database
+  links an instance to its entrance.
 - WFA-28: `Data/Teleports.lua` (class teleports and bind items): wago.tools spell and item tables with classic-db
   `spell_target_position` landings; neither database holds spell effects or landings. Known spells, reagent
   counts, cooldowns, cast times and the bind point are read from the client.

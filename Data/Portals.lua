@@ -64,3 +64,37 @@ ns.Portals = {
 		seconds = 5,
 	},
 }
+
+-- Instance entrances: a goal on a dungeon or raid map is planned to its door. [instance map] = the
+-- entrance on a walkable continent: AreaTrigger position where classic-db sends one into the instance,
+-- otherwise the Map table's corpse point (where a ghost walks back in), which has no height.
+
+-- stylua: ignore
+ns.Entrances = {
+	[33] = { name = "Shadowfang Keep", map = 0, x = -230.99, y = 1571.57 },
+	[34] = { name = "Stormwind Stockade", map = 0, x = -8762.38, y = 848.01 },
+	[36] = { name = "Deadmines", map = 0, x = -11207.8, y = 1681.15 },
+	[43] = { name = "Wailing Caverns", map = 1, x = -751.13, y = -2209.24 },
+	[47] = { name = "Razorfen Kraul", map = 1, x = -4459.45, y = -1660.21 },
+	[48] = { name = "Blackfathom Deeps", map = 1, x = 4249.12, y = 748.39 },
+	[70] = { name = "Uldaman", map = 0, x = -6060.18, y = -2955 },
+	[90] = { name = "Gnomeregan", map = 0, x = -5162.66, y = 931.6 },
+	[109] = { name = "Sunken Temple", map = 0, x = -10170.1, y = -3995.97 },
+	[129] = { name = "Razorfen Downs", map = 1, x = -4662.88, y = -2535.87 },
+	[189] = { name = "Scarlet Monastery", map = 0, x = 2892.24, y = -811.26 },
+	[209] = { name = "Zul'Farrak", map = 1, x = -6790.58, y = -2891.28 },
+	[229] = { name = "Blackrock Spire", map = 0, x = -7522.53, y = -1233.04 },
+	[230] = { name = "Blackrock Depths", map = 0, x = -7178.09, y = -928.64 },
+	[249] = { name = "Onyxia's Lair", map = 1, x = -4768.61, y = -3752.11, z = 53.432 },
+	[289] = { name = "Scholomance", map = 0, x = 1274.78, y = -2552.56 },
+	[309] = { name = "Zul'Gurub", map = 0, x = -11915.8, y = -1236.43, z = 96.15 },
+	[329] = { name = "Stratholme", map = 0, x = 3392.32, y = -3378.48 },
+	[349] = { name = "Maraudon", map = 1, x = -1432.7, y = 2924.98 },
+	[389] = { name = "Ragefire Chasm", map = 1, x = 1816.76, y = -4423.37 },
+	[409] = { name = "Molten Core", map = 0, x = -7510.87, y = -1035.87, z = 182.952 },
+	[429] = { name = "Dire Maul", map = 1, x = -3908.03, y = 1130 },
+	[469] = { name = "Blackwing Lair", map = 0, x = -7663.41, y = -1218.67 },
+	[509] = { name = "Ruins of Ahn'Qiraj", map = 1, x = -8424.94, y = 1508.65, z = 32.014 },
+	[531] = { name = "Ahn'Qiraj Temple", map = 1, x = -8230.4, y = 2005.33, z = 129.863 },
+	[533] = { name = "Naxxramas", map = 0, x = 3133.15, y = -3730.29, z = 138.659 },
+}

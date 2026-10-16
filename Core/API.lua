@@ -431,7 +431,7 @@ function API.NavigateRoute(owner, stops)
 		if not point then
 			return false
 		end
-		point.label = stop.title
+		point.label = stop.title or point.label
 		point.tooltip = stop.tooltip
 		-- A caller such as Adventure Guide may need the route to remain visible while the
 		-- player completes an interaction at this location. It resubmits the route after

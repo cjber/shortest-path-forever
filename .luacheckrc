@@ -58,6 +58,8 @@ read_globals = {
 	"IsInGroup",
 	"IsInGuild",
 	"IsInInstance",
+	"GetInstanceInfo",
+	"GetRealZoneText",
 	"IsInRaid",
 	"LE_PARTY_CATEGORY_INSTANCE",
 	"MapCanvasDataProviderMixin",

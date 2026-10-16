@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Journeys to a dungeon go to its door.** A quest objective, a map click or a guide's stop inside a dungeon or raid used to have no way there, because there's no walking map inside. From outside, the journey now takes you to the instance's entrance as "Enter Deadmines" (or the caller's own name for the stop). Inside the dungeon nothing changes.
+
 - **Data checked against Forever 1.60.1.70425.** Two Skyborne air routes changed course in this build. The Alliance skyship between Dalaran and Valanaar now takes about 5 seconds longer per round trip, and the Horde zeppelin between Thunder Bluff and Zephras Isle a fraction of a second less, so their departure times follow the new paths. Flight points, flight times, lifts, portals and teleports are unchanged.
 - **The quest tracker is let go when the Journey has nothing to show.** To fit the Forever sections above your quests, the shared column moves the game's quest tracker. It kept holding it there with no journey, no boat times and nothing from the other Forever addons, or with All Objectives collapsed. That fought EllesmereUI and other UI addons that place the tracker themselves. Now the tracker goes straight back to where the game, Edit Mode or your UI addon put it, and is moved again only once a section has something to show.
 - **Collapsing All Objectives in combat hides the Forever sections at once.** During a fight they stayed on screen until combat ended. A Forever section from another addon that changes in combat now redraws in the space it already has, instead of keeping its old text. The game's quest tracker still isn't moved until combat ends.

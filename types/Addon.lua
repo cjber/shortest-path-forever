@@ -7,6 +7,7 @@
 ---@field TaxiNodes table<number, SPFTaxiNode>
 ---@field TaxiPaths SPFTaxiPath[]
 ---@field Portals SPFPortal[]
+---@field Entrances table<number, SPFEntrance>
 ---@field Teleports SPFTeleport[]
 ---@field Landmasses SPFLandmass[]
 ---@field Walks table<number, table<string, (number|false)[]>>
@@ -77,6 +78,8 @@
 ---@field faction? string
 ---@field requires? string
 ---@field seconds number
+---@class SPFEntrance : SPFPoint -- a dungeon's or raid's door, by instance map (Data/Portals.lua)
+---@field name string
 ---@class SPFTeleport
 ---@field spell number
 ---@field item? number

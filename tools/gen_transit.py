@@ -60,7 +60,7 @@ def classicdb(refresh=False, offline=False):
         timeout=60,
         validate=gzip.decompress,
     )
-    spawns, teleports, positions = defaultdict(list), {}, {}
+    spawns, teleports, positions, instances = defaultdict(list), {}, {}, {}
     # These three tables have one INSERT per line; quoted SQL strings may contain commas and parentheses.
     tuples = re.compile(r"\(((?:'(?:\\.|[^'\\])*'|[^()'])*)\)")
     with gzip.open(path, "rt", encoding="utf-8") as stream:
@@ -83,13 +83,14 @@ def classicdb(refresh=False, offline=False):
                     row = next(csv.reader([match[1]], quotechar="'", escapechar="\\"))
                     if int(row[0]) in PORTAL_NAMES:
                         teleports[int(row[0])] = location(int(row[6]), map(float, row[7:10]))
+                    instances[int(row[0])] = int(row[6])
             elif line.startswith("INSERT INTO `spell_target_position` VALUES "):
                 for match in tuples.finditer(line):
                     row = match[1].split(",")
                     positions[int(row[0])] = location(int(row[1]), map(float, row[2:5]))
     if set(spawns) != LIFTS | TRAMS or set(teleports) != set(PORTAL_NAMES) or not positions:
         raise ValueError("classic-db: missing expected transport spawn, public passage or spell position")
-    return spawns, teleports, positions
+    return spawns, teleports, positions, instances
 
 
 def location(map_id, pos):
@@ -360,6 +361,35 @@ def portals(triggers, teleports):
     ]
 
 
+def entrances(triggers, instance_triggers, maps):
+    """Where a goal inside a dungeon or raid is reached from: [instance map] = its entrance on a walkable continent.
+
+    An AreaTrigger that classic-db's areatrigger_teleport sends into the instance, standing on a continent, is the
+    entrance itself (the lowest ID where there are several, such as Molten Core's window and lava triggers). This
+    build lacks most dungeons' triggers, so the rest take the Map table's corpse point: where a ghost is sent to walk
+    back in, outside the instance's door, with no height."""
+    result = {}
+    for trigger, target in sorted(instance_triggers.items()):
+        row, instance = triggers.get(trigger), maps.get(target)
+        if not row or not instance or instance["InstanceType"] not in ("1", "2") or target in result:
+            continue
+        continent = int(row["ContinentID"])
+        if continent in MAPS:
+            result[target] = {"name": instance["MapName_lang"], **location(continent, point(row))}
+    for target, instance in sorted(maps.items()):
+        corpse = int(instance["CorpseMapID"])
+        x, y = float(instance["Corpse_0"]), float(instance["Corpse_1"])
+        if (
+            target not in result
+            and instance["InstanceType"] in ("1", "2")
+            and corpse in MAPS
+            and (x, y) != (0, 0)
+            and not instance["MapName_lang"].startswith("<")
+        ):
+            result[target] = {"name": instance["MapName_lang"], "map": corpse, "x": round(x, 2), "y": round(y, 2)}
+    return dict(sorted(result.items()))
+
+
 def personal_teleports(tables, positions):
     """Class teleports (SkillLineAbility with a class) and items that return you to your bind point.
 
@@ -496,7 +526,7 @@ def main():
             "ItemSparse",
         )
     }
-    spawns, teleports, positions = classicdb(args.refresh, args.offline)
+    spawns, teleports, positions, instance_triggers = classicdb(args.refresh, args.offline)
     triggers = {int(r["ID"]): r for r in tables["AreaTrigger"]}
     docks, routes = transports(tables["TransportAnimation"], spawns, triggers)
     durations = inflight(
@@ -506,6 +536,7 @@ def main():
     nodes, paths = taxis(tables["TaxiNodes"], tables["TaxiPath"], tables["TaxiPathNode"], durations)
     islands = landmasses(tables["UiMapAssignment"], {int(r["ID"]): r for r in tables["Map"]})
     passages = portals(triggers, teleports)
+    doors = entrances(triggers, instance_triggers, {int(r["ID"]): r for r in tables["Map"]})
     transport_lines = header("TransportAnimation + classic-db gameobject spawns; milliseconds, world yards.")
     transport_lines += [
         "-- TB pairs have 30000/30033 ms periods: each car is a separate route.",
@@ -558,6 +589,13 @@ def main():
             "\t" + render(portal, 1) + ",",
         ]
     portal_lines += ["}", ""]
+    portal_lines += [
+        "-- Instance entrances: a goal on a dungeon or raid map is planned to its door. [instance map] = the",
+        "-- entrance on a walkable continent: AreaTrigger position where classic-db sends one into the instance,",
+        "-- otherwise the Map table's corpse point (where a ghost walks back in), which has no height.",
+        "",
+    ]
+    portal_lines += assignment("ns.Entrances", doors)
     personal, unsourced = personal_teleports(tables, positions)
     teleport_lines = header("SpellEffect TELEPORT_UNITS + classic-db spell_target_position destinations.")
     teleport_lines += [
@@ -582,7 +620,8 @@ def main():
     publish(outputs)
     print(
         f"Transports: {len(routes)} routes, {len(docks)} docks; Taxi: {len(nodes)} nodes, {len(paths)} paths, "
-        f"{covered / len(paths):.1%} measured; {len(islands)} landmasses; Portals: {len(passages)} directed entries; "
+        f"{covered / len(paths):.1%} measured; {len(islands)} landmasses; Portals: {len(passages)} directed entries, "
+        f"{len(doors)} entrances; "
         f"Teleports: {len(personal)}"
     )
 

@@ -2,6 +2,28 @@
 local ns = select(2, ...)
 local L = ns.L
 
+-- A place inside a dungeon or raid has no walking map: from outside, the journey goes to its entrance instead
+-- (Data/Portals.lua ns.Entrances). Inside that instance the point stays as it is.
+---@param point SPFPoint
+---@return SPFPoint
+function ns.InstanceEntrance(point)
+	local entrance = ns.Entrances and ns.Entrances[point.map]
+	if not entrance or select(8, GetInstanceInfo()) == point.map then
+		return point
+	end
+	local name = GetRealZoneText(point.map)
+	if not name or name == "" then
+		name = entrance.name
+	end
+	return {
+		map = entrance.map,
+		x = entrance.x,
+		y = entrance.y,
+		z = entrance.z,
+		label = L["Enter %s"]:format(name),
+	}
+end
+
 ---@param uiMapID integer
 ---@param x number
 ---@param y number
@@ -10,7 +32,7 @@ function ns.WorldPoint(uiMapID, x, y)
 	local continent, world = C_Map.GetWorldPosFromMapPos(uiMapID, CreateVector2D(x, y))
 	if continent and world then
 		local worldX, worldY = world:GetXY()
-		return { map = continent, x = worldX, y = worldY }
+		return ns.InstanceEntrance({ map = continent, x = worldX, y = worldY })
 	end
 end
 
@@ -47,7 +69,7 @@ local function PlanQuest(questID, clickedMap, isWaypoint)
 		ns.Print(L["No location for that quest yet."])
 		return
 	end
-	point.label, point.questID, point.pinBadge = location.label, questID, clickedMap ~= nil
+	point.label, point.questID, point.pinBadge = location.label or point.label, questID, clickedMap ~= nil
 	ns.StartJourney(point)
 end
 
@@ -84,7 +106,7 @@ function ns.JourneyToMapPoint(uiMapID, x, y, label)
 		ns.Print(L["no journey can be planned to that spot."])
 		return false
 	end
-	point.label = label
+	point.label = label or point.label
 	ns.StartJourney(point)
 	return true
 end
@@ -149,7 +171,7 @@ local function OnPinClick(map, action, button)
 				end
 			end
 			if point and OnZone(point) then
-				point.label = info and info.name
+				point.label = info and info.name or point.label
 				point.pinBadge = true
 				ns.StartJourney(point)
 				return true

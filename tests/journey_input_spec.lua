@@ -143,3 +143,41 @@ chatBox = {}
 destination = nil
 assert(not handler(map, 3, "LeftButton") and destination == nil, "Shift+click must share to an open chat box")
 chatBox = nil
+
+-- A spot inside a dungeon has no walking map: from outside, the journey goes to its door, named in the game's
+-- language, and a label the caller gave stands. Inside that dungeon the spot is left as it is.
+setmetatable(ns.L, {
+	__index = function(_, phrase)
+		return phrase
+	end,
+})
+ns.Entrances = { [36] = { name = "Deadmines", map = 0, x = -11207.8, y = 1681.15 } }
+local instance, zoneText = 0, "Les Mortemines"
+env.GetInstanceInfo = function()
+	return "", "none", 0, "", 0, 0, false, instance
+end
+env.GetRealZoneText = function(id)
+	return id == 36 and zoneText or ""
+end
+env.C_Map.GetWorldPosFromMapPos = function(uiMap, pos)
+	return uiMap == 1581 and 36 or 1, {
+		GetXY = function()
+			return pos.x, pos.y
+		end,
+	}
+end
+destination = nil
+assert(ns.JourneyToMapPoint(1581, 0.5, 0.5), "a spot in a dungeon plans a journey")
+assert(destination.map == 0 and destination.x == -11207.8 and destination.y == 1681.15, "it goes to the door")
+assert(destination.label == "Enter Les Mortemines", "the door is named in the game's language")
+zoneText = ""
+assert(ns.JourneyToMapPoint(1581, 0.5, 0.5) and destination.label == "Enter Deadmines", "the shipped name stands in")
+assert(
+	ns.JourneyToMapPoint(1581, 0.5, 0.5, "Van Cleef") and destination.label == "Van Cleef",
+	"a caller's label stands"
+)
+assert(ns.Entrances[36].label == nil, "the shipped entrance is never changed")
+instance = 36
+assert(ns.WorldPoint(1581, 0.5, 0.5).map == 36, "inside the dungeon the spot is left as it is")
+assert(ns.WorldPoint(1440, 0.5, 0.5).map == 1, "a spot outside any dungeon is unchanged")
+print("journey input: instance entrances ok")
