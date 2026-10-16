@@ -45,11 +45,11 @@ part of it.
 
 ## Ideas and contributors
 
-Credit for the ideas, translations and reports behind the addon.
+Credit for the ideas and reports behind the addon.
 
 | Who | What | Notes |
 |---|---|---|
-| [Polestar](https://github.com/fitzforge/polestar) by Fitz | The ideas for knowing the Hearthstone bind point at login (#147), keeping a journey after `/reload` (#148), an eased, movable fallback arrow (#149), flights in flight master tooltips (#150), routing instance goals to the entrance (#151), stopping idle minimap updates (#152), the arrival sound (#155), the time left under the compass (#156) and the goal on the minimap rim (#157); `/path report` the `Subscribe` API and `tests/README.md` (cjber/adventure-guide-forever#159, #164), and the shared tooling's zip check, `tools/doctor.py`, stale-screenshot check and `.editorconfig`, plus this file, the issue forms and the "For addon authors" changelog subsection (cjber/adventure-guide-forever#156-#158, #160-#163, #165) | GPL-3.0. Inspired only; no code was copied. Fitz is welcome to use our code. |
+| [Polestar](https://github.com/fitzforge/polestar) by Fitz | The ideas for learning the Hearthstone bind point from where it lands you (#147), keeping a journey after `/reload` (#148), an eased, movable fallback arrow (#149), flights in flight master tooltips (#150), routing instance goals to the entrance (#151), stopping idle minimap updates (#152), the arrival sound (#155), the time left under the compass (#156) and the goal on the minimap rim (#157). From cjber/adventure-guide-forever's issues: `/path report` with its copy box and caught errors (#156), the issue forms (#157), the zip check (#158), the `Subscribe` API (#159), `tools/doctor.py` (#160), the stale-screenshot check (#161), this file (#162), the "For addon authors" changelog subsection (#163), `tests/README.md` (#164) and `.editorconfig` (#165). | GPL-3.0. Inspired only; no code was copied. Fitz is welcome to use our code. |
 | Fitz | Found that drawn walks skipped the line test at their ends, with reproductions (#144); the fix is our own (#187) | |
 | Zavian | Found Shift-click on map pins blocking chat links, with the fix (#134) | |
 | Osipanda | Found routes ignoring Forever's new boats (#84) | |

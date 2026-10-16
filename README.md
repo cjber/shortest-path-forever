@@ -124,11 +124,11 @@ Run `tools/typecheck.sh` for LuaLS and static checks, and `luajit tests/<name>_s
 
 ## Credits
 
-Travel data comes from [wago.tools](https://wago.tools), [CMaNGOS](https://github.com/cmangos) (GPL) and [InFlight](https://github.com/LudiusMaximus/InFlight) (MIT). Some features were inspired by [Polestar](https://github.com/fitzforge/polestar) by Fitz, such as the arrival sound; no code was copied. Fitz is welcome to use our code. Thanks to Zavian, Osipanda, Nightwind416, wfournier, maggew and everyone who reported a bug.
+Travel data comes from [wago.tools](https://wago.tools), [CMaNGOS classic-db](https://github.com/cmangos/classic-db) (GPL-3.0), [InFlight](https://github.com/LudiusMaximus/InFlight) (MIT) and [TrinityCore](https://github.com/TrinityCore/TrinityCore)'s terrain tools. Some features were inspired by [Polestar](https://github.com/fitzforge/polestar) by Fitz, such as the arrival sound; no code was copied. Fitz is welcome to use our code. Thanks to Zavian, Osipanda, Nightwind416, wfournier, maggew and everyone who reported a bug.
 
 ## Licence
 
-GPL-3.0-or-later. Every input and its licence: [THIRD_PARTY.md](THIRD_PARTY.md).
+GPL-3.0-or-later. [THIRD_PARTY.md](THIRD_PARTY.md) lists every input.
 
 Made by Cillian Berragan · [cillian.dev](https://cillian.dev) · [GitHub](https://github.com/cjber) · [Twitter](https://twitter.com/cjberragan)
 
