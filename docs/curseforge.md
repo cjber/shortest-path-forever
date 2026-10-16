@@ -6,10 +6,10 @@ The route settles, the next boat counts down and the compass turns with you.
 
 ## Features
 
-- **Plan the trip.** Combine walking, known flights, boats, zeppelins, lifts, the tram, portals and teleports. Walking routes go around walls, hills and water. Routes replan as you move.
+- **Plan the trip.** Combine walking, known flights, boats, zeppelins, lifts, the tram, portals and teleports. Walking routes go around walls, hills and water, and a dungeon's spot leads to its entrance.
 - **Follow your guide.** RestedXP journeys are on by default, without TomTom or a bridge addon. With TomTom absent, other guides can pass waypoints to Shortest Path. Adventure Guide takes over when its RestedXP display is on.
 - **Choose what you see.** Hide Journey steps or the direction arrow while keeping the map route. Move and scale the arrow, which eases round to each bearing, and add the time left under the compass.
-- **Complete a step.** Click the current journey step and choose *Complete this step*. Skipping a Hearthstone leaves it out for that journey; later plans follow your actual position.
+- **Complete a step.** Click the current journey step and choose *Complete this step*. Skipping a Hearthstone leaves it out for that journey.
 - **Find services and departures.** Map tracking menus offer nearby trainers, repairs, vendors and other services using installed QuestieDB. Dock tooltips show destinations and times, and flight master tooltips list their flights. Ride times improve estimates.
 - **Travel prompts.** Hearthstone and teleport steps show what to cast. Transport sounds and a taskbar flash warn before a boat arrives, and an optional ping marks your arrival. A red corpse route guides ghosts back to their bodies.
 - **Keep your journey.** An option starts your own journey again after a `/reload`.

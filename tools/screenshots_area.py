@@ -12,7 +12,7 @@ from wowmock import scene
 MAP_ID = 1436
 QUEST_ID, OBJECTIVE = "92744", "0"
 # The area the player stands in, which the crop is taken around.
-STANDING = "575423"
+STANDING = "590790"
 BORDER = "interface/minimap/ui-bonusobjectiveblob-outside.blp"
 BORDER_ALPHA = 192 / 255
 STEPS = 8
