@@ -107,6 +107,7 @@ L["One line in chat the first time you log in after an update."] = "One line in 
 L["Only use the Hearthstone when it saves at least this much time."] = "Only use the Hearthstone when it saves at least this much time."
 L["Open"] = "Open"
 L["Open settings."] = "Open settings."
+L["Open the world map and choose Nearby services in its tracking menu."] = "Open the world map and choose Nearby services in its tracking menu."
 L["Open the world map to see it."] = "Open the world map to see it."
 L["Open these settings from the minimap."] = "Open these settings from the minimap."
 L["Other Faction's Routes"] = "Other Faction's Routes"

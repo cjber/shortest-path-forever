@@ -679,6 +679,12 @@ moverFrame.scripts.OnEvent(moverFrame, "PLAYER_REGEN_ENABLED")
 assert(strip.keyboard == false, "nor after combat under it")
 gamepad = false
 strip.scripts.OnEnter(strip)
+assert(strip.keyboard == true)
+gamepad = true
+strip.scripts.OnKeyDown(strip, "UP")
+assert(strip.keyboard == false and strip.propagate == true, "the gamepad interface coming up gives the keyboard back")
+gamepad = false
+strip.scripts.OnEnter(strip)
 -- Placing turned off with the pointer still on the compass: the next key gives the keyboard back.
 ns.MoveCompass(false)
 strip.scripts.OnKeyDown(strip, "UP")

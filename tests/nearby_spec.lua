@@ -222,7 +222,7 @@ local ns = {
 local gamepad = false
 ns.OpenWorldMap = function(uiMap)
 	if gamepad then
-		return false
+		return env.WorldMapFrame ~= nil and env.WorldMapFrame:IsShown()
 	end
 	env.C_Map.OpenWorldMap(uiMap)
 	return true

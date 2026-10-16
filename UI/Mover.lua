@@ -164,8 +164,9 @@ function Mover.Attach(frame, placed)
 			ReleaseKeyboard()
 			return
 		end
-		-- Placing ended (move mode off, or the frame hidden) without the pointer leaving: the keys are the game's.
-		if keyboard ~= self or not self:IsMouseEnabled() or not self:IsVisible() then
+		-- Placing ended (move mode off, the frame hidden, or the gamepad interface came up) without the pointer
+		-- leaving: the keys are the game's.
+		if keyboard ~= self or not self:IsMouseEnabled() or not self:IsVisible() or ns.GamepadUI() then
 			self:SetPropagateKeyboardInput(true)
 			ReleaseKeyboard()
 			return

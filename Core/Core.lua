@@ -68,23 +68,30 @@ end
 -- the keyboard to the game.
 ---@return boolean
 function ns.GamepadUI()
-	local styles = Enum.InputDeviceInterfaceType
-	return C_InputInterfaceStyle ~= nil and styles ~= nil and C_InputInterfaceStyle.GetCurrentStyle() == styles.Gamepad
+	-- Enum.InputDeviceInterfaceType is the Forever UI's own name (Blizzard_EditMode/Shared/EditModeManager.lua).
+	local styles, api = Enum.InputDeviceInterfaceType, C_InputInterfaceStyle
+	return styles ~= nil and api ~= nil and api.GetCurrentStyle ~= nil and api.GetCurrentStyle() == styles.Gamepad
 end
 
--- Opens the world map from our own code, except under the gamepad interface, where the game opens it (#158): the
--- player is told to open it, and nothing else changes. Returns whether it opened.
+-- Shows the world map on uiMap (or where you are) and returns whether it is up. Under the gamepad interface the
+-- addon never opens it (#158): a map the game already opened is turned to uiMap, as a click on it would, and with
+-- none the player is told to open it (`hint`, or the plain line) and false comes back.
 ---@param uiMap? number
+---@param hint? string
 ---@return boolean
-function ns.OpenWorldMap(uiMap)
-	if ns.GamepadUI() then
-		if not (WorldMapFrame and WorldMapFrame:IsShown()) then
-			ns.Print(ns.L["Open the world map to see it."])
-		end
-		return false
+function ns.OpenWorldMap(uiMap, hint)
+	if not ns.GamepadUI() then
+		C_Map.OpenWorldMap(uiMap)
+		return true
 	end
-	C_Map.OpenWorldMap(uiMap)
-	return true
+	if WorldMapFrame and WorldMapFrame:IsShown() then
+		if uiMap then
+			WorldMapFrame:SetMapID(uiMap)
+		end
+		return true
+	end
+	ns.Print(hint or ns.L["Open the world map to see it."])
+	return false
 end
 
 ---@param message string
