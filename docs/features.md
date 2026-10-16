@@ -162,3 +162,11 @@ With RestedXP installed, **Resume guide** in Guidance or the Journey header menu
     Shortest Path can't tell which instances Legacy covers, so it shows on every door.
 
   Clicking the menu entry or the tracker line opens the link window with *Don't suggest this again*.
+
+## Languages
+
+The addon follows the game's language. Which languages it ships in, how they were translated and how to correct a
+line are in [Locales/README.md](../Locales/README.md).
+
+Outside the Chinese clients the game shows yards as metres, so distances do too. *Distances in metres* in Interface
+switches to real metres and kilometres.

@@ -23,8 +23,6 @@ L["/way [zone] x y [title], with x and y from 0 to 100."] = "/way [地區] x y [
 L["Adventure Guide couldn't start that just now. Choose it again from its guide."] =
 	"Adventure Guide暫時無法開始。請在其指南中重新選擇。"
 L["Adventure Guide suggests"] = "Adventure Guide推薦"
-L["Adventure Guide's suggestions show in the quest menus, and a new settings page lists my other Forever addons."] =
-	"Adventure Guide的推薦會顯示在任務選單中，新的設定頁面會列出我的其他Forever插件。"
 L["Alert before a boat arrives"] = "船隻抵達前提醒"
 L["Alerts"] = "提醒"
 L["Alliance"] = "聯盟"
@@ -120,6 +118,8 @@ L["No location for that quest yet."] = "該任務還沒有位置。"
 L["No way there from here."] = "從這裡無法抵達那裡。"
 L["Not discovered"] = "未發現"
 L["Not installed"] = "未安裝"
+L["Now also in German, French, Spanish, Brazilian Portuguese, Russian, Korean and Chinese (machine translated)."] =
+	"現已支援德語、法語、西班牙語、巴西葡萄牙語、俄語、韓語和中文（機器翻譯）。"
 L["On"] = "開啟"
 L["On board to %s"] = "搭乘前往%s"
 L["On the world map."] = "顯示在世界地圖上。"

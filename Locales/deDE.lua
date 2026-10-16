@@ -23,8 +23,6 @@ L["/way [zone] x y [title], with x and y from 0 to 100."] = "/way [Zone] x y [Ti
 L["Adventure Guide couldn't start that just now. Choose it again from its guide."] =
 	"Adventure Guide konnte das gerade nicht starten. Wählt es erneut in seinem Leitfaden aus."
 L["Adventure Guide suggests"] = "Adventure Guide schlägt vor"
-L["Adventure Guide's suggestions show in the quest menus, and a new settings page lists my other Forever addons."] =
-	"Die Vorschläge von Adventure Guide erscheinen in den Questmenüs, und eine neue Optionsseite listet meine anderen Forever-Addons."
 L["Alert before a boat arrives"] = "Warnung, bevor ein Schiff ankommt"
 L["Alerts"] = "Warnungen"
 L["Alliance"] = "Allianz"
@@ -121,6 +119,8 @@ L["No location for that quest yet."] = "Noch kein Ort für diese Quest."
 L["No way there from here."] = "Von hier gibt es keinen Weg dorthin."
 L["Not discovered"] = "Nicht entdeckt"
 L["Not installed"] = "Nicht installiert"
+L["Now also in German, French, Spanish, Brazilian Portuguese, Russian, Korean and Chinese (machine translated)."] =
+	"Jetzt auch auf Deutsch, Französisch, Spanisch, Brasilianisch-Portugiesisch, Russisch, Koreanisch und Chinesisch (maschinell übersetzt)."
 L["On"] = "An"
 L["On board to %s"] = "An Bord nach %s"
 L["On the world map."] = "Auf der Weltkarte."
