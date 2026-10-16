@@ -37,6 +37,7 @@ Transport\Taxi.lua
 Transport\Teleports.lua
 UI\Art.lua
 UI\Report.lua
+UI\ForeverFamily.lua
 UI\Map.lua
 UI\Looks.lua
 UI\MinimapPins.lua

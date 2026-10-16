@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **A Forever addons page in the settings.** Under Shortest Path Forever in the AddOns settings, *Forever addons* lists my five WoW: Forever addons with what each does and whether you have it: on, installed but turned off, or not installed. *Copy link* shows the addon's CurseForge address to copy into your browser. The page also has *Suggest my other Forever addons*, on by default, for the quiet hints about addons you don't have; untick it and none show.
+
 ## [1.17.0] - 2026-10-16
 
 - **Data checked against Forever 1.60.1.70425.** Two Skyborne air routes changed course in this build. The Alliance skyship between Dalaran and Valanaar now takes about 5 seconds longer per round trip, and the Horde zeppelin between Thunder Bluff and Zephras Isle a fraction of a second less, so their departure times follow the new paths. Flight points, flight times, lifts, portals and teleports are unchanged.

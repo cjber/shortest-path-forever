@@ -777,6 +777,16 @@ _G.Settings = setmetatable({
 			end,
 		}
 	end,
+	RegisterCanvasLayoutSubcategory = function(parent, frame, name)
+		assert(frame, "a canvas page has its frame")
+		return {
+			name = name,
+			parent = parent,
+			GetID = function(self)
+				return self.name
+			end,
+		}
+	end,
 	RegisterVerticalLayoutSubcategory = function(parent, name)
 		return {
 			name = name,
