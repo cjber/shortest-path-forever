@@ -12,7 +12,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
-- **A Forever addons page in the settings.** Under Shortest Path Forever in the AddOns settings, *Forever addons* lists my five WoW: Forever addons with what each does and whether you have it: on, installed but turned off, or not installed. *Copy link* shows the addon's CurseForge address to copy into your browser. The same page has *Suggest my other Forever addons*, on by default: where one of the others would help, Shortest Path may show a quiet grey line about it, only for addons you don't have. Untick it and none show. Each line also has *Don't suggest this again*.
+- **A Forever addons page in the settings.** Under Shortest Path Forever in the AddOns settings, *Forever addons* lists my five WoW: Forever addons with what each does and whether you have it: on, installed but turned off, or not installed. *Copy link* shows the addon's CurseForge address to copy into your browser. The page also has *Suggest my other Forever addons*, on by default, for the quiet hints about addons you don't have; untick it and none show.
 
 ## [1.17.0] - 2026-10-16
 

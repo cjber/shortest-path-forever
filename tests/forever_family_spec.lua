@@ -1,6 +1,6 @@
 -- UI/ForeverFamily.lua is byte-identical in all five Forever addons, and so is this spec. A change to the module is
 -- made in Shortest Path Forever first, then copied unchanged to the other four with this spec and its new pin.
-local PINNED = "0e9abdf1ac836a0c93913fb000d55f98075203a1d83103885d809f197502806d"
+local PINNED = "59852f2b801d864dce6a8341bbeb13927182c28d31d0cdfc3e283cb0c2df9eab"
 local PATH = "UI/ForeverFamily.lua"
 
 local bit = require("bit")
@@ -243,6 +243,12 @@ local count = #frames
 local second = { L = PhraseLocale() }
 check(Load(second) == Family, "a later copy joins the first")
 check(#frames == count and count == 0, "loading builds no frames; the window and page wait until they're needed")
+check(type(Family.VERSION) == "number" and Family.VERSION >= 1, "the module says which version it is")
+local older = { VERSION = Family.VERSION - 1 }
+env.ForeverFamily = older
+local newer = { L = PhraseLocale() }
+check(Load(newer) ~= older and env.ForeverFamily == newer.Family, "a newer copy takes over from an older one")
+env.ForeverFamily = Family
 
 -- The five addons, in order, with their store pages.
 local expected = {
@@ -353,7 +359,7 @@ local parent = Create("Frame")
 local panel = Family.CreatePanel(parent, function()
 	return saved
 end, "LegacyForever")
-check(#panel.children == 0, "nothing is built until the page shows")
+check(#panel.children == 0 and not panel.shown, "the page starts hidden and empty until it shows")
 panel:Show()
 check(Texts(panel):find("Forever addons", 1, true), "the page has its title")
 local check_ = Children(panel, "CheckButton")[1]
@@ -387,8 +393,16 @@ check(window:IsShown() and window.title == "SkillUp Forever", "Copy link opens t
 saved.suggestFamily = false
 panel:Show()
 check(not check_.checked, "the box shows the saved setting")
+saved.familyDismissed = { ["Test.footer"] = true }
 panel:OnDefault()
 check(saved.suggestFamily == true and check_.checked, "Defaults turns the hints back on")
+check(saved.familyDismissed == nil, "including the dismissed ones")
+local unloaded = Family.CreatePanel(nil, function() end)
+unloaded:Show()
+local early = Children(unloaded, "CheckButton")[1]
+early.checked = false
+early:Click()
+check(early.checked, "before saved variables load, the box can't be changed")
 local tableDb = { suggestFamily = false }
 local plain = Family.CreatePanel(nil, tableDb)
 plain:Show()

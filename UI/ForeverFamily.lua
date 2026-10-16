@@ -3,7 +3,8 @@ local _, ns = ...
 
 -- The Forever addons, and the quiet hints one shows for another the player doesn't have. This file is
 -- byte-identical in all five addons (tests/forever_family_spec.lua pins it): the first copy to load sets the
--- `ForeverFamily` global and later copies use it. It holds no addon's own code; each addon passes in its saved
+-- `ForeverFamily` global and later copies use it, unless a later copy is newer (a higher VERSION), which takes over
+-- so an addon updated first never runs on an older copy. It holds no addon's own code; each addon passes in its saved
 -- variables (`db`) and its own folder. Nothing here is protected, hooks Blizzard code, runs in combat or reaches
 -- the network: a hint is a grey line, a menu entry or a settings row that shows a link to copy.
 
@@ -25,6 +26,7 @@ local _, ns = ...
 ---@alias ForeverFamilySaved ForeverFamilyDB|fun(): ForeverFamilyDB?
 
 ---@class ForeverFamilyAPI
+---@field VERSION integer raised with every change to this file
 ---@field ADDONS ForeverFamilyAddon[]
 ---@field State fun(folder: string): ForeverFamilyState
 ---@field Hint fun(db?: ForeverFamilyDB, key: string, folder: string): boolean
@@ -42,7 +44,8 @@ local _, ns = ...
 ---@field SetTitle fun(self: ForeverFamilyLinkWindow, title: string)
 ---@field GetPortrait fun(self: ForeverFamilyLinkWindow): Texture
 
-if ForeverFamily then
+local VERSION = 1
+if ForeverFamily and (tonumber(ForeverFamily.VERSION) or 0) >= VERSION then
 	ns.Family = ForeverFamily
 	return
 end
@@ -60,7 +63,7 @@ local QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
 local LINK_NAME = "ForeverFamilyLink"
 
 ---@class ForeverFamilyAPI
-local Family = {}
+local Family = { VERSION = VERSION }
 Family.ADDONS = {
 	{
 		name = "Shortest Path Forever",
@@ -304,13 +307,15 @@ local ROW_HEIGHT = 52
 -- The "Forever addons" settings page: the hint setting, then a row per addon with its icon, line, state and a
 -- Copy link button. `db` is the addon's saved variables, or a function that returns them once they load;
 -- `current` is the addon's own folder, whose row says "This addon". The rows are built the first time it shows
--- and their states read again each time.
+-- and their states read again each time. Defaults turns the hints back on, dismissed ones included.
 ---@param parent? Frame
 ---@param db ForeverFamilySaved
 ---@param current? string
 ---@return ForeverFamilyPanel
 function Family.CreatePanel(parent, db, current)
 	local panel = CreateFrame("Frame", nil, parent) --[[@as ForeverFamilyPanel]]
+	-- Hidden until the settings panel shows it, so its OnShow always fires.
+	panel:Hide()
 	---@return ForeverFamilyDB?
 	local function Saved()
 		if type(db) == "function" then
@@ -332,6 +337,8 @@ function Family.CreatePanel(parent, db, current)
 			local saved = Saved()
 			if saved then
 				saved.suggestFamily = self:GetChecked() and true or false
+			else
+				self:SetChecked(true)
 			end
 		end)
 		local label = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
@@ -393,7 +400,7 @@ function Family.CreatePanel(parent, db, current)
 	function panel.OnDefault()
 		local saved = Saved()
 		if saved then
-			saved.suggestFamily = true
+			saved.suggestFamily, saved.familyDismissed = true, nil
 		end
 		Refresh()
 	end
