@@ -2,6 +2,34 @@
 local ns = select(2, ...)
 local L = ns.L
 
+-- A place inside a dungeon or raid has no walking map: from outside, a journey there goes to the instance's door
+-- (Data/Portals.lua ns.Entrances) and arrives when you go in. The door keeps the stop it stands for (`stop`), its
+-- name, quest and title; areas and holds drawn inside the instance stay behind. Inside, the point stays as it is.
+---@param point SPFPoint
+---@return SPFPoint
+function ns.InstanceEntrance(point)
+	local entrance = ns.Entrances and ns.Entrances[point.map]
+	if not entrance or select(8, GetInstanceInfo()) == point.map then
+		return point
+	end
+	local name = GetRealZoneText(point.map)
+	if not name or name == "" then
+		name = entrance.name
+	end
+	return {
+		map = entrance.map,
+		x = entrance.x,
+		y = entrance.y,
+		z = entrance.z,
+		label = point.label or L["Enter %s"]:format(name),
+		questID = point.questID,
+		routeTitle = point.routeTitle,
+		tooltip = point.tooltip,
+		entrance = point.map,
+		stop = point,
+	}
+end
+
 ---@param uiMapID integer
 ---@param x number
 ---@param y number
@@ -80,7 +108,7 @@ end
 ---@return boolean
 function ns.JourneyToMapPoint(uiMapID, x, y, label)
 	local point = ns.WorldPoint(uiMapID, x, y)
-	if not (point and OnZone(point)) then
+	if not (point and OnZone(ns.InstanceEntrance(point))) then
 		ns.Print(L["no journey can be planned to that spot."])
 		return false
 	end
@@ -148,7 +176,7 @@ local function OnPinClick(map, action, button)
 					point = ns.WorldPoint(map:GetMapID(), x, y)
 				end
 			end
-			if point and OnZone(point) then
+			if point and OnZone(ns.InstanceEntrance(point)) then
 				point.label = info and info.name
 				point.pinBadge = true
 				ns.StartJourney(point)
@@ -184,7 +212,7 @@ ns.Init(function()
 			return
 		end
 		local point = ns.WorldPoint(WorldMapFrame:GetMapID(), WorldMapFrame:GetNormalizedCursorPosition())
-		if point and OnZone(point) then
+		if point and OnZone(ns.InstanceEntrance(point)) then
 			ns.StartJourney(point)
 		end
 	end)

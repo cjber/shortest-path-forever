@@ -225,15 +225,27 @@ local function UpdateProgress()
 		Guide.Pause()
 		return
 	end
-	if not goal.hold and Near(goal) then
+	-- A dungeon's door is reached by going in (EnteredInstance), never by standing beside it: the stop it stands for
+	-- is inside, and the next stop may be too.
+	if not goal.hold and not goal.entrance and Near(goal) then
 		Arrive()
 		return
 	end
 	local riding, flying = ns.CurrentRide(), UnitOnTaxi("player")
-	if ns.AdvanceJourneyProgress(result.legs, progress, goal, riding, flying, Near, Guide) then
+	if ns.AdvanceJourneyProgress(result.legs, progress, goal, riding, flying, Near, Guide) or goal.entrance then
 		return
 	end
 	Arrive()
+end
+
+-- Going in through the door of the instance a journey's stop is inside completes that stop.
+local function EnteredInstance()
+	if goal and goal.entrance and not nextPoint and select(8, GetInstanceInfo()) == goal.entrance then
+		Arrive()
+		if nextPoint then
+			ns.StartJourney(nextPoint)
+		end
+	end
 end
 
 ---@return boolean
@@ -546,6 +558,7 @@ end
 ---@param point SPFPoint
 ---@return boolean
 function ns.StartJourney(point)
+	point = ns.InstanceEntrance(point)
 	if CorpseRun() then
 		-- Queued behind the corpse run, which ResumeJourney plans from where you come back to life.
 		if not (goal and SamePlace(goal, point)) then
@@ -611,6 +624,7 @@ ns.Init(function()
 	driver:SetScript("OnEvent", function(self, event, questID)
 		if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
 			Guide.ClearOrphan()
+			EnteredInstance()
 		elseif
 			event == "PLAYER_REGEN_DISABLED"
 			and not (goal and goal.hold and (goal.radius or goal.shapes or goal.questIDs))

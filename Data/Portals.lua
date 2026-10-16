@@ -64,3 +64,101 @@ ns.Portals = {
 		seconds = 5,
 	},
 }
+
+-- Instance entrances: a goal on a dungeon or raid map is planned to its door. [instance map] = the door
+-- on a walkable continent: the Map table's corpse point (where a ghost walks back in; no height), else the
+-- AreaTrigger classic-db sends into the instance. zones: the outdoor UiMaps whose region holds it.
+
+-- stylua: ignore
+ns.Entrances = {
+	[33] = { name = "Shadowfang Keep", map = 0, x = -230.99, y = 1571.57, zones = { 1421 } },
+	[34] = { name = "Stormwind Stockade", map = 0, x = -8762.38, y = 848.01, zones = { 1429, 1453 } },
+	[36] = { name = "Deadmines", map = 0, x = -11207.8, y = 1681.15, zones = { 1434, 1436 } },
+	[43] = {
+		name = "Wailing Caverns",
+		map = 1,
+		x = -751.13,
+		y = -2209.24,
+		zones = {
+			1411, 1412, 1413,
+		},
+	},
+	[47] = {
+		name = "Razorfen Kraul",
+		map = 1,
+		x = -4459.45,
+		y = -1660.21,
+		zones = {
+			1413, 1441, 1445,
+		},
+	},
+	[48] = {
+		name = "Blackfathom Deeps",
+		map = 1,
+		x = 4249.12,
+		y = 748.39,
+		zones = {
+			1439, 1440, 1448,
+		},
+	},
+	[70] = {
+		name = "Uldaman",
+		map = 0,
+		x = -6060.18,
+		y = -2955,
+		zones = {
+			1418, 1426, 1432,
+		},
+	},
+	[90] = { name = "Gnomeregan", map = 0, x = -5162.66, y = 931.6, zones = { 1426 } },
+	[109] = { name = "Sunken Temple", map = 0, x = -10170.1, y = -3995.97, zones = { 1435 } },
+	[129] = {
+		name = "Razorfen Downs",
+		map = 1,
+		x = -4662.88,
+		y = -2535.87,
+		zones = {
+			1413, 1441, 1445,
+		},
+	},
+	[189] = { name = "Scarlet Monastery", map = 0, x = 2892.24, y = -811.26, zones = { 1420, 1422 } },
+	[209] = {
+		name = "Zul'Farrak",
+		map = 1,
+		x = -6790.58,
+		y = -2891.28,
+		zones = {
+			1441, 1446, 1449,
+		},
+	},
+	[229] = { name = "Blackrock Spire", map = 0, x = -7522.53, y = -1233.04, zones = { 1427, 1428 } },
+	[230] = { name = "Blackrock Depths", map = 0, x = -7178.09, y = -928.64, zones = { 1427, 1428 } },
+	[249] = {
+		name = "Onyxia's Lair",
+		map = 1,
+		x = -4753.31,
+		y = -3752.42,
+		zones = {
+			1413, 1441, 1445,
+		},
+	},
+	[289] = {
+		name = "Scholomance",
+		map = 0,
+		x = 1274.78,
+		y = -2552.56,
+		zones = {
+			1422, 1423, 1425,
+		},
+	},
+	[309] = { name = "Zul'Gurub", map = 0, x = -11916.06, y = -1224.58, zones = { 1434 } },
+	[329] = { name = "Stratholme", map = 0, x = 3392.32, y = -3378.48, zones = { 1423 } },
+	[349] = { name = "Maraudon", map = 1, x = -1432.7, y = 2924.98, zones = { 1443 } },
+	[389] = { name = "Ragefire Chasm", map = 1, x = 1816.76, y = -4423.37, zones = { 1454 } },
+	[409] = { name = "Molten Core", map = 0, x = -7510.56, y = -1036.7, zones = { 1427, 1428 } },
+	[429] = { name = "Dire Maul", map = 1, x = -3908.03, y = 1130, zones = { 1413, 1444 } },
+	[469] = { name = "Blackwing Lair", map = 0, x = -7663.41, y = -1218.67, zones = { 1428 } },
+	[509] = { name = "Ruins of Ahn'Qiraj", map = 1, x = -8114.46, y = 1526.37, zones = { 1451 } },
+	[531] = { name = "Ahn'Qiraj Temple", map = 1, x = -8111.72, y = 1526.79, zones = { 1451 } },
+	[533] = { name = "Naxxramas", map = 0, x = 3133.15, y = -3730.29, z = 138.659, zones = { 1422, 1423 } },
+}
