@@ -1,6 +1,6 @@
 -- UI/ForeverFamily.lua is byte-identical in all five Forever addons, and so is this spec. A change to the module is
 -- made in Shortest Path Forever first, then copied unchanged to the other four with this spec and its new pin.
-local PINNED = "a3892682638ef9c4fe066fae714a26cd8a48f586ae80b2c7cce1e2cd91a58f4f"
+local PINNED = "888db73062646cd0e1e129ebf96b3be8081fafbbc477954ccf2de89c8b1fa5fb"
 local PATH = "UI/ForeverFamily.lua"
 
 local bit = require("bit")
@@ -134,6 +134,12 @@ end
 function Widget:GetWidth()
 	return self.width or 0
 end
+function Widget:SetHeight(height)
+	self.height = height
+end
+function Widget:SetSize(width, height)
+	self.width, self.height = width, height
+end
 -- A label's width as the client would measure it: seven pixels a letter.
 function Widget:GetFontString()
 	local widget = self
@@ -142,6 +148,10 @@ function Widget:GetFontString()
 			return #(widget.text or "") * 7
 		end,
 	}
+end
+-- Text as tall as the client would set it: one 14-pixel line per 50 letters.
+function Widget:GetStringHeight()
+	return math.max(1, math.ceil(#(self.text or "") / 50)) * 14
 end
 function Widget:GetChecked()
 	return self.checked
@@ -210,6 +220,14 @@ local function Client()
 	env = setmetatable({
 		UIParent = Create("Frame"),
 		UISpecialFrames = {},
+		tContains = function(list, item)
+			for _, value in ipairs(list) do
+				if value == item then
+					return true
+				end
+			end
+			return false
+		end,
 		InCombatLockdown = function()
 			return combat
 		end,
@@ -266,15 +284,11 @@ local secondView = Load(second)
 check(env.ForeverFamily == Family and secondView ~= firstView, "a later copy joins the first, with its own view")
 check(secondView.Hint == Family.Hint, "the same module behind it")
 check(#frames == count and count == 0, "loading builds no frames; the window and page wait until they're needed")
-local older = { VERSION = Family.VERSION - 1, claimed = { ["Test.older"] = true } }
+local older = { VERSION = Family.VERSION - 1 }
 env.ForeverFamily = older
 local newer = { L = PhraseLocale() }
 Load(newer)
 check(env.ForeverFamily ~= older and env.ForeverFamily.VERSION == 3, "a newer copy takes over from an older one")
-check(not env.ForeverFamily.Once("Test.older"), "and carries on what the older one already claimed this session")
-env.ForeverFamily = { VERSION = 2 }
-Load({ L = PhraseLocale() })
-check(env.ForeverFamily.Once("Test.v2"), "an older copy with no record starts a fresh one")
 env.ForeverFamily = Family
 
 -- The five addons, in order, with their store pages.
@@ -358,7 +372,7 @@ local buttons = Children(window, "Button", "UIPanelButtonTemplate")
 local close, never = buttons[1], buttons[2]
 check(close.text == "Close" and never.text == "Don't suggest this again", "Close and Don't suggest this again")
 check(close.width == 96 and never.width == #"Don't suggest this again" * 7 + 24, "each as wide as its label needs")
-check(window.width == 400, "inside the window's own width")
+check(window.width == 400 and window.height == 186, "inside the window's own size")
 check(never:IsShown(), "a hint's window offers to dismiss it")
 close:Click()
 check(not window:IsShown(), "Close closes it")
@@ -498,26 +512,47 @@ check(linkButtons[1].text == "Fermer", "a view's ShowLink reads in its own L")
 frenchView.ShowLink(nil, nil, "ShortestPathForever", nil, PhraseLocale())
 check(linkButtons[1].text == "Close", "unless the call names another")
 
--- VERSION 3 takes over from an older copy and its window, which keeps one name: the older window is put away and
--- Escape lists the name once.
+-- A long translation grows the window rather than pushing a button out of it or running the line over the box. The
+-- hidden Don't suggest button doesn't count.
+local long = { ["Don't suggest this again"] = string.rep("x", 60), [SPF_LINE] = string.rep("y", 160) }
+Translated.ShowLink({}, "Test.long", "ShortestPathForever", nil, long)
+check(linkWindow.width == 96 + 8 + (60 * 7 + 24) + 102, "the window fits its buttons")
+check(linkWindow.height == 4 * 14 + 14 + 124, "and its line")
+Translated.ShowLink(nil, nil, "ShortestPathForever", nil, long)
+check(linkWindow.width == 400, "a hidden button takes no room")
+
+-- The generic rule for a later version: a newer copy takes over the global, puts away the window the older one
+-- keeps on its own table (one name, listed once for Escape), and an addon still holding the older copy's view is
+-- served by the newer one.
 Client()
-env.ForeverFamily = { VERSION = 2 }
-local oldWindow = Create("Frame")
-env.ForeverFamilyLink = oldWindow
+local v3view = Load({ L = PhraseLocale() })
+local v3 = env.ForeverFamily
+v3view.ShowLink(nil, nil, "TweaksForever")
+local v3window = v3.window
+check(v3window == named.ForeverFamilyLink and v3window:IsShown(), "the window is kept on the module")
+local served = {}
+local v4 = {
+	VERSION = 4,
+	ShowLink = function(_, _, folder)
+		served[#served + 1] = folder
+		return true
+	end,
+	Once = function()
+		return "v4"
+	end,
+}
+env.ForeverFamily = v4
+check(v3view.ShowLink(nil, nil, "SkillUpForever") and served[1] == "SkillUpForever", "a newer copy serves ShowLink")
+check(v3.Once("Test.later") == "v4", "and Once, so there is one record")
+-- And from the other side: a copy taking over from an older one hides the older one's window.
+Client()
+local olderWindow = Create("Frame")
+env.ForeverFamily = { VERSION = 2, window = olderWindow }
 env.UISpecialFrames[1] = "ForeverFamilyLink"
 local takeoverView = Load({ L = PhraseLocale() })
-check(env.ForeverFamily.VERSION == 3, "VERSION 3 replaces VERSION 2")
 takeoverView.ShowLink(nil, nil, "TweaksForever")
-check(not oldWindow:IsShown() and named.ForeverFamilyLink:IsShown(), "the older window is put away")
+check(not olderWindow:IsShown() and named.ForeverFamilyLink:IsShown(), "the older copy's window is put away")
 check(#env.UISpecialFrames == 1, "and Escape lists the name once")
--- A VERSION 2 window (its own name) is put away too, and again whenever this one shows.
-local v2Window = Create("Frame")
-env.ForeverFamilyLink2 = v2Window
-takeoverView.ShowLink(nil, nil, "SkillUpForever")
-check(not v2Window:IsShown(), "two link windows never show at once")
--- A long translation widens the window rather than pushing a button out of it.
-takeoverView.ShowLink(nil, nil, "SkillUpForever", nil, { ["Don't suggest this again"] = string.rep("x", 60) })
-check(named.ForeverFamilyLink.width == 96 + (60 * 7 + 24) + 110, "the window fits its buttons")
 
 -- An addon whose L uses other keys (Adventure Guide's) names an English-keyed one as ns.FamilyL for this file.
 Client()

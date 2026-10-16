@@ -47,21 +47,31 @@ end
 local QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
 -- One window name for every copy and version, so Escape always knows it.
 local LINK_NAME = "ForeverFamilyLink"
--- Older copies' windows (VERSION 1 used LINK_NAME too, VERSION 2 its own), put away whenever this one shows.
-local OLDER_WINDOWS = { LINK_NAME, "ForeverFamilyLink2" }
 local NO_STRINGS = {}
+-- The copy this one takes over, if an older version loaded first: its window is put away when this one opens.
+local previous = ForeverFamily
 
 ---@class ForeverFamilyAPI
 ---@field VERSION integer raised with every change to this file
 ---@field ADDONS ForeverFamilyAddon[] the five addons, in order
----@field claimed table<string, boolean> the keys Once has said yes to this session, shared by later versions
+---@field window? ForeverFamilyLinkWindow the link window once built, for a newer copy to put away
 local Family = { VERSION = VERSION }
+
+-- The copy now in charge when a newer version has taken over the global since this one loaded: an addon still
+-- holding this copy's view is then served by the newer one, so there is only ever one window and one record.
+---@return ForeverFamilyAPI?
+local function Newer()
+	local current = ForeverFamily
+	if current ~= Family and type(current) == "table" and (tonumber(current.VERSION) or 0) > VERSION then
+		return current
+	end
+end
 
 -- Every addon's L takes English phrases as keys. A phrase reads from one L only, the calling addon's (or, for a
 -- caller that names none, the L of the addon whose copy is in use), and as itself where that L has no string for
 -- it, so a line is never half in one language and half in another. A phrase counts only as the L's own entry
--- (rawget), never through its metatable. One lookup table per L, kept for the session like the L itself.
-local strings = {}
+-- (rawget), never through its metatable. One lookup table per L, rebuilt if the collector takes it.
+local strings = setmetatable({}, { __mode = "kv" })
 ---@param locale? ForeverFamilyL
 ---@return ForeverFamilyL
 local function Strings(locale)
@@ -208,17 +218,20 @@ function Family.Hint(db, key, folder)
 	return Family.State(folder) == "missing"
 end
 
--- One record for the session however many copies load: a newer version carries it on.
-Family.claimed = ForeverFamily and type(ForeverFamily.claimed) == "table" and ForeverFamily.claimed or {}
+local claimed = {}
 -- True the first time `key` asks this session, for the places that draw attention (the tracker footer). Keys are
 -- shared by every Forever addon, so each starts with its own addon's name.
 ---@param key string
 ---@return boolean
 function Family.Once(key)
-	if Family.claimed[key] then
+	local newer = Newer()
+	if newer and type(newer.Once) == "function" then
+		return newer.Once(key)
+	end
+	if claimed[key] then
 		return false
 	end
-	Family.claimed[key] = true
+	claimed[key] = true
 	return true
 end
 
@@ -235,31 +248,18 @@ local function Select(edit)
 	edit:HighlightText()
 end
 
--- Another copy's window, from an older version still loaded in another addon, so two never show at once.
-local function PutAwayOthers()
-	for _, name in ipairs(OLDER_WINDOWS) do
-		local other = rawget(_G, name)
-		if other ~= window and type(other) == "table" and type(other.Hide) == "function" then
-			other:Hide()
-		end
-	end
-end
-
 ---@return ForeverFamilyLinkWindow
 local function Window()
 	if window then
 		return window
 	end
-	PutAwayOthers()
-	local frame = CreateFrame("Frame", LINK_NAME, UIParent, "PortraitFrameTemplate") --[[@as ForeverFamilyLinkWindow]]
-	local listed = false
-	for _, name in ipairs(UISpecialFrames) do
-		if name == LINK_NAME then
-			listed = true
-			break
-		end
+	-- The copy this one took over keeps its window on its own table; this one takes the name, and Escape with it.
+	local older = type(previous) == "table" and previous.window
+	if type(older) == "table" and type(older.Hide) == "function" then
+		older:Hide()
 	end
-	if not listed then
+	local frame = CreateFrame("Frame", LINK_NAME, UIParent, "PortraitFrameTemplate") --[[@as ForeverFamilyLinkWindow]]
+	if not tContains(UISpecialFrames, LINK_NAME) then
 		-- Escape closes it like any panel (an addon-owned frame).
 		table.insert(UISpecialFrames, LINK_NAME)
 	end
@@ -280,7 +280,7 @@ local function Window()
 	line:SetJustifyH("LEFT")
 
 	local edit = CreateFrame("EditBox", nil, frame, "InputBoxTemplate") --[[@as EditBox]]
-	edit:SetPoint("TOPLEFT", 76, -78)
+	edit:SetPoint("TOPLEFT", line, "BOTTOMLEFT", 6, -12)
 	edit:SetPoint("RIGHT", -20, 0)
 	edit:SetHeight(24)
 	edit:SetAutoFocus(false)
@@ -325,6 +325,7 @@ local function Window()
 
 	parts.line, parts.edit, parts.hint, parts.close, parts.never = line, edit, hint, close, never
 	window = frame
+	Family.window = frame
 	return frame
 end
 
@@ -338,12 +339,15 @@ end
 ---@param locale? ForeverFamilyL
 ---@return boolean
 function Family.ShowLink(db, key, folder, onDismiss, locale)
+	local newer = Newer()
+	if newer and type(newer.ShowLink) == "function" then
+		return newer.ShowLink(db, key, folder, onDismiss, locale)
+	end
 	local addon = Find(folder)
 	if not addon or InCombatLockdown() then
 		return false
 	end
 	local frame = Window()
-	PutAwayOthers()
 	local L = Strings(locale)
 	showing.db, showing.key, showing.onDismiss = db, key, onDismiss
 	shownURL = addon.url
@@ -354,12 +358,17 @@ function Family.ShowLink(db, key, folder, onDismiss, locale)
 	parts.hint:SetText(L["Copy the address, then open it in your browser."])
 	parts.close:SetText(L["Close"])
 	parts.never:SetText(L["Don't suggest this again"])
+	local dismissable = db ~= nil and key ~= nil
 	Fit(parts.close, 96)
 	Fit(parts.never, 140)
-	-- The window widens for a long translation rather than letting a button leave it.
-	frame:SetWidth(math.max(400, parts.close:GetWidth() + parts.never:GetWidth() + 110))
+	parts.never:SetShown(dismissable)
+	-- The window grows for a long translation rather than letting a button leave it or the line run over the box:
+	-- the title band, the line, the box, the hint and the buttons, each with its gap.
+	local buttons = parts.close:GetWidth() + (dismissable and parts.never:GetWidth() + 8 or 0)
+	frame:SetWidth(math.max(400, buttons + 102))
+	local text = (parts.line:GetStringHeight() or 0) + (parts.hint:GetStringHeight() or 0)
+	frame:SetHeight(math.max(186, text + 124))
 	parts.edit:SetText(addon.url)
-	parts.never:SetShown(db ~= nil and key ~= nil)
 	frame:Show()
 	Select(parts.edit)
 	return true
@@ -478,8 +487,8 @@ end
 
 -- The API bound to one addon's L: ShowLink and CreatePanel read in that L unless a call names another. Each addon's
 -- copy sets `ns.Family` to its own view (of `ns.FamilyL`, else `ns.L`), so no call site can leave it out. The same
--- view comes back for the same L.
-local views = {}
+-- view comes back for the same L while one is held.
+local views = setmetatable({}, { __mode = "kv" })
 ---@param locale? ForeverFamilyL
 ---@return ForeverFamilyAPI
 function Family.For(locale)

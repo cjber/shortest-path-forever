@@ -18,7 +18,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ### For addon authors
 
-- **The shared `UI/ForeverFamily.lua` is now VERSION 3.** Each addon's copy sets `ns.Family` to `ForeverFamily.For(ns.L)` (or `ns.FamilyL`, for an addon whose L isn't keyed by English phrases), a view whose `ShowLink` and `CreatePanel` read in that addon's own L, and in English where it has no entry. Calls without an L, as older copies make them, read in the L of the copy in use. The link window keeps one global name, `ForeverFamilyLink`, which a newer copy takes over. `Family.Once` keeps one record for the session across copies, on `ForeverFamily.claimed`. `ADDONS[i].line` is the English line and its key in each addon's L.
+- **The shared `UI/ForeverFamily.lua` is now VERSION 3.** Each addon's copy sets `ns.Family` to `ForeverFamily.For(ns.L)` (or `ns.FamilyL`, for an addon whose L isn't keyed by English phrases), a view whose `ShowLink` and `CreatePanel` read in that addon's own L, and in English where it has no entry. Calls without an L, as older copies make them, read in the L of the copy in use. The link window has one global name, `ForeverFamilyLink`, and is kept on the module as `ForeverFamily.window`. A newer copy takes over the global, puts that window away, and serves `ShowLink` and `Once` for addons still holding an older copy's view. `ADDONS[i].line` is the English line and its key in each addon's L.
 
 ## [1.17.0] - 2026-10-16
 

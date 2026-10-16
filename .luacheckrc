@@ -188,5 +188,6 @@ read_globals[#read_globals + 1] = "UnitClass"
 read_globals[#read_globals + 1] = "UnitRace"
 read_globals[#read_globals + 1] = "UnitLevel"
 read_globals[#read_globals + 1] = "UISpecialFrames"
+read_globals[#read_globals + 1] = "tContains"
 -- Mover.lua: whether the button of a fine drag is still held.
 read_globals[#read_globals + 1] = "IsMouseButtonDown"
