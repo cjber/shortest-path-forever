@@ -23,8 +23,6 @@ L["/way [zone] x y [title], with x and y from 0 to 100."] = "/way [지역] x y [
 L["Adventure Guide couldn't start that just now. Choose it again from its guide."] =
 	"Adventure Guide가 지금 시작하지 못했습니다. 가이드에서 다시 선택하십시오."
 L["Adventure Guide suggests"] = "Adventure Guide 제안"
-L["Adventure Guide's suggestions show in the quest menus, and a new settings page lists my other Forever addons."] =
-	"Adventure Guide의 제안이 퀘스트 메뉴에 표시되고, 새 설정 페이지에 제 다른 Forever 애드온이 나열됩니다."
 L["Alert before a boat arrives"] = "배 도착 전 알림"
 L["Alerts"] = "알림"
 L["Alliance"] = "얼라이언스"
@@ -123,6 +121,8 @@ L["No location for that quest yet."] = "이 퀘스트의 위치가 아직 없습
 L["No way there from here."] = "여기서 그곳까지 가는 길이 없습니다."
 L["Not discovered"] = "발견하지 않음"
 L["Not installed"] = "설치 안 됨"
+L["Now also in German, French, Spanish, Portuguese, Russian, Korean and Chinese (machine translated)."] =
+	"이제 독일어, 프랑스어, 스페인어, 포르투갈어, 러시아어, 한국어, 중국어로도 제공됩니다(기계 번역)."
 L["On"] = "켬"
 L["On board to %s"] = "%s행 탑승 중"
 L["On the world map."] = "세계 지도에 표시합니다."

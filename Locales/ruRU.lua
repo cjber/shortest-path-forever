@@ -24,8 +24,6 @@ L["/way [zone] x y [title], with x and y from 0 to 100."] =
 L["Adventure Guide couldn't start that just now. Choose it again from its guide."] =
 	"Adventure Guide не удалось это запустить. Выберите это снова в его руководстве."
 L["Adventure Guide suggests"] = "Adventure Guide предлагает"
-L["Adventure Guide's suggestions show in the quest menus, and a new settings page lists my other Forever addons."] =
-	"Предложения Adventure Guide появляются в меню заданий, а новая страница настроек показывает другие мои модификации Forever."
 L["Alert before a boat arrives"] = "Оповещать о прибытии корабля"
 L["Alerts"] = "Оповещения"
 L["Alliance"] = "Альянс"
@@ -127,6 +125,8 @@ L["No location for that quest yet."] = "Для этого задания пок�
 L["No way there from here."] = "Отсюда туда нет пути."
 L["Not discovered"] = "Не открыто"
 L["Not installed"] = "Не установлено"
+L["Now also in German, French, Spanish, Portuguese, Russian, Korean and Chinese (machine translated)."] =
+	"Теперь также на немецком, французском, испанском, португальском, русском, корейском и китайском (машинный перевод)."
 L["On"] = "Вкл."
 L["On board to %s"] = "На борту: %s"
 L["On the world map."] = "На карте мира."

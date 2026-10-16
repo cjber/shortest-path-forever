@@ -5,8 +5,7 @@ local L = ns.L
 
 -- One sentence on what the latest release changed, printed once after an update. Each release refreshes it from
 -- its CHANGELOG entry.
-ns.WHATS_NEW =
-	L["Adventure Guide's suggestions show in the quest menus, and a new settings page lists my other Forever addons."]
+ns.WHATS_NEW = L["Now also in German, French, Spanish, Portuguese, Russian, Korean and Chinese (machine translated)."]
 
 -- Once per new version, after an update: never on a first install, nor in a checkout, whose TOC still holds the
 -- packager's version keyword (matched by its "@", as the packager would rewrite the whole keyword here too).
