@@ -68,6 +68,9 @@ local nativeAnchor
 local appliedNativeAnchor
 -- The saved slot ReleaseNative last wrote, so the probe does not reflow for our own handback.
 local releasedNativeAnchor
+-- The column's height and header room when the native frame was last stacked below it: in combat the native frame
+-- cannot move, so the sections redraw within this.
+local stackedHeight, stackedReserve = 1, 0
 -- Whether the native frame was clamped to the screen before we stacked it below our column.
 local nativeClamped
 
@@ -537,15 +540,13 @@ local function LayoutInCombat()
 	if appliedNativeAnchor and IsAppliedNativeAnchor(ObjectiveTrackerFrame:GetPoint()) then
 		-- Still stacked where the last reflow left both frames: nothing moves, but the sections still follow their
 		-- content and All Objectives. The native frame cannot move up or down to make room, so the sections redraw
-		-- within the height they already have, and the next reflow out of combat sizes them again.
-		if NativeCollapsed() then
-			RestoreNativeHeader()
-			host:Hide()
-			return
-		end
-		local reserve = headerAdopted and HEADER_TOP_PADDING or 0
-		local room = math.max(0, (host:GetHeight() or 0) - reserve)
-		if LayoutModules(host:GetWidth(), room, reserve) then
+		-- within the height the stack gave them (less the last section's 10px gap, which LayoutModules adds back), and
+		-- the next reflow out of combat sizes them again.
+		local room = math.max(0, stackedHeight - stackedReserve - 10)
+		if not NativeCollapsed() and LayoutModules(host:GetWidth(), room, stackedReserve) then
+			if stackedReserve > 0 then
+				AdoptNativeHeader()
+			end
 			host:Show()
 		else
 			RestoreNativeHeader()
@@ -731,6 +732,7 @@ local function LayoutAttached()
 	local nativeOffsetY = nativeY * screenScale / nativeScale
 	ObjectiveTrackerFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", nativeX, nativeOffsetY)
 	releasedNativeAnchor = nil
+	stackedHeight, stackedReserve = host:GetHeight() or 1, headerReserve
 	appliedNativeAnchor = {
 		point = "TOPLEFT",
 		relativeTo = UIParent,
@@ -864,7 +866,7 @@ probe:SetScript("OnSizeChanged", function()
 	local point, relativeTo, relativePoint, x, y = ObjectiveTrackerFrame:GetPoint()
 	if
 		not IsAppliedNativeAnchor(point, relativeTo, relativePoint, x, y)
-		and not SameAnchor(releasedNativeAnchor, point, relativeTo, relativePoint, x, y)
+		and not (attached and SameAnchor(releasedNativeAnchor, point, relativeTo, relativePoint, x, y))
 	then
 		host:MarkDirty()
 	end
