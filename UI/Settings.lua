@@ -356,7 +356,7 @@ ns.Init(function()
 				ns.MoveArrow
 			),
 			nil,
-			L["Shows the arrow so you can drag it anywhere on screen; Shift-drag nudges it. Right-click it to put it back."]
+			L["Shows the arrow to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."]
 		)
 	)
 	local arrowScale = Settings.RegisterAddOnSetting(
@@ -418,7 +418,7 @@ ns.Init(function()
 				ns.MoveCompass
 			),
 			nil,
-			L["Shows the compass so you can drag it anywhere on screen; Shift-drag nudges it. Right-click it to put it back."]
+			L["Shows the compass to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."]
 		)
 	)
 	if host and host.GetScale and host.SetScale then
