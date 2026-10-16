@@ -122,11 +122,13 @@ Run `tools/typecheck.sh` for LuaLS and static checks, and `luajit tests/<name>_s
 
 [Contributing](https://github.com/cjber/.github/blob/main/CONTRIBUTING.md), [AGENTS.md](AGENTS.md) and [security reports](https://github.com/cjber/.github/blob/main/SECURITY.md).
 
+## Credits
+
+Travel data comes from [wago.tools](https://wago.tools), [CMaNGOS](https://github.com/cmangos) (GPL) and [InFlight](https://github.com/LudiusMaximus/InFlight) (MIT). Some features were inspired by [Polestar](https://github.com/fitzforge/polestar) by Fitz, such as the arrival sound; no code was copied. Fitz is welcome to use our code. Thanks to Zavian, Osipanda, Nightwind416, wfournier, maggew and everyone who reported a bug.
+
 ## Licence
 
-GPL-3.0-or-later. Routes, lifts, the tram and flight paths come from the game's data via
-[wago.tools](https://wago.tools); transport timing and portals from [CMaNGOS](https://github.com/cmangos); recorded
-flight times from [InFlight](https://github.com/LudiusMaximus/InFlight) (MIT). All inputs and their licences: [THIRD_PARTY.md](THIRD_PARTY.md).
+GPL-3.0-or-later. Every input and its licence: [THIRD_PARTY.md](THIRD_PARTY.md).
 
 Made by Cillian Berragan · [cillian.dev](https://cillian.dev) · [GitHub](https://github.com/cjber) · [Twitter](https://twitter.com/cjberragan)
 

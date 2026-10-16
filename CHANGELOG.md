@@ -14,6 +14,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 - **A Forever addons page in the settings.** Under Shortest Path Forever in the AddOns settings, *Forever addons* lists my five WoW: Forever addons with what each does and whether you have it: on, installed but turned off, or not installed. *Copy link* shows the addon's CurseForge address to copy into your browser. The page also has *Suggest my other Forever addons*, on by default, for the quiet hints about addons you don't have; untick it and none show.
 - **A quiet word about my other addons, only where it helps.** With Adventure Guide Forever not installed, the quest menus (right-click a quest in the tracker or the quest log) show a grey *Suggest quests for my level: Adventure Guide Forever* under *Plan journey*. Once a session, a journey you planned yourself that arrives with nothing more planned leaves a grey "What next?" line under it in the tracker for two minutes. With Legacy Forever not installed, a dungeon or raid door's stop on the map says in grey that Legacy Forever shows the challenges it counts toward. Clicking the menu entry or the tracker line shows the address to copy, with *Don't suggest this again*. None of these show for an addon you have, even switched off, or with *Suggest my other Forever addons* unticked.
+- **The README credits the people and addons behind Shortest Path Forever.** The players who reported bugs and the addons that inspired features are named, and THIRD_PARTY.md has the full list.
 
 ## [1.17.0] - 2026-10-16
 
