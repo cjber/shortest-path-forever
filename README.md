@@ -108,6 +108,8 @@ Installed together, the others send Shortest Path their destinations: an Adventu
 
 Journey steps share one tracker column with the Adventure Guide, SkillUp and Legacy sections, above your quests.
 
+Without Adventure Guide or Legacy, a grey hint suggests it where it would help. *Suggest my other Forever addons*, in settings, turns hints off.
+
 ## Ways to help
 
 No code needed:
