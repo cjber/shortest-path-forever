@@ -8,15 +8,17 @@ Alt-click the world map to place a destination directly over a Questie icon. Shi
 
 In **Map marks**, scale transport, flight master and minimap icons separately from 25% to 200%. Right-click a flight master icon to mark its path as known or unknown; opening a flight master's map also syncs paths reported by the client.
 
-In **Interface**, turn **Show journey in tracker** and **Show direction arrow** off independently, leaving the map route visible. Choose yards or metres, resize the tracker and compass, give the compass a background, or enable the optional minimap settings button. Turn off **Attach to quest tracker** in Guidance to drag the Forever column by its heading.
+In **Interface**, turn **Show journey in tracker** and **Show direction arrow** off independently, leaving the map route visible. Choose yards or metres, resize the tracker and compass, give the compass a background, or enable the optional minimap settings button. Turn off **Attach to quest tracker** in Guidance, or in the right-click menu of the tracker's "Journey to …" line (out of combat), to drag the Forever column by its heading.
 
-The direction arrow swings smoothly to each new bearing and rests while you stand still. **Move the arrow** and **Arrow scale** in Interface place and size it, together with the cast prompt that takes its place on a Hearthstone or teleport step. While moving the arrow or the compass, hold Shift as you drag to move it a quarter as far as the mouse. **Show the time left under the compass** (off by default) puts the journey's time left beside the distance to your next turn.
+The direction arrow swings smoothly to each new bearing and rests while you stand still. **Move the arrow** and **Arrow scale** in Interface place and size it, together with the cast prompt that takes its place on a Hearthstone or teleport step. While moving the arrow or the compass, hold Shift as you drag to move it a quarter as far as the mouse, or rest the pointer on it and press the arrow keys to nudge it (ten times as far with Shift). The arrow keys walk as usual everywhere else and in combat. **Show the time left under the compass** (off by default) puts the journey's time left beside the distance to your next turn.
 
 **Keep journeys after a reload** in Guidance (off by default) starts a journey you planned yourself (a map click, `/way`, a quest or Nearby services) again after a `/reload`, or when you log back in within 30 minutes. Guides and other addons start their own again, and one that does so first wins.
 
 **Play a sound when you reach the goal** in Alerts (off by default) plays the map's ping when a journey you planned yourself arrives, even with the game in the background. Clearing a journey stays quiet.
 
 `/path report` opens a window with a report already selected: addon and game versions, your character and position, the journey and its steps, your ride, the ride trace when `/path debug` is on, errors caught this session and your other addons. Press Ctrl+C and paste it into a bug report.
+
+With the game's gamepad interface on, Shortest Path never opens the world map itself, nor takes the keyboard: *Show on map*, tracker dock lines and route ends turn a map you have open, or ask you to open one, and Nearby services points to the map's own tracking menu.
 
 Click the current journey step and choose **Complete this step** to advance it. Skipping a Hearthstone leaves it out of plans for that journey. Other steps may return if your actual position still requires them.
 
@@ -32,6 +34,8 @@ With RestedXP installed, **Resume guide** in Guidance or the Journey header menu
   quest. It replans as you move but only switches to a clearly faster way (at least 30 seconds and a tenth of the time left), and stays aboard if you are already riding. **Guide**, on from the start
   of every journey (click the tracker header to turn it off), moves the game's own waypoint marker to where each step ends, the next boat, lift or flight master (or, with *Mark only where steps end* off in `/path`, along the route turn by turn, round walls), and hands your tracked quest back when you finish. To head for a quest, pick **Plan journey** from its right-click menu in the objective
   tracker or quest log, or Shift-click its marker on the map; a finished quest routes to its turn-in.
+  A goal inside a dungeon or raid, which has no walking map, is planned to the instance's entrance from outside
+  (*Enter Deadmines*); going in completes it, and a guide's next stop inside starts from there.
   A journey can start with your Hearthstone, a mage's city teleport (with a Rune of Teleportation), a shaman's
   Astral Recall or a druid's Teleport: Moonglade, after its own icon and named in your game's language:
   *1. Use Hearthstone*. A cooldown counts as waiting, and a jump to another continent adds a few seconds for

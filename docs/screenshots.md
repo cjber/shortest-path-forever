@@ -56,8 +56,9 @@ remains 8,000 ms. The animation uses fixed time steps, never the wall clock.
 - `UI/StopPin.lua` gives the current stop the tracked quest's `UI-QuestPoi-QuestNumber-SuperTracked` button and the
   grid's dark numeral, and every later stop the plain `UI-QuestPoi-QuestNumber` button and its yellow numeral, at the
   0.9 alpha later lines share. Each button keeps the caller's action badge over its lower right.
-- `area.png` draws the client's own areas for quest 92744's objective 0 on Westfall: its three `QuestPOIBlob`
-  rows and their `QuestPOIPoint` corners, projected through `UiMapAssignment`, with the player in blob 575423.
+- `area.png` draws the client's own areas for quest 92744's objective 0 on Westfall: every `QuestPOIBlob`
+  row of it and their `QuestPOIPoint` corners, projected through `UiMapAssignment`, with the player in the
+  largest (blob 590790 in build 70425).
   The border is `Interface\Minimap\UI-BonusObjectiveBlob-Outside`, the texture `UI/QuestBlob.lua` gives the
   blob widget, at the stock border alpha of 192; that set's fill texture is clear, so the area is not filled.
   The widget's drawing is engine-side, so three things are assumptions: a closed Catmull-Rom curve through

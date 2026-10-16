@@ -11,8 +11,8 @@ from wowmock import scene
 
 MAP_ID = 1436
 QUEST_ID, OBJECTIVE = "92744", "0"
-# The area the player stands in, which the crop is taken around.
-STANDING = "575423"
+# The player stands in the objective's largest area (by its corners' bounding box), which the crop is taken around:
+# a fixed blob ID would not survive the next build's renumbering.
 BORDER = "interface/minimap/ui-bonusobjectiveblob-outside.blp"
 BORDER_ALPHA = 192 / 255
 STEPS = 8
@@ -78,12 +78,17 @@ def render(ui, map_frame, project, landmarks, icon):
     canvas.image = base.image.copy()
     mx, my, mw, mh = rects["map"]
     edge = ui.texture(BORDER)
-    standing = None
-    for blob_id, corners in areas(ui).items():
+    standing, largest = None, -1.0
+    found = areas(ui)
+    if not found:
+        raise ValueError(f"quest {QUEST_ID} objective {OBJECTIVE} has no area on map {MAP_ID} in this build")
+    for corners in found.values():
         outline = spline([(mx + n[0] * mw, my + n[1] * mh) for n in (project(ui, p, MAP_ID) for p in corners)])
         blob(canvas, outline, edge)
-        if blob_id == STANDING:
-            standing = outline
+        xs, ys = [p["x"] for p in corners], [p["y"] for p in corners]
+        size = (max(xs) - min(xs)) * (max(ys) - min(ys))
+        if size > largest:
+            standing, largest = outline, size
     landmarks(canvas, MAP_ID, rects["map"])
     xs, ys = [x for x, _ in standing], [y for _, y in standing]
     icon(canvas, "UI-WorldMapArrow", sum(xs) / len(xs), sum(ys) / len(ys), 27)
