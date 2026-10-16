@@ -90,7 +90,7 @@ With *Follow RestedXP guides* on (the default), leave RestedXP's TomTom option o
 
 <!-- forever-family:start -->
 
-## My other Forever addons
+## The Forever addons
 
 Each one works on its own, and they work together when you install more than one.
 
@@ -107,6 +107,8 @@ Each one works on its own, and they work together when you install more than one
 Installed together, the others send Shortest Path their destinations: an Adventure Guide journey or RestedXP step, a trainer or vendor in a SkillUp route (SkillUp picks the nearest by travel time), a Legacy dungeon or raid pin, or a dungeon or raid entrance Tweaks adds to the map.
 
 Journey steps share one tracker column with the Adventure Guide, SkillUp and Legacy sections, above your quests.
+
+Without Adventure Guide or Legacy, a grey hint suggests it where it would help. *Suggest my other Forever addons*, in settings, turns hints off.
 
 ## Ways to help
 
