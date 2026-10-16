@@ -13,6 +13,15 @@ local SERVICES = {
 	{ key = "flight", flag = "FLIGHT_MASTER", label = L["Flight master"] },
 	{ key = "stable", flag = "STABLEMASTER", label = L["Stable master"] },
 }
+-- A reagent vendor's title, as QuestieDB gives it: in English, or in the client's language where QuestieDB has it.
+-- L["Reagent Vendor"] is only ever this match, so a translation keeps it to the client's own NPC title; the menu
+-- label L["Reagents"] counts too, as some vendors carry that title.
+local REAGENT_TITLES = {
+	["Reagents"] = true,
+	["Reagent Vendor"] = true,
+	[L["Reagents"]] = true,
+	[L["Reagent Vendor"]] = true,
+}
 local index, state, menuOpen = {}, "idle", false
 local Open
 local function Close()
@@ -107,11 +116,7 @@ local function Build()
 					local keys = {}
 					for _, service in ipairs(SERVICES) do
 						if service.flag and bit.band(flags, constants[service.flag]) ~= 0 then
-							if
-								service.key ~= "reagents"
-								or specialty == L["Reagents"]
-								or specialty == L["Reagent Vendor"]
-							then
+							if service.key ~= "reagents" or REAGENT_TITLES[specialty] then
 								keys[#keys + 1] = service.key
 							end
 						end

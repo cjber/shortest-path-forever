@@ -1,5 +1,5 @@
 name: Translation
-description: Paste a translated Locales file and I'll add it.
+description: Paste corrected or new translations and I'll add them.
 labels: [enhancement]
 body:
   - type: dropdown
@@ -11,7 +11,6 @@ body:
         - esES
         - esMX
         - frFR
-        - itIT
         - koKR
         - ptBR
         - ruRU
@@ -24,7 +23,8 @@ body:
     attributes:
       label: Locales file
       description: >-
-        Your copy of `Locales/phrases.txt` with the right-hand sides translated. Lines you leave out stay in English.
+        The lines you corrected from `Locales/<locale>.lua`, or your copy of `Locales/phrases.txt` with the right-hand
+        sides translated. Lines you leave out stay as they are.
       render: lua
     validations:
       required: true

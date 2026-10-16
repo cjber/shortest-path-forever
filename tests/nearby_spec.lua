@@ -328,12 +328,12 @@ env.SlashCmdList.SPFNEAR("repair")
 assert(navigated[#navigated][5] == "Neutral repairs")
 
 -- A fresh copy of the menu over another QuestieDB, read to the end, then opened here or on another continent.
-local function fresh(questie, away)
+local function fresh(questie, away, L)
 	local elsewhere = false
 	env.LibQuestieDB = questie
 	local starts = {}
 	local copy = {
-		L = ns.L,
+		L = L or ns.L,
 		Path = ns.Path,
 		Init = function(fn)
 			starts[#starts + 1] = fn
@@ -360,6 +360,35 @@ for position = 2, #menuEntries do
 	local item = menuEntries[position]
 	assert(item.text:find("unavailable here", 1, true) and item.enabled == false and #item.children == 0, item.text)
 end
+-- In a translated client a reagent vendor's title may come from QuestieDB in English or in that language: both count,
+-- and a general vendor still doesn't.
+local translated = setmetatable({ ["Reagents"] = "Reagenzien", ["Reagent Vendor"] = "Reagenzienhändler" }, {
+	__index = function(_, phrase)
+		return phrase
+	end,
+})
+local localized = {
+	[2] = { "Translated reagents", "Reagenzien", { [10] = { { 80, 80 } } }, "A", 4, n = 5 },
+	[11] = { "English reagents", "Reagent Vendor", { [10] = { { 70, 70 } } }, "A", 4, n = 5 },
+	[12] = { "General goods", "Gemischtwaren", { [10] = { { 60, 60 } } }, "A", 4, n = 5 },
+}
+local localizedLib = setmetatable({
+	Npc = {
+		GetAllIds = function()
+			return { 2, 11, 12 }
+		end,
+		GetAll = function(id)
+			return localized[id]
+		end,
+	},
+}, { __index = lib })
+local reagents = fresh(localizedLib, false, translated).NearbyServices.Index().reagents
+local ids = {}
+for _, place in ipairs(reagents) do
+	ids[#ids + 1] = place.id
+end
+table.sort(ids)
+assert(#ids == 2 and ids[1] == 2 and ids[2] == 11, "English and translated reagent titles count; a general vendor not")
 -- No QuestieDB, and one whose zone tables do not read, each say so in a line of their own.
 assert(fresh(nil).NearbyServices.State() == "missing")
 assert(#menuEntries == 2 and menuEntries[2].text == "Nearby services need the QuestieDB addon.")

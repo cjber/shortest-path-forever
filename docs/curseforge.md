@@ -36,6 +36,8 @@ Hover a dock to see its services and destinations.
 - `/spfnear` opens nearby services. For a bug report, type `/path report` and paste what it shows.
 - With the gamepad interface on, you open the world map; Shortest Path won't.
 
+Translated into German, French, Spanish, Brazilian Portuguese, Russian, Korean and Chinese (machine translated; corrections welcome through a [translation issue](https://github.com/cjber/shortest-path-forever/issues/new?template=translation.yml)).
+
 <!-- forever-family:start -->
 
 ## The Forever addons
