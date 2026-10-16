@@ -93,6 +93,32 @@ for _, readyAtLoad in ipairs({ false, true }) do
 		fn()
 	end
 	assert(owners[modules[1]] == native, "private ownership survives initialization and late loading")
+	-- The Journey's right-click menu lets the shared column go, to drag it anywhere, and takes it back.
+	local entries, attached = {}, true
+	env.MenuUtil = {
+		CreateContextMenu = function(_, build)
+			build(nil, {
+				CreateCheckbox = function(_, text, get, set)
+					entries[text] = { get = get, set = set }
+				end,
+				CreateButton = noop,
+			})
+		end,
+	}
+	ns.Corpse = { Active = noop }
+	ns.TrackerHost.IsAttachedToQuestTracker = function()
+		return attached
+	end
+	ns.TrackerHost.SetAttached = function(value)
+		attached = value
+	end
+	modules[1]:OnBlockHeaderClick({ id = "journey" }, "RightButton")
+	local row = assert(entries["Attach to quest tracker"], "the Journey menu offers to move the tracker")
+	assert(row.get() == true)
+	row.set()
+	assert(attached == false and row.get() == false, "unticking lets the column be dragged")
+	row.set()
+	assert(attached == true, "ticking attaches it again")
 	checks = checks + 1
 end
 print("tracker_lifecycle_spec: " .. checks .. " load-order cases passed")

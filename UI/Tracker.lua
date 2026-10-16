@@ -41,6 +41,13 @@ function ModuleMixin:OnBlockHeaderClick(block, button)
 				if not ns.Corpse.Active() then
 					root:CreateButton(L["Clear journey"], ns.ClearJourney)
 				end
+				-- The shared column can be dragged anywhere once it is let go of the quest tracker (also in Settings).
+				local host = ns.TrackerHost
+				if host and host.SetAttached and host.IsAttachedToQuestTracker then
+					root:CreateCheckbox(L["Attach to quest tracker"], host.IsAttachedToQuestTracker, function()
+						host.SetAttached(not host.IsAttachedToQuestTracker())
+					end)
+				end
 			end)
 		end
 	elseif button == "LeftButton" then
