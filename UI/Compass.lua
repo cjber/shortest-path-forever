@@ -333,7 +333,7 @@ local function Create()
 	frame.Mover:Hide()
 	frame.MoverHint = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	frame.MoverHint:SetPoint("BOTTOM", frame, "BOTTOM", 0, 4)
-	frame.MoverHint:SetText(L["Drag to move, Shift-drag to nudge. Right-click to reset."])
+	frame.MoverHint:SetText(L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."])
 	frame.MoverHint:Hide()
 	frame.ticks = {}
 	local directions = { L["N"], L["W"], L["S"], L["E"] }

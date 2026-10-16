@@ -595,3 +595,52 @@ ns.db.compassTime = false
 ns.RefreshCompass()
 assert(strip.Time.hidden, "turned off")
 print("compass: optional time left: ok")
+
+-- With the pointer on the compass while it is being placed, the arrow keys nudge it a pixel (Shift: ten) and are kept
+-- from the game; every other key reaches the game. Off the compass, or in combat, the keyboard is the game's.
+local combat = false
+env.InCombatLockdown = function()
+	return combat
+end
+function methods:EnableKeyboard(on)
+	self.keyboard = on
+end
+function methods:SetPropagateKeyboardInput(on)
+	assert(not combat, "SetPropagateKeyboardInput cannot be called in combat")
+	self.propagate = on
+end
+function methods:RegisterEvent(event)
+	self.events[event] = true
+end
+function methods:SetScript(name, fn)
+	self.scripts[name] = fn
+end
+methods.GetCenter = function(self)
+	return self.atX, self.atY
+end
+ns.MoveCompass(true)
+strip:SetPoint("CENTER", env.UIParent, "BOTTOMLEFT", 300, 200)
+strip.scripts.OnEnter(strip)
+assert(strip.keyboard and strip.propagate, "hovering a compass being placed listens, passing keys on")
+shift = false
+strip.scripts.OnKeyDown(strip, "UP")
+assert(strip.propagate == false and at("CENTER", "BOTTOMLEFT", 300, 201), "an arrow key nudges it a pixel")
+assert(ns.db.compassX == 300 and ns.db.compassY == 201, "and the nudge is saved")
+shift = true
+strip.scripts.OnKeyDown(strip, "LEFT")
+assert(at("CENTER", "BOTTOMLEFT", 290, 201), "Shift nudges ten")
+strip.scripts.OnKeyDown(strip, "W")
+assert(strip.propagate == true and at("CENTER", "BOTTOMLEFT", 290, 201), "other keys reach the game")
+strip.scripts.OnLeave(strip)
+assert(strip.keyboard == false, "leaving the compass gives the keyboard back")
+strip.scripts.OnEnter(strip)
+combat = true
+moverFrame.scripts.OnEvent(moverFrame, "PLAYER_REGEN_DISABLED")
+assert(strip.keyboard == false, "combat gives the keyboard back at once")
+strip.scripts.OnEnter(strip)
+assert(strip.keyboard == false, "hovering in combat does not take it")
+strip.scripts.OnKeyDown(strip, "UP")
+assert(at("CENTER", "BOTTOMLEFT", 290, 201), "and nothing moves in combat")
+combat = false
+ns.MoveCompass(false)
+print("compass: arrow-key nudge while placing ok")

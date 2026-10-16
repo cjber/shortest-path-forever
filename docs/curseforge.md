@@ -31,7 +31,7 @@ Hover a dock to see its services and destinations.
 - `/path` opens settings under **Options → AddOns → Shortest Path Forever**.
 - Alt-click the world map to choose a destination directly over a Questie icon. Shift-click the map, minimap or a Shortest Path icon; for quests, choose **Plan journey** in the right-click menu.
 - In **Map marks**, scale each kind of icon from 25% to 200%. Right-click a flight master icon to correct whether its path is known.
-- In **Interface**, choose what shows, metres, sizes and a compass background. While moving the arrow or compass, Shift-drag for fine placement.
+- In **Interface**, choose what shows, metres, sizes and a compass background. While moving the arrow or compass, Shift-drag or use the arrow keys for fine placement.
 - In **Guidance**, turn off **Attach to quest tracker** to drag the shared column. **Resume guide** returns to RestedXP; **Keep journeys after a reload** restarts yours.
 - `/way [zone] x y [title]` plans a journey there while TomTom and other addons leave `/way` free; `/path way` always works. With TomTom installed, **Follow TomTom's arrow** in Guidance follows its waypoints.
 - `/spfnear` opens nearby services. For a bug report, type `/path report` and paste what it shows.
