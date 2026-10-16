@@ -103,8 +103,10 @@ for _, case in ipairs({ { "frFR", "Journey" }, { "deDE", "Reise" } }) do
 	assert(ns.L["Journey"] == case[2] and ns.L["Boats"] == "Boats", case[1])
 end
 
--- Every translation the TOC loads, read in its own client language: each line is a string, and each one formats
--- with the arguments its English takes (a sample per placeholder), so no translation can break a string.format.
+-- Every translation the TOC loads, read in its own client language: each line is a string and formats without error
+-- given the arguments its English takes (a sample per placeholder). tools/check_locales.py checks that the
+-- placeholders themselves match. The translations load straight after Locales/enUS.lua, before any file that reads
+-- L while it loads (labels, and Nearby's reagent titles), or those would stay English.
 local SAMPLE = { d = 7, i = 7, c = 65, o = 7, u = 7, x = 7, X = 7, e = 1.5, E = 1.5, f = 1.5, g = 1.5, G = 1.5 }
 local function samples(english)
 	local args = {}
@@ -114,6 +116,11 @@ local function samples(english)
 	return args
 end
 local translations = 0
+for position = 2, #shipped do
+	if shipped[position]:match("^Locales/") then
+		assert(shipped[position - 1]:match("^Locales/"), shipped[position] .. " loads straight after Locales/enUS.lua")
+	end
+end
 for _, file in ipairs(shipped) do
 	local code = file:match("^Locales/(%a%a%a%a)%.lua$")
 	if code and code ~= "enUS" then
@@ -135,8 +142,8 @@ for _, file in ipairs(shipped) do
 		for english, text in pairs(own.L) do
 			lines = lines + 1
 			assert(type(english) == "string" and type(text) == "string", file .. ": " .. tostring(english))
-			if english:gsub("%%%%", ""):find("%%[-+#0]*%d*%.?%d*%a") and not english:find("%% ") then
-				local args = samples(english)
+			local args = samples(english)
+			if #args > 0 then
 				local ok, err = pcall(string.format, text, unpack(args))
 				assert(ok, string.format('%s: "%s" does not format: %s', file, text, tostring(err)))
 				assert(pcall(string.format, english, unpack(args)), english)

@@ -383,7 +383,12 @@ local localizedLib = setmetatable({
 	},
 }, { __index = lib })
 local reagents = fresh(localizedLib, false, translated).NearbyServices.Index().reagents
-assert(#reagents == 2, "English and translated reagent titles both count; a general vendor does not")
+local ids = {}
+for _, place in ipairs(reagents) do
+	ids[#ids + 1] = place.id
+end
+table.sort(ids)
+assert(#ids == 2 and ids[1] == 2 and ids[2] == 11, "English and translated reagent titles count; a general vendor not")
 -- No QuestieDB, and one whose zone tables do not read, each say so in a line of their own.
 assert(fresh(nil).NearbyServices.State() == "missing")
 assert(#menuEntries == 2 and menuEntries[2].text == "Nearby services need the QuestieDB addon.")

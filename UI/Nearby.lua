@@ -14,6 +14,8 @@ local SERVICES = {
 	{ key = "stable", flag = "STABLEMASTER", label = L["Stable master"] },
 }
 -- A reagent vendor's title, as QuestieDB gives it: in English, or in the client's language where QuestieDB has it.
+-- L["Reagent Vendor"] is only ever this match, so a translation keeps it to the client's own NPC title; the menu
+-- label L["Reagents"] counts too, as some vendors carry that title.
 local REAGENT_TITLES = {
 	["Reagents"] = true,
 	["Reagent Vendor"] = true,
