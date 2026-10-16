@@ -705,8 +705,12 @@ check(
 	"an empty host hands the native frame back to its saved slot"
 )
 check(native.clamped == true, "an empty host hands back the native frame's screen clamp")
+probe.scripts.OnSizeChanged(probe)
+check(#timers == 0, "the host's own handback does not queue another reflow")
 -- A move by Edit Mode or a UI addon while the host is empty stays where they put it.
 native:SetPoint("CENTER", parent, "CENTER", 40, 20)
+probe.scripts.OnSizeChanged(probe)
+check(#timers == 1, "a move after the handback still reflows the column")
 host.scripts.OnEvent(host, "QUEST_LOG_UPDATE")
 drain()
 check(
@@ -796,6 +800,48 @@ host.scripts.OnEvent(host, "PLAYER_REGEN_ENABLED")
 drain()
 check(nativeHeader.point[2] == host, "the header returns to the shared column after combat")
 check(first.point[5] == -38, "leaving combat restores the header's room")
+-- In combat with the column still stacked, the sections keep following their content and All Objectives without the
+-- native frame moving: they redraw within the room they already have, and collapsing or emptying hides them at once.
+combat = true
+host.scripts.OnEvent(host, "PLAYER_REGEN_DISABLED")
+drain()
+local stackedNative, stackedRoom, stackedUpdates = native.point, host:GetHeight(), first.updates
+host:MarkDirty()
+drain()
+check(first.updates == stackedUpdates + 1, "stacked combat still redraws the sections' content")
+check(first.available <= stackedRoom - 38, "stacked combat redraws the sections within the room they already have")
+check(host:GetHeight() <= stackedRoom and host.shown ~= false, "stacked combat never grows the column over the quests")
+check(native.point == stackedNative, "stacked combat redraws never write the native frame")
+native.isCollapsed = true
+minimizeButton.scripts.OnClick(minimizeButton)
+drain()
+check(host.shown == false, "collapsing All Objectives in combat hides the sections straight away")
+check(nativeHeader.point[2] == native, "collapsing in combat gives the header back to the native frame")
+check(native.point == stackedNative, "collapsing in combat never writes the native frame")
+native.isCollapsed = false
+minimizeButton.scripts.OnClick(minimizeButton)
+drain()
+check(host.shown == true, "expanding in combat shows the sections again")
+first.GetContentsHeight = function()
+	return 0
+end
+second.GetContentsHeight = function()
+	return 0
+end
+host:MarkDirty()
+drain()
+check(host.shown == false and native.point == stackedNative, "sections emptied in combat hide without native writes")
+first.GetContentsHeight = function()
+	return 80
+end
+second.GetContentsHeight = function()
+	return 80
+end
+combat = false
+host.scripts.OnEvent(host, "PLAYER_REGEN_ENABLED")
+drain()
+check(host.shown == true and nativeHeader.point[2] == host, "leaving combat restacks the column with its header")
+check(first.point[5] == -38, "leaving combat gives the header its room again")
 native.isCollapsed = true
 minimizeButton.scripts.OnClick(minimizeButton)
 drain()

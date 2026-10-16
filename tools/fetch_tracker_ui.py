@@ -4,7 +4,7 @@ import hashlib
 import urllib.request
 from pathlib import Path
 
-REVISION = "70ef1b2fd78061a73f886c4a1e79dc5b5cff6d5e"
+REVISION = "b401e0332adfbf0460d319b06d8ea29279a941f1"
 FILES = {
     "Blizzard_ObjectiveTrackerModule.lua": "605b9be7f2aef1628692ddabafaf3256bb08943500c0e61f1eb5ac2d0c332cdb",
     "Blizzard_ObjectiveTrackerBlock.lua": "29312dc4ed67640ed3a1f928d5fef0a5c8614b03371cd08370bcd495262fa7c1",

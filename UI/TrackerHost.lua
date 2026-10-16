@@ -66,6 +66,8 @@ local attachmentCallbacks = {}
 -- secure module collection.
 local nativeAnchor
 local appliedNativeAnchor
+-- The saved slot ReleaseNative last wrote, so the probe does not reflow for our own handback.
+local releasedNativeAnchor
 -- Whether the native frame was clamped to the screen before we stacked it below our column.
 local nativeClamped
 
@@ -76,13 +78,16 @@ local function RestoreNativeClamp()
 	end
 	nativeClamped = nil
 end
+local function SameAnchor(anchor, point, relativeTo, relativePoint, x, y)
+	return anchor
+		and anchor.point == point
+		and anchor.relativeTo == relativeTo
+		and anchor.relativePoint == relativePoint
+		and math.abs(anchor.x - (x or 0)) <= 0.5
+		and math.abs(anchor.y - (y or 0)) <= 0.5
+end
 local function IsAppliedNativeAnchor(point, relativeTo, relativePoint, x, y)
-	return appliedNativeAnchor
-		and appliedNativeAnchor.point == point
-		and appliedNativeAnchor.relativeTo == relativeTo
-		and appliedNativeAnchor.relativePoint == relativePoint
-		and math.abs(appliedNativeAnchor.x - (x or 0)) <= 0.5
-		and math.abs(appliedNativeAnchor.y - (y or 0)) <= 0.5
+	return SameAnchor(appliedNativeAnchor, point, relativeTo, relativePoint, x, y)
 end
 local function StackPoints(point)
 	if point == "CENTER" or point == "TOP" or point == "BOTTOM" then
@@ -471,6 +476,7 @@ local function ReleaseNative()
 		ObjectiveTrackerFrame:ClearAllPoints()
 		local saved = nativeAnchor.saved
 		ObjectiveTrackerFrame:SetPoint(saved.point, saved.relativeTo, saved.relativePoint, saved.x, saved.y)
+		releasedNativeAnchor = saved
 	end
 	appliedNativeAnchor = nil
 	RestoreNativeClamp()
@@ -529,7 +535,22 @@ local function LayoutInCombat()
 	-- protected and nothing protected anchors to it, so it stays at the top of our column. Only Blizzard moving
 	-- the native frame itself sends us to the one-column fallback below its content.
 	if appliedNativeAnchor and IsAppliedNativeAnchor(ObjectiveTrackerFrame:GetPoint()) then
-		-- Still stacked where the last reflow left both frames: nothing to move.
+		-- Still stacked where the last reflow left both frames: nothing moves, but the sections still follow their
+		-- content and All Objectives. The native frame cannot move up or down to make room, so the sections redraw
+		-- within the height they already have, and the next reflow out of combat sizes them again.
+		if NativeCollapsed() then
+			RestoreNativeHeader()
+			host:Hide()
+			return
+		end
+		local reserve = headerAdopted and HEADER_TOP_PADDING or 0
+		local room = math.max(0, (host:GetHeight() or 0) - reserve)
+		if LayoutModules(host:GetWidth(), room, reserve) then
+			host:Show()
+		else
+			RestoreNativeHeader()
+			host:Hide()
+		end
 		return
 	end
 	-- An empty column hid the host out of combat; a section that gains content in combat shows it again (it is
@@ -709,6 +730,7 @@ local function LayoutAttached()
 	local nativeX = hostLeft * screenScale / nativeScale
 	local nativeOffsetY = nativeY * screenScale / nativeScale
 	ObjectiveTrackerFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", nativeX, nativeOffsetY)
+	releasedNativeAnchor = nil
 	appliedNativeAnchor = {
 		point = "TOPLEFT",
 		relativeTo = UIParent,
@@ -839,7 +861,11 @@ local probe = CreateFrame("Frame", nil, UIParent)
 probe:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", 0, 0)
 probe:SetPoint("TOPRIGHT", ObjectiveTrackerFrame, "TOPLEFT", 0, 0)
 probe:SetScript("OnSizeChanged", function()
-	if not IsAppliedNativeAnchor(ObjectiveTrackerFrame:GetPoint()) then
+	local point, relativeTo, relativePoint, x, y = ObjectiveTrackerFrame:GetPoint()
+	if
+		not IsAppliedNativeAnchor(point, relativeTo, relativePoint, x, y)
+		and not SameAnchor(releasedNativeAnchor, point, relativeTo, relativePoint, x, y)
+	then
 		host:MarkDirty()
 	end
 end)
