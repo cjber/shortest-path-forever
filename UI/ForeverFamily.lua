@@ -4,13 +4,14 @@ local _, ns = ...
 -- The Forever addons, and the quiet hints one shows for another the player doesn't have. This file is
 -- byte-identical in all five addons (tests/forever_family_spec.lua pins it): the first copy to load sets the
 -- `ForeverFamily` global and later copies use it, unless a later copy is newer (a higher VERSION), which takes over
--- so an addon updated first never runs on an older copy. It holds no addon's own code; each addon passes in its
--- saved variables (`db`), its own folder and (VERSION 2) its own L, so its page and window read in its translations;
--- without one, the L of the addon whose copy is in use answers. Nothing here is protected, hooks Blizzard code, runs
--- in combat or reaches the network: a hint is a grey line, a menu entry or a settings row that shows a link to copy.
+-- so an addon updated first never runs on an older copy. It holds no addon's own code: each addon passes in its
+-- saved variables (`db`) and its own folder, and `ns.Family` is a view bound to the addon's own L (VERSION 3), so
+-- its page and window read in its translations and nowhere else's. Nothing here is protected, hooks Blizzard code,
+-- runs in combat or reaches the network: a hint is a grey line, a menu entry or a settings row that shows a link.
 
 ---@class ForeverFamilyNamespace
----@field L? table<string, string>
+---@field L? ForeverFamilyL
+---@field FamilyL? ForeverFamilyL an English-keyed L for this file, for an addon whose own L uses other keys
 ---@field Family? ForeverFamilyAPI
 
 ---@class ForeverFamilyDB
@@ -21,19 +22,11 @@ local _, ns = ...
 ---@field name string
 ---@field folder string
 ---@field url string
----@field phrase string what it does, in one line, in English: the key for each addon's L
----@field line string the same, in the first loader's L
+---@field line string what it does, in one line, in English: also its key in each addon's L
 
 ---@alias ForeverFamilyState "on"|"off"|"missing"
 ---@alias ForeverFamilyL table<string, string>
 ---@alias ForeverFamilySaved ForeverFamilyDB|fun(): ForeverFamilyDB?
-
----@class ForeverFamilyAPI
----@field VERSION integer raised with every change to this file
----@field ADDONS ForeverFamilyAddon[]
----@field State fun(folder: string): ForeverFamilyState
----@field Hint fun(db?: ForeverFamilyDB, key: string, folder: string): boolean
----@field Once fun(key: string): boolean
 
 ---@class ForeverFamilyPanel : Frame
 ---@field Refresh fun(self: ForeverFamilyPanel)
@@ -45,51 +38,59 @@ local _, ns = ...
 ---@field SetTitle fun(self: ForeverFamilyLinkWindow, title: string)
 ---@field GetPortrait fun(self: ForeverFamilyLinkWindow): Texture
 
-local VERSION = 2
+local VERSION = 3
 if ForeverFamily and (tonumber(ForeverFamily.VERSION) or 0) >= VERSION then
-	ns.Family = ForeverFamily
+	ns.Family = type(ForeverFamily.For) == "function" and ForeverFamily.For(ns.FamilyL or ns.L) or ForeverFamily
 	return
 end
 
--- Every addon's L takes English phrases as keys and answers a phrase it has no entry for with the phrase itself.
--- A phrase reads from the calling addon's own entries (`locale`), then from the L of the addon whose copy of this
--- file is in use, then as itself.
+local QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
+-- One window name for every copy and version, so Escape always knows it.
+local LINK_NAME = "ForeverFamilyLink"
+-- Older copies' windows (VERSION 1 used LINK_NAME too, VERSION 2 its own), put away whenever this one shows.
+local OLDER_WINDOWS = { LINK_NAME, "ForeverFamilyLink2" }
+local NO_STRINGS = {}
+
+---@class ForeverFamilyAPI
+---@field VERSION integer raised with every change to this file
+---@field ADDONS ForeverFamilyAddon[] the five addons, in order
+---@field claimed table<string, boolean> the keys Once has said yes to this session, shared by later versions
+local Family = { VERSION = VERSION }
+
+-- Every addon's L takes English phrases as keys. A phrase reads from one L only, the calling addon's (or, for a
+-- caller that names none, the L of the addon whose copy is in use), and as itself where that L has no string for
+-- it, so a line is never half in one language and half in another. A phrase counts only as the L's own entry
+-- (rawget), never through its metatable. One lookup table per L, kept for the session like the L itself.
+local strings = {}
 ---@param locale? ForeverFamilyL
 ---@return ForeverFamilyL
 local function Strings(locale)
-	return setmetatable({}, {
-		__index = function(_, phrase)
-			local text = type(locale) == "table" and rawget(locale, phrase) or nil
-			if type(text) ~= "string" then
-				text = ns.L and ns.L[phrase]
-			end
-			return type(text) == "string" and text or phrase
-		end,
-	})
+	local own = ns.FamilyL or ns.L
+	local source = type(locale) == "table" and locale or type(own) == "table" and own or NO_STRINGS
+	local found = strings[source]
+	if not found then
+		found = setmetatable({}, {
+			__index = function(_, phrase)
+				local text = rawget(source, phrase)
+				return type(text) == "string" and text or phrase
+			end,
+		})
+		strings[source] = found
+	end
+	return found
 end
 
-local QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
-
----@class ForeverFamilyAPI
-local Family = { VERSION = VERSION }
--- One addon, with its line's English phrase (each caller's key) and that line in the copy in use's L.
 ---@param name string
 ---@param folder string
 ---@param slug string the CurseForge project's address
----@param phrase string
+---@param line string
 ---@return ForeverFamilyAddon
-local function Addon(name, folder, slug, phrase)
-	return {
-		name = name,
-		folder = folder,
-		url = "https://www.curseforge.com/wow/addons/" .. slug,
-		phrase = phrase,
-		line = Strings(nil)[phrase],
-	}
+local function Addon(name, folder, slug, line)
+	return { name = name, folder = folder, url = "https://www.curseforge.com/wow/addons/" .. slug, line = line }
 end
 
--- The addons in order. Written through an L that answers each phrase with itself, so tools/phrases.py in each
--- addon lists the lines for translators.
+-- The addons in order. Written through an L that answers each phrase with itself, so the lines stay English keys
+-- and tools/phrases.py in each addon lists them for translators.
 ---@param L ForeverFamilyL
 ---@return ForeverFamilyAddon[]
 local function List(L)
@@ -126,19 +127,7 @@ local function List(L)
 		),
 	}
 end
-Family.ADDONS = List(setmetatable({}, {
-	__index = function(_, phrase)
-		return phrase
-	end,
-}))
-
--- The addon's line in the calling addon's own L, falling back as Strings does.
----@param addon ForeverFamilyAddon
----@param locale? ForeverFamilyL
----@return string
-function Family.Line(addon, locale)
-	return Strings(locale)[addon.phrase]
-end
+Family.ADDONS = List(Strings(NO_STRINGS))
 
 -- An installed addon's own icon; files load from a folder whether or not its addon is switched on.
 ---@param folder string
@@ -156,6 +145,14 @@ local function Find(folder)
 			return addon
 		end
 	end
+end
+
+-- A button as wide as its label, so a translated one fits.
+---@param button Button
+---@param minimum number
+local function Fit(button, minimum)
+	local label = button:GetFontString()
+	button:SetWidth(math.max(minimum, label and label:GetStringWidth() + 24 or 0))
 end
 
 -- The client may answer with a secret value in a restricted state; testing one raises, so the test happens
@@ -211,16 +208,17 @@ function Family.Hint(db, key, folder)
 	return Family.State(folder) == "missing"
 end
 
-local claimed = {}
+-- One record for the session however many copies load: a newer version carries it on.
+Family.claimed = ForeverFamily and type(ForeverFamily.claimed) == "table" and ForeverFamily.claimed or {}
 -- True the first time `key` asks this session, for the places that draw attention (the tracker footer). Keys are
 -- shared by every Forever addon, so each starts with its own addon's name.
 ---@param key string
 ---@return boolean
 function Family.Once(key)
-	if claimed[key] then
+	if Family.claimed[key] then
 		return false
 	end
-	claimed[key] = true
+	Family.claimed[key] = true
 	return true
 end
 
@@ -237,16 +235,34 @@ local function Select(edit)
 	edit:HighlightText()
 end
 
+-- Another copy's window, from an older version still loaded in another addon, so two never show at once.
+local function PutAwayOthers()
+	for _, name in ipairs(OLDER_WINDOWS) do
+		local other = rawget(_G, name)
+		if other ~= window and type(other) == "table" and type(other.Hide) == "function" then
+			other:Hide()
+		end
+	end
+end
+
 ---@return ForeverFamilyLinkWindow
 local function Window()
 	if window then
 		return window
 	end
-	-- Each version names its own window, so a copy of another version still open alongside never takes its name.
-	local name = "ForeverFamilyLink" .. VERSION
-	local frame = CreateFrame("Frame", name, UIParent, "PortraitFrameTemplate") --[[@as ForeverFamilyLinkWindow]]
-	-- Escape closes it like any panel (an addon-owned frame).
-	table.insert(UISpecialFrames, name)
+	PutAwayOthers()
+	local frame = CreateFrame("Frame", LINK_NAME, UIParent, "PortraitFrameTemplate") --[[@as ForeverFamilyLinkWindow]]
+	local listed = false
+	for _, name in ipairs(UISpecialFrames) do
+		if name == LINK_NAME then
+			listed = true
+			break
+		end
+	end
+	if not listed then
+		-- Escape closes it like any panel (an addon-owned frame).
+		table.insert(UISpecialFrames, LINK_NAME)
+	end
 	frame:SetSize(400, 186)
 	frame:SetPoint("CENTER")
 	frame:SetFrameStrata("DIALOG")
@@ -285,15 +301,15 @@ local function Window()
 	hint:SetPoint("RIGHT", -16, 0)
 	hint:SetJustifyH("LEFT")
 
-	local close = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-	close:SetSize(96, 22)
+	local close = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate") --[[@as Button]]
+	close:SetHeight(22)
 	close:SetPoint("BOTTOMRIGHT", -14, 14)
 	close:SetScript("OnClick", function()
 		frame:Hide()
 	end)
 
-	local never = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-	never:SetSize(190, 22)
+	local never = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate") --[[@as Button]]
+	never:SetHeight(22)
 	never:SetPoint("RIGHT", close, "LEFT", -8, 0)
 	never:SetScript("OnClick", function()
 		local db, key, onDismiss = showing.db, showing.key, showing.onDismiss
@@ -314,7 +330,7 @@ end
 
 -- A small window with `folder`'s name, line and store address, selected for Ctrl+C. With a hint `key` it also
 -- offers "Don't suggest this again", which dismisses that hint in `db` and then calls `onDismiss`. Never opens in
--- combat; returns whether it opened. Its text reads from `locale`, the calling addon's L, first.
+-- combat; returns whether it opened. Its text reads from `locale` (an addon's view passes its own L).
 ---@param db? ForeverFamilyDB
 ---@param key? string
 ---@param folder string
@@ -327,16 +343,21 @@ function Family.ShowLink(db, key, folder, onDismiss, locale)
 		return false
 	end
 	local frame = Window()
+	PutAwayOthers()
+	local L = Strings(locale)
 	showing.db, showing.key, showing.onDismiss = db, key, onDismiss
 	shownURL = addon.url
 	frame:SetTitle(addon.name)
 	-- art-ok: a square icon in the template's round portrait
 	frame:GetPortrait():SetTexture(Icon(folder, Family.State(folder)))
-	local L = Strings(locale)
-	parts.line:SetText(L[addon.phrase])
+	parts.line:SetText(L[addon.line])
 	parts.hint:SetText(L["Copy the address, then open it in your browser."])
 	parts.close:SetText(L["Close"])
 	parts.never:SetText(L["Don't suggest this again"])
+	Fit(parts.close, 96)
+	Fit(parts.never, 140)
+	-- The window widens for a long translation rather than letting a button leave it.
+	frame:SetWidth(math.max(400, parts.close:GetWidth() + parts.never:GetWidth() + 110))
 	parts.edit:SetText(addon.url)
 	parts.never:SetShown(db ~= nil and key ~= nil)
 	frame:Show()
@@ -350,7 +371,7 @@ local ROW_HEIGHT = 52
 -- Copy link button. `db` is the addon's saved variables, or a function that returns them once they load;
 -- `current` is the addon's own folder, whose row says "This addon". The rows are built the first time it shows
 -- and their states read again each time. Defaults turns the hints back on, dismissed ones included. Its text reads
--- from `locale`, the calling addon's L, first.
+-- from `locale` (an addon's view passes its own L).
 ---@param parent? Frame
 ---@param db ForeverFamilySaved
 ---@param current? string
@@ -360,6 +381,8 @@ function Family.CreatePanel(parent, db, current, locale)
 	local panel = CreateFrame("Frame", nil, parent) --[[@as ForeverFamilyPanel]]
 	-- Hidden until the settings panel shows it, so its OnShow always fires.
 	panel:Hide()
+	local L = Strings(locale)
+	local states = { on = L["On"], off = L["Installed, turned off"], missing = L["Not installed"] }
 	---@return ForeverFamilyDB?
 	local function Saved()
 		if type(db) == "function" then
@@ -369,9 +392,6 @@ function Family.CreatePanel(parent, db, current, locale)
 	end
 	local check
 	local rows = {}
-
-	local L = Strings(locale)
-	local states = { on = L["On"], off = L["Installed, turned off"], missing = L["Not installed"] }
 
 	local function Build()
 		local title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
@@ -404,10 +424,11 @@ function Family.CreatePanel(parent, db, current, locale)
 			local icon = panel:CreateTexture(nil, "ARTWORK")
 			icon:SetSize(32, 32)
 			icon:SetPoint("TOPLEFT", 16, top)
-			local button = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-			button:SetSize(110, 22)
+			local button = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate") --[[@as Button]]
+			button:SetHeight(22)
 			button:SetPoint("TOPRIGHT", -16, top - 5)
 			button:SetText(L["Copy link"])
+			Fit(button, 110)
 			button:SetScript("OnClick", function()
 				Family.ShowLink(nil, nil, addon.folder, nil, locale)
 			end)
@@ -422,7 +443,7 @@ function Family.CreatePanel(parent, db, current, locale)
 			line:SetPoint("TOPLEFT", name, "BOTTOMLEFT", 0, -3)
 			line:SetPoint("RIGHT", state, "LEFT", -10, 0)
 			line:SetJustifyH("LEFT")
-			line:SetText(L[addon.phrase])
+			line:SetText(L[addon.line])
 			rows[index] = { addon = addon, icon = icon, state = state, button = button }
 		end
 	end
@@ -455,5 +476,30 @@ function Family.CreatePanel(parent, db, current, locale)
 	return panel
 end
 
+-- The API bound to one addon's L: ShowLink and CreatePanel read in that L unless a call names another. Each addon's
+-- copy sets `ns.Family` to its own view (of `ns.FamilyL`, else `ns.L`), so no call site can leave it out. The same
+-- view comes back for the same L.
+local views = {}
+---@param locale? ForeverFamilyL
+---@return ForeverFamilyAPI
+function Family.For(locale)
+	if type(locale) ~= "table" then
+		return Family
+	end
+	local view = views[locale]
+	if not view then
+		view = setmetatable({
+			ShowLink = function(db, key, folder, onDismiss, other)
+				return Family.ShowLink(db, key, folder, onDismiss, other or locale)
+			end,
+			CreatePanel = function(parent, db, current, other)
+				return Family.CreatePanel(parent, db, current, other or locale)
+			end,
+		}, { __index = Family })
+		views[locale] = view
+	end
+	return view --[[@as ForeverFamilyAPI]]
+end
+
 ForeverFamily = Family -- taint-ok: addon-owned registry shared by the Forever addons
-ns.Family = Family
+ns.Family = Family.For(ns.FamilyL or ns.L)
