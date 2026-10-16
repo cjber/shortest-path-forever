@@ -511,7 +511,7 @@ ns.Init(function()
 	-- The Forever addons page is shared by all five addons (UI/ForeverFamily.lua), with the hint setting on it.
 	local family = Settings.RegisterCanvasLayoutSubcategory(
 		category,
-		ns.Family.CreatePanel(nil, ns.db, addonName),
+		ns.Family.CreatePanel(nil, ns.db, addonName, L),
 		L["Forever addons"]
 	)
 	Settings.RegisterInitializer(
