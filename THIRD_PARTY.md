@@ -62,8 +62,8 @@ Credit for the ideas and reports behind the addon.
 | merlinqt, on CurseForge | Asked for map icon sizes (1.14.0) | |
 | maggew, on CurseForge | Found the "Division by zero" error, and asked for the steps on the destination pin and the compass background (1.15.0), finer compass positioning (#160) and the arrow-key nudge (1.17.0) | |
 | neil_team_brigade, phear and test1point6, on CurseForge | Asked to hide the empty tracker's title (1.15.0) | |
-| berserkerlxl, on CurseForge | Asked for `/way` (1.15.0) | |
+| berserkerlxl, on CurseForge | Found guides' TomTom waypoints not reaching the addon, and asked for `/way` (1.15.0) | |
 | rydoc and joster91, on CurseForge | Found the Journey collapsing into or overlapping the quest tracker (1.15.0, 1.17.0) | |
-| deathmvp1, on CurseForge | Asked for an easier way to move the tracker, now in its right-click menu (1.17.0) | |
+| deathmvp1, on CurseForge | Asked to move the Journey off the quest list; detaching it is now in its right-click menu (1.17.0) | |
 
 Thanks also to everyone else who reported a bug or asked for a feature, here or on CurseForge.
