@@ -71,8 +71,6 @@ Right-click a flight master icon to mark its flight path as known if a flight ma
 Every feature has its own switch in the settings; the world map's filter menu and the minimap's tracking menu hide
 each kind of mark. Searches and tracker updates wait until combat ends.
 
-It's in English for now; [Ways to help](#ways-to-help) says how to translate it.
-
 ## Move the tracker
 
 Turn off **Attach to quest tracker** in Guidance, or right-click the tracker's "Journey to …" line and untick it there, then drag the shared Forever column by its heading. The column and its heading hide while nothing is tracked; turn the setting back on in Guidance to attach it above your quests again.
@@ -124,11 +122,13 @@ Run `tools/typecheck.sh` for LuaLS and static checks, and `luajit tests/<name>_s
 
 [Contributing](https://github.com/cjber/.github/blob/main/CONTRIBUTING.md), [AGENTS.md](AGENTS.md) and [security reports](https://github.com/cjber/.github/blob/main/SECURITY.md).
 
+## Credits
+
+Travel data comes from [wago.tools](https://wago.tools), [CMaNGOS](https://github.com/cmangos/classic-db) (GPL-3.0) and [InFlight](https://github.com/LudiusMaximus/InFlight) (MIT). Some features were inspired by [Polestar](https://github.com/fitzforge/polestar) by Fitz; no code was copied. Fitz is welcome to use our code. Thanks to maggew, alex21xx and everyone listed in [THIRD_PARTY.md](THIRD_PARTY.md).
+
 ## Licence
 
-GPL-3.0-or-later. Routes, lifts, the tram and flight paths come from the game's data via
-[wago.tools](https://wago.tools); transport timing and portals from [CMaNGOS](https://github.com/cmangos); recorded
-flight times from [InFlight](https://github.com/LudiusMaximus/InFlight) (MIT). All inputs and their licences: [THIRD_PARTY.md](THIRD_PARTY.md).
+GPL-3.0-or-later. Inputs: [THIRD_PARTY.md](THIRD_PARTY.md).
 
 Made by Cillian Berragan · [cillian.dev](https://cillian.dev) · [GitHub](https://github.com/cjber) · [Twitter](https://twitter.com/cjberragan)
 
