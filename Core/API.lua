@@ -236,6 +236,8 @@ end
 ---@param point SPFPoint
 ---@return SPFPoint?
 function ns.NextJourneyStop(point)
+	-- A door stands in for the stop inside its instance (JourneyInput.lua).
+	point = point.stop or point
 	return route and route.points[route.index] == point and route.points[route.index + 1] or nil
 end
 

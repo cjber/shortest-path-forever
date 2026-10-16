@@ -69,3 +69,38 @@ assert(
 assert(journey.SkipJourneyStep(1) and journey.SkipJourneyStep(2), "current steps can be completed manually")
 assert(not journey.HasJourney(), "completing the final step ends the journey")
 print("journey_arrival_spec: manual completion and journey-local Hearthstone refusal ok")
+
+-- A stop inside a dungeon is planned to the instance's door and completed by going in, not by standing at the door:
+-- the next stop, inside too, starts once you are in.
+local dungeon = assert(loadfile("tests/journey_driver.lua"))()
+local game = dungeon.ns
+local instance = 0
+dungeon.env.GetInstanceInfo = function()
+	return "", "none", 0, "", 0, 0, false, instance
+end
+dungeon.env.GetRealZoneText = function()
+	return ""
+end
+game.Entrances = { [36] = { name = "Deadmines", map = 1, x = 3000, y = 0 } }
+local boss, chest = { map = 36, x = 10, y = 10, label = "Boss" }, { map = 36, x = 20, y = 20, label = "Chest" }
+local started
+game.NextJourneyStop = function(point)
+	started = point
+	return point.stop == boss and chest or nil
+end
+dungeon.move({ map = 1, x = 0, y = 0 })
+assert(game.StartJourney(boss))
+dungeon.path.settle()
+local planned = assert(dungeon.shown(), "the dungeon stop plans a journey")
+local last = planned.legs[#planned.legs].to
+assert(last.map == 1 and last.x == 3000 and last.y == 0 and last.label == "Boss", "it ends at the door")
+dungeon.move({ map = 1, x = 3000, y = 0 })
+dungeon.update(1)
+assert(game.HasJourney() and started == nil, "standing at the door does not complete the stop")
+dungeon.fire("PLAYER_ENTERING_WORLD")
+assert(game.HasJourney() and started == nil, "loading into another place is not going in")
+instance = 36
+dungeon.fire("PLAYER_ENTERING_WORLD")
+assert(started and started.stop == boss, "going in completes the stop the door stood for")
+assert(game.HasJourney(), "the next stop inside the dungeon starts")
+print("journey_arrival_spec: a dungeon stop is completed by going in ok")

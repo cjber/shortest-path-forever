@@ -7,6 +7,7 @@
 ---@field TaxiNodes table<number, SPFTaxiNode>
 ---@field TaxiPaths SPFTaxiPath[]
 ---@field Portals SPFPortal[]
+---@field Entrances table<number, SPFEntrance>
 ---@field Teleports SPFTeleport[]
 ---@field Landmasses SPFLandmass[]
 ---@field Walks table<number, table<string, (number|false)[]>>
@@ -35,6 +36,8 @@
 ---@field pinBadge? boolean -- destination marker beside an existing map icon
 ---@field questIDs? number[] -- the quests whose client areas a held stop stands for (API.lua)
 ---@field corpse? boolean -- where your corpse lies (Corpse.lua)
+---@field entrance? number -- the instance map whose door this is (JourneyInput.lua)
+---@field stop? SPFPoint -- the stop inside that instance the door stands for
 ---@class SPFAreaShape : SPFPoint
 ---@field radius number -- yards
 ---@class SPFPlace : SPFPoint
@@ -77,6 +80,8 @@
 ---@field faction? string
 ---@field requires? string
 ---@field seconds number
+---@class SPFEntrance : SPFPoint -- a dungeon's or raid's door, by instance map (Data/Portals.lua)
+---@field name string
 ---@class SPFTeleport
 ---@field spell number
 ---@field item? number
