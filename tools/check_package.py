@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Check the packager's output before an upload (forever_tools.package): every file the TOC and XML load ships,
-nothing from development does, LICENSE does, and the smoke spec passes on the packaged files.
+nothing from development does, LICENSE does, and the smoke and shared Forever family specs pass on the packaged files.
 
     printf 'Package check\\n' > .release-notes.md
     <BigWigs packager release.sh> -d -z    # CI: the package job, with the release workflow's pinned packager
@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parent.parent
 # The smoke spec fetches the pinned Blizzard UI fixture with tools/fetch_blizzard_ui.sh on first run.
 POLICY = package.Policy(
     addons=("ShortestPathForever",),
-    specs=("tests/smoke_spec.lua",),
+    specs=("tests/smoke_spec.lua", "tests/forever_family_spec.lua"),
     support=("tests", "tools/fetch_blizzard_ui.sh"),
 )
 
