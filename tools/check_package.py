@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Check the packager's output before an upload (forever_tools.package): every file the TOC and XML load ships,
-nothing from development does, LICENSE and THIRD_PARTY.md do (with README's `## Credits` and THIRD_PARTY's
+nothing from development does, a licence file and THIRD_PARTY.md do (with README's `## Credits` and THIRD_PARTY's
 `## Ideas and contributors`, WFA-10 and WFA-31), and the smoke and shared Forever family specs pass on the packaged
 files.
 

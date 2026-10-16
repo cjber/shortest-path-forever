@@ -34,6 +34,7 @@ python3 tools/lint_multivalue.py
 python3 tools/lint_art.py
 python3 tools/lint_secret.py
 python3 tools/check_editorconfig.py
+python3 tools/check_locales.py
 python3 tools/check_family.py
 # An interrupted check must never leave a stale report looking like this run's result.
 report=.types/diagnostics.json
