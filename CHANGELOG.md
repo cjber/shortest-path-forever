@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Data checked against Forever 1.60.1.70425.** Two Skyborne air routes changed course in this build. The Alliance skyship between Dalaran and Valanaar now takes about 5 seconds longer per round trip, and the Horde zeppelin between Thunder Bluff and Zephras Isle a fraction of a second less, so their departure times follow the new paths. Flight points, flight times, lifts, portals and teleports are unchanged.
+
 ## [1.16.0] - 2026-10-16
 
 - **Keep journeys after a reload.** Turn on *Keep journeys after a reload* in Guidance and a journey you planned yourself (a map click, `/way`, a quest or Nearby services) starts again after a `/reload`, or when you log back in within 30 minutes. Guides and other addons start their own again, and one that does so first wins. It is off by default.
