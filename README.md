@@ -108,7 +108,7 @@ Installed together, the others send Shortest Path their destinations: an Adventu
 
 Journey steps share one tracker column with the Adventure Guide, SkillUp and Legacy sections, above your quests.
 
-The *Forever addons* page in Shortest Path's settings lists all five and whether you have them. Where one you don't have would help, a grey line in a quest menu, the tracker or a stop pin says so; untick *Suggest my other Forever addons* there to turn these off.
+Without Adventure Guide or Legacy, a grey hint suggests it where it would help. *Suggest my other Forever addons*, in settings, turns hints off.
 
 ## Ways to help
 
