@@ -797,6 +797,74 @@ local function sight(st, P, a, b, water)
 	return k == P.k[b] and node == P.n[b]
 end
 
+-- No surface of any height on global cell (gx, gy): no base surface and no floor. Off the map counts as none.
+local function bare(st, gx, gy)
+	if gx < 0 or gy < 0 or gx >= st.GX or gy >= st.GY then
+		return true
+	end
+	local C = st.C
+	local k, lc = floor(gx / C) * st.ny + floor(gy / C), (gx % C) * C + gy % C
+	local val = grid(st, k)
+	return not val or (val[lc + 1] == 0 and st.at[k][-(lc + 1)] == nil)
+end
+
+-- A drawn line's end segment runs from a path node's cell centre to the endpoint itself, off any centre. Walk the
+-- cells that segment really crosses, from node of cluster k on global cell (gx, gy) towards the fractional cell
+-- position (tx, ty), following the surface as sight does. Returns the cluster and node it reaches in the end's
+-- cell; or, when a step is closed, nil and whether every cell from the closed one to the end has no surface at
+-- all (the line only runs on into a point the grid has no surface for).
+local function toward(st, k, node, gx, gy, tx, ty, water)
+	local ex, ey = floor(tx), floor(ty)
+	local dx, dy = tx - (gx + 0.5), ty - (gy + 0.5)
+	local sx, sy = dx > 0 and 1 or -1, dy > 0 and 1 or -1
+	-- Distance along the segment, in segment lengths, to the next x and y cell boundary and between boundaries.
+	local stepX, stepY = dx ~= 0 and 1 / abs(dx) or huge, dy ~= 0 and 1 / abs(dy) or huge
+	local nextX, nextY = 0.5 * stepX, 0.5 * stepY
+	local x, y, closed = gx, gy, false
+	for _ = 1, 2 * (abs(ex - gx) + abs(ey - gy)) + 2 do
+		if x == ex and y == ey then
+			break
+		end
+		tick()
+		local mx, my = 0, 0
+		if abs(nextX - nextY) < 1e-9 then -- through a corner
+			mx, my, nextX, nextY = sx, sy, nextX + stepX, nextY + stepY
+		elseif nextX < nextY then
+			mx, nextX = sx, nextX + stepX
+		else
+			my, nextY = sy, nextY + stepY
+		end
+		-- Rounding can only overshoot along an axis already level with the end; never step past it.
+		if x == ex then
+			mx = 0
+		end
+		if y == ey then
+			my = 0
+		end
+		if mx ~= 0 or my ~= 0 then
+			if not closed then
+				local nk, nn = neighbour(st, k, node, x, y, mx, my, water)
+				if nk then
+					k, node = nk, nn
+				else
+					closed = true
+				end
+			end
+			x, y = x + mx, y + my
+			if closed and not bare(st, x, y) then
+				return nil, false
+			end
+		end
+	end
+	if closed then
+		return nil, true
+	end
+	if x ~= ex or y ~= ey then
+		return nil, false
+	end
+	return k, node
+end
+
 -- Collapse a node path to its turns, then pull the string: from each anchor, jump to the furthest point in sight.
 -- Water may only be crossed where the path itself swam.
 local function smooth(st, P)
@@ -887,6 +955,7 @@ ns.PathGrid = {
 	standing = standing,
 	snap = snap,
 	smooth = smooth,
+	toward = toward,
 	Idle = Idle,
 	Reset = Reset,
 	TILE = TILE,

@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Walking lines no longer clip rock or buildings at their ends.** The line on the map and minimap is drawn from exactly where you stand and to exactly where you're going, but only the part between those ends was checked against the walking map. The first and last stretch could cut through a wall or a hillside for a few yards. Each end is now checked too. One that would cross bare ground bends through the nearest walkable spot instead. The time and the route are unchanged. Thanks to fitzforge for the report.
+
 - **Data checked against Forever 1.60.1.70425.** Two Skyborne air routes changed course in this build. The Alliance skyship between Dalaran and Valanaar now takes about 5 seconds longer per round trip, and the Horde zeppelin between Thunder Bluff and Zephras Isle a fraction of a second less, so their departure times follow the new paths. Flight points, flight times, lifts, portals and teleports are unchanged.
 - **The quest tracker is let go when the Journey has nothing to show.** To fit the Forever sections above your quests, the shared column moves the game's quest tracker. It kept holding it there with no journey, no boat times and nothing from the other Forever addons, or with All Objectives collapsed. That fought EllesmereUI and other UI addons that place the tracker themselves. Now the tracker goes straight back to where the game, Edit Mode or your UI addon put it, and is moved again only once a section has something to show.
 

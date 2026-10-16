@@ -10,6 +10,7 @@ local tick, Deadline, Expansions, State, surface, grid =
 	Grid.tick, Grid.Deadline, Grid.Expansions, Grid.State, Grid.surface, Grid.grid
 local cellOf, nodesOf, metadata, adjacent = Grid.cellOf, Grid.nodesOf, Grid.metadata, Grid.adjacent
 local entrance, locate, standing, snap, smooth = Grid.entrance, Grid.locate, Grid.standing, Grid.snap, Grid.smooth
+local toward = Grid.toward
 
 local TILE, SNAP, ZTOL, DX, DY = Grid.TILE, Grid.SNAP, Grid.ZTOL, Grid.DX, Grid.DY
 local RETRIES = 8 -- other cells tried for an endpoint stuck in a pocket
@@ -354,6 +355,24 @@ local function connectPoint(st, swim, k, node, h)
 	return ends, merged, via
 end
 -- Sliced A* and refinement share scratch trees; splitting adds hot-path calls and upvalues
+-- Whether the drawn segment from path entry j's cell centre to point stays on the walkable surface: the walk
+-- reaches the point's own cell, on the surface it stands on when it has a height, or runs on only into cells with no
+-- surface at all, towards a point the grid has none for.
+local function clearEnd(st, P, j, point, water)
+	local tx, ty = (point.x - st.x0) / st.cs, (point.y - st.y0) / st.cs
+	local k, node = toward(st, P.k[j], P.n[j], P.x[j], P.y[j], tx, ty, water)
+	if not k then
+		return node == true
+	end
+	if point.z == nil then
+		return true
+	end
+	local pk, lc = locate(st, point.x, point.y)
+	grid(st, pk)
+	local own, gap = surface(st, pk, lc, -1, point.z)
+	return not own or gap > ZTOL or (pk == k and own == node)
+end
+
 local function run(map, from, to, waterWalking, costOnly)
 	local st = State(map)
 	if not st then
@@ -557,9 +576,28 @@ local function run(map, from, to, waterWalking, costOnly)
 	if #keep == 1 then -- both ends on one node
 		keep[2] = keep[1]
 	end
-	local points = { { map = map, x = from.x, y = from.y, z = from.z } }
+	local n = #P.x
+	-- The string was pulled between node centres, but the line is drawn from the endpoints themselves. Each end
+	-- segment gets its own walk from the vertex beside it to the point; one that fails is drawn through the end
+	-- node's centre first, from where the pulled string already holds.
+	local inner = #keep > 2
+	local startDetour = not clearEnd(st, P, inner and keep[2] or n, from, P.w[inner and keep[2] or n] > 0)
+	local goalVia = inner and keep[#keep - 1] or 1
+	local goalDetour = not clearEnd(st, P, goalVia, to, P.w[n] - (P.w[goalVia - 1] or 0) > 0)
+	local drawn = { 1 }
+	if startDetour then
+		drawn[2] = 1
+	end
 	for i = 2, #keep - 1 do
-		local j = keep[i]
+		drawn[#drawn + 1] = keep[i]
+	end
+	if goalDetour and drawn[#drawn] ~= n then
+		drawn[#drawn + 1] = n
+	end
+	drawn[#drawn + 1] = n
+	local points = { { map = map, x = from.x, y = from.y, z = from.z } }
+	for i = 2, #drawn - 1 do
+		local j = drawn[i]
 		grid(st, P.k[j])
 		points[#points + 1] = {
 			map = map,
@@ -571,7 +609,7 @@ local function run(map, from, to, waterWalking, costOnly)
 	points[#points + 1] = { map = map, x = to.x, y = to.y, z = to.z }
 	local wetYards = 0
 	for i = 2, #points do
-		local p, q = keep[i - 1], keep[i]
+		local p, q = drawn[i - 1], drawn[i]
 		local wet = q > p and (P.w[q] - P.w[p]) / (q - p) or 0
 		local length = sqrt((points[i].x - points[i - 1].x) ^ 2 + (points[i].y - points[i - 1].y) ^ 2)
 		wetYards = wetYards + length * wet
