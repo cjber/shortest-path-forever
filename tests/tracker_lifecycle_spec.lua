@@ -137,6 +137,10 @@ for _, readyAtLoad in ipairs({ false, true }) do
 		OpenFooter = function()
 			opened = opened + 1
 		end,
+		Footer = noop,
+		Version = function()
+			return 0
+		end,
 	}
 	modules[1]:OnBlockHeaderClick({ id = "family" }, "RightButton")
 	assert(opened == 0, "a right click on the footer does nothing")

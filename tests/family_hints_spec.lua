@@ -45,7 +45,7 @@ local env = setmetatable({
 }, { __index = _G })
 env.GRAY_FONT_COLOR.r = 0.5
 
-local goal
+local goal, owner
 local ns = {
 	L = setmetatable({}, {
 		__index = function(_, key)
@@ -61,6 +61,9 @@ local ns = {
 	end,
 	HasJourney = function()
 		return goal ~= nil
+	end,
+	JourneyOwner = function()
+		return owner
 	end,
 	PlaceLabel = function(point)
 		return point.label
@@ -164,14 +167,32 @@ JourneyChanged(nil, "cleared")
 check(Hints.Footer() == nil, "no footer when the player clears a journey")
 goal = stop1
 JourneyChanged(stop1)
-local before, beforeRefreshed = Hints.Version(), refreshed
+local before = Hints.Version()
 installed.AdventureGuideForever = "on"
 goal = nil
 JourneyChanged(nil, "arrived")
 check(Hints.Footer() == nil and Hints.Version() == before, "no footer with Adventure Guide on")
 installed.AdventureGuideForever = nil
+-- A guide or another addon driving the journey has its own next step.
+owner = "RestedXP"
 goal = stop2
 JourneyChanged(stop2)
+owner = nil
+goal = nil
+JourneyChanged(nil, "arrived")
+check(Hints.Footer() == nil and Hints.Version() == before, "no footer after another addon's journey")
+-- Nor with the journey hidden from the tracker.
+ns.db.journeyTracker = false
+goal = stop2
+JourneyChanged(stop2)
+goal = nil
+JourneyChanged(nil, "arrived")
+check(Hints.Footer() == nil and Hints.Version() == before, "no footer with the journey hidden from the tracker")
+ns.db.journeyTracker = nil
+owner = "Shortest Path Forever"
+goal = stop2
+JourneyChanged(stop2)
+owner = nil
 goal = nil
 JourneyChanged(nil, "arrived")
 local footer = Hints.Footer()
@@ -183,7 +204,7 @@ check(
 		and footer.rows[1].text == "What next? Adventure Guide Forever suggests quests for your level.",
 	"one grey line"
 )
-check(Hints.Version() ~= before and refreshed > beforeRefreshed, "the tracker is told")
+check(Hints.Version() ~= before, "the tracker's change check sees it")
 check(timers[#timers].delay == 120 and timers[#timers].fn == ns.RefreshTracker, "the tracker looks again later")
 now = now + 60
 check(Hints.Footer() ~= nil, "it stays a while")
@@ -229,9 +250,10 @@ combat = true
 Hints.OpenFooter()
 check(Hints.Footer() ~= nil, "a click in combat leaves it, as the window can't open")
 combat = false
-local count = #links
+local count, refreshedBefore = #links, refreshed
 Hints.OpenFooter()
 check(#links == count + 1 and links[#links].key == "ShortestPathForever.arrival", "clicking it opens the link")
+check(refreshed == refreshedBefore + 1, "and redraws the tracker without it")
 check(links[#links].folder == "AdventureGuideForever", "for Adventure Guide")
 check(Hints.Footer() == nil, "and takes the footer away")
 Hints.OpenFooter()
@@ -240,5 +262,9 @@ Session()
 ns.db.familyDismissed = { ["ShortestPathForever.arrival"] = true }
 check(Hints.Footer() == nil, "Don't suggest this again takes it away")
 ns.db.familyDismissed = nil
+Session()
+ns.db.journeyTracker = false
+check(Hints.Footer() == nil, "hiding the journey from the tracker takes it away")
+ns.db.journeyTracker = nil
 
 print(("family_hints_spec: %d checks passed"):format(checks))

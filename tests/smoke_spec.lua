@@ -893,6 +893,8 @@ Run("forever family arrival footer", function()
 	}
 	ns.JourneyChanged({ map = 1, x = 0.5, y = 0.5, label = "Footer" })
 	ns.JourneyChanged(nil, "arrived")
+	-- EndJourney redraws the tracker right after it tells ns.JourneyChanged.
+	ns.RefreshTracker()
 	Flush()
 	assert(ns.FamilyHints.Footer(), "the footer shows after arriving")
 	local tracker = _G.ShortestPathForeverObjectiveTracker

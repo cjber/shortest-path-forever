@@ -12,6 +12,8 @@ local QUEST_MENU, ARRIVAL, ENTRANCE =
 	"ShortestPathForever.questMenu", "ShortestPathForever.arrival", "ShortestPathForever.entrance"
 -- How long the footer stays under a finished journey with nothing else in the tracker.
 local FOOTER_SECONDS = 120
+-- Nearby services starts journeys through the API under this name: those are the player's own (UI/Alert.lua).
+local OWN = "Shortest Path Forever"
 
 ---@class SPFFamilyHints
 local Hints = {}
@@ -22,13 +24,9 @@ local footer
 local version = 0
 ---@type SPFPoint?
 local journeyPoint
-
-local function Changed()
-	version = version + 1
-	if ns.RefreshTracker then
-		ns.RefreshTracker()
-	end
-end
+-- Who owned the journey under way, read when it started: API.lua has forgotten the owner by the time it ends.
+---@type string?
+local journeyOwner
 
 -- The quest menus' entry, under Plan journey: Adventure Guide picks quests for the player's level.
 ---@param root table the menu description being built
@@ -58,13 +56,15 @@ function Hints.AddEntranceLine(tooltip)
 end
 
 -- The footer's block for the tracker, or nil. It goes when a new journey starts, the hint no longer applies (the
--- setting, a dismissal, or Adventure Guide now installed), or FOOTER_SECONDS have passed.
+-- setting, a dismissal, or Adventure Guide now installed), the journey is hidden from the tracker, or
+-- FOOTER_SECONDS have passed. Only RefreshTracker asks, so a footer that goes is redrawn away at once.
 ---@return { key: string, title: string, rows: SPFRow[] }?
 function Hints.Footer()
 	if
 		footer
 		and (
 			ns.HasJourney()
+			or ns.db.journeyTracker == false
 			or GetTime() - footer.shownAt >= FOOTER_SECONDS
 			or not ns.Family.Hint(ns.db, ARRIVAL, ADVENTURE)
 		)
@@ -101,21 +101,24 @@ function Hints.OpenFooter()
 	end
 	if ns.Family.ShowLink(ns.db, ARRIVAL, ADVENTURE) then
 		footer = nil
-		Changed()
+		version = version + 1
+		ns.RefreshTracker()
 	end
 end
 
 -- ns.JourneyChanged: a point is the next stop; nil with "arrived" ends the journey with nothing more planned.
+-- Only the player's own journeys count: a guide or another addon driving the journey has its own next step.
+-- EndJourney redraws the tracker after this, so the footer only needs its version moved.
 ---@param point SPFPoint?
 ---@param reason? "arrived"|"cleared"
 local function JourneyChanged(point, reason)
 	if point then
-		journeyPoint = point
+		journeyPoint, journeyOwner = point, ns.JourneyOwner()
 		return
 	end
-	local finished = journeyPoint
-	journeyPoint = nil
-	if reason ~= "arrived" or not finished then
+	local finished, owner = journeyPoint, journeyOwner
+	journeyPoint, journeyOwner = nil, nil
+	if reason ~= "arrived" or not finished or (owner ~= nil and owner ~= OWN) or ns.db.journeyTracker == false then
 		return
 	end
 	if ns.Family.Hint(ns.db, ARRIVAL, ADVENTURE) and ns.Family.Once(ARRIVAL) then
@@ -123,7 +126,7 @@ local function JourneyChanged(point, reason)
 			title = finished.routeTitle or L["Journey to %s"]:format(ns.PlaceLabel(finished)),
 			shownAt = GetTime(),
 		}
-		Changed()
+		version = version + 1
 		C_Timer.After(FOOTER_SECONDS, ns.RefreshTracker)
 	end
 end

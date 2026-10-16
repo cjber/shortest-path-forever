@@ -310,7 +310,10 @@ local function RefreshTracker(dockID, yards)
 		blocks[#blocks + 1] = { key = blockKey, title = title, rows = rows }
 	end
 	module.dockID, module.mapDock = dockID, mapDock
-	local section = (journeyTitle or familyBlock) and L["Journey"] or kind and HEADER[kind] or ModuleMixin.headerText
+	local section = journeyTitle and L["Journey"]
+		or kind and HEADER[kind]
+		or familyBlock and L["Journey"]
+		or ModuleMixin.headerText
 	local header = journeyTitle and JourneyHeader(journeyResult, journeyIndex, loading) or section
 	if not journeyTitle then
 		distanceCache = nil
@@ -384,7 +387,7 @@ ns.Init(function()
 		if button == "LeftButton" then
 			if ns.JourneyInfo() then
 				ns.ToggleJourneyGuide()
-			elseif ns.FamilyHints.Footer() then
+			elseif not module.mapDock and module.blocks[1] and module.blocks[1].key == "family" then
 				ns.FamilyHints.OpenFooter()
 			else
 				OpenDockMap(module.mapDock)
