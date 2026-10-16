@@ -91,9 +91,14 @@ local function StackPoints(point)
 	local horizontal = point:find("RIGHT", 1, true) and "RIGHT" or "LEFT"
 	return "TOP" .. horizontal, "BOTTOM" .. horizontal
 end
+-- Whether the native frame is still where our last restack put it (or on a legacy anchor to the host), rather than
+-- somewhere Blizzard, Edit Mode or a UI addon has moved it since.
+local function NativeStillOurs(point, relativeTo, relativePoint, x, y)
+	return nativeAnchor ~= nil and (relativeTo == host or IsAppliedNativeAnchor(point, relativeTo, relativePoint, x, y))
+end
 local function CaptureNativeAnchor()
 	local point, relativeTo, relativePoint, x, y = ObjectiveTrackerFrame:GetPoint()
-	if nativeAnchor and (relativeTo == host or IsAppliedNativeAnchor(point, relativeTo, relativePoint, x, y)) then
+	if NativeStillOurs(point, relativeTo, relativePoint, x, y) then
 		return
 	end
 	point, y = point or "TOPRIGHT", y or 0
@@ -458,6 +463,18 @@ local function LayoutModules(width, available, reserve)
 	host:SetHeight(math.max(1, height))
 	return hasSections
 end
+-- Hands the native frame back to the slot Blizzard, Edit Mode or a UI addon gave it, clamp included, when it is still
+-- where our last restack left it. One moved since is already in someone else's hands and stays where it is. Out of
+-- combat only: the native frame is protected.
+local function ReleaseNative()
+	if NativeStillOurs(ObjectiveTrackerFrame:GetPoint()) then
+		ObjectiveTrackerFrame:ClearAllPoints()
+		local saved = nativeAnchor.saved
+		ObjectiveTrackerFrame:SetPoint(saved.point, saved.relativeTo, saved.relativePoint, saved.x, saved.y)
+	end
+	appliedNativeAnchor = nil
+	RestoreNativeClamp()
+end
 -- Switches the host between attached and detached when the settings or combat state allow, and returns the settings
 -- that chose the mode.
 local function ApplyAttachment()
@@ -467,21 +484,7 @@ local function ApplyAttachment()
 		attached = desired
 	elseif not InCombatLockdown() and desired ~= attached then
 		if not desired then
-			local currentPoint, currentRelative, currentRelativePoint, currentX, currentY =
-				ObjectiveTrackerFrame:GetPoint()
-			if
-				nativeAnchor
-				and (
-					currentRelative == host
-					or IsAppliedNativeAnchor(currentPoint, currentRelative, currentRelativePoint, currentX, currentY)
-				)
-			then
-				ObjectiveTrackerFrame:ClearAllPoints()
-				local saved = nativeAnchor.saved
-				ObjectiveTrackerFrame:SetPoint(saved.point, saved.relativeTo, saved.relativePoint, saved.x, saved.y)
-				appliedNativeAnchor = nil
-			end
-			RestoreNativeClamp()
+			ReleaseNative()
 		end
 		attached = desired
 	end
@@ -529,6 +532,9 @@ local function LayoutInCombat()
 		-- Still stacked where the last reflow left both frames: nothing to move.
 		return
 	end
+	-- An empty column hid the host out of combat; a section that gains content in combat shows it again (it is
+	-- addon-owned, so showing it in combat is allowed). A collapsed All Objectives keeps the sections hidden.
+	host:SetShown(not NativeCollapsed())
 	CaptureNativeAnchor()
 	host:SetWidth(ObjectiveTrackerFrame:GetWidth())
 	host:ClearAllPoints()
@@ -639,22 +645,21 @@ local function LayoutAttached()
 	-- with no reserved gap.
 	local collapsed = NativeCollapsed()
 	local headerCandidate = not collapsed and NativeHeaderShown()
-	local hasSections = false
-	if collapsed then
+	local headerReserve = headerCandidate and HEADER_TOP_PADDING or 0
+	if collapsed or not LayoutModules(width, math.max(0, available - headerReserve), headerReserve) then
+		-- Nothing to stack (All Objectives is collapsed, or no section has content): the native tracker goes back to
+		-- its own slot and is left alone, so an addon with nothing to show never holds the quest tracker in place.
 		RestoreNativeHeader()
+		ReleaseNative()
 		host:SetHeight(1)
 		host:Hide()
-	else
-		host:Show()
-		local reserve = headerCandidate and HEADER_TOP_PADDING or 0
-		hasSections = LayoutModules(width, math.max(0, available - reserve), reserve)
-		if hasSections and headerCandidate then
-			AdoptNativeHeader()
-		else
-			RestoreNativeHeader()
-		end
+		return
 	end
-	local headerReserve = hasSections and headerCandidate and HEADER_TOP_PADDING or 0
+	if headerCandidate then
+		AdoptNativeHeader()
+	else
+		RestoreNativeHeader()
+	end
 	-- If the combined column would run below the screen, move the whole
 	-- column upward from its saved edit-mode slot.  The offset is calculated
 	-- from the original point each pass, so repeated refreshes never drift.

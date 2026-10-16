@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **The quest tracker is let go when the Journey has nothing to show.** To fit the Forever sections above your quests, the shared column moves the game's quest tracker. It kept holding it there with no journey, no boat times and nothing from the other Forever addons, or with All Objectives collapsed. That fought EllesmereUI and other UI addons that place the tracker themselves. Now the tracker goes straight back to where the game, Edit Mode or your UI addon put it, and is moved again only once a section has something to show.
+
 ## [1.16.0] - 2026-10-16
 
 - **Keep journeys after a reload.** Turn on *Keep journeys after a reload* in Guidance and a journey you planned yourself (a map click, `/way`, a quest or Nearby services) starts again after a `/reload`, or when you log back in within 30 minutes. Guides and other addons start their own again, and one that does so first wins. It is off by default.
