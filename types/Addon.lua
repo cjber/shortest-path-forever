@@ -36,6 +36,8 @@
 ---@field pinBadge? boolean -- destination marker beside an existing map icon
 ---@field questIDs? number[] -- the quests whose client areas a held stop stands for (API.lua)
 ---@field corpse? boolean -- where your corpse lies (Corpse.lua)
+---@field entrance? number -- the instance map whose door this is (JourneyInput.lua)
+---@field stop? SPFPoint -- the stop inside that instance the door stands for
 ---@class SPFAreaShape : SPFPoint
 ---@field radius number -- yards
 ---@class SPFPlace : SPFPoint

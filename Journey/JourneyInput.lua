@@ -2,8 +2,9 @@
 local ns = select(2, ...)
 local L = ns.L
 
--- A place inside a dungeon or raid has no walking map: from outside, the journey goes to its entrance instead
--- (Data/Portals.lua ns.Entrances). Inside that instance the point stays as it is.
+-- A place inside a dungeon or raid has no walking map: from outside, a journey there goes to the instance's door
+-- (Data/Portals.lua ns.Entrances) and arrives when you go in. The door keeps the stop it stands for (`stop`), its
+-- name, quest and title; areas and holds drawn inside the instance stay behind. Inside, the point stays as it is.
 ---@param point SPFPoint
 ---@return SPFPoint
 function ns.InstanceEntrance(point)
@@ -20,7 +21,12 @@ function ns.InstanceEntrance(point)
 		x = entrance.x,
 		y = entrance.y,
 		z = entrance.z,
-		label = L["Enter %s"]:format(name),
+		label = point.label or L["Enter %s"]:format(name),
+		questID = point.questID,
+		routeTitle = point.routeTitle,
+		tooltip = point.tooltip,
+		entrance = point.map,
+		stop = point,
 	}
 end
 
@@ -32,7 +38,7 @@ function ns.WorldPoint(uiMapID, x, y)
 	local continent, world = C_Map.GetWorldPosFromMapPos(uiMapID, CreateVector2D(x, y))
 	if continent and world then
 		local worldX, worldY = world:GetXY()
-		return ns.InstanceEntrance({ map = continent, x = worldX, y = worldY })
+		return { map = continent, x = worldX, y = worldY }
 	end
 end
 
@@ -69,7 +75,7 @@ local function PlanQuest(questID, clickedMap, isWaypoint)
 		ns.Print(L["No location for that quest yet."])
 		return
 	end
-	point.label, point.questID, point.pinBadge = location.label or point.label, questID, clickedMap ~= nil
+	point.label, point.questID, point.pinBadge = location.label, questID, clickedMap ~= nil
 	ns.StartJourney(point)
 end
 
@@ -102,11 +108,11 @@ end
 ---@return boolean
 function ns.JourneyToMapPoint(uiMapID, x, y, label)
 	local point = ns.WorldPoint(uiMapID, x, y)
-	if not (point and OnZone(point)) then
+	if not (point and OnZone(ns.InstanceEntrance(point))) then
 		ns.Print(L["no journey can be planned to that spot."])
 		return false
 	end
-	point.label = label or point.label
+	point.label = label
 	ns.StartJourney(point)
 	return true
 end
@@ -170,8 +176,8 @@ local function OnPinClick(map, action, button)
 					point = ns.WorldPoint(map:GetMapID(), x, y)
 				end
 			end
-			if point and OnZone(point) then
-				point.label = info and info.name or point.label
+			if point and OnZone(ns.InstanceEntrance(point)) then
+				point.label = info and info.name
 				point.pinBadge = true
 				ns.StartJourney(point)
 				return true
@@ -206,7 +212,7 @@ ns.Init(function()
 			return
 		end
 		local point = ns.WorldPoint(WorldMapFrame:GetMapID(), WorldMapFrame:GetNormalizedCursorPosition())
-		if point and OnZone(point) then
+		if point and OnZone(ns.InstanceEntrance(point)) then
 			ns.StartJourney(point)
 		end
 	end)
