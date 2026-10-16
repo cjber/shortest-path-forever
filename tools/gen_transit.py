@@ -60,7 +60,7 @@ def classicdb(refresh=False, offline=False):
         timeout=60,
         validate=gzip.decompress,
     )
-    spawns, teleports, positions = defaultdict(list), {}, {}
+    spawns, teleports, positions, instances = defaultdict(list), {}, {}, {}
     # These three tables have one INSERT per line; quoted SQL strings may contain commas and parentheses.
     tuples = re.compile(r"\(((?:'(?:\\.|[^'\\])*'|[^()'])*)\)")
     with gzip.open(path, "rt", encoding="utf-8") as stream:
@@ -83,13 +83,14 @@ def classicdb(refresh=False, offline=False):
                     row = next(csv.reader([match[1]], quotechar="'", escapechar="\\"))
                     if int(row[0]) in PORTAL_NAMES:
                         teleports[int(row[0])] = location(int(row[6]), map(float, row[7:10]))
+                    instances[int(row[0])] = int(row[6])
             elif line.startswith("INSERT INTO `spell_target_position` VALUES "):
                 for match in tuples.finditer(line):
                     row = match[1].split(",")
                     positions[int(row[0])] = location(int(row[1]), map(float, row[2:5]))
-    if set(spawns) != LIFTS | TRAMS or set(teleports) != set(PORTAL_NAMES) or not positions:
-        raise ValueError("classic-db: missing expected transport spawn, public passage or spell position")
-    return spawns, teleports, positions
+    if set(spawns) != LIFTS | TRAMS or set(teleports) != set(PORTAL_NAMES) or not positions or not instances:
+        raise ValueError("classic-db: missing expected transport spawn, public passage, spell position or trigger")
+    return spawns, teleports, positions, instances
 
 
 def location(map_id, pos):
@@ -360,6 +361,52 @@ def portals(triggers, teleports):
     ]
 
 
+def zones_of(assignments, door):
+    """The outdoor zone maps whose UiMapAssignment region holds a door, leaving out the world and continent maps
+    (no area) and indoor (WMO) assignments. Zone regions are rectangles and overlap, so a door may sit in several."""
+    found = set()
+    for row in assignments:
+        if int(row["MapID"]) != door["map"] or int(row["WMOGroupID"]) or not int(row["AreaID"]):
+            continue
+        min_x, min_y, max_x, max_y = (float(row[f"Region_{i}"]) for i in (0, 1, 3, 4))
+        if min_x <= door["x"] <= max_x and min_y <= door["y"] <= max_y:
+            found.add(int(row["UiMapID"]))
+    return sorted(found)
+
+
+def entrances(triggers, instance_triggers, maps, assignments):
+    """Where a goal inside a dungeon or raid is reached from: [instance map] = its door on a walkable continent.
+
+    The door is the instance's corpse point in the client's Map table: where a ghost is sent to walk back in, outside
+    the door on the walking map, with no height. An instance without one (Naxxramas) takes the AreaTrigger that
+    classic-db's areatrigger_teleport sends into it from a continent, the lowest ID where there are several. A door
+    that is on no outdoor zone map is left out rather than guessed."""
+    result = {}
+    for target, instance in sorted(maps.items()):
+        corpse = int(instance["CorpseMapID"])
+        x, y = float(instance["Corpse_0"]), float(instance["Corpse_1"])
+        if (
+            instance["InstanceType"] in ("1", "2")
+            and corpse in MAPS
+            and (x, y) != (0, 0)
+            and not instance["MapName_lang"].startswith("<")
+        ):
+            result[target] = {"name": instance["MapName_lang"], "map": corpse, "x": round(x, 2), "y": round(y, 2)}
+    for trigger, target in sorted(instance_triggers.items()):
+        row, instance = triggers.get(trigger), maps.get(target)
+        if not row or not instance or instance["InstanceType"] not in ("1", "2") or target in result:
+            continue
+        continent = int(row["ContinentID"])
+        if continent in MAPS:
+            result[target] = {"name": instance["MapName_lang"], **location(continent, point(row))}
+    doors = {}
+    for target, door in sorted(result.items()):
+        zones = zones_of(assignments, door)
+        if zones:
+            doors[target] = {**door, "zones": zones}
+    return doors
+
+
 def personal_teleports(tables, positions):
     """Class teleports (SkillLineAbility with a class) and items that return you to your bind point.
 
@@ -496,7 +543,7 @@ def main():
             "ItemSparse",
         )
     }
-    spawns, teleports, positions = classicdb(args.refresh, args.offline)
+    spawns, teleports, positions, instance_triggers = classicdb(args.refresh, args.offline)
     triggers = {int(r["ID"]): r for r in tables["AreaTrigger"]}
     docks, routes = transports(tables["TransportAnimation"], spawns, triggers)
     durations = inflight(
@@ -506,6 +553,8 @@ def main():
     nodes, paths = taxis(tables["TaxiNodes"], tables["TaxiPath"], tables["TaxiPathNode"], durations)
     islands = landmasses(tables["UiMapAssignment"], {int(r["ID"]): r for r in tables["Map"]})
     passages = portals(triggers, teleports)
+    instance_maps = {int(r["ID"]): r for r in tables["Map"]}
+    doors = entrances(triggers, instance_triggers, instance_maps, tables["UiMapAssignment"])
     transport_lines = header("TransportAnimation + classic-db gameobject spawns; milliseconds, world yards.")
     transport_lines += [
         "-- TB pairs have 30000/30033 ms periods: each car is a separate route.",
@@ -558,6 +607,13 @@ def main():
             "\t" + render(portal, 1) + ",",
         ]
     portal_lines += ["}", ""]
+    portal_lines += [
+        "-- Instance entrances: a goal on a dungeon or raid map is planned to its door. [instance map] = the door",
+        "-- on a walkable continent: the Map table's corpse point (where a ghost walks back in; no height), else the",
+        "-- AreaTrigger classic-db sends into the instance. zones: the outdoor UiMaps whose region holds it.",
+        "",
+    ]
+    portal_lines += assignment("ns.Entrances", doors)
     personal, unsourced = personal_teleports(tables, positions)
     teleport_lines = header("SpellEffect TELEPORT_UNITS + classic-db spell_target_position destinations.")
     teleport_lines += [
@@ -582,7 +638,8 @@ def main():
     publish(outputs)
     print(
         f"Transports: {len(routes)} routes, {len(docks)} docks; Taxi: {len(nodes)} nodes, {len(paths)} paths, "
-        f"{covered / len(paths):.1%} measured; {len(islands)} landmasses; Portals: {len(passages)} directed entries; "
+        f"{covered / len(paths):.1%} measured; {len(islands)} landmasses; Portals: {len(passages)} directed entries, "
+        f"{len(doors)} entrances; "
         f"Teleports: {len(personal)}"
     )
 
