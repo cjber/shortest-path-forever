@@ -553,9 +553,8 @@ def main():
     nodes, paths = taxis(tables["TaxiNodes"], tables["TaxiPath"], tables["TaxiPathNode"], durations)
     islands = landmasses(tables["UiMapAssignment"], {int(r["ID"]): r for r in tables["Map"]})
     passages = portals(triggers, teleports)
-    doors = entrances(
-        triggers, instance_triggers, {int(r["ID"]): r for r in tables["Map"]}, tables["UiMapAssignment"]
-    )
+    instance_maps = {int(r["ID"]): r for r in tables["Map"]}
+    doors = entrances(triggers, instance_triggers, instance_maps, tables["UiMapAssignment"])
     transport_lines = header("TransportAnimation + classic-db gameobject spawns; milliseconds, world yards.")
     transport_lines += [
         "-- TB pairs have 30000/30033 ms periods: each car is a separate route.",
