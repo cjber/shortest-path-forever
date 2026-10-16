@@ -142,3 +142,23 @@ With RestedXP installed, **Resume guide** in Guidance or the Journey header menu
   fast ride.
 - **Shared between players.** Sightings are passed on quietly over guild, party and yell at the docks, so
   someone else's ride can time your boat. No chat messages are shown; turn it off in the settings.
+
+## With my other Forever addons
+
+- **Adventure Guide's suggestions.** With Adventure Guide Forever on (a version whose API offers suggestions) and
+  *Shift-click to plan journeys* on, right-click a quest in the tracker or the quest log: under *Plan journey*,
+  *Adventure Guide suggests* lists up to three of its suggestions as `[level] title`, in its own order. Choosing one
+  starts it as Adventure Guide's own Start does. If its route has moved on since the menu opened, one chat line says
+  so.
+- **The Forever addons page.** *Forever addons*, the last page of the settings, lists my five WoW: Forever addons
+  with a line on each and whether you have it: on, installed but turned off, or not installed. *Copy link* opens a
+  small window with the addon's CurseForge address selected, to copy into your browser. It never opens in combat.
+- **Quiet hints.** Only for an addon that isn't installed at all, and only while *Suggest my other Forever addons*
+  on that page is ticked (it is by default):
+  - with Adventure Guide missing, a grey *Suggest quests for my level: Adventure Guide Forever* under *Plan journey*;
+  - with Adventure Guide missing, once a session, a grey "What next?" line under a journey you planned yourself
+    that arrives with nothing more planned, for two minutes or until another journey starts;
+  - with Legacy missing, a grey line on the tooltip of the pin you're heading for when it's a dungeon or raid door.
+    Shortest Path can't tell which instances Legacy covers, so it shows on every door.
+
+  Clicking the menu entry or the tracker line opens the link window with *Don't suggest this again*.

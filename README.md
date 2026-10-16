@@ -56,7 +56,7 @@ Install it from [CurseForge](https://www.curseforge.com/wow/addons/shortest-path
 
 Alt-click the world map to choose a destination over a Questie icon. Shift-click works on empty map space and Shortest Path icons. With the gamepad interface on, Shortest Path never opens the world map itself; it asks you to.
 
-The settings have five pages. **Transport** draws routes, shows the other faction's boats and zeppelins (off by default), and shares departure times. **Guidance** holds journey behaviour: *Resume guide*, *Keep journeys after a reload*, *Minimum Hearthstone saving* and *Attach to quest tracker*. **Map marks** scales each kind of icon from 25% to 200%. **Interface** shows or hides the tracker, arrow and compass, sizes them, and switches to metres. **Alerts** covers the boat warning and the arrival sound. [docs/features.md](docs/features.md) has the detail.
+The settings have six pages. **Transport** draws routes, shows the other faction's boats and zeppelins (off by default), and shares departure times. **Guidance** holds journey behaviour: *Resume guide*, *Keep journeys after a reload*, *Minimum Hearthstone saving* and *Attach to quest tracker*. **Map marks** scales each kind of icon from 25% to 200%. **Interface** shows or hides the tracker, arrow and compass, sizes them, and switches to metres. **Alerts** covers the boat warning and the arrival sound. **Forever addons** holds the hint setting. [docs/features.md](docs/features.md) has the detail.
 
 Right-click a flight master icon to mark its flight path as known if a flight map missed it. Open a flight master's map once after installing to sync the flight points you know.
 
@@ -106,7 +106,7 @@ Installed together, the others send Shortest Path their destinations: an Adventu
 
 Journey steps share one tracker column with the Adventure Guide, SkillUp and Legacy sections, above your quests.
 
-Without Adventure Guide or Legacy, a grey hint suggests it where it would help. *Suggest my other Forever addons*, in settings, turns hints off.
+If Adventure Guide or Legacy isn't installed, a grey hint suggests it where it would help.
 
 ## Ways to help
 

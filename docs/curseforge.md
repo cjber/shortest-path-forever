@@ -56,7 +56,7 @@ Installed together, the others send Shortest Path their destinations. Pick an Ad
 
 Journey steps share one tracker column with the Adventure Guide, SkillUp and Legacy sections, above your quests.
 
-Without Adventure Guide or Legacy, a grey hint suggests it where it would help. *Suggest my other Forever addons*, in settings, turns hints off.
+If Adventure Guide or Legacy isn't installed, a grey hint suggests it where it would help. Untick *Suggest my other Forever addons* on the *Forever addons* settings page to turn hints off.
 
 Details and issues: [GitHub](https://github.com/cjber/shortest-path-forever). Licence: GPL-3.0-or-later.
 
