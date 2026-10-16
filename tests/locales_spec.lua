@@ -103,6 +103,50 @@ for _, case in ipairs({ { "frFR", "Journey" }, { "deDE", "Reise" } }) do
 	assert(ns.L["Journey"] == case[2] and ns.L["Boats"] == "Boats", case[1])
 end
 
+-- Every translation the TOC loads, read in its own client language: each line is a string, and each one formats
+-- with the arguments its English takes (a sample per placeholder), so no translation can break a string.format.
+local SAMPLE = { d = 7, i = 7, c = 65, o = 7, u = 7, x = 7, X = 7, e = 1.5, E = 1.5, f = 1.5, g = 1.5, G = 1.5 }
+local function samples(english)
+	local args = {}
+	for spec in english:gsub("%%%%", ""):gmatch("%%[-+#0]*%d*%.?%d*(%a)") do
+		args[#args + 1] = SAMPLE[spec] or "Stormwind"
+	end
+	return args
+end
+local translations = 0
+for _, file in ipairs(shipped) do
+	local code = file:match("^Locales/(%a%a%a%a)%.lua$")
+	if code and code ~= "enUS" then
+		translations = translations + 1
+		local own = {}
+		assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", own)
+		local untouched = {}
+		assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", untouched)
+		for _, case in ipairs({ { code, own }, { code == "deDE" and "frFR" or "deDE", untouched } }) do
+			local env = setmetatable({
+				GetLocale = function()
+					return case[1]
+				end,
+			}, { __index = _G })
+			setfenv(assert(loadfile(file)), env)("ShortestPathForever", case[2])
+		end
+		assert(next(rawget(untouched, "L")) == nil, file .. " changes nothing in another client language")
+		local lines = 0
+		for english, text in pairs(own.L) do
+			lines = lines + 1
+			assert(type(english) == "string" and type(text) == "string", file .. ": " .. tostring(english))
+			if english:gsub("%%%%", ""):find("%%[-+#0]*%d*%.?%d*%a") and not english:find("%% ") then
+				local args = samples(english)
+				local ok, err = pcall(string.format, text, unpack(args))
+				assert(ok, string.format('%s: "%s" does not format: %s', file, text, tostring(err)))
+				assert(pcall(string.format, english, unpack(args)), english)
+			end
+		end
+		assert(lines > 0, file .. " translates something")
+	end
+end
+assert(translations > 0, "the TOC loads the translations after Locales/enUS.lua")
+
 -- The packager's CurseForge localization keyword would fail the release: CurseForge no longer serves translations.
 local keyword = "@" .. "localization"
 local grep = assert(io.popen("git grep -l -F '" .. keyword .. "'"))

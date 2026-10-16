@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **In your language.** The addon is now in German, French, Spanish (Spain and Latin America), Brazilian Portuguese, Russian, Korean and Chinese (simplified and traditional), every language the WoW: Forever client offers. It's machine translated, using the game's own words for flight masters, Hearthstones, the tracker and the rest; corrections are welcome through the [translation issue form](https://github.com/cjber/shortest-path-forever/issues/new?template=translation.yml). Eight French lines are Brainc3ll's, from his Legacy Forever translation. Outside the Chinese clients, distances follow the game, which shows yards as metres; *Distances in metres* switches to real metres. Nearby services finds reagent vendors whether QuestieDB names them in English or in your language.
+
 ## [1.18.0] - 2026-10-16
 
 - **Adventure Guide's suggestions in the quest menus.** With Adventure Guide Forever on (its next release, which adds the suggestions to its API) and *Shift-click to plan journeys* on, right-click a quest in the tracker or the quest log: under *Plan journey*, *Adventure Guide suggests* lists up to three of its suggestions as `[level] title`. Choosing one starts it as Adventure Guide's own Start does. Nothing shows while it has none.

@@ -68,8 +68,7 @@ Right-click a flight master icon to mark its flight path as known if a flight ma
 | `/path debug` | Keep a trace of your ride matching, for a ride that did not sync |
 | `/spfnear` | Open nearby services; add a service such as `repair`, `trainer` or `flight` to route to the nearest one |
 
-Every feature has its own switch in the settings; the world map's filter menu and the minimap's tracking menu hide
-each kind of mark. Searches and tracker updates wait until combat ends.
+The world map's filter menu and the minimap's tracking menu hide each kind of mark. Searches and tracker updates wait until combat ends.
 
 ## Move the tracker
 
@@ -102,7 +101,7 @@ Each one works on its own, and they work together when you install more than one
 
 <!-- forever-family:end -->
 
-Installed together, the others send Shortest Path their destinations: an Adventure Guide journey or quest-menu suggestion, a RestedXP step, a trainer or vendor in a SkillUp route (SkillUp picks the nearest by travel time), a Legacy dungeon or raid pin, or a dungeon or raid entrance Tweaks adds to the map.
+Installed together, the others send Shortest Path their destinations: an Adventure Guide journey or quest-menu suggestion, a RestedXP step, a trainer or vendor in a SkillUp route, a Legacy dungeon or raid pin, or a dungeon or raid entrance Tweaks adds to the map.
 
 Journey steps share one tracker column with the Adventure Guide, SkillUp and Legacy sections, above your quests.
 
@@ -114,7 +113,7 @@ No code needed:
 
 - **A wrong route:** type `/path report` while the journey is on screen and paste it into a [Wrong route issue](https://github.com/cjber/shortest-path-forever/issues/new?template=wrong_route.yml).
 - **An error:** open a [bug report](https://github.com/cjber/shortest-path-forever/issues/new?template=bug_report.yml) with the error's text, and paste `/path report` under its steps.
-- **A translation:** translate [Locales/phrases.txt](Locales/phrases.txt) and paste it into a [translation issue](https://github.com/cjber/shortest-path-forever/issues/new?template=translation.yml).
+- **A translation:** Translated into German, French, Spanish, Brazilian Portuguese, Russian, Korean and Chinese (machine translated; corrections welcome). Paste a fix into a [translation issue](https://github.com/cjber/shortest-path-forever/issues/new?template=translation.yml).
 
 ## Development
 
@@ -124,7 +123,7 @@ Run `tools/typecheck.sh` for LuaLS and static checks, and `luajit tests/<name>_s
 
 ## Credits
 
-Travel data comes from [wago.tools](https://wago.tools), [CMaNGOS](https://github.com/cmangos/classic-db) (GPL-3.0) and [InFlight](https://github.com/LudiusMaximus/InFlight) (MIT). Some features were inspired by [Polestar](https://github.com/fitzforge/polestar) by Fitz; no code was copied. Fitz is welcome to use our code. Thanks to maggew, alex21xx and everyone listed in [THIRD_PARTY.md](THIRD_PARTY.md).
+Travel data comes from [wago.tools](https://wago.tools), [CMaNGOS](https://github.com/cmangos/classic-db) (GPL-3.0) and [InFlight](https://github.com/LudiusMaximus/InFlight) (MIT). Some features were inspired by [Polestar](https://github.com/fitzforge/polestar) by Fitz; no code was copied. Fitz is welcome to use our code. Thanks to maggew, alex21xx, Brainc3ll (French) and everyone listed in [THIRD_PARTY.md](THIRD_PARTY.md).
 
 ## Licence
 

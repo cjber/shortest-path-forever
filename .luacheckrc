@@ -191,3 +191,6 @@ read_globals[#read_globals + 1] = "UISpecialFrames"
 read_globals[#read_globals + 1] = "tContains"
 -- Mover.lua: whether the button of a fine drag is still held.
 read_globals[#read_globals + 1] = "IsMouseButtonDown"
+
+-- A translated line is one string; StyLua already wraps what it can, and CJK text counts bytes, not columns.
+files["Locales/*.lua"] = { max_line_length = false }

@@ -17,6 +17,8 @@ it, so a data refresh that moves the pin never leaves this file behind. The addo
 
 No embedded libraries ship. `media/` is this addon's own: the icon is drawn in `media/icon.svg`, `zeppelin.tga` by
 `tools/draw_zeppelin.py`, and `Dot.tga` is a plain white disc.
+`Locales/*.lua` are machine translated, using the client's own GlobalStrings for the pinned build (via wago.tools)
+as the glossary for game terms; eight frFR lines are Brainc3ll's.
 
 ## Read in game, never bundled
 
@@ -65,5 +67,6 @@ Credit for the ideas and reports behind the addon.
 | berserkerlxl, on CurseForge | Found guides' TomTom waypoints not reaching the addon, and asked for `/way` (1.15.0) | |
 | rydoc and joster91, on CurseForge | Found the Journey collapsing into or overlapping the quest tracker (1.15.0, 1.17.0) | |
 | deathmvp1, on CurseForge | Asked to move the Journey off the quest list; detaching it is now in its right-click menu (1.17.0) | |
+| [Brainc3ll](https://github.com/Brainc3ll) | Eight lines of the French translation, from his Legacy Forever translation (cjber/legacy-forever#99); the rest of `Locales/frFR.lua` and the other languages are machine translated (lines ending `-- mt` in frFR) | |
 
 Thanks also to everyone else who reported a bug or asked for a feature, here or on CurseForge.

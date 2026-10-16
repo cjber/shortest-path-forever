@@ -29,6 +29,10 @@ authorization. A preparation-only request ends before tags or uploads.
    `python3 tools/changelog.py --check`; inspect the extracted version notes.
    Public API changes go under an optional `### For addon authors` subsection after the
    player bullets; the release notes carry it as written.
+   Before that, translate every phrase added since the last tag into each shipped locale
+   (WFA-34): `python3 tools/check_locales.py` lists the gaps, and `--release` must pass.
+   Machine lines follow `Locales/README.md` (the file's marker, `-- mt` in `frFR.lua`, the
+   game's own GlobalStrings terms); never overwrite a human line.
 
 ## Refresh every presentation surface
 
