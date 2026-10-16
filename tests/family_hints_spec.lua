@@ -46,6 +46,7 @@ local env = setmetatable({
 env.GRAY_FONT_COLOR.r = 0.5
 
 local goal, owner
+local caught, printed = {}, {}
 local ns = {
 	L = setmetatable({}, {
 		__index = function(_, key)
@@ -72,6 +73,17 @@ local ns = {
 		refreshed = refreshed + 1
 	end,
 	JourneyChanged = noop,
+	-- Core/SafeCall.lua: pcall's answers, with each failure kept as the report keeps it.
+	SafeCall = function(label, fn, ...)
+		local results = { pcall(fn, ...) }
+		if not results[1] then
+			caught[#caught + 1] = label
+		end
+		return unpack(results)
+	end,
+	Print = function(text)
+		printed[#printed + 1] = text
+	end,
 }
 setfenv(assert(loadfile("UI/ForeverFamily.lua")), env)("ShortestPathForever", ns)
 -- The window itself is the shared module's, covered by tests/forever_family_spec.lua; here it records its calls.
@@ -266,5 +278,104 @@ Session()
 ns.db.journeyTracker = false
 check(Hints.Footer() == nil, "hiding the journey from the tracker takes it away")
 ns.db.journeyTracker = nil
+
+-- Adventure Guide on: its suggestions in the quest menus, from an AGF stub with API.Suggestions (minor 2).
+local function Entries()
+	local entries = {}
+	Hints.AddQuestMenu({
+		CreateTitle = function(_, text)
+			entries[#entries + 1] = { title = text }
+		end,
+		CreateButton = function(_, text, fn)
+			entries[#entries + 1] = { text = text, fn = fn }
+		end,
+	})
+	return entries
+end
+local cards = {
+	{ id = "story:1413", title = "The Barrens story", level = 10, kind = "story", map = 1413 },
+	{ id = "carry", title = "Quests in your log", kind = "carry", map = 1413 },
+	{ id = "zone:1440", title = "Head to Ashenvale", level = 18, kind = "nextzone", map = 1440 },
+	{ id = "zone:1421", title = "Head to Silverpine Forest", level = 10, kind = "nextzone", map = 1421 },
+}
+local asked, started = {}, {}
+local agf = {
+	Suggestions = function(limit)
+		asked[#asked + 1] = limit
+		local list = {}
+		for index = 1, math.min(limit or 5, #cards) do
+			list[index] = cards[index]
+		end
+		return list
+	end,
+	StartSuggestion = function(id)
+		started[#started + 1] = id
+		return true
+	end,
+}
+installed.AdventureGuideForever = "on"
+env.AdventureGuideForever = { API = agf }
+local entries = Entries()
+check(asked[#asked] == 3, "asks for three")
+check(#entries == 4 and entries[1].title == "Adventure Guide suggests", "a titled section with three rows")
+check(entries[2].text == "[10] The Barrens story", "[level] title")
+check(entries[3].text == "Quests in your log", "a card with no level shows its title alone")
+check(entries[4].text == "[18] Head to Ashenvale", "in Adventure Guide's order")
+entries[4].fn()
+check(started[1] == "zone:1440", "clicking one starts it in Adventure Guide")
+ns.db.suggestFamily = false
+check(#Entries() == 4, "the suggestions are a feature, not a hint: the hint setting leaves them")
+ns.db.suggestFamily = nil
+agf.Suggestions = function()
+	return nil
+end
+check(#Entries() == 0, "nothing while Adventure Guide is still working out its route")
+agf.Suggestions = function()
+	return {}
+end
+check(#Entries() == 0, "nothing when it has no suggestions")
+agf.Suggestions = function()
+	error("broken")
+end
+check(#Entries() == 0, "an error in Adventure Guide shows nothing")
+check(caught[#caught] == "Adventure Guide suggestions", "and is reported, not swallowed")
+agf.Suggestions = function()
+	return {
+		{ id = 3, title = "bad" },
+		{ id = "a", title = "A", level = 0 / 0 },
+		{ id = "b", title = "B", level = 12.5 },
+		{ id = "c", title = "C", level = 20 },
+		{ id = "d", title = "D" },
+	}
+end
+entries = Entries()
+check(#entries == 4, "a malformed card is skipped without using up a row")
+check(entries[2].text == "A" and entries[3].text == "B", "a level that isn't a whole number isn't shown")
+check(entries[4].text == "[20] C", "three rows at most")
+agf.StartSuggestion = function()
+	return false
+end
+entries[2].fn()
+check(
+	printed[#printed] == "Adventure Guide couldn't start that just now. Choose it again from its guide.",
+	"a start Adventure Guide refuses says so"
+)
+local said = #printed
+agf.StartSuggestion = function()
+	error("broken")
+end
+entries[2].fn()
+check(caught[#caught] == "Adventure Guide start" and #printed == said, "an error starting one is reported")
+env.AdventureGuideForever = { API = { CurrentStop = noop } }
+check(#Entries() == 0, "an older Adventure Guide without Suggestions shows nothing, and no hint")
+env.AdventureGuideForever = nil
+check(#Entries() == 0, "on but with no API at all: nothing")
+installed.AdventureGuideForever = "off"
+entries = Entries()
+check(#entries == 0, "switched off (so not loaded): neither suggestions nor the hint")
+installed.AdventureGuideForever = nil
+env.AdventureGuideForever = nil
+entries = Entries()
+check(#entries == 1 and entries[1].text:find("Adventure Guide Forever", 1, true), "missing: the grey hint again")
 
 print(("family_hints_spec: %d checks passed"):format(checks))
