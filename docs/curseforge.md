@@ -56,6 +56,8 @@ Installed together, the others send Shortest Path their destinations. Pick an Ad
 
 Journey steps share one tracker column with the Adventure Guide, SkillUp and Legacy sections, above your quests.
 
+The *Forever addons* page in Shortest Path's settings lists all five and whether you have them. Where one you don't have would help, a grey line in a quest menu, the tracker or a stop pin says so; untick *Suggest my other Forever addons* there to turn these off.
+
 Details and issues: [GitHub](https://github.com/cjber/shortest-path-forever). Licence: GPL-3.0-or-later.
 
 Made by Cillian Berragan · [cillian.dev](https://cillian.dev/) · [GitHub](https://github.com/cjber) · [Twitter](https://twitter.com/cjberragan)
