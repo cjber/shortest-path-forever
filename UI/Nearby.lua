@@ -262,9 +262,14 @@ Open = function()
 	if InCombatLockdown() then
 		return
 	end
+	-- The services menu opens over the world map; under the gamepad interface the game opens that (#158), and the
+	-- map's own tracking menu lists the services once it is up. The index starts loading either way.
+	if not ns.OpenWorldMap(nil, L["Open the world map and choose Nearby services in its tracking menu."]) then
+		Build()
+		return
+	end
 	menuOpen = true
 	Build()
-	C_Map.OpenWorldMap()
 	local world = PlayerWorld()
 	MenuUtil.CreateContextMenu(WorldMapFrame or UIParent, function(_, root)
 		root:AddMenuReleasedCallback(Close)

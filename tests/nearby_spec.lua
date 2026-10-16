@@ -218,6 +218,15 @@ local ns = {
 		end,
 	},
 }
+-- Core.lua's map opener: the game opens the map instead under the gamepad interface (#158).
+local gamepad = false
+ns.OpenWorldMap = function(uiMap)
+	if gamepad then
+		return env.WorldMapFrame ~= nil and env.WorldMapFrame:IsShown()
+	end
+	env.C_Map.OpenWorldMap(uiMap)
+	return true
+end
 setfenv(assert(loadfile("Locales/enUS.lua")), env)("ShortestPathForever", ns)
 setfenv(assert(loadfile("UI/Nearby.lua")), env)("ShortestPathForever", ns)
 for _, fn in ipairs(initializers) do
@@ -332,6 +341,7 @@ local function fresh(questie, away)
 		WorldPoint = function(_, x, y)
 			return { map = elsewhere and 2 or 1, x = x * 1000, y = y * 1000 }
 		end,
+		OpenWorldMap = ns.OpenWorldMap,
 	}
 	setfenv(assert(loadfile("UI/Nearby.lua")), env)("ShortestPathForever", copy)
 	for _, fn in ipairs(starts) do
@@ -368,6 +378,20 @@ for _, private in ipairs({
 	assert(#menuEntries == 2 and menuEntries[2].text == "Nearby services could not read QuestieDB.")
 end
 env.LibQuestieDB = lib
+-- Under the gamepad interface the services menu never opens the world map itself: with the map closed it waits for
+-- the player to open it, and over a map the game opened it works as before.
+gamepad = true
+local opens, entries = mapOpens, menuEntries
+env.SlashCmdList.SPFNEAR("")
+assert(mapOpens == opens and menuEntries == entries, "no map or menu opened by us under the gamepad interface")
+env.WorldMapFrame = {
+	IsShown = function()
+		return true
+	end,
+}
+env.SlashCmdList.SPFNEAR("")
+assert(mapOpens == opens and menuEntries ~= entries, "over an open map the menu still opens")
+gamepad, env.WorldMapFrame = false, nil
 print(
 	"nearby: installed QuestieDB contract, sliced loading, faction/class/specialty, "
 		.. "real map-menu callbacks and UI-coordinate dispatch: ok"

@@ -62,6 +62,39 @@ function ns.TrackerHostSettings()
 	return settings
 end
 
+-- Whether the game's gamepad interface is up. Forever's gamepad layer (SmartNavigation, FrameControlsManager) counts a
+-- window as belonging to whatever code opened it, and the gamepad action bar later calls the protected
+-- SetPreferredGamepadInteractTarget from that path (#158). Under it, the addon leaves opening windows and taking
+-- the keyboard to the game.
+---@return boolean
+function ns.GamepadUI()
+	-- Enum.InputDeviceInterfaceType is the Forever UI's own name (Blizzard_EditMode/Shared/EditModeManager.lua).
+	local styles, api = Enum.InputDeviceInterfaceType, C_InputInterfaceStyle
+	return styles ~= nil and api ~= nil and api.GetCurrentStyle ~= nil and api.GetCurrentStyle() == styles.Gamepad
+end
+
+-- Shows the world map on uiMap (or where you are) and returns whether it is up. Under the gamepad interface the
+-- addon never opens it (#158): a map the game already opened is turned to uiMap by the game's own code, and with
+-- none the player is told to open it (`hint`, or the plain line) and false comes back.
+---@param uiMap? number
+---@param hint? string
+---@return boolean
+function ns.OpenWorldMap(uiMap, hint)
+	if not ns.GamepadUI() then
+		C_Map.OpenWorldMap(uiMap)
+		return true
+	end
+	if WorldMapFrame and WorldMapFrame:IsShown() then
+		-- Already open, so this only has the game's own code turn it.
+		if uiMap then
+			C_Map.OpenWorldMap(uiMap)
+		end
+		return true
+	end
+	ns.Print(hint or ns.L["Open the world map to see it."])
+	return false
+end
+
 ---@param message string
 function ns.Print(message)
 	print(NORMAL_FONT_COLOR:WrapTextInColorCode("Shortest Path Forever:") .. " " .. message)

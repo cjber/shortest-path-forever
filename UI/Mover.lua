@@ -75,7 +75,8 @@ end
 
 local function TakeKeyboard()
 	ReleaseKeyboard()
-	if hovered and hovered:IsMouseEnabled() and not InCombatLockdown() then
+	-- Never under the gamepad interface, whose own navigation owns input (#158).
+	if hovered and hovered:IsMouseEnabled() and not InCombatLockdown() and not ns.GamepadUI() then
 		keyboard = hovered
 		keyboard:EnableKeyboard(true)
 		keyboard:SetPropagateKeyboardInput(true)
@@ -163,8 +164,9 @@ function Mover.Attach(frame, placed)
 			ReleaseKeyboard()
 			return
 		end
-		-- Placing ended (move mode off, or the frame hidden) without the pointer leaving: the keys are the game's.
-		if keyboard ~= self or not self:IsMouseEnabled() or not self:IsVisible() then
+		-- Placing ended (move mode off, the frame hidden, or the gamepad interface came up) without the pointer
+		-- leaving: the keys are the game's.
+		if keyboard ~= self or not self:IsMouseEnabled() or not self:IsVisible() or ns.GamepadUI() then
 			self:SetPropagateKeyboardInput(true)
 			ReleaseKeyboard()
 			return

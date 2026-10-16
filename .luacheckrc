@@ -34,6 +34,7 @@ read_globals = {
 	"Menu",
 	"MenuUtil",
 	"Saturate",
+	"C_InputInterfaceStyle",
 	"C_Map",
 	"C_Texture",
 	"C_Timer",
