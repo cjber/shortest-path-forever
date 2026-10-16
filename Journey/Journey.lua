@@ -279,7 +279,7 @@ end
 function ns.ShowJourneyMap()
 	local place = CorpseRun() and ns.Corpse.Point() or goal
 	local location = place and ns.Locate(place)
-	C_Map.OpenWorldMap(location and location.uiMap)
+	ns.OpenWorldMap(location and location.uiMap)
 end
 
 -- The tracker and screen prompt name the same item or spell in the client's language.

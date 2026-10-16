@@ -28,6 +28,9 @@ RaidWarningUtil = nil
 OBJECTIVE_TRACKER_COLOR = nil
 ---@type string
 OFF = nil
+-- InputInterfaceStyleDocumentation.lua: which interface the game shows, mouse and keyboard or the gamepad one.
+---@type {GetCurrentStyle: fun(): number}?
+C_InputInterfaceStyle = nil
 ---@type {Label: {Right: integer}}
 MinimalSliderWithSteppersMixin = nil
 

@@ -262,9 +262,12 @@ Open = function()
 	if InCombatLockdown() then
 		return
 	end
+	-- The services menu opens over the world map; under the gamepad interface the game opens that (#158).
+	if not ns.OpenWorldMap() and not (WorldMapFrame and WorldMapFrame:IsShown()) then
+		return
+	end
 	menuOpen = true
 	Build()
-	C_Map.OpenWorldMap()
 	local world = PlayerWorld()
 	MenuUtil.CreateContextMenu(WorldMapFrame or UIParent, function(_, root)
 		root:AddMenuReleasedCallback(Close)

@@ -75,7 +75,8 @@ end
 
 local function TakeKeyboard()
 	ReleaseKeyboard()
-	if hovered and hovered:IsMouseEnabled() and not InCombatLockdown() then
+	-- Never under the gamepad interface, whose own navigation owns input (#158).
+	if hovered and hovered:IsMouseEnabled() and not InCombatLockdown() and not ns.GamepadUI() then
 		keyboard = hovered
 		keyboard:EnableKeyboard(true)
 		keyboard:SetPropagateKeyboardInput(true)

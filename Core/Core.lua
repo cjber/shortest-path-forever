@@ -62,6 +62,31 @@ function ns.TrackerHostSettings()
 	return settings
 end
 
+-- Whether the game's gamepad interface is up. Forever's gamepad layer (SmartNavigation, FrameControlsManager) counts a
+-- window as belonging to whatever code opened it, and the gamepad action bar later calls the protected
+-- SetPreferredGamepadInteractTarget from that path (#158). Under it, the addon leaves opening windows and taking
+-- the keyboard to the game.
+---@return boolean
+function ns.GamepadUI()
+	local styles = Enum.InputDeviceInterfaceType
+	return C_InputInterfaceStyle ~= nil and styles ~= nil and C_InputInterfaceStyle.GetCurrentStyle() == styles.Gamepad
+end
+
+-- Opens the world map from our own code, except under the gamepad interface, where the game opens it (#158): the
+-- player is told to open it, and nothing else changes. Returns whether it opened.
+---@param uiMap? number
+---@return boolean
+function ns.OpenWorldMap(uiMap)
+	if ns.GamepadUI() then
+		if not (WorldMapFrame and WorldMapFrame:IsShown()) then
+			ns.Print(ns.L["Open the world map to see it."])
+		end
+		return false
+	end
+	C_Map.OpenWorldMap(uiMap)
+	return true
+end
+
 ---@param message string
 function ns.Print(message)
 	print(NORMAL_FONT_COLOR:WrapTextInColorCode("Shortest Path Forever:") .. " " .. message)

@@ -393,7 +393,9 @@ end
 
 -- The pins live only on the world map, and the game's own handler for this request retargets it.
 local function ShowEnd(target)
-	C_Map.OpenWorldMap(target.uiMap)
+	if not ns.OpenWorldMap(target.uiMap) then
+		return
+	end
 	local x, y = MapPosition(target.point, target.uiMap)
 	if x then
 		provider:Ping(x, y)

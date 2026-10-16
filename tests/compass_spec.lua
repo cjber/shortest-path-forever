@@ -142,8 +142,12 @@ local stop = { map = 1, x = 0, y = -100, kind = "taxi", id = 26 }
 local goal = { map = 1, x = -100, y = 0 }
 local dock = { map = 1, x = 0, y = -100, z = 10 }
 local dockKind = "boat"
+local gamepad = false
 local ns = {
 	db = { compass = true, journey = true },
+	GamepadUI = function()
+		return gamepad
+	end,
 	TaxiNodes = { [26] = { faction = "Alliance" } },
 	IsJourneyGuided = function()
 		return guided
@@ -666,6 +670,15 @@ assert(at("CENTER", "BOTTOMLEFT", 295, 201), "and nothing moves in combat")
 combat = false
 moverFrame.scripts.OnEvent(moverFrame, "PLAYER_REGEN_ENABLED")
 assert(strip.keyboard == true, "after combat the compass under the pointer listens again")
+-- Under the gamepad interface the compass never takes the keyboard: the game's navigation owns input (#158).
+strip.scripts.OnLeave(strip)
+gamepad = true
+strip.scripts.OnEnter(strip)
+assert(strip.keyboard == false, "no keyboard under the gamepad interface")
+moverFrame.scripts.OnEvent(moverFrame, "PLAYER_REGEN_ENABLED")
+assert(strip.keyboard == false, "nor after combat under it")
+gamepad = false
+strip.scripts.OnEnter(strip)
 -- Placing turned off with the pointer still on the compass: the next key gives the keyboard back.
 ns.MoveCompass(false)
 strip.scripts.OnKeyDown(strip, "UP")
