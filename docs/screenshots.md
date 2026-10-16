@@ -3,7 +3,7 @@
 `tools/screenshots.py` uses Pillow 12+, LuaJIT and the shared
 `wow-mock-screenshots` skill. Set `WOWMOCK` if the skill is not under
 `~/.claude/skills/`. All downloaded art is pinned to the client build in
-`tools/gen_routes.py` (`BUILD`, now **1.60.1.70374**); `~/.cache/wowmock/<build>/` holds the assets. No game installation or
+`tools/gen_routes.py` (`BUILD`); `~/.cache/wowmock/<build>/` holds the assets. No game installation or
 SavedVariables are read. Verified with Pillow 12.3.0 / FreeType 2.14.3.
 
 ```sh

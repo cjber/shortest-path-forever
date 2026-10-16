@@ -33,12 +33,12 @@ Hover a dock to see its services and destinations.
 - In **Map marks**, scale each kind of icon from 25% to 200%. Right-click a flight master icon to correct whether its path is known.
 - In **Interface**, choose what shows, metres, sizes and a compass background. Shift-drag the arrow or compass to place it to the pixel.
 - In **Guidance**, turn off **Attach to quest tracker** to drag the shared column. **Resume guide** returns to RestedXP; **Keep journeys after a reload** restarts yours.
-- `/way [zone] x y [title]` plans a journey there while TomTom is not installed; `/path way` always works. With TomTom installed, **Follow TomTom's arrow** in Guidance follows its waypoints.
+- `/way [zone] x y [title]` plans a journey there while TomTom and other addons leave `/way` free; `/path way` always works. With TomTom installed, **Follow TomTom's arrow** in Guidance follows its waypoints.
 - `/spfnear` opens nearby services. For a bug report, type `/path report` and paste what it shows.
 
 ## With my other Forever addons
 
-Each one is optional and works alone. Installed with Shortest Path Forever, they send it their destinations:
+Each one works alone. Installed with Shortest Path Forever, they send it their destinations:
 
 - [Adventure Guide Forever](https://www.curseforge.com/wow/addons/adventure-guide-forever) suggests quests and journeys for your level. Pick one and Shortest Path leads you to each stop, including RestedXP steps.
 - [SkillUp Forever](https://www.curseforge.com/wow/addons/skillup-forever) plans profession levelling. Click a trainer or vendor in its route to travel to the nearest one by travel time.

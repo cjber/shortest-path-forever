@@ -19,15 +19,15 @@ with you.
 
 - **Plan a journey.** Shift-click the world map or minimap, or choose *Plan journey* on a quest. Routes combine walking, flights, boats, zeppelins, lifts, the tram, portals and teleports, and replan as you move. *Keep journeys after a reload* in Guidance starts your own journey again after a `/reload`.
   ![Journey steps from Auberdine to Silithus](docs/screenshots/tracker.png)
-  The tracker shows each step, with time and distance remaining. Hover the destination's pin on the world map for the same steps, and for how much sooner the other faction's boats would get you there.
-- **Follow your guide.** Journeys follow RestedXP's current target by default, without TomTom or a bridge addon; *Resume guide* returns to it after another journey. With TomTom absent, other guides' TomTom waypoints start journeys here.
+  The tracker shows each step, with time and distance remaining. Hover the destination's pin on the world map for the same steps, and, with the other faction's routes hidden, whether their boats would be at least two minutes faster.
+- **Follow your guide.** Journeys follow RestedXP's current target by default, without TomTom or a bridge addon; *Resume guide* returns to it after another journey, unless Adventure Guide's RestedXP display leads instead. With TomTom absent, other guides' TomTom waypoints start journeys here.
 - **Type a waypoint.** `/way [zone] x y [title]` plans a journey there, written as for TomTom, while TomTom and other addons leave `/way` free; `/path way` always works. With TomTom installed, *Follow TomTom's arrow* in Guidance follows its arrow.
   ![A guide route through Thelsamar](docs/screenshots/stops.png)
   The current stop lights up like a tracked quest.
 - **Choose your guidance.** Keep the route on both maps while hiding the Journey tracker or direction arrow. The arrow eases round to each new bearing; move and scale it in Interface. Click the current step to complete it manually; skipping a Hearthstone leaves it out for that journey.
   ![Route and native waypoint on the minimap](docs/screenshots/minimap.png)
   Breadcrumbs show the walking route; the waypoint leads to the next step. A goal off the minimap waits on its rim.
-- **See flights and departures.** Flight maps highlight your next flight, and a flight master's world map tooltip lists its flights and their times. Dock tooltips show destinations and departure times; nearby services count down in the tracker. Ride times improve estimates and can be shared with your guild, party and nearby players.
+- **See flights and departures.** Flight maps highlight your next flight, and a flight master's world map tooltip lists its flights and their times. Dock tooltips show destinations and departure times; nearby services count down in the tracker. Ride times improve estimates and are shared with other players.
   ![A smooth flight line leaving Stormwind](docs/screenshots/flight.png)
   Flight lines follow the route between flight points.
 - **Find nearby services.** The map and minimap tracking menus offer trainers, repairs, reagents, vendors, inns, banks, auction houses, flight masters and stables. Requires installed QuestieDB; class trainers also use Tweaks Forever.
@@ -38,7 +38,7 @@ with you.
   The prompt clears as the journey continues.
 - **Compass and corpse routes.** The compass marks turns, stops and your destination, and can show the time left under it. As a ghost, a red route leads to your body; your journey resumes when you are alive.
   ![The compass with turns and destination](docs/screenshots/compass.png)
-  The strip can be moved and resized separately from the tracker. Shift-drag it, or the arrow, to place it to the pixel.
+  The strip can be moved and resized separately from the tracker. While moving it or the arrow, Shift-drag to place it to the pixel.
 - **Quest areas.** Inside a quest's area, the client draws it in gold instead of a stop pin and line.
   ![A quest area on the world map](docs/screenshots/area.png)
   The highlighted area is the game's own quest boundary.
@@ -56,9 +56,9 @@ Install it from [CurseForge](https://www.curseforge.com/wow/addons/shortest-path
 
 Alt-click the world map to choose a destination over a Questie icon. Shift-click works on empty map space and Shortest Path icons.
 
-The settings have four pages. **Guidance** holds journey behaviour: *Resume guide*, *Keep journeys after a reload*, *Minimum Hearthstone saving* and *Attach to quest tracker*. **Map marks** scales each kind of icon from 25% to 200%. **Interface** shows or hides the tracker, arrow and compass, sizes them, and switches to metres. **Alerts** covers the boat warning and the arrival sound. [docs/features.md](docs/features.md) has the detail.
+The settings have five pages. **Transport** draws routes, shows the other faction's boats and zeppelins (off by default), and shares departure times. **Guidance** holds journey behaviour: *Resume guide*, *Keep journeys after a reload*, *Minimum Hearthstone saving* and *Attach to quest tracker*. **Map marks** scales each kind of icon from 25% to 200%. **Interface** shows or hides the tracker, arrow and compass, sizes them, and switches to metres. **Alerts** covers the boat warning and the arrival sound. [docs/features.md](docs/features.md) has the detail.
 
-Click the current step and choose **Complete this step** to advance it. Right-click a flight master icon to mark its flight path as known if a flight map missed it, and open a flight master's map once after installing to sync the flight points you already know.
+Right-click a flight master icon to mark its flight path as known if a flight map missed it. Open a flight master's map once after installing to sync the flight points you know.
 
 | Command | What it does |
 |---|---|
@@ -69,7 +69,7 @@ Click the current step and choose **Complete this step** to advance it. Right-cl
 | `/spfnear` | Open nearby services; add a service such as `repair`, `trainer` or `flight` to route to the nearest one |
 
 Every feature has its own switch in the settings; the world map's filter menu and the minimap's tracking menu hide
-each kind of mark. The other faction's boats and zeppelins are off by default. Searches and tracker updates wait until combat ends.
+each kind of mark. Searches and tracker updates wait until combat ends.
 
 It's in English for now; [Ways to help](#ways-to-help) says how to translate it.
 
@@ -115,7 +115,7 @@ Run `tools/typecheck.sh` for LuaLS and static checks, and `luajit tests/<name>_s
 
 GPL-3.0-or-later. Routes, lifts, the tram and flight paths come from the game's data via
 [wago.tools](https://wago.tools); transport timing and portals from [CMaNGOS](https://github.com/cmangos); recorded
-flight times from [InFlight](https://github.com/LudiusMaximus/InFlight) (MIT). Every input, its pin and licence, and what ships: [THIRD_PARTY.md](THIRD_PARTY.md).
+flight times from [InFlight](https://github.com/LudiusMaximus/InFlight) (MIT). All inputs and their licences: [THIRD_PARTY.md](THIRD_PARTY.md).
 
 Made by Cillian Berragan · [cillian.dev](https://cillian.dev) · [GitHub](https://github.com/cjber) · [Twitter](https://twitter.com/cjberragan)
 

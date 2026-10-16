@@ -36,8 +36,8 @@ With RestedXP installed, **Resume guide** in Guidance or the Journey header menu
   Astral Recall or a druid's Teleport: Moonglade, after its own icon and named in your game's language:
   *1. Use Hearthstone*. A cooldown counts as waiting, and a jump to another continent adds a few seconds for
   the loading screen. The client does not say where your bind point is, so it is where you stood when you last
-  bound at an innkeeper with the addon on, or where your last Hearthstone or Astral Recall set you down; until
-  either happens, the hearth is left out. The recorded bind position is saved per character and checked against
+  bound at an innkeeper with the addon on, or where your last Hearthstone or Astral Recall set you down. Until
+  then, or after binding somewhere else with the addon off, the hearth is left out. The recorded bind position is saved per character and checked against
   the current bind name. Class teleports need no bind point. Turn this
   off with *Use hearth and teleports* in `/path`.
   ![Journey steps from Auberdine to Silithus with time and distance remaining](screenshots/tracker.png)
@@ -67,8 +67,7 @@ With RestedXP installed, **Resume guide** in Guidance or the Journey header menu
 - **The destination pin.** Hover the pin you are heading for on the world map to see the time and distance left and
   each step, worded as the tracker words them, with the current one lit. A later stop's pin names only that stop.
   With *Other Faction's Routes* off, it adds a line when the other faction's boats or zeppelins would get you there
-  at least two minutes sooner, such as "Through Horde transport: about 4 min faster". On the minimap, a goal
-  beyond the rim keeps its mark on the rim in its direction, a little faded.
+  at least two minutes sooner, such as "Through Horde transport: about 4 min faster".
 
 - **Finding the fastest way.** While a new journey is checked, the map shows only its destination pin and the
   tracker the Group Finder spinner; the route, steps and totals then appear together. A search that takes more than
@@ -112,7 +111,8 @@ With RestedXP installed, **Resume guide** in Guidance or the Journey header menu
   one icon, and its tooltip names each pier by where it lies, and draws its routes on the map.
   Crossings between continents curve from dock to dock on the Azeroth map; closer maps show the sailing path.
 - **On the minimap as well.** Docks, lifts, tram stations and portals appear on the minimap with the same icons
-  and tooltips, and vanish at its rim like the game's own tracking icons. *Transport* in the minimap's tracking
+  and tooltips, and vanish at its rim like the game's own tracking icons. The goal you are heading for is the
+  exception: beyond the rim, its mark waits on the rim in its direction, a little faded. *Transport* in the minimap's tracking
   menu (or `/path`) turns them off.
   ![Hovering Auberdine’s piers shows departures and lights destination docks](screenshots/docks.png)
 
