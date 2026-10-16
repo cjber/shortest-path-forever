@@ -71,7 +71,8 @@ check(
 )
 
 local file = assert(io.open(PATH, "rb"))
-local source = file:read("*a")
+-- The packager writes every text file with CRLF line endings, and CI runs this spec on the packaged files too.
+local source = file:read("*a"):gsub("\r\n", "\n")
 file:close()
 local actual = sha256(source)
 check(
