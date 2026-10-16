@@ -36,14 +36,23 @@ Hover a dock to see its services and destinations.
 - `/spfnear` opens nearby services. For a bug report, type `/path report` and paste what it shows.
 - With the gamepad interface on, you open the world map; Shortest Path won't.
 
-## With my other Forever addons
+<!-- forever-family:start -->
 
-Each works alone; installed together, they send Shortest Path their destinations:
+## My other Forever addons
 
-- [Adventure Guide Forever](https://www.curseforge.com/wow/addons/adventure-guide-forever) suggests quests for your level. Pick one and Shortest Path leads you to each stop, including RestedXP steps.
-- [SkillUp Forever](https://www.curseforge.com/wow/addons/skillup-forever) plans profession levelling. Click a trainer or vendor in its route to travel to the nearest one.
-- [Legacy Forever](https://www.curseforge.com/wow/addons/legacy-forever) puts unfinished Legacy challenges on the world map. Click a dungeon or raid pin to travel there.
-- [Tweaks Forever](https://www.curseforge.com/wow/addons/tweaks-forever) adds dungeon and raid entrances to the map. Click one to travel there.
+Each one works on its own, and they work together when you install more than one.
+
+| Addon | What it does |
+|---|---|
+| [Shortest Path Forever](https://www.curseforge.com/wow/addons/shortest-path-forever) | Plans journeys on foot, by air, by sea and through portals, with directions in the tracker. |
+| [Adventure Guide Forever](https://www.curseforge.com/wow/addons/adventure-guide-forever) | Suggests quests for your level and routes you from one to the next. |
+| [SkillUp Forever](https://www.curseforge.com/wow/addons/skillup-forever) | Shows skill-up chances, recipe costs and levelling routes in the Professions window. |
+| [Legacy Forever](https://www.curseforge.com/wow/addons/legacy-forever) | Shows your unfinished Legacy challenges on the world map and tracks the ones you choose. |
+| [Tweaks Forever](https://www.curseforge.com/wow/addons/tweaks-forever) | Adds quest automation, rare alerts and merchant options to the game's settings. |
+
+<!-- forever-family:end -->
+
+Installed together, the others send Shortest Path their destinations. Pick an Adventure Guide journey or RestedXP step, or click a trainer or vendor in a SkillUp route to travel to the nearest one. Click a Legacy dungeon or raid pin, or a dungeon or raid entrance Tweaks adds to the map, to travel there.
 
 Journey steps share one tracker column with the Adventure Guide, SkillUp and Legacy sections, above your quests.
 
