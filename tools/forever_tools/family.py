@@ -1,4 +1,4 @@
-"""The shared "My other Forever addons" block in every addon's README.md and docs/curseforge.md (WFA-32).
+"""The shared "The Forever addons" block in every addon's README.md and docs/curseforge.md (WFA-32).
 
 `BLOCK` is the one copy: a heading, a sentence and a table of the five addons in the family's order, each name linked
 to its CurseForge page. Each repo places it once per file, between `START` and `END`, where it fits that page; `check`
@@ -56,7 +56,7 @@ BLOCK = "\n".join(
     [
         START,
         "",
-        "## My other Forever addons",
+        "## The Forever addons",
         "",
         "Each one works on its own, and they work together when you install more than one.",
         "",
