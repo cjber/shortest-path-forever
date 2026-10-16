@@ -10,6 +10,7 @@ local tick, Deadline, Expansions, State, surface, grid =
 	Grid.tick, Grid.Deadline, Grid.Expansions, Grid.State, Grid.surface, Grid.grid
 local cellOf, nodesOf, metadata, adjacent = Grid.cellOf, Grid.nodesOf, Grid.metadata, Grid.adjacent
 local entrance, locate, standing, snap, smooth = Grid.entrance, Grid.locate, Grid.standing, Grid.snap, Grid.smooth
+local toward = Grid.toward
 
 local TILE, SNAP, ZTOL, DX, DY = Grid.TILE, Grid.SNAP, Grid.ZTOL, Grid.DX, Grid.DY
 local RETRIES = 8 -- other cells tried for an endpoint stuck in a pocket
@@ -353,6 +354,46 @@ local function connectPoint(st, swim, k, node, h)
 	end
 	return ends, merged, via
 end
+-- A point's position in global cells, and the node it stands on in its own cell: within ZTOL of its height, or the
+-- base surface when it has none.
+local function own(st, point)
+	local fx, fy = (point.x - st.x0) / st.cs, (point.y - st.y0) / st.cs
+	local k, lc = locate(st, point.x, point.y)
+	local node, gap = standing(st, k, lc, point.z)
+	return fx, fy, k, (node and gap <= ZTOL) and node or nil
+end
+
+-- The string is pulled between node centres, but the line is drawn from the endpoints themselves. Whether the drawn
+-- segment between point and path entry j's cell centre stays on the walkable surface, walked in the direction it is
+-- travelled (outbound from the start, inbound to the goal). A point standing on a surface must be reached on it, or
+-- leave from it; one with no surface in its cell (inside rock or a building the grid has none for) passes when the
+-- segment runs on into it only across cells with no surface at all.
+local function clearEnd(st, P, j, point, outbound, water)
+	local fx, fy, k, node = own(st, point)
+	local cx, cy = P.x[j] + 0.5, P.y[j] + 0.5
+	if outbound and node then
+		local tk, tn = toward(st, k, node, fx, fy, cx, cy, water)
+		return tk == P.k[j] and tn == P.n[j]
+	end
+	local tk, tn = toward(st, P.k[j], P.n[j], cx, cy, fx, fy, water)
+	if not tk then
+		return tn == true
+	end
+	return not node or (tk == k and tn == node)
+end
+
+-- With no pulled vertex between them, the line is the one chord between the two points: walked whole from a start
+-- that stands on a surface to the goal's cell, on the goal's own surface when it has one.
+local function clearChord(st, from, to, water)
+	local fx, fy, k, node = own(st, from)
+	if not node then
+		return false
+	end
+	local tx, ty, gk, goal = own(st, to)
+	local tk, tn = toward(st, k, node, fx, fy, tx, ty, water)
+	return tk ~= nil and (not goal or (tk == gk and tn == goal))
+end
+
 -- Sliced A* and refinement share scratch trees; splitting adds hot-path calls and upvalues
 local function run(map, from, to, waterWalking, costOnly)
 	local st = State(map)
@@ -557,9 +598,34 @@ local function run(map, from, to, waterWalking, costOnly)
 	if #keep == 1 then -- both ends on one node
 		keep[2] = keep[1]
 	end
-	local points = { { map = map, x = from.x, y = from.y, z = from.z } }
+	local n = #P.x
+	-- An end segment that fails is drawn through its end node's centre first: the string was pulled from there, so the
+	-- rest of the line holds as it did. A chord that fails tries each end that way.
+	local startVia, goalVia = #keep > 2 and keep[2] or n, #keep > 2 and keep[#keep - 1] or 1
+	local startDetour, goalDetour = false, false
+	if #keep > 2 or not clearChord(st, from, to, P.w[n] > 0) then
+		startDetour = not clearEnd(st, P, startVia, from, true, P.w[startVia] > 0)
+		-- A chord whose start detoured now reaches the goal from the start node's centre.
+		if startDetour and #keep <= 2 then
+			goalVia = 1
+		end
+		goalDetour = not clearEnd(st, P, goalVia, to, false, P.w[n] - (P.w[goalVia - 1] or 0) > 0)
+	end
+	local drawn = { 1 }
+	if startDetour then
+		drawn[#drawn + 1] = 1
+	end
 	for i = 2, #keep - 1 do
-		local j = keep[i]
+		drawn[#drawn + 1] = keep[i]
+	end
+	-- Both ends on one node already pass through its centre once the start has detoured.
+	if goalDetour and not (startDetour and n == 1) then
+		drawn[#drawn + 1] = n
+	end
+	drawn[#drawn + 1] = n
+	local points = { { map = map, x = from.x, y = from.y, z = from.z } }
+	for i = 2, #drawn - 1 do
+		local j = drawn[i]
 		grid(st, P.k[j])
 		points[#points + 1] = {
 			map = map,
@@ -571,8 +637,9 @@ local function run(map, from, to, waterWalking, costOnly)
 	points[#points + 1] = { map = map, x = to.x, y = to.y, z = to.z }
 	local wetYards = 0
 	for i = 2, #points do
-		local p, q = keep[i - 1], keep[i]
-		local wet = q > p and (P.w[q] - P.w[p]) / (q - p) or 0
+		local p, q = drawn[i - 1], drawn[i]
+		-- A segment to or from an end node's own centre is as wet as that node.
+		local wet = q > p and (P.w[q] - P.w[p]) / (q - p) or P.w[q] - (P.w[q - 1] or 0)
 		local length = sqrt((points[i].x - points[i - 1].x) ^ 2 + (points[i].y - points[i - 1].y) ^ 2)
 		wetYards = wetYards + length * wet
 	end
