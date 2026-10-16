@@ -10,6 +10,14 @@ In **Map marks**, scale transport, flight master and minimap icons separately fr
 
 In **Interface**, turn **Show journey in tracker** and **Show direction arrow** off independently, leaving the map route visible. Choose yards or metres, resize the tracker and compass, give the compass a background, or enable the optional minimap settings button. Turn off **Attach to quest tracker** in Guidance to drag the Forever column by its heading.
 
+The direction arrow swings smoothly to each new bearing and rests while you stand still. **Move the arrow** and **Arrow scale** in Interface place and size it, together with the cast prompt that takes its place on a Hearthstone or teleport step. While moving the arrow or the compass, hold Shift as you drag to move it a quarter as far as the mouse. **Show the time left under the compass** (off by default) puts the journey's time left beside the distance to your next turn.
+
+**Keep journeys after a reload** in Guidance (off by default) starts a journey you planned yourself (a map click, `/way`, a quest or Nearby services) again after a `/reload`, or when you log back in within 30 minutes. Guides and other addons start their own again, and one that does so first wins.
+
+**Play a sound when you reach the goal** in Alerts (off by default) plays the map's ping when a journey you planned yourself arrives, even with the game in the background. Clearing a journey stays quiet.
+
+`/path report` opens a window with a report already selected: addon and game versions, your character and position, the journey and its steps, your ride, the ride trace when `/path debug` is on, errors caught this session and your other addons. Press Ctrl+C and paste it into a bug report.
+
 Click the current journey step and choose **Complete this step** to advance it. Skipping a Hearthstone leaves it out of plans for that journey. Other steps may return if your actual position still requires them.
 
 With RestedXP installed, **Resume guide** in Guidance or the Journey header menu resumes its current target after another journey. Adventure Guide owns this action when its RestedXP display is enabled; update both addons to use the integrated resume control.
@@ -28,8 +36,9 @@ With RestedXP installed, **Resume guide** in Guidance or the Journey header menu
   Astral Recall or a druid's Teleport: Moonglade, after its own icon and named in your game's language:
   *1. Use Hearthstone*. A cooldown counts as waiting, and a jump to another continent adds a few seconds for
   the loading screen. The client does not say where your bind point is, so it is where you stood when you last
-  bound at an innkeeper with the addon on; bound anywhere else since, the hearth is left out until you bind
-  again. The recorded bind position is saved per character and checked against the current bind name. Class teleports need no bind point. Turn this
+  bound at an innkeeper with the addon on, or where your last Hearthstone or Astral Recall set you down; until
+  either happens, the hearth is left out. The recorded bind position is saved per character and checked against
+  the current bind name. Class teleports need no bind point. Turn this
   off with *Use hearth and teleports* in `/path`.
   ![Journey steps from Auberdine to Silithus with time and distance remaining](screenshots/tracker.png)
 
@@ -57,6 +66,9 @@ With RestedXP installed, **Resume guide** in Guidance or the Journey header menu
 
 - **The destination pin.** Hover the pin you are heading for on the world map to see the time and distance left and
   each step, worded as the tracker words them, with the current one lit. A later stop's pin names only that stop.
+  With *Other Faction's Routes* off, it adds a line when the other faction's boats or zeppelins would get you there
+  at least two minutes sooner, such as "Through Horde transport: about 4 min faster". On the minimap, a goal
+  beyond the rim keeps its mark on the rim in its direction, a little faded.
 
 - **Finding the fastest way.** While a new journey is checked, the map shows only its destination pin and the
   tracker the Group Finder spinner; the route, steps and totals then appear together. A search that takes more than
@@ -107,7 +119,9 @@ With RestedXP installed, **Resume guide** in Guidance or the Journey header menu
 - **Lifts, the Deeprun Tram and portals.** The Great Lift, Freewind Post, Thunder Bluff and Undercity
   lifts, and both tram trains, count down like the boats (each landing or station is its own stop). The
   tram shows at its Stormwind and Ironforge entrances. Portals are marked with where they go.
-- **Flight masters on the world map**, known and undiscovered, with the game's own flight point icons.
+- **Flight masters on the world map**, known and undiscovered, with the game's own flight point icons. Hover one
+  for the flights from it and how long each takes: your own timed flights first, then the shipped times. Flight
+  points you haven't found are grey, and so is every flight from one you haven't found.
 - **In the map's filter menu.** *Flight Masters*, *Boat and Zeppelin Routes*, *Boats & Zeppelins*, *Lifts &
   Tram* and *Portals* turn each layer off; *Other Faction's Routes* shows the
   boats and zeppelins run by the other faction (anyone can ride them, but they are hidden by default).

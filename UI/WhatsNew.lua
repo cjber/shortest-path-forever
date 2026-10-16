@@ -5,7 +5,7 @@ local L = ns.L
 
 -- One sentence on what the latest release changed, printed once after an update. Each release refreshes it from
 -- its CHANGELOG entry.
-ns.WHATS_NEW = L["Type /way to plan a journey, follow TomTom's arrow, and give the compass a background in Interface."]
+ns.WHATS_NEW = L["Keep journeys after a reload, copy a bug report with /path report, and set up the arrow and compass."]
 
 -- Once per new version, after an update: never on a first install, nor in a checkout, whose TOC still holds the
 -- packager's version keyword (matched by its "@", as the packager would rewrite the whole keyword here too).

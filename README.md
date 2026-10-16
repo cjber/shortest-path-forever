@@ -17,29 +17,28 @@ with you.
 
 ## Features
 
-- **Plan a journey.** Shift-click the world map or minimap, or choose *Plan journey* on a quest. Routes combine walking, flights, boats, zeppelins, lifts, the tram, portals and teleports, and replan as you move.
+- **Plan a journey.** Shift-click the world map or minimap, or choose *Plan journey* on a quest. Routes combine walking, flights, boats, zeppelins, lifts, the tram, portals and teleports, and replan as you move. *Keep journeys after a reload* in Guidance starts your own journey again after a `/reload`.
   ![Journey steps from Auberdine to Silithus](docs/screenshots/tracker.png)
-  The tracker shows each step, with time and distance remaining. Hover the destination's pin on the world map for the same steps.
-- **Follow RestedXP.** Journeys follow its current target by default, without TomTom or a bridge addon. In Guidance settings, *Resume guide* returns to RestedXP after another journey. Adventure Guide handles navigation when its RestedXP display is enabled.
-- **Use another guide's waypoints.** With TomTom absent, guides that call its waypoint API can start journeys here. *Let guides set TomTom waypoints* controls this.
-- **Type a waypoint.** `/way [zone] x y [title]` plans a journey there, written as for TomTom. `/way` is only taken while TomTom and other addons leave it free; `/path way` always works. With TomTom installed, turn on *Follow TomTom's arrow* in Guidance and journeys go wherever its arrow points.
+  The tracker shows each step, with time and distance remaining. Hover the destination's pin on the world map for the same steps, and for how much sooner the other faction's boats would get you there.
+- **Follow your guide.** Journeys follow RestedXP's current target by default, without TomTom or a bridge addon; *Resume guide* returns to it after another journey. With TomTom absent, other guides' TomTom waypoints start journeys here.
+- **Type a waypoint.** `/way [zone] x y [title]` plans a journey there, written as for TomTom, while TomTom and other addons leave `/way` free; `/path way` always works. With TomTom installed, *Follow TomTom's arrow* in Guidance follows its arrow.
   ![A guide route through Thelsamar](docs/screenshots/stops.png)
   The current stop lights up like a tracked quest.
-- **Choose your guidance.** Keep the route on both maps while hiding the Journey tracker or direction arrow. Show distances in yards or metres. Click the current step to complete it manually; skipping a Hearthstone leaves it out for that journey.
+- **Choose your guidance.** Keep the route on both maps while hiding the Journey tracker or direction arrow. The arrow eases round to each new bearing; move and scale it in Interface. Click the current step to complete it manually; skipping a Hearthstone leaves it out for that journey.
   ![Route and native waypoint on the minimap](docs/screenshots/minimap.png)
-  Breadcrumbs show the walking route; the waypoint leads to the next step.
-- **See flights and departures.** Flight maps highlight your next flight. Dock tooltips show destinations and departure times; nearby services count down in the tracker. Ride times improve estimates and can be shared with your guild, party and nearby players.
+  Breadcrumbs show the walking route; the waypoint leads to the next step. A goal off the minimap waits on its rim.
+- **See flights and departures.** Flight maps highlight your next flight, and a flight master's world map tooltip lists its flights and their times. Dock tooltips show destinations and departure times; nearby services count down in the tracker. Ride times improve estimates and can be shared with your guild, party and nearby players.
   ![A smooth flight line leaving Stormwind](docs/screenshots/flight.png)
   Flight lines follow the route between flight points.
 - **Find nearby services.** The map and minimap tracking menus offer trainers, repairs, reagents, vendors, inns, banks, auction houses, flight masters and stables. Requires installed QuestieDB; class trainers also use Tweaks Forever.
   ![Nearby services in the map menu](docs/screenshots/services.png)
   Choose a service to plan the trip there.
-- **Travel prompts and alerts.** Hearthstone and teleport steps show the item or spell to use. A banner, transport sound and taskbar flash warn before your boat arrives.
+- **Travel prompts and alerts.** Hearthstone and teleport steps show the item or spell to use. A banner, transport sound and taskbar flash warn before your boat arrives. *Play a sound when you reach the goal* in Alerts plays the map's ping on arrival.
   ![The current Hearthstone action](docs/screenshots/cast_prompt.png)
   The prompt clears as the journey continues.
-- **Compass and corpse routes.** The compass marks turns, stops and your destination. As a ghost, a red route leads to your body; your journey resumes when you are alive.
+- **Compass and corpse routes.** The compass marks turns, stops and your destination, and can show the time left under it. As a ghost, a red route leads to your body; your journey resumes when you are alive.
   ![The compass with turns and destination](docs/screenshots/compass.png)
-  The strip can be moved and resized separately from the tracker.
+  The strip can be moved and resized separately from the tracker. Shift-drag it, or the arrow, to place it to the pixel.
 - **Quest areas.** Inside a quest's area, the client draws it in gold instead of a stop pin and line.
   ![A quest area on the world map](docs/screenshots/area.png)
   The highlighted area is the game's own quest boundary.
@@ -55,39 +54,28 @@ Install it from [CurseForge](https://www.curseforge.com/wow/addons/shortest-path
 
 ## Usage
 
-Alt-click the world map to choose a destination directly over a Questie icon. Shift-click remains available on empty map space and Shortest Path icons.
+Alt-click the world map to choose a destination over a Questie icon. Shift-click works on empty map space and Shortest Path icons.
 
-In **Map marks**, scale transport, flight master and minimap icons separately from 25% to 200%. Right-click a flight master icon to mark its flight path as known if a flight map missed it.
+The settings have four pages. **Guidance** holds journey behaviour: *Resume guide*, *Keep journeys after a reload*, *Minimum Hearthstone saving* and *Attach to quest tracker*. **Map marks** scales each kind of icon from 25% to 200%. **Interface** shows or hides the tracker, arrow and compass, sizes them, and switches to metres. **Alerts** covers the boat warning and the arrival sound. [docs/features.md](docs/features.md) has the detail.
 
-In **Interface**, hide **Show journey in tracker** and **Show direction arrow** independently while keeping the route on both maps, choose metres, or enable the **Show options button on minimap**.
-
-Click the current journey step and choose **Complete this step** to advance it manually. Completing a Hearthstone step plans without it for the rest of that journey. Later plans still follow your actual position.
-
-In **Guidance**, choose **Resume guide** to return to RestedXP after selecting another journey.
-
-In **Interface** settings, set **Forever tracker size** and **Compass size** separately from 50% to 200%. The tracker setting applies to the shared Forever column. **Compass background** puts a dark band behind the compass where snow or sand drowns its marks.
-
-Open a flight master’s map once after installing to sync the flight points you already know. Opposing-faction boat and zeppelin routes are off by default; you can opt in through settings.
+Click the current step and choose **Complete this step** to advance it. Right-click a flight master icon to mark its flight path as known if a flight map missed it, and open a flight master's map once after installing to sync the flight points you already know.
 
 | Command | What it does |
 |---|---|
-| `/path` | Open the settings (also in Settings → AddOns, or from the addon compartment on the minimap) |
-| `/path report` | Show a report to copy into a bug report: versions, your journey and its steps, your ride, recent errors |
-| `/path perf` | Print this addon's CPU averages and peaks from the client's profiler, and its memory after a full collection, terrain included |
-| `/path debug` | Keep a trace of your position and ride matching, for reporting a ride that did not sync |
-| `/spfnear` | Open the nearby services menu on the world map; add `class`, `trainer`, `repair`, `reagents`, `vendor`, `innkeeper`, `bank`, `auction`, `flight` or `stable` to route to the nearest one |
+| `/path` | Open the settings (also in Settings → AddOns and the addon compartment) |
+| `/path report` | Show a report to paste into a bug report: versions, your journey, your ride, recent errors |
+| `/path perf` | Print this addon's CPU and memory use |
+| `/path debug` | Keep a trace of your ride matching, for a ride that did not sync |
+| `/spfnear` | Open nearby services; add a service such as `repair`, `trainer` or `flight` to route to the nearest one |
 
 Every feature has its own switch in the settings; the world map's filter menu and the minimap's tracking menu hide
-each kind of mark. Searches and tracker updates wait until combat ends.
-In Guidance, **Minimum Hearthstone saving** lets you keep your Hearthstone for bigger time savings.
-It defaults to zero; class teleports still count as alternatives.
+each kind of mark. The other faction's boats and zeppelins are off by default. Searches and tracker updates wait until combat ends.
 
-It's in English for now. Translations are welcome: see [Ways to help](#ways-to-help), or open a pull request as
-[Locales/README.md](Locales/README.md) describes.
+It's in English for now; [Ways to help](#ways-to-help) says how to translate it.
 
 ## Move the tracker
 
-Turn off **Attach to quest tracker** in Guidance settings, then drag the shared Forever column by its heading. Its position survives `/reload`; turn the setting back on to attach it above your quests.
+Turn off **Attach to quest tracker** in Guidance, then drag the shared Forever column by its heading. Turn it back on to attach the column above your quests.
 
 ![Detached Forever tracker](docs/screenshots/detached.png)
 
@@ -95,14 +83,10 @@ The heading moves the Forever sections; your quests keep their own position.
 
 ## Works alongside
 
-Other addons can plan and guide journeys through `ShortestPathForever.API`: travel-time estimates, and routes of
-up to 64 stops that wear the game's own quest, flight master or boat marks. While TomTom is not installed, the
-addon answers TomTom's waypoint calls and takes `/way`; with it installed, *Follow TomTom's arrow* follows its
-waypoints. A held stop can name the quest area it stands for. [docs/api.md](docs/api.md)
-has the calls and what they return.
+Other addons can plan and guide journeys through `ShortestPathForever.API`, ask for travel times, and subscribe
+to journey changes. [docs/api.md](docs/api.md) has the calls and what they return.
 
-RestedXP passes its current target directly by default. Toggle *Follow RestedXP guides* in `/path`. Leave
-RestedXP TomTom disabled when using this option, so only one addon follows the guide.
+With *Follow RestedXP guides* on (the default), leave RestedXP's TomTom option off so only one addon follows the guide.
 
 My other Forever addons send it their destinations when both are installed:
 
@@ -123,9 +107,7 @@ No code needed:
 
 ## Development
 
-Run `tools/typecheck.sh` for LuaLS and static checks, and `luajit tests/<name>_spec.lua` for a focused check. CI runs the full suite. [tests/README.md](tests/README.md) describes the test layers and the journey driver; [performance notes](tests/search_performance.md) and [type declarations](types/README.md) describe the rest.
-
-For releases, follow [.agents/skills/release/SKILL.md](.agents/skills/release/SKILL.md). Signed tags publish the version's changelog to GitHub, CurseForge and Wago after main CI passes.
+Run `tools/typecheck.sh` for LuaLS and static checks, and `luajit tests/<name>_spec.lua` for a focused check. CI runs the full suite. [tests/README.md](tests/README.md) describes the test layers; [performance notes](tests/search_performance.md) and [type declarations](types/README.md) describe the rest. Releases follow [.agents/skills/release/SKILL.md](.agents/skills/release/SKILL.md).
 
 [Contributing](https://github.com/cjber/.github/blob/main/CONTRIBUTING.md), [AGENTS.md](AGENTS.md) and [security reports](https://github.com/cjber/.github/blob/main/SECURITY.md).
 
