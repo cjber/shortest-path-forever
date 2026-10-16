@@ -205,4 +205,42 @@ local tower = ns.Docks[11]
 pts = Path.FindSync(0, tower, GOLDSHIRE)
 assert(tower.z and pts and pts[2].z > 25, "boards from the beach")
 
+-- The string is pulled between node centres, but each walk is drawn from the endpoints themselves. Its first and last
+-- segments must not cut across cells the walking map has no surface for (fitzforge, #144): count the yards each end
+-- segment spends over such cells, past the bare run touching the endpoint, where the point itself may stand.
+local Grid = ns.PathGrid
+local function bare(map, x, y)
+	local st = Grid.State(map)
+	return Grid.bare(st, math.floor((x - st.x0) / st.cs), math.floor((y - st.y0) / st.cs))
+end
+local function bareEnds(map, points)
+	local yards = 0
+	for _, segment in ipairs({ { points[2], points[1] }, { points[#points - 1], points[#points] } }) do
+		local a, b = segment[1], segment[2]
+		local length = dist(a.x, a.y, b.x, b.y)
+		local steps = math.max(1, math.floor(length / 0.5))
+		local last = steps
+		while last >= 0 and bare(map, a.x + (b.x - a.x) * last / steps, a.y + (b.y - a.y) * last / steps) do
+			last = last - 1
+		end
+		for step = 0, last do
+			if bare(map, a.x + (b.x - a.x) * step / steps, a.y + (b.y - a.y) * step / steps) then
+				yards = yards + length / steps
+			end
+		end
+	end
+	return yards
+end
+-- A map click to Stonard's flight master, and out of Everlook, where the start's own cell is the snapped one: both
+-- crossed 6 to 8 yards of rock or building on an end segment when drawn straight from the point.
+for _, walk in ipairs({
+	{ 0, { x = -10582.4, y = -3130.91 }, { x = -10456.97, y = -3279.25, z = 21.35 } },
+	{ 1, { x = 6799.24, y = -4742.44, z = 701.5 }, { x = 7076.63, y = -4809.55 } },
+}) do
+	local drawn, cost = Path.FindSync(walk[1], walk[2], walk[3])
+	assert(drawn and cost, "the end-segment walks are found")
+	assert(drawn[1].x == walk[2].x and drawn[#drawn].y == walk[3].y, "the line still starts and ends at the points")
+	assert(bareEnds(walk[1], drawn) == 0, "no end segment cuts across cells with no surface")
+end
+
 print("path_spec: ok")
