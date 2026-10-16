@@ -198,6 +198,7 @@ ForeverTrackerHost = nil
 ---@field VarType {Boolean: string, Number: string}
 ---@field RegisterVerticalLayoutCategory fun(name: string): SPFSettingsCategory
 ---@field RegisterVerticalLayoutSubcategory fun(parent: SPFSettingsCategory, name: string): SPFSettingsCategory
+---@field RegisterCanvasLayoutSubcategory fun(parent: SPFSettingsCategory, frame: Frame, name: string): SPFSettingsCategory
 ---@field RegisterProxySetting fun(category: SPFSettingsCategory, variable: string, variableType: string, name: string, default: boolean|number, getter: (fun(): boolean|number), setter: (fun(value: boolean|number))): SPFSetting
 ---@field NotifyUpdate fun(variable: string)
 ---@field RegisterAddOnSetting fun(category: SPFSettingsCategory, variable: string, key: string, storage: SPFDatabase, variableType: string, name: string, default: boolean|number): SPFSetting

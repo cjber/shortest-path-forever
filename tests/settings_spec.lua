@@ -4,6 +4,7 @@
 -- blamed on this addon. The index buttons go through RegisterInitializer too, and keep themselves out of search.
 local rows, buttons, settings = {}, {}, {}
 local opened = {}
+local canvas, familyPanel
 
 local attachmentNotified, attachmentChanged
 local trackerState = { attached = true }
@@ -44,6 +45,16 @@ local env = setmetatable({
 			}, {
 				AddInitializer = function()
 					error("addon code inserted a row into a settings layout; use Settings.RegisterInitializer")
+				end,
+			}
+		end,
+		RegisterCanvasLayoutSubcategory = function(parent, frame, name)
+			canvas = { parent = parent, frame = frame, name = name }
+			return {
+				name = name,
+				parent = parent,
+				GetID = function(self)
+					return self.name
 				end,
 			}
 		end,
@@ -154,6 +165,12 @@ local ns = {
 	Way = function(message)
 		ways[#ways + 1] = message
 	end,
+	Family = {
+		CreatePanel = function(parent, db, current)
+			familyPanel = { parent = parent, db = db, current = current }
+			return familyPanel
+		end,
+	},
 	db = {},
 	Defaults = setmetatable({
 		hearthMinimumSavings = 0,
@@ -249,7 +266,7 @@ local groups = {
 }
 local order = { "Map marks", "Transport", "Guidance", "Alerts", "Interface" }
 
-assert(#buttons == #order, "one index button per group")
+assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
 assert(#rows == 39, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
@@ -265,6 +282,15 @@ for index, name in ipairs(order) do
 	end
 end
 assert(cursor == #rows, "every row belongs to a group")
+
+-- The shared Forever addons page (UI/ForeverFamily.lua) is the last subpage, with this addon's saved variables.
+local family = buttons[#order + 1]
+assert(family.target.name == "Shortest Path Forever" and family.initializer.name == "Forever addons")
+assert(canvas and canvas.name == "Forever addons" and canvas.parent.name == "Shortest Path Forever")
+assert(canvas.frame == familyPanel and familyPanel.db == ns.db, "the page reads and writes this addon's settings")
+assert(familyPanel.current == "ShortestPathForever", "its own row is this addon's")
+family.initializer.callback()
+assert(opened[#opened] == "Forever addons", "the button opens the page")
 
 -- The rows themselves are unchanged: keys, defaults, tooltips and callbacks.
 local function Row(key)

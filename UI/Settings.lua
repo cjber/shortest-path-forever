@@ -508,6 +508,19 @@ ns.Init(function()
 		L["One line in chat the first time you log in after an update."]
 	)
 
+	-- The Forever addons page is shared by all five addons (UI/ForeverFamily.lua), with the hint setting on it.
+	local family = Settings.RegisterCanvasLayoutSubcategory(
+		category,
+		ns.Family.CreatePanel(nil, ns.db, addonName),
+		L["Forever addons"]
+	)
+	Settings.RegisterInitializer(
+		category,
+		CreateSettingsButtonInitializer(L["Forever addons"], L["Open"], function()
+			Settings.OpenToCategory(family:GetID())
+		end, nil, false)
+	)
+
 	Settings.RegisterAddOnCategory(category)
 	ns.RefreshOptionsButton()
 	SLASH_SHORTESTPATHFOREVER1 = "/path"

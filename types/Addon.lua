@@ -130,7 +130,7 @@
 ---@field current? boolean
 ---@field grey? boolean
 
----@class SPFDatabase
+---@class SPFDatabase : ForeverFamilyDB
 ---@field trackerHost? ForeverTrackerSettings
 ---@field pins? boolean
 ---@field transit? boolean
