@@ -87,11 +87,11 @@ local ns = {
 }
 setfenv(assert(loadfile("UI/ForeverFamily.lua")), env)("ShortestPathForever", ns)
 -- The window itself is the shared module's, covered by tests/forever_family_spec.lua; here it records its calls.
-ns.Family.ShowLink = function(db, key, folder)
+ns.Family.ShowLink = function(db, key, folder, _, locale)
 	if combat then
 		return false
 	end
-	links[#links + 1] = { db = db, key = key, folder = folder }
+	links[#links + 1] = { db = db, key = key, folder = folder, locale = locale }
 	return true
 end
 setfenv(assert(loadfile("UI/FamilyHints.lua")), env)("ShortestPathForever", ns)
@@ -120,7 +120,7 @@ check(
 	links[1].folder == "AdventureGuideForever" and links[1].key == "ShortestPathForever.questMenu",
 	"it opens Adventure Guide's link, dismissable"
 )
-check(links[1].db == ns.db, "with Shortest Path's settings")
+check(links[1].db == ns.db and links[1].locale == ns.L, "with Shortest Path's settings and translations")
 installed.AdventureGuideForever = "on"
 check(#Menu() == 0, "nothing with Adventure Guide on")
 installed.AdventureGuideForever = "off"
@@ -233,11 +233,11 @@ check(Hints.Footer() == nil, "at most once a session")
 local function Session()
 	env.ForeverFamily, ns.Family = nil, nil
 	setfenv(assert(loadfile("UI/ForeverFamily.lua")), env)("ShortestPathForever", ns)
-	ns.Family.ShowLink = function(db, key, folder)
+	ns.Family.ShowLink = function(db, key, folder, _, locale)
 		if combat then
 			return false
 		end
-		links[#links + 1] = { db = db, key = key, folder = folder }
+		links[#links + 1] = { db = db, key = key, folder = folder, locale = locale }
 		return true
 	end
 	hooks = {}
