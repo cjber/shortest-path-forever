@@ -775,6 +775,16 @@ local addonSettings, settingsRows, settingsButtons, openedCategories = {}, {}, {
 _G.MinimalSliderWithSteppersMixin = { Label = { Right = 1 } }
 -- The frames Escape closes (UIParent.lua); the report and Forever family windows add themselves.
 _G.UISpecialFrames = _G.UISpecialFrames or {}
+-- Blizzard_SharedXML/TableUtil.lua.
+_G.tContains = _G.tContains
+	or function(list, item)
+		for _, value in ipairs(list) do
+			if value == item then
+				return true
+			end
+		end
+		return false
+	end
 _G.OFF = _G.OFF or "Off"
 _G.SecondsToTime = _G.SecondsToTime or function(seconds)
 	return seconds .. " Sec"

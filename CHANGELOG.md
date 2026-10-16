@@ -17,6 +17,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 - **Adventure Guide's suggestions in the quest menus.** With Adventure Guide Forever on, right-clicking a quest in the tracker or the quest log shows *Adventure Guide suggests* under *Plan journey*, with up to three of its suggestions as `[level] title`. Choosing one starts it as Adventure Guide's own Start does. Nothing shows while it has none.
 - **The README credits the people and addons behind Shortest Path Forever.** The players who reported bugs or asked for features, and Polestar, which inspired some features, are named, and THIRD_PARTY.md has the full list.
 
+### For addon authors
+
+- **The shared `UI/ForeverFamily.lua` is now VERSION 3.** Each addon's copy sets `ns.Family` to `ForeverFamily.For(ns.L)` (or `ns.FamilyL`, for an addon whose L isn't keyed by English phrases), a view whose `ShowLink` and `CreatePanel` read in that addon's own L, and in English where it has no entry. Calls without an L, as older copies make them, read in the L of the copy in use. The link window has one global name, `ForeverFamilyLink`, and is kept on the module as `ForeverFamily.window`. A newer copy takes over the global, puts that window away, and serves `ShowLink` and `Once` for addons still holding an older copy's view. `ADDONS[i].line` is the English line and its key in each addon's L.
+
 ## [1.17.0] - 2026-10-16
 
 - **Data checked against Forever 1.60.1.70425.** Two Skyborne air routes changed course in this build. The Alliance skyship between Dalaran and Valanaar now takes about 5 seconds longer per round trip, and the Horde zeppelin between Thunder Bluff and Zephras Isle a fraction of a second less, so their departure times follow the new paths. Flight points, flight times, lifts, portals and teleports are unchanged.
