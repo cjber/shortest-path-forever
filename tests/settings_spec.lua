@@ -166,8 +166,8 @@ local ns = {
 		ways[#ways + 1] = message
 	end,
 	Family = {
-		CreatePanel = function(parent, db, current)
-			familyPanel = { parent = parent, db = db, current = current }
+		CreatePanel = function(parent, db, current, locale)
+			familyPanel = { parent = parent, db = db, current = current, locale = locale }
 			return familyPanel
 		end,
 	},
@@ -289,6 +289,7 @@ assert(family.target.name == "Shortest Path Forever" and family.initializer.name
 assert(canvas and canvas.name == "Forever addons" and canvas.parent.name == "Shortest Path Forever")
 assert(canvas.frame == familyPanel and familyPanel.db == ns.db, "the page reads and writes this addon's settings")
 assert(familyPanel.current == "ShortestPathForever", "its own row is this addon's")
+assert(familyPanel.locale == ns.L, "and it reads in this addon's own translations")
 family.initializer.callback()
 assert(opened[#opened] == "Forever addons", "the button opens the page")
 

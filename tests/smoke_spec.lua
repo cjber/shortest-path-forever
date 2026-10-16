@@ -902,9 +902,9 @@ Run("forever family arrival footer", function()
 	assert(block and block.used, "the tracker draws the footer's block")
 	tracker:OnBlockHeaderClick(block, "LeftButton")
 	Flush()
-	assert(_G.ForeverFamilyLink and _G.ForeverFamilyLink:IsShown(), "clicking it opens the link window")
+	assert(_G.ForeverFamilyLink2 and _G.ForeverFamilyLink2:IsShown(), "clicking it opens the link window")
 	assert(not ns.FamilyHints.Footer(), "and takes the footer away")
-	_G.ForeverFamilyLink:Hide()
+	_G.ForeverFamilyLink2:Hide()
 	_G.C_AddOns = nil
 end)
 _G.C_AddOns = nil

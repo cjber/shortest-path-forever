@@ -1,6 +1,6 @@
 -- UI/ForeverFamily.lua is byte-identical in all five Forever addons, and so is this spec. A change to the module is
 -- made in Shortest Path Forever first, then copied unchanged to the other four with this spec and its new pin.
-local PINNED = "59852f2b801d864dce6a8341bbeb13927182c28d31d0cdfc3e283cb0c2df9eab"
+local PINNED = "e361893f68b2a7cc14935d1f0fac4733d0369f98b99963c790d4443347d0b693"
 local PATH = "UI/ForeverFamily.lua"
 
 local bit = require("bit")
@@ -313,9 +313,9 @@ check(#frames == 0, "and nothing is built")
 combat = false
 check(not Family.ShowLink(db, "Test.x", "NotAForeverAddon"), "an unknown folder opens nothing")
 check(Family.ShowLink(db, "Test.tweaks", "TweaksForever"), "the window opens out of combat")
-local window = named.ForeverFamilyLink
+local window = named.ForeverFamilyLink2
 check(window and window:IsShown() and window.title == "Tweaks Forever", "it shows the addon's name")
-check(env.UISpecialFrames[1] == "ForeverFamilyLink", "Escape closes it")
+check(env.UISpecialFrames[1] == "ForeverFamilyLink2", "Escape closes it, under this version's own name")
 check(window.portrait.texture == "Interface\\Icons\\INV_Misc_QuestionMark", "a missing addon gets a neutral icon")
 local edit = Children(window, "EditBox")[1]
 check(edit.text == "https://www.curseforge.com/wow/addons/tweaks-forever", "the address is in the box")
@@ -421,5 +421,56 @@ page:Show()
 check(Texts(page):find("Nicht installiert", 1, true), "a translated phrase is used")
 check(Texts(page):find("Copy link", 1, true) == nil, "button labels aren't font strings")
 check(Children(page, "Button")[1].text == "Copy link", "and fall back to English")
+
+-- Each addon's own L (VERSION 2): its page and window read in its translations first, then the first loader's.
+local SPF_LINE = Translated.ADDONS[1].phrase
+-- Shaped like every addon's L (Locales/enUS.lua): a phrase it has no entry for answers itself.
+local french = setmetatable({
+	["Copy link"] = "Copier le lien",
+	["Not installed"] = "Pas installé",
+	["Forever addons"] = "Addons Forever",
+	[SPF_LINE] = "Planifie le trajet le plus rapide.",
+	["Close"] = "Fermer",
+	["Copy the address, then open it in your browser."] = "Copiez l'adresse.",
+}, {
+	__index = function(_, phrase)
+		return phrase
+	end,
+})
+check(
+	Translated.Line(Translated.ADDONS[1], french) == "Planifie le trajet le plus rapide.",
+	"Line reads the caller's L"
+)
+check(Translated.Line(Translated.ADDONS[2], french) == Translated.ADDONS[2].phrase, "and falls back to English")
+local own = Translated.CreatePanel(nil, {}, nil, french)
+own:Show()
+local ownText = Texts(own)
+check(ownText:find("Addons Forever", 1, true), "the page's title is the caller's")
+check(ownText:find("Pas installé", 1, true), "its states are the caller's, over the first loader's")
+check(ownText:find("Planifie le trajet le plus rapide.", 1, true), "and so are the addons' lines")
+check(ownText:find("Suggest my other Forever addons", 1, true), "a phrase neither has reads as English")
+agf.L["This addon"] = "Dieses Addon"
+own = Translated.CreatePanel(nil, {}, "LegacyForever", french)
+own:Show()
+check(Texts(own):find("Dieses Addon", 1, true), "a phrase only the copy in use's L has comes from it")
+check(Children(own, "Button")[1].text == "Copier le lien", "the buttons are the caller's")
+page:Show()
+check(Texts(page):find("Nicht installiert", 1, true), "a page made without an L keeps the first loader's")
+Children(own, "Button")[1]:Click()
+local linkWindow = named.ForeverFamilyLink2
+local linkButtons = Children(linkWindow, "Button", "UIPanelButtonTemplate")
+check(linkButtons[1].text == "Fermer", "Copy link opens the window in the page's language")
+check(Texts(linkWindow):find("Copiez l'adresse.", 1, true), "all of it")
+check(Texts(linkWindow):find("Planifie le trajet le plus rapide.", 1, true), "with the addon's line")
+Translated.ShowLink(nil, nil, "ShortestPathForever")
+check(linkButtons[1].text == "Close", "a call without an L (a VERSION 1 caller) reads as the first loader")
+check(Texts(linkWindow):find(Translated.ADDONS[1].line, 1, true), "line included")
+
+-- VERSION 2 takes over from a VERSION 1 copy, whose window ("ForeverFamilyLink") keeps its own name.
+Client()
+env.ForeverFamily = { VERSION = 1 }
+local takeover = { L = PhraseLocale() }
+local Second = Load(takeover)
+check(Second.VERSION == 2 and env.ForeverFamily == Second, "VERSION 2 replaces VERSION 1")
 
 print(("forever_family_spec: %d checks passed"):format(checks))
