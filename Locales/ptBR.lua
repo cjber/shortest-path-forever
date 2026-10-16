@@ -119,8 +119,8 @@ L["No location for that quest yet."] = "Ainda não há local para essa missão."
 L["No way there from here."] = "Não há caminho daqui até lá."
 L["Not discovered"] = "Não descoberto"
 L["Not installed"] = "Não instalado"
-L["Now also in German, French, Spanish, Portuguese, Russian, Korean and Chinese (machine translated)."] =
-	"Agora também em alemão, francês, espanhol, português, russo, coreano e chinês (tradução automática)."
+L["Now also in German, French, Spanish, Brazilian Portuguese, Russian, Korean and Chinese (machine translated)."] =
+	"Agora também em alemão, francês, espanhol, português do Brasil, russo, coreano e chinês (tradução automática)."
 L["On"] = "Ativado"
 L["On board to %s"] = "A bordo para %s"
 L["On the world map."] = "No mapa-múndi."

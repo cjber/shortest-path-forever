@@ -15,7 +15,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 ## [1.19.0] - 2026-10-16
 
 - **In your language.** Shortest Path Forever is now in German, French, Spanish (Spain and Latin America), Brazilian Portuguese, Russian, Korean and Chinese (simplified and traditional): every language the WoW: Forever client offers besides English. It's machine translated, using the game's own words for flight masters, Hearthstones, the tracker and the rest, so corrections are welcome through the [translation issue form](https://github.com/cjber/shortest-path-forever/issues/new?template=translation.yml). Eight French lines are Brainc3ll's, from his Legacy Forever translation. Outside the Chinese clients, distances follow the game, which shows yards as metres; *Distances in metres* switches to real metres.
-- **Reagent vendors in any language.** Nearby services finds reagent vendors whether QuestieDB names them in English or in your language.
+- **Reagent vendors in your language.** Nearby services finds reagent vendors whether QuestieDB names them in English or in your language.
 
 ## [1.18.0] - 2026-10-16
 

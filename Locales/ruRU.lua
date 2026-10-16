@@ -125,8 +125,8 @@ L["No location for that quest yet."] = "Для этого задания пок�
 L["No way there from here."] = "Отсюда туда нет пути."
 L["Not discovered"] = "Не открыто"
 L["Not installed"] = "Не установлено"
-L["Now also in German, French, Spanish, Portuguese, Russian, Korean and Chinese (machine translated)."] =
-	"Теперь также на немецком, французском, испанском, португальском, русском, корейском и китайском (машинный перевод)."
+L["Now also in German, French, Spanish, Brazilian Portuguese, Russian, Korean and Chinese (machine translated)."] =
+	"Теперь также на немецком, французском, испанском, бразильском португальском, русском, корейском и китайском (машинный перевод)."
 L["On"] = "Вкл."
 L["On board to %s"] = "На борту: %s"
 L["On the world map."] = "На карте мира."

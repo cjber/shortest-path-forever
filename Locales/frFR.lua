@@ -121,8 +121,8 @@ L["No location for that quest yet."] = "Pas encore d'emplacement pour cette quê
 L["No way there from here."] = "Aucun chemin d'ici jusque-là." -- mt
 L["Not discovered"] = "Non découvert" -- mt
 L["Not installed"] = "Non installé" -- mt
-L["Now also in German, French, Spanish, Portuguese, Russian, Korean and Chinese (machine translated)."] =
-	"Désormais aussi en allemand, français, espagnol, portugais, russe, coréen et chinois (traduction automatique)." -- mt
+L["Now also in German, French, Spanish, Brazilian Portuguese, Russian, Korean and Chinese (machine translated)."] =
+	"Désormais aussi en allemand, français, espagnol, portugais du Brésil, russe, coréen et chinois (traduction automatique)." -- mt
 L["On"] = "Activé" -- mt
 L["On board to %s"] = "À bord pour %s" -- mt
 L["On the world map."] = "Sur la carte du monde." -- mt

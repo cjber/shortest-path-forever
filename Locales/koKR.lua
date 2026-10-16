@@ -121,8 +121,8 @@ L["No location for that quest yet."] = "이 퀘스트의 위치가 아직 없습
 L["No way there from here."] = "여기서 그곳까지 가는 길이 없습니다."
 L["Not discovered"] = "발견하지 않음"
 L["Not installed"] = "설치 안 됨"
-L["Now also in German, French, Spanish, Portuguese, Russian, Korean and Chinese (machine translated)."] =
-	"이제 독일어, 프랑스어, 스페인어, 포르투갈어, 러시아어, 한국어, 중국어로도 제공됩니다(기계 번역)."
+L["Now also in German, French, Spanish, Brazilian Portuguese, Russian, Korean and Chinese (machine translated)."] =
+	"이제 독일어, 프랑스어, 스페인어, 브라질 포르투갈어, 러시아어, 한국어, 중국어로도 제공됩니다(기계 번역)."
 L["On"] = "켬"
 L["On board to %s"] = "%s행 탑승 중"
 L["On the world map."] = "세계 지도에 표시합니다."

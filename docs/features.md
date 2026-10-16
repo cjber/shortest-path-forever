@@ -165,12 +165,8 @@ With RestedXP installed, **Resume guide** in Guidance or the Journey header menu
 
 ## Languages
 
-The addon follows the game's language: German, French, Spanish (Spain and Latin America), Brazilian Portuguese,
-Russian, Korean and Chinese (simplified and traditional), and English for everything else. The translations are
-machine translated, using the game's own words for flight masters, Hearthstones, the tracker and the rest; eight
-French lines are Brainc3ll's. Correct a line through a
-[translation issue](https://github.com/cjber/shortest-path-forever/issues/new?template=translation.yml), or see
-[Locales/README.md](../Locales/README.md).
+The addon follows the game's language. Which languages it ships in, how they were translated and how to correct a
+line are in [Locales/README.md](../Locales/README.md).
 
 Outside the Chinese clients the game shows yards as metres, so distances do too. *Distances in metres* in Interface
 switches to real metres and kilometres.
