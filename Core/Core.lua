@@ -74,7 +74,7 @@ function ns.GamepadUI()
 end
 
 -- Shows the world map on uiMap (or where you are) and returns whether it is up. Under the gamepad interface the
--- addon never opens it (#158): a map the game already opened is turned to uiMap, as a click on it would, and with
+-- addon never opens it (#158): a map the game already opened is turned to uiMap by the game's own code, and with
 -- none the player is told to open it (`hint`, or the plain line) and false comes back.
 ---@param uiMap? number
 ---@param hint? string
@@ -85,8 +85,9 @@ function ns.OpenWorldMap(uiMap, hint)
 		return true
 	end
 	if WorldMapFrame and WorldMapFrame:IsShown() then
+		-- Already open, so this only has the game's own code turn it.
 		if uiMap then
-			WorldMapFrame:SetMapID(uiMap)
+			C_Map.OpenWorldMap(uiMap)
 		end
 		return true
 	end

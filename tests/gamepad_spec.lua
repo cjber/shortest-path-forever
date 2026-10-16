@@ -40,9 +40,6 @@ local env = setmetatable({
 		IsShown = function()
 			return mapShown
 		end,
-		SetMapID = function(_, uiMap)
-			opened[#opened + 1] = "turned " .. uiMap
-		end,
 	},
 	NORMAL_FONT_COLOR = {
 		WrapTextInColorCode = function(_, text)
@@ -73,7 +70,7 @@ assert(not ns.OpenWorldMap(1429) and #opened == 1, "under it the addon does not 
 assert(#printed == 1 and printed[1]:find("Open the world map to see it.", 1, true), "it says to open the map")
 assert(not ns.OpenWorldMap(nil, "Use its menu.") and printed[2]:find("Use its menu.", 1, true), "a caller's hint")
 mapShown = true
-assert(ns.OpenWorldMap(1446) and opened[2] == "turned 1446", "a map the game opened is turned to the place")
+assert(ns.OpenWorldMap(1446) and opened[2] == 1446, "a map the game opened is turned to the place by the game")
 assert(#printed == 2, "with the map already open it says nothing")
 env.C_InputInterfaceStyle = nil
 assert(not ns.GamepadUI(), "a client without the interface style API is mouse and keyboard")
