@@ -31,7 +31,24 @@
 ---@type SPFRestedXP?
 RXP = nil
 
+-- One of Adventure Guide's cards, as its API.Suggestions answers (minor 2).
+---@class SPFAdventureSuggestion
+---@field id string
+---@field title string
+---@field level? integer
+---@field kind string
+---@field map integer
+---@field x? number
+---@field y? number
+
+-- Adventure Guide's API once it has both suggestion calls (UI/FamilyHints.lua checks before using them).
+---@class SPFAdventureSuggestionsAPI
+---@field Suggestions fun(limit?: integer): SPFAdventureSuggestion[]?
+---@field StartSuggestion fun(id: string): boolean
+
 ---@class SPFRestedXPFrontendAPI
+---@field Suggestions? fun(limit?: integer): SPFAdventureSuggestion[]?
+---@field StartSuggestion? fun(id: string): boolean
 ---@field ResumeRestedXP? fun(): boolean
 ---@field RestedXPIntegrated? fun(): boolean
 ---@field RestedXPNativeUI? fun(): boolean
