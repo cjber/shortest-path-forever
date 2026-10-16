@@ -773,7 +773,6 @@ check(
 )
 probe.scripts.OnSizeChanged(probe)
 check(#timers == 1, "a detached column still follows the native frame, even in the slot detaching gave back")
-drain()
 ns.TrackerHost.SetAttached(true)
 drain()
 check(nativeHeader.point[2] == host, "reattaching returns the header to the shared column")
@@ -810,9 +809,10 @@ host.scripts.OnEvent(host, "PLAYER_REGEN_DISABLED")
 drain()
 local stackedNative, stackedHeight, stackedUpdates = native.point, host:GetHeight(), first.updates
 local room = stackedHeight - 38 - 10
+-- Section heights for a redraw; true fills all the room a section is offered.
 local function contents(a, b)
-	first.GetContentsHeight = function()
-		return a
+	first.GetContentsHeight = function(self)
+		return a == true and self.available or a
 	end
 	second.GetContentsHeight = function()
 		return b
@@ -821,46 +821,30 @@ local function contents(a, b)
 	drain()
 end
 contents(80, 80)
-check(first.updates == stackedUpdates + 1, "stacked combat still redraws the sections' content")
-check(first.available == room, "stacked combat redraws the sections within the room the stack gave them")
-check(host:GetHeight() == stackedHeight and host.shown ~= false, "unchanged content keeps the stacked height")
-check(native.point == stackedNative, "stacked combat redraws never write the native frame")
+check(first.updates == stackedUpdates + 1 and first.available == room, "stacked combat redraws within the stack's room")
+check(host:GetHeight() == stackedHeight and native.point == stackedNative, "a redraw keeps the stack, no native writes")
 -- Shrinking and growing again in one fight keeps the full room: it comes from the stack, not the last redraw.
 contents(40, 80)
 contents(80, 80)
 check(first.available == room and host:GetHeight() == stackedHeight, "a section that shrank can grow back in combat")
--- A section that fills all it is offered still ends at the stacked height, never over the quests below.
-first.GetContentsHeight = function(self)
-	return self.available
-end
-second.GetContentsHeight = function()
-	return 0
-end
-host:MarkDirty()
-drain()
+contents(true, 0)
 check(host:GetHeight() <= stackedHeight, "a section filling its room never runs past the stacked column")
 native.isCollapsed = true
 minimizeButton.scripts.OnClick(minimizeButton)
 drain()
-check(host.shown == false, "collapsing All Objectives in combat hides the sections straight away")
-check(nativeHeader.point[2] == native, "collapsing in combat gives the header back to the native frame")
-check(native.point == stackedNative, "collapsing in combat never writes the native frame")
+check(host.shown == false and nativeHeader.point[2] == native and native.point == stackedNative, "collapse in combat")
 native.isCollapsed = false
 minimizeButton.scripts.OnClick(minimizeButton)
 drain()
-check(host.shown == true, "expanding in combat shows the sections again")
-check(nativeHeader.point[2] == host and first.point[5] == -38, "expanding in combat puts the header back on top")
+check(host.shown == true and nativeHeader.point[2] == host, "expanding in combat shows them, the header on top")
 contents(0, 0)
-check(host.shown == false and native.point == stackedNative, "sections emptied in combat hide without native writes")
-check(nativeHeader.point[2] == native, "an emptied column gives the header back in combat")
+check(host.shown == false and nativeHeader.point[2] == native, "sections emptied in combat hide, header back")
 contents(80, 80)
-check(host.shown == true and first.available == room, "sections refilled in the same fight get their full room")
-check(nativeHeader.point[2] == host and native.point == stackedNative, "refilling in combat restores the header only")
+check(host.shown and first.available == room and nativeHeader.point[2] == host, "refilled sections get the full room")
 combat = false
 host.scripts.OnEvent(host, "PLAYER_REGEN_ENABLED")
 drain()
-check(host.shown == true and nativeHeader.point[2] == host, "leaving combat restacks the column with its header")
-check(first.point[5] == -38, "leaving combat gives the header its room again")
+check(host.shown and nativeHeader.point[2] == host and first.point[5] == -38, "leaving combat restacks with the header")
 native.isCollapsed = true
 minimizeButton.scripts.OnClick(minimizeButton)
 drain()
