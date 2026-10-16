@@ -104,7 +104,7 @@ Each one works on its own, and they work together when you install more than one
 
 <!-- forever-family:end -->
 
-Installed together, the others send Shortest Path their destinations: an Adventure Guide journey or RestedXP step, a trainer or vendor in a SkillUp route (SkillUp picks the nearest by travel time), a Legacy dungeon or raid pin, or a Tweaks entrance.
+Installed together, the others send Shortest Path their destinations: an Adventure Guide journey or RestedXP step, a trainer or vendor in a SkillUp route (SkillUp picks the nearest by travel time), a Legacy dungeon or raid pin, or a dungeon or raid entrance Tweaks adds to the map.
 
 Journey steps share one tracker column with the Adventure Guide, SkillUp and Legacy sections, above your quests.
 
