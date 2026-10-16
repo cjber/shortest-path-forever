@@ -595,3 +595,79 @@ ns.db.compassTime = false
 ns.RefreshCompass()
 assert(strip.Time.hidden, "turned off")
 print("compass: optional time left: ok")
+
+-- With the pointer on the compass while it is being placed, the arrow keys nudge it a step (Shift: ten) and are kept
+-- from the game, down and up; every other key reaches the game. Off the compass, or in combat, the keyboard is the
+-- game's, and it comes back to the compass when combat ends with the pointer still on it.
+local combat, nextFrame = false, {}
+env.InCombatLockdown = function()
+	return combat
+end
+env.C_Timer.After = function(_, fn)
+	nextFrame[#nextFrame + 1] = fn
+end
+local function frameLater()
+	local due = nextFrame
+	nextFrame = {}
+	for _, fn in ipairs(due) do
+		fn()
+	end
+end
+function methods:EnableKeyboard(on)
+	self.keyboard = on
+end
+function methods:SetPropagateKeyboardInput(on)
+	assert(not combat, "SetPropagateKeyboardInput cannot be called in combat")
+	self.propagate = on
+end
+function methods:IsMouseEnabled()
+	return self.mouse
+end
+methods.GetCenter = function(self)
+	return self.atX, self.atY
+end
+ns.MoveCompass(true)
+strip:SetPoint("CENTER", env.UIParent, "BOTTOMLEFT", 300, 200)
+strip.scripts.OnEnter(strip)
+assert(strip.keyboard and strip.propagate, "hovering a compass being placed listens, passing keys on")
+shift = false
+strip.scripts.OnKeyDown(strip, "UP")
+assert(strip.propagate == false and at("CENTER", "BOTTOMLEFT", 300, 201), "an arrow key nudges it a step")
+assert(ns.db.compassX == 300 and ns.db.compassY == 201, "and the nudge is saved")
+strip.scripts.OnKeyUp(strip, "UP")
+assert(strip.propagate == false, "its release is kept from the game too")
+frameLater()
+assert(strip.propagate == true, "a frame later every key reaches the game again")
+strip.scripts.OnKeyUp(strip, "W")
+assert(strip.propagate == true, "a held movement key's release reaches the game after a nudge")
+shift = true
+strip.scripts.OnKeyDown(strip, "LEFT")
+assert(at("CENTER", "BOTTOMLEFT", 290, 201), "Shift nudges ten")
+strip.scripts.OnKeyDown(strip, "W")
+assert(strip.propagate == true and at("CENTER", "BOTTOMLEFT", 290, 201), "other keys reach the game")
+strip.scale = 2
+strip.scripts.OnKeyDown(strip, "RIGHT")
+assert(at("CENTER", "BOTTOMLEFT", 295, 201), "a step is the screen's, whatever the compass's scale")
+strip.scale = nil
+-- A drag places the frame itself; an arrow key during it is kept from the game but moves nothing.
+strip.scripts.OnDragStart(strip)
+strip.scripts.OnKeyDown(strip, "UP")
+strip.scripts.OnDragStop(strip)
+assert(ns.db.compassY == 201, "no nudge during a drag")
+strip:SetPoint("CENTER", env.UIParent, "BOTTOMLEFT", 295, 201)
+strip.scripts.OnLeave(strip)
+assert(strip.keyboard == false, "leaving the compass gives the keyboard back")
+strip.scripts.OnEnter(strip)
+combat = true
+moverFrame.scripts.OnEvent(moverFrame, "PLAYER_REGEN_DISABLED")
+assert(strip.keyboard == false, "combat gives the keyboard back at once")
+strip.scripts.OnKeyDown(strip, "UP")
+assert(at("CENTER", "BOTTOMLEFT", 295, 201), "and nothing moves in combat")
+combat = false
+moverFrame.scripts.OnEvent(moverFrame, "PLAYER_REGEN_ENABLED")
+assert(strip.keyboard == true, "after combat the compass under the pointer listens again")
+-- Placing turned off with the pointer still on the compass: the next key gives the keyboard back.
+ns.MoveCompass(false)
+strip.scripts.OnKeyDown(strip, "UP")
+assert(strip.keyboard == false and strip.propagate == true and at("CENTER", "BOTTOMLEFT", 295, 201))
+print("compass: arrow-key nudge while placing ok")
