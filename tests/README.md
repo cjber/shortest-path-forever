@@ -30,7 +30,9 @@ client is stubbed, and agents never launch it. Checks that need the real client 
   `costs`.
 - `driver.secret` stands in for a value the client keeps secret; using it as a number errors.
 
-`tomtom_fake.lua` stands in for TomTom 4.3.12 for `tomtom_follow_spec`.
+`tomtom_fake.lua` stands in for TomTom 4.3.12 for `tomtom_follow_spec` and `polestar_compat_spec`, which also has a
+small Polestar of its own, written from Polestar's documented behaviour. `api_contract_spec` pins the API meanings
+other addons build on.
 
 ## Benches
 
