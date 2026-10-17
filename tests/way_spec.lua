@@ -49,6 +49,10 @@ env.C_AddOns = {
 	end,
 }
 env.SlashCmdList = {}
+-- Core/TomTom.lua's answer, whether TomTom loads after Shortest Path: not installed here.
+ns.TomTomEnabled = function()
+	return loaded.TomTom == true
+end
 local printed = {}
 ns.Print = function(message)
 	printed[#printed + 1] = message
@@ -142,8 +146,9 @@ equal(ns.HasJourney(), false, "journeys switched off start nothing")
 equal(printed[#printed]:find("Shift-click to plan journeys", 1, true) ~= nil, true, "and names the setting")
 ns.db.journey = true
 
--- /way is claimed at login, and only while it is free.
-equal(env.SLASH_SHORTESTPATHFOREVERWAY1, nil, "nothing is claimed before login")
+-- /way is claimed as Shortest Path loads, while it is free, and given up at login to TomTom or another addon.
+equal(env.SLASH_SHORTESTPATHFOREVERWAY1, "/way", "a free /way is claimed as Shortest Path loads")
+equal(env.SlashCmdList.SHORTESTPATHFOREVERWAY, ns.Way, "with its handler")
 loaded.TomTom = true
 login:OnEvent("PLAYER_LOGIN")
 equal(env.SLASH_SHORTESTPATHFOREVERWAY1, nil, "TomTom keeps its own /way")

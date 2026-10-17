@@ -12,6 +12,12 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Works alongside Polestar.** With Polestar installed, Shortest Path's TomTom stand-in, `/way` and *Follow TomTom's arrow* always work, whichever addon loads first, and a waypoint is never planned by both. Polestar's own stand-in no longer counts as TomTom, so *Let guides set TomTom waypoints* can be turned on at any time and gives Polestar's back when turned off. When Polestar follows TomTom's arrow and hands its target to Shortest Path, that waypoint isn't followed a second time, and the copy of Polestar's own target it puts in TomTom is left to Polestar.
+
+### For addon authors
+
+- **`/way` is claimed as Shortest Path loads**, while TomTom isn't installed and no addon has it, rather than at login. An addon that claims `/way` at login while it's free finds it taken; TomTom, or an addon that takes `/way` without looking, still keeps it. The API meanings other addons rely on (`NavigateRoute` stops, `CurrentStop`, `Active`, `Ended`, `Cancel` and `Subscribe`) are now pinned by `tests/api_contract_spec.lua`.
+
 ## [1.19.1] - 2026-10-17
 
 - **Data checked against Forever 1.60.1.70450.** The travel data is unchanged apart from its build pin.

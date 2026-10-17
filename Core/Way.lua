@@ -5,7 +5,7 @@ local L = ns.L
 -- TomTom's /way: `/way [#mapID] [zone] x y [title]`, with x and y as percentages of the map. With no map ID and no
 -- zone, the point is on the map you stand on. A decimal comma reads as a point, and a comma or point straight after
 -- x separates it from y, as TomTom reads them. The command plans a journey to that spot, the same way a Shift-click
--- on the world map does. /way is registered only while TomTom is not loaded and no other addon has taken it;
+-- on the world map does. /way is registered only while TomTom is not installed and no other addon has taken it;
 -- `/path way` always works.
 
 -- Zone names as the client spells them, folded: lower case without spaces or punctuation.
@@ -153,30 +153,46 @@ function ns.Way(message)
 	ns.JourneyToMapPoint(map, x, y, title)
 end
 
--- Whether another addon has a command spelled /way. Slash commands are globals named SLASH_<NAME><n>.
+-- Whether TomTom has /way, or takes it as it loads after Shortest Path, or another addon has a command spelled /way.
+-- Slash commands are globals named SLASH_<NAME><n>. By login every addon that loads has loaded.
+---@param loggedIn boolean
 ---@return boolean
-local function WayTaken()
-	if C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded("TomTom") then
+local function WayTaken(loggedIn)
+	if loggedIn and C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded("TomTom") then
+		return true
+	end
+	if not loggedIn and ns.TomTomEnabled() then
 		return true
 	end
 	for key, value in pairs(_G) do
-		if type(key) == "string" and type(value) == "string" and key:find("^SLASH_") and value:lower() == "/way" then
+		if
+			type(key) == "string"
+			and type(value) == "string"
+			and key ~= "SLASH_SHORTESTPATHFOREVERWAY1"
+			and key:find("^SLASH_")
+			and value:lower() == "/way"
+		then
 			return true
 		end
 	end
 	return false
 end
 
--- Every addon has loaded by PLAYER_LOGIN, so TomTom, or any other owner of /way, is there to be seen.
+---@param claim boolean
+local function Claim(claim)
+	SLASH_SHORTESTPATHFOREVERWAY1 = claim and "/way" or nil
+	SlashCmdList.SHORTESTPATHFOREVERWAY = claim and ns.Way or nil
+end
+
+-- /way is claimed as Shortest Path loads, ahead of addons such as Polestar that claim it at login only while it is
+-- free, and looked at again at login, once every addon has loaded: TomTom, or another addon that took /way without
+-- looking, keeps it.
 ns.Init(function()
+	Claim(not WayTaken(false))
 	local login = CreateFrame("Frame")
 	login:RegisterEvent("PLAYER_LOGIN")
 	login:SetScript("OnEvent", function(self)
 		self:UnregisterEvent("PLAYER_LOGIN")
-		if WayTaken() then
-			return
-		end
-		SLASH_SHORTESTPATHFOREVERWAY1 = "/way"
-		SlashCmdList.SHORTESTPATHFOREVERWAY = ns.Way
+		Claim(not WayTaken(true))
 	end)
 end)

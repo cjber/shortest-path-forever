@@ -179,6 +179,8 @@ read_globals[#read_globals + 1] = "C_EncodingUtil"
 read_globals[#read_globals + 1] = "RXP"
 
 read_globals[#read_globals + 1] = "AdventureGuideForever"
+-- Core/TomTom.lua: Polestar's TomTom stand-in and its settings.
+read_globals[#read_globals + 1] = "Polestar"
 -- SafeCall.lua and Report.lua (the report window shared with the other Forever addons).
 read_globals[#read_globals + 1] = "debugstack"
 read_globals[#read_globals + 1] = "strtrim"
