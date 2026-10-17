@@ -91,7 +91,7 @@ do
 	near(profile.Point(1, -500, -500), 1, "a shared town")
 	near(profile.Point(1, 2500, 0), 6, "a hostile capital")
 	near(profile.Point(2, 500, 0), 1, "another continent")
-	near(profile.Chord(1, -700, 500, -300, 500), 6, "a walk through the town")
+	near(profile.Chord(1, -700, 500, -300, 500), 1 + 0.75 * 5, "300 of its 400 yards in the town")
 	near(profile.Chord(1, -700, 200, -300, 200), 1, "a walk past it")
 	assert(profile.Near(1, -400, 600, -300, 700) and not profile.Near(1, 0, 0, 100, 100), "a town near a box")
 	-- A straight walk half in the avoided zone weighs about half way between 1 and its factor.
@@ -111,6 +111,10 @@ do
 	assert(profile.key ~= exemptKey, "the exemptions are part of the costs")
 
 	-- Level 14 grows into the 18 zone's reach; the setting off avoids no zone, though towns stay.
+	level = 11
+	local eleven = Hazards.Profile(west, east).key
+	level = 12
+	assert(Hazards.Profile(west, east).key == eleven, "a level-up that crosses no threshold keeps every search")
 	level = 14
 	assert(Hazards.Profile(west, east).zones[200], "18 is still four above 14")
 	level = 15
@@ -383,6 +387,14 @@ do
 		rows[3] and rows[3].text == L["Crosses %s (level %s)"]:format("Zone 200", "18-30"),
 		table.concat(texts, " | ")
 	)
+	-- Walking on into another zone and an unrelated policy change keep the journey's costs: the start it exempts is
+	-- where the journey began.
+	local key = walking.batches[#walking.batches].hazards.key
+	driver.move({ map = 1, x = 1200, y = 0, z = 0 })
+	jns.TravelPolicyChanged()
+	driver.update(0.1)
+	assert(walking.batches[#walking.batches].hazards.key == key, "the same costs from wherever you are now")
+	driver.move({ map = 1, x = -900, y = 0, z = 0 })
 	-- Turning the setting off searches again without the zone.
 	local before = #walking.batches
 	jns.db.avoidHighZones = false

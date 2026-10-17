@@ -277,6 +277,7 @@ ShortestPathForeverPathData = nil
 ---@field preview? boolean
 ---@field prepared? boolean
 ---@field waterMode? boolean
+---@field hazards? string -- the key of the hazards its walks were searched with (Hazards.lua)
 ---@field preferred? boolean a ride the planner chose over a slightly quicker long walk
 ---@class SPFWalkCost
 ---@field from SPFPoint

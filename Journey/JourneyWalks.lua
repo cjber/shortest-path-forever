@@ -218,6 +218,11 @@ end
 function Walks.SetHazards(profile)
 	hazards = profile
 	Walks.Clear()
+	for _, entry in pairs(landings) do
+		if entry.job then
+			ns.Path.Cancel(entry.job)
+		end
+	end
 	landings = {}
 end
 
@@ -243,7 +248,7 @@ local function Landing(place, water)
 		end
 		entry = { targets = targets, waiting = {} }
 		landings[key] = entry
-		ns.Path.FindMany(place.map, place, targets, function(costs)
+		entry.job = ns.Path.FindMany(place.map, place, targets, function(costs)
 			local waiting = entry.waiting or {}
 			entry.costs, entry.waiting = costs, nil
 			for _, callback in ipairs(waiting) do

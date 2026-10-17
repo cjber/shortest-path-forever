@@ -237,7 +237,7 @@ L["Vendors by specialty"] = "Händler nach Fachgebiet"
 L["W"] = "W"
 L["Walk to %s"] = "Zu Fuß nach %s"
 L["Walks go round zones whose lowest level is 4 or more above yours, but never the ones you start or end in."] =
-	"Fußwege umgehen Gebiete, deren niedrigste Stufe 4 oder mehr über deiner liegt, aber nie die, in denen du startest oder ankommst."
+	"Fußwege umgehen Gebiete, deren niedrigste Stufe 4 oder mehr über Eurer liegt, aber nie die, in denen Ihr startet oder ankommt."
 L["What next? Adventure Guide Forever suggests quests for your level."] =
 	"Wie weiter? Adventure Guide Forever schlägt Quests für Eure Stufe vor."
 L["What's new after an update"] = "Neuigkeiten nach einem Update"

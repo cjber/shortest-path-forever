@@ -20,7 +20,7 @@ local KEEP = 50000
 ---@class SPFHazards
 ---@field key string -- identifies the costs, for the searches' caches
 ---@field Point fun(map: number, x: number, y: number): number -- the factor at a world point, at least 1
----@field Chord fun(map: number, ax: number, ay: number, bx: number, by: number): number -- a town a segment crosses
+---@field Chord fun(map: number, ax: number, ay: number, bx: number, by: number): number -- towns along a segment
 ---@field Near fun(map: number, minX: number, minY: number, maxX: number, maxY: number): boolean -- a town in the box
 ---@field Segment fun(map: number, ax: number, ay: number, bx: number, by: number): number -- mean factor along it
 ---@field zones table<number, number> -- [uiMap] = factor, for the avoided zones and hostile capitals
@@ -118,14 +118,6 @@ local function Clip(zone, map, ax, ay, bx, by)
 	return t0, t1
 end
 
--- How near a segment passes a point, squared.
-local function SegmentDistance2(x, y, ax, ay, bx, by)
-	local dx, dy = bx - ax, by - ay
-	local length2 = dx * dx + dy * dy
-	local t = length2 > 0 and math.max(0, math.min(1, ((x - ax) * dx + (y - ay) * dy) / length2)) or 0
-	return Distance2(x, y, ax + t * dx, ay + t * dy)
-end
-
 -- The other faction's towns: its flight masters with none of yours within SHARED.
 ---@param faction string
 ---@return SPFHazardTown[]
@@ -169,7 +161,8 @@ function Hazards.Profile(from, goal)
 	local level = Hazards.Level()
 	local exempt, keys = {}, {}
 	for _, point in ipairs({ from, goal }) do
-		local zone = ZoneAt(point.map, point.x, point.y)
+		-- The point's own zone, not its cached square's: a goal just over a border is in the zone it is in.
+		local zone = ns.ZoneMap(point.map, point.x, point.y)
 		if zone then
 			exempt[zone] = true
 		end
@@ -228,13 +221,15 @@ function Hazards.Profile(from, goal)
 		end
 		return factor
 	end
+	-- The mean factor of the towns along a segment: only the share of it inside each one counts extra.
 	local function Chord(map, ax, ay, bx, by)
+		local extra = 0
 		for _, town in ipairs(active) do
-			if town.map == map and SegmentDistance2(town.x, town.y, ax, ay, bx, by) <= TOWN_RADIUS ^ 2 then
-				return TOWN_COST
+			if town.map == map then
+				extra = extra + ShareInCircle(town.x, town.y, TOWN_RADIUS, ax, ay, bx, by) * (TOWN_COST - 1)
 			end
 		end
-		return 1
+		return 1 + extra
 	end
 	local function Near(map, minX, minY, maxX, maxY)
 		for _, town in ipairs(active) do
@@ -277,7 +272,8 @@ function Hazards.Profile(from, goal)
 		return 1 + extra
 	end
 	return {
-		key = table.concat({ level, faction or "", ns.db.avoidHighZones and "z" or "", table.concat(keys, ",") }, ":"),
+		-- What is avoided, not why: a level-up that crosses no zone's threshold keeps every search.
+		key = (faction or "") .. ":" .. table.concat(keys, ","),
 		Point = Point,
 		Chord = Chord,
 		Near = Near,

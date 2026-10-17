@@ -107,6 +107,7 @@ local function MeasuredWalks(here)
 	local leg = followed and followed.legs[progress.index]
 	local rest = leg
 		and followed.waterMode == waterMode
+		and followed.hazards == (hazards and hazards.key)
 		and leg.mode == "walk"
 		and leg.measured
 		and Remaining(leg, here)
@@ -414,6 +415,7 @@ local function Plan(feasible, incumbent)
 	local planned = ns.Planner.Plan(options)
 	if planned then
 		planned.now, planned.preview, planned.waterMode = now, nil, waterMode
+		planned.hazards = hazards and hazards.key
 	end
 	return planned
 end
@@ -814,10 +816,12 @@ function Search.Reset()
 	goal, followed = nil, nil
 end
 
--- The hazards a journey to goal from where you stand keeps away from; walks searched with others no longer apply.
+-- The hazards a journey keeps away from, exempting where it started (the first readable position) and its goal;
+-- walks searched with others no longer apply. Only a level-up or a setting changes them while the goal stays.
+local origin
 local function Avoid()
-	local here = Here()
-	local profile = here and goal and ns.Hazards.Profile(here, goal) or nil
+	origin = origin or Here()
+	local profile = origin and goal and ns.Hazards.Profile(origin, goal) or nil
 	if (profile and profile.key) ~= (hazards and hazards.key) then
 		hazards = profile
 		Walks.SetHazards(profile)
@@ -836,6 +840,7 @@ function Search.Start(point, route, state, listener)
 	goal, followed, progress, publish = point, route, state, listener
 	search = nil
 	waterMode = (ns.JourneyWaterWalking())
+	origin = nil
 	Avoid()
 	RefreshCosts(true, false)
 end
@@ -852,6 +857,10 @@ function Search.Poll(changed)
 	-- No batch has started, or a callback waited for a readable position.
 	local stale = not startAt or costsWaiting
 	costsWaiting = nil
+	-- A journey started where no position could be read takes its hazards from the first one that can.
+	if not hazards then
+		Avoid()
+	end
 	-- Search callbacks may finish while position is unavailable; resume from readable endpoints.
 	if stale then
 		RefreshCosts(true, true)
