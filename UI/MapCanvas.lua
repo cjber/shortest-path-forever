@@ -602,25 +602,32 @@ end)
 
 -- The Forever addons' markers on the world map, for each other: Tweaks Forever keeps its dungeon entrances clear of
 -- them. With every addon drawing on frames of its own, none can find another's through the map's pin pools any more.
--- The first addon to load makes the global table; each sets one function under its folder name:
+-- Each addon publishes a copy of the global table with one function of its own added under its folder name (a
+-- field written into a table another addon made would be a write into that addon's state), and readers look the
+-- global up each time:
 --   ForeverMapMarkers[addonName] = function(map) -> { { x = number, y = number, kind = string }... }
 -- `map` is the map frame (WorldMapFrame); x and y are the shown markers' fractions on map:GetMapID(), in a fresh table
 -- the caller may keep. A function never errors and returns an empty table for a map it does not draw on.
-ForeverMapMarkers = ForeverMapMarkers or {}
-ForeverMapMarkers.ShortestPathForever = function(map)
-	local markers, view = {}, views[map]
+-- The table is the family's own, not Blizzard's: this addon adds its function to a copy it then publishes.
+local markers = {}
+for name, fn in pairs(ForeverMapMarkers or {}) do
+	markers[name] = fn
+end
+ForeverMapMarkers = markers
+markers.ShortestPathForever = function(map)
+	local list, view = {}, views[map]
 	if not (view and view.shown and view.layer:IsShown()) then
-		return markers
+		return list
 	end
 	for _, pool in pairs(view.pools) do
 		if pool.marker then
 			for pin in pool:EnumerateActive() do
 				local x, y = pin:GetPosition()
 				if x and pin:IsShown() then
-					markers[#markers + 1] = { x = x, y = y, kind = pool.marker }
+					list[#list + 1] = { x = x, y = y, kind = pool.marker }
 				end
 			end
 		end
 	end
-	return markers
+	return list
 end
