@@ -18,6 +18,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 - **`/way` is claimed as Shortest Path loads**, while TomTom isn't installed and no addon has it, rather than at login. An addon that claims `/way` at login while it's free finds it taken; TomTom, or an addon that takes `/way` without looking, still keeps it. The API meanings other addons rely on (`NavigateRoute` stops, `CurrentStop`, `Active`, `Ended`, `Cancel` and `Subscribe`) are now pinned by `tests/api_contract_spec.lua`.
 
+## [1.19.2] - 2026-10-17
+
+- **The tracker sections now move clear of Questie's quest list.** With Questie's tracker on, its list was drawn over the Journey and the other Forever sections. The shared column now sits below Questie's list, or above or beside it when there isn't room, and follows it when it moves, grows or hides; your quest tracker keeps its own place. A detached column you haven't moved yet starts beside Questie's list. Thanks to deathmvp1 for the report and berserkerlxl for finding the cause.
+
 ## [1.19.1] - 2026-10-17
 
 - **Data checked against Forever 1.60.1.70450.** The travel data is unchanged apart from its build pin.
