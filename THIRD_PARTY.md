@@ -57,16 +57,18 @@ Credit for the ideas and reports behind the addon.
 | Osipanda | Found routes ignoring Forever's new boats (#84) | |
 | Nightwind416 | Asked for a movable tracker and compass (#76) | |
 | wfournier | Asked for the tracker and compass to scale (#122) | |
-| the\_\_\_fast, on CurseForge | Found the Powderfuse Port flight path that isn't there, and asked for *Minimum Hearthstone saving* (1.7.0) | |
+| The\_\_\_Fast, on CurseForge | Found the Powderfuse Port flight path that isn't there, and asked for *Minimum Hearthstone saving* (1.7.0) | |
 | cidolfus27, on CurseForge | Asked for journeys to follow RestedXP's guide in place of its arrow (1.12.0) | |
-| alex21xx, on CurseForge | Asked for metres, *Resume guide*, *Complete this step*, the minimap settings button and marking a flight path as known (1.14.0), and found routes flying on through flight points the character doesn't know (1.15.0) | |
+| Alex21xx, on CurseForge | Asked for metres, *Resume guide*, *Complete this step*, the minimap settings button and marking a flight path as known (1.14.0), and found routes flying on through flight points the character doesn't know (1.15.0) | |
 | o0saw0o, on CurseForge | Asked to hide the Journey steps and the arrow while keeping the map route (1.14.0) | |
-| merlinqt, on CurseForge | Asked for map icon sizes (1.14.0) | |
-| maggew, on CurseForge | Found the "Division by zero" error, and asked for the steps on the destination pin and the compass background (1.15.0), finer compass positioning (#160) and the arrow-key nudge (1.17.0) | |
-| neil_team_brigade, phear and test1point6, on CurseForge | Asked to hide the empty tracker's title (1.15.0) | |
+| Merlinqt, on CurseForge | Asked for map icon sizes (1.14.0) | |
+| Maggew, on CurseForge | Found the "Division by zero" error, and asked for the steps on the destination pin and the compass background (1.15.0), finer compass positioning (#160) and the arrow-key nudge (1.17.0) | |
+| team\_Brigade, phear and Testvonfarkle, on CurseForge | Asked to hide the empty tracker's title (1.15.0) | |
 | berserkerlxl, on CurseForge | Found guides' TomTom waypoints not reaching the addon, and asked for `/way` (1.15.0) | |
-| rydoc and joster91, on CurseForge | Found the Journey collapsing into or overlapping the quest tracker (1.15.0, 1.17.0) | |
+| rydoc and Joster91, on CurseForge | Found the Journey collapsing into or overlapping the quest tracker (1.15.0, 1.17.0) | |
 | deathmvp1, on CurseForge | Asked to move the Journey off the quest list; detaching it is now in its right-click menu (1.17.0) | |
+| GenericP, on CurseForge | Asked to plan to a spot under a Questie icon, now Alt-click on the world map (1.14.0), and for TomTom waypoints to start journeys (1.15.0); also answered other players' questions on the page | |
+| Sol\_Deus, tallsmartman and TRDeadbeat, on CurseForge | Reported the blocked `SetPreferredGamepadInteractTarget()` error and freezes with a controller, which led to leaving the world map to the game in the gamepad interface (1.17.0, #158) | |
 | [Brainc3ll](https://github.com/Brainc3ll) | Eight lines of the French translation, from his Legacy Forever translation (cjber/legacy-forever#99); the rest of `Locales/frFR.lua` and the other languages are machine translated (lines ending `-- mt` in frFR) | |
 
 Thanks also to everyone else who reported a bug or asked for a feature, here or on CurseForge.

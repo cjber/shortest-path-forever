@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **More players credited.** THIRD_PARTY.md now thanks GenericP for asking to plan to a spot under a Questie icon (Alt-click, 1.14.0) and for TomTom waypoints to start journeys, and Sol_Deus, tallsmartman and TRDeadbeat for reporting the controller error and freezes behind the gamepad change in 1.17.0. CurseForge players are now listed by the name CurseForge shows, such as team_Brigade and Testvonfarkle.
+
 ## [1.19.1] - 2026-10-17
 
 - **Data checked against Forever 1.60.1.70450.** The travel data is unchanged apart from its build pin.
