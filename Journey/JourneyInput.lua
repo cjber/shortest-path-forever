@@ -208,7 +208,8 @@ local function OnOwnPinClick(pin, button)
 		return false
 	end
 	local x, y = pin:GetPosition()
-	return JourneyToPin(pin:GetMap():GetMapID(), marker == "flight" and pin.poiInfo or nil, marker == "flight", x, y)
+	local info = marker == "flight" and (pin --[[@as SPFAddonFlightPin]]).poiInfo or nil
+	return JourneyToPin(pin:GetMap():GetMapID(), info, marker == "flight", x, y)
 end
 
 local function AddQuestMenuEntry(root, questID)

@@ -323,7 +323,7 @@ end
 -- The stock map ping (MapPinPingTemplate, SharedMapPoiTemplates.xml): its ring flashes twice while it grows, at
 -- a point rather than a pin, as a portal's far end has none and a dock's may be filtered out.
 local PING_LOOPS, PING_GROW = 2, 0.575
----@param ping Frame
+---@param ping SPFPingPin
 local function PingArt(ping)
 	ping:SetSize(70, 70)
 	local ring = ping:CreateTexture(nil, "BACKGROUND")
@@ -364,7 +364,7 @@ function PingPin:OnLoad()
 	PingArt(self)
 end
 
----@param mapID number the map the point is on, which the map is being turned to
+---@param mapID? number the map the point is on, which the map is being turned to
 ---@param x number
 ---@param y number
 function Docks:Ping(mapID, x, y)
@@ -373,7 +373,7 @@ function Docks:Ping(mapID, x, y)
 		return
 	end
 	if not self.ping then
-		self.ping = MapCanvas.Pool(WorldMapFrame, "ping", PingPin):Acquire()
+		self.ping = MapCanvas.Pool(WorldMapFrame, "ping", PingPin):Acquire() --[[@as SPFPingPin]]
 	end
 	self.pingMap = mapID
 	self.ping:Show()

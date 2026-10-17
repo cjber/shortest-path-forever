@@ -174,9 +174,9 @@ local function PinAtCursor(view)
 	return best
 end
 
----@param view SPFCanvasView
 local Hide
 
+---@param view SPFCanvasView
 local function Update(view)
 	if not view.map:IsVisible() then
 		Hide(view)
@@ -335,7 +335,9 @@ local Pin = {}
 MapCanvas.PinMixin = Pin
 
 function Pin.OnLoad() end
-function Pin.OnAcquired() end
+-- Given what the pool's Acquire was given.
+---@type fun(self: SPFCanvasPin, ...: any)
+Pin.OnAcquired = function() end
 function Pin.OnReleased() end
 function Pin.OnMouseEnter() end
 function Pin.OnMouseLeave() end
