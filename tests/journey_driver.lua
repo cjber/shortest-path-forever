@@ -193,6 +193,8 @@ end
 ns.Init = function(fn)
 	fn()
 end
+-- UI/MapCanvas.lua is not loaded here: the addon's own map pins hand Shift-clicks to JourneyInput.lua through it.
+ns.MapCanvas = { OnClick = noop }
 ns.WakeTravel = noop
 ns.OnTravelTick = noop
 ns.NowMs = function()

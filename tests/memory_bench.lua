@@ -131,27 +131,23 @@ release("remaining Path graphs/grids/scratch", function()
 end)
 release("journey display/Guide on clear (client regions remain pooled)", ns.ClearJourney)
 release("transport geometry (open-map scenario)", function()
-	local providers = upvalue(driver.refresh, "providers")
-	for _, provider in pairs(providers or {}) do
-		wipe(upvalue(provider.RefreshAllData, "transportGeometry"))
+	local transports = upvalue(ns.RefreshTransportRoutes, "transportProvider")
+	if transports then
+		wipe(upvalue(transports.RefreshAllData, "transportGeometry"))
 	end
-	local active = upvalue(WorldMapFrame.EnumeratePinsByTemplate, "active")
-	for _, pins in pairs(active or {}) do
-		for _, pin in pairs(pins) do
+	for _, pool in pairs(ns.MapCanvas.Pools(WorldMapFrame)) do
+		for _, pin in ipairs(pool.active) do
 			pin.paths = nil
 		end
 	end
 end)
 release("pooled stroke Lua bookkeeping (UI region storage is client-owned)", function()
-	local map = MapCanvasDataProviderMixin:GetMap()
-	local pools = upvalue(map.RemoveAllPinsByTemplate, "pools")
-	local active = upvalue(map.RemoveAllPinsByTemplate, "active")
 	local function strokes(owner)
 		owner.lines, owner.underlines, owner.strokes = nil, nil, nil
 	end
-	for _, list in ipairs({ pools, active }) do
-		for _, pins in pairs(list) do
-			for _, pin in ipairs(pins) do
+	for _, pool in pairs(ns.MapCanvas.Pools(WorldMapFrame)) do
+		for _, list in ipairs({ pool.active, pool.free }) do
+			for _, pin in ipairs(list) do
 				strokes(pin)
 			end
 		end

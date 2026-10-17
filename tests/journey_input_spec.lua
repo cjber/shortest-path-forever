@@ -1,4 +1,4 @@
-local handler, destination, mouseEvent
+local handler, destination, mouseEvent, ownClick
 local alt, overMap, shown = false, true, true
 local map = {
 	GetMapID = function()
@@ -6,7 +6,7 @@ local map = {
 	end,
 }
 local pin = {
-	pinTemplate = "ShortestPathForeverFlightPinTemplate",
+	pinTemplate = "FlightPointPinTemplate",
 	GetMap = function()
 		return map
 	end,
@@ -27,6 +27,12 @@ local ns = {
 	Init = function(fn)
 		fn()
 	end,
+	-- UI/MapCanvas.lua: the addon's own pins hand their clicks to this filter.
+	MapCanvas = {
+		OnClick = function(fn)
+			ownClick = fn
+		end,
+	},
 }
 local env = setmetatable({
 	CreateFrame = function()
@@ -106,20 +112,40 @@ assert(not handler(map, 3, "LeftButton") and destination == nil)
 pin.GetMap = function()
 	return map
 end
-pin.pinTemplate, pin.poiInfo = "FlightPointPinTemplate", { nodeID = 26, name = "Astranaar" }
-assert(handler(map, 3, "LeftButton") and destination.label == "Astranaar", "native flight pins work too")
 pin.pinTemplate, pin.poiInfo = "AreaPOIPinTemplate", { name = "Camp" }
 pin.GetGlobalPosition = function()
 	return 0.3, 0.4
 end
 assert(handler(map, 3, "LeftButton") and destination.x == 0.3 and destination.y == 0.4)
 assert(destination.label == "Camp" and destination.pinBadge, "other point icons keep their corner tag")
-destination, pin.pinTemplate = nil, "ShortestPathForeverGoalPinTemplate"
-assert(not handler(map, 3, "LeftButton") and destination == nil, "clicking a route stop must preserve the itinerary")
-pin.pinTemplate = "AreaPOIPinTemplate"
 pin.GetGlobalPosition = function() end
 destination = nil
 assert(not handler(map, 3, "LeftButton") and destination == nil, "non-point pins cannot start journeys")
+
+-- The addon's own pins (UI/MapCanvas.lua) are not the map's: their Shift-click comes through MapCanvas.OnClick.
+local own = {
+	marker = "flight",
+	poiInfo = { nodeID = 26, name = "Astranaar" },
+	GetMap = function()
+		return map
+	end,
+	GetPosition = function()
+		return 0.6, 0.7
+	end,
+}
+destination = nil
+assert(ownClick(own, "LeftButton") and destination.x == 100 and destination.label == "Astranaar", "own flight pin")
+assert(destination.pinBadge, "keep the clicked icon's corner marker")
+own.marker, own.poiInfo, destination = "dock", nil, nil
+assert(ownClick(own, "LeftButton") and destination.x == 0.6 and destination.y == 0.7, "a dock by where it stands")
+own.marker, destination = "stop", nil
+assert(not ownClick(own, "LeftButton") and destination == nil, "clicking a route stop must preserve the itinerary")
+own.marker, shift = "portal", false
+assert(not ownClick(own, "LeftButton") and destination == nil, "a plain click is the pin's own")
+shift, chatBox = true, {}
+assert(not ownClick(own, "LeftButton") and destination == nil, "an open chat box takes the Shift-click")
+chatBox = nil
+assert(not ownClick(own, "RightButton") and destination == nil)
 print("journey input ok")
 
 -- The global mouse event still fires over a Questie-owned icon that swallowed canvas clicks.

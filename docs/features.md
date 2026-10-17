@@ -18,7 +18,7 @@ The direction arrow swings smoothly to each new bearing and rests while you stan
 
 `/path report` opens a window with a report already selected: addon and game versions, your character and position, the journey and its steps, your ride, the ride trace when `/path debug` is on, errors caught this session and your other addons. Press Ctrl+C and paste it into a bug report.
 
-With the game's gamepad interface on, Shortest Path never opens the world map itself, nor takes the keyboard: *Show on map*, tracker dock lines and route ends turn a map you have open, or ask you to open one, and Nearby services points to the map's own tracking menu.
+With the game's gamepad interface on, Shortest Path never opens the world map itself, nor takes the keyboard: *Show on map*, tracker dock lines and route ends turn a map you have open, or ask you to open one, and Nearby services points to the map's own tracking menu. Its map pins are frames of its own over the map, which it only reads, and a pin under the gamepad's map cursor shows its tooltip.
 
 Click the current journey step and choose **Complete this step** to advance it. Skipping a Hearthstone leaves it out of plans for that journey. Other steps may return if your actual position still requires them.
 

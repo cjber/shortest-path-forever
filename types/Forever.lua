@@ -7,8 +7,6 @@
 UNKNOWN = nil
 ---@type number
 LE_PARTY_CATEGORY_INSTANCE = nil
----@type number
-AM_PIN_SCALE_STYLE_WITH_TERRAIN = nil
 ---@type table<string, fun(message: string, editBox: EditBox)>
 SlashCmdList = nil
 ---@type table<string, {r: number, g: number, b: number}>
@@ -77,20 +75,17 @@ function GameTooltip_AddColoredLine(tooltip, text, color, wrap) end
 ---@param rightColor ColorMixin
 function GameTooltip_AddColoredDoubleLine(tooltip, left, right, leftColor, rightColor) end
 
+-- The world map, as the addon reads it (UI/MapCanvas.lua lists every read): it adds no provider and acquires no pin.
 ---@class SPFMapCanvas : Frame
 ---@field ScrollContainer Frame
 ---@field dataProviders table<SPFMapProvider, boolean>
----@field AddDataProvider fun(self: SPFMapCanvas, provider: SPFMapProvider)
----@field RemoveDataProvider fun(self: SPFMapCanvas, provider: SPFMapProvider)
 ---@field GetMapID fun(self: SPFMapCanvas): number
 ---@field GetCanvas fun(self: SPFMapCanvas): Frame
 ---@field GetGlobalPinScale fun(self: SPFMapCanvas): number
 ---@field GetCanvasScale fun(self: SPFMapCanvas): number
 ---@field GetCanvasZoomPercent fun(self: SPFMapCanvas): number
 ---@field GetNormalizedCursorPosition fun(self: SPFMapCanvas): number, number
----@field AcquirePin fun(self: SPFMapCanvas, template: string, ...): SPFMapPin
----@field RemoveAllPinsByTemplate fun(self: SPFMapCanvas, template: string)
----@field EnumeratePinsByTemplate fun(self: SPFMapCanvas, template: string): fun(): SPFMapPin
+---@field GetPinFrameLevelsManager fun(self: SPFMapCanvas): {GetValidFrameLevel: fun(self: table, levelType: string, index?: number): number}
 ---@field AddCanvasClickHandler fun(self: SPFMapCanvas, handler: fun(map: SPFMapCanvas, button: string): boolean)
 ---@field AddGlobalPinMouseActionHandler fun(self: SPFMapCanvas, handler: fun(map: SPFMapCanvas, action: number, button: string): boolean)
 ---@type SPFMapCanvas
@@ -100,41 +95,29 @@ MapCanvasMixin = nil
 ---@type {Style: {Waypoint: number}}
 POIButtonUtil = nil
 
+-- One of the map's own pins, as a Shift-click on it is read (JourneyInput.lua).
 ---@class SPFMapPin : Frame
 ---@field pinTemplate string
 ---@field GetMap fun(self: SPFMapPin): SPFMapCanvas
----@field OnLoad fun(self: SPFMapPin)
----@field OnReleased fun(self: SPFMapPin)
----@field SetIgnoreGlobalPinScale fun(self: SPFMapPin, ignore: boolean)
----@field SetScaleStyle fun(self: SPFMapPin, style: number)
----@field SetPosition fun(self: SPFMapPin, x: number, y: number)
 ---@field GetGlobalPosition fun(self: SPFMapPin): number?, number?
----@field UseFrameLevelType fun(self: SPFMapPin, frameLevelType: string)
----@field SetScalingLimits fun(self: SPFMapPin, style: number, minScale: number, maxScale: number)
----@field SetNumLoops fun(self: SPFMapPin, loops: number)
----@field PlayAt fun(self: SPFMapPin, x: number, y: number)
----@type SPFMapPin
-MapCanvasPinMixin = nil
 
+-- The map's own waypoint provider, whose pin JourneyGuide.lua hides under its own.
 ---@class SPFMapProvider
----@field GetMap fun(self: SPFMapProvider): SPFMapCanvas
 ---@field RefreshAllData fun(self: SPFMapProvider, fromOnShow?: boolean)
----@field RemoveAllData fun(self: SPFMapProvider)
----@type SPFMapProvider
-MapCanvasDataProviderMixin = nil
+---@field pin? Frame
 ---@type SPFMapProvider
 WaypointLocationDataProviderMixin = nil
----@class SPFFlightProvider : SPFMapProvider
----@field ShouldShowTaxiNode fun(self: SPFFlightProvider, faction: string, info: TaxiNodeInfo): boolean
----@type SPFFlightProvider
-FlightPointDataProviderMixin = nil
 ---@class SPFFlightPin : SPFMapPin
----@field OnAcquired fun(self: SPFFlightPin, info: TaxiNodeInfo)
----@field OnMouseClickAction fun(self: SPFFlightPin, button: string)
----@field name string
 ---@field poiInfo {nodeID: number, name: string, isUndiscovered: boolean}
----@type SPFFlightPin
-FlightPointPinMixin = nil
+
+-- Blizzard_GamepadMapCursor: the gamepad's cursor on the world map, read for its place.
+---@type Frame
+SoftCursor = nil
+
+-- The Forever addons' world map markers, for each other (UI/MapCanvas.lua): each addon's function gives its shown
+-- markers on a map, as map fractions.
+---@type table<string, fun(map: SPFMapCanvas): {x: number, y: number, kind: string}[]>
+ForeverMapMarkers = nil
 
 ---@class SPFQuestPin : SPFMapPin
 ---@field GetQuestID fun(self: SPFQuestPin): number?

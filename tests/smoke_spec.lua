@@ -88,7 +88,7 @@ local function Advance(seconds)
 			end
 		end
 		for _, frame in ipairs(frames) do
-			if frame:IsShown() and frame.scripts.OnUpdate then
+			if frame:IsVisible() and frame.scripts.OnUpdate then
 				frame.scripts.OnUpdate(frame, 1 / 60)
 			end
 		end
@@ -568,7 +568,8 @@ local function Reset()
 	combat, onTaxi, ghost, corpsePosition, modifierDown, shiftDown = false, false, false, nil, false, false
 	moving = false
 	mapID, posMap, posX, posY, posZ, facing = 1414, 1, 0, 0, 0, 0
-	zoom, cursorX, cursorY, visible, WorldMapFrame.shown = 1, 0.5, 0.5, true, true
+	zoom, cursorX, cursorY = 1, 0.5, 0.5
+	setMapShown(true)
 	-- The settings drive below leaves every key off; a profile starts from the shipped defaults.
 	for _, key in ipairs(SortedKeys(ns.Defaults)) do
 		if ns.db[key] ~= ns.Defaults[key] then

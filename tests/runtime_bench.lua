@@ -58,15 +58,15 @@ return {
   T = T + 1/60
   local fn = nextFrame nextFrame = nil if fn then fn() end
   for _, f in ipairs(frames) do
-   if f:IsShown() and f.scripts.OnUpdate
+   if f:IsVisible() and f.scripts.OnUpdate
     and (miniEnabled or f ~= ShortestPathForeverMinimapRoute) then f.scripts.OnUpdate(f, 1/60) end
   end
   for _, t in ipairs(tickers) do if not t.cancelled and T >= t.next then t.next = T + t.every t.fn() end end
  end,
  pending = function() return nextFrame end,
  shown = function() return displayed end,
- refresh = function() for _, provider in ipairs(providers) do provider:RefreshAllData() end end,
- open = function(value) visible = value WorldMapFrame.shown = value end,
+ refresh = function() refreshMap() end,
+ open = function(value) setMapShown(value) end,
  minimap = function(value) miniEnabled = value end,
  sail = function(id, phase)
   ns.CurrentRide = function() return id end

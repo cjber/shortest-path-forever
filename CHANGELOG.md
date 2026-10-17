@@ -12,6 +12,12 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Gamepad interface: the world map is only read.** Shortest Path's docks, portals, flight points, route and stops are now drawn on frames of its own over the map, so the game's map no longer holds any of the addon's pins or data. With the gamepad interface on, the map walks its own pins from secure code every frame, and an addon's pins in that walk are the likeliest cause of the blocked `SetPreferredGamepadInteractTarget()` error some controller players reported. Every pin works as before: tooltips, clicks, Shift-click to plan a journey, right-click to zoom out, the size settings, and a flight point you click on a zone map becomes the one you track. Under the gamepad interface, a pin under the map cursor shows its tooltip. Thanks to TRDeadbeat, tallsmartman and the CurseForge players who reported it, and to Polestar for the idea.
+
+### For addon authors
+
+- **`ForeverMapMarkers`.** The pins aren't the map's own any more, so `WorldMapFrame:EnumeratePinsByTemplate` no longer finds them. `ForeverMapMarkers.ShortestPathForever(WorldMapFrame)` returns the shown docks, portals, flight points and stops as `{x, y, kind}` map fractions on the map being viewed (docs/api.md).
+
 ## [1.19.1] - 2026-10-17
 
 - **Data checked against Forever 1.60.1.70450.** The travel data is unchanged apart from its build pin.

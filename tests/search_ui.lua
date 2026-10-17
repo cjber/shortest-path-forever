@@ -7,7 +7,7 @@ for _, part in ipairs({ "ui_client.lua", "ui_map.lua" }) do
 	file:close()
 end
 assert(loadstring(source .. [[
-visible, WorldMapFrame.shown = true, true
+setMapShown(true)
 posX, posY, posMap, facing = 0, 0, 1, 0
 mapID, cursorX, cursorY, shiftDown = 1414, 0.5, 0.496, true
 ns.db.tracker, ns.db.compass = false, true
@@ -157,7 +157,7 @@ begin()
 ready()
 finish()
 local released = drawn(false)
-visible, WorldMapFrame.shown = false, false
+setMapShown(false)
 ns.ClearJourney()
 assert(released.paths == nil, "clearing while the map is closed releases pooled journey geometry")
 pulse(released, false)

@@ -8,13 +8,13 @@ for _, part in ipairs({ "ui_client.lua", "ui_map.lua" }) do
 	file:close()
 end
 assert(loadstring(source .. [[
-visible, WorldMapFrame.shown = true, true
+setMapShown(true)
 posX, posY, posMap, facing = 0, 0, 1, 0
 mapID, zoom = 1414, 1
 ns.db.mapRoutes = true
-for _, provider in ipairs(providers) do provider:RefreshAllData() end
+refreshMap()
 ns.db.flightPinScale = 50
-local flightPin = map:AcquirePin("ShortestPathForeverFlightPinTemplate", {
+local flightPin = ns.MapCanvas.Pools(WorldMapFrame).ShortestPathForeverFlightPinTemplate:Acquire({
  nodeID = 32, name = "Stormwind", position = CreateVector2D(0.5, 0.5),
  faction = Enum.FlightPathFaction.Alliance, atlasName = "taxinode_alliance",
 })
@@ -119,7 +119,7 @@ assert(api.Cancel("Test"))
 local areaTemplate = "ShortestPathForeverAreaPinTemplate"
 local GOLD, BLUE = "Interface\\Minimap\\UI-BonusObjectiveBlob-", "Interface\\Minimap\\UI-QuestBlobMinimap-"
 local function refresh()
- for _, provider in ipairs(providers) do provider:RefreshAllData() end
+ refreshMap()
  mini.scripts.OnUpdate(mini, 0.2)
 end
 local function count(template)
@@ -140,8 +140,8 @@ local areaPin = active[areaTemplate][1]
 assert(count(areaTemplate) == 1 and areaPin.blobMap == 14, "the area pin draws on the map being viewed")
 assert(#areaPin.blobs == 1 and areaPin.blobs[1] == 7, "the named quest's own area, outside the guide's circle too")
 assert(areaPin.fill == GOLD .. "Inside" and areaPin.border == GOLD .. "Outside", "in the minimap's gold set")
-assert(areaPin.width == 1000 and areaPin.height == 700 and areaPin.x == 0.5, "the pin covers the canvas")
-assert(areaPin.frameLevelType == "PIN_FRAME_LEVEL_QUEST_BLOB")
+assert(areaPin.width == 1000 and areaPin.height == 700 and areaPin.mapX == 0.5, "the pin covers the canvas")
+assert(areaPin.levelType == "PIN_FRAME_LEVEL_QUEST_BLOB")
 assert(count(goalTemplate) == 0, "no stop button inside the area")
 assert(count(lineTemplate) == 0, "no line, and no ring of ours")
 assert(mini.Goal.hidden and mini.used == 0, "the minimap's ring and line step aside")
@@ -230,7 +230,7 @@ local hovered = showing()
 assert(hovered > 0 and hovered < transport.used, "only the hovered dock's routes show")
 -- Re-acquiring unchanged geometry keeps the strokes and their hover state without a redraw.
 local before = lineCreations
-for _, provider in ipairs(providers) do provider:RefreshAllData() end
+refreshMap()
 assert(showing() == hovered and lineCreations == before)
 ns.HoverTransportRoutes(transport, nil)
 assert(showing() == 0, "and hide again")

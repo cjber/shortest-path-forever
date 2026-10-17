@@ -48,7 +48,9 @@ UI\Art.lua
 UI\Report.lua
 UI\ForeverFamily.lua
 UI\FamilyHints.lua
+UI\MapCanvas.lua
 UI\Map.lua
+UI\FlightPins.lua
 UI\Looks.lua
 UI\MinimapPins.lua
 UI\TrackerHost.lua

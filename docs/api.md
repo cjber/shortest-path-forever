@@ -51,6 +51,25 @@ calling it. The full types are in [`types/API.lua`](../types/API.lua).
 
 Use your addon's name as `owner`; starting another journey replaces ownership.
 
+## World map markers
+
+Shortest Path draws its world map pins on frames of its own, so `WorldMapFrame:EnumeratePinsByTemplate` doesn't find
+them. The Forever addons share one global table instead: the first to load creates `ForeverMapMarkers`, and each sets a
+function under its folder name. `ForeverMapMarkers.ShortestPathForever(map)` takes the map frame (`WorldMapFrame`) and
+returns a new array of `{x, y, kind}`. These are the pins shown on `map:GetMapID()`, as 0–1 fractions. `kind` is `"dock"`,
+`"portal"`, `"flight"` or `"stop"`. The array is empty while the map is closed, in combat, and for a map Shortest
+Path doesn't draw on. Another addon adds its own markers the same way:
+
+```lua
+ForeverMapMarkers = ForeverMapMarkers or {}
+ForeverMapMarkers.MyAddon = function(map) return {} end
+for _, markers in pairs(ForeverMapMarkers) do
+	for _, marker in ipairs(markers(WorldMapFrame)) do
+		-- marker.x, marker.y, marker.kind
+	end
+end
+```
+
 ## Stop kinds
 
 A stop's optional `kind` says what stands there: `"pickup"`, `"turnin"`, `"objective"`, `"trainer"`,
