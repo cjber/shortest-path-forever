@@ -12,7 +12,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
-- **Works alongside Polestar.** With Polestar installed, Shortest Path's TomTom stand-in, `/way` and *Follow TomTom's arrow* always work, whichever addon loads first, and a waypoint is never planned by both. Polestar's own stand-in no longer counts as TomTom, so *Let guides set TomTom waypoints* can be turned on at any time and gives Polestar's back when turned off. When Polestar follows TomTom's arrow and hands its target to Shortest Path, that waypoint isn't followed a second time, and the copy of Polestar's own target it puts in TomTom is left to Polestar.
+- **Works alongside Polestar.** With Polestar installed, Shortest Path's TomTom stand-in, `/way` and *Follow TomTom's arrow* always work, whichever addon loads first, and a waypoint is never planned by both. Polestar's own stand-in no longer counts as TomTom, so *Let guides set TomTom waypoints* can be turned on at any time, and turned off again gives Polestar's back if Polestar had it. When Polestar follows TomTom's arrow and hands its target to Shortest Path, that waypoint isn't followed a second time, and the copy of Polestar's own target it puts in TomTom (or in the stand-in) is left to Polestar.
 
 ### For addon authors
 

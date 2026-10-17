@@ -113,7 +113,8 @@ order, neither blocks the other's and no waypoint is planned twice:
   too and hands its target here (`nav.followTomTom` and `nav.spfHandoff`), that target arrives as Polestar's journey,
   so Shortest Path doesn't follow the waypoint as well. With Polestar guiding by itself, Shortest Path follows, and
   Polestar steps aside while that journey runs. The copy of its own target Polestar puts in TomTom
-  (`from = "Polestar"`) is never followed: whether that goes to Shortest Path is Polestar's hand-off setting.
+  (`from = "Polestar"`) is never followed, and the stand-in refuses it (`AddWaypoint` returns `nil`): whether
+  Polestar's target goes to Shortest Path is Polestar's hand-off setting.
 - Polestar's *Follow TomTom's arrow* is meant for the real TomTom. While this stand-in answers in its place, leave it
   off: a guide's waypoint is already a journey here.
 

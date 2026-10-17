@@ -5,8 +5,8 @@ local L = ns.L
 -- TomTom's /way: `/way [#mapID] [zone] x y [title]`, with x and y as percentages of the map. With no map ID and no
 -- zone, the point is on the map you stand on. A decimal comma reads as a point, and a comma or point straight after
 -- x separates it from y, as TomTom reads them. The command plans a journey to that spot, the same way a Shift-click
--- on the world map does. /way is registered only while TomTom is not installed and no other addon has taken it;
--- `/path way` always works.
+-- on the world map does. /way is registered only while TomTom has not loaded (nor is enabled to load after
+-- Shortest Path) and no other addon has taken it; `/path way` always works.
 
 -- Zone names as the client spells them, folded: lower case without spaces or punctuation.
 ---@param name string
@@ -161,7 +161,7 @@ local function WayTaken(loggedIn)
 	if loggedIn and C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded("TomTom") then
 		return true
 	end
-	if not loggedIn and ns.TomTomEnabled() then
+	if not loggedIn and ns.TomTomEnabled and ns.TomTomEnabled() then
 		return true
 	end
 	for key, value in pairs(_G) do

@@ -193,6 +193,10 @@ for _, spfFirst in ipairs({ false, true }) do
 	c.driver.path.settle()
 	equal(c.ns.JourneyInfo(), "Journey to Goldshire", order .. ": /way plans the journey")
 	equal(c.polestar.way, nil, order .. ": and Polestar's /way never sees it")
+	c.ns.ClearJourney()
+	local copy = env.TomTom:AddWaypoint(1, 0.63, 0.5, { title = "Polestar's target", from = "Polestar" })
+	equal(copy, nil, order .. ": the copy of Polestar's own target is refused")
+	equal(c.ns.HasJourney(), false, order .. ": and plans nothing")
 end
 
 -- With Shortest Path's stand-in off at login, Polestar's takes the global. It is not TomTom: Follow TomTom's arrow

@@ -89,6 +89,7 @@ local function Same(a, b)
 end
 
 -- Both the waypoint and the journey start together: a refused journey leaves no waypoint for a guide to remove.
+-- Polestar copies its own target into TomTom (from = "Polestar"); whether that comes here is its hand-off setting.
 ---@param map integer
 ---@param x number
 ---@param y number
@@ -96,7 +97,7 @@ end
 ---@param opts table?
 ---@return TomTomWaypoint?
 local function Start(map, x, y, title, opts)
-	if not (active and API and ns.db) then
+	if not (active and API and ns.db) or type(opts) == "table" and opts.from == "Polestar" then
 		return nil
 	end
 	---@type TomTomWaypoint
@@ -370,7 +371,8 @@ local function StandDown()
 	current = nil
 	Forget()
 	if TomTom == shim then
-		TomTom = displaced and PolestarAnswers() and displaced or nil
+		local polestar = displaced and PolestarAnswers() and PolestarNav()
+		TomTom = polestar and polestar.tomtomShim or nil
 	end
 	displaced = nil
 end
