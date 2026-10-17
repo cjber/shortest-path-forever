@@ -21,7 +21,7 @@ local LATER_STOP_ALPHA = 0.9
 -- Route.lua groups stops by the button's size.
 ns.GoalAtlas, ns.StopSize = GOAL_ATLAS, STOP_SIZE
 
----@class SPFGoalPin : SPFMapPin
+---@class SPFGoalPin : SPFCanvasPin
 ---@field Texture Texture
 ---@field Icon Texture
 ---@field Disc Texture
@@ -32,13 +32,16 @@ ns.GoalAtlas, ns.StopSize = GOAL_ATLAS, STOP_SIZE
 ---@field stopTitles? string[]
 ---@field stopDetails? string[]
 ---@field current? boolean -- marks the stop being travelled to, whose steps the tooltip lists
-ShortestPathForeverGoalPinMixin = CreateFromMixins(MapCanvasPinMixin)
+local GoalPin = CreateFromMixins(ns.MapCanvas.PinMixin)
+-- Route.lua's pool puts it on.
+ns.GoalPinMixin = GoalPin
 
-function ShortestPathForeverGoalPinMixin:OnLoad()
+function GoalPin:OnLoad()
 	-- The user waypoint's level (WaypointLocationDataProvider), above every quest POI, super-tracked ones included.
 	self:UseFrameLevelType("PIN_FRAME_LEVEL_WAYPOINT_LOCATION")
 	self:SetIgnoreGlobalPinScale(true)
 	self:SetScalingLimits(1, 1, 1)
+	self.takesMouse = true
 	-- The disc's own silhouette, opaque under a faded button.
 	self.Disc:SetVertexColor(0, 0, 0)
 	self.Number = self:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -60,7 +63,7 @@ end
 ---@param look? SPFAPIStopKind
 ---@param details? string[]
 ---@param pinBadge? boolean
-function ShortestPathForeverGoalPinMixin:OnAcquired(x, y, numbers, titles, later, look, details, pinBadge)
+function GoalPin:OnAcquired(x, y, numbers, titles, later, look, details, pinBadge)
 	self:SetPosition(x, y)
 	-- The disc's shadow stays opaque, so a faded button still hides the POI beneath it.
 	local alpha = later and LATER_STOP_ALPHA or 1
@@ -115,7 +118,7 @@ function ShortestPathForeverGoalPinMixin:OnAcquired(x, y, numbers, titles, later
 	end
 end
 
-function ShortestPathForeverGoalPinMixin:OnMouseEnter()
+function GoalPin:OnMouseEnter()
 	local title, rows = ns.JourneyInfo()
 	if not title or not rows then
 		return
@@ -151,28 +154,27 @@ function ShortestPathForeverGoalPinMixin:OnMouseEnter()
 	GameTooltip:Show()
 end
 
-function ShortestPathForeverGoalPinMixin:OnMouseLeave()
+function GoalPin:OnMouseLeave()
 	self.Glow:Hide()
 	if GameTooltip:IsOwned(self) then
 		GameTooltip:Hide()
 	end
 end
 
--- Pins pass right clicks to the canvas to zoom out (Blizzard_MapCanvas.lua:328); this one clears instead.
-function ShortestPathForeverGoalPinMixin.ShouldMouseButtonBePassthrough()
+-- Pins pass right clicks to the canvas to zoom out (UI/MapCanvas.lua); this one clears instead.
+function GoalPin.ShouldMouseButtonBePassthrough()
 	return false
 end
 
-function ShortestPathForeverGoalPinMixin.OnMouseClickAction(_, button)
+function GoalPin.OnMouseClickAction(_, button)
 	if button == "RightButton" then
 		ns.ClearJourney()
 	end
 end
 
-function ShortestPathForeverGoalPinMixin:OnReleased()
+function GoalPin:OnReleased()
 	self:OnMouseLeave()
 	self.stopTitles = nil
 	self.stopDetails = nil
 	self.current = nil
-	MapCanvasPinMixin.OnReleased(self)
 end

@@ -2,10 +2,10 @@
 local ns = select(2, ...)
 local L = ns.L
 
+local MapCanvas = ns.MapCanvas
 local PIN_TEMPLATE = "ShortestPathForeverDockPinTemplate"
-local FLIGHT_TEMPLATE = "ShortestPathForeverFlightPinTemplate"
 local PORTAL_TEMPLATE = "ShortestPathForeverPortalPinTemplate"
-local PING_TEMPLATE = "ShortestPathForeverPingPinTemplate"
+local PING_FILE = "Interface\\Minimap\\UI-Minimap-Ping-Expand"
 local PIN_SIZE = 20
 local ARROW_SIZE = 15
 -- The floor arrows are 13 by 14 (UiTextureAtlasMember, 1.60.1.70009), so they are fitted, never squared.
@@ -20,14 +20,10 @@ local EDGE = 0.015
 -- Docks closer than this many pins apart merge into one.
 local OVERLAP = 0.8
 
-local function ActivePins(template)
-	local count = 0
-	for _ in WorldMapFrame:EnumeratePinsByTemplate(template) do
-		count = count + 1
-	end
-	return count
-end
-local provider
+-- The pins' pools on the world map (UI/MapCanvas.lua), made at load.
+---@type SPFCanvasPool, SPFCanvasPool
+local dockPins, portalPins
+local Docks
 
 -- The stock ferry for boats. There is no zeppelin map icon in the game (only top-down vehicle sprites), so
 -- zeppelins use our own, drawn to match the ferry (tools/draw_zeppelin.py). Lifts and the tram take the stock
@@ -111,23 +107,26 @@ local function AddDepartureLines(departures)
 	end
 end
 
----@class SPFDockPin : SPFMapPin
+---@class SPFDockPin : SPFCanvasPin
 ---@field Texture Texture
 ---@field HighlightTexture Texture
 ---@field Glow Texture
-ShortestPathForeverDockPinMixin = CreateFromMixins(MapCanvasPinMixin)
+---@field cluster? table
+---@field tooltipElapsed number
+local DockPin = CreateFromMixins(MapCanvas.PinMixin)
 
-function ShortestPathForeverDockPinMixin:OnLoad()
+function DockPin:OnLoad()
 	-- Above town, flight point and dungeon icons, so a dock beside one still takes the hover.
 	self:UseFrameLevelType("PIN_FRAME_LEVEL_GOSSIP")
 	self:SetScalingLimits(1, 1, 1.2)
 	self:SetSize(PIN_SIZE, PIN_SIZE)
+	self.takesMouse = true
 	self:SetScript("OnHide", self.OnMouseLeave)
 end
 
 -- cluster = { docks = { { id, x, y }... }, x, y, kind, kinds = { [kind] = true }, key = the dock ids joined by
 -- commas }: one dock, or several too close to tell apart.
-function ShortestPathForeverDockPinMixin:OnAcquired(cluster)
+function DockPin:OnAcquired(cluster)
 	self.cluster = cluster
 	local scale = (ns.db.mapPinScale or 100) / 100
 	self:SetScalingLimits(1, scale, scale * 1.2)
@@ -246,13 +245,13 @@ function ns.AddDockTooltip(cluster)
 	end
 end
 
-function ShortestPathForeverDockPinMixin:RefreshTooltip()
+function DockPin:RefreshTooltip()
 	ns.AddDockTooltip(self.cluster)
 	AddEndsLine(self:GetEnds())
 	GameTooltip:Show()
 end
 
-function ShortestPathForeverDockPinMixin:OnMouseEnter()
+function DockPin:OnMouseEnter()
 	local routes = {}
 	for _, dock in ipairs(self.cluster.docks) do
 		for _, departure in ipairs(ns.Timetable.Departures(dock.id)) do
@@ -260,7 +259,7 @@ function ShortestPathForeverDockPinMixin:OnMouseEnter()
 		end
 	end
 	ns.HoverTransportRoutes(self, routes)
-	provider:ShowDestinations(self)
+	Docks:ShowDestinations(self)
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 	self:RefreshTooltip()
 	self.tooltipElapsed = 0
@@ -277,35 +276,38 @@ function ShortestPathForeverDockPinMixin:OnMouseEnter()
 	end)
 end
 
-function ShortestPathForeverDockPinMixin:OnMouseLeave()
+function DockPin:OnMouseLeave()
 	ns.HoverTransportRoutes(self, nil)
-	provider:HideDestinations()
+	Docks:HideDestinations()
 	self:SetScript("OnUpdate", nil)
 	if GameTooltip:IsOwned(self) then
 		GameTooltip:Hide()
 	end
 end
 
-function ShortestPathForeverDockPinMixin:OnReleased()
+function DockPin:OnReleased()
 	self:OnMouseLeave()
 	self.Glow:Hide()
 	self.cluster = nil
-	MapCanvasPinMixin.OnReleased(self)
 end
 
----@class SPFDockProvider : SPFMapProvider
-local ProviderMixin = CreateFromMixins(MapCanvasDataProviderMixin)
+-- The docks' layer on the world map: their pins, and the ping that marks a crossing's far end.
+---@class SPFDockLayer
+---@field pins? table<string, SPFDockPin> by the key of the cluster's docks
+---@field pinOf? table<number, SPFDockPin> by dock id
+---@field mapID? number
+---@field ping? SPFPingPin
+---@field pingMap? number
+Docks = {}
 
-function ProviderMixin:RemoveAllData()
-	self:GetMap():RemoveAllPinsByTemplate(PIN_TEMPLATE)
-	self:GetMap():RemoveAllPinsByTemplate(PING_TEMPLATE)
-	self.ping = nil
+function Docks:RemoveAllData()
+	dockPins:ReleaseAll()
 	-- [dockID] = the pin showing it; [key of the cluster's docks] = that pin.
 	self.pinOf, self.pins = {}, {}
 end
 
 -- Where the hovered pin's boats go, glowing like the map legend's related pins.
-function ProviderMixin:ShowDestinations(pin)
+function Docks:ShowDestinations(pin)
 	for _, dock in ipairs(pin.cluster.docks) do
 		for _, departure in ipairs(ns.Timetable.Departures(dock.id)) do
 			for _, destination in ipairs(departure.to) do
@@ -318,22 +320,69 @@ function ProviderMixin:ShowDestinations(pin)
 	end
 end
 
--- The stock map ping (MapCanvasDataProviderMixin:PingPin), at a point rather than a pin: a portal's far end
--- has none, and a dock's may be filtered out.
-function ProviderMixin:Ping(x, y)
+-- The stock map ping (MapPinPingTemplate, SharedMapPoiTemplates.xml): its ring flashes twice while it grows, at
+-- a point rather than a pin, as a portal's far end has none and a dock's may be filtered out.
+local PING_LOOPS, PING_GROW = 2, 0.575
+---@param ping SPFPingPin
+local function PingArt(ping)
+	ping:SetSize(70, 70)
+	local ring = ping:CreateTexture(nil, "BACKGROUND")
+	ring:SetPoint("CENTER")
+	ns.Art.Icon(ring, PING_FILE, 50)
+	ring:SetAlpha(0)
+	local flash = ping:CreateAnimationGroup()
+	for loop = 0, PING_LOOPS - 1 do
+		for step, delay in ipairs({ 0, 0.45, 0.575, 0.95 }) do
+			local alpha = flash:CreateAnimation("Alpha")
+			alpha:SetTarget(ring)
+			alpha:SetFromAlpha(step % 2 == 1 and 0 or 1)
+			alpha:SetToAlpha(step % 2 == 1 and 1 or 0)
+			alpha:SetStartDelay(loop * 1.15 + delay)
+			alpha:SetDuration(0.2)
+			alpha:SetOrder(1)
+		end
+	end
+	local grow = flash:CreateAnimation("Scale")
+	grow:SetTarget(ring)
+	grow:SetScaleFrom(0.5, 0.5)
+	grow:SetScaleTo(1.2, 1.2)
+	grow:SetDuration(PING_GROW)
+	grow:SetOrder(1)
+	flash:SetScript("OnFinished", function()
+		ping:Hide()
+	end)
+	ping.animation = flash
+end
+
+---@class SPFPingPin : SPFCanvasPin
+---@field animation AnimationGroup
+local PingPin = CreateFromMixins(MapCanvas.PinMixin)
+
+function PingPin:OnLoad()
+	self:UseFrameLevelType("PIN_FRAME_LEVEL_QUEST_PING")
+	self:SetScalingLimits(1, 0.65, 0.65)
+	PingArt(self)
+end
+
+---@param mapID? number the map the point is on, which the map is being turned to
+---@param x number
+---@param y number
+function Docks:Ping(mapID, x, y)
 	if InCombatLockdown() then
 		ns.QueueMapRefresh()
 		return
 	end
 	if not self.ping then
-		self.ping = self:GetMap():AcquirePin(PING_TEMPLATE)
-		self.ping:UseFrameLevelType("PIN_FRAME_LEVEL_QUEST_PING")
+		self.ping = MapCanvas.Pool(WorldMapFrame, "ping", PingPin):Acquire() --[[@as SPFPingPin]]
 	end
-	self.ping:SetNumLoops(2)
-	self.ping:PlayAt(x, y)
+	self.pingMap = mapID
+	self.ping:Show()
+	self.ping:SetPosition(x, y)
+	self.ping.animation:Stop()
+	self.ping.animation:Play()
 end
 
-function ProviderMixin:HideDestinations()
+function Docks:HideDestinations()
 	for _, pin in pairs(self.pins) do
 		pin.Glow:Hide()
 	end
@@ -375,6 +424,8 @@ local function MapPosition(point, mapID)
 		return Clamp(x, EDGE, 1 - EDGE), Clamp(y, EDGE, 1 - EDGE)
 	end
 end
+-- FlightPins.lua places its pins the same way.
+ns.MapPinPosition, ns.IsDockMap = MapPosition, IsDockMap
 
 -- Where a pin's routes end, one per map other than this one: candidates = { { kind, point }... }, in the
 -- tooltip's order. A lift's landings share one spot, so a lift has an end only from a map other than its own.
@@ -397,8 +448,8 @@ local function ShowEnd(target)
 		return
 	end
 	local x, y = MapPosition(target.point, target.uiMap)
-	if x then
-		provider:Ping(x, y)
+	if x and y then
+		Docks:Ping(target.uiMap, x, y)
 	end
 end
 
@@ -422,7 +473,7 @@ local function OpenEnds(pin, button)
 	end
 end
 
-function ShortestPathForeverDockPinMixin:GetEnds()
+function DockPin:GetEnds()
 	local candidates = {}
 	for _, dock in ipairs(self.cluster.docks) do
 		for _, departure in ipairs(ns.Timetable.Departures(dock.id)) do
@@ -434,7 +485,7 @@ function ShortestPathForeverDockPinMixin:GetEnds()
 	return Ends(self:GetMap():GetMapID(), candidates)
 end
 
-ShortestPathForeverDockPinMixin.OnMouseClickAction = OpenEnds
+DockPin.OnMouseClickAction = OpenEnds
 
 -- The docks on this map with any route still shown, as { id, x, y } in map fractions. A lift or tram
 -- landing also shows on any neighbouring zone it falls inside: the Great Lift joins the Barrens to Thousand
@@ -519,15 +570,15 @@ local function Clusters(map, docks)
 	return clusters
 end
 
-function ProviderMixin:RefreshAllData()
+function Docks:RefreshAllData()
 	if InCombatLockdown() then
 		ns.QueueMapRefresh()
 		return
 	end
 	ns.JourneyGuide.RefreshWaypointPins()
-	local map = self:GetMap()
+	local map = WorldMapFrame
 	local mapID = map:GetMapID()
-	-- A map never opened has no zoom levels yet; opening it refreshes every provider anyway.
+	-- A map never opened has no zoom levels yet; opening it redraws every layer anyway.
 	if not (mapID and map:IsVisible()) then
 		self:RemoveAllData()
 		return
@@ -557,7 +608,7 @@ function ProviderMixin:RefreshAllData()
 	end
 	self:RemoveAllData()
 	for _, cluster in ipairs(clusters) do
-		local pin = map:AcquirePin(PIN_TEMPLATE, cluster)
+		local pin = dockPins:Acquire(cluster) --[[@as SPFDockPin]]
 		self.pins[cluster.key] = pin
 		for _, dock in ipairs(cluster.docks) do
 			self.pinOf[dock.id] = pin
@@ -565,24 +616,22 @@ function ProviderMixin:RefreshAllData()
 	end
 end
 
-function ProviderMixin:OnCanvasScaleChanged()
-	self:RefreshAllData()
-end
-
----@class SPFPortalPin : SPFMapPin
+---@class SPFPortalPin : SPFCanvasPin
 ---@field Texture Texture
 ---@field HighlightTexture Texture
-ShortestPathForeverPortalPinMixin = CreateFromMixins(MapCanvasPinMixin)
+---@field portal table
+local PortalPin = CreateFromMixins(MapCanvas.PinMixin)
 
-function ShortestPathForeverPortalPinMixin:OnLoad()
+function PortalPin:OnLoad()
 	self:UseFrameLevelType("PIN_FRAME_LEVEL_GOSSIP")
 	self:SetScalingLimits(1, 1, 1.2)
 	self:SetSize(PIN_SIZE, PIN_SIZE)
+	self.takesMouse = true
 	-- Closing the map hides the pin without an OnMouseLeave.
 	self:SetScript("OnHide", self.OnMouseLeave)
 end
 
-function ShortestPathForeverPortalPinMixin:OnAcquired(portal, x, y)
+function PortalPin:OnAcquired(portal, x, y)
 	self.portal = portal
 	local scale = (ns.db.mapPinScale or 100) / 100
 	self:SetScalingLimits(1, scale, scale * 1.2)
@@ -600,20 +649,20 @@ function ns.AddPortalTooltip(portal)
 	)
 end
 
-function ShortestPathForeverPortalPinMixin:OnMouseEnter()
+function PortalPin:OnMouseEnter()
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 	ns.AddPortalTooltip(self.portal)
 	AddEndsLine(self:GetEnds())
 	GameTooltip:Show()
 end
 
-function ShortestPathForeverPortalPinMixin:GetEnds()
+function PortalPin:GetEnds()
 	return Ends(self:GetMap():GetMapID(), { { kind = "portal", point = self.portal.to } })
 end
 
-ShortestPathForeverPortalPinMixin.OnMouseClickAction = OpenEnds
+PortalPin.OnMouseClickAction = OpenEnds
 
-function ShortestPathForeverPortalPinMixin:OnMouseLeave()
+function PortalPin:OnMouseLeave()
 	if GameTooltip:IsOwned(self) then
 		GameTooltip:Hide()
 	end
@@ -624,20 +673,22 @@ function ns.PortalShown(portal)
 	return portal.kind == "portal" and (not portal.faction or portal.faction == UnitFactionGroup("player"))
 end
 
----@class SPFPortalProvider : SPFMapProvider
-local PortalProviderMixin = CreateFromMixins(MapCanvasDataProviderMixin)
+---@class SPFPortalLayer
+---@field signature? string
+local Portals = {}
 
-function PortalProviderMixin:RemoveAllData()
-	self:GetMap():RemoveAllPinsByTemplate(PORTAL_TEMPLATE)
+function Portals:RemoveAllData()
+	portalPins:ReleaseAll()
+	self.signature = nil
 end
 
-function PortalProviderMixin:RefreshAllData()
+function Portals:RefreshAllData()
 	if InCombatLockdown() then
 		ns.QueueMapRefresh()
 		return
 	end
-	local mapID = self:GetMap():GetMapID()
-	if not (mapID and ns.db.portals and self:GetMap():IsVisible()) then
+	local mapID = WorldMapFrame:GetMapID()
+	if not (mapID and ns.db.portals and WorldMapFrame:IsVisible()) then
 		self:RemoveAllData()
 		return
 	end
@@ -648,7 +699,7 @@ function PortalProviderMixin:RefreshAllData()
 		.. tostring(ns.db.otherFaction)
 		.. ":"
 		.. tostring(ns.db.mapPinScale)
-	if self.signature == signature and ActivePins(PORTAL_TEMPLATE) >= (self.pinCount or 0) then
+	if self.signature == signature then
 		return
 	end
 	self:RemoveAllData()
@@ -658,204 +709,19 @@ function PortalProviderMixin:RefreshAllData()
 		if location and IsDockMap(location, mapID) then
 			local x, y = MapPosition(portal.from, mapID)
 			if x then
-				self:GetMap():AcquirePin(PORTAL_TEMPLATE, portal, x, y)
+				portalPins:Acquire(portal, x, y)
 			end
 		end
 	end
-	self.pinCount = ActivePins(PORTAL_TEMPLATE)
 end
 
--- Reuse the native flight-point template and acquisition (atlas size, nudging and supertracking).
----@class SPFAddonFlightPin : SPFFlightPin
-ShortestPathForeverFlightPinMixin = CreateFromMixins(FlightPointPinMixin)
-
-function ShortestPathForeverFlightPinMixin:OnLoad()
-	FlightPointPinMixin.OnLoad(self)
-	-- Closing the map hides the pin without an OnMouseLeave.
-	self:SetScript("OnHide", self.OnMouseLeave)
-end
-
-function ShortestPathForeverFlightPinMixin:OnAcquired(info)
-	FlightPointPinMixin.OnAcquired(self, info)
-	local scale = (ns.db.flightPinScale or 100) / 100
-	self:SetScalingLimits(1, scale, scale * 1.2)
-end
-
-function ShortestPathForeverFlightPinMixin.ShouldMouseButtonBePassthrough()
-	return false
-end
-
-function ShortestPathForeverFlightPinMixin:OnMouseClickAction(button)
-	if button == "RightButton" then
-		MenuUtil.CreateContextMenu(self, function(_, root)
-			root:CreateCheckbox(L["Flight path known"], function()
-				local known = ns.KnownTaxiNodes()
-				return known and known[self.poiInfo.nodeID] == true
-			end, function()
-				local known = ns.KnownTaxiNodes()
-				ns.SetTaxiKnown(self.poiInfo.nodeID, not (known and known[self.poiInfo.nodeID]))
-				ns.RefreshMap()
-			end)
-		end)
-		return true
-	elseif FlightPointPinMixin.OnMouseClickAction then
-		return FlightPointPinMixin.OnMouseClickAction(self, button)
-	end
-end
-
--- A flight point's tooltip lists where you can fly from it, as many as fit.
-local FLIGHTS_SHOWN = 8
-
----@param nodeID number
----@param undiscovered? boolean the hovered point itself is not known yet: nothing flies from it for you
-local function AddFlights(nodeID, undiscovered)
-	local known, faction = ns.KnownTaxiNodes(), UnitFactionGroup("player")
-	-- The flight points the planner flies to (Planner.lua's Eligible): neutral ones and your faction's, whatever the
-	-- boat and zeppelin setting says.
-	local flights = ns.TaxiTimes.FlightsFrom(nodeID, function(to)
-		local node = ns.TaxiNodes[to]
-		return node ~= nil and (not node.faction or node.faction == faction)
-	end)
-	if not flights[1] then
-		return
-	end
-	GameTooltip_AddNormalLine(GameTooltip, L["Flights from here"])
-	for index = 1, math.min(#flights, FLIGHTS_SHOWN) do
-		local flight = flights[index]
-		local time = ns.FormatCountdown(flight.seconds * 1000)
-		-- A time worked out from the path's length, not timed by anyone, says so.
-		if flight.estimated then
-			time = string.format(L["about %s"], time)
-		end
-		-- Flight points you have not found yet are grey, as on the flight map; all are from one you have not found.
-		local color = (undiscovered or not known[flight.to]) and GRAY_FONT_COLOR or HIGHLIGHT_FONT_COLOR
-		GameTooltip_AddColoredDoubleLine(GameTooltip, ns.TaxiName(flight.to), time, color, color)
-	end
-	if #flights > FLIGHTS_SHOWN then
-		GameTooltip_AddNormalLine(GameTooltip, string.format(L["and %d more"], #flights - FLIGHTS_SHOWN))
-	end
-end
-
-function ShortestPathForeverFlightPinMixin:OnMouseEnter()
-	GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-	GameTooltip_SetTitle(GameTooltip, self.poiInfo.name)
-	if self.poiInfo.isUndiscovered then
-		GameTooltip_AddNormalLine(GameTooltip, L["Not discovered"])
-	end
-	AddFlights(self.poiInfo.nodeID, self.poiInfo.isUndiscovered)
-	GameTooltip:Show()
-end
-
-function ShortestPathForeverFlightPinMixin:OnMouseLeave()
-	if GameTooltip:IsOwned(self) then
-		GameTooltip:Hide()
-	end
-end
-
-function ShortestPathForeverFlightPinMixin:OnReleased()
-	self:OnMouseLeave()
-	MapCanvasPinMixin.OnReleased(self)
-end
-
----@class SPFAddonFlightProvider : SPFFlightProvider
-local FlightProviderMixin = CreateFromMixins(FlightPointDataProviderMixin)
-
-function FlightProviderMixin:RemoveAllData()
-	self:GetMap():RemoveAllPinsByTemplate(FLIGHT_TEMPLATE)
-end
-
-function FlightProviderMixin:RefreshAllData()
-	if InCombatLockdown() then
-		ns.QueueMapRefresh()
-		return
-	end
-	local map = self:GetMap()
-	local mapID = map:GetMapID()
-	if not (ns.db.mapFlightMasters and mapID and map:IsVisible()) then
-		self:RemoveAllData()
-		self.signature = nil
-		return
-	end
-	local signature = mapID
-		.. ":"
-		.. tostring(ns.db.mapFlightMasters)
-		.. ":"
-		.. tostring(ns.db.otherFaction)
-		.. ":"
-		.. tostring(ns.db.flightPinScale)
-	if self.signature == signature and not self.force and ActivePins(FLIGHT_TEMPLATE) >= (self.pinCount or 0) then
-		return
-	end
-	self.force = nil
-	self:RemoveAllData()
-	self.signature = signature
-	local known, faction = ns.KnownTaxiNodes(), UnitFactionGroup("player")
-	local queried, reported = {}, {}
-	local function Query(id)
-		if id and not queried[id] then
-			queried[id] = true
-			for _, info in ipairs(C_TaxiMap.GetTaxiNodesForMap(id) or {}) do
-				reported[info.nodeID] = info
-			end
-		end
-	end
-	Query(mapID)
-	for id, node in pairs(ns.TaxiNodes) do
-		local location = ns.Locate(node)
-		local x, y = MapPosition(node, mapID)
-		if x and y and location and IsDockMap(location, mapID) then
-			Query(location.uiMap)
-			local unknown = known ~= nil and not known[id]
-			local native = reported[id]
-			-- The API's nodeID is the TaxiNodes DB2 key, also used by Taxi.lua; no name/position guessing. Its name is
-			-- the client's own; its position is on whichever map was asked, so the shipped world point places the pin.
-			local info = {
-				nodeID = id,
-				name = native and native.name ~= "" and native.name or ns.TaxiName(id),
-				position = CreateVector2D(x, y),
-				isUndiscovered = unknown,
-				faction = Enum.FlightPathFaction[node.faction or "Neutral"],
-				-- Native fallback atlases from UiTextureAtlasMember, build 1.60.1.69913.
-				atlasName = unknown and "taxinode_undiscovered" or "taxinode_" .. (node.faction or "Neutral"):lower(),
-			}
-			if native and native.isUndiscovered == unknown and native.atlasName ~= "" then
-				info.atlasName = native.atlasName
-				info.textureKit = native.textureKit ~= "" and native.textureKit or nil
-			end
-			if self:ShouldShowTaxiNode(faction, info) then
-				map:AcquirePin(FLIGHT_TEMPLATE, info)
-			end
-		end
-	end
-	self.pinCount = ActivePins(FLIGHT_TEMPLATE)
-end
-
-local portalProvider, flightProvider
-
-local MAP_TEMPLATES = {
-	PIN_TEMPLATE,
-	PING_TEMPLATE,
-	PORTAL_TEMPLATE,
-	FLIGHT_TEMPLATE,
-	"ShortestPathForeverRoutePinTemplate",
-	"ShortestPathForeverGoalPinTemplate",
-	"ShortestPathForeverTransportPinTemplate",
-}
-
+-- Combat hides every pin of the addon's on the world map, and the minimap's, until it ends.
 function ns.HideMapPins()
-	for _, template in ipairs(MAP_TEMPLATES) do
-		for pin in WorldMapFrame:EnumeratePinsByTemplate(template) do
-			pin:Hide()
-		end
-	end
+	MapCanvas.SetShown(WorldMapFrame, false)
 end
 
 function ns.ShowMapPins()
-	for _, template in ipairs(MAP_TEMPLATES) do
-		for pin in WorldMapFrame:EnumeratePinsByTemplate(template) do
-			pin:Show()
-		end
-	end
+	MapCanvas.SetShown(WorldMapFrame, true)
 end
 
 function ns.RefreshMap()
@@ -863,12 +729,11 @@ function ns.RefreshMap()
 		ns.QueueMapRefresh()
 		return
 	end
-	if provider then
-		provider:RemoveAllData()
-		provider:RefreshAllData()
-		portalProvider:RefreshAllData()
-		flightProvider.force = true
-		flightProvider:RefreshAllData()
+	if dockPins then
+		Docks:RemoveAllData()
+		Docks:RefreshAllData()
+		Portals:RefreshAllData()
+		ns.RefreshFlightPins(true)
 		ns.RefreshTransportRoutes()
 	end
 	ns.RefreshMinimapPins()
@@ -910,38 +775,29 @@ ns.Init(function()
 	function ns.QueueMapRefresh()
 		ns.mapRefreshPending = true
 	end
-	-- Replace only this map's stock provider, avoiding duplicates if the native gate starts returning true.
-	for existing in pairs(WorldMapFrame.dataProviders) do
-		if existing.RefreshAllData == FlightPointDataProviderMixin.RefreshAllData then
-			WorldMapFrame:RemoveDataProvider(existing)
+	dockPins = MapCanvas.Pool(WorldMapFrame, PIN_TEMPLATE, DockPin, { template = PIN_TEMPLATE, marker = "dock" })
+	portalPins =
+		MapCanvas.Pool(WorldMapFrame, PORTAL_TEMPLATE, PortalPin, { template = PORTAL_TEMPLATE, marker = "portal" })
+	-- The map opening, turning to another map or zooming: what the stock map asked its data providers to redraw.
+	MapCanvas.Watch(WorldMapFrame, function(_, what)
+		if what == "show" or what == "map" then
+			Docks:RefreshAllData()
+			Portals:RefreshAllData()
+			ns.RefreshFlightPins()
+		elseif what == "scale" then
+			-- Docks merge or split as the zoom changes.
+			Docks:RefreshAllData()
 		end
-	end
-	flightProvider = CreateFromMixins(FlightProviderMixin)
-	WorldMapFrame:AddDataProvider(flightProvider)
-	local taxiEvents = CreateFrame("Frame")
-	taxiEvents:RegisterEvent("TAXI_NODE_STATUS_CHANGED")
-	taxiEvents:RegisterEvent("TAXIMAP_OPENED")
-	local taxiPending
-	taxiEvents:SetScript("OnEvent", function()
-		if taxiPending or not WorldMapFrame:IsVisible() then
-			return
+		-- A ping marks a place on the map it was set for: turning to another map or closing it leaves it.
+		local ping = Docks.ping
+		if ping and (what == "hide" or (what == "map" and WorldMapFrame:GetMapID() ~= Docks.pingMap)) then
+			ping:Hide()
 		end
-		taxiPending = true
-		-- Let Taxi.lua finish updating the known-set before recolouring the pins.
-		C_Timer.After(0, function()
-			taxiPending = nil
-			flightProvider.force = true
-			flightProvider:RefreshAllData()
-		end)
 	end)
-	provider = CreateFromMixins(ProviderMixin)
-	portalProvider = CreateFromMixins(PortalProviderMixin)
-	WorldMapFrame:AddDataProvider(provider)
-	WorldMapFrame:AddDataProvider(portalProvider)
 	Menu.ModifyMenu("MENU_WORLD_MAP_TRACKING", AddFilters)
 	ns.Timetable.OnChange(function()
 		-- Sightings change countdowns, never the set of docks, portals, flights or route geometry.
-		for _, pin in pairs(provider.pins or {}) do
+		for _, pin in pairs(Docks.pins or {}) do
 			if GameTooltip:IsOwned(pin) and GameTooltip:IsShown() then
 				pin:RefreshTooltip()
 			end

@@ -1,6 +1,7 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+local MapCanvas = ns.MapCanvas
 local LINE_TEMPLATE = "ShortestPathForeverRoutePinTemplate"
 local GOAL_TEMPLATE = "ShortestPathForeverGoalPinTemplate"
 local AREA_TEMPLATE = "ShortestPathForeverAreaPinTemplate"
@@ -28,6 +29,9 @@ local COLORS = {
 	teleport = CreateColor(0.85, 0.35, 1),
 }
 local provider, goal, paths, worldPaths, stops, stopIndex
+-- The route's pools on the world map (UI/MapCanvas.lua), made at load.
+---@type SPFCanvasPool, SPFCanvasPool, SPFCanvasPool
+local linePins, goalPins, areaPins
 -- Whether this client has the blob widget QuestBlob.lua's pin is; nil until the first area is wanted.
 ---@type boolean?
 local areaSupported
@@ -210,32 +214,42 @@ function ns.RefreshJourneyPulse(shown)
 		return
 	end
 	loading = shown
-	for pin in WorldMapFrame:EnumeratePinsByTemplate(LINE_TEMPLATE) do
-		Pulse(pin)
+	if linePins then
+		for pin in linePins:EnumerateActive() do
+			---@cast pin SPFRoutePin
+			Pulse(pin)
+		end
 	end
 	if minimap then
 		Pulse(minimap)
 	end
 end
 
----@class SPFRoutePin : SPFMapPin
+-- One frame the size of the canvas that grows with the terrain (no scaling limits, the pin scale ignored), holding
+-- the route's strokes.
+---@class SPFRoutePin : SPFCanvasPin
 ---@field lines Line[]
 ---@field underlines Line[]
 ---@field dots boolean[]
 ---@field used number
+---@field paths? SPFDrawPath[]
+---@field drawMap? number
+---@field drawWidth? number
+---@field drawHeight? number
+---@field drawScale? number
 ---@field strokeLayer? SPFStrokeLayer
 ---@field strokes? SPFStrokes -- a pin that keeps its strokes between draws (RouteTransports.lua) has its own buffer
 ---@field UpdateAlpha? fun(self: SPFRoutePin)
-ShortestPathForeverRoutePinMixin = CreateFromMixins(MapCanvasPinMixin)
+local RoutePin = CreateFromMixins(MapCanvas.PinMixin)
+ns.RoutePinMixin = RoutePin
 
-function ShortestPathForeverRoutePinMixin:OnLoad()
+function RoutePin:OnLoad()
 	self:UseFrameLevelType("PIN_FRAME_LEVEL_QUEST_BLOB")
 	self:SetIgnoreGlobalPinScale(true)
-	self:SetScaleStyle(AM_PIN_SCALE_STYLE_WITH_TERRAIN)
 	self.lines, self.underlines, self.dots, self.used = {}, {}, {}, 0
 end
 
-function ShortestPathForeverRoutePinMixin:Draw()
+function RoutePin:Draw()
 	local map = self:GetMap()
 	local canvas = map:GetCanvas()
 	self.drawMap, self.drawWidth, self.drawHeight, self.drawScale =
@@ -258,17 +272,16 @@ function ShortestPathForeverRoutePinMixin:Draw()
 	end
 end
 
-function ShortestPathForeverRoutePinMixin:OnReleased()
+function RoutePin:OnReleased()
 	if self.strokeLayer then
 		StopPulse(self.strokeLayer)
 	end
-	-- Released journey pins must not keep the last route alive through the client's pin pool.
+	-- Released journey pins must not keep the last route alive through the pool.
 	self.paths = nil
-	MapCanvasPinMixin.OnReleased(self)
 end
 
 ---@param geometry SPFDrawPath[]
-function ShortestPathForeverRoutePinMixin:OnAcquired(geometry)
+function RoutePin:OnAcquired(geometry)
 	if not self.strokes and not self.strokeLayer then
 		StrokeLayer(self)
 	end
@@ -291,7 +304,7 @@ function ShortestPathForeverRoutePinMixin:OnAcquired(geometry)
 		and self.drawHeight == height
 		and self.drawScale == scale
 	then
-		-- MapCanvas's pool clears anchors on release, even when the strokes remain reusable.
+		-- The pool clears anchors on release, even when the strokes remain reusable.
 		self:SetPosition(0.5, 0.5)
 		self:UpdateAlpha()
 		return
@@ -299,11 +312,11 @@ function ShortestPathForeverRoutePinMixin:OnAcquired(geometry)
 	self:Draw()
 end
 
-function ShortestPathForeverRoutePinMixin:OnCanvasScaleChanged()
+function RoutePin:OnCanvasScaleChanged()
 	self:Draw()
 end
 
-function ShortestPathForeverRoutePinMixin:OnCanvasSizeChanged()
+function RoutePin:OnCanvasSizeChanged()
 	self:Draw()
 end
 
@@ -328,31 +341,35 @@ local function DrawArea(map)
 			return false
 		end
 	end
-	local pin = map:AcquirePin(AREA_TEMPLATE, goal.questIDs) --[[@as SPFAreaPin]]
+	local pin = areaPins:Acquire(goal.questIDs) --[[@as SPFAreaPin]]
 	if not pin.blob then
-		map:RemoveAllPinsByTemplate(AREA_TEMPLATE)
+		areaPins:ReleaseAll()
 		areaSupported = false
 	end
 	return areaSupported
 end
 
----@class SPFRouteProvider : SPFMapProvider
-local ProviderMixin = CreateFromMixins(MapCanvasDataProviderMixin)
+-- The journey's layer on the world map: the line, the stops' buttons and the quest area.
+---@class SPFRouteLayer
+---@field stopsKey? string
+---@field stopMarks? {x: number, y: number, radius: number}[]
+---@field area? boolean
+local Layer = {}
 
-function ProviderMixin:RemoveAllData()
-	self:GetMap():RemoveAllPinsByTemplate(LINE_TEMPLATE)
-	self:GetMap():RemoveAllPinsByTemplate(GOAL_TEMPLATE)
-	self:GetMap():RemoveAllPinsByTemplate(AREA_TEMPLATE)
+function Layer:RemoveAllData()
+	linePins:ReleaseAll()
+	goalPins:ReleaseAll()
+	areaPins:ReleaseAll()
 	self.stopsKey, self.stopMarks, self.area = nil, nil, nil
 end
 
-function ProviderMixin:RefreshAllData()
+function Layer:RefreshAllData()
 	if InCombatLockdown() then
 		ns.QueueMapRefresh()
 		return
 	end
 	self:RemoveAllData()
-	local map = self:GetMap()
+	local map = WorldMapFrame
 	-- Before the map's first show its zoom levels are unset.
 	if not (map:GetMapID() and map:IsVisible() and goal and (ns.db.journey or goal.corpse)) then
 		return
@@ -365,15 +382,15 @@ function ProviderMixin:RefreshAllData()
 	-- The stops go first: the line leaves a gap at each.
 	self:RefreshStops()
 	if #worldPaths > 0 then
-		map:AcquirePin(LINE_TEMPLATE, worldPaths)
+		linePins:Acquire(worldPaths)
 	end
 end
 
 -- Stops whose buttons would overlap at this zoom share one, as the map's docks do: at their middle, faded, or at the
 -- stop being guided to and at full strength when it is among them. The buttons are rebuilt only when that grouping
 -- changes, and the line redrawn around them.
-function ProviderMixin:RefreshStops()
-	local map = self:GetMap()
+function Layer:RefreshStops()
+	local map = WorldMapFrame
 	local mapID = map:GetMapID()
 	-- The game's own tombstone marks your corpse.
 	if not (mapID and map:IsVisible() and ns.db.journey and goal) or goal.corpse then
@@ -408,7 +425,7 @@ function ProviderMixin:RefreshStops()
 		return
 	end
 	self.stopsKey = key
-	map:RemoveAllPinsByTemplate(GOAL_TEMPLATE)
+	goalPins:ReleaseAll()
 	self.stopMarks = {}
 	for _, group in ipairs(groups) do
 		local x, y, numbers, titles, details = 0, 0, {}, {}, {}
@@ -427,16 +444,16 @@ function ProviderMixin:RefreshStops()
 		else
 			x, y, numbered = lead.x, lead.y, stops and numbers
 		end
-		local pin = map:AcquirePin(GOAL_TEMPLATE, x, y, numbered, titles, later, look, details, lead.pinBadge)
+		local pin = goalPins:Acquire(x, y, numbered, titles, later, look, details, lead.pinBadge)
 		self.stopMarks[#self.stopMarks + 1] = { x = x, y = y, radius = pin:GetWidth() / 2 }
 	end
-	for pin in WorldMapFrame:EnumeratePinsByTemplate(LINE_TEMPLATE) do
+	for pin in linePins:EnumerateActive() do
 		---@cast pin SPFRoutePin
 		pin:Draw()
 	end
 end
 
-function ProviderMixin:OnCanvasScaleChanged()
+function Layer:OnCanvasScaleChanged()
 	if InCombatLockdown() then
 		ns.QueueMapRefresh()
 		return
@@ -654,8 +671,23 @@ function ns.SetJourneyRoute(destination, route)
 end
 
 ns.Init(function()
-	provider = CreateFromMixins(ProviderMixin)
-	WorldMapFrame:AddDataProvider(provider)
+	linePins = MapCanvas.Pool(WorldMapFrame, LINE_TEMPLATE, RoutePin)
+	goalPins =
+		MapCanvas.Pool(WorldMapFrame, GOAL_TEMPLATE, ns.GoalPinMixin, { template = GOAL_TEMPLATE, marker = "stop" })
+	areaPins = MapCanvas.Pool(
+		WorldMapFrame,
+		AREA_TEMPLATE,
+		ns.AreaPinMixin,
+		{ frameType = "QuestPOIFrame", template = AREA_TEMPLATE }
+	)
+	provider = Layer
+	MapCanvas.Watch(WorldMapFrame, function(_, what)
+		if what == "show" or what == "map" then
+			provider:RefreshAllData()
+		elseif what == "scale" then
+			provider:OnCanvasScaleChanged()
+		end
+	end)
 	local minimapRoute = CreateFrame("Frame", "ShortestPathForeverMinimapRoute", Minimap)
 	---@cast minimapRoute SPFMinimapRoute
 	minimap = minimapRoute

@@ -18,7 +18,7 @@ local function advance(seconds)
    if T >= pending[i].at then local p = table.remove(pending, i) callbacks = callbacks + 1 p.fn() end
   end
   for _, f in ipairs(frames) do
-   if f:IsShown() and f.scripts.OnUpdate then callbacks = callbacks + 1 f.scripts.OnUpdate(f, 1/60) end
+   if f:IsVisible() and f.scripts.OnUpdate then callbacks = callbacks + 1 f.scripts.OnUpdate(f, 1/60) end
   end
  end
 end
@@ -120,46 +120,50 @@ assert(ns.CurrentRide() == 118981, "height-only passive lift must still sync")
 posX, posY, posZ, posMap = 0, 0, 0, 1
 advance(40)
 
--- MapCanvas may release every pin before asking providers to refresh the same map.
-visible, WorldMapFrame.shown = true, true
+-- The map's pins are the addon's own: closing and opening the map keeps them, and a sighting changes no layer.
+setMapShown(true)
 ns.RefreshMap()
 local template = "ShortestPathForeverDockPinTemplate"
 assert(#active[template] > 0)
-map:RemoveAllPinsByTemplate(template)
-ns.RefreshMap()
-assert(#active[template] > 0 and active[template][1].cluster, "reacquire after external pin release")
-local acquisitions, acquire = 0, map.AcquirePin
-map.AcquirePin = function(self, ...) acquisitions = acquisitions + 1 return acquire(self, ...) end
+local first = active[template][1]
+setMapShown(false)
+setMapShown(true)
+assert(#active[template] > 0 and active[template][1] == first and first.cluster, "reopening keeps the dock pins")
+local docks = ns.MapCanvas.Pools(WorldMapFrame)[template]
+local acquisitions, acquire = 0, docks.Acquire
+docks.Acquire = function(self, ...) acquisitions = acquisitions + 1 return acquire(self, ...) end
 ns.Timetable.Sighted(241, { epoch = ns.NowMs(), seen = GetServerTime(), source = "you" })
 assert(acquisitions == 0, "sightings must not rebuild unrelated map layers")
-map.AcquirePin = acquire
-visible, WorldMapFrame.shown = false, false
+docks.Acquire = nil
+setMapShown(false)
 
--- MapCanvas pin creation touches protected mouse-routing methods. A combat refresh must leave the
--- existing pins alone and replay the complete provider refresh exactly once after combat.
-visible, WorldMapFrame.shown = true, true
-local mapAcquire = map.AcquirePin
+-- Combat leaves the existing pins alone, hidden, and replays the complete refresh exactly once after it.
+setMapShown(true)
 local combatAcquires = 0
-map.AcquirePin = function(self, ...)
-	combatAcquires = combatAcquires + 1
-	assert(not combat, "map providers must not acquire pins in combat")
-	return mapAcquire(self, ...)
+local poolsByKey = ns.MapCanvas.Pools(WorldMapFrame)
+for _, pool in pairs(poolsByKey) do
+	local poolAcquire = pool.Acquire
+	pool.Acquire = function(self, ...)
+		combatAcquires = combatAcquires + 1
+		assert(not combat, "map layers must not acquire pins in combat")
+		return poolAcquire(self, ...)
+	end
 end
 combat = true
 fireEvent("PLAYER_REGEN_DISABLED")
+assert(not ns.MapCanvas.Watch(WorldMapFrame).layer:IsShown(), "combat hides the addon's map pins")
 ns.RefreshMap()
 ns.RefreshMinimapPins()
-for _, mapProvider in ipairs(providers) do
-	if mapProvider.Ping then
-		mapProvider:Ping(0.5, 0.5)
-	end
-end
-assert(combatAcquires == 0, "combat map refresh must defer protected pin creation")
+refreshMap()
+assert(combatAcquires == 0, "combat map refresh must defer pin creation")
 combat = false
 fireEvent("PLAYER_REGEN_ENABLED")
-assert(active[template][1]:IsShown(), "deferred map refresh must restore hidden pins after combat")
-map.AcquirePin = mapAcquire
-visible, WorldMapFrame.shown = false, false
+assert(ns.MapCanvas.Watch(WorldMapFrame).layer:IsShown(), "deferred map refresh must restore hidden pins after combat")
+assert(active[template][1]:IsVisible(), "the docks are back")
+for _, pool in pairs(poolsByKey) do
+	pool.Acquire = nil
+end
+setMapShown(false)
 
 -- A queued walking search must sleep in combat and resume from the single regen event.
 ns.Path = actualPath

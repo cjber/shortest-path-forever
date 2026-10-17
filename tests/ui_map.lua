@@ -1,13 +1,64 @@
 -- Continues tests/ui_client.lua: the world map, Blizzard's own map providers, and the addon loaded in TOC order.
 local zoom, mapID, visible = 0, 1414, false
 cursorX, cursorY = 0.5, 0.5
-local pools, active, providers = {}, {}, {}
-local canvas = { width = 1000, height = 700 }
-function canvas:GetWidth()
-	return self.width
+local providers = {}
+-- What the addon's map frames (UI/MapCanvas.lua) ask of a frame beyond the shared stub.
+local function frameExtras(f)
+	function f:GetScript(n)
+		return self.scripts[n]
+	end
+	-- The client moves a frame under another without a script; a hidden parent hides it with no OnHide of its own.
+	function f:SetParent(parent)
+		for index, child in ipairs(self.parent and self.parent.children or {}) do
+			if child == self then
+				table.remove(self.parent.children, index)
+				break
+			end
+		end
+		self.parent = parent
+		if parent then
+			parent.children = parent.children or {}
+			parent.children[#parent.children + 1] = self
+		end
+	end
+	function f:SetScale(value)
+		self.scale = value
+	end
+	function f:GetScale()
+		return self.scale or 1
+	end
+	function f:ClearAllPoints()
+		self.anchor = nil
+	end
+	return f
 end
-function canvas:GetHeight()
-	return self.height
+-- The flight point a map click super-tracks (SuperTrackablePinMixin), as its type and node.
+local trackedPinType, trackedPinID
+function C_SuperTrack.GetSuperTrackedMapPin()
+	return trackedPinType, trackedPinID
+end
+function C_SuperTrack.SetSuperTrackedMapPin(kind, id)
+	trackedPinType, trackedPinID = kind, id
+	fireEvent("SUPER_TRACKING_CHANGED")
+end
+function C_SuperTrack.ClearAllSuperTracked()
+	trackedPinType, trackedPinID, trackedQuest, supertracked = nil, nil, 0, false
+	fireEvent("SUPER_TRACKING_CHANGED")
+end
+Enum.SuperTrackingMapPinType = { TaxiNode = 2 }
+-- The map's canvas, a frame the addon's own pins sit on (UI/MapCanvas.lua).
+local canvas = frameExtras(stubframe())
+canvas.width, canvas.height = 1000, 700
+-- The canvas shows and hides with the map; the client runs OnUpdate only on a visible frame.
+function canvas.IsShown()
+	return visible
+end
+function canvas.IsVisible()
+	return visible
+end
+-- The scroll container scales the canvas by the zoom (MapCanvasScrollControllerMixin:SetCanvasScale).
+function canvas.GetEffectiveScale()
+	return uiScale * (0.5 + zoom * 1.5)
 end
 local map = setmetatable({
 	GetMapID = function()
@@ -33,32 +84,29 @@ local map = setmetatable({
 	GetNormalizedCursorPosition = function()
 		return cursorX, cursorY
 	end,
+	-- MapCanvas_PinFrameLevelsManager.lua: a read of the level a pin type is given.
+	GetPinFrameLevelsManager = function()
+		return {
+			GetValidFrameLevel = function(_, levelType, index)
+				return 2000 + #levelType + (index or 1)
+			end,
+		}
+	end,
 }, mt)
-function map:RemoveAllPinsByTemplate(template)
-	pools[template] = pools[template] or {}
-	for _, pin in ipairs(active[template] or {}) do
-		pin:Hide()
-		pin.anchor = nil
-		pin:OnReleased()
-		pools[template][#pools[template] + 1] = pin
-	end
-	active[template] = {}
-end
-function map:AcquirePin(template, ...)
-	pools[template], active[template] = pools[template] or {}, active[template] or {}
-	local pin = table.remove(pools[template])
-	if not pin then
-		pin = stubframe()
+-- The addon's pin templates (UI/Map.xml), each with the art its XML gives it.
+local createFrame = CreateFrame
+_G.CreateFrame = function(frameType, name, parent, template)
+	local pin = frameExtras(createFrame(frameType, name, parent, template))
+	if type(template) == "string" and template:match("^ShortestPathForever.*PinTemplate$") then
 		pin.Icon = pin:CreateTexture()
-		pin.Glow, pin.Texture, pin.HighlightTexture = setmetatable({}, mt), pin:CreateTexture(), setmetatable({}, mt)
-		function pin.Texture:SetAtlas(atlas)
-			self.atlas = atlas
-		end
+		pin.Glow, pin.Texture, pin.HighlightTexture = pin:CreateTexture(), pin:CreateTexture(), pin:CreateTexture()
+		pin.Glow:Hide()
+		pin.SuperTrackGlow, pin.SuperTrackMarker = pin:CreateTexture(), pin:CreateTexture()
 		pin.Disc, pin.Button, pin.Numeral = pin:CreateTexture(), pin:CreateTexture(), pin:CreateTexture()
 		-- The blob widget's own methods (FrameAPIBlob), recorded: the quests drawn since the last DrawNone, and on
 		-- which map.
 		if template:match("AreaPin") then
-			assert(blobWidget, "no QuestPOIFrame on this client")
+			assert(frameType == "QuestPOIFrame" and blobWidget, "no QuestPOIFrame on this client")
 			function pin:SetFillTexture(texture)
 				self.fill = texture
 			end
@@ -76,23 +124,10 @@ function map:AcquirePin(template, ...)
 				self.blobs[#self.blobs + 1] = questID
 			end
 		end
-		-- A template with no mixin of its own (the ping pin) inherits the client's MapPinPingTemplate instead.
-		local mixin = _G[template:gsub("Template$", "Mixin")]
-		if mixin then
-			for k, v in pairs(mixin) do
-				pin[k] = v
-			end
-		end
-		pin:OnLoad()
-	end
-	active[template][#active[template] + 1] = pin
-	pin:Show()
-	pin:OnAcquired(...)
-	if template:match("Transport") then
-		assert(pin.anchor, "pooled transport geometry must restore its anchor")
 	end
 	return pin
 end
+-- Blizzard's own pins, for its own providers: the addon's pins build on none of these.
 _G.MapCanvasPinMixin = {
 	OnReleased = noop,
 	-- MapCanvas_DataProviderBase.lua:233/284: clicks reach OnMouseClickAction; right clicks pass through to zoom out.
@@ -162,35 +197,68 @@ _G.SuperTrackablePoiPinMixin = {
 _G.MapPinTags = { FlightPoint = 1 }
 assert(loadfile(BLIZZARD_UI .. "Blizzard_SharedMapDataProviders/FlightPointDataProvider.lua"))()
 local clickHandlers, pinHandlers = {}, {}
+-- Blizzard's own pins, which its own providers acquire (the flight points and the user waypoint). The addon draws on
+-- frames of its own (UI/MapCanvas.lua) and never acquires one: a template of its own here fails the check.
+local nativePools, nativeActive = {}, {}
+-- Once the addon has loaded, adding or removing a data provider fails the check (#158).
+local addonLoaded = false
 _G.WorldMapFrame = setmetatable({
 	dataProviders = {},
 	shown = true,
 	IsShown = function(self)
 		return self.shown
 	end,
-	IsVisible = function()
-		return visible
-	end,
 	EnumeratePinsByTemplate = function(_, template)
-		local i, list = 0, active[template] or {}
+		local i, list = 0, nativeActive[template] or {}
 		return function()
 			i = i + 1
 			return list[i]
 		end
 	end,
+	RemoveAllPinsByTemplate = function(_, template)
+		assert(not template:match("^ShortestPathForever"), "the addon released a map pin of its own: " .. template)
+		nativePools[template] = nativePools[template] or {}
+		for _, pin in ipairs(nativeActive[template] or {}) do
+			pin:Hide()
+			pin:OnReleased()
+			nativePools[template][#nativePools[template] + 1] = pin
+		end
+		nativeActive[template] = {}
+	end,
+	AcquirePin = function(_, template, ...)
+		assert(not template:match("^ShortestPathForever"), "the addon acquired a map pin: " .. template)
+		nativePools[template], nativeActive[template] = nativePools[template] or {}, nativeActive[template] or {}
+		local pin = table.remove(nativePools[template])
+		if not pin then
+			pin = stubframe()
+			pin.Texture, pin.Icon = pin:CreateTexture(), pin:CreateTexture()
+			function pin.Texture:SetAtlas(atlas)
+				self.atlas = atlas
+			end
+			local mixin = _G[template:gsub("Template$", "Mixin")]
+			for k, v in pairs(mixin or {}) do
+				pin[k] = v
+			end
+			pin.pinTemplate = template
+			if pin.OnLoad then
+				pin:OnLoad()
+			end
+		end
+		nativeActive[template][#nativeActive[template] + 1] = pin
+		pin:Show()
+		if pin.OnAcquired then
+			pin:OnAcquired(...)
+		end
+		return pin
+	end,
 	AddDataProvider = function(self, provider)
+		assert(not addonLoaded, "the addon added a data provider to the world map")
 		providers[#providers + 1] = provider
 		self.dataProviders[provider] = true
 		provider:RefreshAllData()
 	end,
-	RemoveDataProvider = function(self, provider)
-		provider:RemoveAllData()
-		self.dataProviders[provider] = nil
-		for i = #providers, 1, -1 do
-			if providers[i] == provider then
-				table.remove(providers, i)
-			end
-		end
+	RemoveDataProvider = function()
+		error("the addon removed a data provider from the world map")
 	end,
 	AddCanvasClickHandler = function(_, fn)
 		clickHandlers[#clickHandlers + 1] = fn
@@ -198,10 +266,12 @@ _G.WorldMapFrame = setmetatable({
 	AddGlobalPinMouseActionHandler = function(_, fn)
 		pinHandlers[#pinHandlers + 1] = fn
 	end,
-	GetMapID = function()
-		return mapID
-	end,
 }, mt)
+-- One map: the canvas reads above are the world map's own.
+for key, value in pairs(map) do
+	rawset(WorldMapFrame, key, value)
+end
+map = WorldMapFrame
 _G.ObjectiveTrackerManager = setmetatable({}, {
 	__index = function(_, key)
 		error("addon entered native tracker manager: " .. key)
@@ -296,3 +366,59 @@ ns.Path = path.Path
 fireEvent("ADDON_LOADED", "ShortestPathForever")
 fireEvent("PLAYER_ENTERING_WORLD")
 assert(#errors == 0, table.concat(errors, "\n"))
+addonLoaded = true
+-- The addon's pins on the world map, by pool (its template name): the active ones and the free ones.
+-- The addon's pools are listed by key, so a check can walk them; Blizzard's own pins are looked up by template.
+local active = setmetatable({}, {
+	__index = function(_, key)
+		return nativeActive[key]
+	end,
+})
+for key, pool in pairs(ns.MapCanvas.Pools(WorldMapFrame)) do
+	active[key] = pool.active
+end
+local pools = setmetatable({}, {
+	__index = function(_, key)
+		local pool = ns.MapCanvas.Pools(WorldMapFrame)[key]
+		return pool and pool.free
+	end,
+})
+-- One frame of the map's view (UI/MapCanvas.lua), as the client runs its OnUpdate while the map is shown.
+local function mapTick()
+	ns.MapCanvas.Update(WorldMapFrame)
+end
+-- The world map opened or closed. Closing hides the canvas, and with it the view's frame (its OnHide); opening runs
+-- the view's first frame, as the client would.
+local function setMapShown(shown)
+	local was = visible
+	visible, WorldMapFrame.shown = shown, shown
+	if was and not shown then
+		for _, child in ipairs(canvas.children or {}) do
+			if child.scripts.OnHide then
+				child.scripts.OnHide(child)
+			end
+		end
+	elseif shown then
+		mapTick()
+	end
+end
+-- The map closed and opened again: the addon's layers redraw as they do on the map's show, and Blizzard's own
+-- providers refresh as MapCanvasMixin:OnShow has them.
+local function refreshMap()
+	if visible then
+		setMapShown(false)
+		setMapShown(true)
+	end
+	for _, provider in ipairs(providers) do
+		provider:RefreshAllData()
+	end
+end
+-- The canvas zoomed (or its pin scale changed): the view tells the layers on its next frame.
+local function canvasScaled()
+	ns.MapCanvas.Watch(WorldMapFrame).scale = nil
+	mapTick()
+end
+-- A click on one of the addon's pins, as the press and release of a mouse button over it make one.
+local function clickPin(pin, button)
+	ns.MapCanvas.Click(pin, button)
+end

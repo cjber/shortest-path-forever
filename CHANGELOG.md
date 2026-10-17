@@ -12,7 +12,14 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
-- **More players credited.** THIRD_PARTY.md now thanks GenericP for asking to plan to a spot under a Questie icon (Alt-click, 1.14.0) and for TomTom waypoints to start journeys, and Sol_Deus, tallsmartman and TRDeadbeat for reporting the controller error and freezes behind the gamepad change in 1.17.0. CurseForge players are now listed by the name CurseForge shows, such as team_Brigade and Testvonfarkle.
+- **Gamepad interface: the world map is only read.** Shortest Path's docks, portals, flight points, route and stops are now drawn on frames of its own over the map, so the game's map no longer holds any of the addon's pins or data. With the gamepad interface on, the map walks its own pins from secure code every frame, and an addon's pins in that walk are the likeliest cause of the blocked `SetPreferredGamepadInteractTarget()` error some controller players reported. Every pin works as before: tooltips, clicks, Shift-click to plan a journey, right-click to zoom out, the size settings, and a flight point you click on a zone map becomes the one you track. Under the gamepad interface, a pin under the map cursor shows its tooltip. Thanks to TRDeadbeat, tallsmartman and the CurseForge players who reported it, and to Polestar for the idea.
+- **Works alongside Polestar.** With Polestar installed, Shortest Path's TomTom stand-in, `/way` and *Follow TomTom's arrow* always work, whichever addon loads first, and a waypoint is never planned by both. Polestar's own stand-in no longer counts as TomTom, so *Let guides set TomTom waypoints* can be turned on at any time, and turned off again gives Polestar's back if Polestar had it. When Polestar follows TomTom's arrow and hands its target to Shortest Path, that waypoint isn't followed a second time, and the copy of Polestar's own target it puts in TomTom (or in the stand-in) is left to Polestar.
+- **More players credited.** THIRD_PARTY.md now thanks GenericP for asking to plan to a spot under a Questie icon (Alt-click, 1.14.0) and for TomTom waypoints to start journeys, and Sol_Deus for reporting the controller error with TomTom and Scrap. CurseForge players are now listed by the name CurseForge shows, such as team_Brigade and Testvonfarkle.
+
+### For addon authors
+
+- **`ForeverMapMarkers`.** The pins aren't the map's own any more, so `WorldMapFrame:EnumeratePinsByTemplate` no longer finds them. `ForeverMapMarkers.ShortestPathForever(WorldMapFrame)` returns the shown docks, portals, flight points and stops as `{x, y, kind}` map fractions on the map being viewed (docs/api.md).
+- **`/way` is claimed as Shortest Path loads**, while TomTom isn't installed and no addon has it, rather than at login. An addon that claims `/way` at login while it's free finds it taken; TomTom, or an addon that takes `/way` without looking, still keeps it. The API meanings other addons rely on (`NavigateRoute` stops, `CurrentStop`, `Active`, `Ended`, `Cancel` and `Subscribe`) are now pinned by `tests/api_contract_spec.lua`.
 
 ## [1.19.2] - 2026-10-17
 
