@@ -72,7 +72,7 @@ The world map's filter menu and the minimap's tracking menu hide each kind of ma
 
 ## Move the tracker
 
-Turn off **Attach to quest tracker** in Guidance, or right-click the tracker's "Journey to …" line and untick it there, then drag the shared Forever column by its heading. The column and its heading hide while nothing is tracked; turn the setting back on in Guidance to attach it above your quests again.
+Turn off **Attach to quest tracker** in Guidance, or right-click the tracker's "Journey to …" line and untick it, then drag the Forever column by its heading. The column hides while nothing is tracked; turn the setting back on to reattach it.
 
 ![Detached Forever tracker](docs/screenshots/detached.png)
 
@@ -84,6 +84,8 @@ Other addons can plan and guide journeys through `ShortestPathForever.API`, ask 
 to journey changes. [docs/api.md](docs/api.md) has the calls and what they return.
 
 With *Follow RestedXP guides* on (the default), leave RestedXP's TomTom option off so only one addon follows the guide.
+
+With Questie's tracker on, the Forever sections move clear of its quest list.
 
 <!-- forever-family:start -->
 
@@ -123,7 +125,7 @@ Run `tools/typecheck.sh` for LuaLS and static checks, and `luajit tests/<name>_s
 
 ## Credits
 
-Travel data comes from [wago.tools](https://wago.tools), [CMaNGOS](https://github.com/cmangos/classic-db) (GPL-3.0) and [InFlight](https://github.com/LudiusMaximus/InFlight) (MIT). Some features were inspired by [Polestar](https://github.com/fitzforge/polestar) by Fitz; no code was copied. Fitz is welcome to use our code. Thanks to Maggew, Alex21xx, Brainc3ll (French) and everyone listed in [THIRD_PARTY.md](THIRD_PARTY.md).
+Travel data comes from [wago.tools](https://wago.tools), [CMaNGOS](https://github.com/cmangos/classic-db) (GPL-3.0) and [InFlight](https://github.com/LudiusMaximus/InFlight) (MIT). Some features were inspired by [Polestar](https://github.com/fitzforge/polestar) by Fitz; no code was copied. Fitz is welcome to use our code. Thanks to Maggew, Alex21xx, Brainc3ll (French), deathmvp1, berserkerlxl and everyone listed in [THIRD_PARTY.md](THIRD_PARTY.md).
 
 ## Licence
 

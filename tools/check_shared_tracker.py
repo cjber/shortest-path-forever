@@ -5,7 +5,13 @@ import urllib.error
 import urllib.request
 
 REPOSITORIES = ("shortest-path-forever", "adventure-guide-forever", "skillup-forever", "legacy-forever")
-SHARED = ("UI/TrackerHost.lua", "tools/fetch_tracker_ui.py", "tests/tracker_host_spec.lua")
+SHARED = (
+    "UI/TrackerHost.lua",
+    "UI/TrackerQuestie.lua",
+    "tools/fetch_tracker_ui.py",
+    "tests/tracker_host_spec.lua",
+    "tests/tracker_questie_spec.lua",
+)
 
 
 def compare(copies, path):

@@ -53,7 +53,6 @@ L["Copy the address, then open it in your browser."] =
 	"Скопируйте адрес и откройте его в браузере."
 L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."] =
 	"Затемняет землю за компасом, чтобы его отметки читались на снегу или песке. 0% – без затемнения."
-L["Data checked against Forever 1.60.1.70450."] = "Данные сверены с Forever 1.60.1.70450."
 L["Deeprun Tram"] = "Подземный поезд"
 L["Distances in metres"] = "Расстояние в настоящих метрах"
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
@@ -225,6 +224,8 @@ L["The map's ping when a journey you planned reaches its goal, even with the gam
 L["The objective tracker is unavailable."] = "Панель отслеживания целей недоступна."
 L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it into your bug report."] =
 	"Текст выделен. Нажмите Ctrl+C (Cmd+C на Mac), чтобы скопировать его, и вставьте в отчет об ошибке."
+L["The tracker sections now move clear of Questie's quest list."] =
+	"Разделы отслеживания теперь не перекрываются списком заданий Questie."
 L["This addon"] = "Эта модификация"
 L["Through %s transport, there is a way"] = "Через транспорт фракции «%s» путь есть"
 L["Through %s transport: about %d min faster"] =

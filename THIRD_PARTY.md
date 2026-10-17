@@ -64,9 +64,9 @@ Credit for the ideas and reports behind the addon.
 | Merlinqt, on CurseForge | Asked for map icon sizes (1.14.0) | |
 | Maggew, on CurseForge | Found the "Division by zero" error, and asked for the steps on the destination pin and the compass background (1.15.0), finer compass positioning (#160) and the arrow-key nudge (1.17.0) | |
 | team\_Brigade, phear and Testvonfarkle, on CurseForge | Asked to hide the empty tracker's title (1.15.0) | |
-| berserkerlxl, on CurseForge | Found guides' TomTom waypoints not reaching the addon, and asked for `/way` (1.15.0) | |
+| berserkerlxl, on CurseForge | Found guides' TomTom waypoints not reaching the addon, and asked for `/way` (1.15.0); found that Questie's tracker was covering the Journey (#214) | |
 | rydoc and Joster91, on CurseForge | Found the Journey collapsing into or overlapping the quest tracker (1.15.0, 1.17.0) | |
-| deathmvp1, on CurseForge | Asked to move the Journey off the quest list; detaching it is now in its right-click menu (1.17.0) | |
+| deathmvp1, on CurseForge | Asked to move the Journey off the quest list; detaching it is now in its right-click menu (1.17.0). Found Questie's quest list covering the Journey, which now moves clear of it (#214) | |
 | GenericP, on CurseForge | Asked to plan to a spot under a Questie icon, now Alt-click on the world map (1.14.0), and for TomTom waypoints to start journeys (1.15.0); also answered other players' questions on the page | |
 | Sol\_Deus, tallsmartman and TRDeadbeat, on CurseForge | Reported the blocked `SetPreferredGamepadInteractTarget()` error and freezes with a controller, which led to leaving the world map to the game in the gamepad interface (1.17.0, #158) | |
 | [Brainc3ll](https://github.com/Brainc3ll) | Eight lines of the French translation, from his Legacy Forever translation (cjber/legacy-forever#99); the rest of `Locales/frFR.lua` and the other languages are machine translated (lines ending `-- mt` in frFR) | |
