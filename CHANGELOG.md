@@ -14,6 +14,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 - **Walks stay out of trouble.** A walk goes round zones whose lowest level is 4 or more above yours, and plans again when you level up (Ding! by Yendi gave me the idea). It also goes round the other faction's towns and capitals. The zones and towns you start and end in are never avoided. The tracker says when a walk goes round a zone, has to cross one, or passes a hostile town: *Hostile town: Crossroads*. *Avoid zones far above my level* in Guidance turns off the zone part. The towns idea came from Polestar.
 
+## [1.19.2] - 2026-10-17
+
+- **The tracker sections now move clear of Questie's quest list.** With Questie's tracker on, its list was drawn over the Journey and the other Forever sections. The shared column now sits below Questie's list, or above or beside it when there isn't room, and follows it when it moves, grows or hides; your quest tracker keeps its own place. A detached column you haven't moved yet starts beside Questie's list. Thanks to deathmvp1 for the report and berserkerlxl for finding the cause.
+
 ## [1.19.1] - 2026-10-17
 
 - **Data checked against Forever 1.60.1.70450.** The travel data is unchanged apart from its build pin.

@@ -54,7 +54,6 @@ L["Copy the address, then open it in your browser."] = "Copia la dirección y á
 L["Crosses %s (level %s)"] = "Cruza %s (nivel %s)"
 L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."] =
 	"Oscurece el suelo tras la brújula para que sus marcas se lean bien sobre nieve o arena. 0 % no muestra nada."
-L["Data checked against Forever 1.60.1.70450."] = "Datos comprobados con Forever 1.60.1.70450."
 L["Deeprun Tram"] = "Tranvía Subterráneo"
 L["Distances in metres"] = "Distancias en metros reales"
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
@@ -219,6 +218,8 @@ L["The map's ping when a journey you planned reaches its goal, even with the gam
 L["The objective tracker is unavailable."] = "El rastreador de objetivos no está disponible."
 L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it into your bug report."] =
 	"El texto está seleccionado. Pulsa Ctrl+C (Cmd+C en Mac) para copiarlo y pégalo en tu informe de error."
+L["The tracker sections now move clear of Questie's quest list."] =
+	"Las secciones del seguimiento ahora se apartan de la lista de misiones de Questie."
 L["This addon"] = "Este addon"
 L["Through %s transport, there is a way"] = "Con el transporte de la %s hay un camino"
 L["Through %s transport: about %d min faster"] = "Con el transporte de la %s: unos %d min más rápido"
