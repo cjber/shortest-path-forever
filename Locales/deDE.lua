@@ -30,6 +30,8 @@ L["Arriving at %s in %s"] = "Ankunft in %s in %s"
 L["Arrow scale"] = "Pfeilgröße"
 L["Attach to quest tracker"] = "An Questverfolgung anheften"
 L["Auction house"] = "Auktionshaus"
+L["Avoid zones far above my level"] = "Gebiete weit über meiner Stufe meiden"
+L["Avoids %s (level %s)"] = "Umgeht %s (Stufe %s)"
 L["Bank"] = "Bank"
 L["Boat and Zeppelin Routes"] = "Schiffs- und Zeppelinrouten"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
@@ -49,6 +51,7 @@ L["Compass scale"] = "Kompassgröße"
 L["Complete this step"] = "Diesen Schritt abschließen"
 L["Copy link"] = "Link kopieren"
 L["Copy the address, then open it in your browser."] = "Kopiert die Adresse und öffnet sie dann in Eurem Browser."
+L["Crosses %s (level %s)"] = "Durchquert %s (Stufe %s)"
 L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."] =
 	"Dunkelt den Boden hinter dem Kompass ab, damit seine Markierungen auf Schnee oder Sand lesbar bleiben. 0 % zeigt nichts."
 L["Data checked against Forever 1.60.1.70450."] = "Daten mit Forever 1.60.1.70450 abgeglichen."
@@ -80,6 +83,7 @@ L["Guide marks the next boat, lift, flight master or your destination, not each 
 	"Die Führung markiert das nächste Schiff, den nächsten Aufzug, Flugmeister oder Euer Ziel, nicht jede Abzweigung des Fußwegs."
 L["Guide me"] = "Führen"
 L["Horde"] = "Horde"
+L["Hostile town: %s"] = "Feindliche Siedlung: %s"
 L["In the objective tracker while you are near a dock, lift or tram."] =
 	"In der Questverfolgung, während Ihr nahe einer Anlegestelle, eines Aufzugs oder der Bahn seid."
 L["Innkeeper"] = "Gastwirt"
@@ -231,6 +235,8 @@ L["Use hearth and teleports"] = "Ruhestein und Teleports nutzen"
 L["Vendors by specialty"] = "Händler nach Fachgebiet"
 L["W"] = "W"
 L["Walk to %s"] = "Zu Fuß nach %s"
+L["Walks go round zones whose lowest level is 4 or more above yours, but never the ones you start or end in."] =
+	"Fußwege umgehen Gebiete, deren niedrigste Stufe 4 oder mehr über deiner liegt, aber nie die, in denen du startest oder ankommst."
 L["What next? Adventure Guide Forever suggests quests for your level."] =
 	"Wie weiter? Adventure Guide Forever schlägt Quests für Eure Stufe vor."
 L["What's new after an update"] = "Neuigkeiten nach einem Update"

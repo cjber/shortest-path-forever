@@ -30,6 +30,8 @@ L["Arriving at %s in %s"] = "%s 도착까지 %s"
 L["Arrow scale"] = "화살표 크기"
 L["Attach to quest tracker"] = "퀘스트 추적기에 붙이기"
 L["Auction house"] = "경매장"
+L["Avoid zones far above my level"] = "내 레벨보다 훨씬 높은 지역 피하기"
+L["Avoids %s (level %s)"] = "%s 우회 (레벨 %s)"
 L["Bank"] = "은행"
 L["Boat and Zeppelin Routes"] = "배와 비행선 노선"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
@@ -49,6 +51,7 @@ L["Compass scale"] = "나침반 크기"
 L["Complete this step"] = "이 단계 완료"
 L["Copy link"] = "링크 복사"
 L["Copy the address, then open it in your browser."] = "주소를 복사한 후 브라우저에서 여십시오."
+L["Crosses %s (level %s)"] = "%s 통과 (레벨 %s)"
 L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."] =
 	"나침반 뒤의 지면을 어둡게 해 눈이나 모래 위에서도 표시가 잘 보이게 합니다. 0%는 표시하지 않습니다."
 L["Data checked against Forever 1.60.1.70450."] = "Forever 1.60.1.70450 기준으로 데이터를 확인했습니다."
@@ -81,6 +84,7 @@ L["Guide marks the next boat, lift, flight master or your destination, not each 
 	"안내는 다음 배, 승강기, 비행 조련사 또는 목적지를 표시하며, 걷는 길의 모든 갈림길을 표시하지는 않습니다."
 L["Guide me"] = "안내 받기"
 L["Horde"] = "호드"
+L["Hostile town: %s"] = "적대 마을: %s"
 L["In the objective tracker while you are near a dock, lift or tram."] =
 	"부두, 승강기, 지하철 근처에 있을 때 목표 추적기에 표시합니다."
 L["Innkeeper"] = "여관주인"
@@ -235,6 +239,8 @@ L["Use hearth and teleports"] = "귀환석과 순간이동 사용"
 L["Vendors by specialty"] = "전문 분야별 상인"
 L["W"] = "서"
 L["Walk to %s"] = "%s까지 걷기"
+L["Walks go round zones whose lowest level is 4 or more above yours, but never the ones you start or end in."] =
+	"최저 레벨이 내 레벨보다 4 이상 높은 지역은 걸어서 돌아가지만, 출발 지역과 도착 지역은 예외입니다."
 L["What next? Adventure Guide Forever suggests quests for your level."] =
 	"다음은? Adventure Guide Forever가 레벨에 맞는 퀘스트를 추천합니다."
 L["What's new after an update"] = "업데이트 후 새로운 소식"

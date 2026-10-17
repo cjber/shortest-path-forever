@@ -76,7 +76,8 @@ local function full(o)
 		if not reverse and o.to.map == point.map and ns.Planner.Landmass(o.to, o.landmasses) == mass then
 			targets[#targets + 1] = o.to
 		end
-		local costs = ns.Path.FindManySync(point.map, point, targets, o.waterWalking, reverse)
+		-- The same hazards as the journey's own searches: the other faction's towns are on every continent.
+		local costs = ns.Path.FindManySync(point.map, point, targets, o.waterWalking, reverse, o.hazards)
 		for i, target in ipairs(targets) do
 			walks[#walks + 1] =
 				{ from = reverse and target or point, to = reverse and point or target, cost = costs[i] }

@@ -218,16 +218,22 @@ local function PlaceKey(node)
 end
 
 -- options.baked holds walks searched ahead of time between fixed places, per map; options.waterWalking picks
--- which of their two costs applies.
+-- which of their two costs applies. They were searched without hazards, so options.hazards weights one by the hazards
+-- on the straight way between its ends, as the walking search would weight the yards it walks inside them.
 local function BakedCost(options, a, b)
 	local ka, kb = a.bakedKey, b.bakedKey
 	local baked = ka and kb and options.baked and options.baked[a.map]
 	local pair = baked and baked[ka < kb and ka .. " " .. kb or kb .. " " .. ka]
 	if pair then
 		local mode = options.waterWalking and 2 or 1
-		return true,
-			pair[mode + (ka > kb and pair[3] ~= nil and 2 or 0)],
-			pair[mode + (ka < kb and pair[3] ~= nil and 2 or 0)]
+		local yards = pair[mode + (ka > kb and pair[3] ~= nil and 2 or 0)]
+		local reverse = pair[mode + (ka < kb and pair[3] ~= nil and 2 or 0)]
+		local hazards = options.hazards
+		if hazards and (yards or reverse) then
+			local factor = hazards.Segment(a.map, a.x, a.y, b.x, b.y)
+			yards, reverse = yards and yards * factor, reverse and reverse * factor
+		end
+		return true, yards, reverse
 	end
 	return false
 end
@@ -328,6 +334,7 @@ local CACHE_KEYS = {
 	"faction",
 	"otherFaction",
 	"waterWalking",
+	"hazards",
 }
 
 ---@param options SPFPlanOptions

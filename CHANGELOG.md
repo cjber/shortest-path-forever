@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Walks stay out of trouble.** A walk goes round zones whose lowest level is 4 or more above yours, and plans again when you level up (Ding! by Yendi gave me the idea). It also goes round the other faction's towns and capitals. The zones and towns you start and end in are never avoided. The tracker says when a walk goes round a zone, has to cross one, or passes a hostile town: *Hostile town: Crossroads*. *Avoid zones far above my level* in Guidance turns off the zone part. The towns idea came from Polestar.
+
 ## [1.19.1] - 2026-10-17
 
 - **Data checked against Forever 1.60.1.70450.** The travel data is unchanged apart from its build pin.

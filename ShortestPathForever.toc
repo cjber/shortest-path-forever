@@ -30,6 +30,7 @@ Data\Transports.lua
 Data\Taxi.lua
 Data\Portals.lua
 Data\Teleports.lua
+Data\Zones.lua
 Data\Walks.lua
 Transport\Model.lua
 Routing\Planner.lua
@@ -61,6 +62,7 @@ Routing\PathGrid.lua
 Routing\Path.lua
 Routing\PathJobs.lua
 Journey\JourneySteps.lua
+Journey\Hazards.lua
 Journey\JourneySearch.lua
 Journey\JourneyWalks.lua
 Journey\JourneyGuide.lua

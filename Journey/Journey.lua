@@ -333,6 +333,10 @@ function ns.JourneyInfo()
 				text = loading and text or text .. "   " .. ns.LegTime(leg),
 				current = index == progress.index,
 			}
+			-- Hostile towns and high zones on this walk, under its step.
+			for note, line in ipairs(leg.hazardNotes or {}) do
+				rows[#rows + 1] = { key = index .. ":" .. note, text = line, grey = true }
+			end
 		end
 	else
 		rows[1] = { key = "unreachable", text = costError and WALK_FAILURE[costError] or L["No way there from here."] }
