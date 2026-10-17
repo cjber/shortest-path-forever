@@ -51,7 +51,6 @@ L["Copy link"] = "複製連結"
 L["Copy the address, then open it in your browser."] = "複製該網址，然後在瀏覽器中開啟。"
 L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."] =
 	"調暗羅盤後方的地面，讓標記在雪地或沙地上也清晰可讀。0%為不顯示。"
-L["Data checked against Forever 1.60.1.70450."] = "已按 Forever 1.60.1.70450 核對資料。"
 L["Deeprun Tram"] = "礦道地鐵"
 L["Distances in metres"] = "距離以公尺顯示"
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
@@ -209,6 +208,8 @@ L["The map's ping when a journey you planned reaches its goal, even with the gam
 L["The objective tracker is unavailable."] = "目標追蹤器無法使用。"
 L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it into your bug report."] =
 	"文字已選取。按Ctrl+C（Mac上為Cmd+C）複製，然後貼到你的錯誤報告中。"
+L["The tracker sections now move clear of Questie's quest list."] =
+	"追蹤欄現在會避開 Questie 的任務列表。"
 L["This addon"] = "本插件"
 L["Through %s transport, there is a way"] = "藉助%s的交通工具可以抵達"
 L["Through %s transport: about %d min faster"] = "藉助%s的交通工具：約快%d分鐘"

@@ -51,7 +51,6 @@ L["Copy link"] = "링크 복사"
 L["Copy the address, then open it in your browser."] = "주소를 복사한 후 브라우저에서 여십시오."
 L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."] =
 	"나침반 뒤의 지면을 어둡게 해 눈이나 모래 위에서도 표시가 잘 보이게 합니다. 0%는 표시하지 않습니다."
-L["Data checked against Forever 1.60.1.70450."] = "Forever 1.60.1.70450 기준으로 데이터를 확인했습니다."
 L["Deeprun Tram"] = "깊은굴 지하철"
 L["Distances in metres"] = "실제 미터로 거리 표시"
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
@@ -219,6 +218,8 @@ L["The map's ping when a journey you planned reaches its goal, even with the gam
 L["The objective tracker is unavailable."] = "목표 추적기를 사용할 수 없습니다."
 L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it into your bug report."] =
 	"텍스트가 선택되었습니다. Ctrl+C(Mac은 Cmd+C)를 눌러 복사한 후 버그 보고서에 붙여 넣으십시오."
+L["The tracker sections now move clear of Questie's quest list."] =
+	"이제 추적기 항목이 Questie 퀘스트 목록을 가리지 않도록 비켜 표시됩니다."
 L["This addon"] = "이 애드온"
 L["Through %s transport, there is a way"] = "%s 교통수단을 이용하면 길이 있습니다"
 L["Through %s transport: about %d min faster"] = "%s 교통수단 이용 시: 약 %d분 더 빠름"

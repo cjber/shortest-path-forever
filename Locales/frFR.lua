@@ -52,7 +52,6 @@ L["Copy link"] = "Copier le lien" -- mt
 L["Copy the address, then open it in your browser."] = "Copiez l'adresse, puis ouvrez-la dans votre navigateur." -- mt
 L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."] =
 	"Assombrit le sol derrière la boussole pour que ses repères restent lisibles sur la neige ou le sable. 0 % n'affiche rien." -- mt
-L["Data checked against Forever 1.60.1.70450."] = "Données vérifiées avec Forever 1.60.1.70450." -- mt
 L["Deeprun Tram"] = "Tram des profondeurs" -- mt
 L["Distances in metres"] = "Distances en mètres réels" -- mt
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
@@ -218,6 +217,8 @@ L["The map's ping when a journey you planned reaches its goal, even with the gam
 L["The objective tracker is unavailable."] = "Le suivi des objectifs est indisponible." -- mt
 L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it into your bug report."] =
 	"Le texte est sélectionné. Appuyez sur Ctrl+C (Cmd+C sur Mac) pour le copier, puis collez-le dans votre rapport de bug." -- mt
+L["The tracker sections now move clear of Questie's quest list."] =
+	"Les sections du suivi s'écartent désormais de la liste de quêtes de Questie." -- mt
 L["This addon"] = "Cet addon" -- mt
 L["Through %s transport, there is a way"] = "Par les transports de la faction %s, un chemin existe" -- mt
 L["Through %s transport: about %d min faster"] = "Par les transports de la faction %s : environ %d min plus vite" -- mt
