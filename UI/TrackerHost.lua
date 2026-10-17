@@ -350,22 +350,26 @@ local function SidePoint(point)
 	return point:find("LEFT", 1, true) and "LEFT" or "RIGHT"
 end
 
--- Where a detached column sits until the player drags it: beside the native tracker and level with its top, so
--- neither draws over the other. To its left when the column fits there, otherwise to its right. Offsets are from
--- UIParent's top left corner in the host's own scale; the caller keeps them on screen.
-local function BesideNative(width, screenHeight)
-	local left, right, top =
-		ObjectiveTrackerFrame:GetLeft(), ObjectiveTrackerFrame:GetRight(), ObjectiveTrackerFrame:GetTop()
+-- Where a detached column sits until the player drags it: beside the quest list (the native tracker, or Questie's)
+-- and level with its top, so neither draws over the other. To its left when the column fits there, otherwise to its
+-- right. Offsets are from UIParent's top left corner in the host's own scale; the caller keeps them on screen.
+local function Beside(list, width, screenHeight)
+	local left, right, top = list:GetLeft(), list:GetRight(), list:GetTop()
 	if not (left and right and top) then
 		return 0, -40
 	end
-	local toHost = ObjectiveTrackerFrame:GetEffectiveScale() / host:GetEffectiveScale()
+	local toHost = list:GetEffectiveScale() / host:GetEffectiveScale()
 	local x = left * toHost - 8 - width
 	if x < 0 then
 		x = right * toHost + 8
 	end
 	return x, top * toHost - screenHeight
 end
+
+-- UI/TrackerQuestie.lua, loaded first, finds Questie's quest list (a host loaded without it ignores Questie).
+local TrackerQuestie = ns.TrackerQuestie or { List = function() end, Await = function() end }
+-- Whether the last attached layout went round Questie's list, and the room it gave the sections.
+local besideQuestie, questieRoom = false, 0
 
 -- Blizzard's Edit Mode owns the native slot while its manager is on screen. The manager can also be hidden and locked
 -- without exiting (CheckHideAndLockEditMode), which leaves editModeActive true with no EditMode.Exit: a hidden manager
@@ -516,7 +520,8 @@ local function LayoutDetached(settings)
 	if settings.x and settings.y then
 		x, y = settings.x / scale, settings.y / scale
 	else
-		x, y = BesideNative(width, screenHeight)
+		local questie = TrackerQuestie.List(host, host.MarkDirty)
+		x, y = Beside(questie or ObjectiveTrackerFrame, width, screenHeight)
 	end
 	x = math.max(0, math.min(x, math.max(0, screenWidth - width)))
 	y = math.min(0, math.max(y, 24 - screenHeight))
@@ -744,14 +749,60 @@ local function LayoutAttached()
 	-- anchor. Leave its height alone so the host and native tracker can settle in one pass.
 end
 
+-- Attached while Questie's list covers the native slot: the column goes below, above or beside it and the native
+-- tracker keeps its slot. Only our frames move, so this runs in combat too; with `questie` nil (Questie hid its list in
+-- combat) the column holds its place until combat ends.
+---@param questie Frame?
+local function LayoutBesideQuestie(questie)
+	RestoreNativeHeader()
+	if Editing() then
+		return
+	end
+	besideQuestie = true
+	if not InCombatLockdown() then
+		ReleaseNative()
+	end
+	if not questie then
+		host:SetShown(LayoutModules(host:GetWidth(), questieRoom, 0))
+		return
+	end
+	host:Show()
+	MatchNativeScale()
+	local scale = host:GetEffectiveScale() / UIParent:GetEffectiveScale()
+	local screenWidth, screenHeight = UIParent:GetWidth() / scale, UIParent:GetHeight() / scale
+	local width = math.min(ObjectiveTrackerFrame:GetWidth(), screenWidth)
+	host:SetWidth(width)
+	questieRoom = TrackerQuestie.Room(questie, host)
+	if not LayoutModules(width, questieRoom, 0) then
+		host:Hide()
+		return
+	end
+	local besideX = Beside(questie, width, screenHeight)
+	local places = TrackerQuestie.Places(questie, host, besideX, screenWidth, screenHeight)
+	for index, place in ipairs(places) do
+		host:ClearAllPoints()
+		host:SetPoint(place[1], UIParent, place[1], place[2], place[3])
+		if index == #places or not OverlapsMinimap() then
+			return
+		end
+	end
+end
+
 local function Layout()
 	queued = false
 	local settings = ApplyAttachment()
 	grip:SetShown(not attached)
 	if not attached then
+		besideQuestie = false
 		LayoutDetached(settings)
 		return
 	end
+	local questie = TrackerQuestie.List(host, host.MarkDirty)
+	if questie or (besideQuestie and InCombatLockdown()) then
+		LayoutBesideQuestie(questie)
+		return
+	end
+	besideQuestie = false
 	if InCombatLockdown() then
 		LayoutInCombat()
 		return
@@ -765,8 +816,9 @@ function host.MarkDirty(_)
 		C_Timer.After(0, Layout)
 	end
 end
+-- Questie hides the native tracker and its header, so a collapsed All Objectives no longer hides the sections.
 function host.IsCollapsed(_)
-	return attached == true and NativeCollapsed()
+	return attached == true and not besideQuestie and NativeCollapsed()
 end
 function host:ForceExpand()
 	self:MarkDirty()
@@ -922,7 +974,7 @@ function api.Debug()
 		)
 	end
 	local form = "combat=%s shown=%s hostH=%.1f host[%s] g[%s] nativeH=%.1f native[%s] g[%s] uiS%.2f"
-	return (form .. " stacked=%s clamped=%s"):format(
+	return (form .. " stacked=%s clamped=%s questie=%s"):format(
 		tostring(InCombatLockdown()),
 		tostring(host:IsShown()),
 		host:GetHeight() or -1,
@@ -933,7 +985,8 @@ function api.Debug()
 		geometry(ObjectiveTrackerFrame),
 		UIParent:GetEffectiveScale(),
 		tostring(IsAppliedNativeAnchor(ObjectiveTrackerFrame:GetPoint()) and true or false),
-		tostring(ObjectiveTrackerFrame:IsClampedToScreen())
+		tostring(ObjectiveTrackerFrame:IsClampedToScreen()),
+		tostring(besideQuestie)
 	)
 end
 
@@ -943,4 +996,5 @@ ns.TrackerHost = api
 EventUtil.ContinueAfterAllEvents(function()
 	ready = true
 	host:MarkDirty()
+	TrackerQuestie.Await(host.MarkDirty)
 end, "PLAYER_ENTERING_WORLD", "VARIABLES_LOADED")
