@@ -208,9 +208,11 @@ local env = setmetatable({
 	},
 }, { __index = _G })
 -- The shared art helpers the compass draws with: ns.Art.Fit and ns.SetTransportIcon.
-env.CreateFromMixins, env.MapCanvasPinMixin, env.FlightPointPinMixin = function()
+env.CreateFromMixins = function()
 	return {}
-end, {}, {}
+end
+-- UI/Map.lua's pins build on UI/MapCanvas.lua, which the compass never reaches.
+ns.MapCanvas = { PinMixin = {} }
 ns.Init = function() end
 local stubs = { DockKind = ns.DockKind, DockPoint = ns.DockPoint }
 for _, file in ipairs({ "Core/Distance.lua", "UI/Art.lua", "UI/Looks.lua", "UI/Map.lua", "UI/Mover.lua" }) do

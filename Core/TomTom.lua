@@ -89,6 +89,7 @@ local function Same(a, b)
 end
 
 -- Both the waypoint and the journey start together: a refused journey leaves no waypoint for a guide to remove.
+-- Polestar copies its own target into TomTom (from = "Polestar"); whether that comes here is its hand-off setting.
 ---@param map integer
 ---@param x number
 ---@param y number
@@ -96,7 +97,7 @@ end
 ---@param opts table?
 ---@return TomTomWaypoint?
 local function Start(map, x, y, title, opts)
-	if not (active and API and ns.db) then
+	if not (active and API and ns.db) or type(opts) == "table" and opts.from == "Polestar" then
 		return nil
 	end
 	---@type TomTomWaypoint
@@ -281,17 +282,45 @@ function shim.AddWaypointToCurrentZone(self, x, y, desc)
 	return shim.AddZWaypoint(self, nil, C_Map.GetBestMapForUnit("player"), x, y, desc)
 end
 
--- TomTom owns this global; another addon's TomTom, or one that loads later, is left alone. A TomTom switched off in
--- the AddOns list never loads, so the shim answers in its place.
+-- Polestar keeps a TomTom stand-in of its own as Polestar.Nav.tomtomShim, and puts it in the global at login when
+-- nothing holds it. It is not TomTom: the shim takes the global from it, never follows TomTom's arrow through it, and
+-- gives it back when standing down while Polestar still answers waypoints.
+---@return SPFPolestarNav?
+local function PolestarNav()
+	local nav = type(Polestar) == "table" and Polestar.Nav
+	return type(nav) == "table" and nav or nil
+end
+
+---@param value any
 ---@return boolean
-local function Installed()
-	if TomTom ~= nil and TomTom ~= shim then
+local function PolestarStandIn(value)
+	local nav = PolestarNav()
+	return value ~= nil and nav ~= nil and value == nav.tomtomShim
+end
+
+-- One of Polestar's settings, read through its own Polestar.Get, or nil when there is none to read.
+---@param path string
+---@return any
+local function PolestarSetting(path)
+	local get = type(Polestar) == "table" and Polestar.Get
+	if type(get) ~= "function" then
+		return nil
+	end
+	local ok, value = pcall(get, path)
+	return ok and value or nil
+end
+
+-- TomTom loaded, or installed and enabled for this character, so loading after Shortest Path. A TomTom switched off
+-- in the AddOns list never loads.
+---@return boolean
+function ns.TomTomEnabled()
+	if not C_AddOns then
+		return false
+	end
+	if C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded("TomTom") then
 		return true
 	end
-	if C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded("TomTom") then
-		return true
-	end
-	if not (C_AddOns and C_AddOns.DoesAddOnExist and C_AddOns.DoesAddOnExist("TomTom")) then
+	if not (C_AddOns.DoesAddOnExist and C_AddOns.DoesAddOnExist("TomTom")) then
 		return false
 	end
 	if C_AddOns.GetAddOnEnableState then
@@ -300,6 +329,36 @@ local function Installed()
 	end
 	return true
 end
+
+-- TomTom owns this global; another addon's TomTom, or one that loads later, is left alone, but Polestar's stand-in is
+-- not TomTom. A TomTom switched off in the AddOns list never loads, so the shim answers in its place.
+---@return boolean
+local function Installed()
+	if TomTom ~= nil and TomTom ~= shim and not PolestarStandIn(TomTom) then
+		return true
+	end
+	return ns.TomTomEnabled()
+end
+
+-- Whether Polestar would put its stand-in in the global now: it answers waypoints and is not handing its target to
+-- Shortest Path, which it does through the API instead.
+---@return boolean
+local function PolestarAnswers()
+	if not PolestarSetting("nav.answerTomTom") then
+		return false
+	end
+	local nav = PolestarNav()
+	local handedOff = nav and nav.HandedOff
+	if type(handedOff) ~= "function" then
+		return true
+	end
+	local ok, off = pcall(handedOff)
+	return not (ok and off)
+end
+
+-- Polestar's stand-in, while the shim holds the global in its place.
+---@type TomTom?
+local displaced
 
 local function StandDown()
 	if not active then
@@ -312,8 +371,10 @@ local function StandDown()
 	current = nil
 	Forget()
 	if TomTom == shim then
-		TomTom = nil
+		local polestar = displaced and PolestarAnswers() and PolestarNav()
+		TomTom = polestar and polestar.tomtomShim or nil
 	end
+	displaced = nil
 end
 
 -- The settings checkbox and the addon's own load both call this.
@@ -324,6 +385,9 @@ function ns.RefreshTomTom()
 	end
 	if not active then
 		active = true
+		if PolestarStandIn(TomTom) then
+			displaced = TomTom
+		end
 		TomTom = shim
 	end
 end
@@ -351,7 +415,8 @@ local watcher = CreateFrame("Frame")
 ---@param uid any
 local function Follow(uid)
 	-- TomTom's corpse arrow is left to the corpse run (Journey/Corpse.lua), which keeps the journey you were on.
-	if type(uid) ~= "table" or uid.corpse then
+	-- Polestar's own target, which it copies into TomTom (from = "Polestar"), is Polestar's to guide or hand over.
+	if type(uid) ~= "table" or uid.corpse or uid.from == "Polestar" then
 		return
 	end
 	if not live then
@@ -359,6 +424,11 @@ local function Follow(uid)
 		return
 	end
 	if not (ns.db and ns.db.tomtomFollow and ns.db.journey) then
+		return
+	end
+	-- Polestar following the same arrow with "Hand guiding to Shortest Path Forever" on sends this waypoint here as
+	-- its own journey; following it as well would plan it twice.
+	if PolestarSetting("nav.followTomTom") and PolestarSetting("nav.spfHandoff") then
 		return
 	end
 	if uid == following and API.CurrentStop(OWNER) then
@@ -397,6 +467,7 @@ function ns.RefreshTomTomFollow()
 		not hooked
 		and tomtom
 		and tomtom ~= shim
+		and not PolestarStandIn(tomtom)
 		and type(tomtom.SetCrazyArrow) == "function"
 		and type(tomtom.RemoveWaypoint) == "function"
 	then

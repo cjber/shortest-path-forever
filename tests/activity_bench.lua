@@ -62,7 +62,7 @@ return {
    local t = os.clock() module:LayoutContents() costs.cpu = costs.cpu + os.clock() - t
   end
   for _, f in ipairs(frames) do
-   if f:IsShown() and f.scripts.OnUpdate then
+   if f:IsVisible() and f.scripts.OnUpdate then
     costs.callbacks = costs.callbacks + 1
     local t = os.clock()
     f.scripts.OnUpdate(f, 1/60)

@@ -40,3 +40,16 @@
 
 ---@type TomTom?
 TomTom = nil
+
+-- Polestar (fitzforge/polestar), only as far as Core/TomTom.lua reads it: its own TomTom stand-in, to tell it from
+-- TomTom, whether it hands its target to Shortest Path, and its settings through its Get.
+---@class SPFPolestarNav
+---@field tomtomShim? TomTom
+---@field HandedOff? fun(): boolean -- whether Polestar hands its target to Shortest Path rather than guiding it
+
+---@class SPFPolestar
+---@field Nav? SPFPolestarNav
+---@field Get? fun(path: string): any
+
+---@type SPFPolestar?
+Polestar = nil

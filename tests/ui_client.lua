@@ -32,17 +32,23 @@ local mt = {
 local function animationGroup(owner)
 	local group = { owner = owner, animations = {}, plays = 0 }
 	function group:CreateAnimation(kind)
-		local animation = { kind = kind }
-		for _, key in ipairs({ "Duration", "Degrees", "FromAlpha", "ToAlpha", "Smoothing", "Order", "Target" }) do
-			animation["Set" .. key] = function(self, value)
-				self[key] = value
-			end
-		end
+		-- Each setter records its value under its own name: SetDuration(0.2) sets animation.Duration.
+		local animation = setmetatable({ kind = kind }, {
+			__index = function(_, method)
+				local key = method:match("^Set(.+)")
+				return key and function(self, value)
+					rawset(self, key, value)
+				end
+			end,
+		})
 		self.animations[#self.animations + 1] = animation
 		return animation
 	end
 	function group:SetLooping(value)
 		self.looping = value
+	end
+	function group:SetScript(name, fn)
+		self[name] = fn
 	end
 	function group:Play()
 		self.playing = true

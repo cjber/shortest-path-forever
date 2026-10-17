@@ -47,7 +47,7 @@ end
 -- widget of that kind for the quests a held stop names, set up as the stock pin sets itself up but wearing the
 -- minimap's gold set, so both maps show one area in one colour: its border is the gold edge and its fill is clear,
 -- as on the minimap. The player's tracked quest and the stock pin are never touched.
----@class SPFAreaPin : SPFMapPin
+---@class SPFAreaPin : SPFCanvasPin
 ---@field quests? number[]
 ---@field blob boolean -- whether this client's widget has every blob method the pin calls
 ---@field SetFillTexture fun(self: SPFAreaPin, asset: string)
@@ -58,7 +58,9 @@ end
 ---@field SetMapID fun(self: SPFAreaPin, mapID: number)
 ---@field DrawNone fun(self: SPFAreaPin)
 ---@field DrawBlob fun(self: SPFAreaPin, questID: number, draw: boolean)
-ShortestPathForeverAreaPinMixin = CreateFromMixins(MapCanvasPinMixin)
+local AreaPin = CreateFromMixins(ns.MapCanvas.PinMixin)
+-- Route.lua's pool puts it on.
+ns.AreaPinMixin = AreaPin
 
 -- FrameAPIBlob's methods the pin calls.
 local BLOB_METHODS = {
@@ -72,7 +74,7 @@ local BLOB_METHODS = {
 	"DrawBlob",
 }
 
-function ShortestPathForeverAreaPinMixin:OnLoad()
+function AreaPin:OnLoad()
 	self.blob = true
 	for _, method in ipairs(BLOB_METHODS) do
 		self.blob = self.blob and self[method] ~= nil
@@ -91,7 +93,7 @@ function ShortestPathForeverAreaPinMixin:OnLoad()
 end
 
 -- Every named quest's area the client has on the map being viewed, as the stock pin's Refresh draws several.
-function ShortestPathForeverAreaPinMixin:Refresh()
+function AreaPin:Refresh()
 	self:SetScript("OnUpdate", nil)
 	self:SetMapID(self:GetMap():GetMapID())
 	self:DrawNone()
@@ -101,7 +103,7 @@ function ShortestPathForeverAreaPinMixin:Refresh()
 end
 
 ---@param quests number[]
-function ShortestPathForeverAreaPinMixin:OnAcquired(quests)
+function AreaPin:OnAcquired(quests)
 	if not self.blob then
 		return
 	end
@@ -111,22 +113,21 @@ function ShortestPathForeverAreaPinMixin:OnAcquired(quests)
 	self:Refresh()
 end
 
-function ShortestPathForeverAreaPinMixin:OnReleased()
+function AreaPin:OnReleased()
 	if self.blob then
 		self:SetScript("OnUpdate", nil)
 		self:DrawNone()
 	end
 	self.quests = nil
-	MapCanvasPinMixin.OnReleased(self)
 end
 
-function ShortestPathForeverAreaPinMixin:OnCanvasSizeChanged()
+function AreaPin:OnCanvasSizeChanged()
 	local canvas = self:GetMap():GetCanvas()
 	self:SetSize(canvas:GetWidth(), canvas:GetHeight())
 end
 
 -- The blob is redrawn once the frame's zoom has settled, as the stock pin waits for the end of the frame.
-function ShortestPathForeverAreaPinMixin:OnCanvasScaleChanged()
+function AreaPin:OnCanvasScaleChanged()
 	self:SetScript("OnUpdate", self.Refresh)
 end
 

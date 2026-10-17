@@ -51,6 +51,31 @@ calling it. The full types are in [`types/API.lua`](../types/API.lua).
 
 Use your addon's name as `owner`; starting another journey replaces ownership.
 
+## World map markers
+
+Shortest Path draws its world map pins on frames of its own, so `WorldMapFrame:EnumeratePinsByTemplate` doesn't find
+them. The Forever addons share one global table instead, `ForeverMapMarkers`, which holds one function per addon,
+under its folder name. `ForeverMapMarkers.ShortestPathForever(map)` takes the map frame (`WorldMapFrame`) and returns a
+new array of `{x, y, kind}`. These are the pins shown on `map:GetMapID()`, as 0–1 fractions. `kind` is `"dock"`,
+`"portal"`, `"flight"` or `"stop"`. The array is empty while the map is closed, in combat, and for a map Shortest Path
+doesn't draw on. To add your own, publish a copy of the table with your function in it rather than writing into a
+table another addon made. Read the global each time, since a later addon replaces it:
+
+```lua
+local markers = {}
+for name, fn in pairs(ForeverMapMarkers or {}) do
+	markers[name] = fn
+end
+markers.MyAddon = function(map) return {} end
+ForeverMapMarkers = markers
+
+for _, list in pairs(ForeverMapMarkers or {}) do
+	for _, marker in ipairs(list(WorldMapFrame)) do
+		-- marker.x, marker.y, marker.kind
+	end
+end
+```
+
 ## Stop kinds
 
 A stop's optional `kind` says what stands there: `"pickup"`, `"turnin"`, `"objective"`, `"trainer"`,
@@ -94,3 +119,32 @@ journey, owned by `"TomTom"`, to each waypoint the arrow takes. At login, once t
 waypoint TomTom's arrow was restored to, unless a journey is already under way. Removing that waypoint, including
 through TomTom's *Remove all waypoints* or `/way reset all`, cancels the journey. TomTom's corpse arrow is not
 followed: the corpse run does that job and keeps the journey you were on.
+
+## Alongside Polestar
+
+Polestar has a TomTom stand-in, a `/way` and a *Follow TomTom's arrow* of its own, and can hand its target to
+Shortest Path through this API (its *Hand guiding to Shortest Path Forever*). With both installed, in either load
+order, neither blocks the other's and no waypoint is planned twice:
+
+- The stand-in takes the `TomTom` global as Shortest Path loads, and Polestar takes it at login only while it's free,
+  so it stays out. If *Let guides set TomTom waypoints* was off at login and Polestar's stand-in
+  (`Polestar.Nav.tomtomShim`) took the global, Shortest Path doesn't count it as TomTom: turning the setting on takes
+  the global over, and turning it off again gives Polestar's back while Polestar still answers waypoints
+  (`Polestar.Get("nav.answerTomTom")`) and isn't handing its target here (`Polestar.Nav.HandedOff()`).
+- `/way` is claimed as Shortest Path loads, while TomTom isn't installed and no addon has it, and Polestar claims it
+  at login only while it's free. At login, TomTom or an addon that took `/way` without looking keeps it, and Shortest
+  Path lets it go.
+- *Follow TomTom's arrow* hooks only the real TomTom, never Polestar's stand-in. When Polestar follows TomTom's arrow
+  too and hands its target here (`nav.followTomTom` and `nav.spfHandoff`), that target arrives as Polestar's journey,
+  so Shortest Path doesn't follow the waypoint as well. With Polestar guiding by itself, Shortest Path follows, and
+  Polestar steps aside while that journey runs. The copy of its own target Polestar puts in TomTom
+  (`from = "Polestar"`) is never followed, and the stand-in refuses it (`AddWaypoint` returns `nil`): whether
+  Polestar's target goes to Shortest Path is Polestar's hand-off setting.
+- Polestar's *Follow TomTom's arrow* is meant for the real TomTom. While this stand-in answers in its place, leave it
+  off: a guide's waypoint is already a journey here.
+
+Polestar's hand-off reads the meanings above as they are written: `NavigateRoute` with one stop and its `kind`,
+`hold`, `radius`, `shapes`, `questID` and `questIDs`; `CurrentStop` still naming a stop while `Active()` is false
+when there is no way there; `Active()` true while anyone's journey guides; each reason `Ended` gives; `Cancel`
+clearing only the owner's own journey; and `Subscribe`'s news on the next frame. `tests/api_contract_spec.lua` pins
+each of them, so a change to one fails the specs and would need `version` 2.

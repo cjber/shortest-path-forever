@@ -18,7 +18,7 @@ The direction arrow swings smoothly to each new bearing and rests while you stan
 
 `/path report` opens a window with a report already selected: addon and game versions, your character and position, the journey and its steps, your ride, the ride trace when `/path debug` is on, errors caught this session and your other addons. Press Ctrl+C and paste it into a bug report.
 
-With the game's gamepad interface on, Shortest Path never opens the world map itself, nor takes the keyboard: *Show on map*, tracker dock lines and route ends turn a map you have open, or ask you to open one, and Nearby services points to the map's own tracking menu.
+With the game's gamepad interface on, Shortest Path never opens the world map itself, nor takes the keyboard: *Show on map*, tracker dock lines and route ends turn a map you have open, or ask you to open one, and Nearby services points to the map's own tracking menu. Its map pins are frames of its own over the map, which it only reads, and a pin under the gamepad's map cursor shows its tooltip.
 
 Click the current journey step and choose **Complete this step** to advance it. Skipping a Hearthstone leaves it out of plans for that journey. Other steps may return if your actual position still requires them.
 
@@ -71,8 +71,9 @@ With RestedXP installed, **Resume guide** in Guidance or the Journey header menu
 - **Typed waypoints.** `/way [zone] x y [title]` plans a journey to that spot, read as TomTom reads it: x and y are
   percentages of the map, `#1429` names a map by its ID, a zone can be shortened to any part of its name
   (`/way elwynn 42 65 Goldshire`, `/way hinterlands 14 44`), and a decimal comma works. Without a zone the spot is on the map you stand on.
-  `/way` is registered only when TomTom isn't loaded and no other addon has claimed it; `/path way` takes the same
-  line and always works. With TomTom installed, *Follow TomTom's arrow* in Guidance (off by default) plans a journey
+  `/way` is registered only when TomTom isn't installed and no other addon has claimed it; Polestar's `/way` waits
+  for it, as Polestar's own TomTom stand-in waits for this one ([docs/api.md](api.md#alongside-polestar)). `/path way`
+  takes the same line and always works. With TomTom installed, *Follow TomTom's arrow* in Guidance (off by default) plans a journey
   to each waypoint its arrow takes, from `/way`, a guide or the waypoint you pick, including the one it points to
   after a `/reload`, and removing that waypoint in TomTom, one at a time or all at once, ends the journey. Its corpse
   arrow is left to the corpse run, so dying keeps the journey you were on.
