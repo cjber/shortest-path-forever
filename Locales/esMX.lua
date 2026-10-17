@@ -51,6 +51,7 @@ L["Copy link"] = "Copiar enlace"
 L["Copy the address, then open it in your browser."] = "Copia la dirección y ábrela en tu navegador."
 L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."] =
 	"Oscurece el suelo tras la brújula para que sus marcas se lean bien sobre nieve o arena. 0 % no muestra nada."
+L["Data checked against Forever 1.60.1.70450."] = "Datos comprobados con Forever 1.60.1.70450."
 L["Deeprun Tram"] = "Tranvía Subterráneo"
 L["Distances in metres"] = "Distancias en metros reales"
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
@@ -119,8 +120,6 @@ L["No location for that quest yet."] = "Aún no hay ubicación para esa misión.
 L["No way there from here."] = "No hay camino desde aquí."
 L["Not discovered"] = "Sin descubrir"
 L["Not installed"] = "No instalado"
-L["Now also in German, French, Spanish, Brazilian Portuguese, Russian, Korean and Chinese (machine translated)."] =
-	"Ahora también en alemán, francés, español, portugués de Brasil, ruso, coreano y chino (traducción automática)."
 L["On"] = "Activado"
 L["On board to %s"] = "A bordo hacia %s"
 L["On the world map."] = "En el mapa del mundo."

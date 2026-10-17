@@ -52,6 +52,7 @@ L["Copy link"] = "Copier le lien" -- mt
 L["Copy the address, then open it in your browser."] = "Copiez l'adresse, puis ouvrez-la dans votre navigateur." -- mt
 L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."] =
 	"Assombrit le sol derrière la boussole pour que ses repères restent lisibles sur la neige ou le sable. 0 % n'affiche rien." -- mt
+L["Data checked against Forever 1.60.1.70450."] = "Données vérifiées avec Forever 1.60.1.70450." -- mt
 L["Deeprun Tram"] = "Tram des profondeurs" -- mt
 L["Distances in metres"] = "Distances en mètres réels" -- mt
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
@@ -121,8 +122,6 @@ L["No location for that quest yet."] = "Pas encore d'emplacement pour cette quê
 L["No way there from here."] = "Aucun chemin d'ici jusque-là." -- mt
 L["Not discovered"] = "Non découvert" -- mt
 L["Not installed"] = "Non installé" -- mt
-L["Now also in German, French, Spanish, Brazilian Portuguese, Russian, Korean and Chinese (machine translated)."] =
-	"Désormais aussi en allemand, français, espagnol, portugais du Brésil, russe, coréen et chinois (traduction automatique)." -- mt
 L["On"] = "Activé" -- mt
 L["On board to %s"] = "À bord pour %s" -- mt
 L["On the world map."] = "Sur la carte du monde." -- mt
