@@ -50,7 +50,7 @@ local function FindWalk(planned, leg, key, water, done)
 		leg.walkPoints = points or previous or {}
 		if points then
 			leg.measured, leg.walkDrawn, leg.wet, leg.walkCost = true, true, points.wet, cost
-			leg.hazardNotes = ns.Hazards.Notes(hazards, leg, points)
+			leg.hazardNotes = hazards and ns.Hazards.Notes(hazards, leg, points) or nil
 			if planned.preview then
 				leg.yards = cost
 			end
