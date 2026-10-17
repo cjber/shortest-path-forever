@@ -17,6 +17,7 @@ DATA = (
     "Data/Taxi.lua",
     "Data/Portals.lua",
     "Data/Teleports.lua",
+    "Data/Zones.lua",
     "Data/Walks.lua",
     "Locales/phrases.txt",
 )

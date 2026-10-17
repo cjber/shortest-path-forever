@@ -124,19 +124,23 @@ end
 -- on). callback(points, cost, job) or callback(nil, reason, job): points are { map, x, y, z } from the start to the
 -- goal, with points.wet the drawn yards over water. Cost is the abstract route in running yards, not the smoothed
 -- polyline length; a swum grid yard counts as the data's swim (so routes keep out of water) unless waterWalking, when
--- water is ground. reason is "nodata", "outside", "offmesh", "unreachable" or "error". Returns a Cancel handle.
+-- water is ground. With hazards (Journey/Hazards.lua), the yards between entrances in a hazard count its factor too, so
+-- the walk goes round it where it can. reason is "nodata", "outside", "offmesh", "unreachable" or "error". Returns a
+-- Cancel handle.
 ---@param map number
 ---@param from SPFPoint
 ---@param to SPFPoint
 ---@param callback fun(points: SPFWalkPoints?, cost: number|string, job: SPFPathJob)
 ---@param waterWalking? boolean
+---@param hazards? SPFHazards
 ---@return SPFPathJob
-function Path.Find(map, from, to, callback, waterWalking)
+function Path.Find(map, from, to, callback, waterWalking, hazards)
 	return enqueue({
 		map = map,
 		from = from,
 		to = to,
 		waterWalking = waterWalking,
+		hazards = hazards,
 		callback = callback,
 	})
 end
@@ -148,9 +152,10 @@ end
 ---@param to SPFPoint
 ---@param callback fun(cost: number?, reason: string?, job: SPFPathJob)
 ---@param waterWalking? boolean
+---@param hazards? SPFHazards
 ---@return SPFPathJob
-function Path.FindCost(map, from, to, callback, waterWalking)
-	local job = Path.Find(map, from, to, callback, waterWalking)
+function Path.FindCost(map, from, to, callback, waterWalking, hazards)
+	local job = Path.Find(map, from, to, callback, waterWalking, hazards)
 	job.costOnly = true
 	return job
 end
@@ -166,13 +171,15 @@ end
 ---@param waterWalking? boolean
 ---@param reverse? boolean
 ---@param progress? fun(costs: (number|false)[], reason: nil, job: SPFPathJob)
+---@param hazards? SPFHazards
 ---@return SPFPathJob
-function Path.FindMany(map, from, targets, callback, waterWalking, reverse, progress)
+function Path.FindMany(map, from, targets, callback, waterWalking, reverse, progress, hazards)
 	return enqueue({
 		map = map,
 		from = from,
 		targets = targets,
 		waterWalking = waterWalking,
+		hazards = hazards,
 		reverse = reverse,
 		progress = progress,
 		costs = {},

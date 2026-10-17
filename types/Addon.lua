@@ -10,6 +10,7 @@
 ---@field Entrances table<number, SPFEntrance>
 ---@field Teleports SPFTeleport[]
 ---@field Landmasses SPFLandmass[]
+---@field Zones table<number, SPFZone>
 ---@field Walks table<number, table<string, (number|false)[]>>
 ---@field WalkPlaces table<number, table<string, number[]>>
 ---@field db SPFDatabase
@@ -95,6 +96,16 @@
 ---@field item? number
 ---@field cast number
 ---@field bind? boolean
+-- A zone a continent's map names on hover (Data/Zones.lua): its level range or a capital's side, and its map's box.
+---@class SPFZone
+---@field low? number
+---@field high? number
+---@field city? string
+---@field map number
+---@field minX number
+---@field minY number
+---@field maxX number
+---@field maxY number
 ---@class SPFLandmass
 ---@field map number
 ---@field minX number
@@ -170,6 +181,7 @@
 ---@field compassX? number the compass's centre from the screen's bottom left, once dragged
 ---@field compassY? number
 ---@field corpse? boolean
+---@field avoidHighZones? boolean -- walks go round zones whose lowest level is 4 or more above yours (Hazards.lua)
 ---@field whatsNew? boolean
 ---@field seenVersion? string -- the version last loaded, for the line after an update (WhatsNew.lua)
 ---@field debug? boolean
@@ -253,6 +265,7 @@ ShortestPathForeverPathData = nil
 ---@field walkDeferred? boolean -- exact geometry waiting for arrival on its continent
 ---@field walkDrawn? boolean -- walkPoints came from a search, not a straight placeholder
 ---@field color? ColorMixin -- drawn in this colour rather than its mode's
+---@field hazardNotes? string[] -- the hostile towns and high zones a measured walk meets or goes round (Hazards.lua)
 ---@class SPFPlan
 ---@field provisional? boolean
 ---@field arrive number
@@ -264,6 +277,7 @@ ShortestPathForeverPathData = nil
 ---@field preview? boolean
 ---@field prepared? boolean
 ---@field waterMode? boolean
+---@field hazards? string -- the key of the hazards its walks were searched with (Hazards.lua)
 ---@field preferred? boolean a ride the planner chose over a slightly quicker long walk
 ---@class SPFWalkCost
 ---@field from SPFPoint
@@ -300,6 +314,7 @@ ShortestPathForeverPathData = nil
 ---@field baked? table<number, table<string, (number|false)[]>>
 ---@field exactMaps? table<number, boolean>
 ---@field walks? SPFWalkCost[]
+---@field hazards? SPFHazards -- weights baked walks that cross a hazard (Journey/Hazards.lua)
 ---@field cache? SPFPlannerCache
 ---@class SPFPlannerCache
 ---@field topology? SPFTopology
@@ -346,6 +361,7 @@ ShortestPathForeverPathData = nil
 ---@field to? SPFPoint
 ---@field targets? SPFPoint[]
 ---@field waterWalking? boolean
+---@field hazards? SPFHazards
 ---@field reverse? boolean
 ---@field costOnly? boolean
 ---@field cancelled? boolean

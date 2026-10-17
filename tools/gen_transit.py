@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Generate lifts, trams, flights, public passages and personal teleports for the pinned Forever client (stdlib)."""
+"""Generate lifts, trams, flights, public passages, personal teleports and zone levels for the pinned Forever client
+(stdlib)."""
 
 import argparse
 import csv
@@ -39,6 +40,56 @@ MAPS = (0, 1, 2991)
 # ImplicitTarget DEST_HOME (the bind point) and DEST_DB (the server's spell_target_position row).
 TELEPORT_EFFECTS = {5, 252}
 DEST_HOME, DEST_DB = 9, 17
+# Zone level ranges: Forever's client links no zone to a level range (UiMap and AreaTable ContentTuningID are 0), so
+# the original game's zones take the published range below, by UiMap ID, and Forever's own zones the lowest and highest
+# AreaTable.ExplorationLevel among their subzones. Cities and battlegrounds have none.
+ZONE_SOURCE = "https://warcraft.wiki.gg/wiki/Zones_by_level_(original)"
+PUBLISHED_LEVELS = {
+    # Eastern Kingdoms
+    1416: (30, 40),  # Alterac Mountains
+    1417: (30, 40),  # Arathi Highlands
+    1418: (35, 45),  # Badlands
+    1419: (45, 55),  # Blasted Lands
+    1420: (1, 10),  # Tirisfal Glades
+    1421: (10, 20),  # Silverpine Forest
+    1422: (51, 58),  # Western Plaguelands
+    1423: (53, 60),  # Eastern Plaguelands
+    1424: (20, 30),  # Hillsbrad Foothills
+    1425: (40, 50),  # The Hinterlands
+    1426: (1, 10),  # Dun Morogh
+    1427: (45, 50),  # Searing Gorge
+    1428: (50, 58),  # Burning Steppes
+    1429: (1, 10),  # Elwynn Forest
+    1430: (55, 60),  # Deadwind Pass
+    1431: (18, 30),  # Duskwood
+    1432: (10, 20),  # Loch Modan
+    1433: (15, 25),  # Redridge Mountains
+    1434: (30, 45),  # Stranglethorn Vale
+    1435: (35, 45),  # Swamp of Sorrows
+    1436: (10, 20),  # Westfall
+    1437: (20, 30),  # Wetlands
+    # Kalimdor
+    1411: (1, 10),  # Durotar
+    1412: (1, 10),  # Mulgore
+    1413: (10, 25),  # The Barrens
+    1438: (1, 10),  # Teldrassil
+    1439: (10, 20),  # Darkshore
+    1440: (18, 30),  # Ashenvale
+    1441: (25, 35),  # Thousand Needles
+    1442: (15, 27),  # Stonetalon Mountains
+    1443: (30, 40),  # Desolace
+    1444: (40, 50),  # Feralas
+    1445: (35, 45),  # Dustwallow Marsh
+    1446: (40, 50),  # Tanaris
+    1447: (45, 55),  # Azshara
+    1448: (48, 55),  # Felwood
+    1449: (48, 55),  # Un'Goro Crater
+    1450: (55, 60),  # Moonglade
+    1451: (55, 60),  # Silithus
+    1452: (53, 60),  # Winterspring
+}
+# Enum.UIMapType: a continent's zone children are what its map names on hover.
+UI_ZONE, UI_CONTINENT, UI_WORLD = 3, 2, 947
 PORTAL_NAMES = {
     527: ("Portal to Rut'theran Village", "portal"),
     542: ("Portal to Darnassus", "portal"),
@@ -345,6 +396,63 @@ def landmasses(assignments, maps):
     return result
 
 
+def zones(ui_maps, assignments, areas):
+    """[UiMap] = (fields, name) for each zone a continent's map names on hover. A capital (AreaTable flag 0x100)
+    has city = its side (FactionGroupMask 2 Alliance, 4 Horde); any other zone its level range, the published one
+    else its subzones' exploration levels. map and minX..maxY are the zone map's UiMapAssignment region in world
+    yards; regions overlap, so a box only says where a zone can be, never which zone a point is in. Also returns the
+    names of hover zones with neither."""
+    by_id = {int(r["ID"]): r for r in areas}
+    children = defaultdict(list)
+    for area in areas:
+        children[int(area["ParentAreaID"])].append(int(area["ID"]))
+    continents = {
+        int(r["ID"]) for r in ui_maps if int(r["ParentUiMapID"]) == UI_WORLD and int(r["Type"]) == UI_CONTINENT
+    }
+    boxes, own_areas = {}, defaultdict(set)
+    for row in assignments:
+        ui_map, area = int(row["UiMapID"]), int(row["AreaID"])
+        if not area or int(row["WMOGroupID"]) or int(row["MapID"]) not in MAPS:
+            continue
+        own_areas[ui_map].add(area)
+        game_map, *corners = int(row["MapID"]), *(float(row[f"Region_{i}"]) for i in (0, 1, 3, 4))
+        box = boxes.get(ui_map, (game_map, *corners))
+        boxes[ui_map] = (game_map, *map(min, box[1:3], corners[:2]), *map(max, box[3:], corners[2:]))
+
+    def explored(ui_map):
+        stack, levels = list(own_areas[ui_map]), []
+        while stack:
+            area = stack.pop()
+            level = int(by_id[area]["ExplorationLevel"]) if area in by_id else 0
+            if level > 0:
+                levels.append(level)
+            stack.extend(children.get(area, ()))
+        return (min(levels), max(levels)) if levels else None
+
+    result, missing = {}, []
+    for row in sorted(ui_maps, key=lambda r: int(r["ID"])):
+        ui_map = int(row["ID"])
+        if int(row["ParentUiMapID"]) not in continents or int(row["Type"]) != UI_ZONE or ui_map not in boxes:
+            continue
+        capital = [by_id[a] for a in own_areas[ui_map] if a in by_id and int(by_id[a]["Flags_0"]) & 0x100]
+        sides = {2: "Alliance", 4: "Horde"}
+        levels = PUBLISHED_LEVELS.get(ui_map) or (None if capital else explored(ui_map))
+        if capital and int(capital[0]["FactionGroupMask"]) in sides:
+            fields = {"city": sides[int(capital[0]["FactionGroupMask"])]}
+        elif levels:
+            fields = {"low": levels[0], "high": levels[1]}
+        else:
+            missing.append(row["Name_lang"])
+            continue
+        game_map, x0, y0, x1, y1 = boxes[ui_map]
+        fields.update(map=game_map, minX=round(x0), minY=round(y0), maxX=round(x1), maxY=round(y1))
+        result[ui_map] = (fields, row["Name_lang"])
+    absent = set(PUBLISHED_LEVELS) - set(result)
+    if absent:
+        raise ValueError(f"published zones no longer on a continent map: {sorted(absent)}")
+    return result, missing
+
+
 def portals(triggers, teleports):
     return [
         (
@@ -541,6 +649,8 @@ def main():
             "ItemEffect",
             "ItemXItemEffect",
             "ItemSparse",
+            "UiMap",
+            "AreaTable",
         )
     }
     spawns, teleports, positions, instance_triggers = classicdb(args.refresh, args.offline)
@@ -614,6 +724,28 @@ def main():
         "",
     ]
     portal_lines += assignment("ns.Entrances", doors)
+    zone_rows, unranged = zones(tables["UiMap"], tables["UiMapAssignment"], tables["AreaTable"])
+    zone_lines = [
+        "-- Generated by tools/gen_transit.py — do not edit.",
+        f"-- Source: published level ranges ({ZONE_SOURCE}); otherwise AreaTable",
+        "-- ExplorationLevel, capital flag and side, and UiMapAssignment regions",
+        f"-- (https://wago.tools/db2, build {BUILD}).",
+        "-- low, high: a zone's level range; city: a capital's side. map, minX..maxY: the zone map's region in world",
+        "-- yards. Regions overlap, so a box bounds where a zone can be and never decides which zone a point is in.",
+        "-- Neither range nor side: " + (", ".join(unranged) or "none") + ".",
+        "---@type string, SPFNamespace",
+        "local _, ns = ...",
+        "",
+        "-- stylua: ignore",
+        "ns.Zones = {",
+    ]
+    for ui_map, (fields, name) in zone_rows.items():
+        line = f"\t[{ui_map}] = {render(fields, 1)},"
+        # The zone's name after it, or above it where the line would run past 120 columns.
+        zone_lines += (
+            [f"{line} -- {name}"] if len(line.expandtabs(4)) + len(name) + 4 <= 120 else [f"\t-- {name}", line]
+        )
+    zone_lines += ["}", ""]
     personal, unsourced = personal_teleports(tables, positions)
     teleport_lines = header("SpellEffect TELEPORT_UNITS + classic-db spell_target_position destinations.")
     teleport_lines += [
@@ -633,6 +765,7 @@ def main():
         ("Taxi", taxi_lines),
         ("Portals", portal_lines),
         ("Teleports", teleport_lines),
+        ("Zones", zone_lines),
     ):
         outputs[ROOT / "Data" / f"{name}.lua"] = "\n".join(lines)
     publish(outputs)
@@ -640,7 +773,7 @@ def main():
         f"Transports: {len(routes)} routes, {len(docks)} docks; Taxi: {len(nodes)} nodes, {len(paths)} paths, "
         f"{covered / len(paths):.1%} measured; {len(islands)} landmasses; Portals: {len(passages)} directed entries, "
         f"{len(doors)} entrances; "
-        f"Teleports: {len(personal)}"
+        f"Teleports: {len(personal)}; Zones: {len(zone_rows)}"
     )
 
 

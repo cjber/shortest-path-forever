@@ -36,8 +36,10 @@ local publish
 -- One search from its first batch to its single publication: the private candidate and how it may be committed.
 local search
 local FinishSearch
--- The mode this journey's walks were searched in.
+-- The mode this journey's walks were searched in, and the hazards they keep away from (Hazards.lua).
 local waterMode
+---@type SPFHazards?
+local hazards
 local lastRunSpeed = 7
 local plannerCache = {}
 local probeJobs, pathVersion = {}, 0
@@ -105,6 +107,7 @@ local function MeasuredWalks(here)
 	local leg = followed and followed.legs[progress.index]
 	local rest = leg
 		and followed.waterMode == waterMode
+		and followed.hazards == (hazards and hazards.key)
 		and leg.mode == "walk"
 		and leg.measured
 		and Remaining(leg, here)
@@ -405,13 +408,14 @@ local function Plan(feasible, incumbent)
 	for _, walk in ipairs(Walks.Landings(options.teleports, waterMode)) do
 		walks[#walks + 1] = walk
 	end
-	options.cache, options.walks, options.waterWalking = plannerCache, walks, waterMode
+	options.cache, options.walks, options.waterWalking, options.hazards = plannerCache, walks, waterMode, hazards
 	options.feasibleOnly = feasible
 	options.incumbent, options.incumbentPlan = incumbent and incumbent.arrive, incumbent
 	options.ride = Context.Ride(options)
 	local planned = ns.Planner.Plan(options)
 	if planned then
 		planned.now, planned.preview, planned.waterMode = now, nil, waterMode
+		planned.hazards = hazards and hazards.key
 	end
 	return planned
 end
@@ -441,8 +445,15 @@ local function RefreshCosts(includeGoal, forced)
 		end
 		return list
 	end
+	local hazardKey = hazards and hazards.key
 	local function reuse(batch, point, reverse)
-		if not batch or batch.water ~= waterMode or batch.faction ~= faction or batch.teleports ~= teleports then
+		if
+			not batch
+			or batch.water ~= waterMode
+			or batch.faction ~= faction
+			or batch.teleports ~= teleports
+			or batch.hazards ~= hazardKey
+		then
 			return false
 		end
 		if not reverse and not SamePlace(batch.goal, goal) then
@@ -465,6 +476,7 @@ local function RefreshCosts(includeGoal, forced)
 			water = waterMode,
 			faction = faction,
 			teleports = teleports,
+			hazards = hazardKey,
 			costs = {},
 		}
 	end
@@ -675,7 +687,7 @@ local function RefreshCosts(includeGoal, forced)
 						if left == 0 then
 							consider(true)
 						end
-					end, waterMode)
+					end, waterMode, hazards)
 					probeJobs[job] = true
 				end
 				return
@@ -743,8 +755,16 @@ local function RefreshCosts(includeGoal, forced)
 				ns.Path.Resume(job)
 			end
 		else
-			batch.job =
-				ns.Path.FindMany(batch.point.map, batch.point, batch.targets, update, waterMode, batch.reverse, update)
+			batch.job = ns.Path.FindMany(
+				batch.point.map,
+				batch.point,
+				batch.targets,
+				update,
+				waterMode,
+				batch.reverse,
+				update,
+				hazards
+			)
 		end
 	end
 	attach(startBatch)
@@ -796,6 +816,19 @@ function Search.Reset()
 	goal, followed = nil, nil
 end
 
+-- The hazards a journey keeps away from, exempting where it started (the first readable position) and its goal;
+-- walks searched with others no longer apply. Only a level-up or a setting changes them while the goal stays.
+local origin
+local function Avoid()
+	origin = origin or Here()
+	local profile = origin and goal and ns.Hazards.Profile(origin, goal) or nil
+	if (profile and profile.key) ~= (hazards and hazards.key) then
+		hazards = profile
+		Walks.SetHazards(profile)
+		startCosts, goalCosts = {}, {}
+	end
+end
+
 -- Searches for the fastest way to point from where you stand. route is what Journey follows meanwhile (a repeated
 -- journey's, else nil) and state its progress along it. listener hears every change to what Journey should follow,
 -- possibly before Start returns.
@@ -807,6 +840,8 @@ function Search.Start(point, route, state, listener)
 	goal, followed, progress, publish = point, route, state, listener
 	search = nil
 	waterMode = (ns.JourneyWaterWalking())
+	origin = nil
+	Avoid()
 	RefreshCosts(true, false)
 end
 
@@ -815,11 +850,17 @@ end
 ---@param changed? boolean the travel policy changed since the last frame
 function Search.Poll(changed)
 	if changed then
+		-- A setting or your level changed what to avoid, from where you stand now.
+		Avoid()
 		RefreshCosts(true, true)
 	end
 	-- No batch has started, or a callback waited for a readable position.
 	local stale = not startAt or costsWaiting
 	costsWaiting = nil
+	-- A journey started where no position could be read takes its hazards from the first one that can.
+	if not hazards then
+		Avoid()
+	end
 	-- Search callbacks may finish while position is unavailable; resume from readable endpoints.
 	if stale then
 		RefreshCosts(true, true)

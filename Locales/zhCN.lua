@@ -30,6 +30,8 @@ L["Arriving at %s in %s"] = "到达%s还需%s"
 L["Arrow scale"] = "箭头大小"
 L["Attach to quest tracker"] = "附着到任务追踪器"
 L["Auction house"] = "拍卖行"
+L["Avoid zones far above my level"] = "避开远高于我等级的区域"
+L["Avoids %s (level %s)"] = "绕开%s（等级 %s）"
 L["Bank"] = "银行"
 L["Boat and Zeppelin Routes"] = "船只和飞艇航线"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
@@ -49,6 +51,7 @@ L["Compass scale"] = "指南针大小"
 L["Complete this step"] = "完成此步骤"
 L["Copy link"] = "复制链接"
 L["Copy the address, then open it in your browser."] = "复制该地址，然后在浏览器中打开。"
+L["Crosses %s (level %s)"] = "穿过%s（等级 %s）"
 L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."] =
 	"调暗指南针后方的地面，让标记在雪地或沙地上也清晰可读。0%为不显示。"
 L["Deeprun Tram"] = "矿道地铁"
@@ -79,6 +82,7 @@ L["Guide marks the next boat, lift, flight master or your destination, not each 
 	"引导会标记下一艘船、升降梯、飞行管理员或你的目的地，而不是步行途中的每个转弯。"
 L["Guide me"] = "为我引路"
 L["Horde"] = "部落"
+L["Hostile town: %s"] = "敌对城镇：%s"
 L["In the objective tracker while you are near a dock, lift or tram."] =
 	"在你靠近码头、升降梯或地铁时显示在目标追踪栏中。"
 L["Innkeeper"] = "旅店老板"
@@ -226,6 +230,8 @@ L["Use hearth and teleports"] = "使用炉石和传送"
 L["Vendors by specialty"] = "按专长分类的商人"
 L["W"] = "西"
 L["Walk to %s"] = "步行前往%s"
+L["Walks go round zones whose lowest level is 4 or more above yours, but never the ones you start or end in."] =
+	"步行路线会绕开最低等级比你高 4 级或以上的区域，但不会绕开起点和终点所在的区域。"
 L["What next? Adventure Guide Forever suggests quests for your level."] =
 	"接下来做什么？Adventure Guide Forever会推荐适合你等级的任务。"
 L["What's new after an update"] = "更新后的新内容"
