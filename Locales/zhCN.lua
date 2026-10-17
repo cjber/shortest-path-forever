@@ -51,6 +51,7 @@ L["Copy link"] = "复制链接"
 L["Copy the address, then open it in your browser."] = "复制该地址，然后在浏览器中打开。"
 L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."] =
 	"调暗指南针后方的地面，让标记在雪地或沙地上也清晰可读。0%为不显示。"
+L["Data checked against Forever 1.60.1.70450."] = "已按 Forever 1.60.1.70450 核对数据。"
 L["Deeprun Tram"] = "矿道地铁"
 L["Distances in metres"] = "距离以米显示"
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
@@ -118,8 +119,6 @@ L["No location for that quest yet."] = "该任务还没有位置。"
 L["No way there from here."] = "从这里无法到达那里。"
 L["Not discovered"] = "未发现"
 L["Not installed"] = "未安装"
-L["Now also in German, French, Spanish, Brazilian Portuguese, Russian, Korean and Chinese (machine translated)."] =
-	"现已支持德语、法语、西班牙语、巴西葡萄牙语、俄语、韩语和中文（机器翻译）。"
 L["On"] = "开启"
 L["On board to %s"] = "乘坐前往%s"
 L["On the world map."] = "显示在世界地图上。"

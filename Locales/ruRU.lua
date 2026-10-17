@@ -53,6 +53,7 @@ L["Copy the address, then open it in your browser."] =
 	"Скопируйте адрес и откройте его в браузере."
 L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."] =
 	"Затемняет землю за компасом, чтобы его отметки читались на снегу или песке. 0% – без затемнения."
+L["Data checked against Forever 1.60.1.70450."] = "Данные сверены с Forever 1.60.1.70450."
 L["Deeprun Tram"] = "Подземный поезд"
 L["Distances in metres"] = "Расстояние в настоящих метрах"
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
@@ -125,8 +126,6 @@ L["No location for that quest yet."] = "Для этого задания пок�
 L["No way there from here."] = "Отсюда туда нет пути."
 L["Not discovered"] = "Не открыто"
 L["Not installed"] = "Не установлено"
-L["Now also in German, French, Spanish, Brazilian Portuguese, Russian, Korean and Chinese (machine translated)."] =
-	"Теперь также на немецком, французском, испанском, бразильском португальском, русском, корейском и китайском (машинный перевод)."
 L["On"] = "Вкл."
 L["On board to %s"] = "На борту: %s"
 L["On the world map."] = "На карте мира."

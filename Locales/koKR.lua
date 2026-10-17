@@ -51,6 +51,7 @@ L["Copy link"] = "링크 복사"
 L["Copy the address, then open it in your browser."] = "주소를 복사한 후 브라우저에서 여십시오."
 L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."] =
 	"나침반 뒤의 지면을 어둡게 해 눈이나 모래 위에서도 표시가 잘 보이게 합니다. 0%는 표시하지 않습니다."
+L["Data checked against Forever 1.60.1.70450."] = "Forever 1.60.1.70450 기준으로 데이터를 확인했습니다."
 L["Deeprun Tram"] = "깊은굴 지하철"
 L["Distances in metres"] = "실제 미터로 거리 표시"
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
@@ -121,8 +122,6 @@ L["No location for that quest yet."] = "이 퀘스트의 위치가 아직 없습
 L["No way there from here."] = "여기서 그곳까지 가는 길이 없습니다."
 L["Not discovered"] = "발견하지 않음"
 L["Not installed"] = "설치 안 됨"
-L["Now also in German, French, Spanish, Brazilian Portuguese, Russian, Korean and Chinese (machine translated)."] =
-	"이제 독일어, 프랑스어, 스페인어, 브라질 포르투갈어, 러시아어, 한국어, 중국어로도 제공됩니다(기계 번역)."
 L["On"] = "켬"
 L["On board to %s"] = "%s행 탑승 중"
 L["On the world map."] = "세계 지도에 표시합니다."
