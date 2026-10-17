@@ -15,12 +15,17 @@ local Context = ns.PlanContext
 ---@field points? SPFWalkPoints
 ---@field reason? string
 ---@field cost? number
+---@field notes? string[]
 
 ---@type table<string, SPFMeasuredWalk>
 local walkCache = {}
 local walkOrder, walkPending, walkJobs = {}, {}, {}
 local pathJobs, pathVersion = {}, 0
 local pendingWalks = 0
+-- What every walk here is searched to keep away from (Hazards.lua), and the walks on from bind points.
+---@type SPFHazards?
+local hazards
+local landings
 
 local function WalkKey(from, to)
 	return table.concat({ from.map, from.x, from.y, from.z or "", to.x, to.y, to.z or "" }, ":")
@@ -45,6 +50,7 @@ local function FindWalk(planned, leg, key, water, done)
 		leg.walkPoints = points or previous or {}
 		if points then
 			leg.measured, leg.walkDrawn, leg.wet, leg.walkCost = true, true, points.wet, cost
+			leg.hazardNotes = hazards and ns.Hazards.Notes(hazards, leg, points) or nil
 			if planned.preview then
 				leg.yards = cost
 			end
@@ -67,12 +73,17 @@ local function FindWalk(planned, leg, key, water, done)
 		for _, entry in ipairs(waiting) do
 			entry.apply(points, cost)
 		end
-		CacheWalk(key, { points = points or previous, reason = not points and cost or nil, cost = points and cost })
+		CacheWalk(key, {
+			points = points or previous,
+			reason = not points and cost or nil,
+			cost = points and cost,
+			notes = points and leg.hazardNotes,
+		})
 		if ns.db.debug and ns.Planner.WalkContradicts(leg, points and cost) then
 			ns.Print(string.format("walking cost mismatch: planned %.1f, found %s", leg.yards, tostring(cost)))
 		end
 		done()
-	end, water)
+	end, water, hazards)
 	pathJobs[job], walkJobs[key] = true, job
 end
 
@@ -145,6 +156,7 @@ function Walks.Prepare(planned, drawn, water, done, index)
 				leg.walkPoints, leg.measured = entry.points or {}, entry.reason == nil
 				leg.walkDrawn = entry.points ~= nil
 				leg.wet, leg.walkError = entry.points and entry.points.wet, entry.reason
+				leg.hazardNotes = entry.notes
 				if entry.cost then
 					leg.walkCost = entry.cost
 					if planned.preview then
@@ -201,9 +213,22 @@ function Walks.Clear()
 	walkCache, walkOrder = {}, {}
 end
 
+-- Walks from now on keep away from these hazards; walks and landings measured with others are forgotten.
+---@param profile SPFHazards?
+function Walks.SetHazards(profile)
+	hazards = profile
+	Walks.Clear()
+	for _, entry in pairs(landings) do
+		if entry.job then
+			ns.Path.Cancel(entry.job)
+		end
+	end
+	landings = {}
+end
+
 -- The bind point moves, so its walks on to the fixed places cannot be baked like a class teleport's: each is searched
 -- once per bind point and water mode, alongside the journey's own endpoint searches.
-local landings = {}
+landings = {}
 ---@param place SPFTeleportPlace
 ---@param water boolean?
 ---@return {targets: SPFPlace[], costs?: (number|false)[], waiting?: fun()[]}?
@@ -223,13 +248,13 @@ local function Landing(place, water)
 		end
 		entry = { targets = targets, waiting = {} }
 		landings[key] = entry
-		ns.Path.FindMany(place.map, place, targets, function(costs)
+		entry.job = ns.Path.FindMany(place.map, place, targets, function(costs)
 			local waiting = entry.waiting or {}
 			entry.costs, entry.waiting = costs, nil
 			for _, callback in ipairs(waiting) do
 				callback()
 			end
-		end, water)
+		end, water, nil, nil, hazards)
 	end
 	return entry
 end

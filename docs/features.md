@@ -34,6 +34,15 @@ With RestedXP installed, **Resume guide** in Guidance or the Journey header menu
   quest. It replans as you move but only switches to a clearly faster way (at least 30 seconds and a tenth of the time left), and stays aboard if you are already riding. **Guide**, on from the start
   of every journey (click the tracker header to turn it off), moves the game's own waypoint marker to where each step ends, the next boat, lift or flight master (or, with *Mark only where steps end* off in `/path`, along the route turn by turn, round walls), and hands your tracked quest back when you finish. To head for a quest, pick **Plan journey** from its right-click menu in the objective
   tracker or quest log, or Shift-click its marker on the map; a finished quest routes to its turn-in.
+  Walks keep away from danger. A zone whose lowest level is 4 or more above yours costs four times as much to
+  walk through and the other faction's towns and capitals six times as much, so a walk goes round them when there
+  is a way, and is planned again when you level up. The zones and towns you start and end in are never avoided. Under
+  the walk's step, grey lines say what it did: *Avoids Duskwood (level 18-30)*, *Crosses Wetlands (level 20-30)*
+  where there is no way round, and *Hostile town: Crossroads*. Zone levels are the original game's published
+  ranges; Forever's own zones use their subzones' exploration levels. A hostile town is the ground around one of
+  the other faction's flight masters with none of yours beside it, so Booty Bay and Gadgetzan don't count. Untick
+  *Avoid zones far above my level* in Guidance to walk anywhere; the towns are always avoided. The walk's time
+  counts these costs, so a walk that must cross one reads a little long.
   A goal inside a dungeon or raid, which has no walking map, is planned to the instance's entrance from outside
   (*Enter Deadmines*); going in completes it, and a guide's next stop inside starts from there.
   A journey can start with your Hearthstone, a mage's city teleport (with a Rune of Teleportation), a shaman's

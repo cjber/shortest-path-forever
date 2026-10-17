@@ -241,6 +241,7 @@ local groups = {
 		"tomtom",
 		"tomtomFollow",
 		"restedxp",
+		"avoidHighZones",
 		"teleports",
 		"hearthMinimumSavings",
 		"guideStops",
@@ -267,7 +268,7 @@ local groups = {
 local order = { "Map marks", "Transport", "Guidance", "Alerts", "Interface" }
 
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
-assert(#rows == 39, #rows)
+assert(#rows == 40, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -326,6 +327,11 @@ assert(mover.default == false and mover:GetValue() == false, "the compass starts
 mover:SetValue(true)
 assert(compassMoving == true and mover:GetValue() == true, "the row unlocks the compass for dragging")
 assert(Row("restedxp").setting.default == true, "RestedXP journeys are enabled by default")
+-- Walks keep out of zones far above your level unless this is off; changing it plans the journey again.
+assert(Row("avoidHighZones").setting.default == true, "avoiding high zones is on by default")
+local policyBefore = policyChanged
+Row("avoidHighZones").setting.onChanged()
+assert(policyChanged == policyBefore + 1, "the journey plans again with the new costs")
 assert(Row("tomtom").setting.default == true)
 assert(Row("tomtom").tooltip:find("TomTom", 1, true), "the row names the addon it answers")
 Row("tomtom").setting.onChanged()

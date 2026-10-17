@@ -259,6 +259,12 @@ ns.Init(function()
 		end
 	)
 	Checkbox(
+		"avoidHighZones",
+		L["Avoid zones far above my level"],
+		L["Walks go round zones whose lowest level is 4 or more above yours, but never the ones you start or end in."],
+		ns.TravelPolicyChanged
+	)
+	Checkbox(
 		"teleports",
 		L["Use hearth and teleports"],
 		L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."]
