@@ -448,7 +448,7 @@ local function ShowEnd(target)
 		return
 	end
 	local x, y = MapPosition(target.point, target.uiMap)
-	if x then
+	if x and y then
 		Docks:Ping(target.uiMap, x, y)
 	end
 end
