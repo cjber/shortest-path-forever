@@ -88,7 +88,7 @@ local function Advance(seconds)
 			end
 		end
 		for _, frame in ipairs(frames) do
-			if frame:IsShown() and frame.scripts.OnUpdate then
+			if frame:IsVisible() and frame.scripts.OnUpdate then
 				frame.scripts.OnUpdate(frame, 1 / 60)
 			end
 		end
@@ -323,11 +323,11 @@ local function DrivePins(label)
 						pin:RefreshTooltip()
 					end)
 				end
-				if pin.OnClick then
+				if pin.OnMouseClickAction then
 					for _, button in ipairs({ "LeftButton", "RightButton" }) do
 						Run(tag .. " click " .. button, function()
 							context = {}
-							pin:OnClick(button)
+							clickPin(pin, button)
 							DrainContext(tag)
 							Flush()
 						end)
@@ -336,7 +336,7 @@ local function DrivePins(label)
 						local was = modifierDown
 						modifierDown = true
 						context = {}
-						pin:OnClick("LeftButton")
+						clickPin(pin, "LeftButton")
 						modifierDown = was
 						DrainContext(tag)
 					end)
@@ -568,7 +568,8 @@ local function Reset()
 	combat, onTaxi, ghost, corpsePosition, modifierDown, shiftDown = false, false, false, nil, false, false
 	moving = false
 	mapID, posMap, posX, posY, posZ, facing = 1414, 1, 0, 0, 0, 0
-	zoom, cursorX, cursorY, visible, WorldMapFrame.shown = 1, 0.5, 0.5, true, true
+	zoom, cursorX, cursorY = 1, 0.5, 0.5
+	setMapShown(true)
 	-- The settings drive below leaves every key off; a profile starts from the shipped defaults.
 	for _, key in ipairs(SortedKeys(ns.Defaults)) do
 		if ns.db[key] ~= ns.Defaults[key] then
@@ -807,9 +808,9 @@ local function Fuzz(label)
 					pin:OnMouseEnter()
 				elseif method == 2 and pin.OnMouseLeave then
 					pin:OnMouseLeave()
-				elseif method == 3 and pin.OnClick then
+				elseif method == 3 and pin.OnMouseClickAction then
 					context = {}
-					pin:OnClick("LeftButton")
+					clickPin(pin, "LeftButton")
 					DrainContext(label)
 				end
 				Flush()

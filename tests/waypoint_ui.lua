@@ -7,7 +7,7 @@ for _, part in ipairs({ "ui_client.lua", "ui_map.lua" }) do
 	file:close()
 end
 local setup = [[
-visible, WorldMapFrame.shown = true, true
+setMapShown(true)
 posX, posY, posMap, facing = 0, 0, 1, 0
 ns.CurrentRide = noop
 ns.Planner.Plan = function(o)
@@ -36,8 +36,11 @@ local function nextFrame()
  end
 end
 local function refreshMap()
- -- MapCanvas refreshes every provider; native provider ordering must not matter.
+ -- MapCanvas refreshes every provider; native provider ordering must not matter. The addon's own layers redraw on
+ -- the next frame of its view (UI/MapCanvas.lua), after the map's own show.
  for provider in pairs(WorldMapFrame.dataProviders) do provider:RefreshAllData() end
+ setMapShown(false)
+ setMapShown(true)
 end
 local function pin(shown)
  nextFrame()
@@ -259,13 +262,13 @@ waypointProvider:OnShow() refreshMap() pin(false)
 ns.ToggleJourneyGuide() restored()
 start()
 waypointProvider:OnHide()
-visible, WorldMapFrame.shown = false, false
+setMapShown(false)
 local acquire = map.AcquirePin
 map.AcquirePin = function() error("a closed map must not acquire pins") end
 ns.ToggleJourneyGuide()
 assert(waypoint and waypoint.position.x == 0.7 and supertracked and not ns.charDB.guideWaypoint)
 map.AcquirePin = acquire
-visible, WorldMapFrame.shown = true, true
+setMapShown(true)
 waypointProvider:RefreshAllData(true)
 waypointProvider:OnShow()
 restored()

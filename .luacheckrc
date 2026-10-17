@@ -8,12 +8,7 @@ globals = {
 	"ShortestPathForever",
 	"ShortestPathForeverCharDB",
 	"ShortestPathForeverDB",
-	"ShortestPathForeverDockPinMixin",
-	"ShortestPathForeverGoalPinMixin",
 	"ShortestPathForever_OnAddonCompartmentClick",
-	"ShortestPathForeverPortalPinMixin",
-	"ShortestPathForeverAreaPinMixin",
-	"ShortestPathForeverRoutePinMixin",
 	"TomTom",
 	"SLASH_SHORTESTPATHFOREVER1",
 	"SLASH_SHORTESTPATHFOREVER2",
@@ -26,7 +21,6 @@ read_globals = {
 	"IsAltKeyDown",
 	"CreateFramePoolCollection",
 	"C_XMLUtil",
-	"AM_PIN_SCALE_STYLE_WITH_TERRAIN",
 	"Ambiguate",
 	"C_ChatInfo",
 	"Clamp",
@@ -64,8 +58,6 @@ read_globals = {
 	"IsInInstance",
 	"IsInRaid",
 	"LE_PARTY_CATEGORY_INSTANCE",
-	"MapCanvasDataProviderMixin",
-	"MapCanvasPinMixin",
 	"Mixin",
 	"NORMAL_FONT_COLOR",
 	"ObjectiveTrackerFrame",
@@ -115,12 +107,11 @@ read_globals = {
 }
 files["tests/"] = { std = "+luajit" }
 
--- Native flight pins and tracker colours.
-globals[#globals + 1] = "ShortestPathForeverFlightPinMixin"
-globals[#globals + 1] = "ShortestPathForeverTransportPinMixin"
-read_globals[#read_globals + 1] = "FlightPointPinMixin"
-read_globals[#read_globals + 1] = "FlightPointDataProviderMixin"
+-- Tracker colours.
 read_globals[#read_globals + 1] = "OBJECTIVE_TRACKER_COLOR"
+-- MapCanvas.lua: the Forever addons' shared list of world map markers, and the gamepad's map cursor.
+globals[#globals + 1] = "ForeverMapMarkers"
+read_globals[#read_globals + 1] = "SoftCursor"
 -- Shared-workspace arrow: Blizzard_QuestNavigation/SuperTrackedFrame.lua:291.
 read_globals[#read_globals + 1] = "C_Navigation"
 -- Blizzard_SharedXMLBase/Color.lua:3, saturated route colours.

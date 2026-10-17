@@ -5,20 +5,21 @@ local ns = select(2, ...)
 local TRANSPORT_TEMPLATE = "ShortestPathForeverTransportPinTemplate"
 local UNDER_ALPHA = ns.RouteUnderAlpha
 local transportProvider, dockHover, highlightedRoutes
+---@type SPFCanvasPool
+local transportPins
 
 -- One mouse-transparent canvas pin holds every boat and zeppelin route, each hidden until its dock is hovered.
 ---@class SPFTransportPin : SPFRoutePin
-ShortestPathForeverTransportPinMixin = CreateFromMixins(ShortestPathForeverRoutePinMixin)
+local TransportPin = CreateFromMixins(ns.RoutePinMixin)
 
-function ShortestPathForeverTransportPinMixin:OnLoad()
-	ShortestPathForeverRoutePinMixin.OnLoad(self)
+function TransportPin:OnLoad()
+	ns.RoutePinMixin.OnLoad(self)
 	self:UseFrameLevelType("PIN_FRAME_LEVEL_FOG_OF_WAR")
-	self:EnableMouse(false)
 	-- Its strokes outlive the draw: hovering a dock shows and hides them by route.
 	self.strokes = ns.Strokes.New()
 end
 
-function ShortestPathForeverTransportPinMixin:UpdateAlpha()
+function TransportPin:UpdateAlpha()
 	local strokes = self.strokes
 	for index = 1, strokes.n do
 		local alpha = highlightedRoutes and highlightedRoutes[strokes.route[index]] and 1 or 0
@@ -27,7 +28,7 @@ function ShortestPathForeverTransportPinMixin:UpdateAlpha()
 	end
 end
 
----@param owner SPFMapPin
+---@param owner SPFCanvasPin
 ---@param routes table<number, boolean>?
 function ns.HoverTransportRoutes(owner, routes)
 	if not routes and dockHover ~= owner then
@@ -35,39 +36,34 @@ function ns.HoverTransportRoutes(owner, routes)
 	end
 	dockHover, highlightedRoutes = routes and owner or nil, routes
 	-- Looked up rather than cached: a pin hidden with the map stays active and is not always re-acquired.
-	for pin in WorldMapFrame:EnumeratePinsByTemplate(TRANSPORT_TEMPLATE) do
-		---@cast pin SPFTransportPin
-		pin:UpdateAlpha()
+	if transportPins then
+		for pin in transportPins:EnumerateActive() do
+			---@cast pin SPFTransportPin
+			pin:UpdateAlpha()
+		end
 	end
 end
 
-function ShortestPathForeverTransportPinMixin:OnReleased()
-	MapCanvasPinMixin.OnReleased(self)
-end
+-- Kept strokes and paths survive a release, so the next draw of the same routes reuses them.
+function TransportPin.OnReleased() end
 
----@class SPFTransportProvider : SPFMapProvider
-local TransportProviderMixin = CreateFromMixins(MapCanvasDataProviderMixin)
+-- The routes' layer on the world map.
+---@class SPFTransportLayer
+---@field signature? string
+local Transports = {}
 local transportGeometry = {}
 local geometryRoutes, geometryDocks
 
-local function ActiveTransportPins()
-	local count = 0
-	for _ in WorldMapFrame:EnumeratePinsByTemplate(TRANSPORT_TEMPLATE) do
-		count = count + 1
-	end
-	return count
+function Transports.RemoveAllData()
+	transportPins:ReleaseAll()
 end
 
-function TransportProviderMixin:RemoveAllData()
-	self:GetMap():RemoveAllPinsByTemplate(TRANSPORT_TEMPLATE)
-end
-
-function TransportProviderMixin:RefreshAllData()
+function Transports:RefreshAllData()
 	if InCombatLockdown() then
 		ns.QueueMapRefresh()
 		return
 	end
-	local map = self:GetMap()
+	local map = WorldMapFrame
 	local mapID = map:GetMapID()
 	if not (ns.db.mapRoutes and mapID and map:IsVisible()) then
 		self:RemoveAllData()
@@ -75,7 +71,7 @@ function TransportProviderMixin:RefreshAllData()
 		return
 	end
 	local signature = mapID .. ":" .. tostring(ns.db.mapRoutes) .. ":" .. tostring(ns.db.otherFaction)
-	if self.signature == signature and ActiveTransportPins() >= (self.pinCount or 0) then
+	if self.signature == signature then
 		return
 	end
 	self:RemoveAllData()
@@ -116,8 +112,7 @@ function TransportProviderMixin:RefreshAllData()
 			geometry[#geometry + 1] = path
 		end
 	end
-	map:AcquirePin(TRANSPORT_TEMPLATE, geometry)
-	self.pinCount = ActiveTransportPins()
+	transportPins:Acquire(geometry)
 end
 
 function ns.RefreshTransportRoutes()
@@ -127,6 +122,11 @@ function ns.RefreshTransportRoutes()
 end
 
 ns.Init(function()
-	transportProvider = CreateFromMixins(TransportProviderMixin)
-	WorldMapFrame:AddDataProvider(transportProvider)
+	transportPins = ns.MapCanvas.Pool(WorldMapFrame, TRANSPORT_TEMPLATE, TransportPin)
+	transportProvider = Transports
+	ns.MapCanvas.Watch(WorldMapFrame, function(_, what)
+		if what == "show" or what == "map" then
+			transportProvider:RefreshAllData()
+		end
+	end)
 end)

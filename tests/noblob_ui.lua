@@ -8,7 +8,7 @@ for _, part in ipairs({ "ui_client.lua", "ui_map.lua" }) do
 	file:close()
 end
 assert(loadstring(source .. [[
-visible, WorldMapFrame.shown = true, true
+setMapShown(true)
 posX, posY, posMap, facing = 0, 0, 1, 0
 mapID, zoom = 14, 1
 blobWidget = false
@@ -19,7 +19,7 @@ assert(api.NavigateRoute("Test", {
 }))
 settle()
 for _ = 1, 2 do
- for _, provider in ipairs(providers) do provider:RefreshAllData() end
+ refreshMap()
  assert(#(active.ShortestPathForeverAreaPinTemplate or {}) == 0, "no area pin without the widget")
  assert(#active.ShortestPathForeverGoalPinTemplate == 1, "the stop keeps its button")
 end

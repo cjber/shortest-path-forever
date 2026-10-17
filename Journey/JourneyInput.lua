@@ -137,6 +137,31 @@ local function OnMinimapClick(_, button)
 	end
 end
 
+-- A journey to a Shift-clicked pin, labelled by its name if it has one: a flight point by its node, anything else by
+-- where it stands on the map. False when there is nowhere to plan to.
+---@param mapID number
+---@param info? {nodeID?: number, name?: string}
+---@param flight boolean
+---@param x? number
+---@param y? number
+---@return boolean
+local function JourneyToPin(mapID, info, flight, x, y)
+	local node = flight and info and ns.TaxiNodes[info.nodeID]
+	local point
+	if node then
+		point = { map = node.map, x = node.x, y = node.y, z = node.z }
+	elseif x and y then
+		point = ns.WorldPoint(mapID, x, y)
+	end
+	if not (point and OnZone(ns.InstanceEntrance(point))) then
+		return false
+	end
+	point.label = info and info.name
+	point.pinBadge = true
+	ns.StartJourney(point)
+	return true
+end
+
 local function OnPinClick(map, action, button)
 	if
 		not ns.db.journey
@@ -156,35 +181,35 @@ local function OnPinClick(map, action, button)
 			return true
 		end
 		---@cast pin SPFFlightPin
-		if
-			pin.pinTemplate
-			and pin.pinTemplate ~= "ShortestPathForeverGoalPinTemplate"
-			and pin.pinTemplate ~= "QuestPinTemplate"
-			and pin.GetMap
-			and pin:GetMap() == map
-		then
-			local info = pin.poiInfo
-			local flight = pin.pinTemplate == "FlightPointPinTemplate"
-				or pin.pinTemplate == "ShortestPathForeverFlightPinTemplate"
-			local node = flight and info and ns.TaxiNodes[info.nodeID]
-			local point
-			if node then
-				point = { map = node.map, x = node.x, y = node.y, z = node.z }
-			elseif pin.GetGlobalPosition then
-				local x, y = pin:GetGlobalPosition()
-				if x and y then
-					point = ns.WorldPoint(map:GetMapID(), x, y)
-				end
+		if pin.pinTemplate and pin.pinTemplate ~= "QuestPinTemplate" and pin.GetMap and pin:GetMap() == map then
+			local x, y
+			if pin.GetGlobalPosition then
+				x, y = pin:GetGlobalPosition()
 			end
-			if point and OnZone(ns.InstanceEntrance(point)) then
-				point.label = info and info.name
-				point.pinBadge = true
-				ns.StartJourney(point)
+			if JourneyToPin(map:GetMapID(), pin.poiInfo, pin.pinTemplate == "FlightPointPinTemplate", x, y) then
 				return true
 			end
 		end
 	end
 	return false
+end
+
+-- Shift-click on one of the addon's own map pins (UI/MapCanvas.lua), as OnPinClick does for the map's. The stop
+-- buttons keep their own click.
+---@param pin SPFCanvasPin
+---@param button string
+---@return boolean
+local function OnOwnPinClick(pin, button)
+	if not ns.db.journey or button ~= "LeftButton" or not IsShiftKeyDown() or ChatBoxOpen() then
+		return false
+	end
+	local marker = pin.marker
+	if marker ~= "flight" and marker ~= "dock" and marker ~= "portal" then
+		return false
+	end
+	local x, y = pin:GetPosition()
+	local info = marker == "flight" and (pin --[[@as SPFAddonFlightPin]]).poiInfo or nil
+	return JourneyToPin(pin:GetMap():GetMapID(), info, marker == "flight", x, y)
 end
 
 local function AddQuestMenuEntry(root, questID)
@@ -217,8 +242,12 @@ ns.Init(function()
 			ns.StartJourney(point)
 		end
 	end)
+	-- The map's click registries are Blizzard's own for addons (MapCanvasSecureUtil.CreateHandlerRegistry): it keeps
+	-- them outside the map's fields and calls each handler through securecallfunction, so the map's code never runs
+	-- the addon's. The addon's own pins take their clicks through UI/MapCanvas.lua instead.
 	WorldMapFrame:AddCanvasClickHandler(OnCanvasClick)
 	WorldMapFrame:AddGlobalPinMouseActionHandler(OnPinClick)
+	ns.MapCanvas.OnClick(OnOwnPinClick)
 	-- The stock handler still pings the spot, which marks where the journey goes for your group too.
 	Minimap:HookScript("OnMouseUp", OnMinimapClick)
 	Menu.ModifyMenu("MENU_QUEST_OBJECTIVE_TRACKER", function(owner, root)
