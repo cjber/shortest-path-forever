@@ -59,6 +59,8 @@ View.__index = View
 local views = {}
 ---@type SPFCanvasPin?, SPFCanvasPin?, string?
 local hovered, pressed, pressedButton
+-- Whether the gamepad's map cursor, not the mouse, is hovering `hovered`.
+local hoveredByCursor = false
 ---@type (fun(pin: SPFCanvasPin, button: string): boolean?)[]
 local clickFilters = {}
 local clicks
@@ -93,16 +95,20 @@ end
 
 ---@param view SPFCanvasView
 ---@param what string
-local function Fire(view, what)
-	-- Pins kept from before (a map shown again, a ping set on the map being turned to) follow the view first.
+---@param sized? boolean the canvas size changed since the last frame
+---@param scaled? boolean the zoom or pin scale changed since the last frame
+local function Fire(view, what, sized, scaled)
+	-- Pins kept from before (a map shown again, a ping set on the map being turned to) follow the view first, and
+	-- hear of a size or zoom that changed while the map was hidden or turned.
 	if what ~= "hide" then
 		for _, pool in pairs(view.pools) do
 			for pin in pool:EnumerateActive() do
 				pin:ApplyScale()
 				pin:ApplyPosition()
-				if what == "size" then
+				if sized then
 					pin:OnCanvasSizeChanged()
-				elseif what == "scale" then
+				end
+				if scaled then
 					pin:OnCanvasScaleChanged()
 				end
 			end
@@ -169,12 +175,11 @@ local function PinAtCursor(view)
 end
 
 ---@param view SPFCanvasView
+local Hide
+
 local function Update(view)
 	if not view.map:IsVisible() then
-		if view.shown then
-			view.shown = false
-			Fire(view, "hide")
-		end
+		Hide(view)
 		return
 	end
 	local mapID, width, height, scale, zoom, pinScale = Read(view)
@@ -188,27 +193,29 @@ local function Update(view)
 		view.gamepad = ns.GamepadUI()
 		clicks:RegisterEvent("GLOBAL_MOUSE_DOWN")
 		clicks:RegisterEvent("GLOBAL_MOUSE_UP")
-		Fire(view, "show")
+		Fire(view, "show", sized, scaled)
 	elseif changedMap then
-		Fire(view, "map")
+		Fire(view, "map", sized, scaled)
 	else
 		if sized then
-			Fire(view, "size")
+			Fire(view, "size", true, false)
 		end
 		if scaled then
-			Fire(view, "scale")
+			Fire(view, "scale", false, true)
 		end
 	end
-	if view.gamepad then
+	-- The map cursor hovers a pin within reach, and lets go of one it hovered; a pin the mouse is on stays hovered.
+	if view.gamepad and (not hovered or hoveredByCursor) then
 		local pin = PinAtCursor(view)
-		if pin or (hovered and hovered.view == view) then
+		if pin ~= hovered then
 			SetHovered(pin)
+			hoveredByCursor = pin ~= nil
 		end
 	end
 end
 
 ---@param view SPFCanvasView
-local function Hide(view)
+function Hide(view)
 	if hovered and hovered.view == view then
 		SetHovered(nil)
 	end
@@ -340,7 +347,8 @@ function Pin:GetMap()
 	return self.view.map
 end
 
--- Whether a press of `button` goes through to the canvas: the right button, to zoom out, unless the pin says not.
+-- Whether a press of `button` goes through to the canvas, set again at each acquire: the right button, to zoom out,
+-- unless the pin says not.
 ---@param button string
 ---@return boolean
 function Pin.ShouldMouseButtonBePassthrough(_, button)
@@ -407,12 +415,6 @@ function Pin:ApplyPosition()
 	self:SetPoint("CENTER", view.canvas, "TOPLEFT", view.width * x / scale, -view.height * y / scale)
 end
 
--- The pin's click, as the mouse's press and release over it make it: Shift-click filters first, then its own action.
----@param button string
-function Pin:OnClick(button)
-	MapCanvas.Click(self, button)
-end
-
 --[[ Pools ]]
 
 ---@class SPFCanvasPool
@@ -427,6 +429,7 @@ local Pool = {}
 Pool.__index = Pool
 
 local function OnEnter(pin)
+	hoveredByCursor = false
 	SetHovered(pin)
 end
 
@@ -459,11 +462,13 @@ function Pool:Acquire(...)
 	pin:ApplyScale()
 	pin:ApplyPosition()
 	if pin.takesMouse and pin.SetPassThroughButtons then
-		if pin:ShouldMouseButtonBePassthrough("RightButton") then
-			pin:SetPassThroughButtons("RightButton")
-		else
-			pin:SetPassThroughButtons()
+		local through = {}
+		for _, button in ipairs({ "LeftButton", "RightButton" }) do
+			if pin:ShouldMouseButtonBePassthrough(button) then
+				through[#through + 1] = button
+			end
 		end
+		pin:SetPassThroughButtons(unpack(through))
 	end
 	return pin
 end

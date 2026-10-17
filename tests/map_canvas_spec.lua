@@ -35,9 +35,6 @@ do
 		function frame:SetPassThroughButtons(...)
 			self.passThrough = { ... }
 		end
-		function frame:SetPropagateMouseClicks(value)
-			self.propagates = value
-		end
 		function frame:SetHighlightLocked(value)
 			self.highlightLocked = value
 		end
@@ -237,7 +234,7 @@ check(planned and planned.pinBadge, "and a dock, where it stands")
 shiftDown, ns.StartJourney = false, startJourney
 
 --[[ A flight point super-tracks on a zone map; above one, its click goes through to zoom in ]]
-check(flight.propagates == false, "on a zone a flight point keeps its click")
+check(flight.passThrough and #flight.passThrough == 0, "on a zone a flight point keeps both buttons")
 clickPin(flight, "LeftButton")
 local kind, id = C_SuperTrack.GetSuperTrackedMapPin()
 check(kind == Enum.SuperTrackingMapPinType.TaxiNode and id == flight.poiInfo.nodeID, "a click super-tracks it")
@@ -253,9 +250,12 @@ local above = flights:Acquire({
 	faction = Enum.FlightPathFaction.Neutral,
 	atlasName = "taxinode_neutral",
 })
-check(above.propagates == true, "on a continent a flight point passes its clicks to the map")
+check(above.passThrough[1] == "LeftButton" and #above.passThrough == 1, "on a continent its left click zooms in")
 clickPin(above, "LeftButton")
 check(C_SuperTrack.GetSuperTrackedMapPin() == nil, "no super-tracking from a continent")
+context = {}
+clickPin(above, "RightButton")
+check(context["Flight path known"], "and its right click is still the menu's alone")
 flights:Release(above)
 noErrors("flight clicks")
 
@@ -310,6 +310,15 @@ check(not GameTooltip.shown and dock.highlightLocked == false, "moving the curso
 cursor.x = 400
 mapTick()
 check(GameTooltip.owner == dock, "back over it")
+local other = docks.active[2]
+check(other, "a second dock for the mouse")
+cursor.shown = false
+mapTick()
+other.scripts.OnEnter(other)
+mapTick()
+check(GameTooltip.owner == other, "with the map cursor away, the mouse's hover stays")
+other.scripts.OnLeave(other)
+cursor.shown = true
 setMapShown(false)
 check(not GameTooltip.shown, "closing the map leaves the hovered pin")
 dock.GetCenter, _G.SoftCursor, gamepad = nil, nil, false

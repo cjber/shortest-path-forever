@@ -54,14 +54,13 @@ function FlightPin:OnAcquired(info)
 	local scale = (ns.db.flightPinScale or 100) / 100
 	self:SetScalingLimits(1, scale, scale * 1.2)
 	self:SetPosition(info.position:GetXY())
-	if self.SetPropagateMouseClicks then
-		self:SetPropagateMouseClicks(not SuperTrackMap(self:GetMap():GetMapID()))
-	end
 	self:UpdateSuperTracked()
 end
 
-function FlightPin.ShouldMouseButtonBePassthrough()
-	return false
+-- The right button opens the menu. Above a zone the left button goes through to the map, to zoom in, as the stock
+-- pin's click propagation does there; only that button, so a right click is the menu's alone.
+function FlightPin:ShouldMouseButtonBePassthrough(button)
+	return button == "LeftButton" and not SuperTrackMap(self:GetMap():GetMapID())
 end
 
 function FlightPin:OnMouseClickAction(button)
@@ -198,7 +197,12 @@ function Flights:RefreshAllData()
 	end
 	Query(mapID)
 	-- The game's own provider is left on the map. Where it draws flight points itself, those nodes are its own.
-	local nativeShown = C_TaxiMap.ShouldMapShowTaxiNodes and C_TaxiMap.ShouldMapShowTaxiNodes(mapID) and reported or {}
+	local nativeShown = {}
+	if C_TaxiMap.ShouldMapShowTaxiNodes and C_TaxiMap.ShouldMapShowTaxiNodes(mapID) then
+		for id in pairs(reported) do
+			nativeShown[id] = true
+		end
+	end
 	for id, node in pairs(ns.TaxiNodes) do
 		local location = ns.Locate(node)
 		local x, y = ns.MapPinPosition(node, mapID)

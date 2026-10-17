@@ -19,7 +19,7 @@ local flightPin = ns.MapCanvas.Pools(WorldMapFrame).ShortestPathForeverFlightPin
  faction = Enum.FlightPathFaction.Alliance, atlasName = "taxinode_alliance",
 })
 assert(flightPin.startScale == 0.5 and flightPin.endScale == 0.6, "flight icons use the selected scale")
-flightPin:OnClick("RightButton")
+clickPin(flightPin, "RightButton")
 local knownToggle = assert(context["Flight path known"], "right-click opens the flight ownership menu")
 local wasKnown = knownToggle.get() == true
 knownToggle.click()

@@ -296,7 +296,8 @@ end
 ---@field pins? table<string, SPFDockPin> by the key of the cluster's docks
 ---@field pinOf? table<number, SPFDockPin> by dock id
 ---@field mapID? number
----@field ping? Frame
+---@field ping? SPFPingPin
+---@field pingMap? number
 Docks = {}
 
 function Docks:RemoveAllData()
@@ -363,7 +364,10 @@ function PingPin:OnLoad()
 	PingArt(self)
 end
 
-function Docks:Ping(x, y)
+---@param mapID number the map the point is on, which the map is being turned to
+---@param x number
+---@param y number
+function Docks:Ping(mapID, x, y)
 	if InCombatLockdown() then
 		ns.QueueMapRefresh()
 		return
@@ -371,6 +375,7 @@ function Docks:Ping(x, y)
 	if not self.ping then
 		self.ping = MapCanvas.Pool(WorldMapFrame, "ping", PingPin):Acquire()
 	end
+	self.pingMap = mapID
 	self.ping:Show()
 	self.ping:SetPosition(x, y)
 	self.ping.animation:Stop()
@@ -444,7 +449,7 @@ local function ShowEnd(target)
 	end
 	local x, y = MapPosition(target.point, target.uiMap)
 	if x then
-		Docks:Ping(x, y)
+		Docks:Ping(target.uiMap, x, y)
 	end
 end
 
@@ -782,8 +787,11 @@ ns.Init(function()
 		elseif what == "scale" then
 			-- Docks merge or split as the zoom changes.
 			Docks:RefreshAllData()
-		elseif what == "hide" and Docks.ping then
-			Docks.ping:Hide()
+		end
+		-- A ping marks a place on the map it was set for: turning to another map or closing it leaves it.
+		local ping = Docks.ping
+		if ping and (what == "hide" or (what == "map" and WorldMapFrame:GetMapID() ~= Docks.pingMap)) then
+			ping:Hide()
 		end
 	end)
 	Menu.ModifyMenu("MENU_WORLD_MAP_TRACKING", AddFilters)

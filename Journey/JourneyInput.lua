@@ -181,7 +181,7 @@ local function OnPinClick(map, action, button)
 			return true
 		end
 		---@cast pin SPFFlightPin
-		if pin.pinTemplate and pin.GetMap and pin:GetMap() == map then
+		if pin.pinTemplate and pin.pinTemplate ~= "QuestPinTemplate" and pin.GetMap and pin:GetMap() == map then
 			local x, y
 			if pin.GetGlobalPosition then
 				x, y = pin:GetGlobalPosition()
