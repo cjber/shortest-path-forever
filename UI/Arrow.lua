@@ -4,7 +4,7 @@ local L = ns.L
 
 -- Guide follows the map's walking path bend by bend. Journey places Blizzard's native navigation marker at
 -- this target; our screen arrow is the fallback when that marker is unavailable or the player owns tracking.
--- Camelot omits the navigation setting, but its native super-tracked marker does work.
+-- Camelot omits the navigation setting, but its native super-tracked marker does work while its CVar is on.
 
 -- Polled this often while still; every frame while you move or turn, and while the arrow eases round.
 local POLL_EVERY = 0.1
@@ -51,6 +51,12 @@ end
 -- The shorter way round from a to b, between -pi and pi.
 local function Difference(b, a)
 	return (b - a + math.pi) % TURN - math.pi
+end
+
+-- Whether the game draws its marker. With showInGameNavigation off, which Camelot gives no setting for, the client
+-- still has a navigation frame but keeps the marker at no alpha, so the arrow has to lead.
+local function NativeMarkerShown()
+	return C_Navigation.GetFrame() ~= nil and GetCVarBool("showInGameNavigation")
 end
 
 local function Draw(angle)
@@ -100,7 +106,7 @@ local function Update(elapsed)
 		return
 	end
 	native = placed
-	if not (facing and map == target.map) or (native and C_Navigation.GetFrame()) then
+	if not (facing and map == target.map) or (native and NativeMarkerShown()) then
 		-- The native marker leads; nothing to draw, so only the slow poll runs, moving or not.
 		frame:SetAlpha(moving and 1 or 0)
 		frame.angle = nil
