@@ -922,6 +922,9 @@ _G.Menu = {
 _G.UnitFactionGroup = function()
 	return "Alliance"
 end
+_G.UnitLevel = function()
+	return 60
+end
 _G.Lerp = function(a, b, t)
 	return a + (b - a) * t
 end

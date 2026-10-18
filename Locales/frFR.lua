@@ -31,6 +31,8 @@ L["Arriving at %s in %s"] = "Arrivée à %s dans %s" -- mt
 L["Arrow scale"] = "Taille de la flèche" -- mt
 L["Attach to quest tracker"] = "Attacher au suivi des quêtes"
 L["Auction house"] = "Hôtel des ventes" -- mt
+L["Avoid zones far above my level"] = "Éviter les zones bien au-dessus de mon niveau" -- mt
+L["Avoids %s (level %s)"] = "Contourne %s (niveau %s)" -- mt
 L["Bank"] = "Banque" -- mt
 L["Boat and Zeppelin Routes"] = "Routes des bateaux et zeppelins" -- mt
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
@@ -50,6 +52,7 @@ L["Compass scale"] = "Taille de la boussole" -- mt
 L["Complete this step"] = "Terminer cette étape" -- mt
 L["Copy link"] = "Copier le lien" -- mt
 L["Copy the address, then open it in your browser."] = "Copiez l'adresse, puis ouvrez-la dans votre navigateur." -- mt
+L["Crosses %s (level %s)"] = "Traverse %s (niveau %s)" -- mt
 L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."] =
 	"Assombrit le sol derrière la boussole pour que ses repères restent lisibles sur la neige ou le sable. 0 % n'affiche rien." -- mt
 L["Deeprun Tram"] = "Tram des profondeurs" -- mt
@@ -81,6 +84,7 @@ L["Guide marks the next boat, lift, flight master or your destination, not each 
 	"Le guidage marque le prochain bateau, ascenseur, maître de vol ou votre destination, pas chaque virage du trajet à pied." -- mt
 L["Guide me"] = "Me guider" -- mt
 L["Horde"] = "Horde" -- mt
+L["Hostile town: %s"] = "Ville hostile : %s" -- mt
 L["In the objective tracker while you are near a dock, lift or tram."] =
 	"Dans le suivi des objectifs quand vous êtes près d'un quai, d'un ascenseur ou du tram." -- mt
 L["Innkeeper"] = "Aubergiste" -- mt
@@ -235,6 +239,8 @@ L["Use hearth and teleports"] = "Utiliser foyer et téléportations" -- mt
 L["Vendors by specialty"] = "Marchands par spécialité" -- mt
 L["W"] = "O" -- mt
 L["Walk to %s"] = "Marcher jusqu'à %s" -- mt
+L["Walks go round zones whose lowest level is 4 or more above yours, but never the ones you start or end in."] =
+	"Les trajets à pied contournent les zones dont le niveau minimum dépasse le vôtre de 4 ou plus, mais jamais celles de départ ou d'arrivée." -- mt
 L["What next? Adventure Guide Forever suggests quests for your level."] =
 	"Et maintenant ? Adventure Guide Forever suggère des quêtes de votre niveau." -- mt
 L["What's new after an update"] = "Nouveautés après une mise à jour"

@@ -31,6 +31,8 @@ L["Arriving at %s in %s"] = "Прибытие: %s через %s"
 L["Arrow scale"] = "Размер стрелки"
 L["Attach to quest tracker"] = "Прикрепить к отслеживанию заданий"
 L["Auction house"] = "Аукционный дом"
+L["Avoid zones far above my level"] = "Избегать зон намного выше моего уровня"
+L["Avoids %s (level %s)"] = "Обходит %s (уровень %s)"
 L["Bank"] = "Банк"
 L["Boat and Zeppelin Routes"] = "Маршруты кораблей и дирижаблей"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
@@ -51,6 +53,7 @@ L["Complete this step"] = "Завершить этот шаг"
 L["Copy link"] = "Копировать ссылку"
 L["Copy the address, then open it in your browser."] =
 	"Скопируйте адрес и откройте его в браузере."
+L["Crosses %s (level %s)"] = "Проходит через %s (уровень %s)"
 L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."] =
 	"Затемняет землю за компасом, чтобы его отметки читались на снегу или песке. 0% – без затемнения."
 L["Deeprun Tram"] = "Подземный поезд"
@@ -82,6 +85,7 @@ L["Guide marks the next boat, lift, flight master or your destination, not each 
 	"Навигация отмечает следующий корабль, подъемник, распорядителя полетов или цель, а не каждый поворот пешего пути."
 L["Guide me"] = "Вести меня"
 L["Horde"] = "Орда"
+L["Hostile town: %s"] = "Вражеский город: %s"
 L["In the objective tracker while you are near a dock, lift or tram."] =
 	"На панели отслеживания, когда вы рядом с причалом, подъемником или поездом."
 L["Innkeeper"] = "Хозяин таверны"
@@ -243,6 +247,8 @@ L["Use hearth and teleports"] = "Камень возвращения и теле
 L["Vendors by specialty"] = "Торговцы по специальности"
 L["W"] = "З"
 L["Walk to %s"] = "Идти: %s"
+L["Walks go round zones whose lowest level is 4 or more above yours, but never the ones you start or end in."] =
+	"Пешие маршруты обходят зоны, минимальный уровень которых на 4 и более выше вашего, но не зоны начала и конца пути."
 L["What next? Adventure Guide Forever suggests quests for your level."] =
 	"Что дальше? Adventure Guide Forever предлагает задания по вашему уровню."
 L["What's new after an update"] = "Новое после обновления"

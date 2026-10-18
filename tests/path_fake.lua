@@ -10,8 +10,8 @@ return function()
 	local function distance(a, b)
 		return a.map == b.map and math.sqrt((a.x - b.x) ^ 2 + (a.y - b.y) ^ 2)
 	end
-	local function job(list, map, from, callback, water)
-		local new = { map = map, from = from, callback = callback, water = water, cpu = 0 }
+	local function job(list, map, from, callback, water, hazards)
+		local new = { map = map, from = from, callback = callback, water = water, hazards = hazards, cpu = 0 }
 		list[#list + 1] = new
 		return new
 	end
@@ -25,18 +25,18 @@ return function()
 	function Path.LowerBound(map, from, to)
 		return fake.bound and fake.bound(map, from, to) or 0
 	end
-	function Path.Find(map, from, to, callback, water)
-		local new = job(fake.finds, map, from, callback, water)
+	function Path.Find(map, from, to, callback, water, hazards)
+		local new = job(fake.finds, map, from, callback, water, hazards)
 		new.to = to
 		return new
 	end
-	function Path.FindCost(map, from, to, callback, water)
-		local new = job(fake.probes, map, from, callback, water)
+	function Path.FindCost(map, from, to, callback, water, hazards)
+		local new = job(fake.probes, map, from, callback, water, hazards)
 		new.to, new.costOnly = to, true
 		return new
 	end
-	function Path.FindMany(map, from, targets, callback, water, reverse, progress)
-		local new = job(fake.batches, map, from, callback, water)
+	function Path.FindMany(map, from, targets, callback, water, reverse, progress, hazards)
+		local new = job(fake.batches, map, from, callback, water, hazards)
 		new.targets, new.reverse, new.progress = targets, reverse, progress
 		new.costs, new.radius, new.revision = {}, 0, 0
 		return new

@@ -41,6 +41,7 @@ local DEFAULTS = {
 	arrowScale = 100,
 	compassBackground = 0,
 	corpse = true,
+	avoidHighZones = true,
 	whatsNew = true,
 }
 ns.Defaults = DEFAULTS
@@ -129,11 +130,15 @@ function ns.NowMs()
 	return (GetTime() + offset) * 1000
 end
 
--- The zone map a world point ({ map, x, y }) sits on. GetMapPosFromWorldPos may answer with the continent, so
--- descend to the zone under the point when it does.
-local function Resolve(point)
-	local world = CreateVector2D(point.x, point.y)
-	local uiMap, position = C_Map.GetMapPosFromWorldPos(point.map, world)
+-- The zone map a world point sits on, with the point's position there and the map's info. GetMapPosFromWorldPos
+-- may answer with the continent, so descend to the zone under the point when it does.
+---@param map number
+---@param x number
+---@param y number
+---@return number? uiMap, Vector2DMixin? position, UiMapDetails? info
+function ns.ZoneMap(map, x, y)
+	local world = CreateVector2D(x, y)
+	local uiMap, position = C_Map.GetMapPosFromWorldPos(map, world)
 	if not uiMap then
 		return nil
 	end
@@ -141,11 +146,19 @@ local function Resolve(point)
 	if info and info.mapType ~= Enum.UIMapType.Zone then
 		local zone = C_Map.GetMapInfoAtPosition(uiMap, position:GetXY())
 		if zone and zone.mapType == Enum.UIMapType.Zone then
-			local zoneMap, zonePosition = C_Map.GetMapPosFromWorldPos(point.map, world, zone.mapID)
+			local zoneMap, zonePosition = C_Map.GetMapPosFromWorldPos(map, world, zone.mapID)
 			if zoneMap then
 				uiMap, position, info = zoneMap, zonePosition, zone
 			end
 		end
+	end
+	return uiMap, position, info
+end
+
+local function Resolve(point)
+	local uiMap, position, info = ns.ZoneMap(point.map, point.x, point.y)
+	if not uiMap or not position then
+		return nil
 	end
 	local x, y = position:GetXY()
 	return { uiMap = uiMap, x = x, y = y, zone = info and info.name or UNKNOWN }

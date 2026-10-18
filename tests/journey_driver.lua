@@ -100,6 +100,9 @@ local env = setmetatable({
 	UnitFactionGroup = function()
 		return ns.faction or "Alliance"
 	end,
+	UnitLevel = function()
+		return ns.level or 60
+	end,
 	IsShiftKeyDown = function()
 		return true
 	end,
@@ -208,6 +211,12 @@ end
 ns.Locate = function()
 	return ns.located or { uiMap = 1, x = 0.5, y = 0.5, zone = "Test" }
 end
+-- ns.zoneAt(map, x, y): the zone map under a world point, for Hazards.lua; none by default. A spec that loads
+-- Data/Zones.lua or Data/Taxi.lua replaces these empty tables.
+ns.ZoneMap = function(map, x, y)
+	return ns.zoneAt and ns.zoneAt(map, x, y)
+end
+ns.Zones, ns.TaxiNodes = ns.Zones or {}, ns.TaxiNodes or {}
 -- ns.teleports: the usable places; ns.teleportReady: [index] = when each can be cast.
 ns.UsableTeleports = function()
 	return ns.teleports, ns.teleportReady
@@ -227,6 +236,7 @@ load("Transport/TaxiTimes.lua")
 load("Core/PlanContext.lua")
 load("Routing/Planner.lua")
 load("Journey/JourneySteps.lua")
+load("Journey/Hazards.lua")
 load("Journey/JourneySearch.lua")
 load("Journey/JourneyWalks.lua")
 load("Journey/JourneyGuide.lua")

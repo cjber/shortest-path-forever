@@ -192,6 +192,58 @@ end
 
 local trees = { S = Tree(), G = Tree(), R = Tree() }
 
+-- An entrance's world position: the centre of its cell.
+local function nodeXY(st, id)
+	local k, C = floor(id / 4096), st.C
+	nodesOf(st, k)
+	local lc = metadata(st, id)
+	return st.x0 + (floor(k / st.ny) * C + floor(lc / C) + 0.5) * st.cs,
+		st.y0 + ((k % st.ny) * C + lc % C + 0.5) * st.cs
+end
+
+-- What a hazard profile (Journey/Hazards.lua) multiplies an entrance graph edge by: the mean of its ends' factors, or
+-- a town's when the edge crosses one. Ends are kept per profile; the town test runs only in clusters a town is near.
+local function hazard(st, hz, u, v)
+	local memo = st.hazards
+	if not memo or memo.key ~= hz.key then
+		memo = { key = hz.key, at = {}, near = {} }
+		st.hazards = memo
+	end
+	local at, ux, uy, vx, vy = memo.at, nil, nil, nil, nil
+	local fu, fv = at[u], at[v]
+	if not fu then
+		ux, uy = nodeXY(st, u)
+		fu = hz.Point(st.map, ux, uy)
+		at[u] = fu
+	end
+	if not fv then
+		vx, vy = nodeXY(st, v)
+		fv = hz.Point(st.map, vx, vy)
+		at[v] = fv
+	end
+	local f, k = (fu + fv) / 2, floor(u / 4096)
+	local near = memo.near[k]
+	if near == nil then
+		-- An edge stays within its cluster's neighbours, so a town matters if it is within a cluster of this one.
+		local x, y = st.x0 + (floor(k / st.ny) - 1) * TILE, st.y0 + (k % st.ny - 1) * TILE
+		near = hz.Near(st.map, x, y, x + 3 * TILE, y + 3 * TILE)
+		memo.near[k] = near
+	end
+	if near then
+		if not ux then
+			ux, uy = nodeXY(st, u)
+		end
+		if not vx then
+			vx, vy = nodeXY(st, v)
+		end
+		local town = hz.Chord(st.map, ux, uy, vx, vy)
+		if town > f then
+			f = town
+		end
+	end
+	return f
+end
+
 -- Abstract A* state.
 local ag, apar, astamp, aclosed, agen = {}, {}, {}, {}, 0
 
@@ -395,7 +447,7 @@ local function clearChord(st, from, to, water)
 end
 
 -- Sliced A* and refinement share scratch trees; splitting adds hot-path calls and upvalues
-local function run(map, from, to, waterWalking, costOnly)
+local function run(map, from, to, waterWalking, costOnly, hz)
 	local st = State(map)
 	if not st then
 		return nil, "nodata"
@@ -419,7 +471,7 @@ local function run(map, from, to, waterWalking, costOnly)
 	local S, G = trees.S, trees.G
 	local starts, source, sourceVia = connectPoint(st, swim, sk, sc, from.z)
 	local goals, target, targetVia = connectPoint(st, swim, gk, gc, to.z)
-	local key = table.concat({ sk, sc, gk, gc, swim, from.z and 1 or 0, to.z and 1 or 0 }, ":")
+	local key = table.concat({ sk, sc, gk, gc, swim, from.z and 1 or 0, to.z and 1 or 0, hz and hz.key or "" }, ":")
 	st.paths = st.paths or {}
 	local cached = st.paths[key]
 	local hops, cost, directFrom, directTo
@@ -454,17 +506,13 @@ local function run(map, from, to, waterWalking, costOnly)
 		end
 
 		-- Abstract A* from START to GOAL through the entrance graph.
-		local function world(id)
-			local k, lc = floor(id / 4096), metadata(st, id)
-			return x0 + (floor(k / st.ny) * C + floor(lc / C) + 0.5) * cs, y0 + ((k % st.ny) * C + lc % C + 0.5) * cs
-		end
 		-- Rounded graph edges and snapping must not let the heuristic overstate the remaining cost.
 		local goalCell = cellOf(st, gk, gc)
 		local goalX = x0 + (floor(gk / st.ny) * C + floor(goalCell / C) + 0.5) * cs
 		local goalY = y0 + (gk % st.ny * C + goalCell % C + 0.5) * cs
 		local lower = max(0, 1 - 0.5 / cs)
 		local function h(id)
-			local x, y = world(id)
+			local x, y = nodeXY(st, id)
 			local dx, dy = abs(x - goalX), abs(y - goalY)
 			return (dx > dy and dx + (SQRT2 - 1) * dy or dy + (SQRT2 - 1) * dx) * lower
 		end
@@ -503,7 +551,7 @@ local function run(map, from, to, waterWalking, costOnly)
 					local v = adj[e]
 					if aclosed[v] ~= gen then
 						nodesOf(st, floor(v / 4096))
-						relax(v, gu + adj[e + cost2], u)
+						relax(v, gu + adj[e + cost2] * (hz and hazard(st, hz, u, v) or 1), u)
 					end
 				end
 			end
@@ -650,7 +698,7 @@ end
 
 -- Lazy terminal-node connections let nearby targets settle without first searching every faraway endpoint.
 -- One sliced Dijkstra owns the heap swap and frontier locals across endpoint searches
-local function runMany(map, from, targets, waterWalking, reverse, job)
+local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 	local costs = job and job.costs or {}
 	local function failed(reason)
 		for i = 1, #targets do
@@ -787,7 +835,7 @@ local function runMany(map, from, targets, waterWalking, reverse, job)
 				for e = 1, #adj, 3 do
 					local v = adj[e]
 					if not closed[v] then
-						relax(v, dist[u] + adj[e + cost2])
+						relax(v, dist[u] + adj[e + cost2] * (hz and hazard(st, hz, u, v) or 1))
 					end
 				end
 			end
@@ -852,9 +900,9 @@ local function start(job)
 	end
 	Expansions(0)
 	if job.targets then
-		return runMany(job.map, job.from, job.targets, job.waterWalking, job.reverse, job)
+		return runMany(job.map, job.from, job.targets, job.waterWalking, job.reverse, job, job.hazards)
 	end
-	return run(job.map, job.from, job.to, job.waterWalking, job.costOnly)
+	return run(job.map, job.from, job.to, job.waterWalking, job.costOnly, job.hazards)
 end
 
 local spare
@@ -880,9 +928,10 @@ end
 ---@param from SPFPoint
 ---@param to SPFPoint
 ---@param waterWalking? boolean
-function Path.FindSync(map, from, to, waterWalking)
+---@param hazards? SPFHazards
+function Path.FindSync(map, from, to, waterWalking, hazards)
 	Deadline(huge)
-	local job = { map = map, from = from, to = to, waterWalking = waterWalking }
+	local job = { map = map, from = from, to = to, waterWalking = waterWalking, hazards = hazards }
 	local co = coroutine.create(start)
 	local saved = scratch()
 	local ok, points, cost = coroutine.resume(co, job)
@@ -900,11 +949,12 @@ end
 ---@param targets SPFPoint[]
 ---@param waterWalking? boolean
 ---@param reverse? boolean
-function Path.FindManySync(map, from, targets, waterWalking, reverse)
+---@param hazards? SPFHazards
+function Path.FindManySync(map, from, targets, waterWalking, reverse, hazards)
 	Deadline(huge)
 	Expansions(0)
 	local saved = scratch()
-	local costs, reason = runMany(map, from, targets, waterWalking, reverse)
+	local costs, reason = runMany(map, from, targets, waterWalking, reverse, nil, hazards)
 	scratch(saved)
 	return costs, reason, Expansions()
 end
