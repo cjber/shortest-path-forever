@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.20.0] - 2026-10-18
+
 - **Hazards change the path, not the time.** Walks still go round places you'd rather avoid, but their times now show the travel time along that route. Short walks of 200 yards or less beside a dock or flight master stay direct.
 - **Walks stay out of trouble.** A walk goes round zones whose lowest level is 4 or more above yours, and plans again when you level up (Ding! by Yendi gave me the idea). It also goes round the other faction's towns and capitals. The zones and towns you start and end in are never avoided. The tracker says when a walk goes round a zone, has to cross one, or passes a hostile town: *Hostile town: Crossroads*. *Avoid zones far above my level* in Guidance turns off the zone part. The towns idea came from Polestar.
 - **Gamepad interface: the world map is only read.** Shortest Path's docks, portals, flight points, route and stops are now drawn on frames of its own over the map, so the game's map no longer holds any of the addon's pins or data. With the gamepad interface on, the map walks its own pins from secure code every frame, and an addon's pins in that walk are the likeliest cause of the blocked `SetPreferredGamepadInteractTarget()` error some controller players reported. Every pin works as before: tooltips, clicks, Shift-click to plan a journey, right-click to zoom out, the size settings, and a flight point you click on a zone map becomes the one you track. Under the gamepad interface, a pin under the map cursor shows its tooltip. Thanks to TRDeadbeat, tallsmartman and the CurseForge players who reported it, and to Polestar for the idea.
