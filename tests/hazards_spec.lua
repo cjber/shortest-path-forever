@@ -71,6 +71,7 @@ ns.TaxiNodes = {
 	[3] = { map = 1, x = -450, y = -500, name = "Booty Bay, Stranglethorn", faction = "Alliance" },
 	[4] = { map = 1, x = -800, y = 0, name = "Goldshire", faction = "Alliance" },
 }
+ns.Docks = { [1] = { map = 1, x = 5000, y = 5000, walk = { map = 1, x = 5010, y = 5000 } } }
 ns.TaxiName = function(id)
 	return ns.TaxiNodes[id].name
 end
@@ -98,6 +99,22 @@ do
 	local half = profile.Segment(1, -500, 0, 500, 0)
 	assert(half > 2.3 and half < 2.7, half)
 	near(profile.Segment(1, -900, -900, -800, -900), 1, "a walk near no hazard")
+	assert(
+		profile.ConnectorWalk({ map = 1, x = -700, y = 0 }, { map = 1, x = -600, y = 0 }),
+		"short walks beside a flight master are connectors"
+	)
+	assert(
+		profile.ConnectorWalk({ map = 1, x = 5010, y = 5000 }, { map = 1, x = 5110, y = 5000 }),
+		"short walks beside a dock's walking point are connectors"
+	)
+	assert(
+		not profile.ConnectorWalk({ map = 1, x = -700, y = 0 }, { map = 1, x = -490, y = 0 }),
+		"over 200 yards is not a connector"
+	)
+	assert(
+		not profile.ConnectorWalk({ map = 1, x = -700, y = 0 }, { map = 2, x = -650, y = 0 }),
+		"connectors stay on one map"
+	)
 
 	-- Where the journey starts or ends is never avoided: a goal in the high zone, or in the town.
 	profile = Hazards.Profile(west, { map = 1, x = 500, y = 0 })
@@ -221,11 +238,35 @@ do
 	local round, roundCost = Path.FindSync(0, northshire, goldshire, nil, town)
 	assert(closest(round, cx, cy) > r, "goes round the town")
 	assert(roundCost > plainCost and roundCost < plainCost * 1.5, roundCost)
+	local drawn = 0
+	for i = 2, #round do
+		local dx, dy = round[i].x - round[i - 1].x, round[i].y - round[i - 1].y
+		drawn = drawn + math.sqrt(dx * dx + dy * dy)
+	end
+	assert(
+		roundCost >= drawn and roundCost < drawn * 1.1,
+		"reported yards are real travel cost, without the hazard multiplier"
+	)
 	-- The plain search after the hazard one is not answered from its cache, nor the other way round.
 	assert(select(2, Path.FindSync(0, northshire, goldshire)) == plainCost)
 	assert(select(2, Path.FindSync(0, northshire, goldshire, nil, town)) == roundCost)
 	near(Path.FindManySync(0, northshire, { goldshire }, nil, nil, town)[1], roundCost, "FindMany")
 	near(Path.FindManySync(0, goldshire, { northshire }, nil, true, town)[1], roundCost, "a reverse batch")
+	local connectorTo = { x = northshire.x + 100, y = northshire.y }
+	local connectorHazard = {}
+	for key, value in pairs(town) do
+		connectorHazard[key] = value
+	end
+	connectorHazard.ConnectorWalk = function()
+		return true
+	end
+	local _, connectorCost = Path.FindSync(0, northshire, connectorTo, nil, connectorHazard)
+	near(connectorCost, select(2, Path.FindSync(0, northshire, connectorTo)), "a connector uses its real cost")
+	near(
+		Path.FindManySync(0, northshire, { connectorTo }, nil, nil, connectorHazard)[1],
+		connectorCost,
+		"FindMany keeps connector costs real"
+	)
 	local sliced
 	local frames = {}
 	Path.after = function(fn)

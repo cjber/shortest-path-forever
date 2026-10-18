@@ -3,10 +3,10 @@ local ns = select(2, ...)
 local L = ns.L
 
 -- What a journey's walks keep away from: zones whose lowest level is well above yours (the idea is Ding!'s, by
--- Yendi) and the other faction's towns and capitals (Polestar's). A profile weights the walking search: each yard
--- between entrances inside a hazard counts several times over, so a walk goes round one where it can and crosses
--- where it must. The zones and towns the journey starts and ends in are never avoided, though a hostile town there is
--- still named.
+-- Yendi) and the other faction's towns and capitals (Polestar's). A profile weights path choice: yards inside a
+-- hazard count several times over while the route is chosen, but the walk's displayed time uses its real travel
+-- cost. The zones and towns the journey starts and ends in are never avoided, though a hostile town there is still
+-- named.
 local LEVEL_GAP = 4 -- a zone whose lowest level is this many above yours is avoided
 local ZONE_COST, TOWN_COST = 4, 6
 -- A hostile town: around one of the other faction's flight masters with none of your own this near (a town both
@@ -22,6 +22,8 @@ local KEEP = 50000
 ---@field Point fun(map: number, x: number, y: number): number -- the factor at a world point, at least 1
 ---@field Chord fun(map: number, ax: number, ay: number, bx: number, by: number): number -- towns along a segment
 ---@field Near fun(map: number, minX: number, minY: number, maxX: number, maxY: number): boolean -- a town in the box
+---@field TransportNear fun(map: number, x: number, y: number): boolean -- a dock or flight master within 200 yards
+---@field ConnectorWalk fun(from: SPFPoint, to: SPFPoint): boolean -- a short walk next to a dock or flight master
 ---@field Segment fun(map: number, ax: number, ay: number, bx: number, by: number): number -- mean factor along it
 ---@field zones table<number, number> -- [uiMap] = factor, for the avoided zones and hostile capitals
 ---@field cities table<number, boolean> -- every hostile capital, exempt ones included
@@ -147,6 +149,9 @@ local function HostileTowns(faction)
 	return towns
 end
 
+-- The radius in which a short walk can connect a dock or flight master to the walking network.
+local CONNECTOR_RADIUS = 200
+
 local function Inside(zone, map, x, y)
 	return zone.map == map and x >= zone.minX and x <= zone.maxX and y >= zone.minY and y <= zone.maxY
 end
@@ -245,6 +250,28 @@ function Hazards.Profile(from, goal)
 		end
 		return false
 	end
+	local function TransportNear(map, x, y)
+		for _, node in pairs(ns.TaxiNodes) do
+			if node.map == map and Distance2(x, y, node.x, node.y) <= CONNECTOR_RADIUS ^ 2 then
+				return true
+			end
+		end
+		for _, dock in pairs(ns.Docks or {}) do
+			local point = dock.walk or dock
+			if point.map == map and Distance2(x, y, point.x, point.y) <= CONNECTOR_RADIUS ^ 2 then
+				return true
+			end
+		end
+		return false
+	end
+	local function ConnectorWalk(start, target)
+		if start.map ~= target.map then
+			return false
+		end
+		local dx, dy = start.x - target.x, start.y - target.y
+		return dx * dx + dy * dy <= CONNECTOR_RADIUS ^ 2
+			and (TransportNear(start.map, start.x, start.y) or TransportNear(target.map, target.x, target.y))
+	end
 	-- The mean factor along a straight walk: what a walk baked without hazards costs here. A town counts the share of
 	-- the walk inside it; a zone, the share of samples inside its map's box that the zone's map holds.
 	local function Segment(map, ax, ay, bx, by)
@@ -277,6 +304,8 @@ function Hazards.Profile(from, goal)
 		Point = Point,
 		Chord = Chord,
 		Near = Near,
+		TransportNear = TransportNear,
+		ConnectorWalk = ConnectorWalk,
 		Segment = Segment,
 		zones = zones,
 		cities = cities,

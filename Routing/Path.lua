@@ -245,7 +245,7 @@ local function hazard(st, hz, u, v)
 end
 
 -- Abstract A* state.
-local ag, apar, astamp, aclosed, agen = {}, {}, {}, {}, 0
+local ag, areal, apar, astamp, aclosed, agen = {}, {}, {}, {}, {}, 0
 
 -- Endpoint searches: grid Dijkstra to the cluster's entrances.
 local function endpoint(st, swim, tree, k, node)
@@ -448,6 +448,9 @@ end
 
 -- Sliced A* and refinement share scratch trees; splitting adds hot-path calls and upvalues
 local function run(map, from, to, waterWalking, costOnly, hz)
+	if hz and hz.ConnectorWalk and hz.ConnectorWalk(from, to) then
+		hz = nil
+	end
 	local st = State(map)
 	if not st then
 		return nil, "nodata"
@@ -519,17 +522,17 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 		agen = agen + 1
 		local gen = agen
 		hn = 0
-		local function relax(v, gv, parent)
+		local function relax(v, gv, rv, parent)
 			if astamp[v] ~= gen or gv < ag[v] then
-				ag[v], apar[v], astamp[v] = gv, parent, gen
+				ag[v], areal[v], apar[v], astamp[v] = gv, rv, parent, gen
 				push(gv + (v == GOAL and 0 or h(v)), v)
 			end
 		end
 		for id, distance in pairs(source) do
-			relax(id, distance, START)
+			relax(id, distance, distance, START)
 		end
 		if direct then
-			relax(GOAL, direct, START)
+			relax(GOAL, direct, direct, START)
 		end
 		local found = false
 		while hn > 0 do
@@ -542,8 +545,9 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 					break
 				end
 				local gu = ag[u]
+				local ru = areal[u]
 				if target[u] then
-					relax(GOAL, gu + target[u], u)
+					relax(GOAL, gu + target[u], ru + target[u], u)
 				end
 				nodesOf(st, floor(u / 4096))
 				local adj = adjacent(st, u)
@@ -551,7 +555,9 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 					local v = adj[e]
 					if aclosed[v] ~= gen then
 						nodesOf(st, floor(v / 4096))
-						relax(v, gu + adj[e + cost2] * (hz and hazard(st, hz, u, v) or 1), u)
+						local yards = adj[e + cost2]
+						local factor = hz and hazard(st, hz, u, v) or 1
+						relax(v, gu + yards * factor, ru + yards, u)
 					end
 				end
 			end
@@ -559,7 +565,7 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 		if not found then
 			return nil, "unreachable"
 		end
-		cost = ag[GOAL]
+		cost = areal[GOAL]
 		hops = { GOAL }
 		while hops[#hops] ~= START do
 			hops[#hops + 1] = apar[hops[#hops]]
@@ -640,8 +646,8 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 		end
 	end
 
-	-- Points carry the height of the surface they stand on; the cost weights water as the search did, and points.wet
-	-- is the yards over water, which call for Water Walking.
+	-- Points carry the height of the surface they stand on; the returned cost uses real walking/swimming time, with
+	-- hazards affecting only the route chosen. points.wet is the yards over water, which call for Water Walking.
 	local keep = smooth(st, P)
 	if #keep == 1 then -- both ends on one node
 		keep[2] = keep[1]
@@ -692,7 +698,7 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 		wetYards = wetYards + length * wet
 	end
 	points.wet = wetYards
-	-- Smoothing only changes drawing: planning and FindMany use the identical graph cost.
+	-- Smoothing only changes drawing: planning and FindMany use the same hazard-selected graph route and real cost.
 	return points, cost
 end
 
@@ -731,9 +737,24 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 			yield()
 		end
 	end
+	-- Resolve a short dock/flight-master connector on its own. FindMany shares one frontier among its targets, so a
+	-- single target cannot remove hazard weights from the rest of that frontier.
+	if hz and hz.ConnectorWalk then
+		for i, point in ipairs(targets) do
+			if costs[i] == nil and hz.ConnectorWalk(from, point) then
+				local cost = run(map, from, point, waterWalking, true, nil)
+				if cost then
+					costs[i] = cost
+					if job then
+						job.revision = job.revision + 1
+					end
+				end
+			end
+		end
+	end
 	local swim, cost2 = waterWalking and 1 or st.swim, waterWalking and 2 or 1
 	local starts, source = connectPoint(st, swim, sk, sc, from.z)
-	local clusters, links, dist, closed, left = {}, {}, {}, {}, #targets
+	local clusters, links, dist, real, closed, left = {}, {}, {}, {}, {}, #targets
 	for i, point in ipairs(targets) do
 		local k = locate(st, point.x, point.y)
 		if costs[i] ~= nil then
@@ -746,9 +767,9 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 		end
 	end
 	hn = 0
-	local function relax(id, cost)
+	local function relax(id, cost, realCost)
 		if not dist[id] or cost < dist[id] then
-			dist[id] = cost
+			dist[id], real[id] = cost, realCost
 			push(cost, id)
 		end
 	end
@@ -796,19 +817,19 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 		end
 		hk, hv, hn = keys, values, size
 		for i, cost in pairs(direct) do
-			relax(-i, cost)
+			relax(-i, cost, cost)
 		end
 		for i, edges in pairs(ends) do
 			for id, cost in pairs(edges) do
 				links[id] = links[id] or {}
 				local joined = links[id]
-				joined[#joined + 1], joined[#joined + 2] = -i, cost
+				joined[#joined + 1], joined[#joined + 2], joined[#joined + 3] = -i, cost, cost
 			end
 		end
 	end
 	prepare(sk)
 	for id, cost in pairs(source) do
-		relax(id, cost)
+		relax(id, cost, cost)
 	end
 	while hn > 0 and left > 0 do
 		-- Until the popped node's outgoing edges are relaxed, its key still bounds the frontier.
@@ -819,7 +840,7 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 		if not closed[u] then
 			closed[u] = true
 			if u < 0 then
-				costs[-u], left = dist[u], left - 1
+				costs[-u], left = real[u], left - 1
 				if job then
 					job.revision = job.revision + 1
 				end
@@ -827,15 +848,17 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 				local k = floor(u / 4096)
 				prepare(k)
 				local ends = links[u]
-				for i = 1, ends and #ends or 0, 2 do
-					relax(ends[i], dist[u] + ends[i + 1])
+				for i = 1, ends and #ends or 0, 3 do
+					relax(ends[i], dist[u] + ends[i + 1], real[u] + ends[i + 2])
 				end
 				nodesOf(st, k)
 				local adj = adjacent(st, u)
 				for e = 1, #adj, 3 do
 					local v = adj[e]
 					if not closed[v] then
-						relax(v, dist[u] + adj[e + cost2] * (hz and hazard(st, hz, u, v) or 1))
+						local yards = adj[e + cost2]
+						local factor = hz and hazard(st, hz, u, v) or 1
+						relax(v, dist[u] + yards * factor, real[u] + yards)
 					end
 				end
 			end
@@ -907,18 +930,18 @@ end
 
 local spare
 local function scratch(saved)
-	local previous = { hk, hv, hn, trees, ag, apar, astamp, aclosed, agen }
+	local previous = { hk, hv, hn, trees, ag, areal, apar, astamp, aclosed, agen }
 	if not saved and spare then
 		saved, spare = spare, nil
 		saved[3] = 0
 	end
 	if saved then
 		hk, hv, hn, trees = saved[1], saved[2], saved[3], saved[4]
-		ag, apar, astamp, aclosed, agen = saved[5], saved[6], saved[7], saved[8], saved[9]
+		ag, areal, apar, astamp, aclosed, agen = saved[5], saved[6], saved[7], saved[8], saved[9], saved[10]
 	else
 		hk, hv, hn = {}, {}, 0
 		trees = { S = Tree(), G = Tree(), R = Tree() }
-		ag, apar, astamp, aclosed, agen = {}, {}, {}, {}, 0
+		ag, areal, apar, astamp, aclosed, agen = {}, {}, {}, {}, {}, 0
 	end
 	return previous
 end
