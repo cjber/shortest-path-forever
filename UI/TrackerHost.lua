@@ -34,7 +34,9 @@ local host = CreateFrame("Frame", "ForeverTrackerCompanion", UIParent)
 ---@class ForeverTrackerHostAPI
 local api = {}
 local MIN_SCALE, MAX_SCALE = 0.5, 2
-local fallbackSettings = { attached = true, scale = 1 }
+-- The optional background's strongest opacity: dark enough to read over snow, never a solid block.
+local MAX_BACKGROUND = 0.8
+local fallbackSettings = { attached = true, scale = 1, background = 0 }
 local ready = false
 local function Coordinate(value)
 	if type(value) == "number" and value == value and math.abs(value) ~= math.huge then
@@ -44,15 +46,10 @@ end
 ---@return ForeverTrackerSettings
 local function Settings()
 	local settings = ns.TrackerHostSettings and ns.TrackerHostSettings() or fallbackSettings
-	if type(settings.attached) ~= "boolean" then
-		settings.attached = true
-	end
-	local scale = settings.scale
-	if type(scale) ~= "number" or scale ~= scale then
-		settings.scale = 1
-	else
-		settings.scale = math.max(MIN_SCALE, math.min(MAX_SCALE, scale))
-	end
+	-- Anything but false (a missing or malformed value) is attached, and a scale that is not a finite number is 1.
+	settings.attached = settings.attached ~= false
+	settings.scale = math.max(MIN_SCALE, math.min(MAX_SCALE, Coordinate(settings.scale) or 1))
+	settings.background = math.max(0, math.min(MAX_BACKGROUND, Coordinate(settings.background) or 0))
 	settings.x, settings.y = Coordinate(settings.x), Coordinate(settings.y)
 	return settings
 end
@@ -149,10 +146,27 @@ local function NativeRatio()
 	end
 	return 1
 end
+-- Anchors the host by `point` (the slot's own by default) to the native tracker's saved slot, its offsets converted
+-- to the host's scale and moved by `dx`, `dy` host pixels.
+local function AnchorToSlot(point, dx, dy)
+	local ratio = NativeRatio()
+	local slot = nativeAnchor
+	host:SetPoint(point or slot.point, slot.relativeTo, slot.relativePoint, slot.x * ratio + dx, slot.y * ratio + dy)
+end
 host:SetWidth(ObjectiveTrackerFrame:GetWidth())
 host:SetHeight(1)
 host:SetMovable(true)
 host:SetClampedToScreen(true)
+-- A dark band behind the shared sections for busy ground, off by default (adventure-guide-forever#203). It belongs to
+-- the private host, so the game's own tracker keeps its own look.
+local backdrop = host:CreateTexture(nil, "BACKGROUND")
+backdrop:SetPoint("TOPLEFT", host, "TOPLEFT", -6, 6)
+backdrop:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", 6, -6)
+local function ApplyBackground()
+	local opacity = Settings().background
+	backdrop:SetColorTexture(0, 0, 0, opacity)
+	backdrop:SetShown(opacity > 0)
+end
 local grip = CreateFrame("Button", nil, host)
 grip:SetPoint("TOPLEFT", host, "TOPLEFT", 0, 0)
 grip:SetPoint("TOPRIGHT", host, "TOPRIGHT", 0, 0)
@@ -323,14 +337,7 @@ local function AvoidMinimap(point)
 	local _, relativeTo = ObjectiveTrackerFrame:GetPoint()
 	if relativeTo == host and nativeAnchor then
 		local direction = point:find("RIGHT", 1, true) and -1 or 1
-		local ratio = NativeRatio()
-		host:SetPoint(
-			nativeAnchor.point,
-			nativeAnchor.relativeTo,
-			nativeAnchor.relativePoint,
-			nativeAnchor.x * ratio + direction * (host:GetWidth() + 8),
-			nativeAnchor.y * ratio
-		)
+		AnchorToSlot(nil, direction * (host:GetWidth() + 8), 0)
 	elseif point:find("LEFT", 1, true) then
 		host:SetPoint("TOPLEFT", ObjectiveTrackerFrame, "TOPRIGHT", 0, 0)
 	else
@@ -350,22 +357,46 @@ local function SidePoint(point)
 	return point:find("LEFT", 1, true) and "LEFT" or "RIGHT"
 end
 
--- Where a detached column sits until the player drags it: beside the native tracker and level with its top, so
--- neither draws over the other. To its left when the column fits there, otherwise to its right. Offsets are from
--- UIParent's top left corner in the host's own scale; the caller keeps them on screen.
-local function BesideNative(width, screenHeight)
-	local left, right, top =
-		ObjectiveTrackerFrame:GetLeft(), ObjectiveTrackerFrame:GetRight(), ObjectiveTrackerFrame:GetTop()
+-- Where a detached column sits until the player drags it: beside the quest tracker (the native one, or the addon
+-- tracker that replaced it) and level with its top, so neither draws over the other. To its left when the column fits
+-- there, otherwise to its right. Offsets are from UIParent's top left corner in the host's own scale; the caller keeps
+-- them on screen.
+local function BesideTracker(tracker, width, screenHeight)
+	local left, right, top = tracker:GetLeft(), tracker:GetRight(), tracker:GetTop()
 	if not (left and right and top) then
 		return 0, -40
 	end
-	local toHost = ObjectiveTrackerFrame:GetEffectiveScale() / host:GetEffectiveScale()
+	local toHost = tracker:GetEffectiveScale() / host:GetEffectiveScale()
 	local x = left * toHost - 8 - width
 	if x < 0 then
 		x = right * toHost + 8
 	end
 	return x, top * toHost - screenHeight
 end
+
+-- Quest trackers that replace the game's own, by global frame name. Questie's empties the native tracker and draws its
+-- list at the native slot, so a column stacked there sat behind it (shortest-path-forever#214). Read only: the host
+-- never moves, sizes or reparents another addon's frame, and only hooks its show, hide and resize to reflow.
+local EXTERNAL_TRACKERS = { "Questie_BaseFrame" }
+local watchedTrackers = {}
+---@return Frame? tracker the shown replacement tracker, if any
+local function ExternalTracker()
+	for _, name in ipairs(EXTERNAL_TRACKERS) do
+		local tracker = _G[name]
+		if type(tracker) == "table" and tracker.IsShown and tracker.HookScript then
+			if not watchedTrackers[tracker] then
+				watchedTrackers[tracker] = true
+				for _, script in ipairs({ "OnShow", "OnHide", "OnSizeChanged" }) do
+					tracker:HookScript(script, host.MarkDirty)
+				end
+			end
+			if tracker:IsShown() then
+				return tracker
+			end
+		end
+	end
+end
+local external
 
 -- Blizzard's Edit Mode owns the native slot while its manager is on screen. The manager can also be hidden and locked
 -- without exiting (CheckHideAndLockEditMode), which leaves editModeActive true with no EditMode.Exit: a hidden manager
@@ -516,7 +547,7 @@ local function LayoutDetached(settings)
 	if settings.x and settings.y then
 		x, y = settings.x / scale, settings.y / scale
 	else
-		x, y = BesideNative(width, screenHeight)
+		x, y = BesideTracker(external or ObjectiveTrackerFrame, width, screenHeight)
 	end
 	x = math.max(0, math.min(x, math.max(0, screenWidth - width)))
 	y = math.min(0, math.max(y, 24 - screenHeight))
@@ -530,6 +561,42 @@ local function LayoutDetached(settings)
 	y = math.min(0, math.max(y, math.min(host:GetHeight(), screenHeight) - screenHeight))
 	host:ClearAllPoints()
 	host:SetPoint("TOPLEFT", UIParent, "TOPLEFT", x, y)
+end
+
+-- Another addon's quest tracker holds the native slot: the column follows that tracker instead, below it, else above
+-- it, else beside it, wherever it fits on screen, and the native tracker goes back to its own slot untouched. Every
+-- frame moved here is addon-owned, so this also runs in combat once the native frame is no longer stacked.
+local function LayoutAround(tracker)
+	RestoreNativeHeader()
+	if not InCombatLockdown() then
+		ReleaseNative()
+	end
+	host:Show()
+	MatchNativeScale()
+	local toHost = tracker:GetEffectiveScale() / host:GetEffectiveScale()
+	local fromScreen = UIParent:GetEffectiveScale() / host:GetEffectiveScale()
+	local left, right = (tracker:GetLeft() or 0) * toHost, (tracker:GetRight() or 0) * toHost
+	local top, bottom = (tracker:GetTop() or 0) * toHost, (tracker:GetBottom() or 0) * toHost
+	local screenWidth, screenHeight = UIParent:GetWidth() * fromScreen, UIParent:GetHeight() * fromScreen
+	local width, margin = math.min(ObjectiveTrackerFrame:GetWidth(), screenWidth), 24 * fromScreen
+	host:SetWidth(width)
+	host:ClearAllPoints()
+	-- Beside the tracker has the most room (its top down to the screen's bottom); below and above use less of it.
+	if not LayoutModules(width, math.max(0, top - margin), 0) then
+		host:Hide()
+		return
+	end
+	local height = host:GetHeight()
+	local side = left + right <= screenWidth and "LEFT" or "RIGHT"
+	if bottom - height >= margin then
+		host:SetPoint("TOP" .. side, tracker, "BOTTOM" .. side, 0, 0)
+	elseif screenHeight - top - height >= margin then
+		host:SetPoint("BOTTOM" .. side, tracker, "TOP" .. side, 0, 0)
+	elseif side == "LEFT" then
+		host:SetPoint("TOPLEFT", tracker, "TOPRIGHT", 8, 0)
+	else
+		host:SetPoint("TOPRIGHT", tracker, "TOPLEFT", -8, 0)
+	end
 end
 
 -- In combat: the native tracker is protected, so the private column lives around it rather than restacking it.
@@ -570,14 +637,7 @@ local function LayoutInCombat()
 		-- Preserve the saved slot if a legacy host-relative anchor is restored.
 		-- Moving relative to that protected child would create an anchor cycle.
 		if nativeAnchor then
-			local ratio = NativeRatio()
-			host:SetPoint(
-				nativeAnchor.point,
-				nativeAnchor.relativeTo,
-				nativeAnchor.relativePoint,
-				nativeAnchor.x * ratio,
-				nativeAnchor.y * ratio
-			)
+			AnchorToSlot(nil, 0, 0)
 		end
 	elseif point then
 		local nativePoint, hostPoint = StackPoints(point)
@@ -619,14 +679,7 @@ local function LayoutInCombat()
 		AvoidMinimap(point)
 	elseif nativeAnchor then
 		local _, hostPoint = StackPoints(nativeAnchor.point)
-		local ratio = NativeRatio()
-		host:SetPoint(
-			hostPoint,
-			nativeAnchor.relativeTo,
-			nativeAnchor.relativePoint,
-			nativeAnchor.x * ratio,
-			nativeAnchor.y * ratio
-		)
+		AnchorToSlot(hostPoint, 0, 0)
 	end
 	AvoidMinimap(nativeAnchor and nativeAnchor.point or "TOPRIGHT")
 end
@@ -646,15 +699,8 @@ local function LayoutAttached()
 	CaptureNativeAnchor()
 	local width = ObjectiveTrackerFrame:GetWidth()
 	MatchNativeScale()
-	local ratio = NativeRatio()
 	host:ClearAllPoints()
-	host:SetPoint(
-		nativeAnchor.point,
-		nativeAnchor.relativeTo,
-		nativeAnchor.relativePoint,
-		nativeAnchor.x * ratio,
-		nativeAnchor.y * ratio
-	)
+	AnchorToSlot(nil, 0, 0)
 	local layoutScale = host:GetEffectiveScale()
 	local layoutScreenScale = UIParent:GetEffectiveScale()
 	-- The user's scale enlarges the column; keep it on screen the way the detached column already is.
@@ -687,13 +733,7 @@ local function LayoutAttached()
 	-- from the original point each pass, so repeated refreshes never drift.
 	local shift = 0
 	host:ClearAllPoints()
-	host:SetPoint(
-		nativeAnchor.point,
-		nativeAnchor.relativeTo,
-		nativeAnchor.relativePoint,
-		nativeAnchor.x * ratio,
-		nativeAnchor.y * ratio
-	)
+	AnchorToSlot(nil, 0, 0)
 	local screenHeight = UIParent:GetHeight()
 	local top = host:GetTop()
 	local scale = host:GetEffectiveScale()
@@ -705,13 +745,7 @@ local function LayoutAttached()
 		shift = math.min(shift, math.max(0, screen - margin - top))
 	end
 	host:ClearAllPoints()
-	host:SetPoint(
-		nativeAnchor.point,
-		nativeAnchor.relativeTo,
-		nativeAnchor.relativePoint,
-		nativeAnchor.x * ratio,
-		nativeAnchor.y * ratio + shift
-	)
+	AnchorToSlot(nil, 0, shift)
 	local nativeScale = ObjectiveTrackerFrame:GetEffectiveScale()
 	local hostScale = host:GetEffectiveScale()
 	local hostLeft = (host:GetLeft() or 0) * hostScale / screenScale
@@ -748,8 +782,15 @@ local function Layout()
 	queued = false
 	local settings = ApplyAttachment()
 	grip:SetShown(not attached)
+	ApplyBackground()
+	external = ExternalTracker()
 	if not attached then
 		LayoutDetached(settings)
+		return
+	end
+	-- A native frame still stacked under the column cannot be handed back in combat; that waits for the reflow after.
+	if external and not (InCombatLockdown() and appliedNativeAnchor) then
+		LayoutAround(external)
 		return
 	end
 	if InCombatLockdown() then
@@ -766,7 +807,7 @@ function host.MarkDirty(_)
 	end
 end
 function host.IsCollapsed(_)
-	return attached == true and NativeCollapsed()
+	return attached == true and not external and NativeCollapsed()
 end
 function host:ForceExpand()
 	self:MarkDirty()
@@ -793,6 +834,17 @@ function api.SetScale(value)
 	end
 	settings.scale = scale
 	host:MarkDirty()
+end
+-- The background's opacity, 0 (none, the default) to MAX_BACKGROUND, on the shared host settings. Addon-owned, so it
+-- applies straight away, in combat too; Settings clamps it, and anything but a number turns it off.
+---@return number
+function api.GetBackground()
+	return Settings().background
+end
+---@param value number
+function api.SetBackground(value)
+	Settings().background = value
+	ApplyBackground()
 end
 function api.IsAttachedToQuestTracker()
 	return Settings().attached ~= false
@@ -903,14 +955,8 @@ function api.Debug()
 	-- lint_copy only rejects literals passed straight to Print/SetText (this returns a string instead).
 	local function point(frame)
 		local p = { frame:GetPoint() }
-		local relative = p[2] == host and "host" or tostring(p[2])
-		return ("%s rel %s %s %.1f,%.1f"):format(
-			tostring(p[1]),
-			relative,
-			tostring(p[3]),
-			tonumber(p[4]) or 0,
-			tonumber(p[5]) or 0
-		)
+		local relative, x, y = p[2] == host and "host" or tostring(p[2]), tonumber(p[4]) or 0, tonumber(p[5]) or 0
+		return ("%s rel %s %s %.1f,%.1f"):format(tostring(p[1]), relative, tostring(p[3]), x, y)
 	end
 	local function geometry(frame)
 		return ("%.1f,%.1f-%.1f,%.1f s%.2f"):format(
@@ -922,7 +968,7 @@ function api.Debug()
 		)
 	end
 	local form = "combat=%s shown=%s hostH=%.1f host[%s] g[%s] nativeH=%.1f native[%s] g[%s] uiS%.2f"
-	return (form .. " stacked=%s clamped=%s"):format(
+	return (form .. " stacked=%s clamped=%s external=%s"):format(
 		tostring(InCombatLockdown()),
 		tostring(host:IsShown()),
 		host:GetHeight() or -1,
@@ -933,7 +979,8 @@ function api.Debug()
 		geometry(ObjectiveTrackerFrame),
 		UIParent:GetEffectiveScale(),
 		tostring(IsAppliedNativeAnchor(ObjectiveTrackerFrame:GetPoint()) and true or false),
-		tostring(ObjectiveTrackerFrame:IsClampedToScreen())
+		tostring(ObjectiveTrackerFrame:IsClampedToScreen()),
+		tostring(external ~= nil)
 	)
 end
 

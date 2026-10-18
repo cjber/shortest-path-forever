@@ -9,6 +9,7 @@ local canvas, familyPanel
 local attachmentNotified, attachmentChanged
 local trackerState = { attached = true }
 local trackerScale, compassScaled, compassBackdrop = 1, nil, nil
+local trackerBackground = 0
 local env = setmetatable({
 	MinimalSliderWithSteppersMixin = { Label = { Right = 1 } },
 	OFF = "Off",
@@ -151,6 +152,12 @@ local ns = {
 		SetScale = function(value)
 			trackerScale = value
 		end,
+		GetBackground = function()
+			return trackerBackground
+		end,
+		SetBackground = function(value)
+			trackerBackground = value
+		end,
 	},
 	TravelPolicyChanged = function()
 		policyChanged = policyChanged + 1
@@ -259,6 +266,7 @@ local groups = {
 		"compassTime",
 		"compassMove",
 		"trackerScale",
+		"trackerBackground",
 		"compassScale",
 		"compassBackground",
 		"whatsNew",
@@ -267,7 +275,7 @@ local groups = {
 local order = { "Map marks", "Transport", "Guidance", "Alerts", "Interface" }
 
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
-assert(#rows == 39, #rows)
+assert(#rows == 40, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -381,6 +389,14 @@ assert(trackerSlider.options.format(150) == "150%", "the tracker slider shows a 
 assert(trackerSlider.setting:GetValue() == 100, "the tracker slider reads the shared host")
 trackerSlider.setting:SetValue(150)
 assert(trackerScale == 1.5, "the tracker slider drives the shared host scale")
+-- adventure-guide-forever#203: an optional background behind the shared tracker, off by default.
+local trackerBackdrop = Row("trackerBackground")
+assert(trackerBackdrop.kind == "slider" and trackerBackdrop.setting.default == 0, "no tracker background by default")
+assert(trackerBackdrop.options.minValue == 0 and trackerBackdrop.options.maxValue == 80, "it never goes solid")
+assert(trackerBackdrop.options.format(40) == "40%", "the tracker background slider shows a percent")
+assert(trackerBackdrop.setting:GetValue() == 0, "the background slider reads the shared host")
+trackerBackdrop.setting:SetValue(40)
+assert(trackerBackground == 0.4, "the background slider drives the shared host")
 local compassSlider = Row("compassScale")
 assert(compassSlider.kind == "slider" and compassSlider.setting.default == 100, "compass scale defaults to 100%")
 assert(compassSlider.options.format(150) == "150%", "the compass slider shows a percent")

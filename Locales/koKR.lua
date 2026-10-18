@@ -150,6 +150,8 @@ L["Play a sound with alerts"] = "알림과 함께 소리 재생"
 L["Plays even with the game in the background."] = "게임이 백그라운드에 있어도 재생합니다."
 L["Portal to %s"] = "%s행 차원문"
 L["Portals"] = "차원문"
+L["Puts a dark background behind the shared Forever tracker so its lines are easier to read. 0% shows none."] =
+	"공유 Forever 추적기 뒤에 어두운 배경을 깔아 글자를 읽기 쉽게 합니다. 0%는 표시하지 않습니다."
 L["Quest automation, rare alerts and merchant handling for the default UI."] =
 	"기본 UI용 퀘스트 자동화, 희귀 몬스터 알림, 상인 거래 처리."
 L["Reagent Vendor"] = "마법 재료 상인"
@@ -222,6 +224,7 @@ L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it
 L["This addon"] = "이 애드온"
 L["Through %s transport, there is a way"] = "%s 교통수단을 이용하면 길이 있습니다"
 L["Through %s transport: about %d min faster"] = "%s 교통수단 이용 시: 약 %d분 더 빠름"
+L["Tracker background"] = "추적기 배경"
 L["Tracker scale"] = "추적기 크기"
 L["Trainers by specialty"] = "전문 분야별 상급자"
 L["Tram to %s"] = "%s행 지하철"

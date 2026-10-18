@@ -12,6 +12,9 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **The Journey stays clear of Questie's tracker.** With Questie's own quest tracker on, the shared Forever column sat behind Questie's quest list. It now sits below that list, or above or beside it when there's no room, and a detached column you haven't dragged yet starts beside it. Thanks to deathmvp1 for reporting and berserkerlxl for working out why.
+- **A background for the tracker.** *Tracker background* in Interface puts a dark background behind the shared Forever tracker, from 0% (none, the default) to 80%, so its lines are easier to read. It works like the compass background, and the other Forever addons show the same setting. Thanks to Naburiel for the idea.
+
 ## [1.19.1] - 2026-10-17
 
 - **Data checked against Forever 1.60.1.70450.** The travel data is unchanged apart from its build pin.

@@ -119,8 +119,9 @@ local function scenario(anchor, scale, uiScale, userScale)
 			return self.shown ~= false
 		end
 		function f.CreateFontString(_)
-			return { SetPoint = noop, SetText = noop }
+			return { SetPoint = noop, SetText = noop, SetColorTexture = noop, SetShown = noop }
 		end
+		f.CreateTexture = f.CreateFontString
 		f.SetMovable, f.RegisterForDrag, f.RegisterEvent = noop, noop, noop
 		frames[#frames + 1] = f
 		return f

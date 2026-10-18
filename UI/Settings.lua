@@ -448,6 +448,33 @@ ns.Init(function()
 			)
 		)
 	end
+	if host and host.GetBackground and host.SetBackground then
+		local trackerBackground = Settings.RegisterProxySetting(
+			page,
+			"ShortestPathForever_trackerBackground",
+			Settings.VarType.Number,
+			L["Tracker background"],
+			0,
+			function()
+				return math.floor(host.GetBackground() * 100 + 0.5)
+			end,
+			function(value)
+				host.SetBackground(value / 100)
+			end
+		)
+		local trackerBackgroundOptions = Settings.CreateSliderOptions(0, 80, 10)
+		trackerBackgroundOptions:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
+			return value .. "%"
+		end)
+		Settings.RegisterInitializer(
+			page,
+			Settings.CreateSliderInitializer(
+				trackerBackground,
+				trackerBackgroundOptions,
+				L["Puts a dark background behind the shared Forever tracker so its lines are easier to read. 0% shows none."]
+			)
+		)
+	end
 	local compassScale = Settings.RegisterAddOnSetting(
 		page,
 		"ShortestPathForever_compassScale",

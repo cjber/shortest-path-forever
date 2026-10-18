@@ -150,6 +150,8 @@ L["Play a sound with alerts"] = "Jouer un son avec les alertes" -- mt
 L["Plays even with the game in the background."] = "Même avec le jeu en arrière-plan." -- mt
 L["Portal to %s"] = "Portail vers %s" -- mt
 L["Portals"] = "Portails" -- mt
+L["Puts a dark background behind the shared Forever tracker so its lines are easier to read. 0% shows none."] =
+	"Place un fond sombre derrière le suivi Forever partagé pour que ses lignes soient plus lisibles. 0 % n'affiche rien." -- mt
 L["Quest automation, rare alerts and merchant handling for the default UI."] =
 	"Automatisation des quêtes, alertes de rares et gestion des marchands pour l'interface par défaut." -- mt
 L["Reagent Vendor"] = "Fournisseur de composants" -- mt
@@ -221,6 +223,7 @@ L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it
 L["This addon"] = "Cet addon" -- mt
 L["Through %s transport, there is a way"] = "Par les transports de la faction %s, un chemin existe" -- mt
 L["Through %s transport: about %d min faster"] = "Par les transports de la faction %s : environ %d min plus vite" -- mt
+L["Tracker background"] = "Fond du suivi" -- mt
 L["Tracker scale"] = "Taille du suivi" -- mt
 L["Trainers by specialty"] = "Maîtres par spécialité" -- mt
 L["Tram to %s"] = "Tram pour %s" -- mt

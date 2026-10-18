@@ -154,6 +154,8 @@ L["Play a sound with alerts"] = "Звук при оповещениях"
 L["Plays even with the game in the background."] = "Звучит, даже когда игра в фоне."
 L["Portal to %s"] = "Портал: %s"
 L["Portals"] = "Порталы"
+L["Puts a dark background behind the shared Forever tracker so its lines are easier to read. 0% shows none."] =
+	"Добавляет тёмный фон за общей панелью отслеживания Forever, чтобы её строки было легче читать. 0% – без фона."
 L["Quest automation, rare alerts and merchant handling for the default UI."] =
 	"Автоматизация заданий, оповещения о редких противниках и работа с торговцами для стандартного интерфейса."
 L["Reagent Vendor"] = "Торговец реагентами"
@@ -229,6 +231,7 @@ L["This addon"] = "Эта модификация"
 L["Through %s transport, there is a way"] = "Через транспорт фракции «%s» путь есть"
 L["Through %s transport: about %d min faster"] =
 	"Через транспорт фракции «%s»: примерно на %d мин. быстрее"
+L["Tracker background"] = "Фон панели отслеживания"
 L["Tracker scale"] = "Размер панели отслеживания"
 L["Trainers by specialty"] = "Учителя по специальности"
 L["Tram to %s"] = "Поезд: %s"

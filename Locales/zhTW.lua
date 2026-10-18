@@ -145,6 +145,8 @@ L["Play a sound with alerts"] = "提醒時播放音效"
 L["Plays even with the game in the background."] = "遊戲在背景時也會播放。"
 L["Portal to %s"] = "前往%s的傳送門"
 L["Portals"] = "傳送門"
+L["Puts a dark background behind the shared Forever tracker so its lines are easier to read. 0% shows none."] =
+	"在共用Forever追蹤器後方加上深色背景，讓文字更易讀。0%為不顯示。"
 L["Quest automation, rare alerts and merchant handling for the default UI."] =
 	"為預設介面提供任務自動化、稀有怪提醒與商人處理。"
 L["Reagent Vendor"] = "材料商"
@@ -212,6 +214,7 @@ L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it
 L["This addon"] = "本插件"
 L["Through %s transport, there is a way"] = "藉助%s的交通工具可以抵達"
 L["Through %s transport: about %d min faster"] = "藉助%s的交通工具：約快%d分鐘"
+L["Tracker background"] = "追蹤器背景"
 L["Tracker scale"] = "追蹤器大小"
 L["Trainers by specialty"] = "依專長分類的訓練師"
 L["Tram to %s"] = "前往%s的地鐵"

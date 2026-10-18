@@ -148,6 +148,8 @@ L["Play a sound with alerts"] = "Sonido con los avisos"
 L["Plays even with the game in the background."] = "Suena incluso con el juego en segundo plano."
 L["Portal to %s"] = "Portal a %s"
 L["Portals"] = "Portales"
+L["Puts a dark background behind the shared Forever tracker so its lines are easier to read. 0% shows none."] =
+	"Pone un fondo oscuro tras el rastreador Forever compartido para que sus líneas se lean mejor. 0 % no muestra nada."
 L["Quest automation, rare alerts and merchant handling for the default UI."] =
 	"Automatización de misiones, avisos de raros y gestión de mercaderes para la interfaz predeterminada."
 L["Reagent Vendor"] = "Vendedor de componentes"
@@ -218,6 +220,7 @@ L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it
 L["This addon"] = "Este addon"
 L["Through %s transport, there is a way"] = "Con el transporte de la %s hay un camino"
 L["Through %s transport: about %d min faster"] = "Con el transporte de la %s: unos %d min más rápido"
+L["Tracker background"] = "Fondo del rastreador"
 L["Tracker scale"] = "Tamaño del rastreador"
 L["Trainers by specialty"] = "Instructores por especialidad"
 L["Tram to %s"] = "Tranvía a %s"
