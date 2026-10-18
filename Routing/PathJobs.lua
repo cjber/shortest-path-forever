@@ -122,11 +122,10 @@ end
 
 -- Search coroutine-sliced over frames between two { x, y, z } points (z optional: it picks the floor to start or end
 -- on). callback(points, cost, job) or callback(nil, reason, job): points are { map, x, y, z } from the start to the
--- goal, with points.wet the drawn yards over water. Cost is the abstract route in running yards, not the smoothed
--- polyline length; a swum grid yard counts as the data's swim (so routes keep out of water) unless waterWalking, when
--- water is ground. With hazards (Journey/Hazards.lua), the yards between entrances in a hazard count its factor too, so
--- the walk goes round it where it can. reason is "nodata", "outside", "offmesh", "unreachable" or "error". Returns a
--- Cancel handle.
+-- goal, with points.wet the drawn yards over water. Cost is the abstract route's real running yards, not the
+-- smoothed polyline length; a swum grid yard counts as the data's swim (so routes keep out of water) unless
+-- waterWalking, when water is ground. Hazards (Journey/Hazards.lua) affect which route is selected, not this cost.
+-- reason is "nodata", "outside", "offmesh", "unreachable" or "error". Returns a Cancel handle.
 ---@param map number
 ---@param from SPFPoint
 ---@param to SPFPoint
@@ -161,7 +160,8 @@ function Path.FindCost(map, from, to, callback, waterWalking, hazards)
 end
 
 -- callback(costs, reason, job) completes once; optional progress(costs, nil, job) runs after each slice.
--- costs[i] is nil until settled, an exact running-yard cost afterwards, or false when unreachable. job.radius
+-- costs[i] is nil until settled, the real running-yard cost on the hazard-selected route afterwards, or false when
+-- unreachable. job.radius
 -- bounds every unsettled target, including a popped entrance whose expansion has not finished. Pause/Resume
 -- retain the frontier. Missing data or an invalid source completes with all false plus a reason.
 ---@param map number
