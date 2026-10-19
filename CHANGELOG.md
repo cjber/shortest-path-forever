@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **The quest tracker is free to move when the journey section is hidden.** With Questie or Blizzard's tracker, an empty companion column releases its saved anchor and clears its old height. Thanks to Ragnarok11B for reporting the issue.
+
 - **Alliance Skyborne can route through the Dalaran portal to Stormwind and back.** Horde Skyborne have no equivalent Dalaran portal. Thanks to saikoso for reporting the missing route.
 
 ## [1.20.0] - 2026-10-18

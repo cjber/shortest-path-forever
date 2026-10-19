@@ -180,7 +180,7 @@ local function scenario(options)
 	module.uiOrder = -1
 	module.SetContainer, module.Update = noop, noop
 	module.GetContentsHeight = function()
-		return 227
+		return module.empty and 0 or 227
 	end
 	ns.TrackerHost.Attach(module)
 	local function drain()
@@ -219,6 +219,7 @@ local function scenario(options)
 	end
 	return {
 		host = host,
+		module = module,
 		native = native,
 		questie = questie,
 		slot = slot,
@@ -267,6 +268,20 @@ for _, scale in ipairs({ 0.75, 1, 1.25 }) do
 			-- Without Questie nothing changes: the column takes the native slot and the native tracker stacks below.
 			stacked(scenario(base), label .. " no Questie")
 
+			-- Hiding the journey section leaves no companion content, so the native tracker is returned to its own slot.
+			local empty = scenario(base)
+			empty.module.empty = true
+			empty.host:MarkDirty()
+			empty.drain()
+			check(not empty.host:IsShown(), label .. ": no journey section releases the default tracker anchor")
+			check(
+				empty.native.point[1] == empty.slot[1]
+					and empty.native.point[2] == empty.slot[2]
+					and empty.native.point[4] == empty.slot[4]
+					and empty.native.point[5] == empty.slot[5],
+				label .. ": the default tracker can be moved after its section is hidden"
+			)
+
 			-- Questie's list over the native slot: the column goes below it, and the native tracker keeps its slot.
 			local s = scenario(with({ questie = { point = "TOPRIGHT", x = -24, y = -100, height = 300 } }))
 			local _, _, _, _, questieBottom = bounds(s.questie)
@@ -285,6 +300,19 @@ for _, scale in ipairs({ 0.75, 1, 1.25 }) do
 				label .. ": Questie's frame is untouched"
 			)
 			check(s.host.width == s.native.width, label .. ": the column keeps the tracker's width")
+			local hidden = scenario(with({ questie = { point = "TOPRIGHT", x = -24, y = -100, height = 300 } }))
+			hidden.module.empty = true
+			hidden.host:MarkDirty()
+			hidden.drain()
+			check(not hidden.host:IsShown(), label .. ": no journey section releases the Questie companion anchor")
+			check(
+				hidden.native.point[1] == hidden.slot[1] and hidden.native.point[2] == hidden.slot[2],
+				label .. ": the hidden companion column leaves the native anchor available to Questie"
+			)
+			check(
+				hidden.questie.point[1] == "TOPRIGHT" and hidden.questie.point[4] == -24,
+				label .. ": Questie's anchor stays user-owned"
+			)
 
 			-- Questie hides its list: the column returns to the native slot.
 			s.questie:Hide()
