@@ -10,8 +10,8 @@ local _, ns = ...
 -- Excludes Stormwind's Wizard's Sanctum 702/704: a hop up and down one tower, 12 yd apart on the map,
 -- that never shortens a flat route and would stack two pins. Also the unused vault 107/109 (map 35), the
 -- Leap of Faith fall 943, and PvP barracks 2527-2534, which have no AreaTrigger in this build.
--- Skyborne Dalaran <-> Stormwind omitted: eligibility is documented, exact endpoints are not sourced.
--- https://benjamh681.github.io/wow-forever-atlas/guide.html (Alliance Skyborne only).
+-- Skyborne Dalaran <-> Stormwind: manually mapped Alliance-only portal thresholds; no Horde portal exists.
+-- https://wow-travelcraft.com/guide.html (Alliance portal; Horde Skyborne has no Dalaran portal).
 
 -- stylua: ignore
 ns.Portals = {
@@ -61,6 +61,23 @@ ns.Portals = {
 		kind = "passage",
 		from = { map = 0, x = -4840.26, y = -1330.46, z = 508.172 },
 		to = { map = 369, x = 69.228, y = 10.393, z = -4.297 },
+		seconds = 5,
+	},
+	-- Forever Skyborne portal thresholds; the documented route is Alliance-only.
+	{
+		name = "Portal to Stormwind",
+		kind = "portal",
+		faction = "Alliance",
+		from = { map = 571, x = 5807.06, y = 506.244, z = 657.576 },
+		to = { map = 0, x = -8842.09, y = 626.358, z = 94.087 },
+		seconds = 5,
+	},
+	{
+		name = "Portal to Dalaran",
+		kind = "portal",
+		faction = "Alliance",
+		from = { map = 0, x = -9017, y = 889, z = 132 },
+		to = { map = 571, x = 5807.06, y = 506.244, z = 657.576 },
 		seconds = 5,
 	},
 }
