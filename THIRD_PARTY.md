@@ -70,6 +70,7 @@ Credit for the ideas and reports behind the addon.
 | rydoc and Joster91, on CurseForge | Found the Journey collapsing into or overlapping the quest tracker (1.15.0, 1.17.0) | |
 | deathmvp1, on CurseForge | Asked to move the Journey off the quest list; detaching it is now in its right-click menu (1.17.0). Found Questie's quest list covering the Journey, which now moves clear of it (#214) | |
 | saikoso, on CurseForge | Reported the missing Dalaran–Stormwind portal route for Alliance Skyborne (#226) | |
+| user\_uf9axk2x4gqtmfch, on CurseForge | Asked for the route to work with OpenMap's stitched map, and pointed at OpenMap's API for drawing on it (1.21.0, #194) | |
 | GenericP, on CurseForge | Asked to plan to a spot under a Questie icon, now Alt-click on the world map (1.14.0), and for TomTom waypoints to start journeys (1.15.0); also answered other players' questions on the page | |
 | [Brainc3ll](https://github.com/Brainc3ll) | Eight lines of the French translation, from his Legacy Forever translation (cjber/legacy-forever#99); the rest of `Locales/frFR.lua` and the other languages are machine translated (lines ending `-- mt` in frFR) | |
 
