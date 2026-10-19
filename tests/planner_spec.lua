@@ -414,6 +414,33 @@ real.from, real.to = ns.Docks[1101], ns.Docks[1102]
 real.docks, real.routes = ns.Docks, ns.Routes
 real.taxiNodes, real.taxiPaths = ns.TaxiNodes, ns.TaxiPaths
 real.portals, real.landmasses = ns.Portals, ns.Landmasses
+local dalaranPortal, stormwindPortal
+for _, portalRow in ipairs(ns.Portals) do
+	if portalRow.name == "Portal to Stormwind" then
+		dalaranPortal = portalRow
+	elseif portalRow.name == "Portal to Dalaran" then
+		stormwindPortal = portalRow
+	end
+end
+assert(dalaranPortal and stormwindPortal, "both directions of the Alliance Skyborne portal are routable")
+assert(
+	dalaranPortal.faction == "Alliance" and stormwindPortal.faction == "Alliance",
+	"the Dalaran portal pair is not offered to Horde characters"
+)
+local skyborneOptions = {
+	from = dalaranPortal.from,
+	to = dalaranPortal.to,
+	now = 1000,
+	walkSpeed = 7,
+	faction = "Alliance",
+	portals = ns.Portals,
+	landmasses = ns.Landmasses,
+}
+only(Plan(skyborneOptions), "portal")
+skyborneOptions.from, skyborneOptions.to = stormwindPortal.from, stormwindPortal.to
+only(Plan(skyborneOptions), "portal")
+skyborneOptions.faction = "Horde"
+assert(not Plan(skyborneOptions), "Horde routes do not use the Alliance portal")
 only(Plan(real), "tram")
 points = LegPoints(only(Plan(real), "tram"), real.routes)
 assert(#points > 2 and points[1].map == 369 and points[#points].map == 369)
