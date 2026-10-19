@@ -14,6 +14,15 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 - **The quest tracker is free to move when the journey section is hidden.** With Questie or Blizzard's tracker, an empty companion column releases its saved anchor and clears its old height. Thanks to Ragnarok11B for reporting the issue.
 
+## [1.21.1] - 2026-10-19
+
+- **Credit where it is due.** The OpenMap support in 1.21.0 came from a suggestion by user_uf9axk2x4gqtmfch on CurseForge, who also pointed at OpenMap's own API. Their name now carries the 1.21.0 note and the credits file.
+
+## [1.21.0] - 2026-10-19
+
+- **Works alongside OpenMap.** With OpenMap installed and its seamless world map on, Shortest Path's route now draws across the stitched world instead of stopping at the zone the map is on: the line and the stops carry on into the neighbouring zones as you pan and zoom, and the addon's pins are lifted above OpenMap's map art so they stay visible. Nothing changes without OpenMap, or on its dungeon and battleground maps. Thanks to user_uf9axk2x4gqtmfch on CurseForge for the idea, and for pointing at OpenMap's API.
+## [1.20.1] - 2026-10-19
+
 - **Alliance Skyborne can route through the Dalaran portal to Stormwind and back.** Horde Skyborne have no equivalent Dalaran portal. Thanks to saikoso for reporting the missing route.
 
 ## [1.20.0] - 2026-10-18
