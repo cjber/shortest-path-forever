@@ -219,6 +219,7 @@ end
 -- A line between two map fractions, clipped to the map. Over OpenMap's stitched map the view runs past the host map
 -- into its neighbours, so nothing is clipped there.
 local function Line(x1, y1, x2, y2, color, dashed)
+	---@type number?, number?
 	local low, high = 0, 1
 	if not wide then
 		local reach = dot / 2 + RIM
