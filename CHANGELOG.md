@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.20.1] - 2026-10-19
+
 - **Alliance Skyborne can route through the Dalaran portal to Stormwind and back.** Horde Skyborne have no equivalent Dalaran portal. Thanks to saikoso for reporting the missing route.
 
 ## [1.20.0] - 2026-10-18
