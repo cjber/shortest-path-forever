@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.21.2] - 2026-10-19
+
 - **The quest tracker is free to move when the journey section is hidden.** With Questie or Blizzard's tracker, an empty companion column releases its saved anchor and clears its old height. Thanks to Ragnarok11B for reporting the issue.
 
 ## [1.21.1] - 2026-10-19
