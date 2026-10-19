@@ -8,7 +8,7 @@ The route settles, the next boat counts down and the compass turns with you.
 
 - **Plan the trip.** Combine walking, known flights, boats, zeppelins, lifts, the tram, portals and teleports. Walking routes go around walls, hills and water, and replan as you move. A spot inside a dungeon or raid leads to its entrance.
 - **Follow your guide.** RestedXP journeys are on by default, with no TomTom or bridge addon; without TomTom, other guides' waypoints work too. Adventure Guide takes over when its RestedXP display is on.
-- **Choose what you see.** Hide Journey steps or the direction arrow while keeping the map route. Move and scale the arrow, which eases round to each bearing, and add the time left under the compass.
+- **Choose what you see.** Hide Journey steps or the direction arrow while keeping the map route. With OpenMap on, the route crosses its stitched map into the neighbouring zones. Move and scale the arrow, which eases round to each bearing, and add the time left under the compass.
 - **Complete a step.** Click the current journey step and choose *Complete this step*. Skipping a Hearthstone leaves it out for that journey; other steps return if you still need them.
 - **Find services and departures.** Map tracking menus offer nearby trainers, repairs, vendors and other services using installed QuestieDB. Dock and flight master tooltips show destinations and times.
 - **Travel prompts.** Hearthstone and teleport steps show what to cast. A sound and taskbar flash warn before a boat arrives, and an optional ping marks your arrival. A red corpse route guides ghosts back to their bodies.

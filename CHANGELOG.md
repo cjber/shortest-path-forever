@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.21.0] - 2026-10-19
+
 - **Works alongside OpenMap.** With OpenMap installed and its seamless world map on, Shortest Path's route now draws across the stitched world instead of stopping at the zone the map is on: the line and the stops carry on into the neighbouring zones as you pan and zoom, and the addon's pins are lifted above OpenMap's map art so they stay visible. Nothing changes without OpenMap, or on its dungeon and battleground maps. Thanks to Cillian for the idea.
 ## [1.20.1] - 2026-10-19
 
