@@ -49,6 +49,7 @@ UI\Art.lua
 UI\Report.lua
 UI\ForeverFamily.lua
 UI\FamilyHints.lua
+UI\OpenMap.lua
 UI\MapCanvas.lua
 UI\Map.lua
 UI\FlightPins.lua

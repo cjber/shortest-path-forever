@@ -49,6 +49,7 @@ local CURSOR_REACH = 12
 ---@field scale number
 ---@field zoom number
 ---@field pinScale number
+---@field stitched boolean
 ---@field gamepad boolean
 ---@field listeners fun(view: SPFCanvasView, what: string)[]
 ---@field pools table<string, SPFCanvasPool>
@@ -73,7 +74,13 @@ function View:Level(levelType, index)
 	local map = self.map
 	local levels = map.GetPinFrameLevelsManager and map:GetPinFrameLevelsManager()
 	local level = levelType and levels and levels.GetValidFrameLevel and levels:GetValidFrameLevel(levelType, index)
-	return level or self.canvas:GetFrameLevel() + 1
+	level = level or self.canvas:GetFrameLevel() + 1
+	-- OpenMap's stitched art reaches over Blizzard's pin levels: over the stitched map a pin has to be above it to show.
+	local art = ns.OpenMap.TopLevel()
+	if art and level <= art then
+		level = art + 1
+	end
+	return level
 end
 
 -- What the map shows now; every call a read. A map never opened has no zoom levels, so its scale is read only while
@@ -90,7 +97,8 @@ local function Read(view)
 		canvas:GetHeight() or 0,
 		scale,
 		Saturate(map:GetCanvasZoomPercent() or 0),
-		map:GetGlobalPinScale() or 1
+		map:GetGlobalPinScale() or 1,
+		ns.OpenMap.Stitched()
 end
 
 ---@param view SPFCanvasView
@@ -182,19 +190,29 @@ local function Update(view)
 		Hide(view)
 		return
 	end
-	local mapID, width, height, scale, zoom, pinScale = Read(view)
+	local mapID, width, height, scale, zoom, pinScale, stitched = Read(view)
 	local first, changedMap = not view.shown, mapID ~= view.mapID
+	local stitchedChanged = stitched ~= view.stitched
 	local sized = width ~= view.width or height ~= view.height
 	local scaled = scale ~= view.scale or zoom ~= view.zoom or pinScale ~= view.pinScale
-	view.mapID, view.width, view.height, view.scale, view.zoom, view.pinScale =
-		mapID, width, height, scale, zoom, pinScale
+	view.mapID, view.width, view.height, view.scale, view.zoom, view.pinScale, view.stitched =
+		mapID, width, height, scale, zoom, pinScale, stitched
 	if first then
 		view.shown = true
 		view.gamepad = ns.GamepadUI()
 		clicks:RegisterEvent("GLOBAL_MOUSE_DOWN")
 		clicks:RegisterEvent("GLOBAL_MOUSE_UP")
 		Fire(view, "show", sized, scaled)
-	elseif changedMap then
+	elseif changedMap or stitchedChanged then
+		-- The pins over OpenMap's stitched art are lifted over it (or put back under Blizzard's own), then the layers
+		-- redraw: the stitched view places a point by the world, not by the map underneath.
+		if stitchedChanged then
+			for _, pool in pairs(view.pools) do
+				for pin in pool:EnumerateActive() do
+					pin:ApplyFrameLevel()
+				end
+			end
+		end
 		Fire(view, "map", sized, scaled)
 	else
 		if sized then
@@ -259,6 +277,7 @@ function MapCanvas.Watch(map, listener)
 			map = map,
 			canvas = canvas,
 			shown = false,
+			stitched = false,
 			width = 0,
 			height = 0,
 			scale = 1,

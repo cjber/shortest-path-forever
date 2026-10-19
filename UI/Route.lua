@@ -82,9 +82,16 @@ local function Corners(mapID)
 	return corners[mapID]
 end
 
--- A world point on this map, in map fractions. Lines are clipped to the map, so a point past its edge still counts:
--- the client projects only points it places on the map, and the rest follow from the map's corners.
+-- A world point on this map, in map fractions. Under OpenMap's stitched map the point is placed on the stitched
+-- canvas instead, where 0..1 is the map the map frame is on and the view carries on past it into its neighbours, so
+-- the whole journey draws and not only the part of it on the host map. Otherwise lines are clipped to the map, so a
+-- point past its edge still counts: the client projects only points it places on the map, and the rest follow from
+-- the map's corners.
 local function MapPosition(point, mapID)
+	local stitchedX, stitchedY = ns.OpenMap.Canvas(point)
+	if stitchedX then
+		return stitchedX, stitchedY
+	end
 	local uiMap, position = C_Map.GetMapPosFromWorldPos(point.map, CreateVector2D(point.x, point.y), mapID)
 	if uiMap == mapID and position then
 		return position:GetXY()
@@ -95,6 +102,17 @@ local function MapPosition(point, mapID)
 		return (point.y - map[3]) / (map[5] - map[3]), (point.x - map[2]) / (map[4] - map[2])
 	end
 end
+
+-- Whether a MapPosition result is on the map as drawn: always over OpenMap's stitched map, whose view runs past the
+-- host map's rectangle, and otherwise only inside it.
+---@param x number?
+---@param y number?
+---@return boolean
+local function OnMap(x, y)
+	return x ~= nil and (ns.OpenMap.Stitched() or (x >= 0 and x <= 1 and y >= 0 and y <= 1))
+end
+-- The journey's own placements, for the specs: the map's fractions, or the stitched canvas's.
+ns.JourneyMapPosition = MapPosition
 
 -- What Strokes.lua draws through, refilled for each drawing rather than rebuilt.
 ---@type SPFMapView
@@ -261,6 +279,7 @@ function RoutePin:Draw()
 	mapView.mapID = map:GetMapID()
 	mapView.width, mapView.height, mapView.scale = self:GetWidth(), self:GetHeight(), self:GetEffectiveScale()
 	mapView.zoom, mapView.small = map:GetCanvasScale(), info and info.mapType <= Enum.UIMapType.Continent
+	mapView.stitched = ns.OpenMap.Stitched()
 	mapView.marks = journey and provider and provider.stopMarks or nil
 	-- The journey's own paths come first; the later hops Itinerary.lua adds after them recede.
 	mapView.current = journey and #paths or math.huge
@@ -400,7 +419,7 @@ function Layer:RefreshStops()
 	for index = first, stops and #stops or 1 do
 		local point = stops and stops[index] or goal
 		local x, y = MapPosition(point, mapID)
-		if x and x >= 0 and x <= 1 and y >= 0 and y <= 1 then
+		if OnMap(x, y) then
 			marks[#marks + 1] = {
 				x = x,
 				y = y,

@@ -19,6 +19,8 @@ local LATER_ALPHA = 0.4
 local STOP_GAP = 2
 -- Client regions cannot be destroyed. Bound each painter's pool even after extreme map zooms.
 local LIMIT = 4096
+-- OpenMap's stitched map, for the drawing: the view runs past the host map, so nothing is clipped to its rectangle.
+local wide = false
 
 -- Strokes in drawing order, as parallel arrays 1..n, in the view's own units with x right and y up from its top left.
 -- A redraw overwrites the arrays in place: the minimap redraws ten times a second and must not allocate.
@@ -46,6 +48,7 @@ local LIMIT = 4096
 ---@field scale number -- screen pixels per unit
 ---@field zoom number -- the canvas scale stop marks are held against
 ---@field small boolean -- continent and world maps
+---@field stitched? boolean -- OpenMap's stitched map: the view runs past the host map, so lines are not clipped to it
 ---@field marks? {x: number, y: number, radius: number}[] -- stop marks the dots leave a gap around
 ---@field current number -- paths after this many belong to later hops
 ---@field colors table<SPFMode, colorRGBA>
@@ -102,9 +105,11 @@ end
 ---@param buffer SPFStrokes
 ---@param viewScale number
 ---@param small boolean?
-local function Begin(buffer, viewScale, small)
+---@param stitched boolean? OpenMap's stitched map: nothing is clipped to the host map's rectangle
+local function Begin(buffer, viewScale, small, stitched)
 	out, scale = buffer, viewScale
 	out.n = 0
+	wide = stitched == true
 	dot, spacing = small and SMALL_DOT or DOT, small and SMALL_SPACING or SPACING
 	walked, fade, later, route, circleCount = 0, 1, 1, nil, 0
 end
@@ -211,21 +216,25 @@ local function Segment(x1, y1, x2, y2, low, high, color, dashed)
 	end
 end
 
--- A line between two map fractions, clipped to the map.
+-- A line between two map fractions, clipped to the map. Over OpenMap's stitched map the view runs past the host map
+-- into its neighbours, so nothing is clipped there.
 local function Line(x1, y1, x2, y2, color, dashed)
-	local reach = dot / 2 + RIM
-	local mx = dashed and reach / scale / width or 0
-	local my = dashed and reach / scale / height or 0
-	local low, high = ClipAxis(x1, x2 - x1, 0, 1, mx, 1 - mx)
-	if low then
-		low, high = ClipAxis(y1, y2 - y1, low, high, my, 1 - my)
+	local low, high = 0, 1
+	if not wide then
+		local reach = dot / 2 + RIM
+		local mx = dashed and reach / scale / width or 0
+		local my = dashed and reach / scale / height or 0
+		low, high = ClipAxis(x1, x2 - x1, 0, 1, mx, 1 - mx)
+		if low then
+			low, high = ClipAxis(y1, y2 - y1, low, high, my, 1 - my)
+		end
 	end
 	Segment(x1 * width, -y1 * height, x2 * width, -y2 * height, low, high, color, dashed)
 end
 
 -- A small cross where a hop with no line of its own (a portal, a preview across the sea) leaves or lands.
 local function Mark(x, y, color)
-	if x and x >= 0 and x <= 1 and y >= 0 and y <= 1 then
+	if x and (wide or (x >= 0 and x <= 1 and y >= 0 and y <= 1)) then
 		local size = 4 / scale
 		local dx, dy = size / width, size / height
 		Line(x - dx, y, x + dx, y, color)
@@ -336,7 +345,7 @@ end
 ---@param paths SPFDrawPath[]
 ---@param view SPFMapView
 function Strokes.Map(buffer, paths, view)
-	Begin(buffer, view.scale, view.small)
+	Begin(buffer, view.scale, view.small, view.stitched)
 	width, height = view.width, view.height
 	-- The journey's stop pins keep their size on screen while the canvas zooms under them (MapCanvasPinMixin's
 	-- ApplyCurrentScale sets 1 / canvas scale), so their reach in canvas units grows as the map zooms out.

@@ -38,6 +38,12 @@ do
 		function frame:SetHighlightLocked(value)
 			self.highlightLocked = value
 		end
+		function frame:SetFrameLevel(level)
+			self.frameLevel = level
+		end
+		function frame:GetFrameLevel()
+			return self.frameLevel or 1
+		end
 		return frame
 	end
 end
@@ -147,6 +153,36 @@ for _, pool in pairs(pools) do
 	end
 end
 check(pinCount > 0, "pins to look at")
+
+--[[ OpenMap's stitched map: the pins are lifted over its art, and the layers redraw ]]
+local heard = {}
+view.listeners[#view.listeners + 1] = function(_, what)
+	heard[#heard + 1] = what
+end
+check(view:Level("PIN_FRAME_LEVEL_DOCK", 1) < 9000, "under Blizzard's own pin levels before OpenMap")
+_G.OpenMapAPI = {
+	major = 1,
+	version = 2,
+	IsStitched = function()
+		return true
+	end,
+	ArtTopLevel = function()
+		return 9000
+	end,
+}
+mapTick()
+check(view.stitched == true and heard[#heard] == "map", "OpenMap's stitched map redraws the layers")
+check(view:Level("PIN_FRAME_LEVEL_DOCK", 1) > 9000, "a pin over the stitched art is lifted above it")
+local lifted = true
+for _, pool in pairs(pools) do
+	for pin in pool:EnumerateActive() do
+		lifted = lifted and pin.frameLevel > 9000
+	end
+end
+check(lifted, "pins already drawn are lifted too")
+_G.OpenMapAPI = nil
+mapTick()
+check(view.stitched == false and view:Level("PIN_FRAME_LEVEL_DOCK", 1) < 9000, "and put back when it stops")
 
 --[[ Placing and scaling, as MapCanvasPinMixin ]]
 local function placed(pin)
