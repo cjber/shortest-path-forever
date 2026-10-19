@@ -98,6 +98,27 @@ PORTAL_NAMES = {
     2173: ("Passage to Deeprun Tram (Stormwind)", "passage"),
     2175: ("Passage to Deeprun Tram (Ironforge)", "passage"),
 }
+# The Alliance-only Skyborne portal pair is a Forever addition, absent from the classic-db AreaTrigger table.
+# Its endpoints are the portal thresholds reported in Forever's travel guide and player reports; there is no Horde
+# equivalent in Dalaran or an opposing-faction portal in Stormwind.
+SKYBORNE_PORTALS = [
+    {
+        "name": "Portal to Stormwind",
+        "kind": "portal",
+        "faction": "Alliance",
+        "from": {"map": 571, "x": 5807.06, "y": 506.244, "z": 657.576},
+        "to": {"map": 0, "x": -8842.09, "y": 626.358, "z": 94.087},
+        "seconds": 5,
+    },
+    {
+        "name": "Portal to Dalaran",
+        "kind": "portal",
+        "faction": "Alliance",
+        "from": {"map": 0, "x": -9017.0, "y": 889.0, "z": 132.0},
+        "to": {"map": 571, "x": 5807.06, "y": 506.244, "z": 657.576},
+        "seconds": 5,
+    },
+]
 
 
 def classicdb(refresh=False, offline=False):
@@ -705,8 +726,8 @@ def main():
         "-- Excludes Stormwind's Wizard's Sanctum 702/704: a hop up and down one tower, 12 yd apart on the map,",
         "-- that never shortens a flat route and would stack two pins. Also the unused vault 107/109 (map 35), the",
         "-- Leap of Faith fall 943, and PvP barracks 2527-2534, which have no AreaTrigger in this build.",
-        "-- Skyborne Dalaran <-> Stormwind omitted: eligibility is documented, exact endpoints are not sourced.",
-        "-- https://benjamh681.github.io/wow-forever-atlas/guide.html (Alliance Skyborne only).",
+        "-- Skyborne Dalaran <-> Stormwind: manually mapped Alliance-only portal thresholds; no Horde portal exists.",
+        "-- https://wow-travelcraft.com/guide.html (Alliance portal; Horde Skyborne has no Dalaran portal).",
         "",
         "-- stylua: ignore",
         "ns.Portals = {",
@@ -716,6 +737,8 @@ def main():
             f"\t-- Source: AreaTrigger {trigger} -> classic-db areatrigger_teleport {trigger}.",
             "\t" + render(portal, 1) + ",",
         ]
+    portal_lines += ["\t-- Forever Skyborne portal thresholds; the documented route is Alliance-only."]
+    portal_lines += ["\t" + render(portal, 1) + "," for portal in SKYBORNE_PORTALS]
     portal_lines += ["}", ""]
     portal_lines += [
         "-- Instance entrances: a goal on a dungeon or raid map is planned to its door. [instance map] = the door",
@@ -771,7 +794,8 @@ def main():
     publish(outputs)
     print(
         f"Transports: {len(routes)} routes, {len(docks)} docks; Taxi: {len(nodes)} nodes, {len(paths)} paths, "
-        f"{covered / len(paths):.1%} measured; {len(islands)} landmasses; Portals: {len(passages)} directed entries, "
+        f"{covered / len(paths):.1%} measured; {len(islands)} landmasses; "
+        f"Portals: {len(passages) + len(SKYBORNE_PORTALS)} directed entries, "
         f"{len(doors)} entrances; "
         f"Teleports: {len(personal)}; Zones: {len(zone_rows)}"
     )

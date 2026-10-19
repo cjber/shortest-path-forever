@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Alliance Skyborne can route through the Dalaran portal to Stormwind and back.** Horde Skyborne have no equivalent Dalaran portal. Thanks to saikoso for reporting the missing route.
+
 ## [1.20.0] - 2026-10-18
 
 - **Hazards change the path, not the time.** Walks still go round places you'd rather avoid, but their times now show the travel time along that route. Short walks of 200 yards or less beside a dock or flight master stay direct.
