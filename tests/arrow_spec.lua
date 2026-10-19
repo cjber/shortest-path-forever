@@ -72,6 +72,27 @@ ns.PointGuideArrow(near, function(_, hidden)
 end)
 assert(frame.alpha == 1 and nativeHidden == false, "arrow remains visible at the destination")
 
+-- The game's marker leads only while the client draws it: with in-game navigation off, which Camelot has no setting
+-- for, the client keeps the marker at no alpha, so the arrow stays.
+local cvars = { showInGameNavigation = "1" }
+env.GetCVarBool = function(name)
+	return cvars[name] == "1"
+end
+env.C_Navigation = {
+	GetFrame = function()
+		return {}
+	end,
+}
+local function native()
+	return true
+end
+ns.PointGuideArrow(replacement, native)
+assert(frame.alpha == 0, "the game's marker leads while it is drawn")
+cvars.showInGameNavigation = "0"
+ns.PointGuideArrow(points, native)
+assert(frame.alpha == 1, "with in-game navigation off, the arrow leads")
+env.C_Navigation = { GetFrame = function() end }
+
 -- It eases round to a new bearing over a few frames, by the shorter way, as the compass does.
 local facing = 0
 env.GetPlayerFacing = function()
