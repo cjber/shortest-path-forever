@@ -12,6 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.21.5] - 2026-10-20
+
+- **Lock the tracker where you put it.** Detach the Forever column, drag it where you want it, then tick *Settings*, *Tracker*, *Lock the tracker*: the grip stops moving the column and hovering it says the tracker is locked instead of offering to move it. It is off by default, it only ever suppresses our own drag handler, so turning it on or off in combat cannot taint or move anything, and an existing character's settings gain the switch without losing their place. The grip and its lock also moved into their own file, which keeps the shared tracker host inside the project's file-size rule. Thanks to Alex21xx for the request.
+
 ## [1.21.4] - 2026-10-20
 
 - **The guide's waypoint is set once.** While a RestedXP guide is followed, a rested-XP level-up could restart the journey on every guide update, re-setting the same waypoint and stuttering the game. The guide's target is now compared by map and position only, so jitter in its coordinates and a step renamed at the same spot no longer replan the journey: a renamed step updates its label in place. Thanks to Joster91 on CurseForge.
