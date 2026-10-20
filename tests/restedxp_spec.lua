@@ -1,6 +1,7 @@
 local driver = assert(loadfile("tests/journey_driver.lua"))()
 local ns, env = driver.ns, driver.env
 driver.load("UI/Looks.lua")
+driver.load("Core/SafeCall.lua")
 driver.load("Core/API.lua")
 driver.load("Journey/Itinerary.lua")
 local API = env.ShortestPathForever.API
@@ -185,4 +186,77 @@ assert(
 	"the native UI choice restores RXP navigation without changing standalone preferences"
 )
 assert(ns.db.restedxp, "display choice preserves the standalone preference")
+
+-- #237: RestedXP recalculates element.x/y between its own updates, and near a rested-XP level-up it updates far more
+-- often. Guidance must restart only when the guide genuinely points somewhere else.
+local nativeUI = env.AdventureGuideForever.API.RestedXPNativeUI
+env.AdventureGuideForever.API.RestedXPNativeUI = function()
+	return false
+end
+ns.RefreshRestedXP()
+driver.path.settle()
+local navigations = 0
+local navigate = API.NavigateRoute
+API.NavigateRoute = function(...)
+	navigations = navigations + 1
+	return navigate(...)
+end
+assert(API.CurrentStop("RestedXP") == 1, "the guide target is guided again")
+frame.element.x, frame.element.y = 60, 50
+navigations = 0
+rxp.UpdateGotoSteps()
+rxp.UpdateMap()
+assert(navigations == 0, "(a) an identical target plans nothing twice")
+frame.element.x = 60.03
+rxp.UpdateGotoSteps()
+frame.element.x, frame.element.y = 60, 50.04
+rxp.UpdateMap()
+assert(navigations == 0, "(b) coordinates jittered inside the tolerance plan nothing")
+frame.element.step.index = 2
+rxp.UpdateGotoSteps()
+assert(navigations == 0, "(d) a new step index at the same position plans nothing")
+frame.element.title = "RestedXP renamed target"
+local trackerVersion = ns.journeyVersion
+local relabels = 0
+local refreshTracker = ns.RefreshTracker
+ns.RefreshTracker = function()
+	relabels = relabels + 1
+end
+rxp.UpdateGotoSteps()
+assert(navigations == 0, "(c) a renamed step at the same position plans nothing")
+assert(relabels == 1 and ns.journeyVersion == trackerVersion, "the renamed step redraws the tracker, not a journey")
+assert(API.RenameStop("RestedXP", 1, "RestedXP renamed target"), "a held stop can be relabelled in place")
+frame.element.x = 60.2
+rxp.UpdateGotoSteps()
+assert(navigations == 1 and API.CurrentStop("RestedXP") == 1, "(c) a target that moves plans once")
+-- (e) RestedXP's update arrives while our restart is still running: NavigateRoute calls ns.ItineraryChanged, and
+-- RestedXP's own hooks (the map redraw, the step update) run from inside that call.
+local reentered = 0
+local itineraryChanged = ns.ItineraryChanged
+ns.ItineraryChanged = function(...)
+	reentered = reentered + 1
+	rxp.UpdateGotoSteps()
+	rxp.UpdateMap()
+	rxp.ResetArrowPosition()
+	return itineraryChanged(...)
+end
+navigations = 0
+frame.element.x = 70
+rxp.UpdateMap()
+assert(reentered > 0, "the restart re-enters the guide's hooks")
+assert(navigations == 1, "(e) hooks fired by our own navigation do not plan again")
+assert(API.CurrentStop("RestedXP") == 1, "the re-entrant hooks leave the journey under way")
+ns.ItineraryChanged = itineraryChanged
+API.NavigateRoute = navigate
+navigations = 0
+ns.db.journey = false
+ns.RefreshRestedXP()
+assert(not API.CurrentStop("RestedXP") and navigations == 0, "the journey setting still clears guidance")
+ns.db.journey = true
+ns.db.restedxp = false
+ns.RefreshRestedXP()
+assert(not API.CurrentStop("RestedXP") and navigations == 0, "the guide setting still clears guidance")
+ns.db.restedxp = true
+env.AdventureGuideForever.API.RestedXPNativeUI = nativeUI
+ns.RefreshTracker = refreshTracker
 print("restedxp: ok")
