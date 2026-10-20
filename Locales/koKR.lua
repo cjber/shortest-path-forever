@@ -99,6 +99,8 @@ L["Journeys, and other addons' estimates from here, can start with your hearthst
 L["Keep journeys after a reload"] = "재시작 후 여정 유지"
 L["Keep the route on the map when the journey list is hidden."] =
 	"여정 목록이 숨겨져 있을 때도 지도에 경로를 유지합니다."
+L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
+	"공유 Forever 추적기를 놓은 자리에 유지합니다. 위쪽 손잡이로 더 이상 끌 수 없습니다."
 L["Last seen %d min ago by another player"] = "다른 플레이어가 %d분 전에 마지막으로 목격"
 L["Last seen %d min ago by you"] = "내가 %d분 전에 마지막으로 목격"
 L["Legacy Forever shows the Legacy challenges this counts toward."] =
@@ -110,6 +112,7 @@ L["Lifts & Tram"] = "승강기와 지하철"
 L["Lifts and the Deeprun Tram, on the world map."] =
 	"승강기와 깊은굴 지하철을 세계 지도에 표시합니다."
 L["Loading QuestieDB…"] = "QuestieDB 불러오는 중…"
+L["Lock the tracker"] = "추적기 잠금"
 L["Map marks"] = "지도 표시"
 L["Mark only where steps end"] = "단계 끝만 표시"
 L["Minimap icon size"] = "미니맵 아이콘 크기"
@@ -224,6 +227,8 @@ L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it
 	"텍스트가 선택되었습니다. Ctrl+C(Mac은 Cmd+C)를 눌러 복사한 후 버그 보고서에 붙여 넣으십시오."
 L["The guide's waypoint is set once instead of being re-set on every guide update."] =
 	"안내의 경로 지점은 안내가 갱신될 때마다 다시 설정되지 않고 한 번만 설정됩니다."
+L["The tracker is locked. Turn off Lock the tracker to move it."] =
+	"추적기가 잠겨 있습니다. 추적기 잠금을 끄면 이동할 수 있습니다."
 L["This addon"] = "이 애드온"
 L["Through %s transport, there is a way"] = "%s 교통수단을 이용하면 길이 있습니다"
 L["Through %s transport: about %d min faster"] = "%s 교통수단 이용 시: 약 %d분 더 빠름"

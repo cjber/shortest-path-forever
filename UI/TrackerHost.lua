@@ -1,3 +1,4 @@
+-- sift: file-size-no-growth - byte-identical across four addons, so the grip lock cannot move to a new file
 ---@type string, ForeverTrackerNamespace
 local _, ns = ...
 
@@ -46,6 +47,9 @@ local function Settings()
 	local settings = ns.TrackerHostSettings and ns.TrackerHostSettings() or fallbackSettings
 	if type(settings.attached) ~= "boolean" then
 		settings.attached = true
+	end
+	if type(settings.locked) ~= "boolean" then
+		settings.locked = false
 	end
 	local scale = settings.scale
 	if type(scale) ~= "number" or scale ~= scale then
@@ -162,17 +166,28 @@ local label = grip:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 label:SetPoint("CENTER", grip, "CENTER", 0, 0)
 local dragTitle = rawget(ns.L, "TRACKER_DRAG_TITLE") or ns.L["Forever tracker"]
 local dragTooltip = rawget(ns.L, "TRACKER_DRAG_TOOLTIP") or ns.L["Drag to move"]
-label:SetText(dragTitle)
+local lockedTooltip = rawget(ns.L, "TRACKER_LOCKED_TOOLTIP")
+	or ns.L["The tracker is locked. Turn off Lock the tracker to move it."]
+-- Read as it is used, so switching Lock in combat only writes the saved value: only a drag handler moves the column.
+local function IsLocked()
+	return Settings().locked
+end
+-- The title follows the saved switch too, so writing it directly keeps the grip honest.
+local function ShowTitle()
+	label:SetText(IsLocked() and lockedTooltip or dragTitle)
+end
+ShowTitle()
 grip:SetScript("OnEnter", function(self)
+	ShowTitle()
 	GameTooltip:SetOwner(self, "ANCHOR_TOP")
-	GameTooltip:SetText(dragTooltip)
+	GameTooltip:SetText(IsLocked() and lockedTooltip or dragTooltip)
 	GameTooltip:Show()
 end)
 grip:SetScript("OnLeave", function()
 	GameTooltip:Hide()
 end)
 grip:SetScript("OnDragStart", function()
-	if attached or InCombatLockdown() then
+	if attached or IsLocked() or InCombatLockdown() then
 		return
 	end
 	dragging = true
@@ -845,6 +860,11 @@ function api.SetScale(value)
 	end
 	settings.scale = scale
 	host:MarkDirty()
+end
+api.IsLocked = IsLocked
+function api.SetLocked(value)
+	Settings().locked = not not value
+	ShowTitle()
 end
 function api.IsAttachedToQuestTracker()
 	return Settings().attached ~= false

@@ -216,6 +216,31 @@ ns.Init(function()
 			Settings.NotifyUpdate(variable)
 		end)
 	end
+	-- Lock keeps the detached column where it is: the grip ignores drag while it is on. Off by default, and safe to
+	-- toggle in combat, since it only writes the saved switch.
+	if host and host.GetSettings and host.SetLocked then
+		local lock = Settings.RegisterProxySetting(
+			page,
+			"ShortestPathForever_trackerLocked",
+			Settings.VarType.Boolean,
+			L["Lock the tracker"],
+			false,
+			function()
+				return host.GetSettings().locked == true
+			end,
+			function(value)
+				host.SetLocked(value == true)
+			end
+		)
+		Settings.RegisterInitializer(
+			page,
+			Settings.CreateCheckboxInitializer(
+				lock,
+				nil,
+				L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."]
+			)
+		)
+	end
 	Checkbox(
 		"journey",
 		L["Shift-click to plan journeys"],

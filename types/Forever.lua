@@ -168,6 +168,8 @@ ObjectiveTrackerManager = nil
 ---@field SetScale fun(scale: number)
 ---@field OnAttachmentChanged fun(callback: fun(attached: boolean))
 ---@field SavePosition fun(x: number, y: number)
+---@field IsLocked fun(): boolean
+---@field SetLocked fun(value: boolean)
 ---@type ForeverTrackerHostAPI?
 ForeverTrackerHost = nil
 
@@ -216,6 +218,7 @@ function EventUtil.ContinueAfterAllEvents(callback, ...) end
 
 ---@class ForeverTrackerSettings
 ---@field attached boolean
+---@field locked? boolean the grip ignores drag while the tracker is locked
 ---@field scale? number tracker size, 1 is the stock size
 ---@field x? number
 ---@field y? number
