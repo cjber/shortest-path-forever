@@ -100,6 +100,8 @@ L["Journeys, and other addons' estimates from here, can start with your hearthst
 L["Keep journeys after a reload"] = "Garder les trajets après un rechargement" -- mt
 L["Keep the route on the map when the journey list is hidden."] =
 	"Garder l'itinéraire sur la carte quand la liste du trajet est masquée." -- mt
+L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
+	"Garde le suivi Forever partagé là où vous l'avez placé. La poignée en haut ne le déplace plus." -- mt
 L["Last seen %d min ago by another player"] = "Vu il y a %d min par un autre joueur" -- mt
 L["Last seen %d min ago by you"] = "Vu il y a %d min par vous" -- mt
 L["Legacy Forever shows the Legacy challenges this counts toward."] =
@@ -110,6 +112,7 @@ L["Lifts"] = "Ascenseurs" -- mt
 L["Lifts & Tram"] = "Ascenseurs et tram" -- mt
 L["Lifts and the Deeprun Tram, on the world map."] = "Les ascenseurs et le Tram des profondeurs, sur la carte du monde." -- mt
 L["Loading QuestieDB…"] = "Chargement de QuestieDB…" -- mt
+L["Lock the tracker"] = "Verrouiller le suivi" -- mt
 L["Map marks"] = "Repères sur la carte" -- mt
 L["Mark only where steps end"] = "Marquer seulement la fin des étapes" -- mt
 L["Minimap icon size"] = "Taille des icônes de la minicarte" -- mt
@@ -223,6 +226,8 @@ L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it
 	"Le texte est sélectionné. Appuyez sur Ctrl+C (Cmd+C sur Mac) pour le copier, puis collez-le dans votre rapport de bug." -- mt
 L["The guide's waypoint is set once instead of being re-set on every guide update."] =
 	"Le point de route du guide est pose une seule fois au lieu d'etre repose a chaque mise a jour." -- mt
+L["The tracker is locked. Turn off Lock the tracker to move it."] =
+	"Le suivi est verrouillé. Désactivez Verrouiller le suivi pour le déplacer." -- mt
 L["This addon"] = "Cet addon" -- mt
 L["Through %s transport, there is a way"] = "Par les transports de la faction %s, un chemin existe" -- mt
 L["Through %s transport: about %d min faster"] = "Par les transports de la faction %s : environ %d min plus vite" -- mt

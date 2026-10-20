@@ -56,6 +56,7 @@ UI\FlightPins.lua
 UI\Looks.lua
 UI\MinimapPins.lua
 UI\TrackerQuestie.lua
+UI\TrackerLock.lua
 UI\TrackerHost.lua
 UI\Tracker.lua
 UI\Mover.lua

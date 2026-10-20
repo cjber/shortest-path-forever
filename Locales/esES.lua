@@ -98,6 +98,8 @@ L["Journeys, and other addons' estimates from here, can start with your hearthst
 L["Keep journeys after a reload"] = "Mantener viajes tras recargar"
 L["Keep the route on the map when the journey list is hidden."] =
 	"Mantener la ruta en el mapa cuando la lista del viaje está oculta."
+L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
+	"Mantiene el rastreador compartido Forever donde lo pones. El tirador de arriba ya no lo arrastra."
 L["Last seen %d min ago by another player"] = "Visto hace %d min por otro jugador"
 L["Last seen %d min ago by you"] = "Visto hace %d min por ti"
 L["Legacy Forever shows the Legacy challenges this counts toward."] =
@@ -108,6 +110,7 @@ L["Lifts"] = "Ascensores"
 L["Lifts & Tram"] = "Ascensores y tranvía"
 L["Lifts and the Deeprun Tram, on the world map."] = "Los ascensores y el Tranvía Subterráneo, en el mapa del mundo."
 L["Loading QuestieDB…"] = "Cargando QuestieDB…"
+L["Lock the tracker"] = "Bloquear el rastreador"
 L["Map marks"] = "Marcas del mapa"
 L["Mark only where steps end"] = "Marcar solo el final de cada paso"
 L["Minimap icon size"] = "Tamaño de iconos del minimapa"
@@ -220,6 +223,8 @@ L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it
 	"El texto está seleccionado. Pulsa Ctrl+C (Cmd+C en Mac) para copiarlo y pégalo en tu informe de error."
 L["The guide's waypoint is set once instead of being re-set on every guide update."] =
 	"El punto de ruta de la guia se fija una vez en lugar de fijarse de nuevo en cada actualizacion."
+L["The tracker is locked. Turn off Lock the tracker to move it."] =
+	"El rastreador está bloqueado. Desactiva Bloquear el rastreador para moverlo."
 L["This addon"] = "Este addon"
 L["Through %s transport, there is a way"] = "Con el transporte de la %s hay un camino"
 L["Through %s transport: about %d min faster"] = "Con el transporte de la %s: unos %d min más rápido"

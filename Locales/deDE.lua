@@ -98,6 +98,8 @@ L["Journeys, and other addons' estimates from here, can start with your hearthst
 L["Keep journeys after a reload"] = "Reisen nach /reload behalten"
 L["Keep the route on the map when the journey list is hidden."] =
 	"Die Route auf der Karte lassen, wenn die Reiseliste ausgeblendet ist."
+L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
+	"Hält die gemeinsame Forever-Verfolgung dort, wo Ihr sie hingelegt habt. Der Griff oben zieht sie nicht mehr."
 L["Last seen %d min ago by another player"] = "Zuletzt vor %d Min. von einem anderen Spieler gesehen"
 L["Last seen %d min ago by you"] = "Zuletzt vor %d Min. von Euch gesehen"
 L["Legacy Forever shows the Legacy challenges this counts toward."] =
@@ -108,6 +110,7 @@ L["Lifts"] = "Aufzüge"
 L["Lifts & Tram"] = "Aufzüge & Bahn"
 L["Lifts and the Deeprun Tram, on the world map."] = "Aufzüge und die Tiefenbahn, auf der Weltkarte."
 L["Loading QuestieDB…"] = "QuestieDB wird geladen…"
+L["Lock the tracker"] = "Verfolgung sperren"
 L["Map marks"] = "Kartenmarkierungen"
 L["Mark only where steps end"] = "Nur Schrittenden markieren"
 L["Minimap icon size"] = "Größe der Minikartensymbole"
@@ -220,6 +223,8 @@ L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it
 	"Der Text ist markiert. Drückt Strg+C (Cmd+C auf dem Mac) zum Kopieren und fügt ihn dann in Euren Fehlerbericht ein."
 L["The guide's waypoint is set once instead of being re-set on every guide update."] =
 	"Der Wegpunkt des Leitfadens wird einmal gesetzt, statt bei jeder Aktualisierung neu."
+L["The tracker is locked. Turn off Lock the tracker to move it."] =
+	"Die Verfolgung ist gesperrt. Schaltet Verfolgung sperren aus, um sie zu verschieben."
 L["This addon"] = "Dieses Addon"
 L["Through %s transport, there is a way"] = "Mit Transportmitteln der %s gibt es einen Weg"
 L["Through %s transport: about %d min faster"] = "Mit Transportmitteln der %s: etwa %d Min. schneller"

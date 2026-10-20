@@ -97,6 +97,8 @@ L["Journeys, and other addons' estimates from here, can start with your hearthst
 	"旅程以及其他插件从这里算起的估计，可以从炉石或传送开始，并计入冷却时间。"
 L["Keep journeys after a reload"] = "重载后保留旅程"
 L["Keep the route on the map when the journey list is hidden."] = "旅程列表隐藏时仍在地图上保留路线。"
+L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
+	"将共享的 Forever 追踪器保持在您放置的位置。顶部的拖拽手柄不再移动它。"
 L["Last seen %d min ago by another player"] = "%d分钟前由其他玩家最后看到"
 L["Last seen %d min ago by you"] = "%d分钟前由你最后看到"
 L["Legacy Forever shows the Legacy challenges this counts toward."] =
@@ -107,6 +109,7 @@ L["Lifts"] = "升降梯"
 L["Lifts & Tram"] = "升降梯和地铁"
 L["Lifts and the Deeprun Tram, on the world map."] = "升降梯和矿道地铁，显示在世界地图上。"
 L["Loading QuestieDB…"] = "正在载入QuestieDB…"
+L["Lock the tracker"] = "锁定追踪器"
 L["Map marks"] = "地图标记"
 L["Mark only where steps end"] = "只标记步骤终点"
 L["Minimap icon size"] = "微缩地图图标大小"
@@ -214,6 +217,8 @@ L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it
 	"文字已选中。按Ctrl+C（Mac上为Cmd+C）复制，然后粘贴到你的错误报告中。"
 L["The guide's waypoint is set once instead of being re-set on every guide update."] =
 	"指南的路径点只设置一次，而不是在每次指南更新时重新设置。"
+L["The tracker is locked. Turn off Lock the tracker to move it."] =
+	"追踪器已锁定。关闭“锁定追踪器”即可移动它。"
 L["This addon"] = "本插件"
 L["Through %s transport, there is a way"] = "借助%s的交通工具可以到达"
 L["Through %s transport: about %d min faster"] = "借助%s的交通工具：约快%d分钟"

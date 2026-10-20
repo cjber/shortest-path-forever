@@ -47,6 +47,7 @@ local function Settings()
 	if type(settings.attached) ~= "boolean" then
 		settings.attached = true
 	end
+	settings.locked = settings.locked == true
 	local scale = settings.scale
 	if type(scale) ~= "number" or scale ~= scale then
 		settings.scale = 1
@@ -153,41 +154,12 @@ host:SetWidth(ObjectiveTrackerFrame:GetWidth())
 host:SetHeight(1)
 host:SetMovable(true)
 host:SetClampedToScreen(true)
-local grip = CreateFrame("Button", nil, host)
-grip:SetPoint("TOPLEFT", host, "TOPLEFT", 0, 0)
-grip:SetPoint("TOPRIGHT", host, "TOPRIGHT", 0, 0)
-grip:SetHeight(24)
-grip:RegisterForDrag("LeftButton")
-local label = grip:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-label:SetPoint("CENTER", grip, "CENTER", 0, 0)
-local dragTitle = rawget(ns.L, "TRACKER_DRAG_TITLE") or ns.L["Forever tracker"]
-local dragTooltip = rawget(ns.L, "TRACKER_DRAG_TOOLTIP") or ns.L["Drag to move"]
-label:SetText(dragTitle)
-grip:SetScript("OnEnter", function(self)
-	GameTooltip:SetOwner(self, "ANCHOR_TOP")
-	GameTooltip:SetText(dragTooltip)
-	GameTooltip:Show()
-end)
-grip:SetScript("OnLeave", function()
-	GameTooltip:Hide()
-end)
-grip:SetScript("OnDragStart", function()
-	if attached or InCombatLockdown() then
-		return
-	end
-	dragging = true
-	host:StartMoving()
-end)
-grip:SetScript("OnDragStop", function()
-	if not dragging then
-		return
-	end
-	dragging = false
-	host:StopMovingOrSizing()
-	local scale = host:GetEffectiveScale() / UIParent:GetEffectiveScale()
-	api.SavePosition((host:GetLeft() or 0) * scale, (host:GetTop() or 0) * scale - UIParent:GetHeight())
-end)
-grip:Hide()
+-- The grip and the Lock switch that suppresses its drag live in their own file (UI/TrackerLock.lua), which the TOC
+-- loads before this one. It hands back the label redraw for a Lock change and the show switch for the attachment.
+local Grip = ns.TrackerLock.Grip(host, api)
+local function IsLocked()
+	return Settings().locked
+end
 local modules, queued = {}, false
 local pools = CreateFramePoolCollection()
 
@@ -791,7 +763,7 @@ end
 local function Layout()
 	queued = false
 	local settings = ApplyAttachment()
-	grip:SetShown(not attached)
+	Grip.Show(not attached)
 	if not attached then
 		besideQuestie = false
 		LayoutDetached(settings)
@@ -845,6 +817,15 @@ function api.SetScale(value)
 	end
 	settings.scale = scale
 	host:MarkDirty()
+end
+---@return boolean
+function api.IsLocked()
+	return IsLocked()
+end
+---@param value boolean
+function api.SetLocked(value)
+	Settings().locked = not not value
+	Grip.SetLabel(value)
 end
 function api.IsAttachedToQuestTracker()
 	return Settings().attached ~= false

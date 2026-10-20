@@ -46,20 +46,24 @@ local DEFAULTS = {
 }
 ns.Defaults = DEFAULTS
 
--- The shared tracker host owns the one tracker scale, so it lives in the host's own settings rather than
--- DEFAULTS. Saved variables arrive after the TOC loads, so answer with a throwaway default until then.
+-- The shared tracker host owns the one tracker scale and its Lock switch, so they live in the host's own settings
+-- rather than DEFAULTS. Saved variables arrive after the TOC loads, so answer with a throwaway default until then.
+-- Lock defaults off; a table saved before it existed simply gains the key.
 ---@return ForeverTrackerSettings
 function ns.TrackerHostSettings()
 	if type(ns.db) ~= "table" then
-		return { attached = true, scale = 1 }
+		return { attached = true, locked = false, scale = 1 }
 	end
 	local settings = ns.db.trackerHost
 	if type(settings) ~= "table" then
-		settings = { attached = true, scale = 1 }
+		settings = { attached = true, locked = false, scale = 1 }
 		ns.db.trackerHost = settings
 	end
 	if type(settings.scale) ~= "number" or settings.scale ~= settings.scale then
 		settings.scale = 1
+	end
+	if type(settings.locked) ~= "boolean" then
+		settings.locked = false
 	end
 	return settings
 end

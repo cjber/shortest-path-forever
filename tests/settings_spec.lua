@@ -145,6 +145,9 @@ local ns = {
 		OnAttachmentChanged = function(callback)
 			attachmentChanged = callback
 		end,
+		SetLocked = function(value)
+			trackerState.locked = value
+		end,
 		GetScale = function()
 			return trackerScale
 		end,
@@ -236,6 +239,7 @@ local groups = {
 	Transport = { "mapRoutes", "otherFaction", "tracker", "share" },
 	Guidance = {
 		"trackerAttached",
+		"trackerLocked",
 		"journey",
 		"resumeJourney",
 		"tomtom",
@@ -268,7 +272,7 @@ local groups = {
 local order = { "Map marks", "Transport", "Guidance", "Alerts", "Interface" }
 
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
-assert(#rows == 40, #rows)
+assert(#rows == 41, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -420,3 +424,12 @@ assert(attachmentNotified == "ShortestPathForever_trackerAttached", "proxy notif
 trackerState.attached = true
 attachmentChanged()
 assert(attachment:GetValue(), "external reattach updates proxy")
+
+-- Lock starts off, sits right after the detach row, and drives the shared host rather than a copy of its own.
+local lock = Row("trackerLocked").setting
+assert(lock.name == "Lock the tracker" and lock.default == false, "the lock row is named and off by default")
+assert(lock:GetValue() == false, "the tracker starts unlocked")
+lock:SetValue(true)
+assert(trackerState.locked == true and lock:GetValue(), "locking writes the shared host settings")
+lock:SetValue(false)
+assert(trackerState.locked == false and not lock:GetValue(), "unlocking writes them back")

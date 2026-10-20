@@ -101,6 +101,8 @@ L["Journeys, and other addons' estimates from here, can start with your hearthst
 L["Keep journeys after a reload"] = "Сохранять маршрут после перезагрузки"
 L["Keep the route on the map when the journey list is hidden."] =
 	"Оставлять маршрут на карте, когда список маршрута скрыт."
+L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
+	"Оставляет общий трекер Forever там, где вы его поставили. Ручка сверху больше его не перетаскивает."
 L["Last seen %d min ago by another player"] = "Замечен %d мин. назад другим игроком"
 L["Last seen %d min ago by you"] = "Замечен %d мин. назад вами"
 L["Legacy Forever shows the Legacy challenges this counts toward."] =
@@ -112,6 +114,7 @@ L["Lifts & Tram"] = "Подъемники и поезд"
 L["Lifts and the Deeprun Tram, on the world map."] =
 	"Подъемники и Подземный поезд на карте мира."
 L["Loading QuestieDB…"] = "Загрузка QuestieDB…"
+L["Lock the tracker"] = "Закрепить трекер"
 L["Map marks"] = "Отметки на карте"
 L["Mark only where steps end"] = "Отмечать только концы шагов"
 L["Minimap icon size"] = "Размер значков на мини-карте"
@@ -230,6 +233,8 @@ L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it
 	"Текст выделен. Нажмите Ctrl+C (Cmd+C на Mac), чтобы скопировать его, и вставьте в отчет об ошибке."
 L["The guide's waypoint is set once instead of being re-set on every guide update."] =
 	"Точка маршрута руководства ставится один раз, а не заново при каждом обновлении."
+L["The tracker is locked. Turn off Lock the tracker to move it."] =
+	"Трекер закреплён. Отключите «Закрепить трекер», чтобы переместить его."
 L["This addon"] = "Эта модификация"
 L["Through %s transport, there is a way"] = "Через транспорт фракции «%s» путь есть"
 L["Through %s transport: about %d min faster"] =
