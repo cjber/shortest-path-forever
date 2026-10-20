@@ -12,6 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.21.4] - 2026-10-20
+
+- **The guide's waypoint is set once.** While a RestedXP guide is followed, a rested-XP level-up could restart the journey on every guide update, re-setting the same waypoint and stuttering the game. The guide's target is now compared by map and position only, so jitter in its coordinates and a step renamed at the same spot no longer replan the journey: a renamed step updates its label in place. Thanks to Joster91 on CurseForge.
+
 ## [1.21.3] - 2026-10-20
 
 - **Questie's quest tracker can be moved again.** With a Forever section in the tracker, Questie's quest list and the game's own quest tracker could no longer be dragged, and could vanish. A frame of ours sat between UIParent and Questie's list, and Questie's own drag code reads the list's corners and then clears its points mid-gesture, so a layout pass of ours landing in that window left it nothing to read. Nothing of ours is anchored to the list any more: it is watched through its own show, hide, drag-stop and size calls, the column holds its place while you drag or resize it, and it reflows once when you let go. Thanks to procque and Fareed on CurseForge, and to the Questie team for the report that named the cause in Questie/Questie#8076.

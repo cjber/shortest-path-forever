@@ -222,7 +222,8 @@ L["The map's ping when a journey you planned reaches its goal, even with the gam
 L["The objective tracker is unavailable."] = "목표 추적기를 사용할 수 없습니다."
 L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it into your bug report."] =
 	"텍스트가 선택되었습니다. Ctrl+C(Mac은 Cmd+C)를 눌러 복사한 후 버그 보고서에 붙여 넣으십시오."
-L["Questie's quest tracker can be moved again."] = "Questie의 퀘스트 추적기를 다시 옮길 수 있습니다."
+L["The guide's waypoint is set once instead of being re-set on every guide update."] =
+	"안내의 경로 지점은 안내가 갱신될 때마다 다시 설정되지 않고 한 번만 설정됩니다."
 L["This addon"] = "이 애드온"
 L["Through %s transport, there is a way"] = "%s 교통수단을 이용하면 길이 있습니다"
 L["Through %s transport: about %d min faster"] = "%s 교통수단 이용 시: 약 %d분 더 빠름"

@@ -212,7 +212,8 @@ L["The map's ping when a journey you planned reaches its goal, even with the gam
 L["The objective tracker is unavailable."] = "目标追踪栏不可用。"
 L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it into your bug report."] =
 	"文字已选中。按Ctrl+C（Mac上为Cmd+C）复制，然后粘贴到你的错误报告中。"
-L["Questie's quest tracker can be moved again."] = "Questie 的任务追踪器又可以移动了。"
+L["The guide's waypoint is set once instead of being re-set on every guide update."] =
+	"指南的路径点只设置一次，而不是在每次指南更新时重新设置。"
 L["This addon"] = "本插件"
 L["Through %s transport, there is a way"] = "借助%s的交通工具可以到达"
 L["Through %s transport: about %d min faster"] = "借助%s的交通工具：约快%d分钟"
