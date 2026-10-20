@@ -64,4 +64,6 @@ Details and issues: [GitHub](https://github.com/cjber/shortest-path-forever). Li
 
 Made by Cillian Berragan · [cillian.dev](https://cillian.dev/) · [GitHub](https://github.com/cjber) · [Twitter](https://twitter.com/cjberragan)
 
+The addon is free. If it saves you time, you can [buy me a coffee on Ko-fi](https://ko-fi.com/cjber59408).
+
 Built with AI assistance.

@@ -6,6 +6,7 @@
 Plan journeys in WoW: Forever, on foot, by air, by sea and through portals.<br>
 <a href="https://github.com/cjber/shortest-path-forever/actions/workflows/ci.yml"><img src="https://github.com/cjber/shortest-path-forever/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 <a href="https://github.com/cjber/shortest-path-forever/releases/latest"><img src="https://img.shields.io/github/v/release/cjber/shortest-path-forever" alt="Latest release"></a>
+<a href="https://ko-fi.com/cjber59408"><img src="https://img.shields.io/badge/Ko--fi-tip-ff5e5b?logo=ko-fi&logoColor=white" alt="Ko-fi"></a>
 </p>
 
 Shift-click the world map or minimap, or choose a quest, to plan a journey. Shortest Path Forever gives directions in the objective tracker and on both maps.
@@ -124,6 +125,10 @@ No code needed:
 Run `tools/typecheck.sh` for LuaLS and static checks, and `luajit tests/<name>_spec.lua` for a focused check. CI runs the full suite. [tests/README.md](tests/README.md) describes the test layers; [performance notes](tests/search_performance.md) and [type declarations](types/README.md) describe the rest. Releases follow [.agents/skills/release/SKILL.md](.agents/skills/release/SKILL.md).
 
 [Contributing](https://github.com/cjber/.github/blob/main/CONTRIBUTING.md), [AGENTS.md](AGENTS.md) and [security reports](https://github.com/cjber/.github/blob/main/SECURITY.md).
+
+## Support
+
+The addon is free and stays GPL-3.0. If it saves you time, you can [buy me a coffee on Ko-fi](https://ko-fi.com/cjber59408); nothing is locked behind it and there is no paid version.
 
 ## Credits
 
