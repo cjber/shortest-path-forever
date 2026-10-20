@@ -222,8 +222,7 @@ L["The map's ping when a journey you planned reaches its goal, even with the gam
 L["The objective tracker is unavailable."] = "목표 추적기를 사용할 수 없습니다."
 L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it into your bug report."] =
 	"텍스트가 선택되었습니다. Ctrl+C(Mac은 Cmd+C)를 눌러 복사한 후 버그 보고서에 붙여 넣으십시오."
-L["The tracker sections now move clear of Questie's quest list."] =
-	"이제 추적기 항목이 Questie 퀘스트 목록을 가리지 않도록 비켜 표시됩니다."
+L["Questie's quest tracker can be moved again."] = "Questie의 퀘스트 추적기를 다시 옮길 수 있습니다."
 L["This addon"] = "이 애드온"
 L["Through %s transport, there is a way"] = "%s 교통수단을 이용하면 길이 있습니다"
 L["Through %s transport: about %d min faster"] = "%s 교통수단 이용 시: 약 %d분 더 빠름"
