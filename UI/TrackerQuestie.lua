@@ -21,17 +21,60 @@ local function BaseFrame()
 	return rawget(_G, "Questie_BaseFrame")
 end
 
--- The list's show, hide and size hooks and an addon-owned probe on its bottom right corner call `onChange` when the
--- list toggles, grows or is dragged.
+-- The list's show, hide, size and drag-stop scripts call `onChange` when the list toggles, grows or is dragged, and
+-- one addon-owned ticker notices the moves and resizes nothing of the list's own does: a profile load, or a UI addon
+-- such as MoveAnything, sets the list's anchor with no event and no script of its own.
+--
+-- Nothing of ours is ever anchored to the list. A probe frame reaching from the screen's corner to the list's corner
+-- put Questie_BaseFrame inside our layout's anchor family, and Questie's drag code reads the list's GetLeft and GetTop
+-- just before it clears the list's points (Modules/Tracker/TrackerBaseFrame.lua, _UpdateTrackerPosition), so a layout
+-- pass of ours landing in that window left it nothing to read: it errored, and left the list unanchored, invisible and
+-- undraggable (Questie/Questie#8076, #188). Read here, never written: the ticker asks the list where it is.
+local WATCH_INTERVAL = 0.25
+local ticker, sinceTick, lastPlace
+
+-- Where the list says it is, as one string, so a move or a resize shows up as a different one.
+local function Place(frame)
+	local point, relativeTo, relativePoint, x, y = frame:GetPoint()
+	return table.concat({
+		tostring(point),
+		tostring(relativeTo),
+		tostring(relativePoint),
+		x or 0,
+		y or 0,
+		frame:GetWidth() or 0,
+		frame:GetHeight() or 0,
+	}, "|")
+end
+
 local function Watch(frame, onChange)
 	watched = true
 	frame:HookScript("OnShow", onChange)
 	frame:HookScript("OnHide", onChange)
-	frame:HookScript("OnSizeChanged", onChange)
-	local probe = CreateFrame("Frame", nil, UIParent)
-	probe:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", 0, 0)
-	probe:SetPoint("TOPRIGHT", frame, "BOTTOMRIGHT", 0, 0)
-	probe:SetScript("OnSizeChanged", onChange)
+	frame:HookScript("OnDragStop", onChange)
+	-- While the player drags or resizes the list Questie owns its geometry: the column holds its place, and one reflow
+	-- follows the list to where the player let go of it.
+	local function Moved()
+		if frame.isMoving or frame.isSizing then
+			return
+		end
+		onChange()
+	end
+	frame:HookScript("OnSizeChanged", Moved)
+	ticker = ticker or CreateFrame("Frame")
+	lastPlace = Place(frame)
+	ticker:SetScript("OnUpdate", function(_, elapsed)
+		sinceTick = (sinceTick or 0) + (elapsed or 0)
+		if sinceTick < WATCH_INTERVAL or not frame:IsShown() or frame.isMoving or frame.isSizing then
+			return
+		end
+		sinceTick = 0
+		local place = Place(frame)
+		if place ~= lastPlace then
+			lastPlace = place
+			onChange()
+		end
+	end)
 end
 
 -- Questie's list while it is on screen, or nil. A list anchored to `host` moves with it, so it can never be cleared:
