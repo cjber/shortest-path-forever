@@ -218,8 +218,7 @@ L["The map's ping when a journey you planned reaches its goal, even with the gam
 L["The objective tracker is unavailable."] = "Die Questverfolgung ist nicht verfügbar."
 L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it into your bug report."] =
 	"Der Text ist markiert. Drückt Strg+C (Cmd+C auf dem Mac) zum Kopieren und fügt ihn dann in Euren Fehlerbericht ein."
-L["The tracker sections now move clear of Questie's quest list."] =
-	"Die Trackerabschnitte weichen jetzt der Questliste von Questie aus."
+L["Questie's quest tracker can be moved again."] = "Questies Quest-Tracker lässt sich wieder verschieben."
 L["This addon"] = "Dieses Addon"
 L["Through %s transport, there is a way"] = "Mit Transportmitteln der %s gibt es einen Weg"
 L["Through %s transport: about %d min faster"] = "Mit Transportmitteln der %s: etwa %d Min. schneller"

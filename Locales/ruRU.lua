@@ -228,8 +228,8 @@ L["The map's ping when a journey you planned reaches its goal, even with the gam
 L["The objective tracker is unavailable."] = "Панель отслеживания целей недоступна."
 L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it into your bug report."] =
 	"Текст выделен. Нажмите Ctrl+C (Cmd+C на Mac), чтобы скопировать его, и вставьте в отчет об ошибке."
-L["The tracker sections now move clear of Questie's quest list."] =
-	"Разделы отслеживания теперь не перекрываются списком заданий Questie."
+L["Questie's quest tracker can be moved again."] =
+	"Отслеживание заданий Questie снова можно перемещать."
 L["This addon"] = "Эта модификация"
 L["Through %s transport, there is a way"] = "Через транспорт фракции «%s» путь есть"
 L["Through %s transport: about %d min faster"] =
