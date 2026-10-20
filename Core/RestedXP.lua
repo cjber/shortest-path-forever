@@ -6,6 +6,11 @@ local OWNER = "RestedXP"
 local hooked
 ---@type string?
 local target
+-- The label of the running journey's target, which a renamed step may update in place.
+---@type string?
+local targetTitle
+-- Set while this file restarts guidance: RestedXP calls back into the hooks from inside that restart.
+local navigating = false
 ---@type boolean?
 local textureShown
 ---@type boolean?
@@ -25,8 +30,28 @@ end
 
 local function Clear()
 	API.Cancel(OWNER)
-	target = nil
+	target, targetTitle = nil, nil
 	Restore()
+end
+
+-- The identity of a guide target: its map and position, not its step or label. RestedXP moves element.x and element.y
+-- by less than the fraction of a percent between its own updates, so the tenth of a map percent (about one yard in a
+-- zone) decides whether the guide still points where our journey was planned to.
+local function Key(map, x, y)
+	return string.format("%d:%d:%d", map, math.floor(x * 10 + 0.5), math.floor(y * 10 + 0.5))
+end
+
+-- The current stop's label, renamed without replanning: a guide relabels its step as quests complete at one spot.
+-- RestedXP splits a step into several stops at one place; they share the step's name.
+local function Rename(title, map, x, y)
+	local stop = API.CurrentStop(OWNER)
+	if not stop or title == targetTitle or not API.RenameStop then
+		return
+	end
+	targetTitle = title
+	API.RenameStop(OWNER, stop, title, function(point)
+		return point.map == map and point.x == x and point.y == y
+	end)
 end
 
 local function Suppress()
@@ -54,12 +79,16 @@ local function Sync()
 	end
 	if frontend and type(frontend.RestedXPIntegrated) == "function" and frontend.RestedXPIntegrated() then
 		API.Cancel(OWNER)
-		target = nil
+		target, targetTitle = nil, nil
 		Suppress()
 		return
 	end
 	if not ns.db.restedxp or not ns.db.journey then
 		Clear()
+		return
+	end
+	-- Our own restart runs StartJourney, which RestedXP's hooks may observe; a second restart must never start inside it.
+	if navigating then
 		return
 	end
 	local frame = hooked.arrowFrame
@@ -97,7 +126,7 @@ local function Sync()
 		return
 	end
 	local title = (element.title or step.arrowtext or step.title or "RestedXP"):gsub("RXP_[A-Z]+_", "")
-	local key = string.format("%s:%.17g:%.17g:%s", map, x, y, tostring(step.index))
+	local key = Key(map, x, y)
 	if InCombatLockdown() then
 		if key ~= target then
 			API.Cancel(OWNER)
@@ -108,13 +137,18 @@ local function Sync()
 	end
 	if key ~= target then
 		-- RestedXP decides when an interaction or waypoint is complete, including large arrival radii.
-		if not API.NavigateRoute(OWNER, { { map = map, x = x / 100, y = y / 100, title = title, hold = true } }) then
+		navigating = true
+		local started =
+			API.NavigateRoute(OWNER, { { map = map, x = x / 100, y = y / 100, title = title, hold = true } })
+		navigating = false
+		if not started then
 			Clear()
 			return
 		end
-		target = key
+		target, targetTitle = key, title
 	end
 	if API.CurrentStop(OWNER) then
+		Rename(title, map, x / 100, y / 100)
 		Suppress()
 	else
 		Restore()
@@ -133,7 +167,7 @@ function ns.ResumeRestedXP()
 		frontend.ResumeRestedXP()
 		return
 	end
-	target = nil
+	target, targetTitle = nil, nil
 	Sync()
 end
 

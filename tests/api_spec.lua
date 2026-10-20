@@ -818,6 +818,47 @@ end
 equal(learn.legs[1].mode, "walk", "walk to Auberdine's flight master")
 equal(learn.legs[2].mode, "flight", "then fly from it")
 ns.known[26] = true
+-- Relabelling a running route's stop in place, for a guide that renamed a step at an unchanged position.
+equal(
+	API.NavigateRoute("AGF", {
+		{ map = 1, x = 0.6, y = 0.5, title = "Old name", hold = true },
+		{ map = 1, x = 0.6, y = 0.5, title = "Old name", hold = true },
+		{ map = 1, x = 0.7, y = 0.5, title = "Elsewhere", hold = true },
+	}),
+	true,
+	"a route to relabel"
+)
+driver.path.settle()
+local points, progress = ns.JourneyStops()
+local renamed, relabels = 0, 0
+local refreshTracker = ns.RefreshTracker
+ns.RefreshTracker = function()
+	relabels = relabels + 1
+end
+local function SamePlace(from)
+	return function(point)
+		renamed = renamed + 1
+		return point.map == from.map and point.x == from.x and point.y == from.y
+	end
+end
+equal(API.RenameStop("OtherAddon", 1, "Not mine"), false, "another owner cannot relabel")
+equal(API.RenameStop("AGF", 9, "No such stop"), false, "a stop the route does not have")
+equal(API.RenameStop("AGF", 1, nil), false, "a label must be a string")
+equal(relabels, 0, "a refused relabel redraws nothing")
+equal(API.RenameStop("AGF", 1, "New name", SamePlace(points[1])), true, "the owner relabels the current stop")
+equal(points[1].label, "New name", "the stop takes the new label")
+equal(points[2].label, "New name", "a later stop at the same place takes it too")
+equal(points[3].label, "Elsewhere", "a stop elsewhere keeps its own")
+equal(renamed, 3, "only the route's points are compared")
+equal(relabels, 1, "the tracker redraws once")
+equal(ns.JourneyStops(), points, "relabelling keeps the same points")
+equal(API.CurrentStop("AGF"), progress, "and the same progress")
+equal(ns.PlaceLabel(points[1]), "New name", "the guide's place label names the stop")
+equal(API.RenameStop("AGF", 1, "Plain name"), true, "a relabel with no places to share")
+equal(points[2].label, "New name", "names only what it was asked to")
+equal(API.RenameStop("AGF", 1, "Plain name"), true, "relabelling to the same name again is harmless")
+ns.RefreshTracker = refreshTracker
+API.Cancel("AGF")
 print(
 	string.format(
 		"api_spec: %d checks passed; Estimate cached short %.3f ms, cross-continent cold %.3f / cached %.3f ms",

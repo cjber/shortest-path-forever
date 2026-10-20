@@ -227,6 +227,18 @@ function ns.JourneyChanged(point, reason)
 	ns.ItineraryChanged()
 end
 
+-- A running route's stop was relabelled in place (API.RenameStop, from a guide renaming its step): the tracker names
+-- it. The label is cosmetic, so a tracker that cannot draw is not this journey's problem.
+local function Relabel()
+	ns.RefreshTracker()
+end
+
+function ns.JourneyRelabeled()
+	if ns.RefreshTracker then
+		ns.SafeCall("journey relabel", Relabel)
+	end
+end
+
 -- Which addon owns the journey under way, if one does (Resume.lua keeps only the player's own).
 ---@return string?
 function ns.JourneyOwner()
@@ -496,6 +508,38 @@ function API.Cancel(owner)
 	end
 	ns.ClearJourney()
 	ended[owner] = { reason = "cancelled", at = GetTime() }
+	return true
+end
+
+-- Relabel a running route's stop in place: a guide renames a step whose position did not move, which must not cost a
+-- replan. renamePoints says which later stops are that same place, so they keep the name too. The titles only a
+-- multi-stop route draws stay as they were.
+---@param owner string
+---@param index integer the stop to rename, usually API.CurrentStop
+---@param title string
+---@param renamePoints? fun(point: SPFPoint): boolean?
+---@return boolean
+function API.RenameStop(owner, index, title, renamePoints)
+	if not Owner(owner) or not route or route.owner ~= owner or type(title) ~= "string" then
+		return false
+	end
+	if (title ~= "" and not canaccessvalue(title)) or not route.points[index] then
+		return false
+	end
+	-- Our own points, written before the guard above saw them: nothing to re-read here.
+	local current, shares = route.points[index], nil
+	if renamePoints then
+		shares = {}
+		for _, point in ipairs(route.points) do
+			shares[point] = not not renamePoints(point)
+		end
+	end
+	for _, point in ipairs(route.points) do
+		if point == current or (shares and shares[point]) then
+			point.label = title
+		end
+	end
+	ns.JourneyRelabeled()
 	return true
 end
 
