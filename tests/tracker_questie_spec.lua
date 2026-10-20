@@ -221,10 +221,19 @@ local function scenario(options)
 		host = host,
 		module = module,
 		native = native,
+		frames = frames,
 		questie = questie,
 		slot = slot,
 		settings = settings,
 		drain = drain,
+		-- One watcher tick, the way the game runs the ticker's OnUpdate.
+		tick = function(delta)
+			for _, other in ipairs(frames) do
+				if other.scripts.OnUpdate then
+					other.scripts.OnUpdate(other, delta or 1)
+				end
+			end
+		end,
 		pending = function()
 			return #timers
 		end,
@@ -313,6 +322,39 @@ for _, scale in ipairs({ 0.75, 1, 1.25 }) do
 				hidden.questie.point[1] == "TOPRIGHT" and hidden.questie.point[4] == -24,
 				label .. ": Questie's anchor stays user-owned"
 			)
+
+			-- Nothing of ours may sit in Questie's anchor family. Questie reads the list's own corners and then clears
+			-- its points (TrackerBaseFrame.lua, _UpdateTrackerPosition); a frame of ours anchored to the list left
+			-- those reads nil and the list unanchored and undraggable (Questie/Questie#8076, #188).
+			local anchored = false
+			for _, other in ipairs(s.frames) do
+				if other.point and other.point[2] == s.questie then
+					anchored = true
+				end
+			end
+			check(not anchored, label .. ": no Forever frame is anchored to Questie's list")
+			-- A move nothing of the list's own announces - a profile load, MoveAnything - is still noticed.
+			s.questie:SetPoint("TOPLEFT", s.host.parent, "TOPLEFT", 24, -100)
+			s.tick(1)
+			s.drain()
+			check(clears(s.host, s.questie), label .. ": a move of Questie's list is noticed and the column follows")
+
+			-- While the player drags the list Questie owns its geometry: the column holds its place, then follows the
+			-- list to where the player let go of it.
+			s.questie.height = 400
+			s.questie.isMoving = true
+			local heldLeft, heldTop = bounds(s.host)
+			s.questie.hooks.OnSizeChanged(s.questie)
+			s.drain()
+			local stillLeft, stillTop = bounds(s.host)
+			check(
+				near(heldLeft, stillLeft) and near(heldTop, stillTop),
+				label .. ": a drag of Questie's list holds the column still"
+			)
+			s.questie.isMoving = false
+			s.questie.hooks.OnDragStop(s.questie)
+			s.drain()
+			check(clears(s.host, s.questie), label .. ": the column follows the list when the drag ends")
 
 			-- Questie hides its list: the column returns to the native slot.
 			s.questie:Hide()
