@@ -1,4 +1,3 @@
--- sift: file-size-no-growth - byte-identical across four addons, so the grip lock cannot move to a new file
 ---@type string, ForeverTrackerNamespace
 local _, ns = ...
 
@@ -48,9 +47,7 @@ local function Settings()
 	if type(settings.attached) ~= "boolean" then
 		settings.attached = true
 	end
-	if type(settings.locked) ~= "boolean" then
-		settings.locked = false
-	end
+	settings.locked = settings.locked == true
 	local scale = settings.scale
 	if type(scale) ~= "number" or scale ~= scale then
 		settings.scale = 1
@@ -168,19 +165,15 @@ local dragTitle = rawget(ns.L, "TRACKER_DRAG_TITLE") or ns.L["Forever tracker"]
 local dragTooltip = rawget(ns.L, "TRACKER_DRAG_TOOLTIP") or ns.L["Drag to move"]
 local lockedTooltip = rawget(ns.L, "TRACKER_LOCKED_TOOLTIP")
 	or ns.L["The tracker is locked. Turn off Lock the tracker to move it."]
--- Read as it is used, so switching Lock in combat only writes the saved value: only a drag handler moves the column.
 local function IsLocked()
 	return Settings().locked
 end
--- The title follows the saved switch too, so writing it directly keeps the grip honest.
-local function ShowTitle()
-	label:SetText(IsLocked() and lockedTooltip or dragTitle)
-end
-ShowTitle()
+label:SetText(dragTitle)
 grip:SetScript("OnEnter", function(self)
-	ShowTitle()
+	local locked = IsLocked()
+	label:SetText(locked and lockedTooltip or dragTitle)
 	GameTooltip:SetOwner(self, "ANCHOR_TOP")
-	GameTooltip:SetText(IsLocked() and lockedTooltip or dragTooltip)
+	GameTooltip:SetText(locked and lockedTooltip or dragTooltip)
 	GameTooltip:Show()
 end)
 grip:SetScript("OnLeave", function()
@@ -864,7 +857,7 @@ end
 api.IsLocked = IsLocked
 function api.SetLocked(value)
 	Settings().locked = not not value
-	ShowTitle()
+	label:SetText(value and lockedTooltip or dragTitle)
 end
 function api.IsAttachedToQuestTracker()
 	return Settings().attached ~= false

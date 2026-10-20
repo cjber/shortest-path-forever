@@ -134,6 +134,8 @@ native.Header = nativeHeader
 function native.UpdateHeaderPosition() end
 function native.UpdateHeight() end
 local ns = {
+	-- English phrases, as the addon that translates by phrase has them. Nothing is set for the lock's constant key,
+	-- so the host falls back to its own English sentence, which is what a player without that translation reads.
 	L = setmetatable({}, {
 		__index = function(_, key)
 			return key
