@@ -223,8 +223,17 @@ function EventUtil.ContinueAfterAllEvents(callback, ...) end
 ---@field x? number
 ---@field y? number
 
+---@class ForeverTrackerGrip
+---@field Show fun(value: boolean) shows or hides the grip, which the host keeps hidden while attached
+---@field SetLabel fun(value: boolean) redraws the label from the switch, without waiting for a hover
+
+---@class ForeverTrackerLock
+---@field Locked fun(): boolean reads the saved switch through the host
+---@field Grip fun(host: Frame, source: ForeverTrackerHostAPI): ForeverTrackerGrip draws the grip on the column it drags
+
 ---@class ForeverTrackerNamespace
 ---@field TrackerHost? ForeverTrackerHostAPI
 ---@field TrackerQuestie? ForeverTrackerQuestie Questie's quest list, from UI/TrackerQuestie.lua
+---@field TrackerLock? ForeverTrackerLock the grip and its Lock switch, from UI/TrackerLock.lua
 ---@field TrackerHostSettings? fun(): ForeverTrackerSettings
 ---@field L table<string, string>

@@ -276,6 +276,7 @@ end
 
 local function loadHost(namespace, path)
 	path = path or "UI/TrackerHost.lua"
+	setfenv(assert(loadfile("UI/TrackerLock.lua")), env)("Test", namespace) -- the grip, before the host
 	setfenv(assert(loadfile(path)), env)("Test", namespace)
 end
 local hostPaths = {}
@@ -289,8 +290,7 @@ for index = 2, #hostPaths do
 	check(joining.TrackerHost == ns.TrackerHost, "companion joins the first loaded host")
 	check(#frames == count, "companion must not create a second host")
 end
-local host = frames[6]
-local grip = frames[7]
+local host, grip = frames[6], frames[7]
 local function module(order)
 	local m = frame()
 	m.uiOrder, m.ContentsFrame, m.lineTemplate = order, frame(), "Line"

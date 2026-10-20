@@ -174,6 +174,7 @@ local function scenario(options)
 	}, { __index = _G })
 	env._G = env
 	setfenv(assert(loadfile("UI/TrackerQuestie.lua")), env)("Test", ns)
+	setfenv(assert(loadfile("UI/TrackerLock.lua")), env)("Test", ns)
 	setfenv(assert(loadfile(os.getenv("TRACKER_HOST_SOURCE") or "UI/TrackerHost.lua")), env)("Test", ns)
 	local host = frames[4]
 	local module = frame()
