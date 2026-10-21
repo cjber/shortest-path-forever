@@ -12,6 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.21.7] - 2026-10-21
+
+- **The tracker no longer errors out when another Forever addon adds its own section.** With SkillUp Forever loaded, the two addons' tracker sections are sorted together, and a section that carries no ordering of its own was compared against ones that do, so the layout pass died with `attempt to compare nil with number` on every refresh (297 times on the report). Sections that carry an order keep it, sections without one follow them in the order they were added, and the column draws every time. Thanks to Torpdotorgx and dryzee on CurseForge.
+
 ## [1.21.6] - 2026-10-21
 
 - **The in-combat tracker keeps up with new objectives.** In combat the game's own tracker cannot be moved, so the Forever column fits itself into the height it was given when the fight began. A quest accepted or an objective completed mid-fight could then be cut off until combat ended, and a collapsed native header left an empty gap at the top of the column. The column now reserves header room only while the header is shown, grows to fit a section that gained lines, and keeps that taller height for the rest of the fight. Found in the suite's own review of the shared tracker host.
