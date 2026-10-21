@@ -3,6 +3,19 @@
 local driver = assert(loadfile("tests/journey_driver.lua"))()
 local ns, env = driver.ns, driver.env
 local played = {}
+local warnings, flashes, ticks = {}, 0, {}
+env.RaidWarningUtil = {
+	AddMessage = function(text)
+		warnings[#warnings + 1] = text
+	end,
+}
+env.ChatTypeInfo = { RAID_WARNING = {} }
+env.FlashClientIcon = function()
+	flashes = flashes + 1
+end
+ns.OnTravelTick = function(fn)
+	ticks[#ticks + 1] = fn
+end
 env.PlaySoundFile = function(file, channel)
 	played[#played + 1] = { file = file, channel = channel }
 end
@@ -64,5 +77,59 @@ driver.begin({ map = 1, x = 0, y = -400 }, { map = 1, x = 0, y = -460 })
 driver.move({ map = 1, x = 0, y = -460 })
 driver.update(0.1)
 assert(not ns.HasJourney() and #played == 3, "every arrival of your own pings")
+
+-- An unknown flight master gets one plan warning, then one more on approach, through the same raid-warning banner
+-- and taskbar flash as the timed transport alerts. No sound is guessed for a flight master.
+local unknown = { mode = "walk", to = { id = 9001, map = 1, x = 1000, y = 0, undiscovered = true } }
+local plan = { legs = { unknown } }
+local current = 1
+ns.JourneyPlan = function()
+	return plan, current
+end
+local position = { x = 0, y = 0, map = 1 }
+ns.JourneyPosition = function()
+	return position.x, position.y, position.map
+end
+ns.LegLabel = function()
+	return "Test flight master"
+end
+ns.db.alerts, ns.db.flightPathReminder, ns.db.alertSound = true, true, true
+for _, tick in ipairs(ticks) do
+	tick()
+end
+assert(#warnings == 1 and warnings[1]:find("Step 1", 1, true), "unknown master warns when the plan lands")
+for _, tick in ipairs(ticks) do
+	tick()
+end
+assert(#warnings == 1, "plan warning is deduped across tracker ticks")
+position.x = 900
+for _, tick in ipairs(ticks) do
+	tick()
+end
+assert(#warnings == 2 and warnings[2]:find("near", 1, true), "unknown current master warns on approach")
+assert(flashes == 2 and #played == 3, "both warnings flash, with no invented flight-master sound")
+
+-- A known master stays quiet; an unknown master in a later step gets a plan warning but no approach warning.
+warnings = {}
+plan.legs = { { mode = "walk", to = { id = 9002, map = 1, x = 90, y = 0 } } }
+for _, tick in ipairs(ticks) do
+	tick()
+end
+assert(#warnings == 0, "known master is quiet")
+plan.legs = {
+	{ mode = "walk", to = { id = 9003, map = 1, x = 1000, y = 0 } },
+	{ mode = "walk", to = { id = 9004, map = 1, x = 100, y = 0, undiscovered = true } },
+}
+for _, tick in ipairs(ticks) do
+	tick()
+end
+assert(#warnings == 1 and warnings[1]:find("Step 2", 1, true), "later unknown master is named by its step")
+
+ns.db.flightPathReminder = false
+plan.legs = { { mode = "walk", to = { id = 9005, map = 1, x = 100, y = 0, undiscovered = true } } }
+for _, tick in ipairs(ticks) do
+	tick()
+end
+assert(#warnings == 1, "the reminder option turns off banners")
 
 print("alert_spec: ok")

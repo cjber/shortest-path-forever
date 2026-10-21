@@ -252,7 +252,7 @@ local groups = {
 		"taxiRoute",
 		"corpse",
 	},
-	Alerts = { "alerts", "alertSound", "arrivalSound" },
+	Alerts = { "alerts", "flightPathReminder", "alertSound", "arrivalSound" },
 	Interface = {
 		"journeyTracker",
 		"arrow",
@@ -272,7 +272,7 @@ local groups = {
 local order = { "Map marks", "Transport", "Guidance", "Alerts", "Interface" }
 
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
-assert(#rows == 41, #rows)
+assert(#rows == 42, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -314,6 +314,7 @@ assert(
 )
 assert(Row("guideStops").setting.default == true)
 assert(Row("taxiRoute").setting.default == true)
+assert(Row("flightPathReminder").setting.default == true, "new flight-master reminders are on by default")
 local hearth = Row("hearthMinimumSavings")
 assert(hearth.kind == "slider" and hearth.setting.default == 0)
 assert(hearth.options.format(0) == "Off" and hearth.options.format(90) == "90 Sec", "the slider shows its value")

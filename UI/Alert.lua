@@ -30,10 +30,45 @@ local function Alert(key, kind, text)
 	end
 	alerted[key] = GetTime()
 	RaidWarningUtil.AddMessage(text, ChatTypeInfo.RAID_WARNING)
-	if ns.db.alertSound then
+	if ns.db.alertSound and SOUND[kind] then
 		PlaySoundFile(SOUND[kind], "Master")
 	end
 	FlashClientIcon()
+end
+
+local function AnnounceNewFlightPath(leg, index, approach)
+	if not ns.db.flightPathReminder or not ns.db.alerts or InCombatLockdown() then
+		return
+	end
+	local key = "new-flight-master:" .. tostring(leg.to.id)
+	local text = approach
+			and string.format(L["You are near the new flight master %s. Discover it before flying."], ns.LegLabel(leg))
+		or string.format(L["Step %d: discover flight master %s before flying."], index, ns.LegLabel(leg))
+	Alert(key .. (approach and ":approach" or ":plan"), "flightmaster", text)
+end
+
+local function CheckNewFlightPaths()
+	if not ns.db.flightPathReminder or not ns.db.alerts or InCombatLockdown() then
+		return
+	end
+	local plan, current = ns.JourneyPlan()
+	if not plan then
+		return
+	end
+	for index = current, #plan.legs do
+		local leg = plan.legs[index]
+		if leg.mode == "walk" and leg.to.undiscovered then
+			AnnounceNewFlightPath(leg, index, false)
+			if index == current then
+				local x, y, map = ns.JourneyPosition()
+				local node = leg.to
+				if x and map == node.map and (x - node.x) ^ 2 + (y - node.y) ^ 2 <= 120 ^ 2 then
+					AnnounceNewFlightPath(leg, index, true)
+				end
+			end
+			return
+		end
+	end
 end
 
 local function Due(ms, lead)
@@ -95,6 +130,7 @@ end
 
 ns.Init(function()
 	ns.OnTravelTick(Check)
+	ns.OnTravelTick(CheckNewFlightPaths)
 	-- After every file has loaded, so API.lua's ns.JourneyChanged exists to hook.
 	hooksecurefunc(ns, "JourneyChanged", Arrived) -- taint-ok: ns is this addon's own namespace table.
 end)

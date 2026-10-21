@@ -2,6 +2,19 @@ local driver = assert(loadfile("tests/journey_driver.lua"))()
 local ns, walking = driver.ns, driver.path
 local here, target = { map = 1, x = 0, y = 0, z = 0 }, { map = 1, x = 1200, y = 0 }
 
+-- The reminder sits above the steps, names a future undiscovered master accurately, and leaves known plans alone.
+ns.LegLabel = function()
+	return "Test flight master"
+end
+local known = { mode = "walk", to = { id = 1 } }
+local unknown = { mode = "walk", to = { id = 2, undiscovered = true } }
+local reminder = ns.NewFlightPathReminderRow({ legs = { known, unknown } }, 1)
+assert(reminder and reminder.text:find("Step 2: discover flight master Test flight master", 1, true))
+assert(not ns.NewFlightPathReminderRow({ legs = { known } }, 1), "known flight masters need no reminder row")
+assert(ns.NewFlightPathReminderRow({ legs = { unknown } }, 1).text:find("Step 1", 1, true))
+ns.db.flightPathReminder = false
+assert(ns.NewFlightPathReminderRow({ legs = { unknown } }, 1), "the tracker note remains when banners are disabled")
+
 -- Journey follows what its search reports: nothing is drawn while it searches, then the one route, from where you
 -- stand.
 walking.auto = false

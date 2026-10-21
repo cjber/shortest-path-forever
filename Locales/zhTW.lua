@@ -298,3 +298,9 @@ L["west"] = "西"
 L["your corpse"] = "你的屍體"
 L["your position"] = "你的位置"
 L["zeppelin"] = "飛艇"
+L["Step %d: discover flight master %s before flying."] = "Step %d: discover flight master %s before flying." -- mt
+L["You are near the new flight master %s. Discover it before flying."] =
+	"You are near the new flight master %s. Discover it before flying." -- mt
+L["Remind me about new flight masters"] = "Remind me about new flight masters" -- mt
+L["Warns when a journey needs you to discover a flight master, and again when you are close."] =
+	"Warns when a journey needs you to discover a flight master, and again when you are close." -- mt
