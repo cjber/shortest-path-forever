@@ -61,6 +61,23 @@ function ns.JourneyPlan()
 	return result, progress.index
 end
 
+---@param plan SPFPlan
+---@param current integer
+---@return SPFRow?
+function ns.NewFlightPathReminderRow(plan, current)
+	for index = current, #plan.legs do
+		local leg = plan.legs[index]
+		if leg.mode == "walk" and leg.to.undiscovered then
+			return {
+				key = "new-flight-path",
+				text = string.format(L["Step %d: discover flight master %s before flying."], index, ns.LegLabel(leg)),
+				grey = true,
+			}
+		end
+	end
+	return nil
+end
+
 -- Where the journey goes, also while it waits behind a corpse run; nil with no journey.
 ---@return SPFPoint?
 function ns.JourneyGoal()
@@ -309,6 +326,10 @@ function ns.JourneyInfo()
 		rows[1] = { key = "searching", text = L["Finding the fastest way…"], grey = true }
 	elseif result then
 		local _, spell = WaterWalking()
+		local reminder = ns.NewFlightPathReminderRow(result, progress.index)
+		if reminder then
+			rows[#rows + 1] = reminder
+		end
 		for index = progress.index, #result.legs do
 			local leg = result.legs[index]
 			local text

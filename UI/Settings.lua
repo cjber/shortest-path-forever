@@ -350,6 +350,11 @@ ns.Init(function()
 		L["Alert before a boat arrives"],
 		L["While you wait at a dock or ride a timed boat: a warning on screen and a flashing taskbar icon."]
 	)
+	Checkbox(
+		"flightPathReminder",
+		L["Remind me about new flight masters"],
+		L["Warns when a journey needs you to discover a flight master, and again when you are close."]
+	)
 	Checkbox("alertSound", L["Play a sound with alerts"], L["Plays even with the game in the background."])
 	Checkbox(
 		"arrivalSound",

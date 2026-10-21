@@ -20,6 +20,7 @@ local DEFAULTS = {
 	tracker = true,
 	alerts = true,
 	alertSound = true,
+	flightPathReminder = true,
 	arrivalSound = false,
 	journey = true,
 	resumeJourney = false,

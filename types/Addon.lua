@@ -153,6 +153,7 @@
 ---@field tracker? boolean
 ---@field alerts? boolean
 ---@field alertSound? boolean
+---@field flightPathReminder? boolean
 ---@field journey? boolean
 ---@field compassTime? boolean -- the whole journey's time left under the compass distance (Compass.lua)
 ---@field arrivalSound? boolean -- the map ping when a journey the player planned reaches its goal (Alert.lua)

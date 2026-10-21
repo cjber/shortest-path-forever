@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **A new flight master is hard to miss.** When a journey needs you to discover one, the tracker names it and the step, a raid warning and taskbar flash announce the plan, and the warning repeats as you approach. Turn off *Remind me about new flight masters* to keep the tracker note without the banners. Thanks to cjber for the idea.
+
 ## [1.21.8] - 2026-10-21
 
 - **The game's own All Objectives header stays where the game puts it.** The tracker column had been lifting that header out of the quest tracker and pinning it above the Forever rows, and the client re-anchors it on every tracker update, so the two fought: the header could stay on screen with nothing under it and leave a blank band above the first Forever row. Nothing of ours moves or shows that header any more: it keeps its own place inside the game's tracker, the column starts at the top of the slot with no reserved gap, and an empty column still hides itself. Thanks to team_Brigade on CurseForge.
