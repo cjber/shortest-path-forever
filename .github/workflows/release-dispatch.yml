@@ -1,0 +1,16 @@
+name: release-dispatch
+on:
+  push:
+    branches: ["release-dispatch/**"]
+permissions:
+  actions: write
+  contents: read
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          gh api -X POST repos/cjber/shortest-path-forever/actions/workflows/release.yml/dispatches \
+            -f ref=main -f 'inputs[version]=1.21.9' -f 'inputs[commit]=4c5e5857b6d7a02d313110ccd1fc71ffa127f590'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
