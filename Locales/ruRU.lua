@@ -231,8 +231,6 @@ L["The map's ping when a journey you planned reaches its goal, even with the gam
 L["The objective tracker is unavailable."] = "Панель отслеживания целей недоступна."
 L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it into your bug report."] =
 	"Текст выделен. Нажмите Ctrl+C (Cmd+C на Mac), чтобы скопировать его, и вставьте в отчет об ошибке."
-L["The guide's waypoint is set once instead of being re-set on every guide update."] =
-	"Точка маршрута руководства ставится один раз, а не заново при каждом обновлении."
 L["The tracker is locked. Turn off Lock the tracker to move it."] =
 	"Трекер закреплён. Отключите «Закрепить трекер», чтобы переместить его."
 L["This addon"] = "Эта модификация"
@@ -323,3 +321,5 @@ L["You are near the new flight master %s. Discover it before flying."] =
 L["Remind me about new flight masters"] = "Remind me about new flight masters" -- mt
 L["Warns when a journey needs you to discover a flight master, and again when you are close."] =
 	"Warns when a journey needs you to discover a flight master, and again when you are close." -- mt
+L["A new flight master is hard to miss."] =
+	"Нового распорядителя полётов трудно не заметить." -- mt

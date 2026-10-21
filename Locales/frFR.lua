@@ -224,8 +224,6 @@ L["The map's ping when a journey you planned reaches its goal, even with the gam
 L["The objective tracker is unavailable."] = "Le suivi des objectifs est indisponible." -- mt
 L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it into your bug report."] =
 	"Le texte est sélectionné. Appuyez sur Ctrl+C (Cmd+C sur Mac) pour le copier, puis collez-le dans votre rapport de bug." -- mt
-L["The guide's waypoint is set once instead of being re-set on every guide update."] =
-	"Le point de route du guide est pose une seule fois au lieu d'etre repose a chaque mise a jour." -- mt
 L["The tracker is locked. Turn off Lock the tracker to move it."] =
 	"Le suivi est verrouillé. Désactivez Verrouiller le suivi pour le déplacer." -- mt
 L["This addon"] = "Cet addon" -- mt
@@ -313,3 +311,4 @@ L["You are near the new flight master %s. Discover it before flying."] =
 L["Remind me about new flight masters"] = "Remind me about new flight masters" -- mt
 L["Warns when a journey needs you to discover a flight master, and again when you are close."] =
 	"Warns when a journey needs you to discover a flight master, and again when you are close." -- mt
+L["A new flight master is hard to miss."] = "Un nouveau maître de vol est difficile à manquer." -- mt

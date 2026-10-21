@@ -225,8 +225,6 @@ L["The map's ping when a journey you planned reaches its goal, even with the gam
 L["The objective tracker is unavailable."] = "목표 추적기를 사용할 수 없습니다."
 L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it into your bug report."] =
 	"텍스트가 선택되었습니다. Ctrl+C(Mac은 Cmd+C)를 눌러 복사한 후 버그 보고서에 붙여 넣으십시오."
-L["The guide's waypoint is set once instead of being re-set on every guide update."] =
-	"안내의 경로 지점은 안내가 갱신될 때마다 다시 설정되지 않고 한 번만 설정됩니다."
 L["The tracker is locked. Turn off Lock the tracker to move it."] =
 	"추적기가 잠겨 있습니다. 추적기 잠금을 끄면 이동할 수 있습니다."
 L["This addon"] = "이 애드온"
@@ -314,3 +312,4 @@ L["You are near the new flight master %s. Discover it before flying."] =
 L["Remind me about new flight masters"] = "Remind me about new flight masters" -- mt
 L["Warns when a journey needs you to discover a flight master, and again when you are close."] =
 	"Warns when a journey needs you to discover a flight master, and again when you are close." -- mt
+L["A new flight master is hard to miss."] = "새로운 비행 조련사는 놓치기 어렵습니다." -- mt

@@ -12,6 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.21.9] - 2026-10-21
+
 - **A new flight master is hard to miss.** When a journey needs you to discover one, the tracker names it and the step, a raid warning and taskbar flash announce the plan, and the warning repeats as you approach. Turn off *Remind me about new flight masters* to keep the tracker note without the banners. Thanks to cjber for the idea.
 
 ## [1.21.8] - 2026-10-21

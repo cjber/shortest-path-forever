@@ -215,8 +215,6 @@ L["The map's ping when a journey you planned reaches its goal, even with the gam
 L["The objective tracker is unavailable."] = "目標追蹤器無法使用。"
 L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it into your bug report."] =
 	"文字已選取。按Ctrl+C（Mac上為Cmd+C）複製，然後貼到你的錯誤報告中。"
-L["The guide's waypoint is set once instead of being re-set on every guide update."] =
-	"指南的路徑點只設定一次，而不是在每次指南更新時重新設定。"
 L["The tracker is locked. Turn off Lock the tracker to move it."] =
 	"追蹤器已鎖定。關閉「鎖定追蹤器」即可移動它。"
 L["This addon"] = "本插件"
@@ -304,3 +302,4 @@ L["You are near the new flight master %s. Discover it before flying."] =
 L["Remind me about new flight masters"] = "Remind me about new flight masters" -- mt
 L["Warns when a journey needs you to discover a flight master, and again when you are close."] =
 	"Warns when a journey needs you to discover a flight master, and again when you are close." -- mt
+L["A new flight master is hard to miss."] = "新的飛行管理員很難被錯過。" -- mt
