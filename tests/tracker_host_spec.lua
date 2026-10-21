@@ -1,6 +1,6 @@
 -- The host must never enter Blizzard's tracker manager, including through pooled lines.
 local harness = dofile("tests/tracker_host_harness.lua")
-local t = harness.new({ deferReady = true })
+local t = harness.new({ deferReady = true, headerShown = true })
 local check, drain = t.check, t.drain
 local host, grip, native, parent = t.host, t.grip, t.native, t.parent
 local first, second = t.first, t.second
@@ -16,6 +16,26 @@ t.ready()
 check(t.pending() == 1, "first layout is deferred")
 drain()
 check(first.point[5] == 0 and second.point[5] == -90, "sections follow uiOrder")
+check(t.nativeHeader.point[2] == native, "native header stays anchored to its native parent")
+check(first.point[5] == 0, "visible native header reserves no top gap")
+check(
+	native.point[5]
+		== (host:GetBottom() * host:GetEffectiveScale() / parent:GetEffectiveScale() - parent:GetHeight())
+			* parent:GetEffectiveScale()
+			/ native:GetEffectiveScale(),
+	"native frame top meets the host bottom"
+)
+t.native.headerWanted = false
+t.updateOrder()
+check(not t.headerShown(), "client update hides the native header")
+check(t.nativeHeader.point[2] == native, "hidden header remains anchored to native parent")
+t.native.headerWanted = true
+t.updateOrder()
+check(t.headerShown(), "client update shows the native header")
+check(t.nativeHeader.point[2] == native, "client update re-anchors header to native parent")
+host:MarkDirty()
+drain()
+check(t.nativeHeader.point[2] == native, "layouts leave header anchored to native parent")
 check(second.available == 518, "remaining space follows screen geometry")
 check(native:GetHeight() == 300, "native viewport preserves an externally sized height before clamping")
 native:SetHeight(420)
@@ -84,4 +104,18 @@ for index = 2, #hostPaths do
 end
 check(first:GetContextMenuParent() == host, "menus use private container")
 check(grip ~= nil, "the grip is shown by the detached layout")
+first.contentHeight, second.contentHeight = 0, 0
+host:MarkDirty()
+drain()
+check(host.shown == false, "host hides when no section draws")
+check(first.point[5] == 0 and second.point[5] == 0, "no header gap is reserved without section content")
+check(t.nativeHeader.point[2] == native, "empty layout leaves native header in its parent")
+local empty = harness.new({ headerShown = true })
+empty.first.contentHeight, empty.second.contentHeight = 0, 0
+empty.host:MarkDirty()
+empty.drain()
+empty.check(empty.host.shown == false, "host hides when visible header has no section content")
+empty.check(empty.first.point[5] == 0, "visible header reserves no gap without drawn content")
+empty.check(empty.nativeHeader.point[2] == empty.native, "visible header remains in native parent")
+
 print("tracker_host_spec: " .. t.checks() .. " checks passed")
