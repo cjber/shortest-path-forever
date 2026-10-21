@@ -423,10 +423,29 @@ end
 
 -- Lays every section out from the host's top, leaving `reserve` pixels for the native header. Returns whether any
 -- section drew, which decides if the header moves and the native frame leaves its title room.
+-- Sections with a uiOrder keep that order; a companion addon's section with none (SkillUp's profession reagents)
+-- follows them in registration order, so the comparator stays a strict weak ordering and a nil never meets a number.
 local function LayoutModules(width, available, reserve)
-	table.sort(modules, function(a, b)
-		return a.uiOrder < b.uiOrder
+	local order = {}
+	for index, module in ipairs(modules) do
+		order[index] = { module = module, index = index }
+	end
+	table.sort(order, function(a, b)
+		local left, right = tonumber(a.module.uiOrder), tonumber(b.module.uiOrder)
+		if left and right then
+			if left == right then
+				return a.index < b.index
+			end
+			return left < right
+		end
+		if left or right then
+			return left ~= nil
+		end
+		return a.index < b.index
 	end)
+	for index, entry in ipairs(order) do
+		modules[index] = entry.module
+	end
 	local heights, total = {}, 0
 	for index, module in ipairs(modules) do
 		module:SetWidth(width)
