@@ -149,6 +149,12 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y luajit
       # .pkgmeta's manual changelog, which the release fills with the version's entry.
       - run: printf 'Package check\n' > .release-notes.md
+      # The packager skips a push build when HEAD carries a tag ("Found future tag, not packaging"), so a tag that
+      # lands while this run is in flight would fail this job and leave main without the green run a release starts
+      # from. This job checks what a tag would ship, so hide HEAD's tags and let the dry run build what an ordinary
+      # push to main builds.
+      - name: Package this commit as an untagged build
+        run: git tag --points-at HEAD | xargs -r git tag --delete
       - uses: BigWigsMods/packager@e50a250f8705041e40f2fa1ddcb280a686d65aa0 # v2.6.1
         with:
           args: -d -z
