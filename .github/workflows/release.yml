@@ -60,6 +60,38 @@ jobs:
           ref: ${{ steps.target.outputs.commit }}
           fetch-depth: 0
           persist-credentials: false
+      # A release starts the moment its tag exists, which is normally while that commit's CI push run is still
+      # going, so wait for the run here instead of failing on the race. A run that finished without success fails the
+      # release at once, and the gate below still publishes only a completed, successful full CI run on main for this
+      # exact commit.
+      - name: Wait for full CI on the commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_COMMIT: ${{ steps.target.outputs.commit }}
+        run: |
+          for attempt in $(seq 1 90); do
+            state=$(gh api \
+              "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$RELEASE_COMMIT&event=push&per_page=100" \
+              --jq '[.workflow_runs[] | select(.head_branch == "main")] | if length == 0 then "none/" else (max_by(.run_started_at) | "\(.status)/\(.conclusion // "")") end') || state="unreadable/"
+            case "$state" in
+              completed/success)
+                echo "Full CI on main is green for $RELEASE_COMMIT"
+                exit 0
+                ;;
+              completed/*)
+                echo "::error::Full CI on main finished without success ($state) for $RELEASE_COMMIT"
+                exit 1
+                ;;
+              none/*)
+                echo "::error::No full CI push run on main for $RELEASE_COMMIT"
+                exit 1
+                ;;
+            esac
+            echo "Full CI on main is $state for $RELEASE_COMMIT; waiting (${attempt} of 90)"
+            sleep 20
+          done
+          echo "::error::Full CI on main is still running for $RELEASE_COMMIT after 30 minutes"
+          exit 1
       # release_check.py passes only a commit whose full CI push run on main succeeded, so a manual release cannot
       # publish a branch, a pull request or an unchecked commit.
       - name: Verify full CI on the commit
