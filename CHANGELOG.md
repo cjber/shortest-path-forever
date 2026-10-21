@@ -12,6 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.21.8] - 2026-10-21
+
+- **The game's own All Objectives header stays where the game puts it.** The tracker column had been lifting that header out of the quest tracker and pinning it above the Forever rows, and the client re-anchors it on every tracker update, so the two fought: the header could stay on screen with nothing under it and leave a blank band above the first Forever row. Nothing of ours moves or shows that header any more: it keeps its own place inside the game's tracker, the column starts at the top of the slot with no reserved gap, and an empty column still hides itself. Thanks to team_Brigade on CurseForge.
+
 ## [1.21.7] - 2026-10-21
 
 - **The tracker no longer errors out when another Forever addon adds its own section.** With SkillUp Forever loaded, the two addons' tracker sections are sorted together, and a section that carries no ordering of its own was compared against ones that do, so the layout pass died with `attempt to compare nil with number` on every refresh (297 times on the report). Sections that carry an order keep it, sections without one follow them in the order they were added, and the column draws every time. Thanks to Torpdotorgx and dryzee on CurseForge.
