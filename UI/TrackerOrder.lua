@@ -7,11 +7,11 @@ local _, ns = ...
 local ranks = setmetatable({}, { __mode = "k" })
 local attached = 0
 
-ns.TrackerOrder = {}
+local TrackerOrder = {}
 
 ---Orders `modules` in place for the layout pass.
 ---@param modules ForeverTrackerModule[]
-function ns.TrackerOrder.Sort(modules)
+function TrackerOrder.Sort(modules)
 	for _, module in ipairs(modules) do
 		if not ranks[module] then
 			attached = attached + 1
@@ -29,3 +29,5 @@ function ns.TrackerOrder.Sort(modules)
 		return (ranks[a] or 0) < (ranks[b] or 0)
 	end)
 end
+
+ns.TrackerOrder = TrackerOrder

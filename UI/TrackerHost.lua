@@ -2,6 +2,7 @@
 local _, ns = ...
 
 ---@class ForeverTrackerModule : Frame
+---@field uiOrder? number
 ---@field parentContainer? Frame
 ---@field SetContainer fun(self: ForeverTrackerModule, container: Frame)
 ---@field IsTruncated fun(self: ForeverTrackerModule): boolean
