@@ -210,6 +210,7 @@ local env = setmetatable({
 env._G = env
 -- In TOC order: UI/TrackerLock.lua draws the grip, then the host is handed it.
 setfenv(assert(loadfile("UI/TrackerLock.lua")), env)("Test", ns)
+setfenv(assert(loadfile("UI/TrackerOrder.lua")), env)("Test", ns) -- the section order, loaded before the host
 setfenv(assert(loadfile("UI/TrackerHost.lua")), env)("Test", ns)
 local host, grip, label = frames[6], frames[7], frames[7].label
 local function drain()

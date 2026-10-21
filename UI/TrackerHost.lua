@@ -2,6 +2,7 @@
 local _, ns = ...
 
 ---@class ForeverTrackerModule : Frame
+---@field uiOrder? number
 ---@field parentContainer? Frame
 ---@field SetContainer fun(self: ForeverTrackerModule, container: Frame)
 ---@field IsTruncated fun(self: ForeverTrackerModule): boolean
@@ -424,9 +425,7 @@ end
 -- Lays every section out from the host's top, leaving `reserve` pixels for the native header. Returns whether any
 -- section drew, which decides if the header moves and the native frame leaves its title room.
 local function LayoutModules(width, available, reserve)
-	table.sort(modules, function(a, b)
-		return a.uiOrder < b.uiOrder
-	end)
+	ns.TrackerOrder.Sort(modules)
 	local heights, total = {}, 0
 	for index, module in ipairs(modules) do
 		module:SetWidth(width)
