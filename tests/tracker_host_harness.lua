@@ -70,6 +70,17 @@ function harness.new(options)
 		function f:SetParent(owner)
 			self.parent = owner
 		end
+		-- Effective visibility, the way the client reports it: the frame and every ancestor shown.
+		function f:IsVisible()
+			local owner = self
+			while owner do
+				if not owner:IsShown() then
+					return false
+				end
+				owner = owner.GetParent and owner:GetParent() or owner.parent
+			end
+			return true
+		end
 		function f:GetParent()
 			return self.parent
 		end

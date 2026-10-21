@@ -369,17 +369,12 @@ end
 -- Native methods remain untouched so controller and combat paths retain their secure execution.
 local nativeHeader = ObjectiveTrackerFrame.Header --[[@as ForeverNativeTrackerHeader?]]
 local function NativeHeaderShown()
-	if not nativeHeader or not ObjectiveTrackerFrame:IsShown() then
+	if not nativeHeader or not ObjectiveTrackerFrame:IsShown() or not nativeHeader:IsShown() then
 		return false
 	end
-	local frame = nativeHeader
-	while frame do
-		if not frame:IsShown() then
-			return false
-		end
-		frame = frame.GetParent and frame:GetParent() or frame.parent
-	end
-	return true
+	-- IsVisible also covers an ancestor the client or another addon has hidden, which IsShown on the header alone
+	-- would miss. The harness frames model it the same way.
+	return nativeHeader.IsVisible == nil or nativeHeader:IsVisible()
 end
 
 local function NativeCollapsed()
