@@ -4,6 +4,7 @@ local _, ns = ...
 ---@class ForeverTrackerModule : Frame
 ---@field parentContainer? Frame
 ---@field SetContainer fun(self: ForeverTrackerModule, container: Frame)
+---@field IsTruncated fun(self: ForeverTrackerModule): boolean
 
 ---@class ForeverTrackerHostAPI
 ---@field Attach fun(module: Frame)
@@ -69,6 +70,8 @@ local nativeAnchor
 local appliedNativeAnchor
 -- The saved slot ReleaseNative last wrote, so the probe does not reflow for our own handback.
 local releasedNativeAnchor
+-- The handback is ignored only once: a later move back onto that slot is someone else's move and reflows.
+local releasedNativeProbe = false
 -- The column's height and header room when the native frame was last stacked below it: in combat the native frame
 -- cannot move, so the sections redraw within this.
 local stackedHeight, stackedReserve = 1, 0
@@ -455,7 +458,7 @@ local function ReleaseNative()
 		ObjectiveTrackerFrame:ClearAllPoints()
 		local saved = nativeAnchor.saved
 		ObjectiveTrackerFrame:SetPoint(saved.point, saved.relativeTo, saved.relativePoint, saved.x, saved.y)
-		releasedNativeAnchor = saved
+		releasedNativeAnchor, releasedNativeProbe = saved, true
 	end
 	appliedNativeAnchor = nil
 	RestoreNativeClamp()
@@ -515,14 +518,28 @@ local function LayoutInCombat()
 	-- protected and nothing protected anchors to it, so it stays at the top of our column. Only Blizzard moving
 	-- the native frame itself sends us to the one-column fallback below its content.
 	if appliedNativeAnchor and IsAppliedNativeAnchor(ObjectiveTrackerFrame:GetPoint()) then
-		-- Still stacked where the last reflow left both frames: nothing moves, but the sections still follow their
-		-- content and All Objectives. The native frame cannot move up or down to make room, so the sections redraw
-		-- within the height the stack gave them (less the last section's 10px gap, which LayoutModules adds back), and
-		-- the next reflow out of combat sizes them again.
-		local room = math.max(0, stackedHeight - stackedReserve - 10)
-		if not NativeCollapsed() and LayoutModules(host:GetWidth(), room, stackedReserve) then
-			if stackedReserve > 0 then
+		-- Still stacked: the sections follow their content within the height the stack gave them (less the last
+		-- section's 10px gap, which LayoutModules adds back), and the next out-of-combat reflow sizes them again.
+		-- A hidden header leaves no gap; a section that gains content grows the stack instead of waiting.
+		local headerShown = NativeHeaderShown()
+		local reserve = headerShown and (stackedReserve > 0 and stackedReserve or HEADER_TOP_PADDING) or 0
+		local room = math.max(0, stackedHeight - reserve - 10)
+		local truncated = false
+		local drew = not NativeCollapsed() and LayoutModules(host:GetWidth(), room, reserve)
+		for _, module in ipairs(modules) do
+			truncated = truncated or (module.IsTruncated ~= nil and module:IsTruncated())
+		end
+		if drew and truncated then
+			-- Measure the new content uncapped, then keep the taller stack for the rest of the fight.
+			LayoutModules(host:GetWidth(), math.max(room, (host:GetTop() or UIParent:GetHeight()) - 24), reserve)
+			stackedHeight = math.max(stackedHeight, host:GetHeight() or 1)
+			drew = LayoutModules(host:GetWidth(), math.max(0, stackedHeight - reserve - 10), reserve)
+		end
+		if drew then
+			if headerShown then
 				AdoptNativeHeader()
+			else
+				RestoreNativeHeader()
 			end
 			host:Show()
 		else
@@ -707,9 +724,11 @@ local function LayoutAttached()
 	hostLeft = math.max(0, math.min(hostLeft, UIParent:GetWidth() - nativeWidth))
 	local nativeX = hostLeft * screenScale / nativeScale
 	local nativeOffsetY = nativeY * screenScale / nativeScale
+	-- Read our height before moving the protected frame: its layout can reflow us inside SetPoint.
+	local stackHeight = host:GetHeight() or 1
 	ObjectiveTrackerFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", nativeX, nativeOffsetY)
-	releasedNativeAnchor = nil
-	stackedHeight, stackedReserve = host:GetHeight() or 1, headerReserve
+	releasedNativeAnchor, releasedNativeProbe = nil, false
+	stackedHeight, stackedReserve = stackHeight, headerReserve
 	appliedNativeAnchor = {
 		point = "TOPLEFT",
 		relativeTo = UIParent,
@@ -897,10 +916,10 @@ probe:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", 0, 0)
 probe:SetPoint("TOPRIGHT", ObjectiveTrackerFrame, "TOPLEFT", 0, 0)
 probe:SetScript("OnSizeChanged", function()
 	local point, relativeTo, relativePoint, x, y = ObjectiveTrackerFrame:GetPoint()
-	if
-		not IsAppliedNativeAnchor(point, relativeTo, relativePoint, x, y)
-		and not (attached and SameAnchor(releasedNativeAnchor, point, relativeTo, relativePoint, x, y))
-	then
+	local released = attached and SameAnchor(releasedNativeAnchor, point, relativeTo, relativePoint, x, y)
+	if released and releasedNativeProbe then
+		releasedNativeProbe = false
+	elseif not IsAppliedNativeAnchor(point, relativeTo, relativePoint, x, y) and not released then
 		host:MarkDirty()
 	end
 end)
