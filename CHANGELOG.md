@@ -12,6 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.21.6] - 2026-10-21
+
+- **The in-combat tracker keeps up with new objectives.** In combat the game's own tracker cannot be moved, so the Forever column fits itself into the height it was given when the fight began. A quest accepted or an objective completed mid-fight could then be cut off until combat ended, and a collapsed native header left an empty gap at the top of the column. The column now reserves header room only while the header is shown, grows to fit a section that gained lines, and keeps that taller height for the rest of the fight. Found in the suite's own review of the shared tracker host.
+
 ## [1.21.5] - 2026-10-20
 
 - **Lock the tracker where you put it.** Detach the Forever column, drag it where you want it, then tick *Settings*, *Tracker*, *Lock the tracker*: the grip stops moving the column and hovering it says the tracker is locked instead of offering to move it. It is off by default, it only ever suppresses our own drag handler, so turning it on or off in combat cannot taint or move anything, and an existing character's settings gain the switch without losing their place. The grip and its lock also moved into their own file, which keeps the shared tracker host inside the project's file-size rule. Thanks to Alex21xx for the request.
