@@ -191,6 +191,7 @@ local function scenario(anchor, scale, uiScale, userScale)
 	}, { __index = _G })
 	env._G = env
 	setfenv(assert(loadfile("UI/TrackerLock.lua")), env)("Test", ns)
+	setfenv(assert(loadfile("UI/TrackerOrder.lua")), env)("Test", ns) -- the section order, loaded before the host
 	setfenv(assert(loadfile(os.getenv("TRACKER_HOST_SOURCE") or "UI/TrackerHost.lua")), env)("Test", ns)
 	local host = frames[4]
 	local module = frame()

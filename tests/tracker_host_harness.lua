@@ -326,6 +326,7 @@ function harness.new(options)
 	function ctx.loadHost(namespace, path)
 		path = path or "UI/TrackerHost.lua"
 		setfenv(assert(loadfile("UI/TrackerLock.lua")), env)("Test", namespace) -- the grip, before the host
+		setfenv(assert(loadfile("UI/TrackerOrder.lua")), env)("Test", namespace) -- the section order
 		setfenv(assert(loadfile(path)), env)("Test", namespace)
 	end
 	function ctx.module(order)
