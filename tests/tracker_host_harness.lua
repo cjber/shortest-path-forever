@@ -370,7 +370,8 @@ function harness.new(options)
 		m.uiOrder, m.ContentsFrame, m.lineTemplate = order, frame(), "Line"
 		m.contentHeight = 80
 		function m:SetContainer(container)
-			self.parentContainer = container
+			-- Blizzard's template method registers modules with the native tracker manager.
+			env.ObjectiveTrackerManager:SetModuleContainer(self, container)
 		end
 		function m:Update(available)
 			self.available, self.updates = available, (self.updates or 0) + 1
