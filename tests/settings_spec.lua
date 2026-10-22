@@ -237,6 +237,7 @@ local groups = {
 		"minimapPinScale",
 	},
 	Transport = { "mapRoutes", "otherFaction", "tracker", "share" },
+	["Travel journal"] = { "stats", "statsShare" },
 	Guidance = {
 		"trackerAttached",
 		"trackerLocked",
@@ -269,10 +270,10 @@ local groups = {
 		"whatsNew",
 	},
 }
-local order = { "Map marks", "Transport", "Guidance", "Alerts", "Interface" }
+local order = { "Map marks", "Transport", "Travel journal", "Guidance", "Alerts", "Interface" }
 
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
-assert(#rows == 42, #rows)
+assert(#rows == 44, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer

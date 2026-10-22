@@ -44,6 +44,7 @@ Transport\Observer.lua
 Transport\Sync.lua
 UI\Map.xml
 Transport\Taxi.lua
+Core\Progress.lua
 Transport\Teleports.lua
 UI\Art.lua
 UI\Report.lua

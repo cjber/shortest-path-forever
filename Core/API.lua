@@ -206,6 +206,9 @@ end
 ---@param point SPFPoint?
 ---@param reason? "arrived"|"cleared" -- why a nil point ended the journey
 function ns.JourneyChanged(point, reason)
+	if ns.ProgressJourneyChanged then
+		ns.ProgressJourneyChanged(point, reason)
+	end
 	if not SamePlace(point, guided) then
 		Notify(not point and "ended" or guided and "changed" or "started")
 	end
