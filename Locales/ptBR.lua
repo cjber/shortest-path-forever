@@ -308,4 +308,5 @@ L["You are near the new flight master %s. Discover it before flying."] =
 L["Remind me about new flight masters"] = "Remind me about new flight masters" -- mt
 L["Warns when a journey needs you to discover a flight master, and again when you are close."] =
 	"Warns when a journey needs you to discover a flight master, and again when you are close." -- mt
-L["A new flight master is hard to miss."] = "É difícil não notar um novo mestre de voo." -- mt
+L["A quest item in your bags clicks normally while the tracker is loaded."] =
+	"Um item de missão nas suas bolsas é clicado normalmente enquanto o rastreador está carregado." -- mt

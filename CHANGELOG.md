@@ -14,6 +14,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 Nothing yet.
 
+## [1.21.10] - 2026-10-22
+
+- **A quest item in your bags clicks normally while the tracker is loaded.** Our tracker sections used to be handed to the game's own tracker manager when they were registered, which marked the bag item click path insecure, so a click on an item in your bags could be turned into a blocked action while the Forever column was up. Each addon now parents its own sections and never calls the native manager, so the click path stays secure. This is the same fix SkillUp Forever shipped in 0.18.12, now in the shared tracker host.
+
 ## [1.21.9] - 2026-10-21
 
 - **A new flight master is hard to miss.** When a journey needs you to discover one, the tracker names it and the step, a raid warning and taskbar flash announce the plan, and the warning repeats as you approach. Turn off *Remind me about new flight masters* to keep the tracker note without the banners. Thanks to cjber for the idea.
