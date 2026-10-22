@@ -1,5 +1,6 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
+local L = ns.L
 
 -- Per-character travel journal. Distance is an estimate from same-map position samples while walking; map changes,
 -- secret positions, taxi flights, recognized rides and implausible jumps reset the baseline.
@@ -85,7 +86,7 @@ local function Milestone(key, value, thresholds)
 		local marker = key .. ":" .. threshold
 		if value >= threshold and not localStats.milestones[marker] then
 			localStats.milestones[marker] = GetServerTime()
-			ns.Print(string.format("Travel milestone reached: %s", marker))
+			ns.Print(string.format(L["Travel milestone reached: %s"], marker))
 		end
 	end
 end
@@ -183,11 +184,8 @@ local function Record(key, amount)
 end
 
 local function Position()
-	local x, y, _, map = UnitPosition("player")
-	if not (canaccessvalue(x) and canaccessvalue(y) and canaccessvalue(map)) then
-		return nil
-	end
-	if type(x) ~= "number" or type(y) ~= "number" or type(map) ~= "number" then
+	local x, y, _, map = ns.JourneyPosition()
+	if not x then
 		return nil
 	end
 	return x, y, map

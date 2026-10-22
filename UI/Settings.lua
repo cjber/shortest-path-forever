@@ -587,12 +587,12 @@ ns.Init(function()
 		elseif message == "stats" then
 			local stats = ns.TravelStats()
 			if not stats then
-				ns.Print("Travel stats are not ready yet.")
+				ns.Print(L["Travel stats are not ready yet."])
 				return
 			end
 			ns.Print(
 				string.format(
-					"Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs.",
+					L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs."],
 					stats.walkedYards,
 					stats.routesCompleted,
 					stats.transportsUsed,
@@ -612,7 +612,7 @@ ns.Init(function()
 			}
 			local key = keys[metric]
 			if not key then
-				ns.Print("Use /path leaderboard routes, distance, transports, flights or portals.")
+				ns.Print(L["Use /path leaderboard routes, distance, transports, flights or portals."])
 				return
 			end
 			for index, rank in ipairs(ns.TravelLeaderboard(key)) do
@@ -622,7 +622,7 @@ ns.Init(function()
 				local value = rank.value
 				local formatted = key == "walkedYards" and string.format("~%s", ns.FormatDistance(value))
 					or tostring(value)
-				ns.Print(string.format("%d. %s — %s", index, rank.name, formatted))
+				ns.Print(string.format(L["%d. %s — %s"], index, rank.name, formatted))
 			end
 			return
 		elseif message == "report" then

@@ -18,6 +18,9 @@ ns = {
 }
 local now, x, y, map, moving, taxi = 0, 0, 0, 1, true, false
 local frame
+ns.JourneyPosition = function()
+	return x, y, nil, map
+end
 local env = setmetatable({
 	GetTime = function()
 		return now
