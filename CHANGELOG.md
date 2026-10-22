@@ -14,6 +14,12 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 Nothing yet.
 
+## [1.22.0] - 2026-10-22
+
+- **Every character keeps a travel journal.** While you walk, the addon samples your position on the same map and adds the distance to a running total for the character you are on, next to the journeys it completed and the transports, flights and portals it used. When you pass a milestone a line in chat says so. Recording is on by default: *Settings*, *Travel journal*, *Record travel stats* turns it off, and `/path stats` prints the totals for this character at any time.
+
+- **Travel stats can be shared with your guild and groups, and the journal stays local when they are not.** *Share travel stats with guild and groups* is on by default: the addon sends and receives travel snapshots over the guild, party, raid and instance addon channels, and `/path leaderboard routes`, `distance`, `transports`, `flights` or `portals` lists your own record beside the figures other players report. Shared records are player-reported and not verified. Turn the option off to keep every record on this character only; nothing you already recorded is lost.
+
 ## [1.21.10] - 2026-10-22
 
 - **A quest item in your bags clicks normally while the tracker is loaded.** Our tracker sections used to be handed to the game's own tracker manager when they were registered, which marked the bag item click path insecure, so a click on an item in your bags could be turned into a blocked action while the Forever column was up. Each addon now parents its own sections and never calls the native manager, so the click path stays secure. This is the same fix SkillUp Forever shipped in 0.18.12, now in the shared tracker host.
