@@ -239,6 +239,10 @@ local function OnAnimFinished(block)
 end
 
 local Module = {}
+function Module:SetContainer(container)
+	self.parentContainer = container
+	self:SetParent(container)
+end
 function Module:AcquireFrame(template)
 	local frame, isNew = Acquire(self, template)
 	frame:SetParent(self.ContentsFrame)
