@@ -17,6 +17,9 @@
 ---@field charDB SPFCharacterDatabase
 ---@field Defaults table<string, boolean|number>
 ---@field NearbyServices SPFNearbyServices
+---@field ProgressJourneyChanged? fun(point: SPFPoint?, reason?: "arrived"|"cleared")
+---@field TravelStats fun(): SPFProgressData?
+---@field TravelLeaderboard fun(metric: string?): SPFProgressRank[]
 
 ---@alias SPFMode 'walk'|'flight'|'boat'|'zeppelin'|'lift'|'tram'|'portal'|'passage'|'teleport'
 ---@alias SPFKind 'start'|'goal'|'dock'|'taxi'|'portal'|'teleport'
@@ -165,6 +168,8 @@
 ---@field teleports? boolean
 ---@field hearthMinimumSavings? number -- seconds the Hearthstone must save over the best non-hearth plan
 ---@field share? boolean
+---@field stats? boolean -- collect per-character travel totals
+---@field statsShare? boolean -- exchange travel snapshots over supported addon channels
 ---@field guideStops? boolean
 ---@field compass? boolean
 ---@field mapPinScale? number
@@ -191,6 +196,7 @@
 ---@field trace? (number|string)[][]
 ---@field taxiLog? table<string, {seen: number, showsNodes: boolean, nodes: string[]}>
 ---@class SPFCharacterDatabase
+---@field progress? SPFProgressData
 ---@field taxi table<number, boolean>
 ---@field taxiNames? table<number, string> -- flight points by the name a flight map gave them
 ---@field taxiVersion number
@@ -198,6 +204,23 @@
 ---@field guideWaypoint? {uiMapID: number, x: number, y: number}
 ---@field journey? SPFKeptJourney -- the player's own journey, kept across a reload (Resume.lua)
 ---@field bind? SPFBindPoint
+---@class SPFProgressData
+---@field walkedYards number
+---@field routesCompleted number
+---@field transportsUsed number
+---@field flightsTaken number
+---@field portalsUsed number
+---@field milestones table<string, number>
+---@field peers table<string, table<string, SPFSharedPeer>> addon ID → sender identity → metric/subject records
+---@class SPFSharedPeer
+---@field [string] table<string, SPFSharedMetric>
+---@class SPFSharedMetric
+---@field value number
+---@field eventUnix number
+---@class SPFProgressRank
+---@field name string
+---@field localRecord boolean
+---@field value number
 -- A journey's goal as Resume.lua keeps it, with the GetServerTime() it was planned.
 ---@class SPFKeptJourney
 ---@field map number

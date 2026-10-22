@@ -186,6 +186,20 @@ ns.Init(function()
 		L["Sends and receives sighting times over guild, party and at the dock. No chat messages are shown."]
 	)
 
+	Page(L["Travel journal"])
+	Checkbox(
+		"stats",
+		L["Record travel stats"],
+		L["Keeps estimated walking distance, completed journeys and observed transport use for this character."]
+	)
+	Checkbox(
+		"statsShare",
+		L["Share travel stats with guild and groups"],
+		L["On by default. Sends and receives travel-stat snapshots over guild, party, raid and instance addon channels."]
+			.. " "
+			.. L["Turn this off to keep stats on this character only. Shared records are player-reported and not verified."]
+	)
+
 	-- Guidance: how a journey is planned and led.
 	Page(L["Guidance"])
 	local host = ns.TrackerHost
@@ -569,6 +583,47 @@ ns.Init(function()
 			return
 		elseif message == "perf" then
 			Perf()
+			return
+		elseif message == "stats" then
+			local stats = ns.TravelStats()
+			if not stats then
+				ns.Print(L["Travel stats are not ready yet."])
+				return
+			end
+			ns.Print(
+				string.format(
+					L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs."],
+					stats.walkedYards,
+					stats.routesCompleted,
+					stats.transportsUsed,
+					stats.flightsTaken,
+					stats.portalsUsed
+				)
+			)
+			return
+		elseif message:match("^leaderboard") then
+			local metric = message:match("^leaderboard%s+(%S+)") or "routes"
+			local keys = {
+				routes = "routesCompleted",
+				distance = "walkedYards",
+				transports = "transportsUsed",
+				flights = "flightsTaken",
+				portals = "portalsUsed",
+			}
+			local key = keys[metric]
+			if not key then
+				ns.Print(L["Use /path leaderboard routes, distance, transports, flights or portals."])
+				return
+			end
+			for index, rank in ipairs(ns.TravelLeaderboard(key)) do
+				if index > 5 then
+					break
+				end
+				local value = rank.value
+				local formatted = key == "walkedYards" and string.format("~%s", ns.FormatDistance(value))
+					or tostring(value)
+				ns.Print(string.format(L["%d. %s — %s"], index, rank.name, formatted))
+			end
 			return
 		elseif message == "report" then
 			-- The lines can fail in the very state being reported: the header and caught errors still show.
