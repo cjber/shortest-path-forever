@@ -21,6 +21,11 @@ local WIDTH, HEIGHT = 460, 380
 ---@field Text fun(lines: string[]): string the whole report around the addon's `lines`, at most 2000 characters
 ---@field Show fun(text: string) show `text` in the report window, selected for copying
 ---@field Percent fun(value?: number): string a map coordinate as the map shows it
+---@field Encode fun(value: string): string percent-encode a URL component
+---@field Repo fun(): string the owner/repo from X-Website, or an empty string
+---@field Issue fun(kind: string, title: string, details: string, lines: string[]): string the new-issue URL
+---@field Body fun(kind: string, title: string, details: string, lines: string[]): string the markdown issue body
+---@field Compose fun(kind?: string) show the bug or feature request composer
 local Report = {}
 ns.Report = Report
 
@@ -83,20 +88,90 @@ local function Header()
 	return lines
 end
 
--- The errors ns.SafeCall caught this session, newest first.
+-- BugGrabber exposes its error database when installed; keep just current-session messages and stack frames.
+---@class ReportExternalError
+---@field message string
+---@field count integer
+---@field stack string?
+-- Its `GetDB` API is also what BugSack displays. The built-in ScriptErrors frame has no readable history API.
+---@return ReportExternalError[]?
+local function BugGrabberErrors()
+	local grabber = _G["BugGrabber"]
+	if type(grabber) ~= "table" or type(grabber.GetDB) ~= "function" then
+		return nil
+	end
+	local ok, lines = pcall(function()
+		local database = grabber:GetDB()
+		if type(database) ~= "table" then
+			return {}
+		end
+		local session = type(grabber.GetSessionId) == "function" and grabber:GetSessionId() or nil
+		---@type ReportExternalError[]
+		local result = {}
+		for index = #database, 1, -1 do
+			local entry = database[index]
+			if
+				type(entry) == "table"
+				and type(entry.message) == "string"
+				and (session == nil or session == -1 or entry.session == session)
+			then
+				local stack = {}
+				for line in (type(entry.stack) == "string" and entry.stack or ""):gmatch("[^\n]+") do
+					stack[#stack + 1] = ns.CutText(line, 100)
+					if #stack == 1 then
+						break
+					end
+				end
+				result[#result + 1] = {
+					message = ns.CutText(entry.message, 140),
+					count = type(entry.counter) == "number" and entry.counter or 1,
+					stack = stack[1],
+				}
+				if #result == 2 then
+					break
+				end
+			end
+		end
+		return result
+	end)
+	return ok and lines or nil
+end
+
+-- The errors ns.SafeCall caught this session, newest first, plus recent runtime errors from BugGrabber when present.
 ---@return string[]
 local function Errors()
 	local caught = ns.CaughtErrors()
-	if not caught[1] then
-		return { "Errors: none caught" }
-	end
-	local lines = { ("Errors (%d):"):format(#caught) }
-	for index = #caught, 1, -1 do
-		local entry = caught[index]
-		lines[#lines + 1] = ("- [%s] x%d %s"):format(entry.label, entry.count, entry.message)
-		for line in entry.stack:gmatch("[^\n]+") do
-			lines[#lines + 1] = "    " .. line
+	local bugGrabber = BugGrabberErrors()
+	local lines = {}
+	if bugGrabber and bugGrabber[1] then
+		lines[#lines + 1] = "Recent Lua errors (BugGrabber):"
+		local caughtMessages = {}
+		for _, entry in ipairs(caught) do
+			caughtMessages[entry.message] = true
 		end
+		for _, entry in ipairs(bugGrabber) do
+			if not caughtMessages[entry.message] then
+				lines[#lines + 1] = ("- x%d %s"):format(entry.count, entry.message)
+				if entry.stack then
+					lines[#lines + 1] = "    " .. entry.stack
+				end
+			end
+		end
+	end
+	if caught[1] then
+		lines[#lines + 1] = ("Errors (%d):"):format(#caught)
+		for index = #caught, 1, -1 do
+			local entry = caught[index]
+			lines[#lines + 1] = ("- [%s] x%d %s"):format(entry.label, entry.count, entry.message)
+			for line in entry.stack:gmatch("[^\n]+") do
+				lines[#lines + 1] = "    " .. line
+			end
+		end
+	end
+	if #lines == 0 then
+		return {
+			bugGrabber == nil and "Errors: none caught; BugGrabber is not loaded" or "Errors: none caught this session",
+		}
 	end
 	return lines
 end
@@ -218,4 +293,291 @@ function Report.Show(text)
 	editBox:SetText(text)
 	frame:Show()
 	Select(editBox)
+end
+
+-- Encode a value for a GitHub issue URL. The client is asked to open the link in a browser.
+---@param value string
+---@return string
+function Report.Encode(value)
+	return (value:gsub("([^%w%-_%.~])", function(character)
+		return ("%%%02X"):format(character:byte())
+	end))
+end
+
+-- Read the repo from addon metadata so this report file can move between Forever addons.
+---@return string
+function Report.Repo()
+	local website = C_AddOns.GetAddOnMetadata(addonName, "X-Website") or ""
+	return (website:gsub("^https://github.com/", ""):gsub("/+$", ""))
+end
+
+-- The issue body contains the player's words first, then the existing system report.
+---@param kind string
+---@param title string
+---@param details string
+---@param lines string[]
+---@return string
+function Report.Body(kind, title, details, lines)
+	local _ = kind .. title -- The signature keeps the composed fields explicit at call sites.
+	local detailText = ns.CutText(details, 1000)
+	if detailText == "" then
+		detailText = "-"
+	end
+	local system = ns.CutText(Report.Text(lines), 1200)
+	return "### What happened, or what you would like\n\n" .. detailText .. "\n\n### System information\n\n" .. system
+end
+
+-- Build the ready-made new-issue URL, keeping player details ahead of system information.
+---@param kind string
+---@param title string
+---@param details string
+---@param lines string[]
+---@return string
+function Report.Issue(kind, title, details, lines)
+	local repo = Report.Repo()
+	if repo == "" then
+		return ""
+	end
+	local label = kind == "feature" and "enhancement" or "bug"
+	local safeTitle = ns.CutText(title, 300)
+	local detailText = ns.CutText(details, 1000)
+	local body = Report.Body(kind, safeTitle, detailText, lines)
+	local url = ("https://github.com/%s/issues/new?template=report.md&title=%s&body=%s&labels=%s"):format(
+		repo,
+		Report.Encode(safeTitle),
+		Report.Encode(body),
+		label
+	)
+	if #url > 7000 then
+		body = "### What happened, or what you would like\n\n" .. detailText
+		if detailText == "" then
+			body = "### What happened, or what you would like\n\n-"
+		end
+		body = body .. "\n\nSystem information: copy it from Copy report."
+		url = ("https://github.com/%s/issues/new?template=report.md&title=%s&body=%s&labels=%s"):format(
+			repo,
+			Report.Encode(safeTitle),
+			Report.Encode(body),
+			label
+		)
+		if #url > 7000 then
+			safeTitle = ns.CutText(safeTitle, 120)
+			detailText = ns.CutText(detailText, 350)
+			body = "### What happened, or what you would like\n\n"
+				.. (detailText ~= "" and detailText or "-")
+				.. "\n\nSystem information: copy it from Copy report."
+			url = ("https://github.com/%s/issues/new?template=report.md&title=%s&body=%s&labels=%s"):format(
+				repo,
+				Report.Encode(safeTitle),
+				Report.Encode(body),
+				label
+			)
+		end
+	end
+	return url
+end
+
+-- Keep the composer usable if the addon's own report lines fail in the state being reported.
+---@return string[]
+local function IssueLines()
+	local ok, lines = ns.SafeCall("report lines", ns.ReportLines)
+	return ok and lines or { "Report lines failed: " .. tostring(lines) }
+end
+
+---@class SPFIssueWindow : SPFReportWindow
+---@field titleBox EditBox
+---@field detailsBox EditBox
+---@field outputBox EditBox
+---@field hint FontString
+---@field kind string
+---@field bugButton Button
+---@field featureButton Button
+---@field copyLinkButton Button
+---@field copyReportButton Button
+
+---@type SPFIssueWindow?
+local issueWindow
+---@type EditBox
+local issueTitle, issueDetails, issueOutput
+---@type string
+local issueShown = ""
+---@type string
+local issueKind = "bug"
+
+---@param parent Frame
+---@param text string
+---@param point string
+---@param relative Frame|string
+---@param relativePoint string
+---@param x number
+---@param y number
+---@return FontString
+local function Label(parent, text, point, relative, relativePoint, x, y)
+	local label = parent:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+	label:SetPoint(point, relative, relativePoint, x, y)
+	label:SetJustifyH("LEFT")
+	label:SetText(text)
+	return label
+end
+
+---@param edit EditBox
+---@param text string
+local function SetSelected(edit, text)
+	issueShown = text
+	edit:SetText(text)
+	Select(edit)
+end
+
+---@param kind string
+---@param lines string[]
+local function RefreshIssue(kind, lines)
+	issueKind = kind
+	if issueWindow then
+		issueWindow.kind = kind
+		issueWindow.bugButton:SetButtonState(kind == "feature" and "NORMAL" or "PUSHED", true)
+		issueWindow.featureButton:SetButtonState(kind == "feature" and "PUSHED" or "NORMAL", true)
+	end
+	local title = issueTitle:GetText() or ""
+	issueShown = Report.Issue(kind, title, issueDetails:GetText() or "", lines)
+	issueOutput:SetText(issueShown)
+end
+
+---@param kind string
+local function SetIssueKind(kind)
+	local prefix = kind == "feature" and L["Feature request: "] or L["Bug: "]
+	local current = issueTitle:GetText() or ""
+	local oldPrefix = issueKind == "feature" and L["Feature request: "] or L["Bug: "]
+	local plain = current:sub(1, #oldPrefix) == oldPrefix and current:sub(#oldPrefix + 1) or current
+	issueTitle:SetText(prefix .. plain)
+	RefreshIssue(kind, IssueLines())
+end
+
+---@return SPFIssueWindow
+local function IssueWindow()
+	if issueWindow then
+		return issueWindow
+	end
+	local name = addonName .. "Issue"
+	local frame = CreateFrame("Frame", name, UIParent, "PortraitFrameTemplate") --[[@as SPFIssueWindow]]
+	table.insert(UISpecialFrames, name)
+	frame:SetSize(520, 500)
+	frame:SetPoint("CENTER")
+	frame:SetFrameStrata("DIALOG")
+	frame:SetToplevel(true)
+	frame:SetClampedToScreen(true)
+	frame:SetMovable(true)
+	frame:EnableMouse(true)
+	frame:RegisterForDrag("LeftButton")
+	frame:SetScript("OnDragStart", frame.StartMoving)
+	frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
+	frame:SetTitle(L["Report a bug or request a feature"])
+	Art.Icon(frame:GetPortrait(), ICON, 62)
+
+	local hint = frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+	hint:SetPoint("TOPLEFT", 70, -30)
+	hint:SetPoint("RIGHT", -16, 0)
+	hint:SetJustifyH("LEFT")
+	hint:SetText(
+		L["The link is selected. Press Ctrl+C (Cmd+C on a Mac), then paste into a browser; GitHub opens a filled-in issue."]
+	)
+
+	local bug = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate") --[[@as Button]]
+	bug:SetSize(110, 24)
+	bug:SetPoint("TOPLEFT", 18, -66)
+	bug:SetText(L["Bug"])
+	local feature = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate") --[[@as Button]]
+	feature:SetSize(150, 24)
+	feature:SetPoint("LEFT", bug, "RIGHT", 8, 0)
+	feature:SetText(L["Feature request"])
+	Label(frame, L["Title"], "TOPLEFT", frame, "TOPLEFT", 18, -102)
+	local title = CreateFrame("EditBox", nil, frame, "InputBoxTemplate") --[[@as EditBox]]
+	title:SetAutoFocus(false)
+	title:SetSize(478, 24)
+	title:SetPoint("TOPLEFT", 20, -122)
+	title:SetMaxLetters(300)
+	title:SetText(L["Bug: "])
+	Label(frame, L["What happened, or what you would like"], "TOPLEFT", frame, "TOPLEFT", 18, -158)
+	local details = CreateFrame("EditBox", nil, frame, "InputBoxTemplate") --[[@as EditBox]]
+	details:SetMultiLine(true)
+	details:SetAutoFocus(false)
+	details:SetFontObject("ChatFontNormal")
+	details:SetSize(470, 72)
+	details:SetPoint("TOPLEFT", 22, -178)
+	details:SetMaxLetters(1000)
+
+	local copyLink = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate") --[[@as Button]]
+	copyLink:SetSize(150, 24)
+	copyLink:SetPoint("TOPLEFT", 18, -260)
+	copyLink:SetText(L["Copy issue link"])
+	local copyReport = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate") --[[@as Button]]
+	copyReport:SetSize(140, 24)
+	copyReport:SetPoint("LEFT", copyLink, "RIGHT", 8, 0)
+	copyReport:SetText(L["Copy report"])
+	local inset = CreateFrame("Frame", nil, frame, "InsetFrameTemplate")
+	inset:SetPoint("TOPLEFT", 10, -294)
+	inset:SetPoint("BOTTOMRIGHT", -10, 10)
+	local scroll = CreateFrame("ScrollFrame", nil, inset, "ScrollFrameTemplate")
+	scroll:SetPoint("TOPLEFT", 8, -8)
+	scroll:SetPoint("BOTTOMRIGHT", -28, 8)
+	local output = CreateFrame("EditBox", nil, scroll)
+	output:SetMultiLine(true)
+	output:SetAutoFocus(false)
+	output:SetFontObject("ChatFontNormal")
+	output:SetWidth(520 - 66)
+	output:SetMaxLetters(0)
+	output:SetScript("OnTextChanged", function(self, userInput)
+		if userInput then
+			self:SetText(issueShown)
+			Select(self)
+		end
+	end)
+	output:SetScript("OnEditFocusGained", output.HighlightText)
+	output:SetScript("OnEscapePressed", function()
+		frame:Hide()
+	end)
+	bug:SetScript("OnClick", function()
+		SetIssueKind("bug")
+	end)
+	feature:SetScript("OnClick", function()
+		SetIssueKind("feature")
+	end)
+	copyLink:SetScript("OnClick", function()
+		hint:SetText(
+			L["The link is selected. Press Ctrl+C (Cmd+C on a Mac), then paste into a browser; GitHub opens a filled-in issue."]
+		)
+		RefreshIssue(issueKind, IssueLines())
+		Select(output)
+	end)
+	copyReport:SetScript("OnClick", function()
+		hint:SetText(
+			L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it into your bug report."]
+		)
+		SetSelected(output, Report.Body(issueKind, title:GetText() or "", details:GetText() or "", IssueLines()))
+	end)
+	title:SetScript("OnTextChanged", function()
+		RefreshIssue(issueKind, IssueLines())
+	end)
+	details:SetScript("OnTextChanged", function()
+		RefreshIssue(issueKind, IssueLines())
+	end)
+	scroll:SetScrollChild(output)
+	frame.titleBox, frame.detailsBox, frame.outputBox, frame.hint, frame.kind = title, details, output, hint, "bug"
+	frame.bugButton, frame.featureButton = bug, feature
+	frame.copyLinkButton, frame.copyReportButton = copyLink, copyReport
+	issueTitle, issueDetails, issueOutput, issueWindow = title, details, output, frame
+	return frame
+end
+
+-- Show the issue composer, retaining title and details when its frame is reused.
+---@param kind? string
+function Report.Compose(kind)
+	local frame = IssueWindow()
+	kind = kind or "bug"
+	if kind ~= issueKind then
+		SetIssueKind(kind)
+	else
+		RefreshIssue(kind, IssueLines())
+	end
+	frame:Show()
+	Select(issueOutput)
 end
