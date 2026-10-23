@@ -416,4 +416,100 @@ assert(waypoint and supertracked, "showing directions resumes the native marker"
 ]]
 )
 
+-- Waypoint UI (github.com/Adaptvx/Waypoint-UI) drives the same native user waypoint. Each body below installs a fake
+-- public API and C_AddOns, then starts a journey through the map click like the cases above.
+local wpu = [[
+_G.C_AddOns = {
+ IsAddOnLoaded = function(name) return name == "WaypointUI" end,
+ GetAddOnMetadata = function() return "@project-version@" end,
+}
+local navTracking, navWaypoint = true, nil
+local newCalls, cleared = {}, 0
+local originalClear = C_Map.ClearUserWaypoint
+C_Map.ClearUserWaypoint = function(...) cleared = cleared + 1; return originalClear(...) end
+_G.WaypointUIAPI = { Navigation = {
+ IsUserNavigationTracked = function() return navTracking end,
+ GetUserNavigation = function() return navWaypoint end,
+ NewUserNavigation = function(opts) newCalls[#newCalls + 1] = opts; return true end,
+ ClearUserNavigation = function() return true end,
+}}
+local function wStart()
+ posX, posY, posMap = 0, 0, 1
+ mapID, cursorX, cursorY = 1414, 0.5, 0.452
+ assert(clickHandlers[1](map, "LeftButton"))
+ settle()
+end
+]]
+
+check("waypoint UI tracking: hands over, never writes the waypoint", "", wpu .. [[
+wStart()
+assert(waypointCalls == 0, "must not set the native waypoint Waypoint UI owns")
+assert(cleared == 0, "must not clear the native waypoint Waypoint UI owns")
+assert(#newCalls == 1, "hand the destination over exactly once")
+local title = select(1, ns.JourneyInfo())
+assert(newCalls[1].name == title, "the handover carries the guide's title: " .. tostring(newCalls[1].name))
+assert(newCalls[1].mapID == 1414, "the handover carries the destination map")
+assert(newCalls[1].x >= 0 and newCalls[1].x <= 1 and newCalls[1].y >= 0 and newCalls[1].y <= 1)
+assert(ns.IsJourneyGuided(), "the journey is still guided")
+ns.ClearJourney()
+assert(waypointCalls == 0 and cleared == 0, "ending the journey must not write Waypoint UI's waypoint")
+]])
+
+check("waypoint UI replacing the waypoint mid-journey ends nothing", "", wpu .. [[
+wStart()
+assert(ns.IsJourneyGuided())
+-- Waypoint UI moves its own waypoint and the client tells us it changed.
+navWaypoint = { uiMapID = 1414, position = { x = 0.2, y = 0.1 } }
+waypoint = UiMapPoint.CreateFromCoordinates(1414, 0.2, 0.1)
+fireEvent("USER_WAYPOINT_UPDATED")
+assert(ns.IsJourneyGuided(), "Waypoint UI's own write must not end the journey")
+assert(cleared == 0, "never clear Waypoint UI's waypoint")
+assert(not ns.charDB.guideWaypoint, "no ownership record left behind")
+ns.ClearJourney()
+]])
+
+check(
+	"waypoint UI absent: the native waypoint is still ours",
+	"",
+	[[
+-- Earlier cases leave their fake in the shared global table; absent means both are gone.
+_G.WaypointUIAPI, _G.C_AddOns = nil, nil
+start()
+assert(waypoint and supertracked and waypointCalls > 0, "absent Waypoint UI: we write and track the waypoint")
+assert(ns.IsJourneyGuided())
+record() ns.ClearJourney()
+assert(not waypoint and not supertracked and not ns.charDB.guideWaypoint)
+]]
+)
+
+check("waypoint UI missing NewUserNavigation is ignored", "", wpu .. [[
+_G.WaypointUIAPI.Navigation.NewUserNavigation = nil
+wStart()
+assert(waypointCalls == 0 and cleared == 0, "a missing member must not fall back to writing the waypoint")
+assert(ns.IsJourneyGuided(), "guidance continues")
+ns.ClearJourney()
+]])
+
+check("waypoint UI throwing NewUserNavigation is contained", "", wpu .. [[
+_G.WaypointUIAPI.Navigation.NewUserNavigation = function() error("renamed member") end
+wStart()
+assert(ns.IsJourneyGuided(), "guidance continues when the handover fails")
+assert(waypointCalls == 0 and cleared == 0, "never falls back to writing the waypoint")
+-- ns.SafeCall reports the contained failure to the error report and the game's handler; drop that one handled report
+-- so this check's own bookkeeping matches the other cases.
+errors = {}
+ns.ClearJourney()
+]])
+
+check("a player-made waypoint change ends guidance with Waypoint UI loaded", "", wpu .. [[
+navTracking = false
+start()
+assert(waypoint and waypointCalls > 0, "Waypoint UI loaded but not tracking: we own the waypoint")
+local replacement = UiMapPoint.CreateFromCoordinates(1414, 0.2, 0.1)
+C_Map.SetUserWaypoint(replacement)
+assert(not ns.IsJourneyGuided(), "a player-made waypoint change still ends guidance")
+assert(not ns.charDB.guideWaypoint)
+ns.ClearJourney()
+]])
+
 assert(#failures == 0, table.concat(failures, "\n"))

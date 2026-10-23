@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **With Waypoint UI installed, the two addons stop clearing each other's pin.** Waypoint UI drives the same native user waypoint Shortest Path borrows to steer, so whichever addon refreshed second erased the other's marker. When Waypoint UI is tracking a navigation, Shortest Path now leaves that marker to it and hands its destination over through Waypoint UI's own API, while the arrow, compass, tracker and map drawing keep guiding as before (#271).
+
 ## [1.22.4] - 2026-10-23
 
 - **The travel journal is off until you ask for it.** *Record travel stats* and *Share travel stats with guild and groups* now both start off, so a fresh install records no distance, counts no journeys and sends nothing over the addon channels. Tick either box under *Settings*, *Travel journal* to start, and nothing you already recorded is lost (#269).
