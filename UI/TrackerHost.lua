@@ -720,6 +720,9 @@ end
 
 local function Layout()
 	queued = false
+	if Editing() then
+		return
+	end
 	local settings = ApplyAttachment()
 	Grip.Show(not attached)
 	if not attached then
@@ -851,9 +854,22 @@ end)
 -- An addon-owned probe spans from the screen's bottom left corner to the native frame's top left corner, so any move
 -- of the native frame resizes the probe and its OnSizeChanged reflows the column. Our own restack is skipped.
 local probe = CreateFrame("Frame", nil, UIParent)
-probe:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", 0, 0)
-probe:SetPoint("TOPRIGHT", ObjectiveTrackerFrame, "TOPLEFT", 0, 0)
+local probeEnabled = false
+local function SetProbeEnabled(enabled)
+	if probeEnabled == enabled then
+		return
+	end
+	probeEnabled = enabled
+	probe:ClearAllPoints()
+	if enabled then
+		probe:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", 0, 0)
+		probe:SetPoint("TOPRIGHT", ObjectiveTrackerFrame, "TOPLEFT", 0, 0)
+	end
+end
 probe:SetScript("OnSizeChanged", function()
+	if not probeEnabled then
+		return
+	end
 	local point, relativeTo, relativePoint, x, y = ObjectiveTrackerFrame:GetPoint()
 	local released = attached and SameAnchor(releasedNativeAnchor, point, relativeTo, relativePoint, x, y)
 	if released and releasedNativeProbe then
@@ -862,6 +878,7 @@ probe:SetScript("OnSizeChanged", function()
 		host:MarkDirty()
 	end
 end)
+SetProbeEnabled(not Editing())
 -- Collapsing "All Objectives" hides the shared sections too. Mark the host dirty on the click that flips it; the
 -- native collapse method itself stays unhooked and untouched, and the native header keeps its parent so its button
 -- resolves the native container normally.
@@ -874,10 +891,17 @@ end
 -- on those events instead of polling the native frame every frame.
 local function OnEditModeChanged()
 	HookEditMode()
-	if Editing() and attached then
-		-- Edit Mode drags the native frame itself, so it needs its own edge-of-screen clamp back.
-		RestoreNativeClamp()
+	local editing = Editing()
+	SetProbeEnabled(not editing)
+	if editing and attached then
+		-- Hand the native anchor and screen clamp back before Edit Mode moves the tracker.
+		if not InCombatLockdown() then
+			ReleaseNative()
+		end
 		host:Hide()
+		-- Hidden frames still participate in anchor dependencies; detach our column too.
+		host:ClearAllPoints()
+		host:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", 0, 0)
 	else
 		host:Show()
 	end

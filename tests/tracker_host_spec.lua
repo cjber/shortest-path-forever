@@ -64,6 +64,12 @@ t.editMode.active, t.editMode.shown = true, true
 t.eventRegistry:TriggerEvent("EditMode.Enter")
 check(host.shown == false, "private tracker hides while Edit Mode owns native slot")
 check(native.clamped == true, "Edit Mode gets the native frame's screen clamp back")
+check(probe.point == nil, "Edit Mode disconnects the native geometry probe")
+check(host.point[2] == parent, "hidden companion no longer depends on the native tracker's anchors")
+drain()
+check(native.point[1] == "TOPRIGHT", "queued layouts leave the native slot to Edit Mode")
+probe.scripts.OnSizeChanged(probe)
+check(t.pending() == 0, "a disconnected probe cannot queue a layout")
 -- CheckHideAndLockEditMode hides the manager without exiting it: active stays true and no EditMode.Exit runs.
 check(t.editMode.scripts.OnHide ~= nil, "private tracker follows the Edit Mode manager's own hide")
 t.editMode.shown = false
@@ -74,6 +80,7 @@ t.editMode.active, t.editMode.shown = false, false
 t.eventRegistry:TriggerEvent("EditMode.Exit")
 drain()
 check(host.shown == true, "private tracker returns after Edit Mode")
+check(probe.point[2] == native, "leaving Edit Mode reconnects the native geometry probe")
 check(native.clamped == false, "restacking after Edit Mode unclamps the native frame again")
 check(native.point[1] == "TOPLEFT" and native.point[2] == parent, "native objectives stay independently anchored")
 check(t.ns.TrackerHost.IsAttached(first) and not t.ns.TrackerHost.IsAttached(nil), "ownership lookup")
