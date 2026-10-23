@@ -9,6 +9,76 @@ ns.JourneyGuide = Guide
 
 local guide
 
+-- Waypoint UI (github.com/Adaptvx/Waypoint-UI) drives the same native user waypoint we borrow. It is detected at the
+-- point of use, because it may load after us. While it is tracking a navigation it owns the marker: we hand our
+-- destination over through its public API instead of writing the waypoint and clearing each other's pin.
+---@return table? navigation
+local function WaypointUINavigation()
+	local api = rawget(_G, "WaypointUIAPI")
+	local navigation = type(api) == "table" and api.Navigation
+	if type(navigation) ~= "table" or type(navigation.IsUserNavigationTracked) ~= "function" then
+		return nil
+	end
+	if C_AddOns and C_AddOns.IsAddOnLoaded and not C_AddOns.IsAddOnLoaded("WaypointUI") then
+		return nil
+	end
+	return navigation
+end
+
+-- Waypoint UI is tracking a navigation of its own, so it owns the native marker and we must not write it.
+---@param navigation table
+---@return boolean tracking
+local function WaypointUITracking(navigation)
+	local ok, tracking = ns.SafeCall("Waypoint UI tracking", navigation.IsUserNavigationTracked)
+	return ok and tracking == true
+end
+
+-- Waypoint UI holds the native waypoint right now, so a change to it is Waypoint UI's, not the player's.
+local function WaypointUIHolding()
+	local navigation = WaypointUINavigation()
+	if not navigation or type(navigation.GetUserNavigation) ~= "function" then
+		return false
+	end
+	local ok, waypoint = ns.SafeCall("Waypoint UI waypoint", navigation.GetUserNavigation)
+	return ok and waypoint ~= nil
+end
+
+-- The title the tracker and JourneyInfo use, so Waypoint UI names the destination the same way the guide does.
+---@param goal table?
+---@return string? title
+local function DestinationTitle(goal)
+	if not goal then
+		return nil
+	end
+	if goal.routeTitle then
+		return goal.routeTitle
+	end
+	local ok, label = pcall(ns.PlaceLabel, goal)
+	if ok and label then
+		return string.format(ns.L["Journey to %s"], label)
+	end
+	return goal.label
+end
+
+-- Hand our destination to Waypoint UI rather than writing the waypoint it is already tracking. Wrapped in ns.SafeCall
+-- so a renamed or absent member can never raise into the guide.
+---@param navigation table
+---@param title string?
+---@param uiMap number
+---@param x number
+---@param y number
+local function HandOverToWaypointUI(navigation, title, uiMap, x, y)
+	if type(navigation.NewUserNavigation) ~= "function" then
+		return
+	end
+	ns.SafeCall("Waypoint UI handover", navigation.NewUserNavigation, {
+		name = title,
+		mapID = uiMap,
+		x = x,
+		y = y,
+	})
+end
+
 local function RefreshTracker()
 	ns.journeyVersion = (ns.journeyVersion or 0) + 1
 	ns.RefreshTracker()
@@ -121,6 +191,10 @@ local function StopGuide()
 end
 
 local function OwnsWaypoint()
+	-- Waypoint UI holds the native waypoint while it navigates; a change to it is not the player taking over.
+	if WaypointUIHolding() then
+		return true
+	end
 	if not SameWaypoint(C_Map.GetUserWaypoint(), guide.expectedWaypoint) then
 		-- A manual replacement or removal ends guidance; never reclaim the player's waypoint.
 		StopGuide()
@@ -178,6 +252,8 @@ local function GuideWaypoint(point, fading)
 		guide.bend, guide.uiMap = { map = point.map, x = point.x, y = point.y }, uiMap
 		guide.fading = fading
 		local waypoint
+		local navigation = WaypointUINavigation()
+		local yielding = navigation ~= nil and WaypointUITracking(navigation)
 		-- The native waypoint has no per-pin alpha; near the goal, use the fading fallback instead of stacking icons.
 		if not fading and uiMap and C_Map.CanSetUserWaypointOnMap(uiMap) then
 			local projectedMap, position =
@@ -185,7 +261,16 @@ local function GuideWaypoint(point, fading)
 			if projectedMap == uiMap and position then
 				local x, y = position:GetXY()
 				if x >= 0 and x <= 1 and y >= 0 and y <= 1 then
-					waypoint = UiMapPoint.CreateFromVector2D(uiMap, position)
+					if yielding and navigation then
+						-- Waypoint UI owns the native marker: hand the bend over and never write the waypoint ourselves.
+						-- The second test narrows `navigation` to non-nil for LuaLS: `yielding` already implies it, and nil can
+						-- never reach here because a nil navigation makes it false.
+						HandOverToWaypointUI(navigation, guide.title, uiMap, x, y)
+						guide.waypoint, guide.expectedWaypoint = nil, nil
+						ns.charDB.guideWaypoint = nil
+					else
+						waypoint = UiMapPoint.CreateFromVector2D(uiMap, position)
+					end
 				end
 			end
 		end
@@ -230,6 +315,7 @@ function Guide.To(node, points, goal)
 	end
 	guide.points = points
 	guide.target = node
+	guide.title = DestinationTitle(goal)
 	local point = node.kind == "dock" and ns.DockPoint(node.id) or node
 	ns.PointGuideArrow(points or { point }, GuideWaypoint, node, goal)
 end
@@ -313,6 +399,10 @@ end
 function Guide.TrackingChanged(event)
 	RefreshWaypointPins()
 	if not guide or guide.writing then
+		return
+	end
+	if WaypointUIHolding() then
+		-- Waypoint UI's own write or tracking change: keep steering and never treat it as the player taking over.
 		return
 	end
 	if not OwnsWaypoint() then
