@@ -190,12 +190,12 @@ ns.Init(function()
 	Checkbox(
 		"stats",
 		L["Record travel stats"],
-		L["Keeps estimated walking distance, completed journeys and observed transport use for this character."]
+		L["Off by default. Keeps walking distance, completed journeys and observed transport use for this character."]
 	)
 	Checkbox(
 		"statsShare",
 		L["Share travel stats with guild and groups"],
-		L["On by default. Sends and receives travel-stat snapshots over guild, party, raid and instance addon channels."]
+		L["Sends and receives travel-stat snapshots over guild, party, raid and instance channels."]
 			.. " "
 			.. L["Turn this off to keep stats on this character only. Shared records are player-reported and not verified."]
 	)

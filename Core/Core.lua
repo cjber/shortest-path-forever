@@ -31,8 +31,9 @@ local DEFAULTS = {
 	teleports = true,
 	hearthMinimumSavings = 0,
 	share = true,
-	stats = true,
-	statsShare = true,
+	-- The travel journal records and shares nothing until the player asks for it (#269).
+	stats = false,
+	statsShare = false,
 	guideStops = true,
 	journeyTracker = true,
 	arrow = true,
