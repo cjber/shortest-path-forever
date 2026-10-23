@@ -12,7 +12,9 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
-Nothing yet.
+## [1.22.1] - 2026-10-23
+
+- **Data checked against Forever 1.60.1.70532.** Routes, transports, flight points, portals, teleports and zones are unchanged apart from the bundled data's build pin.
 
 ## [1.22.0] - 2026-10-22
 
