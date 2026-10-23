@@ -630,6 +630,13 @@ ns.Init(function()
 			local ok, lines = ns.SafeCall("report lines", ns.ReportLines)
 			ns.Report.Show(ns.Report.Text(ok and lines or { "Report lines failed: " .. tostring(lines) }))
 			return
+		elseif message == "issue" or message == "bug" or message == "feature" then
+			ns.Report.Compose(message == "feature" and "feature" or "bug")
+			return
+		elseif message == "help" then
+			ns.Print(L["/path report - show a report to copy into a bug report"])
+			ns.Print(L["/path issue - report a bug or request a feature with a ready-made GitHub issue link"])
+			return
 		elseif message == "debug" then
 			ns.db.debug = not ns.db.debug
 			ns.db.trace = ns.db.debug and {} or nil

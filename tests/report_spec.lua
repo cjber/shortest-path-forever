@@ -92,7 +92,11 @@ env.CreateFrame = function(kind, name, parent, template)
 	end
 	return widget
 end
-local metadata = { ShortestPathForever = { Version = "1.16.0" }, TomTom = { Version = "4.3.12" }, Questie = {} }
+local metadata = {
+	ShortestPathForever = { Version = "1.16.0", ["X-Website"] = "https://github.com/cjber/shortest-path-forever/" },
+	TomTom = { Version = "4.3.12" },
+	Questie = {},
+}
 local function AddonList()
 	local names = {}
 	for name in pairs(metadata) do
@@ -156,6 +160,39 @@ driver.load("UI/Art.lua")
 driver.load("UI/Report.lua")
 driver.load("Core/Report.lua")
 local API = env.ShortestPathForever.API
+
+equal(ns.Report.Encode("a b&#é~"), "a%20b%26%23%C3%A9~", "URL encoding")
+equal(ns.Report.Repo(), "cjber/shortest-path-forever", "repo from X-Website")
+metadata.ShortestPathForever["X-Website"] = nil
+equal(ns.Report.Repo(), "", "missing X-Website")
+metadata.ShortestPathForever["X-Website"] = "https://github.com/cjber/shortest-path-forever/"
+local issue = ns.Report.Issue("bug", "Bug: one & two", "details", { "system line" })
+has(issue, "template=report.md", "issue template")
+has(issue, "labels=bug", "bug label")
+has(issue, "title=Bug%3A%20one%20%26%20two", "encoded title")
+has(
+	ns.Report.Body("bug", "Bug: one", "details", { "system line" }),
+	"### System information",
+	"markdown system section"
+)
+equal(#ns.Report.Issue("bug", "Bug: long", ("x"):rep(4000), { "system line" }) < 7000, true, "long detail URL cap")
+local previousBugGrabber = _G.BugGrabber
+_G.BugGrabber = {
+	GetDB = function()
+		return {
+			{ message = "stale session error", stack = "Old.lua:4", session = 6, counter = 8 },
+			{ message = "direct Lua failure", stack = "Addon/Feature.lua:42", session = 7, counter = 2 },
+		}
+	end,
+	GetSessionId = function()
+		return 7
+	end,
+}
+local issueBody = ns.Report.Body("bug", "Bug: direct Lua failure", "it broke", {})
+has(issueBody, "direct Lua failure", "BugGrabber runtime error in issue body")
+has(issueBody, "Addon/Feature.lua:42", "BugGrabber trace in issue body")
+lacks(issueBody, "stale session error", "old BugGrabber errors are excluded")
+_G.BugGrabber = previousBugGrabber
 
 local function Report()
 	local ok, lines = ns.SafeCall("report lines", ns.ReportLines)
