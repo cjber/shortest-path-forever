@@ -170,4 +170,36 @@ moving, now, x = true, 6, 1014
 ns.tick()
 assert(ns.TravelStats().walkedYards == 7, "turning off local collection stops updates")
 
-print("progress_spec: local stats, conservative movement, milestones, sharing opt out and leaderboard ok")
+-- A fresh install: the saved variables hold no `stats` key, so the shipped default (off) applies. Nothing is
+-- recorded, no position is sampled and no snapshot is sent until the player turns the journal on (#269).
+local sent = 0
+env.C_ChatInfo.SendAddonMessage = function()
+	sent = sent + 1
+	return 0
+end
+ns.db = {}
+ns.charDB.progress = nil
+ns.SendTravelStats()
+assert(sent == 0, "a fresh install sends no snapshot")
+moving, now, x = true, 7, 1014
+ns.tick()
+now, x = 8, 1021
+ns.tick()
+assert(ns.TravelStats().walkedYards == 0, "a fresh install records no distance")
+taxi, now = true, 9
+ns.tick()
+taxi, now = false, 10
+ns.tick()
+assert(ns.TravelStats().flightsTaken == 0, "and no flights")
+ns.ProgressJourneyChanged(nil, "arrived")
+assert(ns.TravelStats().routesCompleted == 0, "and no completed journeys")
+assert(sent == 0, "and still nothing sent")
+-- A character who already had the journal on keeps it: the default only fills a key that was absent.
+ns.db.stats = true
+now, x = 11, 1021
+ns.tick()
+now, x = 12, 1028
+ns.tick()
+assert(ns.TravelStats().walkedYards == 7, "turning the journal on starts recording again")
+
+print("progress_spec: local stats, conservative movement, milestones, sharing opt out, defaults and leaderboard ok")

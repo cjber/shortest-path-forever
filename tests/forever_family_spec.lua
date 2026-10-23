@@ -1,6 +1,6 @@
 -- UI/ForeverFamily.lua is byte-identical in all five Forever addons, and so is this spec. A change to the module is
 -- made in Shortest Path Forever first, then copied unchanged to the other four with this spec and its new pin.
-local PINNED = "888db73062646cd0e1e129ebf96b3be8081fafbbc477954ccf2de89c8b1fa5fb"
+local PINNED = "3beb18e13af61d99bee0c680d6d66b4afd34a52e463de4a0f90f291b6c1aa2f3"
 local PATH = "UI/ForeverFamily.lua"
 
 local bit = require("bit")
@@ -168,8 +168,22 @@ end
 function Widget:SetFocus()
 	self.focused = true
 end
-function Widget:HighlightText()
+-- The client's EditBox:HighlightText([start, stop]) errors on a range outside its integer bounds, and it calls an
+-- OnEditFocusGained handler as handler(self, isUserInput), so handing SetScript the method itself lands the boolean
+-- in `start` (#269, UI/ForeverFamily.lua).
+function Widget:HighlightText(start, stop)
+	for _, value in ipairs({ start, stop }) do
+		if type(value) ~= "number" or value ~= value or value < -2147483648 or value > 2147483647 then
+			error(
+				"bad argument #2 to '?' (outside of expected range -2147483648 to 2147483647"
+					.. " - Usage: self:HighlightText([start, stop]))",
+				2
+			)
+		end
+	end
 	self.highlighted = true
+	-- rawget: the widget's metatable answers an unset key with a noop, so a plain read is not a number.
+	self.highlightCalls = (rawget(self, "highlightCalls") or 0) + 1
 end
 function Widget:Click()
 	self.scripts.OnClick(self)
@@ -360,6 +374,12 @@ check(window.portrait.texture == "Interface\\Icons\\INV_Misc_QuestionMark", "a m
 local edit = Children(window, "EditBox")[1]
 check(edit.text == "https://www.curseforge.com/wow/addons/tweaks-forever", "the address is in the box")
 check(edit.focused and edit.highlighted, "and selected for Ctrl+C")
+-- The client calls the handler as handler(self, isUserInput); the method itself in its place used to raise
+-- "bad argument #2 to '?' (outside of expected range ...)" from HighlightText.
+check(type(edit.scripts.OnEditFocusGained) == "function", "the box gains focus through a script")
+edit.highlighted, edit.highlightCalls = false, 0
+edit.scripts.OnEditFocusGained(edit, true)
+check(edit.highlighted and edit.highlightCalls == 1, "focus selects the address again, in range")
 edit:Type("x")
 check(
 	edit.text == "https://www.curseforge.com/wow/addons/tweaks-forever" and edit.highlighted,

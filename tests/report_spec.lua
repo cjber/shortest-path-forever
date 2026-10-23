@@ -59,8 +59,21 @@ local function Widget(kind, name, parent)
 	function methods:SetFocus()
 		focus = self
 	end
-	function methods:HighlightText()
+	-- The client's EditBox:HighlightText([start, stop]) errors on a range outside its integer bounds; an
+	-- OnEditFocusGained handler is called as handler(self, isUserInput), so handing SetScript the method itself
+	-- lands the boolean in `start` (UI/Report.lua:224, #269).
+	function methods:HighlightText(start, stop)
+		for _, value in ipairs({ start, stop }) do
+			if type(value) ~= "number" or value ~= value or value < -2147483648 or value > 2147483647 then
+				error(
+					"bad argument #2 to '?' (outside of expected range -2147483648 to 2147483647"
+						.. " - Usage: self:HighlightText([start, stop]))",
+					2
+				)
+			end
+		end
 		self.highlighted = self.text
+		self.highlightCalls = (self.highlightCalls or 0) + 1
 	end
 	function methods:GetPortrait()
 		self.portrait = self.portrait or Widget("Texture", nil, self)
@@ -80,13 +93,21 @@ local function Widget(kind, name, parent)
 end
 local driverFrame = env.CreateFrame
 env.UISpecialFrames = {}
+local editBoxes = {}
 env.CreateFrame = function(kind, name, parent, template)
-	if name ~= "ShortestPathForeverReport" and not (parent and parent.report) then
+	if
+		name ~= "ShortestPathForeverReport"
+		and name ~= "ShortestPathForeverIssue"
+		and not (parent and parent.report)
+	then
 		return driverFrame(kind, name, parent, template)
 	end
 	made = made + 1
 	local widget = Widget(kind, name, parent)
 	widget.report, widget.template = true, template
+	if kind == "EditBox" then
+		editBoxes[#editBoxes + 1] = widget
+	end
 	if name then
 		env[name] = widget
 	end
@@ -235,6 +256,26 @@ local before = made
 Report()
 equal(made, before, "the window is made once")
 equal(window:IsShown(), true, "shown again")
+
+-- Focusing the read-only report box selects the whole text the way the client calls the handler: handler(self,
+-- isUserInput). Handing SetScript the HighlightText method itself used to raise
+-- "bad argument #2 to '?' (outside of expected range ... Usage: self:HighlightText([start, stop]))" (#269).
+edit.highlighted, edit.highlightCalls = nil, 0
+equal(type(edit.scripts.OnEditFocusGained), "function", "the report box gains focus through a script")
+edit.scripts.OnEditFocusGained(edit, true)
+equal(edit.highlighted, text, "focus selects the whole report")
+equal(edit.highlightCalls, 1, "HighlightText ran once, in range")
+
+-- The issue composer's read-only address box gains focus the same way.
+ns.Report.Compose("bug")
+local composer = env.ShortestPathForeverIssue
+equal(composer ~= nil and composer:IsShown(), true, "the composer opens")
+local composerBox = editBoxes[#editBoxes]
+composerBox.highlighted, composerBox.highlightCalls = nil, 0
+equal(type(composerBox.scripts.OnEditFocusGained), "function", "the address box gains focus through a script")
+composerBox.scripts.OnEditFocusGained(composerBox, true)
+equal(composerBox.highlighted, composerBox:GetText(), "focus selects the whole address")
+equal(composerBox.highlightCalls, 1, "HighlightText ran once, in range")
 
 -- A journey the player planned: its goal, search and every step, the current one marked.
 driver.begin({ map = 1, x = 0, y = 0 }, { map = 1, x = 2000, y = 0 })

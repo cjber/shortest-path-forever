@@ -12,6 +12,12 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.22.4] - 2026-10-23
+
+- **The travel journal is off until you ask for it.** *Record travel stats* and *Share travel stats with guild and groups* now both start off, so a fresh install records no distance, counts no journeys and sends nothing over the addon channels. Tick either box under *Settings*, *Travel journal* to start, and nothing you already recorded is lost (#269).
+
+- **Focusing the read-only report or issue box selects its text without a Lua error.** Opening the copy box put the client's own `isUserInput` flag into `HighlightText`'s start argument, so it raised *bad argument #2 to '?' (outside of expected range -2147483648 to 2147483647)* and left the text unselected. The report window, the issue composer and the Forever addons link box now select the whole text the way the game asks (#269).
+
 ## [1.22.3] - 2026-10-23
 
 - **Report a bug or request a feature from the game.** `/path issue` (also `/path bug` and `/path feature`) opens a composer: write what went wrong, pick Bug or Feature request, and the window hands you a ready-made GitHub issue link, selected so Ctrl+C and a paste opens the new issue with your words and the addon's system report already filled in. Copy report still puts the same text in your hands for Discord.
