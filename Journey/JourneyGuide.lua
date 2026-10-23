@@ -261,8 +261,10 @@ local function GuideWaypoint(point, fading)
 			if projectedMap == uiMap and position then
 				local x, y = position:GetXY()
 				if x >= 0 and x <= 1 and y >= 0 and y <= 1 then
-					if yielding then
+					if yielding and navigation then
 						-- Waypoint UI owns the native marker: hand the bend over and never write the waypoint ourselves.
+						-- The second test narrows `navigation` to non-nil for LuaLS: `yielding` already implies it, and nil can
+						-- never reach here because a nil navigation makes it false.
 						HandOverToWaypointUI(navigation, guide.title, uiMap, x, y)
 						guide.waypoint, guide.expectedWaypoint = nil, nil
 						ns.charDB.guideWaypoint = nil
