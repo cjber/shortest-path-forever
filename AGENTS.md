@@ -125,7 +125,7 @@ before its `v*` tag, since the release publishes it as the notes.
 
 ## Shared tooling
 
-`tools/forever_tools/` vendors the Python tooling from cjber/forever-core's wow-forever-addon skill.
+`tools/forever_tools/` vendors the Python tooling from cjber/forever-core, https://github.com/cjber/forever-core/tree/main/.agents/skills/wow-forever-addon/tooling.
 `python3 tools/forever_tools/sync.py check` verifies it offline. Edit the producer and run
 `sync.py update --source <checkout>` to refresh it. `tools/data_report.py --base REV` reports keyed data changes.
 
