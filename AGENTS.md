@@ -85,7 +85,7 @@ before its `v*` tag, since the release publishes it as the notes.
 
 ## Standards
 
-- `wow-forever-addon` — https://github.com/cjber/skills/tree/c5071b8fcbca48aaa220027e68ff1110d7f1ca2f/wow-forever-addon (UI look,
+- `wow-forever-addon` — https://github.com/cjber/forever-core/tree/3fd1b7fe109e709c4952bb04622e94d05636585e/.agents/skills/wow-forever-addon (UI look,
   icon, README and store page, CI and release requirements shared by every WoW: Forever addon)
 
 ## Waivers
@@ -125,7 +125,7 @@ before its `v*` tag, since the release publishes it as the notes.
 
 ## Shared tooling
 
-`tools/forever_tools/` vendors the Python tooling from cjber/skills, `wow-forever-addon/tooling`.
+`tools/forever_tools/` vendors the Python tooling from cjber/forever-core, `.agents/skills/wow-forever-addon/tooling`.
 `python3 tools/forever_tools/sync.py check` verifies it offline. Edit the producer and run
 `sync.py update --source <checkout>` to refresh it. `tools/data_report.py --base REV` reports keyed data changes.
 

@@ -2,8 +2,8 @@
 """Verify, update and pin a vendored copy of forever_tools against its producer (stdlib only, offline by default).
 
     sync.py check                     # every file matches MANIFEST.json, and the copy is pinned
-    sync.py check --source ~/skills   # also match a producer checkout at the pinned revision
-    sync.py update --source ~/skills  # copy the producer's files; the only command that writes them
+    sync.py check --source ~/forever-core   # also match a producer checkout at the pinned revision
+    sync.py update --source ~/forever-core  # copy the producer's files; the only command that writes them
     sync.py pin <40-hex revision>     # record the producer commit the files came from
     sync.py manifest                  # in the producer: refresh the hashes after an edit
 
@@ -23,8 +23,8 @@ import sys
 from pathlib import Path
 
 PACKAGE = Path(__file__).resolve().parent
-PRODUCER_PATH = "wow-forever-addon/tooling/forever_tools"
-REPOSITORY = "https://github.com/cjber/skills"
+PRODUCER_PATH = ".agents/skills/wow-forever-addon/tooling/forever_tools"
+REPOSITORY = "https://github.com/cjber/forever-core"
 UNPINNED = "UNPINNED"
 MANIFEST = "MANIFEST.json"
 

@@ -16,3 +16,5 @@ ignore:
   - media/icon-400.png
   - stylua.toml
   - ruff.toml
+  - .agents
+  - .claude
