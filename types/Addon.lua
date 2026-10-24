@@ -20,6 +20,10 @@
 ---@field ProgressJourneyChanged? fun(point: SPFPoint?, reason?: "arrived"|"cleared")
 ---@field TravelStats fun(): SPFProgressData?
 ---@field TravelLeaderboard fun(metric: string?): SPFProgressRank[]
+---@field SafeCall fun(label: string, fn: function, ...: any): boolean, ... run fn as pcall does, keeping a failure for the report and passing it to the error handler (Core/SafeCall.lua)
+---@field RecordError fun(label: string, message: any, stack?: string)
+---@field CaughtErrors fun(): ForeverCaughtError[] this session's caught errors, oldest first, as copies
+---@field CutText fun(text: string, limit: integer): string text clipped to the limit on a character boundary
 
 ---@alias SPFMode 'walk'|'flight'|'boat'|'zeppelin'|'lift'|'tram'|'portal'|'passage'|'teleport'
 ---@alias SPFKind 'start'|'goal'|'dock'|'taxi'|'portal'|'teleport'

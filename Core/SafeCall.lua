@@ -1,23 +1,21 @@
----@class SPFNamespace
-local ns = select(2, ...)
+local _, ns = ...
 
--- Caught errors for the report window (cjber/adventure-guide-forever docs/report-window.md). ns.SafeCall runs a
--- callback as pcall does, keeps the last few errors with a short stack for /path report, and still hands each one to
--- the game's error handler, so BugSack and the default error frame see exactly what they saw before. Nothing here
--- knows about the rest of the addon: the file copies across the Forever addons as is.
+-- Caught errors for the report window. ns.SafeCall runs a callback as pcall does, keeps the last few errors with a
+-- short stack, and still hands each one to the game's error handler, so BugSack and the default error frame see
+-- exactly what they saw before. Nothing here knows about the rest of the addon.
 
 local MAX_ERRORS = 5
 local MAX_MESSAGE = 300
 local STACK_LINES = 4
 
----@class SPFCaughtError
+---@class ForeverCaughtError
 ---@field label string where it was caught, e.g. "route listener"
 ---@field message string the error, cut to 300 characters
 ---@field stack string up to four stack lines, outermost last
 ---@field count integer how many times this label and message were caught this session
 
 -- Oldest first; a repeat moves to the end with its count raised.
----@type SPFCaughtError[]
+---@type ForeverCaughtError[]
 local caught = {}
 
 ---@param text string
@@ -66,7 +64,7 @@ function ns.RecordError(label, message, stack)
 end
 
 -- The errors caught this session, oldest first, as copies.
----@return SPFCaughtError[]
+---@return ForeverCaughtError[]
 function ns.CaughtErrors()
 	local copies = {}
 	for index, entry in ipairs(caught) do
