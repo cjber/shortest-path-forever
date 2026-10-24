@@ -577,6 +577,9 @@ ns.Init(function()
 	SLASH_SHORTESTPATHFOREVER2 = "/shortestpath"
 	SlashCmdList.SHORTESTPATHFOREVER = function(message)
 		-- TomTom's /way line, which works whether or not /way itself is free.
+		if ns.Report and ns.Report.Command and ns.Report.Command(message) then
+			return
+		end
 		local way = message == "way" and "" or message:match("^way%s+(.*)$")
 		if way then
 			ns.Way(way)
@@ -624,14 +627,6 @@ ns.Init(function()
 					or tostring(value)
 				ns.Print(string.format(L["%d. %s — %s"], index, rank.name, formatted))
 			end
-			return
-		elseif message == "report" then
-			-- The lines can fail in the very state being reported: the header and caught errors still show.
-			local ok, lines = ns.SafeCall("report lines", ns.ReportLines)
-			ns.Report.Show(ns.Report.Text(ok and lines or { "Report lines failed: " .. tostring(lines) }))
-			return
-		elseif message == "issue" or message == "bug" or message == "feature" then
-			ns.Report.Compose(message == "feature" and "feature" or "bug")
 			return
 		elseif message == "help" then
 			ns.Print(L["/path report - show a report to copy into a bug report"])
