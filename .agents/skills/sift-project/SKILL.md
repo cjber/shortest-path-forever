@@ -54,7 +54,7 @@ On-demand tools for audits. Output is candidates, never verdicts.
 | Large files | `python3 .sift/gate.py --rule file-size-no-growth --all` | lists files over 1000 lines; none remain, so any listed file is a regression |
 | Duplication | `npx --yes jscpd@4 --silent --reporters json --output .sift/runs/jscpd --ignore '**/Nav/**,**/Data/**,**/.sift/**,**/media/**,LICENSE' .` | whole-file clones among `tests/*_ui.lua` are their long-string bodies |
 | Unread `ns` members | the `ns-defined`/`ns-once` pipeline in the sift skill's `languages/lua.md` | its regex has no word boundary, so `options.revision` reads as `ns.revision` |
-| Standards pack | `SIFT_STANDARDS_PATH=$HOME/skills python3 <sift>/scripts/agents.py standards` | `wow-forever-addon` lives in `~/skills`, which the default search path misses |
+| Standards pack | `SIFT_STANDARDS_PATH=$HOME/forever-core python3 <sift>/scripts/agents.py standards` | `wow-forever-addon` lives in `~/forever-core`, which the default search path misses |
 | Live roots (Lua) | `rg -n 'RegisterEvent\|SetScript\|hooksecurefunc\|SLASH_\|SlashCmdList\|LoadAddOn\|SendAddonMessage' -g '*.lua'` | — |
 
 ## Live roots

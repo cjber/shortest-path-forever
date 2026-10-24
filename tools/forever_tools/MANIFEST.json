@@ -1,9 +1,9 @@
 {
   "package": "forever_tools",
   "source": {
-    "repository": "https://github.com/cjber/skills",
-    "path": "wow-forever-addon/tooling/forever_tools",
-    "revision": "4438e176d8b62757cac9797c77a3857e28f83dd0"
+    "repository": "https://github.com/cjber/forever-core",
+    "path": ".agents/skills/wow-forever-addon/tooling/forever_tools",
+    "revision": "3fd1b7fe109e709c4952bb04622e94d05636585e"
   },
   "files": {
     "__init__.py": "845dbed90ad519817771603e96839d1ba970007d5a6d997a4a13fef416b8bcd1",
@@ -11,7 +11,7 @@
     "changelog.py": "d5cafddab4710c3632919bf882cde79164624a83688806359e743aadf44b8683",
     "csvtable.py": "afcfd1ce82104d3c0094eb9b07eb19d544b689d2284fb22b6a4a5c12229fca05",
     "doctor.py": "cb094d2e2c2362cc4c2708266e0dc4a2dac7af806a8520af308ef4560a8dd372",
-    "editorconfig.py": "78bfea23272fdbf49df19a550d55663a2d09d06f125f4b6418ad26657247e455",
+    "editorconfig.py": "736f88f5f0e0727799fd4f8b3d29ebc4adcbd9a46b5f64eacb83bcb5c179c0b5",
     "family.py": "15ae45b3b5d34cd16eb8e6d2092ec1d996d82251c329fb399484f94d030c493a",
     "fsio.py": "a6af0c5ce14823f67f00553dde5c3c014be596e2e4e0b12aaa902349c173e41c",
     "generated.py": "e35f5bc8699bfd9d0773fd52fac826a87283d18d80936ee8907c72d86a6483e1",
@@ -25,7 +25,7 @@
     "release_check.py": "d31b8f0db80b6156c2312a8ae2ce506c1324b5ce7954e4404349837a2f7d93d8",
     "report.py": "2b6e11c9e6dfa856f5bc7bb35822013f02a527225a28820ad745be61565c53ba",
     "screens.py": "3b8f4ffccf1b89d51bafeeec640fd51076a29ad6fd344c7a2030446c3f33048a",
-    "sync.py": "c6bf9559073730561b08baf1060c726c124ccc8763e47afaa02f83a30065e26a",
+    "sync.py": "b895b25c1fe63ab09f040001a6c03f901d9710eafa88a13f18dc7f06bfc2d4d7",
     "taint.py": "befc9deb1a1fa5df813a51d37664a3510a58792b009ed3e44330ceb20f64bbb9",
     "toc.py": "5b278c21cba3974ada13cafc64111cea1ab1e337970930b64c791e23645c522f",
     "wago.py": "8bdf7084192d0081051be90d362251e28e64ff1a80315a81f4160f2640fdbed4"
