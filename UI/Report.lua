@@ -1,12 +1,19 @@
 local addonName = ...
----@class SPFNamespace
+---@class ForeverReportNamespace
+---@field L table<string, string>
+---@field Art table
+---@field ReportTitle string
+---@field CutText fun(text: string, limit: integer): string
+---@field CaughtErrors fun(): table
+---@field SafeCall fun(label: string, callback: function, ...: any): boolean, any
+---@field ReportLines fun(): string[]
 local ns = select(2, ...)
 
--- The report window (cjber/adventure-guide-forever docs/report-window.md): `/path report` shows one block of text,
+-- Vendored from Forever Core. `/report` shows one block of text,
 -- already selected, for the player to copy into a bug report. The text opens with what every Forever addon reports
 -- (versions, build, locale, character, place), then the addon's own lines, the errors ns.SafeCall caught, and the
 -- other addons loaded, cut to fit one message. This file knows nothing else about the addon: it copies across the
--- Forever addons with only its window title and hint changed. The field labels stay English in every locale; the
+-- Forever addons with phrase keys supplied through the namespace. The field labels stay English in every locale; the
 -- names and the addon's own lines are the client's.
 
 local L, Art = ns.L, ns.Art
@@ -17,7 +24,7 @@ local LINES_LIMIT, ERRORS_LIMIT = 1000, 600
 local ICON = "Interface\\AddOns\\" .. addonName .. "\\media\\Icon"
 local WIDTH, HEIGHT = 460, 380
 
----@class SPFReportModule
+---@class ForeverReportModule
 ---@field Text fun(lines: string[]): string the whole report around the addon's `lines`, at most 2000 characters
 ---@field Show fun(text: string) show `text` in the report window, selected for copying
 ---@field Percent fun(value?: number): string a map coordinate as the map shows it
@@ -26,15 +33,16 @@ local WIDTH, HEIGHT = 460, 380
 ---@field Issue fun(kind: string, title: string, details: string, lines: string[]): string the new-issue URL
 ---@field Body fun(kind: string, title: string, details: string, lines: string[]): string the markdown issue body
 ---@field Compose fun(kind?: string) show the bug or feature request composer
+---@field Command fun(command: string, argument?: string): boolean handle shared slash commands
 local Report = {}
 ns.Report = Report
 
 -- PortraitFrameTemplate's own members this file uses (Mainline/SharedUIPanelTemplates.xml).
----@class SPFReportWindow : Frame
----@field SetTitle fun(self: SPFReportWindow, title: string)
----@field GetPortrait fun(self: SPFReportWindow): Texture
+---@class ForeverReportWindow : Frame
+---@field SetTitle fun(self: ForeverReportWindow, title: string)
+---@field GetPortrait fun(self: ForeverReportWindow): Texture
 
----@type SPFReportWindow?
+---@type ForeverReportWindow?
 local window
 ---@type EditBox
 local editBox
@@ -225,13 +233,13 @@ local function Select(edit)
 	edit:HighlightText()
 end
 
----@return SPFReportWindow
+---@return ForeverReportWindow
 local function Window()
 	if window then
 		return window
 	end
 	local name = addonName .. "Report"
-	local frame = CreateFrame("Frame", name, UIParent, "PortraitFrameTemplate") --[[@as SPFReportWindow]]
+	local frame = CreateFrame("Frame", name, UIParent, "PortraitFrameTemplate") --[[@as ForeverReportWindow]]
 	-- Escape closes it like any panel, with or without the edit box's focus (an addon-owned frame).
 	table.insert(UISpecialFrames, name)
 	frame:SetSize(WIDTH, HEIGHT)
@@ -244,7 +252,7 @@ local function Window()
 	frame:RegisterForDrag("LeftButton")
 	frame:SetScript("OnDragStart", frame.StartMoving)
 	frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
-	frame:SetTitle(L["Shortest Path report"])
+	frame:SetTitle(ns.ReportTitle)
 	Art.Icon(frame:GetPortrait(), ICON, 62)
 
 	local hint = frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
@@ -386,7 +394,7 @@ local function IssueLines()
 	return ok and lines or { "Report lines failed: " .. tostring(lines) }
 end
 
----@class SPFIssueWindow : SPFReportWindow
+---@class ForeverIssueWindow : ForeverReportWindow
 ---@field titleBox EditBox
 ---@field detailsBox EditBox
 ---@field outputBox EditBox
@@ -397,7 +405,7 @@ end
 ---@field copyLinkButton Button
 ---@field copyReportButton Button
 
----@type SPFIssueWindow?
+---@type ForeverIssueWindow?
 local issueWindow
 ---@type EditBox
 local issueTitle, issueDetails, issueOutput
@@ -454,13 +462,13 @@ local function SetIssueKind(kind)
 	RefreshIssue(kind, IssueLines())
 end
 
----@return SPFIssueWindow
+---@return ForeverIssueWindow
 local function IssueWindow()
 	if issueWindow then
 		return issueWindow
 	end
 	local name = addonName .. "Issue"
-	local frame = CreateFrame("Frame", name, UIParent, "PortraitFrameTemplate") --[[@as SPFIssueWindow]]
+	local frame = CreateFrame("Frame", name, UIParent, "PortraitFrameTemplate") --[[@as ForeverIssueWindow]]
 	table.insert(UISpecialFrames, name)
 	frame:SetSize(520, 500)
 	frame:SetPoint("CENTER")
@@ -584,4 +592,21 @@ function Report.Compose(kind)
 	end
 	frame:Show()
 	Select(issueOutput)
+end
+
+-- Handle the shared report and issue commands before an addon's own slash commands.
+---@param command string
+---@param argument? string
+---@return boolean handled
+function Report.Command(command, argument)
+	if command == "report" then
+		local ok, lines = ns.SafeCall("report lines", ns.ReportLines)
+		Report.Show(Report.Text(ok and lines or { "Report lines failed: " .. tostring(lines) }))
+		return true
+	end
+	if command == "issue" or command == "bug" or command == "feature" then
+		Report.Compose((command == "feature" or argument == "feature") and "feature" or "bug")
+		return true
+	end
+	return false
 end

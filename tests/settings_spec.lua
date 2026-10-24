@@ -375,6 +375,14 @@ ns.Report = {
 ns.ReportLines = function()
 	return { "Journey: none" }
 end
+ns.Report.Command = function(command)
+	if command == "report" then
+		local ok, lines = ns.SafeCall("report lines", ns.ReportLines)
+		ns.Report.Show(ns.Report.Text(ok and lines or { "Report lines failed: " .. tostring(lines) }))
+		return true
+	end
+	return false
+end
 env.SlashCmdList.SHORTESTPATHFOREVER("report")
 assert(shownReport == "Journey: none", "/path report shows the report")
 ns.ReportLines = function()

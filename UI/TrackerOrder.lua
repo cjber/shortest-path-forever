@@ -30,4 +30,4 @@ function TrackerOrder.Sort(modules)
 	end)
 end
 
-ns.TrackerOrder = TrackerOrder
+ns.TrackerOrder = TrackerOrder --[[@as ForeverTrackerOrderAPI]]

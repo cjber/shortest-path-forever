@@ -1,8 +1,14 @@
 local addonName = ...
 ---@class SPFNamespace
+---@field ReportTitle string the localized title shown by the shared report window
+---@field Report ForeverReportModule the shared report and issue window
 ---@field TrackerHost ForeverTrackerHostAPI
 ---@field Family ForeverFamilyAPI
 local ns = select(2, ...)
+local L = ns.L
+if L then
+	ns.ReportTitle = L["Shortest Path report"]
+end
 
 local Model = ns.Model
 -- The settings panel registers these same defaults, so a checkbox's reset matches a fresh install.

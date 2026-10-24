@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Report and issue text selects when focused.** Ctrl+C now copies the full report or issue link from either text box.
+
 ## [1.22.5] - 2026-10-23
 
 - **With Waypoint UI installed, the two addons stop clearing each other's pin.** Waypoint UI drives the same native user waypoint Shortest Path borrows to steer, so whichever addon refreshed second erased the other's marker. When Waypoint UI is tracking a navigation, Shortest Path now leaves that marker to it and hands its destination over through Waypoint UI's own API, while the arrow, compass, tracker and map drawing keep guiding as before (#271).

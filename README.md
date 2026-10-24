@@ -65,6 +65,7 @@ Right-click a flight master icon to mark its flight path as known if a flight ma
 |---|---|
 | `/path` | Open the settings (also in Settings → AddOns and the addon compartment) |
 | `/path report` | Show a report to paste into a bug report: versions, your journey, your ride, recent errors |
+| `/path issue` | Show a filled-in GitHub issue link, selected for copying, to report a bug or request a feature |
 | `/path perf` | Print this addon's CPU and memory use |
 | `/path debug` | Keep a trace of your ride matching, for a ride that did not sync |
 | `/spfnear` | Open nearby services; add a service such as `repair`, `trainer` or `flight` to route to the nearest one |
