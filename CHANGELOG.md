@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.22.6] - 2026-10-24
+
 - **Report and issue text selects when focused.** Ctrl+C now copies the full report or issue link from either text box.
 
 ## [1.22.5] - 2026-10-23
