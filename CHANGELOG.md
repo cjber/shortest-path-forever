@@ -12,6 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.22.7] - 2026-10-24
+
+- The report keeps the same error details, now captured by Forever Core alongside the other shared report code.
+
 ## [1.22.6] - 2026-10-24
 
 - **Report and issue text selects when focused.** Ctrl+C now copies the full report or issue link from either text box.
