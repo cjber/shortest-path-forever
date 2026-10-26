@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- `/way` folds a zone name with Forever Core's one shared fold (`Core/Text.lua`, `ns.Text.Fold`) before it drops the spaces and punctuation, so an accent in a zone's name no longer has to be typed ("dun garok" reads as "Dûn Garok") and "dunmorogh" still reads as "Dun Morogh". Forever Core's settings-page chrome (`UI/SettingsPage.lua`) is vendored byte for byte for the shared-code drift gate; the addon keeps its own settings page.
+
 ## [1.22.7] - 2026-10-24
 
 - The report keeps the same error details, now captured by Forever Core alongside the other shared report code.
