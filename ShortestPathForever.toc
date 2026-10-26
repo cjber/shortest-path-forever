@@ -25,6 +25,7 @@ Locales\ruRU.lua
 Locales\zhCN.lua
 Locales\zhTW.lua
 Core\SafeCall.lua
+Core\Text.lua
 Data\Routes.lua
 Data\Transports.lua
 Data\Taxi.lua
@@ -85,6 +86,7 @@ UI\Route.lua
 UI\RouteTransports.lua
 UI\Alert.lua
 UI\Settings.lua
+UI\SettingsPage.lua
 UI\WhatsNew.lua
 Core\API.lua
 Journey\Resume.lua
