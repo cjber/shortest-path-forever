@@ -28,7 +28,6 @@ if not (WOWMOCK / "wowmock.py").is_file():
     sys.exit(f"wowmock.py not found in {WOWMOCK}; set WOWMOCK to its directory")
 sys.path.insert(0, str(WOWMOCK))
 from gen_routes import BUILD
-from reference_sheets import comparison_sheet, enlarged
 from screenshots_area import render as render_area_art
 from screenshots_services import render as render_services
 from screenshots_tracker import detached_tracker
@@ -384,12 +383,8 @@ def map_dock_pins(canvas, map_id, rect, hover):
         if hover and set(ids) & {7, 9, 17, 25}:
             canvas.draw(ui.atlas("UI-QuestPoi-OuterGlow"), x - 28, y - 28, 56, 56)
         size = 15 if kind in ("lift", "tram") else 20
-        atlas = {
-            "boat": "flightmasterferry",
-            "zeppelin": "flightmasterferry",
-            "lift": "poi-door-arrow-up",
-            "tram": "poi-door-arrow-down",
-        }[kind]
+        kind = "boat" if kind == "zeppelin" else kind
+        atlas = {"boat": "flightmasterferry", "lift": "poi-door-arrow-up", "tram": "poi-door-arrow-down"}[kind]
         art = ui.atlas(atlas)
         # Fitted at its native shape, as ns.FitAtlas does: the floor arrows are 13 by 14.
         scale = size / max(art.width, art.height)
@@ -805,6 +800,27 @@ def encode(ui, name):
     return buffer.getvalue(), ".png"
 
 
+def comparison_sheet(name, pairs):
+    width = max(a.width + b.width for _, a, _, b in pairs) + 30
+    height = sum(max(a.height, b.height) + 40 for _, a, _, b in pairs)
+    sheet = Image.new("RGB", (width, height), (28, 29, 33))
+    draw, y = ImageDraw.Draw(sheet), 0
+    for left, a, right, b in pairs:
+        draw.text((10, y + 6), left, fill="white")
+        draw.text((a.width + 20, y + 6), right, fill="white")
+        sheet.paste(a, (10, y + 27))
+        sheet.paste(b, (a.width + 20, y + 27))
+        y += max(a.height, b.height) + 40
+    path = ROOT / "docs/verification" / (name + ".png")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    sheet.save(path, optimize=True)
+    print(path.relative_to(ROOT), flush=True)
+
+
+def enlarged(image, factor=2):
+    return image.resize((round(image.width * factor), round(image.height * factor)), Image.Resampling.NEAREST)
+
+
 def compare_map_references(ui, refs):
     def map_image(map_id, hover=False):
         canvas, _ = map_canvas(ui, map_id, hover=hover)
@@ -939,7 +955,6 @@ def compare_references(refs, tooltip_ref=None):
                 demo.seek(index)
                 samples.append(demo.convert("RGB"))
             comparison_sheet(
-                ROOT,
                 "demo",
                 [
                     (f"Frame {a}", samples[i], f"Frame {b}", samples[i + 1])
