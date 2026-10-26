@@ -321,5 +321,5 @@ L["You are near the new flight master %s. Discover it before flying."] =
 L["Remind me about new flight masters"] = "Remind me about new flight masters" -- mt
 L["Warns when a journey needs you to discover a flight master, and again when you are close."] =
 	"Warns when a journey needs you to discover a flight master, and again when you are close." -- mt
-L["A quest item in your bags clicks normally while the tracker is loaded."] =
-	"Предмет задания в сумках нажимается как обычно, пока трекер загружен." -- mt
+L["You no longer have to type an accent in a /way zone name."] =
+	"Больше не нужно вводить диакритику в названии зоны для /way." -- mt
