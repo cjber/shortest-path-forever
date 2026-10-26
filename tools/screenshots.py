@@ -383,12 +383,8 @@ def map_dock_pins(canvas, map_id, rect, hover):
         if hover and set(ids) & {7, 9, 17, 25}:
             canvas.draw(ui.atlas("UI-QuestPoi-OuterGlow"), x - 28, y - 28, 56, 56)
         size = 15 if kind in ("lift", "tram") else 20
-        atlas = {
-            "boat": "flightmasterferry",
-            "zeppelin": "flightmasterferry",
-            "lift": "poi-door-arrow-up",
-            "tram": "poi-door-arrow-down",
-        }[kind]
+        kind = "boat" if kind == "zeppelin" else kind
+        atlas = {"boat": "flightmasterferry", "lift": "poi-door-arrow-up", "tram": "poi-door-arrow-down"}[kind]
         art = ui.atlas(atlas)
         # Fitted at its native shape, as ns.FitAtlas does: the floor arrows are 13 by 14.
         scale = size / max(art.width, art.height)
