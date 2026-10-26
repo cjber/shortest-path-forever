@@ -8,11 +8,13 @@ local L = ns.L
 -- on the world map does. /way is registered only while TomTom has not loaded (nor is enabled to load after
 -- Shortest Path) and no other addon has taken it; `/path way` always works.
 
--- Zone names as the client spells them, folded: lower case without spaces or punctuation.
+-- Zone names as the client spells them, folded: the suite's one fold from Forever Core's Core/Text.lua (lower case,
+-- accents gone), then without spaces or punctuation, so "dun garok" finds "Dûn Garok" and "dunmorogh" still finds
+-- "Dun Morogh".
 ---@param name string
 ---@return string
 local function Fold(name)
-	return (name:lower():gsub("[%s%p]", ""))
+	return (ns.Text.Fold(name):gsub("[%s%p]", ""))
 end
 
 -- Every map under the world the player stands in, by folded name. Built once, on the first /way that names a zone.
