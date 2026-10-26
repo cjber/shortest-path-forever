@@ -12,6 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.22.10] - 2026-10-26
+
+- **The note after updating now names the ferry marker art.** 1.22.9 shipped with the previous release's note, so the one line printed after an update did not match what that version changed. This release corrects the sentence. No gameplay change.
+
 ## [1.22.9] - 2026-10-26
 
 - **Airship and boat route markers now use the client's native ferry atlas art.** Their map appearance matches the game markers and removes the custom bundled airship image.
