@@ -382,18 +382,16 @@ def map_dock_pins(canvas, map_id, rect, hover):
         x, y = x + mx, y + my
         if hover and set(ids) & {7, 9, 17, 25}:
             canvas.draw(ui.atlas("UI-QuestPoi-OuterGlow"), x - 28, y - 28, 56, 56)
-        if kind == "zeppelin":
-            canvas.draw(Image.open(ROOT / "media/zeppelin.tga").convert("RGBA"), x - 10, y - 10, 20, 20)
-        else:
-            size = 15 if kind in ("lift", "tram") else 20
-            atlas = {"boat": "flightmasterferry", "lift": "poi-door-arrow-up", "tram": "poi-door-arrow-down"}[kind]
-            art = ui.atlas(atlas)
-            # Fitted at its native shape, as ns.FitAtlas does: the floor arrows are 13 by 14.
-            scale = size / max(art.width, art.height)
-            w, h = art.width * scale, art.height * scale
-            canvas.draw(art, x - w / 2, y - h / 2, w, h)
-            if hover and 10 in ids:
-                canvas.draw(art, x - w / 2, y - h / 2, w, h, blend="ADD")
+        size = 15 if kind in ("lift", "tram") else 20
+        kind = "boat" if kind == "zeppelin" else kind
+        atlas = {"boat": "flightmasterferry", "lift": "poi-door-arrow-up", "tram": "poi-door-arrow-down"}[kind]
+        art = ui.atlas(atlas)
+        # Fitted at its native shape, as ns.FitAtlas does: the floor arrows are 13 by 14.
+        scale = size / max(art.width, art.height)
+        w, h = art.width * scale, art.height * scale
+        canvas.draw(art, x - w / 2, y - h / 2, w, h)
+        if hover and 10 in ids:
+            canvas.draw(art, x - w / 2, y - h / 2, w, h, blend="ADD")
         if 10 in ids:
             hover_point = (x, y)
     return hover_point

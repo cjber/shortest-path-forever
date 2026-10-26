@@ -30,7 +30,6 @@ SOURCES = (
     "Routing/*.lua",
     "UI/FlightLines.lua",
     "UI/Arrow.lua",
-    "media/zeppelin.tga",
 )
 SCENES = {
     path.name: functools.partial(screens.files, ROOT, SOURCES)

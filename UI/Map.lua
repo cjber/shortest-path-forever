@@ -25,18 +25,16 @@ local OVERLAP = 0.8
 local dockPins, portalPins
 local Docks
 
--- The stock ferry for boats. There is no zeppelin map icon in the game (only top-down vehicle sprites), so
--- zeppelins use our own, drawn to match the ferry (tools/draw_zeppelin.py). Lifts and the tram take the stock
--- map's floor-change arrows; portals its arcane door.
+-- The stock ferry atlas serves both surface transports. Lifts and the tram take the stock map's floor-change arrows;
+-- portals use its arcane door.
 ---@param texture Texture
 ---@param kind SPFMode
 ---@param size number?
 function ns.SetTransportIcon(texture, kind, size)
 	-- The floor arrows fill their box where the ferry has a margin, so they draw smaller to match.
 	size = (size or PIN_SIZE) * ((kind == "lift" or kind == "tram") and ARROW_SIZE / PIN_SIZE or 1)
-	if kind == "zeppelin" then
-		-- Square (64 by 64), like the ferry.
-		ns.Art.Icon(texture, "Interface\\AddOns\\ShortestPathForever\\media\\zeppelin", size)
+	if kind == "boat" or kind == "zeppelin" then
+		ns.Art.Fit(texture, "flightmasterferry", size, size)
 	elseif TRANSPORT_ATLASES[kind] then
 		ns.Art.Fit(texture, TRANSPORT_ATLASES[kind], size, size)
 	else

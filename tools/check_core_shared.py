@@ -12,6 +12,8 @@ TRACKER_CONSUMERS = {
     "skillup-forever",
 }
 COMMON = (
+    "tools/deadcode.py",
+    "tools/deadcode-allow.txt",
     "Core/SafeCall.lua",
     "UI/Report.lua",
     "tests/report_spec.lua",
