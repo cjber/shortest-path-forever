@@ -3,7 +3,7 @@
     python3 tools/screenshots.py
     python3 tools/screenshots.py --scenes tracker minimap
     python3 tools/screenshots.py --verify --refs /path/to/refs
-WOWMOCK overrides ~/.claude/skills/wow-mock-screenshots. First use downloads assets
+FOREVER_CORE selects the shared renderer checkout. First use downloads assets
 from wago.tools; subsequent runs use its build-specific cache. Never reads the game
 installation or SavedVariables. See docs/screenshots.md for source and scene notes.
 """
@@ -23,9 +23,10 @@ from typing import cast
 
 from PIL import Image, ImageDraw
 
-WOWMOCK = Path(os.environ.get("WOWMOCK", Path.home() / ".claude/skills/wow-mock-screenshots"))
+FOREVER_CORE = Path(os.environ.get("FOREVER_CORE", Path(__file__).resolve().parents[2] / "forever-core")).expanduser()
+WOWMOCK = FOREVER_CORE / "tools" / "wowmock"
 if not (WOWMOCK / "wowmock.py").is_file():
-    sys.exit(f"wowmock.py not found in {WOWMOCK}; set WOWMOCK to its directory")
+    sys.exit(f"wowmock.py not found in {WOWMOCK}; set FOREVER_CORE to the forever-core checkout")
 sys.path.insert(0, str(WOWMOCK))
 from gen_routes import BUILD
 from screenshots_area import render as render_area_art
