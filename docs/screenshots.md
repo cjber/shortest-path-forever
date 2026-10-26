@@ -1,8 +1,8 @@
 # Reproducing the media
 
 `tools/screenshots.py` uses Pillow 12+, LuaJIT and the shared
-`wow-mock-screenshots` skill. Set `WOWMOCK` if the skill is not under
-`~/.claude/skills/`. All downloaded art is pinned to the client build in
+shared renderer in `forever-core`. Set `FOREVER_CORE` if the checkout is not beside this repository.
+the sibling `forever-core` checkout. All downloaded art is pinned to the client build in
 `tools/gen_routes.py` (`BUILD`); `~/.cache/wowmock/<build>/` holds the assets. No game installation or
 SavedVariables are read. Verified with Pillow 12.3.0 / FreeType 2.14.3.
 
