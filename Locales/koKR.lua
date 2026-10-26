@@ -312,5 +312,5 @@ L["You are near the new flight master %s. Discover it before flying."] =
 L["Remind me about new flight masters"] = "Remind me about new flight masters" -- mt
 L["Warns when a journey needs you to discover a flight master, and again when you are close."] =
 	"Warns when a journey needs you to discover a flight master, and again when you are close." -- mt
-L["You no longer have to type an accent in a /way zone name."] =
-	"이제 /way 지역 이름에 악센트를 입력하지 않아도 됩니다." -- mt
+L["Airship and boat route markers now use the client's native ferry atlas art."] =
+	"비행선 및 배 경로 표시가 이제 클라이언트의 기본 페리 아틀라스 아트를 사용합니다." -- mt

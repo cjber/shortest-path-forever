@@ -302,5 +302,5 @@ L["You are near the new flight master %s. Discover it before flying."] =
 L["Remind me about new flight masters"] = "Remind me about new flight masters" -- mt
 L["Warns when a journey needs you to discover a flight master, and again when you are close."] =
 	"Warns when a journey needs you to discover a flight master, and again when you are close." -- mt
-L["You no longer have to type an accent in a /way zone name."] =
-	"現在不必在 /way 的地區名稱中輸入重音。" -- mt
+L["Airship and boat route markers now use the client's native ferry atlas art."] =
+	"飛艇和船隻路線標記現在使用客戶端原生的渡船圖集美術。" -- mt
