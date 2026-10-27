@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Taxi, portal, teleport and zone data regenerated for client build 1.60.1.70630.** The generators now read the newest Forever build from wago.tools' `wowf` product as well as `wow_classic_beta`, because wago lists newer builds under `wowf` and the pin check had been reading only the older product, so the daily refresh reported itself already current and skipped regeneration. Flight paths change with this build; walking costs and nav data are unchanged.
+
 ## [1.22.10] - 2026-10-26
 
 - **The note after updating now names the ferry marker art.** 1.22.9 shipped with the previous release's note, so the one line printed after an update did not match what that version changed. This release corrects the sentence. No gameplay change.

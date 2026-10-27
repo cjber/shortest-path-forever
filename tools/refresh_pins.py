@@ -20,6 +20,9 @@ import gen_transit
 
 TOOLS = Path(__file__).resolve().parent
 INFLIGHT = "https://github.com/LudiusMaximus/InFlight"
+# Wago publishes Forever under its own product key now (`wowf`); older builds sit in `wow_classic_beta`.
+PRODUCTS = ("wowf", "wow_classic_beta")
+PREFIX = "1.6"
 INFLIGHT_FILES = ("Defaults.lua", "LICENSE")
 
 
@@ -28,8 +31,13 @@ def version_key(version):
 
 
 def latest_build(builds):
-    """The newest Forever build; wow_classic_beta carries other Classic betas too, and Forever's are 1.6x."""
-    forever = [build["version"] for build in builds["wow_classic_beta"] if build["version"].startswith("1.6")]
+    """The newest Forever build across every wago.tools product that lists it; Forever's versions are 1.6x."""
+    forever = [
+        build["version"]
+        for product in PRODUCTS
+        for build in builds.get(product, [])
+        if build["version"].startswith(PREFIX)
+    ]
     if not forever:
         raise SystemExit("no Forever build listed on wago.tools")
     return max(forever, key=version_key)
