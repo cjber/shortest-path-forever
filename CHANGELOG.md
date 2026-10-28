@@ -12,6 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.22.12] - 2026-10-28
+
+- **Taxi, portal, teleport, transport and zone data re-pinned to client build 1.60.1.70658.** The generators now read and record the newer Forever build from wago.tools, so flight paths, boat and zeppelin timings and portal discovery stay keyed to the build the client ships. Regenerating against this build produces no change to the bundled routes, so nothing a player sees changes.
+
 ## [1.22.11] - 2026-10-27
 
 - **Taxi, portal, teleport and zone data regenerated for client build 1.60.1.70630.** The generators now read the newest Forever build from wago.tools' `wowf` product as well as `wow_classic_beta`, because wago lists newer builds under `wowf` and the pin check had been reading only the older product, so the daily refresh reported itself already current and skipped regeneration. Flight paths change with this build; walking costs and nav data are unchanged.
