@@ -12,6 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.22.13] - 2026-10-28
+
+- **Taxi, portal, teleport, transport and zone data re-pinned to client build 1.60.1.70685.** Regenerating against this build produces no change to the bundled routes, so nothing a player sees changes.
+
 ## [1.22.12] - 2026-10-28
 
 - **Taxi, portal, teleport, transport and zone data re-pinned to client build 1.60.1.70658.** The generators now read and record the newer Forever build from wago.tools, so flight paths, boat and zeppelin timings and portal discovery stay keyed to the build the client ships. Regenerating against this build produces no change to the bundled routes, so nothing a player sees changes.
