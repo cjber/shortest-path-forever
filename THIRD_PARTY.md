@@ -75,5 +75,7 @@ Credit for the ideas and reports behind the addon.
 | Ragnarok11B, on CurseForge | Reported that the quest tracker could not be moved after hiding the journey steps (#227) | |
 | GenericP, on CurseForge | Asked to plan to a spot under a Questie icon, now Alt-click on the world map (1.14.0), and for TomTom waypoints to start journeys (1.15.0); also answered other players' questions on the page | |
 | [Brainc3ll](https://github.com/Brainc3ll) | Eight lines of the French translation, from his Legacy Forever translation (cjber/legacy-forever#99); the rest of `Locales/frFR.lua` and the other languages are machine translated (lines ending `-- mt` in frFR) | |
+| [Mouchoir](https://github.com/Mouchoir) | Found the arrow hiding behind the game's navigation marker when it was turned off, leaving no guidance, and wrote the fix (#224, #223, merged as #225) | Code contributor |
+| [z1ck](https://github.com/z1ck) | Asked for the travel journal to start off, which *Record travel stats* now does (#269, #270) | |
 
 Thanks also to everyone else who reported a bug or asked for a feature, here or on CurseForge.
