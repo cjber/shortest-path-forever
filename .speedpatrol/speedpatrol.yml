@@ -1,0 +1,36 @@
+# Speedpatrol: https://github.com/agent-labs-dev/speedpatrol
+# Commit this file and instructions.md. runs/ is local data.
+version: 1
+project:
+  name: shortest-path-forever
+  source: .
+app:
+  prepare: []
+  setup: []
+  env: {}
+  secrets: []
+defaults:
+  iterations: 7
+  warmup: 1
+benchmarks:
+  # The planner's own benches, run headless. journey_bench also asserts a frame budget and exits
+  # non-zero when a change blows it, which needs no threshold here. These are wall times, so
+  # luajit's own startup is in the number: the threshold is loose on purpose, and a change worth
+  # keeping is one that also passes the repo gate.
+  - id: planner.journey
+    kind: command
+    run: luajit -joff tests/journey_bench.lua
+    tags: [planner]
+  - id: planner.hearth
+    kind: command
+    run: luajit -joff tests/hearth_savings_bench.lua
+    tags: [planner]
+thresholds:
+  relative: 0.10
+  absolute: 2
+agents:
+  scout: { use: claude }
+  analyst: { use: claude }
+  optimizer: { use: claude, enabled: false }
+  github: { enabled: false }
+  patrol: { intervalMinutes: 30, pull: origin/main }
