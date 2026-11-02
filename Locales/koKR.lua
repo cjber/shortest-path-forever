@@ -306,12 +306,13 @@ L["west"] = "서쪽"
 L["your corpse"] = "내 시체"
 L["your position"] = "내 위치"
 L["zeppelin"] = "비행선"
-L["Step %d: discover flight master %s before flying."] = "Step %d: discover flight master %s before flying." -- mt
+L["Step %d: discover flight master %s before flying."] =
+	"%d단계: 날기 전에 %s에 있는 비행 조련사를 찾으세요." -- mt
 L["You are near the new flight master %s. Discover it before flying."] =
-	"You are near the new flight master %s. Discover it before flying." -- mt
-L["Remind me about new flight masters"] = "Remind me about new flight masters" -- mt
+	"새 비행 조련사 %s 근처에 있습니다. 날기 전에 찾으세요." -- mt
+L["Remind me about new flight masters"] = "새 비행 조련사 알림" -- mt
 L["Warns when a journey needs you to discover a flight master, and again when you are close."] =
-	"Warns when a journey needs you to discover a flight master, and again when you are close." -- mt
+	"여정에 비행 조련사를 찾아야 할 때, 그리고 가까이 있을 때 다시 알려 줍니다." -- mt
 L["Airship and boat route markers now use the client's native ferry atlas art."] =
 	"비행선 및 배 경로 표시가 이제 클라이언트의 기본 페리 아틀라스 아트를 사용합니다." -- mt
 L["%d. %s — %s"] = "%d. %s — %s"
