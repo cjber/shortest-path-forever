@@ -8,21 +8,38 @@ local alphabet, codes = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012
 for i = 1, #alphabet do
 	codes[alphabet:byte(i)] = i - 1
 end
+-- Each group of four characters holds 24 bits: codes shifted into place, read back a byte at a time.
+local high, middle, low, chars = {}, {}, {}, {}
+for byte, code in pairs(codes) do
+	high[byte], middle[byte], low[byte] = code * 262144, code * 4096, code * 64
+end
+for i = 0, 255 do
+	chars[i] = string.char(i)
+end
 return {
 	DecodeBase64 = function(source)
-		local out, value, bits = {}, 0, 0
-		for i = 1, #source do
-			local code = codes[source:byte(i)]
-			if code then
-				value, bits = value * 64 + code, bits + 6
-				if bits >= 8 then
-					bits = bits - 8
-					out[#out + 1] = string.char(math.floor(value / 2 ^ bits))
-					value = value % 2 ^ bits
-				end
-			elseif source:sub(i, i) ~= "=" then
+		if source:find("[^%w+/]") then
+			if source:find("[^%w+/=]") then
 				return nil
 			end
+			source = source:gsub("=", "")
+		end
+		local n, out, size = #source, {}, 0
+		for i = 1, n - 3, 4 do
+			local a, b, c, d = source:byte(i, i + 3)
+			local v = high[a] + middle[b] + low[c] + codes[d]
+			local third = v % 256
+			local second = (v - third) / 256 % 256
+			out[size + 1], out[size + 2], out[size + 3] =
+				chars[(v - second * 256 - third) / 65536], chars[second], chars[third]
+			size = size + 3
+		end
+		local a, b, c = source:byte(n - n % 4 + 1, n)
+		if c then
+			local v = high[a] + middle[b] + low[c]
+			out[size + 1], out[size + 2] = chars[math.floor(v / 65536)], chars[math.floor(v / 256) % 256]
+		elseif b then
+			out[size + 1] = chars[math.floor((high[a] + middle[b]) / 65536)]
 		end
 		return table.concat(out)
 	end,
