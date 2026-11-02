@@ -51,7 +51,7 @@ More detail: [features](docs/features.md) and [API](docs/api.md).
 Install it from [CurseForge](https://www.curseforge.com/wow/addons/shortest-path-forever) or
 [Wago Addons](https://addons.wago.io/addons/shortest-path-forever), or download the zip from
 [Releases](https://github.com/cjber/shortest-path-forever/releases). To install the zip by hand, extract it into
-`_classic_beta_/Interface/AddOns/` so you end up with `AddOns/ShortestPathForever/ShortestPathForever.toc`.
+the WoW: Forever client's `Interface/AddOns/` folder (`_forever_` on the live client, `_classic_beta_` on the beta) so you end up with `AddOns/ShortestPathForever/ShortestPathForever.toc`.
 
 ## Usage
 
