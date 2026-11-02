@@ -314,3 +314,34 @@ L["Warns when a journey needs you to discover a flight master, and again when yo
 	"Warns when a journey needs you to discover a flight master, and again when you are close." -- mt
 L["Airship and boat route markers now use the client's native ferry atlas art."] =
 	"비행선 및 배 경로 표시가 이제 클라이언트의 기본 페리 아틀라스 아트를 사용합니다." -- mt
+L["%d. %s — %s"] = "%d. %s — %s"
+L["/path issue - report a bug or request a feature with a ready-made GitHub issue link"] =
+	"/path issue - 준비된 GitHub 이슈 링크로 버그를 보고하거나 기능을 요청합니다"
+L["/path report - show a report to copy into a bug report"] =
+	"/path report - 버그 보고서에 복사할 보고서를 표시합니다"
+L["Bug"] = "버그"
+L["Bug: "] = "버그: "
+L["Copy issue link"] = "이슈 링크 복사"
+L["Copy report"] = "보고서 복사"
+L["Feature request"] = "기능 요청"
+L["Feature request: "] = "기능 요청: "
+L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs."] =
+	"로컬 이동 일지 — 약 %d야드 이동, 여정 %d회, 교통수단 %d회, 비행 %d회, 차원문 구간 %d회."
+L["Off by default. Keeps walking distance, completed journeys and observed transport use for this character."] =
+	"기본적으로 꺼져 있습니다. 이 캐릭터의 도보 거리, 완료한 여정, 관찰한 교통수단 이용을 기록합니다."
+L["Record travel stats"] = "이동 통계 기록"
+L["Report a bug or request a feature"] = "버그 보고 또는 기능 요청"
+L["Sends and receives travel-stat snapshots over guild, party, raid and instance channels."] =
+	"길드, 파티, 공격대, 인스턴스 채널로 이동 통계 요약을 주고받습니다."
+L["Share travel stats with guild and groups"] = "길드와 그룹에 이동 통계 공유"
+L["The link is selected. Press Ctrl+C (Cmd+C on a Mac), then paste into a browser; GitHub opens a filled-in issue."] =
+	"링크가 선택되었습니다. Ctrl+C(Mac은 Cmd+C)를 눌러 복사한 후 브라우저에 붙여 넣으십시오. GitHub에 내용이 채워진 이슈가 열립니다."
+L["Title"] = "제목"
+L["Travel journal"] = "이동 일지"
+L["Travel milestone reached: %s"] = "이동 이정표 달성: %s"
+L["Travel stats are not ready yet."] = "이동 통계가 아직 준비되지 않았습니다."
+L["Turn this off to keep stats on this character only. Shared records are player-reported and not verified."] =
+	"끄면 이 캐릭터에만 통계를 보관합니다. 공유 기록은 플레이어가 보낸 것이며 검증되지 않습니다."
+L["Use /path leaderboard routes, distance, transports, flights or portals."] =
+	"/path leaderboard routes, distance, transports, flights, portals 중 하나를 사용하십시오."
+L["What happened, or what you would like"] = "무슨 일이 있었는지 또는 원하는 점"

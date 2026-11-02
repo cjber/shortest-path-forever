@@ -304,3 +304,34 @@ L["Warns when a journey needs you to discover a flight master, and again when yo
 	"Warns when a journey needs you to discover a flight master, and again when you are close." -- mt
 L["Airship and boat route markers now use the client's native ferry atlas art."] =
 	"飞艇和船只路线标记现在使用客户端原生的渡船图集美术。" -- mt
+L["%d. %s — %s"] = "%d. %s — %s"
+L["/path issue - report a bug or request a feature with a ready-made GitHub issue link"] =
+	"/path issue - 通过现成的 GitHub 问题链接报告缺陷或请求功能"
+L["/path report - show a report to copy into a bug report"] =
+	"/path report - 显示可复制到缺陷报告中的报告"
+L["Bug"] = "错误"
+L["Bug: "] = "错误："
+L["Copy issue link"] = "复制问题链接"
+L["Copy report"] = "复制报告"
+L["Feature request"] = "功能请求"
+L["Feature request: "] = "功能请求："
+L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs."] =
+	"本地旅行日志 — 步行约%d码；%d次旅程；%d次交通；%d次飞行；%d段传送门。"
+L["Off by default. Keeps walking distance, completed journeys and observed transport use for this character."] =
+	"默认关闭。为此角色记录步行距离、完成的旅程和观察到的交通使用情况。"
+L["Record travel stats"] = "记录旅行统计"
+L["Report a bug or request a feature"] = "报告缺陷或请求功能"
+L["Sends and receives travel-stat snapshots over guild, party, raid and instance channels."] =
+	"通过公会、队伍、团队和副本频道收发旅行统计快照。"
+L["Share travel stats with guild and groups"] = "与公会和队伍共享旅行统计"
+L["The link is selected. Press Ctrl+C (Cmd+C on a Mac), then paste into a browser; GitHub opens a filled-in issue."] =
+	"链接已选中。按 Ctrl+C（Mac 上为 Cmd+C）复制，然后粘贴到浏览器中；GitHub 会打开一个已填写的问题。"
+L["Title"] = "标题"
+L["Travel journal"] = "旅行日志"
+L["Travel milestone reached: %s"] = "达成旅行里程碑：%s"
+L["Travel stats are not ready yet."] = "旅行统计尚未准备好。"
+L["Turn this off to keep stats on this character only. Shared records are player-reported and not verified."] =
+	"关闭后统计只保留在此角色上。共享记录由玩家上报，未经核实。"
+L["Use /path leaderboard routes, distance, transports, flights or portals."] =
+	"使用 /path leaderboard routes、distance、transports、flights 或 portals。"
+L["What happened, or what you would like"] = "发生了什么，或你希望有什么"

@@ -323,3 +323,35 @@ L["Warns when a journey needs you to discover a flight master, and again when yo
 	"Warns when a journey needs you to discover a flight master, and again when you are close." -- mt
 L["Airship and boat route markers now use the client's native ferry atlas art."] =
 	"Маркеры маршрутов дирижаблей и лодок теперь используют нативную графику атласа парома клиента." -- mt
+L["%d. %s — %s"] = "%d. %s — %s"
+L["/path issue - report a bug or request a feature with a ready-made GitHub issue link"] =
+	"/path issue - сообщить об ошибке или предложить функцию с готовой ссылкой на задачу GitHub"
+L["/path report - show a report to copy into a bug report"] =
+	"/path report - показать отчет для вставки в сообщение об ошибке"
+L["Bug"] = "Ошибка"
+L["Bug: "] = "Ошибка: "
+L["Copy issue link"] = "Копировать ссылку на задачу"
+L["Copy report"] = "Копировать отчет"
+L["Feature request"] = "Предложение функции"
+L["Feature request: "] = "Предложение функции: "
+L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs."] =
+	"Дневник путешествий — около %d ярдов пешком; %d маршрутов; %d поездок на транспорте; %d полетов; %d переходов через портал."
+L["Off by default. Keeps walking distance, completed journeys and observed transport use for this character."] =
+	"По умолчанию выключено. Сохраняет для этого персонажа пройденный путь, завершенные маршруты и замеченное использование транспорта."
+L["Record travel stats"] = "Записывать статистику путешествий"
+L["Report a bug or request a feature"] = "Сообщить об ошибке или предложить функцию"
+L["Sends and receives travel-stat snapshots over guild, party, raid and instance channels."] =
+	"Отправляет и получает снимки статистики путешествий через каналы гильдии, группы, рейда и подземелья."
+L["Share travel stats with guild and groups"] =
+	"Делиться статистикой путешествий с гильдией и группами"
+L["The link is selected. Press Ctrl+C (Cmd+C on a Mac), then paste into a browser; GitHub opens a filled-in issue."] =
+	"Ссылка выделена. Нажмите Ctrl+C (Cmd+C на Mac) и вставьте ее в браузер; GitHub откроет заполненную задачу."
+L["Title"] = "Заголовок"
+L["Travel journal"] = "Дневник путешествий"
+L["Travel milestone reached: %s"] = "Достигнут рубеж путешествий: %s"
+L["Travel stats are not ready yet."] = "Статистика путешествий еще не готова."
+L["Turn this off to keep stats on this character only. Shared records are player-reported and not verified."] =
+	"Отключите, чтобы статистика велась только для этого персонажа. Общие записи присылают игроки, они не проверены."
+L["Use /path leaderboard routes, distance, transports, flights or portals."] =
+	"Используйте /path leaderboard routes, distance, transports, flights или portals."
+L["What happened, or what you would like"] = "Что произошло или чего бы вы хотели"

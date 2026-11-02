@@ -310,3 +310,34 @@ L["Warns when a journey needs you to discover a flight master, and again when yo
 	"Warns when a journey needs you to discover a flight master, and again when you are close." -- mt
 L["Airship and boat route markers now use the client's native ferry atlas art."] =
 	"Luftschiff- und Bootsroutenmarkierungen nutzen jetzt die native Fähratlas-Grafik des Clients." -- mt
+L["%d. %s — %s"] = "%d. %s — %s"
+L["/path issue - report a bug or request a feature with a ready-made GitHub issue link"] =
+	"/path issue - meldet einen Fehler oder wünscht eine Funktion mit einem fertigen GitHub-Issue-Link"
+L["/path report - show a report to copy into a bug report"] =
+	"/path report - zeigt einen Bericht zum Kopieren in einen Fehlerbericht"
+L["Bug"] = "Fehler"
+L["Bug: "] = "Fehler: "
+L["Copy issue link"] = "Issue-Link kopieren"
+L["Copy report"] = "Bericht kopieren"
+L["Feature request"] = "Funktionswunsch"
+L["Feature request: "] = "Funktionswunsch: "
+L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs."] =
+	"Lokales Reisetagebuch — ca. %d Yards zu Fuß; %d Reisen; %d Transporte; %d Flüge; %d Portalstrecken."
+L["Off by default. Keeps walking distance, completed journeys and observed transport use for this character."] =
+	"Standardmäßig aus. Merkt sich für diesen Charakter die Fußwegstrecke, abgeschlossene Reisen und beobachtete Transportnutzung."
+L["Record travel stats"] = "Reisestatistik aufzeichnen"
+L["Report a bug or request a feature"] = "Fehler melden oder Funktion wünschen"
+L["Sends and receives travel-stat snapshots over guild, party, raid and instance channels."] =
+	"Sendet und empfängt Reisestatistik-Abzüge über Gilden-, Gruppen-, Schlachtzugs- und Instanzkanäle."
+L["Share travel stats with guild and groups"] = "Reisestatistik mit Gilde und Gruppen teilen"
+L["The link is selected. Press Ctrl+C (Cmd+C on a Mac), then paste into a browser; GitHub opens a filled-in issue."] =
+	"Der Link ist markiert. Drückt Strg+C (Cmd+C auf dem Mac) und fügt ihn dann in einen Browser ein; GitHub öffnet ein ausgefülltes Issue."
+L["Title"] = "Titel"
+L["Travel journal"] = "Reisetagebuch"
+L["Travel milestone reached: %s"] = "Reisemeilenstein erreicht: %s"
+L["Travel stats are not ready yet."] = "Die Reisestatistik ist noch nicht bereit."
+L["Turn this off to keep stats on this character only. Shared records are player-reported and not verified."] =
+	"Ausschalten, um die Statistik nur für diesen Charakter zu behalten. Geteilte Einträge stammen von Spielern und sind nicht geprüft."
+L["Use /path leaderboard routes, distance, transports, flights or portals."] =
+	"Nutzt /path leaderboard routes, distance, transports, flights oder portals."
+L["What happened, or what you would like"] = "Was passiert ist oder was Ihr Euch wünscht"
