@@ -12,3 +12,6 @@ docs/verification/
 
 # Local terrain extraction, native builds and generated navigation packages.
 tools/baker/work/
+
+# Bugpatrol: local data and screenshots of the real app
+.bugpatrol/runs/

@@ -1,0 +1,29 @@
+version: 1
+
+# Bugpatrol profile. The game client cannot run here, so the "app" is the repo's headless Lua
+# harness: the specs stub the client API and load the addon files in TOC order.
+app:
+  platform: cli
+  source: .
+  setup: []
+  connect:
+    cli:
+      timeoutMs: 60000
+  instructions: .bugpatrol/instructions.md
+  secrets: []
+
+agents:
+  explorer:
+    use: claude
+    maxSteps: 25
+    budgetUsd: 1
+  judge:
+    use: claude
+  fixer:
+    enabled: false
+    use: claude
+  review:
+    name: harness
+    budgetUsd: 1
+  github:
+    enabled: false
