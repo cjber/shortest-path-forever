@@ -296,12 +296,12 @@ L["west"] = "西"
 L["your corpse"] = "你的尸体"
 L["your position"] = "你的位置"
 L["zeppelin"] = "飞艇"
-L["Step %d: discover flight master %s before flying."] = "Step %d: discover flight master %s before flying." -- mt
+L["Step %d: discover flight master %s before flying."] = "第 %d 步：飞行前先发现飞行管理员 %s。" -- mt
 L["You are near the new flight master %s. Discover it before flying."] =
-	"You are near the new flight master %s. Discover it before flying." -- mt
-L["Remind me about new flight masters"] = "Remind me about new flight masters" -- mt
+	"你就在新的飞行管理员 %s 附近。飞行前先发现它。" -- mt
+L["Remind me about new flight masters"] = "提醒新的飞行管理员" -- mt
 L["Warns when a journey needs you to discover a flight master, and again when you are close."] =
-	"Warns when a journey needs you to discover a flight master, and again when you are close." -- mt
+	"旅程需要你发现飞行管理员时提醒一次，靠近时再提醒一次。" -- mt
 L["Airship and boat route markers now use the client's native ferry atlas art."] =
 	"飞艇和船只路线标记现在使用客户端原生的渡船图集美术。" -- mt
 L["%d. %s — %s"] = "%d. %s — %s"

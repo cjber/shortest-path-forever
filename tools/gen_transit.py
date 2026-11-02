@@ -204,7 +204,7 @@ def transports(animation, spawns, triggers):
     docks, routes = {}, {}
     # Explicit site/car identities keep IDs stable if the source gains more spawns.
     sites = [
-        (118981, "The Great Lift", [(11898, 16874), (11899, 16876)]),
+        (118981, "Great Lift", [(11898, 16874), (11899, 16876)]),
         (118982, "Freewind Post", [(11898, 16875), (11899, 16877)]),
         (41701, "Thunder Bluff, west lift", [(4170, 18298), (4171, 18435)]),
         (472961, "Thunder Bluff, north lift", [(47296, 20639), (47297, 20640)]),

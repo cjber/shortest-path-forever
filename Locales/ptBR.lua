@@ -302,12 +302,12 @@ L["west"] = "oeste"
 L["your corpse"] = "seu corpo"
 L["your position"] = "sua posição"
 L["zeppelin"] = "zepelim"
-L["Step %d: discover flight master %s before flying."] = "Step %d: discover flight master %s before flying." -- mt
+L["Step %d: discover flight master %s before flying."] = "Passo %d: descubra o mestre de voo %s antes de voar." -- mt
 L["You are near the new flight master %s. Discover it before flying."] =
-	"You are near the new flight master %s. Discover it before flying." -- mt
-L["Remind me about new flight masters"] = "Remind me about new flight masters" -- mt
+	"Você está perto do novo mestre de voo %s. Descubra-o antes de voar." -- mt
+L["Remind me about new flight masters"] = "Lembrar de novos mestres de voo" -- mt
 L["Warns when a journey needs you to discover a flight master, and again when you are close."] =
-	"Warns when a journey needs you to discover a flight master, and again when you are close." -- mt
+	"Avisa quando uma jornada precisa que você descubra um mestre de voo, e de novo quando você está perto." -- mt
 L["Airship and boat route markers now use the client's native ferry atlas art."] =
 	"Os marcadores de rota de aeronave e barco agora usam a arte nativa do atlas de balsa do cliente." -- mt
 L["%d. %s — %s"] = "%d. %s — %s"

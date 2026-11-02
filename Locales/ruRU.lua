@@ -315,12 +315,14 @@ L["west"] = "запад"
 L["your corpse"] = "ваше тело"
 L["your position"] = "ваше местоположение"
 L["zeppelin"] = "дирижабль"
-L["Step %d: discover flight master %s before flying."] = "Step %d: discover flight master %s before flying." -- mt
+L["Step %d: discover flight master %s before flying."] =
+	"Шаг %d: откройте распорядителя полётов %s перед полётом." -- mt
 L["You are near the new flight master %s. Discover it before flying."] =
-	"You are near the new flight master %s. Discover it before flying." -- mt
-L["Remind me about new flight masters"] = "Remind me about new flight masters" -- mt
+	"Вы рядом с новым распорядителем полётов %s. Откройте его перед полётом." -- mt
+L["Remind me about new flight masters"] =
+	"Напоминать о новых распорядителях полётов" -- mt
 L["Warns when a journey needs you to discover a flight master, and again when you are close."] =
-	"Warns when a journey needs you to discover a flight master, and again when you are close." -- mt
+	"Предупреждает, когда для путешествия нужно открыть распорядителя полётов, и снова, когда вы рядом." -- mt
 L["Airship and boat route markers now use the client's native ferry atlas art."] =
 	"Маркеры маршрутов дирижаблей и лодок теперь используют нативную графику атласа парома клиента." -- mt
 L["%d. %s — %s"] = "%d. %s — %s"

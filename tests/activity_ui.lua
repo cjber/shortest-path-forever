@@ -114,9 +114,14 @@ local function lift(phase)
   end
  end
 end
+local said, print = {}, ns.Print
+ns.Print = function(message) said[#said + 1] = message end
 lift(0) fireEvent("ZONE_CHANGED")
 for i = 1, 60 do lift(i * 1000 % route.period) advance(1) end
 assert(ns.CurrentRide() == 118981, "height-only passive lift must still sync")
+assert(said[#said] == "synced the Great Lift schedule from your ride.",
+ "the sync line names the lift once: " .. tostring(said[#said]))
+ns.Print = print
 posX, posY, posZ, posMap = 0, 0, 0, 1
 advance(40)
 

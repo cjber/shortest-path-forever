@@ -15,3 +15,7 @@ tools/baker/work/
 
 # Bugpatrol: local data and screenshots of the real app
 .bugpatrol/runs/
+
+# Speedpatrol and Sloppatrol: local runs, worktrees and sessions
+.speedpatrol/runs/
+.sloppatrol/runs/
