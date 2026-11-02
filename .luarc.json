@@ -8,7 +8,7 @@
     ".git",
     ".claude",
     ".types",
-    ".sift",
+    ".sloppatrol",
     "tests",
     "tools",
     ".release",
