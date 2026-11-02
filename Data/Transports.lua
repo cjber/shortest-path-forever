@@ -11,10 +11,10 @@ local _, ns = ...
 -- 176080 leads 176081/176085; 176082 leads 176083/176084. Each train uses its lead track.
 
 -- stylua: ignore
-ns.Docks[1001] = { map = 1, x = -4668.1, y = -1838.64, z = 85.407, site = "The Great Lift", name = "Top" }
+ns.Docks[1001] = { map = 1, x = -4668.1, y = -1838.64, z = 85.407, site = "Great Lift", name = "Top" }
 
 -- stylua: ignore
-ns.Docks[1002] = { map = 1, x = -4668.1, y = -1838.64, z = -44.019, site = "The Great Lift", name = "Bottom" }
+ns.Docks[1002] = { map = 1, x = -4668.1, y = -1838.64, z = -44.019, site = "Great Lift", name = "Bottom" }
 
 -- stylua: ignore
 ns.Docks[1003] = { map = 1, x = -5390.845, y = -2497.02, z = 89.023, site = "Freewind Post", name = "Top" }
@@ -144,7 +144,7 @@ ns.Routes[41711] = {
 -- stylua: ignore
 ns.Routes[118981] = {
 	kind = "lift",
-	site = "The Great Lift",
+	site = "Great Lift",
 	period = 30000,
 	fit = { samples = 5, span = 4000, speed = 8 },
 	stops = {

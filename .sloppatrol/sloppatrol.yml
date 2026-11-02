@@ -1,0 +1,19 @@
+# Sloppatrol profile for Shortest Path Forever, a WoW: Forever addon in Lua 5.1 with Python tooling.
+# `sloppatrol init` writes a failing placeholder for a repo without package.json, so the checks
+# are set by hand from the gate in AGENTS.md. `check_generated.py --offline` is left out: it needs
+# the gitignored tools/.cache, which a clean run checkout does not have, and refactors skip Data/.
+agent: claude
+prepare: []
+cleanup: [stylua .]
+checks:
+  - { name: format, run: "stylua --check ." }
+  - { name: lint, run: "luacheck ." }
+  - { name: typecheck, run: "tools/typecheck.sh" }
+  - { name: specs, run: "for s in tests/*_spec.lua; do luajit \"$s\" || exit 1; done", tests: true }
+  - { name: tools, run: "ruff format --check . && ruff check ." }
+focus: [Journey/**, Nav/**, Routing/**, Transport/**, UI/**]
+ignore: [Data/**, Locales/**, Libs/**, tools/forever_tools/**]
+guards: { maxFiles: 8, maxLines: 400 }
+agents:
+  refactorer: { maxPerCycle: 1, maxAttempts: 2 }
+github: { enabled: false }

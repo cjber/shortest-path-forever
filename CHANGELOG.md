@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Riding the Great Lift names it once.** The chat line after a ride read "synced the The Great Lift schedule from your ride."; the lift is now called the Great Lift everywhere the addon names it, its map labels included.
+
 ## [1.22.15] - 2026-10-30
 
 - **THIRD_PARTY.md credits more of the players behind the addon.** Its Ideas and contributors table gains rows for players whose reports, ideas or fixes shipped but were not yet credited there. Thanks to Mouchoir and z1ck for what they reported, asked for and fixed.
