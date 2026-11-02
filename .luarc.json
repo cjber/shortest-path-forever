@@ -11,7 +11,10 @@
     ".sift",
     "tests",
     "tools",
-    ".release"
+    ".release",
+    ".bugpatrol",
+    ".speedpatrol",
+    ".sloppatrol"
   ],
   "workspace.checkThirdParty": false,
   "workspace.maxPreload": 10000,
