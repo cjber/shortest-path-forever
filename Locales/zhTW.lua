@@ -65,6 +65,7 @@ L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] 
 L["E"] = "東"
 L["Either faction can ride any boat or zeppelin."] = "任何陣營都可以搭乘任何船隻或飛艇。"
 L["Enter %s"] = "進入%s"
+L["Every line now reads in all nine shipped languages."] = "現在所有文字都有九種隨附語言的譯文。"
 L["Finding the fastest way…"] = "正在尋找最快路線…"
 L["Flight Masters"] = "飛行管理員"
 L["Flight master"] = "飛行管理員"
@@ -302,8 +303,6 @@ L["You are near the new flight master %s. Discover it before flying."] =
 L["Remind me about new flight masters"] = "提醒新的飛行管理員" -- mt
 L["Warns when a journey needs you to discover a flight master, and again when you are close."] =
 	"旅程需要你發現飛行管理員時提醒一次，靠近時再提醒一次。" -- mt
-L["Airship and boat route markers now use the client's native ferry atlas art."] =
-	"飛艇和船隻路線標記現在使用客戶端原生的渡船圖集美術。" -- mt
 L["%d. %s — %s"] = "%d. %s — %s"
 L["/path issue - report a bug or request a feature with a ready-made GitHub issue link"] =
 	"/path issue - 透過現成的 GitHub 問題連結回報缺陷或請求功能"

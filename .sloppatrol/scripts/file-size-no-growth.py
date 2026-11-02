@@ -2,8 +2,8 @@
 # SPDX-FileCopyrightText: 2026 Agent Labs
 # SPDX-License-Identifier: MIT
 # catalog: file-size-no-growth@0.2.0
-# sift-scope: changed
-# sift-fix: split the file along its responsibilities before adding to it, or put the new code in a new file
+# sloppatrol-scope: changed
+# sloppatrol-fix: split the file along its responsibilities before adding to it, or put the new code in a new file
 """Report a changed file over LIMIT lines that this change added or grew."""
 
 from __future__ import annotations
@@ -19,10 +19,10 @@ EXCLUDE = (
     "*.lock",
     "*-lock.json",
     "*-lock.yaml",
-    ".sift/gate.py",
-    ".sift/agents.py",
+    ".sloppatrol/gate.py",
+    ".sloppatrol/agents.py",
     # Generated JSON ledger that cannot carry an inline marker; excluded with the user's approval, 2026-09-27.
-    ".sift/ledger.json",
+    ".sloppatrol/ledger.json",
     "Data/*.lua",
     "Nav/*.lua",
 )
@@ -42,10 +42,10 @@ def base_lines(base: str, path: str) -> int:
 
 
 def main() -> int:
-    rule, base = os.environ["SIFT_RULE"], os.environ["SIFT_BASE"]
-    corpus = set(Path(os.environ["SIFT_FILES"]).read_text().splitlines())
+    rule, base = os.environ["SLOPPATROL_RULE"], os.environ["SLOPPATROL_BASE"]
+    corpus = set(Path(os.environ["SLOPPATROL_FILES"]).read_text().splitlines())
     hits = []
-    for row in Path(os.environ["SIFT_CHANGED"]).read_text().splitlines():
+    for row in Path(os.environ["SLOPPATROL_CHANGED"]).read_text().splitlines():
         status, old, *renamed = row.split("\t")
         new = renamed[0] if renamed else old
         if status == "D" or new not in corpus or any(fnmatch.fnmatch(new, p) for p in EXCLUDE):

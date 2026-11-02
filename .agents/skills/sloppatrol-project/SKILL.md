@@ -1,11 +1,11 @@
 ---
-name: sift-project
-description: "Project profile for sift in Shortest Path Forever: the exact quality-gate and evidence commands, live roots that must never be deleted as dead code, exclusions, conventions and risk order. Load before running sift or any code-quality, cleanup or dead-code work in this repository."
+name: sloppatrol-project
+description: "Project profile for Sloppatrol in Shortest Path Forever: the exact quality-gate and evidence commands, live roots that must never be deleted as dead code, exclusions, conventions and risk order. Load before running Sloppatrol or any code-quality, cleanup or dead-code work in this repository."
 ---
 
-# sift project profile — Shortest Path Forever
+# Sloppatrol project profile — Shortest Path Forever
 
-<!-- Written by `sift setup`. Keep it factual: every command here has been run and works.
+<!-- Written by `sloppatrol setup`. Keep it factual: every command here has been run and works.
      Update it whenever an audit learns something (a live root, a false-positive source). -->
 
 A World of Warcraft: Forever (Classic, `## Interface: 16001`) addon that plans journeys (walking, flights,
@@ -31,7 +31,7 @@ Run in order from the repository root. All must pass before and after any audit 
 | Tests | `for s in tests/*_spec.lua; do luajit "$s" \|\| exit 1; done` | every spec prints `…: ok`; ~25 s total |
 | Workflows | `actionlint && zizmor --offline .github` | exit 0 / "No findings" |
 | Secrets | `gitleaks git --redact --no-banner .` | `no leaks found` |
-| Project rules | `python3 .sift/gate.py --base origin/main && python3 .sift/agents.py check` | exit 0 |
+| Project rules | `python3 .sloppatrol/gate.py --base origin/main && python3 .sloppatrol/agents.py check` | exit 0 |
 
 When the two workflow linters are not on PATH, `go run github.com/rhysd/actionlint/cmd/actionlint@latest`
 and `uvx zizmor --offline .github` run the same checks.
@@ -51,10 +51,10 @@ On-demand tools for audits. Output is candidates, never verdicts.
 | Diagnostics (Lua) | `tools/typecheck.sh` (file:line diagnostics and counts; JSON in `.types/diagnostics.json`) | tests/tools are excluded from LuaLS; all TOC runtime files, including generated data, are checked |
 | Dead code (Python) | `uvx vulture tools --min-confidence 60` | clean today |
 | Types (Python) | `uvx --with pillow ty check --extra-search-path tools --python-version 3.10 tools` | 5 inference errors in `gen_nav.py` (tuple unpacking, `dict.get` keys) + Pillow `Image.LANCZOS` — not bugs |
-| Large files | `python3 .sift/gate.py --rule file-size-no-growth --all` | lists files over 1000 lines; none remain, so any listed file is a regression |
-| Duplication | `npx --yes jscpd@4 --silent --reporters json --output .sift/runs/jscpd --ignore '**/Nav/**,**/Data/**,**/.sift/**,**/media/**,LICENSE' .` | whole-file clones among `tests/*_ui.lua` are their long-string bodies |
-| Unread `ns` members | the `ns-defined`/`ns-once` pipeline in the sift skill's `languages/lua.md` | its regex has no word boundary, so `options.revision` reads as `ns.revision` |
-| Standards pack | `SIFT_STANDARDS_PATH=$HOME/forever-core python3 <sift>/scripts/agents.py standards` | `wow-forever-addon` lives in `~/forever-core`, which the default search path misses |
+| Large files | `python3 .sloppatrol/gate.py --rule file-size-no-growth --all` | lists files over 1000 lines; none remain, so any listed file is a regression |
+| Duplication | `npx --yes jscpd@4 --silent --reporters json --output .sloppatrol/runs/jscpd --ignore '**/Nav/**,**/Data/**,**/.sloppatrol/**,**/media/**,LICENSE' .` | whole-file clones among `tests/*_ui.lua` are their long-string bodies |
+| Unread `ns` members | the `ns-defined`/`ns-once` pipeline in the Sloppatrol skill's `references/languages/lua.md` | its regex has no word boundary, so `options.revision` reads as `ns.revision` |
+| Standards (`wow-forever-addon`) | load the `wow-forever-addon` skill that AGENTS.md declares under `## Standards` | an audit reviews the addon against its WFA ids |
 | Live roots (Lua) | `rg -n 'RegisterEvent\|SetScript\|hooksecurefunc\|SLASH_\|SlashCmdList\|LoadAddOn\|SendAddonMessage' -g '*.lua'` | — |
 
 ## Live roots
@@ -158,7 +158,7 @@ Audit slices from lowest to highest risk:
 
 ## Project rules and lenses
 
-- Rules: `file-size-no-growth` (`.sift/scripts/`, from the sift catalog) fails a change that adds
+- Rules: `file-size-no-growth` (`.sloppatrol/scripts/`) fails a change that adds
   a file over 1000 lines or grows one. Generated `Data/*.lua` and `Nav/*.lua`
   are excluded.
 - Lenses: none yet.

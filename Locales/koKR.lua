@@ -66,6 +66,7 @@ L["E"] = "동"
 L["Either faction can ride any boat or zeppelin."] =
 	"어느 진영이든 모든 배와 비행선을 탈 수 있습니다."
 L["Enter %s"] = "%s 입장"
+L["Every line now reads in all nine shipped languages."] = "이제 모든 줄이 아홉 개 언어로 표시됩니다."
 L["Finding the fastest way…"] = "가장 빠른 길 찾는 중…"
 L["Flight Masters"] = "비행 조련사"
 L["Flight master"] = "비행 조련사"
@@ -313,8 +314,6 @@ L["You are near the new flight master %s. Discover it before flying."] =
 L["Remind me about new flight masters"] = "새 비행 조련사 알림" -- mt
 L["Warns when a journey needs you to discover a flight master, and again when you are close."] =
 	"여정에 비행 조련사를 찾아야 할 때, 그리고 가까이 있을 때 다시 알려 줍니다." -- mt
-L["Airship and boat route markers now use the client's native ferry atlas art."] =
-	"비행선 및 배 경로 표시가 이제 클라이언트의 기본 페리 아틀라스 아트를 사용합니다." -- mt
 L["%d. %s — %s"] = "%d. %s — %s"
 L["/path issue - report a bug or request a feature with a ready-made GitHub issue link"] =
 	"/path issue - 준비된 GitHub 이슈 링크로 버그를 보고하거나 기능을 요청합니다"

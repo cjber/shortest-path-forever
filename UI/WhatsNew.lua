@@ -5,7 +5,7 @@ local L = ns.L
 
 -- One sentence on what the latest release changed, printed once after an update. Each release refreshes it from
 -- its CHANGELOG entry.
-ns.WHATS_NEW = L["Airship and boat route markers now use the client's native ferry atlas art."]
+ns.WHATS_NEW = L["Every line now reads in all nine shipped languages."]
 
 -- Once per new version, after an update: never on a first install, nor in a checkout, whose TOC still holds the
 -- packager's version keyword (matched by its "@", as the packager would rewrite the whole keyword here too).
