@@ -68,6 +68,8 @@ L["E"] = "В"
 L["Either faction can ride any boat or zeppelin."] =
 	"Любая фракция может сесть на любой корабль или дирижабль."
 L["Enter %s"] = "Войти: %s"
+L["Every line now reads in all nine shipped languages."] =
+	"Теперь все строки есть на всех девяти языках."
 L["Finding the fastest way…"] = "Поиск самого быстрого пути…"
 L["Flight Masters"] = "Распорядители полетов"
 L["Flight master"] = "Распорядитель полетов"
@@ -323,8 +325,6 @@ L["Remind me about new flight masters"] =
 	"Напоминать о новых распорядителях полётов" -- mt
 L["Warns when a journey needs you to discover a flight master, and again when you are close."] =
 	"Предупреждает, когда для путешествия нужно открыть распорядителя полётов, и снова, когда вы рядом." -- mt
-L["Airship and boat route markers now use the client's native ferry atlas art."] =
-	"Маркеры маршрутов дирижаблей и лодок теперь используют нативную графику атласа парома клиента." -- mt
 L["%d. %s — %s"] = "%d. %s — %s"
 L["/path issue - report a bug or request a feature with a ready-made GitHub issue link"] =
 	"/path issue - сообщить об ошибке или предложить функцию с готовой ссылкой на задачу GitHub"

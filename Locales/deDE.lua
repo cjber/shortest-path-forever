@@ -65,6 +65,8 @@ L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] 
 L["E"] = "O"
 L["Either faction can ride any boat or zeppelin."] = "Beide Fraktionen können jedes Schiff und jeden Zeppelin nutzen."
 L["Enter %s"] = "%s betreten"
+L["Every line now reads in all nine shipped languages."] =
+	"Jede Zeile steht jetzt in allen neun ausgelieferten Sprachen."
 L["Finding the fastest way…"] = "Schnellster Weg wird gesucht…"
 L["Flight Masters"] = "Flugmeister"
 L["Flight master"] = "Flugmeister"
@@ -308,8 +310,6 @@ L["You are near the new flight master %s. Discover it before flying."] =
 L["Remind me about new flight masters"] = "An neue Flugmeister erinnern" -- mt
 L["Warns when a journey needs you to discover a flight master, and again when you are close."] =
 	"Warnt, wenn eine Reise verlangt, dass Ihr einen Flugmeister entdeckt, und noch einmal, wenn Ihr in der Nähe seid." -- mt
-L["Airship and boat route markers now use the client's native ferry atlas art."] =
-	"Luftschiff- und Bootsroutenmarkierungen nutzen jetzt die native Fähratlas-Grafik des Clients." -- mt
 L["%d. %s — %s"] = "%d. %s — %s"
 L["/path issue - report a bug or request a feature with a ready-made GitHub issue link"] =
 	"/path issue - meldet einen Fehler oder wünscht eine Funktion mit einem fertigen GitHub-Issue-Link"

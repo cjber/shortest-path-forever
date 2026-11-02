@@ -67,6 +67,8 @@ L["E"] = "E" -- mt
 L["Either faction can ride any boat or zeppelin."] =
 	"Les deux factions peuvent prendre n'importe quel bateau ou zeppelin." -- mt
 L["Enter %s"] = "Entrer dans %s" -- mt
+L["Every line now reads in all nine shipped languages."] =
+	"Toutes les lignes existent désormais dans les neuf langues livrées."
 L["Finding the fastest way…"] = "Recherche du chemin le plus rapide…" -- mt
 L["Flight Masters"] = "Maîtres de vol" -- mt
 L["Flight master"] = "Maître de vol" -- mt
@@ -311,8 +313,6 @@ L["You are near the new flight master %s. Discover it before flying."] =
 L["Remind me about new flight masters"] = "Me rappeler les nouveaux maîtres de vol" -- mt
 L["Warns when a journey needs you to discover a flight master, and again when you are close."] =
 	"Prévient quand un trajet exige de découvrir un maître de vol, et de nouveau quand vous êtes proche." -- mt
-L["Airship and boat route markers now use the client's native ferry atlas art."] =
-	"Les marqueurs d'itinéraire d'aéronef et de bateau utilisent désormais l'art natif de l'atlas de ferry du client." -- mt
 L["%d. %s — %s"] = "%d. %s — %s"
 L["/path issue - report a bug or request a feature with a ready-made GitHub issue link"] =
 	"/path issue - signale un bug ou demande une fonctionnalité avec un lien de ticket GitHub prêt à l'emploi"

@@ -12,6 +12,9 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.22.16] - 2026-11-02
+
+- **Every line now reads in all nine shipped languages.** The locale check found lines still shown in English: the flight-master and transport strings, and the phrases the report and shopping-list work added. All nine locale files cover `Locales/phrases.txt`, so no window falls back to English. `tools/typecheck.sh` runs the locale check with `--release` from now on, so an English line added without its translations fails the change that adds it.
 - **Riding the Great Lift names it once.** The chat line after a ride read "synced the The Great Lift schedule from your ride."; the lift is now called the Great Lift everywhere the addon names it, its map labels included.
 
 ## [1.22.15] - 2026-10-30
