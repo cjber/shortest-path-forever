@@ -29,6 +29,9 @@ local DEFAULTS = {
 	flightPathReminder = true,
 	arrivalSound = false,
 	journey = true,
+	-- An on-screen marker over the destination, like the client's own waypoint pin. Off by default: it is
+	-- new screen furniture, and a player asks for it from Settings > Guidance.
+	destinationPin = false,
 	resumeJourney = false,
 	tomtom = true,
 	tomtomFollow = false,

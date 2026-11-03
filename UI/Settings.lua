@@ -274,6 +274,14 @@ ns.Init(function()
 		end
 	)
 	Checkbox(
+		"destinationPin",
+		L["Show a pin over the destination"],
+		L["A marker on screen over where the journey ends, like the game's own waypoint pin. It yields to Waypoint UI while that addon is navigating."],
+		function()
+			ns.DestinationPinChanged()
+		end
+	)
+	Checkbox(
 		"tomtom",
 		L["Let guides set TomTom waypoints"],
 		L["While TomTom is not installed, a guide that sets a TomTom waypoint starts a journey here instead."],
@@ -583,6 +591,21 @@ ns.Init(function()
 		local way = message == "way" and "" or message:match("^way%s+(.*)$")
 		if way then
 			ns.Way(way)
+			return
+		elseif message:match("^follow") then
+			local unit = message:match("^follow%s*(.*)$")
+			if unit == "" or unit == nil then
+				-- The first party member is who a follow is nearly always for.
+				unit = "party1"
+			end
+			if unit == "off" or ns.IsFollowing() and unit == "" then
+				ns.StopFollowing()
+				ns.Print(L["No longer following."])
+				return
+			end
+			if ns.StartFollowing(unit) then
+				ns.Print(L["Following %s."]:format(L["Party member"]))
+			end
 			return
 		elseif message == "perf" then
 			Perf()

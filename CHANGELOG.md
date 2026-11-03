@@ -12,6 +12,11 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.22.18] - 2026-11-03
+
+- **Follow a party member and the route keeps up with them.** `/path follow` (or `/path follow party2`) plans a journey to where that player is and replans it as they move, so the arrow, compass, tracker and map stay on them instead of on where they stood when you set off. The client only reports another player's position as a fraction of a zone map, so a refresh is due once a second and only after a visible move; the replan is handed to the next frame no walking search is using, which a bench over real Ashenvale and Darkshore data shows keeps it out of the frame the search was already spending. It ends when you are within 40 yards of them or they leave the group. Asked for by a player whose wife could use the direction, in the CurseForge comments.
+- **A pin on screen over the journey's destination.** Settings > Guidance gains `Show a pin over the destination`: the game's own waypoint pin, held over where the journey ends, turning with you as you face it and fading when it is behind you, with the distance under it. It is off until you ask for it, only draws in the zone you are in, and stands down while Waypoint UI is navigating so the two never draw a pin over each other. That was the other half of the CurseForge request that shipped its Waypoint UI half in 1.22.5.
+
 ## [1.22.17] - 2026-11-03
 
 - **The first journey after a login or `/reload` no longer stalls.** The planner threw away its transport topology on every reset, so each journey's first plan rebuilt it inside the click: 476 ms on the first journey after a reload against 5 ms on the second. The topology now survives a reset and is rebuilt only when one of its inputs changes, so the cold build is paid once a session rather than once a journey. Reported by JohnChrin, who measured it around `API.NavigateRoute` on v1.22.16.

@@ -90,6 +90,8 @@ read_globals = {
 	"C_TaxiMap",
 	"C_SuperTrack",
 	"UnitFactionGroup",
+	"UnitExists",
+	"UnitIsUnit",
 	"UnitName",
 	"UnitOnTaxi",
 	"UnitPosition",

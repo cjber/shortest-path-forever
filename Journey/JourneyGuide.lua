@@ -43,6 +43,14 @@ local function WaypointUIHolding()
 	return ok and waypoint ~= nil
 end
 
+-- Whether Waypoint UI is tracking a navigation of its own: its pin is the one in the world then, and ours
+-- (UI/DestinationPin.lua) stands down rather than drawing a second one over it.
+---@return boolean
+function ns.WaypointUIPinOwned()
+	local navigation = WaypointUINavigation()
+	return navigation ~= nil and WaypointUITracking(navigation)
+end
+
 -- The title the tracker and JourneyInfo use, so Waypoint UI names the destination the same way the guide does.
 ---@param goal table?
 ---@return string? title

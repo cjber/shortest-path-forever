@@ -246,6 +246,7 @@ local groups = {
 		"trackerLocked",
 		"journey",
 		"resumeJourney",
+		"destinationPin",
 		"tomtom",
 		"tomtomFollow",
 		"restedxp",
@@ -276,7 +277,7 @@ local groups = {
 local order = { "Map marks", "Transport", "Travel journal", "Guidance", "Alerts", "Interface" }
 
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
-assert(#rows == 44, #rows)
+assert(#rows == 45, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
