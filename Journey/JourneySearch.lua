@@ -811,7 +811,10 @@ function Search.Reset()
 	end
 	startBatch, goalBatch = nil, nil
 	search = nil
-	plannerCache = {}
+	-- plannerCache is kept: Planner.Plan rebuilds the graph itself whenever an input it was built from differs (its
+	-- CACHE_KEYS, waterWalking and hazards among them) and rewrites the two endpoints for the new journey, so a
+	-- journey started after this one plans against a warm graph instead of paying the whole build on its first
+	-- click. The decoded walking grids are still released here.
 	ns.Path.ClearCaches()
 	goal, followed = nil, nil
 end
