@@ -12,6 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.22.19] - 2026-11-03
+
+- **The destination pin says what the step is, not only how far.** The in-world pin now carries one short line of the current step's wording under the distance, taken from the journey's current row and falling back to the journey title when no row is current, cut at a word so it fits the pin. It is reread only when the goal or the stop index changes, so the per-poll cost is unchanged, and the map pin's tooltip still carries the full text of every step. Asked for on the pin that shipped in 1.22.18.
+
 ## [1.22.18] - 2026-11-03
 
 - **Follow a party member and the route keeps up with them.** `/path follow` (or `/path follow party2`) plans a journey to where that player is and replans it as they move, so the arrow, compass, tracker and map stay on them instead of on where they stood when you set off. The client only reports another player's position as a fraction of a zone map, so a refresh is due once a second and only after a visible move; the replan is handed to the next frame no walking search is using, which a bench over real Ashenvale and Darkshore data shows keeps it out of the frame the search was already spending. It ends when you are within 40 yards of them or they leave the group. Asked for by a player whose wife could use the direction, in the CurseForge comments.
