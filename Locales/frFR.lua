@@ -344,3 +344,11 @@ L["Turn this off to keep stats on this character only. Shared records are player
 L["Use /path leaderboard routes, distance, transports, flights or portals."] =
 	"Utilisez /path leaderboard routes, distance, transports, flights ou portals."
 L["What happened, or what you would like"] = "Ce qui s'est passé, ou ce que vous aimeriez"
+L["Party member"] = "Membre du groupe" -- mt
+L["That player is not on a map you can see."] = "Ce joueur n’est pas sur une carte que vous pouvez voir." -- mt
+L["You have caught up with %s."] = "Vous avez rattrapé %s." -- mt
+L["Show a pin over the destination"] = "Afficher une épingle sur la destination" -- mt
+L["A marker on screen over where the journey ends, like the game's own waypoint pin."] = "Un repère à l’écran sur l’arrivée du trajet, comme l’épingle de point de passage du jeu." -- mt
+L["It stands down while Waypoint UI is navigating, so the two never draw over each other."] = "Elle s’efface pendant que Waypoint UI navigue, pour qu’elles ne se superposent jamais." -- mt
+L["No longer following."] = "Vous ne suivez plus personne." -- mt
+L["Following %s."] = "Vous suivez %s." -- mt

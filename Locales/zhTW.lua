@@ -334,3 +334,11 @@ L["Turn this off to keep stats on this character only. Shared records are player
 L["Use /path leaderboard routes, distance, transports, flights or portals."] =
 	"使用 /path leaderboard routes、distance、transports、flights 或 portals。"
 L["What happened, or what you would like"] = "發生了什麼，或你希望有什麼"
+L["Party member"] = "隊友" -- mt
+L["That player is not on a map you can see."] = "該玩家不在你能看到的地圖上。" -- mt
+L["You have caught up with %s."] = "你已追上%s。" -- mt
+L["Show a pin over the destination"] = "在目的地顯示圖釘" -- mt
+L["A marker on screen over where the journey ends, like the game's own waypoint pin."] = "在旅程終點上方顯示螢幕標記，類似遊戲內建的路徑點圖釘。" -- mt
+L["It stands down while Waypoint UI is navigating, so the two never draw over each other."] = "Waypoint UI 導航時它會隱藏，兩者不會互相覆蓋。" -- mt
+L["No longer following."] = "已停止跟隨。" -- mt
+L["Following %s."] = "正在跟隨%s。" -- mt
