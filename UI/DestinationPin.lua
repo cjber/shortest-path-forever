@@ -25,6 +25,7 @@ local PIN_ATLAS, PIN_WIDTH, PIN_HEIGHT = "Waypoint-MapPin-Tracked", 28, 36
 ---@class SPFDestinationPinFrame : Frame
 ---@field Pin Texture
 ---@field Distance FontString
+---@field Step FontString
 ---@field elapsed number
 ---@type SPFDestinationPinFrame?
 local frame
@@ -50,7 +51,7 @@ end
 ---@return SPFDestinationPinFrame
 local function Create()
 	local pin = CreateFrame("Frame", "ShortestPathForeverDestinationPin", UIParent) --[[@as SPFDestinationPinFrame]]
-	pin:SetSize(PIN_WIDTH, PIN_HEIGHT + 14)
+	pin:SetSize(PIN_WIDTH, PIN_HEIGHT + 28)
 	pin:SetFrameStrata("MEDIUM")
 	pin:SetAlpha(1)
 	pin.Pin = pin:CreateTexture(nil, "ARTWORK")
@@ -59,6 +60,11 @@ local function Create()
 	pin.Distance = pin:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	pin.Distance:SetPoint("TOP", pin, "TOP", 0, -PIN_HEIGHT + 4)
 	pin.Distance:SetJustifyH("CENTER")
+	pin.Step = pin:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	pin.Step:SetPoint("TOP", pin.Distance, "BOTTOM", 0, -2)
+	pin.Step:SetJustifyH("CENTER")
+	pin.Step:SetWordWrap(false)
+	pin.Step:SetMaxLines(1)
 	pin.elapsed = 0
 	pin:Hide()
 	frame = pin
@@ -89,6 +95,52 @@ function ns.DestinationPinWanted()
 	return true
 end
 
+-- Longest step wording the pin shows: one short line under the distance, since the map pin's
+-- tooltip carries the full text of every step.
+local STEP_MAX = 32
+local stepText, stepKey
+
+-- The current step's wording, as the tracker and the map pin's tooltip put it, cut to one line.
+-- rows are JourneyInfo's, whose current row is the step being walked.
+---@param title string?
+---@param rows SPFRow[]?
+---@return string?
+function ns.PinStepText(title, rows)
+	local wording
+	for _, row in ipairs(rows or {}) do
+		if row.current and row.text then
+			wording = row.text
+			break
+		end
+	end
+	wording = wording or title
+	if type(wording) ~= "string" or wording == "" then
+		return nil
+	end
+	if #wording > STEP_MAX then
+		wording = (wording:sub(1, STEP_MAX - 3):gsub("%s+%S*$", "")) .. "..."
+	end
+	return wording
+end
+
+-- The step wording costs a JourneyInfo build, so it is read only when the step changes: the goal
+-- and the stop index the route is on. Between steps the pin reuses the line it already has.
+---@param goal SPFPoint
+---@return string?
+local function StepText(goal)
+	if not (ns.JourneyInfo and ns.JourneyStops) then
+		return nil
+	end
+	local _, index = ns.JourneyStops()
+	local key = tostring(goal) .. ":" .. tostring(index)
+	if key ~= stepKey then
+		stepKey = key
+		local title, rows = ns.JourneyInfo()
+		stepText = ns.PinStepText(title, rows)
+	end
+	return stepText
+end
+
 -- One update of the pin: where it goes, how strong it is and how far there is to go.
 function ns.RefreshDestinationPin()
 	if not ns.DestinationPinWanted() then
@@ -112,6 +164,12 @@ function ns.RefreshDestinationPin()
 	pin:SetPoint("CENTER", UIParent, "CENTER", offsetX, offsetY)
 	pin:SetAlpha(alpha)
 	pin.Distance:SetText(ns.FormatDistance(distance, true))
+	local step = StepText(goal)
+	if pin.step ~= step then
+		pin.step = step
+		pin.Step:SetText(step or "")
+		pin.Step:SetShown(step ~= nil)
+	end
 	pin:Show()
 end
 

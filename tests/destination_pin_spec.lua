@@ -78,4 +78,21 @@ ns.WaypointUIPinOwned = function()
 end
 assert(ns.DestinationPinWanted(), "Waypoint UI absent leaves ours in charge")
 
+-- The step line under the distance: the current row's wording, the title when no row is current,
+-- one short line cut at a word, and nothing at all when there is no wording to show.
+assert(
+	ns.PinStepText("Journey to Goldshire", { { text = "1. Walk", current = true } }) == "1. Walk",
+	"the current row wins"
+)
+assert(
+	ns.PinStepText("Journey to Goldshire", { { text = "1. Walk" }, { text = "2. Fly" } }) == "Journey to Goldshire",
+	"no current row falls back to the title"
+)
+assert(ns.PinStepText(nil, nil) == nil, "no wording, no line")
+assert(ns.PinStepText("", {}) == nil, "an empty title is not a line")
+local cut = ns.PinStepText(string.rep("word ", 12), nil)
+assert(#cut <= 32, "the line is cut to fit the pin")
+assert(cut:sub(-3) == "...", "a cut line says so")
+assert(not cut:find(" $"), "a cut line never ends on a space")
+
 print("destination pin: ok")
