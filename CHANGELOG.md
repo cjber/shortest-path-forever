@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.22.20] - 2026-11-03
+
 - **Alt-left-click plans journeys with TomTom installed.** TomTom keeps its right-click waypoint gesture, while Alt-left-click plans a journey over map icons. Saved TomTom settings no longer disable that gesture. Thanks to cjber for requesting the compatibility audit (#329).
 
 ## [1.22.19] - 2026-11-03
