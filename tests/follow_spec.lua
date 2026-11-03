@@ -71,8 +71,9 @@ end
 local here = { map = 1, x = 2827.34, y = -289.24 }
 driver.move(here)
 assert(ns.StartFollowing("party1"), "start following")
--- The walking search settles over the frames after the click, as it does in the game.
-for _ = 1, 40 do
+-- The walking search settles over the frames after the click, as it does in the game. The search is sliced by a
+-- real-time budget, so a slower machine needs more frames for the same walk: the cap is generous rather than tight.
+for _ = 1, 400 do
 	if driver.shown() then
 		break
 	end
