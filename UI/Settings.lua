@@ -276,7 +276,9 @@ ns.Init(function()
 	Checkbox(
 		"destinationPin",
 		L["Show a pin over the destination"],
-		L["A marker on screen over where the journey ends, like the game's own waypoint pin. It yields to Waypoint UI while that addon is navigating."],
+		L["A marker on screen over where the journey ends, like the game's own waypoint pin."]
+			.. " "
+			.. L["It stands down while Waypoint UI is navigating, so the two never draw over each other."],
 		function()
 			ns.DestinationPinChanged()
 		end

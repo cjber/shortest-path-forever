@@ -78,13 +78,10 @@ local function Here()
 	return x and { map = map, x = x, y = y }
 end
 
--- A unit's name may be a secret value: reading one as text is the bug the guard prevents.
-local function Name(unit)
-	local name = UnitName(unit)
-	if not canaccessvalue(name) or type(name) ~= "string" then
-		name = nil
-	end
-	return name or L["Party member"]
+-- A unit's name can be a secret the client keeps back (tools/lint_secret.py), so the target is
+-- named for what it is: the tracker, the arrow and the pin all say "Party member".
+local function Name()
+	return L["Party member"]
 end
 
 -- Point the journey at the member now. Called from a quiet frame only.
@@ -95,7 +92,7 @@ local function Apply()
 	if not (point and following) then
 		return
 	end
-	local label = Name(following.unit)
+	local label = Name()
 	following.point = point
 	point.label, point.routeTitle = label, label
 	ns.StartJourney(point)
@@ -135,7 +132,7 @@ function ns.StartFollowing(unit, throttle)
 	-- throttle rather than firing on the next frame.
 	local seconds = throttle or THROTTLE
 	following = { unit = unit, throttle = seconds, waiting = seconds, arrived = false, point = point }
-	local label = Name(unit)
+	local label = Name()
 	point.label, point.routeTitle = label, label
 	ns.StartJourney(point)
 	return true
@@ -175,7 +172,7 @@ function ns.FollowTick(elapsed)
 	if close and close <= ARRIVE then
 		if not following.arrived then
 			following.arrived = true
-			ns.Print(L["You have caught up with %s."]:format(Name(unit)))
+			ns.Print(L["You have caught up with %s."]:format(Name()))
 		end
 		return
 	end

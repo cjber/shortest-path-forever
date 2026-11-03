@@ -33,8 +33,8 @@ assert(close(alpha, 0.4), "behind is dimmest")
 
 -- The bearing is taken relative to facing, and wraps the short way round: turned just past
 -- north, north sits a little to your right rather than most of the way round the screen.
-x, _, alpha = ns.PinPlace(0, 2 * math.pi - 0.1, 500)
-assert(x > 0 and x < 40, "a small turn puts the pin just to the side")
+local turnedX = ns.PinPlace(0, 2 * math.pi - 0.1, 500)
+assert(turnedX > 0 and turnedX < 40, "a small turn puts the pin just to the side")
 
 -- A distance is not needed for placement, but a missing bearing or facing has no answer.
 assert(ns.PinPlace(nil, 0, 500) == nil, "no bearing, no pin")
