@@ -385,4 +385,35 @@ do
 	h.clear()
 end
 
+-- A journey started after one ends plans on the topology the last one built, and only a changed input rebuilds it.
+-- Reset used to drop the whole planner cache, so the graph was rebuilt inside the click (issue 317: the first journey
+-- after a login or reload blocked the client for about half a second).
+do
+	local h = scenario(300, 275)
+	local ns = h.ns
+	local plan, seen = ns.Planner.Plan, nil
+	ns.Planner.Plan = function(options)
+		seen = options.cache
+		return plan(options)
+	end
+	h.costs("A")
+	h.geometry()
+	local cache = assert(seen, "the first journey plans")
+	local topology = assert(cache.topology, "the first plan builds a topology")
+	local goal = h.goal
+	h.clear()
+	h.start({ map = 1, x = 0, y = 0 }, goal)
+	h.costs("A")
+	h.geometry()
+	assert(seen == cache, "a journey after a reset keeps the planner cache")
+	assert(cache.topology == topology, "and plans on the topology it already built")
+	ns.Portals = { ns.Portals[1], ns.Portals[2] }
+	h.clear()
+	h.start({ map = 1, x = 0, y = 0 }, goal)
+	h.costs("A")
+	h.geometry()
+	assert(cache.topology ~= topology, "a changed input still rebuilds the topology")
+	h.clear()
+end
+
 print("search_spec: measured guidance, private guesses, background replans, reuse and cancellation: ok")
