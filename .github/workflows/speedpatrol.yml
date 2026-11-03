@@ -1,0 +1,34 @@
+name: Speedpatrol
+
+# Times this PR against its base branch in alternating A/B rounds on one runner, comments the table on the PR and
+# fails on a regression. Only the planner benches run here.
+on: pull_request
+
+permissions: {}
+
+jobs:
+  speedpatrol:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      # Ubuntu 24.04's release-pocket builds, which the archive never replaces.
+      - name: Install LuaJIT
+        env:
+          LUAJIT: 2.1.0+git20231223.c525bcb+dfsg-1
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends --allow-downgrades \
+            "luajit=$LUAJIT" "libluajit-5.1-2=$LUAJIT" "libluajit-5.1-common=$LUAJIT"
+      - uses: agent-labs-dev/speedpatrol@726e8f5a08743ba46ab211860547a4bff901a502 # v0
+        with:
+          benchmarks: planner.journey planner.hearth
+          fail-on-regression: true
+          rounds: 3
+          package: speedpatrol@0.2.0

@@ -8,7 +8,7 @@ failed assertion. `luacheck <file>` lints a file.
 
 Two benches are part of the suite and run outside the game:
 
-- `luajit -joff tests/journey_bench.lua` times the planner and asserts a frame budget.
+- `luajit -joff tests/journey_bench.lua` times the planner and fails a journey that does not settle.
 - `SPF_BENCH_STRICT=1 luajit -joff tests/hearth_savings_bench.lua` times the hearthstone comparison.
   Its 3 ms budget is a local machine budget, so a failure here is a timing signal, not a bug report,
   unless the code path it exercises changed.

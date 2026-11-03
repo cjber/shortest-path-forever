@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-  # The data refresh dispatches CI on the branch of the PR it opens.
+  # A manual run on any branch.
   workflow_dispatch:
 
 permissions:
@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   deadcode:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -20,18 +20,27 @@ jobs:
       - run: python3 tools/deadcode.py --check
 
   check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - run: sudo apt-get update && sudo apt-get install -y luajit lua-check
+      # Ubuntu 24.04's release-pocket builds, which the archive never replaces.
+      - name: Install LuaJIT and luacheck
+        env:
+          LUAJIT: 2.1.0+git20231223.c525bcb+dfsg-1
+          LUACHECK: 1.1.2-1
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends --allow-downgrades \
+            "luajit=$LUAJIT" "libluajit-5.1-2=$LUAJIT" "libluajit-5.1-common=$LUAJIT" "lua-check=$LUACHECK"
       - run: luacheck .
       - run: for spec in tests/*_spec.lua; do luajit "$spec" || exit 1; done
       # A screenshot older than the code it is drawn from (docs/screenshots/scenes.sha256).
       - run: python3 tools/check_screenshots.py
       - run: luajit -joff tests/runtime_bench.lua cold
       - run: luajit -joff tests/hearth_savings_bench.lua
+      - run: luajit -joff tests/journey_bench.lua
       - name: Native tracker integration
         run: |
           python3 tools/fetch_tracker_ui.py
@@ -48,7 +57,7 @@ jobs:
       - run: pipx run --spec shfmt-py==4.2.0 shfmt -d tools/baker/bake.sh tools/typecheck.sh tools/fetch_blizzard_ui.sh tests/ui.sh
 
   bake-provenance:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -56,7 +65,7 @@ jobs:
       - run: python3 -m unittest tools.bake_inputs_test tools.bake_tiles_test
 
   bake-native:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -71,13 +80,20 @@ jobs:
         run: tools/baker/bake.sh
 
   generated:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - run: sudo apt-get update && sudo apt-get install -y luajit
+      # Ubuntu 24.04's release-pocket builds, which the archive never replaces.
+      - name: Install LuaJIT
+        env:
+          LUAJIT: 2.1.0+git20231223.c525bcb+dfsg-1
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends --allow-downgrades \
+            "luajit=$LUAJIT" "libluajit-5.1-2=$LUAJIT" "libluajit-5.1-common=$LUAJIT"
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: tools/.cache
@@ -86,13 +102,20 @@ jobs:
       - run: python3 tools/check_generated.py
 
   typecheck:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       # tools/check_locales.py parses each translation with LuaJIT.
-      - run: sudo apt-get update && sudo apt-get install -y luajit
+      # Ubuntu 24.04's release-pocket builds, which the archive never replaces.
+      - name: Install LuaJIT
+        env:
+          LUAJIT: 2.1.0+git20231223.c525bcb+dfsg-1
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends --allow-downgrades \
+            "luajit=$LUAJIT" "libluajit-5.1-2=$LUAJIT" "libluajit-5.1-common=$LUAJIT"
       - name: lua-language-server
         env:
           LUALS_VERSION: 3.19.1
@@ -105,7 +128,7 @@ jobs:
       - run: tools/typecheck.sh
 
   secrets:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -122,7 +145,7 @@ jobs:
           "$RUNNER_TEMP/gitleaks" git --redact --no-banner .
 
   project-rules:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -136,7 +159,7 @@ jobs:
       - run: python3 .sloppatrol/agents.py check
 
   workflows:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -147,14 +170,21 @@ jobs:
   # What a tag would ship, checked before it ships: the release workflow's packager without uploading or zipping,
   # then tools/check_package.py on .release/ (every loaded file present, no development folders, specs pass on it).
   package:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
-      - run: sudo apt-get update && sudo apt-get install -y luajit
+      # Ubuntu 24.04's release-pocket builds, which the archive never replaces.
+      - name: Install LuaJIT
+        env:
+          LUAJIT: 2.1.0+git20231223.c525bcb+dfsg-1
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends --allow-downgrades \
+            "luajit=$LUAJIT" "libluajit-5.1-2=$LUAJIT" "libluajit-5.1-common=$LUAJIT"
       # .pkgmeta's manual changelog, which the release fills with the version's entry.
       - run: printf 'Package check\n' > .release-notes.md
       # The packager skips a push build when HEAD carries a tag ("Found future tag, not packaging"), so a tag that

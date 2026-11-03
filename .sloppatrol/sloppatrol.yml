@@ -11,6 +11,7 @@ checks:
   - { name: typecheck, run: "tools/typecheck.sh" }
   - { name: specs, run: "for s in tests/*_spec.lua; do luajit \"$s\" || exit 1; done", tests: true }
   - { name: tools, run: "ruff format --check . && ruff check ." }
+  - { name: gate, run: "python3 .sloppatrol/gate.py --base origin/main && python3 .sloppatrol/agents.py check" }
 focus: [Journey/**, Nav/**, Routing/**, Transport/**, UI/**]
 ignore: [Data/**, Locales/**, Libs/**, tools/forever_tools/**]
 guards: { maxFiles: 8, maxLines: 400 }

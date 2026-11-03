@@ -13,7 +13,7 @@ ruff format --check . && ruff check .
 luacheck .
 tools/typecheck.sh                  # LuaLS 3.19.1 + multi-value lint; first run fetches pinned WoW types
 for s in tests/*_spec.lua; do luajit "$s" || exit 1; done
-luajit -joff tests/journey_bench.lua   # after touching the planner: frames stay under 3 ms
+luajit -joff tests/journey_bench.lua   # fails a journey that does not settle; read its worst frame against 3 ms
 SPF_BENCH_STRICT=1 luajit -joff tests/hearth_savings_bench.lua   # CI checks the plan; the 3 ms budget is local
 python3 tools/check_generated.py --offline # omit --offline to fetch missing pinned inputs
 python3 tools/changelog.py --check
@@ -27,7 +27,8 @@ THIRD_PARTY.md ship with README's `## Credits` and THIRD_PARTY's `## Ideas and c
 specs pass on the packaged files.
 
 CI runs the same gate, plus the UI checks (`tests/ui.sh`), shellcheck and shfmt on the shell scripts, actionlint and zizmor on the workflows,
-and gitleaks on the history. Every version needs a `CHANGELOG.md` entry (prose, bold-lead bullets)
+and gitleaks on the history. `.github/workflows/speedpatrol.yml` times the journey and hearth benches on every pull
+request against its base branch and fails on a regression (`.speedpatrol/instructions.md`). Every version needs a `CHANGELOG.md` entry (prose, bold-lead bullets)
 before its `v*` tag, since the release publishes it as the notes.
 
 ## Layout
@@ -36,7 +37,8 @@ before its `v*` tag, since the release publishes it as the notes.
   hand-edit.
 - Pins: `BUILD` in `tools/gen_routes.py` (the client build, read by both generators) and `INFLIGHT_REV` in
   `tools/gen_transit.py` (flight times) follow upstream: `.github/workflows/refresh-data.yml` runs
-  `tools/refresh_pins.py` daily, regenerates, runs the specs and opens a `data/refresh` PR; a failed run on
+  `tools/refresh_pins.py` daily, regenerates, runs the specs, opens a `data/refresh` PR and approves its CI and Speedpatrol runs, which GitHub holds for
+  a PR opened by `GITHUB_TOKEN`; a failed run on
   main is re-run once ten minutes later by `.github/workflows/retry-refresh.yml`, and one that fails again opens or comments on
   the issue "Data refresh failed". Moved by hand: `DB_REV` (classic-db, frozen under
   the WFA-28 waivers), `REVISION` in `tools/fetch_tracker_ui.py` (shared with the companion addons), the
