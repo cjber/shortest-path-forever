@@ -11,6 +11,10 @@ local ns = select(2, ...)
 --
 -- It stands down while Waypoint UI is tracking a navigation of its own: that addon's pin owns
 -- the world then, and two pins on one destination is the fight #271 was about.
+--
+-- Under the distance it carries one short line of the current step's wording (#323), so the pin
+-- says what the step is and not only how far it is; the full text of every step stays in the
+-- map pin's tooltip, and the line is reread only when the step changes.
 
 -- Pixels from the middle of the screen with the destination dead ahead.
 local REACH = 150
