@@ -221,23 +221,10 @@ local function AddQuestMenuEntry(root, questID)
 	end
 end
 
--- TomTom's world-map click-to-waypoint is on by default and reads the same Alt-click, so the press would plan a
--- journey and drop a waypoint at once. While that option is on, the click is left to TomTom. Its saved table only
--- exists once it has loaded, so that is the test for whether it is here.
----@return boolean
-local function TomTomOwnsAltClick()
-	local db = TomTomDB
-	if type(db) ~= "table" then
-		return false
-	end
-	local profile = db.profile or (type(db.profiles) == "table" and db.profiles.Default)
-	local worldmap = type(profile) == "table" and profile.worldmap
-	return not (type(worldmap) == "table" and worldmap.clickcreate == false)
-end
-
 ns.Init(function()
 	-- Questie owns Shift-click on its icons. Alt-click observes the map cursor
 	-- through our own event frame, including icons that swallow canvas clicks.
+	-- TomTom's map overlay passes LeftButton through; its waypoint gesture uses RightButton.
 	local clicks = CreateFrame("Frame")
 	clicks:RegisterEvent("GLOBAL_MOUSE_DOWN")
 	clicks:SetScript("OnEvent", function(_, _, button)
@@ -248,7 +235,6 @@ ns.Init(function()
 			or IsShiftKeyDown()
 			or not WorldMapFrame:IsShown()
 			or not WorldMapFrame.ScrollContainer:IsMouseOver()
-			or TomTomOwnsAltClick()
 		then
 			return
 		end

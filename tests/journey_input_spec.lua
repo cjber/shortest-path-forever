@@ -155,6 +155,22 @@ assert(
 	destination and destination.x == 0.25 and destination.y == 0.75,
 	"Alt-click uses the exact map cursor over icons"
 )
+-- TomTom v4.3.13 CreateWorldMapClickHandler passes LeftButton through even while its modifier matches.
+-- Its waypoint gesture is right-click, so active or stale saved options must not disable our left-click.
+for _, options in ipairs({
+	{ profiles = { Default = { worldmap = { clickcreate = true, create_modifier = "A" } } } },
+	{ profile = { worldmap = { clickcreate = true, create_modifier = "C" } } },
+	{ profiles = { Default = { worldmap = { clickcreate = false } } } },
+	{},
+}) do
+	env.TomTomDB, destination = options, nil
+	mouseEvent(nil, "GLOBAL_MOUSE_DOWN", "LeftButton")
+	assert(destination and destination.x == 0.25, "TomTom options must not claim Alt-left-click")
+	destination = nil
+	mouseEvent(nil, "GLOBAL_MOUSE_DOWN", "RightButton")
+	assert(destination == nil, "TomTom keeps its right-click gesture")
+end
+env.TomTomDB = nil
 shift, destination = true, nil
 mouseEvent(nil, "GLOBAL_MOUSE_DOWN", "LeftButton")
 assert(destination == nil, "Shift with Alt leaves journey handling to the existing Shift-click path")

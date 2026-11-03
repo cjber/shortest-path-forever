@@ -89,6 +89,8 @@ With *Follow RestedXP guides* on (the default), leave RestedXP's TomTom option o
 
 With Questie's tracker on, the Forever sections move clear of its quest list.
 
+Alt-left-click on the world map plans a journey even with TomTom installed. TomTom keeps its modified right-click waypoint gesture.
+
 With OpenMap on, the route and its stops draw across its stitched world map and carry on into the zones either side, over OpenMap's own art.
 
 <!-- forever-family:start -->
