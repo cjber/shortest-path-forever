@@ -87,8 +87,11 @@ before its `v*` tag, since the release publishes it as the notes.
 
 ## Standards
 
-- `wow-forever-addon` — https://github.com/cjber/forever-core/tree/3fd1b7fe109e709c4952bb04622e94d05636585e/.agents/skills/wow-forever-addon (UI look,
+- `wow-forever-addon` — https://github.com/cjber/forever-core/tree/af94fd89610c9128bc11ec07354bd9dabafb5dd0/.agents/skills/wow-forever-addon (UI look,
   icon, README and store page, CI and release requirements shared by every WoW: Forever addon)
+- For UI design, mockups, asset selection and visual audits, also read the pinned
+  `wow-retail-ui-style` skill at the same Forever Core commit. Its asset registry and audit sheets
+  distinguish approved native host art from conditional and blacklisted assets.
 
 ## Waivers
 
