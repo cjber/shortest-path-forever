@@ -53,3 +53,7 @@ TomTom = nil
 
 ---@type SPFPolestar?
 Polestar = nil
+
+-- TomTom's saved options, read only for its world-map click-to-waypoint switch.
+---@type {profile?: table, profiles?: {Default?: table}}?
+TomTomDB = nil

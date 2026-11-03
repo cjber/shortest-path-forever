@@ -10,6 +10,7 @@ globals = {
 	"ShortestPathForeverDB",
 	"ShortestPathForever_OnAddonCompartmentClick",
 	"TomTom",
+	"TomTomDB",
 	"SLASH_SHORTESTPATHFOREVER1",
 	"SLASH_SHORTESTPATHFOREVER2",
 	"SlashCmdList",
