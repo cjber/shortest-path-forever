@@ -344,7 +344,9 @@ L["Party member"] = "Membro do grupo" -- mt
 L["That player is not on a map you can see."] = "Esse jogador não está num mapa que você possa ver." -- mt
 L["You have caught up with %s."] = "Você alcançou %s." -- mt
 L["Show a pin over the destination"] = "Mostrar um alfinete sobre o destino" -- mt
-L["A marker on screen over where the journey ends, like the game's own waypoint pin."] = "Uma marca na tela sobre onde o trajeto termina, como o alfinete de ponto de rota do jogo." -- mt
-L["It stands down while Waypoint UI is navigating, so the two never draw over each other."] = "Ela se retira enquanto o Waypoint UI navega, para que as duas nunca se sobreponham." -- mt
+L["A marker on screen over where the journey ends, like the game's own waypoint pin."] =
+	"Uma marca na tela sobre onde o trajeto termina, como o alfinete de ponto de rota do jogo." -- mt
+L["It stands down while Waypoint UI is navigating, so the two never draw over each other."] =
+	"Ela se retira enquanto o Waypoint UI navega, para que as duas nunca se sobreponham." -- mt
 L["No longer following."] = "Não está mais seguindo." -- mt
 L["Following %s."] = "Seguindo %s." -- mt

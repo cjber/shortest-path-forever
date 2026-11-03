@@ -358,10 +358,13 @@ L["Use /path leaderboard routes, distance, transports, flights or portals."] =
 	"Используйте /path leaderboard routes, distance, transports, flights или portals."
 L["What happened, or what you would like"] = "Что произошло или чего бы вы хотели"
 L["Party member"] = "Участник группы" -- mt
-L["That player is not on a map you can see."] = "Этот игрок не на карте, которую вы видите." -- mt
+L["That player is not on a map you can see."] =
+	"Этот игрок не на карте, которую вы видите." -- mt
 L["You have caught up with %s."] = "Вы догнали %s." -- mt
 L["Show a pin over the destination"] = "Показывать метку над пунктом назначения" -- mt
-L["A marker on screen over where the journey ends, like the game's own waypoint pin."] = "Метка на экране над концом маршрута, как игровая метка путевой точки." -- mt
-L["It stands down while Waypoint UI is navigating, so the two never draw over each other."] = "Скрывается, пока Waypoint UI ведёт навигацию, чтобы метки не перекрывались." -- mt
+L["A marker on screen over where the journey ends, like the game's own waypoint pin."] =
+	"Метка на экране над концом маршрута, как игровая метка путевой точки." -- mt
+L["It stands down while Waypoint UI is navigating, so the two never draw over each other."] =
+	"Скрывается, пока Waypoint UI ведёт навигацию, чтобы метки не перекрывались." -- mt
 L["No longer following."] = "Вы больше не следуете." -- mt
 L["Following %s."] = "Вы следуете за %s." -- mt

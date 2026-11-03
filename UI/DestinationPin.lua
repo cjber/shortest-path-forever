@@ -47,6 +47,7 @@ function ns.PinPlace(bearing, facing, distance)
 	return math.sin(angle) * reach, -front * reach, alpha
 end
 
+---@return SPFDestinationPinFrame
 local function Create()
 	local pin = CreateFrame("Frame", "ShortestPathForeverDestinationPin", UIParent)
 	pin:SetSize(PIN_WIDTH, PIN_HEIGHT + 14)
@@ -99,7 +100,7 @@ function ns.RefreshDestinationPin()
 	local dx, dy = goal.x - x, goal.y - y
 	local distance = math.sqrt(dx * dx + dy * dy)
 	local offsetX, offsetY, alpha = ns.PinPlace(math.atan2(dy, dx), GetPlayerFacing() or 0, distance)
-	if not offsetX then
+	if not (offsetX and offsetY and alpha) then
 		Hide()
 		return
 	end
@@ -144,17 +145,9 @@ function ns.DestinationPinChanged()
 end
 
 ns.Init(function()
-	-- A journey starting or ending is when the pin's frame timer is wanted or not.
-	local journeyChanged = ns.JourneyChanged
-	ns.JourneyChanged = function(point, reason)
-		if journeyChanged then
-			journeyChanged(point, reason)
-		end
-		if point and ns.db and ns.db.destinationPin then
-			Poll(true)
-			ns.RefreshDestinationPin()
-		else
-			Poll(false)
-		end
+	-- Only a player who turned the pin on pays for a timer; with the setting off there is no
+	-- frame callback at all.
+	if ns.db and ns.db.destinationPin then
+		Poll(true)
 	end
 end)

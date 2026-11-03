@@ -149,6 +149,7 @@
 ---@field grey? boolean
 
 ---@class SPFDatabase : ForeverFamilyDB
+---@field destinationPin boolean an on-screen marker over the journey's destination
 ---@field trackerHost? ForeverTrackerSettings
 ---@field pins? boolean
 ---@field transit? boolean

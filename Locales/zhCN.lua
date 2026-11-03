@@ -338,7 +338,9 @@ L["Party member"] = "队员" -- mt
 L["That player is not on a map you can see."] = "该玩家不在你能看到的地图上。" -- mt
 L["You have caught up with %s."] = "你已追上%s。" -- mt
 L["Show a pin over the destination"] = "在目的地显示图钉" -- mt
-L["A marker on screen over where the journey ends, like the game's own waypoint pin."] = "在旅程终点上方显示屏幕标记，类似游戏自带的路径点图钉。" -- mt
-L["It stands down while Waypoint UI is navigating, so the two never draw over each other."] = "Waypoint UI 导航时它会隐藏，两者不会互相覆盖。" -- mt
+L["A marker on screen over where the journey ends, like the game's own waypoint pin."] =
+	"在旅程终点上方显示屏幕标记，类似游戏自带的路径点图钉。" -- mt
+L["It stands down while Waypoint UI is navigating, so the two never draw over each other."] =
+	"Waypoint UI 导航时它会隐藏，两者不会互相覆盖。" -- mt
 L["No longer following."] = "已停止跟随。" -- mt
 L["Following %s."] = "正在跟随%s。" -- mt

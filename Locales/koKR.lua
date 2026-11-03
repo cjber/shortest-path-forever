@@ -349,7 +349,9 @@ L["Party member"] = "파티원" -- mt
 L["That player is not on a map you can see."] = "그 플레이어는 볼 수 있는 지도에 없습니다." -- mt
 L["You have caught up with %s."] = "%s을(를) 따라잡았습니다." -- mt
 L["Show a pin over the destination"] = "목적지 위에 핀 표시" -- mt
-L["A marker on screen over where the journey ends, like the game's own waypoint pin."] = "여정이 끝나는 곳 위에 화면 표시를 놓습니다. 게임의 경로 지점 핀과 같습니다." -- mt
-L["It stands down while Waypoint UI is navigating, so the two never draw over each other."] = "Waypoint UI가 안내하는 동안에는 표시하지 않아 서로 겹치지 않습니다." -- mt
+L["A marker on screen over where the journey ends, like the game's own waypoint pin."] =
+	"여정이 끝나는 곳 위에 화면 표시를 놓습니다. 게임의 경로 지점 핀과 같습니다." -- mt
+L["It stands down while Waypoint UI is navigating, so the two never draw over each other."] =
+	"Waypoint UI가 안내하는 동안에는 표시하지 않아 서로 겹치지 않습니다." -- mt
 L["No longer following."] = "더 이상 따라가지 않습니다." -- mt
 L["Following %s."] = "%s을(를) 따라가는 중입니다." -- mt

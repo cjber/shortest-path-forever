@@ -36,6 +36,21 @@ local following
 local pending
 local scheduled
 
+-- The follow driver only runs a frame timer while a follow is under way: an idle addon that
+-- ticks every frame is what the UI checks (and the client's frame budget) refuse.
+---@type Frame?
+local driver
+
+local function Driver()
+	if not driver then
+		driver = CreateFrame("Frame", "ShortestPathForeverFollowDriver", UIParent)
+		driver:SetScript("OnUpdate", function(_, elapsed)
+			ns.FollowTick(elapsed)
+		end)
+	end
+	return driver
+end
+
 -- The member's position as a journey point, or nil while the client cannot say: a member on
 -- another map, one who has not loaded, or a position the client keeps back. The map fraction
 -- is converted the way a map click is (JourneyInput.lua's WorldPoint), so the point is in the
@@ -132,14 +147,19 @@ function ns.StartFollowing(unit, throttle)
 	-- throttle rather than firing on the next frame.
 	local seconds = throttle or THROTTLE
 	following = { unit = unit, throttle = seconds, waiting = seconds, arrived = false, point = point }
+	Driver()
 	local label = Name()
 	point.label, point.routeTitle = label, label
 	ns.StartJourney(point)
+	Driver()
 	return true
 end
 
 function ns.StopFollowing()
 	following, pending, scheduled = nil, nil, nil
+	if driver then
+		driver:SetScript("OnUpdate", nil)
+	end
 end
 
 ---@return boolean active
@@ -190,10 +210,3 @@ function ns.FollowTick(elapsed)
 	pending = point
 	Request()
 end
-
-ns.Init(function()
-	local driver = CreateFrame("Frame", "ShortestPathForeverFollowDriver", UIParent)
-	driver:SetScript("OnUpdate", function(_, elapsed)
-		ns.FollowTick(elapsed)
-	end)
-end)
