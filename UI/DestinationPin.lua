@@ -30,6 +30,7 @@ local PIN_ATLAS, PIN_WIDTH, PIN_HEIGHT = "Waypoint-MapPin-Tracked", 28, 36
 ---@field Pin Texture
 ---@field Distance FontString
 ---@field Step FontString
+---@field step string? the wording the step line shows, so it is only reset when it changes
 ---@field elapsed number
 ---@type SPFDestinationPinFrame?
 local frame
