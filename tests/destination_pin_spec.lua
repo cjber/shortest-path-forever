@@ -2,7 +2,7 @@
 -- the setting, the player's own zone, and no Waypoint UI navigation in charge).
 local root = "."
 local driver = assert(loadfile("tests/journey_driver.lua"))(root)
-local ns, env = driver.ns, driver.env
+local ns = driver.ns
 
 -- Only the pure placement and the wanted test are reached here: no frame is created.
 local loaded = pcall(driver.load, "UI/DestinationPin.lua")
@@ -33,7 +33,7 @@ assert(close(alpha, 0.4), "behind is dimmest")
 
 -- The bearing is taken relative to facing, and wraps the short way round: turned just past
 -- north, north sits a little to your right rather than most of the way round the screen.
-x, y, alpha = ns.PinPlace(0, 2 * math.pi - 0.1, 500)
+x, _, alpha = ns.PinPlace(0, 2 * math.pi - 0.1, 500)
 assert(x > 0 and x < 40, "a small turn puts the pin just to the side")
 
 -- A distance is not needed for placement, but a missing bearing or facing has no answer.

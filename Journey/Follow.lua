@@ -78,8 +78,12 @@ local function Here()
 	return x and { map = map, x = x, y = y }
 end
 
+-- A unit's name may be a secret value: reading one as text is the bug the guard prevents.
 local function Name(unit)
 	local name = UnitName(unit)
+	if not canaccessvalue(name) or type(name) ~= "string" then
+		name = nil
+	end
 	return name or L["Party member"]
 end
 
@@ -144,11 +148,6 @@ end
 ---@return boolean active
 function ns.IsFollowing()
 	return following ~= nil
-end
-
----@return string? unit
-function ns.FollowingUnit()
-	return following and following.unit
 end
 
 -- One frame of following, called from the follow driver's OnUpdate. The throttle counts this

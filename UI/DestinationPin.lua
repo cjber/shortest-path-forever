@@ -1,6 +1,5 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
-local L = ns.L
 
 -- Destination pin: the game's own waypoint pin, held on screen over the journey's final
 -- destination so it can be seen all the way there rather than only on the map.

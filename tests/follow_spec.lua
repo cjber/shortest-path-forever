@@ -80,7 +80,7 @@ for _ = 1, 40 do
 	driver.update(0)
 end
 assert(driver.shown(), "the follow journey plans")
-assert(ns.IsFollowing() and ns.FollowingUnit() == "party1", "following is on")
+assert(ns.IsFollowing(), "following is on")
 assert(journeys == 1, "starting plans once")
 
 -- Inside the throttle nothing is replanned, however far the member walks.
