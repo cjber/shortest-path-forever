@@ -49,7 +49,7 @@ end
 
 ---@return SPFDestinationPinFrame
 local function Create()
-	local pin = CreateFrame("Frame", "ShortestPathForeverDestinationPin", UIParent)
+	local pin = CreateFrame("Frame", "ShortestPathForeverDestinationPin", UIParent) --[[@as SPFDestinationPinFrame]]
 	pin:SetSize(PIN_WIDTH, PIN_HEIGHT + 14)
 	pin:SetFrameStrata("MEDIUM")
 	pin:SetAlpha(1)
@@ -96,7 +96,11 @@ function ns.RefreshDestinationPin()
 		return
 	end
 	local goal = ns.JourneyGoal()
-	local x, y, _, _ = ns.JourneyPosition()
+	local x, y = ns.JourneyPosition()
+	if not (goal and x and y) then
+		Hide()
+		return
+	end
 	local dx, dy = goal.x - x, goal.y - y
 	local distance = math.sqrt(dx * dx + dy * dy)
 	local offsetX, offsetY, alpha = ns.PinPlace(math.atan2(dy, dx), GetPlayerFacing() or 0, distance)
