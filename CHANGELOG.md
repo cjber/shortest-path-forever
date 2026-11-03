@@ -12,6 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.22.17] - 2026-11-03
+
+- **The first journey after a login or `/reload` no longer stalls.** The planner threw away its transport topology on every reset, so each journey's first plan rebuilt it inside the click: 476 ms on the first journey after a reload against 5 ms on the second. The topology now survives a reset and is rebuilt only when one of its inputs changes, so the cold build is paid once a session rather than once a journey. Reported by JohnChrin, who measured it around `API.NavigateRoute` on v1.22.16.
+
 ## [1.22.16] - 2026-11-02
 
 - **Every line now reads in all nine shipped languages.** The locale check found lines still shown in English: the flight-master and transport strings, and the phrases the report and shopping-list work added. All nine locale files cover `Locales/phrases.txt`, so no window falls back to English. `tools/typecheck.sh` runs the locale check with `--release` from now on, so an English line added without its translations fails the change that adds it.
