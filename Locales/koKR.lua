@@ -314,7 +314,7 @@ L["You are near the new flight master %s. Discover it before flying."] =
 L["Remind me about new flight masters"] = "새 비행 조련사 알림" -- mt
 L["Warns when a journey needs you to discover a flight master, and again when you are close."] =
 	"여정에 비행 조련사를 찾아야 할 때, 그리고 가까이 있을 때 다시 알려 줍니다." -- mt
-L["%d. %s — %s"] = "%d. %s — %s"
+L["%d. %s - %s"] = "%d. %s - %s"
 L["/path issue - report a bug or request a feature with a ready-made GitHub issue link"] =
 	"/path issue - 준비된 GitHub 이슈 링크로 버그를 보고하거나 기능을 요청합니다"
 L["/path report - show a report to copy into a bug report"] =
@@ -327,8 +327,6 @@ L["Feature request"] = "기능 요청"
 L["Feature request: "] = "기능 요청: "
 L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs."] =
 	"로컬 이동 일지 — 약 %d야드 이동, 여정 %d회, 교통수단 %d회, 비행 %d회, 차원문 구간 %d회."
-L["Off by default. Keeps walking distance, completed journeys and observed transport use for this character."] =
-	"기본적으로 꺼져 있습니다. 이 캐릭터의 도보 거리, 완료한 여정, 관찰한 교통수단 이용을 기록합니다."
 L["Record travel stats"] = "이동 통계 기록"
 L["Report a bug or request a feature"] = "버그 보고 또는 기능 요청"
 L["Sends and receives travel-stat snapshots over guild, party, raid and instance channels."] =
@@ -355,3 +353,15 @@ L["It stands down while Waypoint UI is navigating, so the two never draw over ea
 	"Waypoint UI가 안내하는 동안에는 표시하지 않아 서로 겹치지 않습니다." -- mt
 L["No longer following."] = "더 이상 따라가지 않습니다." -- mt
 L["Following %s."] = "%s을(를) 따라가는 중입니다." -- mt
+
+L["You (local)"] = "나 (로컬)"
+L["%s (reported)"] = "%s (신고됨)"
+L["On by default. Records approximate walking distance, completed journeys and transport use."] =
+	"기본적으로 켜집니다. 이 캐릭터의 대략적인 도보 거리, 완료한 여정 및 관찰된 교통수단 이용을 기록합니다."
+L["Travel records from guild and group addon users. Peer totals are player-reported."] =
+	"길드 및 파티 애드온 사용자의 여행 기록입니다. 다른 플레이어의 합계는 직접 보고한 수치입니다."
+L["Completed journeys"] = "완료한 여정"
+L["Approximate walking distance"] = "대략적인 도보 거리"
+L["Transport rides"] = "교통수단 이용"
+L["Flights taken"] = "이용한 비행"
+L["Portal legs"] = "차원문 구간"

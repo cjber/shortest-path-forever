@@ -2,6 +2,7 @@ std = "lua51"
 max_line_length = 120
 exclude_files = { ".claude/**", "tools/.cache/**", ".types/**", "types/**", ".release/**", "Nav/**", ".bugpatrol/runs/**", ".speedpatrol/runs/**", ".sloppatrol/runs/**" }
 globals = {
+	"ForeverPeerStats",
 	"ForeverFamily",
 	"ForeverTrackerHost",
 	"EventUtil",

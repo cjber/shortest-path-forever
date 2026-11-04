@@ -9,6 +9,7 @@ local canvas, familyPanel
 local attachmentNotified, attachmentChanged
 local trackerState = { attached = true }
 local trackerScale, compassScaled, compassBackdrop = 1, nil, nil
+local sharingChanges = 0
 local env = setmetatable({
 	MinimalSliderWithSteppersMixin = { Label = { Right = 1 } },
 	OFF = "Off",
@@ -174,11 +175,14 @@ local ns = {
 			return familyPanel
 		end,
 	},
+	TravelSharingChanged = function()
+		sharingChanges = sharingChanges + 1
+	end,
 	db = {},
 	Defaults = setmetatable({
-		-- The travel journal's shipped defaults (#269); the fallback below answers `true`, so name them here.
-		stats = false,
-		statsShare = false,
+		-- Travel participation defaults are explicit, matching Core/Core.lua.
+		stats = true,
+		statsShare = true,
 		hearthMinimumSavings = 0,
 		compassScale = 100,
 		arrowScale = 100,
@@ -398,13 +402,15 @@ assert(ways[1] == "Elwynn Forest 42.1 65.3 Goldshire", "/path way hands on the r
 env.SlashCmdList.SHORTESTPATHFOREVER("way")
 assert(ways[2] == "", "a bare /path way still answers, with its usage")
 assert(Row("whatsNew").setting.default == true)
--- The travel journal records nothing on a fresh install: both rows start off, and the tooltips say so instead of
--- claiming they are on (#269).
-assert(Row("stats").setting.default == false, "the travel journal is off by default")
-assert(Row("statsShare").setting.default == false, "and sharing its stats is too")
-assert(Row("stats").tooltip:find("Off by default", 1, true), "the journal's tooltip says it is off")
+-- New participation defaults on, while the runtime preserves every saved false choice.
+assert(Row("stats").setting.default == true, "the travel journal is on by default")
+assert(Row("statsShare").setting.default == true, "and sharing its stats is too")
+assert(Row("stats").tooltip:find("On by default", 1, true), "the journal's tooltip says it is on")
 assert(not Row("statsShare").tooltip:find("On by default", 1, true), "sharing is not claimed on by default")
 assert(Row("statsShare").tooltip:find("player-reported", 1, true), "shared records are still marked unverified")
+Row("stats").setting.onChanged()
+Row("statsShare").setting.onChanged()
+assert(sharingChanges == 2, "both recording and sharing switches update the active transport")
 local trackerSlider = Row("trackerScale")
 assert(trackerSlider.kind == "slider" and trackerSlider.setting.default == 100, "tracker scale defaults to 100%")
 assert(trackerSlider.options.minValue == 50 and trackerSlider.options.maxValue == 200, "tracker scale is a percentage")

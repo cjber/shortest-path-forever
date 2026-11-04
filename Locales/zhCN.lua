@@ -303,7 +303,7 @@ L["You are near the new flight master %s. Discover it before flying."] =
 L["Remind me about new flight masters"] = "提醒新的飞行管理员" -- mt
 L["Warns when a journey needs you to discover a flight master, and again when you are close."] =
 	"旅程需要你发现飞行管理员时提醒一次，靠近时再提醒一次。" -- mt
-L["%d. %s — %s"] = "%d. %s — %s"
+L["%d. %s - %s"] = "%d. %s - %s"
 L["/path issue - report a bug or request a feature with a ready-made GitHub issue link"] =
 	"/path issue - 通过现成的 GitHub 问题链接报告缺陷或请求功能"
 L["/path report - show a report to copy into a bug report"] =
@@ -316,8 +316,6 @@ L["Feature request"] = "功能请求"
 L["Feature request: "] = "功能请求："
 L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs."] =
 	"本地旅行日志 — 步行约%d码；%d次旅程；%d次交通；%d次飞行；%d段传送门。"
-L["Off by default. Keeps walking distance, completed journeys and observed transport use for this character."] =
-	"默认关闭。为此角色记录步行距离、完成的旅程和观察到的交通使用情况。"
 L["Record travel stats"] = "记录旅行统计"
 L["Report a bug or request a feature"] = "报告缺陷或请求功能"
 L["Sends and receives travel-stat snapshots over guild, party, raid and instance channels."] =
@@ -344,3 +342,15 @@ L["It stands down while Waypoint UI is navigating, so the two never draw over ea
 	"Waypoint UI 导航时它会隐藏，两者不会互相覆盖。" -- mt
 L["No longer following."] = "已停止跟随。" -- mt
 L["Following %s."] = "正在跟随%s。" -- mt
+
+L["You (local)"] = "你（本地）"
+L["%s (reported)"] = "%s（玩家报告）"
+L["On by default. Records approximate walking distance, completed journeys and transport use."] =
+	"默认开启。记录此角色的大致步行距离、已完成的旅程和观察到的交通工具使用情况。"
+L["Travel records from guild and group addon users. Peer totals are player-reported."] =
+	"来自公会和队伍插件用户的旅行记录。其他玩家的总数由其自行报告。"
+L["Completed journeys"] = "已完成的旅程"
+L["Approximate walking distance"] = "大致步行距离"
+L["Transport rides"] = "交通工具乘坐次数"
+L["Flights taken"] = "飞行次数"
+L["Portal legs"] = "传送门路段"

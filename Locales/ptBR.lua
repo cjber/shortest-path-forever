@@ -309,7 +309,7 @@ L["You are near the new flight master %s. Discover it before flying."] =
 L["Remind me about new flight masters"] = "Lembrar de novos mestres de voo" -- mt
 L["Warns when a journey needs you to discover a flight master, and again when you are close."] =
 	"Avisa quando uma jornada precisa que você descubra um mestre de voo, e de novo quando você está perto." -- mt
-L["%d. %s — %s"] = "%d. %s — %s"
+L["%d. %s - %s"] = "%d. %s - %s"
 L["/path issue - report a bug or request a feature with a ready-made GitHub issue link"] =
 	"/path issue - relate um bug ou peça um recurso com um link pronto para uma issue do GitHub"
 L["/path report - show a report to copy into a bug report"] =
@@ -322,8 +322,6 @@ L["Feature request"] = "Sugestão de recurso"
 L["Feature request: "] = "Sugestão de recurso: "
 L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs."] =
 	"Diário de viagem local — aprox. %d jardas caminhadas; %d jornadas; %d transportes; %d voos; %d trechos de portal."
-L["Off by default. Keeps walking distance, completed journeys and observed transport use for this character."] =
-	"Desativado por padrão. Guarda para este personagem a distância a pé, as jornadas concluídas e o uso de transportes observado."
 L["Record travel stats"] = "Registrar estatísticas de viagem"
 L["Report a bug or request a feature"] = "Relatar um bug ou pedir um recurso"
 L["Sends and receives travel-stat snapshots over guild, party, raid and instance channels."] =
@@ -350,3 +348,15 @@ L["It stands down while Waypoint UI is navigating, so the two never draw over ea
 	"Ela se retira enquanto o Waypoint UI navega, para que as duas nunca se sobreponham." -- mt
 L["No longer following."] = "Não está mais seguindo." -- mt
 L["Following %s."] = "Seguindo %s." -- mt
+
+L["You (local)"] = "Você (local)"
+L["%s (reported)"] = "%s (informado)"
+L["On by default. Records approximate walking distance, completed journeys and transport use."] =
+	"Ativado por padrão. Registra a distância aproximada a pé, as jornadas concluídas e o uso observado de transportes deste personagem."
+L["Travel records from guild and group addon users. Peer totals are player-reported."] =
+	"Registros de usuários do addon na guilda e no grupo. Os totais de outros jogadores são informados por eles."
+L["Completed journeys"] = "Jornadas concluídas"
+L["Approximate walking distance"] = "Distância aproximada a pé"
+L["Transport rides"] = "Viagens em transporte"
+L["Flights taken"] = "Voos realizados"
+L["Portal legs"] = "Trechos de portal"

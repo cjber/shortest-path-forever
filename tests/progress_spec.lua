@@ -17,11 +17,25 @@ ns = {
 	Print = function() end,
 }
 local now, x, y, map, moving, taxi = 0, 0, 0, 1, true, false
-local frame
+local frames, frame = {}, nil
+local function Fire(event, ...)
+	for _, target in ipairs(frames) do
+		if target.onEvent then
+			target.onEvent(target, event, ...)
+		end
+	end
+end
 ns.JourneyPosition = function()
 	return x, y, nil, map
 end
 local env = setmetatable({
+	ForeverPeerStats = false,
+	GetRealmName = function()
+		return "Realm"
+	end,
+	GetNormalizedRealmName = function()
+		return "Realm"
+	end,
 	GetTime = function()
 		return now
 	end,
@@ -72,6 +86,7 @@ local env = setmetatable({
 	},
 	CreateFrame = function()
 		frame = {}
+		frames[#frames + 1] = frame
 		frame.RegisterEvent = function() end
 		frame.SetScript = function(_, _, callback)
 			frame.onEvent = callback
@@ -82,6 +97,7 @@ local env = setmetatable({
 ns.Init = function(callback)
 	callback()
 end
+setfenv(assert(loadfile("Core/PeerStats.lua")), env)("ShortestPathForever", ns)
 setfenv(assert(loadfile("Core/Progress.lua")), env)("ShortestPathForever", ns)
 
 ns.tick()
@@ -107,85 +123,56 @@ ns.ProgressJourneyChanged(nil, "cleared")
 assert(ns.TravelStats().routesCompleted == 1, "clearing a journey is not completion")
 
 ns.plan = { legs = { { mode = "portal" } } }
-frame.onEvent(frame, "ZONE_CHANGED_NEW_AREA")
+Fire("ZONE_CHANGED_NEW_AREA")
 assert(ns.TravelStats().portalsUsed == 1, "portal use is inferred only for an active portal or passage leg")
-frame.onEvent(frame, "ZONE_CHANGED_NEW_AREA")
+Fire("ZONE_CHANGED_NEW_AREA")
 assert(ns.TravelStats().portalsUsed == 1, "duplicate zone events for one leg count once")
 
 ns.db.statsShare = true
-frame.onEvent(frame, "CHAT_MSG_ADDON", "WFAStats", "1|spf|routes_completed|all|10|100", "GUILD", "Peer-Realm")
-frame.onEvent(frame, "CHAT_MSG_ADDON", "WFAStats", "1|fieldguide|creature_kills|12345|6|200", "GUILD", "Guide-Realm")
-frame.onEvent(frame, "CHAT_MSG_ADDON", "WFAStats", "1|fieldguide|first_sighting|12345|1|200", "GUILD", "Guide-Realm")
-frame.onEvent(frame, "CHAT_MSG_ADDON", "WFAStats", "1|fieldguide|first_sighting|12345|1|150", "GUILD", "Guide-Realm")
-frame.onEvent(frame, "CHAT_MSG_ADDON", "WFAStats", "1|fieldguide|not_allowed|12345|1|100", "GUILD", "Guide-Realm")
+Fire("CHAT_MSG_ADDON", "WFAStats", "1|spf|routes_completed|all|10|100", "GUILD", "Peer-Realm")
+Fire("CHAT_MSG_ADDON", "WFAStats", "1|fieldguide|creature_kills|12345|6|200", "GUILD", "Guide-Realm")
+Fire("CHAT_MSG_ADDON", "WFAStats", "1|fieldguide|first_sighting|12345|1|200", "GUILD", "Guide-Realm")
+Fire("CHAT_MSG_ADDON", "WFAStats", "1|fieldguide|first_sighting|12345|1|150", "GUILD", "Guide-Realm")
+Fire("CHAT_MSG_ADDON", "WFAStats", "1|fieldguide|not_allowed|12345|1|100", "GUILD", "Guide-Realm")
 local ranks = ns.TravelLeaderboard("routesCompleted")
-assert(
-	ranks[1].name == "Peer-Realm (reported)" and ranks[1].value == 10,
-	"peer snapshots are ranked as reported claims"
-)
-assert(
-	ns.charDB.progress.peers.fieldguide["Guide-Realm"].creature_kills["12345"].value == 6,
-	"suite records retain addon and subject"
-)
-assert(
-	ns.charDB.progress.peers.fieldguide["Guide-Realm"].first_sighting["12345"].eventUnix == 150,
-	"firsts merge to earliest event"
-)
-assert(
-	not ns.charDB.progress.peers.fieldguide["Guide-Realm"].not_allowed,
-	"unknown addon-specific metrics are rejected"
-)
-for id = 1, 126 do
-	frame.onEvent(
-		frame,
-		"CHAT_MSG_ADDON",
-		"WFAStats",
-		"1|fieldguide|creature_kills|" .. id .. "|1|200",
-		"GUILD",
-		"Guide-Realm"
-	)
+assert(ranks[1].name == "Peer (reported)" and ranks[1].value == 10, "peer snapshots are ranked as reported claims")
+assert(ns.charDB.progress.peers.fieldguide == nil, "foreign addon records are not cached by travel boards")
+for index = 1, 99 do
+	Fire("CHAT_MSG_ADDON", "WFAStats", "1|spf|routes_completed|all|1|200", "GUILD", "Peer-" .. index)
 end
-frame.onEvent(frame, "CHAT_MSG_ADDON", "WFAStats", "1|fieldguide|creature_kills|999999|1|200", "GUILD", "Guide-Realm")
-assert(#(function()
-	local subjects = {}
-	for subject in pairs(ns.charDB.progress.peers.fieldguide["Guide-Realm"].creature_kills) do
-		subjects[#subjects + 1] = subject
-	end
-	return subjects
-end)() == 127, "per-peer row cap rejects additional metric/subject records")
-for index = 1, 98 do
-	frame.onEvent(frame, "CHAT_MSG_ADDON", "WFAStats", "1|spf|routes_completed|all|1|200", "GUILD", "Peer-" .. index)
-end
-frame.onEvent(frame, "CHAT_MSG_ADDON", "WFAStats", "1|spf|routes_completed|all|1|200", "GUILD", "Peer-overflow")
+Fire("CHAT_MSG_ADDON", "WFAStats", "1|spf|routes_completed|all|1|200", "GUILD", "Peer-overflow")
 assert(not ns.charDB.progress.peers.spf["Peer-overflow"], "global peer cap rejects new senders")
 ns.db.statsShare = false
-frame.onEvent(frame, "CHAT_MSG_ADDON", "WFAStats", "1|spf|routes_completed|all|99|100", "GUILD", "Peer-Realm")
+Fire("CHAT_MSG_ADDON", "WFAStats", "1|spf|routes_completed|all|99|100", "GUILD", "Peer-Realm")
 assert(
-	ns.charDB.progress.peers.spf["Peer-Realm"].routes_completed.all.value == 10,
+	ns.charDB.progress.peers.spf["Peer"].routes_completed.all.value == 10,
 	"sharing opt out stops receiving snapshots"
 )
+
+assert(#ns.TravelLeaderboard("routesCompleted") == 1, "opt-out hides cached peers and retains the personal row")
+assert(next(ns.TravelStats().peers) == nil, "public snapshots hide cached peer records during opt-out")
 
 ns.db.stats = false
 moving, now, x = true, 6, 1014
 ns.tick()
 assert(ns.TravelStats().walkedYards == 7, "turning off local collection stops updates")
 
--- A fresh install: the saved variables hold no `stats` key, so the shipped default (off) applies. Nothing is
--- recorded, no position is sampled and no snapshot is sent until the player turns the journal on (#269).
+-- Explicit recording and sharing opt-outs stop collection and sending. Core default migration is covered
+-- by faction_defaults_spec; this fixture loads only the progress module.
 local sent = 0
 env.C_ChatInfo.SendAddonMessage = function()
 	sent = sent + 1
 	return 0
 end
-ns.db = {}
+ns.db = { stats = false, statsShare = false }
 ns.charDB.progress = nil
 ns.SendTravelStats()
-assert(sent == 0, "a fresh install sends no snapshot")
+assert(sent == 0, "recording opt-out sends no snapshot")
 moving, now, x = true, 7, 1014
 ns.tick()
 now, x = 8, 1021
 ns.tick()
-assert(ns.TravelStats().walkedYards == 0, "a fresh install records no distance")
+assert(ns.TravelStats().walkedYards == 0, "recording opt-out records no distance")
 taxi, now = true, 9
 ns.tick()
 taxi, now = false, 10
@@ -194,7 +181,7 @@ assert(ns.TravelStats().flightsTaken == 0, "and no flights")
 ns.ProgressJourneyChanged(nil, "arrived")
 assert(ns.TravelStats().routesCompleted == 0, "and no completed journeys")
 assert(sent == 0, "and still nothing sent")
--- A character who already had the journal on keeps it: the default only fills a key that was absent.
+-- Re-enabling the journal resumes local recording.
 ns.db.stats = true
 now, x = 11, 1021
 ns.tick()
@@ -202,4 +189,4 @@ now, x = 12, 1028
 ns.tick()
 assert(ns.TravelStats().walkedYards == 7, "turning the journal on starts recording again")
 
-print("progress_spec: local stats, conservative movement, milestones, sharing opt out, defaults and leaderboard ok")
+print("progress_spec: local stats, conservative movement, milestones, sharing opt out, re-enable and leaderboard ok")

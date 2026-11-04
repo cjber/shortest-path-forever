@@ -325,7 +325,7 @@ L["Remind me about new flight masters"] =
 	"Напоминать о новых распорядителях полётов" -- mt
 L["Warns when a journey needs you to discover a flight master, and again when you are close."] =
 	"Предупреждает, когда для путешествия нужно открыть распорядителя полётов, и снова, когда вы рядом." -- mt
-L["%d. %s — %s"] = "%d. %s — %s"
+L["%d. %s - %s"] = "%d. %s - %s"
 L["/path issue - report a bug or request a feature with a ready-made GitHub issue link"] =
 	"/path issue - сообщить об ошибке или предложить функцию с готовой ссылкой на задачу GitHub"
 L["/path report - show a report to copy into a bug report"] =
@@ -338,8 +338,6 @@ L["Feature request"] = "Предложение функции"
 L["Feature request: "] = "Предложение функции: "
 L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs."] =
 	"Дневник путешествий — около %d ярдов пешком; %d маршрутов; %d поездок на транспорте; %d полетов; %d переходов через портал."
-L["Off by default. Keeps walking distance, completed journeys and observed transport use for this character."] =
-	"По умолчанию выключено. Сохраняет для этого персонажа пройденный путь, завершенные маршруты и замеченное использование транспорта."
 L["Record travel stats"] = "Записывать статистику путешествий"
 L["Report a bug or request a feature"] = "Сообщить об ошибке или предложить функцию"
 L["Sends and receives travel-stat snapshots over guild, party, raid and instance channels."] =
@@ -368,3 +366,15 @@ L["It stands down while Waypoint UI is navigating, so the two never draw over ea
 	"Скрывается, пока Waypoint UI ведёт навигацию, чтобы метки не перекрывались." -- mt
 L["No longer following."] = "Вы больше не следуете." -- mt
 L["Following %s."] = "Вы следуете за %s." -- mt
+
+L["You (local)"] = "Вы (локально)"
+L["%s (reported)"] = "%s (сообщено)"
+L["On by default. Records approximate walking distance, completed journeys and transport use."] =
+	"Включено по умолчанию. Сохраняет примерное расстояние пешком, завершённые путешествия и наблюдаемое использование транспорта этим персонажем."
+L["Travel records from guild and group addon users. Peer totals are player-reported."] =
+	"Записи пользователей аддона из гильдии и группы. Итоги других игроков сообщены ими самими."
+L["Completed journeys"] = "Завершённые путешествия"
+L["Approximate walking distance"] = "Примерное расстояние пешком"
+L["Transport rides"] = "Поездки на транспорте"
+L["Flights taken"] = "Совершённые полёты"
+L["Portal legs"] = "Участки с порталами"

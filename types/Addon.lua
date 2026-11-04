@@ -18,6 +18,9 @@
 ---@field Defaults table<string, boolean|number>
 ---@field NearbyServices SPFNearbyServices
 ---@field ProgressJourneyChanged? fun(point: SPFPoint?, reason?: "arrived"|"cleared")
+---@field PeerStats ForeverPeerStatsNamespace
+---@field TravelSharingChanged fun()
+---@field PrintTravelLeaderboard fun(metric: string)
 ---@field TravelStats fun(): SPFProgressData?
 ---@field TravelLeaderboard fun(metric: string?): SPFProgressRank[]
 ---@field SafeCall fun(label: string, fn: function, ...: any): boolean, ... run fn as pcall does, keeping a failure for the report and passing it to the error handler (Core/SafeCall.lua)

@@ -190,14 +190,16 @@ ns.Init(function()
 	Checkbox(
 		"stats",
 		L["Record travel stats"],
-		L["Off by default. Keeps walking distance, completed journeys and observed transport use for this character."]
+		L["On by default. Records approximate walking distance, completed journeys and transport use."],
+		ns.TravelSharingChanged
 	)
 	Checkbox(
 		"statsShare",
 		L["Share travel stats with guild and groups"],
 		L["Sends and receives travel-stat snapshots over guild, party, raid and instance channels."]
 			.. " "
-			.. L["Turn this off to keep stats on this character only. Shared records are player-reported and not verified."]
+			.. L["Turn this off to keep stats on this character only. Shared records are player-reported and not verified."],
+		ns.TravelSharingChanged
 	)
 
 	-- Guidance: how a journey is planned and led.
@@ -643,15 +645,7 @@ ns.Init(function()
 				ns.Print(L["Use /path leaderboard routes, distance, transports, flights or portals."])
 				return
 			end
-			for index, rank in ipairs(ns.TravelLeaderboard(key)) do
-				if index > 5 then
-					break
-				end
-				local value = rank.value
-				local formatted = key == "walkedYards" and string.format("~%s", ns.FormatDistance(value))
-					or tostring(value)
-				ns.Print(string.format(L["%d. %s — %s"], index, rank.name, formatted))
-			end
+			ns.PrintTravelLeaderboard(key)
 			return
 		elseif message == "help" then
 			ns.Print(L["/path report - show a report to copy into a bug report"])

@@ -12,6 +12,12 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Travel leaderboards keep your own row visible.** Guild and group totals are labelled player-reported, and approximate distance stays marked. New participation starts on, while saved recording and sharing opt-outs remain off. Disabling either cancels queued sends and hides cached peers while preserving personal history. Shared reports use the suite's bounded transport. Only travel records are cached.
+
+### For addon authors
+
+- `TravelStats().peers` retains its addon, player, metric and subject layout, but now contains only `spf` travel reports. Unused foreign-addon caches are removed.
+
 ## [1.22.21] - 2026-11-04
 
 - **Screenshot art pins are recorded separately from map content.** The renderer keeps its UI art build independent of the generated map data build, and THIRD_PARTY.md names both pins.
