@@ -35,6 +35,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends --allow-downgrades \
             "luajit=$LUAJIT" "libluajit-5.1-2=$LUAJIT" "libluajit-5.1-common=$LUAJIT" "lua-check=$LUACHECK"
       - run: luacheck .
+      - run: python3 -m tools.forever_tools.assets
       - run: for spec in tests/*_spec.lua; do luajit "$spec" || exit 1; done
       # A screenshot older than the code it is drawn from (docs/screenshots/scenes.sha256).
       - run: python3 tools/check_screenshots.py

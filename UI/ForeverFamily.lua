@@ -5,7 +5,7 @@ local _, ns = ...
 -- byte-identical in all five addons (tests/forever_family_spec.lua pins it): the first copy to load sets the
 -- `ForeverFamily` global and later copies use it, unless a later copy is newer (a higher VERSION), which takes over
 -- so an addon updated first never runs on an older copy. It holds no addon's own code: each addon passes in its
--- saved variables (`db`) and its own folder, and `ns.Family` is a view bound to the addon's own L (VERSION 3), so
+-- saved variables (`db`) and its own folder, and `ns.Family` is a view bound to the addon's own L (VERSION 4), so
 -- its page and window read in its translations and nowhere else's. Nothing here is protected, hooks Blizzard code,
 -- runs in combat or reaches the network: a hint is a grey line, a menu entry or a settings row that shows a link.
 
@@ -38,7 +38,7 @@ local _, ns = ...
 ---@field SetTitle fun(self: ForeverFamilyLinkWindow, title: string)
 ---@field GetPortrait fun(self: ForeverFamilyLinkWindow): Texture
 
-local VERSION = 3
+local VERSION = 4
 if ForeverFamily and (tonumber(ForeverFamily.VERSION) or 0) >= VERSION then
 	ns.Family = type(ForeverFamily.For) == "function" and ForeverFamily.For(ns.FamilyL or ns.L) or ForeverFamily
 	return
@@ -303,14 +303,14 @@ local function Window()
 	hint:SetPoint("RIGHT", -16, 0)
 	hint:SetJustifyH("LEFT")
 
-	local close = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate") --[[@as Button]]
+	local close = CreateFrame("Button", nil, frame, "SharedButtonSmallTemplate") --[[@as Button]]
 	close:SetHeight(22)
 	close:SetPoint("BOTTOMRIGHT", -14, 14)
 	close:SetScript("OnClick", function()
 		frame:Hide()
 	end)
 
-	local never = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate") --[[@as Button]]
+	local never = CreateFrame("Button", nil, frame, "SharedButtonSmallTemplate") --[[@as Button]]
 	never:SetHeight(22)
 	never:SetPoint("RIGHT", close, "LEFT", -8, 0)
 	never:SetScript("OnClick", function()
@@ -435,7 +435,7 @@ function Family.CreatePanel(parent, db, current, locale)
 			local icon = panel:CreateTexture(nil, "ARTWORK")
 			icon:SetSize(32, 32)
 			icon:SetPoint("TOPLEFT", 16, top)
-			local button = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate") --[[@as Button]]
+			local button = CreateFrame("Button", nil, panel, "SharedButtonSmallTemplate") --[[@as Button]]
 			button:SetHeight(22)
 			button:SetPoint("TOPRIGHT", -16, top - 5)
 			button:SetText(L["Copy link"])

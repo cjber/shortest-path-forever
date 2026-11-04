@@ -22,7 +22,7 @@ end
 local optionsButton
 function ns.RefreshOptionsButton()
 	if ns.db.minimapButton and not optionsButton then
-		optionsButton = CreateFrame("Button", nil, Minimap, "UIPanelButtonTemplate")
+		optionsButton = CreateFrame("Button", nil, Minimap, "SharedButtonSmallTemplate")
 		optionsButton:SetSize(70, 22)
 		optionsButton:SetPoint("TOP", Minimap, "BOTTOM", 0, -2)
 		optionsButton:SetText(L["Journey"])

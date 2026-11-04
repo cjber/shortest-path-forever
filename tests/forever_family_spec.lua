@@ -1,6 +1,6 @@
 -- UI/ForeverFamily.lua is byte-identical in all five Forever addons, and so is this spec. A change to the module is
--- made in Shortest Path Forever first, then copied unchanged to the other four with this spec and its new pin.
-local PINNED = "3beb18e13af61d99bee0c680d6d66b4afd34a52e463de4a0f90f291b6c1aa2f3"
+-- made in Forever Core first, then copied unchanged to the other four with this spec and its new pin.
+local PINNED = "9adf91e21b265a8bebc6db4ac78e461593141a50fc5e6a0f239da34935b05060"
 local PATH = "UI/ForeverFamily.lua"
 
 local bit = require("bit")
@@ -80,7 +80,7 @@ check(
 	PATH
 		.. " changed (sha256 "
 		.. actual
-		.. "). It is shared byte for byte by all five Forever addons: make the change in Shortest Path Forever, "
+		.. "). It is shared byte for byte by all five Forever addons: make the change in Forever Core, "
 		.. "update PINNED here, then copy both files unchanged to the others."
 )
 
@@ -288,7 +288,7 @@ Client()
 local first = { L = PhraseLocale() }
 local firstView = Load(first)
 local Family = env.ForeverFamily
-check(Family and Family.VERSION == 3, "the first copy sets the shared global")
+check(Family and Family.VERSION == 4, "the first copy sets the shared global")
 check(firstView.State == Family.State and firstView.VERSION == Family.VERSION, "an addon's view is the shared module")
 check(Family.For(first.L) == firstView, "bound to its own L, the same view each time")
 check(Family.For(nil) == Family, "with no L, the module itself")
@@ -302,7 +302,7 @@ local older = { VERSION = Family.VERSION - 1 }
 env.ForeverFamily = older
 local newer = { L = PhraseLocale() }
 Load(newer)
-check(env.ForeverFamily ~= older and env.ForeverFamily.VERSION == 3, "a newer copy takes over from an older one")
+check(env.ForeverFamily ~= older and env.ForeverFamily.VERSION == 4, "a newer copy takes over from an older one")
 env.ForeverFamily = Family
 
 -- The five addons, in order, with their store pages.
@@ -388,7 +388,7 @@ check(
 local texts = Texts(window)
 check(texts:find("Copy the address, then open it in your browser.", 1, true), "it says what to do")
 check(texts:find(Family.ADDONS[5].line, 1, true), "with the addon's line")
-local buttons = Children(window, "Button", "UIPanelButtonTemplate")
+local buttons = Children(window, "Button", "SharedButtonSmallTemplate")
 local close, never = buttons[1], buttons[2]
 check(close.text == "Close" and never.text == "Don't suggest this again", "Close and Don't suggest this again")
 check(close.width == 96 and never.width == #"Don't suggest this again" * 7 + 24, "each as wide as its label needs")
@@ -438,7 +438,7 @@ check(saved.suggestFamily == false, "unticking turns the hints off")
 check_.checked = true
 check_:Click()
 check(saved.suggestFamily == true, "ticking turns them on")
-local copies = Children(panel, "Button", "UIPanelButtonTemplate")
+local copies = Children(panel, "Button", "SharedButtonSmallTemplate")
 local icons = Children(panel, "Texture")
 check(#copies == 5 and #icons == 5, "a row per addon")
 local text = Texts(panel)
@@ -519,7 +519,7 @@ page:Show()
 check(Texts(page):find("Nicht installiert", 1, true), "a page made without an L reads in the copy in use's")
 Children(own, "Button")[1]:Click()
 local linkWindow = named.ForeverFamilyLink
-local linkButtons = Children(linkWindow, "Button", "UIPanelButtonTemplate")
+local linkButtons = Children(linkWindow, "Button", "SharedButtonSmallTemplate")
 check(linkButtons[1].text == "Fermer", "Copy link opens the window in the page's language")
 check(Texts(linkWindow):find("Copiez l'adresse.", 1, true), "all of it")
 check(Texts(linkWindow):find("Planifie le trajet le plus rapide.", 1, true), "with the addon's line")
@@ -545,29 +545,32 @@ check(linkWindow.width == 400, "a hidden button takes no room")
 -- keeps on its own table (one name, listed once for Escape), and an addon still holding the older copy's view is
 -- served by the newer one.
 Client()
-local v3view = Load({ L = PhraseLocale() })
-local v3 = env.ForeverFamily
-v3view.ShowLink(nil, nil, "TweaksForever")
-local v3window = v3.window
-check(v3window == named.ForeverFamilyLink and v3window:IsShown(), "the window is kept on the module")
+local currentView = Load({ L = PhraseLocale() })
+local current = env.ForeverFamily
+currentView.ShowLink(nil, nil, "TweaksForever")
+local currentWindow = current.window
+check(currentWindow == named.ForeverFamilyLink and currentWindow:IsShown(), "the window is kept on the module")
 local served = {}
-local v4 = {
-	VERSION = 4,
+local v5 = {
+	VERSION = 5,
 	ShowLink = function(_, _, folder)
 		served[#served + 1] = folder
 		return true
 	end,
 	Once = function()
-		return "v4"
+		return "v5"
 	end,
 }
-env.ForeverFamily = v4
-check(v3view.ShowLink(nil, nil, "SkillUpForever") and served[1] == "SkillUpForever", "a newer copy serves ShowLink")
-check(v3.Once("Test.later") == "v4", "and Once, so there is one record")
+env.ForeverFamily = v5
+check(
+	currentView.ShowLink(nil, nil, "SkillUpForever") and served[1] == "SkillUpForever",
+	"a newer copy serves ShowLink"
+)
+check(current.Once("Test.later") == "v5", "and Once, so there is one record")
 -- And from the other side: a copy taking over from an older one hides the older one's window.
 Client()
 local olderWindow = Create("Frame")
-env.ForeverFamily = { VERSION = 2, window = olderWindow }
+env.ForeverFamily = { VERSION = 3, window = olderWindow }
 env.UISpecialFrames[1] = "ForeverFamilyLink"
 local takeoverView = Load({ L = PhraseLocale() })
 takeoverView.ShowLink(nil, nil, "TweaksForever")

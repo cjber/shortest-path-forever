@@ -11,7 +11,7 @@
 ---@class InterfaceOptionsCheckButtonTemplate : CheckButton
 ---@class OptionsSliderTemplate : Slider
 ---@class UIDropDownMenuTemplate : Frame
----@class UIPanelButtonTemplate : Button
+---@class SharedButtonSmallTemplate : Button
 
 -- FrameXML's dropdown menu API, in its own file since Dragonflight; the pinned Core annotations predate that move.
 ---@type fun(dropdown: Frame, width: number)
