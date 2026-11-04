@@ -794,7 +794,7 @@ ns.Init(function()
 			ping:Hide()
 		end
 	end)
-	Menu.ModifyMenu("MENU_WORLD_MAP_TRACKING", AddFilters)
+	ns.ModifyMenu("MENU_WORLD_MAP_TRACKING", "map", AddFilters)
 	ns.Timetable.OnChange(function()
 		-- Sightings change countdowns, never the set of docks, portals, flights or route geometry.
 		for _, pin in pairs(Docks.pins or {}) do

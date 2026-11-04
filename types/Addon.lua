@@ -154,6 +154,7 @@
 ---@class SPFDatabase : ForeverFamilyDB
 ---@field destinationPin boolean an on-screen marker over the journey's destination
 ---@field trackerHost? ForeverTrackerSettings
+---@field menuTest? string `/path menutest`: which world map filter menu entries to leave out ("map", "nearby", "both")
 ---@field pins? boolean
 ---@field transit? boolean
 ---@field portals? boolean

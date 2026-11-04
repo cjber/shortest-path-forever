@@ -30,6 +30,7 @@ read_globals = {
 	"Lerp",
 	"Menu",
 	"MenuUtil",
+	"MenuResponse",
 	"Saturate",
 	"C_InputInterfaceStyle",
 	"C_Map",

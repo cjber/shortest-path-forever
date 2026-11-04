@@ -362,3 +362,6 @@ L["Approximate walking distance"] = "Distância aproximada a pé"
 L["Transport rides"] = "Viagens em transporte"
 L["Flights taken"] = "Voos realizados"
 L["Portal legs"] = "Trechos de portal"
+L["World map filter menu test: %s. Type /reload to apply."] =
+	"Teste do menu de filtros do mapa-múndi: %s. Digite /reload para aplicar." -- mt
+L["Usage: /path menutest map, nearby, both or off"] = "Uso: /path menutest map, nearby, both ou off" -- mt

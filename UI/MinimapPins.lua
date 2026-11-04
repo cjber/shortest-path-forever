@@ -270,6 +270,6 @@ ns.Init(function()
 		end
 	end)
 	ns.OnTravelTick(Wake)
-	Menu.ModifyMenu("MENU_MINIMAP_TRACKING", AddTracking)
+	ns.ModifyMenu("MENU_MINIMAP_TRACKING", "minimap", AddTracking)
 	ns.RefreshMinimapPins()
 end)

@@ -69,7 +69,7 @@ local flags = {
 }
 local calls = 0
 
-local menuEntries, closedMenus, releaseMenu, trackingMenus = {}, 0, nil, {}
+local menuEntries, releaseMenu, trackingMenus = {}, nil, {}
 local mapOpens = 0
 local function menuNode()
 	local node = {}
@@ -148,10 +148,9 @@ local env = setmetatable({
 			end
 			callback(nil, root)
 		end,
-		CloseAllMenus = function()
-			closedMenus = closedMenus + 1
-		end,
 	},
+	-- The Forever client's MenuUtil has no CloseAllMenus: a button closes its menu through its response (#161).
+	MenuResponse = { Open = 1, Refresh = 2, Close = 3, CloseAll = 4 },
 	UIParent = {},
 	UnitFactionGroup = function()
 		return "Alliance"
@@ -233,7 +232,13 @@ ns.OpenWorldMap = function(uiMap)
 	env.C_Map.OpenWorldMap(uiMap)
 	return true
 end
+-- UI/MenuModifier.lua's guard, with errors left to surface here rather than reported.
+ns.db = {}
+ns.SafeCall = function(_, fn, ...)
+	return true, fn(...)
+end
 setfenv(assert(loadfile("Locales/enUS.lua")), env)("ShortestPathForever", ns)
+setfenv(assert(loadfile("UI/MenuModifier.lua")), env)("ShortestPathForever", ns)
 setfenv(assert(loadfile("UI/Nearby.lua")), env)("ShortestPathForever", ns)
 for _, fn in ipairs(initializers) do
 	fn()
@@ -320,9 +325,8 @@ for _, child in ipairs(trainers.children) do
 end
 assert(navigated[#navigated][5] == "Alchemy trainer", "specialty picker sends actual chosen trainer")
 env.SlashCmdList.SPFNEAR("")
-entry("Reagents").callback()
+assert(entry("Reagents").callback() == env.MenuResponse.CloseAll, "a service that starts a journey closes every menu")
 assert(navigated[#navigated][5] == "Far vendor", "reagents ignores closer general vendor")
-assert(closedMenus > 0, "successful menu actions close the map menu")
 local before = calls
 local beforeMenus = #menuEntries
 for _ = 1, 20 do
@@ -350,6 +354,7 @@ local function fresh(questie, away, L)
 		OpenWorldMap = ns.OpenWorldMap,
 		GamepadUI = ns.GamepadUI,
 		Print = ns.Print,
+		ModifyMenu = ns.ModifyMenu,
 	}
 	setfenv(assert(loadfile("UI/Nearby.lua")), env)("ShortestPathForever", copy)
 	for _, fn in ipairs(starts) do

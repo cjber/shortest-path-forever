@@ -40,6 +40,7 @@ Core\Distance.lua
 Transport\Timetable.lua
 Transport\TaxiTimes.lua
 Core\PlanContext.lua
+UI\MenuModifier.lua
 UI\Nearby.lua
 Transport\Observer.lua
 Transport\Sync.lua

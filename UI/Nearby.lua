@@ -67,6 +67,15 @@ local function Navigate(key, place)
 		or nil
 	return ShortestPathForever.API.Navigate("Shortest Path Forever", place.map, place.x, place.y, place.name, kind)
 end
+-- A service button's response: one that starts a journey closes every menu, one that cannot keeps the menu open.
+-- The response is how a button closes its menu: the Forever client's MenuUtil has no CloseAllMenus (#161).
+local function Pick(key, place)
+	if Navigate(key, place) then
+		Close()
+		return MenuResponse.CloseAll
+	end
+	return MenuResponse.Open
+end
 local function Build()
 	if state == "building" or state == "ready" then
 		return
@@ -220,26 +229,17 @@ local function AddService(root, service, world)
 		for _, specialty in ipairs(SpecialtyNames(service.key, world)) do
 			local specialist = Nearest(service.key, world, specialty)
 			submenu:CreateButton(specialty, function()
-				if Navigate(service.key, specialist) then
-					Close()
-					MenuUtil.CloseAllMenus()
-				end
+				return Pick(service.key, specialist)
 			end)
 		end
 		submenu:CreateButton(L["Nearest"], function()
-			if Navigate(service.key, place) then
-				Close()
-				MenuUtil.CloseAllMenus()
-			end
+			return Pick(service.key, place)
 		end)
 		return
 	end
 	local label = place and service.label or L["%s — unavailable here"]:format(service.label)
 	local entry = root:CreateButton(label, function()
-		if Navigate(service.key, place) then
-			Close()
-			MenuUtil.CloseAllMenus()
-		end
+		return Pick(service.key, place)
 	end)
 	entry:SetEnabled(place ~= nil)
 end
@@ -322,8 +322,8 @@ ns.Init(function()
 	if WorldMapFrame and WorldMapFrame.HookScript then
 		WorldMapFrame:HookScript("OnHide", Close)
 	end
-	Menu.ModifyMenu("MENU_WORLD_MAP_TRACKING", AddTrackingEntry)
-	Menu.ModifyMenu("MENU_MINIMAP_TRACKING", AddTrackingEntry)
+	ns.ModifyMenu("MENU_WORLD_MAP_TRACKING", "nearby", AddTrackingEntry)
+	ns.ModifyMenu("MENU_MINIMAP_TRACKING", "nearby", AddTrackingEntry)
 	SLASH_SPFNEAR1 = "/spfnear"
 	SlashCmdList.SPFNEAR = function(message)
 		local key = string.lower((message or ""):match("^%s*(.-)%s*$"))

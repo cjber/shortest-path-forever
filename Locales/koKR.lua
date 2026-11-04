@@ -367,3 +367,6 @@ L["Approximate walking distance"] = "대략적인 도보 거리"
 L["Transport rides"] = "교통수단 이용"
 L["Flights taken"] = "이용한 비행"
 L["Portal legs"] = "차원문 구간"
+L["World map filter menu test: %s. Type /reload to apply."] =
+	"세계 지도 필터 메뉴 테스트: %s. 적용하려면 /reload를 입력하세요." -- mt
+L["Usage: /path menutest map, nearby, both or off"] = "사용법: /path menutest map, nearby, both 또는 off" -- mt

@@ -26,6 +26,9 @@ RaidWarningUtil = nil
 OBJECTIVE_TRACKER_COLOR = nil
 ---@type string
 OFF = nil
+-- Blizzard_Menu/MenuConstants.lua: what a menu button's responder answers; CloseAll closes every menu.
+---@type {Open: MenuResponse, Refresh: MenuResponse, Close: MenuResponse, CloseAll: MenuResponse}
+MenuResponse = nil
 -- InputInterfaceStyleDocumentation.lua: which interface the game shows, mouse and keyboard or the gamepad one.
 ---@type {GetCurrentStyle: fun(): number}?
 C_InputInterfaceStyle = nil

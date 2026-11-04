@@ -611,6 +611,14 @@ ns.Init(function()
 				ns.Print(L["Following %s."]:format(L["Party member"]))
 			end
 			return
+		elseif message:match("^menutest") then
+			local value = message:match("^menutest%s+(%S+)")
+			if value and ns.SetMenuTest(value) then
+				ns.Print(L["World map filter menu test: %s. Type /reload to apply."]:format(value))
+			else
+				ns.Print(L["Usage: /path menutest map, nearby, both or off"])
+			end
+			return
 		elseif message == "perf" then
 			Perf()
 			return

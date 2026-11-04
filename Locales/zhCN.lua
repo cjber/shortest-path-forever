@@ -356,3 +356,6 @@ L["Approximate walking distance"] = "大致步行距离"
 L["Transport rides"] = "交通工具乘坐次数"
 L["Flights taken"] = "飞行次数"
 L["Portal legs"] = "传送门路段"
+L["World map filter menu test: %s. Type /reload to apply."] =
+	"世界地图过滤菜单测试：%s。输入 /reload 以应用。" -- mt
+L["Usage: /path menutest map, nearby, both or off"] = "用法：/path menutest map、nearby、both 或 off" -- mt

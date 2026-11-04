@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Picking a Nearby service no longer raises an error.** Choosing a service from the world map's filter menu, the minimap's tracking menu or `/spfnear` started the journey and then called a menu function the game does not have, so a Lua error followed every pick. The button now closes the menu the way the game's own buttons do. Our entries in those menus are also checked before they are added and report any error of their own instead of passing it into the game's menu code. If the world map filter menu still crashes the game when it opens, `/path menutest map`, `/path menutest nearby` or `/path menutest both` leaves our entries out after a `/reload`, and `/path menutest off` puts them back, so you can tell us which one it is (#161).
+
 ## [1.22.25] - 2026-11-04
 
 - **Controller players no longer trip the client's gamepad block.** Under the gamepad interface, a context menu opened from the tracker header, a step line, a dock pin or a flight pin now says "This menu needs mouse and keyboard." instead of opening inside our own click handler, and the world map is no longer turned when it is already open. Both changes remove the synchronous path from this addon into the protected interact-target call that the client blocked, which also explains why other addons were being named alongside it.
