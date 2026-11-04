@@ -65,7 +65,7 @@ end
 
 function FlightPin:OnMouseClickAction(button)
 	if button == "RightButton" then
-		MenuUtil.CreateContextMenu(self, function(_, root)
+		ns.ContextMenu(self, function(_, root)
 			root:CreateCheckbox(L["Flight path known"], function()
 				local known = ns.KnownTaxiNodes()
 				return known and known[self.poiInfo.nodeID] == true

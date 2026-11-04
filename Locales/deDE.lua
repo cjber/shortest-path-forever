@@ -140,6 +140,8 @@ L["Open settings."] = "Optionen öffnen."
 L["Open the world map and choose Nearby services in its tracking menu."] =
 	"Öffnet die Weltkarte und wählt „Dienste in der Nähe“ in ihrem Aufspürmenü."
 L["Open the world map to see it."] = "Öffnet die Weltkarte, um es zu sehen."
+L["Turn the world map to %s to see it."] = "Dreht die Weltkarte auf %s, um es zu sehen." -- mt
+L["This menu needs mouse and keyboard."] = "Dieses Menü braucht Maus und Tastatur." -- mt
 L["Open these settings from the minimap."] = "Diese Optionen über die Minikarte öffnen."
 L["Other Faction's Routes"] = "Routen der anderen Fraktion"
 L["Picks quests for your level and plans them into one journey."] =

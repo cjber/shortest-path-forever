@@ -461,7 +461,7 @@ local function OpenEnds(pin, button)
 	if #ends == 1 then
 		ShowEnd(ends[1])
 	elseif #ends > 1 then
-		MenuUtil.CreateContextMenu(pin, function(_, root)
+		ns.ContextMenu(pin, function(_, root)
 			for _, target in ipairs(ends) do
 				root:CreateButton(string.format(TO[target.kind], target.zone), function()
 					ShowEnd(target)

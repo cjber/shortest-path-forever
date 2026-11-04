@@ -141,6 +141,8 @@ L["Open settings."] = "설정을 엽니다."
 L["Open the world map and choose Nearby services in its tracking menu."] =
 	"세계 지도를 열고 추적 메뉴에서 주변 편의시설을 선택하십시오."
 L["Open the world map to see it."] = "세계 지도를 열어 확인하십시오."
+L["Turn the world map to %s to see it."] = "%s 지역으로 세계 지도를 돌려 확인하십시오." -- mt
+L["This menu needs mouse and keyboard."] = "이 메뉴는 마우스와 키보드가 필요합니다." -- mt
 L["Open these settings from the minimap."] = "미니맵에서 이 설정을 엽니다."
 L["Other Faction's Routes"] = "다른 진영의 노선"
 L["Picks quests for your level and plans them into one journey."] =

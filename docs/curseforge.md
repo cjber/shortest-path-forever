@@ -34,7 +34,7 @@ Hover a dock to see its services and destinations.
 - In **Guidance**, or by right-clicking the tracker's "Journey to …" line, turn off **Attach to quest tracker** to drag the shared column. **Resume guide** returns to RestedXP; **Keep journeys after a reload** restarts yours.
 - `/way [zone] x y [title]` plans a journey, or `/path way` when another addon owns `/way`. **Follow TomTom's arrow** in Guidance follows TomTom.
 - `/spfnear` opens nearby services. For a bug report, type `/path report` and paste what it shows. Type `/path issue` to show a filled-in GitHub issue link, selected for copying, for a bug or feature request.
-- With the gamepad interface on, you open the world map; Shortest Path won't.
+- With the gamepad interface on, you open and turn the world map; Shortest Path won't, and its right-click menus need mouse and keyboard.
 
 Translated into German, French, Spanish, Brazilian Portuguese, Russian, Korean and Chinese (machine translated; corrections welcome through a [translation issue](https://github.com/cjber/shortest-path-forever/issues/new?template=translation.yml)).
 

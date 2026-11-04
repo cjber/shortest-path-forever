@@ -106,6 +106,10 @@ for _, readyAtLoad in ipairs({ false, true }) do
 		end,
 	}
 	ns.Corpse = { Active = noop }
+	-- Core.lua's menu opener, with mouse and keyboard.
+	ns.ContextMenu = function(owner, generator)
+		return env.MenuUtil.CreateContextMenu(owner, generator)
+	end
 	ns.TrackerHost.IsAttachedToQuestTracker = function()
 		return attached
 	end

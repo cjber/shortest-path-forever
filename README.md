@@ -61,7 +61,7 @@ The top five appear alongside your own rank, even when it is lower.
 
 ## Usage
 
-Alt-click the world map to choose a destination over a Questie icon. Shift-click works on empty map space and Shortest Path icons. With the gamepad interface on, Shortest Path never opens the world map itself; it asks you to.
+Alt-click the world map to choose a destination over a Questie icon. Shift-click works on empty map space and Shortest Path icons. With the gamepad interface on, Shortest Path never opens or turns the world map, or opens a menu, itself; it asks you to.
 
 The settings have six pages. **Transport** draws routes, shows the other faction's boats and zeppelins (off by default), and shares departure times. **Guidance** holds journey behaviour: *Resume guide*, *Keep journeys after a reload*, *Minimum Hearthstone saving* and *Attach to quest tracker*. **Map marks** scales each kind of icon from 25% to 200%. **Interface** shows or hides the tracker, arrow and compass, sizes them, and switches to metres. **Alerts** covers the boat warning and the arrival sound. **Forever addons** holds the hint setting. [docs/features.md](docs/features.md) has the detail.
 

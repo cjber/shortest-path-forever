@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Controller play no longer blocks the game's interact target.** With the gamepad interface on, the game takes every menu and window that opens into its controller focus straight away, and when Shortest Path opened one (a tracker or map pin menu, Nearby services, or turning an open map to a place) the game blocked `SetPreferredGamepadInteractTarget()` and blamed whichever addon touched it last. Under the gamepad interface those menus now say they need mouse and keyboard, and Show on map asks you to turn the map yourself. Nothing changes with mouse and keyboard. Thanks to TRDeadbeat, tallsmartman and the other CurseForge players for the reports.
+
 ## [1.22.24] - 2026-11-04
 
 - **Water walking checks work reliably.** The check for a known water-walking spell used a compatibility function that only exists while the game's deprecation fallbacks are enabled. Without them, a journey raised a Lua error and never finished planning. It now asks the spellbook directly.

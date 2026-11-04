@@ -32,7 +32,7 @@ function ModuleMixin:OnBlockHeaderClick(block, button)
 		if button == "LeftButton" then
 			ns.ToggleJourneyGuide()
 		elseif button == "RightButton" then
-			MenuUtil.CreateContextMenu(block, function(_, root)
+			ns.ContextMenu(block, function(_, root)
 				root:CreateCheckbox(L["Guide me"], ns.IsJourneyGuided, ns.ToggleJourneyGuide)
 				root:CreateButton(L["Show on map"], ns.ShowJourneyMap)
 				root:CreateButton(L["Resume RestedXP guide"], function()
@@ -89,7 +89,7 @@ function ModuleMixin:LayoutContents()
 					ns.FamilyHints.OpenFooter()
 					return
 				end
-				MenuUtil.CreateContextMenu(line, function(_, root)
+				ns.ContextMenu(line, function(_, root)
 					root:CreateButton(L["Complete this step"], function()
 						local index = row.key
 						if type(index) == "number" then

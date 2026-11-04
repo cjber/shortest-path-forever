@@ -81,10 +81,11 @@ function ns.TrackerHostSettings()
 	return settings
 end
 
--- Whether the game's gamepad interface is up. Forever's gamepad layer (SmartNavigation, FrameControlsManager) counts a
--- window as belonging to whatever code opened it, and the gamepad action bar later calls the protected
--- SetPreferredGamepadInteractTarget from that path (#158). Under it, the addon leaves opening windows and taking
--- the keyboard to the game.
+-- Whether the game's gamepad interface is up. Under it, Forever's FrameControlsManager takes every menu and UI panel
+-- that shows into its focus, in the same call: it pushes a binding set, and the gamepad action bar's
+-- UpdateInteractIcons calls the protected SetPreferredGamepadInteractTarget from there. A menu, panel or map change
+-- this addon's code starts makes that whole call tainted and the client blocks it (#158), so under the gamepad
+-- interface the addon leaves opening menus and windows, turning the map and taking the keyboard to the game.
 ---@return boolean
 function ns.GamepadUI()
 	-- Enum.InputDeviceInterfaceType is the Forever UI's own name (Blizzard_EditMode/Shared/EditModeManager.lua).
@@ -92,9 +93,10 @@ function ns.GamepadUI()
 	return styles ~= nil and api ~= nil and api.GetCurrentStyle ~= nil and api.GetCurrentStyle() == styles.Gamepad
 end
 
--- Shows the world map on uiMap (or where you are) and returns whether it is up. Under the gamepad interface the
--- addon never opens it (#158): a map the game already opened is turned to uiMap by the game's own code, and with
--- none the player is told to open it (`hint`, or the plain line) and false comes back.
+-- Shows the world map on uiMap (or where you are) and returns whether it is up there. Under the gamepad interface
+-- the addon neither opens nor turns it (#158): C_Map.OpenWorldMap runs the map's own handler, its pins and the
+-- gamepad focus in this addon's call. A map the player already has on uiMap (or any map, with no uiMap) is used as
+-- it is; otherwise the player is told what to open (`hint`, or the plain line) and false comes back.
 ---@param uiMap? number
 ---@param hint? string
 ---@return boolean
@@ -103,15 +105,32 @@ function ns.OpenWorldMap(uiMap, hint)
 		C_Map.OpenWorldMap(uiMap)
 		return true
 	end
-	if WorldMapFrame and WorldMapFrame:IsShown() then
-		-- Already open, so this only has the game's own code turn it.
-		if uiMap then
-			C_Map.OpenWorldMap(uiMap)
+	local map = WorldMapFrame
+	if map and map:IsShown() then
+		if not uiMap or map:GetMapID() == uiMap then
+			return true
 		end
-		return true
+		local info = C_Map.GetMapInfo(uiMap)
+		if info and info.name then
+			ns.Print(ns.L["Turn the world map to %s to see it."]:format(info.name))
+			return false
+		end
 	end
 	ns.Print(hint or ns.L["Open the world map to see it."])
 	return false
+end
+
+-- Opens a context menu on owner (MenuUtil.CreateContextMenu) and returns it. Under the gamepad interface a menu this
+-- addon opens is blocked the same way (#158), so none opens, the player is told why and nil comes back.
+---@param owner Region
+---@param generator fun(owner: Region, root: table)
+---@return table?
+function ns.ContextMenu(owner, generator)
+	if ns.GamepadUI() then
+		ns.Print(ns.L["This menu needs mouse and keyboard."])
+		return nil
+	end
+	return MenuUtil.CreateContextMenu(owner, generator)
 end
 
 ---@param message string

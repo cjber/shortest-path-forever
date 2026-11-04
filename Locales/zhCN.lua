@@ -137,6 +137,8 @@ L["Open settings."] = "打开设置。"
 L["Open the world map and choose Nearby services in its tracking menu."] =
 	"打开世界地图，在其追踪菜单中选择“附近服务”。"
 L["Open the world map to see it."] = "打开世界地图查看。"
+L["Turn the world map to %s to see it."] = "将世界地图切换到%s查看。" -- mt
+L["This menu needs mouse and keyboard."] = "此菜单需要鼠标和键盘。" -- mt
 L["Open these settings from the minimap."] = "从微缩地图打开这些设置。"
 L["Other Faction's Routes"] = "另一阵营的航线"
 L["Picks quests for your level and plans them into one journey."] =

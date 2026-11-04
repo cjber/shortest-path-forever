@@ -218,8 +218,14 @@ local ns = {
 		end,
 	},
 }
--- Core.lua's map opener: the game opens the map instead under the gamepad interface (#158).
-local gamepad = false
+-- Core.lua's map opener and gamepad check: the game opens the map and menus under the gamepad interface (#158).
+local gamepad, printed = false, {}
+ns.GamepadUI = function()
+	return gamepad
+end
+ns.Print = function(text)
+	printed[#printed + 1] = text
+end
 ns.OpenWorldMap = function(uiMap)
 	if gamepad then
 		return env.WorldMapFrame ~= nil and env.WorldMapFrame:IsShown()
@@ -342,6 +348,8 @@ local function fresh(questie, away, L)
 			return { map = elsewhere and 2 or 1, x = x * 1000, y = y * 1000 }
 		end,
 		OpenWorldMap = ns.OpenWorldMap,
+		GamepadUI = ns.GamepadUI,
+		Print = ns.Print,
 	}
 	setfenv(assert(loadfile("UI/Nearby.lua")), env)("ShortestPathForever", copy)
 	for _, fn in ipairs(starts) do
@@ -407,8 +415,8 @@ for _, private in ipairs({
 	assert(#menuEntries == 2 and menuEntries[2].text == "Nearby services could not read QuestieDB.")
 end
 env.LibQuestieDB = lib
--- Under the gamepad interface the services menu never opens the world map itself: with the map closed it waits for
--- the player to open it, and over a map the game opened it works as before.
+-- Under the gamepad interface the services menu never opens the world map or a menu itself, even over a map the game
+-- opened: the player is pointed at the map's own tracking menu, which lists the services.
 gamepad = true
 local opens, entries = mapOpens, menuEntries
 env.SlashCmdList.SPFNEAR("")
@@ -419,7 +427,8 @@ env.WorldMapFrame = {
 	end,
 }
 env.SlashCmdList.SPFNEAR("")
-assert(mapOpens == opens and menuEntries ~= entries, "over an open map the menu still opens")
+assert(mapOpens == opens and menuEntries == entries, "over an open map no menu of ours opens either")
+assert(printed[#printed]:find("tracking menu", 1, true), "it points at the map's tracking menu")
 gamepad, env.WorldMapFrame = false, nil
 print(
 	"nearby: installed QuestieDB contract, sliced loading, faction/class/specialty, "

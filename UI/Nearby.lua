@@ -267,12 +267,15 @@ Open = function()
 	if InCombatLockdown() then
 		return
 	end
-	-- The services menu opens over the world map; under the gamepad interface the game opens that (#158), and the
-	-- map's own tracking menu lists the services once it is up. The index starts loading either way.
-	if not ns.OpenWorldMap(nil, L["Open the world map and choose Nearby services in its tracking menu."]) then
+	-- The services menu opens over the world map. Under the gamepad interface neither the map nor a menu the addon
+	-- opens gets past the client (#158), so the map's own tracking menu, which the game opens, lists the services.
+	-- The index starts loading either way.
+	if ns.GamepadUI() then
 		Build()
+		ns.Print(L["Open the world map and choose Nearby services in its tracking menu."])
 		return
 	end
+	ns.OpenWorldMap()
 	menuOpen = true
 	Build()
 	local world = PlayerWorld()
