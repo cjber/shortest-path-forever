@@ -19,6 +19,7 @@ globals = {
 	"SLASH_SHORTESTPATHFOREVERWAY1",
 }
 read_globals = {
+	"TomTomCrazyArrow",
 	"IsAltKeyDown",
 	"CreateFramePoolCollection",
 	"C_XMLUtil",

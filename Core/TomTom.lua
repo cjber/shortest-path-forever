@@ -410,7 +410,42 @@ local waiting
 local live = false
 ---@type TomTomWaypoint?
 local restored
+---@type TomTomWaypoint?
+local arrowWaypoint
 local watcher = CreateFrame("Frame")
+local guideArrow, muted = false, false
+
+-- Keep TomTom's OnUpdate running: it advances the waypoint queue even while our route supplies the direction.
+local function SyncArrow()
+	local frame = TomTomCrazyArrow
+	if not frame or not hooked or not hooked.ShowHideCrazyArrow then
+		return
+	end
+	local empty = hooked.IsCrazyArrowEmpty and hooked:IsCrazyArrowEmpty()
+	local hijacked = hooked.CrazyArrowIsHijacked and hooked:CrazyArrowIsHijacked()
+	if empty then
+		arrowWaypoint = nil
+	end
+	if
+		following
+		and not hijacked
+		and following == arrowWaypoint
+		and API.CurrentStop(OWNER)
+		and guideArrow
+		and ns.db.arrow ~= false
+		and not UnitIsDeadOrGhost("player")
+	then
+		muted = true
+		frame:SetAlpha(0)
+		frame:EnableMouse(false)
+	elseif muted then
+		muted = false
+		hooked:ShowHideCrazyArrow()
+	end
+	if empty and not hijacked then
+		frame:Hide()
+	end
+end
 
 ---@param uid any
 local function Follow(uid)
@@ -444,6 +479,7 @@ local function Follow(uid)
 	if API.Navigate(OWNER, uid[1], uid[2], uid[3], Text(uid.title) and uid.title or nil) then
 		following = uid
 	end
+	SyncArrow()
 end
 
 ---@param uid any
@@ -473,8 +509,22 @@ function ns.RefreshTomTomFollow()
 	then
 		hooked = tomtom
 		hooksecurefunc(tomtom, "SetCrazyArrow", function(_, uid) -- taint-ok: TomTom owns this addon table.
+			arrowWaypoint = type(uid) == "table" and uid or nil
 			Follow(uid)
+			SyncArrow()
 		end)
+		if type(tomtom.ShowHideCrazyArrow) == "function" then
+			hooksecurefunc(tomtom, "ShowHideCrazyArrow", SyncArrow) -- taint-ok: TomTom owns this addon table.
+		end
+		if type(tomtom.HijackCrazyArrow) == "function" then
+			hooksecurefunc(tomtom, "HijackCrazyArrow", SyncArrow) -- taint-ok: TomTom owns this addon table.
+		end
+		if type(tomtom.ReleaseCrazyArrow) == "function" then
+			hooksecurefunc(tomtom, "ReleaseCrazyArrow", SyncArrow) -- taint-ok: TomTom owns this addon table.
+		end
+		if type(tomtom.ClearCrazyArrowPoint) == "function" then
+			hooksecurefunc(tomtom, "ClearCrazyArrowPoint", SyncArrow) -- taint-ok: TomTom owns this addon table.
+		end
 		hooksecurefunc(tomtom, "RemoveWaypoint", function(_, uid) -- taint-ok: TomTom owns this addon table.
 			Unfollow(uid)
 		end)
@@ -488,6 +538,7 @@ function ns.RefreshTomTomFollow()
 		Unfollow(following)
 		waiting = nil
 	end
+	SyncArrow()
 end
 
 -- A journey that ends, or is replaced by the player or another addon, leaves no waypoint behind.
@@ -499,9 +550,14 @@ hooksecurefunc(ns, "JourneyChanged", function()
 			Forget()
 		end
 	end
+	SyncArrow()
 end)
 
 ns.Init(function()
+	hooksecurefunc(ns, "PointGuideArrow", function(points) -- taint-ok: Shortest Path owns this addon table.
+		guideArrow = points ~= nil and #points > 0
+		SyncArrow()
+	end)
 	watcher:RegisterEvent("ADDON_LOADED")
 	watcher:RegisterEvent("PLAYER_ENTERING_WORLD")
 	watcher:SetScript("OnEvent", function(self, event, name)

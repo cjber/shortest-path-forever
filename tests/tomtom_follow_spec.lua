@@ -18,6 +18,21 @@ local function Boot(follow)
 	driver.load("Core/API.lua")
 	driver.load("Journey/Itinerary.lua")
 	local client = { combat = false, timers = {} }
+	local arrow = { alpha = 0.7, mouse = true }
+	function arrow:SetAlpha(value)
+		self.alpha = value
+	end
+	function arrow:EnableMouse(value)
+		self.mouse = value
+	end
+	function arrow:Show()
+		self.hidden = false
+	end
+	function arrow:Hide()
+		self.hidden = true
+	end
+	env.TomTomCrazyArrow = arrow
+	client.arrow = arrow
 	env.C_AddOns = {
 		DoesAddOnExist = function(name)
 			return name == "TomTom"
@@ -71,7 +86,12 @@ local function Boot(follow)
 	end
 	-- TomTom's files load (its table becomes the global), then its ADDON_LOADED, then PLAYER_LOGIN runs its Enable.
 	function client.login(saved)
-		local tomtom = Fake.New(saved)
+		local tomtom = Fake.New(saved, arrow)
+		function tomtom:ShowHideCrazyArrow()
+			arrow:Show()
+			arrow:SetAlpha(self.arrowAlpha or 0.7)
+			arrow:EnableMouse(self.arrowMouse ~= false)
+		end
 		env.TomTom = tomtom
 		client.watcher:OnEvent("ADDON_LOADED", "TomTom")
 		tomtom:Enable()
@@ -85,6 +105,102 @@ local function Boot(follow)
 		return ns.JourneyInfo()
 	end
 	return client
+end
+
+do
+	local c = Boot(true)
+	local tomtom = c.login()
+	c.world()
+	c.frame()
+	tomtom:Way(1, 60, 52, "One arrow")
+	c.driver.path.settle()
+	equal(c.arrow.alpha, 0, "SPF guidance suppresses TomTom's duplicate arrow")
+	equal(c.arrow.hidden, false, "the muted frame stays shown for waypoint processing")
+	equal(c.arrow.mouse, false, "the invisible TomTom arrow cannot intercept clicks")
+	tomtom:HijackCrazyArrow(function() end)
+	equal(c.arrow.alpha, 0.7, "hijacking immediately restores the third-party arrow")
+	equal(c.arrow.mouse, true, "hijacking restores its input")
+	tomtom:ShowHideCrazyArrow()
+	tomtom:ReleaseCrazyArrow()
+	equal(c.arrow.alpha, 0, "releasing the arrow immediately resumes SPF suppression")
+	equal(c.arrow.mouse, false, "the released duplicate cannot intercept clicks")
+	c.ns.PointGuideArrow(nil)
+	equal(c.arrow.alpha, 0.7, "pausing walking guidance restores TomTom's arrow")
+	c.ns.PointGuideArrow({ { map = 1, x = 1, y = 1 } })
+	equal(c.arrow.alpha, 0, "resuming walking guidance suppresses the duplicate")
+	tomtom.arrowAlpha, tomtom.arrowMouse = 0.4, false
+	tomtom:ShowHideCrazyArrow()
+	equal(c.arrow.alpha, 0, "TomTom settings updates preserve suppression")
+	c.ns.db.arrow = false
+	c.ns.PointGuideArrow(nil)
+	equal(c.arrow.alpha, 0.4, "turning SPF's arrow off restores TomTom's current alpha")
+	equal(c.arrow.mouse, false, "TomTom's current input setting is retained")
+	c.ns.db.arrow = true
+	c.ns.PointGuideArrow({ { map = 1, x = 1, y = 1 } })
+	equal(c.arrow.alpha, 0, "turning SPF's arrow on resumes suppression")
+	c.env.UnitIsDeadOrGhost = function()
+		return true
+	end
+	c.ns.PointGuideArrow({ { map = 1, x = 1, y = 1 } })
+	equal(c.arrow.alpha, 0.4, "death restores TomTom even when it keeps its previous waypoint")
+	tomtom:Die(1, 0.3, 0.3)
+	equal(c.arrow.alpha, 0.4, "TomTom's corpse guidance remains visible")
+	tomtom:Revive()
+	c.env.UnitIsDeadOrGhost = function()
+		return false
+	end
+	tomtom:Way(1, 65, 52, "Resume")
+	c.driver.path.settle()
+	equal(c.arrow.alpha, 0, "normal guidance resumes suppression after corpse removal")
+	c.ns.ClearJourney()
+	equal(c.arrow.alpha, 0.4, "ending SPF guidance restores TomTom's alpha")
+	equal(c.arrow.mouse, false, "ending SPF guidance restores TomTom's input")
+	tomtom:Way(1, 70, 52, "Opt out")
+	c.driver.path.settle()
+	c.ns.db.tomtomFollow = false
+	c.ns.RefreshTomTomFollow()
+	equal(c.arrow.alpha, 0.4, "turning follow off restores TomTom guidance")
+end
+
+do
+	local c = Boot(true)
+	local tomtom = c.login()
+	c.world()
+	c.frame()
+	tomtom:Way(1, 60, 52, "Clear arrow")
+	c.driver.path.settle()
+	tomtom:ClearCrazyArrowPoint(false)
+	c.ns.PointGuideArrow(nil)
+	equal(c.arrow.hidden, true, "restoring settings never resurrects an empty TomTom arrow")
+	tomtom:ShowHideCrazyArrow()
+	equal(c.arrow.hidden, true, "later TomTom settings refreshes keep its empty arrow hidden")
+	equal(c.API.CurrentStop("TomTom"), 1, "clearing only the arrow retains the followed journey")
+	tomtom:Way(1, 65, 52, "Next arrow")
+	c.driver.path.settle()
+	equal(c.arrow.alpha, 0, "a new TomTom target can hand guidance over again")
+	c.ns.ClearJourney()
+	equal(c.arrow.hidden, false, "a nonempty TomTom arrow is restored normally")
+	local closest = tomtom:AddWaypoint(1, 0.7, 0.52, { title = "Closest", crazy = false })
+	tomtom.closest = closest
+	tomtom:ClearCrazyArrowPoint(false)
+	equal(tomtom.Arrow(), closest, "clearing can synchronously select the closest remaining waypoint")
+	equal(c.title(), "Journey to Closest", "the replacement is followed before the clear hook finishes")
+	c.driver.path.settle()
+	equal(c.arrow.alpha, 0, "the replacement arrow stays suppressed while SPF guides")
+	equal(c.arrow.hidden, false, "replacement keeps TomTom's queue frame shown")
+end
+
+-- TomTom permits another addon to own its arrow without an active waypoint.
+do
+	local c = Boot(false)
+	local tomtom = c.login()
+	c.world()
+	c.frame()
+	tomtom:HijackCrazyArrow(function() end)
+	c.ns.PointGuideArrow(nil)
+	equal(c.arrow.hidden, false, "an empty arrow owned by another addon stays visible")
+	tomtom:ShowHideCrazyArrow()
+	equal(c.arrow.hidden, false, "settings refresh preserves another addon's arrow")
 end
 
 -- A reload: TomTom restores its saved waypoints at PLAYER_LOGIN, pointing the arrow at each in turn. Nothing is

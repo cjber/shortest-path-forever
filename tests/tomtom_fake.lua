@@ -25,10 +25,12 @@
 local Fake = {}
 
 ---@param saved? table[] the waypoints TomTom saved last session: {map, x, y, title = ...}
-function Fake.New(saved)
+---@param wayframe? table the arrow frame, when a spec observes its visibility
+function Fake.New(saved, wayframe)
 	local tomtom = { profile = { stickycorpse = false, setclosest = true } }
 	local waypoints, valid, profile = {}, {}, {}
 	local arrow
+	local hijacked = false
 	tomtom.waypoints = waypoints
 
 	local function Key(m, x, y, title)
@@ -40,6 +42,28 @@ function Fake.New(saved)
 			return
 		end
 		arrow = uid
+		if wayframe then
+			wayframe:Show()
+		end
+	end
+
+	function tomtom.HijackCrazyArrow(_, _)
+		hijacked = true
+		if wayframe then
+			wayframe:Show()
+		end
+	end
+
+	function tomtom.ReleaseCrazyArrow()
+		hijacked = false
+	end
+
+	function tomtom.CrazyArrowIsHijacked()
+		return hijacked
+	end
+
+	function tomtom.IsCrazyArrowEmpty()
+		return arrow == nil
 	end
 
 	function tomtom.ClearWaypoint(_, uid)
@@ -156,7 +180,13 @@ function Fake.New(saved)
 			if remove then
 				self:RemoveWaypoint(arrow)
 			else
+				local prior = arrow
 				arrow = nil
+				-- Specs supply the nearest remaining point instead of querying the player's position.
+				local closest = self.closest
+				if self.profile.setclosest and closest and closest ~= prior and self:IsValidWaypoint(closest) then
+					self:SetCrazyArrow(closest, 15, closest.title)
+				end
 			end
 		end
 	end

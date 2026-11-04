@@ -120,6 +120,14 @@ waypoint TomTom's arrow was restored to, unless a journey is already under way. 
 through TomTom's *Remove all waypoints* or `/way reset all`, cancels the journey. TomTom's corpse arrow is not
 followed: the corpse run does that job and keeps the journey you were on.
 
+While Shortest Path supplies directions to the followed waypoint, it sets `TomTomCrazyArrow` to zero alpha and
+disables its mouse input. The frame stays shown so TomTom keeps processing waypoint arrivals. A hook on TomTom's
+`ShowHideCrazyArrow` maintains this handoff after options change; `ClearCrazyArrowPoint` releases it when the arrow
+is cleared without removing its waypoint. Hooks on `HijackCrazyArrow` and `ReleaseCrazyArrow` yield to another
+addon taking over the arrow and resume the handoff when it releases ownership. Calling `ShowHideCrazyArrow` restores TomTom's current
+settings when Shortest Path stops supplying directions, follow is disabled or the player dies. No TomTom saved
+settings are changed.
+
 ## Alongside Polestar
 
 Polestar has a TomTom stand-in, a `/way` and a *Follow TomTom's arrow* of its own, and can hand its target to

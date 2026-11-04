@@ -29,6 +29,12 @@
 ---@field AddZWaypoint fun(self: TomTom, continent: number?, zone: number, x: number, y: number, desc?: string, persistent?: boolean, minimap?: boolean, world?: boolean, callbacks?: table|false, silent?: boolean, crazy?: boolean): TomTomWaypoint? -- 0-100 coordinates
 ---@field RemoveWaypoint fun(self: TomTom, waypoint: TomTomWaypoint): boolean -- true when it cleared this shim's own waypoint
 ---@field SetCrazyArrow? fun(self: TomTom, waypoint: TomTomWaypoint, arrival?: number, title?: string) -- TomTom's own: points its arrow at a waypoint
+---@field ShowHideCrazyArrow? fun(self: TomTom) -- applies TomTom's current arrow settings
+---@field IsCrazyArrowEmpty? fun(self: TomTom): boolean
+---@field CrazyArrowIsHijacked? fun(self: TomTom): boolean?
+---@field HijackCrazyArrow? fun(self: TomTom, onupdate: function)
+---@field ReleaseCrazyArrow? fun(self: TomTom)
+---@field ClearCrazyArrowPoint? fun(self: TomTom, remove?: boolean) -- clears the arrow, optionally removing its waypoint
 ---@field ClearWaypoint? fun(self: TomTom, waypoint: TomTomWaypoint) -- TomTom's own: takes a waypoint off the maps; every removal goes through it
 ---@field IsValidWaypoint? fun(self: TomTom, waypoint: TomTomWaypoint): boolean -- TomTom's own: whether the waypoint is still set
 ---@field WaypointExists? fun(self: TomTom, map: integer, x: number, y: number, desc?: string): boolean -- a waypoint with this map, point and title is set
@@ -40,6 +46,9 @@
 
 ---@type TomTom?
 TomTom = nil
+
+---@type Frame?
+TomTomCrazyArrow = nil
 
 -- Polestar (fitzforge/polestar), only as far as Core/TomTom.lua reads it: its own TomTom stand-in, to tell it from
 -- TomTom, whether it hands its target to Shortest Path, and its settings through its Get.
