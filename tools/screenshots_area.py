@@ -22,11 +22,11 @@ def areas(ui):
     """The quest objective's areas on the map as {blob ID: world points}, in the table's own order."""
     blobs = [
         row["ID"]
-        for row in ui.data.wago.db2("QuestPOIBlob")
+        for row in ui.data.table("QuestPOIBlob").values()
         if (row["QuestID"], row["ObjectiveIndex"], int(row["UiMapID"])) == (QUEST_ID, OBJECTIVE, MAP_ID)
     ]
     points = {blob: [] for blob in blobs}
-    for row in sorted(ui.data.wago.db2("QuestPOIPoint"), key=lambda row: int(row["ID"])):
+    for row in sorted(ui.data.table("QuestPOIPoint").values(), key=lambda row: int(row["ID"])):
         if row["QuestPOIBlobID"] in points:
             points[row["QuestPOIBlobID"]].append({"map": 0, "x": float(row["X"]), "y": float(row["Y"])})
     return points

@@ -652,7 +652,7 @@ def render_compass(ui):
 def render_cast_prompt(ui):
     # UI/Arrow.lua: 36-unit item icon, GameFontNormalLarge action 6 units below.
     canvas = ui.canvas(320, 70)
-    hearth = ui.item(6948)
+    hearth = ui.data.item(6948)
     canvas.draw(ui.texture(hearth.icon), 142, 0, 36, 36)
     canvas.text(0, 42, f"Use {hearth.name}", FONTS["GameFontNormalLarge"], justify="CENTER", width=320)
     return scene(ui, [(canvas, 0, 0)])
