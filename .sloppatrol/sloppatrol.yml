@@ -13,7 +13,7 @@ checks:
   - { name: tools, run: "ruff format --check . && ruff check ." }
   - { name: gate, run: "python3 .sloppatrol/gate.py --base origin/main && python3 .sloppatrol/agents.py check" }
 focus: [Journey/**, Nav/**, Routing/**, Transport/**, UI/**]
-ignore: [Data/**, Locales/**, Libs/**, tools/forever_tools/**]
+ignore: [Data/**, Locales/**, Libs/**, tools/forever_tools/**, tools/forever_sim/**]
 guards: { maxFiles: 8, maxLines: 400 }
 agents:
   refactorer: { maxPerCycle: 1, maxAttempts: 2 }

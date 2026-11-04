@@ -25,6 +25,8 @@ EXCLUDE = (
     ".sloppatrol/ledger.json",
     "Data/*.lua",
     "Nav/*.lua",
+    # Byte-for-byte producer code, verified by tools/forever_sim/sync.py check in CI.
+    "tools/forever_sim/*",
 )
 
 

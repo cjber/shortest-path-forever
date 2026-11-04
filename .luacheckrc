@@ -139,7 +139,6 @@ read_globals[#read_globals + 1] = "canaccessvalue"
 read_globals[#read_globals + 1] = "WaypointLocationDataProviderMixin"
 -- Journey.lua: water walking from its buffs, or a spell to cast.
 read_globals[#read_globals + 1] = "C_UnitAuras"
-read_globals[#read_globals + 1] = "IsPlayerSpell"
 read_globals[#read_globals + 1] = "C_Spell"
 -- Route.lua: the cursor over the minimap.
 read_globals[#read_globals + 1] = "GetCursorPosition"

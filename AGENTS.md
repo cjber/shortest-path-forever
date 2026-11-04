@@ -13,6 +13,7 @@ ruff format --check . && ruff check .
 luacheck .
 tools/typecheck.sh                  # LuaLS 3.19.1 + multi-value lint; first run fetches pinned WoW types
 for s in tests/*_spec.lua; do luajit "$s" || exit 1; done
+luajit tools/forever_sim/run.lua   # native client scenarios (tests/sim); python3 tools/forever_sim/fetch.py first
 luajit -joff tests/journey_bench.lua   # fails a journey that does not settle; read its worst frame against 3 ms
 SPF_BENCH_STRICT=1 luajit -joff tests/hearth_savings_bench.lua   # CI checks the plan; the 3 ms budget is local
 python3 tools/check_generated.py --offline # omit --offline to fetch missing pinned inputs

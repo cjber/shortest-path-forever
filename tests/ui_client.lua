@@ -635,9 +635,6 @@ local function fireEvent(event, ...)
 end
 -- Water walking: no buff is up and no spell is known.
 _G.C_UnitAuras = { GetPlayerAuraBySpellID = noop }
-_G.IsPlayerSpell = function()
-	return false
-end
 _G.C_Spell = {
 	GetSpellName = function(id)
 		return ({ [546] = "Water Walking", [1706] = "Levitate" })[id]

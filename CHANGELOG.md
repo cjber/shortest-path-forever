@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Water walking checks work on every client setup.** The check for a known water-walking spell used a compatibility function that only exists while the game's deprecation fallbacks are enabled. Without them, a journey raised a Lua error and never finished planning. It now asks the spellbook directly.
+
 ## [1.22.23] - 2026-11-04
 
 - **Companion map layers avoid duplicate pins.** Visible OpenMap and Leatrix Maps pins replace matching background flight and transport pins. Active journey guidance stays visible, and layers without a companion equivalent remain available.

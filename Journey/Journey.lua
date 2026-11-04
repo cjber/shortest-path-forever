@@ -104,9 +104,8 @@ local function WaterWalking()
 		end
 	end
 	for _, id in ipairs(WATER_SPELLS) do
-		-- Forever still exposes IsPlayerSpell; Ketho marks the retail compatibility wrapper deprecated.
-		---@diagnostic disable-next-line: deprecated
-		if IsPlayerSpell(id) then
+		-- IsPlayerSpell is a deprecation fallback, defined only while the loadDeprecationFallbacks CVar is on.
+		if C_SpellBook.IsSpellKnown(id) then
 			return true, id
 		end
 	end

@@ -37,6 +37,15 @@ jobs:
       - run: luacheck .
       - run: python3 -m tools.forever_tools.assets
       - run: for spec in tests/*_spec.lua; do luajit "$spec" || exit 1; done
+      # The native client simulator: real Blizzard UI under LuaJIT with the full TOC, failing on errors and
+      # gamepad-interface taint. Its UI source and client data are fetched at a pinned build and cached.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: tools/.cache/forever_sim
+          key: forever-sim-${{ hashFiles('tools/forever_sim/fetch.py') }}
+      - run: python3 tools/forever_sim/sync.py check
+      - run: python3 tools/forever_sim/fetch.py
+      - run: luajit tools/forever_sim/run.lua
       # A screenshot older than the code it is drawn from (docs/screenshots/scenes.sha256).
       - run: python3 tools/check_screenshots.py
       - run: luajit -joff tests/runtime_bench.lua cold

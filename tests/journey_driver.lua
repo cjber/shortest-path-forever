@@ -107,9 +107,11 @@ local env = setmetatable({
 		return true
 	end,
 	C_UnitAuras = { GetPlayerAuraBySpellID = noop },
-	IsPlayerSpell = function()
-		return ns.water
-	end,
+	C_SpellBook = {
+		IsSpellKnown = function()
+			return ns.water
+		end,
+	},
 	C_Map = {
 		GetWorldPosFromMapPos = function(map, point)
 			return map, vector((0.5 - point.y) * 50000, (0.5 - point.x) * 50000)
