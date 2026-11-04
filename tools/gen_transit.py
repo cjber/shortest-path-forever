@@ -24,7 +24,7 @@ except ModuleNotFoundError:
 
 DB_REV = "22b51464f1625f6ef6275771de1f5466c6f5d19e"
 DB_URL = f"https://raw.githubusercontent.com/cmangos/classic-db/{DB_REV}/Full_DB/ClassicDB_1_12_1_z2815.sql.gz"
-INFLIGHT_REV = "fc9b435150fb6a5036095246b766cf80aa96304f"
+INFLIGHT_REV = "2efdd7ba6d0e094edf84a04eeb40c038f004ea52"
 INFLIGHT_URL = f"https://raw.githubusercontent.com/LudiusMaximus/InFlight/{INFLIGHT_REV}"
 # CMaNGOS mangos-classic src/game/MotionGenerators/PathMovementGenerator.cpp: TAXI_FLIGHT_SPEED.
 TAXI_SPEED = 32.0
