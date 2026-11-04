@@ -1,5 +1,6 @@
--- Resolve anchors recursively in screen pixels, including native screen clamping.
--- Nominal GetPoint anchors remain unchanged when Blizzard clamps a frame.
+-- The attached column on a geometry that resolves anchors recursively in screen pixels, native screen clamping
+-- included, across tracker anchors and scales: the protected native tracker keeps its slot and the column reads below
+-- its quests, in combat and out. Nominal GetPoint anchors remain unchanged when Blizzard clamps a frame.
 local checks = 0
 local function check(value, message)
 	assert(value, message)
@@ -137,18 +138,12 @@ local function scenario(anchor, scale, uiScale, userScale)
 	nineSlice.width, nineSlice.height, nineSlice.scale = 250, 1, 1
 	nineSlice:SetPoint("TOP", native, "TOP", 0, -300)
 	native.NineSlice = nineSlice
-	local rawPoint, rawClear, rawHeight = native.SetPoint, native.ClearAllPoints, native.SetHeight
-	function native:SetPoint(...)
-		assert(not combat, "protected combat reposition")
-		rawPoint(self, ...)
-	end
-	function native:ClearAllPoints()
-		assert(not combat, "protected combat clear")
-		rawClear(self)
-	end
-	function native:SetHeight(value)
-		assert(not combat, "protected combat resize")
-		rawHeight(self, value)
+	-- The host never writes the protected native tracker; Blizzard's own moves below go through the raw methods.
+	local rawPoint, rawHeight = native.SetPoint, native.SetHeight
+	for _, method in ipairs({ "SetPoint", "ClearAllPoints", "SetHeight", "SetClampedToScreen" }) do
+		native[method] = function()
+			error("the host wrote the protected native tracker: " .. method)
+		end
 	end
 	local settings = { attached = true, scale = userScale or 1 }
 	local ns = {
@@ -211,116 +206,72 @@ local function scenario(anchor, scale, uiScale, userScale)
 			fn()
 		end
 	end
-	local _, slotTop = bounds(native)
+	local label = anchor .. " scale " .. scale .. " ui " .. uiScale .. " user " .. userScale
+	local slot = { native:GetPoint() }
 	ready()
 	drain()
-	local left, top, nativeWidth = bounds(native)
-	check(
-		left >= -0.01 and left + nativeWidth <= screen.width * screen:GetEffectiveScale() + 0.01,
-		"native quests stay horizontally on screen when scaling the private column"
-	)
-	local _, hostTop, _, hostHeight = bounds(host)
-	check(
-		math.abs(hostTop - slotTop) < 0.01,
-		"the shared column starts at the top of the tracker's Edit Mode slot, not its anchor point: "
-			.. anchor
-			.. " scale "
-			.. scale
-			.. " ui "
-			.. uiScale
-	)
-	check(math.abs(top - (hostTop - hostHeight)) < 0.01, "native starts below guide at effective scale")
+	local function below()
+		local _, _, _, _, contentBottom = bounds(nineSlice)
+		local left, top, width, height = bounds(host)
+		local screenWidth = screen.width * screen:GetEffectiveScale()
+		check(left >= -0.01 and left + width <= screenWidth + 0.01, "the column stays on screen: " .. label)
+		check(clears(host, nineSlice), "the column clears the native quests: " .. label)
+		return top, contentBottom, height
+	end
+	local function inSlot()
+		local p, rel, rp, nx, ny = native:GetPoint()
+		return p == slot[1] and rel == slot[2] and rp == slot[3] and nx == slot[4] and ny == slot[5]
+	end
+	check(inSlot(), "the native tracker keeps its Edit Mode slot: " .. label)
+	local top, contentBottom = below()
+	-- Only the off-screen fallback, for quests ending too low to fit the column below them, places it elsewhere.
+	local fits = host.point[2] == nineSlice
+	if fits then
+		check(math.abs(top - contentBottom) < 0.01, "the column starts where the native quests end: " .. label)
+	end
+	local before = { bounds(host) }
+	local function still(message)
+		local now = { bounds(host) }
+		for index = 1, 4 do
+			check(math.abs(now[index] - before[index]) < 0.01, message .. ": " .. label)
+		end
+	end
 	for _ = 1, 3 do
 		host:MarkDirty()
 		drain()
 	end
-	local nextLeft, nextTop = bounds(native)
-	check(math.abs(left - nextLeft) < 0.01 and math.abs(top - nextTop) < 0.01, "repeated layout does not drift")
+	still("repeated layout does not drift")
 	combat = true
-	rawHeight(native, 800)
 	host.scripts.OnEvent(host, "PLAYER_REGEN_DISABLED")
 	drain()
-	check(
-		clears(host, native),
-		"combat height clamp must not overlap guide and objectives: "
-			.. anchor
-			.. " scale "
-			.. scale
-			.. " ui "
-			.. uiScale
-			.. " host "
-			.. table.concat({ bounds(host) }, ",")
-			.. " native "
-			.. table.concat({ bounds(native) }, ",")
-			.. " hp "
-			.. tostring(host.point[1])
-	)
-	local nl, nt = bounds(native)
-	for _ = 1, 3 do
-		host:MarkDirty()
-		drain()
+	still("entering combat leaves the column still")
+	-- Blizzard's managed-frame layout puts the protected frame back in its saved slot in combat: already there.
+	rawPoint(native, unpack(slot))
+	host:MarkDirty()
+	drain()
+	still("a native restore in combat leaves the column still")
+	-- Quests grow in combat: the column follows the native content down.
+	nineSlice.point = { "TOP", native, "TOP", 0, -320 }
+	host:MarkDirty()
+	drain()
+	top, contentBottom = below()
+	if fits then
+		check(math.abs(top - contentBottom) < 0.01, "the column follows growing quests in combat: " .. label)
 	end
-	local settledLeft, settledTop = bounds(native)
-	check(
-		math.abs(nl - settledLeft) < 0.01 and math.abs(nt - settledTop) < 0.01,
-		"moving guide cannot move native tracker"
-	)
-	check(clears(host, native), "repeated combat refresh stays separated")
-	-- Blizzard restores the protected frame to its saved slot in combat. The header goes back to the native frame
-	-- and the private host sits directly below the native content, out of the game's way.
-	native.point = { anchor, screen, anchor, x, y }
-	host:MarkDirty()
-	drain()
-	local _, _, _, _, sliceBottom = bounds(nineSlice)
-	local _, columnTop = bounds(host)
-	check(
-		math.abs(columnTop - sliceBottom) < 0.01,
-		"combat puts the private column below the native content: "
-			.. anchor
-			.. " scale "
-			.. scale
-			.. " ui "
-			.. uiScale
-			.. " user "
-			.. userScale
-	)
-	check(
-		clears(host, nineSlice),
-		"the one column clears the native content: "
-			.. anchor
-			.. " scale "
-			.. scale
-			.. " ui "
-			.. uiScale
-			.. " user "
-			.. userScale
-	)
-	-- When that column would run off the bottom of the screen, the fallback still clears the native content.
-	nineSlice.point = { "BOTTOM", native, "BOTTOM", 0, 0 }
-	host:MarkDirty()
-	drain()
-	check(
-		clears(host, nineSlice),
-		"the off-screen fallback clears the native content: "
-			.. anchor
-			.. " scale "
-			.. scale
-			.. " ui "
-			.. uiScale
-			.. " user "
-			.. userScale
-	)
 	nineSlice.point = { "TOP", native, "TOP", 0, -300 }
+	rawHeight(native, 300)
 	combat = false
 	host.scripts.OnEvent(host, "PLAYER_REGEN_ENABLED")
 	drain()
+	still("leaving combat leaves the column still")
+	-- When the column would run off the bottom of the screen, the fallback still clears the native content.
+	nineSlice.point = { "BOTTOM", native, "BOTTOM", 0, 0 }
+	host:MarkDirty()
+	drain()
+	below()
 	ns.TrackerHost.SetAttached(false)
 	drain()
-	local p, rel, rp, restoredX, restoredY = native:GetPoint()
-	check(
-		p == anchor and rel == screen and rp == anchor and restoredX == x and restoredY == y,
-		"detach restores original edit mode anchor"
-	)
+	check(inSlot(), "detaching leaves the native tracker in its slot: " .. label)
 end
 for _, scale in ipairs({ 0.75, 1, 1.25 }) do
 	for _, anchor in ipairs({ "TOPRIGHT", "TOPLEFT", "TOP", "CENTER", "BOTTOM", "BOTTOMRIGHT" }) do

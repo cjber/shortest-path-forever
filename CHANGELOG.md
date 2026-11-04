@@ -12,7 +12,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
-- **The objective tracker column stays still as you enter and leave combat.** It no longer jumps in height or drops its last line during a fight, and the quest list below it stays where it is.
+- **The objective tracker column stays still as you enter and leave combat.** All Objectives and your quests keep their place at the top, and the Forever sections always follow below them, so nothing swaps order, jumps or loses a line when a fight starts or ends.
 
 ## [1.22.27] - 2026-11-04
 
