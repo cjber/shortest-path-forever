@@ -7,17 +7,31 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-IGNORED = ("types/", "tests/", "tools/", "docs/", ".agents/", "Nav/", ".types/", ".sloppatrol/", "reference/")
+IGNORED = ("types/", "tests/", "tools/", "docs/", ".agents/", "Nav/", ".types/", "reference/")
+SCRATCH_ROOTS = {".git", ".venv", "scratch", ".release"}
+SCRATCH_RUNS = {".bugpatrol", ".sloppatrol", ".speedpatrol"}
+# A patrol tool's own fixtures and checkouts are scratch, not the addon's source: `runs/` holds working copies and
+# `script-tests/` holds deliberately broken Lua a script-test asserts on.
+SCRATCH_SUBTREES = {"runs", "script-tests"}
 # Consumer-only shared modules are stored here as source for sync_consumers.py.
-CORE_SOURCE_ONLY = {"UI/Report.lua", "UI/ForeverFamily.lua"}
+CORE_SOURCE_ONLY = {"UI/Report.lua", "UI/ForeverFamily.lua", "UI/MapCanvas.lua"}
 
 
 def rel(path):
     return path.relative_to(ROOT).as_posix()
 
 
+def is_scratch(path):
+    parts = path.relative_to(ROOT).parts
+    if parts and parts[0] in SCRATCH_ROOTS:
+        return True
+    return len(parts) >= 2 and parts[0] in SCRATCH_RUNS and parts[1] in SCRATCH_SUBTREES
+
+
 def source_files(pattern):
-    return sorted(p for p in ROOT.rglob(pattern) if not any(x in {".git", ".venv"} for x in p.parts))
+    return sorted(
+        p for p in ROOT.rglob(pattern) if not is_scratch(p) and p.relative_to(ROOT).parts[:2] != ("tools", ".cache")
+    )
 
 
 def ignored(path):
@@ -45,7 +59,7 @@ def scan():
 
     definitions = []
     for path, content in texts.items():
-        if ROOT.name == "forever-core" and rel(path) in CORE_SOURCE_ONLY:
+        if (ROOT / "ForeverCore.toc").is_file() and rel(path) in CORE_SOURCE_ONLY:
             continue
         for match in re.finditer(
             r"\bfunction\s+ns\.([A-Za-z_]\w*)\s*\(|\bns\.([A-Za-z_]\w*)\s*=\s*function\b", content
@@ -67,7 +81,7 @@ def scan():
                 toc_entries.add(entry)
     for path in source_files("*.lua"):
         name = rel(path)
-        if ignored(path) or (ROOT.name == "forever-core" and name in CORE_SOURCE_ONLY):
+        if ignored(path) or ((ROOT / "ForeverCore.toc").is_file() and name in CORE_SOURCE_ONLY):
             continue
         if not any(name == entry or name.endswith("/" + entry) for entry in toc_entries):
             errors.append((name, 1, "Lua file is not named by any TOC"))
@@ -87,7 +101,7 @@ def scan():
     for source in reference_sources:
         if ignored(source):
             continue
-        if ROOT.name == "forever-core" and rel(source) in CORE_SOURCE_ONLY:
+        if (ROOT / "ForeverCore.toc").is_file() and rel(source) in CORE_SOURCE_ONLY:
             continue
         content = source.read_text(encoding="utf-8", errors="replace").replace("\\", "/")
         if source.suffix == ".lua":
@@ -146,7 +160,7 @@ def scan():
             entries.update(
                 name for name in py if re.search(rf"python3?\s+(?:-m\s+)?tools/{re.escape(name)}(?:\.py)?\b", content)
             )
-    for documentation in ROOT.rglob("*.md"):
+    for documentation in source_files("*.md"):
         if ignored(documentation):
             continue
         content = documentation.read_text(encoding="utf-8", errors="replace")
