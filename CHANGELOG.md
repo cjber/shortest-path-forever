@@ -12,7 +12,11 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.22.23] - 2026-11-04
+
 - **Companion map layers avoid duplicate pins.** Visible OpenMap and Leatrix Maps pins replace matching background flight and transport pins. Active journey guidance stays visible, and layers without a companion equivalent remain available.
+
+- **Travel data regenerated against the 1.60.1.70755 build.** The travel data set (taxi network, teleports, transports and zone adjacency) is rebuilt from the new Forever client build. The regenerated values match the previous build, so the routes and boat times you see do not move.
 
 ## [1.22.22] - 2026-11-04
 
