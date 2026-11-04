@@ -53,6 +53,7 @@ UI\Report.lua
 UI\ForeverFamily.lua
 UI\FamilyHints.lua
 UI\OpenMap.lua
+UI\CompanionMaps.lua
 UI\MapCanvas.lua
 UI\Map.lua
 UI\FlightPins.lua

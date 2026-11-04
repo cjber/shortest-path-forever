@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Companion map layers avoid duplicate pins.** Visible OpenMap and Leatrix Maps pins replace matching background flight and transport pins. Active journey guidance stays visible, and layers without a companion equivalent remain available.
+
 ## [1.22.22] - 2026-11-04
 
 - **Travel leaderboards keep your own row visible.** Guild and group totals are labelled player-reported, and approximate distance stays marked. New participation starts on, while saved recording and sharing opt-outs remain off. Disabling either cancels queued sends and hides cached peers while preserving personal history. Shared reports use the suite's bounded transport. Only travel records are cached.

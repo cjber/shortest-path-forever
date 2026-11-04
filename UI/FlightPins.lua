@@ -172,7 +172,9 @@ function Flights:RefreshAllData()
 		self.signature = nil
 		return
 	end
-	local signature = mapID
+	local signature = ns.CompanionMaps.Scan(map)
+		.. ":"
+		.. mapID
 		.. ":"
 		.. tostring(ns.db.mapFlightMasters)
 		.. ":"
@@ -225,7 +227,7 @@ function Flights:RefreshAllData()
 				info.atlasName = native.atlasName
 				info.textureKit = native.textureKit ~= "" and native.textureKit or nil
 			end
-			if ShouldShowTaxiNode(faction, info) then
+			if ShouldShowTaxiNode(faction, info) and not ns.CompanionMaps.Suppresses("flight", x, y, "taxi", id) then
 				flightPins:Acquire(info)
 			end
 		end

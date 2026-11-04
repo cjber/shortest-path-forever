@@ -883,6 +883,7 @@ end)
 -- The Forever family footer (UI/FamilyHints.lua): after an arrival with Adventure Guide missing, a grey line under
 -- the finished journey, drawn with Blizzard's tracker code; clicking it opens the shared link window.
 Reset()
+local clientAddOns = C_AddOns
 Run("forever family arrival footer", function()
 	_G.C_AddOns = {
 		IsAddOnLoaded = function()
@@ -906,9 +907,9 @@ Run("forever family arrival footer", function()
 	assert(_G.ForeverFamilyLink and _G.ForeverFamilyLink:IsShown(), "clicking it opens the link window")
 	assert(not ns.FamilyHints.Footer(), "and takes the footer away")
 	_G.ForeverFamilyLink:Hide()
-	_G.C_AddOns = nil
+	_G.C_AddOns = clientAddOns
 end)
-_G.C_AddOns = nil
+_G.C_AddOns = clientAddOns
 stats.profiles = stats.profiles + 1
 for step = 1, 400 do
 	Fuzz(("fuzz %d"):format(step))

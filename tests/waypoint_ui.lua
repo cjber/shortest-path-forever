@@ -63,9 +63,9 @@ local function check(name, beforeLogin, body)
 	local fixture = source:gsub('fireEvent%("ADDON_LOADED", "ShortestPathForever"%)', function()
 		return beforeLogin
 			.. '\nwaypointProvider:RefreshAllData()\nfireEvent("ADDON_LOADED", "ShortestPathForever")'
-			-- Only What's New reads the TOC at login; the other checks run with no C_AddOns, as before.
-			.. '\n_G.C_AddOns = { GetAddOnMetadata = function() return "@project-version@" end }'
-			.. '\nfireEvent("PLAYER_LOGIN")\n_G.C_AddOns = nil'
+			-- Login reads TOC metadata; the remaining checks retain the client addon-loading API.
+			.. '\n_G.C_AddOns = { GetAddOnMetadata = function() return "@project-version@" end, IsAddOnLoaded = function() return false end }'
+			.. '\nfireEvent("PLAYER_LOGIN")\n_G.C_AddOns = { IsAddOnLoaded = function() return false end }'
 	end, 1)
 	local run = assert(
 		loadstring(
@@ -473,7 +473,7 @@ check(
 	"",
 	[[
 -- Earlier cases leave their fake in the shared global table; absent means both are gone.
-_G.WaypointUIAPI, _G.C_AddOns = nil, nil
+_G.WaypointUIAPI, _G.C_AddOns = nil, { IsAddOnLoaded = function() return false end }
 start()
 assert(waypoint and supertracked and waypointCalls > 0, "absent Waypoint UI: we write and track the waypoint")
 assert(ns.IsJourneyGuided())

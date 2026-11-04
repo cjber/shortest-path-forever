@@ -3,6 +3,11 @@
 local BLIZZARD_UI = (os.getenv("SPF_BLIZZARD_UI") or "tools/.cache/blizzard-ui") .. "/Interface/AddOns/"
 -- Loads the addon in toc order against stubs, fires ADDON_LOADED, runs tickers and a fake ride.
 local T, frames, tickers = 0, {}, {}
+C_AddOns = {
+	IsAddOnLoaded = function()
+		return false
+	end,
+}
 local uiScale = 1
 local shiftDown, mouseFoci = true, {}
 local arrowFrame

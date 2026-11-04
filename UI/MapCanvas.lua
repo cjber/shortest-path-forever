@@ -50,6 +50,7 @@ local CURSOR_REACH = 12
 ---@field zoom number
 ---@field pinScale number
 ---@field stitched boolean
+---@field companionLayers? string
 ---@field gamepad boolean
 ---@field listeners fun(view: SPFCanvasView, what: string)[]
 ---@field pools table<string, SPFCanvasPool>
@@ -193,6 +194,9 @@ local function Update(view)
 	local mapID, width, height, scale, zoom, pinScale, stitched = Read(view)
 	local first, changedMap = not view.shown, mapID ~= view.mapID
 	local stitchedChanged = stitched ~= view.stitched
+	local companionLayers = ns.CompanionMaps.Scan(view.map)
+	local companionsChanged = companionLayers ~= view.companionLayers
+	view.companionLayers = companionLayers
 	local sized = width ~= view.width or height ~= view.height
 	local scaled = scale ~= view.scale or zoom ~= view.zoom or pinScale ~= view.pinScale
 	view.mapID, view.width, view.height, view.scale, view.zoom, view.pinScale, view.stitched =
@@ -203,7 +207,7 @@ local function Update(view)
 		clicks:RegisterEvent("GLOBAL_MOUSE_DOWN")
 		clicks:RegisterEvent("GLOBAL_MOUSE_UP")
 		Fire(view, "show", sized, scaled)
-	elseif changedMap or stitchedChanged then
+	elseif changedMap or stitchedChanged or companionsChanged then
 		-- The pins over OpenMap's stitched art are lifted over it (or put back under Blizzard's own), then the layers
 		-- redraw: the stitched view places a point by the world, not by the map underneath.
 		if stitchedChanged then

@@ -498,7 +498,7 @@ local function MapDocks(mapID)
 		local location = ns.DockLocation(dockID)
 		if location and (ns.Docks[dockID].site or IsDockMap(location, mapID)) and ns.DockShown(dockID) then
 			local x, y = MapPosition(ns.DockPoint(dockID), mapID)
-			if x then
+			if x and y and not ns.CompanionMaps.Suppresses(ns.DockKind(dockID), x, y, "dock", dockID) then
 				docks[#docks + 1] = { id = dockID, x = x, y = y }
 			end
 		end
@@ -690,7 +690,9 @@ function Portals:RefreshAllData()
 		self:RemoveAllData()
 		return
 	end
-	local signature = mapID
+	local signature = ns.CompanionMaps.Scan(WorldMapFrame)
+		.. ":"
+		.. mapID
 		.. ":"
 		.. tostring(ns.db.portals)
 		.. ":"
@@ -702,11 +704,11 @@ function Portals:RefreshAllData()
 	end
 	self:RemoveAllData()
 	self.signature = signature
-	for _, portal in ipairs(ns.Portals) do
+	for portalID, portal in ipairs(ns.Portals) do
 		local location = ns.PortalShown(portal) and ns.Locate(portal.from)
 		if location and IsDockMap(location, mapID) then
 			local x, y = MapPosition(portal.from, mapID)
-			if x then
+			if x and y and not ns.CompanionMaps.Suppresses("portal", x, y, "portal", portalID * 2 - 1) then
 				portalPins:Acquire(portal, x, y)
 			end
 		end
