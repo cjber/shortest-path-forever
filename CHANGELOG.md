@@ -12,6 +12,11 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.22.25] - 2026-11-04
+
+- **Controller players no longer trip the client's gamepad block.** Under the gamepad interface, a context menu opened from the tracker header, a step line, a dock pin or a flight pin now says "This menu needs mouse and keyboard." instead of opening inside our own click handler, and the world map is no longer turned when it is already open. Both changes remove the synchronous path from this addon into the protected interact-target call that the client blocked, which also explains why other addons were being named alongside it.
+
+
 - **Controller play no longer blocks the game's interact target.** With the gamepad interface on, the game takes every menu and window that opens into its controller focus straight away, and when Shortest Path opened one (a tracker or map pin menu, Nearby services, or turning an open map to a place) the game blocked `SetPreferredGamepadInteractTarget()` and blamed whichever addon touched it last. Under the gamepad interface those menus now say they need mouse and keyboard, and Show on map asks you to turn the map yourself. Nothing changes with mouse and keyboard. Thanks to TRDeadbeat, tallsmartman and the other CurseForge players for the reports.
 
 ## [1.22.24] - 2026-11-04
