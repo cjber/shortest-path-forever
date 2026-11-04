@@ -28,10 +28,10 @@ TRACKER_CONSUMERS = (
 )
 ALL_CONSUMERS = TRACKER_CONSUMERS + ("tweaks-forever",)
 MICRO_CONSUMERS = ("adventure-guide-forever", "field-guide-forever")
-# Core/Text.lua goes to the three addons that search by name.
-TEXT_CONSUMERS = ("adventure-guide-forever", "shortest-path-forever", "hoard-forever")
-# The settings canvas and the dead-code gate go to every addon with a settings page, Field Guide and Hoard included.
-SETTINGS_CONSUMERS = ALL_CONSUMERS + ("field-guide-forever", "hoard-forever")
+# Core/Text.lua goes to the addons that search by name.
+TEXT_CONSUMERS = ("adventure-guide-forever", "shortest-path-forever")
+# The settings canvas and the dead-code gate go to every addon with a settings page, Field Guide included.
+SETTINGS_CONSUMERS = ALL_CONSUMERS + ("field-guide-forever",)
 # This drift check reaches every addon in the suite.
 SUITE_CONSUMERS = SETTINGS_CONSUMERS + ("commissions-forever",)
 PEER_CONSUMERS = TRACKER_CONSUMERS + ("field-guide-forever", "commissions-forever")
@@ -61,6 +61,7 @@ VENDORED = {
     "UI/TrackerQuestie.lua": TRACKER_CONSUMERS,
     "tests/tracker_host_spec.lua": TRACKER_CONSUMERS,
     "tests/tracker_host_harness.lua": TRACKER_CONSUMERS,
+    "tests/tracker_combat_spec.lua": TRACKER_CONSUMERS,
     "tests/tracker_questie_spec.lua": TRACKER_CONSUMERS,
     "tools/fetch_tracker_ui.py": TRACKER_CONSUMERS,
     "Core/SafeCall.lua": ALL_CONSUMERS,
