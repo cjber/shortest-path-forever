@@ -64,7 +64,8 @@ local function check(name, beforeLogin, body)
 		return beforeLogin
 			.. '\nwaypointProvider:RefreshAllData()\nfireEvent("ADDON_LOADED", "ShortestPathForever")'
 			-- Login reads TOC metadata; the remaining checks retain the client addon-loading API.
-			.. '\n_G.C_AddOns = { GetAddOnMetadata = function() return "@project-version@" end, IsAddOnLoaded = function() return false end }'
+			.. '\n_G.C_AddOns = { GetAddOnMetadata = function() return "@project-version@" end,'
+			.. " IsAddOnLoaded = function() return false end }"
 			.. '\nfireEvent("PLAYER_LOGIN")\n_G.C_AddOns = { IsAddOnLoaded = function() return false end }'
 	end, 1)
 	local run = assert(
