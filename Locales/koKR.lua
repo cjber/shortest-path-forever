@@ -66,7 +66,8 @@ L["E"] = "동"
 L["Either faction can ride any boat or zeppelin."] =
 	"어느 진영이든 모든 배와 비행선을 탈 수 있습니다."
 L["Enter %s"] = "%s 입장"
-L["Every line now reads in all nine shipped languages."] = "이제 모든 줄이 아홉 개 언어로 표시됩니다."
+L["The objective tracker column stays still as you enter and leave combat."] =
+	"전투에 들어가고 나올 때 목표 추적기 열이 움직이지 않습니다." -- mt
 L["Finding the fastest way…"] = "가장 빠른 길 찾는 중…"
 L["Flight Masters"] = "비행 조련사"
 L["Flight master"] = "비행 조련사"

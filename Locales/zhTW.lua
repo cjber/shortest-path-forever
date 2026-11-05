@@ -65,7 +65,8 @@ L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] 
 L["E"] = "東"
 L["Either faction can ride any boat or zeppelin."] = "任何陣營都可以搭乘任何船隻或飛艇。"
 L["Enter %s"] = "進入%s"
-L["Every line now reads in all nine shipped languages."] = "現在所有文字都有九種隨附語言的譯文。"
+L["The objective tracker column stays still as you enter and leave combat."] =
+	"進入和離開戰鬥時，目標追蹤欄保持不動。" -- mt
 L["Finding the fastest way…"] = "正在尋找最快路線…"
 L["Flight Masters"] = "飛行管理員"
 L["Flight master"] = "飛行管理員"

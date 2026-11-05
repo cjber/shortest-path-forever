@@ -65,7 +65,8 @@ L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] 
 L["E"] = "L"
 L["Either faction can ride any boat or zeppelin."] = "Qualquer facção pode usar qualquer barco ou zepelim."
 L["Enter %s"] = "Entrar em %s"
-L["Every line now reads in all nine shipped languages."] = "Todas as linhas agora existem nos nove idiomas enviados."
+L["The objective tracker column stays still as you enter and leave combat."] =
+	"A coluna do rastreador de objetivos fica parada ao entrar e sair de combate." -- mt
 L["Finding the fastest way…"] = "Procurando o caminho mais rápido…"
 L["Flight Masters"] = "Mestres de voo"
 L["Flight master"] = "Mestre de voo"
