@@ -91,13 +91,6 @@ assert(frame.alpha == 0, "the game's marker leads while it is drawn")
 cvars.showInGameNavigation = "0"
 ns.PointGuideArrow(points, native)
 assert(frame.alpha == 1, "with in-game navigation off, the arrow leads")
--- RestedXP's arrow on the step Adventure Guide handed over: one arrow, not two.
-ns.RestedXPArrowLeads = function()
-	return true
-end
-ns.PointGuideArrow(replacement, native)
-assert(frame.alpha == 0, "RestedXP's arrow leads in place of ours")
-ns.RestedXPArrowLeads = nil
 env.C_Navigation = { GetFrame = function() end }
 
 -- It eases round to a new bearing over a few frames, by the shorter way, as the compass does.

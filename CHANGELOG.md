@@ -12,6 +12,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **One arrow on an Adventure Guide RestedXP guide.** While Adventure Guide Forever steers a RestedXP guide, RestedXP's own arrow stays hidden again and our compass and arrow point at the step Adventure Guide hands us, so you no longer see two arrows. Choosing RestedXP's own window in Adventure Guide leaves its arrow to RestedXP, and without Adventure Guide, turning off Follow RestedXP guides keeps its arrow.
 - **The Forever addons settings page ends with a Ko-fi link.** If the addons help you, its Copy link button shows the address, ready to paste into your browser. Nothing is locked behind it, and it shows nowhere else.
 
 ## [1.22.29] - 2026-11-05
