@@ -79,7 +79,15 @@ local function menuNode()
 	function node.CreateButton(_self, text, callback)
 		local entry = { text = text, callback = callback, children = {} }
 		function entry.CreateButton(_entry, childText, childCallback)
-			local child = { text = childText, callback = childCallback, children = {}, SetEnabled = function() end }
+			local child = {
+				text = childText,
+				callback = childCallback,
+				children = {},
+				SetEnabled = function() end,
+				SetScrollMode = function(c, extent)
+					c.scrollExtent = extent
+				end,
+			}
 			function child.CreateButton(c, childText2, childCallback2)
 				local grandchild = { text = childText2, callback = childCallback2, SetEnabled = function() end }
 				c.children[#c.children + 1] = grandchild
@@ -90,6 +98,9 @@ local function menuNode()
 		end
 		function entry.SetEnabled(_entry, enabled)
 			entry.enabled = enabled
+		end
+		function entry.SetScrollMode(_entry, extent)
+			entry.scrollExtent = extent
 		end
 		function entry.CreateTitle(_entry, titleText)
 			entry.children[#entry.children + 1] = { text = titleText, title = true }
@@ -318,6 +329,7 @@ assert(navigated[#navigated][5] == "Mage trainer", "class action routes nearest 
 env.SlashCmdList.SPFNEAR("")
 local trainers = entry("Trainers by specialty")
 assert(#trainers.children > 0, "trainer category has specialty submenu")
+assert(trainers.scrollExtent == 400, "a specialty submenu scrolls rather than running off the screen")
 for _, child in ipairs(trainers.children) do
 	if child.text == "Alchemy Trainer" then
 		child.callback()

@@ -221,11 +221,16 @@ local function SpecialtyNames(key, world)
 	return result
 end
 
+-- A specialty list can run past the screen edge (a capital city sells dozens), and a submenu never clamps to the
+-- screen, so it scrolls past this many rows the way Blizzard's own long menus do (Blizzard_Menu SetScrollMode).
+local MENU_ROW, MENU_ROWS = 20, 20
+
 local function AddService(root, service, world)
 	local place = world and Nearest(service.key, world)
 	local hasSpecialties = service.key == "trainer" or service.key == "vendor"
 	if hasSpecialties and place then
 		local submenu = root:CreateButton(service.label)
+		submenu:SetScrollMode(MENU_ROW * MENU_ROWS)
 		for _, specialty in ipairs(SpecialtyNames(service.key, world)) do
 			local specialist = Nearest(service.key, world, specialty)
 			submenu:CreateButton(specialty, function()
