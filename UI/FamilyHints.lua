@@ -42,7 +42,7 @@ local function AddSuggestions(root, api)
 		return
 	end
 	local shown = 0
-	for _, suggestion in ipairs(suggestions) do
+	for _, suggestion in ipairs(suggestions) do -- menu-scroll-ok: stops after SUGGESTIONS (3) entries
 		if shown == SUGGESTIONS then
 			break
 		end

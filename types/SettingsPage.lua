@@ -5,25 +5,12 @@
 -- Gethe/wow-ui-source forever @ (see tools/typecheck.sh for the pinned revision). These declarations never load in the
 -- client.
 
--- The four templates the shared page creates, each the widget its row is: the return type of CreateFrame with a
+-- The three templates the shared page creates, each the widget its row is: the return type of CreateFrame with a
 -- template is the union of the template class and the widget class, and a template that is a widget does not have to
 -- be cast back to one.
 ---@class InterfaceOptionsCheckButtonTemplate : CheckButton
 ---@class OptionsSliderTemplate : Slider
----@class UIDropDownMenuTemplate : Frame
 ---@class SharedButtonSmallTemplate : Button
-
--- FrameXML's dropdown menu API, in its own file since Dragonflight; the pinned Core annotations predate that move.
----@type fun(dropdown: Frame, width: number)
-UIDropDownMenu_SetWidth = nil
----@type fun(dropdown: Frame, value: any)
-UIDropDownMenu_SetSelectedValue = nil
----@type fun(dropdown: Frame, initialize: fun(dropdown: Frame, level: number?))
-UIDropDownMenu_Initialize = nil
----@type fun(): table
-UIDropDownMenu_CreateInfo = nil
----@type fun(info: table, level: number?)
-UIDropDownMenu_AddButton = nil
 
 -- Settings: the canvas category the page registers itself as.
 ---@class Settings

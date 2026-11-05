@@ -263,7 +263,7 @@ local function AddTrackingEntry(_, root)
 		submenu:CreateTitle(STATUS[state])
 		return
 	end
-	for _, service in ipairs(SERVICES) do
+	for _, service in ipairs(SERVICES) do -- menu-scroll-ok: SERVICES is ten fixed services
 		AddService(submenu, service, world)
 	end
 end
@@ -295,7 +295,7 @@ Open = function()
 			root:CreateTitle(L["Your position is unavailable"])
 			return
 		end
-		for _, service in ipairs(SERVICES) do
+		for _, service in ipairs(SERVICES) do -- menu-scroll-ok: SERVICES is ten fixed services
 			AddService(root, service, world)
 		end
 	end)

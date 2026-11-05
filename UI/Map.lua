@@ -452,7 +452,9 @@ local function ShowEnd(target)
 end
 
 -- One end opens straight away. A hub's ends are a menu, as the map is gone once one opens, so there is no
--- cycling through them.
+-- cycling through them. A hub can have many ends, so the menu scrolls past 20 rows of 20 px (Blizzard_Menu
+-- SetScrollMode) rather than running off the screen.
+local ENDS_EXTENT = 20 * 20
 local function OpenEnds(pin, button)
 	if button ~= "LeftButton" or IsModifierKeyDown() then
 		return
@@ -462,6 +464,7 @@ local function OpenEnds(pin, button)
 		ShowEnd(ends[1])
 	elseif #ends > 1 then
 		ns.ContextMenu(pin, function(_, root)
+			root:SetScrollMode(ENDS_EXTENT)
 			for _, target in ipairs(ends) do
 				root:CreateButton(string.format(TO[target.kind], target.zone), function()
 					ShowEnd(target)

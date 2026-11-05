@@ -134,6 +134,13 @@ local first = active[template][1]
 setMapShown(false)
 setMapShown(true)
 assert(#active[template] > 0 and active[template][1] == first and first.cluster, "reopening keeps the dock pins")
+-- A hub's ends are a menu built from a list, so it scrolls rather than running off the screen.
+first.GetEnds = function()
+ return { { kind = "boat", zone = "Booty Bay" }, { kind = "zeppelin", zone = "Orgrimmar" } }
+end
+first:OnMouseClickAction("LeftButton")
+first.GetEnds = nil
+assert(context["Boat to Booty Bay"] and contextScroll == 400, "a hub's Ends menu scrolls past 20 rows")
 local docks = ns.MapCanvas.Pools(WorldMapFrame)[template]
 local acquisitions, acquire = 0, docks.Acquire
 docks.Acquire = function(self, ...) acquisitions = acquisitions + 1 return acquire(self, ...) end

@@ -899,11 +899,15 @@ _G.CreateSettingsButtonInitializer = function(name, description, callback, tags,
 		addSearchTags = addSearchTags,
 	}
 end
-local menus, context = {}, {}
+-- contextScroll: the extent the last context menu scrolls past (SetScrollMode), nil when it does not scroll.
+local menus, context, contextScroll = {}, {}, nil
 _G.MenuUtil = {
 	CreateContextMenu = function(owner, generator)
-		context = {}
+		context, contextScroll = {}, nil
 		local root = {
+			SetScrollMode = function(_, extent)
+				contextScroll = extent
+			end,
 			CreateCheckbox = function(_, text, get, set)
 				context[text] = { get = get, click = set }
 			end,
