@@ -369,6 +369,24 @@ ns.Init(function()
 		end, nil, false)
 	)
 
+	-- Party portals: another player's mage portals, declared because the client cannot read their spellbook. The
+	-- planner only offers them while another mage is in the party or raid.
+	Page(L["Party mage portals"])
+	Checkbox(
+		"partyMagePortals",
+		L["Ask a mage in my group for portals"],
+		L["Only when another mage is in your party or raid. A portal is offered when it shortens the journey."]
+			.. " "
+			.. L["Only your faction's capital portals are used."],
+		ns.TravelPolicyChanged
+	)
+	Checkbox("partyMageStormwind", L["Stormwind"], L["The mage can open a portal here."], ns.TravelPolicyChanged)
+	Checkbox("partyMageIronforge", L["Ironforge"], L["The mage can open a portal here."], ns.TravelPolicyChanged)
+	Checkbox("partyMageDarnassus", L["Darnassus"], L["The mage can open a portal here."], ns.TravelPolicyChanged)
+	Checkbox("partyMageUndercity", L["Undercity"], L["The mage can open a portal here."], ns.TravelPolicyChanged)
+	Checkbox("partyMageThunderBluff", L["Thunder Bluff"], L["The mage can open a portal here."], ns.TravelPolicyChanged)
+	Checkbox("partyMageOrgrimmar", L["Orgrimmar"], L["The mage can open a portal here."], ns.TravelPolicyChanged)
+
 	-- Alerts: the arrival warning.
 	Page(L["Alerts"])
 	Checkbox(

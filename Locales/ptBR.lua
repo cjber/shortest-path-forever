@@ -367,3 +367,17 @@ L["Portal legs"] = "Trechos de portal"
 L["World map filter menu test: %s. Type /reload to apply."] =
 	"Teste do menu de filtros do mapa-múndi: %s. Digite /reload para aplicar." -- mt
 L["Usage: /path menutest map, nearby, both or off"] = "Uso: /path menutest map, nearby, both ou off" -- mt
+
+L["Ask %s for a portal to %s"] = "Peça a %s um portal para %s."
+L["Ask a mage in my group for portals"] = "Pedir portais a um mago do meu grupo"
+L["Darnassus"] = "Darnassus"
+L["Ironforge"] = "Altaforja"
+L["Only when another mage is in your party or raid. A portal is offered when it shortens the journey."] =
+	"Somente quando outro mago estiver no seu grupo ou raide. Um portal é oferecido quando encurta a viagem."
+L["Only your faction's capital portals are used."] = "Somente os portais de capital da sua facção são usados."
+L["Orgrimmar"] = "Orgrimmar"
+L["Party mage portals"] = "Portais de mago do grupo"
+L["Stormwind"] = "Ventobravo"
+L["The mage can open a portal here."] = "O mago pode abrir um portal aqui."
+L["Thunder Bluff"] = "Penhasco do Trovão"
+L["Undercity"] = "Cidade Baixa"

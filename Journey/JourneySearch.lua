@@ -444,7 +444,8 @@ local function RefreshCosts(includeGoal, forced)
 	search = { initial = not followed, forced = forced }
 	local version = pathVersion
 	local teleports = ns.UsableTeleports(ns.NowMs())
-	local places, faction = Context.Places(teleports)
+	local partyPortals = ns.PartyPortalPlaces and ns.PartyPortalPlaces(here) or nil
+	local places, faction = Context.Places(teleports, partyPortals)
 	local function targets(point, withGoal)
 		local list = {}
 		local mass = Context.Landmass(point)
@@ -465,6 +466,7 @@ local function RefreshCosts(includeGoal, forced)
 			or batch.water ~= waterMode
 			or batch.faction ~= faction
 			or batch.teleports ~= teleports
+			or batch.partyPortals ~= partyPortals
 			or batch.hazards ~= hazardKey
 		then
 			return false
@@ -489,6 +491,7 @@ local function RefreshCosts(includeGoal, forced)
 			water = waterMode,
 			faction = faction,
 			teleports = teleports,
+			partyPortals = partyPortals,
 			hazards = hazardKey,
 			costs = {},
 		}
@@ -890,14 +893,18 @@ end
 ---@param changedRide boolean either changed since the last frame
 function Search.Replan(riding, flying, changedRide)
 	local mode = ns.JourneyWaterWalking()
+	local partyPortals = ns.PartyPortalPlaces and ns.PartyPortalPlaces(Here() or goal) or nil
 	if mode ~= waterMode then
 		-- Walks searched in another water mode no longer apply.
 		waterMode = mode
 		Walks.Clear()
 		startCosts, goalCosts = {}, {}
 		RefreshCosts(true, false)
-	elseif goalBatch ~= nil and goalBatch.teleports ~= ns.UsableTeleports(ns.NowMs()) then
-		-- A new bind point or teleport: measure the walks on from where it lands.
+	elseif
+		goalBatch ~= nil
+		and (goalBatch.teleports ~= ns.UsableTeleports(ns.NowMs()) or goalBatch.partyPortals ~= partyPortals)
+	then
+		-- A new bind point, teleport or party mage: measure the walks on from where it lands.
 		RefreshCosts(true, false)
 	elseif pendingCosts == 0 and Walks.Pending() == 0 then
 		local here = Here()

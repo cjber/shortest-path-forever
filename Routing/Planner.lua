@@ -273,9 +273,18 @@ function Planner.Places(options)
 			add("portal", id * 2, portal.to, Planner.PortalDestination(portal))
 		end
 	end
-	-- Keyed by spell, so a fixed destination finds its baked walks.
+	-- Keyed by spell, so a fixed destination finds its baked walks. A party mage's capital portal lands on the same
+	-- generated teleport destination, so it reuses that place when the character also knows the spell.
+	local teleportSpells = {}
 	for _, teleport in ipairs(options.teleports or {}) do
 		add("teleport", teleport.spell, teleport)
+		teleportSpells[teleport.spell] = true
+	end
+	for _, party in ipairs(options.partyPortals or {}) do
+		if not teleportSpells[party.spell] then
+			add("teleport", party.spell, party)
+			teleportSpells[party.spell] = true
+		end
 	end
 	return places
 end
@@ -328,6 +337,7 @@ local CACHE_KEYS = {
 	"taxiPaths",
 	"portals",
 	"teleports",
+	"partyPortals",
 	"landmasses",
 	"baked",
 	"taxiTimes",
@@ -554,6 +564,18 @@ local function Plan(options)
 				teleport = teleport,
 				ready = ready[id],
 				duration = teleport.cast + (teleport.map ~= options.from.map and LOADING or 0),
+			})
+		end
+	end
+	-- A party mage's portal starts where you stand: no walking leg to a portal object, just the ask and the cast.
+	for _, party in ipairs(options.partyPortals or {}) do
+		local index = teleports[party.spell]
+		if index then
+			Edge(start, index, {
+				mode = "teleport",
+				teleport = party,
+				partyPortal = party,
+				duration = party.cast,
 			})
 		end
 	end
@@ -794,6 +816,7 @@ local function Plan(options)
 				hops = edge.path and { edge.path } or nil,
 				yards = edge.yards,
 				teleport = edge.teleport,
+				partyPortal = edge.partyPortal,
 				ready = edge.ready,
 			}
 			-- Zero-cost lower bounds may disappear from the displayed steps, but still need proof.

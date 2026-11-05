@@ -361,3 +361,17 @@ L["Portal legs"] = "傳送門路段"
 L["World map filter menu test: %s. Type /reload to apply."] =
 	"世界地圖過濾選單測試：%s。輸入 /reload 以套用。" -- mt
 L["Usage: /path menutest map, nearby, both or off"] = "用法：/path menutest map、nearby、both 或 off" -- mt
+
+L["Ask %s for a portal to %s"] = "請 %s 開啟通往 %s 的傳送門。"
+L["Ask a mage in my group for portals"] = "向我隊伍中的法師請求傳送門"
+L["Darnassus"] = "達納蘇斯"
+L["Ironforge"] = "鐵爐堡"
+L["Only when another mage is in your party or raid. A portal is offered when it shortens the journey."] =
+	"僅當你的隊伍或團隊中有其他法師時生效。只有在能縮短旅程時才會提供傳送門。"
+L["Only your faction's capital portals are used."] = "僅使用你所在陣營的主城傳送門。"
+L["Orgrimmar"] = "奧格瑪"
+L["Party mage portals"] = "隊伍法師傳送門"
+L["Stormwind"] = "暴風城"
+L["The mage can open a portal here."] = "法師可以在這裡開啟傳送門。"
+L["Thunder Bluff"] = "雷霆崖"
+L["Undercity"] = "幽暗城"

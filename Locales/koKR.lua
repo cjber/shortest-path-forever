@@ -372,3 +372,17 @@ L["Portal legs"] = "차원문 구간"
 L["World map filter menu test: %s. Type /reload to apply."] =
 	"세계 지도 필터 메뉴 테스트: %s. 적용하려면 /reload를 입력하세요." -- mt
 L["Usage: /path menutest map, nearby, both or off"] = "사용법: /path menutest map, nearby, both 또는 off" -- mt
+
+L["Ask %s for a portal to %s"] = "%s에게 %s(으)로 가는 차원문을 부탁하세요."
+L["Ask a mage in my group for portals"] = "내 그룹의 마법사에게 차원문 부탁하기"
+L["Darnassus"] = "다르나서스"
+L["Ironforge"] = "아이언포지"
+L["Only when another mage is in your party or raid. A portal is offered when it shortens the journey."] =
+	"다른 마법사가 파티나 공격대에 있을 때만 적용됩니다. 여정을 단축할 때 차원문이 제안됩니다."
+L["Only your faction's capital portals are used."] = "내 진영의 수도 차원문만 사용됩니다."
+L["Orgrimmar"] = "오그리마"
+L["Party mage portals"] = "파티 마법사 차원문"
+L["Stormwind"] = "스톰윈드"
+L["The mage can open a portal here."] = "마법사가 여기에 차원문을 열 수 있습니다."
+L["Thunder Bluff"] = "썬더 블러프"
+L["Undercity"] = "언더시티"

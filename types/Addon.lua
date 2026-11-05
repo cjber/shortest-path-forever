@@ -106,6 +106,12 @@
 ---@field item? number
 ---@field cast number
 ---@field bind? boolean
+---@field partyMage? string -- the party mage who opens this portal
+---@field destination? string -- the capital it lands in, as the client names it
+-- A capital portal a party mage can open, declared by the player (Transport/PartyPortals.lua).
+---@class SPFPartyPortal : SPFTeleportPlace
+---@field partyMage string
+---@field destination string
 -- A zone a continent's map names on hover (Data/Zones.lua): its level range or a capital's side, and its map's box.
 ---@class SPFZone
 ---@field low? number
@@ -175,6 +181,13 @@
 ---@field tomtomFollow? boolean -- with TomTom installed, a journey follows the waypoint its arrow points to
 ---@field taxiRoute? boolean
 ---@field teleports? boolean
+---@field partyMagePortals? boolean -- offer a party mage's capital portals
+---@field partyMageStormwind? boolean
+---@field partyMageIronforge? boolean
+---@field partyMageDarnassus? boolean
+---@field partyMageUndercity? boolean
+---@field partyMageThunderBluff? boolean
+---@field partyMageOrgrimmar? boolean
 ---@field hearthMinimumSavings? number -- seconds the Hearthstone must save over the best non-hearth plan
 ---@field share? boolean
 ---@field stats? boolean -- collect per-character travel totals
@@ -289,6 +302,7 @@ ShortestPathForeverPathData = nil
 ---@field hops? SPFTaxiPath[]
 ---@field yards? number
 ---@field teleport? SPFTeleportPlace
+---@field partyPortal? SPFPartyPortal
 ---@field ready? number
 ---@field walkPoints? SPFWalkPoints
 ---@field walkError? string
@@ -343,6 +357,7 @@ ShortestPathForeverPathData = nil
 ---@field taxiKnown? table<number, boolean>
 ---@field portals? SPFPortal[]
 ---@field teleports? SPFTeleportPlace[]
+---@field partyPortals? SPFPartyPortal[]
 ---@field landmasses? SPFLandmass[]
 ---@field anchors? table<number, SPFAnchor>
 ---@field baked? table<number, table<string, (number|false)[]>>
@@ -375,6 +390,7 @@ ShortestPathForeverPathData = nil
 ---@field estimated? boolean
 ---@field yards? number
 ---@field teleport? SPFTeleportPlace
+---@field partyPortal? SPFPartyPortal
 ---@field ready? number
 ---@class SPFLabels
 ---@field node number[]

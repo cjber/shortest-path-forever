@@ -60,10 +60,14 @@ function ns.LegLabel(leg)
 	return ns.PlaceLabel(leg.to, leg.mode)
 end
 
--- What to do on a leg: "Boat to Menethil Harbor".
+-- What to do on a leg: "Boat to Menethil Harbor", or the mage and the capital for a party portal.
 ---@param leg SPFLeg
 ---@return string
 function ns.LegStep(leg)
+	local party = leg.partyPortal
+	if party then
+		return string.format(L["Ask %s for a portal to %s"], party.partyMage, party.destination or ns.LegLabel(leg))
+	end
 	return string.format(STEP[leg.mode], ns.LegLabel(leg))
 end
 

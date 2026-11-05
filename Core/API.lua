@@ -24,6 +24,7 @@ local CONTEXT_KEYS = {
 	"taxiPaths",
 	"portals",
 	"teleports",
+	"partyPortals",
 	"landmasses",
 	"baked",
 	"hearthMinimumSavings",

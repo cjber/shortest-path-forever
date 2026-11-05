@@ -302,6 +302,10 @@ end
 ---@param teleport SPFTeleportPlace
 ---@return string action, number? icon
 function ns.TeleportAction(teleport)
+	if teleport.partyMage then
+		local icon = C_Spell.GetSpellTexture and C_Spell.GetSpellTexture(teleport.spell)
+		return L["Ask %s for a portal to %s"]:format(teleport.partyMage, teleport.destination or UNKNOWN), icon
+	end
 	local name = teleport.item and C_Item.GetItemNameByID(teleport.item)
 		or C_Spell.GetSpellName(teleport.spell)
 		or UNKNOWN

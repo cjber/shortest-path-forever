@@ -50,6 +50,7 @@ Transport\Taxi.lua
 Core\PeerStats.lua
 Core\Progress.lua
 Transport\Teleports.lua
+Transport\PartyPortals.lua
 UI\Art.lua
 UI\Report.lua
 UI\ForeverFamily.lua

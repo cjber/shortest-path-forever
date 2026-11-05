@@ -29,6 +29,7 @@ end
 ---@field anchors table<number, SPFAnchor>
 ---@field teleports SPFTeleportPlace[]
 ---@field teleportReady table<number, number>
+---@field partyPortals SPFPartyPortal[]
 
 ---@param from SPFPoint
 ---@param to SPFPoint
@@ -36,6 +37,7 @@ end
 function Context.Options(from, to)
 	local now = ns.NowMs()
 	local teleports, ready = ns.UsableTeleports(now)
+	local partyPortals = ns.PartyPortalPlaces and ns.PartyPortalPlaces(from) or nil
 	return {
 		from = from,
 		to = to,
@@ -53,6 +55,7 @@ function Context.Options(from, to)
 		portals = ns.Portals,
 		teleports = teleports,
 		teleportReady = ready,
+		partyPortals = partyPortals,
 		hearthMinimumSavings = ns.db and ns.db.hearthMinimumSavings or 0,
 		landmasses = ns.Landmasses,
 		baked = ns.Walks,
@@ -87,14 +90,16 @@ end
 
 -- The fixed places your faction can use, with these teleport destinations (none for a bind point's own landing).
 ---@param teleports? SPFTeleportPlace[]
+---@param partyPortals? SPFPartyPortal[]
 ---@return SPFPlace[] places, string faction the faction they were chosen for
-function Context.Places(teleports)
+function Context.Places(teleports, partyPortals)
 	local faction = UnitFactionGroup("player")
 	return ns.Planner.Places({
 		docks = ns.Docks,
 		taxiNodes = ns.TaxiNodes,
 		portals = ns.Portals,
 		teleports = teleports,
+		partyPortals = partyPortals,
 		faction = faction,
 	}),
 		faction

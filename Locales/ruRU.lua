@@ -387,3 +387,18 @@ L["World map filter menu test: %s. Type /reload to apply."] =
 	"Проверка меню фильтров карты мира: %s. Введите /reload, чтобы применить." -- mt
 L["Usage: /path menutest map, nearby, both or off"] =
 	"Использование: /path menutest map, nearby, both или off" -- mt
+
+L["Ask %s for a portal to %s"] = "Попросите %s открыть портал в %s."
+L["Ask a mage in my group for portals"] = "Просить порталы у мага в моей группе"
+L["Darnassus"] = "Дарнас"
+L["Ironforge"] = "Стальгорн"
+L["Only when another mage is in your party or raid. A portal is offered when it shortens the journey."] =
+	"Только когда в вашей группе или рейде есть другой маг. Портал предлагается, если он сокращает путь."
+L["Only your faction's capital portals are used."] =
+	"Используются только порталы столиц вашей фракции."
+L["Orgrimmar"] = "Оргриммар"
+L["Party mage portals"] = "Порталы мага группы"
+L["Stormwind"] = "Штормград"
+L["The mage can open a portal here."] = "Маг может открыть здесь портал."
+L["Thunder Bluff"] = "Громовой Утёс"
+L["Undercity"] = "Подгород"

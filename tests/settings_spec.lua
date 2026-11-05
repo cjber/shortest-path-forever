@@ -183,6 +183,7 @@ local ns = {
 		-- Travel participation defaults are explicit, matching Core/Core.lua.
 		stats = true,
 		statsShare = true,
+		partyMagePortals = false,
 		hearthMinimumSavings = 0,
 		compassScale = 100,
 		arrowScale = 100,
@@ -261,6 +262,15 @@ local groups = {
 		"taxiRoute",
 		"corpse",
 	},
+	["Party mage portals"] = {
+		"partyMagePortals",
+		"partyMageStormwind",
+		"partyMageIronforge",
+		"partyMageDarnassus",
+		"partyMageUndercity",
+		"partyMageThunderBluff",
+		"partyMageOrgrimmar",
+	},
 	Alerts = { "alerts", "flightPathReminder", "alertSound", "arrivalSound" },
 	Interface = {
 		"journeyTracker",
@@ -278,10 +288,18 @@ local groups = {
 		"whatsNew",
 	},
 }
-local order = { "Map marks", "Transport", "Travel journal", "Guidance", "Alerts", "Interface" }
+local order = {
+	"Map marks",
+	"Transport",
+	"Travel journal",
+	"Guidance",
+	"Party mage portals",
+	"Alerts",
+	"Interface",
+}
 
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
-assert(#rows == 45, #rows)
+assert(#rows == 52, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -334,6 +352,21 @@ assert(Row("taxiRoute").tooltip:find("flight master", 1, true))
 Row("taxiRoute").setting.onChanged()
 assert(taxiRefreshed == 1, "flight route updates when its setting changes")
 assert(Row("corpse").setting.default == true)
+-- Party mage portals are opt-in, and every capital starts ticked for the mage to open.
+assert(Row("partyMagePortals").setting.default == false, "party mage portals are off by default")
+for _, key in ipairs({
+	"partyMageStormwind",
+	"partyMageIronforge",
+	"partyMageDarnassus",
+	"partyMageUndercity",
+	"partyMageThunderBluff",
+	"partyMageOrgrimmar",
+}) do
+	assert(Row(key).setting.default == true, key .. " starts ticked")
+end
+local policyBeforeParty = policyChanged
+Row("partyMagePortals").setting.onChanged()
+assert(policyChanged == policyBeforeParty + 1, "the party portal setting replans the journey")
 -- The compass is on by default: it is the game's own palette rather than a panel on the screen.
 assert(Row("compass").setting.default == true)
 local mover = Row("compassMove").setting

@@ -38,6 +38,15 @@ local DEFAULTS = {
 	restedxp = true,
 	taxiRoute = true,
 	teleports = true,
+	-- Another player's spellbook is not queryable, so a party mage's portals are declared. Off by default; when on,
+	-- every capital portal of the player's faction is offered until the player unticks one.
+	partyMagePortals = false,
+	partyMageStormwind = true,
+	partyMageIronforge = true,
+	partyMageDarnassus = true,
+	partyMageUndercity = true,
+	partyMageThunderBluff = true,
+	partyMageOrgrimmar = true,
 	hearthMinimumSavings = 0,
 	share = true,
 	-- Existing saved false choices remain off; missing settings join the travel journal.
