@@ -109,13 +109,100 @@ local function SameWaypoint(a, b)
 	return aWorld and bWorld and aMap == bMap and (aWorld.x - bWorld.x) ^ 2 + (aWorld.y - bWorld.y) ^ 2 <= 1
 end
 
-local waypointProviders = {}
+-- Whether two points are the same place on the map.
+---@param a table?
+---@param b table?
+---@return boolean
+local function SamePoint(a, b)
+	return a == b or (a ~= nil and b ~= nil and a.map == b.map and a.x == b.x and a.y == b.y)
+end
 
--- Guide's waypoint only steers the native marker; our own pins already draw the route and destination.
+-- What the tracker calls the current leg's destination, with the journey's goal under it while the leg is a hop.
+-- Nil when the client's waypoint is not ours: a player's own pin and Waypoint UI's navigation keep their tooltip.
+---@return string? title, string? goalTitle
+local function WaypointNames()
+	if not guide or guide.paused or not guide.waypoint or WaypointUIHolding() then
+		return nil
+	end
+	if not SameWaypoint(C_Map.GetUserWaypoint(), guide.expectedWaypoint) then
+		return nil
+	end
+	local title
+	if guide.leg then
+		local ok, label = pcall(ns.LegLabel, guide.leg)
+		if ok then
+			title = label
+		end
+	end
+	if not title and guide.target then
+		local ok, label = pcall(ns.PlaceLabel, guide.target)
+		if ok then
+			title = label
+		end
+	end
+	title = title or guide.title
+	if not title then
+		return nil
+	end
+	local goalTitle
+	if guide.leg and guide.goal and not SamePoint(guide.leg.to, guide.goal) then
+		goalTitle = guide.title
+		if goalTitle == title then
+			goalTitle = nil
+		end
+	end
+	return title, goalTitle
+end
+
+-- A tooltip hook must not read or draw on a tooltip the client has marked forbidden; nil is not a tooltip either.
+---@param tooltip GameTooltip?
+---@return boolean
+local function Usable(tooltip)
+	return tooltip ~= nil and not tooltip:IsForbidden()
+end
+
+-- The client's generic titles for a user waypoint: MAP_PIN is "Map Pin" on the minimap, whose tooltip the client
+-- builds from C_TooltipInfo.GetMinimapMouseover, and MAP_PIN_SHARING is "Map Pin Sharing" on the map's
+-- WaypointLocationPin. Replace either only for the waypoint Guide holds, keeping the client's own instructions and
+-- adding the journey's goal under a hop.
+---@param tooltip GameTooltip
+local function NameWaypointTooltip(tooltip)
+	if not Usable(tooltip) then
+		return
+	end
+	local titleLine = GameTooltipTextLeft1
+	local clientTitle = titleLine and titleLine.GetText and titleLine:GetText()
+	if not (clientTitle and (clientTitle == MAP_PIN or clientTitle == MAP_PIN_SHARING)) then
+		return
+	end
+	local title, goalTitle = WaypointNames()
+	if not title then
+		return
+	end
+	titleLine:SetText(title)
+	if goalTitle then
+		GameTooltip_AddNormalLine(tooltip, goalTitle)
+	end
+	tooltip:Show()
+end
+
+local waypointProviders = {}
+-- Pins the world map's provider recreates on refresh; each one gets the tooltip hook once.
+local hookedPins = setmetatable({}, { __mode = "k" })
+
+-- Guide's waypoint is the marker that names the leg's destination. Our own goal pin already stands where the leg
+-- ends at the journey's goal, so hide the native one only there; at an intermediate hop it stays visible and named.
 local function HideGuideWaypointPin(provider)
 	if provider.pin then
+		if not hookedPins[provider.pin] then
+			hookedPins[provider.pin] = true
+			provider.pin:HookScript("OnEnter", function()
+				NameWaypointTooltip(GameTooltip)
+			end)
+		end
 		local owned = guide and (guide.writingWaypoint or guide.waypoint)
-		provider.pin:SetShown(not (owned and SameWaypoint(C_Map.GetUserWaypoint(), owned)))
+		local atGoal = not guide or not guide.target or SamePoint(guide.target, guide.goal)
+		provider.pin:SetShown(not (owned and atGoal and SameWaypoint(C_Map.GetUserWaypoint(), owned)))
 	end
 end
 
@@ -307,8 +394,14 @@ end
 ---@param node table
 ---@param points table?
 ---@param goal table?
-function Guide.To(node, points, goal)
-	if not guide or (guide.target == node and guide.points == points) then
+---@param leg? SPFLeg
+function Guide.To(node, points, goal, leg)
+	if not guide then
+		return
+	end
+	guide.leg, guide.goal = leg, goal
+	if guide.target == node and guide.points == points then
+		guide.title = DestinationTitle(goal)
 		return
 	end
 	if guide.paused then
@@ -335,7 +428,7 @@ function Guide.Pause()
 	end
 	local changed = not guide.paused
 	guide.paused = true
-	guide.points, guide.target, guide.bend = nil, nil, nil
+	guide.points, guide.target, guide.bend, guide.leg, guide.goal = nil, nil, nil, nil, nil
 	ns.PointGuideArrow(nil)
 	if not InCombatLockdown() and guide.waypoint and OwnsWaypoint() then
 		ClearGuideWaypoint()
@@ -371,7 +464,7 @@ end
 function Guide.Retarget()
 	ns.PointCastPrompt(nil)
 	if guide then
-		guide.target = nil
+		guide.target, guide.leg, guide.goal = nil, nil, nil
 	end
 end
 
@@ -424,11 +517,25 @@ Guide.Stop = StopGuide
 Guide.ClearOrphan = ClearOrphanWaypoint
 Guide.RefreshWaypointPins = RefreshWaypointPins
 Guide.RefreshTracker = RefreshTracker
+Guide.WaypointNames = WaypointNames
+Guide.NameWaypointTooltip = NameWaypointTooltip
 
 ns.Init(function()
 	for provider in pairs(WorldMapFrame.dataProviders) do
 		if provider.RefreshAllData == WaypointLocationDataProviderMixin.RefreshAllData then
 			waypointProviders[#waypointProviders + 1] = provider
 		end
+	end
+	-- Minimap_OnUpdate (Blizzard_Minimap/Mainline/Minimap.lua) rebuilds its tooltip from
+	-- C_TooltipInfo.GetMinimapMouseover on every mouseover update; TooltipDataHandler.lua runs these callbacks after
+	-- the client's lines are in place.
+	local minimap = Enum and Enum.TooltipDataType and Enum.TooltipDataType.MinimapMouseover
+	if minimap and TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall then
+		TooltipDataProcessor.AddTooltipPostCall(minimap, function(tooltip)
+			if not Usable(tooltip) then
+				return
+			end
+			NameWaypointTooltip(tooltip)
+		end)
 	end
 end)

@@ -53,6 +53,20 @@ function Lerp(start, finish, amount) end
 ---@type (fun(): string)?
 GetMinimapShape = nil
 
+-- Blizzard_SharedXMLGame/Tooltip/TooltipDataHandler.lua: the client's callback registry. The minimap rebuilds its
+-- waypoint tooltip from C_TooltipInfo.GetMinimapMouseover on every mouseover update.
+---@type {AddTooltipPostCall: fun(tooltipType: number, callback: fun(tooltip: GameTooltip, data: table))}
+TooltipDataProcessor = nil
+-- GlobalStrings: the generic "Map Pin" title the minimap gives a user waypoint.
+---@type string
+MAP_PIN = nil
+-- GlobalStrings: the "Map Pin Sharing" title the map's WaypointLocationPin gives a user waypoint.
+---@type string
+MAP_PIN_SHARING = nil
+-- The shared tooltip's first line, which holds its title (SharedTooltipTemplates.lua).
+---@type FontString
+GameTooltipTextLeft1 = nil
+
 ---@param tooltip GameTooltip
 ---@param title string
 ---@param color? ColorMixin

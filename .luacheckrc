@@ -136,8 +136,13 @@ read_globals[#read_globals + 1] = "ShortestPathForeverPathData"
 read_globals[#read_globals + 1] = "C_AddOns"
 -- Whether a value the client may hold secret can be read: checked across Core, Journey, Transport and UI.
 read_globals[#read_globals + 1] = "canaccessvalue"
--- JourneyGuide.lua: picks out the map's own waypoint data provider.
+-- JourneyGuide.lua: picks out the map's own waypoint data provider, and names its pin rather than the client's
+-- generic "Map Pin".
 read_globals[#read_globals + 1] = "WaypointLocationDataProviderMixin"
+read_globals[#read_globals + 1] = "TooltipDataProcessor"
+read_globals[#read_globals + 1] = "GameTooltipTextLeft1"
+read_globals[#read_globals + 1] = "MAP_PIN"
+read_globals[#read_globals + 1] = "MAP_PIN_SHARING"
 -- Journey.lua: water walking from its buffs, or a spell to cast.
 read_globals[#read_globals + 1] = "C_UnitAuras"
 read_globals[#read_globals + 1] = "C_Spell"

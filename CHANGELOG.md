@@ -16,6 +16,9 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [1.22.31] - 2026-11-05
 - **Right-click the tracker header to attach, detach or lock it.** The section header in the quest tracker now opens a small menu with Attach to quest tracker and Lock the tracker, the same switches as in the settings, so moving the section no longer needs a trip to the options.
+
+- **The guided waypoint says where it leads.** Hovering the pin the game places at the end of the current step, on the minimap or the world map, now names the flight master, boat, portal or place the step reaches instead of the client's generic "Map Pin". When the step is only a hop, the journey's own destination sits under it. A pin you place yourself keeps the game's own tooltip.
+
 - **The gold step area shows even with the game's quest areas off.** Questie's Questie and pfQuest objective types hide the game's blue quest areas, and with them Shortest Path's gold area for the step you stand in. The world map now draws that gold area either way, and the minimap keeps the step's ring while the game's areas are hidden.
 
 ## [1.22.30] - 2026-11-05

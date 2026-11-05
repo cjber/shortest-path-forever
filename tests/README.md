@@ -12,7 +12,7 @@ client is stubbed, and agents never launch it. Checks that need the real client 
 | Walking maps | `Routing/PathGrid.lua`, `Path.lua` and `PathJobs.lua` on the shipped `Nav/` maps | walking search, costs, slices and loading | `path_spec`, `path_many_spec`, `nav_loading_spec` |
 | Journey | `journey_driver.lua`: the journey, search, guide and steps over a stubbed client, with `path_fake.lua` answering walks, plus whatever files the spec loads on top | journeys, arrivals, replans, the public API, TomTom and anything hooked on them | `journey_spec`, `api_spec`, `tomtom_spec`, `journey_optimal_spec` |
 | Single module | the module's own file, with only the client calls it makes stubbed in the spec | settings rows, the compass, the timetable, flight times | `settings_spec`, `compass_spec`, `timetable_spec`, `taxitimes_spec` |
-| Whole client | `ui_client.lua` then `ui_map.lua`: the addon in TOC order against Blizzard's own map, tracker and menu code, which `tools/fetch_blizzard_ui.sh` fetches pinned into `tools/.cache/blizzard-ui` | pins, route strokes, the tracker host, menus and waypoints | `smoke_spec` (fetches it itself), and the `*_ui.lua` checks `tests/ui.sh` runs: `api_ui`, `route_ui`, `tracker_ui`, `waypoint_ui` |
+| Whole client | `ui_client.lua` then `ui_map.lua`: the addon in TOC order against Blizzard's own map, tracker and menu code, which `tools/fetch_blizzard_ui.sh` fetches pinned into `tools/.cache/blizzard-ui` | pins, route strokes, the tracker host, menus and waypoints | `smoke_spec` and `waypoint_label_spec` (fetch it themselves), and the `*_ui.lua` checks `tests/ui.sh` runs: `api_ui`, `route_ui`, `tracker_ui`, `waypoint_ui` |
 
 ## The journey driver
 

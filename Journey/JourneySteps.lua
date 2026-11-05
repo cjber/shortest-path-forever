@@ -164,7 +164,7 @@ function ns.AdvanceJourneyProgress(legs, progress, goal, riding, flying, near, g
 			if aboard or near(leg.from) then
 				progress.departed = true
 			else
-				guide.To(leg.from, nil, goal)
+				guide.To(leg.from, nil, goal, leg)
 				return true
 			end
 		end
@@ -173,11 +173,11 @@ function ns.AdvanceJourneyProgress(legs, progress, goal, riding, flying, near, g
 			return true
 		end
 		if not Landed(leg, progress, near) or (leg.mode == "flight" and flying) then
-			guide.To(leg.to, leg.walkPoints, goal)
+			guide.To(leg.to, leg.walkPoints, goal, leg)
 			return true
 		end
 		if goal.hold and leg.mode == "walk" and not nextLeg then
-			guide.To(leg.to, leg.walkPoints, goal)
+			guide.To(leg.to, leg.walkPoints, goal, leg)
 			return true
 		end
 		progress.index, progress.departed = progress.index + 1, false
