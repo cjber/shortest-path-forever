@@ -127,7 +127,7 @@ jobs:
           # The packager reads the version from the tag on the checked-out commit. The full-history checkout
           # already holds a tag that existed before this run, so only a new one is created here.
           git rev-parse -q --verify "refs/tags/$RELEASE_TAG" > /dev/null || git tag "$RELEASE_TAG" "$RELEASE_COMMIT"
-      - uses: BigWigsMods/packager@e50a250f8705041e40f2fa1ddcb280a686d65aa0 # v2.6.1
+      - uses: BigWigsMods/packager@01e8631a69c69d7654c788d152630d5fed9e3812 # v2.7.0
         env:
           CF_API_KEY: ${{ secrets.CF_API_KEY }}
           WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
