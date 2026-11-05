@@ -678,6 +678,7 @@ _G.Enum = {
 		InvalidChatType = 4,
 		InvalidChannel = 7,
 	},
+	TooltipDataType = { MinimapMouseover = 21 },
 }
 _G.CreateVector2D = function(x, y)
 	return {
@@ -945,8 +946,23 @@ _G.math.atan2 = math.atan2 or function(y, x)
 	return math.atan(y, x)
 end
 local tip = {}
+local tipTitle = font()
+_G.GameTooltipTextLeft1 = tipTitle
+-- GlobalStrings at the pinned build: the minimap says MAP_PIN, the map's waypoint pin says MAP_PIN_SHARING.
+_G.MAP_PIN = "Map Pin"
+_G.MAP_PIN_SHARING = "Map Pin Sharing"
+-- TooltipDataHandler.lua: each tooltip type's post-call runs once the client's own lines are in place.
+local tooltipCallbacks = {}
+_G.TooltipDataProcessor = {
+	AllTypes = "ALL",
+	AddTooltipPostCall = function(kind, fn)
+		tooltipCallbacks[kind] = tooltipCallbacks[kind] or {}
+		tooltipCallbacks[kind][#tooltipCallbacks[kind] + 1] = fn
+	end,
+}
 _G.GameTooltip_SetTitle = function(_, t)
 	tip = { "# " .. t }
+	tipTitle:SetText(t)
 end
 _G.GameTooltip_AddColoredLine = function(_, t)
 	tip[#tip + 1] = "  " .. t

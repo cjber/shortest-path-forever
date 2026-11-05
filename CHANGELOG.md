@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **The guided waypoint says where it leads.** Hovering the pin the game places at the end of the current step, on the minimap or the world map, now names the flight master, boat, portal or place the step reaches instead of the client's generic "Map Pin". When the step is only a hop, the journey's own destination sits under it. A pin you place yourself keeps the game's own tooltip.
+
 - **A short trip can now change to a quicker way as you walk.** A followed route only gave way to one saving at least 30 seconds and a tenth of the time left, and nothing can save 30 seconds on a trip under half a minute, so a clearly better way found as you moved never took over. It now gives way for a saving of a tenth of the trip left or 30 seconds, whichever is the smaller, so short trips follow their best route without flip-flopping.
 
 ## [1.22.31] - 2026-11-05
