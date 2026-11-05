@@ -111,6 +111,37 @@ function ns.JourneyTime(legs, index)
 	return seconds * 1000
 end
 
+-- Whether a leg has reached its far end. A lift's landings share a spot on the map and the player's height is unknown
+-- (UnitPosition's is a placeholder 0), so standing at the shaft cannot tell the top from the bottom. Such a leg is
+-- over when you step away from the shaft after being there for at least the ride; stepping away sooner means you
+-- did not ride, and the step points you back to the landing.
+---@param leg SPFLeg
+---@param progress {index: integer, departed?: boolean}
+---@param near fun(node: SPFPoint|SPFPlace): boolean?
+---@return boolean
+local function Landed(leg, progress, near)
+	local from, to = leg.from, leg.to
+	local stacked = leg.route
+		and from.map == to.map
+		and from.z
+		and to.z
+		and from.z ~= to.z
+		and (from.x - to.x) ^ 2 + (from.y - to.y) ^ 2 < 1
+	if not stacked then
+		return near(to) == true
+	end
+	local now = ns.NowMs()
+	if near(to) then
+		leg.reachedAt = leg.reachedAt or now
+		return false
+	end
+	if leg.reachedAt and now - leg.reachedAt >= leg.arrive - leg.depart then
+		return true
+	end
+	leg.reachedAt, progress.departed = nil, false
+	return false
+end
+
 -- Advance legs that can be completed from the player's current position. Keeping this
 -- state machine beside the step vocabulary keeps the journey driver focused on refreshes.
 function ns.AdvanceJourneyProgress(legs, progress, goal, riding, flying, near, guide)
@@ -141,7 +172,7 @@ function ns.AdvanceJourneyProgress(legs, progress, goal, riding, flying, near, g
 			guide.Cast(leg)
 			return true
 		end
-		if not near(leg.to) or (leg.mode == "flight" and flying) then
+		if not Landed(leg, progress, near) or (leg.mode == "flight" and flying) then
 			guide.To(leg.to, leg.walkPoints, goal)
 			return true
 		end

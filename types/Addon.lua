@@ -299,6 +299,7 @@ ShortestPathForeverPathData = nil
 ---@field walkDrawn? boolean -- walkPoints came from a search, not a straight placeholder
 ---@field color? ColorMixin -- drawn in this colour rather than its mode's
 ---@field hazardNotes? string[] -- the hostile towns and high zones a measured walk meets or goes round (Hazards.lua)
+---@field reachedAt? number -- when you reached a lift's shaft, whose landings share a spot (JourneySteps.lua)
 ---@class SPFPlan
 ---@field provisional? boolean
 ---@field arrive number
