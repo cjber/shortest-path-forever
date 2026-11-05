@@ -303,6 +303,7 @@ local function stubframe()
 	f.Header = {
 		SetScript = noop,
 		EnableMouse = noop,
+		HookScript = noop,
 	}
 	frames[#frames + 1] = f
 	return f
