@@ -65,8 +65,8 @@ L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] 
 L["E"] = "東"
 L["Either faction can ride any boat or zeppelin."] = "任何陣營都可以搭乘任何船隻或飛艇。"
 L["Enter %s"] = "進入%s"
-L["RestedXP's arrow shows again while Adventure Guide steers its guide."] =
-	"Adventure Guide 引導其指南時，RestedXP 的箭頭重新顯示。" -- mt
+L["One arrow on an Adventure Guide RestedXP guide."] =
+	"Adventure Guide 引導 RestedXP 指南時只顯示一個箭頭。" -- mt
 L["Finding the fastest way…"] = "正在尋找最快路線…"
 L["Flight Masters"] = "飛行管理員"
 L["Flight master"] = "飛行管理員"

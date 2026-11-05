@@ -66,8 +66,8 @@ L["E"] = "동"
 L["Either faction can ride any boat or zeppelin."] =
 	"어느 진영이든 모든 배와 비행선을 탈 수 있습니다."
 L["Enter %s"] = "%s 입장"
-L["RestedXP's arrow shows again while Adventure Guide steers its guide."] =
-	"Adventure Guide가 가이드를 이끄는 동안 RestedXP 화살표가 다시 표시됩니다." -- mt
+L["One arrow on an Adventure Guide RestedXP guide."] =
+	"Adventure Guide가 RestedXP 가이드를 이끌 때 화살표는 하나만 표시됩니다." -- mt
 L["Finding the fastest way…"] = "가장 빠른 길 찾는 중…"
 L["Flight Masters"] = "비행 조련사"
 L["Flight master"] = "비행 조련사"

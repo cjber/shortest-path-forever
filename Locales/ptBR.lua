@@ -65,8 +65,8 @@ L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] 
 L["E"] = "L"
 L["Either faction can ride any boat or zeppelin."] = "Qualquer facção pode usar qualquer barco ou zepelim."
 L["Enter %s"] = "Entrar em %s"
-L["RestedXP's arrow shows again while Adventure Guide steers its guide."] =
-	"A seta do RestedXP volta a aparecer enquanto o Adventure Guide conduz o guia." -- mt
+L["One arrow on an Adventure Guide RestedXP guide."] =
+	"Uma só seta quando o Adventure Guide conduz um guia do RestedXP." -- mt
 L["Finding the fastest way…"] = "Procurando o caminho mais rápido…"
 L["Flight Masters"] = "Mestres de voo"
 L["Flight master"] = "Mestre de voo"
