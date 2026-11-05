@@ -68,8 +68,8 @@ L["E"] = "В"
 L["Either faction can ride any boat or zeppelin."] =
 	"Любая фракция может сесть на любой корабль или дирижабль."
 L["Enter %s"] = "Войти: %s"
-L["One arrow on an Adventure Guide RestedXP guide."] =
-	"Одна стрелка, когда Adventure Guide ведёт руководство RestedXP." -- mt
+L["The guided waypoint says where it leads."] =
+	"Путевая точка маршрута показывает, куда она ведёт." -- mt
 L["Finding the fastest way…"] = "Поиск самого быстрого пути…"
 L["Flight Masters"] = "Распорядители полетов"
 L["Flight master"] = "Распорядитель полетов"
