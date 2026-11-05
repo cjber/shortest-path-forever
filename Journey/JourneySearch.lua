@@ -292,10 +292,21 @@ FinishSearch = function()
 		and followed
 		and #followed.legs == 1
 		and followed.legs[1].mode == "walk"
+	-- A teleport not yet cast commits you to nothing: any quicker way that leaves it unspent replaces it.
+	local current = followed and followed.legs[progress.index]
+	local first = planned and planned.legs[1]
+	local uncast = current
+		and current.mode == "teleport"
+		and first
+		and (first.mode ~= "teleport" or first.teleport.spell ~= current.teleport.spell)
 	local better = estimate
 		and planned
 		and gain
-		and (overWalk or gain >= SWITCH_GAIN and gain >= (estimate.arrive - planned.now) * SWITCH_SHARE)
+		and (
+			overWalk
+			or uncast and gain > 0
+			or gain >= SWITCH_GAIN and gain >= (estimate.arrive - planned.now) * SWITCH_SHARE
+		)
 	local valid = true
 	for _, leg in ipairs(planned and planned.legs or {}) do
 		if leg.walkError then
@@ -895,7 +906,10 @@ function Search.Replan(riding, flying, changedRide)
 			and startAt
 			and moved
 			and (not followed or (leg and leg.walkError) or here.map ~= startAt.map)
-		if not flying and not riding and (off or retry or GetTime() - refreshedAt >= REFRESH_EVERY) then
+		-- A teleport is cast where you stand, so its time holds wherever you go, while the walks searched from where
+		-- you stood stop describing here: walked on before casting, they are searched again.
+		local walkedOn = moved and leg and leg.mode == "teleport"
+		if not flying and not riding and (off or retry or walkedOn or GetTime() - refreshedAt >= REFRESH_EVERY) then
 			RefreshCosts(false, off or retry)
 		else
 			local planned = Plan()

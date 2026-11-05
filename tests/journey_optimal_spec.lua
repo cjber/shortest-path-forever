@@ -332,6 +332,34 @@ do
 end
 print("hearth journey: the first step, named by the game: ok")
 
+-- Bound in Dolanaar, a hearth beats the walk in from 250 yd south of town. Walked in anyway to 59 yd from the goal, at
+-- Teldrassil (56.3, 62.0), a 10 s cast no longer saves anything: the walk replaces it (#371).
+do
+	ns.faction, ns.water, ns.speed = "Alliance", false, 7
+	local function Teldrassil(x, y)
+		local zone = { minX = 8438, minY = -1277, maxX = 11831, maxY = 3815 }
+		return { map = 1, x = zone.maxX - y * (zone.maxX - zone.minX), y = zone.maxY - x * (zone.maxY - zone.minY) }
+	end
+	local inn, here = Teldrassil(0.556, 0.598), Teldrassil(0.563, 0.62)
+	local step = { map = 1, x = here.x + 59, y = here.y }
+	ns.teleports = { { map = 1, x = inn.x, y = inn.y, spell = 8690, item = 6948, cast = 10000, bind = true } }
+	ns.teleportReady = { 123456 }
+	local outside = { map = 1, x = here.x - 250, y = here.y }
+	driver.begin(outside, step)
+	drain()
+	assert(driver.shown().legs[1].mode == "teleport", "the hearth wins from outside town")
+	for i = 1, 36 do
+		driver.move({ map = 1, x = outside.x + (here.x - outside.x) * i / 36, y = here.y })
+		driver.update(1)
+		drain()
+	end
+	local shown = driver.shown()
+	assert(shown.legs[1].mode == "walk" and #shown.legs == 1, "a 59 yd walk in the bind town needs no hearth")
+	ns.ClearJourney()
+	ns.teleports, ns.teleportReady = nil, nil
+end
+print("hearth journey: walked into the bind town, the walk replaces the hearth: ok")
+
 -- A half-hour walk gives way to boats that arrive within a tenth of its time; a clearly quicker walk does not.
 ns.faction, ns.water, ns.speed, ns.known = "Alliance", false, 7, {}
 local ironforge = { map = 0, x = -4918, y = -940 }
