@@ -68,19 +68,32 @@ local function Suppress()
 	frame:EnableMouse(false)
 end
 
+local function Integrated()
+	local frontend = AdventureGuideForever and AdventureGuideForever.API
+	return frontend ~= nil and type(frontend.RestedXPIntegrated) == "function" and frontend.RestedXPIntegrated() == true
+end
+
+-- RestedXP's own arrow on screen for the step Adventure Guide handed us: our arrow would point at it a second time.
+---@return boolean
+function ns.RestedXPArrowLeads()
+	local frame = hooked and hooked.arrowFrame
+	return frame ~= nil
+		and Integrated()
+		and API.CurrentStop("AdventureGuideForever") ~= nil
+		and frame:IsVisible()
+		and frame:GetAlpha() > 0
+		and frame.texture:IsShown()
+end
+
 local function Sync()
 	if not hooked or not ns.db then
 		return
 	end
+	-- Adventure Guide steering the guide hands us its step itself and leaves RestedXP's arrow pointing at it; its
+	-- native UI choice leaves the guide to RestedXP alone.
 	local frontend = AdventureGuideForever and AdventureGuideForever.API
-	if frontend and type(frontend.RestedXPNativeUI) == "function" and frontend.RestedXPNativeUI() then
+	if Integrated() or (frontend and type(frontend.RestedXPNativeUI) == "function" and frontend.RestedXPNativeUI()) then
 		Clear()
-		return
-	end
-	if frontend and type(frontend.RestedXPIntegrated) == "function" and frontend.RestedXPIntegrated() then
-		API.Cancel(OWNER)
-		target, targetTitle = nil, nil
-		Suppress()
 		return
 	end
 	if not ns.db.restedxp or not ns.db.journey then
@@ -158,12 +171,7 @@ end
 -- Let the player hand control back after pausing a guide, without waiting for its next native update.
 function ns.ResumeRestedXP()
 	local frontend = AdventureGuideForever and AdventureGuideForever.API
-	if
-		frontend
-		and type(frontend.RestedXPIntegrated) == "function"
-		and frontend.RestedXPIntegrated()
-		and type(frontend.ResumeRestedXP) == "function"
-	then
+	if frontend and Integrated() and type(frontend.ResumeRestedXP) == "function" then
 		frontend.ResumeRestedXP()
 		return
 	end
@@ -192,18 +200,7 @@ end
 
 hooksecurefunc(ns, "JourneyChanged", function()
 	if not API.CurrentStop(OWNER) then
-		local frontend = AdventureGuideForever and AdventureGuideForever.API
-		if
-			hooked
-			and ns.db
-			and frontend
-			and type(frontend.RestedXPIntegrated) == "function"
-			and frontend.RestedXPIntegrated()
-		then
-			Suppress()
-		else
-			Restore()
-		end
+		Restore()
 	end
 end)
 

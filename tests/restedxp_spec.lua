@@ -38,7 +38,13 @@ local function Region()
 	end
 	return region
 end
-local frame = { texture = Region(), text = Region(), mouse = true }
+local frame = { texture = Region(), text = Region(), mouse = true, alpha = 1 }
+function frame.IsVisible()
+	return true
+end
+function frame:GetAlpha()
+	return self.alpha
+end
 function frame:IsMouseEnabled()
 	return self.mouse
 end
@@ -157,7 +163,17 @@ frame.element.hidden, frame.element.completed, frame.element.skip = false, false
 frame.element.arrow = true
 rxp.UpdateMap()
 assert(not API.CurrentStop("RestedXP"), "AGF's integrated frontend does not start a competing route")
-assert(not frame.texture.shown and not frame.mouse, "the integrated frontend suppresses the native arrow")
+assert(
+	frame.texture.shown and frame.text.shown and frame.mouse,
+	"RestedXP's own arrow points at the step the integrated frontend steers to"
+)
+assert(not ns.RestedXPArrowLeads(), "RestedXP's arrow leads only while the frontend's journey runs")
+assert(API.NavigateRoute("AdventureGuideForever", { { map = 1, x = 0.6, y = 0.5, title = "Step 28" } }))
+assert(ns.RestedXPArrowLeads(), "our arrow yields to RestedXP's on the frontend's journey")
+frame.alpha = 0
+assert(not ns.RestedXPArrowLeads(), "our arrow leads again while the frontend hides RestedXP's")
+frame.alpha = 1
+API.Cancel("AdventureGuideForever")
 local resumed = 0
 env.AdventureGuideForever.API.ResumeRestedXP = function()
 	resumed = resumed + 1
@@ -169,9 +185,9 @@ rxp.UpdateMap()
 assert(not API.CurrentStop("RestedXP"), "engine updates keep navigation with the frontend")
 ns.db.restedxp = false
 ns.RefreshRestedXP()
-assert(not frame.texture.shown, "AGF suppresses RXP arrow even with standalone integration disabled")
+assert(frame.texture.shown, "RXP's arrow stays with standalone integration disabled")
 ns.JourneyChanged()
-assert(not frame.texture.shown, "journey changes retain AGF arrow suppression")
+assert(frame.texture.shown, "journey changes keep RXP's arrow under the frontend")
 ns.db.restedxp = true
 integrated = false
 ns.RefreshRestedXP()

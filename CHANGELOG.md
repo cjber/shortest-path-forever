@@ -12,6 +12,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **RestedXP's arrow shows again while Adventure Guide steers its guide.** With Adventure Guide Forever running a RestedXP guide, Shortest Path hid RestedXP's direction arrow and left only the game's small waypoint marker, so there was no arrow to follow. RestedXP's arrow now stays and points at the guide's current step, and our own screen arrow steps aside while it shows, so you see one arrow rather than two. With TomTom installed, its arrow still shows only for waypoints you or another addon set in it.
 - **Long specialty lists in Nearby services scroll.** Trainers and vendors by specialty show 20 rows at a time and scroll like the game's own long menus, instead of running off the bottom of the screen.
 
 ## [1.22.28] - 2026-11-05
