@@ -187,6 +187,41 @@ do
 	h.clear()
 end
 
+-- A timed replan takes the quicker way for a gain of a tenth of the time left or 30 seconds, whichever is the
+-- smaller: a trip under half a minute could never save the 30 seconds the old rule demanded (issue 374). The two
+-- thresholds cross at five minutes, so each case below is decided by the smaller one alone.
+local function replanned(oldSeconds, newSeconds, replaces, why)
+	local h = scenario(oldSeconds, newSeconds)
+	h.costs("A")
+	h.geometry()
+	assert(h.via() == "A", why .. ": the first route goes through A")
+	local route = h.route
+	h.heard()
+	-- A minute on, the timed replan searches again from where you stand, a hundredth of the way along the walk, so
+	-- the share still ahead of you is a hundredth short of the whole trip.
+	h.refresh({ map = 1, x = 5, y = 1 })
+	h.costs("B")
+	h.geometry()
+	if replaces then
+		assert(h.heard() == "route" and h.via() == "B", why)
+	else
+		assert(h.via() == "A" and h.route == route, why .. ": the followed route stays")
+	end
+	h.clear()
+end
+-- 12 s off a 25 s trip: no floor can be met, so the share decides, and it is a tenth.
+replanned(20, 8, true, "12 s off a 25 s trip replaces it")
+-- 2 s off a 30 s trip: the share is 6%, under the tenth.
+replanned(25, 23, false, "2 s off a 30 s trip keeps it")
+-- 18 s off a 2 min 45 s trip: 11%, so the share replaces it without the 30 s floor.
+replanned(160, 140, true, "18 s off a 2 min 45 s trip replaces it")
+-- 13 s off the same trip: 8%, under the share.
+replanned(160, 145, false, "13 s off a 2 min 45 s trip keeps it")
+-- 44 s off a ten-minute trip: 7%, so the floor replaces it without the share.
+replanned(600, 550, true, "44 s off a ten-minute trip replaces it")
+-- 14 s off the same trip: under the floor.
+replanned(600, 580, false, "14 s off a ten-minute trip keeps it")
+
 -- Moving through many origins must evict old walks; clearing also discards a still-reusable recent walk.
 do
 	local h = scenario(300, 275)
@@ -416,4 +451,4 @@ do
 	h.clear()
 end
 
-print("search_spec: measured guidance, private guesses, background replans, reuse and cancellation: ok")
+print("search_spec: measured guidance, private guesses, background replans, switch gains, reuse and cancellation: ok")

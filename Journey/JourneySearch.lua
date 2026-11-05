@@ -11,6 +11,12 @@ local REFRESH_EVERY = 60
 -- the infrequent batches, except for Remaining() along the walk you are following.
 local SWITCH_GAIN, SWITCH_SHARE = 30000, 0.1
 
+-- A followed route yields to a challenger for a gain worth the change: a tenth of the trip left, or 30 seconds,
+-- whichever is the smaller. The floor alone is unreachable on a trip under half a minute, so there the share decides.
+local function Worthwhile(gain, remaining)
+	return gain >= SWITCH_GAIN or gain >= remaining * SWITCH_SHARE
+end
+
 local Context = ns.PlanContext
 ---@class SPFJourneySearch
 local Search = {}
@@ -302,11 +308,7 @@ FinishSearch = function()
 	local better = estimate
 		and planned
 		and gain
-		and (
-			overWalk
-			or uncast and gain > 0
-			or gain >= SWITCH_GAIN and gain >= (estimate.arrive - planned.now) * SWITCH_SHARE
-		)
+		and (overWalk or uncast and gain > 0 or Worthwhile(gain, estimate.arrive - planned.now))
 	local valid = true
 	for _, leg in ipairs(planned and planned.legs or {}) do
 		if leg.walkError then
@@ -383,7 +385,7 @@ local function Render(planned, forced)
 		and EstimateKept(planned and planned.now or ns.NowMs())
 	if estimate and planned and Walks.Pending() == 0 and not search.refine then
 		local gain = estimate.arrive - planned.arrive
-		if gain < SWITCH_GAIN or gain < (estimate.arrive - planned.now) * SWITCH_SHARE then
+		if not Worthwhile(gain, estimate.arrive - planned.now) then
 			FinishSearch()
 			return
 		end

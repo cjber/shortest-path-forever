@@ -31,7 +31,8 @@ With RestedXP installed, **Resume guide** in Guidance or the Journey header menu
   portals, including a flight master you haven't found yet if walking to it pays off. Walks go through
   tunnels and between a city's levels, such as Dun Algaz and the Undercity, and walks keep out of water, which is slow and risky, unless you have Water Walking or Levitate (the step asks you to cast it). The route is drawn
   on the map and minimap, walking legs dotted, and the steps sit in the objective tracker like a tracked
-  quest. It replans as you move but only switches to a clearly faster way (at least 30 seconds and a tenth of the time left), and stays aboard if you are already riding. **Guide**, on from the start
+  quest. It replans as you move but only switches to a clearly faster way (a tenth quicker or 30 seconds sooner,
+  whichever is the smaller saving), and stays aboard if you are already riding. **Guide**, on from the start
   of every journey (click the tracker header to turn it off), moves the game's own waypoint marker to where each step ends, the next boat, lift or flight master (or, with *Mark only where steps end* off in `/path`, along the route turn by turn, round walls), and hands your tracked quest back when you finish. To head for a quest, pick **Plan journey** from its right-click menu in the objective
   tracker or quest log, or Shift-click its marker on the map; a finished quest routes to its turn-in.
   Walks keep away from danger. A zone whose lowest level is 4 or more above yours costs four times as much to
@@ -85,9 +86,10 @@ With RestedXP installed, **Resume guide** in Guidance or the Journey header menu
 
 - **Finding the fastest way.** While a new journey is checked, the map shows only its destination pin and the
   tracker the Group Finder spinner; the route, steps and totals then appear together. A search that takes more than
-  three seconds shows its best route so far, and changes it only for one at least 30 seconds and 10% faster, or if
-  it stops working. The drawn route pulses gently on the world map and minimap while the spinner turns, then
-  becomes steady as soon as the search finishes. Later checks run quietly without a spinner or pulsing.
+  three seconds shows its best route so far, and changes it only for one a tenth quicker or 30 seconds sooner,
+  whichever is the smaller saving, or if it stops working. The drawn route pulses gently on the world map and
+  minimap while the spinner turns, then becomes steady as soon as the search finishes. Later checks run quietly
+  without a spinner or pulsing.
   Nearby walks can settle immediately; longer searches stop as soon as no unchecked alternative can beat the chosen route. Only that route gets
   walking geometry, and drawn paths stay visible during refreshes, and clearing a journey releases its search caches. Walking
   maps load in small parts as the search reaches them, and a fixed walk on another continent keeps its measured cost
