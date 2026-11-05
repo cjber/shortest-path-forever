@@ -12,6 +12,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.22.33] - 2026-11-05
 - **A mage in your group can shorten a journey.** An opt-in Party mage portals setting adds "ask <mage> for a portal" to a capital city when that beats walking there, using the capital portals in the shipped mage teleport data. It only appears while another mage is in your party or raid, only for the capitals you tick, and only for your faction. It is off by default, and the hop disappears on the next plan when the mage leaves or you turn the setting off.
 
 ## [1.22.32] - 2026-11-05
