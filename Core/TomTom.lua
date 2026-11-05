@@ -133,11 +133,11 @@ end
 ---@param y number
 ---@param opts? TomTomWaypointOptions
 ---@return TomTomWaypoint?
-function shim.AddMFWaypoint(_, map, floor, x, y, opts)
+function shim.AddMFWaypoint(self, map, floor, x, y, opts)
 	if floor ~= nil and not Number(floor) then
 		return nil
 	end
-	return Start(map, x, y, opts and opts.title, opts)
+	return shim.AddWaypoint(self, map, x, y, opts)
 end
 
 -- The old continent and zone form, with coordinates on a 0-100 scale.

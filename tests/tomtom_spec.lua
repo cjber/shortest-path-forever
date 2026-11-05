@@ -208,10 +208,15 @@ equal(type(flags), "table", "false callbacks and flags are accepted")
 env.TomTom:RemoveWaypoint(flags)
 
 -- The map and floor form the newer TomTom also carries.
-local mf = env.TomTom:AddMFWaypoint(1, 0, 0.5, 0.5, { title = "Floor" })
+local mf = env.TomTom:AddMFWaypoint(1, 0, 0.6, 0.5, { title = "Floor" })
 driver.path.settle()
 equal(type(mf), "table", "AddMFWaypoint starts a journey")
 equal(mf.title, "Floor", "AddMFWaypoint keeps the title")
+for _, opts in ipairs({ true, false, 5, "options" }) do
+	equal(env.TomTom:AddMFWaypoint(1, 0, 0.5, 0.5, opts), nil, "non-table floor waypoint options are refused")
+end
+equal(env.TomTom:IsValidWaypoint(mf), true, "refused options preserve the existing waypoint")
+equal(API.CurrentStop("TomTom"), 1, "refused options preserve the existing journey")
 env.TomTom:RemoveWaypoint(mf)
 equal(env.TomTom:AddMFWaypoint(1, "0", 0.5, 0.5, {}), nil, "the floor must be a number")
 
