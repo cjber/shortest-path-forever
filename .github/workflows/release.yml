@@ -124,8 +124,9 @@ jobs:
           else
             gh api "repos/$GITHUB_REPOSITORY/git/refs" -f "ref=refs/tags/$RELEASE_TAG" -f "sha=$RELEASE_COMMIT" > /dev/null
           fi
-          # The packager reads the version from the tag on the checked-out commit.
-          git tag "$RELEASE_TAG" "$RELEASE_COMMIT"
+          # The packager reads the version from the tag on the checked-out commit. The full-history checkout
+          # already holds a tag that existed before this run, so only a new one is created here.
+          git rev-parse -q --verify "refs/tags/$RELEASE_TAG" > /dev/null || git tag "$RELEASE_TAG" "$RELEASE_COMMIT"
       - uses: BigWigsMods/packager@e50a250f8705041e40f2fa1ddcb280a686d65aa0 # v2.6.1
         env:
           CF_API_KEY: ${{ secrets.CF_API_KEY }}
