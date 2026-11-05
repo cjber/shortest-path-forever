@@ -138,6 +138,8 @@ L["Open settings."] = "打开设置。"
 L["Open the world map and choose Nearby services in its tracking menu."] =
 	"打开世界地图，在其追踪菜单中选择“附近服务”。"
 L["Open the world map to see it."] = "打开世界地图查看。"
+L["The Forever addons are free, with nothing locked behind them. If they help, you can buy me a coffee."] =
+	"Forever 插件全部免费，没有任何付费才能使用的内容。如果它们对你有帮助，可以请我喝杯咖啡。" -- mt
 L["Turn the world map to %s to see it."] = "将世界地图切换到%s查看。" -- mt
 L["This menu needs mouse and keyboard."] = "此菜单需要鼠标和键盘。" -- mt
 L["Open these settings from the minimap."] = "从微缩地图打开这些设置。"

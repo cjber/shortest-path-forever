@@ -140,6 +140,8 @@ L["Open settings."] = "Abrir la configuración."
 L["Open the world map and choose Nearby services in its tracking menu."] =
 	"Abre el mapa del mundo y elige Servicios cercanos en su menú de rastreo."
 L["Open the world map to see it."] = "Abre el mapa del mundo para verlo."
+L["The Forever addons are free, with nothing locked behind them. If they help, you can buy me a coffee."] =
+	"Los addons Forever son gratuitos y no hay nada bloqueado tras un pago. Si te ayudan, puedes invitarme a un café." -- mt
 L["Turn the world map to %s to see it."] = "Gira el mapa del mundo hacia %s para verlo." -- mt
 L["This menu needs mouse and keyboard."] = "Este menú necesita ratón y teclado." -- mt
 L["Open these settings from the minimap."] = "Abrir esta configuración desde el minimapa."

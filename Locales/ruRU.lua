@@ -146,6 +146,8 @@ L["Open settings."] = "Открыть настройки."
 L["Open the world map and choose Nearby services in its tracking menu."] =
 	"Откройте карту мира и выберите «Услуги поблизости» в ее меню отслеживания."
 L["Open the world map to see it."] = "Откройте карту мира, чтобы увидеть."
+L["The Forever addons are free, with nothing locked behind them. If they help, you can buy me a coffee."] =
+	"Аддоны Forever бесплатны, и ничего в них не закрыто за оплатой. Если они вам помогают, можете угостить меня кофе." -- mt
 L["Turn the world map to %s to see it."] =
 	"Переключите карту мира на %s, чтобы увидеть." -- mt
 L["This menu needs mouse and keyboard."] = "Для этого меню нужны мышь и клавиатура." -- mt
