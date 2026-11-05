@@ -67,8 +67,8 @@ L["E"] = "E" -- mt
 L["Either faction can ride any boat or zeppelin."] =
 	"Les deux factions peuvent prendre n'importe quel bateau ou zeppelin." -- mt
 L["Enter %s"] = "Entrer dans %s" -- mt
-L["The objective tracker column stays still as you enter and leave combat."] =
-	"La colonne du suivi des objectifs reste immobile quand vous entrez en combat et en sortez." -- mt
+L["RestedXP's arrow shows again while Adventure Guide steers its guide."] =
+	"La flèche de RestedXP réapparaît pendant qu'Adventure Guide pilote son guide." -- mt
 L["Finding the fastest way…"] = "Recherche du chemin le plus rapide…" -- mt
 L["Flight Masters"] = "Maîtres de vol" -- mt
 L["Flight master"] = "Maître de vol" -- mt

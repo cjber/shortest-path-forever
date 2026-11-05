@@ -12,8 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
-- **A dock or portal with many destinations scrolls its menu.** Clicking a hub on the world map lists 20 destinations at a time and scrolls the rest, so a long list stays on the screen.
+## [1.22.29] - 2026-11-05
+
 - **RestedXP's arrow shows again while Adventure Guide steers its guide.** With Adventure Guide Forever running a RestedXP guide, Shortest Path hid RestedXP's direction arrow and left only the game's small waypoint marker, so there was no arrow to follow. RestedXP's arrow now stays and points at the guide's current step, and our own screen arrow steps aside while it shows, so you see one arrow rather than two. With TomTom installed, its arrow still shows only for waypoints you or another addon set in it.
+- **A dock or portal with many destinations scrolls its menu.** Clicking a hub on the world map lists 20 destinations at a time and scrolls the rest, so a long list stays on the screen.
 - **Long specialty lists in Nearby services scroll.** Trainers and vendors by specialty show 20 rows at a time and scroll like the game's own long menus, instead of running off the bottom of the screen.
 - **The settings page opens without an error.** Its title asked the game for a font Forever does not have, which logged a Lua error each time the page was built; it now uses the font the game's own settings pages title with.
 - **A lift step lasts until you have ridden it.** A lift's top and bottom are the same spot on the map and the game does not say which floor you are on, so reaching the bottom of the Undercity, Thunder Bluff, Great Lift or Freewind Post lifts used to skip straight to the walk from the top. The lift step now stays, with its wait, until you step off after the ride.

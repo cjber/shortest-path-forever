@@ -65,8 +65,8 @@ L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] 
 L["E"] = "東"
 L["Either faction can ride any boat or zeppelin."] = "任何陣營都可以搭乘任何船隻或飛艇。"
 L["Enter %s"] = "進入%s"
-L["The objective tracker column stays still as you enter and leave combat."] =
-	"進入和離開戰鬥時，目標追蹤欄保持不動。" -- mt
+L["RestedXP's arrow shows again while Adventure Guide steers its guide."] =
+	"Adventure Guide 引導其指南時，RestedXP 的箭頭重新顯示。" -- mt
 L["Finding the fastest way…"] = "正在尋找最快路線…"
 L["Flight Masters"] = "飛行管理員"
 L["Flight master"] = "飛行管理員"

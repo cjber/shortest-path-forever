@@ -68,8 +68,8 @@ L["E"] = "В"
 L["Either faction can ride any boat or zeppelin."] =
 	"Любая фракция может сесть на любой корабль или дирижабль."
 L["Enter %s"] = "Войти: %s"
-L["The objective tracker column stays still as you enter and leave combat."] =
-	"Колонка отслеживания целей не сдвигается при входе в бой и выходе из него." -- mt
+L["RestedXP's arrow shows again while Adventure Guide steers its guide."] =
+	"Стрелка RestedXP снова видна, пока Adventure Guide ведёт её руководство." -- mt
 L["Finding the fastest way…"] = "Поиск самого быстрого пути…"
 L["Flight Masters"] = "Распорядители полетов"
 L["Flight master"] = "Распорядитель полетов"

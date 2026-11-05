@@ -65,8 +65,8 @@ L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] 
 L["E"] = "E"
 L["Either faction can ride any boat or zeppelin."] = "Cualquier facción puede subir a cualquier barco o zepelín."
 L["Enter %s"] = "Entrar en %s"
-L["The objective tracker column stays still as you enter and leave combat."] =
-	"La columna del rastreador de objetivos se mantiene quieta al entrar y salir de combate." -- mt
+L["RestedXP's arrow shows again while Adventure Guide steers its guide."] =
+	"La flecha de RestedXP vuelve a aparecer mientras Adventure Guide dirige su guía." -- mt
 L["Finding the fastest way…"] = "Buscando la ruta más rápida…"
 L["Flight Masters"] = "Maestros de vuelo"
 L["Flight master"] = "Maestro de vuelo"
