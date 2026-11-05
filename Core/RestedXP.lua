@@ -73,26 +73,20 @@ local function Integrated()
 	return frontend ~= nil and type(frontend.RestedXPIntegrated) == "function" and frontend.RestedXPIntegrated() == true
 end
 
--- RestedXP's own arrow on screen for the step Adventure Guide handed us: our arrow would point at it a second time.
----@return boolean
-function ns.RestedXPArrowLeads()
-	local frame = hooked and hooked.arrowFrame
-	return frame ~= nil
-		and Integrated()
-		and API.CurrentStop("AdventureGuideForever") ~= nil
-		and frame:IsVisible()
-		and frame:GetAlpha() > 0
-		and frame.texture:IsShown()
-end
-
 local function Sync()
 	if not hooked or not ns.db then
 		return
 	end
-	-- Adventure Guide steering the guide hands us its step itself and leaves RestedXP's arrow pointing at it; its
-	-- native UI choice leaves the guide to RestedXP alone.
+	-- Adventure Guide steering the guide hands us its step itself, and our arrow points at it: RestedXP's would be a
+	-- second one, so it stays hidden. Adventure Guide's native UI choice leaves the guide, arrow and all, to RestedXP.
+	if Integrated() then
+		API.Cancel(OWNER)
+		target, targetTitle = nil, nil
+		Suppress()
+		return
+	end
 	local frontend = AdventureGuideForever and AdventureGuideForever.API
-	if Integrated() or (frontend and type(frontend.RestedXPNativeUI) == "function" and frontend.RestedXPNativeUI()) then
+	if frontend and type(frontend.RestedXPNativeUI) == "function" and frontend.RestedXPNativeUI() then
 		Clear()
 		return
 	end
@@ -199,7 +193,12 @@ function ns.RefreshRestedXP()
 end
 
 hooksecurefunc(ns, "JourneyChanged", function()
-	if not API.CurrentStop(OWNER) then
+	if API.CurrentStop(OWNER) then
+		return
+	end
+	if hooked and ns.db and Integrated() then
+		Suppress()
+	else
 		Restore()
 	end
 end)
