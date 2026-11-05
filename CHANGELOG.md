@@ -12,6 +12,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.22.31] - 2026-11-05
 - **Right-click the tracker header to attach, detach or lock it.** The section header in the quest tracker now opens a small menu with Attach to quest tracker and Lock the tracker, the same switches as in the settings, so moving the section no longer needs a trip to the options.
 - **The gold step area shows even with the game's quest areas off.** Questie's Questie and pfQuest objective types hide the game's blue quest areas, and with them Shortest Path's gold area for the step you stand in. The world map now draws that gold area either way, and the minimap keeps the step's ring while the game's areas are hidden.
 
