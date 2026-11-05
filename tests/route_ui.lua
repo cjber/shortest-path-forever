@@ -168,19 +168,25 @@ assert(Minimap.questBlobOutside == BLUE .. "Outside", "the stock quest blue come
 posX = 0
 refresh()
 assert(count(areaTemplate) == 0 and count(goalTemplate) == 1, "the client's outside answer keeps the stop")
--- Back inside, a map that shows no quests (QuestBlobPinMixin's mapAllowsBlobs) keeps the stop; so does a player
--- who turned quest objectives off on the map.
+-- Back inside, a map that shows no quests (QuestBlobPinMixin's mapAllowsBlobs) keeps the stop.
 insideQuestBlob[7] = true
 mapID = 1414
 fireEvent("PLAYER_INSIDE_QUEST_BLOB_STATE_CHANGED")
 assert(count(areaTemplate) == 0 and count(goalTemplate) == 1, "a continent map draws no area")
 mapID = 14
+-- The game's quest areas hidden (questPOI 0, as Questie's objective types set it): our own gold area still draws on
+-- the world map, and the minimap, whose own blob the client may then leave out, keeps the stop's ring (#375).
 cvars.questPOI = "0"
 refresh()
-assert(count(areaTemplate) == 0 and count(goalTemplate) == 1, "no area with quest objectives hidden")
+assert(count(areaTemplate) == 1 and count(goalTemplate) == 0, "the gold area draws with quest areas hidden")
+mini.revision = nil
+fireEvent("PLAYER_INSIDE_QUEST_BLOB_STATE_CHANGED")
+assert(not mini.Goal.hidden, "the minimap keeps the stop's ring with quest areas hidden")
 cvars.questPOI = "1"
-refresh()
-assert(count(areaTemplate) == 1 and count(goalTemplate) == 0, "the area is back on its zone")
+mini.revision = nil
+fireEvent("PLAYER_INSIDE_QUEST_BLOB_STATE_CHANGED")
+assert(count(areaTemplate) == 1 and count(goalTemplate) == 0, "the area stays on its zone")
+assert(mini.Goal.hidden, "with quest areas shown, the minimap's ring steps aside again")
 assert(Minimap.questBlobOutside == GOLD .. "Outside", "back inside, the blob is gold again")
 -- Clearing the journey while still inside clears the area and hands the blue back.
 assert(api.Cancel("Test"))

@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **The gold step area shows even with the game's quest areas off.** Questie's Questie and pfQuest objective types hide the game's blue quest areas, and with them Shortest Path's gold area for the step you stand in. The world map now draws that gold area either way, and the minimap keeps the step's ring while the game's areas are hidden.
+
 ## [1.22.30] - 2026-11-05
 
 - **One arrow on an Adventure Guide RestedXP guide.** While Adventure Guide Forever steers a RestedXP guide, RestedXP's own arrow stays hidden again and our compass and arrow point at the step Adventure Guide hands us, so you no longer see two arrows. Choosing RestedXP's own window in Adventure Guide leaves its arrow to RestedXP, and without Adventure Guide, turning off Follow RestedXP guides keeps its arrow.

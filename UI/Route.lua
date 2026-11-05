@@ -340,13 +340,14 @@ function RoutePin:OnCanvasSizeChanged()
 end
 
 -- Standing in the area of a quest the held stop names, on a map that shows it: the game's own area is drawn there
--- in the stop's place. The client's own conditions hold (QuestBlobPinMixin:Refresh): quest objectives are shown,
--- and the map is a zone or smaller (MapUtil.ShouldMapTypeShowQuests). A client without the widget draws none.
+-- in the stop's place, on a map that is a zone or smaller (MapUtil.ShouldMapTypeShowQuests). The pin is our own, so it
+-- draws whether or not the stock quest areas are shown (questPOI, which Questie's objective types turn off, #375).
+-- A client without the widget draws none.
 ---@param map SPFMapCanvas
 ---@return boolean
 local function DrawArea(map)
 	local mapID = map:GetMapID()
-	if areaSupported == false or goal.corpse or not ns.StopInQuestArea(goal) or not GetCVarBool("questPOI") then
+	if areaSupported == false or goal.corpse or not ns.StopInQuestArea(goal) then
 		return false
 	end
 	local x, y = MapPosition(goal, mapID)
@@ -548,9 +549,11 @@ local function DrawMinimap(self)
 	view.x, view.y, view.map, view.radius, view.facing = x, y, map, radius, facing
 	view.width, view.height, view.scale, view.square = width, height, scale, square
 	-- Standing in the area of a quest the held stop names: the game's own blob wears the guide's gold there, and the
-	-- stop's ring and the line to it step aside. A stop with no quest has no blob, so it keeps its ring and line.
-	local area = goal ~= nil and not goal.corpse and ns.StopInQuestArea(goal)
-	ns.SetAreaBlob(area)
+	-- stop's ring and the line to it step aside. A stop with no quest has no blob, so it keeps its ring and line, and so
+	-- does every stop while the game's quest areas are hidden (questPOI off), when the client may draw no blob (#375).
+	local inside = goal ~= nil and not goal.corpse and ns.StopInQuestArea(goal)
+	ns.SetAreaBlob(inside)
+	local area = inside and GetCVarBool("questPOI")
 	-- A goal with a known mark wears the wider ring (ns.SetJourneyRoute).
 	view.goal, view.goalRadius = not area and goal or nil, (goal and goal.look and MINIMAP_RING or MINIMAP_GOAL) / 2
 	local gx, gy, edge = Strokes.Minimap(journeyStrokes, area and {} or paths, view)
