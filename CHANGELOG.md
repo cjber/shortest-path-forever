@@ -13,6 +13,9 @@ optional `### For addon authors` subsection after a version's player bullets.
 ## [Unreleased]
 - **You appear once on leaderboards with a two-part name.** A Forever name like Hel Io no longer shows twice, once as you and once as a reported player with the same value.
 
+## [1.22.40] - 2026-11-06
+- **A dungeon name in `/way` goes to its entrance's zone.** `/way wail 50 50` answered "no zone called wail" because only zone names were searched. A name that matches only a dungeon or raid, such as Wailing Caverns, now plans the journey to the outdoor zone its entrance sits in, The Barrens, and a name that could be two dungeons names both instead of guessing.
+
 ## [1.22.39] - 2026-11-06
 
 - **The walking route line can be another colour.** The line on the minimap and the world map has a colour choice in `/path` settings, with gold, white, cyan, green and magenta presets. Gold stays the default, so nothing changes unless you pick one. Thanks to Oxds on CurseForge for the idea.

@@ -9,7 +9,8 @@ local function equal(actual, expected, label)
 end
 
 -- A world (1) holding a continent (10) whose zones are Elwynn Forest (1) and Westfall (2), plus a city that shares
--- its name with a micro map, two zones with a common start, and a zone whose name starts with "The".
+-- its name with a micro map, two zones with a common start, a zone whose name starts with "The", and dungeons inside
+-- them, one behind a micro map and two sharing a start.
 local maps = {
 	[1] = { mapID = 1, name = "Elwynn Forest", mapType = 3, parentMapID = 10 },
 	[2] = { mapID = 2, name = "Westfall", mapType = 3, parentMapID = 10 },
@@ -18,10 +19,16 @@ local maps = {
 	[5] = { mapID = 5, name = "Duskwood", mapType = 3, parentMapID = 10 },
 	[6] = { mapID = 6, name = "Dun Morogh", mapType = 3, parentMapID = 10 },
 	[7] = { mapID = 7, name = "The Hinterlands", mapType = 3, parentMapID = 10 },
+	[8] = { mapID = 8, name = "The Barrens", mapType = 3, parentMapID = 10 },
+	[20] = { mapID = 20, name = "Wailing Caverns", mapType = 4, parentMapID = 8 },
+	[21] = { mapID = 21, name = "Shadowfang Keep", mapType = 4, parentMapID = 8 },
+	[22] = { mapID = 22, name = "Shadow Labyrinth", mapType = 4, parentMapID = 5 },
+	[23] = { mapID = 23, name = "The Stockade", mapType = 4, parentMapID = 3 },
 	[10] = { mapID = 10, name = "Eastern Kingdoms", mapType = 2, parentMapID = 100 },
 	[100] = { mapID = 100, name = "Azeroth", mapType = 1, parentMapID = 0 },
 }
 env.Enum.UIMapType.Zone = 3
+env.Enum.UIMapType.Dungeon = 4
 env.C_Map.GetMapInfo = function(id)
 	return maps[id]
 end
@@ -116,6 +123,13 @@ equal(parse("west 30 40").map, 2, "a name a zone begins wins over one inside ano
 way = parse("or 30 40")
 equal(way.map, nil, "a name inside several zones is refused")
 equal(way.err, "or could be Dun Morogh, Elwynn Forest, Stormwind City.", "and each is named")
+-- Dungeon names mean the outdoor zone holding their entrance.
+equal(parse("wail 50 50").map, 8, "a dungeon a name begins means its outdoor zone")
+equal(parse("Wailing Caverns 50 50").map, 8, "a dungeon named in full means its outdoor zone")
+way = parse("shadow 50 50")
+equal(way.map, nil, "a name two dungeons begin is refused")
+equal(way.err, "shadow could be Shadow Labyrinth, Shadowfang Keep.", "and both dungeons are named")
+equal(parse("stockade 50 50").map, 1, "a dungeon through a micro map still means a zone")
 way = parse(".5 50.")
 equal(way.x, 0.005, "a leading point reads as TomTom's tonumber reads it")
 equal(way.y, 0.5, "a trailing point too")
