@@ -12,6 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.22.34] - 2026-11-06
+- **A zeppelin is drawn as a zeppelin, not a boat.** Zeppelin docks borrowed the game's boat icon on the world map, the compass and the minimap, so a tower sending you to Stranglethorn looked like a ferry. Zeppelins now have their own airship icon; boats keep the ferry one.
+- **Every zeppelin tower stays hoverable as you zoom the map.** Zooming into Durotar and hovering the towers outside Orgrimmar could make one of their pins vanish, losing its tooltip and route highlight until the map was reopened. Re-clustering on a zoom now keeps every tower in that town addressable at every zoom level.
+
 ## [1.22.33] - 2026-11-05
 - **A mage in your group can shorten a journey.** An opt-in Party mage portals setting adds "ask <mage> for a portal" to a capital city when that beats walking there, using the capital portals in the shipped mage teleport data. It only appears while another mage is in your party or raid, only for the capitals you tick, and only for your faction. It is off by default, and the hop disappears on the next plan when the mage leaves or you turn the setting off.
 
