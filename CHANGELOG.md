@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves. API changes other addons' aut
 optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
+
+## [1.22.36] - 2026-11-06
 - **A cleaner zeppelin icon.** Zeppelin docks, route steps, the compass and the minimap now draw a bolder zeppelin with thick lines and a black outline, matching the boat icon beside it, so it stays readable at minimap size.
 
 ## [1.22.35] - 2026-11-06
