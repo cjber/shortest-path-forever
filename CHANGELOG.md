@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.22.38] - 2026-11-06
+
 - **The world map's pins look like the client's own.** Portals wear the game's teleport marker instead of a Legion-era door, and the extra glow rings around hovered route ends, journey stops and super-tracked flight points are gone, leaving each pin with only the art the game gives it.
 
 ## [1.22.37] - 2026-11-06
