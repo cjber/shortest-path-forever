@@ -447,7 +447,198 @@ env.SlashCmdList.SPFNEAR("")
 assert(mapOpens == opens and menuEntries == entries, "over an open map no menu of ours opens either")
 assert(printed[#printed]:find("tracking menu", 1, true), "it points at the map's tracking menu")
 gamepad, env.WorldMapFrame = false, nil
+-- The planner's own travel cost chooses between the shortlist: an Alliance hunter in Auberdine takes the Teldrassil
+-- boat to Darnassus rather than walk to Kaerbrus, though Kaerbrus is the closest by straight line.
+do
+	local driver = assert(loadfile("tests/journey_driver.lua"))()
+	local travelEnv, worldNs = driver.env, driver.ns
+	travelEnv._G = travelEnv
+	driver.load("Core/SafeCall.lua")
+	driver.load("UI/Looks.lua")
+	driver.load("Core/API.lua")
+	for _, file in ipairs({
+		"Data/Routes.lua",
+		"Data/Transports.lua",
+		"Data/Taxi.lua",
+		"Data/Portals.lua",
+		"Data/Walks.lua",
+	}) do
+		driver.load(file)
+	end
+	local project = travelEnv.C_Map.GetWorldPosFromMapPos
+	local kalimdor = { [1438] = true, [1439] = true, [1448] = true, [1457] = true }
+	travelEnv.C_Map.GetWorldPosFromMapPos = function(map, point)
+		local _, world = project(map, point)
+		return kalimdor[map] and 1 or (map == 2 and 0 or map), world
+	end
+	local function ui(point)
+		return 0.5 - point.y / 50000, 0.5 - point.x / 50000
+	end
+	-- Auberdine, Kaerbrus on the Felwood border, Dolanaar and Darnassus, at the issue's straight-line distances.
+	local auberdine = { x = 6341.38, y = 557.68 }
+	local playerX, playerY = ui(auberdine)
+	travelEnv.C_Map.GetBestMapForUnit = function()
+		return 1439
+	end
+	travelEnv.C_Map.GetPlayerMapPosition = function()
+		return {
+			GetXY = function()
+				return playerX, playerY
+			end,
+		}
+	end
+	driver.move({ map = 1, x = auberdine.x, y = auberdine.y, z = 0 })
+	-- The Teldrassil boat is at Auberdine's dock: one boat ride away is what the planner should see.
+	worldNs.serverTime = 0
+	assert(worldNs.Timetable.Sighted(293, { epoch = -206368, seen = 0, source = "you" }))
+	local travelTimers = {}
+	travelEnv.C_Timer = {
+		After = function(_, fn)
+			travelTimers[#travelTimers + 1] = fn
+		end,
+	}
+	travelEnv.debugprofilestop = function()
+		return 0
+	end
+	travelEnv.MenuResponse = { Open = 1, CloseAll = 4 }
+	travelEnv.SlashCmdList = {}
+	local travelTracking = {}
+	travelEnv.Menu.ModifyMenu = function(tag, callback)
+		travelTracking[tag] = callback
+	end
+	local function spawn(zone, point)
+		local x, y = ui(point)
+		return zone, { x * 100, y * 100 }
+	end
+	local function place(zone, point)
+		local key, spot = spawn(zone, point)
+		return { [key] = { spot } }
+	end
+	local npcs = {
+		[5501] = { "Kaerbrus", "Hunter Trainer", place(1448, { x = 6341.38, y = -1885 }), "A", 16, n = 5 },
+		[5502] = { "Dazalar", "Hunter Trainer", place(1438, { x = 9347, y = 2200 }), "A", 16, n = 5 },
+		[5503] = {
+			"Darnassus hunter trainer",
+			"Hunter Trainer",
+			place(1457, { x = 9946.25, y = 2612.97 }),
+			"A",
+			16,
+			n = 5,
+		},
+	}
+	local npcIds = { 5501, 5502, 5503 }
+	travelEnv.TweaksForever = {
+		API = {
+			version = 2,
+			Trainers = function()
+				local trainerList = {}
+				for _, id in ipairs(npcIds) do
+					trainerList[#trainerList + 1] = { npc = id }
+				end
+				return trainerList
+			end,
+		},
+	}
+	travelEnv.LibQuestieDB = {
+		RequireContract = function(version)
+			return version == 2
+		end,
+		Enum = { byExpansion = { Classic = { npcFlags = flags } } },
+		Support = {
+			Get = function(name)
+				assert(name == "ZoneDB")
+				return {
+					private = {
+						areaIdToUiMapId = "return {[1438]=1438,[1439]=1439,[1448]=1448,[1457]=1457}",
+						subZoneToParentZone = "return {}",
+					},
+				}
+			end,
+		},
+		Npc = {
+			GetAllIds = function()
+				return npcIds
+			end,
+			GetAll = function(id)
+				return npcs[id]
+			end,
+		},
+	}
+	local routed
+	local api = travelEnv.ShortestPathForever.API
+	api.Navigate = function(_, map, x, y, title)
+		routed = { map = map, x = x, y = y, title = title }
+		return true
+	end
+	local estimates = 0
+	local estimate = api.Estimate
+	api.Estimate = function(...)
+		estimates = estimates + 1
+		return estimate(...)
+	end
+	driver.load("UI/MenuModifier.lua")
+	driver.load("UI/Nearby.lua")
+	local guard = 0
+	while #travelTimers > 0 do
+		guard = guard + 1
+		assert(guard < 1000, "the QuestieDB index settles")
+		table.remove(travelTimers, 1)()
+	end
+	assert(worldNs.NearbyServices.State() == "ready")
+	local nearest = worldNs.NearbyServices.Nearest("class", { map = 1, x = auberdine.x, y = auberdine.y })
+	assert(nearest.id == 5501, "Kaerbrus is the closest by straight line")
+	local function travelMenu()
+		local root = { children = {} }
+		function root.CreateTitle(_root) end
+		function root.CreateButton(_root, text, callback)
+			local button = { text = text, callback = callback, children = {} }
+			function button.CreateTitle(_button) end
+			function button.CreateButton(_button, childText, childCallback)
+				local child = {
+					text = childText,
+					callback = childCallback,
+					children = {},
+					SetEnabled = function() end,
+					SetScrollMode = function() end,
+				}
+				function child.CreateButton(_child) end
+				function child.CreateTitle(_child) end
+				button.children[#button.children + 1] = child
+				return child
+			end
+			button.SetEnabled = function() end
+			button.SetScrollMode = function() end
+			root.children[#root.children + 1] = button
+			return button
+		end
+		return root
+	end
+	local function build()
+		local root = travelMenu()
+		travelTracking.MENU_WORLD_MAP_TRACKING(nil, root)
+		local services = root.children[1]
+		assert(services and services.text == "Nearby services")
+		for _, child in ipairs(services.children) do
+			if child.text == "Class trainer" then
+				return child
+			end
+		end
+		error("no class trainer entry")
+	end
+	build()
+	build()
+	assert(estimates == 0, "building or refreshing the menu plans nothing")
+	assert(build().callback() == travelEnv.MenuResponse.CloseAll)
+	assert(routed.title == "Darnassus hunter trainer", "the boat's Teldrassil trainer beats the short walk to Kaerbrus")
+	assert(estimates == 3, "only the clicked service's shortlist is planned")
+	local detail = api.EstimateDetail(1439, playerX, playerY, routed.map, routed.x, routed.y)
+	local boat = false
+	for _, leg in ipairs(detail.legs) do
+		boat = boat or leg.mode == "boat"
+	end
+	assert(boat, "the chosen trainer is reached by boat")
+end
 print(
 	"nearby: installed QuestieDB contract, sliced loading, faction/class/specialty, "
-		.. "real map-menu callbacks and UI-coordinate dispatch: ok"
+		.. "real map-menu callbacks, UI-coordinate dispatch and travel-cost choice: ok"
 )

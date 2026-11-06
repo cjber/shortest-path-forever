@@ -45,17 +45,34 @@ local function Table(source)
 	local ok, value = pcall(chunk)
 	return ok and type(value) == "table" and value or nil
 end
-local function Nearest(key, world, specialty)
-	local best, distance
+-- A service's closest few by straight line: enough to include the one a boat or flight reaches sooner than the
+-- closest walk, without planning every spawn on the continent.
+local SHORTLIST = 5
+
+local function Shortlist(key, world, specialty, limit)
+	local list, gaps = {}, {}
 	for _, place in ipairs(index[key] or {}) do
 		if place.world.map == world.map and (not specialty or place.specialty == specialty) then
-			local d = (place.world.x - world.x) ^ 2 + (place.world.y - world.y) ^ 2
-			if not distance or d < distance or (d == distance and place.id < best.id) then
-				best, distance = place, d
+			local gap = (place.world.x - world.x) ^ 2 + (place.world.y - world.y) ^ 2
+			local last = #list
+			if last < limit or gap < gaps[last] or (gap == gaps[last] and place.id < list[last].id) then
+				local at = last + 1
+				while at > 1 and (gaps[at - 1] > gap or (gaps[at - 1] == gap and list[at - 1].id > place.id)) do
+					at = at - 1
+				end
+				table.insert(list, at, place)
+				table.insert(gaps, at, gap)
+				if #list > limit then
+					list[#list], gaps[#gaps] = nil, nil
+				end
 			end
 		end
 	end
-	return best
+	return list
+end
+
+local function Nearest(key, world, specialty)
+	return Shortlist(key, world, specialty, 1)[1]
 end
 local function Navigate(key, place)
 	if not place then
@@ -199,12 +216,40 @@ local function Build()
 	end
 	C_Timer.After(0, Pump)
 end
-local function PlayerWorld()
+-- The player's own map coordinates, which the public estimate takes.
+local function PlayerUi()
 	local map = C_Map.GetBestMapForUnit("player")
 	local point = map and C_Map.GetPlayerMapPosition(map, "player")
 	if map and point then
-		return ns.WorldPoint(map, point:GetXY()) -- multi-value: x and y
+		local x, y = point:GetXY() -- multi-value: x and y
+		return map, x, y
 	end
+end
+local function PlayerWorld()
+	local map, x, y = PlayerUi()
+	if map then
+		return ns.WorldPoint(map, x, y)
+	end
+end
+-- The chosen place: the closest few by straight line, then the cheapest of those by the planner's own journey cost.
+-- A boat or flight can beat a shorter walk across the hills. Planned here, on the click, so opening or refreshing a
+-- menu never starts a plan, and only the shortlist is planned.
+local function TravelNearest(key, world, specialty)
+	local candidates = Shortlist(key, world, specialty, SHORTLIST)
+	local best = candidates[1]
+	local api = ShortestPathForever and ShortestPathForever.API
+	local map, x, y = PlayerUi()
+	if #candidates < 2 or not (api and api.Estimate and map) then
+		return best
+	end
+	local cheapest, seconds
+	for _, place in ipairs(candidates) do
+		local estimate = api.Estimate(map, x, y, place.map, place.x, place.y)
+		if estimate and (not seconds or estimate < seconds) then
+			cheapest, seconds = place, estimate
+		end
+	end
+	return cheapest or best
 end
 local function SpecialtyNames(key, world)
 	local names = {}
@@ -232,19 +277,18 @@ local function AddService(root, service, world)
 		local submenu = root:CreateButton(service.label)
 		submenu:SetScrollMode(MENU_ROW * MENU_ROWS)
 		for _, specialty in ipairs(SpecialtyNames(service.key, world)) do
-			local specialist = Nearest(service.key, world, specialty)
 			submenu:CreateButton(specialty, function()
-				return Pick(service.key, specialist)
+				return Pick(service.key, TravelNearest(service.key, world, specialty))
 			end)
 		end
 		submenu:CreateButton(L["Nearest"], function()
-			return Pick(service.key, place)
+			return Pick(service.key, TravelNearest(service.key, world))
 		end)
 		return
 	end
 	local label = place and service.label or L["%s — unavailable here"]:format(service.label)
 	local entry = root:CreateButton(label, function()
-		return Pick(service.key, place)
+		return Pick(service.key, TravelNearest(service.key, world))
 	end)
 	entry:SetEnabled(place ~= nil)
 end
@@ -336,7 +380,7 @@ ns.Init(function()
 		if key ~= "" and state == "ready" and world then
 			for _, service in ipairs(SERVICES) do
 				if service.key == key then
-					Navigate(key, Nearest(key, world))
+					Navigate(key, TravelNearest(key, world))
 					return
 				end
 			end
