@@ -22,6 +22,8 @@ local DEFAULTS = {
 	mapPinScale = 100,
 	flightPinScale = 100,
 	minimapPinScale = 100,
+	-- The walking route line's preset: gold, the client's own marker colour.
+	routeColor = "gold",
 	otherFaction = false,
 	tracker = true,
 	alerts = true,

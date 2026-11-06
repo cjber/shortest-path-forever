@@ -347,7 +347,12 @@ local function DrivePins(label)
 end
 
 local function SettingValues(default)
-	return type(default) == "number" and { 0, 600 } or { true, false }
+	if type(default) == "number" then
+		return { 0, 600 }
+	elseif type(default) == "string" then
+		return { default, default == "gold" and "cyan" or "gold" }
+	end
+	return { true, false }
 end
 
 local function DriveSettings(label)
@@ -390,7 +395,11 @@ local function DriveSettingsPages(label)
 		stats.rows = stats.rows + 1
 		Run(("%s settings page %s"):format(label, setting.key), function()
 			local value = setting:GetValue()
-			setting:SetValue(type(value) == "number" and (value == 0 and 600 or 0) or not value)
+			if type(setting.default) == "string" then
+				setting:SetValue(value == "gold" and "cyan" or "gold")
+			else
+				setting:SetValue(type(value) == "number" and (value == 0 and 600 or 0) or not value)
+			end
 			Flush()
 		end)
 	end

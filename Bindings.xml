@@ -1,0 +1,5 @@
+<Bindings>
+	<Binding name="CLICK ShortestPathForeverTravelToPinButton:LeftButton" header="BINDING_HEADER_SHORTESTPATHFOREVER" category="ADDONS"/>
+	<Binding name="CLICK ShortestPathForeverTravelToTrackedQuestButton:LeftButton" category="ADDONS"/>
+	<Binding name="CLICK ShortestPathForeverClearJourneyButton:LeftButton" category="ADDONS"/>
+</Bindings>

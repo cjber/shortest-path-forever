@@ -240,6 +240,27 @@ refreshMap()
 assert(showing() == hovered and lineCreations == before)
 ns.HoverTransportRoutes(transport, nil)
 assert(showing() == 0, "and hide again")
+
+-- The walking line's colour is a preset: repainting reaches both painters without replanning the journey.
+posX, posY, posMap = 0, 0, 1414
+assert(api.NavigateRoute("Colour", { { map = 1414, x = 0.02, y = 0.02, title = "Colour" } }))
+settle()
+local cyan
+for _, choice in ipairs(ns.RouteColors) do
+ if choice.key == "cyan" then cyan = choice.color end
+end
+ns.SetRouteColor("cyan")
+settle()
+local red, green, blue = cyan:GetRGBA()
+for _, owner in ipairs({ active[lineTemplate][1], mini }) do
+ assert(owner.used > 0, "the route still has strokes")
+ for i = 1, owner.used do
+  local colour = owner.lines[i].color
+  assert(colour[1] == red and colour[2] == green and colour[3] == blue, "the walking line wears the chosen colour")
+ end
+end
+assert(api.Cancel("Colour"))
+ns.SetRouteColor("gold")
 assert(#errors == 0, table.concat(errors, "\n"))
 print("route_ui: shared stop button, pooled stroke pairs, minimap stop mark and hovered transport routes ok")
 ]]))()

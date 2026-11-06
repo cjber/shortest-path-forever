@@ -22,6 +22,30 @@ local module
 local ModuleMixin = { headerText = L["Boats"] }
 local HEADER = { boat = L["Boats"], zeppelin = L["Boats"], lift = L["Lifts"], tram = L["Deeprun Tram"] }
 
+-- The shared host builds every section header's menu (UI/TrackerHost.lua) and this addon's departures option is not
+-- its business, so the one menu opener it calls is decorated here: a section showing departures also offers to hide
+-- them. The host's own attach and lock entries are built first and stay as they are.
+local function HasDepartures()
+	return module ~= nil and (module.dockID ~= nil or module.riding ~= nil)
+end
+
+local function HideDepartures()
+	ns.SetOption("tracker", false)
+end
+
+local openMenu = ns.ContextMenu
+if type(openMenu) == "function" then
+	---@diagnostic disable-next-line: duplicate-set-field -- the host calls this field; the wrapper adds one entry
+	ns.ContextMenu = function(owner, generator)
+		return openMenu(owner, function(menuOwner, root)
+			generator(menuOwner, root)
+			if HasDepartures() and module.GetContextMenuParent and owner == module:GetContextMenuParent() then
+				root:CreateButton(L["Hide departures"], HideDepartures)
+			end
+		end)
+	end
+end
+
 local function OpenDockMap(dockID)
 	local location = dockID and ns.DockLocation(dockID)
 	ns.OpenWorldMap(location and location.uiMap)

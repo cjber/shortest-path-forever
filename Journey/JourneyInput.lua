@@ -2,6 +2,13 @@
 local ns = select(2, ...)
 local L = ns.L
 
+-- The bindings UI reads these names from the global namespace. They are set here from L so each locale translates
+-- them with the rest of the addon; Bindings.xml lists the hidden buttons they click.
+_G.BINDING_HEADER_SHORTESTPATHFOREVER = L["Shortest Path Forever"]
+_G["BINDING_NAME_CLICK ShortestPathForeverTravelToPinButton:LeftButton"] = L["Travel to my map pin"]
+_G["BINDING_NAME_CLICK ShortestPathForeverTravelToTrackedQuestButton:LeftButton"] = L["Travel to my tracked quest"]
+_G["BINDING_NAME_CLICK ShortestPathForeverClearJourneyButton:LeftButton"] = L["Clear journey"]
+
 -- A place inside a dungeon or raid has no walking map: from outside, a journey there goes to the instance's door
 -- (Data/Portals.lua ns.Entrances) and arrives when you go in. The door keeps the stop it stands for (`stop`), its
 -- name, quest and title; areas and holds drawn inside the instance stay behind. Inside, the point stays as it is.
@@ -117,6 +124,35 @@ function ns.JourneyToMapPoint(uiMapID, x, y, label)
 	return true
 end
 
+-- The client's own map pin (the user waypoint a player drops from the map) as a journey, for the key binding a
+-- controller player has instead of Shift-click.
+---@return boolean
+function ns.JourneyToUserWaypoint()
+	if not ns.db.journey then
+		ns.Print(L["Journeys are off. Turn on Shift-click to plan journeys in settings."])
+		return false
+	end
+	local waypoint = C_Map.GetUserWaypoint()
+	local position = waypoint and waypoint.position
+	if not (position and waypoint.uiMapID) then
+		ns.Print(L["no map pin is set."])
+		return false
+	end
+	return ns.JourneyToMapPoint(waypoint.uiMapID, position.x, position.y)
+end
+
+-- The quest the client is super-tracking, as the Shift-click on its tracker block would plan it.
+---@return boolean
+function ns.JourneyToTrackedQuest()
+	local questID = C_SuperTrack.GetSuperTrackedQuestID()
+	if not questID or questID == 0 then
+		ns.Print(L["no quest is tracked."])
+		return false
+	end
+	PlanQuest(questID)
+	return true
+end
+
 local function OnCanvasClick(map, button)
 	if not ns.db.journey or button ~= "LeftButton" or not IsShiftKeyDown() or ChatBoxOpen() then
 		return false
@@ -221,7 +257,21 @@ local function AddQuestMenuEntry(root, questID)
 	end
 end
 
+-- Bindings.xml's CLICK bindings name these hidden buttons, so a key or a controller button reaches the same actions
+-- the map's Shift-click does. A hidden button takes a CLICK binding without drawing anything.
+---@param name string
+---@param onClick fun()
+local function Binding(name, onClick)
+	local button = CreateFrame("Button", name, UIParent)
+	button:SetSize(1, 1)
+	button:Hide()
+	button:SetScript("OnClick", onClick)
+end
+
 ns.Init(function()
+	Binding("ShortestPathForeverTravelToPinButton", ns.JourneyToUserWaypoint)
+	Binding("ShortestPathForeverTravelToTrackedQuestButton", ns.JourneyToTrackedQuest)
+	Binding("ShortestPathForeverClearJourneyButton", ns.ClearJourney)
 	-- Questie owns Shift-click on its icons. Alt-click observes the map cursor
 	-- through our own event frame, including icons that swallow canvas clicks.
 	-- TomTom's map overlay passes LeftButton through; its waypoint gesture uses RightButton.

@@ -2,6 +2,18 @@
 local zoom, mapID, visible = 0, 1414, false
 cursorX, cursorY = 0.5, 0.5
 local providers = {}
+-- The colour dropdown UI/Settings.lua registers for the walking route line; the fixture keeps its shape, not its data.
+function Settings.CreateControlTextContainer()
+	return {
+		Add = noop,
+		GetData = function()
+			return {}
+		end,
+	}
+end
+function Settings.CreateDropdownInitializer(setting)
+	return { kind = "dropdown", setting = setting }
+end
 -- What the addon's map frames (UI/MapCanvas.lua) ask of a frame beyond the shared stub.
 local function frameExtras(f)
 	function f:GetScript(n)

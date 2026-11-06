@@ -15,7 +15,7 @@
 ---@field WalkPlaces table<number, table<string, number[]>>
 ---@field db SPFDatabase
 ---@field charDB SPFCharacterDatabase
----@field Defaults table<string, boolean|number>
+---@field Defaults table<string, boolean|number|string>
 ---@field NearbyServices SPFNearbyServices
 ---@field ProgressJourneyChanged? fun(point: SPFPoint?, reason?: "arrived"|"cleared")
 ---@field PeerStats ForeverPeerStatsNamespace
@@ -197,6 +197,7 @@
 ---@field mapPinScale? number
 ---@field flightPinScale? number
 ---@field minimapPinScale? number
+---@field routeColor? string the walking route line's preset (Route.lua)
 ---@field journeyTracker? boolean
 ---@field arrow? boolean
 ---@field metres? boolean

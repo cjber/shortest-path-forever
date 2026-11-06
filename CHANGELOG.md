@@ -12,6 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **The walking route line can be another colour.** The line on the minimap and the world map has a colour choice in `/path` settings, with gold, white, cyan, green and magenta presets. Gold stays the default, so nothing changes unless you pick one. Thanks to Oxds on CurseForge for the idea.
+- **Controller and keyboard players can bind the journey actions.** Key Bindings > AddOns now has Travel to my map pin, Travel to my tracked quest and Clear journey, so a controller button or a key reaches what used to need a Shift-click, through the same planning the map uses. Thanks to sean16981 for the idea.
+- **The departures switch says what it hides.** The tracker option is now named Show boat, lift and tram departures in the tracker, and right-clicking the section header while departures show has a Hide departures entry that turns the same option off. Thanks to the player who reported it on CurseForge for the report.
+
 ## [1.22.38] - 2026-11-06
 
 - **The world map's pins look like the client's own.** Portals wear the game's teleport marker instead of a Legion-era door, and the extra glow rings around hovered route ends, journey stops and super-tracked flight points are gone, leaving each pin with only the art the game gives it.

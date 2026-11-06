@@ -38,8 +38,12 @@ local env = setmetatable({
 	CreateFrame = function()
 		return {
 			RegisterEvent = function() end,
-			SetScript = function(_, _, fn)
-				mouseEvent = fn
+			SetSize = function() end,
+			Hide = function() end,
+			SetScript = function(_, event, fn)
+				if event == "OnEvent" then
+					mouseEvent = fn
+				end
 			end,
 		}
 	end,

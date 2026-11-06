@@ -77,5 +77,7 @@ Credit for the ideas and reports behind the addon.
 | [Brainc3ll](https://github.com/Brainc3ll) | Eight lines of the French translation, from his Legacy Forever translation (cjber/legacy-forever#99); the rest of `Locales/frFR.lua` and the other languages are machine translated (lines ending `-- mt` in frFR) | |
 | [Mouchoir](https://github.com/Mouchoir) | Found the arrow hiding behind the game's navigation marker when it was turned off, leaving no guidance, and wrote the fix (#224, #223, merged as #225) | Code contributor |
 | [z1ck](https://github.com/z1ck) | Asked for the travel journal to start off, which *Record travel stats* now does (#269, #270) | |
+| Oxds, on CurseForge | Asked for the walking route line's colour to be a choice in `/path` settings (#411) | |
+| sean16981 | Asked for key bindings for the Shift-click journey actions, for controller players (#412) | |
 
 Thanks also to everyone else who reported a bug or asked for a feature, here or on CurseForge.

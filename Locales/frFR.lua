@@ -201,7 +201,6 @@ L["Show portals"] = "Afficher les portails" -- mt
 L["Show routes on the world map"] = "Afficher les routes sur la carte du monde" -- mt
 L["Show the compass"] = "Afficher la boussole" -- mt
 L["Show the flight to take"] = "Afficher le vol à prendre" -- mt
-L["Show the next departures"] = "Afficher les prochains départs" -- mt
 L["Show the next direction and the game's navigation marker."] =
 	"Afficher la prochaine direction et le marqueur de navigation du jeu." -- mt
 L["Show the time left under the compass"] = "Temps restant sous la boussole" -- mt
@@ -384,3 +383,19 @@ L["Stormwind"] = "Hurlevent" -- mt
 L["The mage can open a portal here."] = "Le mage peut ouvrir un portail ici." -- mt
 L["Thunder Bluff"] = "Les Pitons du Tonnerre" -- mt
 L["Undercity"] = "Fossoyeuse" -- mt
+
+L["Shortest Path Forever"] = "Shortest Path Forever"
+L["Travel to my map pin"] = "Voyager vers mon repère de carte"
+L["Travel to my tracked quest"] = "Voyager vers ma quête suivie"
+L["no map pin is set."] = "aucun repère de carte n'est placé."
+L["no quest is tracked."] = "aucune quête n'est suivie."
+L["Walking route colour"] = "Couleur de l'itinéraire à pied"
+L["The walking line on the world map and the minimap."] = "La ligne à pied sur la carte du monde et la minicarte."
+L["Gold"] = "Or"
+L["White"] = "Blanc"
+L["Cyan"] = "Cyan"
+L["Green"] = "Vert"
+L["Magenta"] = "Magenta"
+L["Show boat, lift and tram departures in the tracker"] =
+	"Afficher les départs des bateaux, ascenseurs et du tram dans le suivi"
+L["Hide departures"] = "Masquer les départs"

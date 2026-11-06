@@ -157,6 +157,31 @@ ns.Init(function()
 	)
 	Scale("minimapPinScale", L["Minimap icon size"], L["Sizes transport icons on the minimap."], ns.RefreshMinimapPins)
 
+	-- The walking line's colour, so it stays apart from the herbs and ore a player is gathering.
+	local routeColor = Settings.RegisterAddOnSetting(
+		page,
+		"ShortestPathForever_routeColor",
+		"routeColor",
+		ns.db,
+		Settings.VarType.String,
+		L["Walking route colour"],
+		ns.Defaults.routeColor
+	)
+	routeColor:SetValueChangedCallback(function(_, value)
+		ns.SetRouteColor(type(value) == "string" and value or nil)
+	end)
+	settings.routeColor = routeColor
+	local routeColorOptions = Settings.CreateControlTextContainer()
+	for _, choice in ipairs(ns.RouteColors) do
+		routeColorOptions:Add(choice.key, choice.label)
+	end
+	Settings.RegisterInitializer(
+		page,
+		Settings.CreateDropdownInitializer(routeColor, function()
+			return routeColorOptions:GetData()
+		end, L["The walking line on the world map and the minimap."])
+	)
+
 	-- Transport: routes and departure times.
 	Page(L["Transport"])
 	Checkbox(
@@ -176,7 +201,7 @@ ns.Init(function()
 	)
 	Checkbox(
 		"tracker",
-		L["Show the next departures"],
+		L["Show boat, lift and tram departures in the tracker"],
 		L["In the objective tracker while you are near a dock, lift or tram."],
 		ns.RefreshTracker
 	)

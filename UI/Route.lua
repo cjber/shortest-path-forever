@@ -1,5 +1,6 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
+local L = ns.L
 
 local MapCanvas = ns.MapCanvas
 local LINE_TEMPLATE = "ShortestPathForeverRoutePinTemplate"
@@ -28,6 +29,26 @@ local COLORS = {
 	passage = CreateColor(0.85, 0.35, 1),
 	teleport = CreateColor(0.85, 0.35, 1),
 }
+-- The walking route line's presets. Each is bright enough for the dark outline to keep it readable on parchment and
+-- the minimap, and gold is the client's own marker gold, so a fresh install draws what it always did.
+---@class SPFRouteColorChoice
+---@field key string
+---@field label string
+---@field color ColorMixin
+---@type SPFRouteColorChoice[]
+local ROUTE_COLORS = {
+	{ key = "gold", label = L["Gold"], color = NORMAL_FONT_COLOR },
+	{ key = "white", label = L["White"], color = CreateColor(1, 1, 1) },
+	{ key = "cyan", label = L["Cyan"], color = CreateColor(0.2, 0.9, 1) },
+	{ key = "green", label = L["Green"], color = CreateColor(0.3, 1, 0.35) },
+	{ key = "magenta", label = L["Magenta"], color = CreateColor(1, 0.35, 1) },
+}
+ns.RouteColors = ROUTE_COLORS
+---@type table<string, ColorMixin>
+local routeColorByKey = {}
+for _, choice in ipairs(ROUTE_COLORS) do
+	routeColorByKey[choice.key] = choice.color
+end
 local provider, goal, paths, worldPaths, stops, stopIndex
 -- The route's pools on the world map (UI/MapCanvas.lua), made at load.
 ---@type SPFCanvasPool, SPFCanvasPool, SPFCanvasPool
@@ -651,6 +672,25 @@ function ns.RefreshJourneyPreview()
 	end
 end
 
+-- The chosen walking line colour, applied to both painters. An unknown saved value falls back to gold, as a database
+-- written by an older version has none.
+---@param value string?
+function ns.SetRouteColor(value)
+	local chosen = routeColorByKey[value or ""] or routeColorByKey.gold
+	COLORS.walk = chosen
+	geometryRevision = geometryRevision + 1
+	if linePins and WorldMapFrame:IsShown() then
+		for pin in linePins:EnumerateActive() do
+			---@cast pin SPFRoutePin
+			pin:Draw()
+		end
+	end
+	if minimap and minimap:IsShown() then
+		DrawMinimap(minimap)
+		WakeMinimap(minimap)
+	end
+end
+
 ---@param destination SPFPoint?
 ---@param route SPFPlan?
 function ns.SetJourneyRoute(destination, route)
@@ -759,4 +799,5 @@ ns.Init(function()
 		self:SetScript("OnUpdate", nil)
 	end)
 	minimap:Hide()
+	ns.SetRouteColor(ns.db and ns.db.routeColor)
 end)

@@ -36,7 +36,7 @@ local env = setmetatable({
 		NotifyUpdate = function(variable)
 			attachmentNotified = variable
 		end,
-		VarType = { Boolean = "boolean", Number = "number" },
+		VarType = { Boolean = "boolean", Number = "number", String = "string" },
 		RegisterVerticalLayoutCategory = function(name)
 			return {
 				name = name,
@@ -104,6 +104,21 @@ local env = setmetatable({
 			assert(setting.varType == "number" and options)
 			return { kind = "slider", setting = setting, options = options, tooltip = tooltip }
 		end,
+		CreateControlTextContainer = function()
+			local data = {}
+			return {
+				Add = function(_, value, text)
+					data[#data + 1] = { value = value, text = text }
+				end,
+				GetData = function()
+					return data
+				end,
+			}
+		end,
+		CreateDropdownInitializer = function(setting, getData, tooltip)
+			assert(setting.varType == "string" and type(getData) == "function")
+			return { kind = "dropdown", setting = setting, getData = getData, tooltip = tooltip }
+		end,
 		RegisterInitializer = function(target, initializer)
 			if initializer.kind == "button" then
 				if target.name == "Shortest Path Forever" then
@@ -133,6 +148,7 @@ local refreshed, taxiRefreshed, policyChanged, tomtomRefreshed = 0, 0, 0, 0
 local compassMoving = false
 local arrowMoving, arrowScaled = false, nil
 local tomtomFollowRefreshed, ways = 0, {}
+local routeColour = nil
 -- Core/Core.lua's defaults: every row on.
 local ns = {
 	TrackerHost = {
@@ -192,6 +208,7 @@ local ns = {
 		compassTime = false,
 		arrivalSound = false,
 		resumeJourney = false,
+		routeColor = "gold",
 	}, {
 		__index = function()
 			return true
@@ -227,6 +244,16 @@ local ns = {
 	SetCompassBackground = function(value)
 		compassBackdrop = value
 	end,
+	SetRouteColor = function(value)
+		routeColour = value
+	end,
+	RouteColors = {
+		{ key = "gold", label = "Gold" },
+		{ key = "white", label = "White" },
+		{ key = "cyan", label = "Cyan" },
+		{ key = "green", label = "Green" },
+		{ key = "magenta", label = "Magenta" },
+	},
 }
 assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", ns)
 setfenv(assert(loadfile("UI/Settings.lua")), env)("ShortestPathForever", ns)
@@ -243,6 +270,7 @@ local groups = {
 		"mapPinScale",
 		"flightPinScale",
 		"minimapPinScale",
+		"routeColor",
 	},
 	Transport = { "mapRoutes", "otherFaction", "tracker", "share" },
 	["Travel journal"] = { "stats", "statsShare" },
@@ -299,7 +327,7 @@ local order = {
 }
 
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
-assert(#rows == 52, #rows)
+assert(#rows == 53, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -338,6 +366,20 @@ assert(Row("pins").setting.variable == "ShortestPathForever_pins" and Row("pins"
 assert(
 	Row("minimapPins").tooltip
 		== "Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."
+)
+-- The walking line's colour is a preset dropdown, gold by default, and it repaints without replanning.
+local routeColor = Row("routeColor")
+assert(routeColor.kind == "dropdown" and routeColor.setting.default == "gold", "the route line starts gold")
+assert(routeColor.setting.variable == "ShortestPathForever_routeColor", "the choice is saved")
+local choices = routeColor.getData()
+assert(#choices == 5 and choices[1].value == "gold", "gold leads the presets")
+assert(choices[2].text == "White" and choices[5].value == "magenta", "every preset has a label and a key")
+routeColor.setting.onChanged(nil, "cyan")
+assert(routeColour == "cyan", "choosing a preset repaints the walking line")
+-- The departures switch names what it hides, so a player looking for Lifts finds it.
+assert(
+	Row("tracker").setting.name == "Show boat, lift and tram departures in the tracker",
+	"the departures switch names boats, lifts and the tram"
 )
 assert(Row("guideStops").setting.default == true)
 assert(Row("taxiRoute").setting.default == true)
