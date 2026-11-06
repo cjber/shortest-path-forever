@@ -99,9 +99,8 @@ _G.CreateFrame = function(frameType, name, parent, template)
 	local pin = frameExtras(createFrame(frameType, name, parent, template))
 	if type(template) == "string" and template:match("^ShortestPathForever.*PinTemplate$") then
 		pin.Icon = pin:CreateTexture()
-		pin.Glow, pin.Texture, pin.HighlightTexture = pin:CreateTexture(), pin:CreateTexture(), pin:CreateTexture()
-		pin.Glow:Hide()
-		pin.SuperTrackGlow, pin.SuperTrackMarker = pin:CreateTexture(), pin:CreateTexture()
+		pin.Texture, pin.HighlightTexture = pin:CreateTexture(), pin:CreateTexture()
+		pin.SuperTrackMarker = pin:CreateTexture()
 		pin.Disc, pin.Button, pin.Numeral = pin:CreateTexture(), pin:CreateTexture(), pin:CreateTexture()
 		-- The blob widget's own methods (FrameAPIBlob), recorded: the quests drawn since the last DrawNone, and on
 		-- which map.

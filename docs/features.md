@@ -123,14 +123,14 @@ With RestedXP installed, **Resume guide** in Guidance or the Journey header menu
 
 - **Docks on the world map.** Each pier gets the stock ferry icon and each zeppelin tower a matching
   zeppelin, on its zone and continent map. Hover one to see where each boat goes next, when it arrives and
-  when it leaves; the docks it sails to light up. Docks too close to tell apart at the current zoom share
+  when it leaves, with its crossings drawn on the map. Docks too close to tell apart at the current zoom share
   one icon, and its tooltip names each pier by where it lies, and draws its routes on the map.
   Crossings between continents curve from dock to dock on the Azeroth map; closer maps show the sailing path.
 - **On the minimap as well.** Docks, lifts, tram stations and portals appear on the minimap with the same icons
   and tooltips, and vanish at its rim like the game's own tracking icons. The goal you are heading for is the
   exception: beyond the rim, its mark waits on the rim in its direction, a little faded. *Transport* in the minimap's tracking
   menu (or `/path`) turns them off.
-  ![Hovering Auberdine’s piers shows departures and lights destination docks](screenshots/docks.png)
+  ![Hovering Auberdine’s piers shows departures and draws their crossings on the map](screenshots/docks.png)
 
 - **Lifts, the Deeprun Tram and portals.** The Great Lift, Freewind Post, Thunder Bluff and Undercity
   lifts, and both tram trains, count down like the boats (each landing or station is its own stop). The

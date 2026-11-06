@@ -14,7 +14,6 @@ local flightPins
 ---@class SPFAddonFlightPin : SPFCanvasPin
 ---@field Texture Texture
 ---@field HighlightTexture Texture
----@field SuperTrackGlow Texture
 ---@field SuperTrackMarker Texture
 ---@field poiInfo {nodeID: number, name: string, isUndiscovered: boolean, atlasName: string, textureKit?: string}
 local FlightPin = CreateFromMixins(ns.MapCanvas.PinMixin)
@@ -38,7 +37,6 @@ end
 function FlightPin:UpdateSuperTracked()
 	local kind, id = C_SuperTrack.GetSuperTrackedMapPin()
 	local tracked = kind == Enum.SuperTrackingMapPinType.TaxiNode and id == self.poiInfo.nodeID
-	self.SuperTrackGlow:SetShown(tracked)
 	self.SuperTrackMarker:SetShown(tracked)
 	return tracked
 end

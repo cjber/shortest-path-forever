@@ -26,7 +26,6 @@ ns.GoalAtlas, ns.StopSize = GOAL_ATLAS, STOP_SIZE
 ---@field Icon Texture
 ---@field Disc Texture
 ---@field Button Texture
----@field Glow Texture
 ---@field Numeral Texture
 ---@field Number FontString
 ---@field stopTitles? string[]
@@ -123,7 +122,6 @@ function GoalPin:OnMouseEnter()
 	if not title or not rows then
 		return
 	end
-	self.Glow:SetShown(self.Disc:IsShown() or self.Icon:IsShown())
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 	-- A shared button names every stop it marks, in order.
 	local stopTitles = self.stopTitles or {}
@@ -155,7 +153,6 @@ function GoalPin:OnMouseEnter()
 end
 
 function GoalPin:OnMouseLeave()
-	self.Glow:Hide()
 	if GameTooltip:IsOwned(self) then
 		GameTooltip:Hide()
 	end
