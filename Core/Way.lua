@@ -10,21 +10,24 @@ local L = ns.L
 
 -- Zone names as the client spells them, folded: the suite's one fold from Forever Core's Core/Text.lua (lower case,
 -- accents gone), then without spaces or punctuation, so "dun garok" finds "Dûn Garok" and "dunmorogh" still finds
--- "Dun Morogh".
+-- "Dun Morogh". Dungeon and raid names fold the same way, but mean the outdoor zone holding their entrance.
 ---@param name string
 ---@return string
 local function Fold(name)
 	return (ns.Text.Fold(name):gsub("[%s%p]", ""))
 end
 
--- Every map under the world the player stands in, by folded name. Built once, on the first /way that names a zone.
+-- Every map under the world the player stands in, by folded name: zones apart from dungeons and raids, so a dungeon
+-- name falls back to the zone holding its entrance. Built once, on the first /way that names a zone.
 ---@type table<string, UiMapDetails>?
 local zones
+---@type table<string, UiMapDetails>?
+local dungeons
 
----@return table<string, UiMapDetails>
-local function Zones()
-	if zones then
-		return zones
+---@return table<string, UiMapDetails>, table<string, UiMapDetails>
+local function Maps()
+	if zones and dungeons then
+		return zones, dungeons
 	end
 	local root = C_Map.GetBestMapForUnit("player")
 	local info = root and C_Map.GetMapInfo(root)
@@ -35,29 +38,38 @@ local function Zones()
 		end
 		root, info = info.parentMapID, parent
 	end
-	local found = {}
+	local found, caves = {}, {}
 	for _, child in ipairs(root and C_Map.GetMapChildrenInfo(root, nil, true) or {}) do
 		local key = Fold(child.name or "")
-		local held = found[key]
-		-- A city and a micro map can share a name; the zone is the one a player means.
-		if key ~= "" and (not held or held.mapType ~= Enum.UIMapType.Zone and child.mapType == Enum.UIMapType.Zone) then
-			found[key] = child
+		if key ~= "" then
+			if child.mapType == Enum.UIMapType.Dungeon then
+				caves[key] = caves[key] or child
+			else
+				local held = found[key]
+				-- A city and a micro map can share a name; the zone is the one a player means.
+				if not held or held.mapType ~= Enum.UIMapType.Zone and child.mapType == Enum.UIMapType.Zone then
+					found[key] = child
+				end
+			end
 		end
 	end
 	if next(found) then
 		zones = found
 	end
-	return found
+	if next(caves) then
+		dungeons = caves
+	end
+	return found, caves
 end
 
--- The map a zone name means: its exact name, the one zone it begins, or else the one zone it is part of, as TomTom
--- reads "barrens" as The Barrens. An error says why there is none.
----@param name string
----@return integer? map, string? error
-local function ZoneMap(name)
-	local key, list = Fold(name), Zones()
+-- The one map in a list a folded key names: its exact name, or the one name it begins, or else the one name it is
+-- part of, as TomTom reads "barrens" as The Barrens. Several matches are the names to list in an error.
+---@param list table<string, UiMapDetails>
+---@param key string
+---@return UiMapDetails? info, string[]? matches
+local function Match(list, key)
 	if list[key] then
-		return list[key].mapID
+		return list[key]
 	end
 	local matches = {}
 	for _, inside in ipairs({ false, true }) do
@@ -72,10 +84,50 @@ local function ZoneMap(name)
 		end
 	end
 	if #matches == 1 then
-		return list[Fold(matches[1])].mapID
+		return list[Fold(matches[1])]
 	end
 	if #matches > 1 then
 		table.sort(matches)
+		return nil, matches
+	end
+end
+
+-- The outdoor zone a dungeon lies in: the nearest ancestor of its map that is a zone, through any micro map.
+---@param mapID integer
+---@return integer?
+local function ZoneOf(mapID)
+	local info = C_Map.GetMapInfo(mapID)
+	while info and info.parentMapID and info.parentMapID ~= 0 do
+		info = C_Map.GetMapInfo(info.parentMapID)
+		if info and info.mapType == Enum.UIMapType.Zone then
+			return info.mapID
+		end
+	end
+end
+
+-- The map a zone name means: its exact name, the one zone it begins, or else the one zone it is part of, as TomTom
+-- reads "barrens" as The Barrens. A dungeon or raid name means the outdoor zone holding its entrance. An error says
+-- why there is none.
+---@param name string
+---@return integer? map, string? error
+local function ZoneMap(name)
+	local key = Fold(name)
+	local list, caves = Maps()
+	local info, matches = Match(list, key)
+	if info then
+		return info.mapID
+	end
+	if matches then
+		return nil, string.format(L["%s could be %s."], name, table.concat(matches, ", "))
+	end
+	info, matches = Match(caves, key)
+	if info then
+		local zone = ZoneOf(info.mapID)
+		if zone then
+			return zone
+		end
+	end
+	if matches then
 		return nil, string.format(L["%s could be %s."], name, table.concat(matches, ", "))
 	end
 	return nil, string.format(L["no zone called %s."], name)
