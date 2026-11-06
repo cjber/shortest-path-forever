@@ -20,7 +20,7 @@ python3 tools/check_generated.py --offline # omit --offline to fetch missing pin
 python3 tools/changelog.py --check
 python3 tools/check_screenshots.py   # an image older than its sources; --record after tools/screenshots.py
 python3 tools/check_menu_scroll.py # menus built from a list scroll (WFA-36); CI runs it in core-shared
-python3 .sloppatrol/gate.py --base origin/main && python3 .sloppatrol/agents.py check
+python3 tools/repo_rules.py   # rules no linter covers; CI runs it in project-rules
 ```
 
 CI's `package` job builds the zip with the release's packager without uploading (`-d -z`) and runs
@@ -76,8 +76,8 @@ before its `v*` tag, since the release publishes it as the notes.
 - Release: load `.agents/skills/release/SKILL.md` when preparing or publishing a release.
   A cloud session cannot push tags: once the version's PR is merged and `.github/workflows/ci.yml` passed on main, start the Release
   workflow on main with `version` (and `commit` for an older main commit); it tags that commit and publishes.
-- Quality: load `.agents/skills/sloppatrol-project/SKILL.md` before cleanup, dead-code or refactoring
-  work.
+- Quality: read the live roots and settled shapes in `.sloppatrol/instructions.md` before cleanup, dead-code or
+  refactoring work.
 - Searches and tracker updates wait until combat ends; no idle `OnUpdate` (the world map view in `UI/MapCanvas.lua` runs
   one only while the map is open, where the map itself runs one).
 - Never stretch art: an icon, atlas or texture is drawn at its native aspect, through `UI/Art.lua` (`Art.Fit`,
