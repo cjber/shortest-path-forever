@@ -274,9 +274,9 @@ check(flight.passThrough and #flight.passThrough == 0, "on a zone a flight point
 clickPin(flight, "LeftButton")
 local kind, id = C_SuperTrack.GetSuperTrackedMapPin()
 check(kind == Enum.SuperTrackingMapPinType.TaxiNode and id == flight.poiInfo.nodeID, "a click super-tracks it")
-check(not flight.SuperTrackGlow.hidden and not flight.SuperTrackMarker.hidden, "wearing the glow and marker")
+check(not flight.SuperTrackMarker.hidden, "wearing the stock marker")
 clickPin(flight, "LeftButton")
-check(C_SuperTrack.GetSuperTrackedMapPin() == nil and flight.SuperTrackGlow.hidden, "a second click lets it go")
+check(C_SuperTrack.GetSuperTrackedMapPin() == nil and flight.SuperTrackMarker.hidden, "a second click lets it go")
 mapID = 1414
 mapTick()
 local above = flights:Acquire({

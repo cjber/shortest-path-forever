@@ -309,7 +309,8 @@ def map_landmarks(canvas, map_id, rect):
     for portal in ordered(data()["portals"]):
         p = point(portal["from"])
         if p and portal["kind"] == "portal" and portal.get("faction", "Alliance") == "Alliance":
-            icon(canvas, "map-icon-suramardoor.tga", *p, size=20)
+            # The map legend's teleport atlas (MapLegendFrameData.lua), fitted by Art.Fit as Map.lua draws it.
+            icon(canvas, "TaxiNode_Continent_Neutral", *p, size=20)
 
 
 @cache
@@ -365,8 +366,6 @@ def map_dock_pins(canvas, map_id, rect, hover):
     hover_point = None
     for x, y, ids, kind in clusters:
         x, y = x + mx, y + my
-        if hover and set(ids) & {7, 9, 17, 25}:
-            canvas.draw(ui.atlas("UI-QuestPoi-OuterGlow"), x - 28, y - 28, 56, 56)
         size = 15 if kind in ("lift", "tram") else 20
         if kind == "zeppelin":
             # Art.Icon draws the addon's own square file whole.
@@ -856,12 +855,6 @@ def compare_map_references(ui, refs):
     comparison_sheet(
         "docks",
         [
-            (
-                "Owner 14: ferry beside Menethil (3x)",
-                enlarged(Image.open(refs / "14.png").crop((590, 230, 674, 297)), 3),
-                "Hover mock: same ferry, destination glow (3x)",
-                enlarged(hover.crop((590, 230, 674, 297)), 3),
-            ),
             (
                 "Owner 14: Auberdine (3x)",
                 enlarged(Image.open(refs / "14.png").crop((130, 135, 175, 175)), 3),

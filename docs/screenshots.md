@@ -24,7 +24,7 @@ pixels never enter product media.
 | `flight.png` | A smooth flight line leaving Stormwind on the Elwynn Forest map |
 | `kalimdor.png` | Auberdine → Menethil → Theramore → Cenarion Hold, Silithus |
 | `darkshore.png` | A measured walk south from Auberdine to the Grove of the Ancients |
-| `docks.png` | Auberdine's clustered piers; arrivals/departures and destination glows |
+| `docks.png` | Auberdine's clustered piers; arrivals/departures and hover highlighting |
 | `stops.png` | A four-stop API route through Thelsamar (three places): the current stop lit like the tracked quest and the later ones plain, action badges on the map's numbered quest buttons |
 | `area.png` | Westfall, standing in a quest's area: the world map draws the game's own area for the quest in gold, with no stop pin or line, cropped to the area |
 | `tracker.png` | Capture 21's five Auberdine → Silithus steps, with the current totals header |
@@ -65,7 +65,8 @@ remains 8,000 ms. The animation uses fixed time steps, never the wall clock.
   the corners, a border as wide as the texture is tall (16 units), and the border laid inward from the edge with
   its brightest row on the edge. The client's own minimap blob is not mocked.
 - `UI/Map.lua` / `UI/Map.xml` supply 20-unit ferry pins, transitive dock clustering,
-  18-unit glow outsets, hover highlighting and tooltip wording. Default map layers
+  hover highlighting and tooltip wording. Portals wear the map legend's teleport atlas,
+  `TaxiNode_Continent_Neutral`, fitted at its own shape. Default map layers
   include zeppelins, lifts, trams, portals and undiscovered Alliance flight points.
   Loading `UI/Map.lua` with LuaJIT stubs confirms `DockPierName(8)` returns
   `Auberdine northeast pier`; the earlier mock hardcoded `north pier`. Hover
@@ -92,7 +93,7 @@ remains 8,000 ms. The animation uses fixed time steps, never the wall clock.
 
 All supplied captures (11–16 and 18–21; no 17 supplied) were inspected. Enlarged
 comparison sheets cover world map (14), Kalimdor (11), Darkshore (13), minimap (18/19),
-tracker (21), compass (20), dock pins/glow and sampled animation frames.
+tracker (21), compass (20), dock pins and sampled animation frames.
 
 The current source differs from these older captures: thinner physical route strokes,
 curved overview crossings, a 360×60 compass ribbon with no panel whose ticks and gold

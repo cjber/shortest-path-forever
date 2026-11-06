@@ -9,7 +9,7 @@ local atlasSizes = {
 	flightmasterferry = { width = 32, height = 32 },
 	["poi-door-arrow-up"] = { width = 13, height = 14 },
 	["poi-door-arrow-down"] = { width = 13, height = 14 },
-	["map-icon-suramardoor.tga"] = { width = 32, height = 32 },
+	TaxiNode_Continent_Neutral = { width = 28, height = 28 },
 	taxinode_alliance = { width = 21, height = 21 },
 	taxinode_horde = { width = 21, height = 21 },
 	taxinode_neutral = { width = 21, height = 21 },
@@ -399,6 +399,11 @@ for _, kind in ipairs({ "boat", "lift", "tram", "portal", "zeppelin", "boat" }) 
 		assert(strip.Stop.texture == ZEPPELIN and strip.Stop.atlas == nil, "the compass draws the zeppelin's own file")
 	elseif kind == "boat" then
 		assert(strip.Stop.atlas == "flightmasterferry" and strip.Stop.texture == nil, "a boat keeps the ferry atlas")
+	elseif kind == "portal" then
+		assert(
+			strip.Stop.atlas == "TaxiNode_Continent_Neutral" and strip.Stop.texture == nil,
+			"a portal wears the map legend's teleport atlas"
+		)
 	end
 end
 stop = { kind = "taxi", id = 26, map = 1, x = 0, y = -100 }

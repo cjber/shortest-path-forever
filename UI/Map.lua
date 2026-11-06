@@ -14,7 +14,8 @@ local TRANSPORT_ATLASES = {
 	boat = "flightmasterferry",
 	lift = "poi-door-arrow-up",
 	tram = "poi-door-arrow-down",
-	portal = "map-icon-suramardoor.tga",
+	-- The map legend's teleport icon (MapLegendFrameData.lua): a 28 by 28 atlas fitted into the pin's box.
+	portal = "TaxiNode_Continent_Neutral",
 }
 -- Half a pin, as a fraction of a zoomed-out map.
 local EDGE = 0.015
@@ -27,7 +28,7 @@ local dockPins, portalPins
 local Docks
 
 -- Boats use the stock ferry atlas and zeppelins their own file. Lifts and the tram take the stock map's floor-change
--- arrows; portals use its arcane door.
+-- arrows; portals the map legend's teleport icon.
 ---@param texture Texture
 ---@param kind SPFMode
 ---@param size number?
@@ -109,7 +110,6 @@ end
 ---@class SPFDockPin : SPFCanvasPin
 ---@field Texture Texture
 ---@field HighlightTexture Texture
----@field Glow Texture
 ---@field cluster? table
 ---@field tooltipElapsed number
 local DockPin = CreateFromMixins(MapCanvas.PinMixin)
@@ -258,7 +258,6 @@ function DockPin:OnMouseEnter()
 		end
 	end
 	ns.HoverTransportRoutes(self, routes)
-	Docks:ShowDestinations(self)
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 	self:RefreshTooltip()
 	self.tooltipElapsed = 0
@@ -277,7 +276,6 @@ end
 
 function DockPin:OnMouseLeave()
 	ns.HoverTransportRoutes(self, nil)
-	Docks:HideDestinations()
 	self:SetScript("OnUpdate", nil)
 	if GameTooltip:IsOwned(self) then
 		GameTooltip:Hide()
@@ -286,7 +284,6 @@ end
 
 function DockPin:OnReleased()
 	self:OnMouseLeave()
-	self.Glow:Hide()
 	self.cluster = nil
 end
 
@@ -303,20 +300,6 @@ function Docks:RemoveAllData()
 	dockPins:ReleaseAll()
 	-- [dockID] = the pin showing it; [key of the cluster's docks] = that pin.
 	self.pinOf, self.pins = {}, {}
-end
-
--- Where the hovered pin's boats go, glowing like the map legend's related pins.
-function Docks:ShowDestinations(pin)
-	for _, dock in ipairs(pin.cluster.docks) do
-		for _, departure in ipairs(ns.Timetable.Departures(dock.id)) do
-			for _, destination in ipairs(departure.to) do
-				local target = self.pinOf[destination]
-				if target and target ~= pin then
-					target.Glow:Show()
-				end
-			end
-		end
-	end
 end
 
 -- The stock map ping (MapPinPingTemplate, SharedMapPoiTemplates.xml): its ring flashes twice while it grows, at
@@ -379,12 +362,6 @@ function Docks:Ping(mapID, x, y)
 	self.ping:SetPosition(x, y)
 	self.ping.animation:Stop()
 	self.ping.animation:Play()
-end
-
-function Docks:HideDestinations()
-	for _, pin in pairs(self.pins) do
-		pin.Glow:Hide()
-	end
 end
 
 -- A dock shows on its zone and every map above it (continent, Azeroth), where both ends of a crossing fit.
