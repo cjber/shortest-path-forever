@@ -257,6 +257,7 @@ function EventUtil.ContinueAfterAllEvents(callback, ...) end
 ---@field TrackerHost? ForeverTrackerHostAPI
 ---@field TrackerOrder? ForeverTrackerOrderAPI the section order, from UI/TrackerOrder.lua
 ---@field TrackerQuestie? ForeverTrackerQuestie Questie's quest list, from UI/TrackerQuestie.lua
+---@field TrackerEqot? ForeverTrackerEqot EQOT's quest list, from UI/TrackerEqot.lua
 ---@field TrackerLock? ForeverTrackerLock the grip and its Lock switch, from UI/TrackerLock.lua
 ---@field TrackerHostSettings? fun(): ForeverTrackerSettings
 ---@field L table<string, string>

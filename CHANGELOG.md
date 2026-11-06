@@ -12,6 +12,9 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.22.35] - 2026-11-06
+- **The journey column steps aside for EQ Objective Tracker.** EQ Objective Tracker hides the game's quest tracker and draws its own list in that same slot, so its quests and the Forever sections drew over each other and neither could be read. The column now asks EQOT where its list is through EQOT's public API and re-places itself below, above or beside it after every redraw, and reads EQOT's own frame the same way when that API is not there. Turn EQOT off and the column goes back where it was.
+
 ## [1.22.34] - 2026-11-06
 - **A zeppelin is drawn as a zeppelin, not a boat.** Zeppelin docks borrowed the game's boat icon on the world map, the compass and the minimap, so a tower sending you to Stranglethorn looked like a ferry. Zeppelins now have their own airship icon; boats keep the ferry one.
 - **Every zeppelin tower stays hoverable as you zoom the map.** Zooming into Durotar and hovering the towers outside Orgrimmar could make one of their pins vanish, losing its tooltip and route highlight until the map was reopened. Re-clustering on a zoom now keeps every tower in that town addressable at every zoom level.
