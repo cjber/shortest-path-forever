@@ -50,33 +50,101 @@ local function Zones()
 	return found
 end
 
+-- A dungeon's or raid's name, with the door that reaches it, so /way reads it like a zone.
+---@class SPFWayMap
+---@field name string
+---@field mapID integer
+---@field entrance? SPFEntrance
+
+-- Every dungeon's and raid's name by its door (Data/Portals.lua ns.Entrances), for a name no outdoor zone has. Built
+-- once, with the zones.
+---@type table<string, SPFWayMap>?
+local instances
+
+---@return table<string, SPFWayMap>
+local function Instances()
+	if instances then
+		return instances
+	end
+	local found = {}
+	for mapID, entrance in pairs(ns.Entrances or {}) do
+		local key = Fold(entrance.name)
+		if key ~= "" then
+			found[key] = { name = entrance.name, mapID = mapID, entrance = entrance }
+		end
+	end
+	instances = found
+	return found
+end
+
+-- The entries a folded name picks from a list: its exact name, the names it begins, or else the names it is part of.
+---@param key string
+---@param list table<string, SPFWayMap|UiMapDetails>
+---@return (SPFWayMap|UiMapDetails)[]
+local function Matches(key, list)
+	if list[key] then
+		return { list[key] }
+	end
+	for _, beginning in ipairs({ true, false }) do
+		local found = {}
+		for folded, entry in pairs(list) do
+			local at = key ~= "" and folded:find(key, 1, true)
+			if at and (not beginning or at == 1) then
+				found[#found + 1] = entry
+			end
+		end
+		if found[1] then
+			return found
+		end
+	end
+	return {}
+end
+
+-- The outdoor zone a matched name stands for: a zone as itself, a dungeon by the zone its door stands in
+-- (Data/Portals.lua ns.Entrances), or another instance map by its nearest parent zone. The map itself when none.
+---@param entry SPFWayMap|UiMapDetails
+---@return integer
+local function Outdoor(entry)
+	local entrance = (entry --[[@as SPFWayMap]]).entrance
+	if entrance then
+		local zone = ns.ZoneMap(entrance.map, entrance.x, entrance.y)
+		local zoneInfo = zone and C_Map.GetMapInfo(zone)
+		if zone and zoneInfo and zoneInfo.mapType == Enum.UIMapType.Zone then
+			return zone
+		end
+		return entry.mapID
+	end
+	local info = C_Map.GetMapInfo(entry.mapID)
+	while info and info.mapType ~= Enum.UIMapType.Zone and info.parentMapID and info.parentMapID ~= 0 do
+		info = C_Map.GetMapInfo(info.parentMapID)
+	end
+	if info and info.mapType == Enum.UIMapType.Zone then
+		return info.mapID
+	end
+	return entry.mapID
+end
+
 -- The map a zone name means: its exact name, the one zone it begins, or else the one zone it is part of, as TomTom
--- reads "barrens" as The Barrens. An error says why there is none.
+-- reads "barrens" as The Barrens. An outdoor zone that matches wins; a name only a dungeon or another instance map
+-- has means the outdoor zone that map stands on. An error says why there is none.
 ---@param name string
 ---@return integer? map, string? error
 local function ZoneMap(name)
-	local key, list = Fold(name), Zones()
-	if list[key] then
-		return list[key].mapID
+	local key = Fold(name)
+	local matched = Matches(key, Zones())
+	if #matched == 0 then
+		matched = Matches(key, Instances())
 	end
-	local matches = {}
-	for _, inside in ipairs({ false, true }) do
-		for folded, info in pairs(list) do
-			local at = key ~= "" and folded:find(key, 1, true)
-			if at and (inside or at == 1) then
-				matches[#matches + 1] = info.name
-			end
+	if #matched == 1 then
+		return Outdoor(matched[1])
+	end
+	if #matched > 1 then
+		local names = {}
+		for index, entry in ipairs(matched) do
+			names[index] = entry.name
 		end
-		if matches[1] then
-			break
-		end
-	end
-	if #matches == 1 then
-		return list[Fold(matches[1])].mapID
-	end
-	if #matches > 1 then
-		table.sort(matches)
-		return nil, string.format(L["%s could be %s."], name, table.concat(matches, ", "))
+		table.sort(names)
+		return nil, string.format(L["%s could be %s."], name, table.concat(names, ", "))
 	end
 	return nil, string.format(L["no zone called %s."], name)
 end

@@ -9,7 +9,8 @@ local function equal(actual, expected, label)
 end
 
 -- A world (1) holding a continent (10) whose zones are Elwynn Forest (1) and Westfall (2), plus a city that shares
--- its name with a micro map, two zones with a common start, and a zone whose name starts with "The".
+-- its name with a micro map, two zones with a common start, a zone whose name starts with "The", and The Barrens
+-- (1413), where Wailing Caverns' door stands.
 local maps = {
 	[1] = { mapID = 1, name = "Elwynn Forest", mapType = 3, parentMapID = 10 },
 	[2] = { mapID = 2, name = "Westfall", mapType = 3, parentMapID = 10 },
@@ -18,6 +19,7 @@ local maps = {
 	[5] = { mapID = 5, name = "Duskwood", mapType = 3, parentMapID = 10 },
 	[6] = { mapID = 6, name = "Dun Morogh", mapType = 3, parentMapID = 10 },
 	[7] = { mapID = 7, name = "The Hinterlands", mapType = 3, parentMapID = 10 },
+	[1413] = { mapID = 1413, name = "The Barrens", mapType = 3, parentMapID = 10 },
 	[10] = { mapID = 10, name = "Eastern Kingdoms", mapType = 2, parentMapID = 100 },
 	[100] = { mapID = 100, name = "Azeroth", mapType = 1, parentMapID = 0 },
 }
@@ -52,6 +54,22 @@ env.SlashCmdList = {}
 -- Core/TomTom.lua's answer, whether TomTom loads after Shortest Path: not installed here.
 ns.TomTomEnabled = function()
 	return loaded.TomTom == true
+end
+-- Three dungeons' doors, as Data/Portals.lua ns.Entrances gives them, and the outdoor zone each door stands in, as
+-- Core/Core.lua's ns.ZoneMap finds it on the client's maps.
+ns.Entrances = {
+	[34] = { name = "Stormwind Stockade", map = 0, x = 1, y = 0 },
+	[36] = { name = "Deadmines", map = 0, x = 2, y = 0 },
+	[43] = { name = "Wailing Caverns", map = 1, x = 3, y = 0 },
+}
+ns.zoneAt = function(map, x)
+	if map == 1 and x == 3 then
+		return 1413
+	elseif map == 0 and x == 2 then
+		return 2
+	elseif map == 0 and x == 1 then
+		return 4
+	end
 end
 local printed = {}
 ns.Print = function(message)
@@ -113,6 +131,11 @@ equal(way.err, "Du could be Dun Morogh, Duskwood.", "and both are named")
 equal(parse("hinterlands 30 40").map, 7, "a name inside the zone's own")
 equal(parse("The Hinterlands 30 40").map, 7, "the zone's full name")
 equal(parse("west 30 40").map, 2, "a name a zone begins wins over one inside another's")
+-- A name only a dungeon has means the outdoor zone its door stands in; an outdoor zone still wins when it matches.
+equal(parse("wail 50 50").map, 1413, "a dungeon's prefix means the zone its door stands in")
+equal(parse("dead 50 50").map, 2, "another dungeon's prefix, in its own zone")
+equal(parse("storm 50 50").map, 4, "an outdoor zone wins over a dungeon sharing its name")
+equal(parse("wailing caverns 50 50").map, 1413, "a dungeon named in full means the zone its door stands in")
 way = parse("or 30 40")
 equal(way.map, nil, "a name inside several zones is refused")
 equal(way.err, "or could be Dun Morogh, Elwynn Forest, Stormwind City.", "and each is named")

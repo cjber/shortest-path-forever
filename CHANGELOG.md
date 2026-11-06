@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **`/way` finds a dungeon by the start of its name.** A partial name that only matches a dungeon or raid, such as `wail`, now plans to the outdoor zone its entrance stands in, here The Barrens. A matching outdoor zone still wins.
+
 ## [1.22.39] - 2026-11-06
 
 - **The walking route line can be another colour.** The line on the minimap and the world map has a colour choice in `/path` settings, with gold, white, cyan, green and magenta presets. Gold stays the default, so nothing changes unless you pick one. Thanks to Oxds on CurseForge for the idea.
