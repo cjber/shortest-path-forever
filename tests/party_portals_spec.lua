@@ -132,7 +132,7 @@ local plan = ns.Planner.Plan({
 assert(plan and #plan.legs == 2, "the portal wins over the long walk")
 assert(plan.legs[1].mode == "teleport" and plan.legs[1].partyPortal, "the first leg is the party portal")
 assert(plan.legs[1].partyPortal.partyMage == "Magey" and plan.legs[1].partyPortal.destination == "Stormwind")
-assert(plan.arrive == 23000, "the fixed ask plus the last 70 yards")
+assert(plan.arrive == 28000, "the fixed ask, the loading screen and the last 70 yards")
 local step = ns.LegStep(plan.legs[1])
 assert(step:find("Magey", 1, true) and step:find("Stormwind", 1, true), step)
 

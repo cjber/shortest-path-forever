@@ -10,8 +10,11 @@ ns.Planner = Planner
 -- Talking to the flight master and picking the destination. Taxis leave at once, so this is part of the flight's
 -- time, never a wait.
 local BOARDING = 3000
--- A teleport to another continent shows a loading screen: the same allowance as a portal's.
+-- Every teleport here changes zone or recalls to a bind point, so it shows a loading screen: the same allowance as a
+-- portal's.
 local LOADING = 5000
+-- A Hearthstone spends a long cooldown, so it must save at least 20 s over walking before it is chosen.
+local HEARTH_MINIMUM_SAVING = 20
 -- A journey that would be one walk of at least LONG_WALK takes a ride instead when that arrives within RIDE_MARGIN
 -- of the walk's time.
 local LONG_WALK, RIDE_MARGIN = 600000, 1.1
@@ -563,7 +566,7 @@ local function Plan(options)
 				mode = "teleport",
 				teleport = teleport,
 				ready = ready[id],
-				duration = teleport.cast + (teleport.map ~= options.from.map and LOADING or 0),
+				duration = teleport.cast + LOADING,
 			})
 		end
 	end
@@ -575,7 +578,7 @@ local function Plan(options)
 				mode = "teleport",
 				teleport = party,
 				partyPortal = party,
-				duration = party.cast,
+				duration = party.cast + LOADING,
 			})
 		end
 	end
@@ -853,7 +856,7 @@ local function Plan(options)
 	-- options.incumbent, an arrival already in hand, ends the search for anything that cannot beat it: no route
 	-- then means the incumbent stands. Its plan still passes through hearth and long-walk preferences below.
 	local planned = Search(options.withoutHearth == true, options.incumbent) or options.incumbentPlan
-	local minimum = options.hearthMinimumSavings or 0
+	local minimum = math.max(options.hearthMinimumSavings or 0, HEARTH_MINIMUM_SAVING)
 	if planned and minimum > 0 then
 		for _, leg in ipairs(planned.legs) do
 			if leg.teleport and leg.teleport.item == 6948 then

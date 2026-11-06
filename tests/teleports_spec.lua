@@ -27,7 +27,8 @@ assert(loadfile("Transport/Model.lua"))("ShortestPathForever", ns)
 assert(loadfile("Routing/Planner.lua"))("ShortestPathForever", ns)
 local Plan = ns.Planner.Plan
 
--- 7000 yards on foot is 1000 s; the hearth lands 70 yards short of the goal (10 s) after a 10 s cast.
+-- 7000 yards on foot is 1000 s; the hearth lands 70 yards short of the goal (10 s) after a 10 s cast and a loading
+-- screen.
 local hearths = { { map = 1, x = 6930, y = 0, spell = 8690, item = 6948, cast = 10000, label = "Goldshire" } }
 local function trip(ready, cache, minimum)
 	return Plan({
@@ -45,7 +46,7 @@ end
 local hearthed = trip(1000)
 assert(#hearthed.legs == 2 and hearthed.legs[1].mode == "teleport", "the hearth beats a long walk")
 local cast = hearthed.legs[1]
-assert(cast.teleport.item == 6948 and cast.wait == 0 and cast.arrive == 11000 and cast.ready == 1000)
+assert(cast.teleport.item == 6948 and cast.wait == 0 and cast.arrive == 16000 and cast.ready == 1000)
 assert(cast.to.kind == "teleport" and cast.to.label == "Goldshire")
 assert(hearthed.legs[2].mode == "walk" and hearthed.legs[2].from == cast.to, "walk on from where it lands")
 assert(ns.Planner.LegPoints(cast, {})[1].jump, "no line is drawn across the world")
@@ -61,11 +62,11 @@ assert(trip(1000, cache).legs[1].mode == "teleport")
 local topology = cache.topology
 assert(trip(1000 + 2000000, cache).legs[1].mode == "walk" and cache.topology == topology)
 assert(trip(1000, cache).legs[1].mode == "teleport" and cache.topology == topology)
-assert(trip(1000, cache, 980).legs[1].mode == "teleport", "saving exactly the threshold allows Hearthstone")
-assert(trip(1000, cache, 981).legs[1].mode == "walk", "a smaller saving preserves Hearthstone")
+assert(trip(1000, cache, 975).legs[1].mode == "teleport", "saving exactly the threshold allows Hearthstone")
+assert(trip(1000, cache, 976).legs[1].mode == "walk", "a smaller saving preserves Hearthstone")
 assert(cache.topology == topology, "the non-hearth comparison reuses topology")
-assert(trip(301000, cache, 680).legs[1].mode == "teleport", "the threshold includes cooldown waiting")
-assert(trip(301000, cache, 681).legs[1].mode == "walk", "cooldown can push savings below the threshold")
+assert(trip(301000, cache, 675).legs[1].mode == "teleport", "the threshold includes cooldown waiting")
+assert(trip(301000, cache, 676).legs[1].mode == "walk", "cooldown can push savings below the threshold")
 local alternatives = Plan({
 	from = { map = 1, x = 0, y = 0 },
 	to = { map = 1, x = 7000, y = 0 },
@@ -76,12 +77,12 @@ local alternatives = Plan({
 	hearthMinimumSavings = 11,
 })
 assert(alternatives.legs[1].teleport.spell == 3566, "class teleports remain an alternative to Hearthstone")
-assert(alternatives.arrive == 30000, "no invented savings penalty enters the ETA")
+assert(alternatives.arrive == 35000, "no invented savings penalty enters the ETA")
 -- A new set of destinations (a new bind point) is a new topology.
 hearths = { { map = 1, x = -700, y = 0, spell = 8690, item = 6948, cast = 10000 } }
 assert(trip(1000, cache).legs[1].mode == "walk" and cache.topology ~= topology)
 
--- Another continent adds the loading screen.
+-- A teleport adds the loading screen, whatever the continent.
 local far = Plan({
 	from = { map = 0, x = 0, y = 0 },
 	to = { map = 1, x = 7000, y = 0 },

@@ -360,6 +360,32 @@ do
 end
 print("hearth journey: walked into the bind town, the walk replaces the hearth: ok")
 
+-- Bound at Dolanaar's inn, a goal 60 yd past it and the player 20, 40 or 80 yd short: the walk there is a few seconds,
+-- so a fresh plan never starts with the hearth, whatever its 10 s cast alone would say (#402).
+do
+	ns.faction, ns.water, ns.speed = "Alliance", false, 7
+	local function Teldrassil(x, y)
+		local zone = { minX = 8438, minY = -1277, maxX = 11831, maxY = 3815 }
+		return { map = 1, x = zone.maxX - y * (zone.maxX - zone.minX), y = zone.maxY - x * (zone.maxY - zone.minY) }
+	end
+	local inn = Teldrassil(0.556, 0.598)
+	local goal = { map = 1, x = inn.x + 60, y = inn.y }
+	ns.teleports = { { map = 1, x = inn.x, y = inn.y, spell = 8690, item = 6948, cast = 10000, bind = true } }
+	ns.teleportReady = { 123456 }
+	for _, distance in ipairs({ 20, 40, 80 }) do
+		driver.begin({ map = 1, x = inn.x - distance, y = inn.y }, goal)
+		drain()
+		local shown = driver.shown()
+		assert(
+			shown.legs[1].mode == "walk",
+			string.format("a %d yd walk past the bind point needs no hearth", distance + 60)
+		)
+		ns.ClearJourney()
+	end
+	ns.teleports, ns.teleportReady = nil, nil
+end
+print("hearth journey: a short walk past the bind point needs no hearth: ok")
+
 -- A half-hour walk gives way to boats that arrive within a tenth of its time; a clearly quicker walk does not.
 ns.faction, ns.water, ns.speed, ns.known = "Alliance", false, 7, {}
 local ironforge = { map = 0, x = -4918, y = -940 }
