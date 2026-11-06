@@ -28,6 +28,7 @@ WOWMOCK = FOREVER_CORE / "tools" / "wowmock"
 if not (WOWMOCK / "wowmock.py").is_file():
     sys.exit(f"wowmock.py not found in {WOWMOCK}; set FOREVER_CORE to the forever-core checkout")
 sys.path.insert(0, str(WOWMOCK))
+from screenshot_docks import dock_kinds, zeppelin_art
 from screenshots_area import render as render_area_art
 from screenshots_art import Art
 from screenshots_progress import render_leaderboard
@@ -255,21 +256,9 @@ def icon(canvas, name, x, y, size=None, alpha=1):
     canvas.draw(art, x - w / 2, y - h / 2, w, h, (1, 1, 1, alpha))
 
 
-@cache
-def zeppelin_art():
-    """The addon's own zeppelin icon, drawn by tools/gen_zeppelin_icon.py."""
-    with Image.open(ROOT / "media" / "Zeppelin.tga") as source:
-        return source.convert("RGBA")
-
-
-@cache
-def dock_kinds():
-    return {int(stop["dock"]): route["kind"] for route in data()["routes"].values() for stop in route["stops"].values()}
-
-
 def map_docks(ui, map_id, width, height):
     """Map.lua's sorted, transitive clusters; a running centroid misses chains of overlapping pins."""
-    kinds = dock_kinds()
+    kinds = dock_kinds(data()["routes"])
     docks = []
     for key, dock in sorted(data()["docks"].items(), key=lambda item: int(item[0])):
         p = projection(ui, dock.get("pin", dock), map_id)
@@ -698,7 +687,7 @@ def render_minimap(ui):
     canvas.paste(face, cx - size / 2, cy - size / 2)
     # MinimapPins.lua: 16-unit icons, hidden unless wholly inside the rim.
     reach = (1 - 16 / size) * radius
-    kinds = dock_kinds()
+    kinds = dock_kinds(data()["routes"])
     for dock_id, dock in sorted(data()["docks"].items(), key=lambda item: int(item[0])):
         if dock["map"] == START["map"] and math.hypot(dock["x"] - here["x"], dock["y"] - here["y"]) <= reach:
             x, y = project(dock)
