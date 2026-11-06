@@ -12,7 +12,9 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.22.37] - 2026-11-06
 - **The Hearthstone no longer wins a short walk.** Standing beside the inn you are bound to, a journey could still start with "Use Hearthstone" for a goal a few steps past it, because the hearth's cost counted only its cast. A teleport now also pays its loading screen, and a Hearthstone must save at least 20 seconds over walking before the journey suggests it, so short walks stay on foot and long trips still take the hearth.
+
 
 ## [1.22.36] - 2026-11-06
 - **A cleaner zeppelin icon.** Zeppelin docks, route steps, the compass and the minimap now draw a bolder zeppelin with thick lines and a black outline, matching the boat icon beside it, so it stays readable at minimap size.
