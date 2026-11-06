@@ -6,6 +6,7 @@ local MapCanvas = ns.MapCanvas
 local PIN_TEMPLATE = "ShortestPathForeverDockPinTemplate"
 local PORTAL_TEMPLATE = "ShortestPathForeverPortalPinTemplate"
 local PING_FILE = "Interface\\Minimap\\UI-Minimap-Ping-Expand"
+local ZEPPELIN_FILE = "Interface\\AddOns\\ShortestPathForever\\media\\Zeppelin"
 local PIN_SIZE = 20
 local ARROW_SIZE = 15
 -- The floor arrows are 13 by 14 (UiTextureAtlasMember, 1.60.1.70009), so they are fitted, never squared.
@@ -25,16 +26,16 @@ local OVERLAP = 0.8
 local dockPins, portalPins
 local Docks
 
--- The stock ferry atlas serves both surface transports. Lifts and the tram take the stock map's floor-change arrows;
--- portals use its arcane door.
+-- Boats use the stock ferry atlas and zeppelins their own file. Lifts and the tram take the stock map's floor-change
+-- arrows; portals use its arcane door.
 ---@param texture Texture
 ---@param kind SPFMode
 ---@param size number?
 function ns.SetTransportIcon(texture, kind, size)
 	-- The floor arrows fill their box where the ferry has a margin, so they draw smaller to match.
 	size = (size or PIN_SIZE) * ((kind == "lift" or kind == "tram") and ARROW_SIZE / PIN_SIZE or 1)
-	if kind == "boat" or kind == "zeppelin" then
-		ns.Art.Fit(texture, "flightmasterferry", size, size)
+	if kind == "zeppelin" then
+		ns.Art.Icon(texture, ZEPPELIN_FILE, size)
 	elseif TRANSPORT_ATLASES[kind] then
 		ns.Art.Fit(texture, TRANSPORT_ATLASES[kind], size, size)
 	else
@@ -591,6 +592,7 @@ function Docks:RefreshAllData()
 	end
 	-- Rebuild only when the set of pins changed (a new map, a zoom that merged or split docks, a filter), so a
 	-- hovered pin keeps its tooltip through repeated canvas refreshes.
+	local previousMapID = self.mapID
 	local same = self.pins ~= nil and mapID == self.mapID
 	for key, pin in pairs(self.pins or {}) do
 		same = same and pin.cluster ~= nil and wanted[key] ~= nil
@@ -607,12 +609,35 @@ function Docks:RefreshAllData()
 		end
 		return
 	end
+	-- A zoom or filter re-clusters the pins on this map. Releasing the hovered pin clears its tooltip and route,
+	-- and the pointer does not enter the pin that replaces it, so carry the hover to the new pin for its first
+	-- dock. A new map closes the tooltip as before.
+	local hoveredDocks
+	if mapID == previousMapID then
+		for _, pin in pairs(self.pins or {}) do
+			if pin.cluster and GameTooltip:IsOwned(pin) and GameTooltip:IsShown() then
+				hoveredDocks = {}
+				for _, dock in ipairs(pin.cluster.docks) do
+					hoveredDocks[#hoveredDocks + 1] = dock.id
+				end
+			end
+		end
+	end
 	self:RemoveAllData()
 	for _, cluster in ipairs(clusters) do
 		local pin = dockPins:Acquire(cluster) --[[@as SPFDockPin]]
 		self.pins[cluster.key] = pin
 		for _, dock in ipairs(cluster.docks) do
 			self.pinOf[dock.id] = pin
+		end
+	end
+	if hoveredDocks then
+		for _, dockID in ipairs(hoveredDocks) do
+			local pin = self.pinOf[dockID]
+			if pin then
+				pin:OnMouseEnter()
+				break
+			end
 		end
 	end
 end

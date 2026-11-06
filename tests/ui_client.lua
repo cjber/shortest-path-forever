@@ -133,10 +133,13 @@ local function stubframe()
 	function f:CreateTexture()
 		local texture = setmetatable({ parent = self }, mt)
 		function texture:SetAtlas(v)
-			self.atlas = v
+			self.atlas, self.texture = v, nil
 			if v == "Navigation-Tracked-Arrow" then
 				arrowFrame = f
 			end
+		end
+		function texture:SetTexture(v)
+			self.texture, self.atlas = v, nil
 		end
 		function texture:CreateAnimationGroup()
 			return animationGroup(self)

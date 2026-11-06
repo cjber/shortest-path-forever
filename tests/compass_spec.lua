@@ -1,6 +1,7 @@
 -- Exercise the real compass against allocation-free UI spies, including a stopped OnUpdate.
 local source = arg[1] or "UI/Compass.lua"
 local calls = { text = 0, atlas = 0, info = 0, objects = 0, points = 0, panels = 0, colors = 0 }
+local ZEPPELIN = "Interface\\AddOns\\ShortestPathForever\\media\\Zeppelin"
 local stripTemplate, moverFrame
 local atlasSizes = {
 	["Waypoint-MapPin-Tracked"] = { width = 30, height = 30 },
@@ -394,6 +395,11 @@ for _, kind in ipairs({ "boat", "lift", "tram", "portal", "zeppelin", "boat" }) 
 	close(strip.Stop.width / strip.Stop.height, ratio)
 	-- The floor arrows fill their box where the ferry has a margin, so they draw smaller, as on the map.
 	close(strip.Stop.height, (kind == "lift" or kind == "tram") and 18 * 15 / 20 or 18)
+	if kind == "zeppelin" then
+		assert(strip.Stop.texture == ZEPPELIN and strip.Stop.atlas == nil, "the compass draws the zeppelin's own file")
+	elseif kind == "boat" then
+		assert(strip.Stop.atlas == "flightmasterferry" and strip.Stop.texture == nil, "a boat keeps the ferry atlas")
+	end
 end
 stop = { kind = "taxi", id = 26, map = 1, x = 0, y = -100 }
 ns.RefreshCompass()

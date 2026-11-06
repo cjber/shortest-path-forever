@@ -8,6 +8,7 @@ for _, part in ipairs({ "ui_client.lua", "ui_map.lua" }) do
 end
 assert(loadstring(source .. [[
 local layer = ShortestPathForeverMinimapPins
+local ZEPPELIN = "Interface\\AddOns\\ShortestPathForever\\media\\Zeppelin"
 local function shown()
  local list = {}
  for _, pin in ipairs(layer.children or {}) do
@@ -51,6 +52,22 @@ ferry.scripts.OnEnter(ferry)
 assert(GameTooltip:IsOwned(ferry) and tip[1]:find("Boat to", 1, true), "the dock's departures tooltip")
 ferry.scripts.OnLeave(ferry)
 assert(not GameTooltip:IsOwned(ferry))
+
+-- A zeppelin uses the addon's own file, not the ferry atlas its boat neighbours use.
+local wasX, wasY, wasZ, wasMap = posX, posY, posZ, posMap
+local zeppelinDock = ns.Docks[13]
+ns.db.otherFaction = true
+posX, posY, posZ, posMap = zeppelinDock.x, zeppelinDock.y, zeppelinDock.z or 0, zeppelinDock.map
+ns.RefreshMinimapPins()
+local zeppelin
+for _, pin in ipairs(shown()) do
+ if pin.entry.cluster and pin.entry.cluster.docks[1].id == 13 then zeppelin = pin end
+end
+assert(zeppelin and zeppelin.Texture.texture == ZEPPELIN, "the tower's zeppelin shows its own art on the minimap")
+assert(zeppelin.Texture.atlas == nil, "not the ferry atlas")
+ns.db.otherFaction = false
+posX, posY, posZ, posMap = wasX, wasY, wasZ, wasMap
+ns.RefreshMinimapPins()
 
 -- The rim: a place just inside the view but under the frame's edge is hidden, never clamped.
 posX = dock.x + 195

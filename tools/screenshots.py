@@ -255,11 +255,21 @@ def icon(canvas, name, x, y, size=None, alpha=1):
     canvas.draw(art, x - w / 2, y - h / 2, w, h, (1, 1, 1, alpha))
 
 
+@cache
+def zeppelin_art():
+    """The addon's own zeppelin icon, drawn by tools/gen_zeppelin_icon.py."""
+    with Image.open(ROOT / "media" / "Zeppelin.tga") as source:
+        return source.convert("RGBA")
+
+
+@cache
+def dock_kinds():
+    return {int(stop["dock"]): route["kind"] for route in data()["routes"].values() for stop in route["stops"].values()}
+
+
 def map_docks(ui, map_id, width, height):
     """Map.lua's sorted, transitive clusters; a running centroid misses chains of overlapping pins."""
-    kinds = {
-        int(stop["dock"]): route["kind"] for route in data()["routes"].values() for stop in route["stops"].values()
-    }
+    kinds = dock_kinds()
     docks = []
     for key, dock in sorted(data()["docks"].items(), key=lambda item: int(item[0])):
         p = projection(ui, dock.get("pin", dock), map_id)
@@ -369,12 +379,15 @@ def map_dock_pins(canvas, map_id, rect, hover):
         if hover and set(ids) & {7, 9, 17, 25}:
             canvas.draw(ui.atlas("UI-QuestPoi-OuterGlow"), x - 28, y - 28, 56, 56)
         size = 15 if kind in ("lift", "tram") else 20
-        kind = "boat" if kind == "zeppelin" else kind
-        atlas = {"boat": "flightmasterferry", "lift": "poi-door-arrow-up", "tram": "poi-door-arrow-down"}[kind]
-        art = ui.atlas(atlas)
-        # Fitted at its native shape, as ns.FitAtlas does: the floor arrows are 13 by 14.
-        scale = size / max(art.width, art.height)
-        w, h = art.width * scale, art.height * scale
+        if kind == "zeppelin":
+            # Art.Icon draws the addon's own square file whole.
+            art, w, h = zeppelin_art(), size, size
+        else:
+            atlas = {"boat": "flightmasterferry", "lift": "poi-door-arrow-up", "tram": "poi-door-arrow-down"}[kind]
+            art = ui.atlas(atlas)
+            # Fitted at its native shape, as Art.Fit does: the floor arrows are 13 by 14.
+            scale = size / max(art.width, art.height)
+            w, h = art.width * scale, art.height * scale
         canvas.draw(art, x - w / 2, y - h / 2, w, h)
         if hover and 10 in ids:
             canvas.draw(art, x - w / 2, y - h / 2, w, h, blend="ADD")
@@ -685,10 +698,15 @@ def render_minimap(ui):
     canvas.paste(face, cx - size / 2, cy - size / 2)
     # MinimapPins.lua: 16-unit icons, hidden unless wholly inside the rim.
     reach = (1 - 16 / size) * radius
-    for _, dock in sorted(data()["docks"].items(), key=lambda item: int(item[0])):
+    kinds = dock_kinds()
+    for dock_id, dock in sorted(data()["docks"].items(), key=lambda item: int(item[0])):
         if dock["map"] == START["map"] and math.hypot(dock["x"] - here["x"], dock["y"] - here["y"]) <= reach:
             x, y = project(dock)
-            icon(canvas, "flightmasterferry", cx - size / 2 + x, cy - size / 2 + y, 16)
+            if kinds.get(int(dock_id)) == "zeppelin":
+                art = zeppelin_art()
+                canvas.draw(art, cx - size / 2 + x - 8, cy - size / 2 + y - 8, 16, 16)
+            else:
+                icon(canvas, "flightmasterferry", cx - size / 2 + x, cy - size / 2 + y, 16)
     icon(canvas, "UI-HUD-Minimap-Frame", cx, cy)
     # Camelot Diel.lua: indicator is 63 right and 72 up from the cluster center.
     icon(canvas, "UI-HUD-Minimap-NightCycle", cx + 63, cy - 72)
