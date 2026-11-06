@@ -11,6 +11,7 @@ verbatim rather than rewritten as the addon moves. API changes other addons' aut
 optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
+- **A cleaner zeppelin icon.** Zeppelin docks, route steps, the compass and the minimap now draw a bolder zeppelin with thick lines and a black outline, matching the boat icon beside it, so it stays readable at minimap size.
 
 ## [1.22.35] - 2026-11-06
 - **The journey column steps aside for EQ Objective Tracker.** EQ Objective Tracker hides the game's quest tracker and draws its own list in that same slot, so its quests and the Forever sections drew over each other and neither could be read. The column now asks EQOT where its list is through EQOT's public API and re-places itself below, above or beside it after every redraw, and reads EQOT's own frame the same way when that API is not there. Turn EQOT off and the column goes back where it was.

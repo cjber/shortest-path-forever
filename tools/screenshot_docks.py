@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 @cache
 def zeppelin_art():
-    """The addon's own zeppelin icon, drawn by tools/gen_zeppelin_icon.py."""
+    """The addon's own zeppelin icon, media/Zeppelin.tga."""
     with Image.open(ROOT / "media" / "Zeppelin.tga") as source:
         return source.convert("RGBA")
 
