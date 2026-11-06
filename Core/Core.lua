@@ -208,7 +208,24 @@ local function Resolve(point)
 		return nil
 	end
 	local x, y = position:GetXY()
-	return { uiMap = uiMap, x = x, y = y, zone = info and info.name or UNKNOWN }
+	local location = { uiMap = uiMap, x = x, y = y, zone = info and info.name or UNKNOWN }
+	-- A capital map is a sibling of the zone it stands in, not its child (UiMap gives each capital its continent as
+	-- the parent), so a point in the capital's coarse region never reaches the zone. Keep both: the capital for its
+	-- name, and the zone map and position for a dock pin, which stands outdoors at the capital's gates.
+	local capital = ns.Zones and ns.Zones[uiMap]
+	if capital and capital.zone then
+		local zoneMap, zonePosition =
+			C_Map.GetMapPosFromWorldPos(point.map, CreateVector2D(point.x, point.y), capital.zone)
+		if zoneMap == capital.zone and zonePosition then
+			local zoneX, zoneY = zonePosition:GetXY()
+			if zoneX >= 0 and zoneX <= 1 and zoneY >= 0 and zoneY <= 1 then
+				location.capitalUiMap = uiMap
+				location.zoneUiMap = zoneMap
+				location.zoneX, location.zoneY = zoneX, zoneY
+			end
+		end
+	end
+	return location
 end
 
 local locations = setmetatable({}, { __mode = "k" })
@@ -232,7 +249,20 @@ end
 ---@param dockID number
 ---@return SPFLocation?
 function ns.DockLocation(dockID)
-	return ns.Locate(ns.DockPoint(dockID))
+	local dock = ns.Docks[dockID]
+	local location = ns.Locate(ns.DockPoint(dockID))
+	-- A lift or tram stop stands inside the capital's own map, so only a boat or zeppelin dock (no site) moves out
+	-- to the zone. The capital's name stays on the stop either way.
+	if not (location and location.zoneUiMap) or dock.site then
+		return location
+	end
+	return {
+		uiMap = location.zoneUiMap,
+		x = location.zoneX,
+		y = location.zoneY,
+		zone = location.zone,
+		capitalUiMap = location.capitalUiMap,
+	}
 end
 
 ---@param dockID number

@@ -14,7 +14,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 - **The walking route line can be another colour.** The line on the minimap and the world map has a colour choice in `/path` settings, with gold, white, cyan, green and magenta presets. Gold stays the default, so nothing changes unless you pick one. Thanks to Oxds on CurseForge for the idea.
 - **Controller and keyboard players can bind the journey actions.** Key Bindings > AddOns now has Travel to my map pin, Travel to my tracked quest and Clear journey, so a controller button or a key reaches what used to need a Shift-click, through the same planning the map uses. Thanks to sean16981 for the idea.
-- **The departures switch says what it hides.** The tracker option is now named Show boat, lift and tram departures in the tracker, and right-clicking the section header while departures show has a Hide departures entry that turns the same option off. Thanks to the player who reported it on CurseForge for the report.
+- **The departures switch says what it hides.** The tracker option is now named Show boat, lift and tram departures in the tracker, and right-clicking the section header while departures show has a Hide departures entry that turns the same option off. Thanks to a player on CurseForge for the report.
+- **A dock at a capital's gate pins to the zone it stands in.** The zeppelin to Stranglethorn Vale drew at the bottom of the Orgrimmar city map instead of the tower outside the gate, and the Stormwind boat dock had the same fault, because the client's capital maps sit beside their zones rather than inside them. A boat or zeppelin pin, and the map it opens from the tracker or its tooltip, now uses the zone the dock stands in, and appears on the capital map only where the point falls inside it, while the stop still reads as Orgrimmar or Stormwind City. Thanks to Stiandresius for the report.
 
 ## [1.22.38] - 2026-11-06
 

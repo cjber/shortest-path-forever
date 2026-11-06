@@ -403,12 +403,13 @@ end
 -- FlightPins.lua places its pins the same way.
 ns.MapPinPosition, ns.IsDockMap = MapPosition, IsDockMap
 
--- Where a pin's routes end, one per map other than this one: candidates = { { kind, point }... }, in the
--- tooltip's order. A lift's landings share one spot, so a lift has an end only from a map other than its own.
+-- Where a pin's routes end, one per map other than this one: candidates = { { kind, location }... } or
+-- { { kind, point }... }, in the tooltip's order. A lift's landings share one spot, so a lift has an end only
+-- from a map other than its own.
 local function Ends(mapID, candidates)
 	local ends, seen = {}, { [mapID] = true }
 	for _, candidate in ipairs(candidates) do
-		local location = ns.Locate(candidate.point)
+		local location = candidate.location or ns.Locate(candidate.point)
 		if location and not seen[location.uiMap] then
 			seen[location.uiMap] = true
 			candidate.uiMap, candidate.zone = location.uiMap, location.zone
@@ -457,7 +458,11 @@ function DockPin:GetEnds()
 	for _, dock in ipairs(self.cluster.docks) do
 		for _, departure in ipairs(ns.Timetable.Departures(dock.id)) do
 			for _, dockID in ipairs(departure.to) do
-				candidates[#candidates + 1] = { kind = departure.kind, point = ns.DockPoint(dockID) }
+				candidates[#candidates + 1] = {
+					kind = departure.kind,
+					point = ns.DockPoint(dockID),
+					location = ns.DockLocation(dockID),
+				}
 			end
 		end
 	end
@@ -468,7 +473,8 @@ DockPin.OnMouseClickAction = OpenEnds
 
 -- The docks on this map with any route still shown, as { id, x, y } in map fractions. A lift or tram
 -- landing also shows on any neighbouring zone it falls inside: the Great Lift joins the Barrens to Thousand
--- Needles, so it belongs on both.
+-- Needles, so it belongs on both. A dock at a capital's gates shows on its zone, and on the capital only where
+-- its point projects inside the capital's bounds.
 local function MapDocks(mapID)
 	local ids, docks = {}, {}
 	for dockID in pairs(ns.Docks) do
@@ -477,7 +483,11 @@ local function MapDocks(mapID)
 	table.sort(ids)
 	for _, dockID in ipairs(ids) do
 		local location = ns.DockLocation(dockID)
-		if location and (ns.Docks[dockID].site or IsDockMap(location, mapID)) and ns.DockShown(dockID) then
+		if
+			location
+			and (ns.Docks[dockID].site or IsDockMap(location, mapID) or location.capitalUiMap == mapID)
+			and ns.DockShown(dockID)
+		then
 			local x, y = MapPosition(ns.DockPoint(dockID), mapID)
 			if x and y and not ns.CompanionMaps.Suppresses(ns.DockKind(dockID), x, y, "dock", dockID) then
 				docks[#docks + 1] = { id = dockID, x = x, y = y }

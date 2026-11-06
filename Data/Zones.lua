@@ -2,8 +2,9 @@
 -- Source: published level ranges (https://warcraft.wiki.gg/wiki/Zones_by_level_(original)); otherwise AreaTable
 -- ExplorationLevel, capital flag and side, and UiMapAssignment regions
 -- (https://wago.tools/db2, build 1.60.1.70790).
--- low, high: a zone's level range; city: a capital's side. map, minX..maxY: the zone map's region in world
--- yards. Regions overlap, so a box bounds where a zone can be and never decides which zone a point is in.
+-- low, high: a zone's level range; city: a capital's side; zone: the zone map a capital stands in. map,
+-- minX..maxY: the zone map's region in world yards. Regions overlap, so a box bounds where a zone can be
+-- and never decides which zone a point is in.
 -- Neither range nor side: Mount Hyjal, Shen'dralas.
 ---@type string, SPFNamespace
 local _, ns = ...
@@ -59,11 +60,24 @@ ns.Zones = {
 	[1450] = { low = 55, high = 60, map = 1, minX = 6952, minY = -3690, maxX = 8492, maxY = -1381 }, -- Moonglade
 	[1451] = { low = 55, high = 60, map = 1, minX = -8281, minY = -946, maxX = -5958, maxY = 2538 }, -- Silithus
 	[1452] = { low = 53, high = 60, map = 1, minX = 3800, minY = -7417, maxX = 8533, maxY = -317 }, -- Winterspring
-	[1453] = { city = "Alliance", map = 0, minX = -9154, minY = -15, maxX = -7996, maxY = 1723 }, -- Stormwind City
-	[1454] = { city = "Horde", map = 1, minX = 1338, minY = -5083, maxX = 2274, maxY = -3681 }, -- Orgrimmar
-	[1455] = { city = "Alliance", map = 0, minX = -5097, minY = -1504, maxX = -4569, maxY = -714 }, -- Ironforge
-	[1456] = { city = "Horde", map = 1, minX = -1546, minY = -527, maxX = -850, maxY = 517 }, -- Thunder Bluff
-	[1457] = { city = "Alliance", map = 1, minX = 9533, minY = 1880, maxX = 10238, maxY = 2938 }, -- Darnassus
-	[1458] = { city = "Horde", map = 0, minX = 1238, minY = -86, maxX = 1878, maxY = 873 }, -- Undercity
+	-- Stormwind City
+	[1453] = { city = "Alliance", zone = 1429, map = 0, minX = -9154, minY = -15, maxX = -7996, maxY = 1723 },
+	-- Orgrimmar
+	[1454] = { city = "Horde", zone = 1411, map = 1, minX = 1338, minY = -5083, maxX = 2274, maxY = -3681 },
+	-- Ironforge
+	[1455] = {
+		city = "Alliance",
+		zone = 1426,
+		map = 0,
+		minX = -5097,
+		minY = -1504,
+		maxX = -4569,
+		maxY = -714,
+	},
+	-- Thunder Bluff
+	[1456] = { city = "Horde", zone = 1412, map = 1, minX = -1546, minY = -527, maxX = -850, maxY = 517 },
+	-- Darnassus
+	[1457] = { city = "Alliance", zone = 1438, map = 1, minX = 9533, minY = 1880, maxX = 10238, maxY = 2938 },
+	[1458] = { city = "Horde", zone = 1420, map = 0, minX = 1238, minY = -86, maxX = 1878, maxY = 873 }, -- Undercity
 	[2548] = { low = 36, high = 44, map = 0, minX = -9700, minY = -6742, maxX = -6467, maxY = -1892 }, -- Riverglades
 }

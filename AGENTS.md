@@ -122,7 +122,9 @@ before its `v*` tag, since the release publishes it as the notes.
   `PUBLISHED_LEVELS` in `tools/gen_transit.py` (facts, no text copied), as Adventure Guide and Tweaks already do;
   Forever's own zones take their subzones' wago.tools `AreaTable.ExplorationLevel`, capitals its capital flag and
   `FactionGroupMask`, boxes `UiMapAssignment`. Neither database holds zone levels, and Forever's client returns none
-  (`C_Map.GetMapLevels`). Which zone a point is in is always the client's `C_Map.GetMapInfoAtPosition`.
+  (`C_Map.GetMapLevels`). Which zone a point is in is always the client's `C_Map.GetMapInfoAtPosition`. Each
+  capital's surrounding zone is typed into `CAPITAL_ZONES` in `tools/gen_transit.py`, because UiMap parents every
+  capital to its continent and leaves the zone a sibling map.
 - WFA-28: `Data/Teleports.lua` (class teleports and bind items): wago.tools spell and item tables with classic-db
   `spell_target_position` landings; neither database holds spell effects or landings. Known spells, reagent
   counts, cooldowns, cast times and the bind point are read from the client.

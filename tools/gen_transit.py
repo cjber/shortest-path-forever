@@ -88,6 +88,17 @@ PUBLISHED_LEVELS = {
     1451: (55, 60),  # Silithus
     1452: (53, 60),  # Winterspring
 }
+# UiMap puts each capital directly under its continent, with the zone it stands in a sibling map, so a world point
+# inside the capital's coarse region never resolves to that zone. The zone each capital stands in is a classic fact,
+# needed where a dock at the capital's gates belongs on the zone's map.
+CAPITAL_ZONES = {
+    1453: 1429,  # Stormwind City, Elwynn Forest
+    1454: 1411,  # Orgrimmar, Durotar
+    1455: 1426,  # Ironforge, Dun Morogh
+    1456: 1412,  # Thunder Bluff, Mulgore
+    1457: 1438,  # Darnassus, Teldrassil
+    1458: 1420,  # Undercity, Tirisfal Glades
+}
 # Enum.UIMapType: a continent's zone children are what its map names on hover.
 UI_ZONE, UI_CONTINENT, UI_WORLD = 3, 2, 947
 PORTAL_NAMES = {
@@ -419,10 +430,10 @@ def landmasses(assignments, maps):
 
 def zones(ui_maps, assignments, areas):
     """[UiMap] = (fields, name) for each zone a continent's map names on hover. A capital (AreaTable flag 0x100)
-    has city = its side (FactionGroupMask 2 Alliance, 4 Horde); any other zone its level range, the published one
-    else its subzones' exploration levels. map and minX..maxY are the zone map's UiMapAssignment region in world
-    yards; regions overlap, so a box only says where a zone can be, never which zone a point is in. Also returns the
-    names of hover zones with neither."""
+    has city = its side (FactionGroupMask 2 Alliance, 4 Horde) and zone = the zone map it stands in; any other zone
+    its level range, the published one else its subzones' exploration levels. map and minX..maxY are the zone map's
+    UiMapAssignment region in world yards; regions overlap, so a box only says where a zone can be, never which zone
+    a point is in. Also returns the names of hover zones with neither."""
     by_id = {int(r["ID"]): r for r in areas}
     children = defaultdict(list)
     for area in areas:
@@ -459,7 +470,10 @@ def zones(ui_maps, assignments, areas):
         sides = {2: "Alliance", 4: "Horde"}
         levels = PUBLISHED_LEVELS.get(ui_map) or (None if capital else explored(ui_map))
         if capital and int(capital[0]["FactionGroupMask"]) in sides:
-            fields = {"city": sides[int(capital[0]["FactionGroupMask"])]}
+            zone = CAPITAL_ZONES.get(ui_map)
+            if zone is None:
+                raise ValueError(f"capital with no zone: {row['Name_lang']}")
+            fields = {"city": sides[int(capital[0]["FactionGroupMask"])], "zone": zone}
         elif levels:
             fields = {"low": levels[0], "high": levels[1]}
         else:
@@ -471,6 +485,17 @@ def zones(ui_maps, assignments, areas):
     absent = set(PUBLISHED_LEVELS) - set(result)
     if absent:
         raise ValueError(f"published zones no longer on a continent map: {sorted(absent)}")
+    # A capital's zone must be a zone on the same continent, not another capital.
+    for fields, name in result.values():
+        zone = fields.get("zone")
+        if zone is None:
+            continue
+        if zone not in result:
+            raise ValueError(f"{name}: capital zone {zone} is not a zone map")
+        if "city" in result[zone][0]:
+            raise ValueError(f"{name}: capital zone {zone} is another capital")
+        if result[zone][0]["map"] != fields["map"]:
+            raise ValueError(f"{name}: capital zone {zone} is on another continent")
     return result, missing
 
 
@@ -753,8 +778,9 @@ def main():
         f"-- Source: published level ranges ({ZONE_SOURCE}); otherwise AreaTable",
         "-- ExplorationLevel, capital flag and side, and UiMapAssignment regions",
         f"-- (https://wago.tools/db2, build {BUILD}).",
-        "-- low, high: a zone's level range; city: a capital's side. map, minX..maxY: the zone map's region in world",
-        "-- yards. Regions overlap, so a box bounds where a zone can be and never decides which zone a point is in.",
+        "-- low, high: a zone's level range; city: a capital's side; zone: the zone map a capital stands in. map,",
+        "-- minX..maxY: the zone map's region in world yards. Regions overlap, so a box bounds where a zone can be",
+        "-- and never decides which zone a point is in.",
         "-- Neither range nor side: " + (", ".join(unranged) or "none") + ".",
         "---@type string, SPFNamespace",
         "local _, ns = ...",

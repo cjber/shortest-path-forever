@@ -79,5 +79,6 @@ Credit for the ideas and reports behind the addon.
 | [z1ck](https://github.com/z1ck) | Asked for the travel journal to start off, which *Record travel stats* now does (#269, #270) | |
 | Oxds, on CurseForge | Asked for the walking route line's colour to be a choice in `/path` settings (#411) | |
 | sean16981 | Asked for key bindings for the Shift-click journey actions, for controller players (#412) | |
+| Stiandresius, on CurseForge | Found zeppelin docks drawn with the boat icon and the Stranglethorn tower vanishing from Durotar on zoom (#394, #393), and the Grom'gol zeppelin pin drawing on the Orgrimmar map instead of Durotar (#414) | |
 
 Thanks also to everyone else who reported a bug or asked for a feature, here or on CurseForge.
