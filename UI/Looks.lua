@@ -12,13 +12,9 @@ local ATLASES = {
 	objective = { "questobjective", "SideInProgressquesticon" },
 	innkeeper = { "innkeeper" },
 	dungeon = { "dungeon" },
-}
--- The minimap tracking menu's own icons (ManifestInterfaceData, same build). A file has no lookup, so these are
--- trusted to the build's manifest.
----@type table<SPFAPIStopKind, string>
-local FILES = {
-	trainer = "Interface\\Minimap\\Tracking\\Class",
-	battlemaster = "Interface\\Minimap\\Tracking\\BattleMaster",
+	-- The minimap tracking menu's own marks, now atlases rather than the pre-Legion tracking files.
+	trainer = { "Class" },
+	battlemaster = { "BattleMaster" },
 }
 -- The map's own dock, lift, tram and portal icons (Map.lua).
 local TRANSPORTS = { boat = true, zeppelin = true, lift = true, tram = true, portal = true }
@@ -27,9 +23,6 @@ local TAXI = { Alliance = "taxinode_alliance", Horde = "taxinode_horde" }
 ---@type table<string, true>
 local kinds = { flightmaster = true }
 for kind in pairs(ATLASES) do
-	kinds[kind] = true
-end
-for kind in pairs(FILES) do
 	kinds[kind] = true
 end
 for kind in pairs(TRANSPORTS) do
@@ -47,7 +40,6 @@ end
 
 ---@class SPFStopArt
 ---@field atlas? string
----@field file? string
 ---@field transport? boolean
 
 ---@type table<string, SPFStopArt|false>
@@ -60,8 +52,6 @@ local function Art(kind)
 		found[kind] = false
 		if TRANSPORTS[kind] then
 			found[kind] = { transport = true }
-		elseif FILES[kind] then
-			found[kind] = { file = FILES[kind] }
 		else
 			local candidates = ATLASES[kind]
 			if kind == "flightmaster" then
@@ -90,8 +80,6 @@ function ns.SetStopLook(texture, kind, size)
 		return false
 	elseif art.transport then
 		ns.SetTransportIcon(texture, kind --[[@as SPFMode]], size)
-	elseif art.file then
-		ns.Art.Icon(texture, art.file, size)
 	else
 		ns.Art.Fit(texture, art.atlas --[[@as string]], size, size)
 	end

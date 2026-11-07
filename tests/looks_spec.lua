@@ -12,6 +12,8 @@ local atlases = {
 	SideInProgressquesticon = { width = 16, height = 18 },
 	taxinode_horde = { width = 32, height = 32 },
 	taxinode_neutral = { width = 32, height = 32 },
+	Class = { width = 32, height = 32 },
+	BattleMaster = { width = 32, height = 32 },
 }
 local lookups = {}
 local faction = "Horde"
@@ -56,7 +58,17 @@ local function texture()
 	return t
 end
 
-for _, kind in ipairs({ "pickup", "turnin", "objective", "trainer", "flightmaster", "boat", "portal", "dungeon" }) do
+for _, kind in ipairs({
+	"pickup",
+	"turnin",
+	"objective",
+	"trainer",
+	"battlemaster",
+	"flightmaster",
+	"boat",
+	"portal",
+	"dungeon",
+}) do
 	check(ns.StopKind(kind) == kind, "known kind " .. kind)
 end
 for _, value in ipairs({ "mailbox", "hub", "", 1, true, secret }) do
@@ -72,7 +84,8 @@ check(ns.SetStopLook(pin, "objective", 18), "an objective falls back to the in-p
 check(pin.atlas == "SideInProgressquesticon" and pin.height == 18 and pin.width == 16, "keeps the atlas's shape")
 check(ns.SetStopLook(pin, "flightmaster", 18) and pin.atlas == "taxinode_horde", "the player's own flight master")
 check(ns.SetStopLook(pin, "trainer", 18), "a trainer")
-check(pin.file == "Interface\\Minimap\\Tracking\\Class" and pin.coords[2] == 1, "the tracking menu's icon, uncropped")
+check(pin.atlas == "Class" and pin.width == 18 and pin.height == 18, "the tracking menu's class icon")
+check(ns.SetStopLook(pin, "battlemaster", 18) and pin.atlas == "BattleMaster", "a battlemaster")
 check(ns.SetStopLook(pin, "zeppelin", 18), "a zeppelin")
 check(transports[1].texture == pin and transports[1].kind == "zeppelin" and transports[1].size == 18, "the map's icon")
 
@@ -87,6 +100,7 @@ check(plain.atlas == "Waypoint-MapPin-Tracked" and plain.width == nil, "the text
 ns.SetStopLook(pin, "pickup", 18)
 ns.SetStopLook(plain, "innkeeper", 18)
 check(lookups.QuestNormal == 1 and lookups.innkeeper == 1, "art looked up once per kind")
+check(lookups.Class == 1 and lookups.BattleMaster == 1, "the tracking atlases looked up once per kind")
 check(lookups.questobjective == 1, "the missing objective atlas asked once")
 
 print(string.format("looks_spec: %d checks passed", checks))

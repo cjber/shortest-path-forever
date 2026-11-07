@@ -5,7 +5,9 @@ local L = ns.L
 local MapCanvas = ns.MapCanvas
 local PIN_TEMPLATE = "ShortestPathForeverDockPinTemplate"
 local PORTAL_TEMPLATE = "ShortestPathForeverPortalPinTemplate"
-local PING_FILE = "Interface\\Minimap\\UI-Minimap-Ping-Expand"
+-- The ping's own expanding glow ring (Blizzard_PingUI's Ping_SpotGlw_<kit>_Out), a 53 by 53 atlas fitted into
+-- the 50 by 50 ring box.
+local PING_ATLAS = "Ping_SpotGlw_Assist_Out"
 local ZEPPELIN_FILE = "Interface\\AddOns\\ShortestPathForever\\media\\Zeppelin"
 local PIN_SIZE = 20
 local ARROW_SIZE = 15
@@ -310,7 +312,7 @@ local function PingArt(ping)
 	ping:SetSize(70, 70)
 	local ring = ping:CreateTexture(nil, "BACKGROUND")
 	ring:SetPoint("CENTER")
-	ns.Art.Icon(ring, PING_FILE, 50)
+	ns.Art.Fit(ring, PING_ATLAS, 50, 50)
 	ring:SetAlpha(0)
 	local flash = ping:CreateAnimationGroup()
 	for loop = 0, PING_LOOPS - 1 do

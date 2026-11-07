@@ -214,9 +214,15 @@ end
 assert(api.Cancel("Test"))
 assert(api.Navigate("Test", 1414, 0.51, 0.5, "Trainer", "trainer"))
 settle()
--- The trainer's tracking icon is a file, which the harness does not record; a lone stop has no number or button.
+-- The trainer's Class atlas fits the 22 by 22 look box at the stub atlas's 36 by 44 shape; a lone stop has no number or button.
 local lone = active[goalTemplate][1]
-assert(not lone.Icon.hidden and lone.Icon.width == 22 and lone.Icon.anchor[1] == "CENTER")
+assert(
+	not lone.Icon.hidden
+		and lone.Icon.atlas == "Class"
+		and math.abs(lone.Icon.width - 18) < 1e-9
+		and lone.Icon.height == 22
+		and lone.Icon.anchor[1] == "CENTER"
+)
 assert(lone.Texture.hidden and lone.Button.hidden and lone.Number.text == "")
 mt.__index = stubIndex
 assert(api.Cancel("Test"))
