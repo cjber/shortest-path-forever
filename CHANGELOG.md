@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves. API changes other addons' aut
 optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
+
+## [1.22.44] - 2026-11-07
 - **Leaderboards show full names.** The Forever Leaderboards rows and tooltips show a player's first name and surname, such as "Dirtyjoke Lovetties", instead of one run-together word or the first name alone. (cjber/forever-core#179)
 
 ## [1.22.43] - 2026-11-07
