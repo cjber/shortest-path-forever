@@ -11,6 +11,8 @@ verbatim rather than rewritten as the addon moves. API changes other addons' aut
 optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
+- **No blocked-action error from the tracker in combat.** Clicking the Shortest Path header, or *Show on map* in its menu, during a fight no longer raises an `ADDON_ACTION_BLOCKED` error for `OpenWorldMap()`: the game only lets you open the world map yourself in combat, so the addon says to open it, as it already does with a gamepad (#444).
+
 - **The Forever Leaderboards tab wears a game icon.** The Shortest Path tab now uses the game's own spyglass instead of the addon's logo, so it sits beside the other tabs as if it came with the window (cjber/forever-core#180).
 
 - **A locked tracker stays quiet until you hover it.** With *Lock the tracker* on, the Forever column's grip no longer shows the long "tracker is locked" sentence all the time, where it overlapped whatever sat below and ran off screen at an edge. The grip stays blank until the pointer is over it, and the sentence is in its tooltip. Thanks to MrFIXlT for the request (cjber/forever-core#193).

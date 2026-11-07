@@ -1,11 +1,14 @@
 -- Under the game's gamepad interface the addon leaves opening and turning the world map, and opening menus, to the
 -- game (#158): Forever's FrameControlsManager takes each into its focus in the same call, and the gamepad action bar
 -- calls the protected SetPreferredGamepadInteractTarget from there. With mouse and keyboard nothing changes.
-local style, opened, printed, mapShown, mapID, menus = 0, {}, {}, false, 1429, {}
+local style, opened, printed, mapShown, mapID, menus, combat = 0, {}, {}, false, 1429, {}, false
 local env = setmetatable({
 	ShortestPathForeverDB = {},
 	GetServerTime = function()
 		return 100
+	end,
+	InCombatLockdown = function()
+		return combat
 	end,
 	UnitFactionGroup = function()
 		return "Alliance"
@@ -77,6 +80,11 @@ end
 assert(not ns.GamepadUI(), "mouse and keyboard is not the gamepad interface")
 assert(ns.OpenWorldMap(1429) and opened[1] == 1429 and #printed == 0, "the map opens as before")
 assert(ns.ContextMenu("pin", print) == "pin" and menus[1] == "pin", "menus open as before")
+combat = true
+assert(not ns.OpenWorldMap(1429) and #opened == 1, "in combat the addon does not open the map (#444)")
+assert(#printed == 1 and printed[1]:find("Open the world map to see it.", 1, true), "it says to open the map")
+combat = false
+printed = {}
 style = 1
 assert(ns.GamepadUI(), "the gamepad interface is seen")
 assert(not ns.OpenWorldMap(1429) and #opened == 1, "under it the addon does not open the map")

@@ -107,13 +107,14 @@ end
 
 -- Shows the world map on uiMap (or where you are) and returns whether it is up there. Under the gamepad interface
 -- the addon neither opens nor turns it (#158): C_Map.OpenWorldMap runs the map's own handler, its pins and the
--- gamepad focus in this addon's call. A map the player already has on uiMap (or any map, with no uiMap) is used as
--- it is; otherwise the player is told what to open (`hint`, or the plain line) and false comes back.
+-- gamepad focus in this addon's call. In combat the call is protected (#444), so it is left to the player the same
+-- way. A map the player already has on uiMap (or any map, with no uiMap) is used as it is; otherwise the player is
+-- told what to open (`hint`, or the plain line) and false comes back.
 ---@param uiMap? number
 ---@param hint? string
 ---@return boolean
 function ns.OpenWorldMap(uiMap, hint)
-	if not ns.GamepadUI() then
+	if not ns.GamepadUI() and not InCombatLockdown() then
 		C_Map.OpenWorldMap(uiMap)
 		return true
 	end
