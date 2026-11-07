@@ -214,8 +214,8 @@ end
 assert(api.Cancel("Test"))
 assert(api.Navigate("Test", 1414, 0.51, 0.5, "Trainer", "trainer"))
 settle()
--- The trainer's Class atlas fits the 22 by 22 look box at the stub atlas's 36 by 44 shape; a lone stop has no
--- number or button.
+-- The trainer's Class atlas fits the 22 by 22 look box at the stub atlas's 36 by 44 shape; a lone
+-- stop has no number or button.
 local lone = active[goalTemplate][1]
 assert(
 	not lone.Icon.hidden
