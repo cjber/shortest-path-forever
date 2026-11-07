@@ -28,7 +28,7 @@ WOWMOCK = FOREVER_CORE / "tools" / "wowmock"
 if not (WOWMOCK / "wowmock.py").is_file():
     sys.exit(f"wowmock.py not found in {WOWMOCK}; set FOREVER_CORE to the forever-core checkout")
 sys.path.insert(0, str(WOWMOCK))
-from screenshot_docks import dock_kinds, zeppelin_art
+from screenshot_docks import dock_kinds, pin_art, zeppelin_art
 from screenshots_area import render as render_area_art
 from screenshots_art import Art
 from screenshots_services import render as render_services
@@ -255,6 +255,11 @@ def icon(canvas, name, x, y, size=None, alpha=1):
     canvas.draw(art, x - w / 2, y - h / 2, w, h, (1, 1, 1, alpha))
 
 
+def pin_icon(canvas, x, y, size, alpha=1):
+    """The addon's own square goal pin, media/Pin.tga, at its native aspect."""
+    canvas.draw(pin_art(), x - size / 2, y - size / 2, size, size, (1, 1, 1, alpha))
+
+
 def map_docks(ui, map_id, width, height):
     """Map.lua's sorted, transitive clusters; a running centroid misses chains of overlapping pins."""
     kinds = dock_kinds(data()["routes"])
@@ -457,10 +462,7 @@ def map_canvas(ui, map_id=947, alpha=1, hover=False):
         goal = DARKSHORE_GOAL if map_id == 1439 else data()["taxis"]["73"] if map_id == 1414 else GOAL
         gp = point(goal)
         if gp and 0 <= gp[0] <= mw and 0 <= gp[1] <= mh:
-            art = ui.atlas("Waypoint-MapPin-Tracked")
-            canvas.draw(
-                art, mx + gp[0] - art.width * 0.4, my + gp[1] - art.height * 0.4, art.width * 0.8, art.height * 0.8
-            )
+            pin_icon(canvas, mx + gp[0], my + gp[1] - 29 / 2, 29)  # StopPin.lua stands the point on the goal
         points = ordered(data()["darkshore" if map_id == 1439 else "walk"])
         bend = next(p for p in points[1:] if math.hypot(p["x"] - START["x"], p["y"] - START["y"]) > 25)
         bp = point(bend)
@@ -601,7 +603,7 @@ def render_tracker(ui):
 
 def compass_canvas(ui, facing=math.pi - 0.2, distance=780):
     # Compass.lua's ribbon: no panel and no border. Its ticks and their letters fade out towards the ends, so
-    # the compass dissolves into the world, and the destination is the game's own waypoint pin.
+    # the compass dissolves into the world, and the destination is the addon's own gold goal pin.
     canvas = ui.canvas(360, 65)
 
     def offset(angle):
@@ -629,9 +631,10 @@ def compass_canvas(ui, facing=math.pi - 0.2, distance=780):
                 width=20,
             )
     canvas.fill(179.5, 3, 1, 6, (1, 0.82, 0, 0.85))
-    # Chosen bearings reproduce reference 20, using the current proportion-preserving atlas sizes.
+    # Chosen bearings reproduce reference 20, using the current proportion-preserving sizes.
+    x = 180 + max(-180, min(180, offset(math.pi + 0.9)))
+    pin_icon(canvas, x, 36, 18)
     for angle, name, size, alpha, bend in (
-        (math.pi + 0.9, "Waypoint-MapPin-Tracked", 18, 1, False),
         (math.pi, "Navigation-Tracked-Icon", 18, 1, True),
         (math.pi + 0.15, "Navigation-Tracked-Icon", 12, 0.5, False),
     ):

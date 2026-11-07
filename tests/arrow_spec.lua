@@ -26,6 +26,7 @@ env.CreateFrame = function(...)
 	end
 	return frame
 end
+driver.load("UI/Art.lua")
 driver.load("UI/Mover.lua")
 driver.load("UI/Arrow.lua")
 local points = { { map = 1, x = 0, y = 0 }, { map = 1, x = 200, y = 0 } }

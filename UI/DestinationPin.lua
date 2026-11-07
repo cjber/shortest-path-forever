@@ -1,7 +1,7 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
--- Destination pin: the game's own waypoint pin, held on screen over the journey's final
+-- Destination pin: the addon's own gold goal pin, held on screen over the journey's final
 -- destination so it can be seen all the way there rather than only on the map.
 --
 -- The pin is placed by the bearing to the destination and the way you are facing: straight
@@ -24,7 +24,7 @@ local BEHIND = 2
 local ALPHA_AHEAD, ALPHA_BEHIND = 1, 0.4
 -- Seconds between updates: the arrow rides the same interval, and the pin needs nothing faster.
 local POLL = 0.1
-local PIN_ATLAS, PIN_WIDTH, PIN_HEIGHT = "Waypoint-MapPin-Tracked", 28, 36
+local PIN_SIZE = 36
 
 ---@class SPFDestinationPinFrame : Frame
 ---@field Pin Texture
@@ -56,14 +56,14 @@ end
 ---@return SPFDestinationPinFrame
 local function Create()
 	local pin = CreateFrame("Frame", "ShortestPathForeverDestinationPin", UIParent) --[[@as SPFDestinationPinFrame]]
-	pin:SetSize(PIN_WIDTH, PIN_HEIGHT + 28)
+	pin:SetSize(PIN_SIZE, PIN_SIZE + 28)
 	pin:SetFrameStrata("MEDIUM")
 	pin:SetAlpha(1)
 	pin.Pin = pin:CreateTexture(nil, "ARTWORK")
 	pin.Pin:SetPoint("TOP", pin, "TOP", 0, 0)
-	ns.Art.Fit(pin.Pin, PIN_ATLAS, PIN_WIDTH, PIN_HEIGHT)
+	ns.Art.Icon(pin.Pin, ns.PIN_FILE, PIN_SIZE)
 	pin.Distance = pin:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-	pin.Distance:SetPoint("TOP", pin, "TOP", 0, -PIN_HEIGHT + 4)
+	pin.Distance:SetPoint("TOP", pin, "TOP", 0, -PIN_SIZE + 4)
 	pin.Distance:SetJustifyH("CENTER")
 	pin.Step = pin:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	pin.Step:SetPoint("TOP", pin.Distance, "BOTTOM", 0, -2)

@@ -14,8 +14,20 @@ local UNDER_ALPHA = 0.5
 -- RouteTransports.lua fades its outlines with the same share.
 ns.RouteUnderAlpha = UNDER_ALPHA
 -- StopPin.lua's marks. On the minimap a hollow ring circles the game's own icon at a stop with a known mark.
-local GOAL_ATLAS, RING_ATLAS, STOP_SIZE = ns.GoalAtlas, "adventureguide-ring", ns.StopSize
+local RING_ATLAS, STOP_SIZE = "adventureguide-ring", ns.StopSize
 local MINIMAP_GOAL, MINIMAP_RING = 16, 22
+
+-- A stop with a known mark is only ringed, so the game's icon shows through; every other goal wears our own pin.
+---@param texture Texture
+---@param ringed boolean
+---@param size number
+local function SetGoalArt(texture, ringed, size)
+	if ringed then
+		ns.Art.Fit(texture, RING_ATLAS, size, size)
+	else
+		ns.Art.Icon(texture, ns.PIN_FILE, size)
+	end
+end
 -- How strongly the goal's mark shows when it waits on the minimap's rim, off its face.
 local EDGE_ALPHA = 0.6
 local COLORS = {
@@ -587,7 +599,7 @@ local function DrawMinimap(self)
 			self.goalEdge = edge
 			local ringed = not edge and goal and goal.look ~= nil
 			local size = ringed and MINIMAP_RING or MINIMAP_GOAL
-			ns.Art.Fit(self.Goal, ringed and RING_ATLAS or GOAL_ATLAS, size, size)
+			SetGoalArt(self.Goal, ringed, size)
 		end
 		self.Goal:Show()
 	end
@@ -716,9 +728,9 @@ function ns.SetJourneyRoute(destination, route)
 	if minimap then
 		-- Addon textures draw over the minimap's own icons, so a stop with a known mark (a "?", a flight master) is only
 		-- circled there: the game's icon shows through the ring.
-		local ringed = destination and destination.look ~= nil
+		local ringed = destination ~= nil and destination.look ~= nil
 		local size = ringed and MINIMAP_RING or MINIMAP_GOAL
-		ns.Art.Fit(minimap.Goal, ringed and RING_ATLAS or GOAL_ATLAS, size, size)
+		SetGoalArt(minimap.Goal, ringed, size)
 		minimap.goalEdge = nil
 		if destination then
 			minimap:Show()
@@ -759,7 +771,7 @@ ns.Init(function()
 	minimap.elapsed, minimap.idle = 0, 0
 	StrokeLayer(minimap)
 	minimap.Goal = Minimap:CreateTexture(nil, "OVERLAY")
-	ns.Art.Fit(minimap.Goal, GOAL_ATLAS, MINIMAP_GOAL, MINIMAP_GOAL)
+	SetGoalArt(minimap.Goal, false, MINIMAP_GOAL)
 	minimap.Goal:Hide()
 	-- The client's own "inside the quest's area" state, the one it paints the blob from, drives the tint at once.
 	minimap:RegisterEvent("PLAYER_INSIDE_QUEST_BLOB_STATE_CHANGED")

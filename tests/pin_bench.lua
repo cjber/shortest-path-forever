@@ -56,10 +56,14 @@ driver.env.C_Texture = {
 		return { width = 32, height = 32 }
 	end,
 }
+ns.PIN_FILE = "Interface\\AddOns\\ShortestPathForever\\media\\Pin"
 ns.Art = {
 	Fit = function(texture)
 		texture:SetSize(28, 36)
 		return true
+	end,
+	Icon = function(texture)
+		texture:SetSize(36, 36)
 	end,
 }
 ns.FormatDistance = function(yards)

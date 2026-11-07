@@ -40,7 +40,9 @@ assert(badgePin.Texture.width <= 11 and badgePin.Texture.height <= 11 and not ba
 ns.ClearJourney()
 ns.StartJourney(assert(ns.WorldPoint(1414, 0.53, 0.5)))
 settle()
-assert(active[goalTemplate][1].Texture.allPoints == active[goalTemplate][1], "reused pin restores full size")
+local reused = active[goalTemplate][1].Texture
+assert(reused.anchor[1] == "BOTTOM" and reused.anchor[3] == "CENTER" and reused.width == 29 and reused.height == 29,
+ "a reused pin restores full size, standing on its point at the goal")
 ns.ClearJourney()
 
 -- Stop 3 goes back to stop 1's place: one button, the first visit's number, both titles and the later detail.

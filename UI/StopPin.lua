@@ -2,7 +2,9 @@
 local ns = select(2, ...)
 local L = ns.L
 
-local GOAL_ATLAS, GOAL_SCALE = "Waypoint-MapPin-Tracked", 0.8
+-- The addon's own gold goal pin: a square file whose point is the bottom centre of the square.
+-- 29 tall: the stock pin at the 0.8 scale the map drew it, so the goal sits no heavier on the map than before.
+local GOAL_FILE, GOAL_SIZE = ns.PIN_FILE, 29
 -- The map's own quest button (POIButtonTemplate): a 20-unit button whose 32-unit disc art overhangs it.
 local STOP_SIZE = 20
 -- The numbered quest button's numerals (QuestPOI_CalculateNumericTexCoords): an 8 by 8 grid whose lower half holds
@@ -19,7 +21,7 @@ local LOOK_SIZE, BADGE_SIZE, BADGE_OFFSET, TAG_SIZE = 22, 16, 4, 11
 -- Later stops stay stronger than Strokes.lua's later lines so their numbers remain legible.
 local LATER_STOP_ALPHA = 0.9
 -- Route.lua groups stops by the button's size.
-ns.GoalAtlas, ns.StopSize = GOAL_ATLAS, STOP_SIZE
+ns.StopSize = STOP_SIZE
 
 ---@class SPFGoalPin : SPFCanvasPin
 ---@field Texture Texture
@@ -52,9 +54,9 @@ function GoalPin:OnLoad()
 	self:SetScript("OnHide", self.OnMouseLeave)
 end
 
--- A lone destination wears the waypoint pin; a numbered stop wears the map's quest button with its number. Stops
--- whose buttons would overlap, a place visited twice among them, share one: it shows the first stop's number with the
--- action badge intact, and its tooltip names each.
+-- A lone destination wears the addon's own goal pin; a numbered stop wears the map's quest button with its number.
+-- Stops whose buttons would overlap, a place visited twice among them, share one: it shows the first stop's number
+-- with the action badge intact, and its tooltip names each.
 -- A numbered stop whose caller said what stands there wears that mark as a badge on the button's lower right, so the
 -- pin reads as step 3 at the quest giver or flight master; a lone one wears the mark alone, full size.
 ---@param numbers integer[]? the stops this pin marks, in order; nil for a lone destination
@@ -101,17 +103,21 @@ function GoalPin:OnAcquired(x, y, numbers, titles, later, look, details, pinBadg
 	elseif marked then
 		self:SetSize(LOOK_SIZE, LOOK_SIZE)
 	else
-		-- The native waypoint pin (SuperTrackedFrame.lua:219) that Guide's marker wears, so map and marker agree.
-		local atlas = C_Texture.GetAtlasInfo(GOAL_ATLAS)
-		self:SetSize(atlas.width * GOAL_SCALE, atlas.height * GOAL_SCALE)
-		self.Texture:SetAtlas(GOAL_ATLAS) -- art-ok: fills the pin, sized above from the atlas's own shape
+		-- The addon's own gold goal pin, square, so its shape is not stretched.
+		self:SetSize(GOAL_SIZE, GOAL_SIZE)
+		ns.Art.Icon(self.Texture, GOAL_FILE, GOAL_SIZE)
 	end
 	self.Texture:ClearAllPoints()
 	if pinBadge and not numbers and not marked then
 		self:SetSize(LOOK_SIZE, LOOK_SIZE)
-		ns.Art.Fit(self.Texture, GOAL_ATLAS, TAG_SIZE, TAG_SIZE)
+		ns.Art.Icon(self.Texture, GOAL_FILE, TAG_SIZE)
 		self.Texture:SetPoint("CENTER", self, "BOTTOMRIGHT", 0, 0)
 		self:SetHitRectInsets(0, -TAG_SIZE / 2, 0, -TAG_SIZE / 2)
+	elseif not numbers and not marked then
+		-- The pin's point marks the goal: the map centres the frame on it, so the pin stands on the centre and the
+		-- hit rect rises with it.
+		self.Texture:SetPoint("BOTTOM", self, "CENTER")
+		self:SetHitRectInsets(0, 0, -GOAL_SIZE / 2, GOAL_SIZE / 2)
 	else
 		self.Texture:SetAllPoints()
 	end

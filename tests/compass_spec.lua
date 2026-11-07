@@ -256,6 +256,7 @@ assert(strip.Distance.text == "100 yd")
 close(strip.Bend.width / strip.Bend.height, 23 / 35)
 close(strip.Next.width / strip.Next.height, 23 / 35)
 close(strip.Goal.width / strip.Goal.height, 1)
+assert(strip.Goal.texture == ns.PIN_FILE and strip.Goal.atlas == nil, "the goal marker uses the addon's own gold pin")
 assert(strip.Distance.font == "GameFontHighlightSmall")
 
 -- No panel, no border, no backdrop template: the compass is the world's own palette on the screen.
