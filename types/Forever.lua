@@ -33,6 +33,7 @@ C_DateAndTime = nil
 CreateDataProvider = nil
 ---@class SPFScrollBoxLinearView
 ---@field SetElementInitializer fun(self: SPFScrollBoxLinearView, element: string, initializer: fun(button: any, entry: any))
+---@field SetElementExtent fun(self: SPFScrollBoxLinearView, extent: number)
 ---@type fun(...): SPFScrollBoxLinearView
 CreateScrollBoxListLinearView = nil
 ---@type {InitScrollBoxListWithScrollBar: fun(scrollBox: Frame, scrollBar: any, view: SPFScrollBoxLinearView)}
