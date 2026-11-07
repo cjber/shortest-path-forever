@@ -3,7 +3,7 @@
   "source": {
     "repository": "https://github.com/cjber/forever-core",
     "path": ".agents/skills/wow-forever-addon/tooling/forever_tools",
-    "revision": "839ee3fe9169561080258d1eaa0476acb63ba69c"
+    "revision": "8a6f64a5fe7aafeb48894b280fe21d2168a16a6a"
   },
   "files": {
     "__init__.py": "845dbed90ad519817771603e96839d1ba970007d5a6d997a4a13fef416b8bcd1",
@@ -18,13 +18,13 @@
     "generated.py": "1165ae433d771dd26c5aa606ed56a2e9bc8e6bea6e3436e34ca07c2f9fc10569",
     "interface_paths.txt": "14179c8c508b67347fe98dacbf6f62e0a8ebaacc6a4e9c9ca8c016f8a957233e",
     "latest_build.py": "31d483946a872f5a90f62e03f34dae8b4a78f3516f819f323714687985f6e483",
-    "legacy_chrome.py": "c921765d51dbc645f28225f03ebb6596c4894d28a23cbae93467489e9b1cbf58",
-    "legacy_chrome.txt": "299be17536c7359b72608ea1dd7e532dbaaaa7275bc35de2602c01db2a1b6443",
+    "legacy_chrome.py": "9ddc37ef2eb0ab7d27eccd4d8c5b297856ae23989de4149a39a557644cafecff",
+    "legacy_chrome.txt": "2883fb217ec2329ed06b2c4965ffe1d66fd64e47e88be51c30383bec8852ddbd",
     "locales.py": "f7dc8dbacbc5e422f4e3ca20251d6094236e9a604bbcd40e866d8fd5af30343d",
     "lua.py": "030f1dd8c9dd5fa29bda054b8699570a4d9e17fae8022a48e6d171cea167a7a3",
     "luadata.py": "d2621f31d1ddfa8c338d3305d3dbfb74020555f512c96b5991484404632c598e",
     "multivalue.py": "39815c69ae1518e1f847a8043837ca48f096d626b05d49a7bc9b6052521c639f",
-    "package.py": "3ecbb740b70d0d25b362d1490967e4b6979c402922c114b37fdb42148b6fd477",
+    "package.py": "aa785e5d5d84886ddc2bfd59ea20364ba76dd121b53c517a42166630c07b2680",
     "readable.py": "5f41e691066830727e3218bd958c07c05a442f3b7e311150c9e2cbffefb567d4",
     "release_check.py": "b7a9c1ac0fe8600eef2eb5d8d0df4ed12ab535b0f3f04fc76535725fdb6459a8",
     "report.py": "2b6e11c9e6dfa856f5bc7bb35822013f02a527225a28820ad745be61565c53ba",
