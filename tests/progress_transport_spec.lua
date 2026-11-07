@@ -148,7 +148,7 @@ local boards = {
 local shared = harness(nil, nil, boards)
 check(spec and spec.key == "spf", "the addon registers its board with the shared window")
 check(spec.title == "Shortest Path Forever", "the tab carries the addon's title")
-check(spec.icon == "Interface\\AddOns\\ShortestPathForever\\media\\Icon", "the tab carries the shipped icon")
+check(spec.icon == "Interface\\Icons\\INV_Misc_Spyglass_03", "the tab carries the game's spyglass icon")
 check(spec.metric == "Completed journeys", "the board names its metric")
 check(type(spec.revision) == "function", "the board has a revision callback")
 check(spec.sharing(), "sharing is on by default")

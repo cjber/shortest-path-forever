@@ -80,7 +80,7 @@ local function Snapshot()
 		peers = {},
 	}
 end
-local ICON = "Interface\\AddOns\\ShortestPathForever\\media\\Icon"
+local TAB_ICON = "Interface\\Icons\\INV_Misc_Spyglass_03"
 local BOARD_METRIC = "routes_completed"
 
 -- Sharing is opt-out: only an explicit off stays off, so a missing saved setting reads as on.
@@ -146,7 +146,7 @@ end
 if ns.Leaderboards then
 	ns.Leaderboards:Register("spf", {
 		title = L["Shortest Path Forever"],
-		icon = ICON,
+		icon = TAB_ICON,
 		metric = L["Completed journeys"],
 		board = Board,
 		revision = function()
