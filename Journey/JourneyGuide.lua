@@ -69,7 +69,8 @@ local function DestinationTitle(goal)
 end
 
 -- Hand our destination to Waypoint UI rather than writing the waypoint it is already tracking. Wrapped in ns.SafeCall
--- so a renamed or absent member can never raise into the guide.
+-- so a renamed or absent member can never raise into the guide. Waypoint UI's public API takes coordinates as percent,
+-- while our bend coordinates are normalized 0-1, so we scale them by 100 here.
 ---@param navigation table
 ---@param title string?
 ---@param uiMap number
@@ -82,8 +83,8 @@ local function HandOverToWaypointUI(navigation, title, uiMap, x, y)
 	ns.SafeCall("Waypoint UI handover", navigation.NewUserNavigation, {
 		name = title,
 		mapID = uiMap,
-		x = x,
-		y = y,
+		x = x * 100,
+		y = y * 100,
 	})
 end
 
