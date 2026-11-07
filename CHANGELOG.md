@@ -12,6 +12,11 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+
+## [1.22.49] - 2026-11-07
+
+- **Bends handed to Waypoint UI land on the route again.** While Waypoint UI is tracking a navigation of its own, Shortest Path hands each bend over to it, but it passed map fractions (0.42) where Waypoint UI expects percent (42). Every handed-over bend therefore sat in the zone map's top-left corner and the journey drew no bends on the map. The handover now sends percent, so the bend shows where it belongs (#454).
+
 ## [1.22.48] - 2026-11-07
 
 - **Gold numbered markers for stops and turns.** The world map's stops wear the addon's own gold numbered markers up to 25, with later stops on the font, and the compass shows the next turn as 1 and the one after as 2 instead of the game's tracking diamond. The goal pin leaves the compass while a turn stands between you and it, so 1 is always the thing to aim for. The stop you are travelling to stays brightest while later stops dim.
