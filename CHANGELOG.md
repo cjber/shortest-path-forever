@@ -11,10 +11,12 @@ verbatim rather than rewritten as the addon moves. API changes other addons' aut
 optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
+
+
+## [1.22.46] - 2026-11-07
+
 - **Shortest Path's own gold pin marks the goal.** The world map, the minimap, the compass, the arrow and the on-screen destination pin show the addon's own gold pin instead of the game's waypoint pin, so the goal no longer looks like a waypoint you placed yourself.
-
 - **The Forever Leaderboards tab wears a game icon.** The Shortest Path tab now uses the game's own spyglass instead of the addon's logo, so it sits beside the other tabs as if it came with the window (cjber/forever-core#180).
-
 - **A locked tracker stays quiet until you hover it.** With *Lock the tracker* on, the Forever column's grip no longer shows the long "tracker is locked" sentence all the time, where it overlapped whatever sat below and ran off screen at an edge. The grip stays blank until the pointer is over it, and the sentence is in its tooltip. Thanks to MrFIXlT for the request (cjber/forever-core#193).
 
 ## [1.22.45] - 2026-11-07
