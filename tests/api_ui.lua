@@ -169,7 +169,7 @@ posX, posY = 0, 0
 assert(api.Navigate("Test", 1414, 0.51, 0.5, "Only"))
 settle()
 assert(#active[goalTemplate] == 1 and active[goalTemplate][1].Number.text == "")
-assert(active[goalTemplate][1].Texture.atlas == "Waypoint-MapPin-Tracked")
+assert(active[goalTemplate][1].Texture.texture == ns.PIN_FILE and active[goalTemplate][1].Texture.atlas == nil)
 assert(active[goalTemplate][1].stopTitles == nil and arrowFrame.Progress.text == "")
 -- The destination's pin names the journey, the time and distance left, and each step as the tracker words it.
 active[goalTemplate][1]:OnMouseEnter()
@@ -201,7 +201,7 @@ assert(plain.Icon.hidden and plain.Texture.hidden and not plain.Button.hidden an
 assert(numeral(plain) == 2)
 -- The stop is off the minimap here, so its mark waits on the rim as the goal pin: a ring would circle nothing.
 local miniRoute = ShortestPathForeverMinimapRoute
-assert(miniRoute.goalEdge and miniRoute.Goal.atlas == "Waypoint-MapPin-Tracked")
+assert(miniRoute.goalEdge and miniRoute.Goal.texture == ns.PIN_FILE and miniRoute.Goal.atlas == nil)
 -- Standing beside it, the minimap rings the game's own icon there again.
 do
  local _, at = C_Map.GetWorldPosFromMapPos(1414, CreateVector2D(0.51, 0.5))
@@ -222,8 +222,8 @@ mt.__index = stubIndex
 assert(api.Cancel("Test"))
 assert(api.Navigate("Test", 1414, 0.51, 0.5, "Only"))
 settle()
-assert(active[goalTemplate][1].Icon.hidden and active[goalTemplate][1].Texture.atlas == "Waypoint-MapPin-Tracked")
-assert(ShortestPathForeverMinimapRoute.Goal.atlas == "Waypoint-MapPin-Tracked")
+assert(active[goalTemplate][1].Icon.hidden and active[goalTemplate][1].Texture.texture == ns.PIN_FILE)
+assert(ShortestPathForeverMinimapRoute.Goal.texture == ns.PIN_FILE)
 assert(api.Cancel("Test"))
 posX, posY = 0, 0
 assert(api.NavigateRoute("Test", stops))

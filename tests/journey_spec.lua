@@ -127,6 +127,7 @@ for _, destination in ipairs({ { map = 1, x = 6400, y = 100 }, { map = 0, x = 22
 		"Routing/PathGrid.lua",
 		"Routing/Path.lua",
 		"Routing/PathJobs.lua",
+		"UI/Art.lua",
 		"UI/Mover.lua",
 		"UI/Arrow.lua",
 	}) do

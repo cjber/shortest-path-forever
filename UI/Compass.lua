@@ -3,7 +3,7 @@ local ns = select(2, ...)
 local L = ns.L
 
 -- A thin ribbon of the game's own parchment ticks across the top of the screen: no panel, no border, the
--- ticks and their letters fading out towards its ends, the destination drawn as the game's own waypoint pin.
+-- ticks and their letters fading out towards its ends, the destination drawn as the addon's own gold goal pin.
 local WIDTH, HEIGHT, POLL_EVERY = 360, 60, 0.1
 local TURN, EASE, SETTLED = 2 * math.pi, 18, 0.001
 local OVERLAP = 6
@@ -53,7 +53,7 @@ local function Offset(angle, facing)
 	return -Difference(angle, facing) * WIDTH / math.pi
 end
 
--- The icon is a transport kind (drawn as the map draws it) or an atlas name.
+-- The icon is a transport kind (drawn as the map draws it), a file path, or an atlas name.
 local function SetIcon(marker, icon)
 	if marker.icon == icon then
 		return false
@@ -61,6 +61,8 @@ local function SetIcon(marker, icon)
 	marker.icon = icon
 	if TRANSPORTS[icon] then
 		ns.SetTransportIcon(marker, icon, marker.size)
+	elseif icon:find("\\", 1, true) then
+		ns.Art.Icon(marker, icon, marker.size)
 	else
 		ns.Art.Fit(marker, icon, marker.size, marker.size)
 	end
@@ -70,13 +72,13 @@ end
 local function StopIcon(stop)
 	if stop and stop.kind == "dock" then
 		local kind = ns.DockKind(stop.id)
-		return TRANSPORTS[kind] and kind or "Waypoint-MapPin-Tracked", true
+		return TRANSPORTS[kind] and kind or ns.PIN_FILE, true
 	elseif stop and stop.kind == "taxi" then
 		local taxi = ns.TaxiNodes[stop.id]
 		return stop.undiscovered and "taxinode_undiscovered" or taxiIcons[taxi and taxi.faction] or taxiIcons.Neutral,
 			true
 	end
-	return "Waypoint-MapPin-Tracked", false
+	return ns.PIN_FILE, false
 end
 
 local function SamePlace(a, b)
@@ -373,7 +375,7 @@ local function Create()
 		---@field offset number
 		local marker = frame:CreateTexture(nil, "OVERLAY")
 		marker.size = name == "Next" and 12 or 18
-		SetIcon(marker, name == "Goal" and "Waypoint-MapPin-Tracked" or "Navigation-Tracked-Icon")
+		SetIcon(marker, name == "Goal" and ns.PIN_FILE or "Navigation-Tracked-Icon")
 		frame[name] = marker
 	end
 	-- The game's own pins and arrow at full strength; a turn still ahead of the stop is the only dim one.

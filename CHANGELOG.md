@@ -11,6 +11,7 @@ verbatim rather than rewritten as the addon moves. API changes other addons' aut
 optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
+- **Shortest Path's own gold pin marks the goal.** The world map, the minimap, the compass, the arrow and the on-screen destination pin show the addon's own gold pin instead of the game's waypoint pin, so the goal no longer looks like a waypoint you placed yourself.
 
 ## [1.22.44] - 2026-11-07
 - **Leaderboards show full names.** The Forever Leaderboards rows and tooltips show a player's first name and surname, such as "Dirtyjoke Lovetties", instead of one run-together word or the first name alone. (cjber/forever-core#179)

@@ -20,6 +20,13 @@ def zeppelin_art():
         return source.convert("RGBA")
 
 
+@cache
+def pin_art():
+    """The addon's own gold goal pin, media/Pin.tga, square with the point at its bottom centre."""
+    with Image.open(ROOT / "media" / "Pin.tga") as source:
+        return source.convert("RGBA")
+
+
 def dock_kinds(routes):
     """Dock id to route kind, the lookup ns.DockKind serves in game."""
     return {int(stop["dock"]): route["kind"] for route in routes.values() for stop in route["stops"].values()}

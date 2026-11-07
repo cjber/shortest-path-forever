@@ -5,6 +5,9 @@ local ns = select(2, ...)
 -- inside its box, and a file icon is drawn whole. Every other file sets art only where its line says why its shape is
 -- right (tools/lint_art.py).
 
+-- The addon's own goal pin, media/Pin.tga: a square file whose point is the bottom centre of the square.
+ns.PIN_FILE = "Interface\\AddOns\\ShortestPathForever\\media\\Pin"
+
 ---@class SPFArt
 local Art = {}
 ns.Art = Art
