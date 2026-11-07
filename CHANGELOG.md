@@ -11,6 +11,7 @@ verbatim rather than rewritten as the addon moves. API changes other addons' aut
 optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
+- **The Forever Leaderboards window opens.** `/flb` and `/forever` no longer raise a Lua error on first open: the list's rows now have a fixed height (cjber/forever-core#174).
 
 ## [1.22.42] - 2026-11-07
 - **The completed-journeys leaderboard is part of the shared Forever Leaderboards window.** `/path leaderboard` opens that window on the Shortest Path tab, with this week's progress and all-time totals from guild and group members who report theirs. The window also shows your overall place across every installed Forever addon, and the unit tooltip shows a player's place. Sharing is on unless you turn it off with the window's Share my progress box or the checkbox in **Travel journal**. Reported totals are player-reported and not verified.
