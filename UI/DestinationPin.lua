@@ -21,7 +21,7 @@ local REACH = 150
 -- How much further out a destination behind you sits, as a factor of REACH.
 local BEHIND = 2
 -- Alpha ahead and behind; the pin is dimmest at your back so it never competes with the fight.
-local ALPHA_AHEAD, ALPHA_BEHIND = 1, 0.4
+local ALPHA_AHEAD, ALPHA_BEHIND = 1, ns.BEHIND_ALPHA or 0.4
 -- Seconds between updates: the arrow rides the same interval, and the pin needs nothing faster.
 local POLL = 0.1
 local PIN_SIZE = 36

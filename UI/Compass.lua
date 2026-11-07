@@ -18,6 +18,7 @@ local FADE = 80
 ---@field Bend SPFCompassMarker
 ---@field Center Texture
 ---@field Distance FontString
+---@field behind boolean
 ---@field Time FontString
 ---@field timeAt? number
 ---@field timeText? string
@@ -69,16 +70,21 @@ local function SetIcon(marker, icon)
 	return true
 end
 
+-- The numbered marker a route stop carries, when it has art; any other stop wears the goal pin.
+local function StopNumber(stop)
+	return ns.NumberFile(stop and stop.number) or ns.PIN_FILE
+end
+
 local function StopIcon(stop)
 	if stop and stop.kind == "dock" then
 		local kind = ns.DockKind(stop.id)
-		return TRANSPORTS[kind] and kind or ns.PIN_FILE, true
+		return TRANSPORTS[kind] and kind or StopNumber(stop), true
 	elseif stop and stop.kind == "taxi" then
 		local taxi = ns.TaxiNodes[stop.id]
 		return stop.undiscovered and "taxinode_undiscovered" or taxiIcons[taxi and taxi.faction] or taxiIcons.Neutral,
 			true
 	end
-	return ns.PIN_FILE, false
+	return StopNumber(stop), false
 end
 
 local function SamePlace(a, b)
@@ -152,6 +158,25 @@ local function Render(x, y, map)
 	else
 		frame.Distance:Hide()
 	end
+	-- Facing away dims every marker and the distance under the next point; the turn after hides, so two markers never
+	-- stack at the strip's edge. A merged bend keeps pointing with the marker that survived it.
+	local behind = false
+	local cue = owner and owner.point
+	if cue then
+		local angle = Difference(math.atan2(cue.y - y, cue.x - x), frame.facing)
+		behind = ns.TurnAround.Behind(angle, frame.behind)
+	end
+	frame.behind = behind
+	local alpha = behind and ns.BEHIND_ALPHA or 1
+	frame.Goal:SetAlpha(alpha)
+	frame.Stop:SetAlpha(alpha)
+	frame.Bend:SetAlpha(alpha)
+	frame.Next:SetAlpha(behind and alpha or 0.6)
+	frame.Distance:SetAlpha(alpha)
+	if behind then
+		frame.Next:Hide()
+		frame.Next.visible = false
+	end
 end
 
 -- Beside the distance, with "Show the time left" on: the time left exactly as the tracker's header gives it (the corpse
@@ -193,6 +218,7 @@ local function Update(elapsed)
 	local bend, nextBend, stop, goal = ns.GuideTargets()
 	if not (ns.db.compass and ns.db.journey and ns.IsJourneyGuided() and bend) then
 		HideTime()
+		frame.behind = false
 		frame:SetShown(moving)
 		frame:SetAlpha(1)
 		SetUpdating(false)
@@ -201,6 +227,7 @@ local function Update(elapsed)
 	local x, y, _, map = ns.JourneyPosition()
 	local facing = GetPlayerFacing()
 	if not (x and y and map and canaccessvalue(facing) and facing) then
+		frame.behind = false
 		frame:SetAlpha(0)
 		frame.facing = nil
 		SetUpdating(false)
@@ -208,15 +235,18 @@ local function Update(elapsed)
 	end
 	frame:SetAlpha(1)
 	local moved = x ~= frame.x or y ~= frame.y or map ~= frame.map or facing ~= frame.rawFacing
+	-- The goal pin leaves the compass while a turn stands between you and it, so the turn's 1 is the only thing to
+	-- aim for; it returns when the bend has merged into the goal.
+	local goalTarget = goal and SamePlace(goal, bend) and goal or nil
 	local changed = frame.dirty
 		or not frame.facing
 		or bend ~= frame.Bend.target
 		or nextBend ~= frame.Next.target
 		or stop ~= frame.Stop.target
-		or goal ~= frame.Goal.target
+		or goalTarget ~= frame.Goal.target
 	local icon, specific = StopIcon(stop)
 	changed = SetIcon(frame.Stop, icon) or changed
-	frame.Goal.target, frame.Stop.target, frame.Bend.target, frame.Next.target = goal, stop, bend, nextBend
+	frame.Goal.target, frame.Stop.target, frame.Bend.target, frame.Next.target = goalTarget, stop, bend, nextBend
 	-- A named transport is more useful than a generic pin; the final destination outranks walking bends.
 	frame.markers[1], frame.markers[2] = specific and frame.Stop or frame.Goal, specific and frame.Goal or frame.Stop
 	frame.x, frame.y, frame.map, frame.rawFacing = x, y, map, facing
@@ -270,6 +300,7 @@ local function OnHide()
 	end
 	frame:UnregisterAllEvents()
 	frame.facing = nil
+	frame.behind = false
 	HideTime()
 end
 
@@ -374,20 +405,23 @@ local function Create()
 		---@field replacement? SPFCompassMarker
 		---@field offset number
 		local marker = frame:CreateTexture(nil, "OVERLAY")
-		marker.size = name == "Next" and 12 or 18
-		SetIcon(marker, name == "Goal" and ns.PIN_FILE or "Navigation-Tracked-Icon")
+		marker.size = name == "Bend" and 20 or name == "Next" and 16 or 18
+		-- The goal wears the addon's own pin; the turns wear numbered markers, 1 for the next and 2 for the one after.
+		SetIcon(marker, name == "Goal" and ns.PIN_FILE or ns.NumberFile(name == "Next" and 2 or 1) --[[@as string]])
 		frame[name] = marker
 	end
-	-- The game's own pins and arrow at full strength; a turn still ahead of the stop is the only dim one.
+	-- The goal and stop at full strength; the turn after the next one is dimmer still.
 	frame.Goal:SetAlpha(1)
 	frame.Stop:SetAlpha(1)
-	frame.Next:SetAlpha(0.5)
+	frame.Bend:SetAlpha(1)
+	frame.Next:SetAlpha(0.6)
 	frame.markers = { frame.Goal, frame.Stop, frame.Bend, frame.Next }
 	frame.Distance = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	frame.Time = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	-- Beside the distance rather than under it, inside the compass's band and its clamp to the screen.
 	frame.Time:SetPoint("LEFT", frame.Distance, "RIGHT", 6, 0)
 	frame.Time:Hide()
+	frame.behind = false
 	frame.idle = 0
 	frame:SetScript("OnShow", OnShow)
 	frame:SetScript("OnHide", OnHide)

@@ -28,6 +28,7 @@ env.CreateFrame = function(...)
 end
 driver.load("UI/Art.lua")
 driver.load("UI/Mover.lua")
+driver.load("UI/TurnAround.lua")
 driver.load("UI/Arrow.lua")
 local points = { { map = 1, x = 0, y = 0 }, { map = 1, x = 200, y = 0 } }
 local placed = 0
@@ -118,6 +119,27 @@ for _ = 1, 30 do
 	end
 end
 assert(rawget(frame, "OnUpdate") == nil, "a still, settled arrow has no OnUpdate")
+
+-- Facing away: the whole arrow window dims to DestinationPin's behind alpha, with the same 120/100 hysteresis as
+-- the compass, and returns when the bend is ahead again.
+driver.move({ map = 1, x = 0, y = 0, z = 0 })
+ns.PointGuideArrow({ { map = 1, x = 0, y = 0 }, { map = 1, x = 100, y = 0 } }, place)
+local function face(degrees)
+	facing = degrees * math.pi / 180
+	frame.OnUpdate(frame, 1 / 60)
+end
+face(130)
+assert(frame.alpha == 0.4, "past 120 degrees the arrow window dims")
+face(110)
+assert(frame.alpha == 0.4, "once dimmed it is kept at 110 degrees")
+face(100.1)
+assert(frame.alpha == 0.4, "and just past 100 degrees it is still kept")
+face(99)
+assert(frame.alpha == 1, "under 100 degrees it returns to full strength")
+face(110)
+assert(frame.alpha == 1, "and it does not dim until the bend is past 120 again")
+face(130)
+assert(frame.alpha == 0.4, "past 120 degrees it dims again")
 
 -- Move the arrow: dragged, saved in screen pixels, scaled, and reset with a right-click.
 ns.MoveArrow(true)

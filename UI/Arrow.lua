@@ -21,6 +21,7 @@ local TOP = -120
 ---@field Arrow Texture
 ---@field Distance FontString
 ---@field Progress FontString
+---@field behind boolean
 ---@field Mover Texture
 ---@field MoverHint FontString
 ---@field metres? boolean
@@ -81,6 +82,7 @@ end
 local function Update(elapsed)
 	-- The client may already have queued this tick when another callback stopped guidance.
 	if not path or not target then
+		frame.behind = false
 		SetUpdating(false)
 		return
 	end
@@ -89,6 +91,7 @@ local function Update(elapsed)
 	local facing = GetPlayerFacing()
 	if not x or not canaccessvalue(facing) then
 		-- No position to point from (an instance): nothing drawn, only the slow poll runs.
+		frame.behind = false
 		frame:SetAlpha(moving and 1 or 0)
 		frame.angle = nil
 		SetUpdating(false)
@@ -108,13 +111,16 @@ local function Update(elapsed)
 	native = placed
 	if not (facing and map == target.map) or (native and NativeMarkerShown()) then
 		-- The native marker leads; nothing to draw, so only the slow poll runs, moving or not.
+		frame.behind = false
 		frame:SetAlpha(moving and 1 or 0)
 		frame.angle = nil
 		SetUpdating(false)
 		return
 	end
-	frame:SetAlpha(1)
-	local angle = Bearing(x, y) - facing
+	local angle = Difference(Bearing(x, y), facing)
+	-- The arrow still points the way, and dims with the compass when that way is behind you.
+	frame.behind = ns.TurnAround.Behind(angle, frame.behind)
+	frame:SetAlpha(frame.behind and ns.BEHIND_ALPHA or 1)
 	-- Exponential decay is frame-rate independent and swings by the shortest arc.
 	local delta = frame.angle and Difference(angle, frame.angle) or 0
 	local easing = math.abs(delta) > SETTLED
@@ -221,6 +227,7 @@ local function Create()
 		end
 		frame:UnregisterAllEvents()
 		frame.angle = nil
+		frame.behind = false
 	end)
 	frame:SetScript("OnEvent", Wake)
 	-- Made hidden, so the first Show starts the poll and the movement events.

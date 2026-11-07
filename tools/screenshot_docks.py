@@ -27,6 +27,13 @@ def pin_art():
         return source.convert("RGBA")
 
 
+@cache
+def number_art(number):
+    """The addon's own numbered marker, media/Numbers/<number>.tga, a square gold ring."""
+    with Image.open(ROOT / "media" / "Numbers" / f"{number}.tga") as source:
+        return source.convert("RGBA")
+
+
 def dock_kinds(routes):
     """Dock id to route kind, the lookup ns.DockKind serves in game."""
     return {int(stop["dock"]): route["kind"] for route in routes.values() for stop in route["stops"].values()}

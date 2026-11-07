@@ -54,11 +54,13 @@ assert(api.NavigateRoute("Test", {
 settle()
 local rings = active[goalTemplate]
 assert(#rings == 2, "the place visited twice shares one button")
-assert(not rings[1].Button.hidden and not rings[1].Disc.hidden and rings[1].width == 20, "the map's quest button")
+assert(not rings[1].Texture.hidden and rings[1].Texture.texture == ns.NumberFile(1) and rings[1].Texture.width == 24,
+ "the first stop's gold numbered marker")
+assert(rings[1].Button.hidden and rings[1].Disc.hidden, "no quest button under a numbered marker")
 assert(rawget(rings[1], "Count") == nil, "shared stop keeps its number without corner text")
 assert(rings[1].stopTitles[1] == "Stop 1 of 3: Quest giver" and rings[1].stopTitles[2] == "Stop 3 of 3: Quest giver")
 assert(rings[1].stopDetails[1] == "Quest detail", "shared stop keeps a later detail when the lead has none")
-assert(rings[2].Button.alpha == 0.9 and rings[2].Disc.alpha == nil, "a later stop fades over its opaque shadow")
+assert(rings[2].Texture.alpha == 0.7 and rings[2].Disc.alpha == nil, "a later stop's marker dims")
 
 -- Each stroke is a pooled pair on the pin's pulsing layer: the core over a darker, wider, half-strength outline.
 local function painted(owner, label)

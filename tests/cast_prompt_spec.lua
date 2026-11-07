@@ -36,6 +36,7 @@ ns.Art = {
 	end,
 }
 driver.load("UI/Mover.lua")
+driver.load("UI/TurnAround.lua")
 driver.load("UI/Arrow.lua")
 local hearth = { teleport = { item = 6948, spell = 8690 } }
 ns.JourneyGuide.Start()

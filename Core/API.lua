@@ -477,6 +477,7 @@ function API.NavigateRoute(owner, stops)
 		end
 		-- An unknown kind is dropped, not refused: a caller written for a later vocabulary still gets its route.
 		point.look = ns.StopKind(stop.kind)
+		point.number = index
 		if count > 1 then
 			local location = not point.label and ns.Locate(point)
 			point.routeTitle = string.format(

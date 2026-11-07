@@ -64,4 +64,11 @@ check(icon.file == "Interface\\AddOns\\ShortestPathForever\\media\\Zeppelin" and
 check(icon.crop == nil, "the crop is reset")
 check(icon.width == 18 and icon.height == 18, "square at its size")
 
+-- NumberFile: the shipped numbered markers, 1 to 25; above the art, nothing, so the caller keeps the font.
+check(ns.NumberFile(1) == "Interface\\AddOns\\ShortestPathForever\\media\\Numbers\\1", "the first numbered marker")
+check(ns.NumberFile(25) == "Interface\\AddOns\\ShortestPathForever\\media\\Numbers\\25", "the last")
+check(ns.NumberFile(26) == nil, "above 25 there is no marker art")
+check(ns.NumberFile(0) == nil and ns.NumberFile(nil) == nil, "no marker for an impossible number")
+check(ns.NumberFile(1.5) == nil, "whole numbers only")
+
 print(string.format("art_spec: %d checks passed", checks))

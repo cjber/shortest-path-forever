@@ -5,7 +5,6 @@ local ZEPPELIN = "Interface\\AddOns\\ShortestPathForever\\media\\Zeppelin"
 local stripTemplate, moverFrame
 local atlasSizes = {
 	["Waypoint-MapPin-Tracked"] = { width = 30, height = 30 },
-	["Navigation-Tracked-Icon"] = { width = 23, height = 35 },
 	flightmasterferry = { width = 32, height = 32 },
 	["poi-door-arrow-up"] = { width = 13, height = 14 },
 	["poi-door-arrow-down"] = { width = 13, height = 14 },
@@ -92,6 +91,9 @@ function methods:SetFormattedText(format, value)
 end
 function methods:SetAlpha(alpha)
 	self.alpha = alpha
+end
+function methods:SetRotation(rotation)
+	self.rotation = rotation
 end
 function methods:SetShown(shown)
 	if shown then
@@ -216,7 +218,14 @@ end
 ns.MapCanvas = { PinMixin = {} }
 ns.Init = function() end
 local stubs = { DockKind = ns.DockKind, DockPoint = ns.DockPoint }
-for _, file in ipairs({ "Core/Distance.lua", "UI/Art.lua", "UI/Looks.lua", "UI/Map.lua", "UI/Mover.lua" }) do
+for _, file in ipairs({
+	"Core/Distance.lua",
+	"UI/Art.lua",
+	"UI/Looks.lua",
+	"UI/Map.lua",
+	"UI/Mover.lua",
+	"UI/TurnAround.lua",
+}) do
 	setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
 end
 ns.Init, ns.DockKind, ns.DockPoint = nil, stubs.DockKind, stubs.DockPoint
@@ -253,9 +262,13 @@ assert(strip.Distance.text == "91 m", "stationary compass refreshes its distance
 ns.db.metres = false
 ns.RefreshCompass()
 assert(strip.Distance.text == "100 yd")
-close(strip.Bend.width / strip.Bend.height, 23 / 35)
-close(strip.Next.width / strip.Next.height, 23 / 35)
+close(strip.Bend.width, 20)
+close(strip.Bend.height, 20)
+close(strip.Next.width, 16)
+close(strip.Next.height, 16)
 close(strip.Goal.width / strip.Goal.height, 1)
+assert(strip.Bend.texture == ns.NumberFile(1) and strip.Bend.atlas == nil, "the next turn wears numbered marker 1")
+assert(strip.Next.texture == ns.NumberFile(2) and strip.Next.atlas == nil, "the turn after wears 2")
 assert(strip.Goal.texture == ns.PIN_FILE and strip.Goal.atlas == nil, "the goal marker uses the addon's own gold pin")
 assert(strip.Distance.font == "GameFontHighlightSmall")
 
@@ -295,10 +308,21 @@ assert(faded, "the ribbon dissolves at its ends instead of stopping at a border"
 close(strip.Center.color[1], 1)
 close(strip.Center.color[2], 0.82)
 close(strip.Center.color[3], 0)
--- The game's own marks: the destination pin and the stop at full strength, the turn ahead of it dimmer.
+-- The goal and stop at full strength, the turn after the next one dimmer still.
 close(strip.Goal.alpha, 1)
 close(strip.Stop.alpha, 1)
-close(strip.Next.alpha, 0.5)
+close(strip.Bend.alpha, 1)
+close(strip.Next.alpha, 0.6)
+
+-- The stop's marker is its own number when it has one and the art reaches; otherwise it is the goal pin.
+stop = { map = 1, x = 0, y = -100, number = 3 }
+ns.RefreshCompass()
+assert(strip.Stop.texture == ns.NumberFile(3), "a known stop number wears its own marker")
+stop.number = 30
+ns.RefreshCompass()
+assert(strip.Stop.texture == ns.PIN_FILE, "above 25 the stop falls back to the goal pin")
+stop = { map = 1, x = 0, y = -100, kind = "taxi", id = 26 }
+ns.RefreshCompass()
 
 -- The old 10 Hz gate leaves this first 60 Hz frame stationary.
 facing = math.pi / 4
@@ -377,7 +401,7 @@ stop = nil
 bend = { map = 1, x = 40, y = 1 }
 nextBend = { map = 1, x = 50, y = 1 }
 ns.RefreshCompass()
-assert(strip.Bend.hidden and strip.Next.hidden and strip.Distance.owner == strip.Goal)
+assert(not strip.Bend.hidden and strip.Next.hidden and strip.Distance.owner == strip.Bend)
 assert(strip.Distance.text == "40 yd")
 bend = { map = 1, x = 0, y = 50 }
 nextBend = { map = 1, x = 100, y = 100 }
@@ -439,6 +463,56 @@ assert(allocated < 1, "per-frame allocation: " .. allocated .. " KB")
 assert(calls.objects == objects and calls.text == textCount and calls.atlas == atlasCount and calls.info == infos)
 print(string.format("compass: 10000 moving frames, %.3f KB allocated, no text/atlas writes or new regions", allocated))
 
+-- The goal pin stands down while a turn remains: the next point is the bend and its 1 is the only thing to aim for.
+-- It returns when the bend has merged into the goal, which then carries the distance.
+local goalPoint = { map = 1, x = 100, y = 0 }
+local turnPoint = { map = 1, x = 50, y = 0 }
+x, y = 0, 0
+bend, nextBend, stop, goal = turnPoint, nil, nil, goalPoint
+startHeading(0)
+assert(strip.Goal.hidden and not strip.Bend.hidden, "the goal pin hides while a turn remains")
+assert(strip.Distance.owner == strip.Bend and strip.Distance.text == "50 yd")
+bend, nextBend, stop, goal = goalPoint, nil, nil, goalPoint
+startHeading(0)
+assert(not strip.Goal.hidden and strip.Bend.hidden, "the goal pin returns when the bend merges into it")
+assert(strip.Distance.owner == strip.Goal and strip.Distance.text == "100 yd")
+
+-- Facing away: past 120 degrees the markers and the distance dim to 0.4 and the turn after hides, kept until the
+-- bend is within 100 degrees so turning on the spot does not flicker.
+local function bendAt(degrees, nextDegrees)
+	local radians = degrees * math.pi / 180
+	bend = { map = 1, x = 100 * math.cos(radians), y = 100 * math.sin(radians) }
+	nextBend = nextDegrees
+			and {
+				map = 1,
+				x = 100 * math.cos(nextDegrees * math.pi / 180),
+				y = 100 * math.sin(nextDegrees * math.pi / 180),
+			}
+		or nil
+	stop, goal = nil, nil
+	ns.RefreshCompass()
+end
+startHeading(0)
+bendAt(60, 80)
+assert(not strip.behind and not strip.Next.hidden, "ahead, the turn after shows")
+assert(strip.Bend.alpha == 1 and strip.Next.alpha == 0.6 and strip.Distance.alpha == 1)
+bendAt(130, 80)
+assert(strip.behind, "past 120 degrees the compass dims")
+assert(strip.Bend.alpha == 0.4 and strip.Goal.alpha == 0.4 and strip.Stop.alpha == 0.4)
+assert(strip.Distance.alpha == 0.4, "the distance dims with the markers")
+assert(strip.Next.hidden and not strip.Next.visible, "the turn after hides when you face away")
+bendAt(110, 80)
+assert(strip.behind, "once dimmed it is kept at 110 degrees")
+bendAt(100.1, 80)
+assert(strip.behind, "and just past 100 degrees it is still kept")
+bendAt(99, 80)
+assert(not strip.behind, "under 100 degrees it clears")
+assert(strip.Bend.alpha == 1 and strip.Distance.alpha == 1)
+assert(not strip.Next.hidden and strip.Next.alpha == 0.6)
+bendAt(110, 80)
+assert(not strip.behind, "and it does not come back until the bend is past 120 again")
+bendAt(-130, -80)
+assert(strip.behind, "the other side dims it too")
 map = 0
 step()
 assert(strip.Bend.hidden and strip.Distance.hidden, "cross-map points cannot have a bearing")

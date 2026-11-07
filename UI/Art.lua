@@ -7,10 +7,23 @@ local ns = select(2, ...)
 
 -- The addon's own goal pin, media/Pin.tga: a square file whose point is the bottom centre of the square.
 ns.PIN_FILE = "Interface\\AddOns\\ShortestPathForever\\media\\Pin"
+-- The numbered markers, media/Numbers/<n>.tga: gold notched rings with the numeral painted in. Stops and turns
+-- above this many keep the font.
+local MAX_NUMBER_ART = 25
 
 ---@class SPFArt
 local Art = {}
 ns.Art = Art
+
+-- The numbered marker for `number`, or nil when there is no art for it.
+---@param number integer?
+---@return string?
+function ns.NumberFile(number)
+	if type(number) ~= "number" or number < 1 or number > MAX_NUMBER_ART or number % 1 ~= 0 then
+		return nil
+	end
+	return string.format("Interface\\AddOns\\ShortestPathForever\\media\\Numbers\\%d", number)
+end
 
 ---@type table<string, AtlasInfo|false>
 local infos = {}

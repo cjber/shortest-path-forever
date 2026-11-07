@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Gold numbered markers for stops and turns.** The world map's stops wear the addon's own gold numbered markers up to 25, with later stops on the font, and the compass shows the next turn as 1 and the one after as 2 instead of the game's tracking diamond. The goal pin leaves the compass while a turn stands between you and it, so 1 is always the thing to aim for. The stop you are travelling to stays brightest while later stops dim.
+- **The compass and arrow dim when the next turn is behind you.** When the bend you are heading for is more than 120 degrees off your facing, every compass marker and the distance under it, and the arrow window, fade to about 40 percent until you turn back. The marker for the turn after hides while you are facing away, so the two never stack at the edge.
 
 ## [1.22.47] - 2026-11-07
 

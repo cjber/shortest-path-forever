@@ -41,6 +41,7 @@
 ---@field label? string
 ---@field tooltip? string
 ---@field routeTitle? string
+---@field number? integer -- the stop's place in a multi-stop itinerary (API.lua)
 ---@field hold? boolean -- remain visible at the destination until the caller submits an updated route
 ---@field radius? number -- yards around a held stop where travel cues pause; finite and nonnegative
 ---@field shapes? SPFAreaShape[] -- objective areas the stop stands for, in world coordinates

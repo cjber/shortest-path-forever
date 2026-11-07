@@ -5,21 +5,21 @@ local L = ns.L
 -- The addon's own gold goal pin: a square file whose point is the bottom centre of the square.
 -- 29 tall: the stock pin at the 0.8 scale the map drew it, so the goal sits no heavier on the map than before.
 local GOAL_FILE, GOAL_SIZE = ns.PIN_FILE, 29
--- The map's own quest button (POIButtonTemplate): a 20-unit button whose 32-unit disc art overhangs it.
-local STOP_SIZE = 20
--- The numbered quest button's numerals (QuestPOI_CalculateNumericTexCoords): an 8 by 8 grid whose lower half holds
--- the yellow numbers 1 to 25; later stops use the font.
-local NUMERAL_CELL, NUMERAL_YELLOW, NUMERALS_PER_ROW, MAX_NUMERAL = 0.125, 0.5, 8, 25
--- The stop being travelled to wears the button of the quest the game tracks (POIButton.lua): the lit disc with the
--- dark numeral from the grid's upper half. Every other stop wears the plain button with the yellow numeral.
+-- The map's own quest button (POIButtonTemplate): a 20-unit button whose 32-unit disc art overhangs it. A numbered
+-- stop up to 25 wears the addon's numbered marker instead, square and 24 units across.
+local STOP_SIZE, NUMBER_SIZE = 20, 24
+-- The stop being travelled to wears the button of the quest the game tracks (POIButton.lua): the lit disc. Above 25
+-- it keeps the lit button and its font number, while every other stop wears the plain button.
 local STOP_ATLAS, CURRENT_ATLAS = "UI-QuestPoi-QuestNumber", "UI-QuestPoi-QuestNumber-SuperTracked"
 local NUMBER_YELLOW, NUMBER_DARK = { 1, 0.82, 0.25 }, { 0.1, 0.05, 0 }
--- A lone stop's own mark stands alone at the size of the map's quest marks. A numbered one keeps its button and wears
--- the mark as a badge over the button's lower right, as Legacy Forever's entrance pins wear the Legacy shield; the
--- pin's hit rect reaches out over the badge.
+-- A lone stop's own mark stands alone at the size of the map's quest marks. A numbered one wears the mark as a badge
+-- over the marker's lower right, as Legacy Forever's entrance pins wear the Legacy shield; the pin's hit rect reaches
+-- out over the badge.
 local LOOK_SIZE, BADGE_SIZE, BADGE_OFFSET, TAG_SIZE = 22, 16, 4, 11
--- Later stops stay stronger than Strokes.lua's later lines so their numbers remain legible.
-local LATER_STOP_ALPHA = 0.9
+-- Later stops stay brighter than Strokes.lua's later lines so their numbers remain legible.
+local LATER_STOP_ALPHA = 0.7
+-- The numbered marker overhangs its 20-unit pin by 2 on each side.
+local MARKER_INSET = 2
 -- Route.lua groups stops by the button's size.
 ns.StopSize = STOP_SIZE
 
@@ -28,7 +28,6 @@ ns.StopSize = STOP_SIZE
 ---@field Icon Texture
 ---@field Disc Texture
 ---@field Button Texture
----@field Numeral Texture
 ---@field Number FontString
 ---@field stopTitles? string[]
 ---@field stopDetails? string[]
@@ -47,17 +46,16 @@ function GoalPin:OnLoad()
 	self.Disc:SetVertexColor(0, 0, 0)
 	self.Number = self:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	self.Number:SetPoint("CENTER")
-	for _, texture in ipairs({ self.Button, self.Numeral }) do
-		texture:SetDesaturated(false)
-		texture:SetVertexColor(1, 0.9, 0.7)
-	end
+	self.Button:SetDesaturated(false)
+	self.Button:SetVertexColor(1, 0.9, 0.7)
 	self:SetScript("OnHide", self.OnMouseLeave)
 end
 
--- A lone destination wears the addon's own goal pin; a numbered stop wears the map's quest button with its number.
+-- A lone destination wears the addon's own goal pin; a numbered stop up to 25 wears the numbered marker, and a later
+-- stop the map's quest button with its font number.
 -- Stops whose buttons would overlap, a place visited twice among them, share one: it shows the first stop's number
 -- with the action badge intact, and its tooltip names each.
--- A numbered stop whose caller said what stands there wears that mark as a badge on the button's lower right, so the
+-- A numbered stop whose caller said what stands there wears that mark as a badge on the marker's lower right, so the
 -- pin reads as step 3 at the quest giver or flight master; a lone one wears the mark alone, full size.
 ---@param numbers integer[]? the stops this pin marks, in order; nil for a lone destination
 ---@param titles string[]
@@ -70,8 +68,8 @@ function GoalPin:OnAcquired(x, y, numbers, titles, later, look, details, pinBadg
 	local alpha = later and LATER_STOP_ALPHA or 1
 	self.Button:SetAlpha(alpha)
 	self.Icon:SetAlpha(alpha)
-	self.Numeral:SetAlpha(alpha)
 	self.Number:SetAlpha(alpha)
+	self.Texture:SetAlpha(alpha)
 	self.stopTitles = titles[1] and titles or nil
 	self.stopDetails = details and details[1] and details or nil
 	self.current = not later
@@ -82,21 +80,20 @@ function GoalPin:OnAcquired(x, y, numbers, titles, later, look, details, pinBadg
 	self.Icon:SetPoint(badge and "BOTTOMRIGHT" or "CENTER", badge and BADGE_OFFSET or 0, badge and -BADGE_OFFSET or 0)
 	local corner = badge and -BADGE_OFFSET or 0
 	self:SetHitRectInsets(0, corner, 0, corner)
-	self.Texture:SetShown(not marked and numbers == nil)
-	self.Disc:SetShown(numbers ~= nil)
-	self.Button:SetShown(numbers ~= nil)
 	local number = numbers and numbers[1]
-	local numeral = number ~= nil and number <= MAX_NUMERAL
-	self.Numeral:SetShown(numeral)
-	self.Number:SetText(number and not numeral and tostring(number) or "")
+	local numberArt = number and ns.NumberFile(number)
+	local numbered = numberArt ~= nil
+	-- Above the numbered markers' 25, the button and its font number return.
+	local fonted = numbers ~= nil and not numbered
+	self.Texture:SetShown(numbered or (numbers == nil and not marked))
+	self.Disc:SetShown(fonted)
+	self.Button:SetShown(fonted)
+	self.Number:SetText(fonted and tostring(number) or "")
 	local current = numbers ~= nil and not later
-	-- art-ok: both quest buttons are 32 by 32, in Map.xml's 32 by 32 box
-	self.Button:SetAtlas(current and CURRENT_ATLAS or STOP_ATLAS)
-	self.Number:SetTextColor(unpack(current and NUMBER_DARK or NUMBER_YELLOW))
-	if numeral then
-		local left = (number - 1) % NUMERALS_PER_ROW * NUMERAL_CELL
-		local top = (current and 0 or NUMERAL_YELLOW) + math.floor((number - 1) / NUMERALS_PER_ROW) * NUMERAL_CELL
-		self.Numeral:SetTexCoord(left, left + NUMERAL_CELL, top, top + NUMERAL_CELL)
+	if fonted then
+		-- art-ok: both quest buttons are 32 by 32, in Map.xml's 32 by 32 box
+		self.Button:SetAtlas(current and CURRENT_ATLAS or STOP_ATLAS)
+		self.Number:SetTextColor(unpack(current and NUMBER_DARK or NUMBER_YELLOW))
 	end
 	if numbers then
 		self:SetSize(STOP_SIZE, STOP_SIZE)
@@ -108,7 +105,13 @@ function GoalPin:OnAcquired(x, y, numbers, titles, later, look, details, pinBadg
 		ns.Art.Icon(self.Texture, GOAL_FILE, GOAL_SIZE)
 	end
 	self.Texture:ClearAllPoints()
-	if pinBadge and not numbers and not marked then
+	if numbered then
+		ns.Art.Icon(self.Texture, numberArt --[[@as string]], NUMBER_SIZE)
+		self.Texture:SetPoint("CENTER")
+		local right = badge and -BADGE_OFFSET or -MARKER_INSET
+		local bottom = badge and -BADGE_OFFSET or -MARKER_INSET
+		self:SetHitRectInsets(-MARKER_INSET, right, -MARKER_INSET, bottom)
+	elseif pinBadge and not numbers and not marked then
 		self:SetSize(LOOK_SIZE, LOOK_SIZE)
 		ns.Art.Icon(self.Texture, GOAL_FILE, TAG_SIZE)
 		self.Texture:SetPoint("CENTER", self, "BOTTOMRIGHT", 0, 0)

@@ -113,7 +113,7 @@ _G.CreateFrame = function(frameType, name, parent, template)
 		pin.Icon = pin:CreateTexture()
 		pin.Texture, pin.HighlightTexture = pin:CreateTexture(), pin:CreateTexture()
 		pin.SuperTrackMarker = pin:CreateTexture()
-		pin.Disc, pin.Button, pin.Numeral = pin:CreateTexture(), pin:CreateTexture(), pin:CreateTexture()
+		pin.Disc, pin.Button = pin:CreateTexture(), pin:CreateTexture()
 		-- The blob widget's own methods (FrameAPIBlob), recorded: the quests drawn since the last DrawNone, and on
 		-- which map.
 		if template:match("AreaPin") then

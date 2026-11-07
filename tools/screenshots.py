@@ -28,7 +28,7 @@ WOWMOCK = FOREVER_CORE / "tools" / "wowmock"
 if not (WOWMOCK / "wowmock.py").is_file():
     sys.exit(f"wowmock.py not found in {WOWMOCK}; set FOREVER_CORE to the forever-core checkout")
 sys.path.insert(0, str(WOWMOCK))
-from screenshot_docks import dock_kinds, pin_art, zeppelin_art
+from screenshot_docks import dock_kinds, number_art, pin_art, zeppelin_art
 from screenshots_area import render as render_area_art
 from screenshots_art import Art
 from screenshots_services import render as render_services
@@ -42,7 +42,6 @@ from wowmock import (
     TrackerModule,
     backdrop,
     colored,
-    crop_coords,
     draw_overlay,
     map_art,
     map_overlays,
@@ -513,20 +512,16 @@ THELSAMAR = {"map": 0, "x": -5640.0, "y": -2760.0}
 # and back to the quest giver, whose ring then holds stops 2 and 4.
 STOP_BADGES = ("taxinode_alliance", "QuestNormal", "QuestTurnin", "QuestTurnin")
 STOP_SIZE = 20
-NUMBER_ICONS = "interface/worldmap/ui-questpoi-numbericons.blp"
+NUMBER_SIZE = 24
 
 
 def stop_pin(canvas, x, y, number, badge, later):
-    """StopPin.lua: the current stop wears the tracked quest's lit button and dark numeral, the rest the plain
-    button and yellow numeral; the action badge stays visible."""
-    alpha = 0.9 if later else 1
-    button = canvas.ui.atlas("UI-QuestPoi-QuestNumber" if later else "UI-QuestPoi-QuestNumber-SuperTracked").image
-    canvas.draw(button, x - 16, y - 16, 32, 32, (0, 0, 0, 1))
-    canvas.draw(button, x - 16, y - 16, 32, 32, (1, 0.9, 0.7, alpha))
-    cell = number - 1
-    left, top = cell % 8 * 0.125, (0.5 if later else 0) + cell // 8 * 0.125
-    numeral = crop_coords(canvas.ui.texture(NUMBER_ICONS), left, left + 0.125, top, top + 0.125)
-    canvas.draw(numeral, x - 16, y - 16, 32, 32, (1, 0.9, 0.7, alpha))
+    """StopPin.lua: a numbered stop wears the addon's own gold numbered marker, later stops dimmer; the action badge
+    stays visible at the lower right."""
+    alpha = 0.7 if later else 1
+    canvas.draw(
+        number_art(number), x - NUMBER_SIZE / 2, y - NUMBER_SIZE / 2, NUMBER_SIZE, NUMBER_SIZE, (1, 1, 1, alpha)
+    )
     edge = STOP_SIZE / 2 + 5
     art = canvas.ui.atlas(badge)
     factor = 11 / max(art.width, art.height)
@@ -601,10 +596,12 @@ def render_tracker(ui):
     return scene(ui, [(tracker_canvas(ui), 0, 0)])
 
 
-def compass_canvas(ui, facing=math.pi - 0.2, distance=780):
+def compass_canvas(ui, facing=math.pi - 0.2, distance=780, overhang=0):
     # Compass.lua's ribbon: no panel and no border. Its ticks and their letters fade out towards the ends, so
-    # the compass dissolves into the world, and the destination is the addon's own gold goal pin.
-    canvas = ui.canvas(360, 65)
+    # the compass dissolves into the world, and its turns are the addon's own gold numbered markers.
+    # The client draws a texture past its frame, so `overhang` keeps room beside the ribbon for a marker clamped
+    # to its end and the distance under it, which the scene would otherwise cut at the canvas edge.
+    canvas = ui.canvas(360 + overhang, 65)
 
     def offset(angle):
         return -((angle - facing + math.pi) % (2 * math.pi) - math.pi) * 360 / math.pi
@@ -631,21 +628,28 @@ def compass_canvas(ui, facing=math.pi - 0.2, distance=780):
                 width=20,
             )
     canvas.fill(179.5, 3, 1, 6, (1, 0.82, 0, 0.85))
-    # Chosen bearings reproduce reference 20, using the current proportion-preserving sizes.
-    x = 180 + max(-180, min(180, offset(math.pi + 0.9)))
-    pin_icon(canvas, x, 36, 18)
-    for angle, name, size, alpha, bend in (
-        (math.pi, "Navigation-Tracked-Icon", 18, 1, True),
-        (math.pi + 0.15, "Navigation-Tracked-Icon", 12, 0.5, False),
-    ):
-        x = 180 + max(-180, min(180, offset(angle)))
-        icon(canvas, name, x, 36, size, alpha)
-        if bend:
-            art = ui.atlas(name)
-            h = size * art.height / max(art.width, art.height)
-            canvas.text(
-                x - 40, 36 + h / 2 + 2, f"{distance} yd", FONTS["GameFontHighlightSmall"], justify="CENTER", width=80
-            )
+
+    def number_marker(number, x, y, size, alpha=1):
+        # UI/Art.lua's NumberFile art, square and drawn at its native aspect.
+        canvas.draw(number_art(number), x - size / 2, y - size / 2, size, size, (1, 1, 1, alpha))
+
+    # Compass.lua's marker row: the bend (next turn) is 1 at 20 units and the turn after is 2 at 16, dimmer. The goal
+    # pin stands down while a bend is ahead, and facing away dims the row to DestinationPin's behind alpha.
+    bend = math.pi
+    behind = abs((bend - facing + math.pi) % (2 * math.pi) - math.pi) * 180 / math.pi > 120
+    x = 180 + max(-180, min(180, offset(bend)))
+    number_marker(1, x, 36, 20, 0.4 if behind else 1)
+    if not behind:
+        number_marker(2, 180 + max(-180, min(180, offset(bend + 0.15))), 36, 16, 0.6)
+    canvas.text(
+        x - 40,
+        36 + 20 / 2 + 2,
+        f"{distance} yd",
+        FONTS["GameFontHighlightSmall"],
+        (*NORMAL, 0.4 if behind else 1),
+        justify="CENTER",
+        width=80,
+    )
     return canvas
 
 
@@ -781,6 +785,9 @@ SCENES = {
     "detached": lambda ui: detached_tracker(ui, tracker_canvas(ui)),
     "minimap": render_minimap,
     "compass": render_compass,
+    "compass_behind": lambda ui: scene(
+        ui, [(compass_canvas(ui, facing=math.pi + 140 * math.pi / 180, overhang=45), 0, 0)]
+    ),
     "cast_prompt": render_cast_prompt,
     "services": render_services,
 }

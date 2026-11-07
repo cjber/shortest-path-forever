@@ -71,12 +71,11 @@
 	<QuestPOIFrame name="ShortestPathForeverAreaPinTemplate" virtual="true"/>
 	<Frame name="ShortestPathForeverGoalPinTemplate" virtual="true">
 		<Layers>
-			<!-- A numbered stop of a multi-stop journey is the map's own quest button (POIButtonTemplate in
-			     Blizzard_POIButton): its brown disc and gold ring, and the numbered quest button's yellow numeral from
-			     UI-QuestPoi-NumberIcons (QuestPOINumericTemplate). A shadow of the disc stays opaque under it, so a
-			     faded later stop still hides the POI beneath. A stop whose caller said what stands there wears that
-			     mark as a badge over the button's lower right; a lone one shows the mark alone, and a lone destination
-			     the waypoint pin. -->
+			<!-- A numbered stop of a multi-stop journey wears the addon's own numbered marker (StopPin.lua). Above 25
+			     it is the map's own quest button (POIButtonTemplate in Blizzard_POIButton): its brown disc and gold
+			     ring, with the number in the font. A shadow of the disc stays opaque under it, so a faded later stop
+			     still hides the POI beneath. A stop whose caller said what stands there wears that mark as a badge over
+			     the marker's lower right; a lone one shows the mark alone, and a lone destination the waypoint pin. -->
 			<Layer level="BACKGROUND">
 				<!-- art-ok: the 32 by 32 quest button at its own size -->
 				<Texture parentKey="Disc" atlas="UI-QuestPoi-QuestNumber" hidden="true">
@@ -90,15 +89,6 @@
 				<Texture parentKey="Texture" setAllPoints="true"/>
 				<!-- art-ok: the 32 by 32 quest button at its own size -->
 				<Texture parentKey="Button" atlas="UI-QuestPoi-QuestNumber" hidden="true">
-					<Size x="32" y="32"/>
-					<Anchors>
-						<Anchor point="CENTER"/>
-					</Anchors>
-				</Texture>
-			</Layer>
-			<Layer level="ARTWORK" textureSubLevel="1">
-				<!-- art-ok: one square cell of the numeral grid (StopPin.lua's SetTexCoord) in a square box -->
-				<Texture parentKey="Numeral" file="Interface\WorldMap\UI-QuestPoi-NumberIcons" hidden="true">
 					<Size x="32" y="32"/>
 					<Anchors>
 						<Anchor point="CENTER"/>
