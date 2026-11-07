@@ -67,7 +67,7 @@ L["E"] = "E" -- mt
 L["Either faction can ride any boat or zeppelin."] =
 	"Les deux factions peuvent prendre n'importe quel bateau ou zeppelin." -- mt
 L["Enter %s"] = "Entrer dans %s" -- mt
-L["The guided waypoint says where it leads."] = "Le point de passage guidé indique où il mène." -- mt
+L["Gold numbered markers for stops and turns."] = "Des marqueurs dorés numérotés pour les arrêts et les virages." -- mt
 L["Finding the fastest way…"] = "Recherche du chemin le plus rapide…" -- mt
 L["Flight Masters"] = "Maîtres de vol" -- mt
 L["Flight master"] = "Maître de vol" -- mt
