@@ -551,7 +551,11 @@ local function DrivePaths(label)
 		local before = mapOpens
 		ns.ShowJourneyMap()
 		Flush()
-		assert(mapOpens == before + 1, "show on map asks the game to open the map")
+		if InCombatLockdown() then
+			assert(mapOpens == before, "in combat show on map leaves opening the map to the player (#444)")
+		else
+			assert(mapOpens == before + 1, "show on map asks the game to open the map")
+		end
 	end)
 	Run(label .. " slash command", function()
 		SlashCmdList.SHORTESTPATHFOREVER("")

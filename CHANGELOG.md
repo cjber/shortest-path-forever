@@ -12,6 +12,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **No blocked-action error from the tracker in combat.** Clicking the Shortest Path header, or *Show on map* in its menu, during a fight no longer raises an `ADDON_ACTION_BLOCKED` error for `OpenWorldMap()`: the game only lets you open the world map yourself in combat, so the addon says to open it, as it already does with a gamepad (#444).
 
 ## [1.22.46] - 2026-11-07
 
