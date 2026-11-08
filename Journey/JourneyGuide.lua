@@ -245,8 +245,9 @@ local waypointProviders = {}
 -- Pins the world map's provider recreates on refresh; each one gets the tooltip hook once.
 local hookedPins = setmetatable({}, { __mode = "k" })
 
--- Guide's waypoint is the marker that names the leg's destination. Our own goal pin already stands where the leg
--- ends at the journey's goal, so hide the native one only there; at an intermediate hop it stays visible and named.
+-- Guide's waypoint is the marker Shortest Path wrote. Our own pin is the one a player should see, so hide the
+-- native pin wherever Guide owns the waypoint: at the goal the gold pin stands there, and at a bend the route line
+-- and the tracker name it. The player's own waypoint keeps the client's pin.
 local function HideGuideWaypointPin(provider)
 	if provider.pin then
 		if not hookedPins[provider.pin] then
@@ -256,8 +257,7 @@ local function HideGuideWaypointPin(provider)
 			end)
 		end
 		local owned = guide and (guide.writingWaypoint or guide.waypoint)
-		local atGoal = not guide or not guide.target or SamePoint(guide.target, guide.goal)
-		provider.pin:SetShown(not (owned and atGoal and SameWaypoint(C_Map.GetUserWaypoint(), owned)))
+		provider.pin:SetShown(not (owned and SameWaypoint(C_Map.GetUserWaypoint(), owned)))
 	end
 end
 
@@ -321,6 +321,9 @@ local function StopGuide()
 	then
 		RefreshWaypointPins()
 		RefreshNativeMarker()
+		if ns.RefreshJourneyPin then
+			ns.RefreshJourneyPin()
+		end
 		return
 	end
 	local ownsTracking = not previous.yielded and SameTracking(previous)
@@ -340,6 +343,9 @@ local function StopGuide()
 	end
 	RefreshWaypointPins()
 	RefreshNativeMarker()
+	if ns.RefreshJourneyPin then
+		ns.RefreshJourneyPin()
+	end
 end
 
 local function OwnsWaypoint()
@@ -367,6 +373,9 @@ local function ClearGuideWaypoint()
 	guide.writing = nil
 	RefreshWaypointPins()
 	RefreshNativeMarker()
+	if ns.RefreshJourneyPin then
+		ns.RefreshJourneyPin()
+	end
 end
 
 local function YieldGuide()
@@ -374,6 +383,9 @@ local function YieldGuide()
 	guide.yielded = true
 	if guide.waypoint then
 		ClearGuideWaypoint()
+	end
+	if ns.RefreshJourneyPin then
+		ns.RefreshJourneyPin()
 	end
 end
 
@@ -446,6 +458,9 @@ local function GuideWaypoint(point, fading)
 			HideGuideWaypointPin(provider)
 		end
 		RefreshNativeMarker()
+		if ns.RefreshJourneyPin then
+			ns.RefreshJourneyPin()
+		end
 	end
 	return guide.waypoint ~= nil and C_SuperTrack.IsSuperTrackingUserWaypoint()
 end
@@ -494,6 +509,9 @@ function Guide.Pause()
 	end
 	if changed then
 		RefreshTracker()
+		if ns.RefreshJourneyPin then
+			ns.RefreshJourneyPin()
+		end
 	end
 end
 
@@ -530,6 +548,17 @@ end
 ---@return boolean
 function Guide.Active()
 	return guide ~= nil
+end
+
+-- Whether the journey's goal is tracked as the client's waypoint right now. The goal pin is gold only then; a
+-- paused, yielded or stopped guide is the bronze untracked state, and a planned route with no guide is too.
+---@return boolean
+function ns.JourneyPinTracked()
+	return guide ~= nil
+		and not guide.paused
+		and not guide.yielded
+		and guide.waypoint ~= nil
+		and C_SuperTrack.IsSuperTrackingUserWaypoint()
 end
 
 function Guide.Start()

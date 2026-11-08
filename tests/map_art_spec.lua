@@ -1,6 +1,6 @@
 -- Run from the repository root: luajit tests/map_art_spec.lua
 -- The world map's pins keep the client's own art (UI/Map.xml, UI/Map.lua): the glow layers the client art audit removed
--- are gone from the templates and from the pins' code, and a super-tracked flight point still wears the stock marker.
+-- are gone from the templates and from the pins' code, and a super-tracked flight point wears the addon's own pin.
 local checks = 0
 local function check(value, label)
 	checks = checks + 1
@@ -19,7 +19,12 @@ for _, gone in ipairs({
 }) do
 	check(not xml:find(gone, 1, true), "UI/Map.xml draws no removed glow: " .. gone)
 end
-check(xml:find('parentKey="SuperTrackMarker"', 1, true), "a super-tracked flight point keeps the stock marker")
+check(xml:find('parentKey="SuperTrackMarker"', 1, true), "a super-tracked flight point keeps a marker")
+check(
+	xml:find('file="Interface\\AddOns\\ShortestPathForever\\media\\Pin"', 1, true),
+	"the super-track marker wears the addon's own pin"
+)
+check(not xml:find("Waypoint-MapPin-Tracked", 1, true), "no stock waypoint atlas is drawn by our pins")
 
 -- No runtime file under UI/ may bring a removed glow or the Legion portal file back.
 for _, gone in ipairs({ "UI-QuestPoi-OuterGlow", "UI-QuestPoi-InnerGlow", "map-icon-suramardoor" }) do

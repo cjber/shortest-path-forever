@@ -13,6 +13,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 ## [Unreleased]
 
 - **The gold quest area on the minimap replaces the game's blue one instead of circling it.** Standing in a held stop's quest area recoloured the minimap's edge ring, which draws around the whole map, so a larger gold outline appeared around the client's blue area. The area itself now wears the gold, and the edge ring is left alone, so the gold area sits at the client's own shape and scale instead of becoming a second, larger outline (#504).
+- **Shortest Path's goal pin is its own everywhere, gold and bronze.** A journey's goal now wears a teardrop pin of Shortest Path's own on the world map, the minimap, the compass, the arrow, the on-screen destination pin and the super-track marker on its flight points, so it no longer looks like the waypoint you dropped yourself. While Guide is off the same pin turns bronze, as the game's untracked waypoint does, and a waypoint you place by hand keeps the game's diamond. The pin and its bronze twin are original art, generated from `tools/pin_source` (#432).
 
 ## [1.22.55] - 2026-11-08
 

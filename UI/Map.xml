@@ -50,8 +50,8 @@
 				</Texture>
 			</Layer>
 			<Layer level="ARTWORK" textureSubLevel="7">
-				<!-- art-ok: the stock super-track marker at the stock 20 by 20, the square pin it is drawn as -->
-				<Texture parentKey="SuperTrackMarker" atlas="Waypoint-MapPin-Tracked" hidden="true">
+				<!-- art-ok: the addon's own square pin at the stock super-track marker's 20 by 20 -->
+				<Texture parentKey="SuperTrackMarker" file="Interface\AddOns\ShortestPathForever\media\Pin" hidden="true">
 					<Size x="20" y="20"/>
 					<Anchors>
 						<Anchor point="CENTER" relativePoint="BOTTOMRIGHT" x="-4" y="4"/>

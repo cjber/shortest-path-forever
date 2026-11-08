@@ -29,7 +29,7 @@ pixels never enter product media.
 | `area.png` | Westfall, standing in a quest's area: the world map draws the game's own area for the quest in gold, with no stop pin or line, cropped to the area |
 | `tracker.png` | Capture 21's five Auberdine → Silithus steps, with the current totals header |
 | `detached.png` | The Journey tracker detached from the quest tracker, under its draggable "Forever tracker" heading |
-| `minimap.png` | Auberdine's piers as minimap pins, the last dotted stretch to the south pier, native Guide waypoint |
+| `minimap.png` | Auberdine's piers as minimap pins, the last dotted stretch to the south pier, the addon's own goal pin |
 | `cast_prompt.png` | The current Hearthstone action, using the same icon, label and spacing as the screen prompt |
 | `compass.png` | The compass: the game's own ticks and gold letters fading out at each end, turns 1 and 2 and the yards under the next, no panel (on by default) |
 | `compass_behind.png` | The same compass facing about 140 degrees away: the markers and distance dim to 40 percent and only turn 1 shows |
@@ -53,7 +53,7 @@ remains 8,000 ms. The animation uses fixed time steps, never the wall clock.
   Timings in the tracker reproduce capture 21, not a new optimality measurement.
 - `UI/Strokes.lua` and `UI/Route.lua` supply 2-pixel cores in 4-pixel outlines, 4-pixel walk dots in 6-pixel rims 9 apart, colours,
   overview curves, fading continent-edge curves and the 1.2-second settling pulse.
-  Outlines render below all cores. The destination uses the native pin at 0.8 scale.
+  Outlines render below all cores. The destination uses the addon's own pin at 0.8 scale.
 - `UI/StopPin.lua` gives every numbered stop up to 25 the addon's own gold numbered marker at 24 units, the current
   stop at full strength and later stops at the 0.4 alpha they share with the lines leading to them, and keeps above 25
   the tracked quest's `UI-QuestPoi-QuestNumber-SuperTracked` button and the font number. Each stop keeps the caller's
@@ -120,5 +120,5 @@ python3 tools/screenshots.py --refs /path/to/refs --tooltip-ref /tmp/tooltip-ref
 
 Live timings, engine rendering and interaction remain unverified in game, by design.
 The UI checks (`tests/ui.sh`) check route pixel sizing, overview/edge
-curves, native waypoints, tracker totals/countdowns, compass bearings and the route
+curves, the addon's goal pins, tracker totals/countdowns, compass bearings and the route
 button's gold state.

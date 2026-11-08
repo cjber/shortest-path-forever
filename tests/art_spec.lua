@@ -71,4 +71,35 @@ check(ns.NumberFile(26) == nil, "above 25 there is no marker art")
 check(ns.NumberFile(0) == nil and ns.NumberFile(nil) == nil, "no marker for an impossible number")
 check(ns.NumberFile(1.5) == nil, "whole numbers only")
 
+-- The goal pin has a bronze twin, media/PinInactive.tga, for a goal Guide is not tracking. Both ship at the same
+-- square native size, so neither is stretched to stand in for the other.
+local PIN = "Interface\\AddOns\\ShortestPathForever\\media\\Pin"
+local INACTIVE = "Interface\\AddOns\\ShortestPathForever\\media\\PinInactive"
+check(ns.PIN_FILE == PIN, "the gold goal pin")
+check(ns.PIN_INACTIVE_FILE == INACTIVE, "the bronze untracked goal pin")
+check(ns.GoalPinFile(true) == PIN, "a tracked goal is gold")
+check(ns.GoalPinFile(false) == INACTIVE, "an untracked goal is bronze")
+ns.IsJourneyGuided = function()
+	return false
+end
+check(ns.GoalPinFile() == INACTIVE, "with no answer from the caller, Guide decides")
+ns.IsJourneyGuided = function()
+	return true
+end
+check(ns.GoalPinFile() == PIN, "a guided journey asks for gold")
+
+-- A TGA header states its width and height in two little-endian bytes each, at offsets 12 and 14.
+local function TgaSize(path)
+	local handle = assert(io.open(path, "rb"), path .. " ships")
+	local header = assert(handle:read(18))
+	handle:close()
+	local width = header:byte(13) + header:byte(14) * 256
+	local height = header:byte(15) + header:byte(16) * 256
+	return width, height
+end
+local goldWidth, goldHeight = TgaSize("media/Pin.tga")
+local inactiveWidth, inactiveHeight = TgaSize("media/PinInactive.tga")
+check(goldWidth == 128 and goldHeight == 128, "the gold pin is 128 by 128")
+check(inactiveWidth == goldWidth and inactiveHeight == goldHeight, "the bronze pin keeps the gold pin's native size")
+
 print(string.format("art_spec: %d checks passed", checks))

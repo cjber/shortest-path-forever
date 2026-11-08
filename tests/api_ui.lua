@@ -63,6 +63,9 @@ end
 assert(api.NavigateRoute("Test", stops))
 settle()
 local first = check(1, 4)
+-- The world map's own waypoint pin steps aside at an intermediate stop: it marks our waypoint, not the player's,
+-- so the journey's own pins are the only ones on the map.
+assert(waypointProvider.pin and not waypointProvider.pin:IsShown(), "the native waypoint pin hides at a later stop")
 -- Map closure/reopening and canvas resizes keep the full itinerary, without reallocating pins.
 local created = lineCreations
 first:OnCanvasScaleChanged()
@@ -167,6 +170,22 @@ settle()
 assert(#active[goalTemplate] == 1 and active[goalTemplate][1].Number.text == "")
 assert(active[goalTemplate][1].Texture.texture == ns.PIN_FILE and active[goalTemplate][1].Texture.atlas == nil)
 assert(active[goalTemplate][1].stopLabels == nil and arrowFrame.Progress.text == "")
+-- Turning Guide off leaves the route and turns its goal bronze, as the game's own untracked waypoint does; turning
+-- it back on returns gold, on the world map and the minimap.
+ns.ToggleJourneyGuide()
+settle()
+assert(not ns.IsJourneyGuided() and ns.HasJourney(), "the route waits unguided")
+assert(
+	active[goalTemplate][1].Texture.texture == ns.PIN_INACTIVE_FILE
+		and active[goalTemplate][1].Texture.atlas == nil,
+	"an unguided goal wears the bronze pin"
+)
+assert(ShortestPathForeverMinimapRoute.Goal.texture == ns.PIN_INACTIVE_FILE, "the minimap follows it")
+ns.ToggleJourneyGuide()
+settle()
+assert(ns.IsJourneyGuided(), "the journey guides again")
+assert(active[goalTemplate][1].Texture.texture == ns.PIN_FILE, "and its goal is gold again")
+assert(ShortestPathForeverMinimapRoute.Goal.texture == ns.PIN_FILE, "the minimap follows it back")
 -- The destination's pin names the journey, the time and distance left, and each step as the tracker words it.
 active[goalTemplate][1]:OnMouseEnter()
 local _, rows = ns.JourneyInfo()

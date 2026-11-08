@@ -28,6 +28,7 @@ local PIN_SIZE = 36
 
 ---@class SPFDestinationPinFrame : Frame
 ---@field Pin Texture
+---@field pinFile string the goal pin art drawn now, so a tracked/untracked change repaints it
 ---@field Distance FontString
 ---@field Step FontString
 ---@field step string? the wording the step line shows, so it is only reset when it changes
@@ -61,7 +62,8 @@ local function Create()
 	pin:SetAlpha(1)
 	pin.Pin = pin:CreateTexture(nil, "ARTWORK")
 	pin.Pin:SetPoint("TOP", pin, "TOP", 0, 0)
-	ns.Art.Icon(pin.Pin, ns.PIN_FILE, PIN_SIZE)
+	pin.pinFile = ns.GoalPinFile()
+	ns.Art.Icon(pin.Pin, pin.pinFile, PIN_SIZE)
 	pin.Distance = pin:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	pin.Distance:SetPoint("TOP", pin, "TOP", 0, -PIN_SIZE + 4)
 	pin.Distance:SetJustifyH("CENTER")
@@ -166,6 +168,12 @@ function ns.RefreshDestinationPin()
 		return
 	end
 	local pin = frame or Create()
+	-- Gold while Guide tracks the goal; bronze while the journey is planned but not guided.
+	local pinFile = ns.GoalPinFile()
+	if pin.pinFile ~= pinFile then
+		pin.pinFile = pinFile
+		ns.Art.Icon(pin.Pin, pinFile, PIN_SIZE)
+	end
 	pin:SetPoint("CENTER", UIParent, "CENTER", offsetX, offsetY)
 	pin:SetAlpha(alpha)
 	pin.Distance:SetText(ns.FormatDistance(distance, true))

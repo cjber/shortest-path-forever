@@ -2,9 +2,10 @@
 local ns = select(2, ...)
 local L = ns.L
 
--- The addon's own gold goal pin: a square file whose point is the bottom centre of the square.
--- 29 tall: the stock pin at the 0.8 scale the map drew it, so the goal sits no heavier on the map than before.
-local GOAL_FILE, GOAL_SIZE = ns.PIN_FILE, 29
+-- The addon's own goal pin: a square file whose point is the bottom centre of the square, gold while Guide tracks
+-- the goal and bronze while it does not. 29 tall: the stock pin at the 0.8 scale the map drew it, so the goal sits
+-- no heavier on the map than before.
+local GOAL_SIZE = 29
 -- The map's own quest button (POIButtonTemplate): a 20-unit button whose 32-unit disc art overhangs it. A numbered
 -- stop up to 25 wears the addon's numbered marker instead, square and 24 units across.
 local STOP_SIZE, NUMBER_SIZE = 20, 24
@@ -77,6 +78,8 @@ function GoalPin:OnAcquired(x, y, numbers, count, labels, later, look, details, 
 	self.stopDetails = details and details[1] and details or nil
 	self.later = later
 	self.current = not later
+	-- A planned route nobody is guided along is an untracked goal: its pin is the bronze twin.
+	local goalFile = ns.GoalPinFile()
 	local marked = look ~= nil and ns.SetStopLook(self.Icon, look, numbers and BADGE_SIZE or LOOK_SIZE)
 	local badge = marked and numbers ~= nil
 	self.Icon:SetShown(marked)
@@ -104,9 +107,9 @@ function GoalPin:OnAcquired(x, y, numbers, count, labels, later, look, details, 
 	elseif marked then
 		self:SetSize(LOOK_SIZE, LOOK_SIZE)
 	else
-		-- The addon's own gold goal pin, square, so its shape is not stretched.
+		-- The addon's own goal pin, square, so its shape is not stretched.
 		self:SetSize(GOAL_SIZE, GOAL_SIZE)
-		ns.Art.Icon(self.Texture, GOAL_FILE, GOAL_SIZE)
+		ns.Art.Icon(self.Texture, goalFile, GOAL_SIZE)
 	end
 	self.Texture:ClearAllPoints()
 	if numbered then
@@ -117,7 +120,7 @@ function GoalPin:OnAcquired(x, y, numbers, count, labels, later, look, details, 
 		self:SetHitRectInsets(-MARKER_INSET, right, -MARKER_INSET, bottom)
 	elseif pinBadge and not numbers and not marked then
 		self:SetSize(LOOK_SIZE, LOOK_SIZE)
-		ns.Art.Icon(self.Texture, GOAL_FILE, TAG_SIZE)
+		ns.Art.Icon(self.Texture, goalFile, TAG_SIZE)
 		self.Texture:SetPoint("CENTER", self, "BOTTOMRIGHT", 0, 0)
 		self:SetHitRectInsets(0, -TAG_SIZE / 2, 0, -TAG_SIZE / 2)
 	elseif not numbers and not marked then
@@ -141,7 +144,7 @@ function GoalPin:OnAcquired(x, y, numbers, count, labels, later, look, details, 
 		ns.SetStopLook(highlight, look --[[@as SPFAPIStopKind]], numbers and BADGE_SIZE or LOOK_SIZE)
 		highlight:SetAllPoints(self.Icon)
 	else
-		ns.Art.Icon(highlight, GOAL_FILE, GOAL_SIZE)
+		ns.Art.Icon(highlight, goalFile, GOAL_SIZE)
 		highlight:SetAllPoints(self.Texture)
 	end
 	highlight:SetShown(self.highlighted == true)
