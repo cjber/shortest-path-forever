@@ -239,6 +239,7 @@ ObjectiveTrackerManager = nil
 ---@field CreateSliderOptions fun(minimum: number, maximum: number, step: number): table
 ---@field CreateSliderInitializer fun(setting: SPFSetting, options: table, tooltip?: string): SPFSettingsInitializer
 ---@field CreateCheckboxInitializer fun(setting: SPFSetting, options?: table, tooltip?: string): SPFSettingsInitializer
+---@field CreateCheckbox fun(category: SPFSettingsCategory, setting: SPFSetting, tooltip?: string)
 ---@field CreateControlTextContainer fun(): SPFControlTextContainer
 ---@field CreateDropdownInitializer fun(setting: SPFSetting, getData: (fun(): table[]), tooltip?: string): SPFSettingsInitializer
 ---@field RegisterInitializer fun(category: SPFSettingsCategory, initializer: SPFSettingsInitializer)
@@ -249,12 +250,18 @@ Settings = nil
 
 -- Blizzard's settings button initializer, absent from the pinned annotations (Ketho/vscode-wow-api).
 ---@param name string
----@param description string
----@param callback function
----@param searchTags? table
+---@param buttonText string
+---@param click fun()
+---@param tooltip? string
 ---@param addSearchTags? boolean
 ---@return SPFSettingsInitializer
-function CreateSettingsButtonInitializer(name, description, callback, searchTags, addSearchTags) end
+function CreateSettingsButtonInitializer(name, buttonText, click, tooltip, addSearchTags) end
+
+-- Blizzard_SharedXMLGame InputUtil.lua: the client's input-device switch, read by UI/ForeverFamily.lua.
+---@class SPFInputUtil
+---@field IsGamepadUIEnabled fun(): boolean
+---@type SPFInputUtil?
+InputUtil = nil
 
 ---@class SPFUiMapPointFactory
 ---@field CreateFromVector2D fun(uiMapID: number, position: Vector2DMixin): UiMapPoint

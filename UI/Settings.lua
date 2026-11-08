@@ -642,11 +642,9 @@ ns.Init(function()
 	)
 
 	-- The Forever addons page is shared by all five addons (UI/ForeverFamily.lua), with the hint setting on it.
-	local family = Settings.RegisterCanvasLayoutSubcategory(
-		category,
-		ns.Family.CreatePanel(nil, ns.db, addonName, L),
-		L["Forever addons"]
-	)
+	-- With the gamepad interface on the page is the client's own rows so the Options navigation can enter it
+	-- (cjber/tweaks-forever#382).
+	local family = ns.Family.Register(category, ns.db, addonName, L)
 	Settings.RegisterInitializer(
 		category,
 		CreateSettingsButtonInitializer(L["Forever addons"], L["Open"], function()
