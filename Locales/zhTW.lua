@@ -20,6 +20,7 @@ L["%s · %s"] = "%s · %s"
 L["%s — unavailable here"] = "%s——此處無法使用"
 L["%s, then %s"] = "%s，然後%s"
 L["/way [zone] x y [title], with x and y from 0 to 100."] = "/way [地區] x y [標題]，x和y為0到100。"
+L["/way reset all, away, <zone> or not <zone>"] = "/way reset all, away, <地區> 或 not <地區>"
 L["Adventure Guide couldn't start that just now. Choose it again from its guide."] =
 	"Adventure Guide暫時無法開始。請在其指南中重新選擇。"
 L["Adventure Guide suggests"] = "Adventure Guide推薦"

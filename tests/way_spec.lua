@@ -180,4 +180,101 @@ driver.path.settle()
 equal(ns.JourneyInfo(), "Journey to Goldshire", "the command plans the journey")
 ns.ClearJourney()
 
+-- /way reset, as TomTom's own reads it: all, away, a zone, or any zone but one, ends the journey /way started and
+-- leaves a journey planned since from elsewhere alone.
+local planned, current, cleared = nil, nil, 0
+ns.JourneyToMapPoint = function(map, x, y, title)
+	planned = { map = map, x = x, y = y, title = title }
+	current = planned
+	return true
+end
+ns.JourneyGoal = function()
+	return current
+end
+ns.ClearJourney = function()
+	cleared = cleared + 1
+	current = nil
+end
+local function plan(map)
+	ns.Way("#" .. map .. " 50 50")
+	cleared = 0
+end
+local function say(line)
+	local before = #printed
+	ns.Way(line)
+	return #printed > before and printed[#printed] or nil
+end
+
+plan(1)
+equal(say("reset all"), nil, "reset all says nothing")
+equal(cleared, 1, "reset all clears the /way journey")
+equal(current, nil, "and the journey is gone")
+current = { map = 2 }
+cleared = 0
+say("RESET ALL")
+equal(cleared, 1, "reset all clears a journey /way did not start")
+equal(current, nil, "whatever planned it")
+cleared = 0
+equal(say("reset all"), nil, "reset all with no journey says nothing")
+equal(cleared, 0, "and does nothing")
+
+plan(1)
+say("reset Elwynn Forest")
+equal(cleared, 1, "reset <zone> clears the /way journey in that zone")
+equal(current, nil, "and the journey is gone")
+plan(2)
+say("reset Elwynn Forest")
+equal(cleared, 0, "reset <zone> keeps a /way journey in another zone")
+equal(current, planned, "the other journey stays")
+
+plan(2)
+say("reset not Elwynn Forest")
+equal(cleared, 1, "reset not <zone> clears a /way journey outside the zone")
+equal(current, nil, "and the journey is gone")
+plan(1)
+say("reset not Elwynn Forest")
+equal(cleared, 0, "reset not <zone> keeps a /way journey in the zone")
+equal(current, planned, "the other journey stays")
+
+plan(2)
+driver.move({ map = 1, x = 0, y = 0, z = 0 })
+say("reset away")
+equal(cleared, 1, "reset away clears a /way journey on another map")
+equal(current, nil, "and the journey is gone")
+plan(1)
+say("reset away")
+equal(cleared, 0, "reset away keeps a /way journey on this map")
+equal(current, planned, "the journey stays")
+plan(2)
+driver.move({ map = 1, x = 0, y = 0, z = 0 })
+current = { map = 1 }
+cleared = 0
+say("reset away")
+equal(cleared, 0, "reset away leaves a journey planned since")
+equal(current.map, 1, "wherever it goes")
+
+plan(1)
+equal(say("reset Atlantis"), "no zone called Atlantis.", "an unknown zone says so")
+equal(cleared, 0, "and clears nothing")
+equal(current, planned, "the journey stays")
+
+plan(1)
+current = { map = 1 }
+cleared = 0
+say("reset Elwynn Forest")
+equal(cleared, 0, "reset <zone> leaves a journey planned since")
+say("reset not Westfall")
+equal(cleared, 0, "reset not <zone> leaves it too")
+equal(current.map, 1, "and it stays where it goes")
+
+plan(1)
+equal(say("reset"), "/way reset all, away, <zone> or not <zone>", "bare reset prints the usage")
+equal(cleared, 0, "and clears nothing")
+
+plan(1)
+ns.db.journey = false
+say("reset all")
+equal(cleared, 1, "a reset works with journeys turned off")
+ns.db.journey = true
+
 print("way: ok, " .. checks .. " checks")

@@ -21,6 +21,7 @@ L["%s · %s"] = "%s · %s" -- mt
 L["%s — unavailable here"] = "%s – indisponible ici" -- mt
 L["%s, then %s"] = "%s, puis %s" -- mt
 L["/way [zone] x y [title], with x and y from 0 to 100."] = "/way [zone] x y [titre], avec x et y de 0 à 100." -- mt
+L["/way reset all, away, <zone> or not <zone>"] = "/way reset all, away, <zone> ou not <zone>" -- mt
 L["Adventure Guide couldn't start that just now. Choose it again from its guide."] =
 	"Adventure Guide n'a pas pu lancer cela pour l'instant. Choisissez-le de nouveau dans son guide." -- mt
 L["Adventure Guide suggests"] = "Adventure Guide suggère" -- mt

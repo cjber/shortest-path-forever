@@ -21,6 +21,7 @@ L["%s — unavailable here"] = "%s – здесь недоступно"
 L["%s, then %s"] = "%s, затем %s"
 L["/way [zone] x y [title], with x and y from 0 to 100."] =
 	"/way [зона] x y [название], x и y от 0 до 100."
+L["/way reset all, away, <zone> or not <zone>"] = "/way reset all, away, <зона> или not <зона>"
 L["Adventure Guide couldn't start that just now. Choose it again from its guide."] =
 	"Adventure Guide не удалось это запустить. Выберите это снова в его руководстве."
 L["Adventure Guide suggests"] = "Adventure Guide предлагает"

@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **`/way reset all` ends the journey without TomTom.** Shortest Path's own `/way` now reads TomTom's reset forms. `all` ends the journey, `away`, `<zone>` and `not <zone>` end the one the last `/way` line started, and a bare `reset` shows how to use it. Before, every reset printed the coordinate usage line and left the journey running (#159).
+
 ## [1.23.0] - 2026-11-08
 
 - **The tracker can have a background.** Right-click any section's title in the Forever tracker and pick *Tracker background*: Off, or the game's tooltip fill at 25, 50, 75 or 100%, so quest text stays readable over bright ground. The choice is shared by every Forever addon in the column (cjber/forever-core#246).

@@ -20,6 +20,7 @@ L["%s · %s"] = "%s · %s"
 L["%s — unavailable here"] = "%s - 여기서 사용할 수 없음"
 L["%s, then %s"] = "%s, 다음 %s"
 L["/way [zone] x y [title], with x and y from 0 to 100."] = "/way [지역] x y [제목], x와 y는 0에서 100 사이."
+L["/way reset all, away, <zone> or not <zone>"] = "/way reset all, away, <지역> 또는 not <지역>"
 L["Adventure Guide couldn't start that just now. Choose it again from its guide."] =
 	"Adventure Guide가 지금 시작하지 못했습니다. 가이드에서 다시 선택하십시오."
 L["Adventure Guide suggests"] = "Adventure Guide 제안"
