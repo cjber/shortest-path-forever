@@ -257,6 +257,56 @@ local function AddQuestMenuEntry(root, questID)
 	end
 end
 
+-- A tracker replacement (EQOT, the guide column) can leave a block under ObjectiveTrackerFrame without the native
+-- parentModule/GetContextMenuParent chain. Walk a bounded number of parents so a block from another frame is never
+-- accepted as the right-clicked one.
+local TRACKER_DEPTH = 8
+
+---@param block Frame
+---@return boolean
+local function UnderObjectiveTracker(block)
+	for _ = 1, TRACKER_DEPTH do
+		local parent = block:GetParent()
+		if not parent then
+			return false
+		end
+		if parent == ObjectiveTrackerFrame then
+			return true
+		end
+		block = parent
+	end
+	return false
+end
+
+---@param block SPFTrackerBlock
+---@param owner Frame
+---@return boolean
+local function BlockBelongsTo(block, owner)
+	local module = block.parentModule
+	local getContextMenuParent = module and module.GetContextMenuParent
+	if getContextMenuParent then
+		return getContextMenuParent(module) == owner
+	end
+	return UnderObjectiveTracker(block)
+end
+
+-- The right-clicked header's block, never a previous hover's: the header test keeps a stale focus from being used.
+---@param owner Frame
+---@return number|string?
+local function QuestIDFromTrackerFocus(owner)
+	for _, header in ipairs(GetMouseFoci()) do
+		---@cast header SPFTrackerBlockHeader
+		local block = header:GetParent()
+		---@cast block SPFTrackerBlock
+		if block and block.HeaderButton == header and BlockBelongsTo(block, owner) then
+			local questID = block.id or block.questID or header.questID
+			if questID then
+				return questID
+			end
+		end
+	end
+end
+
 -- Bindings.xml's CLICK bindings name these hidden buttons, so a key or a controller button reaches the same actions
 -- the map's Shift-click does. A hidden button takes a CLICK binding without drawing anything.
 ---@param name string
@@ -302,25 +352,14 @@ ns.Init(function()
 	-- The stock handler still pings the spot, which marks where the journey goes for your group too.
 	Minimap:HookScript("OnMouseUp", OnMinimapClick)
 	Menu.ModifyMenu("MENU_QUEST_OBJECTIVE_TRACKER", function(owner, root)
+		---@cast owner Frame
 		-- The native menu owner is the tracker container, with no quest ID/context data.
 		-- Resolve the right-clicked HeaderButton's block; never reuse a previous hover's quest.
-		for _, header in ipairs(GetMouseFoci()) do
-			local block = header:GetParent()
-			---@cast block SPFTrackerBlock
-			if
-				block
-				and block.HeaderButton == header
-				and block.parentModule
-				and block.parentModule:GetContextMenuParent() == owner
-			then
-				AddQuestMenuEntry(root, block.id)
-				return
-			end
-		end
+		AddQuestMenuEntry(root, QuestIDFromTrackerFocus(owner))
 	end)
 	Menu.ModifyMenu("MENU_QUEST_MAP_LOG_TITLE", function(owner, root)
 		---@cast owner SPFQuestMenuOwner
-		-- Waypoint menus share this tag, but have no questID.
-		AddQuestMenuEntry(root, owner.questID)
+		-- Waypoint menus share this tag, but have no questID; the client also spells it questId.
+		AddQuestMenuEntry(root, owner.questID or owner.questId)
 	end)
 end)

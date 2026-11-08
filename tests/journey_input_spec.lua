@@ -1,4 +1,5 @@
 local handler, destination, mouseEvent, ownClick
+local questTrackerMenu, questMapLogMenu
 local alt, overMap, shown = false, true, true
 local map = {
 	GetMapID = function()
@@ -33,6 +34,7 @@ local ns = {
 			ownClick = fn
 		end,
 	},
+	FamilyHints = { AddQuestMenu = function() end },
 }
 local env = setmetatable({
 	CreateFrame = function()
@@ -71,7 +73,15 @@ local env = setmetatable({
 		end,
 	},
 	Minimap = { HookScript = function() end },
-	Menu = { ModifyMenu = function() end },
+	Menu = {
+		ModifyMenu = function(tag, fn)
+			if tag == "MENU_QUEST_OBJECTIVE_TRACKER" then
+				questTrackerMenu = fn
+			elseif tag == "MENU_QUEST_MAP_LOG_TITLE" then
+				questMapLogMenu = fn
+			end
+		end,
+	},
 	MapCanvasMixin = { MouseAction = { Click = 3 } },
 	C_Map = {
 		GetWorldPosFromMapPos = function(_, pos)
@@ -231,3 +241,143 @@ instance = 36
 assert(ns.InstanceEntrance(stop) == stop, "inside the dungeon the spot is left as it is")
 assert(ns.WorldPoint(1440, 0.5, 0.5).map == 1, "a spot outside any dungeon is unchanged")
 print("journey input: instance entrances ok")
+
+-- The quest log menus: wherever the right-clicked tracker block or map-log title carries a quest id, the entry appears.
+local function QuestMenuRoot()
+	local root = {}
+	function root:CreateButton(label, onClick)
+		self.label, self.onClick = label, onClick
+	end
+	return root
+end
+
+local locatable = 4242
+ns.Planner = {
+	QuestDestination = function(questID)
+		return questID == locatable and { uiMapID = 1440, x = 0.5, y = 0.5, label = "Objective" } or nil
+	end,
+}
+env.GetQuestUiMapID = function()
+	return 1440
+end
+env.C_QuestLog = {
+	GetNextWaypoint = function()
+		return 1440, 0.5, 0.5
+	end,
+	GetQuestsOnMap = function()
+		return {}
+	end,
+	GetTitleForQuestID = function()
+		return "Quest"
+	end,
+	IsComplete = function()
+		return false
+	end,
+}
+
+local trackerOwner = {}
+local trackerModule = {
+	GetContextMenuParent = function()
+		return trackerOwner
+	end,
+}
+local function Focus(header, block)
+	env.GetMouseFoci = function()
+		return { header }
+	end
+	header.GetParent = function()
+		return block
+	end
+	block.HeaderButton = header
+end
+
+-- A normal tracker block: parentModule names the same menu owner.
+local header, block = {}, { id = locatable, parentModule = trackerModule }
+Focus(header, block)
+local root = QuestMenuRoot()
+assert(questTrackerMenu, "the objective tracker menu must be registered")
+questTrackerMenu(trackerOwner, root)
+assert(root.label == "Plan journey" and root.onClick, "a located quest offers Plan journey")
+destination = nil
+root.onClick()
+assert(destination and destination.questID == locatable, "the entry plans the right-clicked quest")
+
+-- No quest id anywhere on the header or block: no entry.
+header, block = {}, { parentModule = trackerModule }
+Focus(header, block)
+root = QuestMenuRoot()
+questTrackerMenu(trackerOwner, root)
+assert(root.onClick == nil, "a block with no quest id adds no entry")
+
+-- EQOT-style replacement: no parentModule, but the block still sits under ObjectiveTrackerFrame.
+local trackerFrame = {
+	GetParent = function()
+		return nil
+	end,
+}
+env.ObjectiveTrackerFrame = trackerFrame
+local middle = {
+	GetParent = function()
+		return trackerFrame
+	end,
+}
+header, block = {}, {
+	id = locatable,
+	GetParent = function()
+		return middle
+	end,
+}
+Focus(header, block)
+root = QuestMenuRoot()
+questTrackerMenu({}, root)
+assert(root.onClick, "a block under ObjectiveTrackerFrame still gets the entry")
+destination = nil
+root.onClick()
+assert(destination and destination.questID == locatable, "the replacement tracker's quest is planned")
+
+-- A block under some other frame is never taken for the right-clicked one.
+local otherFrame = {
+	GetParent = function()
+		return nil
+	end,
+}
+middle = {
+	GetParent = function()
+		return otherFrame
+	end,
+}
+header, block = {}, {
+	id = locatable,
+	GetParent = function()
+		return middle
+	end,
+}
+Focus(header, block)
+root = QuestMenuRoot()
+questTrackerMenu({}, root)
+assert(root.onClick == nil, "a block from another frame adds no entry")
+
+-- The header's own questID and the block's questID are accepted too.
+header, block = { questID = locatable }, { parentModule = trackerModule }
+Focus(header, block)
+root = QuestMenuRoot()
+questTrackerMenu(trackerOwner, root)
+assert(root.onClick, "a header's own quest id is accepted")
+header, block = {}, { questID = locatable, parentModule = trackerModule }
+Focus(header, block)
+root = QuestMenuRoot()
+questTrackerMenu(trackerOwner, root)
+assert(root.onClick, "a block's questID is accepted")
+
+-- Map-log titles: questID and questId both work; neither means no entry.
+root = QuestMenuRoot()
+questMapLogMenu({ questID = locatable }, root)
+assert(root.onClick, "the map log's questID offers the entry")
+root = QuestMenuRoot()
+questMapLogMenu({ questId = locatable }, root)
+assert(root.onClick, "the map log's questId offers the entry")
+root = QuestMenuRoot()
+questMapLogMenu({}, root)
+assert(root.onClick == nil, "a map-log owner with no quest id adds no entry")
+
+print("journey input: quest menus ok")

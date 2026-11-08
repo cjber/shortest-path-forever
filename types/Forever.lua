@@ -165,12 +165,16 @@ ForeverMapMarkers = nil
 ---@field GetStyle fun(self: SPFQuestPin): number
 ---@class SPFQuestMenuOwner : Frame
 ---@field questID? number
+---@field questId? number
 
 ---@class SPFTrackerLine : Frame
 ---@field Text FontString
 ---@field used boolean
+---@class SPFTrackerBlockHeader : Button
+---@field questID? number
 ---@class SPFTrackerBlock : Frame
 ---@field id number|string
+---@field questID? number
 ---@field HeaderButton Button
 ---@field HeaderText FontString
 ---@field headerHeight number
