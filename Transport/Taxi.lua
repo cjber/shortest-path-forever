@@ -2,12 +2,11 @@
 local ns = select(2, ...)
 
 -- The flight points this character knows, for the journey planner and the map's flight master pins. Only a
--- flight master's own map says which nodes a character can fly to: a node counts only when its slot's type is not
--- "NONE", the stock TaxiFrame's own rule for drawing a node. The node's reported state is not a source: this
--- client answers reachable for nodes the character has never discovered.
+-- flight master's own map says which nodes a character can fly to: the world map's taxi query answers anywhere
+-- but reports every node as discovered on this client (the other faction's included), so it is not a source.
 
--- Lists built from the flight master's node states claimed undiscovered nodes, so start again from empty.
-local KNOWN_VERSION = 3
+-- Lists built from that query before it was dropped; they claim every node, so start again from empty.
+local KNOWN_VERSION = 2
 
 ---@type SPFLeg[]?
 local journeyLegs
@@ -193,10 +192,9 @@ local function Log(key, uiMap, nodes)
 	local rows = {}
 	for _, node in ipairs(nodes) do
 		rows[#rows + 1] = string.format(
-			"%d %s type=%s undiscovered=%s state=%s",
+			"%d %s undiscovered=%s state=%s",
 			node.nodeID,
 			node.name,
-			tostring(node.slotIndex and TaxiNodeGetType(node.slotIndex)),
 			tostring(node.isUndiscovered),
 			tostring(node.state)
 		)
@@ -209,9 +207,8 @@ local function Log(key, uiMap, nodes)
 	}
 end
 
--- At a flight master, a node whose slot type the flight map shows (anything but "NONE", which the stock TaxiFrame
--- uses to decide whether to draw it) is one the character can see and fly to, so it is known and takes the name the
--- client gives it there, which is in the game's language. Absence never unlearns one.
+-- At a flight master, every node it can fly to is known (absence never unlearns one), by the name the client gives
+-- it there, which is in the game's language.
 local function ScanFlightMaster()
 	local uiMap = GetTaxiMapID and GetTaxiMapID()
 	local nodes = uiMap and C_TaxiMap.GetAllTaxiNodes(uiMap) or {}
@@ -221,12 +218,11 @@ local function ScanFlightMaster()
 	end
 	for _, node in ipairs(nodes) do
 		if ns.TaxiNodes[node.nodeID] then
-			local slot = node.slotIndex
-			if slot and TaxiNodeGetType(slot) ~= "NONE" then
+			if node.state ~= Enum.FlightPathState.Unreachable then
 				ns.charDB.taxi[node.nodeID] = true
-				if node.name and node.name ~= "" then
-					ns.charDB.taxiNames[node.nodeID] = node.name
-				end
+			end
+			if node.name and node.name ~= "" then
+				ns.charDB.taxiNames[node.nodeID] = node.name
 			end
 		end
 	end
