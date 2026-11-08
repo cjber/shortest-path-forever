@@ -67,7 +67,8 @@ L["E"] = "E" -- mt
 L["Either faction can ride any boat or zeppelin."] =
 	"Les deux factions peuvent prendre n'importe quel bateau ou zeppelin." -- mt
 L["Enter %s"] = "Entrer dans %s" -- mt
-L["Guidelime guides can lead the journey, and the arrow lets clicks through."] = "Les guides Guidelime peuvent mener le trajet, et la flèche laisse passer les clics." -- mt
+L["Guidelime guides can lead the journey, and the arrow lets clicks through."] =
+	"Les guides Guidelime peuvent mener le trajet, et la flèche laisse passer les clics." -- mt
 L["Finding the fastest way…"] = "Recherche du chemin le plus rapide…" -- mt
 L["Flight Masters"] = "Maîtres de vol" -- mt
 L["Flight master"] = "Maître de vol" -- mt
