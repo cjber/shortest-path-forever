@@ -811,19 +811,42 @@ ns.Init(function()
 	minimap.Goal:Hide()
 	-- The client's own "inside the quest's area" state, the one it paints the blob from, drives the tint at once.
 	minimap:RegisterEvent("PLAYER_INSIDE_QUEST_BLOB_STATE_CHANGED")
-	minimap:SetScript("OnEvent", function(self, event)
+	-- A quest update can rebuild the blob from the stock textures while the player stands still; redraw then so the
+	-- area wears the gold again. Only the questPOI setting changes what the minimap draws.
+	local questEvents = {
+		"QUEST_LOG_UPDATE",
+		"QUEST_WATCH_LIST_CHANGED",
+		"QUEST_POI_UPDATE",
+		"SUPER_TRACKING_CHANGED",
+		"CVAR_UPDATE",
+	}
+	local questEvent = {}
+	for _, event in ipairs(questEvents) do
+		minimap:RegisterEvent(event)
+		questEvent[event] = true
+	end
+	minimap:SetScript("OnEvent", function(self, event, cvar)
 		if not goal then
 			return
 		end
-		if event ~= "PLAYER_INSIDE_QUEST_BLOB_STATE_CHANGED" then
-			WakeMinimap(self)
+		if event == "CVAR_UPDATE" and cvar ~= "questPOI" then
 			return
 		end
-		self.revision = nil
-		DrawMinimap(self)
-		if WorldMapFrame:IsShown() then
-			provider:RefreshAllData()
+		if event == "PLAYER_INSIDE_QUEST_BLOB_STATE_CHANGED" then
+			self.revision = nil
+			DrawMinimap(self)
+			if WorldMapFrame:IsShown() then
+				provider:RefreshAllData()
+			end
+			return
 		end
+		if questEvent[event] then
+			if not ns.StopInQuestArea(goal) then
+				return
+			end
+			self.revision = nil
+		end
+		WakeMinimap(self)
 	end)
 	-- While shown: the poll, and moving, turning or zooming the minimap wake the every-frame redraw.
 	minimap:SetScript("OnShow", function(self)

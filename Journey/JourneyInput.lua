@@ -323,10 +323,11 @@ local function Under(block, ancestor)
 		if block == ancestor then
 			return true
 		end
-		block = block:GetParent()
-		if not block then
+		local parent = block:GetParent()
+		if not parent then
 			return false
 		end
+		block = parent
 	end
 	return false
 end

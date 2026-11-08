@@ -32,11 +32,15 @@ local setOutsideSelected = minimap and minimap.SetQuestBlobOutsideSelectedTextur
 local tinted
 
 -- Recolours the minimap's quest area: true wears the gold while the player stands in the area, false hands the
--- stock blue back. Repeated calls with the same state cost nothing.
+-- stock blue back. The area textures are applied on every call while inside, since a quest update can rebuild the
+-- client's blob from the stock set while the player has not moved; the stock set is restored only once.
 ---@param on boolean
 function ns.SetAreaBlob(on)
 	on = on == true
-	if not supported or tinted == on then
+	if not supported then
+		return
+	end
+	if not on and not tinted then
 		return
 	end
 	tinted = on
