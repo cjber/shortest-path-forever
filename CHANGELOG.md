@@ -14,6 +14,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 - **`/way reset all` ends the journey without TomTom.** Shortest Path's own `/way` now reads TomTom's reset forms. `all` ends the journey, `away`, `<zone>` and `not <zone>` end the one the last `/way` line started, and a bare `reset` shows how to use it. Before, every reset printed the coordinate usage line and left the journey running (#159).
 
+## [1.23.1] - 2026-11-08
+
 - **Journeys no longer fly to flight points the character has not discovered.** The flight master's map only drew the points this character can actually see, but Shortest Path learned every node the map's query returned, so a level 16 character could be routed through flights it had never unlocked. It now learns a point only when the map draws it, and the known list starts again from empty, relearning at the next flight master (#512).
 
 ## [1.23.0] - 2026-11-08
