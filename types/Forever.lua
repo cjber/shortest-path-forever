@@ -149,7 +149,7 @@ POIButtonUtil = nil
 -- The map's own waypoint provider, whose pin JourneyGuide.lua hides under its own.
 ---@class SPFMapProvider
 ---@field RefreshAllData fun(self: SPFMapProvider, fromOnShow?: boolean)
----@field GetPinTemplate fun(self: SPFMapProvider): string -- the pin template the provider acquires; quest pins for the quest provider
+---@field GetPinTemplate fun(self: SPFMapProvider, ...: any): string -- the pin template the provider acquires; the quest one is recognised by this function, never called
 ---@field pin? Frame
 ---@type SPFMapProvider
 WaypointLocationDataProviderMixin = nil
