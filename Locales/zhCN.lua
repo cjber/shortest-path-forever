@@ -123,6 +123,8 @@ L["Nearby services"] = "附近服务"
 L["Nearby services could not read QuestieDB."] = "附近服务无法读取QuestieDB。"
 L["Nearby services need the QuestieDB addon."] = "附近服务需要QuestieDB插件。"
 L["Nearest"] = "最近"
+L["A flight point you have not discovered yet would shorten this route: visit a flight master to learn it."] =
+	"尚未发现的飞行点会缩短这条路线：去拜访飞行管理员以了解它。"
 L["No location for that quest yet."] = "该任务还没有位置。"
 L["No way there from here."] = "从这里无法到达那里。"
 L["Not discovered"] = "未发现"
