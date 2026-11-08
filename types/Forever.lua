@@ -132,6 +132,7 @@ function GameTooltip_AddColoredDoubleLine(tooltip, left, right, leftColor, right
 ---@field EnumeratePinsByTemplate fun(self: SPFMapCanvas, template: string): fun(): SPFMapPin
 ---@field AddCanvasClickHandler fun(self: SPFMapCanvas, handler: fun(map: SPFMapCanvas, button: string): boolean)
 ---@field AddGlobalPinMouseActionHandler fun(self: SPFMapCanvas, handler: fun(map: SPFMapCanvas, action: number, button: string): boolean)
+---@field AddDataProvider fun(self: SPFMapCanvas, provider: SPFMapProvider) -- UI/QuestPins.lua only hooks it, to see providers added later
 ---@type SPFMapCanvas
 WorldMapFrame = nil
 ---@type {MouseAction: {Click: number}}
@@ -148,6 +149,7 @@ POIButtonUtil = nil
 -- The map's own waypoint provider, whose pin JourneyGuide.lua hides under its own.
 ---@class SPFMapProvider
 ---@field RefreshAllData fun(self: SPFMapProvider, fromOnShow?: boolean)
+---@field GetPinTemplate fun(self: SPFMapProvider): string -- the pin template the provider acquires; quest pins for the quest provider
 ---@field pin? Frame
 ---@type SPFMapProvider
 WaypointLocationDataProviderMixin = nil

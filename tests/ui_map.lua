@@ -211,8 +211,9 @@ local clickHandlers, pinHandlers = {}, {}
 -- Blizzard's own pins, which its own providers acquire (the flight points and the user waypoint). The addon draws on
 -- frames of its own (UI/MapCanvas.lua) and never acquires one: a template of its own here fails the check.
 local nativePools, nativeActive = {}, {}
--- Once the addon has loaded, adding or removing a data provider fails the check (#158).
-local addonLoaded = false
+-- Once the addon has loaded, adding or removing a data provider fails the check (#158); a spec may add one as the
+-- client can, by setting testAddsProvider while it does.
+local addonLoaded, testAddsProvider = false, false
 _G.WorldMapFrame = setmetatable({
 	dataProviders = {},
 	shown = true,
@@ -263,7 +264,7 @@ _G.WorldMapFrame = setmetatable({
 		return pin
 	end,
 	AddDataProvider = function(self, provider)
-		assert(not addonLoaded, "the addon added a data provider to the world map")
+		assert(testAddsProvider or not addonLoaded, "the addon added a data provider to the world map")
 		providers[#providers + 1] = provider
 		self.dataProviders[provider] = true
 		provider:RefreshAllData()

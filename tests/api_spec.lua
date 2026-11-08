@@ -223,6 +223,14 @@ for _, invalid in ipairs({
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, questIDs = { driver.secret } } },
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, questIDs = { [2] = 7 } } },
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, questIDs = { 7, quest = 8 } } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, handins = 7 } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, handins = {} } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, handins = { 7, 0 } } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, handins = { 7, 1.5 } } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, handins = { "7" } } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, handins = { driver.secret } } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, handins = { [2] = 7 } } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, handins = { 7, quest = 8 } } },
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, shapes = "one" } },
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, shapes = {} } },
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, shapes = { { map = 1, x = 2, y = 0.5, radius = 5 } } } },
@@ -384,6 +392,28 @@ equal(ns.StopInside(held), true, "no answer for any: inside a shape")
 equal(ns.StopInQuestArea(held), false, "which is not the client's own area")
 _G.C_Minimap = nil
 equal(API.Cancel("AGF"), true, "several-quest route cancels")
+
+-- A stop can name the quests handed in there: they are copied onto the stop, hide the game's own pins
+-- (UI/QuestPins.lua), and never decide arrival, which stays the quests' objective areas alone.
+local blob = {}
+_G.C_Minimap = {
+	IsInsideQuestBlob = function(questID)
+		return blob[questID]
+	end,
+}
+local handin = { map = 1, x = 0.5, y = 0.5, title = "Hand-in", kind = "turnin", hold = true, handins = { 21, 22 } }
+driver.move({ map = 1, x = 0, y = -4000 })
+assert(API.NavigateRoute("AGF", { handin, { map = 1, x = 0.6, y = 0.5 } }), "hand-in route starts")
+local handing = ns.JourneyStops()[1]
+equal(table.concat(handing.handins, ","), "21,22", "the hand-ins are carried into the journey")
+equal(handing.questIDs, nil, "a hand-in names no objective area")
+handin.handins[1] = 99
+equal(handing.handins[1], 21, "the caller's later edit changes nothing")
+blob[21], blob[22] = true, true
+equal(ns.StopInside(handing), false, "a hand-in never decides arrival")
+equal(ns.StopInQuestArea(handing), false, "and never shows the game's own area")
+_G.C_Minimap = nil
+equal(API.Cancel("AGF"), true, "hand-in route cancels")
 
 -- A held stop remains visible at its destination until the owner refreshes its route.
 driver.move({ map = 1, x = 0, y = -400 })

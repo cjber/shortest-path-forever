@@ -150,6 +150,26 @@ assert(API.Navigate("Shortest Path Forever", 1, 0.6, 0.5, "Innkeeper", "innkeepe
 assert(ns.charDB.journey and ns.charDB.journey.label == "Innkeeper", "a Nearby journey is kept")
 ns.ClearJourney()
 
+-- A kept stop's hand-in quests travel with it, so the game's own pins stay hidden after a reload too.
+assert(API.NavigateRoute("Shortest Path Forever", {
+	{ map = 1, x = 0.6, y = 0.5, label = "Hand-in", handins = { 21, 22 } },
+}))
+local keptHandins = ns.charDB.journey and ns.charDB.journey.handins
+assert(keptHandins and keptHandins[1] == 21 and keptHandins[2] == 22, "a kept stop's hand-ins are kept")
+ns.serverTime = ns.serverTime + 10
+reload()
+driver.fire("PLAYER_ENTERING_WORLD")
+runTimers()
+assert(ns.HasJourney() and ns.JourneyGoal().handins[1] == 21, "the hand-ins are resumed with the journey")
+ns.ClearJourney()
+-- A damaged hand-in list is dropped, not resumed.
+keep({ map = 1, x = 2000, y = 0, at = ns.serverTime, handins = { 21, "22" } })
+reload()
+driver.fire("PLAYER_ENTERING_WORLD")
+runTimers()
+assert(ns.HasJourney() and ns.JourneyGoal().handins == nil, "a damaged hand-in list is dropped")
+ns.ClearJourney()
+
 -- Turned on during a journey: that journey is kept straight away.
 ns.db.resumeJourney = false
 driver.begin({ map = 1, x = 0, y = 0 }, { map = 1, x = 2000, y = 0 })
