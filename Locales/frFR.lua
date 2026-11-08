@@ -67,7 +67,8 @@ L["E"] = "E" -- mt
 L["Either faction can ride any boat or zeppelin."] =
 	"Les deux factions peuvent prendre n'importe quel bateau ou zeppelin." -- mt
 L["Enter %s"] = "Entrer dans %s" -- mt
-L["Every clickable icon answers the pointer."] = "Chaque icône cliquable réagit au pointeur." -- mt
+L["A journey stop where you hand a quest in keeps the game's quest icon off it."] =
+	"Un arrêt du trajet où vous rendez une quête n'affiche pas l'icône de quête du jeu." -- mt
 L["Finding the fastest way…"] = "Recherche du chemin le plus rapide…" -- mt
 L["Flight Masters"] = "Maîtres de vol" -- mt
 L["Flight master"] = "Maître de vol" -- mt

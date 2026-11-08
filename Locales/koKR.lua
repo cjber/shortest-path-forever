@@ -66,8 +66,8 @@ L["E"] = "동"
 L["Either faction can ride any boat or zeppelin."] =
 	"어느 진영이든 모든 배와 비행선을 탈 수 있습니다."
 L["Enter %s"] = "%s 입장"
-L["Every clickable icon answers the pointer."] =
-	"클릭할 수 있는 모든 아이콘이 마우스 포인터에 반응합니다." -- mt
+L["A journey stop where you hand a quest in keeps the game's quest icon off it."] =
+	"퀘스트를 완료 보고하는 여정 경유지에는 게임의 퀘스트 아이콘이 표시되지 않습니다." -- mt
 L["Finding the fastest way…"] = "가장 빠른 길 찾는 중…"
 L["Flight Masters"] = "비행 조련사"
 L["Flight master"] = "비행 조련사"

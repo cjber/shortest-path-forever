@@ -68,8 +68,8 @@ L["E"] = "В"
 L["Either faction can ride any boat or zeppelin."] =
 	"Любая фракция может сесть на любой корабль или дирижабль."
 L["Enter %s"] = "Войти: %s"
-L["Every clickable icon answers the pointer."] =
-	"Каждый значок, на который можно нажать, реагирует на указатель." -- mt
+L["A journey stop where you hand a quest in keeps the game's quest icon off it."] =
+	"Остановка маршрута, где вы сдаёте задание, не показывает игровой значок задания." -- mt
 L["Finding the fastest way…"] = "Поиск самого быстрого пути…"
 L["Flight Masters"] = "Распорядители полетов"
 L["Flight master"] = "Распорядитель полетов"
