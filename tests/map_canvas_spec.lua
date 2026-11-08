@@ -216,6 +216,46 @@ check(GameTooltip.owner == dock and GameTooltip.shown, "hovering a dock shows it
 dock.scripts.OnLeave(dock)
 check(not GameTooltip.shown, "leaving it hides the tooltip")
 
+--[[ Stock hover and pressed: the pin's own art again with ADD, and the pushed look while held ]]
+local function checkPinStates(pin, name, button)
+	local highlight, texture = pin.HighlightTexture, pin.Texture
+	local width, height, anchor = pin.width, pin.height, pin.anchor
+	local action = pin.OnMouseClickAction
+	pin.OnMouseClickAction = nil
+	function pin.IsMouseOver()
+		return true
+	end
+	check(highlight and highlight.hidden, name .. " rests unlit")
+	pin.scripts.OnEnter(pin)
+	check(not highlight.hidden, name .. " lights its own art on hover")
+	check(
+		highlight.atlas == texture.atlas and highlight.texture == texture.texture,
+		name .. " wears the same art on hover"
+	)
+	check(texture.offsetX == nil and texture.offsetY == nil, name .. " stays put on hover")
+	fireEvent("GLOBAL_MOUSE_DOWN", button)
+	check(texture.offsetX == 1 and texture.offsetY == -1, name .. " is pushed down and right while held")
+	check(
+		pin.width == width and pin.height == height and pin.anchor == anchor,
+		name .. " keeps its size, anchor and hit rect while held"
+	)
+	fireEvent("GLOBAL_MOUSE_UP", button)
+	check(texture.offsetX == 0 and texture.offsetY == 0, name .. " comes back on release")
+	fireEvent("GLOBAL_MOUSE_DOWN", button)
+	check(texture.offsetX == 1 and texture.offsetY == -1, name .. " pushes again")
+	pin.scripts.OnLeave(pin)
+	check(texture.offsetX == 0 and texture.offsetY == 0, name .. " is released when the pointer leaves")
+	check(highlight.hidden, name .. " leaves the rest look")
+	fireEvent("GLOBAL_MOUSE_UP", button)
+	pin.IsMouseOver, pin.OnMouseClickAction = nil, action
+end
+checkPinStates(dock, "a dock", "RightButton")
+local portalPins = pools.ShortestPathForeverPortalPinTemplate
+local portalPin = portalPins:Acquire(ns.Portals[1], 0.5, 0.5)
+checkPinStates(portalPin, "a portal", "RightButton")
+portalPins:Release(portalPin)
+noErrors("hover and pressed states")
+
 --[[ A click is a press and release over the hovered pin ]]
 local clicked
 local action = dock.OnMouseClickAction
@@ -268,6 +308,9 @@ planned = nil
 clickPin(docks.active[1], "LeftButton")
 check(planned and planned.pinBadge, "and a dock, where it stands")
 shiftDown, ns.StartJourney = false, startJourney
+
+checkPinStates(flight, "a flight point", "RightButton")
+noErrors("flight point states")
 
 --[[ A flight point super-tracks on a zone map; above one, its click goes through to zoom in ]]
 check(flight.passThrough and #flight.passThrough == 0, "on a zone a flight point keeps both buttons")
@@ -409,6 +452,7 @@ for pin in pools.ShortestPathForeverGoalPinTemplate:EnumerateActive() do
 	pin.scripts.OnEnter(pin)
 	pin.scripts.OnLeave(pin)
 end
+checkPinStates(stop, "a stop", "LeftButton")
 clickPin(stop, "RightButton")
 check(not ns.HasJourney(), "right-clicking a stop clears the journey")
 for pin in docks:EnumerateActive() do

@@ -30,6 +30,12 @@ local ns = select(2, ...)
 -- pin passes the right button through to the canvas (zoom out) unless it says otherwise, as the map's own pins do.
 -- Under the gamepad interface a pin within reach of the map cursor shows its tooltip, as the map's own pins do; its
 -- clicks stay with the mouse.
+--
+-- A pin tells the player it can be clicked the way the stock pins do: a `HighlightTexture` on the HIGHLIGHT layer wears
+-- the pin's own art again with the ADD blend while the pointer is over it (BaseHighlightableMapPoiPinTemplate), and
+-- `SetPressed` shifts the pin's art down and right by one while the button is held (POIButtonMixin's display layer,
+-- SuperTrackablePinMixin's nudge), restoring it on release or when the pointer leaves. Only the art moves: the pin's
+-- anchor, size and hit rect stay put.
 
 local MapCanvas = {}
 ns.MapCanvas = MapCanvas
@@ -136,12 +142,18 @@ local function SetHovered(pin)
 	local previous = hovered
 	hovered = pin
 	if previous then
+		previous:SetHighlighted(false)
+		previous:SetPressed(false)
+		if pressed == previous then
+			pressed = nil
+		end
 		if previous.SetHighlightLocked then
 			previous:SetHighlightLocked(false)
 		end
 		previous:OnMouseLeave()
 	end
 	if pin then
+		pin:SetHighlighted(true)
 		if pin.SetHighlightLocked then
 			pin:SetHighlightLocked(true)
 		end
@@ -241,6 +253,9 @@ function Hide(view)
 	if hovered and hovered.view == view then
 		SetHovered(nil)
 	end
+	if pressed then
+		pressed:SetPressed(false)
+	end
 	pressed = nil
 	local open = false
 	for _, other in pairs(views) do
@@ -330,17 +345,43 @@ function MapCanvas.SetShown(map, shown)
 		if not shown and hovered and hovered.view == view then
 			SetHovered(nil)
 		end
+		if not shown and pressed and pressed.view == view then
+			pressed:SetPressed(false)
+			pressed = nil
+		end
 		view.layer:SetShown(shown)
 	end
 end
 
 --[[ Pins ]]
 
+-- A frame that can show the stock pushed look: the art regions that move while it is held.
+---@class SPFPressable : Frame
+---@field pressed? boolean
+---@field pressRegions? Region[]
+
+-- The stock pushed look: `regions` move down and right by one pixel while the button is held, and back on release,
+-- as POIButtonMixin's display layer and a super-tracked pin do. An owner that is pressed again is left alone, so a
+-- release after a leave never moves the art twice.
+---@param owner SPFPressable
+---@param regions? Region[]
+---@param down boolean
+function MapCanvas.Press(owner, regions, down)
+	if (owner.pressed or false) == down then
+		return
+	end
+	owner.pressed = down
+	local dx, dy = down and 1 or -1, down and -1 or 1
+	for _, region in ipairs(regions or {}) do
+		region:AdjustPointsOffset(dx, dy)
+	end
+end
+
 -- The base of every pin: MapCanvasPinMixin's placing and scaling, worked out from the view rather than asked of the
 -- map. A pin is placed at map fractions (SetPosition) and keeps a constant size on screen, between startScale zoomed
 -- out and endScale zoomed in, times the map's pin scale unless it ignores it (ApplyCurrentScale). A pin with no limits
 -- that ignores the pin scale grows with the terrain.
----@class SPFCanvasPin : Frame
+---@class SPFCanvasPin : SPFPressable
 ---@field view SPFCanvasView
 ---@field pool SPFCanvasPool
 ---@field mapX? number
@@ -353,6 +394,8 @@ end
 ---@field levelIndex? number
 ---@field takesMouse? boolean
 ---@field marker? string
+---@field HighlightTexture? Texture
+---@field highlighted? boolean
 ---@field OnMouseClickAction? fun(self: SPFCanvasPin, button: string)
 local Pin = {}
 MapCanvas.PinMixin = Pin
@@ -366,6 +409,24 @@ function Pin.OnMouseEnter() end
 function Pin.OnMouseLeave() end
 function Pin.OnCanvasScaleChanged() end
 function Pin.OnCanvasSizeChanged() end
+
+-- The stock highlight (BaseHighlightableMapPoiPinTemplate): the pin's own art on the HIGHLIGHT layer, drawn with ADD.
+---@param shown boolean
+function Pin:SetHighlighted(shown)
+	self.highlighted = shown
+	local highlight = self.HighlightTexture
+	-- The UI fixture answers an unknown name with a function; a frame without a highlight has none.
+	if highlight and type(highlight) ~= "function" then
+		highlight:SetShown(shown)
+	end
+end
+
+-- The stock pushed look (POIButtonMixin, SuperTrackablePinMixin): the pin's art moves down and right by one while the
+-- button is held, and comes back on release or leave. The frame keeps its anchor, size and hit rect.
+---@param down boolean
+function Pin:SetPressed(down)
+	MapCanvas.Press(self, self.pressRegions, down)
+end
 
 ---@return SPFMapCanvas
 function Pin:GetMap()
@@ -481,6 +542,8 @@ function Pool:Acquire(...)
 		end
 	end
 	self.active[#self.active + 1] = pin
+	pin:SetHighlighted(false)
+	pin:SetPressed(false)
 	pin:Show()
 	pin:OnAcquired(...)
 	pin:ApplyFrameLevel()
@@ -506,6 +569,7 @@ local function Release(pin)
 	if pressed == pin then
 		pressed = nil
 	end
+	pin:SetPressed(false)
 	pin:Hide()
 	pin:ClearAllPoints()
 	pin:OnReleased()
@@ -613,11 +677,15 @@ clicks:SetScript("OnEvent", function(_, event, button)
 		pressed, pressedButton = nil, button
 		if hovered and hovered:IsVisible() and hovered:IsMouseOver() then
 			pressed = hovered
+			pressed:SetPressed(true)
 		end
 		return
 	end
 	local pin = pressed
 	pressed = nil
+	if pin then
+		pin:SetPressed(false)
+	end
 	if pin and pin == hovered and button == pressedButton and pin:IsVisible() and pin:IsMouseOver() then
 		ns.SafeCall("map pin click", MapCanvas.Click, pin, button)
 	end

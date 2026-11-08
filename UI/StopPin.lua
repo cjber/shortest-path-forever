@@ -28,6 +28,7 @@ ns.StopSize = STOP_SIZE
 ---@field Icon Texture
 ---@field Disc Texture
 ---@field Button Texture
+---@field HighlightTexture Texture
 ---@field Number FontString
 ---@field stopTitles? string[]
 ---@field stopDetails? string[]
@@ -46,6 +47,7 @@ function GoalPin:OnLoad()
 	self.Disc:SetVertexColor(0, 0, 0)
 	self.Number = self:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	self.Number:SetPoint("CENTER")
+	self.pressRegions = { self.Texture, self.Icon, self.Disc, self.Button, self.Number, self.HighlightTexture }
 	self.Button:SetDesaturated(false)
 	self.Button:SetVertexColor(1, 0.9, 0.7)
 	self:SetScript("OnHide", self.OnMouseLeave)
@@ -124,6 +126,23 @@ function GoalPin:OnAcquired(x, y, numbers, titles, later, look, details, pinBadg
 	else
 		self.Texture:SetAllPoints()
 	end
+	-- Hover: the pin's own art again on the HIGHLIGHT layer, drawn with ADD, as BaseHighlightableMapPoiPinTemplate does.
+	local highlight = self.HighlightTexture
+	highlight:ClearAllPoints()
+	if fonted then
+		ns.Art.Fit(highlight, current and CURRENT_ATLAS or STOP_ATLAS, 32, 32)
+		highlight:SetAllPoints(self.Button)
+	elseif numbered then
+		ns.Art.Icon(highlight, numberArt --[[@as string]], NUMBER_SIZE)
+		highlight:SetAllPoints(self.Texture)
+	elseif marked then
+		ns.SetStopLook(highlight, look --[[@as SPFAPIStopKind]], numbers and BADGE_SIZE or LOOK_SIZE)
+		highlight:SetAllPoints(self.Icon)
+	else
+		ns.Art.Icon(highlight, GOAL_FILE, GOAL_SIZE)
+		highlight:SetAllPoints(self.Texture)
+	end
+	highlight:SetShown(self.highlighted == true)
 end
 
 function GoalPin:OnMouseEnter()

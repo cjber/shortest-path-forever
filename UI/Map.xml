@@ -12,7 +12,7 @@
 				</Texture>
 			</Layer>
 			<Layer level="HIGHLIGHT">
-				<Texture parentKey="HighlightTexture" alphaMode="ADD" alpha="0.4">
+				<Texture parentKey="HighlightTexture" alphaMode="ADD" alpha="0.4" hidden="true">
 					<Anchors>
 						<Anchor point="CENTER"/>
 					</Anchors>
@@ -30,7 +30,7 @@
 				</Texture>
 			</Layer>
 			<Layer level="HIGHLIGHT">
-				<Texture parentKey="HighlightTexture" alphaMode="ADD" alpha="0.4">
+				<Texture parentKey="HighlightTexture" alphaMode="ADD" alpha="0.4" hidden="true">
 					<Anchors>
 						<Anchor point="CENTER"/>
 					</Anchors>
@@ -59,7 +59,7 @@
 				</Texture>
 			</Layer>
 			<Layer level="HIGHLIGHT">
-				<Texture parentKey="HighlightTexture" alphaMode="ADD" alpha="0.4">
+				<Texture parentKey="HighlightTexture" alphaMode="ADD" alpha="0.4" hidden="true">
 					<Anchors>
 						<Anchor point="CENTER"/>
 					</Anchors>
@@ -97,6 +97,11 @@
 			</Layer>
 			<Layer level="OVERLAY" textureSubLevel="1">
 				<Texture parentKey="Icon" hidden="true"/>
+			</Layer>
+			<!-- The goal pin's own art again, with the stock highlight's ADD blend, shown while the pointer is over it
+			     (UI/MapCanvas.lua SetHighlighted). -->
+			<Layer level="HIGHLIGHT">
+				<Texture parentKey="HighlightTexture" alphaMode="ADD" alpha="0.4" hidden="true"/>
 			</Layer>
 		</Layers>
 	</Frame>

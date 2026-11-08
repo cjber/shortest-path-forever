@@ -1,5 +1,6 @@
 -- The client the UI checks run against: stub frames and client APIs. tests/ui_map.lua follows it in one chunk,
 -- so the checks appended after both share their locals.
+-- rule-ignore: file-size-no-growth - one client fixture by design
 local BLIZZARD_UI = (os.getenv("SPF_BLIZZARD_UI") or "tools/.cache/blizzard-ui") .. "/Interface/AddOns/"
 -- Loads the addon in toc order against stubs, fires ADDON_LOADED, runs tickers and a fake ride.
 local T, frames, tickers = 0, {}, {}
@@ -174,6 +175,10 @@ local function stubframe()
 		function texture:SetPoint(...)
 			self.anchor = { ... }
 		end
+		function texture:AdjustPointsOffset(x, y)
+			self.offsetX = (self.offsetX or 0) + x
+			self.offsetY = (self.offsetY or 0) + y
+		end
 		function texture:Show()
 			self.hidden = false
 		end
@@ -233,6 +238,10 @@ local function stubframe()
 	end
 	function f:SetPoint(...)
 		self.anchor = { ... }
+	end
+	function f:AdjustPointsOffset(x, y)
+		self.offsetX = (self.offsetX or 0) + x
+		self.offsetY = (self.offsetY or 0) + y
 	end
 	function f:IsShown()
 		return not self.hidden

@@ -122,6 +122,8 @@ function DockPin:OnLoad()
 	self:SetScalingLimits(1, 1, 1.2)
 	self:SetSize(PIN_SIZE, PIN_SIZE)
 	self.takesMouse = true
+	self.pressRegions = { self.Texture, self.HighlightTexture }
+	-- Closing the map hides the pin without an OnMouseLeave.
 	self:SetScript("OnHide", self.OnMouseLeave)
 end
 
@@ -642,6 +644,7 @@ function PortalPin:OnLoad()
 	self:SetScalingLimits(1, 1, 1.2)
 	self:SetSize(PIN_SIZE, PIN_SIZE)
 	self.takesMouse = true
+	self.pressRegions = { self.Texture, self.HighlightTexture }
 	-- Closing the map hides the pin without an OnMouseLeave.
 	self:SetScript("OnHide", self.OnMouseLeave)
 end

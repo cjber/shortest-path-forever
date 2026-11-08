@@ -16,6 +16,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 - **A tracked quest now gets its route from the journey key binding.** A quest shown in the objective tracker is watched, not necessarily super-tracked, so Travel to my tracked quest could answer "no quest is tracked" and the minimap stayed empty. The binding now falls back to the tracker's quest list, the right-click Plan journey entry also recognises a replacement tracker's block by its own menu owner, and a journey that cannot be planned says why. Thanks to TeeRKee for the report (cjber/shortest-path-forever#466).
 
+- **Every clickable icon answers the pointer.** The world map's docks, portals, flight points and journey stops and the minimap's transport pins now wear the stock highlight under the cursor and the stock pushed look while the mouse button is held, so it is clear what can be clicked and that the click landed. Only the art moves: each pin keeps its size, anchor and hit area. (#469).
+
 ## [1.22.52] - 2026-11-08
 
 - **RestedXP's arrow can stay while Shortest Path still follows the guide.** One checkbox used to do everything: plan journeys to RestedXP guide targets, follow them, and hide the guide's own arrow so ours was the only one. A new **Hide RestedXP's arrow** setting in Settings > Guidance owns the takeover alone. Turn it off and the guide's arrow, text and clicks stay as RestedXP drew them while journeys and routing are unchanged; it defaults to on, so existing profiles behave exactly as before (#464).
