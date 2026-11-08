@@ -286,6 +286,7 @@ function EventUtil.ContinueAfterAllEvents(callback, ...) end
 ---@field scale? number tracker size, 1 is the stock size
 ---@field x? number
 ---@field y? number
+---@field backdropOpacity? number the tracker background's opacity, 0 (off) to 1
 
 ---@class ForeverTrackerGrip
 ---@field Show fun(value: boolean) shows or hides the grip, which the host keeps hidden while attached
