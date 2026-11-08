@@ -249,6 +249,8 @@ L["Tram to %s"] = "Поезд: %s"
 L["Tram to %s arrives in %s"] = "Поезд (%s) прибудет через %s"
 L["Transport"] = "Транспорт"
 L["Transport icon size"] = "Размер значков транспорта"
+L["Turning this off leaves RestedXP's arrow visible."] =
+	"Если отключить эту опцию, стрелка RestedXP останется видимой." -- mt
 L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
 	"Отключите, чтобы перетаскивать общую панель отслеживания Forever в любое место экрана."
 L["Use %s"] = "Использовать: %s"
@@ -358,6 +360,8 @@ L["Party member"] = "Участник группы" -- mt
 L["That player is not on a map you can see."] =
 	"Этот игрок не на карте, которую вы видите." -- mt
 L["You have caught up with %s."] = "Вы догнали %s." -- mt
+L["Shortest Path's own arrow replaces the guide's while a guide target is followed."] =
+	"Собственная стрелка Shortest Path заменяет стрелку руководства, пока цель руководства отслеживается." -- mt
 L["Show a pin over the destination"] = "Показывать метку над пунктом назначения" -- mt
 L["A marker on screen over where the journey ends, like the game's own waypoint pin."] =
 	"Метка на экране над концом маршрута, как игровая метка путевой точки." -- mt
@@ -403,6 +407,7 @@ L["Green"] = "Зелёный"
 L["Magenta"] = "Пурпурный"
 L["Show boat, lift and tram departures in the tracker"] =
 	"Показывать отправления кораблей, лифтов и трамвая в трекере"
+L["Hide RestedXP's arrow"] = "Скрыть стрелку RestedXP" -- mt
 L["Hide departures"] = "Скрыть отправления"
 
 -- Forever Leaderboards (Forever Core's shared window).

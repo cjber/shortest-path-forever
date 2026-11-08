@@ -68,6 +68,15 @@ local function Suppress()
 	frame:EnableMouse(false)
 end
 
+-- The arrow takeover alone: a player may keep RestedXP's arrow while still following its guide.
+local function HoldArrow()
+	if ns.db and ns.db.restedxpHideArrow == false then
+		Restore()
+	else
+		Suppress()
+	end
+end
+
 local function Integrated()
 	local frontend = AdventureGuideForever and AdventureGuideForever.API
 	return frontend ~= nil and type(frontend.RestedXPIntegrated) == "function" and frontend.RestedXPIntegrated() == true
@@ -82,7 +91,7 @@ local function Sync()
 	if Integrated() then
 		API.Cancel(OWNER)
 		target, targetTitle = nil, nil
-		Suppress()
+		HoldArrow()
 		return
 	end
 	local frontend = AdventureGuideForever and AdventureGuideForever.API
@@ -158,7 +167,7 @@ local function Sync()
 		Rename(title, map, x / 100, y / 100)
 		-- RestedXP owns the arrow when Shortest Path is not drawing one of its own.
 		if ns.db.arrow ~= false then
-			Suppress()
+			HoldArrow()
 		else
 			Restore()
 		end
@@ -202,7 +211,7 @@ hooksecurefunc(ns, "JourneyChanged", function()
 		return
 	end
 	if hooked and ns.db and Integrated() then
-		Suppress()
+		HoldArrow()
 	else
 		Restore()
 	end

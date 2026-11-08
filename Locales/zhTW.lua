@@ -230,6 +230,7 @@ L["Tram to %s"] = "前往%s的地鐵"
 L["Tram to %s arrives in %s"] = "前往%s的地鐵將在%s後抵達"
 L["Transport"] = "交通"
 L["Transport icon size"] = "交通圖示大小"
+L["Turning this off leaves RestedXP's arrow visible."] = "關閉此選項後，RestedXP 的箭頭仍會顯示。" -- mt
 L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
 	"關閉此項可將共用Forever追蹤器拖曳到螢幕上任意位置。"
 L["Use %s"] = "使用%s"
@@ -333,6 +334,8 @@ L["What happened, or what you would like"] = "發生了什麼，或你希望有�
 L["Party member"] = "隊友" -- mt
 L["That player is not on a map you can see."] = "該玩家不在你能看到的地圖上。" -- mt
 L["You have caught up with %s."] = "你已追上%s。" -- mt
+L["Shortest Path's own arrow replaces the guide's while a guide target is followed."] =
+	"在追蹤指南目標時，Shortest Path 自己的箭頭會取代指南的箭頭。" -- mt
 L["Show a pin over the destination"] = "在目的地顯示圖釘" -- mt
 L["A marker on screen over where the journey ends, like the game's own waypoint pin."] =
 	"在旅程終點上方顯示螢幕標記，類似遊戲內建的路徑點圖釘。" -- mt
@@ -374,6 +377,7 @@ L["Cyan"] = "青色"
 L["Green"] = "綠色"
 L["Magenta"] = "洋紅色"
 L["Show boat, lift and tram departures in the tracker"] = "在追蹤器中顯示船隻、升降梯和地鐵的班次"
+L["Hide RestedXP's arrow"] = "隱藏 RestedXP 的箭頭" -- mt
 L["Hide departures"] = "隱藏班次"
 
 -- Forever Leaderboards (Forever Core's shared window).

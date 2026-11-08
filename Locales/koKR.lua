@@ -241,6 +241,8 @@ L["Tram to %s"] = "%s행 지하철"
 L["Tram to %s arrives in %s"] = "%s행 지하철 %s 후 도착"
 L["Transport"] = "교통수단"
 L["Transport icon size"] = "교통수단 아이콘 크기"
+L["Turning this off leaves RestedXP's arrow visible."] =
+	"이 옵션을 끄면 RestedXP의 화살표가 계속 표시됩니다." -- mt
 L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
 	"이 옵션을 끄면 공유 Forever 추적기를 화면 어디로든 끌 수 있습니다."
 L["Use %s"] = "%s 사용"
@@ -345,6 +347,8 @@ L["What happened, or what you would like"] = "무슨 일이 있었는지 또는 
 L["Party member"] = "파티원" -- mt
 L["That player is not on a map you can see."] = "그 플레이어는 볼 수 있는 지도에 없습니다." -- mt
 L["You have caught up with %s."] = "%s을(를) 따라잡았습니다." -- mt
+L["Shortest Path's own arrow replaces the guide's while a guide target is followed."] =
+	"안내 목표를 따라가는 동안 Shortest Path의 화살표가 안내의 화살표를 대신합니다." -- mt
 L["Show a pin over the destination"] = "목적지 위에 핀 표시" -- mt
 L["A marker on screen over where the journey ends, like the game's own waypoint pin."] =
 	"여정이 끝나는 곳 위에 화면 표시를 놓습니다. 게임의 경로 지점 핀과 같습니다." -- mt
@@ -387,6 +391,7 @@ L["Cyan"] = "청록색"
 L["Green"] = "녹색"
 L["Magenta"] = "자홍색"
 L["Show boat, lift and tram departures in the tracker"] = "추적기에서 배, 승강기, 지하철 출발 표시"
+L["Hide RestedXP's arrow"] = "RestedXP 화살표 숨기기" -- mt
 L["Hide departures"] = "출발 숨기기"
 
 -- Forever Leaderboards (Forever Core's shared window).

@@ -12,6 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.22.52] - 2026-11-08
+
+- **RestedXP's arrow can stay while Shortest Path still follows the guide.** One checkbox used to do everything: plan journeys to RestedXP guide targets, follow them, and hide the guide's own arrow so ours was the only one. A new **Hide RestedXP's arrow** setting in Settings > Guidance owns the takeover alone. Turn it off and the guide's arrow, text and clicks stay as RestedXP drew them while journeys and routing are unchanged; it defaults to on, so existing profiles behave exactly as before (#464).
+
 ## [1.22.51] - 2026-11-08
 
 - **The quest log keeps Plan journey when another tracker replaces the game's.** The right-click entry was resolved through the game's own tracker chain, so with a tracker replacement that wraps the quest header the entry silently vanished and there was no way to start a journey from a tracked quest. The block is now recognised wherever it sits under the objective tracker, the quest id is read from the header or the block, and the map's quest log title accepts both spellings the client uses. A quest with no located objective still adds nothing (#459).

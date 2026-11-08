@@ -72,6 +72,16 @@ rxp.UpdateMap()
 driver.path.settle()
 assert(not frame.texture.shown, "Shortest Path suppresses RestedXP's arrow again")
 assert(rxp.settings.profile.disableArrow == nil, "guide settings stay untouched")
+ns.db.restedxpHideArrow = false
+ns.RefreshRestedXP()
+assert(API.CurrentStop("RestedXP") == 1, "keeping the guide arrow still follows the guide target")
+assert(frame.texture.shown and frame.text.shown, "turning the takeover off leaves RestedXP's arrow shown")
+assert(frame.mouse == true, "the visible guide arrow still takes clicks")
+ns.db.restedxpHideArrow = true
+ns.RefreshRestedXP()
+assert(not frame.texture.shown and not frame.text.shown, "turning the takeover back on hides the guide arrow")
+assert(frame.mouse == false, "the hidden guide arrow takes no clicks")
+assert(API.CurrentStop("RestedXP") == 1, "hiding the arrow again keeps the journey running")
 local starts = 0
 local start = ns.StartJourney
 ns.StartJourney = function(...)

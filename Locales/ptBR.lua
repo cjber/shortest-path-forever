@@ -236,6 +236,7 @@ L["Tram to %s"] = "Metrô para %s"
 L["Tram to %s arrives in %s"] = "Metrô para %s chega em %s"
 L["Transport"] = "Transporte"
 L["Transport icon size"] = "Tamanho dos ícones de transporte"
+L["Turning this off leaves RestedXP's arrow visible."] = "Desativar esta opção deixa a seta do RestedXP visível." -- mt
 L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
 	"Desative para arrastar o rastreador Forever compartilhado para qualquer lugar da tela."
 L["Use %s"] = "Usar %s"
@@ -339,6 +340,8 @@ L["What happened, or what you would like"] = "O que aconteceu ou o que você gos
 L["Party member"] = "Membro do grupo" -- mt
 L["That player is not on a map you can see."] = "Esse jogador não está num mapa que você possa ver." -- mt
 L["You have caught up with %s."] = "Você alcançou %s." -- mt
+L["Shortest Path's own arrow replaces the guide's while a guide target is followed."] =
+	"A seta do Shortest Path substitui a do guia enquanto um objetivo do guia estiver sendo seguido." -- mt
 L["Show a pin over the destination"] = "Mostrar um alfinete sobre o destino" -- mt
 L["A marker on screen over where the journey ends, like the game's own waypoint pin."] =
 	"Uma marca na tela sobre onde o trajeto termina, como o alfinete de ponto de rota do jogo." -- mt
@@ -381,6 +384,7 @@ L["Green"] = "Verde"
 L["Magenta"] = "Magenta"
 L["Show boat, lift and tram departures in the tracker"] =
 	"Mostrar partidas de barcos, elevadores e metrô no rastreador"
+L["Hide RestedXP's arrow"] = "Ocultar a seta do RestedXP" -- mt
 L["Hide departures"] = "Ocultar partidas"
 
 -- Forever Leaderboards (Forever Core's shared window).

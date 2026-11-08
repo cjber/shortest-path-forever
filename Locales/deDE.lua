@@ -236,6 +236,7 @@ L["Tram to %s"] = "Bahn nach %s"
 L["Tram to %s arrives in %s"] = "Bahn nach %s kommt in %s an"
 L["Transport"] = "Transport"
 L["Transport icon size"] = "Größe der Transportsymbole"
+L["Turning this off leaves RestedXP's arrow visible."] = "Wenn Ihr dies ausschaltet, bleibt RestedXPs Pfeil sichtbar." -- mt
 L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
 	"Ausschalten, um die gemeinsame Forever-Verfolgung frei auf dem Bildschirm zu verschieben."
 L["Use %s"] = "%s benutzen"
@@ -339,6 +340,8 @@ L["What happened, or what you would like"] = "Was passiert ist oder was Ihr Euch
 L["Party member"] = "Gruppenmitglied" -- mt
 L["That player is not on a map you can see."] = "Dieser Spieler ist nicht auf einer Karte, die du sehen kannst." -- mt
 L["You have caught up with %s."] = "Du hast %s eingeholt." -- mt
+L["Shortest Path's own arrow replaces the guide's while a guide target is followed."] =
+	"Der eigene Pfeil von Shortest Path ersetzt den des Leitfadens, solange ein Leitfaden-Ziel verfolgt wird." -- mt
 L["Show a pin over the destination"] = "Markierung über dem Ziel anzeigen" -- mt
 L["A marker on screen over where the journey ends, like the game's own waypoint pin."] =
 	"Eine Markierung auf dem Bildschirm über dem Reiseziel, wie die eigene Wegpunktnadel des Spiels." -- mt
@@ -381,6 +384,7 @@ L["Green"] = "Grün"
 L["Magenta"] = "Magenta"
 L["Show boat, lift and tram departures in the tracker"] =
 	"Abfahrten von Schiffen, Aufzügen und der Bahn in der Verfolgung zeigen"
+L["Hide RestedXP's arrow"] = "RestedXPs Pfeil ausblenden" -- mt
 L["Hide departures"] = "Abfahrten ausblenden"
 
 -- Forever Leaderboards (Forever Core's shared window).

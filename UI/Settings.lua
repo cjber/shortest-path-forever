@@ -335,6 +335,16 @@ ns.Init(function()
 		end
 	)
 	Checkbox(
+		"restedxpHideArrow",
+		L["Hide RestedXP's arrow"],
+		L["Shortest Path's own arrow replaces the guide's while a guide target is followed."]
+			.. " "
+			.. L["Turning this off leaves RestedXP's arrow visible."],
+		function()
+			ns.RefreshRestedXP()
+		end
+	)
+	Checkbox(
 		"avoidHighZones",
 		L["Avoid zones far above my level"],
 		L["Walks go round zones whose lowest level is 4 or more above yours, but never the ones you start or end in."],

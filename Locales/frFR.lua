@@ -239,6 +239,8 @@ L["Tram to %s"] = "Tram pour %s" -- mt
 L["Tram to %s arrives in %s"] = "Le tram pour %s arrive dans %s" -- mt
 L["Transport"] = "Transport" -- mt
 L["Transport icon size"] = "Taille des icônes de transport" -- mt
+L["Turning this off leaves RestedXP's arrow visible."] =
+	"Désactiver cette option laisse la flèche de RestedXP visible." -- mt
 L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
 	"Désactivez cette option pour déplacer le suivi Forever partagé n'importe où à l'écran."
 L["Use %s"] = "Utiliser %s" -- mt
@@ -342,6 +344,8 @@ L["What happened, or what you would like"] = "Ce qui s'est passé, ou ce que vou
 L["Party member"] = "Membre du groupe" -- mt
 L["That player is not on a map you can see."] = "Ce joueur n’est pas sur une carte que vous pouvez voir." -- mt
 L["You have caught up with %s."] = "Vous avez rattrapé %s." -- mt
+L["Shortest Path's own arrow replaces the guide's while a guide target is followed."] =
+	"La flèche de Shortest Path remplace celle du guide tant qu'une cible du guide est suivie." -- mt
 L["Show a pin over the destination"] = "Afficher une épingle sur la destination" -- mt
 L["A marker on screen over where the journey ends, like the game's own waypoint pin."] =
 	"Un repère à l’écran sur l’arrivée du trajet, comme l’épingle de point de passage du jeu." -- mt
@@ -384,6 +388,7 @@ L["Green"] = "Vert"
 L["Magenta"] = "Magenta"
 L["Show boat, lift and tram departures in the tracker"] =
 	"Afficher les départs des bateaux, ascenseurs et du tram dans le suivi"
+L["Hide RestedXP's arrow"] = "Masquer la flèche de RestedXP" -- mt
 L["Hide departures"] = "Masquer les départs"
 
 -- Forever Leaderboards (Forever Core's shared window).

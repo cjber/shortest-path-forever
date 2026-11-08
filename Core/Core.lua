@@ -38,6 +38,8 @@ local DEFAULTS = {
 	tomtom = true,
 	tomtomFollow = false,
 	restedxp = true,
+	-- The arrow takeover alone: keep RestedXP's arrow while still following its guide.
+	restedxpHideArrow = true,
 	taxiRoute = true,
 	teleports = true,
 	-- Another player's spellbook is not queryable, so a party mage's portals are declared. Off by default; when on,
