@@ -117,6 +117,7 @@ L["Lifts and the Deeprun Tram, on the world map."] =
 	"승강기와 깊은굴 지하철을 세계 지도에 표시합니다."
 L["Loading QuestieDB…"] = "QuestieDB 불러오는 중…"
 L["Lock the tracker"] = "추적기 잠금"
+L["Tracker background"] = "추적기 배경"
 L["Map marks"] = "지도 표시"
 L["Mark only where steps end"] = "단계 끝만 표시"
 L["Minimap icon size"] = "미니맵 아이콘 크기"
