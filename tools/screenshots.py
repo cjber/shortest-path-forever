@@ -462,12 +462,6 @@ def map_canvas(ui, map_id=947, alpha=1, hover=False):
         gp = point(goal)
         if gp and 0 <= gp[0] <= mw and 0 <= gp[1] <= mh:
             pin_icon(canvas, mx + gp[0], my + gp[1] - 29 / 2, 29)  # StopPin.lua stands the point on the goal
-        points = ordered(data()["darkshore" if map_id == 1439 else "walk"])
-        bend = next(p for p in points[1:] if math.hypot(p["x"] - START["x"], p["y"] - START["y"]) > 25)
-        bp = point(bend)
-        if bp:
-            # JourneyGuide.lua places Guide's native 30-unit waypoint beneath the player's map arrow.
-            icon(canvas, "Waypoint-MapPin-Tracked", mx + bp[0], my + bp[1], 30)
     sp = point(START)
     if sp:
         icon(canvas, "UI-WorldMapArrow", mx + sp[0], my + sp[1], 27)
@@ -708,7 +702,8 @@ def render_minimap(ui):
     icon(canvas, "MinimapArrow", cx, cy, 16)
     bend = next(p for p in points[1:] if math.hypot(p["x"] - here["x"], p["y"] - here["y"]) > 25)
     x, y = project(bend)
-    icon(canvas, "Waypoint-MapPin-Minimap-Tracked", cx - size / 2 + x, cy - size / 2 + y, 16)
+    # Route.lua gives the minimap goal the addon's own pin at 16 units.
+    pin_icon(canvas, cx - size / 2 + x, cy - size / 2 + y, 16)
     canvas.text(0, 13, dock_name(10), FONTS["GameFontNormal"], justify="CENTER", width=300)
     return scene(ui, [(canvas, 0, 0)])
 

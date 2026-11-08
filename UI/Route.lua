@@ -17,15 +17,17 @@ ns.RouteUnderAlpha = UNDER_ALPHA
 local RING_ATLAS, STOP_SIZE = "adventureguide-ring", ns.StopSize
 local MINIMAP_GOAL, MINIMAP_RING = 16, 22
 
--- A stop with a known mark is only ringed, so the game's icon shows through; every other goal wears our own pin.
+-- A stop with a known mark is only ringed, so the game's icon shows through; every other goal wears our own pin,
+-- gold while Guide tracks it and bronze while the route is only planned.
 ---@param texture Texture
 ---@param ringed boolean
 ---@param size number
-local function SetGoalArt(texture, ringed, size)
+---@param active boolean?
+local function SetGoalArt(texture, ringed, size, active)
 	if ringed then
 		ns.Art.Fit(texture, RING_ATLAS, size, size)
 	else
-		ns.Art.Icon(texture, ns.PIN_FILE, size)
+		ns.Art.Icon(texture, ns.GoalPinFile(active), size)
 	end
 end
 -- How strongly the goal's mark shows when it waits on the minimap's rim, off its face.
@@ -472,8 +474,10 @@ function Layer:RefreshStops()
 			}
 		end
 	end
-	-- Groups keep their marks in order, so the current stop leads its group.
-	local groups, keys = ns.OverlapGroups(map, marks, STOP_SIZE), { mapID }
+	-- Groups keep their marks in order, so the current stop leads its group. Whether Guide tracks the goal is part
+	-- of the key: tracking, pausing, yielding or turning Guide off turns the goal pin gold or bronze.
+	local groups, keys =
+		ns.OverlapGroups(map, marks, STOP_SIZE), { mapID, ns.GoalPinActive() and "tracked" or "untracked" }
 	for _, group in ipairs(groups) do
 		for _, mark in ipairs(group) do
 			keys[#keys + 1] = mark.index
@@ -606,7 +610,7 @@ local function DrawMinimap(self)
 			self.goalEdge = edge
 			local ringed = not edge and goal and goal.look ~= nil
 			local size = ringed and MINIMAP_RING or MINIMAP_GOAL
-			SetGoalArt(self.Goal, ringed, size)
+			SetGoalArt(self.Goal, ringed, size, ns.GoalPinActive())
 		end
 		self.Goal:Show()
 	end
@@ -759,7 +763,7 @@ function ns.SetJourneyRoute(destination, route)
 		-- circled there: the game's icon shows through the ring.
 		local ringed = destination ~= nil and destination.look ~= nil
 		local size = ringed and MINIMAP_RING or MINIMAP_GOAL
-		SetGoalArt(minimap.Goal, ringed, size)
+		SetGoalArt(minimap.Goal, ringed, size, ns.GoalPinActive())
 		minimap.goalEdge = nil
 		if destination then
 			minimap:Show()
@@ -770,6 +774,33 @@ function ns.SetJourneyRoute(destination, route)
 			minimap:Hide()
 			ns.SetAreaBlob(false)
 		end
+	end
+end
+
+-- Guide starts, stops, pauses or yields: the goal pin's gold/bronze state changes with it, on the map, the minimap
+-- and the on-screen destination pin. Keeping this here means the journey module only asks for it, without reaching
+-- into the painters. A change while the state stays the same costs one comparison.
+local journeyPinActive
+function ns.RefreshJourneyPin()
+	if not goal then
+		journeyPinActive = nil
+		return
+	end
+	local active = ns.GoalPinActive()
+	if journeyPinActive == active then
+		return
+	end
+	journeyPinActive = active
+	if minimap then
+		local ringed = not minimap.goalEdge and goal.look ~= nil
+		local size = ringed and MINIMAP_RING or MINIMAP_GOAL
+		SetGoalArt(minimap.Goal, ringed, size, active)
+	end
+	if provider and WorldMapFrame and WorldMapFrame:IsShown() then
+		provider:RefreshAllData()
+	end
+	if ns.RefreshDestinationPin then
+		ns.RefreshDestinationPin()
 	end
 end
 
@@ -807,7 +838,7 @@ ns.Init(function()
 	minimap.elapsed, minimap.idle = 0, 0
 	StrokeLayer(minimap)
 	minimap.Goal = Minimap:CreateTexture(nil, "OVERLAY")
-	SetGoalArt(minimap.Goal, false, MINIMAP_GOAL)
+	SetGoalArt(minimap.Goal, false, MINIMAP_GOAL, true)
 	minimap.Goal:Hide()
 	-- The client's own "inside the quest's area" state, the one it paints the blob from, drives the tint at once.
 	minimap:RegisterEvent("PLAYER_INSIDE_QUEST_BLOB_STATE_CHANGED")

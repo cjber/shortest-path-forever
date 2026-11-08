@@ -16,11 +16,11 @@ it, so a data refresh that moves the pin never leaves this file behind. The addo
 | Local client terrain, baked with TrinityCore's tools | The walkable cells in `Nav/*.lua` (`tools/baker/README.md`) | `TRINITY_REV` in `tools/baker/bake.sh` and the client build baked | Derived data, GPL-3.0-or-later; Blizzard's EULA applies to the client files |
 
 No embedded libraries ship. `media/` is this addon's own: the icon is drawn in `media/icon.svg`, the feathered
-`Dot.tga` is the route-stroke brush, `Zeppelin.tga` is the zeppelin map marker, `Pin.tga` is the gold goal pin, and
-`Numbers/1.tga` to `Numbers/25.tga` are the gold numbered markers, all original assets made for this addon with AI
-assistance and no Blizzard art; the pin and the numbered markers are generated from `tools/pin_source` and
-`tools/pin_source/numbers` by `tools/export_pin.py`. Boat markers use Blizzard's `flightmasterferry` atlas, which has
-no zeppelin equivalent.
+`Dot.tga` is the route-stroke brush, `Zeppelin.tga` is the zeppelin map marker, `Pin.tga` is the gold goal pin and
+`PinInactive.tga` its bronze untracked twin, and `Numbers/1.tga` to `Numbers/25.tga` are the gold numbered markers,
+all original assets made for this addon with AI assistance and no Blizzard art; the pins and the numbered markers are
+generated from `tools/pin_source` and `tools/pin_source/numbers` by `tools/export_pin.py`. Boat markers use
+Blizzard's `flightmasterferry` atlas, which has no zeppelin equivalent.
 `Locales/*.lua` are machine translated, using the client's own GlobalStrings for the pinned build (via wago.tools)
 as the glossary for game terms; eight frFR lines are Brainc3ll's.
 

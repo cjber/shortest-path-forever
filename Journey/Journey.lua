@@ -293,6 +293,9 @@ end
 local function StartGuide()
 	Guide.Start()
 	UpdateProgress()
+	if ns.RefreshJourneyPin then
+		ns.RefreshJourneyPin()
+	end
 end
 
 function ns.ToggleJourneyGuide()
@@ -305,6 +308,10 @@ function ns.ToggleJourneyGuide()
 		StartGuide()
 	end
 	RefreshTracker()
+	-- The goal's pin is gold while Guide tracks it and bronze while the route waits unguided.
+	if ns.RefreshJourneyPin then
+		ns.RefreshJourneyPin()
+	end
 end
 
 function ns.ShowJourneyMap()

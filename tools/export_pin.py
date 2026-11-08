@@ -2,7 +2,8 @@
 
 The sources are AI-assisted originals on a flat magenta (#FF00FF) background, made for this addon with no Blizzard
 art. This keys the magenta to alpha, crops to the art, centres it at its native aspect on a square canvas and writes
-media/Pin.tga, the goal pin, and media/Numbers/<n>.tga, the numbered markers.
+media/Pin.tga, the goal pin, media/PinInactive.tga, its bronze untracked twin, and media/Numbers/<n>.tga, the numbered
+markers.
 """
 
 import sys
@@ -13,7 +14,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parent.parent
 SIZE = 128
 NUMBER_SIZE = 64
-PINS = {"pin-gold.png": "Pin.tga"}
+PINS = {"pin-gold.png": "Pin.tga", "pin-bronze.png": "PinInactive.tga"}
 MAX_NUMBER = 25
 NUMBERS = range(1, MAX_NUMBER + 1)
 
