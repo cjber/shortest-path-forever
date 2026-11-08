@@ -89,10 +89,10 @@ before its `v*` tag, since the release publishes it as the notes.
 
 ## Standards
 
-- `wow-forever-addon` — https://github.com/cjber/forever-core/tree/af94fd89610c9128bc11ec07354bd9dabafb5dd0/.agents/skills/wow-forever-addon (UI look,
+- `wow-forever-addon` — https://github.com/cjber/forever-core/tree/main/.agents/skills/wow-forever-addon (UI look,
   icon, README and store page, CI and release requirements shared by every WoW: Forever addon)
-- For UI design, mockups, asset selection and visual audits, also read the pinned
-  `wow-retail-ui-style` skill at the same Forever Core commit. Its asset registry and audit sheets
+- For UI design, mockups, asset selection and visual audits, also read the
+  `wow-retail-ui-style` skill on Forever Core `main`. Its asset registry and audit sheets
   distinguish approved native host art from conditional and blacklisted assets.
 
 ## Waivers
@@ -141,12 +141,12 @@ before its `v*` tag, since the release publishes it as the notes.
 ## Secure UI regression checks
 
 `tools/typecheck.sh` checks the TOC/XML load graph, LuaLS coverage, `tools/lint_taint.py`, `tools/lint_secret.py` (secret values through `ns.Readable`, tooltip hooks behind `ns.Usable`), `tools/check_editorconfig.py` and `tools/check_family.py` (the shared family block between the `forever-family` markers in README.md and docs/curseforge.md).
-Do not hook Blizzard object methods: use events, `HookScript` or a supported callback registry.
+Never touch Blizzard's Lua state: WFA-38 in `wow-forever-addon` lists what addon code may do to Blizzard's
+frames, how to restyle one by drawing on top, and when a `taint-ok` exception holds.
 Keep addon tracker sections and pools in `UI/TrackerHost.lua`, outside Blizzard's registry.
 Draw on the world map only through `UI/MapCanvas.lua`: the addon's own frames on the canvas, and no `AddDataProvider`,
 `AcquirePin`, `AddOverlayFrame` or other write into the map (#158; `tests/map_canvas_spec.lua` fails on one).
 Render only after `PLAYER_ENTERING_WORLD` and `VARIABLES_LOADED`, deferred one frame.
 This supersedes WFA-5's native registration guidance. CI exercises the host against checksum-pinned
 Forever tracker source; native manager access is forbidden in the integration harness.
-A `taint-ok` exception must identify an addon-owned object or a verified safe contract; it cannot
-excuse hooking a native frame. Test event ordering and reuse, not just method existence.
+Test event ordering and reuse, not just method existence.
