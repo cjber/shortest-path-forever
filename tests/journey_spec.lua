@@ -12,6 +12,16 @@ local reminder = ns.NewFlightPathReminderRow({ legs = { known, unknown } }, 1)
 assert(reminder and reminder.text:find("Step 2: discover flight master Test flight master", 1, true))
 assert(not ns.NewFlightPathReminderRow({ legs = { known } }, 1), "known flight masters need no reminder row")
 assert(ns.NewFlightPathReminderRow({ legs = { unknown } }, 1).text:find("Step 1", 1, true))
+local unknownFlight = ns.NewFlightPathReminderRow({ legs = { known }, unknownFlight = true }, 1)
+assert(
+	unknownFlight and unknownFlight.key == "unknown-flight-path",
+	"a walk waiting on an unknown flight point says so"
+)
+assert(unknownFlight.text:find("flight point", 1, true))
+assert(
+	not ns.NewFlightPathReminderRow({ legs = { { mode = "flight" } }, unknownFlight = true }, 1),
+	"a route that already flies needs no unknown-flight notice"
+)
 ns.db.flightPathReminder = false
 assert(ns.NewFlightPathReminderRow({ legs = { unknown } }, 1), "the tracker note remains when banners are disabled")
 
