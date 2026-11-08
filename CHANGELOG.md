@@ -12,6 +12,9 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.22.50] - 2026-11-08
+
+- **A RestedXP guide keeps its arrow when Shortest Path's arrow is switched off.** While a RestedXP step drove a journey, the addon hid the guide's own arrow so the two would not stack, but Shortest Path only draws its arrow while the arrow setting is on. With that setting off both arrows were hidden and the screen carried no arrow at all. The guide's arrow now stays whenever Shortest Path is not drawing one (#458).
 
 ## [1.22.49] - 2026-11-07
 
