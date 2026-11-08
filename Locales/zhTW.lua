@@ -65,7 +65,7 @@ L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] 
 L["E"] = "東"
 L["Either faction can ride any boat or zeppelin."] = "任何陣營都可以搭乘任何船隻或飛艇。"
 L["Enter %s"] = "進入%s"
-L["Gold numbered markers for stops and turns."] = "停靠點和轉彎處使用金色數字標記。" -- mt
+L["Every clickable icon answers the pointer."] = "每個可點擊的圖示都會回應指標。" -- mt
 L["Finding the fastest way…"] = "正在尋找最快路線…"
 L["Flight Masters"] = "飛行管理員"
 L["Flight master"] = "飛行管理員"

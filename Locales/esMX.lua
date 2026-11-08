@@ -65,7 +65,7 @@ L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] 
 L["E"] = "E"
 L["Either faction can ride any boat or zeppelin."] = "Cualquier facción puede subir a cualquier barco o zepelín."
 L["Enter %s"] = "Entrar en %s"
-L["Gold numbered markers for stops and turns."] = "Marcadores dorados numerados para paradas y giros." -- mt
+L["Every clickable icon answers the pointer."] = "Todos los iconos en los que se puede hacer clic responden al puntero." -- mt
 L["Finding the fastest way…"] = "Buscando la ruta más rápida…"
 L["Flight Masters"] = "Maestros de vuelo"
 L["Flight master"] = "Maestro de vuelo"
