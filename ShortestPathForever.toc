@@ -26,6 +26,7 @@ Locales\ruRU.lua
 Locales\zhCN.lua
 Locales\zhTW.lua
 Core\SafeCall.lua
+Core\Log.lua
 Core\Text.lua
 Data\Routes.lua
 Data\Transports.lua

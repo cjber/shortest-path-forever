@@ -28,6 +28,11 @@
 ---@field SafeCall fun(label: string, fn: function, ...: any): boolean, ... run fn as pcall does, keeping a failure for the report and passing it to the error handler (Core/SafeCall.lua)
 ---@field RecordError fun(label: string, message: any, stack?: string)
 ---@field CaughtErrors fun(): ForeverCaughtError[] this session's caught errors, oldest first, as copies
+---@field AttachErrorJournal fun(store: table) keep the journal in the saved table, so a /reload keeps it (Core/Core.lua)
+---@field Log fun(level: string, topic: string, message: any, ...: any) one line in the shared ring (Core/Log.lua)
+---@field LogLines fun(count?: integer): string[] the newest log lines, oldest first, as copies (Core/Log.lua)
+---@field AttachLog fun(store: table) keep the log ring in the saved table, so a /reload keeps it (Core/Core.lua)
+---@field DebugCommand fun(argument?: string): boolean `/forever debug`: toggle, pin, off or show (Core/Log.lua)
 ---@field CutText fun(text: string, limit: integer): string text clipped to the limit on a character boundary
 
 ---@alias SPFMode 'walk'|'flight'|'boat'|'zeppelin'|'lift'|'tram'|'portal'|'passage'|'teleport'
@@ -169,6 +174,8 @@
 ---@field grey? boolean
 
 ---@class SPFDatabase : ForeverFamilyDB
+---@field errors? ForeverCaughtError[] the shared error journal (Core/SafeCall.lua): earlier sessions' errors, for the report
+---@field log? ForeverDebugLogStore the shared debug log ring (Core/Log.lua): recent lines, for the report
 ---@field destinationPin boolean an on-screen marker over the journey's destination
 ---@field trackerHost? ForeverTrackerSettings
 ---@field menuTest? string `/path menutest`: which world map filter menu entries to leave out ("map", "nearby", "both")

@@ -2,6 +2,7 @@ std = "lua51"
 max_line_length = 120
 exclude_files = { ".claude/**", "tools/.cache/**", ".types/**", "types/**", ".release/**", "Nav/**", ".bugpatrol/runs/**", ".speedpatrol/runs/**", ".sloppatrol/runs/**" }
 globals = {
+	"ForeverErrorJournal",
 	"ForeverPeerStats",
 	"ForeverFamily",
 	"ForeverLeaderboards",
@@ -188,8 +189,9 @@ read_globals[#read_globals + 1] = "RXP"
 read_globals[#read_globals + 1] = "AdventureGuideForever"
 -- Core/TomTom.lua: Polestar's TomTom stand-in and its settings.
 read_globals[#read_globals + 1] = "Polestar"
--- SafeCall.lua and Report.lua (the report window shared with the other Forever addons).
+-- SafeCall.lua, Log.lua and Report.lua (the report window shared with the other Forever addons).
 read_globals[#read_globals + 1] = "debugstack"
+read_globals[#read_globals + 1] = "date"
 read_globals[#read_globals + 1] = "strtrim"
 read_globals[#read_globals + 1] = "GetBuildInfo"
 read_globals[#read_globals + 1] = "GetLocale"

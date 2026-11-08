@@ -1,5 +1,8 @@
 local function loadCore(saved)
 	local frames = {}
+	-- Core/SafeCall.lua installs its error handler and event frame once per addon; this stand-in client counts this
+	-- copy as already installed, so the frame below is the one Core.lua makes for ADDON_LOADED.
+	ForeverErrorJournal = { installed = { ShortestPathForever = true } }
 	local env = setmetatable({
 		ShortestPathForeverDB = saved,
 		GetServerTime = function()
@@ -26,7 +29,7 @@ local function loadCore(saved)
 		end,
 	}, { __index = _G })
 	local ns = { Model = {} }
-	for _, file in ipairs({ "Core/SafeCall.lua", "Core/Core.lua" }) do
+	for _, file in ipairs({ "Core/SafeCall.lua", "Core/Log.lua", "Core/Core.lua" }) do
 		setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
 	end
 	frames[1]:OnEvent("ADDON_LOADED", "ShortestPathForever")

@@ -444,3 +444,20 @@ L["6th"] = "6-е" -- mt
 L["7th"] = "7-е" -- mt
 L["8th"] = "8-е" -- mt
 L[", "] = ", " -- mt
+
+-- Shared debug log (Forever Core's Core/Log.lua).
+L["Debug log is off."] = "Журнал отладки выключен." -- mt
+L["Debug log is on for this session."] = "Журнал отладки включён для этого сеанса." -- mt
+L["Debug log is on and pinned for this character."] =
+	"Журнал отладки включён и закреплён для этого персонажа." -- mt
+L["Debug log is already on and pinned for this character."] =
+	"Журнал отладки уже включён и закреплён для этого персонажа." -- mt
+L["Debug log is off for this session; it is still pinned."] =
+	"Журнал отладки выключен для этого сеанса; закрепление сохранено." -- mt
+L["Debug log is off and unpinned."] = "Журнал отладки выключен, закрепление снято." -- mt
+L["No addon has attached its log yet."] =
+	"Ни один аддон ещё не подключил свой журнал." -- mt
+L["%s (last %d):"] = "%s (последние %d):" -- mt
+L["%s: no lines yet."] = "%s: строк пока нет." -- mt
+L["Usage: /forever debug, /forever debug pin, /forever debug off, /forever debug show"] =
+	"Использование: /forever debug, /forever debug pin, /forever debug off, /forever debug show" -- mt

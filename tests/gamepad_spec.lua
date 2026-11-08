@@ -73,7 +73,7 @@ local ns = {
 		end,
 	}),
 }
-for _, file in ipairs({ "Core/SafeCall.lua", "Core/Core.lua" }) do
+for _, file in ipairs({ "Core/SafeCall.lua", "Core/Log.lua", "Core/Core.lua" }) do
 	setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
 end
 

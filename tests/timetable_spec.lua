@@ -7,6 +7,9 @@ local faction = "Alliance"
 -- Core.lua for the real Init, clock and faction filter; then the timetable, started as at login.
 local function login(saved)
 	local frames = {}
+	-- Core/SafeCall.lua installs its error handler and event frame once per addon; this stand-in client counts this
+	-- copy as already installed, so the frame below is the one Core.lua makes for ADDON_LOADED.
+	ForeverErrorJournal = { installed = { ShortestPathForever = true } }
 	local env = setmetatable({
 		ShortestPathForeverDB = saved,
 		GetRealmName = function()
@@ -68,6 +71,7 @@ local function login(saved)
 	for _, file in ipairs({
 		"Locales/enUS.lua",
 		"Core/SafeCall.lua",
+		"Core/Log.lua",
 		"Transport/Model.lua",
 		"Core/Core.lua",
 		"Transport/Timetable.lua",

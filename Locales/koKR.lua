@@ -427,3 +427,19 @@ L["6th"] = "6위" -- mt
 L["7th"] = "7위" -- mt
 L["8th"] = "8위" -- mt
 L[", "] = ", " -- mt
+
+-- Shared debug log (Forever Core's Core/Log.lua).
+L["Debug log is off."] = "디버그 기록이 꺼져 있습니다." -- mt
+L["Debug log is on for this session."] = "이 세션 동안 디버그 기록이 켜져 있습니다." -- mt
+L["Debug log is on and pinned for this character."] =
+	"이 캐릭터에 대해 디버그 기록이 켜져 있고 고정되어 있습니다." -- mt
+L["Debug log is already on and pinned for this character."] =
+	"이 캐릭터에 대해 디버그 기록이 이미 켜져 있고 고정되어 있습니다." -- mt
+L["Debug log is off for this session; it is still pinned."] =
+	"이 세션 동안 디버그 기록이 꺼져 있지만 여전히 고정되어 있습니다." -- mt
+L["Debug log is off and unpinned."] = "디버그 기록이 꺼져 있고 고정이 해제되었습니다." -- mt
+L["No addon has attached its log yet."] = "아직 기록을 첨부한 애드온이 없습니다." -- mt
+L["%s (last %d):"] = "%s (최근 %d개):" -- mt
+L["%s: no lines yet."] = "%s: 아직 줄이 없습니다." -- mt
+L["Usage: /forever debug, /forever debug pin, /forever debug off, /forever debug show"] =
+	"사용법: /forever debug, /forever debug pin, /forever debug off, /forever debug show" -- mt

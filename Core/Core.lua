@@ -347,6 +347,13 @@ frame:SetScript("OnEvent", function(self, _, name)
 			ns.db[key] = value
 		end
 	end
+	-- The shared error journal (Core/SafeCall.lua) lives in the saved table, so the report lists earlier sessions'
+	-- errors after a /reload. A record, not a setting: DEFAULTS holds the settings the panel draws.
+	ns.db.errors = ns.db.errors or {}
+	-- The shared log (Core/Log.lua) rides beside it, so the lines that led to a bug survive a /reload.
+	ns.db.log = ns.db.log or { lines = {}, pinned = false }
+	ns.AttachErrorJournal(ns.db.errors)
+	ns.AttachLog(ns.db.log)
 	ready = true
 	for _, fn in ipairs(pending) do
 		Start(fn)

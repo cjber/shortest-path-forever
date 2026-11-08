@@ -420,3 +420,19 @@ L["6th"] = "6." -- mt
 L["7th"] = "7." -- mt
 L["8th"] = "8." -- mt
 L[", "] = ", " -- mt
+
+-- Shared debug log (Forever Core's Core/Log.lua).
+L["Debug log is off."] = "Das Debug-Protokoll ist aus." -- mt
+L["Debug log is on for this session."] = "Das Debug-Protokoll ist für diese Sitzung an." -- mt
+L["Debug log is on and pinned for this character."] =
+	"Das Debug-Protokoll ist an und für diesen Charakter dauerhaft aktiviert." -- mt
+L["Debug log is already on and pinned for this character."] =
+	"Das Debug-Protokoll ist bereits an und für diesen Charakter dauerhaft aktiviert." -- mt
+L["Debug log is off for this session; it is still pinned."] =
+	"Das Debug-Protokoll ist für diese Sitzung aus; es bleibt dauerhaft aktiviert." -- mt
+L["Debug log is off and unpinned."] = "Das Debug-Protokoll ist aus und nicht mehr dauerhaft aktiviert." -- mt
+L["No addon has attached its log yet."] = "Noch kein Addon hat sein Protokoll angehängt." -- mt
+L["%s (last %d):"] = "%s (letzte %d):" -- mt
+L["%s: no lines yet."] = "%s: noch keine Zeilen." -- mt
+L["Usage: /forever debug, /forever debug pin, /forever debug off, /forever debug show"] =
+	"Verwendung: /forever debug, /forever debug pin, /forever debug off, /forever debug show" -- mt
