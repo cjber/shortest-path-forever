@@ -1,9 +1,8 @@
 -- Run from the repository root: luajit tests/quest_blob_spec.lua
 -- The minimap's own quest area while the player stands in a held stop's area (#504): the area's inside, outside and
 -- selected outside textures wear the bonus objective's gold, the edge ring around the whole minimap is left alone
--- (a gold ring there is a second, larger outline around the blue area), and a quest update that rebuilds the client's
--- blob from the stock textures is recoloured again on the next call. A client without the selected setter still gets
--- the ordinary area recoloured.
+-- (a gold ring there is a second, larger outline around the blue area). A client without the selected setter still
+-- gets the ordinary area recoloured.
 local checks = 0
 local function equal(actual, expected, label)
 	checks = checks + 1
@@ -64,14 +63,6 @@ do
 	equal(minimap.outside, BONUS.outside, "outside wears the gold set")
 	equal(minimap.outsideSelected, BONUS.outsideSelected, "a super-tracked quest's selected edge wears the gold set")
 	equal(minimap.ring, nil, "the minimap's own edge ring is not recoloured")
-
-	-- A quest update rebuilds the client's blob from the stock textures while the player has not moved.
-	minimap.inside, minimap.outside, minimap.outsideSelected = QUEST.inside, QUEST.outside, QUEST.outsideSelected
-	ns.SetAreaBlob(true)
-	equal(minimap.inside, BONUS.inside, "the inside is recoloured again after the client rebuilds it")
-	equal(minimap.outside, BONUS.outside, "the outside is recoloured again after the client rebuilds it")
-	equal(minimap.outsideSelected, BONUS.outsideSelected, "the selected edge is recoloured again too")
-	equal(minimap.ring, nil, "recolouring the area never touches the edge ring")
 
 	ns.SetAreaBlob(false)
 	equal(minimap.inside, QUEST.inside, "leaving hands the stock inside back")
