@@ -40,10 +40,10 @@ local function frame()
 	frames[#frames + 1] = f
 	return f
 end
-local function fire(event)
+local function fire(event, ...)
 	for _, f in ipairs(frames) do
 		if rawget(f, "OnEvent") then
-			f:OnEvent(event)
+			f:OnEvent(event, ...)
 		end
 	end
 end

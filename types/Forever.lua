@@ -154,6 +154,14 @@ WaypointLocationDataProviderMixin = nil
 -- QuestDataProvider's mixin, whose RefreshAllData UI/QuestPins.lua hooks so a provider refresh keeps our stops covered.
 ---@type SPFMapProvider
 QuestDataProviderMixin = nil
+
+-- The game's in-world navigation marker (Blizzard_QuestNavigation/SuperTrackedFrame.lua), loaded on demand. JourneyGuide.lua
+-- paints the addon's own pin over its icon while the marker points at the waypoint the guide placed.
+---@class SPFSuperTrackedFrame : Frame
+---@field Icon Texture
+---@field IconBorder Texture
+---@type SPFSuperTrackedFrame?
+SuperTrackedFrame = nil
 ---@class SPFFlightPin : SPFMapPin
 ---@field poiInfo {nodeID: number, name: string, isUndiscovered: boolean}
 

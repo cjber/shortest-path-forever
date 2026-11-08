@@ -118,6 +118,60 @@ local function SamePoint(a, b)
 	return a == b or (a ~= nil and b ~= nil and a.map == b.map and a.x == b.x and a.y == b.y)
 end
 
+-- The game's in-world navigation marker (Blizzard_QuestNavigation/SuperTrackedFrame.lua) picks Blizzard's atlas
+-- whenever the super-tracked target changes. While it points at the waypoint this guide placed, our own child frame
+-- draws the addon's pin over its icon; a quest, a corpse or the player's own pin keeps Blizzard's icon.
+local MARKER_SIZE = 36
+
+---@return boolean
+local function MarkerIsOurs()
+	if not guide or not guide.waypoint or not guide.expectedWaypoint then
+		return false
+	end
+	if not C_SuperTrack.IsSuperTrackingUserWaypoint() then
+		return false
+	end
+	return SameWaypoint(C_Map.GetUserWaypoint(), guide.expectedWaypoint)
+end
+
+-- Our own frame, parented to the marker, holds a pin texture: it inherits the marker's alpha fading and follows its
+-- icon, and Blizzard's UpdateIcon never touches it. Built once for the one marker the client keeps.
+local markerPin, markerPinParent
+---@param parent SPFSuperTrackedFrame
+---@return Frame
+local function MarkerPin(parent)
+	if markerPin and markerPinParent == parent then
+		return markerPin
+	end
+	local pinFrame = CreateFrame("Frame", nil, parent)
+	local pin = pinFrame:CreateTexture(nil, "ARTWORK")
+	ns.Art.Icon(pin, ns.PIN_FILE, MARKER_SIZE)
+	pin:SetPoint("CENTER", parent.Icon, "CENTER")
+	pinFrame:Hide()
+	markerPin, markerPinParent = pinFrame, parent
+	return pinFrame
+end
+
+-- The marker's own icon and border never have their alpha set by Blizzard's UpdateIcon, so ours sticks across its
+-- repaints. Hidden again the moment the marker points at anything but the guide's waypoint.
+local function RefreshNativeMarker()
+	local frame = SuperTrackedFrame
+	if not (frame and frame.Icon) then
+		return
+	end
+	local ours = MarkerIsOurs()
+	if ours then
+		MarkerPin(frame):Show()
+	elseif markerPin then
+		markerPin:Hide()
+	end
+	local alpha = ours and 0 or 1
+	frame.Icon:SetAlpha(alpha)
+	if frame.IconBorder then
+		frame.IconBorder:SetAlpha(alpha)
+	end
+end
+
 -- What the tracker calls the current leg's destination, with the journey's goal under it while the leg is a hop.
 -- Nil when the client's waypoint is not ours: a player's own pin and Waypoint UI's navigation keep their tooltip.
 ---@return string? title, string? goalTitle
@@ -266,6 +320,7 @@ local function StopGuide()
 		or not SameWaypoint(C_Map.GetUserWaypoint(), previous.expectedWaypoint)
 	then
 		RefreshWaypointPins()
+		RefreshNativeMarker()
 		return
 	end
 	local ownsTracking = not previous.yielded and SameTracking(previous)
@@ -284,6 +339,7 @@ local function StopGuide()
 		C_SuperTrack.SetSuperTrackedUserWaypoint(false)
 	end
 	RefreshWaypointPins()
+	RefreshNativeMarker()
 end
 
 local function OwnsWaypoint()
@@ -310,6 +366,7 @@ local function ClearGuideWaypoint()
 	RememberTracking(guide)
 	guide.writing = nil
 	RefreshWaypointPins()
+	RefreshNativeMarker()
 end
 
 local function YieldGuide()
@@ -388,6 +445,7 @@ local function GuideWaypoint(point, fading)
 		for _, provider in ipairs(waypointProviders) do
 			HideGuideWaypointPin(provider)
 		end
+		RefreshNativeMarker()
 	end
 	return guide.waypoint ~= nil and C_SuperTrack.IsSuperTrackingUserWaypoint()
 end
@@ -521,7 +579,27 @@ Guide.RefreshTracker = RefreshTracker
 Guide.WaypointNames = WaypointNames
 Guide.NameWaypointTooltip = NameWaypointTooltip
 
+-- Blizzard_QuestNavigation loads on demand, so the marker may arrive after this addon's own load; every tracking or
+-- waypoint change is ours to answer too, and none of it goes through Blizzard's own frame methods.
+local markerEvents = CreateFrame("Frame")
+markerEvents:RegisterEvent("SUPER_TRACKING_CHANGED")
+markerEvents:RegisterEvent("USER_WAYPOINT_UPDATED")
+
 ns.Init(function()
+	if SuperTrackedFrame and SuperTrackedFrame.Icon then
+		RefreshNativeMarker()
+	else
+		markerEvents:RegisterEvent("ADDON_LOADED")
+	end
+	markerEvents:SetScript("OnEvent", function(self, event, name)
+		if event == "ADDON_LOADED" then
+			if name ~= "Blizzard_QuestNavigation" then
+				return
+			end
+			self:UnregisterEvent("ADDON_LOADED")
+		end
+		RefreshNativeMarker()
+	end)
 	for provider in pairs(WorldMapFrame.dataProviders) do
 		if provider.RefreshAllData == WaypointLocationDataProviderMixin.RefreshAllData then
 			waypointProviders[#waypointProviders + 1] = provider
