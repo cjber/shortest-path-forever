@@ -95,6 +95,10 @@ function Widget:SetEnabled(enabled)
 	self.enabled = enabled
 end
 
+function Widget:IsEnabled()
+	return self.enabled ~= false
+end
+
 function Widget:SetWidth(width)
 	self.width = width
 end
@@ -149,6 +153,11 @@ end
 
 function Widget:SetupMenu(generator)
 	self.menu = generator
+end
+
+-- A dropdown's own OpenMenu: the window's gamepad wrapper calls it with the interface off, and records the call.
+function Widget:OpenMenu()
+	self.openedMenus = self.openedMenus + 1
 end
 
 function Widget:SetCustomOnMouseUpHandler(handler)
@@ -211,6 +220,7 @@ function Create(kind, parent, template)
 		children = {},
 		points = {},
 		shown = true,
+		openedMenus = 0,
 	}, Widget)
 	if parent then
 		parent.children[#parent.children + 1] = widget
@@ -398,6 +408,19 @@ end
 
 function harness.row(name, value, extra, you, class)
 	return { name = name, value = value, extra = extra, you = you, class = class }
+end
+
+-- The menu root a dropdown's SetupMenu generator builds into: it records the radios, in order, and counts dividers.
+function harness.MenuRoot()
+	local root = { radios = {}, dividers = 0 }
+	root.SetScrollMode = function() end
+	root.CreateDivider = function()
+		root.dividers = root.dividers + 1
+	end
+	root.CreateRadio = function(_, text, getter, onClick)
+		root.radios[#root.radios + 1] = { text = text, getter = getter, onClick = onClick }
+	end
+	return root
 end
 
 harness.ICON = "Interface\\Icons\\INV_Misc_Trophy_Argent"

@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **The Forever Leaderboards period menu works with a gamepad.** With the gamepad interface on, a press on it steps through this week or all time, for your guild and group or for players you've met, instead of opening a game menu that later had the client block `SetPreferredGamepadInteractTarget()` (cjber/forever-core#267).
+
 ## [1.23.3] - 2026-11-08
 
 - **Long journeys to another continent appear again.** When a bind point's walks finished being searched after the route was already chosen, that late answer hit an error and the journey was never shown. A search that has finished now ignores answers that arrive after it (#516).
