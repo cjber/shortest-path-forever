@@ -68,8 +68,8 @@ L["E"] = "В"
 L["Either faction can ride any boat or zeppelin."] =
 	"Любая фракция может сесть на любой корабль или дирижабль."
 L["Enter %s"] = "Войти: %s"
-L["A journey stop where you hand a quest in keeps the game's quest icon off it."] =
-	"Остановка маршрута, где вы сдаёте задание, не показывает игровой значок задания." -- mt
+L["The controller keeps working after the world map and its filter menu."] =
+	"Геймпад продолжает работать после карты мира и меню её фильтров." -- mt
 L["Finding the fastest way…"] = "Поиск самого быстрого пути…"
 L["Flight Masters"] = "Распорядители полетов"
 L["Flight master"] = "Распорядитель полетов"
