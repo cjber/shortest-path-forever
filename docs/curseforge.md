@@ -36,7 +36,7 @@ Hover a dock to see its services and destinations.
 - In **Guidance**, or by right-clicking the tracker's "Journey to …" line, turn off **Attach to quest tracker** to drag the shared column. **Resume guide** returns to RestedXP; **Keep journeys after a reload** restarts yours.
 - `/way [zone] x y [title]` plans a journey, or `/path way` when another addon owns `/way`. **Follow TomTom's arrow** in Guidance follows TomTom.
 - `/path leaderboard` opens Forever Leaderboards on the Shortest Path tab, ranking completed journeys against guild and group members who report theirs, for this week or all time. The window also shows the overall standing across installed Forever addons and puts a player's place in the unit tooltip. Sharing is on unless you turn it off with the window's Share my progress box or the checkbox in **Travel journal**.
-- `/spfnear` opens nearby services. For a bug report, type `/path report` and paste what it shows. Type `/path issue` to show a filled-in GitHub issue link, selected for copying, for a bug or feature request.
+- `/spfnear` opens nearby services. For a bug report, type `/path report` and paste what it shows, including errors from earlier sessions; `/forever debug` keeps a detailed log for the session. Type `/path issue` to show a filled-in GitHub issue link, selected for copying, for a bug or feature request.
 - With the gamepad interface on, you open and turn the world map; Shortest Path won't, and its right-click menus need mouse and keyboard.
 
 Translated into German, French, Spanish, Brazilian Portuguese, Russian, Korean and Chinese (machine translated; corrections welcome through a [translation issue](https://github.com/cjber/shortest-path-forever/issues/new?template=translation.yml)).

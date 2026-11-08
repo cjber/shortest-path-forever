@@ -68,7 +68,8 @@ Right-click a flight master icon to mark its flight path as known if a flight ma
 | Command | What it does |
 |---|---|
 | `/path` | Open the settings (also in Settings → AddOns and the addon compartment) |
-| `/path report` | Show a report to paste into a bug report: versions, your journey, your ride, recent errors |
+| `/path report` | Show a report to paste into a bug report: versions, your journey, your ride, errors from earlier sessions, recent log lines |
+| `/forever debug` | Keep a detailed log for this session, and show it to copy with `/forever debug show` |
 | `/path issue` | Show a filled-in GitHub issue link, selected for copying, to report a bug or request a feature |
 | `/path leaderboard` | Open Forever Leaderboards on the Shortest Path tab: your completed journeys against guild and group members who report theirs |
 | `/path perf` | Print this addon's CPU and memory use |

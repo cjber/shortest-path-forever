@@ -16,7 +16,7 @@ The direction arrow swings smoothly to each new bearing and rests while you stan
 
 **Play a sound when you reach the goal** in Alerts (off by default) plays the map's ping when a journey you planned yourself arrives, even with the game in the background. Clearing a journey stays quiet.
 
-`/path report` opens a window with a report already selected: addon and game versions, your character and position, the journey and its steps, your ride, the ride trace when `/path debug` is on, errors caught this session and your other addons. Press Ctrl+C and paste it into a bug report.
+`/path report` opens a window with a report already selected: addon and game versions, your character and position, the journey and its steps, your ride, the ride trace when `/path debug` is on, errors from earlier sessions and this one with when each was first and last seen, the recent log lines, and your other addons. Press Ctrl+C and paste it into a bug report. `/forever debug` turns on detailed log lines for the session, and `/forever debug show` opens the log to copy.
 
 With the game's gamepad interface on, Shortest Path never opens or turns the world map, opens a menu of its own, or takes the keyboard: the game would block its controller target for the rest of that call. *Show on map*, tracker dock lines and route ends use a map you have open on the place, or ask you to open or turn it; its right-click menus say they need mouse and keyboard; and Nearby services points to the map's own tracking menu. Its map pins are frames of its own over the map, which it only reads, and a pin under the gamepad's map cursor shows its tooltip.
 

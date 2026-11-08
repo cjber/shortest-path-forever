@@ -65,8 +65,8 @@ L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] 
 L["E"] = "東"
 L["Either faction can ride any boat or zeppelin."] = "任何陣營都可以搭乘任何船隻或飛艇。"
 L["Enter %s"] = "進入%s"
-L["A journey stop where you hand a quest in keeps the game's quest icon off it."] =
-	"交任務的旅程站點不會顯示遊戲的任務圖示。" -- mt
+L["The controller keeps working after the world map and its filter menu."] =
+	"開啟世界地圖及其過濾選單後，控制器仍可繼續使用。" -- mt
 L["Finding the fastest way…"] = "正在尋找最快路線…"
 L["Flight Masters"] = "飛行管理員"
 L["Flight master"] = "飛行管理員"
