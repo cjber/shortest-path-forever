@@ -192,9 +192,56 @@ function ns.ParseWay(message)
 	return map, x / 100, y / 100, title ~= "" and title or nil
 end
 
+-- The map and goal a /way line started. The journey is that one only while the goal is the same, so /way reset never
+-- ends a journey planned since from the map, a quest or another addon.
+---@type integer?
+local wayMap
+---@type SPFPoint?
+local wayGoal
+
+-- Whether the journey under way is the one the last /way line started.
+---@return boolean
+local function WayJourney()
+	return wayGoal ~= nil and ns.JourneyGoal() == wayGoal
+end
+
+-- TomTom's own /way reset: all, away, a zone, or any zone but one. The stand-in has one waypoint, the journey, so a
+-- reset ends the journey /way started and never one planned since from elsewhere.
+---@param text string
+local function ResetWay(text)
+	local action, name = text:match("^(%S*)%s*(.-)%s*$")
+	action = action:lower()
+	if action == "all" then
+		if ns.JourneyGoal() then
+			ns.ClearJourney()
+		end
+	elseif action == "away" then
+		if WayJourney() and wayMap ~= C_Map.GetBestMapForUnit("player") then
+			ns.ClearJourney()
+		end
+	elseif action ~= "" then
+		local notThis = action == "not"
+		local zone, err = ZoneMap(notThis and name or text)
+		if not zone then
+			ns.Print(err or L["no journey can be planned to that spot."])
+			return
+		end
+		if WayJourney() and (wayMap == zone) ~= notThis then
+			ns.ClearJourney()
+		end
+	else
+		ns.Print(L["/way reset all, away, <zone> or not <zone>"])
+	end
+end
+
 -- A /way line, from /way itself or /path way.
 ---@param message string
 function ns.Way(message)
+	local command, rest = message:match("^%s*(%S+)%s*(.-)%s*$")
+	if command and command:lower() == "reset" then
+		ResetWay(rest)
+		return
+	end
 	if not ns.db.journey then
 		ns.Print(L["Journeys are off. Turn on Shift-click to plan journeys in settings."])
 		return
@@ -204,7 +251,9 @@ function ns.Way(message)
 		ns.Print(err or L["no journey can be planned to that spot."])
 		return
 	end
-	ns.JourneyToMapPoint(map, x, y, title)
+	if ns.JourneyToMapPoint(map, x, y, title) then
+		wayMap, wayGoal = map, ns.JourneyGoal()
+	end
 end
 
 -- Whether TomTom has /way, or takes it as it loads after Shortest Path, or another addon has a command spelled /way.
