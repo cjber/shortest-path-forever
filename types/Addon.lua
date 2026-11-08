@@ -338,6 +338,7 @@ ShortestPathForeverPathData = nil
 ---@field waterMode? boolean
 ---@field hazards? string -- the key of the hazards its walks were searched with (Hazards.lua)
 ---@field preferred? boolean a ride the planner chose over a slightly quicker long walk
+---@field unknownFlight? boolean the route walks only because a flight point it would use is undiscovered
 ---@class SPFWalkCost
 ---@field from SPFPoint
 ---@field to SPFPoint
@@ -356,6 +357,7 @@ ShortestPathForeverPathData = nil
 ---@field walkSpeed? number
 ---@field waterWalking? boolean
 ---@field ride? {route: number, dock: number, arrive: number}
+---@field unknownFlightNotice? boolean also report a walk caused by an undiscovered flight point
 -- [teleport index] = server ms when it can be cast; absent when it cannot.
 ---@field teleportReady? table<number, number>
 ---@class SPFPlaceOptions

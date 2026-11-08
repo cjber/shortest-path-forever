@@ -214,8 +214,14 @@ local nativePools, nativeActive = {}, {}
 -- Once the addon has loaded, adding or removing a data provider fails the check (#158); a spec may add one as the
 -- client can, by setting testAddsProvider while it does.
 local addonLoaded, testAddsProvider = false, false
+-- The scripts the addon hooks on the map (QuestPins.lua hooks OnShow), run as the client runs them.
+local mapScripts = {}
 _G.WorldMapFrame = setmetatable({
 	dataProviders = {},
+	HookScript = function(_, name, fn)
+		mapScripts[name] = mapScripts[name] or {}
+		table.insert(mapScripts[name], fn)
+	end,
 	shown = true,
 	IsShown = function(self)
 		return self.shown
@@ -342,26 +348,33 @@ end
 -- Use Blizzard's acquisition and event paths so pin visibility tests also cover pooled frames.
 _G.SlashCommandUtil = { CheckAddSlashCommand = noop }
 _G.SLASH_COMMAND, _G.SLASH_COMMAND_CATEGORY = { MAPPIN = 1 }, { MAP = 1 }
+-- EventRegistry's callbacks, recorded so a check can trigger one as the client does (QuestPins.lua listens for
+-- MapCanvas.MapSet; the callback receives its owner first, as CallbackRegistryMixin:TriggerEvent calls it).
+local registryCallbacks = {}
 _G.EventRegistry = {
-	callbacks = {},
-	RegisterCallback = function(self, event, callback, owner)
-		self.callbacks[event] = self.callbacks[event] or {}
-		table.insert(self.callbacks[event], { callback = callback, owner = owner })
+	RegisterCallback = function(_, name, fn, owner)
+		local list = registryCallbacks[name] or {}
+		registryCallbacks[name] = list
+		list[#list + 1] = { fn = fn, owner = owner }
 	end,
-	UnregisterCallback = function(self, event, owner)
-		for index, entry in ipairs(self.callbacks[event] or {}) do
-			if entry.owner == owner then
-				table.remove(self.callbacks[event], index)
-				return
+	UnregisterCallback = function(_, name, owner)
+		for index, callback in ipairs(registryCallbacks[name] or {}) do
+			if callback.owner == owner then
+				table.remove(registryCallbacks[name], index)
+				break
 			end
 		end
 	end,
-	TriggerEvent = function(self, event, ...)
-		for _, entry in ipairs(self.callbacks[event] or {}) do
-			entry.callback(entry.owner, ...)
-		end
-	end,
 }
+local function triggerEvent(name, ...)
+	for _, callback in ipairs(registryCallbacks[name] or {}) do
+		callback.fn(callback.owner, ...)
+	end
+end
+-- The panel manager fires its hide events through the registry, as the client does.
+_G.EventRegistry.TriggerEvent = function(_, name, ...)
+	triggerEvent(name, ...)
+end
 assert(loadfile(BLIZZARD_UI .. "Blizzard_SharedMapDataProviders/WaypointLocationDataProvider.lua"))()
 local waypointProvider = CreateFromMixins(WaypointLocationDataProviderMixin)
 do
@@ -418,6 +431,12 @@ local pools = setmetatable({}, {
 local function mapTick()
 	ns.MapCanvas.Update(WorldMapFrame)
 end
+-- The map's own scripts the addon hooked, as the client runs them around a show or hide.
+local function runMapScripts(name)
+	for _, fn in ipairs(mapScripts[name] or {}) do
+		fn(WorldMapFrame)
+	end
+end
 -- The world map opened or closed. Closing hides the canvas, and with it the view's frame; the panel manager then
 -- tells its callbacks the panel is hidden, as the client's HideUIPanel does, and the addon's view hears the close
 -- there. Opening runs the view's first frame, as the client would.
@@ -430,9 +449,28 @@ local function setMapShown(shown)
 				child.scripts.OnHide(child)
 			end
 		end
+		runMapScripts("OnHide")
 		EventRegistry:TriggerEvent("UIParentPanelManager.HideUIPanel", WorldMapFrame)
 	elseif shown then
 		mapTick()
+		runMapScripts("OnShow")
+	end
+end
+-- The client's C_Timer.After(0) callbacks that are due, run in the order they were scheduled.
+local function runPending()
+	while true do
+		local due
+		for index, timer in ipairs(pending) do
+			if T >= timer.at then
+				due = index
+				break
+			end
+		end
+		if not due then
+			return
+		end
+		local timer = table.remove(pending, due)
+		timer.fn()
 	end
 end
 -- The map closed and opened again: the addon's layers redraw as they do on the map's show, and Blizzard's own

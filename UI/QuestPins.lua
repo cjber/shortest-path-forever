@@ -6,17 +6,28 @@ local ns = select(2, ...)
 -- the stop is drawn, the game's pin goes; a quest no stop marks keeps its pin; and every pin hidden here comes back
 -- when its stop is passed, the journey ends, or journey drawing is turned off. Pins are hidden one by one through
 -- their own Hide: the questPOI CVar and the quest data provider stay as the player and other addons set them.
+--
+-- This module never hooks or calls into a data provider (WFA-38, #486): whichever provider acquired a pin, its own
+-- methods stay untouched, so pins are found only through the map's read-only pin enumeration. The provider re-acquires
+-- every pin on its events and on the map changing, so a refresh of ours is deferred one frame after those to walk the
+-- pins it has just drawn.
 
 -- The map's quest pins this module has hidden, so only those are shown again: a pin another addon hid stays hidden.
 ---@type table<SPFMapPin, boolean>
 local hidden = setmetatable({}, { __mode = "k" })
--- The providers this module hooked, once each, and whether the map is hooked for the providers it gains later.
----@type table<SPFMapProvider, boolean>
-local hookedProviders = setmetatable({}, { __mode = "k" })
-local hookedMap = false
 -- The pin template the game's quest data provider draws, the exact thing its mixin defines: the same template this
 -- module's own pass walks (EnumeratePinsByTemplate below).
 local QUEST_PINS = "QuestPinTemplate"
+-- The events QuestDataProvider refreshes its pins on (Blizzard_SharedMapDataProviders/QuestDataProvider.lua), plus
+-- SUPER_TRACKING_CHANGED, the event behind the Supertracking.OnChanged callback it registers. CVAR_UPDATE comes
+-- through too, but only the questPOI setting redraws the pins.
+local PROVIDER_EVENTS = {
+	"QUEST_LOG_UPDATE",
+	"QUEST_WATCH_LIST_CHANGED",
+	"QUEST_POI_UPDATE",
+	"SUPER_TRACKING_CHANGED",
+	"CVAR_UPDATE",
+}
 
 -- The quests the drawn stops mark: the stops from the one being travelled to, as Route.lua draws them, and a lone
 -- destination. A corpse run's goal marks no quest.
@@ -55,59 +66,9 @@ local function Marked()
 	return marked
 end
 
--- QuestDataProvider:RefreshAllData re-acquires every pin, so hiding again after it keeps the stops covered. The
--- provider's own refresh runs first and is never replaced; only the pins it just drew are looked at. Mixin copies the
--- mixin's functions into each provider before this addon loads (#483), so the mixin table is not on the path: every
--- live provider is hooked on its own.
----@param provider SPFMapProvider
-local function HookProvider(provider)
-	if hookedProviders[provider] or type(provider.GetPinTemplate) ~= "function" then
-		return
-	end
-	-- The quest provider is the one carrying QuestDataProviderMixin:GetPinTemplate itself: Mixin copies function
-	-- references, so a provider mixed from the quest mixin, directly or through another mixin, holds that exact
-	-- function. Never call GetPinTemplate on an unknown provider to identify it: a vignette provider's reads its
-	-- argument (#491).
-	local questMixin = QuestDataProviderMixin
-	if
-		not (
-			questMixin
-			and provider.GetPinTemplate == questMixin.GetPinTemplate
-			and type(provider.RefreshAllData) == "function"
-		)
-	then
-		return
-	end
-	hookedProviders[provider] = true
-	hooksecurefunc(provider, "RefreshAllData", function() -- taint-ok: post-hook only; the refresh runs first
-		ns.RefreshQuestPins()
-	end)
-end
-
--- Every quest provider the map holds, and any it gains later (WorldMapFrame:AddDataProvider), each hooked once.
-local function Hook()
-	if hookedMap then
-		return
-	end
-	local map = WorldMapFrame
-	if not (map and map.dataProviders and type(map.AddDataProvider) == "function") then
-		return
-	end
-	for provider in pairs(map.dataProviders) do
-		HookProvider(provider)
-	end
-	hooksecurefunc(map, "AddDataProvider", function(_, provider) -- taint-ok: post-hook only; the map's add runs first
-		HookProvider(provider)
-	end)
-	-- Only a completed hook disables the next attempt: a failure above leaves this false, so the next quest pin
-	-- refresh tries again rather than leaving the game's pins over the stops for the session.
-	hookedMap = true
-end
-
 -- One pass over the map's quest pins: hide the marked quests, bring back the pins this module hid before, and forget
 -- the pins the provider has released (its pool already hid those).
 function ns.RefreshQuestPins()
-	Hook()
 	local map = WorldMapFrame
 	if not (map and map.EnumeratePinsByTemplate) then
 		return
@@ -133,4 +94,48 @@ function ns.RefreshQuestPins()
 	end
 end
 
-ns.Init(Hook)
+-- A provider's refresh runs first and re-acquires every pin; ours waits a frame so the walk sees the new pins. Many
+-- events in one frame share one pass.
+---@type boolean?
+local refreshQueued
+local function QueueRefresh()
+	if refreshQueued then
+		return
+	end
+	refreshQueued = true
+	C_Timer.After(0, function()
+		refreshQueued = nil
+		ns.RefreshQuestPins()
+	end)
+end
+
+ns.Init(function()
+	local events = CreateFrame("Frame")
+	for _, event in ipairs(PROVIDER_EVENTS) do
+		events:RegisterEvent(event)
+	end
+	events:SetScript("OnEvent", function(_, event, cvar)
+		if event == "CVAR_UPDATE" and cvar ~= "questPOI" then
+			return
+		end
+		QueueRefresh()
+	end)
+
+	local map = WorldMapFrame
+	if not map then
+		return
+	end
+	-- The map re-acquires its quest pins when it opens and when its map changes: its own OnShow, and the
+	-- MapCanvas.MapSet callback its scroll container triggers on every map change. The provider also refreshes for a
+	-- focused quest, through its map's SetFocusedQuestID and ClearFocusedQuestID callbacks.
+	if map.HookScript then
+		map:HookScript("OnShow", QueueRefresh)
+	end
+	if EventRegistry then
+		EventRegistry:RegisterCallback("MapCanvas.MapSet", QueueRefresh, ns)
+	end
+	if map.RegisterCallback then
+		map:RegisterCallback("SetFocusedQuestID", QueueRefresh, ns)
+		map:RegisterCallback("ClearFocusedQuestID", QueueRefresh, ns)
+	end
+end)
