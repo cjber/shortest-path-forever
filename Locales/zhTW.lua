@@ -66,8 +66,7 @@ L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] 
 L["E"] = "東"
 L["Either faction can ride any boat or zeppelin."] = "任何陣營都可以搭乘任何船隻或飛艇。"
 L["Enter %s"] = "進入%s"
-L["Guidelime guides can lead the journey, and the arrow lets clicks through."] =
-	"Guidelime 指南可以引導旅程，箭頭也會讓點擊穿透。" -- mt
+L["Long journeys to another continent appear again."] = "前往其他大陸的長途旅程重新顯示了。" -- mt
 L["Finding the fastest way…"] = "正在尋找最快路線…"
 L["Flight Masters"] = "飛行管理員"
 L["Flight master"] = "飛行管理員"
