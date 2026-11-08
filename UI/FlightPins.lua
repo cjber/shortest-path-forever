@@ -22,6 +22,7 @@ function FlightPin:OnLoad()
 	self:UseFrameLevelType("PIN_FRAME_LEVEL_FLIGHT_POINT")
 	self:SetScalingLimits(1, 1, 1.2)
 	self.takesMouse = true
+	self.pressRegions = { self.Texture, self.HighlightTexture, self.SuperTrackMarker }
 	-- Closing the map hides the pin without an OnMouseLeave.
 	self:SetScript("OnHide", self.OnMouseLeave)
 end

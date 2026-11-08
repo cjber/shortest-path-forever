@@ -93,7 +93,12 @@ local function OnUpdate(pin, elapsed)
 	end
 end
 
+local function Press(pin, pressed)
+	ns.MapCanvas.Press(pin --[[@as SPFPressable]], pin.pressRegions --[[@as Region[]?]], pressed)
+end
+
 local function OnEnter(pin)
+	pin.HighlightTexture:Show()
 	GameTooltip:SetOwner(pin, "ANCHOR_RIGHT")
 	Tooltip(pin)
 	pin.elapsed = 0
@@ -101,6 +106,8 @@ local function OnEnter(pin)
 end
 
 local function OnLeave(pin)
+	Press(pin, false)
+	pin.HighlightTexture:Hide()
 	pin:SetScript("OnUpdate", nil)
 	if GameTooltip:IsOwned(pin) then
 		GameTooltip:Hide()
@@ -118,9 +125,23 @@ local function Acquire(entry)
 		pin:SetPropagateMouseClicks(true)
 		pin.Texture = pin:CreateTexture(nil, "ARTWORK")
 		pin.Texture:SetPoint("CENTER")
+		-- The same art again with ADD while the pointer is over it, as the map's own pins draw their highlight.
+		pin.HighlightTexture = pin:CreateTexture(nil, "HIGHLIGHT")
+		pin.HighlightTexture:SetPoint("CENTER")
+		pin.HighlightTexture:SetBlendMode("ADD")
+		pin.HighlightTexture:SetAlpha(0.4)
+		pin.HighlightTexture:Hide()
+		pin.pressRegions = { pin.Texture, pin.HighlightTexture }
 		pin:SetScript("OnEnter", OnEnter)
 		pin:SetScript("OnLeave", OnLeave)
 		pin:SetScript("OnHide", OnLeave)
+		-- The art moves down and right while held, as POIButtonMixin's display layer does; the pin keeps its rect.
+		pin:SetScript("OnMouseDown", function(self)
+			Press(self, true)
+		end)
+		pin:SetScript("OnMouseUp", function(self)
+			Press(self, false)
+		end)
 		pins[used] = pin
 	end
 	local size = SIZE * (ns.db.minimapPinScale or 100) / 100
@@ -132,7 +153,9 @@ local function Acquire(entry)
 		pin.size = size
 		pin:SetSize(size, size)
 		ns.SetTransportIcon(pin.Texture, entry.kind, size)
+		ns.SetTransportIcon(pin.HighlightTexture, entry.kind, size)
 	end
+	Press(pin, false)
 	pin:Show()
 	return pin
 end
