@@ -22,6 +22,10 @@ local ns = select(2, ...)
 -- compares a handful of reads each frame, telling its listeners what changed:
 --   "show"  the map opened          "map"   another map is shown       "size"  the canvas was resized
 --   "scale" the zoom or pin scale   "hide"  the map closed
+-- The close is heard through the panel manager's own callback, not a script on this frame: a script there runs
+-- inside UIParentPanelManager's hide, before it clears the gamepad binding stack, and this addon's taint blocks
+-- SetPreferredGamepadInteractTarget (#158). The manager calls its callbacks isolated from the hide, as the gamepad's
+-- FrameControlsManager listens for the same two.
 -- The pins live on a layer under that frame, so combat can hide them all at once.
 --
 -- Pins are plain frames that take the mouse with OnEnter and OnLeave only: the gamepad interface reads a frame with a
@@ -30,6 +34,10 @@ local ns = select(2, ...)
 -- pin passes the right button through to the canvas (zoom out) unless it says otherwise, as the map's own pins do.
 -- Under the gamepad interface a pin within reach of the map cursor shows its tooltip, as the map's own pins do; its
 -- clicks stay with the mouse.
+--
+-- A pin sets no OnHide script: closing the map would run it inside the panel's own hide, before the gamepad binding
+-- stack is cleared, and the addon's taint would block SetPreferredGamepadInteractTarget (#158). The view clears the
+-- hovered pin (its OnMouseLeave, and the tooltip with it) when it hears the panel hidden.
 --
 -- A pin tells the player it can be clicked the way the stock pins do: a `HighlightTexture` on the HIGHLIGHT layer wears
 -- the pin's own art again with the ADD blend while the pointer is over it (BaseHighlightableMapPoiPinTemplate), and
@@ -271,6 +279,27 @@ function Hide(view)
 	end
 end
 
+-- Called by the panel manager after it hides a panel, with the frame as it was passed to HideUIPanel.
+---@param _ table
+---@param frame Frame
+local function PanelHidden(_, frame)
+	local view = views[frame]
+	if view then
+		Hide(view)
+	end
+end
+
+local panelHidden
+local function WatchPanelHides()
+	if panelHidden then
+		return
+	end
+	panelHidden = true
+	-- The same two the gamepad's FrameControlsManager listens for: an explicit hide, and one panel replacing another.
+	EventRegistry:RegisterCallback("UIParentPanelManager.HideUIPanel", PanelHidden, MapCanvas)
+	EventRegistry:RegisterCallback("UIParentPanelManager.ForcePanelHide", PanelHidden, MapCanvas)
+end
+
 -- A frame with no parent, then set under `parent`: the gamepad interface follows CreateFrame calls whose parent is
 -- in an open window.
 ---@param frameType string
@@ -312,14 +341,12 @@ function MapCanvas.Watch(map, listener)
 		host:SetScript("OnUpdate", function()
 			Update(view)
 		end)
-		host:SetScript("OnHide", function()
-			Hide(view)
-		end)
 		local layer = FrameUnder("Frame", host)
 		layer:SetAllPoints(host)
 		layer:EnableMouse(false)
 		view.host, view.layer = host, layer
 		views[map] = view
+		WatchPanelHides()
 	end
 	if listener then
 		view.listeners[#view.listeners + 1] = listener

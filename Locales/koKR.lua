@@ -66,8 +66,8 @@ L["E"] = "동"
 L["Either faction can ride any boat or zeppelin."] =
 	"어느 진영이든 모든 배와 비행선을 탈 수 있습니다."
 L["Enter %s"] = "%s 입장"
-L["Every clickable icon answers the pointer."] =
-	"클릭할 수 있는 모든 아이콘이 마우스 포인터에 반응합니다." -- mt
+L["A journey stop where you hand a quest in keeps the game's quest icon off it."] =
+	"퀘스트를 완료 보고하는 여정 경유지에는 게임의 퀘스트 아이콘이 표시되지 않습니다." -- mt
 L["Finding the fastest way…"] = "가장 빠른 길 찾는 중…"
 L["Flight Masters"] = "비행 조련사"
 L["Flight master"] = "비행 조련사"
@@ -126,6 +126,8 @@ L["Nearby services"] = "주변 편의시설"
 L["Nearby services could not read QuestieDB."] = "주변 편의시설에서 QuestieDB를 읽을 수 없습니다."
 L["Nearby services need the QuestieDB addon."] = "주변 편의시설에는 QuestieDB 애드온이 필요합니다."
 L["Nearest"] = "가장 가까운 곳"
+L["A flight point you have not discovered yet would shorten this route: visit a flight master to learn it."] =
+	"아직 발견하지 못한 비행 지점이 이 경로를 단축할 수 있습니다: 비행 조련사를 방문해 알아두세요."
 L["No location for that quest yet."] = "이 퀘스트의 위치가 아직 없습니다."
 L["No way there from here."] = "여기서 그곳까지 가는 길이 없습니다."
 L["Not discovered"] = "발견하지 않음"

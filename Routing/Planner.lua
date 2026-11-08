@@ -538,8 +538,13 @@ local function Plan(options)
 			masses[i] = Planner.Landmass(point, options.landmasses or {})
 		end
 	end
+	local undiscovered = false
 	for id, index in pairs(taxis) do
-		nodes[index].undiscovered = options.taxiKnown ~= nil and not options.taxiKnown[id]
+		local known = options.taxiKnown == nil or options.taxiKnown[id] and true or false
+		nodes[index].undiscovered = not known
+		if not known then
+			undiscovered = true
+		end
 	end
 
 	local ride = options.ride
@@ -646,26 +651,33 @@ local function Plan(options)
 			end
 		end
 	end
-	local function Search(withoutHearth, cutoff, ridden)
-		local labels = topology.labels
-			or {
-				node = {},
-				state = {},
-				time = {},
-				key = {},
-				parent = {},
-				edge = {},
-				depart = {},
-				wait = {},
-				estimated = {},
-				discarded = {},
-			}
-		for i = 1, labels.count or 0 do
-			labels.discarded[i], labels.edge[i] = nil, nil
+	local function NewLabels()
+		return {
+			node = {},
+			state = {},
+			time = {},
+			key = {},
+			parent = {},
+			edge = {},
+			depart = {},
+			wait = {},
+			estimated = {},
+			discarded = {},
+		}
+	end
+	local function Search(withoutHearth, cutoff, ridden, assumeKnown, ownLabels)
+		local labels
+		if ownLabels then
+			labels = NewLabels()
+		else
+			labels = topology.labels or NewLabels()
+			for i = 1, labels.count or 0 do
+				labels.discarded[i], labels.edge[i] = nil, nil
+			end
+			topology.labels = labels
 		end
 		labels.node[1], labels.state[1], labels.time[1] = start, start, options.now
 		labels.key[1], labels.parent[1] = options.now + (lower[start] or math.huge), nil
-		topology.labels = labels
 		local labelCount = 1
 		labels.count = 1
 		local states, heap = { [start] = { 1 } }, { 1 }
@@ -717,7 +729,7 @@ local function Plan(options)
 				local flying, walked = state > count and state <= count * 2, state > count * 2
 				-- Unknown nodes may be learned on foot, but a flight can neither land at one nor fly on through it:
 				-- the client routes connecting flights only through flight points the character knows.
-				local canLeaveNode = not flying or not nodes[node].undiscovered
+				local canLeaveNode = assumeKnown or not flying or not nodes[node].undiscovered
 				for _, edge in ipairs(edges[node]) do
 					local canLeave = canLeaveNode
 					if withoutHearth and edge.teleport and edge.teleport.item == 6948 then
@@ -853,6 +865,34 @@ local function Plan(options)
 			pendingWalks = pendingWalks,
 		}
 	end
+	-- A walk with no flight at all may still be walking only because the flight point it would use has not been
+	-- discovered. Proving that needs a second search that treats every node as known: only a route it finds that
+	-- both beats this one and flies is evidence the walk waits on an unknown node, not on the walk being quickest.
+	local function UnknownFlight(plan)
+		if not plan or not options.unknownFlightNotice or not undiscovered then
+			return false
+		end
+		local walk = false
+		for _, leg in ipairs(plan.legs) do
+			if leg.mode == "flight" then
+				return false
+			end
+			walk = walk or leg.mode == "walk"
+		end
+		if not walk then
+			return false
+		end
+		local faster = Search(options.withoutHearth == true, plan.arrive, false, true, true)
+		if not faster then
+			return false
+		end
+		for _, leg in ipairs(faster.legs) do
+			if leg.mode == "flight" then
+				return true
+			end
+		end
+		return false
+	end
 	-- options.incumbent, an arrival already in hand, ends the search for anything that cannot beat it: no route
 	-- then means the incumbent stands. Its plan still passes through hearth and long-walk preferences below.
 	local planned = Search(options.withoutHearth == true, options.incumbent) or options.incumbentPlan
@@ -880,8 +920,12 @@ local function Plan(options)
 		local ridden = Search(true, options.now + (planned.arrive - options.now) * RIDE_MARGIN, true)
 		if ridden then
 			ridden.preferred = true
+			ridden.unknownFlight = UnknownFlight(ridden) or nil
 			return ridden
 		end
+	end
+	if planned then
+		planned.unknownFlight = UnknownFlight(planned) or nil
 	end
 	return planned
 end

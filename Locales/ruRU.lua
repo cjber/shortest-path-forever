@@ -68,8 +68,8 @@ L["E"] = "В"
 L["Either faction can ride any boat or zeppelin."] =
 	"Любая фракция может сесть на любой корабль или дирижабль."
 L["Enter %s"] = "Войти: %s"
-L["Every clickable icon answers the pointer."] =
-	"Каждый значок, на который можно нажать, реагирует на указатель." -- mt
+L["A journey stop where you hand a quest in keeps the game's quest icon off it."] =
+	"Остановка маршрута, где вы сдаёте задание, не показывает игровой значок задания." -- mt
 L["Finding the fastest way…"] = "Поиск самого быстрого пути…"
 L["Flight Masters"] = "Распорядители полетов"
 L["Flight master"] = "Распорядитель полетов"
@@ -130,6 +130,8 @@ L["Nearby services could not read QuestieDB."] =
 L["Nearby services need the QuestieDB addon."] =
 	"Для услуг поблизости нужна модификация QuestieDB."
 L["Nearest"] = "Ближайший"
+L["A flight point you have not discovered yet would shorten this route: visit a flight master to learn it."] =
+	"Неизвестная вам точка полёта сократила бы этот маршрут: посетите распорядителя полётов, чтобы открыть её."
 L["No location for that quest yet."] = "Для этого задания пока нет места."
 L["No way there from here."] = "Отсюда туда нет пути."
 L["Not discovered"] = "Не открыто"

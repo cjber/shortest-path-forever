@@ -123,8 +123,6 @@ function DockPin:OnLoad()
 	self:SetSize(PIN_SIZE, PIN_SIZE)
 	self.takesMouse = true
 	self.pressRegions = { self.Texture, self.HighlightTexture }
-	-- Closing the map hides the pin without an OnMouseLeave.
-	self:SetScript("OnHide", self.OnMouseLeave)
 end
 
 -- cluster = { docks = { { id, x, y }... }, x, y, kind, kinds = { [kind] = true }, key = the dock ids joined by
@@ -645,8 +643,6 @@ function PortalPin:OnLoad()
 	self:SetSize(PIN_SIZE, PIN_SIZE)
 	self.takesMouse = true
 	self.pressRegions = { self.Texture, self.HighlightTexture }
-	-- Closing the map hides the pin without an OnMouseLeave.
-	self:SetScript("OnHide", self.OnMouseLeave)
 end
 
 function PortalPin:OnAcquired(portal, x, y)

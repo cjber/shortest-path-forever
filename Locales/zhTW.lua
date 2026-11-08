@@ -65,7 +65,8 @@ L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] 
 L["E"] = "東"
 L["Either faction can ride any boat or zeppelin."] = "任何陣營都可以搭乘任何船隻或飛艇。"
 L["Enter %s"] = "進入%s"
-L["Every clickable icon answers the pointer."] = "每個可點擊的圖示都會回應指標。" -- mt
+L["A journey stop where you hand a quest in keeps the game's quest icon off it."] =
+	"交任務的旅程站點不會顯示遊戲的任務圖示。" -- mt
 L["Finding the fastest way…"] = "正在尋找最快路線…"
 L["Flight Masters"] = "飛行管理員"
 L["Flight master"] = "飛行管理員"
@@ -122,6 +123,8 @@ L["Nearby services"] = "附近服務"
 L["Nearby services could not read QuestieDB."] = "附近服務無法讀取QuestieDB。"
 L["Nearby services need the QuestieDB addon."] = "附近服務需要QuestieDB插件。"
 L["Nearest"] = "最近"
+L["A flight point you have not discovered yet would shorten this route: visit a flight master to learn it."] =
+	"尚未發現的飛行點會縮短這條路線：去拜訪飛行管理員以了解它。"
 L["No location for that quest yet."] = "該任務還沒有位置。"
 L["No way there from here."] = "從這裡無法抵達那裡。"
 L["Not discovered"] = "未發現"

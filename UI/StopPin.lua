@@ -53,7 +53,6 @@ function GoalPin:OnLoad()
 	self.pressRegions = { self.Texture, self.Icon, self.Disc, self.Button, self.Number, self.HighlightTexture }
 	self.Button:SetDesaturated(false)
 	self.Button:SetVertexColor(1, 0.9, 0.7)
-	self:SetScript("OnHide", self.OnMouseLeave)
 end
 
 -- A lone destination wears the addon's own goal pin; a numbered stop up to 25 wears the numbered marker, and a later

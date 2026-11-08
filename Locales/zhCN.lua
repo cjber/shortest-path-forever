@@ -65,7 +65,8 @@ L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] 
 L["E"] = "东"
 L["Either faction can ride any boat or zeppelin."] = "任何阵营都可以乘坐任何船只或飞艇。"
 L["Enter %s"] = "进入%s"
-L["Every clickable icon answers the pointer."] = "每个可点击的图标都会响应指针。" -- mt
+L["A journey stop where you hand a quest in keeps the game's quest icon off it."] =
+	"交任务的旅程站点不会显示游戏的任务图标。" -- mt
 L["Finding the fastest way…"] = "正在寻找最快路线…"
 L["Flight Masters"] = "飞行管理员"
 L["Flight master"] = "飞行管理员"
@@ -122,6 +123,8 @@ L["Nearby services"] = "附近服务"
 L["Nearby services could not read QuestieDB."] = "附近服务无法读取QuestieDB。"
 L["Nearby services need the QuestieDB addon."] = "附近服务需要QuestieDB插件。"
 L["Nearest"] = "最近"
+L["A flight point you have not discovered yet would shorten this route: visit a flight master to learn it."] =
+	"尚未发现的飞行点会缩短这条路线：去拜访飞行管理员以了解它。"
 L["No location for that quest yet."] = "该任务还没有位置。"
 L["No way there from here."] = "从这里无法到达那里。"
 L["Not discovered"] = "未发现"

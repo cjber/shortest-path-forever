@@ -425,6 +425,7 @@ local function Plan(feasible, incumbent)
 	options.feasibleOnly = feasible
 	options.incumbent, options.incumbentPlan = incumbent and incumbent.arrive, incumbent
 	options.ride = Context.Ride(options)
+	options.unknownFlightNotice = true
 	local planned = ns.Planner.Plan(options)
 	if planned then
 		planned.now, planned.preview, planned.waterMode = now, nil, waterMode

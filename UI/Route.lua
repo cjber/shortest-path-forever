@@ -240,7 +240,9 @@ local function Paint(owner, strokes)
 	Pulse(owner)
 end
 
--- One loading animation covers all strokes and outlines.
+-- One loading animation covers all strokes and outlines. The layer sets no show or hide script: on the map it sits
+-- under the canvas, where the panel manager's own show and hide would run addon code inside the gamepad's binding
+-- work (#158). The route's map listener and the minimap's own scripts pulse it and stop it instead.
 local function StrokeLayer(owner)
 	---@class SPFStrokeLayer : Frame
 	local layer = CreateFrame("Frame", nil, owner)
@@ -255,10 +257,6 @@ local function StrokeLayer(owner)
 	alpha:SetDuration(0.6)
 	alpha:SetSmoothing("IN_OUT")
 	layer.animation = animation
-	layer:SetScript("OnShow", function()
-		Pulse(owner)
-	end)
-	layer:SetScript("OnHide", StopPulse)
 end
 
 -- JourneyInfo's loading flag drives both the header spinner and the route, even when geometry is kept.
@@ -791,6 +789,13 @@ ns.Init(function()
 			provider:RefreshAllData()
 		elseif what == "scale" then
 			provider:OnCanvasScaleChanged()
+		elseif what == "hide" and linePins then
+			for pin in linePins:EnumerateActive() do
+				---@cast pin SPFRoutePin
+				if pin.strokeLayer then
+					StopPulse(pin.strokeLayer)
+				end
+			end
 		end
 	end)
 	local minimapRoute = CreateFrame("Frame", "ShortestPathForeverMinimapRoute", Minimap)
@@ -829,9 +834,13 @@ ns.Init(function()
 		self:RegisterEvent("PLAYER_STARTED_MOVING")
 		self:RegisterEvent("PLAYER_STARTED_TURNING")
 		self:RegisterEvent("MINIMAP_UPDATE_ZOOM")
+		Pulse(self)
 		WakeMinimap(self)
 	end)
 	minimap:SetScript("OnHide", function(self)
+		if self.strokeLayer then
+			StopPulse(self.strokeLayer)
+		end
 		if self.ticker then
 			self.ticker:Cancel()
 			self.ticker = nil

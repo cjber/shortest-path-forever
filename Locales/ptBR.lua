@@ -65,7 +65,8 @@ L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] 
 L["E"] = "L"
 L["Either faction can ride any boat or zeppelin."] = "Qualquer facção pode usar qualquer barco ou zepelim."
 L["Enter %s"] = "Entrar em %s"
-L["Every clickable icon answers the pointer."] = "Todos os ícones clicáveis respondem ao ponteiro." -- mt
+L["A journey stop where you hand a quest in keeps the game's quest icon off it."] =
+	"Uma parada da jornada onde você entrega uma missão não mostra o ícone de missão do jogo." -- mt
 L["Finding the fastest way…"] = "Procurando o caminho mais rápido…"
 L["Flight Masters"] = "Mestres de voo"
 L["Flight master"] = "Mestre de voo"
@@ -123,6 +124,8 @@ L["Nearby services"] = "Serviços próximos"
 L["Nearby services could not read QuestieDB."] = "Os serviços próximos não conseguiram ler o QuestieDB."
 L["Nearby services need the QuestieDB addon."] = "Os serviços próximos precisam do AddOn QuestieDB."
 L["Nearest"] = "Mais próximo"
+L["A flight point you have not discovered yet would shorten this route: visit a flight master to learn it."] =
+	"Um ponto de voo que você ainda não descobriu encurtaria esta rota: visite um mestre de voo para aprendê-lo."
 L["No location for that quest yet."] = "Ainda não há local para essa missão."
 L["No way there from here."] = "Não há caminho daqui até lá."
 L["Not discovered"] = "Não descoberto"

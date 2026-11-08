@@ -75,6 +75,21 @@ function ns.NewFlightPathReminderRow(plan, current)
 			}
 		end
 	end
+	if plan.unknownFlight then
+		local walk, flight = false, false
+		for index = current, #plan.legs do
+			local mode = plan.legs[index].mode
+			walk = walk or mode == "walk"
+			flight = flight or mode == "flight"
+		end
+		if walk and not flight then
+			return {
+				key = "unknown-flight-path",
+				text = L["A flight point you have not discovered yet would shorten this route: visit a flight master to learn it."],
+				grey = true,
+			}
+		end
+	end
 	return nil
 end
 

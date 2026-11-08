@@ -108,7 +108,6 @@ read_globals = {
 	"C_DeathInfo",
 	"UNKNOWN",
 	"WorldMapFrame",
-	"QuestDataProviderMixin",
 	"Minimap",
 	"GetPlayerFacing",
 	"GetCVar",
@@ -145,6 +144,8 @@ read_globals[#read_globals + 1] = "canaccessvalue"
 -- JourneyGuide.lua: picks out the map's own waypoint data provider, and names its pin rather than the client's
 -- generic "Map Pin".
 read_globals[#read_globals + 1] = "WaypointLocationDataProviderMixin"
+-- The game's in-world navigation marker, loaded on demand.
+read_globals[#read_globals + 1] = "SuperTrackedFrame"
 read_globals[#read_globals + 1] = "TooltipDataProcessor"
 read_globals[#read_globals + 1] = "GameTooltipTextLeft1"
 read_globals[#read_globals + 1] = "MAP_PIN"
