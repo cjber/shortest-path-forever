@@ -17,6 +17,23 @@ env.CreateFrame = function(...)
 	frame.GetCenter = function(self)
 		return self.centerX, self.centerY
 	end
+	-- As the client does: setting a mouse script or registering for drag turns the frame's mouse on.
+	local setScript = frame.SetScript
+	frame.SetScript = function(self, name, fn)
+		setScript(self, name, fn)
+		if fn and (name:find("^OnMouse") or name == "OnEnter" or name == "OnLeave" or name:find("^OnDrag")) then
+			self.mouse = true
+		end
+	end
+	frame.RegisterForDrag = function(self)
+		self.mouse = true
+	end
+	frame.EnableMouse = function(self, enabled)
+		self.mouse = enabled
+	end
+	frame.IsMouseEnabled = function(self)
+		return self.mouse == true
+	end
 	frame.SetShown = function(self, shown)
 		if shown then
 			self:Show()
@@ -142,7 +159,9 @@ face(130)
 assert(frame.alpha == 0.4, "past 120 degrees it dims again")
 
 -- Move the arrow: dragged, saved in screen pixels, scaled, and reset with a right-click.
+assert(not frame.mouse, "click-through until Move the arrow is on")
 ns.MoveArrow(true)
+assert(frame.mouse, "takes the mouse while it is being placed")
 assert(ns.ArrowMoving() and not frame.hidden and frame.alpha == 1, "shown to be dragged")
 frame.centerX, frame.centerY = 300, 400
 frame.OnDragStop(frame)
@@ -154,7 +173,7 @@ ns.SetArrowScale(100)
 frame.OnMouseUp(frame, "RightButton")
 assert(ns.db.arrowX == nil and frame.point[1] == "TOP", "right-click puts it back")
 ns.MoveArrow(false)
-assert(not ns.ArrowMoving())
+assert(not ns.ArrowMoving() and not frame.mouse, "click-through again once placed")
 -- With the arrow turned off, finishing moving it hides it again even mid-journey.
 ns.db.arrow = false
 ns.PointGuideArrow({ { map = 1, x = 0, y = 200 } }, place)

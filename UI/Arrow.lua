@@ -180,7 +180,6 @@ local function Create()
 	frame:SetClampedToScreen(true)
 	Anchor(frame)
 	frame:SetFrameStrata("BACKGROUND")
-	frame:EnableMouse(false)
 	-- Drag to move, Shift-drag for fine placing (Mover.lua); right-click puts it back.
 	ns.Mover.Attach(frame, function()
 		local scale = frame:GetEffectiveScale() / UIParent:GetEffectiveScale()
@@ -194,6 +193,9 @@ local function Create()
 			Anchor(frame)
 		end
 	end)
+	-- Click-through until it is being placed. Last: the client turns a frame's mouse on when it is given a mouse
+	-- script or registered for drag.
+	frame:EnableMouse(false)
 	frame.Mover = frame:CreateTexture(nil, "BACKGROUND", nil, -1)
 	frame.Mover:SetAllPoints()
 	frame.Mover:SetColorTexture(0, 0, 0, 0.5)

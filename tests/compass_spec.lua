@@ -20,11 +20,13 @@ local methods = {
 	ClearAllPoints = noop,
 	SetClampedToScreen = noop,
 	SetMovable = noop,
-	RegisterForDrag = noop,
 	StartMoving = noop,
 	StopMovingOrSizing = noop,
 	SetAllPoints = noop,
 }
+function methods:RegisterForDrag()
+	self.mouse = true
+end
 function methods:EnableMouse(enabled)
 	self.mouse = enabled
 end
@@ -118,8 +120,12 @@ function methods:Hide()
 		self.scripts.OnHide(self)
 	end
 end
+-- As the client does: setting a mouse script or registering for drag turns the frame's mouse on.
 function methods:SetScript(name, fn)
 	self.scripts[name] = fn
+	if fn and (name:find("^OnMouse") or name == "OnEnter" or name == "OnLeave" or name:find("^OnDrag")) then
+		self.mouse = true
+	end
 end
 function methods:RegisterEvent(event)
 	self.events[event] = true

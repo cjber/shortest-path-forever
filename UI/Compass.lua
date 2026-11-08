@@ -343,7 +343,6 @@ local function Create()
 	frame:SetClampedToScreen(true)
 	Anchor()
 	frame:SetFrameStrata("LOW")
-	frame:EnableMouse(false)
 	-- Drag to move, Shift-drag for fine placing (Mover.lua).
 	ns.Mover.Attach(frame, function()
 		local scale = RelativeScale()
@@ -357,6 +356,9 @@ local function Create()
 			Anchor()
 		end
 	end)
+	-- Click-through until it is being placed. Last: the client turns a frame's mouse on when it is given a mouse
+	-- script or registered for drag.
+	frame:EnableMouse(false)
 	frame.Backdrop = frame:CreateTexture(nil, "BACKGROUND", nil, -1)
 	frame.Backdrop:SetAllPoints()
 	ApplyBackground()
