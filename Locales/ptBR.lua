@@ -65,8 +65,8 @@ L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] 
 L["E"] = "L"
 L["Either faction can ride any boat or zeppelin."] = "Qualquer facção pode usar qualquer barco ou zepelim."
 L["Enter %s"] = "Entrar em %s"
-L["A journey stop where you hand a quest in keeps the game's quest icon off it."] =
-	"Uma parada da jornada onde você entrega uma missão não mostra o ícone de missão do jogo." -- mt
+L["The controller keeps working after the world map and its filter menu."] =
+	"O controle continua funcionando depois do mapa-múndi e do seu menu de filtros." -- mt
 L["Finding the fastest way…"] = "Procurando o caminho mais rápido…"
 L["Flight Masters"] = "Mestres de voo"
 L["Flight master"] = "Mestre de voo"

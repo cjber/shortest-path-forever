@@ -13,6 +13,9 @@ optional `### For addon authors` subsection after a version's player bullets.
 ## [Unreleased]
 
 - **The gold quest area on the minimap replaces the game's blue one instead of circling it.** Standing in a held stop's quest area recoloured the minimap's edge ring, which draws around the whole map, so a larger gold outline appeared around the client's blue area. The area itself now wears the gold, and the edge ring is left alone, so the gold area sits at the client's own shape and scale instead of becoming a second, larger outline (#504).
+
+## [1.22.55] - 2026-11-08
+
 - **The report keeps errors from earlier sessions.** An error Shortest Path caught before the last `/reload`, a blocked action or a Lua warning was forgotten when the client reloaded, so it could not be copied into a report once it was gone. The report now lists them under their own heading, with when each was first and last seen and the version, build and locale it happened on, and keeps the 50 most recent. It also carries Shortest Path's recent log lines, the steps that led up to a bug, and `/forever debug` turns on detailed lines for the session (cjber/forever-core#204, cjber/forever-core#206).
 - **The controller keeps working after the world map and its filter menu.** Opening either could leave the game's interact action blocked, and the client could freeze. Shortest Path now lets the game finish closing the map before it takes its own hover and tooltip down, so the controller's actions stay the game's (#158).
 
