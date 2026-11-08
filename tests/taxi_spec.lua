@@ -8,8 +8,11 @@ local mapNodes = {
 	{ nodeID = 103, slotIndex = 1, state = reachable, name = "Sturmwind" },
 	{ nodeID = 101, slotIndex = 3, state = current },
 	{ nodeID = 102, slotIndex = 4, state = reachable },
+	-- The flight master reports this node reachable, but the client gives its slot type NONE, so it is not shown.
+	{ nodeID = 104, slotIndex = 5, state = reachable, name = "Ghostlands" },
+	{ nodeID = 105, slotIndex = 2, state = reachable, name = "Kharanos" },
 }
-local nodeTypes = { "REACHABLE", "DISTANT", "CURRENT", "REACHABLE" }
+local nodeTypes = { "REACHABLE", "DISTANT", "CURRENT", "REACHABLE", "NONE" }
 -- The client's chosen route deliberately differs from the planner's intermediate hop.
 local routes = { [1] = { { 3, 2 }, { 2, 1 } }, [4] = { { 3, 4 } } }
 local textures, eventFrame = {}, nil
@@ -188,11 +191,25 @@ assert(ns.TaxiDestination({ { mode = "boat" }, flight }, 101) == nil, "do not sk
 assert(ns.TaxiDestination(nil, 101) == nil and ns.TaxiDestination({}, 101) == nil)
 
 ns.db = { taxiRoute = true }
-ns.TaxiNodes = { [101] = { name = "Ironforge" }, [102] = {}, [103] = { name = "Stormwind" } }
+ns.TaxiNodes = {
+	[101] = { name = "Ironforge" },
+	[102] = {},
+	[103] = { name = "Stormwind" },
+	[104] = { name = "Ghostlands" },
+	[105] = { name = "Kharanos" },
+}
 ns.TaxiNodes[101].faction, ns.TaxiNodes[103].faction = "Alliance", "Horde"
 ns.SetJourneyRoute = function() end
 ns.JourneyChanged = function() end
+-- A version 2 list was built from node states that claimed undiscovered nodes, so init starts it again from empty.
+env.ShortestPathForeverCharDB = {
+	taxi = { [101] = true },
+	taxiNames = { [101] = "Ironforge" },
+	taxiVersion = 2,
+}
 ns.init()
+assert(next(env.ShortestPathForeverCharDB.taxi) == nil, "a version 2 list is emptied on init")
+assert(env.ShortestPathForeverCharDB.taxiVersion == 3, "the list is stamped with the new version")
 env.ShortestPathForeverCharDB.taxi = {}
 env.ShortestPathForeverCharDB.taxiNames = {}
 ns.charDB = env.ShortestPathForeverCharDB
@@ -244,6 +261,13 @@ assert(
 	"replace stock one-hop lines and reveal a distant connection"
 )
 assert(ns.KnownTaxiNodes()[103], "flight discovery still runs")
+assert(
+	ns.KnownTaxiNodes()[101] and ns.KnownTaxiNodes()[102] and ns.KnownTaxiNodes()[105],
+	"current, reachable and distant slots are all known flight points"
+)
+assert(not ns.KnownTaxiNodes()[104], "a node whose slot type is NONE is never learned")
+assert(not env.ShortestPathForeverCharDB.taxiNames[104], "an unlearned node keeps its name out of the list")
+assert(ns.TaxiName(105) == "Kharanos", "a learned node keeps the client's name")
 assert(textures[1].path == "Interface\\TaxiFrame\\UI-Taxi-Line")
 assert(table.concat(textures[1].points, ",") == "60,90,40,60", "first client hop uses displayed button anchors")
 assert(
