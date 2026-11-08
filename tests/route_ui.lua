@@ -153,9 +153,10 @@ assert(mini.Goal.hidden and mini.used == 0, "the minimap's ring and line step as
 assert(
  Minimap.questBlobInside == GOLD .. "Inside"
   and Minimap.questBlobOutside == GOLD .. "Outside"
-  and Minimap.questBlobRing == GOLD .. "MinimapRing",
- "the game's own blob wears the bonus objective's gold inside the area"
+  and Minimap.questBlobOutsideSelected == GOLD .. "OutsideSelected",
+ "the game's own area wears the bonus objective's gold inside the area, the selected edge too"
 )
+assert(Minimap.questBlobRing == nil, "the minimap's own edge ring is left alone, so no second outline is drawn")
 -- A zoom redraws the blob once, after the frame, and leaves no script running.
 areaPin.blobs = nil
 areaPin:OnCanvasScaleChanged()
@@ -168,7 +169,11 @@ fireEvent("PLAYER_INSIDE_QUEST_BLOB_STATE_CHANGED")
 assert(count(areaTemplate) == 0 and #areaPin.blobs == 0, "leaving clears the area")
 assert(count(goalTemplate) == 1 and count(lineTemplate) == 1, "the stop button and the line are back")
 assert(not mini.Goal.hidden, "and the minimap's stop ring is back")
-assert(Minimap.questBlobOutside == BLUE .. "Outside", "the stock quest blue comes back outside the area")
+assert(
+ Minimap.questBlobOutside == BLUE .. "Outside" and Minimap.questBlobOutsideSelected == BLUE .. "OutsideSelected",
+ "the stock quest blue comes back outside the area, selected edge too"
+)
+assert(Minimap.questBlobRing == nil, "the edge ring was never recoloured")
 -- The client's outside answer wins inside the guide's circle.
 posX = 0
 refresh()
@@ -192,11 +197,17 @@ mini.revision = nil
 fireEvent("PLAYER_INSIDE_QUEST_BLOB_STATE_CHANGED")
 assert(count(areaTemplate) == 1 and count(goalTemplate) == 0, "the area stays on its zone")
 assert(mini.Goal.hidden, "with quest areas shown, the minimap's ring steps aside again")
-assert(Minimap.questBlobOutside == GOLD .. "Outside", "back inside, the blob is gold again")
+assert(
+ Minimap.questBlobOutside == GOLD .. "Outside" and Minimap.questBlobOutsideSelected == GOLD .. "OutsideSelected",
+ "back inside, the area is gold again, selected edge too"
+)
 -- Clearing the journey while still inside clears the area and hands the blue back.
 assert(api.Cancel("Test"))
 assert(count(areaTemplate) == 0, "clearing the journey clears the area")
-assert(Minimap.questBlobOutside == BLUE .. "Outside", "clearing the journey leaves the minimap's quest blue")
+assert(
+ Minimap.questBlobOutside == BLUE .. "Outside" and Minimap.questBlobOutsideSelected == BLUE .. "OutsideSelected",
+ "clearing the journey leaves the minimap's quest blue"
+)
 insideQuestBlob[7] = nil
 
 -- A stop standing for several quests draws each one's area, inside any of them.
@@ -205,7 +216,10 @@ area({ questID = 8, questIDs = { 8, 9 } })
 areaPin = active[areaTemplate][1]
 assert(#areaPin.blobs == 2 and areaPin.blobs[1] == 8 and areaPin.blobs[2] == 9, "every named quest's area")
 assert(count(goalTemplate) == 0 and mini.Goal.hidden, "inside any of them, the stop steps aside")
-assert(Minimap.questBlobOutside == GOLD .. "Outside", "and the minimap's blob is gold")
+assert(
+ Minimap.questBlobOutside == GOLD .. "Outside" and Minimap.questBlobOutsideSelected == GOLD .. "OutsideSelected",
+ "and the minimap's area is gold, selected edge too"
+)
 insideQuestBlob[9] = nil
 assert(api.Cancel("Test"))
 
@@ -219,7 +233,10 @@ for _, owner in ipairs({ active[lineTemplate][1], mini }) do
   assert(owner.lines[i].texture == DOT, "only the walk's breadcrumbs: no ring geometry")
  end
 end
-assert(Minimap.questBlobOutside == BLUE .. "Outside", "the minimap's blob stays blue")
+assert(
+ Minimap.questBlobOutside == BLUE .. "Outside" and Minimap.questBlobOutsideSelected == BLUE .. "OutsideSelected",
+ "the minimap's area stays blue"
+)
 assert(api.Cancel("Test"))
 mapID = 1414
 

@@ -505,7 +505,7 @@ _G.C_XMLUtil = {
 _G.Minimap = stubframe()
 Minimap:SetSize(200, 200)
 -- The minimap's own quest blob textures, which the addon swaps while the player stands in an objective area.
-for _, key in ipairs({ "Inside", "Outside", "Ring" }) do
+for _, key in ipairs({ "Inside", "Outside", "OutsideSelected", "Ring" }) do
 	rawset(Minimap, "SetQuestBlob" .. key .. "Texture", function(self, texture)
 		self["questBlob" .. key] = texture
 	end)

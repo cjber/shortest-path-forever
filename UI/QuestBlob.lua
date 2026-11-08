@@ -4,30 +4,34 @@ local ns = select(2, ...)
 -- The minimap draws a quest's objective area itself (MinimapFrameAPI). Standing in the area of a quest the held
 -- stop names recolours the game's own blob to the bonus objective's gold by swapping the stock quest textures for
 -- the stock bonus objective set; the moment that stops being true the quest set comes back, so the minimap is never
--- left altered. Both sets are client files (FileDataIDs 533893 to 533895 and 1117897 to 1117899). The world map's
--- own bonus objective set (Interface\WorldMap\UI-BonusObjectiveBlob-Inside and -Outside) is green, so the world
--- map's area wears the minimap's gold set too.
+-- left altered. Both sets are client files (FileDataIDs 533893 to 533895 and 1117897 to 1117899, with their selected
+-- edges at 1083696 and 1388127). The world map's own bonus objective set (Interface\WorldMap\UI-BonusObjectiveBlob-
+-- Inside and -Outside) is green, so the world map's area wears the minimap's gold set too.
+--
+-- The ring is not part of this. It is the minimap's own edge ring, drawn around the whole map rather than around the
+-- quest's area, so recolouring it puts a second, larger gold outline around the blue area the player is in (#504).
+-- The area itself is the inside and outside textures, and the edge a super-tracked quest wears is the selected
+-- outside texture; where a client has no setter for that one, the ordinary area remains as it was.
 local QUEST = {
 	inside = "Interface\\Minimap\\UI-QuestBlobMinimap-Inside",
 	outside = "Interface\\Minimap\\UI-QuestBlobMinimap-Outside",
-	ring = "Interface\\Minimap\\UI-QuestBlob-MinimapRing",
+	outsideSelected = "Interface\\Minimap\\UI-QuestBlobMinimap-OutsideSelected",
 }
 local BONUS = {
 	inside = "Interface\\Minimap\\UI-BonusObjectiveBlob-Inside",
 	outside = "Interface\\Minimap\\UI-BonusObjectiveBlob-Outside",
-	ring = "Interface\\Minimap\\UI-BonusObjectiveBlob-MinimapRing",
+	outsideSelected = "Interface\\Minimap\\UI-BonusObjectiveBlob-OutsideSelected",
 }
 
 -- A client without the blob setters keeps the minimap untouched.
 local minimap = Minimap
-local supported = minimap
-	and minimap.SetQuestBlobInsideTexture
-	and minimap.SetQuestBlobOutsideTexture
-	and minimap.SetQuestBlobRingTexture
+local supported = minimap and minimap.SetQuestBlobInsideTexture and minimap.SetQuestBlobOutsideTexture
+-- The selected edge is not on every client's Minimap; the ordinary area is still recoloured without it.
+local setOutsideSelected = minimap and minimap.SetQuestBlobOutsideSelectedTexture
 
 local tinted
 
--- Recolours the minimap's quest blob: true wears the gold while the player stands in the area, false hands the
+-- Recolours the minimap's quest area: true wears the gold while the player stands in the area, false hands the
 -- stock blue back. Repeated calls with the same state cost nothing.
 ---@param on boolean
 function ns.SetAreaBlob(on)
@@ -39,7 +43,9 @@ function ns.SetAreaBlob(on)
 	local textures = on and BONUS or QUEST
 	minimap:SetQuestBlobInsideTexture(textures.inside)
 	minimap:SetQuestBlobOutsideTexture(textures.outside)
-	minimap:SetQuestBlobRingTexture(textures.ring)
+	if setOutsideSelected then
+		minimap:SetQuestBlobOutsideSelectedTexture(textures.outsideSelected)
+	end
 end
 
 -- The world map draws the tracked quest's area with a pin of the blob widget, sized to the canvas
