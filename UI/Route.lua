@@ -414,6 +414,8 @@ function Layer:RemoveAllData()
 	goalPins:ReleaseAll()
 	areaPins:ReleaseAll()
 	self.stopsKey, self.stopMarks, self.area = nil, nil, nil
+	-- Reconcile the game's quest pins with the stops drawn now (#472).
+	ns.RefreshQuestPins()
 end
 
 function Layer:RefreshAllData()
@@ -430,6 +432,7 @@ function Layer:RefreshAllData()
 	-- The area replaces the stop and the line to it. Another zone the player browses keeps its own stops.
 	self.area = DrawArea(map)
 	if self.area then
+		ns.RefreshQuestPins()
 		return
 	end
 	-- The stops go first: the line leaves a gap at each.
@@ -437,6 +440,8 @@ function Layer:RefreshAllData()
 	if #worldPaths > 0 then
 		linePins:Acquire(worldPaths)
 	end
+	-- Each drawn stop already marks its quest: the game's own pin for it steps aside (#472).
+	ns.RefreshQuestPins()
 end
 
 -- Stops whose buttons would overlap at this zoom share one, as the map's docks do: at their middle, faded, or at the
