@@ -60,7 +60,8 @@ assert(rings[1].Button.hidden and rings[1].Disc.hidden, "no quest button under a
 assert(rawget(rings[1], "Count") == nil, "shared stop keeps its number without corner text")
 assert(rings[1].stopLabels[1] == "Quest giver" and rings[1].stopLabels[2] == "Quest giver")
 assert(rings[1].stopNumbers[1] == 1 and rings[1].stopNumbers[2] == 3 and rings[1].stopCount == 3)
-assert(rings[1].stopDetails[1] == "Quest detail", "shared stop keeps a later detail when the lead has none")
+assert(#rings[1].stopDetails[1] == 0 and rings[1].stopDetails[2][1] == "Quest detail",
+ "shared stop keeps a later detail with its own stop when the lead has none")
 assert(rings[2].Texture.alpha == ns.LaterAlpha and rings[2].Disc.alpha == nil, "a later stop's marker dims")
 
 -- Each stroke is a pooled pair on the pin's pulsing layer: the core over a darker, wider, half-strength outline.

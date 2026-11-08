@@ -31,7 +31,7 @@ function ns.InstanceEntrance(point)
 		label = point.label or L["Enter %s"]:format(name),
 		questID = point.questID,
 		routeTitle = point.routeTitle,
-		tooltip = point.tooltip,
+		details = point.details,
 		entrance = point.map,
 		stop = point,
 	}

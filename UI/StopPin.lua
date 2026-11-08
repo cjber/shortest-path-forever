@@ -34,7 +34,7 @@ ns.StopSize = STOP_SIZE
 ---@field stopLabels? string[]
 ---@field stopNumbers? integer[]
 ---@field stopCount? integer
----@field stopDetails? string[]
+---@field stopDetails? string[][] a stop's own detail lines, by the stop's place in this pin
 ---@field later? boolean
 ---@field current? boolean -- marks the stop being travelled to, whose steps the tooltip lists
 local GoalPin = CreateFromMixins(ns.MapCanvas.PinMixin)
@@ -159,45 +159,74 @@ function GoalPin:SetStopAlpha(alpha)
 	self.Texture:SetAlpha(alpha)
 end
 
+-- A title's right-hand value, as the repo's other tooltips give one (UI/Map.lua, UI/FlightPins.lua).
+---@param text string
+---@param right? string
+local function AddTitleLine(text, right)
+	if right then
+		GameTooltip_AddColoredDoubleLine(GameTooltip, text, right, HIGHLIGHT_FONT_COLOR, HIGHLIGHT_FONT_COLOR)
+	else
+		GameTooltip_SetTitle(GameTooltip, text)
+	end
+end
+
 function GoalPin:OnMouseEnter()
 	self:SetStopAlpha(1)
 	if ns.HoverStop then
 		ns.HoverStop(self.stopNumbers)
 	end
-	local title, rows = ns.JourneyInfo()
+	local title, rows, plan, index = ns.JourneyInfo()
 	if not title or not rows then
 		return
 	end
-	GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-	local labels, numbers = self.stopLabels, self.stopNumbers
-	if labels and numbers then
-		-- Each stop this pin marks: its count on a short line of its own, then what to do there in white.
-		GameTooltip_SetTitle(GameTooltip, string.format(L["Stop %d of %d"], numbers[1], self.stopCount))
-		for i, label in ipairs(labels) do
-			if i > 1 then
-				GameTooltip_AddNormalLine(GameTooltip, string.format(L["Stop %d of %d"], numbers[i], self.stopCount))
-			end
-			GameTooltip_AddColoredLine(GameTooltip, label, HIGHLIGHT_FONT_COLOR)
-		end
-	else
-		GameTooltip_SetTitle(GameTooltip, title)
-	end
-	for _, detail in ipairs(self.stopDetails or {}) do
-		GameTooltip_AddNormalLine(GameTooltip, detail)
-	end
-	-- The pin you are travelling to lists the steps there, as the tracker does, under the time and distance left.
+	-- The time and distance left are the journey's, so they sit on the title line, not a line of their own.
+	local left
 	if self.current then
 		local time, distance = ns.JourneyLeft()
 		if time then
-			GameTooltip_AddColoredLine(GameTooltip, string.format(L["%s · %s"], time, distance), HIGHLIGHT_FONT_COLOR)
+			left = string.format(L["%s · %s"], time, distance)
 		end
+	end
+	GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+	local labels, numbers = self.stopLabels, self.stopNumbers
+	local shown = {}
+	local function AddDetails(stop)
+		for _, detail in ipairs(self.stopDetails and self.stopDetails[stop] or {}) do
+			-- A line an earlier stop already gave is the same quest's: show the shared text once.
+			if not shown[detail] then
+				shown[detail] = true
+				GameTooltip_AddNormalLine(GameTooltip, detail)
+			end
+		end
+	end
+	if labels and numbers then
+		-- Each stop this pin marks: its count, what to do there in white, then only the details it adds.
+		for i, label in ipairs(labels) do
+			local count = string.format(L["Stop %d of %d"], numbers[i], self.stopCount)
+			if i == 1 then
+				AddTitleLine(count, left)
+			else
+				GameTooltip_AddNormalLine(GameTooltip, count)
+			end
+			GameTooltip_AddColoredLine(GameTooltip, label, HIGHLIGHT_FONT_COLOR)
+			AddDetails(i)
+		end
+	else
+		AddTitleLine(title, left)
+		AddDetails(1)
+	end
+	-- The pin you are travelling to lists the steps there, as the tracker does, when the trip has more than one.
+	if self.current then
 		local hint = ns.OtherFactionHint()
 		if hint then
 			GameTooltip_AddNormalLine(GameTooltip, hint)
 		end
-		for _, row in ipairs(rows) do
-			local color = row.current and HIGHLIGHT_FONT_COLOR or row.grey and GRAY_FONT_COLOR or NORMAL_FONT_COLOR
-			GameTooltip_AddColoredLine(GameTooltip, row.text, color)
+		local trip = plan and #plan.legs - (index or 1) + 1 or #rows
+		if trip > 1 then
+			for _, row in ipairs(rows) do
+				local color = row.current and HIGHLIGHT_FONT_COLOR or row.grey and GRAY_FONT_COLOR or NORMAL_FONT_COLOR
+				GameTooltip_AddColoredLine(GameTooltip, row.text, color)
+			end
 		end
 		ns.FamilyHints.AddEntranceLine(GameTooltip)
 	end

@@ -44,7 +44,7 @@
 ---@field z? number
 ---@field jump? number
 ---@field label? string
----@field tooltip? string
+---@field details? string[] -- a stop's own detail lines, in the caller's order (API.lua)
 ---@field routeTitle? string
 ---@field stopLabel? string -- what to do at a multi-stop stop, without its count (API.lua)
 ---@field number? integer -- the stop's place in a multi-stop itinerary (API.lua)
