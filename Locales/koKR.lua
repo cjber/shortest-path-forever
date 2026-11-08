@@ -66,8 +66,7 @@ L["E"] = "동"
 L["Either faction can ride any boat or zeppelin."] =
 	"어느 진영이든 모든 배와 비행선을 탈 수 있습니다."
 L["Enter %s"] = "%s 입장"
-L["The controller keeps working after the world map and its filter menu."] =
-	"세계 지도와 필터 메뉴를 연 뒤에도 게임패드가 계속 작동합니다." -- mt
+L["Guidelime guides can lead the journey, and the arrow lets clicks through."] = "Guidelime 가이드가 여정을 이끌 수 있고, 화살표는 클릭을 통과시킵니다." -- mt
 L["Finding the fastest way…"] = "가장 빠른 길 찾는 중…"
 L["Flight Masters"] = "비행 조련사"
 L["Flight master"] = "비행 조련사"

@@ -65,8 +65,7 @@ L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] 
 L["E"] = "东"
 L["Either faction can ride any boat or zeppelin."] = "任何阵营都可以乘坐任何船只或飞艇。"
 L["Enter %s"] = "进入%s"
-L["The controller keeps working after the world map and its filter menu."] =
-	"打开世界地图及其过滤菜单后，控制器仍可继续使用。" -- mt
+L["Guidelime guides can lead the journey, and the arrow lets clicks through."] = "Guidelime 指南可以引导旅程，箭头也会让点击穿透。" -- mt
 L["Finding the fastest way…"] = "正在寻找最快路线…"
 L["Flight Masters"] = "飞行管理员"
 L["Flight master"] = "飞行管理员"

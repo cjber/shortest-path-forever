@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.23.0] - 2026-11-08
+
 - **The tracker can have a background.** Right-click any section's title in the Forever tracker and pick *Tracker background*: Off, or the game's tooltip fill at 25, 50, 75 or 100%, so quest text stays readable over bright ground. The choice is shared by every Forever addon in the column (cjber/forever-core#246).
 - **Guidelime guides can lead the journey too.** With *Follow Guidelime guides* on, the guide's current step plans the journey and moves it on as the guide advances; Guidelime's own arrow steps aside while Shortest Path draws one, and returns when ours is off. *Resume guide* takes the current step back after another journey. Thanks to deathmvp1 on CurseForge for the request (#506).
 - **The guide arrow and the compass let clicks through again.** Both took the mouse even with "Move the arrow" and "Move the compass" off, so a click near them could drag them away. They now take it only while being moved. (#509)
