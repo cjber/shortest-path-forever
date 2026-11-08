@@ -12,6 +12,9 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Later stops fade as far as their lines.** With several stops, every stop past the one being guided to now dims to the same 40 percent as the line that leads to it, so the way ahead recedes as one. Hovering a later stop brings its icon and its own leg back to full strength, and they fade again when the pointer leaves (#475).
+- **The stop tooltip reads at a glance.** A stop's count now sits on a short title line of its own, what to do there is the first line under it in white, and the quest, chapter and next lines stay in the normal colour above a blank line and the right-click hint. A long Adventure Guide stop no longer wraps its title over three lines (#476).
+
 ## [1.22.53] - 2026-11-08
 
 - **Shortest Path's settings no longer write the client's bare `Text` name.** The shared Forever addons page and the minimap Journey button were built from Blizzard templates under unnamed frames, so their labels landed on bare globals such as `Text`, written on the way to every settings page, Combat Text included. Both are named now, so every name they write is this addon's. This removes one way Shortest Path could carry taint into the Combat Text compare error. Thanks to Speaker1264 for the report (cjber/shortest-path-forever#457).

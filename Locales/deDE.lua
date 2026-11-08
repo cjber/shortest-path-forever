@@ -213,6 +213,7 @@ L["Sizes boat, lift, tram and portal icons on the world map."] =
 L["Sizes flight master icons on the world map."] = "Größe der Flugmeistersymbole auf der Weltkarte."
 L["Sizes transport icons on the minimap."] = "Größe der Transportsymbole auf der Minikarte."
 L["Stable master"] = "Stallmeister"
+L["Stop %d of %d"] = "Halt %d von %d" -- mt
 L["Stop %d of %d: %s"] = "Halt %d von %d: %s"
 L["Suggest my other Forever addons"] = "Meine anderen Forever-Addons vorschlagen"
 L["Suggest quests for my level: Adventure Guide Forever"] =

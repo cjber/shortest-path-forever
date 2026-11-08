@@ -516,9 +516,9 @@ NUMBER_SIZE = 24
 
 
 def stop_pin(canvas, x, y, number, badge, later):
-    """StopPin.lua: a numbered stop wears the addon's own gold numbered marker, later stops dimmer; the action badge
-    stays visible at the lower right."""
-    alpha = 0.7 if later else 1
+    """StopPin.lua: a numbered stop wears the addon's own gold numbered marker, later stops as faded as their lines;
+    the action badge stays visible at the lower right."""
+    alpha = 0.4 if later else 1
     canvas.draw(
         number_art(number), x - NUMBER_SIZE / 2, y - NUMBER_SIZE / 2, NUMBER_SIZE, NUMBER_SIZE, (1, 1, 1, alpha)
     )

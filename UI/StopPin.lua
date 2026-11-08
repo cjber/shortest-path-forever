@@ -16,8 +16,8 @@ local NUMBER_YELLOW, NUMBER_DARK = { 1, 0.82, 0.25 }, { 0.1, 0.05, 0 }
 -- over the marker's lower right, as Legacy Forever's entrance pins wear the Legacy shield; the pin's hit rect reaches
 -- out over the badge.
 local LOOK_SIZE, BADGE_SIZE, BADGE_OFFSET, TAG_SIZE = 22, 16, 4, 11
--- Later stops stay brighter than Strokes.lua's later lines so their numbers remain legible.
-local LATER_STOP_ALPHA = 0.7
+-- A later stop fades by the same amount as the line that leads to it (Strokes.lua's ns.LaterAlpha, read when used
+-- because Strokes.lua loads after this file).
 -- The numbered marker overhangs its 20-unit pin by 2 on each side.
 local MARKER_INSET = 2
 -- Route.lua groups stops by the button's size.
@@ -30,8 +30,11 @@ ns.StopSize = STOP_SIZE
 ---@field Button Texture
 ---@field HighlightTexture Texture
 ---@field Number FontString
----@field stopTitles? string[]
+---@field stopLabels? string[]
+---@field stopNumbers? integer[]
+---@field stopCount? integer
 ---@field stopDetails? string[]
+---@field later? boolean
 ---@field current? boolean -- marks the stop being travelled to, whose steps the tooltip lists
 local GoalPin = CreateFromMixins(ns.MapCanvas.PinMixin)
 -- Route.lua's pool puts it on.
@@ -60,20 +63,20 @@ end
 -- A numbered stop whose caller said what stands there wears that mark as a badge on the marker's lower right, so the
 -- pin reads as step 3 at the quest giver or flight master; a lone one wears the mark alone, full size.
 ---@param numbers integer[]? the stops this pin marks, in order; nil for a lone destination
----@param titles string[]
+---@param count? integer the route's stop count
+---@param labels? string[] what to do at each stop this pin marks
 ---@param look? SPFAPIStopKind
 ---@param details? string[]
 ---@param pinBadge? boolean
-function GoalPin:OnAcquired(x, y, numbers, titles, later, look, details, pinBadge)
+function GoalPin:OnAcquired(x, y, numbers, count, labels, later, look, details, pinBadge)
 	self:SetPosition(x, y)
 	-- The disc's shadow stays opaque, so a faded button still hides the POI beneath it.
-	local alpha = later and LATER_STOP_ALPHA or 1
-	self.Button:SetAlpha(alpha)
-	self.Icon:SetAlpha(alpha)
-	self.Number:SetAlpha(alpha)
-	self.Texture:SetAlpha(alpha)
-	self.stopTitles = titles[1] and titles or nil
+	self:SetStopAlpha(later and ns.LaterAlpha or 1)
+	self.stopLabels = labels and labels[1] and labels or nil
+	self.stopNumbers = numbers
+	self.stopCount = count
 	self.stopDetails = details and details[1] and details or nil
+	self.later = later
 	self.current = not later
 	local marked = look ~= nil and ns.SetStopLook(self.Icon, look, numbers and BADGE_SIZE or LOOK_SIZE)
 	local badge = marked and numbers ~= nil
@@ -145,17 +148,37 @@ function GoalPin:OnAcquired(x, y, numbers, titles, later, look, details, pinBadg
 	highlight:SetShown(self.highlighted == true)
 end
 
+-- The pin's art, faded for a later stop and full while the pointer is on it.
+---@param alpha number
+function GoalPin:SetStopAlpha(alpha)
+	self.Button:SetAlpha(alpha)
+	self.Icon:SetAlpha(alpha)
+	self.Number:SetAlpha(alpha)
+	self.Texture:SetAlpha(alpha)
+end
+
 function GoalPin:OnMouseEnter()
+	self:SetStopAlpha(1)
+	if ns.HoverStop then
+		ns.HoverStop(self.stopNumbers)
+	end
 	local title, rows = ns.JourneyInfo()
 	if not title or not rows then
 		return
 	end
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-	-- A shared button names every stop it marks, in order.
-	local stopTitles = self.stopTitles or {}
-	GameTooltip_SetTitle(GameTooltip, stopTitles[1] or title)
-	for i = 2, #stopTitles do
-		GameTooltip_AddColoredLine(GameTooltip, stopTitles[i], HIGHLIGHT_FONT_COLOR)
+	local labels, numbers = self.stopLabels, self.stopNumbers
+	if labels and numbers then
+		-- Each stop this pin marks: its count on a short line of its own, then what to do there in white.
+		GameTooltip_SetTitle(GameTooltip, string.format(L["Stop %d of %d"], numbers[1], self.stopCount))
+		for i, label in ipairs(labels) do
+			if i > 1 then
+				GameTooltip_AddNormalLine(GameTooltip, string.format(L["Stop %d of %d"], numbers[i], self.stopCount))
+			end
+			GameTooltip_AddColoredLine(GameTooltip, label, HIGHLIGHT_FONT_COLOR)
+		end
+	else
+		GameTooltip_SetTitle(GameTooltip, title)
 	end
 	for _, detail in ipairs(self.stopDetails or {}) do
 		GameTooltip_AddNormalLine(GameTooltip, detail)
@@ -176,6 +199,7 @@ function GoalPin:OnMouseEnter()
 		end
 		ns.FamilyHints.AddEntranceLine(GameTooltip)
 	end
+	GameTooltip_AddBlankLineToTooltip(GameTooltip)
 	GameTooltip_AddNormalLine(GameTooltip, L["Right-click to clear"])
 	GameTooltip:Show()
 end
@@ -183,6 +207,10 @@ end
 function GoalPin:OnMouseLeave()
 	if GameTooltip:IsOwned(self) then
 		GameTooltip:Hide()
+	end
+	self:SetStopAlpha(self.later and ns.LaterAlpha or 1)
+	if ns.HoverStop then
+		ns.HoverStop(nil)
 	end
 end
 
@@ -199,7 +227,10 @@ end
 
 function GoalPin:OnReleased()
 	self:OnMouseLeave()
-	self.stopTitles = nil
+	self.stopLabels = nil
+	self.stopNumbers = nil
+	self.stopCount = nil
 	self.stopDetails = nil
+	self.later = nil
 	self.current = nil
 end

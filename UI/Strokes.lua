@@ -12,8 +12,9 @@ local THICKNESS, DOT, RIM, SPACING = 2, 4, 1, 9
 local SMALL_DOT, SMALL_SPACING = 3, 7
 local UNDER_THICKNESS = THICKNESS + 2
 -- Everything past the stop being guided to recedes, so the way ahead reads first. Later lines keep their colour
--- but drop well back against parchment; StopPin.lua's later stops stay a little stronger.
+-- but drop well back against parchment; StopPin.lua fades its later stops by this same amount.
 local LATER_ALPHA = 0.4
+ns.LaterAlpha = LATER_ALPHA
 -- Breadcrumbs stop short of each stop's mark, so the way runs up to a stop rather than under it: a dot is left out when
 -- its rim would come within STOP_GAP of the mark, on screen, at either end of a leg.
 local STOP_GAP = 2
@@ -51,6 +52,7 @@ local wide = false
 ---@field stitched? boolean -- OpenMap's stitched map: the view runs past the host map, so lines are not clipped to it
 ---@field marks? {x: number, y: number, radius: number}[] -- stop marks the dots leave a gap around
 ---@field current number -- paths after this many belong to later hops
+---@field highlight? table<number, boolean> -- stops whose leg is shown at full strength while the pointer is on them
 ---@field colors table<SPFMode, colorRGBA>
 
 -- The minimap around the player. radius and facing are nil while the client withholds them.
@@ -360,6 +362,10 @@ function Strokes.Map(buffer, paths, view)
 		local color = path.color or view.colors[path.mode]
 		route = path.route
 		later = pathIndex > view.current and LATER_ALPHA or 1
+		-- A stop under the pointer shows its own leg at full strength, so the faded way ahead answers the cursor.
+		if view.highlight and path.stop and view.highlight[path.stop] then
+			later = 1
+		end
 		walked = 0
 		local previous, px, py
 		local points = ns.FlightLinePoints(path)

@@ -196,9 +196,11 @@ function ns.JourneyPreview()
 		local hop, to = hops[Key(points[stop], points[stop + 1])], points[stop + 1]
 		if hop and hop.paths then
 			if #chain > 1 then
-				drawn[#drawn + 1] = { mode = "walk", points = chain, preview = true }
+				-- The placeholder leads to the last stop it reaches (UI/Route.lua highlights a stop's own leg).
+				drawn[#drawn + 1] = { mode = "walk", points = chain, preview = true, stop = points[stop].number }
 			end
 			for _, path in ipairs(hop.paths) do
+				path.stop = to.number
 				drawn[#drawn + 1] = path
 			end
 			chain = { to }
@@ -207,7 +209,7 @@ function ns.JourneyPreview()
 		end
 	end
 	if #chain > 1 then
-		drawn[#drawn + 1] = { mode = "walk", points = chain, preview = true }
+		drawn[#drawn + 1] = { mode = "walk", points = chain, preview = true, stop = points[#points].number }
 	end
 	return drawn
 end

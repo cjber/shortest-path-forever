@@ -25,7 +25,7 @@ pixels never enter product media.
 | `kalimdor.png` | Auberdine → Menethil → Theramore → Cenarion Hold, Silithus |
 | `darkshore.png` | A measured walk south from Auberdine to the Grove of the Ancients |
 | `docks.png` | Auberdine's clustered piers; arrivals/departures and hover highlighting |
-| `stops.png` | A four-stop API route through Thelsamar (three places): the current stop at full strength and the later ones dimmer, each on the addon's gold numbered marker with its action badge |
+| `stops.png` | A four-stop API route through Thelsamar (three places): the current stop at full strength and the later ones as faded as their lines, each on the addon's gold numbered marker with its action badge |
 | `area.png` | Westfall, standing in a quest's area: the world map draws the game's own area for the quest in gold, with no stop pin or line, cropped to the area |
 | `tracker.png` | Capture 21's five Auberdine → Silithus steps, with the current totals header |
 | `detached.png` | The Journey tracker detached from the quest tracker, under its draggable "Forever tracker" heading |
@@ -55,9 +55,9 @@ remains 8,000 ms. The animation uses fixed time steps, never the wall clock.
   overview curves, fading continent-edge curves and the 1.2-second settling pulse.
   Outlines render below all cores. The destination uses the native pin at 0.8 scale.
 - `UI/StopPin.lua` gives every numbered stop up to 25 the addon's own gold numbered marker at 24 units, the current
-  stop at full strength and later stops at the 0.7 alpha they share, and keeps above 25 the tracked quest's
-  `UI-QuestPoi-QuestNumber-SuperTracked` button and the font number. Each stop keeps the caller's action badge over its
-  lower right.
+  stop at full strength and later stops at the 0.4 alpha they share with the lines leading to them, and keeps above 25
+  the tracked quest's `UI-QuestPoi-QuestNumber-SuperTracked` button and the font number. Each stop keeps the caller's
+  action badge over its lower right.
 - `area.png` draws the client's own areas for quest 92744's objective 0 on Westfall: every `QuestPOIBlob`
   row of it and their `QuestPOIPoint` corners, projected through `UiMapAssignment`, with the player in the
   largest area in the pinned data build.

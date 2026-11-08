@@ -218,6 +218,7 @@ L["Sizes flight master icons on the world map."] =
 	"세계 지도의 비행 조련사 아이콘 크기를 조절합니다."
 L["Sizes transport icons on the minimap."] = "미니맵의 교통수단 아이콘 크기를 조절합니다."
 L["Stable master"] = "야수 관리인"
+L["Stop %d of %d"] = "정거장 %d/%d" -- mt
 L["Stop %d of %d: %s"] = "정거장 %d/%d: %s"
 L["Suggest my other Forever addons"] = "제 다른 Forever 애드온 추천"
 L["Suggest quests for my level: Adventure Guide Forever"] =

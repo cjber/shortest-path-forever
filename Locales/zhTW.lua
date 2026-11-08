@@ -208,6 +208,7 @@ L["Sizes boat, lift, tram and portal icons on the world map."] =
 L["Sizes flight master icons on the world map."] = "調整世界地圖上飛行管理員圖示的大小。"
 L["Sizes transport icons on the minimap."] = "調整小地圖上交通圖示的大小。"
 L["Stable master"] = "獸欄管理員"
+L["Stop %d of %d"] = "第%d站，共%d站" -- mt
 L["Stop %d of %d: %s"] = "第%d站，共%d站：%s"
 L["Suggest my other Forever addons"] = "推薦我的其他Forever插件"
 L["Suggest quests for my level: Adventure Guide Forever"] = "推薦適合我等級的任務：Adventure Guide Forever"

@@ -95,6 +95,9 @@ local journeyStrokes = Strokes.New()
 local minimap
 local geometryRevision = 0
 local loading = false
+-- The stops whose legs the pointer is on (UI/StopPin.lua), as a set of stop numbers.
+---@type table<number, boolean>?
+local hoveredStops
 
 -- Each map's world corners: { continent, x and y at the top left, x and y at the bottom right }.
 local corners = {}
@@ -316,6 +319,7 @@ function RoutePin:Draw()
 	mapView.marks = journey and provider and provider.stopMarks or nil
 	-- The journey's own paths come first; the later hops Itinerary.lua adds after them recede.
 	mapView.current = journey and #paths or math.huge
+	mapView.highlight = journey and hoveredStops or nil
 	local strokes = self.strokes or journeyStrokes
 	Strokes.Map(strokes, self.paths, mapView)
 	Paint(self, strokes)
@@ -463,7 +467,7 @@ function Layer:RefreshStops()
 				x = x,
 				y = y,
 				index = index,
-				title = point.routeTitle,
+				label = point.stopLabel,
 				detail = point.tooltip,
 				look = point.look,
 				pinBadge = point.pinBadge,
@@ -486,9 +490,9 @@ function Layer:RefreshStops()
 	goalPins:ReleaseAll()
 	self.stopMarks = {}
 	for _, group in ipairs(groups) do
-		local x, y, numbers, titles, details = 0, 0, {}, {}, {}
+		local x, y, numbers, labels, details = 0, 0, {}, {}, {}
 		for i, mark in ipairs(group) do
-			x, y, numbers[i], titles[i] = x + mark.x, y + mark.y, mark.index, mark.title
+			x, y, numbers[i], labels[i] = x + mark.x, y + mark.y, mark.index, mark.label
 			if mark.detail then
 				details[#details + 1] = mark.detail
 			end
@@ -502,7 +506,7 @@ function Layer:RefreshStops()
 		else
 			x, y, numbered = lead.x, lead.y, stops and numbers
 		end
-		local pin = goalPins:Acquire(x, y, numbered, titles, later, look, details, lead.pinBadge)
+		local pin = goalPins:Acquire(x, y, numbered, stops and #stops, labels, later, look, details, lead.pinBadge)
 		self.stopMarks[#self.stopMarks + 1] = { x = x, y = y, radius = pin:GetWidth() / 2 }
 	end
 	for pin in linePins:EnumerateActive() do
@@ -670,10 +674,32 @@ local function WorldPaths()
 	if stops then
 		worldPaths = {}
 		for _, path in ipairs(paths) do
+			-- Every stroke of the current leg leads to the stop being guided to.
+			path.stop = stopIndex
 			worldPaths[#worldPaths + 1] = path
 		end
 		for _, path in ipairs(ns.JourneyPreview()) do
 			worldPaths[#worldPaths + 1] = path
+		end
+	end
+end
+
+-- The stop under the pointer lights its own leg, and only its own; nil restores the faded way ahead.
+---@param numbers integer[]?
+function ns.HoverStop(numbers)
+	if numbers then
+		local set = {}
+		for _, number in ipairs(numbers) do
+			set[number] = true
+		end
+		hoveredStops = set
+	else
+		hoveredStops = nil
+	end
+	if linePins then
+		for pin in linePins:EnumerateActive() do
+			---@cast pin SPFRoutePin
+			pin:Draw()
 		end
 	end
 end
