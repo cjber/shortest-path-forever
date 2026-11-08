@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Long journeys to another continent appear again.** When a bind point's walks finished being searched after the route was already chosen, that late answer hit an error and the journey was never shown. A search that has finished now ignores answers that arrive after it (#516).
+
 ## [1.23.2] - 2026-11-08
 
 - **`/way reset all` ends the journey without TomTom.** Shortest Path's own `/way` now reads TomTom's reset forms. `all` ends the journey, `away`, `<zone>` and `not <zone>` end the one the last `/way` line started, and a bare `reset` shows how to use it. Before, every reset printed the coordinate usage line and left the journey running (#159).

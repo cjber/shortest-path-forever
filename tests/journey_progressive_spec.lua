@@ -268,4 +268,53 @@ for _, stop in ipairs({ Search.Reset, Search.Cancel }) do
 end
 onRoute = nil
 Search.Reset()
-print("journey_progressive_spec: settled walks offer one route, the optimum replaces it once, later walks wait: ok")
+
+-- A bind point's walks finishing after the search has published its route are never heard from late (#516).
+from = { map = 1, x = 0, y = 0 }
+local hearth = { map = 1, x = 900, y = 4900, spell = 8690, cast = 10000, bind = true }
+-- On cooldown: the search never waits for its walks, though it hears when they end.
+ns.teleports, ns.teleportReady = { hearth }, { 10 ^ 12 }
+local far, bound = true, walking.bound
+-- B's walk looks too far to matter until the route is shown, then worth measuring, as a boat's later departure would.
+walking.bound = function(map, a, b)
+	if far and (at(a, enter.B) or at(b, enter.B)) then
+		return 10 ^ 7
+	end
+	return bound(map, a, b)
+end
+begin()
+local landing
+start, back = nil, nil
+for i = made + 1, #walking.batches do
+	local batch = walking.batches[i]
+	if at(batch.from, hearth) then
+		landing = batch
+	elseif batch.reverse then
+		back = batch
+	else
+		start = batch
+	end
+end
+settle(back, function(target)
+	return yards(target, goal)
+end)
+settle(start, function(target)
+	return not at(target, enter.B) and yards(origin, target) or nil
+end)
+geometry()
+exhaust()
+geometry()
+assert(heard():find("route") and via() == "A" and Search.Status() == 0, "the search is over")
+far = false
+local costs = {}
+for i = 1, #landing.targets do
+	costs[i] = 1000
+end
+walking.finish(landing, costs)
+assert(heard() == "" and via() == "A", "a search that is over is never heard from")
+walking.bound, ns.teleports, ns.teleportReady = bound, nil, nil
+Search.Reset()
+print(
+	"journey_progressive_spec: settled walks offer one route, the optimum replaces it once, "
+		.. "later walks wait, a finished search stays quiet: ok"
+)
