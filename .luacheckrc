@@ -107,7 +107,6 @@ read_globals = {
 	"C_DeathInfo",
 	"UNKNOWN",
 	"WorldMapFrame",
-	"QuestDataProviderMixin",
 	"Minimap",
 	"GetPlayerFacing",
 	"GetCVar",
