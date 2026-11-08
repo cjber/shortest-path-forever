@@ -10,7 +10,13 @@ local ns = select(2, ...)
 -- The map's quest pins this module has hidden, so only those are shown again: a pin another addon hid stays hidden.
 ---@type table<SPFMapPin, boolean>
 local hidden = setmetatable({}, { __mode = "k" })
-local hooked = false
+-- The providers this module hooked, once each, and whether the map is hooked for the providers it gains later.
+---@type table<SPFMapProvider, boolean>
+local hookedProviders = setmetatable({}, { __mode = "k" })
+local hookedMap = false
+-- The pin template the game's quest data provider draws, the exact thing its mixin defines: the same template this
+-- module's own pass walks (EnumeratePinsByTemplate below).
+local QUEST_PINS = "QuestPinTemplate"
 
 -- The quests the drawn stops mark: the stops from the one being travelled to, as Route.lua draws them, and a lone
 -- destination. A corpse run's goal marks no quest.
@@ -32,6 +38,11 @@ local function Marked()
 		for _, questID in ipairs(point.questIDs or {}) do
 			marked[questID] = true
 		end
+		-- A quest handed in at the stop has no objective area here: its pin is hidden all the same, so the game's "?"
+		-- does not sit over the stop.
+		for _, questID in ipairs(point.handins or {}) do
+			marked[questID] = true
+		end
 	end
 	local points, index = ns.JourneyStops()
 	if points then
@@ -45,15 +56,40 @@ local function Marked()
 end
 
 -- QuestDataProvider:RefreshAllData re-acquires every pin, so hiding again after it keeps the stops covered. The
--- provider's own refresh runs first and is never replaced; only the pins it just drew are looked at.
-local function Hook()
-	if hooked or not QuestDataProviderMixin or type(QuestDataProviderMixin.RefreshAllData) ~= "function" then
+-- provider's own refresh runs first and is never replaced; only the pins it just drew are looked at. Mixin copies the
+-- mixin's functions into each provider before this addon loads (#483), so the mixin table is not on the path: every
+-- live provider is hooked on its own.
+---@param provider SPFMapProvider
+local function HookProvider(provider)
+	if hookedProviders[provider] or type(provider.GetPinTemplate) ~= "function" then
 		return
 	end
-	hooked = true
-	local provider = QuestDataProviderMixin
-	hooksecurefunc(provider, "RefreshAllData", function() -- taint-ok: provider data, refresh observed only
+	-- GetPinTemplate is what the quest provider's mixin defines: the pin template it acquires, whatever the provider
+	-- is called or mixed from.
+	if provider:GetPinTemplate() ~= QUEST_PINS or type(provider.RefreshAllData) ~= "function" then
+		return
+	end
+	hookedProviders[provider] = true
+	hooksecurefunc(provider, "RefreshAllData", function() -- taint-ok: post-hook only; the refresh runs first
 		ns.RefreshQuestPins()
+	end)
+end
+
+-- Every quest provider the map holds, and any it gains later (WorldMapFrame:AddDataProvider), each hooked once.
+local function Hook()
+	if hookedMap then
+		return
+	end
+	local map = WorldMapFrame
+	if not (map and map.dataProviders and type(map.AddDataProvider) == "function") then
+		return
+	end
+	hookedMap = true
+	for provider in pairs(map.dataProviders) do
+		HookProvider(provider)
+	end
+	hooksecurefunc(map, "AddDataProvider", function(_, provider) -- taint-ok: post-hook only; the map's add runs first
+		HookProvider(provider)
 	end)
 end
 
@@ -67,7 +103,7 @@ function ns.RefreshQuestPins()
 	end
 	local marked = Marked()
 	local seen = {}
-	for pin in map:EnumeratePinsByTemplate("QuestPinTemplate") do
+	for pin in map:EnumeratePinsByTemplate(QUEST_PINS) do
 		---@cast pin SPFQuestPin
 		seen[pin] = true
 		local questID = ns.QuestPinID(pin, map)

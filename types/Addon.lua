@@ -50,6 +50,7 @@
 ---@field questID? number
 ---@field pinBadge? boolean -- destination marker beside an existing map icon
 ---@field questIDs? number[] -- the quests whose client areas a held stop stands for (API.lua)
+---@field handins? number[] -- the quests handed in at an API stop, hidden from the game's own map pins (API.lua)
 ---@field corpse? boolean -- where your corpse lies (Corpse.lua)
 ---@field entrance? number -- the instance map whose door this is (JourneyInput.lua)
 ---@field stop? SPFPoint -- the stop inside that instance the door stands for
@@ -259,6 +260,7 @@
 ---@field z? number
 ---@field label? string
 ---@field questID? number
+---@field handins? number[] -- the quests handed in at the kept stop, validated on the way in and out (Resume.lua)
 ---@field pinBadge? boolean
 ---@field at number
 -- Where the character stood when it last bound at an inn, with GetBindLocation's name then.

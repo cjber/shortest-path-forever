@@ -441,6 +441,7 @@ function API.NavigateRoute(owner, stops)
 			or (stop.radius ~= nil and (not Number(stop.radius) or stop.radius < 0))
 			or (stop.questID ~= nil and not QuestID(stop.questID))
 			or (stop.questIDs ~= nil and (type(stop.questIDs) ~= "table" or not Quests(stop.questIDs)))
+			or (stop.handins ~= nil and (type(stop.handins) ~= "table" or not Quests(stop.handins)))
 			or (stop.shapes ~= nil and (type(stop.shapes) ~= "table" or not Shapes(stop.shapes)))
 		then
 			return false
@@ -464,6 +465,14 @@ function API.NavigateRoute(owner, stops)
 				if questID ~= stop.questID then
 					point.questIDs[#point.questIDs + 1] = questID
 				end
+			end
+		end
+		-- The quests handed in at the stop, copied: they hide the game's own pins there (UI/QuestPins.lua) and never
+		-- decide arrival or the stop's area, which are the quests above alone.
+		if stop.handins then
+			point.handins = {}
+			for _, questID in ipairs(stop.handins) do
+				point.handins[#point.handins + 1] = questID
 			end
 		end
 		-- The areas are copied to world points too: the caller cannot redirect a journey they no longer own.

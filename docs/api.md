@@ -24,6 +24,9 @@ calling it. The full types are in [`types/API.lua`](../types/API.lua).
   hides walking directions inside the area while preserving ownership and the current stop. Directions
   resume outside it. Optional `questID` names the quest a held area stands for, and optional `questIDs` every
   quest it stands for when there are several: an array of 1 or more quest IDs, given with or without `questID`.
+  Optional `handins` names the quests handed in at the stop: an array of 1 or more quest IDs, copied like the rest.
+  The game's own pin for each of those quests is hidden while the stop is drawn; `handins` never decides arrival or
+  the stop's area, which stay with `questID`, `questIDs` and `shapes`.
   While the player stands in the area of any named quest, by the client's own inside-area state, the game's own
   area takes the place of the stop pin and its line: the world map draws each named quest's area with the
   client's own blob, the minimap's own quest blob is recoloured, and both wear the stock bonus objective gold.
