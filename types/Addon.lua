@@ -41,6 +41,7 @@
 ---@field label? string
 ---@field tooltip? string
 ---@field routeTitle? string
+---@field stopLabel? string -- what to do at a multi-stop stop, without its count (API.lua)
 ---@field number? integer -- the stop's place in a multi-stop itinerary (API.lua)
 ---@field hold? boolean -- remain visible at the destination until the caller submits an updated route
 ---@field radius? number -- yards around a held stop where travel cues pause; finite and nonnegative
@@ -293,6 +294,7 @@ ShortestPathForeverPathData = nil
 ---@field points SPFWalkPoints
 ---@field preview? boolean
 ---@field route? number
+---@field stop? number -- the stop this path leads to, for a pointer hovering it (Itinerary.lua, Route.lua)
 ---@field color? ColorMixin
 ---@class SPFLeg
 ---@field mode SPFMode

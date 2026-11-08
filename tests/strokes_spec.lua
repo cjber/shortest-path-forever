@@ -14,6 +14,8 @@ for _, file in ipairs({ "UI/FlightLines.lua", "UI/Strokes.lua" }) do
 end
 local Strokes = ns.Strokes
 local DOT, RIM, GAP, SPACING, SMALL_DOT, SMALL_SPACING, LATER = 4, 1, 2, 9, 3, 7, 0.4
+-- StopPin.lua fades a later stop by the same amount, read from here (UI/Strokes.lua).
+check(ns.LaterAlpha == LATER, "one later alpha for stops and strokes")
 local CANVAS, MINIMAP = 1000, 140
 -- Colours pass through untouched, so a name stands in for each.
 local colors = {}
@@ -191,6 +193,24 @@ for _, zoom in ipairs({ 2, 0.5 }) do
 	end
 	check(current > 0 and later > 0 and strokes.alpha[1] == 1, "the current leg is drawn first")
 end
+
+-- A stop under the pointer shows its own leg at full strength, and only its own: stop 2's leg is lit while stop 3's
+-- stays faded (UI/Route.lua's ns.HoverStop).
+local legged = {
+	{ mode = "walk", points = { player, first }, stop = 1 },
+	{ mode = "walk", points = { first, second }, stop = 2 },
+	{ mode = "walk", points = { second, point(0.7, 0.5) }, stop = 3 },
+}
+Strokes.Map(strokes, legged, mapView({ current = 1, highlight = { [2] = true } }))
+local lit, faded = 0, 0
+for i = 1, strokes.n do
+	local middle = (strokes.x1[i] + strokes.x2[i]) / 2
+	if middle > first.x * CANVAS then
+		check(strokes.alpha[i] == (middle < second.x * CANVAS and 1 or LATER), "the hovered stop's own leg")
+		lit, faded = lit + (middle < second.x * CANVAS and 1 or 0), faded + (middle >= second.x * CANVAS and 1 or 0)
+	end
+end
+check(lit > 0 and faded > 0, "one leg lights while the rest of the way ahead recedes")
 
 -- A portal or passage has no line: a small cross marks each end the map shows.
 Strokes.Map(

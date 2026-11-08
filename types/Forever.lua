@@ -97,6 +97,8 @@ GameTooltipTextLeft1 = nil
 ---@param wrap? boolean
 function GameTooltip_SetTitle(tooltip, title, color, wrap) end
 ---@param tooltip GameTooltip
+function GameTooltip_AddBlankLineToTooltip(tooltip) end
+---@param tooltip GameTooltip
 ---@param text string
 ---@param wrap? boolean
 function GameTooltip_AddNormalLine(tooltip, text, wrap) end

@@ -957,7 +957,7 @@ end
 _G.math.atan2 = math.atan2 or function(y, x)
 	return math.atan(y, x)
 end
-local tip = {}
+local tip, tipColors = {}, {}
 local tipTitle = font()
 _G.GameTooltipTextLeft1 = tipTitle
 -- GlobalStrings at the pinned build: the minimap says MAP_PIN, the map's waypoint pin says MAP_PIN_SHARING.
@@ -973,20 +973,28 @@ _G.TooltipDataProcessor = {
 	end,
 }
 _G.GameTooltip_SetTitle = function(_, t)
-	tip = { "# " .. t }
+	tip, tipColors = { "# " .. t }, { false }
 	tipTitle:SetText(t)
 end
-_G.GameTooltip_AddColoredLine = function(_, t)
+_G.GameTooltip_AddColoredLine = function(_, t, color)
 	tip[#tip + 1] = "  " .. t
+	tipColors[#tipColors + 1] = color
 end
 _G.GameTooltip_AddNormalLine = function(_, t)
 	tip[#tip + 1] = "  " .. t
+	tipColors[#tipColors + 1] = NORMAL_FONT_COLOR
+end
+_G.GameTooltip_AddBlankLineToTooltip = function(_)
+	tip[#tip + 1] = " "
+	tipColors[#tipColors + 1] = false
 end
 _G.GameTooltip_AddInstructionLine = function(_, t)
 	tip[#tip + 1] = "  " .. t
+	tipColors[#tipColors + 1] = NORMAL_FONT_COLOR
 end
 _G.GameTooltip_AddColoredDoubleLine = function(_, l, r)
 	tip[#tip + 1] = "  " .. l .. " | " .. r
+	tipColors[#tipColors + 1] = NORMAL_FONT_COLOR
 end
 _G.SlashCmdList = {}
 _G.CreateFromMixins = function(...)

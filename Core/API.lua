@@ -480,12 +480,9 @@ function API.NavigateRoute(owner, stops)
 		point.number = index
 		if count > 1 then
 			local location = not point.label and ns.Locate(point)
-			point.routeTitle = string.format(
-				L["Stop %d of %d: %s"],
-				index,
-				count,
-				point.label or location and location.zone or UNKNOWN
-			)
+			-- What to do there, apart from the count the tooltip gives its own line (UI/StopPin.lua).
+			point.stopLabel = point.label or location and location.zone or UNKNOWN
+			point.routeTitle = string.format(L["Stop %d of %d: %s"], index, count, point.stopLabel)
 		end
 		points[index] = point
 	end

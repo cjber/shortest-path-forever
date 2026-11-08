@@ -243,6 +243,7 @@ L["Sizes flight master icons on the world map."] = "Sizes flight master icons on
 L["Sizes transport icons on the minimap."] = "Sizes transport icons on the minimap."
 L["Stable master"] = "Stable master"
 L["Step %d: discover flight master %s before flying."] = "Step %d: discover flight master %s before flying."
+L["Stop %d of %d"] = "Stop %d of %d"
 L["Stop %d of %d: %s"] = "Stop %d of %d: %s"
 L["Stormwind"] = "Stormwind"
 L["Suggest my other Forever addons"] = "Suggest my other Forever addons"

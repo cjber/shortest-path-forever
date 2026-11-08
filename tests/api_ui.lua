@@ -37,10 +37,10 @@ local function check(index, count)
   assert(pin.Texture.texture == ns.NumberFile(number) and pin.Texture.width == 24,
    "remaining pins retain their numbered markers")
   assert(pin.Button.hidden and pin.Disc.hidden and pin.Number.text == "")
-  assert(pin.Texture.alpha == (i == 1 and 1 or 0.7), "only the stop being guided to is at full strength")
+  assert(pin.Texture.alpha == (i == 1 and 1 or ns.LaterAlpha), "only the stop being guided to is at full strength")
   assert(pin.alpha == nil and pin.Texture.atlas == nil, "the marker is the addon's own art")
   assert(pin.levelType == "PIN_FRAME_LEVEL_WAYPOINT_LOCATION", "stops draw above quest POIs")
-  assert(pin.stopTitles[1] == string.format("Stop %d of %d: %s", number, count, stops[number].title))
+  assert(pin.stopLabels[1] == stops[number].title and pin.stopNumbers[1] == number and pin.stopCount == count)
  end
  local line = active[lineTemplate][1]
  assert(line.used > 0 and line.used <= 4096)
@@ -50,11 +50,11 @@ local function check(index, count)
  local current, later = 0, 0
  for i = 1, line.used do
   local alpha = line.lines[i].alpha
-  assert(alpha == 1 or alpha == 0.4, "strokes are either current or later")
+  assert(alpha == 1 or alpha == ns.LaterAlpha, "strokes are either current or later")
   if alpha == 1 then current = current + 1 else later = later + 1 end
  end
  assert(current > 0)
- assert(index == count and later == 0 or later > 0 and line.lines[line.used].alpha == 0.4)
+ assert(index == count and later == 0 or later > 0 and line.lines[line.used].alpha == ns.LaterAlpha)
  assert(line.lines[1].alpha == 1, "the current leg is drawn first, at full strength")
  assert(arrowFrame.Progress.text == string.format("Stop %d of %d: %s", index, count, stops[index].title))
  assert(ns.JourneyInfo() == arrowFrame.Progress.text)
@@ -99,12 +99,11 @@ local function rings(expected)
  assert(#pins == #expected, "one ring per group: " .. #pins)
  for i, want in ipairs(expected) do
   local pin = pins[i]
-  assert(pin.Texture.alpha == (i == 1 and 1 or 0.7), "only the current stop's marker is at full strength")
+  assert(pin.Texture.alpha == (i == 1 and 1 or ns.LaterAlpha), "only the current stop's marker is at full strength")
   assert(pin.alpha == nil and pin.Disc.alpha == nil, "the marker hides the POI beneath")
-  assert(#pin.stopTitles == #want.stops)
+  assert(#pin.stopLabels == #want.stops and pin.stopCount == 7)
   for j, n in ipairs(want.stops) do
-   local expected = string.format("Stop %d of 7: %s", n, close[n].title)
-   assert(pin.stopTitles[j] == expected, "the tooltip names each stop in order")
+   assert(pin.stopLabels[j] == close[n].title and pin.stopNumbers[j] == n, "the tooltip names each stop in order")
   end
   assert(pin.Texture.texture == ns.NumberFile(want.stops[1]) and pin.Number.text == "")
   assert(rawget(pin, "Count") == nil, "no text over the action badge")
@@ -129,7 +128,11 @@ canvasScaled()
 -- The current stop's ring takes the later stops overlapping it, rather than drawing over them.
 local zoomedOut = rings({ {stops={1,2,3,4}}, {stops={5,7}}, {stops={6}} })
 zoomedOut[1]:OnMouseEnter()
-assert(tip[1] == "# Stop 1 of 7: A" and tip[2] == "  Stop 2 of 7: B" and tip[4] == "  Stop 4 of 7: D")
+assert(tip[1] == "# Stop 1 of 7" and tip[2] == "  A", tip[1])
+assert(tip[3] == "  Stop 2 of 7" and tip[4] == "  B" and tip[7] == "  Stop 4 of 7" and tip[8] == "  D")
+assert(tipColors[2] == HIGHLIGHT_FONT_COLOR and tipColors[4] == HIGHLIGHT_FONT_COLOR, "labels in white")
+assert(tipColors[8] == HIGHLIGHT_FONT_COLOR, "the last shared stop's label in white")
+assert(tip[#tip] == "  Right-click to clear" and tip[#tip - 1] == " " and tipColors[#tip] == NORMAL_FONT_COLOR)
 zoomedOut[1]:OnMouseLeave()
 -- A canvas refresh that keeps the grouping keeps the rings, hover and all.
 local goalPool = ns.MapCanvas.Pools(WorldMapFrame)[goalTemplate]
@@ -152,8 +155,8 @@ tick()
 assert(api.CurrentStop("Test") == 2)
 local pins = active[goalTemplate]
 assert(#pins == 3 and pins[1].Texture.texture == ns.NumberFile(2))
-assert(pins[1].Texture.alpha == 1 and #pins[1].stopTitles == 3)
-assert(pins[1].mapX == close[2].x and pins[2].Texture.alpha == 0.7)
+assert(pins[1].Texture.alpha == 1 and #pins[1].stopLabels == 3)
+assert(pins[1].mapX == close[2].x and pins[2].Texture.alpha == ns.LaterAlpha)
 api.Cancel("Test")
 zoom = 1
 posX, posY = 0, 0
@@ -163,7 +166,7 @@ assert(api.Navigate("Test", 1414, 0.51, 0.5, "Only"))
 settle()
 assert(#active[goalTemplate] == 1 and active[goalTemplate][1].Number.text == "")
 assert(active[goalTemplate][1].Texture.texture == ns.PIN_FILE and active[goalTemplate][1].Texture.atlas == nil)
-assert(active[goalTemplate][1].stopTitles == nil and arrowFrame.Progress.text == "")
+assert(active[goalTemplate][1].stopLabels == nil and arrowFrame.Progress.text == "")
 -- The destination's pin names the journey, the time and distance left, and each step as the tracker words it.
 active[goalTemplate][1]:OnMouseEnter()
 local _, rows = ns.JourneyInfo()
@@ -171,7 +174,8 @@ local left, far = ns.JourneyLeft()
 assert(tip[1] == "# Journey to Only", tip[1])
 assert(left and tip[2] == "  " .. left .. " · " .. far, tip[2])
 assert(#rows > 0 and tip[3] == "  " .. rows[1].text and tip[3]:find("^  1%. "), tip[3])
-assert(#tip == #rows + 3 and tip[#tip] == "  Right-click to clear", "every step, then how to clear")
+assert(#tip == #rows + 4 and tip[#tip] == "  Right-click to clear", "every step, then a blank line and how to clear")
+assert(tip[#tip - 1] == " ", "the hint stands apart")
 active[goalTemplate][1]:OnMouseLeave()
 assert(api.Cancel("Test"))
 -- A numbered stop that says what stands there keeps its numbered marker and wears that mark as a small badge over the
@@ -229,12 +233,14 @@ posX, posY = 0, 0
 assert(api.NavigateRoute("Test", stops))
 settle()
 assert(not api.Cancel("Other") and #active[goalTemplate] == 4)
--- The stop being travelled to lists the steps there under its own title; a later stop names only itself.
+-- The stop being travelled to lists the steps there under its own short count; a later stop names only itself.
 active[goalTemplate][1]:OnMouseEnter()
-assert(tip[1] == "# Stop 1 of 4: First" and tip[3] and tip[3]:find("^  1%. "), tip[3])
+assert(tip[1] == "# Stop 1 of 4" and tip[2] == "  First" and tipColors[2] == HIGHLIGHT_FONT_COLOR, tip[2])
+assert(tip[4] and tip[4]:find("^  1%. "), tip[4])
 active[goalTemplate][1]:OnMouseLeave()
 active[goalTemplate][2]:OnMouseEnter()
-assert(tip[1] == "# Stop 2 of 4: Second" and tip[2] == "  Right-click to clear" and #tip == 2)
+assert(tip[1] == "# Stop 2 of 4" and tip[2] == "  Second" and tipColors[2] == HIGHLIGHT_FONT_COLOR)
+assert(tip[3] == " " and tip[4] == "  Right-click to clear" and #tip == 4, "then a blank line and the hint")
 active[goalTemplate][2]:OnMouseLeave()
 active[goalTemplate][3]:OnMouseClickAction("RightButton")
 assert(not api.CurrentStop("Test") and #active[goalTemplate] == 0)
@@ -272,8 +278,8 @@ local line = active[lineTemplate][1]
 -- They share two rings, one per row; the current stop's row sits on it.
 local pins = active[goalTemplate]
 assert(#pins == 2 and #line.paths[#line.paths].points == 64)
-assert(pins[1].Texture.alpha == 1 and #pins[1].stopTitles == 32)
-assert(pins[2].Texture.texture == ns.NumberFile(2) and #pins[2].stopTitles == 32)
+assert(pins[1].Texture.alpha == 1 and #pins[1].stopLabels == 32)
+assert(pins[2].Texture.texture == ns.NumberFile(2) and #pins[2].stopLabels == 32)
 local drawCPU, drawWorst = 0, 0
 for _=1,30 do
  started = os.clock()
@@ -282,6 +288,30 @@ for _=1,30 do
  drawCPU, drawWorst = drawCPU+ms, math.max(drawWorst, ms)
 end
 assert(line.used <= 4096)
+api.Cancel("Test")
+
+-- Hovering a later stop shows it at full: its icon and the leg leading to it lose the fade, and fade back on leave.
+zoom = 1
+posX, posY = 0, 0
+assert(api.NavigateRoute("Test", {
+ stops[1],
+ { map = 1414, x = 0.53, y = 0.49, title = "Second", tooltip = "Quest detail" },
+}))
+settle()
+local laterPin, laterLine = active[goalTemplate][2], active[lineTemplate][1]
+assert(laterPin.Texture.alpha == ns.LaterAlpha and laterLine.lines[laterLine.used].alpha == ns.LaterAlpha)
+laterPin:OnMouseEnter()
+assert(laterPin.Texture.alpha == 1 and laterPin.Button.alpha == 1)
+-- The tooltip: the count on its own title line, the label in white, details in the normal colour, then the hint.
+assert(tip[1] == "# Stop 2 of 2" and tip[2] == "  Second" and tipColors[2] == HIGHLIGHT_FONT_COLOR)
+assert(tip[3] == "  Quest detail" and tipColors[3] == NORMAL_FONT_COLOR)
+assert(tip[4] == " " and tip[5] == "  Right-click to clear" and tipColors[5] == NORMAL_FONT_COLOR)
+for i = 1, laterLine.used do
+ assert(laterLine.lines[i].alpha == 1, "the hovered stop's leg at full strength")
+end
+laterPin:OnMouseLeave()
+assert(laterPin.Texture.alpha == ns.LaterAlpha and laterPin.Button.alpha == ns.LaterAlpha)
+assert(laterLine.lines[laterLine.used].alpha == ns.LaterAlpha, "and the leg fades again")
 api.Cancel("Test")
 
 -- Above 25 the numbered art runs out: stop 30 keeps the map's button and its font number, dimmer as a later stop.
@@ -295,12 +325,12 @@ assert(api.NavigateRoute("Test", lots))
 settle()
 local thirtieth
 for _, pin in ipairs(active[goalTemplate]) do
- if pin.stopTitles[1] == "Stop 30 of 30: 30" then thirtieth = pin end
+ if pin.stopLabels[1] == "30" and pin.stopNumbers[1] == 30 then thirtieth = pin end
 end
 assert(thirtieth, "the thirtieth stop has a pin")
 assert(thirtieth.Texture.hidden and not thirtieth.Button.hidden and not thirtieth.Disc.hidden)
 assert(thirtieth.Number.text == "30", "above 25 the map's button keeps the font number")
-assert(thirtieth.Button.atlas == "UI-QuestPoi-QuestNumber" and thirtieth.Button.alpha == 0.7)
+assert(thirtieth.Button.atlas == "UI-QuestPoi-QuestNumber" and thirtieth.Button.alpha == ns.LaterAlpha)
 assert(thirtieth.Disc.alpha == nil)
 api.Cancel("Test")
 assert(#errors == 0, table.concat(errors, "\n"))

@@ -44,6 +44,7 @@ read_globals = {
 	"CreateVector2D",
 	"Enum",
 	"GameTooltip",
+	"GameTooltip_AddBlankLineToTooltip",
 	"GameTooltip_AddColoredDoubleLine",
 	"GameTooltip_AddColoredLine",
 	"GameTooltip_AddInstructionLine",
