@@ -62,6 +62,15 @@ driver.path.settle()
 assert(API.CurrentStop("RestedXP") == 1, "late-loaded guide starts a journey")
 assert(not frame.texture.shown and not frame.text.shown, "the guide arrow becomes invisible")
 assert(frame.mouse == false, "the invisible arrow does not intercept clicks")
+ns.db.arrow = false
+rxp.UpdateMap()
+driver.path.settle()
+assert(frame.texture.shown and frame.text.shown, "RestedXP's arrow comes back when our own arrow is off")
+assert(API.CurrentStop("RestedXP") == 1, "the journey keeps running without our own arrow")
+ns.db.arrow = true
+rxp.UpdateMap()
+driver.path.settle()
+assert(not frame.texture.shown, "Shortest Path suppresses RestedXP's arrow again")
 assert(rxp.settings.profile.disableArrow == nil, "guide settings stay untouched")
 local starts = 0
 local start = ns.StartJourney

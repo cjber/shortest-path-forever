@@ -156,7 +156,12 @@ local function Sync()
 	end
 	if API.CurrentStop(OWNER) then
 		Rename(title, map, x / 100, y / 100)
-		Suppress()
+		-- RestedXP owns the arrow when Shortest Path is not drawing one of its own.
+		if ns.db.arrow ~= false then
+			Suppress()
+		else
+			Restore()
+		end
 	else
 		Restore()
 	end
