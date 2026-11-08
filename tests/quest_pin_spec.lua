@@ -1,8 +1,8 @@
 -- Run from the repository root: luajit tests/quest_pin_spec.lua
--- The game's own quest pins on the world map (#472, #483, #484): while a journey stop marks a quest, its pin is
+-- The game's own quest pins on the world map (#472, #483, #484, #491): while a journey stop marks a quest, its pin is
 -- hidden and the pins for quests no stop marks stay; clearing the journey, a quest data provider's own refresh and a
--- provider the map gains later bring every pin back or hide the marked ones again; and a stop that only hands a quest
--- in hides its pin too.
+-- provider the map gains later bring every pin back or hide the marked ones again; a stop that only hands a quest in
+-- hides its pin too; and a map provider whose GetPinTemplate needs an argument is never asked for one while hooking.
 local dir = arg[0]:match("^(.*)/") or "tests"
 
 local probe = "tools/.cache/blizzard-ui/Interface/AddOns/Blizzard_SharedXML/Spinner.lua"
@@ -57,14 +57,32 @@ QuestDataProviderMixin = {
 local function NewProvider()
 	return Mixin({}, QuestDataProviderMixin)
 end
-local provider = NewProvider()
+-- Another mixin in between still carries the quest mixin's own function, because Mixin copies references.
+local QuestAliasMixin = CreateFromMixins(QuestDataProviderMixin)
+local provider = Mixin({}, QuestAliasMixin)
 WorldMapFrame.dataProviders[provider] = true
+
+-- The map's vignette provider: its GetPinTemplate reads the vignette it would draw, so calling it with no argument
+-- errors, as VignetteDataProviderMixin does (#491). The count shows whether the addon asked it anything at all.
+local vignetteLookups = 0
+local vignettes = {
+	GetPinTemplate = function(_, vignetteInfo)
+		vignetteLookups = vignetteLookups + 1
+		return "VignettePinTemplate-" .. vignetteInfo.kind
+	end,
+	RefreshAllData = function() end,
+}
+WorldMapFrame.dataProviders[vignettes] = true
 ]==]
 local fixture = source:gsub('fireEvent%("ADDON_LOADED", "ShortestPathForever"%)', function()
 	return setup .. '\nfireEvent("ADDON_LOADED", "ShortestPathForever")'
 end, 1)
 
 assert(loadstring(fixture .. [==[
+-- Hooking the map's providers must not call a provider's GetPinTemplate to identify it: the vignette provider's reads
+-- its argument, and its error used to abort the hooking and leave the quest pins uncovered for the session.
+assert(vignetteLookups == 0, "the vignette provider is not asked for a pin template while hooking")
+assert(#errors == 0, "no provider's GetPinTemplate is called while hooking: " .. tostring(errors[1]))
 setMapShown(true)
 posX, posY, posMap, facing = 0, 0, 1, 0
 mapID, zoom = 1414, 0
@@ -77,6 +95,8 @@ assert(ShortestPathForever.API.NavigateRoute("Test", {
 	{ map = 1414, x = 0.55, y = 0.5, title = "Second", questID = 202 },
 }))
 settle()
+assert(vignetteLookups == 0, "refreshing quest pins does not ask the vignette provider for a template")
+assert(#errors == 0, "refreshing quest pins reports no error: " .. tostring(errors[1]))
 pins = nativeActive.QuestPinTemplate
 assert(pins[1].hidden and pins[2].hidden, "the pins for the marked quests are hidden")
 assert(not pins[3].hidden, "a quest no stop marks keeps its pin")

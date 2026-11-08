@@ -64,9 +64,18 @@ local function HookProvider(provider)
 	if hookedProviders[provider] or type(provider.GetPinTemplate) ~= "function" then
 		return
 	end
-	-- GetPinTemplate is what the quest provider's mixin defines: the pin template it acquires, whatever the provider
-	-- is called or mixed from.
-	if provider:GetPinTemplate() ~= QUEST_PINS or type(provider.RefreshAllData) ~= "function" then
+	-- The quest provider is the one carrying QuestDataProviderMixin:GetPinTemplate itself: Mixin copies function
+	-- references, so a provider mixed from the quest mixin, directly or through another mixin, holds that exact
+	-- function. Never call GetPinTemplate on an unknown provider to identify it: a vignette provider's reads its
+	-- argument (#491).
+	local questMixin = QuestDataProviderMixin
+	if
+		not (
+			questMixin
+			and provider.GetPinTemplate == questMixin.GetPinTemplate
+			and type(provider.RefreshAllData) == "function"
+		)
+	then
 		return
 	end
 	hookedProviders[provider] = true
@@ -84,13 +93,15 @@ local function Hook()
 	if not (map and map.dataProviders and type(map.AddDataProvider) == "function") then
 		return
 	end
-	hookedMap = true
 	for provider in pairs(map.dataProviders) do
 		HookProvider(provider)
 	end
 	hooksecurefunc(map, "AddDataProvider", function(_, provider) -- taint-ok: post-hook only; the map's add runs first
 		HookProvider(provider)
 	end)
+	-- Only a completed hook disables the next attempt: a failure above leaves this false, so the next quest pin
+	-- refresh tries again rather than leaving the game's pins over the stops for the session.
+	hookedMap = true
 end
 
 -- One pass over the map's quest pins: hide the marked quests, bring back the pins this module hid before, and forget
