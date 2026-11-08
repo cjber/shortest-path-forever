@@ -219,6 +219,18 @@ local function JourneyToPin(mapID, info, flight, x, y)
 	return true
 end
 
+-- The quest a pin marks, when it is the map's own quest pin on `map` (QuestDataProvider's QuestPinTemplate); nil for
+-- any other pin. UI/QuestPins.lua uses the same lookup to hide the game's pin under one of our stops.
+---@param pin SPFMapPin
+---@param map SPFMapCanvas
+---@return number?
+function ns.QuestPinID(pin, map)
+	---@cast pin SPFQuestPin
+	if pin.pinTemplate == "QuestPinTemplate" and pin.GetMap and pin:GetMap() == map and pin.GetQuestID then
+		return pin:GetQuestID()
+	end
+end
+
 local function OnPinClick(map, action, button)
 	if
 		not ns.db.journey
@@ -233,8 +245,9 @@ local function OnPinClick(map, action, button)
 	for _, focus in ipairs(GetMouseFoci()) do
 		local pin = focus
 		---@cast pin SPFQuestPin
-		if pin.pinTemplate == "QuestPinTemplate" and pin:GetMap() == map and pin:GetQuestID() then
-			PlanQuest(pin:GetQuestID(), map:GetMapID(), pin:GetStyle() == POIButtonUtil.Style.Waypoint)
+		local questID = ns.QuestPinID(pin, map)
+		if questID then
+			PlanQuest(questID, map:GetMapID(), pin:GetStyle() == POIButtonUtil.Style.Waypoint)
 			return true
 		end
 		---@cast pin SPFFlightPin

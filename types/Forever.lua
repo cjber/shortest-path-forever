@@ -127,6 +127,7 @@ function GameTooltip_AddColoredDoubleLine(tooltip, left, right, leftColor, right
 ---@field GetCanvasZoomPercent fun(self: SPFMapCanvas): number
 ---@field GetNormalizedCursorPosition fun(self: SPFMapCanvas): number, number
 ---@field GetPinFrameLevelsManager fun(self: SPFMapCanvas): {GetValidFrameLevel: fun(self: table, levelType: string, index?: number): number}
+---@field EnumeratePinsByTemplate fun(self: SPFMapCanvas, template: string): fun(): SPFMapPin
 ---@field AddCanvasClickHandler fun(self: SPFMapCanvas, handler: fun(map: SPFMapCanvas, button: string): boolean)
 ---@field AddGlobalPinMouseActionHandler fun(self: SPFMapCanvas, handler: fun(map: SPFMapCanvas, action: number, button: string): boolean)
 ---@type SPFMapCanvas
@@ -148,6 +149,9 @@ POIButtonUtil = nil
 ---@field pin? Frame
 ---@type SPFMapProvider
 WaypointLocationDataProviderMixin = nil
+-- QuestDataProvider's mixin, whose RefreshAllData UI/QuestPins.lua hooks so a provider refresh keeps our stops covered.
+---@type SPFMapProvider
+QuestDataProviderMixin = nil
 ---@class SPFFlightPin : SPFMapPin
 ---@field poiInfo {nodeID: number, name: string, isUndiscovered: boolean}
 

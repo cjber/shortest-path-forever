@@ -18,6 +18,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 - **Every clickable icon answers the pointer.** The world map's docks, portals, flight points and journey stops and the minimap's transport pins now wear the stock highlight under the cursor and the stock pushed look while the mouse button is held, so it is clear what can be clicked and that the click landed. Only the art moves: each pin keeps its size, anchor and hit area. (#469).
 
+- **A journey's quest stops no longer appear twice on the world map.** While a journey draws a numbered stop for a quest, the game's own quest pin for that quest now steps aside, so each stop reads once instead of showing our number beside the game's dark circle or question mark. Quests no stop marks keep their pins, and every pin comes back when its stop is passed, the journey ends, or journey drawing is turned off. Pins are hidden one by one, leaving the questPOI setting and the quest data provider untouched (#472).
+
 ## [1.22.52] - 2026-11-08
 
 - **RestedXP's arrow can stay while Shortest Path still follows the guide.** One checkbox used to do everything: plan journeys to RestedXP guide targets, follow them, and hide the guide's own arrow so ours was the only one. A new **Hide RestedXP's arrow** setting in Settings > Guidance owns the takeover alone. Turn it off and the guide's arrow, text and clicks stay as RestedXP drew them while journeys and routing are unchanged; it defaults to on, so existing profiles behave exactly as before (#464).

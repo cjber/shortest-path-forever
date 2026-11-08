@@ -92,6 +92,7 @@ UI\StopPin.lua
 UI\FlightLines.lua
 UI\Strokes.lua
 UI\QuestBlob.lua
+UI\QuestPins.lua
 UI\Route.lua
 UI\RouteTransports.lua
 UI\Alert.lua
