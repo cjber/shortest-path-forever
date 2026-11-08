@@ -119,6 +119,7 @@ L["Lifts and the Deeprun Tram, on the world map."] =
 	"Подъемники и Подземный поезд на карте мира."
 L["Loading QuestieDB…"] = "Загрузка QuestieDB…"
 L["Lock the tracker"] = "Закрепить трекер"
+L["Tracker background"] = "Фон отслеживания"
 L["Map marks"] = "Отметки на карте"
 L["Mark only where steps end"] = "Отмечать только концы шагов"
 L["Minimap icon size"] = "Размер значков на мини-карте"

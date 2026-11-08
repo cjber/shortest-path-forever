@@ -117,6 +117,7 @@ L["Lifts & Tram"] = "Ascenseurs et tram" -- mt
 L["Lifts and the Deeprun Tram, on the world map."] = "Les ascenseurs et le Tram des profondeurs, sur la carte du monde." -- mt
 L["Loading QuestieDB…"] = "Chargement de QuestieDB…" -- mt
 L["Lock the tracker"] = "Verrouiller le suivi" -- mt
+L["Tracker background"] = "Fond du suivi"
 L["Map marks"] = "Repères sur la carte" -- mt
 L["Mark only where steps end"] = "Marquer seulement la fin des étapes" -- mt
 L["Minimap icon size"] = "Taille des icônes de la minicarte" -- mt

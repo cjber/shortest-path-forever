@@ -39,12 +39,20 @@ local host = CreateFrame("Frame", "ForeverTrackerCompanion", UIParent)
 ---@class ForeverTrackerHostAPI
 local api = {}
 local MIN_SCALE, MAX_SCALE = 0.5, 2
-local fallbackSettings = { attached = true, scale = 1 }
+local fallbackSettings = { attached = true, scale = 1, backdropOpacity = 0 }
 local ready = false
 local function Coordinate(value)
 	if type(value) == "number" and value == value and math.abs(value) ~= math.huge then
 		return value
 	end
+end
+-- The saved backdrop opacity is a fraction, so the value the slider writes and the value the texture reads are the
+-- same number. It is not a separate on/off switch: 0 is off, and every value above it is the texture's opacity.
+local function Opacity(value)
+	if type(value) ~= "number" or value ~= value then
+		return 0
+	end
+	return math.max(0, math.min(1, value))
 end
 ---@return ForeverTrackerSettings
 local function Settings()
@@ -59,6 +67,7 @@ local function Settings()
 	else
 		settings.scale = math.max(MIN_SCALE, math.min(MAX_SCALE, scale))
 	end
+	settings.backdropOpacity = Opacity(settings.backdropOpacity)
 	settings.x, settings.y = Coordinate(settings.x), Coordinate(settings.y)
 	return settings
 end
@@ -94,6 +103,47 @@ host:SetClampedToScreen(true)
 -- The grip and the Lock switch that suppresses its drag live in their own file (UI/TrackerLock.lua), which the TOC
 -- loads before this one. It hands back the label redraw for a Lock change and the show switch for the attachment.
 local Grip = ns.TrackerLock.Grip(host, api)
+-- The optional backdrop spans the whole private column, so every Forever section sits on it at once. It is one
+-- texture on the host rather than chrome each addon draws, and it uses the game's own tooltip background art, tinted
+-- the way the tooltip tints it. Off is simply opacity 0; drawing it only changes a texture, never a frame, so the
+-- slider is safe to move in combat.
+local BACKDROP_ATLAS = "Tooltip-NineSlice-Center"
+local BACKDROP_INSET = 6
+local backdrop = host:CreateTexture(nil, "BACKGROUND")
+-- art-ok: the tooltip's own centre fill, a tiling texture stretched to the column by design
+backdrop:SetAtlas(BACKDROP_ATLAS)
+-- No inset at the top: the attached column starts at the native quests' bottom edge, so the backdrop must not reach
+-- up over the last quest line. It pads the sides and the bottom instead.
+backdrop:SetPoint("TOPLEFT", host, "TOPLEFT", -BACKDROP_INSET, 0)
+backdrop:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", BACKDROP_INSET, -BACKDROP_INSET)
+backdrop:Hide()
+
+local function BackdropTint()
+	local color = rawget(_G, "TOOLTIP_DEFAULT_BACKGROUND_COLOR")
+	if color then
+		local getter = color.GetRGB
+		if type(getter) == "function" then
+			local r, g, b = getter(color)
+			if type(r) == "number" and type(g) == "number" and type(b) == "number" then
+				return r, g, b
+			end
+		end
+		if type(color.r) == "number" and type(color.g) == "number" and type(color.b) == "number" then
+			return color.r, color.g, color.b
+		end
+	end
+	-- The tooltip's saved default when the client's colour object is not available (tests, and a stripped client).
+	return 0.09, 0.09, 0.19
+end
+
+local function ApplyBackdrop(settings)
+	local opacity = settings.backdropOpacity or 0
+	backdrop:SetShown(opacity > 0)
+	if opacity > 0 then
+		local r, g, b = BackdropTint()
+		backdrop:SetVertexColor(r, g, b, opacity)
+	end
+end
 local function IsLocked()
 	return Settings().locked
 end
@@ -511,6 +561,7 @@ local function Layout()
 		return
 	end
 	local settings = ApplyAttachment()
+	ApplyBackdrop(settings)
 	Grip.Show(not attached)
 	-- Lock the host's scale before a list is normalised into it, so a saved user scale is already applied.
 	MatchNativeScale()
@@ -573,6 +624,25 @@ function api.SetScale(value)
 	settings.scale = scale
 	host:MarkDirty()
 end
+-- The tracker background, from 0 (off) to 1 (opaque as the tooltip draws it). A change only recolours the texture, so
+-- it applies at once in combat as well.
+---@return number
+function api.GetBackdropOpacity()
+	return Settings().backdropOpacity
+end
+---@param value number
+function api.SetBackdropOpacity(value)
+	if type(value) ~= "number" or value ~= value then
+		return
+	end
+	local settings = Settings()
+	local opacity = Opacity(value)
+	if settings.backdropOpacity == opacity then
+		return
+	end
+	settings.backdropOpacity = opacity
+	ApplyBackdrop(settings)
+end
 ---@return boolean
 function api.IsLocked()
 	return IsLocked()
@@ -632,6 +702,7 @@ local function AddHeaderMenu(module)
 	local L = ns.L
 	local attach = rawget(L, "SETTING_ATTACH_TRACKER") or L["Attach to quest tracker"] or "Attach to quest tracker"
 	local lock = rawget(L, "SETTING_LOCK_TRACKER") or L["Lock the tracker"] or "Lock the tracker"
+	local background = rawget(L, "SETTING_TRACKER_BACKGROUND") or L["Tracker background"] or "Tracker background"
 	header:EnableMouse(true)
 	header:HookScript("OnMouseUp", function(_, button)
 		if button ~= "RightButton" then
@@ -644,6 +715,22 @@ local function AddHeaderMenu(module)
 			if api.IsLocked and api.SetLocked then
 				root:CreateCheckbox(lock, api.IsLocked, function()
 					api.SetLocked(not api.IsLocked())
+				end)
+			end
+			-- Every section's menu offers the same background choices, so no addon has to wire a settings row of its
+			-- own. The values are the saved fractions the host draws, and picking one only recolours the texture.
+			local backgroundMenu = root:CreateButton(background)
+			backgroundMenu:CreateRadio(rawget(_G, "OFF") or "Off", function()
+				return api.GetBackdropOpacity() == 0
+			end, function()
+				api.SetBackdropOpacity(0)
+			end)
+			for _, percent in ipairs({ 25, 50, 75, 100 }) do
+				local value = percent / 100
+				backgroundMenu:CreateRadio(percent .. "%", function()
+					return api.GetBackdropOpacity() == value
+				end, function()
+					api.SetBackdropOpacity(value)
 				end)
 			end
 		end)

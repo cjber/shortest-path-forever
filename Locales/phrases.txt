@@ -280,6 +280,7 @@ L["Through %s transport, there is a way"] = "Through %s transport, there is a wa
 L["Through %s transport: about %d min faster"] = "Through %s transport: about %d min faster"
 L["Thunder Bluff"] = "Thunder Bluff"
 L["Title"] = "Title"
+L["Tracker background"] = "Tracker background"
 L["Tracker scale"] = "Tracker scale"
 L["Trainers by specialty"] = "Trainers by specialty"
 L["Tram to %s"] = "Tram to %s"

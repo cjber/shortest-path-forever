@@ -10,6 +10,7 @@ function harness.new(options)
 	end
 	local function noop() end
 	local timers, readyFn, frames, releases, menus = {}, nil, {}, {}, {}
+	local textures = {}
 	local initializationEvents
 	local combat = false
 	local parent
@@ -113,6 +114,32 @@ function harness.new(options)
 		end
 		function f.CreateFontString(_)
 			return { SetPoint = noop, SetText = noop, SetShown = noop }
+		end
+		function f.CreateTexture(_)
+			local texture = { points = {} }
+			function texture:SetPoint(...)
+				self.points[#self.points + 1] = { ... }
+			end
+			function texture:SetAtlas(name)
+				self.atlas = name
+			end
+			function texture:SetVertexColor(r, g, b, a)
+				self.r, self.g, self.b, self.a = r, g, b, a
+			end
+			function texture:SetShown(value)
+				self.shown = value
+			end
+			texture.Show = function(self)
+				self.shown = true
+			end
+			texture.Hide = function(self)
+				self.shown = false
+			end
+			texture.IsShown = function(self)
+				return self.shown ~= false
+			end
+			textures[#textures + 1] = texture
+			return texture
 		end
 		function f:SetShown(value)
 			self.shown = value
@@ -250,26 +277,44 @@ function harness.new(options)
 				return { type = "Frame" }
 			end,
 		},
-		-- The client's menu API, recorded so a spec can read back what a click offered.
+		-- The client's menu API, recorded so a spec can read back what a click offered. An entry with no callback and
+		-- entries of its own is a submenu, as inserting elements into an element description makes one in the client.
 		MenuUtil = {
 			CreateContextMenu = function(owner, generator)
+				local function Description()
+					local descriptionObject = { entries = {} }
+					function descriptionObject.CreateCheckbox(_, text, isSelected, setSelected)
+						descriptionObject.entries[#descriptionObject.entries + 1] =
+							{ text = text, isSelected = isSelected, setSelected = setSelected }
+						return {}
+					end
+					function descriptionObject.CreateRadio(_, text, isSelected, setSelected)
+						descriptionObject.entries[#descriptionObject.entries + 1] =
+							{ text = text, isSelected = isSelected, setSelected = setSelected }
+						return {}
+					end
+					function descriptionObject.CreateButton(_, text, callback)
+						if callback then
+							descriptionObject.entries[#descriptionObject.entries + 1] =
+								{ text = text, callback = callback }
+							return {}
+						end
+						local submenu = Description()
+						submenu.text = text
+						descriptionObject.entries[#descriptionObject.entries + 1] = { text = text, submenu = submenu }
+						return submenu
+					end
+					function descriptionObject.CreateTitle(_, text)
+						descriptionObject.title = text
+					end
+					return descriptionObject
+				end
 				local menu = { owner = owner, entries = {} }
-				local root = {}
-				function root.CreateCheckbox(_, text, isSelected, setSelected)
-					menu.entries[#menu.entries + 1] =
-						{ text = text, isSelected = isSelected, setSelected = setSelected }
-					return {}
-				end
-				function root.CreateTitle(_, text)
-					menu.title = text
-				end
-				function root.CreateButton(_, text, callback)
-					menu.entries[#menu.entries + 1] = { text = text, callback = callback }
-					return {}
-				end
+				local root = Description()
 				if generator then
 					generator(owner, root)
 				end
+				menu.entries, menu.title = root.entries, root.title
 				menus[#menus + 1] = menu
 				return menu
 			end,
@@ -357,6 +402,7 @@ function harness.new(options)
 		ns = ns,
 		hostSettings = hostSettings,
 		frames = frames,
+		textures = textures,
 		releases = releases,
 		native = native,
 		parent = parent,
