@@ -232,6 +232,18 @@ function M.build(sim)
 	sim.errors = {}
 	sim.printed = {}
 	local handler
+	-- True while sim.reportError is dispatching the error to the installed handler. A handler that saved the
+	-- default error handler and forwards to it (SafeCall, BugGrabber) runs it as addon code; that forward must not
+	-- record the error a second time, with the addon's taint, because the raise site already recorded it.
+	local dispatching = false
+	-- What geterrorhandler() returns until an addon installs a handler. It records only when it is the first stop
+	-- for an error: a handler that forwards to it during a dispatch has already had the error recorded.
+	local function DefaultHandler(msg)
+		if dispatching then
+			return
+		end
+		sim.reportError(msg, debug.traceback("", 2), Taint.current)
+	end
 	function sim.reportError(message, traceback, taint)
 		message = tostring(Secret.unwrap(message))
 		if taint and message:find("attempt to compare %a+ with %a+") and message:find("userdata") then
@@ -244,7 +256,10 @@ function M.build(sim)
 		local entry = { message = message, traceback = traceback or "", taint = taint, time = sim.time }
 		table.insert(sim.errors, entry)
 		if handler then
+			local wasDispatching = dispatching
+			dispatching = true
 			pcall(handler, message)
+			dispatching = wasDispatching
 		end
 		if sim.verbose then
 			io.stderr:write("[sim error] ", message, "\n", traceback or "", "\n")
@@ -252,9 +267,7 @@ function M.build(sim)
 	end
 	Taint.onError = sim.reportError
 	G.geterrorhandler = function()
-		return handler or function(msg)
-			sim.reportError(msg, debug.traceback("", 2), Taint.current)
-		end
+		return handler or DefaultHandler
 	end
 	G.seterrorhandler = function(f)
 		handler = f
@@ -638,7 +651,19 @@ function M.build(sim)
 	end
 
 	-- CVars.
+	-- Numeric CVars client code reads through GetCVarNumberOrDefault even when tainted (an unset one reads nil
+	-- then, and tonumber(nil) errors). The gamepad interface transition reads these; the values are stand-ins.
+	local cvarDefaults = {
+		GamepadMapScrollSpeed = "1",
+		GamepadMapScrollSpeedFullScreen = "1",
+		GamepadMapZoomSpeed = "1",
+		GamepadMapEdgePanDistance = "40",
+		GamepadTargetingModifierVisualDelay = "0.5",
+	}
 	sim.cvars = {}
+	for name, value in pairs(cvarDefaults) do
+		sim.cvars[name] = value
+	end
 	-- Client code reads CVars the client always defines; an unset one reads "0" for it (recorded as a gap).
 	local function cvar(name)
 		local v = sim.cvars[name]
@@ -658,7 +683,7 @@ function M.build(sim)
 		return v == "1" or v == "true"
 	end
 	sim.impl["C_CVar.GetCVarDefault"] = function(name)
-		return sim.cvars[name]
+		return cvarDefaults[name] or sim.cvars[name]
 	end
 	sim.impl["C_CVar.RegisterCVar"] = function(name, value)
 		if sim.cvars[name] == nil then
@@ -719,6 +744,14 @@ function M.build(sim)
 	end
 	G.GetBindingAction = function()
 		return ""
+	end
+	-- The key-binding calls the settings pages make through legacy globals (the generated API does not
+	-- document them): no modifier click by default, and a binding with no keys bound to it.
+	G.GetModifiedClick = function()
+		return "NONE"
+	end
+	G.GetBinding = function()
+		return "MOVEFORWARD", "BINDING_HEADER_MOVEMENT"
 	end
 	G.GetCurrentBindingSet = function()
 		return 1

@@ -23,8 +23,6 @@ function FlightPin:OnLoad()
 	self:SetScalingLimits(1, 1, 1.2)
 	self.takesMouse = true
 	self.pressRegions = { self.Texture, self.HighlightTexture, self.SuperTrackMarker }
-	-- Closing the map hides the pin without an OnMouseLeave.
-	self:SetScript("OnHide", self.OnMouseLeave)
 end
 
 -- Whether this map is a zone or smaller: above one, clicks zoom in (SuperTrackablePinMixin:DoesMapTypeAllowSuperTrack).

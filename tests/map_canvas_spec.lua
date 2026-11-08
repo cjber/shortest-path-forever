@@ -139,6 +139,12 @@ for _, record in ipairs(made) do
 	end
 end
 check(#canvas.children == 1 and canvas.children[1] == view.host, "one frame of the addon's on the canvas")
+-- A show or hide script on a frame inside the map runs addon code inside UIParentPanelManager's own show or hide,
+-- and under the gamepad interface that taints the binding stack it clears there (#158). The view hears the close
+-- through the panel manager's callback instead, and clears the hovered pin itself.
+for _, script in ipairs({ "OnShow", "OnHide" }) do
+	check((view.host.scripts or {})[script] == nil, "the view's frame with an " .. script .. " script")
+end
 local pinCount = 0
 for _, pool in pairs(pools) do
 	for pin in pool:EnumerateActive() do
@@ -146,6 +152,9 @@ for _, pool in pairs(pools) do
 		check(pin.parent == view.layer, "a pin sits on the view's layer")
 		for _, script in ipairs({ "OnClick", "OnMouseDown", "OnMouseUp", "OnDoubleClick" }) do
 			check(pin.scripts[script] == nil, "a pin with a " .. script .. " script is a button to the gamepad")
+		end
+		for _, script in ipairs({ "OnShow", "OnHide" }) do
+			check((pin.scripts or {})[script] == nil, "a pin with an " .. script .. " script")
 		end
 		for _, key in ipairs({ "owningMap", "pinTemplate", "dataProvider" }) do
 			check(rawget(pin, key) == nil, "a pin carries the map's key " .. key)
@@ -446,6 +455,13 @@ assert(ShortestPathForever.API.NavigateRoute("Test", {
 settle()
 check(pools.ShortestPathForeverGoalPinTemplate:GetNumActive() == 2, "the stops' buttons")
 check(pools.ShortestPathForeverRoutePinTemplate:GetNumActive() == 1, "the line")
+-- The route's stroke layer is a frame under the pin, and so under the canvas: the same rule holds for it.
+local route = pools.ShortestPathForeverRoutePinTemplate.active[1]
+for _, frame in ipairs({ route, route.strokeLayer }) do
+	for _, script in ipairs({ "OnShow", "OnHide" }) do
+		check((frame.scripts or {})[script] == nil, "a route frame with an " .. script .. " script")
+	end
+end
 local stop = pools.ShortestPathForeverGoalPinTemplate.active[1]
 check(stop.passThrough and #stop.passThrough == 0, "a stop keeps its right click, to clear")
 for pin in pools.ShortestPathForeverGoalPinTemplate:EnumerateActive() do

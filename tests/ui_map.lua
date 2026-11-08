@@ -342,7 +342,26 @@ end
 -- Use Blizzard's acquisition and event paths so pin visibility tests also cover pooled frames.
 _G.SlashCommandUtil = { CheckAddSlashCommand = noop }
 _G.SLASH_COMMAND, _G.SLASH_COMMAND_CATEGORY = { MAPPIN = 1 }, { MAP = 1 }
-_G.EventRegistry = { RegisterCallback = noop, UnregisterCallback = noop }
+_G.EventRegistry = {
+	callbacks = {},
+	RegisterCallback = function(self, event, callback, owner)
+		self.callbacks[event] = self.callbacks[event] or {}
+		table.insert(self.callbacks[event], { callback = callback, owner = owner })
+	end,
+	UnregisterCallback = function(self, event, owner)
+		for index, entry in ipairs(self.callbacks[event] or {}) do
+			if entry.owner == owner then
+				table.remove(self.callbacks[event], index)
+				return
+			end
+		end
+	end,
+	TriggerEvent = function(self, event, ...)
+		for _, entry in ipairs(self.callbacks[event] or {}) do
+			entry.callback(entry.owner, ...)
+		end
+	end,
+}
 assert(loadfile(BLIZZARD_UI .. "Blizzard_SharedMapDataProviders/WaypointLocationDataProvider.lua"))()
 local waypointProvider = CreateFromMixins(WaypointLocationDataProviderMixin)
 do
@@ -399,17 +418,19 @@ local pools = setmetatable({}, {
 local function mapTick()
 	ns.MapCanvas.Update(WorldMapFrame)
 end
--- The world map opened or closed. Closing hides the canvas, and with it the view's frame (its OnHide); opening runs
--- the view's first frame, as the client would.
+-- The world map opened or closed. Closing hides the canvas, and with it the view's frame; the panel manager then
+-- tells its callbacks the panel is hidden, as the client's HideUIPanel does, and the addon's view hears the close
+-- there. Opening runs the view's first frame, as the client would.
 local function setMapShown(shown)
 	local was = visible
 	visible, WorldMapFrame.shown = shown, shown
 	if was and not shown then
 		for _, child in ipairs(canvas.children or {}) do
-			if child.scripts.OnHide then
+			if child.scripts and child.scripts.OnHide then
 				child.scripts.OnHide(child)
 			end
 		end
+		EventRegistry:TriggerEvent("UIParentPanelManager.HideUIPanel", WorldMapFrame)
 	elseif shown then
 		mapTick()
 	end
