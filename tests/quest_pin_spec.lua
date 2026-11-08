@@ -1,7 +1,8 @@
 -- Run from the repository root: luajit tests/quest_pin_spec.lua
--- The game's own quest pins on the world map (#472): while a journey stop marks a quest, that quest's pin is hidden
--- and the pins for quests no stop marks stay; clearing the journey and a quest data provider's refresh bring every
--- pin back or hide the marked ones again.
+-- The game's own quest pins on the world map (#472, #483, #484): while a journey stop marks a quest, its pin is
+-- hidden and the pins for quests no stop marks stay; clearing the journey, a quest data provider's own refresh and a
+-- provider the map gains later bring every pin back or hide the marked ones again; and a stop that only hands a quest
+-- in hides its pin too.
 local dir = arg[0]:match("^(.*)/") or "tests"
 
 local probe = "tools/.cache/blizzard-ui/Interface/AddOns/Blizzard_SharedXML/Spinner.lua"
@@ -22,9 +23,9 @@ for _, part in ipairs({ "ui_client.lua", "ui_map.lua" }) do
 	file:close()
 end
 
-assert(loadstring(source .. [==[
--- The quest data provider's own pins: the fixture's map enumerates whatever a test puts here, as the provider's
--- RefreshAllData acquires a fresh pin for every quest on the map.
+-- The quest data provider the client builds before this addon loads. Its mixin copies its functions into every
+-- provider, as Mixin does, so a hook on the mixin table never runs for the live provider (#483).
+local setup = [==[
 local function QuestPins(questIDs)
 	local pins = {}
 	for _, questID in ipairs(questIDs) do
@@ -43,13 +44,27 @@ local function QuestPins(questIDs)
 end
 
 local refreshes = 0
+-- Blizzard's quest data provider mixin, as its file writes it: the pin template it acquires and its refresh.
 QuestDataProviderMixin = {
+	GetPinTemplate = function()
+		return "QuestPinTemplate"
+	end,
 	RefreshAllData = function()
 		refreshes = refreshes + 1
 		return QuestPins({ 101, 202, 303 })
 	end,
 }
+local function NewProvider()
+	return Mixin({}, QuestDataProviderMixin)
+end
+local provider = NewProvider()
+WorldMapFrame.dataProviders[provider] = true
+]==]
+local fixture = source:gsub('fireEvent%("ADDON_LOADED", "ShortestPathForever"%)', function()
+	return setup .. '\nfireEvent("ADDON_LOADED", "ShortestPathForever")'
+end, 1)
 
+assert(loadstring(fixture .. [==[
 setMapShown(true)
 posX, posY, posMap, facing = 0, 0, 1, 0
 mapID, zoom = 1414, 0
@@ -75,12 +90,32 @@ pins = nativeActive.QuestPinTemplate
 assert(not pins[1].hidden, "the passed stop's pin is restored")
 assert(pins[2].hidden and not pins[3].hidden, "the stop still ahead keeps its pin hidden")
 
--- The quest data provider refreshes and acquires every pin again: the same rule applies to the new pins.
-QuestDataProviderMixin.RefreshAllData()
-assert(refreshes == 1, "the provider refresh ran")
+-- The provider refreshes on its own instance, as the client's live providers do: it re-acquires every pin, and the
+-- same rule applies to the new pins. A hook on the mixin table alone never runs here.
+provider:RefreshAllData()
+assert(refreshes == 1, "the provider's own refresh ran")
 pins = nativeActive.QuestPinTemplate
 assert(not pins[1].hidden, "an unmarked quest's refreshed pin shows")
 assert(pins[2].hidden and not pins[3].hidden, "the refreshed pin for the stop ahead is hidden again")
+
+-- A stop that hands quest 303 in marks it without naming an objective area: its "?" pin goes too.
+assert(ShortestPathForever.API.NavigateRoute("Test", {
+	{ map = 1414, x = 0.57, y = 0.5, title = "Hand-in", handins = { 303 } },
+}))
+settle()
+pins = nativeActive.QuestPinTemplate
+assert(not pins[1].hidden and not pins[2].hidden, "quests no stop marks keep their pins")
+assert(pins[3].hidden, "a quest handed in at the stop has its pin hidden")
+
+-- A quest provider the map gains after the addon loaded is hooked as it arrives, and its own refresh hides again.
+local later = NewProvider()
+testAddsProvider = true
+WorldMapFrame:AddDataProvider(later)
+testAddsProvider = false
+later:RefreshAllData()
+pins = nativeActive.QuestPinTemplate
+assert(not pins[1].hidden and not pins[2].hidden, "the late provider's unmarked pins show")
+assert(pins[3].hidden, "the late provider's pin for the hand-in is hidden again")
 
 -- The journey ends: every pin this module hid comes back.
 assert(ShortestPathForever.API.Cancel("Test"))
@@ -88,5 +123,5 @@ pins = nativeActive.QuestPinTemplate
 assert(not pins[1].hidden and not pins[2].hidden and not pins[3].hidden, "clearing the journey restores every pin")
 assert(ns.JourneyGoal() == nil, "the journey is gone")
 
-print("quest pin spec: marked pins hidden, unmarked shown, restored on clear and after provider refresh")
+print("quest pin spec: marked pins hidden, unmarked shown, restored on clear and after provider refreshes")
 ]==]))()
