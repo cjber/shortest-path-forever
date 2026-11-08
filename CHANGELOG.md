@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.22.54] - 2026-11-08
+
 - **A journey stop where you hand a quest in keeps the game's quest icon off it.** The game's own pin for a quest handed in at a stop now steps aside like the pins for a stop's objective areas, and every hidden pin stays hidden after the map refreshes its quest pins (#483, #484).
 - **Later stops fade as far as their lines.** With several stops, every stop past the one being guided to now dims to the same 40 percent as the line that leads to it, so the way ahead recedes as one. Hovering a later stop brings its icon and its own leg back to full strength, and they fade again when the pointer leaves (#475).
 - **The stop tooltip reads at a glance.** A stop's count now sits on a short title line of its own, what to do there is the first line under it in white, and the quest, chapter and next lines stay in the normal colour above a blank line and the right-click hint. A long Adventure Guide stop no longer wraps its title over three lines (#476).

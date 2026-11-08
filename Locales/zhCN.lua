@@ -65,7 +65,8 @@ L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] 
 L["E"] = "东"
 L["Either faction can ride any boat or zeppelin."] = "任何阵营都可以乘坐任何船只或飞艇。"
 L["Enter %s"] = "进入%s"
-L["Every clickable icon answers the pointer."] = "每个可点击的图标都会响应指针。" -- mt
+L["A journey stop where you hand a quest in keeps the game's quest icon off it."] =
+	"交任务的旅程站点不会显示游戏的任务图标。" -- mt
 L["Finding the fastest way…"] = "正在寻找最快路线…"
 L["Flight Masters"] = "飞行管理员"
 L["Flight master"] = "飞行管理员"
