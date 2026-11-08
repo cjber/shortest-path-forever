@@ -12,6 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Shortest Path's settings no longer write the client's bare `Text` name.** The shared Forever addons page and the minimap Journey button were built from Blizzard templates under unnamed frames, so their labels landed on bare globals such as `Text`, written on the way to every settings page, Combat Text included. Both are named now, so every name they write is this addon's. This removes one way Shortest Path could carry taint into the Combat Text compare error. Thanks to Speaker1264 for the report (cjber/shortest-path-forever#457).
+
+- **A tracked quest now gets its route from the journey key binding.** A quest shown in the objective tracker is watched, not necessarily super-tracked, so Travel to my tracked quest could answer "no quest is tracked" and the minimap stayed empty. The binding now falls back to the tracker's quest list, the right-click Plan journey entry also recognises a replacement tracker's block by its own menu owner, and a journey that cannot be planned says why. Thanks to TeeRKee for the report (cjber/shortest-path-forever#466).
+
 ## [1.22.52] - 2026-11-08
 
 - **RestedXP's arrow can stay while Shortest Path still follows the guide.** One checkbox used to do everything: plan journeys to RestedXP guide targets, follow them, and hide the guide's own arrow so ours was the only one. A new **Hide RestedXP's arrow** setting in Settings > Guidance owns the takeover alone. Turn it off and the guide's arrow, text and clicks stay as RestedXP drew them while journeys and routing are unchanged; it defaults to on, so existing profiles behave exactly as before (#464).

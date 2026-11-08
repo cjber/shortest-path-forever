@@ -335,6 +335,28 @@ destination = nil
 root.onClick()
 assert(destination and destination.questID == locatable, "the replacement tracker's quest is planned")
 
+-- A replacement tracker of its own (EQOT's frame) is not under ObjectiveTrackerFrame: the menu owner is the ancestry
+-- that identifies its block.
+local eqotFrame = {
+	GetParent = function()
+		return nil
+	end,
+}
+local eqotBlock = {
+	id = locatable,
+	GetParent = function()
+		return eqotFrame
+	end,
+}
+header = {}
+Focus(header, eqotBlock)
+root = QuestMenuRoot()
+questTrackerMenu(eqotFrame, root)
+assert(root.onClick, "a replacement tracker's own owner still gets the entry")
+destination = nil
+root.onClick()
+assert(destination and destination.questID == locatable, "the replacement owner's quest is planned")
+
 -- A block under some other frame is never taken for the right-clicked one.
 local otherFrame = {
 	GetParent = function()

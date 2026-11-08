@@ -22,7 +22,9 @@ end
 local optionsButton
 function ns.RefreshOptionsButton()
 	if ns.db.minimapButton and not optionsButton then
-		optionsButton = CreateFrame("Button", nil, Minimap, "SharedButtonSmallTemplate")
+		-- Named: a template button under an unnamed frame gives its `$parent` label a bare global name
+		-- (`MinimapText` here), which another addon or a Blizzard layout could read as its own (#457).
+		optionsButton = CreateFrame("Button", "ShortestPathForeverOptionsButton", Minimap, "SharedButtonSmallTemplate")
 		optionsButton:SetSize(70, 22)
 		optionsButton:SetPoint("TOP", Minimap, "BOTTOM", 0, -2)
 		optionsButton:SetText(L["Journey"])

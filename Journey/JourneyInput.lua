@@ -51,7 +51,8 @@ end
 
 local function PlanQuest(questID, clickedMap, isWaypoint)
 	if not ns.db.journey then
-		return
+		ns.Print(L["Journeys are off. Turn on Shift-click to plan journeys in settings."])
+		return false
 	end
 	-- Forever takes questID and ignoreWaypoint; Ketho's Wiki stub incorrectly has zero parameters.
 	---@diagnostic disable-next-line: redundant-parameter
@@ -80,10 +81,11 @@ local function PlanQuest(questID, clickedMap, isWaypoint)
 	if not point then
 		-- Questie.API exposes icons and update notifications, but no public coordinate lookup.
 		ns.Print(L["No location for that quest yet."])
-		return
+		return false
 	end
 	point.label, point.questID, point.pinBadge = location.label, questID, clickedMap ~= nil
 	ns.StartJourney(point)
+	return true
 end
 
 -- The World map between its continents and a continent's open sea still give a world position, on no zone: the
@@ -141,16 +143,35 @@ function ns.JourneyToUserWaypoint()
 	return ns.JourneyToMapPoint(waypoint.uiMapID, position.x, position.y)
 end
 
--- The quest the client is super-tracking, as the Shift-click on its tracker block would plan it.
+-- The quest the player is tracking. The client's super-tracked quest is the ordinary answer, but a quest shown in the
+-- objective tracker is merely watched: the native menu only offers "Super Track Quest" for it. Falling back to the
+-- watch list, in tracker order, is what makes the tracked-quest binding reach the block the player sees.
+---@return number?
+local function TrackedQuestID()
+	local questID = C_SuperTrack.GetSuperTrackedQuestID()
+	if questID and questID > 0 then
+		return questID
+	end
+	local count = C_QuestLog.GetNumQuestWatches and C_QuestLog.GetNumQuestWatches() or 0
+	for index = 1, count do
+		local getWatch = C_QuestLog.GetQuestIDForQuestWatchIndex
+		questID = getWatch and getWatch(index)
+		if questID and questID > 0 then
+			return questID
+		end
+	end
+end
+
+-- The quest the client is super-tracking, or the top tracked quest when none is, as the Shift-click on its tracker
+-- block would plan it.
 ---@return boolean
 function ns.JourneyToTrackedQuest()
-	local questID = C_SuperTrack.GetSuperTrackedQuestID()
-	if not questID or questID == 0 then
+	local questID = TrackedQuestID()
+	if not questID then
 		ns.Print(L["no quest is tracked."])
 		return false
 	end
-	PlanQuest(questID)
-	return true
+	return PlanQuest(questID)
 end
 
 local function OnCanvasClick(map, button)
@@ -278,16 +299,37 @@ local function UnderObjectiveTracker(block)
 	return false
 end
 
+---@param block Frame
+---@param ancestor Frame?
+---@return boolean
+local function Under(block, ancestor)
+	if not ancestor then
+		return false
+	end
+	for _ = 1, TRACKER_DEPTH do
+		if block == ancestor then
+			return true
+		end
+		block = block:GetParent()
+		if not block then
+			return false
+		end
+	end
+	return false
+end
+
 ---@param block SPFTrackerBlock
 ---@param owner Frame
 ---@return boolean
 local function BlockBelongsTo(block, owner)
 	local module = block.parentModule
 	local getContextMenuParent = module and module.GetContextMenuParent
-	if getContextMenuParent then
-		return getContextMenuParent(module) == owner
+	if getContextMenuParent and getContextMenuParent(module) == owner then
+		return true
 	end
-	return UnderObjectiveTracker(block)
+	-- A replacement tracker such as EQOT draws its blocks under a frame of its own, not ObjectiveTrackerFrame, so the
+	-- menu's owner is the only ancestry left to check before the native fallback.
+	return Under(block, owner) or UnderObjectiveTracker(block)
 end
 
 -- The right-clicked header's block, never a previous hover's: the header test keeps a stale focus from being used.

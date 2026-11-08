@@ -24,6 +24,7 @@ end
 assert(not bindings:find("<Binding[^>]*>%s*[^<%s]"), "the entries hold no Lua of their own")
 
 local destination, waypoint, quest, cleared = nil, nil, 0, 0
+local watches = {}
 local printed = {}
 local env
 local function vector(x, y)
@@ -140,6 +141,12 @@ env = setmetatable({
 		IsComplete = function()
 			return false
 		end,
+		GetNumQuestWatches = function()
+			return #watches
+		end,
+		GetQuestIDForQuestWatchIndex = function(index)
+			return watches[index]
+		end,
 	},
 }, { __index = _G })
 assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", ns)
@@ -173,6 +180,38 @@ assert(destination and destination.questID == 9 and destination.label == "Tracke
 quest, destination, printed = 0, nil, {}
 Press(env.ShortestPathForeverTravelToTrackedQuestButton)
 assert(destination == nil and printed[1] == "no quest is tracked.", "no tracked quest says so")
+
+-- A quest in the objective tracker is watched; it need not be super-tracked, and the binding must still reach it.
+destination, quest, watches, printed = nil, 0, { 15 }, {}
+Press(env.ShortestPathForeverTravelToTrackedQuestButton)
+assert(destination and destination.questID == 15, "a watched quest need not be super-tracked")
+-- The super-tracked quest still wins, then the tracker's first watched quest.
+destination, quest, watches = nil, 9, { 15 }
+Press(env.ShortestPathForeverTravelToTrackedQuestButton)
+assert(destination and destination.questID == 9, "the super-tracked quest is the tracked one")
+destination, quest, watches = nil, 0, { 15, 16 }
+Press(env.ShortestPathForeverTravelToTrackedQuestButton)
+assert(destination and destination.questID == 15, "with none super-tracked the tracker's first quest is used")
+destination, quest, watches, printed = nil, 0, {}, {}
+Press(env.ShortestPathForeverTravelToTrackedQuestButton)
+assert(destination == nil and printed[1] == "no quest is tracked.", "an empty watch list says so")
+-- A journey that cannot be planned says why, and journeys turned off say so too.
+watches, destination, printed = { 15 }, nil, {}
+local plan = ns.Planner.QuestDestination
+ns.Planner.QuestDestination = function()
+	return nil
+end
+Press(env.ShortestPathForeverTravelToTrackedQuestButton)
+assert(destination == nil and printed[1] == "No location for that quest yet.", "a quest with no location says so")
+ns.Planner.QuestDestination = plan
+ns.db.journey, destination, printed = false, nil, {}
+Press(env.ShortestPathForeverTravelToTrackedQuestButton)
+assert(
+	destination == nil and printed[1] == "Journeys are off. Turn on Shift-click to plan journeys in settings.",
+	"journeys turned off say so"
+)
+ns.db.journey = true
+watches = {}
 
 Press(env.ShortestPathForeverClearJourneyButton)
 assert(cleared == 1, "the third key clears the journey")
