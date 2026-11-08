@@ -121,7 +121,7 @@ function GameTooltip_AddColoredDoubleLine(tooltip, left, right, leftColor, right
 -- The world map, as the addon reads it (UI/MapCanvas.lua lists every read): it adds no provider and acquires no pin.
 ---@class SPFMapCanvas : Frame
 ---@field ScrollContainer Frame
----@field dataProviders table<SPFMapProvider, boolean>
+---@field dataProviders table<SPFMapProvider, boolean> -- read only, to find the waypoint provider (JourneyGuide.lua)
 ---@field GetMapID fun(self: SPFMapCanvas): number
 ---@field GetCanvas fun(self: SPFMapCanvas): Frame
 ---@field GetGlobalPinScale fun(self: SPFMapCanvas): number
@@ -132,7 +132,7 @@ function GameTooltip_AddColoredDoubleLine(tooltip, left, right, leftColor, right
 ---@field EnumeratePinsByTemplate fun(self: SPFMapCanvas, template: string): fun(): SPFMapPin
 ---@field AddCanvasClickHandler fun(self: SPFMapCanvas, handler: fun(map: SPFMapCanvas, button: string): boolean)
 ---@field AddGlobalPinMouseActionHandler fun(self: SPFMapCanvas, handler: fun(map: SPFMapCanvas, action: number, button: string): boolean)
----@field AddDataProvider fun(self: SPFMapCanvas, provider: SPFMapProvider) -- UI/QuestPins.lua only hooks it, to see providers added later
+---@field RegisterCallback fun(self: SPFMapCanvas, event: string, callback: function, owner: any) -- the map's own callback registry (SetFocusedQuestID)
 ---@type SPFMapCanvas
 WorldMapFrame = nil
 ---@type {MouseAction: {Click: number}}
@@ -149,13 +149,9 @@ POIButtonUtil = nil
 -- The map's own waypoint provider, whose pin JourneyGuide.lua hides under its own.
 ---@class SPFMapProvider
 ---@field RefreshAllData fun(self: SPFMapProvider, fromOnShow?: boolean)
----@field GetPinTemplate fun(self: SPFMapProvider, ...: any): string -- the pin template the provider acquires; the quest one is recognised by this function, never called
 ---@field pin? Frame
 ---@type SPFMapProvider
 WaypointLocationDataProviderMixin = nil
--- QuestDataProvider's mixin, whose RefreshAllData UI/QuestPins.lua hooks so a provider refresh keeps our stops covered.
----@type SPFMapProvider
-QuestDataProviderMixin = nil
 
 -- The game's in-world navigation marker (Blizzard_QuestNavigation/SuperTrackedFrame.lua), loaded on demand. JourneyGuide.lua
 -- paints the addon's own pin over its icon while the marker points at the waypoint the guide placed.
