@@ -1,7 +1,7 @@
 # About the app
 
 Shortest Path Forever is a World of Warcraft: Forever addon written in Lua 5.1. It cannot run outside
-the game client, and you must never start the game. What runs here is its headless test harness: each
+the game client, and this patrol never starts it (see the rules below). What runs here is its headless test harness: each
 `tests/<name>_spec.lua` stubs the client API, loads the addon files the TOC lists, and checks one
 feature. Run a spec with `luajit tests/<name>_spec.lua`; a failing spec exits non-zero and prints the
 failed assertion. `luacheck <file>` lints a file.
@@ -36,7 +36,7 @@ No sign-in.
 
 ## Never do these things
 
-- Never launch the game, Battle.net, Lutris or Wine.
+- Never start the game, Battle.net, Lutris or Wine. The headless client (forever-core's `wow-forever-addon/in-game.md`) tests the build linked into the game, not this checkout, so in-game checks belong to the agent that ships a change.
 - Never edit, move or delete files.
 - Never use the network.
 - Never treat a bench timing as a functional failure without saying so.
