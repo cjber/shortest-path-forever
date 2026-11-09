@@ -4,8 +4,10 @@ usage: gen_nav.py [<out.lua>] --map <id> [--name "<title>"] [--rows r0 r1 --cols
 
 Reads our own bake of the local client (TrinityCore mmtile layout <mm>/MMMM_RR_CC.mmtile, one Detour tile
 per ADT) from NAV_MM. The tile bounding box comes from the .mmtile files present (optionally cut to --rows/--cols).
-Every tile with walkable data becomes a cluster; poly components under MIN_COMPONENT polys (rooftops, treetops,
-props) are dropped over the whole map.
+Every tile with walkable data becomes a cluster. Poly components a player cannot reach are dropped over the whole
+map: those holding none of the map's fixed places (tools/baker/places.lua: flight masters, docks and lift ends, portal
+ends, teleport landings), such as the sealed terrain under Stormwind, and those under MIN_COMPONENT polys (rooftops,
+treetops, props).
 
 Streamed so a continent fits in memory: pass 1 finds the poly components over the whole map with a compact
 union-find; pass 2 rasterizes each tile from the 3x3 tiles around it (in parallel); pass 3 builds the HPA graph over
@@ -18,10 +20,12 @@ y grows west (world Y).
 
 import glob
 import heapq
+import json
 import math
 import multiprocessing
 import os
 import re
+import subprocess
 import sys
 import time
 from array import array
@@ -31,12 +35,14 @@ from textwrap import wrap
 from typing import cast
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from baker.geometry import height, plane, point_in_convex, poly_distance, seg_in_box  # noqa: E402
 from baker.inputs import arguments, source_label  # noqa: E402
 from baker.measure import record, tile_hashes  # noqa: E402
 from baker.tiles import load_tile  # noqa: E402
 from forever_tools.fsio import atomic_write  # noqa: E402
 
 MM = os.environ.get("NAV_MM", "mm")
+ROOT = Path(__file__).resolve().parents[2]
 T = 1600 / 3
 CELLS = 67
 CS = T / CELLS
@@ -101,26 +107,16 @@ def enc(v, width):
     return "".join(B64[(v >> (6 * (width - 1 - i))) & 63] for i in range(width))
 
 
-def plane(pts, c):
-    """(cx, cy, cz, gx, gy): height at (x, y) is cz + gx (x - cx) + gy (y - cy), from the Newell normal."""
-    nx = ny = nz = 0.0
-    for i in range(len(pts)):
-        (x1, y1, z1), (x2, y2, z2) = pts[i], pts[(i + 1) % len(pts)]
-        nx += (y1 - y2) * (z1 + z2)
-        ny += (z1 - z2) * (x1 + x2)
-        nz += (x1 - x2) * (y1 + y2)
-    if abs(nz) < 1e-9:
-        return (*c, 0.0, 0.0)
-    return (*c, -nx / nz, -ny / nz)
-
-
-def height(p, x, y):
-    cx, cy, cz, gx, gy = p["plane"]
-    return cz + gx * (x - cx) + gy * (y - cy)
-
-
 def cluster_of_tile(rr, cc):
     return ((31 - rr) - CX0) * NY + ((31 - cc) - CY0)
+
+
+def places(map_id):
+    """The map's fixed places with a height, as (x, y, z): players arrive there, so their ground is reached."""
+    run = subprocess.run(
+        ["luajit", "tools/baker/places.lua", str(map_id)], cwd=ROOT, check=True, capture_output=True, text=True
+    )
+    return [tuple(p) for p in json.loads(run.stdout)]
 
 
 def walkable(pts, flags, area, typ):
@@ -186,12 +182,22 @@ def gid(rc, i):
     return ORD[rc] << 16 | i
 
 
-def components():
-    """Pass 1: union-find over every walkable poly of the map; SIZE records each poly's component size."""
+def components(spots):
+    """Pass 1: union-find over every walkable poly of the map; SIZE records each poly's component size, or 0 for a
+    component no fixed place in spots stands on. A place stands on its nearest walkable poly in its own or a
+    neighbouring tile, whatever that poly's component."""
     global SIZE
     parent = array("i")
     border = defaultdict(list)
     dense = {}  # gid -> dense id, only while matching borders
+    near = defaultdict(list)  # tile -> the places in it or a neighbouring tile
+    for n, (x, y, _) in enumerate(spots):
+        rr, cc = int(32 - x / T), int(32 - y / T)
+        if (rr, cc) in TILES:
+            for dr in (-1, 0, 1):
+                for dc in (-1, 0, 1):
+                    near[(rr + dr, cc + dc)].append(n)
+    stand = [(math.inf, -1)] * len(spots)  # place -> (distance, dense id of the poly it stands on)
 
     def find(x):
         while parent[x] != x:
@@ -206,6 +212,16 @@ def components():
         parent.extend(range(base, base + len(polys)))
         for i, j, _, _ in links:
             parent[find(loc[i])] = find(loc[j])
+        for n in near.get(rc, ()):
+            for i, pts, _ in polys:
+                # the gap to the poly's bounding box never exceeds the distance to the poly
+                gap = max(
+                    max(min(p[a] for p in pts) - spots[n][a], spots[n][a] - max(p[a] for p in pts)) for a in (0, 1, 2)
+                )
+                if gap < stand[n][0]:
+                    d = poly_distance(spots[n], pts)
+                    if d < stand[n][0]:
+                        stand[n] = (d, loc[i])
         for key, i, lo, hi, z in edges:
             g = gid(rc, i)
             dense[g] = loc[i]
@@ -215,10 +231,13 @@ def components():
     size = defaultdict(int)
     for x in range(len(parent)):
         size[find(x)] += 1
-    SIZE = array("i", (size[find(x)] for x in range(len(parent))))
-    big = sorted((s for s in size.values() if s >= MIN_COMPONENT), reverse=True)
+    reached = {find(x) for _, x in stand if x >= 0}
+    if not reached:
+        sys.exit(f"no fixed place of map {MAP} stands on the selected tiles, so none of their ground is reachable")
+    SIZE = array("i", (size[r] if r in reached else 0 for r in map(find, range(len(parent)))))
+    big = sorted((size[r] for r in reached if size[r] >= MIN_COMPONENT), reverse=True)
     print(
-        f"tiles {len(TILES)}, polys {len(parent)}, components {len(size)}, kept {len(big)} "
+        f"tiles {len(TILES)}, polys {len(parent)}, components {len(size)}, reached {len(reached)}, kept {len(big)} "
         f"({sum(big)} polys): {big[:12]}{' ...' if len(big) > 12 else ''}",
         flush=True,
     )
@@ -252,42 +271,6 @@ def load_window(tiles):
         adj[b].add(a)
         portal[(a, b)] = portal[(b, a)] = ends
     return polys, adj, portal
-
-
-def point_in_convex(px, py, pts):
-    sign = 0
-    n = len(pts)
-    for i in range(n):
-        (x1, y1), (x2, y2) = pts[i], pts[(i + 1) % n]
-        c = (x2 - x1) * (py - y1) - (y2 - y1) * (px - x1)
-        if abs(c) < 1e-9:
-            continue
-        s = 1 if c > 0 else -1
-        if sign == 0:
-            sign = s
-        elif s != sign:
-            return False
-    return True
-
-
-def seg_in_box(a, b, box):
-    """Does segment a-b touch the axis-aligned box (x0, x1, y0, y1)? (Liang-Barsky clip.)"""
-    x0, x1, y0, y1 = box
-    t0, t1 = 0.0, 1.0
-    dx, dy = b[0] - a[0], b[1] - a[1]
-    for p, q in ((-dx, a[0] - x0), (dx, x1 - a[0]), (-dy, a[1] - y0), (dy, y1 - a[1])):
-        if p == 0:
-            if q < 0:
-                return False
-            continue
-        r = q / p
-        if p < 0:
-            t0 = max(t0, r)
-        else:
-            t1 = min(t1, r)
-        if t0 > t1:
-            return False
-    return True
 
 
 def rasterize_layers(polys, adj, portal, bounds):
@@ -915,7 +898,7 @@ def main():
     )
     inputs = tile_hashes(TILES.values()) if args.metrics else {}
     code = tile_hashes(Path(__file__).parent.glob("*.py")) if args.metrics else {}
-    components()
+    components(places(map_id))
     phases["components"] = time.perf_counter() - checkpoint
     checkpoint = time.perf_counter()
     grid, cuts = bytearray(GW * GH), set()
