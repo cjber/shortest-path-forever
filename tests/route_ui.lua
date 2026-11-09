@@ -64,6 +64,16 @@ assert(#rings[1].stopDetails[1] == 0 and rings[1].stopDetails[2][1] == "Quest de
  "shared stop keeps a later detail with its own stop when the lead has none")
 assert(rings[2].Texture.alpha == ns.LaterAlpha and rings[2].Disc.alpha == nil, "a later stop's marker dims")
 
+-- The line redraws every half second while you move; the button under the pointer stays, hovered, so its
+-- right-click to clear is heard. A rebuilt button lost its hover and press, and the click with them.
+local hoveredRing = rings[1]
+hoveredRing.scripts.OnEnter(hoveredRing)
+assert(hoveredRing.highlighted and GameTooltip.owner == hoveredRing, "the pointer is on the first stop")
+ns.RefreshJourneyPreview()
+assert(active[goalTemplate][1] == hoveredRing and hoveredRing.shown ~= false, "a redraw keeps the stop's button")
+assert(hoveredRing.highlighted and GameTooltip.owner == hoveredRing, "and its hover, tooltip and all")
+hoveredRing.scripts.OnLeave(hoveredRing)
+
 -- Each stroke is a pooled pair on the pin's pulsing layer: the core over a darker, wider, half-strength outline.
 local function painted(owner, label)
  local scale = owner:GetEffectiveScale()

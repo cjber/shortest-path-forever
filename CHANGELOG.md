@@ -29,6 +29,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 - **Long journeys to another continent appear again.** When a bind point's walks finished being searched after the route was already chosen, that late answer hit an error and the journey was never shown. A search that has finished now ignores answers that arrive after it (#516).
 - **The Forever addons page opens with a gamepad.** With the gamepad interface on, the Forever addons settings page can be entered from the Options list (cjber/tweaks-forever#382).
+- **Right-clicking a stop on the world map clears the journey on the first try.** While you moved with the map open, the route redrew every half second and every replan, and each redraw rebuilt the stops' buttons, so the one under the pointer lost its hover and a right-click landing then went unheard. The top half of the goal pin also never took a click. The buttons now stay put unless what they show changes, and a click counts anywhere the pin lights up.
 
 ## [1.23.2] - 2026-11-08
 

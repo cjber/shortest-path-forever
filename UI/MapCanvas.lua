@@ -698,11 +698,23 @@ function MapCanvas.Click(pin, button)
 	end
 end
 
+-- Whether the pointer is on the pin where it takes the mouse. IsMouseOver tests the frame's rect, not its hit rect: the
+-- goal pin's art and hit rect rise half a pin above its frame (StopPin.lua), so a click on the top half of the art
+-- was dropped. The client's own mouse focus follows the hit rect.
+---@param pin SPFCanvasPin
+---@return boolean
+local function UnderMouse(pin)
+	if pin.IsMouseMotionFocus then
+		return pin:IsMouseMotionFocus() == true
+	end
+	return pin:IsMouseOver()
+end
+
 clicks = CreateFrame("Frame")
 clicks:SetScript("OnEvent", function(_, event, button)
 	if event == "GLOBAL_MOUSE_DOWN" then
 		pressed, pressedButton = nil, button
-		if hovered and hovered:IsVisible() and hovered:IsMouseOver() then
+		if hovered and hovered:IsVisible() and UnderMouse(hovered) then
 			pressed = hovered
 			pressed:SetPressed(true)
 		end
@@ -713,7 +725,7 @@ clicks:SetScript("OnEvent", function(_, event, button)
 	if pin then
 		pin:SetPressed(false)
 	end
-	if pin and pin == hovered and button == pressedButton and pin:IsVisible() and pin:IsMouseOver() then
+	if pin and pin == hovered and button == pressedButton and pin:IsVisible() and UnderMouse(pin) then
 		ns.SafeCall("map pin click", MapCanvas.Click, pin, button)
 	end
 end)

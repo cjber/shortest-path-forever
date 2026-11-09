@@ -231,7 +231,8 @@ local function checkPinStates(pin, name, button)
 	local width, height, anchor = pin.width, pin.height, pin.anchor
 	local action = pin.OnMouseClickAction
 	pin.OnMouseClickAction = nil
-	function pin.IsMouseOver()
+	-- The pointer is on the pin's hit rect: the client's mouse focus, which the click reads.
+	function pin.IsMouseMotionFocus()
 		return true
 	end
 	check(highlight and highlight.hidden, name .. " rests unlit")
@@ -256,7 +257,7 @@ local function checkPinStates(pin, name, button)
 	check(texture.offsetX == 0 and texture.offsetY == 0, name .. " is released when the pointer leaves")
 	check(highlight.hidden, name .. " leaves the rest look")
 	fireEvent("GLOBAL_MOUSE_UP", button)
-	pin.IsMouseOver, pin.OnMouseClickAction = nil, action
+	pin.IsMouseMotionFocus, pin.OnMouseClickAction = nil, action
 end
 checkPinStates(dock, "a dock", "RightButton")
 local portalPins = pools.ShortestPathForeverPortalPinTemplate
@@ -271,7 +272,7 @@ local action = dock.OnMouseClickAction
 dock.OnMouseClickAction = function(_, button)
 	clicked = button
 end
-function dock.IsMouseOver()
+function dock.IsMouseMotionFocus()
 	return true
 end
 dock.scripts.OnEnter(dock)
@@ -297,7 +298,7 @@ dock.scripts.OnLeave(dock)
 fireEvent("GLOBAL_MOUSE_DOWN", "LeftButton")
 fireEvent("GLOBAL_MOUSE_UP", "LeftButton")
 check(clicked == nil, "a click over no pin of ours is the map's")
-dock.OnMouseClickAction, dock.IsMouseOver = action, nil
+dock.OnMouseClickAction, dock.IsMouseMotionFocus = action, nil
 noErrors("clicks")
 
 --[[ Shift-click on the addon's own pins plans a journey there ]]

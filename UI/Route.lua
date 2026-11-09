@@ -427,15 +427,22 @@ function Layer:RefreshAllData()
 		ns.QueueMapRefresh()
 		return
 	end
-	self:RemoveAllData()
 	local map = WorldMapFrame
 	-- Before the map's first show its zoom levels are unset.
 	if not (map:GetMapID() and map:IsVisible() and goal and (ns.db.journey or goal.corpse)) then
+		self:RemoveAllData()
 		return
 	end
+	-- The line is redrawn every half second while you move, and the route on every replan. The stops' buttons stay
+	-- unless what they show changed (RefreshStops): a button rebuilt under the pointer lost its hover and its press, so
+	-- a right-click to clear went unheard.
+	linePins:ReleaseAll()
+	areaPins:ReleaseAll()
 	-- The area replaces the stop and the line to it. Another zone the player browses keeps its own stops.
 	self.area = DrawArea(map)
 	if self.area then
+		goalPins:ReleaseAll()
+		self.stopsKey, self.stopMarks = nil, nil
 		ns.RefreshQuestPins()
 		return
 	end
@@ -446,6 +453,12 @@ function Layer:RefreshAllData()
 	end
 	-- Each drawn stop already marks its quest: the game's own pin for it steps aside (#472).
 	ns.RefreshQuestPins()
+	-- A button under the pointer shows its tooltip and lights its leg again, on the new line and with the time left now.
+	for pin in goalPins:EnumerateActive() do
+		if GameTooltip:IsOwned(pin) then
+			pin:OnMouseEnter()
+		end
+	end
 end
 
 -- Stops whose buttons would overlap at this zoom share one, as the map's docks do: at their middle, faded, or at the
@@ -456,6 +469,8 @@ function Layer:RefreshStops()
 	local mapID = map:GetMapID()
 	-- The game's own tombstone marks your corpse.
 	if not (mapID and map:IsVisible() and ns.db.journey and goal) or goal.corpse then
+		goalPins:ReleaseAll()
+		self.stopsKey, self.stopMarks = nil, nil
 		return
 	end
 	local first, marks = stopIndex or 1, {}
@@ -475,12 +490,23 @@ function Layer:RefreshStops()
 		end
 	end
 	-- Groups keep their marks in order, so the current stop leads its group. Whether Guide tracks the goal is part
-	-- of the key: tracking, pausing, yielding or turning Guide off turns the goal pin gold or bronze.
+	-- of the key: tracking, pausing, yielding or turning Guide off turns the goal pin gold or bronze. So is everything
+	-- a button shows, since a new route keeps the buttons when the key is the same.
 	local groups, keys =
-		ns.OverlapGroups(map, marks, STOP_SIZE), { mapID, ns.GoalPinActive() and "tracked" or "untracked" }
+		ns.OverlapGroups(map, marks, STOP_SIZE),
+		{ mapID, ns.GoalPinActive() and "tracked" or "untracked", first, stops and #stops or 0 }
 	for _, group in ipairs(groups) do
 		for _, mark in ipairs(group) do
-			keys[#keys + 1] = mark.index
+			keys[#keys + 1] = string.format(
+				"%d:%.6f:%.6f:%s:%s:%s:%s",
+				mark.index,
+				mark.x,
+				mark.y,
+				tostring(mark.label),
+				tostring(mark.detail),
+				tostring(mark.look),
+				tostring(mark.pinBadge)
+			)
 		end
 		keys[#keys + 1] = 0 -- between groups; stops count from 1
 	end
