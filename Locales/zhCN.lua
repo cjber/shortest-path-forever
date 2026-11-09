@@ -72,8 +72,7 @@ L["Drink"] = "饮水"
 L["E"] = "东"
 L["Either faction can ride any boat or zeppelin."] = "任何阵营都可以乘坐任何船只或飞艇。"
 L["Enter %s"] = "进入%s"
-L["Adventure Guide's quest focus no longer leaves two markers."] =
-	"Adventure Guide 的任务聚焦不再留下两个标记。" -- mt
+L["A journey only flies between flight points you know."] = "旅程只会在你已知的飞行点之间飞行。" -- mt
 L["Finding the fastest way…"] = "正在寻找最快路线…"
 L["Flight Masters"] = "飞行管理员"
 L["Flight master"] = "飞行管理员"

@@ -72,8 +72,7 @@ L["Drink"] = "Bebida"
 L["E"] = "L"
 L["Either faction can ride any boat or zeppelin."] = "Qualquer facção pode usar qualquer barco ou zepelim."
 L["Enter %s"] = "Entrar em %s"
-L["Adventure Guide's quest focus no longer leaves two markers."] =
-	"O foco de missão do Adventure Guide não deixa mais dois marcadores." -- mt
+L["A journey only flies between flight points you know."] = "Uma jornada só voa entre pontos de voo que você conhece." -- mt
 L["Finding the fastest way…"] = "Procurando o caminho mais rápido…"
 L["Flight Masters"] = "Mestres de voo"
 L["Flight master"] = "Mestre de voo"

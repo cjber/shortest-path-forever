@@ -74,8 +74,8 @@ L["E"] = "E" -- mt
 L["Either faction can ride any boat or zeppelin."] =
 	"Les deux factions peuvent prendre n'importe quel bateau ou zeppelin." -- mt
 L["Enter %s"] = "Entrer dans %s" -- mt
-L["Adventure Guide's quest focus no longer leaves two markers."] =
-	"Le suivi de quête d'Adventure Guide ne laisse plus deux marqueurs." -- mt
+L["A journey only flies between flight points you know."] =
+	"Un trajet ne vole plus qu'entre des points de vol que vous connaissez." -- mt
 L["Finding the fastest way…"] = "Recherche du chemin le plus rapide…" -- mt
 L["Flight Masters"] = "Maîtres de vol" -- mt
 L["Flight master"] = "Maître de vol" -- mt
