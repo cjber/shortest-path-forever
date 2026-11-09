@@ -130,6 +130,7 @@ function GameTooltip_AddColoredDoubleLine(tooltip, left, right, leftColor, right
 ---@field GetGlobalPinScale fun(self: SPFMapCanvas): number
 ---@field GetCanvasScale fun(self: SPFMapCanvas): number
 ---@field GetCanvasZoomPercent fun(self: SPFMapCanvas): number
+---@field GetViewRect fun(self: SPFMapCanvas): {left: number, right: number, top: number, bottom: number}
 ---@field GetNormalizedCursorPosition fun(self: SPFMapCanvas): number, number
 ---@field GetPinFrameLevelsManager fun(self: SPFMapCanvas): {GetValidFrameLevel: fun(self: table, levelType: string, index?: number): number}
 ---@field EnumeratePinsByTemplate fun(self: SPFMapCanvas, template: string): fun(): SPFMapPin

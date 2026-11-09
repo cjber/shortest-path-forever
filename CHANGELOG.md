@@ -12,6 +12,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Zooming the map with a journey on it is lighter.** The route redraws ten times a second while the map zooms and lays out only the dots near the view, so a long walk over OpenMap's stitched map no longer works through thousands of off-screen breadcrumbs (#529).
 
 ## [1.24.0] - 2026-11-09
 

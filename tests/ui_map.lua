@@ -72,9 +72,14 @@ end
 function canvas.GetEffectiveScale()
 	return uiScale * (0.5 + zoom * 1.5)
 end
+-- What of the map the view shows, in map fractions: the whole map until a check drags the view.
+local viewRect = { left = 0, right = 1, top = 0, bottom = 1 }
 local map = setmetatable({
 	GetMapID = function()
 		return mapID
+	end,
+	GetViewRect = function()
+		return viewRect
 	end,
 	IsVisible = function()
 		return visible

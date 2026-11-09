@@ -193,6 +193,16 @@ _G.OpenMapAPI = nil
 mapTick()
 check(view.stitched == false and view:Level("PIN_FRAME_LEVEL_DOCK", 1) < 9000, "and put back when it stops")
 
+--[[ A drag moves the view without resizing or zooming the canvas: the layers hear it and redraw around the new view ]]
+local moves = #heard
+viewRect.left, viewRect.right = 0.1, 0.3
+mapTick()
+check(heard[#heard] == "moved", "a drag tells the layers")
+mapTick()
+check(#heard == moves + 1, "and not again while the view stays put")
+viewRect.left, viewRect.right = 0, 1
+mapTick()
+
 --[[ Placing and scaling, as MapCanvasPinMixin ]]
 local function placed(pin)
 	local scale = Lerp(pin.startScale, pin.endScale, zoom) / (0.5 + zoom * 1.5) * 1.4
