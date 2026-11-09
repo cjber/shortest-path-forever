@@ -3,9 +3,9 @@ local ns = select(2, ...)
 
 -- The flight points this character knows, for the journey planner and the map's flight master pins. Only the
 -- classic flight-master list says which nodes a character can fly to: slots 1 to NumTaxiNodes(), each with
--- TaxiNodeGetType and TaxiNodeName, are the entries the stock TaxiFrame draws and only contain nodes the character
--- really has. The new node query reports every node on the continent as reachable here, so its presence is not a
--- source.
+-- TaxiNodeGetType and TaxiNodeName, are the entries the stock TaxiFrame draws. That list holds a slot for every
+-- point on the continent, not only the ones the character has: SlotKnown is the one rule for which slots count.
+-- The new node query reports every node on the continent as reachable here, so its presence is not a source.
 
 ---@type SPFLeg[]?
 local journeyLegs
@@ -102,6 +102,8 @@ end
 ---@param slot number
 ---@return Button?, number?, number?
 local function ButtonPosition(slot)
+	-- A DISTANT slot still exists and can be part of the route drawn through it: the stock frame only hides its
+	-- button until a route uses it. NONE means no node at all, not a point the character has not discovered.
 	if not slot or slot < 1 or slot > NumTaxiNodes() or TaxiNodeGetType(slot) == "NONE" then
 		return nil
 	end
@@ -218,11 +220,21 @@ local function Log(key, uiMap, nodes)
 	}
 end
 
--- At a flight master, only the classic list's entries are nodes the character really has. Walk slots 1 to
--- NumTaxiNodes() and learn those whose type is not "NONE", using the new query only to resolve the slot to its
--- nodeID. The list covers every flight point the character knows on that continent, so once it has listed a node,
--- forget the points already known on the same continent that it leaves out. Nodes on other continents stay, and a
--- scan that lists nothing changes nothing.
+-- A flight-master slot is a point the character has only when its type is CURRENT or REACHABLE: the stock
+-- TaxiFrame shows those buttons and hides DISTANT ones, which mean undiscovered on this client. Recorded on WoW
+-- Forever build 70862 at Stormwind's flight master: 5 known points were those types and all 13 others DISTANT.
+---@param slot number
+---@return boolean
+local function SlotKnown(slot)
+	local kind = TaxiNodeGetType(slot)
+	return kind == "CURRENT" or kind == "REACHABLE"
+end
+
+-- At a flight master, only the classic list's slots the character knows are nodes it really has. Walk slots 1
+-- to NumTaxiNodes(), learn those SlotKnown accepts, and use the new query only to resolve each slot to its
+-- nodeID. Every flight point the character has on that continent is one of those listed slots, so once the scan
+-- has learned them, forget the points already known on the same continent that it left out. Nodes on other
+-- continents stay, and a scan that lists nothing changes nothing.
 local function ScanFlightMaster()
 	local uiMap = GetTaxiMapID and GetTaxiMapID()
 	local nodes = uiMap and C_TaxiMap.GetAllTaxiNodes(uiMap) or {}
@@ -239,7 +251,7 @@ local function ScanFlightMaster()
 	local listed, continent, changed = {}, nil, false
 	for slot = 1, NumTaxiNodes() do
 		local node = bySlot[slot]
-		if node and TaxiNodeGetType(slot) ~= "NONE" then
+		if node and SlotKnown(slot) then
 			if not ns.charDB.taxi[node.nodeID] then
 				changed = true
 			end

@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Flight points you have not discovered are no longer marked as known.** Opening a flight master stored every point on its map, including ones your character has never visited, so routes could fly through them. Only the flight points you can actually use are kept now, and the next flight master you open clears the ones added before. Reported on CurseForge by user_ey1r2bwls2pf3sht32372 (#593).
+
 ## [1.24.6] - 2026-11-09
 
 - **Opening a flight master's map takes unknown flights off your journey at once.** The map already dropped flight points it did not list, but the journey kept its planned flight to one of them, so a route could still say "Fly to Booty Bay" with the flight map open and no Booty Bay on it. The journey now plans again the moment the list changes, without that flight. Reported on Discord by pachonaso (#588).
