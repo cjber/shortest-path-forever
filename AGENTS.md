@@ -149,7 +149,7 @@ before its `v*` tag, since the release publishes it as the notes.
 
 ## Secure UI regression checks
 
-`tools/typecheck.sh` checks the TOC/XML load graph, LuaLS coverage, `tools/lint_taint.py`, `tools/lint_secret.py` (secret values through `ns.Readable`, tooltip hooks behind `ns.Usable`), `tools/check_editorconfig.py` and `tools/check_family.py` (the shared family block between the `forever-family` markers in README.md and docs/curseforge.md).
+`tools/typecheck.sh` checks the TOC/XML load graph, LuaLS coverage, `tools/lint_secret.py` (secret values through `ns.Readable`, tooltip hooks behind `ns.Usable`), `tools/check_editorconfig.py` and `tools/check_family.py` (the shared family block between the `forever-family` markers in README.md and docs/curseforge.md).
 Never touch Blizzard's Lua state: WFA-38 in `wow-forever-addon` lists what addon code may do to Blizzard's
 frames, how to restyle one by drawing on top, and when a `taint-ok` exception holds.
 Keep addon tracker sections and pools in `UI/TrackerHost.lua`, outside Blizzard's registry.

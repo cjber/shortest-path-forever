@@ -15,7 +15,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 ## [1.24.8] - 2026-11-09
 
 - **Routing from the world map works with a controller.** Shift-clicking the world map to start a route and then closing the map with the controller could get a controller action blocked by the game. The route now waits until the map has closed before it sets your waypoint. Reported by joaocjesus (#581).
-- **Walks inside Stormwind keep to the streets more often.** The walking map kept the bare ground about 35 yards under the city as a floor, so a route could cut under the buildings instead of following the streets. Ground the game marks as lying under liquid is no longer walked on. That leaves hidden ground with no liquid above it, so some walks may still dip under the city. Reported on Discord by jixxor. (#602)
+
+- **Walks inside Stormwind follow its streets.** Routes could still cut under the city across ground about 35 yards below the streets that no one can reach. The walking map now keeps only ground connected to a flight master, dock, lift, portal or teleport, so that hidden ground is gone, along with other unreachable ground such as sealed mountain tops. Reported on Discord by jixxor. (#602)
 
 ## [1.24.7] - 2026-11-09
 

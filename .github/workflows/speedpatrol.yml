@@ -26,7 +26,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends --allow-downgrades \
             "luajit=$LUAJIT" "libluajit-5.1-2=$LUAJIT" "libluajit-5.1-common=$LUAJIT"
-      - uses: agent-labs-dev/speedpatrol@726e8f5a08743ba46ab211860547a4bff901a502 # v0
+      - uses: agent-labs-dev/speedpatrol@06264b336597ed9977b289a3a86c1a0ce4c3fe62 # v0
         with:
           benchmarks: planner.journey planner.hearth
           fail-on-regression: true

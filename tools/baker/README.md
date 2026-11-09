@@ -13,7 +13,7 @@ completeness and liquid hazards.
 WOW="$HOME/Games/battlenet/drive_c/Program Files (x86)/World of Warcraft" MAPS="0 1 2991" tools/baker/bake.sh
 ```
 
-Requires Linux, git, CMake, Ninja, a C++ compiler, Python 3.10+, and TrinityCore's development dependencies:
+Requires Linux, git, CMake, Ninja, a C++ compiler, Python 3.10+, LuaJIT, and TrinityCore's development dependencies:
 Boost, OpenSSL, zlib, bzip2 and readline. On Debian/Ubuntu install `build-essential cmake ninja-build git
 libboost-all-dev libssl-dev zlib1g-dev libbz2-dev libreadline-dev`. The tools build without the server,
 scripts, database or jemalloc. Python uses only the standard library.
@@ -82,8 +82,11 @@ A bake never regenerates the walking maps shipped in the repository.
 
 The Python generator builds HPA* graphs and 8-yard grids from Detour polygons. It keeps overlapping walkable
 floors, drops underwater floors, and stores directed costs for ordinary swimming and walking on water.
-Small disconnected components such as rooftops are removed over the supplied crop or map. A crop therefore
-has different global pruning from a continent; compare identical bounds when measuring.
+Ground a player cannot reach is removed over the supplied crop or map: every disconnected component that holds
+none of the map's fixed places with a height (flight masters, docks and lift ends, portal ends and teleport landings,
+read from `Data/` by `places.lua`), such as the sealed terrain under Stormwind, and small components such as
+rooftops. A crop holding no such place is refused, and a crop has different global pruning from a continent;
+compare identical bounds when measuring.
 
 The generator emits raw base64 cluster fields. `pack_nav.py --root <addon root> NavN.lua...` compresses them
 with zlib into blocks that expand to at most 16 KiB and bundles them under `Nav/`, each Lua file at most
