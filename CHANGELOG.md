@@ -13,6 +13,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 ## [Unreleased]
 
 - **A journey starts even when the client withholds the player's position.** Journey, the world map line, the minimap route and the arrow read the player's place from the client's own map position when `UnitPosition` hands addons secret values instead. A journey from Stormwind to Ironforge now plans and draws the walk from the Deeprun Tram to the quest givers, and the tracker lists its steps, instead of leaving no route and only Adventure Guide's own estimate line (#553).
+- **Flight points are learned only while a flight master's map is open.** Changing zones or reloading could mark every flight point on the continent as discovered, because Shortest Path also read the flight map's slots when a flight point's status changed with no flight master open. It now learns only while a flight master's map is open, still catching a point you discover there. Lists built the old way start again from empty and fill at the next flight master. Thanks to Exo_NA, user_ey1r2bwls2pf3sht32372 and legortiz on CurseForge for the reports (#555).
 
 ## [1.24.2] - 2026-11-09
 

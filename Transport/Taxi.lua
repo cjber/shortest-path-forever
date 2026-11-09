@@ -3,11 +3,13 @@ local ns = select(2, ...)
 
 -- The flight points this character knows, for the journey planner and the map's flight master pins. Only a
 -- flight master's own map says which nodes a character can fly to: a node counts only when its slot's type is not
--- "NONE", the stock TaxiFrame's own rule for drawing a node. The node's reported state is not a source: this
--- client answers reachable for nodes the character has never discovered.
+-- "NONE", the stock TaxiFrame's own rule for drawing a node, and only while that map is open, since away from a
+-- flight master the slot types describe no drawn map. The node's reported state is not a source: this client
+-- answers reachable for nodes the character has never discovered.
 
--- Lists built from the flight master's node states claimed undiscovered nodes, so start again from empty.
-local KNOWN_VERSION = 3
+-- Lists built by the status scan running with no flight master's map open held a whole continent, so start again
+-- from empty.
+local KNOWN_VERSION = 4
 
 ---@type SPFLeg[]?
 local journeyLegs
@@ -18,6 +20,9 @@ local lines = {}
 ---@type Button?
 local highlighted, hovered
 local ownsMap = false
+-- Set by the client's own TAXIMAP_OPENED and cleared by TAXIMAP_CLOSED (and the map hiding): the only window in
+-- which the flight master's slot types describe a drawn map, so the only window in which a scan may learn a node.
+local taxiMapOpen = false
 local hookedFrame
 local hookedButtons = {}
 
@@ -209,9 +214,10 @@ local function Log(key, uiMap, nodes)
 	}
 end
 
--- At a flight master, a node whose slot type the flight map shows (anything but "NONE", which the stock TaxiFrame
--- uses to decide whether to draw it) is one the character can see and fly to, so it is known and takes the name the
--- client gives it there, which is in the game's language. Absence never unlearns one.
+-- At a flight master, while the flight map is open, a node whose slot type the flight map shows (anything but
+-- "NONE", which the stock TaxiFrame uses to decide whether to draw it) is one the character can see and fly to, so
+-- it is known and takes the name the client gives it there, which is in the game's language. Absence never
+-- unlearns one.
 local function ScanFlightMaster()
 	local uiMap = GetTaxiMapID and GetTaxiMapID()
 	local nodes = uiMap and C_TaxiMap.GetAllTaxiNodes(uiMap) or {}
@@ -261,6 +267,7 @@ function ns.SetTaxiKnown(nodeID, known)
 end
 
 local function Closed()
+	taxiMapOpen = false
 	hovered, mapNodes = nil, {}
 	ClearRoute(false)
 end
@@ -313,13 +320,19 @@ ns.Init(function()
 	frame:SetScript("OnEvent", function(_, event)
 		if event == "TAXIMAP_CLOSED" then
 			Closed()
+			return
+		end
+		if event == "TAXIMAP_OPENED" then
+			taxiMapOpen = true
+		elseif not taxiMapOpen then
+			-- A status change away from a flight master (a zone change, a /reload) describes no drawn map.
+			return
+		end
+		HookTaxiFrame()
+		if TaxiFrame and TaxiFrame:IsShown() then
+			Shown()
 		else
-			HookTaxiFrame()
-			if TaxiFrame and TaxiFrame:IsShown() then
-				Shown()
-			else
-				ScanFlightMaster()
-			end
+			ScanFlightMaster()
 		end
 	end)
 	HookTaxiFrame()

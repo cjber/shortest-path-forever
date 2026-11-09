@@ -11,8 +11,10 @@ local mapNodes = {
 	-- The flight master reports this node reachable, but the client gives its slot type NONE, so it is not shown.
 	{ nodeID = 104, slotIndex = 5, state = reachable, name = "Ghostlands" },
 	{ nodeID = 105, slotIndex = 2, state = reachable, name = "Kharanos" },
+	-- Undiscovered at first: the flight map draws it only once the character learns it while the map is open.
+	{ nodeID = 106, slotIndex = 6, state = reachable, name = "Thelsamar" },
 }
-local nodeTypes = { "REACHABLE", "DISTANT", "CURRENT", "REACHABLE", "NONE" }
+local nodeTypes = { "REACHABLE", "DISTANT", "CURRENT", "REACHABLE", "NONE", "NONE" }
 -- The client's chosen route deliberately differs from the planner's intermediate hop.
 local routes = { [1] = { { 3, 2 }, { 2, 1 } }, [4] = { { 3, 4 } } }
 local textures, eventFrame = {}, nil
@@ -197,19 +199,20 @@ ns.TaxiNodes = {
 	[103] = { name = "Stormwind" },
 	[104] = { name = "Ghostlands" },
 	[105] = { name = "Kharanos" },
+	[106] = { name = "Thelsamar" },
 }
 ns.TaxiNodes[101].faction, ns.TaxiNodes[103].faction = "Alliance", "Horde"
 ns.SetJourneyRoute = function() end
 ns.JourneyChanged = function() end
--- A version 2 list was built from node states that claimed undiscovered nodes, so init starts it again from empty.
+-- A version 3 list was built by the status scan running with no flight master open, so init starts again from empty.
 env.ShortestPathForeverCharDB = {
 	taxi = { [101] = true },
 	taxiNames = { [101] = "Ironforge" },
-	taxiVersion = 2,
+	taxiVersion = 3,
 }
 ns.init()
-assert(next(env.ShortestPathForeverCharDB.taxi) == nil, "a version 2 list is emptied on init")
-assert(env.ShortestPathForeverCharDB.taxiVersion == 3, "the list is stamped with the new version")
+assert(next(env.ShortestPathForeverCharDB.taxi) == nil, "a version 3 list is emptied on init")
+assert(env.ShortestPathForeverCharDB.taxiVersion == 4, "the list is stamped with the new version")
 env.ShortestPathForeverCharDB.taxi = {}
 env.ShortestPathForeverCharDB.taxiNames = {}
 ns.charDB = env.ShortestPathForeverCharDB
@@ -241,6 +244,10 @@ end
 local target = env.TaxiButton1
 publish()
 assert(routeQueries == 0, "a closed map does no route work")
+-- A zone change or a login fires this with no flight master's map open. Its slot types describe no drawn map,
+-- so nothing may be learned from them even though most slots are not NONE.
+event("TAXI_NODE_STATUS_CHANGED")
+assert(next(ns.KnownTaxiNodes()) == nil, "a status change with no flight master open learns nothing")
 -- A flight point reads by its shipped name until a flight map has named it, in the game's language.
 ns.L = setmetatable({}, {
 	__index = function(_, phrase)
@@ -267,6 +274,12 @@ assert(
 )
 assert(not ns.KnownTaxiNodes()[104], "a node whose slot type is NONE is never learned")
 assert(not env.ShortestPathForeverCharDB.taxiNames[104], "an unlearned node keeps its name out of the list")
+assert(not ns.KnownTaxiNodes()[106], "an undiscovered node stays unknown while the map is open")
+-- The flight master reports a node discovered while its map is open: the scan learns it then.
+nodeTypes[6] = "REACHABLE"
+event("TAXI_NODE_STATUS_CHANGED")
+assert(ns.KnownTaxiNodes()[106], "a node discovered while the map is open is learned")
+assert(ns.TaxiName(106) == "Thelsamar", "a node discovered while the map is open keeps the client's name")
 assert(ns.TaxiName(105) == "Kharanos", "a learned node keeps the client's name")
 assert(textures[1].path == "Interface\\TaxiFrame\\UI-Taxi-Line")
 assert(table.concat(textures[1].points, ",") == "60,90,40,60", "first client hop uses displayed button anchors")
@@ -338,6 +351,10 @@ assert(visibleLines() == 2)
 
 event("TAXIMAP_CLOSED")
 assert(visibleLines() == 0 and not target.locked, "closed event clears before the frame hides")
+-- A zone change after leaving the flight master fires this too: its slot types describe no open map any more.
+env.ShortestPathForeverCharDB.taxi = {}
+event("TAXI_NODE_STATUS_CHANGED")
+assert(next(ns.KnownTaxiNodes()) == nil, "a status change after the flight master is left learns nothing")
 env.TaxiFrame:Hide()
 env.TaxiFrame:Show()
 event("TAXIMAP_OPENED")
