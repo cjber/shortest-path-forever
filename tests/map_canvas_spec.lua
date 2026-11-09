@@ -229,8 +229,7 @@ mapTick()
 dock = docks.active[1]
 
 --[[ Hover with the mouse, and the right button passed through ]]
-check(dock.passThrough == nil, "a dock leaves the protected pass-through call to the game")
-check(dock:ShouldMouseButtonBePassthrough("RightButton"), "and still reads the right button as passing through")
+check(dock.passThrough and dock.passThrough[1] == "RightButton", "a dock passes the right button to the canvas")
 dock.scripts.OnEnter(dock)
 check(GameTooltip.owner == dock and GameTooltip.shown, "hovering a dock shows its tooltip")
 dock.scripts.OnLeave(dock)
@@ -334,8 +333,7 @@ checkPinStates(flight, "a flight point", "RightButton")
 noErrors("flight point states")
 
 --[[ A flight point super-tracks on a zone map; above one, its click goes through to zoom in ]]
-check(flight.passThrough == nil, "a flight point leaves the protected pass-through call to the game")
-check(not flight:ShouldMouseButtonBePassthrough("LeftButton"), "on a zone it keeps both buttons")
+check(flight.passThrough and #flight.passThrough == 0, "on a zone a flight point keeps both buttons")
 clickPin(flight, "LeftButton")
 local kind, id = C_SuperTrack.GetSuperTrackedMapPin()
 check(kind == Enum.SuperTrackingMapPinType.TaxiNode and id == flight.poiInfo.nodeID, "a click super-tracks it")
@@ -351,8 +349,7 @@ local above = flights:Acquire({
 	faction = Enum.FlightPathFaction.Neutral,
 	atlasName = "taxinode_neutral",
 })
-check(above.passThrough == nil, "on a continent it still leaves the pass-through call to the game")
-check(above:ShouldMouseButtonBePassthrough("LeftButton"), "and reads its left click as going through to zoom in")
+check(above.passThrough[1] == "LeftButton" and #above.passThrough == 1, "on a continent its left click zooms in")
 clickPin(above, "LeftButton")
 check(C_SuperTrack.GetSuperTrackedMapPin() == nil, "no super-tracking from a continent")
 context = {}
@@ -477,8 +474,7 @@ for _, frame in ipairs({ route, route.strokeLayer }) do
 	end
 end
 local stop = pools.ShortestPathForeverGoalPinTemplate.active[1]
-check(stop.passThrough == nil, "a stop leaves the protected pass-through call to the game")
-check(not stop:ShouldMouseButtonBePassthrough("RightButton"), "and keeps its right click, to clear")
+check(stop.passThrough and #stop.passThrough == 0, "a stop keeps its right click, to clear")
 for pin in pools.ShortestPathForeverGoalPinTemplate:EnumerateActive() do
 	pin.scripts.OnEnter(pin)
 	pin.scripts.OnLeave(pin)

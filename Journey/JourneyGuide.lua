@@ -399,18 +399,6 @@ local function YieldGuide()
 	end
 end
 
--- The native waypoint is map state: setting it runs the map's waypoint provider and pin code, and under the gamepad
--- interface a map close reads that state while FrameControlsManager pops the map's focus. While that interface has
--- the map open, leave the write to the next guide call after it closes, so starting a route from a map click does not
--- taint the close (#581). Mouse and keyboard keep the immediate waypoint, since no controller focus pop reads it.
-local function MapOpenUnderGamepad()
-	return ns.GamepadUI
-		and ns.GamepadUI() == true
-		and WorldMapFrame ~= nil
-		and WorldMapFrame.IsShown ~= nil
-		and WorldMapFrame:IsShown()
-end
-
 local function GuideWaypoint(point, fading)
 	if not guide then
 		return false
@@ -418,11 +406,6 @@ local function GuideWaypoint(point, fading)
 	-- The bend callback can run before deferred notifications of a player's waypoint or tracking change.
 	if not OwnsWaypoint() then
 		RefreshTracker()
-		return false
-	end
-	if MapOpenUnderGamepad() then
-		-- Do not let Guide.To's same-target check keep the waypoint from being written after the map closes.
-		guide.target, guide.points = nil, nil
 		return false
 	end
 	if not guide.yielded and not SameTracking(guide) then

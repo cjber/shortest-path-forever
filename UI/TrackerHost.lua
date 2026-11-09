@@ -6,7 +6,6 @@ local _, ns = ...
 ---@field parentContainer? Frame
 ---@field Header? Frame
 ---@field headerMenu? boolean
----@field show? ForeverTrackerShowSetting the section's own show switch, when it has one
 ---@field GetContextMenuParent fun(self: ForeverTrackerModule): Frame
 ---@field SetContainer fun(self: ForeverTrackerModule, container: Frame)
 ---@field IsTruncated fun(self: ForeverTrackerModule): boolean
@@ -700,7 +699,6 @@ local function AddHeaderMenu(module)
 	local attach = rawget(L, "SETTING_ATTACH_TRACKER") or L["Attach to quest tracker"] or "Attach to quest tracker"
 	local lock = rawget(L, "SETTING_LOCK_TRACKER") or L["Lock the tracker"] or "Lock the tracker"
 	local background = rawget(L, "SETTING_TRACKER_BACKGROUND") or L["Tracker background"] or "Tracker background"
-	local hide = rawget(L, "SETTING_HIDE_SECTION") or L["Hide this section"] or "Hide this section"
 	header:EnableMouse(true)
 	header:HookScript("OnMouseUp", function(_, button)
 		if button ~= "RightButton" then
@@ -731,25 +729,6 @@ local function AddHeaderMenu(module)
 					api.SetBackdropOpacity(value)
 				end)
 			end
-			-- A section with its own show switch offers hiding itself here, and the entry's tooltip names where the
-			-- switch lives. Only the addon's own setting is written, so this is safe in combat like the switches above.
-			local show = module.show
-			if
-				type(show) == "table"
-				and type(show.get) == "function"
-				and type(show.set) == "function"
-				and type(show.where) == "string"
-			then
-				local entry = root:CreateButton(hide, function()
-					if show.get() then
-						show.set(false)
-					end
-				end)
-				entry:SetTooltip(function(tooltip)
-					tooltip:SetText(hide, 1, 1, 1)
-					tooltip:AddLine(show.where, nil, nil, nil, true)
-				end)
-			end
 			-- A section may add its own entries after the column's, without the host learning what the section is.
 			if type(module.AddHeaderMenuEntries) == "function" then
 				module:AddHeaderMenuEntries(root)
@@ -757,12 +736,8 @@ local function AddHeaderMenu(module)
 		end)
 	end)
 end
----@param show? ForeverTrackerShowSetting the section's own show switch, when it has one
-function api.Attach(module, show)
+function api.Attach(module)
 	---@cast module ForeverTrackerModule
-	if show ~= nil then
-		module.show = show
-	end
 	if module.parentContainer == host then
 		return
 	end
@@ -891,7 +866,7 @@ function api.Debug()
 	)
 end
 
-ForeverTrackerHost = api
+ForeverTrackerHost = api -- taint-ok: addon-owned companion tracker registry
 ns.TrackerHost = api
 
 EventUtil.ContinueAfterAllEvents(function()

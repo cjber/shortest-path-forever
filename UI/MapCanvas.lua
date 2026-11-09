@@ -31,10 +31,8 @@ local ns = select(2, ...)
 -- Pins are plain frames that take the mouse with OnEnter and OnLeave only: the gamepad interface reads a frame with a
 -- click script (OnClick, OnMouseDown, OnMouseUp) as a button of the window it scans. A click is the press and release
 -- of a button over the hovered pin, seen through GLOBAL_MOUSE_DOWN and GLOBAL_MOUSE_UP on a frame of the addon's. A
--- pin cannot set the client's pass-through buttons: the call is protected and refused from addon code even out of
--- combat (adventure-guide-forever#534), so the pin keeps its clicks; ShouldMouseButtonBePassthrough still names the
--- presses that are not the pin's own. Under the gamepad interface a pin within reach of the map cursor shows its
--- tooltip, as the map's own pins do; its
+-- pin passes the right button through to the canvas (zoom out) unless it says otherwise, as the map's own pins do.
+-- Under the gamepad interface a pin within reach of the map cursor shows its tooltip, as the map's own pins do; its
 -- clicks stay with the mouse.
 --
 -- A pin sets no OnHide script: closing the map would run it inside the panel's own hide, before the gamepad binding
@@ -604,9 +602,15 @@ function Pool:Acquire(...)
 	pin:ApplyFrameLevel()
 	pin:ApplyScale()
 	pin:ApplyPosition()
-	-- The client refuses SetPassThroughButtons from addon code even out of combat (adventure-guide-forever#534), so
-	-- the pin keeps the buttons. MapCanvas.Click still tells a passthrough click apart before it reaches the pin.
-
+	if pin.takesMouse and pin.SetPassThroughButtons then
+		local through = {}
+		for _, button in ipairs({ "LeftButton", "RightButton" }) do
+			if pin:ShouldMouseButtonBePassthrough(button) then
+				through[#through + 1] = button
+			end
+		end
+		pin:SetPassThroughButtons(unpack(through))
+	end
 	return pin
 end
 

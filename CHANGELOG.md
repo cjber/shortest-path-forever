@@ -12,7 +12,9 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
-- **A controller route no longer disturbs the map's close.** Shift-clicking empty space on the world map with the gamepad interface on now sets the journey's map pin after the map closes, so closing the map no longer risks the client blocking the controller's interact action. The game's own map and minimap tracking menus also stay the game's under the controller; mouse and keyboard keep Shortest Path's filters and Nearby services. Reported by joaocjesus (#581).
+## [1.24.7] - 2026-11-09
+
+- **Flight points you have not discovered are no longer marked as known.** Opening a flight master stored every point on its map, including ones your character has never visited, so routes could fly through them. Only the flight points you can actually use are kept now, and the next flight master you open clears the ones added before. Reported on CurseForge by user_ey1r2bwls2pf3sht32372 and on Discord by pachonaso (#593).
 
 ## [1.24.6] - 2026-11-09
 

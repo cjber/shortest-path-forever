@@ -61,26 +61,16 @@ Sim.CORE = {
 	"Blizzard_FrameXML/QuestSession.lua",
 	"Blizzard_FrameXML/QuestSession.xml",
 	"Blizzard_ActionBar/Shared/ActionButtonUtil.lua",
-	"Blizzard_ActionBar/Shared/ActionButton.lua",
-	"Blizzard_ActionBar/Shared/ActionButtonComponentTemplate.xml",
-	"Blizzard_ActionBar/Mainline/ActionButtonTemplate.xml",
-	-- The gamepad action bars are real: they are where UpdateInteractIcons makes its protected call. The action
-	-- bar templates above supply the buttons they inherit; the gamepad UI's own setup registers the target and
-	-- soft-interact callbacks and reacts to binding-set changes.
-	"Blizzard_GamepadSharedUtility",
-	"Blizzard_GamepadSmartNavigation",
-	"Blizzard_GamepadActionBars",
 	"Blizzard_ChatFrameBase/Shared/SlashCommands.lua",
 	-- The map, quest log and fog-of-war pieces of Blizzard_UIPanels_Game, in its TOC order, plus the quest frame
 	-- the quest log's OnHide closes the quest portrait through.
 	"Blizzard_UIPanels_Game:PlayerInteractionFrameManager|ScrollingFlatPanel|WarCampaignTemplates|WorldMap"
 		.. "|MapLegend|QuestMap|FogOfWar|UnitPosition|CastingBarFrame|ContainerFrame"
-		.. "|QuestFrameTemplates|QuestFrame|QuestInfo|CharacterFrame|MerchantFrame|SkillsFrame",
+		.. "|QuestFrameTemplates|QuestFrame|QuestInfo",
 	-- Loaded at startup by the client, and what most Forever addons draw on.
 	"Blizzard_WorldMap",
 	"Blizzard_ObjectiveTracker",
 	"Blizzard_ContentTracking",
-	"Blizzard_TrainerUI",
 }
 
 local docsCache = {}
@@ -110,7 +100,10 @@ function Sim.new(opts)
 		sim.gaps[k] = true
 		return leValue
 	end
-	Taint.reset()
+	Taint.current = nil
+	Taint.globalTaint = {}
+	Taint.addonFolders = {}
+	Taint.listeners = { taint = {}, untaint = {} }
 	sim.secret = Secret
 	Secret.taintedBy = function()
 		return Taint.current
@@ -136,7 +129,7 @@ function Sim.new(opts)
 	-- Addon functions report themselves (instrument.lua); FOREVER_SIM_HOOK=1 also watches every call, slowly.
 	local mark = function(addon)
 		if Taint.current ~= addon then
-			Taint.set(addon, addon and { addon = addon, kind = "execution" } or nil)
+			Taint.set(addon)
 		end
 	end
 	rawset(sim.env, "__fst", mark)
@@ -153,14 +146,10 @@ function Sim.new(opts)
 	sim.G.loadstring = function(code, name)
 		local addon = Taint.current
 		local chunk, err
-		if type(code) == "string" and code:sub(1, 1) ~= "\27" then
-			if addon then
-				local wrapper
-				wrapper, err = rawLoadstring(bind .. Instrument.rewrite(code, addon) .. "\nend", name or code)
-				chunk = wrapper and wrapper(mark)
-			else
-				chunk, err = rawLoadstring(Instrument.rewrite(code, nil), name or code)
-			end
+		if addon and type(code) == "string" then
+			local wrapper
+			wrapper, err = rawLoadstring(bind .. Instrument.rewrite(code, addon) .. "\nend", name or code)
+			chunk = wrapper and wrapper(mark)
 		else
 			chunk, err = rawLoadstring(code, name)
 		end
@@ -217,31 +206,10 @@ function Sim:takeErrors()
 	return errors
 end
 
--- One entry per distinct taint cause (field, writer line, origin line), with the number of occurrences; every
--- other error keeps its own entry.
 local function describe(errors)
-	local out, groups, order = {}, {}, {}
+	local out = {}
 	for _, e in ipairs(errors) do
-		local key = Taint.causeKey(e.origin)
-		if key then
-			local group = groups[key]
-			if not group then
-				group = { entry = e, count = 0 }
-				groups[key] = group
-				order[#order + 1] = group
-			end
-			group.count = group.count + 1
-		else
-			order[#order + 1] = { entry = e, count = 0 }
-		end
-	end
-	for _, group in ipairs(order) do
-		local e = group.entry
-		local text = e.message .. (e.traceback ~= "" and ("\n" .. e.traceback) or "")
-		if group.count > 0 then
-			text = string.format("%dx %s", group.count, text)
-		end
-		out[#out + 1] = text
+		out[#out + 1] = e.message .. (e.traceback ~= "" and ("\n" .. e.traceback) or "")
 	end
 	return table.concat(out, "\n\n")
 end

@@ -29,6 +29,7 @@ python3 tools/forever_tools/sync.py check
 python3 tools/typecheck_coverage.py
 python3 -m unittest discover -s tests -p 'test_typecheck.py'
 python3 -m unittest discover -s tools -p '*_test.py'
+python3 -m tools.lint_taint
 python3 tools/lint_multivalue.py
 python3 tools/lint_art.py
 python3 tools/lint_secret.py
