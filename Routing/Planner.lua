@@ -727,11 +727,19 @@ local function Plan(options)
 					break
 				end
 				local flying, walked = state > count and state <= count * 2, state > count * 2
-				-- Unknown nodes may be learned on foot, but a flight can neither land at one nor fly on through it:
-				-- the client routes connecting flights only through flight points the character knows.
+				-- A flight may only leave, land at or connect through flight points the character knows: walking to
+				-- an unknown flight master does not learn it, and the client routes connecting flights only through
+				-- known points. Walking may still reach an unknown flight point, ready to be learned in person.
 				local canLeaveNode = assumeKnown or not flying or not nodes[node].undiscovered
 				for _, edge in ipairs(edges[node]) do
 					local canLeave = canLeaveNode
+					if
+						edge.mode == "flight"
+						and not assumeKnown
+						and (nodes[node].undiscovered or nodes[edge.to].undiscovered)
+					then
+						canLeave = false
+					end
 					if withoutHearth and edge.teleport and edge.teleport.item == 6948 then
 						canLeave = false
 					end
