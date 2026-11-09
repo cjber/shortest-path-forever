@@ -66,7 +66,8 @@ L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] 
 L["E"] = "东"
 L["Either faction can ride any boat or zeppelin."] = "任何阵营都可以乘坐任何船只或飞艇。"
 L["Enter %s"] = "进入%s"
-L["Long journeys to another continent appear again."] = "前往其他大陆的长途旅程重新显示了。" -- mt
+L["Adventure Guide's quest focus no longer leaves two markers."] =
+	"Adventure Guide 的任务聚焦不再留下两个标记。" -- mt
 L["Finding the fastest way…"] = "正在寻找最快路线…"
 L["Flight Masters"] = "飞行管理员"
 L["Flight master"] = "飞行管理员"
