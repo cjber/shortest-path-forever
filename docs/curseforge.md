@@ -2,6 +2,8 @@ Shift-click the world map or minimap, or choose a quest, to plan a journey. Shor
 
 Free, with nothing locked behind it. If it saves you time, you can [buy me a coffee on Ko-fi](https://ko-fi.com/cjber).
 
+[![Support me on Ko-fi](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/kofi-button.png)](https://ko-fi.com/cjber)
+
 ![A route settling, the departure countdown and compass](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/demo.gif)
 
 The route settles, the next boat counts down and the compass turns with you.

@@ -6,7 +6,7 @@
 Plan journeys in WoW: Forever, on foot, by air, by sea and through portals.<br>
 <a href="https://github.com/cjber/shortest-path-forever/actions/workflows/ci.yml"><img src="https://github.com/cjber/shortest-path-forever/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 <a href="https://github.com/cjber/shortest-path-forever/releases/latest"><img src="https://img.shields.io/github/v/release/cjber/shortest-path-forever" alt="Latest release"></a>
-<a href="https://ko-fi.com/cjber"><img src="https://img.shields.io/badge/Ko--fi-tip-ff5e5b?logo=ko-fi&logoColor=white" alt="Ko-fi"></a>
+<br><br><a href="https://ko-fi.com/cjber"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Support me on Ko-fi"></a>
 </p>
 
 Shift-click the world map or minimap, or choose a quest, to plan a journey. Shortest Path Forever gives directions in the objective tracker and on both maps.
