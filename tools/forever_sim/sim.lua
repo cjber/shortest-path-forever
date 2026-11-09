@@ -33,10 +33,12 @@ Sim.CORE = {
 	"Blizzard_SharedXMLGame",
 	"Blizzard_FrameXMLBase",
 	"Blizzard_UIParent",
+	"Blizzard_UIErrorsFrame",
 	"Blizzard_StaticPopup",
 	"Blizzard_UIPanelTemplates",
 	"Blizzard_UIParentPanelManager",
 	"Blizzard_GameTooltip",
+	"Blizzard_SplashFrame",
 	"Blizzard_ItemButton",
 	"Blizzard_FrameXMLUtil",
 	"Blizzard_Flyout",
@@ -44,18 +46,31 @@ Sim.CORE = {
 	"Blizzard_ObjectAPI",
 	"Blizzard_Settings_Shared",
 	"Blizzard_GamepadSoftCursor",
-	-- Single files from addons too large to boot whole: the templates other UI inherits from them.
+	-- Single files from addons too large to boot whole: the templates other UI inherits from them (the secure
+	-- templates and the deprecated settings templates), and the alert frames the client loads at startup
+	-- (AlertFrame is a global addons anchor to).
 	"Blizzard_FrameXML/SecureTemplatesBase.xml",
+	"Blizzard_FrameXML/SecureTemplates.lua",
+	"Blizzard_FrameXML/SecureTemplates.xml",
+	"Blizzard_FrameXML/DeprecatedTemplates.xml",
+	"Blizzard_FrameXML/Mainline/AlertFrames.lua",
+	"Blizzard_FrameXML/Mainline/AlertFrames.xml",
 	"Blizzard_FrameXML/Mainline/NavigationBar.lua",
 	"Blizzard_FrameXML/Mainline/NavigationBar.xml",
+	-- The quest session dialog the quest log updates when it is shown, loaded by the client at startup.
+	"Blizzard_FrameXML/QuestSession.lua",
+	"Blizzard_FrameXML/QuestSession.xml",
 	"Blizzard_ActionBar/Shared/ActionButtonUtil.lua",
 	"Blizzard_ChatFrameBase/Shared/SlashCommands.lua",
-	-- The map, quest log and fog-of-war pieces of Blizzard_UIPanels_Game, in its TOC order.
+	-- The map, quest log and fog-of-war pieces of Blizzard_UIPanels_Game, in its TOC order, plus the quest frame
+	-- the quest log's OnHide closes the quest portrait through.
 	"Blizzard_UIPanels_Game:PlayerInteractionFrameManager|ScrollingFlatPanel|WarCampaignTemplates|WorldMap"
-		.. "|MapLegend|QuestMap|FogOfWar|UnitPosition|CastingBarFrame|ContainerFrame",
+		.. "|MapLegend|QuestMap|FogOfWar|UnitPosition|CastingBarFrame|ContainerFrame"
+		.. "|QuestFrameTemplates|QuestFrame|QuestInfo",
 	-- Loaded at startup by the client, and what most Forever addons draw on.
 	"Blizzard_WorldMap",
 	"Blizzard_ObjectiveTracker",
+	"Blizzard_ContentTracking",
 }
 
 local docsCache = {}
@@ -63,6 +78,9 @@ local docsCache = {}
 function Sim.new(opts)
 	opts = opts or {}
 	local sim = setmetatable({}, Sim)
+	-- Kept so Sim:reload builds the same client; registered holds the addons and stubs in registration order.
+	sim.opts = opts
+	sim.registered = {}
 	sim.cache = opts.cache or os.getenv("FOREVER_SIM_CACHE") or "tools/.cache/forever_sim"
 	sim.ui = opts.ui or (sim.cache .. "/wow-ui-source")
 	sim.build = "1.60.1.70425"
@@ -155,7 +173,9 @@ end
 
 -- Registers an addon under test (a folder holding its TOC). `name` defaults to the TOC's name.
 function Sim:addon(dir, name)
-	return self.loader.addon(dir, name)
+	local entry = self.loader.addon(dir, name)
+	self.registered[#self.registered + 1] = { kind = "addon", dir = dir, name = entry.name }
+	return entry
 end
 
 -- Adds a third-party stand-in from stubs/ (Questie, TomTom, Auctionator, Polestar), with its options; it loads
@@ -164,6 +184,7 @@ function Sim:stub(name, options)
 	self.G.FOREVER_SIM_STUBS = self.G.FOREVER_SIM_STUBS or {}
 	self.G.FOREVER_SIM_STUBS[name] = options or {}
 	self.taint.globalTaint.FOREVER_SIM_STUBS = nil
+	self.registered[#self.registered + 1] = { kind = "stub", name = name, options = options or {} }
 	return self.loader.addon(Sim.dir .. "stubs/" .. name, name)
 end
 
