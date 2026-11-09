@@ -65,6 +65,11 @@ local env = setmetatable({
 	GetRealmName = function()
 		return "Test"
 	end,
+	RED_FONT_COLOR = {
+		WrapTextInColorCode = function(_, text)
+			return "|cffff2020" .. text .. "|r"
+		end,
+	},
 	-- ns.serverTime: the server clock sightings age by.
 	GetServerTime = function()
 		return ns.serverTime or 0

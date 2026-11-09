@@ -224,7 +224,10 @@ function GoalPin:OnMouseEnter()
 		local trip = plan and #plan.legs - (index or 1) + 1 or #rows
 		if trip > 1 then
 			for _, row in ipairs(rows) do
-				local color = row.current and HIGHLIGHT_FONT_COLOR or row.grey and GRAY_FONT_COLOR or NORMAL_FONT_COLOR
+				local color = row.warning and RED_FONT_COLOR
+					or row.current and HIGHLIGHT_FONT_COLOR
+					or row.grey and GRAY_FONT_COLOR
+					or NORMAL_FONT_COLOR
 				GameTooltip_AddColoredLine(GameTooltip, row.text, color)
 			end
 		end

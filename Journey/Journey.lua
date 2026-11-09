@@ -93,6 +93,84 @@ function ns.NewFlightPathReminderRow(plan, current)
 	return nil
 end
 
+local CONTINENTS = {
+	{ map = 0, uiMap = 1415, name = L["Eastern Kingdoms"] },
+	{ map = 1, uiMap = 1414, name = L["Kalimdor"] },
+}
+local continentsNamed = false
+local NONE = {}
+
+local function Continents()
+	if not continentsNamed then
+		continentsNamed = true
+		for _, continent in ipairs(CONTINENTS) do
+			local info = C_Map.GetMapInfo(continent.uiMap)
+			if info and info.name and info.name ~= "" then
+				continent.name = info.name
+			end
+		end
+	end
+	return CONTINENTS
+end
+
+local function KnownCounts()
+	local counts = {}
+	for nodeID in pairs(ns.KnownTaxiNodes()) do
+		local node = ns.TaxiNodes[nodeID]
+		if node then
+			counts[node.map] = (counts[node.map] or 0) + 1
+		end
+	end
+	return counts
+end
+
+---@return {map: number, name: string, known: integer}[]
+function ns.KnownFlightPointsByContinent()
+	local counts, continents = KnownCounts(), {}
+	for _, continent in ipairs(Continents()) do
+		continents[#continents + 1] = { map = continent.map, name = continent.name, known = counts[continent.map] or 0 }
+	end
+	return continents
+end
+
+---@param plan SPFPlan
+---@return {map: number, name: string}[]
+local function UnsyncedContinents(plan)
+	local maps = plan.unknownFlightMaps
+	if not maps then
+		return NONE
+	end
+	local counts, unsynced = KnownCounts(), NONE
+	for _, continent in ipairs(Continents()) do
+		if maps[continent.map] and not counts[continent.map] then
+			unsynced = unsynced == NONE and {} or unsynced
+			unsynced[#unsynced + 1] = continent
+		end
+	end
+	return unsynced
+end
+
+---@param plan SPFPlan
+---@return SPFRow[]
+function ns.UnsyncedFlightPointRows(plan)
+	local unsynced = UnsyncedContinents(plan)
+	if unsynced == NONE then
+		return NONE
+	end
+	local rows = {}
+	for _, continent in ipairs(unsynced) do
+		rows[#rows + 1] = {
+			key = "no-flight-points-" .. continent.map,
+			text = string.format(
+				L["No flight points learned in %s: open a flight master's map once to sync them."],
+				continent.name
+			),
+			warning = true,
+		}
+	end
+	return rows
+end
+
 -- Where the journey goes, also while it waits behind a corpse run; nil with no journey.
 ---@return SPFPoint?
 function ns.JourneyGoal()
@@ -402,9 +480,13 @@ function ns.JourneyInfo(formatPlace)
 		rows[1] = { key = "searching", text = L["Finding the fastest way…"], grey = true }
 	elseif result then
 		local _, spell = WaterWalking()
+		local unsynced = ns.UnsyncedFlightPointRows(result)
 		local reminder = ns.NewFlightPathReminderRow(result, progress.index)
-		if reminder then
+		if reminder and not (unsynced[1] and reminder.key == "unknown-flight-path") then
 			rows[#rows + 1] = reminder
+		end
+		for _, row in ipairs(unsynced) do
+			rows[#rows + 1] = row
 		end
 		for index = progress.index, #result.legs do
 			local leg = result.legs[index]
@@ -526,6 +608,30 @@ end
 
 local SamePlace = Search.SamePlace
 
+local announcedGoal, announced = nil, {}
+
+local function AnnounceUnsyncedFlightPoints()
+	if not (result and result.unknownFlightMaps and goal and ns.db.flightPathReminder) then
+		return
+	end
+	if announcedGoal ~= goal then
+		announcedGoal, announced = goal, {}
+	end
+	for _, continent in ipairs(UnsyncedContinents(result)) do
+		if not announced[continent.map] then
+			announced[continent.map] = true
+			ns.Print(
+				RED_FONT_COLOR:WrapTextInColorCode(
+					string.format(
+						L["A flight would be quicker. Open a flight master's map in %s once to sync your flight points."],
+						continent.name
+					)
+				)
+			)
+		end
+	end
+end
+
 -- Everything the search changes about what to follow arrives here, possibly while it is being started or stepped.
 ---@param route SPFPlan?
 ---@param news SPFSearchNews
@@ -544,6 +650,7 @@ local function Follow(route, news)
 		Guide.Retarget()
 	end
 	UpdateProgress()
+	AnnounceUnsyncedFlightPoints()
 	if news == "times" then
 		return RefreshTracker()
 	end

@@ -99,6 +99,9 @@ local function font()
 	function f:GetHeight()
 		return 12
 	end
+	function f:CreateAnimationGroup()
+		return animationGroup(self)
+	end
 	return setmetatable(f, mt)
 end
 local fontmt = {
@@ -408,6 +411,10 @@ _G.CreateFrame = function(_, name, parent, template)
 						SetScript = function(self, name, callback)
 							self[name] = callback
 						end,
+						HookScript = function(self, name, callback)
+							self.hooks = self.hooks or {}
+							self.hooks[name] = callback
+						end,
 						Text = font(),
 						Dash = font(),
 						template = template,
@@ -569,6 +576,7 @@ _G.NORMAL_FONT_COLOR = color(1, 0.82, 0)
 _G.ORANGE_FONT_COLOR = color(1, 0.5, 0)
 _G.AM_PIN_SCALE_STYLE_WITH_TERRAIN = 3
 _G.GRAY_FONT_COLOR = _G.NORMAL_FONT_COLOR
+_G.RED_FONT_COLOR = color(1, 0.125, 0.125)
 _G.HIGHLIGHT_FONT_COLOR = color(1, 1, 1)
 _G.ChatTypeInfo = { RAID_WARNING = {} }
 _G.RaidWarningUtil = { AddMessage = noop }

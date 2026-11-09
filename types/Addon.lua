@@ -186,6 +186,7 @@
 ---@field action? string -- the step's words without its number or mark (the tracker's line, place already wrapped)
 ---@field time? string -- the step's time, greyed after it
 ---@field icon? number -- a teleport's own item or spell icon, leading its line
+---@field warning? boolean
 
 ---@class SPFDatabase : ForeverFamilyDB
 ---@field errors? ForeverCaughtError[] the shared error journal (Core/SafeCall.lua): earlier sessions' errors, for the report
@@ -363,6 +364,7 @@ ShortestPathForeverPathData = nil
 ---@field hazards? string -- the key of the hazards its walks were searched with (Hazards.lua)
 ---@field preferred? boolean a ride the planner chose over a slightly quicker long walk
 ---@field unknownFlight? boolean the route walks only because a flight point it would use is undiscovered
+---@field unknownFlightMaps? table<number, true> the continents whose undiscovered flight points would shorten the route
 ---@class SPFWalkCost
 ---@field from SPFPoint
 ---@field to SPFPoint

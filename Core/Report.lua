@@ -102,6 +102,11 @@ function ns.ReportLines()
 	}
 	local bind = ns.charDB.bind
 	lines[#lines + 1] = ("Bind point: %s"):format(bind and (bind.name .. ", " .. Place(bind)) or "not known")
+	local known = {}
+	for _, continent in ipairs(ns.KnownFlightPointsByContinent()) do
+		known[#known + 1] = ("%s %d"):format(continent.name, continent.known)
+	end
+	lines[#lines + 1] = "Flight points known: " .. table.concat(known, ", ")
 	local ride = ns.CurrentRide()
 	lines[#lines + 1] = ("Ride: %s%s"):format(
 		ride and ("route " .. ride) or (ns.IsObservingRide() and "being matched" or "none"),

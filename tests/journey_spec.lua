@@ -25,6 +25,29 @@ assert(
 ns.db.flightPathReminder = false
 assert(ns.NewFlightPathReminderRow({ legs = { unknown } }, 1), "the tracker note remains when banners are disabled")
 
+ns.TaxiNodes = { [1] = { map = 0 }, [2] = { map = 1 }, [3] = { map = 1 }, [4] = { map = 2991 } }
+ns.known = {}
+local both = { legs = {}, unknownFlightMaps = { [0] = true, [1] = true, [2991] = true } }
+local unsynced = ns.UnsyncedFlightPointRows(both)
+assert(#unsynced == 2, "one warning per continent with no known flight point")
+assert(unsynced[1].key == "no-flight-points-0" and unsynced[1].text:find("Eastern Kingdoms", 1, true))
+assert(unsynced[2].key == "no-flight-points-1" and unsynced[2].text:find("Kalimdor", 1, true))
+assert(unsynced[1].warning and unsynced[2].warning and not unsynced[1].grey, "the warning is not a grey note")
+assert(#ns.UnsyncedFlightPointRows({ legs = {} }) == 0, "no faster flight, no warning")
+unsynced = ns.UnsyncedFlightPointRows({ legs = {}, unknownFlightMaps = { [1] = true } })
+assert(#unsynced == 1 and unsynced[1].key == "no-flight-points-1", "only the continent a faster flight would use")
+ns.known = { [3] = true }
+unsynced = ns.UnsyncedFlightPointRows(both)
+assert(#unsynced == 1 and unsynced[1].key == "no-flight-points-0", "one known point clears its continent")
+ns.known = { [1] = true, [2] = true }
+assert(#ns.UnsyncedFlightPointRows(both) == 0, "every continent known, no warning")
+ns.known = {}
+assert(
+	#ns.UnsyncedFlightPointRows({ legs = {}, unknownFlightMaps = { [2991] = true } }) == 0,
+	"only Eastern Kingdoms and Kalimdor are warned about"
+)
+ns.TaxiNodes, ns.known = {}, nil
+
 -- Journey follows what its search reports: nothing is drawn while it searches, then the one route, from where you
 -- stand.
 walking.auto = false
@@ -50,6 +73,16 @@ driver.move(here)
 driver.update(5)
 local trimmed = driver.shown().legs[1].walkPoints
 assert(trimmed[1].x == 300 and trimmed[1].y == 150 and trimmed[2] == points[2], "drawn from where you stand")
+ns.TaxiNodes = { [1] = { map = 0 } }
+local walkingPlan = select(3, ns.JourneyInfo())
+walkingPlan.unknownFlight, walkingPlan.unknownFlightMaps = true, { [0] = true }
+local warned = select(2, ns.JourneyInfo())
+assert(
+	warned[1].key == "no-flight-points-0" and warned[2].key == 1,
+	"the warning replaces the grey note above the steps"
+)
+walkingPlan.unknownFlight, walkingPlan.unknownFlightMaps = nil, nil
+ns.TaxiNodes = {}
 ns.ClearJourney()
 assert(not driver.shown() and not ns.JourneyInfo() and not ns.JourneyStatus())
 

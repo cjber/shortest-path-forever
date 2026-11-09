@@ -876,30 +876,36 @@ local function Plan(options)
 	-- A walk with no flight at all may still be walking only because the flight point it would use has not been
 	-- discovered. Proving that needs a second search that treats every node as known: only a route it finds that
 	-- both beats this one and flies is evidence the walk waits on an unknown node, not on the walk being quickest.
-	local function UnknownFlight(plan)
+	local function UnknownFlightMaps(plan)
 		if not plan or not options.unknownFlightNotice or not undiscovered then
-			return false
+			return nil
 		end
 		local walk = false
 		for _, leg in ipairs(plan.legs) do
 			if leg.mode == "flight" then
-				return false
+				return nil
 			end
 			walk = walk or leg.mode == "walk"
 		end
 		if not walk then
-			return false
+			return nil
 		end
 		local faster = Search(options.withoutHearth == true, plan.arrive, false, true, true)
 		if not faster then
-			return false
+			return nil
 		end
+		local maps
 		for _, leg in ipairs(faster.legs) do
 			if leg.mode == "flight" then
-				return true
+				maps = maps or {}
+				maps[leg.from.map] = true
 			end
 		end
-		return false
+		return maps
+	end
+	local function MarkUnknownFlight(plan)
+		plan.unknownFlightMaps = UnknownFlightMaps(plan)
+		plan.unknownFlight = plan.unknownFlightMaps and true or nil
 	end
 	-- options.incumbent, an arrival already in hand, ends the search for anything that cannot beat it: no route
 	-- then means the incumbent stands. Its plan still passes through hearth and long-walk preferences below.
@@ -928,12 +934,12 @@ local function Plan(options)
 		local ridden = Search(true, options.now + (planned.arrive - options.now) * RIDE_MARGIN, true)
 		if ridden then
 			ridden.preferred = true
-			ridden.unknownFlight = UnknownFlight(ridden) or nil
+			MarkUnknownFlight(ridden)
 			return ridden
 		end
 	end
 	if planned then
-		planned.unknownFlight = UnknownFlight(planned) or nil
+		MarkUnknownFlight(planned)
 	end
 	return planned
 end

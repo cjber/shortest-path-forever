@@ -67,6 +67,7 @@ read_globals = {
 	"GetServerTime",
 	"GetTime",
 	"GRAY_FONT_COLOR",
+	"RED_FONT_COLOR",
 	"HIGHLIGHT_FONT_COLOR",
 	"hooksecurefunc",
 	"securecallfunction",

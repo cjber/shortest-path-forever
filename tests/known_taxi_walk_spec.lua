@@ -16,7 +16,7 @@ for _, file in ipairs({
 	assert(loadfile(file))("ShortestPathForever", ns)
 end
 
-local function Plan(from, to, known)
+local function Plan(from, to, known, faction)
 	return ns.Planner.Plan({
 		from = from,
 		to = to,
@@ -28,7 +28,7 @@ local function Plan(from, to, known)
 		portals = ns.Portals,
 		landmasses = ns.Landmasses,
 		baked = ns.Walks,
-		faction = "Alliance",
+		faction = faction or "Alliance",
 		otherFaction = false,
 		walkSpeed = 7,
 		taxiKnown = known,
@@ -58,6 +58,7 @@ local from = { map = 0, x = -8800, y = 800, label = "Stormwind" }
 local walked = assert(Plan(from, entrance, {}))
 assert(not Has(walked, "flight"), "no known flight point means no flight")
 assert(walked.unknownFlight == true, "the plan explains the flight point it could not use")
+assert(walked.unknownFlightMaps and walked.unknownFlightMaps[0], "the faster flight is in the Eastern Kingdoms")
 local first = walked.legs[1]
 assert(
 	first.mode == "walk" and first.to.kind == "dock" and first.yards > 5000,
@@ -78,5 +79,16 @@ assert(Has(known, "flight"), "both known flight points fly")
 assert(known.legs[1].to.kind == "taxi" and known.legs[1].to.id == STORMWIND, "the flight starts at Stormwind")
 assert(known.arrive <= booty.arrive, "knowing the nearer flight point cannot make the journey slower")
 assert(known.arrive < walked.arrive, "a known taxi node beats the walked leg")
+
+local gromgol = { map = 0, x = -12414, y = 146, label = "Grom'gol" }
+local lochModan = { map = 0, x = -5400, y = -2900, label = "Loch Modan" }
+local hordeWalk = assert(Plan(gromgol, lochModan, {}, "Horde"))
+assert(not Has(hordeWalk, "flight"), "with nothing known the Horde route to Loch Modan has no flight")
+assert(
+	hordeWalk.unknownFlightMaps and hordeWalk.unknownFlightMaps[0] and not hordeWalk.unknownFlightMaps[1],
+	"a faster Eastern Kingdoms flight is reported, Kalimdor is not"
+)
+local stroll = assert(Plan(gromgol, { map = 0, x = -12300, y = 200, label = "Grom'gol" }, {}, "Horde"))
+assert(not stroll.unknownFlightMaps, "a short walk no flight would beat reports no continent")
 
 print("known taxi walk: a known flight point flies instead of walking: ok")

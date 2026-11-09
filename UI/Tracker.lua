@@ -96,7 +96,8 @@ local function DepartureText(departure)
 end
 
 local function RowColor(row)
-	return row.grey and GRAY_FONT_COLOR
+	return row.warning and RED_FONT_COLOR
+		or row.grey and GRAY_FONT_COLOR
 		or row.current and OBJECTIVE_TRACKER_COLOR.NormalHighlight
 		or OBJECTIVE_TRACKER_COLOR.Normal
 end
@@ -172,6 +173,35 @@ local function JourneyTitle(title)
 	return ns.Art.FileMarkup(ns.GoalPinFile(), ICON_SIZE) .. " " .. title
 end
 
+local PULSE_SECONDS, PULSE_DIM = 1.6, 0.35
+
+local function StopPulse(line)
+	if line.spfPulse then
+		line.spfPulse:Stop()
+	end
+end
+
+local function SetPulse(line, pulsing)
+	if not pulsing then
+		StopPulse(line)
+		return
+	end
+	if not line.spfPulse then
+		local animation = line.Text:CreateAnimationGroup()
+		animation:SetLooping("BOUNCE")
+		local alpha = animation:CreateAnimation("Alpha")
+		alpha:SetFromAlpha(1)
+		alpha:SetToAlpha(PULSE_DIM)
+		alpha:SetDuration(PULSE_SECONDS)
+		alpha:SetSmoothing("IN_OUT")
+		line.spfPulse = animation
+		line:HookScript("OnHide", StopPulse)
+	end
+	if not line.spfPulse:IsPlaying() then
+		line.spfPulse:Play()
+	end
+end
+
 function ModuleMixin:LayoutContents()
 	for _, entry in ipairs(self.blocks) do
 		local block = self:GetBlock(entry.key)
@@ -180,6 +210,7 @@ function ModuleMixin:LayoutContents()
 		for _, row in ipairs(entry.rows) do
 			local line = block:AddObjective(row.key, row.text, nil, true, nil, RowColor(row))
 			SetLineMark(line, RowMark(row))
+			SetPulse(line, row.warning == true)
 			local family = entry.key == "family"
 			local clickable = family or entry.key == "journey" and row.current and not ns.Corpse.Active()
 			line:EnableMouse(clickable == true)

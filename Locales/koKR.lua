@@ -471,3 +471,9 @@ L["Usage: /forever debug, /forever debug pin, /forever debug off, /forever debug
 L["Follow roads"] = "도로 따라가기" -- mt
 L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =
 	"이동 경로는 추가 거리가 절반 미만이면 도로와 포장된 거리를 따라갑니다. 지역의 일반 흙으로 칠해진 도로는 알 수 없습니다." -- mt
+L["A flight would be quicker. Open a flight master's map in %s once to sync your flight points."] =
+	"비행이 더 빠릅니다. %s에서 비행 조련사의 지도를 한 번 열어 비행 지점을 동기화하세요." -- mt
+L["Eastern Kingdoms"] = "동부 왕국" -- mt
+L["Kalimdor"] = "칼림도어" -- mt
+L["No flight points learned in %s: open a flight master's map once to sync them."] =
+	"%s에서 배운 비행 지점이 없습니다: 비행 조련사의 지도를 한 번 열어 동기화하세요." -- mt

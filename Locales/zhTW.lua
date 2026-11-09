@@ -454,3 +454,9 @@ L["Usage: /forever debug, /forever debug pin, /forever debug off, /forever debug
 L["Follow roads"] = "沿道路行走" -- mt
 L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =
 	"當繞行不到一半時，步行路線會沿道路和鋪設街道前進。以區域一般泥土繪製的道路尚無法辨識。" -- mt
+L["A flight would be quicker. Open a flight master's map in %s once to sync your flight points."] =
+	"飛行會更快。在%s開啟一次飛行管理員的地圖，以同步你的飛行點。" -- mt
+L["Eastern Kingdoms"] = "東部王國" -- mt
+L["Kalimdor"] = "卡林多" -- mt
+L["No flight points learned in %s: open a flight master's map once to sync them."] =
+	"尚未在%s學會任何飛行點：開啟一次飛行管理員的地圖以同步它們。" -- mt

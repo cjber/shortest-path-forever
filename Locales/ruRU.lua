@@ -489,3 +489,9 @@ L["Usage: /forever debug, /forever debug pin, /forever debug off, /forever debug
 L["Follow roads"] = "Следовать дорогам" -- mt
 L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =
 	"Пешие маршруты держатся дорог и мощёных улиц, если это удлиняет путь менее чем наполовину. Дороги, нарисованные обычной землёй зоны, не распознаются." -- mt
+L["A flight would be quicker. Open a flight master's map in %s once to sync your flight points."] =
+	"Полёт был бы быстрее. Один раз откройте карту распорядителя полётов в зоне «%s», чтобы синхронизировать точки полёта." -- mt
+L["Eastern Kingdoms"] = "Восточные королевства" -- mt
+L["Kalimdor"] = "Калимдор" -- mt
+L["No flight points learned in %s: open a flight master's map once to sync them."] =
+	"В зоне «%s» не изучено ни одной точки полёта: один раз откройте карту распорядителя полётов, чтобы синхронизировать их." -- mt

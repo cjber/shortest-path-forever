@@ -199,6 +199,24 @@ assert(dirty == marks and headers == texts, "combat defers the new header too")
 combat = false
 settling = false
 assert(refresh() == "Journey  44:47 · 900 yd")
+local journeyInfo = ns.JourneyInfo
+ns.JourneyInfo = function()
+ local title, rows, plan, at, loading = journeyInfo()
+ table.insert(rows, 1, {key="no-flight-points-0", text="No flight points learned in Eastern Kingdoms", warning=true})
+ return title, rows, plan, at, loading
+end
+refresh(true)
+local warning = tracker:GetExistingBlock("journey"):GetExistingLine("no-flight-points-0")
+assert(warning.Text.colorStyle == RED_FONT_COLOR, "the flight point warning is red")
+assert(warning.spfPulse and warning.spfPulse:IsPlaying() and warning.spfPulse.looping == "BOUNCE",
+ "the flight point warning pulses")
+assert(warning.spfPulse.animations[1].Duration >= 1, "the pulse is slow")
+assert(not tracker:GetExistingBlock("journey"):GetExistingLine(1).spfPulse, "steps do not pulse")
+warning.hooks.OnHide(warning)
+assert(not warning.spfPulse:IsPlaying(), "a freed warning line stops pulsing")
+ns.JourneyInfo = journeyInfo
+refresh(true)
+assert(tracker.blocks[1].rows[1].key == 1, "the warning leaves with its row")
 route = nil
 refresh(true)
 assert(tracker.Header.text == "Boats" and #tracker.blocks == 0 and not tracker.distance)

@@ -82,5 +82,6 @@ Credit for the ideas and reports behind the addon.
 | Oxds, on CurseForge | Asked for the walking route line's colour to be a choice in `/path` settings (#411) | |
 | sean16981 | Asked for key bindings for the Shift-click journey actions, for controller players (#412) | |
 | Stiandresius, on CurseForge | Found zeppelin docks drawn with the boat icon and the Stranglethorn tower vanishing from Durotar on zoom (#394, #393), and the Grom'gol zeppelin pin drawing on the Orgrimmar map instead of Durotar (#414) | |
+| aryaxo | Found players walking while no flight point was known since 1.23.1, not knowing to open a flight master, and asked for a hint when a flight would be quicker (#539) | |
 
 Thanks also to everyone else who reported a bug or asked for a feature, here or on CurseForge.
