@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Walks inside Stormwind keep to the streets more often.** The walking map kept the bare ground about 35 yards under the city as a floor, so a route could cut under the buildings instead of following the streets. Ground the game marks as lying under liquid is no longer walked on. That leaves hidden ground with no liquid above it, so some walks may still dip under the city. Reported on Discord by jixxor. (#602)
+
 ## [1.24.7] - 2026-11-09
 
 - **Flight points you have not discovered are no longer marked as known.** Opening a flight master stored every point on its map, including ones your character has never visited, so routes could fly through them. Only the flight points you can actually use are kept now, and the next flight master you open clears the ones added before. Reported on CurseForge by user_ey1r2bwls2pf3sht32372 and on Discord by pachonaso (#593).
