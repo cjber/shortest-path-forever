@@ -33,7 +33,8 @@ pixels never enter product media.
 | `cast_prompt.png` | The current Hearthstone action, using the same icon, label and spacing as the screen prompt |
 | `compass.png` | The compass: the game's own ticks and gold letters fading out at each end, turns 1 and 2 and the yards under the next, no panel (on by default) |
 | `compass_behind.png` | The same compass facing about 140 degrees away: the markers and distance dim to 40 percent and only turn 1 shows |
-| `services.png` | The Nearby services tab in the world map's quest log, its bags tab selected: Auberdine's vendors, each with the nearest NPC and walking time |
+| `services.png` | The Nearby services tab in the world map's quest log, its bags tab selected: Auberdine's vendors for a level 15 hunter, each with the nearest NPC and walking time, and the arrows, shot, food and drink for that level |
+| `services_better.png` | The same tab for that hunter at level 25 with a bow: Dalmond still sells only Sharp Arrow, so a one-line row under Arrows offers Razor Arrow in Darnassus with its own time and the upgrade arrow on its icon; Auberdine already sells the best food and drink for 25 |
 | `services_search.png` | The same tab while `water` is typed into its search box: the nearest food and drink vendors selling something that matches, each row naming only the item that matched |
 | `demo.gif` | Eight-second montage: route pulse/settle, tracker countdown and gliding compass; under 0.5 MB |
 
