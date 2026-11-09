@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.24.4] - 2026-11-09
+
 - **The switch that keeps a journey out of the objective tracker is easier to find.** It moved from Interface to Guidance and is now called *Show journey steps in the objective tracker*. Off, the journey still guides with its arrow, destination pin, map line and minimap route, and the tracker shows only the departures their own switch allows. Your choice carries over. Thanks to _spada on Discord for the question (#563).
 
 - **Known flight points are never wiped.** Updating Shortest Path no longer clears the flight points a character has learned, and opening a flight master corrects the list for that continent: points the map leaves out there are dropped while points on other continents stay (#570).
