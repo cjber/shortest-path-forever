@@ -208,15 +208,37 @@ end
 -- Read-only capability query shared by the public estimator and the guided planner.
 ns.JourneyWaterWalking = WaterWalking
 
--- A missing/secret sample is not evidence that the journey is unreachable. Every read of the player's position goes
--- through this gate; ride observation alone also takes the client's height, nil while it is secret.
+-- The player's world position, from UnitPosition or the map the client puts the player on. The client may withhold
+-- UnitPosition from addons (its values are secret) while the map APIs still answer with the same place; the journey,
+-- its route, the minimap and the arrow then keep working instead of silently waiting for a sample that never comes
+-- (#553).
 ---@return number? x, number? y, number? z, number? map
 function ns.PlayerPosition()
 	local x, y, z, map = UnitPosition("player")
-	if not (canaccessvalue(x) and canaccessvalue(y) and canaccessvalue(map)) or not (x and y and map) then
+	if canaccessvalue(x) and canaccessvalue(y) and canaccessvalue(map) and x and y and map then
+		return x, y, canaccessvalue(z) and z or nil, map
+	end
+	local uiMap = C_Map.GetBestMapForUnit("player")
+	if not (uiMap and canaccessvalue(uiMap)) then
 		return nil
 	end
-	return x, y, canaccessvalue(z) and z or nil, map
+	local position = C_Map.GetPlayerMapPosition(uiMap, "player")
+	if not (position and canaccessvalue(position)) then
+		return nil
+	end
+	local mapX, mapY = position:GetXY()
+	if not (canaccessvalue(mapX) and canaccessvalue(mapY)) or not (mapX and mapY) then
+		return nil
+	end
+	local continent, world = C_Map.GetWorldPosFromMapPos(uiMap, CreateVector2D(mapX, mapY))
+	if not (continent and world and canaccessvalue(continent) and canaccessvalue(world)) then
+		return nil
+	end
+	x, y = world:GetXY()
+	if not (canaccessvalue(x) and canaccessvalue(y)) or not (x and y) then
+		return nil
+	end
+	return x, y, nil, continent
 end
 
 -- Planning, Guide and lines share this gate. UnitPosition's third value is no floor to plan from, so the player's

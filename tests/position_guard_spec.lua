@@ -8,6 +8,15 @@ local secret = setmetatable({}, {
 	end,
 })
 local sample
+-- The client's map position, which answers when UnitPosition's sample is secret or missing (#553).
+local mapPosition
+local function vector(x, y)
+	return {
+		GetXY = function()
+			return x, y
+		end,
+	}
+end
 local env = setmetatable({
 	UnitPosition = function()
 		return sample[1], sample[2], sample[3], sample[4]
@@ -15,6 +24,18 @@ local env = setmetatable({
 	canaccessvalue = function(value)
 		return value ~= secret
 	end,
+	CreateVector2D = vector,
+	C_Map = {
+		GetBestMapForUnit = function()
+			return mapPosition and 1453
+		end,
+		GetPlayerMapPosition = function()
+			return mapPosition and vector(mapPosition[1], mapPosition[2])
+		end,
+		GetWorldPosFromMapPos = function()
+			return mapPosition and 0, mapPosition and vector(mapPosition[3], mapPosition[4])
+		end,
+	},
 }, { __index = _G })
 
 -- Only the definitions themselves in Journey/Journey.lua, extracted from the file the client loads.
@@ -46,6 +67,16 @@ assert(x == 1 and y == 2 and z == 5 and map == 3, "ride observation keeps the cl
 sample = { 1, 2, secret, 3 }
 x, y, z, map = ns.PlayerPosition()
 assert(x == 1 and y == 2 and z == nil and map == 3, "a secret height alone leaves the position readable")
+
+-- The map's own position answers when the client withholds UnitPosition's sample (#553).
+mapPosition = { 0.5, 0.6, 100, 200 }
+sample = { secret, secret, 0, secret }
+x, y, z, map = ns.JourneyPosition()
+assert(x == 100 and y == 200 and z == nil and map == 0, "a secret sample falls back to the map position")
+x, y, z, map = ns.PlayerPosition()
+assert(x == 100 and y == 200 and z == nil and map == 0, "the fallback has no height")
+mapPosition = { secret, 0.6, 100, 200 }
+assert(ns.JourneyPosition() == nil, "a secret map position still reads as no position")
 
 local toc = assert(io.open("ShortestPathForever.toc"))
 local checked = 0
