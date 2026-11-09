@@ -15,6 +15,49 @@ local SKIPS = {
 	both = { map = true, nearby = true },
 }
 
+-- The menu modifiers we have registered, with Menu.ModifyMenu's handle, so the gamepad interface can take ours out
+-- while it owns the UI. A native menu runs its modifiers in the call that shows it, and the gamepad's
+-- FrameControlsManager takes the shown menu into its focus in that same call. An addon modifier on that path leaves
+-- its taint on the focus write, so the menu's close runs the gamepad action bar's protected
+-- SetPreferredGamepadInteractTarget tainted, and the client blocks it (#158, #581). Under the gamepad interface the
+-- game's own menus stay the game's, as the addon's own menus already do; the mouse and keyboard keep every entry.
+local modifiers = {}
+
+local function GamepadUI()
+	return ns.GamepadUI and ns.GamepadUI() == true
+end
+
+local function Register(entry)
+	if entry.handle or GamepadUI() then
+		return
+	end
+	entry.handle = Menu.ModifyMenu(entry.tag, entry.build)
+end
+
+local function Unregister(entry)
+	local handle = entry.handle
+	entry.handle = nil
+	if handle and handle.Unregister then
+		handle:Unregister()
+	end
+end
+
+local function ApplyInterface()
+	for _, entry in ipairs(modifiers) do
+		if GamepadUI() then
+			Unregister(entry)
+		else
+			Register(entry)
+		end
+	end
+end
+
+local transition = CreateFrame("Frame")
+if transition.RegisterEvent then
+	transition:RegisterEvent("INPUT_DEVICE_INTERFACE_TRANSITION")
+	transition:SetScript("OnEvent", ApplyInterface)
+end
+
 ---@param tag string the menu's tag, e.g. "MENU_WORLD_MAP_TRACKING"
 ---@param name string which of ours this is, for the A/B check and the error report
 ---@param build fun(owner: any, root: table, contextData: any)
@@ -23,12 +66,17 @@ function ns.ModifyMenu(tag, name, build)
 	if skip and skip[name] then
 		return
 	end
-	Menu.ModifyMenu(tag, function(owner, root, contextData)
-		if type(root) ~= "table" then
-			return
-		end
-		ns.SafeCall(name .. " menu", build, owner, root, contextData)
-	end)
+	local entry = {
+		tag = tag,
+		build = function(owner, root, contextData)
+			if type(root) ~= "table" then
+				return
+			end
+			ns.SafeCall(name .. " menu", build, owner, root, contextData)
+		end,
+	}
+	modifiers[#modifiers + 1] = entry
+	Register(entry)
 end
 
 -- The slash command's half: answers whether the value was one it knows.

@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **A controller route no longer disturbs the map's close.** Shift-clicking empty space on the world map with the gamepad interface on now sets the journey's map pin after the map closes, so closing the map no longer risks the client blocking the controller's interact action. The game's own map and minimap tracking menus also stay the game's under the controller; mouse and keyboard keep Shortest Path's filters and Nearby services. Reported by joaocjesus (#581).
+
 ## [1.24.6] - 2026-11-09
 
 - **Opening a flight master's map takes unknown flights off your journey at once.** The map already dropped flight points it did not list, but the journey kept its planned flight to one of them, so a route could still say "Fly to Booty Bay" with the flight map open and no Booty Bay on it. The journey now plans again the moment the list changes, without that flight. Reported on Discord by pachonaso (#588).

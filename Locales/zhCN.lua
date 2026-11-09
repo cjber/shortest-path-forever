@@ -461,3 +461,4 @@ L["Kalimdor"] = "卡利姆多" -- mt
 L["No flight points learned in %s: open a flight master's map once to sync them."] =
 	"尚未在%s学会任何飞行点：打开一次飞行管理员的地图以同步它们。" -- mt
 L["Only the flight points your character has are learned now."] = "现在只会记录你的角色已有的飞行点。" -- mt
+L["Hide this section"] = "隐藏此部分" -- mt

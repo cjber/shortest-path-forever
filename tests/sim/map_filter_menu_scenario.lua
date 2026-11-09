@@ -266,23 +266,39 @@ scenario(
 		assert(not G.WorldMapFrame.WorldMapTrackingOptionsButton:IsMenuOpen(), "picking a service closes the menu")
 		sim:closeWorldMap()
 
-		-- Submenus are left shut under the gamepad: the simulator's setGamepad does not give menu frames made under
-		-- the mouse their gamepad footer, so Blizzard's own submenus fail there too (cjber/forever-core#102).
-		sim:setGamepad(true)
-		Round("gamepad")
-		sim:enterCombat()
-		Round("gamepad, in combat")
-		sim:leaveCombat()
-		sim:advance(0.5)
-		sim:openWorldMap(1429)
-		OpenFilterMenu("gamepad, after combat")
-		sim:gamepadNavigate()
-		CloseMenus()
-		sim:closeWorldMap()
-		assert(opens == 17, "opened the filter menu 17 times, not " .. opens)
+		assert(opens == 10, "opened the filter menu 10 times, not " .. opens)
 		sim:expectNoErrors(ADDON)
 	end
 )
+
+-- A fresh client for the gamepad: the game's menus stay the game's, because an addon modifier on the menu's show
+-- path taints the focus write and the gamepad action bar's protected interact call (#158, #581).
+scenario("the world map filter menu stays the game's under the gamepad", function(sim)
+	local G = sim.G
+	local ns = Login(sim)
+	sim:setGamepad(true)
+	sim:openWorldMap(1429)
+	local button = G.WorldMapFrame.WorldMapTrackingOptionsButton
+	for _ = 1, 3 do
+		sim:input(function()
+			button:OpenMenu()
+		end)
+		sim:advance(0.1)
+		assert(button:IsMenuOpen(), "the filter menu opens")
+		local entries = Walk(G, button.menuDescription)
+		assert(Count(entries, ns.L["Flight Masters"]) == 0, "no addon map filters on the gamepad")
+		assert(Count(entries, ns.L["Nearby services"]) == 0, "no Nearby services on the gamepad")
+		sim:input(function()
+			button:CloseMenu()
+		end)
+		sim:advance(0.1)
+		assert(not button:IsMenuOpen(), "the filter menu closes")
+	end
+	sim:gamepadNavigate()
+	sim:closeWorldMap()
+	sim:advance(0.2)
+	sim:expectNoErrors(ADDON)
+end)
 
 -- `/path menutest` leaves one of our two modifiers out of the world map filter menu from the next /reload, so the
 -- owner can A/B #161 in game without editing files. Each value is a fresh client logged in with it saved.

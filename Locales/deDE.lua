@@ -470,3 +470,4 @@ L["No flight points learned in %s: open a flight master's map once to sync them.
 	"Noch keine Flugpunkte in %s gelernt: Öffnet einmal die Karte eines Flugmeisters, um sie abzugleichen." -- mt
 L["Only the flight points your character has are learned now."] =
 	"Es werden nur noch die Flugpunkte gelernt, die Euer Charakter hat." -- mt
+L["Hide this section"] = "Diesen Abschnitt ausblenden" -- mt

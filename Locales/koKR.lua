@@ -477,3 +477,4 @@ L["No flight points learned in %s: open a flight master's map once to sync them.
 	"%s에서 배운 비행 지점이 없습니다: 비행 조련사의 지도를 한 번 열어 동기화하세요." -- mt
 L["Only the flight points your character has are learned now."] =
 	"이제 캐릭터가 가진 비행 지점만 기억합니다." -- mt
+L["Hide this section"] = "이 섹션 숨기기" -- mt
