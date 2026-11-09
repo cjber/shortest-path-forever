@@ -11,12 +11,18 @@ Plan journeys in WoW: Forever, on foot, by air, by sea and through portals.<br>
 
 Shift-click the world map or minimap, or choose a quest, to plan a journey. Shortest Path Forever gives directions in the objective tracker and on both maps.
 
+Need a vendor, a trainer or an inn? The **Nearby services** tab on the world map finds the closest one, tells you how long it takes to get there, and takes you there in one click. Search for any item to see who sells it.
+
 ![Eight-second demo of a route settling, the countdown and the compass](docs/screenshots/demo.gif)
 
 Planning a journey from the map: the route settles, the next boat counts down in the tracker and the compass turns
 with you.
 
 ## Features
+
+- **Find nearby services.** A tab in the world map's quest log lists vendors by what they sell, trainers by profession, and inns, banks, auction houses, flight masters, stables and repairs, each with the nearest NPC and the travel time. Search for a group, an NPC or an item, then click a row to start the journey; arrows mark that NPC's nameplate when you get there. Requires installed QuestieDB; class trainers also use Tweaks Forever.
+  ![The Nearby services tab in the world map's quest log](docs/screenshots/services.png)
+  The tracking menus and `/spfnear` open the same tab.
 
 - **Compare completed journeys.** `/path leaderboard` opens Forever Leaderboards on the Shortest Path tab, with this week's and all-time totals from guild and group members who report theirs. The window also shows your overall place across every installed Forever addon and puts a player's place in the unit tooltip. Sharing is on unless you turn it off with the window's Share my progress box or the checkbox in **Travel journal**. Reported totals are player-reported and not verified.
 
@@ -33,9 +39,7 @@ with you.
 - **See flights and departures.** Flight maps highlight your next flight, and a flight master's world map tooltip lists its flights and their times. Dock tooltips show destinations and departure times; nearby services count down in the tracker. Ride times improve estimates and are shared with other players.
   ![A smooth flight line leaving Stormwind](docs/screenshots/flight.png)
   Flight lines follow the route between flight points.
-- **Find nearby services.** The map and minimap tracking menus offer trainers, repairs, reagents, vendors, inns, banks, auction houses, flight masters and stables. Requires installed QuestieDB; class trainers also use Tweaks Forever.
-  ![Nearby services in the map menu](docs/screenshots/services.png)
-  Choose a service to plan the trip there.
+
 - **Travel prompts and alerts.** Hearthstone and teleport steps show the item or spell to use. A banner, transport sound and taskbar flash warn before your boat arrives. *Play a sound when you reach the goal* in Alerts plays the map's ping on arrival.
   ![The current Hearthstone action](docs/screenshots/cast_prompt.png)
   The prompt clears as the journey continues.
@@ -74,7 +78,7 @@ Right-click a flight master icon to mark its flight path as known if a flight ma
 | `/path leaderboard` | Open Forever Leaderboards on the Shortest Path tab: your completed journeys against guild and group members who report theirs |
 | `/path perf` | Print this addon's CPU and memory use |
 | `/path debug` | Keep a trace of your ride matching, for a ride that did not sync |
-| `/spfnear` | Open nearby services; add a service such as `repair`, `trainer` or `flight` to route to the nearest one |
+| `/spfnear` | Open the Nearby services tab; add a service such as `repair`, `trainer` or `flight` to route to the nearest one |
 
 The world map's filter menu and the minimap's tracking menu hide each kind of mark. Searches and tracker updates wait until combat ends.
 

@@ -33,7 +33,8 @@ pixels never enter product media.
 | `cast_prompt.png` | The current Hearthstone action, using the same icon, label and spacing as the screen prompt |
 | `compass.png` | The compass: the game's own ticks and gold letters fading out at each end, turns 1 and 2 and the yards under the next, no panel (on by default) |
 | `compass_behind.png` | The same compass facing about 140 degrees away: the markers and distance dim to 40 percent and only turn 1 shows |
-| `services.png` | The Nearby services submenu in the world map's tracking menu, with trainer and vendor specialty categories |
+| `services.png` | The Nearby services tab in the world map's quest log, its bags tab selected: Auberdine's vendors, each with the nearest NPC and walking time |
+| `services_search.png` | The same tab while `water` is typed into its search box: the nearest food and drink vendors selling something that matches, each row naming only the item that matched |
 | `demo.gif` | Eight-second montage: route pulse/settle, tracker countdown and gliding compass; under 0.5 MB |
 
 `tools/screenshots_services.py` draws the services scene,

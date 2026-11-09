@@ -112,8 +112,9 @@ With RestedXP or Guidelime installed, **Resume guide** in Guidance or the Journe
   ![The compass strip with the next turns and destination](screenshots/compass.png)
 
 - **Find nearby services.** Open the minimap's tracking menu or the world map's and pick *Nearby services*, or use
-  `/spfnear`. It lists class and profession trainers, repairs, reagents, vendors, innkeepers, banks, auction houses, flight
-  masters and stable masters. Pick a trainer or vendor specialty to route to the nearest friendly location in your
+  `/spfnear`. Vendors are grouped by what they sell: arrows, bullets, food, drink, bags, trade supplies, reagents,
+  and weapons and armour. Trainers are grouped by class or profession. It also lists repairs, innkeepers, banks,
+  auction houses, flight masters and stable masters. Pick a group to route to the nearest friendly location in your
   installed QuestieDB.
 
 - **Back to your corpse.** Release as a ghost and a red-orange dotted path, the colour of your corpse's tombstone,

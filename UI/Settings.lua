@@ -315,6 +315,16 @@ ns.Init(function()
 		end
 	)
 	Checkbox(
+		"npcArrows",
+		L["Arrows on the NPC's nameplate"],
+		L["Shows over the nameplate of the NPC a Nearby services journey walks to."]
+			.. " "
+			.. L["Friendly nameplates must be on to see them."],
+		function()
+			ns.RefreshNpcArrows()
+		end
+	)
+	Checkbox(
 		"tomtom",
 		L["Let guides set TomTom waypoints"],
 		L["While TomTom is not installed, a guide that sets a TomTom waypoint starts a journey here instead."],

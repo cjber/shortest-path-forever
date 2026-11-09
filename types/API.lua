@@ -33,6 +33,9 @@
 ---@field questID? number -- the quest this held stop's area belongs to; the client's own "inside the area" state for it decides inside, and the client's own area for it is shown while the player is inside
 ---@field questIDs? number[] -- every quest the area belongs to, when it has several: 1 or more positive integers; inside any of them is inside, and each one's area is shown. May be given with or without questID
 ---@field handins? number[] -- the quests handed in at this stop: 1 or more positive integers; the game's own pin for each is hidden while the stop is drawn, and they never decide arrival or the stop's area
+--- The NPC whose service this stop reaches. Shortest Path marks that NPC's nameplate while the stop is current.
+--- Another addon's route passes no npc, so its own highlight is the only one.
+---@field npc? integer
 ---@field shapes? SPFAPIShape[] -- objective areas a held stop stands for; they decide inside when no quest is named or the client has no answer, and are never drawn
 
 ---@class SPFAPILeg

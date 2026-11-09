@@ -11,12 +11,17 @@
 ---@field Teleports SPFTeleport[]
 ---@field Landmasses SPFLandmass[]
 ---@field Zones table<number, SPFZone>
+---@field Food number[] items whose use spell restores health (Data/Services.lua)
+---@field Drink number[] items whose use spell restores mana (Data/Services.lua)
+---@field ProfessionTrainers table<number, number> trainer NPC -> its profession skill line (Data/Services.lua)
+---@field ClassTrainers table<number, number> class trainer NPC -> its class (Data/Services.lua)
 ---@field Walks table<number, table<string, (number|false)[]>>
 ---@field WalkPlaces table<number, table<string, number[]>>
 ---@field db SPFDatabase
 ---@field charDB SPFCharacterDatabase
 ---@field Defaults table<string, boolean|number|string>
 ---@field NearbyServices SPFNearbyServices
+---@field QuestLogTabs ForeverQuestLogTabsAPI the shared quest log side tabs (UI/QuestLogTabs.lua)
 ---@field ProgressJourneyChanged? fun(point: SPFPoint?, reason?: "arrived"|"cleared")
 ---@field PeerStats ForeverPeerStatsNamespace
 ---@field LeaderboardsData? ForeverLeaderboardsData the shared leaderboards' data half (Core/LeaderboardsData.lua)
@@ -53,6 +58,7 @@
 ---@field shapes? SPFAreaShape[] -- objective areas the stop stands for, in world coordinates
 ---@field look? SPFAPIStopKind -- what the caller said stands there (API.lua)
 ---@field questID? number
+---@field npc? integer -- the service NPC this stop reaches: Shortest Path marks its nameplate while the stop is current (Nearby services)
 ---@field pinBadge? boolean -- destination marker beside an existing map icon
 ---@field questIDs? number[] -- the quests whose client areas a held stop stands for (API.lua)
 ---@field handins? number[] -- the quests handed in at an API stop, hidden from the game's own map pins (API.lua)
@@ -177,6 +183,7 @@
 ---@field errors? ForeverCaughtError[] the shared error journal (Core/SafeCall.lua): earlier sessions' errors, for the report
 ---@field log? ForeverDebugLogStore the shared debug log ring (Core/Log.lua): recent lines, for the report
 ---@field destinationPin boolean an on-screen marker over the journey's destination
+---@field npcArrows? boolean arrows beside the nameplate of the NPC a Nearby services journey walks to (NpcArrows.lua)
 ---@field trackerHost? ForeverTrackerSettings
 ---@field menuTest? string `/path menutest`: which world map filter menu entries to leave out ("map", "nearby", "both")
 ---@field pins? boolean

@@ -19,6 +19,7 @@ L["%s station"] = "station %s" -- mt
 L["%s tower"] = "tour %s" -- mt
 L["%s · %s"] = "%s · %s" -- mt
 L["%s — unavailable here"] = "%s – indisponible ici" -- mt
+L["%s, %s"] = "%s, %s"
 L["%s, then %s"] = "%s, puis %s" -- mt
 L["/way [zone] x y [title], with x and y from 0 to 100."] = "/way [zone] x y [titre], avec x et y de 0 à 100." -- mt
 L["/way reset all, away, <zone> or not <zone>"] = "/way reset all, away, <zone> ou not <zone>" -- mt
@@ -30,10 +31,13 @@ L["Alerts"] = "Alertes" -- mt
 L["Alliance"] = "Alliance" -- mt
 L["Arriving at %s in %s"] = "Arrivée à %s dans %s" -- mt
 L["Arrow scale"] = "Taille de la flèche" -- mt
+L["Arrows"] = "Flèches"
+L["Arrows on the NPC's nameplate"] = "Flèches sur la plaque de nom du PNJ"
 L["Attach to quest tracker"] = "Attacher au suivi des quêtes"
 L["Auction house"] = "Hôtel des ventes" -- mt
 L["Avoid zones far above my level"] = "Éviter les zones bien au-dessus de mon niveau" -- mt
 L["Avoids %s (level %s)"] = "Contourne %s (niveau %s)" -- mt
+L["Bags"] = "Sacs"
 L["Bank"] = "Banque" -- mt
 L["Boat and Zeppelin Routes"] = "Routes des bateaux et zeppelins" -- mt
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
@@ -42,6 +46,7 @@ L["Boat to %s"] = "Bateau pour %s" -- mt
 L["Boat to %s arrives in %s"] = "Le bateau pour %s arrive dans %s" -- mt
 L["Boats"] = "Bateaux" -- mt
 L["Boats & Zeppelins"] = "Bateaux et zeppelins" -- mt
+L["Bullets"] = "Balles"
 L["Cast %s"] = "Lancer %s" -- mt
 L["Class trainer"] = "Maître de classe" -- mt
 L["Clear journey"] = "Effacer le trajet" -- mt
@@ -64,6 +69,7 @@ L["Don't suggest this again"] = "Ne plus me le suggérer" -- mt
 L["Drag to move"] = "Glisser pour déplacer"
 L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] =
 	"Glisser pour déplacer ; Maj-glisser ou les flèches pour ajuster. Clic droit pour réinitialiser." -- mt
+L["Drink"] = "Boissons"
 L["E"] = "E" -- mt
 L["Either faction can ride any boat or zeppelin."] =
 	"Les deux factions peuvent prendre n'importe quel bateau ou zeppelin." -- mt
@@ -80,8 +86,11 @@ L["Fly to %s"] = "Voler vers %s" -- mt
 L["Follow Guidelime guides"] = "Suivre les guides Guidelime" -- mt
 L["Follow RestedXP guides"] = "Suivre les guides RestedXP" -- mt
 L["Follow TomTom's arrow"] = "Suivre la flèche de TomTom" -- mt
+L["Food"] = "Nourriture"
 L["Forever addons"] = "Addons Forever" -- mt
 L["Forever tracker"] = "Suivi Forever"
+L["Friendly nameplates must be on to see them."] =
+	"Les plaques de nom des unités amies doivent être activées pour les voir."
 L["Go through to %s"] = "Passer vers %s" -- mt
 L["Guidance"] = "Guidage" -- mt
 L["Guide marks the next boat, lift, flight master or your destination, not each turn of the walk on the way."] =
@@ -129,10 +138,10 @@ L["N"] = "N" -- mt
 L["Nearby services"] = "Services à proximité" -- mt
 L["Nearby services could not read QuestieDB."] = "Les services à proximité n'ont pas pu lire QuestieDB." -- mt
 L["Nearby services need the QuestieDB addon."] = "Les services à proximité nécessitent l'addon QuestieDB." -- mt
-L["Nearest"] = "Le plus proche" -- mt
 L["A flight point you have not discovered yet would shorten this route: visit a flight master to learn it."] =
 	"Un point de vol que vous n'avez pas encore découvert raccourcirait cet itinéraire : visitez un maître de vol pour l'apprendre." -- mt
 L["No location for that quest yet."] = "Pas encore d'emplacement pour cette quête." -- mt
+L["No services nearby."] = "Aucun service à proximité."
 L["No way there from here."] = "Aucun chemin d'ici jusque-là." -- mt
 L["Not discovered"] = "Non découvert" -- mt
 L["Not installed"] = "Non installé" -- mt
@@ -144,6 +153,7 @@ L["One line in chat the first time you log in after an update."] =
 L["Only use the Hearthstone when it saves at least this much time."] =
 	"N'utiliser la pierre de foyer que si elle fait gagner au moins ce temps." -- mt
 L["Open"] = "Ouvrir"
+L["Open Nearby services"] = "Ouvrir Services à proximité"
 L["Open settings."] = "Ouvrir les réglages." -- mt
 L["Open the world map and choose Nearby services in its tracking menu."] =
 	"Ouvrez la carte du monde et choisissez Services à proximité dans son menu de pistage." -- mt
@@ -172,7 +182,6 @@ L["Portal to %s"] = "Portail vers %s" -- mt
 L["Portals"] = "Portails" -- mt
 L["Quest automation, rare alerts and merchant handling for the default UI."] =
 	"Automatisation des quêtes, alertes de rares et gestion des marchands pour l'interface par défaut." -- mt
-L["Reagent Vendor"] = "Fournisseur de composants" -- mt
 L["Reagents"] = "Composants" -- mt
 L["Repair"] = "Réparations" -- mt
 L["RestedXP guide"] = "Guide RestedXP" -- mt
@@ -187,8 +196,10 @@ L["Scales the compass. 100% matches the game's own art."] =
 	"Ajuste la taille de la boussole. 100 % correspond aux graphismes du jeu." -- mt
 L["Scales the shared Forever tracker. 100% matches the game's own tracker."] =
 	"Ajuste la taille du suivi Forever partagé. 100 % correspond au suivi du jeu." -- mt
+L["Search services and goods"] = "Rechercher des services et des biens"
 L["Sends and receives sighting times over guild, party and at the dock. No chat messages are shown."] =
 	"Envoie et reçoit les heures d'observation via la guilde, le groupe et au quai. Aucun message n'apparaît dans la discussion." -- mt
+L["Services"] = "Services"
 L["Share departure times"] = "Partager les horaires de départ" -- mt
 L["Shift-click the world map or the minimap to plan a journey there."] =
 	"Maj-clic sur la carte du monde ou la minicarte pour y planifier un trajet." -- mt
@@ -215,6 +226,8 @@ L["Show the next direction and the game's navigation marker."] =
 	"Afficher la prochaine direction et le marqueur de navigation du jeu." -- mt
 L["Show the time left under the compass"] = "Temps restant sous la boussole" -- mt
 L["Show the way to your corpse"] = "Afficher le chemin vers votre cadavre" -- mt
+L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =
+	"Les affiche sur la plaque de nom du PNJ vers lequel mène un trajet de services à proximité."
 L["Shows the Legacy challenges you can advance in each zone."] =
 	"Affiche les défis d'héritage que vous pouvez faire avancer dans chaque région." -- mt
 L["Shows the arrow to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =
@@ -245,7 +258,8 @@ L["This addon"] = "Cet addon" -- mt
 L["Through %s transport, there is a way"] = "Par les transports de la faction %s, un chemin existe" -- mt
 L["Through %s transport: about %d min faster"] = "Par les transports de la faction %s : environ %d min plus vite" -- mt
 L["Tracker scale"] = "Taille du suivi" -- mt
-L["Trainers by specialty"] = "Maîtres par spécialité" -- mt
+L["Trade supplies"] = "Artisanat"
+L["Trainers"] = "Maîtres"
 L["Tram to %s"] = "Tram pour %s" -- mt
 L["Tram to %s arrives in %s"] = "Le tram pour %s arrive dans %s" -- mt
 L["Transport"] = "Transport" -- mt
@@ -256,11 +270,12 @@ L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
 	"Désactivez cette option pour déplacer le suivi Forever partagé n'importe où à l'écran."
 L["Use %s"] = "Utiliser %s" -- mt
 L["Use hearth and teleports"] = "Utiliser foyer et téléportations" -- mt
-L["Vendors by specialty"] = "Marchands par spécialité" -- mt
+L["Vendors"] = "Marchands"
 L["W"] = "O" -- mt
 L["Walk to %s"] = "Marcher jusqu'à %s" -- mt
 L["Walks go round zones whose lowest level is 4 or more above yours, but never the ones you start or end in."] =
 	"Les trajets à pied contournent les zones dont le niveau minimum dépasse le vôtre de 4 ou plus, mais jamais celles de départ ou d'arrivée." -- mt
+L["Weapons and armour"] = "Armes et armures"
 L["What next? Adventure Guide Forever suggests quests for your level."] =
 	"Et maintenant ? Adventure Guide Forever suggère des quêtes de votre niveau." -- mt
 L["What's new after an update"] = "Nouveautés après une mise à jour"

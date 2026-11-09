@@ -6,13 +6,18 @@ Free, with nothing locked behind it. If it saves you time, you can [buy me a cof
 
 The route settles, the next boat counts down and the compass turns with you.
 
+![The Nearby services tab in the world map's quest log](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/services.png)
+
+Nearby services finds the closest vendor, trainer or inn, and how long it takes to get there.
+
 ## Features
 
+- **Find anything nearby.** The Nearby services tab in the world map's quest log lists vendors by what they sell, trainers by profession, and inns, banks, auction houses, flight masters, stables and repairs. Each shows the nearest NPC and how long it takes to get there. Search for any item to see who sells it, then click a row to go there. Arrows mark that NPC's nameplate when you arrive. Uses installed QuestieDB.
 - **Plan the trip.** Combine walking, known flights, boats, zeppelins, lifts, the tram, portals and teleports. Walking routes go around walls, hills and water, and replan as you move. A spot inside a dungeon or raid leads to its entrance.
 - **Follow your guide.** RestedXP and Guidelime journeys are on by default, with no TomTom or bridge addon; without TomTom, other guides' waypoints work too. Adventure Guide takes over when its RestedXP display is on.
 - **Choose what you see.** Hide Journey steps or the direction arrow while keeping the map route. With OpenMap on, the route crosses its stitched map into the neighbouring zones. Move and scale the arrow, which eases round to each bearing, and add the time left under the compass.
 - **Complete a step.** Click the current journey step and choose *Complete this step*. Skipping a Hearthstone leaves it out for that journey; other steps return if you still need them.
-- **Find services and departures.** Map tracking menus offer nearby trainers, repairs, vendors and other services using installed QuestieDB. Dock and flight master tooltips show destinations and times.
+- **See departures.** Dock and flight master tooltips show destinations and times.
 - **Travel prompts.** Hearthstone and teleport steps show what to cast. A sound and taskbar flash warn before a boat arrives, and an optional ping marks your arrival. A red corpse route guides ghosts back to their bodies.
 
 ![Journey steps with time and distance remaining](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/tracker.png)
@@ -36,7 +41,7 @@ Hover a dock to see its services and destinations.
 - In **Guidance**, or by right-clicking the tracker's "Journey to …" line, turn off **Attach to quest tracker** to drag the shared column. **Resume guide** returns to RestedXP or Guidelime; **Keep journeys after a reload** restarts yours.
 - `/way [zone] x y [title]` plans a journey, or `/path way` when another addon owns `/way`. **Follow TomTom's arrow** in Guidance follows TomTom.
 - `/path leaderboard` opens Forever Leaderboards on the Shortest Path tab, ranking completed journeys against guild and group members who report theirs, for this week or all time. The window also shows the overall standing across installed Forever addons and puts a player's place in the unit tooltip. Sharing is on unless you turn it off with the window's Share my progress box or the checkbox in **Travel journal**.
-- `/spfnear` opens nearby services. For a bug report, type `/path report` and paste what it shows, including errors from earlier sessions; `/forever debug` keeps a detailed log for the session. Type `/path issue` to show a filled-in GitHub issue link, selected for copying, for a bug or feature request.
+- `/spfnear` opens the Nearby services tab. For a bug report, type `/path report` and paste what it shows, including errors from earlier sessions; `/forever debug` keeps a detailed log for the session. Type `/path issue` to show a filled-in GitHub issue link, selected for copying, for a bug or feature request.
 - With the gamepad interface on, you open and turn the world map; Shortest Path won't, and its right-click menus need mouse and keyboard.
 
 Translated into German, French, Spanish, Brazilian Portuguese, Russian, Korean and Chinese (machine translated; corrections welcome through a [translation issue](https://github.com/cjber/shortest-path-forever/issues/new?template=translation.yml)).
