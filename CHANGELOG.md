@@ -12,6 +12,9 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+
+## [1.24.3] - 2026-11-09
+
 - **A journey starts even when the client withholds the player's position.** Journey, the world map line, the minimap route and the arrow read the player's place from the client's own map position when `UnitPosition` hands addons secret values instead. A journey from Stormwind to Ironforge now plans and draws the walk from the Deeprun Tram to the quest givers, and the tracker lists its steps, instead of leaving no route and only Adventure Guide's own estimate line (#553).
 - **Only flight points the character really has are learned.** Opening a flight master still stored every node the map's new query returned, and this client reports undiscovered nodes as reachable, so a level 16 character could be routed through Light's Hope or Booty Bay. Learning now walks the flight master's own list (`NumTaxiNodes`, `TaxiNodeGetType` and `TaxiNodeName`), which the stock frame draws and only the character's points fill; an empty list learns nothing. The known list starts again from empty so wrongly learned points are dropped, and `/path debug` records the list and each node's type and name to confirm it (#555).
 
