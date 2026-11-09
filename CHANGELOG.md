@@ -14,7 +14,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [1.24.7] - 2026-11-09
 
-- **Flight points you have not discovered are no longer marked as known.** Opening a flight master stored every point on its map, including ones your character has never visited, so routes could fly through them. Only the flight points you can actually use are kept now, and the next flight master you open clears the ones added before. Reported on CurseForge by user_ey1r2bwls2pf3sht32372 and on Discord by pachonaso (#593).
+- **Flight points you have not discovered are no longer marked as known.** Opening a flight master stored every point on its map, including ones your character has never visited, so routes could fly through them. Only the flight points you can actually use are kept now, and the next flight master you open clears the ones added before. Reported on CurseForge by user_ey1r2bwls2pf3sht32372 and on Discord by pachonaso, _spada and .biddle, who also traced the cause (#593).
 
 ## [1.24.6] - 2026-11-09
 
