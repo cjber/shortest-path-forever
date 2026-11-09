@@ -54,6 +54,7 @@ ZQ = 2  # base heights are stored to this step (yd)
 DIRS = {(1, 0): 0, (-1, 0): 1, (0, 1): 2, (0, -1): 3, (1, 1): 4, (1, -1): 5, (-1, 1): 6, (-1, -1): 7}
 AREA_GROUND, AREA_WATER, AREA_OCEAN = 11, 9, 6
 FLAG_UNDER_HAZARD = 0x80  # Mappster: ground under magma or slime
+FLAG_UNDER_LIQUID = 0x40  # Mappster: ground under liquid
 SOURCE = source_label(None)
 B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
@@ -123,7 +124,15 @@ def cluster_of_tile(rr, cc):
 
 
 def walkable(pts, flags, area, typ):
-    return typ == 0 and area in (AREA_GROUND, AREA_WATER, AREA_OCEAN) and not flags & FLAG_UNDER_HAZARD and pts
+    # Ground under liquid is a hidden floor, such as the bare terrain about 35 yards under Stormwind. The player's
+    # height is unknown when a walk starts, so a route could pick it. The TrinityCore patch removes it at bake time;
+    # the historical Mappster tiles are read here instead, so drop it too.
+    return (
+        typ == 0
+        and area in (AREA_GROUND, AREA_WATER, AREA_OCEAN)
+        and not flags & (FLAG_UNDER_HAZARD | FLAG_UNDER_LIQUID)
+        and pts
+    )
 
 
 def read_tile(rc):
