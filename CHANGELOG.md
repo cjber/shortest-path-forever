@@ -12,6 +12,9 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+
+## [1.24.2] - 2026-11-09
+
 - **The journey says when it knows none of your flight points.** Since 1.23.1 the known list starts empty and fills only when you open a flight master, so until then every journey walks, even when a flight would be far quicker. When a flight would make the journey quicker on Eastern Kingdoms or Kalimdor and Shortest Path knows none of your flight points there, the journey now shows a slowly pulsing red line asking you to open a flight master's map once to sync them. It goes as soon as one is known. When the journey is set, chat says the same once in red, unless *Remind me about new flight masters* is off, and `/path report` lists how many it knows on each. Thanks to aryaxo for the request (#539).
 - **The note that an undiscovered flight point would shorten a walk shows every time.** When a journey proved the walk it was already showing, it kept the walk without the finding that a flight would be quicker, so the grey note under the journey appeared on only some walks. It now shows on every walk it applies to (#539).
 - **Zooming the map with a journey on it is lighter.** The route redraws ten times a second while the map zooms and lays out only the dots near the view, so a long walk over OpenMap's stitched map no longer works through thousands of off-screen breadcrumbs (#529).
