@@ -13,15 +13,15 @@ local ns = select(2, ...)
 --   map:GetMapID(), map:GetCanvas(), map:GetCanvasScale(), map:GetCanvasZoomPercent(), map:GetGlobalPinScale(),
 --   map:IsVisible() and map:GetPinFrameLevelsManager():GetValidFrameLevel(type, index)
 -- (each returns a field or works one out from fields; Blizzard_MapCanvas.lua, MapCanvas_PinFrameLevelsManager.lua),
--- plus the canvas's size and the gamepad's SoftCursor rect. tests/map_canvas_spec.lua runs the addon against a map
--- that fails on any write.
+-- plus the map's view rectangle, the canvas's size and the gamepad's SoftCursor rect. tests/map_canvas_spec.lua
+-- runs the addon against a map that fails on any write.
 --
 -- One view per map: a frame of the addon's set on the canvas (the client parents it, in C: the scroll frame clips it
 -- and it shows and hides with the map), made with no parent and then moved there, since the gamepad interface follows
 -- frames created inside an open window. Its OnUpdate runs only while the map is shown (a hidden frame gets none) and
 -- compares a handful of reads each frame, telling its listeners what changed:
 --   "show"  the map opened          "map"   another map is shown       "size"  the canvas was resized
---   "scale" the zoom or pin scale   "hide"  the map closed
+--   "scale" the zoom or pin scale   "moved" the canvas moved           "hide"  the map closed
 -- The close is heard through the panel manager's own callback, not a script on this frame: a script there runs
 -- inside UIParentPanelManager's hide, before it clears the gamepad binding stack, and this addon's taint blocks
 -- SetPreferredGamepadInteractTarget (#158). The manager calls its callbacks isolated from the hide, as the gamepad's
@@ -65,6 +65,8 @@ local CURSOR_REACH = 12
 ---@field pinScale number
 ---@field stitched boolean
 ---@field companionLayers? string
+---@field viewLeft? number -- the map's view, to hear of a drag
+---@field viewTop? number
 ---@field gamepad boolean
 ---@field listeners fun(view: SPFCanvasView, what: string)[]
 ---@field pools table<string, SPFCanvasPool>
@@ -114,6 +116,22 @@ local function Read(view)
 		Saturate(map:GetCanvasZoomPercent() or 0),
 		map:GetGlobalPinScale() or 1,
 		ns.OpenMap.Stitched()
+end
+
+-- What of the map the view shows, in map fractions: the same space MapPosition places a journey in, where OpenMap's
+-- stitched map carries on past 0..1. Nil until the map is laid out. Every call a read.
+---@param map SPFMapCanvas
+---@return number?, number?, number?, number?
+function MapCanvas.ViewRect(map)
+	local rect = map:GetViewRect()
+	if not rect then
+		return nil
+	end
+	local left, right, top, bottom = rect.left, rect.right, rect.top, rect.bottom
+	if not (left and right and top and bottom) or right <= left or bottom <= top then
+		return nil
+	end
+	return left, right, top, bottom
 end
 
 ---@param view SPFCanvasView
@@ -244,6 +262,14 @@ local function Update(view)
 		end
 		if scaled then
 			Fire(view, "scale", false, true)
+		end
+	end
+	-- A drag moves the view without changing any of the above. A size or zoom redraws with the new view already.
+	local viewLeft, viewTop = MapCanvas.ViewRect(view.map)
+	if viewLeft ~= view.viewLeft or viewTop ~= view.viewTop then
+		view.viewLeft, view.viewTop = viewLeft, viewTop
+		if not (first or changedMap or stitchedChanged or companionsChanged or sized or scaled) then
+			Fire(view, "moved")
 		end
 	end
 	-- The map cursor hovers a pin within reach, and lets go of one it hovered; a pin the mouse is on stays hovered.

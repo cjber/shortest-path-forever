@@ -152,6 +152,11 @@ end
 -- The journey's own placements, for the specs: the map's fractions, or the stitched canvas's.
 ns.JourneyMapPosition = MapPosition
 
+-- The route redraws at most this often in seconds, on the map while it zooms and on the minimap.
+local REDRAW_EVERY = 0.1
+-- How far past the view the journey is drawn, in views, so a drag stays drawn until it has gone that far.
+local VIEW_MARGIN = 0.5
+
 -- What Strokes.lua draws through, refilled for each drawing rather than rebuilt.
 ---@type SPFMapView
 local mapView = {
@@ -291,6 +296,11 @@ end
 ---@field drawWidth? number
 ---@field drawHeight? number
 ---@field drawScale? number
+---@field elapsed? number -- since a zoom asked for a redraw
+---@field drawnLeft? number -- the map fractions the journey was last drawn in
+---@field drawnRight? number
+---@field drawnTop? number
+---@field drawnBottom? number
 ---@field strokeLayer? SPFStrokeLayer
 ---@field strokes? SPFStrokes -- a pin that keeps its strokes between draws (RouteTransports.lua) has its own buffer
 ---@field UpdateAlpha? fun(self: SPFRoutePin)
@@ -304,6 +314,7 @@ function RoutePin:OnLoad()
 end
 
 function RoutePin:Draw()
+	self:SetScript("OnUpdate", nil)
 	local map = self:GetMap()
 	local canvas = map:GetCanvas()
 	self.drawMap, self.drawWidth, self.drawHeight, self.drawScale =
@@ -320,6 +331,17 @@ function RoutePin:Draw()
 	-- The journey's own paths come first; the later hops Itinerary.lua adds after them recede.
 	mapView.current = journey and #paths or math.huge
 	mapView.highlight = journey and hoveredStops or nil
+	-- A journey's dots run every few pixels whatever the zoom: only those near the view are drawn. Lines of other
+	-- pins (RouteTransports.lua) are short and do not follow the view.
+	mapView.clipLeft, mapView.clipRight, mapView.clipTop, mapView.clipBottom = nil, nil, nil, nil
+	local left, right, top, bottom = MapCanvas.ViewRect(map)
+	if journey and left then
+		local marginX, marginY = (right - left) * VIEW_MARGIN, (bottom - top) * VIEW_MARGIN
+		mapView.clipLeft, mapView.clipRight = left - marginX, right + marginX
+		mapView.clipTop, mapView.clipBottom = top - marginY, bottom + marginY
+	end
+	self.drawnLeft, self.drawnRight, self.drawnTop, self.drawnBottom =
+		mapView.clipLeft, mapView.clipRight, mapView.clipTop, mapView.clipBottom
 	local strokes = self.strokes or journeyStrokes
 	Strokes.Map(strokes, self.paths, mapView)
 	Paint(self, strokes)
@@ -329,6 +351,7 @@ function RoutePin:Draw()
 end
 
 function RoutePin:OnReleased()
+	self:SetScript("OnUpdate", nil)
 	if self.strokeLayer then
 		StopPulse(self.strokeLayer)
 	end
@@ -368,8 +391,36 @@ function RoutePin:OnAcquired(geometry)
 	self:Draw()
 end
 
+---@param self SPFRoutePin
+---@param elapsed number
+local function RedrawWhenDue(self, elapsed)
+	self.elapsed = (self.elapsed or 0) + elapsed
+	if self.elapsed >= REDRAW_EVERY then
+		self:Draw()
+	end
+end
+
+-- A zoom asks on every frame it runs. The canvas already scales the strokes, so a redraw only puts their widths and
+-- the dots' spacing back on screen, and it can wait.
 function RoutePin:OnCanvasScaleChanged()
-	self:Draw()
+	if not self:GetScript("OnUpdate") then
+		self.elapsed = 0
+		self:SetScript("OnUpdate", RedrawWhenDue)
+	end
+end
+
+-- The view left what was drawn around it.
+function RoutePin:OnViewMoved()
+	if not self.drawnLeft then
+		return
+	end
+	local left, right, top, bottom = MapCanvas.ViewRect(self:GetMap())
+	if
+		left
+		and (left < self.drawnLeft or right > self.drawnRight or top < self.drawnTop or bottom > self.drawnBottom)
+	then
+		self:Draw()
+	end
 end
 
 function RoutePin:OnCanvasSizeChanged()
@@ -620,7 +671,7 @@ end
 -- The minimap redraws ten times a second while you move or turn or its zoom changes. Once nothing has changed for a
 -- second it drops its every-frame script, and a quarter-second poll wakes it: a mouse turn, a boat or a flight moves
 -- the minimap with no event to say so.
-local REDRAW_EVERY, POLL_EVERY, REST_AFTER = 0.1, 0.25, 1
+local POLL_EVERY, REST_AFTER = 0.25, 1
 local UpdateMinimap
 
 ---@param self SPFMinimapRoute
@@ -819,6 +870,11 @@ ns.Init(function()
 			provider:RefreshAllData()
 		elseif what == "scale" then
 			provider:OnCanvasScaleChanged()
+		elseif what == "moved" then
+			for pin in linePins:EnumerateActive() do
+				---@cast pin SPFRoutePin
+				pin:OnViewMoved()
+			end
 		elseif what == "hide" and linePins then
 			for pin in linePins:EnumerateActive() do
 				---@cast pin SPFRoutePin

@@ -84,6 +84,40 @@ local pin, mini = active[lineTemplate][1], ShortestPathForeverMinimapRoute
 painted(pin, "world map")
 painted(mini, "minimap")
 assert(pin.used > 0 and mini.used > 0)
+-- The route is laid out only around the view and its margin: a long walk at a zoom where all of it would be hundreds
+-- of dots keeps a viewful, in the places the whole walk has them. A drag inside the margin keeps them; past it redraws.
+local savedZoom = zoom
+zoom = 40
+viewRect.left, viewRect.right, viewRect.top, viewRect.bottom = 0, 1, 0, 1
+pin:Draw()
+local whole = pin.used
+viewRect.left, viewRect.right, viewRect.top, viewRect.bottom = 0.52, 0.525, 0.49, 0.51
+pin:Draw()
+local kept = pin.used
+assert(whole > 200 and kept > 0 and kept < 200, "only the view's dots are laid out: " .. kept .. " of " .. whole)
+for i = 1, kept do
+ local x = pin.lines[i].start[1]
+ assert(x >= 0.5175 * canvas:GetWidth() and x <= 0.5275 * canvas:GetWidth(), "every dot inside the view's margin")
+end
+-- A zoom asks on every frame it runs; the redraw waits for the next tenth of a second.
+pin:OnCanvasScaleChanged()
+assert(pin.scripts.OnUpdate and pin.used == kept, "a zoom waits")
+pin.scripts.OnUpdate(pin, 0.05)
+assert(pin.scripts.OnUpdate and pin.used == kept, "not before a tenth of a second")
+pin.scripts.OnUpdate(pin, 0.06)
+assert(not pin.scripts.OnUpdate, "one redraw, then it rests")
+-- A drag inside the margin needs nothing; one past it redraws where the view went.
+local drawn = pin.lines[1].start[1]
+viewRect.left, viewRect.right = 0.522, 0.523
+pin:OnViewMoved()
+assert(pin.lines[1].start[1] == drawn, "a drag inside the margin keeps the drawing")
+viewRect.left, viewRect.right, viewRect.top, viewRect.bottom = 0.54, 0.545, 0.49, 0.51
+pin:OnViewMoved()
+assert(pin.lines[1].start[1] > 0.535 * canvas:GetWidth(), "a drag past it redraws at the view")
+-- Put the whole route back in the pool for the checks after this one.
+viewRect.left, viewRect.right, viewRect.top, viewRect.bottom = 0, 1, 0, 1
+pin:Draw()
+zoom = savedZoom
 -- A shorter route hides the pairs it no longer needs and creates none: on the map its few dots fall under the stop.
 local longest, created = pin.used, lineCreations
 assert(api.NavigateRoute("Test", {{map=1414,x=0.5,y=0.4976,title="Near"}}))

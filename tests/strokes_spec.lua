@@ -423,4 +423,23 @@ check(measured(function()
 	end
 end) == 0, "nor does a world map redraw")
 
+-- Clipped to the view: a long walk's far end is drawn at a zoom where the whole walk would run past LIMIT, its dots in
+-- the places the whole walk has them, so a drag does not make them crawl.
+do
+	local long = { mode = "walk", points = { point(0.1, 0.5), point(6, 0.5) } }
+	local clipped = Strokes.New()
+	Strokes.Map(
+		clipped,
+		{ long },
+		mapView({ stitched = true, scale = 16, clipLeft = 5.5, clipRight = 5.6, clipTop = 0, clipBottom = 1 })
+	)
+	local kept = dots(clipped)
+	check(#kept > 0 and #kept < 200, "only what is near the view is drawn: " .. #kept)
+	for _, dot in ipairs(kept) do
+		check(dot[1] >= 5.5 * CANVAS and dot[1] <= 5.6 * CANVAS, "inside the clip")
+		local along = (dot[1] - 0.1 * CANVAS) % (SPACING / 16)
+		check(along < 1e-6 or SPACING / 16 - along < 1e-6, "where the whole walk has a dot")
+	end
+end
+
 print(string.format("strokes_spec: %d checks ok", checks))
