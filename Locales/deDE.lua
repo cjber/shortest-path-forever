@@ -461,3 +461,6 @@ L["%s (last %d):"] = "%s (letzte %d):" -- mt
 L["%s: no lines yet."] = "%s: noch keine Zeilen." -- mt
 L["Usage: /forever debug, /forever debug pin, /forever debug off, /forever debug show"] =
 	"Verwendung: /forever debug, /forever debug pin, /forever debug off, /forever debug show" -- mt
+L["Follow roads"] = "Straßen folgen" -- mt
+L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =
+	"Wege bleiben auf Straßen und gepflasterten Wegen, wenn das den Weg um weniger als die Hälfte verlängert. Straßen, die mit dem schlichten Erdboden einer Zone gemalt wurden, sind nicht bekannt." -- mt

@@ -1,5 +1,6 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
+-- rule-ignore: file-size-no-growth - the decoded walking grid and its searches share one hot path
 
 -- Walking routes over a continent's collision map: HPA* between ADT-tile clusters, an 8 yd grid inside them,
 -- then string-pulling so the drawn line is not jagged. FindMany resolves costs in one abstract Dijkstra.
@@ -20,6 +21,9 @@ Path.cacheKB = 24576 -- decoded grids across all maps; active coroutine locals a
 Path.clock = debugprofilestop or function()
 	return os.clock() * 1000
 end
+-- With Follow roads on, a yard off the road counts as 1.5 while a walk is chosen: a road is taken when it adds less
+-- than half again to the walk.
+local OFFROAD = 1.5
 
 local TILE = 1600 / 3
 local SNAP = 6 -- cells searched around an off-grid endpoint
@@ -147,6 +151,8 @@ local function State(map)
 			ends = {}, -- bounded local connections, shared by successive endpoint batches
 			endCount = 0,
 			nadj = {}, -- [id] = { target, cost swimming, cost walking on water, ... }
+			road = {}, -- [k] = road cells (local cell -> true), false when the cluster has none
+			roadEdges = {}, -- [k] = baked entrance edge ratios (RoadEdges.lua)
 		}
 		states[map] = st
 	end
@@ -421,6 +427,7 @@ local function evict(st, oldest)
 	decodedKB, decodedCount = decodedKB - st.sizes[oldest], decodedCount - 1
 	st.sizes[oldest], st.used[oldest] = nil, nil
 	st.val[oldest], st.moves[oldest], st.z[oldest], st.at[oldest], st.links[oldest] = nil, nil, nil, nil, nil
+	st.road[oldest], st.roadEdges[oldest] = nil, nil
 	st.decoded = st.decoded - 1
 end
 
@@ -579,6 +586,116 @@ local function adjacent(st, id)
 		st.graphSize[k], graphKB = st.graphSize[k] + size, graphKB + size
 	end
 	return adj
+end
+
+-- Road cells of cluster k (RoadCells.lua), decoded once: a set of local cell -> true, or false when it has none.
+-- Only read while Follow roads is on.
+local function decodeRoads(st, k)
+	local list = ns.RoadCells and ns.RoadCells[st.map]
+	local s = list and list[k + 1]
+	if not s then
+		return false
+	end
+	local set, lc, on, pos = {}, 0, false, 1
+	while pos <= #s do
+		local run = num(s, pos, 2)
+		pos = pos + 2
+		if run > 0 then
+			if on then
+				for cell = lc, lc + run - 1 do
+					set[cell] = true
+				end
+			end
+			lc = lc + run
+		end
+		on = not on
+	end
+	return set
+end
+
+local function roads(st, k)
+	local set = st.road[k]
+	if set == nil then
+		set = decodeRoads(st, k) or false
+		st.road[k] = set
+	end
+	return set or nil
+end
+
+-- Is this node's base cell a road cell of its cluster?
+local function roadNode(st, k, node)
+	local set = roads(st, k)
+	if not set then
+		return false
+	end
+	local C = st.C
+	local cell = node < C * C and node or st.at[k][node + 1]
+	return cell ~= nil and set[cell] == true
+end
+
+-- RoadEdges.lua's edge ratios for cluster k: a default run is "=" and its length in two base64 symbols, any other
+-- edge is four symbols (preference and real ratio for walking, then for water walking). A ratio q is
+-- 1 + q / 63 * (OFFROAD - 1); a default edge is OFFROAD and 1 in both modes.
+local function decodeRoadEdges(st, k)
+	local list = ns.RoadEdges and ns.RoadEdges[st.map]
+	local s = list and list[k + 1]
+	local ratios, e = {}, 0
+	if not s then
+		return ratios
+	end
+	local pos = 1
+	while pos <= #s do
+		if byte(s, pos) == 61 then -- "="
+			local n = num(s, pos + 1, 2)
+			pos = pos + 3
+			for _ = 1, n do
+				e = e + 1
+				ratios[e * 4 - 3], ratios[e * 4 - 2] = OFFROAD, 1
+				ratios[e * 4 - 1], ratios[e * 4] = OFFROAD, 1
+			end
+		else
+			local a, b, c, d = B64[byte(s, pos)], B64[byte(s, pos + 1)], B64[byte(s, pos + 2)], B64[byte(s, pos + 3)]
+			pos = pos + 4
+			e = e + 1
+			ratios[e * 4 - 3] = 1 + a / 63 * (OFFROAD - 1)
+			ratios[e * 4 - 2] = 1 + b / 63 * (OFFROAD - 1)
+			ratios[e * 4 - 1] = 1 + c / 63 * (OFFROAD - 1)
+			ratios[e * 4] = 1 + d / 63 * (OFFROAD - 1)
+		end
+	end
+	return ratios
+end
+
+-- An entrance's edge ratios, aligned with adjacent(st, id): for edge e, the preference and real ratio with normal
+-- swimming, then with water walking. Missing data is the default: OFFROAD and 1.
+local function roadEdges(st, id)
+	local k = floor(id / 4096)
+	local data = st.roadEdges[k]
+	if not data then
+		data = { ratios = decodeRoadEdges(st, k), at = {}, byId = {} }
+		local offset = 0
+		for _, node in ipairs(nodesOf(st, k)) do
+			data.at[node] = offset
+			offset = offset + #adjacent(st, node) / 3
+		end
+		st.roadEdges[k] = data
+	end
+	local cached = data.byId[id]
+	if cached then
+		return cached
+	end
+	local adj = adjacent(st, id)
+	local base = data.at[id] or 0
+	local r = {}
+	for e = 1, #adj / 3 do
+		local j = (base + e) * 4
+		r[e * 4 - 3] = data.ratios[j - 3] or OFFROAD
+		r[e * 4 - 2] = data.ratios[j - 2] or 1
+		r[e * 4 - 1] = data.ratios[j - 1] or OFFROAD
+		r[e * 4] = data.ratios[j] or 1
+	end
+	data.byId[id] = r
+	return r
 end
 
 -- An entrance's node in its cluster.
@@ -768,7 +885,7 @@ end
 
 -- Line of sight between two path entries, walking every cell the segment between their cell centres crosses and
 -- following the surface from node to node, so it cannot jump between floors.
-local function sight(st, P, a, b, water)
+local function sight(st, P, a, b, water, road)
 	local ax, ay, bx, by = P.x[a], P.y[a], P.x[b], P.y[b]
 	local k, node = P.k[a], P.n[a]
 	local dx, dy = bx - ax, by - ay
@@ -789,6 +906,9 @@ local function sight(st, P, a, b, water)
 		end
 		k, node = neighbour(st, k, node, x, y, mx, my, water)
 		if not k then
+			return false
+		end
+		if road and not roadNode(st, k, node) then
 			return false
 		end
 		x, y = x + mx, y + my
@@ -872,11 +992,16 @@ end
 -- Collapse a node path to its turns, then pull the string: from each anchor, jump to the furthest point in sight.
 -- Water may only be crossed where the path itself swam.
 local function smooth(st, P)
-	local PX, PY, PW = P.x, P.y, P.w
+	local PX, PY, PW, PR = P.x, P.y, P.w, P.r
 	local n = #PX
 	local keep = { 1 }
 	for i = 2, n - 1 do
-		if PX[i + 1] - PX[i] ~= PX[i] - PX[i - 1] or PY[i + 1] - PY[i] ~= PY[i] - PY[i - 1] or PW[i + 1] ~= PW[i] then
+		if
+			PX[i + 1] - PX[i] ~= PX[i] - PX[i - 1]
+			or PY[i + 1] - PY[i] ~= PY[i] - PY[i - 1]
+			or PW[i + 1] ~= PW[i]
+			or (PR and PR[i + 1] - PR[i] ~= PR[i] - PR[i - 1])
+		then
 			keep[#keep + 1] = i
 		end
 	end
@@ -888,7 +1013,8 @@ local function smooth(st, P)
 		local b = a + 1
 		for j = a + 2, #keep do
 			local p, q = keep[a], keep[j]
-			if not sight(st, P, p, q, PW[q] - PW[p] > 0) then
+			local road = PR and PR[q] - PR[p] == 0
+			if not sight(st, P, p, q, PW[q] - PW[p] > 0, road) then
 				break
 			end
 			b = j
@@ -958,6 +1084,8 @@ ns.PathGrid = {
 	locate = locate,
 	standing = standing,
 	snap = snap,
+	roads = roads,
+	roadEdges = roadEdges,
 	smooth = smooth,
 	toward = toward,
 	bare = bare,
@@ -966,6 +1094,7 @@ ns.PathGrid = {
 	TILE = TILE,
 	SNAP = SNAP,
 	ZTOL = ZTOL,
+	OFFROAD = OFFROAD,
 	DX = DX,
 	DY = DY,
 }

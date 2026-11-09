@@ -486,3 +486,6 @@ L["%s (last %d):"] = "%s (последние %d):" -- mt
 L["%s: no lines yet."] = "%s: строк пока нет." -- mt
 L["Usage: /forever debug, /forever debug pin, /forever debug off, /forever debug show"] =
 	"Использование: /forever debug, /forever debug pin, /forever debug off, /forever debug show" -- mt
+L["Follow roads"] = "Следовать дорогам" -- mt
+L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =
+	"Пешие маршруты держатся дорог и мощёных улиц, если это удлиняет путь менее чем наполовину. Дороги, нарисованные обычной землёй зоны, не распознаются." -- mt

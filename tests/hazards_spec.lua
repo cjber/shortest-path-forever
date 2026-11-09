@@ -115,6 +115,12 @@ do
 		not profile.ConnectorWalk({ map = 1, x = -700, y = 0 }, { map = 2, x = -650, y = 0 }),
 		"connectors stay on one map"
 	)
+	-- Follow roads is part of the profile: a separate cache key and the flag the walking search reads.
+	assert(not profile.roads, "roads are off by default")
+	ns.db.followRoads = true
+	local withRoads = Hazards.Profile(west, east)
+	assert(withRoads.roads == true and withRoads.key ~= profile.key, "a road search is keyed apart")
+	ns.db.followRoads = false
 
 	-- Where the journey starts or ends is never avoided: a goal in the high zone, or in the town.
 	profile = Hazards.Profile(west, { map = 1, x = 500, y = 0 })

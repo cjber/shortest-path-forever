@@ -1,5 +1,6 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
+-- rule-ignore: file-size-no-growth - the walking search and its refinement share one hot path
 
 -- Walking searches over PathGrid.lua's decoded maps: HPA* between ADT-tile clusters, an 8 yd grid inside them, and
 -- FindMany's abstract Dijkstra. PathJobs.lua slices them over frames.
@@ -13,10 +14,12 @@ local entrance, locate, standing, snap, smooth = Grid.entrance, Grid.locate, Gri
 local toward = Grid.toward
 
 local TILE, SNAP, ZTOL, DX, DY = Grid.TILE, Grid.SNAP, Grid.ZTOL, Grid.DX, Grid.DY
+local OFFROAD = Grid.OFFROAD
 local RETRIES = 8 -- other cells tried for an endpoint stuck in a pocket
 local DROP = 30 -- how far below its surface a stuck endpoint may move: one can jump down a ledge, never climb one
 local SQRT2 = math.sqrt(2)
 local START, GOAL = -1, -2
+local ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
 local floor, sqrt, huge, max, abs = math.floor, math.sqrt, math.huge, math.max, math.abs
 local yield = coroutine.yield
@@ -65,10 +68,11 @@ end
 -- node + 1. With goal set it is A*, otherwise Dijkstra that stops once every node in targets (a set of nodes) is
 -- settled.
 local function Tree()
-	return { g = {}, par = {}, stamp = {}, closed = {}, gen = 0 }
+	return { g = {}, r = {}, par = {}, stamp = {}, closed = {}, gen = 0 }
 end
--- One grid search loop; splitting moves its retained arrays to upvalues on the hot path
-local function search(st, k, swim, source, tree, goal, targets, left)
+-- One grid search loop; splitting moves its retained arrays to upvalues on the hot path. g is the preference
+-- cost it orders by and r the real cost it reports.
+local function search(st, k, swim, source, tree, goal, targets, left, roads)
 	local val = grid(st, k)
 	-- Search only enters populated grids, through snapped endpoints or decoded entrances.
 	---@cast val number[]
@@ -76,26 +80,28 @@ local function search(st, k, swim, source, tree, goal, targets, left)
 	local m, z, at, links = st.moves[k], st.z[k], st.at[k], st.links[k]
 	local C, cs = st.C, st.cs
 	local N = C * C
-	local g, par, stamp, closed = tree.g, tree.par, tree.stamp, tree.closed
+	local g, r, par, stamp, closed = tree.g, tree.r, tree.par, tree.stamp, tree.closed
 	tree.gen = tree.gen + 1
 	local gen = tree.gen
 	tree.k = k
 	local gx, gy = 0, 0
 	if goal then
-		local cell = goal < N and goal or at[goal + 1]
-		gx, gy = floor(cell / C), cell % C
+		local goalCell = goal < N and goal or at[goal + 1]
+		gx, gy = floor(goalCell / C), goalCell % C
 	end
 	hn = 0
-	g[source + 1], par[source + 1], stamp[source + 1] = 0, -1, gen
+	g[source + 1], r[source + 1], par[source + 1], stamp[source + 1] = 0, 0, -1, gen
 	push(0, source)
 
-	---@type number, number, number, number
-	local u, ux, uy, gu
+	---@type number, number, number, number, number
+	local u, ux, uy, gu, ru
 	local function relax(v, length)
 		local i = v + 1
-		local gv = gu + length * cs * (val[i] == 2 and swim or 1)
+		local step = length * cs * (val[i] == 2 and swim or 1)
+		local base = v < N and v or at[i]
+		local gv = gu + (roads and not roads[base] and step * OFFROAD or step)
 		if stamp[i] ~= gen or gv < g[i] then
-			g[i], par[i], stamp[i] = gv, u, gen
+			g[i], r[i], par[i], stamp[i] = gv, ru + step, u, gen
 			local h = 0
 			if goal then
 				local cell = v < N and v or at[i]
@@ -128,7 +134,7 @@ local function search(st, k, swim, source, tree, goal, targets, left)
 				end
 			end
 			local cell = u < N and u or at[i]
-			gu, ux, uy = g[i], floor(cell / C), cell % C
+			gu, ru, ux, uy = g[i], r[i], floor(cell / C), cell % C
 			if u < N then
 				local mi = m[i] % 16
 				local px, mx = mi % 2 == 1, ux > 0 and m[i - C] % 2 == 1
@@ -192,6 +198,10 @@ end
 
 local trees = { S = Tree(), G = Tree(), R = Tree() }
 
+-- The bake runs a whole map's searches back to back; two trees keep their grown arrays instead of rebuilding four
+-- tables for every search. The gen stamp makes each search start clean.
+local bakeTrees = { Tree(), Tree() }
+
 -- An entrance's world position: the centre of its cell.
 local function nodeXY(st, id)
 	local k, C = floor(id / 4096), st.C
@@ -248,7 +258,7 @@ end
 local ag, areal, apar, astamp, aclosed, agen = {}, {}, {}, {}, {}, 0
 
 -- Endpoint searches: grid Dijkstra to the cluster's entrances.
-local function endpoint(st, swim, tree, k, node)
+local function endpoint(st, swim, tree, k, node, roadsOn)
 	local targets, left = {}, 0
 	for _, id in ipairs(nodesOf(st, k)) do
 		local e = entrance(st, id)
@@ -256,13 +266,13 @@ local function endpoint(st, swim, tree, k, node)
 			targets[e], left = true, left + 1
 		end
 	end
-	search(st, k, swim, node, tree, nil, targets, left)
+	search(st, k, swim, node, tree, nil, targets, left, roadsOn and Grid.roads(st, k))
 end
 -- An endpoint on a rooftop or ledge the grid cannot leave moves to the nearest node that reaches an entrance,
 -- down a ledge but never up one or onto another level.
-local function settle(st, swim, tree, k, node)
+local function settle(st, swim, tree, k, node, roadsOn)
 	local C = st.C
-	endpoint(st, swim, tree, k, node)
+	endpoint(st, swim, tree, k, node, roadsOn)
 	local function connected()
 		for _, id in ipairs(nodesOf(st, k)) do
 			local e = entrance(st, id)
@@ -293,7 +303,7 @@ local function settle(st, swim, tree, k, node)
 					local rise = near and st.z[k][near + 1] - h
 					if near and rise <= ZTOL and rise >= -DROP and not reached(tree, near) then
 						tries, node = tries + 1, near
-						endpoint(st, swim, tree, k, node)
+						endpoint(st, swim, tree, k, node, roadsOn)
 						if connected() then
 							return node
 						end
@@ -308,14 +318,14 @@ end
 -- Both APIs connect endpoints with the same local search. Connections are outward at both ends, as in the
 -- baked undirected graph; the same-cluster direct edge retains the grid's entering-water direction.
 local function connections(st, tree, k)
-	local edges = {}
+	local edges, reals = {}, {}
 	for _, id in ipairs(nodesOf(st, k)) do
 		local e = entrance(st, id)
 		if e and reached(tree, e) then
-			edges[id] = tree.g[e + 1]
+			edges[id], reals[id] = tree.g[e + 1], tree.r[e + 1]
 		end
 	end
-	return edges
+	return edges, reals
 end
 
 local function pointNode(st, point)
@@ -329,14 +339,15 @@ end
 
 -- Fixed places recur in both batches and in later journeys. Keep their small entrance-cost vectors and only the
 -- last eight grid trees; cap the cache so moving start positions cannot grow it for the entire play session.
-local function connect(st, swim, k, node)
+local function connect(st, swim, k, node, roadsOn)
 	nodesOf(st, k)
-	local key = k .. ":" .. node .. ":" .. swim
+	local key = k .. ":" .. node .. ":" .. swim .. (roadsOn and ":r" or "")
 	local entry = st.ends[key]
 	if not entry then
 		local tree = Tree()
-		node = settle(st, swim, tree, k, node)
-		entry = { node = node, edges = connections(st, tree, k), tree = tree }
+		node = settle(st, swim, tree, k, node, roadsOn)
+		local edges, reals = connections(st, tree, k)
+		entry = { node = node, edges = edges, reals = reals, tree = tree }
 		-- A handful of local trees removes repeated endpoint searches without retaining a continent's grids.
 		st.endTrees = st.endTrees or {}
 		st.endTrees[#st.endTrees + 1] = entry
@@ -348,14 +359,14 @@ local function connect(st, swim, k, node)
 		end
 		st.ends[key], st.endCount = entry, st.endCount + 1
 	end
-	return entry.node, entry.edges, entry.tree
+	return entry.node, entry.edges, entry.reals, entry.tree
 end
 
 -- A point without a height (the player, whose UnitPosition height is a placeholder 0, or a map click) could stand on
 -- any surface at its spot, so it starts from each one within a cell of it at a distinct height and the search keeps
 -- the cheapest: a street beside or over a canal is not walked from the canal bed. Returns each surface's connection,
 -- the entrance costs merged by minimum and, per entrance, the surface it came from.
-local function connectPoint(st, swim, k, node, h)
+local function connectPoint(st, swim, k, node, h, roadsOn)
 	local nodes = { node }
 	if not h then
 		local values = grid(st, k)
@@ -394,17 +405,17 @@ local function connectPoint(st, swim, k, node, h)
 			end
 		end
 	end
-	local ends, merged, via = {}, {}, {}
+	local ends, merged, mergedReal, via = {}, {}, {}, {}
 	for _, start in ipairs(nodes) do
-		local n, edges, tree = connect(st, swim, k, start)
+		local n, edges, reals, tree = connect(st, swim, k, start, roadsOn)
 		ends[#ends + 1] = { node = n, tree = tree }
 		for id, cost in pairs(edges) do
 			if not merged[id] or cost < merged[id] then
-				merged[id], via[id] = cost, ends[#ends]
+				merged[id], mergedReal[id], via[id] = cost, reals[id], ends[#ends]
 			end
 		end
 	end
-	return ends, merged, via
+	return ends, merged, mergedReal, via
 end
 -- A point's position in global cells, and the node it stands on in its own cell: within ZTOL of its height, or the
 -- base surface when it has none.
@@ -470,10 +481,11 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 		return nil, "offmesh"
 	end
 	local C = st.C
+	local roadsOn = hz and hz.roads
 
 	local S, G = trees.S, trees.G
-	local starts, source, sourceVia = connectPoint(st, swim, sk, sc, from.z)
-	local goals, target, targetVia = connectPoint(st, swim, gk, gc, to.z)
+	local starts, source, sourceReal, sourceVia = connectPoint(st, swim, sk, sc, from.z, roadsOn)
+	local goals, target, targetReal, targetVia = connectPoint(st, swim, gk, gc, to.z, roadsOn)
 	local key = table.concat({ sk, sc, gk, gc, swim, from.z and 1 or 0, to.z and 1 or 0, hz and hz.key or "" }, ":")
 	st.paths = st.paths or {}
 	local cached = st.paths[key]
@@ -482,12 +494,16 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 	if cached then
 		hops, cost, directFrom, directTo = cached.hops, cached.cost, cached.directFrom, cached.directTo
 	else
-		local direct
+		local direct, directReal
 		if sk == gk then
+			local roadSet = roadsOn and Grid.roads(st, sk)
 			for _, a in ipairs(starts) do
 				for _, b in ipairs(goals) do
-					if search(st, sk, swim, a.node, S, b.node) and (not direct or S.g[b.node + 1] < direct) then
-						direct, directFrom, directTo = S.g[b.node + 1], a.node, b.node
+					if search(st, sk, swim, a.node, S, b.node, nil, nil, roadSet) then
+						local gv, rv = S.g[b.node + 1], S.r[b.node + 1]
+						if not direct or gv < direct then
+							direct, directReal, directFrom, directTo = gv, rv, a.node, b.node
+						end
 					end
 				end
 			end
@@ -529,10 +545,10 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 			end
 		end
 		for id, distance in pairs(source) do
-			relax(id, distance, distance, START)
+			relax(id, distance, sourceReal[id], START)
 		end
 		if direct then
-			relax(GOAL, direct, direct, START)
+			relax(GOAL, direct, directReal, START)
 		end
 		local found = false
 		while hn > 0 do
@@ -547,17 +563,28 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 				local gu = ag[u]
 				local ru = areal[u]
 				if target[u] then
-					relax(GOAL, gu + target[u], ru + target[u], u)
+					relax(GOAL, gu + target[u], ru + targetReal[u], u)
 				end
 				nodesOf(st, floor(u / 4096))
 				local adj = adjacent(st, u)
+				local ratios = roadsOn and Grid.roadEdges(st, u) or nil
 				for e = 1, #adj, 3 do
 					local v = adj[e]
 					if aclosed[v] ~= gen then
 						nodesOf(st, floor(v / 4096))
 						local yards = adj[e + cost2]
 						local factor = hz and hazard(st, hz, u, v) or 1
-						relax(v, gu + yards * factor, ru + yards, u)
+						if ratios then
+							local ei, m = (e + 2) / 3, cost2 == 2 and 2 or 0
+							relax(
+								v,
+								gu + yards * ratios[ei * 4 - 3 + m] * factor,
+								ru + yards * ratios[ei * 4 - 2 + m],
+								u
+							)
+						else
+							relax(v, gu + yards * factor, ru + yards, u)
+						end
 					end
 				end
 			end
@@ -585,6 +612,9 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 	-- graph may route through an entrance a little off the way, which refines to a spur walked out and back: a node
 	-- reached again cuts the loop since its first visit, so the drawn walk never doubles back.
 	local P = { x = {}, y = {}, w = {}, k = {}, n = {} }
+	if roadsOn then
+		P.roads, P.r = true, {}
+	end
 	local seen = {}
 	local function add(k, node)
 		local id = k * 1048576 + node
@@ -593,6 +623,9 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 			for j = #P.x, at + 1, -1 do
 				seen[P.k[j] * 1048576 + P.n[j]] = nil
 				P.x[j], P.y[j], P.w[j], P.k[j], P.n[j] = nil, nil, nil, nil, nil
+				if P.r then
+					P.r[j] = nil
+				end
 			end
 			return
 		end
@@ -601,6 +634,10 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 		P.x[n + 1], P.y[n + 1] = floor(k / st.ny) * C + floor(cell / C), (k % st.ny) * C + cell % C
 		P.k[n + 1], P.n[n + 1] = k, node
 		P.w[n + 1] = (P.w[n] or 0) + ((st.val[k] or grid(st, k))[node + 1] == 2 and 1 or 0)
+		if P.r then
+			local roadSet = Grid.roads(st, k)
+			P.r[n + 1] = (P.r[n] or 0) + ((not roadSet or not roadSet[cell]) and 1 or 0)
+		end
 		seen[id] = n + 1
 	end
 	local function addAll(k, nodes, first, last, step)
@@ -612,14 +649,14 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 	for i = #hops, 2, -1 do
 		local a, b = hops[i], hops[i - 1]
 		if a == START and b == GOAL then
-			search(st, sk, swim, directFrom, S, directTo)
+			search(st, sk, swim, directFrom, S, directTo, nil, nil, roadsOn and Grid.roads(st, sk))
 			local nodes = trace(S, directTo, {})
 			addAll(sk, nodes, #nodes, 1, -1)
 		elseif a == START then
 			local start = sourceVia[b]
 			local tree = start.tree
 			if not tree or not reached(tree, entrance(st, b)) then
-				search(st, sk, swim, start.node, S, entrance(st, b))
+				search(st, sk, swim, start.node, S, entrance(st, b), nil, nil, roadsOn and Grid.roads(st, sk))
 				tree = S
 			end
 			local nodes = trace(tree, entrance(st, b), {})
@@ -628,7 +665,7 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 			local goal = targetVia[a]
 			local tree = goal.tree
 			if not tree or not reached(tree, entrance(st, a)) then
-				search(st, gk, swim, goal.node, G, entrance(st, a))
+				search(st, gk, swim, goal.node, G, entrance(st, a), nil, nil, roadsOn and Grid.roads(st, gk))
 				tree = G
 			end
 			local nodes = trace(tree, entrance(st, a), {})
@@ -636,7 +673,7 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 		else
 			local ka, kb = floor(a / 4096), floor(b / 4096)
 			local ea, eb = entrance(st, a), entrance(st, b)
-			if ka == kb and search(st, ka, swim, ea, R, eb) then
+			if ka == kb and search(st, ka, swim, ea, R, eb, nil, nil, roadsOn and Grid.roads(st, ka)) then
 				local nodes = trace(R, eb, {})
 				addAll(ka, nodes, #nodes, 1, -1)
 			else -- neighbouring entrances across a cluster border
@@ -753,7 +790,8 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 		end
 	end
 	local swim, cost2 = waterWalking and 1 or st.swim, waterWalking and 2 or 1
-	local starts, source = connectPoint(st, swim, sk, sc, from.z)
+	local roadsOn = hz and hz.roads
+	local starts, source, sourceReal = connectPoint(st, swim, sk, sc, from.z, roadsOn)
 	local clusters, links, dist, real, closed, left = {}, {}, {}, {}, {}, #targets
 	for i, point in ipairs(targets) do
 		local k = locate(st, point.x, point.y)
@@ -782,12 +820,12 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 		-- Local searches need their own heap, including across a yield midway through a connection.
 		local keys, values, size = hk, hv, hn
 		hk, hv, hn = {}, {}, 0
-		local direct, ends = {}, {}
+		local direct, directReal, ends, realEnds = {}, {}, {}, {}
 		for _, i in ipairs(list) do
 			local _, node = pointNode(st, targets[i])
 			if node then
 				local goals
-				goals, ends[i] = connectPoint(st, swim, k, node, targets[i].z)
+				goals, ends[i], realEnds[i] = connectPoint(st, swim, k, node, targets[i].z, roadsOn)
 				for _, a in ipairs(k == sk and starts or {}) do
 					for _, b in ipairs(goals) do
 						-- Both trees search outward from their endpoint; a reverse batch walks to the source.
@@ -795,16 +833,16 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 						if reverse then
 							first, last, tree = b.node, a.node, b.tree
 						end
-						local cost
+						local cost, realCost
 						if first == last then
-							cost = 0
+							cost, realCost = 0, 0
 						elseif tree and reached(tree, last) then
-							cost = tree.g[last + 1]
-						elseif search(st, k, swim, first, trees.R, last) then
-							cost = trees.R.g[last + 1]
+							cost, realCost = tree.g[last + 1], tree.r[last + 1]
+						elseif search(st, k, swim, first, trees.R, last, nil, nil, roadsOn and Grid.roads(st, k)) then
+							cost, realCost = trees.R.g[last + 1], trees.R.r[last + 1]
 						end
 						if cost and (not direct[i] or cost < direct[i]) then
-							direct[i] = cost
+							direct[i], directReal[i] = cost, realCost
 						end
 					end
 				end
@@ -817,19 +855,20 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 		end
 		hk, hv, hn = keys, values, size
 		for i, cost in pairs(direct) do
-			relax(-i, cost, cost)
+			relax(-i, cost, directReal[i])
 		end
 		for i, edges in pairs(ends) do
+			local reals = realEnds[i]
 			for id, cost in pairs(edges) do
 				links[id] = links[id] or {}
 				local joined = links[id]
-				joined[#joined + 1], joined[#joined + 2], joined[#joined + 3] = -i, cost, cost
+				joined[#joined + 1], joined[#joined + 2], joined[#joined + 3] = -i, cost, reals[id]
 			end
 		end
 	end
 	prepare(sk)
 	for id, cost in pairs(source) do
-		relax(id, cost, cost)
+		relax(id, cost, sourceReal[id])
 	end
 	while hn > 0 and left > 0 do
 		-- Until the popped node's outgoing edges are relaxed, its key still bounds the frontier.
@@ -853,12 +892,22 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 				end
 				nodesOf(st, k)
 				local adj = adjacent(st, u)
+				local ratios = roadsOn and Grid.roadEdges(st, u) or nil
 				for e = 1, #adj, 3 do
 					local v = adj[e]
 					if not closed[v] then
 						local yards = adj[e + cost2]
 						local factor = hz and hazard(st, hz, u, v) or 1
-						relax(v, dist[u] + yards * factor, real[u] + yards)
+						if ratios then
+							local ei, m = (e + 2) / 3, cost2 == 2 and 2 or 0
+							relax(
+								v,
+								dist[u] + yards * ratios[ei * 4 - 3 + m] * factor,
+								real[u] + yards * ratios[ei * 4 - 2 + m]
+							)
+						else
+							relax(v, dist[u] + yards * factor, real[u] + yards)
+						end
 					end
 				end
 			end
@@ -874,6 +923,167 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 		end
 	end
 	return costs
+end
+
+-- Does this cluster's grid contain water? Walking with water walking and swimming costs the same over a grid with
+-- none, so the bake can answer both modes from one search.
+local function wetCluster(st, k)
+	local val = grid(st, k)
+	if not val then
+		return true
+	end
+	for i = 1, st.C * st.C do
+		if val[i] == 2 then
+			return true
+		end
+	end
+	return false
+end
+
+-- The bake relaxes hundreds of thousands of edges against one cluster's roads. Its sparse set (only road cells) reads
+-- as a hash lookup there, so expand it to a dense array once per cluster.
+local function denseRoads(st, road)
+	local set = {}
+	for cell = 0, st.C * st.C - 1 do
+		set[cell] = road[cell] == true
+	end
+	return set
+end
+
+-- Bake RoadEdges.lua: each entrance graph edge's road ratios, four base64 symbols per non-default edge, or a
+-- default run as "=" and its length in two symbols. Only the bake tool calls this.
+---@param map number
+---@return table<number, string>
+function Path.BakeRoadEdges(map)
+	Deadline(huge)
+	local st = State(map)
+	local out = {}
+	if not st then
+		return out
+	end
+	local function ratioQ(value)
+		local q = floor((value - 1) / (OFFROAD - 1) * 63 + 0.5)
+		if q < 0 then
+			return 0
+		elseif q > 63 then
+			return 63
+		end
+		return q
+	end
+	local function ratio(value)
+		if value < 1 then
+			return 1
+		elseif value > OFFROAD then
+			return OFFROAD
+		end
+		return value
+	end
+	for k = 0, st.D.nx * st.ny - 1 do
+		local nodes = nodesOf(st, k)
+		if #nodes > 0 then
+			local road = Grid.roads(st, k)
+			local wet, roadDense
+			local parts, defaults, any = {}, 0, false
+			local function flush()
+				while defaults > 0 do
+					local n = defaults > 4095 and 4095 or defaults
+					parts[#parts + 1] = "="
+						.. ALPHABET:sub(floor(n / 64) + 1, floor(n / 64) + 1)
+						.. ALPHABET:sub(n % 64 + 1, n % 64 + 1)
+					defaults = defaults - n
+				end
+			end
+			for _, u in ipairs(nodes) do
+				local adj = adjacent(st, u)
+				local degree = #adj / 3
+				local uNode = entrance(st, u)
+				local targets, left = {}, 0
+				if road and uNode then
+					for e = 1, degree do
+						local v = adj[e * 3 - 2]
+						if floor(v / 4096) == k then
+							local target = entrance(st, v)
+							if target and not targets[target] then
+								targets[target], left = true, left + 1
+							end
+						end
+					end
+				end
+				local searches
+				if left > 0 then
+					if wet == nil then
+						wet = st.swim ~= 1 and wetCluster(st, k)
+					end
+					roadDense = roadDense or denseRoads(st, road)
+					searches = {}
+					local tree = bakeTrees[1]
+					search(st, k, st.swim, uNode, tree, nil, targets, left, roadDense)
+					searches[1] = tree
+					if wet then
+						tree = bakeTrees[2]
+						search(st, k, 1, uNode, tree, nil, targets, left, roadDense)
+					end
+					searches[2] = tree
+				end
+				for e = 1, degree do
+					local v = adj[e * 3 - 2]
+					local c1, c2 = adj[e * 3 - 1], adj[e * 3]
+					local target = entrance(st, v)
+					local q1, q2, q3, q4
+					if floor(v / 4096) == k then
+						if searches and target then
+							local tree = searches[1]
+							if c1 == 0 or not reached(tree, target) then
+								q1, q2 = 63, 0
+							else
+								q1, q2 = ratioQ(ratio(tree.g[target + 1] / c1)), ratioQ(ratio(tree.r[target + 1] / c1))
+							end
+							tree = searches[2]
+							if c2 == 0 or not reached(tree, target) then
+								q3, q4 = 63, 0
+							else
+								q3, q4 = ratioQ(ratio(tree.g[target + 1] / c2)), ratioQ(ratio(tree.r[target + 1] / c2))
+							end
+						else
+							q1, q2, q3, q4 = 63, 0, 63, 0
+						end
+					else
+						local on = false
+						if target then
+							local other = Grid.roads(st, floor(v / 4096))
+							local cell = metadata(st, v)
+							on = other and cell and other[cell] or false
+						end
+						if c1 == 0 then
+							q1, q2 = 63, 0
+						else
+							q1, q2 = on and 0 or 63, 0
+						end
+						if c2 == 0 then
+							q3, q4 = 63, 0
+						else
+							q3, q4 = on and 0 or 63, 0
+						end
+					end
+					if q1 == 63 and q2 == 0 and q3 == 63 and q4 == 0 then
+						defaults = defaults + 1
+					else
+						flush()
+						any = true
+						parts[#parts + 1] = ALPHABET:sub(q1 + 1, q1 + 1)
+							.. ALPHABET:sub(q2 + 1, q2 + 1)
+							.. ALPHABET:sub(q3 + 1, q3 + 1)
+							.. ALPHABET:sub(q4 + 1, q4 + 1)
+					end
+				end
+			end
+			flush()
+			if any then
+				out[k] = table.concat(parts)
+			end
+		end
+	end
+	return out
 end
 
 -- Eight-direction grid distance is a lower bound even across clusters. Costs omit snapping and height

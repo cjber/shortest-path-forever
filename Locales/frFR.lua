@@ -466,3 +466,6 @@ L["%s (last %d):"] = "%s (dernières %d) :" -- mt
 L["%s: no lines yet."] = "%s : aucune ligne pour l'instant." -- mt
 L["Usage: /forever debug, /forever debug pin, /forever debug off, /forever debug show"] =
 	"Utilisation : /forever debug, /forever debug pin, /forever debug off, /forever debug show" -- mt
+L["Follow roads"] = "Suivre les routes" -- mt
+L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =
+	"Les trajets à pied suivent les routes et les rues pavées lorsque cela rallonge le trajet de moins de moitié. Les routes peintes avec la terre simple d'une zone ne sont pas reconnues." -- mt

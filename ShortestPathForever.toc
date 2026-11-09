@@ -36,6 +36,8 @@ Data\Teleports.lua
 Data\Zones.lua
 Data\Services.lua
 Data\Walks.lua
+Data\RoadCells.lua
+Data\RoadEdges.lua
 Transport\Model.lua
 Routing\Planner.lua
 Core\Core.lua

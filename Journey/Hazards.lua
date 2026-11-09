@@ -25,6 +25,7 @@ local KEEP = 50000
 ---@field TransportNear fun(map: number, x: number, y: number): boolean -- a dock or flight master within 200 yards
 ---@field ConnectorWalk fun(from: SPFPoint, to: SPFPoint): boolean -- a short walk next to a dock or flight master
 ---@field Segment fun(map: number, ax: number, ay: number, bx: number, by: number): number -- mean factor along it
+---@field roads? true -- Follow roads is on: walks prefer road cells (Path.lua)
 ---@field zones table<number, number> -- [uiMap] = factor, for the avoided zones and hostile capitals
 ---@field cities table<number, boolean> -- every hostile capital, exempt ones included
 ---@field towns SPFHazardTown[] -- every hostile town, exempt ones included
@@ -300,13 +301,14 @@ function Hazards.Profile(from, goal)
 	end
 	return {
 		-- What is avoided, not why: a level-up that crosses no zone's threshold keeps every search.
-		key = (faction or "") .. ":" .. table.concat(keys, ","),
+		key = (faction or "") .. ":" .. table.concat(keys, ",") .. (ns.db.followRoads and ":roads" or ""),
 		Point = Point,
 		Chord = Chord,
 		Near = Near,
 		TransportNear = TransportNear,
 		ConnectorWalk = ConnectorWalk,
 		Segment = Segment,
+		roads = ns.db.followRoads and true or nil,
 		zones = zones,
 		cities = cities,
 		towns = towns,

@@ -234,5 +234,8 @@ read_globals[#read_globals + 1] = "GetNumGuildMembers"
 
 -- A translated line is one string; StyLua already wraps what it can, and CJK text counts bytes, not columns.
 files["Locales/*.lua"] = { max_line_length = false }
+-- Generated road data carries long encoded strings; the producers decide their line length.
+files["Data/RoadCells.lua"] = { max_line_length = false }
+files["Data/RoadEdges.lua"] = { max_line_length = false }
 
 files["tests/companion_maps_spec.lua"] = { globals = { "C_AddOns", "GetTime" } }

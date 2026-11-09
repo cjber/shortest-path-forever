@@ -72,6 +72,7 @@ local DEFAULTS = {
 	compassBackground = 0,
 	corpse = true,
 	avoidHighZones = true,
+	followRoads = false,
 	whatsNew = true,
 }
 ns.Defaults = DEFAULTS

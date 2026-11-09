@@ -213,6 +213,7 @@ local ns = {
 		arrivalSound = false,
 		resumeJourney = false,
 		routeColor = "gold",
+		followRoads = false,
 	}, {
 		__index = function()
 			return true
@@ -291,6 +292,7 @@ local groups = {
 		"restedxpHideArrow",
 		"guidelime",
 		"avoidHighZones",
+		"followRoads",
 		"teleports",
 		"hearthMinimumSavings",
 		"guideStops",
@@ -334,7 +336,8 @@ local order = {
 }
 
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
-assert(#rows == 56, #rows)
+-- The follow-roads branch added followRoads, main added npcArrows, so the merged list is one row longer.
+assert(#rows == 57, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -435,6 +438,9 @@ assert(Row("avoidHighZones").setting.default == true, "avoiding high zones is on
 local policyBefore = policyChanged
 Row("avoidHighZones").setting.onChanged()
 assert(policyChanged == policyBefore + 1, "the journey plans again with the new costs")
+assert(Row("followRoads").setting.default == false, "following roads is off by default")
+Row("followRoads").setting.onChanged()
+assert(policyChanged == policyBefore + 2, "following roads plans again with the new costs")
 assert(Row("tomtom").setting.default == true)
 assert(Row("tomtom").tooltip:find("TomTom", 1, true), "the row names the addon it answers")
 Row("tomtom").setting.onChanged()

@@ -373,6 +373,14 @@ ns.Init(function()
 		ns.TravelPolicyChanged
 	)
 	Checkbox(
+		"followRoads",
+		L["Follow roads"],
+		-- luacheck: push ignore 631
+		L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."],
+		-- luacheck: pop
+		ns.TravelPolicyChanged
+	)
+	Checkbox(
 		"teleports",
 		L["Use hearth and teleports"],
 		L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."]

@@ -452,3 +452,6 @@ L["%s (last %d):"] = "%s（最近 %d 条）：" -- mt
 L["%s: no lines yet."] = "%s：还没有日志行。" -- mt
 L["Usage: /forever debug, /forever debug pin, /forever debug off, /forever debug show"] =
 	"用法：/forever debug、/forever debug pin、/forever debug off、/forever debug show" -- mt
+L["Follow roads"] = "沿道路行走" -- mt
+L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =
+	"当绕行不到一半时，步行路线会沿道路和铺装街道前进。用区域普通泥土绘制的道路尚无法识别。" -- mt

@@ -468,3 +468,6 @@ L["%s (last %d):"] = "%s (최근 %d개):" -- mt
 L["%s: no lines yet."] = "%s: 아직 줄이 없습니다." -- mt
 L["Usage: /forever debug, /forever debug pin, /forever debug off, /forever debug show"] =
 	"사용법: /forever debug, /forever debug pin, /forever debug off, /forever debug show" -- mt
+L["Follow roads"] = "도로 따라가기" -- mt
+L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =
+	"이동 경로는 추가 거리가 절반 미만이면 도로와 포장된 거리를 따라갑니다. 지역의 일반 흙으로 칠해진 도로는 알 수 없습니다." -- mt

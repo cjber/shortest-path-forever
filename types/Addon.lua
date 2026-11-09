@@ -17,6 +17,8 @@
 ---@field ClassTrainers table<number, number> class trainer NPC -> its class (Data/Services.lua)
 ---@field Walks table<number, table<string, (number|false)[]>>
 ---@field WalkPlaces table<number, table<string, number[]>>
+---@field RoadCells table<number, table<number, string>>
+---@field RoadEdges table<number, table<number, string>>
 ---@field db SPFDatabase
 ---@field charDB SPFCharacterDatabase
 ---@field Defaults table<string, boolean|number|string>
@@ -244,6 +246,7 @@
 ---@field compassY? number
 ---@field corpse? boolean
 ---@field avoidHighZones? boolean -- walks go round zones whose lowest level is 4 or more above yours (Hazards.lua)
+---@field followRoads? boolean -- walks keep to roads where the detour is short (Data/RoadCells.lua)
 ---@field whatsNew? boolean
 ---@field seenVersion? string -- the version last loaded, for the line after an update (WhatsNew.lua)
 ---@field debug? boolean

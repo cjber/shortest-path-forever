@@ -134,6 +134,10 @@ before its `v*` tag, since the release publishes it as the notes.
 - WFA-28: `Data/Walks.lua` and `Nav/` (walking costs and walking maps): baked by
   `tools/bake_walks.lua` and `tools/baker/` from a local client install's terrain; neither database holds
   terrain. A walk you are on is searched live on the walking map.
+- WFA-28: `Data/RoadCells.lua` and `Data/RoadEdges.lua` (road cells and road ratios for Follow roads):
+  `tools/gen_roads.py` reads the terrain texture layers of the ADT tiles from wago.tools' CASC mirror for the pinned
+  build, keeping the 33 road textures it lists after checking each against the client's minimap;
+  `tools/bake_roads.lua` derives the edge ratios. Neither database holds roads.
 
 ## Shared tooling
 
