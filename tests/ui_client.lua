@@ -646,6 +646,16 @@ _G.C_Texture = {
 		return { width = 36, height = 44 }
 	end,
 }
+-- The classic flight-master list: empty here, so a scan at a flight master learns nothing (ScanFlightMaster).
+_G.NumTaxiNodes = function()
+	return 0
+end
+_G.TaxiNodeGetType = function()
+	return "NONE"
+end
+_G.TaxiNodeName = function()
+	return ""
+end
 _G.C_TaxiMap = {
 	ShouldMapShowTaxiNodes = function()
 		return false

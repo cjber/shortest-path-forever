@@ -13,6 +13,9 @@ TAXIROUTE_LINEFACTOR = nil
 
 ---@return number
 function NumTaxiNodes() end
+---@param index number
+---@return string
+function TaxiNodeName(index) end
 ---@param slot number
 ---@return number
 function GetNumRoutes(slot) end

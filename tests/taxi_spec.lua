@@ -11,10 +11,21 @@ local mapNodes = {
 	-- The flight master reports this node reachable, but the client gives its slot type NONE, so it is not shown.
 	{ nodeID = 104, slotIndex = 5, state = reachable, name = "Ghostlands" },
 	{ nodeID = 105, slotIndex = 2, state = reachable, name = "Kharanos" },
-	-- Undiscovered at first: the flight map draws it only once the character learns it while the map is open.
-	{ nodeID = 106, slotIndex = 6, state = reachable, name = "Thelsamar" },
+	-- The new query returns this undiscovered node and this client still gives its slot a non-NONE type, but the
+	-- classic list ends at five entries, so the character does not really have it.
+	{ nodeID = 106, slotIndex = 6, state = reachable, name = "Light's Hope" },
 }
-local nodeTypes = { "REACHABLE", "DISTANT", "CURRENT", "REACHABLE", "NONE", "NONE" }
+local nodeTypes = { "REACHABLE", "DISTANT", "CURRENT", "REACHABLE", "NONE" }
+local staleTypes = { [6] = "REACHABLE" }
+local nodeNames = {
+	[1] = "Sturmwind",
+	[2] = "Kharanos",
+	[3] = "Ironforge",
+	[4] = "Menethil Harbor",
+	[5] = "Ghostlands",
+	[6] = "Light's Hope",
+}
+local numNodes = #nodeTypes
 -- The client's chosen route deliberately differs from the planner's intermediate hop.
 local routes = { [1] = { { 3, 2 }, { 2, 1 } }, [4] = { { 3, 4 } } }
 local textures, eventFrame = {}, nil
@@ -95,10 +106,10 @@ local env = setmetatable({
 		return 99
 	end,
 	NumTaxiNodes = function()
-		return #nodeTypes
+		return numNodes
 	end,
 	TaxiNodeGetType = function(slot)
-		return nodeTypes[slot]
+		return staleTypes[slot] or nodeTypes[slot]
 	end,
 	GetNumRoutes = function(slot)
 		routeQueries = routeQueries + 1
@@ -107,8 +118,8 @@ local env = setmetatable({
 	TaxiGetNodeSlot = function(slot, hop, source)
 		return routes[slot][hop][source and 1 or 2]
 	end,
-	TaxiNodeName = function()
-		error("never match by name")
+	TaxiNodeName = function(slot)
+		return nodeNames[slot] or ""
 	end,
 	TaxiNodePosition = function()
 		error("never guess a slot from unverified coordinates")
@@ -199,15 +210,15 @@ ns.TaxiNodes = {
 	[103] = { name = "Stormwind" },
 	[104] = { name = "Ghostlands" },
 	[105] = { name = "Kharanos" },
-	[106] = { name = "Thelsamar" },
+	[106] = { name = "Light's Hope" },
 }
 ns.TaxiNodes[101].faction, ns.TaxiNodes[103].faction = "Alliance", "Horde"
 ns.SetJourneyRoute = function() end
 ns.JourneyChanged = function() end
--- A version 3 list was built by the status scan running with no flight master open, so init starts again from empty.
+-- A version 3 list was built from node slots that claimed undiscovered nodes, so init starts it again from empty.
 env.ShortestPathForeverCharDB = {
-	taxi = { [101] = true },
-	taxiNames = { [101] = "Ironforge" },
+	taxi = { [101] = true, [106] = true },
+	taxiNames = { [101] = "Ironforge", [106] = "Light's Hope" },
 	taxiVersion = 3,
 }
 ns.init()
@@ -244,8 +255,7 @@ end
 local target = env.TaxiButton1
 publish()
 assert(routeQueries == 0, "a closed map does no route work")
--- A zone change or a login fires this with no flight master's map open. Its slot types describe no drawn map,
--- so nothing may be learned from them even though most slots are not NONE.
+-- A zone change or a login fires this with no flight master's map open, so nothing may be learned from it.
 event("TAXI_NODE_STATUS_CHANGED")
 assert(next(ns.KnownTaxiNodes()) == nil, "a status change with no flight master open learns nothing")
 -- A flight point reads by its shipped name until a flight map has named it, in the game's language.
@@ -274,12 +284,11 @@ assert(
 )
 assert(not ns.KnownTaxiNodes()[104], "a node whose slot type is NONE is never learned")
 assert(not env.ShortestPathForeverCharDB.taxiNames[104], "an unlearned node keeps its name out of the list")
-assert(not ns.KnownTaxiNodes()[106], "an undiscovered node stays unknown while the map is open")
--- The flight master reports a node discovered while its map is open: the scan learns it then.
-nodeTypes[6] = "REACHABLE"
-event("TAXI_NODE_STATUS_CHANGED")
-assert(ns.KnownTaxiNodes()[106], "a node discovered while the map is open is learned")
-assert(ns.TaxiName(106) == "Thelsamar", "a node discovered while the map is open keeps the client's name")
+assert(
+	not ns.KnownTaxiNodes()[106],
+	"an undiscovered node beyond the classic list is never learned, even with a non-NONE slot type"
+)
+assert(not env.ShortestPathForeverCharDB.taxiNames[106], "an undiscovered node keeps its name out of the list")
 assert(ns.TaxiName(105) == "Kharanos", "a learned node keeps the client's name")
 assert(textures[1].path == "Interface\\TaxiFrame\\UI-Taxi-Line")
 assert(table.concat(textures[1].points, ",") == "60,90,40,60", "first client hop uses displayed button anchors")
@@ -351,15 +360,25 @@ assert(visibleLines() == 2)
 
 event("TAXIMAP_CLOSED")
 assert(visibleLines() == 0 and not target.locked, "closed event clears before the frame hides")
--- A zone change after leaving the flight master fires this too: its slot types describe no open map any more.
+-- A zone change after leaving the flight master fires this too: the list describes no open map any more.
+local learned = env.ShortestPathForeverCharDB.taxi
 env.ShortestPathForeverCharDB.taxi = {}
 event("TAXI_NODE_STATUS_CHANGED")
 assert(next(ns.KnownTaxiNodes()) == nil, "a status change after the flight master is left learns nothing")
+env.ShortestPathForeverCharDB.taxi = learned
 env.TaxiFrame:Hide()
 env.TaxiFrame:Show()
 event("TAXIMAP_OPENED")
 assert(visibleLines() == 2 and target.locked, "also support open events after the stock OnShow")
 env.TaxiFrame:Hide()
 assert(visibleLines() == 0 and not target.locked, "hiding the frame clears without waiting for the event")
+
+-- An empty classic list is not a reason to fall back to the new query's nodes.
+numNodes = 0
+env.ShortestPathForeverCharDB.taxi = {}
+env.ShortestPathForeverCharDB.taxiNames = {}
+event("TAXI_NODE_STATUS_CHANGED")
+assert(next(ns.KnownTaxiNodes()) == nil, "an empty classic list learns nothing")
+assert(next(env.ShortestPathForeverCharDB.taxiNames) == nil, "an empty classic list names nothing")
 
 print("taxi_spec: ok")
