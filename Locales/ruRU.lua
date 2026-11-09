@@ -69,8 +69,8 @@ L["E"] = "В"
 L["Either faction can ride any boat or zeppelin."] =
 	"Любая фракция может сесть на любой корабль или дирижабль."
 L["Enter %s"] = "Войти: %s"
-L["Long journeys to another continent appear again."] =
-	"Длинные маршруты на другой континент снова отображаются." -- mt
+L["Adventure Guide's quest focus no longer leaves two markers."] =
+	"Фокус заданий Adventure Guide больше не оставляет два маркера." -- mt
 L["Finding the fastest way…"] = "Поиск самого быстрого пути…"
 L["Flight Masters"] = "Распорядители полетов"
 L["Flight master"] = "Распорядитель полетов"

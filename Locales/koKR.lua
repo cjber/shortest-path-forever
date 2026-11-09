@@ -67,8 +67,8 @@ L["E"] = "동"
 L["Either faction can ride any boat or zeppelin."] =
 	"어느 진영이든 모든 배와 비행선을 탈 수 있습니다."
 L["Enter %s"] = "%s 입장"
-L["Long journeys to another continent appear again."] =
-	"다른 대륙으로 가는 긴 여정이 다시 표시됩니다." -- mt
+L["Adventure Guide's quest focus no longer leaves two markers."] =
+	"Adventure Guide의 퀘스트 집중이 더 이상 표식을 두 개 남기지 않습니다." -- mt
 L["Finding the fastest way…"] = "가장 빠른 길 찾는 중…"
 L["Flight Masters"] = "비행 조련사"
 L["Flight master"] = "비행 조련사"
