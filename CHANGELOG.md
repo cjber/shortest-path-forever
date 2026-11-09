@@ -12,6 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.24.6] - 2026-11-09
+
+- **Opening a flight master's map takes unknown flights off your journey at once.** The map already dropped flight points it did not list, but the journey kept its planned flight to one of them, so a route could still say "Fly to Booty Bay" with the flight map open and no Booty Bay on it. The journey now plans again the moment the list changes, without that flight. Reported on Discord by pachonaso (#588).
+
 ## [1.24.5] - 2026-11-09
 
 - **The minimap route no longer covers your character arrow.** Its breadcrumbs now begin outside the arrow at the middle of the minimap, so the arrow still shows which way you face while the route leads on ahead. Reported on CurseForge by user_afgy8z90v9fxemb0 (#583).

@@ -236,10 +236,13 @@ local function ScanFlightMaster()
 			bySlot[node.slotIndex] = node
 		end
 	end
-	local listed, continent = {}, nil
+	local listed, continent, changed = {}, nil, false
 	for slot = 1, NumTaxiNodes() do
 		local node = bySlot[slot]
 		if node and TaxiNodeGetType(slot) ~= "NONE" then
+			if not ns.charDB.taxi[node.nodeID] then
+				changed = true
+			end
 			ns.charDB.taxi[node.nodeID] = true
 			listed[node.nodeID] = true
 			continent = continent or ns.TaxiNodes[node.nodeID].map
@@ -258,8 +261,12 @@ local function ScanFlightMaster()
 			if node and node.map == continent and not listed[nodeID] then
 				ns.charDB.taxi[nodeID] = nil
 				ns.charDB.taxiNames[nodeID] = nil
+				changed = true
 			end
 		end
+	end
+	if changed and ns.TravelPolicyChanged then
+		ns.TravelPolicyChanged()
 	end
 end
 
