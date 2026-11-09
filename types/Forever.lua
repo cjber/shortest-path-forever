@@ -269,7 +269,52 @@ InputUtil = nil
 ---@type SPFUiMapPointFactory
 UiMapPoint = nil
 
+---@type {ContinueOnAddOnLoaded: fun(name: string, callback: fun()), ContinueAfterAllEvents: fun(callback: fun(), ...: string)}
 EventUtil = {}
 ---@param callback function
 ---@param ... string
 function EventUtil.ContinueAfterAllEvents(callback, ...) end
+
+-- The shared quest log side tab (UI/QuestLogTabs.lua), and the map frame it hangs from. The registry is published by
+-- the first Forever addon to load, so every addon's tab stacks in the one column.
+---@class ForeverQuestLogTab : Button
+---@field SetCustomOnMouseUpHandler fun(self: ForeverQuestLogTab, handler: fun(self: ForeverQuestLogTab, mouseButton: string, upInside: boolean))
+---@field SetChecked fun(self: ForeverQuestLogTab, checked: boolean)
+---@field tooltipText string
+---@field activeAtlas? string
+---@field inactiveAtlas? string
+---@field Icon Texture the tab's art, fitted to its template
+
+---@class ForeverQuestLogTabSpec
+---@field name string the tab frame's global name
+---@field tooltip string the tab's tooltip text
+---@field panel Frame the panel the tab shows
+---@field order number where the tab sits in the stack, lowest first
+---@field shown? fun(visible: boolean) called once per change when the panel becomes visible to the player or stops being so
+
+---@class ForeverQuestLogTabsAPI
+---@field Register fun(key: string, spec: ForeverQuestLogTabSpec): ForeverQuestLogTab
+---@field Select fun(key: string)
+---@field ShowQuests fun()
+---@field Selected fun(): string?
+
+---@type ForeverQuestLogTabsAPI?
+ForeverQuestLogTabs = nil
+
+---@class ForeverQuestLogContentFrame : Frame
+---@field displayMode any
+---@class ForeverQuestMapFrame : Frame
+---@field ContentsAnchor Frame
+---@field ContentFrames ForeverQuestLogContentFrame[]
+---@field QuestsTab Button
+---@field MapLegendTab Button
+---@field displayMode any
+---@type ForeverQuestMapFrame
+QuestMapFrame = nil
+---@class ForeverQuestMapFrameOverrides
+---@field questTabHidden? boolean
+---@field GetQuestsTabAnchorOffset fun(): number, number
+---@type ForeverQuestMapFrameOverrides
+QuestMapFrameOverrides = nil
+---@type string
+QUESTS_LABEL = nil

@@ -12,6 +12,9 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Nearby services has its own tab in the world map's quest log.** Open the map and pick the bags tab beside Quests to see vendors grouped by what they sell (arrows, bullets, food, drink, bags, trade supplies, reagents, weapons and armour), trainers by profession, and the inn, bank, auction house, flight master, stable and repairs. Each row names the nearest NPC and the travel time, and clicking it starts the journey. The search box finds a group, an NPC, or an item by name, so typing Simple Wood shows who sells it. Food and drink come from what each item restores, and profession trainers from the spells they teach, so a vendor is never filed by its title. `/spfnear` and the tracking menu's Open Nearby services entry open the tab, and the menu still lists every group. With Adventure Guide installed, both tabs sit under one Quests tab and one panel shows at a time (#430).
+- **The NPC you are walking to is marked on screen.** On a journey from Nearby services, bouncing arrows sit either side of that NPC's nameplate, and stay after you arrive until you walk away. Friendly nameplates must be on; Settings > Guidance > Arrows on the NPC's nameplate turns them off (#487).
+
 ## [1.23.4] - 2026-11-09
 
 - **Adventure Guide's quest focus no longer leaves two markers.** Walking into the area of the step you are on makes Adventure Guide select that quest, which used to take the game's navigation marker away from Shortest Path: the quest's marker and the guide's arrow then led at once. The waypoint Shortest Path tracks now stays the marker, and only your own quest click takes navigation back. (#531)

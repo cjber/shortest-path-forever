@@ -34,6 +34,8 @@ local DEFAULTS = {
 	-- An on-screen marker over the destination, like the client's own waypoint pin. Off by default: it is
 	-- new screen furniture, and a player asks for it from Settings > Guidance.
 	destinationPin = false,
+	-- Bouncing arrows beside the nameplate of the NPC a Nearby services journey walks to.
+	npcArrows = true,
 	resumeJourney = false,
 	tomtom = true,
 	tomtomFollow = false,

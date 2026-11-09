@@ -32,6 +32,7 @@ from screenshot_docks import dock_kinds, number_art, pin_art, zeppelin_art
 from screenshots_area import render as render_area_art
 from screenshots_art import Art
 from screenshots_services import render as render_services
+from screenshots_services import render_search as render_services_search
 from screenshots_tracker import detached_tracker
 from wowmock import (
     FONTS,
@@ -785,6 +786,7 @@ SCENES = {
     ),
     "cast_prompt": render_cast_prompt,
     "services": render_services,
+    "services_search": render_services_search,
 }
 
 

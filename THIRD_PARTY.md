@@ -9,8 +9,8 @@ it, so a data refresh that moves the pin never leaves this file behind. The addo
 
 | Input | Used for | Pin | Licence |
 |---|---|---|---|
-| WoW: Forever client tables, via [wago.tools](https://wago.tools) | Taxi paths, transports, lifts, portals and teleports in `Data/*.lua` | `BUILD` in `tools/gen_routes.py` (`tools/gen_transit.py` imports it) | Blizzard Entertainment's game data |
-| [CMaNGOS classic-db](https://github.com/cmangos/classic-db) | Portal and teleport destinations, transport spawns and periods in `Data/*.lua` | `DB_REV` in `tools/gen_transit.py` | GPL-3.0 |
+| WoW: Forever client tables, via [wago.tools](https://wago.tools) | Taxi paths, transports, lifts, portals, teleports, food and drink items, and profession spells in `Data/*.lua` | `BUILD` in `tools/gen_routes.py` (`tools/gen_transit.py` and `tools/gen_services.py` import it) | Blizzard Entertainment's game data |
+| [CMaNGOS classic-db](https://github.com/cmangos/classic-db) | Portal and teleport destinations, transport spawns and periods, and trainer NPCs and spells in `Data/*.lua` | `DB_REV` in `tools/gen_transit.py` (`tools/gen_services.py` imports it) | GPL-3.0 |
 | [CMaNGOS mangos-classic](https://github.com/cmangos/mangos-classic) | The transport timetable model and flight speed, reimplemented in `tools/gen_routes.py` and `tools/gen_transit.py` | Cited by source file in those scripts; no code copied | GPL-2.0-or-later |
 | [InFlight](https://github.com/LudiusMaximus/InFlight) | Recorded flight durations in `Data/Taxi.lua` | `INFLIGHT_REV` in `tools/gen_transit.py` | MIT |
 | Local client terrain, baked with TrinityCore's tools | The walkable cells in `Nav/*.lua` (`tools/baker/README.md`) | `TRINITY_REV` in `tools/baker/bake.sh` and the client build baked | Derived data, GPL-3.0-or-later; Blizzard's EULA applies to the client files |

@@ -51,9 +51,18 @@ local function FakeQuestieDB()
 			GetAllIds = function()
 				return { 1, 2, 3 }
 			end,
-			GetAll = function(id)
+			GetAll = function(id, fields)
 				local row = npcs[id]
-				return row and { row[1], row[2], row[3], row[4], row[5], n = 5 }
+				if not row then
+					return nil
+				end
+				local at = { name = 1, subName = 2, spawns = 3, friendlyToFaction = 4, npcFlags = 5 }
+				local values = {}
+				for _, field in ipairs(fields) do
+					values[#values + 1] = row[at[field]]
+				end
+				values.n = #values
+				return values
 			end,
 		},
 	}
@@ -135,8 +144,8 @@ scenario(
 
 		local navigations = 0
 		local api = G.ShortestPathForever.API
-		local navigate = api.Navigate
-		api.Navigate = function(...)
+		local navigate = api.NavigateRoute
+		api.NavigateRoute = function(...)
 			navigations = navigations + 1
 			return navigate(...)
 		end
