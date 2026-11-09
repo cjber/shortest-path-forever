@@ -19,6 +19,9 @@ local lines = {}
 ---@type Button?
 local highlighted, hovered
 local ownsMap = false
+-- Set by TAXIMAP_OPENED and cleared by TAXIMAP_CLOSED (and the map hiding): the only window in which the classic
+-- list describes a flight master's map, so the only window in which a scan may learn a node.
+local taxiMapOpen = false
 local hookedFrame
 local hookedButtons = {}
 
@@ -278,6 +281,7 @@ function ns.SetTaxiKnown(nodeID, known)
 end
 
 local function Closed()
+	taxiMapOpen = false
 	hovered, mapNodes = nil, {}
 	ClearRoute(false)
 end
@@ -330,13 +334,19 @@ ns.Init(function()
 	frame:SetScript("OnEvent", function(_, event)
 		if event == "TAXIMAP_CLOSED" then
 			Closed()
+			return
+		end
+		if event == "TAXIMAP_OPENED" then
+			taxiMapOpen = true
+		elseif not taxiMapOpen then
+			-- A status change away from a flight master (a zone change, a /reload) describes no flight map.
+			return
+		end
+		HookTaxiFrame()
+		if TaxiFrame and TaxiFrame:IsShown() then
+			Shown()
 		else
-			HookTaxiFrame()
-			if TaxiFrame and TaxiFrame:IsShown() then
-				Shown()
-			else
-				ScanFlightMaster()
-			end
+			ScanFlightMaster()
 		end
 	end)
 	HookTaxiFrame()

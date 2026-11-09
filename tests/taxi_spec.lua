@@ -255,6 +255,9 @@ end
 local target = env.TaxiButton1
 publish()
 assert(routeQueries == 0, "a closed map does no route work")
+-- A zone change or a login fires this with no flight master's map open, so nothing may be learned from it.
+event("TAXI_NODE_STATUS_CHANGED")
+assert(next(ns.KnownTaxiNodes()) == nil, "a status change with no flight master open learns nothing")
 -- A flight point reads by its shipped name until a flight map has named it, in the game's language.
 ns.L = setmetatable({}, {
 	__index = function(_, phrase)
@@ -357,6 +360,12 @@ assert(visibleLines() == 2)
 
 event("TAXIMAP_CLOSED")
 assert(visibleLines() == 0 and not target.locked, "closed event clears before the frame hides")
+-- A zone change after leaving the flight master fires this too: the list describes no open map any more.
+local learned = env.ShortestPathForeverCharDB.taxi
+env.ShortestPathForeverCharDB.taxi = {}
+event("TAXI_NODE_STATUS_CHANGED")
+assert(next(ns.KnownTaxiNodes()) == nil, "a status change after the flight master is left learns nothing")
+env.ShortestPathForeverCharDB.taxi = learned
 env.TaxiFrame:Hide()
 env.TaxiFrame:Show()
 event("TAXIMAP_OPENED")
