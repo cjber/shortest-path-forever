@@ -15,6 +15,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 ## [1.23.4] - 2026-11-09
 
 - **Adventure Guide's quest focus no longer leaves two markers.** Walking into the area of the step you are on makes Adventure Guide select that quest, which used to take the game's navigation marker away from Shortest Path: the quest's marker and the guide's arrow then led at once. The waypoint Shortest Path tracks now stays the marker, and only your own quest click takes navigation back. (#531)
+- **The Forever Leaderboards period menu works with a gamepad.** With the gamepad interface on, a press on it steps through this week or all time, for your guild and group or for players you've met, instead of opening a game menu that later had the client block `SetPreferredGamepadInteractTarget()` (cjber/forever-core#267).
 
 ## [1.23.3] - 2026-11-08
 

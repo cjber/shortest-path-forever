@@ -57,6 +57,19 @@ do
 	check(api.window.share:GetChecked() == false, "one explicit false unchecks Overall")
 end
 
+-- Tabs are Buttons -----------------------------------------------------------------------------------------------
+do
+	Client()
+	local api = Load()
+	api:Register("guide", spec("guide", { row("Me", 1, nil, true, "HUNTER") }, {}))
+	api:Open("guide")
+	local tabs = api.window.tabs
+	equal(#tabs, 2, "Overall plus the registered board")
+	for _, tab in ipairs(tabs) do
+		equal(tab.kind, "Button", "a side tab was not created as a Button")
+	end
+end
+
 -- The tooltip ----------------------------------------------------------------------------------------------------
 do
 	Client()
@@ -216,6 +229,183 @@ do
 	local joined = Load()
 	equal(env.ForeverLeaderboards, fresh, "a newer global is kept")
 	equal(joined, fresh, "the older file adopts it")
+end
+
+-- The reach choice includes relayed peers -------------------------------------------------------------------------
+do
+	Client()
+	local env = harness.env
+	local manager = { includeRelayed = false }
+	env.ForeverPeerStats = manager
+	local function board()
+		local include = manager.includeRelayed == true
+		local list = { row("Abe", 10, nil, false, "MAGE"), row("Me", 1, nil, true, "HUNTER") }
+		if include then
+			list[#list + 1] = row("Met-OtherRealm", 5, nil, false, "MAGE")
+		end
+		return list
+	end
+	local api = Load()
+	api:Register("guide", { title = "guide", metric = "Metric guide", icon = ICON, board = board })
+	api:Open("guide")
+	local window = api.window
+	equal(window.subtitle.text, "Your guild and group", "the default reach")
+	equal(manager.includeRelayed, false, "the flag is false after the board call")
+	local root = harness.MenuRoot()
+	window.dropdown.menu(window.dropdown, root)
+	equal(root.dividers, 1, "one divider between scopes and reaches")
+	equal(#root.radios, 4, "two scopes and two reaches")
+	equal(root.radios[1].text, "This week", "the first scope")
+	equal(root.radios[2].text, "All time", "the second scope")
+	equal(root.radios[3].text, "Your guild and group", "the direct reach")
+	equal(root.radios[4].text, "Players you've met", "the met reach")
+	equal(root.radios[3].getter(), true, "the direct reach is selected by default")
+
+	local names = {}
+	for _, button in ipairs(window.scroll.buttons) do
+		names[button.nameText.text] = true
+	end
+	equal(names["Met-OtherRealm"], nil, "the board hides relayed peers by default")
+
+	root.radios[4].onClick()
+	equal(api.reach, "met", "the reach changes")
+	equal(window.subtitle.text, "Players you've met", "the subtitle follows the reach")
+	equal(manager.includeRelayed, false, "the flag is false again after the board call")
+	names = {}
+	for _, button in ipairs(window.scroll.buttons) do
+		names[button.nameText.text] = true
+	end
+	equal(names["Met-OtherRealm"], true, "the board shows relayed peers")
+
+	local found = false
+	for _, entry in ipairs(api:Overall("week")) do
+		if entry.name == "Met-OtherRealm" then
+			found = true
+		end
+	end
+	equal(found, true, "Overall includes relayed peers")
+	equal(manager.includeRelayed, false, "the flag is false again after Overall")
+
+	root.radios[3].onClick()
+	equal(api.reach, "group", "switching back")
+	equal(window.subtitle.text, "Your guild and group", "restores the subtitle")
+	names = {}
+	for _, button in ipairs(window.scroll.buttons) do
+		names[button.nameText.text] = true
+	end
+	equal(names["Met-OtherRealm"], nil, "and hides relayed peers again")
+
+	-- A board that raises still restores the flag.
+	api:Register("boom", {
+		title = "boom",
+		metric = "Boom",
+		icon = ICON,
+		board = function()
+			error("boom")
+		end,
+	})
+	api.reach = "met"
+	manager.includeRelayed = false
+	local ok = pcall(function()
+		return api:Overall("week")
+	end)
+	check(ok, "a raising board does not escape")
+	equal(manager.includeRelayed, false, "the flag is restored when a board raises")
+end
+
+-- The period dropdown under the gamepad interface: a press steps through the four choices instead of opening a menu,
+-- which would taint the gamepad focus (#267).
+---@param gamepad boolean
+---@return table env
+local function GamepadClient(gamepad)
+	local env = Client()
+	env.InputUtil = {
+		IsGamepadUIEnabled = function()
+			return gamepad
+		end,
+	}
+	return env
+end
+
+---@param api ForeverLeaderboardsAPI
+local function OpenBoard(api)
+	api:Register("one", spec("one", { row("Me", 1, nil, true, "HUNTER") }, {}))
+	api:Open("one")
+	return api.window.dropdown
+end
+
+-- A gamepad press steps to the next choice and opens no menu -----------------------------------------------------
+do
+	GamepadClient(true)
+	local api = Load()
+	local dropdown = OpenBoard(api)
+	local window = api.window
+	equal(api.scope, "week", "a fresh window starts at this week")
+	equal(api.reach, "group", "for the guild and group")
+	equal(dropdown.openedMenus, 0, "no menu opens before a press")
+
+	dropdown:OpenMenu()
+	equal(dropdown.openedMenus, 0, "the first press opens no menu")
+	equal(api.scope, "all", "the first press moves to all time")
+	equal(api.reach, "group", "staying on the guild and group")
+	equal(window.valueHeader.text, "All time", "the header follows the scope")
+	equal(window.subtitle.text, "Your guild and group", "the subtitle follows the reach")
+
+	dropdown:OpenMenu()
+	equal(dropdown.openedMenus, 0, "the second press opens no menu")
+	equal(api.scope, "week", "the second press moves back to this week")
+	equal(api.reach, "met", "and on to the players you've met")
+	equal(window.valueHeader.text, "This week", "the header shows this week")
+	equal(window.subtitle.text, "Players you've met", "the subtitle shows the wider reach")
+
+	dropdown:OpenMenu()
+	equal(dropdown.openedMenus, 0, "the third press opens no menu")
+	equal(api.scope, "all", "the third press moves to all time again")
+	equal(api.reach, "met", "still for the players you've met")
+	equal(window.valueHeader.text, "All time", "the header shows all time")
+	equal(window.subtitle.text, "Players you've met", "the subtitle keeps the reach")
+
+	dropdown:OpenMenu()
+	equal(dropdown.openedMenus, 0, "the fourth press opens no menu")
+	equal(api.scope, "week", "the fourth press wraps to this week")
+	equal(api.reach, "group", "and back to the guild and group")
+	equal(window.valueHeader.text, "This week", "the header is back to this week")
+	equal(window.subtitle.text, "Your guild and group", "the subtitle is back to the guild and group")
+end
+
+-- A disabled dropdown does nothing --------------------------------------------------------------------------------
+do
+	GamepadClient(true)
+	local api = Load()
+	local dropdown = OpenBoard(api)
+	dropdown:SetEnabled(false)
+	check(dropdown:IsEnabled() == false, "the harness can disable the dropdown")
+	dropdown:OpenMenu()
+	equal(dropdown.openedMenus, 0, "a disabled press opens no menu")
+	equal(api.scope, "week", "and keeps the scope")
+	equal(api.reach, "group", "and the reach")
+end
+
+-- With the gamepad interface off the client's own OpenMenu runs ---------------------------------------------------
+do
+	GamepadClient(false)
+	local api = Load()
+	local dropdown = OpenBoard(api)
+	dropdown:OpenMenu()
+	equal(dropdown.openedMenus, 1, "the client's OpenMenu runs once")
+	equal(api.scope, "week", "and the scope is unchanged")
+	equal(api.reach, "group", "and the reach is unchanged")
+end
+
+-- With no InputUtil at all the menu opens as before -----------------------------------------------------------------
+do
+	Client()
+	local api = Load()
+	local dropdown = OpenBoard(api)
+	dropdown:OpenMenu()
+	equal(dropdown.openedMenus, 1, "a press with no gamepad switch opens the menu")
+	equal(api.scope, "week", "and leaves the scope alone")
+	equal(api.reach, "group", "and the reach alone")
 end
 
 print(("leaderboards_window_spec: %d checks passed"):format(harness.checks()))

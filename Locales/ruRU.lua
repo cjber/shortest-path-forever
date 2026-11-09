@@ -429,6 +429,7 @@ L["Forever Leaderboards"] = "Рейтинги Forever" -- mt
 L["Overall"] = "Общий" -- mt
 L["Forever standing"] = "Общий рейтинг Forever" -- mt
 L["Your guild and group"] = "Ваша гильдия и группа" -- mt
+L["Players you've met"] = "Встреченные игроки" -- mt
 L["This week"] = "На этой неделе" -- mt
 L["All time"] = "За всё время" -- mt
 L["Rank"] = "Место" -- mt

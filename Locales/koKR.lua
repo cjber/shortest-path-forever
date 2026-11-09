@@ -413,6 +413,7 @@ L["Forever Leaderboards"] = "Forever 순위표" -- mt
 L["Overall"] = "전체" -- mt
 L["Forever standing"] = "Forever 순위" -- mt
 L["Your guild and group"] = "길드 및 그룹" -- mt
+L["Players you've met"] = "만난 플레이어" -- mt
 L["This week"] = "이번 주" -- mt
 L["All time"] = "전체 기간" -- mt
 L["Rank"] = "순위" -- mt
