@@ -77,6 +77,8 @@ before its `v*` tag, since the release publishes it as the notes.
   workflow on main with `version` (and `commit` for an older main commit); it tags that commit and publishes.
 - Quality: read the live roots and settled shapes in `.sloppatrol/instructions.md` before cleanup, dead-code or
   refactoring work.
+- A flight point is known only when its flight-master slot is CURRENT or REACHABLE; DISTANT is undiscovered on
+  this client, and `tests/taxi_known_client_spec.lua` guards the recorded fixture.
 - Searches and tracker updates wait until combat ends; no idle `OnUpdate` (the world map view in `UI/MapCanvas.lua` runs
   one only while the map is open, where the map itself runs one).
 - Never stretch art: an icon, atlas or texture is drawn at its native aspect, through `UI/Art.lua` (`Art.Fit`,

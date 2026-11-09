@@ -211,6 +211,7 @@ ns.TaxiNodes = {
 	[104] = { name = "Ghostlands", map = 0 },
 	[105] = { name = "Kharanos", map = 0 },
 	[106] = { name = "Light's Hope", map = 1 },
+	[107] = { name = "Sentinel Hill", map = 0 },
 }
 ns.TaxiNodes[101].faction, ns.TaxiNodes[103].faction = "Alliance", "Horde"
 ns.SetJourneyRoute = function() end
@@ -285,10 +286,9 @@ assert(
 	"replace stock one-hop lines and reveal a distant connection"
 )
 assert(ns.KnownTaxiNodes()[103], "flight discovery still runs")
-assert(
-	ns.KnownTaxiNodes()[101] and ns.KnownTaxiNodes()[102] and ns.KnownTaxiNodes()[105],
-	"current, reachable and distant slots are all known flight points"
-)
+assert(ns.KnownTaxiNodes()[101] and ns.KnownTaxiNodes()[102], "current and reachable slots are known flight points")
+assert(not ns.KnownTaxiNodes()[105], "a distant slot is a point the character has not discovered")
+assert(not env.ShortestPathForeverCharDB.taxiNames[105], "a distant slot keeps its name out of the list")
 assert(not ns.KnownTaxiNodes()[104], "a node whose slot type is NONE is never learned")
 assert(not env.ShortestPathForeverCharDB.taxiNames[104], "an unlearned node keeps its name out of the list")
 assert(
@@ -296,7 +296,7 @@ assert(
 	"an undiscovered node beyond the classic list is never learned, even with a non-NONE slot type"
 )
 assert(not env.ShortestPathForeverCharDB.taxiNames[106], "an undiscovered node keeps its name out of the list")
-assert(ns.TaxiName(105) == "Kharanos", "a learned node keeps the client's name")
+assert(ns.TaxiName(102) == "Menethil Harbor", "a learned node keeps the client's name")
 assert(textures[1].path == "Interface\\TaxiFrame\\UI-Taxi-Line")
 assert(table.concat(textures[1].points, ",") == "60,90,40,60", "first client hop uses displayed button anchors")
 assert(
@@ -392,15 +392,18 @@ assert(
 	"an empty scan keeps every known name"
 )
 
--- A scan lists every flight point the character knows on that continent, so points it leaves out are forgotten
--- there while points on another continent stay.
-numNodes = 2
+-- #593: this client reports points the character has not discovered as DISTANT in the flight master's list, so a
+-- scan learns only CURRENT and REACHABLE slots. A previously saved wrong point on that continent goes too, while
+-- points on another continent stay.
+numNodes = 3
+nodeTypes[1], nodeTypes[2], nodeTypes[3] = "REACHABLE", "DISTANT", "CURRENT"
 env.ShortestPathForeverCharDB.taxi = {
 	[101] = true,
 	[102] = true,
 	[103] = true,
 	[104] = true,
 	[106] = true,
+	[107] = true,
 }
 env.ShortestPathForeverCharDB.taxiNames = {
 	[101] = "Ironforge",
@@ -408,24 +411,27 @@ env.ShortestPathForeverCharDB.taxiNames = {
 	[103] = "Stormwind",
 	[104] = "Ghostlands",
 	[106] = "Light's Hope",
+	[107] = "Sentinel Hill",
 }
 event("TAXI_NODE_STATUS_CHANGED")
-assert(ns.KnownTaxiNodes()[103] and ns.KnownTaxiNodes()[105], "the listed nodes are known")
+assert(ns.KnownTaxiNodes()[103] and ns.KnownTaxiNodes()[101], "the current and reachable nodes are known")
 assert(
-	not ns.KnownTaxiNodes()[101] and not ns.KnownTaxiNodes()[102] and not ns.KnownTaxiNodes()[104],
+	not ns.KnownTaxiNodes()[102] and not ns.KnownTaxiNodes()[104] and not ns.KnownTaxiNodes()[107],
 	"unlisted nodes on that continent are dropped"
 )
+assert(not ns.KnownTaxiNodes()[105], "a distant node is not learned")
 assert(ns.KnownTaxiNodes()[106], "an unlisted node on another continent is kept")
 assert(
 	env.ShortestPathForeverCharDB.taxiNames[103] == "Sturmwind"
-		and env.ShortestPathForeverCharDB.taxiNames[105] == "Kharanos",
+		and env.ShortestPathForeverCharDB.taxiNames[101] == "Ironforge",
 	"the listed nodes keep their names"
 )
 assert(
-	not env.ShortestPathForeverCharDB.taxiNames[101]
-		and not env.ShortestPathForeverCharDB.taxiNames[102]
-		and not env.ShortestPathForeverCharDB.taxiNames[104],
-	"dropped nodes lose their names"
+	not env.ShortestPathForeverCharDB.taxiNames[102]
+		and not env.ShortestPathForeverCharDB.taxiNames[104]
+		and not env.ShortestPathForeverCharDB.taxiNames[105]
+		and not env.ShortestPathForeverCharDB.taxiNames[107],
+	"unlisted and distant nodes lose their names"
 )
 assert(env.ShortestPathForeverCharDB.taxiNames[106] == "Light's Hope", "a kept node keeps its name")
 
