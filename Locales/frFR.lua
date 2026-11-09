@@ -74,8 +74,6 @@ L["E"] = "E" -- mt
 L["Either faction can ride any boat or zeppelin."] =
 	"Les deux factions peuvent prendre n'importe quel bateau ou zeppelin." -- mt
 L["Enter %s"] = "Entrer dans %s" -- mt
-L["A journey only flies between flight points you know."] =
-	"Un trajet ne vole plus qu'entre des points de vol que vous connaissez." -- mt
 L["Finding the fastest way…"] = "Recherche du chemin le plus rapide…" -- mt
 L["Flight Masters"] = "Maîtres de vol" -- mt
 L["Flight master"] = "Maître de vol" -- mt
@@ -475,3 +473,5 @@ L["Eastern Kingdoms"] = "Royaumes de l'est" -- mt
 L["Kalimdor"] = "Kalimdor" -- mt
 L["No flight points learned in %s: open a flight master's map once to sync them."] =
 	"Aucun point de vol appris en %s : ouvrez une fois la carte d'un maître de vol pour les synchroniser." -- mt
+L["Only the flight points your character has are learned now."] =
+	"Seuls les points de vol de votre personnage sont désormais appris." -- mt

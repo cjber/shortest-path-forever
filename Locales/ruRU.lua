@@ -75,8 +75,6 @@ L["E"] = "В"
 L["Either faction can ride any boat or zeppelin."] =
 	"Любая фракция может сесть на любой корабль или дирижабль."
 L["Enter %s"] = "Войти: %s"
-L["A journey only flies between flight points you know."] =
-	"Маршрут летит только между известными вам точками полёта." -- mt
 L["Finding the fastest way…"] = "Поиск самого быстрого пути…"
 L["Flight Masters"] = "Распорядители полетов"
 L["Flight master"] = "Распорядитель полетов"
@@ -495,3 +493,5 @@ L["Eastern Kingdoms"] = "Восточные королевства" -- mt
 L["Kalimdor"] = "Калимдор" -- mt
 L["No flight points learned in %s: open a flight master's map once to sync them."] =
 	"В зоне «%s» не изучено ни одной точки полёта: один раз откройте карту распорядителя полётов, чтобы синхронизировать их." -- mt
+L["Only the flight points your character has are learned now."] =
+	"Теперь запоминаются только точки полёта, которые есть у персонажа." -- mt
