@@ -468,7 +468,7 @@ function Layer:RefreshStops()
 				y = y,
 				index = index,
 				label = point.stopLabel,
-				detail = point.tooltip,
+				details = point.details,
 				look = point.look,
 				pinBadge = point.pinBadge,
 			}
@@ -495,9 +495,8 @@ function Layer:RefreshStops()
 		local x, y, numbers, labels, details = 0, 0, {}, {}, {}
 		for i, mark in ipairs(group) do
 			x, y, numbers[i], labels[i] = x + mark.x, y + mark.y, mark.index, mark.label
-			if mark.detail then
-				details[#details + 1] = mark.detail
-			end
+			-- Details stay with the stop that has them, so the tooltip can keep each stop's own lines together.
+			details[i] = mark.details or {}
 		end
 		local lead = group[1]
 		-- A shared button stands for several places, so only a stop on its own wears its badge.

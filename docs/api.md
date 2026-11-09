@@ -19,7 +19,8 @@ calling it. The full types are in [`types/API.lua`](../types/API.lua).
 
   Both return a boolean; invalid input, combat or disabled Journeys return `false` without replacing guidance.
   Titles are optional, as is `tooltip`, a destination detail shown on the stop pin's tooltip and never used as
-  the arrow label. A stop with `hold = true` waits for its owner to replace or cancel the route rather
+  the arrow label; each newline in it starts a line of its own, and a line an earlier stop on the same pin already
+  shows is not repeated. A stop with `hold = true` waits for its owner to replace or cancel the route rather
   than advancing on arrival. For held objective areas, optional `radius` (yards, finite and non-negative)
   hides walking directions inside the area while preserving ownership and the current stop. Directions
   resume outside it. Optional `questID` names the quest a held area stands for, and optional `questIDs` every

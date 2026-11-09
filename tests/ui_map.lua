@@ -325,6 +325,8 @@ end
 _G.GameTooltip = setmetatable({
 	SetOwner = function(self, owner)
 		self.owner = owner
+		-- The client clears the lines when a tooltip takes a new owner.
+		tip, tipColors = {}, {}
 	end,
 	IsOwned = function(self, owner)
 		return self.owner == owner

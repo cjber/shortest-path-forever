@@ -56,6 +56,21 @@ local function ID(value)
 	return Number(value) and value % 1 == 0 and value >= 1
 end
 
+-- A stop's detail is one string with one line per quest (Adventure Guide joins its quest lines with newlines).
+-- Split it here so every stop keeps its own lines for the pin tooltip (UI/StopPin.lua).
+---@param text? string
+---@return string[]?
+local function DetailLines(text)
+	if not text then
+		return nil
+	end
+	local lines = {}
+	for line in text:gmatch("[^\n]+") do
+		lines[#lines + 1] = line
+	end
+	return lines[1] and lines or nil
+end
+
 -- An objective area list: one or more places on a map, each with a yard radius. Every entry must be one this
 -- client can place.
 ---@param shapes table
@@ -453,7 +468,7 @@ function API.NavigateRoute(owner, stops)
 			return false
 		end
 		point.label = stop.title
-		point.tooltip = stop.tooltip
+		point.details = DetailLines(stop.tooltip)
 		-- A caller such as Adventure Guide may need the route to remain visible while the
 		-- player completes an interaction at this location. It resubmits the route after
 		-- that state changes; ordinary API stops retain automatic arrival.

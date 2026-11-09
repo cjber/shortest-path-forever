@@ -131,7 +131,9 @@ canvasScaled()
 -- The current stop's ring takes the later stops overlapping it, rather than drawing over them.
 local zoomedOut = rings({ {stops={1,2,3,4}}, {stops={5,7}}, {stops={6}} })
 zoomedOut[1]:OnMouseEnter()
-assert(tip[1] == "# Stop 1 of 7" and tip[2] == "  A", tip[1])
+local atStop, yardsLeft = ns.JourneyLeft()
+assert(atStop and tip[1] == "  Stop 1 of 7 | " .. atStop .. " · " .. yardsLeft, tip[1])
+assert(tip[2] == "  A", tip[2])
 assert(tip[3] == "  Stop 2 of 7" and tip[4] == "  B" and tip[7] == "  Stop 4 of 7" and tip[8] == "  D")
 assert(tipColors[2] == HIGHLIGHT_FONT_COLOR and tipColors[4] == HIGHLIGHT_FONT_COLOR, "labels in white")
 assert(tipColors[8] == HIGHLIGHT_FONT_COLOR, "the last shared stop's label in white")
@@ -186,15 +188,21 @@ settle()
 assert(ns.IsJourneyGuided(), "the journey guides again")
 assert(active[goalTemplate][1].Texture.texture == ns.PIN_FILE, "and its goal is gold again")
 assert(ShortestPathForeverMinimapRoute.Goal.texture == ns.PIN_FILE, "the minimap follows it back")
--- The destination's pin names the journey, the time and distance left, and each step as the tracker words it.
+
+-- The destination's pin names the journey, with the time and distance left on its title line, and a one-leg trip
+-- adds no step list of its own.
 active[goalTemplate][1]:OnMouseEnter()
-local _, rows = ns.JourneyInfo()
+local _, rows, plan, planIndex = ns.JourneyInfo()
 local left, far = ns.JourneyLeft()
-assert(tip[1] == "# Journey to Only", tip[1])
-assert(left and tip[2] == "  " .. left .. " · " .. far, tip[2])
-assert(#rows > 0 and tip[3] == "  " .. rows[1].text and tip[3]:find("^  1%. "), tip[3])
-assert(#tip == #rows + 4 and tip[#tip] == "  Right-click to clear", "every step, then a blank line and how to clear")
-assert(tip[#tip - 1] == " ", "the hint stands apart")
+assert(tip[1] == "  Journey to Only | " .. left .. " · " .. far, tip[1])
+assert(#plan.legs - planIndex + 1 <= 1, "this journey is one leg")
+assert(
+	#rows > 0
+		and #tip == 3
+		and tip[2] == " "
+		and tip[3] == "  Right-click to clear",
+	"no step list, then a blank line and how to clear"
+)
 active[goalTemplate][1]:OnMouseLeave()
 assert(api.Cancel("Test"))
 -- A numbered stop that says what stands there keeps its numbered marker and wears that mark as a small badge over the
@@ -252,10 +260,13 @@ posX, posY = 0, 0
 assert(api.NavigateRoute("Test", stops))
 settle()
 assert(not api.Cancel("Other") and #active[goalTemplate] == 4)
--- The stop being travelled to lists the steps there under its own short count; a later stop names only itself.
+-- The stop being travelled to lists the steps there under its own short count only when the trip has more than one
+-- leg; a later stop names only itself.
 active[goalTemplate][1]:OnMouseEnter()
-assert(tip[1] == "# Stop 1 of 4" and tip[2] == "  First" and tipColors[2] == HIGHLIGHT_FONT_COLOR, tip[2])
-assert(tip[4] and tip[4]:find("^  1%. "), tip[4])
+local firstLeft, firstDistance = ns.JourneyLeft()
+assert(tip[1] == "  Stop 1 of 4 | " .. firstLeft .. " · " .. firstDistance, tip[1])
+assert(tip[2] == "  First" and tipColors[2] == HIGHLIGHT_FONT_COLOR, tip[2])
+assert(tip[3] == " " and tip[4] == "  Right-click to clear" and #tip == 4, "one leg: no step list, then the hint")
 active[goalTemplate][1]:OnMouseLeave()
 active[goalTemplate][2]:OnMouseEnter()
 assert(tip[1] == "# Stop 2 of 4" and tip[2] == "  Second" and tipColors[2] == HIGHLIGHT_FONT_COLOR)
@@ -263,6 +274,40 @@ assert(tip[3] == " " and tip[4] == "  Right-click to clear" and #tip == 4, "then
 active[goalTemplate][2]:OnMouseLeave()
 active[goalTemplate][3]:OnMouseClickAction("RightButton")
 assert(not api.CurrentStop("Test") and #active[goalTemplate] == 0)
+
+-- Two stops at one place, one quest: each stop keeps its own count, action and details, a detail the earlier stop
+-- already gave is not repeated, the time sits on the title line, and a one-leg trip adds no step list.
+local lockboxDetails = "[17] Deep Ocean, Vast Sea\nChapter 2 of 2"
+assert(api.NavigateRoute("Test", {
+	{
+		map = 1414,
+		x = 0.51,
+		y = 0.5,
+		title = "Mist Veil's Lockbox",
+		tooltip = lockboxDetails,
+	},
+	{
+		map = 1414,
+		x = 0.51,
+		y = 0.5,
+		title = "Silver Dawning's Lockbox",
+		tooltip = lockboxDetails,
+	},
+}))
+settle()
+local sharedPin = active[goalTemplate][1]
+assert(#active[goalTemplate] == 1 and #sharedPin.stopLabels == 2, "two stops at one place share one pin")
+sharedPin:OnMouseEnter()
+local sharedTime, sharedDistance = ns.JourneyLeft()
+assert(tip[1] == "  Stop 1 of 2 | " .. sharedTime .. " · " .. sharedDistance, "the time is on the title line")
+assert(tip[2] == "  Mist Veil's Lockbox" and tipColors[2] == HIGHLIGHT_FONT_COLOR, "the first action in white")
+assert(tip[3] == "  [17] Deep Ocean, Vast Sea" and tip[4] == "  Chapter 2 of 2", "the first stop's details")
+assert(tip[5] == "  Stop 2 of 2", "the second stop's count")
+assert(tip[6] == "  Silver Dawning's Lockbox" and tipColors[6] == HIGHLIGHT_FONT_COLOR, "the second action in white")
+assert(tip[7] == " " and tip[8] == "  Right-click to clear" and #tip == 8,
+	"shared details shown once, then a blank line and the hint, with no step list for one leg")
+sharedPin:OnMouseLeave()
+assert(api.Cancel("Test"))
 
 -- Previews can cross continents on an overview map when both endpoints project there.
 assert(api.NavigateRoute("Test", {stops[1], {map=1415,x=0.52,y=0.5,title="Across the sea"}}))

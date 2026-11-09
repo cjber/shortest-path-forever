@@ -49,7 +49,7 @@
 ---@field z? number
 ---@field jump? number
 ---@field label? string
----@field tooltip? string
+---@field details? string[] -- a stop's own detail lines, in the caller's order (API.lua)
 ---@field routeTitle? string
 ---@field routeTitleFormat? string -- the locale format behind an addon-built routeTitle (API.lua)
 ---@field routeCount? integer -- stops in a multi-stop routeTitle (API.lua)
