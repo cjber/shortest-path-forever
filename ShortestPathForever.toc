@@ -7,7 +7,7 @@
 ## OptionalDeps: QuestieDB, TweaksForever, RXPGuides, Guidelime
 ## X-License: GPL-3.0-or-later
 ## X-Website: https://github.com/cjber/shortest-path-forever
-## X-Donate: https://ko-fi.com/cjber
+## X-Donate: https://github.com/sponsors/cjber
 ## X-Curse-Project-ID: 1708599
 ## X-Wago-ID: b6Xy1wKp
 ## SavedVariables: ShortestPathForeverDB
