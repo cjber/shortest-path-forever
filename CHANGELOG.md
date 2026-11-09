@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Adventure Guide's quest focus no longer leaves two markers.** Walking into the area of the step you are on makes Adventure Guide select that quest, which used to take the game's navigation marker away from Shortest Path: the quest's marker and the guide's arrow then led at once. The waypoint Shortest Path tracks now stays the marker, and only your own quest click takes navigation back. (#531)
+
 ## [1.23.3] - 2026-11-08
 
 - **Long journeys to another continent appear again.** When a bind point's walks finished being searched after the route was already chosen, that late answer hit an error and the journey was never shown. A search that has finished now ignores answers that arrive after it (#516).
