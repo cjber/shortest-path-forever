@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.24.5] - 2026-11-09
+
 - **The minimap route no longer covers your character arrow.** Its breadcrumbs now begin outside the arrow at the middle of the minimap, so the arrow still shows which way you face while the route leads on ahead. Reported on CurseForge by user_afgy8z90v9fxemb0 (#583).
 
 ## [1.24.4] - 2026-11-09
