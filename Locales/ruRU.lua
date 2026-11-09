@@ -424,6 +424,9 @@ L["no quest is tracked."] = "нет отслеживаемого задания.
 L["Walking route colour"] = "Цвет пешего маршрута"
 L["The walking line on the world map and the minimap."] =
 	"Пешая линия на карте мира и миникарте."
+L["Show the walking line on the world map"] = "Показывать пешую линию на карте мира"
+L["Show the walking line on the minimap"] = "Показывать пешую линию на миникарте"
+L["On the minimap."] = "На миникарте."
 L["Gold"] = "Золотой"
 L["White"] = "Белый"
 L["Cyan"] = "Бирюзовый"

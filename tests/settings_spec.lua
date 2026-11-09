@@ -143,6 +143,7 @@ local compassMoving = false
 local arrowMoving, arrowScaled = false, nil
 local tomtomFollowRefreshed, ways = 0, {}
 local routeColour = nil
+local routeLinesRefreshed = 0
 -- Core/Core.lua's defaults: every row on.
 local ns = {
 	TrackerHost = {
@@ -256,6 +257,9 @@ local ns = {
 	SetRouteColor = function(value)
 		routeColour = value
 	end,
+	RefreshRouteLines = function()
+		routeLinesRefreshed = routeLinesRefreshed + 1
+	end,
 	RouteColors = {
 		{ key = "gold", label = "Gold" },
 		{ key = "white", label = "White" },
@@ -280,6 +284,8 @@ local groups = {
 		"flightPinScale",
 		"minimapPinScale",
 		"routeColor",
+		"mapLine",
+		"minimapLine",
 	},
 	Transport = { "mapRoutes", "otherFaction", "tracker", "share" },
 	["Travel journal"] = { "stats", "statsShare" },
@@ -341,7 +347,7 @@ local order = {
 
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
 -- The follow-roads branch added followRoads, main added npcArrows, so the merged list is one row longer.
-assert(#rows == 57, #rows)
+assert(#rows == 59, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -390,6 +396,23 @@ assert(#choices == 5 and choices[1].value == "gold", "gold leads the presets")
 assert(choices[2].text == "White" and choices[5].value == "magenta", "every preset has a label and a key")
 routeColor.setting.onChanged(nil, "cyan")
 assert(routeColour == "cyan", "choosing a preset repaints the walking line")
+-- The walking line can be turned off on either surface, on by default, beside the colour that draws it.
+for _, key in ipairs({ "mapLine", "minimapLine" }) do
+	local line = Row(key)
+	assert(line.kind == "checkbox" and line.setting.default == true, key .. " starts on")
+	assert(line.setting.variable == "ShortestPathForever_" .. key, key .. " is saved")
+	local before = routeLinesRefreshed
+	line.setting.onChanged()
+	assert(routeLinesRefreshed == before + 1, key .. " repaints both surfaces at once")
+end
+assert(
+	Row("mapLine").setting.name == "Show the walking line on the world map",
+	"the world map switch names its surface"
+)
+assert(
+	Row("minimapLine").setting.name == "Show the walking line on the minimap",
+	"the minimap switch names its surface"
+)
 -- The departures switch names what it hides, so a player looking for Lifts finds it.
 assert(
 	Row("tracker").setting.name == "Show boat, lift and tram departures in the tracker",

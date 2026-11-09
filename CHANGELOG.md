@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **The walking line can be turned off on the world map or the minimap.** Two switches beside *Walking route colour* in Settings > Map marks let you hide the route line on either surface while the arrow, destination pin and tracker still guide you, and the other surface keeps its line. Reported on CurseForge by Gaafah (#576).
+
 ## [1.24.8] - 2026-11-09
 
 - **Routing from the world map works with a controller.** Shift-clicking the world map to start a route and then closing the map with the controller could get a controller action blocked by the game. The route now waits until the map has closed before it sets your waypoint. Reported by joaocjesus (#581).

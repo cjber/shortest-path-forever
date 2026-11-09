@@ -24,6 +24,9 @@ local DEFAULTS = {
 	minimapPinScale = 100,
 	-- The walking route line's preset: gold, the client's own marker colour.
 	routeColor = "gold",
+	-- The walking line on each surface can be turned off without touching the journey's other guidance.
+	mapLine = true,
+	minimapLine = true,
 	otherFaction = false,
 	tracker = true,
 	alerts = true,
