@@ -112,8 +112,6 @@ L["Journeys are off. Turn on Shift-click to plan journeys in settings."] =
 L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."] =
 	"Les trajets, et les estimations d'autres addons depuis ici, peuvent commencer par votre pierre de foyer ou une téléportation, temps de recharge compris." -- mt
 L["Keep journeys after a reload"] = "Garder les trajets après un rechargement" -- mt
-L["Keep the route on the map when the journey list is hidden."] =
-	"Garder l'itinéraire sur la carte quand la liste du trajet est masquée." -- mt
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"Garde le suivi Forever partagé là où vous l'avez placé. La poignée en haut ne le déplace plus." -- mt
 L["Last seen %d min ago by another player"] = "Vu il y a %d min par un autre joueur" -- mt
@@ -145,6 +143,8 @@ L["No services nearby."] = "Aucun service à proximité."
 L["No way there from here."] = "Aucun chemin d'ici jusque-là." -- mt
 L["Not discovered"] = "Non découvert" -- mt
 L["Not installed"] = "Non installé" -- mt
+L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."] =
+	"Désactivé garde la flèche, le repère, la ligne de carte et l'itinéraire de la minicarte, sans bloc de trajet dans le suivi." -- mt
 L["On"] = "Activé" -- mt
 L["On board to %s"] = "À bord pour %s" -- mt
 L["On the world map."] = "Sur la carte du monde." -- mt
@@ -210,7 +210,7 @@ L["Show a quiet line where one of my other Forever addons would help. Only for a
 L["Show boats and zeppelins"] = "Afficher bateaux et zeppelins" -- mt
 L["Show direction arrow"] = "Afficher la flèche de direction" -- mt
 L["Show flight masters"] = "Afficher les maîtres de vol" -- mt
-L["Show journey in tracker"] = "Afficher le trajet dans le suivi" -- mt
+L["Show journey steps in the objective tracker"] = "Afficher les étapes du trajet dans le suivi des objectifs" -- mt
 L["Show lifts and the tram"] = "Afficher ascenseurs et tram" -- mt
 L["Show marks on the minimap"] = "Afficher les repères sur la minicarte" -- mt
 L["Show metres and kilometres instead of yards."] =

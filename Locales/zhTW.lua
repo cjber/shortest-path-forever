@@ -108,7 +108,6 @@ L["Journeys are off. Turn on Shift-click to plan journeys in settings."] =
 L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."] =
 	"旅程以及其他插件從這裡算起的估計，可以從爐石或傳送開始，並計入冷卻時間。"
 L["Keep journeys after a reload"] = "重載後保留旅程"
-L["Keep the route on the map when the journey list is hidden."] = "旅程清單隱藏時仍在地圖上保留路線。"
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"將共用的 Forever 追蹤器保持在您放置的位置。頂部的拖曳握把不再移動它。"
 L["Last seen %d min ago by another player"] = "%d分鐘前由其他玩家最後看到"
@@ -140,6 +139,8 @@ L["No services nearby."] = "附近沒有服務。"
 L["No way there from here."] = "從這裡無法抵達那裡。"
 L["Not discovered"] = "未發現"
 L["Not installed"] = "未安裝"
+L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."] =
+	"關閉後仍保留箭頭、標記、地圖路線和小地圖路線，但不在目標追蹤器中顯示旅程區塊。"
 L["On"] = "開啟"
 L["On board to %s"] = "搭乘前往%s"
 L["On the world map."] = "顯示在世界地圖上。"
@@ -202,7 +203,7 @@ L["Show a quiet line where one of my other Forever addons would help. Only for a
 L["Show boats and zeppelins"] = "顯示船隻與飛艇"
 L["Show direction arrow"] = "顯示方向箭頭"
 L["Show flight masters"] = "顯示飛行管理員"
-L["Show journey in tracker"] = "在追蹤器中顯示旅程"
+L["Show journey steps in the objective tracker"] = "在目標追蹤器中顯示旅程步驟"
 L["Show lifts and the tram"] = "顯示升降梯與地鐵"
 L["Show marks on the minimap"] = "在小地圖上顯示標記"
 L["Show metres and kilometres instead of yards."] = "以公尺和公里代替碼顯示。"

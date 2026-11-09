@@ -297,6 +297,12 @@ ns.Init(function()
 		end
 	)
 	Checkbox(
+		"journeyTracker",
+		L["Show journey steps in the objective tracker"],
+		L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."],
+		ns.RefreshTracker
+	)
+	Checkbox(
 		"resumeJourney",
 		L["Keep journeys after a reload"],
 		L["Your own journey starts again after a /reload, or logging back in within 30 minutes. Guides start theirs."],
@@ -479,12 +485,6 @@ ns.Init(function()
 
 	-- Interface: what the addon puts on screen.
 	Page(L["Interface"])
-	Checkbox(
-		"journeyTracker",
-		L["Show journey in tracker"],
-		L["Keep the route on the map when the journey list is hidden."],
-		ns.RefreshTracker
-	)
 	Checkbox(
 		"arrow",
 		L["Show direction arrow"],

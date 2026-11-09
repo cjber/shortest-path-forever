@@ -63,6 +63,21 @@ end
 assert(api.NavigateRoute("Test", stops))
 settle()
 local first = check(1, 4)
+-- The journey's tracker block is its own switch. Off leaves the pin, the map line and the minimap route drawing, and
+-- the journey still guided; the departures block answers its own switch.
+local tracker = ShortestPathForeverObjectiveTracker
+ns.RefreshTracker()
+assert(#tracker.blocks > 0, "the journey starts with a tracker block")
+ns.db.journeyTracker = false
+ns.RefreshTracker()
+assert(#tracker.blocks == 0, "off leaves no journey block in the objective tracker")
+assert(tracker:GetContentsHeight() == 0, "an empty journey section takes no room")
+assert(ns.HasJourney() and ns.IsJourneyGuided(), "the journey still plans and guides")
+assert(#active[goalTemplate] == #stops and #active[lineTemplate] == 1, "its pins and map line stay")
+assert(ShortestPathForeverMinimapRoute.Goal.texture == ns.PIN_FILE, "its minimap route stays")
+ns.db.journeyTracker = true
+ns.RefreshTracker()
+assert(#tracker.blocks > 0, "on brings the journey block back")
 -- The world map's own waypoint pin steps aside at an intermediate stop: it marks our waypoint, not the player's,
 -- so the journey's own pins are the only ones on the map.
 assert(waypointProvider.pin and not waypointProvider.pin:IsShown(), "the native waypoint pin hides at a later stop")
