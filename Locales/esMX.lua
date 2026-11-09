@@ -108,8 +108,6 @@ L["Journeys are off. Turn on Shift-click to plan journeys in settings."] =
 L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."] =
 	"Los viajes, y las estimaciones de otros addons desde aquí, pueden empezar con tu piedra de hogar o un teletransporte, contando el tiempo de reutilización."
 L["Keep journeys after a reload"] = "Mantener viajes tras recargar"
-L["Keep the route on the map when the journey list is hidden."] =
-	"Mantener la ruta en el mapa cuando la lista del viaje está oculta."
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"Mantiene el rastreador compartido Forever donde lo pones. El tirador de arriba ya no lo arrastra."
 L["Last seen %d min ago by another player"] = "Visto hace %d min por otro jugador"
@@ -141,6 +139,8 @@ L["No services nearby."] = "No hay servicios cercanos."
 L["No way there from here."] = "No hay camino desde aquí."
 L["Not discovered"] = "Sin descubrir"
 L["Not installed"] = "No instalado"
+L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."] =
+	"Desactivado mantiene la flecha, el marcador, la línea del mapa y la ruta del minimapa, sin bloque de viaje en el rastreador."
 L["On"] = "Activado"
 L["On board to %s"] = "A bordo hacia %s"
 L["On the world map."] = "En el mapa del mundo."
@@ -206,7 +206,7 @@ L["Show a quiet line where one of my other Forever addons would help. Only for a
 L["Show boats and zeppelins"] = "Mostrar barcos y zepelines"
 L["Show direction arrow"] = "Mostrar flecha de dirección"
 L["Show flight masters"] = "Mostrar maestros de vuelo"
-L["Show journey in tracker"] = "Mostrar viaje en el rastreador"
+L["Show journey steps in the objective tracker"] = "Mostrar los pasos del viaje en el rastreador de objetivos"
 L["Show lifts and the tram"] = "Mostrar elevadores y tranvía"
 L["Show marks on the minimap"] = "Mostrar marcas en el minimapa"
 L["Show metres and kilometres instead of yards."] =

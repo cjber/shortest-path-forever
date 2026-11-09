@@ -138,6 +138,7 @@ local env = setmetatable({
 }, { __index = _G })
 
 local refreshed, taxiRefreshed, policyChanged, tomtomRefreshed, guidelimeRefreshed = 0, 0, 0, 0, 0
+local trackerRefreshed = 0
 local compassMoving = false
 local arrowMoving, arrowScaled = false, nil
 local tomtomFollowRefreshed, ways = 0, {}
@@ -169,6 +170,9 @@ local ns = {
 		policyChanged = policyChanged + 1
 	end,
 	RefreshRestedXP = function() end,
+	RefreshTracker = function()
+		trackerRefreshed = trackerRefreshed + 1
+	end,
 	RefreshGuidelime = function()
 		guidelimeRefreshed = guidelimeRefreshed + 1
 	end,
@@ -283,6 +287,7 @@ local groups = {
 		"trackerAttached",
 		"trackerLocked",
 		"journey",
+		"journeyTracker",
 		"resumeJourney",
 		"destinationPin",
 		"npcArrows",
@@ -310,7 +315,6 @@ local groups = {
 	},
 	Alerts = { "alerts", "flightPathReminder", "alertSound", "arrivalSound" },
 	Interface = {
-		"journeyTracker",
 		"arrow",
 		"arrowMove",
 		"arrowScale",
@@ -391,6 +395,20 @@ assert(
 	Row("tracker").setting.name == "Show boat, lift and tram departures in the tracker",
 	"the departures switch names boats, lifts and the tram"
 )
+-- The journey's own block has its switch in Guidance, on by default, and turning it off redraws the tracker.
+local journeySteps = Row("journeyTracker")
+assert(
+	journeySteps.setting.name == "Show journey steps in the objective tracker",
+	"the journey switch names the steps and where they show"
+)
+assert(journeySteps.setting.default == true, "journey steps show in the tracker by default")
+assert(
+	journeySteps.tooltip:find("arrow", 1, true) and journeySteps.tooltip:find("objective tracker", 1, true),
+	"the tooltip says the guidance stays and the block goes"
+)
+local trackerRefreshes = trackerRefreshed
+journeySteps.setting.onChanged()
+assert(trackerRefreshed == trackerRefreshes + 1, "the journey switch redraws the tracker")
 assert(Row("guideStops").setting.default == true)
 assert(Row("taxiRoute").setting.default == true)
 assert(Row("flightPathReminder").setting.default == true, "new flight-master reminders are on by default")

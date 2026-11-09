@@ -109,8 +109,6 @@ L["Journeys are off. Turn on Shift-click to plan journeys in settings."] =
 L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."] =
 	"여정과 다른 애드온의 이곳 기준 예상 시간은 재사용 대기시간을 포함해 귀환석이나 순간이동으로 시작할 수 있습니다."
 L["Keep journeys after a reload"] = "재시작 후 여정 유지"
-L["Keep the route on the map when the journey list is hidden."] =
-	"여정 목록이 숨겨져 있을 때도 지도에 경로를 유지합니다."
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"공유 Forever 추적기를 놓은 자리에 유지합니다. 위쪽 손잡이로 더 이상 끌 수 없습니다."
 L["Last seen %d min ago by another player"] = "다른 플레이어가 %d분 전에 마지막으로 목격"
@@ -143,6 +141,8 @@ L["No services nearby."] = "주변에 편의시설이 없습니다."
 L["No way there from here."] = "여기서 그곳까지 가는 길이 없습니다."
 L["Not discovered"] = "발견하지 않음"
 L["Not installed"] = "설치 안 됨"
+L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."] =
+	"끄면 화살표, 표식, 지도 선, 미니맵 경로는 유지되고 목표 추적기에는 여정 블록이 표시되지 않습니다."
 L["On"] = "켬"
 L["On board to %s"] = "%s행 탑승 중"
 L["On the world map."] = "세계 지도에 표시합니다."
@@ -208,7 +208,7 @@ L["Show a quiet line where one of my other Forever addons would help. Only for a
 L["Show boats and zeppelins"] = "배와 비행선 표시"
 L["Show direction arrow"] = "방향 화살표 표시"
 L["Show flight masters"] = "비행 조련사 표시"
-L["Show journey in tracker"] = "추적기에 여정 표시"
+L["Show journey steps in the objective tracker"] = "목표 추적기에서 여정 단계 표시"
 L["Show lifts and the tram"] = "승강기와 지하철 표시"
 L["Show marks on the minimap"] = "미니맵에 표시"
 L["Show metres and kilometres instead of yards."] =

@@ -155,6 +155,27 @@ ns.db.journeyTracker = false
 refresh()
 assert(#tracker.blocks == 0, "hiding journey steps removes the journey block")
 assert(route ~= nil, "hiding the tracker keeps the active journey")
+-- Departures keep their own switch: a ride still lists where it calls next while the journey block is hidden.
+ns.db.tracker = true
+onTaxi = true
+local dockTitle = ns.DockTitle
+local nextStop = ns.Timetable.NextStop
+ns.Timetable.NextStop = function()
+	return 42, 60
+end
+ns.DockTitle = function()
+	return "Dock"
+end
+ns.Routes = ns.Routes or {}
+ns.Routes[123] = { period = 6000, kind = "boat", frames = {} }
+refresh(true)
+assert(
+	#tracker.blocks == 1 and tracker.blocks[1].key == "ride42",
+	"departures still show with journey steps off"
+)
+ns.db.tracker, onTaxi, route, ns.DockTitle = false, false, nil, dockTitle
+ns.Timetable.NextStop = nextStop
+refresh(true)
 ns.db.journeyTracker, ns.db.metres = true, false
 assert(start({leg("walk", {point(0), point(0)}, 0)}) == "Journey  0:00 · 0 yd")
 posX = nil

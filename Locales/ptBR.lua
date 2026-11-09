@@ -107,8 +107,6 @@ L["Journeys are off. Turn on Shift-click to plan journeys in settings."] =
 L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."] =
 	"As jornadas, e as estimativas de outros AddOns a partir daqui, podem começar com a sua pedra de regresso ou um teleporte, contando a recarga."
 L["Keep journeys after a reload"] = "Manter jornadas após recarregar"
-L["Keep the route on the map when the journey list is hidden."] =
-	"Manter a rota no mapa quando a lista da jornada estiver oculta."
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"Mantém o rastreador Forever compartilhado onde você o colocou. A alça no topo não o arrasta mais."
 L["Last seen %d min ago by another player"] = "Visto há %d min por outro jogador"
@@ -140,6 +138,8 @@ L["No services nearby."] = "Nenhum serviço próximo."
 L["No way there from here."] = "Não há caminho daqui até lá."
 L["Not discovered"] = "Não descoberto"
 L["Not installed"] = "Não instalado"
+L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."] =
+	"Desativado mantém a seta, o marcador, a linha do mapa e a rota do minimapa, sem bloco de jornada no rastreador."
 L["On"] = "Ativado"
 L["On board to %s"] = "A bordo para %s"
 L["On the world map."] = "No mapa-múndi."
@@ -205,7 +205,7 @@ L["Show a quiet line where one of my other Forever addons would help. Only for a
 L["Show boats and zeppelins"] = "Mostrar barcos e zepelins"
 L["Show direction arrow"] = "Mostrar seta de direção"
 L["Show flight masters"] = "Mostrar mestres de voo"
-L["Show journey in tracker"] = "Mostrar jornada no rastreador"
+L["Show journey steps in the objective tracker"] = "Mostrar as etapas da jornada no rastreador de objetivos"
 L["Show lifts and the tram"] = "Mostrar elevadores e metrô"
 L["Show marks on the minimap"] = "Mostrar marcas no minimapa"
 L["Show metres and kilometres instead of yards."] =

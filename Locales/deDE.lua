@@ -107,8 +107,6 @@ L["Journeys are off. Turn on Shift-click to plan journeys in settings."] =
 L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."] =
 	"Reisen, und die Schätzungen anderer Addons von hier, können mit Eurem Ruhestein oder einem Teleport beginnen, Abklingzeit eingerechnet."
 L["Keep journeys after a reload"] = "Reisen nach /reload behalten"
-L["Keep the route on the map when the journey list is hidden."] =
-	"Die Route auf der Karte lassen, wenn die Reiseliste ausgeblendet ist."
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"Hält die gemeinsame Forever-Verfolgung dort, wo Ihr sie hingelegt habt. Der Griff oben zieht sie nicht mehr."
 L["Last seen %d min ago by another player"] = "Zuletzt vor %d Min. von einem anderen Spieler gesehen"
@@ -140,6 +138,8 @@ L["No services nearby."] = "Keine Dienste in der Nähe."
 L["No way there from here."] = "Von hier gibt es keinen Weg dorthin."
 L["Not discovered"] = "Nicht entdeckt"
 L["Not installed"] = "Nicht installiert"
+L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."] =
+	"Aus lässt Pfeil, Markierung, Kartenlinie und Minikartenroute bestehen, ohne Reiseblock in der Verfolgung."
 L["On"] = "An"
 L["On board to %s"] = "An Bord nach %s"
 L["On the world map."] = "Auf der Weltkarte."
@@ -205,7 +205,7 @@ L["Show a quiet line where one of my other Forever addons would help. Only for a
 L["Show boats and zeppelins"] = "Schiffe und Zeppeline zeigen"
 L["Show direction arrow"] = "Richtungspfeil zeigen"
 L["Show flight masters"] = "Flugmeister zeigen"
-L["Show journey in tracker"] = "Reise in der Verfolgung zeigen"
+L["Show journey steps in the objective tracker"] = "Reiseschritte in der Verfolgung zeigen"
 L["Show lifts and the tram"] = "Aufzüge und die Bahn zeigen"
 L["Show marks on the minimap"] = "Markierungen auf der Minikarte zeigen"
 L["Show metres and kilometres instead of yards."] = "Echte Meter und Kilometer statt der Spieleinheit (Yards) zeigen."

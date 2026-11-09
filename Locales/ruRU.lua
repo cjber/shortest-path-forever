@@ -111,8 +111,6 @@ L["Journeys are off. Turn on Shift-click to plan journeys in settings."] =
 L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."] =
 	"Маршруты, а также оценки других модификаций отсюда, могут начинаться с камня возвращения или телепорта с учетом восстановления."
 L["Keep journeys after a reload"] = "Сохранять маршрут после перезагрузки"
-L["Keep the route on the map when the journey list is hidden."] =
-	"Оставлять маршрут на карте, когда список маршрута скрыт."
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"Оставляет общий трекер Forever там, где вы его поставили. Ручка сверху больше его не перетаскивает."
 L["Last seen %d min ago by another player"] = "Замечен %d мин. назад другим игроком"
@@ -147,6 +145,8 @@ L["No services nearby."] = "Поблизости нет услуг."
 L["No way there from here."] = "Отсюда туда нет пути."
 L["Not discovered"] = "Не открыто"
 L["Not installed"] = "Не установлено"
+L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."] =
+	"Выключено: стрелка, метка, линия на карте и маршрут на мини-карте остаются, а блока маршрута в панели отслеживания нет."
 L["On"] = "Вкл."
 L["On board to %s"] = "На борту: %s"
 L["On the world map."] = "На карте мира."
@@ -214,7 +214,8 @@ L["Show a quiet line where one of my other Forever addons would help. Only for a
 L["Show boats and zeppelins"] = "Показывать корабли и дирижабли"
 L["Show direction arrow"] = "Показывать стрелку направления"
 L["Show flight masters"] = "Показывать распорядителей полетов"
-L["Show journey in tracker"] = "Показывать маршрут на панели отслеживания"
+L["Show journey steps in the objective tracker"] =
+	"Показывать этапы маршрута в панели отслеживания заданий"
 L["Show lifts and the tram"] = "Показывать подъемники и поезд"
 L["Show marks on the minimap"] = "Показывать отметки на мини-карте"
 L["Show metres and kilometres instead of yards."] =
