@@ -20,6 +20,7 @@ L["%s · %s"] = "%s · %s"
 L["%s — unavailable here"] = "%s - 여기서 사용할 수 없음"
 L["%s, then %s"] = "%s, 다음 %s"
 L["/way [zone] x y [title], with x and y from 0 to 100."] = "/way [지역] x y [제목], x와 y는 0에서 100 사이."
+L["/way reset all, away, <zone> or not <zone>"] = "/way reset all, away, <지역> 또는 not <지역>"
 L["Adventure Guide couldn't start that just now. Choose it again from its guide."] =
 	"Adventure Guide가 지금 시작하지 못했습니다. 가이드에서 다시 선택하십시오."
 L["Adventure Guide suggests"] = "Adventure Guide 제안"
@@ -66,8 +67,8 @@ L["E"] = "동"
 L["Either faction can ride any boat or zeppelin."] =
 	"어느 진영이든 모든 배와 비행선을 탈 수 있습니다."
 L["Enter %s"] = "%s 입장"
-L["Guidelime guides can lead the journey, and the arrow lets clicks through."] =
-	"Guidelime 가이드가 여정을 이끌 수 있고, 화살표는 클릭을 통과시킵니다." -- mt
+L["Long journeys to another continent appear again."] =
+	"다른 대륙으로 가는 긴 여정이 다시 표시됩니다." -- mt
 L["Finding the fastest way…"] = "가장 빠른 길 찾는 중…"
 L["Flight Masters"] = "비행 조련사"
 L["Flight master"] = "비행 조련사"
@@ -412,6 +413,7 @@ L["Forever Leaderboards"] = "Forever 순위표" -- mt
 L["Overall"] = "전체" -- mt
 L["Forever standing"] = "Forever 순위" -- mt
 L["Your guild and group"] = "길드 및 그룹" -- mt
+L["Players you've met"] = "만난 플레이어" -- mt
 L["This week"] = "이번 주" -- mt
 L["All time"] = "전체 기간" -- mt
 L["Rank"] = "순위" -- mt

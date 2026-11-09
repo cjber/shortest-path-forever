@@ -2,7 +2,7 @@
 
 Every spec is a plain LuaJIT script run from the repository root (`luajit tests/<name>_spec.lua`). CI runs them all
 with a glob, so a new `*_spec.lua` is picked up without being listed anywhere. None of them needs the game: the
-client is stubbed, and agents never launch it. Checks that need the real client go in a PR's in-game list.
+client is stubbed. Checks that need the real client run in the headless client (forever-core's `wow-forever-addon/in-game.md`) and are listed in the PR.
 
 ## Layers
 

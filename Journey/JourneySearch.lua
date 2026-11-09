@@ -443,6 +443,7 @@ local function RefreshCosts(includeGoal, forced)
 	end
 	CancelPaths()
 	search = { initial = not followed, forced = forced }
+	local owner = search
 	local version = pathVersion
 	local teleports = ns.UsableTeleports(ns.NowMs())
 	local partyPortals = ns.PartyPortalPlaces and ns.PartyPortalPlaces(here) or nil
@@ -585,7 +586,8 @@ local function RefreshCosts(includeGoal, forced)
 	local consider
 	-- Bounded search callback; splitting adds calls and upvalues on every frontier update
 	consider = function(final)
-		if version ~= pathVersion or not goal then
+		-- A search that has published (FinishSearch forgets it) or was replaced is never heard from again.
+		if version ~= pathVersion or search ~= owner or not goal then
 			return
 		end
 		if not ns.JourneyPosition() then

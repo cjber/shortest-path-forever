@@ -72,6 +72,8 @@ With RestedXP or Guidelime installed, **Resume guide** in Guidance or the Journe
 - **Typed waypoints.** `/way [zone] x y [title]` plans a journey to that spot, read as TomTom reads it: x and y are
   percentages of the map, `#1429` names a map by its ID, a zone can be shortened to any part of its name
   (`/way elwynn 42 65 Goldshire`, `/way hinterlands 14 44`), and a decimal comma works. Without a zone the spot is on the map you stand on.
+  `/way reset all` ends the journey; `/way reset away`, `/way reset <zone>` and `/way reset not <zone>` end the one
+  the last `/way` line started, as TomTom's own resets do.
   `/way` is registered only when TomTom isn't installed and no other addon has claimed it; Polestar's `/way` waits
   for it, as Polestar's own TomTom stand-in waits for this one ([docs/api.md](api.md#alongside-polestar)). `/path way`
   takes the same line and always works. With TomTom installed, *Follow TomTom's arrow* in Guidance (off by default) plans a journey

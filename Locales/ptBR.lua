@@ -20,6 +20,7 @@ L["%s · %s"] = "%s · %s"
 L["%s — unavailable here"] = "%s: indisponível aqui"
 L["%s, then %s"] = "%s, depois %s"
 L["/way [zone] x y [title], with x and y from 0 to 100."] = "/way [zona] x y [título], com x e y de 0 a 100."
+L["/way reset all, away, <zone> or not <zone>"] = "/way reset all, away, <zona> ou not <zona>"
 L["Adventure Guide couldn't start that just now. Choose it again from its guide."] =
 	"O Adventure Guide não conseguiu iniciar isso agora. Escolha de novo no guia dele."
 L["Adventure Guide suggests"] = "Adventure Guide sugere"
@@ -65,8 +66,7 @@ L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] 
 L["E"] = "L"
 L["Either faction can ride any boat or zeppelin."] = "Qualquer facção pode usar qualquer barco ou zepelim."
 L["Enter %s"] = "Entrar em %s"
-L["Guidelime guides can lead the journey, and the arrow lets clicks through."] =
-	"Os guias do Guidelime podem conduzir a jornada, e a seta deixa os cliques passarem." -- mt
+L["Long journeys to another continent appear again."] = "Jornadas longas para outro continente voltam a aparecer." -- mt
 L["Finding the fastest way…"] = "Procurando o caminho mais rápido…"
 L["Flight Masters"] = "Mestres de voo"
 L["Flight master"] = "Mestre de voo"
@@ -406,6 +406,7 @@ L["Forever Leaderboards"] = "Classificações Forever" -- mt
 L["Overall"] = "Geral" -- mt
 L["Forever standing"] = "Posição Forever" -- mt
 L["Your guild and group"] = "Sua guilda e grupo" -- mt
+L["Players you've met"] = "Jogadores que você conheceu" -- mt
 L["This week"] = "Esta semana" -- mt
 L["All time"] = "Todo o período" -- mt
 L["Rank"] = "Classificação" -- mt

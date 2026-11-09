@@ -4,7 +4,7 @@
 -- blamed on this addon. The index buttons go through RegisterInitializer too, and keep themselves out of search.
 local rows, buttons, settings = {}, {}, {}
 local opened = {}
-local canvas, familyPanel
+local familyPage
 
 local attachmentNotified, attachmentChanged
 local trackerState = { attached = true }
@@ -49,15 +49,8 @@ local env = setmetatable({
 				end,
 			}
 		end,
-		RegisterCanvasLayoutSubcategory = function(parent, frame, name)
-			canvas = { parent = parent, frame = frame, name = name }
-			return {
-				name = name,
-				parent = parent,
-				GetID = function(self)
-					return self.name
-				end,
-			}
+		RegisterCanvasLayoutSubcategory = function()
+			error("the Forever addons page registers with ns.Family.Register, not a canvas")
 		end,
 		RegisterVerticalLayoutSubcategory = function(parent, name)
 			return {
@@ -189,9 +182,14 @@ local ns = {
 		ways[#ways + 1] = message
 	end,
 	Family = {
-		CreatePanel = function(parent, db, current, locale)
-			familyPanel = { parent = parent, db = db, current = current, locale = locale }
-			return familyPanel
+		Register = function(category, db, current, locale)
+			familyPage = { category = category, db = db, current = current, locale = locale }
+			return {
+				name = "Forever addons",
+				GetID = function(self)
+					return self.name
+				end,
+			}
 		end,
 	},
 	TravelSharingChanged = function()
@@ -354,10 +352,10 @@ assert(cursor == #rows, "every row belongs to a group")
 -- The shared Forever addons page (UI/ForeverFamily.lua) is the last subpage, with this addon's saved variables.
 local family = buttons[#order + 1]
 assert(family.target.name == "Shortest Path Forever" and family.initializer.name == "Forever addons")
-assert(canvas and canvas.name == "Forever addons" and canvas.parent.name == "Shortest Path Forever")
-assert(canvas.frame == familyPanel and familyPanel.db == ns.db, "the page reads and writes this addon's settings")
-assert(familyPanel.current == "ShortestPathForever", "its own row is this addon's")
-assert(familyPanel.locale == ns.L, "and it reads in this addon's own translations")
+assert(familyPage and familyPage.category.name == "Shortest Path Forever", "the page sits under the addon's category")
+assert(familyPage.db == ns.db, "the page reads and writes this addon's settings")
+assert(familyPage.current == "ShortestPathForever", "its own row is this addon's")
+assert(familyPage.locale == ns.L, "and it reads in this addon's own translations")
 family.initializer.callback()
 assert(opened[#opened] == "Forever addons", "the button opens the page")
 

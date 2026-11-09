@@ -47,9 +47,10 @@ for _, case in ipairs({
 	local here = ns.TaxiNodes[case[2]]
 	driver.begin(here, ns.TaxiNodes[case[3]])
 	drain()
-	local current, points, segment, offset
+	local current, points, segment, offset, lastTransport
 	while driver.shown() do
-		local leg = driver.shown().legs[1]
+		local legs = driver.shown().legs
+		local leg = legs[1]
 		assert(leg, "empty journey")
 		-- A replan restarts the same goal from the player, so its endpoint can move by rounding alone.
 		local to, was = leg.to, current and current.to
@@ -100,9 +101,24 @@ for _, case in ipairs({
 				transfers = transfers + 1
 			end
 			current = nil
-			here = leg.to
-			driver.move(here)
-			driver.update(math.max(0.1, (leg.arrive - ns.NowMs()) / 1000))
+			if leg == lastTransport then
+				-- A stacked lift's step ends when you walk away from the shaft after the ride (#362).
+				local nextLeg = legs[2]
+				if nextLeg and nextLeg.mode == "walk" and nextLeg.walkPoints and #nextLeg.walkPoints >= 2 then
+					here = nextLeg.walkPoints[2]
+				elseif nextLeg then
+					here = nextLeg.to
+				else
+					here = leg.to
+				end
+				driver.move(here)
+				driver.update(5)
+			else
+				here = leg.to
+				driver.move(here)
+				driver.update(math.max(0.1, (leg.arrive - ns.NowMs()) / 1000))
+			end
+			lastTransport = leg
 		end
 		drain()
 		steps = steps + 1

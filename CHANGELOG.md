@@ -12,6 +12,22 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Adventure Guide's quest focus no longer leaves two markers.** Walking into the area of the step you are on makes Adventure Guide select that quest, which used to take the game's navigation marker away from Shortest Path: the quest's marker and the guide's arrow then led at once. The waypoint Shortest Path tracks now stays the marker, and only your own quest click takes navigation back. (#531)
+- **The Forever Leaderboards period menu works with a gamepad.** With the gamepad interface on, a press on it steps through this week or all time, for your guild and group or for players you've met, instead of opening a game menu that later had the client block `SetPreferredGamepadInteractTarget()` (cjber/forever-core#267).
+
+## [1.23.3] - 2026-11-08
+
+- **Long journeys to another continent appear again.** When a bind point's walks finished being searched after the route was already chosen, that late answer hit an error and the journey was never shown. A search that has finished now ignores answers that arrive after it (#516).
+- **The Forever addons page opens with a gamepad.** With the gamepad interface on, the Forever addons settings page can be entered from the Options list (cjber/tweaks-forever#382).
+
+## [1.23.2] - 2026-11-08
+
+- **`/way reset all` ends the journey without TomTom.** Shortest Path's own `/way` now reads TomTom's reset forms. `all` ends the journey, `away`, `<zone>` and `not <zone>` end the one the last `/way` line started, and a bare `reset` shows how to use it. Before, every reset printed the coordinate usage line and left the journey running (#159).
+
+## [1.23.1] - 2026-11-08
+
+- **Journeys no longer fly to flight points the character has not discovered.** The flight master's map only drew the points this character can actually see, but Shortest Path learned every node the map's query returned, so a level 16 character could be routed through flights it had never unlocked. It now learns a point only when the map draws it, and the known list starts again from empty, relearning at the next flight master (#512).
+
 ## [1.23.0] - 2026-11-08
 
 - **The tracker can have a background.** Right-click any section's title in the Forever tracker and pick *Tracker background*: Off, or the game's tooltip fill at 25, 50, 75 or 100%, so quest text stays readable over bright ground. The choice is shared by every Forever addon in the column (cjber/forever-core#246).

@@ -18,6 +18,8 @@ local _, ns = ...
 
 ---@alias ForeverLeaderboardsScope "week"|"all"
 
+---@alias ForeverLeaderboardsReach "group"|"met"
+
 ---@class ForeverLeaderboardsRow
 ---@field name string the player's display name
 ---@field identity? string the compacted key the row was ranked under, when the board supplies one
@@ -71,7 +73,7 @@ local _, ns = ...
 ---@field rank integer
 ---@field weekly boolean
 
-local LEADERBOARDS_VERSION = 2
+local LEADERBOARDS_VERSION = 6
 local OVERALL = "overall"
 local TROPHY = "Interface\\Icons\\INV_Misc_Trophy_Argent"
 local ROW_HEIGHT = 30
@@ -106,6 +108,7 @@ end
 ---@field VERSION integer raised with every change to this file
 ---@field LEADERBOARDS_VERSION integer the same version, under the name the file compares
 ---@field scope ForeverLeaderboardsScope the selected scope
+---@field reach ForeverLeaderboardsReach rows heard directly ("group") or every row heard ("met")
 ---@field selected? string the board the window shows
 ---@field window? ForeverLeaderboardsWindow the window once built, for a newer copy to put away
 ---@field tooltipHooked? boolean the one unit-tooltip hook is already installed
@@ -117,6 +120,7 @@ local api = {
 	boards = {},
 	order = {},
 	scope = "week",
+	reach = "group",
 	registration = 0,
 }
 local sequence = 0
@@ -138,6 +142,9 @@ if type(previous) == "table" then
 	api.tooltipHooked = previous.tooltipHooked == true
 	if previous.scope == "all" or previous.scope == "week" then
 		api.scope = previous.scope
+	end
+	if previous.reach == "group" or previous.reach == "met" then
+		api.reach = previous.reach
 	end
 	if type(previous.selected) == "string" then
 		api.selected = previous.selected
@@ -328,8 +335,8 @@ local function Rows(key, scope)
 	if not spec then
 		return rows
 	end
-	local ok, list = pcall(spec.board, scope)
-	if not ok or type(list) ~= "table" then
+	local list = data.BoardRows(api, spec, scope)
+	if type(list) ~= "table" then
 		return rows
 	end
 	local weekly = scope == "week"
@@ -369,6 +376,8 @@ end
 ---@class ForeverLeaderboardsDropdown : Frame
 ---@field SetDefaultText fun(self: ForeverLeaderboardsDropdown, text: string)
 ---@field SetupMenu fun(self: ForeverLeaderboardsDropdown, generator: fun(owner: Frame, root: any))
+---@field OpenMenu fun(self: ForeverLeaderboardsDropdown)
+---@field IsEnabled fun(self: ForeverLeaderboardsDropdown): boolean
 
 ---@alias ForeverLeaderboardsTabMouseUp fun(self: Frame, button: string, upInside: boolean)
 
@@ -489,7 +498,8 @@ function BuildTabs(frame)
 	end
 	local last
 	for index, entry in ipairs(list) do
-		local tab = CreateFrame("Frame", nil, frame, "LargeSideTabButtonTemplate") --[[@as ForeverLeaderboardsTab]]
+		-- A Button, so the gamepad's SmartNavigation scan never reads this frame's mouse scripts (cjber/skillup-forever#398).
+		local tab = CreateFrame("Button", nil, frame, "LargeSideTabButtonTemplate") --[[@as ForeverLeaderboardsTab]]
 		if last then
 			tab:SetPoint("TOP", last, "BOTTOM", 0, -3)
 		else
@@ -530,7 +540,7 @@ function Refresh()
 	api.selected = key
 	local spec = key ~= OVERALL and api.boards[key] or nil
 	frame.heading:SetText(spec and spec.metric or L["Forever standing"])
-	frame.subtitle:SetText(L["Your guild and group"])
+	frame.subtitle:SetText(api.reach == "met" and L["Players you've met"] or L["Your guild and group"])
 	frame.valueHeader:SetText(api.scope == "week" and L["This week"] or L["All time"])
 	frame.dropdown:SetDefaultText(api.scope == "week" and L["This week"] or L["All time"])
 	RefreshTabs(frame)
@@ -611,6 +621,24 @@ function Refresh()
 	)
 end
 
+-- The dropdown's four choices, in the order a press steps through them.
+local PERIOD_CHOICES = {
+	{ scope = "week", reach = "group" },
+	{ scope = "all", reach = "group" },
+	{ scope = "week", reach = "met" },
+	{ scope = "all", reach = "met" },
+}
+
+-- The client's gamepad switch. Read through _G because not every consumer's pinned WoW API annotations declare
+-- InputUtil, and this file has to typecheck unchanged in each of them.
+---@return boolean
+local function GamepadUI()
+	local input = rawget(_G, "InputUtil")
+	return type(input) == "table"
+		and type(input.IsGamepadUIEnabled) == "function"
+		and input.IsGamepadUIEnabled() == true
+end
+
 ---@return ForeverLeaderboardsWindow
 local function Window()
 	if api.window then
@@ -646,7 +674,7 @@ local function Window()
 
 	frame.subtitle = frame:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
 	frame.subtitle:SetPoint("TOPLEFT", 62, -54)
-	frame.subtitle:SetText(L["Your guild and group"])
+	frame.subtitle:SetText(api.reach == "met" and L["Players you've met"] or L["Your guild and group"])
 
 	local dropdown = CreateFrame("DropdownButton", nil, frame, DROPDOWN_TEMPLATE) --[[@as ForeverLeaderboardsDropdown]]
 	dropdown:SetSize(140, 24)
@@ -665,7 +693,43 @@ local function Window()
 			api.scope = "all"
 			Refresh()
 		end)
+		root:CreateDivider()
+		root:CreateRadio(L["Your guild and group"], function()
+			return api.reach == "group"
+		end, function()
+			api.reach = "group"
+			Refresh()
+		end)
+		root:CreateRadio(L["Players you've met"], function()
+			return api.reach == "met"
+		end, function()
+			api.reach = "met"
+			Refresh()
+		end)
 	end)
+	-- With the gamepad interface on, the client's gamepad frame manager takes every menu that shows into its focus
+	-- in the same call, under the taint of whoever opened it, and the next secure window call then has its protected
+	-- SetPreferredGamepadInteractTarget refused. No addon code can open a Blizzard menu untainted, so a press steps
+	-- to the next choice instead (cjber/forever-core#267, cjber/skillup-forever#398).
+	local openMenu = dropdown.OpenMenu
+	function dropdown:OpenMenu()
+		if not GamepadUI() then
+			return openMenu(self)
+		end
+		if not self:IsEnabled() then
+			return
+		end
+		local index = 1
+		for position, choice in ipairs(PERIOD_CHOICES) do
+			if choice.scope == api.scope and choice.reach == api.reach then
+				index = position % #PERIOD_CHOICES + 1
+				break
+			end
+		end
+		local choice = PERIOD_CHOICES[index]
+		api.scope, api.reach = choice.scope, choice.reach
+		Refresh()
+	end
 	dropdown:SetDefaultText(L["This week"])
 	frame.dropdown = dropdown
 

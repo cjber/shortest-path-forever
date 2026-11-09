@@ -21,6 +21,7 @@ L["%s — unavailable here"] = "%s – здесь недоступно"
 L["%s, then %s"] = "%s, затем %s"
 L["/way [zone] x y [title], with x and y from 0 to 100."] =
 	"/way [зона] x y [название], x и y от 0 до 100."
+L["/way reset all, away, <zone> or not <zone>"] = "/way reset all, away, <зона> или not <зона>"
 L["Adventure Guide couldn't start that just now. Choose it again from its guide."] =
 	"Adventure Guide не удалось это запустить. Выберите это снова в его руководстве."
 L["Adventure Guide suggests"] = "Adventure Guide предлагает"
@@ -68,8 +69,8 @@ L["E"] = "В"
 L["Either faction can ride any boat or zeppelin."] =
 	"Любая фракция может сесть на любой корабль или дирижабль."
 L["Enter %s"] = "Войти: %s"
-L["Guidelime guides can lead the journey, and the arrow lets clicks through."] =
-	"Руководства Guidelime могут вести маршрут, а стрелка пропускает щелчки." -- mt
+L["Long journeys to another continent appear again."] =
+	"Длинные маршруты на другой континент снова отображаются." -- mt
 L["Finding the fastest way…"] = "Поиск самого быстрого пути…"
 L["Flight Masters"] = "Распорядители полетов"
 L["Flight master"] = "Распорядитель полетов"
@@ -428,6 +429,7 @@ L["Forever Leaderboards"] = "Рейтинги Forever" -- mt
 L["Overall"] = "Общий" -- mt
 L["Forever standing"] = "Общий рейтинг Forever" -- mt
 L["Your guild and group"] = "Ваша гильдия и группа" -- mt
+L["Players you've met"] = "Встреченные игроки" -- mt
 L["This week"] = "На этой неделе" -- mt
 L["All time"] = "За всё время" -- mt
 L["Rank"] = "Место" -- mt

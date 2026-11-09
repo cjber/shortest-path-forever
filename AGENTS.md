@@ -65,8 +65,7 @@ before its `v*` tag, since the release publishes it as the notes.
 - Lua 5.1 in the game's sandbox: no `require`. The client loads the files `ShortestPathForever.toc` lists, in
   that order, each receiving `local addonName, ns = ...` (or `ns = select(2, ...)`); a new file goes in the TOC or never runs.
 - The specs are a headless harness with stubbed client APIs. Anything they cannot reach (frames,
-  menus, tooltips, the tracker) is checked in game: list those checks in the PR as `/reload` tests
-  for the user. Never drive the game client.
+  menus, tooltips, the tracker) is checked in game: check them in the headless client (forever-core's `wow-forever-addon/in-game.md`) and list in the PR what was checked; what waits on the player's own session goes in the PR as `/reload` tests for the user.
 - New runtime globals go in `.luacheckrc` and need real types: Ketho's pinned annotations, the defining
   addon class, or `types/*.lua` for missing Forever APIs. No blanket globals/diagnostic allowlist.
 - LuaLS checks every TOC-loaded Lua file, including generated data and walking maps. Keep namespace and

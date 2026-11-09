@@ -217,19 +217,6 @@ ObjectiveTrackerFrame = nil
 ---@type SPFTrackerManager
 ObjectiveTrackerManager = nil
 
----@class ForeverTrackerHostAPI
----@field IsAttachedToQuestTracker fun(): boolean
----@field SetAttached fun(attached: boolean)
----@field GetSettings fun(): ForeverTrackerSettings
----@field GetScale fun(): number
----@field SetScale fun(scale: number)
----@field OnAttachmentChanged fun(callback: fun(attached: boolean))
----@field SavePosition fun(x: number, y: number)
----@field IsLocked fun(): boolean
----@field SetLocked fun(value: boolean)
----@type ForeverTrackerHostAPI?
-ForeverTrackerHost = nil
-
 ---@class SPFSetting
 ---@field SetValue fun(self: SPFSetting, value: boolean|number|string)
 ---@field SetValueChangedCallback fun(self: SPFSetting, callback: fun(setting: SPFSetting, value: boolean|number|string))
@@ -252,6 +239,7 @@ ForeverTrackerHost = nil
 ---@field CreateSliderOptions fun(minimum: number, maximum: number, step: number): table
 ---@field CreateSliderInitializer fun(setting: SPFSetting, options: table, tooltip?: string): SPFSettingsInitializer
 ---@field CreateCheckboxInitializer fun(setting: SPFSetting, options?: table, tooltip?: string): SPFSettingsInitializer
+---@field CreateCheckbox fun(category: SPFSettingsCategory, setting: SPFSetting, tooltip?: string)
 ---@field CreateControlTextContainer fun(): SPFControlTextContainer
 ---@field CreateDropdownInitializer fun(setting: SPFSetting, getData: (fun(): table[]), tooltip?: string): SPFSettingsInitializer
 ---@field RegisterInitializer fun(category: SPFSettingsCategory, initializer: SPFSettingsInitializer)
@@ -262,12 +250,18 @@ Settings = nil
 
 -- Blizzard's settings button initializer, absent from the pinned annotations (Ketho/vscode-wow-api).
 ---@param name string
----@param description string
----@param callback function
----@param searchTags? table
+---@param buttonText string
+---@param click fun()
+---@param tooltip? string
 ---@param addSearchTags? boolean
 ---@return SPFSettingsInitializer
-function CreateSettingsButtonInitializer(name, description, callback, searchTags, addSearchTags) end
+function CreateSettingsButtonInitializer(name, buttonText, click, tooltip, addSearchTags) end
+
+-- Blizzard_SharedXMLGame InputUtil.lua: the client's input-device switch, read by UI/ForeverFamily.lua.
+---@class SPFInputUtil
+---@field IsGamepadUIEnabled fun(): boolean
+---@type SPFInputUtil?
+InputUtil = nil
 
 ---@class SPFUiMapPointFactory
 ---@field CreateFromVector2D fun(uiMapID: number, position: Vector2DMixin): UiMapPoint
@@ -279,32 +273,3 @@ EventUtil = {}
 ---@param callback function
 ---@param ... string
 function EventUtil.ContinueAfterAllEvents(callback, ...) end
-
----@class ForeverTrackerSettings
----@field attached boolean
----@field locked? boolean the grip ignores drag while the tracker is locked
----@field scale? number tracker size, 1 is the stock size
----@field x? number
----@field y? number
----@field backdropOpacity? number the tracker background's opacity, 0 (off) to 1
-
----@class ForeverTrackerGrip
----@field Show fun(value: boolean) shows or hides the grip, which the host keeps hidden while attached
----@field SetLabel fun(value: boolean) redraws the label from the switch, without waiting for a hover
-
----@class ForeverTrackerOrderAPI
----@field Sort fun(modules: ForeverTrackerModule[]) orders the shared column's sections in place
-
----@class ForeverTrackerLock
----@field Locked fun(): boolean reads the saved switch through the host
----@field Grip fun(host: Frame, source: ForeverTrackerHostAPI): ForeverTrackerGrip draws the grip on the column it drags
-
----@class ForeverTrackerNamespace
----@field TrackerHost? ForeverTrackerHostAPI
----@field TrackerOrder? ForeverTrackerOrderAPI the section order, from UI/TrackerOrder.lua
----@field TrackerQuestie? ForeverTrackerQuestie Questie's quest list, from UI/TrackerQuestie.lua
----@field TrackerEqot? ForeverTrackerEqot EQOT's quest list, from UI/TrackerEqot.lua
----@field TrackerLock? ForeverTrackerLock the grip and its Lock switch, from UI/TrackerLock.lua
----@field TrackerHostSettings? fun(): ForeverTrackerSettings
----@field L table<string, string>
----@field ContextMenu? fun(owner: Frame, generator: fun(owner: Frame, root: any)): any the addon's own context menu, when it draws one

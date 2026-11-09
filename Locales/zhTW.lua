@@ -20,6 +20,7 @@ L["%s · %s"] = "%s · %s"
 L["%s — unavailable here"] = "%s——此處無法使用"
 L["%s, then %s"] = "%s，然後%s"
 L["/way [zone] x y [title], with x and y from 0 to 100."] = "/way [地區] x y [標題]，x和y為0到100。"
+L["/way reset all, away, <zone> or not <zone>"] = "/way reset all, away, <地區> 或 not <地區>"
 L["Adventure Guide couldn't start that just now. Choose it again from its guide."] =
 	"Adventure Guide暫時無法開始。請在其指南中重新選擇。"
 L["Adventure Guide suggests"] = "Adventure Guide推薦"
@@ -65,8 +66,7 @@ L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] 
 L["E"] = "東"
 L["Either faction can ride any boat or zeppelin."] = "任何陣營都可以搭乘任何船隻或飛艇。"
 L["Enter %s"] = "進入%s"
-L["Guidelime guides can lead the journey, and the arrow lets clicks through."] =
-	"Guidelime 指南可以引導旅程，箭頭也會讓點擊穿透。" -- mt
+L["Long journeys to another continent appear again."] = "前往其他大陸的長途旅程重新顯示了。" -- mt
 L["Finding the fastest way…"] = "正在尋找最快路線…"
 L["Flight Masters"] = "飛行管理員"
 L["Flight master"] = "飛行管理員"
@@ -399,6 +399,7 @@ L["Forever Leaderboards"] = "Forever 排行榜" -- mt
 L["Overall"] = "總覽" -- mt
 L["Forever standing"] = "Forever 總排名" -- mt
 L["Your guild and group"] = "你的公會和隊伍" -- mt
+L["Players you've met"] = "遇過的玩家" -- mt
 L["This week"] = "本週" -- mt
 L["All time"] = "全部時間" -- mt
 L["Rank"] = "排名" -- mt
