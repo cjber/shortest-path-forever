@@ -12,7 +12,13 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+
+## [1.24.1] - 2026-11-09
+
 - **Zooming the map with a journey on it is lighter.** The route redraws ten times a second while the map zooms and lays out only the dots near the view, so a long walk over OpenMap's stitched map no longer works through thousands of off-screen breadcrumbs (#529).
+
+- **A flight is only planned when both of its flight points are known.** The planner checked the point the flight left from but not the one it landed at, so a route could plan a flight into a flight point you had never visited; the route now falls back to the walk unless both ends are known (#537).
+- **A right-click on a stop clears the journey the first time.** Every redraw released and re-acquired the stop buttons, which dropped the canvas's pressed pin, so a right-click that straddled a redraw landed on nothing. The refresh now keeps the pins it already has (#542).
 
 ## [1.24.0] - 2026-11-09
 
