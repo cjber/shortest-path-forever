@@ -73,8 +73,6 @@ L["E"] = "동"
 L["Either faction can ride any boat or zeppelin."] =
 	"어느 진영이든 모든 배와 비행선을 탈 수 있습니다."
 L["Enter %s"] = "%s 입장"
-L["A journey only flies between flight points you know."] =
-	"여정은 이제 알고 있는 비행 지점 사이로만 비행합니다." -- mt
 L["Finding the fastest way…"] = "가장 빠른 길 찾는 중…"
 L["Flight Masters"] = "비행 조련사"
 L["Flight master"] = "비행 조련사"
@@ -477,3 +475,5 @@ L["Eastern Kingdoms"] = "동부 왕국" -- mt
 L["Kalimdor"] = "칼림도어" -- mt
 L["No flight points learned in %s: open a flight master's map once to sync them."] =
 	"%s에서 배운 비행 지점이 없습니다: 비행 조련사의 지도를 한 번 열어 동기화하세요." -- mt
+L["Only the flight points your character has are learned now."] =
+	"이제 캐릭터가 가진 비행 지점만 기억합니다." -- mt

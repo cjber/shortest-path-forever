@@ -72,7 +72,6 @@ L["Drink"] = "飲料"
 L["E"] = "東"
 L["Either faction can ride any boat or zeppelin."] = "任何陣營都可以搭乘任何船隻或飛艇。"
 L["Enter %s"] = "進入%s"
-L["A journey only flies between flight points you know."] = "旅程只會在你已知的飛行點之間飛行。" -- mt
 L["Finding the fastest way…"] = "正在尋找最快路線…"
 L["Flight Masters"] = "飛行管理員"
 L["Flight master"] = "飛行管理員"
@@ -461,3 +460,4 @@ L["Eastern Kingdoms"] = "東部王國" -- mt
 L["Kalimdor"] = "卡林多" -- mt
 L["No flight points learned in %s: open a flight master's map once to sync them."] =
 	"尚未在%s學會任何飛行點：開啟一次飛行管理員的地圖以同步它們。" -- mt
+L["Only the flight points your character has are learned now."] = "現在只會記錄你的角色已有的飛行點。" -- mt
