@@ -1,0 +1,16 @@
+name: Rerun failed checks
+on:
+  push:
+    branches:
+      - rerun/**
+permissions:
+  actions: write
+  contents: read
+jobs:
+  rerun:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rerun failed jobs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh api -X POST "repos/cjber/shortest-path-forever/actions/runs/42580466466/rerun-failed-jobs"
