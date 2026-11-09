@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **The minimap route no longer covers your character arrow.** Its breadcrumbs now begin outside the arrow at the middle of the minimap, so the arrow still shows which way you face while the route leads on ahead. Reported on CurseForge by user_afgy8z90v9fxemb0 (#583).
+
 ## [1.24.4] - 2026-11-09
 
 - **The switch that keeps a journey out of the objective tracker is easier to find.** It moved from Interface to Guidance and is now called *Show journey steps in the objective tracker*. Off, the journey still guides with its arrow, destination pin, map line and minimap route, and the tracker shows only the departures their own switch allows. Your choice carries over. Thanks to _spada on Discord for the question (#563).

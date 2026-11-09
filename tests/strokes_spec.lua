@@ -14,6 +14,8 @@ for _, file in ipairs({ "UI/FlightLines.lua", "UI/Strokes.lua" }) do
 end
 local Strokes = ns.Strokes
 local DOT, RIM, GAP, SPACING, SMALL_DOT, SMALL_SPACING, LATER = 4, 1, 2, 9, 3, 7, 0.4
+-- The minimap's own player arrow is 16 units across (Strokes.lua PLAYER_ARROW is its radius).
+local ARROW = 8
 -- StopPin.lua fades a later stop by the same amount, read from here (UI/Strokes.lua).
 check(ns.LaterAlpha == LATER, "one later alpha for stops and strokes")
 local CANVAS, MINIMAP = 1000, 140
@@ -87,6 +89,16 @@ local function clears(strokes, cx, cy, radius, scale, label)
 	end
 	check(nearest >= reach, label .. ": a dot runs under the mark")
 	check(nearest < reach + SPACING / scale, label .. ": the dots stop well short of the mark")
+end
+
+-- A dot's centre begins outside the mark's own radius, with the nearest within one spacing of it.
+local function beginsOutside(strokes, cx, cy, radius, scale, label)
+	local nearest = math.huge
+	for _, dot in ipairs(dots(strokes)) do
+		nearest = math.min(nearest, math.sqrt((dot[1] - cx) ^ 2 + (dot[2] - cy) ^ 2))
+	end
+	check(nearest >= radius, label .. ": a dot runs under the mark")
+	check(nearest < radius + SPACING / scale, label .. ": the dots stop well short of the mark")
 end
 
 -- Dense flight smoothing must not become subpixel native lines at default map zoom.
@@ -312,6 +324,9 @@ local ex, ey, edge =
 local ringRim = 1 - minimapView(player).goalRadius / (MINIMAP / 2)
 check(edge and close(ex, 0) and close(ey, ringRim), "due north, on the rim")
 clears(strokes, MINIMAP / 2, -MINIMAP / 2 + ringRim * MINIMAP / 2, 8, 1, "the rim mark")
+-- The player's own arrow sits at the centre: its breadcrumbs begin outside the arrow's radius, so it still shows the
+-- facing (#583).
+beginsOutside(strokes, MINIMAP / 2, -MINIMAP / 2, ARROW, 1, "the player arrow")
 -- Still on the face but too near its rim for the whole ring: pulled in onto the rim at full strength, not an edge.
 local close_rim = point(0.1 + 0.5 * 0.95, 0.5)
 ex, ey, edge = Strokes.Minimap(strokes, {}, minimapView(player, { goal = close_rim }))

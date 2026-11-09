@@ -18,6 +18,9 @@ ns.LaterAlpha = LATER_ALPHA
 -- Breadcrumbs stop short of each stop's mark, so the way runs up to a stop rather than under it: a dot is left out when
 -- its rim would come within STOP_GAP of the mark, on screen, at either end of a leg.
 local STOP_GAP = 2
+-- The minimap's player arrow is the game's own 16-unit arrow, centred on the player: the route begins outside its
+-- radius, so the arrow still shows which way the player faces (#583).
+local PLAYER_ARROW = 8
 -- Client regions cannot be destroyed. Bound each painter's pool even after extreme map zooms.
 local LIMIT = 4096
 -- OpenMap's stitched map, for the drawing: the view runs past the host map, so nothing is clipped to its rectangle.
@@ -185,11 +188,15 @@ local function Clear(count, x, y)
 	return true
 end
 
+-- A mark the dots avoid: their centres stay outside its reach, in the view's own units.
+local function Avoid(x, y, reach)
+	circles[circleCount + 1], circles[circleCount + 2], circles[circleCount + 3] = x, y, reach
+	circleCount = circleCount + 3
+end
+
 -- A stop mark the dots leave a gap around: its radius plus what leaves STOP_GAP on screen past a dot's rim.
 local function Circle(x, y, radius)
-	circles[circleCount + 1], circles[circleCount + 2] = x, y
-	circles[circleCount + 3] = radius + (STOP_GAP + dot / 2 + RIM) / scale
-	circleCount = circleCount + 3
+	Avoid(x, y, radius + (STOP_GAP + dot / 2 + RIM) / scale)
 end
 
 -- Clip before subdividing: even continent-sized walks need only the visible breadcrumbs. Dots sit at every SPACING
@@ -474,6 +481,10 @@ function Strokes.Minimap(buffer, paths, view)
 		return nil
 	end
 	local cosine, sine = math.cos(facing), math.sin(facing)
+	-- The player's arrow sits at the centre of the minimap: no breadcrumb is centred under it, so the route never
+	-- hides which way the player faces. Only the arrow's own radius, not a stop's full gap, so a ten-yard approach
+	-- still has room for dots (#74).
+	Avoid(width / 2, -height / 2, PLAYER_ARROW)
 	local markX, markY, edge
 	if goal and goal.map == map and not goal.corpse then
 		local gx, gy = Project(goal, x, y, radius, cosine, sine)
