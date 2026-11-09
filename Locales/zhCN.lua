@@ -399,6 +399,7 @@ L["Forever Leaderboards"] = "Forever 排行榜" -- mt
 L["Overall"] = "总览" -- mt
 L["Forever standing"] = "Forever 总排名" -- mt
 L["Your guild and group"] = "你的公会和队伍" -- mt
+L["Players you've met"] = "遇到过的玩家" -- mt
 L["This week"] = "本周" -- mt
 L["All time"] = "全部时间" -- mt
 L["Rank"] = "排名" -- mt

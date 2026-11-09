@@ -411,6 +411,7 @@ L["Forever Leaderboards"] = "Classements Forever" -- mt
 L["Overall"] = "Général" -- mt
 L["Forever standing"] = "Classement Forever" -- mt
 L["Your guild and group"] = "Votre guilde et votre groupe" -- mt
+L["Players you've met"] = "Joueurs rencontrés" -- mt
 L["This week"] = "Cette semaine" -- mt
 L["All time"] = "Depuis toujours" -- mt
 L["Rank"] = "Rang" -- mt
