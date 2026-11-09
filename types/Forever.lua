@@ -46,8 +46,11 @@ ChatEdit_GetActiveWindow = nil
 ChatFrameUtil = nil
 ---@type {AddMessage: fun(message: string, color: {r: number, g: number, b: number})}
 RaidWarningUtil = nil
----@type {Normal: ColorMixin, NormalHighlight: ColorMixin, Header: ColorMixin}
+---@type {Normal: colorRGBA, NormalHighlight: colorRGBA, Header: colorRGBA}
 OBJECTIVE_TRACKER_COLOR = nil
+-- The stock objective line's dash, which the client also leaves as the line's indent.
+---@type string
+QUEST_DASH = nil
 ---@type string
 OFF = nil
 -- Blizzard_Menu/MenuConstants.lua: what a menu button's responder answers; CloseAll closes every menu.
@@ -181,6 +184,8 @@ ForeverMapMarkers = nil
 
 ---@class SPFTrackerLine : Frame
 ---@field Text FontString
+---@field Dash FontString
+---@field template string the XML template whose pool this line belongs to
 ---@field used boolean
 ---@class SPFTrackerBlockHeader : Button
 ---@field questID? number
@@ -202,6 +207,7 @@ ForeverMapMarkers = nil
 ---@class SPFTrackerModule : Frame
 ---@field Header SPFTrackerHeader
 ---@field headerText string
+---@field lineTemplate string
 ---@field uiOrder number
 ---@field hasDisplayPriority boolean
 ---@field GetBlock fun(self: SPFTrackerModule, id: number|string): SPFTrackerBlock

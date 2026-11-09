@@ -137,18 +137,33 @@ function Corpse.Point()
 	return run and run.point
 end
 
--- The tracker's block, in JourneyInfo's shape.
+-- The tracker's block, in JourneyInfo's shape. `formatPlace` wraps the place in the step the tracker reads.
+---@param formatPlace? fun(place: string): string
 ---@return string? title, SPFRow[]? rows, SPFPlan? plan, number? index, boolean? loading
-function Corpse.Info()
+function Corpse.Info(formatPlace)
 	if not run then
 		return nil
 	end
 	local leg = run.leg
-	local text = "1. " .. ns.LegStep(leg)
-	if leg.walkError then
-		text = text .. " (" .. (ns.WalkFailure[leg.walkError] or L["walking search failed"]) .. ")"
-	end
-	return TITLE, { { key = 1, text = text .. "   " .. ns.LegTime(leg), current = true } }, run.plan, 1, false
+	local suffix = leg.walkError and (" (" .. (ns.WalkFailure[leg.walkError] or L["walking search failed"]) .. ")")
+		or ""
+	local action = ns.LegStep(leg) .. suffix
+	local shown = formatPlace and ns.LegStep(leg, formatPlace) .. suffix or action
+	local time = ns.LegTime(leg)
+	return TITLE,
+		{
+			{
+				key = 1,
+				text = "1. " .. action .. "   " .. time,
+				mode = leg.mode,
+				action = shown,
+				time = time,
+				current = true,
+			},
+		},
+		run.plan,
+		1,
+		false
 end
 
 ---@param point SPFPoint

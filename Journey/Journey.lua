@@ -320,13 +320,19 @@ function ns.ShowJourneyMap()
 	ns.OpenWorldMap(location and location.uiMap)
 end
 
--- The tracker and screen prompt name the same item or spell in the client's language.
+-- The tracker and screen prompt name the same item or spell in the client's language. `formatPlace`, when the
+-- tracker asks for it, wraps the capital a party mage opens inside the same locale sentence.
 ---@param teleport SPFTeleportPlace
+---@param formatPlace? fun(place: string): string
 ---@return string action, number? icon
-function ns.TeleportAction(teleport)
+function ns.TeleportAction(teleport, formatPlace)
 	if teleport.partyMage then
 		local icon = C_Spell.GetSpellTexture and C_Spell.GetSpellTexture(teleport.spell)
-		return L["Ask %s for a portal to %s"]:format(teleport.partyMage, teleport.destination or UNKNOWN), icon
+		local place = teleport.destination or UNKNOWN
+		if formatPlace then
+			place = formatPlace(place)
+		end
+		return L["Ask %s for a portal to %s"]:format(teleport.partyMage, place), icon
 	end
 	local name = teleport.item and C_Item.GetItemNameByID(teleport.item)
 		or C_Spell.GetSpellName(teleport.spell)
@@ -335,16 +341,61 @@ function ns.TeleportAction(teleport)
 	return (teleport.item and USE_ITEM or CAST_SPELL):format(name), icon
 end
 
--- Shared by the tracker and the goal pin, including on a fullscreen map.
+-- The journey's name. `formatPlace` wraps the place this addon named inside the same locale sentence; a caller's
+-- own title (`routeTitle`) keeps its words, since only a title this addon built knows where its place sits.
+---@param point SPFPoint
+---@param formatPlace? fun(place: string): string
+---@return string
+function ns.JourneyTitle(point, formatPlace)
+	local function place(text)
+		return formatPlace and formatPlace(text) or text
+	end
+	if point.routeTitleFormat and point.stopLabel then
+		return string.format(point.routeTitleFormat, point.number, point.routeCount, place(point.stopLabel))
+	end
+	if point.routeTitle then
+		return point.routeTitle
+	end
+	return string.format(L["Journey to %s"], place(ns.PlaceLabel(point)))
+end
+
+-- One step's words with its suffixes. The tracker asks for a second copy with the place wrapped; the plain copy stays
+-- for the goal pin's tooltip, the arrow's progress line and other addons.
+---@param leg SPFLeg
+---@param spell number?
+---@param formatPlace? fun(place: string): string
+---@return string action, number? icon
+local function StepText(leg, spell, formatPlace)
+	local action, icon
+	if leg.teleport then
+		action, icon = ns.TeleportAction(leg.teleport, formatPlace)
+	else
+		action = ns.LegStep(leg, formatPlace)
+	end
+	if leg.mode == "walk" and leg.to.undiscovered then
+		action = string.format(L["%s (new flight path)"], action)
+	end
+	if leg.walkError then
+		action = action .. " (" .. (WALK_FAILURE[leg.walkError] or L["walking search failed"]) .. ")"
+	end
+	if spell and leg.wet and leg.wet >= WATER_HINT then
+		action = string.format(L["%s (cast %s)"], action, C_Spell.GetSpellName(spell))
+	end
+	return action, icon
+end
+
+-- Shared by the tracker and the goal pin, including on a fullscreen map. `formatPlace` asks for the places in the
+-- title and each step already wrapped in the tracker's colour; the plain text is left as it is.
+---@param formatPlace? fun(place: string): string
 ---@return string? title, SPFRow[]? rows, SPFPlan? plan, number? index, boolean? loading
-function ns.JourneyInfo()
+function ns.JourneyInfo(formatPlace)
 	if CorpseRun() then
-		return ns.Corpse.Info()
+		return ns.Corpse.Info(formatPlace)
 	end
 	if not goal or Guide.Paused() then
 		return nil
 	end
-	local title = goal.routeTitle or string.format(L["Journey to %s"], ns.PlaceLabel(goal))
+	local title = ns.JourneyTitle(goal, formatPlace)
 	local rows = {}
 	local _, _, costError, loading = Search.Status()
 	if not result and loading then
@@ -357,26 +408,21 @@ function ns.JourneyInfo()
 		end
 		for index = progress.index, #result.legs do
 			local leg = result.legs[index]
-			local text
-			local teleport = leg.teleport
-			if teleport then
-				local action, icon = ns.TeleportAction(teleport)
-				text = string.format("%d. %s%s", index, icon and ICON:format(icon) or "", action)
-			else
-				text = string.format("%d. %s", index, ns.LegStep(leg))
-			end
-			if leg.mode == "walk" and leg.to.undiscovered then
-				text = string.format(L["%s (new flight path)"], text)
-			end
-			if leg.walkError then
-				text = text .. " (" .. (WALK_FAILURE[leg.walkError] or L["walking search failed"]) .. ")"
-			end
-			if spell and leg.wet and leg.wet >= WATER_HINT then
-				text = string.format(L["%s (cast %s)"], text, C_Spell.GetSpellName(spell))
+			local action, icon = StepText(leg, spell)
+			local shown = formatPlace and StepText(leg, spell, formatPlace) or action
+			-- The tracker draws the mode's mark and the time in its quieter colour.
+			local time = not loading and ns.LegTime(leg) or nil
+			local text = string.format("%d. %s%s", index, icon and ICON:format(icon) or "", action)
+			if time then
+				text = text .. "   " .. time
 			end
 			rows[#rows + 1] = {
 				key = index,
-				text = loading and text or text .. "   " .. ns.LegTime(leg),
+				text = text,
+				mode = leg.mode,
+				action = shown,
+				time = time,
+				icon = icon,
 				current = index == progress.index,
 			}
 			-- Hostile towns and high zones on this walk, under its step.

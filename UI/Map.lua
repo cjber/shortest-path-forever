@@ -8,17 +8,8 @@ local PORTAL_TEMPLATE = "ShortestPathForeverPortalPinTemplate"
 -- The ping's own expanding glow ring (Blizzard_PingUI's Ping_SpotGlw_<kit>_Out), a 53 by 53 atlas fitted into
 -- the 50 by 50 ring box.
 local PING_ATLAS = "Ping_SpotGlw_Assist_Out"
-local ZEPPELIN_FILE = "Interface\\AddOns\\ShortestPathForever\\media\\Zeppelin"
 local PIN_SIZE = 20
 local ARROW_SIZE = 15
--- The floor arrows are 13 by 14 (UiTextureAtlasMember, 1.60.1.70009), so they are fitted, never squared.
-local TRANSPORT_ATLASES = {
-	boat = "flightmasterferry",
-	lift = "poi-door-arrow-up",
-	tram = "poi-door-arrow-down",
-	-- The map legend's teleport icon (MapLegendFrameData.lua): a 28 by 28 atlas fitted into the pin's box.
-	portal = "TaxiNode_Continent_Neutral",
-}
 -- Half a pin, as a fraction of a zoomed-out map.
 local EDGE = 0.015
 -- Docks closer than this many pins apart merge into one.
@@ -30,7 +21,8 @@ local dockPins, portalPins
 local Docks
 
 -- Boats use the stock ferry atlas and zeppelins their own file. Lifts and the tram take the stock map's floor-change
--- arrows; portals the map legend's teleport icon.
+-- arrows; portals the map legend's teleport icon. The art itself is chosen once, in UI/Art.lua, so the tracker's rows
+-- look the same.
 ---@param texture Texture
 ---@param kind SPFMode
 ---@param size number?
@@ -38,11 +30,13 @@ function ns.SetTransportIcon(texture, kind, size)
 	-- The floor arrows fill their box where the ferry has a margin, so they draw smaller to match.
 	size = (size or PIN_SIZE) * ((kind == "lift" or kind == "tram") and ARROW_SIZE / PIN_SIZE or 1)
 	if kind == "zeppelin" then
-		ns.Art.Icon(texture, ZEPPELIN_FILE, size)
-	elseif TRANSPORT_ATLASES[kind] then
-		ns.Art.Fit(texture, TRANSPORT_ATLASES[kind], size, size)
+		ns.Art.Icon(texture, ns.Art.ZEPPELIN_FILE, size)
 	else
-		error("unknown route kind " .. tostring(kind))
+		local atlas = ns.Art.ModeAtlas(kind)
+		if not atlas then
+			error("unknown route kind " .. tostring(kind))
+		end
+		ns.Art.Fit(texture, atlas, size, size)
 	end
 end
 

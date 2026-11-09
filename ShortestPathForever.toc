@@ -73,6 +73,7 @@ UI\TrackerEqot.lua
 UI\TrackerLock.lua
 UI\TrackerOrder.lua
 UI\TrackerHost.lua
+UI\Tracker.xml
 UI\Tracker.lua
 UI\Mover.lua
 UI\TurnAround.lua

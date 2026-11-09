@@ -17,6 +17,42 @@ local MAX_NUMBER_ART = 25
 local Art = {}
 ns.Art = Art
 
+-- The addon's own zeppelin art (media/Zeppelin.tga): the client has no zeppelin icon (docs/asset-registry.md).
+Art.ZEPPELIN_FILE = "Interface\\AddOns\\ShortestPathForever\\media\\Zeppelin"
+
+-- The client art each journey mode wears, the same choice the map's own pins make (UI/Map.lua's SetTransportIcon,
+-- UI/Looks.lua's flight master), so a mode looks alike on the map, the minimap and the tracker. Each is looked up in
+-- the client before it is drawn.
+local MODE_ATLAS = {
+	-- A waypoint line in the client's own quest tracker (Blizzard_QuestObjectiveTracker.xml's
+	-- QuestObjectiveWaypointLineTemplate, 26 by 34).
+	walk = "poi-traveldirections-arrow",
+	-- The flight master's own mark, keyed by the player's side below as UI/Looks.lua draws a stop (32 by 32).
+	flight = "taxinode_neutral",
+	-- The stock ferry of a boat dock (32 by 32).
+	boat = "flightmasterferry",
+	-- The map's floor-change arrows (13 by 14), as UI/Map.lua draws a lift and the Deeprun Tram.
+	lift = "poi-door-arrow-up",
+	tram = "poi-door-arrow-down",
+	-- The map legend's teleport icon (64 by 64), as UI/Map.lua draws a portal.
+	portal = "TaxiNode_Continent_Neutral",
+	-- A class teleport or a bind item, whose own icon leads when the client has it; this is the fallback.
+	teleport = "TaxiNode_Continent_Neutral",
+	-- A passage goes in through an instance door: the client tracker's own dungeon mark (18 by 18).
+	passage = "questlog-questtypeicon-dungeon",
+}
+local TAXI_ATLAS = { Alliance = "taxinode_alliance", Horde = "taxinode_horde" }
+
+-- The atlas a journey mode wears on this character, or nil for a mode with no art.
+---@param mode SPFMode
+---@return string?
+function Art.ModeAtlas(mode)
+	if mode == "flight" then
+		return TAXI_ATLAS[UnitFactionGroup("player") or ""] or MODE_ATLAS.flight
+	end
+	return MODE_ATLAS[mode]
+end
+
 -- The numbered marker for `number`, or nil when there is no art for it.
 ---@param number integer?
 ---@return string?
@@ -69,6 +105,41 @@ function Art.Icon(texture, file, size)
 	texture:SetTexCoord(0, 1, 0, 1)
 	texture:SetTexture(file)
 	texture:SetSize(size, size)
+end
+
+-- `|A:atlas:height:width|a` at the atlas's native aspect: the inline form of Art.Fit. Markup takes whole pixels, so
+-- a caller picks a height whose width lands within 2% of the shape (WFA-27). nil when the client lacks the atlas.
+---@param atlas string
+---@param height number
+---@return string?
+function Art.Markup(atlas, height)
+	local info = Art.Info(atlas)
+	if not info or info.height <= 0 then
+		return nil
+	end
+	local width = math.max(1, math.floor(height * info.width / info.height + 0.5))
+	return ("|A:%s:%d:%d|a"):format(atlas, height, width)
+end
+
+-- A file icon's inline form, square as every file icon is, and whole.
+---@param file string|integer
+---@param size number
+---@return string
+function Art.FileMarkup(file, size)
+	return ("|T%s:%d:%d|t"):format(file, size, size)
+end
+
+-- A journey mode's own mark, at `height`, as the map and minimap already draw it. The zeppelin has no atlas: the
+-- addon's own square file stands in. nil when the client has no art for the mode.
+---@param mode SPFMode
+---@param height number
+---@return string?
+function Art.ModeMarkup(mode, height)
+	if mode == "zeppelin" then
+		return Art.FileMarkup(Art.ZEPPELIN_FILE, height)
+	end
+	local atlas = Art.ModeAtlas(mode)
+	return atlas and Art.Markup(atlas, height) or nil
 end
 
 -- `atlas` over the whole of a `width` by `height` box at its own aspect, the overflow cropped evenly from both sides

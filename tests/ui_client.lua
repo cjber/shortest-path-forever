@@ -388,7 +388,7 @@ _G.CreateFrame = function(_, name, parent, template)
 		function f:GetBlock(id)
 			local b = self.liveBlocks[id]
 			if not b then
-				b = { id = id, HeaderText = font(), lines = {} }
+				b = { id = id, HeaderText = font(), lines = {}, parentModule = self }
 				function b:SetHeader(text)
 					self.HeaderText:SetText(text)
 				end
@@ -398,6 +398,9 @@ _G.CreateFrame = function(_, name, parent, template)
 					return fs:GetHeight()
 				end
 				function b:AddObjective(key, text, template, full, dash, color)
+					-- Blizzard's GetLine falls back to the module's template; the stock line comes from a pool shared by
+					-- every tracker module, so a spec reads which template each SPF row actually asked for.
+					template = template or self.parentModule.lineTemplate
 					local line = {
 						EnableMouse = function(self, value)
 							self.mouseEnabled = value
@@ -406,11 +409,15 @@ _G.CreateFrame = function(_, name, parent, template)
 							self[name] = callback
 						end,
 						Text = font(),
+						Dash = font(),
+						template = template,
 						used = true,
 						GetHeight = function()
 							return 12
 						end,
 					}
+					-- The stock line keeps its dash text hidden or shown with the line; the line's text hangs after it.
+					line.Dash:SetText(_G.QUEST_DASH)
 					line.Text:SetText(text)
 					line.Text.colorStyle = color
 					self.lines[key] = line
@@ -540,6 +547,9 @@ _G.IsInInstance = function()
 end
 local function color(r, g, b)
 	return {
+		r = r,
+		g = g,
+		b = b,
 		GetRGBA = function()
 			return r, g, b, 1
 		end,
@@ -548,7 +558,12 @@ local function color(r, g, b)
 		end,
 	}
 end
-_G.OBJECTIVE_TRACKER_COLOR = { Normal = {}, NormalHighlight = {}, Header = {} }
+_G.OBJECTIVE_TRACKER_COLOR = {
+	Normal = color(0.8, 0.8, 0.8),
+	NormalHighlight = color(1, 1, 1),
+	Header = color(1, 0.82, 0),
+}
+_G.QUEST_DASH = "- "
 _G.CreateColor = color
 _G.NORMAL_FONT_COLOR = color(1, 0.82, 0)
 _G.ORANGE_FONT_COLOR = color(1, 0.5, 0)

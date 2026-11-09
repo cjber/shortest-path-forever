@@ -90,6 +90,13 @@ driver.path.settle()
 equal(API.Ended("AGF"), nil, "running")
 equal(ns.IsJourneyGuided(), true, "arrow enabled")
 equal(ns.JourneyInfo(), "Journey to Quest giver", "title propagated")
+equal(
+	ns.JourneyInfo(function(place)
+		return "[" .. place .. "]"
+	end),
+	"Journey to [Quest giver]",
+	"the tracker asks for the title with its place already wrapped"
+)
 local shown, waypoint = driver.shown(), driver.waypoint()
 local _, _, plan, index = ns.JourneyInfo()
 near(API.Estimate(1, 0.5, 0.5, 1, 0.5014, 0.5), 10, "estimate during journey")
@@ -198,6 +205,13 @@ equal(API.CurrentStop("AGF"), 1, "first stop")
 equal(API.CurrentStop("OtherAddon"), nil, "foreign current stop")
 equal(API.CurrentStop(driver.secret), nil, "secret owner")
 equal(ns.JourneyInfo(), "Stop 1 of 4: First", "route progress title")
+equal(
+	ns.JourneyInfo(function(place)
+		return "[" .. place .. "]"
+	end),
+	"Stop 1 of 4: [First]",
+	"the tracker asks for the route title with its place already wrapped"
+)
 for _, invalid in ipairs({
 	false,
 	{},

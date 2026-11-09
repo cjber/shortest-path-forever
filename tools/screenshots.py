@@ -34,20 +34,16 @@ from screenshots_art import Art
 from screenshots_services import render as render_services
 from screenshots_services import render_search as render_services_search
 from screenshots_tracker import detached_tracker
+from screenshots_tracker import tracker_canvas as journey_tracker
 from wowmock import (
     FONTS,
     NORMAL,
-    WHITE,
     TooltipLine,
-    TrackerBlock,
-    TrackerModule,
     backdrop,
-    colored,
     draw_overlay,
     map_art,
     map_overlays,
     minimap_art,
-    objective_tracker,
     rgba255,
     scene,
     tooltip,
@@ -568,27 +564,8 @@ def render_stops(ui):
     return scene(ui, [(crop, 0, 0)])
 
 
-def tracker_canvas(ui, seconds=0):
-    # Reference 21 is a captured itinerary, not a new optimality claim for these timings.
-    rows = [
-        colored(f"1. Walk to {dock_title(10)}   {countdown(120 - seconds)}", WHITE),
-        "2. Boat to Wetlands   leaves in 2:28 · 1:20",
-        f"3. Walk to {dock_title(5)}   1:31",
-        "4. Boat to Dustwallow Marsh   leaves in about 2:45 · 1:44",
-        "5. Walk to Silithus   33:02",
-    ]
-    module = TrackerModule(
-        f"Journey  {countdown(2687 - seconds)} · 9.2k yd", [TrackerBlock("Journey to Silithus", rows)]
-    )
-    return objective_tracker(ui, [module], container=False)[0]
-
-
-def countdown(seconds):
-    return f"{max(0, seconds) // 60}:{max(0, seconds) % 60:02d}"
-
-
 def render_tracker(ui):
-    return scene(ui, [(tracker_canvas(ui), 0, 0)])
+    return scene(ui, [(journey_tracker(ui, dock_title), 0, 0)])
 
 
 def compass_canvas(ui, facing=math.pi - 0.2, distance=780, overhang=0):
@@ -724,7 +701,7 @@ def render_demo():
             canvas.draw(map_frame.image, (760 - width) / 2, 0, width, height)
         else:
             seconds = int(t - 3)
-            tracker = tracker_canvas(ui, seconds)
+            tracker = journey_tracker(ui, dock_title, seconds)
             canvas.paste(tracker, 242, 165)
             # Compass.lua's exponential easing, fed a deterministic slow player turn.
             target = math.pi - 0.2 + 0.3 * math.sin((t - 3) * math.pi / 2.5)
@@ -778,7 +755,7 @@ SCENES = {
     "docks": render_docks,
     "stops": render_stops,
     "tracker": render_tracker,
-    "detached": lambda ui: detached_tracker(ui, tracker_canvas(ui)),
+    "detached": lambda ui: detached_tracker(ui, journey_tracker(ui, dock_title)),
     "minimap": render_minimap,
     "compass": render_compass,
     "compass_behind": lambda ui: scene(
@@ -875,7 +852,7 @@ def compare_references(refs, tooltip_ref=None):
     ui, art = Art(scale=1.2), Art(scale=2)
     # Reuse the cached 2x atlas at the capture's UI scale; never switch the art set for this comparison.
     ui.atlas = art.atlas
-    panel = tracker_canvas(ui)
+    panel = journey_tracker(ui, dock_title)
     ground = backdrop(ui, panel.width, panel.height)
     ground.paste(panel, 0, 0)
     reference = Image.open(refs / "21.png").convert("RGB").crop((5, 14, 325, 213))

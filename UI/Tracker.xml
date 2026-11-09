@@ -1,0 +1,5 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<!-- SPF's journey lines come from a pool of their own. The stock line template is shared by every tracker module,
+	     so a line that once carried a leg's mark must never reach the quest tracker's pool (SetLineMark). -->
+	<Frame name="ShortestPathForeverTrackerLineTemplate" inherits="ObjectiveTrackerLineTemplate" virtual="true"/>
+</Ui>

@@ -496,7 +496,10 @@ function API.NavigateRoute(owner, stops)
 			local location = not point.label and ns.Locate(point)
 			-- What to do there, apart from the count the tooltip gives its own line (UI/StopPin.lua).
 			point.stopLabel = point.label or location and location.zone or UNKNOWN
-			point.routeTitle = string.format(L["Stop %d of %d: %s"], index, count, point.stopLabel)
+			-- Keep the locale format beside the built title, so the tracker can colour the place inside it.
+			point.routeTitleFormat = L["Stop %d of %d: %s"]
+			point.routeCount = count
+			point.routeTitle = string.format(point.routeTitleFormat, index, count, point.stopLabel)
 		end
 		points[index] = point
 	end

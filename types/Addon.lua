@@ -51,6 +51,8 @@
 ---@field label? string
 ---@field tooltip? string
 ---@field routeTitle? string
+---@field routeTitleFormat? string -- the locale format behind an addon-built routeTitle (API.lua)
+---@field routeCount? integer -- stops in a multi-stop routeTitle (API.lua)
 ---@field stopLabel? string -- what to do at a multi-stop stop, without its count (API.lua)
 ---@field number? integer -- the stop's place in a multi-stop itinerary (API.lua)
 ---@field hold? boolean -- remain visible at the destination until the caller submits an updated route
@@ -178,6 +180,10 @@
 ---@field text string
 ---@field current? boolean
 ---@field grey? boolean
+---@field mode? SPFMode -- the leg's mode, whose mark leads its tracker line
+---@field action? string -- the step's words without its number or mark (the tracker's line, place already wrapped)
+---@field time? string -- the step's time, greyed after it
+---@field icon? number -- a teleport's own item or spell icon, leading its line
 
 ---@class SPFDatabase : ForeverFamilyDB
 ---@field errors? ForeverCaughtError[] the shared error journal (Core/SafeCall.lua): earlier sessions' errors, for the report

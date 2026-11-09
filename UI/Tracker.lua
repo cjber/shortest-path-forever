@@ -101,6 +101,77 @@ local function RowColor(row)
 		or OBJECTIVE_TRACKER_COLOR.Normal
 end
 
+-- The tracker's line font is 12 high, and a row's mark is drawn at that height so it never grows the line. Markup
+-- takes whole pixels, so each mark keeps its atlas's native shape within WFA-27's 2%.
+local ICON_SIZE = 12
+-- SPF's own line template (UI/Tracker.xml), so its pooled lines never come from, or return to, the stock template
+-- every other tracker module shares.
+local LINE_TEMPLATE = "ShortestPathForeverTrackerLineTemplate"
+
+---@param color colorRGBA
+---@param text string
+---@return string
+local function ColorText(color, text)
+	return CreateColor(color.r, color.g, color.b):WrapTextInColorCode(text)
+end
+
+-- The place in a step's own sentence, as the tracker's header colours it.
+---@param place string
+---@return string
+local function HeaderPlace(place)
+	return ColorText(OBJECTIVE_TRACKER_COLOR.Header, place)
+end
+
+-- The mark a row leads with: a teleport's own item or spell icon, else its mode's client art.
+---@param row SPFRow
+---@return string?
+local function RowMark(row)
+	return (row.icon and ns.Art.FileMarkup(row.icon, ICON_SIZE))
+		or (row.mode and ns.Art.ModeMarkup(row.mode, ICON_SIZE))
+end
+
+-- A leg's line: the verb in the row's colour, the place already wrapped by JourneyInfo, and the time in its grey
+-- (GRAY_FONT_COLOR). JourneyInfo's plain text stays for the goal pin's tooltip and other addons.
+---@param row SPFRow
+---@return string
+local function LegText(row)
+	local text = row.action or row.text
+	if row.time then
+		text = text .. "   " .. ColorText(GRAY_FONT_COLOR, row.time)
+	end
+	return text
+end
+
+-- The stock line anchors its text to the dash's right edge, so the dash is the line's indent. HIDE hides the dash but
+-- keeps its width, which can only indent every line by the dash itself; the client's waypoint line draws its icon in
+-- that column and hangs the text after it (QuestObjectiveWaypointLineTemplate). A leg's mark stands there instead of
+-- the dash, so the text and every wrapped line hang after it; a note keeps the stock dash.
+-- Only SPF's own lines use its template, so the dash text is SPF's to compare and rewrite. AddObjective rewrites it
+-- only when a line's dash style changes, which would leave an old mark on a reused line.
+---@param line SPFTrackerLine
+---@param mark string?
+local function SetLineMark(line, mark)
+	if not line.Dash then
+		return
+	end
+	local text = mark and (mark .. " ") or QUEST_DASH
+	if line.Dash:GetText() ~= text then
+		line.Dash:SetText(text)
+	end
+	line.Dash:Show()
+end
+
+-- The journey's title, led by the goal's own pin as the map and the on-screen marker wear it (UI/StopPin.lua,
+-- UI/DestinationPin.lua). A corpse run keeps its own title without a pin.
+---@param title string
+---@return string
+local function JourneyTitle(title)
+	if ns.Corpse.Active() then
+		return title
+	end
+	return ns.Art.FileMarkup(ns.GoalPinFile(), ICON_SIZE) .. " " .. title
+end
+
 function ModuleMixin:LayoutContents()
 	for _, entry in ipairs(self.blocks) do
 		local block = self:GetBlock(entry.key)
@@ -108,6 +179,7 @@ function ModuleMixin:LayoutContents()
 		block.headerHeight = block.HeaderText:GetHeight()
 		for _, row in ipairs(entry.rows) do
 			local line = block:AddObjective(row.key, row.text, nil, true, nil, RowColor(row))
+			SetLineMark(line, RowMark(row))
 			local family = entry.key == "family"
 			local clickable = family or entry.key == "journey" and row.current and not ns.Corpse.Active()
 			line:EnableMouse(clickable == true)
@@ -265,9 +337,13 @@ local function RefreshBlockText(blocks)
 			end
 			for _, row in ipairs(entry.rows) do
 				local line = block:GetExistingLine(row.key)
-				if line and line.used and line.Text:GetText() ~= row.text then
-					local height = block:SetStringText(line.Text, row.text, true, RowColor(row), block.isHighlighted)
-					resized = resized or height > line:GetHeight() + 0.5
+				if line and line.used then
+					if line.Text:GetText() ~= row.text then
+						local height =
+							block:SetStringText(line.Text, row.text, true, RowColor(row), block.isHighlighted)
+						resized = resized or height > line:GetHeight() + 0.5
+					end
+					SetLineMark(line, RowMark(row))
 				end
 			end
 		end
@@ -326,12 +402,17 @@ local function RefreshTracker(dockID, yards)
 		end
 	end
 	local blocks = {}
-	local journeyTitle, journeyRows, journeyResult, journeyIndex, loading = ns.JourneyInfo()
+	local journeyTitle, journeyRows, journeyResult, journeyIndex, loading = ns.JourneyInfo(HeaderPlace)
 	if not journey then
 		journeyTitle = nil
 	end
 	if journeyTitle then
-		blocks[#blocks + 1] = { key = "journey", title = journeyTitle, rows = journeyRows }
+		for _, row in ipairs(journeyRows or {}) do
+			if row.mode then
+				row.text = LegText(row)
+			end
+		end
+		blocks[#blocks + 1] = { key = "journey", title = JourneyTitle(journeyTitle), rows = journeyRows }
 	elseif familyBlock then
 		blocks[#blocks + 1] = familyBlock
 	end
@@ -400,6 +481,7 @@ ns.Init(function()
 	Mixin(tracker, ModuleMixin)
 	---@cast tracker SPFTracker
 	module = tracker
+	module.lineTemplate = LINE_TEMPLATE
 	module.blocks = {}
 	-- SharedXML loads Group Finder's ring and sparks, with animation tied to the frame's visibility.
 	local spinner = CreateFrame("Frame", nil, module.Header, "SpinnerTemplate")

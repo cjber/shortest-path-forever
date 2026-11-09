@@ -135,6 +135,10 @@ assert(plan.legs[1].partyPortal.partyMage == "Magey" and plan.legs[1].partyPorta
 assert(plan.arrive == 28000, "the fixed ask, the loading screen and the last 70 yards")
 local step = ns.LegStep(plan.legs[1])
 assert(step:find("Magey", 1, true) and step:find("Stormwind", 1, true), step)
+local wrapped = ns.LegStep(plan.legs[1], function(place)
+	return "[" .. place .. "]"
+end)
+assert(wrapped:find("[Stormwind]", 1, true), "the tracker asks for the place already wrapped: " .. wrapped)
 
 -- A near destination is still a walk: the portal only joins when it shortens the journey.
 plan = ns.Planner.Plan({

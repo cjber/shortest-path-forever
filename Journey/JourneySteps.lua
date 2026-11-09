@@ -60,15 +60,21 @@ function ns.LegLabel(leg)
 	return ns.PlaceLabel(leg.to, leg.mode)
 end
 
--- What to do on a leg: "Boat to Menethil Harbor", or the mage and the capital for a party portal.
+-- What to do on a leg: "Boat to Menethil Harbor", or the mage and the capital for a party portal. `formatPlace`
+-- wraps the place name in the caller's colour, inside the same locale sentence; the plain call leaves it as it is.
 ---@param leg SPFLeg
+---@param formatPlace? fun(place: string): string
 ---@return string
-function ns.LegStep(leg)
+function ns.LegStep(leg, formatPlace)
 	local party = leg.partyPortal
-	if party then
-		return string.format(L["Ask %s for a portal to %s"], party.partyMage, party.destination or ns.LegLabel(leg))
+	local place = party and (party.destination or ns.LegLabel(leg)) or ns.LegLabel(leg)
+	if formatPlace then
+		place = formatPlace(place)
 	end
-	return string.format(STEP[leg.mode], ns.LegLabel(leg))
+	if party then
+		return string.format(L["Ask %s for a portal to %s"], party.partyMage, place)
+	end
+	return string.format(STEP[leg.mode], place)
 end
 
 -- Whole seconds as a countdown shows them, so totals add up to the times on screen.

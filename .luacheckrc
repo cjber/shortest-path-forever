@@ -126,8 +126,9 @@ read_globals = {
 }
 files["tests/"] = { std = "+luajit" }
 
--- Tracker colours.
+-- Tracker colours and the stock line's dash.
 read_globals[#read_globals + 1] = "OBJECTIVE_TRACKER_COLOR"
+read_globals[#read_globals + 1] = "QUEST_DASH"
 -- MapCanvas.lua: the Forever addons' shared list of world map markers, and the gamepad's map cursor.
 globals[#globals + 1] = "ForeverMapMarkers"
 read_globals[#read_globals + 1] = "SoftCursor"
