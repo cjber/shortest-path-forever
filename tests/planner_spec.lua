@@ -287,11 +287,18 @@ assert(not flying.estimated, "a measured flight is no longer estimated")
 flight.taxiTimes = nil
 flight.taxiKnown = { [1] = true }
 only(Plan(flight), "walk")
+-- A flight needs both endpoints known (#537): knowing the arrival cannot take a flight from an unknown departure.
 flight.taxiKnown = { [2] = true }
+only(Plan(flight), "walk")
+flight.taxiKnown = { [1] = true, [2] = true }
 only(Plan(flight), "flight")
 flight.from = point(1, -70)
+flight.taxiKnown = { [2] = true }
 result = Plan(flight)
-assert(#result.legs == 2 and result.legs[1].mode == "walk" and result.legs[1].to.undiscovered)
+assert(#result.legs == 1 and result.legs[1].mode == "walk", "an unknown departure means walking all the way")
+flight.taxiKnown = { [1] = true, [2] = true }
+result = Plan(flight)
+assert(#result.legs == 2 and result.legs[1].mode == "walk" and not result.legs[1].to.undiscovered)
 assert(result.legs[2].mode == "flight" and result.legs[2].to.id == 2)
 near(result.arrive, 24000)
 flight.from = point(1)

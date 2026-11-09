@@ -86,12 +86,12 @@ local function Flights(plan)
 	return flights, fromMoonglade
 end
 
--- A flight may leave an unknown point only from the ground (walking there learns it, and a zero-length walk may be
--- dropped from the legs), never as a connection: every stop after the first, and the landing, must be known.
+-- A flight may leave, land at or connect through only the points the character knows; walking to an unknown
+-- flight master does not learn it.
 local function KnownConnections(plan, known)
 	for _, hops in ipairs((Flights(plan))) do
-		for index, hop in ipairs(hops) do
-			assert(index == 1 or known[hop.from], "no flight connects through unknown point " .. hop.from)
+		for _, hop in ipairs(hops) do
+			assert(known[hop.from], "no flight departs unknown point " .. hop.from)
 			assert(known[hop.to], "no flight lands on unknown point " .. hop.to)
 		end
 	end
@@ -135,9 +135,9 @@ for _, leg in ipairs(Plan(starts[1], ns.TaxiNodes[ORGRIMMAR], { [ORGRIMMAR] = tr
 end
 assert(zeppelin, "Elwynn to Orgrimmar takes the zeppelin")
 
--- Once Everlook and Valormok are known, the teleport, the walk that learns Moonglade's flight master and the
+-- Once Moonglade, Everlook and Valormok are known, the teleport, the walk to Moonglade's flight master and the
 -- connecting flight from there are the quick way, so the refusal above is the unknown points' doing.
-local known = { [ORGRIMMAR] = true, [ZORAMGAR] = true, [EVERLOOK] = true, [VALORMOK] = true }
+local known = { [ORGRIMMAR] = true, [ZORAMGAR] = true, [MOONGLADE] = true, [EVERLOOK] = true, [VALORMOK] = true }
 local plan = Plan(starts[1], ns.TaxiNodes[ORGRIMMAR], known)
 assert(plan.legs[1].mode == "teleport", "known connections make the Moonglade flight the quick way")
 local _, fromMoonglade = Flights(plan)
