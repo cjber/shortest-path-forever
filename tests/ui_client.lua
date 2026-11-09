@@ -734,6 +734,14 @@ _G.C_Map = {
 	HasUserWaypoint = function()
 		return waypoint ~= nil
 	end,
+	-- The player's place on `m`, from the same world point UnitPosition reports; nil until a check places them.
+	GetPlayerMapPosition = function(m)
+		if not (posX and posY and posMap) then
+			return nil
+		end
+		local _, position = C_Map.GetMapPosFromWorldPos(posMap, CreateVector2D(posX, posY), m)
+		return position
+	end,
 	GetMapPosFromWorldPos = function(cont, v, override)
 		local x, y = v:GetXY()
 		local m = cont == 0 and 1415 or 1414
