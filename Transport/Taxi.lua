@@ -1,13 +1,14 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
--- The flight points this character knows, for the journey planner and the map's flight master pins. Only a
--- flight master's own map says which nodes a character can fly to: a node counts only when its slot's type is not
--- "NONE", the stock TaxiFrame's own rule for drawing a node. The node's reported state is not a source: this
--- client answers reachable for nodes the character has never discovered.
+-- The flight points this character knows, for the journey planner and the map's flight master pins. Only the
+-- classic flight-master list says which nodes a character can fly to: slots 1 to NumTaxiNodes(), each with
+-- TaxiNodeGetType and TaxiNodeName, are the entries the stock TaxiFrame draws and only contain nodes the character
+-- really has. The new node query reports every node on the continent as reachable here, so its presence is not a
+-- source.
 
--- Lists built from the flight master's node states claimed undiscovered nodes, so start again from empty.
-local KNOWN_VERSION = 3
+-- Lists built from the new node query claimed undiscovered nodes, so start again from empty.
+local KNOWN_VERSION = 4
 
 ---@type SPFLeg[]?
 local journeyLegs
@@ -201,17 +202,25 @@ local function Log(key, uiMap, nodes)
 			tostring(node.state)
 		)
 	end
+	local count = NumTaxiNodes()
+	local slots = {}
+	for index = 1, count do
+		slots[#slots + 1] =
+			string.format("%d %s type=%s", index, tostring(TaxiNodeName(index)), tostring(TaxiNodeGetType(index)))
+	end
 	ns.db.taxiLog = ns.db.taxiLog or {}
 	ns.db.taxiLog[key .. uiMap] = {
 		seen = GetServerTime(),
 		showsNodes = C_TaxiMap.ShouldMapShowTaxiNodes(uiMap),
+		numTaxiNodes = count,
 		nodes = rows,
+		slots = slots,
 	}
 end
 
--- At a flight master, a node whose slot type the flight map shows (anything but "NONE", which the stock TaxiFrame
--- uses to decide whether to draw it) is one the character can see and fly to, so it is known and takes the name the
--- client gives it there, which is in the game's language. Absence never unlearns one.
+-- At a flight master, only the classic list's entries are nodes the character really has. Walk slots 1 to
+-- NumTaxiNodes() and learn those whose type is not "NONE", using the new query only to resolve the slot to its
+-- nodeID. An empty list learns nothing: absence never unlearns a node, and an empty answer is not a guess.
 local function ScanFlightMaster()
 	local uiMap = GetTaxiMapID and GetTaxiMapID()
 	local nodes = uiMap and C_TaxiMap.GetAllTaxiNodes(uiMap) or {}
@@ -219,14 +228,22 @@ local function ScanFlightMaster()
 	if uiMap then
 		Log("master", uiMap, nodes)
 	end
+	local bySlot = {}
 	for _, node in ipairs(nodes) do
-		if ns.TaxiNodes[node.nodeID] then
-			local slot = node.slotIndex
-			if slot and TaxiNodeGetType(slot) ~= "NONE" then
-				ns.charDB.taxi[node.nodeID] = true
-				if node.name and node.name ~= "" then
-					ns.charDB.taxiNames[node.nodeID] = node.name
-				end
+		if node.slotIndex and ns.TaxiNodes[node.nodeID] then
+			bySlot[node.slotIndex] = node
+		end
+	end
+	for slot = 1, NumTaxiNodes() do
+		local node = bySlot[slot]
+		if node and TaxiNodeGetType(slot) ~= "NONE" then
+			ns.charDB.taxi[node.nodeID] = true
+			local name = TaxiNodeName(slot)
+			if not name or name == "" then
+				name = node.name
+			end
+			if name and name ~= "" then
+				ns.charDB.taxiNames[node.nodeID] = name
 			end
 		end
 	end

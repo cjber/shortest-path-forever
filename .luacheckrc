@@ -97,6 +97,7 @@ read_globals = {
 	"GetTaxiMapID",
 	"NumTaxiNodes",
 	"TaxiNodeGetType",
+	"TaxiNodeName",
 	"TaxiGetNodeSlot",
 	"GetNumRoutes",
 	"TaxiFrame",
