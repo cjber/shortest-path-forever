@@ -174,11 +174,36 @@ function ns.JourneyToTrackedQuest()
 	return PlanQuest(questID)
 end
 
+local pendingMapPoint
+local mapCloseWatcher = CreateFrame("Frame")
+mapCloseWatcher:Hide()
+mapCloseWatcher:SetScript("OnUpdate", function(self)
+	if WorldMapFrame:IsShown() then
+		return
+	end
+	self:Hide()
+	local point = pendingMapPoint
+	pendingMapPoint = nil
+	if point and ns.db.journey then
+		ns.JourneyToMapPoint(point.map, point.x, point.y)
+	end
+end)
+
 local function OnCanvasClick(map, button)
 	if not ns.db.journey or button ~= "LeftButton" or not IsShiftKeyDown() or ChatBoxOpen() then
 		return false
 	end
-	ns.JourneyToMapPoint(map:GetMapID(), map:GetNormalizedCursorPosition())
+	local mapID = map:GetMapID()
+	local x, y = map:GetNormalizedCursorPosition()
+	if ns.GamepadUI() then
+		-- Start on a separate frame after the map closes and Blizzard restores controller focus.
+		pendingMapPoint = { map = mapID, x = x, y = y }
+		mapCloseWatcher:Show()
+	else
+		pendingMapPoint = nil
+		mapCloseWatcher:Hide()
+		ns.JourneyToMapPoint(mapID, x, y)
+	end
 	return true
 end
 

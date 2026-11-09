@@ -1,4 +1,6 @@
 local handler, destination, mouseEvent, ownClick
+local canvasClick, updateWatcher, watcherShown
+local gamepad = false
 local questTrackerMenu, questMapLogMenu
 local alt, overMap, shown = false, true, true
 local map = {
@@ -18,6 +20,9 @@ local chatBox
 local ns = {
 	db = { journey = true },
 	L = {},
+	GamepadUI = function()
+		return gamepad
+	end,
 	TaxiNodes = { [26] = { map = 1, x = 100, y = 200 } },
 	StartJourney = function(point)
 		destination = point
@@ -41,10 +46,17 @@ local env = setmetatable({
 		return {
 			RegisterEvent = function() end,
 			SetSize = function() end,
-			Hide = function() end,
+			Hide = function()
+				watcherShown = false
+			end,
+			Show = function()
+				watcherShown = true
+			end,
 			SetScript = function(_, event, fn)
 				if event == "OnEvent" then
 					mouseEvent = fn
+				elseif event == "OnUpdate" then
+					updateWatcher = fn
 				end
 			end,
 		}
@@ -67,7 +79,9 @@ local env = setmetatable({
 		GetNormalizedCursorPosition = function()
 			return 0.25, 0.75
 		end,
-		AddCanvasClickHandler = function() end,
+		AddCanvasClickHandler = function(_, fn)
+			canvasClick = fn
+		end,
 		AddGlobalPinMouseActionHandler = function(_, fn)
 			handler = fn
 		end,
@@ -111,6 +125,25 @@ local env = setmetatable({
 }, { __index = _G })
 local chunk = assert(loadfile("Journey/JourneyInput.lua"))
 setfenv(chunk, env)("ShortestPathForever", ns)
+assert(canvasClick(env.WorldMapFrame, "LeftButton"))
+assert(destination and destination.x == 0.25 and destination.y == 0.75, "mouse mode starts immediately")
+destination, gamepad = nil, true
+assert(canvasClick(env.WorldMapFrame, "LeftButton"))
+assert(watcherShown and destination == nil, "gamepad mode queues the destination")
+local watcher = {
+	Hide = function()
+		watcherShown = false
+	end,
+}
+updateWatcher(watcher)
+assert(watcherShown and destination == nil, "do not start while the map is open")
+shown = false
+updateWatcher(watcher)
+assert(not watcherShown and destination and destination.x == 0.25 and destination.y == 0.75)
+destination = nil
+updateWatcher(watcher)
+assert(destination == nil, "consume the queued destination once")
+shown, gamepad = true, false
 assert(handler(map, 3, "LeftButton"), "Shift-clicking a flight-master pin must start a journey")
 assert(destination.map == 1 and destination.x == 100 and destination.y == 200)
 assert(destination.label == "Astranaar" and destination.pinBadge, "keep the clicked icon's corner marker")
