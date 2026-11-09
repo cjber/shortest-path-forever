@@ -205,25 +205,32 @@ assert(ns.TaxiDestination(nil, 101) == nil and ns.TaxiDestination({}, 101) == ni
 
 ns.db = { taxiRoute = true }
 ns.TaxiNodes = {
-	[101] = { name = "Ironforge" },
-	[102] = {},
-	[103] = { name = "Stormwind" },
-	[104] = { name = "Ghostlands" },
-	[105] = { name = "Kharanos" },
-	[106] = { name = "Light's Hope" },
+	[101] = { name = "Ironforge", map = 0 },
+	[102] = { map = 0 },
+	[103] = { name = "Stormwind", map = 0 },
+	[104] = { name = "Ghostlands", map = 0 },
+	[105] = { name = "Kharanos", map = 0 },
+	[106] = { name = "Light's Hope", map = 1 },
 }
 ns.TaxiNodes[101].faction, ns.TaxiNodes[103].faction = "Alliance", "Horde"
 ns.SetJourneyRoute = function() end
 ns.JourneyChanged = function() end
--- A version 3 list was built from node slots that claimed undiscovered nodes, so init starts it again from empty.
+-- A list saved under any older taxiVersion is kept: an update never forgets learned flight points.
 env.ShortestPathForeverCharDB = {
 	taxi = { [101] = true, [106] = true },
 	taxiNames = { [101] = "Ironforge", [106] = "Light's Hope" },
 	taxiVersion = 3,
 }
 ns.init()
-assert(next(env.ShortestPathForeverCharDB.taxi) == nil, "a version 3 list is emptied on init")
-assert(env.ShortestPathForeverCharDB.taxiVersion == 4, "the list is stamped with the new version")
+assert(
+	env.ShortestPathForeverCharDB.taxi[101] and env.ShortestPathForeverCharDB.taxi[106],
+	"a list saved under an old taxiVersion is kept on load"
+)
+assert(
+	env.ShortestPathForeverCharDB.taxiNames[101] == "Ironforge"
+		and env.ShortestPathForeverCharDB.taxiNames[106] == "Light's Hope",
+	"an old list keeps its names on load"
+)
 env.ShortestPathForeverCharDB.taxi = {}
 env.ShortestPathForeverCharDB.taxiNames = {}
 ns.charDB = env.ShortestPathForeverCharDB
@@ -373,12 +380,53 @@ assert(visibleLines() == 2 and target.locked, "also support open events after th
 env.TaxiFrame:Hide()
 assert(visibleLines() == 0 and not target.locked, "hiding the frame clears without waiting for the event")
 
--- An empty classic list is not a reason to fall back to the new query's nodes.
+-- An empty classic list is not a reason to fall back to the new query's nodes, and it forgets nothing.
 numNodes = 0
-env.ShortestPathForeverCharDB.taxi = {}
-env.ShortestPathForeverCharDB.taxiNames = {}
+env.ShortestPathForeverCharDB.taxi = { [101] = true, [106] = true }
+env.ShortestPathForeverCharDB.taxiNames = { [101] = "Ironforge", [106] = "Light's Hope" }
+event("TAXIMAP_OPENED")
+assert(ns.KnownTaxiNodes()[101] and ns.KnownTaxiNodes()[106], "an empty scan keeps every known flight point")
+assert(
+	env.ShortestPathForeverCharDB.taxiNames[101] == "Ironforge"
+		and env.ShortestPathForeverCharDB.taxiNames[106] == "Light's Hope",
+	"an empty scan keeps every known name"
+)
+
+-- A scan lists every flight point the character knows on that continent, so points it leaves out are forgotten
+-- there while points on another continent stay.
+numNodes = 2
+env.ShortestPathForeverCharDB.taxi = {
+	[101] = true,
+	[102] = true,
+	[103] = true,
+	[104] = true,
+	[106] = true,
+}
+env.ShortestPathForeverCharDB.taxiNames = {
+	[101] = "Ironforge",
+	[102] = "Kharanos",
+	[103] = "Stormwind",
+	[104] = "Ghostlands",
+	[106] = "Light's Hope",
+}
 event("TAXI_NODE_STATUS_CHANGED")
-assert(next(ns.KnownTaxiNodes()) == nil, "an empty classic list learns nothing")
-assert(next(env.ShortestPathForeverCharDB.taxiNames) == nil, "an empty classic list names nothing")
+assert(ns.KnownTaxiNodes()[103] and ns.KnownTaxiNodes()[105], "the listed nodes are known")
+assert(
+	not ns.KnownTaxiNodes()[101] and not ns.KnownTaxiNodes()[102] and not ns.KnownTaxiNodes()[104],
+	"unlisted nodes on that continent are dropped"
+)
+assert(ns.KnownTaxiNodes()[106], "an unlisted node on another continent is kept")
+assert(
+	env.ShortestPathForeverCharDB.taxiNames[103] == "Sturmwind"
+		and env.ShortestPathForeverCharDB.taxiNames[105] == "Kharanos",
+	"the listed nodes keep their names"
+)
+assert(
+	not env.ShortestPathForeverCharDB.taxiNames[101]
+		and not env.ShortestPathForeverCharDB.taxiNames[102]
+		and not env.ShortestPathForeverCharDB.taxiNames[104],
+	"dropped nodes lose their names"
+)
+assert(env.ShortestPathForeverCharDB.taxiNames[106] == "Light's Hope", "a kept node keeps its name")
 
 print("taxi_spec: ok")

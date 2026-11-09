@@ -14,6 +14,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 - **The switch that keeps a journey out of the objective tracker is easier to find.** It moved from Interface to Guidance and is now called *Show journey steps in the objective tracker*. Off, the journey still guides with its arrow, destination pin, map line and minimap route, and the tracker shows only the departures their own switch allows. Your choice carries over. Thanks to _spada on Discord for the question (#563).
 
+- **Known flight points are never wiped.** Updating Shortest Path no longer clears the flight points a character has learned, and opening a flight master corrects the list for that continent: points the map leaves out there are dropped while points on other continents stay (#570).
+
 ## [1.24.3] - 2026-11-09
 
 - **A journey starts even when the client withholds the player's position.** Journey, the world map line, the minimap route and the arrow read the player's place from the client's own map position when `UnitPosition` hands addons secret values instead. A journey from Stormwind to Ironforge now plans and draws the walk from the Deeprun Tram to the quest givers, and the tracker lists its steps, instead of leaving no route and only Adventure Guide's own estimate line (#553).

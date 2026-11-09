@@ -7,9 +7,6 @@ local ns = select(2, ...)
 -- really has. The new node query reports every node on the continent as reachable here, so its presence is not a
 -- source.
 
--- Lists built from the new node query claimed undiscovered nodes, so start again from empty.
-local KNOWN_VERSION = 4
-
 ---@type SPFLeg[]?
 local journeyLegs
 ---@type TaxiNodeInfo[]
@@ -223,7 +220,9 @@ end
 
 -- At a flight master, only the classic list's entries are nodes the character really has. Walk slots 1 to
 -- NumTaxiNodes() and learn those whose type is not "NONE", using the new query only to resolve the slot to its
--- nodeID. An empty list learns nothing: absence never unlearns a node, and an empty answer is not a guess.
+-- nodeID. The list covers every flight point the character knows on that continent, so once it has listed a node,
+-- forget the points already known on the same continent that it leaves out. Nodes on other continents stay, and a
+-- scan that lists nothing changes nothing.
 local function ScanFlightMaster()
 	local uiMap = GetTaxiMapID and GetTaxiMapID()
 	local nodes = uiMap and C_TaxiMap.GetAllTaxiNodes(uiMap) or {}
@@ -237,16 +236,28 @@ local function ScanFlightMaster()
 			bySlot[node.slotIndex] = node
 		end
 	end
+	local listed, continent = {}, nil
 	for slot = 1, NumTaxiNodes() do
 		local node = bySlot[slot]
 		if node and TaxiNodeGetType(slot) ~= "NONE" then
 			ns.charDB.taxi[node.nodeID] = true
+			listed[node.nodeID] = true
+			continent = continent or ns.TaxiNodes[node.nodeID].map
 			local name = TaxiNodeName(slot)
 			if not name or name == "" then
 				name = node.name
 			end
 			if name and name ~= "" then
 				ns.charDB.taxiNames[node.nodeID] = name
+			end
+		end
+	end
+	if continent ~= nil then
+		for nodeID in pairs(ns.charDB.taxi) do
+			local node = ns.TaxiNodes[nodeID]
+			if node and node.map == continent and not listed[nodeID] then
+				ns.charDB.taxi[nodeID] = nil
+				ns.charDB.taxiNames[nodeID] = nil
 			end
 		end
 	end
@@ -322,9 +333,7 @@ end
 ns.Init(function()
 	ShortestPathForeverCharDB = ShortestPathForeverCharDB or {}
 	ns.charDB = ShortestPathForeverCharDB
-	if ns.charDB.taxiVersion ~= KNOWN_VERSION then
-		ns.charDB.taxi, ns.charDB.taxiScanned, ns.charDB.taxiVersion = {}, nil, KNOWN_VERSION
-	end
+	ns.charDB.taxi = ns.charDB.taxi or {}
 	ns.charDB.taxiNames = ns.charDB.taxiNames or {}
 	local frame = CreateFrame("Frame")
 	frame:RegisterEvent("TAXIMAP_OPENED")
