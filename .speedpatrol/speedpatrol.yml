@@ -5,7 +5,10 @@ project:
   name: shortest-path-forever
   source: .
 app:
-  prepare: []
+  # Each side loads the ForeverCore its own tools/forever-core.txt pins: CI checks out only the PR's pin, so the
+  # base checkout gets its own here, where the harness looks first (cjber/skillup-forever#550).
+  prepare:
+    - run: '[ -f forever-core/ForeverCore.toc ] || git -c advice.detachedHead=false clone -q --depth 1 --branch "$(cat tools/forever-core.txt)" https://github.com/cjber/forever-core forever-core'
   setup: []
   env: {}
   secrets: []
