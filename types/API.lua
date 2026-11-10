@@ -25,6 +25,7 @@
 ---@field map integer -- uiMapID
 ---@field x number -- normalized 0-1
 ---@field y number -- normalized 0-1
+---@field z? number -- world height in yards; above or below the terrain there, the stop pin wears the map's arrow
 ---@field title? string
 ---@field tooltip? string -- optional destination detail shown on the stop pin tooltip, never used as the arrow label
 ---@field kind? SPFAPIStopKind -- any other value is ignored and the stop keeps the plain pin

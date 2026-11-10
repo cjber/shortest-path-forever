@@ -11,7 +11,7 @@ calling it. The full types are in [`types/API.lua`](../types/API.lua).
   from anywhere else it leaves them out.
 - `EstimateDetail` takes the same arguments and cache and returns `{seconds, legs}`, each leg a fresh
   `{mode, to, seconds, wait?, newFlightPath?}`.
-- `NavigateRoute(owner, stops)` guides through 1 to 64 `{map, x, y, title, tooltip}` stops in order, advancing on arrival
+- `NavigateRoute(owner, stops)` guides through 1 to 64 `{map, x, y, title, tooltip, z}` stops in order, advancing on arrival
   and ending after the last. Remaining stops have numbered map pins, and the way between them is drawn as
   planned, walks along the walking map, once worked out behind the current leg; the tracker and arrow show
   “Stop 2 of 4: …”.
@@ -20,8 +20,14 @@ calling it. The full types are in [`types/API.lua`](../types/API.lua).
   Both return a boolean; invalid input, combat or disabled Journeys return `false` without replacing guidance.
   Titles are optional, as is `tooltip`, a destination detail shown on the stop pin's tooltip and under the arrival
   pin while the player stands in a held stop's area. It is never used as the arrow label; each newline in it starts a
-  line of its own, and a line an earlier stop on the same pin already shows is not repeated. A stop with `hold = true`
-  waits for its owner to replace or cancel the route rather than advancing on arrival. For held objective areas,
+  line of its own, and a line an earlier stop on the same pin already shows is not repeated. Optional `z` is the
+  stop's world height in yards, any finite number: the pin snaps it to the nearest surface of its cell and compares
+  that with the cell's ground layer, the floor nearest the terrain there. Above that floor it wears the map's up
+  arrow and its tooltip says “Above ground level”; below it wears the down arrow and says “Below ground level”. On
+  the ground, without a height, in a cell with no floors, over a cell whose ground has no terrain, or without a
+  surface under it, no arrow is shown, and a pin marking several stops shows one only when all of them agree. A stop
+  with `hold = true` waits for its
+  owner to replace or cancel the route rather than advancing on arrival. For held objective areas,
   optional `radius` (yards, finite and non-negative) hides walking directions inside the area while preserving
   ownership and the current stop. Directions resume outside it. Optional `questID` names the quest a held area
   stands for, and optional `questIDs` every quest it stands for when there are several: an array of 1 or more quest

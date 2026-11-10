@@ -480,3 +480,5 @@ L["In a stop's area the direction arrow becomes a pin with the stop's objectives
 	"Na área de uma parada, a seta de direção vira um alfinete com os objetivos da parada, em vez de sumir." -- mt
 L["It returns to the arrow when you leave the area or the stop changes."] =
 	"Ele volta a ser a seta quando você sai da área ou a parada muda." -- mt
+L["Above ground level"] = "Acima do nível do solo" -- mt
+L["Below ground level"] = "Abaixo do nível do solo" -- mt

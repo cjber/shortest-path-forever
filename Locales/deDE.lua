@@ -480,3 +480,5 @@ L["In a stop's area the direction arrow becomes a pin with the stop's objectives
 	"Im Bereich eines Halts wird der Richtungspfeil zu einer Markierung mit den Zielen des Halts, statt zu verschwinden." -- mt
 L["It returns to the arrow when you leave the area or the stop changes."] =
 	"Er wird wieder zum Pfeil, wenn Ihr den Bereich verlasst oder sich der Halt ändert." -- mt
+L["Above ground level"] = "Über dem Bodenniveau" -- mt
+L["Below ground level"] = "Unter dem Bodenniveau" -- mt
