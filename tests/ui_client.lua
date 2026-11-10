@@ -481,6 +481,13 @@ end
 _G.UnitOnTaxi = function()
 	return onTaxi
 end
+-- Floor.lua: outdoors and dry unless a UI check says otherwise.
+_G.IsIndoors = function()
+	return false
+end
+_G.IsSwimming = function()
+	return false
+end
 -- A ghost, for the corpse-run state; a UI check sets it directly when it drives dead play.
 local ghost = false
 _G.UnitIsGhost = function()

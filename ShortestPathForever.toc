@@ -85,6 +85,7 @@ Nav\Nav.xml
 Routing\PathGrid.lua
 Routing\Path.lua
 Routing\PathJobs.lua
+Routing\Floor.lua
 Journey\JourneySteps.lua
 Journey\Hazards.lua
 Journey\JourneySearch.lua

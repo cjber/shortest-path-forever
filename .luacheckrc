@@ -185,6 +185,9 @@ read_globals[#read_globals + 1] = "GetAddOnMemoryUsage"
 read_globals[#read_globals + 1] = "C_Item"
 read_globals[#read_globals + 1] = "C_SpellBook"
 read_globals[#read_globals + 1] = "GetBindLocation"
+-- Floor.lua: indoors, where floors stack, the floor is followed whenever you move; swimming, you are on water.
+read_globals[#read_globals + 1] = "IsIndoors"
+read_globals[#read_globals + 1] = "IsSwimming"
 -- TrackerHost.lua: whether Edit Mode is open.
 read_globals[#read_globals + 1] = "EditModeManagerFrame"
 

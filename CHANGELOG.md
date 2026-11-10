@@ -12,6 +12,9 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Journeys start on the floor you are on.** The game does not say how high you stand, so a walk from where you were started on the cheapest surface around you: in the Undercity that was often the Ruins of Lordaeron overhead, or a walkway above the canal, and the route led you as if you were up there. Shortest Path now follows your floor as you move, keeping only the surfaces the walking map can reach from where you were, and starts the walk on it once one floor is left, usually within a few dozen yards of walking. Until then, standing still where floors overlap or just after a hearth or a lift, it walks from the cheapest surface as before. The floor is followed during a journey, and indoors whenever you move, so a journey planned in the Undercity after a short walk there starts in the city.
+- **A spot picked on the Undercity's map is in the city.** The map gives no height, so a journey there ended on the cheapest surface at that spot: under the throne hall that was the Ruins of Lordaeron overhead, and the route led you across the ruins instead of down into the city. A spot picked on the Undercity's map, by Shift-click, `/way` or a quest, now ends on the city's floor, and crossing the hall above it no longer counts as arriving. The Tirisfal Glades map still names the surface.
+
 ## [1.24.8] - 2026-11-09
 
 - **Routing from the world map works with a controller.** Shift-clicking the world map to start a route and then closing the map with the controller could get a controller action blocked by the game. The route now waits until the map has closed before it sets your waypoint. Reported by joaocjesus (#581).
