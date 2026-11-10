@@ -31,8 +31,6 @@ local MODE_ATLAS = {
 	-- A waypoint line in the client's own quest tracker (Blizzard_QuestObjectiveTracker.xml's
 	-- QuestObjectiveWaypointLineTemplate, 26 by 34).
 	walk = "poi-traveldirections-arrow",
-	-- The flight master's own mark, keyed by the player's side below as UI/Looks.lua draws a stop (32 by 32).
-	flight = "taxinode_neutral",
 	-- The stock ferry of a boat dock (32 by 32).
 	boat = "flightmasterferry",
 	-- The map's floor-change arrows (13 by 14), as UI/Map.lua draws a lift and the Deeprun Tram.
@@ -45,14 +43,28 @@ local MODE_ATLAS = {
 	-- A passage goes in through an instance door: the client tracker's own dungeon mark (18 by 18).
 	passage = "questlog-questtypeicon-dungeon",
 }
-local TAXI_ATLAS = { Alliance = "taxinode_alliance", Horde = "taxinode_horde" }
+-- A flight point's mark: the node's own side where it has one, the player's side when the node's is unknown, then
+-- neutral. One rule for the compass, the tracker and stop pins, so the same flight point wears the same mark.
+---@param nodeFaction? string
+---@return string
+function Art.FlightAtlas(nodeFaction)
+	local faction = nodeFaction
+	if faction ~= "Alliance" and faction ~= "Horde" and faction ~= "Neutral" then
+		faction = UnitFactionGroup("player")
+	end
+	if faction == "Alliance" or faction == "Horde" then
+		return "taxinode_" .. string.lower(faction)
+	end
+	return "taxinode_neutral"
+end
 
 -- The atlas a journey mode wears on this character, or nil for a mode with no art.
 ---@param mode SPFMode
+---@param nodeFaction? string a flight point's side, when the caller knows the node
 ---@return string?
-function Art.ModeAtlas(mode)
+function Art.ModeAtlas(mode, nodeFaction)
 	if mode == "flight" then
-		return TAXI_ATLAS[UnitFactionGroup("player") or ""] or MODE_ATLAS.flight
+		return Art.FlightAtlas(nodeFaction)
 	end
 	return MODE_ATLAS[mode]
 end
