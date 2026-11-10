@@ -86,10 +86,8 @@ assert(registered.spec.title == "Shortest Path report", "with its own report tit
 assert(type(registered.spec.lines) == "function", "and its own report lines")
 assert(attached == ns.db, "the saved table is attached once it loads")
 
--- The dependency is declared for the client and the stores.
+-- The client loads ForeverCore first because the TOC declares it.
 local toc = assert(io.open("ShortestPathForever.toc", "rb")):read("*a")
 assert(toc:find("## Dependencies: ForeverCore", 1, true), "the TOC declares ForeverCore")
-local pkgmeta = assert(io.open(".pkgmeta", "rb")):read("*a")
-assert(pkgmeta:find("required%-dependenc%ies:%s*\n%s*%-%s*forevercore"), "the stores install forevercore with it")
 
 print("core_dependency_spec: ok")

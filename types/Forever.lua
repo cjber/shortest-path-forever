@@ -158,7 +158,7 @@ ForeverMapMarkers = nil
 ---@field SetStringText fun(self: SPFTrackerBlock, font: FontString, text: string, wrap: boolean?, color: ColorMixin|ForeverObjectiveTrackerColor, highlight?: boolean): number
 ---@class SPFTrackerHeader : Frame
 ---@field Text FontString
----@class SPFTrackerModule : Frame
+---@class SPFTrackerModule : ForeverTrackerModule
 ---@field Header SPFTrackerHeader
 ---@field headerText string
 ---@field lineTemplate string
@@ -171,8 +171,6 @@ ForeverMapMarkers = nil
 ---@field MarkDirty fun(self: SPFTrackerModule)
 ---@field IsDirty fun(self: SPFTrackerModule): boolean
 ---@field GetContextMenuParent fun(self: SPFTrackerModule): Frame
----@field safeCall? fun(label: string, fn: function, ...: any): boolean, any
----@field legacySettings? ForeverTrackerLegacySettings
 ---@type ForeverNativeTrackerFrame
 ObjectiveTrackerFrame = nil
 ---@class SPFTrackerManager
