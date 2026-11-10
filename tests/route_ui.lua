@@ -94,6 +94,33 @@ local pin, mini = active[lineTemplate][1], ShortestPathForeverMinimapRoute
 painted(pin, "world map")
 painted(mini, "minimap")
 assert(pin.used > 0 and mini.used > 0)
+-- Each surface's walking line has its own switch. Off draws no dots there; the other surface keeps its own, and
+-- the goal ring stays, so only the line goes.
+local function linesOn(owner)
+	local count = 0
+	for i = 1, owner.used do
+		if owner.lines[i].shown then
+			count = count + 1
+		end
+	end
+	return count
+end
+assert(ns.db.mapLine == true and ns.db.minimapLine == true, "both walking lines start on")
+ns.db.mapLine = false
+ns.RefreshRouteLines()
+assert(#(active[lineTemplate] or {}) == 0, "the world map's switch off draws no route there")
+assert(linesOn(mini) > 0, "the minimap keeps drawing its own")
+assert(not mini.Goal.hidden, "the minimap's destination ring stays")
+ns.db.mapLine, ns.db.minimapLine = true, false
+ns.RefreshRouteLines()
+pin = active[lineTemplate][1]
+assert(linesOn(pin) > 0, "the world map keeps drawing its own")
+assert(linesOn(mini) == 0, "the minimap's switch off draws no route there")
+assert(not mini.Goal.hidden, "the minimap's destination ring stays with its line off")
+ns.db.minimapLine = true
+ns.RefreshRouteLines()
+pin = active[lineTemplate][1]
+assert(linesOn(pin) > 0 and linesOn(mini) > 0, "turning them back on draws both lines again")
 -- The route is laid out only around the view and its margin: a long walk at a zoom where all of it would be hundreds
 -- of dots keeps a viewful, in the places the whole walk has them. A drag inside the margin keeps them; past it redraws.
 local savedZoom = zoom

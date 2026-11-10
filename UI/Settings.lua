@@ -183,6 +183,18 @@ ns.Init(function()
 			return routeColorOptions:GetData()
 		end, L["The walking line on the world map and the minimap."])
 	)
+	Checkbox(
+		"mapLine",
+		L["Line on the world map"],
+		L["Draws the walking route on the world map. With it off, the destination pin, arrow and tracker still guide you."],
+		ns.RefreshRouteLines
+	)
+	Checkbox(
+		"minimapLine",
+		L["Line on the minimap"],
+		L["Draws the walking route on the minimap. With it off, the destination pin, arrow and tracker still guide you."],
+		ns.RefreshRouteLines
+	)
 
 	-- Transport: routes and departure times.
 	Page(L["Transport"])

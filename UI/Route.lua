@@ -72,6 +72,8 @@ local linePins, goalPins, areaPins
 local areaSupported
 -- The journey's strokes are painted as soon as they are made, so the map pin and the minimap share one buffer.
 local journeyStrokes = Strokes.New()
+-- A surface with its line switched off still draws its goal mark, so both share one empty path list.
+local NO_PATHS = {}
 ---@class SPFMinimapRoute : Frame
 ---@field lines Line[]
 ---@field underlines Line[]
@@ -499,7 +501,7 @@ function Layer:RefreshAllData()
 	end
 	-- The stops go first: the line leaves a gap at each.
 	self:RefreshStops()
-	if #worldPaths > 0 then
+	if #worldPaths > 0 and ns.db.mapLine ~= false then
 		linePins:Acquire(worldPaths)
 	end
 	-- Each drawn stop already marks its quest: the game's own pin for it steps aside (#472).
@@ -676,7 +678,11 @@ local function DrawMinimap(self)
 	local area = inside and GetCVarBool("questPOI")
 	-- A goal with a known mark wears the wider ring (ns.SetJourneyRoute).
 	view.goal, view.goalRadius = not area and goal or nil, (goal and goal.look and MINIMAP_RING or MINIMAP_GOAL) / 2
-	local gx, gy, edge = Strokes.Minimap(journeyStrokes, area and {} or paths, view)
+	local linePaths = paths
+	if area or ns.db.minimapLine == false then
+		linePaths = NO_PATHS
+	end
+	local gx, gy, edge = Strokes.Minimap(journeyStrokes, linePaths, view)
 	if gx then
 		self.Goal:SetPoint("CENTER", self, "CENTER", gx * width / 2, gy * height / 2)
 		-- Off the minimap it only shows the way, a little faded, as the game's own tracked pin is at the minimap's
@@ -805,6 +811,19 @@ function ns.SetRouteColor(value)
 			---@cast pin SPFRoutePin
 			pin:Draw()
 		end
+	end
+	if minimap and minimap:IsShown() then
+		DrawMinimap(minimap)
+		WakeMinimap(minimap)
+	end
+end
+
+-- Each surface's line has its own switch. Repaint both at once, without replanning the journey: the map takes its
+-- line pins back or lets them go, and the minimap redraws with the new choice.
+function ns.RefreshRouteLines()
+	geometryRevision = geometryRevision + 1
+	if linePins and WorldMapFrame:IsShown() then
+		provider:RefreshAllData()
 	end
 	if minimap and minimap:IsShown() then
 		DrawMinimap(minimap)
