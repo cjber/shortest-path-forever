@@ -288,6 +288,18 @@ areaPin:OnCanvasScaleChanged()
 assert(areaPin.blobs == nil and areaPin.scripts.OnUpdate, "the redraw waits for the end of the frame")
 areaPin.scripts.OnUpdate(areaPin, 0.01)
 assert(#areaPin.blobs == 1 and areaPin.scripts.OnUpdate == nil, "one redraw, then idle")
+-- A guide step that moves on at the same place changes the stop's quests in place; the map's gold area follows at
+-- once, and so does the minimap's own area, without replanning the route.
+insideQuestBlob[7] = false
+insideQuestBlob[8] = true
+assert(ns.SetStopQuests("Test", 1, { 8 }))
+local changed = active[areaTemplate][1]
+assert(changed and #changed.blobs == 1 and changed.blobs[1] == 8, "the area pin draws the new quest")
+assert(Minimap.questBlobInside == GOLD .. "Inside", "the minimap keeps the stop's gold area")
+assert(ns.SetStopQuests("Test", 1, { 7 }))
+insideQuestBlob[8] = false
+insideQuestBlob[7] = true
+
 -- The client's own state change is the trigger: stepping out restores the stop, the line and the stock blue.
 insideQuestBlob[7] = false
 fireEvent("PLAYER_INSIDE_QUEST_BLOB_STATE_CHANGED")

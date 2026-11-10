@@ -193,6 +193,19 @@ assert(nativeActive.QuestPinTemplate[3].hidden, "opening the map hides the hand-
 -- A provider whose GetPinTemplate takes its vignette is never called, to identify the quest provider or otherwise.
 assert(vignetteLookups == 0, "a provider's GetPinTemplate is never called")
 
+-- A guide step that moves on at the same place changes the stop's quests in place; the map's quest pins follow at
+-- once, without waiting for a quest-log event or an unrelated map refresh.
+assert(ShortestPathForever.API.NavigateRoute("Test", {
+	{ map = 1414, x = 0.57, y = 0.5, title = "Same place", questID = 101 },
+}))
+settle()
+pins = nativeActive.QuestPinTemplate
+assert(pins[1].hidden, "the stop's quest pin is hidden")
+assert(ns.SetStopQuests("Test", 1, { 202 }))
+pins = nativeActive.QuestPinTemplate
+assert(not pins[1].hidden, "the old quest's pin comes back at once")
+assert(pins[2].hidden, "the new quest's pin is hidden at once")
+
 -- The journey ends: every pin this module hid comes back.
 assert(ShortestPathForever.API.Cancel("Test"))
 pins = nativeActive.QuestPinTemplate
