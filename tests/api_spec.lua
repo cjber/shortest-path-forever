@@ -1,3 +1,4 @@
+-- rule-ignore: file-size-no-growth - API contract spec kept whole
 local driver = assert(loadfile("tests/journey_driver.lua"))()
 local ns, env, checks = driver.ns, driver.env, 0
 driver.load("UI/Looks.lua")
@@ -599,7 +600,7 @@ end
 
 -- Subscribe: one call per burst of guidance changes, on the next frame, each subscriber isolated from the others.
 do
-	equal(API.minor, 2, "minor 2 records Subscribe and the additions after it")
+	equal(API.minor, 3, "minor 3 records Journey, Pause, Resume, SkipLeg, Stats and Leaderboard")
 	equal(pcall(API.Subscribe, "callback"), false, "a callback must be a function")
 	local timers, route =
 		{}, {
@@ -929,6 +930,201 @@ equal(points[2].label, "New name", "names only what it was asked to")
 equal(API.RenameStop("AGF", 1, "Plain name"), true, "relabelling to the same name again is harmless")
 ns.RefreshTracker = refreshTracker
 API.Cancel("AGF")
+
+-- The journey under way: another addon reads fresh copies in API coordinates, its time left is the tracker's own
+-- total, and only the owner may pause, resume or skip it.
+do
+	driver.move({ map = 1, x = 0, y = 0 })
+	equal(API.Journey(), nil, "no journey to read")
+	equal(select(2, API.Journey()), "none", "no journey says none")
+	local savedDb = ns.db
+	ns.db = nil
+	why("loading", "the journey before the data loads", API.Journey())
+	ns.db = savedDb
+	assert(API.NavigateRoute("AGF", {
+		{ map = 1, x = 0.502, y = 0.5, title = "First" },
+		{ map = 1, x = 0.6, y = 0.5, title = "Second" },
+	}))
+	why("loading", "a first search with no route yet", API.Journey())
+	driver.path.settle()
+	local journey = assert(API.Journey())
+	equal(journey.owner, "AGF", "Journey names its owner")
+	equal(journey.goal.map, 1, "the goal is a uiMapID")
+	near(journey.goal.x, 0.502, "the goal's x is normalized")
+	near(journey.goal.y, 0.5, "the goal's y is normalized")
+	equal(journey.goal.title, "First", "the goal keeps its own title")
+	equal(journey.index, 1, "the leg under way")
+	equal(journey.guided, true, "the journey guides")
+	local title, _, trackedPlan, trackedIndex = ns.JourneyInfo()
+	equal(type(title), "string", "the tracker names the journey")
+	near(
+		journey.secondsLeft,
+		ns.JourneyTime(trackedPlan.legs, trackedIndex) / 1000,
+		"secondsLeft is the tracker's total"
+	)
+	equal(#journey.legs, #trackedPlan.legs - trackedIndex + 1, "every remaining leg is listed")
+	equal(journey.legs[1].mode, trackedPlan.legs[trackedIndex].mode, "a leg keeps its mode")
+	equal(journey.legs[1].text, ns.StepText(trackedPlan.legs[trackedIndex]), "a leg keeps the step's plain words")
+	local legTotal = 0
+	for _, leg in ipairs(journey.legs) do
+		legTotal = legTotal + leg.seconds
+	end
+	equal(legTotal, journey.secondsLeft, "the legs add up to the time left")
+
+	journey.goal.x, journey.goal.title = 0, "Changed by caller"
+	journey.legs[1].text, journey.legs[1].seconds = "Changed by caller", -1
+	journey.legs[2] = {}
+	local reread = assert(API.Journey())
+	equal(reread ~= journey, true, "each Journey is a fresh table")
+	equal(reread.goal ~= journey.goal, true, "each goal is fresh")
+	equal(reread.legs ~= journey.legs, true, "each leg list is fresh")
+	near(reread.goal.x, 0.502, "a caller's edit leaves the goal intact")
+	equal(reread.goal.title, "First", "and its title")
+	equal(reread.legs[1].text, ns.StepText(trackedPlan.legs[trackedIndex]), "and the step's words")
+
+	equal(API.Pause("OtherAddon"), false, "another owner cannot pause")
+	equal(API.Resume("OtherAddon"), false, "another owner cannot resume")
+	equal(API.SkipLeg("OtherAddon"), false, "another owner cannot skip")
+	equal(API.Pause("AGF"), true, "the owner pauses")
+	equal(API.Active(), false, "pausing stops guidance")
+	equal(assert(API.Journey()).guided, false, "Journey says it is paused")
+	equal(API.Pause("AGF"), false, "an already paused journey is no change")
+	equal(API.Resume("AGF"), true, "the owner resumes")
+	equal(API.Active(), true, "resuming starts guidance")
+	equal(API.Resume("AGF"), false, "an already guiding journey is no change")
+	env.InCombatLockdown = function()
+		return true
+	end
+	equal(API.Pause("AGF"), false, "combat refuses a pause")
+	equal(API.Active(), true, "and leaves guidance as it was")
+	env.InCombatLockdown = function()
+		return false
+	end
+
+	local before = assert(API.Journey())
+	equal(API.SkipLeg("AGF", "1"), false, "a leg index must be a whole number")
+	equal(API.SkipLeg("AGF", before.index + 5), false, "a leg that is not current is refused")
+	equal(API.SkipLeg("AGF", before.index), true, "the owner skips the current leg")
+	local skipped = assert(API.Journey())
+	equal(skipped.index, before.index + 1, "the leg advanced")
+	equal(skipped.secondsLeft <= before.secondsLeft, true, "the time left does not grow")
+	API.Cancel("AGF")
+	equal(API.Journey(), nil, "a cancelled journey is not read")
+	equal(select(2, API.Journey()), "none", "and says none")
+end
+
+-- Pause, Resume and a skip reach subscribers on the frame after the change.
+do
+	local timers = {}
+	local previousTimer = env.C_Timer
+	env.C_Timer = {
+		After = function(_, fn)
+			timers[#timers + 1] = fn
+		end,
+	}
+	local function frame()
+		local due = timers
+		timers = {}
+		for _, fn in ipairs(due) do
+			fn()
+		end
+	end
+	local heard = {}
+	local unsubscribe = API.Subscribe(function(changes)
+		heard[#heard + 1] = changes
+	end)
+	driver.move({ map = 1, x = 0, y = 0 })
+	assert(API.NavigateRoute("AGF", { { map = 1, x = 0.502, y = 0.5, title = "Only" } }))
+	driver.path.settle()
+	frame()
+	equal(heard[#heard].started, true, "a start is heard")
+	equal(API.Pause("AGF"), true, "the owner pauses")
+	frame()
+	equal(heard[#heard].active, true, "a pause is heard as active")
+	equal(API.Resume("AGF"), true, "the owner resumes")
+	frame()
+	equal(heard[#heard].active, true, "a resume is heard as active")
+	equal(API.SkipLeg("AGF"), true, "the owner skips the leg")
+	frame()
+	equal(heard[#heard].leg, true, "a skip is heard on the leg change")
+	unsubscribe()
+	API.Cancel("AGF")
+	env.C_Timer = previousTimer
+end
+
+-- Stats and Leaderboard read the travel journal through the shared peer protocol.
+do
+	local ForeverCore = dofile("tests/forever_core.lua")
+	env.UnitName = function()
+		return "Tester"
+	end
+	local coreNs = ForeverCore.load(env, "ForeverCore", { "Core/PeerStats.lua" })
+	env.ForeverCore.PeerStats = coreNs.PeerStats
+	env.ForeverCore.Leaderboards = { Register = function() end, Open = function() end }
+	local peers = {}
+	for peerIndex = 1, 30 do
+		peers["Peer" .. peerIndex] = { routes_completed = { all = { value = 101 - peerIndex, eventUnix = 200 } } }
+	end
+	ns.charDB.progress = {
+		walkedYards = 1234,
+		routesCompleted = 2,
+		transportsUsed = 3,
+		flightsTaken = 4,
+		portalsUsed = 5,
+		milestones = {},
+		peers = { spf = peers },
+	}
+	env.C_Timer = { After = function() end }
+	driver.load("Core/Progress.lua")
+
+	local savedDb = ns.db
+	local stats = assert(API.Stats())
+	equal(#stats, 5, "one travel row per metric")
+	equal(stats[1].addon, "ShortestPathForever", "the addon's own name")
+	equal(stats[1].subject, "all", "the travel subject")
+	local byMetric = {}
+	for _, row in ipairs(stats) do
+		byMetric[row.metric] = row.value
+	end
+	equal(byMetric.distance_yards, 1234, "yards walked")
+	equal(byMetric.routes_completed, 2, "completed journeys")
+	equal(byMetric.transports_used, 3, "transport rides")
+	equal(byMetric.flights_taken, 4, "flights taken")
+	equal(byMetric.portals_used, 5, "portals used")
+	stats[1].value = -1
+	equal(assert(API.Stats())[1].value, 1234, "Stats returns fresh rows")
+
+	local board = assert(API.Leaderboard())
+	equal(board.metric, "routes_completed", "the board's metric")
+	equal(board.scope, "guild_group", "the suite's scope")
+	equal(board.sharing, true, "sharing is on")
+	equal(board.total, 31, "every row counts before the limit")
+	equal(#board.rows, 11, "ten ranked rows and the player's own")
+	equal(board.rows[1].rank, 1, "ranked from the top")
+	equal(board.rows[1].eventUnix, nil, "no event time the journal does not record")
+	equal(board.rows[1].self, nil, "the top row is not this character")
+	equal(#assert(API.Leaderboard(99)).rows, 26, "the limit is capped at 25, with the player's own row")
+	local own = assert(API.Leaderboard(0))
+	equal(#own.rows, 1, "zero asks for the player's row alone")
+	equal(own.rows[1].self, true, "which is marked as this character")
+	equal(own.rows[1].value, 2, "with this character's own total")
+	local top = assert(API.Leaderboard(1))
+	equal(#top.rows, 2, "one ranked row and the player's own")
+	equal(top.rows[1].self, nil, "the ranked row is not this character")
+	equal(top.rows[2].self, true, "and the player's row is kept below the limit")
+	for _, bad in ipairs({ -1, 1.5, "5", math.huge, 0 / 0, driver.secret }) do
+		why("invalid", "a bad leaderboard limit", API.Leaderboard(bad))
+	end
+	board.rows[1].name = "Changed by caller"
+	equal(assert(API.Leaderboard()).rows[1].name ~= "Changed by caller", true, "Leaderboard returns fresh rows")
+
+	ns.db = nil
+	why("loading", "Stats before the saved variables", API.Stats())
+	why("loading", "Leaderboard before the saved variables", API.Leaderboard())
+	why("invalid", "a bad limit is still invalid before loading", API.Leaderboard(-1))
+	ns.db = savedDb
+end
+
 print(
 	string.format(
 		"api_spec: %d checks passed; Estimate cached short %.3f ms, cross-continent cold %.3f / cached %.3f ms",

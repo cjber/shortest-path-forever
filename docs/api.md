@@ -1,11 +1,13 @@
 # Addon API
 
-Addons can use `ShortestPathForever.API` (`version = 1`, `minor = 2`) with uiMapIDs and normalized 0–1 coordinates.
+Addons can use `ShortestPathForever.API` (`version = 1`, `minor = 3`) with uiMapIDs and normalized 0-1 coordinates.
 Additions keep `version` at 1 and raise `minor`; check that a function exists before calling it, because an older
 addon may not have it yet. The full types are in [`types/API.lua`](../types/API.lua).
 
 ## Minor history
 
+- `minor = 3`: adds `Journey`, `Pause`, `Resume`, `SkipLeg`, `Stats` and `Leaderboard`, and the `leg` change in
+  `Subscribe`.
 - `minor = 2`: adds `RenameStop`, the stop fields `npc` and `handins`, and the `"vendor"` stop kind. They shipped
   while `minor` stayed 1, so they are listed together here.
 - `minor = 1`: adds `Subscribe`.
@@ -71,12 +73,21 @@ addon may not have it yet. The full types are in [`types/API.lua`](../types/API.
   changes, whoever made them. `changes` is a new table each call with any of these set to `true`: `started` (a
   journey began where none was under way), `changed` (the journey under way now heads somewhere else, replaced or
   on to its next stop; sending the same destination again is no change), `ended` (it ended with nothing after it),
-  `stop` (what `CurrentStop` answers changed: an addon's route started, moved on or ended) and `active` (what
-  `Active` answers changed, including the player turning guidance off or a corpse run guiding after a journey
-  ends). Several can be set together, so read `CurrentStop`, `Ended` and `Active` again rather than replaying
-  them. Only the subscribers there when the dispatch began are called, so one added by a callback waits for the
-  next burst. It returns a function that unsubscribes, safe to call twice. An error in one callback goes to the
-  game's error handler without stopping the others. A non-function callback is an error.
+  `stop` (what `CurrentStop` answers changed: an addon's route started, moved on or ended), `leg` (the leg under way
+  moved on without the goal changing: the player or an owner skipped it) and `active` (what `Active` answers changed,
+  including the player turning guidance off or a corpse run guiding after a journey ends). Several can be set together,
+  so read `CurrentStop`, `Ended` and `Active` again rather than replaying them. Only the subscribers there when the
+  dispatch began are called, so one added by a callback waits for the next burst. It returns a function that
+  unsubscribes, safe to call twice. An error in one callback goes to the game's error handler without stopping the
+  others. A non-function callback is an error.
+- `Journey()` reads the journey under way, whoever owns it: its owner, goal, remaining legs and time left. It returns
+  `nil, "loading"` while the saved variables are not loaded or the planner has no route yet, and `nil, "none"` with no
+  journey.
+- `Pause(owner)` and `Resume(owner)` stop and restart that owner's guidance on the same goal, as the tracker's own
+  guidance switch does. `SkipLeg(owner, index?)` advances that owner's current leg. Each returns `true` when it acted
+  and `false` for any other owner, no journey, the state already asked for, or combat.
+- `Stats()` and `Leaderboard(limit)` publish this character's travel records and the all-time completed journeys board
+  in the suite's statistics shape.
 
 Use your addon's name as `owner`; starting another journey replaces ownership.
 
@@ -92,7 +103,78 @@ A read with nothing to answer returns `nil, reason`. `Estimate` and `EstimateDet
 | `"loading"` | the addon is still building its data, so ask again later |
 
 `CurrentStop` and `Ended` use `"loading"` while the addon is still building its data, and `"none"` when there is
-nothing to answer: no current stop, or no ended journey to report.
+nothing to answer: no current stop, or no ended journey to report. `Journey` uses `"loading"` while the saved
+variables are not loaded or the planner has no route yet, and `"none"` when there is no journey. `Stats` and
+`Leaderboard` use `"loading"` until the saved variables are loaded; `Leaderboard` answers a limit that is not a whole
+number of zero or more with plain `nil, "invalid"`, because the argument is wrong rather than the data unready.
+
+## The journey under way
+
+`Journey()` returns a fresh table describing the journey under way, whether the player started it or another addon
+owns it. Every table and leg is new on each call, and the coordinates are the uiMapID and 0-1 fractions the rest of
+this API uses.
+
+| Field | |
+|---|---|
+| `owner` | the addon that owns the journey; absent for the player's own |
+| `goal` | a fresh `{map, x, y, title}`: where the journey ends, and the stop's own title or where it stands |
+| `legs` | the planner's legs from the current one on, each a fresh `{mode, text, seconds}` |
+| `index` | the 1-based leg under way |
+| `guided` | whether guidance is on, as `Active` asks it |
+| `secondsLeft` | whole seconds from the current leg to the goal, the same total as the tracker's Journey header |
+
+A leg's `text` is the step's action words exactly as the tracker has them, without its number, mark or colours, and
+its `seconds` is that leg's own whole seconds including the wait for a boat, zeppelin, lift, tram or teleport. The
+legs add up to `secondsLeft`.
+
+While the player is a ghost the corpse run is the journey under way: `Journey` reports it as the tracker draws it,
+with its goal on the corpse, one walking leg and `owner` absent. The journey waiting behind it keeps its goal and
+answers again once the player is alive.
+
+`Pause(owner)` stops guidance and keeps the goal and route, the same state as turning the tracker's guidance switch
+off: the goal's pin turns bronze and the route waits. `Resume(owner)` starts guidance again on that goal.
+`SkipLeg(owner, index?)` advances the leg under way through the same step the tracker's leg menu takes; `index`, when
+given, must be the current leg and is usually left out. Only the addon that owns the journey may call them, and all
+three return `true` when they acted. They return `false` for any other owner, no journey, the state already asked
+for (guidance already off, guidance already on), combat, or while a corpse run guides in the journey's place.
+
+```lua
+local api = ShortestPathForever.API
+local journey = api.Journey()
+if journey then
+	print(("%s: %d seconds, %d legs left"):format(journey.goal.title, journey.secondsLeft, #journey.legs))
+	if not journey.guided and journey.owner == "MyAddon" then
+		api.Resume("MyAddon")
+	end
+end
+```
+
+## Stats and Leaderboard
+
+`Stats()` returns a fresh array of this character's travel records, one row per metric:
+
+| Field | |
+|---|---|
+| `addon` | always `"ShortestPathForever"` |
+| `metric` | `"distance_yards"`, `"routes_completed"`, `"transports_used"`, `"flights_taken"` or `"portals_used"` |
+| `subject` | always `"all"` |
+| `value` | the recorded total: estimated yards walked, journeys reached their last stop, boat, zeppelin, lift and tram rides, taxi flights, or portals and passages |
+| `eventUnix` | absent: the travel journal records no event time |
+
+`Leaderboard(limit)` returns the all-time completed journeys board:
+
+| Field | |
+|---|---|
+| `metric` | always `"routes_completed"` |
+| `scope` | always `"guild_group"` |
+| `sharing` | whether this character sends and receives totals |
+| `total` | every eligible row, before the limit |
+| `rows` | fresh ranked rows: `rank`, `name`, `value`, and `self` on this character's row; `eventUnix` is absent, as the travel journal records no event time |
+
+The default limit is 10, capped at 25. Zero asks for only the player's own row, which is kept even below the limit.
+A negative, fractional or non-number limit returns `nil, "invalid"`. There is no `ruleset` field: the travel records
+name no game-mode ruleset, so the all-time board compares every row it holds. Peer values are player reports and are
+not proof of travel.
 
 ## World map markers
 
