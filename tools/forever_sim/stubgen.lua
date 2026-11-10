@@ -189,6 +189,22 @@ function M.build(sim)
 		end
 		G.Constants[name] = t
 	end
+	-- Constants the documentation defines as arithmetic over other constants lose that expression when the
+	-- documentation file is loaded (its Constants lookup is a forgiving placeholder), so the client's derived
+	-- gamepad slot counts are computed here from the values that did survive.
+	local gamepad = G.Constants.GamepadActionBarConstants
+	if type(gamepad) == "table" then
+		local group = gamepad.NUM_SLOTS_PER_GAMEPAD_ACTION_BAR_GROUP
+		local groups = gamepad.NUM_GROUPS_PER_GAMEPAD_ACTION_BAR
+		if type(group) == "number" and type(groups) == "number" then
+			gamepad.NUM_SLOTS_PER_GAMEPAD_ACTION_BAR = group * groups
+			if type(gamepad.NUM_PAGEABLE_BARS_IN_GAMEPAD_ACTION_BAR_PAGE_UNIT) == "number" then
+				local bars = gamepad.NUM_PAGEABLE_BARS_IN_GAMEPAD_ACTION_BAR_PAGE_UNIT
+				local slots = gamepad.NUM_SLOTS_PER_GAMEPAD_ACTION_BAR
+				gamepad.NUM_PAGEABLE_SLOTS_PER_GAMEPAD_ACTION_BAR_PAGE_UNIT_STANDARD_PAGE = bars * slots
+			end
+		end
+	end
 	-- The client exposes the documented QuestInfoLuaConsts table as Constants.QuestConsts, read by
 	-- Blizzard_FrameXMLUtil/Camelot/QuestUtilsOverrides.lua.
 	G.Constants.QuestConsts = G.Constants.QuestInfoLuaConsts
@@ -322,6 +338,7 @@ function M.build(sim)
 	local function stub(qualified, fdoc)
 		local nargs = #(fdoc.Arguments or {})
 		local protected = fdoc.IsProtectedFunction or protectedNames[qualified]
+		local restricted = fdoc.HasRestrictions
 		local secretArgs = fdoc.SecretArguments
 		local returns = fdoc.Returns or {}
 		local f = function(...)
@@ -356,7 +373,10 @@ function M.build(sim)
 					end
 				end
 			end
-			if protected and tainted then
+			-- HasRestrictions alone is a combat-time restriction; a documented function this client refuses at all
+			-- times is in protectedNames instead.
+			local refused = protected or (restricted and sim.combatLockdown)
+			if refused and tainted then
 				sim.forbidden(qualified)
 				return
 			end
@@ -364,7 +384,8 @@ function M.build(sim)
 			local out
 			if impl then
 				out = { n = 0 }
-				local r = { impl(...) }
+				-- The C function's synchronous Blizzard Lua runs in the caller's taint (Taint.callSecure).
+				local r = { Taint.callSecure(impl, ...) }
 				out.n = table.maxn(r)
 				for i = 1, out.n do
 					out[i] = r[i]
@@ -442,7 +463,7 @@ function M.build(sim)
 			G[ns][name] = function(...)
 				local f = sim.impl[q]
 				if f then
-					return f(...)
+					return Taint.callSecure(f, ...)
 				end
 				return default
 			end
