@@ -13,6 +13,7 @@ local function frame(_, name, parent, template)
 	function f:SetScript(event, fn)
 		self.scripts[event] = fn
 	end
+	function f.RegisterEvent() end
 	function f:SetPoint(...)
 		self.point = { ... }
 	end
@@ -645,7 +646,8 @@ for _, private in ipairs({
 end
 env.LibQuestieDB = lib
 -- Under the gamepad interface the services menu never opens the world map or a menu itself, even over a map the game
--- opened: the player is pointed at the map's own tracking menu, which lists the services.
+-- opened: the game's own menus carry none of our entries there (#645), so the player is told it needs mouse and
+-- keyboard.
 gamepad = true
 local opens, entries = mapOpens, menuEntries
 env.SlashCmdList.SPFNEAR("")
@@ -657,7 +659,7 @@ env.WorldMapFrame = {
 }
 env.SlashCmdList.SPFNEAR("")
 assert(mapOpens == opens and menuEntries == entries, "over an open map no menu of ours opens either")
-assert(printed[#printed]:find("tracking menu", 1, true), "it points at the map's tracking menu")
+assert(printed[#printed]:find("mouse and keyboard", 1, true), "it says what the services need")
 gamepad, env.WorldMapFrame = false, nil
 -- The planner's own travel cost chooses between the shortlist: an Alliance hunter in Auberdine takes the Teldrassil
 -- boat to Darnassus rather than walk to Kaerbrus, though Kaerbrus is the closest by straight line.

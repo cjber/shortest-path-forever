@@ -48,6 +48,15 @@ do
 	end
 end
 local gamepad = false
+-- The client's secure delegate, counted: a pin's restricted passthrough call has to go through it (#645).
+local delegates = 0
+do
+	local create = CreateSecureDelegate
+	_G.CreateSecureDelegate = function(fn)
+		delegates = delegates + 1
+		return create(fn)
+	end
+end
 -- JourneyInput.lua's Alt-click watches the same global mouse events.
 _G.IsAltKeyDown = function()
 	return false
@@ -229,6 +238,7 @@ mapTick()
 dock = docks.active[1]
 
 --[[ Hover with the mouse, and the right button passed through ]]
+check(delegates > 0, "the pin's restricted passthrough call runs through the client's secure delegate")
 check(dock.passThrough and dock.passThrough[1] == "RightButton", "a dock passes the right button to the canvas")
 dock.scripts.OnEnter(dock)
 check(GameTooltip.owner == dock and GameTooltip.shown, "hovering a dock shows its tooltip")

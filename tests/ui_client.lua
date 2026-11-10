@@ -26,6 +26,11 @@ end
 _G.InCombatLockdown = function()
 	return combat
 end
+-- The client's secure delegate runs a restricted call as the client itself; map pins set their button
+-- passthrough through it (#645).
+_G.CreateSecureDelegate = function(fn)
+	return fn
+end
 local cvars = { rotateMinimap = "0", questPOI = "1" }
 local function noop() end
 local mt = {

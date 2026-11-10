@@ -31,9 +31,10 @@ local ns = select(2, ...)
 -- Pins are plain frames that take the mouse with OnEnter and OnLeave only: the gamepad interface reads a frame with a
 -- click script (OnClick, OnMouseDown, OnMouseUp) as a button of the window it scans. A click is the press and release
 -- of a button over the hovered pin, seen through GLOBAL_MOUSE_DOWN and GLOBAL_MOUSE_UP on a frame of the addon's. A
--- pin passes the right button through to the canvas (zoom out) unless it says otherwise, as the map's own pins do.
--- Under the gamepad interface a pin within reach of the map cursor shows its tooltip, as the map's own pins do; its
--- clicks stay with the mouse.
+-- pin passes the right button through to the canvas (zoom out) unless it says otherwise, as the map's own pins do,
+-- through the client's restricted SetPassThroughButtons run by its secure delegate (Pool:Acquire). Under the gamepad
+-- interface a pin within reach of the map cursor shows its tooltip, as the map's own pins do; its clicks stay with
+-- the mouse.
 --
 -- A pin sets no OnHide script: closing the map would run it inside the panel's own hide, before the gamepad binding
 -- stack is cleared, and the addon's taint would block SetPreferredGamepadInteractTarget (#158). The view clears the
@@ -578,6 +579,30 @@ local function OnLeave(pin)
 	end
 end
 
+-- SetPassThroughButtons is a client method with restrictions: called from tainted code the client refuses it, and a
+-- pin is acquired from executions that are tainted through no fault of the pin (a journey started from one of the
+-- game's menus, a search whose cost refresh settled one) (#645). The client's secure delegate runs the call as the
+-- client itself, as the shared openers run the client's own openers (Core/OpenMap.lua); the pin then keeps the stock
+-- passthrough: a dock or portal passes the right button to the canvas to zoom out, a flight point above a zone its
+-- left to zoom in, and the goal pin keeps both, so its right click clears the journey. A build without the delegate
+-- (cjber/adventure-guide-forever#592) leaves the pin taking every button, as that addon's own pins do.
+local securePassThrough
+local function PassThrough(pin)
+	if not securePassThrough then
+		if type(CreateSecureDelegate) ~= "function" or type(pin.SetPassThroughButtons) ~= "function" then
+			return
+		end
+		securePassThrough = CreateSecureDelegate(pin.SetPassThroughButtons)
+	end
+	local through = {}
+	for _, button in ipairs({ "LeftButton", "RightButton" }) do
+		if pin:ShouldMouseButtonBePassthrough(button) then
+			through[#through + 1] = button
+		end
+	end
+	securePassThrough(pin, unpack(through))
+end
+
 ---@return SPFCanvasPin
 function Pool:Acquire(...)
 	local pin = table.remove(self.free)
@@ -602,14 +627,8 @@ function Pool:Acquire(...)
 	pin:ApplyFrameLevel()
 	pin:ApplyScale()
 	pin:ApplyPosition()
-	if pin.takesMouse and pin.SetPassThroughButtons then
-		local through = {}
-		for _, button in ipairs({ "LeftButton", "RightButton" }) do
-			if pin:ShouldMouseButtonBePassthrough(button) then
-				through[#through + 1] = button
-			end
-		end
-		pin:SetPassThroughButtons(unpack(through))
+	if pin.takesMouse then
+		PassThrough(pin)
 	end
 	return pin
 end

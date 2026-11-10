@@ -157,8 +157,6 @@ L["Only use the Hearthstone when it saves at least this much time."] =
 L["Open"] = "Открыть"
 L["Open Nearby services"] = "Открыть услуги поблизости"
 L["Open settings."] = "Открыть настройки."
-L["Open the world map and choose Nearby services in its tracking menu."] =
-	"Откройте карту мира и выберите «Услуги поблизости» в ее меню отслеживания."
 L["Open the world map to see it."] = "Откройте карту мира, чтобы увидеть."
 L["The Forever addons are free, with nothing locked behind them. If they help, you can buy me a coffee."] =
 	"Аддоны Forever бесплатны, и ничего в них не закрыто за оплатой. Если они вам помогают, можете угостить меня кофе." -- mt
