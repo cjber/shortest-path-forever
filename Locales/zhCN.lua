@@ -29,6 +29,7 @@ L["Alert before a boat arrives"] = "船只到达前提醒"
 L["Alerts"] = "提醒"
 L["Alliance"] = "联盟"
 L["Arriving at %s in %s"] = "到达%s还需%s"
+L["Arrow label"] = "箭头标签" -- mt
 L["Arrow scale"] = "箭头大小"
 L["Arrows"] = "箭"
 L["Arrows on the NPC's nameplate"] = "NPC姓名板上的箭头"
@@ -61,6 +62,7 @@ L["Crosses %s (level %s)"] = "穿过%s（等级 %s）"
 L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."] =
 	"调暗指南针后方的地面，让标记在雪地或沙地上也清晰可读。0%为不显示。"
 L["Deeprun Tram"] = "矿道地铁"
+L["Distance"] = "距离" -- mt
 L["Distances in metres"] = "距离以米显示"
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
 	"码头、升降梯、地铁和传送门。也可在微缩地图追踪菜单的“交通”中找到。"
@@ -264,6 +266,8 @@ L["Walks go round zones whose lowest level is 4 or more above yours, but never t
 L["Weapons and armour"] = "武器和护甲"
 L["What next? Adventure Guide Forever suggests quests for your level."] =
 	"接下来做什么？Adventure Guide Forever会推荐适合你等级的任务。"
+L["What the direction arrow shows under it: the distance to walk, the time left in the journey, or both."] =
+	"方向箭头下方显示的内容：要走的距离、旅程剩余时间，或两者。" -- mt
 L["What's new after an update"] = "更新后的新内容"
 L["While Guide is on: your next turns, the next stop and your destination across the top of the screen."] =
 	"引导开启时：在屏幕顶部显示你接下来的转弯、下一站和目的地。"
@@ -333,6 +337,7 @@ L["/path issue - report a bug or request a feature with a ready-made GitHub issu
 	"/path issue - 通过现成的 GitHub 问题链接报告缺陷或请求功能"
 L["/path report - show a report to copy into a bug report"] =
 	"/path report - 显示可复制到缺陷报告中的报告"
+L["Both"] = "两者" -- mt
 L["Bug"] = "错误"
 L["Bug: "] = "错误："
 L["Copy issue link"] = "复制问题链接"
@@ -346,6 +351,7 @@ L["Report a bug or request a feature"] = "报告缺陷或请求功能"
 L["Share travel stats with guild and groups"] = "与公会和队伍共享旅行统计"
 L["The link is selected. Press Ctrl+C (Cmd+C on a Mac), then paste into a browser; GitHub opens a filled-in issue."] =
 	"链接已选中。按 Ctrl+C（Mac 上为 Cmd+C）复制，然后粘贴到浏览器中；GitHub 会打开一个已填写的问题。"
+L["Time left"] = "剩余时间" -- mt
 L["Title"] = "标题"
 L["Travel journal"] = "旅行日志"
 L["Travel milestone reached: %s"] = "达成旅行里程碑：%s"

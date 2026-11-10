@@ -140,7 +140,7 @@ local env = setmetatable({
 local refreshed, taxiRefreshed, policyChanged, tomtomRefreshed, guidelimeRefreshed = 0, 0, 0, 0, 0
 local trackerRefreshed = 0
 local compassMoving = false
-local arrowMoving, arrowScaled = false, nil
+local arrowMoving, arrowScaled, arrowLabelSet = false, nil, nil
 local tomtomFollowRefreshed, ways = 0, {}
 local routeColour = nil
 local routeLinesRefreshed = 0
@@ -212,6 +212,7 @@ local ns = {
 		hearthMinimumSavings = 0,
 		compassScale = 100,
 		arrowScale = 100,
+		arrowLabel = "distance",
 		compassBackground = 0,
 		tomtomFollow = false,
 		compassTime = false,
@@ -250,6 +251,9 @@ local ns = {
 	end,
 	SetArrowScale = function(value)
 		arrowScaled = value
+	end,
+	SetArrowLabel = function(value)
+		arrowLabelSet = value
 	end,
 	SetCompassBackground = function(value)
 		compassBackdrop = value
@@ -325,6 +329,7 @@ local groups = {
 		"arrow",
 		"arrowMove",
 		"arrowScale",
+		"arrowLabel",
 		"metres",
 		"minimapButton",
 		"compass",
@@ -348,7 +353,7 @@ local order = {
 
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
 -- Main's arrival pin added arrivalPin and the line switches added mapLine and minimapLine to the merged list.
-assert(#rows == 60, #rows)
+assert(#rows == 61, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -566,6 +571,15 @@ local arrowSlider = Row("arrowScale")
 assert(arrowSlider.kind == "slider" and arrowSlider.setting.default == 100, "arrow scale defaults to 100%")
 arrowSlider.setting.onChanged(nil, 150)
 assert(arrowScaled == 150, "the arrow slider rescales the arrow")
+local arrowLabelRow = Row("arrowLabel")
+assert(arrowLabelRow.kind == "dropdown", "the arrow label is a dropdown")
+assert(arrowLabelRow.setting.default == "distance", "the arrow starts with the distance")
+assert(arrowLabelRow.setting.variable == "ShortestPathForever_arrowLabel", "the label choice is saved")
+local labelChoices = arrowLabelRow.getData()
+assert(#labelChoices == 3 and labelChoices[1].value == "distance", "distance leads the choices")
+assert(labelChoices[2].value == "time" and labelChoices[3].value == "both", "time and both follow the distance")
+arrowLabelRow.setting.onChanged(nil, "time")
+assert(arrowLabelSet == "time", "choosing the time refreshes the arrow at once")
 local arrowMover = Row("arrowMove").setting
 arrowMover:SetValue(true)
 assert(arrowMoving == true and arrowMover:GetValue() == true, "the row lets the arrow be dragged")

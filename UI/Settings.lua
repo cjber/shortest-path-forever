@@ -553,6 +553,31 @@ ns.Init(function()
 		page,
 		Settings.CreateSliderInitializer(arrowScale, arrowOptions, L["Scales the arrow and the cast prompt."])
 	)
+	local arrowLabel = Settings.RegisterAddOnSetting(
+		page,
+		"ShortestPathForever_arrowLabel",
+		"arrowLabel",
+		ns.db,
+		Settings.VarType.String,
+		L["Arrow label"],
+		ns.Defaults.arrowLabel
+	)
+	arrowLabel:SetValueChangedCallback(function(_, value)
+		if type(value) == "string" then
+			ns.SetArrowLabel(value)
+		end
+	end)
+	settings.arrowLabel = arrowLabel
+	local arrowLabelOptions = Settings.CreateControlTextContainer()
+	arrowLabelOptions:Add("distance", L["Distance"])
+	arrowLabelOptions:Add("time", L["Time left"])
+	arrowLabelOptions:Add("both", L["Both"])
+	Settings.RegisterInitializer(
+		page,
+		Settings.CreateDropdownInitializer(arrowLabel, function()
+			return arrowLabelOptions:GetData()
+		end, L["What the direction arrow shows under it: the distance to walk, the time left in the journey, or both."])
+	)
 	Checkbox("metres", L["Distances in metres"], L["Show metres and kilometres instead of yards."], function()
 		ns.RefreshCompass()
 		ns.RefreshTracker()

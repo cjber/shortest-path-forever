@@ -17,6 +17,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 <!-- discord-image: docs/screenshots/floors.png -->
 
 - **A stop above or below the ground shows which.** A guide's stop at the top of a tower used to look just like one on the ground, so the pin said "34 yd" while you stood underneath with no hint to climb. Where floors stack, such as the Sentinel Hill tower or the Undercity under the ruins, a stop now wears the map's own up or down arrow at the pin's upper right, and its tooltip adds "Above ground level" or "Below ground level" under the place. A spot with one floor never wears an arrow, and a pin marking several stops shows one only when they agree (#648, #649).
+- **The direction arrow can show the journey's time left, or the time and the distance together.** Its label follows a new *Arrow label* choice in Interface: *Distance* as before, *Time left*, or *Both*. Both reads like the tracker's Journey header ("2:32 · 450 yd") from the same countdown, so the two never disagree, and while a journey is still being planned the distance stands alone. Asked on the Guidelime Discord, where Guidelime's own arrow offers the same choices (#651).
 
 ## [1.25.2] - 2026-11-10
 

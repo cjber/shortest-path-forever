@@ -29,6 +29,7 @@ L["Alert before a boat arrives"] = "Avisar antes de que llegue un barco"
 L["Alerts"] = "Avisos"
 L["Alliance"] = "Alianza"
 L["Arriving at %s in %s"] = "Llegada a %s en %s"
+L["Arrow label"] = "Etiqueta de la flecha" -- mt
 L["Arrow scale"] = "Tamaño de la flecha"
 L["Arrows"] = "Flechas"
 L["Arrows on the NPC's nameplate"] = "Flechas en la placa de nombre del PNJ"
@@ -61,6 +62,7 @@ L["Crosses %s (level %s)"] = "Cruza %s (nivel %s)"
 L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."] =
 	"Oscurece el suelo tras la brújula para que sus marcas se lean bien sobre nieve o arena. 0 % no muestra nada."
 L["Deeprun Tram"] = "Tranvía Subterráneo"
+L["Distance"] = "Distancia" -- mt
 L["Distances in metres"] = "Distancias en metros reales"
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
 	"Muelles, ascensores, el tranvía y portales. También en Transporte, en el menú de rastreo del minimapa."
@@ -270,6 +272,8 @@ L["Walks go round zones whose lowest level is 4 or more above yours, but never t
 L["Weapons and armour"] = "Armas y armaduras"
 L["What next? Adventure Guide Forever suggests quests for your level."] =
 	"¿Y ahora qué? Adventure Guide Forever sugiere misiones para tu nivel."
+L["What the direction arrow shows under it: the distance to walk, the time left in the journey, or both."] =
+	"Lo que muestra la flecha de dirección debajo: la distancia por recorrer, el tiempo restante del viaje o ambos." -- mt
 L["What's new after an update"] = "Novedades tras una actualización"
 L["While Guide is on: your next turns, the next stop and your destination across the top of the screen."] =
 	"Con la guía activa: tus próximos giros, la siguiente parada y tu destino en la parte superior de la pantalla."
@@ -339,6 +343,7 @@ L["/path issue - report a bug or request a feature with a ready-made GitHub issu
 	"/path issue - informa de un error o pide una función con un enlace listo a una incidencia de GitHub"
 L["/path report - show a report to copy into a bug report"] =
 	"/path report - muestra un informe para copiar en un informe de error"
+L["Both"] = "Ambos" -- mt
 L["Bug"] = "Error"
 L["Bug: "] = "Error: "
 L["Copy issue link"] = "Copiar enlace de la incidencia"
@@ -352,6 +357,7 @@ L["Report a bug or request a feature"] = "Informar de un error o pedir una funci
 L["Share travel stats with guild and groups"] = "Compartir estadísticas de viaje con la hermandad y los grupos"
 L["The link is selected. Press Ctrl+C (Cmd+C on a Mac), then paste into a browser; GitHub opens a filled-in issue."] =
 	"El enlace está seleccionado. Pulsa Ctrl+C (Cmd+C en Mac) y pégalo en un navegador; GitHub abrirá una incidencia ya rellenada."
+L["Time left"] = "Tiempo restante" -- mt
 L["Title"] = "Título"
 L["Travel journal"] = "Diario de viaje"
 L["Travel milestone reached: %s"] = "Hito de viaje alcanzado: %s"
