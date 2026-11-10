@@ -165,6 +165,8 @@ read_globals[#read_globals + 1] = "MAP_PIN_SHARING"
 -- Journey.lua: water walking from its buffs, or a spell to cast.
 read_globals[#read_globals + 1] = "C_UnitAuras"
 read_globals[#read_globals + 1] = "C_Spell"
+-- UI/ServicesPanel.lua: Shift-click on a row's goods links them, as on any item button.
+read_globals[#read_globals + 1] = "HandleModifiedItemClick"
 -- UI/Nearby.lua: a profession trainer group's localised skill line name.
 read_globals[#read_globals + 1] = "C_TradeSkillUI"
 -- Route.lua: the cursor over the minimap.
@@ -217,6 +219,10 @@ read_globals[#read_globals + 1] = "GetLocale"
 read_globals[#read_globals + 1] = "UnitClass"
 read_globals[#read_globals + 1] = "UnitRace"
 read_globals[#read_globals + 1] = "UnitLevel"
+-- Nearby.lua: a better arrow, shot or drink far off is offered to whoever has the ranged weapon or the mana for it.
+read_globals[#read_globals + 1] = "GetInventorySlotInfo"
+read_globals[#read_globals + 1] = "GetInventoryItemID"
+read_globals[#read_globals + 1] = "UnitPowerMax"
 read_globals[#read_globals + 1] = "UISpecialFrames"
 read_globals[#read_globals + 1] = "tContains"
 -- Mover.lua: whether the button of a fine drag is still held.

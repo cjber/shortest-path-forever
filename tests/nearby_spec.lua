@@ -60,7 +60,8 @@ local data = {
 	[13] = { "Both vendor", { [10] = { { 70, 70 } } }, "A", 4, "Trade Goods", n = 5 },
 	[1215] = { "Alchemy trainer", { [10] = { { 40, 40 } } }, "A", 16, "Alchemy Trainer", n = 5 },
 }
--- QuestieDB's item fields for the fixture vendors: the NPCs that sell it, its class, subclass and name.
+-- QuestieDB's item fields for the fixture vendors: the NPCs that sell it, its class, subclass and name (and the
+-- level it needs, nil here: the tiers have a fixture of their own below).
 local items = {
 	[2511] = { { 1 }, 6, 2, "Sharp Arrow" }, -- Sharp Arrow
 	[2512] = { { 1, 2 }, 6, 2, "Rough Arrow" }, -- Rough Arrow
@@ -167,9 +168,9 @@ local lib = {
 			return itemIDs
 		end,
 		GetAll = function(id, fields)
-			assert(type(id) == "number" and #fields == 4, "item fields: vendors, class, subClass, name")
+			assert(type(id) == "number" and #fields == 5, "item fields: vendors, class, subClass, name, requiredLevel")
 			local row = items[id]
-			return row and { row[1], row[2], row[3], row[4], n = 4 }
+			return row and { row[1], row[2], row[3], row[4], row[5], n = 5 }
 		end,
 	},
 }
