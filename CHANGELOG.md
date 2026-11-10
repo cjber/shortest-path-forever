@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Guidelime steps in the tracker read as words, not guide codes.** A step such as "Journey to [A Forever] Outside Hall Of Thanes at [TAR264943] [QA96394]" showed the raw line Guidelime parses for itself. The tracker now names a step from its parsed parts, the same words Guidelime prints: the guide's own text, and the quest, item or target names it gives, falling back to the game's quest title where the guide leaves the name out (#650).
+
 ## [1.25.1] - 2026-11-10
 
 - **A quest whose only map pin is its start still gets a journey.** Some quests start and end with one NPC and have no objective area, such as Dragonmaw Shinbones (1846), so the client reports only that start pin. Planning a journey from the quest log did nothing; it now goes to the pin the client names, and a quest with no pin or waypoint at all still says it has no location. Reported on GitHub by Aldericdevir (#629).
