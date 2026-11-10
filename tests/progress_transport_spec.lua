@@ -146,9 +146,12 @@ local boards = {
 	end,
 }
 local shared = harness(nil, nil, boards)
+local declaredIcon = shared.toc["X-Forever-Icon"]
+check(declaredIcon and declaredIcon ~= "", "the TOC declares the addon's identity icon")
+check(shared.ns.Icon == declaredIcon, "the addon reads its identity icon from the TOC")
 check(spec and spec.key == "spf", "the addon registers its board with the shared window")
 check(spec.title == "Shortest Path Forever", "the tab carries the addon's title")
-check(spec.icon == "Interface\\Icons\\INV_Misc_Spyglass_03", "the tab carries the game's spyglass icon")
+check(spec.icon == shared.ns.Icon, "the tab carries the same icon the addon reads from the TOC")
 check(spec.metric == "Completed journeys", "the board names its metric")
 check(type(spec.revision) == "function", "the board has a revision callback")
 check(spec.sharing(), "sharing is on by default")

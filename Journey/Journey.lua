@@ -399,10 +399,11 @@ function ns.IsJourneyGuided()
 	return Guide.Active()
 end
 
----@return boolean pending, integer settleRound, string? costError why no walk could be measured, if one could not
+-- costError says why no walk could be measured, if one could not; loading says a first search is still working.
+---@return boolean pending, integer settleRound, string? costError, boolean loading
 function ns.JourneyStatus()
-	local pending, settleRound, costError = Search.Status()
-	return pending > 0, settleRound, costError
+	local pending, settleRound, costError, loading = Search.Status()
+	return pending > 0, settleRound, costError, loading
 end
 
 local function StartGuide()
@@ -497,6 +498,15 @@ local function StepText(leg, spell, formatPlace)
 		action = string.format(L["%s (cast %s)"], action, C_Spell.GetSpellName(spell))
 	end
 	return action, icon
+end
+
+-- The step's plain words, as the tracker's row has them without its number, mark or colours. Core/API.lua's Journey
+-- reads a leg's action from here so another addon's line says exactly what the arrow says.
+---@param leg SPFLeg
+---@return string
+function ns.StepText(leg)
+	local _, spell = WaterWalking()
+	return (StepText(leg, spell))
 end
 
 -- Shared by the tracker and the goal pin, including on a fullscreen map. `formatPlace` asks for the places in the
@@ -655,6 +665,10 @@ function ns.SkipJourneyStep(index)
 		UpdateProgress()
 	end
 	Refresh()
+	-- The leg under way moved on without the goal changing: subscribers hear "leg" (Core/API.lua).
+	if ns.JourneyLegChanged then
+		ns.JourneyLegChanged()
+	end
 	return true
 end
 

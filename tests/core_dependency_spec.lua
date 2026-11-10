@@ -2,6 +2,9 @@
 -- Shortest Path Forever requires ForeverCore. This spec covers the two places the handover is the addon's: the
 -- one-line stop for a ForeverCore older than API 1 or without the API kit, and the services it registers with core at
 -- load.
+local TOC = dofile("tests/toc_fields.lua").read("ShortestPathForever.toc")
+assert(TOC["X-Forever-Icon"], "the TOC declares X-Forever-Icon")
+
 local function Load(foreverCore)
 	local lines, registered, attached, frames = {}, nil, nil, {}
 	local function frame()
@@ -16,6 +19,11 @@ local function Load(foreverCore)
 	end
 	local env = setmetatable({
 		ForeverCore = foreverCore,
+		C_AddOns = {
+			GetAddOnMetadata = function(name, field)
+				return name == "ShortestPathForever" and TOC[field] or nil
+			end,
+		},
 		UIErrorsFrame = {
 			AddMessage = function(_, text)
 				lines[#lines + 1] = text
@@ -85,6 +93,7 @@ assert(unkit.broken == true and #unkitLines == 1, "a ForeverCore without the API
 local ns, quiet, registered, attached = Load({ API = 1, APIKit = {} })
 assert(quiet and #quiet == 0, "API 1 runs the addon and says nothing")
 assert(ns.core ~= nil, "the addon keeps its ForeverCore context")
+assert(ns.Icon == TOC["X-Forever-Icon"], "the addon reads its identity icon from the TOC")
 assert(registered.name == "ShortestPathForever", "it registers under its addon name")
 assert(registered.spec.title == "Shortest Path report", "with its own report title")
 assert(type(registered.spec.lines) == "function", "and its own report lines")

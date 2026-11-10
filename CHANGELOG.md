@@ -14,6 +14,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 - **Less work at login after an update.** Nearby services now looks up map locations only for the vendors, trainers and services it lists, not for every creature in the game, which halves the time that first read takes (#582).
 
+### For addon authors
+
+- **`ShortestPathForever.API` now has `minor = 3` and can read any journey, pause and resume it, skip a leg, and read the travel statistics.** `Journey()` returns the owner, goal, remaining legs and time left of whoever's journey guides; `Pause(owner)`, `Resume(owner)` and `SkipLeg(owner, index?)` act only for the journey's owner; and `Stats()` and `Leaderboard(limit)` publish the travel records in the shared statistics shape. `Subscribe` gains the `leg` change for a leg that moved on without the goal changing. Nothing changes for players.
+
 ## [1.28.0] - 2026-11-10
 
 - **Needs Forever Core.** The shared tracker column, bug report and leaderboards now come from one Forever Core addon, which comes in the same download, so every Forever addon's tracker scale, lock and position stay in step. Your tracker settings carry over.
