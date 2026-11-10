@@ -12,6 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.29.0] - 2026-11-10
+
+<!-- discord-image: docs/screenshots/minimap.png -->
+
 - **Only your current quest's area on the minimap changes colour.** Standing in a stop's quest area used to turn every tracked quest's area on the minimap gold. The other areas now stay blue, and the stop keeps its ring and route line on the minimap so you can still see where you're going (#680).
 
 ### For addon authors
