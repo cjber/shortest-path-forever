@@ -56,6 +56,12 @@ local env = setmetatable({
 			timers[#timers + 1] = fn
 		end,
 	},
+	-- The client's own event queue: the read begins once everything has loaded, which is already true here.
+	EventUtil = {
+		ContinueAfterAllEvents = function(fn)
+			fn()
+		end,
+	},
 	debugprofilestop = function()
 		return 0
 	end,
@@ -96,6 +102,7 @@ local function load(questie)
 	setfenv(assert(loadfile("Locales/enUS.lua")), env)("ShortestPathForever", ns)
 	setfenv(assert(loadfile("Data/Services.lua")), env)("ShortestPathForever", ns)
 	setfenv(assert(loadfile("UI/MenuModifier.lua")), env)("ShortestPathForever", ns)
+	setfenv(assert(loadfile("UI/NearbyQuestie.lua")), env)("ShortestPathForever", ns)
 	setfenv(assert(loadfile("UI/Nearby.lua")), env)("ShortestPathForever", ns)
 	for _, fn in ipairs(starts) do
 		fn()

@@ -23,6 +23,7 @@
 ---@field charDB SPFCharacterDatabase
 ---@field Defaults table<string, boolean|number|string>
 ---@field NearbyServices SPFNearbyServices
+---@field NearbyQuestie SPFNearbyQuestie the QuestieDB read behind the Nearby list (UI/NearbyQuestie.lua)
 ---@field QuestLogTabs ForeverQuestLogTabsAPI the shared quest log side tabs (UI/QuestLogTabs.lua)
 ---@field ProgressJourneyChanged? fun(point: SPFPoint?, reason?: "arrived"|"cleared")
 ---@field PeerStats ForeverPeerStatsNamespace
@@ -255,6 +256,7 @@
 ---@field seenVersion? string -- the version last loaded, for the line after an update (WhatsNew.lua)
 ---@field debug? boolean
 ---@field anchors table<string, table<number, SPFAnchor>>
+---@field nearbyRead? SPFNearbyQuestieRead the last QuestieDB read the Nearby list kept (UI/NearbyQuestie.lua)
 ---@field taxiTimes? table<string, number> -- measured seconds per directed flight path, "from:to"
 ---@field trace? (number|string)[][]
 ---@field taxiLog? table<string, {seen: number, showsNodes: boolean, nodes: string[]}>

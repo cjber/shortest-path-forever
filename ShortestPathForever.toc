@@ -47,6 +47,7 @@ Transport\TaxiTimes.lua
 Core\PlanContext.lua
 UI\MenuModifier.lua
 UI\QuestLogTabs.lua
+UI\NearbyQuestie.lua
 UI\Nearby.lua
 Transport\Observer.lua
 Transport\Sync.lua

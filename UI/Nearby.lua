@@ -49,7 +49,7 @@ local itemNames = {}
 local itemLevels = {}
 -- Each tiered group's best tier by NPC for one player level, since the level last asked.
 local tierLevel, tierCache = nil, {}
--- Callers waiting for the index, so an open panel fills as soon as the read finishes.
+-- Callers waiting for the index, so an open panel fills as soon as the read finishes, or says why it could not.
 local waiting = {}
 
 ---@param fn fun()
@@ -60,6 +60,16 @@ local function WhenReady(fn)
 		waiting[#waiting + 1] = fn
 	end
 end
+
+-- Tells those callers the index is ready, or that it never will be.
+local function Notify()
+	local callers = waiting
+	waiting = {}
+	for _, fn in ipairs(callers) do
+		fn()
+	end
+end
+
 -- Case-folded matching for the panel's search box: plain substring, never a keyword list.
 local Fold = ns.Text and ns.Text.Fold or function(text)
 	return tostring(text or ""):lower()
@@ -74,18 +84,6 @@ local STATUS = {
 	missing = L["Nearby services need the QuestieDB addon."],
 	failed = L["Nearby services could not read QuestieDB."],
 }
--- One of QuestieDB's zone tables, which it keeps as Lua source; nil when it does not read as a table.
----@param source any
----@return table?
-local function Table(source)
-	local chunk = type(source) == "string" and loadstring(source)
-	if not chunk then
-		return nil
-	end
-	setfenv(chunk, {})
-	local ok, value = pcall(chunk)
-	return ok and type(value) == "table" and value or nil
-end
 -- A service's closest few by straight line: enough to include the one a boat or flight reaches sooner than the
 -- closest walk, without planning every spawn on the continent.
 local SHORTLIST = 5
@@ -454,122 +452,73 @@ local function BuildGroups()
 	groupByKey = byKey
 	return list
 end
-local function Build()
-	if state == "building" or state == "ready" then
-		return
-	end
-	local lib = rawget(_G, "LibQuestieDB")
-	if not lib then
-		state = "missing"
-		return
-	end
-	local zones = lib.RequireContract and lib.RequireContract(2) and lib.Support.Get("ZoneDB")
-	local expansion = lib.Enum and lib.Enum.byExpansion and lib.Enum.byExpansion.Classic
-	local constants = expansion and expansion.npcFlags
-	-- Without the two zone tables no spawn has a map, which would read as no service anywhere.
-	local private = zones and zones.private
-	local area = private and Table(private.areaIdToUiMapId)
-	local parents = private and Table(private.subZoneToParentZone)
-	if not (area and parents and constants and lib.Npc) then
-		state = "failed"
-		return
-	end
-	index, vendorItems, groups = {}, {}, {}
+-- The NPC flag names whose rows the list needs: the services it groups on, and trainer for a class a companion addon
+-- names as taught by an NPC this addon's own trainer list does not hold.
+local KEEP_FLAGS = {}
+for _, service in ipairs(SERVICES) do
+	KEEP_FLAGS[#KEEP_FLAGS + 1] = service.flag
+end
+KEEP_FLAGS[#KEEP_FLAGS + 1] = "TRAINER"
+
+-- The index, from QuestieDB's rows: the vendor groups, the level tiers, and every service NPC's spawns, a slice a
+-- frame. The rows are read in UI/NearbyQuestie.lua, which checks what QuestieDB answers.
+---@param read SPFNearbyQuestieRead
+local function Assemble(read)
+	itemNames, itemLevels, index, vendorItems, groups = {}, {}, {}, {}, {}
+	tierLevel, tierCache = nil, {}
 	state = "building"
 	local co = coroutine.create(function()
-		-- QuestieDB's own corrections to those two, which a flavour may leave out.
-		local override = Table(private.areaIdToUiMapIdOverride) or {}
-		local parentOverride = Table(private.subZoneToParentZoneOverride) or {}
-		local faction = UnitFactionGroup("player") == "Alliance" and "A" or "H"
-		local classIds = ClassTrainerIDs(rawget(_G, "TweaksForever"))
-		-- Every item says who sells it and what it is; that is the whole vendor grouping.
-		local item = lib.Item
-		if item and item.GetAllIds and item.GetAll then
-			local fields = { "vendors", "class", "subClass", "name", "requiredLevel" }
-			for _, itemID in ipairs(item.GetAllIds()) do
-				local values = item.GetAll(itemID, fields)
-				if values then
-					local vendors, class, subClass, name, requiredLevel = unpack(values, 1, values.n)
-					if type(name) == "string" then
-						itemNames[itemID] = name
-					end
-					if type(class) == "number" and type(subClass) == "number" and type(vendors) == "table" then
-						local keys = VendorKeys(itemID, class, subClass)
-						for _, npc in ipairs(vendors) do
-							for _, key in ipairs(keys) do
-								AddVendorItem(key, npc, itemID)
-							end
-						end
-						for _, key in ipairs(keys) do
-							if TIERED[key] then
-								itemLevels[itemID] = type(requiredLevel) == "number" and requiredLevel or 0
-							end
-						end
-					end
+		-- Every item QuestieDB says a vendor sells, with what this list groups it by.
+		for itemID, item in pairs(read.items) do
+			itemNames[itemID] = item.name
+			local keys = VendorKeys(itemID, item.class, item.subClass)
+			for _, npc in ipairs(item.vendors) do
+				for _, key in ipairs(keys) do
+					AddVendorItem(key, npc, itemID)
 				end
-				coroutine.yield()
 			end
+			for _, key in ipairs(keys) do
+				if TIERED[key] then
+					itemLevels[itemID] = item.level or 0
+				end
+			end
+			coroutine.yield()
 		end
-		local fields = { "name", "spawns", "friendlyToFaction", "npcFlags", "subName" }
-		for _, id in ipairs(lib.Npc.GetAllIds()) do
-			local values = lib.Npc.GetAll(id, fields)
-			if values then
-				local name, spawns, friendly, flags, title = unpack(values, 1, values.n)
-				if type(name) == "string" and (friendly == "AH" or friendly == faction) and type(flags) == "number" then
-					local keys = {}
-					for _, service in ipairs(SERVICES) do
-						if bit.band(flags, constants[service.flag]) ~= 0 then
-							keys[#keys + 1] = service.key
+		local classIds = ClassTrainerIDs(rawget(_G, "TweaksForever"))
+		-- Every NPC the read kept, in each group its flags, its goods and its training put it in.
+		for id, row in pairs(read.npcs) do
+			local keys = {}
+			for _, service in ipairs(SERVICES) do
+				local flag = read.flags[service.flag]
+				if type(flag) == "number" and bit.band(row.flags, flag) ~= 0 then
+					keys[#keys + 1] = service.key
+				end
+			end
+			for _, group in ipairs(VENDOR_GROUPS) do
+				if vendorItems[group.key] and vendorItems[group.key][id] then
+					keys[#keys + 1] = group.key
+				end
+			end
+			if classIds[id] then
+				keys[#keys + 1] = "class"
+			end
+			local skill = ns.ProfessionTrainers and ns.ProfessionTrainers[id]
+			if skill then
+				keys[#keys + 1] = "profession:" .. skill
+			end
+			if #keys > 0 then
+				for _, spawn in ipairs(row.spawns) do
+					local map, x, y = spawn[1], spawn[2], spawn[3]
+					local world = ns.WorldPoint(map, x, y)
+					if world then
+						local place =
+							{ id = id, name = row.name, title = row.title, map = map, x = x, y = y, world = world }
+						for _, key in ipairs(keys) do
+							index[key] = index[key] or {}
+							index[key][#index[key] + 1] = place
 						end
 					end
-					for _, group in ipairs(VENDOR_GROUPS) do
-						if vendorItems[group.key] and vendorItems[group.key][id] then
-							keys[#keys + 1] = group.key
-						end
-					end
-					if classIds[id] then
-						keys[#keys + 1] = "class"
-					end
-					local skill = ns.ProfessionTrainers and ns.ProfessionTrainers[id]
-					if skill then
-						keys[#keys + 1] = "profession:" .. skill
-					end
-					if #keys > 0 then
-						for zone, points in pairs(spawns or {}) do
-							local parent = parentOverride[zone] or parents[zone]
-							local map = override[zone] or area[zone] or (parent and (override[parent] or area[parent]))
-							for _, spot in ipairs(points) do
-								local x, y = spot[1], spot[2]
-								if
-									map
-									and type(x) == "number"
-									and type(y) == "number"
-									and x >= 0
-									and x <= 100
-									and y >= 0
-									and y <= 100
-								then
-									local world = ns.WorldPoint(map, x / 100, y / 100)
-									if world then
-										local place = {
-											id = id,
-											name = name,
-											title = type(title) == "string" and title ~= "" and title or nil,
-											map = map,
-											x = x / 100,
-											y = y / 100,
-											world = world,
-										}
-										for _, key in ipairs(keys) do
-											index[key] = index[key] or {}
-											index[key][#index[key] + 1] = place
-										end
-									end
-								end
-								coroutine.yield()
-							end
-						end
-					end
+					coroutine.yield()
 				end
 			end
 			coroutine.yield()
@@ -587,14 +536,12 @@ local function Build()
 			if not ok then
 				state = "failed"
 				geterrorhandler()(err)
+				Notify()
 				return
 			end
 			if coroutine.status(co) == "dead" then
 				state = "ready"
-				for _, fn in ipairs(waiting) do
-					fn()
-				end
-				waiting = {}
+				Notify()
 				return
 			end
 		until debugprofilestop() >= finish
@@ -602,6 +549,27 @@ local function Build()
 	end
 	C_Timer.After(0, Pump)
 end
+
+-- QuestieDB's answer: the index is assembled from the read, or the list says why there is none.
+---@param read SPFNearbyQuestieRead?
+---@param outcome string
+local function Read(read, outcome)
+	if read and ns.SafeCall("nearby services index", Assemble, read) then
+		return
+	end
+	state = (read and "failed") or outcome
+	Notify()
+end
+
+-- Starts the read, once: a saved read is assembled as it is, and a fresh one waits for Questie's own start.
+local function Build()
+	if state ~= "idle" then
+		return
+	end
+	state = "building"
+	ns.NearbyQuestie.Read(KEEP_FLAGS, Read)
+end
+
 -- The player's own map coordinates, which the public estimate takes.
 local function PlayerUi()
 	local map = C_Map.GetBestMapForUnit("player")
@@ -925,7 +893,9 @@ ns.NearbyServices = {
 	Open = OpenServices,
 }
 ns.Init(function()
-	Build()
+	-- Questie starts after every addon has loaded and applies its corrections then, so the first read begins at
+	-- PLAYER_LOGIN: a saved read is assembled there at once, and a fresh one waits for Questie's ready callback.
+	EventUtil.ContinueAfterAllEvents(Build, "PLAYER_LOGIN")
 	ns.ModifyMenu("MENU_WORLD_MAP_TRACKING", "nearby", AddTrackingEntry)
 	ns.ModifyMenu("MENU_MINIMAP_TRACKING", "nearby", AddTrackingEntry)
 	SLASH_SPFNEAR1 = "/spfnear"
