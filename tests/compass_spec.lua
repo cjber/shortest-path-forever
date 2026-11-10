@@ -152,6 +152,7 @@ local goal = { map = 1, x = -100, y = 0 }
 local dock = { map = 1, x = 0, y = -100, z = 10 }
 local dockKind = "boat"
 local gamepad = false
+local arrival
 local ns = {
 	db = { compass = true, journey = true },
 	GamepadUI = function()
@@ -160,6 +161,9 @@ local ns = {
 	TaxiNodes = { [26] = { faction = "Alliance" } },
 	IsJourneyGuided = function()
 		return guided
+	end,
+	ArrivalStop = function()
+		return arrival
 	end,
 	GuideTargets = function()
 		return bend, nextBend, stop, goal
@@ -693,6 +697,35 @@ ns.db.compassTime = false
 ns.RefreshCompass()
 assert(strip.Time.hidden, "turned off")
 print("compass: optional time left: ok")
+
+-- Arriving in a held stop's area: the ribbon stays up, quietly tinted towards green, with no glow and no markers.
+arrival = { map = 1, x = 0, y = 0, hold = true, radius = 50 }
+bend, nextBend, stop, goal = nil, nil, nil, nil
+x, y = 0, 0
+ns.db.compass, guided = true, true
+ns.RefreshCompass()
+assert(not strip.hidden, "the compass stays up while the player is in the arrived stop's area")
+close(strip.ticks[1].color[1], 0.6)
+close(strip.ticks[1].color[2], 0.76)
+close(strip.ticks[1].color[3], 0.58)
+close(strip.ticks[1].color[4], 0.7)
+close(strip.Center.color[1], 0.62)
+close(strip.Center.color[2], 0.9)
+close(strip.Center.color[3], 0.55)
+assert(strip.Bend.hidden and strip.Distance.hidden, "no direction marks are drawn on arrival")
+-- Leaving the area with nothing to follow hides the compass as before.
+arrival = nil
+ns.RefreshCompass()
+assert(strip.hidden, "leaving the area hides the compass again")
+-- And a following bend returns the parchment gold.
+bend = { map = 1, x = 100, y = 0 }
+ns.RefreshCompass()
+assert(not strip.hidden, "a bend brings the compass back")
+close(strip.ticks[1].color[1], 0.72)
+close(strip.ticks[1].color[2], 0.67)
+close(strip.ticks[1].color[3], 0.55)
+close(strip.Center.color[1], 1)
+print("compass: arrival tint and return to the arrow: ok")
 
 -- With the pointer on the compass while it is being placed, the arrow keys nudge it a step (Shift: ten) and are kept
 -- from the game, down and up; every other key reaches the game. Off the compass, or in combat, the keyboard is the

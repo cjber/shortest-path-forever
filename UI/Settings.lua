@@ -333,6 +333,14 @@ ns.Init(function()
 		end
 	)
 	Checkbox(
+		"arrivalPin",
+		L["Show a pin when you reach a stop"],
+		L["In a stop's area the direction arrow becomes a pin with the stop's objectives, instead of hiding."]
+			.. " "
+			.. L["It returns to the arrow when you leave the area or the stop changes."],
+		ns.ArrivalPinChanged
+	)
+	Checkbox(
 		"npcArrows",
 		L["Arrows on the NPC's nameplate"],
 		L["Shows over the nameplate of the NPC a Nearby services journey walks to."]

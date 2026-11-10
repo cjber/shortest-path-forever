@@ -16,11 +16,18 @@ local RADIUS = 36
 local PASSED = 25
 -- The stock place, under the top of the screen; the cast prompt stands there too.
 local TOP = -120
+-- Arriving: the client's own waypoint pin, at its native 30 by 30, in place of the direction arrow.
+local ARRIVAL_PIN = "Waypoint-MapPin-Tracked"
+-- The stop's title and objective lines beneath the pin, wrapped and capped so they stay a summary.
+local ARRIVAL_WIDTH, ARRIVAL_TITLE_LINES, ARRIVAL_LINE_LIMIT = 240, 2, 3
 ---@class SPFArrowFrame : Frame
 ---@field Icon Texture
 ---@field Arrow Texture
 ---@field Distance FontString
 ---@field Progress FontString
+---@field ArrivalTitle FontString
+---@field ArrivalLines FontString
+---@field arrival? boolean draws the arrived stop's pin instead of the direction arrow
 ---@field behind boolean
 ---@field Mover Texture
 ---@field MoverHint FontString
@@ -43,6 +50,9 @@ local moving = false
 local OnUpdate
 ---@type SPFCastPromptFrame?
 local castPrompt
+-- The stop whose area the player is in, drawn as a pin with what to do there (#627).
+---@type SPFPoint?
+local arrival
 
 -- Counter-clockwise from north, like GetPlayerFacing: UnitPosition's first value grows north, its second west.
 local function Bearing(x, y)
@@ -80,6 +90,18 @@ end
 
 ---@param elapsed number seconds since the last update
 local function Update(elapsed)
+	-- Arrived: the pin stands until the player leaves the stop's area, then the arrow or nothing takes over.
+	if arrival then
+		if ns.StopInside and not ns.StopInside(arrival) then
+			ns.PointArrivalPin(nil)
+			return
+		end
+		frame.behind = false
+		frame:SetAlpha(1)
+		frame.angle = nil
+		SetUpdating(false)
+		return
+	end
 	-- The client may already have queued this tick when another callback stopped guidance.
 	if not path or not target then
 		frame.behind = false
@@ -215,6 +237,20 @@ local function Create()
 	frame.Distance:SetPoint("TOP", frame.Icon, "BOTTOM", 0, -8)
 	frame.Progress = frame:CreateFontString(nil, "BACKGROUND", "GameFontNormal")
 	frame.Progress:SetPoint("TOP", frame.Distance, "BOTTOM", 0, -4)
+	frame.ArrivalTitle = frame:CreateFontString(nil, "BACKGROUND", "GameFontNormal")
+	frame.ArrivalTitle:SetPoint("TOP", frame.Icon, "BOTTOM", 0, -8)
+	frame.ArrivalTitle:SetWidth(ARRIVAL_WIDTH)
+	frame.ArrivalTitle:SetJustifyH("CENTER")
+	frame.ArrivalTitle:SetWordWrap(true)
+	frame.ArrivalTitle:SetMaxLines(ARRIVAL_TITLE_LINES)
+	frame.ArrivalTitle:Hide()
+	frame.ArrivalLines = frame:CreateFontString(nil, "BACKGROUND", "GameFontHighlightSmall")
+	frame.ArrivalLines:SetPoint("TOP", frame.ArrivalTitle, "BOTTOM", 0, -4)
+	frame.ArrivalLines:SetWidth(ARRIVAL_WIDTH)
+	frame.ArrivalLines:SetJustifyH("CENTER")
+	frame.ArrivalLines:SetWordWrap(true)
+	frame.ArrivalLines:SetMaxLines(ARRIVAL_LINE_LIMIT)
+	frame.ArrivalLines:Hide()
 	frame:SetScript("OnShow", function()
 		frame.ticker = C_Timer.NewTicker(POLL_EVERY, Poll)
 		frame:RegisterEvent("PLAYER_STARTED_MOVING")
@@ -234,6 +270,107 @@ local function Create()
 	frame:SetScript("OnEvent", Wake)
 	-- Made hidden, so the first Show starts the poll and the movement events.
 	frame:Hide()
+end
+
+-- The pin, title and lines only while the player stands in the arrived stop's area; the arrow otherwise.
+---@param stop SPFPoint
+local function ShowArrival(stop)
+	if not frame.arrival then
+		frame.arrival = true
+		frame.Arrow:Hide()
+		frame.Distance:Hide()
+		frame.Progress:Hide()
+		if not ns.Art.Fit(frame.Icon, ARRIVAL_PIN, 36, 36) then
+			-- A client without the atlas still has the goal pin: never leave the pin a bare arrow.
+			ns.Art.Icon(frame.Icon, ns.PIN_FILE, 36)
+		end
+		frame.ArrivalTitle:Show()
+		frame.ArrivalLines:Show()
+	end
+	local title = stop.routeTitle or stop.label or (ns.JourneyTitle and ns.JourneyTitle(stop)) or ""
+	if frame.ArrivalTitle:GetText() ~= title then
+		frame.ArrivalTitle:SetText(title)
+	end
+	local lines = stop.details
+	local text = ""
+	if lines then
+		local shown = {}
+		for line = 1, math.min(#lines, ARRIVAL_LINE_LIMIT) do
+			shown[line] = lines[line]
+		end
+		text = table.concat(shown, "\n")
+	end
+	if frame.ArrivalLines:GetText() ~= text then
+		frame.ArrivalLines:SetText(text)
+	end
+	frame.ArrivalLines:SetShown(text ~= "")
+end
+
+-- Back to the direction arrow, whichever of an arrival, a new stop or leaving the area ended the stop.
+local function RestoreArrow()
+	if not (frame and frame.arrival) then
+		return
+	end
+	frame.arrival = nil
+	ns.Art.Icon(frame.Icon, ns.PIN_FILE, 36)
+	frame.Arrow:Show()
+	frame.Distance:Show()
+	frame.Progress:Show()
+	frame.ArrivalTitle:Hide()
+	frame.ArrivalLines:Hide()
+end
+
+-- End the arrival state without drawing anything else.
+local function EndArrival()
+	if not arrival then
+		return false
+	end
+	arrival = nil
+	RestoreArrow()
+	return true
+end
+
+-- The arrived stop, if any: the compass keeps its ribbon up and tints it while this is set.
+---@return SPFPoint?
+function ns.ArrivalStop()
+	return arrival
+end
+
+-- Journey calls this when the player reaches a held stop's area, and with nil when it leaves or the stop changes.
+---@param stop SPFPoint?
+function ns.PointArrivalPin(stop)
+	if stop and ns.db and (ns.db.arrivalPin == false or ns.db.arrow == false) then
+		stop = nil
+	end
+	if not stop then
+		if EndArrival() then
+			if frame and not (path and target) then
+				frame:SetShown(moving)
+			end
+			if ns.RefreshCompass then
+				ns.RefreshCompass()
+			end
+		end
+		return
+	end
+	arrival = stop
+	if not frame then
+		Create()
+	end
+	ShowArrival(stop)
+	frame:Show()
+	Wake()
+	Update(0)
+	if ns.RefreshCompass then
+		ns.RefreshCompass()
+	end
+end
+
+-- Settings: turning the arrival pin off returns a paused guide to the old hide, at once.
+function ns.ArrivalPinChanged()
+	if not (ns.db and ns.db.arrivalPin) then
+		ns.PointArrivalPin(nil)
+	end
 end
 
 -- Guide leads bend by bend, or straight to the walk's end when set to mark only where each step ends.
@@ -266,6 +403,8 @@ end
 ---@param goal SPFPoint?
 function ns.PointGuideArrow(points, placeBend, stop, goal)
 	ns.PointCastPrompt(nil)
+	-- Any new directions, or none, end an arrival pin: only the stop Journey says was reached wears it.
+	EndArrival()
 	revision = revision + 1
 	if points and #points == 0 then
 		points = nil
@@ -317,7 +456,7 @@ function ns.MoveArrow(value)
 	if moving then
 		frame:SetAlpha(1)
 		frame:Show()
-	elseif not path or ns.db.arrow == false then
+	elseif (not path and not arrival) or ns.db.arrow == false then
 		frame:Hide()
 	end
 end

@@ -18,13 +18,14 @@ calling it. The full types are in [`types/API.lua`](../types/API.lua).
 - `Navigate(owner, map, x, y, title, kind)` is the one-stop form.
 
   Both return a boolean; invalid input, combat or disabled Journeys return `false` without replacing guidance.
-  Titles are optional, as is `tooltip`, a destination detail shown on the stop pin's tooltip and never used as
-  the arrow label; each newline in it starts a line of its own, and a line an earlier stop on the same pin already
-  shows is not repeated. A stop with `hold = true` waits for its owner to replace or cancel the route rather
-  than advancing on arrival. For held objective areas, optional `radius` (yards, finite and non-negative)
-  hides walking directions inside the area while preserving ownership and the current stop. Directions
-  resume outside it. Optional `questID` names the quest a held area stands for, and optional `questIDs` every
-  quest it stands for when there are several: an array of 1 or more quest IDs, given with or without `questID`.
+  Titles are optional, as is `tooltip`, a destination detail shown on the stop pin's tooltip and under the arrival
+  pin while the player stands in a held stop's area. It is never used as the arrow label; each newline in it starts a
+  line of its own, and a line an earlier stop on the same pin already shows is not repeated. A stop with `hold = true`
+  waits for its owner to replace or cancel the route rather than advancing on arrival. For held objective areas,
+  optional `radius` (yards, finite and non-negative) hides walking directions inside the area while preserving
+  ownership and the current stop. Directions resume outside it. Optional `questID` names the quest a held area
+  stands for, and optional `questIDs` every quest it stands for when there are several: an array of 1 or more quest
+  IDs, given with or without `questID`.
   Optional `handins` names the quests handed in at the stop: an array of 1 or more quest IDs, copied like the rest.
   The game's own pin for each of those quests is hidden while the stop is drawn; `handins` never decides arrival or
   the stop's area, which stay with `questID`, `questIDs` and `shapes`.

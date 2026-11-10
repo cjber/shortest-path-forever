@@ -468,3 +468,8 @@ L["No flight points learned in %s: open a flight master's map once to sync them.
 	"尚未在%s学会任何飞行点：打开一次飞行管理员的地图以同步它们。" -- mt
 L["Only the flight points your character has are learned now."] = "现在只会记录你的角色已有的飞行点。" -- mt
 L["Better for your level, farther away"] = "更适合你的等级，但更远" -- mt
+L["Show a pin when you reach a stop"] = "到达目的地时显示图钉" -- mt
+L["In a stop's area the direction arrow becomes a pin with the stop's objectives, instead of hiding."] =
+	"在目的地范围内，方向箭头会变成带有目的地目标的图钉，而不是隐藏。" -- mt
+L["It returns to the arrow when you leave the area or the stop changes."] =
+	"当你离开该区域或目的地改变时，它会恢复为箭头。" -- mt
