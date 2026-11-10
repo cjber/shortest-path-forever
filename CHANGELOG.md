@@ -12,6 +12,9 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Nearby services read QuestieDB once Questie is ready, and keep the result.** The list was built the moment the addon loaded, before Questie had applied its corrections, so a vendor could be in the wrong place or missing from its group until the next login. It is now read once Questie reports ready, and what was read is kept under the version of QuestieDB it came from, so a later login fills the list without reading every item and every NPC again.
+- **A QuestieDB that cannot be read says so in the list.** A database missing a table Nearby needs threw an error at login, and again from the world map's or the minimap's tracking menu each time it opened. The list now says it could not read QuestieDB, with the one line it already had for that, and opening the menu again neither throws nor reads the database again.
+
 ## [1.26.1] - 2026-11-10
 
 - **The direction arrow can show the journey's time left, or the time and the distance together.** Its label follows a new *Arrow label* choice in Interface: *Distance* as before, *Time left*, or *Both*. Both reads like the tracker's Journey header ("2:32 · 450 yd") from the same countdown, so the two never disagree, and while a journey is still being planned the distance stands alone. Asked on the Guidelime Discord, where Guidelime's own arrow offers the same choices (#651).
@@ -25,8 +28,6 @@ optional `### For addon authors` subsection after a version's player bullets.
 ## [1.25.2] - 2026-11-10
 
 - **With the map filter menu, Shortest Path no longer causes a blocked-action error.** Opening the world map's filter menu, or picking a service from it, could make the game refuse one of its own actions and blame Shortest Path Forever. The menu now behaves as the game's own does, and on the gamepad interface Shortest Path leaves that menu to the game (#645).
-- **Nearby services read QuestieDB once Questie is ready, and keep the result.** The list was built the moment the addon loaded, before Questie had applied its corrections, so a vendor could be in the wrong place or missing from its group until the next login. It is now read once Questie reports ready, and what was read is kept under the version of QuestieDB it came from, so a later login fills the list without reading every item and every NPC again.
-- **A QuestieDB that cannot be read says so in the list.** A database missing a table Nearby needs threw an error at login, and again from the world map's or the minimap's tracking menu each time it opened. The list now says it could not read QuestieDB, with the one line it already had for that, and opening the menu again neither throws nor reads the database again.
 - **Guidelime steps in the tracker read as words, not guide codes.** A step such as "Journey to [A Forever] Outside Hall Of Thanes at [TAR264943] [QA96394]" showed the raw line Guidelime parses for itself. The tracker now names a step from its parsed parts, the same words Guidelime prints: the guide's own text, and the quest, item or target names it gives, falling back to the game's quest title where the guide leaves the name out (#650).
 
 ## [1.25.1] - 2026-11-10
