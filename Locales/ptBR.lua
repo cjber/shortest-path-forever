@@ -60,7 +60,7 @@ L["Darkens the ground behind the compass so its marks stay readable on snow or s
 	"Escurece o chão atrás da bússola para que as marcas fiquem legíveis na neve ou na areia. 0% não mostra nada."
 L["Deeprun Tram"] = "Metrô Correfundo"
 L["Distance"] = "Distância" -- mt
-L["Distances in metres"] = "Distâncias em metros reais"
+L["Distances in metres"] = "Distâncias em metros"
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
 	"Cais, elevadores, o metrô e portais. Também em Transporte no menu de rastreamento do minimapa."
 L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] =
@@ -104,6 +104,8 @@ L["Journeys, and other addons' estimates from here, can start with your hearthst
 L["Keep journeys after a reload"] = "Manter jornadas após recarregar"
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"Mantém o rastreador Forever compartilhado onde você o colocou. A alça no topo não o arrasta mais."
+L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
+	"Rotular as distâncias em metros, como fazem os clientes do jogo em sistema métrico. Os números continuam sendo os do jogo."
 L["Last seen %d min ago by another player"] = "Visto há %d min por outro jogador"
 L["Last seen %d min ago by you"] = "Visto há %d min por você"
 L["Legacy Forever shows the Legacy challenges this counts toward."] =
@@ -186,8 +188,6 @@ L["Show flight masters"] = "Mostrar mestres de voo"
 L["Show journey steps in the objective tracker"] = "Mostrar as etapas da jornada no rastreador de objetivos"
 L["Show lifts and the tram"] = "Mostrar elevadores e metrô"
 L["Show marks on the minimap"] = "Mostrar marcas no minimapa"
-L["Show metres and kilometres instead of yards."] =
-	"Mostrar metros e quilômetros reais em vez das unidades do jogo (jardas)."
 L["Show on map"] = "Mostrar no mapa"
 L["Show options button on minimap"] = "Botão de opções no minimapa"
 L["Show other faction's routes"] = "Mostrar rotas da outra facção"

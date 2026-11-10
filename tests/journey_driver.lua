@@ -197,6 +197,12 @@ local env = setmetatable({
 		end,
 	},
 	Menu = { ModifyMenu = noop },
+	-- The client's own event queue, which runs a callback once its events have fired; here they already have.
+	EventUtil = {
+		ContinueAfterAllEvents = function(fn)
+			fn()
+		end,
+	},
 }, { __index = _G })
 -- A spec with a ghost sets UnitIsGhost; dead or ghost follows it.
 env.UnitIsDeadOrGhost = function()

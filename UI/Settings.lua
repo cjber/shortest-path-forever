@@ -580,11 +580,16 @@ ns.Init(function()
 			return arrowLabelOptions:GetData()
 		end, L["What the direction arrow shows under it: the distance to walk, the time left in the journey, or both."])
 	)
-	Checkbox("metres", L["Distances in metres"], L["Show metres and kilometres instead of yards."], function()
-		ns.RefreshCompass()
-		ns.RefreshTracker()
-		ns.WakeTravel()
-	end)
+	Checkbox(
+		"metres",
+		L["Distances in metres"],
+		L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."],
+		function()
+			ns.RefreshCompass()
+			ns.RefreshTracker()
+			ns.WakeTravel()
+		end
+	)
 	Checkbox(
 		"minimapButton",
 		L["Show options button on minimap"],

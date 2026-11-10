@@ -187,4 +187,4 @@ The addon follows the game's language. Which languages it ships in, how they wer
 line are in [Locales/README.md](../Locales/README.md).
 
 Outside the Chinese clients the game shows yards as metres, so distances do too. *Distances in metres* in Interface
-switches to real metres and kilometres.
+labels them in metres with the game's own numbers, as those clients do.

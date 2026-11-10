@@ -61,7 +61,7 @@ L["Darkens the ground behind the compass so its marks stay readable on snow or s
 	"Затемняет землю за компасом, чтобы его отметки читались на снегу или песке. 0% – без затемнения."
 L["Deeprun Tram"] = "Подземный поезд"
 L["Distance"] = "Расстояние" -- mt
-L["Distances in metres"] = "Расстояние в настоящих метрах"
+L["Distances in metres"] = "Расстояние в метрах"
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
 	"Причалы, подъемники, поезд и порталы. Также в разделе «Транспорт» меню отслеживания мини-карты."
 L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] =
@@ -107,6 +107,8 @@ L["Journeys, and other addons' estimates from here, can start with your hearthst
 L["Keep journeys after a reload"] = "Сохранять маршрут после перезагрузки"
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"Оставляет общий трекер Forever там, где вы его поставили. Ручка сверху больше его не перетаскивает."
+L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
+	"Подписывать расстояния в метрах, как это делают метрические языковые версии игры. Числа остаются игровыми."
 L["Last seen %d min ago by another player"] = "Замечен %d мин. назад другим игроком"
 L["Last seen %d min ago by you"] = "Замечен %d мин. назад вами"
 L["Legacy Forever shows the Legacy challenges this counts toward."] =
@@ -195,8 +197,6 @@ L["Show journey steps in the objective tracker"] =
 	"Показывать этапы маршрута в панели отслеживания заданий"
 L["Show lifts and the tram"] = "Показывать подъемники и поезд"
 L["Show marks on the minimap"] = "Показывать отметки на мини-карте"
-L["Show metres and kilometres instead of yards."] =
-	"Показывать настоящие метры и километры вместо игровых единиц (ярдов)."
 L["Show on map"] = "Показать на карте"
 L["Show options button on minimap"] = "Кнопка настроек у мини-карты"
 L["Show other faction's routes"] = "Показывать маршруты другой фракции"

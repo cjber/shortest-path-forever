@@ -61,7 +61,7 @@ L["Darkens the ground behind the compass so its marks stay readable on snow or s
 	"Assombrit le sol derrière la boussole pour que ses repères restent lisibles sur la neige ou le sable. 0 % n'affiche rien." -- mt
 L["Deeprun Tram"] = "Tram des profondeurs" -- mt
 L["Distance"] = "Distance" -- mt
-L["Distances in metres"] = "Distances en mètres réels" -- mt
+L["Distances in metres"] = "Distances en mètres" -- mt
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
 	"Quais, ascenseurs, le tram et les portails. Aussi sous Transport dans le menu de pistage de la minicarte." -- mt
 L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] =
@@ -107,6 +107,8 @@ L["Journeys, and other addons' estimates from here, can start with your hearthst
 L["Keep journeys after a reload"] = "Garder les trajets après un rechargement" -- mt
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"Garde le suivi Forever partagé là où vous l'avez placé. La poignée en haut ne le déplace plus." -- mt
+L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
+	"Afficher les distances en mètres, comme le font les clients du jeu en système métrique. Les nombres restent ceux du jeu." -- mt
 L["Last seen %d min ago by another player"] = "Vu il y a %d min par un autre joueur" -- mt
 L["Last seen %d min ago by you"] = "Vu il y a %d min par vous" -- mt
 L["Legacy Forever shows the Legacy challenges this counts toward."] =
@@ -189,8 +191,6 @@ L["Show flight masters"] = "Afficher les maîtres de vol" -- mt
 L["Show journey steps in the objective tracker"] = "Afficher les étapes du trajet dans le suivi des objectifs" -- mt
 L["Show lifts and the tram"] = "Afficher ascenseurs et tram" -- mt
 L["Show marks on the minimap"] = "Afficher les repères sur la minicarte" -- mt
-L["Show metres and kilometres instead of yards."] =
-	"Affiche de vrais mètres et kilomètres au lieu des unités du jeu (yards)." -- mt
 L["Show on map"] = "Afficher sur la carte" -- mt
 L["Show options button on minimap"] = "Bouton d'options sur la minicarte" -- mt
 L["Show other faction's routes"] = "Afficher les routes de l'autre faction" -- mt

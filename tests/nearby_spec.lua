@@ -326,11 +326,18 @@ ns.core = {
 		return true, fn(...)
 	end,
 }
+-- The client's own event queue: the read begins once everything has loaded, which is already true here.
+env.EventUtil = {
+	ContinueAfterAllEvents = function(fn)
+		fn()
+	end,
+}
 setfenv(assert(loadfile("Locales/enUS.lua")), env)("ShortestPathForever", ns)
 setfenv(assert(loadfile("Data/Services.lua")), env)("ShortestPathForever", ns)
 -- The fixture class trainers for the player's class, beside the companion addon's own list.
 ns.ClassTrainers = { [7] = 1 }
 setfenv(assert(loadfile("UI/MenuModifier.lua")), env)("ShortestPathForever", ns)
+setfenv(assert(loadfile("UI/NearbyQuestie.lua")), env)("ShortestPathForever", ns)
 setfenv(assert(loadfile("UI/Nearby.lua")), env)("ShortestPathForever", ns)
 for _, fn in ipairs(initializers) do
 	fn()
@@ -579,6 +586,9 @@ local function fresh(questie, away, L)
 	local copy = {
 		L = L or ns.L,
 		Path = ns.Path,
+		-- A database of its own: no read saved by another copy is adopted here.
+		db = {},
+		core = ns.core,
 		Food = ns.Food,
 		Drink = ns.Drink,
 		ProfessionTrainers = ns.ProfessionTrainers,
@@ -594,6 +604,7 @@ local function fresh(questie, away, L)
 		Print = ns.Print,
 		ModifyMenu = ns.ModifyMenu,
 	}
+	setfenv(assert(loadfile("UI/NearbyQuestie.lua")), env)("ShortestPathForever", copy)
 	setfenv(assert(loadfile("UI/Nearby.lua")), env)("ShortestPathForever", copy)
 	for _, fn in ipairs(starts) do
 		fn()
@@ -604,6 +615,9 @@ local function fresh(questie, away, L)
 	elsewhere = away
 	menuEntries = {}
 	trackingMenus.MENU_WORLD_MAP_TRACKING(nil, menuNode())
+	while #timers > 0 do
+		pump()
+	end
 	return copy
 end
 -- A zone QuestieDB has nothing for: every group, the services too, reads as unavailable here.
@@ -796,6 +810,7 @@ do
 		return estimate(...)
 	end
 	driver.load("UI/MenuModifier.lua")
+	driver.load("UI/NearbyQuestie.lua")
 	driver.load("UI/Nearby.lua")
 	local guard = 0
 	while #travelTimers > 0 do
