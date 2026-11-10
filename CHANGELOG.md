@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Only your current quest's area on the minimap changes colour.** Standing in a stop's quest area used to turn every tracked quest's area on the minimap gold. The other areas now stay blue, and the stop keeps its ring and route line on the minimap so you can still see where you're going (#680).
+
 ### For addon authors
 
 - **`ShortestPathForever.API` now has `minor = 3` and can read any journey, pause and resume it, skip a leg, and read the travel statistics.** `Journey()` returns the owner, goal, remaining legs and time left of whoever's journey guides; `Pause(owner)`, `Resume(owner)` and `SkipLeg(owner, index?)` act only for the journey's owner; and `Stats()` and `Leaderboard(limit)` publish the travel records in the shared statistics shape. `Subscribe` gains the `leg` change for a leg that moved on without the goal changing. Nothing changes for players.
