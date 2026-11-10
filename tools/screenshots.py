@@ -32,6 +32,7 @@ from screenshot_docks import dock_kinds, number_art, pin_art, zeppelin_art
 from screenshots_area import render as render_area_art
 from screenshots_arrival import render as render_arrival
 from screenshots_art import Art
+from screenshots_floors import render as render_floors
 from screenshots_services import render as render_services
 from screenshots_services import render_better as render_services_better
 from screenshots_services import render_search as render_services_search
@@ -762,6 +763,7 @@ SCENES = {
     "darkshore": lambda ui: render_map(ui, 1439),
     "docks": render_docks,
     "stops": render_stops,
+    "floors": render_floors,
     "tracker": render_tracker,
     "detached": lambda ui: detached_tracker(ui, journey_tracker(ui, dock_title)),
     "minimap": render_minimap,
