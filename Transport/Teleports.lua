@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- The personal teleports this character can cast now, for the planner. The client names the bind point but has no
 -- position for it, so it is where you stood when you bound (beside the innkeeper), or where a Hearthstone or Astral
 -- Recall last set you down, kept with that name. Bound anywhere else since (before this addon, or on another

@@ -66,6 +66,7 @@ end
 local env = setmetatable({
 	CreateFrame = frame,
 	UIParent = frame(),
+	SlashCmdList = {},
 	GetRealmName = function()
 		return "Test"
 	end,
@@ -201,14 +202,28 @@ local env = setmetatable({
 env.UnitIsDeadOrGhost = function()
 	return env.UnitIsGhost ~= nil and env.UnitIsGhost()
 end
+-- ForeverCore's error capture: the only shared service these files read at run time, without the tracker and
+-- leaderboards a full core load would start in this small client.
+local ForeverCore = dofile(root .. "/tests/forever_core.lua")
+local coreNs = ForeverCore.load(env, "ForeverCore", { "Core/SafeCall.lua", "Core/Text.lua" })
+env.ForeverCore = { Text = coreNs.Text }
+local safe = coreNs.SafeCallFor("ShortestPathForever")
+ns.core = {
+	SafeCall = function(label, fn, ...)
+		return safe:SafeCall(label, fn, ...)
+	end,
+	CaughtErrors = function()
+		return safe:CaughtErrors()
+	end,
+}
 local function load(file)
 	setfenv(assert(loadfile(root .. "/" .. file)), env)("ShortestPathForever", ns)
 end
 ns.Init = function(fn)
 	fn()
 end
--- UI/MapCanvas.lua is not loaded here: the addon's own map pins hand Shift-clicks to JourneyInput.lua through it.
-ns.MapCanvas = { OnClick = noop }
+-- UI/Canvas.lua is not loaded here: the addon's own map pins hand Shift-clicks to JourneyInput.lua through it.
+ns.Canvas = { OnClick = noop }
 ns.WakeTravel = noop
 ns.OnTravelTick = noop
 ns.NowMs = function()
@@ -239,8 +254,6 @@ end
 -- Until a spec says otherwise the walking search answers at once, with the straight line.
 local path = assert(loadfile(root .. "/tests/path_fake.lua"))()()
 ns.Path = path.Path
--- Core/Text.lua loads before everything that reads it in the TOC.
-load("Core/Text.lua")
 load("Transport/Model.lua")
 load("Core/Distance.lua")
 -- The real timetable, with no sightings until a spec records one.

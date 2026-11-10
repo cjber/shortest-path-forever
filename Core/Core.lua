@@ -1,14 +1,22 @@
 local addonName = ...
 ---@class SPFNamespace
----@field ReportTitle string the localized title shown by the shared report window
----@field Report ForeverReportModule the shared report and issue window
----@field TrackerHost ForeverTrackerHostAPI
----@field Family ForeverFamilyAPI
 local ns = select(2, ...)
+if ns.broken then
+	return
+end
 local L = ns.L
 if L then
 	ns.ReportTitle = L["Shortest Path report"]
 end
+
+-- The addon's own ForeverCore services: the error journal, the debug log, the report window and the map canvas. The
+-- report's own lines are read when the window opens, after Core/Report.lua has defined them.
+ns.core = ForeverCore.Register(addonName, {
+	title = ns.ReportTitle,
+	lines = function()
+		return ns.ReportLines()
+	end,
+})
 
 local Model = ns.Model
 -- The settings panel registers these same defaults, so a checkbox's reset matches a fresh install.
@@ -84,28 +92,6 @@ local DEFAULTS = {
 }
 ns.Defaults = DEFAULTS
 
--- The shared tracker host owns the one tracker scale and its Lock switch, so they live in the host's own settings
--- rather than DEFAULTS. Saved variables arrive after the TOC loads, so answer with a throwaway default until then.
--- Lock defaults off; a table saved before it existed simply gains the key.
----@return ForeverTrackerSettings
-function ns.TrackerHostSettings()
-	if type(ns.db) ~= "table" then
-		return { attached = true, locked = false, scale = 1 }
-	end
-	local settings = ns.db.trackerHost
-	if type(settings) ~= "table" then
-		settings = { attached = true, locked = false, scale = 1 }
-		ns.db.trackerHost = settings
-	end
-	if type(settings.scale) ~= "number" or settings.scale ~= settings.scale then
-		settings.scale = 1
-	end
-	if type(settings.locked) ~= "boolean" then
-		settings.locked = false
-	end
-	return settings
-end
-
 -- Whether the game's gamepad interface is up. Under it, Forever's FrameControlsManager takes every menu and UI panel
 -- that shows into its focus, in the same call: it pushes a binding set, and the gamepad action bar's
 -- UpdateInteractIcons calls the protected SetPreferredGamepadInteractTarget from there. A menu, panel or map change
@@ -119,16 +105,16 @@ function ns.GamepadUI()
 end
 
 -- Shows the world map on uiMap (or where you are) and returns whether it is up there. Under the gamepad interface
--- the addon neither opens nor turns it (#158): C_Map.OpenWorldMap runs the map's own handler, its pins and the
--- gamepad focus in this addon's call. In combat the call is protected (#444), so it is left to the player the same
--- way. A map the player already has on uiMap (or any map, with no uiMap) is used as it is; otherwise the player is
--- told what to open (`hint`, or the plain line) and false comes back.
+-- the addon neither opens nor turns it (#158): the map's own handler runs the map's pins and the gamepad focus in
+-- this addon's call. In combat the call is protected (#444), so it is left to the player the same way. Otherwise the
+-- shared secure opener (ForeverCore.OpenMap) runs the client's own C_Map.OpenWorldMap, which refuses a direct call
+-- from addon code (cjber/forever-core#333). A map the player already has on uiMap (or any map, with no uiMap) is used
+-- as it is; otherwise the player is told what to open (`hint`, or the plain line) and false comes back.
 ---@param uiMap? number
 ---@param hint? string
 ---@return boolean
 function ns.OpenWorldMap(uiMap, hint)
-	if not ns.GamepadUI() and not InCombatLockdown() then
-		C_Map.OpenWorldMap(uiMap)
+	if not ns.GamepadUI() and not InCombatLockdown() and ForeverCore.OpenMap(uiMap) then
 		return true
 	end
 	local map = WorldMapFrame
@@ -146,19 +132,6 @@ function ns.OpenWorldMap(uiMap, hint)
 	return false
 end
 
--- Opens a context menu on owner (MenuUtil.CreateContextMenu) and returns it. Under the gamepad interface a menu this
--- addon opens is blocked the same way (#158), so none opens, the player is told why and nil comes back.
----@param owner Region
----@param generator fun(owner: Region, root: table)
----@return table?
-function ns.ContextMenu(owner, generator)
-	if ns.GamepadUI() then
-		ns.Print(ns.L["This menu needs mouse and keyboard."])
-		return nil
-	end
-	return MenuUtil.CreateContextMenu(owner, generator)
-end
-
 ---@param message string
 function ns.Print(message)
 	print(NORMAL_FONT_COLOR:WrapTextInColorCode("Shortest Path Forever:") .. " " .. message)
@@ -167,7 +140,7 @@ end
 -- Each module starts on its own, so one that fails (reported as usual, and kept for /path report) does not stop
 -- the rest.
 local function Start(fn)
-	ns.SafeCall("module start", fn)
+	ns.core.SafeCall("module start", fn)
 end
 
 local pending, ready = {}, false
@@ -358,13 +331,10 @@ frame:SetScript("OnEvent", function(self, _, name)
 			ns.db[key] = value
 		end
 	end
-	-- The shared error journal (Core/SafeCall.lua) lives in the saved table, so the report lists earlier sessions'
-	-- errors after a /reload. A record, not a setting: DEFAULTS holds the settings the panel draws.
-	ns.db.errors = ns.db.errors or {}
-	-- The shared log (Core/Log.lua) rides beside it, so the lines that led to a bug survive a /reload.
-	ns.db.log = ns.db.log or { lines = {}, pinned = false }
-	ns.AttachErrorJournal(ns.db.errors)
-	ns.AttachLog(ns.db.log)
+	-- ForeverCore keeps the shared error journal under `errors` and the debug log under `log` in this saved table, so
+	-- the report lists earlier sessions' errors and the lines that led to them after a /reload. Attach also merges
+	-- what the shared files saw before the saved variables arrived.
+	ns.core.Attach(ns.db)
 	ready = true
 	for _, fn in ipairs(pending) do
 		Start(fn)

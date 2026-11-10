@@ -15,6 +15,11 @@ ns = {
 		return ns.plan, 1
 	end,
 	Print = function() end,
+	core = {
+		SafeCall = function(_, fn, ...)
+			return pcall(fn, ...)
+		end,
+	},
 }
 local now, x, y, map, moving, taxi = 0, 0, 0, 1, true, false
 local frames, frame = {}, nil
@@ -29,7 +34,6 @@ ns.JourneyPosition = function()
 	return x, y, nil, map
 end
 local env = setmetatable({
-	ForeverPeerStats = false,
 	GetRealmName = function()
 		return "Realm"
 	end,
@@ -97,7 +101,12 @@ local env = setmetatable({
 ns.Init = function(callback)
 	callback()
 end
-setfenv(assert(loadfile("Core/PeerStats.lua")), env)("ShortestPathForever", ns)
+local ForeverCore = dofile("tests/forever_core.lua")
+local coreNs = ForeverCore.load(env, "ForeverCore", { "Locales/enUS.lua", "Core/PeerStats.lua" })
+env.ForeverCore = {
+	PeerStats = coreNs.PeerStats,
+	Leaderboards = { Register = function() end, Open = function() end },
+}
 setfenv(assert(loadfile("Core/Progress.lua")), env)("ShortestPathForever", ns)
 
 ns.tick()

@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- Guide: the arrow and the native user waypoint that steer along the journey's current leg. It borrows the player's
 -- waypoint and super tracking, and gives them back when it stops or the player takes them over.
 ---@class SPFJourneyGuide
@@ -29,7 +33,7 @@ end
 ---@param navigation table
 ---@return boolean tracking
 local function WaypointUITracking(navigation)
-	local ok, tracking = ns.SafeCall("Waypoint UI tracking", navigation.IsUserNavigationTracked)
+	local ok, tracking = ns.core.SafeCall("Waypoint UI tracking", navigation.IsUserNavigationTracked)
 	return ok and tracking == true
 end
 
@@ -39,7 +43,7 @@ local function WaypointUIHolding()
 	if not navigation or type(navigation.GetUserNavigation) ~= "function" then
 		return false
 	end
-	local ok, waypoint = ns.SafeCall("Waypoint UI waypoint", navigation.GetUserNavigation)
+	local ok, waypoint = ns.core.SafeCall("Waypoint UI waypoint", navigation.GetUserNavigation)
 	return ok and waypoint ~= nil
 end
 
@@ -68,8 +72,9 @@ local function DestinationTitle(goal)
 	return goal.label
 end
 
--- Hand our destination to Waypoint UI rather than writing the waypoint it is already tracking. Wrapped in ns.SafeCall
--- so a renamed or absent member can never raise into the guide. Waypoint UI's public API takes coordinates as percent,
+-- Hand our destination to Waypoint UI rather than writing the waypoint it is already tracking. Wrapped in
+-- ns.core.SafeCall so a renamed or absent member can never raise into the guide. Waypoint UI's public API takes
+-- coordinates as percent,
 -- while our bend coordinates are normalized 0-1, so we scale them by 100 here.
 ---@param navigation table
 ---@param title string?
@@ -80,7 +85,7 @@ local function HandOverToWaypointUI(navigation, title, uiMap, x, y)
 	if type(navigation.NewUserNavigation) ~= "function" then
 		return
 	end
-	ns.SafeCall("Waypoint UI handover", navigation.NewUserNavigation, {
+	ns.core.SafeCall("Waypoint UI handover", navigation.NewUserNavigation, {
 		name = title,
 		mapID = uiMap,
 		x = x * 100,

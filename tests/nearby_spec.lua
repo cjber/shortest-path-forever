@@ -278,6 +278,10 @@ local env = setmetatable({
 		},
 	},
 }, { __index = _G })
+local ForeverCore = dofile("tests/forever_core.lua")
+local coreNs = ForeverCore.load(env, "ForeverCore", { "Locales/enUS.lua", "Core/Text.lua" })
+env.ForeverCore = { Text = coreNs.Text }
+
 env._G = env
 local ns = {
 	Init = function(fn)
@@ -308,18 +312,20 @@ ns.OpenWorldMap = function(uiMap)
 	env.C_Map.OpenWorldMap(uiMap)
 	return true
 end
--- The panel's tab registry (UI/QuestLogTabs.lua, vendored): /spfnear and the tracking entry select this key.
+-- ForeverCore's quest log tab registry: /spfnear and the tracking entry select this key.
 local selectedTab
-ns.QuestLogTabs = {
+env.ForeverCore.QuestLogTabs = {
 	Select = function(key)
 		selectedTab = key
 	end,
 }
 -- UI/MenuModifier.lua's guard, with errors left to surface here rather than reported.
 ns.db = {}
-ns.SafeCall = function(_, fn, ...)
-	return true, fn(...)
-end
+ns.core = {
+	SafeCall = function(_, fn, ...)
+		return true, fn(...)
+	end,
+}
 setfenv(assert(loadfile("Locales/enUS.lua")), env)("ShortestPathForever", ns)
 setfenv(assert(loadfile("Data/Services.lua")), env)("ShortestPathForever", ns)
 -- The fixture class trainers for the player's class, beside the companion addon's own list.
@@ -587,7 +593,6 @@ local function fresh(questie, away, L)
 		GamepadUI = ns.GamepadUI,
 		Print = ns.Print,
 		ModifyMenu = ns.ModifyMenu,
-		QuestLogTabs = ns.QuestLogTabs,
 	}
 	setfenv(assert(loadfile("UI/Nearby.lua")), env)("ShortestPathForever", copy)
 	for _, fn in ipairs(starts) do
@@ -667,7 +672,6 @@ do
 	local driver = assert(loadfile("tests/journey_driver.lua"))()
 	local travelEnv, worldNs = driver.env, driver.ns
 	travelEnv._G = travelEnv
-	driver.load("Core/SafeCall.lua")
 	driver.load("UI/Looks.lua")
 	driver.load("Core/API.lua")
 	for _, file in ipairs({

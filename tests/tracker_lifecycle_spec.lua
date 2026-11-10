@@ -57,12 +57,18 @@ for _, readyAtLoad in ipairs({ false, true }) do
 			return true
 		end,
 	}, { __index = _G })
+	local host = {
+		Attach = function(module)
+			owners[module] = native
+		end,
+	}
 	local ns = {
-		TrackerHost = {
-			Attach = function(module)
-				owners[module] = native
+		core = {
+			SafeCall = function(_, fn, ...)
+				return fn(...)
 			end,
 		},
+		TrackerHost = host,
 		L = setmetatable({}, {
 			__index = function(_, key)
 				return key
@@ -80,7 +86,7 @@ for _, readyAtLoad in ipairs({ false, true }) do
 		OnTravelTick = noop,
 		NearestDock = noop,
 	}
-	env.ForeverTrackerHost = ns.TrackerHost
+	env.ForeverCore = { TrackerHost = host }
 	setfenv(assert(loadfile("UI/Tracker.lua")), env)("Addon", ns)
 	if not readyAtLoad then
 		assert(owners[modules[1]] == native, "private host attachment is independent of Blizzard")
@@ -106,14 +112,14 @@ for _, readyAtLoad in ipairs({ false, true }) do
 		end,
 	}
 	ns.Corpse = { Active = noop }
-	-- Core.lua's menu opener, with mouse and keyboard.
-	ns.ContextMenu = function(owner, generator)
+	-- ForeverCore's menu opener, drawn in its own frames.
+	env.ForeverCore.ContextMenu = function(owner, generator)
 		return env.MenuUtil.CreateContextMenu(owner, generator)
 	end
-	ns.TrackerHost.IsAttachedToQuestTracker = function()
+	host.IsAttachedToQuestTracker = function()
 		return attached
 	end
-	ns.TrackerHost.SetAttached = function(value)
+	host.SetAttached = function(value)
 		attached = value
 	end
 	local combat = false
@@ -127,14 +133,10 @@ for _, readyAtLoad in ipairs({ false, true }) do
 	assert(attached == false and row.get() == false, "unticking lets the column be dragged")
 	row.set()
 	assert(attached == true, "ticking attaches it again")
-	-- In combat the host cannot switch, so the menu leaves the choice out; so does a shared host without it.
+	-- In combat the host cannot switch, so the menu leaves the choice out.
 	entries, combat = {}, true
 	modules[1]:OnBlockHeaderClick({ id = "journey" }, "RightButton")
 	assert(entries["Attach to quest tracker"] == nil, "no attach choice in combat")
-	combat = false
-	ns.TrackerHost.SetAttached = nil
-	modules[1]:OnBlockHeaderClick({ id = "journey" }, "RightButton")
-	assert(entries["Attach to quest tracker"] == nil, "an older shared host without the call offers none")
 	-- The grey footer after a journey arrives (UI/FamilyHints.lua) opens its link on a left click.
 	local opened = 0
 	ns.FamilyHints = {

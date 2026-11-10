@@ -34,7 +34,7 @@ _G.C_Map = {
 
 local ns = {}
 assert(loadfile("UI/OpenMap.lua"))("ShortestPathForever", ns)
-local OpenMap = ns.OpenMap
+local OpenMap = ns.OpenMapAddon
 check(OpenMap ~= nil, "the module is on the namespace")
 
 -- No OpenMap at all: nothing changes.

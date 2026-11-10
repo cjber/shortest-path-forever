@@ -394,6 +394,15 @@ function M.build(sim)
 		end
 		return false
 	end
+	impl["C_TradeSkillUI.CloseTradeSkill"] = function()
+		if not W.openProfession then
+			return
+		end
+		-- Clear the skill before the event, as the client does: ProfessionsFrame:OnHide calls this API again, and
+		-- with nothing open that second call is a no-op rather than another TRADE_SKILL_CLOSE.
+		W.openProfession = nil
+		sim.events.fire("TRADE_SKILL_CLOSE")
+	end
 
 	-- Items.
 	impl["C_Item.GetItemInfo"] = function(id)
@@ -506,10 +515,11 @@ function M.build(sim)
 
 	-- Maps: the player's position and the map tree (fill sim.world.maps[id] = { name, parent, mapType }).
 	impl["C_Map.OpenWorldMap"] = function(mapID)
-		sim.taint.dispatch(nil, function()
-			G.C_AddOns.LoadAddOn("Blizzard_WorldMap")
-			sim.events.fire("WORLD_MAP_OPEN", mapID)
-		end)
+		-- The C API raises the WORLD_MAP_OPEN event, which WorldMapFrame registers for and handles by opening
+		-- the map (Blizzard_WorldMap/Blizzard_WorldMap.lua:171 and :198). The event dispatch is the engine
+		-- boundary: handlers run with their own taint, while the Lua this API loads runs in the caller's taint.
+		G.C_AddOns.LoadAddOn("Blizzard_WorldMap")
+		sim.events.fire("WORLD_MAP_OPEN", mapID)
 	end
 	impl["C_Map.GetBestMapForUnit"] = function(u)
 		if Secret.unwrap(u) == "player" then

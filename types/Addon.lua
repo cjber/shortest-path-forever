@@ -23,24 +23,14 @@
 ---@field charDB SPFCharacterDatabase
 ---@field Defaults table<string, boolean|number|string>
 ---@field NearbyServices SPFNearbyServices
----@field QuestLogTabs ForeverQuestLogTabsAPI the shared quest log side tabs (UI/QuestLogTabs.lua)
+---@field core ForeverCoreAddon the addon's own ForeverCore services: journal, log, report and map canvas
+---@field broken? boolean set when an installed ForeverCore is too old, so the addon's files stop
+---@field ReportTitle string the localized title shown by the shared report window
 ---@field ProgressJourneyChanged? fun(point: SPFPoint?, reason?: "arrived"|"cleared")
----@field PeerStats ForeverPeerStatsNamespace
----@field LeaderboardsData? ForeverLeaderboardsData the shared leaderboards' data half (Core/LeaderboardsData.lua)
----@field Leaderboards? ForeverLeaderboardsAPI the shared Forever Leaderboards window (UI/Leaderboards.lua)
 ---@field TravelSharingChanged fun()
 ---@field TravelStats fun(): SPFProgressData?
 ---@field TravelBoard fun(scope: ForeverLeaderboardsScope): ForeverLeaderboardsRow[] this addon's board for the shared window
 ---@field OpenTravelLeaderboard fun() opens Forever Leaderboards on this addon's tab
----@field SafeCall fun(label: string, fn: function, ...: any): boolean, ... run fn as pcall does, keeping a failure for the report and passing it to the error handler (Core/SafeCall.lua)
----@field RecordError fun(label: string, message: any, stack?: string)
----@field CaughtErrors fun(): ForeverCaughtError[] this session's caught errors, oldest first, as copies
----@field AttachErrorJournal fun(store: table) keep the journal in the saved table, so a /reload keeps it (Core/Core.lua)
----@field Log fun(level: string, topic: string, message: any, ...: any) one line in the shared ring (Core/Log.lua)
----@field LogLines fun(count?: integer): string[] the newest log lines, oldest first, as copies (Core/Log.lua)
----@field AttachLog fun(store: table) keep the log ring in the saved table, so a /reload keeps it (Core/Core.lua)
----@field DebugCommand fun(argument?: string): boolean `/forever debug`: toggle, pin, off or show (Core/Log.lua)
----@field CutText fun(text: string, limit: integer): string text clipped to the limit on a character boundary
 
 ---@alias SPFMode 'walk'|'flight'|'boat'|'zeppelin'|'lift'|'tram'|'portal'|'passage'|'teleport'
 ---@alias SPFKind 'start'|'goal'|'dock'|'taxi'|'portal'|'teleport'
@@ -189,12 +179,12 @@
 ---@field warning? boolean
 
 ---@class SPFDatabase : ForeverFamilyDB
----@field errors? ForeverCaughtError[] the shared error journal (Core/SafeCall.lua): earlier sessions' errors, for the report
----@field log? ForeverDebugLogStore the shared debug log ring (Core/Log.lua): recent lines, for the report
+---@field errors? ForeverCaughtError[] ForeverCore's shared error journal: earlier sessions' errors, for the report
+---@field log? ForeverDebugLogStore ForeverCore's shared debug log ring: recent lines, for the report
 ---@field destinationPin boolean an on-screen marker over the journey's destination
 ---@field arrivalPin? boolean a pin with the stop's objectives while in its area, instead of hiding the arrow
 ---@field npcArrows? boolean arrows beside the nameplate of the NPC a Nearby services journey walks to (NpcArrows.lua)
----@field trackerHost? ForeverTrackerSettings
+---@field trackerHost? ForeverTrackerLegacySettings the old tracker table, offered to ForeverCore once
 ---@field menuTest? string `/path menutest`: which world map filter menu entries to leave out ("map", "nearby", "both")
 ---@field pins? boolean
 ---@field transit? boolean

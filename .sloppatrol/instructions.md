@@ -19,8 +19,8 @@ Things reached indirectly: none of them is dead code, even when no file calls it
   their `OnLoad`, `OnAcquired`, `OnReleased`, `OnMouseEnter`/`OnMouseLeave`, `OnClick`,
   `OnCanvasScaleChanged`, `OnCanvasSizeChanged` by name. Data-provider mixins' `RefreshAllData`,
   `RemoveAllData`, `OnAdded`, `OnRemoved`, `OnMapChanged` likewise.
-- Tracker module methods (`UI/Tracker.lua`) are called by the addon-owned `ForeverTrackerHost` in
-  `UI/TrackerHost.lua`; this host never registers the module with `ObjectiveTrackerManager`.
+- Tracker module methods (`UI/Tracker.lua`) are called by `ForeverCore.TrackerHost`; this addon never registers
+  the module with `ObjectiveTrackerManager`.
 - `ns.X` / `function ns.X` exports are the cross-file API; a symbol defined in one file is used in another
   (and by specs via `loadfile(...)("ShortestPathForever", ns)`). Search every `.lua`, not just the file.
 - `Nav/Nav.xml` loads compressed walking-map fields; `Routing/PathGrid.lua` decodes them on demand.
@@ -32,8 +32,8 @@ Things reached indirectly: none of them is dead code, even when no file calls it
   (`SLASH_SPFNEAR1`, `SlashCmdList.SPFNEAR`, UI/Nearby.lua).
 - UI/Nearby.lua reads two optional globals other addons define: `LibQuestieDB` and `TweaksForever.API`.
 - `tools/*.py` are run by hand (README), except those a workflow runs: `ci.yml` runs `check_generated.py`,
-  `changelog.py --check`, `repo_rules.py`, `fetch_tracker_ui.py` and `typecheck.sh`; `release.yml` runs `release_check.py` and
-  `changelog.py`; `shared-tracker.yml` runs `check_shared_tracker.py`.
+  `changelog.py --check`, `repo_rules.py`, `check_core_shared.py` and `typecheck.sh`; `release.yml` runs
+  `release_check.py` and `changelog.py`.
   `tools/bake_walks.lua` writes `Data/Walks.lua`; `tools/baker/bake.sh` builds pinned TrinityCore tools
   and runs `trinity.py`, `gen_nav.py` and `pack_nav.py`.
 - Test seams: `Path.after`, `Path.clock` and `Path.budget` are replaced by specs. Specs that load Journey without
@@ -64,15 +64,12 @@ dismissed for the same reason.
   yards, planner replanning); they are not one fact.
 - **WalkPlaces provenance**: `ns.WalkPlaces` in the shipped `Data/Walks.lua` is read only by `planner_spec.lua`,
   which checks the baked walks were built from the current places; CI consumes it, so it is live.
-- **Blizzard-called handlers**: `tools/fetch_blizzard_ui.sh` does not pin the ObjectiveTracker Block/Module
-  files, so a handler such as `OnBlockHeaderClick` (called by `Blizzard_ObjectiveTrackerBlock.lua`) has no caller
-  in the tree and is still live.
+- **ForeverCore-called handlers**: `ForeverCore.TrackerHost` calls a section's `OnBlockHeaderClick`,
+  `AddHeaderMenuEntries` and `LayoutBlock` by name, so they have no caller in this tree and are still live.
 - **partial-load guard**: a nil check on `ns.db`, `ns.Teleports`, `ns.Landmasses` or `C_AddOns` that a spec or
   UI check needs because it loads the module without the rest of the addon (`Core/PlanContext.lua` under
   `tests/plan_context_spec.lua`, `/path perf` in `UI/Settings.lua` under `tests/activity_ui.lua`).
-- **byte-shared tracker files**: `UI/TrackerHost.lua`, `tools/fetch_tracker_ui.py` and
-  `tests/tracker_host_spec.lua` are held byte-identical across four addon repositories by
-  `tools/check_shared_tracker.py`. An export, comment or override that nothing here uses can have a reader in a
-  sibling repository, and a copy of this repository's own helper there cannot be folded in.
+- **externally supplied types**: `forever-core/` (or `../forever-core`) is ForeverCore's checkout, read by LuaLS
+  and the specs through `FOREVER_CORE`; nothing in it is this addon's dead code.
 - **middle dot join**: `tests/locales_spec.lua` requires two joined phrases to go through `L["%s · %s"]`, so the
   middle dot in shown text is the project's join form.

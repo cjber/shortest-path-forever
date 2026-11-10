@@ -1,5 +1,5 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
-	<!-- The addon's map pins are its own frames on the map canvas (UI/MapCanvas.lua), so no template here inherits the
+	<!-- The addon's map pins are its own frames on the map canvas (UI/Canvas.lua), so no template here inherits the
 	     map's pin templates or names a mixin: the pools put the mixins on. Each keeps the art of the stock pin it stands
 	     in for (BaseHighlightableMapPoiPinTemplate in SharedMapPoiTemplates.xml): a texture and its added highlight. -->
 	<Frame name="ShortestPathForeverDockPinTemplate" virtual="true">
@@ -102,7 +102,7 @@
 				<Texture parentKey="Arrow" hidden="true"/>
 			</Layer>
 			<!-- The goal pin's own art again, with the stock highlight's ADD blend, shown while the pointer is over it
-			     (UI/MapCanvas.lua SetHighlighted). -->
+			     (UI/Canvas.lua SetHighlighted). -->
 			<Layer level="HIGHLIGHT">
 				<Texture parentKey="HighlightTexture" alphaMode="ADD" alpha="0.4" hidden="true"/>
 			</Layer>

@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- The game's own quest pins repeat a journey's stops (#472): QuestDataProvider's QuestPinTemplate draws a dark circle
 -- with "..." or "?" for each quest on the map, and a stop that marks the same quest draws its number beside it. While
 -- the stop is drawn, the game's pin goes; a quest no stop marks keeps its pin; and every pin hidden here comes back

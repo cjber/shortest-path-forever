@@ -1,5 +1,9 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
+
+if ns.broken then
+	return
+end
 local L = ns.L
 
 -- The addon's own goal pin: a square file whose point is the bottom centre of the square, gold while Guide tracks
@@ -42,7 +46,7 @@ ns.StopSize = STOP_SIZE
 ---@field stopGround? (string|false)[] how each stop stands against the terrain: "up", "down" or false
 ---@field later? boolean
 ---@field current? boolean -- marks the stop being travelled to, whose steps the tooltip lists
-local GoalPin = CreateFromMixins(ns.MapCanvas.PinMixin)
+local GoalPin = CreateFromMixins(ns.Canvas.PinMixin)
 -- Route.lua's pool puts it on.
 ns.GoalPinMixin = GoalPin
 
@@ -283,7 +287,7 @@ function GoalPin:OnMouseLeave()
 	end
 end
 
--- Pins pass right clicks to the canvas to zoom out (UI/MapCanvas.lua); this one clears instead.
+-- Pins pass right clicks to the canvas to zoom out (UI/Canvas.lua); this one clears instead.
 function GoalPin.ShouldMouseButtonBePassthrough()
 	return false
 end

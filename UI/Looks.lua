@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- What a stop is, drawn as the game draws it: a caller's kind (API.lua) turns the stop's map pin into the thing
 -- itself, a quest giver's "!" or a hand-in's "?", so the pin never hides the mark it stands on. The atlases are the
 -- Forever build's (UiTextureAtlasMember, 1.60.1.69913), and each is still looked up in the client: a kind whose art

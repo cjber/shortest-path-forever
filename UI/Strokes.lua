@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- Route drawing as geometry: paths and a view in, strokes out. Nothing here touches a frame or the client, so the
 -- painters (Route.lua's map pin and minimap frame, RouteTransports.lua's pin) only copy strokes onto pooled lines.
 --

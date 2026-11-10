@@ -1,11 +1,15 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- OpenMap (the seamless world map addon) offers other addons a small read-only API, OpenMapAPI: major 1, version 2
 -- and up. It says where a point in the game's world sits on the stitched map's canvas (CanvasFromWorldPos, in
 -- canvas fractions that run past 0..1 wherever the stitched view does), how high its stitched art reaches
 -- (ArtTopLevel, so a frame of ours can be drawn above it), and whether the map on screen is the stitched one
--- (IsStitched). Only those are used here: UI/MapCanvas.lua already watches the canvas every frame the map is
+-- (IsStitched). Only those are used here: UI/Canvas.lua already watches the canvas every frame the map is
 -- shown, so it notices stitching start and stop without subscribing to OpenMap's callbacks.
 --
 -- Every call is a read: nothing here writes to OpenMap, to its settings or to Blizzard's map. An OpenMap that is
@@ -14,7 +18,7 @@ local ns = select(2, ...)
 -- player turned stitching off).
 
 local OpenMap = {}
-ns.OpenMap = OpenMap
+ns.OpenMapAddon = OpenMap
 
 -- The API version CanvasFromWorldPos and ArtTopLevel arrived in.
 local CANVAS_VERSION = 2

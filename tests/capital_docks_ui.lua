@@ -78,7 +78,7 @@ ns.db.pins, ns.db.transit, ns.db.portals, ns.db.mapFlightMasters, ns.db.mapRoute
 posX, posY, posMap, facing = 1360, -4631, 1, 0
 setMapShown(true)
 
-local pools = ns.MapCanvas.Pools(WorldMapFrame)
+local pools = ns.Canvas.Pools(WorldMapFrame)
 local dockPins = pools.ShortestPathForeverDockPinTemplate
 local function pinFor(dockID)
 	for _, pin in ipairs(dockPins.active) do

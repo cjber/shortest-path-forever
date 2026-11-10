@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Needs Forever Core.** The shared tracker column, bug report and leaderboards now come from one Forever Core addon that installs with it, so every Forever addon's tracker scale, lock and position stay in step. Your tracker settings carry over.
+
 ## [1.26.1] - 2026-11-10
 
 - **The direction arrow can show the journey's time left, or the time and the distance together.** Its label follows a new *Arrow label* choice in Interface: *Distance* as before, *Time left*, or *Both*. Both reads like the tracker's Journey header ("2:32 · 450 yd") from the same countdown, so the two never disagree, and while a journey is still being planned the distance stands alone. Asked on the Guidelime Discord, where Guidelime's own arrow offers the same choices (#651).

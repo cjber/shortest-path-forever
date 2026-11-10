@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- The search for a journey's fastest way: one bounded FindMany from where you stand and one back from the goal,
 -- short A* probes for the candidate's own walks, the plan they settle, that plan's walking geometry (JourneyWalks.lua)
 -- and whether it replaces the route you are following. A feasible route can be followed while the proof continues.

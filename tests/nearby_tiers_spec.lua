@@ -68,6 +68,9 @@ local env = setmetatable({
 	SlashCmdList = {},
 }, { __index = _G })
 env._G = env
+local ForeverCore = dofile("tests/forever_core.lua")
+local coreNs = ForeverCore.load(env, "ForeverCore", { "Locales/enUS.lua", "Core/Text.lua" })
+env.ForeverCore = { Text = coreNs.Text }
 
 -- Nearby.lua over a fixture QuestieDB, read to the end. Its map points are the UI map's percent in thousandths.
 local function load(questie)
@@ -89,9 +92,11 @@ local function load(questie)
 		GamepadUI = function()
 			return false
 		end,
-		SafeCall = function(_, fn, ...)
-			return true, fn(...)
-		end,
+		core = {
+			SafeCall = function(_, fn, ...)
+				return true, fn(...)
+			end,
+		},
 	}
 	setfenv(assert(loadfile("Locales/enUS.lua")), env)("ShortestPathForever", ns)
 	setfenv(assert(loadfile("Data/Services.lua")), env)("ShortestPathForever", ns)

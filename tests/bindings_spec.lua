@@ -60,7 +60,7 @@ local ns = {
 			return { uiMapID = 1440, x = 0.5, y = 0.5, label = "Tracked" }
 		end,
 	},
-	MapCanvas = { OnClick = function() end },
+	Canvas = { OnClick = function() end },
 }
 env = setmetatable({
 	CreateFrame = function(_, name)

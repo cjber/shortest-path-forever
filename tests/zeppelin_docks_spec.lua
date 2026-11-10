@@ -21,7 +21,7 @@ mapID, zoom = 14, 0
 setMapShown(true)
 ns.RefreshMap()
 
-local pools = ns.MapCanvas.Pools(WorldMapFrame)
+local pools = ns.Canvas.Pools(WorldMapFrame)
 local dockPins = pools.ShortestPathForeverDockPinTemplate
 local function ids(pin)
  local list = {}

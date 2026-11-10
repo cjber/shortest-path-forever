@@ -1,5 +1,9 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
+
+if ns.broken then
+	return
+end
 local L = ns.L
 
 -- TomTom's /way: `/way [#mapID] [zone] x y [title]`, with x and y as percentages of the map. With no map ID and no
@@ -14,7 +18,7 @@ local L = ns.L
 ---@param name string
 ---@return string
 local function Fold(name)
-	return (ns.Text.Fold(name):gsub("[%s%p]", ""))
+	return (ForeverCore.Text.Fold(name):gsub("[%s%p]", ""))
 end
 
 -- Every map under the world the player stands in, by folded name: zones apart from dungeons and raids, so a dungeon

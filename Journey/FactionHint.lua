@@ -1,5 +1,9 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
+
+if ns.broken then
+	return
+end
 local L = ns.L
 
 -- With "Other Faction's Routes" off, the journey's goal pin says how much faster the journey would be through the

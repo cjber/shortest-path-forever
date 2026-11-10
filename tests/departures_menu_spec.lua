@@ -1,11 +1,15 @@
--- Right-clicking the section header while departures show offers to hide them, next to the shared column's own
--- attach and lock entries. The shared host builds that menu, so UI/Tracker.lua decorates its generator.
+-- Right-clicking the section header while departures show offers to hide them through the module's
+-- AddHeaderMenuEntries hook, below the shared column's own attach and lock entries.
 local noop = function() end
 local entries = {}
 local owner = {}
 local ns = {
 	db = { tracker = true },
-	TrackerHost = { Attach = noop },
+	core = {
+		SafeCall = function(_, fn, ...)
+			return fn(...)
+		end,
+	},
 	L = setmetatable({}, {
 		__index = function(_, key)
 			return key
@@ -27,18 +31,6 @@ local ns = {
 		entries.option = { key = key, value = value }
 	end,
 }
--- The wrapper is installed at load over this opener; the test reads what the generator was given.
-ns.ContextMenu = function(openOwner, generator)
-	local root = {
-		CreateCheckbox = function(_, text)
-			entries[text] = true
-		end,
-		CreateButton = function(_, text, click)
-			entries[text] = { click = click }
-		end,
-	}
-	generator(openOwner, root)
-end
 local modules = {}
 local env = setmetatable({
 	ObjectiveTrackerFrame = {},
@@ -68,8 +60,13 @@ local env = setmetatable({
 	InCombatLockdown = function()
 		return true
 	end,
+	ForeverCore = {
+		TrackerHost = { Attach = noop },
+		ContextMenu = function(_, generator)
+			generator(owner, { CreateButton = noop, CreateCheckbox = noop })
+		end,
+	},
 }, { __index = _G })
-env.ForeverTrackerHost = ns.TrackerHost
 setfenv(assert(loadfile("UI/Tracker.lua")), env)("ShortestPathForever", ns)
 
 local module = modules[1]
@@ -79,15 +76,16 @@ module.GetContextMenuParent = function()
 end
 local function Open()
 	entries = {}
-	ns.ContextMenu(owner, function(_, root)
-		root:CreateCheckbox("Attach to quest tracker")
-	end)
+	module:AddHeaderMenuEntries({
+		CreateButton = function(_, text, click)
+			entries[text] = { click = click }
+		end,
+	})
 	return entries
 end
 
 module.dockID = 1
 local menu = Open()
-assert(menu["Attach to quest tracker"], "the shared host's own entry stays")
 assert(menu["Hide departures"], "a departures section offers to hide them")
 menu["Hide departures"].click()
 assert(entries.option and entries.option.key == "tracker" and entries.option.value == false, "it turns departures off")

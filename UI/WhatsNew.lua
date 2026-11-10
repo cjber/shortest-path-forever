@@ -1,6 +1,10 @@
 local addonName = ...
 ---@class SPFNamespace
 local ns = select(2, ...)
+
+if ns.broken then
+	return
+end
 local L = ns.L
 
 -- One sentence on what the latest release changed, printed once after an update. Each release refreshes it from

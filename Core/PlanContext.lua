@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- What a plan starts from, read from the client and the shipped data in one place: your run speed, faction, known
 -- flight points, fresh sightings, usable teleports and the ride you are on, plus the static tables every plan
 -- crosses. The journey search, the estimate, the bind-point landings and the corpse run ask here; Planner.lua's wide

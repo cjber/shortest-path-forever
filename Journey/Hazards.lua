@@ -1,5 +1,9 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
+
+if ns.broken then
+	return
+end
 local L = ns.L
 
 -- What a journey's walks keep away from: zones whose lowest level is well above yours (the idea is Ding!'s, by

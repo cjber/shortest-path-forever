@@ -1,9 +1,14 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
--- Shortest Path's own lines in /path report (UI/Report.lua; the pattern is cjber/adventure-guide-forever
--- docs/report-window.md): the travel settings, the bind point, the ride and, with /path debug on, the last samples
--- of its trace, then the corpse run and the journey with its goal and every step of its plan. The steps come last, so
+if ns.broken then
+	return
+end
+
+-- Shortest Path's own lines in /path report (ForeverCore's report window; the pattern is
+-- cjber/adventure-guide-forever docs/report-window.md): the travel settings, the bind point, the ride and, with
+-- /path debug on, the last samples of its trace, then the corpse run and the journey with its goal and every step
+-- of its plan. The steps come last, so
 -- a long plan is what the report's cap cuts. Read from the journey as it stands, paused or behind a corpse run:
 -- nothing is planned or searched for the report. Field labels are English; place names are the client's.
 
@@ -29,7 +34,11 @@ end
 local function Place(point)
 	local location = ns.Locate(point)
 	if location then
-		return ("map %d %s, %s"):format(location.uiMap, ns.Report.Percent(location.x), ns.Report.Percent(location.y))
+		return ("map %d %s, %s"):format(
+			location.uiMap,
+			ns.core.Report.Percent(location.x),
+			ns.core.Report.Percent(location.y)
+		)
 	end
 	return ("continent %s %.0f, %.0f"):format(tostring(point.map), point.x, point.y)
 end

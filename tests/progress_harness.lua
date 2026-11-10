@@ -20,9 +20,13 @@ local function harness(saved, progress, leaderboards)
 		Print = function(line)
 			h.printed[#h.printed + 1] = line
 		end,
+		core = {
+			SafeCall = function(_, fn, ...)
+				return pcall(fn, ...)
+			end,
+		},
 	}
 	local env = setmetatable({
-		ForeverPeerStats = false,
 		GetTime = function()
 			return h.now
 		end,
@@ -71,9 +75,14 @@ local function harness(saved, progress, leaderboards)
 		end,
 	}, { __index = _G })
 	env._G = env
-	for _, file in ipairs({ "Core/PeerStats.lua", "Core/Progress.lua" }) do
-		setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
-	end
+	local ForeverCore = dofile("tests/forever_core.lua")
+	local coreNs = ForeverCore.load(env, "ForeverCore", { "Locales/enUS.lua", "Core/PeerStats.lua" })
+	env.ForeverCore = {
+		PeerStats = coreNs.PeerStats,
+		Leaderboards = leaderboards or { Register = function() end, Open = function() end },
+	}
+	ns.PeerStats = coreNs.PeerStats
+	setfenv(assert(loadfile("Core/Progress.lua")), env)("ShortestPathForever", ns)
 	function h:Fire(event, ...)
 		for _, frame in ipairs(self.frames) do
 			frame:OnEvent(event, ...)

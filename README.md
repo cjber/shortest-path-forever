@@ -60,7 +60,7 @@ More detail: [features](docs/features.md) and [API](docs/api.md).
 
 Install it from [CurseForge](https://www.curseforge.com/wow/addons/shortest-path-forever) or
 [Wago Addons](https://addons.wago.io/addons/shortest-path-forever), or download the zip from
-[Releases](https://github.com/cjber/shortest-path-forever/releases). To install the zip by hand, extract it into
+[Releases](https://github.com/cjber/shortest-path-forever/releases). It needs Forever Core, which CurseForge and Wago install with it. To install the zip by hand, extract it into
 the WoW: Forever client's `Interface/AddOns/` folder (`_forever_` on the live client, `_classic_beta_` on the beta) so you end up with `AddOns/ShortestPathForever/ShortestPathForever.toc`.
 
 ## Usage
@@ -119,6 +119,8 @@ Each one works on its own, and they work together when you install more than one
 | [Legacy Forever](https://www.curseforge.com/wow/addons/legacy-forever) | Shows your unfinished Legacy challenges on the world map and tracks the ones you choose. | [Issues](https://github.com/cjber/legacy-forever/issues) |
 | [Tweaks Forever](https://www.curseforge.com/wow/addons/tweaks-forever) | Adds quest automation, rare alerts and merchant options to the game's settings. | [Issues](https://github.com/cjber/tweaks-forever/issues) |
 | [Field Guide Forever](https://www.curseforge.com/wow/addons/field-guide-forever) | Keeps a cosmetic journal of the creatures you kill, zone by zone. | [Issues](https://github.com/cjber/field-guide-forever/issues) |
+| [Commissions Forever](https://www.curseforge.com/wow/addons/commissions-forever) | Lists your commission turn-ins, the materials in your bags and the next NPC to visit. | [Issues](https://github.com/cjber/commissions-forever/issues) |
+| [Macro Assist Forever](https://www.curseforge.com/wow/addons/macro-assist-forever) | Adds a macro window with every macro in one list, a mono editor with live checks, and history. | [Issues](https://github.com/cjber/macro-assist-forever/issues) |
 
 Bug reports, feature requests and pull requests are welcome on each addon's GitHub. Everyone whose report or idea ships is thanked by name in the addon's credits and changelog.
 

@@ -1,5 +1,9 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
+
+if ns.broken then
+	return
+end
 local L = ns.L
 
 -- A thin ribbon of the game's own parchment ticks across the top of the screen: no panel, no border, the

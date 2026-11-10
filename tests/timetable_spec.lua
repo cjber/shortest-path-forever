@@ -5,13 +5,21 @@ local clock = { time = 0, server = 1790000000 }
 local faction = "Alliance"
 
 -- Core.lua for the real Init, clock and faction filter; then the timetable, started as at login.
+local ForeverCore = dofile("tests/forever_core.lua")
+
 local function login(saved)
 	local frames = {}
-	-- Core/SafeCall.lua installs its error handler and event frame once per addon; this stand-in client counts this
-	-- copy as already installed, so the frame below is the one Core.lua makes for ADDON_LOADED.
-	ForeverErrorJournal = { installed = { ShortestPathForever = true } }
 	local env = setmetatable({
 		ShortestPathForeverDB = saved,
+		SlashCmdList = {},
+		C_Timer = {
+			NewTicker = function()
+				return { Cancel = function() end }
+			end,
+		},
+		IsPlayerMoving = function()
+			return false
+		end,
 		GetRealmName = function()
 			return "Test"
 		end,
@@ -68,17 +76,24 @@ local function login(saved)
 			},
 		},
 	}
+	ForeverCore.load(env, "ForeverCore")
+	local function fire(event, name)
+		for _, frame in ipairs(frames) do
+			if frame.OnEvent then
+				frame:OnEvent(event, name)
+			end
+		end
+	end
+	fire("ADDON_LOADED", "ForeverCore")
 	for _, file in ipairs({
 		"Locales/enUS.lua",
-		"Core/SafeCall.lua",
-		"Core/Log.lua",
 		"Transport/Model.lua",
 		"Core/Core.lua",
 		"Transport/Timetable.lua",
 	}) do
 		setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
 	end
-	frames[1]:OnEvent("ADDON_LOADED", "ShortestPathForever")
+	fire("ADDON_LOADED", "ShortestPathForever")
 	return ns, ns.Timetable
 end
 local function advance(seconds)

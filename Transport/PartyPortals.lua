@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- A party mage's capital portals. The client exposes no API for another player's spellbook, so the player declares
 -- them: the setting says a mage is in the group and which capitals that mage can open. The destinations and their
 -- positions come from Data/Teleports.lua (mage teleports that spend a Rune of Teleportation), matched to the capital

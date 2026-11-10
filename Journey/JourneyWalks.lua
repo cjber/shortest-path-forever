@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- The walks a journey's search has measured, kept behind JourneySearch.lua: the drawn path of each walking leg,
 -- searched once and shared by every plan that walks it, and the walks on from a bind point.
 local WALK_CACHE_LIMIT = 64

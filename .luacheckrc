@@ -1,13 +1,7 @@
 std = "lua51"
 max_line_length = 120
-exclude_files = { ".claude/**", "tools/.cache/**", ".types/**", "types/**", ".release/**", "Nav/**", ".bugpatrol/runs/**", ".speedpatrol/runs/**", ".sloppatrol/runs/**" }
+exclude_files = { "forever-core/**", ".claude/**", "tools/.cache/**", ".types/**", "types/**", ".release/**", "Nav/**", ".bugpatrol/runs/**", ".speedpatrol/runs/**", ".sloppatrol/runs/**" }
 globals = {
-	"ForeverErrorJournal",
-	"ForeverPeerStats",
-	"ForeverFamily",
-	"ForeverLeaderboards",
-	"ForeverTrackerHost",
-	"ForeverQuestLogTabs",
 	"EventUtil",
 	"ShortestPathForever",
 	"ShortestPathForeverCharDB",
@@ -16,14 +10,13 @@ globals = {
 	"TomTom",
 	"SLASH_SHORTESTPATHFOREVER1",
 	"SLASH_SHORTESTPATHFOREVER2",
-	"SLASH_FOREVERLEADERBOARDS1",
-	"SLASH_FOREVERLEADERBOARDS2",
 	"SlashCmdList",
 	"bit",
 	"SLASH_SPFNEAR1",
 	"SLASH_SHORTESTPATHFOREVERWAY1",
 }
 read_globals = {
+	"ForeverCore",
 	"Guidelime",
 	"GuidelimeArrow",
 	"TomTomCrazyArrow",
@@ -33,7 +26,6 @@ read_globals = {
 	"QUESTS_LABEL",
 	"GetSubZoneText",
 	"GetZoneText",
-	"CreateFramePoolCollection",
 	"C_XMLUtil",
 	"Ambiguate",
 	"C_ChatInfo",
@@ -131,7 +123,7 @@ files["tests/"] = { std = "+luajit" }
 -- Tracker colours and the stock line's dash.
 read_globals[#read_globals + 1] = "OBJECTIVE_TRACKER_COLOR"
 read_globals[#read_globals + 1] = "QUEST_DASH"
--- MapCanvas.lua: the Forever addons' shared list of world map markers, and the gamepad's map cursor.
+-- UI/Canvas.lua: the Forever addons' shared list of world map markers, and the gamepad's map cursor.
 globals[#globals + 1] = "ForeverMapMarkers"
 read_globals[#read_globals + 1] = "SoftCursor"
 -- Shared-workspace arrow: Blizzard_QuestNavigation/SuperTrackedFrame.lua:291.
@@ -190,9 +182,6 @@ read_globals[#read_globals + 1] = "GetBindLocation"
 -- Floor.lua: indoors, where floors stack, the floor is followed whenever you move; swimming, you are on water.
 read_globals[#read_globals + 1] = "IsIndoors"
 read_globals[#read_globals + 1] = "IsSwimming"
--- TrackerHost.lua: whether Edit Mode is open.
-read_globals[#read_globals + 1] = "EditModeManagerFrame"
-
 -- tests/ui_client.lua and tests/ui_map.lua are one chunk defining the client for the UI checks, which append code
 -- reading their locals. 2xx: locals and arguments only the appended checks use; 43x: stub methods named like the
 -- client's.
@@ -213,14 +202,11 @@ read_globals[#read_globals + 1] = "RXP"
 read_globals[#read_globals + 1] = "AdventureGuideForever"
 -- Core/TomTom.lua: Polestar's TomTom stand-in and its settings.
 read_globals[#read_globals + 1] = "Polestar"
--- SafeCall.lua, Log.lua and Report.lua (the report window shared with the other Forever addons).
-read_globals[#read_globals + 1] = "debugstack"
+-- The report window ForeverCore draws for this addon.
 read_globals[#read_globals + 1] = "date"
 read_globals[#read_globals + 1] = "strtrim"
-read_globals[#read_globals + 1] = "GetBuildInfo"
 read_globals[#read_globals + 1] = "GetLocale"
 read_globals[#read_globals + 1] = "UnitClass"
-read_globals[#read_globals + 1] = "UnitRace"
 read_globals[#read_globals + 1] = "UnitLevel"
 -- Nearby.lua: a better arrow, shot or drink far off is offered to whoever has the ranged weapon or the mana for it.
 read_globals[#read_globals + 1] = "GetInventorySlotInfo"
@@ -231,17 +217,8 @@ read_globals[#read_globals + 1] = "tContains"
 -- Mover.lua: whether the button of a fine drag is still held.
 read_globals[#read_globals + 1] = "IsMouseButtonDown"
 
--- Forever Leaderboards (Core/LeaderboardsData.lua, UI/Leaderboards.lua): the shared window's client surfaces.
-read_globals[#read_globals + 1] = "C_DateAndTime"
-read_globals[#read_globals + 1] = "RAID_CLASS_COLORS"
+-- Forever Leaderboards: the shared window's client surfaces the travel board reads.
 read_globals[#read_globals + 1] = "GREEN_FONT_COLOR"
-read_globals[#read_globals + 1] = "ScrollBoxConstants"
-read_globals[#read_globals + 1] = "CreateDataProvider"
-read_globals[#read_globals + 1] = "CreateScrollBoxListLinearView"
-read_globals[#read_globals + 1] = "ScrollUtil"
--- LeaderboardsData.lua: the guild roster's classFileName behind a peer row's missing class.
-read_globals[#read_globals + 1] = "GetGuildRosterInfo"
-read_globals[#read_globals + 1] = "GetNumGuildMembers"
 
 -- A translated line is one string; StyLua already wraps what it can, and CJK text counts bytes, not columns.
 files["Locales/*.lua"] = { max_line_length = false }

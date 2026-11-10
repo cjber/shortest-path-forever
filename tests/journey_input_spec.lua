@@ -28,8 +28,8 @@ local ns = {
 	Init = function(fn)
 		fn()
 	end,
-	-- UI/MapCanvas.lua: the addon's own pins hand their clicks to this filter.
-	MapCanvas = {
+	-- UI/Canvas.lua: the addon's own pins hand their clicks to this filter.
+	Canvas = {
 		OnClick = function(fn)
 			ownClick = fn
 		end,
@@ -136,7 +136,7 @@ pin.GetGlobalPosition = function() end
 destination = nil
 assert(not handler(map, 3, "LeftButton") and destination == nil, "non-point pins cannot start journeys")
 
--- The addon's own pins (UI/MapCanvas.lua) are not the map's: their Shift-click comes through MapCanvas.OnClick.
+-- The addon's own pins (UI/Canvas.lua) are not the map's: their Shift-click comes through MapCanvas.OnClick.
 local own = {
 	marker = "flight",
 	poiInfo = { nodeID = 26, name = "Astranaar" },

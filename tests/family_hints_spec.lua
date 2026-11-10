@@ -73,25 +73,30 @@ local ns = {
 		refreshed = refreshed + 1
 	end,
 	JourneyChanged = noop,
-	-- Core/SafeCall.lua: pcall's answers, with each failure kept as the report keeps it.
-	SafeCall = function(label, fn, ...)
-		local results = { pcall(fn, ...) }
-		if not results[1] then
-			caught[#caught + 1] = label
-		end
-		return unpack(results)
-	end,
+	core = {
+		-- pcall's answers, with each failure kept as the report keeps it.
+		SafeCall = function(label, fn, ...)
+			local results = { pcall(fn, ...) }
+			if not results[1] then
+				caught[#caught + 1] = label
+			end
+			return unpack(results)
+		end,
+	},
 	Print = function(text)
 		printed[#printed + 1] = text
 	end,
 }
-setfenv(assert(loadfile("UI/ForeverFamily.lua")), env)("ShortestPathForever", ns)
--- The window itself is the shared module's, covered by tests/forever_family_spec.lua; here it records its calls.
-ns.Family.ShowLink = function(db, key, folder, _, locale)
+local ForeverCore = dofile("tests/forever_core.lua")
+local coreFiles = { "Locales/enUS.lua", "UI/ForeverFamily.lua" }
+local coreNs = ForeverCore.load(env, "ForeverCore", coreFiles)
+env.ForeverCore = { Family = coreNs.Family }
+-- The window itself is ForeverCore's; here it records its calls.
+env.ForeverCore.Family.ShowLink = function(db, key, folder, _, safeCall)
 	if combat then
 		return false
 	end
-	links[#links + 1] = { db = db, key = key, folder = folder, locale = locale }
+	links[#links + 1] = { db = db, key = key, folder = folder, safeCall = safeCall }
 	return true
 end
 setfenv(assert(loadfile("UI/FamilyHints.lua")), env)("ShortestPathForever", ns)
@@ -120,7 +125,7 @@ check(
 	links[1].folder == "AdventureGuideForever" and links[1].key == "ShortestPathForever.questMenu",
 	"it opens Adventure Guide's link, dismissable"
 )
-check(links[1].db == ns.db and links[1].locale == ns.L, "with Shortest Path's settings and translations")
+check(links[1].db == ns.db and links[1].safeCall == ns.core.SafeCall, "with Shortest Path's settings and SafeCall")
 installed.AdventureGuideForever = "on"
 check(#Menu() == 0, "nothing with Adventure Guide on")
 installed.AdventureGuideForever = "off"
@@ -231,13 +236,13 @@ check(Hints.Footer() == nil, "at most once a session")
 
 -- A fresh session, for the footer's other endings.
 local function Session()
-	env.ForeverFamily, ns.Family = nil, nil
-	setfenv(assert(loadfile("UI/ForeverFamily.lua")), env)("ShortestPathForever", ns)
-	ns.Family.ShowLink = function(db, key, folder, _, locale)
+	local fresh = ForeverCore.load(env, "ForeverCore", coreFiles)
+	env.ForeverCore.Family = fresh.Family
+	env.ForeverCore.Family.ShowLink = function(db, key, folder, _, safeCall)
 		if combat then
 			return false
 		end
-		links[#links + 1] = { db = db, key = key, folder = folder, locale = locale }
+		links[#links + 1] = { db = db, key = key, folder = folder, safeCall = safeCall }
 		return true
 	end
 	hooks = {}

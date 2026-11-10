@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- Bouncing arrows either side of the nameplate of the NPC a Nearby services journey walks to. The nameplate itself
 -- is never changed: the arrows are this addon's own frame and textures, anchored to its health bar the way Adventure
 -- Guide Forever marks its current step's NPC. NPE_ArrowRight points right on the left, NPE_ArrowLeft points left on

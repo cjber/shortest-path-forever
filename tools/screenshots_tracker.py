@@ -1,4 +1,4 @@
-"""The Journey tracker scene and the shared tracker grip from UI/TrackerHost.lua."""
+"""The Journey tracker scene and ForeverCore's shared tracker grip."""
 
 import math
 

@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- The player's floor. The client gives no player height (UnitPosition's is a placeholder 0), so a search from where
 -- you stand starts from every surface near you and keeps the cheapest: under the Ruins of Lordaeron that is the
 -- ruins, and on the Undercity's rings a walkway above you. Floor follows the surfaces you can be on as you move

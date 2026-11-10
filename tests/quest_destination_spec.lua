@@ -7,7 +7,7 @@ assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", ns)
 assert(loadfile("Transport/Model.lua"))("ShortestPathForever", ns)
 assert(loadfile("Routing/Planner.lua"))("ShortestPathForever", ns)
 ns.db = { journey = true }
-ns.MapCanvas = { OnClick = function() end }
+ns.Canvas = { OnClick = function() end }
 ns.FamilyHints = { AddQuestMenu = function() end }
 ns.Init = function(fn)
 	fn()

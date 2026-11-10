@@ -1,5 +1,9 @@
 ---@type string, SPFNamespace
 local _, ns = ...
+
+if ns.broken then
+	return
+end
 local L = ns.L
 local Art = ns.Art
 
@@ -615,12 +619,13 @@ local function Attach()
 			StartTicker(false)
 		end
 	end
-	local tab = ns.QuestLogTabs.Register("services", {
+	local tab = ForeverCore.QuestLogTabs.Register("services", {
 		name = "ShortestPathForeverServicesTab",
 		tooltip = L["Nearby services"],
 		panel = panel,
 		order = 20,
 		shown = Shown,
+		safeCall = ns.core.SafeCall,
 	})
 	Art.Fit(tab.Icon, SERVICES_ATLAS, TAB_ICON, TAB_ICON)
 	ns.NearbyServices.OnReady(function()

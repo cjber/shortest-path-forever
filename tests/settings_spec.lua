@@ -50,7 +50,7 @@ local env = setmetatable({
 			}
 		end,
 		RegisterCanvasLayoutSubcategory = function()
-			error("the Forever addons page registers with ns.Family.Register, not a canvas")
+			error("the Forever addons page registers with ForeverCore.Family.Register, not a canvas")
 		end,
 		RegisterVerticalLayoutSubcategory = function(parent, name)
 			return {
@@ -126,8 +126,8 @@ local env = setmetatable({
 			assert(target.name == "Shortest Path Forever", "the index page is the addon's category")
 			assert(#rows == #settings, "every row registers before the category")
 		end,
-		OpenToCategory = function(id)
-			opened[#opened + 1] = id
+		OpenToCategory = function()
+			error("Blizzard's Settings.OpenToCategory is restricted: open settings through ForeverCore (#333)")
 		end,
 	},
 	CreateSettingsButtonInitializer = function(name, description, callback, tags, addSearchTags)
@@ -136,6 +136,38 @@ local env = setmetatable({
 	end,
 	SlashCmdList = {},
 }, { __index = _G })
+-- ForeverCore's secure settings opener runs the client's restricted C_SettingsUtil.OpenSettingsPanel through
+-- CreateSecureDelegate, and records what it opened.
+local secureCalls = 0
+env.InCombatLockdown = function()
+	return false
+end
+env.CreateSecureDelegate = function(fn)
+	return function(...)
+		secureCalls = secureCalls + 1
+		return fn(...)
+	end
+end
+env.C_SettingsUtil = {
+	OpenSettingsPanel = function(categoryID)
+		opened[#opened + 1] = categoryID
+	end,
+}
+local ForeverCore = dofile("tests/forever_core.lua")
+local coreNs = ForeverCore.load(env, "ForeverCore", { "Locales/enUS.lua", "Core/OpenSettings.lua" })
+env.ForeverCore = {
+	OpenSettingsPanel = coreNs.OpenSettingsPanel,
+	Family = {
+		Register = function(category, db, current, safeCall)
+			familyPage = { category = category, db = db, current = current, safeCall = safeCall }
+			return {
+				GetID = function()
+					return "Forever addons"
+				end,
+			}
+		end,
+	},
+}
 
 local refreshed, taxiRefreshed, policyChanged, tomtomRefreshed, guidelimeRefreshed = 0, 0, 0, 0, 0
 local trackerRefreshed = 0
@@ -146,6 +178,11 @@ local routeColour = nil
 local routeLinesRefreshed = 0
 -- Core/Core.lua's defaults: every row on.
 local ns = {
+	core = {
+		SafeCall = function(_, fn, ...)
+			return pcall(fn, ...)
+		end,
+	},
 	TrackerHost = {
 		GetSettings = function()
 			return trackerState
@@ -272,6 +309,7 @@ local ns = {
 		{ key = "magenta", label = "Magenta" },
 	},
 }
+env.ForeverCore.TrackerHost = ns.TrackerHost
 assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", ns)
 setfenv(assert(loadfile("UI/Settings.lua")), env)("ShortestPathForever", ns)
 
@@ -369,15 +407,16 @@ for index, name in ipairs(order) do
 end
 assert(cursor == #rows, "every row belongs to a group")
 
--- The shared Forever addons page (UI/ForeverFamily.lua) is the last subpage, with this addon's saved variables.
+-- ForeverCore's Forever addons page is the last subpage, with this addon's saved variables.
 local family = buttons[#order + 1]
 assert(family.target.name == "Shortest Path Forever" and family.initializer.name == "Forever addons")
 assert(familyPage and familyPage.category.name == "Shortest Path Forever", "the page sits under the addon's category")
 assert(familyPage.db == ns.db, "the page reads and writes this addon's settings")
 assert(familyPage.current == "ShortestPathForever", "its own row is this addon's")
-assert(familyPage.locale == ns.L, "and it reads in this addon's own translations")
+assert(familyPage.safeCall == ns.core.SafeCall, "and reports its failures through this addon's SafeCall")
 family.initializer.callback()
 assert(opened[#opened] == "Forever addons", "the button opens the page")
+assert(#opened == secureCalls, "every settings open went through ForeverCore's secure opener (#333)")
 
 -- The rows themselves are unchanged: keys, defaults, tooltips and callbacks.
 local function Row(key)
@@ -507,10 +546,10 @@ Row("resumeJourney").setting.onChanged()
 assert(keepChanged == 1, "the kept journey follows its setting")
 -- /path report shows the report, its lines run through SafeCall; lines that fail still show the rest.
 local shownReport
-ns.SafeCall = function(_, fn, ...)
+ns.core.SafeCall = function(_, fn, ...)
 	return pcall(fn, ...)
 end
-ns.Report = {
+ns.core.Report = {
 	Text = function(lines)
 		return table.concat(lines, "\n")
 	end,
@@ -521,10 +560,10 @@ ns.Report = {
 ns.ReportLines = function()
 	return { "Journey: none" }
 end
-ns.Report.Command = function(command)
+ns.core.Report.Command = function(command)
 	if command == "report" then
-		local ok, lines = ns.SafeCall("report lines", ns.ReportLines)
-		ns.Report.Show(ns.Report.Text(ok and lines or { "Report lines failed: " .. tostring(lines) }))
+		local ok, lines = ns.core.SafeCall("report lines", ns.ReportLines)
+		ns.core.Report.Show(ns.core.Report.Text(ok and lines or { "Report lines failed: " .. tostring(lines) }))
 		return true
 	end
 	return false

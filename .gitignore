@@ -19,3 +19,6 @@ tools/baker/work/
 # Speedpatrol and Sloppatrol: local runs, worktrees and sessions
 .speedpatrol/runs/
 .sloppatrol/runs/
+
+# ForeverCore, checked out here for the specs and typecheck
+forever-core/

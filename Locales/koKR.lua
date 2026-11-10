@@ -52,12 +52,9 @@ L["Class trainer"] = "직업 상급자"
 L["Clear journey"] = "여정 지우기"
 L["Click to show %s"] = "클릭하여 %s 표시"
 L["Click to show where they go"] = "클릭하여 행선지 표시"
-L["Close"] = "닫기"
 L["Compass background"] = "나침반 배경"
 L["Compass scale"] = "나침반 크기"
 L["Complete this step"] = "이 단계 완료"
-L["Copy link"] = "링크 복사"
-L["Copy the address, then open it in your browser."] = "주소를 복사한 후 브라우저에서 여십시오."
 L["Crosses %s (level %s)"] = "%s 통과 (레벨 %s)"
 L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."] =
 	"나침반 뒤의 지면을 어둡게 해 눈이나 모래 위에서도 표시가 잘 보이게 합니다. 0%는 표시하지 않습니다."
@@ -66,8 +63,6 @@ L["Distance"] = "거리" -- mt
 L["Distances in metres"] = "실제 미터로 거리 표시"
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
 	"부두, 승강기, 지하철, 차원문. 미니맵 추적 메뉴의 교통수단에서도 설정할 수 있습니다."
-L["Don't suggest this again"] = "다시 제안하지 않기"
-L["Drag to move"] = "끌어서 이동"
 L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] =
 	"끌어서 이동, Shift-끌기나 화살표 키로 미세 조정. 오른쪽 클릭으로 초기화."
 L["Drink"] = "음료"
@@ -87,7 +82,6 @@ L["Follow RestedXP guides"] = "RestedXP 가이드 따르기"
 L["Follow TomTom's arrow"] = "TomTom 화살표 따르기"
 L["Food"] = "음식"
 L["Forever addons"] = "Forever 애드온"
-L["Forever tracker"] = "Forever 추적기"
 L["Friendly nameplates must be on to see them."] =
 	"우호적인 유닛의 이름표가 켜져 있어야 볼 수 있습니다."
 L["Go through to %s"] = "%s(으)로 통과"
@@ -101,7 +95,6 @@ L["Hostile town: %s"] = "적대 마을: %s"
 L["In the objective tracker while you are near a dock, lift or tram."] =
 	"부두, 승강기, 지하철 근처에 있을 때 목표 추적기에 표시합니다."
 L["Innkeeper"] = "여관주인"
-L["Installed, turned off"] = "설치됨, 사용 안 함"
 L["Interface"] = "인터페이스"
 L["Journey"] = "여정"
 L["Journey  %s · %s"] = "여정  %s · %s"
@@ -125,7 +118,6 @@ L["Lifts and the Deeprun Tram, on the world map."] =
 	"승강기와 깊은굴 지하철을 세계 지도에 표시합니다."
 L["Loading QuestieDB…"] = "QuestieDB 불러오는 중…"
 L["Lock the tracker"] = "추적기 잠금"
-L["Tracker background"] = "추적기 배경"
 L["Map marks"] = "지도 표시"
 L["Mark only where steps end"] = "단계 끝만 표시"
 L["Minimap icon size"] = "미니맵 아이콘 크기"
@@ -142,10 +134,8 @@ L["No location for that quest yet."] = "이 퀘스트의 위치가 아직 없습
 L["No services nearby."] = "주변에 편의시설이 없습니다."
 L["No way there from here."] = "여기서 그곳까지 가는 길이 없습니다."
 L["Not discovered"] = "발견하지 않음"
-L["Not installed"] = "설치 안 됨"
 L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."] =
 	"끄면 화살표, 표식, 지도 선, 미니맵 경로는 유지되고 목표 추적기에는 여정 블록이 표시되지 않습니다."
-L["On"] = "켬"
 L["On board to %s"] = "%s행 탑승 중"
 L["On the world map."] = "세계 지도에 표시합니다."
 L["One line in chat the first time you log in after an update."] =
@@ -156,30 +146,20 @@ L["Open"] = "열기"
 L["Open Nearby services"] = "주변 편의시설 열기"
 L["Open settings."] = "설정을 엽니다."
 L["Open the world map to see it."] = "세계 지도를 열어 확인하십시오."
-L["The Forever addons are free, with nothing locked behind them. If they help, you can buy me a coffee."] =
-	"Forever 애드온은 무료이며 잠긴 기능이 없습니다. 도움이 되셨다면 커피 한 잔 사 주세요." -- mt
 L["Turn the world map to %s to see it."] = "%s 지역으로 세계 지도를 돌려 확인하십시오." -- mt
 L["This menu needs mouse and keyboard."] = "이 메뉴는 마우스와 키보드가 필요합니다." -- mt
 L["Open these settings from the minimap."] = "미니맵에서 이 설정을 엽니다."
 L["Other Faction's Routes"] = "다른 진영의 노선"
-L["Picks quests for your level and plans them into one journey."] =
-	"레벨에 맞는 퀘스트를 골라 하나의 여정으로 계획합니다."
 L["Plan journey"] = "여정 계획"
 L["Plan journeys to Guidelime's current guide step. Guidelime's arrow steps aside while ours draws."] =
 	"Guidelime의 현재 가이드 단계로 여정을 계획합니다. 우리 화살표가 그려지는 동안 Guidelime의 화살표는 물러납니다."
 L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."] =
 	"RestedXP 가이드 목표까지 여정을 계획하고 그 화살표를 숨깁니다. TomTom이 필요 없습니다."
-L["Plans the cheapest route to your next profession rank."] =
-	"다음 전문 기술 등급까지 가장 저렴한 경로를 계획합니다."
-L["Plans the quickest way anywhere and guides you there, with live boat and zeppelin times."] =
-	"어디든 가장 빠른 길을 계획해 안내하며, 배와 비행선 시간을 실시간으로 보여줍니다."
 L["Play a sound when you reach the goal"] = "목적지에 도착하면 소리 재생"
 L["Play a sound with alerts"] = "알림과 함께 소리 재생"
 L["Plays even with the game in the background."] = "게임이 백그라운드에 있어도 재생합니다."
 L["Portal to %s"] = "%s행 차원문"
 L["Portals"] = "차원문"
-L["Quest automation, rare alerts and merchant handling for the default UI."] =
-	"기본 UI용 퀘스트 자동화, 희귀 몬스터 알림, 상인 거래 처리."
 L["Reagents"] = "마법 재료"
 L["Repair"] = "장비 수리"
 L["RestedXP guide"] = "RestedXP 가이드"
@@ -203,8 +183,6 @@ L["Shift-click the world map or the minimap to plan a journey there."] =
 	"세계 지도나 미니맵을 Shift-클릭하면 그곳까지 여정을 계획합니다."
 L["Shift-click to plan journeys"] = "Shift-클릭으로 여정 계획"
 L["Shortest Path report"] = "Shortest Path 보고서"
-L["Show a quiet line where one of my other Forever addons would help. Only for addons you don't have."] =
-	"제 다른 Forever 애드온이 도움이 될 만한 곳에 조용히 한 줄을 표시합니다. 설치하지 않은 애드온만 해당됩니다."
 L["Show boats and zeppelins"] = "배와 비행선 표시"
 L["Show direction arrow"] = "방향 화살표 표시"
 L["Show flight masters"] = "비행 조련사 표시"
@@ -226,8 +204,6 @@ L["Show the time left under the compass"] = "나침반 아래에 남은 시간 �
 L["Show the way to your corpse"] = "시체까지 가는 길 표시"
 L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =
 	"주변 편의시설 여정이 향하는 NPC의 이름표 위에 표시합니다."
-L["Shows the Legacy challenges you can advance in each zone."] =
-	"각 지역에서 진행할 수 있는 유산 도전을 보여줍니다."
 L["Shows the arrow to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =
 	"화살표를 표시해 어디로든 끌 수 있습니다. Shift-끌기나 화살표 키로 미세 조정하고, 오른쪽 클릭하면 제자리로 돌아갑니다."
 L["Shows the compass to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =
@@ -240,7 +216,6 @@ L["Sizes transport icons on the minimap."] = "미니맵의 교통수단 아이�
 L["Stable master"] = "야수 관리인"
 L["Stop %d of %d"] = "정거장 %d/%d" -- mt
 L["Stop %d of %d: %s"] = "정거장 %d/%d: %s"
-L["Suggest my other Forever addons"] = "제 다른 Forever 애드온 추천"
 L["Suggest quests for my level: Adventure Guide Forever"] =
 	"내 레벨에 맞는 퀘스트 추천: Adventure Guide Forever"
 L["Teleport to %s"] = "%s(으)로 순간이동"
@@ -249,11 +224,6 @@ L["The journey's time left, as the tracker shows it, beside the distance to your
 L["The map's ping when a journey you planned reaches its goal, even with the game in the background."] =
 	"계획한 여정이 목적지에 도착할 때 지도 알림음을 재생합니다. 게임이 백그라운드에 있어도 재생합니다."
 L["The objective tracker is unavailable."] = "목표 추적기를 사용할 수 없습니다."
-L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it into your bug report."] =
-	"텍스트가 선택되었습니다. Ctrl+C(Mac은 Cmd+C)를 눌러 복사한 후 버그 보고서에 붙여 넣으십시오."
-L["The tracker is locked. Turn off Lock the tracker to move it."] =
-	"추적기가 잠겨 있습니다. 추적기 잠금을 끄면 이동할 수 있습니다."
-L["This addon"] = "이 애드온"
 L["Through %s transport, there is a way"] = "%s 교통수단을 이용하면 길이 있습니다"
 L["Through %s transport: about %d min faster"] = "%s 교통수단 이용 시: 약 %d분 더 빠름"
 L["Tracker scale"] = "추적기 크기"
@@ -350,27 +320,16 @@ L["/path issue - report a bug or request a feature with a ready-made GitHub issu
 L["/path report - show a report to copy into a bug report"] =
 	"/path report - 버그 보고서에 복사할 보고서를 표시합니다"
 L["Both"] = "둘 다" -- mt
-L["Bug"] = "버그"
-L["Bug: "] = "버그: "
-L["Copy issue link"] = "이슈 링크 복사"
-L["Copy report"] = "보고서 복사"
-L["Feature request"] = "기능 요청"
-L["Feature request: "] = "기능 요청: "
 L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs."] =
 	"로컬 이동 일지 — 약 %d야드 이동, 여정 %d회, 교통수단 %d회, 비행 %d회, 차원문 구간 %d회."
 L["Record travel stats"] = "이동 통계 기록"
-L["Report a bug or request a feature"] = "버그 보고 또는 기능 요청"
 L["Share travel stats with guild and groups"] = "길드와 그룹에 이동 통계 공유"
-L["The link is selected. Press Ctrl+C (Cmd+C on a Mac), then paste into a browser; GitHub opens a filled-in issue."] =
-	"링크가 선택되었습니다. Ctrl+C(Mac은 Cmd+C)를 눌러 복사한 후 브라우저에 붙여 넣으십시오. GitHub에 내용이 채워진 이슈가 열립니다."
 L["Time left"] = "남은 시간" -- mt
-L["Title"] = "제목"
 L["Travel journal"] = "이동 일지"
 L["Travel milestone reached: %s"] = "이동 이정표 달성: %s"
 L["Travel stats are not ready yet."] = "이동 통계가 아직 준비되지 않았습니다."
 L["Turn this off to keep stats on this character only. Shared records are player-reported and not verified."] =
 	"끄면 이 캐릭터에만 통계를 보관합니다. 공유 기록은 플레이어가 보낸 것이며 검증되지 않습니다."
-L["What happened, or what you would like"] = "무슨 일이 있었는지 또는 원하는 점"
 L["Party member"] = "파티원" -- mt
 L["That player is not on a map you can see."] = "그 플레이어는 볼 수 있는 지도에 없습니다." -- mt
 L["You have caught up with %s."] = "%s을(를) 따라잡았습니다." -- mt
@@ -427,55 +386,12 @@ L["Show boat, lift and tram departures in the tracker"] = "추적기에서 배, 
 L["Hide RestedXP's arrow"] = "RestedXP 화살표 숨기기" -- mt
 L["Hide departures"] = "출발 숨기기"
 
--- Forever Leaderboards (Forever Core's shared window).
+-- Travel stats and the shared Forever Leaderboards.
 L["Completed journeys"] = "완료한 여정"
 L["On unless you turn it off. Shares travel records with guild and group and puts you on Forever Leaderboards."] =
 	"끄지 않는 한 켜져 있습니다. 길드, 파티, 공격대, 인스턴스 채널로 여행 기록을 공유하고 Forever 순위표에 표시합니다." -- mt
 L["total"] = "총" -- mt
-L["Forever Leaderboards"] = "Forever 순위표" -- mt
-L["Overall"] = "전체" -- mt
-L["Forever standing"] = "Forever 순위" -- mt
-L["Your guild and group"] = "길드 및 그룹" -- mt
-L["Players you've met"] = "만난 플레이어" -- mt
-L["This week"] = "이번 주" -- mt
-L["All time"] = "전체 기간" -- mt
-L["Rank"] = "순위" -- mt
-L["Player"] = "플레이어" -- mt
-L["No one has reported yet."] = "아직 보고한 사람이 없습니다." -- mt
-L["Share my progress"] = "내 진행 상황 공유" -- mt
-L["Others' values are player-reported."] = "다른 플레이어의 값은 플레이어가 보고한 것입니다." -- mt
-L["Points for placing on each addon's board."] = "각 애드온 순위표에 오른 점수입니다." -- mt
-L["(you)"] = "(나)" -- mt
-L["board"] = "순위표" -- mt
-L["boards"] = "순위표" -- mt
-L["Uses Forever addons"] = "Forever 애드온 사용 중" -- mt
-L["Forever: %s overall this week"] = "Forever: 이번 주 종합 %s" -- mt
-L["Forever: %s overall"] = "Forever: 종합 %s" -- mt
-L["1st"] = "1위" -- mt
-L["2nd"] = "2위" -- mt
-L["3rd"] = "3위" -- mt
-L["4th"] = "4위" -- mt
-L["5th"] = "5위" -- mt
-L["6th"] = "6위" -- mt
-L["7th"] = "7위" -- mt
-L["8th"] = "8위" -- mt
-L[", "] = ", " -- mt
 
--- Shared debug log (Forever Core's Core/Log.lua).
-L["Debug log is off."] = "디버그 기록이 꺼져 있습니다." -- mt
-L["Debug log is on for this session."] = "이 세션 동안 디버그 기록이 켜져 있습니다." -- mt
-L["Debug log is on and pinned for this character."] =
-	"이 캐릭터에 대해 디버그 기록이 켜져 있고 고정되어 있습니다." -- mt
-L["Debug log is already on and pinned for this character."] =
-	"이 캐릭터에 대해 디버그 기록이 이미 켜져 있고 고정되어 있습니다." -- mt
-L["Debug log is off for this session; it is still pinned."] =
-	"이 세션 동안 디버그 기록이 꺼져 있지만 여전히 고정되어 있습니다." -- mt
-L["Debug log is off and unpinned."] = "디버그 기록이 꺼져 있고 고정이 해제되었습니다." -- mt
-L["No addon has attached its log yet."] = "아직 기록을 첨부한 애드온이 없습니다." -- mt
-L["%s (last %d):"] = "%s (최근 %d개):" -- mt
-L["%s: no lines yet."] = "%s: 아직 줄이 없습니다." -- mt
-L["Usage: /forever debug, /forever debug pin, /forever debug off, /forever debug show"] =
-	"사용법: /forever debug, /forever debug pin, /forever debug off, /forever debug show" -- mt
 L["Follow roads"] = "도로 따라가기" -- mt
 L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =
 	"이동 경로는 추가 거리가 절반 미만이면 도로와 포장된 거리를 따라갑니다. 지역의 일반 흙으로 칠해진 도로는 알 수 없습니다." -- mt

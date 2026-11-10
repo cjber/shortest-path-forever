@@ -1,5 +1,9 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
+
+if ns.broken then
+	return
+end
 local L = ns.L
 
 -- A corpse run: while you are a ghost, the walk back to your body, dotted in the red-orange of the game's own

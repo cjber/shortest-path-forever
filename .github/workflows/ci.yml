@@ -21,9 +21,21 @@ jobs:
 
   check:
     runs-on: ubuntu-24.04
+    env:
+      FOREVER_CORE: forever-core
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
+      - name: Read the ForeverCore ref
+        id: forever-core-ref
+        run: echo "ref=$(cat tools/forever-core.txt)" >> "$GITHUB_OUTPUT"
+      - name: Check out ForeverCore
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: cjber/forever-core
+          ref: ${{ steps.forever-core-ref.outputs.ref }}
+          path: forever-core
           persist-credentials: false
       # Ubuntu 24.04's release-pocket builds, which the archive never replaces.
       - name: Install LuaJIT and luacheck
@@ -51,10 +63,6 @@ jobs:
       - run: luajit -joff tests/runtime_bench.lua cold
       - run: luajit -joff tests/hearth_savings_bench.lua
       - run: luajit -joff tests/journey_bench.lua
-      - name: Native tracker integration
-        run: |
-          python3 tools/fetch_tracker_ui.py
-          TRACKER_UI_ROOT=tools/.cache/tracker-ui luajit tests/tracker_host_spec.lua
       - run: tests/ui.sh
       - uses: JohnnyMorganz/stylua-action@76fd70c03e6340ceaf673366712db9b20560b402 # v5.0.0
         with:
@@ -113,9 +121,21 @@ jobs:
 
   typecheck:
     runs-on: ubuntu-24.04
+    env:
+      FOREVER_CORE: forever-core
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
+      - name: Read the ForeverCore ref
+        id: forever-core-ref
+        run: echo "ref=$(cat tools/forever-core.txt)" >> "$GITHUB_OUTPUT"
+      - name: Check out ForeverCore
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: cjber/forever-core
+          ref: ${{ steps.forever-core-ref.outputs.ref }}
+          path: forever-core
           persist-credentials: false
       # tools/check_locales.py parses each translation with LuaJIT.
       # Ubuntu 24.04's release-pocket builds, which the archive never replaces.
@@ -192,10 +212,22 @@ jobs:
   package:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    env:
+      FOREVER_CORE: forever-core
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
+      - name: Read the ForeverCore ref
+        id: forever-core-ref
+        run: echo "ref=$(cat tools/forever-core.txt)" >> "$GITHUB_OUTPUT"
+      - name: Check out ForeverCore
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: cjber/forever-core
+          ref: ${{ steps.forever-core-ref.outputs.ref }}
+          path: forever-core
           persist-credentials: false
       # Ubuntu 24.04's release-pocket builds, which the archive never replaces.
       - name: Install LuaJIT

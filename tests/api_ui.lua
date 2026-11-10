@@ -155,7 +155,7 @@ assert(tipColors[8] == HIGHLIGHT_FONT_COLOR, "the last shared stop's label in wh
 assert(tip[#tip] == "  Right-click to clear" and tip[#tip - 1] == " " and tipColors[#tip] == NORMAL_FONT_COLOR)
 zoomedOut[1]:OnMouseLeave()
 -- A canvas refresh that keeps the grouping keeps the rings, hover and all.
-local goalPool = ns.MapCanvas.Pools(WorldMapFrame)[goalTemplate]
+local goalPool = ns.Canvas.Pools(WorldMapFrame)[goalTemplate]
 local acquisitions, acquire = 0, goalPool.Acquire
 goalPool.Acquire = function(self, ...) acquisitions = acquisitions + 1 return acquire(self, ...) end
 canvasScaled()

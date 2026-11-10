@@ -1,13 +1,17 @@
 # AGENTS.md
 
 Shortest Path Forever is a WoW: Forever addon (Interface 16001) that plans and guides journeys by foot,
-flight, boat, lift, tram and portal. The BigWigs packager ships it with bundled compressed terrain
-as one addon on a `v*` tag.
+flight, boat, lift, tram and portal. It requires ForeverCore (`## Dependencies: ForeverCore`,
+`required-dependencies` in `.pkgmeta`), the standalone addon every Forever addon needs: the tracker column, the
+report window, leaderboards, the error journal and debug log, the settings chrome, the quest log tabs and the
+family page are core's alone. The BigWigs packager ships it with bundled compressed terrain as one addon on a `v*`
+tag, and the stores install ForeverCore with it.
 
 ## Commands
 
 ```sh
 python3 tools/doctor.py   # first on a new machine: every tool pin below, with a fix for each problem
+export FOREVER_CORE=../forever-core   # or the checkout of tools/forever-core.txt's ref, beside this one
 stylua --check .
 ruff format --check . && ruff check .
 luacheck .
@@ -43,12 +47,12 @@ before its `v*` tag, since the release publishes it as the notes.
   a PR opened by `GITHUB_TOKEN`; a failed run on
   main is re-run once ten minutes later by `.github/workflows/retry-refresh.yml`, and one that fails again opens or comments on
   the issue "Data refresh failed". Moved by hand: `DB_REV` (classic-db, frozen under
-  the WFA-28 waivers), `REVISION` in `tools/fetch_tracker_ui.py` (shared with the companion addons), the
+  the WFA-28 waivers), the Blizzard UI source pin in `tools/forever_sim/fetch.py` (moved with forever-core), the
   checksummed UI source in `tools/fetch_blizzard_ui.sh`, and the walking maps, which need a local client install.
 - `Nav/` - compressed walking maps built by `tools/baker/` and `tools/pack_nav.py`; terrain is decoded
   only when a route needs it.
-- `Core/` — addon lifecycle, defaults, the planning context (the live and static inputs every plan starts from)
-  and the public API.
+- `Core/` — addon lifecycle, the ForeverCore registration and its API floor, defaults, the planning context
+  (the live and static inputs every plan starts from) and the public API. The shared runtime is ForeverCore's.
 - `Routing/` — transport search and walking-map decoding, search and frame scheduling.
 - `Journey/` — journey state, steps, costs, guidance and corpse recovery; performance budgets live in
   `tests/journey_performance.md`.
@@ -64,8 +68,12 @@ before its `v*` tag, since the release publishes it as the notes.
 
 - Lua 5.1 in the game's sandbox: no `require`. The client loads the files `ShortestPathForever.toc` lists, in
   that order, each receiving `local addonName, ns = ...` (or `ns = select(2, ...)`); a new file goes in the TOC or never runs.
-- The specs are a headless harness with stubbed client APIs. Anything they cannot reach (frames,
-  menus, tooltips, the tracker) is checked in game: check them in the headless client (forever-core's `wow-forever-addon/in-game.md`) and list in the PR what was checked; what waits on the player's own session goes in the PR as `/reload` tests for the user.
+- The specs are a headless harness with stubbed client APIs. They load ForeverCore first, from the checkout
+  `FOREVER_CORE` names (default `../forever-core`; `tools/forever-core.txt` names the ref CI checks out), through
+  `tests/forever_core.lua`, so a spec exercises the real shared modules and never a vendored copy. Anything they
+  cannot reach (frames, menus, tooltips, the tracker) is checked in game: check them in the headless client
+  (forever-core's `wow-forever-addon/in-game.md`) and list in the PR what was checked; what waits on the player's
+  own session goes in the PR as `/reload` tests for the user.
 - New runtime globals go in `.luacheckrc` and need real types: Ketho's pinned annotations, the defining
   addon class, or `types/*.lua` for missing Forever APIs. No blanket globals/diagnostic allowlist.
 - LuaLS checks every TOC-loaded Lua file, including generated data and walking maps. Keep namespace and
@@ -79,7 +87,7 @@ before its `v*` tag, since the release publishes it as the notes.
   refactoring work.
 - A flight point is known only when its flight-master slot is CURRENT or REACHABLE; DISTANT is undiscovered on
   this client, and `tests/taxi_known_client_spec.lua` guards the recorded fixture.
-- Searches and tracker updates wait until combat ends; no idle `OnUpdate` (the world map view in `UI/MapCanvas.lua` runs
+- Searches and tracker updates wait until combat ends; no idle `OnUpdate` (the world map view in `UI/Canvas.lua` runs
   one only while the map is open, where the map itself runs one).
 - Never stretch art: an icon, atlas or texture is drawn at its native aspect, through `UI/Art.lua` (`Art.Fit`,
   `Art.Icon`); only nine-slice pieces, bars and fills stretch by design. `tools/lint_art.py` refuses a raw
@@ -152,10 +160,12 @@ before its `v*` tag, since the release publishes it as the notes.
 `tools/typecheck.sh` checks the TOC/XML load graph, LuaLS coverage, `tools/lint_secret.py` (secret values through `ns.Readable`, tooltip hooks behind `ns.Usable`), `tools/check_editorconfig.py` and `tools/check_family.py` (the shared family block between the `forever-family` markers in README.md and docs/curseforge.md).
 Never touch Blizzard's Lua state: WFA-38 in `wow-forever-addon` lists what addon code may do to Blizzard's
 frames, how to restyle one by drawing on top, and when a `taint-ok` exception holds.
-Keep addon tracker sections and pools in `UI/TrackerHost.lua`, outside Blizzard's registry.
-Draw on the world map only through `UI/MapCanvas.lua`: the addon's own frames on the canvas, and no `AddDataProvider`,
-`AcquirePin`, `AddOverlayFrame` or other write into the map (#158; `tests/map_canvas_spec.lua` fails on one).
+Keep addon tracker sections in the shared column: create the module, set its `safeCall`, `legacySettings` and
+`AddHeaderMenuEntries`, and attach it with `ForeverCore.TrackerHost.Attach`. Never register with Blizzard's
+tracker manager.
+Draw on the world map only through `UI/Canvas.lua`: the addon's own frames on the canvas, and no `AddDataProvider`,
+`AcquirePin`, `AddOverlayFrame` or other write into the map (#158; `tests/ui_map.lua` fails on one).
 Render only after `PLAYER_ENTERING_WORLD` and `VARIABLES_LOADED`, deferred one frame.
-This supersedes WFA-5's native registration guidance. CI exercises the host against checksum-pinned
-Forever tracker source; native manager access is forbidden in the integration harness.
+This supersedes WFA-5's native registration guidance. ForeverCore owns the host; native manager access is
+forbidden in the integration harness.
 Test event ordering and reuse, not just method existence.

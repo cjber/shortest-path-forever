@@ -24,7 +24,6 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "docs/screenshots"
 SOURCES = (
     "Core/Progress.lua",
-    "Core/PeerStats.lua",
     "tests/progress_harness.lua",
     "Locales/enUS.lua",
     "tools/screenshots*.py",

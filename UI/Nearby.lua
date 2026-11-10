@@ -1,5 +1,9 @@
 ---@type string, SPFNamespace
 local _, ns = ...
+
+if ns.broken then
+	return
+end
 local L = ns.L
 -- Vendors grouped by what they sell: QuestieDB's item class and subclass, and the food and drink item IDs in
 -- Data/Services.lua. The icon is the item the mock shows for the group.
@@ -61,9 +65,7 @@ local function WhenReady(fn)
 	end
 end
 -- Case-folded matching for the panel's search box: plain substring, never a keyword list.
-local Fold = ns.Text and ns.Text.Fold or function(text)
-	return tostring(text or ""):lower()
-end
+local Fold = ForeverCore.Text.Fold
 
 local function Contains(folded, query)
 	return query == "" or folded:find(query, 1, true) ~= nil
@@ -733,8 +735,8 @@ local function OpenServices()
 		ns.Print(L["This menu needs mouse and keyboard."])
 		return
 	end
-	if ns.OpenWorldMap() and ns.QuestLogTabs then
-		ns.QuestLogTabs.Select("services")
+	if ns.OpenWorldMap() then
+		ForeverCore.QuestLogTabs.Select("services")
 	end
 end
 

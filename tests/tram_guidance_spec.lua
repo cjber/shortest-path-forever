@@ -118,7 +118,7 @@ assert(
 settleAll()
 local title, rows = ns.JourneyInfo()
 assert(title and rows and #rows > 0, "the tracker has the journey's steps")
-local pins = ns.MapCanvas.Pools(WorldMapFrame)
+local pins = ns.Canvas.Pools(WorldMapFrame)
 local line = pins.ShortestPathForeverRoutePinTemplate
 local goals = pins.ShortestPathForeverGoalPinTemplate
 
