@@ -52,6 +52,55 @@
 ---@field seconds number -- equal to Estimate's answer
 ---@field legs SPFAPILeg[] -- fresh copies on every call, never SPF's own tables
 
+--- A place as the API names it: a uiMapID and normalized 0-1 coordinates.
+---@class SPFAPIPlace
+---@field map integer -- uiMapID
+---@field x number -- normalized 0-1
+---@field y number -- normalized 0-1
+
+--- Where a journey ends: a place, and the goal's own title.
+---@class SPFAPIJourneyGoal : SPFAPIPlace
+---@field title string -- the stop's title, or where it stands when it has none
+
+--- One leg still ahead, as the tracker words it.
+---@class SPFAPIJourneyLeg
+---@field mode SPFAPIMode
+---@field text string -- the step's action words, plain and without the tracker's colours
+---@field seconds number -- this leg's own whole seconds, its wait included
+
+--- The journey under way, whoever owns it.
+---@class SPFAPIJourney
+---@field owner? string -- the addon that owns it; absent for the player's own journey
+---@field goal SPFAPIJourneyGoal
+---@field legs SPFAPIJourneyLeg[] -- fresh copies from the leg under way to the goal
+---@field index integer -- the 1-based leg under way
+---@field guided boolean -- whether guidance is on
+---@field secondsLeft number -- whole seconds from the leg under way to the goal, as the tracker header shows it
+
+--- One travel record of this character's.
+---@class SPFAPIStat
+---@field addon string -- always "ShortestPathForever"
+---@field metric string -- "distance_yards", "routes_completed", "transports_used", "flights_taken" or "portals_used"
+---@field subject string -- always "all"
+---@field value number
+---@field eventUnix? number -- absent: the travel journal records no event time
+
+--- One player's row on the all-time travel board.
+---@class SPFAPILeaderboardRow
+---@field rank integer
+---@field name string
+---@field value number
+---@field eventUnix? number
+---@field self? boolean -- true on this character's row
+
+--- The all-time completed journeys board.
+---@class SPFAPILeaderboard
+---@field metric string -- "routes_completed"
+---@field scope string -- "guild_group"
+---@field sharing boolean -- whether this character sends and receives totals
+---@field total integer -- every eligible row, before the limit
+---@field rows SPFAPILeaderboardRow[]
+
 --- What happened to guidance since the subscriber was last called; each field is true or absent. Several can be
 --- true together, from one burst of changes.
 ---@class SPFAPIChanges
@@ -59,16 +108,23 @@
 ---@field changed? boolean -- the journey under way now heads somewhere else: replaced by a new one, or on to its next stop
 ---@field ended? boolean -- the journey under way ended, with nothing after it
 ---@field stop? boolean -- what CurrentStop answers changed: an addon's route started, moved on to another stop or ended
+---@field leg? boolean -- the leg under way moved on without the goal changing: the player or an owner skipped it
 ---@field active? boolean -- what Active answers changed
 
 ---@class SPFPublicAPI
 ---@field version integer -- 1; a breaking change would raise it
----@field minor integer -- 2: RenameStop, npc, handins and the vendor kind; 1 added Subscribe
+---@field minor integer -- 3: Journey, Pause, Resume, SkipLeg, Stats and Leaderboard, and the leg change; 2: RenameStop, npc, handins and the vendor kind; 1 added Subscribe
 ---@field Estimate fun(fromMap: integer, fromX: number, fromY: number, toMap: integer, toX: number, toY: number): seconds: number?, reason: SPFAPINoRoute? -- travel seconds; nil comes with the reason
 ---@field Navigate fun(owner: string, map: integer, x: number, y: number, title?: string, kind?: SPFAPIStopKind): boolean -- starts/replaces guidance outside combat when journeys are enabled
 ---@field NavigateRoute fun(owner: string, stops: SPFAPIStop[]): boolean -- starts/replaces guidance through 1-64 stops in order; false leaves the current journey intact
 ---@field CurrentStop fun(owner: string): index: integer?, reason: SPFAPINotReady? -- 1-based current stop, or nil and why there is none
 ---@field Cancel fun(owner: string): boolean -- true only when this owner's current journey was cancelled
+---@field Journey fun(): journey: SPFAPIJourney?, reason: SPFAPINotReady? -- the journey under way, whoever owns it, or nil and why there is none
+---@field Pause fun(owner: string): boolean -- stops that owner's guidance and keeps its goal; false for another owner, no journey, an already stopped journey or combat
+---@field Resume fun(owner: string): boolean -- starts that owner's guidance again on the same goal; false for another owner, no journey, an already guided journey or combat
+---@field SkipLeg fun(owner: string, index?: integer): boolean -- advances that owner's current leg; false for another owner or when nothing was skipped
+---@field Stats fun(): rows: SPFAPIStat[]?, reason: SPFAPINotReady? -- this character's travel records, one fresh row per metric
+---@field Leaderboard fun(limit?: integer): board: SPFAPILeaderboard?, reason: ("invalid"|SPFAPINotReady)? -- the all-time completed journeys board; nil and "invalid" for a limit that is not a whole number of zero or more
 ---@field RenameStop fun(owner: string, index: integer, title: string, renamePoints?: fun(point: SPFPoint): boolean?): boolean -- relabels a running route's stop in place; false leaves it as it was
 ---@field EstimateDetail fun(fromMap: integer, fromX: number, fromY: number, toMap: integer, toX: number, toY: number): detail: SPFAPIDetail?, reason: SPFAPINoRoute? -- Estimate leg by leg, sharing its cache
 ---@field Active fun(): boolean -- true while any journey is guiding, whoever started it

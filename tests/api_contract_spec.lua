@@ -41,7 +41,7 @@ end
 
 -- What is there to call: version 1, minor 2, and every function the hand-off checks before calling it.
 equal(API.version, 1, "version stays 1")
-equal(API.minor, 2, "minor 2 records Subscribe and the additions after it")
+equal(API.minor, 3, "minor 3 records Journey, Pause, Resume, SkipLeg, Stats and Leaderboard")
 for _, name in ipairs({
 	"NavigateRoute",
 	"Navigate",

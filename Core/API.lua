@@ -56,6 +56,25 @@ local function Point(map, x, y)
 	return ns.WorldPoint(map, x, y)
 end
 
+-- A world point as this API names places: the uiMapID C_Map projects it onto and 0-1 fractions there. It is the
+-- reverse of Point, so a caller reads back the same shape it sent and never one of ns's own world points.
+---@param point SPFPoint?
+---@return SPFAPIPlace?
+local function Place(point)
+	if not point then
+		return nil
+	end
+	local uiMap, position = C_Map.GetMapPosFromWorldPos(point.map, CreateVector2D(point.x, point.y))
+	if not (uiMap and position and Number(uiMap) and uiMap > 0 and uiMap % 1 == 0) then
+		return nil
+	end
+	local x, y = position:GetXY()
+	if not (Number(x) and Number(y) and x >= 0 and x <= 1 and y >= 0 and y <= 1) then
+		return nil
+	end
+	return { map = uiMap, x = x, y = y }
+end
+
 -- A positive whole number: a quest or NPC id.
 local function ID(value)
 	return Number(value) and value % 1 == 0 and value >= 1
@@ -150,12 +169,12 @@ local MAX_STOPS = 64
 local ended = {}
 
 -- Subscribe's hub (ForeverCore.APIKit): told once per burst what happened to guidance, after every change in it has
--- landed. Each channel is a comparable key the hub reads when it dispatches. The four event channels count the notices
+-- landed. Each channel is a comparable key the hub reads when it dispatches. The five event channels count the notices
 -- the old dispatcher queued, so a caller hears the same changes it used to, and "active" is the answer itself, so a
 -- guide switched off and on again within one burst stays quiet.
-local notices = { started = 0, changed = 0, ended = 0, stop = 0 }
+local notices = { started = 0, changed = 0, ended = 0, stop = 0, leg = 0 }
 
----@param name "started"|"changed"|"ended"|"stop"
+---@param name "started"|"changed"|"ended"|"stop"|"leg"
 ---@return fun(): integer|false
 local function Counter(name)
 	return function()
@@ -168,6 +187,7 @@ local hub = APIKit.Hub("ShortestPathForever", {
 	changed = Counter("changed"),
 	ended = Counter("ended"),
 	stop = Counter("stop"),
+	leg = Counter("leg"),
 	active = function()
 		return ns.IsJourneyGuided() == true
 	end,
@@ -183,7 +203,7 @@ local stopOwner
 local stopIndex
 local active = false
 
----@param kind "started"|"changed"|"ended"|"stop"
+---@param kind "started"|"changed"|"ended"|"stop"|"leg"
 local function Notify(kind)
 	notices[kind] = notices[kind] + 1
 	hub.Queue()
@@ -212,6 +232,12 @@ end
 -- JourneyGuide.lua: the guide started or stopped, which Active() reports.
 function ns.GuideChanged()
 	Settle()
+end
+
+-- Journey.lua: the leg under way moved on, skipped from the tracker or by another addon's SkipLeg. A stop changing
+-- already says "changed"; this says the leg within the same stop is not the one a subscriber last read.
+function ns.JourneyLegChanged()
+	Notify("leg")
 end
 
 ---@param point SPFPoint?
@@ -276,7 +302,7 @@ function ns.JourneyStops()
 end
 
 ---@class SPFPublicAPI
-local API = { version = 1, minor = 2 }
+local API = { version = 1, minor = 3 }
 
 local function Differs(a, b)
 	for key, value in pairs(a) do
@@ -554,6 +580,146 @@ function API.Cancel(owner)
 	return true
 end
 
+-- A place with the goal's name: the title its caller gave the stop, else the name the tracker's header gives it. The
+-- header's own line also counts the stops ("Stop 1 of 2: ..."), which a caller reads from index instead.
+---@param point SPFPoint
+---@return SPFAPIJourneyGoal?
+local function JourneyPlace(point)
+	local place = Place(point)
+	if not place then
+		return nil
+	end
+	return { map = place.map, x = place.x, y = place.y, title = point.label or ns.JourneyTitle(point) }
+end
+
+local function Whole(ms)
+	return math.max(0, math.ceil(ms / 1000))
+end
+
+-- The planner's legs from the one under way on, as fresh copies: the tracker's plain action words, the mode's own
+-- name and the leg's whole seconds including its wait, which is how JourneyTime adds the header up.
+---@param plan SPFPlan
+---@param index integer
+---@return SPFAPIJourneyLeg[]
+local function JourneyLegs(plan, index)
+	local legs = {}
+	for legIndex = index, #plan.legs do
+		local leg = plan.legs[legIndex]
+		legs[#legs + 1] = {
+			mode = leg.mode,
+			text = ns.StepText(leg),
+			seconds = Whole(ns.LegSpan(leg)) + Whole(leg.wait or 0),
+		}
+	end
+	return legs
+end
+
+-- A corpse run is the journey under way while you are a ghost. Corpse.Info already names it, its one plan and the
+-- step under way, so the run is read as the tracker draws it; the journey waiting behind it keeps its goal.
+---@return SPFAPIJourney?
+local function CorpseJourney()
+	local title, _, plan, index = ns.Corpse.Info()
+	local point = ns.Corpse.Point()
+	local goal = point and JourneyPlace(point)
+	if not (title and plan and goal and index) then
+		return nil
+	end
+	goal.title = title
+	return {
+		owner = nil,
+		goal = goal,
+		legs = JourneyLegs(plan, index),
+		index = index,
+		guided = ns.IsJourneyGuided() == true,
+		secondsLeft = ns.JourneyTime(plan.legs, index) / 1000,
+	}
+end
+
+-- The journey under way, whoever owns it. Every table is new, and a search still working on its first plan has
+-- nothing to read yet, exactly as the tracker shows a spinner.
+---@return SPFAPIJourney?, SPFAPINotReady?
+function API.Journey()
+	if not Loaded() then
+		return Loading()
+	end
+	if ns.Corpse and ns.Corpse.Active() then
+		local run = CorpseJourney()
+		if run then
+			return run
+		end
+		-- A run with no corpse place or plan has nothing to read: the tracker likewise shows no run until it can.
+		return Loading()
+	end
+	local goal = ns.JourneyGoal()
+	if not goal then
+		return None()
+	end
+	local plan, index = ns.JourneyPlan()
+	index = index or 1
+	if not plan and select(4, ns.JourneyStatus()) then
+		return Loading()
+	end
+	local place = JourneyPlace(goal)
+	if not place then
+		return None()
+	end
+	return {
+		owner = ns.JourneyOwner(),
+		goal = place,
+		legs = plan and JourneyLegs(plan, index) or {},
+		index = index,
+		guided = ns.IsJourneyGuided() == true,
+		secondsLeft = plan and ns.JourneyTime(plan.legs, index) / 1000 or 0,
+	}
+end
+
+-- Only the owner may steer its journey, and only while the player is alive to be guided: a corpse run is the
+-- player's own guidance and the owner's journey waits behind it.
+---@param owner string
+---@return boolean
+local function Steerable(owner)
+	return Owner(owner)
+		and route ~= nil
+		and route.owner == owner
+		and ns.JourneyGoal() ~= nil
+		and not (ns.Corpse and ns.Corpse.Active())
+end
+
+-- Stop guidance and keep the goal and route, the state the tracker's guidance switch leaves when turned off. The
+-- goal's pin turns bronze and the route waits for Resume.
+---@param owner string
+---@return boolean
+function API.Pause(owner)
+	if not (Loaded() and not InCombatLockdown() and Steerable(owner)) or not ns.IsJourneyGuided() then
+		return false
+	end
+	ns.ToggleJourneyGuide()
+	return true
+end
+
+-- Start guidance again on the same goal, as the tracker's Journeys switch does.
+---@param owner string
+---@return boolean
+function API.Resume(owner)
+	if not (Loaded() and not InCombatLockdown() and Steerable(owner)) or ns.IsJourneyGuided() then
+		return false
+	end
+	ns.ToggleJourneyGuide()
+	return true
+end
+
+-- Advance the leg under way, through the same step the tracker's leg menu takes. index is optional and, when given,
+-- must name the current leg.
+---@param owner string
+---@param index? integer
+---@return boolean
+function API.SkipLeg(owner, index)
+	if not (Loaded() and Steerable(owner)) or (index ~= nil and not (Number(index) and index % 1 == 0)) then
+		return false
+	end
+	return ns.SkipJourneyStep(index) == true
+end
+
 -- Relabel a running route's stop in place: a guide renames a step whose position did not move, which must not cost a
 -- replan. renamePoints says which later stops are that same place, so they keep the name too. The titles only a
 -- multi-stop route draws stay as they were.
@@ -649,6 +815,80 @@ function API.Ended(owner)
 		return entry.reason, entry.at
 	end
 	return None()
+end
+
+local LEADERBOARD_LIMIT, LEADERBOARD_MAX = 10, 25
+local LEADERBOARD_METRIC = "routes_completed"
+-- Core/Progress.lua's travel journal, by the field its snapshot keeps. The API names the metrics and Progress keeps
+-- the totals; the journal records no event time, so eventUnix is left out rather than invented.
+local TRAVEL_METRICS = {
+	{ metric = "distance_yards", field = "walkedYards" },
+	{ metric = "routes_completed", field = "routesCompleted" },
+	{ metric = "transports_used", field = "transportsUsed" },
+	{ metric = "flights_taken", field = "flightsTaken" },
+	{ metric = "portals_used", field = "portalsUsed" },
+}
+
+-- This character's own travel records, one fresh row per metric (Core/Progress.lua keeps them).
+---@return SPFAPIStat[]?, SPFAPINotReady?
+function API.Stats()
+	if not Loaded() then
+		return Loading()
+	end
+	local stats = ns.TravelStats()
+	if not stats then
+		return Loading()
+	end
+	local rows = {}
+	for index, entry in ipairs(TRAVEL_METRICS) do
+		rows[index] = {
+			addon = "ShortestPathForever",
+			metric = entry.metric,
+			subject = "all",
+			value = stats[entry.field],
+		}
+	end
+	return rows
+end
+
+-- The all-time completed journeys board, in the suite's shape. A limit of zero keeps the player's own row, which
+-- sits below the requested ranks; a wrong limit is an argument error, not a not-ready reason.
+---@param limit? integer how many top rows, ten unless given, 25 at most; the player's row is always kept
+---@return SPFAPILeaderboard?, ("invalid"|SPFAPINotReady)?
+function API.Leaderboard(limit)
+	if limit == nil then
+		limit = LEADERBOARD_LIMIT
+	elseif not (Number(limit) and limit >= 0 and limit % 1 == 0) then
+		return nil, "invalid"
+	end
+	if not Loaded() then
+		return Loading()
+	end
+	local stats = ns.TravelStats()
+	if not stats then
+		return Loading()
+	end
+	local board = ns.TravelBoard("all")
+	limit = math.min(limit, LEADERBOARD_MAX)
+	local rows = {}
+	for rank, row in ipairs(board) do
+		if rank <= limit or row.you then
+			rows[#rows + 1] = {
+				rank = rank,
+				name = row.name,
+				value = row.value,
+				self = row.you == true or nil,
+			}
+		end
+	end
+	return {
+		metric = LEADERBOARD_METRIC,
+		scope = "guild_group",
+		-- Progress.lua's two switches: sharing, and its own recording switch which keeps the journal local.
+		sharing = ns.db.statsShare ~= false and ns.db.stats ~= false,
+		total = #board,
+		rows = rows,
+	}
 end
 
 API.Subscribe = hub.Subscribe
