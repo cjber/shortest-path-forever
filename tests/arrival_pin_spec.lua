@@ -1,6 +1,5 @@
--- Reaching a held stop's area turns the direction arrow into the client's own waypoint pin with the stop's
--- objectives under it (#627), instead of hiding; leaving the area or changing the stop brings the arrow back, and
--- turning the setting off keeps the old hide.
+-- Reaching a held stop's area keeps the gold goal pin with the stop's objectives under it (#627), instead of
+-- hiding; leaving the area or changing the stop brings the arrow back, and turning the setting off keeps the old hide.
 local driver = assert(loadfile("tests/journey_driver.lua"))()
 local ns, env = driver.ns, driver.env
 local create = env.CreateFrame
@@ -103,13 +102,6 @@ env.C_Timer = {
 		fn()
 	end,
 }
-env.C_Texture = {
-	GetAtlasInfo = function(atlas)
-		if atlas == "Waypoint-MapPin-Tracked" then
-			return { width = 30, height = 30 }
-		end
-	end,
-}
 for _, file in ipairs({ "UI/Art.lua", "UI/Mover.lua", "UI/TurnAround.lua", "UI/Arrow.lua" }) do
 	driver.load(file)
 end
@@ -144,8 +136,11 @@ driver.move({ map = 1, x = 0, y = 0, z = 0 })
 driver.update(0.1)
 assert(ns.ArrivalStop() == stop, "the stop whose area the player is in is the arrival")
 assert(frame.arrival and not frame.hidden, "the arrow frame stays up as the arrival pin")
-assert(frame.Icon.atlas == "Waypoint-MapPin-Tracked", "the client's own pin art")
-assert(frame.Icon.width == 36 and frame.Icon.height == 36, "drawn at the pin's native square aspect")
+assert(
+	frame.Icon.texture == ns.PIN_FILE and frame.Icon.atlas == nil,
+	"the addon's own gold goal pin, not a client atlas"
+)
+assert(frame.Icon.width == 36 and frame.Icon.height == 36, "at the arrow's normal pin size")
 assert(frame.ArrivalTitle.text == "Stop 1 of 2: The Camp", "the stop's title beneath it")
 assert(
 	frame.ArrivalLines.text == "Slay 6 boars\nCollect 4 tusks\nReturn to the camp",

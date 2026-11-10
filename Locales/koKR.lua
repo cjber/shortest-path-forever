@@ -475,8 +475,8 @@ L["Eastern Kingdoms"] = "동부 왕국" -- mt
 L["Kalimdor"] = "칼림도어" -- mt
 L["No flight points learned in %s: open a flight master's map once to sync them."] =
 	"%s에서 배운 비행 지점이 없습니다: 비행 조련사의 지도를 한 번 열어 동기화하세요." -- mt
-L["Only the flight points your character has are learned now."] =
-	"이제 캐릭터가 가진 비행 지점만 기억합니다." -- mt
+L["When you reach a stop, the arrow becomes a pin with what to do there."] =
+	"지점에 도착하면 화살표가 그곳에서 할 일이 담긴 핀으로 바뀝니다." -- mt
 L["Better for your level, farther away"] = "레벨에 더 좋은 물품, 더 먼 곳" -- mt
 L["Show a pin when you reach a stop"] = "지점에 도착하면 핀 표시" -- mt
 L["In a stop's area the direction arrow becomes a pin with the stop's objectives, instead of hiding."] =

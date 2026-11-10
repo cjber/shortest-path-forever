@@ -361,7 +361,7 @@ L["Turn this off to keep stats on this character only. Shared records are player
 	"Ausschalten, um die Statistik nur für diesen Charakter zu behalten. Geteilte Einträge stammen von Spielern und sind nicht geprüft."
 L["What happened, or what you would like"] = "Was passiert ist oder was Ihr Euch wünscht"
 L["Party member"] = "Gruppenmitglied" -- mt
-L["That player is not on a map you can see."] = "Dieser Spieler ist nicht auf einer Karte, die du sehen kannst." -- mt
+L["That player is not on a map you can see."] = "Dieser Spieler ist nicht auf einer Karte, die Ihr sehen könnt." -- mt
 L["You have caught up with %s."] = "Du hast %s eingeholt." -- mt
 L["Shortest Path's own arrow replaces the guide's while a guide target is followed."] =
 	"Der eigene Pfeil von Shortest Path ersetzt den des Leitfadens, solange ein Leitfaden-Ziel verfolgt wird." -- mt
@@ -468,11 +468,11 @@ L["Eastern Kingdoms"] = "Östliche Königreiche" -- mt
 L["Kalimdor"] = "Kalimdor" -- mt
 L["No flight points learned in %s: open a flight master's map once to sync them."] =
 	"Noch keine Flugpunkte in %s gelernt: Öffnet einmal die Karte eines Flugmeisters, um sie abzugleichen." -- mt
-L["Only the flight points your character has are learned now."] =
-	"Es werden nur noch die Flugpunkte gelernt, die Euer Charakter hat." -- mt
+L["When you reach a stop, the arrow becomes a pin with what to do there."] =
+	"Wenn Ihr einen Halt erreicht, wird der Pfeil zu einer Markierung mit dem, was dort zu tun ist." -- mt
 L["Better for your level, farther away"] = "Besser für Eure Stufe, weiter entfernt" -- mt
-L["Show a pin when you reach a stop"] = "Eine Markierung anzeigen, wenn du einen Halt erreichst" -- mt
+L["Show a pin when you reach a stop"] = "Eine Markierung anzeigen, wenn Ihr einen Halt erreicht" -- mt
 L["In a stop's area the direction arrow becomes a pin with the stop's objectives, instead of hiding."] =
 	"Im Bereich eines Halts wird der Richtungspfeil zu einer Markierung mit den Zielen des Halts, statt zu verschwinden." -- mt
 L["It returns to the arrow when you leave the area or the stop changes."] =
-	"Er wird wieder zum Pfeil, wenn du den Bereich verlässt oder sich der Halt ändert." -- mt
+	"Er wird wieder zum Pfeil, wenn Ihr den Bereich verlasst oder sich der Halt ändert." -- mt

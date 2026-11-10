@@ -469,8 +469,8 @@ L["Eastern Kingdoms"] = "Reinos del Este" -- mt
 L["Kalimdor"] = "Kalimdor" -- mt
 L["No flight points learned in %s: open a flight master's map once to sync them."] =
 	"No has aprendido puntos de vuelo en %s: abre una vez el mapa de un maestro de vuelo para sincronizarlos." -- mt
-L["Only the flight points your character has are learned now."] =
-	"Ahora solo se aprenden los puntos de vuelo que tiene tu personaje." -- mt
+L["When you reach a stop, the arrow becomes a pin with what to do there."] =
+	"Al llegar a una parada, la flecha se convierte en una marca con lo que hay que hacer allí." -- mt
 L["Better for your level, farther away"] = "Mejor para tu nivel, más lejos" -- mt
 L["Show a pin when you reach a stop"] = "Mostrar una marca al llegar a una parada" -- mt
 L["In a stop's area the direction arrow becomes a pin with the stop's objectives, instead of hiding."] =

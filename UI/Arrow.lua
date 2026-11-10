@@ -16,8 +16,6 @@ local RADIUS = 36
 local PASSED = 25
 -- The stock place, under the top of the screen; the cast prompt stands there too.
 local TOP = -120
--- Arriving: the client's own waypoint pin, at its native 30 by 30, in place of the direction arrow.
-local ARRIVAL_PIN = "Waypoint-MapPin-Tracked"
 -- The stop's title and objective lines beneath the pin, wrapped and capped so they stay a summary.
 local ARRIVAL_WIDTH, ARRIVAL_TITLE_LINES, ARRIVAL_LINE_LIMIT = 240, 2, 3
 ---@class SPFArrowFrame : Frame
@@ -27,7 +25,7 @@ local ARRIVAL_WIDTH, ARRIVAL_TITLE_LINES, ARRIVAL_LINE_LIMIT = 240, 2, 3
 ---@field Progress FontString
 ---@field ArrivalTitle FontString
 ---@field ArrivalLines FontString
----@field arrival? boolean draws the arrived stop's pin instead of the direction arrow
+---@field arrival? boolean the arrived stop's pin and lines show, with the arrow and distance hidden
 ---@field behind boolean
 ---@field Mover Texture
 ---@field MoverHint FontString
@@ -227,7 +225,7 @@ local function Create()
 	frame.MoverHint:SetText(L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."])
 	frame.MoverHint:Hide()
 	frame.Icon = frame:CreateTexture(nil, "BACKGROUND")
-	-- The stock pin's 36-pixel height, square, so the pin's own shape is not stretched.
+	-- The journey's own gold goal pin, square at 36 pixels like the compass Goal marker and the map's pins.
 	ns.Art.Icon(frame.Icon, ns.PIN_FILE, 36)
 	frame.Icon:SetPoint("CENTER")
 	frame.Arrow = frame:CreateTexture(nil, "BACKGROUND")
@@ -280,10 +278,9 @@ local function ShowArrival(stop)
 		frame.Arrow:Hide()
 		frame.Distance:Hide()
 		frame.Progress:Hide()
-		if not ns.Art.Fit(frame.Icon, ARRIVAL_PIN, 36, 36) then
-			-- A client without the atlas still has the goal pin: never leave the pin a bare arrow.
-			ns.Art.Icon(frame.Icon, ns.PIN_FILE, 36)
-		end
+		-- The same gold goal pin the compass Goal marker and the map draw: arriving puts only the arrow, distance
+		-- and progress away, leaving the pin at its normal size.
+		ns.Art.Icon(frame.Icon, ns.PIN_FILE, 36)
 		frame.ArrivalTitle:Show()
 		frame.ArrivalLines:Show()
 	end

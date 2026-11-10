@@ -12,7 +12,11 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
-- **The arrow becomes a pin when you reach a stop's area.** Adventure Guide's area stops used to hide the direction arrow and compass on arrival. The arrow now turns into the game's own waypoint pin, with the stop's title and objective lines beneath it, while the compass tints quietly instead of glowing. It goes back to the arrow when you leave the area or the stop changes. The pin is on by default; turn *Show a pin when you reach a stop* off under Guidance to hide guidance on arrival as before. Reported on CurseForge by sampconrad (#627).
+## [1.25.0] - 2026-11-10
+
+<!-- discord-image: docs/screenshots/arrival.png -->
+
+- **The arrow becomes a pin when you reach a stop's area.** Adventure Guide's area stops used to hide the direction arrow and compass on arrival. The arrow now turns into Shortest Path's gold pin, the same one on your destination, with the stop's title and objective lines beneath it, while the compass tints quietly instead of glowing. It goes back to the arrow when you leave the area or the stop changes. The pin is on by default; turn *Show a pin when you reach a stop* off under Guidance to hide guidance on arrival as before. Reported on CurseForge by sampconrad (#627).
 
 ## [1.24.10] - 2026-11-10
 
