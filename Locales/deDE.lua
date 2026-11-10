@@ -29,6 +29,7 @@ L["Alert before a boat arrives"] = "Warnung, bevor ein Schiff ankommt"
 L["Alerts"] = "Warnungen"
 L["Alliance"] = "Allianz"
 L["Arriving at %s in %s"] = "Ankunft in %s in %s"
+L["Arrow label"] = "Pfeilbeschriftung" -- mt
 L["Arrow scale"] = "Pfeilgröße"
 L["Arrows"] = "Pfeile"
 L["Arrows on the NPC's nameplate"] = "Pfeile auf der Namensplakette des NPC"
@@ -61,6 +62,7 @@ L["Crosses %s (level %s)"] = "Durchquert %s (Stufe %s)"
 L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."] =
 	"Dunkelt den Boden hinter dem Kompass ab, damit seine Markierungen auf Schnee oder Sand lesbar bleiben. 0 % zeigt nichts."
 L["Deeprun Tram"] = "Die Tiefenbahn"
+L["Distance"] = "Entfernung" -- mt
 L["Distances in metres"] = "Entfernungen in echten Metern"
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
 	"Anlegestellen, Aufzüge, die Bahn und Portale. Auch unter Transport im Aufspürmenü der Minikarte."
@@ -269,6 +271,8 @@ L["Walks go round zones whose lowest level is 4 or more above yours, but never t
 L["Weapons and armour"] = "Waffen und Rüstung"
 L["What next? Adventure Guide Forever suggests quests for your level."] =
 	"Wie weiter? Adventure Guide Forever schlägt Quests für Eure Stufe vor."
+L["What the direction arrow shows under it: the distance to walk, the time left in the journey, or both."] =
+	"Was der Richtungspfeil darunter anzeigt: die zu gehende Entfernung, die verbleibende Reisezeit oder beides." -- mt
 L["What's new after an update"] = "Neuigkeiten nach einem Update"
 L["While Guide is on: your next turns, the next stop and your destination across the top of the screen."] =
 	"Solange die Führung an ist: Eure nächsten Abzweigungen, der nächste Halt und Euer Ziel oben am Bildschirm."
@@ -338,6 +342,7 @@ L["/path issue - report a bug or request a feature with a ready-made GitHub issu
 	"/path issue - meldet einen Fehler oder wünscht eine Funktion mit einem fertigen GitHub-Issue-Link"
 L["/path report - show a report to copy into a bug report"] =
 	"/path report - zeigt einen Bericht zum Kopieren in einen Fehlerbericht"
+L["Both"] = "Beides" -- mt
 L["Bug"] = "Fehler"
 L["Bug: "] = "Fehler: "
 L["Copy issue link"] = "Issue-Link kopieren"
@@ -351,6 +356,7 @@ L["Report a bug or request a feature"] = "Fehler melden oder Funktion wünschen"
 L["Share travel stats with guild and groups"] = "Reisestatistik mit Gilde und Gruppen teilen"
 L["The link is selected. Press Ctrl+C (Cmd+C on a Mac), then paste into a browser; GitHub opens a filled-in issue."] =
 	"Der Link ist markiert. Drückt Strg+C (Cmd+C auf dem Mac) und fügt ihn dann in einen Browser ein; GitHub öffnet ein ausgefülltes Issue."
+L["Time left"] = "Restzeit" -- mt
 L["Title"] = "Titel"
 L["Travel journal"] = "Reisetagebuch"
 L["Travel milestone reached: %s"] = "Reisemeilenstein erreicht: %s"

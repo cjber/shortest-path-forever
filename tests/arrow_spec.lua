@@ -3,8 +3,20 @@ local driver = assert(loadfile("tests/journey_driver.lua"))()
 local ns, frame = driver.ns, nil
 local env = driver.env
 local create = env.CreateFrame
+local createFontString
 env.CreateFrame = function(...)
 	frame = create(...)
+	createFontString = createFontString or frame.CreateFontString
+	frame.CreateFontString = function(self, ...)
+		local text = createFontString(self, ...)
+		local setText = text.SetText
+		text.SetText = function(fontString, value)
+			fontString.text = value
+			fontString.sets = (fontString.sets or 0) + 1
+			return setText(fontString, value)
+		end
+		return text
+	end
 	frame.GetEffectiveScale = function(self)
 		return self.scale or 1
 	end
@@ -181,6 +193,41 @@ ns.MoveArrow(true)
 ns.MoveArrow(false)
 assert(frame.hidden, "a turned-off arrow goes away after moving it")
 ns.db.arrow = true
+-- The label can show the journey's time left, or both, with the same time the tracker's header shows.
+local clock = 0
+env.GetTime = function()
+	return clock
+end
+local journeyTime = "2:32"
+ns.JourneyLeft = function()
+	return journeyTime, "1.1k yd"
+end
+local function ArrowText(value)
+	ns.SetArrowLabel(value)
+	return frame.Distance.text
+end
+driver.move({ map = 1, x = 0, y = 0, z = 0 })
+facing = 0
+clock = 100
+local labelPoints = { { map = 1, x = 0, y = 0 }, { map = 1, x = 200, y = 0 } }
+ns.PointGuideArrow(labelPoints, place)
+assert(frame.Distance.text == "200 yd", "the arrow's label starts with the distance")
+assert(ArrowText("distance") == "200 yd", "the distance choice keeps the distance alone")
+assert(ArrowText("time") == "2:32", "the time choice shows the header's time left")
+assert(ArrowText("both") == "2:32 · 200 yd", "both puts the time first, then the distance")
+journeyTime = nil
+assert(ArrowText("time") == "200 yd" and ArrowText("both") == "200 yd", "with no time yet, the distance stands alone")
+journeyTime = "2:32"
+assert(ArrowText("time") == "2:32")
+local sets = frame.Distance.sets
+journeyTime = "2:31"
+clock = 101
+frame.OnUpdate(frame, 0.1)
+assert(frame.Distance.text == "2:31", "the label follows the time as it counts down")
+assert(frame.Distance.sets == sets + 1, "a changed label is written once")
+sets = frame.Distance.sets
+frame.OnUpdate(frame, 0.1)
+assert(frame.Distance.sets == sets, "a label that has not changed is not written again")
 -- No route: no every-frame update.
 ns.PointGuideArrow(nil)
 frame.OnUpdate(frame, 1 / 60)

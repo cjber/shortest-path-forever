@@ -66,6 +66,8 @@ local DEFAULTS = {
 	guideStops = true,
 	journeyTracker = true,
 	arrow = true,
+	-- Under the arrow: "distance", the journey's "time" left, or "both".
+	arrowLabel = "distance",
 	-- On reaching a held stop's area, the arrow turns into a pin with the stop's objectives rather than hiding.
 	arrivalPin = true,
 	metres = false,

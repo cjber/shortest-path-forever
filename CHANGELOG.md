@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **The direction arrow can show the journey's time left, or the time and the distance together.** Its label follows a new *Arrow label* choice in Interface: *Distance* as before, *Time left*, or *Both*. Both reads like the tracker's Journey header ("2:32 · 450 yd") from the same countdown, so the two never disagree, and while a journey is still being planned the distance stands alone. Asked on the Guidelime Discord, where Guidelime's own arrow offers the same choices (#651).
+
 ## [1.26.0] - 2026-11-10
 
 <!-- discord-image: docs/screenshots/floors.png -->
