@@ -31,6 +31,9 @@ local ARRIVAL_WIDTH, ARRIVAL_TITLE_LINES, ARRIVAL_LINE_LIMIT = 240, 2, 3
 ---@field MoverHint FontString
 ---@field metres? boolean
 ---@field yards? number
+---@field label? string the text last shown under the arrow
+---@field labelAt? number the second the time in that label was read
+---@field labelMode? string the arrowLabel setting it was built for
 ---@field angle? number the bearing drawn, easing towards the true one
 ---@field ticker? FunctionContainer
 ---@field updating? boolean
@@ -71,6 +74,25 @@ end
 local function Draw(angle)
 	frame.Arrow:SetRotation(angle)
 	frame.Arrow:SetPoint("CENTER", frame.Icon, "CENTER", -math.sin(angle) * RADIUS, math.cos(angle) * RADIUS)
+end
+
+-- What the label under the arrow says: the distance to walk, the journey's time left as the tracker's header gives it,
+-- or both, time first. Until the journey has a time, every choice shows the distance.
+---@param yards number
+---@param mode? string
+---@return string
+local function ArrowLabel(yards, mode)
+	local distance = ns.FormatDistance(yards)
+	if mode == "time" or mode == "both" then
+		local time = ns.JourneyLeft and ns.JourneyLeft()
+		if time then
+			if mode == "time" then
+				return time
+			end
+			return string.format(L["%s · %s"], time, distance)
+		end
+	end
+	return distance
 end
 
 local function SetUpdating(running)
@@ -152,10 +174,26 @@ local function Update(elapsed)
 		distance = distance + math.sqrt((path[i].x - path[i - 1].x) ^ 2 + (path[i].y - path[i - 1].y) ^ 2)
 	end
 	local yards = math.floor(distance)
-	if yards ~= frame.yards or frame.metres ~= ns.db.metres then
+	local mode = ns.db.arrowLabel
+	-- The time counts down every second while the distance may not move, so read it with the header's own tick. The
+	-- final label is cached as a whole, and only written when it changes.
+	local timed = mode == "time" or mode == "both"
+	local second = timed and math.floor(GetTime()) or nil
+	if
+		yards ~= frame.yards
+		or frame.metres ~= ns.db.metres
+		or frame.labelMode ~= mode
+		or (second and second ~= frame.labelAt)
+	then
 		frame.metres = ns.db.metres
 		frame.yards = yards
-		frame.Distance:SetText(ns.FormatDistance(yards))
+		frame.labelMode = mode
+		frame.labelAt = second
+		local text = ArrowLabel(yards, mode)
+		if text ~= frame.label then
+			frame.label = text
+			frame.Distance:SetText(text)
+		end
 	end
 	Settle(elapsed, easing, moved)
 end
@@ -455,6 +493,18 @@ function ns.MoveArrow(value)
 		frame:Show()
 	elseif (not path and not arrival) or ns.db.arrow == false then
 		frame:Hide()
+	end
+end
+
+-- "Arrow label": a new choice reads at once, without waiting for its second or the next bend.
+---@param value? string
+function ns.SetArrowLabel(value)
+	if type(value) == "string" then
+		ns.db.arrowLabel = value
+	end
+	if frame then
+		frame.labelAt, frame.labelMode = nil, nil
+		Update(0)
 	end
 end
 

@@ -29,6 +29,7 @@ L["Alert before a boat arrives"] = "Alertar antes de um barco chegar"
 L["Alerts"] = "Alertas"
 L["Alliance"] = "Aliança"
 L["Arriving at %s in %s"] = "Chegando a %s em %s"
+L["Arrow label"] = "Rótulo da seta" -- mt
 L["Arrow scale"] = "Tamanho da seta"
 L["Arrows"] = "Flechas"
 L["Arrows on the NPC's nameplate"] = "Setas na placa de nome do NPC"
@@ -61,6 +62,7 @@ L["Crosses %s (level %s)"] = "Atravessa %s (nível %s)"
 L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."] =
 	"Escurece o chão atrás da bússola para que as marcas fiquem legíveis na neve ou na areia. 0% não mostra nada."
 L["Deeprun Tram"] = "Metrô Correfundo"
+L["Distance"] = "Distância" -- mt
 L["Distances in metres"] = "Distâncias em metros reais"
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
 	"Cais, elevadores, o metrô e portais. Também em Transporte no menu de rastreamento do minimapa."
@@ -269,6 +271,8 @@ L["Walks go round zones whose lowest level is 4 or more above yours, but never t
 L["Weapons and armour"] = "Armas e armaduras"
 L["What next? Adventure Guide Forever suggests quests for your level."] =
 	"E agora? O Adventure Guide Forever sugere missões para o seu nível."
+L["What the direction arrow shows under it: the distance to walk, the time left in the journey, or both."] =
+	"O que a seta de direção mostra embaixo: a distância a percorrer, o tempo restante da jornada ou ambos." -- mt
 L["What's new after an update"] = "Novidades após uma atualização"
 L["While Guide is on: your next turns, the next stop and your destination across the top of the screen."] =
 	"Com a orientação ativa: suas próximas curvas, a próxima parada e seu destino no topo da tela."
@@ -338,6 +342,7 @@ L["/path issue - report a bug or request a feature with a ready-made GitHub issu
 	"/path issue - relate um bug ou peça um recurso com um link pronto para uma issue do GitHub"
 L["/path report - show a report to copy into a bug report"] =
 	"/path report - mostra um relatório para copiar em um relato de bug"
+L["Both"] = "Ambos" -- mt
 L["Bug"] = "Bug"
 L["Bug: "] = "Bug: "
 L["Copy issue link"] = "Copiar link da issue"
@@ -351,6 +356,7 @@ L["Report a bug or request a feature"] = "Relatar um bug ou pedir um recurso"
 L["Share travel stats with guild and groups"] = "Compartilhar estatísticas de viagem com a guilda e os grupos"
 L["The link is selected. Press Ctrl+C (Cmd+C on a Mac), then paste into a browser; GitHub opens a filled-in issue."] =
 	"O link está selecionado. Pressione Ctrl+C (Cmd+C no Mac) e cole em um navegador; o GitHub abre uma issue já preenchida."
+L["Time left"] = "Tempo restante" -- mt
 L["Title"] = "Título"
 L["Travel journal"] = "Diário de viagem"
 L["Travel milestone reached: %s"] = "Marco de viagem alcançado: %s"
