@@ -268,7 +268,7 @@ assert(strip.Goal.hidden, "clamped markers at the same edge must collapse")
 assert(strip.Distance.text == "100 yd")
 ns.db.metres = true
 ns.RefreshCompass()
-assert(strip.Distance.text == "91 m", "stationary compass refreshes its distance units")
+assert(strip.Distance.text == "100 m", "stationary compass refreshes its distance units, with the game's own yards")
 ns.db.metres = false
 ns.RefreshCompass()
 assert(strip.Distance.text == "100 yd")

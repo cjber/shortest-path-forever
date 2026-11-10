@@ -149,8 +149,14 @@ onTaxi, posX, posY = false, 0, 0
 assert(start({leg("walk", {point(0), point(850)}, 60)}) == "Journey  1:00 · 850 yd")
 assert(start({leg("walk", {point(0), point(999.6)}, 60)}) == "Journey  1:00 · 1.0k yd")
 ns.db.metres = true
-assert(refresh() == "Journey  1:00 · 914 m", "changing units refreshes a stationary header")
-assert(start({leg("walk", {point(0), point(2000)}, 60)}) == "Journey  1:00 · 1.8 km")
+assert(
+	refresh() == "Journey  1:00 · 1.0 km",
+	"changing units refreshes a stationary header, and the number matches the game's own yards"
+)
+assert(
+	start({ leg("walk", { point(0), point(2000) }, 60) }) == "Journey  1:00 · 2.0 km",
+	"metres and kilometres carry the same number as the game's yards"
+)
 ns.db.journeyTracker = false
 refresh()
 assert(#tracker.blocks == 0, "hiding journey steps removes the journey block")

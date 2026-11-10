@@ -111,6 +111,8 @@ L["Journeys, and other addons' estimates from here, can start with your hearthst
 L["Keep journeys after a reload"] = "重载后保留旅程"
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"将共享的 Forever 追踪器保持在您放置的位置。顶部的拖拽手柄不再移动它。"
+L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
+	"以米标注距离，与游戏采用公制的语言客户端一致。数字仍为游戏自身的码数。"
 L["Last seen %d min ago by another player"] = "%d分钟前由其他玩家最后看到"
 L["Last seen %d min ago by you"] = "%d分钟前由你最后看到"
 L["Legacy Forever shows the Legacy challenges this counts toward."] =
@@ -205,7 +207,6 @@ L["Show flight masters"] = "显示飞行管理员"
 L["Show journey steps in the objective tracker"] = "在目标追踪器中显示旅程步骤"
 L["Show lifts and the tram"] = "显示升降梯和地铁"
 L["Show marks on the minimap"] = "在微缩地图上显示标记"
-L["Show metres and kilometres instead of yards."] = "以米和公里代替码显示。"
 L["Show on map"] = "在地图上显示"
 L["Show options button on minimap"] = "在微缩地图上显示选项按钮"
 L["Show other faction's routes"] = "显示另一阵营的航线"

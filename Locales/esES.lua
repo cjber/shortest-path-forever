@@ -63,7 +63,7 @@ L["Darkens the ground behind the compass so its marks stay readable on snow or s
 	"Oscurece el suelo tras la brújula para que sus marcas se lean bien sobre nieve o arena. 0 % no muestra nada."
 L["Deeprun Tram"] = "Tranvía Subterráneo"
 L["Distance"] = "Distancia" -- mt
-L["Distances in metres"] = "Distancias en metros reales"
+L["Distances in metres"] = "Distancias en metros"
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
 	"Muelles, ascensores, el tranvía y portales. También en Transporte, en el menú de rastreo del minimapa."
 L["Don't suggest this again"] = "No volver a sugerir"
@@ -112,6 +112,8 @@ L["Journeys, and other addons' estimates from here, can start with your hearthst
 L["Keep journeys after a reload"] = "Mantener viajes tras recargar"
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"Mantiene el rastreador compartido Forever donde lo pones. El tirador de arriba ya no lo arrastra."
+L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
+	"Etiquetar las distancias en metros, como hacen los clientes del juego con sistema métrico. Los números siguen siendo los del juego."
 L["Last seen %d min ago by another player"] = "Visto hace %d min por otro jugador"
 L["Last seen %d min ago by you"] = "Visto hace %d min por ti"
 L["Legacy Forever shows the Legacy challenges this counts toward."] =
@@ -209,8 +211,6 @@ L["Show flight masters"] = "Mostrar maestros de vuelo"
 L["Show journey steps in the objective tracker"] = "Mostrar los pasos del viaje en el rastreador de objetivos"
 L["Show lifts and the tram"] = "Mostrar ascensores y tranvía"
 L["Show marks on the minimap"] = "Mostrar marcas en el minimapa"
-L["Show metres and kilometres instead of yards."] =
-	"Mostrar metros y kilómetros reales en vez de las unidades del juego (yardas)."
 L["Show on map"] = "Mostrar en el mapa"
 L["Show options button on minimap"] = "Botón de opciones en el minimapa"
 L["Show other faction's routes"] = "Mostrar rutas de la otra facción"

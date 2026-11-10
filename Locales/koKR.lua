@@ -63,7 +63,7 @@ L["Darkens the ground behind the compass so its marks stay readable on snow or s
 	"나침반 뒤의 지면을 어둡게 해 눈이나 모래 위에서도 표시가 잘 보이게 합니다. 0%는 표시하지 않습니다."
 L["Deeprun Tram"] = "깊은굴 지하철"
 L["Distance"] = "거리" -- mt
-L["Distances in metres"] = "실제 미터로 거리 표시"
+L["Distances in metres"] = "거리를 미터로 표시"
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
 	"부두, 승강기, 지하철, 차원문. 미니맵 추적 메뉴의 교통수단에서도 설정할 수 있습니다."
 L["Don't suggest this again"] = "다시 제안하지 않기"
@@ -113,6 +113,8 @@ L["Journeys, and other addons' estimates from here, can start with your hearthst
 L["Keep journeys after a reload"] = "재시작 후 여정 유지"
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"공유 Forever 추적기를 놓은 자리에 유지합니다. 위쪽 손잡이로 더 이상 끌 수 없습니다."
+L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
+	"게임의 미터법 언어 클라이언트처럼 거리에 미터 단위를 붙입니다. 숫자는 게임의 야드 값 그대로입니다."
 L["Last seen %d min ago by another player"] = "다른 플레이어가 %d분 전에 마지막으로 목격"
 L["Last seen %d min ago by you"] = "내가 %d분 전에 마지막으로 목격"
 L["Legacy Forever shows the Legacy challenges this counts toward."] =
@@ -211,8 +213,6 @@ L["Show flight masters"] = "비행 조련사 표시"
 L["Show journey steps in the objective tracker"] = "목표 추적기에서 여정 단계 표시"
 L["Show lifts and the tram"] = "승강기와 지하철 표시"
 L["Show marks on the minimap"] = "미니맵에 표시"
-L["Show metres and kilometres instead of yards."] =
-	"게임 단위(야드) 대신 실제 미터와 킬로미터로 표시합니다."
 L["Show on map"] = "지도에 표시"
 L["Show options button on minimap"] = "미니맵에 설정 버튼 표시"
 L["Show other faction's routes"] = "다른 진영의 노선 표시"

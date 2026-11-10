@@ -63,7 +63,7 @@ L["Darkens the ground behind the compass so its marks stay readable on snow or s
 	"Dunkelt den Boden hinter dem Kompass ab, damit seine Markierungen auf Schnee oder Sand lesbar bleiben. 0 % zeigt nichts."
 L["Deeprun Tram"] = "Die Tiefenbahn"
 L["Distance"] = "Entfernung" -- mt
-L["Distances in metres"] = "Entfernungen in echten Metern"
+L["Distances in metres"] = "Entfernungen in Metern"
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
 	"Anlegestellen, Aufzüge, die Bahn und Portale. Auch unter Transport im Aufspürmenü der Minikarte."
 L["Don't suggest this again"] = "Nicht mehr vorschlagen"
@@ -111,6 +111,8 @@ L["Journeys, and other addons' estimates from here, can start with your hearthst
 L["Keep journeys after a reload"] = "Reisen nach /reload behalten"
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"Hält die gemeinsame Forever-Verfolgung dort, wo Ihr sie hingelegt habt. Der Griff oben zieht sie nicht mehr."
+L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
+	"Entfernungen in Metern beschriften, wie es die metrischen Sprachversionen des Spiels tun. Die Zahlen bleiben die des Spiels."
 L["Last seen %d min ago by another player"] = "Zuletzt vor %d Min. von einem anderen Spieler gesehen"
 L["Last seen %d min ago by you"] = "Zuletzt vor %d Min. von Euch gesehen"
 L["Legacy Forever shows the Legacy challenges this counts toward."] =
@@ -208,7 +210,6 @@ L["Show flight masters"] = "Flugmeister zeigen"
 L["Show journey steps in the objective tracker"] = "Reiseschritte in der Verfolgung zeigen"
 L["Show lifts and the tram"] = "Aufzüge und die Bahn zeigen"
 L["Show marks on the minimap"] = "Markierungen auf der Minikarte zeigen"
-L["Show metres and kilometres instead of yards."] = "Echte Meter und Kilometer statt der Spieleinheit (Yards) zeigen."
 L["Show on map"] = "Auf Karte zeigen"
 L["Show options button on minimap"] = "Optionsknopf an der Minikarte zeigen"
 L["Show other faction's routes"] = "Routen der anderen Fraktion zeigen"
