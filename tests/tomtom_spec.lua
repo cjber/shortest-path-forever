@@ -265,6 +265,73 @@ disabled = false
 ns.RefreshTomTom()
 equal(type(env.TomTom.AddWaypoint), "function", "the shim returns once TomTom is gone")
 
+-- Zygor's guide state is read only through the fields its own tables name. Questie and the shim are already here;
+-- Zygor's TomTom waypointer is what a guide with no bridge used to leave titled alone.
+driver.load("Core/Zygor.lua")
+env.C_QuestLog = {
+	GetTitleForQuestID = function(questID)
+		if questID == 100 then
+			return "The Escape"
+		elseif questID == 101 then
+			return "The Letter"
+		end
+	end,
+}
+
+-- Questie names the quest inside the tracker call that sets the waypoint: the shim reads it there, never from the
+-- title, and the stop carries it into the journey.
+local questieTitle = "Turn in 'The Escape'"
+local trackerUtils = {
+	SetQuestTomTomTarget = function()
+		env.TomTom:AddWaypoint(1, 0.55, 0.45, { title = questieTitle, from = "Questie" })
+		return true
+	end,
+}
+env.Questie = {}
+env.QuestieLoader = {
+	ImportModule = function(_, name)
+		return name == "TrackerUtils" and trackerUtils or nil
+	end,
+}
+watcher:OnEvent("ADDON_LOADED", "Questie")
+trackerUtils.SetQuestTomTomTarget(4242)
+driver.path.settle()
+equal(ns.JourneyGoal().questID, 4242, "Questie's quest reaches the stop it sets")
+equal(ns.JourneyInfo(), "Journey to " .. questieTitle, "the waypoint keeps the guide's own title")
+env.TomTom:AddWaypoint(1, 0.4, 0.4, { title = "All The Things", questID = 1234 })
+driver.path.settle()
+equal(ns.JourneyGoal().questID, 1234, "a caller's own questID is used")
+env.TomTom:AddWaypoint(1, 0.3, 0.3, { title = "Plain", questID = "7" })
+driver.path.settle()
+equal(ns.JourneyGoal().questID, nil, "a questID that is not a quest id is left alone")
+
+-- Zygor: the current step's goals name its quests, and a turn-in or pick-up step says so.
+local zgv = {
+	WaypointFunctions = { tomtom = {} },
+	CurrentStep = {
+		goals = {
+			{ action = "turnin", questid = 100 },
+			{ action = "accept", questid = 101 },
+		},
+	},
+}
+zgv.ConnectedWaypointer = zgv.WaypointFunctions.tomtom
+env.ZGV = zgv
+local zygor = env.TomTom:AddZWaypoint(10, 1, 60, 50, "Turn in 'The Escape'", false, true, true, nil, true, true)
+driver.path.settle()
+equal(type(zygor), "table", "Zygor's waypoint starts a journey")
+equal(table.concat(ns.JourneyGoal().questIDs, ","), "100,101", "the step's goals name its quests")
+equal(ns.JourneyGoal().details[1], "The Escape (turn in)", "a turn-in goal says what to do")
+equal(ns.JourneyGoal().details[2], "The Letter (pick up)", "and a pick-up goal its own action")
+
+-- A shape this build does not have leaves the guide's title alone rather than inventing a quest.
+zgv.CurrentStep = { goals = "not a table" }
+env.TomTom:AddWaypoint(1, 0.2, 0.2, { title = "Title only" })
+driver.path.settle()
+equal(ns.JourneyGoal().questIDs, nil, "a step of another shape names no quests")
+equal(ns.JourneyGoal().details, nil, "and no action")
+env.ZGV = nil
+
 -- TomTom loading later replaces the global; the shim stands down and clears what it started.
 local late = env.TomTom:AddWaypoint(1, 0.6, 0.5, { title = "Late" })
 driver.path.settle()

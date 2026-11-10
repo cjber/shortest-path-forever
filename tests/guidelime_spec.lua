@@ -64,12 +64,14 @@ function arrow.EnableMouse(_, value)
 end
 env.Guidelime = { registerGuide = function() end }
 env.GuidelimeArrow = arrow
--- The tracker's label for the step the guide plans, captured as the journey is handed its title.
-local label
+-- The tracker's label for the step the guide plans, captured as the journey is handed its title, its quests and any
+-- action line.
+local label, quests, tooltip
 local planned = API.NavigateRoute
 API.NavigateRoute = function(owner, stops)
 	if owner == "Guidelime" then
 		label = stops[1].title
+		quests, tooltip = stops[1].questIDs, stops[1].tooltip
 	end
 	return planned(owner, stops)
 end
@@ -105,6 +107,8 @@ tick()
 assert(API.CurrentStop("Guidelime") == 1, "the parsed step is guided")
 assert(label == "Outside Hall Of Thanes at The Restless Dead", "the label reads the parsed words: " .. tostring(label))
 assert(not label:find("[", 1, true) and not label:find("]", 1, true), "the label carries none of the guide's codes")
+assert(quests and quests[1] == 96394 and #quests == 1, "the step names its quest for the live objectives")
+assert(tooltip == "The Restless Dead (pick up)", "a pick-up step says what to do: " .. tostring(tooltip))
 
 -- A quest the guide leaves unnamed takes the client's title for it, and a target keeps the name the guide gave.
 arrow.element = {
@@ -122,6 +126,8 @@ arrow.element = {
 }
 tick()
 assert(label == "Turn in The Restless Dead", "a quest without a title uses the client's: " .. tostring(label))
+assert(quests and quests[1] == 96394, "the turn-in step names its quest too")
+assert(tooltip == "The Restless Dead (turn in)", "and says to turn it in: " .. tostring(tooltip))
 arrow.element = {
 	t = "GOTO",
 	mapID = 1,
@@ -137,6 +143,31 @@ arrow.element = {
 }
 tick()
 assert(label == "Talk to Afadra Dunwall", "a target uses the name the guide gave: " .. tostring(label))
+assert(quests == nil and tooltip == nil, "a step with no quest shows no objective lines")
+
+-- A step that moves on at the same place (a turn-in at the NPC just left) updates the running stop's quests without
+-- replanning the route.
+arrow.element = {
+	t = "GOTO",
+	mapID = 1,
+	x = 70,
+	y = 40,
+	title = "Turn in the dead",
+	step = { elements = { { t = "TURNIN", questId = 96394, title = "The Restless Dead" } } },
+}
+tick()
+assert(ns.JourneyGoal() and ns.JourneyGoal().questIDs[1] == 96394, "the stop stands for the first turn-in")
+arrow.element = {
+	t = "GOTO",
+	mapID = 1,
+	x = 70,
+	y = 40,
+	title = "Turn in the second",
+	step = { elements = { { t = "TURNIN", questId = 96395, title = "The Second Dead" } } },
+}
+tick()
+assert(ns.JourneyGoal().questIDs[1] == 96395, "the same place now stands for the next quest")
+assert(ns.JourneyGoal().details[1] == "The Second Dead (turn in)", "with its own action line")
 -- An impossible target clears the journey and brings the guide's arrow back.
 arrow.element = { t = "GOTO", mapID = 1, x = 150, y = 50, title = "Outside the map" }
 tick()

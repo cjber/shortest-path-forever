@@ -17,6 +17,9 @@ local target
 -- The label of the running journey's target, which a renamed step may update in place.
 ---@type string?
 local targetTitle
+-- The quests and action lines that label stands for, so a step that moved on at the same place updates the stop.
+---@type string?
+local targetQuests
 ---@type number?
 local savedAlpha
 ---@type boolean?
@@ -35,7 +38,7 @@ end
 
 local function Clear()
 	API.Cancel(OWNER)
-	target, targetTitle = nil, nil
+	target, targetTitle, targetQuests = nil, nil, nil
 	Restore()
 end
 
@@ -145,6 +148,27 @@ local function Label(element)
 	return Clean(table.concat(parts, " "))
 end
 
+-- The arrow's element is the step's target: the quest itself, the target attached to it, or a goto inside its step.
+---@param element SPFGuidelimeElement
+---@return number[]? quests, string[]? actions, string key
+local function StepQuests(element)
+	local collector = ns.StepQuests()
+	local function Add(part)
+		if type(part) ~= "table" or not QUEST_TYPES[part.t] then
+			return
+		end
+		local action = part.t == "ACCEPT" and "accept" or part.t == "TURNIN" and "turnin" or nil
+		collector.add(tonumber(part.questId), action, action and QuestName(part) or nil)
+	end
+	Add(element)
+	Add(element.attached)
+	local step = type(element.step) == "table" and element.step or nil
+	for _, part in ipairs(type(step) == "table" and type(step.elements) == "table" and step.elements or {}) do
+		Add(part)
+	end
+	return collector.finish()
+end
+
 -- Guidelime's arrow steps aside while ours draws, the way RestedXP's does. Guidelime resets its arrow's alpha only
 -- when it creates the frame, so fading the frame keeps every part of it, text included, out of the way without
 -- touching the player's guide settings.
@@ -195,7 +219,7 @@ local function Sync()
 	-- guide's step, so Guidelime's arrow stays out of the way while we draw one.
 	local owner = ns.JourneyOwner()
 	if owner and owner ~= OWNER and (owner == "RestedXP" or owner == "AdventureGuideForever") then
-		target, targetTitle = nil, nil
+		target, targetTitle, targetQuests = nil, nil, nil
 		if ns.db.arrow ~= false then
 			Suppress()
 		else
@@ -227,6 +251,7 @@ local function Sync()
 	---@cast x number
 	---@cast y number
 	local title = Label(element)
+	local quests, actions, questKey = StepQuests(element)
 	local key = Key(map, x, y)
 	if InCombatLockdown() then
 		if key ~= target then
@@ -239,13 +264,30 @@ local function Sync()
 	if key ~= target then
 		-- Guidelime decides when a step is complete, including its arrival radius; the journey holds the stop until
 		-- the guide moves on to the next one.
-		local started =
-			API.NavigateRoute(OWNER, { { map = map, x = x / 100, y = y / 100, title = title, hold = true } })
+		local started = API.NavigateRoute(OWNER, {
+			{
+				map = map,
+				x = x / 100,
+				y = y / 100,
+				title = title,
+				hold = true,
+				questIDs = quests,
+				tooltip = actions and table.concat(actions, "\n") or nil,
+			},
+		})
 		if not started then
 			Clear()
 			return
 		end
-		target, targetTitle = key, title
+		target, targetTitle, targetQuests = key, title, questKey
+	elseif questKey ~= targetQuests then
+		-- The step moved on at the same place (a turn-in at the NPC just left): only its quests changed, so the stop
+		-- gets the new live objectives without the route being planned again.
+		targetQuests = questKey
+		local stop = API.CurrentStop(OWNER)
+		if stop then
+			ns.SetStopQuests(OWNER, stop, quests, actions)
+		end
 	end
 	if API.CurrentStop(OWNER) then
 		Rename(title)
@@ -269,7 +311,7 @@ end
 
 -- Let the player hand control back after pausing a guide, without waiting for its next step.
 function ns.ResumeGuidelime()
-	target, targetTitle = nil, nil
+	target, targetTitle, targetQuests = nil, nil, nil
 	Sync()
 end
 

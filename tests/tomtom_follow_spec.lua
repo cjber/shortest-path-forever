@@ -17,6 +17,7 @@ local function Boot(follow)
 	driver.load("UI/Looks.lua")
 	driver.load("Core/API.lua")
 	driver.load("Journey/Itinerary.lua")
+	driver.load("Core/Zygor.lua")
 	local client = { combat = false, timers = {} }
 	local arrow = { alpha = 0.7, mouse = true }
 	function arrow:SetAlpha(value)
@@ -51,8 +52,9 @@ local function Boot(follow)
 	env.hooksecurefunc = function(target, key, hook)
 		local original = target[key]
 		target[key] = function(...)
-			original(...)
+			local result = original(...)
 			hook(...)
+			return result
 		end
 	end
 	env.C_Timer = {
@@ -308,14 +310,70 @@ do
 	c.ns.db.tomtomFollow = true
 	c.ns.RefreshTomTomFollow()
 	c.ns.RefreshTomTomFollow()
-	local seen, navigate = 0, c.API.Navigate
-	c.API.Navigate = function(...)
+	local seen, navigate = 0, c.API.NavigateRoute
+	c.API.NavigateRoute = function(...)
 		seen = seen + 1
 		return navigate(...)
 	end
 	tomtom:Way(1, 65, 50, "Once")
-	c.API.Navigate = navigate
+	c.API.NavigateRoute = navigate
 	equal(seen, 1, "one hook per TomTom call")
+end
+
+-- Following TomTom's arrow carries the quests the waypoint stands for, exactly as the shim's own waypoints do.
+do
+	local c = Boot(true)
+	local tomtom = c.login()
+	c.world()
+	c.frame()
+	c.env.C_QuestLog = {
+		GetTitleForQuestID = function(questID)
+			return questID == 100 and "The Escape" or nil
+		end,
+	}
+	-- Questie names its quest inside the tracker call that sets the waypoint.
+	local questieTitle = "Turn in 'The Escape'"
+	local trackerUtils = {
+		SetQuestTomTomTarget = function()
+			tomtom:AddWaypoint(1, 0.6, 0.5, { title = questieTitle, crazy = true, from = "Questie" })
+			return true
+		end,
+	}
+	c.env.Questie = {}
+	c.env.QuestieLoader = {
+		ImportModule = function(_, name)
+			return name == "TrackerUtils" and trackerUtils or nil
+		end,
+	}
+	c.watcher:OnEvent("ADDON_LOADED", "Questie")
+	trackerUtils.SetQuestTomTomTarget(4242)
+	c.driver.path.settle()
+	equal(c.API.CurrentStop("TomTom"), 1, "Questie's waypoint is followed")
+	equal(c.ns.JourneyGoal().questID, 4242, "Questie's quest reaches the followed journey")
+	equal(c.title(), "Journey to " .. questieTitle, "the waypoint keeps Questie's own title")
+
+	-- Zygor's current step names its goals' quests on a waypoint that names no other author.
+	c.env.ZGV = {
+		WaypointFunctions = { tomtom = {} },
+		CurrentStep = { goals = { { action = "turnin", questid = 100 } } },
+	}
+	c.env.ZGV.ConnectedWaypointer = c.env.ZGV.WaypointFunctions.tomtom
+	tomtom:AddWaypoint(1, 0.55, 0.45, { title = "Turn in 'The Escape'", crazy = true })
+	c.driver.path.settle()
+	equal(c.ns.JourneyGoal().questIDs[1], 100, "Zygor's step reaches the followed journey")
+	equal(c.ns.JourneyGoal().details[1], "The Escape (turn in)", "with its turn-in action")
+	c.env.ZGV = nil
+
+	-- A titled caller's waypoint is never given Zygor's step.
+	c.env.ZGV = {
+		WaypointFunctions = { tomtom = {} },
+		CurrentStep = { goals = { { action = "turnin", questid = 100 } } },
+	}
+	c.env.ZGV.ConnectedWaypointer = c.env.ZGV.WaypointFunctions.tomtom
+	tomtom:Way(1, 50, 40, "Somewhere else")
+	c.driver.path.settle()
+	equal(c.ns.JourneyGoal().questIDs, nil, "another author's waypoint keeps its own quests")
+	c.env.ZGV = nil
 end
 
 -- A journey already under way when the world comes up is not replaced by a waypoint TomTom restored.

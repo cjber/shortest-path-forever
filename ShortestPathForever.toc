@@ -28,6 +28,7 @@ Locales\zhTW.lua
 Core\SafeCall.lua
 Core\Log.lua
 Core\Text.lua
+Core\Objectives.lua
 Data\Routes.lua
 Data\Transports.lua
 Data\Taxi.lua
@@ -112,6 +113,7 @@ Core\API.lua
 Journey\Resume.lua
 Core\Report.lua
 Journey\Itinerary.lua
+Core\Zygor.lua
 Core\TomTom.lua
 Core\Way.lua
 Core\RestedXP.lua

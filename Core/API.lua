@@ -582,6 +582,60 @@ function API.RenameStop(owner, index, title, renamePoints)
 	return true
 end
 
+-- A guide's step moved on without moving the player (a turn-in at the same NPC): the stop under way now stands for
+-- other quests. Its lines are read live from the client, so only the stop's quest list and any action lines change.
+-- Not part of the public API: the Guidelime, RestedXP and TomTom bridges use it to keep a stop's objectives current.
+---@param owner string
+---@param index integer the stop to update, usually API.CurrentStop
+---@param quests? number[] the quests the stop now stands for; nil clears them
+---@param details? string[] the stop's own action lines, as API.NavigateRoute's tooltip gives them; nil clears them
+---@return boolean
+function ns.SetStopQuests(owner, index, quests, details)
+	if not Owner(owner) or not route or route.owner ~= owner then
+		return false
+	end
+	local point = route.points[index]
+	if not point then
+		return false
+	end
+	local ids
+	if quests ~= nil then
+		if type(quests) ~= "table" or not Quests(quests) then
+			return false
+		end
+		ids = {}
+		for quest = 1, #quests do
+			ids[quest] = quests[quest]
+		end
+	end
+	local lines
+	if details ~= nil then
+		if type(details) ~= "table" then
+			return false
+		end
+		lines = {}
+		for line = 1, #details do
+			if type(details[line]) ~= "string" then
+				return false
+			end
+			lines[line] = details[line]
+		end
+		if not lines[1] then
+			lines = nil
+		end
+	end
+	point.questIDs, point.questID, point.details = ids, nil, lines
+	-- The map's quest area and marks, the game's quest pins it hides, the minimap's area and the arrow all read the
+	-- stop's quests. RefreshRouteLines repaints the map and minimap without replanning; the arrow re-reads its lines.
+	if ns.RefreshRouteLines then
+		ns.RefreshRouteLines()
+	end
+	if ns.RefreshArrowLines then
+		ns.RefreshArrowLines()
+	end
+	return true
+end
+
 function API.Ended(owner)
 	local entry = Owner(owner) and ended[owner]
 	if entry then
