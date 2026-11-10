@@ -77,8 +77,6 @@ If Adventure Guide or Legacy isn't installed, a grey hint suggests it where it w
 
 Details and issues: [GitHub](https://github.com/cjber/shortest-path-forever). Licence: GPL-3.0-or-later.
 
-Made by Cillian Berragan · [cillian.dev](https://cillian.dev/) · [GitHub](https://github.com/cjber) · [Twitter](https://twitter.com/cjberragan)
-
 Built with AI assistance.
 
 [![Sponsor me on GitHub](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/github-sponsors-button.png)](https://github.com/sponsors/cjber) [![Support me on Ko-fi](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/kofi-button.png)](https://ko-fi.com/cjber)
