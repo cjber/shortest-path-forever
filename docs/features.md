@@ -115,7 +115,10 @@ With RestedXP or Guidelime installed, **Resume guide** in Guidance or the Journe
   `/spfnear`. Vendors are grouped by what they sell: arrows, bullets, food, drink, bags, trade supplies, reagents,
   and weapons and armour. Trainers are grouped by class or profession. It also lists repairs, innkeepers, banks,
   auction houses, flight masters and stable masters. Pick a group to route to the nearest friendly location in your
-  installed QuestieDB.
+  installed QuestieDB. Arrows, shot, food and drink go to the best goods for your level sold around you; when better
+  ones are sold farther away on your continent, a row under the group offers that trip with its own travel time.
+
+  ![Better arrows farther away, under the Arrows row](screenshots/services_better.png)
 
 - **Back to your corpse.** Release as a ghost and a red-orange dotted path, the colour of your corpse's tombstone,
   walks you back to it on the world map and minimap, round walls like any walk. Guide leads the way and the tracker

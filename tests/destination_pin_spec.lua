@@ -18,23 +18,23 @@ end
 
 -- Dead ahead: above the middle of the screen, at full strength.
 local x, y, alpha = ns.PinPlace(0, 0, 500)
-assert(close(x, 0) and close(y, -150), "ahead sits at the reach")
+assert(close(x, 0) and close(y, 150), "ahead sits at the reach")
 assert(close(alpha, 1), "ahead is full strength")
 
 -- To the right: at the side and half way out to the behind reach, half faded between the extremes.
-x, y, alpha = ns.PinPlace(math.pi / 2, 0, 500)
+x, y, alpha = ns.PinPlace(-math.pi / 2, 0, 500)
 assert(close(x, 225) and close(y, 0), "right sits at the side")
 assert(alpha < 1 and alpha > 0.4, "the side is neither full nor dimmest")
 
 -- Behind: below the middle, further out and dimmer.
 x, y, alpha = ns.PinPlace(math.pi, 0, 500)
-assert(close(x, 0) and close(y, 300), "behind sits below, at twice the reach")
+assert(close(x, 0) and close(y, -300), "behind sits below, at twice the reach")
 assert(close(alpha, 0.4), "behind is dimmest")
 
 -- The bearing is taken relative to facing, and wraps the short way round: turned just past
--- north, north sits a little to your right rather than most of the way round the screen.
+-- north to the east, north sits a little to your left rather than most of the way round the screen.
 local turnedX = ns.PinPlace(0, 2 * math.pi - 0.1, 500)
-assert(turnedX > 0 and turnedX < 40, "a small turn puts the pin just to the side")
+assert(turnedX < 0 and turnedX > -40, "a small turn puts the pin just to the side")
 
 -- A distance is not needed for placement, but a missing bearing or facing has no answer.
 assert(ns.PinPlace(nil, 0, 500) == nil, "no bearing, no pin")

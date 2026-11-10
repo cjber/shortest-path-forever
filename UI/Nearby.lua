@@ -13,6 +13,20 @@ local VENDOR_GROUPS = {
 	{ key = "reagents", label = L["Reagents"], icon = 2928 },
 	{ key = "gear", label = L["Weapons and armour"], icon = 851 },
 }
+-- Groups whose goods come in level tiers (QuestieDB's requiredLevel): Rough to Jagged Arrow, Tough Hunk of Bread
+-- to Homemade Cherry Pie, Spring Water to Morning Glory Dew. The nearest arrow seller in Orgrimmar sells Rough and
+-- Sharp only, while the bow merchant beside him sells Razor and Jagged too.
+local TIERED = { arrows = true, bullets = true, food = true, drink = true }
+-- Yards farther than the nearest seller a vendor of a better tier for your level may stand and still be chosen:
+-- about a minute's run, which crosses a capital. The best tiers of all (level 51 and up) are each sold by one vendor
+-- on a continent, so a tier is only ever chosen from around you.
+local TIER_REACH = 400
+-- The ranged weapons each ammunition group feeds (item subclass: Bows, Guns, Crossbows), so a better arrow far off is
+-- offered only to whoever carries a bow.
+local AMMO = { [2] = "arrows", [3] = "bullets", [18] = "arrows" }
+-- The client's own upgrade mark on an item (Blizzard_UIPanels_Game/Mainline/ContainerFrame.xml:109, and Forever's
+-- Camelot/EquipmentFlyout.xml:12), before a better trip's menu button; 12 high keeps its 20x22 shape (WFA-27).
+local UPGRADE_ATLAS, UPGRADE_MARKUP = "bags-greenarrow", 12
 -- The other services keep their own keys and the client's tracking atlases.
 local SERVICES = {
 	{ key = "innkeeper", flag = "INNKEEPER", label = L["Innkeeper"], icon = "innkeeper" },
@@ -31,6 +45,10 @@ local SECTION_LABELS = {
 local index, vendorItems, groups, groupByKey, state = {}, {}, {}, {}, "idle"
 -- Every vendor item's name, so a search matches what a vendor sells and a row can name it.
 local itemNames = {}
+-- The level a tiered group's item needs, by item ID; 0 for none.
+local itemLevels = {}
+-- Each tiered group's best tier by NPC for one player level, since the level last asked.
+local tierLevel, tierCache = nil, {}
 -- Callers waiting for the index, so an open panel fills as soon as the read finishes.
 local waiting = {}
 
@@ -75,12 +93,15 @@ local SHORTLIST = 5
 -- so it scrolls past this many rows the way Blizzard's own long menus do (Blizzard_Menu SetScrollMode).
 local MENU_ROW, MENU_ROWS = 20, 20
 
--- What put an NPC in a group (defined below, after the index is built).
-local Items
+-- What put an NPC in a group (defined below, after the index is built), and the goods a row names.
+local Items, Goods
 
 -- Every NPC of a group on the player's continent that a folded query matches, or all of them with an empty query.
 -- A group label, an NPC's name or title, or the name of an item that puts the NPC in the group each count.
 local function Matching(key, world, query)
+	if query == "" then
+		return nil
+	end
 	local matching = {}
 	local labelHit = query ~= "" and Contains(Fold((groupByKey[key] or {}).label), query)
 	for _, place in ipairs(index[key] or {}) do
@@ -105,17 +126,91 @@ local function Matching(key, world, query)
 	return matching
 end
 
+local function PlayerLevel()
+	local level = UnitLevel and UnitLevel("player")
+	return type(level) == "number" and level > 0 and level or nil
+end
+
+-- The level of the best goods of a tiered group an NPC sells that you can use: nil when it sells none you can, or
+-- when your level or the group's tiers are unknown.
+---@param key string
+---@param npc integer
+---@return integer?
+local function Tier(key, npc)
+	local level = PlayerLevel()
+	if not (level and TIERED[key]) then
+		return nil
+	end
+	if level ~= tierLevel then
+		tierLevel, tierCache = level, {}
+	end
+	local byNpc = tierCache[key]
+	if not byNpc then
+		byNpc = {}
+		tierCache[key] = byNpc
+	end
+	local tier = byNpc[npc]
+	if tier == nil then
+		tier = false
+		local items = vendorItems[key] and vendorItems[key][npc]
+		for _, itemID in ipairs(items or {}) do
+			local needs = itemLevels[itemID] or 0
+			if needs <= level and (not tier or needs > tier) then
+				tier = needs
+			end
+		end
+		byNpc[npc] = tier
+	end
+	return tier or nil
+end
+
+-- The tier to buy here: the best one you can use that a vendor sells within `reach` yards of the nearest seller
+-- (TIER_REACH, or the whole continent). A search for an item or an NPC wants what it names, so only the group's own
+-- label (or no query) picks a tier.
+local function BestTier(key, world, folded, matching, reach)
+	if not (TIERED[key] and PlayerLevel()) then
+		return nil
+	end
+	if folded ~= "" and not Contains(Fold((groupByKey[key] or {}).label), folded) then
+		return nil
+	end
+	local function Gap(place)
+		if place.world.map == world.map and (not matching or matching[place.id]) then
+			return math.sqrt((place.world.x - world.x) ^ 2 + (place.world.y - world.y) ^ 2)
+		end
+	end
+	local nearest = math.huge
+	for _, place in ipairs(index[key] or {}) do
+		nearest = math.min(nearest, Gap(place) or math.huge)
+	end
+	local best
+	for _, place in ipairs(index[key] or {}) do
+		local gap = Gap(place)
+		local tier = gap and gap <= nearest + reach and Tier(key, place.id)
+		if tier and (not best or tier > best) then
+			best = tier
+		end
+	end
+	return best
+end
+
 ---@param key string
 ---@param world SPFPoint
 ---@param limit integer
 ---@param query? string a raw search query, matched without case or accent
+---@param tier? integer the tier to keep, in place of the best one around you
 ---@return SPFNearbyPlace[]
-local function Shortlist(key, world, limit, query)
+local function Shortlist(key, world, limit, query, tier)
 	local list, gaps = {}, {}
 	local folded = Fold(query)
-	local matching = folded ~= "" and Matching(key, world, folded) or nil
+	local matching = Matching(key, world, folded)
+	tier = tier or BestTier(key, world, folded, matching, TIER_REACH)
 	for _, place in ipairs(index[key] or {}) do
-		if place.world.map == world.map and (not matching or matching[place.id]) then
+		if
+			place.world.map == world.map
+			and (not matching or matching[place.id])
+			and (not tier or Tier(key, place.id) == tier)
+		then
 			local gap = (place.world.x - world.x) ^ 2 + (place.world.y - world.y) ^ 2
 			local last = #list
 			if last < limit or gap < gaps[last] or (gap == gaps[last] and place.id < list[last].id) then
@@ -136,6 +231,49 @@ end
 
 local function Nearest(key, world)
 	return Shortlist(key, world, 1)[1]
+end
+
+-- Whether this character would go out of its way for a group's goods: food always, drink with a mana bar, and
+-- ammunition for the ranged weapon it carries.
+local function Wanted(key)
+	if key == "food" then
+		return true
+	elseif key == "drink" then
+		return (UnitPowerMax("player", Enum.PowerType.Mana) or 0) > 0
+	end
+	local slot = GetInventorySlotInfo("RANGEDSLOT")
+	local item = slot and GetInventoryItemID("player", slot)
+	local subClass = item and select(7, C_Item.GetItemInfoInstant(item)) -- multi-value: the subclass is seventh
+	return subClass ~= nil and AMMO[subClass] == key
+end
+
+-- The best tier you can use that any vendor on your continent sells, when it beats the one sold around you: the
+-- panel and the menu offer it as a trip of its own, for whoever would walk farther for better goods. nil when the
+-- best is around you already, while a search names an item or an NPC, or for goods this character has no use for.
+---@param key string
+---@param world SPFPoint
+---@param query? string
+---@return integer?
+local function Better(key, world, query)
+	if not TIERED[key] then
+		return nil
+	end
+	local folded = Fold(query)
+	local matching = Matching(key, world, folded)
+	local here = BestTier(key, world, folded, matching, TIER_REACH)
+	if not (here and Wanted(key)) then
+		return nil
+	end
+	local best = BestTier(key, world, folded, matching, math.huge)
+	return best and best > here and best or nil
+end
+
+-- The zone a place stands in, as the client names it.
+---@param place SPFNearbyPlace
+---@return string?
+local function Zone(place)
+	local info = C_Map.GetMapInfo(place.map)
+	return info and info.name ~= "" and info.name or nil
 end
 -- The trainer groups are the class one and one per profession skill line.
 local function Kind(key)
@@ -347,11 +485,11 @@ local function Build()
 		-- Every item says who sells it and what it is; that is the whole vendor grouping.
 		local item = lib.Item
 		if item and item.GetAllIds and item.GetAll then
-			local fields = { "vendors", "class", "subClass", "name" }
+			local fields = { "vendors", "class", "subClass", "name", "requiredLevel" }
 			for _, itemID in ipairs(item.GetAllIds()) do
 				local values = item.GetAll(itemID, fields)
 				if values then
-					local vendors, class, subClass, name = unpack(values, 1, values.n)
+					local vendors, class, subClass, name, requiredLevel = unpack(values, 1, values.n)
 					if type(name) == "string" then
 						itemNames[itemID] = name
 					end
@@ -360,6 +498,11 @@ local function Build()
 						for _, npc in ipairs(vendors) do
 							for _, key in ipairs(keys) do
 								AddVendorItem(key, npc, itemID)
+							end
+						end
+						for _, key in ipairs(keys) do
+							if TIERED[key] then
+								itemLevels[itemID] = type(requiredLevel) == "number" and requiredLevel or 0
 							end
 						end
 					end
@@ -517,8 +660,8 @@ end
 -- The chosen place: the closest few by straight line, then the cheapest of those by the planner's own journey cost.
 -- A boat or flight can beat a shorter walk across the hills. Planned here, on the click, so opening or refreshing a
 -- menu never starts a plan, and only the shortlist is planned.
-local function TravelNearest(key, world, query)
-	local candidates = Shortlist(key, world, SHORTLIST, query)
+local function TravelNearest(key, world, query, tier)
+	local candidates = Shortlist(key, world, SHORTLIST, query, tier)
 	local best = candidates[1]
 	local api = ShortestPathForever and ShortestPathForever.API
 	local map, x, y = PlayerUi()
@@ -533,7 +676,23 @@ local function TravelNearest(key, world, query)
 	return rank.best or best
 end
 
--- A group's nearest from here, or a row that says it is not on this map.
+-- The tooltip an upgrade's row and menu button share: the goods, why they are offered, and who sells them where.
+---@param tooltip GameTooltip
+---@param itemID integer
+---@param place SPFNearbyPlace
+local function BetterTooltip(tooltip, itemID, place)
+	GameTooltip_SetTitle(tooltip, itemNames[itemID])
+	GameTooltip_AddNormalLine(tooltip, L["Better for your level, farther away"])
+	local zone = Zone(place)
+	GameTooltip_AddColoredLine(
+		tooltip,
+		zone and L["%s, %s"]:format(place.name, zone) or place.name,
+		HIGHLIGHT_FONT_COLOR
+	)
+end
+
+-- A group's nearest from here, or a row that says it is not on this map. Under a tiered group, the better goods
+-- farther away (Better), marked with the client's green upgrade arrow.
 local function AddGroups(root, world)
 	root:SetScrollMode(MENU_ROW * MENU_ROWS)
 	local section
@@ -548,6 +707,19 @@ local function AddGroups(root, world)
 			return Pick(group.key, TravelNearest(group.key, world))
 		end)
 		entry:SetEnabled(place ~= nil)
+		local tier = place and Better(group.key, world)
+		local far = tier and Shortlist(group.key, world, 1, nil, tier)[1]
+		local goods = far and Goods(group.key, far)
+		if goods then
+			---@cast far -?
+			local arrow = ns.Art and ns.Art.Markup(UPGRADE_ATLAS, UPGRADE_MARKUP)
+			local better = root:CreateButton((arrow and arrow .. " " or "") .. itemNames[goods[1]], function()
+				return Pick(group.key, TravelNearest(group.key, world, nil, tier))
+			end)
+			better:SetTooltip(function(tooltip)
+				BetterTooltip(tooltip, goods[1], far)
+			end)
+		end
 	end
 end
 
@@ -594,8 +766,10 @@ end
 ---@field icon number|string
 ---@field npcs number[]
 ---@class SPFNearbyRow
+---@field id string the group's key, or "better:" and the key for its upgrade row
 ---@field group SPFNearbyGroup
 ---@field npc SPFNearbyPlace the nearest matching NPC by straight line
+---@field tier? integer on an upgrade row, the better tier it goes to (Better)
 ---@class SPFNearbySection
 ---@field section "vendors"|"trainers"|"services"
 ---@field label string
@@ -612,9 +786,13 @@ end
 ---@field State fun(): string
 ---@field OnReady fun(fn: fun())
 ---@field Sections fun(world: SPFPoint, query?: string, collapsed?: table<string, boolean>): SPFNearbySection[]
----@field Shortlist fun(key: string, world: SPFPoint, limit: integer, query?: string): SPFNearbyPlace[]
+---@field Shortlist fun(key: string, world: SPFPoint, limit: integer, query?: string, tier?: integer): SPFNearbyPlace[]
 ---@field Rank SPFRank
 ---@field Detail fun(key: string, place: SPFNearbyPlace, query?: string): string
+---@field Goods fun(key: string, place: SPFNearbyPlace, query?: string): integer[]?
+---@field ItemName fun(itemID: integer): string?
+---@field Zone fun(place: SPFNearbyPlace): string?
+---@field BetterTooltip fun(tooltip: GameTooltip, itemID: integer, place: SPFNearbyPlace)
 ---@field Navigate fun(key: string, place: SPFNearbyPlace?): boolean
 ---@field PlayerUi fun(): integer?, number?, number?
 ---@field PlayerWorld fun(): SPFPoint?
@@ -647,12 +825,18 @@ local function Sections(world, query, collapsed)
 	local folded = Fold(query)
 	local list = {}
 	for _, section in ipairs({ "vendors", "trainers", "services" }) do
-		local rows = {}
+		local rows, count = {}, 0
 		for _, group in ipairs(groups) do
 			if group.section == section then
 				local place = Shortlist(group.key, world, 1, folded)[1]
 				if place then
-					rows[#rows + 1] = { group = group, npc = place }
+					count = count + 1
+					rows[#rows + 1] = { id = group.key, group = group, npc = place }
+					local tier = Better(group.key, world, folded)
+					local far = tier and Shortlist(group.key, world, 1, folded, tier)[1]
+					if far then
+						rows[#rows + 1] = { id = "better:" .. group.key, group = group, npc = far, tier = tier }
+					end
 				end
 			end
 		end
@@ -661,7 +845,7 @@ local function Sections(world, query, collapsed)
 			list[#list + 1] = {
 				section = section,
 				label = SECTION_LABELS[section],
-				count = #rows,
+				count = count,
 				collapsed = isCollapsed,
 				rows = isCollapsed and {} or rows,
 			}
@@ -670,24 +854,42 @@ local function Sections(world, query, collapsed)
 	return list
 end
 
--- A row's detail line: the NPC and its title, or while searching, the NPC and only the items that matched.
-local function Detail(key, place, query)
+-- The goods a row names, sorted by name: while searching, the NPC's items that matched; otherwise, in a tiered group,
+-- the NPC's goods of the best tier you can use. nil for none.
+---@param key string
+---@param place SPFNearbyPlace
+---@param query? string
+---@return integer[]?
+function Goods(key, place, query)
 	local folded = Fold(query)
-	if folded ~= "" then
-		local names = {}
-		for _, itemID in ipairs(Items(key, place.id) or {}) do
-			local name = itemNames[itemID]
-			if name and Contains(Fold(name), folded) then
-				names[#names + 1] = name
-			end
-		end
-		if #names > 0 then
-			table.sort(names)
-			return L["%s · %s"]:format(place.name, table.concat(names, ", "))
-		end
-		return place.name
+	local tier = folded == "" and Tier(key, place.id)
+	if folded == "" and not tier then
+		return nil
 	end
-	if place.title then
+	local goods = {}
+	for _, itemID in ipairs(Items(key, place.id) or {}) do
+		local name = itemNames[itemID]
+		if name and (tier and (itemLevels[itemID] or 0) == tier or not tier and Contains(Fold(name), folded)) then
+			goods[#goods + 1] = itemID
+		end
+	end
+	table.sort(goods, function(a, b)
+		return itemNames[a] < itemNames[b]
+	end)
+	return #goods > 0 and goods or nil
+end
+
+-- A row's detail line: the NPC and its title, or the NPC and the goods the row names (Goods) in place of the title.
+local function Detail(key, place, query)
+	local goods = Goods(key, place, query)
+	if goods then
+		local names = {}
+		for at, itemID in ipairs(goods) do
+			names[at] = itemNames[itemID]
+		end
+		return L["%s · %s"]:format(place.name, table.concat(names, ", "))
+	end
+	if Fold(query) == "" and place.title then
 		return L["%s · %s"]:format(place.name, place.title)
 	end
 	return place.name
@@ -710,6 +912,12 @@ ns.NearbyServices = {
 	Shortlist = Shortlist,
 	Rank = NewRank,
 	Detail = Detail,
+	Goods = Goods,
+	ItemName = function(itemID)
+		return itemNames[itemID]
+	end,
+	Zone = Zone,
+	BetterTooltip = BetterTooltip,
 	Navigate = Navigate,
 	PlayerUi = PlayerUi,
 	PlayerWorld = PlayerWorld,

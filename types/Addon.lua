@@ -455,6 +455,7 @@ ShortestPathForeverPathData = nil
 ---@field hazards? SPFHazards
 ---@field reverse? boolean
 ---@field costOnly? boolean
+---@field decode? number[] -- clusters a Path.Decode job decodes for Floor.lua; it searches nothing
 ---@field cancelled? boolean
 ---@field paused? boolean
 ---@field done? boolean

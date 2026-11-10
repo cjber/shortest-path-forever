@@ -51,7 +51,7 @@ function ns.PinPlace(bearing, facing, distance)
 	local front = math.cos(angle)
 	local reach = REACH * (1 + (1 - front) * (BEHIND - 1) / 2)
 	local alpha = ALPHA_BEHIND + (ALPHA_AHEAD - ALPHA_BEHIND) * (front + 1) / 2
-	return math.sin(angle) * reach, -front * reach, alpha
+	return -math.sin(angle) * reach, front * reach, alpha
 end
 
 ---@return SPFDestinationPinFrame

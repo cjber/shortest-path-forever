@@ -35,18 +35,20 @@ def effect(spell, aura=0, effect=0, trigger=0, misc=0):
 
 
 class FoodDrinkTest(unittest.TestCase):
-    def test_a_use_spell_or_one_trigger_hop_decides_food_and_drink(self):
+    def test_a_use_spell_or_one_trigger_hop_decides_food_and_drink_and_an_equip_spell_does_not(self):
         items = [
             {"ItemID": "1", "ItemEffectID": "10"},
             {"ItemID": "2", "ItemEffectID": "11"},
             {"ItemID": "3", "ItemEffectID": "12"},
             {"ItemID": "4", "ItemEffectID": "13"},
+            {"ItemID": "5", "ItemEffectID": "14"},
         ]
         use = [
-            {"ID": "10", "SpellID": "100"},
-            {"ID": "11", "SpellID": "101"},
-            {"ID": "12", "SpellID": "102"},
-            {"ID": "13", "SpellID": "103"},
+            {"ID": "10", "SpellID": "100", "TriggerType": "0"},
+            {"ID": "11", "SpellID": "101", "TriggerType": "0"},
+            {"ID": "12", "SpellID": "102", "TriggerType": "0"},
+            {"ID": "13", "SpellID": "103", "TriggerType": "0"},
+            {"ID": "14", "SpellID": "101", "TriggerType": "1"},
         ]
         spells = [
             effect(100, aura=84),

@@ -1025,15 +1025,43 @@ local function smooth(st, P)
 	return out
 end
 
+-- The clusters around the player that Floor.lua follows the player's floor on, by map. Idle keeps them decoded; the
+-- memory ceilings may still evict one, and Floor.lua then asks for it again.
+local pinned = {}
+
+---@param map number?
+---@param clusters table<number, true>?
+local function Pin(map, clusters)
+	if not map and next(pinned) == nil then
+		return -- outdoors Floor.lua forgets on every tick: nothing pinned, no table to make
+	end
+	pinned = {}
+	if map and clusters then
+		pinned[map] = clusters
+	end
+end
+
+-- Whether cluster k is decoded, or holds no walking data, so reading it never decodes.
+local function Ready(st, k)
+	if st.val[k] ~= nil then
+		return true
+	end
+	local D = st.D
+	return D.grid[k + 1] == nil and not (D.packed and D.packed.grid[k + 1])
+end
+
 -- With no search queued, drop decoded grids and local trees; exact endpoint costs stay.
 local function Idle()
-	for _, st in pairs(states) do
+	for map, st in pairs(states) do
 		for _, entry in ipairs(st.endTrees or {}) do
 			entry.tree = nil
 		end
 		st.endTrees = nil
+		local keep = pinned[map]
 		for k in pairs(st.used) do
-			evict(st, k)
+			if not (keep and keep[k]) then
+				evict(st, k)
+			end
 		end
 		if st.D.packed then
 			st.D.grid, st.D.height, st.D.floor = {}, {}, {}
@@ -1089,6 +1117,9 @@ ns.PathGrid = {
 	smooth = smooth,
 	toward = toward,
 	bare = bare,
+	neighbour = neighbour,
+	Pin = Pin,
+	Ready = Ready,
 	Idle = Idle,
 	Reset = Reset,
 	TILE = TILE,

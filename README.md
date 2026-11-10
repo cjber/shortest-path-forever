@@ -20,7 +20,7 @@ with you.
 
 ## Features
 
-- **Find nearby services.** A tab in the world map's quest log lists vendors by what they sell, trainers by profession, and inns, banks, auction houses, flight masters, stables and repairs, each with the nearest NPC and the travel time. Search for a group, an NPC or an item, then click a row to start the journey; arrows mark that NPC's nameplate when you get there. Requires installed QuestieDB; class trainers also use Tweaks Forever.
+- **Find nearby services.** A tab in the world map's quest log lists vendors by what they sell, trainers by profession, and inns, banks, auction houses, flight masters, stables and repairs, each with the nearest NPC and the travel time. Arrows, shot, food and drink are the best for your level, and a row under them offers better ones farther away. Search for a group, an NPC or an item, then click a row to start the journey; arrows mark that NPC's nameplate when you get there. Requires installed QuestieDB; class trainers also use Tweaks Forever.
   ![The Nearby services tab in the world map's quest log](docs/screenshots/services.png)
   The tracking menus and `/spfnear` open the same tab.
 
