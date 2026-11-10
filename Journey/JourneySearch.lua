@@ -61,9 +61,14 @@ local function SamePlace(a, b)
 end
 Search.SamePlace = SamePlace
 
+-- Where you stand, with the height of your floor when Floor.lua knows it: the walks then start on that floor rather
+-- than the cheapest surface near you.
 local function Here()
 	local x, y, _, map = ns.JourneyPosition()
-	return x and { map = map, x = x, y = y }
+	if not (x and y and map) then
+		return nil
+	end
+	return { map = map, x = x, y = y, z = ns.Floor and ns.Floor.Height(map, x, y) or nil }
 end
 
 -- Cancelled searches leave both batches paused with their settled costs.

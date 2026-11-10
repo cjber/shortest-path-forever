@@ -37,6 +37,15 @@ function ns.InstanceEntrance(point)
 	}
 end
 
+-- A map of a place under another one you can walk on, and the height of its floor. A spot gives no height, and a walk
+-- ends on the cheapest surface there: a spot picked on the Undercity's map ended on the Ruins of Lordaeron overhead.
+-- With this height the walk ends on the floor nearest it (Path.lua's snap), in the city; a spot with no city under it
+-- keeps the ruins. The Tirisfal Glades map names the same spots on the surface and gets no height. Ironforge's
+-- mountain top cannot be walked to, so its city is already the cheapest.
+local UNDERGROUND = {
+	[1458] = -43.1, -- Undercity: the flight master's floor (Data/Taxi.lua node 11)
+}
+
 ---@param uiMapID integer
 ---@param x number
 ---@param y number
@@ -45,7 +54,7 @@ function ns.WorldPoint(uiMapID, x, y)
 	local continent, world = C_Map.GetWorldPosFromMapPos(uiMapID, CreateVector2D(x, y))
 	if continent and world then
 		local worldX, worldY = world:GetXY()
-		return { map = continent, x = worldX, y = worldY }
+		return { map = continent, x = worldX, y = worldY, z = UNDERGROUND[uiMapID] }
 	end
 end
 

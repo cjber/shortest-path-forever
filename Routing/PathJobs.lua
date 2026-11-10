@@ -159,6 +159,33 @@ function Path.FindCost(map, from, to, callback, waterWalking, hazards)
 	return job
 end
 
+-- A Path.Decode job: its clusters, decoded under the frame budget like a search's.
+local function decode(job)
+	local st = Grid.State(job.map)
+	for _, k in ipairs(st and job.decode or {}) do
+		Grid.grid(st, k)
+	end
+end
+
+-- Decode clusters under the shared frame budget, then callback(nil, nil, job). Floor.lua reads only decoded
+-- clusters, so following the player's floor never decodes in a frame of its own.
+---@param map number
+---@param clusters number[]
+---@param callback fun(points: nil, reason: string?, job: SPFPathJob)
+---@return SPFPathJob
+function Path.Decode(map, clusters, callback)
+	local job = enqueue({ map = map, decode = clusters, callback = callback })
+	job.co = coroutine.create(decode)
+	return job
+end
+
+-- Keep these clusters of map decoded while no search runs, or none (no arguments).
+---@param map number?
+---@param clusters table<number, true>?
+function Path.Pin(map, clusters)
+	Grid.Pin(map, clusters)
+end
+
 -- callback(costs, reason, job) completes once; optional progress(costs, nil, job) runs after each slice.
 -- costs[i] is nil until settled, the real running-yard cost on the hazard-selected route afterwards, or false when
 -- unreachable. job.radius
