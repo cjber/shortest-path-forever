@@ -69,23 +69,80 @@ local function Clean(text)
 	text = text:gsub("|c%x+", ""):gsub("|r", "")
 	text = text:gsub("|T.-|t", ""):gsub("|A.-|a", "")
 	text = text:gsub("[\r\n]+", " ")
-	return (text:gsub("^%s+", ""):gsub("%s+$", ""))
+	return (text:gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", ""))
 end
 
--- What to call the step in the tracker: the arrow's own title, else the step's text, without guide markup.
+-- The element types Guidelime parses a quest into; its own step text names the quest for each of them.
+local QUEST_TYPES = { ACCEPT = true, COMPLETE = true, TURNIN = true, WORK = true, SKIP = true, PICKUP = true }
+
+-- The quest's name as Guidelime prints it: the guide's own title when it gives one, else the client's.
+---@param element SPFGuidelimeElement
+---@return string?
+local function QuestName(element)
+	local title = element.title
+	if type(title) == "string" and Clean(title) ~= "" then
+		return Clean(title)
+	end
+	local questID = tonumber(element.questId)
+	if questID and C_QuestLog and type(C_QuestLog.GetTitleForQuestID) == "function" then
+		local name = C_QuestLog.GetTitleForQuestID(questID)
+		if type(name) == "string" and Clean(name) ~= "" then
+			return Clean(name)
+		end
+	end
+	return nil
+end
+
+-- The words one parsed element contributes, as Guidelime's own step text gathers them: the guide's text where it
+-- wrote any, else the quest, item or target it names. APPLIES and the other wordless codes contribute nothing.
+---@param element SPFGuidelimeElement
+---@return string?
+local function Words(element)
+	local text = element.text
+	if type(text) == "string" and Clean(text) ~= "" then
+		return Clean(text)
+	end
+	if QUEST_TYPES[element.t] and element.questId ~= nil then
+		return QuestName(element)
+	end
+	if element.t == "TARGET" or element.t == "USE_ITEM" or element.t == "COLLECT_ITEM" then
+		local title = element.title
+		if type(title) == "string" and Clean(title) ~= "" then
+			return Clean(title)
+		end
+	end
+	return nil
+end
+
+-- What to call the step in the tracker: the arrow's own title when it has one, else the step's parsed parts. The raw
+-- line still holds Guidelime's codes ([QA96394], [TAR264943]), so it is never read.
 ---@param element SPFGuidelimeElement
 ---@return string
 local function Label(element)
 	local attached = element.attached
-	local title = type(attached) == "table" and attached.title or element.title
+	local title = type(attached) == "table" and attached.title or nil
 	if type(title) ~= "string" or Clean(title) == "" then
-		local step = element.step
-		title = type(step) == "table" and step.text or nil
+		title = element.title
 	end
-	if type(title) ~= "string" or Clean(title) == "" then
+	if type(title) == "string" and Clean(title) ~= "" then
+		return Clean(title)
+	end
+	local step = element.step
+	local elements = type(step) == "table" and step.elements or nil
+	if type(elements) ~= "table" then
 		return "Guidelime"
 	end
-	return Clean(title)
+	local parts = {}
+	for _, part in ipairs(elements) do
+		local words = Words(part)
+		if words then
+			parts[#parts + 1] = words
+		end
+	end
+	if #parts == 0 then
+		return "Guidelime"
+	end
+	return Clean(table.concat(parts, " "))
 end
 
 -- Guidelime's arrow steps aside while ours draws, the way RestedXP's does. Guidelime resets its arrow's alpha only

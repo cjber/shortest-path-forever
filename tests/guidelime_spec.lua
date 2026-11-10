@@ -37,6 +37,13 @@ env.C_Timer = {
 }
 ns.db.guidelime = true
 
+-- Quest names the guide does not write into its code come from the client, as Guidelime's own step text does.
+env.C_QuestLog = {
+	GetTitleForQuestID = function(questID)
+		return questID == 96394 and "The Restless Dead" or nil
+	end,
+}
+
 -- Guidelime 6.017's public surface: the addon table, and the arrow frame it publishes as GuidelimeArrow. The
 -- element is the current step's target, as the guide hands it to its arrow, in percent coordinates.
 local alpha, mouse = 0.8, true
@@ -57,15 +64,79 @@ function arrow.EnableMouse(_, value)
 end
 env.Guidelime = { registerGuide = function() end }
 env.GuidelimeArrow = arrow
+-- The tracker's label for the step the guide plans, captured as the journey is handed its title.
+local label
+local planned = API.NavigateRoute
+API.NavigateRoute = function(owner, stops)
+	if owner == "Guidelime" then
+		label = stops[1].title
+	end
+	return planned(owner, stops)
+end
 driver.load("Core/Guidelime.lua")
 assert(API.CurrentStop("Guidelime") == 1, "Guidelime's current step starts a journey")
+assert(label == "Step 1", "the arrow's own title names the step")
 assert(alpha == 0 and not mouse, "Guidelime's arrow and its clicks step aside while ours draws")
 assert(tick ~= nil, "the arrow is followed while Guidelime is installed")
 
--- A step with no title of its own still plans, from its text without the guide's colour and icon markup.
+-- A step with no parsed parts and no title of its own is named by the guide, never by its raw line.
 arrow.element = { t = "GOTO", mapID = 1, x = 64, y = 45, step = { text = "|cff1eff00Accept|r |T123|t The Farmer" } }
 tick()
 assert(API.CurrentStop("Guidelime") == 1, "a step named only by its text is guided")
+assert(label == "Guidelime", "a step with nothing parsed falls back to the guide's name")
+
+-- The tracker names a step from the parts Guidelime parsed, not the raw line with its guide codes (#650).
+arrow.element = {
+	t = "GOTO",
+	mapID = 1,
+	x = 66,
+	y = 44,
+	step = {
+		text = "[A Forever] Outside Hall Of Thanes at [TAR264943] [QA96394]",
+		elements = {
+			{ t = "APPLIES" },
+			{ t = "TEXT", text = "Outside Hall Of Thanes at " },
+			{ t = "TARGET", targetNpcId = 264943 },
+			{ t = "ACCEPT", questId = 96394, title = "The Restless Dead" },
+		},
+	},
+}
+tick()
+assert(API.CurrentStop("Guidelime") == 1, "the parsed step is guided")
+assert(label == "Outside Hall Of Thanes at The Restless Dead", "the label reads the parsed words: " .. tostring(label))
+assert(not label:find("[", 1, true) and not label:find("]", 1, true), "the label carries none of the guide's codes")
+
+-- A quest the guide leaves unnamed takes the client's title for it, and a target keeps the name the guide gave.
+arrow.element = {
+	t = "GOTO",
+	mapID = 1,
+	x = 68,
+	y = 42,
+	step = {
+		text = "Turn in [QT96394]",
+		elements = {
+			{ t = "TEXT", text = "Turn in " },
+			{ t = "TURNIN", questId = 96394 },
+		},
+	},
+}
+tick()
+assert(label == "Turn in The Restless Dead", "a quest without a title uses the client's: " .. tostring(label))
+arrow.element = {
+	t = "GOTO",
+	mapID = 1,
+	x = 70,
+	y = 40,
+	step = {
+		text = "Talk to [TAR264943 Afadra Dunwall]",
+		elements = {
+			{ t = "TEXT", text = "Talk to " },
+			{ t = "TARGET", targetNpcId = 264943, title = "Afadra Dunwall" },
+		},
+	},
+}
+tick()
+assert(label == "Talk to Afadra Dunwall", "a target uses the name the guide gave: " .. tostring(label))
 -- An impossible target clears the journey and brings the guide's arrow back.
 arrow.element = { t = "GOTO", mapID = 1, x = 150, y = 50, title = "Outside the map" }
 tick()
