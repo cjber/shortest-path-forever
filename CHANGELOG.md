@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.25.2] - 2026-11-10
+
 - **With the map filter menu, Shortest Path no longer causes a blocked-action error.** Opening the world map's filter menu, or picking a service from it, could make the game refuse one of its own actions and blame Shortest Path Forever. The menu now behaves as the game's own does, and on the gamepad interface Shortest Path leaves that menu to the game (#645).
 - **Guidelime steps in the tracker read as words, not guide codes.** A step such as "Journey to [A Forever] Outside Hall Of Thanes at [TAR264943] [QA96394]" showed the raw line Guidelime parses for itself. The tracker now names a step from its parsed parts, the same words Guidelime prints: the guide's own text, and the quest, item or target names it gives, falling back to the game's quest title where the guide leaves the name out (#650).
 
