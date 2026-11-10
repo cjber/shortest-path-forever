@@ -18,9 +18,11 @@ local CONTRACT = 2
 -- Questie can load and never report ready, when its own start stops on an error for one character. Past this the
 -- database is read as it stands, and that read is not kept: the next login reads the corrected one.
 local READY_WAIT = 60
--- The fields read for each item and NPC, in the order QuestieDB answers them.
+-- The fields read for each item and NPC, in the order QuestieDB answers them. An NPC's spawns are a table QuestieDB
+-- decodes fresh on every read, so they are asked for only once its other fields have put it in the list.
 local ITEM_FIELDS = { "vendors", "class", "subClass", "name", "requiredLevel" }
-local NPC_FIELDS = { "name", "spawns", "friendlyToFaction", "npcFlags", "subName" }
+local NPC_FIELDS = { "name", "friendlyToFaction", "npcFlags", "subName" }
+local NPC_SPAWNS = { "spawns" }
 
 -- "idle" before anything is asked, "waiting" for Questie's ready callback, "reading" through the database a slice a
 -- frame, "ready" with a read in hand, "missing" without QuestieDB, "failed" when it does not read as this file does.
@@ -170,7 +172,7 @@ local function Saved(key)
 end
 
 -- QuestieDB as this file reads it, as a coroutine body: every item a vendor sells, then every NPC the caller could
--- group. `yield` is called between rows, so a read never holds a frame.
+-- group, and only those NPCs' spawns. `yield` is called between rows, so a read never holds a frame.
 ---@param fit SPFNearbyQuestieFit
 ---@param wanted string[] the NPC flag names whose rows the caller needs
 ---@param yield fun()
@@ -236,42 +238,46 @@ local function Scan(fit, wanted, yield)
 		trainers[npc] = true
 	end
 	local npcs = {}
+	-- The NPCs whose spawns the read still owes, in the order they were found.
+	local kept = {}
 	for _, id in ipairs(lib.Npc.GetAllIds()) do
 		local values = lib.Npc.GetAll(id, NPC_FIELDS)
 		if values then
-			local name, spawns, friendly, flags, title = unpack(values, 1, values.n)
+			local name, friendly, flags, title = unpack(values, 1, values.n)
 			if
 				type(name) == "string"
 				and type(friendly) == "string"
 				and type(flags) == "number"
 				and (sells[id] or trainers[id] or bit.band(flags, mask) ~= 0)
+				and (friendly == "AH" or friendly == faction)
 			then
-				local kept = {}
-				for area, points in pairs(type(spawns) == "table" and spawns or {}) do
-					local map = type(area) == "number" and Map(area) or nil
-					for _, spot in ipairs(map and type(points) == "table" and points or {}) do
-						local x, y = spot[1], spot[2]
-						if
-							type(x) == "number"
-							and type(y) == "number"
-							and x >= 0
-							and x <= 100
-							and y >= 0
-							and y <= 100
-						then
-							kept[#kept + 1] = { map, x / 100, y / 100 }
-						end
-					end
-				end
-				if kept[1] and (friendly == "AH" or friendly == faction) then
-					npcs[id] = {
-						name = name,
-						title = type(title) == "string" and title ~= "" and title or nil,
-						flags = flags,
-						spawns = kept,
-					}
+				kept[#kept + 1] = { id = id, name = name, flags = flags, title = title }
+			end
+		end
+		yield()
+	end
+	-- Only the NPCs the list keeps have their spawns read: a spawn tree is the largest thing QuestieDB decodes, and
+	-- most NPCs are not a service, a trainer or a vendor.
+	for _, row in ipairs(kept) do
+		local values = lib.Npc.GetAll(row.id, NPC_SPAWNS)
+		local spawns = values and values[1]
+		local spots = {}
+		for area, points in pairs(type(spawns) == "table" and spawns or {}) do
+			local map = type(area) == "number" and Map(area) or nil
+			for _, spot in ipairs(map and type(points) == "table" and points or {}) do
+				local x, y = spot[1], spot[2]
+				if type(x) == "number" and type(y) == "number" and x >= 0 and x <= 100 and y >= 0 and y <= 100 then
+					spots[#spots + 1] = { map, x / 100, y / 100 }
 				end
 			end
+		end
+		if spots[1] then
+			npcs[row.id] = {
+				name = row.name,
+				title = type(row.title) == "string" and row.title ~= "" and row.title or nil,
+				flags = row.flags,
+				spawns = spots,
+			}
 		end
 		yield()
 	end

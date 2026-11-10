@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Less work at login after an update.** Nearby services now looks up map locations only for the vendors, trainers and services it lists, not for every creature in the game, which halves the time that first read takes (#582).
+
 ## [1.28.0] - 2026-11-10
 
 - **Needs Forever Core.** The shared tracker column, bug report and leaderboards now come from one Forever Core addon, which comes in the same download, so every Forever addon's tracker scale, lock and position stay in step. Your tracker settings carry over.

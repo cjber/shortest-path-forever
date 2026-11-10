@@ -171,8 +171,15 @@ do
 			GetAllIds = function()
 				return { 21, 22, 23 }
 			end,
-			GetAll = function(id)
-				return tierNpcs[id]
+			GetAll = function(id, fields)
+				local row = tierNpcs[id]
+				if not row then
+					return nil
+				end
+				if #fields == 1 then
+					return { row[2], n = 1 }
+				end
+				return { row[1], row[3], row[4], row[5], n = 4 }
 			end,
 		},
 		Item = {

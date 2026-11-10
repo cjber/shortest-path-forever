@@ -158,9 +158,18 @@ local lib = {
 			return { 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 1215 }
 		end,
 		GetAll = function(id, fields)
-			assert(type(id) == "number" and #fields == 5, "packed GetAll actual contract")
+			assert(type(id) == "number", "packed GetAll takes an id")
 			calls = calls + 1
-			return data[id]
+			local row = data[id]
+			if not row then
+				return nil
+			end
+			if #fields == 1 then
+				assert(fields[1] == "spawns", "an NPC's spawns are read on their own, once it is kept")
+				return { row[2], n = 1 }
+			end
+			assert(#fields == 4, "an NPC's name, side, flags and title are read together, without its spawns")
+			return { row[1], row[3], row[4], row[5], n = 4 }
 		end,
 	},
 	Item = {
@@ -791,8 +800,15 @@ do
 			GetAllIds = function()
 				return npcIds
 			end,
-			GetAll = function(id)
-				return travelNpcs[id]
+			GetAll = function(id, fields)
+				local row = travelNpcs[id]
+				if not row then
+					return nil
+				end
+				if #fields == 1 then
+					return { row[2], n = 1 }
+				end
+				return { row[1], row[3], row[4], row[5], n = 4 }
 			end,
 		},
 	}

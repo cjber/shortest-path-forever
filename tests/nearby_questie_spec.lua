@@ -1,7 +1,8 @@
 -- UI/NearbyQuestie.lua and UI/Nearby.lua's start of it: QuestieDB is read through its public API, a slice a frame,
 -- once Questie has had its own start (its corrections change what the database says), and what was read is kept
--- under the inputs that produced it, so a later session reads nothing. A database that does not read says so once,
--- in the list, instead of throwing out of the menu and trying again every time it opens.
+-- under the inputs that produced it, so a later session reads nothing. An NPC's spawns are read only when the rest of
+-- its row puts it in the list. A database that does not read says so once, in the list, instead of throwing out of the
+-- menu and trying again every time it opens.
 local FLAGS = {
 	VENDOR = 4,
 	TRAINER = 16,
@@ -14,14 +15,16 @@ local FLAGS = {
 }
 
 -- A QuestieDB with one NPC per kind: an innkeeper friendly to both sides, a flight master and a vendor of arrows of
--- the Alliance, and a Horde innkeeper this character can never use. `count` says how many rows were read.
----@param count {items: integer, npcs: integer}
+-- the Alliance, a Horde innkeeper this character can never use, and a passer-by with no service at all. `count` says
+-- how many rows were read, and `spawns` how many of those reads asked for spawn trees.
+---@param count {items: integer, npcs: integer, spawns: integer?}
 local function QuestieDB(count)
 	local npcs = {
 		[9101] = { "Farley", { [12] = { { 40, 60 } } }, "AH", FLAGS.INNKEEPER },
 		[9102] = { "Ariena", { [12] = { { 41, 61 } } }, "A", FLAGS.FLIGHT_MASTER, "Flight Master" },
 		[9103] = { "Bow merchant", { [12] = { { 42, 62 } } }, "A", FLAGS.VENDOR, "Bow Merchant" },
 		[9104] = { "Horde innkeeper", { [12] = { { 43, 63 } } }, "H", FLAGS.INNKEEPER },
+		[9105] = { "Passer-by", { [12] = { { 44, 64 } } }, "A", 0 },
 	}
 	local items = { [2512] = { { 9103 }, 6, 2, "Rough Arrow", 1 } }
 	return {
@@ -37,13 +40,30 @@ local function QuestieDB(count)
 		},
 		Npc = {
 			GetAllIds = function()
-				return { 9101, 9102, 9103, 9104 }
+				return { 9101, 9102, 9103, 9104, 9105 }
 			end,
 			GetAll = function(id, fields)
-				assert(#fields == 5, "name, spawns, side, flags and title are one read")
 				count.npcs = count.npcs + 1
 				local row = npcs[id]
-				return row and { row[1], row[2], row[3], row[4], row[5], n = 5 }
+				local spawns = false
+				for _, field in ipairs(fields) do
+					spawns = spawns or field == "spawns"
+				end
+				if spawns then
+					count.spawns = (count.spawns or 0) + 1
+					count.spawned = count.spawned or {}
+					count.spawned[id] = true
+				end
+				if #fields == 1 then
+					assert(fields[1] == "spawns", "a kept NPC's spawns are asked for on their own, once")
+					return row and { row[2], n = 1 }
+				end
+				if #fields == 5 then
+					return row and { row[1], row[2], row[3], row[4], row[5], n = 5 }
+				end
+				assert(#fields == 4, "name, side, flags and title are one read; the spawns are not")
+				assert(fields[1] == "name" and fields[2] == "friendlyToFaction" and fields[3] == "npcFlags")
+				return row and { row[1], row[3], row[4], row[5], n = 4 }
 			end,
 		},
 		Item = {
@@ -263,7 +283,7 @@ end
 
 -- A fresh read waits for Questie's own start, and is kept for the next session, which reads nothing.
 do
-	local count = { items = 0, npcs = 0 }
+	local count = { items = 0, npcs = 0, spawns = 0 }
 	local db = {}
 	local questie, Ready = QuestieAPI()
 	local run = Load({ lib = QuestieDB(count), questie = questie, db = db, questieVersion = "12.0" })
@@ -278,20 +298,30 @@ do
 	Ready()
 	run.Run(true)
 	assert(run.ns.NearbyServices.State() == "ready", "the list is ready once Questie reports ready")
-	assert(count.items == 1 and count.npcs == 4, "every item and NPC was read once")
-	assert(count.npcs == 4, "and only once: the assembler reads none of them again")
+	assert(count.items == 1 and count.npcs == 8, "every item and NPC was read once")
+	assert(count.npcs == 8, "and once more only for the kept NPCs' spawns")
+	assert(count.spawns == 3, "the spawns of only the NPCs the list keeps")
+	assert(
+		count.spawned[9101] and count.spawned[9102] and count.spawned[9103],
+		"the innkeeper, flight master and vendor each had their spawns read"
+	)
+	assert(
+		not count.spawned[9104] and not count.spawned[9105],
+		"neither the other side's innkeeper nor a passer-by had a spawn tree decoded"
+	)
 	local kept = db.nearbyRead
 	assert(type(kept) == "table" and type(kept.key) == "string", "the read is kept for the next session")
 	assert(kept.key:find("questiedb=1.0.13", 1, true), "under QuestieDB's own version: " .. tostring(kept.key))
 	assert(kept.key:find("questie=12.0", 1, true), "and Questie's: " .. tostring(kept.key))
 	assert(kept.npcs[9104] == nil, "an NPC of the other side is not kept: QuestieDB's rows are per faction")
 	assert(kept.npcs[9101] and kept.npcs[9101].name == "Farley", "and the innkeeper is")
+	assert(#kept.npcs[9101].spawns == 1, "with the spawns the second read brought")
 
 	-- The next session, over the same saved variables: nothing is read.
 	local second = Load({ lib = QuestieDB(count), questie = questie, db = db, questieVersion = "12.0" })
 	second.Login()
 	second.Run(true)
-	assert(count.npcs == 4 and count.items == 1, "a later session reads no item and no NPC at all")
+	assert(count.npcs == 8 and count.items == 1, "a later session reads no item and no NPC at all")
 	assert(second.ns.NearbyServices.State() == "ready", "it is ready at once")
 	local here = { map = 1, x = 0, y = 0 }
 	assert(second.ns.NearbyServices.Nearest("innkeeper", here).id == 9101, "and the services are all there")
@@ -300,25 +330,25 @@ do
 	-- Questie's own start finishing after the saved read was adopted changes none of it.
 	Ready()
 	second.Run(true)
-	assert(count.npcs == 4, "a saved read is not read again when Questie's ready callback arrives")
+	assert(count.npcs == 8, "a saved read is not read again when Questie's ready callback arrives")
 	assert(#run.reported == 0 and #second.reported == 0, "nothing was thrown")
 end
 
 -- Without Questie there are no corrections to wait for: the database is read at once, and kept.
 do
-	local count = { items = 0, npcs = 0 }
+	local count = { items = 0, npcs = 0, spawns = 0 }
 	local db = {}
 	local run = Load({ lib = QuestieDB(count), db = db })
 	run.Login()
 	run.Run(true)
 	assert(run.ns.NearbyServices.State() == "ready", "the list is ready without Questie")
-	assert(count.npcs == 4, "the database was read")
+	assert(count.npcs == 8, "the database was read")
 	assert(type(db.nearbyRead) == "table", "and kept, since Questie has no corrections to add")
 end
 
 -- A read from another QuestieDB version is not used: the database is read again, and kept under the new version.
 do
-	local count = { items = 0, npcs = 0 }
+	local count = { items = 0, npcs = 0, spawns = 0 }
 	local db = {}
 	local first = Load({ lib = QuestieDB(count), db = db })
 	first.Login()
@@ -328,14 +358,14 @@ do
 	local run = Load({ lib = QuestieDB(count), db = db, questiedbVersion = "1.0.14" })
 	run.Login()
 	run.Run(true)
-	assert(count.npcs == 8, "a read from another QuestieDB version is not used: every NPC is read again")
+	assert(count.npcs == 16, "a read from another QuestieDB version is not used: every NPC is read again")
 	assert(db.nearbyRead ~= kept, "and the saved read is replaced")
 	assert(db.nearbyRead.key:find("questiedb=1.0.14", 1, true), "under the version that produced it")
 end
 
 -- Questie can never report ready: the database is read as it stands after the wait, and that read is not kept.
 do
-	local count = { items = 0, npcs = 0 }
+	local count = { items = 0, npcs = 0, spawns = 0 }
 	local db = {}
 	local run = Load({
 		lib = QuestieDB(count),
@@ -347,22 +377,22 @@ do
 	run.Run(true)
 	assert(count.npcs == 0, "the wait holds the read, frame after frame")
 	run.Run(false)
-	assert(count.npcs == 4 and run.ns.NearbyServices.State() == "ready", "the wait runs out and the database is read")
+	assert(count.npcs == 8 and run.ns.NearbyServices.State() == "ready", "the wait runs out and the database is read")
 	assert(db.nearbyRead == nil, "but that read is not kept: it has none of Questie's corrections")
 end
 
 -- Questie reports ready after the wait has run out: the database is read again with its corrections, and kept.
 do
-	local count = { items = 0, npcs = 0 }
+	local count = { items = 0, npcs = 0, spawns = 0 }
 	local db = {}
 	local questie, Ready = QuestieAPI()
 	local run = Load({ lib = QuestieDB(count), db = db, questie = questie })
 	run.Login()
 	run.Run(false)
-	assert(count.npcs == 4 and db.nearbyRead == nil, "read as it stood, and not kept")
+	assert(count.npcs == 8 and db.nearbyRead == nil, "read as it stood, and not kept")
 	Ready()
 	run.Run(true)
-	assert(count.npcs == 8, "Questie's late ready callback has the database read again")
+	assert(count.npcs == 16, "Questie's late ready callback has the database read again")
 	assert(type(db.nearbyRead) == "table", "and that read, with its corrections, is kept")
 	assert(run.ns.NearbyServices.State() == "ready", "the list stays ready over it")
 	assert(#run.reported == 0, "nothing is thrown")
@@ -403,7 +433,7 @@ for _, case in ipairs({
 		end,
 	},
 }) do
-	local count = { items = 0, npcs = 0 }
+	local count = { items = 0, npcs = 0, spawns = 0 }
 	local lib = QuestieDB(count)
 	case.break_(lib)
 	local run = Load({ lib = lib })
