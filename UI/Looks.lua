@@ -24,7 +24,7 @@ local ATLASES = {
 local TRANSPORTS = { boat = true, zeppelin = true, lift = true, tram = true, portal = true }
 
 ---@type table<string, true>
-local kinds = { flightmaster = true }
+local kinds = { flightmaster = true, vendor = true }
 for kind in pairs(ATLASES) do
 	kinds[kind] = true
 end

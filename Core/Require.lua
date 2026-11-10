@@ -1,9 +1,9 @@
 local _, ns = ...
 
 -- The game refuses to load this addon when ForeverCore is absent (## Dependencies), but an older ForeverCore still
--- loads. Its API version says whether it has everything this addon calls, so an out-of-date one stops the addon's own
--- files here with one line on screen, never a chat message.
-if ForeverCore == nil or (ForeverCore.API or 0) < 1 then
+-- loads. Its API version and the kit this addon's own API is built on say whether it has everything called here, so an
+-- out-of-date one stops the addon's own files with one line on screen, never a chat message.
+if ForeverCore == nil or (ForeverCore.API or 0) < 1 or ForeverCore.APIKit == nil then
 	ns.broken = true
 	local errors = rawget(_G, "UIErrorsFrame")
 	if errors then

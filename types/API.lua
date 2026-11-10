@@ -4,14 +4,16 @@
 -- Additions keep version 1 and raise minor: a caller checks optional members with type(api.Name) == "function".
 
 ---@alias SPFAPIMode "walk"|"flight"|"boat"|"zeppelin"|"lift"|"tram"|"portal"|"passage"|"teleport"
----@alias SPFAPINoRoute "combat"|"invalid"|"unreachable" -- retry after combat; never for bad input; unreachable with what this character knows
+---@alias SPFAPINoRoute "combat"|"invalid"|"unreachable"|"loading" -- retry after combat; never for bad input; unreachable with what this character knows; loading while the addon builds its data
 
 ---@alias SPFAPIEnded "arrived"|"cleared"|"replaced"|"cancelled" -- reached the last stop; the player cleared it; another journey took over; the owner's own Cancel
+
+---@alias SPFAPINotReady "loading"|"none" -- still building the data; nothing to answer
 
 -- What stands at a stop. Its numbered pin on the world map wears that mark (a quest's "!" or "?", a trainer, a
 -- flight master, a dock) as a small badge on its lower right, a lone stop shows the mark alone, and the minimap
 -- rings the spot instead of covering the game's own icon there.
----@alias SPFAPIStopKind "pickup"|"turnin"|"objective"|"trainer"|"innkeeper"|"flightmaster"|"battlemaster"|"dungeon"|"boat"|"zeppelin"|"lift"|"tram"|"portal"
+---@alias SPFAPIStopKind "pickup"|"turnin"|"objective"|"trainer"|"innkeeper"|"flightmaster"|"battlemaster"|"dungeon"|"boat"|"zeppelin"|"lift"|"tram"|"portal"|"vendor"
 
 --- An objective area a held stop stands for: a circle on one map. Circles are never drawn: they decide whether the
 -- player stands in the area when the stop names no quest, or the client has no answer for the quests it names.
@@ -61,15 +63,16 @@
 
 ---@class SPFPublicAPI
 ---@field version integer -- 1; a breaking change would raise it
----@field minor integer -- 1 from Subscribe; absent before
+---@field minor integer -- 2: RenameStop, npc, handins and the vendor kind; 1 added Subscribe
 ---@field Estimate fun(fromMap: integer, fromX: number, fromY: number, toMap: integer, toX: number, toY: number): seconds: number?, reason: SPFAPINoRoute? -- travel seconds; nil comes with the reason
 ---@field Navigate fun(owner: string, map: integer, x: number, y: number, title?: string, kind?: SPFAPIStopKind): boolean -- starts/replaces guidance outside combat when journeys are enabled
 ---@field NavigateRoute fun(owner: string, stops: SPFAPIStop[]): boolean -- starts/replaces guidance through 1-64 stops in order; false leaves the current journey intact
----@field CurrentStop fun(owner: string): integer? -- 1-based current stop, nil unless owner owns the active journey
+---@field CurrentStop fun(owner: string): index: integer?, reason: SPFAPINotReady? -- 1-based current stop, or nil and why there is none
 ---@field Cancel fun(owner: string): boolean -- true only when this owner's current journey was cancelled
+---@field RenameStop fun(owner: string, index: integer, title: string, renamePoints?: fun(point: SPFPoint): boolean?): boolean -- relabels a running route's stop in place; false leaves it as it was
 ---@field EstimateDetail fun(fromMap: integer, fromX: number, fromY: number, toMap: integer, toX: number, toY: number): detail: SPFAPIDetail?, reason: SPFAPINoRoute? -- Estimate leg by leg, sharing its cache
 ---@field Active fun(): boolean -- true while any journey is guiding, whoever started it
----@field Ended fun(owner: string): reason: SPFAPIEnded?, at: number? -- why owner's last journey ended and its GetTime(); nil while it runs, before any, or after a reload
+---@field Ended fun(owner: string): reason: (SPFAPIEnded|SPFAPINotReady)?, at: (number|SPFAPINotReady)? -- why owner's last journey ended and its GetTime(), or nil and why there is none
 ---@field Subscribe fun(callback: fun(changes: SPFAPIChanges)): unsubscribe: fun() -- calls back at most once per burst of journey changes, the next frame; errors go to the game's error handler
 
 ---@class SPFPublicAddon
