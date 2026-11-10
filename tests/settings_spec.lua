@@ -290,6 +290,7 @@ local groups = {
 		"journeyTracker",
 		"resumeJourney",
 		"destinationPin",
+		"arrivalPin",
 		"npcArrows",
 		"tomtom",
 		"tomtomFollow",
@@ -340,8 +341,9 @@ local order = {
 }
 
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
--- The follow-roads branch added followRoads, main added npcArrows, so the merged list is one row longer.
-assert(#rows == 57, #rows)
+-- The follow-roads branch added followRoads, main added npcArrows, and the arrival pin added arrivalPin, so the
+-- merged list is one row longer.
+assert(#rows == 58, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer

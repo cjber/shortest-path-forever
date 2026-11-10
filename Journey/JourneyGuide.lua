@@ -490,6 +490,7 @@ function Guide.To(node, points, goal, leg)
 	end
 	if guide.paused then
 		guide.paused = nil
+		guide.pausedGoal = nil
 		RefreshTracker()
 	end
 	if ns.db.arrow == false and guide.waypoint then
@@ -505,15 +506,32 @@ function Guide.To(node, points, goal, leg)
 	ns.PointGuideArrow(points or { point }, GuideWaypoint, node, goal)
 end
 
--- Keep the owner's stop while it waits for quest progress, without directions to a place already reached.
+-- Keep the owner's stop while it waits for quest progress, without directions to a place already reached. The arrow
+-- becomes the arrival pin over the stop's own area (#627), and leaves it to the guide when the stop changes.
 function Guide.Pause()
 	if not guide then
 		return
 	end
-	local changed = not guide.paused
+	if guide.paused then
+		-- The driver asks every tick while the player stands in the area: only the arrival pin may need putting back,
+		-- for a setting turned on again, and a waypoint combat kept until it ended still has to go.
+		if not InCombatLockdown() and guide.waypoint and OwnsWaypoint() then
+			ClearGuideWaypoint()
+		end
+		if ns.PointArrivalPin then
+			ns.PointArrivalPin(guide.pausedGoal)
+		end
+		return
+	end
+	local goal = guide.goal
+	local changed = true
 	guide.paused = true
+	guide.pausedGoal = goal
 	guide.points, guide.target, guide.bend, guide.leg, guide.goal = nil, nil, nil, nil, nil
 	ns.PointGuideArrow(nil)
+	if ns.PointArrivalPin then
+		ns.PointArrivalPin(goal)
+	end
 	if not InCombatLockdown() and guide.waypoint and OwnsWaypoint() then
 		ClearGuideWaypoint()
 	end

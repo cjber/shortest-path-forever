@@ -476,3 +476,8 @@ L["No flight points learned in %s: open a flight master's map once to sync them.
 L["Only the flight points your character has are learned now."] =
 	"Seuls les points de vol de votre personnage sont désormais appris." -- mt
 L["Better for your level, farther away"] = "Meilleur pour votre niveau, plus loin" -- mt
+L["Show a pin when you reach a stop"] = "Afficher une épingle lorsque vous atteignez une étape" -- mt
+L["In a stop's area the direction arrow becomes a pin with the stop's objectives, instead of hiding."] =
+	"Dans la zone d'une étape, la flèche de direction devient une épingle avec les objectifs de l'étape, au lieu de disparaître." -- mt
+L["It returns to the arrow when you leave the area or the stop changes."] =
+	"Elle redevient la flèche lorsque vous quittez la zone ou que l'étape change." -- mt

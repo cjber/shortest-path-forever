@@ -9,6 +9,12 @@ local TURN, EASE, SETTLED = 2 * math.pi, 18, 0.001
 local OVERLAP = 6
 -- Pixels over which a tick fades from full strength to nothing at the ribbon's end.
 local FADE = 80
+-- While the player stands in an arrived stop's area the ribbon tints, quietly, with no glow: the same parchment,
+-- nudged towards the green of a finished objective.
+local TICK_COLOR = { 0.72, 0.67, 0.55, 0.7 }
+local ARRIVED_TICK_COLOR = { 0.6, 0.76, 0.58, 0.7 }
+local CENTER_COLOR = { 1, 0.82, 0, 0.85 }
+local ARRIVED_CENTER_COLOR = { 0.62, 0.9, 0.55, 0.85 }
 ---@class SPFCompassFrame : Frame
 ---@field ticks SPFCompassTick[]
 ---@field markers SPFCompassMarker[]
@@ -19,6 +25,7 @@ local FADE = 80
 ---@field Center Texture
 ---@field Distance FontString
 ---@field behind boolean
+---@field arrived? boolean tints the ribbon while the player is in an arrived stop's area
 ---@field Time FontString
 ---@field timeAt? number
 ---@field timeText? string
@@ -90,6 +97,17 @@ end
 local function SamePlace(a, b)
 	return a == b
 		or (a.map == b.map and (a.x - b.x) ^ 2 + (a.y - b.y) ^ 2 <= 1 and not (a.z and b.z and math.abs(a.z - b.z) > 1))
+end
+
+-- The ribbon's colour for the journey's state: the parchment gold, or the quieter green of having arrived.
+---@param arrived boolean
+local function Paint(arrived)
+	local tick = arrived and ARRIVED_TICK_COLOR or TICK_COLOR
+	for _, mark in ipairs(frame.ticks) do
+		mark:SetColorTexture(tick[1], tick[2], tick[3], tick[4])
+	end
+	local center = arrived and ARRIVED_CENTER_COLOR or CENTER_COLOR
+	frame.Center:SetColorTexture(center[1], center[2], center[3], center[4])
 end
 
 local function Place(marker, x, y, map, facing, index)
@@ -216,7 +234,8 @@ end
 
 local function Update(elapsed)
 	local bend, nextBend, stop, goal = ns.GuideTargets()
-	if not (ns.db.compass and ns.db.journey and ns.IsJourneyGuided() and bend) then
+	local arrived = ns.ArrivalStop and ns.ArrivalStop() or nil
+	if not (ns.db.compass and ns.db.journey and ns.IsJourneyGuided() and (bend or arrived)) then
 		HideTime()
 		frame.behind = false
 		frame:SetShown(moving)
@@ -237,7 +256,7 @@ local function Update(elapsed)
 	local moved = x ~= frame.x or y ~= frame.y or map ~= frame.map or facing ~= frame.rawFacing
 	-- The goal pin leaves the compass while a turn stands between you and it, so the turn's 1 is the only thing to
 	-- aim for; it returns when the bend has merged into the goal.
-	local goalTarget = goal and SamePlace(goal, bend) and goal or nil
+	local goalTarget = bend and goal and SamePlace(goal, bend) and goal or nil
 	local changed = frame.dirty
 		or not frame.facing
 		or bend ~= frame.Bend.target
@@ -249,6 +268,11 @@ local function Update(elapsed)
 	frame.Goal.target, frame.Stop.target, frame.Bend.target, frame.Next.target = goalTarget, stop, bend, nextBend
 	-- A named transport is more useful than a generic pin; the final destination outranks walking bends.
 	frame.markers[1], frame.markers[2] = specific and frame.Stop or frame.Goal, specific and frame.Goal or frame.Stop
+	if (arrived ~= nil) ~= frame.arrived then
+		frame.arrived = arrived ~= nil
+		Paint(frame.arrived)
+		changed = true
+	end
 	frame.x, frame.y, frame.map, frame.rawFacing = x, y, map, facing
 	frame.facing = frame.facing or facing
 	local delta = Difference(facing, frame.facing)
@@ -381,7 +405,7 @@ local function Create()
 		tick.angle = index * TURN / 24
 		tick.major = index % 6 == 0
 		-- The parchment gold the map's own marks are drawn in, faint enough to read as a compass, not a UI.
-		tick:SetColorTexture(0.72, 0.67, 0.55, 0.7)
+		tick:SetColorTexture(TICK_COLOR[1], TICK_COLOR[2], TICK_COLOR[3], TICK_COLOR[4])
 		tick:SetSize(1, tick.major and 5 or 3)
 		if tick.major then
 			-- The game's own label font: the parchment gold of its map labels, with the shadow that keeps
@@ -394,7 +418,7 @@ local function Create()
 	end
 	frame.Center = frame:CreateTexture(nil, "OVERLAY")
 	-- Straight ahead of you, in the gold the game marks your own place in the world with.
-	frame.Center:SetColorTexture(1, 0.82, 0, 0.85)
+	frame.Center:SetColorTexture(CENTER_COLOR[1], CENTER_COLOR[2], CENTER_COLOR[3], CENTER_COLOR[4])
 	frame.Center:SetSize(1, 6)
 	frame.Center:SetPoint("TOP", frame, "TOP", 0, -3)
 	for _, name in ipairs({ "Goal", "Stop", "Next", "Bend" }) do
@@ -432,7 +456,9 @@ local function Create()
 end
 
 function ns.RefreshCompass()
-	if moving or (ns.db.compass and ns.db.journey and ns.IsJourneyGuided() and ns.GuideTargets()) then
+	local arrived = ns.ArrivalStop and ns.ArrivalStop()
+	local guided = ns.db.compass and ns.db.journey and ns.IsJourneyGuided() and (ns.GuideTargets() or arrived)
+	if moving or guided then
 		if not frame then
 			Create()
 		end

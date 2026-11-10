@@ -478,3 +478,8 @@ L["No flight points learned in %s: open a flight master's map once to sync them.
 L["Only the flight points your character has are learned now."] =
 	"이제 캐릭터가 가진 비행 지점만 기억합니다." -- mt
 L["Better for your level, farther away"] = "레벨에 더 좋은 물품, 더 먼 곳" -- mt
+L["Show a pin when you reach a stop"] = "지점에 도착하면 핀 표시" -- mt
+L["In a stop's area the direction arrow becomes a pin with the stop's objectives, instead of hiding."] =
+	"지점 범위에 들어가면 방향 화살표가 사라지는 대신 지점의 목표가 담긴 핀으로 바뀝니다." -- mt
+L["It returns to the arrow when you leave the area or the stop changes."] =
+	"범위를 벗어나거나 지점이 바뀌면 다시 화살표로 돌아갑니다." -- mt

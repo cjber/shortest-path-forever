@@ -63,6 +63,8 @@ local DEFAULTS = {
 	guideStops = true,
 	journeyTracker = true,
 	arrow = true,
+	-- On reaching a held stop's area, the arrow turns into a pin with the stop's objectives rather than hiding.
+	arrivalPin = true,
 	metres = false,
 	minimapButton = false,
 	compass = true,

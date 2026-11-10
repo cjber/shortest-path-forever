@@ -497,3 +497,8 @@ L["No flight points learned in %s: open a flight master's map once to sync them.
 L["Only the flight points your character has are learned now."] =
 	"Теперь запоминаются только точки полёта, которые есть у персонажа." -- mt
 L["Better for your level, farther away"] = "Лучше для вашего уровня, но дальше" -- mt
+L["Show a pin when you reach a stop"] = "Показывать метку при прибытии к остановке" -- mt
+L["In a stop's area the direction arrow becomes a pin with the stop's objectives, instead of hiding."] =
+	"В области остановки стрелка направления превращается в метку с целями остановки, а не исчезает." -- mt
+L["It returns to the arrow when you leave the area or the stop changes."] =
+	"Она снова становится стрелкой, когда вы покидаете область или остановка меняется." -- mt
