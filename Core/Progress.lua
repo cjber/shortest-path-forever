@@ -84,7 +84,6 @@ local function Snapshot()
 		peers = {},
 	}
 end
-local TAB_ICON = "Interface\\Icons\\INV_Misc_Spyglass_03"
 local BOARD_METRIC = "routes_completed"
 
 -- Sharing is opt-out: only an explicit off stays off, so a missing saved setting reads as on.
@@ -147,7 +146,7 @@ end
 
 ForeverCore.Leaderboards:Register("spf", {
 	title = L["Shortest Path Forever"],
-	icon = TAB_ICON,
+	icon = ns.Icon,
 	metric = L["Completed journeys"],
 	board = Board,
 	revision = function()

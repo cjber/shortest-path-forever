@@ -4,9 +4,13 @@
 local BLIZZARD_UI = (os.getenv("SPF_BLIZZARD_UI") or "tools/.cache/blizzard-ui") .. "/Interface/AddOns/"
 -- Loads the addon in toc order against stubs, fires ADDON_LOADED, runs tickers and a fake ride.
 local T, frames, tickers = 0, {}, {}
+local TOC = dofile("tests/toc_fields.lua").read("ShortestPathForever.toc")
 C_AddOns = {
 	IsAddOnLoaded = function()
 		return false
+	end,
+	GetAddOnMetadata = function(name, field)
+		return name == "ShortestPathForever" and TOC[field] or nil
 	end,
 }
 local uiScale = 1

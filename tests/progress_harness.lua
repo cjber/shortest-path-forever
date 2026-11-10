@@ -1,5 +1,7 @@
+local TOC = dofile("tests/toc_fields.lua").read("ShortestPathForever.toc")
+
 local function harness(saved, progress, leaderboards)
-	local h = { now = 1000, timers = {}, frames = {}, sent = {}, guild = true, group = true, printed = {} }
+	local h = { now = 1000, timers = {}, frames = {}, sent = {}, guild = true, group = true, printed = {}, toc = TOC }
 	local ns = {
 		db = saved or { stats = true, statsShare = true },
 		charDB = { progress = progress },
@@ -51,6 +53,11 @@ local function harness(saved, progress, leaderboards)
 		IsInRaid = function()
 			return false
 		end,
+		C_AddOns = {
+			GetAddOnMetadata = function(name, field)
+				return name == "ShortestPathForever" and TOC[field] or nil
+			end,
+		},
 		C_ChatInfo = {
 			RegisterAddonMessagePrefix = function()
 				return true
@@ -78,10 +85,13 @@ local function harness(saved, progress, leaderboards)
 	local ForeverCore = dofile("tests/forever_core.lua")
 	local coreNs = ForeverCore.load(env, "ForeverCore", { "Locales/enUS.lua", "Core/PeerStats.lua" })
 	env.ForeverCore = {
+		API = 1,
+		APIKit = {},
 		PeerStats = coreNs.PeerStats,
 		Leaderboards = leaderboards or { Register = function() end, Open = function() end },
 	}
 	ns.PeerStats = coreNs.PeerStats
+	setfenv(assert(loadfile("Core/Require.lua")), env)("ShortestPathForever", ns)
 	setfenv(assert(loadfile("Core/Progress.lua")), env)("ShortestPathForever", ns)
 	function h:Fire(event, ...)
 		for _, frame in ipairs(self.frames) do
