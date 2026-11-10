@@ -73,7 +73,7 @@ jobs:
         if: steps.pins.outputs.changed == 'true'
         run: |
           luacheck .
-          for spec in tests/*_spec.lua; do luajit "$spec" || exit 1; done
+          python3 -m tools.forever_tools.specs
           luajit -joff tests/hearth_savings_bench.lua
       - if: steps.pins.outputs.changed == 'true'
         uses: JohnnyMorganz/stylua-action@76fd70c03e6340ceaf673366712db9b20560b402 # v5.0.0
