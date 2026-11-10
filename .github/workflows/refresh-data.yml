@@ -133,6 +133,7 @@ jobs:
     # The first attempt stays quiet: retry-refresh.yml re-runs it, and only a failed re-run is reported.
     if: failure() && github.run_attempt > 1 && github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     permissions:
       issues: write
     steps:
