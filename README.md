@@ -47,8 +47,8 @@ with you.
   ![The compass with turns and destination](docs/screenshots/compass.png)
   When the next turn is behind you, the compass and the arrow dim until you turn back.
   ![The compass dimmed with the next turn behind](docs/screenshots/compass_behind.png)
-  ![The gold goal pin with a quest's objectives, and the compass tinted green](docs/screenshots/arrival.png)
   In a quest's area the arrow becomes the same gold pin that marks your destination, with the quest's objectives under it, and the compass turns quietly green.
+  ![The gold goal pin with a quest's objectives, and the compass tinted green](docs/screenshots/arrival.png)
   The strip can be moved and resized separately from the tracker. While moving it or the arrow, Shift-drag, or rest the pointer on it and use the arrow keys, to place it to the pixel.
 - **Quest areas.** Inside a quest's area, the client draws it in gold instead of a stop pin and line.
   ![A quest area on the world map](docs/screenshots/area.png)
