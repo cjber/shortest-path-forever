@@ -1,15 +1,26 @@
 # Addon API
 
-Addons can use `ShortestPathForever.API` (`version = 1`) with uiMapIDs and normalized 0–1 coordinates. Additions
-keep `version` at 1 and raise `minor` (1 from `Subscribe`, absent before); check that a function exists before
-calling it. The full types are in [`types/API.lua`](../types/API.lua).
+Addons can use `ShortestPathForever.API` (`version = 1`, `minor = 2`) with uiMapIDs and normalized 0–1 coordinates.
+Additions keep `version` at 1 and raise `minor`; check that a function exists before calling it, because an older
+addon may not have it yet. The full types are in [`types/API.lua`](../types/API.lua).
+
+## Minor history
+
+- `minor = 2`: adds `RenameStop`, the stop fields `npc` and `handins`, and the `"vendor"` stop kind. They shipped
+  while `minor` stayed 1, so they are listed together here.
+- `minor = 1`: adds `Subscribe`.
+- Before `minor` existed: `version = 1` published `Estimate`, `EstimateDetail`, `NavigateRoute`, `Navigate`,
+  `CurrentStop`, `Cancel`, `Ended` and `Active`.
+
+## Published members
 
 - `Estimate(fromMap, fromX, fromY, toMap, toX, toY)` returns travel seconds, or `nil` and why (`"combat"`,
-  `"invalid"` or `"unreachable"`), without changing guidance. It omits endpoint terrain searches and caches
+  `"loading"`, `"invalid"` or `"unreachable"`), without changing guidance. It omits endpoint terrain searches and caches
   estimates for five seconds, rounding origins to 0.0001. An estimate from where the player stands counts their
   hearthstone and class teleports, with cooldowns, unless the setting *Use hearth and teleports* is off;
   from anywhere else it leaves them out.
-- `EstimateDetail` takes the same arguments and cache and returns `{seconds, legs}`, each leg a fresh
+- `EstimateDetail(fromMap, fromX, fromY, toMap, toX, toY)` takes the same arguments and cache and returns
+  `{seconds, legs}`, each leg a fresh
   `{mode, to, seconds, wait?, newFlightPath?}`.
 - `NavigateRoute(owner, stops)` guides through 1 to 64 `{map, x, y, title, tooltip, z}` stops in order, advancing on arrival
   and ending after the last. Remaining stops have numbered map pins, and the way between them is drawn as
@@ -34,7 +45,8 @@ calling it. The full types are in [`types/API.lua`](../types/API.lua).
   IDs, given with or without `questID`.
   Optional `handins` names the quests handed in at the stop: an array of 1 or more quest IDs, copied like the rest.
   The game's own pin for each of those quests is hidden while the stop is drawn; `handins` never decides arrival or
-  the stop's area, which stay with `questID`, `questIDs` and `shapes`.
+  the stop's area, which stay with `questID`, `questIDs` and `shapes`. Optional `npc` names the service NPC the stop
+  reaches: while the stop is current, Shortest Path marks that NPC's nameplate.
   While the player stands in the area of any named quest, by the client's own inside-area state, the game's own
   area takes the place of the stop pin and its line: the world map draws each named quest's area with the
   client's own blob, the minimap's own quest blob is recoloured, and both wear the stock bonus objective gold.
@@ -42,13 +54,19 @@ calling it. The full types are in [`types/API.lua`](../types/API.lua).
   `shapes` names the area as 1 or more `{map, x, y, radius}` circles, each on the map it names with its `radius`
   in yards. Circles are never drawn. They decide inside only for a stop that names no quest, or while the client
   has no answer for any quest it names, and such a stop keeps its pin and line.
-- `CurrentStop(owner)` returns the current 1-based stop or `nil`.
+- `CurrentStop(owner)` returns the current 1-based stop, or `nil` and a reason: `"loading"` while the addon is
+  still building its data, `"none"` when that owner has no current stop.
 - `Cancel(owner)` returns `true` only when it clears that owner's whole route.
+- `RenameStop(owner, index, title, renamePoints)` relabels one of a running route's stops in place, without a
+  replan, and returns `true`. `index` is usually `CurrentStop(owner)`. `renamePoints(point)` may say which later
+  stops are that same place, so they take the new title too. A label that is not a string, a stop the route does
+  not have, or an owner that does not own the route returns `false`.
 - `Active()` says whether any journey is guiding, yours or another addon's.
 - `Ended(owner)` says why that owner's last journey ended: `"arrived"` after its last stop, `"cleared"` by the
   player (or by turning Journeys off), `"replaced"` by another addon's or the player's journey, or `"cancelled"`
-  by the owner's own `Cancel`; its second return is the `GetTime()` it ended. It is `nil` while the journey runs,
-  before the owner's first, and after a reload. `Subscribe` says when to read it again.
+  by the owner's own `Cancel`; its second return is the `GetTime()` it ended. While the journey runs, before the
+  owner's first, and after a reload it returns `nil` and a reason: `"loading"` while the addon is still building
+  its data, `"none"` when there is no ended journey to report. `Subscribe` says when to read it again.
 - `Subscribe(callback)` calls `callback(changes)` on the frame after guidance changes, at most once per burst of
   changes, whoever made them. `changes` is a new table each call with any of these set to `true`: `started` (a
   journey began where none was under way), `changed` (the journey under way now heads somewhere else, replaced or
@@ -56,11 +74,25 @@ calling it. The full types are in [`types/API.lua`](../types/API.lua).
   `stop` (what `CurrentStop` answers changed: an addon's route started, moved on or ended) and `active` (what
   `Active` answers changed, including the player turning guidance off or a corpse run guiding after a journey
   ends). Several can be set together, so read `CurrentStop`, `Ended` and `Active` again rather than replaying
-  them. A callback is not told about a burst already under way when it subscribed. It returns a function that
-  unsubscribes, safe to call twice. An error in one callback goes to the game's error handler without stopping
-  the others. A non-function callback is an error.
+  them. Only the subscribers there when the dispatch began are called, so one added by a callback waits for the
+  next burst. It returns a function that unsubscribes, safe to call twice. An error in one callback goes to the
+  game's error handler without stopping the others. A non-function callback is an error.
 
 Use your addon's name as `owner`; starting another journey replaces ownership.
+
+## Not ready
+
+A read with nothing to answer returns `nil, reason`. `Estimate` and `EstimateDetail` use:
+
+| reason | meaning |
+|---|---|
+| `"combat"` | the game is in combat, so ask again after it |
+| `"invalid"` | a point or map cannot be placed on this client |
+| `"unreachable"` | there is no way there with what this character knows |
+| `"loading"` | the addon is still building its data, so ask again later |
+
+`CurrentStop` and `Ended` use `"loading"` while the addon is still building its data, and `"none"` when there is
+nothing to answer: no current stop, or no ended journey to report.
 
 ## World map markers
 
@@ -90,9 +122,10 @@ end
 ## Stop kinds
 
 A stop's optional `kind` says what stands there: `"pickup"`, `"turnin"`, `"objective"`, `"trainer"`,
-`"innkeeper"`, `"flightmaster"`, `"battlemaster"`, `"dungeon"`, `"boat"`, `"zeppelin"`, `"lift"`, `"tram"` or
-`"portal"`. Its numbered map pin then wears the game's own mark for it (a quest's “!” or “?”, a flight master, a
-boat) as a small badge on its lower right; a lone stop shows the mark alone. The minimap circles the spot
+`"innkeeper"`, `"flightmaster"`, `"battlemaster"`, `"dungeon"`, `"boat"`, `"zeppelin"`, `"lift"`, `"tram"`,
+`"portal"` or `"vendor"`. Its numbered map pin then wears the game's own mark for it (a quest's “!” or “?”, a flight
+master, a boat) as a small badge on its lower right; a lone stop shows the mark alone. A `"vendor"` stop is accepted
+for guides such as SkillUp and keeps the plain pin until the client has a vendor mark. The minimap circles the spot
 rather than covering the game's icon there. Any other kind is ignored, as is a kind whose art the client lacks: the
 stop keeps the plain pin.
 

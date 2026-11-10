@@ -48,6 +48,7 @@ jobs:
             "luajit=$LUAJIT" "libluajit-5.1-2=$LUAJIT" "libluajit-5.1-common=$LUAJIT" "lua-check=$LUACHECK"
       - run: luacheck .
       - run: python3 -m tools.forever_tools.assets
+      - run: python3 tools/check_api_docs.py
       - run: for spec in tests/*_spec.lua; do luajit "$spec" || exit 1; done
       # The native client simulator: real Blizzard UI under LuaJIT with the full TOC, failing on errors and
       # gamepad-interface taint. Its UI source and client data are fetched at a pinned build and cached.

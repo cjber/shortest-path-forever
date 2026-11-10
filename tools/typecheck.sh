@@ -36,6 +36,7 @@ python3 tools/check_editorconfig.py
 # --release: a shipped locale short of Locales/phrases.txt fails the PR, not the release.
 python3 tools/check_locales.py --release
 python3 tools/check_family.py
+python3 tools/check_store_page.py
 # An interrupted check must never leave a stale report looking like this run's result.
 report=.types/diagnostics.json
 rm -f "$report"
