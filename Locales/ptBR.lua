@@ -394,8 +394,7 @@ L["Eastern Kingdoms"] = "Reinos do Leste" -- mt
 L["Kalimdor"] = "Kalimdor" -- mt
 L["No flight points learned in %s: open a flight master's map once to sync them."] =
 	"Nenhum ponto de voo aprendido em %s: abra uma vez o mapa de um mestre de voo para sincronizá-los." -- mt
-L["When you reach a stop, the arrow becomes a pin with what to do there."] =
-	"Ao chegar a uma parada, a seta vira um alfinete com o que fazer ali." -- mt
+L["Needs Forever Core."] = "Requer Forever Core." -- mt
 L["Better for your level, farther away"] = "Melhor para o seu nível, mais longe" -- mt
 L["Show a pin when you reach a stop"] = "Mostrar um alfinete quando você chegar a uma parada" -- mt
 L["In a stop's area the direction arrow becomes a pin with the stop's objectives, instead of hiding."] =
