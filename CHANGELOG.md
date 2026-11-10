@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.24.9] - 2026-11-10
+
 - **Nearby services find the arrows, shot, food and drink for your level.** A row went to the nearest NPC selling anything of the kind, so a level 25 hunter in Orgrimmar was sent to the weapon vendor, who sells only Rough and Sharp Arrows, past the bow merchant with Razor Arrows. Arrows, shot, food and drink now go to the nearest vendor with the best goods you can use, from among those up to about a minute's run farther than the nearest seller, so a rare top-tier vendor across the continent is never chosen for the row. The row names what you will buy and shows it as its icon: hover the icon for the item's own tooltip, or Shift-click it to link the item. While you search, the icon is the first item that matched. A search for an item or an NPC still finds exactly that.
 - **Better goods farther away.** When a better arrow, shot, food or drink for your level is sold elsewhere on your continent, a one-line row under the group names it and its zone, with the client's green upgrade arrow on its icon and its own travel time, so you can weigh the trip against the vendor nearby. Click it to go there; hover it for who sells it, or hover its icon for the item's tooltip. The world map's and the minimap's tracking menus offer the same trip under the group. Arrows show only with a bow or crossbow equipped, shot only with a gun, and drink only for a character with mana.
 - **Trinkets no longer count as drink.** Worn items that restore mana every 5 seconds, such as the Darkspear Voodoo Seal, Enriched Seal and Atiesh, were in the Drink group, so a Drink row could send you to a reputation quartermaster. Only goods you eat or drink count now.
