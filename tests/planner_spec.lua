@@ -37,7 +37,15 @@ do
 	assert(destination.label == "The Red Crystal (turn in)")
 	destination = QuestDestination(7, "The Red Crystal", true, nil, nil, hop)
 	assert(destination.uiMapID == hop.uiMapID, "native waypoint is usable when no destination POI is reported")
-	assert(hop.label == nil and turnIn.label == nil, "do not mutate native data")
+	-- A quest that starts and ends with one NPC can report only that pin. It is still the place the client names.
+	local start = { questID = 7, isQuestStart = true, x = 0.62, y = 0.39 }
+	destination = QuestDestination(7, "The Red Crystal", false, 1414, { start })
+	assert(destination.x == start.x and destination.y == start.y, "the only start pin becomes the destination")
+	destination = QuestDestination(7, "The Red Crystal", false, 1414, { start, objective })
+	assert(destination.x == objective.x, "an objective pin still beats a start pin")
+	destination = QuestDestination(7, "The Red Crystal", true, 1414, { start }, hop)
+	assert(destination.uiMapID == hop.uiMapID, "a waypoint still beats a start pin when the quest is complete")
+	assert(hop.label == nil and turnIn.label == nil and start.label == nil, "do not mutate native data")
 	assert(not QuestDestination(8, "Another quest", false, 1414, { objective }))
 	assert(
 		not QuestDestination(
@@ -45,8 +53,9 @@ do
 			"The Red Crystal",
 			false,
 			1414,
-			{ { questID = 7, isQuestStart = true, x = 0.5, y = 0.5 } }
-		)
+			{ { questID = 7, isQuestStart = true, x = -1, y = 0.5 } }
+		),
+		"an invalid start pin is no destination"
 	)
 	assert(not QuestDestination(7, "The Red Crystal", false, 0, { objective }))
 	assert(not QuestDestination(7, "The Red Crystal", false, 1414, { { questID = 7, x = -1, y = 0.5 } }))

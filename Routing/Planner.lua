@@ -40,20 +40,26 @@ end
 ---@param pois QuestPOIMapInfo[]?
 ---@param waypoint {uiMapID: number?, x: number?, y: number?}?
 function Planner.QuestDestination(questID, title, complete, uiMapID, pois, waypoint)
-	local destination
+	local destination, start
 	for _, poi in ipairs(pois or {}) do
-		if poi.questID == questID and not poi.isQuestStart then
+		if poi.questID == questID then
 			-- As in QuestDataProvider, x/y belong to the queried map, even for child-map POIs.
 			local point = { uiMapID = uiMapID, x = poi.x, y = poi.y }
 			if QuestPointValid(point) then
-				destination = point
-				break
+				if not poi.isQuestStart then
+					destination = point
+					break
+				end
+				-- Some quests start and end with one NPC and have no objective area, so the client reports only
+				-- that start pin. It is still the only place it names, and better than no journey at all.
+				start = start or point
 			end
 		end
 	end
 	if waypoint and QuestPointValid(waypoint) and (not complete or not destination) then
 		destination = { uiMapID = waypoint.uiMapID, x = waypoint.x, y = waypoint.y }
 	end
+	destination = destination or start
 	if destination and title and title ~= "" then
 		destination.label = complete and string.format(L["%s (turn in)"], title) or title
 		return destination

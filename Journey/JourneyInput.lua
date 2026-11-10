@@ -58,6 +58,34 @@ function ns.WorldPoint(uiMapID, x, y)
 	end
 end
 
+-- The map whose quest pins include this quest, and those pins. A quest whose only pin is its start can name no map
+-- of its own (Dragonmaw Shinbones, 1846, whose objective is an item drop), so the map under the player is asked too.
+---@param questID number
+---@param uiMapID number?
+---@param here boolean? ask the map under the player when the first map has no pin
+---@return number? mapID, QuestPOIMapInfo[]? pois
+local function QuestPOIs(questID, uiMapID, here)
+	local seen = {}
+	local function Ask(mapID)
+		if not mapID or mapID <= 0 or seen[mapID] then
+			return nil
+		end
+		seen[mapID] = true
+		local pois = C_QuestLog.GetQuestsOnMap(mapID)
+		for _, poi in ipairs(pois or {}) do
+			if poi.questID == questID then
+				return mapID, pois
+			end
+		end
+	end
+	local mapID, pois = Ask(uiMapID)
+	if not pois and here then
+		local current = C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player")
+		mapID, pois = Ask(current)
+	end
+	return mapID, pois
+end
+
 local function PlanQuest(questID, clickedMap, isWaypoint)
 	if not ns.db.journey then
 		ns.Print(L["Journeys are off. Turn on Shift-click to plan journeys in settings."])
@@ -66,6 +94,11 @@ local function PlanQuest(questID, clickedMap, isWaypoint)
 	-- Forever takes questID and ignoreWaypoint; Ketho's Wiki stub incorrectly has zero parameters.
 	---@diagnostic disable-next-line: redundant-parameter
 	local uiMapID = clickedMap or GetQuestUiMapID(questID, true)
+	if not clickedMap and (not uiMapID or uiMapID <= 0) then
+		-- No map for the quest's own pins: the game's map for the quest may still be its waypoint's.
+		---@diagnostic disable-next-line: redundant-parameter
+		uiMapID = GetQuestUiMapID(questID, false)
+	end
 	local waypoint
 	if not clickedMap or isWaypoint then
 		local mapID, x, y
@@ -77,7 +110,12 @@ local function PlanQuest(questID, clickedMap, isWaypoint)
 		end
 		waypoint = { uiMapID = mapID, x = x, y = y }
 	end
-	local pois = not isWaypoint and uiMapID and uiMapID > 0 and C_QuestLog.GetQuestsOnMap(uiMapID) or nil
+	local pois
+	if not isWaypoint then
+		local poiMap
+		poiMap, pois = QuestPOIs(questID, uiMapID, not clickedMap)
+		uiMapID = poiMap or uiMapID
+	end
 	local location = ns.Planner.QuestDestination(
 		questID,
 		C_QuestLog.GetTitleForQuestID(questID),
