@@ -169,7 +169,7 @@ env.InCombatLockdown = function()
 end
 local db = ns.db
 ns.db = nil
-why("invalid", "not loaded yet", API.Estimate(1, 0.5, 0.5, 1, 0.6, 0.5))
+why("loading", "not loaded yet", API.Estimate(1, 0.5, 0.5, 1, 0.6, 0.5))
 ns.db = db
 local project = env.C_Map.GetWorldPosFromMapPos
 env.C_Map.GetWorldPosFromMapPos = function()
@@ -181,6 +181,16 @@ env.C_Map.GetWorldPosFromMapPos = project
 ns.ClearJourney()
 
 -- A stop's kind is what stands there; one Shortest Path does not know, or cannot read, leaves the plain pin.
+equal(
+	API.NavigateRoute("AGF", {
+		{ map = 1, x = 0.5, y = 0.5, title = "Vendor", kind = "vendor" },
+		{ map = 1, x = 0.51, y = 0.5, title = "Next" },
+	}),
+	true,
+	"a vendor kind is accepted"
+)
+equal(ns.JourneyStops()[1].look, "vendor", "and carried onto the stop")
+API.Cancel("AGF")
 local stops = {
 	{ map = 1, x = 0.502, y = 0.5, title = "First", kind = "turnin", z = 60 },
 	{ map = 1, x = 0.504, y = 0.5, title = "Second", kind = "zeppelin" },
@@ -589,7 +599,7 @@ end
 
 -- Subscribe: one call per burst of guidance changes, on the next frame, each subscriber isolated from the others.
 do
-	equal(API.minor, 1, "Subscribe raises minor, not version")
+	equal(API.minor, 2, "minor 2 records Subscribe and the additions after it")
 	equal(pcall(API.Subscribe, "callback"), false, "a callback must be a function")
 	local timers, route =
 		{}, {
@@ -655,7 +665,7 @@ do
 	only(heard.first[1], "a route starts", "started", "stop", "active")
 	equal(#errors, 1, "the broken callback reaches the error handler")
 	local caught = ns.core.CaughtErrors()
-	equal(caught[#caught].label, "Subscribe callback", "and is kept for /path report")
+	equal(caught[#caught].label, "API subscriber", "and is kept for /path report")
 	equal(#heard.last, 1, "and the subscriber after it is still called")
 	equal(heard.first[1] ~= heard.last[1], true, "each subscriber gets its own table")
 	heard.first[1].started = false
@@ -706,7 +716,7 @@ do
 	frameEnd()
 	only(heard.last[7], "start and end", "started", "ended", "stop")
 
-	-- A callback may unsubscribe itself, and one subscribing mid-burst hears only later bursts.
+	-- A callback may unsubscribe itself; from then on it hears nothing, even within the same burst's dispatch.
 	local unsubscribeSelf
 	local selfCalls = 0
 	API.Navigate("AGF", 1, 0.6, 0.5)
@@ -715,14 +725,14 @@ do
 		unsubscribeSelf()
 	end)
 	frameEnd()
-	equal(selfCalls, 0, "not told of the burst it subscribed in")
+	equal(selfCalls, 1, "told of the burst the hub dispatched")
 	equal(#heard.first, 8, "the others are")
 	ns.ClearJourney()
 	frameEnd()
-	equal(selfCalls, 1, "told of the next one")
+	equal(selfCalls, 1, "and it unsubscribed itself")
 	API.Navigate("AGF", 1, 0.6, 0.5)
 	frameEnd()
-	equal(selfCalls, 1, "and it unsubscribed itself")
+	equal(selfCalls, 1, "so it hears nothing more")
 	unsubscribeFirst()
 	unsubscribeLast()
 	ns.ClearJourney()

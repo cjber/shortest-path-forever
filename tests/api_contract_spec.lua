@@ -39,10 +39,19 @@ local function last()
 	return heard[#heard] or {}
 end
 
--- What is there to call: version 1, minor 1 or more, and every function the hand-off checks before calling it.
+-- What is there to call: version 1, minor 2, and every function the hand-off checks before calling it.
 equal(API.version, 1, "version stays 1")
-equal(type(API.minor) == "number" and API.minor >= 1, true, "minor 1 or more")
-for _, name in ipairs({ "NavigateRoute", "Navigate", "Cancel", "CurrentStop", "Active", "Ended", "Subscribe" }) do
+equal(API.minor, 2, "minor 2 records Subscribe and the additions after it")
+for _, name in ipairs({
+	"NavigateRoute",
+	"Navigate",
+	"Cancel",
+	"CurrentStop",
+	"Active",
+	"Ended",
+	"RenameStop",
+	"Subscribe",
+}) do
 	equal(type(API[name]), "function", name)
 end
 local unsubscribe = API.Subscribe(function(changes)
@@ -55,6 +64,22 @@ equal(API.CurrentStop(OWNER), nil, "no stop before the first journey")
 equal(API.Ended(OWNER), nil, "no end before the first journey")
 equal(API.Active(), false, "nothing guides")
 equal(API.Cancel(OWNER), false, "Cancel clears nothing")
+
+-- Every not-ready answer says why: loading while the data is not built, none when there is nothing to answer, and
+-- the reasons estimates have always given for combat, bad input and no way.
+equal(select(2, API.CurrentStop(OWNER)), "none", "CurrentStop says none")
+equal(select(2, API.Ended(OWNER)), "none", "Ended says none")
+local savedDb = ns.db
+ns.db = nil
+equal(select(2, API.CurrentStop(OWNER)), "loading", "CurrentStop says loading")
+equal(select(2, API.Ended(OWNER)), "loading", "Ended says loading")
+equal(select(2, API.Estimate(1, 0.5, 0.5, 1, 0.501, 0.5)), "loading", "Estimate says loading")
+ns.db = savedDb
+combat = true
+equal(select(2, API.Estimate(1, 0.5, 0.5, 1, 0.501, 0.5)), "combat", "Estimate says combat")
+combat = false
+equal(select(2, API.Estimate(1, 2, 0.5, 1, 0.501, 0.5)), "invalid", "Estimate says invalid")
+equal(select(2, API.Estimate(1, 0.5, 0.5, 2, 0.5, 0.5)), "unreachable", "Estimate says unreachable")
 
 -- One stop with a title and a kind: taken, current, guiding, and news of it on the next frame.
 local stop = { map = 1, x = 0.502, y = 0.5, title = "Goldshire", kind = "innkeeper" }
@@ -152,8 +177,29 @@ equal(API.CurrentStop(OWNER), 1, "the stop with no way stays current")
 equal(API.Active(), false, "and Active is false")
 API.Cancel(OWNER)
 
--- Unsubscribing ends the news, and is safe twice.
+-- The kit sends one call for a burst of two changes, and a subscriber added from a callback waits for the next burst.
 frame()
+local lateCalls, unsubscribeLate = 0, nil
+local unsubscribeAdder = API.Subscribe(function()
+	if not unsubscribeLate then
+		unsubscribeLate = API.Subscribe(function()
+			lateCalls = lateCalls + 1
+		end)
+	end
+end)
+local beforeLate = #heard
+API.Navigate(OWNER, 1, 0.7, 0.5)
+ns.ClearJourney()
+frame()
+equal(lateCalls, 0, "a subscriber added during the burst waits")
+equal(#heard, beforeLate + 1, "one call for two changes in the burst")
+API.Navigate(OWNER, 1, 0.7, 0.5)
+frame()
+equal(lateCalls, 1, "and hears the next burst")
+unsubscribeAdder()
+unsubscribeLate()
+
+-- Unsubscribing ends the news, and is safe twice.
 local count = #heard
 unsubscribe()
 unsubscribe()

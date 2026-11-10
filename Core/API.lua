@@ -5,6 +5,7 @@ if ns.broken then
 	return
 end
 local L = ns.L
+local APIKit = assert(ForeverCore.APIKit)
 
 -- This topology belongs exclusively to estimates: Planner.Plan mutates its cache between calls.
 -- Never borrow the active journey's cache, path jobs, progress, waypoint or route drawing.
@@ -116,8 +117,24 @@ local function Quests(quests)
 	return true
 end
 
+local function Loaded()
+	return ns.db ~= nil and ns.charDB ~= nil
+end
+
 local function Ready()
-	return ns.db and ns.charDB and not InCombatLockdown()
+	return Loaded() and not InCombatLockdown()
+end
+
+---@return nil, "loading"
+local function Loading()
+	local _, answer = APIKit.NotReady("loading")
+	return nil, answer --[[@as "loading"]]
+end
+
+---@return nil, "none"
+local function None()
+	local _, answer = APIKit.NotReady("none")
+	return nil, answer --[[@as "none"]]
 end
 
 local function Owner(owner)
@@ -132,16 +149,30 @@ local MAX_STOPS = 64
 ---@type table<string, {reason: SPFAPIEnded, at: number}>
 local ended = {}
 
--- Subscribe's callbacks: told once per burst what happened to guidance, after every change in it has landed.
----@class SPFSubscription
----@field callback fun(changes: SPFAPIChanges)
----@field active boolean
----@field after? SPFAPIChanges -- the burst under way when it subscribed, which it is not told about
+-- Subscribe's hub (ForeverCore.APIKit): told once per burst what happened to guidance, after every change in it has
+-- landed. Each channel is a comparable key the hub reads when it dispatches. The four event channels count the notices
+-- the old dispatcher queued, so a caller hears the same changes it used to, and "active" is the answer itself, so a
+-- guide switched off and on again within one burst stays quiet.
+local notices = { started = 0, changed = 0, ended = 0, stop = 0 }
 
----@type SPFSubscription[]
-local subscriptions = {}
----@type SPFAPIChanges?
-local pending
+---@param name "started"|"changed"|"ended"|"stop"
+---@return fun(): integer|false
+local function Counter(name)
+	return function()
+		return notices[name] ~= 0 and notices[name] or false
+	end
+end
+
+local hub = APIKit.Hub("ShortestPathForever", {
+	started = Counter("started"),
+	changed = Counter("changed"),
+	ended = Counter("ended"),
+	stop = Counter("stop"),
+	active = function()
+		return ns.IsJourneyGuided() == true
+	end,
+})
+
 -- What subscribers were last told about, kept whether or not anyone listens: the destination (to tell a start from
 -- a change), the owner and stop CurrentStop answers for, and Active().
 ---@type SPFPoint?
@@ -151,52 +182,11 @@ local stopOwner
 ---@type integer?
 local stopIndex
 local active = false
--- Active() as subscribers were last told it.
-local heardActive = false
 
--- Each subscriber gets its own copy, from a copy of the list, so a callback may unsubscribe or change what it was
--- given; an error goes to the game's error handler, and to /path report, without stopping the others.
-local function Flush()
-	local changes = pending
-	pending = nil
-	if not changes then
-		return
-	end
-	-- The guide can stop and start again within a burst (a replaced journey): only a different answer counts.
-	if changes.active then
-		local now = ns.IsJourneyGuided() == true
-		changes.active = now ~= heardActive or nil
-		heardActive = now
-		if not next(changes) then
-			return
-		end
-	end
-	local current = {}
-	for index, subscription in ipairs(subscriptions) do
-		current[index] = subscription
-	end
-	for _, subscription in ipairs(current) do
-		if subscription.active and subscription.after ~= changes then
-			local copy = {}
-			for key, value in pairs(changes) do
-				copy[key] = value
-			end
-			ns.core.SafeCall("Subscribe callback", subscription.callback, copy)
-		end
-	end
-end
-
----@param kind "started"|"changed"|"ended"|"stop"|"active"
+---@param kind "started"|"changed"|"ended"|"stop"
 local function Notify(kind)
-	if not subscriptions[1] then
-		return
-	end
-	if not pending then
-		-- Scheduled first: a failure leaves nothing half-queued to swallow later bursts.
-		C_Timer.After(0, Flush)
-		pending = {}
-	end
-	pending[kind] = true
+	notices[kind] = notices[kind] + 1
+	hub.Queue()
 end
 
 ---@param a SPFPoint?
@@ -215,7 +205,7 @@ local function Settle()
 	local now = ns.IsJourneyGuided() == true
 	if now ~= active then
 		active = now
-		Notify("active")
+		hub.Queue()
 	end
 end
 
@@ -286,7 +276,7 @@ function ns.JourneyStops()
 end
 
 ---@class SPFPublicAPI
-local API = { version = 1, minor = 1 }
+local API = { version = 1, minor = 2 }
 
 local function Differs(a, b)
 	for key, value in pairs(a) do
@@ -381,11 +371,15 @@ local function Answer(from, to, key)
 	return nil, "unreachable"
 end
 
--- The reason tells a caller whether asking again later can help: "combat" after combat, "invalid" never for bad
--- input (only if the addon had not loaded yet), "unreachable" when known flight paths or boat timings change.
+-- The reason tells a caller whether asking again later can help: "combat" after combat, "loading" when the addon is
+-- still building its data, "invalid" never for bad input, "unreachable" when known flight paths or boat timings change.
+---@return { at: number, seconds: number|false, legs?: SPFLeg[] }?, ("combat"|"invalid"|"unreachable"|"loading")?
 local function Lookup(fromMap, fromX, fromY, toMap, toX, toY)
 	if not Ready() then
-		return nil, InCombatLockdown() and "combat" or "invalid"
+		if InCombatLockdown() then
+			return nil, "combat"
+		end
+		return Loading()
 	end
 	local from, to = Point(fromMap, fromX, fromY), Point(toMap, toX, toY)
 	if not from or not to then
@@ -542,7 +536,13 @@ function API.Navigate(owner, map, x, y, title, kind)
 end
 
 function API.CurrentStop(owner)
-	return Owner(owner) and route and route.owner == owner and route.index or nil
+	if not Loaded() then
+		return Loading()
+	end
+	if Owner(owner) and route and route.owner == owner then
+		return route.index
+	end
+	return None()
 end
 
 function API.Cancel(owner)
@@ -641,29 +641,17 @@ function ns.SetStopQuests(owner, index, quests, details)
 end
 
 function API.Ended(owner)
+	if not Loaded() then
+		return Loading()
+	end
 	local entry = Owner(owner) and ended[owner]
 	if entry then
 		return entry.reason, entry.at
 	end
+	return None()
 end
 
-function API.Subscribe(callback)
-	if type(callback) ~= "function" then
-		error("ShortestPathForever.API.Subscribe: callback must be a function", 2)
-	end
-	---@type SPFSubscription
-	local subscription = { callback = callback, active = true, after = pending }
-	subscriptions[#subscriptions + 1] = subscription
-	return function()
-		subscription.active = false
-		for index, other in ipairs(subscriptions) do
-			if other == subscription then
-				table.remove(subscriptions, index)
-				return
-			end
-		end
-	end
-end
+API.Subscribe = hub.Subscribe
 
 -- Anyone's journey counts, the player's own included, so a caller can ask before replacing it.
 function API.Active()
