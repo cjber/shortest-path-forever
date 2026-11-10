@@ -10,8 +10,10 @@ while read -r sum file; do
 	path=$root/Interface/AddOns/$file
 	if [[ ! -f "$path" ]]; then
 		mkdir -p "$(dirname "$path")"
-		curl -fsSLo "$path.tmp" "https://raw.githubusercontent.com/Gethe/wow-ui-source/$revision/Interface/AddOns/$file"
-		mv "$path.tmp" "$path"
+		# A unique temporary name, renamed into place, so specs fetching at the same time never share a partial file.
+		partial=$(mktemp "$path.XXXXXX")
+		curl -fsSLo "$partial" "https://raw.githubusercontent.com/Gethe/wow-ui-source/$revision/Interface/AddOns/$file"
+		mv -f "$partial" "$path"
 	fi
 	echo "$sum  $path" | sha256sum --quiet -c -
 done <<'FILES'

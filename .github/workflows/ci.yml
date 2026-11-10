@@ -97,12 +97,22 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - run: sudo apt-get update && sudo apt-get install -y ninja-build libboost-all-dev libssl-dev zlib1g-dev libbz2-dev libreadline-dev
+      - run: sudo apt-get update && sudo apt-get install -y ninja-build ccache libboost-all-dev libssl-dev zlib1g-dev libbz2-dev libreadline-dev
+      # ccache hashes every compile's preprocessed input and flags, so a hit is the same object a full compile makes;
+      # every source still goes through the compiler step, which is what this job proves.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/ccache
+          key: bake-native-ccache-${{ hashFiles('tools/baker/bake.sh', 'tools/baker/*.patch') }}
+          restore-keys: bake-native-ccache-
       - name: Build pinned terrain tools without a game install
         env:
           BUILD_ONLY: 1
           OUT: ${{ runner.temp }}/terrain
-          JOBS: 2
+          JOBS: 4
+          CCACHE_DIR: ${{ runner.temp }}/ccache
+          CMAKE_C_COMPILER_LAUNCHER: ccache
+          CMAKE_CXX_COMPILER_LAUNCHER: ccache
         run: tools/baker/bake.sh
 
   generated:
