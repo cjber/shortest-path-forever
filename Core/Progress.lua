@@ -1,5 +1,9 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
+
+if ns.broken then
+	return
+end
 local L = ns.L
 
 -- Per-character travel journal. Distance is an estimate from same-map position samples while walking; map changes,
@@ -138,30 +142,27 @@ ns.TravelBoard = Board
 
 --- Open the shared Forever Leaderboards window on this addon's tab.
 function ns.OpenTravelLeaderboard()
-	if ns.Leaderboards then
-		ns.Leaderboards:Open("spf")
-	end
+	ForeverCore.Leaderboards:Open("spf")
 end
 
-if ns.Leaderboards then
-	ns.Leaderboards:Register("spf", {
-		title = L["Shortest Path Forever"],
-		icon = TAB_ICON,
-		metric = L["Completed journeys"],
-		board = Board,
-		revision = function()
-			return peer:Revision()
-		end,
-		sharing = Sharing,
-		setSharing = function(shared)
-			ns.db.statsShare = shared == true
-			ns.TravelSharingChanged()
-			if ns.SetOption then
-				pcall(ns.SetOption, "statsShare", shared == true)
-			end
-		end,
-	})
-end
+ForeverCore.Leaderboards:Register("spf", {
+	title = L["Shortest Path Forever"],
+	icon = TAB_ICON,
+	metric = L["Completed journeys"],
+	board = Board,
+	revision = function()
+		return peer:Revision()
+	end,
+	sharing = Sharing,
+	setSharing = function(shared)
+		ns.db.statsShare = shared == true
+		ns.TravelSharingChanged()
+		if ns.SetOption then
+			pcall(ns.SetOption, "statsShare", shared == true)
+		end
+	end,
+	safeCall = ns.core.SafeCall,
+})
 
 local function Record(key, amount)
 	if not ns.db.stats then
@@ -241,7 +242,8 @@ local metricConfig = {}
 for _, metric in ipairs(METRICS) do
 	metricConfig[metric.id] = { subject = "all" }
 end
-peer = ns.PeerStats.New({
+peer = ForeverCore.PeerStats.New({
+	safeCall = ns.core.SafeCall,
 	addon = "spf",
 	enabled = Enabled,
 	db = function()

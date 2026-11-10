@@ -1,6 +1,10 @@
 local addonName = ...
 ---@class SPFNamespace
 local ns = select(2, ...)
+
+if ns.broken then
+	return
+end
 local L = ns.L
 
 local settings = {}
@@ -15,8 +19,10 @@ end
 local category
 
 -- The settings category is the addon's one options surface: the slash command and the compartment entry open it.
+-- Through ForeverCore's secure opener: the client's Settings.OpenToCategory and its C_SettingsUtil.OpenSettingsPanel
+-- refuse a direct call from addon code (cjber/forever-core#333).
 function ns.OpenSettings()
-	Settings.OpenToCategory(category:GetID())
+	ForeverCore.OpenSettingsPanel(category:GetID())
 end
 
 local optionsButton
@@ -91,7 +97,7 @@ ns.Init(function()
 		Settings.RegisterInitializer(
 			category,
 			CreateSettingsButtonInitializer(name, L["Open"], function()
-				Settings.OpenToCategory(subcategory:GetID())
+				ForeverCore.OpenSettingsPanel(subcategory:GetID())
 			end, nil, false)
 		)
 	end
@@ -243,59 +249,55 @@ ns.Init(function()
 
 	-- Guidance: how a journey is planned and led.
 	Page(L["Guidance"])
-	local host = ns.TrackerHost
-	if host and host.GetSettings and host.SetAttached and host.OnAttachmentChanged then
-		local variable = "ShortestPathForever_trackerAttached"
-		local attachment = Settings.RegisterProxySetting(
-			page,
-			variable,
-			Settings.VarType.Boolean,
-			L["Attach to quest tracker"],
-			true,
-			function()
-				return host.GetSettings().attached
-			end,
-			function(value)
-				host.SetAttached(value == true)
-			end
+	local host = ForeverCore.TrackerHost --[[@as ForeverTrackerHostAPI]]
+	local variable = "ShortestPathForever_trackerAttached"
+	local attachment = Settings.RegisterProxySetting(
+		page,
+		variable,
+		Settings.VarType.Boolean,
+		L["Attach to quest tracker"],
+		true,
+		function()
+			return host.GetSettings().attached
+		end,
+		function(value)
+			host.SetAttached(value == true)
+		end
+	)
+	Settings.RegisterInitializer(
+		page,
+		Settings.CreateCheckboxInitializer(
+			attachment,
+			nil,
+			L["Turn this off to drag the shared Forever tracker anywhere on screen."]
 		)
-		Settings.RegisterInitializer(
-			page,
-			Settings.CreateCheckboxInitializer(
-				attachment,
-				nil,
-				L["Turn this off to drag the shared Forever tracker anywhere on screen."]
-			)
-		)
-		host.OnAttachmentChanged(function()
-			Settings.NotifyUpdate(variable)
-		end)
-	end
+	)
+	host.OnAttachmentChanged(function()
+		Settings.NotifyUpdate(variable)
+	end)
 	-- Lock keeps the detached column where it is: the grip ignores drag while it is on. Off by default, and safe to
 	-- toggle in combat, since it only writes the saved switch.
-	if host and host.GetSettings and host.SetLocked then
-		local lock = Settings.RegisterProxySetting(
-			page,
-			"ShortestPathForever_trackerLocked",
-			Settings.VarType.Boolean,
-			L["Lock the tracker"],
-			false,
-			function()
-				return host.GetSettings().locked == true
-			end,
-			function(value)
-				host.SetLocked(value == true)
-			end
+	local lock = Settings.RegisterProxySetting(
+		page,
+		"ShortestPathForever_trackerLocked",
+		Settings.VarType.Boolean,
+		L["Lock the tracker"],
+		false,
+		function()
+			return host.GetSettings().locked == true
+		end,
+		function(value)
+			host.SetLocked(value == true)
+		end
+	)
+	Settings.RegisterInitializer(
+		page,
+		Settings.CreateCheckboxInitializer(
+			lock,
+			nil,
+			L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."]
 		)
-		Settings.RegisterInitializer(
-			page,
-			Settings.CreateCheckboxInitializer(
-				lock,
-				nil,
-				L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."]
-			)
-		)
-	end
+	)
 	Checkbox(
 		"journey",
 		L["Shift-click to plan journeys"],
@@ -709,14 +711,14 @@ ns.Init(function()
 		L["One line in chat the first time you log in after an update."]
 	)
 
-	-- The Forever addons page is shared by all five addons (UI/ForeverFamily.lua), with the hint setting on it.
+	-- The Forever addons page is ForeverCore's, with the hint setting on it.
 	-- With the gamepad interface on the page is the client's own rows so the Options navigation can enter it
 	-- (cjber/tweaks-forever#382).
-	local family = ns.Family.Register(category, ns.db, addonName, L)
+	local family = ForeverCore.Family.Register(category, ns.db, addonName, ns.core.SafeCall)
 	Settings.RegisterInitializer(
 		category,
 		CreateSettingsButtonInitializer(L["Forever addons"], L["Open"], function()
-			Settings.OpenToCategory(family:GetID())
+			ForeverCore.OpenSettingsPanel(family:GetID())
 		end, nil, false)
 	)
 
@@ -726,7 +728,7 @@ ns.Init(function()
 	SLASH_SHORTESTPATHFOREVER2 = "/shortestpath"
 	SlashCmdList.SHORTESTPATHFOREVER = function(message)
 		-- TomTom's /way line, which works whether or not /way itself is free.
-		if ns.Report and ns.Report.Command and ns.Report.Command(message) then
+		if ns.core.Report.Command(message) then
 			return
 		end
 		local way = message == "way" and "" or message:match("^way%s+(.*)$")

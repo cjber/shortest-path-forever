@@ -1,6 +1,11 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
+
 -- rule-ignore: file-size-no-growth - the decoded walking grid and its searches share one hot path
+
+if ns.broken then
+	return
+end
 
 -- Walking routes over a continent's collision map: HPA* between ADT-tile clusters, an 8 yd grid inside them,
 -- then string-pulling so the drawn line is not jagged. FindMany resolves costs in one abstract Dijkstra.

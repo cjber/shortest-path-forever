@@ -1,8 +1,12 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
+
+if ns.broken then
+	return
+end
 local L = ns.L
 
-local MapCanvas = ns.MapCanvas
+local MapCanvas = ns.Canvas
 local PIN_TEMPLATE = "ShortestPathForeverDockPinTemplate"
 local PORTAL_TEMPLATE = "ShortestPathForeverPortalPinTemplate"
 -- The ping's own expanding glow ring (Blizzard_PingUI's Ping_SpotGlw_<kit>_Out), a 53 by 53 atlas fitted into
@@ -15,7 +19,7 @@ local EDGE = 0.015
 -- Docks closer than this many pins apart merge into one.
 local OVERLAP = 0.8
 
--- The pins' pools on the world map (UI/MapCanvas.lua), made at load.
+-- The pins' pools on the world map (UI/Canvas.lua), made at load.
 ---@type SPFCanvasPool, SPFCanvasPool
 local dockPins, portalPins
 local Docks
@@ -438,7 +442,7 @@ local function OpenEnds(pin, button)
 	if #ends == 1 then
 		ShowEnd(ends[1])
 	elseif #ends > 1 then
-		ns.ContextMenu(pin, function(_, root)
+		ForeverCore.ContextMenu(pin, function(_, root)
 			root:SetScrollMode(ENDS_EXTENT)
 			for _, target in ipairs(ends) do
 				root:CreateButton(string.format(TO[target.kind], target.zone), function()

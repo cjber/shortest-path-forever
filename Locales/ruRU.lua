@@ -53,13 +53,9 @@ L["Class trainer"] = "Учитель классовых навыков"
 L["Clear journey"] = "Сбросить маршрут"
 L["Click to show %s"] = "Щелкните, чтобы показать: %s"
 L["Click to show where they go"] = "Щелкните, чтобы увидеть, куда они идут"
-L["Close"] = "Закрыть"
 L["Compass background"] = "Фон компаса"
 L["Compass scale"] = "Размер компаса"
 L["Complete this step"] = "Завершить этот шаг"
-L["Copy link"] = "Копировать ссылку"
-L["Copy the address, then open it in your browser."] =
-	"Скопируйте адрес и откройте его в браузере."
 L["Crosses %s (level %s)"] = "Проходит через %s (уровень %s)"
 L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."] =
 	"Затемняет землю за компасом, чтобы его отметки читались на снегу или песке. 0% – без затемнения."
@@ -68,8 +64,6 @@ L["Distance"] = "Расстояние" -- mt
 L["Distances in metres"] = "Расстояние в метрах"
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
 	"Причалы, подъемники, поезд и порталы. Также в разделе «Транспорт» меню отслеживания мини-карты."
-L["Don't suggest this again"] = "Больше не предлагать"
-L["Drag to move"] = "Перетащите, чтобы переместить"
 L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] =
 	"Перетащите, чтобы переместить; Shift+перетаскивание или стрелки – точная подстройка. Правый щелчок – сброс."
 L["Drink"] = "Напитки"
@@ -89,7 +83,6 @@ L["Follow RestedXP guides"] = "Следовать руководствам Reste
 L["Follow TomTom's arrow"] = "Следовать стрелке TomTom"
 L["Food"] = "Еда"
 L["Forever addons"] = "Модификации Forever"
-L["Forever tracker"] = "Отслеживание Forever"
 L["Friendly nameplates must be on to see them."] =
 	"Чтобы их увидеть, включите таблички с именами дружественных существ."
 L["Go through to %s"] = "Пройти: %s"
@@ -103,7 +96,6 @@ L["Hostile town: %s"] = "Вражеский город: %s"
 L["In the objective tracker while you are near a dock, lift or tram."] =
 	"На панели отслеживания, когда вы рядом с причалом, подъемником или поездом."
 L["Innkeeper"] = "Хозяин таверны"
-L["Installed, turned off"] = "Установлено, отключено"
 L["Interface"] = "Интерфейс"
 L["Journey"] = "Маршрут"
 L["Journey  %s · %s"] = "Маршрут  %s · %s"
@@ -129,7 +121,6 @@ L["Lifts and the Deeprun Tram, on the world map."] =
 	"Подъемники и Подземный поезд на карте мира."
 L["Loading QuestieDB…"] = "Загрузка QuestieDB…"
 L["Lock the tracker"] = "Закрепить трекер"
-L["Tracker background"] = "Фон отслеживания"
 L["Map marks"] = "Отметки на карте"
 L["Mark only where steps end"] = "Отмечать только концы шагов"
 L["Minimap icon size"] = "Размер значков на мини-карте"
@@ -148,10 +139,8 @@ L["No location for that quest yet."] = "Для этого задания пок�
 L["No services nearby."] = "Поблизости нет услуг."
 L["No way there from here."] = "Отсюда туда нет пути."
 L["Not discovered"] = "Не открыто"
-L["Not installed"] = "Не установлено"
 L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."] =
 	"Выключено: стрелка, метка, линия на карте и маршрут на мини-карте остаются, а блока маршрута в панели отслеживания нет."
-L["On"] = "Вкл."
 L["On board to %s"] = "На борту: %s"
 L["On the world map."] = "На карте мира."
 L["One line in chat the first time you log in after an update."] =
@@ -162,31 +151,21 @@ L["Open"] = "Открыть"
 L["Open Nearby services"] = "Открыть услуги поблизости"
 L["Open settings."] = "Открыть настройки."
 L["Open the world map to see it."] = "Откройте карту мира, чтобы увидеть."
-L["The Forever addons are free, with nothing locked behind them. If they help, you can buy me a coffee."] =
-	"Аддоны Forever бесплатны, и ничего в них не закрыто за оплатой. Если они вам помогают, можете угостить меня кофе." -- mt
 L["Turn the world map to %s to see it."] =
 	"Переключите карту мира на %s, чтобы увидеть." -- mt
 L["This menu needs mouse and keyboard."] = "Для этого меню нужны мышь и клавиатура." -- mt
 L["Open these settings from the minimap."] = "Открывать эти настройки с мини-карты."
 L["Other Faction's Routes"] = "Маршруты другой фракции"
-L["Picks quests for your level and plans them into one journey."] =
-	"Подбирает задания по вашему уровню и объединяет их в один маршрут."
 L["Plan journey"] = "Проложить маршрут"
 L["Plan journeys to Guidelime's current guide step. Guidelime's arrow steps aside while ours draws."] =
 	"Планировать путешествия к текущему шагу руководства Guidelime. Его стрелка уступает место нашей."
 L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."] =
 	"Прокладывать маршруты к целям руководств RestedXP и скрывать его стрелку. TomTom не нужен."
-L["Plans the cheapest route to your next profession rank."] =
-	"Прокладывает самый дешевый путь к следующему рангу профессии."
-L["Plans the quickest way anywhere and guides you there, with live boat and zeppelin times."] =
-	"Прокладывает самый быстрый путь куда угодно и ведет вас туда, с расписанием кораблей и дирижаблей в реальном времени."
 L["Play a sound when you reach the goal"] = "Звук по прибытии к цели"
 L["Play a sound with alerts"] = "Звук при оповещениях"
 L["Plays even with the game in the background."] = "Звучит, даже когда игра в фоне."
 L["Portal to %s"] = "Портал: %s"
 L["Portals"] = "Порталы"
-L["Quest automation, rare alerts and merchant handling for the default UI."] =
-	"Автоматизация заданий, оповещения о редких противниках и работа с торговцами для стандартного интерфейса."
 L["Reagents"] = "Реагенты"
 L["Repair"] = "Ремонт"
 L["RestedXP guide"] = "Руководство RestedXP"
@@ -211,8 +190,6 @@ L["Shift-click the world map or the minimap to plan a journey there."] =
 	"Shift+щелчок по карте мира или мини-карте прокладывает туда маршрут."
 L["Shift-click to plan journeys"] = "Shift+щелчок для маршрута"
 L["Shortest Path report"] = "Отчет Shortest Path"
-L["Show a quiet line where one of my other Forever addons would help. Only for addons you don't have."] =
-	"Показывать неприметную строку там, где помогла бы другая моя модификация Forever. Только для тех, что у вас не установлены."
 L["Show boats and zeppelins"] = "Показывать корабли и дирижабли"
 L["Show direction arrow"] = "Показывать стрелку направления"
 L["Show flight masters"] = "Показывать распорядителей полетов"
@@ -233,8 +210,6 @@ L["Show the time left under the compass"] = "Оставшееся время п�
 L["Show the way to your corpse"] = "Показывать путь к телу"
 L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =
 	"Показывает их над табличкой с именем НИП, к которому ведёт маршрут к услугам поблизости."
-L["Shows the Legacy challenges you can advance in each zone."] =
-	"Показывает старинные испытания, которые можно продвинуть в каждой зоне."
 L["Shows the arrow to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =
 	"Показывает стрелку, которую можно перетащить куда угодно; Shift+перетаскивание или стрелки двигают ее точнее. Правый щелчок возвращает ее на место."
 L["Shows the compass to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =
@@ -248,7 +223,6 @@ L["Sizes transport icons on the minimap."] =
 L["Stable master"] = "Хозяин стойл"
 L["Stop %d of %d"] = "Остановка %d из %d" -- mt
 L["Stop %d of %d: %s"] = "Остановка %d из %d: %s"
-L["Suggest my other Forever addons"] = "Предлагать другие мои модификации Forever"
 L["Suggest quests for my level: Adventure Guide Forever"] =
 	"Предлагать задания по уровню: Adventure Guide Forever"
 L["Teleport to %s"] = "Телепорт: %s"
@@ -257,11 +231,6 @@ L["The journey's time left, as the tracker shows it, beside the distance to your
 L["The map's ping when a journey you planned reaches its goal, even with the game in the background."] =
 	"Сигнал карты, когда проложенный вами маршрут достигает цели, даже если игра в фоне."
 L["The objective tracker is unavailable."] = "Панель отслеживания целей недоступна."
-L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it into your bug report."] =
-	"Текст выделен. Нажмите Ctrl+C (Cmd+C на Mac), чтобы скопировать его, и вставьте в отчет об ошибке."
-L["The tracker is locked. Turn off Lock the tracker to move it."] =
-	"Трекер закреплён. Отключите «Закрепить трекер», чтобы переместить его."
-L["This addon"] = "Эта модификация"
 L["Through %s transport, there is a way"] = "Через транспорт фракции «%s» путь есть"
 L["Through %s transport: about %d min faster"] =
 	"Через транспорт фракции «%s»: примерно на %d мин. быстрее"
@@ -362,28 +331,17 @@ L["/path issue - report a bug or request a feature with a ready-made GitHub issu
 L["/path report - show a report to copy into a bug report"] =
 	"/path report - показать отчет для вставки в сообщение об ошибке"
 L["Both"] = "Оба" -- mt
-L["Bug"] = "Ошибка"
-L["Bug: "] = "Ошибка: "
-L["Copy issue link"] = "Копировать ссылку на задачу"
-L["Copy report"] = "Копировать отчет"
-L["Feature request"] = "Предложение функции"
-L["Feature request: "] = "Предложение функции: "
 L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs."] =
 	"Дневник путешествий — около %d ярдов пешком; %d маршрутов; %d поездок на транспорте; %d полетов; %d переходов через портал."
 L["Record travel stats"] = "Записывать статистику путешествий"
-L["Report a bug or request a feature"] = "Сообщить об ошибке или предложить функцию"
 L["Share travel stats with guild and groups"] =
 	"Делиться статистикой путешествий с гильдией и группами"
-L["The link is selected. Press Ctrl+C (Cmd+C on a Mac), then paste into a browser; GitHub opens a filled-in issue."] =
-	"Ссылка выделена. Нажмите Ctrl+C (Cmd+C на Mac) и вставьте ее в браузер; GitHub откроет заполненную задачу."
 L["Time left"] = "Оставшееся время" -- mt
-L["Title"] = "Заголовок"
 L["Travel journal"] = "Дневник путешествий"
 L["Travel milestone reached: %s"] = "Достигнут рубеж путешествий: %s"
 L["Travel stats are not ready yet."] = "Статистика путешествий еще не готова."
 L["Turn this off to keep stats on this character only. Shared records are player-reported and not verified."] =
 	"Отключите, чтобы статистика велась только для этого персонажа. Общие записи присылают игроки, они не проверены."
-L["What happened, or what you would like"] = "Что произошло или чего бы вы хотели"
 L["Party member"] = "Участник группы" -- mt
 L["That player is not on a map you can see."] =
 	"Этот игрок не на карте, которую вы видите." -- mt
@@ -444,57 +402,12 @@ L["Show boat, lift and tram departures in the tracker"] =
 L["Hide RestedXP's arrow"] = "Скрыть стрелку RestedXP" -- mt
 L["Hide departures"] = "Скрыть отправления"
 
--- Forever Leaderboards (Forever Core's shared window).
+-- Travel stats and the shared Forever Leaderboards.
 L["Completed journeys"] = "Завершённые путешествия"
 L["On unless you turn it off. Shares travel records with guild and group and puts you on Forever Leaderboards."] =
 	"Включено, пока вы это не отключите. Делится записями о путешествиях по каналам гильдии, группы, рейда и подземелья и добавляет вас в рейтинги Forever." -- mt
 L["total"] = "всего" -- mt
-L["Forever Leaderboards"] = "Рейтинги Forever" -- mt
-L["Overall"] = "Общий" -- mt
-L["Forever standing"] = "Общий рейтинг Forever" -- mt
-L["Your guild and group"] = "Ваша гильдия и группа" -- mt
-L["Players you've met"] = "Встреченные игроки" -- mt
-L["This week"] = "На этой неделе" -- mt
-L["All time"] = "За всё время" -- mt
-L["Rank"] = "Место" -- mt
-L["Player"] = "Игрок" -- mt
-L["No one has reported yet."] = "Пока никто не сообщил." -- mt
-L["Share my progress"] = "Делиться прогрессом" -- mt
-L["Others' values are player-reported."] =
-	"Значения других игроков сообщены ими самими." -- mt
-L["Points for placing on each addon's board."] = "Очки за место в списке каждого аддона." -- mt
-L["(you)"] = "(вы)" -- mt
-L["board"] = "список" -- mt
-L["boards"] = "списки" -- mt
-L["Uses Forever addons"] = "Использует аддоны Forever" -- mt
-L["Forever: %s overall this week"] = "Forever: %s на этой неделе" -- mt
-L["Forever: %s overall"] = "Forever: %s за всё время" -- mt
-L["1st"] = "1-е" -- mt
-L["2nd"] = "2-е" -- mt
-L["3rd"] = "3-е" -- mt
-L["4th"] = "4-е" -- mt
-L["5th"] = "5-е" -- mt
-L["6th"] = "6-е" -- mt
-L["7th"] = "7-е" -- mt
-L["8th"] = "8-е" -- mt
-L[", "] = ", " -- mt
 
--- Shared debug log (Forever Core's Core/Log.lua).
-L["Debug log is off."] = "Журнал отладки выключен." -- mt
-L["Debug log is on for this session."] = "Журнал отладки включён для этого сеанса." -- mt
-L["Debug log is on and pinned for this character."] =
-	"Журнал отладки включён и закреплён для этого персонажа." -- mt
-L["Debug log is already on and pinned for this character."] =
-	"Журнал отладки уже включён и закреплён для этого персонажа." -- mt
-L["Debug log is off for this session; it is still pinned."] =
-	"Журнал отладки выключен для этого сеанса; закрепление сохранено." -- mt
-L["Debug log is off and unpinned."] = "Журнал отладки выключен, закрепление снято." -- mt
-L["No addon has attached its log yet."] =
-	"Ни один аддон ещё не подключил свой журнал." -- mt
-L["%s (last %d):"] = "%s (последние %d):" -- mt
-L["%s: no lines yet."] = "%s: строк пока нет." -- mt
-L["Usage: /forever debug, /forever debug pin, /forever debug off, /forever debug show"] =
-	"Использование: /forever debug, /forever debug pin, /forever debug off, /forever debug show" -- mt
 L["Follow roads"] = "Следовать дорогам" -- mt
 L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =
 	"Пешие маршруты держатся дорог и мощёных улиц, если это удлиняет путь менее чем наполовину. Дороги, нарисованные обычной землёй зоны, не распознаются." -- mt

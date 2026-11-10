@@ -1,5 +1,9 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
+
+if ns.broken then
+	return
+end
 local L = ns.L
 
 -- This topology belongs exclusively to estimates: Planner.Plan mutates its cache between calls.
@@ -177,7 +181,7 @@ local function Flush()
 			for key, value in pairs(changes) do
 				copy[key] = value
 			end
-			ns.SafeCall("Subscribe callback", subscription.callback, copy)
+			ns.core.SafeCall("Subscribe callback", subscription.callback, copy)
 		end
 	end
 end
@@ -255,7 +259,7 @@ end
 
 function ns.JourneyRelabeled()
 	if ns.RefreshTracker then
-		ns.SafeCall("journey relabel", Relabel)
+		ns.core.SafeCall("journey relabel", Relabel)
 	end
 end
 

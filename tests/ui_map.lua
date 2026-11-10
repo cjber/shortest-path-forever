@@ -14,7 +14,7 @@ end
 function Settings.CreateDropdownInitializer(setting)
 	return { kind = "dropdown", setting = setting }
 end
--- What the addon's map frames (UI/MapCanvas.lua) ask of a frame beyond the shared stub.
+-- What the addon's map frames (UI/Canvas.lua) ask of a frame beyond the shared stub.
 local function frameExtras(f)
 	function f:GetScript(n)
 		return self.scripts[n]
@@ -58,7 +58,7 @@ function C_SuperTrack.ClearAllSuperTracked()
 	fireEvent("SUPER_TRACKING_CHANGED")
 end
 Enum.SuperTrackingMapPinType = { TaxiNode = 2 }
--- The map's canvas, a frame the addon's own pins sit on (UI/MapCanvas.lua).
+-- The map's canvas, a frame the addon's own pins sit on (UI/Canvas.lua).
 local canvas = frameExtras(stubframe())
 canvas.width, canvas.height = 1000, 700
 -- The canvas shows and hides with the map; the client runs OnUpdate only on a visible frame.
@@ -215,7 +215,7 @@ _G.MapPinTags = { FlightPoint = 1 }
 assert(loadfile(BLIZZARD_UI .. "Blizzard_SharedMapDataProviders/FlightPointDataProvider.lua"))()
 local clickHandlers, pinHandlers = {}, {}
 -- Blizzard's own pins, which its own providers acquire (the flight points and the user waypoint). The addon draws on
--- frames of its own (UI/MapCanvas.lua) and never acquires one: a template of its own here fails the check.
+-- frames of its own (UI/Canvas.lua) and never acquires one: a template of its own here fails the check.
 local nativePools, nativeActive = {}, {}
 -- Once the addon has loaded, adding or removing a data provider fails the check (#158); a spec may add one as the
 -- client can, by setting testAddsProvider while it does.
@@ -313,7 +313,7 @@ end
 _G.CreateFramePoolCollection = function()
 	return {
 		GetOrCreatePool = function()
-			error("native pooling is exercised by tracker_host_spec")
+			error("native pooling is exercised by ForeverCore's own specs")
 		end,
 	}
 end
@@ -405,6 +405,16 @@ WorldMapFrame:AddDataProvider(waypointProvider)
 -- The walking search answers with the straight line when a check calls settle().
 local path = assert(loadfile("tests/path_fake.lua"))()()
 local settle = path.settle
+-- ForeverCore loads first, as the client loads a dependency: its TOC's files, then its own ADDON_LOADED.
+local ForeverCore = dofile("tests/forever_core.lua")
+ForeverCore.load(_G, "ForeverCore")
+fireEvent("ADDON_LOADED", "ForeverCore")
+-- ForeverCore's frames and tickers are not the addon's own; the UI checks count only what starts after this line.
+local coreFrames, coreTickers = #frames, #tickers
+-- Core draws its menu in its own frames; the checks read the generator through this fixture's MenuUtil instead.
+_G.ForeverCore.ContextMenu = function(owner, generator)
+	return MenuUtil.CreateContextMenu(owner, generator)
+end
 local ns = {}
 for line in io.lines("ShortestPathForever.toc") do
 	-- The packager writes CRLF; tools/check_package.py runs this on its output.
@@ -426,18 +436,18 @@ local active = setmetatable({}, {
 		return nativeActive[key]
 	end,
 })
-for key, pool in pairs(ns.MapCanvas.Pools(WorldMapFrame)) do
+for key, pool in pairs(ns.Canvas.Pools(WorldMapFrame)) do
 	active[key] = pool.active
 end
 local pools = setmetatable({}, {
 	__index = function(_, key)
-		local pool = ns.MapCanvas.Pools(WorldMapFrame)[key]
+		local pool = ns.Canvas.Pools(WorldMapFrame)[key]
 		return pool and pool.free
 	end,
 })
--- One frame of the map's view (UI/MapCanvas.lua), as the client runs its OnUpdate while the map is shown.
+-- One frame of the map's view (UI/Canvas.lua), as the client runs its OnUpdate while the map is shown.
 local function mapTick()
-	ns.MapCanvas.Update(WorldMapFrame)
+	ns.Canvas.Update(WorldMapFrame)
 end
 -- The map's own scripts the addon hooked, as the client runs them around a show or hide.
 local function runMapScripts(name)
@@ -494,10 +504,10 @@ local function refreshMap()
 end
 -- The canvas zoomed (or its pin scale changed): the view tells the layers on its next frame.
 local function canvasScaled()
-	ns.MapCanvas.Watch(WorldMapFrame).scale = nil
+	ns.Canvas.Watch(WorldMapFrame).scale = nil
 	mapTick()
 end
 -- A click on one of the addon's pins, as the press and release of a mouse button over it make one.
 local function clickPin(pin, button)
-	ns.MapCanvas.Click(pin, button)
+	ns.Canvas.Click(pin, button)
 end

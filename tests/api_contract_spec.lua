@@ -5,7 +5,6 @@
 -- docs/api.md is the contract; tests/api_spec.lua tests each call in depth.
 local driver = assert(loadfile("tests/journey_driver.lua"))()
 local ns, env, checks = driver.ns, driver.env, 0
-driver.load("Core/SafeCall.lua")
 driver.load("UI/Looks.lua")
 driver.load("Core/API.lua")
 driver.load("Journey/Itinerary.lua")

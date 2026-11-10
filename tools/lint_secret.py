@@ -14,17 +14,12 @@ except ModuleNotFoundError:
     from typecheck_coverage import runtime_files
 
 POLICY = secret.DEFAULT_POLICY
-# Vendored byte for byte from forever-core (tools/check_core_shared.py), so a secret-ok line cannot be added here. The
-# shared leaderboards data reads UnitName, then clears the name and realm through canaccessvalue before using either;
-# this policy only follows the `ns.Readable(...)` form, so the check would keep flagging the shared copy.
-VENDORED = frozenset({"Core/LeaderboardsData.lua"})
 check = secret.check
 
 
 def main() -> int:
     root = Path(__file__).resolve().parent.parent
     files = [Path(arg) for arg in sys.argv[1:]] or runtime_files(root)
-    files = [path for path in files if path.resolve().relative_to(root).as_posix() not in VENDORED]
     return secret.run(files, POLICY)
 
 

@@ -1,5 +1,9 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
+
+if ns.broken then
+	return
+end
 local API = ShortestPathForever.API
 local OWNER = "RestedXP"
 ---@type SPFRestedXP?

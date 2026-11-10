@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- Art at its native aspect (AGENTS.md: never stretch art). An atlas is sized from C_Texture.GetAtlasInfo to fit
 -- inside its box, and a file icon is drawn whole. Every other file sets art only where its line says why its shape is
 -- right (tools/lint_art.py).

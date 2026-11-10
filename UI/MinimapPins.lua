@@ -1,5 +1,9 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
+
+if ns.broken then
+	return
+end
 local L = ns.L
 
 -- Docks, lifts, tram stations and portals on the minimap, with the world map's icons and tooltips. The
@@ -94,7 +98,7 @@ local function OnUpdate(pin, elapsed)
 end
 
 local function Press(pin, pressed)
-	ns.MapCanvas.Press(pin --[[@as SPFPressable]], pin.pressRegions --[[@as Region[]?]], pressed)
+	ns.Canvas.Press(pin --[[@as SPFPressable]], pin.pressRegions --[[@as Region[]?]], pressed)
 end
 
 local function OnEnter(pin)

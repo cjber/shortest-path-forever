@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- Pure timetable arithmetic, free of game APIs. Times are server milliseconds; a route's `epoch` is the
 -- server time at which its loop was at 0 ms, so its phase is (now - epoch) % period.
 ---@class SPFModel

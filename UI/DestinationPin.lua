@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- Destination pin: the addon's own gold goal pin, held on screen over the journey's final
 -- destination so it can be seen all the way there rather than only on the map.
 --

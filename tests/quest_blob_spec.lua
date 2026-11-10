@@ -47,7 +47,7 @@ local function fixture(selected)
 		record("ring", texture)
 	end
 
-	local ns = { MapCanvas = { PinMixin = {} }, Init = function() end }
+	local ns = { Canvas = { PinMixin = {} }, Init = function() end }
 	_G.Minimap = minimap
 	_G.CreateFromMixins = function()
 		return {}

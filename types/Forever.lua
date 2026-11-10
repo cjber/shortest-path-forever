@@ -7,41 +7,11 @@
 UNKNOWN = nil
 ---@type number
 LE_PARTY_CATEGORY_INSTANCE = nil
----@type table<string, fun(message: string, editBox: EditBox)>
-SlashCmdList = nil
 ---@type table<string, {r: number, g: number, b: number}>
 ChatTypeInfo = nil
--- UIParent.lua: the frame names Escape closes like a panel (UI/Report.lua lists its own window).
----@type string[]
-UISpecialFrames = nil
-
 -- ItemButtonTemplate.lua: a modified click on an item (Shift links it to chat); true when the click was used.
 ---@type fun(link: string, itemLocation?: table): boolean
 HandleModifiedItemClick = nil
-
--- UI/Leaderboards.lua publishes the shared window every Forever addon registers into.
----@type ForeverLeaderboardsAPI?
-ForeverLeaderboards = nil
--- Client class colours, keyed by the RAID_CLASS_COLORS token (Constants.lua).
----@type table<string, ColorMixin>?
-RAID_CLASS_COLORS = nil
--- The scroll box's own option flags (ScrollBoxConstants.lua).
----@type {RetainScrollPosition: integer}
-ScrollBoxConstants = nil
--- The client's weekly reset countdown (DateAndTime.lua).
----@type {GetSecondsUntilWeeklyReset: fun(): number}?
-C_DateAndTime = nil
--- The scroll box's list helpers (SharedXML/ScrollBox.lua): UI/Leaderboards.lua builds one data provider per refresh.
----@class SPFDataProvider
----@type fun(entries?: any[]): SPFDataProvider
-CreateDataProvider = nil
----@class SPFScrollBoxLinearView
----@field SetElementInitializer fun(self: SPFScrollBoxLinearView, element: string, initializer: fun(button: any, entry: any))
----@field SetElementExtent fun(self: SPFScrollBoxLinearView, extent: number)
----@type fun(...): SPFScrollBoxLinearView
-CreateScrollBoxListLinearView = nil
----@type {InitScrollBoxListWithScrollBar: fun(scrollBox: Frame, scrollBar: any, view: SPFScrollBoxLinearView)}
-ScrollUtil = nil
 
 -- ChatFrame.lua in the Forever UI source: the edit box a Shift+click map link would land in.
 ---@type (fun(): Frame?)?
@@ -50,8 +20,6 @@ ChatEdit_GetActiveWindow = nil
 ChatFrameUtil = nil
 ---@type {AddMessage: fun(message: string, color: {r: number, g: number, b: number})}
 RaidWarningUtil = nil
----@type {Normal: colorRGBA, NormalHighlight: colorRGBA, Header: colorRGBA}
-OBJECTIVE_TRACKER_COLOR = nil
 -- The stock objective line's dash, which the client also leaves as the line's indent.
 ---@type string
 QUEST_DASH = nil
@@ -60,9 +28,6 @@ OFF = nil
 -- Blizzard_Menu/MenuConstants.lua: what a menu button's responder answers; CloseAll closes every menu.
 ---@type {Open: MenuResponse, Refresh: MenuResponse, Close: MenuResponse, CloseAll: MenuResponse}
 MenuResponse = nil
--- InputInterfaceStyleDocumentation.lua: which interface the game shows, mouse and keyboard or the gamepad one.
----@type {GetCurrentStyle: fun(): number}?
-C_InputInterfaceStyle = nil
 ---@type {Label: {Right: integer}}
 MinimalSliderWithSteppersMixin = nil
 
@@ -71,15 +36,6 @@ MinimalSliderWithSteppersMixin = nil
 ---@param maximum number
 ---@return number
 function Clamp(value, minimum, maximum) end
----@param value number
----@return number
-function Saturate(value) end
----@param start number
----@param finish number
----@param amount number
----@return number
-function Lerp(start, finish, amount) end
-
 -- LibDBIcon and minimap addons supply this optional shared shape query.
 ---@type (fun(): string)?
 GetMinimapShape = nil
@@ -98,11 +54,6 @@ MAP_PIN_SHARING = nil
 ---@type FontString
 GameTooltipTextLeft1 = nil
 
----@param tooltip GameTooltip
----@param title string
----@param color? ColorMixin
----@param wrap? boolean
-function GameTooltip_SetTitle(tooltip, title, color, wrap) end
 ---@param tooltip GameTooltip
 function GameTooltip_AddBlankLineToTooltip(tooltip) end
 ---@param tooltip GameTooltip
@@ -125,24 +76,26 @@ function GameTooltip_AddColoredLine(tooltip, text, color, wrap) end
 ---@param rightColor ColorMixin
 function GameTooltip_AddColoredDoubleLine(tooltip, left, right, leftColor, rightColor) end
 
--- The world map, as the addon reads it (UI/MapCanvas.lua lists every read): it adds no provider and acquires no pin.
----@class SPFMapCanvas : Frame
+-- The world map, as the addon reads it (UI/Canvas.lua lists every read): it adds no provider and acquires no pin.
+-- Core declares the frame; these are the reads its annotations do not carry.
+---@alias SPFMapCanvas WorldMapFrame
+---@class WorldMapFrame : Frame
+---@field GetMapID fun(self: WorldMapFrame): number
+---@field GetCanvasScale fun(self: WorldMapFrame): number
+---@field GetCanvasZoomPercent fun(self: WorldMapFrame): number
+---@field GetGlobalPinScale fun(self: WorldMapFrame): number
 ---@field ScrollContainer Frame
 ---@field dataProviders table<SPFMapProvider, boolean> -- read only, to find the waypoint provider (JourneyGuide.lua)
----@field GetMapID fun(self: SPFMapCanvas): number
----@field GetCanvas fun(self: SPFMapCanvas): Frame
----@field GetGlobalPinScale fun(self: SPFMapCanvas): number
----@field GetCanvasScale fun(self: SPFMapCanvas): number
----@field GetCanvasZoomPercent fun(self: SPFMapCanvas): number
----@field GetViewRect fun(self: SPFMapCanvas): {left: number, right: number, top: number, bottom: number}
----@field GetNormalizedCursorPosition fun(self: SPFMapCanvas): number, number
----@field GetPinFrameLevelsManager fun(self: SPFMapCanvas): {GetValidFrameLevel: fun(self: table, levelType: string, index?: number): number}
----@field EnumeratePinsByTemplate fun(self: SPFMapCanvas, template: string): fun(): SPFMapPin
----@field AddCanvasClickHandler fun(self: SPFMapCanvas, handler: fun(map: SPFMapCanvas, button: string): boolean)
----@field AddGlobalPinMouseActionHandler fun(self: SPFMapCanvas, handler: fun(map: SPFMapCanvas, action: number, button: string): boolean)
----@field RegisterCallback fun(self: SPFMapCanvas, event: string, callback: function, owner: any) -- the map's own callback registry (SetFocusedQuestID)
----@type SPFMapCanvas
-WorldMapFrame = nil
+---@field GetViewRect fun(self: WorldMapFrame): {left: number, right: number, top: number, bottom: number}
+---@field GetNormalizedCursorPosition fun(self: WorldMapFrame): number, number
+---@field EnumeratePinsByTemplate fun(self: WorldMapFrame, template: string): fun(): SPFMapPin
+---@field AddCanvasClickHandler fun(self: WorldMapFrame, handler: fun(map: WorldMapFrame, button: string): boolean)
+---@field AddGlobalPinMouseActionHandler fun(self: WorldMapFrame, handler: fun(map: WorldMapFrame, action: number, button: string): boolean)
+---@field RegisterCallback fun(self: WorldMapFrame, event: string, callback: function, owner: any) -- the map's own callback registry (SetFocusedQuestID)
+
+-- The levels manager's own extra argument, which core's annotation leaves out.
+---@class ForeverCanvasLevels
+---@field GetValidFrameLevel fun(self: ForeverCanvasLevels, levelType: string, index?: number): number?
 ---@type {MouseAction: {Click: number}}
 MapCanvasMixin = nil
 ---@type {Style: {Waypoint: number}}
@@ -171,11 +124,7 @@ SuperTrackedFrame = nil
 ---@class SPFFlightPin : SPFMapPin
 ---@field poiInfo {nodeID: number, name: string, isUndiscovered: boolean}
 
--- Blizzard_GamepadMapCursor: the gamepad's cursor on the world map, read for its place.
----@type Frame
-SoftCursor = nil
-
--- The Forever addons' world map markers, for each other (UI/MapCanvas.lua): each addon's function gives its shown
+-- The Forever addons' world map markers, for each other (UI/Canvas.lua): each addon's function gives its shown
 -- markers on a map, as map fractions.
 ---@type table<string, fun(map: SPFMapCanvas): {x: number, y: number, kind: string}[]>
 ForeverMapMarkers = nil
@@ -206,10 +155,10 @@ ForeverMapMarkers = nil
 ---@field SetHeader fun(self: SPFTrackerBlock, text: string)
 ---@field AddObjective fun(self: SPFTrackerBlock, id: number|string, text: string, template?: string, wrap?: boolean, dashStyle?: number, color?: ColorMixin): SPFTrackerLine
 ---@field GetExistingLine fun(self: SPFTrackerBlock, id: number|string): SPFTrackerLine?
----@field SetStringText fun(self: SPFTrackerBlock, font: FontString, text: string, wrap: boolean?, color: ColorMixin, highlight?: boolean): number
+---@field SetStringText fun(self: SPFTrackerBlock, font: FontString, text: string, wrap: boolean?, color: ColorMixin|ForeverObjectiveTrackerColor, highlight?: boolean): number
 ---@class SPFTrackerHeader : Frame
 ---@field Text FontString
----@class SPFTrackerModule : Frame
+---@class SPFTrackerModule : ForeverTrackerModule
 ---@field Header SPFTrackerHeader
 ---@field headerText string
 ---@field lineTemplate string
@@ -268,7 +217,7 @@ Settings = nil
 ---@return SPFSettingsInitializer
 function CreateSettingsButtonInitializer(name, buttonText, click, tooltip, addSearchTags) end
 
--- Blizzard_SharedXMLGame InputUtil.lua: the client's input-device switch, read by UI/ForeverFamily.lua.
+-- Blizzard_SharedXMLGame InputUtil.lua: the client's input-device switch.
 ---@class SPFInputUtil
 ---@field IsGamepadUIEnabled fun(): boolean
 ---@type SPFInputUtil?
@@ -280,52 +229,8 @@ InputUtil = nil
 ---@type SPFUiMapPointFactory
 UiMapPoint = nil
 
----@type {ContinueOnAddOnLoaded: fun(name: string, callback: fun()), ContinueAfterAllEvents: fun(callback: fun(), ...: string)}
-EventUtil = {}
----@param callback function
----@param ... string
-function EventUtil.ContinueAfterAllEvents(callback, ...) end
-
--- The shared quest log side tab (UI/QuestLogTabs.lua), and the map frame it hangs from. The registry is published by
--- the first Forever addon to load, so every addon's tab stacks in the one column.
+-- ForeverCore's shared quest log tab: the addon fits its art after registering it.
 ---@class ForeverQuestLogTab : Button
----@field SetCustomOnMouseUpHandler fun(self: ForeverQuestLogTab, handler: fun(self: ForeverQuestLogTab, mouseButton: string, upInside: boolean))
----@field SetChecked fun(self: ForeverQuestLogTab, checked: boolean)
----@field tooltipText string
----@field activeAtlas? string
----@field inactiveAtlas? string
 ---@field Icon Texture the tab's art, fitted to its template
-
----@class ForeverQuestLogTabSpec
----@field name string the tab frame's global name
----@field tooltip string the tab's tooltip text
----@field panel Frame the panel the tab shows
----@field order number where the tab sits in the stack, lowest first
----@field shown? fun(visible: boolean) called once per change when the panel becomes visible to the player or stops being so
-
----@class ForeverQuestLogTabsAPI
----@field Register fun(key: string, spec: ForeverQuestLogTabSpec): ForeverQuestLogTab
----@field Select fun(key: string)
----@field ShowQuests fun()
----@field Selected fun(): string?
-
----@type ForeverQuestLogTabsAPI?
-ForeverQuestLogTabs = nil
-
----@class ForeverQuestLogContentFrame : Frame
----@field displayMode any
 ---@class ForeverQuestMapFrame : Frame
 ---@field ContentsAnchor Frame
----@field ContentFrames ForeverQuestLogContentFrame[]
----@field QuestsTab Button
----@field MapLegendTab Button
----@field displayMode any
----@type ForeverQuestMapFrame
-QuestMapFrame = nil
----@class ForeverQuestMapFrameOverrides
----@field questTabHidden? boolean
----@field GetQuestsTabAnchorOffset fun(): number, number
----@type ForeverQuestMapFrameOverrides
-QuestMapFrameOverrides = nil
----@type string
-QUESTS_LABEL = nil

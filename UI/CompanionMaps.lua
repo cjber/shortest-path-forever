@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 local Maps = {}
 ns.CompanionMaps = Maps
 
@@ -35,7 +39,7 @@ function Maps.Scan(map)
 	local width, height = canvas:GetWidth(), canvas:GetHeight()
 	local left, top = canvas:GetLeft(), canvas:GetTop()
 	local lea = C_AddOns.IsAddOnLoaded("Leatrix_Maps")
-	local open = C_AddOns.IsAddOnLoaded("OpenMap") and ns.OpenMap.Stitched()
+	local open = C_AddOns.IsAddOnLoaded("OpenMap") and ns.OpenMapAddon.Stitched()
 	local found, keys = {}, {}
 	local function Visit(parent, recursive)
 		for _, child in ipairs({ parent:GetChildren() }) do

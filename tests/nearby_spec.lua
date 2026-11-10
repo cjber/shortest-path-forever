@@ -278,6 +278,10 @@ local env = setmetatable({
 		},
 	},
 }, { __index = _G })
+local ForeverCore = dofile("tests/forever_core.lua")
+local coreNs = ForeverCore.load(env, "ForeverCore", { "Locales/enUS.lua", "Core/Text.lua" })
+env.ForeverCore = { Text = coreNs.Text }
+
 env._G = env
 local ns = {
 	Init = function(fn)
@@ -308,18 +312,20 @@ ns.OpenWorldMap = function(uiMap)
 	env.C_Map.OpenWorldMap(uiMap)
 	return true
 end
--- The panel's tab registry (UI/QuestLogTabs.lua, vendored): /spfnear and the tracking entry select this key.
+-- ForeverCore's quest log tab registry: /spfnear and the tracking entry select this key.
 local selectedTab
-ns.QuestLogTabs = {
+env.ForeverCore.QuestLogTabs = {
 	Select = function(key)
 		selectedTab = key
 	end,
 }
 -- UI/MenuModifier.lua's guard, with errors left to surface here rather than reported.
 ns.db = {}
-ns.SafeCall = function(_, fn, ...)
-	return true, fn(...)
-end
+ns.core = {
+	SafeCall = function(_, fn, ...)
+		return true, fn(...)
+	end,
+}
 -- The client's own event queue: the read begins once everything has loaded, which is already true here.
 env.EventUtil = {
 	ContinueAfterAllEvents = function(fn)
@@ -582,7 +588,7 @@ local function fresh(questie, away, L)
 		Path = ns.Path,
 		-- A database of its own: no read saved by another copy is adopted here.
 		db = {},
-		SafeCall = ns.SafeCall,
+		core = ns.core,
 		Food = ns.Food,
 		Drink = ns.Drink,
 		ProfessionTrainers = ns.ProfessionTrainers,
@@ -597,7 +603,6 @@ local function fresh(questie, away, L)
 		GamepadUI = ns.GamepadUI,
 		Print = ns.Print,
 		ModifyMenu = ns.ModifyMenu,
-		QuestLogTabs = ns.QuestLogTabs,
 	}
 	setfenv(assert(loadfile("UI/NearbyQuestie.lua")), env)("ShortestPathForever", copy)
 	setfenv(assert(loadfile("UI/Nearby.lua")), env)("ShortestPathForever", copy)
@@ -681,7 +686,6 @@ do
 	local driver = assert(loadfile("tests/journey_driver.lua"))()
 	local travelEnv, worldNs = driver.env, driver.ns
 	travelEnv._G = travelEnv
-	driver.load("Core/SafeCall.lua")
 	driver.load("UI/Looks.lua")
 	driver.load("Core/API.lua")
 	for _, file in ipairs({

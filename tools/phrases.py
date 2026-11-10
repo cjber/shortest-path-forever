@@ -16,9 +16,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 TOC = ROOT / "ShortestPathForever.toc"
 PHRASE = re.compile(r'\bL\["((?:\\.|[^"\\])*)"\]')
-# The shared Forever Leaderboards files read a few phrases through a variable (`L[phrase]`, `L[n == 1 and "board" or
-# "boards"]`), so the extractor names them here. Every other phrase is a literal it finds.
-DYNAMIC = ("board", "boards", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th")
+# Every phrase is a literal in the addon's own files.
+DYNAMIC = ()
 HEADER = """\
 -- Copy this file to Locales/deDE.lua (or your language's code), set that code below, translate the text on the
 -- right of each line and delete any line you leave in English. Then add the file to ShortestPathForever.toc after

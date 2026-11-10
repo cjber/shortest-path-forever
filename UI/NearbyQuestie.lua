@@ -1,6 +1,10 @@
 ---@type string, SPFNamespace
 local addonName, ns = ...
 
+if ns.broken then
+	return
+end
+
 -- QuestieDB as the Nearby services list reads it: who sells what, and where a service NPC stands. The database is
 -- read through its public API only (WFA-28), a slice a frame, after Questie has finished its own start, because
 -- Questie's corrections change what the database says. What was read is kept in the saved variables under the inputs
@@ -427,7 +431,7 @@ local function Read(flags, onRead)
 		return
 	end
 	answer, flagNames = onRead, flags
-	if not ns.SafeCall("nearby QuestieDB", Start) and state ~= "ready" then
+	if not ns.core.SafeCall("nearby QuestieDB", Start) and state ~= "ready" then
 		state = "failed"
 		Answer()
 	end

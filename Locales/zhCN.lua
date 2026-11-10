@@ -52,12 +52,9 @@ L["Class trainer"] = "职业训练师"
 L["Clear journey"] = "清除旅程"
 L["Click to show %s"] = "点击显示%s"
 L["Click to show where they go"] = "点击查看目的地"
-L["Close"] = "关闭"
 L["Compass background"] = "指南针背景"
 L["Compass scale"] = "指南针大小"
 L["Complete this step"] = "完成此步骤"
-L["Copy link"] = "复制链接"
-L["Copy the address, then open it in your browser."] = "复制该地址，然后在浏览器中打开。"
 L["Crosses %s (level %s)"] = "穿过%s（等级 %s）"
 L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."] =
 	"调暗指南针后方的地面，让标记在雪地或沙地上也清晰可读。0%为不显示。"
@@ -66,8 +63,6 @@ L["Distance"] = "距离" -- mt
 L["Distances in metres"] = "距离以米显示"
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
 	"码头、升降梯、地铁和传送门。也可在微缩地图追踪菜单的“交通”中找到。"
-L["Don't suggest this again"] = "不再推荐"
-L["Drag to move"] = "拖动以移动"
 L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] =
 	"拖动以移动；Shift拖动或方向键微调。右键点击重置。"
 L["Drink"] = "饮水"
@@ -86,7 +81,6 @@ L["Follow RestedXP guides"] = "跟随RestedXP指南"
 L["Follow TomTom's arrow"] = "跟随TomTom的箭头"
 L["Food"] = "食物"
 L["Forever addons"] = "Forever插件"
-L["Forever tracker"] = "Forever追踪栏"
 L["Friendly nameplates must be on to see them."] = "需要开启友方姓名板才能看到。"
 L["Go through to %s"] = "穿过前往%s"
 L["Guidance"] = "引导"
@@ -99,7 +93,6 @@ L["Hostile town: %s"] = "敌对城镇：%s"
 L["In the objective tracker while you are near a dock, lift or tram."] =
 	"在你靠近码头、升降梯或地铁时显示在目标追踪栏中。"
 L["Innkeeper"] = "旅店老板"
-L["Installed, turned off"] = "已安装，已禁用"
 L["Interface"] = "界面"
 L["Journey"] = "旅程"
 L["Journey  %s · %s"] = "旅程  %s · %s"
@@ -124,7 +117,6 @@ L["Lifts & Tram"] = "升降梯和地铁"
 L["Lifts and the Deeprun Tram, on the world map."] = "升降梯和矿道地铁，显示在世界地图上。"
 L["Loading QuestieDB…"] = "正在载入QuestieDB…"
 L["Lock the tracker"] = "锁定追踪器"
-L["Tracker background"] = "追踪器背景"
 L["Map marks"] = "地图标记"
 L["Mark only where steps end"] = "只标记步骤终点"
 L["Minimap icon size"] = "微缩地图图标大小"
@@ -141,10 +133,8 @@ L["No location for that quest yet."] = "该任务还没有位置。"
 L["No services nearby."] = "附近没有服务。"
 L["No way there from here."] = "从这里无法到达那里。"
 L["Not discovered"] = "未发现"
-L["Not installed"] = "未安装"
 L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."] =
 	"关闭后仍保留箭头、标记、地图路线和小地图路线，但不在目标追踪器中显示旅程区块。"
-L["On"] = "开启"
 L["On board to %s"] = "乘坐前往%s"
 L["On the world map."] = "显示在世界地图上。"
 L["One line in chat the first time you log in after an update."] = "更新后首次登录时在聊天中显示一行。"
@@ -154,29 +144,20 @@ L["Open"] = "打开"
 L["Open Nearby services"] = "打开附近服务"
 L["Open settings."] = "打开设置。"
 L["Open the world map to see it."] = "打开世界地图查看。"
-L["The Forever addons are free, with nothing locked behind them. If they help, you can buy me a coffee."] =
-	"Forever 插件全部免费，没有任何付费才能使用的内容。如果它们对你有帮助，可以请我喝杯咖啡。" -- mt
 L["Turn the world map to %s to see it."] = "将世界地图切换到%s查看。" -- mt
 L["This menu needs mouse and keyboard."] = "此菜单需要鼠标和键盘。" -- mt
 L["Open these settings from the minimap."] = "从微缩地图打开这些设置。"
 L["Other Faction's Routes"] = "另一阵营的航线"
-L["Picks quests for your level and plans them into one journey."] =
-	"挑选适合你等级的任务，并规划成一段旅程。"
 L["Plan journey"] = "规划旅程"
 L["Plan journeys to Guidelime's current guide step. Guidelime's arrow steps aside while ours draws."] =
 	"规划前往 Guidelime 当前攻略步骤的旅程。在我们的箭头显示时，Guidelime 的箭头会移开。"
 L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."] =
 	"规划前往RestedXP指南目标的旅程并隐藏其箭头。无需TomTom。"
-L["Plans the cheapest route to your next profession rank."] = "规划升到下一专业等级最省钱的路线。"
-L["Plans the quickest way anywhere and guides you there, with live boat and zeppelin times."] =
-	"规划前往任何地点的最快路线并为你引路，附带船只和飞艇的实时时刻。"
 L["Play a sound when you reach the goal"] = "到达目标时播放声音"
 L["Play a sound with alerts"] = "提醒时播放声音"
 L["Plays even with the game in the background."] = "游戏在后台时也会播放。"
 L["Portal to %s"] = "前往%s的传送门"
 L["Portals"] = "传送门"
-L["Quest automation, rare alerts and merchant handling for the default UI."] =
-	"为默认界面提供任务自动化、稀有怪提醒和商人处理。"
 L["Reagents"] = "材料"
 L["Repair"] = "修理"
 L["RestedXP guide"] = "RestedXP指南"
@@ -199,8 +180,6 @@ L["Shift-click the world map or the minimap to plan a journey there."] =
 	"Shift点击世界地图或微缩地图以规划前往该处的旅程。"
 L["Shift-click to plan journeys"] = "Shift点击规划旅程"
 L["Shortest Path report"] = "Shortest Path报告"
-L["Show a quiet line where one of my other Forever addons would help. Only for addons you don't have."] =
-	"在我的其他Forever插件能帮上忙的地方显示一行不显眼的提示。仅限你尚未安装的插件。"
 L["Show boats and zeppelins"] = "显示船只和飞艇"
 L["Show direction arrow"] = "显示方向箭头"
 L["Show flight masters"] = "显示飞行管理员"
@@ -219,8 +198,6 @@ L["Show the time left under the compass"] = "在指南针下显示剩余时间"
 L["Show the way to your corpse"] = "显示前往尸体的路"
 L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =
 	"显示在附近服务旅程所前往的NPC姓名板上方。"
-L["Shows the Legacy challenges you can advance in each zone."] =
-	"显示每个地区中你可以推进的传承挑战。"
 L["Shows the arrow to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =
 	"显示箭头，可拖到任意位置；Shift拖动或方向键微调。右键点击使其复位。"
 L["Shows the compass to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =
@@ -232,7 +209,6 @@ L["Sizes transport icons on the minimap."] = "调整微缩地图上交通图标�
 L["Stable master"] = "兽栏管理员"
 L["Stop %d of %d"] = "第%d站，共%d站" -- mt
 L["Stop %d of %d: %s"] = "第%d站，共%d站：%s"
-L["Suggest my other Forever addons"] = "推荐我的其他Forever插件"
 L["Suggest quests for my level: Adventure Guide Forever"] = "推荐适合我等级的任务：Adventure Guide Forever"
 L["Teleport to %s"] = "传送到%s"
 L["The journey's time left, as the tracker shows it, beside the distance to your next turn."] =
@@ -240,11 +216,6 @@ L["The journey's time left, as the tracker shows it, beside the distance to your
 L["The map's ping when a journey you planned reaches its goal, even with the game in the background."] =
 	"你规划的旅程到达目标时地图的提示音，游戏在后台时也会播放。"
 L["The objective tracker is unavailable."] = "目标追踪栏不可用。"
-L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it into your bug report."] =
-	"文字已选中。按Ctrl+C（Mac上为Cmd+C）复制，然后粘贴到你的错误报告中。"
-L["The tracker is locked. Turn off Lock the tracker to move it."] =
-	"追踪器已锁定。关闭“锁定追踪器”即可移动它。"
-L["This addon"] = "本插件"
 L["Through %s transport, there is a way"] = "借助%s的交通工具可以到达"
 L["Through %s transport: about %d min faster"] = "借助%s的交通工具：约快%d分钟"
 L["Tracker scale"] = "追踪栏大小"
@@ -339,27 +310,16 @@ L["/path issue - report a bug or request a feature with a ready-made GitHub issu
 L["/path report - show a report to copy into a bug report"] =
 	"/path report - 显示可复制到缺陷报告中的报告"
 L["Both"] = "两者" -- mt
-L["Bug"] = "错误"
-L["Bug: "] = "错误："
-L["Copy issue link"] = "复制问题链接"
-L["Copy report"] = "复制报告"
-L["Feature request"] = "功能请求"
-L["Feature request: "] = "功能请求："
 L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs."] =
 	"本地旅行日志 — 步行约%d码；%d次旅程；%d次交通；%d次飞行；%d段传送门。"
 L["Record travel stats"] = "记录旅行统计"
-L["Report a bug or request a feature"] = "报告缺陷或请求功能"
 L["Share travel stats with guild and groups"] = "与公会和队伍共享旅行统计"
-L["The link is selected. Press Ctrl+C (Cmd+C on a Mac), then paste into a browser; GitHub opens a filled-in issue."] =
-	"链接已选中。按 Ctrl+C（Mac 上为 Cmd+C）复制，然后粘贴到浏览器中；GitHub 会打开一个已填写的问题。"
 L["Time left"] = "剩余时间" -- mt
-L["Title"] = "标题"
 L["Travel journal"] = "旅行日志"
 L["Travel milestone reached: %s"] = "达成旅行里程碑：%s"
 L["Travel stats are not ready yet."] = "旅行统计尚未准备好。"
 L["Turn this off to keep stats on this character only. Shared records are player-reported and not verified."] =
 	"关闭后统计只保留在此角色上。共享记录由玩家上报，未经核实。"
-L["What happened, or what you would like"] = "发生了什么，或你希望有什么"
 L["Party member"] = "队员" -- mt
 L["That player is not on a map you can see."] = "该玩家不在你能看到的地图上。" -- mt
 L["You have caught up with %s."] = "你已追上%s。" -- mt
@@ -415,53 +375,12 @@ L["Show boat, lift and tram departures in the tracker"] = "在追踪器中显示
 L["Hide RestedXP's arrow"] = "隐藏 RestedXP 的箭头" -- mt
 L["Hide departures"] = "隐藏班次"
 
--- Forever Leaderboards (Forever Core's shared window).
+-- Travel stats and the shared Forever Leaderboards.
 L["Completed journeys"] = "已完成的旅程"
 L["On unless you turn it off. Shares travel records with guild and group and puts you on Forever Leaderboards."] =
 	"除非你关闭，否则保持开启。通过公会、队伍、团队和副本频道分享旅行记录，并将你列入 Forever 排行榜。" -- mt
 L["total"] = "总计" -- mt
-L["Forever Leaderboards"] = "Forever 排行榜" -- mt
-L["Overall"] = "总览" -- mt
-L["Forever standing"] = "Forever 总排名" -- mt
-L["Your guild and group"] = "你的公会和队伍" -- mt
-L["Players you've met"] = "遇到过的玩家" -- mt
-L["This week"] = "本周" -- mt
-L["All time"] = "全部时间" -- mt
-L["Rank"] = "排名" -- mt
-L["Player"] = "玩家" -- mt
-L["No one has reported yet."] = "还没有人报告。" -- mt
-L["Share my progress"] = "分享我的进度" -- mt
-L["Others' values are player-reported."] = "其他玩家的数值由玩家自行报告。" -- mt
-L["Points for placing on each addon's board."] = "在每个插件的排行榜上获得名次的分数。" -- mt
-L["(you)"] = "（你）" -- mt
-L["board"] = "个榜单" -- mt
-L["boards"] = "个榜单" -- mt
-L["Uses Forever addons"] = "使用 Forever 插件" -- mt
-L["Forever: %s overall this week"] = "Forever：本周总排名 %s" -- mt
-L["Forever: %s overall"] = "Forever：总排名 %s" -- mt
-L["1st"] = "第 1 名" -- mt
-L["2nd"] = "第 2 名" -- mt
-L["3rd"] = "第 3 名" -- mt
-L["4th"] = "第 4 名" -- mt
-L["5th"] = "第 5 名" -- mt
-L["6th"] = "第 6 名" -- mt
-L["7th"] = "第 7 名" -- mt
-L["8th"] = "第 8 名" -- mt
-L[", "] = ", " -- mt
 
--- Shared debug log (Forever Core's Core/Log.lua).
-L["Debug log is off."] = "调试日志已关闭。" -- mt
-L["Debug log is on for this session."] = "本次会话已开启调试日志。" -- mt
-L["Debug log is on and pinned for this character."] = "该角色的调试日志已开启并固定。" -- mt
-L["Debug log is already on and pinned for this character."] = "该角色的调试日志已经开启并固定。" -- mt
-L["Debug log is off for this session; it is still pinned."] =
-	"本次会话已关闭调试日志，但仍保持固定。" -- mt
-L["Debug log is off and unpinned."] = "调试日志已关闭并取消固定。" -- mt
-L["No addon has attached its log yet."] = "还没有插件附加日志。" -- mt
-L["%s (last %d):"] = "%s（最近 %d 条）：" -- mt
-L["%s: no lines yet."] = "%s：还没有日志行。" -- mt
-L["Usage: /forever debug, /forever debug pin, /forever debug off, /forever debug show"] =
-	"用法：/forever debug、/forever debug pin、/forever debug off、/forever debug show" -- mt
 L["Follow roads"] = "沿道路行走" -- mt
 L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =
 	"当绕行不到一半时，步行路线会沿道路和铺装街道前进。用区域普通泥土绘制的道路尚无法识别。" -- mt

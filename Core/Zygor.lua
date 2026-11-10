@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- Zygor publishes no API for its guide state, so only the fields its own tables name are read, and only when they hold
 -- the types expected. A build with a different shape gives the waypoint its title alone rather than a wrong quest.
 -- Zygor reaches Shortest Path by setting a TomTom waypoint: its current step's goals name the quests the stop stands

@@ -11,20 +11,23 @@ local callbacks = 0
 local function advance(seconds)
  for _ = 1, math.floor(seconds * 60) do
   T = T + 1/60
-  for _, t in ipairs(tickers) do
-   if not t.cancelled and T >= t.next then t.next = T + t.every callbacks = callbacks + 1 t.fn() end
+  for index, t in ipairs(tickers) do
+   if index > coreTickers and not t.cancelled and T >= t.next then
+    t.next = T + t.every callbacks = callbacks + 1 t.fn()
+   end
   end
   for i = #pending, 1, -1 do
    if T >= pending[i].at then local p = table.remove(pending, i) callbacks = callbacks + 1 p.fn() end
   end
-  for _, f in ipairs(frames) do
+  for index = coreFrames + 1, #frames do
+   local f = frames[index]
    if f:IsVisible() and f.scripts.OnUpdate then callbacks = callbacks + 1 f.scripts.OnUpdate(f, 1/60) end
   end
  end
 end
 local function activeTickers()
  local count = 0
- for _, t in ipairs(tickers) do if not t.cancelled then count = count + 1 end end
+ for index, t in ipairs(tickers) do if index > coreTickers and not t.cancelled then count = count + 1 end end
  return count
 end
 local tracker = ShortestPathForeverObjectiveTracker
@@ -141,7 +144,7 @@ end
 first:OnMouseClickAction("LeftButton")
 first.GetEnds = nil
 assert(context["Boat to Booty Bay"] and contextScroll == 400, "a hub's Ends menu scrolls past 20 rows")
-local docks = ns.MapCanvas.Pools(WorldMapFrame)[template]
+local docks = ns.Canvas.Pools(WorldMapFrame)[template]
 local acquisitions, acquire = 0, docks.Acquire
 docks.Acquire = function(self, ...) acquisitions = acquisitions + 1 return acquire(self, ...) end
 ns.Timetable.Sighted(241, { epoch = ns.NowMs(), seen = GetServerTime(), source = "you" })
@@ -152,7 +155,7 @@ setMapShown(false)
 -- Combat leaves the existing pins alone, hidden, and replays the complete refresh exactly once after it.
 setMapShown(true)
 local combatAcquires = 0
-local poolsByKey = ns.MapCanvas.Pools(WorldMapFrame)
+local poolsByKey = ns.Canvas.Pools(WorldMapFrame)
 for _, pool in pairs(poolsByKey) do
 	local poolAcquire = pool.Acquire
 	pool.Acquire = function(self, ...)
@@ -163,14 +166,14 @@ for _, pool in pairs(poolsByKey) do
 end
 combat = true
 fireEvent("PLAYER_REGEN_DISABLED")
-assert(not ns.MapCanvas.Watch(WorldMapFrame).layer:IsShown(), "combat hides the addon's map pins")
+assert(not ns.Canvas.Watch(WorldMapFrame).layer:IsShown(), "combat hides the addon's map pins")
 ns.RefreshMap()
 ns.RefreshMinimapPins()
 refreshMap()
 assert(combatAcquires == 0, "combat map refresh must defer pin creation")
 combat = false
 fireEvent("PLAYER_REGEN_ENABLED")
-assert(ns.MapCanvas.Watch(WorldMapFrame).layer:IsShown(), "deferred map refresh must restore hidden pins after combat")
+assert(ns.Canvas.Watch(WorldMapFrame).layer:IsShown(), "deferred map refresh must restore hidden pins after combat")
 assert(active[template][1]:IsVisible(), "the docks are back")
 for _, pool in pairs(poolsByKey) do
 	pool.Acquire = nil

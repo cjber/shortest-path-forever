@@ -1,4 +1,5 @@
 -- luacheck: read globals scenario ADDON
+local ForeverCore = dofile("tests/forever_core.lua")
 -- The world map's filter menu (MENU_WORLD_MAP_TRACKING) carries two of our modifiers: the map filters (UI/Map.lua)
 -- and the Nearby services submenu (UI/Nearby.lua, also on MENU_MINIMAP_TRACKING). #161 reports a client assertion
 -- (ldebug.c:747) on opening it. This opens the real menu again and again, in and out of combat, with the mouse and
@@ -146,6 +147,7 @@ end
 
 scenario(
 	"the world map filter menu opens cleanly with both modifiers, mouse and gamepad, in and out of combat",
+	{ addons = ForeverCore.addons() },
 	function(sim)
 		local G = sim.G
 		local ns = Login(sim)
@@ -311,13 +313,13 @@ scenario(
 		assert(not G.WorldMapFrame.WorldMapTrackingOptionsButton:IsMenuOpen(), "picking a service closes the menu")
 		-- The journey the responder started still draws its stop on the map, and the stop still answers the right
 		-- button itself rather than passing it to the canvas: the pin and its click are not given up for the taint.
-		local goalPins = ns.MapCanvas.Pools(G.WorldMapFrame).ShortestPathForeverGoalPinTemplate
+		local goalPins = ns.Canvas.Pools(G.WorldMapFrame).ShortestPathForeverGoalPinTemplate
 		assert(goalPins:GetNumActive() > 0, "the picked service's stop is drawn on the map")
 		local goalPin = goalPins.active[1]
 		assert(goalPin.takesMouse, "the stop takes the mouse")
 		assert(not goalPin:ShouldMouseButtonBePassthrough("RightButton"), "the stop keeps its right click")
 		sim:input(function()
-			ns.MapCanvas.Click(goalPin, "RightButton")
+			ns.Canvas.Click(goalPin, "RightButton")
 		end)
 		assert(not ns.HasJourney(), "right-clicking the stop clears the journey")
 		sim:closeWorldMap()
@@ -333,34 +335,38 @@ for _, case in ipairs({
 	{ value = "nearby", filters = true, nearby = false },
 	{ value = "both", filters = false, nearby = false },
 }) do
-	scenario("/path menutest " .. case.value .. " leaves its modifiers out of the filter menu", function(sim)
-		local G = sim.G
-		local ns = Login(sim, { ShortestPathForeverDB = { menuTest = case.value } })
-		sim:openWorldMap(1429)
-		local button = G.WorldMapFrame.WorldMapTrackingOptionsButton
-		sim:input(function()
-			button:OpenMenu()
-		end)
-		sim:advance(0.1)
-		local entries = Walk(G, button.menuDescription)
-		local filters = Count(entries, ns.L["Flight Masters"])
-		local nearby = Count(entries, ns.L["Nearby services"])
-		assert(filters == (case.filters and 1 or 0), case.value .. ": map filters listed " .. filters .. " times")
-		assert(nearby == (case.nearby and 1 or 0), case.value .. ": Nearby services listed " .. nearby .. " times")
-		sim:input(function()
-			button:CloseMenu()
-		end)
-		sim:closeWorldMap()
+	scenario(
+		"/path menutest " .. case.value .. " leaves its modifiers out of the filter menu",
+		{ addons = ForeverCore.addons() },
+		function(sim)
+			local G = sim.G
+			local ns = Login(sim, { ShortestPathForeverDB = { menuTest = case.value } })
+			sim:openWorldMap(1429)
+			local button = G.WorldMapFrame.WorldMapTrackingOptionsButton
+			sim:input(function()
+				button:OpenMenu()
+			end)
+			sim:advance(0.1)
+			local entries = Walk(G, button.menuDescription)
+			local filters = Count(entries, ns.L["Flight Masters"])
+			local nearby = Count(entries, ns.L["Nearby services"])
+			assert(filters == (case.filters and 1 or 0), case.value .. ": map filters listed " .. filters .. " times")
+			assert(nearby == (case.nearby and 1 or 0), case.value .. ": Nearby services listed " .. nearby .. " times")
+			sim:input(function()
+				button:CloseMenu()
+			end)
+			sim:closeWorldMap()
 
-		-- The command itself: back to off, which a /reload would apply; an unknown value changes nothing.
-		sim:input(function()
-			G.SlashCmdList.SHORTESTPATHFOREVER("menutest off")
-		end)
-		assert(ns.db.menuTest == nil, "menutest off clears the test")
-		sim:input(function()
-			G.SlashCmdList.SHORTESTPATHFOREVER("menutest everything")
-		end)
-		assert(ns.db.menuTest == nil, "an unknown value changes nothing")
-		sim:expectNoErrors(ADDON)
-	end)
+			-- The command itself: back to off, which a /reload would apply; an unknown value changes nothing.
+			sim:input(function()
+				G.SlashCmdList.SHORTESTPATHFOREVER("menutest off")
+			end)
+			assert(ns.db.menuTest == nil, "menutest off clears the test")
+			sim:input(function()
+				G.SlashCmdList.SHORTESTPATHFOREVER("menutest everything")
+			end)
+			assert(ns.db.menuTest == nil, "an unknown value changes nothing")
+			sim:expectNoErrors(ADDON)
+		end
+	)
 end

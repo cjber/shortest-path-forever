@@ -1,6 +1,11 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
+
 -- rule-ignore: file-size-no-growth - the walking search and its refinement share one hot path
+
+if ns.broken then
+	return
+end
 
 -- Walking searches over PathGrid.lua's decoded maps: HPA* between ADT-tile clusters, an 8 yd grid inside them, and
 -- FindMany's abstract Dijkstra. PathJobs.lua slices them over frames.

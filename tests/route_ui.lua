@@ -14,7 +14,7 @@ mapID, zoom = 1414, 1
 ns.db.mapRoutes = true
 refreshMap()
 ns.db.flightPinScale = 50
-local flightPin = ns.MapCanvas.Pools(WorldMapFrame).ShortestPathForeverFlightPinTemplate:Acquire({
+local flightPin = ns.Canvas.Pools(WorldMapFrame).ShortestPathForeverFlightPinTemplate:Acquire({
  nodeID = 32, name = "Stormwind", position = CreateVector2D(0.5, 0.5),
  faction = Enum.FlightPathFaction.Alliance, atlasName = "taxinode_alliance",
 })

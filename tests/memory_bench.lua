@@ -135,7 +135,7 @@ release("transport geometry (open-map scenario)", function()
 	if transports then
 		wipe(upvalue(transports.RefreshAllData, "transportGeometry"))
 	end
-	for _, pool in pairs(ns.MapCanvas.Pools(WorldMapFrame)) do
+	for _, pool in pairs(ns.Canvas.Pools(WorldMapFrame)) do
 		for _, pin in ipairs(pool.active) do
 			pin.paths = nil
 		end
@@ -145,7 +145,7 @@ release("pooled stroke Lua bookkeeping (UI region storage is client-owned)", fun
 	local function strokes(owner)
 		owner.lines, owner.underlines, owner.strokes = nil, nil, nil
 	end
-	for _, pool in pairs(ns.MapCanvas.Pools(WorldMapFrame)) do
+	for _, pool in pairs(ns.Canvas.Pools(WorldMapFrame)) do
 		for _, list in ipairs({ pool.active, pool.free }) do
 			for _, pin in ipairs(list) do
 				strokes(pin)

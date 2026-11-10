@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- What a flown taxi route really took, and how much of a flight leg is left. A ride is timed from the moment the
 -- client takes control to the moment it gives control back, saved per directed flight path beside the other
 -- observations, and preferred over the shipped estimate by the planner. In flight, the remaining time comes from

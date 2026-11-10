@@ -1,7 +1,6 @@
 local driver = assert(loadfile("tests/journey_driver.lua"))()
 local ns, env = driver.ns, driver.env
 driver.load("UI/Looks.lua")
-driver.load("Core/SafeCall.lua")
 driver.load("Core/API.lua")
 driver.load("Journey/Itinerary.lua")
 local API = env.ShortestPathForever.API

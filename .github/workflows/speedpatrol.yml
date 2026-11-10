@@ -10,6 +10,8 @@ jobs:
   speedpatrol:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    env:
+      FOREVER_CORE: forever-core
     permissions:
       contents: read
       pull-requests: write
@@ -17,6 +19,16 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
+      - name: Read the ForeverCore ref
+        id: forever-core-ref
+        run: echo "ref=$(cat tools/forever-core.txt)" >> "$GITHUB_OUTPUT"
+      - name: Check out ForeverCore
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: cjber/forever-core
+          ref: ${{ steps.forever-core-ref.outputs.ref }}
+          path: forever-core
           persist-credentials: false
       # Ubuntu 24.04's release-pocket builds, which the archive never replaces.
       - name: Install LuaJIT

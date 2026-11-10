@@ -3,7 +3,7 @@
 import unittest
 from pathlib import Path
 
-from tools.lint_art import HELPERS, VENDORED, check
+from tools.lint_art import HELPERS, check
 
 
 class ArtTest(unittest.TestCase):
@@ -13,7 +13,7 @@ class ArtTest(unittest.TestCase):
 
     def test_the_helper_and_vendored_files_exist(self):
         root = Path(__file__).resolve().parent.parent
-        for path in HELPERS | VENDORED:
+        for path in HELPERS:
             self.assertTrue((root / path).is_file(), path)
 
 

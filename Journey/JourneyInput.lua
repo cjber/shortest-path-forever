@@ -1,5 +1,9 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
+
+if ns.broken then
+	return
+end
 local L = ns.L
 
 -- The bindings UI reads these names from the global namespace. They are set here from L so each locale translates
@@ -314,7 +318,7 @@ local function OnPinClick(map, action, button)
 	return false
 end
 
--- Shift-click on one of the addon's own map pins (UI/MapCanvas.lua), as OnPinClick does for the map's. The stop
+-- Shift-click on one of the addon's own map pins (UI/Canvas.lua), as OnPinClick does for the map's. The stop
 -- buttons keep their own click.
 ---@param pin SPFCanvasPin
 ---@param button string
@@ -329,7 +333,7 @@ local function OnOwnPinClick(pin, button)
 	end
 	local x, y = pin:GetPosition()
 	local info = marker == "flight" and (pin --[[@as SPFAddonFlightPin]]).poiInfo or nil
-	return JourneyToPin(pin:GetMap():GetMapID(), info, marker == "flight", x, y)
+	return JourneyToPin(pin:GetMap():GetMapID() --[[@as number]], info, marker == "flight", x, y)
 end
 
 local function AddQuestMenuEntry(root, questID)
@@ -444,17 +448,18 @@ ns.Init(function()
 		then
 			return
 		end
-		local point = ns.WorldPoint(WorldMapFrame:GetMapID(), WorldMapFrame:GetNormalizedCursorPosition())
+		local point =
+			ns.WorldPoint(WorldMapFrame:GetMapID() --[[@as number]], WorldMapFrame:GetNormalizedCursorPosition())
 		if point and OnZone(ns.InstanceEntrance(point)) then
 			ns.StartJourney(point)
 		end
 	end)
 	-- The map's click registries are Blizzard's own for addons (MapCanvasSecureUtil.CreateHandlerRegistry): it keeps
 	-- them outside the map's fields and calls each handler through securecallfunction, so the map's code never runs
-	-- the addon's. The addon's own pins take their clicks through UI/MapCanvas.lua instead.
+	-- the addon's. The addon's own pins take their clicks through UI/Canvas.lua instead.
 	WorldMapFrame:AddCanvasClickHandler(OnCanvasClick)
 	WorldMapFrame:AddGlobalPinMouseActionHandler(OnPinClick)
-	ns.MapCanvas.OnClick(OnOwnPinClick)
+	ns.Canvas.OnClick(OnOwnPinClick)
 	-- The stock handler still pings the spot, which marks where the journey goes for your group too.
 	Minimap:HookScript("OnMouseUp", OnMinimapClick)
 	Menu.ModifyMenu("MENU_QUEST_OBJECTIVE_TRACKER", function(owner, root)

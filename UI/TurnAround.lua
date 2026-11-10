@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- There is no text cue: facing away only dims the compass and the arrow. Past 120 degrees off the next point is
 -- behind enough to dim them. Once dimmed they stay dimmed until it is within 100 degrees, so a player turning on the
 -- spot gets no flicker as the cue crosses the threshold.

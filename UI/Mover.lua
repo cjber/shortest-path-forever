@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- Dragging the compass or the arrow into place: a plain drag follows the cursor as any frame does, and a Shift-drag
 -- moves it a quarter as far, for placing it to the pixel. The fine drag runs on its own frame's OnUpdate, so the
 -- dragged frame keeps its own, and stops with the drag.

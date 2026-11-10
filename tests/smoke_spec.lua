@@ -5,7 +5,7 @@
 -- representative profiles. Every action asserts no Lua error was added, and a crash is reported as
 -- "<profile> <screen/frame/setting> <verb>: <error>", attributable to the setting, frame or screen that raised it.
 -- What it cannot reach is the live client a /reload runs against: the native tracker host and the flight map's
--- real buttons are checked by tracker_host_spec.lua and taxi_spec.lua.
+-- real buttons are checked by ForeverCore's own specs and taxi_spec.lua.
 local dir = arg[0]:match("^(.*)/") or "tests"
 
 -- The map pins and the Spinner run against checksum-pinned Blizzard source, which tests/ui.sh fetches. A spec run
@@ -385,7 +385,11 @@ local function DriveSettingsPages(label)
 			local before = #openedCategories
 			button.initializer.callback()
 			if not button.target.parent then
-				assert(#openedCategories > before, "an index button opens its page")
+				if InCombatLockdown() then
+					assert(#openedCategories == before, "in combat the game keeps the settings panel shut (#444)")
+				else
+					assert(#openedCategories > before, "an index button opens its page")
+				end
 			end
 			Flush()
 		end)

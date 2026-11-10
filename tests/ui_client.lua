@@ -26,11 +26,22 @@ end
 _G.InCombatLockdown = function()
 	return combat
 end
--- The client's secure delegate runs a restricted call as the client itself; map pins set their button
--- passthrough through it (#645).
+-- The client's own restricted openers (C_Map.OpenWorldMap, C_SettingsUtil.OpenSettingsPanel) are run through
+-- CreateSecureDelegate by ForeverCore, and map pins set their button passthrough through it (#645). The stubs below
+-- record whether a call came that way, so a call site back on the restricted function fails here.
+local viaDelegate = false
 _G.CreateSecureDelegate = function(fn)
-	return fn
+	return function(...)
+		viaDelegate = true
+		local result = { pcall(fn, ...) }
+		viaDelegate = false
+		if not result[1] then
+			error(result[2], 0)
+		end
+		return unpack(result, 2)
+	end
 end
+_G.GameTooltip_Hide = function() end
 local cvars = { rotateMinimap = "0", questPOI = "1" }
 local function noop() end
 local mt = {
@@ -132,6 +143,13 @@ local function stubframe()
 	function f:GetEffectiveScale()
 		return (self.parent and self.parent.GetEffectiveScale and self.parent:GetEffectiveScale() or uiScale)
 			* (self.scale or 1)
+	end
+	function f:SetText(value)
+		self.text = value
+	end
+	-- ForeverCore's context menu sizes each row from its text; a stub width keeps the arithmetic a number.
+	function f:GetTextWidth()
+		return #tostring(self.text or "") * 6
 	end
 	function f:SetAlpha(v)
 		self.alpha = v
@@ -367,6 +385,10 @@ _G.CreateFrame = function(_, name, parent, template)
 		f:SetScript("OnShow", f.OnShow)
 		f:SetScript("OnHide", f.OnHide)
 		f:OnShow()
+	end
+	if template == "ScrollFrameTemplate" then
+		-- The template's own scroll bar child, which ForeverCore's context menu shows when it overflows.
+		f.ScrollBar = stubframe()
 	end
 	if template == "PortraitFrameTemplate" then
 		-- The members of SharedUIPanelTemplates.xml's portrait frame that addon windows use.
@@ -748,6 +770,7 @@ _G.CreateVector2D = function(x, y)
 end
 _G.C_Map = {
 	OpenWorldMap = function()
+		assert(viaDelegate, "C_Map.OpenWorldMap is restricted: open the map through ForeverCore (#333)")
 		mapOpens = mapOpens + 1
 	end,
 	GetBestMapForUnit = function()
@@ -845,7 +868,7 @@ _G.C_ChatInfo = {
 	end,
 }
 -- The settings surface, recorded so a UI check can drive the real rows and index buttons: each option's own
--- value-changed callback, and each subpage button's OpenToCategory target.
+-- value-changed callback, and the category each subpage button opens through the client's own settings opener.
 local addonSettings, settingsRows, settingsButtons, openedCategories = {}, {}, {}, {}
 _G.MinimalSliderWithSteppersMixin = { Label = { Right = 1 } }
 -- The frames Escape closes (UIParent.lua); the report and Forever family windows add themselves.
@@ -952,8 +975,8 @@ _G.Settings = setmetatable({
 			settingsRows[#settingsRows + 1] = { target = target, initializer = initializer }
 		end
 	end,
-	OpenToCategory = function(id)
-		openedCategories[#openedCategories + 1] = id
+	OpenToCategory = function()
+		error("Blizzard's Settings.OpenToCategory is restricted: open settings through ForeverCore (#333)")
 	end,
 }, mt)
 _G.CreateSettingsButtonInitializer = function(name, description, callback, tags, addSearchTags)
@@ -966,6 +989,13 @@ _G.CreateSettingsButtonInitializer = function(name, description, callback, tags,
 		addSearchTags = addSearchTags,
 	}
 end
+-- The client's own restricted settings opener, reached only through ForeverCore's secure delegate.
+_G.C_SettingsUtil = {
+	OpenSettingsPanel = function(id)
+		assert(viaDelegate, "C_SettingsUtil.OpenSettingsPanel is restricted: open settings through ForeverCore (#333)")
+		openedCategories[#openedCategories + 1] = id
+	end,
+}
 -- contextScroll: the extent the last context menu scrolls past (SetScrollMode), nil when it does not scroll.
 local menus, context, contextScroll = {}, {}, nil
 _G.MenuUtil = {

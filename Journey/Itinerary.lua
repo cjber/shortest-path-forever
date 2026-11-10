@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- Journey searches only the way to the current stop. Each later hop between stops is planned here with the
 -- estimate's planner (no endpoint searches, about 2 ms cold), then its walking legs are searched on the walking
 -- maps like the current leg's. One piece of work runs at a time, and only on frames the journey's own searches

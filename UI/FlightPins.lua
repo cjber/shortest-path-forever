@@ -1,8 +1,12 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
+
+if ns.broken then
+	return
+end
 local L = ns.L
 
--- Flight points on the world map: the addon's own pins (UI/MapCanvas.lua) in the stock flight point's place.
+-- Flight points on the world map: the addon's own pins (UI/Canvas.lua) in the stock flight point's place.
 local FLIGHT_TEMPLATE = "ShortestPathForeverFlightPinTemplate"
 local PIN_SIZE = 20
 ---@type SPFCanvasPool
@@ -16,7 +20,7 @@ local flightPins
 ---@field HighlightTexture Texture
 ---@field SuperTrackMarker Texture
 ---@field poiInfo {nodeID: number, name: string, isUndiscovered: boolean, atlasName: string, textureKit?: string}
-local FlightPin = CreateFromMixins(ns.MapCanvas.PinMixin)
+local FlightPin = CreateFromMixins(ns.Canvas.PinMixin)
 
 function FlightPin:OnLoad()
 	self:UseFrameLevelType("PIN_FRAME_LEVEL_FLIGHT_POINT")
@@ -57,12 +61,12 @@ end
 -- The right button opens the menu. Above a zone the left button goes through to the map, to zoom in, as the stock
 -- pin's click propagation does there; only that button, so a right click is the menu's alone.
 function FlightPin:ShouldMouseButtonBePassthrough(button)
-	return button == "LeftButton" and not SuperTrackMap(self:GetMap():GetMapID())
+	return button == "LeftButton" and not SuperTrackMap(self:GetMap():GetMapID() --[[@as number]])
 end
 
 function FlightPin:OnMouseClickAction(button)
 	if button == "RightButton" then
-		ns.ContextMenu(self, function(_, root)
+		ForeverCore.ContextMenu(self, function(_, root)
 			root:CreateCheckbox(L["Flight path known"], function()
 				local known = ns.KnownTaxiNodes()
 				return known and known[self.poiInfo.nodeID] == true
@@ -72,7 +76,9 @@ function FlightPin:OnMouseClickAction(button)
 				ns.RefreshMap()
 			end)
 		end)
-	elseif button == "LeftButton" and SuperTrackMap(self:GetMap():GetMapID()) then
+	elseif
+		button == "LeftButton" and SuperTrackMap(self:GetMap():GetMapID() --[[@as number]])
+	then
 		if self:UpdateSuperTracked() then
 			C_SuperTrack.ClearAllSuperTracked()
 		else
@@ -243,7 +249,7 @@ end
 
 ns.Init(function()
 	flightPins =
-		ns.MapCanvas.Pool(WorldMapFrame, FLIGHT_TEMPLATE, FlightPin, { template = FLIGHT_TEMPLATE, marker = "flight" })
+		ns.Canvas.Pool(WorldMapFrame, FLIGHT_TEMPLATE, FlightPin, { template = FLIGHT_TEMPLATE, marker = "flight" })
 	local taxiEvents = CreateFrame("Frame")
 	taxiEvents:RegisterEvent("TAXI_NODE_STATUS_CHANGED")
 	taxiEvents:RegisterEvent("TAXIMAP_OPENED")

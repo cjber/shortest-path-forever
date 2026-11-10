@@ -1,5 +1,9 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
+
+if ns.broken then
+	return
+end
 local L = ns.L
 
 ---@type SPFTracker
@@ -22,9 +26,8 @@ local module
 local ModuleMixin = { headerText = L["Boats"] }
 local HEADER = { boat = L["Boats"], zeppelin = L["Boats"], lift = L["Lifts"], tram = L["Deeprun Tram"] }
 
--- The shared host builds every section header's menu (UI/TrackerHost.lua) and this addon's departures option is not
--- its business, so the one menu opener it calls is decorated here: a section showing departures also offers to hide
--- them. The host's own attach and lock entries are built first and stay as they are.
+-- The shared column builds every section header's menu and offers this addon's own entries through
+-- AddHeaderMenuEntries, below. A section showing departures also offers to hide them.
 local function HasDepartures()
 	return module ~= nil and (module.dockID ~= nil or module.riding ~= nil)
 end
@@ -33,22 +36,18 @@ local function HideDepartures()
 	ns.SetOption("tracker", false)
 end
 
-local openMenu = ns.ContextMenu
-if type(openMenu) == "function" then
-	---@diagnostic disable-next-line: duplicate-set-field -- the host calls this field; the wrapper adds one entry
-	ns.ContextMenu = function(owner, generator)
-		return openMenu(owner, function(menuOwner, root)
-			generator(menuOwner, root)
-			if HasDepartures() and module.GetContextMenuParent and owner == module:GetContextMenuParent() then
-				root:CreateButton(L["Hide departures"], HideDepartures)
-			end
-		end)
-	end
-end
-
 local function OpenDockMap(dockID)
 	local location = dockID and ns.DockLocation(dockID)
 	ns.OpenWorldMap(location and location.uiMap)
+end
+
+-- The shared column calls this while building a section header's menu: this addon's own entry is the departures
+-- switch, offered only while the section shows departures.
+---@param root table
+function ModuleMixin.AddHeaderMenuEntries(_, root)
+	if HasDepartures() then
+		root:CreateButton(L["Hide departures"], HideDepartures)
+	end
 end
 
 function ModuleMixin:OnBlockHeaderClick(block, button)
@@ -56,7 +55,7 @@ function ModuleMixin:OnBlockHeaderClick(block, button)
 		if button == "LeftButton" then
 			ns.ToggleJourneyGuide()
 		elseif button == "RightButton" then
-			ns.ContextMenu(block, function(_, root)
+			ForeverCore.ContextMenu(block, function(_, root)
 				root:CreateCheckbox(L["Guide me"], ns.IsJourneyGuided, ns.ToggleJourneyGuide)
 				root:CreateButton(L["Show on map"], ns.ShowJourneyMap)
 				root:CreateButton(L["Resume RestedXP guide"], function()
@@ -73,8 +72,8 @@ function ModuleMixin:OnBlockHeaderClick(block, button)
 				end
 				-- The shared column can be dragged anywhere once it is let go of the quest tracker (also in Settings). The
 				-- host switches only out of combat, so in combat the entry is left out rather than seeming to do nothing.
-				local host = ns.TrackerHost
-				if host and host.SetAttached and host.IsAttachedToQuestTracker and not InCombatLockdown() then
+				local host = ForeverCore.TrackerHost --[[@as ForeverTrackerHostAPI]]
+				if not InCombatLockdown() then
 					root:CreateCheckbox(L["Attach to quest tracker"], host.IsAttachedToQuestTracker, function()
 						host.SetAttached(not host.IsAttachedToQuestTracker())
 					end)
@@ -109,7 +108,7 @@ local ICON_SIZE = 12
 -- every other tracker module shares.
 local LINE_TEMPLATE = "ShortestPathForeverTrackerLineTemplate"
 
----@param color colorRGBA
+---@param color ForeverObjectiveTrackerColor|colorRGBA
 ---@param text string
 ---@return string
 local function ColorText(color, text)
@@ -221,7 +220,7 @@ function ModuleMixin:LayoutContents()
 					ns.FamilyHints.OpenFooter()
 					return
 				end
-				ns.ContextMenu(line, function(_, root)
+				ForeverCore.ContextMenu(line, function(_, root)
 					root:CreateButton(L["Complete this step"], function()
 						local index = row.key
 						if type(index) == "number" then
@@ -499,7 +498,14 @@ function ns.RefreshTracker()
 end
 
 local function Attach()
-	ForeverTrackerHost.Attach(module)
+	-- The old tracker table this addon kept before ForeverCore owned the column, offered once so the player keeps the
+	-- scale, lock and position they chose. The host copies what it can into ForeverCoreDB, then the key goes.
+	module.safeCall = ns.core.SafeCall
+	module.legacySettings = ns.db and ns.db.trackerHost
+	ForeverCore.TrackerHost.Attach(module)
+	if ns.db then
+		ns.db.trackerHost = nil
+	end
 end
 
 ns.Init(function()

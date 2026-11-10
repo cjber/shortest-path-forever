@@ -227,8 +227,8 @@ local env = setmetatable({
 env.CreateFromMixins = function()
 	return {}
 end
--- UI/Map.lua's pins build on UI/MapCanvas.lua, which the compass never reaches.
-ns.MapCanvas = { PinMixin = {} }
+-- UI/Map.lua's pins build on UI/Canvas.lua, which the compass never reaches.
+ns.Canvas = { PinMixin = {} }
 ns.Init = function() end
 local stubs = { DockKind = ns.DockKind, DockPoint = ns.DockPoint }
 for _, file in ipairs({

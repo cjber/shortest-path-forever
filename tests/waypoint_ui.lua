@@ -37,7 +37,7 @@ local function nextFrame()
 end
 local function refreshMap()
  -- MapCanvas refreshes every provider; native provider ordering must not matter. The addon's own layers redraw on
- -- the next frame of its view (UI/MapCanvas.lua), after the map's own show.
+ -- the next frame of its view (UI/Canvas.lua), after the map's own show.
  for provider in pairs(WorldMapFrame.dataProviders) do provider:RefreshAllData() end
  setMapShown(false)
  setMapShown(true)
@@ -498,7 +498,8 @@ _G.WaypointUIAPI.Navigation.NewUserNavigation = function() error("renamed member
 wStart()
 assert(ns.IsJourneyGuided(), "guidance continues when the handover fails")
 assert(waypointCalls == 0 and cleared == 0, "never falls back to writing the waypoint")
--- ns.SafeCall reports the contained failure to the error report and the game's handler; drop that one handled report
+-- ns.core.SafeCall reports the contained failure to the error report and the game's handler; drop that
+-- one handled report
 -- so this check's own bookkeeping matches the other cases.
 errors = {}
 ns.ClearJourney()

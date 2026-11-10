@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- The flight points this character knows, for the journey planner and the map's flight master pins. Only the
 -- classic flight-master list says which nodes a character can fly to: slots 1 to NumTaxiNodes(), each with
 -- TaxiNodeGetType and TaxiNodeName, are the entries the stock TaxiFrame draws. That list holds a slot for every

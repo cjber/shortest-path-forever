@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check the packager's output before an upload (forever_tools.package): every file the TOC and XML load ships,
 nothing from development does, a licence file and THIRD_PARTY.md do (with README's `## Credits` and THIRD_PARTY's
-`## Ideas and contributors`, WFA-10 and WFA-31), and the smoke and shared Forever family specs pass on the packaged
+`## Ideas and contributors`, WFA-10 and WFA-31), and the smoke and core dependency specs pass on the packaged
 files.
 
     printf 'Package check\\n' > .release-notes.md
@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parent.parent
 # The smoke spec fetches the pinned Blizzard UI fixture with tools/fetch_blizzard_ui.sh on first run.
 POLICY = package.Policy(
     addons=("ShortestPathForever",),
-    specs=("tests/smoke_spec.lua", "tests/forever_family_spec.lua"),
+    specs=("tests/smoke_spec.lua", "tests/core_dependency_spec.lua"),
     support=("tests", "tools/fetch_blizzard_ui.sh"),
 )
 

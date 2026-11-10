@@ -52,12 +52,9 @@ L["Class trainer"] = "Lehrer für eine Klasse"
 L["Clear journey"] = "Reise löschen"
 L["Click to show %s"] = "Klicken, um %s zu zeigen"
 L["Click to show where they go"] = "Klicken, um die Ziele zu zeigen"
-L["Close"] = "Schließen"
 L["Compass background"] = "Kompasshintergrund"
 L["Compass scale"] = "Kompassgröße"
 L["Complete this step"] = "Diesen Schritt abschließen"
-L["Copy link"] = "Link kopieren"
-L["Copy the address, then open it in your browser."] = "Kopiert die Adresse und öffnet sie dann in Eurem Browser."
 L["Crosses %s (level %s)"] = "Durchquert %s (Stufe %s)"
 L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."] =
 	"Dunkelt den Boden hinter dem Kompass ab, damit seine Markierungen auf Schnee oder Sand lesbar bleiben. 0 % zeigt nichts."
@@ -66,8 +63,6 @@ L["Distance"] = "Entfernung" -- mt
 L["Distances in metres"] = "Entfernungen in Metern"
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
 	"Anlegestellen, Aufzüge, die Bahn und Portale. Auch unter Transport im Aufspürmenü der Minikarte."
-L["Don't suggest this again"] = "Nicht mehr vorschlagen"
-L["Drag to move"] = "Ziehen zum Verschieben"
 L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] =
 	"Ziehen zum Verschieben; Umschalt-Ziehen oder Pfeiltasten zum Feinjustieren. Rechtsklick zum Zurücksetzen."
 L["Drink"] = "Getränke"
@@ -86,7 +81,6 @@ L["Follow RestedXP guides"] = "RestedXP-Leitfäden folgen"
 L["Follow TomTom's arrow"] = "Dem Pfeil von TomTom folgen"
 L["Food"] = "Essen"
 L["Forever addons"] = "Forever-Addons"
-L["Forever tracker"] = "Forever-Verfolgung"
 L["Friendly nameplates must be on to see them."] = "Namensplaketten von Verbündeten müssen an sein, um sie zu sehen."
 L["Go through to %s"] = "Hindurch nach %s"
 L["Guidance"] = "Führung"
@@ -99,7 +93,6 @@ L["Hostile town: %s"] = "Feindliche Siedlung: %s"
 L["In the objective tracker while you are near a dock, lift or tram."] =
 	"In der Questverfolgung, während Ihr nahe einer Anlegestelle, eines Aufzugs oder der Bahn seid."
 L["Innkeeper"] = "Gastwirt"
-L["Installed, turned off"] = "Installiert, deaktiviert"
 L["Interface"] = "Interface"
 L["Journey"] = "Reise"
 L["Journey  %s · %s"] = "Reise  %s · %s"
@@ -124,7 +117,6 @@ L["Lifts & Tram"] = "Aufzüge & Bahn"
 L["Lifts and the Deeprun Tram, on the world map."] = "Aufzüge und die Tiefenbahn, auf der Weltkarte."
 L["Loading QuestieDB…"] = "QuestieDB wird geladen…"
 L["Lock the tracker"] = "Verfolgung sperren"
-L["Tracker background"] = "Hintergrund der Verfolgung"
 L["Map marks"] = "Kartenmarkierungen"
 L["Mark only where steps end"] = "Nur Schrittenden markieren"
 L["Minimap icon size"] = "Größe der Minikartensymbole"
@@ -141,10 +133,8 @@ L["No location for that quest yet."] = "Noch kein Ort für diese Quest."
 L["No services nearby."] = "Keine Dienste in der Nähe."
 L["No way there from here."] = "Von hier gibt es keinen Weg dorthin."
 L["Not discovered"] = "Nicht entdeckt"
-L["Not installed"] = "Nicht installiert"
 L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."] =
 	"Aus lässt Pfeil, Markierung, Kartenlinie und Minikartenroute bestehen, ohne Reiseblock in der Verfolgung."
-L["On"] = "An"
 L["On board to %s"] = "An Bord nach %s"
 L["On the world map."] = "Auf der Weltkarte."
 L["One line in chat the first time you log in after an update."] =
@@ -155,30 +145,20 @@ L["Open"] = "Öffnen"
 L["Open Nearby services"] = "Dienste in der Nähe öffnen"
 L["Open settings."] = "Optionen öffnen."
 L["Open the world map to see it."] = "Öffnet die Weltkarte, um es zu sehen."
-L["The Forever addons are free, with nothing locked behind them. If they help, you can buy me a coffee."] =
-	"Die Forever-Addons sind kostenlos, und nichts ist hinter einer Bezahlung versteckt. Wenn sie Euch helfen, könnt Ihr mir einen Kaffee spendieren." -- mt
 L["Turn the world map to %s to see it."] = "Dreht die Weltkarte auf %s, um es zu sehen." -- mt
 L["This menu needs mouse and keyboard."] = "Dieses Menü braucht Maus und Tastatur." -- mt
 L["Open these settings from the minimap."] = "Diese Optionen über die Minikarte öffnen."
 L["Other Faction's Routes"] = "Routen der anderen Fraktion"
-L["Picks quests for your level and plans them into one journey."] =
-	"Wählt Quests für Eure Stufe und plant sie zu einer Reise."
 L["Plan journey"] = "Reise planen"
 L["Plan journeys to Guidelime's current guide step. Guidelime's arrow steps aside while ours draws."] =
 	"Reisen zum aktuellen Schritt des Guidelime-Leitfadens planen. Der Pfeil von Guidelime weicht, solange unserer gezeichnet wird."
 L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."] =
 	"Reisen zu Zielen von RestedXP-Leitfäden planen und deren Pfeil ausblenden. Kein TomTom nötig."
-L["Plans the cheapest route to your next profession rank."] =
-	"Plant den günstigsten Weg zu Eurem nächsten Berufsrang."
-L["Plans the quickest way anywhere and guides you there, with live boat and zeppelin times."] =
-	"Plant den schnellsten Weg überallhin und führt Euch dorthin, mit aktuellen Zeiten für Schiffe und Zeppeline."
 L["Play a sound when you reach the goal"] = "Ton abspielen, wenn Ihr das Ziel erreicht"
 L["Play a sound with alerts"] = "Ton bei Warnungen abspielen"
 L["Plays even with the game in the background."] = "Auch, wenn das Spiel im Hintergrund läuft."
 L["Portal to %s"] = "Portal nach %s"
 L["Portals"] = "Portale"
-L["Quest automation, rare alerts and merchant handling for the default UI."] =
-	"Questautomatik, Warnungen bei seltenen Gegnern und Händlerhilfe für die Standardoberfläche."
 L["Reagents"] = "Reagenzien"
 L["Repair"] = "Reparieren"
 L["RestedXP guide"] = "RestedXP-Leitfaden"
@@ -202,8 +182,6 @@ L["Shift-click the world map or the minimap to plan a journey there."] =
 	"Umschaltklick auf die Weltkarte oder die Minikarte plant eine Reise dorthin."
 L["Shift-click to plan journeys"] = "Umschaltklick plant Reisen"
 L["Shortest Path report"] = "Shortest Path-Bericht"
-L["Show a quiet line where one of my other Forever addons would help. Only for addons you don't have."] =
-	"Zeigt eine unauffällige Zeile, wo eines meiner anderen Forever-Addons helfen würde. Nur für Addons, die Ihr nicht habt."
 L["Show boats and zeppelins"] = "Schiffe und Zeppeline zeigen"
 L["Show direction arrow"] = "Richtungspfeil zeigen"
 L["Show flight masters"] = "Flugmeister zeigen"
@@ -223,8 +201,6 @@ L["Show the time left under the compass"] = "Restzeit unter dem Kompass zeigen"
 L["Show the way to your corpse"] = "Weg zu Eurem Leichnam zeigen"
 L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =
 	"Zeigt die Pfeile über der Namensplakette des NPC, zu dem eine Reise zu Diensten in der Nähe führt."
-L["Shows the Legacy challenges you can advance in each zone."] =
-	"Zeigt die Vermächtnis-Herausforderungen, die Ihr in jeder Zone voranbringen könnt."
 L["Shows the arrow to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =
 	"Zeigt den Pfeil zum freien Verschieben; Umschalt-Ziehen oder die Pfeiltasten justieren ihn fein. Rechtsklick setzt ihn zurück."
 L["Shows the compass to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =
@@ -236,7 +212,6 @@ L["Sizes transport icons on the minimap."] = "Größe der Transportsymbole auf d
 L["Stable master"] = "Stallmeister"
 L["Stop %d of %d"] = "Halt %d von %d" -- mt
 L["Stop %d of %d: %s"] = "Halt %d von %d: %s"
-L["Suggest my other Forever addons"] = "Meine anderen Forever-Addons vorschlagen"
 L["Suggest quests for my level: Adventure Guide Forever"] =
 	"Quests für meine Stufe vorschlagen: Adventure Guide Forever"
 L["Teleport to %s"] = "Teleport nach %s"
@@ -245,11 +220,6 @@ L["The journey's time left, as the tracker shows it, beside the distance to your
 L["The map's ping when a journey you planned reaches its goal, even with the game in the background."] =
 	"Das Signal der Karte, wenn eine von Euch geplante Reise ihr Ziel erreicht, auch wenn das Spiel im Hintergrund läuft."
 L["The objective tracker is unavailable."] = "Die Questverfolgung ist nicht verfügbar."
-L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it, then paste it into your bug report."] =
-	"Der Text ist markiert. Drückt Strg+C (Cmd+C auf dem Mac) zum Kopieren und fügt ihn dann in Euren Fehlerbericht ein."
-L["The tracker is locked. Turn off Lock the tracker to move it."] =
-	"Die Verfolgung ist gesperrt. Schaltet Verfolgung sperren aus, um sie zu verschieben."
-L["This addon"] = "Dieses Addon"
 L["Through %s transport, there is a way"] = "Mit Transportmitteln der %s gibt es einen Weg"
 L["Through %s transport: about %d min faster"] = "Mit Transportmitteln der %s: etwa %d Min. schneller"
 L["Tracker scale"] = "Größe der Verfolgung"
@@ -344,27 +314,16 @@ L["/path issue - report a bug or request a feature with a ready-made GitHub issu
 L["/path report - show a report to copy into a bug report"] =
 	"/path report - zeigt einen Bericht zum Kopieren in einen Fehlerbericht"
 L["Both"] = "Beides" -- mt
-L["Bug"] = "Fehler"
-L["Bug: "] = "Fehler: "
-L["Copy issue link"] = "Issue-Link kopieren"
-L["Copy report"] = "Bericht kopieren"
-L["Feature request"] = "Funktionswunsch"
-L["Feature request: "] = "Funktionswunsch: "
 L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs."] =
 	"Lokales Reisetagebuch — ca. %d Yards zu Fuß; %d Reisen; %d Transporte; %d Flüge; %d Portalstrecken."
 L["Record travel stats"] = "Reisestatistik aufzeichnen"
-L["Report a bug or request a feature"] = "Fehler melden oder Funktion wünschen"
 L["Share travel stats with guild and groups"] = "Reisestatistik mit Gilde und Gruppen teilen"
-L["The link is selected. Press Ctrl+C (Cmd+C on a Mac), then paste into a browser; GitHub opens a filled-in issue."] =
-	"Der Link ist markiert. Drückt Strg+C (Cmd+C auf dem Mac) und fügt ihn dann in einen Browser ein; GitHub öffnet ein ausgefülltes Issue."
 L["Time left"] = "Restzeit" -- mt
-L["Title"] = "Titel"
 L["Travel journal"] = "Reisetagebuch"
 L["Travel milestone reached: %s"] = "Reisemeilenstein erreicht: %s"
 L["Travel stats are not ready yet."] = "Die Reisestatistik ist noch nicht bereit."
 L["Turn this off to keep stats on this character only. Shared records are player-reported and not verified."] =
 	"Ausschalten, um die Statistik nur für diesen Charakter zu behalten. Geteilte Einträge stammen von Spielern und sind nicht geprüft."
-L["What happened, or what you would like"] = "Was passiert ist oder was Ihr Euch wünscht"
 L["Party member"] = "Gruppenmitglied" -- mt
 L["That player is not on a map you can see."] = "Dieser Spieler ist nicht auf einer Karte, die Ihr sehen könnt." -- mt
 L["You have caught up with %s."] = "Du hast %s eingeholt." -- mt
@@ -421,55 +380,12 @@ L["Show boat, lift and tram departures in the tracker"] =
 L["Hide RestedXP's arrow"] = "RestedXPs Pfeil ausblenden" -- mt
 L["Hide departures"] = "Abfahrten ausblenden"
 
--- Forever Leaderboards (Forever Core's shared window).
+-- Travel stats and the shared Forever Leaderboards.
 L["Completed journeys"] = "Abgeschlossene Reisen"
 L["On unless you turn it off. Shares travel records with guild and group and puts you on Forever Leaderboards."] =
 	"Standardmäßig an, bis Ihr es ausschaltet. Teilt Reiseaufzeichnungen über Gilden-, Gruppen-, Schlachtzugs- und Instanzkanäle und setzt Euch auf die Forever-Ranglisten." -- mt
 L["total"] = "gesamt" -- mt
-L["Forever Leaderboards"] = "Forever-Ranglisten" -- mt
-L["Overall"] = "Gesamt" -- mt
-L["Forever standing"] = "Forever-Gesamtwertung" -- mt
-L["Your guild and group"] = "Eure Gilde und Gruppe" -- mt
-L["Players you've met"] = "Spieler, denen Ihr begegnet seid" -- mt
-L["This week"] = "Diese Woche" -- mt
-L["All time"] = "Gesamte Zeit" -- mt
-L["Rank"] = "Rang" -- mt
-L["Player"] = "Spieler" -- mt
-L["No one has reported yet."] = "Niemand hat bisher berichtet." -- mt
-L["Share my progress"] = "Fortschritt teilen" -- mt
-L["Others' values are player-reported."] = "Werte anderer Spieler werden von ihnen gemeldet." -- mt
-L["Points for placing on each addon's board."] = "Punkte für einen Platz auf der Liste jedes Addons." -- mt
-L["(you)"] = "(Ihr)" -- mt
-L["board"] = "Liste" -- mt
-L["boards"] = "Listen" -- mt
-L["Uses Forever addons"] = "Verwendet Forever-Addons" -- mt
-L["Forever: %s overall this week"] = "Forever: %s insgesamt diese Woche" -- mt
-L["Forever: %s overall"] = "Forever: %s insgesamt" -- mt
-L["1st"] = "1." -- mt
-L["2nd"] = "2." -- mt
-L["3rd"] = "3." -- mt
-L["4th"] = "4." -- mt
-L["5th"] = "5." -- mt
-L["6th"] = "6." -- mt
-L["7th"] = "7." -- mt
-L["8th"] = "8." -- mt
-L[", "] = ", " -- mt
 
--- Shared debug log (Forever Core's Core/Log.lua).
-L["Debug log is off."] = "Das Debug-Protokoll ist aus." -- mt
-L["Debug log is on for this session."] = "Das Debug-Protokoll ist für diese Sitzung an." -- mt
-L["Debug log is on and pinned for this character."] =
-	"Das Debug-Protokoll ist an und für diesen Charakter dauerhaft aktiviert." -- mt
-L["Debug log is already on and pinned for this character."] =
-	"Das Debug-Protokoll ist bereits an und für diesen Charakter dauerhaft aktiviert." -- mt
-L["Debug log is off for this session; it is still pinned."] =
-	"Das Debug-Protokoll ist für diese Sitzung aus; es bleibt dauerhaft aktiviert." -- mt
-L["Debug log is off and unpinned."] = "Das Debug-Protokoll ist aus und nicht mehr dauerhaft aktiviert." -- mt
-L["No addon has attached its log yet."] = "Noch kein Addon hat sein Protokoll angehängt." -- mt
-L["%s (last %d):"] = "%s (letzte %d):" -- mt
-L["%s: no lines yet."] = "%s: noch keine Zeilen." -- mt
-L["Usage: /forever debug, /forever debug pin, /forever debug off, /forever debug show"] =
-	"Verwendung: /forever debug, /forever debug pin, /forever debug off, /forever debug show" -- mt
 L["Follow roads"] = "Straßen folgen" -- mt
 L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =
 	"Wege bleiben auf Straßen und gepflasterten Wegen, wenn das den Weg um weniger als die Hälfte verlängert. Straßen, die mit dem schlichten Erdboden einer Zone gemalt wurden, sind nicht bekannt." -- mt

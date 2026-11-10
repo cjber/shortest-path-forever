@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- With "Keep journeys after a reload" on, a journey you planned yourself (a map or minimap click, /way, a quest,
 -- Nearby services) survives a /reload or logging back in: its goal is kept in charDB.journey and started again once
 -- the world is up and combat is over. Addons that own their journeys (Adventure Guide, TomTom's arrow, RestedXP,

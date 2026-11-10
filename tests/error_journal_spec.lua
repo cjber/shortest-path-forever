@@ -1,18 +1,26 @@
 -- Run from the repository root: luajit tests/error_journal_spec.lua
--- The shared error journal (Core/SafeCall.lua) and debug log (Core/Log.lua) live in ShortestPathForeverDB, attached at
--- ADDON_LOADED once the saved variables and their defaults are in, so the report lists earlier sessions' errors and the
--- lines that led to them after a /reload.
+-- ForeverCore's shared error journal and debug log live in ShortestPathForeverDB, attached at ADDON_LOADED once the
+-- saved variables and their defaults are in, so the report lists earlier sessions' errors and the lines that led to
+-- them after a /reload.
+local ForeverCore = dofile("tests/forever_core.lua")
+
 local function loadCore(saved)
 	local frames = {}
-	-- Core/SafeCall.lua installs its error handler and event frame once per addon; this stand-in client counts this
-	-- copy as already installed, so the frame below is the one Core.lua makes for ADDON_LOADED.
-	ForeverErrorJournal = { installed = { ShortestPathForever = true } }
 	local env = setmetatable({
 		ShortestPathForeverDB = saved,
+		SlashCmdList = {},
+		C_Timer = {
+			NewTicker = function()
+				return { Cancel = function() end }
+			end,
+		},
+		IsPlayerMoving = function()
+			return false
+		end,
 		GetServerTime = function()
 			return 100
 		end,
-		-- The client's clock for the shared log's lines (Core/Log.lua), fixed so the spec is deterministic.
+		-- The client's clock for the shared log's lines, fixed so the spec is deterministic.
 		GetTime = function()
 			return 1.5
 		end,
@@ -41,11 +49,20 @@ local function loadCore(saved)
 			return frame
 		end,
 	}, { __index = _G })
+	ForeverCore.load(env, "ForeverCore")
+	local function fire(event, name)
+		for _, frame in ipairs(frames) do
+			if frame.OnEvent then
+				frame:OnEvent(event, name)
+			end
+		end
+	end
+	fire("ADDON_LOADED", "ForeverCore")
 	local ns = { Model = {} }
-	for _, file in ipairs({ "Locales/enUS.lua", "Core/SafeCall.lua", "Core/Log.lua", "Core/Core.lua" }) do
+	for _, file in ipairs({ "Locales/enUS.lua", "Core/Core.lua" }) do
 		setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
 	end
-	frames[1]:OnEvent("ADDON_LOADED", "ShortestPathForever")
+	fire("ADDON_LOADED", "ShortestPathForever")
 	return ns
 end
 
@@ -56,8 +73,8 @@ local db = assert(ns.db, "the saved table was not made")
 assert(type(db.errors) == "table", "the saved table has no error journal")
 assert(type(db.log) == "table", "the saved table has no debug log")
 
--- An error caught by ns.SafeCall is recorded in the saved journal, which is where the next session reads it.
-local ok = ns.SafeCall("error journal spec", function()
+-- An error caught by ns.core.SafeCall is recorded in the saved journal, which is where the next session reads it.
+local ok = ns.core.SafeCall("error journal spec", function()
 	error("error journal spec failure")
 end)
 assert(ok == false, "the failure was not caught")
@@ -72,7 +89,7 @@ assert(entry.kind == "error" and entry.count == 1, "the journal entry is not one
 assert(type(entry.firstSeen) == "number" and type(entry.lastSeen) == "number", "the journal entry has no times")
 
 -- The log rides in the same saved table, so the lines that led to a bug survive a /reload too.
-ns.Log("info", "error journal spec", "a line before the reload")
+ns.core.Log("info", "error journal spec", "a line before the reload")
 local logged
 for _, line in ipairs(db.log.lines or {}) do
 	if line:find("a line before the reload", 1, true) then
@@ -106,7 +123,7 @@ assert(reloaded.db == saved, "the saved table was replaced")
 assert(reloaded.db.errors == saved.errors, "the journal is not the saved errors table")
 assert(reloaded.db.log == saved.log, "the log is not the saved log table")
 local earlier
-for _, candidate in ipairs(reloaded.CaughtErrors()) do
+for _, candidate in ipairs(reloaded.core.CaughtErrors()) do
 	if candidate.message == "error from an earlier session" then
 		earlier = candidate
 	end
@@ -114,7 +131,7 @@ end
 assert(earlier and earlier.fromSession == false, "an earlier session's error is missing from the report")
 assert(earlier.count == 2, "the earlier session's count was lost")
 local kept
-for _, line in ipairs(reloaded.LogLines(10)) do
+for _, line in ipairs(reloaded.core.LogLines(10)) do
 	if line:find("line from an earlier session", 1, true) then
 		kept = line
 	end

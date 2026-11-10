@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- Boat and zeppelin routes on the world map, drawn by Route.lua's painter and shown while their dock is hovered.
 local TRANSPORT_TEMPLATE = "ShortestPathForeverTransportPinTemplate"
 local UNDER_ALPHA = ns.RouteUnderAlpha
@@ -122,9 +126,9 @@ function ns.RefreshTransportRoutes()
 end
 
 ns.Init(function()
-	transportPins = ns.MapCanvas.Pool(WorldMapFrame, TRANSPORT_TEMPLATE, TransportPin)
+	transportPins = ns.Canvas.Pool(WorldMapFrame, TRANSPORT_TEMPLATE, TransportPin)
 	transportProvider = Transports
-	ns.MapCanvas.Watch(WorldMapFrame, function(_, what)
+	ns.Canvas.Watch(WorldMapFrame, function(_, what)
 		if what == "show" or what == "map" then
 			transportProvider:RefreshAllData()
 		end

@@ -325,7 +325,8 @@ ns.NearbyServices = {
 	end,
 	OnReady = function() end,
 }
-ns.QuestLogTabs = {
+ns.core = { SafeCall = function() end }
+local QuestLogTabs = {
 	Register = function(key, spec)
 		ns.registered = { key = key, spec = spec }
 		ns.tab = { Icon = region() }
@@ -407,6 +408,7 @@ local env = setmetatable({
 	end,
 }, { __index = _G })
 env._G = env
+env.ForeverCore = { QuestLogTabs = QuestLogTabs }
 setfenv(assert(loadfile("UI/ServicesPanel.lua")), env)("ShortestPathForever", ns)
 assert(loaded, "the panel waits for Blizzard_WorldMap")
 loaded()
@@ -422,7 +424,7 @@ assert(panel and not panel:IsShown(), "the panel starts hidden")
 local search = assert(byTemplate("SearchBoxTemplate"), "a search box")
 local scroll = assert(byTemplate("ScrollFrameTemplate"), "a scroll frame")
 assert(search.Instructions.text == "Search services and goods", "the search placeholder")
-ns.QuestLogTabs.Select("services")
+env.ForeverCore.QuestLogTabs.Select("services")
 assert(panel:IsShown(), "selecting the tab shows the panel")
 assert(#created > 4, "the panel built its frames")
 
@@ -545,7 +547,7 @@ for _, event in ipairs({ "OnShow", "OnHide", "OnSizeChanged" }) do
 end
 -- The loading line sits under the title: every edge the header, list and line stretch by is a top edge, since a bare
 -- RIGHT anchor also pins a frame's vertical middle and pulled the header over the line while the list was short.
-ns.QuestLogTabs.Select("services")
+env.ForeverCore.QuestLogTabs.Select("services")
 ns.NearbyServices.State = function()
 	return "building"
 end

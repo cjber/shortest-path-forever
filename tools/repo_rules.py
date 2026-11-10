@@ -29,9 +29,6 @@ EXCLUDE = (
     "tools/forever_sim/*",
     # Byte-for-byte producer tooling and its pinned-build data, verified by tools/forever_tools/sync.py check in CI.
     "tools/forever_tools/*",
-    # Byte-for-byte forever-core files, sized there and verified by tools/check_core_shared.py in CI.
-    "Core/PeerStats.lua",
-    "tests/peer_stats_spec.lua",
 )
 
 

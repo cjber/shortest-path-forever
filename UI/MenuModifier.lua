@@ -1,10 +1,14 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- Our entries in the game's own menus (the world map's filter menu, the minimap's tracking menu) are added through
 -- Menu.ModifyMenu, and the game runs each modifier every time it builds the menu: when the map opens and when the
 -- menu opens. Each of ours runs behind two guards: it only ever gets a menu description (a table) to add to, and an
--- error in it is reported through ns.SafeCall instead of unwinding through Blizzard_Menu (#161).
+-- error in it is reported through ns.core.SafeCall instead of unwinding through Blizzard_Menu (#161).
 
 -- `/path menutest map|nearby|both|off` leaves our world map filter menu entries out from the next /reload: an A/B
 -- check for #161 that needs no file edits. "map" is the map filters, "nearby" the Nearby services submenu. It is
@@ -47,7 +51,7 @@ local function Sync()
 				if registering or type(root) ~= "table" then
 					return
 				end
-				ns.SafeCall(modifier.name .. " menu", modifier.build, owner, root, contextData)
+				ns.core.SafeCall(modifier.name .. " menu", modifier.build, owner, root, contextData)
 			end)
 			modifier.registered = true
 			registering = false

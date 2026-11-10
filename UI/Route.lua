@@ -1,8 +1,12 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
+
+if ns.broken then
+	return
+end
 local L = ns.L
 
-local MapCanvas = ns.MapCanvas
+local MapCanvas = ns.Canvas
 local LINE_TEMPLATE = "ShortestPathForeverRoutePinTemplate"
 local GOAL_TEMPLATE = "ShortestPathForeverGoalPinTemplate"
 local AREA_TEMPLATE = "ShortestPathForeverAreaPinTemplate"
@@ -64,7 +68,7 @@ for _, choice in ipairs(ROUTE_COLORS) do
 	routeColorByKey[choice.key] = choice.color
 end
 local provider, goal, paths, worldPaths, stops, stopIndex
--- The route's pools on the world map (UI/MapCanvas.lua), made at load.
+-- The route's pools on the world map (UI/Canvas.lua), made at load.
 ---@type SPFCanvasPool, SPFCanvasPool, SPFCanvasPool
 local linePins, goalPins, areaPins
 -- Whether this client has the blob widget QuestBlob.lua's pin is; nil until the first area is wanted.
@@ -128,7 +132,7 @@ end
 -- point past its edge still counts: the client projects only points it places on the map, and the rest follow from
 -- the map's corners.
 local function MapPosition(point, mapID)
-	local stitchedX, stitchedY = ns.OpenMap.Canvas(point)
+	local stitchedX, stitchedY = ns.OpenMapAddon.Canvas(point)
 	if stitchedX then
 		return stitchedX, stitchedY
 	end
@@ -149,7 +153,7 @@ end
 ---@param y number?
 ---@return boolean
 local function OnMap(x, y)
-	return x ~= nil and (ns.OpenMap.Stitched() or (x >= 0 and x <= 1 and y >= 0 and y <= 1))
+	return x ~= nil and (ns.OpenMapAddon.Stitched() or (x >= 0 and x <= 1 and y >= 0 and y <= 1))
 end
 -- The journey's own placements, for the specs: the map's fractions, or the stitched canvas's.
 ns.JourneyMapPosition = MapPosition
@@ -320,15 +324,19 @@ function RoutePin:Draw()
 	local map = self:GetMap()
 	local canvas = map:GetCanvas()
 	self.drawMap, self.drawWidth, self.drawHeight, self.drawScale =
-		map:GetMapID(), canvas:GetWidth(), canvas:GetHeight(), self:GetEffectiveScale()
+		map:GetMapID(), --[[@as number]]
+		canvas:GetWidth(),
+		canvas:GetHeight(),
+		self:GetEffectiveScale()
 	self:SetSize(canvas:GetWidth(), canvas:GetHeight())
 	self:SetPosition(0.5, 0.5)
-	local info = C_Map.GetMapInfo(map:GetMapID())
+	local info = C_Map.GetMapInfo(map:GetMapID() --[[@as number]])
 	local journey = self.paths == worldPaths
-	mapView.mapID = map:GetMapID()
+	mapView.mapID = map:GetMapID() --[[@as number]]
 	mapView.width, mapView.height, mapView.scale = self:GetWidth(), self:GetHeight(), self:GetEffectiveScale()
-	mapView.zoom, mapView.small = map:GetCanvasScale(), info and info.mapType <= Enum.UIMapType.Continent
-	mapView.stitched = ns.OpenMap.Stitched()
+	mapView.zoom = map:GetCanvasScale() --[[@as number]]
+	mapView.small = info and info.mapType <= Enum.UIMapType.Continent
+	mapView.stitched = ns.OpenMapAddon.Stitched()
 	mapView.marks = journey and provider and provider.stopMarks or nil
 	-- The journey's own paths come first; the later hops Itinerary.lua adds after them recede.
 	mapView.current = journey and #paths or math.huge
@@ -436,7 +444,7 @@ end
 ---@param map SPFMapCanvas
 ---@return boolean
 local function DrawArea(map)
-	local mapID = map:GetMapID()
+	local mapID = map:GetMapID() --[[@as number]]
 	if areaSupported == false or goal.corpse or not ns.StopInQuestArea(goal) then
 		return false
 	end

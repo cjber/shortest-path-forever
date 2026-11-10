@@ -13,8 +13,8 @@ Two benches are part of the suite and run outside the game:
   Its 3 ms budget is a local machine budget, so a failure here is a timing signal, not a bug report,
   unless the code path it exercises changed.
 
-The world map has its own invariant: `tests/map_canvas_spec.lua` runs the map files against a canvas
-that fails on any write. Drawing goes through `UI/MapCanvas.lua` with the addon's own frames, never
+The world map has its own invariant: `tests/ui_map.lua` runs the map files against a canvas that fails on
+any write. Drawing goes through `UI/Canvas.lua` with the addon's own frames, never
 `AddDataProvider`, `AcquirePin`, `AddOverlayFrame` or a `MapCanvasPinMixin`.
 
 Use the specs and `luajit -e` one-liners that load the harness to check what a change claims. Report a

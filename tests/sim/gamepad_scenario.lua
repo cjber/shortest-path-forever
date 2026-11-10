@@ -1,8 +1,9 @@
 -- luacheck: read globals scenario ADDON
+local ForeverCore = dofile("tests/forever_core.lua")
 -- The full TOC under the native client, which loads no deprecation fallbacks: a journey on the open world map,
 -- then the gamepad interface, combat and another map. Controller players reported a blocked
 -- SetPreferredGamepadInteractTarget (#158); Shortest Path must leave the tables the gamepad walks untouched.
-scenario("journey on the world map leaves gamepad tables native", function(sim)
+scenario("journey on the world map leaves gamepad tables native", { addons = ForeverCore.addons() }, function(sim)
 	local player = sim.world.player
 	player.faction, player.race, player.raceFile = "Alliance", "Human", "Human"
 	player.map, player.x, player.y = 1429, 0.42, 0.65

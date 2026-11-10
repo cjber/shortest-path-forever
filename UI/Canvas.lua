@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- The addon's drawings on the world map (#158), on frames of its own and with nothing written into the map.
 --
 -- Forever's gamepad interface runs the map's Lua from secure code. Each frame MapCanvasMixin:UpdateGamepadCursor walks
@@ -13,7 +17,7 @@ local ns = select(2, ...)
 --   map:GetMapID(), map:GetCanvas(), map:GetCanvasScale(), map:GetCanvasZoomPercent(), map:GetGlobalPinScale(),
 --   map:IsVisible() and map:GetPinFrameLevelsManager():GetValidFrameLevel(type, index)
 -- (each returns a field or works one out from fields; Blizzard_MapCanvas.lua, MapCanvas_PinFrameLevelsManager.lua),
--- plus the map's view rectangle, the canvas's size and the gamepad's SoftCursor rect. tests/map_canvas_spec.lua
+-- plus the map's view rectangle, the canvas's size and the gamepad's SoftCursor rect. tests/ui_map.lua
 -- runs the addon against a map that fails on any write.
 --
 -- One view per map: a frame of the addon's set on the canvas (the client parents it, in C: the scroll frame clips it
@@ -46,8 +50,8 @@ local ns = select(2, ...)
 -- SuperTrackablePinMixin's nudge), restoring it on release or when the pointer leaves. Only the art moves: the pin's
 -- anchor, size and hit rect stay put.
 
-local MapCanvas = {}
-ns.MapCanvas = MapCanvas
+local Canvas = {}
+ns.Canvas = Canvas
 
 -- How close the gamepad's map cursor comes to a pin to hover it, as the map's own pins (MIN_PIN_DISTANCE_SQUARED).
 local CURSOR_REACH = 12
@@ -94,7 +98,7 @@ function View:Level(levelType, index)
 	local level = levelType and levels and levels.GetValidFrameLevel and levels:GetValidFrameLevel(levelType, index)
 	level = level or self.canvas:GetFrameLevel() + 1
 	-- OpenMap's stitched art reaches over Blizzard's pin levels: over the stitched map a pin has to be above it to show.
-	local art = ns.OpenMap.TopLevel()
+	local art = ns.OpenMapAddon.TopLevel()
 	if art and level <= art then
 		level = art + 1
 	end
@@ -116,14 +120,14 @@ local function Read(view)
 		scale,
 		Saturate(map:GetCanvasZoomPercent() or 0),
 		map:GetGlobalPinScale() or 1,
-		ns.OpenMap.Stitched()
+		ns.OpenMapAddon.Stitched()
 end
 
 -- What of the map the view shows, in map fractions: the same space MapPosition places a journey in, where OpenMap's
 -- stitched map carries on past 0..1. Nil until the map is laid out. Every call a read.
 ---@param map SPFMapCanvas
 ---@return number?, number?, number?, number?
-function MapCanvas.ViewRect(map)
+function Canvas.ViewRect(map)
 	local rect = map:GetViewRect()
 	if not rect then
 		return nil
@@ -157,7 +161,7 @@ local function Fire(view, what, sized, scaled)
 		end
 	end
 	for _, listener in ipairs(view.listeners) do
-		ns.SafeCall("map canvas " .. what, listener, view, what)
+		ns.core.SafeCall("map canvas " .. what, listener, view, what)
 	end
 end
 
@@ -266,7 +270,7 @@ local function Update(view)
 		end
 	end
 	-- A drag moves the view without changing any of the above. A size or zoom redraws with the new view already.
-	local viewLeft, viewTop = MapCanvas.ViewRect(view.map)
+	local viewLeft, viewTop = Canvas.ViewRect(view.map)
 	if viewLeft ~= view.viewLeft or viewTop ~= view.viewTop then
 		view.viewLeft, view.viewTop = viewLeft, viewTop
 		if not (first or changedMap or stitchedChanged or companionsChanged or sized or scaled) then
@@ -323,8 +327,8 @@ local function WatchPanelHides()
 	end
 	panelHidden = true
 	-- The same two the gamepad's FrameControlsManager listens for: an explicit hide, and one panel replacing another.
-	EventRegistry:RegisterCallback("UIParentPanelManager.HideUIPanel", PanelHidden, MapCanvas)
-	EventRegistry:RegisterCallback("UIParentPanelManager.ForcePanelHide", PanelHidden, MapCanvas)
+	EventRegistry:RegisterCallback("UIParentPanelManager.HideUIPanel", PanelHidden, Canvas)
+	EventRegistry:RegisterCallback("UIParentPanelManager.ForcePanelHide", PanelHidden, Canvas)
 end
 
 -- A frame with no parent, then set under `parent`: the gamepad interface follows CreateFrame calls whose parent is
@@ -338,13 +342,13 @@ local function FrameUnder(frameType, parent, template)
 	frame:SetParent(parent)
 	return frame
 end
-MapCanvas.FrameUnder = FrameUnder
+Canvas.FrameUnder = FrameUnder
 
 -- The view of `map`, made the first time it is asked for; `listener`, when given, hears what changes.
 ---@param map SPFMapCanvas
 ---@param listener? fun(view: SPFCanvasView, what: string)
 ---@return SPFCanvasView
-function MapCanvas.Watch(map, listener)
+function Canvas.Watch(map, listener)
 	local view = views[map]
 	if not view then
 		local canvas = map:GetCanvas()
@@ -383,7 +387,7 @@ end
 
 -- Runs the view's check now, as its next frame would. The UI checks drive the map with it.
 ---@param map SPFMapCanvas
-function MapCanvas.Update(map)
+function Canvas.Update(map)
 	local view = views[map]
 	if view then
 		Update(view)
@@ -393,7 +397,7 @@ end
 -- The addon's pins on this map: shown, or hidden in combat.
 ---@param map SPFMapCanvas
 ---@param shown boolean
-function MapCanvas.SetShown(map, shown)
+function Canvas.SetShown(map, shown)
 	local view = views[map]
 	if view then
 		if not shown and hovered and hovered.view == view then
@@ -420,7 +424,7 @@ end
 ---@param owner SPFPressable
 ---@param regions? Region[]
 ---@param down boolean
-function MapCanvas.Press(owner, regions, down)
+function Canvas.Press(owner, regions, down)
 	if (owner.pressed or false) == down then
 		return
 	end
@@ -452,7 +456,7 @@ end
 ---@field highlighted? boolean
 ---@field OnMouseClickAction? fun(self: SPFCanvasPin, button: string)
 local Pin = {}
-MapCanvas.PinMixin = Pin
+Canvas.PinMixin = Pin
 
 function Pin.OnLoad() end
 -- Given what the pool's Acquire was given.
@@ -479,7 +483,7 @@ end
 -- button is held, and comes back on release or leave. The frame keeps its anchor, size and hit rect.
 ---@param down boolean
 function Pin:SetPressed(down)
-	MapCanvas.Press(self, self.pressRegions, down)
+	Canvas.Press(self, self.pressRegions, down)
 end
 
 ---@return SPFMapCanvas
@@ -582,7 +586,7 @@ end
 -- SetPassThroughButtons is a client method with restrictions: called from tainted code the client refuses it, and a
 -- pin is acquired from executions that are tainted through no fault of the pin (a journey started from one of the
 -- game's menus, a search whose cost refresh settled one) (#645). The client's secure delegate runs the call as the
--- client itself, as the shared openers run the client's own openers (Core/OpenMap.lua); the pin then keeps the stock
+-- client itself, as ForeverCore's openers run the client's own; the pin then keeps the stock
 -- passthrough: a dock or portal passes the right button to the canvas to zoom out, a flight point above a zone its
 -- left to zoom in, and the goal pin keeps both, so its right click clears the journey. A build without the delegate
 -- (cjber/adventure-guide-forever#592) leaves the pin taking every button, as that addon's own pins do.
@@ -684,15 +688,15 @@ function Pool:GetNumActive()
 end
 
 -- A pool of pins on `map`'s view, under `key`. The pins are frames of `frameType` (a Frame by default) from
--- `template`, wearing `mixin`, which builds on MapCanvas.PinMixin. A pool with a `marker` kind lists its pins for the
+-- `template`, wearing `mixin`, which builds on Canvas.PinMixin. A pool with a `marker` kind lists its pins for the
 -- other Forever addons (ForeverMapMarkers, below).
 ---@param map SPFMapCanvas
 ---@param key string
 ---@param mixin table
 ---@param options? {frameType?: string, template?: string, marker?: string}
 ---@return SPFCanvasPool
-function MapCanvas.Pool(map, key, mixin, options)
-	local view = MapCanvas.Watch(map)
+function Canvas.Pool(map, key, mixin, options)
+	local view = Canvas.Watch(map)
 	local pool = view.pools[key]
 	if not pool then
 		options = options or {}
@@ -713,7 +717,7 @@ end
 -- The pools on `map`, by key, for the UI checks.
 ---@param map SPFMapCanvas
 ---@return table<string, SPFCanvasPool>
-function MapCanvas.Pools(map)
+function Canvas.Pools(map)
 	local view = views[map]
 	return view and view.pools or {}
 end
@@ -723,13 +727,13 @@ end
 -- `filter(pin, button)` sees a pin's click before the pin does, and takes it by returning true (Shift-click plans a
 -- journey there, JourneyInput.lua).
 ---@param filter fun(pin: SPFCanvasPin, button: string): boolean?
-function MapCanvas.OnClick(filter)
+function Canvas.OnClick(filter)
 	clickFilters[#clickFilters + 1] = filter
 end
 
 ---@param pin SPFCanvasPin
 ---@param button string
-function MapCanvas.Click(pin, button)
+function Canvas.Click(pin, button)
 	if pin:ShouldMouseButtonBePassthrough(button) then
 		return
 	end
@@ -771,7 +775,7 @@ clicks:SetScript("OnEvent", function(_, event, button)
 		pin:SetPressed(false)
 	end
 	if pin and pin == hovered and button == pressedButton and pin:IsVisible() and UnderMouse(pin) then
-		ns.SafeCall("map pin click", MapCanvas.Click, pin, button)
+		ns.core.SafeCall("map pin click", Canvas.Click, pin, button)
 	end
 end)
 

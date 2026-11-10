@@ -13,7 +13,7 @@ local ns = {
 	JourneyPlan = function()
 		return plan, 1
 	end,
-	OpenMap = {
+	OpenMapAddon = {
 		Stitched = function()
 			return stitched
 		end,

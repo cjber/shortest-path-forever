@@ -1,5 +1,9 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
+
+if ns.broken then
+	return
+end
 local L = ns.L
 
 -- Guide follows the map's walking path bend by bend. Journey places Blizzard's native navigation marker at

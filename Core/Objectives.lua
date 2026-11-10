@@ -1,5 +1,9 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
+
+if ns.broken then
+	return
+end
 local L = ns.L
 
 -- The lines under the arrow and the arrival pin: a caller's own details when it gave any (Adventure Guide), otherwise

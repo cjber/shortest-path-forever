@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- The minimap draws a quest's objective area itself (MinimapFrameAPI). Standing in the area of a quest the held
 -- stop names recolours the game's own blob to the bonus objective's gold by swapping the stock quest textures for
 -- the stock bonus objective set; the moment that stops being true the quest set comes back, so the minimap is never
@@ -64,7 +68,7 @@ end
 ---@field SetMapID fun(self: SPFAreaPin, mapID: number)
 ---@field DrawNone fun(self: SPFAreaPin)
 ---@field DrawBlob fun(self: SPFAreaPin, questID: number, draw: boolean)
-local AreaPin = CreateFromMixins(ns.MapCanvas.PinMixin)
+local AreaPin = CreateFromMixins(ns.Canvas.PinMixin)
 -- Route.lua's pool puts it on.
 ns.AreaPinMixin = AreaPin
 
@@ -101,7 +105,7 @@ end
 -- Every named quest's area the client has on the map being viewed, as the stock pin's Refresh draws several.
 function AreaPin:Refresh()
 	self:SetScript("OnUpdate", nil)
-	self:SetMapID(self:GetMap():GetMapID())
+	self:SetMapID(self:GetMap():GetMapID() --[[@as number]])
 	self:DrawNone()
 	for _, questID in ipairs(self.quests) do
 		self:DrawBlob(questID, true)

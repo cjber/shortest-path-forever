@@ -165,17 +165,22 @@ local function Load(options)
 	local ns = { db = options.db or {}, charDB = {} }
 	---@param label string
 	---@param fn function
-	ns.SafeCall = function(label, fn, ...)
-		local ok, result = pcall(fn, ...)
-		if not ok then
-			reported[#reported + 1] = label .. ": " .. tostring(result)
-		end
-		return ok, result
-	end
+	ns.core = {
+		SafeCall = function(label, fn, ...)
+			local ok, result = pcall(fn, ...)
+			if not ok then
+				reported[#reported + 1] = label .. ": " .. tostring(result)
+			end
+			return ok, result
+		end,
+	}
 	-- A module's start runs inside the addon's shared error capture, as Core/Core.lua runs it.
 	ns.Init = function(fn)
-		ns.SafeCall("module start", fn)
+		ns.core.SafeCall("module start", fn)
 	end
+	-- ForeverCore's text helpers, which the Nearby search folds with; this spec never opens the quest log tab.
+	local coreNs = dofile("tests/forever_core.lua").load(env, "ForeverCore", { "Locales/enUS.lua", "Core/Text.lua" })
+	env.ForeverCore = { Text = coreNs.Text }
 	ns.WorldPoint = function(_, x, y)
 		return { map = 1, x = x * 1000, y = y * 1000 }
 	end

@@ -1,9 +1,13 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
+
+if ns.broken then
+	return
+end
 local L = ns.L
 
--- Where Shortest Path mentions my other Forever addons, each only while that addon isn't installed and behind the
--- shared rules in UI/ForeverFamily.lua (Suggest my other Forever addons, Don't suggest this again): a grey entry in
+-- Where Shortest Path mentions my other Forever addons, each only while that addon isn't installed and behind
+-- ForeverCore's shared rules (Suggest my other Forever addons, Don't suggest this again): a grey entry in
 -- the quest menus for Adventure Guide, a grey footer in the tracker after a journey arrives with nothing more planned
 -- (once a session), and a grey line on a dungeon or raid door's stop for Legacy. With Adventure Guide on, the quest
 -- menus list its suggestions instead.
@@ -33,11 +37,11 @@ local journeyOwner
 
 -- With Adventure Guide loaded, its top suggestions (AdventureGuideForever.API.Suggestions, API minor 2), each started
 -- as the guide's own Start does. Found by the functions, not a version. An answer other than a list of cards shows
--- nothing; an error shows nothing too, and goes to the error handler and /path report through ns.SafeCall.
+-- nothing; an error shows nothing too, and goes to the error handler and /path report through ns.core.SafeCall.
 ---@param root table the menu description being built
 ---@param api SPFAdventureSuggestionsAPI
 local function AddSuggestions(root, api)
-	local ok, suggestions = ns.SafeCall("Adventure Guide suggestions", api.Suggestions, SUGGESTIONS)
+	local ok, suggestions = ns.core.SafeCall("Adventure Guide suggestions", api.Suggestions, SUGGESTIONS)
 	if not ok or type(suggestions) ~= "table" then
 		return
 	end
@@ -55,7 +59,7 @@ local function AddSuggestions(root, api)
 			local whole = type(level) == "number" and level >= 1 and level <= 1000 and level % 1 == 0
 			local text = whole and L["[%d] %s"]:format(level, suggestion.title) or suggestion.title
 			root:CreateButton(text, function()
-				local started, accepted = ns.SafeCall("Adventure Guide start", api.StartSuggestion, id)
+				local started, accepted = ns.core.SafeCall("Adventure Guide start", api.StartSuggestion, id)
 				-- Its route changed since the menu opened, or RestedXP waits out combat.
 				if started and not accepted then
 					ns.Print(L["Adventure Guide couldn't start that just now. Choose it again from its guide."])
@@ -82,11 +86,11 @@ function Hints.AddQuestMenu(root)
 	local api = SuggestionsAPI()
 	if api then
 		AddSuggestions(root, api)
-	elseif ns.Family.Hint(ns.db, QUEST_MENU, ADVENTURE) then
+	elseif ForeverCore.Family.Hint(ns.db, QUEST_MENU, ADVENTURE) then
 		root:CreateButton(
 			GRAY_FONT_COLOR:WrapTextInColorCode(L["Suggest quests for my level: Adventure Guide Forever"]),
 			function()
-				ns.Family.ShowLink(ns.db, QUEST_MENU, ADVENTURE, nil, L)
+				ForeverCore.Family.ShowLink(ns.db, QUEST_MENU, ADVENTURE, nil, ns.core.SafeCall)
 			end
 		)
 	end
@@ -97,7 +101,7 @@ end
 ---@param tooltip GameTooltip
 function Hints.AddEntranceLine(tooltip)
 	local goal = ns.JourneyGoal()
-	if goal and goal.entrance and ns.Family.Hint(ns.db, ENTRANCE, LEGACY) then
+	if goal and goal.entrance and ForeverCore.Family.Hint(ns.db, ENTRANCE, LEGACY) then
 		GameTooltip_AddColoredLine(
 			tooltip,
 			L["Legacy Forever shows the Legacy challenges this counts toward."],
@@ -117,7 +121,7 @@ function Hints.Footer()
 			ns.HasJourney()
 			or ns.db.journeyTracker == false
 			or GetTime() - footer.shownAt >= FOOTER_SECONDS
-			or not ns.Family.Hint(ns.db, ARRIVAL, ADVENTURE)
+			or not ForeverCore.Family.Hint(ns.db, ARRIVAL, ADVENTURE)
 		)
 	then
 		footer = nil
@@ -150,7 +154,7 @@ function Hints.OpenFooter()
 	if not footer then
 		return
 	end
-	if ns.Family.ShowLink(ns.db, ARRIVAL, ADVENTURE, nil, L) then
+	if ForeverCore.Family.ShowLink(ns.db, ARRIVAL, ADVENTURE, nil, ns.core.SafeCall) then
 		footer = nil
 		version = version + 1
 		ns.RefreshTracker()
@@ -172,7 +176,7 @@ local function JourneyChanged(point, reason)
 	if reason ~= "arrived" or not finished or (owner ~= nil and owner ~= OWN) or ns.db.journeyTracker == false then
 		return
 	end
-	if ns.Family.Hint(ns.db, ARRIVAL, ADVENTURE) and ns.Family.Once(ARRIVAL) then
+	if ForeverCore.Family.Hint(ns.db, ARRIVAL, ADVENTURE) and ForeverCore.Family.Once(ARRIVAL) then
 		footer = {
 			title = finished.routeTitle or L["Journey to %s"]:format(ns.PlaceLabel(finished)),
 			shownAt = GetTime(),

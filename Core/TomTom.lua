@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- Guides such as Questie, Zygor and All The Things set waypoints through TomTom's API. While TomTom is not
 -- installed, this shim answers those calls by starting a Shortest Path journey, so a guide's pin plans real
 -- travel. It is never defined when TomTom is installed or loads later, and the player can turn it off in

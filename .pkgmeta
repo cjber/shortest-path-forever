@@ -1,11 +1,15 @@
 package-as: ShortestPathForever
 
+required-dependencies:
+  - forevercore
+
 manual-changelog:
   filename: .release-notes.md
   markup-type: markdown
 
 ignore:
   - AGENTS.md
+  - forever-core
   - docs
   - tools
   - types

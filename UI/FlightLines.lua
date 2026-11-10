@@ -1,6 +1,10 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
 
+if ns.broken then
+	return
+end
+
 -- Render-only corner cutting: keep flight endpoints and loading boundaries, with no spline overshoot.
 -- The source points stay intact for timing and navigation. Geometry is reused at every map zoom.
 ---@type table<SPFDrawPath, SPFPoint[]>
