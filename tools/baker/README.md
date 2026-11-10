@@ -95,6 +95,25 @@ are kept. The main addon's TOC loads `Nav/Nav.xml`; `PathGrid.lua` decodes field
 checkpoints between blocks. Packing a bundle again leaves it unchanged. Offline Lua tools load the same
 bundle through `tools/load_nav.lua`.
 
+Each cluster also carries a terrain field: the cells whose ground is one of their floors, sampled from the
+extractor's `maps/` directory (`NAV_MAPS`) at the centre of every walking-map cell with the same layout as the
+walking grid and quantized to the grid's 2-yard step. A cell with no floor is left out: it has one place to stand,
+and the route walks the player onto it. A cell with floors takes the layer nearest the terrain at its centre (ties
+to the base) and stores an exception only when that ground layer is not the base; a cell with floors over an ADT
+hole or with no extracted tile stores the no-ground marker. `PathGrid.ground` snaps a stop to its cell's nearest
+surface, takes the stored ground layer (or the base when the cell is left out), and says "up" above it and "down"
+below it; a floorless cell and a no-ground cell say nothing. A cluster's exceptions are decoded on the first hover
+rather than with its walking fields, so a tower top reads "up" and a city floor under the ruins reads "down"
+without route decoding paying for the field. `gen_nav.py` emits it for a fresh bake; an existing bundle's walking
+fields can gain it without being re-baked:
+
+```sh
+python3 tools/baker/terrain_field.py --root . --maps-dir /path/to/extract/maps --maps 0 1 2991
+```
+
+This rewrites only the `terrain` field, leaving graph, grid, height and floor byte-identical. `tools/baker/terrain.py`
+reads the pinned extractor's format (flat, float, uint16 and uint8 heights, and holes).
+
 Boat and zeppelin walking endpoints are generated from nearby dry boarding surfaces in the bundled map. Transport coordinates remain the boat or airship position for timetable calculations.
 
 After intentionally replacing shipped terrain, regenerate boarding endpoints and fixed-place walking costs from the repository root:

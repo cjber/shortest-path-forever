@@ -472,3 +472,5 @@ L["In a stop's area the direction arrow becomes a pin with the stop's objectives
 	"在目的地範圍內，方向箭頭會變成帶有目的地目標的圖釘，而不是隱藏。" -- mt
 L["It returns to the arrow when you leave the area or the stop changes."] =
 	"當你離開該區域或目的地改變時，它會恢復為箭頭。" -- mt
+L["Above ground level"] = "高於地面" -- mt
+L["Below ground level"] = "低於地面" -- mt

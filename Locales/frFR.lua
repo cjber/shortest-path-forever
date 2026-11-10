@@ -485,3 +485,5 @@ L["In a stop's area the direction arrow becomes a pin with the stop's objectives
 	"Dans la zone d'une étape, la flèche de direction devient une épingle avec les objectifs de l'étape, au lieu de disparaître." -- mt
 L["It returns to the arrow when you leave the area or the stop changes."] =
 	"Elle redevient la flèche lorsque vous quittez la zone ou que l'étape change." -- mt
+L["Above ground level"] = "Au-dessus du niveau du sol" -- mt
+L["Below ground level"] = "Sous le niveau du sol" -- mt

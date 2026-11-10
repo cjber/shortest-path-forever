@@ -183,7 +183,7 @@ ns.ClearJourney()
 
 -- A stop's kind is what stands there; one Shortest Path does not know, or cannot read, leaves the plain pin.
 local stops = {
-	{ map = 1, x = 0.502, y = 0.5, title = "First", kind = "turnin" },
+	{ map = 1, x = 0.502, y = 0.5, title = "First", kind = "turnin", z = 60 },
 	{ map = 1, x = 0.504, y = 0.5, title = "Second", kind = "zeppelin" },
 	{ map = 1, x = 0.506, y = 0.5, title = "Third", kind = "mailbox" },
 	{ map = 1, x = 0.508, y = 0.5, title = "Last", kind = driver.secret },
@@ -194,12 +194,17 @@ equal(API.NavigateRoute("AGF", stops), true, "start four-stop route")
 do
 	local points = ns.JourneyStops()
 	equal(points[1].look, "turnin", "a hand-in's kind")
+	equal(points[1].z, 60, "a stop's height is carried")
+	equal(points[2].z, nil, "a stop without a height keeps none")
 	equal(points[2].look, "zeppelin", "a transport's kind")
 	equal(points[3].look, nil, "an unknown kind is dropped")
 	equal(points[4].look, nil, "an unreadable kind is dropped")
 	stops[1].kind = "trainer"
+	stops[1].z = -43.1
 	equal(points[1].look, "turnin", "the caller's later edit changes nothing")
+	equal(points[1].z, 60, "the caller's later height edit changes nothing")
 	stops[1].kind = "turnin"
+	stops[1].z = 60
 end
 equal(API.CurrentStop("AGF"), 1, "first stop")
 equal(API.CurrentStop("OtherAddon"), nil, "foreign current stop")
@@ -225,6 +230,10 @@ for _, invalid in ipairs({
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, radius = 0 / 0 } },
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, radius = "30" } },
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, radius = driver.secret } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, z = math.huge } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, z = 0 / 0 } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, z = "60" } },
+	{ stops[1], { map = 1, x = 0.5, y = 0.5, z = driver.secret } },
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, questID = 0 } },
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, questID = 1.5 } },
 	{ stops[1], { map = 1, x = 0.5, y = 0.5, questID = "7" } },

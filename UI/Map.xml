@@ -97,6 +97,9 @@
 			</Layer>
 			<Layer level="OVERLAY" textureSubLevel="1">
 				<Texture parentKey="Icon" hidden="true"/>
+				<!-- The map's floor arrow, drawn at the pin's upper right for a stop above or below the terrain
+				     (StopPin.lua). -->
+				<Texture parentKey="Arrow" hidden="true"/>
 			</Layer>
 			<!-- The goal pin's own art again, with the stock highlight's ADD blend, shown while the pointer is over it
 			     (UI/MapCanvas.lua SetHighlighted). -->

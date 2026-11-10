@@ -487,3 +487,5 @@ L["In a stop's area the direction arrow becomes a pin with the stop's objectives
 	"지점 범위에 들어가면 방향 화살표가 사라지는 대신 지점의 목표가 담긴 핀으로 바뀝니다." -- mt
 L["It returns to the arrow when you leave the area or the stop changes."] =
 	"범위를 벗어나거나 지점이 바뀌면 다시 화살표로 돌아갑니다." -- mt
+L["Above ground level"] = "지면 위" -- mt
+L["Below ground level"] = "지면 아래" -- mt

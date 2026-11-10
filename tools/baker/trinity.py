@@ -269,6 +269,7 @@ def bake_map(args, map_id: int, build: str) -> None:
         log,
         {
             "NAV_MM": str(mmaps),
+            "NAV_MAPS": str(run / "maps"),
             "NAV_JOBS": str(args.jobs),
             "NAV_SOURCE": f"local {args.product} {build}, TrinityCore {args.rev}, recipe {digest}",
         },
