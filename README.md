@@ -97,7 +97,7 @@ to journey changes. [docs/api.md](docs/api.md) has the calls and what they retur
 
 With *Follow RestedXP guides* on (the default), leave RestedXP's TomTom option off so only one addon follows the guide.
 
-With Questie's tracker on, the Forever sections move clear of its quest list.
+With Questie's tracker on, the Forever sections move clear of its quest list. EllesmereUI's Custom Quest Tracker is followed in the same way, including its quest filters.
 
 Alt-left-click on the world map plans a journey even with TomTom installed. TomTom keeps its modified right-click waypoint gesture.
 

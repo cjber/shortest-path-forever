@@ -4,7 +4,7 @@
 ## Author: cjber
 ## Version: @project-version@
 ## Category: Map
-## OptionalDeps: QuestieDB, TweaksForever, RXPGuides, Guidelime
+## OptionalDeps: QuestieDB, TweaksForever, RXPGuides, Guidelime, EllesmereUIQuestTracker
 ## X-License: GPL-3.0-or-later
 ## X-Website: https://github.com/cjber/shortest-path-forever
 ## X-Donate: https://github.com/sponsors/cjber
@@ -72,6 +72,7 @@ UI\Looks.lua
 UI\MinimapPins.lua
 UI\TrackerQuestie.lua
 UI\TrackerEqot.lua
+UI\TrackerEllesmere.lua
 UI\TrackerLock.lua
 UI\TrackerOrder.lua
 UI\TrackerHost.lua

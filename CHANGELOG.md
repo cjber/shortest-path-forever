@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **The Journey follows EllesmereUI's quest tracker.** With EllesmereUI's Custom Quest Tracker on, the Forever sections hung under Blizzard's hidden, unfiltered tracker, so they could sit at the bottom of the screen while the visible quest list showed only a filtered few. They now sit under the tracker you see and move with its quest filters, resizing and position.
+
 ## [1.24.8] - 2026-11-09
 
 - **Routing from the world map works with a controller.** Shift-clicking the world map to start a route and then closing the map with the controller could get a controller action blocked by the game. The route now waits until the map has closed before it sets your waypoint. Reported by joaocjesus (#581).
