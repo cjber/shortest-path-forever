@@ -427,3 +427,5 @@ L["It returns to the arrow when you leave the area or the stop changes."] =
 	"Она снова становится стрелкой, когда вы покидаете область или остановка меняется." -- mt
 L["Above ground level"] = "Выше уровня земли" -- mt
 L["Below ground level"] = "Ниже уровня земли" -- mt
+L["%s (pick up)"] = "%s (принять)"
+L["Ready for turn-in"] = "Готово к сдаче"

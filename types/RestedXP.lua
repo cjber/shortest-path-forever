@@ -5,12 +5,21 @@
 ---@field generated? number
 ---@field completed? boolean
 ---@field text? string
+---@field tag? string the element's code, such as accept, complete or turnin
+---@field questId? integer|string
+---@field questIds? (integer|string)[] several quests on one element
 ---@field parent? {completed: boolean?, skip: boolean?}
 ---@field zone? integer
 ---@field x? number
 ---@field y? number
 ---@field title? string
----@field step? {arrowtext: string?, title: string?, active: boolean?, index: integer?}
+---@field step? {
+---	arrowtext: string?,
+---	title: string?,
+---	active: boolean?,
+---	index: integer?,
+---	elements: SPFRestedXPElement[]?,
+---}
 
 ---@class SPFRestedXPArrow: Frame
 ---@field texture Texture

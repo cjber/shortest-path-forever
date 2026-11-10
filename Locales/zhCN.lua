@@ -399,3 +399,5 @@ L["It returns to the arrow when you leave the area or the stop changes."] =
 	"当你离开该区域或目的地改变时，它会恢复为箭头。" -- mt
 L["Above ground level"] = "高于地面" -- mt
 L["Below ground level"] = "低于地面" -- mt
+L["%s (pick up)"] = "%s（接受任务）"
+L["Ready for turn-in"] = "可以交任务"

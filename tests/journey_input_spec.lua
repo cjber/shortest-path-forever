@@ -225,11 +225,12 @@ end
 destination = nil
 assert(ns.JourneyToMapPoint(1581, 0.5, 0.5), "a spot in a dungeon plans a journey")
 assert(destination.map == 36, "the journey keeps the spot itself; StartJourney sends it to the door")
-local stop = { map = 36, x = 1, y = 2, questID = 7, hold = true, radius = 20, shapes = {} }
+local stop = { map = 36, x = 1, y = 2, questID = 7, questIDs = { 7 }, hold = true, radius = 20, shapes = {} }
 local door = ns.InstanceEntrance(stop)
 assert(door.map == 0 and door.x == -11207.8 and door.y == 1681.15, "it goes to the door")
 assert(door.label == "Enter Les Mortemines", "the door is named in the game's language")
 assert(door.entrance == 36 and door.stop == stop and door.questID == 7, "the door remembers the stop it stands for")
+assert(door.questIDs == stop.questIDs, "and the quests whose objectives the arrow shows on the way")
 assert(not door.hold and not door.radius and not door.shapes, "areas and holds inside the dungeon stay behind")
 zoneText = ""
 assert(ns.InstanceEntrance(stop).label == "Enter Deadmines", "the shipped name stands in")
@@ -301,6 +302,7 @@ assert(root.label == "Plan journey" and root.onClick, "a located quest offers Pl
 destination = nil
 root.onClick()
 assert(destination and destination.questID == locatable, "the entry plans the right-clicked quest")
+assert(destination.questIDs[1] == locatable, "the goal names its quest for the live objectives")
 
 -- No quest id anywhere on the header or block: no entry.
 header, block = {}, { parentModule = trackerModule }

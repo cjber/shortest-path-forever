@@ -13,6 +13,9 @@ local target
 -- The label of the running journey's target, which a renamed step may update in place.
 ---@type string?
 local targetTitle
+-- The quests and action lines that label stands for, so a step that moved on at the same place updates the stop.
+---@type string?
+local targetQuests
 -- Set while this file restarts guidance: RestedXP calls back into the hooks from inside that restart.
 local navigating = false
 ---@type boolean?
@@ -34,7 +37,7 @@ end
 
 local function Clear()
 	API.Cancel(OWNER)
-	target, targetTitle = nil, nil
+	target, targetTitle, targetQuests = nil, nil, nil
 	Restore()
 end
 
@@ -43,6 +46,41 @@ end
 -- zone) decides whether the guide still points where our journey was planned to.
 local function Key(map, x, y)
 	return string.format("%d:%d:%d", map, math.floor(x * 10 + 0.5), math.floor(y * 10 + 0.5))
+end
+
+-- The element tags RestedXP parses a quest into; the two action tags replace the quest's objectives with the action.
+local QUEST_TAGS = { accept = true, complete = true, turnin = true, daily = true, dailyturnin = true, collect = true }
+
+---@param element SPFRestedXPElement
+---@return number[]? quests, string[]? actions, string key
+local function StepQuests(element)
+	local collector = ns.StepQuests()
+	local function Add(part)
+		if type(part) ~= "table" then
+			return
+		end
+		if type(part.questIds) == "table" then
+			for _, questID in ipairs(part.questIds) do
+				collector.add(tonumber(questID))
+			end
+		end
+		if not QUEST_TAGS[part.tag] then
+			return
+		end
+		local action
+		if part.tag == "accept" or part.tag == "daily" then
+			action = "accept"
+		elseif part.tag == "turnin" or part.tag == "dailyturnin" then
+			action = "turnin"
+		end
+		collector.add(tonumber(part.questId), action)
+	end
+	Add(element)
+	local step = type(element.step) == "table" and element.step or nil
+	for _, part in ipairs(type(step) == "table" and type(step.elements) == "table" and step.elements or {}) do
+		Add(part)
+	end
+	return collector.finish()
 end
 
 -- The current stop's label, renamed without replanning: a guide relabels its step as quests complete at one spot.
@@ -94,7 +132,7 @@ local function Sync()
 	-- second one, so it stays hidden. Adventure Guide's native UI choice leaves the guide, arrow and all, to RestedXP.
 	if Integrated() then
 		API.Cancel(OWNER)
-		target, targetTitle = nil, nil
+		target, targetTitle, targetQuests = nil, nil, nil
 		HoldArrow()
 		return
 	end
@@ -146,6 +184,7 @@ local function Sync()
 		return
 	end
 	local title = (element.title or step.arrowtext or step.title or "RestedXP"):gsub("RXP_[A-Z]+_", "")
+	local quests, actions, questKey = StepQuests(element)
 	local key = Key(map, x, y)
 	if InCombatLockdown() then
 		if key ~= target then
@@ -158,17 +197,33 @@ local function Sync()
 	if key ~= target then
 		-- RestedXP decides when an interaction or waypoint is complete, including large arrival radii.
 		navigating = true
-		local started =
-			API.NavigateRoute(OWNER, { { map = map, x = x / 100, y = y / 100, title = title, hold = true } })
+		local started = API.NavigateRoute(OWNER, {
+			{
+				map = map,
+				x = x / 100,
+				y = y / 100,
+				title = title,
+				hold = true,
+				questIDs = quests,
+				tooltip = actions and table.concat(actions, "\n") or nil,
+			},
+		})
 		navigating = false
 		if not started then
 			Clear()
 			return
 		end
-		target, targetTitle = key, title
+		target, targetTitle, targetQuests = key, title, questKey
 	end
 	if API.CurrentStop(OWNER) then
 		Rename(title, map, x / 100, y / 100)
+		if questKey ~= targetQuests then
+			targetQuests = questKey
+			local index = API.CurrentStop(OWNER)
+			if index then
+				ns.SetStopQuests(OWNER, index, quests, actions)
+			end
+		end
 		-- RestedXP owns the arrow when Shortest Path is not drawing one of its own.
 		if ns.db.arrow ~= false then
 			HoldArrow()
@@ -187,7 +242,7 @@ function ns.ResumeRestedXP()
 		frontend.ResumeRestedXP()
 		return
 	end
-	target, targetTitle = nil, nil
+	target, targetTitle, targetQuests = nil, nil, nil
 	Sync()
 end
 

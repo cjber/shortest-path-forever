@@ -254,6 +254,7 @@ end
 -- Until a spec says otherwise the walking search answers at once, with the straight line.
 local path = assert(loadfile(root .. "/tests/path_fake.lua"))()()
 ns.Path = path.Path
+load("Core/Objectives.lua")
 load("Transport/Model.lua")
 load("Core/Distance.lua")
 -- The real timetable, with no sightings until a spec records one.

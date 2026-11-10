@@ -409,3 +409,5 @@ L["It returns to the arrow when you leave the area or the stop changes."] =
 	"Elle redevient la flèche lorsque vous quittez la zone ou que l'étape change." -- mt
 L["Above ground level"] = "Au-dessus du niveau du sol" -- mt
 L["Below ground level"] = "Sous le niveau du sol" -- mt
+L["%s (pick up)"] = "%s (à accepter)" -- mt
+L["Ready for turn-in"] = "Prêt à rendre" -- mt

@@ -20,15 +20,21 @@ local RADIUS = 36
 local PASSED = 25
 -- The stock place, under the top of the screen; the cast prompt stands there too.
 local TOP = -120
--- The stop's title and objective lines beneath the pin, wrapped and capped so they stay a summary.
+-- The stop's title and objective lines beneath the pin, wrapped and capped so they stay a summary. The arrow's own
+-- lines under the distance use the same cap, so the two surfaces say the same few things.
 local ARRIVAL_WIDTH, ARRIVAL_TITLE_LINES, ARRIVAL_LINE_LIMIT = 240, 2, 3
 ---@class SPFArrowFrame : Frame
 ---@field Icon Texture
 ---@field Arrow Texture
 ---@field Distance FontString
 ---@field Progress FontString
+---@field Lines FontString
 ---@field ArrivalTitle FontString
 ---@field ArrivalLines FontString
+---@field linesFor? SPFPoint the goal the travel lines were built from
+---@field linesDirty? boolean the next draw reads the quest log again
+---@field arrivalFor? SPFPoint the stop the arrival lines were built from
+---@field arrivalText? string the arrival lines already joined for the pin
 ---@field arrival? boolean the arrived stop's pin and lines show, with the arrow and distance hidden
 ---@field behind boolean
 ---@field Mover Texture
@@ -58,6 +64,7 @@ local castPrompt
 -- The stop whose area the player is in, drawn as a pin with what to do there (#627).
 ---@type SPFPoint?
 local arrival
+local ShowArrival, RefreshTravelLines
 
 -- Counter-clockwise from north, like GetPlayerFacing: UnitPosition's first value grows north, its second west.
 local function Bearing(x, y)
@@ -199,6 +206,7 @@ local function Update(elapsed)
 			frame.Distance:SetText(text)
 		end
 	end
+	RefreshTravelLines(destination)
 	Settle(elapsed, easing, moved)
 end
 
@@ -277,6 +285,14 @@ local function Create()
 	frame.Distance:SetPoint("TOP", frame.Icon, "BOTTOM", 0, -8)
 	frame.Progress = frame:CreateFontString(nil, "BACKGROUND", "GameFontNormal")
 	frame.Progress:SetPoint("TOP", frame.Distance, "BOTTOM", 0, -4)
+	-- The same lines the arrival pin shows, under the distance while the arrow leads to the stop.
+	frame.Lines = frame:CreateFontString(nil, "BACKGROUND", "GameFontHighlightSmall")
+	frame.Lines:SetPoint("TOP", frame.Progress, "BOTTOM", 0, -4)
+	frame.Lines:SetWidth(ARRIVAL_WIDTH)
+	frame.Lines:SetJustifyH("CENTER")
+	frame.Lines:SetWordWrap(true)
+	frame.Lines:SetMaxLines(ARRIVAL_LINE_LIMIT)
+	frame.Lines:Hide()
 	frame.ArrivalTitle = frame:CreateFontString(nil, "BACKGROUND", "GameFontNormal")
 	frame.ArrivalTitle:SetPoint("TOP", frame.Icon, "BOTTOM", 0, -8)
 	frame.ArrivalTitle:SetWidth(ARRIVAL_WIDTH)
@@ -295,6 +311,9 @@ local function Create()
 		frame.ticker = C_Timer.NewTicker(POLL_EVERY, Poll)
 		frame:RegisterEvent("PLAYER_STARTED_MOVING")
 		frame:RegisterEvent("PLAYER_STARTED_TURNING")
+		-- Objectives are live: the client's quest log changes the lines under the arrow and the pin.
+		frame:RegisterEvent("QUEST_LOG_UPDATE")
+		frame:RegisterEvent("UNIT_QUEST_LOG_CHANGED")
 		Wake()
 	end)
 	frame:SetScript("OnHide", function()
@@ -307,19 +326,43 @@ local function Create()
 		frame.angle = nil
 		frame.behind = false
 	end)
-	frame:SetScript("OnEvent", Wake)
+	frame:SetScript("OnEvent", function(_, event)
+		if event == "QUEST_LOG_UPDATE" or event == "UNIT_QUEST_LOG_CHANGED" then
+			frame.linesDirty = true
+			if arrival then
+				ShowArrival(arrival)
+			elseif destination then
+				RefreshTravelLines(destination)
+			end
+		end
+		Wake()
+	end)
 	-- Made hidden, so the first Show starts the poll and the movement events.
 	frame:Hide()
 end
 
 -- The pin, title and lines only while the player stands in the arrived stop's area; the arrow otherwise.
+---@param lines? string[]
+---@return string
+local function Joined(lines)
+	if not (lines and lines[1]) then
+		return ""
+	end
+	local shown = {}
+	for line = 1, math.min(#lines, ARRIVAL_LINE_LIMIT) do
+		shown[line] = lines[line]
+	end
+	return table.concat(shown, "\n")
+end
+
 ---@param stop SPFPoint
-local function ShowArrival(stop)
+ShowArrival = function(stop)
 	if not frame.arrival then
 		frame.arrival = true
 		frame.Arrow:Hide()
 		frame.Distance:Hide()
 		frame.Progress:Hide()
+		frame.Lines:Hide()
 		-- The same gold goal pin the compass Goal marker and the map draw: arriving puts only the arrow, distance
 		-- and progress away, leaving the pin at its normal size.
 		ns.Art.Icon(frame.Icon, ns.PIN_FILE, 36)
@@ -330,19 +373,44 @@ local function ShowArrival(stop)
 	if frame.ArrivalTitle:GetText() ~= title then
 		frame.ArrivalTitle:SetText(title)
 	end
-	local lines = stop.details
-	local text = ""
-	if lines then
-		local shown = {}
-		for line = 1, math.min(#lines, ARRIVAL_LINE_LIMIT) do
-			shown[line] = lines[line]
-		end
-		text = table.concat(shown, "\n")
+	-- The quest log is read only when the stop or the log changed, not on every tick the pin stands.
+	if frame.arrivalFor ~= stop or frame.linesDirty then
+		frame.arrivalFor, frame.linesDirty = stop, nil
+		frame.arrivalText = Joined(ns.StopObjectiveLines and ns.StopObjectiveLines(stop) or nil)
 	end
+	local text = frame.arrivalText or ""
 	if frame.ArrivalLines:GetText() ~= text then
 		frame.ArrivalLines:SetText(text)
 	end
 	frame.ArrivalLines:SetShown(text ~= "")
+end
+
+-- The same lines under the distance while the arrow leads, read again only when the goal or the quest log changes.
+---@param goal SPFPoint?
+RefreshTravelLines = function(goal)
+	if not frame or (frame.linesFor == goal and not frame.linesDirty) then
+		return
+	end
+	frame.linesFor, frame.linesDirty = goal, nil
+	local text = Joined(ns.StopObjectiveLines and ns.StopObjectiveLines(goal) or nil)
+	if frame.Lines:GetText() ~= text then
+		frame.Lines:SetText(text)
+	end
+	frame.Lines:SetShown(text ~= "")
+end
+
+-- A guide's step at the same place now stands for other quests: read the lines again without replanning.
+function ns.RefreshArrowLines()
+	if not frame then
+		return
+	end
+	frame.linesDirty = true
+	if arrival then
+		ShowArrival(arrival)
+	else
+		RefreshTravelLines(destination)
+		Wake()
+	end
 end
 
 -- Back to the direction arrow, whichever of an arrival, a new stop or leaving the area ended the stop.
@@ -357,6 +425,9 @@ local function RestoreArrow()
 	frame.Progress:Show()
 	frame.ArrivalTitle:Hide()
 	frame.ArrivalLines:Hide()
+	frame.arrivalFor, frame.arrivalText = nil, nil
+	-- Leaving the pin rebuilds the travelling lines, whose own stop may have changed while the pin stood.
+	frame.linesDirty = true
 end
 
 -- End the arrival state without drawing anything else.
@@ -472,6 +543,8 @@ function ns.PointGuideArrow(points, placeBend, stop, goal)
 		Create()
 	end
 	frame.Progress:SetText(goal and goal.routeTitle or "")
+	-- Each new leg reads the quest log again: only a leg or a quest event rebuilds the lines, never a frame.
+	frame.linesDirty = true
 	frame:Show()
 	Wake()
 	Update(0)

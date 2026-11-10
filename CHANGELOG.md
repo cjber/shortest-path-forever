@@ -13,6 +13,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 ## [Unreleased]
 
 - **Needs Forever Core.** The shared tracker column, bug report and leaderboards now come from one Forever Core addon that installs with it, so every Forever addon's tracker scale, lock and position stay in step. Your tracker settings carry over.
+- **The arrow and the arrival pin show what a stop's quests ask of you.** Only Adventure Guide's stops had objective lines, and only once you stood in their area; every other guide showed a title alone, so a Zygor pin could say "Turn in 'The Escape'" with nothing under it. The arrow now lists the stop's live objectives under its label while you travel and the pin lists them on arrival, a finished objective is marked the way the game marks it, and a quest with nothing left to do reads as ready to turn in. Guidelime, RestedXP and Zygor now name the quests their steps stand for, Questie and every other TomTom caller name the quest they pass, and a turn-in or pick-up step says so. Reported on Discord by Kragmars (#660).
 
 ## [1.26.1] - 2026-11-10
 

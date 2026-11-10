@@ -4,6 +4,11 @@ driver.load("UI/Looks.lua")
 driver.load("Core/API.lua")
 driver.load("Journey/Itinerary.lua")
 local API = env.ShortestPathForever.API
+env.C_QuestLog = {
+	GetTitleForQuestID = function(questID)
+		return questID == 777 and "The Escape" or nil
+	end,
+}
 local combat = false
 env.InCombatLockdown = function()
 	return combat
@@ -61,6 +66,21 @@ driver.path.settle()
 assert(API.CurrentStop("RestedXP") == 1, "late-loaded guide starts a journey")
 assert(not frame.texture.shown and not frame.text.shown, "the guide arrow becomes invisible")
 assert(frame.mouse == false, "the invisible arrow does not intercept clicks")
+
+-- The active step's quests reach the stop. A step that kills and then turns in keeps the live objectives; a step that
+-- only turns in says so, with the client's quest name.
+frame.element.step.elements = {
+	{ tag = "complete", questId = 777 },
+	{ tag = "turnin", questId = 777 },
+}
+rxp.UpdateGotoSteps()
+assert(ns.JourneyGoal().questIDs[1] == 777, "the step's quest reaches the running stop")
+assert(ns.JourneyGoal().details == nil, "a mixed step keeps its objectives rather than an action")
+frame.element.step.elements = {
+	{ tag = "turnin", questId = 777 },
+}
+rxp.UpdateGotoSteps()
+assert(ns.JourneyGoal().details[1] == "The Escape (turn in)", "a turn-in step says what to do")
 ns.db.arrow = false
 rxp.UpdateMap()
 driver.path.settle()

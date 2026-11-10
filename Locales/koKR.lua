@@ -411,3 +411,5 @@ L["It returns to the arrow when you leave the area or the stop changes."] =
 	"범위를 벗어나거나 지점이 바뀌면 다시 화살표로 돌아갑니다." -- mt
 L["Above ground level"] = "지면 위" -- mt
 L["Below ground level"] = "지면 아래" -- mt
+L["%s (pick up)"] = "%s (수락)"
+L["Ready for turn-in"] = "완료 보고 가능"

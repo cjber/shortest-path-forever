@@ -34,6 +34,7 @@ function ns.InstanceEntrance(point)
 		z = entrance.z,
 		label = point.label or L["Enter %s"]:format(name),
 		questID = point.questID,
+		questIDs = point.questIDs,
 		routeTitle = point.routeTitle,
 		details = point.details,
 		entrance = point.map,
@@ -135,6 +136,8 @@ local function PlanQuest(questID, clickedMap, isWaypoint)
 		return false
 	end
 	point.label, point.questID, point.pinBadge = location.label, questID, clickedMap ~= nil
+	-- The goal's live objectives: the arrow and any pin read them from the client's quest log.
+	point.questIDs = { questID }
 	ns.StartJourney(point)
 	return true
 end
