@@ -1,5 +1,9 @@
 local root = ... or "."
 local ns = { db = { journey = true }, charDB = {} }
+-- The harness is a mouse client: no gamepad interface, so UI/MenuModifier.lua keeps its entries in place.
+function ns.GamepadUI()
+	return false
+end
 assert(loadfile(root .. "/Locales/enUS.lua"))("ShortestPathForever", ns)
 local now, here, target, shown, click, minimapClick = 0, { map = 1, x = 0, y = 0, z = 0 }
 local function noop() end

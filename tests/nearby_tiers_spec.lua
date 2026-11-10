@@ -30,6 +30,9 @@ local env = setmetatable({
 		end,
 	},
 	MenuResponse = { Open = 1, Refresh = 2, Close = 3, CloseAll = 4 },
+	CreateFrame = function()
+		return { RegisterEvent = function() end, SetScript = function() end }
+	end,
 	UnitFactionGroup = function()
 		return "Horde"
 	end,
@@ -83,6 +86,9 @@ local function load(questie)
 			end,
 		},
 		db = {},
+		GamepadUI = function()
+			return false
+		end,
 		SafeCall = function(_, fn, ...)
 			return true, fn(...)
 		end,

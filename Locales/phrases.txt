@@ -201,7 +201,6 @@ L["Only your faction's capital portals are used."] = "Only your faction's capita
 L["Open"] = "Open"
 L["Open Nearby services"] = "Open Nearby services"
 L["Open settings."] = "Open settings."
-L["Open the world map and choose Nearby services in its tracking menu."] = "Open the world map and choose Nearby services in its tracking menu."
 L["Open the world map to see it."] = "Open the world map to see it."
 L["Open these settings from the minimap."] = "Open these settings from the minimap."
 L["Orgrimmar"] = "Orgrimmar"

@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **With the map filter menu, Shortest Path no longer causes a blocked-action error.** Opening the world map's filter menu, or picking a service from it, could make the game refuse one of its own actions and blame Shortest Path Forever. The menu now behaves as the game's own does, and on the gamepad interface Shortest Path leaves that menu to the game (#645).
+
 ## [1.25.1] - 2026-11-10
 
 - **A quest whose only map pin is its start still gets a journey.** Some quests start and end with one NPC and have no objective area, such as Dragonmaw Shinbones (1846), so the client reports only that start pin. Planning a journey from the quest log did nothing; it now goes to the pin the client names, and a quest with no pin or waypoint at all still says it has no location. Reported on GitHub by Aldericdevir (#629).

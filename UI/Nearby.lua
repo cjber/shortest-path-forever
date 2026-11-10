@@ -726,10 +726,11 @@ end
 -- The panel itself lives in UI/ServicesPanel.lua; this is the way in both the tracking menu and /spfnear take.
 local function OpenServices()
 	Build()
-	-- Under the gamepad interface neither the map nor a menu the addon opens gets past the client (#158), so the
-	-- map's own tracking menu, which the game opens, lists the services and the tab stays where the player finds it.
+	-- Under the gamepad interface a menu or panel this addon opens makes the client's gamepad focus tainted, so the
+	-- addon opens neither (#158) and leaves the game's own menus alone as well (UI/MenuModifier.lua, #645): there is
+	-- no way in to the services with a controller, and the player is told what they would need.
 	if ns.GamepadUI() then
-		ns.Print(L["Open the world map and choose Nearby services in its tracking menu."])
+		ns.Print(L["This menu needs mouse and keyboard."])
 		return
 	end
 	if ns.OpenWorldMap() and ns.QuestLogTabs then

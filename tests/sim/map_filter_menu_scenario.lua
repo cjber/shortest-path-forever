@@ -5,6 +5,14 @@
 -- the gamepad interface, and checks that every entry the menu holds is well formed: text that is a plain string,
 -- selection getters that answer a boolean, filters that toggle and toggle back, and a Nearby service that starts
 -- its journey and closes the menu. The ldebug.c assertion itself is a client check the simulator cannot raise.
+--
+-- Under the gamepad interface the client takes every menu it shows into the gamepad focus in the same call, and a
+-- menu built with entries from an addon is tainted by that addon, so its next protected call is refused (#645). The
+-- addon therefore leaves the game's menus to the game while the interface is on: the gamepad rounds below expect
+-- none of our entries, and the mouse rounds after them expect them all back (#161's A/B in miniature).
+-- They come first because a menu the mouse has built with our entries leaves the client's own dropdown fields
+-- tainted, which no addon can clear; the interface switching on after one may still cost a single refused call
+-- (cjber/skillup-forever#454 carries the same limit).
 
 local FILTERS = {
 	{ key = "mapFlightMasters", label = "Flight Masters" },
@@ -163,7 +171,9 @@ scenario(
 		end
 
 		local opens = 0
-		local function OpenFilterMenu(how)
+		---@param how string
+		---@param ours boolean whether the gamepad interface leaves our entries in the game's menu
+		local function OpenFilterMenu(how, ours)
 			local button = G.WorldMapFrame.WorldMapTrackingOptionsButton
 			assert(button and button:IsShown(), "the filter button shows on the open map")
 			assert(not button:IsMenuOpen(), how .. ": the filter menu starts closed")
@@ -189,6 +199,19 @@ scenario(
 					selected == nil or type(selected) == "boolean",
 					where .. " is selected or not, never " .. type(selected)
 				)
+			end
+
+			if not ours then
+				-- The game's own menu only: under the gamepad interface its entries are the addon's to leave alone.
+				for _, filter in ipairs(FILTERS) do
+					local label = ns.L[filter.label]
+					assert(Count(entries, label) == 0, how .. ": " .. label .. " is left out of the gamepad's menu")
+				end
+				assert(
+					Count(entries, ns.L["Nearby services"]) == 0,
+					how .. ": Nearby services is left out of the gamepad's menu"
+				)
+				return entries
 			end
 
 			-- Our filters: each once, after the game's own, and each pick toggles its option and back.
@@ -230,31 +253,53 @@ scenario(
 			assert(not button:IsMenuOpen(), "the filter menu closes")
 		end
 
-		local function Round(how)
+		local function Round(how, ours)
 			sim:openWorldMap(1429)
 			for _ = 1, 3 do
-				OpenFilterMenu(how)
+				OpenFilterMenu(how, ours)
 				CloseMenus()
 			end
 			sim:closeWorldMap()
 			sim:advance(0.1)
 		end
 
-		Round("mouse")
+		-- The gamepad interface first, on a client whose menus have never held an entry of ours: the client takes
+		-- every menu it shows into the gamepad focus in the same call, and a menu built with an entry from an addon
+		-- is tainted by that addon, so its next protected call is refused (#645). The addon leaves the game's menus
+		-- to the game while the interface is on, so these rounds hold only the game's own entries.
+		sim:setGamepad(true)
+		Round("gamepad", false)
 		sim:enterCombat()
-		Round("mouse, in combat")
+		Round("gamepad, in combat", false)
 		sim:leaveCombat()
 		sim:advance(0.5)
-		Round("mouse, after combat")
+		sim:openWorldMap(1429)
+		OpenFilterMenu("gamepad, after combat", false)
+		sim:gamepadNavigate()
+		CloseMenus()
+		sim:closeWorldMap()
+
+		-- With the interface off our entries are back: every one of them is well formed and works.
+		sim:setGamepad(false)
+		Round("mouse", true)
+		sim:enterCombat()
+		Round("mouse, in combat", true)
+		sim:leaveCombat()
+		sim:advance(0.5)
+		Round("mouse, after combat", true)
 
 		-- A Nearby service picked from the filter menu hands the place to the journey and closes the menu. The
 		-- Forever client's MenuUtil has no CloseAllMenus, which the service buttons used to call after starting it.
 		sim:openWorldMap(1429)
-		local entries = OpenFilterMenu("picking a service")
-		local inn = Find(entries, ns.L["Innkeeper"], "/" .. ns.L["Nearby services"])
+		local entries = OpenFilterMenu("picking a service", true)
+		-- The labels are read before the click: the menu opens in a client dispatch of its own, where a call into
+		-- the addon's own code would taint the manager's fields the dispatch goes on to write.
+		local nearbyLabel, innLabel = ns.L["Nearby services"], ns.L["Innkeeper"]
+		local submenu = Find(entries, nearbyLabel, "")
+		local inn = Find(entries, innLabel, "/" .. nearbyLabel)
 		-- As the player does: open the submenu, then click the service in it.
 		sim:input(function()
-			Find(entries, ns.L["Nearby services"], "").element:ForceOpenSubmenu()
+			submenu.element:ForceOpenSubmenu()
 		end)
 		sim:advance(0.1)
 		sim:input(function()
@@ -264,20 +309,17 @@ scenario(
 		sim:expectNoErrors(ADDON)
 		assert(navigations == 1, "the innkeeper button navigates once, not " .. navigations .. " times")
 		assert(not G.WorldMapFrame.WorldMapTrackingOptionsButton:IsMenuOpen(), "picking a service closes the menu")
-		sim:closeWorldMap()
-
-		-- Submenus are left shut under the gamepad: the simulator's setGamepad does not give menu frames made under
-		-- the mouse their gamepad footer, so Blizzard's own submenus fail there too (cjber/forever-core#102).
-		sim:setGamepad(true)
-		Round("gamepad")
-		sim:enterCombat()
-		Round("gamepad, in combat")
-		sim:leaveCombat()
-		sim:advance(0.5)
-		sim:openWorldMap(1429)
-		OpenFilterMenu("gamepad, after combat")
-		sim:gamepadNavigate()
-		CloseMenus()
+		-- The journey the responder started still draws its stop on the map, and the stop still answers the right
+		-- button itself rather than passing it to the canvas: the pin and its click are not given up for the taint.
+		local goalPins = ns.MapCanvas.Pools(G.WorldMapFrame).ShortestPathForeverGoalPinTemplate
+		assert(goalPins:GetNumActive() > 0, "the picked service's stop is drawn on the map")
+		local goalPin = goalPins.active[1]
+		assert(goalPin.takesMouse, "the stop takes the mouse")
+		assert(not goalPin:ShouldMouseButtonBePassthrough("RightButton"), "the stop keeps its right click")
+		sim:input(function()
+			ns.MapCanvas.Click(goalPin, "RightButton")
+		end)
+		assert(not ns.HasJourney(), "right-clicking the stop clears the journey")
 		sim:closeWorldMap()
 		assert(opens == 17, "opened the filter menu 17 times, not " .. opens)
 		sim:expectNoErrors(ADDON)
