@@ -22,7 +22,6 @@ local ATLASES = {
 }
 -- The map's own dock, lift, tram and portal icons (Map.lua).
 local TRANSPORTS = { boat = true, zeppelin = true, lift = true, tram = true, portal = true }
-local TAXI = { Alliance = "taxinode_alliance", Horde = "taxinode_horde" }
 
 ---@type table<string, true>
 local kinds = { flightmaster = true }
@@ -59,7 +58,7 @@ local function Art(kind)
 		else
 			local candidates = ATLASES[kind]
 			if kind == "flightmaster" then
-				candidates = { TAXI[UnitFactionGroup("player")] or "taxinode_neutral", "taxinode_neutral" }
+				candidates = { ns.Art.FlightAtlas(), "taxinode_neutral" }
 			end
 			for _, atlas in ipairs(candidates) do
 				if ns.Art.Info(atlas) then

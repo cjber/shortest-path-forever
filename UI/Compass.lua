@@ -54,7 +54,6 @@ local OnUpdate
 -- Being placed (Settings: Move the compass): shown without a journey and taking the mouse it otherwise ignores.
 local moving = false
 local TRANSPORTS = { boat = true, zeppelin = true, lift = true, tram = true, portal = true }
-local taxiIcons = { Alliance = "taxinode_alliance", Horde = "taxinode_horde", Neutral = "taxinode_neutral" }
 
 local function Difference(angle, facing)
 	return (angle - facing + math.pi) % TURN - math.pi
@@ -92,8 +91,7 @@ local function StopIcon(stop)
 		return TRANSPORTS[kind] and kind or StopNumber(stop), true
 	elseif stop and stop.kind == "taxi" then
 		local taxi = ns.TaxiNodes[stop.id]
-		return stop.undiscovered and "taxinode_undiscovered" or taxiIcons[taxi and taxi.faction] or taxiIcons.Neutral,
-			true
+		return stop.undiscovered and "taxinode_undiscovered" or ns.Art.FlightAtlas(taxi and taxi.faction), true
 	end
 	return StopNumber(stop), false
 end
