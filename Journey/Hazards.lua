@@ -20,6 +20,8 @@ local KEEP = 50000
 ---@class SPFHazards
 ---@field key string -- identifies the costs, for the searches' caches
 ---@field Point fun(map: number, x: number, y: number): number -- the factor at a world point, at least 1
+-- Whether anything it charges for can lie in a box: the walking search's per-cluster test.
+---@field Charged fun(map: number, minX: number, minY: number, maxX: number, maxY: number): boolean
 ---@field Chord fun(map: number, ax: number, ay: number, bx: number, by: number): number -- towns along a segment
 ---@field Near fun(map: number, minX: number, minY: number, maxX: number, maxY: number): boolean -- a town in the box
 ---@field TransportNear fun(map: number, x: number, y: number): boolean -- a dock or flight master within 200 yards
@@ -251,6 +253,22 @@ function Hazards.Profile(from, goal)
 		end
 		return false
 	end
+	-- Whether anything the profile charges for can lie in a box: a walking search keeps its plain cell costs where none
+	-- can, without reading a factor at every cell.
+	local function Charged(map, minX, minY, maxX, maxY)
+		for _, zone in ipairs(boxes) do
+			if
+				zone.map == map
+				and zone.minX <= maxX
+				and zone.maxX >= minX
+				and zone.minY <= maxY
+				and zone.maxY >= minY
+			then
+				return true
+			end
+		end
+		return Near(map, minX, minY, maxX, maxY)
+	end
 	local function TransportNear(map, x, y)
 		for _, node in pairs(ns.TaxiNodes) do
 			if node.map == map and Distance2(x, y, node.x, node.y) <= CONNECTOR_RADIUS ^ 2 then
@@ -303,6 +321,7 @@ function Hazards.Profile(from, goal)
 		-- What is avoided, not why: a level-up that crosses no zone's threshold keeps every search.
 		key = (faction or "") .. ":" .. table.concat(keys, ",") .. (ns.db.followRoads and ":roads" or ""),
 		Point = Point,
+		Charged = Charged,
 		Chord = Chord,
 		Near = Near,
 		TransportNear = TransportNear,

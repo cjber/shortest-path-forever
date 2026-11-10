@@ -883,9 +883,30 @@ local function neighbour(st, k, node, gx, gy, dx, dy, water)
 	return nil
 end
 
+-- A path entry list built by Path.lua's refinement and drawn here. factor is a hazard profile's cost at an entry,
+-- kept per profile by Path.lua so the drawn line weighs the same cells the search chose between; nil without one.
+---@class SPFPathPoints
+---@field x number[] -- global cell x of each entry
+---@field y number[] -- global cell y of each entry
+---@field w number[] -- water entries up to each entry
+---@field k number[] -- cluster of each entry
+---@field n number[] -- node in that cluster
+---@field r number[]? -- off-road entries up to each entry, with Follow roads
+---@field roads? boolean -- Follow roads was on
+---@field factor? fun(k: number, node: number): number -- a hazard profile's factor at an entry
+
 -- Line of sight between two path entries, walking every cell the segment between their cell centres crosses and
--- following the surface from node to node, so it cannot jump between floors.
-local function sight(st, P, a, b, water, road)
+-- following the surface from node to node, so it cannot jump between floors. With a limit, no crossed cell may be
+-- charged more than the walk the segment replaces.
+---@param P SPFPathPoints
+---@param a number
+---@param b number
+---@param water boolean
+---@param road boolean?
+---@param limit number?
+---@return boolean
+local function sight(st, P, a, b, water, road, limit)
+	local factor = limit and P.factor
 	local ax, ay, bx, by = P.x[a], P.y[a], P.x[b], P.y[b]
 	local k, node = P.k[a], P.n[a]
 	local dx, dy = bx - ax, by - ay
@@ -904,13 +925,17 @@ local function sight(st, P, a, b, water, road)
 		else
 			my = sy
 		end
-		k, node = neighbour(st, k, node, x, y, mx, my, water)
-		if not k then
+		local nk, nn = neighbour(st, k, node, x, y, mx, my, water)
+		if not nk or not nn then
 			return false
 		end
-		if road and not roadNode(st, k, node) then
+		if road and not roadNode(st, nk, nn) then
 			return false
 		end
+		if factor and factor(nk, nn) > limit then
+			return false
+		end
+		k, node = nk, nn
 		x, y = x + mx, y + my
 		ix, iy = ix + mx * sx, iy + my * sy
 	end
@@ -933,10 +958,13 @@ end
 
 -- A drawn line's end segments run off cell centres: from an endpoint itself, or to one. Walk the cells such a
 -- segment really crosses, from node of cluster k at the fractional global cell position (fx, fy) to (tx, ty),
--- following the surface as sight does. Returns the cluster and node it reaches in the end's cell; or, when a step is
+-- following the surface as sight does and, with a limit, refusing a cell a hazard profile charges more than the walk
+-- the segment replaces. Returns the cluster and node it reaches in the end's cell; or, when a step is
 -- closed, nil and whether every cell from the closed one to the end has no surface at all (the line only runs on
 -- into a point the grid has no surface for).
-local function toward(st, k, node, fx, fy, tx, ty, water)
+---@param factor? fun(k: number, node: number): number
+---@param limit number?
+local function toward(st, k, node, fx, fy, tx, ty, water, factor, limit)
 	local x, y, ex, ey = floor(fx), floor(fy), floor(tx), floor(ty)
 	local dx, dy = tx - fx, ty - fy
 	local sx, sy = dx > 0 and 1 or -1, dy > 0 and 1 or -1
@@ -968,7 +996,10 @@ local function toward(st, k, node, fx, fy, tx, ty, water)
 		if mx ~= 0 or my ~= 0 then
 			if not closed then
 				local nk, nn = neighbour(st, k, node, x, y, mx, my, water)
-				if nk then
+				if nk and nn then
+					if factor and factor(nk, nn) > limit then
+						return nil, false
+					end
 					k, node = nk, nn
 				else
 					closed = true
@@ -989,10 +1020,33 @@ local function toward(st, k, node, fx, fy, tx, ty, water)
 	return k, node
 end
 
+-- The largest factor a hazard profile charges over path entries first..last, keeping the highest limit already seen:
+-- a pulled segment may cross no cell charged more than the walk it replaces. Maxima only ever grow as an anchor's
+-- candidates advance, so a running one replaces a prefix sum, which cannot answer a range's maximum.
+---@param P SPFPathPoints
+---@param factor fun(k: number, node: number): number
+---@param first number
+---@param last number
+---@param limit number
+---@return number
+local function peak(P, factor, first, last, limit)
+	for e = first, last do
+		local f = factor(P.k[e], P.n[e])
+		if f > limit then
+			limit = f
+		end
+	end
+	return limit
+end
+
 -- Collapse a node path to its turns, then pull the string: from each anchor, jump to the furthest point in sight.
--- Water may only be crossed where the path itself swam.
+-- Water may only be crossed where the path itself swam, and a hazard profile's cost may be no higher along the pulled
+-- segment than along the entries it replaces, so a walk drawn round a town stays round it.
+---@param P SPFPathPoints
+---@return number[]
 local function smooth(st, P)
 	local PX, PY, PW, PR = P.x, P.y, P.w, P.r
+	local factor = P.factor
 	local n = #PX
 	local keep = { 1 }
 	for i = 2, n - 1 do
@@ -1010,11 +1064,18 @@ local function smooth(st, P)
 	end
 	local out, a = { keep[1] }, 1
 	while a < #keep do
-		local b = a + 1
+		local b, p = a + 1, keep[a]
+		local limit = 1
+		if factor then
+			limit = peak(P, factor, p, keep[b], limit)
+		end
 		for j = a + 2, #keep do
-			local p, q = keep[a], keep[j]
+			local q = keep[j]
+			if factor then
+				limit = peak(P, factor, keep[j - 1] + 1, q, limit)
+			end
 			local road = PR and PR[q] - PR[p] == 0
-			if not sight(st, P, p, q, PW[q] - PW[p] > 0, road) then
+			if not sight(st, P, p, q, PW[q] - PW[p] > 0, road, factor and limit) then
 				break
 			end
 			b = j
@@ -1115,6 +1176,7 @@ ns.PathGrid = {
 	roads = roads,
 	roadEdges = roadEdges,
 	smooth = smooth,
+	peak = peak,
 	toward = toward,
 	bare = bare,
 	neighbour = neighbour,

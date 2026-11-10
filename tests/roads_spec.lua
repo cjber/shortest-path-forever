@@ -82,6 +82,9 @@ local function profile(key, roads)
 		Near = function()
 			return false
 		end,
+		Charged = function()
+			return false
+		end,
 	}
 end
 

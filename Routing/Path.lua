@@ -11,7 +11,7 @@ local tick, Deadline, Expansions, State, surface, grid =
 	Grid.tick, Grid.Deadline, Grid.Expansions, Grid.State, Grid.surface, Grid.grid
 local cellOf, nodesOf, metadata, adjacent = Grid.cellOf, Grid.nodesOf, Grid.metadata, Grid.adjacent
 local entrance, locate, standing, snap, smooth = Grid.entrance, Grid.locate, Grid.standing, Grid.snap, Grid.smooth
-local toward = Grid.toward
+local toward, peak = Grid.toward, Grid.peak
 
 local TILE, SNAP, ZTOL, DX, DY = Grid.TILE, Grid.SNAP, Grid.ZTOL, Grid.DX, Grid.DY
 local OFFROAD = Grid.OFFROAD
@@ -64,6 +64,66 @@ local function pop()
 	return top
 end
 
+-- A hazard profile (Journey/Hazards.lua) keeps its costs per map: entrance factors, near-town clusters and local cell
+-- factors. A new profile starts when the costs it charges change.
+local function memoOf(st, hz)
+	local memo = st.hazards
+	if not memo or memo.key ~= hz.key then
+		memo = { key = hz.key, at = {}, near = {}, cell = {} }
+		st.hazards = memo
+	end
+	return memo
+end
+
+-- What a hazard profile charges at a local cell, read at its centre: a cell search meets a hazard on the same terms
+-- the entrance graph does.
+local function cellFactor(st, hz, k, cell)
+	local C = st.C
+	local x = st.x0 + (floor(k / st.ny) * C + floor(cell / C) + 0.5) * st.cs
+	local y = st.y0 + (k % st.ny * C + cell % C + 0.5) * st.cs
+	return hz.Point(st.map, x, y)
+end
+
+-- The factors the profile charges across cluster k's cells, kept per profile and read at each cell the first time a
+-- search reaches it; nil when nothing in the cluster is charged, so its search keeps its plain costs.
+local function cellFactors(st, hz, k)
+	local memo = memoOf(st, hz)
+	local cells = memo.cell[k]
+	if cells == nil then
+		local C, cs = st.C, st.cs
+		local x, y = st.x0 + floor(k / st.ny) * C * cs, st.y0 + (k % st.ny) * C * cs
+		if not hz.Charged(st.map, x, y, x + C * cs, y + C * cs) then
+			cells = false
+		else
+			cells = {}
+		end
+		memo.cell[k] = cells
+	end
+	return cells or nil
+end
+
+-- The factor the profile charges at a path entry, for the string-pulling in PathGrid.lua: the same per-profile memo
+-- the cluster searches fill, so the drawn line and the chosen one weigh the same cells. A floor node maps to its base
+-- cell the way the search does.
+---@param hz SPFHazards
+---@return fun(k: number, node: number): number
+local function factorOf(st, hz)
+	local C = st.C
+	return function(k, node)
+		local cells = cellFactors(st, hz, k)
+		if not cells then
+			return 1
+		end
+		local base = node < C * C and node or cellOf(st, k, node)
+		local f = cells[base]
+		if not f then
+			f = cellFactor(st, hz, k, base)
+			cells[base] = f
+		end
+		return f
+	end
+end
+
 -- Grid search inside one cluster, entering water costing swim times its length. tree holds g/parent keyed by
 -- node + 1. With goal set it is A*, otherwise Dijkstra that stops once every node in targets (a set of nodes) is
 -- settled.
@@ -71,8 +131,8 @@ local function Tree()
 	return { g = {}, r = {}, par = {}, stamp = {}, closed = {}, gen = 0 }
 end
 -- One grid search loop; splitting moves its retained arrays to upvalues on the hot path. g is the preference
--- cost it orders by and r the real cost it reports.
-local function search(st, k, swim, source, tree, goal, targets, left, roads)
+-- cost it orders by, weighted by the hazard profile where one is given, and r the real cost it reports.
+local function search(st, k, swim, source, tree, goal, targets, left, roads, hz)
 	local val = grid(st, k)
 	-- Search only enters populated grids, through snapped endpoints or decoded entrances.
 	---@cast val number[]
@@ -81,6 +141,7 @@ local function search(st, k, swim, source, tree, goal, targets, left, roads)
 	local C, cs = st.C, st.cs
 	local N = C * C
 	local g, r, par, stamp, closed = tree.g, tree.r, tree.par, tree.stamp, tree.closed
+	local factor = hz and cellFactors(st, hz, k) or nil
 	tree.gen = tree.gen + 1
 	local gen = tree.gen
 	tree.k = k
@@ -99,7 +160,16 @@ local function search(st, k, swim, source, tree, goal, targets, left, roads)
 		local i = v + 1
 		local step = length * cs * (val[i] == 2 and swim or 1)
 		local base = v < N and v or at[i]
-		local gv = gu + (roads and not roads[base] and step * OFFROAD or step)
+		local choice = roads and not roads[base] and step * OFFROAD or step
+		if factor then
+			local f = factor[base]
+			if not f then
+				f = cellFactor(st, hz, k, base)
+				factor[base] = f
+			end
+			choice = choice * f
+		end
+		local gv = gu + choice
 		if stamp[i] ~= gen or gv < g[i] then
 			g[i], r[i], par[i], stamp[i] = gv, ru + step, u, gen
 			local h = 0
@@ -214,11 +284,7 @@ end
 -- What a hazard profile (Journey/Hazards.lua) multiplies an entrance graph edge by: the mean of its ends' factors, or
 -- a town's when the edge crosses one. Ends are kept per profile; the town test runs only in clusters a town is near.
 local function hazard(st, hz, u, v)
-	local memo = st.hazards
-	if not memo or memo.key ~= hz.key then
-		memo = { key = hz.key, at = {}, near = {} }
-		st.hazards = memo
-	end
+	local memo = memoOf(st, hz)
 	local at, ux, uy, vx, vy = memo.at, nil, nil, nil, nil
 	local fu, fv = at[u], at[v]
 	if not fu then
@@ -258,7 +324,7 @@ end
 local ag, areal, apar, astamp, aclosed, agen = {}, {}, {}, {}, {}, 0
 
 -- Endpoint searches: grid Dijkstra to the cluster's entrances.
-local function endpoint(st, swim, tree, k, node, roadsOn)
+local function endpoint(st, swim, tree, k, node, roadsOn, hz)
 	local targets, left = {}, 0
 	for _, id in ipairs(nodesOf(st, k)) do
 		local e = entrance(st, id)
@@ -266,13 +332,13 @@ local function endpoint(st, swim, tree, k, node, roadsOn)
 			targets[e], left = true, left + 1
 		end
 	end
-	search(st, k, swim, node, tree, nil, targets, left, roadsOn and Grid.roads(st, k))
+	search(st, k, swim, node, tree, nil, targets, left, roadsOn and Grid.roads(st, k), hz)
 end
 -- An endpoint on a rooftop or ledge the grid cannot leave moves to the nearest node that reaches an entrance,
 -- down a ledge but never up one or onto another level.
-local function settle(st, swim, tree, k, node, roadsOn)
+local function settle(st, swim, tree, k, node, roadsOn, hz)
 	local C = st.C
-	endpoint(st, swim, tree, k, node, roadsOn)
+	endpoint(st, swim, tree, k, node, roadsOn, hz)
 	local function connected()
 		for _, id in ipairs(nodesOf(st, k)) do
 			local e = entrance(st, id)
@@ -303,7 +369,7 @@ local function settle(st, swim, tree, k, node, roadsOn)
 					local rise = near and st.z[k][near + 1] - h
 					if near and rise <= ZTOL and rise >= -DROP and not reached(tree, near) then
 						tries, node = tries + 1, near
-						endpoint(st, swim, tree, k, node, roadsOn)
+						endpoint(st, swim, tree, k, node, roadsOn, hz)
 						if connected() then
 							return node
 						end
@@ -339,13 +405,13 @@ end
 
 -- Fixed places recur in both batches and in later journeys. Keep their small entrance-cost vectors and only the
 -- last eight grid trees; cap the cache so moving start positions cannot grow it for the entire play session.
-local function connect(st, swim, k, node, roadsOn)
+local function connect(st, swim, k, node, roadsOn, hz)
 	nodesOf(st, k)
-	local key = k .. ":" .. node .. ":" .. swim .. (roadsOn and ":r" or "")
+	local key = k .. ":" .. node .. ":" .. swim .. (roadsOn and ":r" or "") .. (hz and ":" .. hz.key or "")
 	local entry = st.ends[key]
 	if not entry then
 		local tree = Tree()
-		node = settle(st, swim, tree, k, node, roadsOn)
+		node = settle(st, swim, tree, k, node, roadsOn, hz)
 		local edges, reals = connections(st, tree, k)
 		entry = { node = node, edges = edges, reals = reals, tree = tree }
 		-- A handful of local trees removes repeated endpoint searches without retaining a continent's grids.
@@ -366,7 +432,7 @@ end
 -- any surface at its spot, so it starts from each one within a cell of it at a distinct height and the search keeps
 -- the cheapest: a street beside or over a canal is not walked from the canal bed. Returns each surface's connection,
 -- the entrance costs merged by minimum and, per entrance, the surface it came from.
-local function connectPoint(st, swim, k, node, h, roadsOn)
+local function connectPoint(st, swim, k, node, h, roadsOn, hz)
 	local nodes = { node }
 	if not h then
 		local values = grid(st, k)
@@ -407,7 +473,7 @@ local function connectPoint(st, swim, k, node, h, roadsOn)
 	end
 	local ends, merged, mergedReal, via = {}, {}, {}, {}
 	for _, start in ipairs(nodes) do
-		local n, edges, reals, tree = connect(st, swim, k, start, roadsOn)
+		local n, edges, reals, tree = connect(st, swim, k, start, roadsOn, hz)
 		ends[#ends + 1] = { node = n, tree = tree }
 		for id, cost in pairs(edges) do
 			if not merged[id] or cost < merged[id] then
@@ -428,17 +494,18 @@ end
 
 -- The string is pulled between node centres, but the line is drawn from the endpoints themselves. Whether the drawn
 -- segment between point and path entry j's cell centre stays on the walkable surface, walked in the direction it is
--- travelled (outbound from the start, inbound to the goal). A point standing on a surface must be reached on it, or
+-- travelled (outbound from the start, inbound to the goal), and crosses no cell a hazard profile charges more than
+-- the path entries it replaces. A point standing on a surface must be reached on it, or
 -- leave from it; one with no surface in its cell (inside rock or a building the grid has none for) passes when the
 -- segment runs on into it only across cells with no surface at all.
-local function clearEnd(st, P, j, point, outbound, water)
+local function clearEnd(st, P, j, point, outbound, water, limit)
 	local fx, fy, k, node = own(st, point)
 	local cx, cy = P.x[j] + 0.5, P.y[j] + 0.5
 	if outbound and node then
-		local tk, tn = toward(st, k, node, fx, fy, cx, cy, water)
+		local tk, tn = toward(st, k, node, fx, fy, cx, cy, water, P.factor, limit)
 		return tk == P.k[j] and tn == P.n[j]
 	end
-	local tk, tn = toward(st, P.k[j], P.n[j], cx, cy, fx, fy, water)
+	local tk, tn = toward(st, P.k[j], P.n[j], cx, cy, fx, fy, water, P.factor, limit)
 	if not tk then
 		return tn == true
 	end
@@ -446,15 +513,22 @@ local function clearEnd(st, P, j, point, outbound, water)
 end
 
 -- With no pulled vertex between them, the line is the one chord between the two points: walked whole from a start
--- that stands on a surface to the goal's cell, on the goal's own surface when it has one.
-local function clearChord(st, from, to, water)
+-- that stands on a surface to the goal's cell, on the goal's own surface when it has one, and against the same hazard
+-- limit the path's own entries allow.
+local function clearChord(st, P, from, to, water, limit)
 	local fx, fy, k, node = own(st, from)
 	if not node then
 		return false
 	end
 	local tx, ty, gk, goal = own(st, to)
-	local tk, tn = toward(st, k, node, fx, fy, tx, ty, water)
+	local tk, tn = toward(st, k, node, fx, fy, tx, ty, water, P.factor, limit)
 	return tk ~= nil and (not goal or (tk == gk and tn == goal))
+end
+
+-- The largest factor a hazard profile charges over path entries first..last, or nil without a profile: a drawn segment
+-- may cross no cell charged more than the walk it replaces.
+local function limitOver(P, first, last)
+	return P.factor and peak(P, P.factor, first, last, 1)
 end
 
 -- Sliced A* and refinement share scratch trees; splitting adds hot-path calls and upvalues
@@ -484,8 +558,8 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 	local roadsOn = hz and hz.roads
 
 	local S, G = trees.S, trees.G
-	local starts, source, sourceReal, sourceVia = connectPoint(st, swim, sk, sc, from.z, roadsOn)
-	local goals, target, targetReal, targetVia = connectPoint(st, swim, gk, gc, to.z, roadsOn)
+	local starts, source, sourceReal, sourceVia = connectPoint(st, swim, sk, sc, from.z, roadsOn, hz)
+	local goals, target, targetReal, targetVia = connectPoint(st, swim, gk, gc, to.z, roadsOn, hz)
 	local key = table.concat({ sk, sc, gk, gc, swim, from.z and 1 or 0, to.z and 1 or 0, hz and hz.key or "" }, ":")
 	st.paths = st.paths or {}
 	local cached = st.paths[key]
@@ -499,7 +573,7 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 			local roadSet = roadsOn and Grid.roads(st, sk)
 			for _, a in ipairs(starts) do
 				for _, b in ipairs(goals) do
-					if search(st, sk, swim, a.node, S, b.node, nil, nil, roadSet) then
+					if search(st, sk, swim, a.node, S, b.node, nil, nil, roadSet, hz) then
 						local gv, rv = S.g[b.node + 1], S.r[b.node + 1]
 						if not direct or gv < direct then
 							direct, directReal, directFrom, directTo = gv, rv, a.node, b.node
@@ -611,7 +685,11 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 	-- Refine each hop into nodes with their global cells and a running count of water nodes. The pruned entrance
 	-- graph may route through an entrance a little off the way, which refines to a spur walked out and back: a node
 	-- reached again cuts the loop since its first visit, so the drawn walk never doubles back.
+	---@type SPFPathPoints
 	local P = { x = {}, y = {}, w = {}, k = {}, n = {} }
+	if hz then
+		P.factor = factorOf(st, hz)
+	end
 	if roadsOn then
 		P.roads, P.r = true, {}
 	end
@@ -649,14 +727,14 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 	for i = #hops, 2, -1 do
 		local a, b = hops[i], hops[i - 1]
 		if a == START and b == GOAL then
-			search(st, sk, swim, directFrom, S, directTo, nil, nil, roadsOn and Grid.roads(st, sk))
+			search(st, sk, swim, directFrom, S, directTo, nil, nil, roadsOn and Grid.roads(st, sk), hz)
 			local nodes = trace(S, directTo, {})
 			addAll(sk, nodes, #nodes, 1, -1)
 		elseif a == START then
 			local start = sourceVia[b]
 			local tree = start.tree
 			if not tree or not reached(tree, entrance(st, b)) then
-				search(st, sk, swim, start.node, S, entrance(st, b), nil, nil, roadsOn and Grid.roads(st, sk))
+				search(st, sk, swim, start.node, S, entrance(st, b), nil, nil, roadsOn and Grid.roads(st, sk), hz)
 				tree = S
 			end
 			local nodes = trace(tree, entrance(st, b), {})
@@ -665,12 +743,14 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 			local goal = targetVia[a]
 			local tree = goal.tree
 			if not tree or not reached(tree, entrance(st, a)) then
-				search(st, gk, swim, goal.node, G, entrance(st, a), nil, nil, roadsOn and Grid.roads(st, gk))
+				search(st, gk, swim, goal.node, G, entrance(st, a), nil, nil, roadsOn and Grid.roads(st, gk), hz)
 				tree = G
 			end
 			local nodes = trace(tree, entrance(st, a), {})
 			addAll(gk, nodes, 1, #nodes, 1)
 		else
+			-- A mid-route cluster's walk is refined on its baked cost, which the hazard profile does not weight, so it
+			-- is drawn without one: a detour drawn here would not be paid for in the reported cost.
 			local ka, kb = floor(a / 4096), floor(b / 4096)
 			local ea, eb = entrance(st, a), entrance(st, b)
 			if ka == kb and search(st, ka, swim, ea, R, eb, nil, nil, roadsOn and Grid.roads(st, ka)) then
@@ -694,13 +774,14 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 	-- rest of the line holds as it did. A chord that fails tries each end that way.
 	local startVia, goalVia = #keep > 2 and keep[2] or n, #keep > 2 and keep[#keep - 1] or 1
 	local startDetour, goalDetour = false, false
-	if #keep > 2 or not clearChord(st, from, to, P.w[n] > 0) then
-		startDetour = not clearEnd(st, P, startVia, from, true, P.w[startVia] > 0)
+	if #keep > 2 or not clearChord(st, P, from, to, P.w[n] > 0, limitOver(P, 1, n)) then
+		startDetour = not clearEnd(st, P, startVia, from, true, P.w[startVia] > 0, limitOver(P, 1, startVia))
 		-- A chord whose start detoured now reaches the goal from the start node's centre.
 		if startDetour and #keep <= 2 then
 			goalVia = 1
 		end
-		goalDetour = not clearEnd(st, P, goalVia, to, false, P.w[n] - (P.w[goalVia - 1] or 0) > 0)
+		goalDetour =
+			not clearEnd(st, P, goalVia, to, false, P.w[n] - (P.w[goalVia - 1] or 0) > 0, limitOver(P, goalVia, n))
 	end
 	local drawn = { 1 }
 	if startDetour then
@@ -791,7 +872,7 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 	end
 	local swim, cost2 = waterWalking and 1 or st.swim, waterWalking and 2 or 1
 	local roadsOn = hz and hz.roads
-	local starts, source, sourceReal = connectPoint(st, swim, sk, sc, from.z, roadsOn)
+	local starts, source, sourceReal = connectPoint(st, swim, sk, sc, from.z, roadsOn, hz)
 	local clusters, links, dist, real, closed, left = {}, {}, {}, {}, {}, #targets
 	for i, point in ipairs(targets) do
 		local k = locate(st, point.x, point.y)
@@ -825,7 +906,7 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 			local _, node = pointNode(st, targets[i])
 			if node then
 				local goals
-				goals, ends[i], realEnds[i] = connectPoint(st, swim, k, node, targets[i].z, roadsOn)
+				goals, ends[i], realEnds[i] = connectPoint(st, swim, k, node, targets[i].z, roadsOn, hz)
 				for _, a in ipairs(k == sk and starts or {}) do
 					for _, b in ipairs(goals) do
 						-- Both trees search outward from their endpoint; a reverse batch walks to the source.
@@ -838,7 +919,9 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 							cost, realCost = 0, 0
 						elseif tree and reached(tree, last) then
 							cost, realCost = tree.g[last + 1], tree.r[last + 1]
-						elseif search(st, k, swim, first, trees.R, last, nil, nil, roadsOn and Grid.roads(st, k)) then
+						elseif
+							search(st, k, swim, first, trees.R, last, nil, nil, roadsOn and Grid.roads(st, k), hz)
+						then
 							cost, realCost = trees.R.g[last + 1], trees.R.r[last + 1]
 						end
 						if cost and (not direct[i] or cost < direct[i]) then
