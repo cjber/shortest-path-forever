@@ -25,6 +25,13 @@ local function Flag(value)
 	return value == nil or (canaccessvalue(value) and type(value) == "boolean")
 end
 
+-- A third-party addon's global, read from the environment the addon was loaded in (the game's, or a test's).
+---@param name string
+---@return any
+local function Global(name)
+	return rawget(getfenv(), name) or rawget(_G, name)
+end
+
 -- A map the client knows. Modern callers pass a uiMapID; the old continent and zone indices have no client
 -- mapping on this build, so the zone wins when it names a map and the continent is only a fallback.
 ---@param continent any
@@ -56,6 +63,14 @@ local waypoints = {}
 ---@type TomTomWaypoint?
 local current
 local active = false
+-- Questie's tracker knows the quest a TomTom target stands for, but passes TomTom only a title and a point. The
+-- bridge around its tracker call notes the quest while the waypoint set inside that call is started.
+---@type integer?
+local questieQuest
+-- The quests each TomTom waypoint stands for, recorded when it is created (inside Questie's or Zygor's own call) and
+-- read again when the arrow follows it. Weak keys: a waypoint nobody holds any more takes its note with it.
+---@type table<table, { questID: integer?, questIDs: integer[]?, details: string[]? }>
+local recorded = setmetatable({}, { __mode = "k" })
 
 ---@param uid TomTomWaypoint
 ---@param opts table?
@@ -73,6 +88,83 @@ local function Fill(uid, opts)
 		end
 	end
 	return true
+end
+
+---@param list any
+---@return integer[]?
+local function QuestList(list)
+	if type(list) ~= "table" then
+		return nil
+	end
+	local count, copy = #list, {}
+	if count < 1 then
+		return nil
+	end
+	for index = 1, count do
+		local questID = ns.QuestID(list[index])
+		if not questID then
+			return nil
+		end
+		copy[index] = questID
+	end
+	return copy
+end
+
+-- The quests a TomTom waypoint stands for: recorded when it was created, else the caller's own options. Questie names
+-- its quest inside the tracker call that sets the waypoint, and Zygor's step names its goals' quests; neither is read
+-- from a title. Zygor's step is attached only to a waypoint that names no other author, so Questie's and other guides'
+-- waypoints keep their own quest or none.
+---@param uid? TomTomWaypoint
+---@param opts? table
+---@return integer? questID, integer[]? questIDs, string[]? details
+local function WaypointQuests(uid, opts)
+	local known = type(uid) == "table" and recorded[uid] or nil
+	if known then
+		return known.questID, known.questIDs, known.details
+	end
+	local questID, questIDs, details
+	local sources = { opts, uid }
+	for index = 1, 2 do
+		local source = sources[index]
+		if type(source) == "table" then
+			questID = questID or ns.QuestID(source.questID) or ns.QuestID(source.questId)
+			questIDs = questIDs or QuestList(source.questIDs)
+		end
+	end
+	questID = questID or questieQuest
+	local author = type(uid) == "table" and uid.from or nil
+	local fromZygor = type(uid) ~= "table" or author == nil or author == "" or author == "?"
+	if not questID and not questIDs and fromZygor and ns.ZygorStop then
+		questIDs, details = ns.ZygorStop()
+	end
+	if type(uid) == "table" then
+		recorded[uid] = { questID = questID, questIDs = questIDs, details = details }
+	end
+	return questID, questIDs, details
+end
+
+-- The journey for one waypoint, with the quests it stands for, shared by the shim's own waypoints and by following
+-- TomTom's arrow while it is installed.
+---@param uid? TomTomWaypoint
+---@param map integer
+---@param x number
+---@param y number
+---@param title string?
+---@param opts? table
+---@return boolean
+local function RouteToWaypoint(uid, map, x, y, title, opts)
+	local questID, questIDs, details = WaypointQuests(uid, opts)
+	return API.NavigateRoute(OWNER, {
+		{
+			map = map,
+			x = x,
+			y = y,
+			title = title,
+			questID = questID,
+			questIDs = questIDs,
+			tooltip = details and table.concat(details, "\n") or nil,
+		},
+	})
 end
 
 local function Forget()
@@ -102,7 +194,7 @@ local function Start(map, x, y, title, opts)
 	end
 	---@type TomTomWaypoint
 	local uid = { map, x, y, title = title }
-	if not Fill(uid, opts) or not API.Navigate(OWNER, map, x, y, title) then
+	if not Fill(uid, opts) or not RouteToWaypoint(uid, map, x, y, title, opts) then
 		return nil
 	end
 	current = uid
@@ -475,8 +567,9 @@ local function Follow(uid)
 		return
 	end
 	waiting = nil
-	-- API.Navigate checks the map and point; TomTom's waypoint is a uiMapID and a 0-1 point, as the shim's is.
-	if API.Navigate(OWNER, uid[1], uid[2], uid[3], Text(uid.title) and uid.title or nil) then
+	-- API.NavigateRoute checks the map and point; TomTom's waypoint is a uiMapID and a 0-1 point, as the shim's is.
+	-- Questie's and Zygor's quests, recorded when the waypoint was set, go with it.
+	if RouteToWaypoint(uid, uid[1], uid[2], uid[3], Text(uid.title) and uid.title or nil) then
 		following = uid
 	end
 	SyncArrow()
@@ -496,6 +589,32 @@ local function Unfollow(uid)
 	end
 end
 
+-- The waypoint a TomTom table holds at a map and point, after AddWaypoint has stored it. Real TomTom's GetKeyArgs
+-- gives the key; a stand-in without it is matched on the same map, point and title it stores.
+---@param tomtom table
+---@param map any
+---@param x any
+---@param y any
+---@param title any
+---@return TomTomWaypoint?
+local function WaypointAt(tomtom, map, x, y, title)
+	local byMap = type(tomtom.waypoints) == "table" and tomtom.waypoints[map] or nil
+	if type(byMap) ~= "table" then
+		return nil
+	end
+	if type(tomtom.GetKeyArgs) == "function" then
+		local key = tomtom:GetKeyArgs(map, x, y, title)
+		if key and byMap[key] then
+			return byMap[key]
+		end
+	end
+	for _, uid in pairs(byMap) do
+		if type(uid) == "table" and uid[1] == map and uid[2] == x and uid[3] == y and uid.title == title then
+			return uid
+		end
+	end
+end
+
 -- The settings checkbox, TomTom loading and the addon's own load all call this.
 function ns.RefreshTomTomFollow()
 	local tomtom = TomTom
@@ -510,9 +629,23 @@ function ns.RefreshTomTomFollow()
 		hooked = tomtom
 		hooksecurefunc(tomtom, "SetCrazyArrow", function(_, uid) -- taint-ok: TomTom owns this addon table.
 			arrowWaypoint = type(uid) == "table" and uid or nil
+			-- TomTom sets the arrow from inside AddWaypoint, so this is still inside the caller's own call: Questie's
+			-- quest is noted and Zygor's step is current. Record it for the journey Follow starts below.
+			if arrowWaypoint then
+				WaypointQuests(arrowWaypoint, nil)
+			end
 			Follow(uid)
 			SyncArrow()
 		end)
+		if type(tomtom.AddWaypoint) == "function" then
+			-- Also covers a waypoint TomTom already held, which its AddWaypoint returns without setting the arrow again.
+			hooksecurefunc(tomtom, "AddWaypoint", function(self, map, x, y, opts) -- taint-ok: TomTom owns this table.
+				local uid = WaypointAt(self, map, x, y, type(opts) == "table" and opts.title or nil)
+				if uid and not recorded[uid] then
+					WaypointQuests(uid, opts)
+				end
+			end)
+		end
 		if type(tomtom.ShowHideCrazyArrow) == "function" then
 			hooksecurefunc(tomtom, "ShowHideCrazyArrow", SyncArrow) -- taint-ok: TomTom owns this addon table.
 		end
@@ -553,15 +686,54 @@ hooksecurefunc(ns, "JourneyChanged", function()
 	SyncArrow()
 end)
 
+-- Questie's tracker names the quest its target stands for in the call that sets the waypoint (TrackerUtils'
+-- SetQuestTomTomTarget), then hands TomTom a title and a point with no quest in it. Noting the quest for the waypoint
+-- started inside that call gives the stop its live objectives. The call is synchronous, so the note cannot outlive it.
+---@type table?
+local questieUtils
+
+local function HookQuestie()
+	local utils = nil
+	local questie = Global("Questie")
+	if type(questie) == "table" then
+		utils = type(questie.TrackerUtils) == "table" and questie.TrackerUtils or nil
+	end
+	if not utils then
+		local loader = Global("QuestieLoader")
+		local import = type(loader) == "table" and loader.ImportModule or nil
+		if type(import) == "function" then
+			local ok, module = pcall(import, loader, "TrackerUtils")
+			utils = ok and type(module) == "table" and module or nil
+		end
+	end
+	if utils == questieUtils or type(utils) ~= "table" or type(utils.SetQuestTomTomTarget) ~= "function" then
+		return
+	end
+	questieUtils = utils
+	local original = utils.SetQuestTomTomTarget
+	utils.SetQuestTomTomTarget = function(questID, ...) -- taint-ok: Questie owns this addon table.
+		questieQuest = ns.QuestID(questID)
+		local ok, result = pcall(original, questID, ...)
+		questieQuest = nil
+		if not ok then
+			error(result, 0)
+		end
+		return result
+	end
+end
+
 ns.Init(function()
 	hooksecurefunc(ns, "PointGuideArrow", function(points) -- taint-ok: Shortest Path owns this addon table.
 		guideArrow = points ~= nil and #points > 0
 		SyncArrow()
 	end)
 	watcher:RegisterEvent("ADDON_LOADED")
+	watcher:RegisterEvent("PLAYER_LOGIN")
 	watcher:RegisterEvent("PLAYER_ENTERING_WORLD")
 	watcher:SetScript("OnEvent", function(self, event, name)
-		if event == "PLAYER_REGEN_ENABLED" then
+		if event == "PLAYER_LOGIN" then
+			HookQuestie()
+		elseif event == "PLAYER_REGEN_ENABLED" then
 			self:UnregisterEvent(event)
 			Follow(waiting)
 		elseif event == "PLAYER_ENTERING_WORLD" then
@@ -579,12 +751,15 @@ ns.Init(function()
 					end
 				end
 			end)
+		elseif name == "Questie" then
+			HookQuestie()
 		elseif name == "TomTom" then
 			StandDown()
 			self:UnregisterEvent("ADDON_LOADED")
 			ns.RefreshTomTomFollow()
 		end
 	end)
+	HookQuestie()
 	ns.RefreshTomTom()
 	ns.RefreshTomTomFollow()
 end)

@@ -107,6 +107,8 @@ TomTom is enabled or loads later; a TomTom switched off in the AddOns list leave
 - `TomTom:AddWaypoint(map, x, y, opts)` starts a journey to that uiMapID and 0-1 point and returns the waypoint
   table: `[1]` the map, `[2]` and `[3]` the point, `title` and `from` from `opts`. The other `opts` fields
   (`persistent`, `minimap`, `world`, `silent`, `crazy`, `callbacks` and the distances) are copied onto it.
+  `opts.questID` or `opts.questIDs` name the quests the waypoint stands for, and their live objectives show under
+  the arrow and the arrival pin.
 - `TomTom:AddMFWaypoint(map, floor, x, y, opts)` takes the same map and point; this client has no map floors, so
   `floor` is only checked.
 - `TomTom:AddZWaypoint(continent, zone, x, y, desc, ...)` takes 0-100 coordinates. The old continent and zone
