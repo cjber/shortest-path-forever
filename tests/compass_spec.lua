@@ -202,6 +202,9 @@ local env = setmetatable({
 	canaccessvalue = function()
 		return true
 	end,
+	UnitFactionGroup = function()
+		return "Horde"
+	end,
 	C_Texture = {
 		GetAtlasInfo = function(atlas)
 			calls.info = calls.info + 1
@@ -447,6 +450,14 @@ assert(strip.Stop.atlas == "taxinode_alliance")
 stop.undiscovered = true
 step()
 assert(strip.Stop.atlas == "taxinode_undiscovered", "in-place discovery changes must refresh art")
+-- The node's own side outranks the player's, and one rule draws it on the compass and the tracker alike.
+stop.undiscovered = nil
+ns.TaxiNodes[26].faction = "Neutral"
+ns.RefreshCompass()
+assert(strip.Stop.atlas == "taxinode_neutral", "a neutral flight point keeps the neutral mark")
+assert(strip.Stop.atlas == ns.Art.ModeAtlas("flight", "Neutral"), "the compass and the tracker agree on a flight point")
+assert(ns.Art.ModeAtlas("flight") == "taxinode_horde", "a node with no side falls back to the player's")
+ns.TaxiNodes[26].faction = "Alliance"
 
 -- Sampling moving bearings does not allocate, recreate regions, or repeatedly set unchanged art/text.
 bend, nextBend, stop, goal = { map = 1, x = 100, y = 0 }, nil, nil, nil
