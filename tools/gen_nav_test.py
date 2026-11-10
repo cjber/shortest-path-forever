@@ -1,6 +1,7 @@
 import unittest
 from array import array
 from collections import defaultdict
+from contextlib import contextmanager
 from unittest.mock import patch
 
 from tools.baker import gen_nav
@@ -119,7 +120,7 @@ class DiagonalTest(unittest.TestCase):
             patch.object(gen_nav, "rasterize_layers", lambda polys, adj, portal, bounds: layers),
             patch.object(gen_nav, "read_tile", lambda rc: ([], [], [], [])),
         ):
-            _, _, _, _, links, own, _, _, _ = gen_nav.rasterize_tile((0, 0))
+            _, _, _, _, links, own, _ = gen_nav.rasterize_tile((0, 0))
         self.assertEqual(links, [])
         self.assertIn(i * 4 + 2, own, "the symmetric diagonal opens for the decoder's height check")
 
@@ -144,7 +145,7 @@ class SteepStepTest(unittest.TestCase):
             patch.object(gen_nav, "rasterize_layers", lambda polys, adj, portal, bounds: layers),
             patch.object(gen_nav, "read_tile", lambda rc: ([], [], [], [])),
         ):
-            _, _, _, _, links, own, _, _, _ = gen_nav.rasterize_tile((0, 0))
+            _, _, _, _, links, own, _ = gen_nav.rasterize_tile((0, 0))
         self.assertEqual(links, [])
         self.assertNotIn(i * 4, own, "the steep step is not cut")
 
@@ -179,6 +180,98 @@ class ClusterCrossingTest(unittest.TestCase):
             _, edges = gen_nav.grid_hpa(grid, set())
         self.assertIn((u, w), edges)
         self.assertEqual(edges[(u, w)], edges[(w, u)], "the step keeps both directions")
+
+
+class GraphLegalityTest(unittest.TestCase):
+    """The abstract graph walks by exactly the rule the emitted grid decodes, so it cannot take a step the grid
+    refuses or miss one it allows. A step's height rule is the stored height, never a raw one."""
+
+    @contextmanager
+    def world(self, heights, cuts=(), links=None, nx=1):
+        c = gen_nav.CELLS
+        gw = nx * c
+        grid = bytearray(gw * c)
+        base = array("f", [0.0] * (gw * c))
+        for cell, (value, z) in heights.items():
+            grid[cell], base[cell] = value, z
+        line = defaultdict(dict)
+        for u, v, cost in links or ():
+            line[u][v] = cost
+        with (
+            patch.object(gen_nav, "CELLS", c),
+            patch.object(gen_nav, "GW", gw),
+            patch.object(gen_nav, "GH", c),
+            patch.object(gen_nav, "NX", nx),
+            patch.object(gen_nav, "NY", 1),
+            patch.object(gen_nav, "BASE_Z", base),
+            patch.object(gen_nav, "FLOOR_CELL", array("i")),
+            patch.object(gen_nav, "FLOOR_VAL", bytearray()),
+            patch.object(gen_nav, "FLOOR_LAYER", bytearray()),
+            patch.object(gen_nav, "FLOOR_Z", array("f")),
+            patch.object(gen_nav, "FLOORS_OF", defaultdict(list)),
+            patch.object(gen_nav, "FLOORS_AT", {}),
+            patch.object(gen_nav, "LINKS", line),
+            patch.object(gen_nav, "LINKED_OF", defaultdict(list)),
+        ):
+            for node in line:
+                gen_nav.LINKED_OF[gen_nav.cluster_of_cell(node)].append(node)
+            yield grid, (lambda gx, gy: grid[gx * gen_nav.GH + gy])
+
+    def steps(self, heights, cell, cuts=(), links=None):
+        c = gen_nav.CELLS
+        with self.world(heights, cuts, links) as (grid, g):
+            return dict(gen_nav.moves(g, grid, set(cuts), cell, (0, c - 1, 0, c - 1)))
+
+    def crossings(self, heights, cuts=(), links=None):
+        with self.world(heights, cuts, links, nx=2) as (grid, g):
+            return gen_nav.grid_hpa(grid, set(cuts))[1], g, grid
+
+    def test_a_steep_step_uses_the_stored_heights_the_decoder_reads(self):
+        # 20.4 and 20.0 yards are both stored as 20, so the decoder walks the step both ways and the graph must too.
+        # The removed shadow compared the raw heights and wrote only the downhill direction.
+        c = gen_nav.CELLS
+        a, b = 10 * c + 10, 11 * c + 10
+        self.assertIn(b, self.steps({a: (3, 20.4), b: (1, 20.0)}, a))
+        self.assertIn(a, self.steps({a: (3, 20.4), b: (1, 20.0)}, b))
+
+    def test_a_steep_step_between_different_stored_heights_goes_down_only(self):
+        c = gen_nav.CELLS
+        a, b = 10 * c + 10, 11 * c + 10
+        self.assertIn(b, self.steps({a: (3, 20.4), b: (1, 18.0)}, a))  # 18 <= 20: downhill
+        self.assertNotIn(a, self.steps({a: (3, 20.4), b: (1, 18.0)}, b))  # 20 > 18: not uphill
+
+    def test_a_two_way_record_with_a_steep_end_is_one_way(self):
+        # The bake writes a steep pair both ways as a record so the decoder can decide its direction by stored height;
+        # the graph must apply that rule to the record, or it climbs a face the grid refuses.
+        c = gen_nav.CELLS
+        a, b = 10 * c + 10, 10 * c + 11
+        links = [(a, b, None), (b, a, None)]
+        self.assertIn(b, self.steps({a: (1, 20.4), b: (3, 18.0)}, a, links=links))  # 18 <= 20: downhill
+        self.assertNotIn(a, self.steps({a: (1, 20.4), b: (3, 18.0)}, b, links=links))  # 20 > 18: not uphill
+
+    def test_a_runtime_walkable_cluster_crossing_is_in_the_graph(self):
+        c = gen_nav.CELLS
+        u, w = (c - 1) * c + 10, c * c + 10  # the last column of cluster 0 and the first of cluster 1
+        edges, _, _ = self.crossings({u: (3, 20.4), w: (1, 20.0)})
+        self.assertIn((u, w), edges, "equal stored heights: the crossing is walkable both ways")
+        self.assertIn((w, u), edges)
+        self.assertEqual(edges[(u, w)], edges[(w, u)])
+
+    def test_a_steep_cluster_crossing_keeps_its_downhill_direction(self):
+        c = gen_nav.CELLS
+        u, w = (c - 1) * c + 10, c * c + 10
+        edges, _, _ = self.crossings({u: (3, 20.4), w: (1, 18.0)})
+        self.assertIn((u, w), edges)
+        self.assertNotIn((w, u), edges, "the graph must not climb a steep crossing")
+
+    def test_a_one_way_record_crossing_keeps_its_direction(self):
+        # A pair the navmesh joins one way only is cut and written as its own record: the reverse step is not open,
+        # so the graph must not write it.
+        c = gen_nav.CELLS
+        u, w = (c - 1) * c + 10, c * c + 10
+        edges, _, _ = self.crossings({u: (1, 20.0), w: (1, 20.0)}, cuts={u * 4}, links=[(u, w, None)])
+        self.assertIn((u, w), edges)
+        self.assertNotIn((w, u), edges)
 
 
 class AssembleFloorsTest(unittest.TestCase):

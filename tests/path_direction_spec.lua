@@ -355,4 +355,155 @@ assert(belowCost2 and belowCost1, "both formats drop an unreached goal to the su
 assert(math.abs(belowCost2 - belowCost1) < 1e-9, "format 2 resolves a goal like format 1")
 assert(math.abs(belowCost2 - CS) < 1e-9, "the goal moved to the nearest reached surface")
 
+-- A walking step is charged for the cell it enters. A reverse tree walks a stored edge the other way, so it must
+-- charge the node nearer its source: charging the predecessor instead made the same walk cost more from one end than
+-- the other whenever the two ends differed in water. The goal is reached from its cluster's entrance at (10, 10),
+-- which is water: the forward walk charges (10, 11) and (10, 12), so the walk into the goal must charge them too.
+local wetWalk = {
+	[10] = { [10] = at(20, { water = true }), [11] = at(20), [12] = at(20) },
+	[67] = { [10] = at(20) },
+}
+fixture.install(
+	52,
+	fixture.format2({
+		map = 52,
+		nx = 2,
+		ny = 1,
+		cell = wetWalk,
+		node = {
+			{ 10, 10, 1, out = { { 67, 10, 16, 16 } } },
+			{ 67, 10, 1, out = { { 10, 10, 16, 16 } } },
+		},
+	})
+)
+local wetLocal = select(2, Path.FindSync(52, point(10, 10, 20), point(10, 12, 20)))
+local wetAcross = select(2, Path.FindSync(52, point(67, 10, 20), point(10, 12, 20)))
+assert(wetLocal and wetAcross, "the wet walk exists both ways")
+assert(
+	math.abs(wetAcross - (16 + wetLocal)) < 1e-9,
+	string.format(
+		"the walk into the goal costs what the walk out of the entrance does: %s vs %s",
+		wetAcross,
+		16 + wetLocal
+	)
+)
+
+-- A goal on a ledge whose drop is the only way in: the outbound rescue moves it to the higher ground beside it, and
+-- a local walk must not stop there. Targeting that surface reported a walk to ground 8 yards above the goal, cheaper
+-- than the drop that really reaches it.
+local ledgeGoal = {
+	[10] = { [10] = at(30, { flags = 2 }), [11] = at(20, { flags = 1 }) },
+	[11] = { [10] = at(30), [11] = at(28) },
+}
+fixture.install(
+	57,
+	fixture.format2({
+		map = 57,
+		nx = 1,
+		ny = 1,
+		cell = ledgeGoal,
+		link = { { 10, 10, 0, 1, 24 } },
+		node = { { 10, 10, 1 } },
+	})
+)
+local ledgeForward = select(2, Path.FindSync(57, point(10, 10, 30), point(10, 11, 20)))
+assert(ledgeForward and math.abs(ledgeForward - 24) < 1e-9, "the goal costs the drop: " .. tostring(ledgeForward))
+local ledgeReverse = Path.FindManySync(57, point(10, 11, 20), { point(10, 10, 30) }, nil, true)[1]
+assert(
+	ledgeReverse and math.abs(ledgeReverse - 24) < 1e-9,
+	"a reverse batch ends on the start's own surface too: " .. tostring(ledgeReverse)
+)
+
+-- A steep leg cannot feed a diagonal detour: the direct diagonal is one symmetric bit, so opening it from a one-way
+-- downhill leg let the walk climb the face diagonally. The two ordinary steps still go down.
+local steepCorner = {
+	[10] = { [9] = at(16, { steep = true }), [10] = at(32) },
+	[11] = { [9] = at(16) },
+}
+fixture.install(54, fixture.format2({ map = 54, nx = 1, ny = 1, cell = steepCorner, node = { { 10, 10, 1 } } }))
+local cornerState = Grid.State(54)
+assert(cornerState.fmt == 2 and Grid.grid(cornerState, 0))
+local cornerHigh = 10 * 67 + 10
+assert(cornerState.moves[0][cornerHigh + 1] % 16 < 8, "the diagonal must not open through a steep leg")
+assert(Grid.neighbour(cornerState, 0, cornerHigh, 10, 10, 1, -1, false) == nil, "nor be walked")
+local climb, climbWhy = Path.FindSync(54, point(11, 9, 16), point(10, 10, 32))
+assert(climb == nil and climbWhy == "unreachable", "the search must not climb the steep face diagonally")
+local descend, descendCost = Path.FindSync(54, point(10, 10, 32), point(11, 9, 16))
+assert(descend and math.abs(descendCost - 2 * CS) < 1e-9, "the two ordinary steps still go downhill")
+
+-- A cross-cluster diagonal checks its corner: a detour that climbs steep ground is not a diagonal, however level its
+-- two ends are. The same map keeps an ordinary cross-cluster diagonal open.
+local steepAcross = {
+	[66] = { [10] = at(20), [20] = at(20), [21] = at(20) },
+	[67] = { [10] = at(32, { steep = true }), [11] = at(20), [21] = at(20) },
+}
+fixture.install(
+	55,
+	fixture.format2({
+		map = 55,
+		nx = 2,
+		ny = 1,
+		cell = steepAcross,
+		node = { { 66, 10, 1 }, { 66, 20, 1 }, { 67, 11, 1 } },
+	})
+)
+local acrossState = Grid.State(55)
+assert(Grid.grid(acrossState, 0) and Grid.grid(acrossState, 1))
+local acrossFrom = 66 * 67 + 10
+assert(
+	Grid.neighbour(acrossState, 0, acrossFrom, 66, 10, 1, 1, false) == nil,
+	"the diagonal must not climb through its corner cell"
+)
+local levelFrom = 66 * 67 + 20
+local lk, ln = Grid.neighbour(acrossState, 0, levelFrom, 66, 20, 1, 1, false)
+assert(lk == 1 and ln == 21, "a level cross-cluster diagonal stays open")
+
+-- A reverse batch's road ratios come from the edges that reach a node, wherever that node lives: the source's
+-- cluster must not already have been visited for its outbound record to be readable.
+local crossEdge = {
+	[66] = { [10] = at(20) },
+	[67] = { [10] = at(20) },
+}
+fixture.install(
+	53,
+	fixture.format2({
+		map = 53,
+		nx = 2,
+		ny = 1,
+		cell = crossEdge,
+		node = {
+			{ 66, 10, 1, out = { { 67, 10, 16, 16 } } },
+			{ 67, 10, 1 },
+		},
+	})
+)
+local crossReverse = Path.FindManySync(53, point(67, 10, 20), { point(66, 10, 20) }, nil, true, roadProfile)[1]
+assert(crossReverse and math.abs(crossReverse - 16) < 1e-9, "the reverse batch crosses the boundary")
+local crossState = Grid.State(53)
+assert(#Grid.roadEdgesIn(crossState, Grid.nodesOf(crossState, 1)[1]) == 4, "the entering edge has its ratio")
+
+-- Format 1 has no steep encoding, so its state carries no steep check for the hot paths to call, and a floor that
+-- claims value 3 (as only a format 2 bake writes) stays an ordinary floor: a rule the format does not carry must not
+-- refuse a step.
+assert(old.steep == nil, "format 1 has no steep check")
+assert(type(Grid.State(42).steep) == "function", "a format 2 map carries the stored-height check")
+local alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+local function b64(value, width)
+	local digits = {}
+	for i = width, 1, -1 do
+		local d = math.floor(value / 64 ^ (i - 1)) % 64
+		digits[#digits + 1] = alphabet:sub(d + 1, d + 1)
+	end
+	return table.concat(digits)
+end
+local flat = {
+	[5] = { [10] = at(20), [11] = at(20) },
+}
+local format1Floor = fixture.format1_cells({ map = 58, nx = 1, ny = 1, cell = flat, node = { { 5, 11, 1 } } })
+-- one floor on (5, 10) at 40 yards, value 3, its +y step bit, and no explicit links
+format1Floor.floor =
+	{ [1] = b64(1, 3) .. b64(5 * 67 + 10, 3) .. b64(1, 1) .. b64(3, 1) .. b64(40 + 2048, 2) .. b64(4, 2) .. b64(0, 3) }
+fixture.install(58, format1Floor)
+assert(Path.FindSync(58, point(5, 11, 20), point(5, 10, 40)), "a format 1 floor carries no steep rule")
+
 print("path_direction_spec: ok")

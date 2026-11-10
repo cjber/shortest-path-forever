@@ -69,7 +69,6 @@ AREA_GROUND, AREA_GROUND_STEEP, AREA_WATER, AREA_OCEAN = 11, 10, 9, 6
 GRAVITY = 19.2911  # yards per second squared
 RUN = 7.0  # the player's run speed, yards per second
 FALL_LIMIT = 14.57  # the longest fall that does not hurt, yards
-STEEP_TOLERANCE = 0.01  # the previous format's raw-height steep test, kept for the abstract graph's shadow
 DROP_COLUMNS = 4  # how far (8-yard cells) from a ledge a baked connection may land
 LAYER_MARGIN = DROP_COLUMNS  # cells rasterized beyond a tile, so a drop's landing has a layer to land on
 FLAG_UNDER_HAZARD = 0x80  # Mappster: ground under magma or slime
@@ -93,11 +92,6 @@ BASE_Z = array("f")  # cell -> height of its base surface
 LINKS = defaultdict(dict)  # node -> {node it steps to besides the base grid's own: cost in yards, or None for the step}
 FLOORS_OF = defaultdict(list)  # cluster -> its floor nodes, by (cell, height)
 LINKED_OF = defaultdict(list)  # cluster -> its nodes with LINKS, sorted
-# The abstract graph keeps the direction decisions the previous format 2 bake made, so its costs are unchanged. It
-# carries a shadow of the old cuts and links while the emitted grid/floors use the derived steep steps above.
-GRAPH_CUTS = set()
-GRAPH_LINKS = defaultdict(dict)
-GRAPH_LINKED_OF = defaultdict(list)
 FLOORS_AT = {}  # cell -> its floor nodes, lowest first
 TERRAIN = {}  # cluster -> its terrain field (tools/baker/terrain.py)
 KINDS = defaultdict(int)  # how the encoded links came out: step bits, one-way records, drops
@@ -106,9 +100,6 @@ KINDS = defaultdict(int)  # how the encoded links came out: step bits, one-way r
 def configure(map_id, rows=None, cols=None):
     global MAP, TILES, ROWS, COLS, CX0, CY0, NX, NY, GW, GH, X0, Y0, ORD
     KINDS.clear()
-    GRAPH_CUTS.clear()
-    GRAPH_LINKS.clear()
-    GRAPH_LINKED_OF.clear()
     MAP = map_id
     TILES = {}
     for path in glob.glob(os.path.join(MM, f"{map_id:04d}_??_??.mmtile")):
@@ -498,15 +489,6 @@ def rasterize_tile(rc):
             return steep_step(layers[i][la][0], la, layers[j][lb][0], lb)
         return True
 
-    def allows_raw(i, la, j, lb):
-        """The previous format 2 bake's rule, on the raw layer heights: the abstract graph keeps its old decisions."""
-        if not linked(i, la, j, lb):
-            return False
-        (pa, _), (pb, _) = layers[i][la][2], layers[j][lb][2]
-        if polys[pa]["steep"] or polys[pb]["steep"]:
-            return layers[j][lb][0] <= layers[i][la][0] + STEEP_TOLERANCE
-        return True
-
     def base_steep(gx, gy):
         c = gx * GH + gy
         return c in layers and layers[c][0][1] == 3
@@ -524,8 +506,6 @@ def rasterize_tile(rc):
     g = lambda gx, gy: layers[gx * GH + gy][0][1] if gx * GH + gy in layers else 0  # noqa: E731
     inside = lambda gx, gy: tx0 <= gx <= tx1 and ty0 <= gy <= ty1 and 0 <= gx < GW and 0 <= gy < GH  # noqa: E731
     cuts, links = set(), []
-    graph_cuts, graph_links = set(), []
-    graph_window = set()  # every local cut, as the old in-tile diagonal test saw it
     for gx in range(max(0, tx0 - 1), min(GW, tx1 + 2)):
         for gy in range(max(0, ty0 - 1), min(GH, ty1 + 2)):
             i = gx * GH + gy
@@ -538,28 +518,13 @@ def rasterize_tile(rc):
                 # Steep ground keeps the ordinary symmetric bit: the decoder allows it downhill only, from the same
                 # stored heights. A pair the navmesh joins one way only still needs its own record.
                 if linked(i, 0, j, 0) and linked(j, 0, i, 0):
-                    if layers[i][0][1] == 3 or layers[j][0][1] == 3:
-                        graph_window.add(i * 4 + d)
-                        if inside(gx, gy):
-                            graph_cuts.add(i * 4 + d)
-                        if inside(gx, gy) and allows_raw(i, 0, j, 0):
-                            graph_links.append((i, layers[i][0][0], j, layers[j][0][0], None))
-                        if inside(jx, jy) and allows_raw(j, 0, i, 0):
-                            graph_links.append((j, layers[j][0][0], i, layers[i][0][0], None))
                     continue
                 cuts.add(i * 4 + d)
-                graph_window.add(i * 4 + d)
-                if inside(gx, gy):
-                    graph_cuts.add(i * 4 + d)
                 # the pair's step codes are symmetric, so an allowed direction is written out as its own link
                 if inside(gx, gy) and allows(i, 0, j, 0):
                     links.append((i, layers[i][0][0], j, layers[j][0][0], None))
                 if inside(jx, jy) and allows(j, 0, i, 0):
                     links.append((j, layers[j][0][0], i, layers[i][0][0], None))
-                if inside(gx, gy) and allows_raw(i, 0, j, 0):
-                    graph_links.append((i, layers[i][0][0], j, layers[j][0][0], None))
-                if inside(jx, jy) and allows_raw(j, 0, i, 0):
-                    graph_links.append((j, layers[j][0][0], i, layers[i][0][0], None))
     # Diagonal walkways narrower than a cell: open the diagonal step explicitly where both L-shaped detours are closed.
     own = set()
     for gx in range(tx0, min(tx1 + 1, GW - 1)):
@@ -587,27 +552,6 @@ def rasterize_tile(rc):
                             links.append((i, layers[i][0][0], j, layers[j][0][0], None))
                         if allows(j, 0, i, 0) and inside(gx + 1, gy + dy):
                             links.append((j, layers[j][0][0], i, layers[i][0][0], None))
-    # The abstract graph's shadow of the previous format's decisions: diagonals are cut or linked exactly as before,
-    # so the graph's entrances and costs stay put while the emitted grid derives steep steps at runtime.
-    for gx in range(tx0, min(tx1 + 1, GW - 1)):
-        for gy in range(ty0, ty1 + 1):
-            i = gx * GH + gy
-            if not g(gx, gy):
-                continue
-            for d, dy in ((2, 1), (3, -1)):
-                if not 0 <= gy + dy < GH:
-                    continue
-                j = i + GH + dy
-                if g(gx + 1, gy + dy) and not diag_ok(g, graph_window, gx, gy, gx + 1, gy + dy):
-                    forward, backward = allows_raw(i, 0, j, 0), allows_raw(j, 0, i, 0)
-                    if forward and backward:
-                        graph_window.add(i * 4 + d)
-                        graph_cuts.add(i * 4 + d)
-                    else:
-                        if forward and inside(gx, gy):
-                            graph_links.append((i, layers[i][0][0], j, layers[j][0][0], None))
-                        if backward and inside(gx + 1, gy + dy):
-                            graph_links.append((j, layers[j][0][0], i, layers[i][0][0], None))
     own |= {c for c in cuts if tx0 <= c // 4 // GH <= tx1 and ty0 <= c // 4 % GH <= ty1}
     # Floors: every surface pair between a cell and a neighbour that involves a floor, by height at both ends. Both
     # directions are written out, since nothing is derived from a floor's own links any more.
@@ -630,10 +574,6 @@ def rasterize_tile(rc):
                     for lb, (zb, _, _) in enumerate(layers[j]):
                         if not (la or lb):
                             continue
-                        # The graph shadow keeps the old one-directional floor links, so its Dijkstra weights and
-                        # entrances are the same as before the derivation.
-                        if allows_raw(i, la, j, lb):
-                            graph_links.append((i, za, j, zb, None))
                         # A steep pair keeps both directions as an ordinary (no-cost) link, so encode_floors can
                         # carry it as a symmetric step bit; the decoder allows it downhill only. The navmesh also
                         # has to join it both ways for that bit to be exact.
@@ -675,7 +615,6 @@ def rasterize_tile(rc):
             continue
         cost = drop_cost(math.hypot(x1 - x0, y1 - y0), fall)
         links.append((i, layers[i][la][0], j, layers[j][lb][0], cost))
-        graph_links.append((i, layers[i][la][0], j, layers[j][lb][0], cost))
     vals = bytes(g(gx, gy) for gx in range(tx0, tx1 + 1) for gy in range(ty0, ty1 + 1))
     zs = [
         layers[gx * GH + gy][0][0] if gx * GH + gy in layers else None
@@ -683,7 +622,7 @@ def rasterize_tile(rc):
         for gy in range(ty0, ty1 + 1)
     ]
     terrain = sample_cluster(MAPS, MAP, rr, cc, CELLS, ZQ) if MAPS else None
-    return rc, vals, zs, floors, links, sorted(own), terrain, sorted(graph_cuts), graph_links
+    return rc, vals, zs, floors, links, sorted(own), terrain
 
 
 def step_ok(grid, cuts, ux, uy, vx, vy):
@@ -731,10 +670,50 @@ def value_of(grid, n):
     return grid[n] if n < GW * GH else FLOOR_VAL[n - GW * GH]
 
 
+def steep_ok(grid, ux, uy, vx, vy):
+    """Steep ground (value 3) is walked downhill only, compared on the stored heights the file holds: the runtime's
+    own rule, so the graph and the grid it emits cannot disagree about a step."""
+    u, v = ux * GH + uy, vx * GH + vy
+    if grid[u] == 3 or grid[v] == 3:
+        return stored_z(v) <= stored_z(u)
+    return True
+
+
+def steep_node_ok(grid, u, v):
+    """The runtime's steep test between two nodes, base cells or floors: a step with a steep end goes downhill only,
+    by the stored heights the file holds."""
+    if value_of(grid, u) == 3 or value_of(grid, v) == 3:
+        return stored_z(v) <= stored_z(u)
+    return True
+
+
+def bit_step(g, grid, cuts, ux, uy, vx, vy):
+    """An orthogonal step a diagonal detour may take: open, and a steep step only with equal stored heights, exactly
+    as the decoder leaves a one-way steep step as its own record instead of feeding the detour."""
+    if not step_ok(g, cuts, ux, uy, vx, vy):
+        return False
+    u, v = ux * GH + uy, vx * GH + vy
+    if grid[u] == 3 or grid[v] == 3:
+        return stored_z(u) == stored_z(v)
+    return True
+
+
+def step_walkable(g, grid, cuts, ux, uy, vx, vy):
+    """May the emitted grid be walked from (ux, uy) to (vx, vy)? An orthogonal step is its symmetric bit or its own
+    record, a diagonal is either L-shaped detour or the bake's explicit diagonal, and steep ground goes down only."""
+    if not grid[vx * GH + vy]:
+        return False
+    if ux == vx or uy == vy:
+        return step_ok(g, cuts, ux, uy, vx, vy) and steep_ok(grid, ux, uy, vx, vy)
+    if not diag_ok(g, cuts, ux, uy, vx, vy, step=lambda ax, ay, bx, by: bit_step(g, grid, cuts, ax, ay, bx, by)):
+        return False
+    return steep_ok(grid, ux, uy, vx, vy)
+
+
 def moves(g, grid, cuts, u, box, swim=SWIM):
     """(v, cost in yards) for the moves out of node u that stay in box: the base grid's 8-neighbour steps, then its
-    links to and from floors; entering water costs swim. The abstract graph is built from the previous format's
-    shadow cuts and explicit links, so this stays the same rule Path.lua used to bake it."""
+    links to and from floors; entering water costs swim. Every step is walked by the rule the runtime decodes from the
+    same grid, cuts and links, so the abstract graph cannot take a step the grid refuses or miss one it allows."""
     gx0, gx1, gy0, gy1 = box
     ux, uy = divmod(cell_of(u), GH)
     if u < GW * GH:
@@ -742,16 +721,16 @@ def moves(g, grid, cuts, u, box, swim=SWIM):
             vx, vy = ux + dx, uy + dy
             if not (gx0 <= vx <= gx1 and gy0 <= vy <= gy1):
                 continue
-            if dx and dy:
-                ok = diag_ok(g, cuts, ux, uy, vx, vy)
-            else:
-                ok = step_ok(g, cuts, ux, uy, vx, vy)
-            if ok:
+            if step_walkable(g, grid, cuts, ux, uy, vx, vy):
                 v = vx * GH + vy
                 yield v, length * CS * (swim if grid[v] == 2 else 1)
     for v, cost in sorted(LINKS.get(u, {}).items()):
         vx, vy = divmod(cell_of(v), GH)
         if gx0 <= vx <= gx1 and gy0 <= vy <= gy1:
+            # A floor pair is written out both ways even where a steep end makes it one-way; the decoder decides the
+            # direction by stored height, and so must the graph.
+            if not steep_node_ok(grid, u, v):
+                continue
             if cost is not None:
                 yield v, cost
             else:
@@ -791,6 +770,25 @@ def grid_hpa(grid, cuts):
                         stack.append(v)
     edges = {}  # (a, b) cells -> cost per weight
     nodes = defaultdict(set)  # cluster -> cells
+
+    def step_into(a, b, diagonal):
+        """A base step's cost per weight, as the runtime charges it: the cell the step enters pays for its
+        water, so the two directions of one pair can differ."""
+        length = CS * (math.sqrt(2) if diagonal else 1)
+        return tuple(length * (weight if value_of(grid, b) == 2 else 1) for weight in WEIGHTS)
+
+    def back_legal(u, v):
+        """May the runtime walk this crossing's pair the other way? Its own record that way, or the grid's
+        own symmetric bit: a drop and a one-way step do not."""
+        back = LINKS.get(v, {}).get(u, 1)
+        if back is None:
+            return steep_node_ok(grid, v, u)
+        if back != 1:
+            return False
+        bux, buy = divmod(cell_of(u), GH)
+        bvx, bvy = divmod(cell_of(v), GH)
+        return step_walkable(g, grid, cuts, bvx, bvy, bux, buy)
+
     for k in range(NX * NY):
         kx, ky = divmod(k, NY)
         for axis in (0, 1):
@@ -809,8 +807,7 @@ def grid_hpa(grid, cuts):
                     wx, wy = (vx, vy + s) if axis == 0 else (vx + s, vy)
                     if not 0 <= t + s < CELLS:
                         continue
-                    ok = step_ok(g, cuts, ux, uy, wx, wy) if s == 0 else diag_ok(g, cuts, ux, uy, wx, wy)
-                    if ok:
+                    if step_walkable(g, grid, cuts, ux, uy, wx, wy):
                         w = wx * GH + wy
                         groups[(region[u], region[w])].append((t, abs(s), u, w, None))
             # Links across this border, from the nodes of this cluster that have any. A link keeps its own direction
@@ -820,6 +817,9 @@ def grid_hpa(grid, cuts):
                 ux, uy = divmod(cell_of(u), GH)
                 for w, cost in sorted(LINKS[u].items()):
                     if cluster_of_cell(w) == other:
+                        # a two-way record is still one-way at a steep pair, as the decoder reads it
+                        if cost is None and not steep_node_ok(grid, u, w):
+                            continue
                         wx, wy = divmod(cell_of(w), GH)
                         t = uy - ky * CELLS if axis == 0 else ux - kx * CELLS
                         groups[(region[u], region[w])].append((t, int(wx != ux and wy != uy), u, w, cost))
@@ -831,16 +831,22 @@ def grid_hpa(grid, cuts):
                 for i in range(0, len(crossings), ENTRANCE_RUN):
                     chunk = crossings[i : i + ENTRANCE_RUN]
                     mid = chunk[len(chunk) // 2][0]
-                    _, diagonal, u, v, cost = min(chunk, key=lambda c: (c[1], abs(c[0] - mid)))  # prefer orthogonal
-                    wet = ((value_of(grid, u) == 2) + (value_of(grid, v) == 2)) / 2
+                    # prefer orthogonal, then the crossing nearest the chunk's middle
+                    _, diagonal, u, v, cost = min(chunk, key=lambda c: (c[1], abs(c[0] - mid)))
                     if cost is not None:
                         edges[(u, v)] = tuple(cost for _ in WEIGHTS)
                     else:
-                        # a base grid step is two-way, and both directions are written out
-                        step = tuple(CS * (math.sqrt(2) if diagonal else 1) * (1 + (w - 1) * wet) for w in WEIGHTS)
-                        edges[(u, v)] = edges[(v, u)] = step
-                    nodes[cluster_of_cell(u)].add(u)
-                    nodes[cluster_of_cell(v)].add(v)
+                        edges[(u, v)] = step_into(u, v, diagonal)
+                        nodes[cluster_of_cell(u)].add(u)
+                        nodes[cluster_of_cell(v)].add(v)
+                    # The other direction across this border needs its own entrance: the same pair where the grid
+                    # walks it back, else the nearest crossing of the chunk that it does walk back.
+                    backs = [c for c in chunk if c[4] is None and back_legal(c[2], c[3])]
+                    if backs:
+                        _, bdiagonal, bu, bv, _ = min(backs, key=lambda c: (c[1], abs(c[0] - mid)))
+                        edges[(bv, bu)] = step_into(bv, bu, bdiagonal)
+                        nodes[cluster_of_cell(bv)].add(bv)
+                        nodes[cluster_of_cell(bu)].add(bu)
     inter = len(edges)
     for k in sorted(nodes):
         cells = nodes[k]
@@ -1122,23 +1128,6 @@ def assemble_floors(floors, links):
     )
 
 
-def assemble_graph(links):
-    """The abstract graph's shadow links, matched to the same nodes the emitted floors use."""
-    for i, za, j, zb, cost in links:
-        a, b = surface_node(i, za), surface_node(j, zb)
-        if a is None or b is None:
-            continue
-        current = GRAPH_LINKS[a]
-        if b not in current or cheaper(current[b], cost):
-            current[b] = cost
-    for n in sorted(GRAPH_LINKS):
-        GRAPH_LINKED_OF[cluster_of_cell(n)].append(n)
-    print(
-        f"graph shadow: linked nodes {len(GRAPH_LINKS)}, links {sum(map(len, GRAPH_LINKS.values()))}",
-        flush=True,
-    )
-
-
 def encode_heights(grid, k):
     """Base heights of a cluster's walkable cells in cell order, in zstep yards, each against its -y neighbour
     (else its -x neighbour, else the previous cell): symbols 0-46 add -23..23, 47 is followed by an absolute value
@@ -1300,12 +1289,10 @@ def main():
     checkpoint = time.perf_counter()
     grid, cuts = bytearray(GW * GH), set()
     BASE_Z.frombytes(bytes(4 * GW * GH))
-    floors, links, graph_links = [], [], []
+    floors, links = [], []
     order = sorted(TILES, key=ORD.__getitem__)
     with multiprocessing.get_context("fork").Pool(jobs) as pool:  # workers inherit the pass-1 globals
-        for n, (rc, vals, zs, tf, tl, own, terrain, tg, tgl) in enumerate(
-            pool.imap(rasterize_tile, order, chunksize=2)
-        ):
+        for n, (rc, vals, zs, tf, tl, own, terrain) in enumerate(pool.imap(rasterize_tile, order, chunksize=2)):
             kx, ky = divmod(cluster_of_tile(*rc), NY)
             for i in range(CELLS):
                 row = (kx * CELLS + i) * GH + ky * CELLS
@@ -1318,21 +1305,16 @@ def main():
             floors += tf
             links += tl
             cuts.update(own)
-            GRAPH_CUTS.update(tg)
-            graph_links += tgl
             if (n + 1) % 100 == 0:
                 print(f"  rasterized {n + 1}/{len(order)} tiles", flush=True)
     print(f"grid {GW}x{GH}: ground {grid.count(1)}, water {grid.count(2)}, cut steps {len(cuts)}", flush=True)
     phases["raster"] = time.perf_counter() - checkpoint
     checkpoint = time.perf_counter()
     assemble_floors(floors, links)
-    assemble_graph(graph_links)
     phases["floors"] = time.perf_counter() - checkpoint
     checkpoint = time.perf_counter()
-    saved_links, saved_linked = LINKS, LINKED_OF
-    LINKS, LINKED_OF = GRAPH_LINKS, GRAPH_LINKED_OF
-    nodes, edges = grid_hpa(grid, GRAPH_CUTS)
-    LINKS, LINKED_OF = saved_links, saved_linked
+    # The graph is built from the very links and cuts the grid is emitted with, so the two cannot disagree.
+    nodes, edges = grid_hpa(grid, cuts)
     phases["graph"] = time.perf_counter() - checkpoint
     checkpoint = time.perf_counter()
     emit(nodes, edges, grid, cuts, out, name)

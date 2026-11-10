@@ -125,6 +125,21 @@ local function unpackField(data, field, key)
 	return raw
 end
 
+-- A step involving steep ground (value 3) may only go downhill: the destination's stored height must not exceed the
+-- source's. Both are the quantized heights the data file holds, the same ones the bake decided with.
+local function steepStep(valA, zA, from, valB, zB, to)
+	if valA[from + 1] ~= 3 and valB[to + 1] ~= 3 then
+		return true
+	end
+	return zB[to + 1] <= zA[from + 1]
+end
+
+-- May a base step feed a diagonal detour? A steep step only does when its stored heights match, exactly as the
+-- format 2 bake left a one-way steep step as its own record instead of a symmetric bit.
+local function bitStep(val, z, a, b)
+	return (val[a] ~= 3 and val[b] ~= 3) or z[a] == z[b]
+end
+
 local function State(map)
 	local st = states[map]
 	if st == nil then
@@ -141,6 +156,8 @@ local function State(map)
 			map = map,
 			C = C,
 			fmt = D.format or 1,
+			-- Only format 2 carries steep ground, so a format 1 map takes the plain step and never reads a height.
+			steep = (D.format or 1) >= 2 and steepStep or nil,
 			ny = D.ny,
 			GX = D.nx * C,
 			GY = D.ny * C,
@@ -212,21 +229,6 @@ local function surface(st, k, lc, layer, h, values, heights, floors)
 		node = node + 1
 	end
 	return best, gap
-end
-
--- A step involving steep ground (value 3) may only go downhill: the destination's stored height must not exceed the
--- source's. Both are the quantized heights the data file holds, the same ones the bake decided with.
-local function steepStep(valA, zA, from, valB, zB, to)
-	if valA[from + 1] ~= 3 and valB[to + 1] ~= 3 then
-		return true
-	end
-	return zB[to + 1] <= zA[from + 1]
-end
-
--- May a base step feed a diagonal detour? A steep step only does when its stored heights match, exactly as the
--- format 2 bake left a one-way steep step as its own record instead of a symmetric bit.
-local function bitStep(val, z, a, b)
-	return (val[a] ~= 3 and val[b] ~= 3) or z[a] == z[b]
 end
 
 -- Floor step masks recur thousands of times. Share the common immutable link sets;
@@ -569,7 +571,12 @@ local function decodeGrid(st, k)
 						and m[i + C - 1] % 4 >= 2
 						and bitStep(val, z, i + C - 1, i + C)
 					)
-					or (val[i - 1] ~= 0 and m[i - 1] % 64 < 32 and m[i - 1] % 32 < 16)
+					or (val[i - 1] ~= 0 and m[i - 1] % 64 < 32 and m[i - 1] % 32 < 16 and bitStep(val, z, i, i - 1) and bitStep(
+						val,
+						z,
+						i - 1,
+						i + C - 1
+					))
 					or f >= 8
 				)
 			then
@@ -747,8 +754,22 @@ local function metadata(st, id)
 end
 
 -- Most entrances in a visited cluster are never expanded. Decode their edges only when needed.
+local noEdges = {}
+
 local function edgesAt(st, id)
 	local adj = st.nadj[id]
+	if adj == nil then
+		-- The records live in the node's own cluster, so decode it here: a caller holding an id from a neighbour's
+		-- edges must not need to have visited that neighbour first.
+		local k = floor(id / 4096)
+		if not st.nodes[k] then
+			nodesOf(st, k)
+		end
+		adj = st.nadj[id]
+		if adj == nil then
+			return noEdges
+		end
+	end
 	if type(adj) == "number" then
 		local k, pos = floor(id / 4096), adj
 		local s = st.D.graph[k + 1]
@@ -772,8 +793,6 @@ local function edgesAt(st, id)
 	end
 	return adj
 end
-
-local noEdges = {}
 
 -- The links into every node of cluster k, from the outbound records of the cluster and its neighbours. The file
 -- stores each edge once, from the node that leaves it, so a reverse search is handed the same edges the other way:
@@ -1151,19 +1170,10 @@ local function stepOpen(st, gx, gy, dx, dy, water)
 	return f % 4 < 2
 end
 
--- Is the base surface's diagonal step from (gx, gy) by (sx, sy) open?
-local function diagonalOpen(st, gx, gy, sx, sy, water)
-	local b = value(st, gx + sx, gy + sy)
-	if b == 0 or (not water and b == 2) then
-		return false
-	end
-	if
-		(stepOpen(st, gx, gy, sx, 0, water) and stepOpen(st, gx + sx, gy, 0, sy, water))
-		or (stepOpen(st, gx, gy, 0, sy, water) and stepOpen(st, gx, gy + sy, sx, 0, water))
-	then
-		return true
-	end
-	local ax, ay, up = gx, gy, sy > 0 -- links are stored on the lower-x cell
+-- Is the bake's explicit diagonal step from (gx, gy) by (sx, sy) open in the grid? The bit sits on the lower-x
+-- cell: `4` doubles as a ground cell's steep flag in a `steep` map, so only water keeps it there.
+local function diagonalBit(st, gx, gy, sx, sy, water)
+	local ax, ay, up = gx, gy, sy > 0
 	if sx < 0 then
 		ax, ay, up = gx + sx, gy + sy, sy < 0
 	end
@@ -1177,6 +1187,56 @@ local function diagonalOpen(st, gx, gy, sx, sy, water)
 		return f % 8 >= 4
 	end
 	return f >= 8
+end
+
+-- The base surface's cell and node in its own cluster, decoded.
+local function baseAt(st, gx, gy)
+	local C = st.C
+	local k = floor(gx / C) * st.ny + floor(gy / C)
+	grid(st, k)
+	return k, (gx % C) * C + gy % C
+end
+
+-- An orthogonal base step as the player walks it: the grid's own bit, and a steep step downhill only. Decoding a
+-- step reads the same stored heights, so a detour leg cannot climb a face the step itself refuses.
+local function stepLegal(st, gx, gy, dx, dy, water)
+	if not stepOpen(st, gx, gy, dx, dy, water) then
+		return false
+	end
+	local steep = st.steep
+	if not steep then
+		return true
+	end
+	local ak, an = baseAt(st, gx, gy)
+	local bk, bn = baseAt(st, gx + dx, gy + dy)
+	return steep(st.val[ak], st.z[ak], an, st.val[bk], st.z[bk], bn)
+end
+
+-- Is the base surface's diagonal step from (gx, gy) by (dx, dy) walkable in that direction? Either L-shaped detour,
+-- both legs walked by an ordinary step's rule, or the bake's explicit diagonal, which the decoder allows downhill
+-- only by the stored heights. Checking only the two ends would let a detour climb through its corner cell.
+local function diagonalStep(st, gx, gy, dx, dy, water)
+	local tx, ty = gx + dx, gy + dy
+	local b = value(st, tx, ty)
+	if b == 0 or (not water and b == 2) then
+		return false
+	end
+	if
+		(stepLegal(st, gx, gy, dx, 0, water) and stepLegal(st, gx + dx, gy, 0, dy, water))
+		or (stepLegal(st, gx, gy, 0, dy, water) and stepLegal(st, gx, gy + dy, dx, 0, water))
+	then
+		return true
+	end
+	if not diagonalBit(st, gx, gy, dx, dy, water) then
+		return false
+	end
+	local steep = st.steep
+	if not steep then
+		return true
+	end
+	local ak, an = baseAt(st, gx, gy)
+	local bk, bn = baseAt(st, tx, ty)
+	return steep(st.val[ak], st.z[ak], an, st.val[bk], st.z[bk], bn)
 end
 
 -- The node one step (dx, dy) on from node of cluster k at global cell (gx, gy): the base surface's own step first,
@@ -1217,11 +1277,12 @@ local function neighbour(st, k, node, gx, gy, dx, dy, water)
 		elseif dx == 0 or dy == 0 then
 			open = stepOpen(st, gx, gy, dx, dy, water)
 		else
-			open = diagonalOpen(st, gx, gy, dx, dy, water)
+			open = diagonalStep(st, gx, gy, dx, dy, water)
 		end
 		if open then
 			grid(st, tk)
-			if steepStep(st.val[k], st.z[k], node, st.val[tk], st.z[tk], tlc) then
+			local steep = st.steep
+			if not steep or steep(st.val[k], st.z[k], node, st.val[tk], st.z[tk], tlc) then
 				return tk, tlc
 			end
 		end
@@ -1232,6 +1293,7 @@ local function neighbour(st, k, node, gx, gy, dx, dy, water)
 		return nil
 	end
 	local here, h = st.val[k][node + 1], st.z[k][node + 1]
+	local steep = st.steep
 	for e = 1, #l do
 		if st.fmt >= 2 then
 			-- a format 2 link carries the cell offset it steps to, so a drop of more than a cell matches as well
@@ -1240,7 +1302,7 @@ local function neighbour(st, k, node, gx, gy, dx, dy, water)
 				grid(st, tk)
 				local v = surface(st, tk, tlc, floor(entry / 256) % 64 - 1, h)
 				if v and (water or (here ~= 2 and st.val[tk][v + 1] ~= 2)) then
-					if steepStep(st.val[k], st.z[k], node, st.val[tk], st.z[tk], v) then
+					if not steep or steep(st.val[k], st.z[k], node, st.val[tk], st.z[tk], v) then
 						return tk, v
 					end
 				end
@@ -1251,9 +1313,7 @@ local function neighbour(st, k, node, gx, gy, dx, dy, water)
 				grid(st, tk)
 				local v = surface(st, tk, tlc, floor(l[e] / 8) - 1, h)
 				if v and (water or (here ~= 2 and st.val[tk][v + 1] ~= 2)) then
-					if steepStep(st.val[k], st.z[k], node, st.val[tk], st.z[tk], v) then
-						return tk, v
-					end
+					return tk, v
 				end
 			end
 		end

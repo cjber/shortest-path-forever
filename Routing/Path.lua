@@ -17,7 +17,7 @@ local tick, Deadline, Expansions, State, surface, grid =
 local cellOf, nodesOf, metadata = Grid.cellOf, Grid.nodesOf, Grid.metadata
 local adjacent, preceding = Grid.adjacent, Grid.preceding
 local entrance, locate, standing, snap, smooth = Grid.entrance, Grid.locate, Grid.standing, Grid.snap, Grid.smooth
-local toward, peak, steepStep = Grid.toward, Grid.peak, Grid.steepStep
+local toward, peak = Grid.toward, Grid.peak
 
 local TILE, SNAP, ZTOL, DX, DY = Grid.TILE, Grid.SNAP, Grid.ZTOL, Grid.DX, Grid.DY
 local OFFROAD = Grid.OFFROAD
@@ -149,6 +149,7 @@ local function search(st, k, swim, source, tree, goal, targets, left, roads, hz,
 	-- A paused search retains these arrays even if another job evicts its cluster.
 	local m, z, at, links = st.moves[k], st.z[k], st.at[k], st.links[k]
 	local fmt, back = st.fmt, reverse and st.linksIn[k]
+	local steep = st.steep
 	local C, cs = st.C, st.cs
 	local N = C * C
 	local g, r, par, stamp, closed = tree.g, tree.r, tree.par, tree.stamp, tree.closed
@@ -170,15 +171,18 @@ local function search(st, k, swim, source, tree, goal, targets, left, roads, hz,
 	local function relax(v, length, override)
 		-- Forward walks u -> v; a reverse tree walks the stored edge the other way, v -> u, into the source.
 		if reverse then
-			if not steepStep(val, z, v, val, z, u) then
+			if steep and not steep(val, z, v, val, z, u) then
 				return
 			end
-		elseif not steepStep(val, z, u, val, z, v) then
+		elseif steep and not steep(val, z, u, val, z, v) then
 			return
 		end
 		local i = v + 1
-		local step = override or length * cs * (val[i] == 2 and swim or 1)
-		local base = v < N and v or at[i]
+		-- A step is charged for the cell it enters, whichever way the tree walks it: water, Follow roads and a
+		-- hazard profile's weight are all properties of that cell.
+		local entered = reverse and u or v
+		local step = override or length * cs * (val[entered + 1] == 2 and swim or 1)
+		local base = entered < N and entered or at[entered + 1]
 		local choice = roads and not roads[base] and step * OFFROAD or step
 		if factor then
 			local f = factor[base]
@@ -487,7 +491,8 @@ end
 -- any surface at its spot, so it starts from each one within a cell of it at a distinct height and the search keeps
 -- the cheapest: a street beside or over a canal is not walked from the canal bed. Returns each surface's connection,
 -- the entrance costs merged by minimum and, per entrance, the surface it came from; wantIn adds the costs into the
--- point, which is what a goal needs.
+-- point, which is what a goal needs. The surfaces themselves are returned too: a walk drawn or searched to a point
+-- ends on them, never on wherever the outbound rescue moved it.
 local function connectPoint(st, swim, k, node, h, roadsOn, hz, wantIn)
 	local nodes = { node }
 	if not h then
@@ -534,7 +539,7 @@ local function connectPoint(st, swim, k, node, h, roadsOn, hz, wantIn)
 	end
 	for _, start in ipairs(nodes) do
 		local n, edges, reals, tree = connect(st, swim, k, start, roadsOn, hz)
-		ends[#ends + 1] = { node = n, tree = tree }
+		ends[#ends + 1] = { node = n, tree = tree, own = start }
 		for id, cost in pairs(edges) do
 			if not merged[id] or cost < merged[id] then
 				merged[id], mergedReal[id], via[id] = cost, reals[id], ends[#ends]
@@ -549,7 +554,7 @@ local function connectPoint(st, swim, k, node, h, roadsOn, hz, wantIn)
 			end
 		end
 	end
-	return ends, merged, mergedReal, via, mergedIn, mergedInReal, viaIn
+	return ends, merged, mergedReal, via, mergedIn, mergedInReal, viaIn, nodes
 end
 -- A point's position in global cells, and the node it stands on in its own cell: within ZTOL of its height, or the
 -- base surface when it has none.
@@ -627,8 +632,9 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 
 	local S, G = trees.S, trees.G
 	local starts, source, sourceReal, sourceVia = connectPoint(st, swim, sk, sc, from.z, roadsOn, hz)
-	-- The goal's costs are the walks into it, so a ledge drop is not climbed to reach it.
-	local goals, _, _, _, target, targetReal, targetVia = connectPoint(st, swim, gk, gc, to.z, roadsOn, hz, true)
+	-- The goal's costs are the walks into it, so a ledge drop is not climbed to reach it. A local walk to it ends on
+	-- the surfaces it stands on, not on wherever the outbound rescue moved it.
+	local _, _, _, _, target, targetReal, targetVia, goalOwn = connectPoint(st, swim, gk, gc, to.z, roadsOn, hz, true)
 	local key = table.concat({ sk, sc, gk, gc, swim, from.z and 1 or 0, to.z and 1 or 0, hz and hz.key or "" }, ":")
 	st.paths = st.paths or {}
 	local cached = st.paths[key]
@@ -641,11 +647,11 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 		if sk == gk then
 			local roadSet = roadsOn and Grid.roads(st, sk)
 			for _, a in ipairs(starts) do
-				for _, b in ipairs(goals) do
-					if search(st, sk, swim, a.node, S, b.node, nil, nil, roadSet, hz) then
-						local gv, rv = S.g[b.node + 1], S.r[b.node + 1]
+				for _, b in ipairs(goalOwn) do
+					if search(st, sk, swim, a.node, S, b, nil, nil, roadSet, hz) then
+						local gv, rv = S.g[b + 1], S.r[b + 1]
 						if not direct or gv < direct then
-							direct, directReal, directFrom, directTo = gv, rv, a.node, b.node
+							direct, directReal, directFrom, directTo = gv, rv, a.node, b
 						end
 					end
 				end
@@ -986,10 +992,11 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 				end
 				for _, a in ipairs(k == sk and starts or {}) do
 					for _, b in ipairs(goals) do
-						-- Both trees search outward from their endpoint; a reverse batch walks to the source.
-						local first, last, tree = a.node, b.node, a.tree
+						-- Both trees search outward from their endpoint; a reverse batch walks to the source. A local
+						-- walk ends on the surface the point stands on, never on where the outbound rescue moved it.
+						local first, last, tree = a.node, b.own, a.tree
 						if reverse then
-							first, last, tree = b.node, a.node, b.tree
+							first, last, tree = b.node, a.own, b.tree
 						end
 						local cost, realCost
 						if first == last then
