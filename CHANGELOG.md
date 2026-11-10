@@ -12,6 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.26.0] - 2026-11-10
+
+<!-- discord-image: docs/screenshots/floors.png -->
+
 - **A stop above or below the ground shows which.** A guide's stop at the top of a tower used to look just like one on the ground, so the pin said "34 yd" while you stood underneath with no hint to climb. Where floors stack, such as the Sentinel Hill tower or the Undercity under the ruins, a stop now wears the map's own up or down arrow at the pin's upper right, and its tooltip adds "Above ground level" or "Below ground level" under the place. A spot with one floor never wears an arrow, and a pin marking several stops shows one only when they agree (#648, #649).
 
 ## [1.25.2] - 2026-11-10

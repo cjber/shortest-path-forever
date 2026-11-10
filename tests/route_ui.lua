@@ -61,6 +61,8 @@ do
  local high = active[goalTemplate][1]
  assert(not high.Arrow.hidden and high.Arrow.atlas == "poi-door-arrow-up", "a stop above the ground wears the up arrow")
  assert(high.Arrow.anchor[1] == "TOPRIGHT" and high.Arrow.anchor[3] == "TOPRIGHT", "at the pin's upper right")
+-- Outward from the corner, as the action badge is from the lower right, so the arrow never covers the stop number.
+assert(high.Arrow.anchor[4] > 0 and high.Arrow.anchor[5] > 0, "the arrow stands outside the pin's upper right corner")
  high.scripts.OnEnter(high)
  assert(tip[2] == "  Above ground level" and tipColors[2] == HIGHLIGHT_FONT_COLOR,
   "the stop above the ground says so under its label")

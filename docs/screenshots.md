@@ -26,6 +26,7 @@ pixels never enter product media.
 | `darkshore.png` | A measured walk south from Auberdine to the Grove of the Ancients |
 | `docks.png` | Auberdine's clustered piers; arrivals/departures and hover highlighting |
 | `stops.png` | A four-stop API route through Thelsamar (three places): the current stop at full strength and the later ones as faded as their lines, each on the addon's gold numbered marker with its action badge |
+| `floors.png` | Westfall at Sentinel Hill: the current guide stop, Scout Riell at the top of the tower, wears the map's up arrow at its upper right, and its tooltip says "Above ground level" |
 | `area.png` | Westfall, standing in a quest's area: the world map draws the game's own area for the quest in gold, with no stop pin or line, cropped to the area |
 | `tracker.png` | Capture 21's five Auberdine → Silithus steps, with the current totals header |
 | `detached.png` | The Journey tracker detached from the quest tracker, under its draggable "Forever tracker" heading |
@@ -42,6 +43,7 @@ pixels never enter product media.
 `tools/screenshots_services.py` draws the services scene,
 `tools/screenshots_tracker.py` the detached tracker's heading, `tools/screenshots_area.py`
 the quest's area, and `tools/screenshots_arrival.py` the arrival pin and its tinted compass.
+`tools/screenshots_floors.py` draws the stop above the ground at Sentinel Hill.
 
 The static images render at two pixels per UI unit; the GIF renders at its final
 760×555 size to retain the route's physical pixel widths. A shared palette reserves
