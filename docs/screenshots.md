@@ -33,14 +33,15 @@ pixels never enter product media.
 | `cast_prompt.png` | The current Hearthstone action, using the same icon, label and spacing as the screen prompt |
 | `compass.png` | The compass: the game's own ticks and gold letters fading out at each end, turns 1 and 2 and the yards under the next, no panel (on by default) |
 | `compass_behind.png` | The same compass facing about 140 degrees away: the markers and distance dim to 40 percent and only turn 1 shows |
+| `arrival.png` | Standing in a quest's area: the arrow is the addon's gold goal pin with the stop's title and three objectives, and the compass ribbon is tinted green with no turns or distance |
 | `services.png` | The Nearby services tab in the world map's quest log, its bags tab selected: Auberdine's vendors for a level 15 hunter, each with the nearest NPC and walking time, and the arrows, shot, food and drink for that level |
 | `services_better.png` | The same tab for that hunter at level 25 with a bow: Dalmond still sells only Sharp Arrow, so a one-line row under Arrows offers Razor Arrow in Darnassus with its own time and the upgrade arrow on its icon; Auberdine already sells the best food and drink for 25 |
 | `services_search.png` | The same tab while `water` is typed into its search box: the nearest food and drink vendors selling something that matches, each row naming only the item that matched |
 | `demo.gif` | Eight-second montage: route pulse/settle, tracker countdown and gliding compass; under 0.5 MB |
 
 `tools/screenshots_services.py` draws the services scene,
-`tools/screenshots_tracker.py` the detached tracker's heading, and `tools/screenshots_area.py`
-the quest's area.
+`tools/screenshots_tracker.py` the detached tracker's heading, `tools/screenshots_area.py`
+the quest's area, and `tools/screenshots_arrival.py` the arrival pin and its tinted compass.
 
 The static images render at two pixels per UI unit; the GIF renders at its final
 760×555 size to retain the route's physical pixel widths. A shared palette reserves
@@ -92,6 +93,14 @@ remains 8,000 ms. The animation uses fixed time steps, never the wall clock.
   the ribbon's fade ramp and its gold active state, and heading easing.
   Blizzard's ObjectiveTracker templates, WorldMap frame, WaypointLocationDataProvider,
   Minimap XML, Camelot Skin/Diel and Backdrop sources supply the surrounding widgets.
+- `arrival.png` reproduces `UI/Arrow.lua`'s `ShowArrival`: the addon's own gold goal pin,
+  `media/Pin.tga`, at its native square 36 by 36, the stop's title in `GameFontNormal` 8 units
+  below it and up to three objective lines in `GameFontHighlightSmall` 4 below the title, both
+  centred in a 240-unit column. The ribbon keeps `Compass.lua`'s
+  `ARRIVED_TICK_COLOR` and `ARRIVED_CENTER_COLOR` and its turns are absent because the guide
+  holds no targets while it waits in the area. The stop is quest 878, *Tribes at War* in the
+  Barrens, whose three objectives are the lines shown; the fixture names the kills rather than a
+  recorded character's progress.
 
 ## Visual review and limits
 

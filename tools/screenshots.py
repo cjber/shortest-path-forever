@@ -30,6 +30,7 @@ if not (WOWMOCK / "wowmock.py").is_file():
 sys.path.insert(0, str(WOWMOCK))
 from screenshot_docks import dock_kinds, number_art, pin_art, zeppelin_art
 from screenshots_area import render as render_area_art
+from screenshots_arrival import render as render_arrival
 from screenshots_art import Art
 from screenshots_services import render as render_services
 from screenshots_services import render_better as render_services_better
@@ -569,11 +570,14 @@ def render_tracker(ui):
     return scene(ui, [(journey_tracker(ui, dock_title), 0, 0)])
 
 
-def compass_canvas(ui, facing=math.pi - 0.2, distance=780, overhang=0):
+def compass_canvas(ui, facing=math.pi - 0.2, distance=780, overhang=0, arrived=False):
     # Compass.lua's ribbon: no panel and no border. Its ticks and their letters fade out towards the ends, so
     # the compass dissolves into the world, and its turns are the addon's own gold numbered markers.
     # The client draws a texture past its frame, so `overhang` keeps room beside the ribbon for a marker clamped
     # to its end and the distance under it, which the scene would otherwise cut at the canvas edge.
+    # Compass.lua's Paint: the parchment gold, or the quieter green of standing in an arrived stop's area (#627).
+    tick = (0.6, 0.76, 0.58, 0.7) if arrived else (0.72, 0.67, 0.55, 0.7)
+    center = (0.62, 0.9, 0.55, 0.85) if arrived else (1, 0.82, 0, 0.85)
     canvas = ui.canvas(360 + overhang, 65)
 
     def offset(angle):
@@ -589,7 +593,7 @@ def compass_canvas(ui, facing=math.pi - 0.2, distance=780, overhang=0):
         edge = min(1, max(0, (180 - abs(x)) / fade))
         alpha = edge * edge * (major_alpha if major else minor_alpha)
         height = 5 if major else 3
-        canvas.fill(180 + x - 0.5, 6, 1, height, (0.72, 0.67, 0.55, 0.7 * alpha))
+        canvas.fill(180 + x - 0.5, 6, 1, height, (*tick[:3], tick[3] * alpha))
         if major:
             canvas.text(
                 180 + x - 10,
@@ -600,7 +604,10 @@ def compass_canvas(ui, facing=math.pi - 0.2, distance=780, overhang=0):
                 justify="CENTER",
                 width=20,
             )
-    canvas.fill(179.5, 3, 1, 6, (1, 0.82, 0, 0.85))
+    canvas.fill(179.5, 3, 1, 6, center)
+    # The guide has no targets while it waits in the area, so the ribbon keeps its ticks and centre alone.
+    if arrived:
+        return canvas
 
     def number_marker(number, x, y, size, alpha=1):
         # UI/Art.lua's NumberFile art, square and drawn at its native aspect.
@@ -762,6 +769,7 @@ SCENES = {
     "compass_behind": lambda ui: scene(
         ui, [(compass_canvas(ui, facing=math.pi + 140 * math.pi / 180, overhang=45), 0, 0)]
     ),
+    "arrival": lambda ui: render_arrival(ui, compass_canvas),
     "cast_prompt": render_cast_prompt,
     "services": render_services,
     "services_search": render_services_search,

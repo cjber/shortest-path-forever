@@ -13,8 +13,13 @@ optional `### For addon authors` subsection after a version's player bullets.
 ## [Unreleased]
 
 - **A quest whose only map pin is its start still gets a journey.** Some quests start and end with one NPC and have no objective area, such as Dragonmaw Shinbones (1846), so the client reports only that start pin. Planning a journey from the quest log did nothing; it now goes to the pin the client names, and a quest with no pin or waypoint at all still says it has no location. Reported on GitHub by Aldericdevir (#629).
+
+## [1.25.0] - 2026-11-10
+
+<!-- discord-image: docs/screenshots/arrival.png -->
+
+- **The arrow becomes a pin when you reach a stop's area.** Adventure Guide's area stops used to hide the direction arrow and compass on arrival. The arrow now turns into Shortest Path's gold pin, the same one on your destination, with the stop's title and objective lines beneath it, while the compass tints quietly instead of glowing. It goes back to the arrow when you leave the area or the stop changes. The pin is on by default; turn *Show a pin when you reach a stop* off under Guidance to hide guidance on arrival as before. Reported on CurseForge by sampconrad (#627).
 - **The walking line can be turned off on the world map or the minimap.** Two switches beside *Walking route colour* in Settings > Map marks let you hide the route line on either surface while the arrow, destination pin and tracker still guide you, and the other surface keeps its line. Reported on CurseForge by Gaafah (#576).
-- **The arrow becomes a pin when you reach a stop's area.** Adventure Guide's area stops used to hide the direction arrow and compass on arrival. The arrow now turns into the game's own waypoint pin, with the stop's title and objective lines beneath it, while the compass tints quietly instead of glowing. It goes back to the arrow when you leave the area or the stop changes. The pin is on by default; turn *Show a pin when you reach a stop* off under Guidance to hide guidance on arrival as before. Reported on CurseForge by sampconrad (#627).
 
 ## [1.24.10] - 2026-11-10
 

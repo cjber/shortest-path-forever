@@ -500,8 +500,8 @@ L["Eastern Kingdoms"] = "Восточные королевства" -- mt
 L["Kalimdor"] = "Калимдор" -- mt
 L["No flight points learned in %s: open a flight master's map once to sync them."] =
 	"В зоне «%s» не изучено ни одной точки полёта: один раз откройте карту распорядителя полётов, чтобы синхронизировать их." -- mt
-L["Only the flight points your character has are learned now."] =
-	"Теперь запоминаются только точки полёта, которые есть у персонажа." -- mt
+L["When you reach a stop, the arrow becomes a pin with what to do there."] =
+	"Когда вы достигаете остановки, стрелка превращается в метку с тем, что там нужно сделать." -- mt
 L["Better for your level, farther away"] = "Лучше для вашего уровня, но дальше" -- mt
 L["Show a pin when you reach a stop"] = "Показывать метку при прибытии к остановке" -- mt
 L["In a stop's area the direction arrow becomes a pin with the stop's objectives, instead of hiding."] =
