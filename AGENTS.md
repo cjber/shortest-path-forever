@@ -104,6 +104,7 @@ before its `v*` tag, since the release publishes it as the notes.
 - For UI design, mockups, asset selection and visual audits, also read the
   `wow-retail-ui-style` skill on Forever Core `main`. Its asset registry and audit sheets
   distinguish approved native host art from conditional and blacklisted assets.
+- `repo-standards`: the RS-* requirements every cjber repo meets (repo, Actions and security settings, rulesets, CI hardening, community files), a skill in cjber/skills whose `audit.py` checks this repo
 
 ## Waivers
 
