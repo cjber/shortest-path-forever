@@ -455,6 +455,7 @@ function API.NavigateRoute(owner, stops)
 			or (stop.tooltip ~= nil and not (canaccessvalue(stop.tooltip) and type(stop.tooltip) == "string"))
 			or (stop.hold ~= nil and not (canaccessvalue(stop.hold) and type(stop.hold) == "boolean"))
 			or (stop.radius ~= nil and (not Number(stop.radius) or stop.radius < 0))
+			or (stop.z ~= nil and not Number(stop.z))
 			or (stop.questID ~= nil and not ID(stop.questID))
 			or (stop.questIDs ~= nil and (type(stop.questIDs) ~= "table" or not Quests(stop.questIDs)))
 			or (stop.handins ~= nil and (type(stop.handins) ~= "table" or not Quests(stop.handins)))
@@ -469,6 +470,10 @@ function API.NavigateRoute(owner, stops)
 		end
 		point.label = stop.title
 		point.details = DetailLines(stop.tooltip)
+		-- A caller's world height lets the stop pin compare its surface with the terrain under that spot.
+		if stop.z ~= nil then
+			point.z = stop.z
+		end
 		-- A caller such as Adventure Guide may need the route to remain visible while the
 		-- player completes an interaction at this location. It resubmits the route after
 		-- that state changes; ordinary API stops retain automatic arrival.

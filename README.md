@@ -33,7 +33,7 @@ with you.
 - **Type a waypoint.** `/way [zone] x y [title]` plans a journey there, written as for TomTom, while TomTom and other addons leave `/way` free; `/path way` always works. With TomTom installed, *Follow TomTom's arrow* in Guidance follows its arrow.
   ![A guide route through Thelsamar](docs/screenshots/stops.png)
   The current stop lights up like a tracked quest.
-- **Choose your guidance.** Keep the route on both maps while hiding the Journey tracker or direction arrow. *Show journey steps in the objective tracker* is in Guidance and the arrow switch is in Interface. The arrow eases round to each new bearing; move and scale it in Interface. Click the current step to complete it manually; skipping a Hearthstone leaves it out for that journey.
+- **Choose your guidance.** Keep the route on both maps while hiding the Journey tracker or direction arrow. *Show journey steps in the objective tracker* is in Guidance and the arrow switch is in Interface. The arrow eases round to each new bearing; move and scale it in Interface, and choose whether its label shows the distance, the time left or both. Click the current step to complete it manually; skipping a Hearthstone leaves it out for that journey.
   ![Route and native waypoint on the minimap](docs/screenshots/minimap.png)
   Breadcrumbs show the walking route; the waypoint leads to the next step. A goal off the minimap waits on its rim.
 - **See flights and departures.** Flight maps highlight your next flight, and a flight master's world map tooltip lists its flights and their times. Dock tooltips show destinations and departure times; nearby services count down in the tracker. Ride times improve estimates and are shared with other players.
@@ -119,6 +119,8 @@ Each one works on its own, and they work together when you install more than one
 | [Legacy Forever](https://www.curseforge.com/wow/addons/legacy-forever) | Shows your unfinished Legacy challenges on the world map and tracks the ones you choose. | [Issues](https://github.com/cjber/legacy-forever/issues) |
 | [Tweaks Forever](https://www.curseforge.com/wow/addons/tweaks-forever) | Adds quest automation, rare alerts and merchant options to the game's settings. | [Issues](https://github.com/cjber/tweaks-forever/issues) |
 | [Field Guide Forever](https://www.curseforge.com/wow/addons/field-guide-forever) | Keeps a cosmetic journal of the creatures you kill, zone by zone. | [Issues](https://github.com/cjber/field-guide-forever/issues) |
+| [Commissions Forever](https://www.curseforge.com/wow/addons/commissions-forever) | Lists your commission turn-ins, the materials in your bags and the next NPC to visit. | [Issues](https://github.com/cjber/commissions-forever/issues) |
+| [Macro Assist Forever](https://www.curseforge.com/wow/addons/macro-assist-forever) | Adds a macro window with every macro in one list, a mono editor with live checks, and history. | [Issues](https://github.com/cjber/macro-assist-forever/issues) |
 
 Bug reports, feature requests and pull requests are welcome on each addon's GitHub. Everyone whose report or idea ships is thanked by name in the addon's credits and changelog.
 

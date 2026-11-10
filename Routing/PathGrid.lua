@@ -140,6 +140,7 @@ local function State(map)
 			val = {}, -- [k] = node values (node + 1), false when the cluster has no data
 			moves = {}, -- [k][lc + 1] = open moves inside the cluster + 16 * the data file's step flags
 			z = {}, -- [k][node + 1] = height of a walkable node
+			terrain = {}, -- [k][cell + 1] = the cell's ground layer, or false when it has floors over no terrain
 			at = {}, -- [k][node + 1] = a floor's local cell; [k][-(lc + 1)] = the cell's first floor node
 			links = {}, -- [k][node + 1] = { direction + 8 * (layer + 1), ... } steps besides the base grid's
 			graphUsed = {},
@@ -273,6 +274,36 @@ local function decodeHeights(st, val, z, s)
 			last, z[i] = v, v * step
 		end
 	end
+end
+
+-- A cluster's terrain exceptions (tools/baker/terrain.py): only the cells whose ground is one of their floors, plus
+-- cells with floors over no terrain. Each exception is its cell delta from the previous one (symbol 0-62 is 1-63, 63
+-- is followed by the delta - 64 in three symbols), then its ground layer (symbol 0-62 is layer 1-63, 63 is no
+-- ground). A cell with no floor is left out: it has one place to stand, and the route walks the player onto it.
+-- Decoded on the first ground() call, so route decoding never reads it.
+local function decodeTerrain(s)
+	local out = {}
+	if not s or s == "" then
+		return out
+	end
+	local cell, pos = -1, 1
+	while pos <= #s do
+		if pos % 512 == 1 then
+			slice()
+		end
+		local sym = B64[byte(s, pos)]
+		pos = pos + 1
+		if sym < 63 then
+			cell = cell + sym + 1
+		else
+			cell = cell + 64 + num(s, pos, 3)
+			pos = pos + 3
+		end
+		sym = B64[byte(s, pos)]
+		pos = pos + 1
+		out[cell + 1] = sym == 63 and false or sym + 1
+	end
+	return out
 end
 
 local function decodeFloors(st, k, val, z, chunks)
@@ -427,6 +458,7 @@ local function evict(st, oldest)
 	decodedKB, decodedCount = decodedKB - st.sizes[oldest], decodedCount - 1
 	st.sizes[oldest], st.used[oldest] = nil, nil
 	st.val[oldest], st.moves[oldest], st.z[oldest], st.at[oldest], st.links[oldest] = nil, nil, nil, nil, nil
+	st.terrain[oldest] = nil
 	st.road[oldest], st.roadEdges[oldest] = nil, nil
 	st.decoded = st.decoded - 1
 end
@@ -730,6 +762,61 @@ local function standing(st, k, lc, h)
 		return val[lc + 1] ~= 0 and lc or nil, 0
 	end
 	return surface(st, k, lc, -1, h)
+end
+
+-- How a point at height z stands against its cell's ground: "up" above it, "down" below it, nil on it. The point
+-- snaps to the nearest surface of its cell as a walk. A cell with no floor has one place to stand and says nothing.
+-- Otherwise the ground is the cell's stored ground layer, or its base when the cell is left out; a cell with floors
+-- over no terrain stores the no-ground marker and says nothing. An undecoded cell says nothing too: the map's own
+-- asynchronous decoding fills it, so a caller on hover never forces a grid decode. The exceptions themselves are
+-- decoded here, on first use.
+local function terrain(st, k)
+	local exceptions = st.terrain[k]
+	if exceptions == nil then
+		local s = unpackField(st.D, "terrain", k + 1)
+		exceptions = s and decodeTerrain(s) or {}
+		st.terrain[k] = exceptions
+	end
+	return exceptions
+end
+---@param map number
+---@param x number
+---@param y number
+---@param z number?
+---@return "up"|"down"|nil
+local function ground(map, x, y, z)
+	if type(z) ~= "number" then
+		return nil
+	end
+	local st = states[map] or State(map)
+	if not st then
+		return nil
+	end
+	local k, lc = locate(st, x, y)
+	local val = k and st.val[k]
+	if not val then
+		return nil
+	end
+	local at = st.at[k]
+	if not at or not at[-(lc + 1)] then
+		return nil
+	end
+	local layer = terrain(st, k)[lc + 1]
+	if layer == false then
+		return nil
+	end
+	local node = surface(st, k, lc, -1, z)
+	local groundNode = surface(st, k, lc, layer or 0)
+	if not node or not groundNode then
+		return nil
+	end
+	local gap = st.z[k][node + 1] - st.z[k][groundNode + 1]
+	if gap > 0 then
+		return "up"
+	elseif gap < 0 then
+		return "down"
+	end
+	return nil
 end
 
 -- The node an endpoint stands on: within SNAP cells, the surface with the least distance plus twice the height gap,
@@ -1172,6 +1259,7 @@ ns.PathGrid = {
 	entrance = entrance,
 	locate = locate,
 	standing = standing,
+	ground = ground,
 	snap = snap,
 	roads = roads,
 	roadEdges = roadEdges,

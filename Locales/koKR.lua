@@ -29,6 +29,7 @@ L["Alert before a boat arrives"] = "배 도착 전 알림"
 L["Alerts"] = "알림"
 L["Alliance"] = "얼라이언스"
 L["Arriving at %s in %s"] = "%s 도착까지 %s"
+L["Arrow label"] = "화살표 라벨" -- mt
 L["Arrow scale"] = "화살표 크기"
 L["Arrows"] = "화살"
 L["Arrows on the NPC's nameplate"] = "NPC 이름표의 화살표"
@@ -61,6 +62,7 @@ L["Crosses %s (level %s)"] = "%s 통과 (레벨 %s)"
 L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."] =
 	"나침반 뒤의 지면을 어둡게 해 눈이나 모래 위에서도 표시가 잘 보이게 합니다. 0%는 표시하지 않습니다."
 L["Deeprun Tram"] = "깊은굴 지하철"
+L["Distance"] = "거리" -- mt
 L["Distances in metres"] = "실제 미터로 거리 표시"
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
 	"부두, 승강기, 지하철, 차원문. 미니맵 추적 메뉴의 교통수단에서도 설정할 수 있습니다."
@@ -275,6 +277,8 @@ L["Walks go round zones whose lowest level is 4 or more above yours, but never t
 L["Weapons and armour"] = "무기 및 방어구"
 L["What next? Adventure Guide Forever suggests quests for your level."] =
 	"다음은? Adventure Guide Forever가 레벨에 맞는 퀘스트를 추천합니다."
+L["What the direction arrow shows under it: the distance to walk, the time left in the journey, or both."] =
+	"방향 화살표 아래에 표시할 내용: 걸어갈 거리, 여정의 남은 시간 또는 둘 다." -- mt
 L["What's new after an update"] = "업데이트 후 새로운 소식"
 L["While Guide is on: your next turns, the next stop and your destination across the top of the screen."] =
 	"안내가 켜져 있는 동안: 다음 갈림길, 다음 정거장, 목적지를 화면 위쪽에 표시합니다."
@@ -345,6 +349,7 @@ L["/path issue - report a bug or request a feature with a ready-made GitHub issu
 	"/path issue - 준비된 GitHub 이슈 링크로 버그를 보고하거나 기능을 요청합니다"
 L["/path report - show a report to copy into a bug report"] =
 	"/path report - 버그 보고서에 복사할 보고서를 표시합니다"
+L["Both"] = "둘 다" -- mt
 L["Bug"] = "버그"
 L["Bug: "] = "버그: "
 L["Copy issue link"] = "이슈 링크 복사"
@@ -358,6 +363,7 @@ L["Report a bug or request a feature"] = "버그 보고 또는 기능 요청"
 L["Share travel stats with guild and groups"] = "길드와 그룹에 이동 통계 공유"
 L["The link is selected. Press Ctrl+C (Cmd+C on a Mac), then paste into a browser; GitHub opens a filled-in issue."] =
 	"링크가 선택되었습니다. Ctrl+C(Mac은 Cmd+C)를 눌러 복사한 후 브라우저에 붙여 넣으십시오. GitHub에 내용이 채워진 이슈가 열립니다."
+L["Time left"] = "남은 시간" -- mt
 L["Title"] = "제목"
 L["Travel journal"] = "이동 일지"
 L["Travel milestone reached: %s"] = "이동 이정표 달성: %s"
@@ -487,3 +493,5 @@ L["In a stop's area the direction arrow becomes a pin with the stop's objectives
 	"지점 범위에 들어가면 방향 화살표가 사라지는 대신 지점의 목표가 담긴 핀으로 바뀝니다." -- mt
 L["It returns to the arrow when you leave the area or the stop changes."] =
 	"범위를 벗어나거나 지점이 바뀌면 다시 화살표로 돌아갑니다." -- mt
+L["Above ground level"] = "지면 위" -- mt
+L["Below ground level"] = "지면 아래" -- mt

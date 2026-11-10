@@ -539,6 +539,7 @@ function Layer:RefreshStops()
 				details = point.details,
 				look = point.look,
 				pinBadge = point.pinBadge,
+				ground = ns.PathGrid.ground(point.map, point.x, point.y, point.z),
 			}
 		end
 	end
@@ -551,14 +552,15 @@ function Layer:RefreshStops()
 	for _, group in ipairs(groups) do
 		for _, mark in ipairs(group) do
 			keys[#keys + 1] = string.format(
-				"%d:%.6f:%.6f:%s:%s:%s:%s",
+				"%d:%.6f:%.6f:%s:%s:%s:%s:%s",
 				mark.index,
 				mark.x,
 				mark.y,
 				tostring(mark.label),
 				tostring(mark.detail),
 				tostring(mark.look),
-				tostring(mark.pinBadge)
+				tostring(mark.pinBadge),
+				tostring(mark.ground)
 			)
 		end
 		keys[#keys + 1] = 0 -- between groups; stops count from 1
@@ -571,11 +573,12 @@ function Layer:RefreshStops()
 	goalPins:ReleaseAll()
 	self.stopMarks = {}
 	for _, group in ipairs(groups) do
-		local x, y, numbers, labels, details = 0, 0, {}, {}, {}
+		local x, y, numbers, labels, details, ground = 0, 0, {}, {}, {}, {}
 		for i, mark in ipairs(group) do
 			x, y, numbers[i], labels[i] = x + mark.x, y + mark.y, mark.index, mark.label
 			-- Details stay with the stop that has them, so the tooltip can keep each stop's own lines together.
 			details[i] = mark.details or {}
+			ground[i] = mark.ground or false
 		end
 		local lead = group[1]
 		-- A shared button stands for several places, so only a stop on its own wears its badge.
@@ -586,7 +589,8 @@ function Layer:RefreshStops()
 		else
 			x, y, numbered = lead.x, lead.y, stops and numbers
 		end
-		local pin = goalPins:Acquire(x, y, numbered, stops and #stops, labels, later, look, details, lead.pinBadge)
+		local pin =
+			goalPins:Acquire(x, y, numbered, stops and #stops, labels, later, look, details, lead.pinBadge, ground)
 		self.stopMarks[#self.stopMarks + 1] = { x = x, y = y, radius = pin:GetWidth() / 2 }
 	end
 	for pin in linePins:EnumerateActive() do

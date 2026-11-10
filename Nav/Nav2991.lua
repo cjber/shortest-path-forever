@@ -34,6 +34,7 @@ ShortestPathForeverPathData[2991] = {
 	grid = {},
 	height = {},
 	floor = {},
-	counts = { graph = 24, grid = 24, height = 24, floor = 24 },
-	packed = { graph = {}, grid = {}, height = {}, floor = {} },
+	terrain = {},
+	counts = { graph = 24, grid = 24, height = 24, floor = 24, terrain = 23 },
+	packed = { graph = {}, grid = {}, height = {}, floor = {}, terrain = {} },
 }

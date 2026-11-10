@@ -29,6 +29,7 @@ L["Alert before a boat arrives"] = "船隻抵達前提醒"
 L["Alerts"] = "提醒"
 L["Alliance"] = "聯盟"
 L["Arriving at %s in %s"] = "抵達%s還需%s"
+L["Arrow label"] = "箭頭標籤" -- mt
 L["Arrow scale"] = "箭頭大小"
 L["Arrows"] = "箭"
 L["Arrows on the NPC's nameplate"] = "NPC姓名板上的箭頭"
@@ -61,6 +62,7 @@ L["Crosses %s (level %s)"] = "穿過%s（等級 %s）"
 L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."] =
 	"調暗羅盤後方的地面，讓標記在雪地或沙地上也清晰可讀。0%為不顯示。"
 L["Deeprun Tram"] = "礦道地鐵"
+L["Distance"] = "距離" -- mt
 L["Distances in metres"] = "距離以公尺顯示"
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
 	"碼頭、升降梯、地鐵和傳送門。也可在小地圖追蹤選單的「交通」中找到。"
@@ -264,6 +266,8 @@ L["Walks go round zones whose lowest level is 4 or more above yours, but never t
 L["Weapons and armour"] = "武器與護甲"
 L["What next? Adventure Guide Forever suggests quests for your level."] =
 	"接下來做什麼？Adventure Guide Forever會推薦適合你等級的任務。"
+L["What the direction arrow shows under it: the distance to walk, the time left in the journey, or both."] =
+	"方向箭頭下方顯示的內容：要走的距離、旅程剩餘時間，或兩者。" -- mt
 L["What's new after an update"] = "更新後的新內容"
 L["While Guide is on: your next turns, the next stop and your destination across the top of the screen."] =
 	"引導開啟時：在螢幕頂端顯示你接下來的轉彎、下一站和目的地。"
@@ -333,6 +337,7 @@ L["/path issue - report a bug or request a feature with a ready-made GitHub issu
 	"/path issue - 透過現成的 GitHub 問題連結回報缺陷或請求功能"
 L["/path report - show a report to copy into a bug report"] =
 	"/path report - 顯示可複製到缺陷報告中的報告"
+L["Both"] = "兩者" -- mt
 L["Bug"] = "錯誤"
 L["Bug: "] = "錯誤："
 L["Copy issue link"] = "複製問題連結"
@@ -346,6 +351,7 @@ L["Report a bug or request a feature"] = "回報缺陷或請求功能"
 L["Share travel stats with guild and groups"] = "與公會和隊伍共用旅行統計"
 L["The link is selected. Press Ctrl+C (Cmd+C on a Mac), then paste into a browser; GitHub opens a filled-in issue."] =
 	"連結已選取。按 Ctrl+C（Mac 上為 Cmd+C）複製，然後貼到瀏覽器中；GitHub 會開啟一個已填寫的問題。"
+L["Time left"] = "剩餘時間" -- mt
 L["Title"] = "標題"
 L["Travel journal"] = "旅行日誌"
 L["Travel milestone reached: %s"] = "達成旅行里程碑：%s"
@@ -472,3 +478,5 @@ L["In a stop's area the direction arrow becomes a pin with the stop's objectives
 	"在目的地範圍內，方向箭頭會變成帶有目的地目標的圖釘，而不是隱藏。" -- mt
 L["It returns to the arrow when you leave the area or the stop changes."] =
 	"當你離開該區域或目的地改變時，它會恢復為箭頭。" -- mt
+L["Above ground level"] = "高於地面" -- mt
+L["Below ground level"] = "低於地面" -- mt

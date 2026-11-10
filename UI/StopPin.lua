@@ -17,6 +17,9 @@ local NUMBER_YELLOW, NUMBER_DARK = { 1, 0.82, 0.25 }, { 0.1, 0.05, 0 }
 -- over the marker's lower right, as Legacy Forever's entrance pins wear the Legacy shield; the pin's hit rect reaches
 -- out over the badge.
 local LOOK_SIZE, BADGE_SIZE, BADGE_OFFSET, TAG_SIZE = 22, 16, 4, 11
+-- A stop above or below the ground wears the map's own floor arrow at the upper right, opposite the action badge:
+-- both atlases are 13 by 14, fitted at their own shape.
+local ARROW_UP, ARROW_DOWN, ARROW_WIDTH, ARROW_HEIGHT = "poi-door-arrow-up", "poi-door-arrow-down", 13, 14
 -- A later stop fades by the same amount as the line that leads to it (Strokes.lua's ns.LaterAlpha, read when used
 -- because Strokes.lua loads after this file).
 -- The numbered marker overhangs its 20-unit pin by 2 on each side.
@@ -30,11 +33,13 @@ ns.StopSize = STOP_SIZE
 ---@field Disc Texture
 ---@field Button Texture
 ---@field HighlightTexture Texture
+---@field Arrow Texture
 ---@field Number FontString
 ---@field stopLabels? string[]
 ---@field stopNumbers? integer[]
 ---@field stopCount? integer
 ---@field stopDetails? string[][] a stop's own detail lines, by the stop's place in this pin
+---@field stopGround? (string|false)[] how each stop stands against the terrain: "up", "down" or false
 ---@field later? boolean
 ---@field current? boolean -- marks the stop being travelled to, whose steps the tooltip lists
 local GoalPin = CreateFromMixins(ns.MapCanvas.PinMixin)
@@ -68,7 +73,8 @@ end
 ---@param look? SPFAPIStopKind
 ---@param details? string[]
 ---@param pinBadge? boolean
-function GoalPin:OnAcquired(x, y, numbers, count, labels, later, look, details, pinBadge)
+---@param ground? (string|false)[] how each stop stands against the terrain
+function GoalPin:OnAcquired(x, y, numbers, count, labels, later, look, details, pinBadge, ground)
 	self:SetPosition(x, y)
 	-- The disc's shadow stays opaque, so a faded button still hides the POI beneath it.
 	self:SetStopAlpha(later and ns.LaterAlpha or 1)
@@ -76,6 +82,7 @@ function GoalPin:OnAcquired(x, y, numbers, count, labels, later, look, details, 
 	self.stopNumbers = numbers
 	self.stopCount = count
 	self.stopDetails = details and details[1] and details or nil
+	self.stopGround = ground and ground[1] ~= nil and ground or nil
 	self.later = later
 	self.current = not later
 	-- A planned route nobody is guided along is an untracked goal: its pin is the bronze twin.
@@ -131,6 +138,23 @@ function GoalPin:OnAcquired(x, y, numbers, count, labels, later, look, details, 
 	else
 		self.Texture:SetAllPoints()
 	end
+	-- A pin says above or below ground only when every stop it marks agrees; a mixed pin wears no arrow.
+	local arrow, mark = self.Arrow, nil
+	for _, value in ipairs(self.stopGround or {}) do
+		if value == false or (mark ~= nil and value ~= mark) then
+			mark = nil
+			break
+		end
+		mark = value
+	end
+	arrow:ClearAllPoints()
+	if mark then
+		local atlas = mark == "up" and ARROW_UP or ARROW_DOWN
+		arrow:SetShown(ns.Art.Fit(arrow, atlas, ARROW_WIDTH, ARROW_HEIGHT))
+		arrow:SetPoint("TOPRIGHT", self, "TOPRIGHT", BADGE_OFFSET, BADGE_OFFSET)
+	else
+		arrow:SetShown(false)
+	end
 	-- Hover: the pin's own art again on the HIGHLIGHT layer, drawn with ADD, as BaseHighlightableMapPoiPinTemplate does.
 	local highlight = self.HighlightTexture
 	highlight:ClearAllPoints()
@@ -157,6 +181,7 @@ function GoalPin:SetStopAlpha(alpha)
 	self.Icon:SetAlpha(alpha)
 	self.Number:SetAlpha(alpha)
 	self.Texture:SetAlpha(alpha)
+	self.Arrow:SetAlpha(alpha)
 end
 
 -- A title's right-hand value, as the repo's other tooltips give one (UI/Map.lua, UI/FlightPins.lua).
@@ -199,6 +224,14 @@ function GoalPin:OnMouseEnter()
 			end
 		end
 	end
+	local function AddGround(stop)
+		local value = self.stopGround and self.stopGround[stop]
+		if value == "up" then
+			GameTooltip_AddColoredLine(GameTooltip, L["Above ground level"], HIGHLIGHT_FONT_COLOR)
+		elseif value == "down" then
+			GameTooltip_AddColoredLine(GameTooltip, L["Below ground level"], HIGHLIGHT_FONT_COLOR)
+		end
+	end
 	if labels and numbers then
 		-- Each stop this pin marks: its count, what to do there in white, then only the details it adds.
 		for i, label in ipairs(labels) do
@@ -209,10 +242,12 @@ function GoalPin:OnMouseEnter()
 				GameTooltip_AddNormalLine(GameTooltip, count)
 			end
 			GameTooltip_AddColoredLine(GameTooltip, label, HIGHLIGHT_FONT_COLOR)
+			AddGround(i)
 			AddDetails(i)
 		end
 	else
 		AddTitleLine(title, left)
+		AddGround(1)
 		AddDetails(1)
 	end
 	-- The pin you are travelling to lists the steps there, as the tracker does, when the trip has more than one.
@@ -265,6 +300,8 @@ function GoalPin:OnReleased()
 	self.stopNumbers = nil
 	self.stopCount = nil
 	self.stopDetails = nil
+	self.stopGround = nil
+	self.Arrow:Hide()
 	self.later = nil
 	self.current = nil
 end

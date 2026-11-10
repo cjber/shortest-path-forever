@@ -244,6 +244,7 @@
 ---@field minimapButton? boolean
 ---@field compassScale? number percent, 100 is the stock size
 ---@field arrowScale? number percent, 100 is the stock size (Arrow.lua)
+---@field arrowLabel? string what the arrow's label shows: "distance", "time" or "both" (Arrow.lua)
 ---@field arrowX? number the arrow's centre from the screen's bottom left in screen pixels, once dragged
 ---@field arrowY? number
 ---@field compassBackground? number percent opacity of the dark band behind the compass, 0 for none

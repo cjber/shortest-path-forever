@@ -45,6 +45,59 @@ assert(reused.anchor[1] == "BOTTOM" and reused.anchor[3] == "CENTER" and reused.
  "a reused pin restores full size, standing on its point at the goal")
 ns.ClearJourney()
 
+-- A stop above or below the terrain wears the map's floor arrow at the pin's upper right, and its tooltip says which.
+-- A stop on the ground wears neither; a pin whose stops disagree wears no arrow.
+do
+ local ground = ns.PathGrid.ground
+ ns.PathGrid.ground = function(_, _, _, z)
+  if z == 60 then
+   return "up"
+  elseif z == -60 then
+   return "down"
+  end
+ end
+ assert(api.NavigateRoute("Test", { { map = 1414, x = 0.56, y = 0.5, title = "Tower", z = 60 } }))
+ settle()
+ local high = active[goalTemplate][1]
+ assert(not high.Arrow.hidden and high.Arrow.atlas == "poi-door-arrow-up", "a stop above the ground wears the up arrow")
+ assert(high.Arrow.anchor[1] == "TOPRIGHT" and high.Arrow.anchor[3] == "TOPRIGHT", "at the pin's upper right")
+-- Outward from the corner, as the action badge is from the lower right, so the arrow never covers the stop number.
+assert(high.Arrow.anchor[4] > 0 and high.Arrow.anchor[5] > 0, "the arrow stands outside the pin's upper right corner")
+ high.scripts.OnEnter(high)
+ assert(tip[2] == "  Above ground level" and tipColors[2] == HIGHLIGHT_FONT_COLOR,
+  "the stop above the ground says so under its label")
+ high.scripts.OnLeave(high)
+ assert(api.NavigateRoute("Test", { { map = 1414, x = 0.56, y = 0.5, title = "City", z = -60 } }))
+ settle()
+ local low = active[goalTemplate][1]
+ assert(
+  not low.Arrow.hidden and low.Arrow.atlas == "poi-door-arrow-down",
+  "a stop below the ground wears the down arrow"
+ )
+ low.scripts.OnEnter(low)
+ assert(tip[2] == "  Below ground level" and tipColors[2] == HIGHLIGHT_FONT_COLOR,
+  "the stop below the ground says so under its label")
+ low.scripts.OnLeave(low)
+ assert(api.NavigateRoute("Test", { { map = 1414, x = 0.56, y = 0.5, title = "Ground", z = -1 } }))
+ settle()
+ local flat = active[goalTemplate][1]
+ assert(flat.Arrow.hidden, "a stop on the ground wears no arrow")
+ flat.scripts.OnEnter(flat)
+ assert(tip[2] ~= "  Above ground level" and tip[2] ~= "  Below ground level", "and says neither")
+ flat.scripts.OnLeave(flat)
+ assert(
+  api.NavigateRoute("Test", {
+   { map = 1414, x = 0.56, y = 0.5, title = "Tower", z = 60 },
+   { map = 1414, x = 0.56, y = 0.5, title = "City", z = -60 },
+  })
+ )
+ settle()
+ local mixed = active[goalTemplate][1]
+ assert(mixed.Arrow.hidden, "a pin whose stops disagree wears no arrow")
+ ns.PathGrid.ground = ground
+ ns.ClearJourney()
+end
+
 -- Stop 3 goes back to stop 1's place: one button, the first visit's number, both titles and the later detail.
 assert(api.NavigateRoute("Test", {
  {map=1414,x=0.51,y=0.5,title="Quest giver"},

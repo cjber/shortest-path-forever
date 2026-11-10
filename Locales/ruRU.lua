@@ -30,6 +30,7 @@ L["Alert before a boat arrives"] = "Оповещать о прибытии ко�
 L["Alerts"] = "Оповещения"
 L["Alliance"] = "Альянс"
 L["Arriving at %s in %s"] = "Прибытие: %s через %s"
+L["Arrow label"] = "Подпись стрелки" -- mt
 L["Arrow scale"] = "Размер стрелки"
 L["Arrows"] = "Стрелы"
 L["Arrows on the NPC's nameplate"] = "Стрелки на табличке с именем НИП"
@@ -63,6 +64,7 @@ L["Crosses %s (level %s)"] = "Проходит через %s (уровень %s)
 L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."] =
 	"Затемняет землю за компасом, чтобы его отметки читались на снегу или песке. 0% – без затемнения."
 L["Deeprun Tram"] = "Подземный поезд"
+L["Distance"] = "Расстояние" -- mt
 L["Distances in metres"] = "Расстояние в настоящих метрах"
 L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."] =
 	"Причалы, подъемники, поезд и порталы. Также в разделе «Транспорт» меню отслеживания мини-карты."
@@ -284,6 +286,8 @@ L["Walks go round zones whose lowest level is 4 or more above yours, but never t
 L["Weapons and armour"] = "Оружие и доспехи"
 L["What next? Adventure Guide Forever suggests quests for your level."] =
 	"Что дальше? Adventure Guide Forever предлагает задания по вашему уровню."
+L["What the direction arrow shows under it: the distance to walk, the time left in the journey, or both."] =
+	"Что показывает стрелка направления под собой: оставшееся расстояние, оставшееся время пути или и то и другое." -- mt
 L["What's new after an update"] = "Новое после обновления"
 L["While Guide is on: your next turns, the next stop and your destination across the top of the screen."] =
 	"Пока включена навигация: ближайшие повороты, следующая остановка и цель вверху экрана."
@@ -357,6 +361,7 @@ L["/path issue - report a bug or request a feature with a ready-made GitHub issu
 	"/path issue - сообщить об ошибке или предложить функцию с готовой ссылкой на задачу GitHub"
 L["/path report - show a report to copy into a bug report"] =
 	"/path report - показать отчет для вставки в сообщение об ошибке"
+L["Both"] = "Оба" -- mt
 L["Bug"] = "Ошибка"
 L["Bug: "] = "Ошибка: "
 L["Copy issue link"] = "Копировать ссылку на задачу"
@@ -371,6 +376,7 @@ L["Share travel stats with guild and groups"] =
 	"Делиться статистикой путешествий с гильдией и группами"
 L["The link is selected. Press Ctrl+C (Cmd+C on a Mac), then paste into a browser; GitHub opens a filled-in issue."] =
 	"Ссылка выделена. Нажмите Ctrl+C (Cmd+C на Mac) и вставьте ее в браузер; GitHub откроет заполненную задачу."
+L["Time left"] = "Оставшееся время" -- mt
 L["Title"] = "Заголовок"
 L["Travel journal"] = "Дневник путешествий"
 L["Travel milestone reached: %s"] = "Достигнут рубеж путешествий: %s"
@@ -506,3 +512,5 @@ L["In a stop's area the direction arrow becomes a pin with the stop's objectives
 	"В области остановки стрелка направления превращается в метку с целями остановки, а не исчезает." -- mt
 L["It returns to the arrow when you leave the area or the stop changes."] =
 	"Она снова становится стрелкой, когда вы покидаете область или остановка меняется." -- mt
+L["Above ground level"] = "Выше уровня земли" -- mt
+L["Below ground level"] = "Ниже уровня земли" -- mt
