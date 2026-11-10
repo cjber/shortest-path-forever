@@ -12,11 +12,15 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
-- **Needs Forever Core.** The shared tracker column, bug report and leaderboards now come from one Forever Core addon that installs with it, so every Forever addon's tracker scale, lock and position stay in step. Your tracker settings carry over.
-
 ### For addon authors
 
 - **`ShortestPathForever.API` now has `minor = 2` and follows the shared ForeverCore API shape.** `Subscribe` comes from `ForeverCore.APIKit`, so its callbacks keep the five change names and still arrive once on the next frame; `CurrentStop` and `Ended` return `nil, reason` (`"loading"` or `"none"`) instead of plain `nil`; `Estimate` and `EstimateDetail` also return `"loading"` while the addon builds its data; and `RenameStop`, the stop fields `npc` and `handins`, and the `"vendor"` stop kind are now documented in `docs/api.md`. Nothing changes for players.
+
+## [1.28.0] - 2026-11-10
+
+- **Needs Forever Core.** The shared tracker column, bug report and leaderboards now come from one Forever Core addon that installs with it, so every Forever addon's tracker scale, lock and position stay in step. Your tracker settings carry over.
+
+<!-- discord-image: docs/screenshots/tracker.png -->
 
 ## [1.27.0] - 2026-11-10
 

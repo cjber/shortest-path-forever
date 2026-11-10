@@ -390,8 +390,7 @@ L["Eastern Kingdoms"] = "东部王国" -- mt
 L["Kalimdor"] = "卡利姆多" -- mt
 L["No flight points learned in %s: open a flight master's map once to sync them."] =
 	"尚未在%s学会任何飞行点：打开一次飞行管理员的地图以同步它们。" -- mt
-L["When you reach a stop, the arrow becomes a pin with what to do there."] =
-	"到达目的地时，箭头会变成图钉，显示那里要做的事。" -- mt
+L["Needs Forever Core."] = "需要 Forever Core。" -- mt
 L["Better for your level, farther away"] = "更适合你的等级，但更远" -- mt
 L["Show a pin when you reach a stop"] = "到达目的地时显示图钉" -- mt
 L["In a stop's area the direction arrow becomes a pin with the stop's objectives, instead of hiding."] =
