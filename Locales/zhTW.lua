@@ -395,9 +395,12 @@ L["no map pin is set."] = "尚未設定地圖標記。"
 L["no quest is tracked."] = "沒有追蹤中的任務。"
 L["Walking route colour"] = "步行路線顏色"
 L["The walking line on the world map and the minimap."] = "世界地圖和小地圖上的步行路線。"
-L["Show the walking line on the world map"] = "在世界地圖上顯示步行路線"
-L["Show the walking line on the minimap"] = "在小地圖上顯示步行路線"
-L["On the minimap."] = "在小地圖上。"
+L["Line on the world map"] = "世界地圖上的路線" -- mt
+L["Draws the walking route on the world map. With it off, the destination pin, arrow and tracker still guide you."] =
+	"在世界地圖上繪製步行路線。關閉後，目的地標記、箭頭和追蹤器仍會為你指路。" -- mt
+L["Line on the minimap"] = "小地圖上的路線" -- mt
+L["Draws the walking route on the minimap. With it off, the destination pin, arrow and tracker still guide you."] =
+	"在小地圖上繪製步行路線。關閉後，目的地標記、箭頭和追蹤器仍會為你指路。" -- mt
 L["Gold"] = "金色"
 L["White"] = "白色"
 L["Cyan"] = "青色"

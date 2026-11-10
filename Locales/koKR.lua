@@ -408,9 +408,12 @@ L["no quest is tracked."] = "추적 중인 퀘스트가 없습니다."
 L["Walking route colour"] = "도보 경로 색상"
 L["The walking line on the world map and the minimap."] =
 	"세계 지도와 미니맵에 표시되는 도보 경로입니다."
-L["Show the walking line on the world map"] = "세계 지도에 도보 경로 표시"
-L["Show the walking line on the minimap"] = "미니맵에 도보 경로 표시"
-L["On the minimap."] = "미니맵에 표시합니다."
+L["Line on the world map"] = "세계 지도 선" -- mt
+L["Draws the walking route on the world map. With it off, the destination pin, arrow and tracker still guide you."] =
+	"세계 지도에 도보 경로를 그립니다. 끄면 목적지 표식, 화살표, 추적기가 계속 안내합니다." -- mt
+L["Line on the minimap"] = "미니맵 선" -- mt
+L["Draws the walking route on the minimap. With it off, the destination pin, arrow and tracker still guide you."] =
+	"미니맵에 도보 경로를 그립니다. 끄면 목적지 표식, 화살표, 추적기가 계속 안내합니다." -- mt
 L["Gold"] = "금색"
 L["White"] = "흰색"
 L["Cyan"] = "청록색"

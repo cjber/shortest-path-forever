@@ -400,9 +400,12 @@ L["no map pin is set."] = "nenhum marcador no mapa foi definido."
 L["no quest is tracked."] = "nenhuma missão está sendo rastreada."
 L["Walking route colour"] = "Cor da rota a pé"
 L["The walking line on the world map and the minimap."] = "A linha a pé no mapa-múndi e no minimapa."
-L["Show the walking line on the world map"] = "Mostrar a linha a pé no mapa-múndi"
-L["Show the walking line on the minimap"] = "Mostrar a linha a pé no minimapa"
-L["On the minimap."] = "No minimapa."
+L["Line on the world map"] = "Linha no mapa-múndi" -- mt
+L["Draws the walking route on the world map. With it off, the destination pin, arrow and tracker still guide you."] =
+	"Desenha a rota a pé no mapa-múndi. Com ela desligada, o marcador de destino, a seta e o rastreador ainda orientam você." -- mt
+L["Line on the minimap"] = "Linha no minimapa" -- mt
+L["Draws the walking route on the minimap. With it off, the destination pin, arrow and tracker still guide you."] =
+	"Desenha a rota a pé no minimapa. Com ela desligada, o marcador de destino, a seta e o rastreador ainda orientam você." -- mt
 L["Gold"] = "Dourado"
 L["White"] = "Branco"
 L["Cyan"] = "Ciano"
