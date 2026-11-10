@@ -16,6 +16,12 @@ optional `### For addon authors` subsection after a version's player bullets.
 - **Better goods farther away.** When a better arrow, shot, food or drink for your level is sold elsewhere on your continent, a one-line row under the group names it and its zone, with the client's green upgrade arrow on its icon and its own travel time, so you can weigh the trip against the vendor nearby. Click it to go there; hover it for who sells it, or hover its icon for the item's tooltip. The world map's and the minimap's tracking menus offer the same trip under the group. Arrows show only with a bow or crossbow equipped, shot only with a gun, and drink only for a character with mana.
 - **Trinkets no longer count as drink.** Worn items that restore mana every 5 seconds, such as the Darkspear Voodoo Seal, Enriched Seal and Atiesh, were in the Drink group, so a Drink row could send you to a reputation quartermaster. Only goods you eat or drink count now.
 
+## [1.24.8] - 2026-11-09
+
+- **Routing from the world map works with a controller.** Shift-clicking the world map to start a route and then closing the map with the controller could get a controller action blocked by the game. The route now waits until the map has closed before it sets your waypoint. Reported by joaocjesus (#581).
+
+- **Walks inside Stormwind follow its streets.** Routes could still cut under the city across ground about 35 yards below the streets that no one can reach. The walking map now keeps only ground connected to a flight master, dock, lift, portal or teleport, so that hidden ground is gone, along with other unreachable ground such as sealed mountain tops. Reported on Discord by jixxor. (#602)
+
 ## [1.24.7] - 2026-11-09
 
 - **Flight points you have not discovered are no longer marked as known.** Opening a flight master stored every point on its map, including ones your character has never visited, so routes could fly through them. Only the flight points you can actually use are kept now, and the next flight master you open clears the ones added before. Reported on CurseForge by user_ey1r2bwls2pf3sht32372 and on Discord by pachonaso (#593).

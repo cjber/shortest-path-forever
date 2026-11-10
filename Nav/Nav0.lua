@@ -9,9 +9,9 @@
 --   flags 1/2 close the step to the +x/+y neighbour, 4/8 open the +x+y/+x-y
 --   diagonal (otherwise a diagonal is open when either L-shaped detour is). A symbol >= 48 repeats the
 --   previous cell (symbol - 47) more times. Nodes are local cells, then floors from cells * cells on.
--- height[k + 1]: base heights of the walkable cells in cell order, in zstep yards, each against its -y
---   neighbour (else its -x neighbour, else the previous cell): symbols 0-46 add -23..23, 47 is followed by
---   an absolute value + 2048 (2), a symbol >= 48 repeats the previous difference (symbol - 47) more times.
+-- height[k + 1]: base heights of a cluster's walkable cells in cell order, in zstep yards, each against its -y
+--   neighbour (else its -x neighbour, else the previous cell): symbols 0-46 add -23..23, 47 is followed by an
+--   absolute value + 2048 (2), and a symbol >= 48 repeats the previous difference (symbol - 47) more times.
 -- floor[k + 1]: surfaces above or below the base one, numbered from cells * cells in order.
 --   n(3) | n x [cell(3) count(1) count x [value(1) height + 2048(2) steps(2)]] | m(3) | m x [node(3) direction(1)
 --   layer(1)]. A floor's steps bit d links it to the surface in direction d nearest its height; the m links are
@@ -34,6 +34,6 @@ ShortestPathForeverPathData[0] = {
 	grid = {},
 	height = {},
 	floor = {},
-	counts = { graph = 736, grid = 736, height = 736, floor = 471 },
+	counts = { graph = 724, grid = 724, height = 724, floor = 457 },
 	packed = { graph = {}, grid = {}, height = {}, floor = {} },
 }
