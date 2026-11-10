@@ -50,6 +50,11 @@ local cvars = { rotateMinimap = "0", questPOI = "1" }
 local function noop() end
 local mt = {
 	__index = function(t, k)
+		-- A quest blob setter is not universal: a client missing one must look like it does, so these are only the
+		-- stubs installed below and never a generated no-op (#680).
+		if k:match("^SetQuestBlob") then
+			return nil
+		end
 		if k:match("^%u") then
 			return noop
 		end

@@ -683,11 +683,13 @@ local function DrawMinimap(self)
 	view.x, view.y, view.map, view.radius, view.facing = x, y, map, radius, facing
 	view.width, view.height, view.scale, view.square = width, height, scale, square
 	-- Standing in the area of a quest the held stop names: the game's own blob wears the guide's gold there, and the
-	-- stop's ring and the line to it step aside. A stop with no quest has no blob, so it keeps its ring and line, and so
-	-- does every stop while the game's quest areas are hidden (questPOI off), when the client may draw no blob (#375).
+	-- stop's ring and the line to it step aside. A client whose minimap has no selected-edge setter cannot recolour the
+	-- blob, so the ring and line stay and the player still sees the goal (#680). A stop with no quest has no blob, so
+	-- it keeps them too, and so does every stop while the game's quest areas are hidden (questPOI off), when the client
+	-- may draw no blob (#375).
 	local inside = goal ~= nil and not goal.corpse and ns.StopInQuestArea(goal)
 	ns.SetAreaBlob(inside)
-	local area = inside and GetCVarBool("questPOI")
+	local area = inside and GetCVarBool("questPOI") and ns.AreaBlobRecolours()
 	-- A goal with a known mark wears the wider ring (ns.SetJourneyRoute).
 	view.goal, view.goalRadius = not area and goal or nil, (goal and goal.look and MINIMAP_RING or MINIMAP_GOAL) / 2
 	local linePaths = paths
@@ -952,7 +954,7 @@ ns.Init(function()
 	minimap.Goal = Minimap:CreateTexture(nil, "OVERLAY")
 	SetGoalArt(minimap.Goal, false, MINIMAP_GOAL, true)
 	minimap.Goal:Hide()
-	-- The client's own "inside the quest's area" state, the one it paints the blob from, drives the tint at once.
+	-- The client's own "inside the quest's area" state, the one it paints the blob from, drives the redraw at once.
 	minimap:RegisterEvent("PLAYER_INSIDE_QUEST_BLOB_STATE_CHANGED")
 	minimap:SetScript("OnEvent", function(self, event)
 		if not goal then

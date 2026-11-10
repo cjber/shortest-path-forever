@@ -12,6 +12,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Only your current quest's area on the minimap changes colour.** Standing in a stop's quest area used to turn every tracked quest's area on the minimap gold. The other areas now stay blue, and the stop keeps its ring and route line on the minimap so you can still see where you're going (#680).
 - **Less work at login after an update.** Nearby services now looks up map locations only for the vendors, trainers and services it lists, not for every creature in the game, which halves the time that first read takes (#582).
 
 ### For addon authors

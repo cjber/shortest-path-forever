@@ -1,8 +1,8 @@
 -- Run from the repository root: luajit tests/quest_blob_spec.lua
--- The minimap's own quest area while the player stands in a held stop's area (#504): the area's inside, outside and
--- selected outside textures wear the bonus objective's gold, the edge ring around the whole minimap is left alone
--- (a gold ring there is a second, larger outline around the blue area). A client without the selected setter still
--- gets the ordinary area recoloured.
+-- The minimap's quest area while the player stands in a held stop's area (#680): the inside and outside texture setters
+-- repaint every watched quest, so they are never called. Only the super-tracked quest's selected edge may change, and
+-- only when this client has that setter. A client without it leaves the minimap's stock blue alone, and Route.lua keeps
+-- the stop's ring and line drawn there.
 local checks = 0
 local function equal(actual, expected, label)
 	checks = checks + 1
@@ -12,8 +12,6 @@ local function equal(actual, expected, label)
 end
 
 local QUEST = {
-	inside = "Interface\\Minimap\\UI-QuestBlobMinimap-Inside",
-	outside = "Interface\\Minimap\\UI-QuestBlobMinimap-Outside",
 	outsideSelected = "Interface\\Minimap\\UI-QuestBlobMinimap-OutsideSelected",
 }
 local BONUS = {
@@ -58,16 +56,21 @@ end
 
 do
 	local minimap, ns = fixture(true)
+	equal(ns.AreaBlobRecolours(), true, "a client with the selected-edge setter can recolour the minimap")
 	ns.SetAreaBlob(true)
-	equal(minimap.inside, BONUS.inside, "inside wears the gold set")
-	equal(minimap.outside, BONUS.outside, "outside wears the gold set")
-	equal(minimap.outsideSelected, BONUS.outsideSelected, "a super-tracked quest's selected edge wears the gold set")
+	equal(#minimap.sets, 1, "only one texture setter is called")
+	equal(minimap.sets[1].name, "outsideSelected", "the super-tracked quest's selected edge")
+	equal(minimap.outsideSelected, BONUS.outsideSelected, "and it wears the gold set")
+	equal(minimap.inside, nil, "the shared inside texture is never set")
+	equal(minimap.outside, nil, "the shared outside texture is never set")
 	equal(minimap.ring, nil, "the minimap's own edge ring is not recoloured")
 
 	ns.SetAreaBlob(false)
-	equal(minimap.inside, QUEST.inside, "leaving hands the stock inside back")
-	equal(minimap.outside, QUEST.outside, "leaving hands the stock outside back")
+	equal(#minimap.sets, 2, "leaving calls the same one setter")
+	equal(minimap.sets[2].name, "outsideSelected", "the selected edge again")
 	equal(minimap.outsideSelected, QUEST.outsideSelected, "leaving hands the stock selected edge back")
+	equal(minimap.inside, nil, "and still never touches the shared inside texture")
+	equal(minimap.outside, nil, "nor the shared outside texture")
 	equal(minimap.ring, nil, "leaving leaves the edge ring as it was")
 
 	local sets = #minimap.sets
@@ -77,13 +80,15 @@ end
 
 do
 	local minimap, ns = fixture(false)
+	equal(ns.AreaBlobRecolours(), false, "a client without the selected-edge setter cannot recolour the minimap")
 	ns.SetAreaBlob(true)
-	equal(minimap.inside, BONUS.inside, "a client without the selected setter still recolours the inside")
-	equal(minimap.outside, BONUS.outside, "a client without the selected setter still recolours the outside")
-	equal(minimap.outsideSelected, nil, "and it never calls a setter it does not have")
-	equal(minimap.ring, nil, "a client without the selected setter still leaves the edge ring alone")
+	equal(#minimap.sets, 0, "no minimap texture setter is called without the selected-edge setter")
+	equal(minimap.inside, nil, "the shared inside texture stays as it was")
+	equal(minimap.outside, nil, "the shared outside texture stays as it was")
+	equal(minimap.outsideSelected, nil, "and there is no selected edge to set")
+	equal(minimap.ring, nil, "the edge ring stays as it was")
 	ns.SetAreaBlob(false)
-	equal(minimap.outside, QUEST.outside, "and hands the stock outside back")
+	equal(#minimap.sets, 0, "leaving calls nothing either, so the stock blue stays")
 end
 
-print(("quest_blob_spec: %d checks: the minimap's gold area, not its edge ring, replaces the blue one"):format(checks))
+print(("quest_blob_spec: %d checks: only the tracked quest's edge may turn gold"):format(checks))
