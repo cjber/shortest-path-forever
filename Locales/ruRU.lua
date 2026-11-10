@@ -496,3 +496,4 @@ L["No flight points learned in %s: open a flight master's map once to sync them.
 	"В зоне «%s» не изучено ни одной точки полёта: один раз откройте карту распорядителя полётов, чтобы синхронизировать их." -- mt
 L["Only the flight points your character has are learned now."] =
 	"Теперь запоминаются только точки полёта, которые есть у персонажа." -- mt
+L["Better for your level, farther away"] = "Лучше для вашего уровня, но дальше" -- mt

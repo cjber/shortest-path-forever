@@ -21,6 +21,9 @@ except ModuleNotFoundError:
 
 # SpellEffect.EffectAura: MOD_REGEN (food) and MOD_POWER_REGEN (drink).
 FOOD_AURA, DRINK_AURA = 84, 85
+# ItemEffect.TriggerType: on use. On equip (1) is a worn item's lasting bonus: a trinket that restores mana every 5
+# seconds has the drink's MOD_POWER_REGEN aura without being drunk.
+ON_USE = 0
 # SpellEffect.Effect: a use spell can hand its work to another spell one hop away.
 TRIGGER_SPELL = 64
 # SpellEffect.Effect: a trainer spell teaches the spell it triggers.
@@ -76,7 +79,7 @@ def classicdb(refresh=False, offline=False):
 
 def food_and_drink(item_x_item_effect, item_effect, spell_effect):
     """Item IDs whose use spell has a food or drink regen aura, following one TRIGGER_SPELL hop."""
-    use_spells = {int(row["ID"]): int(row["SpellID"]) for row in item_effect}
+    use_spells = {int(row["ID"]): int(row["SpellID"]) for row in item_effect if int(row["TriggerType"]) == ON_USE}
     by_spell = defaultdict(list)
     for row in spell_effect:
         by_spell[int(row["SpellID"])].append(row)

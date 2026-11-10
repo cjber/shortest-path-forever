@@ -15,6 +15,10 @@ ChatTypeInfo = nil
 ---@type string[]
 UISpecialFrames = nil
 
+-- ItemButtonTemplate.lua: a modified click on an item (Shift links it to chat); true when the click was used.
+---@type fun(link: string, itemLocation?: table): boolean
+HandleModifiedItemClick = nil
+
 -- UI/Leaderboards.lua publishes the shared window every Forever addon registers into.
 ---@type ForeverLeaderboardsAPI?
 ForeverLeaderboards = nil

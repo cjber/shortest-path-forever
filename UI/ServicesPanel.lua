@@ -13,6 +13,14 @@ local GROUP_GAP = 6
 local ROW_HEIGHT = 44
 local ROW_GAP = 2
 local ICON = 30
+-- A better trip (NearbyServices.Better: better goods for your level, farther away) is a row of one line, indented
+-- under its group's row, its item icon wearing the client's own upgrade mark at the top left, as a bag slot's does
+-- (Blizzard_UIPanels_Game/Mainline/ContainerFrame.xml:109, and Forever's Camelot/EquipmentFlyout.xml:12).
+local BETTER_HEIGHT = 28
+local BETTER_ICON = 22
+local BETTER_INDENT = 16
+local UPGRADE_ATLAS = "bags-greenarrow"
+local BADGE_WIDTH, BADGE_HEIGHT = 11, 12
 -- The tab and the title wear the client's own bank bags glyph, cut out like the quest log's other tab icons; the tab
 -- draws it at 32: the bags fill their atlas edge to edge, so 32 shows them about as large as the stock quest glyph
 -- and the Adventure Guide compass, which keep a margin inside theirs.
@@ -53,6 +61,8 @@ local emptyText
 local headers = {}
 ---@type SPFServicesRow[]
 local rows = {}
+---@type SPFServicesBetterRow[]
+local betterRows = {}
 ---@type table<string, SPFServicesRow>
 local rowsByKey = {}
 ---@type SPFNearbySection[]
@@ -60,7 +70,8 @@ local sections = {}
 -- Collapsed sections are per session, as the stock quest log's group folds are.
 ---@type table<string, boolean>
 local collapsed = {}
--- The planner's answer per group, from the queue below. A group with neither still shows its straight-line nearest.
+-- The planner's answer per row id (the group's key, or its better trip's), from the queue below. A row with neither
+-- still shows its straight-line nearest.
 ---@type table<string, number>
 local estimates = {}
 ---@type table<string, SPFNearbyPlace>
@@ -89,15 +100,20 @@ local Refresh, Queue
 ---@field CollapseButton SPFCollapseButton
 
 ---@class SPFServicesRow : Button
----@field key string
+---@field id string the row's own id in the section (SPFNearbyRow.id), which its estimate is kept by
+---@field key string the group's key, which the journey goes by
 ---@field group SPFNearbyGroup
 ---@field place SPFNearbyPlace
 ---@field seconds number?
 ---@field query string
+---@field itemID integer? the goods the row names first (NearbyServices.Goods), which its icon shows
+---@field Item Button the icon's hover and click: the item's own tooltip, and Shift-click links it
 ---@field Icon Texture
 ---@field Label FontString
 ---@field Detail FontString
 ---@field Time FontString
+---@field Badge? Texture on a better trip's row only, the upgrade arrow over its icon
+---@class SPFServicesBetterRow : SPFServicesRow
 
 -- An item's icon from the client's item data, which it holds for every item whether or not it is cached; the
 -- question mark if the client has no such item.
@@ -111,8 +127,12 @@ end
 ---@param row SPFServicesRow
 local function PaintRow(row)
 	local group, place = row.group, row.place
+	local goods = ns.NearbyServices.Goods(group.key, place, row.query)
+	row.itemID = goods and goods[1]
 	local icon = group.icon
-	if type(icon) == "number" then
+	if row.itemID then
+		Art.Icon(row.Icon, ItemIcon(row.itemID), ICON)
+	elseif type(icon) == "number" then
 		Art.Icon(row.Icon, ItemIcon(icon), ICON)
 	else
 		Art.Fit(row.Icon, icon, ICON, ICON)
@@ -120,6 +140,63 @@ local function PaintRow(row)
 	row.Label:SetText(group.label)
 	row.Detail:SetText(ns.NearbyServices.Detail(group.key, place, row.query))
 	row.Time:SetText(row.seconds and ns.FormatCountdown(row.seconds * 1000) or "")
+end
+
+-- A better trip's row: its goods in their quality's colour and the zone they are sold in; who sells them is in its
+-- tooltip.
+---@param row SPFServicesBetterRow
+local function PaintBetterRow(row)
+	local goods = ns.NearbyServices.Goods(row.group.key, row.place)
+	row.itemID = goods and goods[1]
+	Art.Icon(row.Icon, row.itemID and ItemIcon(row.itemID) or QUESTION_MARK, BETTER_ICON)
+	local name = row.itemID and ns.NearbyServices.ItemName(row.itemID) or row.place.name
+	local quality = row.itemID and C_Item.GetItemQualityByID(row.itemID)
+	local hex = quality and select(4, C_Item.GetItemQualityColor(quality)) -- multi-value: the hex string is fourth
+	if hex then
+		name = ("|c%s%s|r"):format(hex, name)
+	end
+	local zone = ns.NearbyServices.Zone(row.place)
+	row.Label:SetText(zone and L["%s · %s"]:format(name, zone) or name)
+	row.Time:SetText(row.seconds and ns.FormatCountdown(row.seconds * 1000) or "")
+end
+
+---@param row SPFServicesRow
+local function Paint(row)
+	if row.Badge then
+		PaintBetterRow(row --[[@as SPFServicesBetterRow]])
+	else
+		PaintRow(row)
+	end
+end
+
+-- Over a row's icon, the goods the row names show their own tooltip, as a merchant's or a quest reward's do; the row
+-- keeps its hover light meanwhile, and a click that links nothing still starts the journey.
+---@param row SPFServicesRow
+---@param size number
+local function AddItemButton(row, size)
+	row.Item = CreateFrame("Button", nil, row)
+	row.Item:SetSize(size, size)
+	row.Item:SetPoint("CENTER", row.Icon)
+	row.Item:SetScript("OnEnter", function(self)
+		row:LockHighlight()
+		if row.itemID then
+			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+			GameTooltip:SetItemByID(row.itemID)
+			GameTooltip:Show()
+		end
+	end)
+	row.Item:SetScript("OnLeave", function(self)
+		row:UnlockHighlight()
+		if GameTooltip:IsOwned(self) then
+			GameTooltip:Hide()
+		end
+	end)
+	row.Item:SetScript("OnClick", function()
+		local link = row.itemID and select(2, C_Item.GetItemInfo(row.itemID)) -- multi-value: the link is second
+		if not (link and HandleModifiedItemClick(link)) then
+			ns.NearbyServices.Navigate(row.key, row.place)
+		end
+	end)
 end
 
 ---@param parent Frame
@@ -130,6 +207,7 @@ local function CreateRow(parent)
 	Art.RowArt(row)
 	row.Icon = row:CreateTexture(nil, "ARTWORK")
 	row.Icon:SetPoint("LEFT", 8, 0)
+	AddItemButton(row, ICON)
 	row.Label = row:CreateFontString(nil, "ARTWORK", "GameFontNormalMed3")
 	row.Label:SetJustifyH("LEFT")
 	row.Label:SetWordWrap(false)
@@ -143,6 +221,45 @@ local function CreateRow(parent)
 	row.Detail:SetPoint("RIGHT", row.Time, "LEFT", -6, 0)
 	row.Detail:SetJustifyH("LEFT")
 	row.Detail:SetWordWrap(false)
+	row:SetScript("OnClick", function(self)
+		ns.NearbyServices.Navigate(self.key, self.place)
+	end)
+	return row
+end
+
+---@param parent Frame
+---@return SPFServicesBetterRow
+local function CreateBetterRow(parent)
+	local row = CreateFrame("Button", nil, parent) --[[@as SPFServicesBetterRow]]
+	row:SetHeight(BETTER_HEIGHT)
+	Art.RowArt(row)
+	row.Icon = row:CreateTexture(nil, "ARTWORK")
+	row.Icon:SetPoint("LEFT", 6, 0)
+	local badge = row:CreateTexture(nil, "OVERLAY")
+	badge:SetPoint("TOPLEFT", row.Icon)
+	Art.Fit(badge, UPGRADE_ATLAS, BADGE_WIDTH, BADGE_HEIGHT)
+	row.Badge = badge
+	AddItemButton(row, BETTER_ICON)
+	row.Time = row:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+	row.Time:SetPoint("RIGHT", -8, 0)
+	row.Time:SetJustifyH("RIGHT")
+	row.Label = row:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+	row.Label:SetPoint("LEFT", row.Icon, "RIGHT", 8, 0)
+	row.Label:SetPoint("RIGHT", row.Time, "LEFT", -6, 0)
+	row.Label:SetJustifyH("LEFT")
+	row.Label:SetWordWrap(false)
+	row:SetScript("OnEnter", function(self)
+		if self.itemID then
+			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+			ns.NearbyServices.BetterTooltip(GameTooltip, self.itemID, self.place)
+			GameTooltip:Show()
+		end
+	end)
+	row:SetScript("OnLeave", function(self)
+		if GameTooltip:IsOwned(self) then
+			GameTooltip:Hide()
+		end
+	end)
 	row:SetScript("OnClick", function(self)
 		ns.NearbyServices.Navigate(self.key, self.place)
 	end)
@@ -282,7 +399,7 @@ local function UpdateRow(key)
 	end
 	row.place = chosen[key] or row.place
 	row.seconds = estimates[key]
-	PaintRow(row)
+	Paint(row)
 end
 
 -- One Estimate a frame, only while the panel is shown. The frame script is cleared as soon as the queue empties,
@@ -332,10 +449,10 @@ function Queue()
 	for _, section in ipairs(sections) do
 		if not section.collapsed then
 			for _, entry in ipairs(section.rows) do
-				local candidates = ns.NearbyServices.Shortlist(entry.group.key, world, SHORTLIST, query)
+				local candidates = ns.NearbyServices.Shortlist(entry.group.key, world, SHORTLIST, query, entry.tier)
 				if #candidates > 0 then
 					local rank = ns.NearbyServices.Rank(candidates, api.Estimate, map, x, y)
-					rank.key = entry.group.key
+					rank.key = entry.id
 					queue[#queue + 1] = rank
 				end
 			end
@@ -362,7 +479,7 @@ function Refresh()
 	sections = world and state == "ready" and ns.NearbyServices.Sections(world, query, collapsed) or {}
 	rowsByKey = {}
 	local top = 0
-	local rowAt, headerAt = 0, 0
+	local rowAt, betterAt, headerAt = 0, 0, 0
 	for _, section in ipairs(sections) do
 		headerAt = headerAt + 1
 		local header = headers[headerAt] or CreateHeader(list)
@@ -377,25 +494,38 @@ function Refresh()
 		top = top + HEADER_HEIGHT + HEADER_GAP
 		if not section.collapsed then
 			for _, entry in ipairs(section.rows) do
-				rowAt = rowAt + 1
-				local row = rows[rowAt] or CreateRow(list)
-				rows[rowAt] = row
+				local row, indent, height
+				if entry.tier then
+					betterAt = betterAt + 1
+					row = betterRows[betterAt] or CreateBetterRow(list)
+					betterRows[betterAt] = row
+					indent, height = BETTER_INDENT, BETTER_HEIGHT
+				else
+					rowAt = rowAt + 1
+					row = rows[rowAt] or CreateRow(list)
+					rows[rowAt] = row
+					indent, height = 0, ROW_HEIGHT
+				end
+				row.id = entry.id
 				row.key = entry.group.key
 				row.group = entry.group
-				row.place = chosen[entry.group.key] or entry.npc
-				row.seconds = estimates[entry.group.key]
+				row.place = chosen[entry.id] or entry.npc
+				row.seconds = estimates[entry.id]
 				row.query = query
-				rowsByKey[entry.group.key] = row
-				PaintRow(row)
-				row:SetPoint("TOPLEFT", 6, -top)
+				rowsByKey[entry.id] = row
+				Paint(row)
+				row:SetPoint("TOPLEFT", 6 + indent, -top)
 				row:SetPoint("TOPRIGHT", -6, -top)
 				row:Show()
-				top = top + ROW_HEIGHT + ROW_GAP
+				top = top + height + ROW_GAP
 			end
 		end
 	end
 	for at = rowAt + 1, #rows do
 		rows[at]:Hide()
+	end
+	for at = betterAt + 1, #betterRows do
+		betterRows[at]:Hide()
 	end
 	for at = headerAt + 1, #headers do
 		headers[at]:Hide()
