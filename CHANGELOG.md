@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Walks follow what your character can actually climb and drop.** The walking maps are rebuilt from the game's own terrain with your character's limits: a step up of 2 yards, slopes up to 50°, steeper ground down to 61.6° walked downhill only, and ledges of up to 14.57 yards, the height where a fall starts to hurt, jumped down but never climbed. A walk now takes the short way down a ledge or slope instead of going round to a ramp, and never sends you up one you cannot climb (#638, #639).
+
 ### For addon authors
 
 - **The tracker section is now built with ForeverCore's `TrackerSection`, `TrackerLine` and `UpdateText`, so the addon needs ForeverCore v1.3.2.** Its own line template stays because its leg marks need a private line pool. Nothing changes for players.

@@ -44,6 +44,27 @@ class BakeInputTest(unittest.TestCase):
 
 
 class TrinityDriverTest(unittest.TestCase):
+    def test_extraction_notes_name_skipped_models_and_sections(self):
+        output = (
+            b"SPF-DB2-SKIPPED-SECTION FileDataId: 1349477 key=0DA4670DB36FB2A9 records=2\n"
+            b"Can't open FILE0002F925.xxx: FILE_NOT_FOUND\n"
+            b"SPF-MODEL-NOT-IN-BUILD FileDataId: 194853\n"
+            b"SPF-MODEL-NOT-IN-BUILD FileDataId: 194853\n"
+            b"SPF-MODEL-NOT-IN-BUILD path: world/foo/bar.m2\n"
+        )
+        self.assertEqual(
+            trinity.output_notes(output),
+            {
+                "skipped_map_sections": [{"key": "0DA4670DB36FB2A9", "records": 2}],
+                "skipped_models": [194853],
+                "skipped_model_paths": ["world/foo/bar.m2"],
+            },
+        )
+        self.assertEqual(
+            trinity.output_notes(b"no skips\n"),
+            {"skipped_map_sections": [], "skipped_models": [], "skipped_model_paths": []},
+        )
+
     def test_active_build_needs_exactly_one_active_version(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

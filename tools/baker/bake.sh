@@ -5,7 +5,7 @@ set -euo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
 OUT=$(realpath -m "${OUT:-$HERE/work}")
 WOW=$(realpath -m "${WOW:-$HOME/Games/battlenet/drive_c/Program Files (x86)/World of Warcraft}")
-PRODUCT=${PRODUCT:-wow_classic_beta}
+PRODUCT=${PRODUCT:-wowf}
 MAPS=${MAPS:-"0 1 2991"}
 THREADS=${THREADS:-8}
 JOBS=${JOBS:-6}
@@ -53,6 +53,7 @@ cmake -S "$SOURCE" -B "$OUT/build" -G Ninja -DTOOLS=ON -DSERVERS=OFF -DSCRIPTS=n
 	-DBUILD_TESTING=OFF -DUSE_COREPCH=OFF -DNOJEM=ON -DCMAKE_BUILD_TYPE=Release
 cmake --build "$OUT/build" --target mapextractor vmap4extractor vmap4assembler mmaps_generator -j "$JOBS"
 python3 "$HERE/check_hazards.py" "$SOURCE" "$OUT/build"
+python3 "$HERE/check_drops.py" "$SOURCE" "$OUT/build"
 if [ "${BUILD_ONLY:-0}" = 1 ]; then
 	exit 0
 fi

@@ -28,6 +28,9 @@ LOCALE = "enUS"
 ADDON = "ShortestPathForever"
 BUNDLED = re.compile(r"Nav\.xml|Nav\d+(?:_\d+)?\.lua")
 TILE = re.compile(r"(\d{4})_(\d{2})_(\d{2})")
+SKIPPED_SECTION = re.compile(rb"SPF-DB2-SKIPPED-SECTION FileDataId: 1349477 key=([A-F0-9]+) records=(\d+)")
+SKIPPED_MODEL = re.compile(rb"SPF-MODEL-NOT-IN-BUILD FileDataId: (\d+)")
+SKIPPED_MODEL_PATH = re.compile(rb"SPF-MODEL-NOT-IN-BUILD path: ([^\r\n]+)")
 
 
 def active_build(wow: Path, product: str) -> str:
@@ -83,7 +86,8 @@ def stage_commands(args, map_id: int) -> dict[str, list[str]]:
         "vmap4assembler": ["vmap4assembler", "--threads", threads, "$RUN/Buildings", "$RUN/vmaps"],
         "mmaps_generator": [
             "mmaps_generator", "--input", "$RUN", "--output", "$OUT", "--threads", threads,
-            "--skipJunkMaps", "false", "--bigBaseUnit", "true", str(map_id),
+            "--skipJunkMaps", "false", "--bigBaseUnit", "true", "--maxAngle", "61.6", "--maxAngleNotSteep", "50",
+            str(map_id),
         ],
     }  # fmt: skip
 
@@ -108,6 +112,16 @@ def recipe(args, build: str, commands: dict) -> tuple[str, dict]:
     return digest, body
 
 
+def output_notes(output: bytes) -> dict:
+    """The machine-readable skips in an extractor's output: inaccessible sections and files the build does not ship."""
+    sections = [{"key": key.decode(), "records": int(count)} for key, count in SKIPPED_SECTION.findall(output)]
+    return {
+        "skipped_map_sections": sections,
+        "skipped_models": sorted({int(file_data_id) for file_data_id in SKIPPED_MODEL.findall(output)}),
+        "skipped_model_paths": sorted({path.decode() for path in SKIPPED_MODEL_PATH.findall(output)}),
+    }
+
+
 def measured(argv: list[str], cwd: Path, log: Path, env: dict | None = None) -> dict:
     """Run one fresh process, log its output and return wall and CPU seconds and peak RSS."""
     started = time.perf_counter()
@@ -130,14 +144,12 @@ def measured(argv: list[str], cwd: Path, log: Path, env: dict | None = None) -> 
         raise RuntimeError(f"{Path(argv[0]).name} exited {child.returncode}; see {log}")
     with log.open("rb") as source:
         source.seek(log_start)
-        skipped = re.findall(
-            rb"SPF-DB2-SKIPPED-SECTION FileDataId: 1349477 key=([A-F0-9]+) records=(\d+)", source.read()
-        )
+        notes = output_notes(source.read())
     return {
         "wall_seconds": time.perf_counter() - started,
         "cpu_seconds": usage.ru_utime + usage.ru_stime,
         "max_rss_kib": usage.ru_maxrss,
-        "skipped_map_sections": [{"key": key.decode(), "records": int(count)} for key, count in skipped],
+        **notes,
     }
 
 
@@ -240,6 +252,8 @@ def bake_map(args, map_id: int, build: str) -> None:
             "provenance": body,
             "db2_sha256": {p.name: sha256(p) for p in sorted((run / "dbc" / LOCALE).glob("*.db2"))},
             "skipped_map_sections": metrics["stages"]["mapextractor"]["skipped_map_sections"],
+            "skipped_models": metrics["stages"]["vmap4extractor"]["skipped_models"],
+            "skipped_model_paths": metrics["stages"]["vmap4extractor"]["skipped_model_paths"],
             "rows": args.rows,
             "cols": args.cols,
             "tiles": [f"{map_id:04d}_{x:02d}_{y:02d}" for x, y in targets],

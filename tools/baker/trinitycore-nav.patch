@@ -119,7 +119,7 @@ index a16d1669425eec2d87ebf283079d1acbefa96bc1..9ce24c7113ecbb34cf92f26d07f9ac62
 +
              /// Get the vector coordinate for a specific position
 diff --git a/src/common/mmaps_common/Generator/TileBuilder.cpp b/src/common/mmaps_common/Generator/TileBuilder.cpp
-index 31ec90a83da290e58acdff60d1efae02363dcb52..a1d54fa0347ae1410ca55c59df0c984128c673b7 100644
+index 31ec90a83da290e58acdff60d1efae02363dcb52..848513166331f138b4357c993832b8272388312c 100644
 --- a/src/common/mmaps_common/Generator/TileBuilder.cpp
 +++ b/src/common/mmaps_common/Generator/TileBuilder.cpp
 @@ -25,2 +25,8 @@
@@ -184,7 +184,17 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..a1d54fa0347ae1410ca55c59df0c9841
 +    std::atomic<uint32> FailedTiles = 0;
 +
      struct TileConfig
-@@ -97,2 +151,22 @@ namespace MMAP
+@@ -57,2 +111,5 @@ namespace MMAP
+             BASE_UNIT_DIM = bigBaseUnit ? 0.5333333f : 0.2666666f;
++            // The player's step height is 2.0 yards, which no multiple of the horizontal cell reaches exactly, so the
++            // vertical cell is 0.5 yards and a step is four of them. The horizontal cell stays at 0.5333 for terrain.
++            CELL_HEIGHT = 0.5f;
+ 
+@@ -65,2 +122,3 @@ namespace MMAP
+         float BASE_UNIT_DIM;
++        float CELL_HEIGHT;
+         int VERTEX_PER_MAP;
+@@ -97,2 +155,22 @@ namespace MMAP
  
 +        // FAILED stands until the tile is proven, and no earlier mmtile can outlive a rebuild
 +        boost::filesystem::path const statusPath = TileStatusPath(m_outputDirectory, mapID, tileX, tileY);
@@ -207,11 +217,11 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..a1d54fa0347ae1410ca55c59df0c9841
 +        };
 +
          MeshData meshData;
-@@ -100,2 +174,3 @@ namespace MMAP
+@@ -100,2 +178,3 @@ namespace MMAP
          std::unique_ptr<VMAP::VMapManager> vmapManager = CreateVMapManager(mapID);
 +        m_terrainBuilder.clearFailure();
  
-@@ -107,8 +182,8 @@ namespace MMAP
+@@ -107,8 +186,8 @@ namespace MMAP
  
 +        if (m_terrainBuilder.failed())
 +            return finish("FAILED", true);
@@ -224,7 +234,7 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..a1d54fa0347ae1410ca55c59df0c9841
 -        }
 +            return finish("empty", false);
  
-@@ -119,6 +194,3 @@ namespace MMAP
+@@ -119,6 +198,3 @@ namespace MMAP
          if (meshData.liquidVerts.empty() && meshData.solidVerts.empty())
 -        {
 -            OnTileDone();
@@ -232,7 +242,7 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..a1d54fa0347ae1410ca55c59df0c9841
 -        }
 +            return finish("empty", false);
  
-@@ -138,8 +210,181 @@ namespace MMAP
+@@ -138,8 +214,351 @@ namespace MMAP
          TileResult tileResult = buildMoveMapTile(mapID, tileX, tileY, meshData, bmin, bmax, navMesh->getParams());
 -        if (tileResult.data)
 -            saveMoveMapTileToFile(mapID, tileX, tileY, navMesh, tileResult);
@@ -241,13 +251,14 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..a1d54fa0347ae1410ca55c59df0c9841
 +
 +        if (!tileResult.data)
 +            return finish("empty", false);
-+
+ 
+-        OnTileDone();
 +        if (!saveMoveMapTileToFile(mapID, tileX, tileY, navMesh, tileResult))
 +            return finish("FAILED", true);
 +
 +        finish(Trinity::StringFormat("ok bytes={}", tileResult.size), false);
-+    }
-+
+     }
+ 
 +
 +    // SPF-HAZARD-BEGIN
 +    struct HazardPoint { float x, y, z; };
@@ -309,8 +320,7 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..a1d54fa0347ae1410ca55c59df0c9841
 +
 +        if (poly.size() < 3)
 +            return false;
- 
--        OnTileDone();
++
 +        // an overlap that is only a shared edge or a corner is not "under"
 +        float area = 0.0f;
 +        for (std::size_t i = 0; i < poly.size(); ++i)
@@ -328,8 +338,8 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..a1d54fa0347ae1410ca55c59df0c9841
 +                return true;
 +
 +        return false;
-     }
- 
++    }
++
 +    // Terrain is dropped where a quad's liquid lies wholly above it, but model floors and partly submerged quads keep
 +    // ground below the surface. Under water gen_nav discards that bed itself; under magma or slime the polygon must be
 +    // flagged here, because ground is the area recast prefers over the liquid it sits in. Every ground polygon is
@@ -416,44 +426,228 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..a1d54fa0347ae1410ca55c59df0c9841
 +    }
 +    // SPF-HAZARD-END
 +
++    // SPF-DROP-BEGIN
++    // A ledge the player can drop from but not climb: falling hurts past 14.57 yd (Player::HandleFall at the pinned
++    // commit) and a step reaches 2 yd, so a landing in between is a place only a fall reaches. Recast never links the
++    // two, so the drop is emitted as a one-way off-mesh connection for gen_nav to turn into a directed walk link.
++    namespace
++    {
++        constexpr float NAV_DROP_REACH = 14.57f;      // the longest fall that does not hurt, in yards
++        constexpr int NAV_DROP_COLUMNS = 4;           // how many cells out from a ledge a landing is looked for
++        constexpr float NAV_DROP_SPACING = 8.0f;      // one connection per this long a ledge run (an 8 yard cell)
++        constexpr float NAV_DROP_SLOPE = 1.1917536f;  // tan 50 degrees: a gentler face is walked, not dropped
++
++        struct LedgeDrop
++        {
++            float from[3];
++            float to[3];
++        };
++
++        /// The walkable surface a compact span holds: the floor below its free space.
++        static float SpanSurface(rcCompactHeightfield const& chf, rcCompactSpan const& span)
++        {
++            return chf.bmin[1] + span.y * chf.ch;
++        }
++
++        /// The top of a compact span's free space, used only to see a null-area wall a test puts in the field.
++        static float SpanTop(rcCompactHeightfield const& chf, rcCompactSpan const& span)
++        {
++            return chf.bmin[1] + (span.y + span.h) * chf.ch;
++        }
++
++        /// Is there a walkable surface within climb of surface in column (x, z)? Off the field counts as supported, so
++        /// no drop is invented at a heightfield edge.
++        static bool SupportedAt(rcCompactHeightfield const& chf, int x, int z, float surface, float climb)
++        {
++            if (x < 0 || z < 0 || x >= chf.width || z >= chf.height)
++                return true;
++
++            rcCompactCell const& cell = chf.cells[x + z * chf.width];
++            for (int i = cell.index; i < cell.index + cell.count; ++i)
++                if (chf.areas[i] != RC_NULL_AREA && std::fabs(SpanSurface(chf, chf.spans[i]) - surface) <= climb)
++                    return true;
++
++            return false;
++        }
++
++        // Does a span in column (x, z) cross the band between low and high? A walkable floor inside the band is a shelf
++        // the fall lands on; a null-area span is a wall standing in it.
++        static bool DropColumnBlocked(rcCompactHeightfield const& chf, int x, int z, float low, float high)
++        {
++            if (x < 0 || z < 0 || x >= chf.width || z >= chf.height)
++                return true;
++
++            rcCompactCell const& cell = chf.cells[x + z * chf.width];
++            for (int i = cell.index; i < cell.index + cell.count; ++i)
++            {
++                float const floor = SpanSurface(chf, chf.spans[i]);
++                if (chf.areas[i] == RC_NULL_AREA)
++                {
++                    if (floor < high - 0.01f && SpanTop(chf, chf.spans[i]) > low + 0.01f)
++                        return true;
++                }
++                else if (floor > low + 0.01f && floor < high - 0.01f)
++                    return true;
++            }
++
++            return false;
++        }
++
++        /// The highest walkable surface in column (x, z) that is a fall of more than climb but no more than
++        /// NAV_DROP_REACH below surface.
++        static bool FindLanding(rcCompactHeightfield const& chf, int x, int z, float surface, float climb, float& landing)
++        {
++            if (x < 0 || z < 0 || x >= chf.width || z >= chf.height)
++                return false;
++
++            rcCompactCell const& cell = chf.cells[x + z * chf.width];
++            bool found = false;
++            for (int i = cell.index; i < cell.index + cell.count; ++i)
++            {
++                if (chf.areas[i] == RC_NULL_AREA)
++                    continue;
++
++                float const floor = SpanSurface(chf, chf.spans[i]);
++                float const fall = surface - floor;
++                if (fall > climb && fall <= NAV_DROP_REACH && (!found || floor > landing))
++                    landing = floor, found = true;
++            }
++
++            return found;
++        }
++
++        // Every walkable surface with no walkable surface within a step in some direction is a ledge edge. Look
++        // outwards from it for a landing below, keeping one connection per ledge run: a column within one cell of a used
++        // one is skipped.
++        static std::vector<LedgeDrop> CollectLedgeDrops(rcCompactHeightfield const& chf, float const (&tileMin)[3], float const (&tileMax)[3])
++        {
++            static int const DIRS[4][2] = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } };
++            float const climb = float(chf.walkableClimb) * chf.ch;
++            std::vector<LedgeDrop> drops;
++            std::vector<char> used(chf.width * chf.height, 0);
++            for (int z = 0; z < chf.height; ++z)
++                for (int x = 0; x < chf.width; ++x)
++                {
++                    if (used[x + z * chf.width])
++                        continue;
++
++                    rcCompactCell const& cell = chf.cells[x + z * chf.width];
++                    for (int i = cell.index; i < cell.index + cell.count; ++i)
++                    {
++                        // drops start on ordinary ground: steep ground already walks down on its own, water is swum
++                        if (chf.areas[i] != NAV_AREA_GROUND)
++                            continue;
++
++                        float const surface = SpanSurface(chf, chf.spans[i]);
++                        for (int d = 0; d < 4; ++d)
++                        {
++                            int const dx = DIRS[d][0], dz = DIRS[d][1];
++                            if (SupportedAt(chf, x + dx, z + dz, surface, climb))
++                                continue; // a surface within a step: this is no ledge edge
++
++                            float landing = 0.0f;
++                            for (int step = 1; step <= NAV_DROP_COLUMNS; ++step)
++                            {
++                                int const lx = x + dx * step, lz = z + dz * step;
++                                if (!FindLanding(chf, lx, lz, surface, climb, landing))
++                                    continue;
++
++                                // the fall column and every column between the ends must be clear of walls and shelves
++                                // a face gentler than the walkable slope is a walk, so only steeper pairs are drops
++                                if (surface - landing <= step * chf.cs * NAV_DROP_SLOPE)
++                                    continue;
++
++                                bool clear = !DropColumnBlocked(chf, lx, lz, landing, surface);
++                                for (int over = 1; over < step && clear; ++over)
++                                    clear = !DropColumnBlocked(chf, x + dx * over, z + dz * over, landing + climb, surface);
++
++                                if (!clear)
++                                    continue;
++
++                                float const fx = chf.bmin[0] + (x + 0.5f) * chf.cs;
++                                float const fz = chf.bmin[2] + (z + 0.5f) * chf.cs;
++                                float const tx = chf.bmin[0] + (lx + 0.5f) * chf.cs;
++                                float const tz = chf.bmin[2] + (lz + 0.5f) * chf.cs;
++                                // Detour keeps a connection by the tile its start is in, so the landing may be across
++                                // the boundary; the heightfield border has already bounded how far out it can be.
++                                if (fx < tileMin[0] || fx > tileMax[0] || fz < tileMin[2] || fz > tileMax[2])
++                                    continue;
++
++                                drops.push_back({ { fx, surface, fz }, { tx, landing, tz } });
++                                int const spread = int(NAV_DROP_SPACING / chf.cs + 0.5f);
++                                for (int uz = z - spread; uz <= z + spread; ++uz)
++                                    for (int ux = x - spread; ux <= x + spread; ++ux)
++                                        if (ux >= 0 && uz >= 0 && ux < chf.width && uz < chf.height)
++                                            used[ux + uz * chf.width] = 1;
++                                break;
++                            }
++
++                            if (used[x + z * chf.width])
++                                break;
++                        }
++
++                        if (used[x + z * chf.width])
++                            break;
++                    }
++                }
++
++            return drops;
++        }
++    }
++    // SPF-DROP-END
++
      /**************************************************************************/
-@@ -211,2 +456,3 @@ namespace MMAP
+@@ -211,2 +630,3 @@ namespace MMAP
                      TC_LOG_ERROR("maps.mmapgen", "{} Failed building heightfield!", tileString);
 +                    tileResult.failed = true;
                      continue;
-@@ -240,2 +486,3 @@ namespace MMAP
+@@ -240,2 +660,3 @@ namespace MMAP
                      TC_LOG_ERROR("maps.mmapgen", "{} Failed compacting heightfield!", tileString);
 +                    tileResult.failed = true;
                      continue;
-@@ -247,2 +494,3 @@ namespace MMAP
+@@ -247,2 +668,3 @@ namespace MMAP
                      TC_LOG_ERROR("maps.mmapgen", "{} Failed eroding area!", tileString);
 +                    tileResult.failed = true;
                      continue;
-@@ -253,2 +501,3 @@ namespace MMAP
+@@ -253,2 +675,3 @@ namespace MMAP
                      TC_LOG_ERROR("maps.mmapgen", "{} Failed filtering area!", tileString);
 +                    tileResult.failed = true;
                      continue;
-@@ -259,2 +508,3 @@ namespace MMAP
+@@ -256,2 +679,13 @@ namespace MMAP
+ 
++                // one-way drops off ledges, appended to this tile's own connections
++                for (LedgeDrop const& drop : CollectLedgeDrops(*tile.chf, bmin, bmax))
++                {
++                    meshData.offMeshConnections.insert(meshData.offMeshConnections.end(),
++                        { drop.from[0], drop.from[1], drop.from[2], drop.to[0], drop.to[1], drop.to[2] });
++                    meshData.offMeshConnectionRads.push_back(BASE_UNIT_DIM * config.walkableRadius);
++                    meshData.offMeshConnectionDirs.push_back(0); // down only: DT_OFFMESH_CON_BIDIR is never set
++                    meshData.offMeshConnectionsAreas.push_back(NAV_AREA_GROUND);
++                    meshData.offMeshConnectionsFlags.push_back(0);
++                }
++
+                 if (!rcBuildDistanceField(&m_rcContext, *tile.chf))
+@@ -259,2 +693,3 @@ namespace MMAP
                      TC_LOG_ERROR("maps.mmapgen", "{} Failed building distance field!", tileString);
 +                    tileResult.failed = true;
                      continue;
-@@ -265,2 +515,3 @@ namespace MMAP
+@@ -265,2 +700,3 @@ namespace MMAP
                      TC_LOG_ERROR("maps.mmapgen", "{} Failed building regions!", tileString);
 +                    tileResult.failed = true;
                      continue;
-@@ -272,2 +523,3 @@ namespace MMAP
+@@ -272,2 +708,3 @@ namespace MMAP
                      TC_LOG_ERROR("maps.mmapgen", "{} Failed building contours!", tileString);
 +                    tileResult.failed = true;
                      continue;
-@@ -280,2 +532,3 @@ namespace MMAP
+@@ -280,2 +717,3 @@ namespace MMAP
                      TC_LOG_ERROR("maps.mmapgen", "{} Failed building polymesh!", tileString);
 +                    tileResult.failed = true;
                      continue;
-@@ -287,2 +540,3 @@ namespace MMAP
+@@ -287,2 +725,3 @@ namespace MMAP
                      TC_LOG_ERROR("maps.mmapgen", "{} Failed building polymesh detail!", tileString);
 +                    tileResult.failed = true;
                      continue;
-@@ -310,5 +564,14 @@ namespace MMAP
+@@ -310,5 +749,14 @@ namespace MMAP
              TC_LOG_ERROR("maps.mmapgen", "{} alloc iv.polyMesh FAILED!", tileString);
 +            tileResult.failed = true;
 +            return tileResult;
@@ -469,7 +663,7 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..a1d54fa0347ae1410ca55c59df0c9841
          }
 -        rcMergePolyMeshes(&m_rcContext, pmmerge.get(), nmerge, *iv.polyMesh);
  
-@@ -318,5 +581,11 @@ namespace MMAP
+@@ -318,5 +766,11 @@ namespace MMAP
              TC_LOG_ERROR("maps.mmapgen", "{} alloc m_dmesh FAILED!", tileString);
 +            tileResult.failed = true;
 +            return tileResult;
@@ -482,48 +676,48 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..a1d54fa0347ae1410ca55c59df0c9841
          }
 -        rcMergePolyMeshDetails(&m_rcContext, dmmerge.get(), nmerge, *iv.polyMeshDetail);
  
-@@ -340,2 +609,4 @@ namespace MMAP
+@@ -340,2 +794,4 @@ namespace MMAP
  
 +        MarkGroundUnderHazard(*iv.polyMesh, lVerts, lTris, lTriFlags, lTriCount);
 +
          // setup mesh parameters
-@@ -399,2 +670,3 @@ namespace MMAP
+@@ -399,2 +855,3 @@ namespace MMAP
              TC_LOG_ERROR("maps.mmapgen", "{} Invalid verts-per-polygon value!", tileString);
 +            tileResult.failed = true;
              return tileResult;
-@@ -405,2 +677,3 @@ namespace MMAP
+@@ -405,2 +862,3 @@ namespace MMAP
              TC_LOG_ERROR("maps.mmapgen", "{} Too many vertices!", tileString);
 +            tileResult.failed = true;
              return tileResult;
-@@ -429,2 +702,3 @@ namespace MMAP
+@@ -429,2 +887,3 @@ namespace MMAP
              TC_LOG_ERROR("maps.mmapgen", "{} No detail mesh to build tile!", tileString);
 +            tileResult.failed = true;
              return tileResult;
-@@ -436,2 +710,3 @@ namespace MMAP
+@@ -436,2 +895,3 @@ namespace MMAP
              TC_LOG_ERROR("maps.mmapgen", "{} Failed building navmesh tile!", tileString);
 +            tileResult.failed = true;
              return tileResult;
-@@ -443,3 +718,3 @@ namespace MMAP
+@@ -443,3 +903,3 @@ namespace MMAP
  
 -    void TileBuilder::saveMoveMapTileToFile(uint32 mapID, uint32 tileX, uint32 tileY, dtNavMesh* navMesh,
 +    bool TileBuilder::saveMoveMapTileToFile(uint32 mapID, uint32 tileX, uint32 tileY, dtNavMesh* navMesh,
          TileResult const& tileResult, std::string_view fileNameSuffix)
-@@ -461,3 +736,3 @@ namespace MMAP
+@@ -461,3 +921,3 @@ namespace MMAP
                  TC_LOG_ERROR("maps.mmapgen", "[Map {:04}] [{:02},{:02}]: Failed adding tile to navmesh!", mapID, tileX, tileY);
 -                return;
 +                return false;
              }
-@@ -469,3 +744,3 @@ namespace MMAP
+@@ -469,3 +929,3 @@ namespace MMAP
          std::string fileName = Trinity::StringFormat("{}/mmaps/{:04}_{:02}_{:02}{}.mmtile", m_outputDirectory.generic_string(), mapID, tileX, tileY, fileNameSuffix);
 -        auto file = Trinity::make_unique_ptr_with_deleter<&::fclose>(fopen(fileName.c_str(), "wb"));
 +        FILE* file = fopen(fileName.c_str(), "wb");
          if (!file)
-@@ -473,3 +748,3 @@ namespace MMAP
+@@ -473,3 +933,3 @@ namespace MMAP
              TC_LOG_ERROR("maps.mmapgen", "[Map {:04}] [{:02},{:02}]: {}: Failed to open {} for writing!", mapID, tileX, tileY, strerror(errno), fileName);
 -            return;
 +            return false;
          }
-@@ -482,6 +757,15 @@ namespace MMAP
+@@ -482,6 +942,15 @@ namespace MMAP
          header.size = uint32(tileResult.size);
 -        fwrite(&header, sizeof(MmapTileHeader), 1, file.get());
 +        bool written = fwrite(&header, sizeof(MmapTileHeader), 1, file) == 1;
@@ -541,12 +735,12 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..a1d54fa0347ae1410ca55c59df0c9841
 +
 +        return written;
      }
-@@ -508,3 +792,3 @@ namespace MMAP
+@@ -508,3 +977,3 @@ namespace MMAP
      /**************************************************************************/
 -    bool TileBuilder::shouldSkipTile(uint32 /*mapID*/, uint32 /*tileX*/, uint32 /*tileY*/) const
 +    bool TileBuilder::shouldSkipTile(uint32 mapID, uint32 tileX, uint32 tileY) const
      {
-@@ -513,3 +797,45 @@ namespace MMAP
+@@ -513,3 +982,45 @@ namespace MMAP
  
 -        return true;
 +        // only a tile recorded as proven is skipped; anything else, including a bare mmtile, is rebuilt
@@ -593,6 +787,29 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..a1d54fa0347ae1410ca55c59df0c9841
 +
 +        return false;
      }
+@@ -525,7 +1036,8 @@ namespace MMAP
+         config.cs = tileConfig.BASE_UNIT_DIM;
+-        config.ch = tileConfig.BASE_UNIT_DIM;
+-        // Keeping these 2 slope angles the same reduces a lot the number of polys.
+-        // 55 should be the minimum, maybe 70 is ok (keep in mind blink uses mmaps), 85 is too much for players
+-        config.walkableSlopeAngle = m_maxWalkableAngle.value_or(55.0f);
+-        config.walkableSlopeAngleNotSteep = m_maxWalkableAngleNotSteep.value_or(55.0f);
++        config.ch = tileConfig.CELL_HEIGHT;
++        // The player's limits, not a server creature's: a face is walkable up to 50 degrees, ground from 50 to 61.6
++        // degrees is walked down only (mmaps_generator is given --maxAngle 61.6 --maxAngleNotSteep 50), a step reaches
++        // 2.0 yards, and 1.5 yards of clearance keeps the agent close to the 1.6 yards this baked before.
++        config.walkableSlopeAngle = m_maxWalkableAngle.value_or(61.6f);
++        config.walkableSlopeAngleNotSteep = m_maxWalkableAngleNotSteep.value_or(50.0f);
+         config.tileSize = tileConfig.VERTEX_PER_TILE;
+@@ -537,3 +1049,3 @@ namespace MMAP
+         // a value >= 4|8 allows npcs to walk over all fences
+-        config.walkableClimb = m_bigBaseUnit ? 3 : 6;
++        config.walkableClimb = m_bigBaseUnit ? 4 : 8;
+         config.minRegionArea = rcSqr(60);
+@@ -555,2 +1067,3 @@ namespace MMAP
+                 config.ch *= 2;
++                config.walkableClimb /= 2; // keep the player's 2.0 yard step in the doubled vertical cell
+                 break;
 diff --git a/src/common/mmaps_common/Generator/TileBuilder.h b/src/common/mmaps_common/Generator/TileBuilder.h
 index f3492e51a2e55803ba7934fd28d79281678ab4a7..a1c1f05238d97173afbb710ab894e5d5747e36fe 100644
 --- a/src/common/mmaps_common/Generator/TileBuilder.h

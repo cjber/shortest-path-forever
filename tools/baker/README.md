@@ -5,7 +5,7 @@ main addon, where `PathGrid.lua` decodes them on demand with the client's native
 most 16 KiB. The extractor is TrinityCore, pinned to
 `e3916b2adcf2f8a70ae33817fc57b6c0266e2fb0`, with three patches: `trinitycore-client.patch` for Forever tables and local CASC reads,
 `trinitycore.patch` for bounded terrain and model extraction, and `trinitycore-nav.patch` for navigation
-completeness and liquid hazards.
+completeness, the player's own slope and step limits, liquid hazards and ledge drops.
 
 ## Usage
 
@@ -13,20 +13,25 @@ completeness and liquid hazards.
 WOW="$HOME/Games/battlenet/drive_c/Program Files (x86)/World of Warcraft" MAPS="0 1 2991" tools/baker/bake.sh
 ```
 
+`bake.sh` needs Ninja (`ninja-build`); CMake's Makefile generator is not used, so the build recipe does not depend on
+the generator a machine happens to prefer.
+
 Requires Linux, git, CMake, Ninja, a C++ compiler, Python 3.10+, LuaJIT, and TrinityCore's development dependencies:
 Boost, OpenSSL, zlib, bzip2 and readline. On Debian/Ubuntu install `build-essential cmake ninja-build git
 libboost-all-dev libssl-dev zlib1g-dev libbz2-dev libreadline-dev`. The tools build without the server,
 scripts, database or jemalloc. Python uses only the standard library.
 
 The client install is read only. CASC reads use local storage and built-in keys. Missing required geometry, files or liquid-table keys
-fail extraction. Inaccessible Map table sections are skipped and logged; the selected map and its parent
+fail extraction, except a model, WMO or WMO group the build does not ship (CascLib `ERROR_FILE_NOT_FOUND`): the game has no
+collision for it either, so it is skipped, logged once as `SPF-MODEL-NOT-IN-BUILD` and recorded in the map's metrics and
+provenance, while every other failure stays fatal. Inaccessible Map table sections are skipped and logged; the selected map and its parent
 metadata must still exist. Build sources come from GitHub, but client files and encryption keys are never downloaded.
 All sources, builds, logs and output stay under `OUT`, which must be outside the game install.
 
 | Variable | Default | Meaning |
 |---|---|---|
 | `WOW` | the Wine path above | install root holding `.build.info` |
-| `PRODUCT` | `wow_classic_beta` | active product in `.build.info` |
+| `PRODUCT` | `wowf` | active product in `.build.info` |
 | `MAPS` | `0 1 2991` | space-separated map IDs |
 | `MAP_NAME` | known map title | name of an additional map |
 | `THREADS` | `8` | native extraction and navigation workers |
@@ -50,7 +55,8 @@ The stages are `mapextractor`, `vmap4extractor`, `vmap4assembler`, `mmaps_genera
 
 The map extractor inventories selected tiles from the WDT before converting their ADTs. `trinity.py` records
 the active client version, product, pinned source, patch and binary hashes, commands, crop and expected tiles
-in `source.json` before navigation generation. Every expected tile needs a terminal `ok` or `empty` status;
+in `source.json` before navigation generation. It also records the skipped Map table sections and the models the build
+does not ship, which extraction skips and logs as `SPF-MODEL-NOT-IN-BUILD`. Every expected tile needs a terminal `ok` or `empty` status;
 missing and failed statuses block Python generation. The tile files must exactly match the `ok` statuses.
 The portable recipe hashes source, patches, build and commands. Exact binary hashes remain in provenance,
 so rebuilt executables still require a fresh `OUT`. Worker counts can change when resuming.
@@ -87,6 +93,39 @@ none of the map's fixed places with a height (flight masters, docks and lift end
 read from `Data/` by `places.lua`), such as the sealed terrain under Stormwind, and small components such as
 rooftops. A crop holding no such place is refused, and a crop has different global pruning from a continent;
 compare identical bounds when measuring.
+
+The bake uses the player's own collision limits, not a server creature's:
+
+| Limit | Setting | Player (source) |
+|---|---|---|
+| Walkable slope | `walkableSlopeAngle` 61.6, `walkableSlopeAngleNotSteep` 50 | a face is walkable up to 50 degrees and 50 to 61.6 degrees is walked down only (benilla-re `systems/collision/walking.md`, cos 50 `0x3f248dbb`; the Forever client's float pool holds the same constants) |
+| Step height | `walkableClimb` 4 x `ch` 0.5 = 2.0 yd | H = 2.0 yd (`0x617430` in the 1.12.1 client; the same value in Forever's build) |
+| Agent clearance | `walkableHeight` 3 x 0.5 = 1.5 yd | close to the 1.6 yd the older 0.533 yd voxel reached; a player is not a tall creature |
+| Falling | `NAV_DROP_REACH` 14.57 yd | fall damage starts here (TrinityCore `Player::HandleFall` at the pinned commit) |
+
+The horizontal cell stays 0.5333 yd so terrain is sampled as before; the vertical cell is 0.5 yd because 2.0 yards is
+not a whole number of 0.5333 ones. Slope never changes speed, so no slope cost is charged. Ground from 50 to 61.6
+degrees is baked as `NAV_AREA_GROUND_STEEP` (area 10): the generator accepts it and turns steps into and out of it
+into directed links, downhill only. A landing between 2.0 and 14.57 yards below a ledge is baked as a one-way Detour
+off-mesh connection (`DT_OFFMESH_CON_BIDIR` never set) by the patched `TileBuilder`, which looks outwards from every
+walkable span with no walkable neighbour, rejects a landing whose fall column or path crosses a wall or a shelf, and
+emits one connection per ledge run. A connection belongs to the tile its start is in, as Detour requires, so its
+landing may lie in the next tile; the heightfield border bounds how far out it can be. The connection carries the two
+floor surfaces, and the generator charges the walk plus free fall's time at the client's gravity (19.2911 yd/s²) run
+at 7 yd/s. `tools/baker/check_drops.py` compiles and exercises that helper alongside `check_hazards.py`.
+
+Maps are written in format 2. A step both ways take is one bit in a floor's step mask, exactly as format 1 writes
+it, and the decoder resolves that bit by height and mirrors it on the surface it lands on. Only a step one way takes
+(steep ground, a ledge drop) or one with a cost of its own is a record, so a ledge is dropped off but never climbed
+and steep ground is never walked up. The file stores each single link once, from the node that leaves it: a step's
+[node, direction, layer], or a drop's [node, x, y, layer, cost in whole yards]. An offset of (0, 0) is a link within
+one cell, so a drop from a ledge to a distinct floor of the same cell is stored too, and the generator maps a drop to
+the surfaces its endpoints lie on (the poly's own height, not the nearest cell anchor), linking the ledge to the
+landing's floor or, when that floor is rasterized in a neighbouring cell, to that cell's matching layer. The tile
+graph keeps one record per edge from the node that leaves it as well, and the decoder builds every node's
+predecessors from those records. Nothing is stored twice, so a format 2 map costs about what a format 1 map of the
+same bake does. `Routing/PathGrid.lua` still decodes format 1, which every map shipped so far uses and which keeps its
+symmetric links and height-matched floor steps.
 
 The generator emits raw base64 cluster fields. `pack_nav.py --root <addon root> NavN.lua...` compresses them
 with zlib into blocks that expand to at most 16 KiB and bundles them under `Nav/`, each Lua file at most
