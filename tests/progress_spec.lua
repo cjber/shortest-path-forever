@@ -1,3 +1,4 @@
+local TOC = dofile("tests/toc_fields.lua").read("ShortestPathForever.toc")
 local ns
 ns = {
 	db = { stats = true, statsShare = false },
@@ -68,6 +69,11 @@ local env = setmetatable({
 		return false
 	end,
 	LE_PARTY_CATEGORY_INSTANCE = 1,
+	C_AddOns = {
+		GetAddOnMetadata = function(name, field)
+			return name == "ShortestPathForever" and TOC[field] or nil
+		end,
+	},
 	UnitName = function()
 		return "Player"
 	end,
@@ -104,9 +110,12 @@ end
 local ForeverCore = dofile("tests/forever_core.lua")
 local coreNs = ForeverCore.load(env, "ForeverCore", { "Locales/enUS.lua", "Core/PeerStats.lua" })
 env.ForeverCore = {
+	API = 1,
+	APIKit = {},
 	PeerStats = coreNs.PeerStats,
 	Leaderboards = { Register = function() end, Open = function() end },
 }
+setfenv(assert(loadfile("Core/Require.lua")), env)("ShortestPathForever", ns)
 setfenv(assert(loadfile("Core/Progress.lua")), env)("ShortestPathForever", ns)
 
 ns.tick()
