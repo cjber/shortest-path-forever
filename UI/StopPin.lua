@@ -151,7 +151,7 @@ function GoalPin:OnAcquired(x, y, numbers, count, labels, later, look, details, 
 	if mark then
 		local atlas = mark == "up" and ARROW_UP or ARROW_DOWN
 		arrow:SetShown(ns.Art.Fit(arrow, atlas, ARROW_WIDTH, ARROW_HEIGHT))
-		arrow:SetPoint("TOPRIGHT", self, "TOPRIGHT", -BADGE_OFFSET, BADGE_OFFSET)
+		arrow:SetPoint("TOPRIGHT", self, "TOPRIGHT", BADGE_OFFSET, BADGE_OFFSET)
 	else
 		arrow:SetShown(false)
 	end
