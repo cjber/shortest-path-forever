@@ -64,6 +64,9 @@ local function slice()
 	end
 end
 
+-- Slicing is for a path job's own search, and for a checkpoint a caller inside one asks for (Path.Checkpoint). Work a
+-- job's callback asks for must not slice: the client can reach a callback from C (a secure hook, another addon's
+-- estimate), and no yield may cross that (#717).
 Path.Checkpoint = slice
 
 local function tick()

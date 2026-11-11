@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **A journey no longer loses its route to a rare search error.** When the client called a walking search's callback from inside one of its own calls, the replan it started could fail with "attempt to yield across metamethod/C-call boundary", and the journey got no route. The plan a search callback makes now finishes in that callback instead of pausing partway through. Reported on CurseForge by tgkGate (#717).
+
 ## [1.30.1] - 2026-11-11
 
 - **Forever Core now installs alongside it.** Forever Core is on CurseForge, so the CurseForge app installs and updates it with this addon instead of the addon carrying its own copy. On Wago, install Forever Core from its own page.
