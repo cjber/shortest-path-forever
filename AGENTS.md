@@ -21,6 +21,7 @@ luajit tools/forever_sim/run.lua   # native client scenarios (tests/sim); python
 luajit -joff tests/journey_bench.lua   # fails a journey that does not settle; read its worst frame against 3 ms
 SPF_BENCH_STRICT=1 luajit -joff tests/hearth_savings_bench.lua   # CI checks the plan; the 3 ms budget is local
 python3 tools/check_generated.py --offline # omit --offline to fetch missing pinned inputs
+python3 tools/forever_tools/credits.py --check # Data/Credits.lua and both thanks blocks are current (WFA-31)
 python3 tools/check_api_docs.py
 python3 tools/changelog.py --check
 python3 tools/check_screenshots.py   # an image older than its sources; --record after tools/screenshots.py
@@ -30,7 +31,7 @@ python3 tools/repo_rules.py   # rules no linter covers; CI runs it in project-ru
 
 CI's `package` job builds the zip with the release's packager without uploading (`-d -z`) and runs
 `python3 tools/check_package.py` on its output: every loaded file ships, no development folder does, a licence file and
-THIRD_PARTY.md ship with README's `## Credits` and THIRD_PARTY's `## Ideas and contributors` (WFA-10, WFA-31), and the
+THIRD_PARTY.md ship with README's `## Credits` and THIRD_PARTY's `## Players` (WFA-10, WFA-31), and the
 specs pass on the packaged files.
 
 CI runs the same gate, plus the UI checks (`tests/ui.sh`), shellcheck and shfmt on the shell scripts, actionlint and zizmor on the workflows,
