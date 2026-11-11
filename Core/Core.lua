@@ -34,6 +34,8 @@ local DEFAULTS = {
 	minimapPins = true,
 	mapFlightMasters = true,
 	mapRoutes = true,
+	-- The town services' level of detail: "capitals", "important", "all" or "off" (UI/TownServices.lua).
+	townServices = "capitals",
 	mapPinScale = 100,
 	flightPinScale = 100,
 	minimapPinScale = 100,

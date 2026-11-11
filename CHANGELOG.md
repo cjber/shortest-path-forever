@@ -12,6 +12,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Town services show on the world map.** The trainers, vendors, bankers, flight masters and innkeepers the Nearby services list knows now stand where they do on the map. Zoomed out their pins share one town icon whose tooltip lists the town's services, and zooming in splits them into a pin each with the client's own icon. *Town services on the world map* in Map marks shows only the capitals (the default), the capitals and the services worth a detour, every town, or none. Thanks to cotijelucie for the idea (#739).
 - **The route line can stop at the leg you are walking.** A new switch beside the world map line, "Line to later stops", leaves out the faded legs after the current stop, so a guide with many flight paths no longer covers the map in green lines. Your stop pins, the current leg and the guidance stay, and the switch is on by default. Asked on CurseForge by user_s0vubavdmaczleed46125 (#741).
 
 ## [1.32.0] - 2026-11-11

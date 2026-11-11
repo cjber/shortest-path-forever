@@ -449,3 +449,11 @@ L["How close you must get to a journey's destination for it to count as reached.
 L["Stops before the last on a multi-stop route keep 15 yards."] =
 	"Остановки перед последней на маршруте с несколькими остановками сохраняют 15 метров." -- mt
 L["Dungeons and raids"] = "Подземелья и рейды" -- mt
+L["Town services"] = "Городские услуги" -- mt
+L["Town services on the world map"] = "Городские услуги на карте мира" -- mt
+L["Capitals only"] = "Только столицы" -- mt
+L["Capitals and important services"] = "Столицы и важные услуги" -- mt
+L["All towns"] = "Все города" -- mt
+L["Books and recipes"] = "Книги и рецепты" -- mt
+L["One icon per town, or one per service as you zoom in."] =
+	"Один значок на город или на услугу при приближении." -- mt

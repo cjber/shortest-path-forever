@@ -1,7 +1,8 @@
 -- luacheck: read globals scenario ADDON
 local ForeverCore = dofile("tests/forever_core.lua")
--- The world map's filter menu (MENU_WORLD_MAP_TRACKING) carries two of our modifiers: the map filters (UI/Map.lua)
--- and the Nearby services submenu (UI/Nearby.lua, also on MENU_MINIMAP_TRACKING). #161 reports a client assertion
+-- The world map's filter menu (MENU_WORLD_MAP_TRACKING) carries three of our modifiers: the map filters (UI/Map.lua),
+-- the Nearby services submenu (UI/Nearby.lua, also on MENU_MINIMAP_TRACKING) and the town services levels
+-- (UI/TownServices.lua). #161 reports a client assertion
 -- (ldebug.c:747) on opening it. This opens the real menu again and again, in and out of combat, with the mouse and
 -- the gamepad interface, and checks that every entry the menu holds is well formed: text that is a plain string,
 -- selection getters that answer a boolean, filters that toggle and toggle back, and a Nearby service that starts

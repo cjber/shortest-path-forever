@@ -5,18 +5,10 @@ if ns.broken then
 	return
 end
 local L = ns.L
--- Vendors grouped by what they sell: QuestieDB's item class and subclass, and the food and drink item IDs in
--- Data/Services.lua. The icon is the item the mock shows for the group.
-local VENDOR_GROUPS = {
-	{ key = "arrows", label = L["Arrows"], icon = 2512 },
-	{ key = "bullets", label = L["Bullets"], icon = 2516 },
-	{ key = "food", label = L["Food"], icon = 4540 },
-	{ key = "drink", label = L["Drink"], icon = 159 },
-	{ key = "bags", label = L["Bags"], icon = 4498 },
-	{ key = "trade", label = L["Trade supplies"], icon = 2320 },
-	{ key = "reagents", label = L["Reagents"], icon = 2928 },
-	{ key = "gear", label = L["Weapons and armour"], icon = 851 },
-}
+-- The groups' labels and icons, and the service flags, live in UI/NearbyGroups.lua so the world map's town services
+-- draw the same ones.
+local GROUPS = ns.NearbyGroups
+local VENDOR_GROUPS, SERVICES, SECTION_LABELS = GROUPS.vendors, GROUPS.services, GROUPS.sections
 -- Groups whose goods come in level tiers (QuestieDB's requiredLevel): Rough to Jagged Arrow, Tough Hunk of Bread
 -- to Homemade Cherry Pie, Spring Water to Morning Glory Dew. The nearest arrow seller in Orgrimmar sells Rough and
 -- Sharp only, while the bow merchant beside him sells Razor and Jagged too.
@@ -31,21 +23,6 @@ local AMMO = { [2] = "arrows", [3] = "bullets", [18] = "arrows" }
 -- The client's own upgrade mark on an item (Blizzard_UIPanels_Game/Mainline/ContainerFrame.xml:109, and Forever's
 -- Camelot/EquipmentFlyout.xml:12), before a better trip's menu button; 12 high keeps its 20x22 shape (WFA-27).
 local UPGRADE_ATLAS, UPGRADE_MARKUP = "bags-greenarrow", 12
--- The other services keep their own keys and the client's tracking atlases.
-local SERVICES = {
-	{ key = "innkeeper", flag = "INNKEEPER", label = L["Innkeeper"], icon = "innkeeper" },
-	{ key = "flight", flag = "FLIGHT_MASTER", label = L["Flight master"], icon = "flightmaster" },
-	{ key = "stable", flag = "STABLEMASTER", label = L["Stable master"], icon = "stablemaster" },
-	{ key = "repair", flag = "REPAIR", label = L["Repair"], icon = "repair" },
-	{ key = "bank", flag = "BANKER", label = L["Bank"], icon = "banker" },
-	{ key = "auction", flag = "AUCTIONEER", label = L["Auction house"], icon = "auctioneer" },
-}
-local SECTION_LABELS = {
-	vendors = L["Vendors"],
-	trainers = L["Trainers"],
-	services = L["Services"],
-	entrances = L["Dungeons and raids"],
-}
 -- A vendor group's item IDs by NPC, which a search matches and a row says it sells.
 local index, vendorItems, groups, groupByKey, state = {}, {}, {}, {}, "idle"
 -- Every vendor item's name, so a search matches what a vendor sells and a row can name it.
@@ -331,6 +308,8 @@ local function VendorKeys(itemID, class, subClass)
 		keys[#keys + 1] = "trade"
 	elseif class == 5 or (class == 15 and subClass == 1) then
 		keys[#keys + 1] = "reagents"
+	elseif class == 9 then
+		keys[#keys + 1] = "books"
 	elseif (class == 2 and subClass ~= 14 and subClass ~= 20) or class == 4 then
 		keys[#keys + 1] = "gear"
 	end

@@ -9,7 +9,7 @@ local familyPage
 local attachmentNotified, attachmentChanged
 local trackerState = { attached = true }
 local trackerScale, compassScaled, compassBackdrop = 1, nil, nil
-local sharingChanges, leaderboardOpened = 0, nil
+local sharingChanges, leaderboardOpened, townRefreshed = 0, nil, 0
 local env = setmetatable({
 	MinimalSliderWithSteppersMixin = { Label = { Right = 1 } },
 	OFF = "Off",
@@ -72,6 +72,12 @@ local env = setmetatable({
 			}
 			function setting:SetValueChangedCallback(callback)
 				self.onChanged = callback
+			end
+			function setting:SetValue(value)
+				self.value = value
+				if self.onChanged then
+					self.onChanged(nil, value)
+				end
 			end
 			settings[#settings + 1] = setting
 			return setting
@@ -260,6 +266,7 @@ local ns = {
 		routeColor = "gold",
 		followRoads = false,
 		arrivalDistance = 15,
+		townServices = "capitals",
 	}, {
 		__index = function()
 			return true
@@ -271,6 +278,15 @@ local ns = {
 	RefreshMap = function()
 		refreshed = refreshed + 1
 	end,
+	RefreshTownServices = function()
+		townRefreshed = townRefreshed + 1
+	end,
+	TownServiceChoices = {
+		{ key = "capitals", label = "Capitals only" },
+		{ key = "important", label = "Capitals and important services" },
+		{ key = "all", label = "All towns" },
+		{ key = "off", label = "Off" },
+	},
 	RefreshTaxiRoute = function()
 		taxiRefreshed = taxiRefreshed + 1
 	end,
@@ -337,6 +353,7 @@ local groups = {
 		"mapPinScale",
 		"flightPinScale",
 		"minimapPinScale",
+		"townServices",
 		"routeColor",
 		"mapLine",
 		"minimapLine",
@@ -405,8 +422,9 @@ local order = {
 }
 
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
--- Main's arrival pin added arrivalPin; the line switches added mapLine, minimapLine and laterLegs.
-assert(#rows == 64, #rows)
+-- Main's arrival pin added arrivalPin, the line switches added mapLine, minimapLine and laterLegs, and the
+-- town services added townServices.
+assert(#rows == 65, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -456,6 +474,20 @@ assert(#choices == 5 and choices[1].value == "gold", "gold leads the presets")
 assert(choices[2].text == "White" and choices[5].value == "magenta", "every preset has a label and a key")
 routeColor.setting.onChanged(nil, "cyan")
 assert(routeColour == "cyan", "choosing a preset repaints the walking line")
+-- Town services are a level of detail: capitals first, then important services, all towns, and off.
+local towns = Row("townServices")
+assert(towns.kind == "dropdown" and towns.setting.default == "capitals", "town services start at the capitals")
+assert(towns.setting.variable == "ShortestPathForever_townServices", "the level is saved")
+local levels = towns.getData()
+assert(
+	#levels == 4 and levels[1].value == "capitals" and levels[2].value == "important",
+	"the four levels are listed in order"
+)
+assert(levels[4].value == "off" and levels[4].text == "Off", "off is the last level")
+towns.setting.onChanged(nil, "all")
+assert(townRefreshed == 1, "changing the level redraws the town services")
+ns.SetOption("townServices", "off")
+assert(towns.setting.value == "off" and townRefreshed == 2, "the map filter sets the saved level")
 -- The walking line can be turned off on either surface, on by default, beside the colour that draws it.
 for _, key in ipairs({ "mapLine", "minimapLine" }) do
 	local line = Row(key)
