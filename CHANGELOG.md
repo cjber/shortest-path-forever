@@ -12,7 +12,9 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
-- **A journey no longer loses its route to a rare search error.** When the client called a walking search's callback from inside one of its own calls, the replan it started could fail with "attempt to yield across metamethod/C-call boundary", and the journey got no route. The plan a search callback makes now finishes in that callback instead of pausing partway through. Reported on CurseForge by tgkGate (#717).
+## [1.30.2] - 2026-11-11
+
+- **A journey no longer stops with an "attempt to yield" error.** Now and then, planning a journey failed with "attempt to yield across metamethod/C-call boundary" and left you with no route. Every journey now plans to the end. Reported on CurseForge by tgkGate (#717).
 - **Kaliel's Tracker's quest menu offers Plan journey.** With Kaliel's Tracker installed, right-clicking a quest in its tracker showed only its own menu, so *Plan journey* was missing. The entry now sits in that menu too, for tracked quests and the quest log alike, and plans the same journey as the game's own menu. Reported on CurseForge by IronmanBG (#718).
 
 ### For addon authors
