@@ -803,8 +803,8 @@ function ns.SetStopQuests(owner, index, quests, details)
 		end
 	end
 	point.questIDs, point.questID, point.details = ids, nil, lines
-	-- The map's quest area and marks, the game's quest pins it hides, the minimap's area and the arrow all read the
-	-- stop's quests. RefreshRouteLines repaints the map and minimap without replanning; the arrow re-reads its lines.
+	-- The map's marks, the game's quest pins it hides and the arrow all read the stop's quests. RefreshRouteLines
+	-- repaints the map and minimap without replanning; the arrow re-reads its lines.
 	if ns.RefreshRouteLines then
 		ns.RefreshRouteLines()
 	end

@@ -50,9 +50,6 @@ with you.
   In a quest's area the arrow becomes the same gold pin that marks your destination, with the quest's objectives under it, and the compass turns quietly green.
   ![The gold goal pin with a quest's objectives, and the compass tinted green](docs/screenshots/arrival.png)
   The strip can be moved and resized separately from the tracker. While moving it or the arrow, Shift-drag, or rest the pointer on it and use the arrow keys, to place it to the pixel.
-- **Quest areas.** Inside a quest's area, the client draws it in gold instead of a stop pin and line.
-  ![A quest area on the world map](docs/screenshots/area.png)
-  The highlighted area is the game's own quest boundary.
 
 More detail: [features](docs/features.md) and [API](docs/api.md).
 

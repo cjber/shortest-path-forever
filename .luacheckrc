@@ -26,7 +26,6 @@ read_globals = {
 	"QUESTS_LABEL",
 	"GetSubZoneText",
 	"GetZoneText",
-	"C_XMLUtil",
 	"Ambiguate",
 	"C_ChatInfo",
 	"Clamp",
