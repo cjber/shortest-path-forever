@@ -25,6 +25,10 @@ local BETTER_ICON = 22
 local BETTER_INDENT = 16
 local UPGRADE_ATLAS = "bags-greenarrow"
 local BADGE_WIDTH, BADGE_HEIGHT = 11, 12
+-- The line between your professions and the other trainers: the quest log's own separator, stretched across the
+-- list at its 15 height as the quest log stretches it (Blizzard_UIPanels_Game/Mainline/QuestMapFrame.xml:541).
+local DIVIDER_ATLAS = "QuestLog-frame-devider"
+local DIVIDER_HEIGHT = 15
 -- The tab and the title wear the client's own bank bags glyph, cut out like the quest log's other tab icons; the tab
 -- draws it at 32: the bags fill their atlas edge to edge, so 32 shows them about as large as the stock quest glyph
 -- and the Adventure Guide compass, which keep a margin inside theirs.
@@ -67,6 +71,8 @@ local headers = {}
 local rows = {}
 ---@type SPFServicesBetterRow[]
 local betterRows = {}
+---@type Frame[]
+local dividers = {}
 ---@type table<string, SPFServicesRow>
 local rowsByKey = {}
 ---@type SPFNearbySection[]
@@ -268,6 +274,15 @@ local function CreateBetterRow(parent)
 		ns.NearbyServices.Navigate(self.key, self.place)
 	end)
 	return row
+end
+
+---@param parent Frame
+---@return Frame
+local function CreateDivider(parent)
+	local divider = CreateFrame("Frame", nil, parent)
+	divider:SetHeight(DIVIDER_HEIGHT)
+	Art.Band(divider:CreateTexture(nil, "OVERLAY"), DIVIDER_ATLAS)
+	return divider
 end
 
 ---@param parent Frame
@@ -483,7 +498,7 @@ function Refresh()
 	sections = world and state == "ready" and ns.NearbyServices.Sections(world, query, collapsed) or {}
 	rowsByKey = {}
 	local top = 0
-	local rowAt, betterAt, headerAt = 0, 0, 0
+	local rowAt, betterAt, headerAt, dividerAt = 0, 0, 0, 0
 	for _, section in ipairs(sections) do
 		headerAt = headerAt + 1
 		local header = headers[headerAt] or CreateHeader(list)
@@ -498,6 +513,15 @@ function Refresh()
 		top = top + HEADER_HEIGHT + HEADER_GAP
 		if not section.collapsed then
 			for _, entry in ipairs(section.rows) do
+				if entry.apart then
+					dividerAt = dividerAt + 1
+					local divider = dividers[dividerAt] or CreateDivider(list)
+					dividers[dividerAt] = divider
+					divider:SetPoint("TOPLEFT", 6, -top)
+					divider:SetPoint("TOPRIGHT", -6, -top)
+					divider:Show()
+					top = top + DIVIDER_HEIGHT
+				end
 				local row, indent, height
 				if entry.tier then
 					betterAt = betterAt + 1
@@ -533,6 +557,9 @@ function Refresh()
 	end
 	for at = headerAt + 1, #headers do
 		headers[at]:Hide()
+	end
+	for at = dividerAt + 1, #dividers do
+		dividers[at]:Hide()
 	end
 	-- An empty list says why: still loading, QuestieDB missing or broken, or here is nothing to offer.
 	local status

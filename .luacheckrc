@@ -208,6 +208,9 @@ read_globals[#read_globals + 1] = "strtrim"
 read_globals[#read_globals + 1] = "GetLocale"
 read_globals[#read_globals + 1] = "UnitClass"
 read_globals[#read_globals + 1] = "UnitLevel"
+-- Nearby.lua: your professions' trainers come first.
+read_globals[#read_globals + 1] = "GetProfessions"
+read_globals[#read_globals + 1] = "GetProfessionInfo"
 -- Nearby.lua: a better arrow, shot or drink far off is offered to whoever has the ranged weapon or the mana for it.
 read_globals[#read_globals + 1] = "GetInventorySlotInfo"
 read_globals[#read_globals + 1] = "GetInventoryItemID"

@@ -135,6 +135,9 @@ local function menuNode()
 		function entry.CreateTitle(_entry, titleText)
 			entry.children[#entry.children + 1] = { text = titleText, title = true }
 		end
+		function entry.CreateDivider(_entry)
+			entry.children[#entry.children + 1] = { divider = true }
+		end
 		menuEntries[#menuEntries + 1] = entry
 		return entry
 	end
@@ -222,7 +225,8 @@ local env = setmetatable({
 			if skill == 171 then
 				return "Alchemy"
 			end
-			return "Profession " .. skill
+			-- Named against their skill line order, in mixed case, so a sort by name is told from one by ID.
+			return (skill % 2 == 0 and "profession " or "Profession ") .. (1000 - skill)
 		end,
 	},
 	C_Map = {
@@ -584,6 +588,36 @@ for _ = 1, 20 do
 	trackingMenu(nil, menuNode())
 end
 assert(calls == before, "rebuilding the tracking menu does not rebuild DB")
+-- Your professions come first under the class trainer, primary then secondary, a line under them, the rest by name:
+-- Tailoring in the first slot, Cooking in the fifth (prof1, prof2, First Aid, Fishing, Cooking).
+env.GetProfessions = function()
+	return 1, nil, nil, nil, 2
+end
+env.GetProfessionInfo = function(index)
+	return "", 0, 1, 300, 0, 0, ({ 197, 185 })[index]
+end
+menuEntries = {}
+trackingMenu(nil, menuNode())
+local trainers, inTrainers = {}, false
+for _, item in ipairs(menuEntries[1].children) do
+	if item.title then
+		inTrainers = item.text == "Trainers"
+	elseif inTrainers then
+		trainers[#trainers + 1] = item.divider and "|" or item.text:match("^(.-) —") or item.text
+	end
+end
+assert(
+	trainers[1] == "Class trainer"
+		and trainers[2] == "Profession 803"
+		and trainers[3] == "Profession 815"
+		and trainers[4] == "|",
+	"your primary profession, then your secondary one, then a line"
+)
+assert(trainers[5] == "Alchemy" and #trainers == 15, "then every other profession")
+for at = 6, #trainers do
+	assert(trainers[at - 1]:lower() < trainers[at]:lower(), "the other professions by name, case folded")
+end
+env.GetProfessions, env.GetProfessionInfo = nil, nil
 env.SlashCmdList.SPFNEAR("repair")
 assert(navigated[#navigated][5] == "Neutral repairs")
 

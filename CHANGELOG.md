@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Your own professions' trainers come first.** In Nearby services, the trainers for the professions you have now sit right under your class trainer, your primary professions before First Aid, Fishing and Cooking. A line separates them from the other professions, which are now listed by name.
+
 ## [1.29.0] - 2026-11-10
 
 <!-- discord-image: docs/screenshots/minimap.png -->
