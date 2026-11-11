@@ -79,12 +79,12 @@ For help, ideas and each day's release notes, join [cjber's Workshop on Discord]
 
 Installed together, the others send Shortest Path their destinations. Pick an Adventure Guide journey, one of its suggestions in a quest menu or a RestedXP or Guidelime step, or click a trainer or vendor in a SkillUp route to travel to the nearest one. Click a Legacy dungeon or raid pin, or a dungeon or raid entrance Tweaks adds to the map, to travel there. Journey steps share one tracker column with the Adventure Guide, SkillUp and Legacy sections, above your quests. If Adventure Guide or Legacy isn't installed, a grey hint suggests it where it would help; untick *Suggest my other Forever addons* on the *Forever addons* settings page to turn hints off.
 
-Source code and issues: [github.com/cjber/shortest-path-forever](https://github.com/cjber/shortest-path-forever). Licence: GPL-3.0-or-later.
-
 <!-- forever-credits:start -->
 
 Thanks to Alex21xx, Maggew, MacieGx, Stiandresius, The___Fast, Joster91, GenericP, Fitz, TRDeadbeat, tallsmartman, Sol_Deus, Zavian, Osipanda, Nightwind416, wfournier, cidolfus27, o0saw0o, Merlinqt, team_Brigade, phear, Testvonfarkle, rydoc, deathmvp1, saikoso, Ragnarok11B, Brainc3ll, Mouchoir, z1ck, Oxds, sean16981, aryaxo, Exo_NA, legortiz, JohnChrin, wheelbarrel00, lkshrk, HeartOfD2, rml9ty, hwalflor, chris-chrysos, Quantity-4, Bolton_wow, Aldericdevir, joaocjesus, jakerist (Grayburn), borick7318, cotijelucie, sampconrad, jixxor, Gaafah, _spada, vladsnz, macwire, scraak, overspark, TeeRKee, Speaker1264, SuubzTV, Fel7, Kragmars, spidersylar, Acem, tgkGate, IronmanBG and everyone who reported a bug or asked for a feature.
 
 <!-- forever-credits:end -->
+
+Source code and issues: [github.com/cjber/shortest-path-forever](https://github.com/cjber/shortest-path-forever). Licence: GPL-3.0-or-later.
 
 Built with AI assistance.
