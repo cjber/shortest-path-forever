@@ -1,6 +1,6 @@
 Shortest Path Forever plans a journey when you shift-click the world map or minimap, or choose a quest. It gives directions in the objective tracker and on both maps.
 
-It needs Forever Core, which CurseForge and Wago install with it.
+Everything it needs comes inside the download.
 
 Free, with nothing locked behind it. If it saves you time, you can [sponsor me on GitHub](https://github.com/sponsors/cjber), which takes no fees, or [buy me a coffee on Ko-fi](https://ko-fi.com/cjber). For help and each day's release notes, [join me on Discord](https://discord.gg/FpHugGxRJY).
 
