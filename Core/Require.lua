@@ -5,19 +5,26 @@ local addonName, ns = ...
 ns.Icon = C_AddOns.GetAddOnMetadata(addonName, "X-Forever-Icon")
 
 -- The game refuses to load this addon when ForeverCore is absent (## Dependencies), but an older ForeverCore still
--- loads. Its API version, the kit this addon's own API is built on and the tracker section it builds say whether it
--- has everything called here (the section arrived in 1.2.0), so an out-of-date one stops the addon's own files with
--- one line on screen, never a chat message.
-if
-	ForeverCore == nil
-	or (ForeverCore.API or 0) < 1
-	or ForeverCore.APIKit == nil
-	or ForeverCore.TrackerSection == nil
-	or ForeverCore.TrackerLine == nil
-then
-	ns.broken = true
-	local errors = rawget(_G, "UIErrorsFrame")
-	if errors then
-		errors:AddMessage("Shortest Path Forever needs ForeverCore, which is missing or too old.", 1, 0.1, 0.1)
-	end
-end
+-- loads. Its API version stays at 1 while it adds members, so a core is out of date when a member this addon calls is
+-- missing, never because of a version comparison.
+--
+-- API 1 has the tracker host, the family suggestions, the map and settings openers, the leaderboards, peer stats, the
+-- text helper, the quest log tabs and the context menu, all of which this addon calls. The API kit arrived after it
+-- (ForeverCore 1.1.0), and Core/API.lua builds this addon's own API on its Hub and NotReady. The tracker section and
+-- line arrived after it too (ForeverCore 1.2.0), and UI/Tracker.lua builds its section with Section.Create and
+-- Section.UpdateText and makes its objectives clickable with Line.SetInteractive. Publishing to the suite's list
+-- (APIKit.Publish) is guarded by the kit's minor, so an older kit is not a reason to stop.
+--
+-- The warning itself is Core/ForeverRequire.lua, shared by every Forever addon: one line on screen, never a chat
+-- message, naming the addon to update and never ForeverCore.
+local ready = ForeverCore ~= nil
+	and type(ForeverCore.APIKit) == "table"
+	and type(ForeverCore.APIKit.Hub) == "function"
+	and type(ForeverCore.APIKit.NotReady) == "function"
+	and type(ForeverCore.TrackerSection) == "table"
+	and type(ForeverCore.TrackerSection.Create) == "function"
+	and type(ForeverCore.TrackerSection.UpdateText) == "function"
+	and type(ForeverCore.TrackerLine) == "table"
+	and type(ForeverCore.TrackerLine.SetInteractive) == "function"
+
+ns.ForeverRequire(ready)

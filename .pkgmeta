@@ -27,6 +27,11 @@ optional-dependencies:
   - restedxp-guide
   - guidelime
 
-# ForeverCore is the CurseForge project forevercore (1796337), installed with the addon.
-required-dependencies:
-  - forevercore
+# ForeverCore ships inside this zip as its own folder, at the release tools/forever-core.txt pins, so an
+# update brings it along: players who updated did not get it as a required dependency, and Wago's uploads
+# carry no dependencies at all.
+externals:
+  ForeverCore: https://github.com/cjber/forever-core/releases/download/v1.5.0/ForeverCore-v1.5.0-forever.zip
+
+move-folders:
+  ShortestPathForever/ForeverCore: ForeverCore

@@ -12,7 +12,17 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
-- **Walks follow what your character can actually climb and drop.** The walking maps are rebuilt from the game's own terrain with your character's limits: a step up of 2 yards, slopes up to 50°, steeper ground down to 61.6° walked downhill only, and ledges of up to 14.57 yards, the height where a fall starts to hurt, jumped down but never climbed. A walk now takes the short way down a ledge or slope instead of going round to a ramp, and never sends you up one you cannot climb (#638, #639).
+- **Walks follow what your character can actually climb and drop.** The walking maps are rebuilt from the game's own terrain with your character's limits: a step up of 2 yards, and ledges of up to 14.57 yards, the height where a fall starts to hurt, jumped down but never climbed. A walk now takes the short way down a ledge instead of going round to a ramp (#638).
+- **Walks stay out of lake and sea beds.** Ground under deep water no longer counts as a path, so a walk swims across or goes round instead of running along the bottom.
+- **Walks start and end where you stand.** Standing somewhere the walking map has no ground, such as a lift shaft or mid-jump, the walk now starts from the nearest ground rather than a floor far above or below you.
+
+## [1.30.4] - 2026-11-11
+
+- **Tells you which addon to update.** If another Forever addon you have installed is older than this one and stops it starting, the message now names that addon, so you know exactly what to update.
+
+## [1.30.3] - 2026-11-11
+
+- **Works again after updating.** Updating to the last version could leave the addon switched off in the game's AddOns list with "ForeverCore: missing", because the update did not bring Forever Core with it. Forever Core now comes inside this addon's download again, from CurseForge, Wago or GitHub alike, so updating is all it takes (cjber/shortest-path-forever#731).
 
 ### For addon authors
 
@@ -273,7 +283,6 @@ optional `### For addon authors` subsection after a version's player bullets.
 ## [1.22.37] - 2026-11-06
 - **The Hearthstone no longer wins a short walk.** Standing beside the inn you are bound to, a journey could still start with "Use Hearthstone" for a goal a few steps past it, because the hearth's cost counted only its cast. A teleport now also pays its loading screen, and a Hearthstone must save at least 20 seconds over walking before the journey suggests it, so short walks stay on foot and long trips still take the hearth.
 
-
 ## [1.22.36] - 2026-11-06
 - **A cleaner zeppelin icon.** Zeppelin docks, route steps, the compass and the minimap now draw a bolder zeppelin with thick lines and a black outline, matching the boat icon beside it, so it stays readable at minimap size.
 
@@ -330,7 +339,6 @@ optional `### For addon authors` subsection after a version's player bullets.
 ## [1.22.25] - 2026-11-04
 
 - **Controller players no longer trip the client's gamepad block.** Under the gamepad interface, a context menu opened from the tracker header, a step line, a dock pin or a flight pin now says "This menu needs mouse and keyboard." instead of opening inside our own click handler, and the world map is no longer turned when it is already open. Both changes remove the synchronous path from this addon into the protected interact-target call that the client blocked, which also explains why other addons were being named alongside it.
-
 
 - **Controller play no longer blocks the game's interact target.** With the gamepad interface on, the game takes every menu and window that opens into its controller focus straight away, and when Shortest Path opened one (a tracker or map pin menu, Nearby services, or turning an open map to a place) the game blocked `SetPreferredGamepadInteractTarget()` and blamed whichever addon touched it last. Under the gamepad interface those menus now say they need mouse and keyboard, and Show on map asks you to turn the map yourself. Nothing changes with mouse and keyboard. Thanks to TRDeadbeat, tallsmartman and the other CurseForge players for the reports.
 

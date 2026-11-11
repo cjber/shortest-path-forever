@@ -1,9 +1,78 @@
 -- Run from the repository root: luajit tests/core_dependency_spec.lua
 -- Shortest Path Forever requires ForeverCore. This spec covers the two places the handover is the addon's: the
--- one-line stop for a ForeverCore older than API 1 or without the API kit or the tracker section, and the services it
+-- feature checks Core/Require.lua makes before it hands one boolean to the shared Core/ForeverRequire.lua warning
+-- (whose naming and plural rules ForeverCore's own tests/forever_require_spec.lua covers), and the services it
 -- registers with core at load.
 local TOC = dofile("tests/toc_fields.lua").read("ShortestPathForever.toc")
 assert(TOC["X-Forever-Icon"], "the TOC declares X-Forever-Icon")
+assert(TOC["X-Forever-Core"], "the TOC declares the core it ships")
+
+-- The TOC, the bundle and the pin are the same ForeverCore.
+local function read(path)
+	local file = assert(io.open(path, "rb"))
+	local text = file:read("*a")
+	file:close()
+	return text
+end
+local pin = read("tools/forever-core.txt"):gsub("%s+$", "")
+assert(TOC["X-Forever-Core"] == pin, "the TOC records the pinned core, " .. pin)
+assert(
+	read(".pkgmeta"):find("releases/download/" .. pin .. "/ForeverCore-" .. pin .. "-forever.zip", 1, true),
+	"the package bundles the pinned core, " .. pin
+)
+
+-- The client's addon list: this addon, which requires ForeverCore, and ForeverCore itself.
+local function Addons()
+	local entries = {
+		{
+			name = "ShortestPathForever",
+			title = TOC["Title"],
+			core = TOC["X-Forever-Core"],
+			deps = { "ForeverCore" },
+		},
+		{ name = "ForeverCore", title = "Forever Core", core = pin, deps = {} },
+	}
+	local function At(index)
+		return entries[index]
+	end
+	return {
+		GetAddOnMetadata = function(addon, field)
+			for _, entry in ipairs(entries) do
+				if addon == entry.name or addon == entry.name:lower() then
+					if field == "Title" then
+						return entry.title
+					end
+					if field == "X-Forever-Core" then
+						return entry.core
+					end
+					return TOC[field]
+				end
+			end
+		end,
+		GetNumAddOns = function()
+			return #entries
+		end,
+		GetAddOnInfo = function(index)
+			local entry = At(index)
+			if entry then
+				return entry.name, entry.title
+			end
+		end,
+		IsAddOnLoaded = function(index)
+			return At(index) ~= nil
+		end,
+		GetAddOnEnableState = function(index)
+			return At(index) and 2 or 0
+		end,
+		-- The client returns a dependency list as varargs, never a table.
+		GetAddOnDependencies = function(index)
+			local entry = At(index)
+			if entry then
+				return unpack(entry.deps)
+			end
+		end,
+	}
+end
 
 local function Load(foreverCore)
 	local lines, registered, attached, frames = {}, nil, nil, {}
@@ -19,11 +88,10 @@ local function Load(foreverCore)
 	end
 	local env = setmetatable({
 		ForeverCore = foreverCore,
-		C_AddOns = {
-			GetAddOnMetadata = function(name, field)
-				return name == "ShortestPathForever" and TOC[field] or nil
-			end,
-		},
+		C_AddOns = Addons(),
+		UnitName = function()
+			return "Player"
+		end,
 		UIErrorsFrame = {
 			AddMessage = function(_, text)
 				lines[#lines + 1] = text
@@ -51,14 +119,12 @@ local function Load(foreverCore)
 		setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
 	end
 	load("Locales/enUS.lua")
+	-- The TOC loads the shared warning before the addon's own Require, which calls it.
+	load("Core/ForeverRequire.lua")
 	load("Core/Require.lua")
 	if not ns.broken then
 		registered = { spec = nil }
 		env.ForeverCore = {
-			API = 1,
-			APIKit = foreverCore.APIKit,
-			TrackerSection = foreverCore.TrackerSection,
-			TrackerLine = foreverCore.TrackerLine,
 			Register = function(name, spec)
 				registered.name, registered.spec = name, spec
 				return {
@@ -82,28 +148,32 @@ local function Load(foreverCore)
 	return ns, lines, registered, attached
 end
 
--- An older ForeverCore stops the addon's own files with one line in the error frame, never chat.
-local broken, lines = Load(nil)
-assert(broken.broken == true and broken.core == nil, "a missing ForeverCore stops the addon")
-assert(#lines == 1 and lines[1]:find("ForeverCore", 1, true), "and says so in one error line")
-local old, oldLines = Load({ API = 0 })
-assert(old.broken == true and #oldLines == 1, "a ForeverCore older than API 1 stops the addon too")
-local unkit, unkitLines = Load({ API = 1 })
-assert(unkit.broken == true and #unkitLines == 1, "a ForeverCore without the API kit stops the addon too")
-local nosection, nosectionLines = Load({ API = 1, APIKit = {}, TrackerLine = {} })
+-- A ForeverCore missing a member this addon calls stops the addon's own files with one line in the error frame,
+-- never chat. The API kit and the tracker section and line each arrived after API 1.
+local missing, missingLines = Load(nil)
+assert(missing.broken == true and missing.core == nil, "a missing ForeverCore stops the addon")
+assert(#missingLines == 1, "one line in the error frame")
+local noKit, noKitLines = Load({ TrackerSection = {}, TrackerLine = {} })
+assert(noKit.broken == true, "a ForeverCore without the API kit stops the addon too")
+assert(#noKitLines == 1, "one line in the error frame")
+local noSection, noSectionLines = Load({ APIKit = { Hub = function() end, NotReady = function() end } })
+assert(noSection.broken == true, "a ForeverCore without the tracker section stops the addon too")
 assert(
-	nosection.broken == true and #nosectionLines == 1,
-	"a ForeverCore without the tracker section stops the addon too"
+	noSectionLines[1] == "Shortest Path Forever could not start. Reinstall Shortest Path Forever to fix this.",
+	noSectionLines[1]
 )
-local noline, nolineLines = Load({ API = 1, APIKit = {}, TrackerSection = {} })
-assert(noline.broken == true and #nolineLines == 1, "a ForeverCore without the tracker line stops the addon too")
 
--- API 1 with the API kit and the tracker section registers the addon's services once: the report title and its own
--- report lines.
-local ns, quiet, registered, attached = Load({ API = 1, APIKit = {}, TrackerSection = {}, TrackerLine = {} })
-assert(quiet and #quiet == 0, "API 1 runs the addon and says nothing")
+-- Every member this addon calls is there: the addon runs, says nothing, and registers its services once: the report
+-- title and its own report lines.
+local ns, quiet, registered, attached = Load({
+	APIKit = { Hub = function() end, NotReady = function() end },
+	TrackerSection = { Create = function() end, UpdateText = function() end },
+	TrackerLine = { SetInteractive = function() end },
+})
+assert(quiet and #quiet == 0, "a complete ForeverCore runs the addon and says nothing")
 assert(ns.core ~= nil, "the addon keeps its ForeverCore context")
 assert(ns.Icon == TOC["X-Forever-Icon"], "the addon reads its identity icon from the TOC")
+assert(ns.broken == nil, "a complete ForeverCore leaves the addon unbroken")
 assert(registered.name == "ShortestPathForever", "it registers under its addon name")
 assert(registered.spec.title == "Shortest Path report", "with its own report title")
 assert(type(registered.spec.lines) == "function", "and its own report lines")

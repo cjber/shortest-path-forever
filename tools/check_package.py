@@ -20,9 +20,16 @@ except ModuleNotFoundError:
 ROOT = Path(__file__).resolve().parent.parent
 # The smoke spec fetches the pinned Blizzard UI fixture with tools/fetch_blizzard_ui.sh on first run.
 POLICY = package.Policy(
-    addons=("ShortestPathForever",),
+    addons=("ShortestPathForever", "ForeverCore"),
     specs=("tests/smoke_spec.lua", "tests/core_dependency_spec.lua"),
-    support=("tests", "tools/fetch_blizzard_ui.sh", "tools/forever_sim/toc.lua"),
+    support=(
+        "tests",
+        "tools/fetch_blizzard_ui.sh",
+        "tools/forever_sim/toc.lua",
+        # The core dependency spec checks the bundled pin against these two.
+        "tools/forever-core.txt",
+        ".pkgmeta",
+    ),
 )
 
 if __name__ == "__main__":

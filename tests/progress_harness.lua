@@ -86,13 +86,14 @@ local function harness(saved, progress, leaderboards)
 	local coreNs = ForeverCore.load(env, "ForeverCore", { "Locales/enUS.lua", "Core/PeerStats.lua" })
 	env.ForeverCore = {
 		API = 1,
-		APIKit = {},
-		TrackerSection = {},
-		TrackerLine = {},
+		APIKit = { Hub = function() end, NotReady = function() end },
+		TrackerSection = { Create = function() end, UpdateText = function() end },
+		TrackerLine = { SetInteractive = function() end },
 		PeerStats = coreNs.PeerStats,
 		Leaderboards = leaderboards or { Register = function() end, Open = function() end },
 	}
 	ns.PeerStats = coreNs.PeerStats
+	setfenv(assert(loadfile("Core/ForeverRequire.lua")), env)("ShortestPathForever", ns)
 	setfenv(assert(loadfile("Core/Require.lua")), env)("ShortestPathForever", ns)
 	setfenv(assert(loadfile("Core/Progress.lua")), env)("ShortestPathForever", ns)
 	function h:Fire(event, ...)
