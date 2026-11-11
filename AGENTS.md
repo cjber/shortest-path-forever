@@ -21,6 +21,7 @@ luajit tools/forever_sim/run.lua   # native client scenarios (tests/sim); python
 luajit -joff tests/journey_bench.lua   # fails a journey that does not settle; read its worst frame against 3 ms
 SPF_BENCH_STRICT=1 luajit -joff tests/hearth_savings_bench.lua   # CI checks the plan; the 3 ms budget is local
 python3 tools/check_generated.py --offline # omit --offline to fetch missing pinned inputs
+python3 tools/forever_tools/credits.py --check # Data/Credits.lua and both thanks blocks are current (WFA-31)
 python3 tools/check_api_docs.py
 python3 tools/changelog.py --check
 python3 tools/check_screenshots.py   # an image older than its sources; --record after tools/screenshots.py
