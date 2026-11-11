@@ -349,9 +349,9 @@ setfenv(assert(loadfile("Locales/enUS.lua")), env)("ShortestPathForever", ns)
 setfenv(assert(loadfile("Data/Services.lua")), env)("ShortestPathForever", ns)
 -- The fixture class trainers for the player's class, beside the companion addon's own list.
 ns.ClassTrainers = { [7] = 1 }
-setfenv(assert(loadfile("UI/MenuModifier.lua")), env)("ShortestPathForever", ns)
-setfenv(assert(loadfile("UI/NearbyQuestie.lua")), env)("ShortestPathForever", ns)
-setfenv(assert(loadfile("UI/Nearby.lua")), env)("ShortestPathForever", ns)
+for _, file in ipairs({ "UI/MenuModifier.lua", "UI/NearbyQuestie.lua", "UI/NearbyEntrances.lua", "UI/Nearby.lua" }) do
+	setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
+end
 for _, fn in ipairs(initializers) do
 	fn()
 end
@@ -626,7 +626,7 @@ local function fresh(questie, away, L)
 	local elsewhere = false
 	env.LibQuestieDB = questie
 	local starts = {}
-	local copy = {
+	local copy = setmetatable({
 		L = L or ns.L,
 		Path = ns.Path,
 		-- A database of its own: no read saved by another copy is adopted here.
@@ -646,7 +646,7 @@ local function fresh(questie, away, L)
 		GamepadUI = ns.GamepadUI,
 		Print = ns.Print,
 		ModifyMenu = ns.ModifyMenu,
-	}
+	}, { __index = ns })
 	setfenv(assert(loadfile("UI/NearbyQuestie.lua")), env)("ShortestPathForever", copy)
 	setfenv(assert(loadfile("UI/Nearby.lua")), env)("ShortestPathForever", copy)
 	for _, fn in ipairs(starts) do
@@ -859,9 +859,9 @@ do
 		estimates = estimates + 1
 		return estimate(...)
 	end
-	driver.load("UI/MenuModifier.lua")
-	driver.load("UI/NearbyQuestie.lua")
-	driver.load("UI/Nearby.lua")
+	for _, file in ipairs({ "UI/MenuModifier.lua", "UI/NearbyQuestie.lua", "UI/NearbyEntrances.lua", "UI/Nearby.lua" }) do
+		driver.load(file)
+	end
 	local guard = 0
 	while #travelTimers > 0 do
 		guard = guard + 1

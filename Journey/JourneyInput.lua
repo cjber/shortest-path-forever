@@ -16,14 +16,18 @@ _G["BINDING_NAME_CLICK ShortestPathForeverClearJourneyButton:LeftButton"] = L["C
 -- A place inside a dungeon or raid has no walking map: from outside, a journey there goes to the instance's door
 -- (Data/Portals.lua ns.Entrances) and arrives when you go in. The door keeps the stop it stands for (`stop`), its
 -- name, quest and title; areas and holds drawn inside the instance stay behind. Inside, the point stays as it is.
----@param point SPFPoint
----@return SPFPoint
-function ns.InstanceEntrance(point)
-	local entrance = ns.Entrances and ns.Entrances[point.map]
-	if not entrance or select(8, GetInstanceInfo()) == point.map then
-		return point
+---
+-- The door stop on its own, shared with the Nearby services list: the door's continent and position, the "Enter %s"
+-- label (the client's name for the instance, else the data's), and `entrance`, which completes it on going in.
+---@param instance integer the instance map ID
+---@param point SPFPoint the goal inside the instance whose name, quests and title the door keeps
+---@return SPFPoint?
+function ns.EntranceStop(instance, point)
+	local entrance = ns.Entrances and ns.Entrances[instance]
+	if not entrance then
+		return nil
 	end
-	local name = GetRealZoneText(point.map)
+	local name = GetRealZoneText(instance)
 	if not name or name == "" then
 		name = entrance.name
 	end
@@ -37,9 +41,18 @@ function ns.InstanceEntrance(point)
 		questIDs = point.questIDs,
 		routeTitle = point.routeTitle,
 		details = point.details,
-		entrance = point.map,
+		entrance = instance,
 		stop = point,
 	}
+end
+
+---@param point SPFPoint
+---@return SPFPoint
+function ns.InstanceEntrance(point)
+	if not (ns.Entrances and ns.Entrances[point.map]) or select(8, GetInstanceInfo()) == point.map then
+		return point
+	end
+	return ns.EntranceStop(point.map, point) or point
 end
 
 -- A map of a place under another one you can walk on, and the height of its floor. A spot gives no height, and a walk

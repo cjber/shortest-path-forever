@@ -348,6 +348,30 @@ ns.Init(function()
 			.. L["It returns to the arrow when you leave the area or the stop changes."],
 		ns.ArrivalPinChanged
 	)
+	local arrivalDistance = Settings.RegisterAddOnSetting(
+		page,
+		"ShortestPathForever_arrivalDistance",
+		"arrivalDistance",
+		ns.db,
+		Settings.VarType.Number,
+		L["Arrival distance"],
+		ns.Defaults.arrivalDistance
+	)
+	settings.arrivalDistance = arrivalDistance
+	local arrivalOptions = Settings.CreateSliderOptions(5, 50, 5)
+	arrivalOptions:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
+		return ns.FormatDistance(value)
+	end)
+	Settings.RegisterInitializer(
+		page,
+		Settings.CreateSliderInitializer(
+			arrivalDistance,
+			arrivalOptions,
+			L["How close you must get to a journey's destination for it to count as reached."]
+				.. " "
+				.. L["Stops before the last on a multi-stop route keep 15 yards."]
+		)
+	)
 	Checkbox(
 		"npcArrows",
 		L["Arrows on the NPC's nameplate"],
@@ -585,6 +609,14 @@ ns.Init(function()
 		Settings.CreateDropdownInitializer(arrowLabel, function()
 			return arrowLabelOptions:GetData()
 		end, L["What the direction arrow shows under it: the distance to walk, the time left in the journey, or both."])
+	)
+	Checkbox(
+		"arrowObjectives",
+		L["Objectives under the arrow"],
+		L["The stop's live objectives under the arrow while it leads."]
+			.. " "
+			.. L["The pin shown when you reach a stop keeps its own lines."],
+		ns.ArrowObjectivesChanged
 	)
 	Checkbox(
 		"metres",
