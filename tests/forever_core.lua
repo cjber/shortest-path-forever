@@ -77,8 +77,9 @@ local function Wanted(names)
 	return set
 end
 
--- Loads ForeverCore's files into `env`, each with the one namespace, and returns that namespace. The caller fires
--- ForeverCore's ADDON_LOADED afterwards, as the client does before the addon's own.
+-- Loads ForeverCore's Lua files into `env`, each with the one namespace, and returns that namespace. The caller fires
+-- ForeverCore's ADDON_LOADED afterwards, as the client does before the addon's own. A TOC's XML entry is the client's
+-- own to parse into frames and templates before the Lua beside it runs, so it is skipped here rather than loadfile'd.
 ---@param env table the fake client
 ---@param name? string the addon folder, "ForeverCore"
 ---@param names? string[] only these core files, in TOC order; every file when nil
@@ -95,7 +96,8 @@ function ForeverCore.load(env, name, names, ns)
 			-- guard would stop on the missing client call.
 			local native = env.ObjectiveTrackerFrame
 			local translated = path:match("^Locales/") and path ~= "Locales/enUS.lua"
-			if path ~= "UI/TrackerQuests.lua" or native ~= nil then
+			local xml = path:match("%.xml$") ~= nil
+			if not xml and (path ~= "UI/TrackerQuests.lua" or native ~= nil) then
 				if not (translated and type(env.GetLocale) ~= "function") then
 					local chunk = assert(loadfile(directory .. "/" .. path), path)
 					setfenv(chunk, env)

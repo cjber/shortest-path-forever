@@ -12,6 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+### For addon authors
+
+- **`ForeverCore.APIKit.Addons()` now lists `ShortestPathForever`.** The API table is handed to Forever Core as it loads, on Forever Core 1.3.2 or later, so another addon can find this one's API, its `version` and its `minor` in the suite's own list instead of looking for the global. On an older Forever Core nothing is published and nothing changes. Nothing changes for players.
+
 ## [1.30.0] - 2026-11-11
 
 <!-- discord-image: docs/screenshots/services.png -->
