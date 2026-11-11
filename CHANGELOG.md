@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Journeys to mobs and NPCs in caves and mines end inside.** Questie knows only where a mob is on the map, not how high, so a journey to the miners of Azurelode Mine ended on the hill above them. Alt-clicking a Questie icon or choosing a Nearby services row now goes to the floor that NPC or quest object stands on, for the original world's spawns.
+
 ## [1.29.0] - 2026-11-10
 
 <!-- discord-image: docs/screenshots/minimap.png -->

@@ -140,6 +140,10 @@ before its `v*` tag, since the release publishes it as the notes.
   `ItemEffect`, `SpellEffect`, `SkillLine` and `SkillLineAbility`, with classic-db `creature_template`, `npc_trainer`
   and `npc_trainer_template`; QuestieDB's `foodType` is 0 for every vendor item, so it cannot say food from drink, and
   QuestieDB has no trainer spells.
+- WFA-28: `Data/Heights.lua` (spawn heights): classic-db `creature` spawns and `gameobject` spawns of types 2, 3 and 10,
+  matched to the walking maps' surfaces by `tools/bake_heights.lua`; only spawns standing within a cell of another
+  surface more than ZTOL away are kept. QuestieDB's spawns are zone fractions with no height, so a journey to a mob in
+  a mine ended on the hill above it. Forever's own NPCs are not in classic-db and keep the cheapest surface.
 - WFA-28: `Data/Teleports.lua` (class teleports and bind items): wago.tools spell and item tables with classic-db
   `spell_target_position` landings; neither database holds spell effects or landings. Known spells, reagent
   counts, cooldowns, cast times and the bind point are read from the client.
