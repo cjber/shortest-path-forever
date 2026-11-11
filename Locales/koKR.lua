@@ -417,3 +417,8 @@ L["The stop's live objectives under the arrow while it leads."] =
 	"화살표가 안내하는 동안 화살표 아래에 표시되는 지점의 실시간 목표입니다." -- mt
 L["The pin shown when you reach a stop keeps its own lines."] =
 	"지점에 도착했을 때 표시되는 핀은 자체 목표 줄을 유지합니다." -- mt
+L["Arrival distance"] = "도착 거리" -- mt
+L["How close you must get to a journey's destination for it to count as reached."] =
+	"여정의 목적지에 얼마나 가까워져야 도착으로 칩니다." -- mt
+L["Journeys that stop at a dock, lift or flight master keep their own distance."] =
+	"부두, 승강기, 비행 조련사에서 끝나는 여정은 자체 거리를 유지합니다." -- mt

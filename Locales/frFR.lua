@@ -415,3 +415,8 @@ L["The stop's live objectives under the arrow while it leads."] =
 	"Les objectifs actuels de l'étape sous la flèche pendant qu'elle guide." -- mt
 L["The pin shown when you reach a stop keeps its own lines."] =
 	"L'épingle affichée lorsque vous atteignez une étape garde ses propres lignes." -- mt
+L["Arrival distance"] = "Distance d'arrivée" -- mt
+L["How close you must get to a journey's destination for it to count as reached."] =
+	"À quelle distance de la destination d'un trajet vous devez arriver pour qu'il compte comme terminé." -- mt
+L["Journeys that stop at a dock, lift or flight master keep their own distance."] =
+	"Les trajets qui s'arrêtent à un ponton, un ascenseur ou un maître de vol gardent leur propre distance." -- mt

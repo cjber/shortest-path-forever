@@ -433,3 +433,8 @@ L["The stop's live objectives under the arrow while it leads."] =
 	"Текущие задачи остановки под стрелкой, пока она ведёт." -- mt
 L["The pin shown when you reach a stop keeps its own lines."] =
 	"Метка, показываемая при прибытии к остановке, сохраняет свои строки." -- mt
+L["Arrival distance"] = "Дистанция прибытия" -- mt
+L["How close you must get to a journey's destination for it to count as reached."] =
+	"Насколько близко нужно подойти к месту назначения, чтобы путешествие считалось завершённым." -- mt
+L["Journeys that stop at a dock, lift or flight master keep their own distance."] =
+	"Путешествия, заканчивающиеся у причала, подъёмника или распорядителя полётов, сохраняют свою дистанцию." -- mt

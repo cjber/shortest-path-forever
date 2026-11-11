@@ -319,7 +319,22 @@ local function SameTracking(state)
 		and state.expectedTrackingType == kind
 end
 
-local function StopGuide()
+-- Whether a saved map pin stands at the journey's destination: arriving there clears the pin rather than restoring it.
+---@param waypoint table
+---@param point SPFPoint?
+---@return boolean
+local function PinAtGoal(waypoint, point)
+	local location = point and ns.Locate(point)
+	if not (waypoint and location) then
+		return false
+	end
+	return SameWaypoint(waypoint, UiMapPoint.CreateFromCoordinates(location.uiMap, location.x, location.y))
+end
+
+-- End the guide. `reason` is Journey's end reason: on arrival, a pin that was the journey's own destination is
+-- cleared (the player asked for it to go), while any other pin the player had is put back.
+---@param reason? string
+local function StopGuide(reason)
 	local previous = guide
 	guide = nil
 	ns.PointGuideArrow(nil)
@@ -342,6 +357,9 @@ local function StopGuide()
 		return
 	end
 	local ownsTracking = not previous.yielded and SameTracking(previous)
+	if reason == "arrived" and PinAtGoal(previous.previousWaypoint, previous.goal) then
+		previous.previousWaypoint = nil
+	end
 	local restored = previous.previousWaypoint and C_Map.SetUserWaypoint(previous.previousWaypoint)
 	-- A rejected restoration must still remove our bend, rather than leave it behind without an ownership record.
 	if not restored and previous.waypoint then

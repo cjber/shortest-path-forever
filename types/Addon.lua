@@ -187,6 +187,7 @@
 ---@field log? ForeverDebugLogStore ForeverCore's shared debug log ring: recent lines, for the report
 ---@field destinationPin boolean an on-screen marker over the journey's destination
 ---@field arrivalPin? boolean a pin with the stop's objectives while in its area, instead of hiding the arrow
+---@field arrivalDistance? number yards that count as arrived at a journey's final destination (Journey.lua)
 ---@field npcArrows? boolean arrows beside the nameplate of the NPC a Nearby services journey walks to (NpcArrows.lua)
 ---@field trackerHost? ForeverTrackerLegacySettings the old tracker table, offered to ForeverCore once
 ---@field menuTest? string `/path menutest`: which world map filter menu entries to leave out ("map", "nearby", "both")

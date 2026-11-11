@@ -80,6 +80,9 @@ local DEFAULTS = {
 	arrowObjectives = true,
 	-- On reaching a held stop's area, the arrow turns into a pin with the stop's objectives rather than hiding.
 	arrivalPin = true,
+	-- How close counts as arrived at a journey's final destination, in yards; a stop with another after it keeps the
+	-- fixed reach, so a large setting cannot end a journey before boarding.
+	arrivalDistance = 15,
 	metres = false,
 	minimapButton = false,
 	compass = true,

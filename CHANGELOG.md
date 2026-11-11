@@ -13,6 +13,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 ## [Unreleased]
 
 - **The objective lines under the arrow can be turned off.** The arrow has listed the stop's live objectives under its label since 1.27.0, and there was no way to hide them. *Objectives under the arrow* in Interface now clears them while leaving the distance or time label in place, and the pin shown when you reach a stop keeps its own lines. Asked on CurseForge by CptShooter (#691).
+- **Journeys can count as arrived from further away, and clear the pin they were set from.** *Arrival distance* in Guidance (15 yards by default) sets how close you must get to a journey's final destination. Stops at docks, lifts and flight masters keep their own reach, so a large setting cannot end a journey before boarding. When the map pin you started from was that destination, it is cleared on arrival instead of left behind. Asked on CurseForge by Zwaffelmagic (#733).
 
 ## [1.30.3] - 2026-11-11
 

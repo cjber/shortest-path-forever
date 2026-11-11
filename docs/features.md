@@ -14,6 +14,8 @@ The direction arrow swings smoothly to each new bearing and rests while you stan
 
 **Keep journeys after a reload** in Guidance (off by default) starts a journey you planned yourself (a map click, `/way`, a quest or Nearby services) again after a `/reload`, or when you log back in within 30 minutes. Guides and other addons start their own again, and one that does so first wins.
 
+**Arrival distance** in Guidance (15 yards by default) sets how close you must get to a journey's final destination for it to count as reached, from 5 to 50 yards. A journey that ends at a dock, lift or flight master keeps its own reach, so a large setting cannot end it before boarding. On arrival a map pin you placed at that destination is cleared rather than restored, while any other pin you had before the journey comes back.
+
 **Play a sound when you reach the goal** in Alerts (off by default) plays the map's ping when a journey you planned yourself arrives, even with the game in the background. Clearing a journey stays quiet.
 
 `/path report` opens a window with a report already selected: addon and game versions, your character and position, the journey and its steps, your ride, the ride trace when `/path debug` is on, errors from earlier sessions and this one with when each was first and last seen, the recent log lines, and your other addons. Press Ctrl+C and paste it into a bug report. `/forever debug` turns on detailed log lines for the session, and `/forever debug show` opens the log to copy.

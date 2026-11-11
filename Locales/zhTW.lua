@@ -406,3 +406,8 @@ L["The stop's live objectives under the arrow while it leads."] =
 	"箭頭引路時，箭頭下方顯示該站點的即時目標。" -- mt
 L["The pin shown when you reach a stop keeps its own lines."] =
 	"到達站點時顯示的圖釘保留各自的目標文字。" -- mt
+L["Arrival distance"] = "到達距離" -- mt
+L["How close you must get to a journey's destination for it to count as reached."] =
+	"距離旅程目的地多近才算到達。" -- mt
+L["Journeys that stop at a dock, lift or flight master keep their own distance."] =
+	"在碼頭、升降機或飛行管理員處結束的旅程仍使用各自的距離。" -- mt
