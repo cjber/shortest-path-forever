@@ -786,21 +786,93 @@ def strong_components(order, out):
     return label
 
 
-def grid_hpa(grid, cuts):
+_HPA = None  # (grid, cuts, nodes) for the forked graph workers, set by grid_hpa before each pool starts
+
+
+def run_clusters(work, keys, jobs):
+    """work(k) for each cluster key, in key order: in a forked pool that inherits _HPA when jobs > 1."""
+    if jobs <= 1:
+        yield from map(work, keys)
+        return
+    with multiprocessing.get_context("fork").Pool(jobs) as pool:
+        yield from pool.imap(work, keys, chunksize=4)
+
+
+def cluster_regions(k):
+    """Cluster k's strongly connected parts as (node, label) pairs, under the grid's own directed steps."""
+    grid, cuts, _ = _HPA
+    g = lambda gx, gy: grid[gx * GH + gy]  # noqa: E731
+    box = cluster_box(k)
+    cells = [gx * GH + gy for gx in range(box[0], box[1] + 1) for gy in range(box[2], box[3] + 1)]
+    members = [c for c in cells + FLOORS_OF[k] if value_of(grid, c)]
+    out = {u: [v for v, _ in moves(g, grid, cuts, u, box)] for u in members}
+    return list(strong_components(members, out).items())
+
+
+def cluster_edges(k):
+    """Cluster k's intra-cluster edges between its entrances: Dijkstra under each of WEIGHTS, dropped when a
+    two-hop path is within PRUNE under every weight."""
+    grid, cuts, nodes = _HPA
+    g = lambda gx, gy: grid[gx * GH + gy]  # noqa: E731
+    found = {}
+    cells = nodes[k]
+    box = cluster_box(k)
+    dists = []
+    adjacency = {}
+    for mode in range(len(WEIGHTS)):
+        dist = {}
+        for s in cells:
+            gd, pq, left = {s: 0.0}, [(0.0, s)], len(cells) - 1
+            while pq and left:
+                du, u = heapq.heappop(pq)
+                if du > gd[u]:
+                    continue
+                if u != s and u in cells:
+                    left -= 1
+                    dist[(s, u)] = du
+                if u not in adjacency:
+                    adjacency[u] = tuple(
+                        (v, tuple(c * (weight if value_of(grid, v) == 2 else 1) for weight in WEIGHTS))
+                        for v, c in moves(g, grid, cuts, u, box, 1)
+                    )
+                for v, costs in adjacency[u]:
+                    c = costs[mode]
+                    if du + c < gd.get(v, 1e18):
+                        gd[v] = du + c
+                        heapq.heappush(pq, (du + c, v))
+        dists.append(dist)
+    el = sorted(cells)
+    for a in el:
+        for b in el:
+            if a == b:
+                continue
+            # Weights change costs, never reachability, so a pair is reached under all of them or none.
+            ds = [dist.get((a, b)) for dist in dists]
+            if ds[0] is None:
+                continue
+            ds = cast(list[float], ds)
+            if all(
+                any(dist.get((a, x), 1e18) + dist.get((x, b), 1e18) <= d * PRUNE for x in el if x not in (a, b))
+                for dist, d in zip(dists, ds, strict=False)
+            ):
+                continue
+            found[(a, b)] = tuple(ds)
+    return found
+
+
+def grid_hpa(grid, cuts, jobs=1):
     """HPA* over the grid. Every border crossing (orthogonal or diagonal) is grouped by the strongly connected parts
     of its two clusters it leaves and enters, in the direction it is walked: a crossing into a part the route cannot
     leave, or out of a part the route cannot reach, is of no use to it, so one entrance per such group guarantees a
     route wherever the grid has one. Each group keeps an entrance every ENTRANCE_RUN cells. Intra-cluster edges come
     from Dijkstra under each of WEIGHTS, dropped when a two-hop path is within PRUNE under every weight. An edge
     carries a cost per weight."""
+    global _HPA
     g = lambda gx, gy: grid[gx * GH + gy]  # noqa: E731
     region = array("i", [-1]) * (GW * GH + len(FLOOR_CELL))
-    for k in range(NX * NY):
-        box = cluster_box(k)
-        cells = [gx * GH + gy for gx in range(box[0], box[1] + 1) for gy in range(box[2], box[3] + 1)]
-        members = [c for c in cells + FLOORS_OF[k] if value_of(grid, c)]
-        out = {u: [v for v, _ in moves(g, grid, cuts, u, box)] for u in members}
-        for c, label in strong_components(members, out).items():
+    _HPA = (grid, cuts, None)
+    for parts in run_clusters(cluster_regions, range(NX * NY), jobs):
+        for c, label in parts:
             region[c] = label
     edges = {}  # (a, b) cells -> cost per weight
     nodes = defaultdict(set)  # cluster -> cells
@@ -893,49 +965,10 @@ def grid_hpa(grid, cuts):
             records(groups, k, (kx + 1) * NY + ky + dy, None)
             entrances(groups)
     inter = len(edges)
-    for k in sorted(nodes):
-        cells = nodes[k]
-        box = cluster_box(k)
-        dists = []
-        adjacency = {}
-        for mode in range(len(WEIGHTS)):
-            dist = {}
-            for s in cells:
-                gd, pq, left = {s: 0.0}, [(0.0, s)], len(cells) - 1
-                while pq and left:
-                    du, u = heapq.heappop(pq)
-                    if du > gd[u]:
-                        continue
-                    if u != s and u in cells:
-                        left -= 1
-                        dist[(s, u)] = du
-                    if u not in adjacency:
-                        adjacency[u] = tuple(
-                            (v, tuple(c * (weight if value_of(grid, v) == 2 else 1) for weight in WEIGHTS))
-                            for v, c in moves(g, grid, cuts, u, box, 1)
-                        )
-                    for v, costs in adjacency[u]:
-                        c = costs[mode]
-                        if du + c < gd.get(v, 1e18):
-                            gd[v] = du + c
-                            heapq.heappush(pq, (du + c, v))
-            dists.append(dist)
-        el = sorted(cells)
-        for a in el:
-            for b in el:
-                if a == b:
-                    continue
-                # Weights change costs, never reachability, so a pair is reached under all of them or none.
-                ds = [dist.get((a, b)) for dist in dists]
-                if ds[0] is None:
-                    continue
-                ds = cast(list[float], ds)
-                if all(
-                    any(dist.get((a, x), 1e18) + dist.get((x, b), 1e18) <= d * PRUNE for x in el if x not in (a, b))
-                    for dist, d in zip(dists, ds, strict=False)
-                ):
-                    continue
-                edges[(a, b)] = tuple(ds)
+    _HPA = (grid, cuts, nodes)
+    for found in run_clusters(cluster_edges, sorted(nodes), jobs):
+        edges.update(found)
+    _HPA = None
     print(f"grid HPA: nodes {sum(map(len, nodes.values()))}, edges {len(edges)} (inter {inter})", flush=True)
     return nodes, edges
 
@@ -1359,7 +1392,7 @@ def main():
     phases["floors"] = time.perf_counter() - checkpoint
     checkpoint = time.perf_counter()
     # The graph is built from the very links and cuts the grid is emitted with, so the two cannot disagree.
-    nodes, edges = grid_hpa(grid, cuts)
+    nodes, edges = grid_hpa(grid, cuts, jobs)
     phases["graph"] = time.perf_counter() - checkpoint
     checkpoint = time.perf_counter()
     emit(nodes, edges, grid, cuts, out, name)
