@@ -147,6 +147,19 @@ wide.update(0.1)
 assert(not wide.ns.HasJourney(), "30 yards arrives when the setting is 30")
 print("journey_arrival_spec: the setting decides the arrival distance ok")
 
+local narrow = arrivalDriver(5)
+narrow.move({ map = 1, x = 0, y = 100, z = 0 })
+assert(narrow.ns.StartJourney(camp))
+narrow.path.settle()
+narrow.update(0.1)
+narrow.move({ map = 1, x = 0, y = 12, z = 0 })
+narrow.update(0.1)
+assert(narrow.ns.HasJourney(), "12 yards is not arrival when the setting is 5")
+narrow.move({ map = 1, x = 0, y = 4, z = 0 })
+narrow.update(0.1)
+assert(not narrow.ns.HasJourney(), "4 yards arrives when the setting is 5")
+print("journey_arrival_spec: the setting reaches the last walk leg ok")
+
 local multi = arrivalDriver(50)
 local first = { map = 1, x = 0, y = 0, label = "First" }
 local second = { map = 1, x = 0, y = -300, label = "Second" }
