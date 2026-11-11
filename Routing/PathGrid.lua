@@ -1373,7 +1373,7 @@ local function sight(st, P, a, b, water, road, limit, budget)
 	-- crossing stood.
 	local span = sqrt(dx * dx + dy * dy) * st.cs
 	local invX, invY = nx > 0 and 1 / nx or 0, ny > 0 and 1 / ny or 0
-	local spent, at = 0, 0
+	local spent, at = 0.0, 0.0
 	local x, y, ix, iy = ax, ay, 0, 0
 	while ix < nx or iy < ny do
 		tick()
@@ -1399,19 +1399,19 @@ local function sight(st, P, a, b, water, road, limit, budget)
 			return false
 		end
 		if budget then
-			spent = pace(swim, spent, (next2 - at) * span, st.val[nk][nn + 1] == 2, budget)
-			if not spent then
+			local paced = pace(swim, spent, (next2 - at) * span, st.val[nk][nn + 1] == 2, budget)
+			if not paced then
 				return false
 			end
-			at = next2
+			spent, at = paced, next2
 		end
 		k, node = nk, nn
 		x, y = x + mx, y + my
 		ix, iy = ix + mx * sx, iy + my * sy
 	end
 	if budget and k == P.k[b] and node == P.n[b] then -- the rest of the segment, inside the far entry's own cell
-		spent = pace(swim, spent, (1 - at) * span, st.val[k][node + 1] == 2, budget)
-		if not spent then
+		local paced = pace(swim, spent, (1 - at) * span, st.val[k][node + 1] == 2, budget)
+		if not paced then
 			return false
 		end
 	end
@@ -1453,7 +1453,7 @@ local function toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget)
 	local nextX = (sx > 0 and x + 1 - fx or fx - x) * stepX
 	local nextY = (sy > 0 and y + 1 - fy or fy - y) * stepY
 	-- The whole segment's length in yards, and how far along it the walked boundary crossings have taken us.
-	local span, at, spent = sqrt(dx * dx + dy * dy) * st.cs, 0, 0
+	local span, at, spent = sqrt(dx * dx + dy * dy) * st.cs, 0.0, 0.0
 	local closed = false
 	for _ = 1, 2 * (abs(ex - x) + abs(ey - y)) + 2 do
 		if x == ex and y == ey then
@@ -1500,10 +1500,11 @@ local function toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget)
 				else
 					wet = value(st, x, y) == 2
 				end
-				spent = pace(swim, spent, (reached - at) * span, wet, budget)
-				if not spent then
+				local paced = pace(swim, spent, (reached - at) * span, wet, budget)
+				if not paced then
 					return nil, false
 				end
+				spent = paced
 			end
 			at = reached
 			if closed and not bare(st, x, y) then
@@ -1518,8 +1519,8 @@ local function toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget)
 		return nil, false
 	end
 	if budget and at < 1 then -- the rest of the segment, inside the end's own cell
-		spent = pace(swim, spent, (1 - at) * span, value(st, ex, ey) == 2, budget)
-		if not spent then
+		local paced = pace(swim, spent, (1 - at) * span, value(st, ex, ey) == 2, budget)
+		if not paced then
 			return nil, false
 		end
 	end
