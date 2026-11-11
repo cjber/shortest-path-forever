@@ -307,11 +307,9 @@ local function SameTracking(state)
 	local quest = C_SuperTrack.GetSuperTrackedQuestID()
 	local waypoint = C_SuperTrack.IsSuperTrackingUserWaypoint()
 	local kind = C_SuperTrack.GetHighestPrioritySuperTrackingType()
-	-- Adventure Guide focuses the quest whose area the player walks into and restores the super-tracked waypoint
-	-- after it, whoever placed that waypoint (Focus.lua). The quest then stays selected while our waypoint is still
-	-- the one super-tracked and leading, which is not the player taking navigation over: only a change that leaves
-	-- another destination in front (a quest click, a map pin, content) yields.
-	if state.expectedTrackedWaypoint and waypoint and kind == state.expectedTrackingType then
+	-- A guide may change the selected quest while its waypoint remains super-tracked. The waypoint is still the
+	-- navigation destination, so a changed priority type is not player takeover and must not recreate the guide.
+	if state.expectedTrackedWaypoint and waypoint then
 		return true
 	end
 	return state.expectedQuest == quest

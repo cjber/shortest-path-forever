@@ -12,6 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.33.1] - 2026-11-11
+
+- **Guidance no longer flickers when another addon selects an objective.** RestedXP and other guide integrations can change the objective tracker while Shortest Path's waypoint remains the active navigation target, without making the arrow and tracker reset. Thanks to Blast22 and the anonymous CurseForge reporter for the reports.
+
 ## [1.33.0] - 2026-11-11
 
 <!-- discord-image: docs/screenshots/darkshore.png -->

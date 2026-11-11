@@ -86,6 +86,11 @@ ns.Credits = {
 		{ name = "Acem", what = "Known flight points kept per character" },
 		{ name = "tgkGate", what = "Fixed the path job yield error" },
 		{ name = "IronmanBG", what = "Plan journey back in Kaliel's Tracker" },
+		{ name = "Blast22", what = "Guidance no longer flickers when another addon selects an objective" },
+		{
+			name = "Anonymous CurseForge reporter",
+			what = "Guidance no longer flickers when another addon selects an objective",
+		},
 	},
 	inspired = {
 		{ name = "Polestar by Fitz", what = "Ideas for many features" },

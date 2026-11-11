@@ -139,6 +139,8 @@ Credit for the reports and requests behind the addon.
 | Acem | Known flight points kept per character | CurseForge; #685 |
 | tgkGate | Fixed the path job yield error | CurseForge; #717 |
 | IronmanBG | Plan journey back in Kaliel's Tracker | CurseForge; #718 |
+| Blast22 | Guidance no longer flickers when another addon selects an objective | CurseForge; 8693782 |
+| Anonymous CurseForge reporter | Guidance no longer flickers when another addon selects an objective | CurseForge; #693 |
 
 ## Inspired by
 
