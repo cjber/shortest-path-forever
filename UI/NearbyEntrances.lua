@@ -125,8 +125,9 @@ function Entrances.Sort(list, world)
 	end
 end
 
--- The panel's rows by travel time once every one has an estimate, and by the straight line to the door until then.
--- Every row is on the player's continent, so the distances compare.
+-- The panel's rows by travel time where the panel has one, then by the straight line to the door for the rest, so
+-- one estimate that has not landed cannot hold the whole section in straight-line order. Every row is on the
+-- player's continent, so the distances compare.
 ---@param section string
 ---@param rows SPFNearbyRow[]
 ---@param world SPFPoint
@@ -136,24 +137,20 @@ function Entrances.Order(section, rows, world, seconds)
 		return
 	end
 	local times = seconds or {}
-	local timed = seconds ~= nil
-	if timed then
-		for _, row in ipairs(rows) do
-			if times[row.id] == nil then
-				timed = false
-				break
-			end
-		end
-	end
 	local function Key(row)
-		if timed then
-			return times[row.id]
+		local time = times[row.id]
+		if time ~= nil then
+			return time, false
 		end
 		local door = row.npc.world
-		return (door.x - world.x) ^ 2 + (door.y - world.y) ^ 2
+		return (door.x - world.x) ^ 2 + (door.y - world.y) ^ 2, true
 	end
 	table.sort(rows, function(a, b)
-		local keyA, keyB = Key(a), Key(b)
+		local keyA, untimedA = Key(a)
+		local keyB, untimedB = Key(b)
+		if untimedA ~= untimedB then
+			return not untimedA
+		end
 		if keyA == keyB then
 			return a.id < b.id
 		end

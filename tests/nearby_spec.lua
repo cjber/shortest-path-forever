@@ -580,6 +580,25 @@ assert(
 	rowLabels(sectionOf(timed, "entrances")) == "The Deadmines,Wailing Caverns",
 	"the panel's travel times order the doors"
 )
+local partial = sectionList("", nil, { ["entrance:36"] = 10 })
+assert(
+	rowLabels(sectionOf(partial, "entrances")) == "The Deadmines,Wailing Caverns",
+	"a door with a travel time leads, then the doors without one by straight line"
+)
+local orderRows = {
+	{ id = "entrance:far", npc = { world = { map = 1, x = 100, y = 400 } } },
+	{ id = "entrance:near", npc = { world = { map = 1, x = 100, y = 200 } } },
+	{ id = "entrance:timed", npc = { world = { map = 1, x = 100, y = 900 } } },
+}
+ns.NearbyEntrances.Order("entrances", orderRows, here, { ["entrance:timed"] = 5 })
+local order = {}
+for _, row in ipairs(orderRows) do
+	order[#order + 1] = row.id
+end
+assert(
+	table.concat(order, ",") == "entrance:timed,entrance:near,entrance:far",
+	"one travel time leads, and the rest stay in straight-line order"
+)
 local deadmines = assert((places["entrance:36"] or {})[1], "the door is a place like any other")
 assert(
 	ns.NearbyServices.Detail("entrance:36", deadmines, "") == "Westfall",
