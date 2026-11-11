@@ -40,8 +40,6 @@ local ALLOWED = {
 	["debug "] = true,
 	["walking cost mismatch: planned %.1f, found %s"] = true,
 	["map %s at %s, %s; ride: %s"] = true,
-	-- Core/Require.lua runs before Locales/enUS.lua, so its one line cannot go through L.
-	["Shortest Path Forever needs ForeverCore, which is missing or too old."] = true,
 }
 
 local shipped = {}
@@ -52,8 +50,9 @@ for line in io.lines("ShortestPathForever.toc") do
 	end
 end
 assert(#shipped > 20, "the TOC lists the addon's files")
-assert(shipped[1] == "Core/Require.lua", "the API floor runs before any file")
-assert(shipped[2] == "Locales/enUS.lua", "L exists before any file uses it")
+assert(shipped[1] == "Core/ForeverRequire.lua", "the shared warning loads first")
+assert(shipped[2] == "Core/Require.lua", "the API floor runs before any addon file")
+assert(shipped[3] == "Locales/enUS.lua", "then L, before any addon file reads it")
 
 local found = {}
 for _, file in ipairs(shipped) do
@@ -108,8 +107,8 @@ end
 
 -- Every translation the TOC loads, read in its own client language: each line is a string and formats without error
 -- given the arguments its English takes (a sample per placeholder). tools/check_locales.py checks that the
--- placeholders themselves match. The translations load straight after Locales/enUS.lua, before any file that reads
--- L while it loads (labels, and Nearby's reagent titles), or those would stay English.
+-- placeholders themselves match. The translations load straight after Locales/enUS.lua, before the addon's own files
+-- that read L while they load (labels, and Nearby's reagent titles), or those would stay English.
 local SAMPLE = { d = 7, i = 7, c = 65, o = 7, u = 7, x = 7, X = 7, e = 1.5, E = 1.5, f = 1.5, g = 1.5, G = 1.5 }
 local function samples(english)
 	local args = {}
@@ -119,7 +118,7 @@ local function samples(english)
 	return args
 end
 local translations = 0
-for position = 3, #shipped do
+for position = 4, #shipped do
 	if shipped[position]:match("^Locales/") then
 		assert(shipped[position - 1]:match("^Locales/"), shipped[position] .. " loads straight after Locales/enUS.lua")
 	end
