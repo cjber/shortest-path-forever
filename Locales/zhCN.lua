@@ -396,7 +396,6 @@ L["Eastern Kingdoms"] = "东部王国" -- mt
 L["Kalimdor"] = "卡利姆多" -- mt
 L["No flight points learned in %s: open a flight master's map once to sync them."] =
 	"尚未在%s学会任何飞行点：打开一次飞行管理员的地图以同步它们。" -- mt
-L["Dungeons and raids join Nearby services."] = "地下城和团队副本加入附近服务。" -- mt
 L["Better for your level, farther away"] = "更适合你的等级，但更远" -- mt
 L["Show a pin when you reach a stop"] = "到达目的地时显示图钉" -- mt
 L["In a stop's area the direction arrow becomes a pin with the stop's objectives, instead of hiding."] =
@@ -420,6 +419,7 @@ L["Stops before the last on a multi-stop route keep 15 yards."] =
 L["Dungeons and raids"] = "地下城与团队副本" -- mt
 L["Town services"] = "城镇服务" -- mt
 L["Town services on the world map"] = "世界地图上的城镇服务" -- mt
+L["Town services show on the world map."] = "城镇服务现在显示在世界地图上。" -- mt
 L["Capitals only"] = "仅主城" -- mt
 L["Capitals and important services"] = "主城和重要服务" -- mt
 L["All towns"] = "所有城镇" -- mt

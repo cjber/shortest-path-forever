@@ -410,7 +410,6 @@ L["Eastern Kingdoms"] = "동부 왕국" -- mt
 L["Kalimdor"] = "칼림도어" -- mt
 L["No flight points learned in %s: open a flight master's map once to sync them."] =
 	"%s에서 배운 비행 지점이 없습니다: 비행 조련사의 지도를 한 번 열어 동기화하세요." -- mt
-L["Dungeons and raids join Nearby services."] = "던전과 공격대가 주변 편의시설에 추가됩니다." -- mt
 L["Better for your level, farther away"] = "레벨에 더 좋은 물품, 더 먼 곳" -- mt
 L["Show a pin when you reach a stop"] = "지점에 도착하면 핀 표시" -- mt
 L["In a stop's area the direction arrow becomes a pin with the stop's objectives, instead of hiding."] =
@@ -434,6 +433,7 @@ L["Stops before the last on a multi-stop route keep 15 yards."] =
 L["Dungeons and raids"] = "던전 및 공격대" -- mt
 L["Town services"] = "마을 서비스" -- mt
 L["Town services on the world map"] = "세계 지도에 마을 서비스 표시" -- mt
+L["Town services show on the world map."] = "도시 서비스가 세계 지도에 표시됩니다." -- mt
 L["Capitals only"] = "수도만" -- mt
 L["Capitals and important services"] = "수도 및 주요 서비스" -- mt
 L["All towns"] = "모든 마을" -- mt
