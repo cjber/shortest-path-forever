@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Print every phrase the addon translates, as a translation file to copy (stdlib only).
 
-The phrases are the `L["..."]` keys in the Lua files the TOC loads, English text being its own key. The output
-is committed as Locales/phrases.txt, and tests/locales_spec.lua fails when the two differ, so after changing a
-phrase run
+The phrases are the `L["..."]` keys in the Lua files the TOC loads, or the text a shared file passes to its
+`phrase("...")` helper, English text being its own key. The output is committed as Locales/phrases.txt, and
+tests/locales_spec.lua fails when the two differ, so after changing a phrase run
 
     python3 tools/phrases.py > Locales/phrases.txt
 
@@ -16,6 +16,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 TOC = ROOT / "ShortestPathForever.toc"
 PHRASE = re.compile(r'\bL\["((?:\\.|[^"\\])*)"\]')
+# A shared Forever file may choose its English text with a helper, `phrase("%s is out of date.", name)`, and read
+# ns.L by that same key, so those strings are phrases too.
+PHRASE_HELPER = re.compile(r'\bphrase\("((?:\\.|[^"\\])*)"')
 # Every phrase is a literal in the addon's own files.
 DYNAMIC = ()
 HEADER = """\
@@ -41,7 +44,9 @@ def shipped_lua():
 def phrases():
     found = set(DYNAMIC)
     for path in shipped_lua():
-        found.update(PHRASE.findall(path.read_text()))
+        text = path.read_text()
+        found.update(PHRASE.findall(text))
+        found.update(PHRASE_HELPER.findall(text))
     return sorted(found)
 
 

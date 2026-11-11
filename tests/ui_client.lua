@@ -50,11 +50,6 @@ local cvars = { rotateMinimap = "0", questPOI = "1" }
 local function noop() end
 local mt = {
 	__index = function(t, k)
-		-- A quest blob setter is not universal: a client missing one must look like it does, so these are only the
-		-- stubs installed below and never a generated no-op (#680).
-		if k:match("^SetQuestBlob") then
-			return nil
-		end
 		if k:match("^%u") then
 			return noop
 		end
@@ -574,27 +569,9 @@ end
 _G.GetCVarBool = function(k)
 	return cvars[k] == "1"
 end
--- Whether this client has the QuestPOIFrame widget the world map's area pin is; a check body may turn it off before
--- the first area is wanted.
-local blobWidget = true
-_G.C_XMLUtil = {
-	GetTemplateInfo = function(template)
-		if template == "ShortestPathForeverAreaPinTemplate" and not blobWidget then
-			return nil
-		end
-		local entry = templates[template]
-		return { type = entry and entry.type or "Frame" }
-	end,
-}
 _G.Minimap = stubframe()
 Minimap:SetSize(200, 200)
--- The minimap's own quest blob textures, which the addon swaps while the player stands in an objective area.
-for _, key in ipairs({ "Inside", "Outside", "OutsideSelected", "Ring" }) do
-	rawset(Minimap, "SetQuestBlob" .. key .. "Texture", function(self, texture)
-		self["questBlob" .. key] = texture
-	end)
-end
--- The client's own answer for each quest, which the check bodies set directly.
+-- The client's own answer for each quest; a check body may set one.
 local insideQuestBlob = {}
 _G.C_Minimap = {
 	GetViewRadius = function()

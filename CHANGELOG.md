@@ -13,6 +13,26 @@ optional `### For addon authors` subsection after a version's player bullets.
 ## [Unreleased]
 
 - **The route line can stop at the leg you are walking.** A new switch beside the world map line, "Line to later stops", leaves out the faded legs after the current stop, so a guide with many flight paths no longer covers the map in green lines. Your stop pins, the current leg and the guidance stay, and the switch is on by default. Asked on CurseForge by user_s0vubavdmaczleed46125 (#741).
+- **The map line no longer draws a swim across water the route walks around.** A walk planned along a beach or round a lake was sometimes drawn as one straight line across the water, even though the route and its time went the long way. The drawn line now only crosses water where the walk itself swam, so it costs no more time than the route it shows (#742).
+
+## [1.31.1] - 2026-11-11
+
+<!-- forever-core-sync -->
+
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
+## [1.31.0] - 2026-11-11
+
+<!-- discord-image: docs/screenshots/stops.png -->
+
+- **Walks follow what your character can actually climb and drop.** The walking maps are rebuilt from the game's own terrain with your character's limits: a step up of 2 yards, and ledges of up to 14.57 yards, the height where a fall starts to hurt, jumped down but never climbed. A walk now takes the short way down a ledge instead of going round to a ramp (#638).
+- **Walks stay out of lake and sea beds.** Ground under deep water no longer counts as a path, so a walk swims across or goes round instead of running along the bottom.
+- **Walks start and end where you stand.** Standing somewhere the walking map has no ground, such as a lift shaft or mid-jump, the walk now starts from the nearest ground rather than a floor far above or below you.
+- **The gold quest area is gone, and quest areas stay the game's own blue.** Standing in a held stop's quest area used to recolour part of the minimap and draw a second, larger gold area over the game's blue one on the world map. A partial gold area read as a bug, so the addon now leaves quest areas exactly as the client draws them. The stop keeps its ring and line on the minimap, and the arrival pin and its objectives still appear while you are in the area (#735).
+
+## [1.30.4] - 2026-11-11
+
+- **Tells you which addon to update.** If another Forever addon you have installed is older than this one and stops it starting, the message now names that addon, so you know exactly what to update.
 
 ## [1.30.3] - 2026-11-11
 

@@ -54,7 +54,7 @@ local function walk(from, to, check)
 			Floor.Sample(0, x, y)
 			drain()
 			Floor.Sample(0, x, y)
-			check(x, y, z, Floor.Height(0, x, y))
+			check(x, y, z, Floor.Height(0, x, y), a.z, b.z)
 		end
 	end
 end
@@ -77,12 +77,14 @@ end
 for _, ends in ipairs({ { FM, MAGIC }, { MAGIC, FM } }) do
 	Floor.Forget()
 	local walked, settled, wrong, last = 0, nil, 0, nil
-	walk(ends[1], ends[2], function(x, y, z, height)
+	walk(ends[1], ends[2], function(x, y, z, height, startZ, endZ)
 		walked = walked + (last and math.sqrt((x - last.x) ^ 2 + (y - last.y) ^ 2) or 0)
 		last = { x = x, y = y }
 		if height then
 			settled = settled or walked
-			if z and math.abs(height - z) > 10 then
+			-- On a segment the floor is the start's or the end's, or between them on a ramp.
+			local atEnd = (startZ and math.abs(height - startZ) <= 10) or (endZ and math.abs(height - endZ) <= 10)
+			if z and math.abs(height - z) > 10 and not atEnd then
 				wrong = wrong + 1
 			end
 		end

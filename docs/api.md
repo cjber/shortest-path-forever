@@ -50,13 +50,11 @@ later, the API is also listed by `ForeverCore.APIKit.Addons()`.
   The game's own pin for each of those quests is hidden while the stop is drawn; `handins` never decides arrival or
   the stop's area, which stay with `questID`, `questIDs` and `shapes`. Optional `npc` names the service NPC the stop
   reaches: while the stop is current, Shortest Path marks that NPC's nameplate.
-  While the player stands in the area of any named quest, by the client's own inside-area state, the game's own
-  area takes the place of the stop pin and its line: the world map draws each named quest's area with the
-  client's own blob, the minimap's own quest blob is recoloured, and both wear the stock bonus objective gold.
-  Leaving the area, the stop changing and the journey ending all restore the stock map and minimap. Optional
-  `shapes` names the area as 1 or more `{map, x, y, radius}` circles, each on the map it names with its `radius`
-  in yards. Circles are never drawn. They decide inside only for a stop that names no quest, or while the client
-  has no answer for any quest it names, and such a stop keeps its pin and line.
+  While the player stands in the area of any named quest, by the client's own inside-area state, the stop counts as
+  reached: walking directions step aside. Leaving the area, the stop changing and the journey ending all resume them.
+  Optional `shapes` names the area as 1 or more `{map, x, y, radius}` circles, each on the map it names with its
+  `radius` in yards. Circles are never drawn. They decide inside only for a stop that names no quest, or while the
+  client has no answer for any quest it names.
 - `CurrentStop(owner)` returns the current 1-based stop, or `nil` and a reason: `"loading"` while the addon is
   still building its data, `"none"` when that owner has no current stop.
 - `Cancel(owner)` returns `true` only when it clears that owner's whole route.

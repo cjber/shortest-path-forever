@@ -135,13 +135,19 @@ for _, pin in ipairs({ { -8840.56, 489.7, 0, -20 }, { -8346.46, 514.031, 8, 0 } 
 end
 
 -- Levels: a road through a tunnel under walkable ground, and a city under a city.
--- Ironforge to Menethil goes through Dun Algaz rather than round by Arathi (about 18,600 yards on one level).
+-- Ironforge to Menethil crosses the mountains north, no face steeper than 50 degrees on the way up, rather than round
+-- by Arathi (about 18,600 yards on one level).
 local IRONFORGE_FM = { x = -4821.78, y = -1155.44, z = 502.21 } -- Data/Taxi.lua node 6
 local MENETHIL_FM = { x = -3792.26, y = -783.29, z = 9.06 } -- node 7
 pts, len = Path.FindSync(0, IRONFORGE_FM, MENETHIL_FM)
 assert(pts and len < 8000, len)
-assert(passes(pts, -4220, -2464) < 30, "misses the Dun Algaz tunnel")
 assert(pts[1].z and pts[#pts].z, "points carry heights")
+-- The Dun Algaz road, either side of the tunnel, walks through it rather than over the ridge above.
+local ALGAZ_SOUTH, ALGAZ_NORTH = { x = -4350.2, y = -2463.7, z = 216 }, { x = -4087.6, y = -2463.7, z = 156 }
+for _, ends in ipairs({ { ALGAZ_SOUTH, ALGAZ_NORTH }, { ALGAZ_NORTH, ALGAZ_SOUTH } }) do
+	pts = Path.FindSync(0, ends[1], ends[2])
+	assert(pts and passes(pts, -4220, -2464) < 30, "misses the Dun Algaz tunnel")
+end
 
 -- Undercity: the flight master stands by the west lift's bottom landing, and its top is a long way round on foot.
 local UNDERCITY_FM = { x = 1568.62, y = 267.97, z = -43.1 } -- node 11
@@ -153,13 +159,13 @@ assert(type(far) == "number" and far > 1000, far)
 -- From the top, the surface road leads on to Tarren Mill.
 assert(Path.FindSync(0, { x = WEST_LIFT.x, y = WEST_LIFT.y, z = 55.718 }, { x = -0.06, y = -859.91, z = 58.83 }))
 
--- Across Loch Modan: on foot the walk goes round by the shore, walking on water it goes straight over.
+-- Across Loch Modan: on foot the walk goes round over Stonewrought Dam, walking on water it goes straight over.
 local THELSAMAR_SHORE, WEST_SHORE = { x = -5293, y = -3157 }, { x = -5773, y = -3287 }
 local round, roundCost = Path.FindSync(0, THELSAMAR_SHORE, WEST_SHORE)
 local over, overCost = Path.FindSync(0, THELSAMAR_SHORE, WEST_SHORE, true)
 assert(round and over)
 assert(round.wet < 50 and over.wet > 300, round.wet .. " " .. over.wet)
-assert(overCost < 550 and roundCost > overCost * 1.4, roundCost .. " " .. overCost)
+assert(overCost < 550 and roundCost > overCost + 100, roundCost .. " " .. overCost)
 
 -- The reported Darkshore route: reachable Felwood points go round the mountains; neighbouring map clicks can
 -- miss every walkable surface. Both outcomes must arrive through the sliced callback as well as FindSync.
@@ -186,6 +192,51 @@ for _, target in ipairs({
 	drain()
 	assert(done)
 end
+
+-- The yards a drawn segment spends over water, sampled along it as the router walks the cells it crosses.
+local function wetYards(map, a, b)
+	local Grid, st = ns.PathGrid, ns.PathGrid.State(map)
+	local length = dist(a.x, a.y, b.x, b.y)
+	local steps = math.max(1, math.ceil(length / 0.5))
+	local wet = 0
+	for step = 1, steps do
+		local t = step / steps
+		local k, lc = Grid.locate(st, a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)
+		local val = k and Grid.grid(st, k)
+		if val and val[lc + 1] == 2 then
+			wet = wet + length / steps
+		end
+	end
+	return wet
+end
+
+-- #742: a walk the router paid for on land must not be drawn as a swim. The Darkshore walk round the bay is drawn
+-- along the beach, no slower than the route it replaces; only the water both ends stand in is crossed.
+local BAY_EAST, BAY_WEST = { x = 6401.38, y = 597.68 }, { x = 6261.38, y = 617.68 }
+local bay, bayCost = Path.FindSync(1, BAY_EAST, BAY_WEST)
+assert(bay and bayCost, "the bay walk is found")
+assert(#bay > 2, "the walk round the bay is not drawn as one chord")
+local swim = ns.PathGrid.State(1).swim
+local bayTime = 0
+for i = 2, #bay do
+	local length, wet = dist(bay[i - 1].x, bay[i - 1].y, bay[i].x, bay[i].y), wetYards(1, bay[i - 1], bay[i])
+	bayTime = bayTime + length + wet * (swim - 1)
+	if i > 2 and i < #bay then
+		assert(wet == 0, "the beach between the two ends is dry")
+	end
+end
+assert(bayTime <= bayCost, ("the drawn walk is no slower than its route: %.1f against %.1f"):format(bayTime, bayCost))
+
+-- A walk that really swam a stretch is still pulled straight across that water: both ends here stand on land, and one
+-- drawn segment crosses the water the path's own entries swam.
+local STRAIT_EAST, STRAIT_WEST = { x = -14961.19, y = 274.63 }, { x = -14897.51, y = 274.63 }
+local strait, straitCost = Path.FindSync(0, STRAIT_EAST, STRAIT_WEST)
+assert(strait and straitCost and strait.wet > 15, "the strait walk swims")
+local swam = 0
+for i = 2, #strait do
+	swam = math.max(swam, wetYards(0, strait[i - 1], strait[i]))
+end
+assert(swam > 20, ("the drawn walk crosses the water it swam: %.1f yards"):format(swam))
 
 -- Heights: the player's is unknown (UnitPosition's is a placeholder 0), and a point without one starts from whichever
 -- surface at its spot walks cheapest. A Trade District street over the canal walks out by the Valley of Heroes gate,

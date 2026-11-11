@@ -12,6 +12,7 @@ L["%s (cast %s)"] = "%s (lanzar %s)"
 L["%s (new flight path)"] = "%s (nueva ruta de vuelo)"
 L["%s (turn in)"] = "%s (entregar)"
 L["%s could be %s."] = "%s podría ser %s."
+L["%s could not start. Reinstall %s to fix this."] = "%s no pudo iniciarse. Reinstala %s para solucionarlo." -- mt
 L["%s landing"] = "plataforma %s"
 L["%s pier"] = "muelle %s"
 L["%s station"] = "estación %s"
@@ -20,6 +21,9 @@ L["%s · %s"] = "%s · %s"
 L["%s — unavailable here"] = "%s: no disponible aquí"
 L["%s, %s"] = "%s, %s"
 L["%s, then %s"] = "%s, luego %s"
+L["%s: %s are out of date. Update them to fix this."] =
+	"%s: %s están desactualizados. Actualízalos para solucionarlo." -- mt
+L["%s: %s is out of date. Update it to fix this."] = "%s: %s está desactualizado. Actualízalo para solucionarlo." -- mt
 L["/way [zone] x y [title], with x and y from 0 to 100."] = "/way [zona] x y [título], con x e y de 0 a 100."
 L["/way reset all, away, <zone> or not <zone>"] = "/way reset all, away, <zona> o not <zona>"
 L["Adventure Guide couldn't start that just now. Choose it again from its guide."] =
@@ -398,7 +402,8 @@ L["Eastern Kingdoms"] = "Reinos del Este" -- mt
 L["Kalimdor"] = "Kalimdor" -- mt
 L["No flight points learned in %s: open a flight master's map once to sync them."] =
 	"No has aprendido puntos de vuelo en %s: abre una vez el mapa de un maestro de vuelo para sincronizarlos." -- mt
-L["Needs Forever Core."] = "Requiere Forever Core." -- mt
+L["Walks follow what your character can actually climb and drop."] =
+	"Los caminos siguen lo que tu personaje puede escalar y saltar de verdad." -- mt
 L["Better for your level, farther away"] = "Mejor para tu nivel, más lejos" -- mt
 L["Show a pin when you reach a stop"] = "Mostrar una marca al llegar a una parada" -- mt
 L["In a stop's area the direction arrow becomes a pin with the stop's objectives, instead of hiding."] =

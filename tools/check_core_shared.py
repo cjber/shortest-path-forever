@@ -61,6 +61,8 @@ VENDORED = {
     "tools/check_core_shared.py": CHECKER_CONSUMERS,
     "tools/check_client_load.py": SUITE_CONSUMERS,
     "tools/blizzard_fonts.txt": SUITE_CONSUMERS,
+    "tools/check_slash_words.py": SUITE_CONSUMERS,
+    "tools/client_slash_words.txt": SUITE_CONSUMERS,
     "tools/check_menu_scroll.py": SUITE_CONSUMERS,
     "tools/check_copy.py": SUITE_CONSUMERS,
     ".github/workflows/core-shared-drift.yml": SUITE_CONSUMERS,
@@ -76,6 +78,10 @@ SOURCES = {
     ".github/workflows/core-shared-drift.yml": "tools/core-shared-drift.yml",
     "tools/check_copy.py": ".agents/skills/wow-forever-addon/check_copy.py",
 }
+# The one out-of-date warning every consumer's Core/Require.lua calls. Consumers carry it as Core/ForeverRequire.lua;
+# this repo keeps the source under tools/ so it is development tooling, not a runtime file ForeverCore loads itself.
+VENDORED["Core/ForeverRequire.lua"] = SUITE_CONSUMERS
+SOURCES["Core/ForeverRequire.lua"] = "tools/consumer/ForeverRequire.lua"
 
 # Every repository this map governs, prefixed consumers included.
 KNOWN_CONSUMERS = frozenset(repo for consumers in VENDORED.values() for repo in consumers)

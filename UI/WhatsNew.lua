@@ -7,12 +7,16 @@ if ns.broken then
 end
 local L = ns.L
 
--- One sentence on what the latest release changed, printed once after an update. Each release refreshes it from
--- its CHANGELOG entry.
-ns.WHATS_NEW = L["Needs Forever Core."]
+-- The newest release in CHANGELOG.md with a bold headline, and that headline, printed once after an update. A core
+-- sync's maintenance entry has no headline, so these stay on the release before it: an update to a maintenance
+-- version says nothing new but still remembers the version. Rewrite both lines for each release that has a headline
+-- (tests/whats_new_spec.lua checks them against CHANGELOG.md).
+ns.WHATS_NEW_VERSION = "1.31.0"
+ns.WHATS_NEW = L["Walks follow what your character can actually climb and drop."]
 
 -- Once per new version, after an update: never on a first install, nor in a checkout, whose TOC still holds the
--- packager's version keyword (matched by its "@", as the packager would rewrite the whole keyword here too).
+-- packager's version keyword (matched by its "@", as the packager would rewrite the whole keyword here too). The
+-- chat line is said only for the version with a headline: a maintenance release is remembered but says nothing new.
 function ns.CheckWhatsNew()
 	local db = ns.db
 	local version = C_AddOns.GetAddOnMetadata(addonName, "Version")
@@ -21,7 +25,7 @@ function ns.CheckWhatsNew()
 	end
 	local seen = db.seenVersion
 	db.seenVersion = version
-	if seen and seen ~= version and db.whatsNew then
+	if seen and seen ~= version and version == ns.WHATS_NEW_VERSION and db.whatsNew then
 		ns.Print(string.format(L["updated to %s. %s"], version, ns.WHATS_NEW))
 	end
 end

@@ -159,7 +159,15 @@ for index = 2, #walked do
 	check(walked[index].queued == walked[index - 1].finished, "each later walk is queued as the one before finishes")
 end
 check(refreshed == 2, "within a second, drawn once for the first hop and once when every hop is ready")
-check(not first.preview and #first.points > 2, "the placeholder is replaced by the walking-map path")
+-- The replaced hop draws the walking map's own path between its two stops, not a straight stand-in line.
+local atStops, stopAt = ns.JourneyStops()
+local hopPath = assert(ns.Path.FindSync(atStops[stopAt].map, atStops[stopAt], atStops[stopAt + 1]))
+local replaced = #first.points == #hopPath
+for at = 1, #hopPath do
+	local drawn, found = first.points[at], hopPath[at]
+	replaced = replaced and drawn.map == found.map and drawn.x == found.x and drawn.y == found.y
+end
+check(not first.preview and replaced, "the placeholder is replaced by the walking-map path")
 check(ns.JourneyPreview()[1] == first, "the planned hop draws in place of its placeholder")
 check(ns.Path.IsLoaded(0), "Redridge's walks decode bundled terrain on demand")
 local walks

@@ -11,12 +11,14 @@
 ## X-Curse-Project-ID: 1708599
 ## X-Wago-ID: b6Xy1wKp
 ## Dependencies: ForeverCore
+## X-Forever-Core: v1.7.1
 ## SavedVariables: ShortestPathForeverDB
 ## SavedVariablesPerCharacter: ShortestPathForeverCharDB
 ## IconTexture: Interface\AddOns\ShortestPathForever\media\Icon
 ## X-Forever-Icon: Interface\Icons\INV_Misc_Spyglass_03
 ## AddonCompartmentFunc: ShortestPathForever_OnAddonCompartmentClick
 
+Core\ForeverRequire.lua
 Core\Require.lua
 Locales\enUS.lua
 Locales\deDE.lua
@@ -91,7 +93,6 @@ Journey\FactionHint.lua
 UI\StopPin.lua
 UI\FlightLines.lua
 UI\Strokes.lua
-UI\QuestBlob.lua
 UI\QuestPins.lua
 UI\Route.lua
 UI\RouteTransports.lua

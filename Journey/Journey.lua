@@ -296,14 +296,6 @@ local function InsideQuestArea(point)
 	return answer
 end
 
--- Whether the client itself places the player in the area of a quest the held stop names. Only then is there an
--- area of the game's own to show in the stop's place.
----@param point SPFPoint?
----@return boolean
-function ns.StopInQuestArea(point)
-	return point ~= nil and point.hold == true and InsideQuestArea(point) == true
-end
-
 -- Whether the player stands in a held stop's objective area. A stop that names the quests it stands for is
 -- answered by the client's own blob state, which is what its minimap draws and the player sees; a client that
 -- withholds or does not have it, and a stop the guide only has circles for, falls back to the shapes and radius.
@@ -607,6 +599,8 @@ local function OnWalk(points, here, reach)
 end
 
 ns.OnWalk = OnWalk -- Corpse.lua trims its walk the same way.
+-- The route last handed to the map, kept so a retime moves its arrival without redrawing it.
+local drawn
 local function Refresh()
 	local remaining
 	if result then
@@ -634,6 +628,7 @@ local function Refresh()
 		end
 	end
 	if not CorpseRun() then
+		drawn = remaining
 		ns.SetJourneyRoute(goal, remaining)
 	end
 	RefreshTracker()
@@ -718,6 +713,9 @@ local function Follow(route, news)
 	UpdateProgress()
 	AnnounceUnsyncedFlightPoints()
 	if news == "times" then
+		if drawn and result then
+			drawn.now, drawn.arrive = result.now, result.arrive
+		end
 		return RefreshTracker()
 	end
 	return Refresh()

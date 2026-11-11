@@ -12,6 +12,7 @@ L["%s (cast %s)"] = "%s（施放%s）"
 L["%s (new flight path)"] = "%s（新飛行路線）"
 L["%s (turn in)"] = "%s（交任務）"
 L["%s could be %s."] = "%s可能是%s。"
+L["%s could not start. Reinstall %s to fix this."] = "%s 無法啟動。請重新安裝 %s 以解決此問題。" -- mt
 L["%s landing"] = "%s平台"
 L["%s pier"] = "%s碼頭"
 L["%s station"] = "%s車站"
@@ -20,6 +21,8 @@ L["%s · %s"] = "%s · %s"
 L["%s — unavailable here"] = "%s——此處無法使用"
 L["%s, %s"] = "%s，%s"
 L["%s, then %s"] = "%s，然後%s"
+L["%s: %s are out of date. Update them to fix this."] = "%s：%s 已過期。請更新它們以解決此問題。" -- mt
+L["%s: %s is out of date. Update it to fix this."] = "%s：%s 已過期。請更新它以解決此問題。" -- mt
 L["/way [zone] x y [title], with x and y from 0 to 100."] = "/way [地區] x y [標題]，x和y為0到100。"
 L["/way reset all, away, <zone> or not <zone>"] = "/way reset all, away, <地區> 或 not <地區>"
 L["Adventure Guide couldn't start that just now. Choose it again from its guide."] =
@@ -393,7 +396,8 @@ L["Eastern Kingdoms"] = "東部王國" -- mt
 L["Kalimdor"] = "卡林多" -- mt
 L["No flight points learned in %s: open a flight master's map once to sync them."] =
 	"尚未在%s學會任何飛行點：開啟一次飛行管理員的地圖以同步它們。" -- mt
-L["Needs Forever Core."] = "需要 Forever Core。" -- mt
+L["Walks follow what your character can actually climb and drop."] =
+	"步行路線遵循你的角色實際能攀爬和跳下的地形。" -- mt
 L["Better for your level, farther away"] = "更適合你的等級，但更遠" -- mt
 L["Show a pin when you reach a stop"] = "抵達目的地時顯示圖釘" -- mt
 L["In a stop's area the direction arrow becomes a pin with the stop's objectives, instead of hiding."] =

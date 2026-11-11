@@ -50,9 +50,6 @@ with you.
   In a quest's area the arrow becomes the same gold pin that marks your destination, with the quest's objectives under it, and the compass turns quietly green.
   ![The gold goal pin with a quest's objectives, and the compass tinted green](docs/screenshots/arrival.png)
   The strip can be moved and resized separately from the tracker. While moving it or the arrow, Shift-drag, or rest the pointer on it and use the arrow keys, to place it to the pixel.
-- **Quest areas.** Inside a quest's area, the client draws it in gold instead of a stop pin and line.
-  ![A quest area on the world map](docs/screenshots/area.png)
-  The highlighted area is the game's own quest boundary.
 
 More detail: [features](docs/features.md) and [API](docs/api.md).
 
@@ -60,7 +57,7 @@ More detail: [features](docs/features.md) and [API](docs/api.md).
 
 Install it from [CurseForge](https://www.curseforge.com/wow/addons/shortest-path-forever) or
 [Wago Addons](https://addons.wago.io/addons/shortest-path-forever), or download the zip from
-[Releases](https://github.com/cjber/shortest-path-forever/releases). It needs Forever Core, which CurseForge and Wago install with it. To install the zip by hand, extract it into
+[Releases](https://github.com/cjber/shortest-path-forever/releases). Everything it needs comes inside the download. To install the zip by hand, extract it into
 the WoW: Forever client's `Interface/AddOns/` folder (`_forever_` on the live client, `_classic_beta_` on the beta) so you end up with `AddOns/ShortestPathForever/ShortestPathForever.toc`.
 
 ## Usage
@@ -122,7 +119,7 @@ Each one works on its own, and they work together when you install more than one
 | [Commissions Forever](https://www.curseforge.com/wow/addons/commissions-forever) | Lists your commission turn-ins, the materials in your bags and the next NPC to visit. | [Issues](https://github.com/cjber/commissions-forever/issues) |
 | [Macro Assist Forever](https://www.curseforge.com/wow/addons/macro-assist-forever) | Adds a macro window with every macro in one list, a mono editor with live checks, and history. | [Issues](https://github.com/cjber/macro-assist-forever/issues) |
 
-Bug reports, feature requests and pull requests are welcome on each addon's GitHub. Everyone whose report or idea ships is thanked by name in the addon's credits and changelog.
+Bug reports, feature requests and pull requests are welcome on each addon's GitHub. Everyone whose report or idea ships is thanked by name on the Thanks page in game, in the store page and in the changelog, unless they ask not to be.
 
 For help, ideas and each day's release notes, join [cjber's Workshop on Discord](https://discord.gg/FpHugGxRJY).
 
