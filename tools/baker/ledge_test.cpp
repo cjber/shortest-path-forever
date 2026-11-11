@@ -1,5 +1,7 @@
 // Exercises the patched ledge-drop helper (TileBuilder.cpp SPF-DROP block) on hand-built compact heightfields.
 #include <Recast.h>
+#include <algorithm>
+#include <cfloat>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -8,7 +10,7 @@
 #include <memory>
 #include <vector>
 using uint8 = uint8_t;
-enum { NAV_AREA_GROUND = 11, NAV_AREA_GROUND_STEEP = 10 };
+enum { NAV_AREA_GROUND = 11, NAV_AREA_GROUND_STEEP = 10, NAV_AREA_WATER = 9, NAV_AREA_MAGMA_SLIME = 8, NAV_AREA_UNDER_LIQUID = 7 };
 namespace {
 #include "drops.inc"
 }
@@ -96,6 +98,18 @@ struct Field
         link(x, z, 1, 0);
         link(x, z, 0, 1);
       }
+  }
+
+  void markBeds() {
+    rcCompactHeightfield view{};
+    view = chf;
+    view.cells = cells.data();
+    view.spans = spans.data();
+    view.areas = areas.data();
+    MarkGroundUnderLiquid(view);
+    view.cells = nullptr;
+    view.spans = nullptr;
+    view.areas = nullptr;
   }
 
   std::vector<LedgeDrop> drops(float tileMaxX = 1e30f, float tileMaxZ = 1e30f) {
@@ -197,6 +211,36 @@ int main() {
       steep.surface(x, z, 10);
   steep.linkAll();
   expect("a steep face is no ledge", steep.drops().empty(), true);
+
+  // a canal: its bed lies under the water surface, a quay stands above it in the same column
+  Field canal(2, 1);
+  canal.surface(0, 0, 5);
+  canal.surface(0, 0, 15, NAV_AREA_WATER);
+  canal.surface(0, 0, 20);
+  canal.surface(1, 0, 6, NAV_AREA_GROUND_STEEP);
+  canal.surface(1, 0, 15, NAV_AREA_WATER);
+  canal.markBeds();
+  expect("ground under water is a bed", canal.areas[0] == NAV_AREA_UNDER_LIQUID, true);
+  expect("the water surface stays water", canal.areas[1] == NAV_AREA_WATER, true);
+  expect("ground above the water stays ground", canal.areas[2] == NAV_AREA_GROUND, true);
+  expect("steep ground under water is a bed", canal.areas[3] == NAV_AREA_UNDER_LIQUID, true);
+
+  // a ledge over a pool lands in the water, never on the bed below it
+  Field pool(16, 6);
+  for (int z = 0; z < 6; ++z) {
+    for (int x = 0; x < 6; ++x)
+      pool.surface(x, z, 20);
+    for (int x = 6; x < 16; ++x) {
+      pool.surface(x, z, 8);
+      pool.surface(x, z, 14, NAV_AREA_WATER);
+    }
+  }
+  pool.linkAll();
+  pool.markBeds();
+  std::vector<LedgeDrop> const into = pool.drops();
+  expect("a ledge over a pool drops", !into.empty(), true);
+  if (!into.empty())
+    expect("the drop lands on the water surface", std::fabs(into[0].to[1] - 14) < 0.01f, true);
 
   printf("%s\n", fails ? "FAILED" : "ALL PASS");
   return fails != 0;

@@ -247,9 +247,11 @@ do
 	}
 	local northshire, goldshire = { x = -8914, y = -135 }, { x = -9459, y = 43 }
 	local plain, plainCost = Path.FindSync(0, northshire, goldshire)
-	assert(closest(plain, cx, cy) < 10, "the road runs through the town")
+	assert(closest(plain, cx, cy) < r, "the road runs through the town")
 	local round, roundCost = Path.FindSync(0, northshire, goldshire, nil, town)
-	assert(closest(round, cx, cy) > r, "goes round the town")
+	-- Cells are charged at their centres, so a line round the town may cut into its circle by half a cell diagonal.
+	local half = walking.PathGrid.State(0).cs * math.sqrt(2) / 2
+	assert(closest(round, cx, cy) > r - half, "goes round the town")
 	assert(roundCost > plainCost and roundCost < plainCost * 1.5, roundCost)
 	local drawn = 0
 	for i = 2, #round do

@@ -18,7 +18,7 @@ class WalkableTest(unittest.TestCase):
         self.assertFalse(walkable(triangle, 0x40 | 0x80, 11, 0))
 
     def test_steep_ground_is_walkable_downhill(self):
-        # 50 to 61.6 degrees: the navmesh marks it steep, and its steps decide which way it may be crossed
+        # ground the navmesh marks steep: its steps decide which way it may be crossed
         triangle = [(0.0, 0.0, 0.0), (1.0, 0.0, 0.0), (0.0, 1.0, 0.0)]
         self.assertTrue(walkable(triangle, 0, 10, 0))
         self.assertFalse(walkable(triangle, 0, 0, 0))

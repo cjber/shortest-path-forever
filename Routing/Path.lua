@@ -547,7 +547,7 @@ local function connectPoint(st, swim, k, node, h, roadsOn, hz, inbound)
 	if inbound then
 		return ends, {}, {}, {}, merged, mergedReal, via, nodes
 	end
-	return ends, merged, mergedReal, via, nil, nil, nil, nodes
+	return ends, merged, mergedReal, via, {}, {}, {}, nodes
 end
 -- A point's position in global cells, and the node it stands on in its own cell: within ZTOL of its height, or the
 -- base surface when it has none.

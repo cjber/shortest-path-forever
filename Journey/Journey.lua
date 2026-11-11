@@ -607,6 +607,8 @@ local function OnWalk(points, here, reach)
 end
 
 ns.OnWalk = OnWalk -- Corpse.lua trims its walk the same way.
+-- The route last handed to the map, kept so a retime moves its arrival without redrawing it.
+local drawn
 local function Refresh()
 	local remaining
 	if result then
@@ -634,6 +636,7 @@ local function Refresh()
 		end
 	end
 	if not CorpseRun() then
+		drawn = remaining
 		ns.SetJourneyRoute(goal, remaining)
 	end
 	RefreshTracker()
@@ -718,6 +721,9 @@ local function Follow(route, news)
 	UpdateProgress()
 	AnnounceUnsyncedFlightPoints()
 	if news == "times" then
+		if drawn and result then
+			drawn.now, drawn.arrive = result.now, result.arrive
+		end
 		return RefreshTracker()
 	end
 	return Refresh()

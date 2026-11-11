@@ -64,8 +64,8 @@ CLIMB = 3.0  # two surfaces at one point are the same layer within this height (
 ZQ = 2  # base heights are stored to this step (yd)
 AREA_GROUND, AREA_GROUND_STEEP, AREA_WATER, AREA_OCEAN = 11, 10, 9, 6
 # The player's own limits (benilla-re systems/collision/walking.md, the Forever client's float pool, TrinityCore
-# Player::HandleFall): a face is walkable up to 50 degrees, ground from 50 to 61.6 degrees only downhill, a step
-# reaches 2.0 yards, and falling hurts past 14.57 yards. A drop's fall costs the time free fall takes.
+# Player::HandleFall): steep ground, when the bake marks any, is walked only downhill, a step reaches 2.0 yards, and
+# falling hurts past 14.57 yards. A drop's fall costs the time free fall takes.
 GRAVITY = 19.2911  # yards per second squared
 RUN = 7.0  # the player's run speed, yards per second
 FALL_LIMIT = 14.57  # the longest fall that does not hurt, yards
@@ -154,9 +154,9 @@ def steep_step(za, la, zb, lb):
 
 def walkable(pts, flags, area, typ):
     # Ground under liquid is a hidden floor, such as the bare terrain about 35 yards under Stormwind. The player's
-    # height is unknown when a walk starts, so a route could pick it. The TrinityCore patch removes it at bake time;
-    # the historical Mappster tiles are read here instead, so drop it too. Steep ground (between 50 and 61.6 degrees)
-    # is walkable downhill only; its direction is settled by the steps into and out of it.
+    # height is unknown when a walk starts, so a route could pick it. The TrinityCore patch bakes it as area 7 with
+    # flag 0x40, the flag Mappster gave it, and both are refused here. Steep ground, when a bake marks any, is kept
+    # and its steps become downhill-only links.
     return (
         typ == 0
         and area in (AREA_GROUND, AREA_GROUND_STEEP, AREA_WATER, AREA_OCEAN)
@@ -456,8 +456,13 @@ def rasterize_tile(rc):
     layers = rasterize_layers(polys, adj, portal, (ax0, ax1, ay0, ay1))
 
     def linked(i, la, j, lb):
-        """Is there a navmesh path from cell i's surface la to cell j's surface lb inside the two cells (+ MARGIN)?"""
-        (pa, _), (pb, b) = layers[i][la][2], layers[j][lb][2]
+        """Is there a navmesh path from cell i's surface la to cell j's surface lb inside the two cells (+ MARGIN)?
+
+        Steep ground is crossed downhill only, so the search carries a ceiling: the highest the walk can be inside the
+        poly it reached. Ordinary ground lifts it; on steep ground the walk leaves through a portal no higher than the
+        ceiling, and leaves it at most as high as that portal's top. Without it a path could climb a steep face between
+        two ordinary surfaces, such as the slope that joins the terrain under Stormwind to its streets."""
+        (pa, a), (pb, b) = layers[i][la][2], layers[j][lb][2]
         if pa == pb or pb in adj.get(pa, ()):
             return True
         (xi, yi), (xj, yj) = divmod(i, GH), divmod(j, GH)
@@ -468,15 +473,28 @@ def rasterize_tile(rc):
             Y0 + (max(yi, yj) + 1) * CS + MARGIN,
         )
         hb = height(polys[pb], *b)
-        seen, stack = {pa}, [pa]
+        best = {pa: height(polys[pa], *a) if polys[pa]["steep"] else math.inf}
+        stack = [pa]
         while stack:
             u = stack.pop()
+            ceiling = best[u]
             for v in adj.get(u, ()):
-                if v in seen or not seg_in_box(*portal[(u, v)], box=box):
+                ends = portal[(u, v)]
+                if not seg_in_box(*ends, box=box):
                     continue
+                if polys[u]["steep"] and min(height(polys[u], *e) for e in ends) > ceiling + 0.01:
+                    continue
+                top = math.inf
+                if polys[v]["steep"]:
+                    top = max(height(polys[v], *e) for e in ends)
+                    if polys[u]["steep"]:
+                        top = min(top, ceiling)
                 if v == pb or (point_in_convex(b[0], b[1], polys[v]["pts"]) and abs(height(polys[v], *b) - hb) < CLIMB):
-                    return True
-                seen.add(v)
+                    if not polys[v]["steep"] or height(polys[v], *b) <= top + 0.01:
+                        return True
+                if best.get(v, -math.inf) >= top:
+                    continue
+                best[v] = top
                 stack.append(v)
         return False
 

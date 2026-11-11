@@ -1110,13 +1110,13 @@ local function ground(map, x, y, z)
 end
 
 -- The node an endpoint stands on: within SNAP cells, the surface with the least distance plus twice the height gap,
--- among those within ZTOL of its height. A point off every surface (in a lift shaft, mid-jump, deep under water) takes
--- the nearest surface of any height.
+-- preferring those within ZTOL of its height; a point off every surface (in a lift shaft, mid-jump, deep under water)
+-- takes the least of the same cost among all surfaces.
 local function snap(st, k, lc, x, y, h)
 	local C, cs = st.C, st.cs
 	local lx, ly = floor(lc / C), lc % C
 	local cx, cy = st.x0 + (floor(k / st.ny) * C + lx + 0.5) * cs, st.y0 + ((k % st.ny) * C + ly + 0.5) * cs
-	local best, bestCost, any, anyD
+	local best, bestCost, any, anyCost
 	for r = 0, SNAP do
 		if best and (r - 1) * cs > bestCost then
 			break
@@ -1128,11 +1128,12 @@ local function snap(st, k, lc, x, y, h)
 					local n, gap = standing(st, k, nx * C + ny, h)
 					if n then
 						local d = r == 0 and 0 or sqrt((cx + dx * cs - x) ^ 2 + (cy + dy * cs - y) ^ 2)
-						if gap <= ZTOL and (not bestCost or d + 2 * gap < bestCost) then
-							best, bestCost = n, d + 2 * gap
+						local cost = d + 2 * gap
+						if gap <= ZTOL and (not bestCost or cost < bestCost) then
+							best, bestCost = n, cost
 						end
-						if not anyD or d < anyD then
-							any, anyD = n, d
+						if not anyCost or cost < anyCost then
+							any, anyCost = n, cost
 						end
 					end
 				end

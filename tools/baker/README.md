@@ -103,7 +103,7 @@ The bake uses the player's own collision limits, not a server creature's:
 
 | Limit | Setting | Player (source) |
 |---|---|---|
-| Walkable slope | `walkableSlopeAngle` 61.6, `walkableSlopeAngleNotSteep` 50 | a face is walkable up to 50 degrees and 50 to 61.6 degrees is walked down only (benilla-re `systems/collision/walking.md`, cos 50 `0x3f248dbb`; the Forever client's float pool holds the same constants) |
+| Walkable slope | `walkableSlopeAngle` and `walkableSlopeAngleNotSteep` 55, TrinityCore's own | the player's limit is 50 degrees (benilla-re `systems/collision/walking.md`, cos 50 `0x3f248dbb`; the Forever client's float pool holds the same constants), but see below |
 | Step height | `walkableClimb` 4 x `ch` 0.5 = 2.0 yd | H = 2.0 yd (`0x617430` in the 1.12.1 client; the same value in Forever's build) |
 | Agent clearance | `walkableHeight` 3 x 0.5 = 1.5 yd | close to the 1.6 yd the older 0.533 yd voxel reached; a player is not a tall creature |
 | Falling | `NAV_DROP_REACH` 14.57 yd | fall damage starts here (TrinityCore `Player::HandleFall` at the pinned commit) |
@@ -111,10 +111,17 @@ The bake uses the player's own collision limits, not a server creature's:
 The horizontal cell stays 0.5333 yd so terrain is sampled as before; the vertical cell is 0.5 yd because 2.0 yards is
 not a whole number of 0.5333 ones. The nav patch also corrects Recast's span merge in
 `dep/recastnavigation`: a merged span keeps the area of the surface on top, so a low unwalkable face rasterized under a
-stair tread no longer turns the tread unwalkable and cuts the stair (the Undercity stairs were cut this way). Slope
-never changes speed, so no slope cost is charged. Ground from 50 to 61.6
-degrees is baked as `NAV_AREA_GROUND_STEEP` (area 10): the generator accepts it and turns steps into and out of it
-into directed links, downhill only. A landing between 2.0 and 14.57 yards below a ledge is baked as a one-way Detour
+stair tread no longer turns the tread unwalkable and cuts the stair (the Undercity stairs were cut this way). Ground
+below the top liquid surface of its own voxel column is a bed nobody stands on: the patched `TileBuilder` gives it
+`NAV_AREA_UNDER_LIQUID` (area 7) and flag `0x40`, so Recast splits it into polygons of its own and the generator never
+joins sealed terrain to the world through a canal floor (Stormwind's under-city ground was reached this way). Slope
+never changes speed, so no slope cost is charged. The bake keeps TrinityCore's single 55 degree slope, so it marks no
+steep ground. A 50 degree limit with 50 to 61.6 degrees as `NAV_AREA_GROUND_STEEP` (area 10) marks ground players
+climb every day as steep, such as the Deeprun Tram ramp in Stormwind, and the slide it opens off Stormwind's Cathedral Square reaches the terrain under the city,
+where a walk with no height can wrongly start. The generator is ready for the band: it turns steps into and out of
+area 10 into directed links, downhill only, and its search between cells never climbs through it. It waits for a
+step-onto-tread rule and for walks that start from the player's measured floor (#639, #737). A
+landing between 2.0 and 14.57 yards below a ledge is baked as a one-way Detour
 off-mesh connection (`DT_OFFMESH_CON_BIDIR` never set) by the patched `TileBuilder`, which looks outwards from every
 walkable span with no walkable neighbour, rejects a landing whose fall column or path crosses a wall or a shelf, and
 emits one connection per ledge run. A connection belongs to the tile its start is in, as Detour requires, so its

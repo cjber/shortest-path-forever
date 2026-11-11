@@ -135,13 +135,19 @@ for _, pin in ipairs({ { -8840.56, 489.7, 0, -20 }, { -8346.46, 514.031, 8, 0 } 
 end
 
 -- Levels: a road through a tunnel under walkable ground, and a city under a city.
--- Ironforge to Menethil goes through Dun Algaz rather than round by Arathi (about 18,600 yards on one level).
+-- Ironforge to Menethil crosses the mountains north, no face steeper than 50 degrees on the way up, rather than round
+-- by Arathi (about 18,600 yards on one level).
 local IRONFORGE_FM = { x = -4821.78, y = -1155.44, z = 502.21 } -- Data/Taxi.lua node 6
 local MENETHIL_FM = { x = -3792.26, y = -783.29, z = 9.06 } -- node 7
 pts, len = Path.FindSync(0, IRONFORGE_FM, MENETHIL_FM)
 assert(pts and len < 8000, len)
-assert(passes(pts, -4220, -2464) < 30, "misses the Dun Algaz tunnel")
 assert(pts[1].z and pts[#pts].z, "points carry heights")
+-- The Dun Algaz road, either side of the tunnel, walks through it rather than over the ridge above.
+local ALGAZ_SOUTH, ALGAZ_NORTH = { x = -4350.2, y = -2463.7, z = 216 }, { x = -4087.6, y = -2463.7, z = 156 }
+for _, ends in ipairs({ { ALGAZ_SOUTH, ALGAZ_NORTH }, { ALGAZ_NORTH, ALGAZ_SOUTH } }) do
+	pts = Path.FindSync(0, ends[1], ends[2])
+	assert(pts and passes(pts, -4220, -2464) < 30, "misses the Dun Algaz tunnel")
+end
 
 -- Undercity: the flight master stands by the west lift's bottom landing, and its top is a long way round on foot.
 local UNDERCITY_FM = { x = 1568.62, y = 267.97, z = -43.1 } -- node 11
@@ -153,13 +159,13 @@ assert(type(far) == "number" and far > 1000, far)
 -- From the top, the surface road leads on to Tarren Mill.
 assert(Path.FindSync(0, { x = WEST_LIFT.x, y = WEST_LIFT.y, z = 55.718 }, { x = -0.06, y = -859.91, z = 58.83 }))
 
--- Across Loch Modan: on foot the walk goes round by the shore, walking on water it goes straight over.
+-- Across Loch Modan: on foot the walk goes round over Stonewrought Dam, walking on water it goes straight over.
 local THELSAMAR_SHORE, WEST_SHORE = { x = -5293, y = -3157 }, { x = -5773, y = -3287 }
 local round, roundCost = Path.FindSync(0, THELSAMAR_SHORE, WEST_SHORE)
 local over, overCost = Path.FindSync(0, THELSAMAR_SHORE, WEST_SHORE, true)
 assert(round and over)
 assert(round.wet < 50 and over.wet > 300, round.wet .. " " .. over.wet)
-assert(overCost < 550 and roundCost > overCost * 1.4, roundCost .. " " .. overCost)
+assert(overCost < 550 and roundCost > overCost + 100, roundCost .. " " .. overCost)
 
 -- The reported Darkshore route: reachable Felwood points go round the mountains; neighbouring map clicks can
 -- miss every walkable surface. Both outcomes must arrive through the sliced callback as well as FindSync.

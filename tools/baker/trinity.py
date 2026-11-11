@@ -90,8 +90,7 @@ def stage_commands(args, map_id: int) -> dict[str, list[str]]:
         "vmap4assembler": ["vmap4assembler", "--threads", threads, "$RUN/Buildings", "$RUN/vmaps"],
         "mmaps_generator": [
             "mmaps_generator", "--input", "$RUN", "--output", "$OUT", "--threads", threads,
-            "--skipJunkMaps", "false", "--bigBaseUnit", "true", "--maxAngle", "61.6", "--maxAngleNotSteep", "50",
-            str(map_id),
+            "--skipJunkMaps", "false", "--bigBaseUnit", "true", str(map_id),
         ],
     }  # fmt: skip
 
