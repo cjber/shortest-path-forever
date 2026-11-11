@@ -490,10 +490,11 @@ end
 -- A point without a height (the player, whose UnitPosition height is a placeholder 0, or a map click) could stand on
 -- any surface at its spot, so it starts from each one within a cell of it at a distinct height and the search keeps
 -- the cheapest: a street beside or over a canal is not walked from the canal bed. Returns each surface's connection,
--- the entrance costs merged by minimum and, per entrance, the surface it came from; wantIn adds the costs into the
--- point, which is what a goal needs. The surfaces themselves are returned too: a walk drawn or searched to a point
--- ends on them, never on wherever the outbound rescue moved it.
-local function connectPoint(st, swim, k, node, h, roadsOn, hz, wantIn)
+-- the entrance costs merged by minimum and, per entrance, the surface it came from. inbound returns the costs into the
+-- point instead, which is what a goal needs, in the fifth to seventh places, and leaves the outbound ones empty: each
+-- caller walks a point one way, and on format 2 the other way is a second grid search. The surfaces themselves are
+-- returned too: a walk drawn or searched to a point ends on them, never on wherever the outbound rescue moved it.
+local function connectPoint(st, swim, k, node, h, roadsOn, hz, inbound)
 	local nodes = { node }
 	if not h then
 		local values = grid(st, k)
@@ -533,28 +534,20 @@ local function connectPoint(st, swim, k, node, h, roadsOn, hz, wantIn)
 		end
 	end
 	local ends, merged, mergedReal, via = {}, {}, {}, {}
-	local mergedIn, mergedInReal, viaIn
-	if wantIn then
-		mergedIn, mergedInReal, viaIn = {}, {}, {}
-	end
 	for _, start in ipairs(nodes) do
-		local n, edges, reals, tree = connect(st, swim, k, start, roadsOn, hz)
-		ends[#ends + 1] = { node = n, tree = tree, own = start }
+		local n, edges, reals, tree = connect(st, swim, k, start, roadsOn, hz, inbound)
+		local entry = { node = n, tree = tree, own = start }
+		ends[#ends + 1] = entry
 		for id, cost in pairs(edges) do
 			if not merged[id] or cost < merged[id] then
-				merged[id], mergedReal[id], via[id] = cost, reals[id], ends[#ends]
-			end
-		end
-		if wantIn then
-			local inNode, inEdges, inReals, inTree = connect(st, swim, k, start, roadsOn, hz, true)
-			for id, cost in pairs(inEdges) do
-				if not mergedIn[id] or cost < mergedIn[id] then
-					mergedIn[id], mergedInReal[id], viaIn[id] = cost, inReals[id], { node = inNode, tree = inTree }
-				end
+				merged[id], mergedReal[id], via[id] = cost, reals[id], entry
 			end
 		end
 	end
-	return ends, merged, mergedReal, via, mergedIn, mergedInReal, viaIn, nodes
+	if inbound then
+		return ends, {}, {}, {}, merged, mergedReal, via, nodes
+	end
+	return ends, merged, mergedReal, via, nil, nil, nil, nodes
 end
 -- A point's position in global cells, and the node it stands on in its own cell: within ZTOL of its height, or the
 -- base surface when it has none.
@@ -935,7 +928,8 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 	if hz and hz.ConnectorWalk then
 		for i, point in ipairs(targets) do
 			if costs[i] == nil and hz.ConnectorWalk(from, point) then
-				local cost = run(map, from, point, waterWalking, true, nil)
+				-- a reverse batch costs the walk from the target, which on directed maps is not the walk back
+				local cost = run(map, reverse and point or from, reverse and from or point, waterWalking, true, nil)
 				if cost then
 					costs[i] = cost
 					if job then
@@ -1350,7 +1344,7 @@ function Path.FindSync(map, from, to, waterWalking, hazards)
 end
 
 -- Costs indexed like targets, false for unreachable/off-mesh points; no geometry is built. reverse returns
--- target -> from costs, including the directed same-cluster water step. The shipped abstract edges are symmetric.
+-- target -> from costs, including the directed same-cluster water step: format 2's abstract edges are directed.
 ---@param map number
 ---@param from SPFPoint
 ---@param targets SPFPoint[]
