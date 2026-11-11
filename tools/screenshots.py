@@ -29,7 +29,6 @@ if not (WOWMOCK / "wowmock.py").is_file():
     sys.exit(f"wowmock.py not found in {WOWMOCK}; set FOREVER_CORE to the forever-core checkout")
 sys.path.insert(0, str(WOWMOCK))
 from screenshot_docks import dock_kinds, number_art, pin_art, zeppelin_art
-from screenshots_area import render as render_area_art
 from screenshots_arrival import render as render_arrival
 from screenshots_art import Art
 from screenshots_floors import render as render_floors
@@ -758,7 +757,6 @@ def render_flight(ui):
 
 SCENES = {
     "flight": render_flight,
-    "area": lambda ui: render_area_art(ui, map_base, projection, map_landmarks, icon),
     "kalimdor": lambda ui: render_map(ui, 1414),
     "darkshore": lambda ui: render_map(ui, 1439),
     "docks": render_docks,

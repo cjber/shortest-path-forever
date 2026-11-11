@@ -27,7 +27,6 @@ pixels never enter product media.
 | `docks.png` | Auberdine's clustered piers; arrivals/departures and hover highlighting |
 | `stops.png` | A four-stop API route through Thelsamar (three places): the current stop at full strength and the later ones as faded as their lines, each on the addon's gold numbered marker with its action badge |
 | `floors.png` | Westfall at Sentinel Hill: the current guide stop, Scout Riell at the top of the tower, wears the map's up arrow at its upper right, and its tooltip says "Above ground level" |
-| `area.png` | Westfall, standing in a quest's area: the world map draws the game's own area for the quest in gold, with no stop pin or line, cropped to the area |
 | `tracker.png` | Capture 21's five Auberdine → Silithus steps, with the current totals header |
 | `detached.png` | The Journey tracker detached from the quest tracker, under its draggable "Forever tracker" heading |
 | `minimap.png` | Auberdine's piers as minimap pins, the last dotted stretch to the south pier, the addon's own goal pin |
@@ -41,8 +40,8 @@ pixels never enter product media.
 | `demo.gif` | Eight-second montage: route pulse/settle, tracker countdown and gliding compass; under 0.5 MB |
 
 `tools/screenshots_services.py` draws the services scene,
-`tools/screenshots_tracker.py` the detached tracker's heading, `tools/screenshots_area.py`
-the quest's area, and `tools/screenshots_arrival.py` the arrival pin and its tinted compass.
+`tools/screenshots_tracker.py` the detached tracker's heading, and
+`tools/screenshots_arrival.py` the arrival pin and its tinted compass.
 `tools/screenshots_floors.py` draws the stop above the ground at Sentinel Hill.
 
 The static images render at two pixels per UI unit; the GIF renders at its final
@@ -63,14 +62,6 @@ remains 8,000 ms. The animation uses fixed time steps, never the wall clock.
   stop at full strength and later stops at the 0.4 alpha they share with the lines leading to them, and keeps above 25
   the tracked quest's `UI-QuestPoi-QuestNumber-SuperTracked` button and the font number. Each stop keeps the caller's
   action badge over its lower right.
-- `area.png` draws the client's own areas for quest 92744's objective 0 on Westfall: every `QuestPOIBlob`
-  row of it and their `QuestPOIPoint` corners, projected through `UiMapAssignment`, with the player in the
-  largest area in the pinned data build.
-  The border is `Interface\Minimap\UI-BonusObjectiveBlob-Outside`, the texture `UI/QuestBlob.lua` gives the
-  blob widget, at the stock border alpha of 192; that set's fill texture is clear, so the area is not filled.
-  The widget's drawing is engine-side, so three things are assumptions: a closed Catmull-Rom curve through
-  the corners, a border as wide as the texture is tall (16 units), and the border laid inward from the edge with
-  its brightest row on the edge. The client's own minimap blob is not mocked.
 - `UI/Map.lua` / `UI/Map.xml` supply 20-unit ferry pins, transitive dock clustering,
   hover highlighting and tooltip wording. Portals wear the map legend's teleport atlas,
   `TaxiNode_Continent_Neutral`, fitted at its own shape. Default map layers
