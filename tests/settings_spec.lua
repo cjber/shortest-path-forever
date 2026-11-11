@@ -176,6 +176,7 @@ local arrowMoving, arrowScaled, arrowLabelSet = false, nil, nil
 local tomtomFollowRefreshed, ways = 0, {}
 local routeColour = nil
 local routeLinesRefreshed = 0
+local journeyPreviewRefreshed = 0
 -- Core/Core.lua's defaults: every row on.
 local ns = {
 	core = {
@@ -301,6 +302,9 @@ local ns = {
 	RefreshRouteLines = function()
 		routeLinesRefreshed = routeLinesRefreshed + 1
 	end,
+	RefreshJourneyPreview = function()
+		journeyPreviewRefreshed = journeyPreviewRefreshed + 1
+	end,
 	RouteColors = {
 		{ key = "gold", label = "Gold" },
 		{ key = "white", label = "White" },
@@ -328,6 +332,7 @@ local groups = {
 		"routeColor",
 		"mapLine",
 		"minimapLine",
+		"laterLegs",
 	},
 	Transport = { "mapRoutes", "otherFaction", "tracker", "share" },
 	["Travel journal"] = { "stats", "statsShare" },
@@ -390,8 +395,8 @@ local order = {
 }
 
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
--- Main's arrival pin added arrivalPin and the line switches added mapLine and minimapLine to the merged list.
-assert(#rows == 61, #rows)
+-- Main's arrival pin added arrivalPin, and the line switches added mapLine, minimapLine and laterLegs to the list.
+assert(#rows == 62, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -457,6 +462,18 @@ assert(
 		and Row("minimapLine").tooltip:find("still guide you", 1, true),
 	"the tooltips say the guidance stays when the line is off"
 )
+-- The faded legs after the current stop are a drawing choice of their own, on by default, beside the line switches.
+local laterLegs = Row("laterLegs")
+assert(laterLegs.kind == "checkbox" and laterLegs.setting.default == true, "later stops' legs start on")
+assert(laterLegs.setting.variable == "ShortestPathForever_laterLegs", "the later-legs switch is saved")
+assert(laterLegs.setting.name == "Line to later stops", "the switch names the legs after the current stop")
+assert(
+	laterLegs.tooltip:find("the pins stay", 1, true),
+	"the tooltip says the stop pins stay when the later legs are off"
+)
+local previews = journeyPreviewRefreshed
+laterLegs.setting.onChanged()
+assert(journeyPreviewRefreshed == previews + 1, "the switch redraws the route without replanning the journey")
 -- The departures switch names what it hides, so a player looking for Lifts finds it.
 assert(
 	Row("tracker").setting.name == "Show boat, lift and tram departures in the tracker",

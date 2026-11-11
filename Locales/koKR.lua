@@ -377,6 +377,9 @@ L["Draws the walking route on the world map. With it off, the destination pin, a
 L["Line on the minimap"] = "미니맵 선" -- mt
 L["Draws the walking route on the minimap. With it off, the destination pin, arrow and tracker still guide you."] =
 	"미니맵에 도보 경로를 그립니다. 끄면 목적지 표식, 화살표, 추적기가 계속 안내합니다." -- mt
+L["Line to later stops"] = "이후 지점까지의 선" -- mt
+L["Draws the legs after the current stop, faded, on the world map. Off, only the current leg and the pins stay."] =
+	"현재 이동 중인 구간 이후의 경로를 세계 지도에 흐리게 그립니다. 끄면 현재 구간만 그려지고 이후 지점의 표식은 그대로 남습니다." -- mt
 L["Gold"] = "금색"
 L["White"] = "흰색"
 L["Cyan"] = "청록색"

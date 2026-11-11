@@ -35,6 +35,8 @@ local DEFAULTS = {
 	-- The walking line on each surface can be turned off without touching the journey's other guidance.
 	mapLine = true,
 	minimapLine = true,
+	-- The faded legs after the stop being guided to stay on by default; a fresh route shows the whole journey.
+	laterLegs = true,
 	otherFaction = false,
 	tracker = true,
 	alerts = true,

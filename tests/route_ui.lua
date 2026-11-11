@@ -117,6 +117,33 @@ assert(#rings[1].stopDetails[1] == 0 and rings[1].stopDetails[2][1] == "Quest de
  "shared stop keeps a later detail with its own stop when the lead has none")
 assert(rings[2].Texture.alpha == ns.LaterAlpha and rings[2].Disc.alpha == nil, "a later stop's marker dims")
 
+-- The world map draws the legs after the current stop, faded, until the player turns them off. The stop pins and
+-- the leg being walked stay either way.
+local function routeLegs()
+ local _, index = ns.JourneyStops()
+ local paths = active[lineTemplate][1] and active[lineTemplate][1].paths or {}
+ local later, current = 0, 0
+ for _, path in ipairs(paths) do
+  if path.stop == index then
+   current = current + 1
+  else
+   later = later + 1
+  end
+ end
+ return later, current
+end
+local later, current = routeLegs()
+assert(later > 0 and current > 0, "a journey of several stops draws the later legs after the current one by default")
+local stopPins = #active[goalTemplate]
+ns.db.laterLegs = false
+ns.RefreshJourneyPreview()
+local laterOff, currentOff = routeLegs()
+assert(laterOff == 0 and currentOff == current, "with the later legs off, only the leg being walked is drawn")
+assert(#active[goalTemplate] == stopPins, "the stop pins stay with the later legs off")
+ns.db.laterLegs = true
+ns.RefreshJourneyPreview()
+assert(routeLegs() == later, "turning the later legs back on draws them again")
+
 -- The line redraws every half second while you move; the button under the pointer stays, hovered, so its
 -- right-click to clear is heard. A rebuilt button lost its hover and press, and the click with them.
 local hoveredRing = rings[1]

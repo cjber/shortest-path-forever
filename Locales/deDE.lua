@@ -370,6 +370,9 @@ L["Draws the walking route on the world map. With it off, the destination pin, a
 L["Line on the minimap"] = "Linie auf der Minikarte" -- mt
 L["Draws the walking route on the minimap. With it off, the destination pin, arrow and tracker still guide you."] =
 	"Zeichnet die Fußroute auf der Minikarte. Ist sie aus, führen Zielmarkierung, Pfeil und Verfolgung Euch weiterhin." -- mt
+L["Line to later stops"] = "Linie zu späteren Stopps" -- mt
+L["Draws the legs after the current stop, faded, on the world map. Off, only the current leg and the pins stay."] =
+	"Zeichnet die abgeschwächten Abschnitte nach dem aktuellen Stopp auf der Weltkarte. Ist die Option aus, wird nur der Abschnitt gezeichnet, den Ihr gerade geht. Die späteren Stopps behalten ihre Markierungen." -- mt
 L["Gold"] = "Gold"
 L["White"] = "Weiß"
 L["Cyan"] = "Türkis"

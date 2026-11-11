@@ -201,6 +201,12 @@ ns.Init(function()
 		L["Draws the walking route on the minimap. With it off, the destination pin, arrow and tracker still guide you."],
 		ns.RefreshRouteLines
 	)
+	Checkbox(
+		"laterLegs",
+		L["Line to later stops"],
+		L["Draws the legs after the current stop, faded, on the world map. Off, only the current leg and the pins stay."],
+		ns.RefreshJourneyPreview
+	)
 
 	-- Transport: routes and departure times.
 	Page(L["Transport"])
