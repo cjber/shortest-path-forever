@@ -242,11 +242,11 @@ function Art.RowArt(row)
 	hover:SetBlendMode("ADD")
 end
 
--- A nine-slice band across its anchored box, like the quest log's own list header: such art stretches by design.
+-- A band across its anchored box, like the quest log's own list header and separator: such art stretches by design.
 ---@param texture Texture
 ---@param atlas string
 function Art.Band(texture, atlas)
-	texture:SetAtlas(atlas) -- art-ok: the stock list header's own nine-slice, stretched across its row
+	texture:SetAtlas(atlas) -- art-ok: the stock list header or separator, stretched across its row as the client does
 	texture:SetAllPoints()
 end
 

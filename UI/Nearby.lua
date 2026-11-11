@@ -436,6 +436,7 @@ local function BuildGroups()
 			Add({
 				section = "trainers",
 				key = "profession:" .. skill,
+				skill = skill,
 				label = label,
 				icon = "Profession",
 				npcs = GroupNPCs("profession:" .. skill),
@@ -453,6 +454,57 @@ local function BuildGroups()
 	end
 	groupByKey = byKey
 	return list
+end
+-- The skill line of each profession slot given, ranked by its slot. An unlearned slot is nil.
+---@param rank table<integer, integer>
+---@return table<integer, integer>
+local function SlotRanks(rank, ...)
+	for slot = 1, select("#", ...) do
+		local book = select(slot, ...)
+		local skill = book and select(7, GetProfessionInfo(book)) -- multi-value: the skill line is seventh
+		if type(skill) == "number" and not rank[skill] then
+			rank[skill] = slot
+		end
+	end
+	return rank
+end
+-- Your professions' skill lines, ranked as GetProfessions returns them: the two primary ones, then First Aid,
+-- Fishing and Cooking (Forever's Camelot/Blizzard_ProfessionsBook.lua:21).
+---@return table<integer, integer>
+local function YourProfessions()
+	if not (GetProfessions and GetProfessionInfo) then
+		return {}
+	end
+	return SlotRanks({}, GetProfessions())
+end
+-- The groups in their order: under the class trainer, your own professions first, primary then secondary, and the
+-- rest by name, so whoever has Tailoring or Skinning finds its trainer without scrolling past every other one. The
+-- second value ranks the skill lines you have.
+---@return SPFNearbyGroup[], table<integer, integer>
+local function Ordered()
+	local yours = YourProfessions()
+	local professions = {}
+	for _, group in ipairs(groups) do
+		if group.skill then
+			professions[#professions + 1] = group
+		end
+	end
+	table.sort(professions, function(a, b)
+		local rankA, rankB = yours[a.skill], yours[b.skill]
+		if rankA or rankB then
+			return rankA ~= nil and (rankB == nil or rankA < rankB)
+		end
+		return Fold(a.label) < Fold(b.label)
+	end)
+	local list, at = {}, 0
+	for _, group in ipairs(groups) do
+		if group.skill then
+			at = at + 1
+			group = professions[at]
+		end
+		list[#list + 1] = group
+	end
+	return list, yours
 end
 -- The NPC flag names whose rows the list needs: the services it groups on, and trainer for a class a companion addon
 -- names as taught by an NPC this addon's own trainer list does not hold.
@@ -665,11 +717,19 @@ end
 -- farther away (Better), marked with the client's green upgrade arrow.
 local function AddGroups(root, world)
 	root:SetScrollMode(MENU_ROW * MENU_ROWS)
-	local section
-	for _, group in ipairs(groups) do
+	local section, afterYours
+	local ordered, yours = Ordered()
+	for _, group in ipairs(ordered) do
 		if group.section ~= section then
 			section = group.section
 			root:CreateTitle(SECTION_LABELS[section])
+		end
+		-- A line between your professions and the others.
+		if group.skill and yours[group.skill] then
+			afterYours = true
+		elseif group.skill and afterYours then
+			afterYours = false
+			root:CreateDivider()
 		end
 		local place = world and Nearest(group.key, world)
 		local label = place and group.label or L["%s — unavailable here"]:format(group.label)
@@ -736,8 +796,10 @@ end
 ---@field label string
 ---@field icon number|string
 ---@field npcs number[]
+---@field skill? integer a profession group's skill line
 ---@class SPFNearbyRow
 ---@field id string the group's key, or "better:" and the key for its upgrade row
+---@field apart? boolean the first of the other professions under yours, set off by a line
 ---@field group SPFNearbyGroup
 ---@field npc SPFNearbyPlace the nearest matching NPC by straight line
 ---@field tier? integer on an upgrade row, the better tier it goes to (Better)
@@ -795,14 +857,22 @@ end
 local function Sections(world, query, collapsed)
 	local folded = Fold(query)
 	local list = {}
+	local ordered, yours = Ordered()
 	for _, section in ipairs({ "vendors", "trainers", "services" }) do
-		local rows, count = {}, 0
-		for _, group in ipairs(groups) do
+		local rows, count, afterYours = {}, 0, false
+		for _, group in ipairs(ordered) do
 			if group.section == section then
 				local place = Shortlist(group.key, world, 1, folded)[1]
 				if place then
 					count = count + 1
-					rows[#rows + 1] = { id = group.key, group = group, npc = place }
+					local row = { id = group.key, group = group, npc = place }
+					-- The first of the other professions shown under yours opens with a line.
+					if group.skill and yours[group.skill] then
+						afterYours = true
+					elseif group.skill and afterYours then
+						row.apart, afterYours = true, false
+					end
+					rows[#rows + 1] = row
 					local tier = Better(group.key, world, folded)
 					local far = tier and Shortlist(group.key, world, 1, folded, tier)[1]
 					if far then
