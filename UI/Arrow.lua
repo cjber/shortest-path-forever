@@ -33,6 +33,7 @@ local ARRIVAL_WIDTH, ARRIVAL_TITLE_LINES, ARRIVAL_LINE_LIMIT = 240, 2, 3
 ---@field ArrivalLines FontString
 ---@field linesFor? SPFPoint the goal the travel lines were built from
 ---@field linesDirty? boolean the next draw reads the quest log again
+---@field linesOff? boolean the travel lines are cleared by the switch
 ---@field arrivalFor? SPFPoint the stop the arrival lines were built from
 ---@field arrivalText? string the arrival lines already joined for the pin
 ---@field arrival? boolean the arrived stop's pin and lines show, with the arrow and distance hidden
@@ -388,7 +389,21 @@ end
 -- The same lines under the distance while the arrow leads, read again only when the goal or the quest log changes.
 ---@param goal SPFPoint?
 RefreshTravelLines = function(goal)
-	if not frame or (frame.linesFor == goal and not frame.linesDirty) then
+	if not frame then
+		return
+	end
+	-- The switch hides the stop's objectives under the arrow without touching the arrival pin's own lines.
+	if ns.db.arrowObjectives == false then
+		frame.linesFor, frame.linesDirty = nil, nil
+		if not frame.linesOff then
+			frame.linesOff = true
+			frame.Lines:SetText("")
+			frame.Lines:Hide()
+		end
+		return
+	end
+	frame.linesOff = nil
+	if frame.linesFor == goal and not frame.linesDirty then
 		return
 	end
 	frame.linesFor, frame.linesDirty = goal, nil
@@ -411,6 +426,15 @@ function ns.RefreshArrowLines()
 		RefreshTravelLines(destination)
 		Wake()
 	end
+end
+
+-- Settings: the travel lines go or come back at once, without a replan. The arrival pin keeps its own lines.
+function ns.ArrowObjectivesChanged()
+	if not frame then
+		return
+	end
+	frame.linesDirty = true
+	RefreshTravelLines(destination)
 end
 
 -- Back to the direction arrow, whichever of an arrival, a new stop or leaving the area ended the stop.

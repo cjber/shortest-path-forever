@@ -435,3 +435,14 @@ L["Above ground level"] = "Выше уровня земли" -- mt
 L["Below ground level"] = "Ниже уровня земли" -- mt
 L["%s (pick up)"] = "%s (принять)"
 L["Ready for turn-in"] = "Готово к сдаче"
+L["Objectives under the arrow"] = "Задачи под стрелкой" -- mt
+L["The stop's live objectives under the arrow while it leads."] =
+	"Текущие задачи остановки под стрелкой, пока она ведёт." -- mt
+L["The pin shown when you reach a stop keeps its own lines."] =
+	"Метка, показываемая при прибытии к остановке, сохраняет свои строки." -- mt
+L["Arrival distance"] = "Дистанция прибытия" -- mt
+L["How close you must get to a journey's destination for it to count as reached."] =
+	"Насколько близко нужно подойти к месту назначения, чтобы путешествие считалось завершённым." -- mt
+L["Stops before the last on a multi-stop route keep 15 yards."] =
+	"Остановки перед последней на маршруте с несколькими остановками сохраняют 15 метров." -- mt
+L["Dungeons and raids"] = "Подземелья и рейды" -- mt

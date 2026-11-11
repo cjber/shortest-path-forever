@@ -20,7 +20,7 @@ with you.
 
 ## Features
 
-- **Find nearby services.** A tab in the world map's quest log lists vendors by what they sell, trainers by profession, and inns, banks, auction houses, flight masters, stables and repairs, each with the nearest NPC and the travel time. Arrows, shot, food and drink are the best for your level, and a row under them offers better ones farther away. Search for a group, an NPC or an item, then click a row to start the journey; arrows mark that NPC's nameplate when you get there. Requires installed QuestieDB; class trainers also use Tweaks Forever.
+- **Find nearby services.** A tab in the world map's quest log lists vendors by what they sell, trainers by profession, inns, banks, auction houses, flight masters, stables and repairs, and every dungeon and raid door on your continent. Each row shows the nearest one and how long it takes to get there, and the dungeon and raid rows are ordered by that time. Arrows, shot, food and drink are the best for your level, and a row under them offers better ones farther away. Search for a group, an NPC, an item or an instance, then click a row to start the journey; a dungeon row takes you to the door and ends when you go in. Arrows mark that NPC's nameplate when you get there. Requires installed QuestieDB; class trainers also use Tweaks Forever.
   ![The Nearby services tab in the world map's quest log](docs/screenshots/services.png)
   The tracking menus and `/spfnear` open the same tab.
 
@@ -33,9 +33,10 @@ with you.
 - **Type a waypoint.** `/way [zone] x y [title]` plans a journey there, written as for TomTom, while TomTom and other addons leave `/way` free; `/path way` always works. With TomTom installed, *Follow TomTom's arrow* in Guidance follows its arrow.
   ![A guide route through Thelsamar](docs/screenshots/stops.png)
   The current stop lights up like a tracked quest.
-- **Choose your guidance.** Keep the route on both maps while hiding the Journey tracker or direction arrow. *Show journey steps in the objective tracker* is in Guidance and the arrow switch is in Interface. The arrow eases round to each new bearing; move and scale it in Interface, and choose whether its label shows the distance, the time left or both. Click the current step to complete it manually; skipping a Hearthstone leaves it out for that journey.
+- **Choose your guidance.** Keep the route on both maps while hiding the Journey tracker or direction arrow. *Show journey steps in the objective tracker* is in Guidance and the arrow switch is in Interface. The arrow eases round to each new bearing; move and scale it in Interface, and choose whether its label shows the distance, the time left or both, and whether the stop's objectives show under it. Click the current step to complete it manually; skipping a Hearthstone leaves it out for that journey.
   ![Route and native waypoint on the minimap](docs/screenshots/minimap.png)
   Breadcrumbs show the walking route; the waypoint leads to the next step. A goal off the minimap waits on its rim.
+- **Set how close counts as arrived.** *Arrival distance* in Guidance sets how close counts as reaching your destination, from 5 to 50 yards. A map pin you set as that destination is cleared when you get there instead of left behind.
 - **See flights and departures.** Flight maps highlight your next flight, and a flight master's world map tooltip lists its flights and their times. Dock tooltips show destinations and departure times; nearby services count down in the tracker. Ride times improve estimates and are shared with other players.
   ![A smooth flight line leaving Stormwind](docs/screenshots/flight.png)
   Flight lines follow the route between flight points.
@@ -64,7 +65,7 @@ the WoW: Forever client's `Interface/AddOns/` folder (`_forever_` on the live cl
 
 Alt-click the world map to choose a destination over a Questie icon. Shift-click works on empty map space and Shortest Path icons. With the gamepad interface on, Shortest Path never opens or turns the world map, or opens a menu, itself; it asks you to.
 
-The settings have six pages. **Transport** draws routes, shows the other faction's boats and zeppelins (off by default), and shares departure times. **Guidance** holds journey behaviour: *Show journey steps in the objective tracker*, *Resume guide*, *Keep journeys after a reload*, *Minimum Hearthstone saving* and *Attach to quest tracker*. **Map marks** scales each kind of icon from 25% to 200%. **Interface** shows or hides the arrow and compass, sizes them, and labels distances in metres. **Alerts** covers the boat warning and the arrival sound. **Forever addons** holds the hint setting. [docs/features.md](docs/features.md) has the detail.
+The settings have six pages. **Transport** draws routes, shows the other faction's boats and zeppelins (off by default), and shares departure times. **Guidance** holds journey behaviour: *Show journey steps in the objective tracker*, *Resume guide*, *Keep journeys after a reload*, *Arrival distance*, *Minimum Hearthstone saving* and *Attach to quest tracker*. **Map marks** scales each kind of icon from 25% to 200%. **Interface** shows or hides the arrow and compass, sizes them, and labels distances in metres. **Alerts** covers the boat warning and the arrival sound. **Forever addons** holds the hint setting. [docs/features.md](docs/features.md) has the detail.
 
 Right-click a flight master icon to mark its flight path as known if a flight map missed it. Open a flight master's map once after installing to sync the flight points you know.
 

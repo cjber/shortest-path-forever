@@ -220,6 +220,7 @@ local function Load(options)
 	setfenv(assert(loadfile("Data/Services.lua")), env)("ShortestPathForever", ns)
 	setfenv(assert(loadfile("UI/MenuModifier.lua")), env)("ShortestPathForever", ns)
 	setfenv(assert(loadfile("UI/NearbyQuestie.lua")), env)("ShortestPathForever", ns)
+	setfenv(assert(loadfile("UI/NearbyEntrances.lua")), env)("ShortestPathForever", ns)
 	setfenv(assert(loadfile("UI/Nearby.lua")), env)("ShortestPathForever", ns)
 	-- Runs the timers the addon scheduled: only the frame's own when `zeroOnly`, all of them (the waits too) when not.
 	---@param zeroOnly boolean

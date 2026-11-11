@@ -24,6 +24,7 @@
 ---@field charDB SPFCharacterDatabase
 ---@field Defaults table<string, boolean|number|string>
 ---@field NearbyServices SPFNearbyServices
+---@field NearbyEntrances SPFNearbyEntrancesAPI the dungeons and raids in the Nearby services list (UI/NearbyEntrances.lua)
 ---@field core ForeverCoreAddon the addon's own ForeverCore services: journal, log, report and map canvas
 ---@field broken? boolean set when ForeverCore is missing a member this addon calls, so the addon's files stop
 ---@field ForeverRequire fun(ready: boolean): boolean the shared out-of-date warning, from Core/ForeverRequire.lua
@@ -188,6 +189,7 @@
 ---@field log? ForeverDebugLogStore ForeverCore's shared debug log ring: recent lines, for the report
 ---@field destinationPin boolean an on-screen marker over the journey's destination
 ---@field arrivalPin? boolean a pin with the stop's objectives while in its area, instead of hiding the arrow
+---@field arrivalDistance? number yards that count as arrived at a journey's final destination (Journey.lua)
 ---@field npcArrows? boolean arrows beside the nameplate of the NPC a Nearby services journey walks to (NpcArrows.lua)
 ---@field trackerHost? ForeverTrackerLegacySettings the old tracker table, offered to ForeverCore once
 ---@field menuTest? string `/path menutest`: which world map filter menu entries to leave out ("map", "nearby", "both")
@@ -239,6 +241,7 @@
 ---@field compassScale? number percent, 100 is the stock size
 ---@field arrowScale? number percent, 100 is the stock size (Arrow.lua)
 ---@field arrowLabel? string what the arrow's label shows: "distance", "time" or "both" (Arrow.lua)
+---@field arrowObjectives? boolean the stop's live objectives under the arrow, the pin's own lines either way (Arrow.lua)
 ---@field arrowX? number the arrow's centre from the screen's bottom left in screen pixels, once dragged
 ---@field arrowY? number
 ---@field compassBackground? number percent opacity of the dark band behind the compass, 0 for none

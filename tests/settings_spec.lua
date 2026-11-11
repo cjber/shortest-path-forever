@@ -173,6 +173,7 @@ local refreshed, taxiRefreshed, policyChanged, tomtomRefreshed, guidelimeRefresh
 local trackerRefreshed = 0
 local compassMoving = false
 local arrowMoving, arrowScaled, arrowLabelSet = false, nil, nil
+local arrowObjectivesChanged = 0
 local tomtomFollowRefreshed, ways = 0, {}
 local routeColour = nil
 local routeLinesRefreshed = 0
@@ -257,6 +258,7 @@ local ns = {
 		resumeJourney = false,
 		routeColor = "gold",
 		followRoads = false,
+		arrivalDistance = 15,
 	}, {
 		__index = function()
 			return true
@@ -292,8 +294,14 @@ local ns = {
 	SetArrowLabel = function(value)
 		arrowLabelSet = value
 	end,
+	ArrowObjectivesChanged = function()
+		arrowObjectivesChanged = arrowObjectivesChanged + 1
+	end,
 	SetCompassBackground = function(value)
 		compassBackdrop = value
+	end,
+	FormatDistance = function(yards)
+		return yards .. " yd"
 	end,
 	SetRouteColor = function(value)
 		routeColour = value
@@ -339,6 +347,7 @@ local groups = {
 		"resumeJourney",
 		"destinationPin",
 		"arrivalPin",
+		"arrivalDistance",
 		"npcArrows",
 		"tomtom",
 		"tomtomFollow",
@@ -368,6 +377,7 @@ local groups = {
 		"arrowMove",
 		"arrowScale",
 		"arrowLabel",
+		"arrowObjectives",
 		"metres",
 		"minimapButton",
 		"compass",
@@ -391,7 +401,7 @@ local order = {
 
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
 -- Main's arrival pin added arrivalPin and the line switches added mapLine and minimapLine to the merged list.
-assert(#rows == 61, #rows)
+assert(#rows == 63, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -489,6 +499,20 @@ assert(Row("taxiRoute").tooltip:find("flight master", 1, true))
 Row("taxiRoute").setting.onChanged()
 assert(taxiRefreshed == 1, "flight route updates when its setting changes")
 assert(Row("corpse").setting.default == true)
+-- Arrival distance: a slider from 5 to 50 yards, at the fixed 15 the journey has always used, labelled as the rest.
+local arrivalRow = Row("arrivalDistance")
+assert(arrivalRow.kind == "slider", "arrival distance is a slider")
+assert(arrivalRow.setting.default == 15, "a journey counts as arrived at 15 yards by default")
+assert(arrivalRow.setting.key == "arrivalDistance", "the distance is saved")
+assert(
+	arrivalRow.options.minValue == 5 and arrivalRow.options.maxValue == 50 and arrivalRow.options.step == 5,
+	"the slider runs from 5 to 50 yards in fives"
+)
+assert(arrivalRow.options.format(30) == "30 yd", "the slider labels its value as a distance")
+assert(
+	arrivalRow.tooltip:find("Stops before the last on a multi-stop route keep 15 yards", 1, true),
+	"the tooltip says only earlier stops on a multi-stop route keep 15 yards"
+)
 -- The NPC nameplate arrows are guidance furniture and start on, with the friendly-nameplate condition in the tooltip.
 assert(Row("npcArrows").setting.default == true, "nameplate arrows are on by default")
 assert(Row("npcArrows").tooltip:find("Friendly nameplates", 1, true), "the tooltip says friendly nameplates must be on")
@@ -619,6 +643,17 @@ assert(#labelChoices == 3 and labelChoices[1].value == "distance", "distance lea
 assert(labelChoices[2].value == "time" and labelChoices[3].value == "both", "time and both follow the distance")
 arrowLabelRow.setting.onChanged(nil, "time")
 assert(arrowLabelSet == "time", "choosing the time refreshes the arrow at once")
+-- The stop's objectives under the arrow have their own switch, on by default, beside the label that sits above them.
+local arrowObjectiveRow = Row("arrowObjectives")
+assert(arrowObjectiveRow.kind == "checkbox", "objectives under the arrow are a checkbox")
+assert(arrowObjectiveRow.setting.default == true, "the arrow lists objectives by default")
+assert(arrowObjectiveRow.setting.key == "arrowObjectives", "the switch is saved")
+assert(
+	arrowObjectiveRow.tooltip:find("pin shown when you reach a stop", 1, true),
+	"the tooltip says the arrival pin keeps its own lines"
+)
+arrowObjectiveRow.setting.onChanged()
+assert(arrowObjectivesChanged == 1, "the switch redraws the arrow's lines at once")
 local arrowMover = Row("arrowMove").setting
 arrowMover:SetValue(true)
 assert(arrowMoving == true and arrowMover:GetValue() == true, "the row lets the arrow be dragged")

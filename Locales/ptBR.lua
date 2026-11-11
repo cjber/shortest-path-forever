@@ -409,3 +409,14 @@ L["Above ground level"] = "Acima do nível do solo" -- mt
 L["Below ground level"] = "Abaixo do nível do solo" -- mt
 L["%s (pick up)"] = "%s (aceitar)"
 L["Ready for turn-in"] = "Pronto para entregar"
+L["Objectives under the arrow"] = "Objetivos sob a seta" -- mt
+L["The stop's live objectives under the arrow while it leads."] =
+	"Os objetivos atuais da parada sob a seta enquanto ela guia." -- mt
+L["The pin shown when you reach a stop keeps its own lines."] =
+	"O alfinete mostrado ao chegar a uma parada mantém as próprias linhas." -- mt
+L["Arrival distance"] = "Distância de chegada" -- mt
+L["How close you must get to a journey's destination for it to count as reached."] =
+	"Quão perto você precisa chegar do destino de uma viagem para que ela conte como concluída." -- mt
+L["Stops before the last on a multi-stop route keep 15 yards."] =
+	"As paradas antes da última em uma rota com várias paradas mantêm 15 metros." -- mt
+L["Dungeons and raids"] = "Masmorras e raides" -- mt

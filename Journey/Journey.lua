@@ -335,7 +335,7 @@ local function EndJourney(reason)
 	progress.index, progress.departed = 1, false
 	driver:Hide()
 	if not CorpseRun() then
-		StopGuide()
+		StopGuide(reason)
 		ns.SetJourneyRoute(nil)
 	end
 	RefreshTracker()
@@ -365,12 +365,19 @@ local function UpdateProgress()
 	end
 	-- A dungeon's door is reached by going in (EnteredInstance), never by standing beside it: the stop it stands for
 	-- is inside, and the next stop may be too.
-	if not goal.hold and not goal.entrance and Near(goal) then
-		Arrive()
-		return
+	local reach
+	if not goal.hold and not goal.entrance then
+		-- The player's own arrival distance is for the journey's final destination. The stops before the last on a
+		-- multi-stop route keep the fixed 15 yards.
+		local final = not (ns.NextJourneyStop and ns.NextJourneyStop(goal))
+		reach = final and ns.db.arrivalDistance or nil
+		if Near(goal, reach) then
+			Arrive()
+			return
+		end
 	end
 	local riding, flying = ns.CurrentRide(), UnitOnTaxi("player")
-	if ns.AdvanceJourneyProgress(result.legs, progress, goal, riding, flying, Near, Guide) or goal.entrance then
+	if ns.AdvanceJourneyProgress(result.legs, progress, goal, riding, flying, Near, Guide, reach) or goal.entrance then
 		return
 	end
 	Arrive()

@@ -131,9 +131,10 @@ end
 -- did not ride, and the step points you back to the landing.
 ---@param leg SPFLeg
 ---@param progress {index: integer, departed?: boolean}
----@param near fun(node: SPFPoint|SPFPlace): boolean?
+---@param near fun(node: SPFPoint|SPFPlace, reach?: number): boolean?
+---@param reach? number the player's arrival distance for a last leg that ends the journey
 ---@return boolean
-local function Landed(leg, progress, near)
+local function Landed(leg, progress, near, reach)
 	local from, to = leg.from, leg.to
 	local stacked = leg.route
 		and from.map == to.map
@@ -142,10 +143,10 @@ local function Landed(leg, progress, near)
 		and from.z ~= to.z
 		and (from.x - to.x) ^ 2 + (from.y - to.y) ^ 2 < 1
 	if not stacked then
-		return near(to) == true
+		return near(to, reach) == true
 	end
 	local now = ns.NowMs()
-	if near(to) then
+	if near(to, reach) then
 		leg.reachedAt = leg.reachedAt or now
 		return false
 	end
@@ -158,7 +159,9 @@ end
 
 -- Advance legs that can be completed from the player's current position. Keeping this
 -- state machine beside the step vocabulary keeps the journey driver focused on refreshes.
-function ns.AdvanceJourneyProgress(legs, progress, goal, riding, flying, near, guide)
+---@param near fun(node: SPFPoint|SPFPlace, reach?: number): boolean?
+---@param reach? number the player's arrival distance at the final goal, which the last leg's far end shares
+function ns.AdvanceJourneyProgress(legs, progress, goal, riding, flying, near, guide, reach)
 	while progress.index <= #legs do
 		local leg = legs[progress.index]
 		local nextLeg = legs[progress.index + 1]
@@ -170,6 +173,7 @@ function ns.AdvanceJourneyProgress(legs, progress, goal, riding, flying, near, g
 			progress.index = progress.index + 1
 			leg = nextLeg
 		end
+		local finalReach = progress.index == #legs and reach or nil
 		local aboard = leg.aboard
 			or leg.mode == "teleport"
 			or (leg.route and riding == leg.route)
@@ -182,11 +186,11 @@ function ns.AdvanceJourneyProgress(legs, progress, goal, riding, flying, near, g
 				return true
 			end
 		end
-		if leg.mode == "teleport" and not near(leg.to) then
+		if leg.mode == "teleport" and not near(leg.to, finalReach) then
 			guide.Cast(leg)
 			return true
 		end
-		if not Landed(leg, progress, near) or (leg.mode == "flight" and flying) then
+		if not Landed(leg, progress, near, finalReach) or (leg.mode == "flight" and flying) then
 			guide.To(leg.to, leg.walkPoints, goal, leg)
 			return true
 		end

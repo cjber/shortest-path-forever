@@ -405,3 +405,14 @@ L["Above ground level"] = "高于地面" -- mt
 L["Below ground level"] = "低于地面" -- mt
 L["%s (pick up)"] = "%s（接受任务）"
 L["Ready for turn-in"] = "可以交任务"
+L["Objectives under the arrow"] = "箭头下方的目标" -- mt
+L["The stop's live objectives under the arrow while it leads."] =
+	"箭头引路时，箭头下方显示该站点的实时目标。" -- mt
+L["The pin shown when you reach a stop keeps its own lines."] =
+	"到达站点时显示的图钉保留各自的目标文字。" -- mt
+L["Arrival distance"] = "到达距离" -- mt
+L["How close you must get to a journey's destination for it to count as reached."] =
+	"距离旅程目的地多近才算到达。" -- mt
+L["Stops before the last on a multi-stop route keep 15 yards."] =
+	"多站路线中，最后一站之前的站点仍保持 15 米。" -- mt
+L["Dungeons and raids"] = "地下城与团队副本" -- mt

@@ -447,6 +447,8 @@ local function StepQueue()
 	if rankAt > #rankQueue then
 		rankQueue = nil
 		panel:SetScript("OnUpdate", nil)
+		-- Every row has its travel time now: the dungeons and raids reorder by it, once.
+		Refresh()
 	end
 end
 
@@ -495,7 +497,7 @@ function Refresh()
 	---@cast content -?
 	local state = ns.NearbyServices.State()
 	local world = ns.NearbyServices.PlayerWorld()
-	sections = world and state == "ready" and ns.NearbyServices.Sections(world, query, collapsed) or {}
+	sections = world and state == "ready" and ns.NearbyServices.Sections(world, query, collapsed, estimates) or {}
 	rowsByKey = {}
 	local top = 0
 	local rowAt, betterAt, headerAt, dividerAt = 0, 0, 0, 0

@@ -83,8 +83,13 @@ local DEFAULTS = {
 	arrow = true,
 	-- Under the arrow: "distance", the journey's "time" left, or "both".
 	arrowLabel = "distance",
+	-- The stop's live objectives under the arrow while it leads; the arrival pin keeps its own lines either way.
+	arrowObjectives = true,
 	-- On reaching a held stop's area, the arrow turns into a pin with the stop's objectives rather than hiding.
 	arrivalPin = true,
+	-- How close counts as arrived at a journey's final destination, in yards; the stops before the last on a
+	-- multi-stop route keep the fixed 15 yards.
+	arrivalDistance = 15,
 	metres = false,
 	minimapButton = false,
 	compass = true,

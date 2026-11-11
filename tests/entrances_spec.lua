@@ -55,4 +55,52 @@ end
 assert(count == 26, "the classic dungeons and raids have doors")
 -- A corpse-point door has no height; Naxxramas, with no corpse point, takes its AreaTrigger and its height.
 assert(not ns.Entrances[36].z and ns.Entrances[533].z, "only a trigger door has a height")
-print("entrances: " .. count .. " doors in their zones on the walking maps: ok")
+
+-- The door stop is built once, for a journey to a place inside the instance and for a Nearby services row alike.
+ns.L = setmetatable({}, {
+	__index = function(_, key)
+		return key
+	end,
+})
+-- The file's registrations need the client's frames and menus; the door stop they do not.
+ns.Init = function() end
+local inside = 0
+_G.GetInstanceInfo = function()
+	return "", "none", 0, "", 0, 0, false, inside
+end
+_G.GetRealZoneText = function(instance)
+	return instance == 36 and "The Deadmines" or ""
+end
+assert(loadfile("Journey/JourneyInput.lua"))("ShortestPathForever", ns)
+local boss = {
+	map = 36,
+	x = 10,
+	y = 10,
+	label = "Boss",
+	questID = 101,
+	questIDs = { 101 },
+	routeTitle = "Boss",
+	details = { "Slay the boss" },
+}
+local door = assert(ns.EntranceStop(36, boss), "the door is built from the entrance data")
+assert(
+	door.map == ns.Entrances[36].map and door.x == ns.Entrances[36].x and door.y == ns.Entrances[36].y,
+	"the door stands on its continent at the entrance's own point"
+)
+assert(
+	door.label == "Boss" and door.entrance == 36 and door.stop == boss,
+	"it keeps the stop it stands for, its label and the instance it enters"
+)
+local mapped = assert(ns.InstanceEntrance(boss), "a goal inside the instance plans to its door")
+assert(
+	mapped.label == door.label and mapped.entrance == door.entrance and mapped.stop == door.stop,
+	"the map's instance journey and a Nearby services row start the same door stop"
+)
+local unnamed = assert(ns.EntranceStop(36, { map = 36 }), "a stop without a label still gets a door")
+assert(unnamed.label == "Enter The Deadmines", "the door says what to enter, by the client's own name")
+assert(unnamed.stop and unnamed.stop.map == 36, "and keeps the stop it stands for")
+inside = 36
+assert(ns.InstanceEntrance(boss) == boss, "inside the instance, the goal stays the goal")
+inside = 0
+assert(ns.EntranceStop(9999, boss) == nil, "no entrance, no door")
+print("entrances: one door stop, for the map and the Nearby services list: ok")
