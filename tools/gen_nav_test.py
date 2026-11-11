@@ -273,6 +273,23 @@ class GraphLegalityTest(unittest.TestCase):
         self.assertIn((u, w), edges)
         self.assertNotIn((w, u), edges)
 
+    def test_a_one_way_step_does_not_hide_the_crossing_it_cannot_reach(self):
+        # A steep step splits the border run: the low cell walks down from the high shelf but not back up. The old
+        # fill reached every cell here from one seed, so the whole run was one group and the chunk kept its middle
+        # entrance, on the high shelf, which the low cell can never reach; HPA* then called a route the grid walks
+        # unreachable. Entrances are grouped by the strongly connected parts they leave and enter, so the low cell
+        # keeps a crossing of its own.
+        c = gen_nav.CELLS
+        shelf = [8, 10, 11, 12, 13]  # the high border cells, joined behind the low one
+        low = (c - 1) * c + 9
+        heights = {(c - 1) * c + t: (3, 20.0) for t in shelf}
+        heights.update({(c - 2) * c + t: (3, 20.0) for t in (8, 9, 10)})
+        heights[low] = (1, 18.0)
+        heights.update({c * c + i * c + j: (1, 0.0) for i in range(c) for j in range(c)})
+        edges, _, _ = self.crossings(heights)
+        self.assertIn((low, c * c + 9), edges, "the low side keeps a crossing of its own")
+        self.assertIn((c * c + 9, low), edges, "and the grid walks it back")
+
 
 class AssembleFloorsTest(unittest.TestCase):
     def test_duplicate_collapsed_links_keep_the_cheapest(self):

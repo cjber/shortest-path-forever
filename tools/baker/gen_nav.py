@@ -748,26 +748,60 @@ def cluster_of_cell(c):
     return (gx // CELLS) * NY + gy // CELLS
 
 
+def strong_components(order, out):
+    """A directed graph's strongly connected components, by Kosaraju. A label is a node of its component, so two
+    labels are equal exactly when the nodes can walk to each other inside the cluster."""
+    seen, post = set(), []
+    for start in order:
+        if start in seen:
+            continue
+        seen.add(start)
+        stack = [(start, iter(out.get(start, ())))]
+        while stack:
+            u, steps = stack[-1]
+            for v in steps:
+                if v not in seen:
+                    seen.add(v)
+                    stack.append((v, iter(out.get(v, ()))))
+                    break
+            else:
+                stack.pop()
+                post.append(u)
+    back = defaultdict(list)
+    for u, steps in out.items():
+        for v in steps:
+            back[v].append(u)
+    label = {}
+    for start in reversed(post):
+        if start in label:
+            continue
+        label[start] = start
+        stack = [start]
+        while stack:
+            u = stack.pop()
+            for v in back.get(u, ()):
+                if v not in label:
+                    label[v] = start
+                    stack.append(v)
+    return label
+
+
 def grid_hpa(grid, cuts):
-    """HPA* over the grid. Every border crossing (orthogonal or diagonal) is grouped by the in-cluster regions it
-    joins; each group gets an entrance every ENTRANCE_RUN cells. Intra-cluster edges come from Dijkstra under each of
-    WEIGHTS, dropped when a two-hop path is within PRUNE under every weight. An edge carries a cost per weight."""
+    """HPA* over the grid. Every border crossing (orthogonal or diagonal) is grouped by the strongly connected parts
+    of its two clusters it leaves and enters, in the direction it is walked: a crossing into a part the route cannot
+    leave, or out of a part the route cannot reach, is of no use to it, so one entrance per such group guarantees a
+    route wherever the grid has one. Each group keeps an entrance every ENTRANCE_RUN cells. Intra-cluster edges come
+    from Dijkstra under each of WEIGHTS, dropped when a two-hop path is within PRUNE under every weight. An edge
+    carries a cost per weight."""
     g = lambda gx, gy: grid[gx * GH + gy]  # noqa: E731
     region = array("i", [-1]) * (GW * GH + len(FLOOR_CELL))
     for k in range(NX * NY):
         box = cluster_box(k)
         cells = [gx * GH + gy for gx in range(box[0], box[1] + 1) for gy in range(box[2], box[3] + 1)]
-        for c in cells + FLOORS_OF[k]:
-            if not value_of(grid, c) or region[c] >= 0:
-                continue
-            region[c] = c
-            stack = [c]
-            while stack:
-                u = stack.pop()
-                for v, _ in moves(g, grid, cuts, u, box):
-                    if region[v] < 0:
-                        region[v] = c
-                        stack.append(v)
+        members = [c for c in cells + FLOORS_OF[k] if value_of(grid, c)]
+        out = {u: [v for v, _ in moves(g, grid, cuts, u, box)] for u in members}
+        for c, label in strong_components(members, out).items():
+            region[c] = label
     edges = {}  # (a, b) cells -> cost per weight
     nodes = defaultdict(set)  # cluster -> cells
 
@@ -777,46 +811,42 @@ def grid_hpa(grid, cuts):
         length = CS * (math.sqrt(2) if diagonal else 1)
         return tuple(length * (weight if value_of(grid, b) == 2 else 1) for weight in WEIGHTS)
 
-    def back_legal(u, v):
-        """May the runtime walk this crossing's pair the other way? Its own record that way, or the grid's
-        own symmetric bit: a drop and a one-way step do not."""
-        back = LINKS.get(v, {}).get(u, 1)
-        if back is None:
-            return steep_node_ok(grid, v, u)
-        if back != 1:
-            return False
-        bux, buy = divmod(cell_of(u), GH)
-        bvx, bvy = divmod(cell_of(v), GH)
-        return step_walkable(g, grid, cuts, bvx, bvy, bux, buy)
-
     for k in range(NX * NY):
         kx, ky = divmod(k, NY)
         for axis in (0, 1):
             if (axis == 0 and kx + 1 >= NX) or (axis == 1 and ky + 1 >= NY):
                 continue
             groups = defaultdict(list)
+            # The grid's steps are directed, so crossings are walked both ways and each direction keeps its own
+            # entrances, grouped by the parts of the two clusters it leaves and enters. One pair never stands in for
+            # both directions: a one-way step or a drop would then hide the other side's only crossing.
             for t in range(CELLS):
                 if axis == 0:
-                    ux, uy, vx, vy = kx * CELLS + CELLS - 1, ky * CELLS + t, (kx + 1) * CELLS, ky * CELLS + t
+                    a = (kx * CELLS + CELLS - 1, ky * CELLS + t)
+                    b = ((kx + 1) * CELLS, ky * CELLS + t)
                 else:
-                    ux, uy, vx, vy = kx * CELLS + t, ky * CELLS + CELLS - 1, kx * CELLS + t, (ky + 1) * CELLS
-                u = ux * GH + uy
-                if not grid[u]:
-                    continue
-                for s in (0, -1, 1):
-                    wx, wy = (vx, vy + s) if axis == 0 else (vx + s, vy)
-                    if not 0 <= t + s < CELLS:
+                    a = (kx * CELLS + t, ky * CELLS + CELLS - 1)
+                    b = (kx * CELLS + t, (ky + 1) * CELLS)
+                for (ux, uy), (vx, vy) in ((a, b), (b, a)):
+                    if not grid[ux * GH + uy]:
                         continue
-                    if step_walkable(g, grid, cuts, ux, uy, wx, wy):
-                        w = wx * GH + wy
-                        groups[(region[u], region[w])].append((t, abs(s), u, w, None))
-            # Links across this border, from the nodes of this cluster that have any. A link keeps its own direction
-            # and cost: its reverse, where a step back exists, is one of the other cluster's own links.
+                    u = ux * GH + uy
+                    for s in (0, -1, 1):
+                        wx, wy = (vx, vy + s) if axis == 0 else (vx + s, vy)
+                        if not 0 <= t + s < CELLS:
+                            continue
+                        if step_walkable(g, grid, cuts, ux, uy, wx, wy):
+                            w = wx * GH + wy
+                            groups[(region[u], region[w])].append((t, abs(s), u, w, None))
+            # Links across this border, each from the cluster that owns its direction. A link keeps its own direction
+            # and cost: its reverse, where the grid walks it back, is the other cluster's own crossing.
             other = k + (NY if axis == 0 else 1)
-            for u in LINKED_OF[k]:
-                ux, uy = divmod(cell_of(u), GH)
-                for w, cost in sorted(LINKS[u].items()):
-                    if cluster_of_cell(w) == other:
+            for side, across in ((k, other), (other, k)):
+                for u in LINKED_OF[side]:
+                    ux, uy = divmod(cell_of(u), GH)
+                    for w, cost in sorted(LINKS[u].items()):
+                        if cluster_of_cell(w) != across:
+                            continue
                         # a two-way record is still one-way at a steep pair, as the decoder reads it
                         if cost is None and not steep_node_ok(grid, u, w):
                             continue
@@ -837,16 +867,8 @@ def grid_hpa(grid, cuts):
                         edges[(u, v)] = tuple(cost for _ in WEIGHTS)
                     else:
                         edges[(u, v)] = step_into(u, v, diagonal)
-                        nodes[cluster_of_cell(u)].add(u)
-                        nodes[cluster_of_cell(v)].add(v)
-                    # The other direction across this border needs its own entrance: the same pair where the grid
-                    # walks it back, else the nearest crossing of the chunk that it does walk back.
-                    backs = [c for c in chunk if c[4] is None and back_legal(c[2], c[3])]
-                    if backs:
-                        _, bdiagonal, bu, bv, _ = min(backs, key=lambda c: (c[1], abs(c[0] - mid)))
-                        edges[(bv, bu)] = step_into(bv, bu, bdiagonal)
-                        nodes[cluster_of_cell(bv)].add(bv)
-                        nodes[cluster_of_cell(bu)].add(bu)
+                    nodes[cluster_of_cell(u)].add(u)
+                    nodes[cluster_of_cell(v)].add(v)
     inter = len(edges)
     for k in sorted(nodes):
         cells = nodes[k]
