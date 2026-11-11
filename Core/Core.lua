@@ -1,5 +1,6 @@
 local addonName = ...
 ---@class SPFNamespace
+---@field Credits ForeverCreditsData the player credits Data/Credits.lua generates for the shared Thanks page
 local ns = select(2, ...)
 if ns.broken then
 	return
