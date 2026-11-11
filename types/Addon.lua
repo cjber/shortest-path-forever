@@ -180,6 +180,7 @@
 ---@field time? string -- the step's time, greyed after it
 ---@field icon? number -- a teleport's own item or spell icon, leading its line
 ---@field warning? boolean
+---@field color? colorRGBA|ForeverObjectiveTrackerColor -- the colour a text-only refresh rewrites the line in
 
 ---@class SPFDatabase : ForeverFamilyDB
 ---@field errors? ForeverCaughtError[] ForeverCore's shared error journal: earlier sessions' errors, for the report

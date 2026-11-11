@@ -1,5 +1,6 @@
 -- Right-clicking the section header while departures show offers to hide them through the module's
 -- AddHeaderMenuEntries hook, below the shared column's own attach and lock entries.
+local core = dofile("tests/forever_core.lua")
 local noop = function() end
 local entries = {}
 local owner = {}
@@ -67,6 +68,9 @@ local env = setmetatable({
 		end,
 	},
 }, { __index = _G })
+ns.TrackerHost = env.ForeverCore.TrackerHost
+setfenv(assert(loadfile(core.directory() .. "/UI/TrackerSection.lua")), env)("ForeverCore", ns)
+env.ForeverCore.TrackerSection, env.ForeverCore.TrackerLine = ns.TrackerSection, ns.TrackerLine
 setfenv(assert(loadfile("UI/Tracker.lua")), env)("ShortestPathForever", ns)
 
 local module = modules[1]

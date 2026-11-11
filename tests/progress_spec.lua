@@ -112,6 +112,8 @@ local coreNs = ForeverCore.load(env, "ForeverCore", { "Locales/enUS.lua", "Core/
 env.ForeverCore = {
 	API = 1,
 	APIKit = {},
+	TrackerSection = {},
+	TrackerLine = {},
 	PeerStats = coreNs.PeerStats,
 	Leaderboards = { Register = function() end, Open = function() end },
 }

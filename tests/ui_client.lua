@@ -355,6 +355,18 @@ local function stubframe()
 	frames[#frames + 1] = f
 	return f
 end
+-- The virtual templates an XML file defines, keyed by name with its type and the template it inherits, as the client
+-- registers them before that XML's scripts run. The addon's and ForeverCore's TOC loaders fill this table in.
+local templates = {}
+_G.Templates = templates
+-- The stock templates those entries inherit. A line template resolves to the standard line's members this fixture
+-- otherwise gives the tracker's pooled rows.
+local STOCK = {
+	ObjectiveTrackerLineTemplate = function(frame)
+		frame.Text = frame:CreateFontString()
+		frame.Dash = frame:CreateFontString()
+	end,
+}
 _G.CreateFrame = function(_, name, parent, template)
 	local f = stubframe()
 	f.name, f.parent, f.template = name, parent, template
@@ -493,6 +505,20 @@ _G.CreateFrame = function(_, name, parent, template)
 			self:LayoutContents()
 		end
 	end
+	-- The template's chain, as the client applies it: a registered XML template reaches the stock one it inherits.
+	local inherited = template
+	while inherited do
+		local entry = templates[inherited]
+		if entry then
+			inherited = entry.inherits
+		else
+			local stock = STOCK[inherited]
+			if stock then
+				stock(f)
+			end
+			inherited = nil
+		end
+	end
 	return f
 end
 _G.GetTime = function()
@@ -556,7 +582,8 @@ _G.C_XMLUtil = {
 		if template == "ShortestPathForeverAreaPinTemplate" and not blobWidget then
 			return nil
 		end
-		return { type = "Frame" }
+		local entry = templates[template]
+		return { type = entry and entry.type or "Frame" }
 	end,
 }
 _G.Minimap = stubframe()
