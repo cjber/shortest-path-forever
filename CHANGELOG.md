@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **The map line no longer draws a swim across water the route walks around.** A walk planned along a beach or round a lake was sometimes drawn as one straight line across the water, even though the route and its time went the long way. The drawn line now only crosses water where the walk itself swam, so it costs no more time than the route it shows (#742).
+
 ## [1.31.1] - 2026-11-11
 
 <!-- forever-core-sync -->
