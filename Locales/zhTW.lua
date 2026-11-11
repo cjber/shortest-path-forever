@@ -369,6 +369,9 @@ L["Draws the walking route on the world map. With it off, the destination pin, a
 L["Line on the minimap"] = "小地圖上的路線" -- mt
 L["Draws the walking route on the minimap. With it off, the destination pin, arrow and tracker still guide you."] =
 	"在小地圖上繪製步行路線。關閉後，目的地標記、箭頭和追蹤器仍會為你指路。" -- mt
+L["Line to later stops"] = "通往後續地點的路線" -- mt
+L["Draws the legs after the current stop, faded, on the world map. Off, only the current leg and the pins stay."] =
+	"在世界地圖上以淡色繪製目前路段之後的路段。關閉後只繪製目前路段，後續地點仍保留標記。" -- mt
 L["Gold"] = "金色"
 L["White"] = "白色"
 L["Cyan"] = "青色"
