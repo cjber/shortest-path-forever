@@ -568,10 +568,10 @@ local function clearEnd(st, P, j, point, outbound, water, limit)
 	local fx, fy, k, node = own(st, point)
 	local cx, cy = P.x[j] + 0.5, P.y[j] + 0.5
 	if outbound and node then
-		local tk, tn = toward(st, k, node, fx, fy, cx, cy, water, P.factor, limit)
+		local tk, tn = toward(st, P, k, node, fx, fy, cx, cy, water, limit)
 		return tk == P.k[j] and tn == P.n[j]
 	end
-	local tk, tn = toward(st, P.k[j], P.n[j], cx, cy, fx, fy, water, P.factor, limit)
+	local tk, tn = toward(st, P, P.k[j], P.n[j], cx, cy, fx, fy, water, limit)
 	if not tk then
 		return tn == true
 	end
@@ -579,15 +579,15 @@ local function clearEnd(st, P, j, point, outbound, water, limit)
 end
 
 -- With no pulled vertex between them, the line is the one chord between the two points: walked whole from a start
--- that stands on a surface to the goal's cell, on the goal's own surface when it has one, and against the same hazard
--- limit the path's own entries allow.
-local function clearChord(st, P, from, to, water, limit)
+-- that stands on a surface to the goal's cell, on the goal's own surface when it has one, against the same hazard
+-- limit the path's own entries allow and no slower than the route's own time (#742).
+local function clearChord(st, P, from, to, water, limit, budget)
 	local fx, fy, k, node = own(st, from)
 	if not node then
 		return false
 	end
 	local tx, ty, gk, goal = own(st, to)
-	local tk, tn = toward(st, k, node, fx, fy, tx, ty, water, P.factor, limit)
+	local tk, tn = toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget)
 	return tk ~= nil and (not goal or (tk == gk and tn == goal))
 end
 
@@ -754,7 +754,7 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 	-- graph may route through an entrance a little off the way, which refines to a spur walked out and back: a node
 	-- reached again cuts the loop since its first visit, so the drawn walk never doubles back.
 	---@type SPFPathPoints
-	local P = { x = {}, y = {}, w = {}, k = {}, n = {} }
+	local P = { x = {}, y = {}, w = {}, t = {}, k = {}, n = {}, swim = swim }
 	if hz then
 		P.factor = factorOf(st, hz)
 	end
@@ -768,7 +768,7 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 		if at then
 			for j = #P.x, at + 1, -1 do
 				seen[P.k[j] * 1048576 + P.n[j]] = nil
-				P.x[j], P.y[j], P.w[j], P.k[j], P.n[j] = nil, nil, nil, nil, nil
+				P.x[j], P.y[j], P.w[j], P.t[j], P.k[j], P.n[j] = nil, nil, nil, nil, nil, nil
 				if P.r then
 					P.r[j] = nil
 				end
@@ -779,7 +779,16 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 		local cell = node < C * C and node or cellOf(st, k, node)
 		P.x[n + 1], P.y[n + 1] = floor(k / st.ny) * C + floor(cell / C), (k % st.ny) * C + cell % C
 		P.k[n + 1], P.n[n + 1] = k, node
-		P.w[n + 1] = (P.w[n] or 0) + ((st.val[k] or grid(st, k))[node + 1] == 2 and 1 or 0)
+		local wet = ((st.val[k] or grid(st, k))[node + 1] == 2)
+		P.w[n + 1] = (P.w[n] or 0) + (wet and 1 or 0)
+		-- The walk's own time to this entry, charged as the search charges a step: the cell it enters, land at run
+		-- speed and water at the map's swim.
+		local time = P.t[n] or 0
+		if n > 0 then
+			local dx, dy = P.x[n + 1] - P.x[n], P.y[n + 1] - P.y[n]
+			time = time + sqrt(dx * dx + dy * dy) * st.cs * (wet and swim or 1)
+		end
+		P.t[n + 1] = time
 		if P.r then
 			local roadSet = Grid.roads(st, k)
 			P.r[n + 1] = (P.r[n] or 0) + ((not roadSet or not roadSet[cell]) and 1 or 0)
@@ -842,7 +851,7 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 	-- rest of the line holds as it did. A chord that fails tries each end that way.
 	local startVia, goalVia = #keep > 2 and keep[2] or n, #keep > 2 and keep[#keep - 1] or 1
 	local startDetour, goalDetour = false, false
-	if #keep > 2 or not clearChord(st, P, from, to, P.w[n] > 0, limitOver(P, 1, n)) then
+	if #keep > 2 or not clearChord(st, P, from, to, P.w[n] > 0, limitOver(P, 1, n), cost) then
 		startDetour = not clearEnd(st, P, startVia, from, true, P.w[startVia] > 0, limitOver(P, 1, startVia))
 		-- A chord whose start detoured now reaches the goal from the start node's centre.
 		if startDetour and #keep <= 2 then

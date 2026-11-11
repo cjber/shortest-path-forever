@@ -193,6 +193,51 @@ for _, target in ipairs({
 	assert(done)
 end
 
+-- The yards a drawn segment spends over water, sampled along it as the router walks the cells it crosses.
+local function wetYards(map, a, b)
+	local Grid, st = ns.PathGrid, ns.PathGrid.State(map)
+	local length = dist(a.x, a.y, b.x, b.y)
+	local steps = math.max(1, math.ceil(length / 0.5))
+	local wet = 0
+	for step = 1, steps do
+		local t = step / steps
+		local k, lc = Grid.locate(st, a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)
+		local val = k and Grid.grid(st, k)
+		if val and val[lc + 1] == 2 then
+			wet = wet + length / steps
+		end
+	end
+	return wet
+end
+
+-- #742: a walk the router paid for on land must not be drawn as a swim. The Darkshore walk round the bay is drawn
+-- along the beach, no slower than the route it replaces; only the water both ends stand in is crossed.
+local BAY_EAST, BAY_WEST = { x = 6401.38, y = 597.68 }, { x = 6261.38, y = 617.68 }
+local bay, bayCost = Path.FindSync(1, BAY_EAST, BAY_WEST)
+assert(bay and bayCost, "the bay walk is found")
+assert(#bay > 2, "the walk round the bay is not drawn as one chord")
+local swim = ns.PathGrid.State(1).swim
+local bayTime = 0
+for i = 2, #bay do
+	local length, wet = dist(bay[i - 1].x, bay[i - 1].y, bay[i].x, bay[i].y), wetYards(1, bay[i - 1], bay[i])
+	bayTime = bayTime + length + wet * (swim - 1)
+	if i > 2 and i < #bay then
+		assert(wet == 0, "the beach between the two ends is dry")
+	end
+end
+assert(bayTime <= bayCost, ("the drawn walk is no slower than its route: %.1f against %.1f"):format(bayTime, bayCost))
+
+-- A walk that really swam a stretch is still pulled straight across that water: both ends here stand on land, and one
+-- drawn segment crosses the water the path's own entries swam.
+local STRAIT_EAST, STRAIT_WEST = { x = -14961.19, y = 274.63 }, { x = -14897.51, y = 274.63 }
+local strait, straitCost = Path.FindSync(0, STRAIT_EAST, STRAIT_WEST)
+assert(strait and straitCost and strait.wet > 15, "the strait walk swims")
+local swam = 0
+for i = 2, #strait do
+	swam = math.max(swam, wetYards(0, strait[i - 1], strait[i]))
+end
+assert(swam > 20, ("the drawn walk crosses the water it swam: %.1f yards"):format(swam))
+
 -- Heights: the player's is unknown (UnitPosition's is a placeholder 0), and a point without one starts from whichever
 -- surface at its spot walks cheapest. A Trade District street over the canal walks out by the Valley of Heroes gate,
 -- not from the canal bed round the city (the reported loop through Cathedral Square and Old Town).
