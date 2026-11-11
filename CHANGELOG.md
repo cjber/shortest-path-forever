@@ -12,6 +12,16 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.31.1] - 2026-11-11
+
+<!-- forever-core-sync -->
+
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
+## [1.31.0] - 2026-11-11
+
+<!-- discord-image: docs/screenshots/stops.png -->
+
 - **Walks follow what your character can actually climb and drop.** The walking maps are rebuilt from the game's own terrain with your character's limits: a step up of 2 yards, and ledges of up to 14.57 yards, the height where a fall starts to hurt, jumped down but never climbed. A walk now takes the short way down a ledge instead of going round to a ramp (#638).
 - **Walks stay out of lake and sea beds.** Ground under deep water no longer counts as a path, so a walk swims across or goes round instead of running along the bottom.
 - **The map line no longer draws a swim across water the route walks around.** A walk planned along a beach or round a lake was sometimes drawn as one straight line across the water, even though the route and its time went the long way. The drawn line now only crosses water where the walk itself swam, so it costs no more time than the route it shows (#742).
