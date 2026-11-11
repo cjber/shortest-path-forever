@@ -72,6 +72,7 @@ local items = {
 	[4498] = { { 1 }, 1, 0, "Brown Leather Satchel" }, -- Brown Leather Satchel
 	[2320] = { { 1 }, 7, 0, "Coarse Thread" }, -- Coarse Thread
 	[4470] = { { 1 }, 5, 0, "Simple Wood" }, -- Simple Wood
+	[2555] = { { 1 }, 9, 0, "Recipe: Swiftness Potion" }, -- a recipe for the books group
 	[851] = { { 1 }, 2, 7, "Cutlass" }, -- Cutlass
 	[6256] = { { 11 }, 2, 20, "Fishing Pole" }, -- Fishing Pole
 	[2901] = { { 12 }, 2, 14, "Mining Pick" }, -- Mining Pick
@@ -349,7 +350,13 @@ setfenv(assert(loadfile("Locales/enUS.lua")), env)("ShortestPathForever", ns)
 setfenv(assert(loadfile("Data/Services.lua")), env)("ShortestPathForever", ns)
 -- The fixture class trainers for the player's class, beside the companion addon's own list.
 ns.ClassTrainers = { [7] = 1 }
-for _, file in ipairs({ "UI/MenuModifier.lua", "UI/NearbyQuestie.lua", "UI/NearbyEntrances.lua", "UI/Nearby.lua" }) do
+for _, file in ipairs({
+	"UI/MenuModifier.lua",
+	"UI/NearbyGroups.lua",
+	"UI/NearbyQuestie.lua",
+	"UI/NearbyEntrances.lua",
+	"UI/Nearby.lua",
+}) do
 	setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
 end
 for _, fn in ipairs(initializers) do
@@ -463,6 +470,7 @@ assert(same(npcs("drink"), { 1, 13 }), "drink: exact item IDs, and an item can b
 assert(same(npcs("bags"), { 1 }), "bags: item class 1")
 assert(same(npcs("trade"), { 1 }), "trade supplies: item class 7")
 assert(same(npcs("reagents"), { 1 }), "reagents: item class 5 or class 15 subclass 1")
+assert(same(npcs("books"), { 1 }), "books: item class 9, recipes and books")
 assert(same(npcs("gear"), { 1 }), "gear: weapons and armour, not tools or fishing poles")
 assert(same(npcs("class"), { 6, 7 }), "class trainers: the companion list merged with the player's own class")
 assert(
@@ -483,6 +491,7 @@ assert(
 assert(same(ns.NearbyServices.Items("arrows", 2), { 2512 }), "an item lists every NPC that sells it")
 assert(ns.NearbyServices.Items("food", 1)[1] == 4540, "Items is exact, not a range")
 assert(ns.NearbyServices.Items("drink", 13)[1] == 3448, "an item in both groups names both")
+assert(same(ns.NearbyServices.Items("books", 1), { 2555 }), "the recipe seller's goods are books")
 assert(ns.NearbyServices.Items("gear", 11) == nil, "a fishing pole is not a weapon")
 assert(ns.NearbyServices.Items("gear", 12) == nil, "a mining pick is not a weapon")
 local here = { map = 1, x = 100, y = 100 }
@@ -511,7 +520,7 @@ local function rowLabels(section)
 end
 local all = sectionList("")
 assert(#all == 3, "three sections here")
-assert(sectionOf(all, "vendors").count == 8, "every vendor group is here")
+assert(sectionOf(all, "vendors").count == 9, "every vendor group is here")
 assert(sectionOf(all, "trainers").count == 2, "the class and profession trainers are here")
 assert(sectionOf(all, "services").count == 1, "the repair spawn is here, the services without one are not")
 local byLabel = sectionList("arrows")
@@ -527,7 +536,7 @@ assert(trade[1] and trade[1].count == 2 and rowLabels(trade[1]) == "Food,Drink",
 assert(sectionOf(trade, "trainers") == nil and sectionOf(trade, "services") == nil, "an empty section is dropped")
 local folded = sectionList("", { vendors = true })
 assert(
-	folded[1].collapsed and folded[1].count == 8 and #folded[1].rows == 0,
+	folded[1].collapsed and folded[1].count == 9 and #folded[1].rows == 0,
 	"a collapsed section keeps its header and count and hides its rows"
 )
 local function nearbyPlace(key, id)
@@ -647,6 +656,7 @@ local function fresh(questie, away, L)
 		Print = ns.Print,
 		ModifyMenu = ns.ModifyMenu,
 	}, { __index = ns })
+	setfenv(assert(loadfile("UI/NearbyGroups.lua")), env)("ShortestPathForever", copy)
 	setfenv(assert(loadfile("UI/NearbyQuestie.lua")), env)("ShortestPathForever", copy)
 	setfenv(assert(loadfile("UI/Nearby.lua")), env)("ShortestPathForever", copy)
 	for _, fn in ipairs(starts) do
@@ -859,7 +869,13 @@ do
 		estimates = estimates + 1
 		return estimate(...)
 	end
-	for _, file in ipairs({ "UI/MenuModifier.lua", "UI/NearbyQuestie.lua", "UI/NearbyEntrances.lua", "UI/Nearby.lua" }) do
+	for _, file in ipairs({
+		"UI/MenuModifier.lua",
+		"UI/NearbyGroups.lua",
+		"UI/NearbyQuestie.lua",
+		"UI/NearbyEntrances.lua",
+		"UI/Nearby.lua",
+	}) do
 		driver.load(file)
 	end
 	local guard = 0

@@ -11,7 +11,7 @@ local settings = {}
 
 -- Change an option from anywhere (the map's filter menu) with the settings panel kept in step.
 ---@param key string
----@param value boolean|number
+---@param value boolean|number|string
 function ns.SetOption(key, value)
 	settings[key]:SetValue(value)
 end
@@ -164,6 +164,30 @@ ns.Init(function()
 		ns.RefreshMap
 	)
 	Scale("minimapPinScale", L["Minimap icon size"], L["Sizes transport icons on the minimap."], ns.RefreshMinimapPins)
+
+	-- Town services: one icon per town zoomed out, one per service zoomed in, filtered by how much of a town you want
+	-- on the map. Off and the three levels match the world map's own filter submenu.
+	local townServices = Settings.RegisterAddOnSetting(
+		page,
+		"ShortestPathForever_townServices",
+		"townServices",
+		ns.db,
+		Settings.VarType.String,
+		L["Town services on the world map"],
+		ns.Defaults.townServices
+	)
+	townServices:SetValueChangedCallback(ns.RefreshTownServices)
+	settings.townServices = townServices
+	local townOptions = Settings.CreateControlTextContainer()
+	for _, choice in ipairs(ns.TownServiceChoices) do
+		townOptions:Add(choice.key, choice.label)
+	end
+	Settings.RegisterInitializer(
+		page,
+		Settings.CreateDropdownInitializer(townServices, function()
+			return townOptions:GetData()
+		end, L["One icon per town, or one per service as you zoom in."])
+	)
 
 	-- The walking line's colour, so it stays apart from the herbs and ore a player is gathering.
 	local routeColor = Settings.RegisterAddOnSetting(

@@ -749,6 +749,9 @@ function ns.RefreshMap()
 		Portals:RefreshAllData()
 		ns.RefreshFlightPins(true)
 		ns.RefreshTransportRoutes()
+		if ns.RefreshTownServices then
+			ns.RefreshTownServices()
+		end
 	end
 	ns.RefreshMinimapPins()
 end

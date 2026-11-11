@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Town services show on the world map.** The trainers, vendors, bankers, flight masters and innkeepers the Nearby services list knows now stand where they do on the map. Zoomed out their pins share one town icon whose tooltip lists the town's services, and zooming in splits them into a pin each with the client's own icon. *Town services on the world map* in Map marks shows only the capitals (the default), the capitals and the services worth a detour, every town, or none. Thanks to cotijelucie for the idea (#739).
+
 ## [1.32.0] - 2026-11-11
 
 <!-- discord-image: docs/screenshots/services.png -->

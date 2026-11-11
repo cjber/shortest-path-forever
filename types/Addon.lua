@@ -24,6 +24,9 @@
 ---@field charDB SPFCharacterDatabase
 ---@field Defaults table<string, boolean|number|string>
 ---@field NearbyServices SPFNearbyServices
+---@field NearbyGroups SPFNearbyGroups the vendor and service groups the list and the map share (UI/NearbyGroups.lua)
+---@field TownServiceChoices SPFTownServiceChoice[] the town services' four levels (UI/TownServices.lua)
+---@field RefreshTownServices fun() redraws the town services on the world map (UI/TownServices.lua)
 ---@field NearbyEntrances SPFNearbyEntrancesAPI the dungeons and raids in the Nearby services list (UI/NearbyEntrances.lua)
 ---@field core ForeverCoreAddon the addon's own ForeverCore services: journal, log, report and map canvas
 ---@field broken? boolean set when ForeverCore is missing a member this addon calls, so the addon's files stop
@@ -36,6 +39,23 @@
 ---@field TravelStats fun(): SPFProgressData?
 ---@field TravelBoard fun(scope: ForeverLeaderboardsScope): ForeverLeaderboardsRow[] this addon's board for the shared window
 ---@field OpenTravelLeaderboard fun() opens Forever Leaderboards on this addon's tab
+
+---@class SPFVendorGroup
+---@field key string
+---@field label string
+---@field icon integer|string an item whose icon stands for the goods, or the client's tracking atlas
+---@class SPFServiceGroup
+---@field key string
+---@field flag string the QuestieDB NPC flag that puts an NPC in the group
+---@field label string
+---@field icon string the client's own tracking atlas
+---@class SPFNearbyGroups
+---@field vendors SPFVendorGroup[]
+---@field services SPFServiceGroup[]
+---@field sections table<string, string>
+---@class SPFTownServiceChoice
+---@field key string
+---@field label string
 
 ---@alias SPFMode 'walk'|'flight'|'boat'|'zeppelin'|'lift'|'tram'|'portal'|'passage'|'teleport'
 ---@alias SPFKind 'start'|'goal'|'dock'|'taxi'|'portal'|'teleport'
@@ -199,6 +219,7 @@
 ---@field minimapPins? boolean
 ---@field mapFlightMasters? boolean
 ---@field mapRoutes? boolean
+---@field townServices? string the town services' level of detail: "capitals", "important", "all" or "off" (TownServices.lua)
 ---@field otherFaction? boolean
 ---@field tracker? boolean
 ---@field alerts? boolean

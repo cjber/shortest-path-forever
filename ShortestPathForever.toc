@@ -51,6 +51,7 @@ Transport\Timetable.lua
 Transport\TaxiTimes.lua
 Core\PlanContext.lua
 UI\MenuModifier.lua
+UI\NearbyGroups.lua
 UI\NearbyQuestie.lua
 UI\NearbyEntrances.lua
 UI\Nearby.lua
@@ -68,6 +69,7 @@ UI\OpenMap.lua
 UI\CompanionMaps.lua
 UI\Canvas.lua
 UI\Map.lua
+UI\TownServices.lua
 UI\FlightPins.lua
 UI\Looks.lua
 UI\MinimapPins.lua

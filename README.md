@@ -156,7 +156,7 @@ Travel data comes from [wago.tools](https://wago.tools), [CMaNGOS](https://githu
 
 <!-- forever-credits:start -->
 
-Thanks to Alex21xx, Maggew, MacieGx, Stiandresius, The___Fast, Joster91, GenericP, Fitz, TRDeadbeat, tallsmartman, Sol_Deus, Zavian, Osipanda, Nightwind416, wfournier, cidolfus27, o0saw0o, Merlinqt, team_Brigade, phear, Testvonfarkle, rydoc, deathmvp1, saikoso, Ragnarok11B, Brainc3ll, Mouchoir, z1ck, Oxds, sean16981, aryaxo, Exo_NA, legortiz, JohnChrin, wheelbarrel00, lkshrk, HeartOfD2, rml9ty, hwalflor, chris-chrysos, Quantity-4, Bolton_wow, Aldericdevir, joaocjesus, jakerist (Grayburn), borick7318, cotijelucie, sampconrad, jixxor, Gaafah, _spada, vladsnz, macwire, scraak, overspark, TeeRKee, Speaker1264, SuubzTV, Fel7, Kragmars, spidersylar, Acem, tgkGate, IronmanBG and everyone who reported a bug or asked for a feature.
+Thanks to Alex21xx, Maggew, MacieGx, Stiandresius, The___Fast, Joster91, GenericP, cotijelucie, Fitz, TRDeadbeat, tallsmartman, Sol_Deus, Zavian, Osipanda, Nightwind416, wfournier, cidolfus27, o0saw0o, Merlinqt, team_Brigade, phear, Testvonfarkle, rydoc, deathmvp1, saikoso, Ragnarok11B, Brainc3ll, Mouchoir, z1ck, Oxds, sean16981, aryaxo, Exo_NA, legortiz, JohnChrin, wheelbarrel00, lkshrk, HeartOfD2, rml9ty, hwalflor, chris-chrysos, Quantity-4, Bolton_wow, Aldericdevir, joaocjesus, jakerist (Grayburn), borick7318, sampconrad, jixxor, Gaafah, _spada, vladsnz, macwire, scraak, overspark, TeeRKee, Speaker1264, SuubzTV, Fel7, Kragmars, spidersylar, Acem, tgkGate, IronmanBG and everyone who reported a bug or asked for a feature.
 
 <!-- forever-credits:end -->
 

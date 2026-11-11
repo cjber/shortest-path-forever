@@ -429,3 +429,11 @@ L["How close you must get to a journey's destination for it to count as reached.
 L["Stops before the last on a multi-stop route keep 15 yards."] =
 	"여러 정류장이 있는 경로에서 마지막 이전 정류장은 15미터를 유지합니다." -- mt
 L["Dungeons and raids"] = "던전 및 공격대" -- mt
+L["Town services"] = "마을 서비스" -- mt
+L["Town services on the world map"] = "세계 지도에 마을 서비스 표시" -- mt
+L["Capitals only"] = "수도만" -- mt
+L["Capitals and important services"] = "수도 및 주요 서비스" -- mt
+L["All towns"] = "모든 마을" -- mt
+L["Books and recipes"] = "책과 조리법" -- mt
+L["One icon per town, or one per service as you zoom in."] =
+	"마을마다 아이콘 하나, 확대하면 서비스마다 아이콘 하나." -- mt

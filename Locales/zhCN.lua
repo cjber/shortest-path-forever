@@ -415,3 +415,11 @@ L["How close you must get to a journey's destination for it to count as reached.
 L["Stops before the last on a multi-stop route keep 15 yards."] =
 	"多站路线中，最后一站之前的站点仍保持 15 米。" -- mt
 L["Dungeons and raids"] = "地下城与团队副本" -- mt
+L["Town services"] = "城镇服务" -- mt
+L["Town services on the world map"] = "世界地图上的城镇服务" -- mt
+L["Capitals only"] = "仅主城" -- mt
+L["Capitals and important services"] = "主城和重要服务" -- mt
+L["All towns"] = "所有城镇" -- mt
+L["Books and recipes"] = "书籍和配方" -- mt
+L["One icon per town, or one per service as you zoom in."] =
+	"缩小显示每个城镇一个图标，放大后每个服务一个图标。" -- mt

@@ -121,6 +121,7 @@ Credit for the reports and requests behind the addon.
 | MacieGx | Your own profession trainers come first (code) | GitHub; PR #704 |
 | borick7318 | Metres match the game's distances | Discord; #668 |
 | cotijelucie | Hide travel marks on the world map | Discord; #635 |
+| cotijelucie | Town services drawn on the world map | Discord; #739 |
 | sampconrad | Arrow becomes a pin on arrival | CurseForge; #627 |
 | jixxor | Stormwind walks follow the streets | Discord; #602 |
 | Gaafah | Option to hide the walking line | CurseForge; #576 |

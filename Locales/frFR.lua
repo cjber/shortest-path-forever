@@ -425,3 +425,10 @@ L["How close you must get to a journey's destination for it to count as reached.
 L["Stops before the last on a multi-stop route keep 15 yards."] =
 	"Les étapes avant la dernière d'un trajet à plusieurs étapes conservent 15 mètres." -- mt
 L["Dungeons and raids"] = "Donjons et raids" -- mt
+L["Town services"] = "Services de la ville" -- mt
+L["Town services on the world map"] = "Services de la ville sur la carte du monde" -- mt
+L["Capitals only"] = "Capitales uniquement" -- mt
+L["Capitals and important services"] = "Capitales et services importants" -- mt
+L["All towns"] = "Toutes les villes" -- mt
+L["Books and recipes"] = "Livres et recettes" -- mt
+L["One icon per town, or one per service as you zoom in."] = "Une icône par ville, ou une par service en zoomant." -- mt
