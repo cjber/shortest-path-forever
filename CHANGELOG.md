@@ -12,6 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.30.0] - 2026-11-11
+
+<!-- discord-image: docs/screenshots/services.png -->
+
 - **Your own professions' trainers come first.** In Nearby services, the trainers for the professions you have now sit right under your class trainer, your primary professions before First Aid, Fishing and Cooking. A line separates them from the other professions, which are now listed by name.
 - **Journeys to mobs and NPCs in caves and mines end inside.** Questie knows only where a mob is on the map, not how high, so a journey to the miners of Azurelode Mine ended on the hill above them. Alt-clicking a Questie icon or choosing a Nearby services row now goes to the floor that NPC or quest object stands on, for the original world's spawns.
 
