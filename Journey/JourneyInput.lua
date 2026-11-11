@@ -370,7 +370,11 @@ local function OnOwnPinClick(pin, button)
 	return JourneyToPin(pin:GetMap():GetMapID() --[[@as number]], info, marker == "flight", x, y)
 end
 
-local function AddQuestMenuEntry(root, questID)
+-- A quest menu's entry and the family hint under it, wherever the menu is described: the client's own menus below,
+-- and Kaliel's Tracker's dropdown (Core/KalielsTracker.lua), which is filled through the same calls.
+---@param root table a menu description with CreateButton and CreateTitle
+---@param questID number|string?
+function ns.AddQuestMenuEntry(root, questID)
 	if ns.db.journey and questID then
 		root:CreateButton(L["Plan journey"], function()
 			PlanQuest(questID)
@@ -542,11 +546,11 @@ ns.Init(function()
 		---@cast owner Frame
 		-- The native menu owner is the tracker container, with no quest ID/context data.
 		-- Resolve the right-clicked HeaderButton's block; never reuse a previous hover's quest.
-		AddQuestMenuEntry(root, QuestIDFromTrackerFocus(owner))
+		ns.AddQuestMenuEntry(root, QuestIDFromTrackerFocus(owner))
 	end)
 	Menu.ModifyMenu("MENU_QUEST_MAP_LOG_TITLE", function(owner, root)
 		---@cast owner SPFQuestMenuOwner
 		-- Waypoint menus share this tag, but have no questID; the client also spells it questId.
-		AddQuestMenuEntry(root, owner.questID or owner.questId)
+		ns.AddQuestMenuEntry(root, owner.questID or owner.questId)
 	end)
 end)

@@ -163,6 +163,11 @@ read_globals[#read_globals + 1] = "HandleModifiedItemClick"
 read_globals[#read_globals + 1] = "C_TradeSkillUI"
 -- Route.lua: the cursor over the minimap.
 read_globals[#read_globals + 1] = "GetCursorPosition"
+-- Core/KalielsTracker.lua: the MSA-DropDownMenu-1.0 library Kaliel's Tracker ships, which builds its quest menus.
+read_globals[#read_globals + 1] = "MSA_DROPDOWNMENU_MENU_LEVEL"
+read_globals[#read_globals + 1] = "MSA_DropDownMenu_CreateInfo"
+read_globals[#read_globals + 1] = "MSA_DropDownMenu_AddButton"
+read_globals[#read_globals + 1] = "MSA_DropDownMenu_AddSeparator"
 -- UI/OpenMap.lua: the seamless world map addon's public API for other addons (version 2 and up).
 read_globals[#read_globals + 1] = "OpenMapAPI"
 

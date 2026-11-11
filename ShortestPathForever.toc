@@ -107,5 +107,6 @@ Core\TomTom.lua
 Core\Way.lua
 Core\RestedXP.lua
 Core\Guidelime.lua
+Core\KalielsTracker.lua
 UI\DestinationPin.lua
 UI\NpcArrows.lua
