@@ -25,6 +25,10 @@ from forever_tools.fsio import atomic_write, publish  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 LOCALE = "enUS"
+HERE = Path(__file__).resolve().parent
+# The pinned TrinityCore commit and the patches applied to it, in order; bake.sh builds from the same pins.
+PINNED_REV = (HERE / "trinitycore.rev").read_text().strip()
+PATCHES = tuple(HERE / name for name in ("trinitycore-client.patch", "trinitycore.patch", "trinitycore-nav.patch"))
 ADDON = "ShortestPathForever"
 BUNDLED = re.compile(r"Nav\.xml|Nav\d+(?:_\d+)?\.lua")
 TILE = re.compile(r"(\d{4})_(\d{2})_(\d{2})")
@@ -99,17 +103,28 @@ def expand(argv: list[str], wow: Path, run: Path, output: Path, bin_dir: Path, t
     return out
 
 
-def recipe(args, build: str, commands: dict) -> tuple[str, dict]:
-    """Hash the portable source recipe, retaining exact binaries separately for safe cache reuse."""
+def recipe_body(product: str, build: str, rev: str, patches, commands: dict) -> tuple[str, dict]:
+    """The portable source recipe and its digest: what a map was baked from, without machine paths or binaries."""
     body = {
-        "product": args.product,
+        "product": product,
         "build": build,
-        "code": {"trinitycore": args.rev, "patches": {p.name: sha256(p) for p in args.patch}},
+        "code": {"trinitycore": rev, "patches": {p.name: sha256(p) for p in patches}},
         "commands": commands,
     }
-    digest = hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()
+    return hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest(), body
+
+
+def recipe(args, build: str, commands: dict) -> tuple[str, dict]:
+    """Hash the portable source recipe, retaining exact binaries separately for safe cache reuse."""
+    digest, body = recipe_body(args.product, build, args.rev, args.patch, commands)
     body["binaries"] = {name: sha256(args.bin / name) for name in commands}
     return digest, body
+
+
+def pinned_recipe(product: str, build: str, map_id: int) -> str:
+    """The recipe digest a bake of map_id from this checkout's pins would carry."""
+    commands = stage_commands(argparse.Namespace(product=product), map_id)
+    return recipe_body(product, build, PINNED_REV, PATCHES, commands)[0]
 
 
 def output_notes(output: bytes) -> dict:
@@ -307,10 +322,11 @@ def main() -> None:
     parser.add_argument("--jobs", type=int, default=6)
     parser.add_argument("--rows", nargs=2, type=int)
     parser.add_argument("--cols", nargs=2, type=int)
-    parser.add_argument("--rev", required=True, help="pinned TrinityCore commit the binaries were built from")
-    parser.add_argument("--patch", type=Path, action="append", required=True, help="each patch applied to that commit")
+    parser.add_argument("--rev", default=PINNED_REV, help="TrinityCore commit the binaries were built from")
+    parser.add_argument("--patch", type=Path, action="append", help="each patch applied to that commit (the pins)")
     parser.add_argument("--name", action="append", default=[], metavar="MAP=TITLE", help="name of a map")
     args = parser.parse_args()
+    args.patch = args.patch or list(PATCHES)
     if min(args.threads, args.jobs) < 1:
         parser.error("--threads and --jobs must be positive")
     for bounds in (args.rows, args.cols):

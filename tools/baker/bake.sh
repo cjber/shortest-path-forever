@@ -9,7 +9,7 @@ PRODUCT=${PRODUCT:-wowf}
 MAPS=${MAPS:-"0 1 2991"}
 THREADS=${THREADS:-8}
 JOBS=${JOBS:-6}
-TRINITY_REV=e3916b2adcf2f8a70ae33817fc57b6c0266e2fb0
+TRINITY_REV=$(<"$HERE/trinitycore.rev")
 case "$OUT/" in
 "$WOW/"*)
 	echo "OUT must be outside the game installation" >&2
@@ -59,8 +59,7 @@ if [ "${BUILD_ONLY:-0}" = 1 ]; then
 fi
 read -r -a maps <<<"$MAPS"
 args=(--wow "$WOW" --product "$PRODUCT" --out "$OUT" --bin "$OUT/build/bin/Release/bin"
-	--maps "${maps[@]}" --threads "$THREADS" --jobs "$JOBS" --rev "$TRINITY_REV"
-	--patch "$CLIENT_PATCH" --patch "$PATCH" --patch "$NAV_PATCH"
+	--maps "${maps[@]}" --threads "$THREADS" --jobs "$JOBS"
 	--name "0=Eastern Kingdoms" --name "1=Kalimdor" --name "2991=Zephras Isle")
 if [ -n "${ROWS:-}" ]; then
 	read -r -a rows <<<"$ROWS"

@@ -90,7 +90,7 @@ def main():
     print(summary or f"already on {build}, InFlight {gen_transit.INFLIGHT_REV[:8]}")
     if "GITHUB_OUTPUT" in os.environ:
         with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
-            output.write(f"changed={'true' if moved else 'false'}\nsummary={summary}\n")
+            output.write(f"changed={'true' if moved else 'false'}\nsummary={summary}\nbuild={build}\n")
 
 
 if __name__ == "__main__":

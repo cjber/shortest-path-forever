@@ -2,8 +2,7 @@
 
 Bakes walking maps from a local WoW: Forever client. `tools/pack_nav.py` compresses them into `Nav/` inside the
 main addon, where `PathGrid.lua` decodes them on demand with the client's native zlib decoder, in blocks of at
-most 16 KiB. The extractor is TrinityCore, pinned to
-`e3916b2adcf2f8a70ae33817fc57b6c0266e2fb0`, with three patches: `trinitycore-client.patch` for Forever tables and local CASC reads,
+most 16 KiB. The extractor is TrinityCore at the commit in `trinitycore.rev`, with three patches: `trinitycore-client.patch` for Forever tables and local CASC reads,
 `trinitycore.patch` for bounded terrain and model extraction, and `trinitycore-nav.patch` for navigation
 completeness, the player's own slope and step limits, liquid hazards and ledge drops.
 
@@ -61,6 +60,12 @@ missing and failed statuses block Python generation. The tile files must exactly
 The portable recipe hashes source, patches, build and commands. Exact binary hashes remain in provenance,
 so rebuilt executables still require a fresh `OUT`. Worker counts can change when resuming.
 A different build, recipe or crop requires a fresh `OUT`. Files without provenance cannot be resumed.
+
+Each map's header names its build, TrinityCore commit and recipe, and a `Generator` digest over `gen_nav.py` and
+the baker modules it imports. CI runs `tools/check_nav.py`, which recomputes both from the checkout and fails when a
+change to the pin, a patch, an extractor command or the generator code leaves a map stale: rebake the maps in the
+same PR. The daily data refresh runs it with `--build` against the newest Forever build and keeps the issue "Walking
+maps are behind the client" open until the maps are rebaked from that build.
 
 A rerun extracts inputs afresh and resumes navigation tiles with terminal statuses. It verifies completeness
 before generating or packing a map. The generator writes raw Lua into the scratch directory, and the packer

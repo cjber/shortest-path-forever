@@ -24,6 +24,7 @@ jobs:
       branch: ${{ steps.pr.outputs.pull-request-branch }}
       operation: ${{ steps.pr.outputs.pull-request-operation }}
       sha: ${{ steps.pr.outputs.pull-request-head-sha }}
+      build: ${{ steps.pins.outputs.build }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -127,6 +128,45 @@ jobs:
           done
           echo "::error::The pull_request runs for $SHA were not created or not approved"
           exit 1
+
+  # The walking maps need the game client to rebake, so a newer build cannot regenerate them here. Keep one issue
+  # open while any map is baked from an older build than the newest Forever build.
+  nav:
+    needs: refresh
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          BUILD: ${{ needs.refresh.outputs.build }}
+        run: |
+          title="Walking maps are behind the client"
+          number=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "in:title \"$title\"" \
+            --json number,title --jq "[.[] | select(.title == \"$title\")][0].number // empty")
+          if report=$(python3 tools/check_nav.py --build "$BUILD" 2>&1); then
+            if [[ -n "$number" ]]; then
+              gh issue close "$number" --repo "$GITHUB_REPOSITORY" --comment "All walking maps are baked from $BUILD."
+            fi
+            exit 0
+          fi
+          body="Forever build $BUILD is out, and these walking maps were baked from an older one:
+
+          $report
+
+          Rebake them with \`tools/baker/bake.sh\` on a machine with the client (\`tools/baker/README.md\`)."
+          if [[ -z "$number" ]]; then
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --assignee "$GITHUB_REPOSITORY_OWNER" \
+              --body "$body"
+          elif ! gh issue view "$number" --repo "$GITHUB_REPOSITORY" --json body --jq .body | grep -qF "$BUILD"; then
+            gh issue edit "$number" --repo "$GITHUB_REPOSITORY" --body "$body"
+          fi
 
   # One open issue at most: a later failure comments on it instead of opening another.
   report:
