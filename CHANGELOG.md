@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **The route line can stop at the leg you are walking.** A new switch beside the world map line, "Line to later stops", leaves out the faded legs after the current stop, so a guide with many flight paths no longer covers the map in green lines. Your stop pins, the current leg and the guidance stay, and the switch is on by default. Asked on CurseForge by user_s0vubavdmaczleed46125 (#741).
+
 ## [1.32.0] - 2026-11-11
 
 <!-- discord-image: docs/screenshots/services.png -->

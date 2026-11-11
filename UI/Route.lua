@@ -709,7 +709,7 @@ local function PollMinimap()
 	end
 end
 
--- The world map adds the later hops as Itinerary.lua plans them; the minimap guides along the current leg only.
+-- The world map adds Itinerary.lua's later hops unless laterLegs is off; the minimap guides along the current leg.
 local function WorldPaths()
 	worldPaths = paths
 	if stops then
@@ -719,7 +719,7 @@ local function WorldPaths()
 			path.stop = stopIndex
 			worldPaths[#worldPaths + 1] = path
 		end
-		for _, path in ipairs(ns.JourneyPreview()) do
+		for _, path in ipairs(ns.db.laterLegs ~= false and ns.JourneyPreview() or {}) do
 			worldPaths[#worldPaths + 1] = path
 		end
 	end

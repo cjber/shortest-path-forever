@@ -234,6 +234,7 @@
 ---@field routeColor? string the walking route line's preset (Route.lua)
 ---@field mapLine? boolean the walking line draws on the world map (Route.lua)
 ---@field minimapLine? boolean the walking line draws on the minimap (Route.lua)
+---@field laterLegs? boolean the world map draws the faded legs after the current stop (Route.lua)
 ---@field journeyTracker? boolean
 ---@field arrow? boolean
 ---@field metres? boolean
