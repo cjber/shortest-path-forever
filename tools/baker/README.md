@@ -109,7 +109,10 @@ The bake uses the player's own collision limits, not a server creature's:
 | Falling | `NAV_DROP_REACH` 14.57 yd | fall damage starts here (TrinityCore `Player::HandleFall` at the pinned commit) |
 
 The horizontal cell stays 0.5333 yd so terrain is sampled as before; the vertical cell is 0.5 yd because 2.0 yards is
-not a whole number of 0.5333 ones. Slope never changes speed, so no slope cost is charged. Ground from 50 to 61.6
+not a whole number of 0.5333 ones. The nav patch also corrects Recast's span merge in
+`dep/recastnavigation`: a merged span keeps the area of the surface on top, so a low unwalkable face rasterized under a
+stair tread no longer turns the tread unwalkable and cuts the stair (the Undercity stairs were cut this way). Slope
+never changes speed, so no slope cost is charged. Ground from 50 to 61.6
 degrees is baked as `NAV_AREA_GROUND_STEEP` (area 10): the generator accepts it and turns steps into and out of it
 into directed links, downhill only. A landing between 2.0 and 14.57 yards below a ledge is baked as a one-way Detour
 off-mesh connection (`DT_OFFMESH_CON_BIDIR` never set) by the patched `TileBuilder`, which looks outwards from every

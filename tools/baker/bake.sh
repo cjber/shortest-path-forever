@@ -37,7 +37,8 @@ if git -C "$SOURCE" diff --quiet; then
 fi
 # A changed patch or a hand-edited source tree needs a fresh output directory.
 source_diff=(git -C "$SOURCE" diff --binary --full-index --no-ext-diff --no-textconv --diff-algorithm=myers --unified=1)
-"${source_diff[@]}" -- . ':(exclude)src/common/mmaps_common' ':(exclude)src/tools/mmaps_generator' ':(exclude)src/tools/extractor_common' | cmp -s "$PATCH" - || {
+"${source_diff[@]}" -- . ':(exclude)src/common/mmaps_common' ':(exclude)src/tools/mmaps_generator' ':(exclude)src/tools/extractor_common' \
+	':(exclude)dep/recastnavigation' | cmp -s "$PATCH" - || {
 	echo "TrinityCore source differs from the pinned patch; use a fresh OUT" >&2
 	exit 1
 }
@@ -45,7 +46,7 @@ source_diff=(git -C "$SOURCE" diff --binary --full-index --no-ext-diff --no-text
 	echo "TrinityCore client source differs from the pinned patch; use a fresh OUT" >&2
 	exit 1
 }
-"${source_diff[@]}" -- src/common/mmaps_common src/tools/mmaps_generator | cmp -s "$NAV_PATCH" - || {
+"${source_diff[@]}" -- dep/recastnavigation src/common/mmaps_common src/tools/mmaps_generator | cmp -s "$NAV_PATCH" - || {
 	echo "TrinityCore navigation source differs from the pinned patch; use a fresh OUT" >&2
 	exit 1
 }

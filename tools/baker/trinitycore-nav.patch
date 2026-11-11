@@ -1,3 +1,18 @@
+diff --git a/dep/recastnavigation/Recast/Source/RecastRasterization.cpp b/dep/recastnavigation/Recast/Source/RecastRasterization.cpp
+index 2ffffae8b06b8ce6b9bf1a204460a6be6ec513ba..db2b04453fc67b16f2eff727e4c21cfe0d8b6d48 100644
+--- a/dep/recastnavigation/Recast/Source/RecastRasterization.cpp
++++ b/dep/recastnavigation/Recast/Source/RecastRasterization.cpp
+@@ -124,5 +124,9 @@ static bool addSpan(rcHeightfield& hf, const int x, const int y,
+ 		{
+-			// Merge flags.
++			// Merge flags. The merged span's area is that of the surface on top: both when the tops are a step
++			// apart, otherwise the higher one's. Keeping the new span's area made a low unwalkable face, merged under
++			// a stair tread, turn the tread unwalkable.
+ 			if (rcAbs((int)s->smax - (int)cur->smax) <= flagMergeThr)
+ 				s->area = rcMax(s->area, cur->area);
++			else if (cur->smax > s->smax)
++				s->area = cur->area;
+ 
 diff --git a/src/common/mmaps_common/Generator/TerrainBuilder.cpp b/src/common/mmaps_common/Generator/TerrainBuilder.cpp
 index 449a5cb7557f33af0252f3160592981e89b6d43a..a82b37fe577adf7a27257881ad16c194dc19593b 100644
 --- a/src/common/mmaps_common/Generator/TerrainBuilder.cpp
@@ -119,7 +134,7 @@ index a16d1669425eec2d87ebf283079d1acbefa96bc1..9ce24c7113ecbb34cf92f26d07f9ac62
 +
              /// Get the vector coordinate for a specific position
 diff --git a/src/common/mmaps_common/Generator/TileBuilder.cpp b/src/common/mmaps_common/Generator/TileBuilder.cpp
-index 31ec90a83da290e58acdff60d1efae02363dcb52..848513166331f138b4357c993832b8272388312c 100644
+index 31ec90a83da290e58acdff60d1efae02363dcb52..6a28cad0ee91a5c2b2f6053014b12472b82577ba 100644
 --- a/src/common/mmaps_common/Generator/TileBuilder.cpp
 +++ b/src/common/mmaps_common/Generator/TileBuilder.cpp
 @@ -25,2 +25,8 @@
@@ -187,7 +202,7 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..848513166331f138b4357c993832b827
 @@ -57,2 +111,5 @@ namespace MMAP
              BASE_UNIT_DIM = bigBaseUnit ? 0.5333333f : 0.2666666f;
 +            // The player's step height is 2.0 yards, which no multiple of the horizontal cell reaches exactly, so the
-+            // vertical cell is 0.5 yards and a step is four of them. The horizontal cell stays at 0.5333 for terrain.
++            // vertical cell is 0.5 yards at either horizontal cell, and a step is four of them.
 +            CELL_HEIGHT = 0.5f;
  
 @@ -65,2 +122,3 @@ namespace MMAP
@@ -433,7 +448,7 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..848513166331f138b4357c993832b827
 +    namespace
 +    {
 +        constexpr float NAV_DROP_REACH = 14.57f;      // the longest fall that does not hurt, in yards
-+        constexpr int NAV_DROP_COLUMNS = 4;           // how many cells out from a ledge a landing is looked for
++        constexpr float NAV_DROP_OUT = 2.2f;          // how far out from a ledge, in yards, a landing is looked for
 +        constexpr float NAV_DROP_SPACING = 8.0f;      // one connection per this long a ledge run (an 8 yard cell)
 +        constexpr float NAV_DROP_SLOPE = 1.1917536f;  // tan 50 degrees: a gentler face is walked, not dropped
 +
@@ -546,7 +561,7 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..848513166331f138b4357c993832b827
 +                                continue; // a surface within a step: this is no ledge edge
 +
 +                            float landing = 0.0f;
-+                            for (int step = 1; step <= NAV_DROP_COLUMNS; ++step)
++                            for (int step = 1; step * chf.cs <= NAV_DROP_OUT; ++step)
 +                            {
 +                                int const lx = x + dx * step, lz = z + dz * step;
 +                                if (!FindLanding(chf, lx, lz, surface, climb, landing))
@@ -681,6 +696,14 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..848513166331f138b4357c993832b827
 +        MarkGroundUnderHazard(*iv.polyMesh, lVerts, lTris, lTriFlags, lTriCount);
 +
          // setup mesh parameters
+@@ -362,5 +818,5 @@ namespace MMAP
+ 
+-        params.walkableHeight = BASE_UNIT_DIM * config.walkableHeight;    // agent height
++        params.walkableHeight = config.ch * config.walkableHeight;        // agent height, in vertical cells
+         params.walkableRadius = BASE_UNIT_DIM * config.walkableRadius;    // agent radius
+-        params.walkableClimb = BASE_UNIT_DIM * config.walkableClimb;      // keep less that walkableHeight (aka agent height)!
++        params.walkableClimb = config.ch * config.walkableClimb;          // keep less that walkableHeight (aka agent height)!
+         params.tileX = (((bmin[0] + bmax[0]) / 2) - navMeshParams->orig[0]) / GRID_SIZE;
 @@ -399,2 +855,3 @@ namespace MMAP
              TC_LOG_ERROR("maps.mmapgen", "{} Invalid verts-per-polygon value!", tileString);
 +            tileResult.failed = true;
@@ -801,10 +824,16 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..848513166331f138b4357c993832b827
 +        config.walkableSlopeAngle = m_maxWalkableAngle.value_or(61.6f);
 +        config.walkableSlopeAngleNotSteep = m_maxWalkableAngleNotSteep.value_or(50.0f);
          config.tileSize = tileConfig.VERTEX_PER_TILE;
-@@ -537,3 +1049,3 @@ namespace MMAP
-         // a value >= 4|8 allows npcs to walk over all fences
+@@ -534,6 +1046,6 @@ namespace MMAP
+         config.maxEdgeLen = tileConfig.VERTEX_PER_TILE + 1;        // anything bigger than tileSize
+-        config.walkableHeight = m_bigBaseUnit ? 3 : 6;
+-        // a value >= 3|6 allows npcs to walk over some fences
+-        // a value >= 4|8 allows npcs to walk over all fences
 -        config.walkableClimb = m_bigBaseUnit ? 3 : 6;
-+        config.walkableClimb = m_bigBaseUnit ? 4 : 8;
++        // Counted in the 0.5 yard vertical cell, which is the same at either horizontal cell: 1.5 yards of clearance
++        // and the player's 2.0 yard step.
++        config.walkableHeight = 3;
++        config.walkableClimb = 4;
          config.minRegionArea = rcSqr(60);
 @@ -555,2 +1067,3 @@ namespace MMAP
                  config.ch *= 2;
