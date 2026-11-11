@@ -220,10 +220,6 @@ local env = setmetatable({
 	UnitClass = function()
 		return "Warrior", "WARRIOR", 1
 	end,
-	-- The client's name for an instance map; the empty answer falls back to the data's name.
-	GetRealZoneText = function(instance)
-		return instance == 36 and "The Deadmines" or ""
-	end,
 	C_TradeSkillUI = {
 		GetTradeSkillDisplayName = function(skill)
 			if skill == 171 then
@@ -308,13 +304,6 @@ local ns = {
 		assert(map == 100)
 		return { map = 1, x = x * 1000, y = y * 1000 }
 	end,
-	-- Instance doors (Data/Portals.lua ns.Entrances): two on the player's continent and one on the other, each placed
-	-- on the fixture's zone map, as Core.Locate places them.
-	Entrances = {
-		[36] = { name = "Deadmines", map = 1, x = 800, y = 800 },
-		[43] = { name = "Wailing Caverns", map = 1, x = 200, y = 900 },
-		[33] = { name = "Shadowfang Keep", map = 2, x = 100, y = 100 },
-	},
 	Path = {
 		Busy = function()
 			return busy
@@ -323,28 +312,6 @@ local ns = {
 }
 -- Core.lua's map opener and gamepad check: the game opens the map and menus under the gamepad interface (#158).
 local gamepad, printed = false, {}
--- Where Core.Locate puts a door: the fixture's zone map at the door's own fractions, in the zone its x names.
-local DOOR_ZONES = { [800] = "Westfall", [200] = "The Barrens", [100] = "Silverpine Forest" }
-ns.Locate = function(point)
-	return { uiMap = 100, x = point.x / 1000, y = point.y / 1000, zone = DOOR_ZONES[point.x] }
-end
--- The door stop JourneyInput.lua builds for the instance, as a Nearby services row journeys to it.
-ns.EntranceStop = function(instance, point)
-	local door = ns.Entrances[instance]
-	return {
-		map = 100,
-		x = door.x / 1000,
-		y = door.y / 1000,
-		label = "Enter " .. instance,
-		entrance = instance,
-		stop = point,
-	}
-end
-local journeys = {}
-ns.StartJourney = function(point)
-	journeys[#journeys + 1] = point
-	return true
-end
 ns.GamepadUI = function()
 	return gamepad
 end
@@ -382,10 +349,9 @@ setfenv(assert(loadfile("Locales/enUS.lua")), env)("ShortestPathForever", ns)
 setfenv(assert(loadfile("Data/Services.lua")), env)("ShortestPathForever", ns)
 -- The fixture class trainers for the player's class, beside the companion addon's own list.
 ns.ClassTrainers = { [7] = 1 }
-setfenv(assert(loadfile("UI/MenuModifier.lua")), env)("ShortestPathForever", ns)
-setfenv(assert(loadfile("UI/NearbyQuestie.lua")), env)("ShortestPathForever", ns)
-setfenv(assert(loadfile("UI/NearbyEntrances.lua")), env)("ShortestPathForever", ns)
-setfenv(assert(loadfile("UI/Nearby.lua")), env)("ShortestPathForever", ns)
+for _, file in ipairs({ "UI/MenuModifier.lua", "UI/NearbyQuestie.lua", "UI/NearbyEntrances.lua", "UI/Nearby.lua" }) do
+	setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
+end
 for _, fn in ipairs(initializers) do
 	fn()
 end
@@ -458,12 +424,6 @@ assert(
 )
 menuEntry(minimap.children, "Class trainer").callback()
 assert(navigated[#navigated][5] == "Warrior trainer", "a service chosen from the minimap routes to the nearest")
--- A dungeon row starts the door stop the map's own instance journey gets, and the other continent's door is left out.
-menuEntry(minimap.children, "The Deadmines").callback()
-local door = journeys[#journeys]
-assert(door and door.entrance == 36, "a dungeon row starts a journey whose stop carries the instance")
-assert(door.label == "Enter 36", "through the door stop of JourneyInput.lua")
-assert(not menuEntry(minimap.children, "Shadowfang Keep"), "a door on another continent is left out, never unavailable")
 assert(mapOpens == opensBefore, "the minimap's menu routes without opening the world map")
 local places = ns.NearbyServices.Index()
 local function group(key)
@@ -532,8 +492,8 @@ assert(ns.NearbyServices.Nearest("repair", { map = 2, x = 100, y = 100 }) == nil
 assert(places.repair[1].map == 100, "subzone uses parent map")
 
 -- The panel's pure list: sections in order, filtered by a plain substring in a label, an NPC, a title or an item.
-local function sectionList(query, collapse, seconds)
-	return ns.NearbyServices.Sections(here, query, collapse, seconds)
+local function sectionList(query, collapse)
+	return ns.NearbyServices.Sections(here, query, collapse)
 end
 local function sectionOf(list, key)
 	for _, section in ipairs(list) do
@@ -550,7 +510,7 @@ local function rowLabels(section)
 	return table.concat(labels, ",")
 end
 local all = sectionList("")
-assert(#all == 4, "four sections here")
+assert(#all == 3, "three sections here")
 assert(sectionOf(all, "vendors").count == 8, "every vendor group is here")
 assert(sectionOf(all, "trainers").count == 2, "the class and profession trainers are here")
 assert(sectionOf(all, "services").count == 1, "the repair spawn is here, the services without one are not")
@@ -570,42 +530,6 @@ assert(
 	folded[1].collapsed and folded[1].count == 8 and #folded[1].rows == 0,
 	"a collapsed section keeps its header and count and hides its rows"
 )
--- Dungeons and raids: a row per door on the player's continent, the other continent's left out, nearest door first
--- until the panel's travel times land and by those times afterwards.
-local raids = sectionOf(all, "entrances")
-assert(raids and raids.count == 2, "both doors on this continent are listed, and the other continent's is not")
-assert(rowLabels(raids) == "Wailing Caverns,The Deadmines", "the nearest door leads before any travel time is known")
-local timed = sectionList("", nil, { ["entrance:36"] = 10, ["entrance:43"] = 20 })
-assert(
-	rowLabels(sectionOf(timed, "entrances")) == "The Deadmines,Wailing Caverns",
-	"the panel's travel times order the doors"
-)
-local partial = sectionList("", nil, { ["entrance:36"] = 10 })
-assert(
-	rowLabels(sectionOf(partial, "entrances")) == "The Deadmines,Wailing Caverns",
-	"a door with a travel time leads, then the doors without one by straight line"
-)
-local orderRows = {
-	{ id = "entrance:far", npc = { world = { map = 1, x = 100, y = 400 } } },
-	{ id = "entrance:near", npc = { world = { map = 1, x = 100, y = 200 } } },
-	{ id = "entrance:timed", npc = { world = { map = 1, x = 100, y = 900 } } },
-}
-ns.NearbyEntrances.Order("entrances", orderRows, here, { ["entrance:timed"] = 5 })
-local order = {}
-for _, row in ipairs(orderRows) do
-	order[#order + 1] = row.id
-end
-assert(
-	table.concat(order, ",") == "entrance:timed,entrance:near,entrance:far",
-	"one travel time leads, and the rest stay in straight-line order"
-)
-local deadmines = assert((places["entrance:36"] or {})[1], "the door is a place like any other")
-assert(
-	ns.NearbyServices.Detail("entrance:36", deadmines, "") == "Westfall",
-	"the row names the zone under the instance"
-)
-local byInstance = sectionList("deadmines")
-assert(#byInstance == 1 and rowLabels(byInstance[1]) == "The Deadmines", "a search by instance name keeps its door")
 local function nearbyPlace(key, id)
 	for _, place in ipairs(places[key] or {}) do
 		if place.id == id then
@@ -702,7 +626,7 @@ local function fresh(questie, away, L)
 	local elsewhere = false
 	env.LibQuestieDB = questie
 	local starts = {}
-	local copy = {
+	local copy = setmetatable({
 		L = L or ns.L,
 		Path = ns.Path,
 		-- A database of its own: no read saved by another copy is adopted here.
@@ -722,9 +646,8 @@ local function fresh(questie, away, L)
 		GamepadUI = ns.GamepadUI,
 		Print = ns.Print,
 		ModifyMenu = ns.ModifyMenu,
-	}
+	}, { __index = ns })
 	setfenv(assert(loadfile("UI/NearbyQuestie.lua")), env)("ShortestPathForever", copy)
-	setfenv(assert(loadfile("UI/NearbyEntrances.lua")), env)("ShortestPathForever", copy)
 	setfenv(assert(loadfile("UI/Nearby.lua")), env)("ShortestPathForever", copy)
 	for _, fn in ipairs(starts) do
 		fn()
@@ -936,10 +859,9 @@ do
 		estimates = estimates + 1
 		return estimate(...)
 	end
-	driver.load("UI/MenuModifier.lua")
-	driver.load("UI/NearbyQuestie.lua")
-	driver.load("UI/NearbyEntrances.lua")
-	driver.load("UI/Nearby.lua")
+	for _, file in ipairs({ "UI/MenuModifier.lua", "UI/NearbyQuestie.lua", "UI/NearbyEntrances.lua", "UI/Nearby.lua" }) do
+		driver.load(file)
+	end
 	local guard = 0
 	while #travelTimers > 0 do
 		guard = guard + 1
