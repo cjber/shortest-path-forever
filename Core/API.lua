@@ -908,3 +908,6 @@ end
 
 ShortestPathForever = ShortestPathForever or {}
 ShortestPathForever.API = API
+if (ForeverCore.APIKit.minor or 1) >= 2 then
+	ForeverCore.APIKit.Publish("ShortestPathForever", API)
+end
