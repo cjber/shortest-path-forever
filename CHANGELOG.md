@@ -13,6 +13,11 @@ optional `### For addon authors` subsection after a version's player bullets.
 ## [Unreleased]
 
 - **A journey no longer loses its route to a rare search error.** When the client called a walking search's callback from inside one of its own calls, the replan it started could fail with "attempt to yield across metamethod/C-call boundary", and the journey got no route. The plan a search callback makes now finishes in that callback instead of pausing partway through. Reported on CurseForge by tgkGate (#717).
+- **Kaliel's Tracker's quest menu offers Plan journey.** With Kaliel's Tracker installed, right-clicking a quest in its tracker showed only its own menu, so *Plan journey* was missing. The entry now sits in that menu too, for tracked quests and the quest log alike, and plans the same journey as the game's own menu. Reported on CurseForge by IronmanBG (#718).
+
+### For addon authors
+
+- **`ForeverCore.APIKit.Addons()` now lists `ShortestPathForever`.** The API table is handed to Forever Core as it loads, on Forever Core 1.3.2 or later, so another addon can find this one's API, its `version` and its `minor` in the suite's own list instead of looking for the global. On an older Forever Core nothing is published and nothing changes. Nothing changes for players.
 
 ## [1.30.1] - 2026-11-11
 

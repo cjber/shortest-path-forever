@@ -2,7 +2,8 @@
 
 Addons can use `ShortestPathForever.API` (`version = 1`, `minor = 3`) with uiMapIDs and normalized 0-1 coordinates.
 Additions keep `version` at 1 and raise `minor`; check that a function exists before calling it, because an older
-addon may not have it yet. The full types are in [`types/API.lua`](../types/API.lua).
+addon may not have it yet. The full types are in [`types/API.lua`](../types/API.lua). On ForeverCore 1.3.2 or
+later, the API is also listed by `ForeverCore.APIKit.Addons()`.
 
 ## Minor history
 

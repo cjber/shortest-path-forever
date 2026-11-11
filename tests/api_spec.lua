@@ -1125,6 +1125,40 @@ do
 	ns.db = savedDb
 end
 
+-- The suite's list of addon APIs names this one with its version and minor, and a core whose kit is still at minor 1
+-- has no Publish, so the API loads without being handed over.
+do
+	local function listing(kit)
+		for _, entry in ipairs(kit.Addons()) do
+			if entry.name == "ShortestPathForever" then
+				return entry
+			end
+		end
+	end
+	local kit = env.ForeverCore.APIKit
+	local listed = assert(listing(kit), "APIKit.Addons() lists ShortestPathForever")
+	equal(listed.version, API.version, "the listed version")
+	equal(listed.minor, API.minor, "the listed minor")
+	equal(listed.api, API, "the listed api is the addon's own table")
+
+	local published = 0
+	env.ForeverCore.APIKit = {
+		minor = 1,
+		Hub = kit.Hub,
+		NotReady = kit.NotReady,
+		Publish = function()
+			published = published + 1
+		end,
+	}
+	driver.load("Core/API.lua")
+	equal(published, 0, "a kit at minor 1 publishes nothing")
+	equal(env.ShortestPathForever.API.version, 1, "and still exposes the API")
+
+	env.ForeverCore.APIKit = kit
+	driver.load("Core/API.lua")
+	equal(listing(kit).api, env.ShortestPathForever.API, "a kit at minor 2 publishes what it loaded")
+end
+
 print(
 	string.format(
 		"api_spec: %d checks passed; Estimate cached short %.3f ms, cross-continent cold %.3f / cached %.3f ms",
