@@ -415,14 +415,12 @@ shared.questIDs[1] = 99
 equal(held.questIDs[2], 12, "the caller's later edit changes nothing")
 answers[11], answers[12], answers[13] = false, driver.secret, true
 equal(ns.StopInside(held), true, "inside any named quest's area")
-equal(ns.StopInQuestArea(held), true, "and the client is the one saying so")
 answers[13] = false
 equal(ns.StopInside(held), false, "outside them all by the client's answer, whatever it withholds for one")
 answers[11], answers[13] = driver.secret, driver.secret
 equal(ns.StopInside(held), false, "no answer for any: the shapes decide, and the player is outside them")
 driver.move({ map = 1, x = 0, y = 0 })
 equal(ns.StopInside(held), true, "no answer for any: inside a shape")
-equal(ns.StopInQuestArea(held), false, "which is not the client's own area")
 _G.C_Minimap = nil
 equal(API.Cancel("AGF"), true, "several-quest route cancels")
 
@@ -444,7 +442,6 @@ handin.handins[1] = 99
 equal(handing.handins[1], 21, "the caller's later edit changes nothing")
 blob[21], blob[22] = true, true
 equal(ns.StopInside(handing), false, "a hand-in never decides arrival")
-equal(ns.StopInQuestArea(handing), false, "and never shows the game's own area")
 _G.C_Minimap = nil
 equal(API.Cancel("AGF"), true, "hand-in route cancels")
 

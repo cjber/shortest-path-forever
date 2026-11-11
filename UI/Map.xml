@@ -67,8 +67,6 @@
 			</Layer>
 		</Layers>
 	</Frame>
-	<!-- The client's own blob widget, as QuestBlobPinTemplate (QuestBlobDataProvider.xml) is one. -->
-	<QuestPOIFrame name="ShortestPathForeverAreaPinTemplate" virtual="true"/>
 	<Frame name="ShortestPathForeverGoalPinTemplate" virtual="true">
 		<Layers>
 			<!-- A numbered stop of a multi-stop journey wears the addon's own numbered marker (StopPin.lua). Above 25

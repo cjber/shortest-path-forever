@@ -120,27 +120,6 @@ _G.CreateFrame = function(frameType, name, parent, template)
 		pin.SuperTrackMarker = pin:CreateTexture()
 		pin.Disc, pin.Button = pin:CreateTexture(), pin:CreateTexture()
 		pin.Arrow = pin:CreateTexture()
-		-- The blob widget's own methods (FrameAPIBlob), recorded: the quests drawn since the last DrawNone, and on
-		-- which map.
-		if template:match("AreaPin") then
-			assert(frameType == "QuestPOIFrame" and blobWidget, "no QuestPOIFrame on this client")
-			function pin:SetFillTexture(texture)
-				self.fill = texture
-			end
-			function pin:SetBorderTexture(texture)
-				self.border = texture
-			end
-			function pin:SetMapID(id)
-				self.blobMap = id
-			end
-			function pin:DrawNone()
-				self.blobs = {}
-			end
-			function pin:DrawBlob(questID, draw)
-				assert(draw == true)
-				self.blobs[#self.blobs + 1] = questID
-			end
-		end
 	end
 	return pin
 end
