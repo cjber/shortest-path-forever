@@ -51,6 +51,40 @@ local UNDERGROUND = {
 	[1458] = -43.1, -- Undercity: the flight master's floor (Data/Taxi.lua node 11)
 }
 
+-- The height of the NPC or quest object spawn nearest (x, y) on map, within radius yards, when it stands over or
+-- under another walkable surface (Data/Heights.lua). QuestieDB's spawns have no height, so a journey to one ended on
+-- the cheapest surface there: the hill over Azurelode Mine rather than the miners inside it. With this height the walk
+-- ends on the spawn's own floor (Path.lua's snap); a spawn with one surface around it is not listed and needs none.
+---@param map number
+---@param x number
+---@param y number
+---@param radius number
+---@return number?
+function ns.SpawnHeight(map, x, y, radius)
+	local heights = ns.SpawnHeights and ns.SpawnHeights[map]
+	local st = heights and ns.PathGrid.State(map)
+	if not st then
+		return nil
+	end
+	-- A list is one Nav cluster's; the box's corners name every cluster it reaches, a radius being far below a tile.
+	local best, gap, seen = nil, radius * radius, {}
+	for _, dx in ipairs({ -radius, radius }) do
+		for _, dy in ipairs({ -radius, radius }) do
+			local k = ns.PathGrid.locate(st, x + dx, y + dy)
+			if k and not seen[k] then
+				seen[k] = true
+				for sx, sy, sz in (heights[k + 1] or ""):gmatch("(%S+) (%S+) (%S+)") do
+					local d = (tonumber(sx) - x) ^ 2 + (tonumber(sy) - y) ^ 2
+					if d <= gap then
+						best, gap = tonumber(sz), d
+					end
+				end
+			end
+		end
+	end
+	return best
+end
+
 ---@param uiMapID integer
 ---@param x number
 ---@param y number
@@ -428,6 +462,38 @@ local function Binding(name, onClick)
 	button:SetScript("OnClick", onClick)
 end
 
+-- Yards from a Questie icon to the spawn it marks. Questie keeps a spawn's spot to a hundredth of a percent of its zone
+-- map, a yard or less. Data/Heights.lua lists only spawns with another floor near them, so a wider reach would hand an
+-- unlisted spawn a listed neighbour's floor: at 25 yd 0.7% of single-floor spawns ended on the wrong one, at 8 yd two
+-- in 61,641. A zoomed-out icon standing for a group of spawns, at the group's centre, may find none and keeps the
+-- cheapest surface.
+local QUESTIE_ICON_REACH = 8
+
+-- The spot of the Questie map icon under the cursor: its zone map and the spawn's place on it. Questie draws each
+-- world map icon as a QuestieFrame button holding them (Questie/Questie Modules/Map/QuestieMap.lua, DrawWorldIcon:
+-- x and y in percent, UiMapID, miniMapIcon false). Read only, never written.
+---@return integer?, number?, number?
+local function QuestieIconSpot()
+	if not rawget(_G, "Questie") then
+		return nil
+	end
+	for _, frame in ipairs(GetMouseFoci()) do
+		if not (frame.IsForbidden and frame:IsForbidden()) then
+			---@cast frame SPFQuestieIcon
+			local map, x, y = frame.UiMapID, frame.x, frame.y
+			if
+				frame.miniMapIcon == false
+				and type(frame.data) == "table"
+				and type(map) == "number"
+				and type(x) == "number"
+				and type(y) == "number"
+			then
+				return map, x / 100, y / 100
+			end
+		end
+	end
+end
+
 ns.Init(function()
 	Binding("ShortestPathForeverTravelToPinButton", ns.JourneyToUserWaypoint)
 	Binding("ShortestPathForeverTravelToTrackedQuestButton", ns.JourneyToTrackedQuest)
@@ -448,8 +514,18 @@ ns.Init(function()
 		then
 			return
 		end
-		local point =
-			ns.WorldPoint(WorldMapFrame:GetMapID() --[[@as number]], WorldMapFrame:GetNormalizedCursorPosition())
+		-- Over a Questie icon the journey goes to the spawn it marks, on that spawn's floor.
+		local iconMap, iconX, iconY = QuestieIconSpot()
+		local point
+		if iconMap and iconX and iconY then
+			point = ns.WorldPoint(iconMap, iconX, iconY)
+			if point and point.z == nil then
+				point.z = ns.SpawnHeight(point.map, point.x, point.y, QUESTIE_ICON_REACH)
+			end
+		else
+			point =
+				ns.WorldPoint(WorldMapFrame:GetMapID() --[[@as number]], WorldMapFrame:GetNormalizedCursorPosition())
+		end
 		if point and OnZone(ns.InstanceEntrance(point)) then
 			ns.StartJourney(point)
 		end
