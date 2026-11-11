@@ -401,7 +401,6 @@ L["Eastern Kingdoms"] = "Östliche Königreiche" -- mt
 L["Kalimdor"] = "Kalimdor" -- mt
 L["No flight points learned in %s: open a flight master's map once to sync them."] =
 	"Noch keine Flugpunkte in %s gelernt: Öffnet einmal die Karte eines Flugmeisters, um sie abzugleichen." -- mt
-L["Dungeons and raids join Nearby services."] = "Dungeons und Schlachtzüge erscheinen unter Dienste in der Nähe." -- mt
 L["Better for your level, farther away"] = "Besser für Eure Stufe, weiter entfernt" -- mt
 L["Show a pin when you reach a stop"] = "Eine Markierung anzeigen, wenn Ihr einen Halt erreicht" -- mt
 L["In a stop's area the direction arrow becomes a pin with the stop's objectives, instead of hiding."] =
@@ -425,6 +424,7 @@ L["Stops before the last on a multi-stop route keep 15 yards."] =
 L["Dungeons and raids"] = "Dungeons und Schlachtzüge" -- mt
 L["Town services"] = "Stadtdienste" -- mt
 L["Town services on the world map"] = "Stadtdienste auf der Weltkarte" -- mt
+L["Town services show on the world map."] = "Stadtdienste erscheinen auf der Weltkarte." -- mt
 L["Capitals only"] = "Nur Hauptstädte" -- mt
 L["Capitals and important services"] = "Hauptstädte und wichtige Dienste" -- mt
 L["All towns"] = "Alle Städte" -- mt
