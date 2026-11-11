@@ -39,6 +39,7 @@ Data\Services.lua
 Data\Walks.lua
 Data\RoadCells.lua
 Data\RoadEdges.lua
+Data\Heights.lua
 Transport\Model.lua
 Routing\Planner.lua
 Core\Core.lua
