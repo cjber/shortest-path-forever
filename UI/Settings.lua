@@ -363,7 +363,7 @@ ns.Init(function()
 			arrivalOptions,
 			L["How close you must get to a journey's destination for it to count as reached."]
 				.. " "
-				.. L["Journeys that stop at a dock, lift or flight master keep their own distance."]
+				.. L["Stops before the last on a multi-stop route keep 15 yards."]
 		)
 	)
 	Checkbox(

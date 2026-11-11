@@ -14,7 +14,7 @@ The direction arrow swings smoothly to each new bearing and rests while you stan
 
 **Keep journeys after a reload** in Guidance (off by default) starts a journey you planned yourself (a map click, `/way`, a quest or Nearby services) again after a `/reload`, or when you log back in within 30 minutes. Guides and other addons start their own again, and one that does so first wins.
 
-**Arrival distance** in Guidance (15 yards by default) sets how close you must get to a journey's final destination for it to count as reached, from 5 to 50 yards. A journey that ends at a dock, lift or flight master keeps its own reach, so a large setting cannot end it before boarding. On arrival a map pin you placed at that destination is cleared rather than restored, while any other pin you had before the journey comes back.
+**Arrival distance** in Guidance (15 yards by default) sets how close you must get to a journey's final destination for it to count as reached, from 5 to 50 yards. On a multi-stop route, the stops before the last keep 15 yards. On arrival a map pin you placed at that destination is cleared rather than restored, while any other pin you had before the journey comes back.
 
 **Play a sound when you reach the goal** in Alerts (off by default) plays the map's ping when a journey you planned yourself arrives, even with the game in the background. Clearing a journey stays quiet.
 

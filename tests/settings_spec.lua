@@ -510,8 +510,8 @@ assert(
 )
 assert(arrivalRow.options.format(30) == "30 yd", "the slider labels its value as a distance")
 assert(
-	arrivalRow.tooltip:find("dock, lift or flight master", 1, true),
-	"the tooltip says a transport stop keeps its own distance"
+	arrivalRow.tooltip:find("Stops before the last on a multi-stop route keep 15 yards", 1, true),
+	"the tooltip says only earlier stops on a multi-stop route keep 15 yards"
 )
 -- The NPC nameplate arrows are guidance furniture and start on, with the friendly-nameplate condition in the tooltip.
 assert(Row("npcArrows").setting.default == true, "nameplate arrows are on by default")

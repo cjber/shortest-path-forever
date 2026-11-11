@@ -413,6 +413,6 @@ L["The pin shown when you reach a stop keeps its own lines."] =
 L["Arrival distance"] = "Distância de chegada" -- mt
 L["How close you must get to a journey's destination for it to count as reached."] =
 	"Quão perto você precisa chegar do destino de uma viagem para que ela conte como concluída." -- mt
-L["Journeys that stop at a dock, lift or flight master keep their own distance."] =
-	"Viagens que terminam num cais, elevador ou mestre de voo mantêm a própria distância." -- mt
+L["Stops before the last on a multi-stop route keep 15 yards."] =
+	"As paradas antes da última em uma rota com várias paradas mantêm 15 metros." -- mt
 L["Dungeons and raids"] = "Masmorras e raides" -- mt

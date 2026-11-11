@@ -409,6 +409,6 @@ L["The pin shown when you reach a stop keeps its own lines."] =
 L["Arrival distance"] = "到達距離" -- mt
 L["How close you must get to a journey's destination for it to count as reached."] =
 	"距離旅程目的地多近才算到達。" -- mt
-L["Journeys that stop at a dock, lift or flight master keep their own distance."] =
-	"在碼頭、升降機或飛行管理員處結束的旅程仍使用各自的距離。" -- mt
+L["Stops before the last on a multi-stop route keep 15 yards."] =
+	"多站路線中，最後一站之前的站點仍保持 15 公尺。" -- mt
 L["Dungeons and raids"] = "地城與團隊副本" -- mt

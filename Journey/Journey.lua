@@ -375,8 +375,8 @@ local function UpdateProgress()
 	-- is inside, and the next stop may be too.
 	local reach
 	if not goal.hold and not goal.entrance then
-		-- The player's own arrival distance is for the journey's final destination. A stop with another after it keeps
-		-- the fixed reach, so a large setting cannot end the journey early at a dock or a landing.
+		-- The player's own arrival distance is for the journey's final destination. The stops before the last on a
+		-- multi-stop route keep the fixed 15 yards.
 		local final = not (ns.NextJourneyStop and ns.NextJourneyStop(goal))
 		reach = final and ns.db.arrivalDistance or nil
 		if Near(goal, reach) then

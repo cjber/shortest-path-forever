@@ -436,6 +436,6 @@ L["The pin shown when you reach a stop keeps its own lines."] =
 L["Arrival distance"] = "Дистанция прибытия" -- mt
 L["How close you must get to a journey's destination for it to count as reached."] =
 	"Насколько близко нужно подойти к месту назначения, чтобы путешествие считалось завершённым." -- mt
-L["Journeys that stop at a dock, lift or flight master keep their own distance."] =
-	"Путешествия, заканчивающиеся у причала, подъёмника или распорядителя полётов, сохраняют свою дистанцию." -- mt
+L["Stops before the last on a multi-stop route keep 15 yards."] =
+	"Остановки перед последней на маршруте с несколькими остановками сохраняют 15 метров." -- mt
 L["Dungeons and raids"] = "Подземелья и рейды" -- mt
