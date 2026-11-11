@@ -1328,41 +1328,65 @@ end
 ---@field x number[] -- global cell x of each entry
 ---@field y number[] -- global cell y of each entry
 ---@field w number[] -- water entries up to each entry
+---@field t number[] -- walking time up to each entry, in running yards
 ---@field k number[] -- cluster of each entry
 ---@field n number[] -- node in that cluster
 ---@field r number[]? -- off-road entries up to each entry, with Follow roads
 ---@field roads? boolean -- Follow roads was on
+---@field swim number? -- a water yard's cost in running yards, as the search charged it
 ---@field factor? fun(k: number, node: number): number -- a hazard profile's factor at an entry
+
+-- A drawn step's time: its length on land at run speed, or at the map's swim in water, charged for the cell it enters
+-- as the walk itself is charged. Past the time of the walk it replaces, nil: string-pulling and the end chord turn a
+-- swim the route walked around away by this one rule (#742).
+---@param swim number
+---@param spent number
+---@param yards number
+---@param water boolean
+---@param budget number
+---@return number|nil
+local function pace(swim, spent, yards, water, budget)
+	local time = spent + (water and yards * swim or yards)
+	return time <= budget and time or nil
+end
 
 -- Line of sight between two path entries, walking every cell the segment between their cell centres crosses and
 -- following the surface from node to node, so it cannot jump between floors. With a limit, no crossed cell may be
--- charged more than the walk the segment replaces.
+-- charged more than the walk the segment replaces; with a budget, neither may the segment's own time.
 ---@param P SPFPathPoints
 ---@param a number
 ---@param b number
 ---@param water boolean
 ---@param road boolean?
 ---@param limit number?
+---@param budget number?
 ---@return boolean
-local function sight(st, P, a, b, water, road, limit)
+local function sight(st, P, a, b, water, road, limit, budget)
 	local factor = limit and P.factor
+	local swim = P.swim or st.swim
 	local ax, ay, bx, by = P.x[a], P.y[a], P.x[b], P.y[b]
 	local k, node = P.k[a], P.n[a]
 	local dx, dy = bx - ax, by - ay
 	local sx, sy = dx > 0 and 1 or -1, dy > 0 and 1 or -1
 	local nx, ny = dx * sx, dy * sy
+	-- The segment's own length in yards, the fraction of it one cell boundary crosses, and how far along it the last
+	-- crossing stood.
+	local span = sqrt(dx * dx + dy * dy) * st.cs
+	local invX, invY = nx > 0 and 1 / nx or 0, ny > 0 and 1 / ny or 0
+	local spent, at = 0.0, 0.0
 	local x, y, ix, iy = ax, ay, 0, 0
 	while ix < nx or iy < ny do
 		tick()
 		-- Compare the next x and y boundary crossings: (0.5 + ix) / nx against (0.5 + iy) / ny.
 		local d = (1 + 2 * ix) * ny - (1 + 2 * iy) * nx
 		local mx, my = 0, 0
+		local next2
 		if d == 0 then -- through a corner
-			mx, my = sx, sy
+			mx, my, next2 = sx, sy, (0.5 + ix) * invX
 		elseif d < 0 then
-			mx = sx
+			mx, next2 = sx, (0.5 + ix) * invX
 		else
-			my = sy
+			my, next2 = sy, (0.5 + iy) * invY
 		end
 		local nk, nn = neighbour(st, k, node, x, y, mx, my, water)
 		if not nk or not nn then
@@ -1374,9 +1398,22 @@ local function sight(st, P, a, b, water, road, limit)
 		if factor and factor(nk, nn) > limit then
 			return false
 		end
+		if budget then
+			local paced = pace(swim, spent, (next2 - at) * span, st.val[nk][nn + 1] == 2, budget)
+			if not paced then
+				return false
+			end
+			spent, at = paced, next2
+		end
 		k, node = nk, nn
 		x, y = x + mx, y + my
 		ix, iy = ix + mx * sx, iy + my * sy
+	end
+	if budget and k == P.k[b] and node == P.n[b] then -- the rest of the segment, inside the far entry's own cell
+		local paced = pace(swim, spent, (1 - at) * span, st.val[k][node + 1] == 2, budget)
+		if not paced then
+			return false
+		end
 	end
 	return k == P.k[b] and node == P.n[b]
 end
@@ -1398,12 +1435,16 @@ end
 -- A drawn line's end segments run off cell centres: from an endpoint itself, or to one. Walk the cells such a
 -- segment really crosses, from node of cluster k at the fractional global cell position (fx, fy) to (tx, ty),
 -- following the surface as sight does and, with a limit, refusing a cell a hazard profile charges more than the walk
--- the segment replaces. Returns the cluster and node it reaches in the end's cell; or, when a step is
--- closed, nil and whether every cell from the closed one to the end has no surface at all (the line only runs on
--- into a point the grid has no surface for).
----@param factor? fun(k: number, node: number): number
+-- the segment replaces. With a budget, its own time is charged the way sight charges a pulled segment and the segment
+-- is refused once it would take longer than the walk it replaces. Returns the cluster and node it reaches in the end's
+-- cell; or, when a step is closed, nil and whether every cell from the closed one to the end has no surface at all
+-- (the line only runs on into a point the grid has no surface for).
+---@param P SPFPathPoints
 ---@param limit number?
-local function toward(st, k, node, fx, fy, tx, ty, water, factor, limit)
+---@param budget number?
+local function toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget)
+	local factor = P.factor
+	local swim = P.swim or st.swim
 	local x, y, ex, ey = floor(fx), floor(fy), floor(tx), floor(ty)
 	local dx, dy = tx - fx, ty - fy
 	local sx, sy = dx > 0 and 1 or -1, dy > 0 and 1 or -1
@@ -1411,6 +1452,8 @@ local function toward(st, k, node, fx, fy, tx, ty, water, factor, limit)
 	local stepX, stepY = dx ~= 0 and 1 / abs(dx) or huge, dy ~= 0 and 1 / abs(dy) or huge
 	local nextX = (sx > 0 and x + 1 - fx or fx - x) * stepX
 	local nextY = (sy > 0 and y + 1 - fy or fy - y) * stepY
+	-- The whole segment's length in yards, and how far along it the walked boundary crossings have taken us.
+	local span, at, spent = sqrt(dx * dx + dy * dy) * st.cs, 0.0, 0.0
 	local closed = false
 	for _ = 1, 2 * (abs(ex - x) + abs(ey - y)) + 2 do
 		if x == ex and y == ey then
@@ -1418,6 +1461,7 @@ local function toward(st, k, node, fx, fy, tx, ty, water, factor, limit)
 		end
 		tick()
 		local mx, my = 0, 0
+		local reached = nextX < nextY and nextX or nextY -- equal through a corner
 		if abs(nextX - nextY) < 1e-9 then -- through a corner
 			mx, my, nextX, nextY = sx, sy, nextX + stepX, nextY + stepY
 		elseif nextX < nextY then
@@ -1433,8 +1477,9 @@ local function toward(st, k, node, fx, fy, tx, ty, water, factor, limit)
 			my = 0
 		end
 		if mx ~= 0 or my ~= 0 then
+			local nk, nn
 			if not closed then
-				local nk, nn = neighbour(st, k, node, x, y, mx, my, water)
+				nk, nn = neighbour(st, k, node, x, y, mx, my, water)
 				if nk and nn then
 					if factor and factor(nk, nn) > limit then
 						return nil, false
@@ -1445,6 +1490,23 @@ local function toward(st, k, node, fx, fy, tx, ty, water, factor, limit)
 				end
 			end
 			x, y = x + mx, y + my
+			if budget then
+				if reached > 1 then
+					reached = 1
+				end
+				local wet
+				if nk then
+					wet = st.val[nk][nn + 1] == 2
+				else
+					wet = value(st, x, y) == 2
+				end
+				local paced = pace(swim, spent, (reached - at) * span, wet, budget)
+				if not paced then
+					return nil, false
+				end
+				spent = paced
+			end
+			at = reached
 			if closed and not bare(st, x, y) then
 				return nil, false
 			end
@@ -1455,6 +1517,12 @@ local function toward(st, k, node, fx, fy, tx, ty, water, factor, limit)
 	end
 	if x ~= ex or y ~= ey then
 		return nil, false
+	end
+	if budget and at < 1 then -- the rest of the segment, inside the end's own cell
+		local paced = pace(swim, spent, (1 - at) * span, value(st, ex, ey) == 2, budget)
+		if not paced then
+			return nil, false
+		end
 	end
 	return k, node
 end
@@ -1479,12 +1547,13 @@ local function peak(P, factor, first, last, limit)
 end
 
 -- Collapse a node path to its turns, then pull the string: from each anchor, jump to the furthest point in sight.
--- Water may only be crossed where the path itself swam, and a hazard profile's cost may be no higher along the pulled
--- segment than along the entries it replaces, so a walk drawn round a town stays round it.
+-- Water may only be crossed where the path itself swam, and neither a hazard profile's cost nor a pulled segment's own
+-- time may be higher along the pulled segment than along the entries it replaces, so a walk drawn round a town stays
+-- round it and a walk round a bay is not drawn across the water (#742).
 ---@param P SPFPathPoints
 ---@return number[]
 local function smooth(st, P)
-	local PX, PY, PW, PR = P.x, P.y, P.w, P.r
+	local PX, PY, PW, PR, PT = P.x, P.y, P.w, P.r, P.t
 	local factor = P.factor
 	local n = #PX
 	local keep = { 1 }
@@ -1514,7 +1583,7 @@ local function smooth(st, P)
 				limit = peak(P, factor, keep[j - 1] + 1, q, limit)
 			end
 			local road = PR and PR[q] - PR[p] == 0
-			if not sight(st, P, p, q, PW[q] - PW[p] > 0, road, factor and limit) then
+			if not sight(st, P, p, q, PW[q] - PW[p] > 0, road, factor and limit, PT[q] - PT[p]) then
 				break
 			end
 			b = j
