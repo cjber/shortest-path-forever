@@ -119,6 +119,8 @@ With RestedXP or Guidelime installed, **Resume guide** in Guidance or the Journe
   auction houses, flight masters and stable masters. Pick a group to route to the nearest friendly location in your
   installed QuestieDB. Arrows, shot, food and drink go to the best goods for your level sold around you; when better
   ones are sold farther away on your continent, a row under the group offers that trip with its own travel time.
+  Dungeons and raids have a section of their own: every door on your continent, nearest first by travel time, and a
+  row starts a journey to that door which ends when you go in.
 
   ![Better arrows farther away, under the Arrows row](screenshots/services_better.png)
 

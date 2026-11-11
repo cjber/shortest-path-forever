@@ -44,6 +44,7 @@ local SECTION_LABELS = {
 	vendors = L["Vendors"],
 	trainers = L["Trainers"],
 	services = L["Services"],
+	entrances = L["Dungeons and raids"],
 }
 -- A vendor group's item IDs by NPC, which a search matches and a row says it sells.
 local index, vendorItems, groups, groupByKey, state = {}, {}, {}, {}, "idle"
@@ -291,6 +292,9 @@ local function Navigate(key, place)
 	if not place then
 		return false
 	end
+	if place.entrance then
+		return ns.NearbyEntrances.Navigate(place)
+	end
 	-- The stop carries the NPC id, so the nameplate arrows can point at the NPC the journey walks to.
 	local stop = { map = place.map, x = place.x, y = place.y, title = place.name, kind = Kind(key), npc = place.id }
 	return ShortestPathForever.API.NavigateRoute("Shortest Path Forever", { stop })
@@ -452,6 +456,7 @@ local function BuildGroups()
 			npcs = GroupNPCs(service.key),
 		})
 	end
+	ns.NearbyEntrances.Add(index, Add)
 	groupByKey = byKey
 	return list
 end
@@ -478,10 +483,9 @@ local function YourProfessions()
 	return SlotRanks({}, GetProfessions())
 end
 -- The groups in their order: under the class trainer, your own professions first, primary then secondary, and the
--- rest by name, so whoever has Tailoring or Skinning finds its trainer without scrolling past every other one. The
--- second value ranks the skill lines you have.
+-- rest by name, so whoever has Tailoring or Skinning finds its trainer without scrolling past every other one.
 ---@return SPFNearbyGroup[], table<integer, integer>
-local function Ordered()
+local function Ordered(world)
 	local yours = YourProfessions()
 	local professions = {}
 	for _, group in ipairs(groups) do
@@ -504,6 +508,7 @@ local function Ordered()
 		end
 		list[#list + 1] = group
 	end
+	ns.NearbyEntrances.Sort(list, world)
 	return list, yours
 end
 -- The NPC flag names whose rows the list needs: the services it groups on, and trainer for a class a companion addon
@@ -718,7 +723,7 @@ end
 local function AddGroups(root, world)
 	root:SetScrollMode(MENU_ROW * MENU_ROWS)
 	local section, afterYours
-	local ordered, yours = Ordered()
+	local ordered, yours = Ordered(world)
 	for _, group in ipairs(ordered) do
 		if group.section ~= section then
 			section = group.section
@@ -791,12 +796,13 @@ local function AddTrackingEntry(_, root)
 end
 
 ---@class SPFNearbyGroup
----@field section "vendors"|"trainers"|"services"
+---@field section "vendors"|"trainers"|"services"|"entrances"
 ---@field key string
 ---@field label string
 ---@field icon number|string
 ---@field npcs number[]
 ---@field skill? integer a profession group's skill line
+---@field entrance? integer a dungeon or raid group's instance map ID
 ---@class SPFNearbyRow
 ---@field id string the group's key, or "better:" and the key for its upgrade row
 ---@field apart? boolean the first of the other professions under yours, set off by a line
@@ -804,13 +810,15 @@ end
 ---@field npc SPFNearbyPlace the nearest matching NPC by straight line
 ---@field tier? integer on an upgrade row, the better tier it goes to (Better)
 ---@class SPFNearbySection
----@field section "vendors"|"trainers"|"services"
+---@field section "vendors"|"trainers"|"services"|"entrances"
 ---@field label string
 ---@field count integer
 ---@field collapsed boolean
 ---@field rows SPFNearbyRow[]
 ---@alias SPFEstimate fun(...: number): number?
 ---@alias SPFRank fun(places: SPFNearbyPlace[], estimate: SPFEstimate, map: number, x: number, y: number): SPFNearbyRank
+---@alias SPFClosed table<string, boolean> the sections the player folded shut
+---@alias SPFSeconds table<string, number> the panel's travel estimates, by row id
 ---@class SPFNearbyServices
 ---@field Nearest fun(key: string, world: SPFPoint): SPFNearbyPlace?
 ---@field Index fun(): table<string, SPFNearbyPlace[]>
@@ -818,7 +826,7 @@ end
 ---@field Items fun(key: string, npc: number): integer[]?
 ---@field State fun(): string
 ---@field OnReady fun(fn: fun())
----@field Sections fun(world: SPFPoint, query?: string, collapsed?: table<string, boolean>): SPFNearbySection[]
+---@field Sections fun(world: SPFPoint, query?: string, collapsed?: SPFClosed, seconds?: SPFSeconds): SPFNearbySection[]
 ---@field Shortlist fun(key: string, world: SPFPoint, limit: integer, query?: string, tier?: integer): SPFNearbyPlace[]
 ---@field Rank SPFRank
 ---@field Detail fun(key: string, place: SPFNearbyPlace, query?: string): string
@@ -838,6 +846,7 @@ end
 ---@field x number
 ---@field y number
 ---@field world SPFPoint
+---@field entrance? integer the instance map ID when the place is a dungeon or raid door
 
 function Items(key, npcID)
 	local byNpc = vendorItems[key]
@@ -854,11 +863,11 @@ end
 
 -- The panel's list: sections in their fixed order, each a header and the groups here that the query keeps. A group
 -- with no NPC on the player's continent never reaches a section, and a section with no rows is left out.
-local function Sections(world, query, collapsed)
+local function Sections(world, query, collapsed, seconds)
 	local folded = Fold(query)
 	local list = {}
-	local ordered, yours = Ordered()
-	for _, section in ipairs({ "vendors", "trainers", "services" }) do
+	local ordered, yours = Ordered(world)
+	for _, section in ipairs({ "vendors", "trainers", "services", "entrances" }) do
 		local rows, count, afterYours = {}, 0, false
 		for _, group in ipairs(ordered) do
 			if group.section == section then
@@ -881,6 +890,7 @@ local function Sections(world, query, collapsed)
 				end
 			end
 		end
+		ns.NearbyEntrances.Order(section, rows, world, seconds)
 		if #rows > 0 then
 			local isCollapsed = type(collapsed) == "table" and collapsed[section] == true
 			list[#list + 1] = {
@@ -922,6 +932,9 @@ end
 
 -- A row's detail line: the NPC and its title, or the NPC and the goods the row names (Goods) in place of the title.
 local function Detail(key, place, query)
+	if place.entrance then
+		return ns.NearbyEntrances.Detail(place)
+	end
 	local goods = Goods(key, place, query)
 	if goods then
 		local names = {}

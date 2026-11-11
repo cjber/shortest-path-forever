@@ -411,3 +411,4 @@ L["How close you must get to a journey's destination for it to count as reached.
 	"距离旅程目的地多近才算到达。" -- mt
 L["Journeys that stop at a dock, lift or flight master keep their own distance."] =
 	"在码头、升降机或飞行管理员处结束的旅程仍使用各自的距离。" -- mt
+L["Dungeons and raids"] = "地下城与团队副本" -- mt

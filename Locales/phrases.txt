@@ -81,6 +81,7 @@ L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."] 
 L["Draws the walking route on the minimap. With it off, the destination pin, arrow and tracker still guide you."] = "Draws the walking route on the minimap. With it off, the destination pin, arrow and tracker still guide you."
 L["Draws the walking route on the world map. With it off, the destination pin, arrow and tracker still guide you."] = "Draws the walking route on the world map. With it off, the destination pin, arrow and tracker still guide you."
 L["Drink"] = "Drink"
+L["Dungeons and raids"] = "Dungeons and raids"
 L["E"] = "E"
 L["Eastern Kingdoms"] = "Eastern Kingdoms"
 L["Either faction can ride any boat or zeppelin."] = "Either faction can ride any boat or zeppelin."

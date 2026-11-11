@@ -416,3 +416,4 @@ L["How close you must get to a journey's destination for it to count as reached.
 	"Wie nah Ihr an das Ziel einer Reise herankommen müsst, damit sie als erreicht gilt." -- mt
 L["Journeys that stop at a dock, lift or flight master keep their own distance."] =
 	"Reisen, die an einer Anlegestelle, einem Aufzug oder einem Flugmeister enden, behalten ihren eigenen Abstand." -- mt
+L["Dungeons and raids"] = "Dungeons und Schlachtzüge" -- mt

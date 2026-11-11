@@ -221,11 +221,15 @@ local groups = {
 	{ section = "vendors", key = "arrows", label = "Arrows", icon = 2512 },
 	{ section = "vendors", key = "bank", label = "Bank", icon = 4496 },
 	{ section = "trainers", key = "class", label = "Class trainer", icon = "Class" },
+	{ section = "entrances", key = "entrance:36", label = "The Deadmines", icon = "questlog-questtypeicon-dungeon" },
 }
 local places = {
 	arrows = { { id = 1, name = "Dalmond", title = "General Goods", map = 100, x = 0.1, y = 0.1 } },
 	bank = { { id = 2, name = "Karus", title = "Banker", map = 100, x = 0.2, y = 0.2 } },
 	class = { { id = 3, name = "Mage trainer", title = "Mage Trainer", map = 100, x = 0.3, y = 0.3 } },
+	["entrance:36"] = {
+		{ id = 36, name = "The Deadmines", title = "Westfall", map = 100, x = 0.9, y = 0.9, entrance = 36 },
+	},
 }
 -- The better trip under Arrows: Jagged Arrow from a vendor farther off, with a time of its own.
 local far = { id = 4, name = "Jin'sora", title = "Bow Merchant", map = 1454, x = 0.5, y = 0.5 }
@@ -275,7 +279,7 @@ ns.NearbyServices = {
 	end,
 	Sections = function(_, query)
 		local list = {}
-		for _, section in ipairs({ "vendors", "trainers" }) do
+		for _, section in ipairs({ "vendors", "trainers", "entrances" }) do
 			local rows = {}
 			for _, group in ipairs(groups) do
 				local place = places[group.key][1]
@@ -295,7 +299,7 @@ ns.NearbyServices = {
 	end,
 	Shortlist = function(key, _, _, _, tier)
 		shortlisted[#shortlisted + 1] = { key = key, tier = tier }
-		return { tier and far or { id = 1, name = "Dalmond", title = "General Goods", map = 100, x = 0.1, y = 0.1 } }
+		return { (tier and far) or places[key][1] }
 	end,
 	Rank = function(candidates)
 		return {
@@ -305,7 +309,7 @@ ns.NearbyServices = {
 		}
 	end,
 	Detail = function(_, place)
-		return place.name
+		return place.entrance and place.title or place.name
 	end,
 	-- The arrow row names Razor Arrow, as a level 25 hunter's would; the others name no goods.
 	Goods = function(key, place)
@@ -488,6 +492,20 @@ assert(bankRow and bankRow.itemID == nil, "the bank row names no goods")
 bankRow.Item.scripts.OnEnter(bankRow.Item)
 assert(not tooltip.shown and bankRow.highlightLocked, "and its icon shows no tooltip, only the row's light")
 bankRow.Item.scripts.OnLeave(bankRow.Item)
+
+-- A dungeon or raid row names the instance, its zone under it, and wears the client's dungeon mark at its own size.
+local raidRow
+for _, f in ipairs(created) do
+	if f.key == "entrance:36" and f.Item then
+		raidRow = f
+	end
+end
+assert(raidRow and raidRow.Label.text == "The Deadmines", "a dungeon row names the instance")
+assert(
+	raidRow.Icon.fit and raidRow.Icon.fit.atlas == "questlog-questtypeicon-dungeon",
+	"with the client's dungeon mark, at its own size"
+)
+assert(raidRow.Detail.text == "Westfall", "and the zone under the instance")
 
 -- Better goods farther away: a one-line row right under Arrows, its item icon wearing the client's upgrade arrow, its
 -- goods and their zone, and a time of its own from its own ranking.

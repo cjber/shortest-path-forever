@@ -422,3 +422,4 @@ L["How close you must get to a journey's destination for it to count as reached.
 	"여정의 목적지에 얼마나 가까워져야 도착으로 칩니다." -- mt
 L["Journeys that stop at a dock, lift or flight master keep their own distance."] =
 	"부두, 승강기, 비행 조련사에서 끝나는 여정은 자체 거리를 유지합니다." -- mt
+L["Dungeons and raids"] = "던전 및 공격대" -- mt

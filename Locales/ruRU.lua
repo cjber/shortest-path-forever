@@ -438,3 +438,4 @@ L["How close you must get to a journey's destination for it to count as reached.
 	"Насколько близко нужно подойти к месту назначения, чтобы путешествие считалось завершённым." -- mt
 L["Journeys that stop at a dock, lift or flight master keep their own distance."] =
 	"Путешествия, заканчивающиеся у причала, подъёмника или распорядителя полётов, сохраняют свою дистанцию." -- mt
+L["Dungeons and raids"] = "Подземелья и рейды" -- mt
