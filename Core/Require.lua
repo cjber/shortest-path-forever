@@ -5,9 +5,16 @@ local addonName, ns = ...
 ns.Icon = C_AddOns.GetAddOnMetadata(addonName, "X-Forever-Icon")
 
 -- The game refuses to load this addon when ForeverCore is absent (## Dependencies), but an older ForeverCore still
--- loads. Its API version and the kit this addon's own API is built on say whether it has everything called here, so an
--- out-of-date one stops the addon's own files with one line on screen, never a chat message.
-if ForeverCore == nil or (ForeverCore.API or 0) < 1 or ForeverCore.APIKit == nil then
+-- loads. Its API version, the kit this addon's own API is built on and the tracker section it builds say whether it
+-- has everything called here (the section arrived in 1.2.0), so an out-of-date one stops the addon's own files with
+-- one line on screen, never a chat message.
+if
+	ForeverCore == nil
+	or (ForeverCore.API or 0) < 1
+	or ForeverCore.APIKit == nil
+	or ForeverCore.TrackerSection == nil
+	or ForeverCore.TrackerLine == nil
+then
 	ns.broken = true
 	local errors = rawget(_G, "UIErrorsFrame")
 	if errors then

@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parent.parent
 POLICY = package.Policy(
     addons=("ShortestPathForever",),
     specs=("tests/smoke_spec.lua", "tests/core_dependency_spec.lua"),
-    support=("tests", "tools/fetch_blizzard_ui.sh"),
+    support=("tests", "tools/fetch_blizzard_ui.sh", "tools/forever_sim/toc.lua"),
 )
 
 if __name__ == "__main__":

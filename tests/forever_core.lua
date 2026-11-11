@@ -50,18 +50,24 @@ function ForeverCore.directory()
 	)
 end
 
--- The files ForeverCore.toc lists, in its order, with forward slashes for loadfile.
----@param directory string
----@return string[]
-function ForeverCore.files(directory)
-	local files = {}
-	for line in io.lines(directory .. "/ForeverCore.toc") do
-		line = line:gsub("\r$", "")
-		if not (line:match("^%s*$") or line:match("^%s*#")) then
-			files[#files + 1] = line:gsub("\\", "/")
-		end
+-- The shared TOC reader: the files the client loads from ForeverCore.toc in order, each XML expanded into its Script
+-- and Include children, plus the virtual templates each XML defines.
+local Toc = dofile("tools/forever_sim/toc.lua")
+
+-- Registers an XML file's virtual templates in the harness's table, as the client does before that XML's scripts run.
+-- A harness that resolves CreateFrame's template through the table therefore reaches the stock template the entry
+-- inherits, such as ObjectiveTrackerLineTemplate behind ForeverTrackerInteractiveLineTemplate.
+---@param env table the fake client
+---@param path string
+local function RegisterTemplates(env, path)
+	local templates = env.Templates
+	if type(templates) ~= "table" then
+		templates = {}
+		env.Templates = templates
 	end
-	return files
+	for _, template in ipairs(Toc.templates(path)) do
+		templates[template.name] = template
+	end
 end
 
 ---@param names string[]?
@@ -78,8 +84,8 @@ local function Wanted(names)
 end
 
 -- Loads ForeverCore's Lua files into `env`, each with the one namespace, and returns that namespace. The caller fires
--- ForeverCore's ADDON_LOADED afterwards, as the client does before the addon's own. A TOC's XML entry is the client's
--- own to parse into frames and templates before the Lua beside it runs, so it is skipped here rather than loadfile'd.
+-- ForeverCore's ADDON_LOADED afterwards, as the client does before the addon's own. Each XML entry registers its
+-- templates in the harness, the client's own step before the Lua beside it runs.
 ---@param env table the fake client
 ---@param name? string the addon folder, "ForeverCore"
 ---@param names? string[] only these core files, in TOC order; every file when nil
@@ -89,17 +95,21 @@ function ForeverCore.load(env, name, names, ns)
 	local directory = ForeverCore.directory()
 	local selected = Wanted(names)
 	ns = ns or {}
-	for _, path in ipairs(ForeverCore.files(directory)) do
-		if selected == nil or selected[path] then
+	local prefix = directory .. "/"
+	for _, entry in ipairs(Toc.files(directory, "ForeverCore.toc")) do
+		local path = entry.path
+		local relative = path:sub(1, #prefix) == prefix and path:sub(#prefix + 1) or path
+		if entry.kind == "xml" then
+			RegisterTemplates(env, path)
+		elseif selected == nil or selected[relative] then
 			-- Core's own quest section needs the full native tracker template; a spec without one skips that optional
 			-- section, as core's own api_spec does. A spec with no GetLocale skips the translations after enUS, whose
 			-- guard would stop on the missing client call.
 			local native = env.ObjectiveTrackerFrame
-			local translated = path:match("^Locales/") and path ~= "Locales/enUS.lua"
-			local xml = path:match("%.xml$") ~= nil
-			if not xml and (path ~= "UI/TrackerQuests.lua" or native ~= nil) then
+			local translated = relative:match("^Locales/") and relative ~= "Locales/enUS.lua"
+			if relative ~= "UI/TrackerQuests.lua" or native ~= nil then
 				if not (translated and type(env.GetLocale) ~= "function") then
-					local chunk = assert(loadfile(directory .. "/" .. path), path)
+					local chunk = assert(loadfile(path), relative)
 					setfenv(chunk, env)
 					chunk(name or "ForeverCore", ns)
 				end

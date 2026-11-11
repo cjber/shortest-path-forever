@@ -5,6 +5,10 @@ if ns.broken then
 	return
 end
 local L = ns.L
+-- ForeverCore's tracker section and line helpers, published from 1.2.0; Core/Require.lua stops an older core before
+-- this file runs.
+local Section = ForeverCore.TrackerSection --[[@as ForeverTrackerSectionAPI]]
+local Line = ForeverCore.TrackerLine --[[@as ForeverTrackerLineAPI]]
 
 ---@type SPFTracker
 local module
@@ -89,6 +93,22 @@ function ModuleMixin:OnBlockHeaderClick(block, button)
 	end
 end
 
+-- A left click on the section's own header opens what the section shows: the journey's guide, the family link, or
+-- the dock on the map. The shared column calls this for every button but the right-click menu's.
+---@param button string
+function ModuleMixin.OnHeaderClick(_, button)
+	if button ~= "LeftButton" then
+		return
+	end
+	if ns.JourneyInfo() then
+		ns.ToggleJourneyGuide()
+	elseif not module.mapDock and module.blocks[1] and module.blocks[1].key == "family" then
+		ns.FamilyHints.OpenFooter()
+	else
+		OpenDockMap(module.mapDock)
+	end
+end
+
 local function DepartureText(departure)
 	local text = ns.DockLabel(departure.to[1]) .. "   " .. ns.Timetable.Status(departure)
 	return departure.known and text or GRAY_FONT_COLOR:WrapTextInColorCode(text)
@@ -104,8 +124,9 @@ end
 -- The tracker's line font is 12 high, and a row's mark is drawn at that height so it never grows the line. Markup
 -- takes whole pixels, so each mark keeps its atlas's native shape within WFA-27's 2%.
 local ICON_SIZE = 12
--- SPF's own line template (UI/Tracker.xml), so its pooled lines never come from, or return to, the stock template
--- every other tracker module shares.
+-- SPF's own line template (UI/Tracker.xml). The client pools lines by template name, and SPF puts a leg's mark in the
+-- dash column; a line released to the stock pool, or to core's interactive one, could wear that mark in another
+-- section. Its clickable rows are still wired by ForeverCore's TrackerLine, which works on any line.
 local LINE_TEMPLATE = "ShortestPathForeverTrackerLineTemplate"
 
 ---@param color ForeverObjectiveTrackerColor|colorRGBA
@@ -212,23 +233,30 @@ function ModuleMixin:LayoutContents()
 			SetPulse(line, row.warning == true)
 			local family = entry.key == "family"
 			local clickable = family or entry.key == "journey" and row.current and not ns.Corpse.Active()
-			line:EnableMouse(clickable == true)
-			line:SetScript("OnMouseUp", clickable and function(_, button)
-				if button ~= "LeftButton" then
-					return
-				elseif family then
-					ns.FamilyHints.OpenFooter()
-					return
-				end
-				ForeverCore.ContextMenu(line, function(_, root)
-					root:CreateButton(L["Complete this step"], function()
-						local index = row.key
-						if type(index) == "number" then
-							ns.SkipJourneyStep(index)
+			if clickable then
+				Line.SetInteractive(line, {
+					onClick = function()
+						if family then
+							ns.FamilyHints.OpenFooter()
+							return
 						end
-					end)
-				end)
-			end or nil)
+						ForeverCore.ContextMenu(line, function(_, root)
+							root:CreateButton(L["Complete this step"], function()
+								local index = row.key
+								if type(index) == "number" then
+									ns.SkipJourneyStep(index)
+								end
+							end)
+						end)
+					end,
+				})
+			else
+				-- A line reused from a clickable row must stop answering the mouse.
+				line:EnableMouse(false)
+				for _, script in ipairs({ "OnMouseUp", "OnEnter", "OnLeave" }) do
+					line:SetScript(script, nil)
+				end
+			end
 		end
 		if not self:LayoutBlock(block) then
 			return
@@ -350,36 +378,23 @@ end
 local function RefreshBlockText(blocks)
 	-- Countdown ticks reuse Blizzard's lines; only a row that outgrows its line needs a new layout. A row whose
 	-- timer sits at the wrapping width would otherwise gain and lose a line each second and shake the column.
-	local resized = false
+	for _, entry in ipairs(blocks) do
+		for _, row in ipairs(entry.rows) do
+			row.color = RowColor(row)
+		end
+	end
+	Section.UpdateText(module, blocks)
+	-- The mark in the dash column is SPF's own row art, not the line's text, so it follows a mode change here too.
 	for _, entry in ipairs(blocks) do
 		local block = module:GetExistingBlock(entry.key)
 		if block and block.used then
-			if block.HeaderText:GetText() ~= entry.title then
-				local height = block:SetStringText(
-					block.HeaderText,
-					entry.title,
-					nil,
-					OBJECTIVE_TRACKER_COLOR.Header,
-					block.isHighlighted
-				)
-				resized = resized or height ~= block.headerHeight
-				block.headerHeight = height
-			end
 			for _, row in ipairs(entry.rows) do
 				local line = block:GetExistingLine(row.key)
 				if line and line.used then
-					if line.Text:GetText() ~= row.text then
-						local height =
-							block:SetStringText(line.Text, row.text, true, RowColor(row), block.isHighlighted)
-						resized = resized or height > line:GetHeight() + 0.5
-					end
 					SetLineMark(line, RowMark(row))
 				end
 			end
 		end
-	end
-	if resized then
-		module:MarkDirty()
 	end
 end
 
@@ -497,28 +512,26 @@ function ns.RefreshTracker()
 	RefreshTracker(ns.NearestDock())
 end
 
-local function Attach()
-	-- The old tracker table this addon kept before ForeverCore owned the column, offered once so the player keeps the
-	-- scale, lock and position they chose. The host copies what it can into ForeverCoreDB, then the key goes.
-	module.safeCall = ns.core.SafeCall
-	module.legacySettings = ns.db and ns.db.trackerHost
-	ForeverCore.TrackerHost.Attach(module)
-	if ns.db then
-		ns.db.trackerHost = nil
-	end
-end
-
 ns.Init(function()
-	if not (ObjectiveTrackerManager and ObjectiveTrackerFrame) then
+	-- The shared column builds the section, mixes this addon in, sets its order and header, and attaches it once the
+	-- world loads. The old tracker table is offered once so the player keeps the scale, lock and position they chose.
+	local tracker = Section.Create("ShortestPathForeverObjectiveTracker", ModuleMixin, {
+		-- Above quests, SkillUp Forever (-2) and Legacy Forever (0, -1): each needs its own slot.
+		order = -3,
+		lineTemplate = LINE_TEMPLATE,
+		header = ModuleMixin.headerText,
+		legacy = function()
+			return ns.db
+		end,
+		legacyKey = "trackerHost",
+		safeCall = ns.core.SafeCall,
+	})
+	if not tracker then
 		ns.Print(L["The objective tracker is unavailable."])
 		return
 	end
-	local tracker =
-		CreateFrame("Frame", "ShortestPathForeverObjectiveTracker", UIParent, "ObjectiveTrackerModuleTemplate")
-	Mixin(tracker, ModuleMixin)
 	---@cast tracker SPFTracker
 	module = tracker
-	module.lineTemplate = LINE_TEMPLATE
 	module.blocks = {}
 	-- SharedXML loads Group Finder's ring and sparks, with animation tied to the frame's visibility.
 	local spinner = CreateFrame("Frame", nil, module.Header, "SpinnerTemplate")
@@ -527,25 +540,6 @@ ns.Init(function()
 	module.Spinner:SetSize(16, 16)
 	module.Spinner:Hide()
 	module.section = ModuleMixin.headerText
-	module:SetHeader(ModuleMixin.headerText)
-	-- Above quests, SkillUp Forever (-2) and Legacy Forever (0, -1): each needs its own slot.
-	module.uiOrder = -3
-	module.Header:EnableMouse(true)
-	module.Header:SetScript("OnMouseUp", function(_, button)
-		if button == "LeftButton" then
-			if ns.JourneyInfo() then
-				ns.ToggleJourneyGuide()
-			elseif not module.mapDock and module.blocks[1] and module.blocks[1].key == "family" then
-				ns.FamilyHints.OpenFooter()
-			else
-				OpenDockMap(module.mapDock)
-			end
-		end
-	end)
-	EventUtil.ContinueAfterAllEvents(function()
-		C_Timer.After(0, Attach)
-	end, "PLAYER_ENTERING_WORLD", "VARIABLES_LOADED")
-	Attach()
 	ns.Timetable.OnChange(ns.RefreshTracker)
 	ns.OnTravelTick(RefreshTracker)
 	ns.RefreshTracker()

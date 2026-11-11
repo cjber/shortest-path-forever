@@ -87,6 +87,8 @@ local function harness(saved, progress, leaderboards)
 	env.ForeverCore = {
 		API = 1,
 		APIKit = {},
+		TrackerSection = {},
+		TrackerLine = {},
 		PeerStats = coreNs.PeerStats,
 		Leaderboards = leaderboards or { Register = function() end, Open = function() end },
 	}
