@@ -423,8 +423,8 @@ L["Eastern Kingdoms"] = "Восточные королевства" -- mt
 L["Kalimdor"] = "Калимдор" -- mt
 L["No flight points learned in %s: open a flight master's map once to sync them."] =
 	"В зоне «%s» не изучено ни одной точки полёта: один раз откройте карту распорядителя полётов, чтобы синхронизировать их." -- mt
-L["Walks follow what your character can actually climb and drop."] =
-	"Пешие маршруты учитывают, куда ваш персонаж может подняться и откуда спрыгнуть." -- mt
+L["Dungeons and raids join Nearby services."] =
+	"Подземелья и рейды теперь в списке «Услуги поблизости»." -- mt
 L["Better for your level, farther away"] = "Лучше для вашего уровня, но дальше" -- mt
 L["Show a pin when you reach a stop"] = "Показывать метку при прибытии к остановке" -- mt
 L["In a stop's area the direction arrow becomes a pin with the stop's objectives, instead of hiding."] =
