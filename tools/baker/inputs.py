@@ -1,6 +1,8 @@
 """Verify an extractor's expected tile inventory before publishing a navigation map."""
 
 import argparse
+import ast
+import hashlib
 import json
 import os
 import re
@@ -69,3 +71,35 @@ def source_label(provenance: dict | None) -> str:
                 f"local {provenance['product']} {provenance['build']}, TrinityCore {rev}, recipe {provenance['recipe']}"
             )
     return "own bake of the World of Warcraft client (wow_classic_beta), Mappster/DotRecast"
+
+
+def generator_files() -> list[Path]:
+    """gen_nav.py and every tools/baker module it imports, directly or through another: the code that turns an
+    extract into a walking map, read from the import statements so the list cannot drift from the code."""
+    baker = Path(__file__).resolve().parent
+    seen, todo = set(), [baker / "gen_nav.py"]
+    while todo:
+        path = todo.pop()
+        if path in seen:
+            continue
+        seen.add(path)
+        for node in ast.walk(ast.parse(path.read_text())):
+            if isinstance(node, ast.ImportFrom) and node.module:
+                names = [node.module]
+            elif isinstance(node, ast.Import):
+                names = [alias.name for alias in node.names]
+            else:
+                continue
+            for name in names:
+                parts = name.split(".")
+                if parts[0] == "baker" and len(parts) > 1:
+                    todo.append(baker / f"{parts[1]}.py")
+    return sorted(seen)
+
+
+def generator_digest() -> str:
+    """The sha256 over the generator's files, each by name and content."""
+    digest = hashlib.sha256()
+    for path in generator_files():
+        digest.update(path.name.encode() + b"\0" + path.read_bytes() + b"\0")
+    return digest.hexdigest()

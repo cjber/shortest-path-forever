@@ -146,6 +146,8 @@ jobs:
           key: regeneration-${{ runner.os }}-${{ hashFiles('tools/gen_*.py') }}
           restore-keys: regeneration-${{ runner.os }}-
       - run: python3 tools/check_generated.py
+      # The walking maps name the baker pins and generator code they came from; fails when either moved.
+      - run: python3 tools/check_nav.py
 
   typecheck:
     runs-on: ubuntu-24.04

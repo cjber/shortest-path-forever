@@ -865,6 +865,14 @@ local function Plan(options)
 				last.hops[#last.hops + 1] = leg.hops[1]
 				-- Connecting hops stay in flight; only the initial departure pays boarding.
 				last.estimated = last.estimated or leg.estimated
+			elseif leg.mode == "walk" and leg.arrive == leg.depart and last and last.mode == "walk" then
+				-- A zero-time walk to a place the walk before already reaches (both snap to one walking-map node)
+				-- extends that walk, or it would end short of where the walk really ends.
+				last.to, last.arrive = leg.to, leg.arrive
+				last.yards = (last.yards or 0) + (leg.yards or 0)
+				last.estimated = last.estimated or leg.estimated
+				-- The old end's geometry does not reach the new one.
+				last.walkPoints, last.walkDrawn, last.walkError = nil, nil, nil
 			elseif leg.mode ~= "walk" or leg.arrive > leg.depart or #reversed == 1 then
 				legs[#legs + 1] = leg
 			end
