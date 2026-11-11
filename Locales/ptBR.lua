@@ -397,7 +397,8 @@ L["Eastern Kingdoms"] = "Reinos do Leste" -- mt
 L["Kalimdor"] = "Kalimdor" -- mt
 L["No flight points learned in %s: open a flight master's map once to sync them."] =
 	"Nenhum ponto de voo aprendido em %s: abra uma vez o mapa de um mestre de voo para sincronizá-los." -- mt
-L["Tells you which addon to update."] = "Diz qual addon atualizar." -- mt
+L["Walks follow what your character can actually climb and drop."] =
+	"As caminhadas seguem o que o seu personagem consegue escalar e descer de verdade." -- mt
 L["Better for your level, farther away"] = "Melhor para o seu nível, mais longe" -- mt
 L["Show a pin when you reach a stop"] = "Mostrar um alfinete quando você chegar a uma parada" -- mt
 L["In a stop's area the direction arrow becomes a pin with the stop's objectives, instead of hiding."] =

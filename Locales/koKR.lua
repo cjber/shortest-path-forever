@@ -407,7 +407,8 @@ L["Eastern Kingdoms"] = "동부 왕국" -- mt
 L["Kalimdor"] = "칼림도어" -- mt
 L["No flight points learned in %s: open a flight master's map once to sync them."] =
 	"%s에서 배운 비행 지점이 없습니다: 비행 조련사의 지도를 한 번 열어 동기화하세요." -- mt
-L["Tells you which addon to update."] = "업데이트할 애드온을 알려 줍니다." -- mt
+L["Walks follow what your character can actually climb and drop."] =
+	"걷는 길은 캐릭터가 실제로 오르고 내려갈 수 있는 곳을 따릅니다." -- mt
 L["Better for your level, farther away"] = "레벨에 더 좋은 물품, 더 먼 곳" -- mt
 L["Show a pin when you reach a stop"] = "지점에 도착하면 핀 표시" -- mt
 L["In a stop's area the direction arrow becomes a pin with the stop's objectives, instead of hiding."] =

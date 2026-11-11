@@ -393,7 +393,8 @@ L["Eastern Kingdoms"] = "東部王國" -- mt
 L["Kalimdor"] = "卡林多" -- mt
 L["No flight points learned in %s: open a flight master's map once to sync them."] =
 	"尚未在%s學會任何飛行點：開啟一次飛行管理員的地圖以同步它們。" -- mt
-L["Tells you which addon to update."] = "告訴你該更新哪個插件。" -- mt
+L["Walks follow what your character can actually climb and drop."] =
+	"步行路線會依照你的角色實際能攀爬和跳下的地形來規劃。" -- mt
 L["Better for your level, farther away"] = "更適合你的等級，但更遠" -- mt
 L["Show a pin when you reach a stop"] = "抵達目的地時顯示圖釘" -- mt
 L["In a stop's area the direction arrow becomes a pin with the stop's objectives, instead of hiding."] =
