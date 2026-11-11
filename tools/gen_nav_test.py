@@ -187,11 +187,11 @@ class GraphLegalityTest(unittest.TestCase):
     refuses or miss one it allows. A step's height rule is the stored height, never a raw one."""
 
     @contextmanager
-    def world(self, heights, cuts=(), links=None, nx=1):
+    def world(self, heights, cuts=(), links=None, nx=1, ny=1):
         c = gen_nav.CELLS
-        gw = nx * c
-        grid = bytearray(gw * c)
-        base = array("f", [0.0] * (gw * c))
+        gw, gh = nx * c, ny * c
+        grid = bytearray(gw * gh)
+        base = array("f", [0.0] * (gw * gh))
         for cell, (value, z) in heights.items():
             grid[cell], base[cell] = value, z
         line = defaultdict(dict)
@@ -200,9 +200,9 @@ class GraphLegalityTest(unittest.TestCase):
         with (
             patch.object(gen_nav, "CELLS", c),
             patch.object(gen_nav, "GW", gw),
-            patch.object(gen_nav, "GH", c),
+            patch.object(gen_nav, "GH", gh),
             patch.object(gen_nav, "NX", nx),
-            patch.object(gen_nav, "NY", 1),
+            patch.object(gen_nav, "NY", ny),
             patch.object(gen_nav, "BASE_Z", base),
             patch.object(gen_nav, "FLOOR_CELL", array("i")),
             patch.object(gen_nav, "FLOOR_VAL", bytearray()),
@@ -222,9 +222,22 @@ class GraphLegalityTest(unittest.TestCase):
         with self.world(heights, cuts, links) as (grid, g):
             return dict(gen_nav.moves(g, grid, set(cuts), cell, (0, c - 1, 0, c - 1)))
 
-    def crossings(self, heights, cuts=(), links=None):
-        with self.world(heights, cuts, links, nx=2) as (grid, g):
+    def crossings(self, heights, cuts=(), links=None, ny=1):
+        with self.world(heights, cuts, links, nx=2, ny=ny) as (grid, g):
             return gen_nav.grid_hpa(grid, set(cuts))[1], g, grid
+
+    def test_clusters_that_meet_at_a_corner_keep_the_crossings_between_them(self):
+        # Four clusters; the only walkable cells are the two corner cells of clusters 0 and 3, which touch diagonally.
+        # The runtime walks the bake's explicit diagonal between them, and a drop record may land across the corner,
+        # so the graph needs an entrance there or HPA* calls the route unreachable.
+        c = gen_nav.CELLS
+        u, w = (c - 1) * 2 * c + c - 1, c * 2 * c + c
+        edges, _, _ = self.crossings({u: (1, 0.0), w: (1, 0.0)}, cuts={u * 4 + 2}, ny=2)
+        self.assertIn((u, w), edges)
+        self.assertIn((w, u), edges)
+        edges, _, _ = self.crossings({u: (1, 10.0), w: (1, 0.0)}, links=[(u, w, 12.0)], ny=2)
+        self.assertIn((u, w), edges, "the drop lands across the corner")
+        self.assertNotIn((w, u), edges)
 
     def test_a_steep_step_uses_the_stored_heights_the_decoder_reads(self):
         # 20.4 and 20.0 yards are both stored as 20, so the decoder walks the step both ways and the graph must too.

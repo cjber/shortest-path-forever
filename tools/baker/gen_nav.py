@@ -811,6 +811,43 @@ def grid_hpa(grid, cuts):
         length = CS * (math.sqrt(2) if diagonal else 1)
         return tuple(length * (weight if value_of(grid, b) == 2 else 1) for weight in WEIGHTS)
 
+    def records(groups, k, other, axis):
+        """Link records between clusters k and other, each from the cluster that owns its direction. A link keeps its
+        own direction and cost: its reverse, where the grid walks it back, is the other cluster's own crossing. A
+        record's place along the border orders its entrances; clusters that meet at a corner (axis None) have none."""
+        kx, ky = divmod(k, NY)
+        for side, across in ((k, other), (other, k)):
+            for u in LINKED_OF[side]:
+                ux, uy = divmod(cell_of(u), GH)
+                for w, cost in sorted(LINKS[u].items()):
+                    if cluster_of_cell(w) != across:
+                        continue
+                    # a two-way record is still one-way at a steep pair, as the decoder reads it
+                    if cost is None and not steep_node_ok(grid, u, w):
+                        continue
+                    wx, wy = divmod(cell_of(w), GH)
+                    t = 0 if axis is None else uy - ky * CELLS if axis == 0 else ux - kx * CELLS
+                    groups[(region[u], region[w])].append((t, int(wx != ux and wy != uy), u, w, cost))
+
+    def entrances(groups):
+        """Each group's entrances, one every ENTRANCE_RUN crossings, with the edge the crossing walks."""
+        for crossings in groups.values():
+            # A crossing carries its cost: None for an ordinary step, a float for a drop. Two identical crossings
+            # (a step and a drop over the same pair) would make the tuple comparison fall through to the cost and
+            # raise, so the order is the crossing itself and an ordinary step wins a tie (its reverse is a step).
+            crossings.sort(key=lambda c: (c[0], c[1], c[2], c[3], c[4] is not None))
+            for i in range(0, len(crossings), ENTRANCE_RUN):
+                chunk = crossings[i : i + ENTRANCE_RUN]
+                mid = chunk[len(chunk) // 2][0]
+                # prefer orthogonal, then the crossing nearest the chunk's middle
+                _, diagonal, u, v, cost = min(chunk, key=lambda c: (c[1], abs(c[0] - mid)))
+                if cost is not None:
+                    edges[(u, v)] = tuple(cost for _ in WEIGHTS)
+                else:
+                    edges[(u, v)] = step_into(u, v, diagonal)
+                nodes[cluster_of_cell(u)].add(u)
+                nodes[cluster_of_cell(v)].add(v)
+
     for k in range(NX * NY):
         kx, ky = divmod(k, NY)
         for axis in (0, 1):
@@ -838,37 +875,23 @@ def grid_hpa(grid, cuts):
                         if step_walkable(g, grid, cuts, ux, uy, wx, wy):
                             w = wx * GH + wy
                             groups[(region[u], region[w])].append((t, abs(s), u, w, None))
-            # Links across this border, each from the cluster that owns its direction. A link keeps its own direction
-            # and cost: its reverse, where the grid walks it back, is the other cluster's own crossing.
             other = k + (NY if axis == 0 else 1)
-            for side, across in ((k, other), (other, k)):
-                for u in LINKED_OF[side]:
-                    ux, uy = divmod(cell_of(u), GH)
-                    for w, cost in sorted(LINKS[u].items()):
-                        if cluster_of_cell(w) != across:
-                            continue
-                        # a two-way record is still one-way at a steep pair, as the decoder reads it
-                        if cost is None and not steep_node_ok(grid, u, w):
-                            continue
-                        wx, wy = divmod(cell_of(w), GH)
-                        t = uy - ky * CELLS if axis == 0 else ux - kx * CELLS
-                        groups[(region[u], region[w])].append((t, int(wx != ux and wy != uy), u, w, cost))
-            for crossings in groups.values():
-                # A crossing carries its cost: None for an ordinary step, a float for a drop. Two identical crossings
-                # (a step and a drop over the same pair) would make the tuple comparison fall through to the cost and
-                # raise, so the order is the crossing itself and an ordinary step wins a tie (its reverse is a step).
-                crossings.sort(key=lambda c: (c[0], c[1], c[2], c[3], c[4] is not None))
-                for i in range(0, len(crossings), ENTRANCE_RUN):
-                    chunk = crossings[i : i + ENTRANCE_RUN]
-                    mid = chunk[len(chunk) // 2][0]
-                    # prefer orthogonal, then the crossing nearest the chunk's middle
-                    _, diagonal, u, v, cost = min(chunk, key=lambda c: (c[1], abs(c[0] - mid)))
-                    if cost is not None:
-                        edges[(u, v)] = tuple(cost for _ in WEIGHTS)
-                    else:
-                        edges[(u, v)] = step_into(u, v, diagonal)
-                    nodes[cluster_of_cell(u)].add(u)
-                    nodes[cluster_of_cell(v)].add(v)
+            records(groups, k, other, axis)
+            entrances(groups)
+        # Clusters that meet only at a corner: the diagonal step between the two corner cells, and any record that
+        # lands across the corner, such as a drop.
+        for dy in (1, -1):
+            if kx + 1 >= NX or not 0 <= ky + dy < NY:
+                continue
+            groups = defaultdict(list)
+            a = (kx * CELLS + CELLS - 1, ky * CELLS + (CELLS - 1 if dy > 0 else 0))
+            b = ((kx + 1) * CELLS, (ky + dy) * CELLS + (0 if dy > 0 else CELLS - 1))
+            for (ux, uy), (vx, vy) in ((a, b), (b, a)):
+                if grid[ux * GH + uy] and step_walkable(g, grid, cuts, ux, uy, vx, vy):
+                    u, w = ux * GH + uy, vx * GH + vy
+                    groups[(region[u], region[w])].append((0, 1, u, w, None))
+            records(groups, k, (kx + 1) * NY + ky + dy, None)
+            entrances(groups)
     inter = len(edges)
     for k in sorted(nodes):
         cells = nodes[k]
