@@ -51,41 +51,101 @@ CI tools (StyLua, ruff, luacheck, shellcheck, shfmt, lua-language-server, action
 packager) are pinned in `.github/workflows/` and `tools/typecheck.sh`, except luajit and luacheck, which come from the runner's apt; they build and check the addon and are never
 part of it.
 
-## Ideas and contributors
+## Players
 
-Credit for the ideas and reports behind the addon.
+Credit for the reports and requests behind the addon.
 
 | Who | What | Notes |
 |---|---|---|
-| [Polestar](https://github.com/fitzforge/polestar) by Fitz | The ideas for learning the Hearthstone bind point from where it lands you (#147), keeping a journey after `/reload` (#148), an eased, movable fallback arrow (#149), flights in flight master tooltips (#150), routing instance goals to the entrance (#151), stopping idle minimap updates (#152), the arrival sound (#155), the time left under the compass (#156) the goal on the minimap rim (#157), drawing the world map on frames of its own, which the map never touches (#158), and walks that keep out of the other faction's towns. From cjber/adventure-guide-forever's issues: `/path report` with its copy box and caught errors (#156), the issue forms (#157), the zip check (#158), the `Subscribe` API (#159), `tools/doctor.py` (#160), the stale-screenshot check (#161), this file (#162), the "For addon authors" changelog subsection (#163), `tests/README.md` (#164) and `.editorconfig` (#165). | GPL-3.0. Inspired only; no code was copied. Fitz is welcome to use our code. |
-| Ding! by Yendi | The idea for walks that keep out of zones far above your level (round 6) | Inspired only; no code was copied. |
-| Fitz | Found that drawn walks skipped the line test at their ends, with reproductions (#144); the fix is our own (#187) | |
-| TRDeadbeat, tallsmartman and Sol\_Deus, on CurseForge, and other CurseForge players | Reported the gamepad interface freezing or blocking `SetPreferredGamepadInteractTarget()` (#158) | |
-| Zavian | Found Shift-click on map pins blocking chat links, with the fix (#134) | |
-| Osipanda | Found routes ignoring Forever's new boats (#84) | |
-| Nightwind416 | Asked for a movable tracker and compass (#76) | |
-| wfournier | Asked for the tracker and compass to scale (#122) | |
-| The\_\_\_Fast, on CurseForge | Found the Powderfuse Port flight path that isn't there, and asked for *Minimum Hearthstone saving* (1.7.0) | |
-| cidolfus27, on CurseForge | Asked for journeys to follow RestedXP's guide in place of its arrow (1.12.0) | |
-| Alex21xx, on CurseForge | Asked for metres, *Resume guide*, *Complete this step*, the minimap settings button and marking a flight path as known (1.14.0), and found routes flying on through flight points the character doesn't know (1.15.0) | |
-| o0saw0o, on CurseForge | Asked to hide the Journey steps and the arrow while keeping the map route (1.14.0) | |
-| Merlinqt, on CurseForge | Asked for map icon sizes (1.14.0) | |
-| Maggew, on CurseForge | Found the "Division by zero" error, and asked for the steps on the destination pin and the compass background (1.15.0), finer compass positioning (#160) and the arrow-key nudge (1.17.0) | |
-| team\_Brigade, phear and Testvonfarkle, on CurseForge | Asked to hide the empty tracker's title (1.15.0) | |
-| berserkerlxl, on CurseForge | Found guides' TomTom waypoints not reaching the addon, and asked for `/way` (1.15.0); found that Questie's tracker was covering the Journey (#214) | |
-| rydoc and Joster91, on CurseForge | Found the Journey collapsing into or overlapping the quest tracker (1.15.0, 1.17.0) | |
-| deathmvp1, on CurseForge | Asked to move the Journey off the quest list; detaching it is now in its right-click menu (1.17.0). Found Questie's quest list covering the Journey, which now moves clear of it (#214), and asked for Guidelime guides to lead the journey too (#506) | |
-| saikoso, on CurseForge | Reported the missing Dalaran–Stormwind portal route for Alliance Skyborne (#226) | |
-| user\_uf9axk2x4gqtmfch, on CurseForge | Asked for the route to work with OpenMap's stitched map, and pointed at OpenMap's API for drawing on it (1.21.0, #194) | |
-| Ragnarok11B, on CurseForge | Reported that the quest tracker could not be moved after hiding the journey steps (#227) | |
-| GenericP, on CurseForge | Asked to plan to a spot under a Questie icon, now Alt-click on the world map (1.14.0), and for TomTom waypoints to start journeys (1.15.0); also answered other players' questions on the page | |
-| [Brainc3ll](https://github.com/Brainc3ll) | Eight lines of the French translation, from his Legacy Forever translation (cjber/legacy-forever#99); the rest of `Locales/frFR.lua` and the other languages are machine translated (lines ending `-- mt` in frFR) | |
-| [Mouchoir](https://github.com/Mouchoir) | Found the arrow hiding behind the game's navigation marker when it was turned off, leaving no guidance, and wrote the fix (#224, #223, merged as #225) | Code contributor |
-| [z1ck](https://github.com/z1ck) | Asked for the travel journal to start off, which *Record travel stats* now does (#269, #270) | |
-| Oxds, on CurseForge | Asked for the walking route line's colour to be a choice in `/path` settings (#411) | |
-| sean16981 | Asked for key bindings for the Shift-click journey actions, for controller players (#412) | |
-| Stiandresius, on CurseForge | Found zeppelin docks drawn with the boat icon and the Stranglethorn tower vanishing from Durotar on zoom (#394, #393), and the Grom'gol zeppelin pin drawing on the Orgrimmar map instead of Durotar (#414) | |
-| aryaxo | Found players walking while no flight point was known since 1.23.1, not knowing to open a flight master, and asked for a hint when a flight would be quicker (#539) | |
-| Exo\_NA, user\_ey1r2bwls2pf3sht32372 and legortiz, on CurseForge | Found every unknown flight point marked as discovered after a zone change or `/reload`, when no flight master's map was open (#555) | |
+| Fitz | Walks checked at both ends | GitHub; #144 |
+| TRDeadbeat | Gamepad interface no longer freezes or blocks | CurseForge; #158 |
+| tallsmartman | Gamepad interface no longer freezes or blocks | CurseForge; #158 |
+| Sol\_Deus | Gamepad interface no longer freezes or blocks | CurseForge; #158 |
+| Zavian | Shift-click map pins no longer block chat links | GitHub; #134 |
+| Osipanda | Routes use Forever's new boats | GitHub; #84 |
+| Nightwind416 | Movable tracker and compass | GitHub; #76 |
+| wfournier | Tracker and compass scale | GitHub; #122 |
+| The\_\_\_Fast | Fixed a phantom flight path | CurseForge |
+| The\_\_\_Fast | A minimum Hearthstone saving | CurseForge |
+| cidolfus27 | Journeys follow RestedXP guides | CurseForge |
+| Alex21xx | Choice of yards or metres | CurseForge; 1.14.0 |
+| Alex21xx | Resume guide returns to the current step | CurseForge; 1.14.0 |
+| Alex21xx | Complete this step ticks a step off | CurseForge; 1.14.0 |
+| Alex21xx | Minimap button opens the settings | CurseForge; 1.14.0 |
+| Alex21xx | Right-click a flight master marks it known | CurseForge; 1.14.0 |
+| Alex21xx | Connecting flights only through known points | CurseForge; 1.15.0 |
+| o0saw0o | Hide journey steps and arrow, keep the map route | CurseForge |
+| Merlinqt | Map icon sizes | CurseForge |
+| Maggew | Fixed the division-by-zero route error | CurseForge; 1.15.0 |
+| Maggew | Destination pin names the current step | CurseForge; 1.15.0 |
+| Maggew | Optional background behind the compass | CurseForge; 1.15.0 |
+| Maggew | Finer compass placement | CurseForge; #160 |
+| Maggew | Arrow keys nudge the compass | CurseForge; 1.17.0 |
+| team\_Brigade | Hide the empty tracker's title | CurseForge |
+| phear | Hide the empty tracker's title | CurseForge |
+| Testvonfarkle | Hide the empty tracker's title | CurseForge |
+| rydoc | Fixed the Journey collapsing into the quest tracker | CurseForge |
+| Joster91 | Fixed the Journey overlapping the quest tracker | CurseForge |
+| Joster91 | No more waypoint spam at level-up | CurseForge; #245 |
+| deathmvp1 | Guidelime guides can lead the journey | CurseForge; #506 |
+| saikoso | Fixed the missing Dalaran–Stormwind portal route | CurseForge; #226 |
+| Ragnarok11B | Quest tracker movable after hiding journey steps | CurseForge; #227 |
+| GenericP | Plan to a spot under a Questie icon | CurseForge |
+| GenericP | Journeys start from TomTom waypoints | CurseForge |
+| [Brainc3ll](https://github.com/Brainc3ll) | Eight French translation lines | GitHub; cjber/legacy-forever#99 |
+| [Mouchoir](https://github.com/Mouchoir) | Fixed the arrow hidden behind the game's marker (code) | GitHub; #224, PR #225 |
+| [z1ck](https://github.com/z1ck) | Travel journal starts off | GitHub; #269, #270 |
+| Oxds | Walking route line colour | CurseForge; #411 |
+| sean16981 | Key bindings for journey actions | GitHub; #412 |
+| Stiandresius | Zeppelin pin no longer vanishes when zoomed | CurseForge; #393 |
+| Stiandresius | Zeppelins get their own dock icon | CurseForge; #394 |
+| Stiandresius | Zeppelin pin drawn in the right zone | CurseForge; #414 |
+| aryaxo | Hint when a flight would be quicker | GitHub; #539 |
+| Exo\_NA | Unknown flight points no longer marked as known | CurseForge; #555 |
+| legortiz | Unknown flight points no longer marked as known | CurseForge; #555 |
+| JohnChrin | First journey after login no longer stalls | GitHub; #317 |
+| wheelbarrel00 | Column stays clear of EQ Objective Tracker's list | GitHub; #395 |
+| lkshrk | Tracker header no longer opens the map in combat (code) | GitHub; #444, PR #445 |
+| HeartOfD2 | Waypoint UI bends land on the route | GitHub; #454 |
+| rml9ty | Long journeys to another continent appear | GitHub; #516 |
+| hwalflor | Lighter map redraw while zooming | GitHub; #529 |
+| chris-chrysos | Flights only between known flight points | GitHub; #537 |
+| Quantity-4 | Unknown flight points no longer marked as known | GitHub; #555 |
+| Bolton\_wow | Unknown flight points no longer marked as known | CurseForge; 8673972 |
+| Aldericdevir | Journeys to quests with only a start pin | GitHub; #629 |
+| joaocjesus | Controller route waits for the map to close (code) | GitHub; #581, PR #580 |
+| jakerist (Grayburn) | Destination pin points the right way | GitHub; #624 |
+| MacieGx | Stop right-clicks work first time (code) | GitHub; #542, PR #533 |
+| MacieGx | Walks start and end on your floor (code) | GitHub; PR #574, PR #696 |
+| MacieGx | Nearby goods suit your level (code) | GitHub; PR #601 |
+| MacieGx | Your own profession trainers come first (code) | GitHub; PR #704 |
+| borick7318 | Metres match the game's distances | Discord; #668 |
+| cotijelucie | Hide travel marks on the world map | Discord; #635 |
+| sampconrad | Arrow becomes a pin on arrival | CurseForge; #627 |
+| jixxor | Stormwind walks follow the streets | Discord; #602 |
+| Gaafah | Option to hide the walking line | CurseForge; #576 |
+| \_spada | Journey steps can leave the tracker | Discord; #563 |
+| vladsnz | No second marker beside the character | CurseForge; #531 |
+| macwire | Option to follow roads | CurseForge; #498 |
+| scraak | Routes through a party mage's portals | CurseForge; #353 |
+| overspark | In-world destination pin | CurseForge; #271 |
+| TeeRKee | Route for the tracked quest on the minimap | GitHub; #466 |
+| Speaker1264 | Combat Text taint fixed | GitHub; #457 |
+| SuubzTV | Fixed the RestedXP guidance regression | CurseForge; #458 |
+| Fel7 | Build a path returns to the quest menu | CurseForge; #459 |
+| Kragmars | Objective lines under the arrow and pin | Discord; #660 |
+| spidersylar | Known flight points kept per character | CurseForge; #685 |
+| Acem | Known flight points kept per character | CurseForge; #685 |
+| tgkGate | Fixed the path job yield error | CurseForge; #717 |
+| IronmanBG | Plan journey back in Kaliel's Tracker | CurseForge; #718 |
+
+## Inspired by
+
+Credit for the addons and projects an idea came from.
+
+| Who | What | Notes |
+|---|---|---|
+| [Polestar](https://github.com/fitzforge/polestar) by Fitz | Ideas for many features | Hearthstone learning, journeys after `/reload`, the fallback arrow, flight tooltips, instance routing, compass time, minimap rim, own map frames, and the shared report window and tooling. GPL-3.0. Inspired only; no code was copied. Fitz is welcome to use our code. |
+| Ding! by Yendi | Walks that keep out of zones far above your level | Inspired only; no code was copied. |
 
 Thanks also to everyone else who reported a bug or asked for a feature, here or on CurseForge.

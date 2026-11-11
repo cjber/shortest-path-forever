@@ -148,6 +148,8 @@ jobs:
       - run: python3 tools/check_generated.py
       # The walking maps name the baker pins and generator code they came from; fails when either moved.
       - run: python3 tools/check_nav.py
+      # Data/Credits.lua and the README and store thanks blocks are generated from THIRD_PARTY.md (WFA-31).
+      - run: python3 tools/forever_tools/credits.py --check
 
   typecheck:
     runs-on: ubuntu-24.04

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check the packager's output before an upload (forever_tools.package): every file the TOC and XML load ships,
 nothing from development does, a licence file and THIRD_PARTY.md do (with README's `## Credits` and THIRD_PARTY's
-`## Ideas and contributors`, WFA-10 and WFA-31), and the smoke and core dependency specs pass on the packaged
+`## Players`, WFA-10 and WFA-31), and the smoke and core dependency specs pass on the packaged
 files.
 
     printf 'Package check\\n' > .release-notes.md

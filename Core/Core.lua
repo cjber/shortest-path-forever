@@ -1,5 +1,6 @@
 local addonName = ...
 ---@class SPFNamespace
+---@field Credits ForeverCreditsData the player credits Data/Credits.lua generates for the shared Thanks page
 local ns = select(2, ...)
 if ns.broken then
 	return
@@ -17,6 +18,12 @@ ns.core = ForeverCore.Register(addonName, {
 		return ns.ReportLines()
 	end,
 })
+
+-- Hands the generated player credits to the shared Thanks page (WFA-31). An older core has no Credits module, and the
+-- addon loads as before.
+if type(ForeverCore.Credits) == "table" then
+	ns.core.SafeCall("credits", ForeverCore.Credits.Register, "Shortest Path Forever", ns.Credits)
+end
 
 local Model = ns.Model
 -- The settings panel registers these same defaults, so a checkbox's reset matches a fresh install.
