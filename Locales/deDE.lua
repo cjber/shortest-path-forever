@@ -406,3 +406,8 @@ L["Above ground level"] = "Über dem Bodenniveau" -- mt
 L["Below ground level"] = "Unter dem Bodenniveau" -- mt
 L["%s (pick up)"] = "%s (annehmen)"
 L["Ready for turn-in"] = "Bereit zur Abgabe"
+L["Objectives under the arrow"] = "Ziele unter dem Pfeil" -- mt
+L["The stop's live objectives under the arrow while it leads."] =
+	"Die aktuellen Ziele des Halts unter dem Pfeil, solange er führt." -- mt
+L["The pin shown when you reach a stop keeps its own lines."] =
+	"Die Markierung, die beim Erreichen eines Halts erscheint, behält ihre eigenen Zeilen." -- mt

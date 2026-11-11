@@ -410,3 +410,8 @@ L["Above ground level"] = "Au-dessus du niveau du sol" -- mt
 L["Below ground level"] = "Sous le niveau du sol" -- mt
 L["%s (pick up)"] = "%s (à accepter)" -- mt
 L["Ready for turn-in"] = "Prêt à rendre" -- mt
+L["Objectives under the arrow"] = "Objectifs sous la flèche" -- mt
+L["The stop's live objectives under the arrow while it leads."] =
+	"Les objectifs actuels de l'étape sous la flèche pendant qu'elle guide." -- mt
+L["The pin shown when you reach a stop keeps its own lines."] =
+	"L'épingle affichée lorsque vous atteignez une étape garde ses propres lignes." -- mt

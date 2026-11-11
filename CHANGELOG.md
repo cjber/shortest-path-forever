@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **The objective lines under the arrow can be turned off.** The arrow has listed the stop's live objectives under its label since 1.27.0, and there was no way to hide them. *Objectives under the arrow* in Interface now clears them while leaving the distance or time label in place, and the pin shown when you reach a stop keeps its own lines. Asked on CurseForge by CptShooter (#691).
+
 ## [1.30.3] - 2026-11-11
 
 - **Works again after updating.** Updating to the last version could leave the addon switched off in the game's AddOns list with "ForeverCore: missing", because the update did not bring Forever Core with it. Forever Core now comes inside this addon's download again, from CurseForge, Wago or GitHub alike, so updating is all it takes (cjber/shortest-path-forever#731).

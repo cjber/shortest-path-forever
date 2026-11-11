@@ -208,6 +208,30 @@ assert(
 	"the quest log event repaints the travel lines: " .. tostring(frame.Lines.text)
 )
 
+-- The arrow's objectives have their own switch (#691): off, the arrow keeps its label and reads no quest log, and
+-- turning it back on restores the same lines without a replan.
+assert(not frame.Lines.hidden, "the arrow lists the stop's objectives while the switch is on")
+local travelText = frame.Lines.text
+local finds = #driver.path.finds
+local reads = 0
+local stopObjectiveLines = ns.StopObjectiveLines
+ns.StopObjectiveLines = function(stop)
+	reads = reads + 1
+	return stopObjectiveLines(stop)
+end
+ns.db.arrowObjectives = false
+ns.ArrowObjectivesChanged()
+assert(frame.Lines.hidden and frame.Lines.text == "", "the switch clears the travel lines at once")
+local readBefore = reads
+driver.fire("QUEST_LOG_UPDATE")
+assert(reads == readBefore, "the switch off reads no quest log for the arrow")
+assert(frame.Lines.hidden and frame.Lines.text == "", "a quest update keeps them hidden")
+ns.db.arrowObjectives = true
+ns.ArrowObjectivesChanged()
+assert(not frame.Lines.hidden and frame.Lines.text == travelText, "the switch on restores the same lines")
+assert(#driver.path.finds == finds, "toggling the switch plans nothing again")
+ns.StopObjectiveLines = stopObjectiveLines
+
 -- No quests, no reserved height: the lines go away rather than leaving a gap under the distance.
 assert(ns.StartJourney({ map = 1, x = 500, y = 0, label = "Nowhere" }))
 driver.path.settle()
@@ -238,3 +262,16 @@ assert(
 )
 
 print("objective_lines_spec: live objective lines, done marks, ready state, travel and pin")
+
+-- The arrival pin keeps its own objective lines while the arrow's switch is off.
+assert(not frame.ArrivalLines.hidden and frame.ArrivalLines.text ~= "", "the pin shows its lines with the switch on")
+local pinText = frame.ArrivalLines.text
+ns.db.arrowObjectives = false
+ns.ArrowObjectivesChanged()
+assert(ns.ArrivalStop() == held, "the switch off leaves the arrival pin alone")
+assert(not frame.ArrivalLines.hidden and frame.ArrivalLines.text == pinText, "the pin keeps its own lines")
+assert(frame.Lines.hidden, "the arrow's lines stay out of the pin")
+ns.db.arrowObjectives = true
+ns.ArrowObjectivesChanged()
+
+print("objective_lines_spec: the arrow objectives switch leaves the arrival pin alone")

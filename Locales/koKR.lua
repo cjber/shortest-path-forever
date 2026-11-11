@@ -412,3 +412,8 @@ L["Above ground level"] = "지면 위" -- mt
 L["Below ground level"] = "지면 아래" -- mt
 L["%s (pick up)"] = "%s (수락)"
 L["Ready for turn-in"] = "완료 보고 가능"
+L["Objectives under the arrow"] = "화살표 아래 목표" -- mt
+L["The stop's live objectives under the arrow while it leads."] =
+	"화살표가 안내하는 동안 화살표 아래에 표시되는 지점의 실시간 목표입니다." -- mt
+L["The pin shown when you reach a stop keeps its own lines."] =
+	"지점에 도착했을 때 표시되는 핀은 자체 목표 줄을 유지합니다." -- mt

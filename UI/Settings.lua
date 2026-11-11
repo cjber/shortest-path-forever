@@ -581,6 +581,14 @@ ns.Init(function()
 		end, L["What the direction arrow shows under it: the distance to walk, the time left in the journey, or both."])
 	)
 	Checkbox(
+		"arrowObjectives",
+		L["Objectives under the arrow"],
+		L["The stop's live objectives under the arrow while it leads."]
+			.. " "
+			.. L["The pin shown when you reach a stop keeps its own lines."],
+		ns.ArrowObjectivesChanged
+	)
+	Checkbox(
 		"metres",
 		L["Distances in metres"],
 		L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."],

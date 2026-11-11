@@ -401,3 +401,8 @@ L["Above ground level"] = "高於地面" -- mt
 L["Below ground level"] = "低於地面" -- mt
 L["%s (pick up)"] = "%s（接受任務）"
 L["Ready for turn-in"] = "可以交任務"
+L["Objectives under the arrow"] = "箭頭下方的目標" -- mt
+L["The stop's live objectives under the arrow while it leads."] =
+	"箭頭引路時，箭頭下方顯示該站點的即時目標。" -- mt
+L["The pin shown when you reach a stop keeps its own lines."] =
+	"到達站點時顯示的圖釘保留各自的目標文字。" -- mt
