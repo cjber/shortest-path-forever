@@ -307,6 +307,8 @@ ShortestPathForeverCharDB = nil
 ---@field cy0 number
 ---@field swim number
 ---@field zstep number
+---@field format? number 2 for a step mask plus one-way link records; 1 (absent) for symmetric links
+---@field steep? boolean graph cells spend flag 8 on steep ground; a step with a steep end goes downhill only
 ---@field grid string[]
 ---@field graph string[]
 ---@field height string[]

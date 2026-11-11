@@ -8,7 +8,9 @@ for _, map in ipairs({ 0, 1, 2991 }) do
 end
 local Path = ns.Path
 
--- Verify the shipped graph, not just the generator: every reverse edge exists with both identical costs.
+-- Verify the shipped graph, not just the generator. A format 1 graph is symmetric; a format 2 one is directed, since a
+-- steep step is downhill only and a drop is never climbed, so a reverse edge may be absent. Every edge keeps the
+-- price order that stays true either way: a swim yard never costs less than walking on water over the same step.
 local alphabet, digits = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", {}
 for i = 1, #alphabet do
 	digits[alphabet:byte(i)] = i - 1
@@ -40,10 +42,13 @@ for _, map in ipairs({ 0, 1, 2991 }) do
 	end
 	for from, adjacent in pairs(edges) do
 		for to, costs in pairs(adjacent) do
-			assert(edges[to] and edges[to][from] == costs, "asymmetric graph edge")
+			assert(number(costs, 1, 2) >= number(costs, 3, 2), "an edge's swim cost is below its water-walking cost")
+			if data.format ~= 2 then
+				assert(edges[to] and edges[to][from] == costs, "asymmetric format 1 graph edge")
+			end
 		end
 	end
-	print(string.format("map %d: %d symmetric directed edges", map, count))
+	print(string.format("map %d: %d directed graph edges", map, count))
 end
 
 local comparisons = 0

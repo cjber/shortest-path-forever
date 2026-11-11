@@ -11,7 +11,7 @@
 ## X-Curse-Project-ID: 1708599
 ## X-Wago-ID: b6Xy1wKp
 ## Dependencies: ForeverCore
-## X-Forever-Core: v1.5.0
+## X-Forever-Core: v1.7.2
 ## SavedVariables: ShortestPathForeverDB
 ## SavedVariablesPerCharacter: ShortestPathForeverCharDB
 ## IconTexture: Interface\AddOns\ShortestPathForever\media\Icon
@@ -42,6 +42,7 @@ Data\Walks.lua
 Data\RoadCells.lua
 Data\RoadEdges.lua
 Data\Heights.lua
+Data\Credits.lua
 Transport\Model.lua
 Routing\Planner.lua
 Core\Core.lua
@@ -94,7 +95,6 @@ Journey\FactionHint.lua
 UI\StopPin.lua
 UI\FlightLines.lua
 UI\Strokes.lua
-UI\QuestBlob.lua
 UI\QuestPins.lua
 UI\Route.lua
 UI\RouteTransports.lua

@@ -31,7 +31,7 @@ optional-dependencies:
 # update brings it along: players who updated did not get it as a required dependency, and Wago's uploads
 # carry no dependencies at all.
 externals:
-  ForeverCore: https://github.com/cjber/forever-core/releases/download/v1.5.0/ForeverCore-v1.5.0-forever.zip
+  ForeverCore: https://github.com/cjber/forever-core/releases/download/v1.7.2/ForeverCore-v1.7.2-forever.zip
 
 move-folders:
   ShortestPathForever/ForeverCore: ForeverCore

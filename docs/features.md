@@ -66,10 +66,9 @@ With RestedXP or Guidelime installed, **Resume guide** in Guidance or the Journe
   Zygor and other guides that set a waypoint plan a journey here instead, titled with the guide's own text. Every
   waypoint belongs to one owner, so a fresh one replaces the journey rather than queueing; *Let guides set TomTom
   waypoints* off in `/path` removes the shim and clears the journey it started. A held stop can name the quests
-  whose area it stands for: standing in one, the client draws its own quest blob in the bonus objective's gold on
-  the minimap and on the world map, and the stop's pin and line step aside until you leave. Inside is the client's
-  own inside-area state for the quests the stop names. A stop that names circles and no quest uses the circles to
-  tell when you have arrived, and keeps its pin and line.
+  whose area it stands for: standing in one, the stop counts as reached until you leave, and the arrow becomes the
+  arrival pin with the quest's objectives. Inside is the client's own inside-area state for the quests the stop
+  names. A stop that names circles and no quest uses the circles to tell when you have arrived.
 
 - **Typed waypoints.** `/way [zone] x y [title]` plans a journey to that spot, read as TomTom reads it: x and y are
   percentages of the map, `#1429` names a map by its ID, a zone can be shortened to any part of its name

@@ -25,9 +25,16 @@ from forever_tools.fsio import atomic_write, publish  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 LOCALE = "enUS"
+HERE = Path(__file__).resolve().parent
+# The pinned TrinityCore commit and the patches applied to it, in order; bake.sh builds from the same pins.
+PINNED_REV = (HERE / "trinitycore.rev").read_text().strip()
+PATCHES = tuple(HERE / name for name in ("trinitycore-client.patch", "trinitycore.patch", "trinitycore-nav.patch"))
 ADDON = "ShortestPathForever"
 BUNDLED = re.compile(r"Nav\.xml|Nav\d+(?:_\d+)?\.lua")
 TILE = re.compile(r"(\d{4})_(\d{2})_(\d{2})")
+SKIPPED_SECTION = re.compile(rb"SPF-DB2-SKIPPED-SECTION FileDataId: 1349477 key=([A-F0-9]+) records=(\d+)")
+SKIPPED_MODEL = re.compile(rb"SPF-MODEL-NOT-IN-BUILD FileDataId: (\d+)")
+SKIPPED_MODEL_PATH = re.compile(rb"SPF-MODEL-NOT-IN-BUILD path: ([^\r\n]+)")
 
 
 def active_build(wow: Path, product: str) -> str:
@@ -95,17 +102,38 @@ def expand(argv: list[str], wow: Path, run: Path, output: Path, bin_dir: Path, t
     return out
 
 
-def recipe(args, build: str, commands: dict) -> tuple[str, dict]:
-    """Hash the portable source recipe, retaining exact binaries separately for safe cache reuse."""
+def recipe_body(product: str, build: str, rev: str, patches, commands: dict) -> tuple[str, dict]:
+    """The portable source recipe and its digest: what a map was baked from, without machine paths or binaries."""
     body = {
-        "product": args.product,
+        "product": product,
         "build": build,
-        "code": {"trinitycore": args.rev, "patches": {p.name: sha256(p) for p in args.patch}},
+        "code": {"trinitycore": rev, "patches": {p.name: sha256(p) for p in patches}},
         "commands": commands,
     }
-    digest = hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()
+    return hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest(), body
+
+
+def recipe(args, build: str, commands: dict) -> tuple[str, dict]:
+    """Hash the portable source recipe, retaining exact binaries separately for safe cache reuse."""
+    digest, body = recipe_body(args.product, build, args.rev, args.patch, commands)
     body["binaries"] = {name: sha256(args.bin / name) for name in commands}
     return digest, body
+
+
+def pinned_recipe(product: str, build: str, map_id: int) -> str:
+    """The recipe digest a bake of map_id from this checkout's pins would carry."""
+    commands = stage_commands(argparse.Namespace(product=product), map_id)
+    return recipe_body(product, build, PINNED_REV, PATCHES, commands)[0]
+
+
+def output_notes(output: bytes) -> dict:
+    """The machine-readable skips in an extractor's output: inaccessible sections and files the build does not ship."""
+    sections = [{"key": key.decode(), "records": int(count)} for key, count in SKIPPED_SECTION.findall(output)]
+    return {
+        "skipped_map_sections": sections,
+        "skipped_models": sorted({int(file_data_id) for file_data_id in SKIPPED_MODEL.findall(output)}),
+        "skipped_model_paths": sorted({path.decode() for path in SKIPPED_MODEL_PATH.findall(output)}),
+    }
 
 
 def measured(argv: list[str], cwd: Path, log: Path, env: dict | None = None) -> dict:
@@ -130,14 +158,12 @@ def measured(argv: list[str], cwd: Path, log: Path, env: dict | None = None) -> 
         raise RuntimeError(f"{Path(argv[0]).name} exited {child.returncode}; see {log}")
     with log.open("rb") as source:
         source.seek(log_start)
-        skipped = re.findall(
-            rb"SPF-DB2-SKIPPED-SECTION FileDataId: 1349477 key=([A-F0-9]+) records=(\d+)", source.read()
-        )
+        notes = output_notes(source.read())
     return {
         "wall_seconds": time.perf_counter() - started,
         "cpu_seconds": usage.ru_utime + usage.ru_stime,
         "max_rss_kib": usage.ru_maxrss,
-        "skipped_map_sections": [{"key": key.decode(), "records": int(count)} for key, count in skipped],
+        **notes,
     }
 
 
@@ -240,6 +266,8 @@ def bake_map(args, map_id: int, build: str) -> None:
             "provenance": body,
             "db2_sha256": {p.name: sha256(p) for p in sorted((run / "dbc" / LOCALE).glob("*.db2"))},
             "skipped_map_sections": metrics["stages"]["mapextractor"]["skipped_map_sections"],
+            "skipped_models": metrics["stages"]["vmap4extractor"]["skipped_models"],
+            "skipped_model_paths": metrics["stages"]["vmap4extractor"]["skipped_model_paths"],
             "rows": args.rows,
             "cols": args.cols,
             "tiles": [f"{map_id:04d}_{x:02d}_{y:02d}" for x, y in targets],
@@ -293,10 +321,11 @@ def main() -> None:
     parser.add_argument("--jobs", type=int, default=6)
     parser.add_argument("--rows", nargs=2, type=int)
     parser.add_argument("--cols", nargs=2, type=int)
-    parser.add_argument("--rev", required=True, help="pinned TrinityCore commit the binaries were built from")
-    parser.add_argument("--patch", type=Path, action="append", required=True, help="each patch applied to that commit")
+    parser.add_argument("--rev", default=PINNED_REV, help="TrinityCore commit the binaries were built from")
+    parser.add_argument("--patch", type=Path, action="append", help="each patch applied to that commit (the pins)")
     parser.add_argument("--name", action="append", default=[], metavar="MAP=TITLE", help="name of a map")
     args = parser.parse_args()
+    args.patch = args.patch or list(PATCHES)
     if min(args.threads, args.jobs) < 1:
         parser.error("--threads and --jobs must be positive")
     for bounds in (args.rows, args.cols):

@@ -5,11 +5,11 @@ set -euo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
 OUT=$(realpath -m "${OUT:-$HERE/work}")
 WOW=$(realpath -m "${WOW:-$HOME/Games/battlenet/drive_c/Program Files (x86)/World of Warcraft}")
-PRODUCT=${PRODUCT:-wow_classic_beta}
+PRODUCT=${PRODUCT:-wowf}
 MAPS=${MAPS:-"0 1 2991"}
 THREADS=${THREADS:-8}
 JOBS=${JOBS:-6}
-TRINITY_REV=e3916b2adcf2f8a70ae33817fc57b6c0266e2fb0
+TRINITY_REV=$(<"$HERE/trinitycore.rev")
 case "$OUT/" in
 "$WOW/"*)
 	echo "OUT must be outside the game installation" >&2
@@ -37,7 +37,8 @@ if git -C "$SOURCE" diff --quiet; then
 fi
 # A changed patch or a hand-edited source tree needs a fresh output directory.
 source_diff=(git -C "$SOURCE" diff --binary --full-index --no-ext-diff --no-textconv --diff-algorithm=myers --unified=1)
-"${source_diff[@]}" -- . ':(exclude)src/common/mmaps_common' ':(exclude)src/tools/mmaps_generator' ':(exclude)src/tools/extractor_common' | cmp -s "$PATCH" - || {
+"${source_diff[@]}" -- . ':(exclude)src/common/mmaps_common' ':(exclude)src/tools/mmaps_generator' ':(exclude)src/tools/extractor_common' \
+	':(exclude)dep/recastnavigation' | cmp -s "$PATCH" - || {
 	echo "TrinityCore source differs from the pinned patch; use a fresh OUT" >&2
 	exit 1
 }
@@ -45,7 +46,7 @@ source_diff=(git -C "$SOURCE" diff --binary --full-index --no-ext-diff --no-text
 	echo "TrinityCore client source differs from the pinned patch; use a fresh OUT" >&2
 	exit 1
 }
-"${source_diff[@]}" -- src/common/mmaps_common src/tools/mmaps_generator | cmp -s "$NAV_PATCH" - || {
+"${source_diff[@]}" -- dep/recastnavigation src/common/mmaps_common src/tools/mmaps_generator | cmp -s "$NAV_PATCH" - || {
 	echo "TrinityCore navigation source differs from the pinned patch; use a fresh OUT" >&2
 	exit 1
 }
@@ -53,13 +54,13 @@ cmake -S "$SOURCE" -B "$OUT/build" -G Ninja -DTOOLS=ON -DSERVERS=OFF -DSCRIPTS=n
 	-DBUILD_TESTING=OFF -DUSE_COREPCH=OFF -DNOJEM=ON -DCMAKE_BUILD_TYPE=Release
 cmake --build "$OUT/build" --target mapextractor vmap4extractor vmap4assembler mmaps_generator -j "$JOBS"
 python3 "$HERE/check_hazards.py" "$SOURCE" "$OUT/build"
+python3 "$HERE/check_drops.py" "$SOURCE" "$OUT/build"
 if [ "${BUILD_ONLY:-0}" = 1 ]; then
 	exit 0
 fi
 read -r -a maps <<<"$MAPS"
 args=(--wow "$WOW" --product "$PRODUCT" --out "$OUT" --bin "$OUT/build/bin/Release/bin"
-	--maps "${maps[@]}" --threads "$THREADS" --jobs "$JOBS" --rev "$TRINITY_REV"
-	--patch "$CLIENT_PATCH" --patch "$PATCH" --patch "$NAV_PATCH"
+	--maps "${maps[@]}" --threads "$THREADS" --jobs "$JOBS"
 	--name "0=Eastern Kingdoms" --name "1=Kalimdor" --name "2991=Zephras Isle")
 if [ -n "${ROWS:-}" ]; then
 	read -r -a rows <<<"$ROWS"

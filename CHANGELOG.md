@@ -15,6 +15,23 @@ optional `### For addon authors` subsection after a version's player bullets.
 - **The objective lines under the arrow can be turned off.** The arrow has listed the stop's live objectives under its label since 1.27.0, and there was no way to hide them. *Objectives under the arrow* in Interface now clears them while leaving the distance or time label in place, and the pin shown when you reach a stop keeps its own lines. Asked on CurseForge by CptShooter (#691).
 - **Journeys can count as arrived from further away, and clear the pin they were set from.** *Arrival distance* in Guidance (15 yards by default) sets how close you must get to a journey's final destination. On a multi-stop route, the stops before the last keep 15 yards. When the map pin you started from was that destination, it is cleared on arrival instead of left behind. Asked on CurseForge by Zwaffelmagic (#733).
 - **Dungeons and raids join Nearby services.** The Nearby services list has a section for every dungeon and raid door on your continent, ordered by travel time, with the instance's name over its zone. A row plans a journey to that door, which ends when you go in, the same journey a quest inside the dungeon gets. A door on the other continent is left out. Asked on CurseForge by Wraith12 (#688).
+- **The players who helped are on the Thanks page.** Settings, Forever addons, Thanks lists everyone whose report or idea shipped in Shortest Path Forever, ranked by how much they gave. (#722)
+- **The map line no longer draws a swim across water the route walks around.** A walk planned along a beach or round a lake was sometimes drawn as one straight line across the water, even though the route and its time went the long way. The drawn line now only crosses water where the walk itself swam, so it costs no more time than the route it shows (#742).
+
+## [1.31.1] - 2026-11-11
+
+<!-- forever-core-sync -->
+
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
+## [1.31.0] - 2026-11-11
+
+<!-- discord-image: docs/screenshots/stops.png -->
+
+- **Walks follow what your character can actually climb and drop.** The walking maps are rebuilt from the game's own terrain with your character's limits: a step up of 2 yards, and ledges of up to 14.57 yards, the height where a fall starts to hurt, jumped down but never climbed. A walk now takes the short way down a ledge instead of going round to a ramp (#638).
+- **Walks stay out of lake and sea beds.** Ground under deep water no longer counts as a path, so a walk swims across or goes round instead of running along the bottom.
+- **Walks start and end where you stand.** Standing somewhere the walking map has no ground, such as a lift shaft or mid-jump, the walk now starts from the nearest ground rather than a floor far above or below you.
+- **The gold quest area is gone, and quest areas stay the game's own blue.** Standing in a held stop's quest area used to recolour part of the minimap and draw a second, larger gold area over the game's blue one on the world map. A partial gold area read as a bug, so the addon now leaves quest areas exactly as the client draws them. The stop keeps its ring and line on the minimap, and the arrival pin and its objectives still appear while you are in the area (#735).
 
 ## [1.30.4] - 2026-11-11
 
