@@ -12,6 +12,8 @@ L["%s (cast %s)"] = "%s (%s 시전)"
 L["%s (new flight path)"] = "%s (새 비행 경로)"
 L["%s (turn in)"] = "%s (완료 보고)"
 L["%s could be %s."] = "%s: %s 중 하나일 수 있습니다."
+L["%s could not start. Reinstall %s to fix this."] =
+	"%s을(를) 시작할 수 없습니다. 이 문제를 해결하려면 %s을(를) 다시 설치하세요." -- mt
 L["%s landing"] = "%s 승강장"
 L["%s pier"] = "%s 부두"
 L["%s station"] = "%s 정거장"
@@ -20,6 +22,10 @@ L["%s · %s"] = "%s · %s"
 L["%s — unavailable here"] = "%s - 여기서 사용할 수 없음"
 L["%s, %s"] = "%s, %s"
 L["%s, then %s"] = "%s, 다음 %s"
+L["%s: %s are out of date. Update them to fix this."] =
+	"%s: %s이(가) 오래되었습니다. 이 문제를 해결하려면 모두 업데이트하세요." -- mt
+L["%s: %s is out of date. Update it to fix this."] =
+	"%s: %s이(가) 오래되었습니다. 이 문제를 해결하려면 업데이트하세요." -- mt
 L["/way [zone] x y [title], with x and y from 0 to 100."] = "/way [지역] x y [제목], x와 y는 0에서 100 사이."
 L["/way reset all, away, <zone> or not <zone>"] = "/way reset all, away, <지역> 또는 not <지역>"
 L["Adventure Guide couldn't start that just now. Choose it again from its guide."] =
@@ -401,7 +407,7 @@ L["Eastern Kingdoms"] = "동부 왕국" -- mt
 L["Kalimdor"] = "칼림도어" -- mt
 L["No flight points learned in %s: open a flight master's map once to sync them."] =
 	"%s에서 배운 비행 지점이 없습니다: 비행 조련사의 지도를 한 번 열어 동기화하세요." -- mt
-L["Needs Forever Core."] = "Forever Core가 필요합니다." -- mt
+L["Tells you which addon to update."] = "업데이트할 애드온을 알려 줍니다." -- mt
 L["Better for your level, farther away"] = "레벨에 더 좋은 물품, 더 먼 곳" -- mt
 L["Show a pin when you reach a stop"] = "지점에 도착하면 핀 표시" -- mt
 L["In a stop's area the direction arrow becomes a pin with the stop's objectives, instead of hiding."] =

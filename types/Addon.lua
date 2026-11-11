@@ -26,7 +26,8 @@
 ---@field NearbyServices SPFNearbyServices
 ---@field NearbyEntrances SPFNearbyEntrancesAPI the dungeons and raids in the Nearby services list (UI/NearbyEntrances.lua)
 ---@field core ForeverCoreAddon the addon's own ForeverCore services: journal, log, report and map canvas
----@field broken? boolean set when an installed ForeverCore is too old, so the addon's files stop
+---@field broken? boolean set when ForeverCore is missing a member this addon calls, so the addon's files stop
+---@field ForeverRequire fun(ready: boolean): boolean the shared out-of-date warning, from Core/ForeverRequire.lua
 ---@field ReportTitle string the localized title shown by the shared report window
 ---@field Icon string the one client icon every in-game identity surface draws, read from the TOC
 ---@field NearbyQuestie SPFNearbyQuestie the QuestieDB read behind the Nearby list (UI/NearbyQuestie.lua)

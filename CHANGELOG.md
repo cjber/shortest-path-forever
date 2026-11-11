@@ -16,6 +16,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 - **Journeys can count as arrived from further away, and clear the pin they were set from.** *Arrival distance* in Guidance (15 yards by default) sets how close you must get to a journey's final destination. On a multi-stop route, the stops before the last keep 15 yards. When the map pin you started from was that destination, it is cleared on arrival instead of left behind. Asked on CurseForge by Zwaffelmagic (#733).
 - **Dungeons and raids join Nearby services.** The Nearby services list has a section for every dungeon and raid door on your continent, ordered by travel time, with the instance's name over its zone. A row plans a journey to that door, which ends when you go in, the same journey a quest inside the dungeon gets. A door on the other continent is left out. Asked on CurseForge by Wraith12 (#688).
 
+## [1.30.4] - 2026-11-11
+
+- **Tells you which addon to update.** If another Forever addon you have installed is older than this one and stops it starting, the message now names that addon, so you know exactly what to update.
+
 ## [1.30.3] - 2026-11-11
 
 - **Works again after updating.** Updating to the last version could leave the addon switched off in the game's AddOns list with "ForeverCore: missing", because the update did not bring Forever Core with it. Forever Core now comes inside this addon's download again, from CurseForge, Wago or GitHub alike, so updating is all it takes (cjber/shortest-path-forever#731).

@@ -12,6 +12,8 @@ L["%s (cast %s)"] = "%s (применить: %s)"
 L["%s (new flight path)"] = "%s (новый маршрут полета)"
 L["%s (turn in)"] = "%s (сдать)"
 L["%s could be %s."] = "%s – возможно, %s."
+L["%s could not start. Reinstall %s to fix this."] =
+	"%s не удалось запустить. Переустановите %s, чтобы исправить это." -- mt
 L["%s landing"] = "площадка (%s)"
 L["%s pier"] = "причал (%s)"
 L["%s station"] = "станция (%s)"
@@ -20,6 +22,10 @@ L["%s · %s"] = "%s · %s"
 L["%s — unavailable here"] = "%s – здесь недоступно"
 L["%s, %s"] = "%s, %s"
 L["%s, then %s"] = "%s, затем %s"
+L["%s: %s are out of date. Update them to fix this."] =
+	"%s: %s устарели. Обновите их, чтобы исправить это." -- mt
+L["%s: %s is out of date. Update it to fix this."] =
+	"%s: %s устарел. Обновите его, чтобы исправить это." -- mt
 L["/way [zone] x y [title], with x and y from 0 to 100."] =
 	"/way [зона] x y [название], x и y от 0 до 100."
 L["/way reset all, away, <zone> or not <zone>"] = "/way reset all, away, <зона> или not <зона>"
@@ -417,7 +423,7 @@ L["Eastern Kingdoms"] = "Восточные королевства" -- mt
 L["Kalimdor"] = "Калимдор" -- mt
 L["No flight points learned in %s: open a flight master's map once to sync them."] =
 	"В зоне «%s» не изучено ни одной точки полёта: один раз откройте карту распорядителя полётов, чтобы синхронизировать их." -- mt
-L["Needs Forever Core."] = "Требуется Forever Core." -- mt
+L["Tells you which addon to update."] = "Сообщает, какой аддон нужно обновить." -- mt
 L["Better for your level, farther away"] = "Лучше для вашего уровня, но дальше" -- mt
 L["Show a pin when you reach a stop"] = "Показывать метку при прибытии к остановке" -- mt
 L["In a stop's area the direction arrow becomes a pin with the stop's objectives, instead of hiding."] =
