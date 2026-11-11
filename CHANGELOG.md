@@ -12,6 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.30.3] - 2026-11-11
+
+- **Works again after updating.** Updating to the last version could leave the addon switched off in the game's AddOns list with "ForeverCore: missing", because the update did not bring Forever Core with it. Forever Core now comes inside this addon's download again, from CurseForge, Wago or GitHub alike, so updating is all it takes (cjber/shortest-path-forever#731).
+
 ### For addon authors
 
 - **The tracker section is now built with ForeverCore's `TrackerSection`, `TrackerLine` and `UpdateText`, so the addon needs ForeverCore v1.3.2.** Its own line template stays because its leg marks need a private line pool. Nothing changes for players.
@@ -271,7 +275,6 @@ optional `### For addon authors` subsection after a version's player bullets.
 ## [1.22.37] - 2026-11-06
 - **The Hearthstone no longer wins a short walk.** Standing beside the inn you are bound to, a journey could still start with "Use Hearthstone" for a goal a few steps past it, because the hearth's cost counted only its cast. A teleport now also pays its loading screen, and a Hearthstone must save at least 20 seconds over walking before the journey suggests it, so short walks stay on foot and long trips still take the hearth.
 
-
 ## [1.22.36] - 2026-11-06
 - **A cleaner zeppelin icon.** Zeppelin docks, route steps, the compass and the minimap now draw a bolder zeppelin with thick lines and a black outline, matching the boat icon beside it, so it stays readable at minimap size.
 
@@ -328,7 +331,6 @@ optional `### For addon authors` subsection after a version's player bullets.
 ## [1.22.25] - 2026-11-04
 
 - **Controller players no longer trip the client's gamepad block.** Under the gamepad interface, a context menu opened from the tracker header, a step line, a dock pin or a flight pin now says "This menu needs mouse and keyboard." instead of opening inside our own click handler, and the world map is no longer turned when it is already open. Both changes remove the synchronous path from this addon into the protected interact-target call that the client blocked, which also explains why other addons were being named alongside it.
-
 
 - **Controller play no longer blocks the game's interact target.** With the gamepad interface on, the game takes every menu and window that opens into its controller focus straight away, and when Shortest Path opened one (a tracker or map pin menu, Nearby services, or turning an open map to a place) the game blocked `SetPreferredGamepadInteractTarget()` and blamed whichever addon touched it last. Under the gamepad interface those menus now say they need mouse and keyboard, and Show on map asks you to turn the map yourself. Nothing changes with mouse and keyboard. Thanks to TRDeadbeat, tallsmartman and the other CurseForge players for the reports.
 
