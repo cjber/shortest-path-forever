@@ -15,6 +15,8 @@ The journey search uses lower bounds to decide which endpoint walks still need e
 uses a single earliest label per arrival state to find a valid incumbent quickly. The final optimiser keeps
 visited-set alternatives to prove the optimum. The incumbent arrival allows the planner to discard labels that
 cannot beat it. The route's current walking leg gets its geometry first. Later legs with known costs wait until they become the next walk to follow.
+The planner itself never yields: a plan can be asked for from inside a C call (a secure hook, another addon's
+estimate), where Lua 5.1 cannot yield across, and it finishes inside its caller's frame (#717).
 
 A feasible route can be followed while the search continues to prove the final route. The first walking leg
 must be measured before that route is offered. Cancellation, destination changes and water-mode changes
