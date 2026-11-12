@@ -1,0 +1,29 @@
+{
+  "input_digest": "716da8c4458b21a7e386ceaedadccae1db7853c1b331476afa98d2fb04fd35e0",
+  "runtime_sha256": "716da8c4458b21a7e386ceaedadccae1db7853c1b331476afa98d2fb04fd35e0",
+  "candidate": "0070edee175574cfbc193817e7b33778195d8d7c8e1c30e961fc42967bee5783",
+  "tested_artifact": "release-package",
+  "client_build": "1.60.1.70888 (Interface 16001)",
+  "flows": [
+    {
+      "name": "Shortest Path loads and opens its settings on ForeverCore 1.8.1",
+      "steps": [
+        "Install the packaged candidate with its bundled ForeverCore v1.8.1 and /reload",
+        "Print the loaded versions: ForeverCore v1.8.1, ShortestPathForever v1.33.1-8-g152cb6f, AdventureGuideForever v1.7.6-2-gabadcae, all loaded",
+        "Type /path",
+        "Confirm the Shortest Path Forever settings page opens with every section listed"
+      ],
+      "result": "pass"
+    }
+  ],
+  "images": [
+    {
+      "url": "https://gist.githubusercontent.com/cjber/328823e9708f8e8ea7847dc01bd53905/raw/cad3e2caecfe30ead75d1c5293b58db0a5a9174f/sync181b-versions.png",
+      "sha256": "19cf5e3d567426b1c72aacadcf07644cfa7994935dd811d16236a8f20e147832"
+    },
+    {
+      "url": "https://gist.githubusercontent.com/cjber/328823e9708f8e8ea7847dc01bd53905/raw/cad3e2caecfe30ead75d1c5293b58db0a5a9174f/sync181b-spf-settings-0070ede.png",
+      "sha256": "c0bc438060d059c89f556d877555d4236c8499bbb1d833f1f9e7e1602ab6d6fb"
+    }
+  ]
+}

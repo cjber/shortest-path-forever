@@ -3,7 +3,7 @@
 -- protected SetPreferredGamepadInteractTarget from there. With mouse and keyboard nothing changes. Menus are
 -- ForeverCore's own frames and stay safe, so they no longer change under the gamepad interface.
 local style, opened, printed, mapShown, mapID, combat = 0, {}, {}, false, 1429, false
--- The client's own opener is restricted: ForeverCore.OpenMap runs it through CreateSecureDelegate, and the stub
+-- The client's own opener is restricted: ForeverCore.OpenMap runs it through securecallfunction, and the stub
 -- records whether the call came that way.
 local viaDelegate = false
 local env = setmetatable({
@@ -15,13 +15,11 @@ local env = setmetatable({
 	InCombatLockdown = function()
 		return combat
 	end,
-	CreateSecureDelegate = function(fn)
-		return function(...)
-			viaDelegate = true
-			local result = fn(...)
-			viaDelegate = false
-			return result
-		end
+	securecallfunction = function(fn, ...)
+		viaDelegate = true
+		local result = fn(...)
+		viaDelegate = false
+		return result
 	end,
 	UnitFactionGroup = function()
 		return "Alliance"

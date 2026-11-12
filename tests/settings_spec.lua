@@ -143,16 +143,14 @@ local env = setmetatable({
 	SlashCmdList = {},
 }, { __index = _G })
 -- ForeverCore's secure settings opener runs the client's restricted C_SettingsUtil.OpenSettingsPanel through
--- CreateSecureDelegate, and records what it opened.
+-- securecallfunction, and records what it opened.
 local secureCalls = 0
 env.InCombatLockdown = function()
 	return false
 end
-env.CreateSecureDelegate = function(fn)
-	return function(...)
-		secureCalls = secureCalls + 1
-		return fn(...)
-	end
+env.securecallfunction = function(fn, ...)
+	secureCalls = secureCalls + 1
+	return fn(...)
 end
 env.C_SettingsUtil = {
 	OpenSettingsPanel = function(categoryID)
