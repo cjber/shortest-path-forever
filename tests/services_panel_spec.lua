@@ -207,6 +207,7 @@ end
 
 local ns = {
 	Init = function() end,
+	db = { nearbyTab = true },
 	L = setmetatable({}, {
 		__index = function(_, key)
 			return key
@@ -334,10 +335,20 @@ local QuestLogTabs = {
 	Register = function(key, spec)
 		ns.registered = { key = key, spec = spec }
 		ns.tab = { Icon = region() }
+		function ns.tab:SetShown(shown)
+			self.shown = shown
+		end
 		return ns.tab
+	end,
+	Selected = function()
+		return ns.selected
+	end,
+	ShowQuests = function()
+		ns.selected = nil
 	end,
 	Select = function(key)
 		if ns.registered and ns.registered.key == key then
+			ns.selected = key
 			ns.registered.spec.panel:Show()
 			if ns.registered.spec.shown then
 				ns.registered.spec.shown(true)
@@ -424,6 +435,13 @@ local fit = ns.tab.Icon.fit
 assert(fit and fit.atlas == "Banker" and fit.width == 32 and fit.height == 32, "the tab shows the bank bags at 32")
 assert(ns.registered.spec.tooltip == "Nearby services", "its tooltip")
 assert(panel and not panel:IsShown(), "the panel starts hidden")
+assert(ns.tab.shown ~= false, "the Nearby services tab is hidden by default")
+ns.db.nearbyTab = false
+ns.RefreshNearbyTab()
+assert(ns.tab.shown == false, "disabling Nearby services did not hide its tab")
+ns.db.nearbyTab = true
+ns.RefreshNearbyTab()
+assert(ns.tab.shown == true, "re-enabling Nearby services did not restore its tab")
 
 local search = assert(byTemplate("SearchBoxTemplate"), "a search box")
 local scroll = assert(byTemplate("ScrollFrameTemplate"), "a scroll frame")

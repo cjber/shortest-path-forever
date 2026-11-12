@@ -214,6 +214,15 @@ for _, destination in ipairs({ { map = 1, x = 6400, y = 100 }, { map = 0, x = 22
 	local path = route.legs[1].walkPoints
 	local initialWaypoint = live.waypoint()
 	assert(initialWaypoint and addon.IsJourneyGuided(), "Auberdine must start Guide automatically")
+	-- RestedXP and similar guides can briefly report a quest as the highest-priority type while the
+	-- client's user waypoint remains super-tracked. That transient must not make Guide yield and
+	-- recreate the waypoint, which flickers the arrow and tracker.
+	live.setTrackingType("quest")
+	live.update(0)
+	assert(
+		addon.IsJourneyGuided() and live.waypoint() == initialWaypoint,
+		"a transient quest priority keeps Guide ownership"
+	)
 	-- An unavailable sample spanning a replan used to discard the route and permanently stop Guide.
 	for _, unavailable in ipairs({ {}, { x = live.secret, y = live.secret, map = live.secret } }) do
 		local held = live.shown()

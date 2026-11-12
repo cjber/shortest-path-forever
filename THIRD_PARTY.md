@@ -30,6 +30,7 @@ as the glossary for game terms; eight frFR lines are Brainc3ll's.
 |---|---|---|
 | QuestieDB, if installed | Quest givers and objectives as route goals | QuestieDB carries no licence; nothing is copied |
 | TomTom, RestedXP Guides and Guidelime, if installed | Waypoints and guide steps, through their public APIs | Their own; nothing is copied |
+| Dugi Guides, if installed | Its current guide step, read from the viewer's own arrow tables | All rights reserved; no code, art or guide data is copied or bundled |
 | TomTom's API, while TomTom is not installed | `Core/TomTom.lua` answers guide addons' TomTom calls, and `/way` reads its arguments as TomTom does | Our own code; only TomTom's public call names and `/way` syntax are followed |
 | Adventure Guide Forever and Tweaks Forever, if installed | The RestedXP hand-off, and class trainers for nearby services, through their public APIs | GPL-3.0-or-later |
 
@@ -139,6 +140,11 @@ Credit for the reports and requests behind the addon.
 | Acem | Known flight points kept per character | CurseForge; #685 |
 | tgkGate | Fixed the path job yield error | CurseForge; #717 |
 | IronmanBG | Plan journey back in Kaliel's Tracker | CurseForge; #718 |
+| Blast22 | Guidance no longer flickers when another addon selects an objective | CurseForge; 8693782 |
+| Anonymous CurseForge reporter | Guidance no longer flickers when another addon selects an objective | CurseForge; #693 |
+| cobalt_44 | Nearby services tab toggle | CurseForge; #767, 8694492 |
+| ghuff07 | Dugi Guides can lead the journey | CurseForge; #689 |
+| nimri82 | The public guidance point for RestedXP-Navigator | CurseForge; #777 |
 
 ## Inspired by
 

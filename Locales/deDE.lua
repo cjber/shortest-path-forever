@@ -79,6 +79,7 @@ L["Flight master icon size"] = "Größe der Flugmeistersymbole"
 L["Flight path known"] = "Flugroute bekannt"
 L["Flights from here"] = "Flüge von hier"
 L["Fly to %s"] = "Nach %s fliegen"
+L["Follow Dugi guides"] = "Dugi-Leitfäden folgen" -- mt
 L["Follow Guidelime guides"] = "Guidelime-Leitfäden folgen"
 L["Follow RestedXP guides"] = "RestedXP-Leitfäden folgen"
 L["Follow TomTom's arrow"] = "Dem Pfeil von TomTom folgen"
@@ -153,6 +154,8 @@ L["This menu needs mouse and keyboard."] = "Dieses Menü braucht Maus und Tastat
 L["Open these settings from the minimap."] = "Diese Optionen über die Minikarte öffnen."
 L["Other Faction's Routes"] = "Routen der anderen Fraktion"
 L["Plan journey"] = "Reise planen"
+L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."] =
+	"Reisen zum aktuellen Schritt des Dugi-Leitfadens planen. Dugi behält seinen eigenen Pfeil." -- mt
 L["Plan journeys to Guidelime's current guide step. Guidelime's arrow steps aside while ours draws."] =
 	"Reisen zum aktuellen Schritt des Guidelime-Leitfadens planen. Der Pfeil von Guidelime weicht, solange unserer gezeichnet wird."
 L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."] =
@@ -165,6 +168,7 @@ L["Portals"] = "Portale"
 L["Reagents"] = "Reagenzien"
 L["Repair"] = "Reparieren"
 L["RestedXP guide"] = "RestedXP-Leitfaden"
+L["Resume Dugi guide"] = "Dugi-Leitfaden fortsetzen" -- mt
 L["Resume Guidelime guide"] = "Guidelime-Leitfaden fortsetzen"
 L["Resume RestedXP guide"] = "RestedXP-Leitfaden fortsetzen"
 L["Resume guide"] = "Leitfaden fortsetzen"
@@ -320,13 +324,10 @@ L["Both"] = "Beides" -- mt
 L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs."] =
 	"Lokales Reisetagebuch — ca. %d Yards zu Fuß; %d Reisen; %d Transporte; %d Flüge; %d Portalstrecken."
 L["Record travel stats"] = "Reisestatistik aufzeichnen"
-L["Share travel stats with guild and groups"] = "Reisestatistik mit Gilde und Gruppen teilen"
 L["Time left"] = "Restzeit" -- mt
 L["Travel journal"] = "Reisetagebuch"
 L["Travel milestone reached: %s"] = "Reisemeilenstein erreicht: %s"
 L["Travel stats are not ready yet."] = "Die Reisestatistik ist noch nicht bereit."
-L["Turn this off to keep stats on this character only. Shared records are player-reported and not verified."] =
-	"Ausschalten, um die Statistik nur für diesen Charakter zu behalten. Geteilte Einträge stammen von Spielern und sind nicht geprüft."
 L["Party member"] = "Gruppenmitglied" -- mt
 L["That player is not on a map you can see."] = "Dieser Spieler ist nicht auf einer Karte, die Ihr sehen könnt." -- mt
 L["You have caught up with %s."] = "Du hast %s eingeholt." -- mt
@@ -387,10 +388,6 @@ L["Hide RestedXP's arrow"] = "RestedXPs Pfeil ausblenden" -- mt
 L["Hide departures"] = "Abfahrten ausblenden"
 
 -- Travel stats and the shared Forever Leaderboards.
-L["Completed journeys"] = "Abgeschlossene Reisen"
-L["On unless you turn it off. Shares travel records with guild and group and puts you on Forever Leaderboards."] =
-	"Standardmäßig an, bis Ihr es ausschaltet. Teilt Reiseaufzeichnungen über Gilden-, Gruppen-, Schlachtzugs- und Instanzkanäle und setzt Euch auf die Forever-Ranglisten." -- mt
-L["total"] = "gesamt" -- mt
 
 L["Follow roads"] = "Straßen folgen" -- mt
 L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =
@@ -421,6 +418,7 @@ L["How close you must get to a journey's destination for it to count as reached.
 	"Wie nah Ihr an das Ziel einer Reise herankommen müsst, damit sie als erreicht gilt." -- mt
 L["Stops before the last on a multi-stop route keep 15 yards."] =
 	"Haltestellen vor der letzten auf einer Route mit mehreren Stopps behalten 15 Meter." -- mt
+L["Dugi Guides"] = "Dugi Guides" -- mt
 L["Dungeons and raids"] = "Dungeons und Schlachtzüge" -- mt
 L["Town services"] = "Stadtdienste" -- mt
 L["Town services on the world map"] = "Stadtdienste auf der Weltkarte" -- mt
@@ -430,3 +428,6 @@ L["Capitals and important services"] = "Hauptstädte und wichtige Dienste" -- mt
 L["All towns"] = "Alle Städte" -- mt
 L["Books and recipes"] = "Bücher und Rezepte" -- mt
 L["One icon per town, or one per service as you zoom in."] = "Ein Symbol pro Stadt oder pro Dienst beim Hineinzoomen." -- mt
+L["Show Nearby services tab"] = "Tab für Dienste in der Nähe anzeigen"
+L["The Nearby services tab in the world map and quest log."] =
+	"Der Tab für Dienste in der Nähe auf der Weltkarte und im Questlog."

@@ -19,6 +19,8 @@ read_globals = {
 	"ForeverCore",
 	"Guidelime",
 	"GuidelimeArrow",
+	"DugisGuideViewer",
+	"CurrentTitle",
 	"TomTomCrazyArrow",
 	"IsAltKeyDown",
 	"QuestMapFrame",

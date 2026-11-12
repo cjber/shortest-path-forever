@@ -29,7 +29,7 @@ local function detail(label, ...)
 	return found
 end
 
-equal(API.version, 1, "version")
+equal(API.version, 2, "version")
 near(API.Estimate(1, 0.5, 0.5, 1, 0.5014, 0.5), 10, "world conversion and milliseconds to seconds")
 local walk = detail("walk", 1, 0.5, 0.5, 1, 0.5014, 0.5)
 equal(#walk.legs, 1, "one walking leg")
@@ -597,7 +597,8 @@ end
 
 -- Subscribe: one call per burst of guidance changes, on the next frame, each subscriber isolated from the others.
 do
-	equal(API.minor, 3, "minor 3 records Journey, Pause, Resume, SkipLeg, Stats and Leaderboard")
+	equal(API.version, 2, "version 2 removes peer and leaderboard APIs")
+	equal(API.minor, 1, "minor 1 records Guidance and the guidance change")
 	equal(pcall(API.Subscribe, "callback"), false, "a callback must be a function")
 	local timers, route =
 		{}, {
@@ -1049,79 +1050,6 @@ do
 	env.C_Timer = previousTimer
 end
 
--- Stats and Leaderboard read the travel journal through the shared peer protocol.
-do
-	local ForeverCore = dofile("tests/forever_core.lua")
-	env.UnitName = function()
-		return "Tester"
-	end
-	local coreNs = ForeverCore.load(env, "ForeverCore", { "Core/PeerStats.lua" })
-	env.ForeverCore.PeerStats = coreNs.PeerStats
-	env.ForeverCore.Leaderboards = { Register = function() end, Open = function() end }
-	local peers = {}
-	for peerIndex = 1, 30 do
-		peers["Peer" .. peerIndex] = { routes_completed = { all = { value = 101 - peerIndex, eventUnix = 200 } } }
-	end
-	ns.charDB.progress = {
-		walkedYards = 1234,
-		routesCompleted = 2,
-		transportsUsed = 3,
-		flightsTaken = 4,
-		portalsUsed = 5,
-		milestones = {},
-		peers = { spf = peers },
-	}
-	env.C_Timer = { After = function() end }
-	driver.load("Core/Progress.lua")
-
-	local savedDb = ns.db
-	local stats = assert(API.Stats())
-	equal(#stats, 5, "one travel row per metric")
-	equal(stats[1].addon, "ShortestPathForever", "the addon's own name")
-	equal(stats[1].subject, "all", "the travel subject")
-	local byMetric = {}
-	for _, row in ipairs(stats) do
-		byMetric[row.metric] = row.value
-	end
-	equal(byMetric.distance_yards, 1234, "yards walked")
-	equal(byMetric.routes_completed, 2, "completed journeys")
-	equal(byMetric.transports_used, 3, "transport rides")
-	equal(byMetric.flights_taken, 4, "flights taken")
-	equal(byMetric.portals_used, 5, "portals used")
-	stats[1].value = -1
-	equal(assert(API.Stats())[1].value, 1234, "Stats returns fresh rows")
-
-	local board = assert(API.Leaderboard())
-	equal(board.metric, "routes_completed", "the board's metric")
-	equal(board.scope, "guild_group", "the suite's scope")
-	equal(board.sharing, true, "sharing is on")
-	equal(board.total, 31, "every row counts before the limit")
-	equal(#board.rows, 11, "ten ranked rows and the player's own")
-	equal(board.rows[1].rank, 1, "ranked from the top")
-	equal(board.rows[1].eventUnix, nil, "no event time the journal does not record")
-	equal(board.rows[1].self, nil, "the top row is not this character")
-	equal(#assert(API.Leaderboard(99)).rows, 26, "the limit is capped at 25, with the player's own row")
-	local own = assert(API.Leaderboard(0))
-	equal(#own.rows, 1, "zero asks for the player's row alone")
-	equal(own.rows[1].self, true, "which is marked as this character")
-	equal(own.rows[1].value, 2, "with this character's own total")
-	local top = assert(API.Leaderboard(1))
-	equal(#top.rows, 2, "one ranked row and the player's own")
-	equal(top.rows[1].self, nil, "the ranked row is not this character")
-	equal(top.rows[2].self, true, "and the player's row is kept below the limit")
-	for _, bad in ipairs({ -1, 1.5, "5", math.huge, 0 / 0, driver.secret }) do
-		why("invalid", "a bad leaderboard limit", API.Leaderboard(bad))
-	end
-	board.rows[1].name = "Changed by caller"
-	equal(assert(API.Leaderboard()).rows[1].name ~= "Changed by caller", true, "Leaderboard returns fresh rows")
-
-	ns.db = nil
-	why("loading", "Stats before the saved variables", API.Stats())
-	why("loading", "Leaderboard before the saved variables", API.Leaderboard())
-	why("invalid", "a bad limit is still invalid before loading", API.Leaderboard(-1))
-	ns.db = savedDb
-end
-
 -- The suite's list of addon APIs names this one with its version and minor, and a core whose kit is still at minor 1
 -- has no Publish, so the API loads without being handed over.
 do
@@ -1149,7 +1077,7 @@ do
 	}
 	driver.load("Core/API.lua")
 	equal(published, 0, "a kit at minor 1 publishes nothing")
-	equal(env.ShortestPathForever.API.version, 1, "and still exposes the API")
+	equal(env.ShortestPathForever.API.version, 2, "and still exposes the API")
 
 	env.ForeverCore.APIKit = kit
 	driver.load("Core/API.lua")

@@ -27,6 +27,7 @@
 ---@field NearbyGroups SPFNearbyGroups the vendor and service groups the list and the map share (UI/NearbyGroups.lua)
 ---@field TownServiceChoices SPFTownServiceChoice[] the town services' four levels (UI/TownServices.lua)
 ---@field RefreshTownServices fun() redraws the town services on the world map (UI/TownServices.lua)
+---@field RefreshNearbyTab fun() redraws the Nearby services tab visibility (UI/ServicesPanel.lua)
 ---@field NearbyEntrances SPFNearbyEntrancesAPI the dungeons and raids in the Nearby services list (UI/NearbyEntrances.lua)
 ---@field core ForeverCoreAddon the addon's own ForeverCore services: journal, log, report and map canvas
 ---@field broken? boolean set when ForeverCore is missing a member this addon calls, so the addon's files stop
@@ -35,10 +36,7 @@
 ---@field Icon string the one client icon every in-game identity surface draws, read from the TOC
 ---@field NearbyQuestie SPFNearbyQuestie the QuestieDB read behind the Nearby list (UI/NearbyQuestie.lua)
 ---@field ProgressJourneyChanged? fun(point: SPFPoint?, reason?: "arrived"|"cleared")
----@field TravelSharingChanged fun()
 ---@field TravelStats fun(): SPFProgressData?
----@field TravelBoard fun(scope: ForeverLeaderboardsScope): ForeverLeaderboardsRow[] this addon's board for the shared window
----@field OpenTravelLeaderboard fun() opens Forever Leaderboards on this addon's tab
 
 ---@class SPFVendorGroup
 ---@field key string
@@ -218,6 +216,7 @@
 ---@field portals? boolean
 ---@field minimapPins? boolean
 ---@field mapFlightMasters? boolean
+---@field nearbyTab? boolean
 ---@field mapRoutes? boolean
 ---@field townServices? string the town services' level of detail: "capitals", "important", "all" or "off" (TownServices.lua)
 ---@field otherFaction? boolean
@@ -232,6 +231,7 @@
 ---@field restedxp? boolean -- follow RestedXP guide targets
 ---@field restedxpHideArrow? boolean -- Shortest Path's arrow replaces the guide's while a guide target is followed (RestedXP.lua)
 ---@field guidelime? boolean -- follow Guidelime's current guide step (Guidelime.lua)
+---@field dugi? boolean -- follow Dugi Guides' current guide step (Dugi.lua)
 ---@field tomtom? boolean -- answer third-party guides' TomTom waypoints with a journey while TomTom is absent
 ---@field tomtomFollow? boolean -- with TomTom installed, a journey follows the waypoint its arrow points to
 ---@field taxiRoute? boolean
@@ -246,7 +246,6 @@
 ---@field hearthMinimumSavings? number -- seconds the Hearthstone must save over the best non-hearth plan
 ---@field share? boolean
 ---@field stats? boolean -- collect per-character travel totals
----@field statsShare? boolean -- exchange travel snapshots over supported addon channels
 ---@field guideStops? boolean
 ---@field compass? boolean
 ---@field mapPinScale? number
@@ -296,7 +295,7 @@
 ---@field flightsTaken number
 ---@field portalsUsed number
 ---@field milestones table<string, number>
----@field peers table<string, table<string, SPFSharedPeer>> addon ID → sender identity → metric/subject records
+---@field peers? table<string, table<string, SPFSharedPeer>> legacy shared records, cleared on load
 ---@class SPFSharedPeer
 ---@field [string] table<string, SPFSharedMetric>
 ---@class SPFSharedMetric

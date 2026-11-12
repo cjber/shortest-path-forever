@@ -157,10 +157,22 @@ end
 assert(translations > 0, "the TOC loads the translations after Locales/enUS.lua")
 
 -- The packager's CurseForge localization keyword would fail the release: CurseForge no longer serves translations.
-local keyword = "@" .. "localization"
-local grep = assert(io.popen("git grep -l -F '" .. keyword .. "'"))
-local hits = grep:read("*a")
-grep:close()
-assert(hits == "", "remove the packager localization keyword from:\n" .. hits)
+local scan = assert(io.popen([[python3 - <<'PYSCAN'
+from pathlib import Path
+from tools.forever_tools.pkgmeta import localization_toc_files
+from tools.forever_tools.visual_proof import packaged_runtime_files
+root = Path.cwd()
+files = {p for p in packaged_runtime_files(root).values() if p.suffix == ".lua"}
+files.update(localization_toc_files(root))
+for path in sorted(files):
+    if "@" + "localization" in path.read_text(encoding="utf-8-sig"):
+        print(path.relative_to(root))
+print("scan-ok")
+PYSCAN
+]]))
+local hits = scan:read("*a")
+scan:close()
+-- LuaJIT 5.1 does not expose a failed pipe status; require Python to finish the scan.
+assert(hits == "scan-ok\n", "packaged localization scan failed or found a forbidden keyword:\n" .. hits)
 
 print("locales_spec: ok")

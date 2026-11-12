@@ -83,6 +83,7 @@ L["Flight master icon size"] = "비행 조련사 아이콘 크기"
 L["Flight path known"] = "알고 있는 비행 경로"
 L["Flights from here"] = "여기서 출발하는 비행"
 L["Fly to %s"] = "%s(으)로 비행"
+L["Follow Dugi guides"] = "Dugi 가이드 따르기" -- mt
 L["Follow Guidelime guides"] = "Guidelime 가이드 따르기"
 L["Follow RestedXP guides"] = "RestedXP 가이드 따르기"
 L["Follow TomTom's arrow"] = "TomTom 화살표 따르기"
@@ -159,6 +160,8 @@ L["This menu needs mouse and keyboard."] = "이 메뉴는 마우스와 키보드
 L["Open these settings from the minimap."] = "미니맵에서 이 설정을 엽니다."
 L["Other Faction's Routes"] = "다른 진영의 노선"
 L["Plan journey"] = "여정 계획"
+L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."] =
+	"Dugi 가이드의 현재 단계로 여정을 계획합니다. Dugi는 자체 화살표를 유지합니다." -- mt
 L["Plan journeys to Guidelime's current guide step. Guidelime's arrow steps aside while ours draws."] =
 	"Guidelime의 현재 가이드 단계로 여정을 계획합니다. 우리 화살표가 그려지는 동안 Guidelime의 화살표는 물러납니다."
 L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."] =
@@ -171,6 +174,7 @@ L["Portals"] = "차원문"
 L["Reagents"] = "마법 재료"
 L["Repair"] = "장비 수리"
 L["RestedXP guide"] = "RestedXP 가이드"
+L["Resume Dugi guide"] = "Dugi 가이드 재개" -- mt
 L["Resume Guidelime guide"] = "Guidelime 가이드 재개"
 L["Resume RestedXP guide"] = "RestedXP 가이드 재개"
 L["Resume guide"] = "가이드 재개"
@@ -329,13 +333,10 @@ L["Both"] = "둘 다" -- mt
 L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs."] =
 	"로컬 이동 일지 — 약 %d야드 이동, 여정 %d회, 교통수단 %d회, 비행 %d회, 차원문 구간 %d회."
 L["Record travel stats"] = "이동 통계 기록"
-L["Share travel stats with guild and groups"] = "길드와 그룹에 이동 통계 공유"
 L["Time left"] = "남은 시간" -- mt
 L["Travel journal"] = "이동 일지"
 L["Travel milestone reached: %s"] = "이동 이정표 달성: %s"
 L["Travel stats are not ready yet."] = "이동 통계가 아직 준비되지 않았습니다."
-L["Turn this off to keep stats on this character only. Shared records are player-reported and not verified."] =
-	"끄면 이 캐릭터에만 통계를 보관합니다. 공유 기록은 플레이어가 보낸 것이며 검증되지 않습니다."
 L["Party member"] = "파티원" -- mt
 L["That player is not on a map you can see."] = "그 플레이어는 볼 수 있는 지도에 없습니다." -- mt
 L["You have caught up with %s."] = "%s을(를) 따라잡았습니다." -- mt
@@ -396,10 +397,6 @@ L["Hide RestedXP's arrow"] = "RestedXP 화살표 숨기기" -- mt
 L["Hide departures"] = "출발 숨기기"
 
 -- Travel stats and the shared Forever Leaderboards.
-L["Completed journeys"] = "완료한 여정"
-L["On unless you turn it off. Shares travel records with guild and group and puts you on Forever Leaderboards."] =
-	"끄지 않는 한 켜져 있습니다. 길드, 파티, 공격대, 인스턴스 채널로 여행 기록을 공유하고 Forever 순위표에 표시합니다." -- mt
-L["total"] = "총" -- mt
 
 L["Follow roads"] = "도로 따라가기" -- mt
 L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =
@@ -430,6 +427,7 @@ L["How close you must get to a journey's destination for it to count as reached.
 	"여정의 목적지에 얼마나 가까워져야 도착으로 칩니다." -- mt
 L["Stops before the last on a multi-stop route keep 15 yards."] =
 	"여러 정류장이 있는 경로에서 마지막 이전 정류장은 15미터를 유지합니다." -- mt
+L["Dugi Guides"] = "Dugi Guides" -- mt
 L["Dungeons and raids"] = "던전 및 공격대" -- mt
 L["Town services"] = "마을 서비스" -- mt
 L["Town services on the world map"] = "세계 지도에 마을 서비스 표시" -- mt
@@ -440,3 +438,6 @@ L["All towns"] = "모든 마을" -- mt
 L["Books and recipes"] = "책과 조리법" -- mt
 L["One icon per town, or one per service as you zoom in."] =
 	"마을마다 아이콘 하나, 확대하면 서비스마다 아이콘 하나." -- mt
+L["Show Nearby services tab"] = "주변 편의시설 탭 표시"
+L["The Nearby services tab in the world map and quest log."] =
+	"세계 지도와 퀘스트 로그의 주변 편의시설 탭입니다."

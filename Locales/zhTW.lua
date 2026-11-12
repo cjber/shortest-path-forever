@@ -79,6 +79,7 @@ L["Flight master icon size"] = "飛行管理員圖示大小"
 L["Flight path known"] = "已知飛行路線"
 L["Flights from here"] = "從這裡出發的航班"
 L["Fly to %s"] = "飛往%s"
+L["Follow Dugi guides"] = "跟隨 Dugi 攻略" -- mt
 L["Follow Guidelime guides"] = "跟隨 Guidelime 攻略"
 L["Follow RestedXP guides"] = "跟隨RestedXP指南"
 L["Follow TomTom's arrow"] = "跟隨TomTom的箭頭"
@@ -152,6 +153,8 @@ L["This menu needs mouse and keyboard."] = "此選單需要滑鼠和鍵盤。" -
 L["Open these settings from the minimap."] = "從小地圖開啟這些設定。"
 L["Other Faction's Routes"] = "另一陣營的航線"
 L["Plan journey"] = "規劃旅程"
+L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."] =
+	"規劃前往 Dugi 攻略目前步驟的旅程。Dugi 保留自己的箭頭。" -- mt
 L["Plan journeys to Guidelime's current guide step. Guidelime's arrow steps aside while ours draws."] =
 	"規劃前往 Guidelime 目前攻略步驟的旅程。在我們的箭頭顯示時，Guidelime 的箭頭會讓開。"
 L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."] =
@@ -164,6 +167,7 @@ L["Portals"] = "傳送門"
 L["Reagents"] = "材料"
 L["Repair"] = "修理"
 L["RestedXP guide"] = "RestedXP指南"
+L["Resume Dugi guide"] = "繼續 Dugi 攻略" -- mt
 L["Resume Guidelime guide"] = "繼續 Guidelime 攻略"
 L["Resume RestedXP guide"] = "繼續RestedXP指南"
 L["Resume guide"] = "繼續指南"
@@ -316,13 +320,10 @@ L["Both"] = "兩者" -- mt
 L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs."] =
 	"本地旅行日誌 — 步行約%d碼；%d次旅程；%d次交通；%d次飛行；%d段傳送門。"
 L["Record travel stats"] = "記錄旅行統計"
-L["Share travel stats with guild and groups"] = "與公會和隊伍共用旅行統計"
 L["Time left"] = "剩餘時間" -- mt
 L["Travel journal"] = "旅行日誌"
 L["Travel milestone reached: %s"] = "達成旅行里程碑：%s"
 L["Travel stats are not ready yet."] = "旅行統計尚未準備好。"
-L["Turn this off to keep stats on this character only. Shared records are player-reported and not verified."] =
-	"關閉後統計只保留在此角色上。共用記錄由玩家回報，未經核實。"
 L["Party member"] = "隊友" -- mt
 L["That player is not on a map you can see."] = "該玩家不在你能看到的地圖上。" -- mt
 L["You have caught up with %s."] = "你已追上%s。" -- mt
@@ -382,10 +383,6 @@ L["Hide RestedXP's arrow"] = "隱藏 RestedXP 的箭頭" -- mt
 L["Hide departures"] = "隱藏班次"
 
 -- Travel stats and the shared Forever Leaderboards.
-L["Completed journeys"] = "已完成的旅程"
-L["On unless you turn it off. Shares travel records with guild and group and puts you on Forever Leaderboards."] =
-	"除非你關閉，否則保持開啟。透過公會、隊伍、團隊和副本頻道分享旅行記錄，並將你列入 Forever 排行榜。" -- mt
-L["total"] = "總計" -- mt
 
 L["Follow roads"] = "沿道路行走" -- mt
 L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =
@@ -416,6 +413,7 @@ L["How close you must get to a journey's destination for it to count as reached.
 	"距離旅程目的地多近才算到達。" -- mt
 L["Stops before the last on a multi-stop route keep 15 yards."] =
 	"多站路線中，最後一站之前的站點仍保持 15 公尺。" -- mt
+L["Dugi Guides"] = "Dugi Guides" -- mt
 L["Dungeons and raids"] = "地城與團隊副本" -- mt
 L["Town services"] = "城鎮服務" -- mt
 L["Town services on the world map"] = "世界地圖上的城鎮服務" -- mt
@@ -426,3 +424,5 @@ L["All towns"] = "所有城鎮" -- mt
 L["Books and recipes"] = "書籍和配方" -- mt
 L["One icon per town, or one per service as you zoom in."] =
 	"縮小顯示每個城鎮一個圖示，放大後每個服務一個圖示。" -- mt
+L["Show Nearby services tab"] = "顯示附近服務分頁"
+L["The Nearby services tab in the world map and quest log."] = "世界地圖與任務日誌中的附近服務分頁。"

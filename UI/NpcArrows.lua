@@ -24,11 +24,11 @@ local function Readable(value)
 	return value
 end
 
--- The creature entry in a GUID's sixth field: Creature-0-3685-0-0000000000-000123 is NPC 123.
+-- The decimal creature entry is the sixth field; the seventh field identifies the individual spawn.
 ---@param guid string?
 ---@return integer?
 local function CreatureEntry(guid)
-	local entry = type(guid) == "string" and guid:match("^Creature%-[^-]+%-[^-]+%-[^-]+%-[^-]+%-(%d+)$")
+	local entry = type(guid) == "string" and guid:match("^Creature%-[^-]+%-[^-]+%-[^-]+%-[^-]+%-(%d+)%-%x+$")
 	return tonumber(entry)
 end
 

@@ -30,6 +30,7 @@ local function near(node)
 	return here.map == node.map and (here.x - node.x) ^ 2 + (here.y - node.y) ^ 2 <= 15 ^ 2
 end
 local told
+local riding
 local guide = {
 	To = function(point)
 		told = point
@@ -51,7 +52,7 @@ end
 local function Step(at)
 	here = at
 	told = nil
-	ns.AdvanceJourneyProgress(legs, progress, goal, nil, false, near, guide)
+	ns.AdvanceJourneyProgress(legs, progress, goal, riding, false, near, guide)
 	return progress.index
 end
 local shaft = { map = 0, x = bottom.x - 4, y = bottom.y }
@@ -89,3 +90,20 @@ legs = {
 progress = { index = 1, departed = true }
 assert(Step({ map = 0, x = 900, y = 0 }) == 2)
 print("lift_landing_spec: a ride between distant landings ends on arrival")
+
+-- Reaching a boat dock is not proof that the player boarded.  Leaving without
+-- boarding must keep the journey on the boat leg and guide back to its dock.
+now = 300000
+local boatFrom = { map = 0, x = 100, y = 100, z = 0 }
+local boatTo = { map = 1, x = 200, y = 200, z = 0 }
+legs = { { mode = "boat", route = 1, from = boatFrom, to = boatTo } }
+progress = { index = 1, departed = false }
+assert(Step({ map = 0, x = 100, y = 100 }) == 1, "arriving at a boat dock completed the leg")
+assert(told == boatFrom and not progress.departed, "a boat dock was treated as boarding")
+assert(
+	Step({ map = 0, x = 130, y = 100 }) == 1 and told == boatFrom,
+	"leaving an unboarded boat did not return to its dock"
+)
+riding = 1
+assert(Step({ map = 1, x = 200, y = 200 }) == 2, "an actually boarded boat did not complete")
+print("lift_landing_spec: an unboarded boat remains recoverable")

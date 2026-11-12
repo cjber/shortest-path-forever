@@ -84,6 +84,7 @@ L["Flight master icon size"] = "Размер значков распорядит
 L["Flight path known"] = "Маршрут полета известен"
 L["Flights from here"] = "Полеты отсюда"
 L["Fly to %s"] = "Лететь: %s"
+L["Follow Dugi guides"] = "Следовать гайдам Dugi" -- mt
 L["Follow Guidelime guides"] = "Следовать руководствам Guidelime"
 L["Follow RestedXP guides"] = "Следовать руководствам RestedXP"
 L["Follow TomTom's arrow"] = "Следовать стрелке TomTom"
@@ -163,6 +164,8 @@ L["This menu needs mouse and keyboard."] = "Для этого меню нужн�
 L["Open these settings from the minimap."] = "Открывать эти настройки с мини-карты."
 L["Other Faction's Routes"] = "Маршруты другой фракции"
 L["Plan journey"] = "Проложить маршрут"
+L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."] =
+	"Планировать путешествия к текущему шагу гайда Dugi. Dugi сохраняет свою стрелку." -- mt
 L["Plan journeys to Guidelime's current guide step. Guidelime's arrow steps aside while ours draws."] =
 	"Планировать путешествия к текущему шагу руководства Guidelime. Его стрелка уступает место нашей."
 L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."] =
@@ -175,6 +178,7 @@ L["Portals"] = "Порталы"
 L["Reagents"] = "Реагенты"
 L["Repair"] = "Ремонт"
 L["RestedXP guide"] = "Руководство RestedXP"
+L["Resume Dugi guide"] = "Продолжить гайд Dugi" -- mt
 L["Resume Guidelime guide"] = "Продолжить руководство Guidelime"
 L["Resume RestedXP guide"] = "Продолжить руководство RestedXP"
 L["Resume guide"] = "Продолжить руководство"
@@ -340,14 +344,10 @@ L["Both"] = "Оба" -- mt
 L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs."] =
 	"Дневник путешествий — около %d ярдов пешком; %d маршрутов; %d поездок на транспорте; %d полетов; %d переходов через портал."
 L["Record travel stats"] = "Записывать статистику путешествий"
-L["Share travel stats with guild and groups"] =
-	"Делиться статистикой путешествий с гильдией и группами"
 L["Time left"] = "Оставшееся время" -- mt
 L["Travel journal"] = "Дневник путешествий"
 L["Travel milestone reached: %s"] = "Достигнут рубеж путешествий: %s"
 L["Travel stats are not ready yet."] = "Статистика путешествий еще не готова."
-L["Turn this off to keep stats on this character only. Shared records are player-reported and not verified."] =
-	"Отключите, чтобы статистика велась только для этого персонажа. Общие записи присылают игроки, они не проверены."
 L["Party member"] = "Участник группы" -- mt
 L["That player is not on a map you can see."] =
 	"Этот игрок не на карте, которую вы видите." -- mt
@@ -412,10 +412,6 @@ L["Hide RestedXP's arrow"] = "Скрыть стрелку RestedXP" -- mt
 L["Hide departures"] = "Скрыть отправления"
 
 -- Travel stats and the shared Forever Leaderboards.
-L["Completed journeys"] = "Завершённые путешествия"
-L["On unless you turn it off. Shares travel records with guild and group and puts you on Forever Leaderboards."] =
-	"Включено, пока вы это не отключите. Делится записями о путешествиях по каналам гильдии, группы, рейда и подземелья и добавляет вас в рейтинги Forever." -- mt
-L["total"] = "всего" -- mt
 
 L["Follow roads"] = "Следовать дорогам" -- mt
 L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =
@@ -446,6 +442,7 @@ L["How close you must get to a journey's destination for it to count as reached.
 	"Насколько близко нужно подойти к месту назначения, чтобы путешествие считалось завершённым." -- mt
 L["Stops before the last on a multi-stop route keep 15 yards."] =
 	"Остановки перед последней на маршруте с несколькими остановками сохраняют 15 метров." -- mt
+L["Dugi Guides"] = "Dugi Guides" -- mt
 L["Dungeons and raids"] = "Подземелья и рейды" -- mt
 L["Town services"] = "Городские услуги" -- mt
 L["Town services on the world map"] = "Городские услуги на карте мира" -- mt
@@ -457,3 +454,6 @@ L["All towns"] = "Все города" -- mt
 L["Books and recipes"] = "Книги и рецепты" -- mt
 L["One icon per town, or one per service as you zoom in."] =
 	"Один значок на город или на услугу при приближении." -- mt
+L["Show Nearby services tab"] = "Показывать вкладку услуг поблизости"
+L["The Nearby services tab in the world map and quest log."] =
+	"Вкладка услуг поблизости на карте мира и в журнале заданий."

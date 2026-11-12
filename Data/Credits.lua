@@ -86,6 +86,14 @@ ns.Credits = {
 		{ name = "Acem", what = "Known flight points kept per character" },
 		{ name = "tgkGate", what = "Fixed the path job yield error" },
 		{ name = "IronmanBG", what = "Plan journey back in Kaliel's Tracker" },
+		{ name = "Blast22", what = "Guidance no longer flickers when another addon selects an objective" },
+		{
+			name = "Anonymous CurseForge reporter",
+			what = "Guidance no longer flickers when another addon selects an objective",
+		},
+		{ name = "cobalt_44", what = "Nearby services tab toggle" },
+		{ name = "ghuff07", what = "Dugi Guides can lead the journey" },
+		{ name = "nimri82", what = "The public guidance point for RestedXP-Navigator" },
 	},
 	inspired = {
 		{ name = "Polestar by Fitz", what = "Ideas for many features" },

@@ -145,6 +145,12 @@ ns.Init(function()
 	Checkbox("portals", L["Show portals"], L["On the world map."], ns.RefreshMap)
 	Checkbox("mapFlightMasters", L["Show flight masters"], L["On the world map."], ns.RefreshMap)
 	Checkbox(
+		"nearbyTab",
+		L["Show Nearby services tab"],
+		L["The Nearby services tab in the world map and quest log."],
+		ns.RefreshNearbyTab
+	)
+	Checkbox(
 		"minimapPins",
 		L["Show marks on the minimap"],
 		L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."],
@@ -265,16 +271,7 @@ ns.Init(function()
 	Checkbox(
 		"stats",
 		L["Record travel stats"],
-		L["On by default. Records approximate walking distance, completed journeys and transport use."],
-		ns.TravelSharingChanged
-	)
-	Checkbox(
-		"statsShare",
-		L["Share travel stats with guild and groups"],
-		L["On unless you turn it off. Shares travel records with guild and group and puts you on Forever Leaderboards."]
-			.. " "
-			.. L["Turn this off to keep stats on this character only. Shared records are player-reported and not verified."],
-		ns.TravelSharingChanged
+		L["On by default. Records approximate walking distance, completed journeys and transport use."]
 	)
 
 	-- Guidance: how a journey is planned and led.
@@ -449,6 +446,14 @@ ns.Init(function()
 		end
 	)
 	Checkbox(
+		"dugi",
+		L["Follow Dugi guides"],
+		L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."],
+		function()
+			ns.RefreshDugi()
+		end
+	)
+	Checkbox(
 		"avoidHighZones",
 		L["Avoid zones far above my level"],
 		L["Walks go round zones whose lowest level is 4 or more above yours, but never the ones you start or end in."],
@@ -519,6 +524,12 @@ ns.Init(function()
 		page,
 		CreateSettingsButtonInitializer(L["Guidelime"], L["Resume guide"], function()
 			ns.ResumeGuidelime()
+		end, nil, false)
+	)
+	Settings.RegisterInitializer(
+		page,
+		CreateSettingsButtonInitializer(L["Dugi Guides"], L["Resume guide"], function()
+			ns.ResumeDugi()
 		end, nil, false)
 	)
 
@@ -839,9 +850,6 @@ ns.Init(function()
 					stats.portalsUsed
 				)
 			)
-			return
-		elseif message:match("^leaderboard") then
-			ns.OpenTravelLeaderboard()
 			return
 		elseif message == "help" then
 			ns.Print(L["/path report - show a report to copy into a bug report"])

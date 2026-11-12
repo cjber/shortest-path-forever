@@ -179,7 +179,14 @@ function ns.AdvanceJourneyProgress(legs, progress, goal, riding, flying, near, g
 			or (leg.route and riding == leg.route)
 			or (leg.mode == "flight" and flying)
 		if leg.mode ~= "walk" and not progress.departed then
-			if aboard or near(leg.from) then
+			-- Arriving at a boat dock is only the boarding point.  The client
+			-- reports no boarding event, so retain the unboarded state until the
+			-- transport is actually ridden and remain recoverable if the player
+			-- walks away.
+			if leg.mode == "boat" and not aboard then
+				guide.To(leg.from, nil, goal, leg)
+				return true
+			elseif aboard or near(leg.from) then
 				progress.departed = true
 			else
 				guide.To(leg.from, nil, goal, leg)
