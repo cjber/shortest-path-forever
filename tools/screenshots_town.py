@@ -1,16 +1,19 @@
 """The town services on the world map, in Stormwind City.
 
-UI/NearbyGroups.lua and UI/TownServices.lua supply the icons and the grouping: a pin for one NPC wears the client's
-minimap tracking atlas for its service (the repairer's anvil, the banker's money bags, the baker's bread and milk),
-never a town or city mark and never an item's icon, and a pin that stands for several NPCs wears the addon's own
-market stall (media/TownGroup.tga). The pins that would overlap share one pin, whose tooltip lists every shown
-service and the click journey hint. The NPCs and where they stand are Stormwind's, from QuestieDB 1.0.13's Forever
-bake (X-BUILD-COMMIT 0f7d8adc92b28ac6594f4ad8745257f4d9784edf), Npc spawns in area 1519 as map percent. The first
-scene is the whole city zoomed out, with the Dwarven District's group hovered; the second zooms into the Trade
-District the way the client's map does, the terrain enlarged and the pins still 20 units, so the services separate
-into a pin each.
+UI/NearbyGroups.lua and UI/TownServices.lua supply the icons and the grouping: a pin for one NPC, or for several NPCs
+who all show the same service, wears the client's minimap tracking atlas for that service (the repairer's anvil, the
+banker's money bags, the baker's bread and milk), never a town or city mark and never an item's icon. Only a pin that
+stands for different services wears the addon's own market stall (media/TownGroup.tga). Pins of one service merge
+first, at a wider reach; pins of different services merge only when their own pins truly overlap, and full zoom
+spreads close NPCs around their shared centre so each keeps its own pin. A group's tooltip lists every shown service,
+or every member of one service, and the click journey hint. The NPCs and where they stand are Stormwind's, from
+QuestieDB 1.0.13's Forever bake (X-BUILD-COMMIT 0f7d8adc92b28ac6594f4ad8745257f4d9784edf), Npc spawns in area 1519
+as map percent. The first scene is the whole city zoomed out, with the Dwarven District's mixed group hovered; the
+second zooms into the Trade District the way the client's map does, the terrain enlarged and the pins still 20 units,
+so the services separate into a pin each.
 """
 
+import math
 from functools import cache
 from pathlib import Path
 
@@ -91,11 +94,15 @@ def town_entries():
     return entries
 
 
-def town_clusters(zoom):
-    """UI/TownServices.lua's clusters at a zoom: overlapping pins share one, which lists every shown service."""
-    reach_x = 20 * 1.4 * (1 + 0.2 * zoom) * 0.8 / (0.5 + 1.5 * zoom) / TOWN_CANVAS[0]
-    reach_y = 20 * 1.4 * (1 + 0.2 * zoom) * 0.8 / (0.5 + 1.5 * zoom) / TOWN_CANVAS[1]
-    points = town_entries()
+PIN_SIZE = 20
+PIN_SCALE = 1.4
+OVERLAP = 0.8
+
+
+def town_overlap(points, size, zoom):
+    """UI/Map.lua's OverlapGroups at a zoom, in the client's own canvas units."""
+    reach_x = size * OVERLAP / (0.5 + 1.5 * zoom) / TOWN_CANVAS[0]
+    reach_y = size * OVERLAP / (0.5 + 1.5 * zoom) / TOWN_CANVAS[1]
     roots = list(range(len(points)))
 
     def root(i):
@@ -111,21 +118,63 @@ def town_clusters(zoom):
     groups = {}
     for i, point in enumerate(points):
         groups.setdefault(root(i), []).append(point)
+    return list(groups.values())
+
+
+def town_cluster(members, x=None, y=None):
+    """One pin's members, the service it wears, and every shown service its tooltip lists."""
+    primary = min(members, key=lambda point: TOWN_GROUP_RANK[TOWN_GROUPS[point["primary"]][0]])["primary"]
+    labels = []
+    for point in members:
+        labels.extend(group for group in point["groups"] if group not in labels)
+    return {
+        "points": members,
+        "x": x if x is not None else sum(point["x"] for point in members) / len(members),
+        "y": y if y is not None else sum(point["y"] for point in members) / len(members),
+        "primary": primary,
+        "labels": labels,
+        "shared": primary if all(point["primary"] == primary for point in members) else None,
+    }
+
+
+def town_clusters(zoom):
+    """UI/TownServices.lua's clusters at a zoom: same services merge first, different ones only when truly overlapping,
+    and full zoom gives every NPC its own pin, close ones spread around their shared centre."""
+    points = town_entries()
+    plain = PIN_SIZE * PIN_SCALE
+    if zoom >= 1:
+        clusters = []
+        size = plain / (0.5 + 1.5 * zoom)
+        reach_x, reach_y = size / TOWN_CANVAS[0], size / TOWN_CANVAS[1]
+        for members in town_overlap(points, plain, zoom):
+            if len(members) == 1:
+                clusters.append(town_cluster(members))
+                continue
+            centre_x = sum(point["x"] for point in members) / len(members)
+            centre_y = sum(point["y"] for point in members) / len(members)
+            radius = 0.5 / math.sin(math.pi / len(members))
+            for index, point in enumerate(members):
+                angle = 2 * math.pi * index / len(members)
+                clusters.append(
+                    town_cluster(
+                        [point],
+                        centre_x + math.cos(angle) * reach_x * radius,
+                        centre_y + math.sin(angle) * reach_y * radius,
+                    )
+                )
+        return clusters
+    by_service = {}
+    for point in points:
+        by_service.setdefault(point["primary"], []).append(point)
+    merged = []
+    same_size = plain * 1.2 * (1 - zoom)
+    for members in by_service.values():
+        for group in town_overlap(members, same_size, zoom):
+            merged.append(town_cluster(group))
     clusters = []
-    for members in groups.values():
-        primary = min(members, key=lambda point: TOWN_GROUP_RANK[TOWN_GROUPS[point["primary"]][0]])["primary"]
-        labels = []
-        for point in members:
-            labels.extend(group for group in point["groups"] if group not in labels)
-        clusters.append(
-            {
-                "points": members,
-                "x": sum(point["x"] for point in members) / len(members),
-                "y": sum(point["y"] for point in members) / len(members),
-                "primary": primary,
-                "labels": labels,
-            }
-        )
+    for group in town_overlap(merged, plain * (1 - zoom), zoom):
+        chosen = {id(point) for cluster in group for point in cluster["points"]}
+        clusters.append(town_cluster([point for point in points if id(point) in chosen]))
     return clusters
 
 
@@ -152,13 +201,14 @@ def town_canvas(ui, zoom):
     hover = None
     for cluster in town_clusters(zoom):
         x, y = to_x(cluster["x"]), to_y(cluster["y"])
-        if len(cluster["points"]) > 1:
-            # UI/TownServices.lua paints a group's pin with the addon's stall, whole in the same 20 unit box.
-            canvas.draw(town_group_art(), x - 10, y - 10, 20, 20, (1, 1, 1, 1))
+        if cluster["shared"]:
+            icon(canvas, TOWN_GROUPS[cluster["shared"]][1], x, y, size=20)
         else:
-            icon(canvas, TOWN_GROUPS[cluster["primary"]][1], x, y, size=20)
-        # The group furthest up the map, so its tooltip never covers another pin.
-        if not zoom and len(cluster["points"]) > 1 and (hover is None or y < hover[1]):
+            # UI/TownServices.lua paints a pin of different services with the addon's stall, whole in the same 20
+            # unit box.
+            canvas.draw(town_group_art(), x - 10, y - 10, 20, 20, (1, 1, 1, 1))
+        # The mixed group furthest up the map, so its tooltip never covers another pin.
+        if not zoom and not cluster["shared"] and len(cluster["points"]) > 1 and (hover is None or y < hover[1]):
             hover = (x, y, cluster)
     return canvas, hover
 

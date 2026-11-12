@@ -14,6 +14,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Fewer market stalls on the map, and every NPC apart at full zoom.** Nearby services of the same kind now share that service's icon, so three leatherworking trainers become one leatherworking pin with all three in its tooltip. A market stall appears only where different kinds of service share a spot, and only when their pins truly overlap, so there are fewer of them. Zooming right in splits every NPC into its own icon, spreading those standing in the same doorway so each can be hovered and clicked. Thanks to Lůca [Luutsa] on Discord for the idea (#812).
+
 ## [1.34.2] - 2026-11-12
 
 - **The arrow and the tracker no longer flash while a guide moves between objectives.** The route line, arrow and tracker stay put while the next objective's route is found, and selecting a quest in another addon no longer takes the arrow away. Thanks to Blast22 and user_sggieekz05hc7uxt on CurseForge and kindguydev on Discord (#693).

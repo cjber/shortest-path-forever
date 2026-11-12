@@ -148,6 +148,7 @@ Credit for the reports and requests behind the addon.
 | Blast22 | Guidance no longer flickers between two objectives | CurseForge; 8693782 |
 | user_sggieekz05hc7uxt | Guidance no longer flickers between two objectives | CurseForge; 8685196 |
 | kindguydev | Guidance no longer flickers while a guide re-points | Discord; #693 |
+| Lůca [Luutsa] | Town services of the same kind share one icon | Discord; #812 |
 
 ## Inspired by
 

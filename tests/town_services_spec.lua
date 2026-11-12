@@ -1,7 +1,7 @@
--- UI/TownServices.lua on the world map: one client service icon per pin, the addon's own market stall on a pin that
--- stands for a group of NPCs, the tooltip that names a town's services and the click that plans a journey, the four
--- levels of detail, each service's own Map Filter checkbox with repairers hidden by default, and the maps the pins
--- belong on.
+-- UI/TownServices.lua on the world map: one client service icon per pin, a service's own icon when every member shows
+-- that service, the addon's own market stall when a group stands for different services, the tooltip that names them
+-- and the click that plans a journey, the four levels of detail, each service's own Map Filter checkbox with
+-- repairers hidden by default, and the maps the pins belong on.
 local dir = arg[0]:match("^(.*)/") or "tests"
 
 local probe = "tools/.cache/blizzard-ui/Interface/AddOns/Blizzard_SharedXML/Spinner.lua"
@@ -144,16 +144,16 @@ local bank, inn = find(1), find(2)
 check(bank == inn, "the two Orgrimmar services share one pin at this zoom")
 check(#bank.cluster.services == 2, "the group pin carries both services")
 
--- No pin wears a town or city mark: a pin that stands for several NPCs wears the addon's own market stall, and a
--- pin for one NPC its own client icon.
-check(bank.Texture.atlas ~= "poi-majorcity" and bank.Texture.atlas ~= "poi-town", "a group pin wears no town mark")
+-- No pin wears a town or city mark: a pin that stands for different services wears the addon's own market stall, and
+-- a pin for one service its own client icon.
+check(bank.Texture.atlas ~= "poi-majorcity" and bank.Texture.atlas ~= "poi-town", "a mixed pin wears no town mark")
 check(
 	bank.Texture.texture == "Interface\\AddOns\\ShortestPathForever\\media\\TownGroup" and bank.Texture.atlas == nil,
-	"a group pin wears the addon's market stall, not one service's atlas"
+	"a mixed pin wears the addon's market stall, not one service's atlas"
 )
 check(
 	bank.HighlightTexture.texture == bank.Texture.texture and bank.HighlightTexture.atlas == nil,
-	"the group pin's highlight wears the stall too"
+	"the mixed pin's highlight wears the stall too"
 )
 check(bank.Texture.width == 20 and bank.Texture.height == 20, "the stall fills the same 20 unit box as the atlases")
 local groupCluster = bank.cluster
@@ -258,7 +258,7 @@ check(#linesOf(food) == 0, "the hidden repair is not listed in the tooltip")
 check(not find(5), "an NPC whose only service is hidden draws no pin")
 check(find(4).Texture.atlas == "Reagents", "the trade supplier keeps its own icon while repair is hidden")
 
--- Showing repair at once brings its pins back, makes the shared NPC wear repair, and the group keep its stall.
+-- Showing repair at once brings its pins back, makes the shared NPC wear repair, and the mixed group keep its stall.
 ns.SetTownServiceShown("townServiceRepair", true)
 check(count() == 4 and find(5), "showing repair draws its alone pin")
 check(find(3).Texture.atlas == "Repair", "the food seller keeps its own atlas for the shown repairer")
@@ -267,11 +267,11 @@ local shared = find(4)
 check(
 	#shared.cluster.services == 2
 		and shared.Texture.texture == "Interface\\AddOns\\ShortestPathForever\\media\\TownGroup",
-	"a cluster wears the stall"
+	"a mixed cluster wears the stall"
 )
 check(
 	table.concat(linesOf(shared), ", ") == "Trade supplies, Repair",
-	"the group tooltip lists every shown service in the list's own order, not a pinned service first"
+	"the mixed tooltip lists every shown service in the list's own order, not a pinned service first"
 )
 ns.SetTownServiceShown("townServiceRepair", false)
 check(count() == 3 and not find(5), "hiding repair drops its pin again")
