@@ -82,6 +82,7 @@ L["Flight master icon size"] = "Taille des icônes des maîtres de vol" -- mt
 L["Flight path known"] = "Trajet aérien connu" -- mt
 L["Flights from here"] = "Vols depuis ici" -- mt
 L["Fly to %s"] = "Voler vers %s" -- mt
+L["Follow Dugi guides"] = "Suivre les guides Dugi" -- mt
 L["Follow Guidelime guides"] = "Suivre les guides Guidelime" -- mt
 L["Follow RestedXP guides"] = "Suivre les guides RestedXP" -- mt
 L["Follow TomTom's arrow"] = "Suivre la flèche de TomTom" -- mt
@@ -157,6 +158,8 @@ L["This menu needs mouse and keyboard."] = "Ce menu nécessite la souris et le c
 L["Open these settings from the minimap."] = "Ouvrir ces réglages depuis la minicarte." -- mt
 L["Other Faction's Routes"] = "Routes de l'autre faction" -- mt
 L["Plan journey"] = "Planifier un trajet" -- mt
+L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."] =
+	"Planifier des trajets vers l'étape actuelle du guide Dugi. Dugi conserve sa propre flèche." -- mt
 L["Plan journeys to Guidelime's current guide step. Guidelime's arrow steps aside while ours draws."] =
 	"Planifier des trajets vers l'étape actuelle du guide Guidelime. Sa flèche s'efface pendant que la nôtre s'affiche." -- mt
 L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."] =
@@ -169,6 +172,7 @@ L["Portals"] = "Portails" -- mt
 L["Reagents"] = "Composants" -- mt
 L["Repair"] = "Réparations" -- mt
 L["RestedXP guide"] = "Guide RestedXP" -- mt
+L["Resume Dugi guide"] = "Reprendre le guide Dugi" -- mt
 L["Resume Guidelime guide"] = "Reprendre le guide Guidelime" -- mt
 L["Resume RestedXP guide"] = "Reprendre le guide RestedXP" -- mt
 L["Resume guide"] = "Reprendre le guide" -- mt
@@ -419,6 +423,7 @@ L["How close you must get to a journey's destination for it to count as reached.
 	"À quelle distance de la destination d'un trajet vous devez arriver pour qu'il compte comme terminé." -- mt
 L["Stops before the last on a multi-stop route keep 15 yards."] =
 	"Les étapes avant la dernière d'un trajet à plusieurs étapes conservent 15 mètres." -- mt
+L["Dugi Guides"] = "Dugi Guides" -- mt
 L["Dungeons and raids"] = "Donjons et raids" -- mt
 L["Town services"] = "Services de la ville" -- mt
 L["Town services on the world map"] = "Services de la ville sur la carte du monde" -- mt

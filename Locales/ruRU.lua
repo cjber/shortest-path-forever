@@ -84,6 +84,7 @@ L["Flight master icon size"] = "Размер значков распорядит
 L["Flight path known"] = "Маршрут полета известен"
 L["Flights from here"] = "Полеты отсюда"
 L["Fly to %s"] = "Лететь: %s"
+L["Follow Dugi guides"] = "Следовать гайдам Dugi" -- mt
 L["Follow Guidelime guides"] = "Следовать руководствам Guidelime"
 L["Follow RestedXP guides"] = "Следовать руководствам RestedXP"
 L["Follow TomTom's arrow"] = "Следовать стрелке TomTom"
@@ -163,6 +164,8 @@ L["This menu needs mouse and keyboard."] = "Для этого меню нужн�
 L["Open these settings from the minimap."] = "Открывать эти настройки с мини-карты."
 L["Other Faction's Routes"] = "Маршруты другой фракции"
 L["Plan journey"] = "Проложить маршрут"
+L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."] =
+	"Планировать путешествия к текущему шагу гайда Dugi. Dugi сохраняет свою стрелку." -- mt
 L["Plan journeys to Guidelime's current guide step. Guidelime's arrow steps aside while ours draws."] =
 	"Планировать путешествия к текущему шагу руководства Guidelime. Его стрелка уступает место нашей."
 L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."] =
@@ -175,6 +178,7 @@ L["Portals"] = "Порталы"
 L["Reagents"] = "Реагенты"
 L["Repair"] = "Ремонт"
 L["RestedXP guide"] = "Руководство RestedXP"
+L["Resume Dugi guide"] = "Продолжить гайд Dugi" -- mt
 L["Resume Guidelime guide"] = "Продолжить руководство Guidelime"
 L["Resume RestedXP guide"] = "Продолжить руководство RestedXP"
 L["Resume guide"] = "Продолжить руководство"
@@ -438,6 +442,7 @@ L["How close you must get to a journey's destination for it to count as reached.
 	"Насколько близко нужно подойти к месту назначения, чтобы путешествие считалось завершённым." -- mt
 L["Stops before the last on a multi-stop route keep 15 yards."] =
 	"Остановки перед последней на маршруте с несколькими остановками сохраняют 15 метров." -- mt
+L["Dugi Guides"] = "Dugi Guides" -- mt
 L["Dungeons and raids"] = "Подземелья и рейды" -- mt
 L["Town services"] = "Городские услуги" -- mt
 L["Town services on the world map"] = "Городские услуги на карте мира" -- mt

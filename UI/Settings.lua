@@ -446,6 +446,14 @@ ns.Init(function()
 		end
 	)
 	Checkbox(
+		"dugi",
+		L["Follow Dugi guides"],
+		L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."],
+		function()
+			ns.RefreshDugi()
+		end
+	)
+	Checkbox(
 		"avoidHighZones",
 		L["Avoid zones far above my level"],
 		L["Walks go round zones whose lowest level is 4 or more above yours, but never the ones you start or end in."],
@@ -516,6 +524,12 @@ ns.Init(function()
 		page,
 		CreateSettingsButtonInitializer(L["Guidelime"], L["Resume guide"], function()
 			ns.ResumeGuidelime()
+		end, nil, false)
+	)
+	Settings.RegisterInitializer(
+		page,
+		CreateSettingsButtonInitializer(L["Dugi Guides"], L["Resume guide"], function()
+			ns.ResumeDugi()
 		end, nil, false)
 	)
 

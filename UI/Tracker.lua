@@ -70,6 +70,12 @@ function ModuleMixin:OnBlockHeaderClick(block, button)
 						ns.ResumeGuidelime()
 					end)
 				end
+				local viewer = DugisGuideViewer
+				if type(viewer) == "table" and viewer.DugisArrow then
+					root:CreateButton(L["Resume Dugi guide"], function()
+						ns.ResumeDugi()
+					end)
+				end
 				-- A corpse run ends only when you live again.
 				if not ns.Corpse.Active() then
 					root:CreateButton(L["Clear journey"], ns.ClearJourney)

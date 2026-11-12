@@ -175,7 +175,7 @@ env.ForeverCore = {
 	},
 }
 
-local refreshed, taxiRefreshed, policyChanged, tomtomRefreshed, guidelimeRefreshed = 0, 0, 0, 0, 0
+local refreshed, taxiRefreshed, policyChanged, tomtomRefreshed, guidelimeRefreshed, dugiRefreshed = 0, 0, 0, 0, 0, 0
 local trackerRefreshed = 0
 local compassMoving = false
 local arrowMoving, arrowScaled, arrowLabelSet = false, nil, nil
@@ -222,6 +222,9 @@ local ns = {
 	RefreshGuidelime = function()
 		guidelimeRefreshed = guidelimeRefreshed + 1
 	end,
+	RefreshDugi = function()
+		dugiRefreshed = dugiRefreshed + 1
+	end,
 	RefreshTomTom = function()
 		tomtomRefreshed = tomtomRefreshed + 1
 	end,
@@ -253,6 +256,8 @@ local ns = {
 		arrowLabel = "distance",
 		compassBackground = 0,
 		tomtomFollow = false,
+		-- Dugi is opt-in: its viewer has no published API.
+		dugi = false,
 		compassTime = false,
 		arrivalSound = false,
 		resumeJourney = false,
@@ -370,6 +375,7 @@ local groups = {
 		"restedxp",
 		"restedxpHideArrow",
 		"guidelime",
+		"dugi",
 		"avoidHighZones",
 		"followRoads",
 		"teleports",
@@ -416,9 +422,9 @@ local order = {
 }
 
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
--- Main's arrival pin added arrivalPin, the line switches added mapLine, minimapLine and laterLegs, and the
--- town services added townServices.
-assert(#rows == 65, #rows)
+-- Main's arrival pin added arrivalPin, the line switches added mapLine, minimapLine and laterLegs, the
+-- town services added townServices, and Dugi added dugi.
+assert(#rows == 66, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -585,6 +591,10 @@ assert(Row("guidelime").setting.default == true, "Guidelime journeys are enabled
 assert(Row("guidelime").tooltip:find("Guidelime's arrow", 1, true), "the row says the guide arrow steps aside")
 Row("guidelime").setting.onChanged()
 assert(guidelimeRefreshed == 1, "the row follows its setting")
+assert(Row("dugi").setting.default == false, "Dugi journeys are opt-in")
+assert(Row("dugi").tooltip:find("Dugi", 1, true), "the row names the guide it follows")
+Row("dugi").setting.onChanged()
+assert(dugiRefreshed == 1, "the Dugi row follows its setting")
 -- Walks keep out of zones far above your level unless this is off; changing it plans the journey again.
 assert(Row("avoidHighZones").setting.default == true, "avoiding high zones is on by default")
 local policyBefore = policyChanged

@@ -79,6 +79,7 @@ L["Flight master icon size"] = "飛行管理員圖示大小"
 L["Flight path known"] = "已知飛行路線"
 L["Flights from here"] = "從這裡出發的航班"
 L["Fly to %s"] = "飛往%s"
+L["Follow Dugi guides"] = "跟隨 Dugi 攻略" -- mt
 L["Follow Guidelime guides"] = "跟隨 Guidelime 攻略"
 L["Follow RestedXP guides"] = "跟隨RestedXP指南"
 L["Follow TomTom's arrow"] = "跟隨TomTom的箭頭"
@@ -152,6 +153,8 @@ L["This menu needs mouse and keyboard."] = "此選單需要滑鼠和鍵盤。" -
 L["Open these settings from the minimap."] = "從小地圖開啟這些設定。"
 L["Other Faction's Routes"] = "另一陣營的航線"
 L["Plan journey"] = "規劃旅程"
+L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."] =
+	"規劃前往 Dugi 攻略目前步驟的旅程。Dugi 保留自己的箭頭。" -- mt
 L["Plan journeys to Guidelime's current guide step. Guidelime's arrow steps aside while ours draws."] =
 	"規劃前往 Guidelime 目前攻略步驟的旅程。在我們的箭頭顯示時，Guidelime 的箭頭會讓開。"
 L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."] =
@@ -164,6 +167,7 @@ L["Portals"] = "傳送門"
 L["Reagents"] = "材料"
 L["Repair"] = "修理"
 L["RestedXP guide"] = "RestedXP指南"
+L["Resume Dugi guide"] = "繼續 Dugi 攻略" -- mt
 L["Resume Guidelime guide"] = "繼續 Guidelime 攻略"
 L["Resume RestedXP guide"] = "繼續RestedXP指南"
 L["Resume guide"] = "繼續指南"
@@ -409,6 +413,7 @@ L["How close you must get to a journey's destination for it to count as reached.
 	"距離旅程目的地多近才算到達。" -- mt
 L["Stops before the last on a multi-stop route keep 15 yards."] =
 	"多站路線中，最後一站之前的站點仍保持 15 公尺。" -- mt
+L["Dugi Guides"] = "Dugi Guides" -- mt
 L["Dungeons and raids"] = "地城與團隊副本" -- mt
 L["Town services"] = "城鎮服務" -- mt
 L["Town services on the world map"] = "世界地圖上的城鎮服務" -- mt

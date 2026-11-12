@@ -231,6 +231,7 @@
 ---@field restedxp? boolean -- follow RestedXP guide targets
 ---@field restedxpHideArrow? boolean -- Shortest Path's arrow replaces the guide's while a guide target is followed (RestedXP.lua)
 ---@field guidelime? boolean -- follow Guidelime's current guide step (Guidelime.lua)
+---@field dugi? boolean -- follow Dugi Guides' current guide step (Dugi.lua)
 ---@field tomtom? boolean -- answer third-party guides' TomTom waypoints with a journey while TomTom is absent
 ---@field tomtomFollow? boolean -- with TomTom installed, a journey follows the waypoint its arrow points to
 ---@field taxiRoute? boolean

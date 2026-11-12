@@ -83,6 +83,7 @@ L["Flight master icon size"] = "비행 조련사 아이콘 크기"
 L["Flight path known"] = "알고 있는 비행 경로"
 L["Flights from here"] = "여기서 출발하는 비행"
 L["Fly to %s"] = "%s(으)로 비행"
+L["Follow Dugi guides"] = "Dugi 가이드 따르기" -- mt
 L["Follow Guidelime guides"] = "Guidelime 가이드 따르기"
 L["Follow RestedXP guides"] = "RestedXP 가이드 따르기"
 L["Follow TomTom's arrow"] = "TomTom 화살표 따르기"
@@ -159,6 +160,8 @@ L["This menu needs mouse and keyboard."] = "이 메뉴는 마우스와 키보드
 L["Open these settings from the minimap."] = "미니맵에서 이 설정을 엽니다."
 L["Other Faction's Routes"] = "다른 진영의 노선"
 L["Plan journey"] = "여정 계획"
+L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."] =
+	"Dugi 가이드의 현재 단계로 여정을 계획합니다. Dugi는 자체 화살표를 유지합니다." -- mt
 L["Plan journeys to Guidelime's current guide step. Guidelime's arrow steps aside while ours draws."] =
 	"Guidelime의 현재 가이드 단계로 여정을 계획합니다. 우리 화살표가 그려지는 동안 Guidelime의 화살표는 물러납니다."
 L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."] =
@@ -171,6 +174,7 @@ L["Portals"] = "차원문"
 L["Reagents"] = "마법 재료"
 L["Repair"] = "장비 수리"
 L["RestedXP guide"] = "RestedXP 가이드"
+L["Resume Dugi guide"] = "Dugi 가이드 재개" -- mt
 L["Resume Guidelime guide"] = "Guidelime 가이드 재개"
 L["Resume RestedXP guide"] = "RestedXP 가이드 재개"
 L["Resume guide"] = "가이드 재개"
@@ -423,6 +427,7 @@ L["How close you must get to a journey's destination for it to count as reached.
 	"여정의 목적지에 얼마나 가까워져야 도착으로 칩니다." -- mt
 L["Stops before the last on a multi-stop route keep 15 yards."] =
 	"여러 정류장이 있는 경로에서 마지막 이전 정류장은 15미터를 유지합니다." -- mt
+L["Dugi Guides"] = "Dugi Guides" -- mt
 L["Dungeons and raids"] = "던전 및 공격대" -- mt
 L["Town services"] = "마을 서비스" -- mt
 L["Town services on the world map"] = "세계 지도에 마을 서비스 표시" -- mt

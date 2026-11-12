@@ -66,6 +66,9 @@ local DEFAULTS = {
 	-- The arrow takeover alone: keep RestedXP's arrow while still following its guide.
 	restedxpHideArrow = true,
 	guidelime = true,
+	-- Dugi Guides is read through an undocumented surface of a viewer it does not publish an API for, so following
+	-- it is opt-in. It never changes Dugi's tables or hides Dugi's arrow.
+	dugi = false,
 	taxiRoute = true,
 	teleports = true,
 	-- Another player's spellbook is not queryable, so a party mage's portals are declared. Off by default; when on,
