@@ -18,12 +18,6 @@ local NEAR = 40
 local MIN_SAMPLES = 10
 local MIN_SPAN = 30000
 local CLEAR_LEAD = 1.25
--- How far ahead of this client's clock a sighting may be dated (both read the server's time).
-local CLOCK_SLACK = 5
--- A sighting of your own this recent is not replaced by another player's.
-local OWN_TRUST = 3600
--- Sightings older than this are too stale to share or to count down from.
-Model.MAX_AGE = 6 * 3600
 
 ---@param ms number
 ---@return string
@@ -168,61 +162,10 @@ function Model.RideRoute(fits)
 	end
 end
 
--- Wire format: "<route>:<seen s>:<phase ms at seen>" entries joined by ";". Phase-at-seen keeps every number
--- short and independent of the sender's clock beyond the sighting's own timestamp.
----@param anchors table<number, SPFAnchor>
----@param routes table<number, SPFRoute>
----@return string[]
-function Model.Encode(anchors, routes)
-	local entries = {}
-	for routeID, anchor in pairs(anchors) do
-		local route = routes[routeID]
-		if route then
-			local phase = (anchor.seen * 1000 - anchor.epoch) % route.period
-			entries[#entries + 1] = string.format("%d:%d:%d", routeID, anchor.seen, math.floor(phase))
-		end
-	end
-	table.sort(entries)
-	return entries
-end
-
--- Validated anchors from one message; anything malformed, unknown, future-dated or stale is dropped.
----@param message string
----@param routes table<number, SPFRoute>
----@param now number
----@return table<number, SPFAnchor>
-function Model.Decode(message, routes, now)
-	local anchors = {}
-	for routeText, seenText, phaseText in message:gmatch("(%d+):(%d+):(%d+)") do
-		local routeID, seen, phase = tonumber(routeText), tonumber(seenText), tonumber(phaseText)
-		local route = routeID and routes[routeID]
-		if
-			routeID
-			and route
-			and seen
-			and phase
-			and phase < route.period
-			and seen <= now + CLOCK_SLACK
-			and now - seen <= Model.MAX_AGE
-		then
-			anchors[routeID] = { epoch = seen * 1000 - phase, seen = seen }
-		end
-	end
-	return anchors
-end
-
--- Whether an incoming sighting replaces the one held: only a newer one, and another player's never
--- replaces a recent ride of your own.
+-- Whether a sighting replaces the one held: only a newer one does.
 ---@param incoming SPFAnchor
 ---@param held SPFAnchor?
----@param now number
 ---@return boolean
-function Model.Newer(incoming, held, now)
-	if held == nil then
-		return true
-	end
-	if held.source == "you" and incoming.source ~= "you" and now - held.seen < OWN_TRUST then
-		return false
-	end
-	return incoming.seen > held.seen
+function Model.Newer(incoming, held)
+	return held == nil or incoming.seen > held.seen
 end

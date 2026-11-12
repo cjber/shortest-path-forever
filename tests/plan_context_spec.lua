@@ -153,7 +153,7 @@ local aboard = ride(from)
 assert(aboard.route == 9 and aboard.dock == 2 and aboard.arrive == client.now + 30000, "unsighted ride")
 -- Sighted so the boat is docked at dock 1 now.
 ns.Timetable.Sighted(9, { epoch = client.now - 10000, seen = 0 })
-assert(Context.Options(from, to).anchors[9].epoch == client.now - 10000, "plans take the fresh sightings")
+assert(Context.Options(from, to).anchors[9].epoch == client.now - 10000, "plans take the sightings")
 assert(ride(from) == nil, "standing at the dock the boat is at: disembarked, the ride lingers 30 s")
 assert(ride({ map = 1, x = 300, y = 0 }) ~= nil, "250 yards clear of that dock")
 assert(ride({ map = 2, x = 0, y = 0 }) ~= nil, "another map")

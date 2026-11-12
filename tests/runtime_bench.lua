@@ -70,7 +70,7 @@ return {
  minimap = function(value) miniEnabled = value end,
  sail = function(id, phase)
   ns.CurrentRide = function() return id end
-  ns.db.anchors[GetRealmName()][id] = { epoch = ns.NowMs() - phase, seen = GetServerTime(), source = "you" }
+  ns.db.anchors[id] = { epoch = ns.NowMs() - phase, seen = GetServerTime() }
  end,
  check = function() assert(#errors == 0, table.concat(errors, "\n")) end,
 }
