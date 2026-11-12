@@ -1,0 +1,20 @@
+# Credential metadata only. Unknown lifecycle facts remain visible as gaps.
+sources:
+  - github: cjber/shortest-path-forever
+keys:
+  - id: cf-api-key
+    service: curseforge
+    group: shortest-path-forever
+    owner: unknown
+    locations:
+      - github: CF_API_KEY
+    expires: unknown
+    limit: unknown
+  - id: wago-api-token
+    service: wago
+    group: shortest-path-forever
+    owner: unknown
+    locations:
+      - github: WAGO_API_TOKEN
+    expires: unknown
+    limit: unknown
