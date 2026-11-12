@@ -24,7 +24,7 @@ with you.
   ![The Nearby services tab in the world map's quest log](docs/screenshots/services.png)
   The tracking menus and `/spfnear` open the same tab.
 
-- **Compare completed journeys.** `/path leaderboard` opens Forever Leaderboards on the Shortest Path tab, with this week's and all-time totals from guild and group members who report theirs. The window also shows your overall place across every installed Forever addon and puts a player's place in the unit tooltip. Sharing is on unless you turn it off with the window's Share my progress box or the checkbox in **Travel journal**. Reported totals are player-reported and not verified.
+- **Keep a private travel journal.** `/path stats` reports this character's approximate walking distance, completed journeys and transport use.
 
 - **Plan a journey.** Shift-click the world map or minimap, or choose *Plan journey* on a quest. Routes combine walking, flights, boats, zeppelins, lifts, the tram, portals and teleports, and replan as you move. A spot inside a dungeon or raid leads to its entrance. Walks go round zones whose lowest level is 4 or more above yours and round the other faction's towns, and say so in the tracker when they can't. *Keep journeys after a reload* in Guidance restarts your own journey after a `/reload`.
   ![Journey steps from Auberdine to Silithus](docs/screenshots/tracker.png)
@@ -75,7 +75,6 @@ Right-click a flight master icon to mark its flight path as known if a flight ma
 | `/path report` | Show a report to paste into a bug report: versions, your journey, your ride, errors from earlier sessions, recent log lines |
 | `/forever debug` | Keep a detailed log for this session, and show it to copy with `/forever debug show` |
 | `/path issue` | Show a filled-in GitHub issue link, selected for copying, to report a bug or request a feature |
-| `/path leaderboard` | Open Forever Leaderboards on the Shortest Path tab: your completed journeys against guild and group members who report theirs |
 | `/path perf` | Print this addon's CPU and memory use |
 | `/path debug` | Keep a trace of your ride matching, for a ride that did not sync |
 | `/spfnear` | Open the Nearby services tab; add a service such as `repair`, `trainer` or `flight` to route to the nearest one |

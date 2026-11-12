@@ -74,24 +74,18 @@ local optedIn = loadCore({ otherFaction = true })
 assert(optedIn.db.otherFaction == true, "saved opt-in survives reload")
 assert(optedIn.RouteShown({ faction = "Horde" }), "saved opt-in allows opposing transport")
 assert(loadCore({ otherFaction = false }).db.otherFaction == false, "saved opt-out survives reload")
-assert(fresh.db.stats == true and fresh.db.statsShare == true, "new profiles participate by default")
+assert(fresh.db.stats == true and fresh.db.statsShare == nil, "new profiles record local stats only")
 for _, saved in ipairs({
 	{ stats = false },
-	{ statsShare = false },
-	{ stats = false, statsShare = false },
-	{ stats = true, statsShare = false },
 }) do
-	local recording, sharing = saved.stats, saved.statsShare
+	local recording = saved.stats
 	local loaded = loadCore(saved)
 	if recording ~= nil then
 		assert(loaded.db.stats == recording, "saved recording choice survives")
 	end
-	if sharing ~= nil then
-		assert(loaded.db.statsShare == sharing, "saved sharing choice survives")
-	end
 	local reloaded = loadCore(loaded.db)
 	assert(
-		reloaded.db.stats == loaded.db.stats and reloaded.db.statsShare == loaded.db.statsShare,
+		reloaded.db.stats == loaded.db.stats,
 		"reload retains choices"
 	)
 end

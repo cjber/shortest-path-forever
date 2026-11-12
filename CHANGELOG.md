@@ -12,6 +12,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Travel statistics are local again.** Shortest Path no longer sends peer snapshots, registers a leaderboard tab, or exposes the removed leaderboard API. The public API is version 2, and local journey, distance and transport totals remain available.
 - **The Nearby services tab can be hidden.** The new *Show Nearby services tab* setting removes the map and quest-log side tab when another addon needs that space. *Open Nearby services* in the tracking menu remains available when the tab is hidden. Thanks to cobalt_44 for the request (#767).
 
 ## [1.33.1] - 2026-11-11

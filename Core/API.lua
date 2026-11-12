@@ -305,7 +305,7 @@ function ns.JourneyStops()
 end
 
 ---@class SPFPublicAPI
-local API = { version = 1, minor = 3 }
+local API = { version = 2, minor = 0 }
 
 local function Differs(a, b)
 	for key, value in pairs(a) do
@@ -825,8 +825,6 @@ function API.Ended(owner)
 	return None()
 end
 
-local LEADERBOARD_LIMIT, LEADERBOARD_MAX = 10, 25
-local LEADERBOARD_METRIC = "routes_completed"
 -- Core/Progress.lua's travel journal, by the field its snapshot keeps. The API names the metrics and Progress keeps
 -- the totals; the journal records no event time, so eventUnix is left out rather than invented.
 local TRAVEL_METRICS = {
@@ -857,46 +855,6 @@ function API.Stats()
 		}
 	end
 	return rows
-end
-
--- The all-time completed journeys board, in the suite's shape. A limit of zero keeps the player's own row, which
--- sits below the requested ranks; a wrong limit is an argument error, not a not-ready reason.
----@param limit? integer how many top rows, ten unless given, 25 at most; the player's row is always kept
----@return SPFAPILeaderboard?, ("invalid"|SPFAPINotReady)?
-function API.Leaderboard(limit)
-	if limit == nil then
-		limit = LEADERBOARD_LIMIT
-	elseif not (Number(limit) and limit >= 0 and limit % 1 == 0) then
-		return nil, "invalid"
-	end
-	if not Loaded() then
-		return Loading()
-	end
-	local stats = ns.TravelStats()
-	if not stats then
-		return Loading()
-	end
-	local board = ns.TravelBoard("all")
-	limit = math.min(limit, LEADERBOARD_MAX)
-	local rows = {}
-	for rank, row in ipairs(board) do
-		if rank <= limit or row.you then
-			rows[#rows + 1] = {
-				rank = rank,
-				name = row.name,
-				value = row.value,
-				self = row.you == true or nil,
-			}
-		end
-	end
-	return {
-		metric = LEADERBOARD_METRIC,
-		scope = "guild_group",
-		-- Progress.lua's two switches: sharing, and its own recording switch which keeps the journal local.
-		sharing = ns.db.statsShare ~= false and ns.db.stats ~= false,
-		total = #board,
-		rows = rows,
-	}
 end
 
 API.Subscribe = hub.Subscribe
