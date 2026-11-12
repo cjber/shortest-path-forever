@@ -552,15 +552,15 @@ def compass_canvas(ui, facing=math.pi - 0.2, distance=780, overhang=0, arrived=F
     # The client draws a texture past its frame, so `overhang` keeps room beside the ribbon for a marker clamped
     # to its end and the distance under it, which the scene would otherwise cut at the canvas edge.
     # Compass.lua's Paint: the parchment gold, or the quieter green of standing in an arrived stop's area (#627).
-    tick = (0.6, 0.76, 0.58, 0.7) if arrived else (0.72, 0.67, 0.55, 0.7)
-    center = (0.62, 0.9, 0.55, 0.85) if arrived else (1, 0.82, 0, 0.85)
+    tick = (0.6, 0.76, 0.58, 0.9) if arrived else (0.72, 0.67, 0.55, 0.9)
+    center = (0.62, 0.9, 0.55, 1) if arrived else (1, 0.82, 0, 1)
     canvas = ui.canvas(360 + overhang, 65)
 
     def offset(angle):
         return -((angle - facing + math.pi) % (2 * math.pi) - math.pi) * 360 / math.pi
 
     # Compass.lua's FADE, the ramp a tick dissolves over at each end, and its major/minor strengths.
-    fade, major_alpha, minor_alpha = 80, 0.85, 0.5
+    fade, major_alpha, minor_alpha = 80, 1, 0.65
     for index in range(24):
         x = offset(index * math.pi / 12)
         if abs(x) > 180:
@@ -568,19 +568,19 @@ def compass_canvas(ui, facing=math.pi - 0.2, distance=780, overhang=0, arrived=F
         major = index % 6 == 0
         edge = min(1, max(0, (180 - abs(x)) / fade))
         alpha = edge * edge * (major_alpha if major else minor_alpha)
-        height = 5 if major else 3
-        canvas.fill(180 + x - 0.5, 6, 1, height, (*tick[:3], tick[3] * alpha))
+        height = 10 if major else 6
+        canvas.fill(180 + x - 1, 6, 2, height, (*tick[:3], tick[3] * alpha))
         if major:
             canvas.text(
                 180 + x - 10,
-                12,
+                17,
                 ("N", "W", "S", "E")[index // 6],
-                FONTS["GameFontNormalSmall"],
+                FONTS["GameFontNormal"],
                 (*NORMAL, alpha),
                 justify="CENTER",
                 width=20,
             )
-    canvas.fill(179.5, 3, 1, 6, center)
+    canvas.fill(179, 3, 2, 12, center)
     # The guide has no targets while it waits in the area, so the ribbon keeps its ticks and centre alone.
     if arrived:
         return canvas
@@ -590,16 +590,17 @@ def compass_canvas(ui, facing=math.pi - 0.2, distance=780, overhang=0, arrived=F
         canvas.draw(number_art(number), x - size / 2, y - size / 2, size, size, (1, 1, 1, alpha))
 
     # Compass.lua's marker row: the bend (next turn) is 1 at 20 units and the turn after is 2 at 16, dimmer. The goal
-    # pin stands down while a bend is ahead, and facing away dims the row to DestinationPin's behind alpha.
+    # pin stands down while a bend is ahead, and facing away dims the row to DestinationPin's behind alpha. The row
+    # hangs 40 units under the ribbon's top, clear of the taller ticks' 12-unit letters.
     bend = math.pi
     behind = abs((bend - facing + math.pi) % (2 * math.pi) - math.pi) * 180 / math.pi > 120
     x = 180 + max(-180, min(180, offset(bend)))
-    number_marker(1, x, 36, 20, 0.4 if behind else 1)
+    number_marker(1, x, 40, 20, 0.4 if behind else 1)
     if not behind:
-        number_marker(2, 180 + max(-180, min(180, offset(bend + 0.15))), 36, 16, 0.6)
+        number_marker(2, 180 + max(-180, min(180, offset(bend + 0.15))), 40, 16, 0.6)
     canvas.text(
         x - 40,
-        36 + 20 / 2 + 2,
+        40 + 20 / 2 + 2,
         f"{distance} yd",
         FONTS["GameFontHighlightSmall"],
         (*NORMAL, 0.4 if behind else 1),

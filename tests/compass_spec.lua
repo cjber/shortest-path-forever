@@ -296,21 +296,30 @@ local labels, faded = 0, false
 for index, tick in ipairs(strip.ticks) do
 	assert(tick.color, "every tick is a colour texture")
 	assert(tick.major == (index % 6 == 1), "every fourth tick is a major one")
-	assert(tick.height == (tick.major and 5 or 3), "major ticks are the longer ones")
+	close(tick.width, 2)
+	assert(tick.height == (tick.major and 10 or 6), "major ticks are the longer ones")
+	-- Ticks inside the ribbon hang from its top; those past its ends are hidden and never placed.
+	if tick.anchorPoint then
+		assert(tick.anchorPoint == "TOP" and tick.atY == -6, "ticks hang from the ribbon's top")
+	end
 	if tick.major then
 		labels = labels + 1
-		-- FontStyles.xml: GameFontNormalSmall is Friz 10 in NORMAL_FONT_COLOR's gold with a (1, -1) shadow.
-		assert(tick.label.font == "GameFontNormalSmall", "the game's own small font, its gold and shadow built in")
+		-- FontStyles.xml: GameFontNormal is Friz 12 in NORMAL_FONT_COLOR's gold with a (1, -1) shadow.
+		assert(tick.label.font == "GameFontNormal", "the game's own font, its gold and shadow built in")
+		if tick.label.owner then
+			assert(tick.label.anchorPoint == "TOP" and tick.label.owner == tick and tick.label.atY == -1)
+		end
 	end
 	-- Facing north, the ticks run from the centre to the edge of the ribbon.
 	close(tick.color[1], 0.72)
 	close(tick.color[2], 0.67)
 	close(tick.color[3], 0.55)
+	close(tick.color[4], 0.9)
 	if tick.alpha and tick.alpha < 0.05 then
 		faded = true
 	end
 	if index == 1 then
-		close(tick.alpha, 0.85)
+		close(tick.alpha, 1)
 	end
 	if index == 5 then
 		assert(tick.alpha > 0.2 and tick.alpha < 0.4, "a tick past the middle of the ribbon is already fainter")
@@ -318,9 +327,15 @@ for index, tick in ipairs(strip.ticks) do
 end
 assert(labels == 4, "the four directions, as every compass has")
 assert(faded, "the ribbon dissolves at its ends instead of stopping at a border")
+-- The marker row sits below the letters the 12-unit font hangs under the taller ticks (Bend is the tallest at 20).
+assert(strip.Bend.anchorPoint == "CENTER" and strip.Bend.atY == -10, "markers hang clear of the letters")
+close(strip.Center.width, 2)
+close(strip.Center.height, 12)
+assert(strip.Center.anchorPoint == "TOP" and strip.Center.atY == -3, "the centre mark hangs just under the top")
 close(strip.Center.color[1], 1)
 close(strip.Center.color[2], 0.82)
 close(strip.Center.color[3], 0)
+close(strip.Center.color[4], 1)
 -- The goal and stop at full strength, the turn after the next one dimmer still.
 close(strip.Goal.alpha, 1)
 close(strip.Stop.alpha, 1)
@@ -719,10 +734,11 @@ assert(not strip.hidden, "the compass stays up while the player is in the arrive
 close(strip.ticks[1].color[1], 0.6)
 close(strip.ticks[1].color[2], 0.76)
 close(strip.ticks[1].color[3], 0.58)
-close(strip.ticks[1].color[4], 0.7)
+close(strip.ticks[1].color[4], 0.9)
 close(strip.Center.color[1], 0.62)
 close(strip.Center.color[2], 0.9)
 close(strip.Center.color[3], 0.55)
+close(strip.Center.color[4], 1)
 assert(strip.Bend.hidden and strip.Distance.hidden, "no direction marks are drawn on arrival")
 -- Leaving the area with nothing to follow hides the compass as before.
 arrival = nil
@@ -735,7 +751,9 @@ assert(not strip.hidden, "a bend brings the compass back")
 close(strip.ticks[1].color[1], 0.72)
 close(strip.ticks[1].color[2], 0.67)
 close(strip.ticks[1].color[3], 0.55)
+close(strip.ticks[1].color[4], 0.9)
 close(strip.Center.color[1], 1)
+close(strip.Center.color[4], 1)
 print("compass: arrival tint and return to the arrow: ok")
 
 -- With the pointer on the compass while it is being placed, the arrow keys nudge it a step (Shift: ten) and are kept
