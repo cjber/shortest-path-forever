@@ -110,8 +110,7 @@ L["Keeps the shared Forever tracker where you put it. The grip at its top no lon
 	"Hält die gemeinsame Forever-Verfolgung dort, wo Ihr sie hingelegt habt. Der Griff oben zieht sie nicht mehr."
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
 	"Entfernungen in Metern beschriften, wie es die metrischen Sprachversionen des Spiels tun. Die Zahlen bleiben die des Spiels."
-L["Last seen %d min ago by another player"] = "Zuletzt vor %d Min. von einem anderen Spieler gesehen"
-L["Last seen %d min ago by you"] = "Zuletzt vor %d Min. von Euch gesehen"
+L["Last seen %s ago"] = "Zuletzt vor %s gesehen" -- mt
 L["Legacy Forever shows the Legacy challenges this counts toward."] =
 	"Legacy Forever zeigt die Vermächtnis-Herausforderungen, zu denen dies zählt."
 L["Let guides set TomTom waypoints"] = "Leitfäden TomTom-Wegpunkte setzen lassen"
@@ -178,10 +177,7 @@ L["Scales the compass. 100% matches the game's own art."] =
 L["Scales the shared Forever tracker. 100% matches the game's own tracker."] =
 	"Skaliert die gemeinsame Forever-Verfolgung. 100 % entspricht der Verfolgung des Spiels."
 L["Search services and goods"] = "Dienste und Waren durchsuchen"
-L["Sends and receives sighting times over guild, party and at the dock. No chat messages are shown."] =
-	"Sendet und empfängt Sichtungszeiten über Gilde, Gruppe und an der Anlegestelle. Es werden keine Chatnachrichten angezeigt."
 L["Services"] = "Dienste"
-L["Share departure times"] = "Abfahrtszeiten teilen"
 L["Shift-click the world map or the minimap to plan a journey there."] =
 	"Umschaltklick auf die Weltkarte oder die Minikarte plant eine Reise dorthin."
 L["Shift-click to plan journeys"] = "Umschaltklick plant Reisen"
@@ -321,13 +317,10 @@ L["Both"] = "Beides" -- mt
 L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs."] =
 	"Lokales Reisetagebuch — ca. %d Yards zu Fuß; %d Reisen; %d Transporte; %d Flüge; %d Portalstrecken."
 L["Record travel stats"] = "Reisestatistik aufzeichnen"
-L["Share travel stats with guild and groups"] = "Reisestatistik mit Gilde und Gruppen teilen"
 L["Time left"] = "Restzeit" -- mt
 L["Travel journal"] = "Reisetagebuch"
 L["Travel milestone reached: %s"] = "Reisemeilenstein erreicht: %s"
 L["Travel stats are not ready yet."] = "Die Reisestatistik ist noch nicht bereit."
-L["Turn this off to keep stats on this character only. Shared records are player-reported and not verified."] =
-	"Ausschalten, um die Statistik nur für diesen Charakter zu behalten. Geteilte Einträge stammen von Spielern und sind nicht geprüft."
 L["Party member"] = "Gruppenmitglied" -- mt
 L["That player is not on a map you can see."] = "Dieser Spieler ist nicht auf einer Karte, die Ihr sehen könnt." -- mt
 L["You have caught up with %s."] = "Du hast %s eingeholt." -- mt
@@ -387,11 +380,7 @@ L["Show boat, lift and tram departures in the tracker"] =
 L["Hide RestedXP's arrow"] = "RestedXPs Pfeil ausblenden" -- mt
 L["Hide departures"] = "Abfahrten ausblenden"
 
--- Travel stats and the shared Forever Leaderboards.
-L["Completed journeys"] = "Abgeschlossene Reisen"
-L["On unless you turn it off. Shares travel records with guild and group and puts you on Forever Leaderboards."] =
-	"Standardmäßig an, bis Ihr es ausschaltet. Teilt Reiseaufzeichnungen über Gilden-, Gruppen-, Schlachtzugs- und Instanzkanäle und setzt Euch auf die Forever-Ranglisten." -- mt
-L["total"] = "gesamt" -- mt
+-- Travel stats.
 
 L["Follow roads"] = "Straßen folgen" -- mt
 L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =

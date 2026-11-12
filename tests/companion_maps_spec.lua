@@ -108,4 +108,21 @@ assert(ns.CompanionMaps.Suppresses("flight", 0.5, 0.5))
 pin.shown = false
 scan()
 assert(not ns.CompanionMaps.Suppresses("flight", 0.5, 0.5), "zoom-hidden OpenMap pins do not suppress")
-print("companion_maps_spec: visible coverage, categories, unload and zoom passed")
+
+-- UI/Canvas.lua reads Scan on every frame the map is shown. While the pin set, the journey and the setting stay put,
+-- that read returns the key it already built, without joining a new string for the journey each frame (#784).
+now = now + 0.3
+local steady = ns.CompanionMaps.Scan(map)
+local built = 0
+local toString = rawget(_G, "tostring")
+rawset(_G, "tostring", function(value)
+	built = built + 1
+	return toString(value)
+end)
+for _ = 1, 100 do
+	assert(ns.CompanionMaps.Scan(map) == steady, "an unchanged scan key stays equal")
+end
+rawset(_G, "tostring", toString)
+assert(built == 0, "an unchanged companion scan builds no key string")
+
+print("companion_maps_spec: visible coverage, categories, unload, zoom and a free unchanged scan passed")

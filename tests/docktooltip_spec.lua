@@ -32,5 +32,22 @@ local cluster = {
 assert(#ns.Timetable.Departures(999998) == 0, "the dock has no departures to draw")
 ns.AddDockTooltip(cluster)
 assert(#errors == 0, table.concat(errors, "\n"))
-print("dock tooltip: clusters with no departures are safe")
+
+-- A sighting days old reads in the largest unit, not thousands of minutes.
+local oldSecondsToTime = _G.SecondsToTime
+local asked
+_G.SecondsToTime = function(seconds, detailed, noSeconds, precision)
+	asked = { seconds, detailed, noSeconds, precision }
+	return math.floor(seconds / 86400) .. " Days"
+end
+local seen = GetServerTime() - 3 * 24 * 3600
+ns.db.anchors[11391] = { epoch = ns.NowMs() - 1000, seen = seen }
+ns.AddDockTooltip({ docks = { { id = 18 } }, kinds = { boat = true } })
+assert(
+	asked and asked[1] == 3 * 24 * 3600 and asked[2] == true and asked[3] == false and asked[4] == 1,
+	"the tooltip asks for the largest unit only"
+)
+assert(tip[#tip] == "  Last seen 3 Days ago", "a three-day-old sighting reads in days")
+_G.SecondsToTime = oldSecondsToTime
+print("dock tooltip: clusters with no departures are safe, and old sightings read in their largest unit")
 ]==]))()

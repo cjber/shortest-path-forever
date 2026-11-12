@@ -1,7 +1,8 @@
 local TOC = dofile("tests/toc_fields.lua").read("ShortestPathForever.toc")
-local ns
-ns = {
-	db = { stats = true, statsShare = false },
+local now, x, moving = 0, 0, true
+local tick
+local ns = {
+	db = { stats = true },
 	charDB = {},
 	L = setmetatable({}, {
 		__index = function(_, key)
@@ -9,11 +10,13 @@ ns = {
 		end,
 	}),
 	OnTravelTick = function(fn)
-		ns.tick = fn
+		tick = fn
 	end,
-	JourneyChanged = function() end,
-	JourneyPlan = function()
-		return ns.plan, 1
+	Init = function(fn)
+		fn()
+	end,
+	JourneyPosition = function()
+		return x, 0, nil, 1
 	end,
 	Print = function() end,
 	core = {
@@ -22,25 +25,8 @@ ns = {
 		end,
 	},
 }
-local now, x, y, map, moving, taxi = 0, 0, 0, 1, true, false
-local frames, frame = {}, nil
-local function Fire(event, ...)
-	for _, target in ipairs(frames) do
-		if target.onEvent then
-			target.onEvent(target, event, ...)
-		end
-	end
-end
-ns.JourneyPosition = function()
-	return x, y, nil, map
-end
+local frames = {}
 local env = setmetatable({
-	GetRealmName = function()
-		return "Realm"
-	end,
-	GetNormalizedRealmName = function()
-		return "Realm"
-	end,
 	GetTime = function()
 		return now
 	end,
@@ -48,167 +34,49 @@ local env = setmetatable({
 		return math.floor(now)
 	end,
 	UnitPosition = function()
-		return x, y, 0, map
-	end,
-	canaccessvalue = function()
-		return true
+		return x, 0, 0, 1
 	end,
 	IsPlayerMoving = function()
 		return moving
 	end,
 	UnitOnTaxi = function()
-		return taxi
-	end,
-	IsInGuild = function()
 		return false
 	end,
-	IsInGroup = function()
-		return false
-	end,
-	IsInRaid = function()
-		return false
-	end,
-	LE_PARTY_CATEGORY_INSTANCE = 1,
 	C_AddOns = {
 		GetAddOnMetadata = function(name, field)
 			return name == "ShortestPathForever" and TOC[field] or nil
 		end,
 	},
-	UnitName = function()
-		return "Player"
-	end,
-	Ambiguate = function(name)
-		return name
-	end,
-	C_ChatInfo = {
-		RegisterAddonMessagePrefix = function()
-			return true
-		end,
-		SendAddonMessage = function()
-			return 0
-		end,
-	},
-	C_Timer = {
-		After = function() end,
-	},
-	Enum = {
-		SendAddonMessageResult = { InvalidPrefix = 1, InvalidChatType = 2 },
-	},
+	C_Timer = { After = function() end },
 	CreateFrame = function()
-		frame = {}
-		frames[#frames + 1] = frame
+		local frame = {}
 		frame.RegisterEvent = function() end
-		frame.SetScript = function(_, _, callback)
-			frame.onEvent = callback
+		frame.SetScript = function(self, _, fn)
+			self.OnEvent = fn
 		end
+		frames[#frames + 1] = frame
 		return frame
 	end,
 }, { __index = _G })
-ns.Init = function(callback)
-	callback()
-end
-local ForeverCore = dofile("tests/forever_core.lua")
-local coreNs = ForeverCore.load(env, "ForeverCore", { "Locales/enUS.lua", "Core/PeerStats.lua" })
+env._G = env
+dofile("tests/forever_core.lua")
 env.ForeverCore = {
 	API = 1,
 	APIKit = { Hub = function() end, NotReady = function() end },
 	TrackerSection = { Create = function() end, UpdateText = function() end },
 	TrackerLine = { SetInteractive = function() end },
-	PeerStats = coreNs.PeerStats,
-	Leaderboards = { Register = function() end, Open = function() end },
 }
 setfenv(assert(loadfile("Core/ForeverRequire.lua")), env)("ShortestPathForever", ns)
 setfenv(assert(loadfile("Core/Require.lua")), env)("ShortestPathForever", ns)
 setfenv(assert(loadfile("Core/Progress.lua")), env)("ShortestPathForever", ns)
 
-ns.tick()
+assert(not env.ForeverCore.PeerStats, "progress does not require the retired peer API")
+assert(not ns.TravelBoard and not ns.OpenTravelLeaderboard, "leaderboard integration is removed")
+tick()
 now, x = 1, 7
-ns.tick()
-assert(ns.TravelStats().walkedYards == 7, "plausible movement on the same map counts toward estimated distance")
-now, x = 2, 1000
-ns.tick()
-assert(ns.TravelStats().walkedYards == 7, "a position jump is discarded")
-now, x, map = 3, 1007, 2
-ns.tick()
-assert(ns.TravelStats().walkedYards == 7, "a map transition resets the distance baseline")
-
-taxi, now = true, 4
-ns.tick()
-taxi, now = false, 5
-ns.tick()
-assert(ns.TravelStats().flightsTaken == 1, "a taxi start is recorded once")
-
+tick()
+assert(ns.TravelStats().walkedYards == 7, "local movement remains recorded")
 ns.ProgressJourneyChanged(nil, "arrived")
-assert(ns.TravelStats().routesCompleted == 1, "only a completed journey increments the route count")
-ns.ProgressJourneyChanged(nil, "cleared")
-assert(ns.TravelStats().routesCompleted == 1, "clearing a journey is not completion")
-
-ns.plan = { legs = { { mode = "portal" } } }
-Fire("ZONE_CHANGED_NEW_AREA")
-assert(ns.TravelStats().portalsUsed == 1, "portal use is inferred only for an active portal or passage leg")
-Fire("ZONE_CHANGED_NEW_AREA")
-assert(ns.TravelStats().portalsUsed == 1, "duplicate zone events for one leg count once")
-
-ns.db.statsShare = true
-Fire("CHAT_MSG_ADDON", "WFAStats", "1|spf|routes_completed|all|10|100", "GUILD", "Peer-Realm")
-Fire("CHAT_MSG_ADDON", "WFAStats", "1|fieldguide|creature_kills|12345|6|200", "GUILD", "Guide-Realm")
-Fire("CHAT_MSG_ADDON", "WFAStats", "1|fieldguide|first_sighting|12345|1|200", "GUILD", "Guide-Realm")
-Fire("CHAT_MSG_ADDON", "WFAStats", "1|fieldguide|first_sighting|12345|1|150", "GUILD", "Guide-Realm")
-Fire("CHAT_MSG_ADDON", "WFAStats", "1|fieldguide|not_allowed|12345|1|100", "GUILD", "Guide-Realm")
-local ranks = ns.TravelBoard("all")
-assert(ranks[1].name == "Peer" and ranks[1].value == 10, "peer snapshots are ranked as reported claims")
-assert(ranks[2].you == true and ranks[2].value == 1, "the player's own row follows the peers")
-assert(ns.charDB.progress.peers.fieldguide == nil, "foreign addon records are not cached by travel boards")
-for index = 1, 99 do
-	Fire("CHAT_MSG_ADDON", "WFAStats", "1|spf|routes_completed|all|1|200", "GUILD", "Peer-" .. index)
-end
-Fire("CHAT_MSG_ADDON", "WFAStats", "1|spf|routes_completed|all|1|200", "GUILD", "Peer-overflow")
-assert(not ns.charDB.progress.peers.spf["Peer-overflow"], "global peer cap rejects new senders")
-ns.db.statsShare = false
-Fire("CHAT_MSG_ADDON", "WFAStats", "1|spf|routes_completed|all|99|100", "GUILD", "Peer-Realm")
-assert(
-	ns.charDB.progress.peers.spf["Peer"].routes_completed.all.value == 10,
-	"sharing opt out stops receiving snapshots"
-)
-
-assert(#ns.TravelBoard("all") == 1, "opt-out hides cached peers and retains the personal row")
-assert(next(ns.TravelStats().peers) == nil, "public snapshots hide cached peer records during opt-out")
-
-ns.db.stats = false
-moving, now, x = true, 6, 1014
-ns.tick()
-assert(ns.TravelStats().walkedYards == 7, "turning off local collection stops updates")
-
--- Explicit recording and sharing opt-outs stop collection and sending. Core default migration is covered
--- by faction_defaults_spec; this fixture loads only the progress module.
-local sent = 0
-env.C_ChatInfo.SendAddonMessage = function()
-	sent = sent + 1
-	return 0
-end
-ns.db = { stats = false, statsShare = false }
-ns.charDB.progress = nil
-ns.SendTravelStats()
-assert(sent == 0, "recording opt-out sends no snapshot")
-moving, now, x = true, 7, 1014
-ns.tick()
-now, x = 8, 1021
-ns.tick()
-assert(ns.TravelStats().walkedYards == 0, "recording opt-out records no distance")
-taxi, now = true, 9
-ns.tick()
-taxi, now = false, 10
-ns.tick()
-assert(ns.TravelStats().flightsTaken == 0, "and no flights")
-ns.ProgressJourneyChanged(nil, "arrived")
-assert(ns.TravelStats().routesCompleted == 0, "and no completed journeys")
-assert(sent == 0, "and still nothing sent")
--- Re-enabling the journal resumes local recording.
-ns.db.stats = true
-now, x = 11, 1021
-ns.tick()
-now, x = 12, 1028
-ns.tick()
-assert(ns.TravelStats().walkedYards == 7, "turning the journal on starts recording again")
-
-print("progress_spec: local stats, conservative movement, milestones, sharing opt out, re-enable and leaderboard ok")
+assert(ns.TravelStats().routesCompleted == 1, "completed journeys remain local")
+assert(ns.TravelStats().peers == nil, "snapshots no longer expose peer data")
+print("progress_spec: local journal works without peer or leaderboard APIs")

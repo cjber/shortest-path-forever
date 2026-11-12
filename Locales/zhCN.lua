@@ -110,8 +110,7 @@ L["Keeps the shared Forever tracker where you put it. The grip at its top no lon
 	"将共享的 Forever 追踪器保持在您放置的位置。顶部的拖拽手柄不再移动它。"
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
 	"以米标注距离，与游戏采用公制的语言客户端一致。数字仍为游戏自身的码数。"
-L["Last seen %d min ago by another player"] = "%d分钟前由其他玩家最后看到"
-L["Last seen %d min ago by you"] = "%d分钟前由你最后看到"
+L["Last seen %s ago"] = "%s前最后看到" -- mt
 L["Legacy Forever shows the Legacy challenges this counts toward."] =
 	"Legacy Forever会显示此项计入的传承挑战。"
 L["Let guides set TomTom waypoints"] = "允许指南设置TomTom路径点"
@@ -176,10 +175,7 @@ L["Scales the compass. 100% matches the game's own art."] = "调整指南针大�
 L["Scales the shared Forever tracker. 100% matches the game's own tracker."] =
 	"调整共享Forever追踪栏的大小。100%与游戏自身的追踪栏一致。"
 L["Search services and goods"] = "搜索服务和物品"
-L["Sends and receives sighting times over guild, party and at the dock. No chat messages are shown."] =
-	"通过公会、队伍和在码头收发目击时间。不会显示聊天消息。"
 L["Services"] = "服务"
-L["Share departure times"] = "共享出发时间"
 L["Shift-click the world map or the minimap to plan a journey there."] =
 	"Shift点击世界地图或微缩地图以规划前往该处的旅程。"
 L["Shift-click to plan journeys"] = "Shift点击规划旅程"
@@ -317,13 +313,10 @@ L["Both"] = "两者" -- mt
 L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs."] =
 	"本地旅行日志 — 步行约%d码；%d次旅程；%d次交通；%d次飞行；%d段传送门。"
 L["Record travel stats"] = "记录旅行统计"
-L["Share travel stats with guild and groups"] = "与公会和队伍共享旅行统计"
 L["Time left"] = "剩余时间" -- mt
 L["Travel journal"] = "旅行日志"
 L["Travel milestone reached: %s"] = "达成旅行里程碑：%s"
 L["Travel stats are not ready yet."] = "旅行统计尚未准备好。"
-L["Turn this off to keep stats on this character only. Shared records are player-reported and not verified."] =
-	"关闭后统计只保留在此角色上。共享记录由玩家上报，未经核实。"
 L["Party member"] = "队员" -- mt
 L["That player is not on a map you can see."] = "该玩家不在你能看到的地图上。" -- mt
 L["You have caught up with %s."] = "你已追上%s。" -- mt
@@ -382,11 +375,7 @@ L["Show boat, lift and tram departures in the tracker"] = "在追踪器中显示
 L["Hide RestedXP's arrow"] = "隐藏 RestedXP 的箭头" -- mt
 L["Hide departures"] = "隐藏班次"
 
--- Travel stats and the shared Forever Leaderboards.
-L["Completed journeys"] = "已完成的旅程"
-L["On unless you turn it off. Shares travel records with guild and group and puts you on Forever Leaderboards."] =
-	"除非你关闭，否则保持开启。通过公会、队伍、团队和副本频道分享旅行记录，并将你列入 Forever 排行榜。" -- mt
-L["total"] = "总计" -- mt
+-- Travel stats.
 
 L["Follow roads"] = "沿道路行走" -- mt
 L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =

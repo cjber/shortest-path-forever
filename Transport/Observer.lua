@@ -20,7 +20,7 @@ local FIT_EVERY = 10
 -- A ride's newest samples per route, enough for any crossing: fitting is quadratic, and a lift or tram ride
 -- never pauses long enough to end.
 local MAX_SAMPLES = 300
--- Your own sighting this recent makes a repeat ride routine: no chat line, nothing new worth sharing.
+-- Your own sighting this recent makes a repeat ride routine: no chat line.
 local QUIET = 600
 -- About 25 minutes of debug samples.
 local TRACE_LIMIT = 1500
@@ -53,12 +53,11 @@ local function Record()
 	end
 	local now = GetServerTime()
 	local held = ns.Timetable.Anchor(routeID)
-	local routine = held and held.source == "you" and now - held.seen < QUIET
+	local routine = held and now - held.seen < QUIET
 	ride.announced = routeID
-	if ns.Timetable.Sighted(routeID, { epoch = fits[routeID].epoch, seen = now, source = "you" }) and not routine then
+	if ns.Timetable.Sighted(routeID, { epoch = fits[routeID].epoch, seen = now }) and not routine then
 		local route = ns.Routes[routeID]
 		ns.Print(string.format(L["synced the %s schedule from your ride."], route.site or KIND[route.kind]))
-		ns.Share(routeID)
 	end
 end
 
@@ -107,7 +106,7 @@ local function Sample()
 		end
 		if ride and ride.last == now then
 			ride.count = ride.count + 1
-			-- Sync as soon as the ride proves itself; the ride's end refines it.
+			-- Record as soon as the ride proves itself; the ride's end refines it.
 			if not ride.announced and ride.count % FIT_EVERY == 0 then
 				Record()
 			end
