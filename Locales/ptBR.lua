@@ -413,7 +413,8 @@ L["Stops before the last on a multi-stop route keep 15 yards."] =
 L["Dungeons and raids"] = "Masmorras e raides" -- mt
 L["Town services"] = "Serviços da cidade" -- mt
 L["Town services on the world map"] = "Serviços da cidade no mapa do mundo" -- mt
-L["Journeys no longer stop without a route."] = "As jornadas não param mais sem rota." -- mt
+L["The arrow and the tracker no longer flash while a guide moves between objectives."] =
+	"A seta e o rastreador não piscam mais quando um guia muda de objetivo." -- mt
 L["Capitals only"] = "Apenas capitais" -- mt
 L["Capitals and important services"] = "Capitais e serviços importantes" -- mt
 L["All towns"] = "Todas as cidades" -- mt
