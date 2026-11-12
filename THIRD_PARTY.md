@@ -144,6 +144,7 @@ Credit for the reports and requests behind the addon.
 | Anonymous CurseForge reporter | Guidance no longer flickers when another addon selects an objective | CurseForge; #693 |
 | cobalt_44 | Nearby services tab toggle | CurseForge; #767, 8694492 |
 | ghuff07 | Dugi Guides can lead the journey | CurseForge; #689 |
+| nimri82 | The public guidance point for RestedXP-Navigator | CurseForge; #777 |
 
 ## Inspired by
 

@@ -100,6 +100,11 @@ function Corpse.Steer()
 	if not (run and here) then
 		return
 	end
+	-- The run's own 0.5 s tick advances the bend under way even with the arrow off, so the compass and a guidance
+	-- subscriber keep up without a renderer or a new timer.
+	if ns.AdvanceGuide then
+		ns.AdvanceGuide()
+	end
 	local leg, point = run.leg, run.point
 	local ahead, yards = { here, point }, nil
 	if here.map ~= point.map then

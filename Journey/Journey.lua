@@ -746,6 +746,11 @@ local function Update(self, elapsed)
 		self.progressElapsed = self.progressElapsed + elapsed
 		if self.progressElapsed >= 0.1 then
 			self.progressElapsed = 0
+			-- Progress is the guide's own, not planning or drawing: a bend passed in combat still moves the arrow
+			-- under way and tells guidance subscribers, which writes nothing.
+			if ns.AdvanceGuide then
+				ns.AdvanceGuide()
+			end
 			if goal and ns.StopInside(goal) then
 				Guide.Pause()
 			end
@@ -765,6 +770,11 @@ local function Update(self, elapsed)
 	local x, y, _, map = ns.JourneyPosition()
 	if not x then
 		return
+	end
+	-- The guide's bend under way advances from this existing progress tick too, so an arrow that is off still keeps
+	-- the compass and the public guidance read current. A read advances it as well; there is no poll of its own.
+	if ns.AdvanceGuide then
+		ns.AdvanceGuide()
 	end
 	if ns.Floor and y and map then
 		ns.Floor.Sample(map, x, y)

@@ -93,6 +93,7 @@ ns.Credits = {
 		},
 		{ name = "cobalt_44", what = "Nearby services tab toggle" },
 		{ name = "ghuff07", what = "Dugi Guides can lead the journey" },
+		{ name = "nimri82", what = "The public guidance point for RestedXP-Navigator" },
 	},
 	inspired = {
 		{ name = "Polestar by Fitz", what = "Ideas for many features" },

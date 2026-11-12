@@ -10,6 +10,11 @@
 
 ---@alias SPFAPINotReady "loading"|"none" -- still building the data; nothing to answer
 
+--- Why Guidance has no point to give: loading while the addon or its first plan is still being built, none with no
+--- journey, paused while guidance is off or waiting at a held stop, disabled when Journeys is switched off, cast when
+--- a teleport must be cast where the player stands, and unavailable when a point cannot be placed on this client.
+---@alias SPFAPIGuidanceReason "loading"|"none"|"paused"|"disabled"|"cast"|"unavailable"
+
 -- What stands at a stop. Its numbered pin on the world map wears that mark (a quest's "!" or "?", a trainer, a
 -- flight master, a dock) as a small badge on its lower right, a lone stop shows the mark alone, and the minimap
 -- rings the spot instead of covering the game's own icon there.
@@ -77,6 +82,15 @@
 ---@field guided boolean -- whether guidance is on
 ---@field secondsLeft number -- whole seconds from the leg under way to the goal, as the tracker header shows it
 
+--- The guidance another addon steers by: the next point the arrow leads to and the whole source walk of the leg under
+--- way, as fresh copies on every call.
+---@class SPFAPIGuidance
+---@field owner? string -- the addon that owns the journey; absent for the player's own journey and a corpse run
+---@field leg integer -- the 1-based leg under way in Journey()
+---@field point SPFAPIPlace -- the next point the arrow leads to
+---@field waypoints SPFAPIPlace[] -- every bend of the leg under way, from the route's original source walk
+---@field index integer -- where point stands in waypoints: 1-based, so waypoints[index] is that point
+
 --- One travel record of this character's.
 ---@class SPFAPIStat
 ---@field addon string -- always "ShortestPathForever"
@@ -94,17 +108,20 @@
 ---@field ended? boolean -- the journey under way ended, with nothing after it
 ---@field stop? boolean -- what CurrentStop answers changed: an addon's route started, moved on to another stop or ended
 ---@field leg? boolean -- the leg under way moved on without the goal changing: the player or an owner skipped it
+---@field guidance? boolean -- the guidance point changed: a bend passed within the leg, the leg or its source walk
+--- replaced, the guideStops switch changed what the arrow draws, or guidance started or ended
 ---@field active? boolean -- what Active answers changed
 
 ---@class SPFPublicAPI
 ---@field version integer -- 2 removes peer sharing and Leaderboard; callers accept 1 or 2 and reject future versions
----@field minor integer -- 0 for version 2; version 1 minor 3 added Journey, Pause, Resume, SkipLeg, Stats and the leg change
+---@field minor integer -- 1 adds Guidance and the guidance change for version 2; version 1 minor 3 added Journey, Pause, Resume, SkipLeg, Stats and the leg change
 ---@field Estimate fun(fromMap: integer, fromX: number, fromY: number, toMap: integer, toX: number, toY: number): seconds: number?, reason: SPFAPINoRoute? -- travel seconds; nil comes with the reason
 ---@field Navigate fun(owner: string, map: integer, x: number, y: number, title?: string, kind?: SPFAPIStopKind): boolean -- starts/replaces guidance outside combat when journeys are enabled
 ---@field NavigateRoute fun(owner: string, stops: SPFAPIStop[]): boolean -- starts/replaces guidance through 1-64 stops in order; false leaves the current journey intact
 ---@field CurrentStop fun(owner: string): index: integer?, reason: SPFAPINotReady? -- 1-based current stop, or nil and why there is none
 ---@field Cancel fun(owner: string): boolean -- true only when this owner's current journey was cancelled
 ---@field Journey fun(): journey: SPFAPIJourney?, reason: SPFAPINotReady? -- the journey under way, whoever owns it, or nil and why there is none
+---@field Guidance fun(): guidance: SPFAPIGuidance?, reason: SPFAPIGuidanceReason? -- the next point the arrow leads to and every bend of the leg under way, as fresh copies, or nil and why there is no point
 ---@field Pause fun(owner: string): boolean -- stops that owner's guidance and keeps its goal; false for another owner, no journey, an already stopped journey or combat
 ---@field Resume fun(owner: string): boolean -- starts that owner's guidance again on the same goal; false for another owner, no journey, an already guided journey or combat
 ---@field SkipLeg fun(owner: string, index?: integer): boolean -- advances that owner's current leg; false for another owner or when nothing was skipped

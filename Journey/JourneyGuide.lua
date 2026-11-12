@@ -568,6 +568,13 @@ function Guide.Paused()
 	return guide ~= nil and guide.paused == true
 end
 
+-- The leg under way is a teleport, cast where you stand: there is no walking point to read. Guide.Cast clears the
+-- arrow's points and keeps the leg as its target, which is what this distinguishes from a paused or stopped guide.
+---@return boolean
+function Guide.Casting()
+	return guide ~= nil and guide.points == nil and guide.target ~= nil and guide.target.teleport ~= nil
+end
+
 -- A teleport is cast where you stand: show the item or spell to use, with no walking arrow.
 ---@param leg SPFLeg
 function Guide.Cast(leg)
