@@ -67,6 +67,11 @@ assert(
 	loadCore({ hearthMinimumSavings = 300 }).db.hearthMinimumSavings == 300,
 	"saved savings threshold survives reload"
 )
+assert(fresh.db.hearth == true and fresh.db.teleports == true, "new installs use the Hearthstone and class teleports")
+assert(loadCore({ teleports = false }).db.hearth == false, "an old opt-out keeps the Hearthstone off")
+assert(loadCore({ teleports = true }).db.hearth == true, "an old opt-in keeps the Hearthstone on")
+assert(loadCore({ teleports = false, hearth = true }).db.hearth == true, "a saved Hearthstone choice wins")
+assert(fresh.db.teleportMinimumSavings == 0, "class teleports have no minimum saving by default")
 assert(not fresh.RouteShown({ faction = "Horde" }), "hostile route hidden by default")
 assert(fresh.RouteShown({ faction = "Alliance" }), "own faction route remains available")
 assert(fresh.RouteShown({}), "neutral transport remains available")

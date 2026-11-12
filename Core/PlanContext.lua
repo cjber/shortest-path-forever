@@ -61,6 +61,7 @@ function Context.Options(from, to)
 		teleportReady = ready,
 		partyPortals = partyPortals,
 		hearthMinimumSavings = ns.db and ns.db.hearthMinimumSavings or 0,
+		teleportMinimumSavings = ns.db and ns.db.teleportMinimumSavings or 0,
 		landmasses = ns.Landmasses,
 		baked = ns.Walks,
 	}

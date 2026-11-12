@@ -125,6 +125,26 @@ ns.Init(function()
 		settings[key] = setting
 	end
 
+	-- A minimum time a teleport must save, in seconds; 0 is off.
+	local function Saving(key, name, tooltip)
+		local setting = Settings.RegisterAddOnSetting(
+			page,
+			"ShortestPathForever_" .. key,
+			key,
+			ns.db,
+			Settings.VarType.Number,
+			name,
+			ns.Defaults[key]
+		)
+		setting:SetValueChangedCallback(ns.TravelPolicyChanged)
+		settings[key] = setting
+		local options = Settings.CreateSliderOptions(0, 600, 30)
+		options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
+			return value > 0 and SecondsToTime(value) or OFF
+		end)
+		Settings.RegisterInitializer(page, Settings.CreateSliderInitializer(setting, options, tooltip))
+	end
+
 	local function Scale(key, name, tooltip, refresh)
 		local setting = Settings.RegisterAddOnSetting(
 			page,
@@ -455,32 +475,28 @@ ns.Init(function()
 		ns.TravelPolicyChanged
 	)
 	Checkbox(
-		"teleports",
-		L["Use hearth and teleports"],
-		L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."]
+		"hearth",
+		L["Use your Hearthstone"],
+		-- luacheck: push ignore 631
+		L["Journeys, and other addons' estimates from here, can start with your Hearthstone or Astral Recall, cooldown counted."]
+		-- luacheck: pop
 	)
-	local hearth = Settings.RegisterAddOnSetting(
-		page,
-		"ShortestPathForever_hearthMinimumSavings",
+	Saving(
 		"hearthMinimumSavings",
-		ns.db,
-		Settings.VarType.Number,
 		L["Minimum Hearthstone saving"],
-		ns.Defaults.hearthMinimumSavings
+		L["Only use the Hearthstone when it saves at least this much time."]
 	)
-	hearth:SetValueChangedCallback(ns.TravelPolicyChanged)
-	settings.hearthMinimumSavings = hearth
-	local hearthOptions = Settings.CreateSliderOptions(0, 600, 30)
-	hearthOptions:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
-		return value > 0 and SecondsToTime(value) or OFF
-	end)
-	Settings.RegisterInitializer(
-		page,
-		Settings.CreateSliderInitializer(
-			hearth,
-			hearthOptions,
-			L["Only use the Hearthstone when it saves at least this much time."]
-		)
+	Checkbox(
+		"teleports",
+		L["Use class teleports"],
+		-- luacheck: push ignore 631
+		L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."]
+		-- luacheck: pop
+	)
+	Saving(
+		"teleportMinimumSavings",
+		L["Minimum teleport saving"],
+		L["Only use a class teleport when it saves at least this much time."]
 	)
 	Checkbox(
 		"guideStops",

@@ -54,8 +54,9 @@ With RestedXP or Guidelime installed, **Resume guide** in Guidance or the Journe
   the loading screen. The client does not say where your bind point is, so it is where you stood when you last
   bound at an innkeeper with the addon on, or where your last Hearthstone or Astral Recall set you down. Until
   then, or after binding somewhere else with the addon off, the hearth is left out. The recorded bind position is saved per character and checked against
-  the current bind name. Class teleports need no bind point. Turn this
-  off with *Use hearth and teleports* in `/path`.
+  the current bind name. Class teleports need no bind point. *Use your Hearthstone* (with Astral Recall) and
+  *Use class teleports* in `/path` turn each off, and *Minimum Hearthstone saving* and *Minimum teleport saving*
+  keep one for trips where it saves at least that long.
   ![Journey steps from Auberdine to Silithus with time and distance remaining](screenshots/tracker.png)
 
   The tracker shows each travel step, with time and distance remaining.

@@ -108,8 +108,10 @@ L["Journey  %s · %s"] = "여정  %s · %s"
 L["Journey to %s"] = "%s(으)로 가는 여정"
 L["Journeys are off. Turn on Shift-click to plan journeys in settings."] =
 	"여정이 꺼져 있습니다. 설정에서 'Shift-클릭으로 여정 계획'을 켜십시오."
-L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."] =
-	"여정과 다른 애드온의 이곳 기준 예상 시간은 재사용 대기시간을 포함해 귀환석이나 순간이동으로 시작할 수 있습니다."
+L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
+	"여정과 다른 애드온의 이곳 기준 예상 시간은 재사용 대기시간을 포함해 마법사의 도시 순간이동이나 순간이동: 달의 숲으로 시작할 수 있습니다." -- mt
+L["Journeys, and other addons' estimates from here, can start with your Hearthstone or Astral Recall, cooldown counted."] =
+	"여정과 다른 애드온의 이곳 기준 예상 시간은 재사용 대기시간을 포함해 귀환석이나 영혼의 귀환으로 시작할 수 있습니다." -- mt
 L["Keep journeys after a reload"] = "재시작 후 여정 유지"
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"공유 Forever 추적기를 놓은 자리에 유지합니다. 위쪽 손잡이로 더 이상 끌 수 없습니다."
@@ -130,6 +132,7 @@ L["Map marks"] = "지도 표시"
 L["Mark only where steps end"] = "단계 끝만 표시"
 L["Minimap icon size"] = "미니맵 아이콘 크기"
 L["Minimum Hearthstone saving"] = "귀환석 최소 절약 시간"
+L["Minimum teleport saving"] = "순간이동 최소 절약 시간" -- mt
 L["Move the arrow"] = "화살표 이동"
 L["Move the compass"] = "나침반 이동"
 L["N"] = "북"
@@ -148,6 +151,8 @@ L["On board to %s"] = "%s행 탑승 중"
 L["On the world map."] = "세계 지도에 표시합니다."
 L["One line in chat the first time you log in after an update."] =
 	"업데이트 후 처음 접속할 때 대화창에 한 줄 표시합니다."
+L["Only use a class teleport when it saves at least this much time."] =
+	"최소 이만큼 시간을 절약할 때만 직업 순간이동을 사용합니다." -- mt
 L["Only use the Hearthstone when it saves at least this much time."] =
 	"최소 이만큼 시간을 절약할 때만 귀환석을 사용합니다."
 L["Open"] = "열기"
@@ -241,7 +246,8 @@ L["Turning this off leaves RestedXP's arrow visible."] =
 L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
 	"이 옵션을 끄면 공유 Forever 추적기를 화면 어디로든 끌 수 있습니다."
 L["Use %s"] = "%s 사용"
-L["Use hearth and teleports"] = "귀환석과 순간이동 사용"
+L["Use class teleports"] = "직업 순간이동 사용" -- mt
+L["Use your Hearthstone"] = "귀환석 사용" -- mt
 L["Vendors"] = "상인"
 L["W"] = "서"
 L["Walk to %s"] = "%s까지 걷기"

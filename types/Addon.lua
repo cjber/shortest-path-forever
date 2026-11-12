@@ -246,7 +246,8 @@
 ---@field tomtom? boolean -- answer third-party guides' TomTom waypoints with a journey while TomTom is absent
 ---@field tomtomFollow? boolean -- with TomTom installed, a journey follows the waypoint its arrow points to
 ---@field taxiRoute? boolean
----@field teleports? boolean
+---@field hearth? boolean -- plan the Hearthstone and other teleports that land at the bind point
+---@field teleports? boolean -- plan class teleports with a destination of their own
 ---@field partyMagePortals? boolean -- offer a party mage's capital portals
 ---@field partyMageStormwind? boolean
 ---@field partyMageIronforge? boolean
@@ -255,6 +256,7 @@
 ---@field partyMageThunderBluff? boolean
 ---@field partyMageOrgrimmar? boolean
 ---@field hearthMinimumSavings? number -- seconds the Hearthstone must save over the best non-hearth plan
+---@field teleportMinimumSavings? number -- seconds a class teleport must save over the best plan without one
 ---@field stats? boolean -- collect per-character travel totals
 ---@field guideStops? boolean
 ---@field compass? boolean
@@ -406,6 +408,7 @@ ShortestPathForeverPathData = nil
 ---@field incumbent? number
 ---@field incumbentPlan? SPFPlan
 ---@field hearthMinimumSavings? number
+---@field teleportMinimumSavings? number
 ---@field otherFaction? boolean
 ---@field from SPFPoint
 ---@field to SPFPoint

@@ -36,6 +36,7 @@ local CONTEXT_KEYS = {
 	"landmasses",
 	"baked",
 	"hearthMinimumSavings",
+	"teleportMinimumSavings",
 }
 
 local function Number(value)

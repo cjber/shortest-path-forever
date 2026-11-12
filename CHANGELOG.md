@@ -14,6 +14,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **The Hearthstone and class teleports have their own switches.** *Use hearth and teleports* in Guidance is now *Use your Hearthstone*, which also covers a shaman's Astral Recall, and *Use class teleports*, for a mage's city teleports and Teleport: Moonglade. A new *Minimum teleport saving* keeps class teleports, and their Runes of Teleportation, for trips where they save at least that long, as *Minimum Hearthstone saving* already does for the Hearthstone. If you had turned the old switch off, both stay off.
+
 ## [1.34.3] - 2026-11-12
 
 <!-- forever-core-sync -->
