@@ -55,6 +55,10 @@ local ns = {
 	Init = function(fn)
 		fn()
 	end,
+	-- UI/MenuModifier.lua's entry point; this spec only loads the file, so the tag is recorded and unused.
+	ModifyMenu = function(tag, _, build)
+		env.Menu.ModifyMenu(tag, build)
+	end,
 	Planner = {
 		QuestDestination = function()
 			return { uiMapID = 1440, x = 0.5, y = 0.5, label = "Tracked" }

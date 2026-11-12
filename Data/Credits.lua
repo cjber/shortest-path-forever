@@ -86,6 +86,8 @@ ns.Credits = {
 		{ name = "Acem", what = "Known flight points kept per character" },
 		{ name = "tgkGate", what = "Fixed the path job yield error" },
 		{ name = "IronmanBG", what = "Plan journey back in Kaliel's Tracker" },
+		{ name = "vladsnz", what = "Quest list More options works with a controller" },
+		{ name = "vcatalin", what = "Forever Core bundled in the download again" },
 		{ name = "sdtom", what = "Town service pins wear their own icons" },
 		{ name = "Bervath", what = "Town service pins wear their own icons" },
 	},
