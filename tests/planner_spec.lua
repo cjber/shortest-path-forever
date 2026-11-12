@@ -430,19 +430,15 @@ real.from, real.to = ns.Docks[1101], ns.Docks[1102]
 real.docks, real.routes = ns.Docks, ns.Routes
 real.taxiNodes, real.taxiPaths = ns.TaxiNodes, ns.TaxiPaths
 real.portals, real.landmasses = ns.Portals, ns.Landmasses
-local dalaranPortal, stormwindPortal
+local dalaranPortal
 for _, portalRow in ipairs(ns.Portals) do
 	if portalRow.name == "Portal to Stormwind" then
 		dalaranPortal = portalRow
-	elseif portalRow.name == "Portal to Dalaran" then
-		stormwindPortal = portalRow
 	end
+	assert(portalRow.name ~= "Portal to Dalaran", "Stormwind's portal back to Dalaran was removed on 2026-10-17")
 end
-assert(dalaranPortal and stormwindPortal, "both directions of the Alliance Skyborne portal are routable")
-assert(
-	dalaranPortal.faction == "Alliance" and stormwindPortal.faction == "Alliance",
-	"the Dalaran portal pair is not offered to Horde characters"
-)
+assert(dalaranPortal, "the Alliance Skyborne portal from Dalaran to Stormwind is routable")
+assert(dalaranPortal.faction == "Alliance", "the Dalaran portal is not offered to Horde characters")
 local skyborneOptions = {
 	from = dalaranPortal.from,
 	to = dalaranPortal.to,
@@ -453,9 +449,9 @@ local skyborneOptions = {
 	landmasses = ns.Landmasses,
 }
 only(Plan(skyborneOptions), "portal")
-skyborneOptions.from, skyborneOptions.to = stormwindPortal.from, stormwindPortal.to
-only(Plan(skyborneOptions), "portal")
-skyborneOptions.faction = "Horde"
+skyborneOptions.from, skyborneOptions.to = dalaranPortal.to, dalaranPortal.from
+assert(not Plan(skyborneOptions), "Stormwind has no portal back to Dalaran")
+skyborneOptions.from, skyborneOptions.to, skyborneOptions.faction = dalaranPortal.from, dalaranPortal.to, "Horde"
 assert(not Plan(skyborneOptions), "Horde routes do not use the Alliance portal")
 only(Plan(real), "tram")
 points = LegPoints(only(Plan(real), "tram"), real.routes)
