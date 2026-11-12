@@ -114,9 +114,9 @@ With RestedXP or Guidelime installed, **Resume guide** in Guidance or the Journe
 
 - **Find nearby services.** Open the minimap's tracking menu or the world map's and pick *Nearby services*, or use
   `/spfnear`. Vendors are grouped by what they sell: arrows, bullets, food, drink, bags, trade supplies, reagents,
-  and weapons and armour. Trainers are grouped by class or profession. It also lists repairs, innkeepers, banks,
-  auction houses, flight masters and stable masters. Pick a group to route to the nearest friendly location in your
-  installed QuestieDB. Arrows, shot, food and drink go to the best goods for your level sold around you; when better
+  and weapons and armour. Trainers are grouped by your own class, by portal training for mages, and by profession.
+  It also lists battlemasters, repairs, innkeepers, banks, auction houses, flight masters and stable masters. Pick a
+  group to route to the nearest friendly location in your installed QuestieDB. Arrows, shot, food and drink go to the best goods for your level sold around you; when better
   ones are sold farther away on your continent, a row under the group offers that trip with its own travel time.
   Dungeons and raids have a section of their own: every door on your continent, nearest first by travel time, and a
   row starts a journey to that door which ends when you go in.

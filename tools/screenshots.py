@@ -34,6 +34,7 @@ from screenshots_art import Art
 from screenshots_floors import render as render_floors
 from screenshots_services import render as render_services
 from screenshots_services import render_better as render_services_better
+from screenshots_services import render_roles as render_services_roles
 from screenshots_services import render_search as render_services_search
 from screenshots_tracker import detached_tracker
 from screenshots_tracker import tracker_canvas as journey_tracker
@@ -774,6 +775,7 @@ SCENES = {
     "services": render_services,
     "services_search": render_services_search,
     "services_better": render_services_better,
+    "services_roles": render_services_roles,
 }
 
 
