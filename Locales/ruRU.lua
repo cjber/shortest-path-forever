@@ -115,8 +115,7 @@ L["Keeps the shared Forever tracker where you put it. The grip at its top no lon
 	"Оставляет общий трекер Forever там, где вы его поставили. Ручка сверху больше его не перетаскивает."
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
 	"Подписывать расстояния в метрах, как это делают метрические языковые версии игры. Числа остаются игровыми."
-L["Last seen %d min ago by another player"] = "Замечен %d мин. назад другим игроком"
-L["Last seen %d min ago by you"] = "Замечен %d мин. назад вами"
+L["Last seen %s ago"] = "Замечен %s назад" -- mt
 L["Legacy Forever shows the Legacy challenges this counts toward."] =
 	"Legacy Forever показывает старинные испытания, в которые это засчитывается."
 L["Let guides set TomTom waypoints"] = "Разрешить руководствам ставить точки TomTom"
@@ -188,10 +187,7 @@ L["Scales the compass. 100% matches the game's own art."] =
 L["Scales the shared Forever tracker. 100% matches the game's own tracker."] =
 	"Меняет размер общей панели отслеживания Forever. 100% – как панель отслеживания игры."
 L["Search services and goods"] = "Поиск услуг и товаров"
-L["Sends and receives sighting times over guild, party and at the dock. No chat messages are shown."] =
-	"Отправляет и получает время наблюдений через гильдию, группу и на причале. Сообщения в чате не показываются."
 L["Services"] = "Услуги"
-L["Share departure times"] = "Делиться временем отправления"
 L["Shift-click the world map or the minimap to plan a journey there."] =
 	"Shift+щелчок по карте мира или мини-карте прокладывает туда маршрут."
 L["Shift-click to plan journeys"] = "Shift+щелчок для маршрута"

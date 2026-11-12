@@ -109,8 +109,7 @@ L["Keeps the shared Forever tracker where you put it. The grip at its top no lon
 	"Mantém o rastreador Forever compartilhado onde você o colocou. A alça no topo não o arrasta mais."
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
 	"Rotular as distâncias em metros, como fazem os clientes do jogo em sistema métrico. Os números continuam sendo os do jogo."
-L["Last seen %d min ago by another player"] = "Visto há %d min por outro jogador"
-L["Last seen %d min ago by you"] = "Visto há %d min por você"
+L["Last seen %s ago"] = "Visto há %s" -- mt
 L["Legacy Forever shows the Legacy challenges this counts toward."] =
 	"O Legacy Forever mostra os Desafios de Legado para os quais isso conta."
 L["Let guides set TomTom waypoints"] = "Deixar guias criarem pontos do TomTom"
@@ -177,10 +176,7 @@ L["Scales the compass. 100% matches the game's own art."] =
 L["Scales the shared Forever tracker. 100% matches the game's own tracker."] =
 	"Ajusta o tamanho do rastreador Forever compartilhado. 100% corresponde ao rastreador do jogo."
 L["Search services and goods"] = "Pesquisar serviços e bens"
-L["Sends and receives sighting times over guild, party and at the dock. No chat messages are shown."] =
-	"Envia e recebe horários de avistamento pela guilda, pelo grupo e no cais. Nenhuma mensagem aparece no bate-papo."
 L["Services"] = "Serviços"
-L["Share departure times"] = "Compartilhar horários de partida"
 L["Shift-click the world map or the minimap to plan a journey there."] =
 	"Shift+clique no mapa-múndi ou no minimapa para planejar uma jornada até lá."
 L["Shift-click to plan journeys"] = "Shift+clique para planejar"

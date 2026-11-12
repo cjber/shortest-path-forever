@@ -109,8 +109,7 @@ L["Keeps the shared Forever tracker where you put it. The grip at its top no lon
 	"Hält die gemeinsame Forever-Verfolgung dort, wo Ihr sie hingelegt habt. Der Griff oben zieht sie nicht mehr."
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
 	"Entfernungen in Metern beschriften, wie es die metrischen Sprachversionen des Spiels tun. Die Zahlen bleiben die des Spiels."
-L["Last seen %d min ago by another player"] = "Zuletzt vor %d Min. von einem anderen Spieler gesehen"
-L["Last seen %d min ago by you"] = "Zuletzt vor %d Min. von Euch gesehen"
+L["Last seen %s ago"] = "Zuletzt vor %s gesehen" -- mt
 L["Legacy Forever shows the Legacy challenges this counts toward."] =
 	"Legacy Forever zeigt die Vermächtnis-Herausforderungen, zu denen dies zählt."
 L["Let guides set TomTom waypoints"] = "Leitfäden TomTom-Wegpunkte setzen lassen"
@@ -177,10 +176,7 @@ L["Scales the compass. 100% matches the game's own art."] =
 L["Scales the shared Forever tracker. 100% matches the game's own tracker."] =
 	"Skaliert die gemeinsame Forever-Verfolgung. 100 % entspricht der Verfolgung des Spiels."
 L["Search services and goods"] = "Dienste und Waren durchsuchen"
-L["Sends and receives sighting times over guild, party and at the dock. No chat messages are shown."] =
-	"Sendet und empfängt Sichtungszeiten über Gilde, Gruppe und an der Anlegestelle. Es werden keine Chatnachrichten angezeigt."
 L["Services"] = "Dienste"
-L["Share departure times"] = "Abfahrtszeiten teilen"
 L["Shift-click the world map or the minimap to plan a journey there."] =
 	"Umschaltklick auf die Weltkarte oder die Minikarte plant eine Reise dorthin."
 L["Shift-click to plan journeys"] = "Umschaltklick plant Reisen"

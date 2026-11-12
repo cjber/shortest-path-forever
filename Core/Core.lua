@@ -77,7 +77,6 @@ local DEFAULTS = {
 	partyMageThunderBluff = true,
 	partyMageOrgrimmar = true,
 	hearthMinimumSavings = 0,
-	share = true,
 	-- Existing saved false choices remain off; missing settings join the travel journal.
 	stats = true,
 	guideStops = true,
@@ -345,6 +344,9 @@ frame:SetScript("OnEvent", function(self, _, name)
 			ns.db[key] = value
 		end
 	end
+	-- Departure-time sharing is retired, and no other player's sighting can reach this save now. Clear the switch
+	-- once so an old save carries no dead setting.
+	rawset(ns.db, "share", nil)
 	-- ForeverCore keeps the shared error journal under `errors` and the debug log under `log` in this saved table, so
 	-- the report lists earlier sessions' errors and the lines that led to them after a /reload. Attach also merges
 	-- what the shared files saw before the saved variables arrived.

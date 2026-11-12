@@ -56,7 +56,6 @@ UI\NearbyQuestie.lua
 UI\NearbyEntrances.lua
 UI\Nearby.lua
 Transport\Observer.lua
-Transport\Sync.lua
 UI\Map.xml
 Transport\Taxi.lua
 Core\Progress.lua

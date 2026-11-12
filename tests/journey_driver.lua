@@ -75,7 +75,7 @@ local env = setmetatable({
 			return "|cffff2020" .. text .. "|r"
 		end,
 	},
-	-- ns.serverTime: the server clock sightings age by.
+	-- ns.serverTime: the server clock a sighting is saved with.
 	GetServerTime = function()
 		return ns.serverTime or 0
 	end,

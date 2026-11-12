@@ -84,9 +84,6 @@ for _, saved in ipairs({
 		assert(loaded.db.stats == recording, "saved recording choice survives")
 	end
 	local reloaded = loadCore(loaded.db)
-	assert(
-		reloaded.db.stats == loaded.db.stats,
-		"reload retains choices"
-	)
+	assert(reloaded.db.stats == loaded.db.stats, "reload retains choices")
 end
 print("faction_defaults_spec: defaults and saved preferences passed")

@@ -764,12 +764,9 @@ equal(calls, 6, "new transport timing invalidates cache")
 ns.Timetable.Sighted(1, { epoch = 20, seen = 1 })
 API.Estimate(1, 0.5, 0.5, 1, 0.61, 0.5)
 equal(calls, 7, "a newer transport timing invalidates cache")
-ns.serverTime = ns.Model.MAX_AGE + 2
-API.Estimate(1, 0.5, 0.5, 1, 0.61, 0.5)
-equal(calls, 8, "expired transport timing invalidates cache")
 driver.update(5)
 API.Estimate(1, 0.5, 0.5, 1, 0.61, 0.5)
-equal(calls, 9, "five-second cache lifetime")
+equal(calls, 8, "five-second cache lifetime")
 for i = 1, 257 do
 	API.Estimate(1, 0.5, 0.5, 1, 0.4 + i / 10000, 0.5)
 end

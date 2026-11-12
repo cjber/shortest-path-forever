@@ -255,11 +255,6 @@ ns.Init(function()
 		L["In the objective tracker while you are near a dock, lift or tram."],
 		ns.RefreshTracker
 	)
-	Checkbox(
-		"share",
-		L["Share departure times"],
-		L["Sends and receives sighting times over guild, party and at the dock. No chat messages are shown."]
-	)
 
 	Page(L["Travel journal"])
 	Checkbox(

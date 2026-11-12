@@ -12,7 +12,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
-- **Your travel stats stay on your computer.** Shortest Path no longer shares journey and travel stats with your guild or group, and the leaderboard tab is gone with the rest of Forever Leaderboards. This also stops the short hitch every 10 seconds some players saw with sharing on. Your own journey, distance and transport totals stay as they were.
+- **Your travel stats stay on your computer.** Shortest Path no longer shares journey and travel stats with your guild or group, and the leaderboard tab is gone with the rest of Forever Leaderboards. This also stops the short hitch every 10 seconds some players saw with sharing on. Departure times are no longer swapped with other players either, and timetables come from your own sightings, kept across sessions and characters on your account. Your own journey, distance and transport totals stay as they were.
 
 ## [1.33.1] - 2026-11-12
 

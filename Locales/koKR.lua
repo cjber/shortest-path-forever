@@ -114,8 +114,7 @@ L["Keeps the shared Forever tracker where you put it. The grip at its top no lon
 	"공유 Forever 추적기를 놓은 자리에 유지합니다. 위쪽 손잡이로 더 이상 끌 수 없습니다."
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
 	"게임의 미터법 언어 클라이언트처럼 거리에 미터 단위를 붙입니다. 숫자는 게임의 야드 값 그대로입니다."
-L["Last seen %d min ago by another player"] = "다른 플레이어가 %d분 전에 마지막으로 목격"
-L["Last seen %d min ago by you"] = "내가 %d분 전에 마지막으로 목격"
+L["Last seen %s ago"] = "%s 전에 마지막으로 목격" -- mt
 L["Legacy Forever shows the Legacy challenges this counts toward."] =
 	"Legacy Forever가 이 항목이 포함되는 유산 도전을 보여줍니다."
 L["Let guides set TomTom waypoints"] = "가이드가 TomTom 웨이포인트를 설정하도록 허용"
@@ -183,10 +182,7 @@ L["Scales the compass. 100% matches the game's own art."] =
 L["Scales the shared Forever tracker. 100% matches the game's own tracker."] =
 	"공유 Forever 추적기의 크기를 조절합니다. 100%는 게임 추적기와 같습니다."
 L["Search services and goods"] = "편의시설 및 물품 검색"
-L["Sends and receives sighting times over guild, party and at the dock. No chat messages are shown."] =
-	"길드, 파티, 부두에서 목격 시간을 주고받습니다. 대화창에는 메시지가 표시되지 않습니다."
 L["Services"] = "편의시설"
-L["Share departure times"] = "출발 시간 공유"
 L["Shift-click the world map or the minimap to plan a journey there."] =
 	"세계 지도나 미니맵을 Shift-클릭하면 그곳까지 여정을 계획합니다."
 L["Shift-click to plan journeys"] = "Shift-클릭으로 여정 계획"

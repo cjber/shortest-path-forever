@@ -352,7 +352,7 @@ local groups = {
 		"minimapLine",
 		"laterLegs",
 	},
-	Transport = { "mapRoutes", "otherFaction", "tracker", "share" },
+	Transport = { "mapRoutes", "otherFaction", "tracker" },
 	["Travel journal"] = { "stats" },
 	Guidance = {
 		"trackerAttached",
@@ -416,8 +416,8 @@ local order = {
 
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
 -- Main's arrival pin added arrivalPin, the line switches added mapLine, minimapLine and laterLegs, and the
--- town services added townServices; the travel stats sharing switch is gone with Forever Leaderboards.
-assert(#rows == 64, #rows)
+-- town services added townServices; the travel stats and departure sharing switches are gone with their sharing.
+assert(#rows == 63, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer

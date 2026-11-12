@@ -109,8 +109,7 @@ L["Keeps the shared Forever tracker where you put it. The grip at its top no lon
 	"將共用的 Forever 追蹤器保持在您放置的位置。頂部的拖曳握把不再移動它。"
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
 	"以公尺標註距離，與遊戲採用公制的語言客戶端一致。數字仍為遊戲自身的碼數。"
-L["Last seen %d min ago by another player"] = "%d分鐘前由其他玩家最後看到"
-L["Last seen %d min ago by you"] = "%d分鐘前由你最後看到"
+L["Last seen %s ago"] = "%s前最後看到" -- mt
 L["Legacy Forever shows the Legacy challenges this counts toward."] =
 	"Legacy Forever會顯示此項計入的傳承挑戰。"
 L["Let guides set TomTom waypoints"] = "允許指南設定TomTom路徑點"
@@ -175,10 +174,7 @@ L["Scales the compass. 100% matches the game's own art."] = "調整羅盤大小�
 L["Scales the shared Forever tracker. 100% matches the game's own tracker."] =
 	"調整共用Forever追蹤器的大小。100%與遊戲本身的追蹤器一致。"
 L["Search services and goods"] = "搜尋服務和物品"
-L["Sends and receives sighting times over guild, party and at the dock. No chat messages are shown."] =
-	"透過公會、隊伍和在碼頭收發目擊時間。不會顯示聊天訊息。"
 L["Services"] = "服務"
-L["Share departure times"] = "共用出發時間"
 L["Shift-click the world map or the minimap to plan a journey there."] =
 	"Shift點擊世界地圖或小地圖以規劃前往該處的旅程。"
 L["Shift-click to plan journeys"] = "Shift點擊規劃旅程"

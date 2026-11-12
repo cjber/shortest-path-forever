@@ -775,7 +775,7 @@ do
 	driver.move({ map = 1, x = auberdine.x, y = auberdine.y, z = 0 })
 	-- The Teldrassil boat is at Auberdine's dock: one boat ride away is what the planner should see.
 	worldNs.serverTime = 0
-	assert(worldNs.Timetable.Sighted(293, { epoch = -206368, seen = 0, source = "you" }))
+	assert(worldNs.Timetable.Sighted(293, { epoch = -206368, seen = 0 }))
 	local travelTimers = {}
 	travelEnv.C_Timer = {
 		After = function(_, fn)

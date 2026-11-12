@@ -765,11 +765,6 @@ _G.Enum = {
 	FlightPathFaction = { Neutral = 0, Horde = 1, Alliance = 2 },
 	FlightPathState = { Current = 0, Reachable = 1, Unreachable = 2 },
 	UIMapType = { Continent = 2, Zone = 3 },
-	SendAddonMessageResult = {
-		InvalidPrefix = 1,
-		InvalidChatType = 4,
-		InvalidChannel = 7,
-	},
 	TooltipDataType = { MinimapMouseover = 21 },
 }
 _G.CreateVector2D = function(x, y)
@@ -872,12 +867,6 @@ _G.C_Timer = {
 		end
 		tickers[#tickers + 1] = ticker
 		return ticker
-	end,
-}
-_G.C_ChatInfo = {
-	RegisterAddonMessagePrefix = noop,
-	SendAddonMessage = function()
-		return 0
 	end,
 }
 -- The settings surface, recorded so a UI check can drive the real rows and index buttons: each option's own

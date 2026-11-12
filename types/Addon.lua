@@ -165,7 +165,6 @@
 ---@class SPFAnchor
 ---@field epoch number
 ---@field seen number
----@field source? string
 ---@class SPFSample
 ---@field now number
 ---@field phases number[]
@@ -188,7 +187,6 @@
 ---@field departIn? number
 ---@field thenIn? number
 ---@field seen? number
----@field source? string
 ---@class SPFRow
 ---@field key number|string
 ---@field text string
@@ -241,7 +239,6 @@
 ---@field partyMageThunderBluff? boolean
 ---@field partyMageOrgrimmar? boolean
 ---@field hearthMinimumSavings? number -- seconds the Hearthstone must save over the best non-hearth plan
----@field share? boolean
 ---@field stats? boolean -- collect per-character travel totals
 ---@field guideStops? boolean
 ---@field compass? boolean
@@ -271,7 +268,7 @@
 ---@field whatsNew? boolean
 ---@field seenVersion? string -- the version last loaded, for the line after an update (WhatsNew.lua)
 ---@field debug? boolean
----@field anchors table<string, table<number, SPFAnchor>>
+---@field anchors table<number, SPFAnchor> -- the newest sighting of each route, kept across sessions and characters
 ---@field nearbyRead? SPFNearbyQuestieRead the last QuestieDB read the Nearby list kept (UI/NearbyQuestie.lua)
 ---@field taxiTimes? table<string, number> -- measured seconds per directed flight path, "from:to"
 ---@field trace? (number|string)[][]
@@ -292,12 +289,6 @@
 ---@field flightsTaken number
 ---@field portalsUsed number
 ---@field milestones table<string, number>
----@field peers table<string, table<string, SPFSharedPeer>> addon ID → sender identity → metric/subject records
----@class SPFSharedPeer
----@field [string] table<string, SPFSharedMetric>
----@class SPFSharedMetric
----@field value number
----@field eventUnix number
 -- A journey's goal as Resume.lua keeps it, with the GetServerTime() it was planned.
 ---@class SPFKeptJourney
 ---@field map number
