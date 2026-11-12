@@ -392,7 +392,7 @@ L["Show boat, lift and tram departures in the tracker"] = "추적기에서 배, 
 L["Hide RestedXP's arrow"] = "RestedXP 화살표 숨기기" -- mt
 L["Hide departures"] = "출발 숨기기"
 
--- Travel stats and the shared Forever Leaderboards.
+-- Travel stats.
 
 L["Follow roads"] = "도로 따라가기" -- mt
 L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =

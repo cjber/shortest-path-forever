@@ -388,7 +388,7 @@ L["Show boat, lift and tram departures in the tracker"] =
 L["Hide RestedXP's arrow"] = "Masquer la flèche de RestedXP" -- mt
 L["Hide departures"] = "Masquer les départs"
 
--- Travel stats and the shared Forever Leaderboards.
+-- Travel stats.
 
 L["Follow roads"] = "Suivre les routes" -- mt
 L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =

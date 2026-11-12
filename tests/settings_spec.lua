@@ -416,8 +416,8 @@ local order = {
 
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
 -- Main's arrival pin added arrivalPin, the line switches added mapLine, minimapLine and laterLegs, and the
--- town services added townServices.
-assert(#rows == 65, #rows)
+-- town services added townServices; the travel stats sharing switch is gone with Forever Leaderboards.
+assert(#rows == 64, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -651,7 +651,6 @@ assert(Row("whatsNew").setting.default == true)
 -- New participation defaults on, while the runtime preserves every saved false choice.
 assert(Row("stats").setting.default == true, "the travel journal is on by default")
 assert(Row("stats").tooltip:find("On by default", 1, true), "the journal's tooltip says it is on")
-Row("stats").setting.onChanged()
 local trackerSlider = Row("trackerScale")
 assert(trackerSlider.kind == "slider" and trackerSlider.setting.default == 100, "tracker scale defaults to 100%")
 assert(trackerSlider.options.minValue == 50 and trackerSlider.options.maxValue == 200, "tracker scale is a percentage")

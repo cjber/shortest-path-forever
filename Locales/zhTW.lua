@@ -378,7 +378,7 @@ L["Show boat, lift and tram departures in the tracker"] = "在追蹤器中顯示
 L["Hide RestedXP's arrow"] = "隱藏 RestedXP 的箭頭" -- mt
 L["Hide departures"] = "隱藏班次"
 
--- Travel stats and the shared Forever Leaderboards.
+-- Travel stats.
 
 L["Follow roads"] = "沿道路行走" -- mt
 L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =
