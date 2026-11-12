@@ -9,21 +9,18 @@ local Art = ns.Art
 local Canvas = ns.Canvas
 
 -- The town services on the world map: every trainer, vendor, banker and the rest the Nearby services list finds,
--- drawn at the NPC's own place. Zoomed out, the pins that would overlap share one town icon with the services in its
--- tooltip; zoomed in they separate, the way UI/Map.lua groups the docks of a harbour. The setting chooses which
--- towns show: the capitals, the capitals and the services worth a detour, every town, or none.
+-- drawn at the NPC's own place in the client's minimap tracking icon for that service (a bank's money bags, a
+-- repairer's anvil), never a town or city mark. Zoomed out, the pins that would overlap share one service icon, the
+-- most useful service in the group, with the rest in its tooltip; zoomed in they separate, the way UI/Map.lua groups
+-- the docks of a harbour. A click plans a journey to the NPC. The setting chooses which towns show: the capitals, the
+-- capitals and the services worth a detour, every town, or none.
 local TEMPLATE = "ShortestPathForeverServicePinTemplate"
 local PIN_SIZE = 20
--- The client's own town and city marks (UiTextureAtlas, 32 by 32).
-local CAPITAL_ATLAS, TOWN_ATLAS = "poi-majorcity", "poi-town"
 -- The groups that make a town worth showing under "Capitals and important services": every trainer, the profession
 -- supplies (fishing, cooking and first aid included), books and recipes, the bank, the flight master and the inn.
 local IMPORTANT = { innkeeper = true, flight = true, bank = true, trade = true, reagents = true, books = true }
 -- A town's service icon: the most useful thing the NPC offers, by section and then by the list's own order.
 local RANK = { services = 1, trainers = 2, vendors = 3 }
--- An item's own icon, which the client holds for every item without it being cached; the question mark if it has
--- no such item. The same fallback UI/ServicesPanel.lua uses.
-local QUESTION_MARK = 134400
 
 ---@type SPFTownServiceChoice[]
 ns.TownServiceChoices = {
@@ -55,7 +52,6 @@ ns.TownServiceChoices = {
 ---@field x number
 ---@field y number
 ---@field key string the members' keys joined, which identifies the cluster across redraws
----@field capital boolean any member stands in a capital
 
 local entries = {}
 -- The index table the entries were built from, so a late QuestieDB read is picked up.
@@ -64,12 +60,6 @@ local sourceIndex
 local projections = {}
 local capitalNames = {}
 local zoneNames = {}
-
----@param itemID integer
----@return integer
-local function ItemIcon(itemID)
-	return C_Item.GetItemIconByID(itemID) or QUESTION_MARK
-end
 
 -- The capital whose own map region holds a world point. The regions come from Data/Zones.lua, the same data a
 -- capital portal and a dock at the capital's gates use, so no city is typed in here.
@@ -157,7 +147,8 @@ local function Primary(groups)
 end
 
 -- The NPCs the list knows, one entry each, with every group the NPC serves. The same spawn is indexed under each of
--- its groups, so the key merges them into one pin.
+-- its groups, so the key merges them into one pin. The read holds only NPCs this character's side can use
+-- (UI/NearbyQuestie.lua), so the map never shows the other faction's.
 local function Build()
 	local index, groups = ns.NearbyServices.Index(), ns.NearbyServices.Groups()
 	sourceIndex = index
@@ -248,7 +239,7 @@ local function Points(mapID, level)
 	return points
 end
 
--- The service pins that would overlap at this zoom share one town pin, at their middle, through the same grouping
+-- The service pins that would overlap at this zoom share one service pin, at their middle, through the same grouping
 -- UI/Map.lua uses for docks.
 ---@param map SPFMapCanvas
 ---@param points SPFTownServicePoint[]
@@ -258,18 +249,16 @@ local function Clusters(map, points)
 	local clusters = {}
 	local groups = ns.OverlapGroups(map, points, PIN_SIZE * map:GetGlobalPinScale() * Lerp(1, 1.2, zoom))
 	for i, group in ipairs(groups) do
-		local x, y, ids, capital = 0, 0, {}, false
+		local x, y, ids = 0, 0, {}
 		for _, point in ipairs(group) do
 			x, y = x + point.x, y + point.y
 			ids[#ids + 1] = point.id
-			capital = capital or point.entry.capitalUiMap ~= nil
 		end
 		clusters[i] = {
 			services = group,
 			x = x / #group,
 			y = y / #group,
 			key = table.concat(ids, ","),
-			capital = capital,
 		}
 	end
 	return clusters
@@ -278,11 +267,22 @@ end
 ---@param texture Texture
 ---@param group SPFNearbyGroup
 local function PaintGroup(texture, group)
-	if type(group.icon) == "number" then
-		Art.Icon(texture, ItemIcon(group.icon --[[@as integer]]), PIN_SIZE)
-	else
-		Art.Fit(texture, group.icon --[[@as string]], PIN_SIZE, PIN_SIZE)
+	Art.Fit(texture, group.tracking, PIN_SIZE, PIN_SIZE)
+end
+
+-- The service a pin stands for: its most useful NPC's primary service, by the same ranking a single NPC's pin uses.
+-- One service's pin is the NPC's own primary; a group's is the best of its members.
+---@param cluster SPFTownServiceCluster
+---@return SPFTownServicePoint
+local function Representative(cluster)
+	local best
+	for _, point in ipairs(cluster.services) do
+		local rank = RANK[point.entry.primary.section] or 0
+		if not best or rank < (RANK[best.entry.primary.section] or 0) then
+			best = point
+		end
 	end
+	return best
 end
 
 ---@param cluster SPFTownServiceCluster
@@ -311,18 +311,24 @@ local function AddTooltip(cluster)
 				GameTooltip_AddNormalLine(GameTooltip, group.label)
 			end
 		end
-		return
-	end
-	local town = ClusterTown(cluster)
-	GameTooltip_SetTitle(GameTooltip, town ~= "" and town or L["Town services"])
-	local seen = {}
-	for _, point in ipairs(cluster.services) do
-		for _, group in ipairs(point.entry.groups) do
-			if not seen[group.key] then
-				seen[group.key] = true
-				GameTooltip_AddNormalLine(GameTooltip, group.label)
+	else
+		local town = ClusterTown(cluster)
+		GameTooltip_SetTitle(GameTooltip, town ~= "" and town or L["Town services"])
+		-- The pin wears its most useful service's icon, so its label leads the list and the rest follow.
+		local primary = Representative(cluster).entry.primary
+		GameTooltip_AddNormalLine(GameTooltip, primary.label)
+		local seen = { [primary.key] = true }
+		for _, point in ipairs(cluster.services) do
+			for _, group in ipairs(point.entry.groups) do
+				if not seen[group.key] then
+					seen[group.key] = true
+					GameTooltip_AddNormalLine(GameTooltip, group.label)
+				end
 			end
 		end
+	end
+	if ns.db.journey then
+		GameTooltip_AddInstructionLine(GameTooltip, L["Click to plan a journey here."])
 	end
 end
 
@@ -345,15 +351,9 @@ function ServicePin:OnAcquired(cluster)
 	self.cluster = cluster
 	local scale = (ns.db.mapPinScale or 100) / 100
 	self:SetScalingLimits(1, scale, scale * 1.2)
-	local atlas
-	if #cluster.services == 1 then
-		PaintGroup(self.Texture, cluster.services[1].entry.primary)
-		PaintGroup(self.HighlightTexture, cluster.services[1].entry.primary)
-	else
-		atlas = cluster.capital and CAPITAL_ATLAS or TOWN_ATLAS
-		Art.Fit(self.Texture, atlas, PIN_SIZE, PIN_SIZE)
-		Art.Fit(self.HighlightTexture, atlas, PIN_SIZE, PIN_SIZE)
-	end
+	local primary = Representative(cluster).entry.primary
+	PaintGroup(self.Texture, primary)
+	PaintGroup(self.HighlightTexture, primary)
 	self:SetPosition(cluster.x, cluster.y)
 end
 
@@ -369,6 +369,17 @@ function ServicePin:OnMouseLeave()
 	end
 end
 
+-- A left click plans a journey to the service this pin stands for (a group's most useful one), through the same
+-- Nearby services journey its rows and the tracking menu start. Unlike our other map pins, a plain click is enough:
+-- a service pin has no other left-click action, and the tooltip says so.
+function ServicePin:OnMouseClickAction(button)
+	if button ~= "LeftButton" or not ns.db.journey then
+		return
+	end
+	local entry = Representative(self.cluster).entry
+	ns.NearbyServices.Navigate(entry.primary.key, entry --[[@as SPFNearbyPlace]])
+end
+
 function ServicePin:OnReleased()
 	self:OnMouseLeave()
 	self.cluster = nil
@@ -376,6 +387,18 @@ end
 
 ---@type SPFCanvasPool?
 local servicePins
+
+-- The town services belong on a zone or city map, where a place on the map is a place in the world. A continent or
+-- the world map only marks where the town is, and the client's own town marks already do that.
+---@param mapID integer
+---@return boolean
+local function ServiceMap(mapID)
+	local info = C_Map.GetMapInfo(mapID)
+	if not info then
+		return false
+	end
+	return info.mapType == Enum.UIMapType.Zone or info.mapType == Enum.UIMapType.Micro
+end
 
 ---@class SPFTownServicesLayer
 ---@field pins? table<string, SPFServicePin>
@@ -402,7 +425,16 @@ function Services:RefreshAllData()
 	local mapID = map:GetMapID()
 	local level = ns.db and ns.db.townServices or "capitals"
 	local nearby = ns.NearbyServices
-	if not (mapID and map:IsVisible() and level ~= "off" and nearby and nearby.State() == "ready") then
+	if
+		not (
+			mapID
+			and ServiceMap(mapID)
+			and map:IsVisible()
+			and level ~= "off"
+			and nearby
+			and nearby.State() == "ready"
+		)
+	then
 		self:RemoveAllData()
 		self.mapID = nil
 		return

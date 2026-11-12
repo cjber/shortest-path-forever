@@ -44,11 +44,13 @@
 ---@field key string
 ---@field label string
 ---@field icon integer|string an item whose icon stands for the goods, or the client's tracking atlas
+---@field tracking string the client's minimap tracking atlas the world map's pins wear for the group
 ---@class SPFServiceGroup
 ---@field key string
 ---@field flag string the QuestieDB NPC flag that puts an NPC in the group
 ---@field label string
 ---@field icon string the client's own tracking atlas
+---@field tracking string the client's minimap tracking atlas the world map's pins wear for the group
 ---@class SPFNearbyGroups
 ---@field vendors SPFVendorGroup[]
 ---@field services SPFServiceGroup[]

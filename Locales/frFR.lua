@@ -55,6 +55,7 @@ L["Bullets"] = "Balles"
 L["Cast %s"] = "Lancer %s" -- mt
 L["Class trainer"] = "Maître de classe" -- mt
 L["Clear journey"] = "Effacer le trajet" -- mt
+L["Click to plan a journey here."] = "Cliquez pour planifier un trajet jusqu'ici."
 L["Click to show %s"] = "Cliquez pour afficher %s" -- mt
 L["Click to show where they go"] = "Cliquez pour voir les destinations" -- mt
 L["Compass background"] = "Fond de la boussole" -- mt

@@ -139,6 +139,8 @@ Credit for the reports and requests behind the addon.
 | Acem | Known flight points kept per character | CurseForge; #685 |
 | tgkGate | Fixed the path job yield error | CurseForge; #717 |
 | IronmanBG | Plan journey back in Kaliel's Tracker | CurseForge; #718 |
+| sdtom | Town service pins wear their own icons | CurseForge; #794 |
+| Bervath | Town service pins wear their own icons | CurseForge; #794 |
 
 ## Inspired by
 

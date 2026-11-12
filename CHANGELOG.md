@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Town services wear their own icons.** The pins no longer use a town or city mark: each one shows the same icon the game's minimap tracking menu gives that service, such as the repairer's anvil, the banker's money bags or the baker's bread and milk. A group of nearby services wears the icon of the most useful service in it, with the rest in its tooltip, and zooming in splits the group into one pin per NPC. Click a pin to plan a journey to that NPC, and its tooltip says so. The pins now show only on zone and city maps, never on a continent or the world map. Thanks to sdtom and Bervath for the reports (#794).
+
 ## [1.33.1] - 2026-11-12
 
 <!-- forever-core-sync -->

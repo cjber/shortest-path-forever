@@ -17,7 +17,7 @@ import math
 import os
 import subprocess
 import sys
-from functools import cache, lru_cache
+from functools import lru_cache
 from pathlib import Path
 from typing import cast
 
@@ -32,9 +32,12 @@ from screenshot_docks import dock_kinds, number_art, pin_art, zeppelin_art
 from screenshots_arrival import render as render_arrival
 from screenshots_art import Art
 from screenshots_floors import render as render_floors
+from screenshots_maps import icon, map_base
 from screenshots_services import render as render_services
 from screenshots_services import render_better as render_services_better
 from screenshots_services import render_search as render_services_search
+from screenshots_town import render as render_town_services
+from screenshots_town import render_zoom as render_town_services_zoom
 from screenshots_tracker import detached_tracker
 from screenshots_tracker import tracker_canvas as journey_tracker
 from wowmock import (
@@ -42,14 +45,10 @@ from wowmock import (
     NORMAL,
     TooltipLine,
     backdrop,
-    draw_overlay,
-    map_art,
-    map_overlays,
     minimap_art,
     rgba255,
     scene,
     tooltip,
-    world_map_frame,
 )
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -246,13 +245,6 @@ def flush_strokes(canvas, small=False, marks=()):
     canvas.strokes = []
 
 
-def icon(canvas, name, x, y, size=None, alpha=1):
-    art = canvas.ui.atlas(name)
-    factor = size / max(art.width, art.height) if size else 1
-    w, h = art.width * factor, art.height * factor
-    canvas.draw(art, x - w / 2, y - h / 2, w, h, (1, 1, 1, alpha))
-
-
 def pin_icon(canvas, x, y, size, alpha=1):
     """The addon's own square goal pin, media/Pin.tga, at its native aspect."""
     canvas.draw(pin_art(), x - size / 2, y - size / 2, size, size, (1, 1, 1, alpha))
@@ -313,22 +305,6 @@ def map_landmarks(canvas, map_id, rect):
         if p and portal["kind"] == "portal" and portal.get("faction", "Alliance") == "Alliance":
             # The map legend's teleport atlas (MapLegendFrameData.lua), fitted by Art.Fit as Map.lua draws it.
             icon(canvas, "TaxiNode_Continent_Neutral", *p, size=20)
-
-
-@cache
-def map_base(ui, map_id):
-    art = map_art(ui.data, map_id)
-    for overlay in map_overlays(ui.data, map_id):
-        draw_overlay(ui.data, art, overlay.offset_x, overlay.offset_y, overlay.width, overlay.height, overlay.tiles)
-    names = {
-        947: ("World",),
-        1414: ("World", "Kalimdor"),
-        1439: ("World", "Kalimdor", "Darkshore"),
-        1429: ("World", "Eastern Kingdoms", "Elwynn Forest"),
-        1436: ("World", "Eastern Kingdoms", "Westfall"),
-        1432: ("World", "Eastern Kingdoms", "Loch Modan"),
-    }
-    return world_map_frame(ui, art, names[map_id], arrows=names[map_id][1:])
 
 
 def route_curve(route, a, b, control, color, alpha, fade=False):
@@ -774,6 +750,8 @@ SCENES = {
     "services": render_services,
     "services_search": render_services_search,
     "services_better": render_services_better,
+    "town_services": render_town_services,
+    "town_services_zoom": render_town_services_zoom,
 }
 
 

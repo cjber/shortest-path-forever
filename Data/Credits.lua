@@ -86,6 +86,8 @@ ns.Credits = {
 		{ name = "Acem", what = "Known flight points kept per character" },
 		{ name = "tgkGate", what = "Fixed the path job yield error" },
 		{ name = "IronmanBG", what = "Plan journey back in Kaliel's Tracker" },
+		{ name = "sdtom", what = "Town service pins wear their own icons" },
+		{ name = "Bervath", what = "Town service pins wear their own icons" },
 	},
 	inspired = {
 		{ name = "Polestar by Fitz", what = "Ideas for many features" },
