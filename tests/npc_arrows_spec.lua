@@ -172,8 +172,16 @@ end
 
 ---@param npcID integer
 local function creature(npcID)
-	return "Creature-0-3685-0-0000000000-" .. npcID
+	return "Creature-0-6864-0-6-" .. npcID .. "-930B57223C"
 end
+
+-- Observed on the live Forever client: a readable GUID matches by entry, independently of the displayed name.
+guid.live, unitName.live = "Creature-0-6864-0-6-859-930B57223C", "Different title"
+check(NpcArrows.Matches({ npc = 859, label = "Guard Berton" }, "live"), "the observed live GUID yields entry 859")
+check(
+	not NpcArrows.Matches({ npc = 858, label = "Different title" }, "live"),
+	"a readable GUID cannot fall back to a matching title"
+)
 
 -- A journey to one NPC, with its plate and another NPC's plate on screen: only the matching plate is marked.
 guid.npc, unitName.npc = creature(123), "Innkeeper"
