@@ -294,6 +294,7 @@
 ---@field flightsTaken number
 ---@field portalsUsed number
 ---@field milestones table<string, number>
+---@field peers? table<string, table<string, SPFSharedPeer>> legacy shared records, cleared on load
 ---@class SPFSharedPeer
 ---@field [string] table<string, SPFSharedMetric>
 ---@class SPFSharedMetric
