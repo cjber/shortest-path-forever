@@ -14,6 +14,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **A journey no longer fails with an "attempt to yield" error.** Now and then planning a journey stopped with "attempt to yield across metamethod/C-call boundary" and left you with no route, usually with the world map open while a walk was being searched. Reading a stop's ground for the map, and checking whether the search you already have can be kept, no longer pause the search that asked mid-way, so it finishes and the journey gets its route. Reported on CurseForge by user_efwsfml273dlvfm5 (#803).
+
 ## [1.34.0] - 2026-11-12
 
 <!-- discord-image: docs/screenshots/town_services.png -->
