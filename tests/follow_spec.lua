@@ -36,6 +36,13 @@ end
 ns.FollowPoint = function()
 	return member and { map = member.map, x = member.x, y = member.y }
 end
+-- The position read inside the throttle is what used to make every frame build a point table: count it.
+local reads = 0
+local readPoint = ns.FollowPoint
+ns.FollowPoint = function(unit)
+	reads = reads + 1
+	return readPoint(unit)
+end
 ns.FollowTick = ns.FollowTick
 
 local printed = {}
@@ -84,11 +91,14 @@ assert(driver.shown(), "the follow journey plans")
 assert(ns.IsFollowing(), "following is on")
 assert(journeys == 1, "starting plans once")
 
--- Inside the throttle nothing is replanned, however far the member walks.
+-- Inside the throttle nothing is replanned, however far the member walks, and nothing is even read: no point table
+-- is built on a frame that has nothing to do (#784).
 member = { map = 1, x = 2400, y = -1000 }
+reads = 0
 ns.FollowTick(0.2)
 frames()
 assert(journeys == 1, "no replan before the throttle is up")
+assert(reads == 0, "the member's position is not read inside the throttle")
 
 -- Past the throttle, with a visible move, the replan is queued and lands on the next frame.
 ns.FollowTick(0.9)

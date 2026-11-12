@@ -498,6 +498,19 @@ local function GuideWaypoint(point, fading)
 	return guide.waypoint ~= nil and C_SuperTrack.IsSuperTrackingUserWaypoint()
 end
 
+-- The title Guide shows, built only when the goal or the strings it is named from change: Guide.To runs on the
+-- journey's tick, and rebuilding a formatted title there would allocate every tick (#784).
+---@param goal table?
+---@return string?
+local function GuideTitle(goal)
+	local source = goal and (goal.routeTitleFormat or goal.routeTitle or goal.label)
+	if goal ~= guide.titleGoal or source ~= guide.titleSource then
+		guide.titleGoal, guide.titleSource = goal, source
+		guide.title = DestinationTitle(goal)
+	end
+	return guide.title
+end
+
 ---@param node table
 ---@param points table?
 ---@param goal table?
@@ -508,7 +521,7 @@ function Guide.To(node, points, goal, leg)
 	end
 	guide.leg, guide.goal = leg, goal
 	if guide.target == node and guide.points == points then
-		guide.title = DestinationTitle(goal)
+		GuideTitle(goal)
 		return
 	end
 	if guide.paused then
@@ -524,7 +537,7 @@ function Guide.To(node, points, goal, leg)
 	end
 	guide.points = points
 	guide.target = node
-	guide.title = DestinationTitle(goal)
+	GuideTitle(goal)
 	local point = node.kind == "dock" and ns.DockPoint(node.id) or node
 	ns.PointGuideArrow(points or { point }, GuideWaypoint, node, goal)
 end

@@ -186,6 +186,30 @@ navigations = 0
 tick()
 tick()
 assert(navigations == 0, "an unchanged step plans nothing twice")
+
+-- Nothing the guide shows has changed, so the ticker builds no label, quest collector or key string either: the
+-- step's snapshot is compared field by field and the tick returns (#784).
+local function measured(fn)
+	for _ = 1, 2000 do
+		fn()
+	end
+	-- Count the ticker's own allocation, not the JIT's traces.
+	jit.off()
+	collectgarbage("collect")
+	collectgarbage("stop")
+	local before = collectgarbage("count")
+	for _ = 1, 1000 do
+		fn()
+	end
+	local grew = collectgarbage("count") - before
+	collectgarbage("restart")
+	return grew
+end
+local control = measured(function() end)
+local grew = measured(tick)
+assert(grew - control < 0.5, "an unchanged guide step allocates nothing (" .. (grew - control) .. " KB)")
+assert(navigations == 0, "the measured ticks planned nothing")
+
 for step = 2, 4 do
 	arrow.element = { t = "GOTO", mapID = 1, x = 50 + step, y = 40, title = "Step " .. step }
 	tick()
