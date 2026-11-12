@@ -55,7 +55,8 @@ before its `v*` tag, since the release publishes it as the notes.
   only when a route needs it.
 - `Core/` — addon lifecycle, the ForeverCore registration and its API floor, defaults, the planning context
   (the live and static inputs every plan starts from) and the public API. The shared runtime is ForeverCore's.
-- `Routing/` — transport search and walking-map decoding, search and frame scheduling.
+- `Routing/` — transport search and walking-map decoding, the player's measured height band, search and frame
+  scheduling.
 - `Journey/` — journey state, steps, costs, guidance and corpse recovery; performance budgets live in
   `tests/journey_performance.md`.
 - `Transport/` — the live timetable (sightings, departures and their wording), observation, synchronisation,
@@ -145,6 +146,12 @@ before its `v*` tag, since the release publishes it as the notes.
   matched to the walking maps' surfaces by `tools/bake_heights.lua`; only spawns standing within a cell of another
   surface more than ZTOL away are kept. QuestieDB's spawns are zone fractions with no height, so a journey to a mob in
   a mine ended on the hill above it. Forever's own NPCs are not in classic-db and keep the cheapest surface.
+- WFA-28: `Data/IdleSpawns.lua` (where NPCs stand still and which one they are): the same classic-db spawns and bake,
+  keeping every `MovementType` 0 creature with the height of the surface it stands on, keyed by creature ID because
+  that is how UnitGUID names an NPC (UnitPosition answers for the player's group only). The client gives no player
+  height, so a range check to a creature with one idle spawn on the map is what bounds it (`Routing/Band.lua`).
+  QuestieDB's spawns are zone fractions with no height and it records no movement type, so it cannot say which NPCs
+  hold still.
 - WFA-28: `Data/Teleports.lua` (class teleports and bind items): wago.tools spell and item tables with classic-db
   `spell_target_position` landings; neither database holds spell effects or landings. Known spells, reagent
   counts, cooldowns, cast times and the bind point are read from the client.

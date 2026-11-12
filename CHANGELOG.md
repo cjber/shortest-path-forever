@@ -14,6 +14,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Walks start on the floor you are standing on.** Where floors stack, such as the ground under Stormwind or the hall above the Undercity's city, a journey started from whichever surface at your spot walked cheapest, so it could set off on a floor you were not on and run beneath the city. It now reads how far you are from the NPCs standing around you with the game's own range checks, and starts only on the surfaces within that height. Where nothing around you can be measured it starts exactly as it did before. The idea comes from BV Addon Suite - Routing, which works out the player's height the same way. Thanks to jixxor for the Stormwind report (#737, #602).
+
 ## [1.34.2] - 2026-11-12
 
 - **The arrow and the tracker no longer flash while a guide moves between objectives.** The route line, arrow and tracker stay put while the next objective's route is found, and selecting a quest in another addon no longer takes the arrow away. Thanks to Blast22 and user_sggieekz05hc7uxt on CurseForge and kindguydev on Discord (#693).

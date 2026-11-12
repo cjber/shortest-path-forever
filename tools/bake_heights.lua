@@ -1,6 +1,9 @@
--- The spawns that stand under or over another walkable surface, with the height of the one they stand on. Reads
--- "map x y z" lines (classic-db spawns, world yards) on stdin and writes "map x y z" for each spawn kept, z being the
--- walking map's surface it matched. Run by tools/gen_heights.py, from the repo root:
+-- The spawns that stand on a walkable surface, with the height of the one they stand on. Reads
+-- "map id x y z idle" lines (classic-db spawns, world yards; id the creature's ID, 0 for a quest object; idle 1 for a
+-- creature that stands at its spawn) on stdin and writes two kinds of row: "H map x y z" for each spawn standing
+-- within a cell of another surface more than ZTOL away, which a journey's goal could end on (Data/Heights.lua), and
+-- "I map id x y z" for each idle spawn, which bounds the player's own height when the client says they are in range of
+-- it (Data/IdleSpawns.lua). Run by tools/gen_heights.py, from the repo root:
 -- luajit tools/bake_heights.lua < spawns.tsv
 local ns = {}
 for _, file in ipairs({ "Routing/PathGrid.lua", "Routing/Path.lua", "Routing/PathJobs.lua" }) do
@@ -55,11 +58,22 @@ local function Match(heights, h)
 end
 
 -- [map x y] = the height kept there, or false when spawns on different floors round to the same spot (the ruins over
--- the Undercity): there a height would guess, so the spot keeps the cheapest surface.
+-- the Undercity): there a height would guess, so the spot keeps the cheapest surface. The idle spawns are keyed by
+-- creature ID too, so two creatures at one spot keep their own heights and one creature's two floors cancel.
+local function Remember(kept, order, spot, z)
+	if kept[spot] == nil then
+		kept[spot] = z
+		order[#order + 1] = spot
+	elseif kept[spot] and abs(kept[spot] - z) > APART then
+		kept[spot] = false
+	end
+end
+
 local kept, order = {}, {}
+local idle, idleOrder = {}, {}
 for line in io.lines() do
-	local map, x, y, h = line:match("^(%d+)\t(%S+)\t(%S+)\t(%S+)$")
-	map, x, y, h = tonumber(map), tonumber(x), tonumber(y), tonumber(h)
+	local map, npc, x, y, h, stands = line:match("^(%d+)\t(%d+)\t(%S+)\t(%S+)\t(%S+)\t(%d+)$")
+	map, npc, x, y, h, stands = tonumber(map), tonumber(npc), tonumber(x), tonumber(y), tonumber(h), tonumber(stands)
 	local st = map and Path.HasData(map) and Grid.State(map)
 	if st then
 		local gx, gy = floor((x - st.x0) / st.cs), floor((y - st.y0) / st.cs)
@@ -73,25 +87,31 @@ for line in io.lines() do
 			end
 		end
 		local z = Match(own, h) or Match(near, h)
-		local other = false
-		for _, s in ipairs(z and near or {}) do
-			other = other or abs(s - z) > APART
-		end
-		if other then
+		if z then
 			-- Rounded to the yard: floors are at least 3 yd apart, and snap takes the surface nearest the height.
 			local spot = string.format("%d\t%d\t%d", map, floor(x + 0.5), floor(y + 0.5))
-			z = floor(z + 0.5)
-			if kept[spot] == nil then
-				kept[spot] = z
-				order[#order + 1] = spot
-			elseif kept[spot] and abs(kept[spot] - z) > APART then
-				kept[spot] = false
+			local other = false
+			for _, s in ipairs(near) do
+				other = other or abs(s - z) > APART
+			end
+			if other then
+				Remember(kept, order, spot, floor(z + 0.5))
+			end
+			-- Creature ID 0 is no creature the client names, so it cannot bound anything.
+			if stands == 1 and npc > 0 then
+				local where = string.format("%d\t%d\t%d\t%d", map, npc, floor(x + 0.5), floor(y + 0.5))
+				Remember(idle, idleOrder, where, floor(z + 0.5))
 			end
 		end
 	end
 end
 for _, spot in ipairs(order) do
 	if kept[spot] then
-		io.write(spot, "\t", kept[spot], "\n")
+		io.write("H\t", spot, "\t", kept[spot], "\n")
+	end
+end
+for _, spot in ipairs(idleOrder) do
+	if idle[spot] then
+		io.write("I\t", spot, "\t", idle[spot], "\n")
 	end
 end
