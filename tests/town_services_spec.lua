@@ -299,7 +299,7 @@ local menuRoot = {
 }
 menus.MENU_WORLD_MAP_TRACKING(nil, menuRoot)
 check(#radios == 4, "the submenu still has the four town levels")
-check(#checkboxes == 14, "one checkbox for every service the pins show")
+check(#checkboxes == 13, "one checkbox for every service the pins show")
 local box = {}
 for _, row in ipairs(checkboxes) do
 	box[row.label] = row

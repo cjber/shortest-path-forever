@@ -27,7 +27,7 @@ local RANK = { services = 1, trainers = 2, vendors = 3 }
 -- The Map Filter's checkboxes: one for every service a pin can wear, in the list's own order. Food and drink are one
 -- service to a player, ammunition covers both arrows and bullets, and bags and trade supplies share one switch; every
 -- profession trainer group joins the one Profession trainers switch. A dungeon entrance group is not a service here
--- and gets no checkbox.
+-- and gets no checkbox, and neither does a flight master: its pin is its flight point's (Drawn).
 ---@class SPFTownServiceFilter
 ---@field option string the saved setting, true while the service shows
 ---@field label string
@@ -37,7 +37,6 @@ local RANK = { services = 1, trainers = 2, vendors = 3 }
 ---@type SPFTownServiceFilter[]
 local FILTERS = {
 	{ option = "townServiceInnkeeper", label = L["Innkeeper"], groups = { innkeeper = true } },
-	{ option = "townServiceFlight", label = L["Flight master"], groups = { flight = true } },
 	{ option = "townServiceStable", label = L["Stable master"], groups = { stable = true } },
 	{ option = "townServiceRepair", label = L["Repair"], groups = { repair = true } },
 	{ option = "townServiceBank", label = L["Bank"], groups = { bank = true } },
@@ -190,13 +189,28 @@ local function EntryTown(entry)
 	return TownName(entry)
 end
 
+-- A group the town layer draws. A flight master is not one: QuestieDB's FLIGHT_MASTER flag is what puts an NPC in
+-- the flight group, and that NPC is the flight point's own master, so its taxi node already wears a flight point pin
+-- (UI/FlightPins.lua, and the client's own provider where it draws them). Drawing the NPC as well stood a second
+-- "Flight master" pin beside the flight point pin (#816). The group still counts when a town is "important", since a
+-- flight point is what makes a small town worth the detour.
+---@param group SPFNearbyGroup
+---@return boolean
+local function Drawn(group)
+	return group.key ~= "flight"
+end
+
 -- The NPC's own mark: the most useful service it offers that still shows, so hiding one leaves the next best icon.
 ---@param entry SPFTownService
 ---@return SPFNearbyGroup?
 local function Primary(entry)
 	local best
 	for _, group in ipairs(entry.groups) do
-		if GroupShown(group) and (not best or (RANK[group.section] or 0) < (RANK[best.section] or 0)) then
+		if
+			Drawn(group)
+			and GroupShown(group)
+			and (not best or (RANK[group.section] or 0) < (RANK[best.section] or 0))
+		then
 			best = group
 		end
 	end
@@ -469,7 +483,7 @@ local function AddTooltip(cluster)
 		GameTooltip_SetTitle(GameTooltip, primary.label)
 		GameTooltip_AddColoredLine(GameTooltip, EntryLine(entry), HIGHLIGHT_FONT_COLOR)
 		for _, group in ipairs(entry.groups) do
-			if group ~= primary and GroupShown(group) then
+			if group ~= primary and Drawn(group) and GroupShown(group) then
 				GameTooltip_AddNormalLine(GameTooltip, group.label)
 			end
 		end
@@ -484,7 +498,7 @@ local function AddTooltip(cluster)
 			end
 			for _, point in ipairs(cluster.services) do
 				for _, group in ipairs(point.entry.groups) do
-					if group ~= shared and GroupShown(group) and not seen[group.key] then
+					if group ~= shared and Drawn(group) and GroupShown(group) and not seen[group.key] then
 						seen[group.key] = true
 						GameTooltip_AddNormalLine(GameTooltip, group.label)
 					end
@@ -498,7 +512,7 @@ local function AddTooltip(cluster)
 			local seen = {}
 			for _, point in ipairs(cluster.services) do
 				for _, group in ipairs(point.entry.groups) do
-					if GroupShown(group) and not seen[group.key] then
+					if Drawn(group) and GroupShown(group) and not seen[group.key] then
 						seen[group.key] = true
 						GameTooltip_AddNormalLine(GameTooltip, group.label)
 					end
@@ -647,6 +661,17 @@ function Services:RefreshAllData()
 	end
 	self.mapID, self.shown = mapID, shown
 	if same then
+		-- The pin set is unchanged, but the clusters were worked out again for this zoom. Adopt them, so a pin stands
+		-- on the place this zoom gives it: full zoom spreads NPCs sharing a doorway one pin apart, and every step out
+		-- brings them back onto their own spots. Keying only by the members and leaving the old pins in place kept a
+		-- pin on the previous zoom's spot, which could be off the map at the next step (#816).
+		for key, pin in pairs(previousPins or {}) do
+			local cluster = wanted[key]
+			if cluster then
+				pin.cluster = cluster
+				pin:SetPosition(cluster.x, cluster.y)
+			end
+		end
 		return
 	end
 	-- A zoom or a setting re-clusters the pins. Carry the hover to the new pin for the first service still shown,

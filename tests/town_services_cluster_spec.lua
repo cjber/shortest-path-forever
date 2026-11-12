@@ -180,6 +180,79 @@ navigated = nil
 ns.Canvas.Click(seven, "LeftButton")
 check(navigated and navigated.key == "food" and navigated.spot.id == 7, "and so can the second")
 
+-- A flight master is the flight point's own NPC (QuestieDB's FLIGHT_MASTER flag puts it in the flight group), so the
+-- town layer leaves it to the flight point pin: a flight master alone draws no town pin, and an NPC who is also a
+-- vendor keeps one vendor pin with no second "Flight master" mark (#816).
+local gearTracking
+for _, vendor in ipairs(ns.NearbyGroups.vendors) do
+	if vendor.key == "gear" then
+		gearTracking = vendor.tracking
+	end
+end
+groups[#groups + 1] = group("services", "flight", "Flight master", "FlightMaster")
+groups[#groups + 1] = group("vendors", "gear", "Weapons and armour", gearTracking)
+local rebuilt = {}
+for key, list in pairs(index) do
+	rebuilt[key] = list
+end
+rebuilt.flight = {
+	place(8, "Gryphon Master", 9000, 9000),
+	place(9, "Fruit Seller and Gryphon Master", 9100, 9100),
+}
+rebuilt.food = {}
+for _, point in ipairs(index.food or {}) do
+	rebuilt.food[#rebuilt.food + 1] = point
+end
+rebuilt.food[#rebuilt.food + 1] = place(9, "Fruit Seller and Gryphon Master", 9100, 9100)
+-- Full zoom spreads these two around their shared centre; one zoom step out keeps them apart again, so both pins
+-- must stand back on their own NPCs rather than stay where the spread put them (#816).
+local spreadEleven = place(11, "Food Eleven", 7000, 7000)
+local spreadTwelve = place(12, "Food Twelve", 7000, 7200)
+rebuilt.food[#rebuilt.food + 1] = spreadEleven
+rebuilt.food[#rebuilt.food + 1] = spreadTwelve
+rebuilt.gear = { place(10, "Weapons Merchant", -9000, 9000) }
+index = rebuilt
+ns.RefreshTownServices()
+
+check(find(8) == nil, "a flight master alone draws no town pin: the flight point pin stands for it")
+local vendorAndFlight = find(9)
+check(vendorAndFlight and vendorAndFlight.Texture.atlas == "Food", "an NPC who is also a vendor keeps its vendor pin")
+for _, pin in ipairs(pins()) do
+	check(pin.Texture.atlas ~= "FlightMaster", "no town pin wears the flight master's mark")
+end
+local flightLines = {}
+local oldNormal = GameTooltip_AddNormalLine
+GameTooltip_AddNormalLine = function(_, text)
+	flightLines[#flightLines + 1] = text
+end
+vendorAndFlight.scripts.OnEnter(vendorAndFlight)
+GameTooltip_AddNormalLine = oldNormal
+check(not table.concat(flightLines, ", "):find("Flight master", 1, true), "and its tooltip lists no flight master")
+
+-- The tracking set's `Gear` element is a treasure coin, not equipment: a weapons and armour pin must wear the
+-- group's real mark, an atlas this client has, and never that plain gold dot (#816).
+check(gearTracking ~= nil and gearTracking ~= "Gear", "weapons and armour do not wear the tracking set's coin")
+check(ns.Art.Info(gearTracking) ~= nil, "and their mark is a client atlas")
+check(find(10).Texture.atlas == gearTracking, "a weapons and armour pin wears it")
+
+local eleven, twelve = find(11), find(12)
+check(eleven and twelve and eleven ~= twelve, "the close pair has its own pins at full zoom")
+local expectedX, expectedY = ns.MapPinPosition(spreadEleven.world, 1414)
+check(eleven.mapX ~= expectedX or eleven.mapY ~= expectedY, "and full zoom spreads them off their own spot")
+zoom = 0.999
+canvasScaled()
+ns.RefreshTownServices()
+local elevenOut, twelveOut = find(11), find(12)
+check(elevenOut and twelveOut, "the pair keeps both pins one zoom step out")
+check(
+	elevenOut.mapX == expectedX and elevenOut.mapY == expectedY,
+	"a pin stands on its own NPC again once the zoom lets go of the spread"
+)
+local twelveX, twelveY = ns.MapPinPosition(spreadTwelve.world, 1414)
+check(twelveOut.mapX == twelveX and twelveOut.mapY == twelveY, "and so does the other")
+zoom = 1
+canvasScaled()
+
 check(#errors == 0, table.concat(errors, "\n"))
 print(
 	(
