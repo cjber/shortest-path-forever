@@ -304,10 +304,11 @@ for index, tick in ipairs(strip.ticks) do
 	end
 	if tick.major then
 		labels = labels + 1
-		-- FontStyles.xml: GameFontNormal is Friz 12 in NORMAL_FONT_COLOR's gold with a (1, -1) shadow.
-		assert(tick.label.font == "GameFontNormal", "the game's own font, its gold and shadow built in")
+		-- FontStyles.xml: GameFontNormalMed3 is SystemFont_Shadow_Med3, Friz 14 in NORMAL_FONT_COLOR's gold with a
+		-- (1, -1) shadow.
+		assert(tick.label.font == "GameFontNormalMed3", "the game's own medium font, its gold and shadow built in")
 		if tick.label.owner then
-			assert(tick.label.anchorPoint == "TOP" and tick.label.owner == tick and tick.label.atY == -1)
+			assert(tick.label.anchorPoint == "TOP" and tick.label.owner == tick and tick.label.atY == -4)
 		end
 	end
 	-- Facing north, the ticks run from the centre to the edge of the ribbon.
@@ -327,8 +328,12 @@ for index, tick in ipairs(strip.ticks) do
 end
 assert(labels == 4, "the four directions, as every compass has")
 assert(faded, "the ribbon dissolves at its ends instead of stopping at a border")
--- The marker row sits below the letters the 12-unit font hangs under the taller ticks (Bend is the tallest at 20).
-assert(strip.Bend.anchorPoint == "CENTER" and strip.Bend.atY == -10, "markers hang clear of the letters")
+-- The marker row sits below the letters the 14-unit font hangs under the taller ticks (Bend is the tallest at 20):
+-- the ticks and their gap end 20 units under the frame's top and the letters at 34, so the row's 20-unit marker is
+-- centred at 45, a unit below them.
+assert(strip.Bend.anchorPoint == "CENTER" and strip.Bend.atY == -12.5, "markers hang clear of the letters")
+-- The frame is tall enough for the distance, 2 units under the marker row's bottom edge, and its clamp to the screen.
+close(strip.height, 65)
 close(strip.Center.width, 2)
 close(strip.Center.height, 12)
 assert(strip.Center.anchorPoint == "TOP" and strip.Center.atY == -3, "the centre mark hangs just under the top")

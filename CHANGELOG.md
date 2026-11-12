@@ -14,7 +14,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
-- **The compass is easier to see.** Its ticks are thicker and longer, the direction letters are larger, and the straight-ahead mark is a solid gold bar. Thanks to user_rnkfwc696ynt7c0k on CurseForge (#807).
+- **The compass is easier to see.** Its ticks are thicker and longer, the direction letters are larger and sit further below their ticks, and the straight-ahead mark is a solid gold bar. Thanks to user_rnkfwc696ynt7c0k on CurseForge (#807).
 
 ## [1.34.2] - 2026-11-12
 

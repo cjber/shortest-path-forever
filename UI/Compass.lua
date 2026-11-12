@@ -8,7 +8,7 @@ local L = ns.L
 
 -- A thin ribbon of the game's own parchment ticks across the top of the screen: no panel, no border, the
 -- ticks and their letters fading out towards its ends, the destination drawn as the addon's own gold goal pin.
-local WIDTH, HEIGHT, POLL_EVERY = 360, 60, 0.1
+local WIDTH, HEIGHT, POLL_EVERY = 360, 65, 0.1
 local TURN, EASE, SETTLED = 2 * math.pi, 18, 0.001
 local OVERLAP = 6
 -- Pixels over which a tick fades from full strength to nothing at the ribbon's end.
@@ -133,8 +133,10 @@ local function Place(marker, x, y, map, facing, index)
 			return
 		end
 	end
-	-- The row hangs low enough that the 12-unit letters under the major ticks clear its top edge.
-	marker:SetPoint("CENTER", frame, "CENTER", marker.offset, -10)
+	-- The row hangs low enough that the 14-unit letters under the major ticks clear its top edge: the ticks and their
+	-- gap end 20 units under the frame's top and the letters at 34, so the tallest marker (Bend, 20) is centred at 45,
+	-- a unit clear. The distance, 2 under that marker, ends 2 units past the frame, which the clamp keeps on screen.
+	marker:SetPoint("CENTER", frame, "CENTER", marker.offset, -12.5)
 	marker:Show()
 	marker.visible = true
 end
@@ -412,11 +414,12 @@ local function Create()
 		tick:SetColorTexture(TICK_COLOR[1], TICK_COLOR[2], TICK_COLOR[3], TICK_COLOR[4])
 		tick:SetSize(2, tick.major and 10 or 6)
 		if tick.major then
-			-- The game's own label font: Friz 12 in the parchment gold of its map labels, with the shadow that
-			-- keeps them legible over snow or sand, instead of a panel behind them (FontStyles.xml).
-			tick.label = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+			-- The game's own medium label font: Friz 14 in the gold it gives its interface text, with the shadow
+			-- that keeps the letters legible over snow or sand, instead of a panel behind them (FontStyles.xml,
+			-- SystemFont_Shadow_Med3).
+			tick.label = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalMed3")
 			tick.label:SetText(directions[index / 6 + 1])
-			tick.label:SetPoint("TOP", tick, "BOTTOM", 0, -1)
+			tick.label:SetPoint("TOP", tick, "BOTTOM", 0, -4)
 		end
 		frame.ticks[#frame.ticks + 1] = tick
 	end

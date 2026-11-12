@@ -42,7 +42,9 @@ from screenshots_tracker import detached_tracker
 from screenshots_tracker import tracker_canvas as journey_tracker
 from wowmock import (
     FONTS,
+    FRIZQT,
     NORMAL,
+    Font,
     TooltipLine,
     backdrop,
     minimap_art,
@@ -546,6 +548,11 @@ def render_tracker(ui):
     return scene(ui, [(journey_tracker(ui, dock_title), 0, 0)])
 
 
+# Compass.lua's direction letters: Blizzard's FontStyles.xml gives GameFontNormalMed3 as SystemFont_Shadow_Med3, Friz
+# 14 in the parchment gold with a shadow, which wowmock's FONTS carries no entry for.
+LETTER_FONT = Font(FRIZQT, 14, NORMAL, (1, -1))
+
+
 def compass_canvas(ui, facing=math.pi - 0.2, distance=780, overhang=0, arrived=False):
     # Compass.lua's ribbon: no panel and no border. Its ticks and their letters fade out towards the ends, so
     # the compass dissolves into the world, and its turns are the addon's own gold numbered markers.
@@ -554,7 +561,7 @@ def compass_canvas(ui, facing=math.pi - 0.2, distance=780, overhang=0, arrived=F
     # Compass.lua's Paint: the parchment gold, or the quieter green of standing in an arrived stop's area (#627).
     tick = (0.6, 0.76, 0.58, 0.9) if arrived else (0.72, 0.67, 0.55, 0.9)
     center = (0.62, 0.9, 0.55, 1) if arrived else (1, 0.82, 0, 1)
-    canvas = ui.canvas(360 + overhang, 65)
+    canvas = ui.canvas(360 + overhang, 70)
 
     def offset(angle):
         return -((angle - facing + math.pi) % (2 * math.pi) - math.pi) * 360 / math.pi
@@ -573,9 +580,9 @@ def compass_canvas(ui, facing=math.pi - 0.2, distance=780, overhang=0, arrived=F
         if major:
             canvas.text(
                 180 + x - 10,
-                17,
+                20,
                 ("N", "W", "S", "E")[index // 6],
-                FONTS["GameFontNormal"],
+                LETTER_FONT,
                 (*NORMAL, alpha),
                 justify="CENTER",
                 width=20,
@@ -590,17 +597,17 @@ def compass_canvas(ui, facing=math.pi - 0.2, distance=780, overhang=0, arrived=F
         canvas.draw(number_art(number), x - size / 2, y - size / 2, size, size, (1, 1, 1, alpha))
 
     # Compass.lua's marker row: the bend (next turn) is 1 at 20 units and the turn after is 2 at 16, dimmer. The goal
-    # pin stands down while a bend is ahead, and facing away dims the row to DestinationPin's behind alpha. The row
-    # hangs 40 units under the ribbon's top, clear of the taller ticks' 12-unit letters.
+    # pin stands down while a bend is ahead, and facing away dims the row to DestinationPin's behind alpha. The row's
+    # markers are centred 45 units under the ribbon's top, clear of the taller ticks' 14-unit letters.
     bend = math.pi
     behind = abs((bend - facing + math.pi) % (2 * math.pi) - math.pi) * 180 / math.pi > 120
     x = 180 + max(-180, min(180, offset(bend)))
-    number_marker(1, x, 40, 20, 0.4 if behind else 1)
+    number_marker(1, x, 45, 20, 0.4 if behind else 1)
     if not behind:
-        number_marker(2, 180 + max(-180, min(180, offset(bend + 0.15))), 40, 16, 0.6)
+        number_marker(2, 180 + max(-180, min(180, offset(bend + 0.15))), 45, 16, 0.6)
     canvas.text(
         x - 40,
-        40 + 20 / 2 + 2,
+        45 + 20 / 2 + 2,
         f"{distance} yd",
         FONTS["GameFontHighlightSmall"],
         (*NORMAL, 0.4 if behind else 1),
