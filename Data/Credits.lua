@@ -87,6 +87,7 @@ ns.Credits = {
 		{ name = "tgkGate", what = "Fixed the path job yield error" },
 		{ name = "IronmanBG", what = "Plan journey back in Kaliel's Tracker" },
 		{ name = "vladsnz", what = "Quest list More options works with a controller" },
+		{ name = "vcatalin", what = "Forever Core bundled in the download again" },
 	},
 	inspired = {
 		{ name = "Polestar by Fitz", what = "Ideas for many features" },
