@@ -22,8 +22,8 @@ local env = setmetatable({
 	C_Timer = { After = function() end },
 	CreateFrame = function()
 		local frame = {}
-		function frame:RegisterEvent() end
-		frame.SetScript = function(frame, _, fn) frame.OnEvent = fn end
+		frame.RegisterEvent = function() end
+		frame.SetScript = function(selfFrame, _, fn) selfFrame.OnEvent = fn end
 		frames[#frames + 1] = frame
 		return frame
 	end,
