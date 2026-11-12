@@ -4,26 +4,56 @@ local tick
 local ns = {
 	db = { stats = true },
 	charDB = {},
-	L = setmetatable({}, { __index = function(_, key) return key end }),
-	OnTravelTick = function(fn) tick = fn end,
-	Init = function(fn) fn() end,
-	JourneyPosition = function() return x, 0, nil, 1 end,
+	L = setmetatable({}, {
+		__index = function(_, key)
+			return key
+		end,
+	}),
+	OnTravelTick = function(fn)
+		tick = fn
+	end,
+	Init = function(fn)
+		fn()
+	end,
+	JourneyPosition = function()
+		return x, 0, nil, 1
+	end,
 	Print = function() end,
-	core = { SafeCall = function(_, fn, ...) return pcall(fn, ...) end },
+	core = {
+		SafeCall = function(_, fn, ...)
+			return pcall(fn, ...)
+		end,
+	},
 }
 local frames = {}
 local env = setmetatable({
-	GetTime = function() return now end,
-	GetServerTime = function() return math.floor(now) end,
-	UnitPosition = function() return x, 0, 0, 1 end,
-	IsPlayerMoving = function() return moving end,
-	UnitOnTaxi = function() return false end,
-	C_AddOns = { GetAddOnMetadata = function(name, field) return name == "ShortestPathForever" and TOC[field] or nil end },
+	GetTime = function()
+		return now
+	end,
+	GetServerTime = function()
+		return math.floor(now)
+	end,
+	UnitPosition = function()
+		return x, 0, 0, 1
+	end,
+	IsPlayerMoving = function()
+		return moving
+	end,
+	UnitOnTaxi = function()
+		return false
+	end,
+	C_AddOns = {
+		GetAddOnMetadata = function(name, field)
+			return name == "ShortestPathForever" and TOC[field] or nil
+		end,
+	},
 	C_Timer = { After = function() end },
 	CreateFrame = function()
 		local frame = {}
 		frame.RegisterEvent = function() end
-		frame.SetScript = function(selfFrame, _, fn) selfFrame.OnEvent = fn end
+		frame.SetScript = function(selfFrame, _, fn)
+			selfFrame.OnEvent = fn
+		end
 		frames[#frames + 1] = frame
 		return frame
 	end,
