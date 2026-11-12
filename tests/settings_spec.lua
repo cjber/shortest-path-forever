@@ -9,7 +9,7 @@ local familyPage
 local attachmentNotified, attachmentChanged
 local trackerState = { attached = true }
 local trackerScale, compassScaled, compassBackdrop = 1, nil, nil
-local sharingChanges, leaderboardOpened, townRefreshed = 0, nil, 0
+local townRefreshed = 0
 local env = setmetatable({
 	MinimalSliderWithSteppersMixin = { Label = { Right = 1 } },
 	OFF = "Off",
