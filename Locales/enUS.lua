@@ -9,5 +9,5 @@ local L = setmetatable({}, {
 	end,
 })
 ns.L = L
-L["Show Nearby services tab"] = true
-L["The Nearby services tab in the world map and quest log."] = true
+L["Show Nearby services tab"] = "Show Nearby services tab"
+L["The Nearby services tab in the world map and quest log."] = "The Nearby services tab in the world map and quest log."

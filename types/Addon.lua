@@ -27,6 +27,7 @@
 ---@field NearbyGroups SPFNearbyGroups the vendor and service groups the list and the map share (UI/NearbyGroups.lua)
 ---@field TownServiceChoices SPFTownServiceChoice[] the town services' four levels (UI/TownServices.lua)
 ---@field RefreshTownServices fun() redraws the town services on the world map (UI/TownServices.lua)
+---@field RefreshNearbyTab fun() redraws the Nearby services tab visibility (UI/ServicesPanel.lua)
 ---@field NearbyEntrances SPFNearbyEntrancesAPI the dungeons and raids in the Nearby services list (UI/NearbyEntrances.lua)
 ---@field core ForeverCoreAddon the addon's own ForeverCore services: journal, log, report and map canvas
 ---@field broken? boolean set when ForeverCore is missing a member this addon calls, so the addon's files stop
@@ -215,6 +216,7 @@
 ---@field portals? boolean
 ---@field minimapPins? boolean
 ---@field mapFlightMasters? boolean
+---@field nearbyTab? boolean
 ---@field mapRoutes? boolean
 ---@field townServices? string the town services' level of detail: "capitals", "important", "all" or "off" (TownServices.lua)
 ---@field otherFaction? boolean
@@ -292,7 +294,6 @@
 ---@field flightsTaken number
 ---@field portalsUsed number
 ---@field milestones table<string, number>
----@field peers table<string, table<string, SPFSharedPeer>> addon ID → sender identity → metric/subject records
 ---@class SPFSharedPeer
 ---@field [string] table<string, SPFSharedMetric>
 ---@class SPFSharedMetric

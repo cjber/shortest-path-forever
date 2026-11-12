@@ -342,6 +342,7 @@ local groups = {
 		"transit",
 		"portals",
 		"mapFlightMasters",
+		"nearbyTab",
 		"minimapPins",
 		"mapPinScale",
 		"flightPinScale",
@@ -651,7 +652,6 @@ assert(Row("whatsNew").setting.default == true)
 -- New participation defaults on, while the runtime preserves every saved false choice.
 assert(Row("stats").setting.default == true, "the travel journal is on by default")
 assert(Row("stats").tooltip:find("On by default", 1, true), "the journal's tooltip says it is on")
-Row("stats").setting.onChanged()
 local trackerSlider = Row("trackerScale")
 assert(trackerSlider.kind == "slider" and trackerSlider.setting.default == 100, "tracker scale defaults to 100%")
 assert(trackerSlider.options.minValue == 50 and trackerSlider.options.maxValue == 200, "tracker scale is a percentage")
