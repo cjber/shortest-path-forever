@@ -23,7 +23,7 @@ local env = setmetatable({
 	CreateFrame = function()
 		local frame = {}
 		function frame:RegisterEvent() end
-		function frame:SetScript(_, fn) self.OnEvent = fn end -- luacheck: ignore 212
+		frame.SetScript = function(frame, _, fn) frame.OnEvent = fn end
 		frames[#frames + 1] = frame
 		return frame
 	end,
