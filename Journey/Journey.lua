@@ -196,6 +196,34 @@ function ns.TravelPolicyChanged()
 	ns.WakeTravel()
 end
 
+-- Whether journeys may use the Hearthstone. The saved switch, flipped from the tracker's journey menu and the map's
+-- innkeeper button (UI/HearthPin.lua); off, class teleports and bind items still apply (Transport/Teleports.lua).
+---@return boolean
+function ns.HearthstoneEnabled()
+	return ns.db == nil or ns.db.useHearthstone ~= false
+end
+
+---@param enabled boolean
+function ns.SetHearthstoneEnabled(enabled)
+	if not ns.db then
+		return
+	end
+	ns.db.useHearthstone = enabled == true
+	-- Turning it back on forgives a Hearthstone step skipped by hand earlier in this journey.
+	if ns.db.useHearthstone then
+		withoutHearth = false
+	end
+	ns.TravelPolicyChanged()
+	RefreshTracker()
+	if ns.RefreshHearthPin then
+		ns.RefreshHearthPin()
+	end
+end
+
+function ns.ToggleHearthstone()
+	ns.SetHearthstoneEnabled(not ns.HearthstoneEnabled())
+end
+
 -- Whether walks may cross water, and the spell to cast first when none is up.
 local function WaterWalking()
 	for _, id in ipairs(WATER_AURAS) do

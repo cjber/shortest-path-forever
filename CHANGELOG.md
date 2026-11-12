@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **The destination pin can be made smaller.** *Destination pin size* in Guidance, directly under *Show a pin over the destination*, scales the world map's journey goal pin from 50% to 100%. The pin keeps its shape and its point stays on the destination at every size, and 100% is how it always drew (#778).
+- **The Hearthstone can be kept out of a journey without opening settings.** Right-click the Journey header in the tracker and untick *Use Hearthstone*, or click the innkeeper button at your bind point on the world map. Both flip the same saved switch, replan the journey, and leave your class teleports on offer. The button greys out while the Hearthstone is saved and its tooltip says how much time the Hearthstone saves (cjber/adventure-guide-forever#707).
 - **The quest list's More options works with a controller.** On the gamepad interface, pressing Y on a quest in the quest log's list opened nothing, because the *Plan journey* entry this addon adds to that menu had tainted it and the game's gamepad focus then refused to run. The game's quest menus are now left to the game while the gamepad interface is on, as the map and minimap menus already were, and our entries return with mouse and keyboard. Reported on CurseForge by vladsnz (#788).
 
 ## [1.33.1] - 2026-11-12

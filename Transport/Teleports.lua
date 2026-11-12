@@ -13,6 +13,15 @@ end
 local places, placesKey, sources = {}, nil, {}
 -- The setting off: no teleports for any caller.
 local NONE = {}
+-- The Hearthstone itself, whose own switch keeps it out of journeys while other teleports stay.
+local HEARTHSTONE = 6948
+
+-- Whether the Hearthstone may be planned with. The master teleport switch is checked by the callers; this is the
+-- saved Use Hearthstone switch (Core/Core.lua), which defaults on.
+---@return boolean
+local function HearthAllowed()
+	return ns.db == nil or ns.db.useHearthstone ~= false
+end
 
 ---@return SPFBindPoint?
 local function Bind()
@@ -68,6 +77,44 @@ local function CastTime(teleport)
 	return canaccessvalue(cast) and cast and cast > 0 and cast or teleport.cast
 end
 
+-- The Hearthstone and the bind point it recalls to, when this character could use it: the master switch on, the item
+-- in the bags, and a bind point the client and the last binding or landing agree on. The saved Use Hearthstone switch
+-- does not hide it, since the map's innkeeper button (UI/HearthPin.lua) is how the player flips that switch.
+---@param now? number server ms, for readyAt
+---@return SPFHearthstone?
+function ns.Hearthstone(now)
+	if not (ns.db and ns.db.teleports) then
+		return nil
+	end
+	local bind = Bind()
+	if not (bind and C_Item.GetItemCount(HEARTHSTONE) > 0) then
+		return nil
+	end
+	for _, teleport in ipairs(ns.Teleports or {}) do
+		if teleport.item == HEARTHSTONE then
+			local wait = Stocked(teleport) and Cooldown(teleport)
+			return {
+				name = bind.name,
+				map = bind.map,
+				x = bind.x,
+				y = bind.y,
+				place = {
+					map = bind.map,
+					x = bind.x,
+					y = bind.y,
+					z = bind.z,
+					label = bind.name,
+					bind = true,
+					spell = teleport.spell,
+					item = teleport.item,
+					cast = CastTime(teleport),
+				},
+				readyAt = wait and (now or 0) + wait * 1000 or nil,
+			}
+		end
+	end
+end
+
 -- The places keep their identity while the set is unchanged, so the planner keeps its topology; only readiness
 -- ([index] = server ms when it can be cast) is read afresh.
 ---@param now number server ms
@@ -78,7 +125,11 @@ function ns.UsableTeleports(now)
 	end
 	local bind, known, keys = Bind(), {}, {}
 	for _, teleport in ipairs(ns.Teleports) do
-		if (teleport.to or (teleport.bind and bind)) and Known(teleport) then
+		if
+			(teleport.to or (teleport.bind and bind))
+			and Known(teleport)
+			and (teleport.item ~= HEARTHSTONE or HearthAllowed())
+		then
 			known[#known + 1] = teleport
 			keys[#keys + 1] = teleport.spell
 		end
@@ -126,6 +177,9 @@ local function Record(name, map, x, y)
 		return
 	end
 	ns.charDB.bind = { name = name, map = map, x = x, y = y }
+	if ns.RefreshHearthPin then
+		ns.RefreshHearthPin()
+	end
 end
 
 local function Sample()
@@ -200,6 +254,9 @@ ns.Init(function()
 		else
 			landing = nil
 			ns.charDB.bind = nil
+		end
+		if ns.RefreshHearthPin then
+			ns.RefreshHearthPin()
 		end
 	end)
 end)

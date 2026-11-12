@@ -429,3 +429,14 @@ L["Capitals and important services"] = "Capitais e serviços importantes" -- mt
 L["All towns"] = "Todas as cidades" -- mt
 L["Books and recipes"] = "Livros e receitas" -- mt
 L["One icon per town, or one per service as you zoom in."] = "Um ícone por cidade, ou um por serviço ao aproximar." -- mt
+L["Click to save it."] = "Clique para guardá-la." -- mt
+L["Click to use it."] = "Clique para usá-la." -- mt
+L["Destination pin size"] = "Tamanho do marcador de destino" -- mt
+L["Hearthstone"] = "Pedra de Regresso" -- mt
+L["Saved for later."] = "Guardada para depois." -- mt
+L["Scales the pin over the destination on the world map."] =
+	"Ajusta o tamanho do marcador sobre o destino no mapa-múndi." -- mt
+L["This journey uses it: %s faster."] = "Esta jornada a usa: %s mais rápido." -- mt
+L["Use Hearthstone"] = "Usar Pedra de Regresso" -- mt
+L["Journeys can start with your Hearthstone. Turn it off to save it for later; class teleports are still offered."] =
+	"As jornadas podem começar com sua Pedra de Regresso. Desative-a para guardá-la para depois; os teleportes de classe continuam disponíveis." -- mt

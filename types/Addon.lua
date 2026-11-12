@@ -39,6 +39,15 @@
 ---@field TravelStats fun(): SPFProgressData?
 ---@field TravelBoard fun(scope: ForeverLeaderboardsScope): ForeverLeaderboardsRow[] this addon's board for the shared window
 ---@field OpenTravelLeaderboard fun() opens Forever Leaderboards on this addon's tab
+---@field DestinationPinScale fun(): number the world map journey goal pin's share of its stock size (UI/StopPin.lua)
+---@field RefreshDestinationPinSize fun() redraws the world map goal pins at the player's size (UI/Route.lua)
+---@field HearthstoneEnabled fun(): boolean whether journeys may use the Hearthstone (Journey/Journey.lua)
+---@field SetHearthstoneEnabled fun(enabled: boolean) flips the saved Hearthstone switch and replans (Journey/Journey.lua)
+---@field ToggleHearthstone fun() flips the saved Hearthstone switch (Journey/Journey.lua)
+---@field Hearthstone fun(now?: number): SPFHearthstone? the Hearthstone and its bind point, when it could be used (Transport/Teleports.lua)
+---@field HearthSaving fun(): number? ms the Hearthstone saves on the journey, nil when it cannot be told (UI/HearthPin.lua)
+---@field HearthPinTooltip fun(name: string, saving: number?, enabled: boolean): string, string[] (UI/HearthPin.lua)
+---@field RefreshHearthPin fun() redraws the Hearthstone's button on the world map (UI/HearthPin.lua)
 
 ---@class SPFVendorGroup
 ---@field key string
@@ -143,6 +152,15 @@
 ---@field bind? boolean
 ---@field partyMage? string -- the party mage who opens this portal
 ---@field destination? string -- the capital it lands in, as the client names it
+-- The Hearthstone and the bind point it recalls to, when this character could use it (Transport/Teleports.lua).
+---@class SPFHearthstone
+---@field name string the bind location's name, as the client reports it
+---@field map number
+---@field x number
+---@field y number
+---@field z? number
+---@field place SPFTeleportPlace the planner's place for the Hearthstone
+---@field readyAt? number server ms when it can be cast again
 -- A capital portal a party mage can open, declared by the player (Transport/PartyPortals.lua).
 ---@class SPFPartyPortal : SPFTeleportPlace
 ---@field partyMage string
@@ -208,6 +226,7 @@
 ---@field errors? ForeverCaughtError[] ForeverCore's shared error journal: earlier sessions' errors, for the report
 ---@field log? ForeverDebugLogStore ForeverCore's shared debug log ring: recent lines, for the report
 ---@field destinationPin boolean an on-screen marker over the journey's destination
+---@field destinationPinSize? number percent, the world map journey goal pin's size (50 to 100, UI/StopPin.lua)
 ---@field arrivalPin? boolean a pin with the stop's objectives while in its area, instead of hiding the arrow
 ---@field arrivalDistance? number yards that count as arrived at a journey's final destination (Journey.lua)
 ---@field npcArrows? boolean arrows beside the nameplate of the NPC a Nearby services journey walks to (NpcArrows.lua)
@@ -236,6 +255,7 @@
 ---@field tomtomFollow? boolean -- with TomTom installed, a journey follows the waypoint its arrow points to
 ---@field taxiRoute? boolean
 ---@field teleports? boolean
+---@field useHearthstone? boolean the Hearthstone may be used in journeys, while other teleports still are (Teleports.lua)
 ---@field partyMagePortals? boolean -- offer a party mage's capital portals
 ---@field partyMageStormwind? boolean
 ---@field partyMageIronforge? boolean

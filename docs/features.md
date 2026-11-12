@@ -55,7 +55,8 @@ With RestedXP or Guidelime installed, **Resume guide** in Guidance or the Journe
   bound at an innkeeper with the addon on, or where your last Hearthstone or Astral Recall set you down. Until
   then, or after binding somewhere else with the addon off, the hearth is left out. The recorded bind position is saved per character and checked against
   the current bind name. Class teleports need no bind point. Turn this
-  off with *Use hearth and teleports* in `/path`.
+  off with *Use hearth and teleports* in `/path`, or keep just the Hearthstone out with *Use Hearthstone* in
+  `/path`, the tracker's Journey menu or the innkeeper button at your bind point on the world map.
   ![Journey steps from Auberdine to Silithus with time and distance remaining](screenshots/tracker.png)
 
   The tracker shows each travel step, with time and distance remaining.
