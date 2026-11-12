@@ -1,15 +1,16 @@
 {
-  "input_digest": "716da8c4458b21a7e386ceaedadccae1db7853c1b331476afa98d2fb04fd35e0",
-  "runtime_sha256": "716da8c4458b21a7e386ceaedadccae1db7853c1b331476afa98d2fb04fd35e0",
-  "candidate": "0070edee175574cfbc193817e7b33778195d8d7c8e1c30e961fc42967bee5783",
+  "input_digest": "d1d4317db33f2bb3d9e594f02e2c92d7d173ac33224b2614e13705fec3028b57",
+  "runtime_sha256": "d1d4317db33f2bb3d9e594f02e2c92d7d173ac33224b2614e13705fec3028b57",
+  "candidate": "b0b49a0764755cf50546bedff7bc34ff11efeb64ecc78ab7b58a6b14b7dcd543",
   "tested_artifact": "release-package",
   "client_build": "1.60.1.70888 (Interface 16001)",
   "flows": [
     {
-      "name": "Shortest Path loads and opens its settings on ForeverCore 1.8.1",
+      "name": "Shortest Path 1.34.2 loads with a journey and opens its settings on ForeverCore 1.8.2",
       "steps": [
-        "Install the packaged candidate with its bundled ForeverCore v1.8.1 and /reload",
-        "Print the loaded versions: ForeverCore v1.8.1, ShortestPathForever v1.33.1-8-g152cb6f, AdventureGuideForever v1.7.6-2-gabadcae, all loaded",
+        "Install the v1.34.2 release zip (compare: equivalent to candidate b0b49a07) beside ForeverCore v1.8.2 and /reload",
+        "Print the loaded versions: ForeverCore v1.8.2, ShortestPathForever v1.34.2, both loaded",
+        "Confirm the active journey's pin, tracker and minimap route draw after the reload",
         "Type /path",
         "Confirm the Shortest Path Forever settings page opens with every section listed"
       ],
@@ -18,12 +19,12 @@
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/328823e9708f8e8ea7847dc01bd53905/raw/cad3e2caecfe30ead75d1c5293b58db0a5a9174f/sync181b-versions.png",
-      "sha256": "19cf5e3d567426b1c72aacadcf07644cfa7994935dd811d16236a8f20e147832"
+      "url": "https://gist.githubusercontent.com/cjber/61567dc65726e5b996bad4f0f8db7317/raw/73b3e1ea6f70c5e96063f76a844b2b852685f2c8/spf1342-versions.png",
+      "sha256": "9d40636a89c2dfe91dc51cda1122861a6a2a694884e6aec98f9a23ced741e9c7"
     },
     {
-      "url": "https://gist.githubusercontent.com/cjber/328823e9708f8e8ea7847dc01bd53905/raw/cad3e2caecfe30ead75d1c5293b58db0a5a9174f/sync181b-spf-settings-0070ede.png",
-      "sha256": "c0bc438060d059c89f556d877555d4236c8499bbb1d833f1f9e7e1602ab6d6fb"
+      "url": "https://gist.githubusercontent.com/cjber/61567dc65726e5b996bad4f0f8db7317/raw/73b3e1ea6f70c5e96063f76a844b2b852685f2c8/spf1342-settings.png",
+      "sha256": "b7e46d3e2561f2165d17291e5c229d6d3d5e6edfb51af6a0af6c8733306d3544"
     }
   ]
 }
