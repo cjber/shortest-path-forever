@@ -506,11 +506,11 @@ function Services:RefreshAllData()
 		Build()
 		rebuilt = true
 	end
-	local shown = {}
+	local flags = {}
 	for _, filter in ipairs(FILTERS) do
-		shown[#shown + 1] = ns.db[filter.option] == false and "0" or "1"
+		flags[#flags + 1] = ns.db[filter.option] == false and "0" or "1"
 	end
-	shown = table.concat(shown)
+	local shown = table.concat(flags)
 	local clusters = Clusters(map, Points(mapID, level))
 	local wanted = {}
 	for _, cluster in ipairs(clusters) do
