@@ -329,13 +329,10 @@ L["Both"] = "둘 다" -- mt
 L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs."] =
 	"로컬 이동 일지 — 약 %d야드 이동, 여정 %d회, 교통수단 %d회, 비행 %d회, 차원문 구간 %d회."
 L["Record travel stats"] = "이동 통계 기록"
-L["Share travel stats with guild and groups"] = "길드와 그룹에 이동 통계 공유"
 L["Time left"] = "남은 시간" -- mt
 L["Travel journal"] = "이동 일지"
 L["Travel milestone reached: %s"] = "이동 이정표 달성: %s"
 L["Travel stats are not ready yet."] = "이동 통계가 아직 준비되지 않았습니다."
-L["Turn this off to keep stats on this character only. Shared records are player-reported and not verified."] =
-	"끄면 이 캐릭터에만 통계를 보관합니다. 공유 기록은 플레이어가 보낸 것이며 검증되지 않습니다."
 L["Party member"] = "파티원" -- mt
 L["That player is not on a map you can see."] = "그 플레이어는 볼 수 있는 지도에 없습니다." -- mt
 L["You have caught up with %s."] = "%s을(를) 따라잡았습니다." -- mt
@@ -396,10 +393,6 @@ L["Hide RestedXP's arrow"] = "RestedXP 화살표 숨기기" -- mt
 L["Hide departures"] = "출발 숨기기"
 
 -- Travel stats and the shared Forever Leaderboards.
-L["Completed journeys"] = "완료한 여정"
-L["On unless you turn it off. Shares travel records with guild and group and puts you on Forever Leaderboards."] =
-	"끄지 않는 한 켜져 있습니다. 길드, 파티, 공격대, 인스턴스 채널로 여행 기록을 공유하고 Forever 순위표에 표시합니다." -- mt
-L["total"] = "총" -- mt
 
 L["Follow roads"] = "도로 따라가기" -- mt
 L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =
@@ -441,4 +434,5 @@ L["Books and recipes"] = "책과 조리법" -- mt
 L["One icon per town, or one per service as you zoom in."] =
 	"마을마다 아이콘 하나, 확대하면 서비스마다 아이콘 하나." -- mt
 L["Show Nearby services tab"] = "주변 편의시설 탭 표시"
-L["The Nearby services tab in the world map and quest log."] = "세계 지도와 퀘스트 로그의 주변 편의시설 탭입니다."
+L["The Nearby services tab in the world map and quest log."] =
+	"세계 지도와 퀘스트 로그의 주변 편의시설 탭입니다."

@@ -340,14 +340,10 @@ L["Both"] = "Оба" -- mt
 L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs."] =
 	"Дневник путешествий — около %d ярдов пешком; %d маршрутов; %d поездок на транспорте; %d полетов; %d переходов через портал."
 L["Record travel stats"] = "Записывать статистику путешествий"
-L["Share travel stats with guild and groups"] =
-	"Делиться статистикой путешествий с гильдией и группами"
 L["Time left"] = "Оставшееся время" -- mt
 L["Travel journal"] = "Дневник путешествий"
 L["Travel milestone reached: %s"] = "Достигнут рубеж путешествий: %s"
 L["Travel stats are not ready yet."] = "Статистика путешествий еще не готова."
-L["Turn this off to keep stats on this character only. Shared records are player-reported and not verified."] =
-	"Отключите, чтобы статистика велась только для этого персонажа. Общие записи присылают игроки, они не проверены."
 L["Party member"] = "Участник группы" -- mt
 L["That player is not on a map you can see."] =
 	"Этот игрок не на карте, которую вы видите." -- mt
@@ -412,10 +408,6 @@ L["Hide RestedXP's arrow"] = "Скрыть стрелку RestedXP" -- mt
 L["Hide departures"] = "Скрыть отправления"
 
 -- Travel stats and the shared Forever Leaderboards.
-L["Completed journeys"] = "Завершённые путешествия"
-L["On unless you turn it off. Shares travel records with guild and group and puts you on Forever Leaderboards."] =
-	"Включено, пока вы это не отключите. Делится записями о путешествиях по каналам гильдии, группы, рейда и подземелья и добавляет вас в рейтинги Forever." -- mt
-L["total"] = "всего" -- mt
 
 L["Follow roads"] = "Следовать дорогам" -- mt
 L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =
@@ -458,4 +450,5 @@ L["Books and recipes"] = "Книги и рецепты" -- mt
 L["One icon per town, or one per service as you zoom in."] =
 	"Один значок на город или на услугу при приближении." -- mt
 L["Show Nearby services tab"] = "Показывать вкладку услуг поблизости"
-L["The Nearby services tab in the world map and quest log."] = "Вкладка услуг поблизости на карте мира и в журнале заданий."
+L["The Nearby services tab in the world map and quest log."] =
+	"Вкладка услуг поблизости на карте мира и в журнале заданий."

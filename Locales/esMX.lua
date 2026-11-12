@@ -321,13 +321,10 @@ L["Both"] = "Ambos" -- mt
 L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs."] =
 	"Diario de viaje local: aprox. %d yd andados; %d viajes; %d transportes; %d vuelos; %d tramos de portal."
 L["Record travel stats"] = "Registrar estadísticas de viaje"
-L["Share travel stats with guild and groups"] = "Compartir estadísticas de viaje con la hermandad y los grupos"
 L["Time left"] = "Tiempo restante" -- mt
 L["Travel journal"] = "Diario de viaje"
 L["Travel milestone reached: %s"] = "Hito de viaje alcanzado: %s"
 L["Travel stats are not ready yet."] = "Las estadísticas de viaje aún no están listas."
-L["Turn this off to keep stats on this character only. Shared records are player-reported and not verified."] =
-	"Desactívalo para guardar las estadísticas solo en este personaje. Los registros compartidos los envían los jugadores y no están verificados."
 L["Party member"] = "Miembro del grupo" -- mt
 L["That player is not on a map you can see."] = "Ese jugador no está en un mapa que puedas ver." -- mt
 L["You have caught up with %s."] = "Has alcanzado a %s." -- mt
@@ -388,10 +385,6 @@ L["Hide RestedXP's arrow"] = "Ocultar la flecha de RestedXP" -- mt
 L["Hide departures"] = "Ocultar salidas"
 
 -- Travel stats and the shared Forever Leaderboards.
-L["Completed journeys"] = "Viajes completados"
-L["On unless you turn it off. Shares travel records with guild and group and puts you on Forever Leaderboards."] =
-	"Activado a menos que lo desactives. Comparte registros de viaje por los canales de hermandad, grupo, banda e instancia y te coloca en las clasificaciones Forever." -- mt
-L["total"] = "total" -- mt
 
 L["Follow roads"] = "Seguir caminos" -- mt
 L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =
@@ -432,4 +425,5 @@ L["All towns"] = "Todas las ciudades" -- mt
 L["Books and recipes"] = "Libros y recetas" -- mt
 L["One icon per town, or one per service as you zoom in."] = "Un icono por ciudad, o uno por servicio al acercar." -- mt
 L["Show Nearby services tab"] = "Mostrar pestaña de servicios cercanos"
-L["The Nearby services tab in the world map and quest log."] = "La pestaña de servicios cercanos en el mapa del mundo y el registro de misiones."
+L["The Nearby services tab in the world map and quest log."] =
+	"La pestaña de servicios cercanos en el mapa del mundo y el registro de misiones."
