@@ -148,6 +148,10 @@ Credit for the reports and requests behind the addon.
 | Blast22 | Guidance no longer flickers between two objectives | CurseForge; 8693782 |
 | user_sggieekz05hc7uxt | Guidance no longer flickers between two objectives | CurseForge; 8685196 |
 | kindguydev | Guidance no longer flickers while a guide re-points | Discord; #693 |
+| [hervad](https://github.com/hervad) | No more short hitches during play | GitHub; #759 |
+| [caghanpekin-prog](https://github.com/caghanpekin-prog) | No more brief stutters during play | GitHub; #772 |
+| Zwaffelmagic | Clear the destination on arrival | CurseForge; #733 |
+| CptShooter | Hide the objective lines under the arrow | CurseForge; #691 |
 
 ## Inspired by
 

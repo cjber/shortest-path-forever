@@ -18,6 +18,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 <!-- forever-core-sync -->
 
+- **Two more players are on the Thanks page.** hervad and caghanpekin-prog reported the short hitches during play, which stopped when travel stats stopped being shared with your guild and group. Thanks to hervad and caghanpekin-prog on GitHub for the reports (#759, #772).
 - Ships with the same shared code as your other Forever addons, so they keep working together.
 
 ## [1.34.2] - 2026-11-12
