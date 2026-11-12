@@ -1,7 +1,7 @@
 ---@meta
 
 -- Public addon-to-addon interface. Coordinates are uiMapID and normalized 0-1 x/y, not world yards.
--- Additions keep version 1 and raise minor: a caller checks optional members with type(api.Name) == "function".
+-- Version 2 removes the peer and leaderboard surface. Callers must accept versions 1 and 2, and reject future versions.
 
 ---@alias SPFAPIMode "walk"|"flight"|"boat"|"zeppelin"|"lift"|"tram"|"portal"|"passage"|"teleport"
 ---@alias SPFAPINoRoute "combat"|"invalid"|"unreachable"|"loading" -- retry after combat; never for bad input; unreachable with what this character knows; loading while the addon builds its data
@@ -86,21 +86,6 @@
 ---@field eventUnix? number -- absent: the travel journal records no event time
 
 --- One player's row on the all-time travel board.
----@class SPFAPILeaderboardRow
----@field rank integer
----@field name string
----@field value number
----@field eventUnix? number
----@field self? boolean -- true on this character's row
-
---- The all-time completed journeys board.
----@class SPFAPILeaderboard
----@field metric string -- "routes_completed"
----@field scope string -- "guild_group"
----@field sharing boolean -- whether this character sends and receives totals
----@field total integer -- every eligible row, before the limit
----@field rows SPFAPILeaderboardRow[]
-
 --- What happened to guidance since the subscriber was last called; each field is true or absent. Several can be
 --- true together, from one burst of changes.
 ---@class SPFAPIChanges
@@ -112,8 +97,8 @@
 ---@field active? boolean -- what Active answers changed
 
 ---@class SPFPublicAPI
----@field version integer -- 1; a breaking change would raise it
----@field minor integer -- 3: Journey, Pause, Resume, SkipLeg, Stats and Leaderboard, and the leg change; 2: RenameStop, npc, handins and the vendor kind; 1 added Subscribe
+---@field version integer -- 2 removes peer sharing and Leaderboard; callers accept 1 or 2 and reject future versions
+---@field minor integer -- 0 for version 2; version 1 minor 3 added Journey, Pause, Resume, SkipLeg, Stats and the leg change
 ---@field Estimate fun(fromMap: integer, fromX: number, fromY: number, toMap: integer, toX: number, toY: number): seconds: number?, reason: SPFAPINoRoute? -- travel seconds; nil comes with the reason
 ---@field Navigate fun(owner: string, map: integer, x: number, y: number, title?: string, kind?: SPFAPIStopKind): boolean -- starts/replaces guidance outside combat when journeys are enabled
 ---@field NavigateRoute fun(owner: string, stops: SPFAPIStop[]): boolean -- starts/replaces guidance through 1-64 stops in order; false leaves the current journey intact
@@ -124,7 +109,6 @@
 ---@field Resume fun(owner: string): boolean -- starts that owner's guidance again on the same goal; false for another owner, no journey, an already guided journey or combat
 ---@field SkipLeg fun(owner: string, index?: integer): boolean -- advances that owner's current leg; false for another owner or when nothing was skipped
 ---@field Stats fun(): rows: SPFAPIStat[]?, reason: SPFAPINotReady? -- this character's travel records, one fresh row per metric
----@field Leaderboard fun(limit?: integer): board: SPFAPILeaderboard?, reason: ("invalid"|SPFAPINotReady)? -- the all-time completed journeys board; nil and "invalid" for a limit that is not a whole number of zero or more
 ---@field RenameStop fun(owner: string, index: integer, title: string, renamePoints?: fun(point: SPFPoint): boolean?): boolean -- relabels a running route's stop in place; false leaves it as it was
 ---@field EstimateDetail fun(fromMap: integer, fromX: number, fromY: number, toMap: integer, toX: number, toY: number): detail: SPFAPIDetail?, reason: SPFAPINoRoute? -- Estimate leg by leg, sharing its cache
 ---@field Active fun(): boolean -- true while any journey is guiding, whoever started it

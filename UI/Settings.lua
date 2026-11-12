@@ -265,16 +265,7 @@ ns.Init(function()
 	Checkbox(
 		"stats",
 		L["Record travel stats"],
-		L["On by default. Records approximate walking distance, completed journeys and transport use."],
-		ns.TravelSharingChanged
-	)
-	Checkbox(
-		"statsShare",
-		L["Share travel stats with guild and groups"],
-		L["On unless you turn it off. Shares travel records with guild and group and puts you on Forever Leaderboards."]
-			.. " "
-			.. L["Turn this off to keep stats on this character only. Shared records are player-reported and not verified."],
-		ns.TravelSharingChanged
+		L["On by default. Records approximate walking distance, completed journeys and transport use."]
 	)
 
 	-- Guidance: how a journey is planned and led.
@@ -839,9 +830,6 @@ ns.Init(function()
 					stats.portalsUsed
 				)
 			)
-			return
-		elseif message:match("^leaderboard") then
-			ns.OpenTravelLeaderboard()
 			return
 		elseif message == "help" then
 			ns.Print(L["/path report - show a report to copy into a bug report"])

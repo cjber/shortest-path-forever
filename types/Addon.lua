@@ -35,10 +35,7 @@
 ---@field Icon string the one client icon every in-game identity surface draws, read from the TOC
 ---@field NearbyQuestie SPFNearbyQuestie the QuestieDB read behind the Nearby list (UI/NearbyQuestie.lua)
 ---@field ProgressJourneyChanged? fun(point: SPFPoint?, reason?: "arrived"|"cleared")
----@field TravelSharingChanged fun()
 ---@field TravelStats fun(): SPFProgressData?
----@field TravelBoard fun(scope: ForeverLeaderboardsScope): ForeverLeaderboardsRow[] this addon's board for the shared window
----@field OpenTravelLeaderboard fun() opens Forever Leaderboards on this addon's tab
 
 ---@class SPFVendorGroup
 ---@field key string
@@ -246,7 +243,6 @@
 ---@field hearthMinimumSavings? number -- seconds the Hearthstone must save over the best non-hearth plan
 ---@field share? boolean
 ---@field stats? boolean -- collect per-character travel totals
----@field statsShare? boolean -- exchange travel snapshots over supported addon channels
 ---@field guideStops? boolean
 ---@field compass? boolean
 ---@field mapPinScale? number

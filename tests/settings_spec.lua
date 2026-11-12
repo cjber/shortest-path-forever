@@ -242,17 +242,10 @@ local ns = {
 			}
 		end,
 	},
-	TravelSharingChanged = function()
-		sharingChanges = sharingChanges + 1
-	end,
-	OpenTravelLeaderboard = function()
-		leaderboardOpened = true
-	end,
 	db = {},
 	Defaults = setmetatable({
 		-- Travel participation defaults are explicit, matching Core/Core.lua.
 		stats = true,
-		statsShare = true,
 		partyMagePortals = false,
 		hearthMinimumSavings = 0,
 		compassScale = 100,
@@ -360,7 +353,7 @@ local groups = {
 		"laterLegs",
 	},
 	Transport = { "mapRoutes", "otherFaction", "tracker", "share" },
-	["Travel journal"] = { "stats", "statsShare" },
+	["Travel journal"] = { "stats" },
 	Guidance = {
 		"trackerAttached",
 		"trackerLocked",
@@ -657,16 +650,8 @@ assert(ways[2] == "", "a bare /path way still answers, with its usage")
 assert(Row("whatsNew").setting.default == true)
 -- New participation defaults on, while the runtime preserves every saved false choice.
 assert(Row("stats").setting.default == true, "the travel journal is on by default")
-assert(Row("statsShare").setting.default == true, "and sharing its stats is too")
 assert(Row("stats").tooltip:find("On by default", 1, true), "the journal's tooltip says it is on")
-assert(Row("statsShare").tooltip:find("On unless you turn it off", 1, true), "sharing is opt-out")
-assert(Row("statsShare").tooltip:find("Forever Leaderboards", 1, true), "sharing puts the player on the boards")
-assert(Row("statsShare").tooltip:find("player-reported", 1, true), "shared records are still marked unverified")
 Row("stats").setting.onChanged()
-Row("statsShare").setting.onChanged()
-assert(sharingChanges == 2, "both recording and sharing switches update the active transport")
-env.SlashCmdList.SHORTESTPATHFOREVER("leaderboard")
-assert(leaderboardOpened == true, "the leaderboard command opens the shared window on this addon's tab")
 local trackerSlider = Row("trackerScale")
 assert(trackerSlider.kind == "slider" and trackerSlider.setting.default == 100, "tracker scale defaults to 100%")
 assert(trackerSlider.options.minValue == 50 and trackerSlider.options.maxValue == 200, "tracker scale is a percentage")
