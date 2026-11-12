@@ -888,6 +888,8 @@ local function Plan(options)
 			pendingWalks = pendingWalks,
 		}
 	end
+	-- What the savings check below drops stays dropped for every later search.
+	local withoutHearth, withoutTeleports = options.withoutHearth == true, false
 	-- A walk with no flight at all may still be walking only because the flight point it would use has not been
 	-- discovered. Proving that needs a second search that treats every node as known: only a route it finds that
 	-- both beats this one and flies is evidence the walk waits on an unknown node, not on the walk being quickest.
@@ -905,7 +907,7 @@ local function Plan(options)
 		if not walk then
 			return nil
 		end
-		local faster = Search(options.withoutHearth == true, false, plan.arrive, false, true, true)
+		local faster = Search(withoutHearth, withoutTeleports, plan.arrive, false, true, true)
 		if not faster then
 			return nil
 		end
@@ -924,7 +926,6 @@ local function Plan(options)
 	end
 	-- options.incumbent, an arrival already in hand, ends the search for anything that cannot beat it: no route
 	-- then means the incumbent stands. Its plan still passes through hearth, teleport and long-walk preferences below.
-	local withoutHearth, withoutTeleports = options.withoutHearth == true, false
 	local planned = Search(withoutHearth, false, options.incumbent) or options.incumbentPlan
 	local hearthMinimum = math.max(options.hearthMinimumSavings or 0, HEARTH_MINIMUM_SAVING) * 1000
 	local teleportMinimum = (options.teleportMinimumSavings or 0) * 1000
@@ -953,14 +954,15 @@ local function Plan(options)
 		planned = baseline
 	end
 	-- A long way on foot is one line with nothing to follow through whatever lies between, so a ride nearly as quick
-	-- wins. It never spends the hearthstone (that would trade a cooldown for a slower arrival), nor a class teleport
-	-- that fell short of its minimum.
+	-- wins. It never spends the hearthstone (that would trade a cooldown for a slower arrival), nor, with a minimum
+	-- set, a class teleport: a ride arrives after this walk, so a teleport on it saves less than any minimum.
 	if
 		planned
 		and #planned.legs == 1
 		and planned.legs[1].mode == "walk"
 		and planned.arrive - options.now >= LONG_WALK
 	then
+		withoutTeleports = withoutTeleports or teleportMinimum > 0
 		local ridden = Search(true, withoutTeleports, options.now + (planned.arrive - options.now) * RIDE_MARGIN, true)
 		if ridden then
 			ridden.preferred = true

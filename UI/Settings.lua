@@ -478,8 +478,9 @@ ns.Init(function()
 		"hearth",
 		L["Use your Hearthstone"],
 		-- luacheck: push ignore 631
-		L["Journeys, and other addons' estimates from here, can start with your Hearthstone or Astral Recall, cooldown counted."]
+		L["Journeys, and other addons' estimates from here, can start with your Hearthstone or Astral Recall, cooldown counted."],
 		-- luacheck: pop
+		ns.TravelPolicyChanged
 	)
 	Saving(
 		"hearthMinimumSavings",
@@ -490,8 +491,9 @@ ns.Init(function()
 		"teleports",
 		L["Use class teleports"],
 		-- luacheck: push ignore 631
-		L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."]
+		L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."],
 		-- luacheck: pop
+		ns.TravelPolicyChanged
 	)
 	Saving(
 		"teleportMinimumSavings",

@@ -16,7 +16,7 @@ for _, file in ipairs({
 	assert(loadfile(file))("ShortestPathForever", ns)
 end
 
-local function Plan(from, to, known, faction)
+local function Plan(from, to, known, faction, teleport)
 	return ns.Planner.Plan({
 		from = from,
 		to = to,
@@ -33,8 +33,9 @@ local function Plan(from, to, known, faction)
 		walkSpeed = 7,
 		taxiKnown = known,
 		anchors = {},
-		teleports = {},
-		teleportReady = {},
+		teleports = { teleport },
+		teleportReady = { teleport and teleport.ready },
+		teleportMinimumSavings = teleport and teleport.minimum,
 		unknownFlightNotice = true,
 	})
 end
@@ -64,6 +65,13 @@ assert(
 	first.mode == "walk" and first.to.kind == "dock" and first.yards > 5000,
 	"with no flight point the whole way to the boat is walked"
 )
+
+-- A class teleport dropped for saving less than its minimum stays dropped when looking for the unknown flight
+-- point: it lands at the door 800 s in, before the flight would, yet the walk still reports the flight.
+local rune = { map = 1, x = entrance.x, y = entrance.y, spell = 3565, cast = 10000, ready = 800000, minimum = 600 }
+local kept = assert(Plan(from, entrance, {}, nil, rune))
+assert(not Has(kept, "teleport"), "the teleport saves less than its minimum")
+assert(kept.unknownFlightMaps and kept.unknownFlightMaps[0], "the dropped teleport does not hide the faster flight")
 
 -- Knowing only Booty Bay is not enough (#537): a flight cannot leave Stormwind's flight master before the
 -- character has learned it, so the same journey still walks and reports the unknown flight point.

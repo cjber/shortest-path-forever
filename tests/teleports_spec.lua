@@ -109,6 +109,21 @@ local function runeOrHearth(teleportMinimum, hearthMinimum)
 end
 assert(runeOrHearth(11).legs[1].teleport.spell == 8690, "a teleport saving too little over the hearth gives way to it")
 assert(runeOrHearth(11, 980).legs[1].mode == "walk", "the hearth it gives way to still meets its own minimum")
+-- A teleport landing 7000 yards past the goal arrives just after the 1000 s walk, inside the margin a ride gets
+-- over a long walk; it saves nothing, so with a minimum it never stands in for the ride.
+local function overshoot(minimum)
+	return Plan({
+		from = { map = 1, x = 0, y = 0 },
+		to = { map = 1, x = 7000, y = 0 },
+		now = 0,
+		walkSpeed = 7,
+		teleports = { { map = 1, x = 14000, y = 0, spell = 3561, cast = 10000 } },
+		teleportReady = { 0 },
+		teleportMinimumSavings = minimum,
+	})
+end
+local slower = overshoot(60)
+assert(#slower.legs == 1 and slower.legs[1].mode == "walk", "a slower teleport never replaces a long walk")
 -- A new set of destinations (a new bind point) is a new topology.
 hearths = { { map = 1, x = -700, y = 0, spell = 8690, item = 6948, cast = 10000 } }
 assert(trip(1000, cache).legs[1].mode == "walk" and cache.topology ~= topology)
