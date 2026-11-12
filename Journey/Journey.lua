@@ -832,6 +832,54 @@ function ns.ResumeJourney()
 	RefreshTracker()
 end
 
+-- An owner sent the destination the journey already has; only the stop's words may have changed. A first search
+-- still owing its answer is asked to read what it has, as sending the same route again always did, but nothing of the
+-- journey is restarted.
+function ns.RefreshJourneySearch()
+	if goal and not result and not CorpseRun() and Search.Status() > 0 then
+		Search.Start(goal, result, progress, Follow)
+	end
+end
+
+-- An owner moved the destination of a journey it already owns (a guide's next objective in the area, or the same
+-- waypoint re-pointed). The owner, the stop and the progress stay, and so does the route already drawn, until the
+-- search for the new place settles: tearing all of it down and starting again flashed the arrow, the line and the
+-- tracker for every objective the guide moved to (#693).
+---@param point SPFPoint
+---@return boolean
+function ns.RetargetJourney(point)
+	if CorpseRun() or not goal or point.map ~= goal.map then
+		return ns.StartJourney(point)
+	end
+	if Search.SamePlace(goal, point) then
+		ns.RefreshJourneySearch()
+		return true
+	end
+	goal, nextPoint = point, nil
+	withoutHearth = false
+	if ns.JourneyChanged then
+		ns.JourneyChanged(point)
+	end
+	-- The hops after this stop start from where it now is.
+	ns.ItineraryChanged()
+	driver.elapsed, driver.progressElapsed = 0, 0
+	if not InCombatLockdown() then
+		driver:Show()
+	end
+	ns.WakeTravel()
+	-- Replacing: the plan under way leads to the place this one leaves, so the next plan takes over whatever it costs.
+	Search.Start(goal, result, progress, Follow, true)
+	-- A guide that yielded to the player's own destination leads again for a destination the player did not choose.
+	if Guide.Yielded() then
+		StopGuide()
+	end
+	if not Guide.Active() then
+		StartGuide()
+	end
+	Refresh()
+	return true
+end
+
 ---@param point SPFPoint
 ---@return boolean
 function ns.StartJourney(point)

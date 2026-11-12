@@ -28,6 +28,14 @@ assert(driver.waypoint(), "a quest focused behind the guide's waypoint leaves th
 assert(select(2, driver.waypoint()), "and still super-tracked")
 assert(ns.JourneyPinTracked(), "so the guide has not yielded")
 
+-- A guide selecting its quest can leave the waypoint super-tracked while reporting the quest as the leading type for
+-- a moment. Which icon the client draws is not ownership: the waypoint is still the destination it follows, so the
+-- guide keeps it and does not yield (#693).
+driver.setTrackingType("quest")
+driver.update(0)
+assert(driver.waypoint(), "a transient quest priority keeps the guide's waypoint")
+assert(ns.JourneyPinTracked(), "and the guide still owns navigation")
+
 -- The player clicking a quest is a different thing: nothing restores the waypoint, so the guide yields and clears
 -- its waypoint while the route arrow keeps leading.
 env.C_SuperTrack.SetSuperTrackedQuestID(999)

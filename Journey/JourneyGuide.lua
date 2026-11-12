@@ -307,11 +307,11 @@ local function SameTracking(state)
 	local quest = C_SuperTrack.GetSuperTrackedQuestID()
 	local waypoint = C_SuperTrack.IsSuperTrackingUserWaypoint()
 	local kind = C_SuperTrack.GetHighestPrioritySuperTrackingType()
-	-- Adventure Guide focuses the quest whose area the player walks into and restores the super-tracked waypoint
-	-- after it, whoever placed that waypoint (Focus.lua). The quest then stays selected while our waypoint is still
-	-- the one super-tracked and leading, which is not the player taking navigation over: only a change that leaves
-	-- another destination in front (a quest click, a map pin, content) yields.
-	if state.expectedTrackedWaypoint and waypoint and kind == state.expectedTrackingType then
+	-- Another addon may select the quest whose area the player walks into (Adventure Guide's focus, RestedXP pointing
+	-- at a quest of its own now and then) while the guide's waypoint stays the super-tracked destination. The priority
+	-- type only says which icon the client draws this moment, not who owns navigation, so a selection on top of our
+	-- waypoint is not a takeover: our waypoint is still the one super-tracked and still leads.
+	if state.expectedTrackedWaypoint and waypoint then
 		return true
 	end
 	return state.expectedQuest == quest
@@ -612,6 +612,12 @@ end
 ---@return boolean
 function Guide.Active()
 	return guide ~= nil
+end
+
+-- Whether the player took native navigation over: the route arrow still leads, the client's marker is theirs.
+---@return boolean
+function Guide.Yielded()
+	return guide ~= nil and guide.yielded == true
 end
 
 -- Whether the journey's goal is tracked as the client's waypoint right now. The goal pin is gold only then; a

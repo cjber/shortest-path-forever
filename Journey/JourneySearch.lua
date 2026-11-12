@@ -329,6 +329,7 @@ FinishSearch = function()
 	local provisional = Provisional()
 	-- A first search draws every walk anew; a route shown before its proof ended already drew its first.
 	local refine = search.refine or search.initial and not provisional
+	-- A search replacing a destination that moved cannot be answered by the plan that led to the old place.
 	local keep = followed
 		and planned
 		and estimate
@@ -336,6 +337,9 @@ FinishSearch = function()
 			provisional and not forced and same
 			or not provisional and (not valid or (not forced and (same or not better)))
 		)
+	if search.replace then
+		keep = false
+	end
 	if not keep and planned and not planned.prepared then
 		PrepareWalks(planned)
 		if Walks.Pending() > 0 then
@@ -448,13 +452,16 @@ end
 
 -- Reuse only the last two endpoint searches, with starts confirmed by the pathfinder as the same snapped node.
 -- One search owns the callbacks' shared revision, preview and probe budget across resumes
-local function RefreshCosts(includeGoal, forced)
+---@param includeGoal boolean?
+---@param forced boolean?
+---@param replace boolean? the destination moved, so the plan under way leads somewhere else
+local function RefreshCosts(includeGoal, forced, replace)
 	local here = Here()
 	if not (here and goal) then
 		return
 	end
 	CancelPaths()
-	search = { initial = not followed, forced = forced }
+	search = { initial = not followed, forced = forced, replace = replace }
 	local owner = search
 	local version = pathVersion
 	local teleports = ns.UsableTeleports(ns.NowMs())
@@ -864,19 +871,21 @@ local function Avoid()
 end
 
 -- Searches for the fastest way to point from where you stand. route is what Journey follows meanwhile (a repeated
--- journey's, else nil) and state its progress along it. listener hears every change to what Journey should follow,
--- possibly before Start returns.
+-- journey's, or one whose destination just moved) and state its progress along it. listener hears every change to what
+-- Journey should follow, possibly before Start returns. A replacing search is one whose route leads to a place the
+-- destination no longer is, so its first plan takes over whatever it costs.
 ---@param point SPFPoint
 ---@param route SPFPlan?
 ---@param state {index: integer, departed?: boolean}
 ---@param listener fun(route: SPFPlan?, news: SPFSearchNews)
-function Search.Start(point, route, state, listener)
+---@param replace? boolean the route being replaced leads somewhere else, so the next plan takes over
+function Search.Start(point, route, state, listener, replace)
 	goal, followed, progress, publish = point, route, state, listener
 	search = nil
 	waterMode = (ns.JourneyWaterWalking())
 	origin = nil
 	Avoid()
-	RefreshCosts(true, false)
+	RefreshCosts(true, false, replace == true)
 end
 
 -- Once per driver frame with a readable position: restarts a search whose inputs changed or whose callbacks waited

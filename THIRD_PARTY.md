@@ -144,6 +144,9 @@ Credit for the reports and requests behind the addon.
 | vcatalin | Forever Core bundled in the download again | GitHub; #731 |
 | sdtom | Town service pins wear their own icons | CurseForge; #794 |
 | Bervath | Town service pins wear their own icons | CurseForge; #794 |
+| Blast22 | Guidance no longer flickers between two objectives | CurseForge; 8693782 |
+| user_sggieekz05hc7uxt | Guidance no longer flickers between two objectives | CurseForge; 8685196 |
+| kindguydev | Guidance no longer flickers while a guide re-points | Discord; #693 |
 
 ## Inspired by
 
