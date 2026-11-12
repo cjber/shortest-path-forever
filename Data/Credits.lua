@@ -91,6 +91,9 @@ ns.Credits = {
 		{ name = "vcatalin", what = "Forever Core bundled in the download again" },
 		{ name = "sdtom", what = "Town service pins wear their own icons" },
 		{ name = "Bervath", what = "Town service pins wear their own icons" },
+		{ name = "Blast22", what = "Guidance no longer flickers between two objectives" },
+		{ name = "user_sggieekz05hc7uxt", what = "Guidance no longer flickers between two objectives" },
+		{ name = "kindguydev", what = "Guidance no longer flickers while a guide re-points" },
 	},
 	inspired = {
 		{ name = "Polestar by Fitz", what = "Ideas for many features" },
