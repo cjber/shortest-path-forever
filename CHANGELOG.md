@@ -19,6 +19,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 <!-- forever-core-sync -->
 
 - **Two more players are on the Thanks page.** hervad and caghanpekin-prog reported the short hitches during play, which stopped when travel stats stopped being shared with your guild and group. Thanks to hervad and caghanpekin-prog on GitHub for the reports (#759, #772).
+- **A journey left running no longer re-plans itself every five seconds.** The boats and zeppelins a journey waits for were worked out again every five seconds even when nothing about them had changed. Now a journey works out its waits once and plans again only when a departure it counts on leaves without you, so a journey left running in the background costs next to nothing.
 - Ships with the same shared code as your other Forever addons, so they keep working together.
 
 ## [1.34.2] - 2026-11-12
