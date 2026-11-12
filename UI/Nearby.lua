@@ -395,6 +395,7 @@ local function BuildGroups()
 			key = group.key,
 			label = group.label,
 			icon = group.icon,
+			tracking = group.tracking,
 			npcs = GroupNPCs(group.key),
 		})
 	end
@@ -434,6 +435,7 @@ local function BuildGroups()
 			key = service.key,
 			label = service.label,
 			icon = service.icon,
+			tracking = service.tracking,
 			npcs = GroupNPCs(service.key),
 		})
 	end
