@@ -14,6 +14,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.34.0] - 2026-11-12
+
+<!-- discord-image: docs/screenshots/town_services.png -->
+
 - **Town services wear their own icons.** The pins no longer use a town or city mark: each one shows the same icon the game's minimap tracking menu gives that service, such as the repairer's anvil, the banker's money bags or the baker's bread and milk. A group of nearby services wears a market stall rather than any one service's icon, and its tooltip lists the group's services; zooming in splits the group into one pin per NPC. Click a pin to plan a journey to that NPC, and its tooltip says so. The pins now show only on zone and city maps, never on a continent or the world map. Under *Town services* in the map's filter menu you can now hide any kind of service you never use; repairers start hidden. Thanks to sdtom and Bervath for the reports (#794).
 - **Your travel stats stay on your computer.** Shortest Path no longer shares journey and travel stats with your guild or group, and the leaderboard tab is gone with the rest of Forever Leaderboards. This also stops the short hitch every 10 seconds some players saw with sharing on. Departure times are no longer swapped with other players either, and timetables come from your own sightings, kept across sessions and characters on your account. Your own journey, distance and transport totals stay as they were.
 - **The quest list's More options works with a controller.** On the gamepad interface, pressing Y on a quest in the quest log's list opened nothing, because the *Plan journey* entry this addon adds to that menu had tainted it and the game's gamepad focus then refused to run. The game's quest menus are now left to the game while the gamepad interface is on, as the map and minimap menus already were, and our entries return with mouse and keyboard. Reported on CurseForge by vladsnz (#788).
