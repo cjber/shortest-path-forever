@@ -33,6 +33,7 @@ local DEFAULTS = {
 	portals = true,
 	minimapPins = true,
 	mapFlightMasters = true,
+	nearbyTab = true,
 	mapRoutes = true,
 	-- The town services' level of detail: "capitals", "important", "all" or "off" (UI/TownServices.lua).
 	townServices = "capitals",

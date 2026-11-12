@@ -656,6 +656,20 @@ local function Attach()
 		shown = Shown,
 		safeCall = ns.core.SafeCall,
 	})
+	ns.RefreshNearbyTab = function()
+		local enabled = not ns.db or ns.db.nearbyTab ~= false
+		if not enabled and ForeverCore.QuestLogTabs.Selected() == "services" then
+			ForeverCore.QuestLogTabs.ShowQuests()
+		end
+		if tab.SetShown then
+			tab:SetShown(enabled)
+		elseif enabled and tab.Show then
+			tab:Show()
+		elseif not enabled and tab.Hide then
+			tab:Hide()
+		end
+	end
+	ns.RefreshNearbyTab()
 	Art.Fit(tab.Icon, SERVICES_ATLAS, TAB_ICON, TAB_ICON)
 	ns.NearbyServices.OnReady(function()
 		if visible then

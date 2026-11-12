@@ -426,3 +426,5 @@ L["All towns"] = "所有城鎮" -- mt
 L["Books and recipes"] = "書籍和配方" -- mt
 L["One icon per town, or one per service as you zoom in."] =
 	"縮小顯示每個城鎮一個圖示，放大後每個服務一個圖示。" -- mt
+L["Show Nearby services tab"] = "顯示附近服務分頁"
+L["The Nearby services tab in the world map and quest log."] = "世界地圖與任務日誌中的附近服務分頁。"

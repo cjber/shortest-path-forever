@@ -440,3 +440,5 @@ L["All towns"] = "모든 마을" -- mt
 L["Books and recipes"] = "책과 조리법" -- mt
 L["One icon per town, or one per service as you zoom in."] =
 	"마을마다 아이콘 하나, 확대하면 서비스마다 아이콘 하나." -- mt
+L["Show Nearby services tab"] = "주변 편의시설 탭 표시"
+L["The Nearby services tab in the world map and quest log."] = "세계 지도와 퀘스트 로그의 주변 편의시설 탭입니다."

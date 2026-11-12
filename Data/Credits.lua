@@ -91,6 +91,7 @@ ns.Credits = {
 			name = "Anonymous CurseForge reporter",
 			what = "Guidance no longer flickers when another addon selects an objective",
 		},
+		{ name = "cobalt_44", what = "Nearby services tab toggle" },
 	},
 	inspired = {
 		{ name = "Polestar by Fitz", what = "Ideas for many features" },

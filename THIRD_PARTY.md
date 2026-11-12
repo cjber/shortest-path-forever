@@ -141,6 +141,7 @@ Credit for the reports and requests behind the addon.
 | IronmanBG | Plan journey back in Kaliel's Tracker | CurseForge; #718 |
 | Blast22 | Guidance no longer flickers when another addon selects an objective | CurseForge; 8693782 |
 | Anonymous CurseForge reporter | Guidance no longer flickers when another addon selects an objective | CurseForge; #693 |
+| cobalt_44 | Nearby services tab toggle | CurseForge; #767, 8694492 |
 
 ## Inspired by
 

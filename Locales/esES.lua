@@ -431,3 +431,5 @@ L["Capitals and important services"] = "Capitales y servicios importantes" -- mt
 L["All towns"] = "Todas las ciudades" -- mt
 L["Books and recipes"] = "Libros y recetas" -- mt
 L["One icon per town, or one per service as you zoom in."] = "Un icono por ciudad, o uno por servicio al acercar." -- mt
+L["Show Nearby services tab"] = "Mostrar pestaña de servicios cercanos"
+L["The Nearby services tab in the world map and quest log."] = "La pestaña de servicios cercanos en el mapa del mundo y el registro de misiones."
