@@ -316,13 +316,10 @@ L["Both"] = "兩者" -- mt
 L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs."] =
 	"本地旅行日誌 — 步行約%d碼；%d次旅程；%d次交通；%d次飛行；%d段傳送門。"
 L["Record travel stats"] = "記錄旅行統計"
-L["Share travel stats with guild and groups"] = "與公會和隊伍共用旅行統計"
 L["Time left"] = "剩餘時間" -- mt
 L["Travel journal"] = "旅行日誌"
 L["Travel milestone reached: %s"] = "達成旅行里程碑：%s"
 L["Travel stats are not ready yet."] = "旅行統計尚未準備好。"
-L["Turn this off to keep stats on this character only. Shared records are player-reported and not verified."] =
-	"關閉後統計只保留在此角色上。共用記錄由玩家回報，未經核實。"
 L["Party member"] = "隊友" -- mt
 L["That player is not on a map you can see."] = "該玩家不在你能看到的地圖上。" -- mt
 L["You have caught up with %s."] = "你已追上%s。" -- mt
@@ -382,10 +379,6 @@ L["Hide RestedXP's arrow"] = "隱藏 RestedXP 的箭頭" -- mt
 L["Hide departures"] = "隱藏班次"
 
 -- Travel stats and the shared Forever Leaderboards.
-L["Completed journeys"] = "已完成的旅程"
-L["On unless you turn it off. Shares travel records with guild and group and puts you on Forever Leaderboards."] =
-	"除非你關閉，否則保持開啟。透過公會、隊伍、團隊和副本頻道分享旅行記錄，並將你列入 Forever 排行榜。" -- mt
-L["total"] = "總計" -- mt
 
 L["Follow roads"] = "沿道路行走" -- mt
 L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =

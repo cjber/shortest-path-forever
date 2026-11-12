@@ -319,13 +319,10 @@ L["Both"] = "Ambos" -- mt
 L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs."] =
 	"Diário de viagem local — aprox. %d jardas caminhadas; %d jornadas; %d transportes; %d voos; %d trechos de portal."
 L["Record travel stats"] = "Registrar estatísticas de viagem"
-L["Share travel stats with guild and groups"] = "Compartilhar estatísticas de viagem com a guilda e os grupos"
 L["Time left"] = "Tempo restante" -- mt
 L["Travel journal"] = "Diário de viagem"
 L["Travel milestone reached: %s"] = "Marco de viagem alcançado: %s"
 L["Travel stats are not ready yet."] = "As estatísticas de viagem ainda não estão prontas."
-L["Turn this off to keep stats on this character only. Shared records are player-reported and not verified."] =
-	"Desative para manter as estatísticas só neste personagem. Os registros compartilhados são enviados por jogadores e não são verificados."
 L["Party member"] = "Membro do grupo" -- mt
 L["That player is not on a map you can see."] = "Esse jogador não está num mapa que você possa ver." -- mt
 L["You have caught up with %s."] = "Você alcançou %s." -- mt
@@ -386,10 +383,6 @@ L["Hide RestedXP's arrow"] = "Ocultar a seta do RestedXP" -- mt
 L["Hide departures"] = "Ocultar partidas"
 
 -- Travel stats and the shared Forever Leaderboards.
-L["Completed journeys"] = "Jornadas concluídas"
-L["On unless you turn it off. Shares travel records with guild and group and puts you on Forever Leaderboards."] =
-	"Ativado a menos que você desative. Compartilha registros de viagem nos canais de guilda, grupo, raide e instância e coloca você nas classificações Forever." -- mt
-L["total"] = "total" -- mt
 
 L["Follow roads"] = "Seguir estradas" -- mt
 L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =
