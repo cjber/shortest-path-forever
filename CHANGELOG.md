@@ -17,6 +17,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 ## [1.34.2] - 2026-11-12
 
 - **The arrow and the tracker no longer flash while a guide moves between objectives.** The route line, arrow and tracker stay put while the next objective's route is found, and selecting a quest in another addon no longer takes the arrow away. Thanks to Blast22 and user_sggieekz05hc7uxt on CurseForge and kindguydev on Discord (#693).
+- Ships with the same shared code as your other Forever addons, so they keep working together.
 
 ## [1.34.1] - 2026-11-12
 
