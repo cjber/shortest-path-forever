@@ -14,6 +14,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Two more players are on the Thanks page.** hervad and caghanpekin-prog reported the short hitches during play, which stopped when travel stats stopped being shared with your guild and group. Thanks to hervad and caghanpekin-prog on GitHub for the reports (#759, #772).
+
 ## [1.34.2] - 2026-11-12
 
 - **The arrow and the tracker no longer flash while a guide moves between objectives.** The route line, arrow and tracker stay put while the next objective's route is found, and selecting a quest in another addon no longer takes the arrow away. Thanks to Blast22 and user_sggieekz05hc7uxt on CurseForge and kindguydev on Discord (#693).
