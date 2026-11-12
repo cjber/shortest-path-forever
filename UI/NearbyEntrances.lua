@@ -65,6 +65,9 @@ local function Build()
 				key = key,
 				label = place.name,
 				icon = ICON,
+				-- Never a town service pin (UI/TownServices.lua skips the section), but the client's dungeon mark
+				-- keeps the group's tracking icon its own.
+				tracking = "Dungeon",
 				npcs = {},
 				entrance = instance,
 			}

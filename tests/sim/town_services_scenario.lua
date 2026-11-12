@@ -1,8 +1,9 @@
 -- luacheck: read globals scenario ADDON
 local ForeverCore = dofile("tests/forever_core.lua")
--- The world map's town services: service pins in a capital, a town icon with their tooltip, a zoom re-cluster, the
--- four levels of detail, and combat and the gamepad interface over the layer. The services themselves come from a
--- ready Nearby list here, with a projection into the simulator's Elwynn and Stormwind maps.
+-- The world map's town services: service pins in a capital, a group pin wearing the addon's market stall with every
+-- service in its tooltip, the Shift-click journey, a zoom re-cluster, the four levels of detail, and combat and the
+-- gamepad interface over the layer. The services themselves come from a ready Nearby list here, with a projection
+-- into the simulator's Elwynn and Stormwind maps.
 scenario(
 	"town services draw, split, hover and survive combat and the gamepad interface",
 	{ addons = ForeverCore.addons() },
@@ -34,23 +35,32 @@ scenario(
 		end
 		assert(ns, "full addon namespace loaded")
 
-		-- A ready Nearby list: two services inside Stormwind, and a food seller in Elwynn outside it.
-		local function group(section, key, label, icon)
-			return { section = section, key = key, label = label, icon = icon, npcs = {} }
+		-- A ready Nearby list: two services inside Stormwind, and a food seller in Elwynn outside it. The groups carry
+		-- the client's tracking atlases the map pins wear.
+		local function group(section, key, label, tracking)
+			return { section = section, key = key, label = label, icon = tracking, tracking = tracking, npcs = {} }
 		end
 		local groups = {
-			group("services", "bank", "Bank", "banker"),
-			group("services", "innkeeper", "Innkeeper", "innkeeper"),
-			group("vendors", "food", "Food", 4540),
+			group("services", "bank", "Bank", "Banker"),
+			group("services", "innkeeper", "Innkeeper", "Innkeeper"),
+			group("vendors", "food", "Food", "Food"),
 		}
 		local function place(id, name, x, y)
-			return { id = id, name = name, map = 1429, x = 0.5, y = 0.5, world = { map = 0, x = x, y = y } }
+			return {
+				id = id,
+				name = name,
+				map = 1429,
+				x = 0.5,
+				y = 0.5,
+				world = { map = 0, x = x, y = y },
+			}
 		end
 		local index = {
 			bank = { place(1, "Banker One", -8500, 800) },
-			innkeeper = { place(2, "Innkeeper Two", -8400, 900) },
+			innkeeper = { place(2, "Innkeeper Two", -8440, 860) },
 			food = { place(3, "Food Three", -9449, 64) },
 		}
+		local navigated
 		ns.NearbyServices = {
 			State = function()
 				return "ready"
@@ -62,6 +72,10 @@ scenario(
 				return groups
 			end,
 			OnReady = function() end,
+			Navigate = function(key, spot)
+				navigated = { key = key, spot = spot }
+				return true
+			end,
 		}
 
 		sim:openWorldMap(1429)
@@ -71,10 +85,26 @@ scenario(
 		end)
 		sim:advance(0.2)
 		local pins = ns.Canvas.Pools(sim.G.WorldMapFrame).ShortestPathForeverServicePinTemplate
-		assert(pins:GetNumActive() >= 2, "the capital's town icon and the outlying seller are drawn")
-		sim:hover(pins.active[1])
+		assert(pins:GetNumActive() == 2, "the capital's grouped services and the outlying seller are drawn")
+		local groupPin
+		for _, pin in ipairs(pins.active) do
+			if #pin.cluster.services > 1 then
+				groupPin = pin
+			end
+		end
+		assert(groupPin, "two overlapping services share one pin")
+		assert(
+			groupPin.Texture:GetTexture() == "Interface\\AddOns\\ShortestPathForever\\media\\TownGroup",
+			"the group pin wears the addon's market stall"
+		)
+		assert(groupPin.Texture:GetAtlas() == nil, "no service's atlas or a town mark on a group pin")
+		sim:hover(groupPin)
 		sim:advance(0.2)
 		sim:leave()
+		sim:input(function()
+			ns.Canvas.Click(groupPin, "LeftButton")
+		end)
+		assert(navigated and navigated.key == "bank", "a click plans a journey to the group's service")
 
 		-- A zoom re-clusters the pins; combat defers the redraw and the regen event brings it back.
 		sim:zoomMap(2)

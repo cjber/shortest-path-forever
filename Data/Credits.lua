@@ -88,6 +88,8 @@ ns.Credits = {
 		{ name = "IronmanBG", what = "Plan journey back in Kaliel's Tracker" },
 		{ name = "vladsnz", what = "Quest list More options works with a controller" },
 		{ name = "vcatalin", what = "Forever Core bundled in the download again" },
+		{ name = "sdtom", what = "Town service pins wear their own icons" },
+		{ name = "Bervath", what = "Town service pins wear their own icons" },
 	},
 	inspired = {
 		{ name = "Polestar by Fitz", what = "Ideas for many features" },

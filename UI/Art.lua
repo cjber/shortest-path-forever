@@ -24,6 +24,10 @@ ns.Art = Art
 -- The addon's own zeppelin art (media/Zeppelin.tga): the client has no zeppelin icon (docs/asset-registry.md).
 Art.ZEPPELIN_FILE = "Interface\\AddOns\\ShortestPathForever\\media\\Zeppelin"
 
+-- The addon's own town services group pin (media/TownGroup.tga): a market stall for the pin that stands for more than
+-- one NPC, since no one service's icon can speak for the rest.
+Art.TOWN_GROUP_FILE = "Interface\\AddOns\\ShortestPathForever\\media\\TownGroup"
+
 -- The client art each journey mode wears, the same choice the map's own pins make (UI/Map.lua's SetTransportIcon,
 -- UI/Looks.lua's flight master), so a mode looks alike on the map, the minimap and the tracker. Each is looked up in
 -- the client before it is drawn.

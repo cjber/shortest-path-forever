@@ -36,6 +36,23 @@ local DEFAULTS = {
 	mapRoutes = true,
 	-- The town services' level of detail: "capitals", "important", "all" or "off" (UI/TownServices.lua).
 	townServices = "capitals",
+	-- The services a town pin may wear, each with its own checkbox under the world map's Town services filter. A flat
+	-- key per service keeps the defaults merge from sharing a table with the saved settings, and gives an existing
+	-- player every key it is missing. Repair starts hidden: most players do not want an anvil in every town.
+	townServiceInnkeeper = true,
+	townServiceFlight = true,
+	townServiceStable = true,
+	townServiceRepair = false,
+	townServiceBank = true,
+	townServiceAuction = true,
+	townServiceClass = true,
+	townServiceProfessions = true,
+	townServiceFood = true,
+	townServiceAmmunition = true,
+	townServiceBags = true,
+	townServiceReagents = true,
+	townServiceBooks = true,
+	townServiceGear = true,
 	mapPinScale = 100,
 	flightPinScale = 100,
 	minimapPinScale = 100,
