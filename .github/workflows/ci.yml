@@ -284,7 +284,7 @@ jobs:
           fi
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends --allow-downgrades \
-            "luajit=$LUAJIT" "libluajit-5.1-2=$LUAJIT" "libluajit-5.1-common=$LUAJIT"
+            "luajit=$LUAJIT" "libluajit-5.1-2=$LUAJIT" "libluajit-5.1-common=$LUAJIT" "lua5.1=5.1.5-9build2"
       # .pkgmeta's manual changelog, which the release fills with the version's entry.
       - run: printf 'Package check\n' > .release-notes.md
       # The packager skips a push build when HEAD carries a tag ("Found future tag, not packaging"), so a tag that
@@ -296,4 +296,9 @@ jobs:
       - uses: BigWigsMods/packager@01e8631a69c69d7654c788d152630d5fed9e3812 # v2.7.0
         with:
           args: -d -z
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: tools/.cache/forever_sim
+          key: forever-sim-${{ hashFiles('tools/forever_sim/fetch.py') }}
+      - run: python3 tools/forever_sim/fetch.py
       - run: python3 tools/check_package.py
