@@ -598,7 +598,7 @@ end
 -- Subscribe: one call per burst of guidance changes, on the next frame, each subscriber isolated from the others.
 do
 	equal(API.version, 2, "version 2 removes peer and leaderboard APIs")
-	equal(API.minor, 1, "minor 1 records Guidance and the guidance change")
+	equal(API.minor, 2, "minor 2 records journey leg ends, ResumeRestedXP and the replan change")
 	equal(pcall(API.Subscribe, "callback"), false, "a callback must be a function")
 	local timers, route =
 		{}, {
@@ -658,6 +658,15 @@ do
 
 	equal(API.NavigateRoute("AGF", route), true, "start a route")
 	equal(#heard.first, 0, "not called during the change")
+	-- Let the first plan land before the frame: its replan notice joins the start's burst.
+	for _ = 1, 100 do
+		local journey = API.Journey()
+		if journey and #journey.legs > 0 then
+			break
+		end
+		driver.update(0.1)
+	end
+	assert(API.Journey() and #API.Journey().legs > 0, "the first plan is ready")
 	equal(#timers, 1, "one frame for the whole burst")
 	frameEnd()
 	equal(#heard.first, 1, "one call for the burst")
@@ -671,7 +680,6 @@ do
 	equal(heard.last[1].started, true, "a subscriber's edit reaches no other")
 
 	-- Sending the same route again changes nothing a caller reads, so nobody is called.
-	driver.update(0.1)
 	equal(API.NavigateRoute("AGF", route), true, "the same route again")
 	frameEnd()
 	equal(#heard.last, 1, "the same destination is no change")

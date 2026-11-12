@@ -235,15 +235,17 @@ local function Sync()
 	end
 end
 
--- Let the player hand control back after pausing a guide, without waiting for its next native update.
+-- Let the player hand control back after pausing a guide, without waiting for its next native update. Returns whether
+-- a guide is followed now, which the public API answers with.
+---@return boolean
 function ns.ResumeRestedXP()
 	local frontend = AdventureGuideForever and AdventureGuideForever.API
 	if frontend and Integrated() and type(frontend.ResumeRestedXP) == "function" then
-		frontend.ResumeRestedXP()
-		return
+		return frontend.ResumeRestedXP() == true
 	end
 	target, targetTitle, targetQuests = nil, nil, nil
 	Sync()
+	return API.CurrentStop(OWNER) ~= nil
 end
 
 function ns.RefreshRestedXP()

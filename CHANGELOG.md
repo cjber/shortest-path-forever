@@ -18,6 +18,12 @@ optional `### For addon authors` subsection after a version's player bullets.
 - **The Nearby services tab can be hidden.** The new *Show Nearby services tab* setting removes the map and quest-log side tab when another addon needs that space. *Open Nearby services* in the tracking menu remains available when the tab is hidden. Thanks to cobalt_44 for the request (#767).
 - **Dugi Guides can lead the journey.** Off by default, *Follow Dugi guides* in Guidance plans journeys to the guide's current step and moves them on as the guide does, without TomTom or a bridge addon. It reads the public Dugi viewer without changing it, and Dugi's own arrow stays. Thanks to ghuff07 on CurseForge for the request (#689).
 - **Companion addons can read the next guidance point and active-leg waypoints.** API version 2, minor 1 adds copied `Guidance()` snapshots and `Subscribe` guidance notices. Thanks to nimri82 of RestedXP-Navigator for the request (#777).
+- **A macro can resume your RestedXP guide.** `ShortestPathForever.API.ResumeRestedXP()` resumes the guide RestedXP is showing, the same as *Resume guide* in Settings and the tracker menu, so a macro can bring it back without opening either. Asked on CurseForge by Hatemost (#786).
+
+### For addon authors
+
+- **`ShortestPathForever.API` now has `minor = 2` and names where each journey leg starts and ends.** `Journey()` legs gain copied `from` and `to` `{map, x, y}` points taken from the planner's own leg geometry (#782), and each is absent when this client cannot place that end. `Subscribe` gains the `replan` change for a plan worked out again, including the first one ready and a redrawn walk. `ResumeRestedXP()` resumes the RestedXP guide the player follows and returns `true`, or `nil, "unavailable"` with no guide to resume, or `nil, "invalid"` in combat. Nothing changes for players.
+
 ## [1.33.1] - 2026-11-12
 
 <!-- forever-core-sync -->

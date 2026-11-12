@@ -714,8 +714,17 @@ local function Follow(route, news)
 		if not result then
 			StopGuide()
 		end
+		-- The plan is ready or has been replaced: the legs Journey() reports, and where each starts and ends, may
+		-- differ from the last answer, whether or not the goal changed.
+		if ns.JourneyReplanned then
+			ns.JourneyReplanned()
+		end
 	elseif news == "walks" then
 		Guide.Retarget()
+		-- A redrawn walk can move the leg's own ends, which Journey() copies.
+		if ns.JourneyReplanned then
+			ns.JourneyReplanned()
+		end
 	end
 	UpdateProgress()
 	AnnounceUnsyncedFlightPoints()

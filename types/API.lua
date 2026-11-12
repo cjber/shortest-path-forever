@@ -67,11 +67,13 @@
 ---@class SPFAPIJourneyGoal : SPFAPIPlace
 ---@field title string -- the stop's title, or where it stands when it has none
 
---- One leg still ahead, as the tracker words it.
+--- One leg still ahead, as the tracker words it, with the leg's own ends as the planner drew them.
 ---@class SPFAPIJourneyLeg
 ---@field mode SPFAPIMode
 ---@field text string -- the step's action words, plain and without the tracker's colours
 ---@field seconds number -- this leg's own whole seconds, its wait included
+---@field from? SPFAPIPlace -- where the leg starts, as the planner's own leg points name it; absent when this client cannot place it
+---@field to? SPFAPIPlace -- where the leg ends; absent when this client cannot place it
 
 --- The journey under way, whoever owns it.
 ---@class SPFAPIJourney
@@ -110,11 +112,13 @@
 ---@field leg? boolean -- the leg under way moved on without the goal changing: the player or an owner skipped it
 ---@field guidance? boolean -- the guidance point changed: a bend passed within the leg, the leg or its source walk
 --- replaced, the guideStops switch changed what the arrow draws, or guidance started or ended
+---@field replan? boolean -- the plan was worked out again: the first plan is ready, a new route replaced the
+--- followed one, or its walks were redrawn; read Journey() again, since its legs' from and to may have changed
 ---@field active? boolean -- what Active answers changed
 
 ---@class SPFPublicAPI
 ---@field version integer -- 2 removes peer sharing and Leaderboard; callers accept 1 or 2 and reject future versions
----@field minor integer -- 1 adds Guidance and the guidance change for version 2; version 1 minor 3 added Journey, Pause, Resume, SkipLeg, Stats and the leg change
+---@field minor integer -- 2 adds each journey leg's from and to, ResumeRestedXP and the replan change; 1 adds Guidance and the guidance change; version 1 minor 3 added Journey, Pause, Resume, SkipLeg, Stats and the leg change
 ---@field Estimate fun(fromMap: integer, fromX: number, fromY: number, toMap: integer, toX: number, toY: number): seconds: number?, reason: SPFAPINoRoute? -- travel seconds; nil comes with the reason
 ---@field Navigate fun(owner: string, map: integer, x: number, y: number, title?: string, kind?: SPFAPIStopKind): boolean -- starts/replaces guidance outside combat when journeys are enabled
 ---@field NavigateRoute fun(owner: string, stops: SPFAPIStop[]): boolean -- starts/replaces guidance through 1-64 stops in order; false leaves the current journey intact
@@ -125,6 +129,7 @@
 ---@field Pause fun(owner: string): boolean -- stops that owner's guidance and keeps its goal; false for another owner, no journey, an already stopped journey or combat
 ---@field Resume fun(owner: string): boolean -- starts that owner's guidance again on the same goal; false for another owner, no journey, an already guided journey or combat
 ---@field SkipLeg fun(owner: string, index?: integer): boolean -- advances that owner's current leg; false for another owner or when nothing was skipped
+---@field ResumeRestedXP fun(): success: true?, reason: ("invalid"|"unavailable")? -- resumes the RestedXP guide the player follows, or nil and why it could not
 ---@field Stats fun(): rows: SPFAPIStat[]?, reason: SPFAPINotReady? -- this character's travel records, one fresh row per metric
 ---@field RenameStop fun(owner: string, index: integer, title: string, renamePoints?: fun(point: SPFPoint): boolean?): boolean -- relabels a running route's stop in place; false leaves it as it was
 ---@field EstimateDetail fun(fromMap: integer, fromX: number, fromY: number, toMap: integer, toX: number, toY: number): detail: SPFAPIDetail?, reason: SPFAPINoRoute? -- Estimate leg by leg, sharing its cache

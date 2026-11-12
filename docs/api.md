@@ -1,12 +1,14 @@
 # Addon API
 
-Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 1`) with uiMapIDs and normalized 0-1 coordinates.
+Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 2`) with uiMapIDs and normalized 0-1 coordinates.
 Version 2 removes peer sharing and `Leaderboard`; callers must accept versions 1 and 2 and reject future versions. Check that a function exists before calling it, because an older
 addon may not have it yet. The full types are in [`types/API.lua`](../types/API.lua). On ForeverCore 1.3.2 or
 later, the API is also listed by `ForeverCore.APIKit.Addons()`.
 
 ## Minor history
 
+- Version 2, `minor = 2`: adds each journey leg's `from` and `to`, `ResumeRestedXP` and the `replan` change in
+  `Subscribe`.
 - Version 2, `minor = 1`: adds `Guidance` and the `guidance` change in `Subscribe`.
 - Version 1, `minor = 3`: adds `Journey`, `Pause`, `Resume`, `SkipLeg`, `Stats` and the `leg` change in
   `Subscribe`.
@@ -76,9 +78,10 @@ later, the API is also listed by `ForeverCore.APIKit.Addons()`.
   `stop` (what `CurrentStop` answers changed: an addon's route started, moved on or ended), `leg` (the leg under way
   moved on without the goal changing: the player or an owner skipped it), `guidance` (the point `Guidance` answers
   changed: a bend passed within the leg, a new leg or source walk, the guide-stops switch, or guidance starting or
-  ending) and `active` (what `Active` answers changed,
+  ending), `replan` (the plan was worked out again: the first plan is ready, a new route replaced the followed one,
+  or its walks were redrawn, so the legs `Journey` reports may differ) and `active` (what `Active` answers changed,
   including the player turning guidance off or a corpse run guiding after a journey ends). Several can be set together,
-  so read `CurrentStop`, `Ended` and `Active` again rather than replaying them. Only the subscribers there when the
+  so read `CurrentStop`, `Ended`, `Journey` and `Active` again rather than replaying them. Only the subscribers there when the
   dispatch began are called, so one added by a callback waits for the next burst. It returns a function that
   unsubscribes, safe to call twice. An error in one callback goes to the game's error handler without stopping the
   others. A non-function callback is an error.
@@ -95,6 +98,11 @@ later, the API is also listed by `ForeverCore.APIKit.Addons()`.
 - `Pause(owner)` and `Resume(owner)` stop and restart that owner's guidance on the same goal, as the tracker's own
   guidance switch does. `SkipLeg(owner, index?)` advances that owner's current leg. Each returns `true` when it acted
   and `false` for any other owner, no journey, the state already asked for, or combat.
+- `ResumeRestedXP()` resumes the RestedXP guide the player follows, as *Resume guide* in Settings and in the tracker
+  menu does, so a macro can call it: `/run ShortestPathForever.API.ResumeRestedXP()`. It returns `true` when a guide
+  is now followed. It returns `nil, "unavailable"` when there is no RestedXP guide to resume, because RestedXP is not
+  running, following its guide is off, it has no current step, or the saved variables are not loaded yet, and
+  `nil, "invalid"` in combat, where guidance cannot start.
 - `Stats()` publishes this character's travel records in the suite's statistics shape.
 
 Use your addon's name as `owner`; starting another journey replaces ownership.
@@ -114,7 +122,8 @@ A read with nothing to answer returns `nil, reason`. `Estimate` and `EstimateDet
 nothing to answer: no current stop, or no ended journey to report. `Journey` uses `"loading"` while the saved
 variables are not loaded or the planner has no route yet, and `"none"` when there is no journey. `Guidance` adds
 `"paused"`, `"disabled"`, `"cast"` and `"unavailable"` to those two, each described above. `Stats` uses
-`"loading"` until the saved variables are loaded.
+`"loading"` until the saved variables are loaded. `ResumeRestedXP` is an action, not a read: `nil` comes with
+`"unavailable"` when there is no guide to resume, or `"invalid"` in combat, as described above.
 
 ## The journey under way
 
@@ -126,7 +135,7 @@ this API uses.
 |---|---|
 | `owner` | the addon that owns the journey; absent for the player's own |
 | `goal` | a fresh `{map, x, y, title}`: where the journey ends, and the stop's own title or where it stands |
-| `legs` | the planner's legs from the current one on, each a fresh `{mode, text, seconds}` |
+| `legs` | the planner's legs from the current one on, each a fresh `{mode, text, seconds, from?, to?}` |
 | `index` | the 1-based leg under way |
 | `guided` | whether guidance is on, as `Active` asks it |
 | `secondsLeft` | whole seconds from the current leg to the goal, the same total as the tracker's Journey header |
@@ -134,6 +143,15 @@ this API uses.
 A leg's `text` is the step's action words exactly as the tracker has them, without its number, mark or colours, and
 its `seconds` is that leg's own whole seconds including the wait for a boat, zeppelin, lift, tram or teleport. The
 legs add up to `secondsLeft`.
+
+A leg's `from` and `to` are fresh `{map, x, y}` copies of the planner's own leg points where that leg starts and ends,
+in uiMapID and 0-1 fractions: the first and last point of the line it draws for the leg, which for a walk is its
+planned walking line, for a flight or boat is the route it takes, and for a teleport is its two ends alone. A leg
+with no line here, or an end this client
+cannot place on a map, leaves that field absent. Nothing is estimated, so `from` and `to` can be missing on any leg
+and callers must check each one. They describe the leg as it was planned, not wherever the player stands when they
+read: the leg under way still starts at the point its plan named. A plan worked out again arrives as the `replan`
+change; read `Journey()` again for the legs it now names.
 
 While the player is a ghost the corpse run is the journey under way: `Journey` reports it as the tracker draws it,
 with its goal on the corpse, one walking leg and `owner` absent. The journey waiting behind it keeps its goal and
@@ -156,10 +174,6 @@ if journey then
 	end
 end
 ```
-
-variables are not loaded or the planner has no route yet, and `"none"` when there is no journey. `Guidance` adds
-`"paused"`, `"disabled"`, `"cast"` and `"unavailable"` to those two, each described above. `Stats` uses
-`"loading"` until the saved variables are loaded.
 
 `Stats()` returns a fresh array of this character's travel records, one row per metric:
 
