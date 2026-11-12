@@ -20,10 +20,17 @@ ns.CompanionMaps = Maps
 ---@type {kind: string, x: number, y: number}[]
 local pins = {}
 local signature, nextScan = "", 0
+-- The string Scan returns, built only when the pins or the journey it stands for change: UI/Canvas.lua reads it every
+-- frame the map is shown, and joining a fresh string there is work done once a frame for nothing (WFA-13, #784).
+local key, keySignature, keyPlan, keyCurrent
 
 local function Signature()
 	local plan, current = ns.JourneyPlan()
-	return signature .. ":" .. tostring(plan) .. ":" .. tostring(current)
+	if keySignature ~= signature or keyPlan ~= plan or keyCurrent ~= current then
+		keySignature, keyPlan, keyCurrent = signature, plan, current
+		key = signature .. ":" .. tostring(plan) .. ":" .. tostring(current)
+	end
+	return key
 end
 
 -- Read visible pins, rather than private settings: coverage, faction and zoom rules belong to their producer.

@@ -1,9 +1,9 @@
 -- Run from the repository root: luajit tests/quest_pin_spec.lua
 -- The game's own quest pins on the world map (#472, #486): while a journey stop marks a quest, its pin is hidden and
 -- the pins for quests no stop marks stay; the quest provider's own refreshes (on its events, on the map changing and
--- on the map opening) hide the marked ones again a frame later; a stop that only hands a quest in hides its pin too;
--- and a map provider whose GetPinTemplate needs an argument is never asked for one (#491, #494). No provider is hooked
--- or called to find the pins.
+-- on the map opening) hide the marked ones again at the end of the same frame, after its event handlers, never on a
+-- timer (#783); a stop that only hands a quest in hides its pin too; and a map provider whose GetPinTemplate needs an
+-- argument is never asked for one (#491, #494). No provider is hooked or called to find the pins.
 local dir = arg[0]:match("^(.*)/") or "tests"
 
 local probe = "tools/.cache/blizzard-ui/Interface/AddOns/Blizzard_SharedXML/Spinner.lua"
@@ -100,7 +100,7 @@ assert(loadstring(fixture .. [==[
 assert(vignetteLookups == 0, "the vignette provider is not asked for a pin template")
 assert(#errors == 0, "loading reports no error: " .. tostring(errors[1]))
 setMapShown(true)
-runPending()
+runOnUpdate()
 posX, posY, posMap, facing = 0, 0, 1, 0
 mapID, zoom = 1414, 0
 local pins = QuestPins({ 101, 202, 303 })
@@ -127,14 +127,17 @@ pins = nativeActive.QuestPinTemplate
 assert(not pins[1].hidden, "the passed stop's pin is restored")
 assert(pins[2].hidden and not pins[3].hidden, "the stop still ahead keeps its pin hidden")
 
--- The provider refreshes on QUEST_LOG_UPDATE and re-acquires every pin; our own event frame walks the new pins a
--- frame later, never a provider method. (Planning the journey super-tracked no quest, which refreshed it once already.)
+-- The provider refreshes on QUEST_LOG_UPDATE and re-acquires every pin; our own event frame walks the new pins at the
+-- end of the same frame, never a provider method and never on a timer. (Planning the journey super-tracked no quest,
+-- which refreshed it once already.)
 refreshes = 0
 fireEvent("QUEST_LOG_UPDATE")
 assert(refreshes == 1, "the provider's own refresh ran on the quest log update")
 pins = nativeActive.QuestPinTemplate
 assert(not pins[2].hidden, "the provider's refreshed pin starts shown, before our pass")
 runPending()
+assert(not pins[2].hidden, "the pass is frame work, not a one-shot timer: a due timer still leaves the pin shown")
+runOnUpdate()
 pins = nativeActive.QuestPinTemplate
 assert(not pins[1].hidden, "an unmarked quest's refreshed pin shows")
 assert(pins[2].hidden and not pins[3].hidden, "the refreshed pin for the stop ahead is hidden again")
@@ -153,7 +156,7 @@ provider:RefreshAllData()
 pins = nativeActive.QuestPinTemplate
 assert(not pins[3].hidden, "the refreshed pin starts shown")
 fireEvent("SUPER_TRACKING_CHANGED")
-runPending()
+runOnUpdate()
 pins = nativeActive.QuestPinTemplate
 assert(pins[3].hidden, "the super-tracking refresh hides the hand-in's pin again")
 
@@ -162,10 +165,10 @@ provider:RefreshAllData()
 pins = nativeActive.QuestPinTemplate
 assert(not pins[3].hidden, "the refreshed pin starts shown again")
 fireEvent("CVAR_UPDATE", "notQuestPOI", "0")
-runPending()
+runOnUpdate()
 assert(not pins[3].hidden, "another CVar's change leaves the refreshed pins alone")
 fireEvent("CVAR_UPDATE", "questPOI", "1")
-runPending()
+runOnUpdate()
 pins = nativeActive.QuestPinTemplate
 assert(pins[3].hidden, "the questPOI setting's change hides the hand-in's pin again")
 
@@ -178,7 +181,7 @@ later:RefreshAllData()
 pins = nativeActive.QuestPinTemplate
 assert(not pins[1].hidden and not pins[2].hidden and not pins[3].hidden, "the late provider's pins start shown")
 triggerEvent("MapCanvas.MapSet", 1414)
-runPending()
+runOnUpdate()
 pins = nativeActive.QuestPinTemplate
 assert(not pins[1].hidden and not pins[2].hidden, "unmarked quests keep their pins on a map change")
 assert(pins[3].hidden, "the map change hides the hand-in's pin again")
@@ -187,7 +190,7 @@ assert(pins[3].hidden, "the map change hides the hand-in's pin again")
 provider:RefreshAllData()
 assert(not nativeActive.QuestPinTemplate[3].hidden, "the refreshed pin starts shown before the map opens")
 setMapShown(true)
-runPending()
+runOnUpdate()
 assert(nativeActive.QuestPinTemplate[3].hidden, "opening the map hides the hand-in's pin again")
 
 -- A provider whose GetPinTemplate takes its vignette is never called, to identify the quest provider or otherwise.

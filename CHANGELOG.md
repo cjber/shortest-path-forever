@@ -12,6 +12,11 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Quest pins stop blinking at journey stops.** The game's quest pin at a stop the route already marks no longer shows for a frame every time your quest log changes, so the world map stays steady while a journey is drawn.
+- **Standing still costs less.** The destination pin, the Guidelime step and the map's own checks now skip their work when nothing has changed, and following a party member reads their position once a second instead of every frame, so ordinary play leaves more time for the game.
+
 ## [1.33.1] - 2026-11-12
 
 <!-- forever-core-sync -->
