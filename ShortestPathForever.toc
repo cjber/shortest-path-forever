@@ -42,6 +42,7 @@ Data\Walks.lua
 Data\RoadCells.lua
 Data\RoadEdges.lua
 Data\Heights.lua
+Data\IdleSpawns.lua
 Data\Credits.lua
 Transport\Model.lua
 Routing\Planner.lua
@@ -83,6 +84,7 @@ Routing\PathGrid.lua
 Routing\Path.lua
 Routing\PathJobs.lua
 Routing\Floor.lua
+Routing\Band.lua
 Journey\JourneySteps.lua
 Journey\Hazards.lua
 Journey\JourneySearch.lua

@@ -66,13 +66,15 @@ end
 Search.SamePlace = SamePlace
 
 -- Where you stand, with the height of your floor when Floor.lua knows it: the walks then start on that floor rather
--- than the cheapest surface near you.
+-- than the cheapest surface near you. Where the floor is not known, the range checks to the NPCs around you bound the
+-- height instead, and the walks start on the surfaces inside that band (Band.lua, #737).
 local function Here()
 	local x, y, _, map = ns.JourneyPosition()
 	if not (x and y and map) then
 		return nil
 	end
-	return { map = map, x = x, y = y, z = ns.Floor and ns.Floor.Height(map, x, y) or nil }
+	local z = ns.Floor and ns.Floor.Height(map, x, y) or nil
+	return { map = map, x = x, y = y, z = z, band = z == nil and ns.Band and ns.Band.At(map, x, y) or nil }
 end
 
 -- Cancelled searches leave both batches paused with their settled costs.

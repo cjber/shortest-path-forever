@@ -433,6 +433,10 @@ ns.Init(function()
 			moving = false
 		elseif event == "PLAYER_ENTERING_WORLD" then
 			moving = IsPlayerMoving()
+			-- The NPCs whose range checks bound your height are gone with the loading screen (Band.lua).
+			if ns.Band then
+				ns.Band.Forget()
+			end
 		end
 		ns.WakeTravel()
 	end)

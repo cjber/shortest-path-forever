@@ -101,6 +101,8 @@ read_globals = {
 	"UnitPosition",
 	"UnitIsDeadOrGhost",
 	"UnitIsGhost",
+	"UnitIsPlayer",
+	"UnitCanAttack",
 	"C_DeathInfo",
 	"UNKNOWN",
 	"WorldMapFrame",
@@ -227,6 +229,7 @@ files["Locales/*.lua"] = { max_line_length = false }
 files["Data/RoadCells.lua"] = { max_line_length = false }
 files["Data/RoadEdges.lua"] = { max_line_length = false }
 files["Data/Heights.lua"] = { max_line_length = false }
+files["Data/IdleSpawns.lua"] = { max_line_length = false }
 
 files["tests/companion_maps_spec.lua"] = { globals = { "C_AddOns", "GetTime" } }
 -- The client's secure delegate: map pins set their restricted button passthrough through it (#645).
