@@ -331,6 +331,59 @@ ns.SetTownServiceShown("townServiceRepair", false)
 ns.db.townServices = "capitals"
 ns.RefreshMap()
 check(count() == 1, "the map's own refresh brings the pins back")
+-- A wandering NPC: QuestieDB lists every spawn along its route, but the town layer draws the NPC, not each of its
+-- spawns. One pin per map at every zoom, on the spawn nearest the mean of its spawns there, which is still a real
+-- spawn a journey can go to.
+local function spawn(x, y)
+	return {
+		id = 20,
+		name = "Fritz Fizzle",
+		title = "Engineer",
+		map = 14,
+		x = x,
+		y = y,
+		-- The test client's zone-to-world mapping, the inverse of its C_Map.GetMapPosFromWorldPos
+		-- (tests/ui_client.lua), so the projection puts each spawn back on these map fractions.
+		world = { map = 1, x = (0.5 - y) * 25000, y = (0.5 - x) * 25000 },
+	}
+end
+local wander = {
+	spawn(0.3, 0.4),
+	spawn(0.4, 0.42),
+	spawn(0.35, 0.5),
+	spawn(0.44, 0.48),
+	spawn(0.55, 0.6),
+}
+index = { books = wander }
+groups = { group("vendors", "books", "Books and recipes", "Books") }
+ns.db.townServices = "all"
+zoom = 0
+canvasScaled()
+ns.RefreshTownServices()
+check(count() == 1, "a wandering NPC draws one pin zoomed out")
+zoom = 1
+canvasScaled()
+ns.RefreshTownServices()
+check(count() == 1, "and still one at full zoom, not one pin per spawn")
+local wanderer = find(20)
+check(wanderer ~= nil, "the wandering NPC still shows")
+local middleX, middleY = ns.MapPinPosition(wander[4].world, 1414)
+check(
+	wanderer.mapX == middleX and wanderer.mapY == middleY,
+	"the pin stands on the spawn nearest the mean of its spawns"
+)
+ns.Canvas.Click(wanderer, "LeftButton")
+check(
+	navigated ~= nil
+		and navigated.spot.id == 20
+		and navigated.spot.x == wander[4].x
+		and navigated.spot.y == wander[4].y
+		and navigated.spot.world.x == wander[4].world.x
+		and navigated.spot.world.y == wander[4].world.y,
+	"a journey goes to that real spawn, not the mean"
+)
+navigated = nil
+
 check(#errors == 0, table.concat(errors, "\n"))
 
 print(

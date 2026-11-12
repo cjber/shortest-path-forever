@@ -88,11 +88,13 @@ ns.TownServiceChoices = {
 
 ---@class SPFTownService
 ---@field id integer the NPC's id
----@field key string the NPC and spawn, which a re-read of the database can change
+---@field key string the NPC and map, which a re-read of the database can change
 ---@field name string
 ---@field title? string
----@field world SPFPoint
+---@field world SPFPoint the spawn nearest the middle of the NPC's route on that map
 ---@field map integer the zone map the spawn is on
+---@field x number the chosen spawn's map fraction
+---@field y number the chosen spawn's map fraction
 ---@field groups SPFNearbyGroup[] what the NPC offers, in the list's order
 ---@field capitalUiMap? integer the capital the NPC stands in
 
@@ -217,9 +219,31 @@ local function Primary(entry)
 	return best
 end
 
--- The NPCs the list knows, one entry each, with every group the NPC serves. The same spawn is indexed under each of
--- its groups, so the key merges them into one pin. The read holds only NPCs this character's side can use
--- (UI/NearbyQuestie.lua), so the map never shows the other faction's.
+-- The spot a wandering NPC stands on: QuestieDB lists every spawn along its route, so the town layer draws the NPC
+-- once on each map, at the spawn nearest the mean of its spawns there. That keeps the pin on a real spawn point near
+-- the middle of the route, and a journey from the pin still goes to a real place on its map.
+---@param spawns SPFNearbyPlace[]
+---@return SPFNearbyPlace
+local function Middle(spawns)
+	local sumX, sumY = 0, 0
+	for _, spawn in ipairs(spawns) do
+		sumX, sumY = sumX + spawn.world.x, sumY + spawn.world.y
+	end
+	local meanX, meanY = sumX / #spawns, sumY / #spawns
+	local best, gap
+	for _, spawn in ipairs(spawns) do
+		local distance = (spawn.world.x - meanX) ^ 2 + (spawn.world.y - meanY) ^ 2
+		if not gap or distance < gap then
+			best, gap = spawn, distance
+		end
+	end
+	return best --[[@as SPFNearbyPlace]]
+end
+
+-- The NPCs the list knows, one entry each on each map they stand on, with every group the NPC serves. Every spawn
+-- is indexed under each of its groups, so the key merges them into one pin per NPC per map rather than one per spawn.
+-- The read holds only NPCs this character's side can use (UI/NearbyQuestie.lua), so the map never shows the other
+-- faction's.
 local function Build()
 	local index, groups = ns.NearbyServices.Index(), ns.NearbyServices.Groups()
 	sourceIndex = index
@@ -228,7 +252,7 @@ local function Build()
 	for _, group in ipairs(groups) do
 		if group.section ~= "entrances" then
 			for _, place in ipairs(index[group.key] or {}) do
-				local key = place.id .. ":" .. place.map .. ":" .. place.x .. ":" .. place.y
+				local key = place.id .. ":" .. place.map
 				local entry = byKey[key]
 				if not entry then
 					entry = {
@@ -236,17 +260,26 @@ local function Build()
 						key = key,
 						name = place.name,
 						title = place.title,
-						world = place.world,
 						map = place.map,
 						groups = {},
-						capitalUiMap = Capital(place.world),
+						spawns = {},
 					}
 					byKey[key] = entry
 					entries[#entries + 1] = entry
 				end
-				entry.groups[#entry.groups + 1] = group
+				entry.spawns[#entry.spawns + 1] = place
+				-- Every spawn of the NPC is listed under the group, so the group joins the entry once.
+				if entry.groups[#entry.groups] ~= group then
+					entry.groups[#entry.groups + 1] = group
+				end
 			end
 		end
+	end
+	for _, entry in ipairs(entries) do
+		local spot = Middle(entry.spawns)
+		entry.spawns = nil
+		entry.world, entry.x, entry.y = spot.world, spot.x, spot.y
+		entry.capitalUiMap = Capital(spot.world)
 	end
 end
 
