@@ -105,8 +105,5 @@ assert(
 	"leaving an unboarded boat did not return to its dock"
 )
 riding = 1
-assert(
-	Step({ map = 1, x = 200, y = 200 }) == 2,
-	"an actually boarded boat did not complete"
-)
+assert(Step({ map = 1, x = 200, y = 200 }) == 2, "an actually boarded boat did not complete")
 print("lift_landing_spec: an unboarded boat remains recoverable")
