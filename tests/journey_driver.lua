@@ -75,7 +75,7 @@ local env = setmetatable({
 			return "|cffff2020" .. text .. "|r"
 		end,
 	},
-	-- ns.serverTime: the server clock sightings age by.
+	-- ns.serverTime: the server clock a sighting is saved with.
 	GetServerTime = function()
 		return ns.serverTime or 0
 	end,
@@ -227,6 +227,10 @@ local function load(file)
 end
 ns.Init = function(fn)
 	fn()
+end
+-- UI/MenuModifier.lua's entry point; this small client does not check the game's menus.
+ns.ModifyMenu = function(tag, _, build)
+	env.Menu.ModifyMenu(tag, build)
 end
 -- UI/Canvas.lua is not loaded here: the addon's own map pins hand Shift-clicks to JourneyInput.lua through it.
 ns.Canvas = { OnClick = noop }

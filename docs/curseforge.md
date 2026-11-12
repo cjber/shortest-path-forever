@@ -48,7 +48,6 @@ With the gamepad interface on, you open and turn the world map; Shortest Path wo
 - In **Interface**, choose what shows, metres, sizes and a compass background. While moving the arrow or compass, Shift-drag or use the arrow keys for fine placement.
 - In **Guidance**, or by right-clicking the tracker's "Journey to …" line, turn off **Attach to quest tracker** to drag the shared column. **Resume guide** returns to RestedXP or Guidelime; **Keep journeys after a reload** restarts yours.
 - `/way [zone] x y [title]` plans a journey, or `/path way` when another addon owns `/way`. **Follow TomTom's arrow** in Guidance follows TomTom.
-- `/path leaderboard` opens Forever Leaderboards on the Shortest Path tab, ranking completed journeys against guild and group members who report theirs, for this week or all time. The window also shows the overall standing across installed Forever addons and puts a player's place in the unit tooltip. Sharing is on unless you turn it off with the window's Share my progress box or the checkbox in **Travel journal**.
 
 For a bug report, paste `/path report`. What it shows includes errors from earlier sessions, and `/forever debug` keeps a detailed log for the session. `/path issue` shows a filled-in GitHub issue link, selected for copying, for a bug or feature request.
 
@@ -81,7 +80,7 @@ Installed together, the others send Shortest Path their destinations. Pick an Ad
 
 <!-- forever-credits:start -->
 
-Thanks to Alex21xx, Maggew, MacieGx, Stiandresius, The___Fast, Joster91, GenericP, cotijelucie, Fitz, TRDeadbeat, tallsmartman, Sol_Deus, Zavian, Osipanda, Nightwind416, wfournier, cidolfus27, o0saw0o, Merlinqt, team_Brigade, phear, Testvonfarkle, rydoc, deathmvp1, saikoso, Ragnarok11B, Brainc3ll, Mouchoir, z1ck, Oxds, sean16981, aryaxo, Exo_NA, legortiz, JohnChrin, wheelbarrel00, lkshrk, HeartOfD2, rml9ty, hwalflor, chris-chrysos, Quantity-4, Bolton_wow, Aldericdevir, joaocjesus, jakerist (Grayburn), borick7318, sampconrad, jixxor, Gaafah, _spada, vladsnz, macwire, scraak, overspark, TeeRKee, Speaker1264, SuubzTV, Fel7, Kragmars, spidersylar, Acem, tgkGate, IronmanBG and everyone who reported a bug or asked for a feature.
+Thanks to Alex21xx, Maggew, MacieGx, Stiandresius, The___Fast, Joster91, GenericP, cotijelucie, vladsnz, Fitz, TRDeadbeat, tallsmartman, Sol_Deus, Zavian, Osipanda, Nightwind416, wfournier, cidolfus27, o0saw0o, Merlinqt, team_Brigade, phear, Testvonfarkle, rydoc, deathmvp1, saikoso, Ragnarok11B, Brainc3ll, Mouchoir, z1ck, Oxds, sean16981, aryaxo, Exo_NA, legortiz, JohnChrin, wheelbarrel00, lkshrk, HeartOfD2, rml9ty, hwalflor, chris-chrysos, Quantity-4, Bolton_wow, Aldericdevir, joaocjesus, jakerist (Grayburn), borick7318, sampconrad, jixxor, Gaafah, _spada, macwire, scraak, overspark, TeeRKee, Speaker1264, SuubzTV, Fel7, Kragmars, spidersylar, Acem, tgkGate, IronmanBG, vcatalin and everyone who reported a bug or asked for a feature.
 
 <!-- forever-credits:end -->
 

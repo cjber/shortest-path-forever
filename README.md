@@ -24,7 +24,7 @@ with you.
   ![The Nearby services tab in the world map's quest log](docs/screenshots/services.png)
   The tracking menus and `/spfnear` open the same tab.
 
-- **Compare completed journeys.** `/path leaderboard` opens Forever Leaderboards on the Shortest Path tab, with this week's and all-time totals from guild and group members who report theirs. The window also shows your overall place across every installed Forever addon and puts a player's place in the unit tooltip. Sharing is on unless you turn it off with the window's Share my progress box or the checkbox in **Travel journal**. Reported totals are player-reported and not verified.
+- **Keep a private travel journal.** `/path stats` reports this character's approximate walking distance, completed journeys and transport use.
 
 - **Plan a journey.** Shift-click the world map or minimap, or choose *Plan journey* on a quest. Routes combine walking, flights, boats, zeppelins, lifts, the tram, portals and teleports, and replan as you move. A spot inside a dungeon or raid leads to its entrance. Walks go round zones whose lowest level is 4 or more above yours and round the other faction's towns, and say so in the tracker when they can't. *Keep journeys after a reload* in Guidance restarts your own journey after a `/reload`.
   ![Journey steps from Auberdine to Silithus](docs/screenshots/tracker.png)
@@ -37,7 +37,7 @@ with you.
   ![Route and native waypoint on the minimap](docs/screenshots/minimap.png)
   Breadcrumbs show the walking route; the waypoint leads to the next step. A goal off the minimap waits on its rim.
 - **Set how close counts as arrived.** *Arrival distance* in Guidance sets how close counts as reaching your destination, from 5 to 50 yards. A map pin you set as that destination is cleared when you get there instead of left behind.
-- **See flights and departures.** Flight maps highlight your next flight, and a flight master's world map tooltip lists its flights and their times. Dock tooltips show destinations and departure times; nearby services count down in the tracker. Ride times improve estimates and are shared with other players.
+- **See flights and departures.** Flight maps highlight your next flight, and a flight master's world map tooltip lists its flights and their times. Dock tooltips show destinations and departure times; nearby services count down in the tracker. Ride times improve estimates, from your own sightings kept across sessions and characters on your account.
   ![A smooth flight line leaving Stormwind](docs/screenshots/flight.png)
   Flight lines follow the route between flight points.
 
@@ -65,7 +65,7 @@ the WoW: Forever client's `Interface/AddOns/` folder (`_forever_` on the live cl
 
 Alt-click the world map to choose a destination over a Questie icon. Shift-click works on empty map space and Shortest Path icons. With the gamepad interface on, Shortest Path never opens or turns the world map, or opens a menu, itself; it asks you to.
 
-The settings have six pages. **Transport** draws routes, shows the other faction's boats and zeppelins (off by default), and shares departure times. **Guidance** holds journey behaviour: *Show journey steps in the objective tracker*, *Resume guide*, *Keep journeys after a reload*, *Arrival distance*, *Minimum Hearthstone saving* and *Attach to quest tracker*. **Map marks** scales each kind of icon from 25% to 200%. **Interface** shows or hides the arrow and compass, sizes them, and labels distances in metres. **Alerts** covers the boat warning and the arrival sound. **Forever addons** holds the hint setting. [docs/features.md](docs/features.md) has the detail.
+The settings have six pages. **Transport** draws routes and shows the other faction's boats and zeppelins (off by default). **Guidance** holds journey behaviour: *Show journey steps in the objective tracker*, *Resume guide*, *Keep journeys after a reload*, *Arrival distance*, *Minimum Hearthstone saving* and *Attach to quest tracker*. **Map marks** scales each kind of icon from 25% to 200%. **Interface** shows or hides the arrow and compass, sizes them, and labels distances in metres. **Alerts** covers the boat warning and the arrival sound. **Forever addons** holds the hint setting. [docs/features.md](docs/features.md) has the detail.
 
 Right-click a flight master icon to mark its flight path as known if a flight map missed it. Open a flight master's map once after installing to sync the flight points you know.
 
@@ -75,9 +75,8 @@ Right-click a flight master icon to mark its flight path as known if a flight ma
 | `/path report` | Show a report to paste into a bug report: versions, your journey, your ride, errors from earlier sessions, recent log lines |
 | `/forever debug` | Keep a detailed log for this session, and show it to copy with `/forever debug show` |
 | `/path issue` | Show a filled-in GitHub issue link, selected for copying, to report a bug or request a feature |
-| `/path leaderboard` | Open Forever Leaderboards on the Shortest Path tab: your completed journeys against guild and group members who report theirs |
 | `/path perf` | Print this addon's CPU and memory use |
-| `/path debug` | Keep a trace of your ride matching, for a ride that did not sync |
+| `/path debug` | Keep a trace of your ride matching, for a ride that was not recorded |
 | `/spfnear` | Open the Nearby services tab; add a service such as `repair`, `trainer` or `flight` to route to the nearest one |
 
 The world map's filter menu and the minimap's tracking menu hide each kind of mark. Searches and tracker updates wait until combat ends.
@@ -156,7 +155,7 @@ Travel data comes from [wago.tools](https://wago.tools), [CMaNGOS](https://githu
 
 <!-- forever-credits:start -->
 
-Thanks to Alex21xx, Maggew, MacieGx, Stiandresius, The___Fast, Joster91, GenericP, cotijelucie, Fitz, TRDeadbeat, tallsmartman, Sol_Deus, Zavian, Osipanda, Nightwind416, wfournier, cidolfus27, o0saw0o, Merlinqt, team_Brigade, phear, Testvonfarkle, rydoc, deathmvp1, saikoso, Ragnarok11B, Brainc3ll, Mouchoir, z1ck, Oxds, sean16981, aryaxo, Exo_NA, legortiz, JohnChrin, wheelbarrel00, lkshrk, HeartOfD2, rml9ty, hwalflor, chris-chrysos, Quantity-4, Bolton_wow, Aldericdevir, joaocjesus, jakerist (Grayburn), borick7318, sampconrad, jixxor, Gaafah, _spada, vladsnz, macwire, scraak, overspark, TeeRKee, Speaker1264, SuubzTV, Fel7, Kragmars, spidersylar, Acem, tgkGate, IronmanBG and everyone who reported a bug or asked for a feature.
+Thanks to Alex21xx, Maggew, MacieGx, Stiandresius, The___Fast, Joster91, GenericP, cotijelucie, vladsnz, Fitz, TRDeadbeat, tallsmartman, Sol_Deus, Zavian, Osipanda, Nightwind416, wfournier, cidolfus27, o0saw0o, Merlinqt, team_Brigade, phear, Testvonfarkle, rydoc, deathmvp1, saikoso, Ragnarok11B, Brainc3ll, Mouchoir, z1ck, Oxds, sean16981, aryaxo, Exo_NA, legortiz, JohnChrin, wheelbarrel00, lkshrk, HeartOfD2, rml9ty, hwalflor, chris-chrysos, Quantity-4, Bolton_wow, Aldericdevir, joaocjesus, jakerist (Grayburn), borick7318, sampconrad, jixxor, Gaafah, _spada, macwire, scraak, overspark, TeeRKee, Speaker1264, SuubzTV, Fel7, Kragmars, spidersylar, Acem, tgkGate, IronmanBG, vcatalin and everyone who reported a bug or asked for a feature.
 
 <!-- forever-credits:end -->
 

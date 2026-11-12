@@ -114,8 +114,7 @@ L["Keeps the shared Forever tracker where you put it. The grip at its top no lon
 	"공유 Forever 추적기를 놓은 자리에 유지합니다. 위쪽 손잡이로 더 이상 끌 수 없습니다."
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
 	"게임의 미터법 언어 클라이언트처럼 거리에 미터 단위를 붙입니다. 숫자는 게임의 야드 값 그대로입니다."
-L["Last seen %d min ago by another player"] = "다른 플레이어가 %d분 전에 마지막으로 목격"
-L["Last seen %d min ago by you"] = "내가 %d분 전에 마지막으로 목격"
+L["Last seen %s ago"] = "%s 전에 마지막으로 목격" -- mt
 L["Legacy Forever shows the Legacy challenges this counts toward."] =
 	"Legacy Forever가 이 항목이 포함되는 유산 도전을 보여줍니다."
 L["Let guides set TomTom waypoints"] = "가이드가 TomTom 웨이포인트를 설정하도록 허용"
@@ -183,10 +182,7 @@ L["Scales the compass. 100% matches the game's own art."] =
 L["Scales the shared Forever tracker. 100% matches the game's own tracker."] =
 	"공유 Forever 추적기의 크기를 조절합니다. 100%는 게임 추적기와 같습니다."
 L["Search services and goods"] = "편의시설 및 물품 검색"
-L["Sends and receives sighting times over guild, party and at the dock. No chat messages are shown."] =
-	"길드, 파티, 부두에서 목격 시간을 주고받습니다. 대화창에는 메시지가 표시되지 않습니다."
 L["Services"] = "편의시설"
-L["Share departure times"] = "출발 시간 공유"
 L["Shift-click the world map or the minimap to plan a journey there."] =
 	"세계 지도나 미니맵을 Shift-클릭하면 그곳까지 여정을 계획합니다."
 L["Shift-click to plan journeys"] = "Shift-클릭으로 여정 계획"
@@ -329,13 +325,10 @@ L["Both"] = "둘 다" -- mt
 L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d flights; %d portal legs."] =
 	"로컬 이동 일지 — 약 %d야드 이동, 여정 %d회, 교통수단 %d회, 비행 %d회, 차원문 구간 %d회."
 L["Record travel stats"] = "이동 통계 기록"
-L["Share travel stats with guild and groups"] = "길드와 그룹에 이동 통계 공유"
 L["Time left"] = "남은 시간" -- mt
 L["Travel journal"] = "이동 일지"
 L["Travel milestone reached: %s"] = "이동 이정표 달성: %s"
 L["Travel stats are not ready yet."] = "이동 통계가 아직 준비되지 않았습니다."
-L["Turn this off to keep stats on this character only. Shared records are player-reported and not verified."] =
-	"끄면 이 캐릭터에만 통계를 보관합니다. 공유 기록은 플레이어가 보낸 것이며 검증되지 않습니다."
 L["Party member"] = "파티원" -- mt
 L["That player is not on a map you can see."] = "그 플레이어는 볼 수 있는 지도에 없습니다." -- mt
 L["You have caught up with %s."] = "%s을(를) 따라잡았습니다." -- mt
@@ -395,11 +388,7 @@ L["Show boat, lift and tram departures in the tracker"] = "추적기에서 배, 
 L["Hide RestedXP's arrow"] = "RestedXP 화살표 숨기기" -- mt
 L["Hide departures"] = "출발 숨기기"
 
--- Travel stats and the shared Forever Leaderboards.
-L["Completed journeys"] = "완료한 여정"
-L["On unless you turn it off. Shares travel records with guild and group and puts you on Forever Leaderboards."] =
-	"끄지 않는 한 켜져 있습니다. 길드, 파티, 공격대, 인스턴스 채널로 여행 기록을 공유하고 Forever 순위표에 표시합니다." -- mt
-L["total"] = "총" -- mt
+-- Travel stats.
 
 L["Follow roads"] = "도로 따라가기" -- mt
 L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =

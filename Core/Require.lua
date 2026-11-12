@@ -8,7 +8,7 @@ ns.Icon = C_AddOns.GetAddOnMetadata(addonName, "X-Forever-Icon")
 -- loads. Its API version stays at 1 while it adds members, so a core is out of date when a member this addon calls is
 -- missing, never because of a version comparison.
 --
--- API 1 has the tracker host, the family suggestions, the map and settings openers, the leaderboards, peer stats, the
+-- API 1 has the tracker host, the family suggestions, the map and settings openers, the
 -- text helper, the quest log tabs and the context menu, all of which this addon calls. The API kit arrived after it
 -- (ForeverCore 1.1.0), and Core/API.lua builds this addon's own API on its Hub and NotReady. The tracker section and
 -- line arrived after it too (ForeverCore 1.2.0), and UI/Tracker.lua builds its section with Section.Create and

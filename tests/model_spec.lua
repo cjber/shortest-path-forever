@@ -95,30 +95,9 @@ for second = 1, 300 do
 end
 assert(Model.FitEpoch(ratchet, standing) == nil)
 
--- Sightings round-trip through the wire format; anything unknown, stale or from the future is dropped.
-local now = 1790000000
-local sent = { [241] = { epoch = 1789999876543, seen = now - 30 }, [11616] = { epoch = 1789000000000, seen = now } }
-local message = table.concat(Model.Encode(sent, Routes), ";")
-local received = Model.Decode(message, Routes, now)
-for routeID, anchor in pairs(sent) do
-	local period = Routes[routeID].period
-	assert(received[routeID].seen == anchor.seen)
-	near((received[routeID].epoch - anchor.epoch) % period, 0, 1, "route " .. routeID .. " round trip")
-end
-local rejected = Model.Decode(
-	("9:%d:1;241:%d:1;241:%d:1;285:%d:999999999"):format(now, now + 600, now - Model.MAX_AGE - 1, now),
-	Routes,
-	now
-)
-assert(next(rejected) == nil)
-
-assert(Model.Newer({ seen = 2 }, { seen = 1 }, 2) and not Model.Newer({ seen = 1 }, { seen = 1 }, 2))
-assert(Model.Newer({ seen = 1 }, nil, 1))
--- Your own ride outranks a newer report from someone else for an hour.
-local own = { seen = now, source = "you" }
-assert(not Model.Newer({ seen = now + 60, source = "player" }, own, now + 60))
-assert(Model.Newer({ seen = now + 3700, source = "player" }, own, now + 3700))
-assert(Model.Newer({ seen = now + 60, source = "you" }, own, now + 60))
+-- Only a newer sighting replaces the one held.
+assert(Model.Newer({ seen = 2 }, { seen = 1 }) and not Model.Newer({ seen = 1 }, { seen = 1 }))
+assert(Model.Newer({ seen = 1 }, nil))
 
 -- Sparse transport docks must not change any boat's dock index or timetable.
 assert(loadfile("Data/Transports.lua"))("ShortestPathForever", ns)

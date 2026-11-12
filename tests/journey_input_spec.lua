@@ -15,6 +15,13 @@ local pin = {
 }
 local shift = true
 local chatBox
+local function Record(tag, fn)
+	if tag == "MENU_QUEST_OBJECTIVE_TRACKER" then
+		questTrackerMenu = fn
+	elseif tag == "MENU_QUEST_MAP_LOG_TITLE" then
+		questMapLogMenu = fn
+	end
+end
 local ns = {
 	db = { journey = true },
 	L = {},
@@ -35,6 +42,11 @@ local ns = {
 		end,
 	},
 	FamilyHints = { AddQuestMenu = function() end },
+	-- UI/MenuModifier.lua's entry point, which owns the registration; tests/quest_menu_spec.lua checks its gamepad
+	-- handling. Here it only records the tag's description builder.
+	ModifyMenu = function(tag, _, build)
+		Record(tag, build)
+	end,
 }
 local env = setmetatable({
 	CreateFrame = function()
@@ -73,15 +85,7 @@ local env = setmetatable({
 		end,
 	},
 	Minimap = { HookScript = function() end },
-	Menu = {
-		ModifyMenu = function(tag, fn)
-			if tag == "MENU_QUEST_OBJECTIVE_TRACKER" then
-				questTrackerMenu = fn
-			elseif tag == "MENU_QUEST_MAP_LOG_TITLE" then
-				questMapLogMenu = fn
-			end
-		end,
-	},
+	Menu = { ModifyMenu = Record },
 	MapCanvasMixin = { MouseAction = { Click = 3 } },
 	C_Map = {
 		GetWorldPosFromMapPos = function(_, pos)
