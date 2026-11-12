@@ -168,6 +168,7 @@ L["Resume RestedXP guide"] = "繼續RestedXP指南"
 L["Resume guide"] = "繼續指南"
 L["Return to your corpse"] = "返回你的屍體"
 L["Right-click to clear"] = "右鍵點擊清除"
+L["Route to the focused quest"] = "前往目前聚焦的任務"
 L["S"] = "南"
 L["Scales the arrow and the cast prompt."] = "調整箭頭和施法提示的大小。"
 L["Scales the compass. 100% matches the game's own art."] = "調整羅盤大小。100%與遊戲本身的美術一致。"
@@ -206,6 +207,8 @@ L["Sizes boat, lift, tram and portal icons on the world map."] =
 L["Sizes flight master icons on the world map."] = "調整世界地圖上飛行管理員圖示的大小。"
 L["Sizes transport icons on the minimap."] = "調整小地圖上交通圖示的大小。"
 L["Stable master"] = "獸欄管理員"
+L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no Shift-click. A guide addon's own journey is left alone."] =
+	"當您聚焦任務或放置遊戲地圖標記時開始旅程，因此控制器無需 Shift 點擊。指南插件的自有旅程不受影響。"
 L["Stop %d of %d"] = "第%d站，共%d站" -- mt
 L["Stop %d of %d: %s"] = "第%d站，共%d站：%s"
 L["Suggest quests for my level: Adventure Guide Forever"] = "推薦適合我等級的任務：Adventure Guide Forever"

@@ -175,6 +175,7 @@ L["Resume RestedXP guide"] = "RestedXP 가이드 재개"
 L["Resume guide"] = "가이드 재개"
 L["Return to your corpse"] = "시체로 돌아가기"
 L["Right-click to clear"] = "오른쪽 클릭으로 지우기"
+L["Route to the focused quest"] = "집중한 퀘스트로 이동"
 L["S"] = "남"
 L["Scales the arrow and the cast prompt."] = "화살표와 시전 안내의 크기를 조절합니다."
 L["Scales the compass. 100% matches the game's own art."] =
@@ -216,6 +217,8 @@ L["Sizes flight master icons on the world map."] =
 	"세계 지도의 비행 조련사 아이콘 크기를 조절합니다."
 L["Sizes transport icons on the minimap."] = "미니맵의 교통수단 아이콘 크기를 조절합니다."
 L["Stable master"] = "야수 관리인"
+L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no Shift-click. A guide addon's own journey is left alone."] =
+	"퀘스트를 집중하거나 게임의 지도 핀을 놓으면 여정을 시작하므로 컨트롤러에서 Shift-클릭이 필요 없습니다. 가이드 애드온의 자체 여정은 그대로 둡니다."
 L["Stop %d of %d"] = "정거장 %d/%d" -- mt
 L["Stop %d of %d: %s"] = "정거장 %d/%d: %s"
 L["Suggest quests for my level: Adventure Guide Forever"] =

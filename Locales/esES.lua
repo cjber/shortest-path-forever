@@ -171,6 +171,7 @@ L["Resume RestedXP guide"] = "Reanudar guía de RestedXP"
 L["Resume guide"] = "Reanudar guía"
 L["Return to your corpse"] = "Volver a tu cadáver"
 L["Right-click to clear"] = "Clic derecho para borrar"
+L["Route to the focused quest"] = "Viajar a la misión enfocada"
 L["S"] = "S"
 L["Scales the arrow and the cast prompt."] = "Cambia el tamaño de la flecha y del aviso de lanzamiento."
 L["Scales the compass. 100% matches the game's own art."] =
@@ -211,6 +212,8 @@ L["Sizes boat, lift, tram and portal icons on the world map."] =
 L["Sizes flight master icons on the world map."] = "Tamaño de los iconos de maestros de vuelo en el mapa del mundo."
 L["Sizes transport icons on the minimap."] = "Tamaño de los iconos de transporte en el minimapa."
 L["Stable master"] = "Maestro de establos"
+L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no Shift-click. A guide addon's own journey is left alone."] =
+	"Inicia un viaje al enfocar una misión o colocar el marcador del mapa del juego, así que un mando no necesita Mayús+clic. El viaje propio de un complemento de guía no se toca."
 L["Stop %d of %d"] = "Parada %d de %d" -- mt
 L["Stop %d of %d: %s"] = "Parada %d de %d: %s"
 L["Suggest quests for my level: Adventure Guide Forever"] = "Sugerir misiones de mi nivel: Adventure Guide Forever"

@@ -173,6 +173,7 @@ L["Resume RestedXP guide"] = "Reprendre le guide RestedXP" -- mt
 L["Resume guide"] = "Reprendre le guide" -- mt
 L["Return to your corpse"] = "Retourner à votre cadavre" -- mt
 L["Right-click to clear"] = "Clic droit pour effacer" -- mt
+L["Route to the focused quest"] = "Voyager vers la quête ciblée" -- mt
 L["S"] = "S" -- mt
 L["Scales the arrow and the cast prompt."] = "Ajuste la taille de la flèche et de l'invite de sort." -- mt
 L["Scales the compass. 100% matches the game's own art."] =
@@ -213,6 +214,8 @@ L["Sizes boat, lift, tram and portal icons on the world map."] =
 L["Sizes flight master icons on the world map."] = "Taille des icônes des maîtres de vol sur la carte du monde." -- mt
 L["Sizes transport icons on the minimap."] = "Taille des icônes de transport sur la minicarte." -- mt
 L["Stable master"] = "Maître des écuries" -- mt
+L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no Shift-click. A guide addon's own journey is left alone."] =
+	"Lance un trajet quand vous suivez une quête ou placez le repère de carte du jeu, ainsi une manette n'a pas besoin de Maj-clic. Le trajet propre à un addon de guide n'est pas touché." -- mt
 L["Stop %d of %d"] = "Arrêt %d sur %d" -- mt
 L["Stop %d of %d: %s"] = "Arrêt %d sur %d : %s" -- mt
 L["Suggest quests for my level: Adventure Guide Forever"] =

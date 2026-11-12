@@ -1,5 +1,7 @@
 # Changelog
 
+<!-- rule-ignore: file-size-no-growth - release notes are one history -->
+
 What changed in each release, in the terms someone finding their way would notice. Dates are UTC.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versions follow
@@ -12,6 +14,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Controller players can route to a focused quest or map pin.** *Route to the focused quest* in Guidance starts a journey when you super-track a quest or place the game's own map pin, so a controller needs no Shift-click. Quests a guide addon focuses are left alone while that guide's journey is leading. The three journey bindings under Key Bindings > AddOns, Travel to my map pin, Travel to my tracked quest and Clear journey, also take a gamepad button. Asked on CurseForge by cwebbx and lone_viking1921 (#687).
 - **Your travel stats stay on your computer.** Shortest Path no longer shares journey and travel stats with your guild or group, and the leaderboard tab is gone with the rest of Forever Leaderboards. This also stops the short hitch every 10 seconds some players saw with sharing on. Departure times are no longer swapped with other players either, and timetables come from your own sightings, kept across sessions and characters on your account. Your own journey, distance and transport totals stay as they were.
 - **The quest list's More options works with a controller.** On the gamepad interface, pressing Y on a quest in the quest log's list opened nothing, because the *Plan journey* entry this addon adds to that menu had tainted it and the game's gamepad focus then refused to run. The game's quest menus are now left to the game while the gamepad interface is on, as the map and minimap menus already were, and our entries return with mouse and keyboard. Reported on CurseForge by vladsnz (#788).
 - **Quest pins stop blinking at journey stops.** The game's quest pin at a stop the route already marks no longer shows for a frame every time your quest log changes, so the world map stays steady while a journey is drawn.

@@ -141,6 +141,8 @@ Credit for the reports and requests behind the addon.
 | IronmanBG | Plan journey back in Kaliel's Tracker | CurseForge; #718 |
 | vladsnz | Quest list More options works with a controller | CurseForge; #788 |
 | vcatalin | Forever Core bundled in the download again | GitHub; #731 |
+| cwebbx | Journeys start from a focused quest or map pin | CurseForge; #687 |
+| lone\_viking1921 | Journeys start from a focused quest or map pin | CurseForge; #687 |
 
 ## Inspired by
 

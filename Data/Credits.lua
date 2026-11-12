@@ -88,6 +88,8 @@ ns.Credits = {
 		{ name = "IronmanBG", what = "Plan journey back in Kaliel's Tracker" },
 		{ name = "vladsnz", what = "Quest list More options works with a controller" },
 		{ name = "vcatalin", what = "Forever Core bundled in the download again" },
+		{ name = "cwebbx", what = "Journeys start from a focused quest or map pin" },
+		{ name = "lone_viking1921", what = "Journeys start from a focused quest or map pin" },
 	},
 	inspired = {
 		{ name = "Polestar by Fitz", what = "Ideas for many features" },

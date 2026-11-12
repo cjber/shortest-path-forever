@@ -1,4 +1,6 @@
 <Bindings>
+	<!-- Each CLICK binding clicks a hidden button of the addon's own, so Key Bindings > AddOns can give the action
+	     a key or a gamepad button. -->
 	<Binding name="CLICK ShortestPathForeverTravelToPinButton:LeftButton" header="BINDING_HEADER_SHORTESTPATHFOREVER" category="ADDONS"/>
 	<Binding name="CLICK ShortestPathForeverTravelToTrackedQuestButton:LeftButton" category="ADDONS"/>
 	<Binding name="CLICK ShortestPathForeverClearJourneyButton:LeftButton" category="ADDONS"/>
