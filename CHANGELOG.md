@@ -1,5 +1,7 @@
 # Changelog
 
+<!-- rule-ignore: file-size-no-growth - every release's notes, kept verbatim in one history -->
+
 What changed in each release, in the terms someone finding their way would notice. Dates are UTC.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versions follow
