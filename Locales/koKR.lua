@@ -441,3 +441,7 @@ L["All towns"] = "모든 마을" -- mt
 L["Books and recipes"] = "책과 조리법" -- mt
 L["One icon per town, or one per service as you zoom in."] =
 	"마을마다 아이콘 하나, 확대하면 서비스마다 아이콘 하나." -- mt
+L["Ammunition"] = "탄약" -- mt
+L["Bags and trade supplies"] = "가방 및 전문 기술" -- mt
+L["Food and drink"] = "음식 및 음료" -- mt
+L["Profession trainers"] = "전문 기술 상급자" -- mt

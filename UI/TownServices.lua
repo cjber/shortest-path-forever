@@ -10,10 +10,11 @@ local Canvas = ns.Canvas
 
 -- The town services on the world map: every trainer, vendor, banker and the rest the Nearby services list finds,
 -- drawn at the NPC's own place in the client's minimap tracking icon for that service (a bank's money bags, a
--- repairer's anvil), never a town or city mark. Zoomed out, the pins that would overlap share one service icon, the
--- most useful service in the group, with the rest in its tooltip; zoomed in they separate, the way UI/Map.lua groups
--- the docks of a harbour. A click plans a journey to the NPC. The setting chooses which towns show: the capitals, the
--- capitals and the services worth a detour, every town, or none.
+-- repairer's anvil), never a town or city mark. Zoomed out, the pins that would overlap share one pin: since it
+-- stands for several services at once, it wears the addon's own market stall (media/TownGroup.tga), with every
+-- service in its tooltip; zoomed in they separate, the way UI/Map.lua groups the docks of a harbour. A click plans a
+-- journey to the NPC. The setting chooses which towns show: the capitals, the capitals and the services worth a
+-- detour, every town, or none.
 local TEMPLATE = "ShortestPathForeverServicePinTemplate"
 local PIN_SIZE = 20
 -- The groups that make a town worth showing under "Capitals and important services": every trainer, the profession
@@ -21,6 +22,61 @@ local PIN_SIZE = 20
 local IMPORTANT = { innkeeper = true, flight = true, bank = true, trade = true, reagents = true, books = true }
 -- A town's service icon: the most useful thing the NPC offers, by section and then by the list's own order.
 local RANK = { services = 1, trainers = 2, vendors = 3 }
+
+-- The Map Filter's checkboxes: one for every service a pin can wear, in the list's own order. Food and drink are one
+-- service to a player, ammunition covers both arrows and bullets, and bags and trade supplies share one switch; every
+-- profession trainer group joins the one Profession trainers switch. A dungeon entrance group is not a service here
+-- and gets no checkbox.
+---@class SPFTownServiceFilter
+---@field option string the saved setting, true while the service shows
+---@field label string
+---@field groups? table<string, boolean> the group keys it hides
+---@field profession? boolean every profession trainer group
+
+---@type SPFTownServiceFilter[]
+local FILTERS = {
+	{ option = "townServiceInnkeeper", label = L["Innkeeper"], groups = { innkeeper = true } },
+	{ option = "townServiceFlight", label = L["Flight master"], groups = { flight = true } },
+	{ option = "townServiceStable", label = L["Stable master"], groups = { stable = true } },
+	{ option = "townServiceRepair", label = L["Repair"], groups = { repair = true } },
+	{ option = "townServiceBank", label = L["Bank"], groups = { bank = true } },
+	{ option = "townServiceAuction", label = L["Auction house"], groups = { auction = true } },
+	{ option = "townServiceClass", label = L["Class trainer"], groups = { class = true } },
+	{ option = "townServiceProfessions", label = L["Profession trainers"], profession = true },
+	{ option = "townServiceFood", label = L["Food and drink"], groups = { food = true, drink = true } },
+	{ option = "townServiceAmmunition", label = L["Ammunition"], groups = { arrows = true, bullets = true } },
+	{ option = "townServiceBags", label = L["Bags and trade supplies"], groups = { bags = true, trade = true } },
+	{ option = "townServiceReagents", label = L["Reagents"], groups = { reagents = true } },
+	{ option = "townServiceBooks", label = L["Books and recipes"], groups = { books = true } },
+	{ option = "townServiceGear", label = L["Weapons and armour"], groups = { gear = true } },
+}
+
+-- The filter a group belongs to, by its key; a profession trainer group uses the shared Profession trainers switch.
+local FILTER_OF_KEY, PROFESSION_FILTER = {}, nil
+for _, filter in ipairs(FILTERS) do
+	if filter.profession then
+		PROFESSION_FILTER = filter
+	end
+	for key in pairs(filter.groups or {}) do
+		FILTER_OF_KEY[key] = filter
+	end
+end
+
+---@param group SPFNearbyGroup
+---@return SPFTownServiceFilter?
+local function FilterOf(group)
+	if group.key:sub(1, 11) == "profession:" then
+		return PROFESSION_FILTER
+	end
+	return FILTER_OF_KEY[group.key]
+end
+
+---@param group SPFNearbyGroup
+---@return boolean
+local function GroupShown(group)
+	local filter = FilterOf(group)
+	return not filter or ns.db[filter.option] ~= false
+end
 
 ---@type SPFTownServiceChoice[]
 ns.TownServiceChoices = {
@@ -38,7 +94,6 @@ ns.TownServiceChoices = {
 ---@field world SPFPoint
 ---@field map integer the zone map the spawn is on
 ---@field groups SPFNearbyGroup[] what the NPC offers, in the list's order
----@field primary SPFNearbyGroup the mark the NPC wears
 ---@field capitalUiMap? integer the capital the NPC stands in
 
 ---@class SPFTownServicePoint
@@ -134,12 +189,13 @@ local function EntryTown(entry)
 	return TownName(entry)
 end
 
----@param groups SPFNearbyGroup[]
----@return SPFNearbyGroup
-local function Primary(groups)
+-- The NPC's own mark: the most useful service it offers that still shows, so hiding one leaves the next best icon.
+---@param entry SPFTownService
+---@return SPFNearbyGroup?
+local function Primary(entry)
 	local best
-	for _, group in ipairs(groups) do
-		if not best or (RANK[group.section] or 0) < (RANK[best.section] or 0) then
+	for _, group in ipairs(entry.groups) do
+		if GroupShown(group) and (not best or (RANK[group.section] or 0) < (RANK[best.section] or 0)) then
 			best = group
 		end
 	end
@@ -177,9 +233,6 @@ local function Build()
 			end
 		end
 	end
-	for _, entry in ipairs(entries) do
-		entry.primary = Primary(entry.groups)
-	end
 end
 
 ---@param entry SPFTownService
@@ -195,7 +248,7 @@ local function Shown(entry, level)
 			return true
 		end
 		for _, group in ipairs(entry.groups) do
-			if group.section == "trainers" or IMPORTANT[group.key] then
+			if (group.section == "trainers" or IMPORTANT[group.key]) and GroupShown(group) then
 				return true
 			end
 		end
@@ -229,7 +282,7 @@ end
 local function Points(mapID, level)
 	local points = {}
 	for _, entry in ipairs(entries) do
-		if Shown(entry, level) then
+		if Shown(entry, level) and Primary(entry) then
 			local x, y = Position(entry, mapID)
 			if x and y then
 				points[#points + 1] = { entry = entry, id = entry.key, x = x, y = y }
@@ -265,9 +318,15 @@ local function Clusters(map, points)
 end
 
 ---@param texture Texture
----@param group SPFNearbyGroup
-local function PaintGroup(texture, group)
-	Art.Fit(texture, group.tracking, PIN_SIZE, PIN_SIZE)
+---@param cluster SPFTownServiceCluster
+local function PaintPin(texture, cluster)
+	if #cluster.services > 1 then
+		-- A pin for several NPCs speaks for no one service, so it wears the addon's own stall, square as file art is.
+		Art.Icon(texture, Art.TOWN_GROUP_FILE, PIN_SIZE)
+		return
+	end
+	local primary = Primary(cluster.services[1].entry) --[[@as SPFNearbyGroup]]
+	Art.Fit(texture, primary.tracking, PIN_SIZE, PIN_SIZE)
 end
 
 -- The service a pin stands for: its most useful NPC's primary service, by the same ranking a single NPC's pin uses.
@@ -275,11 +334,12 @@ end
 ---@param cluster SPFTownServiceCluster
 ---@return SPFTownServicePoint
 local function Representative(cluster)
-	local best
+	local best, bestRank
 	for _, point in ipairs(cluster.services) do
-		local rank = RANK[point.entry.primary.section] or 0
-		if not best or rank < (RANK[best.entry.primary.section] or 0) then
-			best = point
+		local primary = Primary(point.entry)
+		local rank = primary and RANK[primary.section] or 0
+		if not best or rank < bestRank then
+			best, bestRank = point, rank
 		end
 	end
 	return best
@@ -303,24 +363,24 @@ end
 local function AddTooltip(cluster)
 	if #cluster.services == 1 then
 		local entry = cluster.services[1].entry
-		GameTooltip_SetTitle(GameTooltip, entry.primary.label)
+		local primary = Primary(entry) --[[@as SPFNearbyGroup]]
+		GameTooltip_SetTitle(GameTooltip, primary.label)
 		local who = entry.title and L["%s · %s"]:format(entry.name, entry.title) or entry.name
 		GameTooltip_AddColoredLine(GameTooltip, who, HIGHLIGHT_FONT_COLOR)
 		for _, group in ipairs(entry.groups) do
-			if group ~= entry.primary then
+			if group ~= primary and GroupShown(group) then
 				GameTooltip_AddNormalLine(GameTooltip, group.label)
 			end
 		end
 	else
 		local town = ClusterTown(cluster)
 		GameTooltip_SetTitle(GameTooltip, town ~= "" and town or L["Town services"])
-		-- The pin wears its most useful service's icon, so its label leads the list and the rest follow.
-		local primary = Representative(cluster).entry.primary
-		GameTooltip_AddNormalLine(GameTooltip, primary.label)
-		local seen = { [primary.key] = true }
+		-- The pin wears the stall, not a service, so every shown service of the group's NPCs is listed once, in the
+		-- list's own order.
+		local seen = {}
 		for _, point in ipairs(cluster.services) do
 			for _, group in ipairs(point.entry.groups) do
-				if not seen[group.key] then
+				if GroupShown(group) and not seen[group.key] then
 					seen[group.key] = true
 					GameTooltip_AddNormalLine(GameTooltip, group.label)
 				end
@@ -351,9 +411,8 @@ function ServicePin:OnAcquired(cluster)
 	self.cluster = cluster
 	local scale = (ns.db.mapPinScale or 100) / 100
 	self:SetScalingLimits(1, scale, scale * 1.2)
-	local primary = Representative(cluster).entry.primary
-	PaintGroup(self.Texture, primary)
-	PaintGroup(self.HighlightTexture, primary)
+	PaintPin(self.Texture, cluster)
+	PaintPin(self.HighlightTexture, cluster)
 	self:SetPosition(cluster.x, cluster.y)
 end
 
@@ -377,7 +436,8 @@ function ServicePin:OnMouseClickAction(button)
 		return
 	end
 	local entry = Representative(self.cluster).entry
-	ns.NearbyServices.Navigate(entry.primary.key, entry --[[@as SPFNearbyPlace]])
+	local primary = Primary(entry) --[[@as SPFNearbyGroup]]
+	ns.NearbyServices.Navigate(primary.key, entry --[[@as SPFNearbyPlace]])
 end
 
 function ServicePin:OnReleased()
@@ -403,6 +463,7 @@ end
 ---@class SPFTownServicesLayer
 ---@field pins? table<string, SPFServicePin>
 ---@field mapID? number
+---@field shown? string which services show, so hiding one repaints its pins even when the clusters stay put
 local Services = {}
 
 function Services:RemoveAllData()
@@ -445,13 +506,18 @@ function Services:RefreshAllData()
 		Build()
 		rebuilt = true
 	end
+	local shown = {}
+	for _, filter in ipairs(FILTERS) do
+		shown[#shown + 1] = ns.db[filter.option] == false and "0" or "1"
+	end
+	shown = table.concat(shown)
 	local clusters = Clusters(map, Points(mapID, level))
 	local wanted = {}
 	for _, cluster in ipairs(clusters) do
 		wanted[cluster.key] = cluster
 	end
 	local previousMapID, previousPins = self.mapID, self.pins
-	local same = not rebuilt and previousPins ~= nil and mapID == previousMapID
+	local same = not rebuilt and previousPins ~= nil and mapID == previousMapID and self.shown == shown
 	if previousPins then
 		for key, pin in pairs(previousPins) do
 			same = same and pin.cluster ~= nil and wanted[key] ~= nil
@@ -460,7 +526,7 @@ function Services:RefreshAllData()
 			same = same and previousPins[key] ~= nil
 		end
 	end
-	self.mapID = mapID
+	self.mapID, self.shown = mapID, shown
 	if same then
 		return
 	end
@@ -504,7 +570,16 @@ function ns.RefreshTownServices()
 	end
 end
 
--- The world map's Map Filter ("Show:") menu gets the same four levels as the settings page.
+-- Shows or hides one service on every pin, as the Map Filter's checkbox does, and redraws the map at once.
+---@param option string
+---@param shown boolean
+function ns.SetTownServiceShown(option, shown)
+	ns.SetOption(option, shown)
+	ns.RefreshTownServices()
+end
+
+-- The world map's Map Filter ("Show:") menu gets the same four levels as the settings page, then a checkbox for each
+-- service the pins can wear.
 local function AddFilter(_, root)
 	root:CreateDivider()
 	local submenu = root:CreateButton(L["Town services"])
@@ -514,6 +589,15 @@ local function AddFilter(_, root)
 			return ns.db.townServices == choice.key
 		end, function()
 			ns.SetOption("townServices", choice.key)
+		end)
+	end
+	submenu:CreateDivider()
+	-- menu-scroll-ok: one checkbox per fixed service
+	for _, filter in ipairs(FILTERS) do
+		submenu:CreateCheckbox(filter.label, function()
+			return ns.db[filter.option] ~= false
+		end, function()
+			ns.SetTownServiceShown(filter.option, ns.db[filter.option] == false)
 		end)
 	end
 end

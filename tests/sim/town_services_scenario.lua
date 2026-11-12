@@ -1,7 +1,7 @@
 -- luacheck: read globals scenario ADDON
 local ForeverCore = dofile("tests/forever_core.lua")
--- The world map's town services: service pins in a capital, a group pin wearing its most useful service's icon with
--- the rest in its tooltip, the Shift-click journey, a zoom re-cluster, the four levels of detail, and combat and the
+-- The world map's town services: service pins in a capital, a group pin wearing the addon's market stall with every
+-- service in its tooltip, the Shift-click journey, a zoom re-cluster, the four levels of detail, and combat and the
 -- gamepad interface over the layer. The services themselves come from a ready Nearby list here, with a projection
 -- into the simulator's Elwynn and Stormwind maps.
 scenario(
@@ -93,8 +93,11 @@ scenario(
 			end
 		end
 		assert(groupPin, "two overlapping services share one pin")
-		assert(groupPin.Texture:GetAtlas() == "Banker", "the group pin wears its most useful service's icon")
-		assert(groupPin.Texture:GetAtlas() ~= "poi-majorcity", "no group pin wears a town mark")
+		assert(
+			groupPin.Texture:GetTexture() == "Interface\\AddOns\\ShortestPathForever\\media\\TownGroup",
+			"the group pin wears the addon's market stall"
+		)
+		assert(groupPin.Texture:GetAtlas() == nil, "no service's atlas or a town mark on a group pin")
 		sim:hover(groupPin)
 		sim:advance(0.2)
 		sim:leave()

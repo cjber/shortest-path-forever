@@ -430,3 +430,7 @@ L["Capitals and important services"] = "Capitais e serviços importantes" -- mt
 L["All towns"] = "Todas as cidades" -- mt
 L["Books and recipes"] = "Livros e receitas" -- mt
 L["One icon per town, or one per service as you zoom in."] = "Um ícone por cidade, ou um por serviço ao aproximar." -- mt
+L["Ammunition"] = "Munição" -- mt
+L["Bags and trade supplies"] = "Bolsas e bens de comércio" -- mt
+L["Food and drink"] = "Comida e bebida" -- mt
+L["Profession trainers"] = "Instrutores de profissão" -- mt

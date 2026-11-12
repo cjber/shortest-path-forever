@@ -37,7 +37,7 @@ pixels never enter product media.
 | `services.png` | The Nearby services tab in the world map's quest log, its bags tab selected: Auberdine's vendors for a level 15 hunter, each with the nearest NPC and walking time, and the arrows, shot, food and drink for that level |
 | `services_better.png` | The same tab for that hunter at level 25 with a bow: Dalmond still sells only Sharp Arrow, so a one-line row under Arrows offers Razor Arrow in Darnassus with its own time and the upgrade arrow on its icon; Auberdine already sells the best food and drink for 25 |
 | `services_search.png` | The same tab while `water` is typed into its search box: the nearest food and drink vendors selling something that matches, each row naming only the item that matched |
-| `town_services.png` | Stormwind City zoomed out: its overlapping services collapse into group pins that wear the client's minimap tracking icon of their most useful service (the innkeeper's moon and the stable master's horseshoe, not a city castle), with the pinned service named first, the group's other services and the click journey hint in the tooltip |
+| `town_services.png` | Stormwind City zoomed out: its overlapping services collapse into group pins that wear the addon's own market stall (never a city castle, nor one service's icon), with the group's services and the click journey hint in the tooltip |
 | `town_services_zoom.png` | The same city zoomed into the Trade District: one pin per NPC, each wearing its own tracking icon (the repairer's anvil, the auctioneer's coins, the baker's bread and milk), as the map separates overlapping services |
 | `demo.gif` | Eight-second montage: route pulse/settle, tracker countdown and gliding compass; under 0.5 MB |
 

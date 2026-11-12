@@ -9,11 +9,17 @@ local L = ns.L
 
 local settings = {}
 
--- Change an option from anywhere (the map's filter menu) with the settings panel kept in step.
+-- Change an option from anywhere (the map's filter menu) with the settings panel kept in step. A menu-only setting
+-- has no row to move, so its saved value is written directly.
 ---@param key string
 ---@param value boolean|number|string
 function ns.SetOption(key, value)
-	settings[key]:SetValue(value)
+	local setting = settings[key]
+	if setting then
+		setting:SetValue(value)
+	else
+		ns.db[key] = value
+	end
 end
 
 local category

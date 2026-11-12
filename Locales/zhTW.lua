@@ -427,3 +427,7 @@ L["All towns"] = "所有城鎮" -- mt
 L["Books and recipes"] = "書籍和配方" -- mt
 L["One icon per town, or one per service as you zoom in."] =
 	"縮小顯示每個城鎮一個圖示，放大後每個服務一個圖示。" -- mt
+L["Ammunition"] = "彈藥" -- mt
+L["Bags and trade supplies"] = "背包和貿易品" -- mt
+L["Food and drink"] = "食物和飲料" -- mt
+L["Profession trainers"] = "專業訓練師" -- mt

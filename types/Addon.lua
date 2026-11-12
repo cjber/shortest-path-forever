@@ -222,6 +222,20 @@
 ---@field mapFlightMasters? boolean
 ---@field mapRoutes? boolean
 ---@field townServices? string the town services' level of detail: "capitals", "important", "all" or "off" (TownServices.lua)
+---@field townServiceInnkeeper? boolean whether innkeeper pins show (TownServices.lua)
+---@field townServiceFlight? boolean whether flight master pins show
+---@field townServiceStable? boolean whether stable master pins show
+---@field townServiceRepair? boolean whether repair pins show; off by default
+---@field townServiceBank? boolean whether bank pins show
+---@field townServiceAuction? boolean whether auction house pins show
+---@field townServiceClass? boolean whether class trainer pins show
+---@field townServiceProfessions? boolean whether profession trainer pins show
+---@field townServiceFood? boolean whether food and drink vendor pins show
+---@field townServiceAmmunition? boolean whether ammunition vendor pins show
+---@field townServiceBags? boolean whether bags and trade supply pins show
+---@field townServiceReagents? boolean whether reagent vendor pins show
+---@field townServiceBooks? boolean whether books and recipe pins show
+---@field townServiceGear? boolean whether weapon and armour pins show
 ---@field otherFaction? boolean
 ---@field tracker? boolean
 ---@field alerts? boolean

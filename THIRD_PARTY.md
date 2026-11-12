@@ -17,10 +17,11 @@ it, so a data refresh that moves the pin never leaves this file behind. The addo
 
 No embedded libraries ship. `media/` is this addon's own: the icon is drawn in `media/icon.svg`, the feathered
 `Dot.tga` is the route-stroke brush, `Zeppelin.tga` is the zeppelin map marker, `Pin.tga` is the gold goal pin and
-`PinInactive.tga` its bronze untracked twin, and `Numbers/1.tga` to `Numbers/25.tga` are the gold numbered markers,
-all original assets made for this addon with AI assistance and no Blizzard art; the pins and the numbered markers are
-generated from `tools/pin_source` and `tools/pin_source/numbers` by `tools/export_pin.py`. Boat markers use
-Blizzard's `flightmasterferry` atlas, which has no zeppelin equivalent.
+`PinInactive.tga` its bronze untracked twin, `Numbers/1.tga` to `Numbers/25.tga` are the gold numbered markers, and
+`TownGroup.tga` is the town services group pin: a market stall for a pin that stands for more than one NPC, generated
+from `tools/pin_source/town-group.png` by `tools/export_pin.py`, as are the pins and the numbered markers from
+`tools/pin_source` and `tools/pin_source/numbers`. All of it is original art made for this addon with AI assistance
+and no Blizzard art. Boat markers use Blizzard's `flightmasterferry` atlas, which has no zeppelin equivalent.
 `Locales/*.lua` are machine translated, using the client's own GlobalStrings for the pinned build (via wago.tools)
 as the glossary for game terms; eight frFR lines are Brainc3ll's.
 

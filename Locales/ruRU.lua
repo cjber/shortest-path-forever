@@ -458,3 +458,7 @@ L["All towns"] = "Все города" -- mt
 L["Books and recipes"] = "Книги и рецепты" -- mt
 L["One icon per town, or one per service as you zoom in."] =
 	"Один значок на город или на услугу при приближении." -- mt
+L["Ammunition"] = "Боеприпасы" -- mt
+L["Bags and trade supplies"] = "Сумки и хозяйственные товары" -- mt
+L["Food and drink"] = "Еда и напитки" -- mt
+L["Profession trainers"] = "Учителя профессий" -- mt

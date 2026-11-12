@@ -1,19 +1,24 @@
 """The town services on the world map, in Stormwind City.
 
-UI/NearbyGroups.lua and UI/TownServices.lua supply the icons and the grouping: every pin wears the client's minimap
-tracking atlas for the service it stands for (the repairer's anvil, the banker's money bags, the baker's bread and
-milk), never a town or city mark and never an item's icon. The pins that would overlap share one pin, which wears its
-best-ranked service; the tooltip leads with the pinned service, lists the rest and the click journey hint. The NPCs
-and where they stand are Stormwind's, from QuestieDB 1.0.13's Forever bake (X-BUILD-COMMIT
-0f7d8adc92b28ac6594f4ad8745257f4d9784edf), Npc spawns in area 1519 as map percent. The first scene is the whole city
-zoomed out, with the Dwarven District's group hovered; the second zooms into the Trade District the way the client's map
-does, the terrain enlarged and the pins still 20 units, so the services separate into a pin each.
+UI/NearbyGroups.lua and UI/TownServices.lua supply the icons and the grouping: a pin for one NPC wears the client's
+minimap tracking atlas for its service (the repairer's anvil, the banker's money bags, the baker's bread and milk),
+never a town or city mark and never an item's icon, and a pin that stands for several NPCs wears the addon's own
+market stall (media/TownGroup.tga). The pins that would overlap share one pin, whose tooltip lists every shown
+service and the click journey hint. The NPCs and where they stand are Stormwind's, from QuestieDB 1.0.13's Forever
+bake (X-BUILD-COMMIT 0f7d8adc92b28ac6594f4ad8745257f4d9784edf), Npc spawns in area 1519 as map percent. The first
+scene is the whole city zoomed out, with the Dwarven District's group hovered; the second zooms into the Trade
+District the way the client's map does, the terrain enlarged and the pins still 20 units, so the services separate
+into a pin each.
 """
+
+from functools import cache
+from pathlib import Path
 
 from PIL import Image
 from screenshots_maps import icon, map_base
 from wowmock import TooltipLine, scene, tooltip
 
+ROOT = Path(__file__).resolve().parent.parent
 # The client's map canvas, which UI/Map.lua's OverlapGroups measures against.
 TOWN_CANVAS = (1002, 668)
 # The Nearby services list's groups, in its order: vendors first, then the trainers, then the services. Each entry is
@@ -61,6 +66,13 @@ TOWN_SERVICES = [
 ]
 
 
+@cache
+def town_group_art():
+    """The addon's own market stall for a group pin, media/TownGroup.tga, square at 64 with its halo."""
+    with Image.open(ROOT / "media" / "TownGroup.tga") as source:
+        return source.convert("RGBA")
+
+
 def town_entries():
     """The addon's entries: one per NPC, in the order its groups put them in, with the group its pin wears."""
     entries, by_name = [], {}
@@ -80,7 +92,7 @@ def town_entries():
 
 
 def town_clusters(zoom):
-    """UI/TownServices.lua's clusters at a zoom: overlapping pins share one, which wears its best-ranked service."""
+    """UI/TownServices.lua's clusters at a zoom: overlapping pins share one, which lists every shown service."""
     reach_x = 20 * 1.4 * (1 + 0.2 * zoom) * 0.8 / (0.5 + 1.5 * zoom) / TOWN_CANVAS[0]
     reach_y = 20 * 1.4 * (1 + 0.2 * zoom) * 0.8 / (0.5 + 1.5 * zoom) / TOWN_CANVAS[1]
     points = town_entries()
@@ -102,14 +114,16 @@ def town_clusters(zoom):
     clusters = []
     for members in groups.values():
         primary = min(members, key=lambda point: TOWN_GROUP_RANK[TOWN_GROUPS[point["primary"]][0]])["primary"]
-        labels = [label for label in TOWN_GROUP_ORDER if any(label in point["groups"] for point in members)]
+        labels = []
+        for point in members:
+            labels.extend(group for group in point["groups"] if group not in labels)
         clusters.append(
             {
                 "points": members,
                 "x": sum(point["x"] for point in members) / len(members),
                 "y": sum(point["y"] for point in members) / len(members),
                 "primary": primary,
-                "labels": [primary, *(label for label in labels if label != primary)],
+                "labels": labels,
             }
         )
     return clusters
@@ -138,7 +152,11 @@ def town_canvas(ui, zoom):
     hover = None
     for cluster in town_clusters(zoom):
         x, y = to_x(cluster["x"]), to_y(cluster["y"])
-        icon(canvas, TOWN_GROUPS[cluster["primary"]][1], x, y, size=20)
+        if len(cluster["points"]) > 1:
+            # UI/TownServices.lua paints a group's pin with the addon's stall, whole in the same 20 unit box.
+            canvas.draw(town_group_art(), x - 10, y - 10, 20, 20, (1, 1, 1, 1))
+        else:
+            icon(canvas, TOWN_GROUPS[cluster["primary"]][1], x, y, size=20)
         # The group furthest up the map, so its tooltip never covers another pin.
         if not zoom and len(cluster["points"]) > 1 and (hover is None or y < hover[1]):
             hover = (x, y, cluster)
