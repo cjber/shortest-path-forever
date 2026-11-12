@@ -228,6 +228,10 @@ end
 ns.Init = function(fn)
 	fn()
 end
+-- UI/MenuModifier.lua's entry point; this small client does not check the game's menus.
+ns.ModifyMenu = function(tag, _, build)
+	env.Menu.ModifyMenu(tag, build)
+end
 -- UI/Canvas.lua is not loaded here: the addon's own map pins hand Shift-clicks to JourneyInput.lua through it.
 ns.Canvas = { OnClick = noop }
 ns.WakeTravel = noop
