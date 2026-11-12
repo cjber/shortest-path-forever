@@ -13,7 +13,6 @@ optional `### For addon authors` subsection after a version's player bullets.
 ## [Unreleased]
 
 - **Destination NPC arrows find the right nameplate.** The arrows now recognize the creature identifier returned by the Forever client.
-
 - **Travel totals stay on this character.** The leaderboard and sharing settings are removed. Your journey, distance and transport totals remain available.
 - **Guidance keeps its waypoint when another addon selects an objective.** RestedXP and other guide integrations can change the objective tracker while Shortest Path's waypoint remains the active navigation target, without making the arrow and tracker reset. Thanks to Blast22 and the anonymous CurseForge reporter for the reports.
 - **The Nearby services tab can be hidden.** The new *Show Nearby services tab* setting removes the map and quest-log side tab when another addon needs that space. *Open Nearby services* in the tracking menu remains available when the tab is hidden. Thanks to cobalt_44 for the request (#767).
