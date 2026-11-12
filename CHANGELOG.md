@@ -16,7 +16,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [1.34.1] - 2026-11-12
 
-- **A journey no longer fails with an "attempt to yield" error.** Now and then planning a journey stopped with "attempt to yield across metamethod/C-call boundary" and left you with no route, usually with the world map open. It now finishes and the journey gets its route. Thanks to user_efwsfml273dlvfm5 on CurseForge for the report. (#803)
+- **Journeys no longer stop without a route.** Now and then planning a journey stopped with "attempt to yield across metamethod/C-call boundary" and left you with no route, usually with the world map open. It now finishes and the journey gets its route. Thanks to user_efwsfml273dlvfm5 on CurseForge for the report. (#803)
 
 ## [1.34.0] - 2026-11-12
 
