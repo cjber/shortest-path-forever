@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **The quest list's More options works with a controller.** On the gamepad interface, pressing Y on a quest in the quest log's list opened nothing, because the *Plan journey* entry this addon adds to that menu had tainted it and the game's gamepad focus then refused to run. The game's quest menus are now left to the game while the gamepad interface is on, as the map and minimap menus already were, and our entries return with mouse and keyboard. Reported on CurseForge by vladsnz (#788).
+
 ## [1.33.1] - 2026-11-12
 
 <!-- forever-core-sync -->

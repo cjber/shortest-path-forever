@@ -139,6 +139,7 @@ Credit for the reports and requests behind the addon.
 | Acem | Known flight points kept per character | CurseForge; #685 |
 | tgkGate | Fixed the path job yield error | CurseForge; #717 |
 | IronmanBG | Plan journey back in Kaliel's Tracker | CurseForge; #718 |
+| vladsnz | Quest list More options works with a controller | CurseForge; #788 |
 
 ## Inspired by
 

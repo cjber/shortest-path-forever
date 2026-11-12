@@ -555,13 +555,16 @@ ns.Init(function()
 	ns.Canvas.OnClick(OnOwnPinClick)
 	-- The stock handler still pings the spot, which marks where the journey goes for your group too.
 	Minimap:HookScript("OnMouseUp", OnMinimapClick)
-	Menu.ModifyMenu("MENU_QUEST_OBJECTIVE_TRACKER", function(owner, root)
+	-- Our entries in the game's quest menus go through ns.ModifyMenu like every other menu this addon adds to: under
+	-- the gamepad interface the game builds these menus itself and takes them into its focus in the same call, and a
+	-- menu an addon added to is tainted, so the quest list's More options action on Y did nothing (#788).
+	ns.ModifyMenu("MENU_QUEST_OBJECTIVE_TRACKER", "quest tracker", function(owner, root)
 		---@cast owner Frame
 		-- The native menu owner is the tracker container, with no quest ID/context data.
 		-- Resolve the right-clicked HeaderButton's block; never reuse a previous hover's quest.
 		ns.AddQuestMenuEntry(root, QuestIDFromTrackerFocus(owner))
 	end)
-	Menu.ModifyMenu("MENU_QUEST_MAP_LOG_TITLE", function(owner, root)
+	ns.ModifyMenu("MENU_QUEST_MAP_LOG_TITLE", "quest log", function(owner, root)
 		---@cast owner SPFQuestMenuOwner
 		-- Waypoint menus share this tag, but have no questID; the client also spells it questId.
 		ns.AddQuestMenuEntry(root, owner.questID or owner.questId)

@@ -86,6 +86,7 @@ ns.Credits = {
 		{ name = "Acem", what = "Known flight points kept per character" },
 		{ name = "tgkGate", what = "Fixed the path job yield error" },
 		{ name = "IronmanBG", what = "Plan journey back in Kaliel's Tracker" },
+		{ name = "vladsnz", what = "Quest list More options works with a controller" },
 	},
 	inspired = {
 		{ name = "Polestar by Fitz", what = "Ideas for many features" },
