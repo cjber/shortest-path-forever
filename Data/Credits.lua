@@ -85,6 +85,7 @@ ns.Credits = {
 		{ name = "spidersylar", what = "Known flight points kept per character" },
 		{ name = "Acem", what = "Known flight points kept per character" },
 		{ name = "tgkGate", what = "Fixed the path job yield error" },
+		{ name = "user_efwsfml273dlvfm5", what = "Fixed the remaining path job yield error" },
 		{ name = "IronmanBG", what = "Plan journey back in Kaliel's Tracker" },
 		{ name = "vladsnz", what = "Quest list More options works with a controller" },
 		{ name = "vcatalin", what = "Forever Core bundled in the download again" },

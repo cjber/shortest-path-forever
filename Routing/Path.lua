@@ -1296,7 +1296,12 @@ function Path.ReuseMany(job, point)
 		return false
 	end
 	local st = State(job.map)
-	local k, node = pointNode(st, point)
+	if not st then
+		return false
+	end
+	-- Asked from a batch's callback, where the client may be inside a C call no yield crosses: the endpoint's cluster
+	-- is decoded whole to answer, never sliced (#803).
+	local k, node = Grid.Quiet(pointNode, st, point)
 	return k == job.sourceCluster and node == job.sourceNode
 end
 
