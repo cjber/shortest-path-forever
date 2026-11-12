@@ -31,18 +31,22 @@ _G.InCombatLockdown = function()
 	return combat
 end
 -- The client's own restricted openers (C_Map.OpenWorldMap, C_SettingsUtil.OpenSettingsPanel) are run through
--- CreateSecureDelegate by ForeverCore, and map pins set their button passthrough through it (#645). The stubs below
--- record whether a call came that way, so a call site back on the restricted function fails here.
+-- securecallfunction by ForeverCore, and map pins set their button passthrough through CreateSecureDelegate (#645).
+-- The stubs below record whether a call came that way, so a call site back on the restricted function fails here.
 local viaDelegate = false
+local function secure(fn, ...)
+	viaDelegate = true
+	local result = { pcall(fn, ...) }
+	viaDelegate = false
+	if not result[1] then
+		error(result[2], 0)
+	end
+	return unpack(result, 2)
+end
+_G.securecallfunction = secure
 _G.CreateSecureDelegate = function(fn)
 	return function(...)
-		viaDelegate = true
-		local result = { pcall(fn, ...) }
-		viaDelegate = false
-		if not result[1] then
-			error(result[2], 0)
-		end
-		return unpack(result, 2)
+		return secure(fn, ...)
 	end
 end
 _G.GameTooltip_Hide = function() end
