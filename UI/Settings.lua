@@ -333,6 +333,13 @@ ns.Init(function()
 		end
 	)
 	Checkbox(
+		"focusedQuest",
+		L["Route to the focused quest"],
+		-- luacheck: push ignore 631
+		L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no Shift-click. A guide addon's own journey is left alone."]
+		-- luacheck: pop
+	)
+	Checkbox(
 		"journeyTracker",
 		L["Show journey steps in the objective tracker"],
 		L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."],

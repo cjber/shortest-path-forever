@@ -37,7 +37,7 @@ TOWN_GROUPS = {
     "Engineering": ("trainers", "Profession"),
     "Food": ("vendors", "Food"),
     "Trade supplies": ("vendors", "Reagents"),
-    "Weapons and armour": ("vendors", "BattleMaster"),
+    "Weapons and armour": ("vendors", "poi-transmogrifier"),
 }
 TOWN_GROUP_RANK = {"services": 1, "trainers": 2, "vendors": 3}
 # UI/Nearby.lua's group order: the vendor groups, the class trainer, the profession trainers, then the services.

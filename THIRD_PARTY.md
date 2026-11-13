@@ -152,6 +152,10 @@ Credit for the reports and requests behind the addon.
 | [caghanpekin-prog](https://github.com/caghanpekin-prog) | No more brief stutters during play | GitHub; #772 |
 | Zwaffelmagic | Clear the destination on arrival | CurseForge; #733 |
 | CptShooter | Hide the objective lines under the arrow | CurseForge; #691 |
+| user\_10oietw0rdrgk4le | Hovering the minimap map pin no longer errors | CurseForge; #824 |
+| ubrider | Hovering the minimap map pin no longer errors | CurseForge; #824 |
+| cwebbx | Journeys start from a focused quest or map pin | CurseForge; #687 |
+| lone\_viking1921 | Journeys start from a focused quest or map pin | CurseForge; #687 |
 | Lůca [Luutsa] | Town services of the same kind share one icon | Discord; #812 |
 
 ## Inspired by
