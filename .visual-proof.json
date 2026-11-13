@@ -1,26 +1,27 @@
 {
-  "input_digest": "dbba609f32405b8006c741c52db16bade21352677af2aedf707ada82ec03f3e0",
-  "runtime_sha256": "dbba609f32405b8006c741c52db16bade21352677af2aedf707ada82ec03f3e0",
-  "candidate": "605df7fbf68160a58ea79ba0d54b8d61f7bbd97cfba02090a6d85068baeb6875",
+  "input_digest": "92f4f772c6e6fa42c99b7f14ec4a1aff0b8a874c66c5e58e8d449154cfc03818",
+  "runtime_sha256": "92f4f772c6e6fa42c99b7f14ec4a1aff0b8a874c66c5e58e8d449154cfc03818",
+  "candidate": "d334f2cd1350be6b7a85ab76a5b7015e999674b99430ab2b6f98d27c95d1ffae",
   "tested_artifact": "source-tree",
   "client_build": "1.60.1.70938 (Interface 16001)",
+  "source_commit": "518c2d68a79bbabe0e8fa8d08db00887214ffa52",
+  "notes": "Recorded in the client from a git archive of this commit linked as the ShortestPathForever folder (visual_proof --compare: equivalent, extra media/icon-400.png only), with the store ForeverCore. No Lua errors this session.",
   "flows": [
     {
-      "name": "The build loads on an enUS client with no Lua errors and its tracker text is unchanged",
+      "name": "With Mark only where steps end on and the game's own navigation marker off, the screen arrow follows the walk",
       "steps": [
-        "Install the PR's shipped files as the ShortestPathForever folder (compare: no differing files; extra media/icon-400.png) beside ForeverCore v1.10.0-dev+c75429c and /reload",
-        "Run errors --addon ShortestPathForever: no Lua errors found",
-        "Follow a /way journey so the Journey section shows in the tracker",
-        "Confirm the Journey section draws its lines as before",
-        "The ruRU separator itself cannot show on an enUS client; the mock render in the PR body shows it with the ruRU font"
+        "Install the candidate and /reload",
+        "Turn off the game's in-game navigation and turn on Mark only where steps end",
+        "Start a journey from Lakeshire to Stonewatch in Redridge Mountains",
+        "The compass marker reads the straight-line 679 yd, while the screen arrow and the tracker read 710 yd along the walk"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/94e6834396a64be6d9cbbffc4e931455/raw/c8862d01129c7b07648b6eefaefba9630c54c5e8/ruru-ingame-journey.png",
-      "sha256": "48ee91152f025a27a206fa96aac98e6d5d90d1f26048fa271d0aa05dd0f89585"
+      "url": "https://gist.githubusercontent.com/cjber/a5a32938e6f3748ac39b3c88ee843a43/raw/17cbacc3eea20793a51d524832f3882465fe812a/830-arrow-bends.png",
+      "sha256": "6b0e46536d282e80d28cdb1f7a744b816d7f8ce318540aaacba878721f9ad4dd"
     }
   ]
 }
