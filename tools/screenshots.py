@@ -35,6 +35,7 @@ from screenshots_floors import render as render_floors
 from screenshots_maps import icon, map_base
 from screenshots_services import render as render_services
 from screenshots_services import render_better as render_services_better
+from screenshots_services import render_roles as render_services_roles
 from screenshots_services import render_search as render_services_search
 from screenshots_town import render as render_town_services
 from screenshots_town import render_zoom as render_town_services_zoom
@@ -758,6 +759,7 @@ SCENES = {
     "services": render_services,
     "services_search": render_services_search,
     "services_better": render_services_better,
+    "services_roles": render_services_roles,
     "town_services": render_town_services,
     "town_services_zoom": render_town_services_zoom,
 }

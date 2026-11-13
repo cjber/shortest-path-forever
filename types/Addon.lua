@@ -15,6 +15,8 @@
 ---@field Drink number[] items whose use spell restores mana (Data/Services.lua)
 ---@field ProfessionTrainers table<number, number> trainer NPC -> its profession skill line (Data/Services.lua)
 ---@field ClassTrainers table<number, number> class trainer NPC -> its class (Data/Services.lua)
+---@field PortalTrainers table<number, number> portal trainer NPC -> its class (Data/Services.lua)
+---@field Battlemasters table<number, number> battlemaster NPC -> its battleground template (Data/Services.lua)
 ---@field Walks table<number, table<string, (number|false)[]>>
 ---@field WalkPlaces table<number, table<string, number[]>>
 ---@field RoadCells table<number, table<number, string>>
@@ -23,6 +25,7 @@
 ---@field db SPFDatabase
 ---@field charDB SPFCharacterDatabase
 ---@field Defaults table<string, boolean|number|string>
+---@field NearbyRoles SPFNearbyRolesAPI the class, portal and battlemaster groups (UI/NearbyRoles.lua)
 ---@field NearbyServices SPFNearbyServices
 ---@field NearbyGroups SPFNearbyGroups the vendor and service groups the list and the map share (UI/NearbyGroups.lua)
 ---@field TownServiceChoices SPFTownServiceChoice[] the town services' four levels (UI/TownServices.lua)
@@ -237,6 +240,7 @@
 ---@field alertSound? boolean
 ---@field flightPathReminder? boolean
 ---@field journey? boolean
+---@field focusedQuest? boolean -- a super-tracked quest or the player's map pin starts a journey (JourneyInput.lua)
 ---@field compassTime? boolean -- the whole journey's time left under the compass distance (Compass.lua)
 ---@field arrivalSound? boolean -- the map ping when a journey the player planned reaches its goal (Alert.lua)
 ---@field resumeJourney? boolean -- start the player's own journey again after a reload or relog (Resume.lua)

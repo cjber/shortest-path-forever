@@ -137,10 +137,12 @@ before its `v*` tag, since the release publishes it as the notes.
   (`C_Map.GetMapLevels`). Which zone a point is in is always the client's `C_Map.GetMapInfoAtPosition`. Each
   capital's surrounding zone is typed into `CAPITAL_ZONES` in `tools/gen_transit.py`, because UiMap parents every
   capital to its continent and leaves the zone a sibling map.
-- WFA-28: `Data/Services.lua` (food and drink items, profession and class trainers): wago.tools `ItemXItemEffect`,
-  `ItemEffect`, `SpellEffect`, `SkillLine` and `SkillLineAbility`, with classic-db `creature_template`, `npc_trainer`
-  and `npc_trainer_template`; QuestieDB's `foodType` is 0 for every vendor item, so it cannot say food from drink, and
-  QuestieDB has no trainer spells.
+- WFA-28: `Data/Services.lua` (food and drink items, profession and class trainers, mage portal trainers and
+  battlemasters): wago.tools `ItemXItemEffect`, `ItemEffect`, `SpellEffect`, `SkillLine` and `SkillLineAbility`, with
+  classic-db `creature_template`, `npc_trainer`, `npc_trainer_template`, `battlemaster_entry`, `spell_template` and
+  `spell_target_position`; QuestieDB's `foodType` is 0 for every vendor item, so it cannot say food from drink,
+  QuestieDB has no trainer spells, `creature_template` has no battlemaster flag, and a portal trainer is a mage
+  trainer whose taught spells all open a portal or land at a destination.
 - WFA-28: `Data/Heights.lua` (spawn heights): classic-db `creature` spawns and `gameobject` spawns of types 2, 3 and 10,
   matched to the walking maps' surfaces by `tools/bake_heights.lua`; only spawns standing within a cell of another
   surface more than ZTOL away are kept. QuestieDB's spawns are zone fractions with no height, so a journey to a mob in
