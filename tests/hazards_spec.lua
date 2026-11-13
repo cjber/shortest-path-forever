@@ -369,6 +369,7 @@ do
 	}
 	assert(loadfile("Data/Taxi.lua"))("ShortestPathForever", data)
 	assert(loadfile("Data/Zones.lua"))("ShortestPathForever", data)
+	assert(loadfile("Data/TownAreas.lua"))("ShortestPathForever", data)
 	data.TaxiName = function(id)
 		return data.TaxiNodes[id].name
 	end
@@ -401,7 +402,7 @@ do
 		local a, b = points[i - 1], points[i]
 		for t = 0, 1, 0.05 do
 			local x, y = a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t
-			assert((x - crossroads.x) ^ 2 + (y - crossroads.y) ^ 2 > 100 ^ 2, "keeps out of the Crossroads")
+			near(hz.Point(1, x, y), 1, "the walk keeps out of the Crossroads")
 		end
 	end
 	assert(not data.Hazards.Notes(hz, { from = south, to = north }, points), "nothing to say")
@@ -418,12 +419,134 @@ do
 	print("hazards: shipped data: ok")
 end
 
+-- A Horde walk from Dun Garok to a quest west of Southshore (#719): the hostile town's ground is the client's own
+-- Southshore area, so the walk goes round the town its guards stand in instead of through it.
+do
+	local data = { L = L, db = { avoidHighZones = true }, charDB = {}, Init = function() end }
+	assert(loadfile("Data/Taxi.lua"))("ShortestPathForever", data)
+	assert(loadfile("Data/Zones.lua"))("ShortestPathForever", data)
+	assert(loadfile("Data/TownAreas.lua"))("ShortestPathForever", data)
+	data.TaxiName = function(id)
+		return data.TaxiNodes[id].name
+	end
+	-- Zone boxes overlap; the smallest one holding a point stands in for the client's answer.
+	data.ZoneMap = function(map, x, y)
+		local best, area
+		for id, zone in pairs(data.Zones) do
+			if zone.map == map and x >= zone.minX and x <= zone.maxX and y >= zone.minY and y <= zone.maxY then
+				local size = (zone.maxX - zone.minX) * (zone.maxY - zone.minY)
+				if not area or size < area then
+					best, area = id, size
+				end
+			end
+		end
+		return best
+	end
+	level, faction = 30, "Horde"
+	setfenv(assert(loadfile("Journey/Hazards.lua")), env)("ShortestPathForever", data)
+	local walking = {}
+	assert(loadfile("tools/load_nav.lua"))(0)
+	for _, file in ipairs({ "Routing/PathGrid.lua", "Routing/Path.lua", "Routing/PathJobs.lua" }) do
+		assert(loadfile(file))("ShortestPathForever", walking)
+	end
+	local Path = walking.Path
+	local function closest(points, x, y)
+		local best = math.huge
+		for i = 2, #points do
+			local a, b = points[i - 1], points[i]
+			local dx, dy = b.x - a.x, b.y - a.y
+			local length2 = dx * dx + dy * dy
+			local t = length2 > 0 and math.max(0, math.min(1, ((x - a.x) * dx + (y - a.y) * dy) / length2)) or 0
+			best = math.min(best, math.sqrt((a.x + t * dx - x) ^ 2 + (a.y + t * dy - y) ^ 2))
+		end
+		return best
+	end
+	local function drawn(points)
+		local yards = 0
+		for i = 2, #points do
+			local dx, dy = points[i].x - points[i - 1].x, points[i].y - points[i - 1].y
+			yards = yards + math.sqrt(dx * dx + dy * dy)
+		end
+		return yards
+	end
+	-- The worst factor a walk's drawn line passes through, sampled finely enough to catch a corner cut.
+	local function charged(hz, points)
+		local worst = 1
+		for i = 2, #points do
+			local a, b = points[i - 1], points[i]
+			local n = math.max(1, math.ceil(math.sqrt((b.x - a.x) ^ 2 + (b.y - a.y) ^ 2) / 16))
+			for step = 0, n do
+				local x, y = a.x + (b.x - a.x) * step / n, a.y + (b.y - a.y) * step / n
+				worst = math.max(worst, hz.Point(a.map, x, y))
+			end
+		end
+		return worst
+	end
+	local southshore
+	for _, node in pairs(data.TaxiNodes) do
+		if node.name:find("^Southshore,") then
+			southshore = node
+		end
+	end
+	assert(southshore and southshore.faction == "Alliance", "Southshore's flight master")
+	-- The town hall, from the client's own game objects, stands west of the flight master.
+	local hall = { map = 0, x = -876.55, y = -520.65 }
+	local dunGarok, quest = { map = 0, x = -1210, y = -1160 }, { map = 0, x = -750, y = -250 }
+
+	-- The report ran on a 150-yard circle around the flight master, which does not reach the town hall or the guards
+	-- west of it: its walk crossed the town, 35 yards from the hall.
+	local areas = data.TownAreas
+	data.TownAreas = nil
+	local circle = data.Hazards.Profile(dunGarok, quest)
+	near(circle.Point(0, hall.x, hall.y), 1, "the circle misses the town hall")
+	local old = Path.FindSync(0, dunGarok, quest, nil, circle)
+	assert(old and closest(old, hall.x, hall.y) < 40, "the circle's walk crosses the town")
+	data.TownAreas = areas
+
+	-- The town's ground is the client's own Southshore area (271), and a walk keeps out of all of it.
+	local hz = data.Hazards.Profile(dunGarok, quest)
+	local town
+	for _, one in ipairs(hz.towns) do
+		if one.id == 14 then
+			town = one
+		end
+	end
+	assert(town and town.area and town.area.area == 271, "Southshore's own ground")
+	near(hz.Point(0, hall.x, hall.y), 6, "the town hall's ground is charged")
+	near(hz.Point(0, southshore.x, southshore.y), 6, "the flight master's ground is charged")
+	near(hz.Point(0, quest.x, quest.y), 1, "the quest's own ground")
+	Path.ClearCaches()
+	local plain, plainCost = Path.FindSync(0, dunGarok, quest)
+	assert(charged(hz, plain) == 6, "the straight way crosses the town")
+	local round, roundCost = Path.FindSync(0, dunGarok, quest, nil, hz)
+	near(charged(hz, round), 1, "the walk goes round the town")
+	assert(closest(round, hall.x, hall.y) > 100, "keeps well clear of the town hall")
+	assert(roundCost > plainCost, "the way round is longer")
+	-- The route chosen is weighted; the cost shown is the walk's own, without the hazard multiplier.
+	local yards = drawn(round)
+	assert(roundCost >= yards and roundCost < yards * 1.1, string.format("%s against %s drawn", roundCost, yards))
+	-- It goes round, so the tracker says nothing about the town.
+	local notes = data.Hazards.Notes(hz, { from = dunGarok, to = quest }, round)
+	for _, note in ipairs(notes or {}) do
+		assert(not note:find("Southshore"), note)
+	end
+
+	-- A journey that ends in the town is never avoided there, and the town is named under the walk.
+	local into = data.Hazards.Profile(dunGarok, hall)
+	near(into.Point(0, hall.x, hall.y), 1, "the town a journey ends in")
+	local points = Path.FindSync(0, dunGarok, hall, nil, into)
+	notes = data.Hazards.Notes(into, { from = dunGarok, to = hall }, points)
+	assert(notes and notes[1] == L["Hostile town: %s"]:format("Southshore"), notes and notes[1])
+	print("hazards: hostile town ground: ok")
+end
+
 -- A walk that starts and ends in one tile must keep out of a hostile town between them just as it does between
 -- tiles: the tile's own cell search charges the profile's cost too, while the walk it reports stays real (#637).
 do
 	local data = { L = L, db = { avoidHighZones = true }, charDB = {}, Init = function() end }
 	assert(loadfile("Data/Taxi.lua"))("ShortestPathForever", data)
 	assert(loadfile("Data/Zones.lua"))("ShortestPathForever", data)
+	assert(loadfile("Data/TownAreas.lua"))("ShortestPathForever", data)
 	data.TaxiName = function(id)
 		return data.TaxiNodes[id].name
 	end
@@ -450,8 +573,9 @@ do
 	local Grid, Path = walking.PathGrid, walking.Path
 	local id, town = 77, data.TaxiNodes[77]
 	assert(town.name:find("^Camp Taurajo"), town.name)
-	-- Both ends, 180 yards either side of the town's flight master, stand in the one tile around it.
-	local from, to = { map = 1, x = town.x, y = town.y - 180 }, { map = 1, x = town.x, y = town.y + 180 }
+	-- Both ends, 230 yards either side of the town's flight master and outside its own ground, stand in the one tile
+	-- around it, with the town between them.
+	local from, to = { map = 1, x = town.x, y = town.y - 230 }, { map = 1, x = town.x, y = town.y + 230 }
 	local st = Grid.State(1)
 	local sk, gk = Grid.locate(st, from.x, from.y), Grid.locate(st, to.x, to.y)
 	assert(sk and sk == gk, "one tile")
@@ -483,7 +607,15 @@ do
 		return yards
 	end
 	local plain, plainCost = Path.FindSync(1, from, to)
-	assert(plain and closest(plain, town.x, town.y) < 20, "the walk without a profile crosses the town")
+	assert(plain, "the walk without a profile")
+	local crossed = false
+	for i = 2, #plain do
+		local a, b = plain[i - 1], plain[i]
+		for t = 0, 1, 0.05 do
+			crossed = crossed or hz.Point(1, a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t) == 6
+		end
+	end
+	assert(crossed, "the walk without a profile crosses the town")
 	local round, roundCost = Path.FindSync(1, from, to, nil, hz)
 	assert(round and closest(round, town.x, town.y) > 100, "goes round the town inside the tile")
 	assert(roundCost > plainCost, "the way round is longer")

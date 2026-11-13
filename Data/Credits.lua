@@ -102,6 +102,7 @@ ns.Credits = {
 		{ name = "ubrider", what = "Hovering the minimap map pin no longer errors" },
 		{ name = "cwebbx", what = "Journeys start from a focused quest or map pin" },
 		{ name = "lone_viking1921", what = "Journeys start from a focused quest or map pin" },
+		{ name = "Nivlemoth_Nathrezim", what = "Horde walks stay out of Southshore" },
 	},
 	inspired = {
 		{ name = "Polestar by Fitz", what = "Ideas for many features" },

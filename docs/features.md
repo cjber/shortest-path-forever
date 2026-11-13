@@ -41,11 +41,12 @@ With RestedXP or Guidelime installed, **Resume guide** in Guidance or the Journe
   tracker or quest log, or Shift-click its marker on the map; a finished quest routes to its turn-in.
   Walks keep away from danger. A zone whose lowest level is 4 or more above yours costs four times as much to
   walk through and the other faction's towns and capitals six times as much, so a walk goes round them when there
-  is a way, and is planned again when you level up. The zones and towns you start and end in are never avoided. Under
-  the walk's step, grey lines say what it did: *Avoids Duskwood (level 18-30)*, *Crosses Wetlands (level 20-30)*
+  is a way, and is planned again when you level up. The zones and towns you start and end in are never avoided.
+  Under the walk's step, grey lines say what it did: *Avoids Duskwood (level 18-30)*, *Crosses Wetlands (level 20-30)*
   where there is no way round, and *Hostile town: Crossroads*. Zone levels are the original game's published
-  ranges; Forever's own zones use their subzones' exploration levels. A hostile town is the ground around one of
-  the other faction's flight masters with none of yours beside it, so Booty Bay and Gadgetzan don't count. Untick
+  ranges; Forever's own zones use their subzones' exploration levels. A hostile town is the ground the game itself
+  calls that town, around one of the other faction's flight masters with none of yours beside it, so Booty Bay and
+  Gadgetzan don't count. Untick
   *Avoid zones far above my level* in Guidance to walk anywhere; the towns are always avoided. The walk's time
   counts these costs, so a walk that must cross one reads a little long.
   A goal inside a dungeon or raid, which has no walking map, is planned to the instance's entrance from outside
