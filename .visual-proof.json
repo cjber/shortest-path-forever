@@ -1,26 +1,26 @@
 {
-  "input_digest": "dbba609f32405b8006c741c52db16bade21352677af2aedf707ada82ec03f3e0",
-  "runtime_sha256": "dbba609f32405b8006c741c52db16bade21352677af2aedf707ada82ec03f3e0",
-  "candidate": "605df7fbf68160a58ea79ba0d54b8d61f7bbd97cfba02090a6d85068baeb6875",
+  "input_digest": "8f9a25cc2d657dc53cc8a182d8249b0001d67a71456500a22354b70c4963ed7d",
+  "runtime_sha256": "8f9a25cc2d657dc53cc8a182d8249b0001d67a71456500a22354b70c4963ed7d",
+  "candidate": "f44522f766e435a70818a401c66ddc04fd920e693505e5babd633c5c34d6dce5",
   "tested_artifact": "source-tree",
   "client_build": "1.60.1.70938 (Interface 16001)",
+  "source_commit": "0e67979609cf3aefe0d4e227d0f651a596818b2f",
+  "notes": "Checked in the headless client: the Kaliel's Tracker declaration and the GetMinimapShape waiver change no behaviour.",
   "flows": [
     {
-      "name": "The build loads on an enUS client with no Lua errors and its tracker text is unchanged",
+      "name": "Journey and minimap pins load",
       "steps": [
-        "Install the PR's shipped files as the ShortestPathForever folder (compare: no differing files; extra media/icon-400.png) beside ForeverCore v1.10.0-dev+c75429c and /reload",
-        "Run errors --addon ShortestPathForever: no Lua errors found",
-        "Follow a /way journey so the Journey section shows in the tracker",
-        "Confirm the Journey section draws its lines as before",
-        "The ruRU separator itself cannot show on an enUS client; the mock render in the PR body shows it with the ruRU font"
+        "Link the candidate build with the store ForeverCore and /reload",
+        "The Journey tracker section and the minimap pins draw on this build",
+        "Print the loaded ShortestPathForever version: the candidate build, 0 Lua errors this session"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/94e6834396a64be6d9cbbffc4e931455/raw/c8862d01129c7b07648b6eefaefba9630c54c5e8/ruru-ingame-journey.png",
-      "sha256": "48ee91152f025a27a206fa96aac98e6d5d90d1f26048fa271d0aa05dd0f89585"
+      "url": "https://gist.githubusercontent.com/cjber/0990754c8ffba2fe40866d6188344f42/raw/23b71071ea17084eb9b4091fc7722a43446bc02c/lint-calls.png",
+      "sha256": "ca73ba50d3622561be970b113f388127d14383bcb7efd9c11685263a532a2743"
     }
   ]
 }
