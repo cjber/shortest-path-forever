@@ -45,6 +45,7 @@ L["Avoid zones far above my level"] = "내 레벨보다 훨씬 높은 지역 피
 L["Avoids %s (level %s)"] = "%s 우회 (레벨 %s)"
 L["Bags"] = "가방"
 L["Bank"] = "은행"
+L["Battlemaster"] = "전장 지휘관"
 L["Boat and Zeppelin Routes"] = "배와 비행선 노선"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"배와 비행선 노선. 부두를 가리키는 동안 그려집니다."
@@ -167,6 +168,7 @@ L["Play a sound when you reach the goal"] = "목적지에 도착하면 소리 �
 L["Play a sound with alerts"] = "알림과 함께 소리 재생"
 L["Plays even with the game in the background."] = "게임이 백그라운드에 있어도 재생합니다."
 L["Portal to %s"] = "%s행 차원문"
+L["Portal trainer"] = "차원문 상급자"
 L["Portals"] = "차원문"
 L["Reagents"] = "마법 재료"
 L["Repair"] = "장비 수리"
