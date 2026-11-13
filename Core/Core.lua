@@ -40,7 +40,6 @@ local DEFAULTS = {
 	-- key per service keeps the defaults merge from sharing a table with the saved settings, and gives an existing
 	-- player every key it is missing. Repair starts hidden: most players do not want an anvil in every town.
 	townServiceInnkeeper = true,
-	townServiceFlight = true,
 	townServiceStable = true,
 	townServiceRepair = false,
 	townServiceBank = true,

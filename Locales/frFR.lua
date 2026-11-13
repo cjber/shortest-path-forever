@@ -45,8 +45,8 @@ L["Avoids %s (level %s)"] = "Contourne %s (niveau %s)" -- mt
 L["Bags"] = "Sacs"
 L["Bank"] = "Banque" -- mt
 L["Battlemaster"] = "Maître de bataille" -- mt
-L["Guidance no longer blinks off and on when another addon points at the destination your journey already has."] =
-	"Le guidage ne clignote plus quand un autre addon désigne la destination que votre trajet a déjà." -- mt
+L["Fewer market stalls on the map, and every NPC apart at full zoom."] =
+	"Moins d'étals sur la carte, et chaque PNJ à part au zoom maximal." -- mt
 L["Boat and Zeppelin Routes"] = "Routes des bateaux et zeppelins" -- mt
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Routes des bateaux et zeppelins, tracées quand vous survolez un quai." -- mt
@@ -95,8 +95,8 @@ L["Friendly nameplates must be on to see them."] =
 	"Les plaques de nom des unités amies doivent être activées pour les voir."
 L["Go through to %s"] = "Passer vers %s" -- mt
 L["Guidance"] = "Guidage" -- mt
-L["Guide marks the next boat, lift, flight master or your destination, not each turn of the walk on the way."] =
-	"Le guidage marque le prochain bateau, ascenseur, maître de vol ou votre destination, pas chaque virage du trajet à pied." -- mt
+L["Guide marks where each step ends, not each turn of the walk on the way. The arrow still follows the walk."] =
+	"Le guidage marque la fin de chaque étape, pas chaque virage du trajet à pied. La flèche suit toujours le trajet à pied." -- mt
 L["Guide me"] = "Me guider" -- mt
 L["Guidelime"] = "Guidelime" -- mt
 L["Horde"] = "Horde" -- mt

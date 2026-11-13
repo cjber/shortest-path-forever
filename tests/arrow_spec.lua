@@ -232,4 +232,21 @@ assert(frame.Distance.sets == sets, "a label that has not changed is not written
 ns.PointGuideArrow(nil)
 frame.OnUpdate(frame, 1 / 60)
 assert(rawget(frame, "OnUpdate") == nil, "nothing to point at, nothing every frame")
+-- "Mark only where steps end" thins the map marks, never the walk the arrow follows: the arrow still points at the
+-- next bend while the map and compass mark the step's end (#817).
+driver.move({ map = 1, x = 0, y = 0, z = 0 })
+facing = 0
+ns.db.guideStops = true
+ns.SetArrowLabel("distance")
+local marks = {}
+local bends = { { map = 1, x = 0, y = 0 }, { map = 1, x = 200, y = 0 }, { map = 1, x = 200, y = 200 } }
+frame.angle = nil
+ns.PointGuideArrow(bends, function(point)
+	marks[#marks + 1] = point
+	return false
+end)
+assert(math.abs(frame.angle) < 1e-9, "the arrow points at the next bend, not the step's end")
+assert(frame.Distance.text == "400 yd", "the distance counts the walk to the step's end, bend by bend")
+assert(marks[#marks] == bends[#bends], "the map still marks only the step's end")
+assert(select(1, ns.GuideTargets()) == bends[#bends], "the compass marks only the step's end too")
 print("arrow_spec: ok")

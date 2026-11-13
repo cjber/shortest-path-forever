@@ -160,6 +160,7 @@ Credit for the reports and requests behind the addon.
 | cwebbx | Journeys start from a focused quest or map pin | CurseForge; #687 |
 | lone\_viking1921 | Journeys start from a focused quest or map pin | CurseForge; #687 |
 | Nivlemoth\_Nathrezim | Horde walks stay out of Southshore | CurseForge; #719 |
+| Lůca [Luutsa] | Town services of the same kind share one icon | Discord; #812 |
 
 ## Inspired by
 

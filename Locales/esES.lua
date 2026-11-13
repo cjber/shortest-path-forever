@@ -44,8 +44,8 @@ L["Avoids %s (level %s)"] = "Rodea %s (nivel %s)"
 L["Bags"] = "Bolsas"
 L["Bank"] = "Banco"
 L["Battlemaster"] = "Maestro de batalla"
-L["Guidance no longer blinks off and on when another addon points at the destination your journey already has."] =
-	"La guía ya no se apaga y se enciende cuando otro addon señala el destino que tu viaje ya tiene." -- mt
+L["Fewer market stalls on the map, and every NPC apart at full zoom."] =
+	"Menos puestos de mercado en el mapa, y cada PNJ por separado con el zoom al máximo." -- mt
 L["Boat and Zeppelin Routes"] = "Rutas de barcos y zepelines"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Rutas de barcos y zepelines, dibujadas al señalar un muelle."
@@ -93,8 +93,8 @@ L["Friendly nameplates must be on to see them."] =
 	"Las placas de nombre de los aliados deben estar activadas para verlas."
 L["Go through to %s"] = "Atravesar hacia %s"
 L["Guidance"] = "Guía"
-L["Guide marks the next boat, lift, flight master or your destination, not each turn of the walk on the way."] =
-	"La guía marca el siguiente barco, ascensor, maestro de vuelo o tu destino, no cada giro del camino a pie."
+L["Guide marks where each step ends, not each turn of the walk on the way. The arrow still follows the walk."] =
+	"La guía marca dónde termina cada paso, no cada giro del camino a pie. La flecha sigue el camino a pie."
 L["Guide me"] = "Guiarme"
 L["Guidelime"] = "Guidelime"
 L["Horde"] = "Horda"

@@ -43,8 +43,8 @@ L["Avoids %s (level %s)"] = "绕开%s（等级 %s）"
 L["Bags"] = "背包"
 L["Bank"] = "银行"
 L["Battlemaster"] = "战场指挥官"
-L["Guidance no longer blinks off and on when another addon points at the destination your journey already has."] =
-	"当其他插件指向你的旅程已有的目的地时，导航不再闪烁。" -- mt
+L["Fewer market stalls on the map, and every NPC apart at full zoom."] =
+	"地图上的集市摊位更少，完全放大时每个NPC都单独显示。" -- mt
 L["Boat and Zeppelin Routes"] = "船只和飞艇航线"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"船只和飞艇航线，在你指向码头时绘制。"
@@ -91,8 +91,8 @@ L["Forever addons"] = "Forever插件"
 L["Friendly nameplates must be on to see them."] = "需要开启友方姓名板才能看到。"
 L["Go through to %s"] = "穿过前往%s"
 L["Guidance"] = "引导"
-L["Guide marks the next boat, lift, flight master or your destination, not each turn of the walk on the way."] =
-	"引导会标记下一艘船、升降梯、飞行管理员或你的目的地，而不是步行途中的每个转弯。"
+L["Guide marks where each step ends, not each turn of the walk on the way. The arrow still follows the walk."] =
+	"引导会标记每一步的终点，而不是步行途中的每个转弯。箭头仍会沿着步行路线指引。"
 L["Guide me"] = "为我引路"
 L["Guidelime"] = "Guidelime"
 L["Horde"] = "部落"

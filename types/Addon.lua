@@ -231,7 +231,6 @@
 ---@field mapRoutes? boolean
 ---@field townServices? string the town services' level of detail: "capitals", "important", "all" or "off" (TownServices.lua)
 ---@field townServiceInnkeeper? boolean whether innkeeper pins show (TownServices.lua)
----@field townServiceFlight? boolean whether flight master pins show
 ---@field townServiceStable? boolean whether stable master pins show
 ---@field townServiceRepair? boolean whether repair pins show; off by default
 ---@field townServiceBank? boolean whether bank pins show

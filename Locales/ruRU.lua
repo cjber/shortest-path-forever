@@ -47,8 +47,8 @@ L["Avoids %s (level %s)"] = "Обходит %s (уровень %s)"
 L["Bags"] = "Сумки"
 L["Bank"] = "Банк"
 L["Battlemaster"] = "Военачальник"
-L["Guidance no longer blinks off and on when another addon points at the destination your journey already has."] =
-	"Навигация больше не мигает, когда другой аддон указывает на пункт назначения, который уже есть у вашего маршрута." -- mt
+L["Fewer market stalls on the map, and every NPC apart at full zoom."] =
+	"Меньше рыночных лотков на карте, а при полном приближении каждый НИП отдельно." -- mt
 L["Boat and Zeppelin Routes"] = "Маршруты кораблей и дирижаблей"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Маршруты кораблей и дирижаблей, когда вы наводите курсор на причал."
@@ -97,8 +97,8 @@ L["Friendly nameplates must be on to see them."] =
 	"Чтобы их увидеть, включите таблички с именами дружественных существ."
 L["Go through to %s"] = "Пройти: %s"
 L["Guidance"] = "Навигация"
-L["Guide marks the next boat, lift, flight master or your destination, not each turn of the walk on the way."] =
-	"Навигация отмечает следующий корабль, подъемник, распорядителя полетов или цель, а не каждый поворот пешего пути."
+L["Guide marks where each step ends, not each turn of the walk on the way. The arrow still follows the walk."] =
+	"Навигация отмечает, где заканчивается каждый шаг, а не каждый поворот пешего пути. Стрелка по-прежнему ведет по пешему пути."
 L["Guide me"] = "Вести меня"
 L["Guidelime"] = "Guidelime"
 L["Horde"] = "Орда"
