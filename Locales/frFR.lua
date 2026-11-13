@@ -424,8 +424,7 @@ L["Stops before the last on a multi-stop route keep 15 yards."] =
 L["Dungeons and raids"] = "Donjons et raids" -- mt
 L["Town services"] = "Services de la ville" -- mt
 L["Town services on the world map"] = "Services de la ville sur la carte du monde" -- mt
-L["The arrow and the tracker no longer flash while a guide moves between objectives."] =
-	"La flèche et le suivi ne clignotent plus quand un guide passe d'un objectif à l'autre." -- mt
+L["The compass is easier to see."] = "La boussole est plus facile à voir." -- mt
 L["Capitals only"] = "Capitales uniquement" -- mt
 L["Capitals and important services"] = "Capitales et services importants" -- mt
 L["All towns"] = "Toutes les villes" -- mt

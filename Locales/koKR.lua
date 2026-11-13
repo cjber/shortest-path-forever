@@ -428,8 +428,7 @@ L["Stops before the last on a multi-stop route keep 15 yards."] =
 L["Dungeons and raids"] = "던전 및 공격대" -- mt
 L["Town services"] = "마을 서비스" -- mt
 L["Town services on the world map"] = "세계 지도에 마을 서비스 표시" -- mt
-L["The arrow and the tracker no longer flash while a guide moves between objectives."] =
-	"가이드가 목표를 옮길 때 화살표와 추적기가 더 이상 깜박이지 않습니다." -- mt
+L["The compass is easier to see."] = "나침반이 더 잘 보입니다." -- mt
 L["Capitals only"] = "수도만" -- mt
 L["Capitals and important services"] = "수도 및 주요 서비스" -- mt
 L["All towns"] = "모든 마을" -- mt
