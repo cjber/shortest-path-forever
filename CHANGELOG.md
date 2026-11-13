@@ -15,6 +15,9 @@ optional `### For addon authors` subsection after a version's player bullets.
 ## [Unreleased]
 
 - **The arrow follows the walk even when only step ends are marked.** With *Mark only where steps end* on, the screen arrow now points at each bend of the walk while the map still marks only where each step ends, and the distance under it counts the whole walk rather than a straight line. Thanks to esc_return on Discord (#817).
+
+## [1.35.2] - 2026-11-13
+
 - **Guidance no longer blinks off and on when another addon points at the destination your journey already has.** When TomTom's arrow, or a guide, took the objective the journey was already going to under its own name, Shortest Path started the journey over: the arrow, the tracker and the game's own map pin dropped away and came back while the same way was searched again. The journey now stays exactly as it is and only changes hands. The game's map pin also stays put for a moment when the game cannot say which map you are on, instead of vanishing and coming back. Thanks to kindguydev on Discord and user_sggieekz05hc7uxt on CurseForge for the reports (#693, #826).
 
 ### For addon authors

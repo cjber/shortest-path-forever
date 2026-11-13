@@ -43,7 +43,8 @@ L["Avoids %s (level %s)"] = "繞開%s（等級 %s）"
 L["Bags"] = "背包"
 L["Bank"] = "銀行"
 L["Battlemaster"] = "戰場指揮官"
-L["Battlemaster pins can be hidden."] = "戰場指揮官圖釘可以隱藏。" -- mt
+L["Guidance no longer blinks off and on when another addon points at the destination your journey already has."] =
+	"當其他插件指向你的旅程已有的目的地時，導航不再閃爍。" -- mt
 L["Boat and Zeppelin Routes"] = "船隻與飛艇航線"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"船隻與飛艇航線，在你指向碼頭時繪製。"

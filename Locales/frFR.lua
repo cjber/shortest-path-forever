@@ -45,7 +45,8 @@ L["Avoids %s (level %s)"] = "Contourne %s (niveau %s)" -- mt
 L["Bags"] = "Sacs"
 L["Bank"] = "Banque" -- mt
 L["Battlemaster"] = "Maître de bataille" -- mt
-L["Battlemaster pins can be hidden."] = "Les marqueurs des maîtres de bataille peuvent être masqués." -- mt
+L["Guidance no longer blinks off and on when another addon points at the destination your journey already has."] =
+	"Le guidage ne clignote plus quand un autre addon désigne la destination que votre trajet a déjà." -- mt
 L["Boat and Zeppelin Routes"] = "Routes des bateaux et zeppelins" -- mt
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Routes des bateaux et zeppelins, tracées quand vous survolez un quai." -- mt

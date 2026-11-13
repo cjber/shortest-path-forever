@@ -46,7 +46,8 @@ L["Avoids %s (level %s)"] = "%s 우회 (레벨 %s)"
 L["Bags"] = "가방"
 L["Bank"] = "은행"
 L["Battlemaster"] = "전장 지휘관"
-L["Battlemaster pins can be hidden."] = "전장 지휘관 핀을 숨길 수 있습니다." -- mt
+L["Guidance no longer blinks off and on when another addon points at the destination your journey already has."] =
+	"다른 애드온이 여정의 목적지를 가리켜도 안내가 더 이상 꺼졌다 켜지지 않습니다." -- mt
 L["Boat and Zeppelin Routes"] = "배와 비행선 노선"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"배와 비행선 노선. 부두를 가리키는 동안 그려집니다."
