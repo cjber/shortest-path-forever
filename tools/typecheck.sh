@@ -32,6 +32,7 @@ python3 -m unittest discover -s tools -p '*_test.py'
 python3 tools/lint_multivalue.py
 python3 tools/lint_art.py
 python3 tools/lint_secret.py
+python3 tools/lint_client_calls.py
 python3 tools/check_editorconfig.py
 # --release: a shipped locale short of Locales/phrases.txt fails the PR, not the release.
 python3 tools/check_locales.py --release

@@ -610,7 +610,7 @@ local function DrawMinimap(self)
 	end
 	local width, height = self:GetWidth(), self:GetHeight()
 	local scale = self:GetEffectiveScale()
-	-- GetMinimapShape is an optional addon convention (HBD-Pins:215), not a Blizzard global.
+	-- client-ok: GetMinimapShape is a minimap addon convention (HBD-Pins), nil without one
 	local square = GetMinimapShape and GetMinimapShape() == "SQUARE"
 	if
 		self.lastX == x

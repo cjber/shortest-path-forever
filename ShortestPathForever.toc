@@ -4,7 +4,7 @@
 ## Author: cjber
 ## Version: @project-version@
 ## Category: Map
-## OptionalDeps: QuestieDB, TweaksForever, RXPGuides, Guidelime
+## OptionalDeps: QuestieDB, TweaksForever, RXPGuides, Guidelime, !KalielsTracker
 ## X-License: GPL-3.0-or-later
 ## X-Website: https://github.com/cjber/shortest-path-forever
 ## X-Donate: https://github.com/sponsors/cjber
