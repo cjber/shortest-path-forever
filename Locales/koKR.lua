@@ -56,6 +56,7 @@ L["Bullets"] = "탄환"
 L["Cast %s"] = "%s 시전"
 L["Class trainer"] = "직업 상급자"
 L["Clear journey"] = "여정 지우기"
+L["Click to plan a journey here."] = "클릭하면 이곳까지 여정을 계획합니다."
 L["Click to show %s"] = "클릭하여 %s 표시"
 L["Click to show where they go"] = "클릭하여 행선지 표시"
 L["Compass background"] = "나침반 배경"
@@ -425,10 +426,15 @@ L["Stops before the last on a multi-stop route keep 15 yards."] =
 L["Dungeons and raids"] = "던전 및 공격대" -- mt
 L["Town services"] = "마을 서비스" -- mt
 L["Town services on the world map"] = "세계 지도에 마을 서비스 표시" -- mt
-L["Town services show on the world map."] = "도시 서비스가 세계 지도에 표시됩니다." -- mt
+L["The arrow and the tracker no longer flash while a guide moves between objectives."] =
+	"가이드가 목표를 옮길 때 화살표와 추적기가 더 이상 깜박이지 않습니다." -- mt
 L["Capitals only"] = "수도만" -- mt
 L["Capitals and important services"] = "수도 및 주요 서비스" -- mt
 L["All towns"] = "모든 마을" -- mt
 L["Books and recipes"] = "책과 조리법" -- mt
 L["One icon per town, or one per service as you zoom in."] =
 	"마을마다 아이콘 하나, 확대하면 서비스마다 아이콘 하나." -- mt
+L["Ammunition"] = "탄약" -- mt
+L["Bags and trade supplies"] = "가방 및 전문 기술" -- mt
+L["Food and drink"] = "음식 및 음료" -- mt
+L["Profession trainers"] = "전문 기술 상급자" -- mt

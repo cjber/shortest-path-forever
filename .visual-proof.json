@@ -1,29 +1,31 @@
 {
-  "input_digest": "716da8c4458b21a7e386ceaedadccae1db7853c1b331476afa98d2fb04fd35e0",
-  "runtime_sha256": "716da8c4458b21a7e386ceaedadccae1db7853c1b331476afa98d2fb04fd35e0",
-  "candidate": "0070edee175574cfbc193817e7b33778195d8d7c8e1c30e961fc42967bee5783",
-  "tested_artifact": "release-package",
+  "input_digest": "f1a3c5eab0a8f3bf80a324b704da249a25d57088b8550ed69fb5b3079f43e8f9",
+  "runtime_sha256": "f1a3c5eab0a8f3bf80a324b704da249a25d57088b8550ed69fb5b3079f43e8f9",
+  "candidate": "2f561bfdd2b099dc1d308410b650b905da540929aa92513dc64c33330ae6f09c",
+  "tested_artifact": "source-tree",
   "client_build": "1.60.1.70888 (Interface 16001)",
+  "source_commit": "3c0fce338a95e94d00fb6f3f0b09be213a039932",
+  "notes": "Recorded on Hel Io in the player's live client from an installed source-tree build of this commit (git archive); --compare reported no missing or differing runtime files, the install additionally carries the ignored store icon. Every other Forever addon's 1.9.0 sync build was loaded in the same session. The only BugGrabber entries this session were the recorder's own over-long /run lines.",
   "flows": [
     {
-      "name": "Shortest Path loads and opens its settings on ForeverCore 1.8.1",
+      "name": "Shortest Path's Thanks entries on ForeverCore 1.9.0",
       "steps": [
-        "Install the packaged candidate with its bundled ForeverCore v1.8.1 and /reload",
-        "Print the loaded versions: ForeverCore v1.8.1, ShortestPathForever v1.33.1-8-g152cb6f, AdventureGuideForever v1.7.6-2-gabadcae, all loaded",
-        "Type /path",
-        "Confirm the Shortest Path Forever settings page opens with every section listed"
+        "Install the candidate with the store ForeverCore v1.9.0 and /reload",
+        "Print every Forever addon's loaded version into a chat tab with no channels: store ForeverCore v1.9.0 plus each 1.9.0 sync build, all loaded, and BugGrabber shows no addon errors this session",
+        "Run ForeverCore.Credits.Open(\"Shortest Path Forever\") and scroll the list to hervad",
+        "hervad shows with 'No more short hitches during play'; the journey retime has no visible change"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/328823e9708f8e8ea7847dc01bd53905/raw/cad3e2caecfe30ead75d1c5293b58db0a5a9174f/sync181b-versions.png",
-      "sha256": "19cf5e3d567426b1c72aacadcf07644cfa7994935dd811d16236a8f20e147832"
+      "url": "https://gist.githubusercontent.com/cjber/627a1b4cf36d973bb26ba262c81eb601/raw/67bd0b623f26040eed9f66dd363a477dbb684579/sync190-spf-thanks.png",
+      "sha256": "090d7046a3131a8f542ad75629669fb00cb8f3117441a5a5904efb6ecd47c0cc"
     },
     {
-      "url": "https://gist.githubusercontent.com/cjber/328823e9708f8e8ea7847dc01bd53905/raw/cad3e2caecfe30ead75d1c5293b58db0a5a9174f/sync181b-spf-settings-0070ede.png",
-      "sha256": "c0bc438060d059c89f556d877555d4236c8499bbb1d833f1f9e7e1602ab6d6fb"
+      "url": "https://gist.githubusercontent.com/cjber/627a1b4cf36d973bb26ba262c81eb601/raw/67bd0b623f26040eed9f66dd363a477dbb684579/sync190-versions.png",
+      "sha256": "9731b84977a7daf94152f9129b9ea996b4c467006f822f7acc430332fa8f08ec"
     }
   ]
 }

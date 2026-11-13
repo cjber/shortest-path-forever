@@ -559,6 +559,17 @@ function API.NavigateRoute(owner, stops)
 	if route and route.owner ~= owner then
 		ended[route.owner] = { reason = "replaced", at = GetTime() }
 	end
+	if
+		route
+		and route.owner == owner
+		and ns.HasJourney
+		and ns.HasJourney()
+		and not (ns.Corpse and ns.Corpse.Active())
+		and ns.ResubmitRoute
+		and ns.ResubmitRoute(route, points)
+	then
+		return true
+	end
 	ended[owner] = nil
 	route = { owner = owner, points = points, index = 1 }
 	ns.ItineraryChanged()

@@ -217,3 +217,143 @@ function ns.JourneyPreview()
 	end
 	return drawn
 end
+
+-- Two stops at the same place, height included: the same destination, not a new journey.
+---@param a SPFPoint?
+---@param b SPFPoint?
+---@return boolean
+local function SameStop(a, b)
+	return a ~= nil and b ~= nil and a.map == b.map and a.x == b.x and a.y == b.y and a.z == b.z
+end
+
+-- One entry of a list a stop keeps: a quest ID, a detail line, or an area as its place and radius.
+---@param a any
+---@param b any
+---@return boolean
+local function SameEntry(a, b)
+	if type(a) == "table" and type(b) == "table" then
+		return a.map == b.map and a.x == b.x and a.y == b.y and a.radius == b.radius
+	end
+	return a == b
+end
+
+-- Whether two lists a stop keeps hold the same entries; a resubmitted stop builds new tables for them every time.
+---@param a any
+---@param b any
+---@return boolean
+local function SameList(a, b)
+	if a == b then
+		return true
+	end
+	if type(a) ~= "table" or type(b) ~= "table" or #a ~= #b then
+		return false
+	end
+	for index = 1, #a do
+		if not SameEntry(a[index], b[index]) then
+			return false
+		end
+	end
+	return true
+end
+
+-- The words a stop shows, which an owner may change without moving the player: its title, its quests, the actions it
+-- names and the area it holds, as API.NavigateRoute builds them. The stop object itself stays, because the journey
+-- follows that object.
+---@param into SPFPoint
+---@param from SPFPoint
+---@return boolean changed nothing the player can read moved
+local function CopyWords(into, from)
+	local changed = into.label ~= from.label
+		or into.questID ~= from.questID
+		or into.radius ~= from.radius
+		or into.hold ~= from.hold
+		or into.npc ~= from.npc
+		or into.look ~= from.look
+		or into.stopLabel ~= from.stopLabel
+		or into.routeTitleFormat ~= from.routeTitleFormat
+		or into.routeCount ~= from.routeCount
+		or into.routeTitle ~= from.routeTitle
+		or into.number ~= from.number
+		or not SameList(into.details, from.details)
+		or not SameList(into.questIDs, from.questIDs)
+		or not SameList(into.handins, from.handins)
+		or not SameList(into.shapes, from.shapes)
+	into.label = from.label
+	into.details = from.details
+	into.questID = from.questID
+	into.questIDs = from.questIDs
+	into.handins = from.handins
+	into.shapes = from.shapes
+	into.radius = from.radius
+	into.hold = from.hold
+	into.npc = from.npc
+	into.look = from.look
+	into.stopLabel = from.stopLabel
+	into.routeTitleFormat = from.routeTitleFormat
+	into.routeCount = from.routeCount
+	into.routeTitle = from.routeTitle
+	into.number = from.number
+	return changed
+end
+
+-- An owner sending its route again: a guide re-points at the stop it already had, or moves it to the next objective
+-- of the step it is on. Answering a re-point with a whole new journey tears down the tracker, the drawn line and the
+-- native waypoint, and the writes that go with them make the guide re-point again: the flicker #693 is about. The
+-- owner, the stop and the progress stay; only the place may move.
+---@param route {owner: string, points: SPFPoint[], index: integer} the route the owner already holds
+---@param points SPFPoint[] the route as it was just submitted
+---@return boolean? handled nil when this is a new route after all
+function ns.ResubmitRoute(route, points)
+	if not ns.RetargetJourney then
+		return nil
+	end
+	local previous = route.points
+	if #points ~= #previous then
+		return nil
+	end
+	local moved, movedCount = nil, 0
+	for index, point in ipairs(points) do
+		if not SameStop(previous[index], point) then
+			moved, movedCount = index, movedCount + 1
+		end
+	end
+	if movedCount == 0 then
+		-- The same places: a relabel, and its quests and area as the guide has them now.
+		local changed = false
+		for index, point in ipairs(points) do
+			changed = CopyWords(previous[index], point) or changed
+		end
+		-- Nothing the player can read moved: the owner repeated itself, and the journey is left exactly as it was.
+		if changed then
+			ns.JourneyRelabeled()
+			if ns.RefreshRouteLines then
+				ns.RefreshRouteLines()
+			end
+			if ns.RefreshArrowLines then
+				ns.RefreshArrowLines()
+			end
+		end
+		if ns.RefreshJourneySearch then
+			ns.RefreshJourneySearch()
+		end
+		return true
+	end
+	if movedCount > 1 or not moved then
+		return nil
+	end
+	local old = previous[moved]
+	-- Another map is a different journey: the route drawn for the old one says nothing about the new.
+	if not old or old.map ~= points[moved].map then
+		return nil
+	end
+	previous[moved] = points[moved]
+	if moved == route.index then
+		return ns.RetargetJourney(points[moved]) == true
+	end
+	-- A stop still ahead moved: the hops after the current stop are planned again, and the journey under way is not.
+	ns.ItineraryChanged()
+	if ns.RefreshRouteLines then
+		ns.RefreshRouteLines()
+	end
+	return true
+end

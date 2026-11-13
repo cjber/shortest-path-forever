@@ -57,6 +57,7 @@ L["Bullets"] = "Пули"
 L["Cast %s"] = "Применить: %s"
 L["Class trainer"] = "Учитель классовых навыков"
 L["Clear journey"] = "Сбросить маршрут"
+L["Click to plan a journey here."] = "Щелкните, чтобы проложить маршрут сюда."
 L["Click to show %s"] = "Щелкните, чтобы показать: %s"
 L["Click to show where they go"] = "Щелкните, чтобы увидеть, куда они идут"
 L["Compass background"] = "Фон компаса"
@@ -440,11 +441,15 @@ L["Stops before the last on a multi-stop route keep 15 yards."] =
 L["Dungeons and raids"] = "Подземелья и рейды" -- mt
 L["Town services"] = "Городские услуги" -- mt
 L["Town services on the world map"] = "Городские услуги на карте мира" -- mt
-L["Town services show on the world map."] =
-	"Городские услуги отображаются на карте мира." -- mt
+L["The arrow and the tracker no longer flash while a guide moves between objectives."] =
+	"Стрелка и трекер больше не мигают, когда гайд переходит между целями." -- mt
 L["Capitals only"] = "Только столицы" -- mt
 L["Capitals and important services"] = "Столицы и важные услуги" -- mt
 L["All towns"] = "Все города" -- mt
 L["Books and recipes"] = "Книги и рецепты" -- mt
 L["One icon per town, or one per service as you zoom in."] =
 	"Один значок на город или на услугу при приближении." -- mt
+L["Ammunition"] = "Боеприпасы" -- mt
+L["Bags and trade supplies"] = "Сумки и хозяйственные товары" -- mt
+L["Food and drink"] = "Еда и напитки" -- mt
+L["Profession trainers"] = "Учителя профессий" -- mt

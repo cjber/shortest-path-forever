@@ -53,6 +53,7 @@ L["Bullets"] = "子弹"
 L["Cast %s"] = "施放%s"
 L["Class trainer"] = "职业训练师"
 L["Clear journey"] = "清除旅程"
+L["Click to plan a journey here."] = "点击以规划前往这里的旅程。"
 L["Click to show %s"] = "点击显示%s"
 L["Click to show where they go"] = "点击查看目的地"
 L["Compass background"] = "指南针背景"
@@ -411,10 +412,15 @@ L["Stops before the last on a multi-stop route keep 15 yards."] =
 L["Dungeons and raids"] = "地下城与团队副本" -- mt
 L["Town services"] = "城镇服务" -- mt
 L["Town services on the world map"] = "世界地图上的城镇服务" -- mt
-L["Town services show on the world map."] = "城镇服务现在显示在世界地图上。" -- mt
+L["The arrow and the tracker no longer flash while a guide moves between objectives."] =
+	"指南切换目标时，箭头和追踪器不再闪烁。" -- mt
 L["Capitals only"] = "仅主城" -- mt
 L["Capitals and important services"] = "主城和重要服务" -- mt
 L["All towns"] = "所有城镇" -- mt
 L["Books and recipes"] = "书籍和配方" -- mt
 L["One icon per town, or one per service as you zoom in."] =
 	"缩小显示每个城镇一个图标，放大后每个服务一个图标。" -- mt
+L["Ammunition"] = "弹药" -- mt
+L["Bags and trade supplies"] = "背包和贸易品" -- mt
+L["Food and drink"] = "食物和饮水" -- mt
+L["Profession trainers"] = "专业训练师" -- mt

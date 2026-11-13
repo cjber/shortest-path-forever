@@ -244,6 +244,27 @@ local function EstimateKept(now)
 	return estimate
 end
 
+-- The drawn route's own timings from where you stand: what a timed tick owes the player, without a search, a plan or
+-- new geometry. False when a sailing the route waits for has moved to its next visit, or nothing can be estimated.
+---@return boolean
+local function RetimeKept()
+	local estimate = followed and EstimateKept(ns.NowMs())
+	if not estimate then
+		return false
+	end
+	for index, leg in ipairs(estimate.legs) do
+		local kept = followed.legs[index + progress.index - 1]
+		-- An untimed route has no sailing to count; it waits out a guess of half its round trip.
+		local sighted = kept.route and kept.boarding and not kept.aboard and ns.Timetable.Anchor(kept.route) ~= nil
+		if sighted and math.abs(leg.depart - kept.depart) > 0.5 then
+			return false
+		end
+	end
+	Retime(estimate)
+	publish(followed, "times")
+	return true
+end
+
 ---@param planned SPFPlan?
 local function Commit(planned)
 	followed = planned
@@ -329,6 +350,7 @@ FinishSearch = function()
 	local provisional = Provisional()
 	-- A first search draws every walk anew; a route shown before its proof ended already drew its first.
 	local refine = search.refine or search.initial and not provisional
+	-- A search replacing a destination that moved cannot be answered by the plan that led to the old place.
 	local keep = followed
 		and planned
 		and estimate
@@ -336,6 +358,9 @@ FinishSearch = function()
 			provisional and not forced and same
 			or not provisional and (not valid or (not forced and (same or not better)))
 		)
+	if search.replace then
+		keep = false
+	end
 	if not keep and planned and not planned.prepared then
 		PrepareWalks(planned)
 		if Walks.Pending() > 0 then
@@ -448,13 +473,16 @@ end
 
 -- Reuse only the last two endpoint searches, with starts confirmed by the pathfinder as the same snapped node.
 -- One search owns the callbacks' shared revision, preview and probe budget across resumes
-local function RefreshCosts(includeGoal, forced)
+---@param includeGoal boolean?
+---@param forced boolean?
+---@param replace boolean? the destination moved, so the plan under way leads somewhere else
+local function RefreshCosts(includeGoal, forced, replace)
 	local here = Here()
 	if not (here and goal) then
 		return
 	end
 	CancelPaths()
-	search = { initial = not followed, forced = forced }
+	search = { initial = not followed, forced = forced, replace = replace }
 	local owner = search
 	local version = pathVersion
 	local teleports = ns.UsableTeleports(ns.NowMs())
@@ -864,19 +892,21 @@ local function Avoid()
 end
 
 -- Searches for the fastest way to point from where you stand. route is what Journey follows meanwhile (a repeated
--- journey's, else nil) and state its progress along it. listener hears every change to what Journey should follow,
--- possibly before Start returns.
+-- journey's, or one whose destination just moved) and state its progress along it. listener hears every change to what
+-- Journey should follow, possibly before Start returns. A replacing search is one whose route leads to a place the
+-- destination no longer is, so its first plan takes over whatever it costs.
 ---@param point SPFPoint
 ---@param route SPFPlan?
 ---@param state {index: integer, departed?: boolean}
 ---@param listener fun(route: SPFPlan?, news: SPFSearchNews)
-function Search.Start(point, route, state, listener)
+---@param replace? boolean the route being replaced leads somewhere else, so the next plan takes over
+function Search.Start(point, route, state, listener, replace)
 	goal, followed, progress, publish = point, route, state, listener
 	search = nil
 	waterMode = (ns.JourneyWaterWalking())
 	origin = nil
 	Avoid()
-	RefreshCosts(true, false)
+	RefreshCosts(true, false, replace == true)
 end
 
 -- Once per driver frame with a readable position: restarts a search whose inputs changed or whose callbacks waited
@@ -901,12 +931,14 @@ function Search.Poll(changed)
 	end
 end
 
--- The timed replan, also due when the ride or run speed changes: searches again where the old costs no longer
--- apply, and otherwise plans in the frame with the costs it has.
+-- The timed replan, also due when the ride or run speed changes: searches again where the old costs no longer apply,
+-- and otherwise plans in the frame with the costs it has. A tick with nothing new retimes the drawn route instead:
+-- only a departure it waits for moving to its next visit gives a plan a different answer.
 ---@param riding number? the route you are aboard
 ---@param flying boolean? on a taxi
 ---@param changedRide boolean either changed since the last frame
-function Search.Replan(riding, flying, changedRide)
+---@param changedSpeed boolean the run speed changed since the last plan
+function Search.Replan(riding, flying, changedRide, changedSpeed)
 	local mode = ns.JourneyWaterWalking()
 	local partyPortals = ns.PartyPortalPlaces and ns.PartyPortalPlaces(Here() or goal) or nil
 	if mode ~= waterMode then
@@ -935,7 +967,7 @@ function Search.Replan(riding, flying, changedRide)
 		local walkedOn = moved and leg and leg.mode == "teleport"
 		if not flying and not riding and (off or retry or walkedOn or GetTime() - refreshedAt >= REFRESH_EVERY) then
 			RefreshCosts(false, off or retry)
-		else
+		elseif changedRide or changedSpeed or not RetimeKept() then
 			local planned = Plan()
 			if
 				planned
