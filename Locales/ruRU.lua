@@ -47,8 +47,8 @@ L["Avoids %s (level %s)"] = "Обходит %s (уровень %s)"
 L["Bags"] = "Сумки"
 L["Bank"] = "Банк"
 L["Battlemaster"] = "Военачальник"
-L["Guidance no longer blinks off and on when another addon points at the destination your journey already has."] =
-	"Навигация больше не мигает, когда другой аддон указывает на пункт назначения, который уже есть у вашего маршрута." -- mt
+L["Fewer market stalls on the map, and every NPC apart at full zoom."] =
+	"Меньше рыночных лотков на карте, а при полном приближении каждый НИП отдельно." -- mt
 L["Boat and Zeppelin Routes"] = "Маршруты кораблей и дирижаблей"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Маршруты кораблей и дирижаблей, когда вы наводите курсор на причал."
