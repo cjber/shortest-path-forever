@@ -170,6 +170,7 @@ L["Resume RestedXP guide"] = "RestedXP-Leitfaden fortsetzen"
 L["Resume guide"] = "Leitfaden fortsetzen"
 L["Return to your corpse"] = "Zu Eurem Leichnam zurückkehren"
 L["Right-click to clear"] = "Rechtsklick zum Löschen"
+L["Route to the focused quest"] = "Reise zur fokussierten Quest"
 L["S"] = "S"
 L["Scales the arrow and the cast prompt."] = "Skaliert den Pfeil und die Zauberaufforderung."
 L["Scales the compass. 100% matches the game's own art."] =
@@ -210,6 +211,8 @@ L["Sizes boat, lift, tram and portal icons on the world map."] =
 L["Sizes flight master icons on the world map."] = "Größe der Flugmeistersymbole auf der Weltkarte."
 L["Sizes transport icons on the minimap."] = "Größe der Transportsymbole auf der Minikarte."
 L["Stable master"] = "Stallmeister"
+L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no Shift-click. A guide addon's own journey is left alone."] =
+	"Startet eine Reise, wenn Ihr eine Quest fokussiert oder die Kartenmarkierung des Spiels setzt, sodass ein Controller keinen Umschaltklick braucht. Eine Reise eines Leitfaden-Addons bleibt unangetastet."
 L["Stop %d of %d"] = "Halt %d von %d" -- mt
 L["Stop %d of %d: %s"] = "Halt %d von %d: %s"
 L["Suggest quests for my level: Adventure Guide Forever"] =

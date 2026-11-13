@@ -154,6 +154,8 @@ Credit for the reports and requests behind the addon.
 | CptShooter | Hide the objective lines under the arrow | CurseForge; #691 |
 | user\_10oietw0rdrgk4le | Hovering the minimap map pin no longer errors | CurseForge; #824 |
 | ubrider | Hovering the minimap map pin no longer errors | CurseForge; #824 |
+| cwebbx | Journeys start from a focused quest or map pin | CurseForge; #687 |
+| lone\_viking1921 | Journeys start from a focused quest or map pin | CurseForge; #687 |
 
 ## Inspired by
 

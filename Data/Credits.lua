@@ -100,6 +100,8 @@ ns.Credits = {
 		{ name = "CptShooter", what = "Hide the objective lines under the arrow" },
 		{ name = "user_10oietw0rdrgk4le", what = "Hovering the minimap map pin no longer errors" },
 		{ name = "ubrider", what = "Hovering the minimap map pin no longer errors" },
+		{ name = "cwebbx", what = "Journeys start from a focused quest or map pin" },
+		{ name = "lone_viking1921", what = "Journeys start from a focused quest or map pin" },
 	},
 	inspired = {
 		{ name = "Polestar by Fitz", what = "Ideas for many features" },
