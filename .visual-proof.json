@@ -1,27 +1,27 @@
 {
-  "input_digest": "ad9df99a719f3ffe80ee4dbdbd42d6e40faab20dbc6d485905f69c321db61c20",
-  "runtime_sha256": "ad9df99a719f3ffe80ee4dbdbd42d6e40faab20dbc6d485905f69c321db61c20",
-  "candidate": "3ddc77cc588a807a27fe145742694a95781ee982cbb7a6c99fabe4075e821785",
+  "input_digest": "794949f42a8ec2d05021748fb9f6126430bcbcfbf9f2b1dc2393a64a5cf1d421",
+  "runtime_sha256": "794949f42a8ec2d05021748fb9f6126430bcbcfbf9f2b1dc2393a64a5cf1d421",
+  "candidate": "20d310673ca5fec547cd28136dcf47a16ac791ca335fd31b431fd2ada94afad6",
   "tested_artifact": "source-tree",
   "client_build": "1.60.1.70938 (Interface 16001)",
-  "source_commit": "ee3487a14c338afa66c03fd4219e16a7434f45eb",
-  "notes": "Recorded in the client from a git archive of this commit linked as the ShortestPathForever folder (visual_proof --compare: equivalent, extra media/icon-400.png only; the client reported version v1.35.2-dev+ee3487a), beside a ForeverCore dev build. No Lua errors this session.",
+  "source_commit": "cf8bf2078887ccd6608069900aee338a99532053",
+  "notes": "Recorded in the client from a git archive of this commit linked as the ShortestPathForever folder (visual_proof --compare: equivalent, extra media/icon-400.png only; the client reported version v1.35.2-dev+cf8bf20), beside a ForeverCore dev build. No Lua errors this session.",
   "flows": [
     {
-      "name": "With Mark only where steps end on and the game's own navigation marker off, the screen arrow follows the walk",
+      "name": "Lakeshire's town pins at full zoom",
       "steps": [
         "Install the candidate and /reload",
-        "Turn off the game's in-game navigation and turn on Mark only where steps end",
-        "Start a journey from Lakeshire to Stonewatch in Redridge Mountains",
-        "The compass marker reads the straight-line 679 yd, while the screen arrow and the tracker read 719 yd along the walk"
+        "Open the world map on Redridge Mountains and zoom fully into Lakeshire",
+        "Once the nearby-services index is ready after the reload, the town service pins draw over Lakeshire; the weapon and armour vendors wear the purple tunic mark",
+        "No Lua errors"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/6a695e608f08d51ec5f7566305a03a6f/raw/b482dc7f2d7caedacd2a7280df9aa5cffa0b5e52/830-arrow-bends.png",
-      "sha256": "64009ebb9ee5d5bec6d3a86ba145f5debcfd42aaa2159c0c0fee8681b5daebd7"
+      "url": "https://gist.githubusercontent.com/cjber/6a695e608f08d51ec5f7566305a03a6f/raw/b482dc7f2d7caedacd2a7280df9aa5cffa0b5e52/813-town-pins.png",
+      "sha256": "5aef104068242aeee52eb4a1380992d9d4e3603e980467f817431f2b6203631f"
     }
   ]
 }
