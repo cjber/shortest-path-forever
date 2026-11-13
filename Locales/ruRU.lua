@@ -46,6 +46,7 @@ L["Avoid zones far above my level"] = "Избегать зон намного в
 L["Avoids %s (level %s)"] = "Обходит %s (уровень %s)"
 L["Bags"] = "Сумки"
 L["Bank"] = "Банк"
+L["Battlemaster"] = "Военачальник"
 L["Boat and Zeppelin Routes"] = "Маршруты кораблей и дирижаблей"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Маршруты кораблей и дирижаблей, когда вы наводите курсор на причал."
@@ -171,6 +172,7 @@ L["Play a sound when you reach the goal"] = "Звук по прибытии к �
 L["Play a sound with alerts"] = "Звук при оповещениях"
 L["Plays even with the game in the background."] = "Звучит, даже когда игра в фоне."
 L["Portal to %s"] = "Портал: %s"
+L["Portal trainer"] = "Учитель порталов"
 L["Portals"] = "Порталы"
 L["Reagents"] = "Реагенты"
 L["Repair"] = "Ремонт"

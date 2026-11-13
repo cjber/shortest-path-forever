@@ -44,6 +44,7 @@ L["Avoid zones far above my level"] = "Éviter les zones bien au-dessus de mon n
 L["Avoids %s (level %s)"] = "Contourne %s (niveau %s)" -- mt
 L["Bags"] = "Sacs"
 L["Bank"] = "Banque" -- mt
+L["Battlemaster"] = "Maître de bataille" -- mt
 L["Boat and Zeppelin Routes"] = "Routes des bateaux et zeppelins" -- mt
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Routes des bateaux et zeppelins, tracées quand vous survolez un quai." -- mt
@@ -165,6 +166,7 @@ L["Play a sound when you reach the goal"] = "Jouer un son à l'arrivée" -- mt
 L["Play a sound with alerts"] = "Jouer un son avec les alertes" -- mt
 L["Plays even with the game in the background."] = "Même avec le jeu en arrière-plan." -- mt
 L["Portal to %s"] = "Portail vers %s" -- mt
+L["Portal trainer"] = "Maître des portails" -- mt
 L["Portals"] = "Portails" -- mt
 L["Reagents"] = "Composants" -- mt
 L["Repair"] = "Réparations" -- mt
