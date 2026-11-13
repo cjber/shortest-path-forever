@@ -43,7 +43,7 @@ for _, map in ipairs({ 0, 1, 2991 }) do
 	for from, adjacent in pairs(edges) do
 		for to, costs in pairs(adjacent) do
 			assert(number(costs, 1, 2) >= number(costs, 3, 2), "an edge's swim cost is below its water-walking cost")
-			if data.format ~= 2 then
+			if (data.format or 1) < 2 then
 				assert(edges[to] and edges[to][from] == costs, "asymmetric format 1 graph edge")
 			end
 		end

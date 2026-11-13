@@ -14,6 +14,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Routes no longer climb hills the game will not let you climb.** The walking maps now use your own movement limits: a slope is walkable up to 50 degrees, a step reaches 2 yards, and ground from 50 to just over 61 degrees can be walked down but never up. A route over a face that would slide you back down now goes around it, and a walk still drops off a ledge where the game lets you. Walking speed is the same uphill, downhill and on the flat, so no route is charged extra for a slope (#639).
 - **One pointer leads, round every bend, with only step ends marked.** With *Mark only where steps end* on, the game's own on-screen marker no longer appears, so Shortest Path's arrow alone leads you round each bend while the map marks where each step ends. The centre of the arrow now shows the next step's number in the same gold marker the compass uses, or, when the step has no number, a gold ring with a diamond inside, instead of a pin whose point looked like a second arrow. Thanks to esc_return on Discord (#817).
 
 ## [1.36.1] - 2026-11-13
