@@ -44,6 +44,10 @@ local KEEP = 50000
 ---@field y number
 ---@field area? SPFTownArea -- the client's own ground for it (Data/TownAreas.lua), where it has one
 ---@field exempt? boolean -- the journey starts or ends in it
+---@field x0 number -- the box its ground fits in, kept once per profile
+---@field y0 number
+---@field x1 number
+---@field y1 number
 
 ---@class SPFHazardsModule
 local Hazards = {}
@@ -157,26 +161,76 @@ end
 ---@return number, number, number, number
 local function TownBox(town)
 	local area = town.area
+	local x0, y0, x1, y1
 	if not area then
-		return town.x - TOWN_RADIUS, town.y - TOWN_RADIUS, town.x + TOWN_RADIUS, town.y + TOWN_RADIUS
+		x0, y0, x1, y1 = town.x - TOWN_RADIUS, town.y - TOWN_RADIUS, town.x + TOWN_RADIUS, town.y + TOWN_RADIUS
+	else
+		x0, y0 = area.i0 * TOWN_CELL, area.j0 * TOWN_CELL
+		x1, y1 = (area.i0 + area.w) * TOWN_CELL, (area.j0 + area.h) * TOWN_CELL
 	end
-	return area.i0 * TOWN_CELL, area.j0 * TOWN_CELL, (area.i0 + area.w) * TOWN_CELL, (area.j0 + area.h) * TOWN_CELL
+	town.x0, town.y0, town.x1, town.y1 = x0, y0, x1, y1
+	return x0, y0, x1, y1
+end
+
+-- The fractions t0, t1 along a segment at which its box enters and leaves a town's box. The callers have already
+-- found the boxes overlap, so each axis' range meets [0, 1]; t0 may still lie beyond t1 where the segment passes the
+-- town's box by a corner.
+---@return number, number
+local function TownClip(x0, y0, x1, y1, ax, ay, bx, by)
+	local t0, t1 = 0, 1
+	local dx, dy = bx - ax, by - ay
+	if dx == 0 then
+		if ax < x0 or ax > x1 then
+			return 1, 0
+		end
+	else
+		local u, v = (x0 - ax) / dx, (x1 - ax) / dx
+		if u > v then
+			u, v = v, u
+		end
+		t0, t1 = math.max(t0, u), math.min(t1, v)
+	end
+	if dy == 0 then
+		if ay < y0 or ay > y1 then
+			return 1, 0
+		end
+	else
+		local u, v = (y0 - ay) / dy, (y1 - ay) / dy
+		if u > v then
+			u, v = v, u
+		end
+		t0, t1 = math.max(t0, u), math.min(t1, v)
+	end
+	return t0, t1
 end
 
 -- The share of a segment on a town's ground: exact for a circle, and sampled at the step a walk's hazards are for an
--- area, since a town's own chunks are square and not a shape a segment can be clipped against.
+-- area, since a town's own chunks are square and not a shape a segment can be clipped against. Only the samples whose
+-- midpoint can be on the ground are taken: a midpoint outside the town's box is off it, and the range is widened by
+-- a sample either side so no boundary falls between two.
 ---@param town SPFHazardTown
 ---@return number
 local function TownShare(town, map, ax, ay, bx, by)
 	if town.map ~= map then
 		return 0
 	end
+	if
+		math.max(ax, bx) < town.x0
+		or math.min(ax, bx) > town.x1
+		or math.max(ay, by) < town.y0
+		or math.min(ay, by) > town.y1
+	then
+		return 0
+	end
 	if not town.area then
 		return ShareInCircle(town.x, town.y, TOWN_RADIUS, ax, ay, bx, by)
 	end
 	local samples = math.max(1, math.ceil(math.sqrt(Distance2(ax, ay, bx, by)) / STEP))
+	local t0, t1 = TownClip(town.x0, town.y0, town.x1, town.y1, ax, ay, bx, by)
+	local first = math.max(1, math.floor(t0 * samples + 0.5) - 1)
+	local last = math.min(samples, math.ceil(t1 * samples + 0.5) + 1)
 	local inside = 0
-	for i = 1, samples do
+	for i = first, last do
 		local t = (i - 0.5) / samples
 		if InTown(town, map, ax + (bx - ax) * t, ay + (by - ay) * t) then
 			inside = inside + 1
@@ -288,6 +342,7 @@ function Hazards.Profile(from, goal)
 	for _, town in ipairs(faction and HostileTowns(faction) or {}) do
 		if not cities[ZoneAt(town.map, town.x, town.y) or 0] then
 			town.area = areas[town.id]
+			TownBox(town)
 			towns[#towns + 1] = town
 		end
 	end
@@ -308,7 +363,14 @@ function Hazards.Profile(from, goal)
 	local function Point(map, x, y)
 		local factor = 1
 		for _, town in ipairs(active) do
-			if InTown(town, map, x, y) then
+			if
+				town.map == map
+				and x >= town.x0
+				and x <= town.x1
+				and y >= town.y0
+				and y <= town.y1
+				and InTown(town, map, x, y)
+			then
 				factor = TOWN_COST
 				break
 			end
@@ -331,8 +393,7 @@ function Hazards.Profile(from, goal)
 	end
 	local function Near(map, minX, minY, maxX, maxY)
 		for _, town in ipairs(active) do
-			local x0, y0, x1, y1 = TownBox(town)
-			if town.map == map and x0 <= maxX and x1 >= minX and y0 <= maxY and y1 >= minY then
+			if town.map == map and town.x0 <= maxX and town.x1 >= minX and town.y0 <= maxY and town.y1 >= minY then
 				return true
 			end
 		end
