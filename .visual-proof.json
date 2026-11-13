@@ -1,11 +1,11 @@
 {
-  "input_digest": "92f4f772c6e6fa42c99b7f14ec4a1aff0b8a874c66c5e58e8d449154cfc03818",
-  "runtime_sha256": "92f4f772c6e6fa42c99b7f14ec4a1aff0b8a874c66c5e58e8d449154cfc03818",
-  "candidate": "d334f2cd1350be6b7a85ab76a5b7015e999674b99430ab2b6f98d27c95d1ffae",
+  "input_digest": "ad9df99a719f3ffe80ee4dbdbd42d6e40faab20dbc6d485905f69c321db61c20",
+  "runtime_sha256": "ad9df99a719f3ffe80ee4dbdbd42d6e40faab20dbc6d485905f69c321db61c20",
+  "candidate": "3ddc77cc588a807a27fe145742694a95781ee982cbb7a6c99fabe4075e821785",
   "tested_artifact": "source-tree",
   "client_build": "1.60.1.70938 (Interface 16001)",
-  "source_commit": "518c2d68a79bbabe0e8fa8d08db00887214ffa52",
-  "notes": "Recorded in the client from a git archive of this commit linked as the ShortestPathForever folder (visual_proof --compare: equivalent, extra media/icon-400.png only), with the store ForeverCore. No Lua errors this session.",
+  "source_commit": "ee3487a14c338afa66c03fd4219e16a7434f45eb",
+  "notes": "Recorded in the client from a git archive of this commit linked as the ShortestPathForever folder (visual_proof --compare: equivalent, extra media/icon-400.png only; the client reported version v1.35.2-dev+ee3487a), beside a ForeverCore dev build. No Lua errors this session.",
   "flows": [
     {
       "name": "With Mark only where steps end on and the game's own navigation marker off, the screen arrow follows the walk",
@@ -13,15 +13,15 @@
         "Install the candidate and /reload",
         "Turn off the game's in-game navigation and turn on Mark only where steps end",
         "Start a journey from Lakeshire to Stonewatch in Redridge Mountains",
-        "The compass marker reads the straight-line 679 yd, while the screen arrow and the tracker read 710 yd along the walk"
+        "The compass marker reads the straight-line 679 yd, while the screen arrow and the tracker read 719 yd along the walk"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/a5a32938e6f3748ac39b3c88ee843a43/raw/17cbacc3eea20793a51d524832f3882465fe812a/830-arrow-bends.png",
-      "sha256": "6b0e46536d282e80d28cdb1f7a744b816d7f8ce318540aaacba878721f9ad4dd"
+      "url": "https://gist.githubusercontent.com/cjber/6a695e608f08d51ec5f7566305a03a6f/raw/b482dc7f2d7caedacd2a7280df9aa5cffa0b5e52/830-arrow-bends.png",
+      "sha256": "64009ebb9ee5d5bec6d3a86ba145f5debcfd42aaa2159c0c0fee8681b5daebd7"
     }
   ]
 }
