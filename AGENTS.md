@@ -15,7 +15,7 @@ export FOREVER_CORE=../forever-core   # or the checkout of tools/forever-core.tx
 stylua --check .
 ruff format --check . && ruff check .
 luacheck .
-tools/typecheck.sh                  # LuaLS 3.19.1 + multi-value lint; first run fetches pinned WoW types
+tools/typecheck.sh                  # LuaLS + multi-value lint; first run fetches pinned WoW types
 for s in tests/*_spec.lua; do luajit "$s" || exit 1; done
 luajit tools/forever_sim/run.lua   # native client scenarios (tests/sim); python3 tools/forever_sim/fetch.py first
 luajit -joff tests/journey_bench.lua   # fails a journey that does not settle; read its worst frame against 3 ms
@@ -34,10 +34,14 @@ CI's `package` job builds the zip with the release's packager without uploading 
 THIRD_PARTY.md ship with README's `## Credits` and THIRD_PARTY's `## Players` (WFA-10, WFA-31), and the
 specs pass on the packaged files.
 
-CI runs the same gate, plus the UI checks (`tests/ui.sh`), shellcheck and shfmt on the shell scripts, actionlint and zizmor on the workflows,
-and gitleaks on the history. `.github/workflows/speedpatrol.yml` times the journey and hearth benches on every pull
-request against its base branch and fails on a regression (`.speedpatrol/instructions.md`). Every version needs a `CHANGELOG.md` entry (prose, bold-lead bullets)
-before its `v*` tag, since the release publishes it as the notes.
+CI runs the same gate, plus the UI checks (`tests/ui.sh`), shellcheck and shfmt on the shell scripts, actionlint and
+zizmor on the workflows, and gitleaks on the history. A tool version lives only in `tools/toolchain.json` (luajit,
+luac5.1, luacheck, LuaLS, StyLua, gitleaks) and in `tools/pyproject.toml` beside `tools/uv.lock` (ruff, ty, zizmor,
+actionlint): the workflows install the first through `cjber/forever-core/.github/actions/toolchain` and run the second
+with `uv run --project tools --frozen --group dev <tool>` after `astral-sh/setup-uv`.
+`.github/workflows/speedpatrol.yml` times the journey and hearth benches on every pull request against its base branch
+and fails on a regression (`.speedpatrol/instructions.md`). Every version needs a `CHANGELOG.md` entry (prose,
+bold-lead bullets) before its `v*` tag, since the release publishes it as the notes.
 
 ## Layout
 

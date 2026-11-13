@@ -1,25 +1,26 @@
 {
-  "input_digest": "0863c16f511dac38d6491088243d9eb319952d49261663e7976efebcd8ff18b6",
-  "runtime_sha256": "0863c16f511dac38d6491088243d9eb319952d49261663e7976efebcd8ff18b6",
-  "candidate": "5071a5376decf552ce7011ba1556b9e956b73fda126f6c6708d5e2e11a734999",
+  "input_digest": "8f9a25cc2d657dc53cc8a182d8249b0001d67a71456500a22354b70c4963ed7d",
+  "runtime_sha256": "8f9a25cc2d657dc53cc8a182d8249b0001d67a71456500a22354b70c4963ed7d",
+  "candidate": "f44522f766e435a70818a401c66ddc04fd920e693505e5babd633c5c34d6dce5",
   "tested_artifact": "source-tree",
-  "client_build": "1.60.1.70888 (Interface 16001)",
+  "client_build": "1.60.1.70938 (Interface 16001)",
+  "source_commit": "0e67979609cf3aefe0d4e227d0f651a596818b2f",
+  "notes": "Checked in the headless client: the Kaliel's Tracker declaration and the GetMinimapShape waiver change no behaviour.",
   "flows": [
     {
-      "name": "The compass shows its bolder ticks and larger direction letters during a journey",
+      "name": "Journey and minimap pins load",
       "steps": [
-        "Install the PR's shipped files as the ShortestPathForever folder (compare: no differing files; extra media/icon-400.png) beside ForeverCore and /reload",
-        "Follow a journey so the compass shows at the top of the screen",
-        "Confirm the ticks are 2 wide and the major tick taller, the gold centre bar is solid, and the W sits in the larger gold font a clear gap under its tick",
-        "Confirm the goal pin and its distance sit below the letters without touching them"
+        "Link the candidate build with the store ForeverCore and /reload",
+        "The Journey tracker section and the minimap pins draw on this build",
+        "Print the loaded ShortestPathForever version: the candidate build, 0 Lua errors this session"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/506297733782163ef6b44f041ccaae05/raw/bb5835fddfc79765f254a160ee13c900408b4073/spf815-compass-ingame.png",
-      "sha256": "70bd7ee9d534107ebda8a838ae1f9375d99fd6dbf5a52abfa14a97435d2809c9"
+      "url": "https://gist.githubusercontent.com/cjber/0990754c8ffba2fe40866d6188344f42/raw/23b71071ea17084eb9b4091fc7722a43446bc02c/lint-calls.png",
+      "sha256": "ca73ba50d3622561be970b113f388127d14383bcb7efd9c11685263a532a2743"
     }
   ]
 }

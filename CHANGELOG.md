@@ -15,6 +15,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 ## [Unreleased]
 
 - **Routes no longer climb hills the game will not let you climb.** The walking maps now use your own movement limits: a slope is walkable up to 50 degrees, a step reaches 2 yards, and ground from 50 to just over 61 degrees can be walked down but never up. A route over a face that would slide you back down now goes around it, and a walk still drops off a ledge where the game lets you. Walking speed is the same uphill, downhill and on the flat, so no route is charged extra for a slope (#639).
+- **Kaliel's Tracker players find the journey entry in its quest menu.** Shortest Path Forever now loads after Kaliel's Tracker when it is installed, so its quest menu entry is added to that tracker's menus.
+- **Russian players no longer see an empty box between parts of a tracker line.** The Russian client's font has no middle dot, so the tracker now separates those parts with a bullet, spaced as before. Reported by XaksFlaX on GitHub (#838).
 
 ## [1.35.2] - 2026-11-13
 

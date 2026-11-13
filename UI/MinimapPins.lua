@@ -176,6 +176,7 @@ local function Draw()
 		x, radius, facing = nil, nil, nil
 	end
 	local width = frame:GetWidth()
+	-- client-ok: GetMinimapShape is a minimap addon convention (HBD-Pins), nil without one
 	local square = GetMinimapShape and GetMinimapShape() == "SQUARE"
 	if
 		x == lastX
