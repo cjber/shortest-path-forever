@@ -414,8 +414,7 @@ L["Stops before the last on a multi-stop route keep 15 yards."] =
 L["Dungeons and raids"] = "地下城与团队副本" -- mt
 L["Town services"] = "城镇服务" -- mt
 L["Town services on the world map"] = "世界地图上的城镇服务" -- mt
-L["The arrow and the tracker no longer flash while a guide moves between objectives."] =
-	"指南切换目标时，箭头和追踪器不再闪烁。" -- mt
+L["The compass is easier to see."] = "罗盘更容易看清了。" -- mt
 L["Capitals only"] = "仅主城" -- mt
 L["Capitals and important services"] = "主城和重要服务" -- mt
 L["All towns"] = "所有城镇" -- mt
