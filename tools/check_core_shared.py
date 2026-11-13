@@ -66,6 +66,8 @@ VENDORED = {
     "tools/check_slash_words.py": SUITE_CONSUMERS,
     "tools/client_slash_words.txt": SUITE_CONSUMERS,
     "tools/check_menu_scroll.py": SUITE_CONSUMERS,
+    # The suite's client-call lint, which every addon runs from its own tools/typecheck.sh.
+    "tools/lint_client_calls.py": SUITE_CONSUMERS,
     # The suite's name: the shared addon is ForeverCore, one word, in every addon's text.
     "tools/check_core_name.py": SUITE_CONSUMERS,
     "tools/check_copy.py": SUITE_CONSUMERS,
@@ -73,9 +75,9 @@ VENDORED = {
     # The pin manifest, the Python tool project and its lock: every consumer's vendored scripts and CI read them.
     # They sit under tools/, the folder .pkgmeta already ignores, so a vendored development file never changes the
     # package selection or invalidates a recorded visual proof.
-    "tools/toolchain.json": SUITE_CONSUMERS,
-    "tools/pyproject.toml": SUITE_CONSUMERS,
-    "tools/uv.lock": SUITE_CONSUMERS,
+    "tools/toolchain.json": SUITE_CONSUMERS + KILN_CONSUMERS,
+    "tools/pyproject.toml": SUITE_CONSUMERS + KILN_CONSUMERS,
+    "tools/uv.lock": SUITE_CONSUMERS + KILN_CONSUMERS,
     # Dependabot's config, identical in every addon. Its patch and minor updates auto-merge through core's one
     # .github/workflows/dependabot-merge.yml, so no workflow is vendored for it.
     ".github/dependabot.yml": SUITE_CONSUMERS,
