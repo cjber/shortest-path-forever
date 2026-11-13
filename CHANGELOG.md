@@ -14,6 +14,12 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.36.1] - 2026-11-13
+
+<!-- forever-core-sync -->
+
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
 ## [1.36.0] - 2026-11-13
 
 <!-- discord-image: docs/screenshots/town_services_zoom.png -->
