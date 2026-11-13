@@ -43,6 +43,7 @@ Data\RoadCells.lua
 Data\RoadEdges.lua
 Data\Heights.lua
 Data\IdleSpawns.lua
+Data\SpellTargets.lua
 Data\Credits.lua
 Transport\Model.lua
 Routing\Planner.lua

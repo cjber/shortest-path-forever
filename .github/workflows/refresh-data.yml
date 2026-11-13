@@ -69,6 +69,7 @@ jobs:
           python3 tools/gen_routes.py
           python3 tools/gen_transit.py
           python3 tools/gen_services.py
+          python3 tools/gen_targets.py
           luajit tools/bake_walks.lua > "$RUNNER_TEMP/Walks.lua"
           mv "$RUNNER_TEMP/Walks.lua" Data/Walks.lua
           python3 tools/pack_nav.py

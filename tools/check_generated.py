@@ -23,6 +23,7 @@ DATA = (
     "Data/RoadEdges.lua",
     "Data/Heights.lua",
     "Data/IdleSpawns.lua",
+    "Data/SpellTargets.lua",
     "Locales/phrases.txt",
 )
 
@@ -50,6 +51,7 @@ def regenerate(root, offline):
     run(root, sys.executable, "tools/gen_routes.py", *mode)
     run(root, sys.executable, "tools/gen_transit.py", *mode)
     run(root, sys.executable, "tools/gen_services.py", *mode)
+    run(root, sys.executable, "tools/gen_targets.py", *mode)
     run(root, "luajit", "tools/bake_walks.lua", output="Data/Walks.lua")
     run(root, "luajit", "tools/bake_roads.lua", output="Data/RoadEdges.lua")
     run(root, sys.executable, "tools/pack_nav.py")
