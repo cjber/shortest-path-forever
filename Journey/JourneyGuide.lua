@@ -438,6 +438,13 @@ local function GuideWaypoint(point, fading)
 		return false
 	end
 	local uiMap = C_Map.GetBestMapForUnit("player")
+	-- A frame with no map for the player is no place to move the marker, or to take it away: the waypoint Guide
+	-- already placed is still the guidance the player has, and the client draws it on the map it names next. Taking it
+	-- away drops the game's own pin and writes it back on the next readable frame, so guidance blinks while the
+	-- journey scans (#826).
+	if not uiMap then
+		return guide.waypoint ~= nil and C_SuperTrack.IsSuperTrackingUserWaypoint()
+	end
 	local bend = guide.bend
 	if
 		not bend
