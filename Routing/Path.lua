@@ -667,15 +667,19 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 		end
 
 		-- Abstract A* from START to GOAL through the entrance graph.
-		-- Rounded graph edges and snapping must not let the heuristic overstate the remaining cost.
+		-- Rounded graph edges and snapping must not let the heuristic overstate the remaining cost: a point can
+		-- snap to a surface up to SNAP cells from the cell centre the heuristic measures to, and a drop shortens a
+		-- fall to less than the cell-centre distance it replaces. Subtract that reach before scaling.
 		local goalCell = cellOf(st, gk, gc)
 		local goalX = x0 + (floor(gk / st.ny) * C + floor(goalCell / C) + 0.5) * cs
 		local goalY = y0 + (gk % st.ny * C + goalCell % C + 0.5) * cs
 		local lower = max(0, 1 - 0.5 / cs)
+		local margin = SNAP * SQRT2 * cs
 		local function h(id)
 			local x, y = nodeXY(st, id)
 			local dx, dy = abs(x - goalX), abs(y - goalY)
-			return (dx > dy and dx + (SQRT2 - 1) * dy or dy + (SQRT2 - 1) * dx) * lower
+			local gap = dx > dy and dx + (SQRT2 - 1) * dy or dy + (SQRT2 - 1) * dx
+			return max(0, gap - margin) * lower
 		end
 		agen = agen + 1
 		local gen = agen
@@ -826,11 +830,12 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 			local nodes = trace(tree, entrance(st, a), {})
 			addAll(gk, nodes, 1, #nodes, 1)
 		else
-			-- A mid-route cluster's walk is refined on its baked cost, which the hazard profile does not weight, so it
-			-- is drawn without one: a detour drawn here would not be paid for in the reported cost.
+			-- A mid-route cluster's walk is refined with the hazard profile: the entrance edge the search chose was
+			-- charged for the ground it crosses, and the drawn line must keep out of the same ground rather than
+			-- cut across it. The reported cost stays the search's real cost.
 			local ka, kb = floor(a / 4096), floor(b / 4096)
 			local ea, eb = entrance(st, a), entrance(st, b)
-			if ka == kb and search(st, ka, swim, ea, R, eb, nil, nil, roadsOn and Grid.roads(st, ka)) then
+			if ka == kb and search(st, ka, swim, ea, R, eb, nil, nil, roadsOn and Grid.roads(st, ka), hz) then
 				local nodes = trace(R, eb, {})
 				addAll(ka, nodes, #nodes, 1, -1)
 			else -- neighbouring entrances across a cluster border

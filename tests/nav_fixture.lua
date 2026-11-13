@@ -110,20 +110,20 @@ local function record_order(a, b)
 	return false
 end
 
---- Build a format 2 map.
--- spec = {
---   map = 42, nx = 2, ny = 1,
---   cell = { [gx] = { [gy] = { z = 20, water = false, steep = false, flags = 0 } } }, -- steep writes flag 8
---   floor = { { gx, gy, z, value, steps } },   -- a floor surface; value 3 is steep, with the step bits it carries
---   link = { { gx, gy, dx, dy, cost, layer, both } },   -- one record: a step only that way (both = a step both
---                                                       -- ways, at least one of whose ends is a floor), or, with a
---                                                       -- cost, a drop
---   node = { { gx, gy, comp, out = { { gx, gy, c1, c2 } } } },
--- }
--- A step both ways take normally lives in a floor's step mask, so a plain link is a one-way step.
-function F.format2(spec)
+-- A cell or node delta as format 3 stores it: symbol 0-62 is the delta, 63 is followed by the delta - 63 in three
+-- characters (tools/baker/gen_nav.py's emit_delta).
+local function delta(value)
+	if value < 63 then
+		return symbol(value)
+	end
+	return symbol(63) .. enc(value - 63, 3)
+end
+
+--- Build a format 2 or format 3 map: the two differ only in the floor chunk, where format 3 names the layer each
+-- step bit lands on and writes cells and record nodes as deltas.
+local function build(spec, format)
 	local ny, nx = spec.ny, spec.nx
-	local map = { cx0 = 0, cy0 = 0, nx = nx, ny = ny, cells = CELLS, swim = 3, zstep = 2, format = 2 }
+	local map = { cx0 = 0, cy0 = 0, nx = nx, ny = ny, cells = CELLS, swim = 3, zstep = 2, format = format }
 	map.grid, map.height, map.floor, map.graph = {}, {}, {}, {}
 	for _, f in ipairs(spec.floor or {}) do
 		if f[4] == 3 then
@@ -191,21 +191,54 @@ function F.format2(spec)
 		end
 		if #cells > 0 or #steps > 0 or #drops > 0 then
 			table.sort(cells)
-			local out = { enc(#cells, 3) }
-			for _, c in ipairs(cells) do
-				local list = floors[c]
-				table.sort(list, function(a, b)
-					return a[3] < b[3]
-				end)
-				out[#out + 1] = enc(c, 3) .. enc(#list, 1)
-				for _, f in ipairs(list) do
-					out[#out + 1] = enc(f[4] or 1, 1) .. enc(math.floor(f[3] + 0.5) + 2048, 2) .. enc(f[5] or 0, 2)
+			local out = {}
+			if format >= 3 then
+				local total = 0
+				for _, c in ipairs(cells) do
+					total = total + #floors[c]
+				end
+				out[1] = enc(total, 3)
+				local at = 0
+				for _, c in ipairs(cells) do
+					local list = floors[c]
+					table.sort(list, function(a, b)
+						return a[3] < b[3]
+					end)
+					for _, f in ipairs(list) do
+						local mask, land = 0, {}
+						for d = 0, 7 do
+							if (f[5] or {})[d] then
+								mask = mask + 2 ^ d
+								land[#land + 1] = enc(f[5][d], 1)
+							end
+						end
+						out[#out + 1] = delta(c - at)
+							.. enc(f[4] or 1, 1)
+							.. enc(math.floor(f[3] + 0.5) + 2048, 2)
+							.. enc(mask, 2)
+							.. table.concat(land)
+						at = c
+					end
+				end
+			else
+				out[1] = enc(#cells, 3)
+				for _, c in ipairs(cells) do
+					local list = floors[c]
+					table.sort(list, function(a, b)
+						return a[3] < b[3]
+					end)
+					out[#out + 1] = enc(c, 3) .. enc(#list, 1)
+					for _, f in ipairs(list) do
+						out[#out + 1] = enc(f[4] or 1, 1) .. enc(math.floor(f[3] + 0.5) + 2048, 2) .. enc(f[5] or 0, 2)
+					end
 				end
 			end
 			table.sort(steps, record_order)
 			out[#out + 1] = enc(#steps, 3)
+			local node = 0
 			for _, s in ipairs(steps) do
-				out[#out + 1] = enc(s[1], 3) .. enc(s[2], 1) .. enc(s[3], 1)
+				out[#out + 1] = (format >= 3 and delta(s[1] - node) or enc(s[1], 3)) .. enc(s[2], 1) .. enc(s[3], 1)
+				node = s[1]
 			end
 			table.sort(drops, record_order)
 			out[#out + 1] = enc(#drops, 3)
@@ -243,6 +276,29 @@ function F.format2(spec)
 	end
 
 	return map
+end
+
+--- Build a format 2 map: a step both ways take is a mask bit whose landing is the surface nearest its height.
+-- spec = {
+--   map = 42, nx = 2, ny = 1,
+--   cell = { [gx] = { [gy] = { z = 20, water = false, steep = false, flags = 0 } } }, -- steep writes flag 8
+--   floor = { { gx, gy, z, value, steps } },   -- a floor surface; value 3 is steep, steps is the 8-bit mask
+--   link = { { gx, gy, dx, dy, cost, layer, both } },   -- one record: a step only that way (both = a step both
+--                                                       -- ways, at least one of whose ends is a floor), or, with a
+--                                                       -- cost, a drop
+--   node = { { gx, gy, comp, out = { { gx, gy, c1, c2 } } } },
+-- }
+-- A step both ways take normally lives in a floor's step mask, so a plain link is a one-way step.
+function F.format2(spec)
+	return build(spec, 2)
+end
+
+--- Build a format 3 map: a floor's step bits name the layer each one lands on, so the decoder resolves the pair the
+-- bake linked rather than a surface merely near its height.
+-- spec = format 2's, with a floor's steps a table of direction -> landing layer (0 is the target cell's base
+-- surface, i the cell's ith floor) and cells and record nodes written as deltas.
+function F.format3(spec)
+	return build(spec, 3)
 end
 
 --- A format 1 map of base surfaces and a symmetric graph.

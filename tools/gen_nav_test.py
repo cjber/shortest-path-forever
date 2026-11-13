@@ -1,3 +1,4 @@
+import math
 import unittest
 from array import array
 from collections import defaultdict
@@ -126,6 +127,75 @@ class DiagonalTest(unittest.TestCase):
 
 
 class SteepStepTest(unittest.TestCase):
+    def tile(self, polys, adj, portal, layers):
+        """What one tile emits for this navmesh and these layers: (links, own)."""
+        c = gen_nav.CELLS
+        with (
+            patch.object(gen_nav, "TILES", {(0, 0): "tile"}),
+            patch.object(gen_nav, "NX", 1),
+            patch.object(gen_nav, "NY", 1),
+            patch.object(gen_nav, "CX0", 31),
+            patch.object(gen_nav, "CY0", 31),
+            patch.object(gen_nav, "GW", c),
+            patch.object(gen_nav, "GH", c),
+            patch.object(gen_nav, "X0", 0.0),
+            patch.object(gen_nav, "Y0", 0.0),
+            patch.object(gen_nav, "load_window", lambda window: (polys, adj, portal)),
+            patch.object(gen_nav, "rasterize_layers", lambda polys, adj, portal, bounds: layers),
+            patch.object(gen_nav, "read_tile", lambda rc: ([], [], [], [])),
+        ):
+            _, _, _, _, links, own, _ = gen_nav.rasterize_tile((0, 0))
+        return links, own
+
+    def face(self, x0, x1, z0, z1, steep):
+        """A strip rising from z0 at x0 to z1 at x1, 8 yards deep, with the plane the bake reads heights from."""
+        pts = [(x0, 0.0, z0), (x1, 0.0, z1), (x1, 8.0, z1), (x0, 8.0, z0)]
+        c = tuple(sum(p[a] for p in pts) / len(pts) for a in range(3))
+        return {"pts": [(p[0], p[1]) for p in pts], "plane": plane(pts, c), "c": c, "steep": steep,
+                "water": False, "size": 1}  # fmt: skip
+
+    def test_a_steep_step_the_walk_refuses_uphill_rides_the_bit(self):
+        # The navmesh walk leaves a steep face downhill only, and the decoder's own stored-height rule refuses the
+        # same crawl back up. One symmetric bit carries that pair: a record each way is what made a map of a
+        # continent 27 MB of Lua.
+        c = gen_nav.CELLS
+        i, j = 10 * c + 10, 11 * c + 10
+        cs = gen_nav.CS
+        polys = {
+            0: self.face(i * cs, (i % c + 1) * cs, 236.0, 244.0, False),  # the cell's own ground
+            1: self.face(i * cs, (i % c + 1) * cs, 240.0, 248.0, True),  # the face above it
+            2: self.face(j * cs, (j % c + 1) * cs, 250.0, 250.0, False),
+            3: self.face(j * cs, (j % c + 1) * cs, 250.0, 250.0, False),  # the ground it leads up to
+        }
+        layers = {
+            i: [(236.0, 1, (0, (i * cs + 2.0, 2.0))), (240.4, 3, (1, (i * cs + 2.0, 2.0)))],
+            j: [(250.0, 1, (2, (j * cs + 2.0, 2.0))), (250.0, 1, (3, (j * cs + 2.0, 2.0)))],
+        }
+        ends = ((j * cs, 0.0), (j * cs, 8.0))
+        links, _ = self.tile(polys, {1: {3}, 3: {1}}, {(1, 3): ends, (3, 1): ends[::-1]}, layers)
+        both = [(i, 240.4, j, 250.0, None), (j, 250.0, i, 240.4, None)]
+        for edge in both:
+            self.assertIn(edge, links, f"the pair rides one bit both ways, so no record is needed: {edge}")
+
+    def test_a_one_way_step_the_heights_refuse_rides_one_bit(self):
+        # The walk takes the face down and refuses the climb; the stored heights refuse it too, and the far end is
+        # steep, so one symmetric bit carries the pair. This is what keeps a continent of steep ground from costing
+        # a record per step.
+        self.assertTrue(gen_nav.pair_carries_bit(20.4, 0, 18.0, 0, True, False, True))
+        self.assertFalse(gen_nav.pair_carries_bit(20.4, 0, 18.0, 0, False, True, True), "that is the climb")
+        self.assertTrue(gen_nav.pair_carries_bit(18.0, 0, 20.4, 0, False, True, True), "the descent is the taken one")
+
+    def test_a_refusal_the_runtime_cannot_check_keeps_its_record(self):
+        # Ordinary ground has no steep test, so a bit would walk the pair both ways: a one-way wall the heights do
+        # not explain must stay its own record, and a pair the walk joins neither way is no step.
+        self.assertFalse(gen_nav.pair_carries_bit(20.0, 0, 18.0, 0, False, True, False))
+        self.assertFalse(gen_nav.pair_carries_bit(20.4, 0, 18.0, 0, False, True, True), "heights allow the descent")
+        self.assertFalse(gen_nav.pair_carries_bit(20.0, 0, 18.0, 0, False, False, True), "no walk, no step")
+
+    def test_a_pair_the_walk_joins_both_ways_always_rides_a_bit(self):
+        self.assertTrue(gen_nav.pair_carries_bit(20.0, 0, 30.0, 0, True, True, False))
+        self.assertTrue(gen_nav.pair_carries_bit(20.0, 1, 20.0, 0, True, True, True))
+
     def test_a_steep_orthogonal_pair_keeps_its_symmetric_bit(self):
         c = gen_nav.CELLS
         i, j = 10 * c + 10, 11 * c + 10
@@ -155,6 +225,14 @@ class SteepStepTest(unittest.TestCase):
         self.assertFalse(gen_nav.steep_step(18.0, 0, 20.4, 0))
         self.assertTrue(gen_nav.steep_step(20.4, 0, 20.4, 0), "equal stored heights pass both ways")
         self.assertFalse(gen_nav.steep_step(20.4, 1, 21.0, 1), "a floor uses whole yards")
+
+    def test_a_52_degree_face_is_walked_down_only(self):
+        # One 8 yard cell of a 52 degree face rises CS * tan 52, inside the bake's steep band: the player walks it
+        # down and cannot climb it. The comparison is between the stored heights, as the decoder reads them.
+        rise = gen_nav.CS * math.tan(math.radians(52))
+        low, high = 20.0, 20.0 + rise
+        self.assertFalse(gen_nav.steep_step(low, 0, high, 0), "the player cannot climb a 52 degree face")
+        self.assertTrue(gen_nav.steep_step(high, 0, low, 0), "the player walks a 52 degree face down")
 
 
 class ClusterCrossingTest(unittest.TestCase):
@@ -352,6 +430,27 @@ class ReachableTest(unittest.TestCase):
     def test_tiles_without_a_fixed_place_are_refused(self):
         with self.assertRaises(SystemExit):
             self.components([(0.0, 0.0, 0.0)])
+
+
+class EmitDeltaTest(unittest.TestCase):
+    """A sorted cell or node delta, as a format 3 cluster's floor list and record list write it."""
+
+    def test_a_small_delta_is_one_symbol(self):
+        out = []
+        gen_nav.emit_delta(out, 0)
+        gen_nav.emit_delta(out, 62)
+        self.assertEqual(out, [gen_nav.B64[0], gen_nav.B64[62]])
+
+    def test_a_large_delta_is_a_symbol_then_three(self):
+        out = []
+        gen_nav.emit_delta(out, 63 + 12345)
+        self.assertEqual(len(out[0]), 4)
+        self.assertEqual(out[0][0], gen_nav.B64[63])
+        self.assertEqual(out[0][1:], gen_nav.enc(12345, 3))
+
+    def test_a_negative_delta_is_refused(self):
+        with self.assertRaises(AssertionError):
+            gen_nav.emit_delta([], -1)
 
 
 if __name__ == "__main__":
