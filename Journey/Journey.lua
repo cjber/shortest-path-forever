@@ -791,7 +791,7 @@ local function Update(self, elapsed)
 	self.speed = speed
 	if self.elapsed >= REPLAN_EVERY or changedRide or changedSpeed then
 		self.elapsed, self.replannedAt = 0, GetTime()
-		Search.Replan(riding, flying, changedRide)
+		Search.Replan(riding, flying, changedRide, changedSpeed)
 	elseif index ~= progress.index then
 		Refresh()
 	end

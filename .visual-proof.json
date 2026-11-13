@@ -1,29 +1,25 @@
 {
-  "input_digest": "716da8c4458b21a7e386ceaedadccae1db7853c1b331476afa98d2fb04fd35e0",
-  "runtime_sha256": "716da8c4458b21a7e386ceaedadccae1db7853c1b331476afa98d2fb04fd35e0",
-  "candidate": "0070edee175574cfbc193817e7b33778195d8d7c8e1c30e961fc42967bee5783",
-  "tested_artifact": "release-package",
+  "input_digest": "0863c16f511dac38d6491088243d9eb319952d49261663e7976efebcd8ff18b6",
+  "runtime_sha256": "0863c16f511dac38d6491088243d9eb319952d49261663e7976efebcd8ff18b6",
+  "candidate": "5071a5376decf552ce7011ba1556b9e956b73fda126f6c6708d5e2e11a734999",
+  "tested_artifact": "source-tree",
   "client_build": "1.60.1.70888 (Interface 16001)",
   "flows": [
     {
-      "name": "Shortest Path loads and opens its settings on ForeverCore 1.8.1",
+      "name": "The compass shows its bolder ticks and larger direction letters during a journey",
       "steps": [
-        "Install the packaged candidate with its bundled ForeverCore v1.8.1 and /reload",
-        "Print the loaded versions: ForeverCore v1.8.1, ShortestPathForever v1.33.1-8-g152cb6f, AdventureGuideForever v1.7.6-2-gabadcae, all loaded",
-        "Type /path",
-        "Confirm the Shortest Path Forever settings page opens with every section listed"
+        "Install the PR's shipped files as the ShortestPathForever folder (compare: no differing files; extra media/icon-400.png) beside ForeverCore and /reload",
+        "Follow a journey so the compass shows at the top of the screen",
+        "Confirm the ticks are 2 wide and the major tick taller, the gold centre bar is solid, and the W sits in the larger gold font a clear gap under its tick",
+        "Confirm the goal pin and its distance sit below the letters without touching them"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/328823e9708f8e8ea7847dc01bd53905/raw/cad3e2caecfe30ead75d1c5293b58db0a5a9174f/sync181b-versions.png",
-      "sha256": "19cf5e3d567426b1c72aacadcf07644cfa7994935dd811d16236a8f20e147832"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/328823e9708f8e8ea7847dc01bd53905/raw/cad3e2caecfe30ead75d1c5293b58db0a5a9174f/sync181b-spf-settings-0070ede.png",
-      "sha256": "c0bc438060d059c89f556d877555d4236c8499bbb1d833f1f9e7e1602ab6d6fb"
+      "url": "https://gist.githubusercontent.com/cjber/506297733782163ef6b44f041ccaae05/raw/bb5835fddfc79765f254a160ee13c900408b4073/spf815-compass-ingame.png",
+      "sha256": "70bd7ee9d534107ebda8a838ae1f9375d99fd6dbf5a52abfa14a97435d2809c9"
     }
   ]
 }
