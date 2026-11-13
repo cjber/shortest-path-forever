@@ -18,8 +18,8 @@ local POLL_EVERY = 0.1
 local TURN, EASE, SETTLED = 2 * math.pi, 18, 0.001
 -- The native marker's arrow sits this far from its icon.
 local RADIUS = 36
--- The icon the arrow turns around: the step's numbered marker at its native 64 pixels, 32 units, inside the arrow's
--- 36-unit orbit, or the gold goal pin at its 36 when the target has no step number.
+-- The arrow turns around the next step's marker at its native 64 pixels, 32 units, inside the arrow's 36-unit orbit;
+-- an arrived stop's goal pin is the pin's own square 36.
 local ICON_SIZE, STEP_SIZE = 36, 32
 -- A bend this close counts as passed, and the arrow turns to the next one.
 local PASSED = 25
@@ -95,14 +95,13 @@ local function Draw(angle)
 end
 
 -- The arrow turns around the step it is walking to, wearing that step's numbered marker, the same art the compass
--- shows for it. A target with no step number (a corpse run, a leg with no stop) keeps the gold goal pin until
--- ForeverCore's ring marker lands (#817).
+-- shows for it. A target with no step number (a corpse run, a leg with no stop) wears ForeverCore's ring and diamond
+-- (#817).
 local function StepIcon()
-	local art = stepEnd and ns.NumberFile(stepEnd.number)
-	local file = art or ns.PIN_FILE
+	local file = (stepEnd and ns.NumberFile(stepEnd.number)) or ForeverCore.Art.Diamond()
 	if frame.iconFile ~= file then
 		frame.iconFile = file
-		ns.Art.Icon(frame.Icon, file, art and STEP_SIZE or ICON_SIZE)
+		ns.Art.Icon(frame.Icon, file, STEP_SIZE)
 	end
 end
 
@@ -296,9 +295,9 @@ local function Create()
 	frame.MoverHint:SetText(L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."])
 	frame.MoverHint:Hide()
 	frame.Icon = frame:CreateTexture(nil, "BACKGROUND")
-	-- The step's numbered marker, or the journey's gold goal pin while the step has no number, square at its size.
-	frame.iconFile = ns.PIN_FILE
-	ns.Art.Icon(frame.Icon, ns.PIN_FILE, ICON_SIZE)
+	-- The next step's numbered marker, or ForeverCore's ring and diamond while it has no number, square at its size.
+	frame.iconFile = ForeverCore.Art.Diamond()
+	ns.Art.Icon(frame.Icon, frame.iconFile, STEP_SIZE)
 	frame.Icon:SetPoint("CENTER")
 	frame.Arrow = frame:CreateTexture(nil, "BACKGROUND")
 	frame.Arrow:SetAtlas("Navigation-Tracked-Arrow", true)
@@ -465,7 +464,7 @@ local function RestoreArrow()
 		return
 	end
 	frame.arrival = nil
-	-- Back to the step the journey is walking to: its numbered marker, or the goal pin while it has no number.
+	-- Back to the step the journey is walking to: its numbered marker, or the ring and diamond while it has no number.
 	frame.iconFile = nil
 	StepIcon()
 	frame.Arrow:Show()

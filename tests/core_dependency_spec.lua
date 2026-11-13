@@ -162,6 +162,16 @@ assert(
 	noSectionLines[1] == "Shortest Path Forever could not start. Reinstall Shortest Path Forever to fix this.",
 	noSectionLines[1]
 )
+-- The step markers arrived in ForeverCore 1.11.0: without them the addon's own Numbers art is gone and there is
+-- nothing to draw a step's marker with.
+local noArt, noArtLines = Load({
+	APIKit = { Hub = function() end, NotReady = function() end },
+	TrackerSection = { Create = function() end, UpdateText = function() end },
+	TrackerLine = { SetInteractive = function() end },
+	Art = { minor = 1, Icon = function() end },
+})
+assert(noArt.broken == true, "a ForeverCore without the step markers stops the addon too")
+assert(#noArtLines == 1, "one line in the error frame")
 
 -- Every member this addon calls is there: the addon runs, says nothing, and registers its services once: the report
 -- title and its own report lines.
@@ -169,6 +179,7 @@ local ns, quiet, registered, attached = Load({
 	APIKit = { Hub = function() end, NotReady = function() end },
 	TrackerSection = { Create = function() end, UpdateText = function() end },
 	TrackerLine = { SetInteractive = function() end },
+	Art = { minor = 2, Marker = function() end, Ring = function() end, Diamond = function() end },
 })
 assert(quiet and #quiet == 0, "a complete ForeverCore runs the addon and says nothing")
 assert(ns.core ~= nil, "the addon keeps its ForeverCore context")

@@ -1,10 +1,10 @@
-"""Export the goal pin, numbered marker and town services group pin textures from their generated sources in
-tools/pin_source.
+"""Export the goal pin and town services group pin textures from their generated sources in tools/pin_source.
 
 The sources are AI-assisted originals on a flat magenta (#FF00FF) background, made for this addon with no Blizzard
 art. This keys the magenta to alpha, crops to the art, centres it at its native aspect on a square canvas and writes
-media/Pin.tga, the goal pin, media/PinInactive.tga, its bronze untracked twin, media/Numbers/<n>.tga, the numbered
-markers, and media/TownGroup.tga, the market stall a town services pin wears when it stands for a group of NPCs.
+media/Pin.tga, the goal pin, media/PinInactive.tga, its bronze untracked twin, and media/TownGroup.tga, the market
+stall a town services pin wears when it stands for a group of NPCs. The numbered step markers are ForeverCore's own
+art (media/Numbers there), the same files every Forever addon draws.
 """
 
 import sys
@@ -14,10 +14,7 @@ from PIL import Image, ImageFilter
 
 ROOT = Path(__file__).resolve().parent.parent
 SIZE = 128
-NUMBER_SIZE = 64
 PINS = {"pin-gold.png": "Pin.tga", "pin-bronze.png": "PinInactive.tga"}
-MAX_NUMBER = 25
-NUMBERS = range(1, MAX_NUMBER + 1)
 # The group pin: the stall 52 across on a 64 canvas, which leaves room for the halo the client's tracking icons wear.
 TOWN_GROUP_SIZE = 64
 TOWN_GROUP_ART = 52
@@ -81,13 +78,6 @@ def main() -> int:
     for source, target in PINS.items():
         export(ROOT / "tools/pin_source" / source, ROOT / "media" / target)
         print(f"wrote media/{target}")
-    for number in NUMBERS:
-        export(
-            ROOT / "tools/pin_source/numbers" / f"{number}.png",
-            ROOT / "media/Numbers" / f"{number}.tga",
-            NUMBER_SIZE,
-        )
-    print(f"wrote media/Numbers/1.tga to media/Numbers/{MAX_NUMBER}.tga")
     export_town_group(ROOT / "tools/pin_source/town-group.png", ROOT / "media/TownGroup.tga")
     print("wrote media/TownGroup.tga")
     return 0

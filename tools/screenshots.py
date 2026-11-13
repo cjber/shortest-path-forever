@@ -488,7 +488,7 @@ NUMBER_SIZE = 24
 
 
 def stop_pin(canvas, x, y, number, badge, later):
-    """StopPin.lua: a numbered stop wears the addon's own gold numbered marker, later stops as faded as their lines;
+    """StopPin.lua: a numbered stop wears ForeverCore's gold numbered marker, later stops as faded as their lines;
     the action badge stays visible at the lower right."""
     alpha = 0.4 if later else 1
     canvas.draw(
@@ -556,7 +556,7 @@ LETTER_FONT = Font(FRIZQT, 14, NORMAL, (1, -1))
 
 def compass_canvas(ui, facing=math.pi - 0.2, distance=780, overhang=0, arrived=False):
     # Compass.lua's ribbon: no panel and no border. Its ticks and their letters fade out towards the ends, so
-    # the compass dissolves into the world, and its turns are the addon's own gold numbered markers.
+    # the compass dissolves into the world, and its turns are ForeverCore's own gold numbered markers.
     # The client draws a texture past its frame, so `overhang` keeps room beside the ribbon for a marker clamped
     # to its end and the distance under it, which the scene would otherwise cut at the canvas edge.
     # Compass.lua's Paint: the parchment gold, or the quieter green of standing in an arrived stop's area (#627).
@@ -594,7 +594,7 @@ def compass_canvas(ui, facing=math.pi - 0.2, distance=780, overhang=0, arrived=F
         return canvas
 
     def number_marker(number, x, y, size, alpha=1):
-        # UI/Art.lua's NumberFile art, square and drawn at its native aspect.
+        # ForeverCore.Art.Marker's art, through ns.NumberFile, square and drawn at its native aspect.
         canvas.draw(number_art(number), x - size / 2, y - size / 2, size, size, (1, 1, 1, alpha))
 
     # Compass.lua's marker row: the bend (next turn) is 1 at 20 units and the turn after is 2 at 16, dimmer. The goal
