@@ -14,6 +14,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Kaliel's Tracker players find the journey entry in its quest menu.** Shortest Path Forever now loads after Kaliel's Tracker when it is installed, so its quest menu entry is added to that tracker's menus.
 - **Russian players no longer see an empty box between parts of a tracker line.** The Russian client's font has no middle dot, so the tracker now separates those parts with a bullet, spaced as before. Reported by XaksFlaX on GitHub (#838).
 
 ## [1.35.2] - 2026-11-13
