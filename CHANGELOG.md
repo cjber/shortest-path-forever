@@ -16,6 +16,14 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 - **The compass is easier to see.** Its ticks are thicker and longer, the direction letters are larger and sit further below their ticks, and the straight-ahead mark is a solid gold bar. Thanks to user_rnkfwc696ynt7c0k on CurseForge (#807).
 
+## [1.34.3] - 2026-11-12
+
+<!-- forever-core-sync -->
+
+- Two more players are on the Thanks page: hervad and caghanpekin-prog reported the short hitches during play, which stopped when travel stats stopped being shared with your guild and group. Thanks to hervad and caghanpekin-prog on GitHub for the reports (#759, #772).
+- A journey left running no longer re-plans itself every five seconds. The boats and zeppelins a journey waits for were worked out again every five seconds even when nothing about them had changed. Now a journey works out its waits once and plans again only when a departure it counts on leaves without you, so a journey left running in the background costs next to nothing.
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
 ## [1.34.2] - 2026-11-12
 
 - **The arrow and the tracker no longer flash while a guide moves between objectives.** The route line, arrow and tracker stay put while the next objective's route is found, and selecting a quest in another addon no longer takes the arrow away. Thanks to Blast22 and user_sggieekz05hc7uxt on CurseForge and kindguydev on Discord (#693).
