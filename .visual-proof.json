@@ -1,10 +1,10 @@
 {
-  "input_digest": "aa1432d4b11ac7750ed8d7cef540144cea8fed89c82f7e6b686cda4c7115c0cc",
-  "runtime_sha256": "aa1432d4b11ac7750ed8d7cef540144cea8fed89c82f7e6b686cda4c7115c0cc",
-  "candidate": "217b935f306f938ca3f9efe766e50f0fea200c2efff68d8320af6055756f4b23",
+  "input_digest": "7bfc23f2f06beea472d92aaffc4aecfad08857538b36863747ab90436f3c7c27",
+  "runtime_sha256": "7bfc23f2f06beea472d92aaffc4aecfad08857538b36863747ab90436f3c7c27",
+  "candidate": "f4658f476e6b1aff4a81ce41ebe32909ceb35210328dfa8fa59a288e5c115de4",
   "client_build": "1.60.1.70938 (Interface 16001)",
   "tested_artifact": "source-tree",
-  "source_commit": "4803badbac5edd7a8f904dce7c8c87c3cfbbaeae",
+  "source_commit": "e8e2c5a4a849e90a9aa48421b01c0088eccf9d5f",
   "flows": [
     {
       "name": "arrow",
@@ -16,8 +16,8 @@
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/f17f555277a104f904502114ffd770b8/raw/036155c66d742598312a12078144907f10e60902/1-arrow.png",
-      "sha256": "856ec87bc86aa8f6d5c7e7ef06130061ab2dc999d9650114ae6c3c42cb41d8ab"
+      "url": "https://gist.githubusercontent.com/cjber/868a9139830baf3d89f43dd8ccf26994/raw/036e05c1e0b88b5e9656463f831592287c4c5cc0/1-arrow.png",
+      "sha256": "9a01e1c5c6c92b94fdfd35443b3e5409564a5a88cfcba911de34555bf85e3a5c"
     }
   ]
 }
