@@ -45,6 +45,7 @@ L["Avoids %s (level %s)"] = "Contourne %s (niveau %s)" -- mt
 L["Bags"] = "Sacs"
 L["Bank"] = "Banque" -- mt
 L["Battlemaster"] = "Maître de bataille" -- mt
+L["Battlemaster pins can be hidden."] = "Les marqueurs des maîtres de bataille peuvent être masqués." -- mt
 L["Boat and Zeppelin Routes"] = "Routes des bateaux et zeppelins" -- mt
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Routes des bateaux et zeppelins, tracées quand vous survolez un quai." -- mt
@@ -424,7 +425,6 @@ L["Stops before the last on a multi-stop route keep 15 yards."] =
 L["Dungeons and raids"] = "Donjons et raids" -- mt
 L["Town services"] = "Services de la ville" -- mt
 L["Town services on the world map"] = "Services de la ville sur la carte du monde" -- mt
-L["The compass is easier to see."] = "La boussole est plus facile à voir." -- mt
 L["Capitals only"] = "Capitales uniquement" -- mt
 L["Capitals and important services"] = "Capitales et services importants" -- mt
 L["All towns"] = "Toutes les villes" -- mt

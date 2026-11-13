@@ -16,13 +16,14 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 - **Guidance no longer blinks off and on when another addon points at the destination your journey already has.** When TomTom's arrow, or a guide, took the objective the journey was already going to under its own name, Shortest Path started the journey over: the arrow, the tracker and the game's own map pin dropped away and came back while the same way was searched again. The journey now stays exactly as it is and only changes hands. The game's map pin also stays put for a moment when the game cannot say which map you are on, instead of vanishing and coming back. Thanks to kindguydev on Discord and user_sggieekz05hc7uxt on CurseForge for the reports (#693, #826).
 
-- **Horde walks stay out of Southshore.** A journey from Dun Garok to a quest west of Southshore was routed through the town, past its guards, because a hostile town counted only the ground within 150 yards of its flight master, and Southshore's town hall and most of its guards stand further west than that. A town's ground is now the ground the game itself names the town, so the walk goes round all of it. Thanks to Nivlemoth_Nathrezim on CurseForge for the report (#719).
-
-- **Battlemaster pins can be hidden.** *Town services* in the world map's filter menu now has a *Battlemaster* checkbox, beside the switches for the other services, so you can keep battlemasters off the map and leave the rest (#833).
-
 ### For addon authors
 
 - `NavigateRoute` and `Navigate` hand a journey over when the only stop they send is the place the journey already goes to: the new owner's `CurrentStop` answers and the previous owner's `Ended` reads `"replaced"`, while the stop, progress, arrow and drawn route stay exactly as they are. A route with several stops still replaces the journey.
+
+## [1.35.1] - 2026-11-13
+
+- **Battlemaster pins can be hidden.** *Town services* in the world map's filter menu now has a *Battlemaster* checkbox, beside the switches for the other services, so you can keep battlemasters off the map and leave the rest (#833).
+- **Horde walks stay out of Southshore.** A journey from Dun Garok to a quest west of Southshore was routed through the town, past its guards, because a hostile town counted only the ground within 150 yards of its flight master, and Southshore's town hall and most of its guards stand further west than that. A town's ground is now the ground the game itself names the town, so the walk goes round all of it. Thanks to Nivlemoth_Nathrezim on CurseForge for the report (#719).
 
 ## [1.35.0] - 2026-11-13
 
