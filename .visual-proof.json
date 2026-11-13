@@ -1,26 +1,27 @@
 {
-  "input_digest": "8f9a25cc2d657dc53cc8a182d8249b0001d67a71456500a22354b70c4963ed7d",
-  "runtime_sha256": "8f9a25cc2d657dc53cc8a182d8249b0001d67a71456500a22354b70c4963ed7d",
-  "candidate": "f44522f766e435a70818a401c66ddc04fd920e693505e5babd633c5c34d6dce5",
+  "input_digest": "ad9df99a719f3ffe80ee4dbdbd42d6e40faab20dbc6d485905f69c321db61c20",
+  "runtime_sha256": "ad9df99a719f3ffe80ee4dbdbd42d6e40faab20dbc6d485905f69c321db61c20",
+  "candidate": "3ddc77cc588a807a27fe145742694a95781ee982cbb7a6c99fabe4075e821785",
   "tested_artifact": "source-tree",
   "client_build": "1.60.1.70938 (Interface 16001)",
-  "source_commit": "0e67979609cf3aefe0d4e227d0f651a596818b2f",
-  "notes": "Checked in the headless client: the Kaliel's Tracker declaration and the GetMinimapShape waiver change no behaviour.",
+  "source_commit": "ee3487a14c338afa66c03fd4219e16a7434f45eb",
+  "notes": "Recorded in the client from a git archive of this commit linked as the ShortestPathForever folder (visual_proof --compare: equivalent, extra media/icon-400.png only; the client reported version v1.35.2-dev+ee3487a), beside a ForeverCore dev build. No Lua errors this session.",
   "flows": [
     {
-      "name": "Journey and minimap pins load",
+      "name": "With Mark only where steps end on and the game's own navigation marker off, the screen arrow follows the walk",
       "steps": [
-        "Link the candidate build with the store ForeverCore and /reload",
-        "The Journey tracker section and the minimap pins draw on this build",
-        "Print the loaded ShortestPathForever version: the candidate build, 0 Lua errors this session"
+        "Install the candidate and /reload",
+        "Turn off the game's in-game navigation and turn on Mark only where steps end",
+        "Start a journey from Lakeshire to Stonewatch in Redridge Mountains",
+        "The compass marker reads the straight-line 679 yd, while the screen arrow and the tracker read 719 yd along the walk"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/0990754c8ffba2fe40866d6188344f42/raw/23b71071ea17084eb9b4091fc7722a43446bc02c/lint-calls.png",
-      "sha256": "ca73ba50d3622561be970b113f388127d14383bcb7efd9c11685263a532a2743"
+      "url": "https://gist.githubusercontent.com/cjber/6a695e608f08d51ec5f7566305a03a6f/raw/b482dc7f2d7caedacd2a7280df9aa5cffa0b5e52/830-arrow-bends.png",
+      "sha256": "64009ebb9ee5d5bec6d3a86ba145f5debcfd42aaa2159c0c0fee8681b5daebd7"
     }
   ]
 }

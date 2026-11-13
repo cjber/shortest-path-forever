@@ -6,8 +6,9 @@ if ns.broken then
 end
 local L = ns.L
 
--- Guide follows the map's walking path bend by bend. Journey places Blizzard's native navigation marker at
--- this target; our screen arrow is the fallback when that marker is unavailable or the player owns tracking.
+-- Guide follows the map's walking path bend by bend, whatever the map marks. Journey places Blizzard's native
+-- navigation marker at that mark (the step's end while only step ends are marked); our screen arrow is the fallback
+-- when the marker is unavailable or the player owns tracking.
 -- Camelot omits the navigation setting, but its native super-tracked marker does work while its CVar is on.
 
 -- Polled this often while still; every frame while you move or turn, and while the arrow eases round.
@@ -120,6 +121,16 @@ local function Settle(elapsed, easing, moved)
 	SetUpdating(easing or frame.idle < 0.15)
 end
 
+-- The point the map marks: the step's end while set to mark only where steps end, else the bend the arrow follows.
+-- The arrow's own path never thins, so it still leads you round every bend (#817).
+---@return SPFPoint?
+local function MarkTarget()
+	if not path then
+		return nil
+	end
+	return ns.db.guideStops and path[#path] or target
+end
+
 ---@param elapsed number seconds since the last update
 local function Update(elapsed)
 	-- Arrived: the pin stands until the player leaves the stop's area, then the arrow or nothing takes over.
@@ -157,7 +168,7 @@ local function Update(elapsed)
 		index = index + 1
 		target = path[index]
 	end
-	local placed = placeTarget and placeTarget(target, false)
+	local placed = placeTarget and placeTarget(MarkTarget(), false)
 	-- Waypoint callbacks can stop or replace guidance synchronously.
 	if revision ~= updating then
 		return
@@ -507,10 +518,11 @@ function ns.ArrivalPinChanged()
 	end
 end
 
--- Guide leads bend by bend, or straight to the walk's end when set to mark only where each step ends.
+-- Guide follows the walk bend by bend. "Mark only where steps end" thins only the point the map marks, never the
+-- walk the arrow follows.
 function ns.RefreshGuideStops()
 	revision = revision + 1
-	path = source and (ns.db.guideStops and { source[#source] } or source)
+	path = source
 	index = 1
 	local x, y, _, map = ns.JourneyPosition()
 	local nearest
@@ -623,9 +635,13 @@ function ns.SetArrowScale(value)
 	end
 end
 
--- Read-only targets share Guide's passed bends, including its step-end-only setting.
+-- Read-only targets share Guide's passed bends as the map marks them: with "Mark only where steps end" on, that is
+-- the step's end, which the compass marks too, while the arrow itself follows every bend.
 function ns.GuideTargets()
 	if path then
+		if ns.db.guideStops then
+			return path[#path], nil, stepEnd, destination
+		end
 		return target, path[index + 1], stepEnd, destination
 	end
 end

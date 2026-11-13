@@ -96,8 +96,8 @@ L["Friendly nameplates must be on to see them."] =
 	"우호적인 유닛의 이름표가 켜져 있어야 볼 수 있습니다."
 L["Go through to %s"] = "%s(으)로 통과"
 L["Guidance"] = "안내"
-L["Guide marks the next boat, lift, flight master or your destination, not each turn of the walk on the way."] =
-	"안내는 다음 배, 승강기, 비행 조련사 또는 목적지를 표시하며, 걷는 길의 모든 갈림길을 표시하지는 않습니다."
+L["Guide marks where each step ends, not each turn of the walk on the way. The arrow still follows the walk."] =
+	"안내는 각 단계가 끝나는 곳을 표시하며, 걷는 길의 모든 갈림길을 표시하지는 않습니다. 화살표는 계속 걷는 길을 따라갑니다."
 L["Guide me"] = "안내 받기"
 L["Guidelime"] = "Guidelime"
 L["Horde"] = "호드"
