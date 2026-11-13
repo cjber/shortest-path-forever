@@ -1,10 +1,10 @@
 {
-  "input_digest": "80e92281e58b890f422f8b796f140a546e3be2d5e655edce992a3c3b99eef720",
-  "runtime_sha256": "80e92281e58b890f422f8b796f140a546e3be2d5e655edce992a3c3b99eef720",
-  "candidate": "ceef1d9647a48cf95c41ccc61a262b4d8874385bd1b2b5600591aa9b00309be7",
+  "input_digest": "e1e10fffead4ff8f486a38b0c97d175c4f02faa3f9cc060999aee49ffcbcbb03",
+  "runtime_sha256": "e1e10fffead4ff8f486a38b0c97d175c4f02faa3f9cc060999aee49ffcbcbb03",
+  "candidate": "16b420c4fb6acdbdfc85519c9a15872488750e60e19b2a5cbf3ab414d3bfd78f",
   "client_build": "1.60.1.70938 (Interface 16001)",
   "tested_artifact": "source-tree",
-  "source_commit": "d0e45b38fee1181fab3b07c933a8b85b4af5c981",
+  "source_commit": "808c460f006dadf96a317820a3a434cd61e51403",
   "flows": [
     {
       "name": "Map marks settings with the quest marker option",
@@ -26,12 +26,12 @@
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/a7ade6cd87307ef4b72822be57671c46/raw/c987fd2c3b9a8adcd8117c3a60b91c1edca78e0d/1-map-marks-settings-with-the-quest-marker-option.png",
-      "sha256": "6e93151d0dfb9f73b3c3592ac5e7d86eec4f312e2f9445ad0e1ff90526d9221f"
+      "url": "https://gist.githubusercontent.com/cjber/951f980800b4382be0ea46871e416ef4/raw/29bb7e841575af9467ad19a43b469905d85eeb00/1-map-marks-settings-with-the-quest-marker-option.png",
+      "sha256": "2e68f5fa61f5a0d9b6601c492aaadc5392c883795afeca548f9cab58bd3b4579"
     },
     {
-      "url": "https://gist.githubusercontent.com/cjber/a7ade6cd87307ef4b72822be57671c46/raw/c987fd2c3b9a8adcd8117c3a60b91c1edca78e0d/2-shortest-path-settings.png",
-      "sha256": "595debd02257e2b4082acfcf73a216a1e807cc06870fc247d8e7358f59ef4c90"
+      "url": "https://gist.githubusercontent.com/cjber/951f980800b4382be0ea46871e416ef4/raw/29bb7e841575af9467ad19a43b469905d85eeb00/2-shortest-path-settings.png",
+      "sha256": "52e81397247bbe125cd3781eba5d394c1bda1c88d1b7a0385957e89a93acfdda"
     }
   ]
 }
