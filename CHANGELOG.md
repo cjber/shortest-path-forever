@@ -14,6 +14,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.35.1] - 2026-11-13
+
 - **Battlemaster pins can be hidden.** *Town services* in the world map's filter menu now has a *Battlemaster* checkbox, beside the switches for the other services, so you can keep battlemasters off the map and leave the rest (#833).
 
 ## [1.35.0] - 2026-11-13
