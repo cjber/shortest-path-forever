@@ -1,23 +1,37 @@
 {
-  "input_digest": "7bfc23f2f06beea472d92aaffc4aecfad08857538b36863747ab90436f3c7c27",
-  "runtime_sha256": "7bfc23f2f06beea472d92aaffc4aecfad08857538b36863747ab90436f3c7c27",
-  "candidate": "f4658f476e6b1aff4a81ce41ebe32909ceb35210328dfa8fa59a288e5c115de4",
+  "input_digest": "80e92281e58b890f422f8b796f140a546e3be2d5e655edce992a3c3b99eef720",
+  "runtime_sha256": "80e92281e58b890f422f8b796f140a546e3be2d5e655edce992a3c3b99eef720",
+  "candidate": "ceef1d9647a48cf95c41ccc61a262b4d8874385bd1b2b5600591aa9b00309be7",
   "client_build": "1.60.1.70938 (Interface 16001)",
   "tested_artifact": "source-tree",
-  "source_commit": "e8e2c5a4a849e90a9aa48421b01c0088eccf9d5f",
+  "source_commit": "d0e45b38fee1181fab3b07c933a8b85b4af5c981",
   "flows": [
     {
-      "name": "arrow",
+      "name": "Map marks settings with the quest marker option",
       "steps": [
-        "../../../.cache/agent-scratch/wow-sweep/proofs/arrow.lua"
+        "Install the candidate and /reload",
+        "Open Options, AddOns, Shortest Path Forever, Map marks",
+        "Hide game quest markers shows under the minimap option, ticked by default, with its label in full"
+      ],
+      "result": "pass"
+    },
+    {
+      "name": "Shortest Path settings",
+      "steps": [
+        "/path",
+        "The settings index opens"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/868a9139830baf3d89f43dd8ccf26994/raw/036e05c1e0b88b5e9656463f831592287c4c5cc0/1-arrow.png",
-      "sha256": "9a01e1c5c6c92b94fdfd35443b3e5409564a5a88cfcba911de34555bf85e3a5c"
+      "url": "https://gist.githubusercontent.com/cjber/a7ade6cd87307ef4b72822be57671c46/raw/c987fd2c3b9a8adcd8117c3a60b91c1edca78e0d/1-map-marks-settings-with-the-quest-marker-option.png",
+      "sha256": "6e93151d0dfb9f73b3c3592ac5e7d86eec4f312e2f9445ad0e1ff90526d9221f"
+    },
+    {
+      "url": "https://gist.githubusercontent.com/cjber/a7ade6cd87307ef4b72822be57671c46/raw/c987fd2c3b9a8adcd8117c3a60b91c1edca78e0d/2-shortest-path-settings.png",
+      "sha256": "595debd02257e2b4082acfcf73a216a1e807cc06870fc247d8e7358f59ef4c90"
     }
   ]
 }
