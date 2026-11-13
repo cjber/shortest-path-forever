@@ -1,26 +1,25 @@
 {
-  "input_digest": "8f9a25cc2d657dc53cc8a182d8249b0001d67a71456500a22354b70c4963ed7d",
-  "runtime_sha256": "8f9a25cc2d657dc53cc8a182d8249b0001d67a71456500a22354b70c4963ed7d",
-  "candidate": "f44522f766e435a70818a401c66ddc04fd920e693505e5babd633c5c34d6dce5",
+  "input_digest": "ada83a1532ea1b6efe837e1c65ce2681285268e569077fd335e1ab66f11f16b6",
+  "runtime_sha256": "ada83a1532ea1b6efe837e1c65ce2681285268e569077fd335e1ab66f11f16b6",
+  "candidate": "9c52488632ca2413d759d03eaea1be796c1999b371d34cf136c7fe149f1671df",
   "tested_artifact": "source-tree",
   "client_build": "1.60.1.70938 (Interface 16001)",
-  "source_commit": "0e67979609cf3aefe0d4e227d0f651a596818b2f",
-  "notes": "Checked in the headless client: the Kaliel's Tracker declaration and the GetMinimapShape waiver change no behaviour.",
+  "source_commit": "d637542cab99fbd9e9372d8e88a3465aa789f9bc",
+  "notes": "Recorded on Hel Io (level 21 hunter) in Redridge Mountains from a source-tree build of this commit linked into AddOns, with the nav headers rebaked on client 70938.",
   "flows": [
     {
-      "name": "Journey and minimap pins load",
+      "name": "Walking route on the rebaked nav mesh",
       "steps": [
-        "Link the candidate build with the store ForeverCore and /reload",
-        "The Journey tracker section and the minimap pins draw on this build",
-        "Print the loaded ShortestPathForever version: the candidate build, 0 Lua errors this session"
+        "Start a journey to Riverglades from the Redridge hills",
+        "The tracker shows Journey 1:07, 465 yd, Walk to Riverglades; the waypoint pin and arrow lead along the slope"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/0990754c8ffba2fe40866d6188344f42/raw/23b71071ea17084eb9b4091fc7722a43446bc02c/lint-calls.png",
-      "sha256": "ca73ba50d3622561be970b113f388127d14383bcb7efd9c11685263a532a2743"
+      "url": "https://gist.githubusercontent.com/cjber/b238e645887ffbeb53f11afb2f54a0cc/raw/55fb3f3af2c0de32325ced751c167cd61c32c301/828-way.png",
+      "sha256": "e239ef4cef8fb928dd952f2d8c25db455ec0c4f6401f2af8693ae44dd18ae92a"
     }
   ]
 }
