@@ -46,6 +46,7 @@ L["Avoids %s (level %s)"] = "%s 우회 (레벨 %s)"
 L["Bags"] = "가방"
 L["Bank"] = "은행"
 L["Battlemaster"] = "전장 지휘관"
+L["Battlemaster pins can be hidden."] = "전장 지휘관 핀을 숨길 수 있습니다." -- mt
 L["Boat and Zeppelin Routes"] = "배와 비행선 노선"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"배와 비행선 노선. 부두를 가리키는 동안 그려집니다."
@@ -428,7 +429,6 @@ L["Stops before the last on a multi-stop route keep 15 yards."] =
 L["Dungeons and raids"] = "던전 및 공격대" -- mt
 L["Town services"] = "마을 서비스" -- mt
 L["Town services on the world map"] = "세계 지도에 마을 서비스 표시" -- mt
-L["The compass is easier to see."] = "나침반이 더 잘 보입니다." -- mt
 L["Capitals only"] = "수도만" -- mt
 L["Capitals and important services"] = "수도 및 주요 서비스" -- mt
 L["All towns"] = "모든 마을" -- mt

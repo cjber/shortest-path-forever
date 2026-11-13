@@ -43,6 +43,7 @@ L["Avoids %s (level %s)"] = "绕开%s（等级 %s）"
 L["Bags"] = "背包"
 L["Bank"] = "银行"
 L["Battlemaster"] = "战场指挥官"
+L["Battlemaster pins can be hidden."] = "战场指挥官图钉可以隐藏。" -- mt
 L["Boat and Zeppelin Routes"] = "船只和飞艇航线"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"船只和飞艇航线，在你指向码头时绘制。"
@@ -414,7 +415,6 @@ L["Stops before the last on a multi-stop route keep 15 yards."] =
 L["Dungeons and raids"] = "地下城与团队副本" -- mt
 L["Town services"] = "城镇服务" -- mt
 L["Town services on the world map"] = "世界地图上的城镇服务" -- mt
-L["The compass is easier to see."] = "罗盘更容易看清了。" -- mt
 L["Capitals only"] = "仅主城" -- mt
 L["Capitals and important services"] = "主城和重要服务" -- mt
 L["All towns"] = "所有城镇" -- mt

@@ -18,6 +18,7 @@ DATA = (
     "Data/Portals.lua",
     "Data/Teleports.lua",
     "Data/Zones.lua",
+    "Data/TownAreas.lua",
     "Data/Services.lua",
     "Data/Walks.lua",
     "Data/RoadEdges.lua",
@@ -48,6 +49,7 @@ def regenerate(root, offline):
     mode = ["--offline"] if offline else []
     run(root, sys.executable, "tools/gen_routes.py", *mode)
     run(root, sys.executable, "tools/gen_transit.py", *mode)
+    run(root, sys.executable, "tools/gen_towns.py", *mode)
     run(root, sys.executable, "tools/gen_services.py", *mode)
     run(root, "luajit", "tools/bake_walks.lua", output="Data/Walks.lua")
     run(root, "luajit", "tools/bake_roads.lua", output="Data/RoadEdges.lua")

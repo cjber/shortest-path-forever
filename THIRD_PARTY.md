@@ -148,6 +148,8 @@ Credit for the reports and requests behind the addon.
 | Blast22 | Guidance no longer flickers between two objectives | CurseForge; 8693782 |
 | user_sggieekz05hc7uxt | Guidance no longer flickers between two objectives | CurseForge; 8685196 |
 | kindguydev | Guidance no longer flickers while a guide re-points | Discord; #693 |
+| kindguydev | Guidance no longer restarts when another addon points at the same destination | Discord; #826 |
+| user_sggieekz05hc7uxt | Guidance no longer restarts when another addon points at the same destination | CurseForge; 8685196 |
 | [hervad](https://github.com/hervad) | No more short hitches during play | GitHub; #759 |
 | [caghanpekin-prog](https://github.com/caghanpekin-prog) | No more brief stutters during play | GitHub; #772 |
 | Zwaffelmagic | Clear the destination on arrival | CurseForge; #733 |
@@ -156,6 +158,7 @@ Credit for the reports and requests behind the addon.
 | ubrider | Hovering the minimap map pin no longer errors | CurseForge; #824 |
 | cwebbx | Journeys start from a focused quest or map pin | CurseForge; #687 |
 | lone\_viking1921 | Journeys start from a focused quest or map pin | CurseForge; #687 |
+| Nivlemoth\_Nathrezim | Horde walks stay out of Southshore | CurseForge; #719 |
 
 ## Inspired by
 
