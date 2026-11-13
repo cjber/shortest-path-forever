@@ -1,0 +1,4 @@
+# Kaliel's Tracker's own quest menus (Core/Modules/Tracker/Quests.lua) build and extend their MSA-DropDownMenu-1.0 dropdowns.
+MSA_DropDownMenu_CreateInfo     !KalielsTracker
+MSA_DropDownMenu_AddButton      !KalielsTracker
+MSA_DropDownMenu_AddSeparator   !KalielsTracker
