@@ -221,19 +221,26 @@ local function Usable(tooltip)
 	return tooltip ~= nil and not tooltip:IsForbidden()
 end
 
--- The client's generic titles for a user waypoint: MAP_PIN is "Map Pin" on the minimap, whose tooltip the client
--- builds from C_TooltipInfo.GetMinimapMouseover, and MAP_PIN_SHARING is "Map Pin Sharing" on the map's
--- WaypointLocationPin. Replace either only for the waypoint Guide holds, keeping the client's own instructions and
--- adding the journey's goal under a hop.
+-- Name the client's user waypoint tooltip for the waypoint Guide holds, keeping the client's own instructions and
+-- adding the journey's goal under a hop. The map's WaypointLocationPin is the waypoint by its own OnEnter, so its
+-- title is never read; the minimap names whatever the pointer is over, and only its readable MAP_PIN title says it
+-- is the waypoint. 1.60.1 hands that title back as a secret value, which addon code may keep but not compare, so a
+-- secret title leaves the client's tooltip as it is rather than guess whose it is.
 ---@param tooltip GameTooltip
-local function NameWaypointTooltip(tooltip)
+---@param fromWaypointPin boolean? the client waypoint pin's own OnEnter, which is the waypoint or nothing
+local function NameWaypointTooltip(tooltip, fromWaypointPin)
 	if not Usable(tooltip) then
 		return
 	end
 	local titleLine = GameTooltipTextLeft1
-	local clientTitle = titleLine and titleLine.GetText and titleLine:GetText()
-	if not (clientTitle and (clientTitle == MAP_PIN or clientTitle == MAP_PIN_SHARING)) then
+	if not titleLine then
 		return
+	end
+	if not fromWaypointPin then
+		local clientTitle = titleLine.GetText and titleLine:GetText()
+		if not canaccessvalue(clientTitle) or clientTitle ~= MAP_PIN then
+			return
+		end
 	end
 	local title, goalTitle = WaypointNames()
 	if not title then
@@ -258,7 +265,7 @@ local function HideGuideWaypointPin(provider)
 		if not hookedPins[provider.pin] then
 			hookedPins[provider.pin] = true
 			provider.pin:HookScript("OnEnter", function()
-				NameWaypointTooltip(GameTooltip)
+				NameWaypointTooltip(GameTooltip, true)
 			end)
 		end
 		local owned = guide and (guide.writingWaypoint or guide.waypoint)

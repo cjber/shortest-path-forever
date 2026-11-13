@@ -14,6 +14,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Hovering a map pin on the minimap no longer gives a Lua error.** Where the game keeps the pin's name from addons, the pin shows the game's own tooltip. Thanks to user_10oietw0rdrgk4le and ubrider on CurseForge for the report (#824).
+
 ## [1.34.3] - 2026-11-12
 
 <!-- forever-core-sync -->

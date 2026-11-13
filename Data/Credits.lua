@@ -98,6 +98,8 @@ ns.Credits = {
 		{ name = "caghanpekin-prog", what = "No more brief stutters during play" },
 		{ name = "Zwaffelmagic", what = "Clear the destination on arrival" },
 		{ name = "CptShooter", what = "Hide the objective lines under the arrow" },
+		{ name = "user_10oietw0rdrgk4le", what = "Hovering the minimap map pin no longer errors" },
+		{ name = "ubrider", what = "Hovering the minimap map pin no longer errors" },
 	},
 	inspired = {
 		{ name = "Polestar by Fitz", what = "Ideas for many features" },
