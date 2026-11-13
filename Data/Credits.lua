@@ -94,6 +94,10 @@ ns.Credits = {
 		{ name = "Blast22", what = "Guidance no longer flickers between two objectives" },
 		{ name = "user_sggieekz05hc7uxt", what = "Guidance no longer flickers between two objectives" },
 		{ name = "kindguydev", what = "Guidance no longer flickers while a guide re-points" },
+		{ name = "hervad", what = "No more short hitches during play" },
+		{ name = "caghanpekin-prog", what = "No more brief stutters during play" },
+		{ name = "Zwaffelmagic", what = "Clear the destination on arrival" },
+		{ name = "CptShooter", what = "Hide the objective lines under the arrow" },
 		{ name = "Lůca [Luutsa]", what = "Town services of the same kind share one icon" },
 	},
 	inspired = {

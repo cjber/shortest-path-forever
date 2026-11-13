@@ -16,6 +16,14 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 - **Fewer market stalls on the map, and every NPC apart at full zoom.** Nearby services of the same kind now share that service's icon, so three leatherworking trainers become one leatherworking pin with all three in its tooltip. A market stall appears only where different kinds of service share a spot, and only when their pins truly overlap, so there are fewer of them. Zooming right in splits every NPC into its own icon, spreading those standing in the same doorway so each can be hovered and clicked, and a pin follows each zoom step back onto its own NPC. A wandering NPC shows one pin per map rather than one at every spawn along its route. A flight master no longer gets a second pin beside its flight point, since the flight point's own pin already stands for that NPC, so the Town services filter no longer offers a Flight master switch. Weapons and armour vendors wear the game's shield mark instead of the plain gold coin that read as a bare dot. Thanks to Lůca [Luutsa] on Discord for the idea (#812, #816).
 
+## [1.34.3] - 2026-11-12
+
+<!-- forever-core-sync -->
+
+- Two more players are on the Thanks page: hervad and caghanpekin-prog reported the short hitches during play, which stopped when travel stats stopped being shared with your guild and group. Thanks to hervad and caghanpekin-prog on GitHub for the reports (#759, #772).
+- A journey left running no longer re-plans itself every five seconds. The boats and zeppelins a journey waits for were worked out again every five seconds even when nothing about them had changed. Now a journey works out its waits once and plans again only when a departure it counts on leaves without you, so a journey left running in the background costs next to nothing.
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
 ## [1.34.2] - 2026-11-12
 
 - **The arrow and the tracker no longer flash while a guide moves between objectives.** The route line, arrow and tracker stay put while the next objective's route is found, and selecting a quest in another addon no longer takes the arrow away. Thanks to Blast22 and user_sggieekz05hc7uxt on CurseForge and kindguydev on Discord (#693).

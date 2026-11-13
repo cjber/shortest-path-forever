@@ -230,13 +230,15 @@ if scenario == "aboard" then
 end
 if scenario == "stationary" or scenario == "aboard" then
 	local stats = driver.stats
+	-- A journey whose ticks plan nothing has no mean to report.
+	local calls = stats.calls
 	print(
 		string.format(
 			"settled Planner.Plan: %d calls, %.3f mean / %.3f worst ms, %.1f KB/call",
-			stats.calls,
-			stats.cpu / stats.calls,
+			calls,
+			calls > 0 and stats.cpu / calls or 0,
 			stats.worst,
-			stats.kb / stats.calls
+			calls > 0 and stats.kb / calls or 0
 		)
 	)
 end
