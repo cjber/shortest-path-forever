@@ -1,18 +1,18 @@
 {
-  "input_digest": "187778adc40457f245380086272f2697f5233189a104c9ae524e99c4a333dd37",
-  "runtime_sha256": "187778adc40457f245380086272f2697f5233189a104c9ae524e99c4a333dd37",
-  "candidate": "38400f92b76fceb68f724bfa9e6d37b4d1f95cc52fd3f013b189f6b6b04904f8",
+  "input_digest": "794949f42a8ec2d05021748fb9f6126430bcbcfbf9f2b1dc2393a64a5cf1d421",
+  "runtime_sha256": "794949f42a8ec2d05021748fb9f6126430bcbcfbf9f2b1dc2393a64a5cf1d421",
+  "candidate": "20d310673ca5fec547cd28136dcf47a16ac791ca335fd31b431fd2ada94afad6",
   "tested_artifact": "source-tree",
   "client_build": "1.60.1.70938 (Interface 16001)",
-  "source_commit": "615d5357f40edb2f80326d730e54885e7dc11a53",
-  "notes": "Recorded in the client from a git archive of this commit linked as the ShortestPathForever folder (visual_proof --compare: equivalent, extra media/icon-400.png only; the client reported version v1.35.2-dev+615d535), with the store ForeverCore. No Lua errors this session.",
+  "source_commit": "cf8bf2078887ccd6608069900aee338a99532053",
+  "notes": "Recorded in the client from a git archive of this commit linked as the ShortestPathForever folder (visual_proof --compare: equivalent, extra media/icon-400.png only; the client reported version v1.35.2-dev+cf8bf20), beside a ForeverCore dev build. No Lua errors this session.",
   "flows": [
     {
       "name": "Lakeshire's town pins at full zoom",
       "steps": [
         "Install the candidate and /reload",
         "Open the world map on Redridge Mountains and zoom fully into Lakeshire",
-        "Town service pins draw over Lakeshire; the weapon and armour vendors wear the purple tunic mark",
+        "Once the nearby-services index is ready after the reload, the town service pins draw over Lakeshire; the weapon and armour vendors wear the purple tunic mark",
         "No Lua errors"
       ],
       "result": "pass"
@@ -20,8 +20,8 @@
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/324222e1e6ffa021ee1b8fd6d6870462/raw/ff1d1f8ae155d66af1a4ffc270331eb4f5ecf600/813-town-pins.png",
-      "sha256": "f0b2f733d967299892277038c7247bc65a2d3450e17963199ace586bd1fed4ad"
+      "url": "https://gist.githubusercontent.com/cjber/6a695e608f08d51ec5f7566305a03a6f/raw/b482dc7f2d7caedacd2a7280df9aa5cffa0b5e52/813-town-pins.png",
+      "sha256": "5aef104068242aeee52eb4a1380992d9d4e3603e980467f817431f2b6203631f"
     }
   ]
 }
