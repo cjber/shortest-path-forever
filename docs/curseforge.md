@@ -44,7 +44,7 @@ With the gamepad interface on, you open and turn the world map; Shortest Path wo
 
 - `/path` opens settings under **Options → AddOns → Shortest Path Forever**. `/spfnear` opens the Nearby services tab.
 - Alt-click the world map to choose a destination directly over a Questie icon. Shift-click the map, minimap or a Shortest Path icon; for quests, choose **Plan journey** in the right-click menu.
-- In **Map marks**, scale each kind of icon, and choose whether a journey's stops hide the game's own quest markers. Right-click a flight master icon to mark its path known or unknown.
+- In **Map marks**, scale each kind of icon, and choose whether journey stops hide the game's quest markers. Right-click a flight master icon to mark its path known or unknown.
 - In **Interface**, choose what shows, metres, sizes and a compass background. While moving the arrow or compass, Shift-drag or use the arrow keys for fine placement.
 - In **Guidance**, or by right-clicking the tracker's "Journey to …" line, turn off **Attach to quest tracker** to drag the shared column. **Resume guide** returns to RestedXP or Guidelime; **Keep journeys after a reload** restarts yours.
 - `/way [zone] x y [title]` plans a journey, or `/path way` when another addon owns `/way`. **Follow TomTom's arrow** in Guidance follows TomTom.
