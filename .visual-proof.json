@@ -1,27 +1,26 @@
 {
-  "input_digest": "794949f42a8ec2d05021748fb9f6126430bcbcfbf9f2b1dc2393a64a5cf1d421",
-  "runtime_sha256": "794949f42a8ec2d05021748fb9f6126430bcbcfbf9f2b1dc2393a64a5cf1d421",
-  "candidate": "20d310673ca5fec547cd28136dcf47a16ac791ca335fd31b431fd2ada94afad6",
+  "input_digest": "72800b2b21ae0f00f481876ea78fcf5bad81cc8f4c14078437fe5c641afa8e7a",
+  "runtime_sha256": "72800b2b21ae0f00f481876ea78fcf5bad81cc8f4c14078437fe5c641afa8e7a",
+  "candidate": "07667432362247d6c06e0f254f3e6f91b49e495f4f964fb38072fcb3229f0e46",
   "tested_artifact": "source-tree",
   "client_build": "1.60.1.70938 (Interface 16001)",
-  "source_commit": "cf8bf2078887ccd6608069900aee338a99532053",
-  "notes": "Recorded in the client from a git archive of this commit linked as the ShortestPathForever folder (visual_proof --compare: equivalent, extra media/icon-400.png only; the client reported version v1.35.2-dev+cf8bf20), beside a ForeverCore dev build. No Lua errors this session.",
+  "source_commit": "65fa3f9ac1b6de7166f689a99bf8aa571bbc176d",
+  "notes": "Recorded in the client from a git archive of this commit linked as the ShortestPathForever folder (visual_proof --compare: equivalent, extra media/icon-400.png only; the client reported version 1.36.0), beside a ForeverCore dev build. No Lua errors this session.",
   "flows": [
     {
-      "name": "Lakeshire's town pins at full zoom",
+      "name": "After an update to 1.36.0 the chat says once what changed",
       "steps": [
-        "Install the candidate and /reload",
-        "Open the world map on Redridge Mountains and zoom fully into Lakeshire",
-        "Once the nearby-services index is ready after the reload, the town service pins draw over Lakeshire; the weapon and armour vendors wear the purple tunic mark",
-        "No Lua errors"
+        "Link the release candidate with its TOC version at 1.36.0 over a saved seenVersion of v1.35.2",
+        "Log in",
+        "Read the chat: one Shortest Path Forever line names 1.36.0 and the new headline"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/6a695e608f08d51ec5f7566305a03a6f/raw/b482dc7f2d7caedacd2a7280df9aa5cffa0b5e52/813-town-pins.png",
-      "sha256": "5aef104068242aeee52eb4a1380992d9d4e3603e980467f817431f2b6203631f"
+      "url": "https://gist.githubusercontent.com/cjber/c90a8346c79f3f71e2902a0ea76b8c2a/raw/7d2d41be9bbe53cba1f89cfb8c2c97935b553933/861-update-notice.png",
+      "sha256": "e1a09f41c2d331db7f0ec5dda96f4689327e625d68275558894d8d9c454c39d7"
     }
   ]
 }
