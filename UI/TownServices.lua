@@ -41,6 +41,7 @@ local FILTERS = {
 	{ option = "townServiceRepair", label = L["Repair"], groups = { repair = true } },
 	{ option = "townServiceBank", label = L["Bank"], groups = { bank = true } },
 	{ option = "townServiceAuction", label = L["Auction house"], groups = { auction = true } },
+	{ option = "townServiceBattlemaster", label = L["Battlemaster"], groups = { battlemaster = true } },
 	{ option = "townServiceClass", label = L["Class trainer"], groups = { class = true, portal = true } },
 	{ option = "townServiceProfessions", label = L["Profession trainers"], profession = true },
 	{ option = "townServiceFood", label = L["Food and drink"], groups = { food = true, drink = true } },

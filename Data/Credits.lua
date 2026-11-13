@@ -94,6 +94,11 @@ ns.Credits = {
 		{ name = "Blast22", what = "Guidance no longer flickers between two objectives" },
 		{ name = "user_sggieekz05hc7uxt", what = "Guidance no longer flickers between two objectives" },
 		{ name = "kindguydev", what = "Guidance no longer flickers while a guide re-points" },
+		{ name = "kindguydev", what = "Guidance no longer restarts when another addon points at the same destination" },
+		{
+			name = "user_sggieekz05hc7uxt",
+			what = "Guidance no longer restarts when another addon points at the same destination",
+		},
 		{ name = "hervad", what = "No more short hitches during play" },
 		{ name = "caghanpekin-prog", what = "No more brief stutters during play" },
 		{ name = "Zwaffelmagic", what = "Clear the destination on arrival" },
@@ -102,6 +107,7 @@ ns.Credits = {
 		{ name = "ubrider", what = "Hovering the minimap map pin no longer errors" },
 		{ name = "cwebbx", what = "Journeys start from a focused quest or map pin" },
 		{ name = "lone_viking1921", what = "Journeys start from a focused quest or map pin" },
+		{ name = "Nivlemoth_Nathrezim", what = "Horde walks stay out of Southshore" },
 		{ name = "Lůca [Luutsa]", what = "Town services of the same kind share one icon" },
 	},
 	inspired = {

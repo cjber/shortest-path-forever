@@ -68,6 +68,7 @@ jobs:
         run: |
           python3 tools/gen_routes.py
           python3 tools/gen_transit.py
+          python3 tools/gen_towns.py
           python3 tools/gen_services.py
           luajit tools/bake_walks.lua > "$RUNNER_TEMP/Walks.lua"
           mv "$RUNNER_TEMP/Walks.lua" Data/Walks.lua

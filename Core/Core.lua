@@ -44,6 +44,7 @@ local DEFAULTS = {
 	townServiceRepair = false,
 	townServiceBank = true,
 	townServiceAuction = true,
+	townServiceBattlemaster = true,
 	townServiceClass = true,
 	townServiceProfessions = true,
 	townServiceFood = true,

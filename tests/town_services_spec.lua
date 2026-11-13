@@ -1,7 +1,7 @@
 -- UI/TownServices.lua on the world map: one client service icon per pin, a service's own icon when every member shows
 -- that service, the addon's own market stall when a group stands for different services, the tooltip that names them
 -- and the click that plans a journey, the four levels of detail, each service's own Map Filter checkbox with
--- repairers hidden by default, and the maps the pins belong on.
+-- repairers hidden by default, the battlemaster's own switch (#833), and the maps the pins belong on.
 local dir = arg[0]:match("^(.*)/") or "tests"
 
 local probe = "tools/.cache/blizzard-ui/Interface/AddOns/Blizzard_SharedXML/Spinner.lua"
@@ -299,13 +299,14 @@ local menuRoot = {
 }
 menus.MENU_WORLD_MAP_TRACKING(nil, menuRoot)
 check(#radios == 4, "the submenu still has the four town levels")
-check(#checkboxes == 13, "one checkbox for every service the pins show")
+check(#checkboxes == 14, "one checkbox for every service the pins show")
 local box = {}
 for _, row in ipairs(checkboxes) do
 	box[row.label] = row
 end
 check(box["Repair"] and box["Repair"].get() == false, "repair starts unchecked")
 check(box["Innkeeper"] and box["Innkeeper"].get() == true, "the other services start checked")
+check(box["Battlemaster"] and box["Battlemaster"].get() == true, "the battlemaster has a checkbox of its own, checked")
 check(
 	box["Profession trainers"] and box["Food and drink"] and box["Ammunition"] and box["Bags and trade supplies"],
 	"the grouped services have one checkbox each"
@@ -331,6 +332,36 @@ ns.SetTownServiceShown("townServiceRepair", false)
 ns.db.townServices = "capitals"
 ns.RefreshMap()
 check(count() == 1, "the map's own refresh brings the pins back")
+-- A battlemaster is a service of its own: hiding it drops its pin and leaves every other service where it was.
+groups[#groups + 1] = group("services", "battlemaster", "Battlemaster", "BattleMaster")
+index = {
+	bank = index.bank,
+	innkeeper = index.innkeeper,
+	repair = index.repair,
+	food = index.food,
+	trade = index.trade,
+	battlemaster = { place(7, "Battlemaster Seven", 4000, -3000) },
+}
+ns.db.townServices = "all"
+ns.RefreshTownServices()
+check(count() == 4, "all towns draws the battlemaster beside the other services")
+check(find(7) and find(7).Texture.atlas == "BattleMaster", "the battlemaster pin wears the client's own mark")
+check(find(7).Texture.texture == nil, "and no file art")
+box["Battlemaster"].click()
+check(ns.db.townServiceBattlemaster == false, "unchecking the battlemaster writes its switch")
+check(not find(7), "its pin goes")
+check(count() == 3, "and no other service's pin goes with it")
+check(find(1) == find(2) and find(3) and find(4), "the capital's services and both outlying sellers stay")
+check(table.concat(linesOf(find(1)), ", ") == "Bank, Innkeeper", "a neighbour's tooltip keeps only its own services")
+check(
+	ns.db.townServiceBank == true
+		and ns.db.townServiceInnkeeper == true
+		and ns.db.townServiceFood == true
+		and ns.db.townServiceRepair == false,
+	"and no other service's switch moves"
+)
+box["Battlemaster"].click()
+check(count() == 4 and find(7), "checking it brings the battlemaster's pin back")
 -- A wandering NPC: QuestieDB lists every spawn along its route, but the town layer draws the NPC, not each of its
 -- spawns. One pin per map at every zoom, on the spawn nearest the mean of its spawns there, which is still a real
 -- spawn a journey can go to.

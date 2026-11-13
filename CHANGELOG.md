@@ -15,6 +15,16 @@ optional `### For addon authors` subsection after a version's player bullets.
 ## [Unreleased]
 
 - **Fewer market stalls on the map, and every NPC apart at full zoom.** Nearby services of the same kind now share that service's icon, so three leatherworking trainers become one leatherworking pin with all three in its tooltip. A market stall appears only where different kinds of service share a spot, and only when their pins truly overlap, so there are fewer of them. Zooming right in splits every NPC into its own icon, spreading those standing in the same doorway so each can be hovered and clicked, and a pin follows each zoom step back onto its own NPC. A wandering NPC shows one pin per map rather than one at every spawn along its route. A flight master no longer gets a second pin beside its flight point, since the flight point's own pin already stands for that NPC, so the Town services filter no longer offers a Flight master switch. Weapons and armour vendors wear the game's tunic mark instead of the plain gold coin that read as a bare dot. Thanks to Lůca [Luutsa] on Discord for the idea (#812, #816).
+- **Guidance no longer blinks off and on when another addon points at the destination your journey already has.** When TomTom's arrow, or a guide, took the objective the journey was already going to under its own name, Shortest Path started the journey over: the arrow, the tracker and the game's own map pin dropped away and came back while the same way was searched again. The journey now stays exactly as it is and only changes hands. The game's map pin also stays put for a moment when the game cannot say which map you are on, instead of vanishing and coming back. Thanks to kindguydev on Discord and user_sggieekz05hc7uxt on CurseForge for the reports (#693, #826).
+
+### For addon authors
+
+- `NavigateRoute` and `Navigate` hand a journey over when the only stop they send is the place the journey already goes to: the new owner's `CurrentStop` answers and the previous owner's `Ended` reads `"replaced"`, while the stop, progress, arrow and drawn route stay exactly as they are. A route with several stops still replaces the journey.
+
+## [1.35.1] - 2026-11-13
+
+- **Battlemaster pins can be hidden.** *Town services* in the world map's filter menu now has a *Battlemaster* checkbox, beside the switches for the other services, so you can keep battlemasters off the map and leave the rest (#833).
+- **Horde walks stay out of Southshore.** A journey from Dun Garok to a quest west of Southshore was routed through the town, past its guards, because a hostile town counted only the ground within 150 yards of its flight master, and Southshore's town hall and most of its guards stand further west than that. A town's ground is now the ground the game itself names the town, so the walk goes round all of it. Thanks to Nivlemoth_Nathrezim on CurseForge for the report (#719).
 
 ## [1.35.0] - 2026-11-13
 
