@@ -471,10 +471,7 @@ assert(
 	"the quest markers hide at journey stops by default"
 )
 assert(questPins.setting.variable == "ShortestPathForever_hideQuestPins", "the quest marker switch is saved")
-assert(
-	questPins.setting.name == "Hide the game's quest markers at journey stops",
-	"the switch names the markers and where they hide"
-)
+assert(questPins.setting.name == "Hide game quest markers", "the switch names the markers and where they hide")
 assert(
 	questPins.tooltip:find("other places a quest can be done", 1, true),
 	"the tooltip says the other places a quest can be done stay when it is off"

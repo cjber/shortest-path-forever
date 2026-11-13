@@ -158,7 +158,7 @@ ns.Init(function()
 	)
 	Checkbox(
 		"hideQuestPins",
-		L["Hide the game's quest markers at journey stops"],
+		L["Hide game quest markers"],
 		L["Off, the game's own quest markers stay beside your journey's pins, showing the other places a quest can be done."],
 		ns.RefreshQuestPins
 	)

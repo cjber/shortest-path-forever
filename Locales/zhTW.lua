@@ -426,6 +426,6 @@ L["Ammunition"] = "彈藥" -- mt
 L["Bags and trade supplies"] = "背包和貿易品" -- mt
 L["Food and drink"] = "食物和飲料" -- mt
 L["Profession trainers"] = "專業訓練師" -- mt
-L["Hide the game's quest markers at journey stops"] = "在旅程站點隱藏遊戲的任務標記" -- mt
+L["Hide game quest markers"] = "隱藏遊戲的任務標記" -- mt
 L["Off, the game's own quest markers stay beside your journey's pins, showing the other places a quest can be done."] =
 	"關閉後，遊戲自帶的任務標記會留在旅程標記旁邊，讓你看見任務還能在哪些地方完成。" -- mt
