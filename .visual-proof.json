@@ -1,7 +1,7 @@
 {
-  "input_digest": "d0ca456087d90de8137330aabebe1d536413d42efda411fa113bf9927f3df87f",
-  "runtime_sha256": "d0ca456087d90de8137330aabebe1d536413d42efda411fa113bf9927f3df87f",
-  "candidate": "3f22d3773d4782c0bd67be74a38ab99df2fe64f9201c65957cca573015bed7a5",
+  "input_digest": "f56c63b4b4534fc31462ef75d658d92f6facef271e7d80896dc7db8b5a753653",
+  "runtime_sha256": "f56c63b4b4534fc31462ef75d658d92f6facef271e7d80896dc7db8b5a753653",
+  "candidate": "ec4f3abe5068dd3b048e5081cd28f63ddddc88045ad44a4e8564873830d05950",
   "tested_artifact": "source-tree",
   "client_build": "1.60.1.70888 (Interface 16001)",
   "flows": [
@@ -9,26 +9,20 @@
       "name": "Hovering a quest stop on the world map shows that quest's blue area",
       "steps": [
         "Install the PR's shipped files as the ShortestPathForever folder (compare: no differing files; extra media/icon-400.png) beside ForeverCore v1.10.0 and /reload",
-        "With a journey of quest stops in Redridge Mountains, open the world map: the stops are drawn and the super-tracked quest's areas show",
-        "Hover stop 5 (Collect 0/10 Shadowhide Pendant, Solomon's Law): the game draws Solomon's Law's blue area around the stop",
-        "Move the pointer off the stop: the area goes and the map is as before",
-        "/reload: no Lua errors"
+        "With a journey of quest stops in Redridge Mountains and no quest super-tracked, open the world map: the stops are drawn and no quest area shows",
+        "Hover stop 5 (Collect 0/10 Shadowhide Pendant, Solomon's Law): the game draws Solomon's Law's blue area around the stop, and no other"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/d74b0095aa2ebbf2ab78a9bf8fa51fe8/raw/d27c9f714223e561f97d4fa4c1e54abd5c4ef484/spf863-before.png",
-      "sha256": "9fd34bcd803a2449ea953d0e7e4b928fac859400fb3251647ab9724646f29f98"
+      "url": "https://gist.githubusercontent.com/cjber/d74b0095aa2ebbf2ab78a9bf8fa51fe8/raw/32c1d4e9f7a983e061dd72d9546e45cb0c7938b6/spf863-before-286d60d.png",
+      "sha256": "1f0a41c2ed4f9626a35e84d0f7beece2bdbe52f258072d6f5edea2811224bcd2"
     },
     {
-      "url": "https://gist.githubusercontent.com/cjber/d74b0095aa2ebbf2ab78a9bf8fa51fe8/raw/d27c9f714223e561f97d4fa4c1e54abd5c4ef484/spf863-hover.png",
-      "sha256": "27dc31a69a33bd6894b965539e0bfae705e0b1736471df685d82041d8b62be53"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/d74b0095aa2ebbf2ab78a9bf8fa51fe8/raw/d27c9f714223e561f97d4fa4c1e54abd5c4ef484/spf863-leave.png",
-      "sha256": "416877614d399d58774d4d4d38129baa0733c0fa0e17dace13f1f846f6def741"
+      "url": "https://gist.githubusercontent.com/cjber/d74b0095aa2ebbf2ab78a9bf8fa51fe8/raw/32c1d4e9f7a983e061dd72d9546e45cb0c7938b6/spf863-hover-286d60d.png",
+      "sha256": "59775d0ff0ea4995226a250e085b20479de59975cea58083d08c64c93c97ced9"
     }
   ]
 }
