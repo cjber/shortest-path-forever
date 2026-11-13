@@ -91,8 +91,8 @@ L["Forever addons"] = "Forever-Addons"
 L["Friendly nameplates must be on to see them."] = "Namensplaketten von Verbündeten müssen an sein, um sie zu sehen."
 L["Go through to %s"] = "Hindurch nach %s"
 L["Guidance"] = "Führung"
-L["Guide marks the next boat, lift, flight master or your destination, not each turn of the walk on the way."] =
-	"Die Führung markiert das nächste Schiff, den nächsten Aufzug, Flugmeister oder Euer Ziel, nicht jede Abzweigung des Fußwegs."
+L["Guide marks where each step ends, not each turn of the walk on the way. The arrow still follows the walk."] =
+	"Die Führung markiert, wo jeder Schritt endet, nicht jede Abzweigung des Fußwegs. Der Pfeil folgt dem Fußweg weiterhin."
 L["Guide me"] = "Führen"
 L["Guidelime"] = "Guidelime"
 L["Horde"] = "Horde"

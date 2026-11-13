@@ -38,8 +38,8 @@ pixels never enter product media.
 | `services_better.png` | The same tab for that hunter at level 25 with a bow: Dalmond still sells only Sharp Arrow, so a one-line row under Arrows offers Razor Arrow in Darnassus with its own time and the upgrade arrow on its icon; Auberdine already sells the best food and drink for 25 |
 | `services_search.png` | The same tab while `water` is typed into its search box: the nearest food and drink vendors selling something that matches, each row naming only the item that matched |
 | `services_roles.png` | The same tab's class, portal and battlemaster rows on their own: the class trainer and portal trainer in Darnassus, and the battlemaster there, each with the boat's time |
-| `town_services.png` | Stormwind City zoomed out: its overlapping services collapse into group pins that wear the addon's own market stall (never a city castle, nor one service's icon), with the group's services and the click journey hint in the tooltip |
-| `town_services_zoom.png` | The same city zoomed into the Trade District: one pin per NPC, each wearing its own tracking icon (the repairer's anvil, the auctioneer's coins, the baker's bread and milk), as the map separates overlapping services |
+| `town_services.png` | Stormwind City zoomed out: services of the same kind share that kind's tracking icon, and only different kinds of service that truly overlap share the addon's own market stall, with the group's services and the click journey hint in the tooltip |
+| `town_services_zoom.png` | The same city zoomed into the Trade District at full zoom: one pin per NPC, each wearing its own tracking icon (the repairer's anvil, the auctioneer's coins, the baker's bread and milk), with close pins spread so none is hidden |
 | `demo.gif` | Eight-second montage: route pulse/settle, tracker countdown and gliding compass; under 0.5 MB |
 
 `tools/screenshots_services.py` draws the services scene,
@@ -102,9 +102,11 @@ remains 8,000 ms. The animation uses fixed time steps, never the wall clock.
   (`X-BUILD-COMMIT 0f7d8adc`), Npc spawns in area 1519 as map percent: the bank, inn, auction house, flight
   master, weapons merchant, baker and trade supplier around the Trade District, and the stable master, hunter
   trainer and engineering trainer in the Dwarven District. Clustering is `UI/Map.lua`'s transitive
-  `OverlapGroups` against the client's 1002 by 668 map canvas, at the addon's pin size; a group wears its
-  best-ranked service's atlas, `UI/NearbyGroups.lua`'s tracking icons. The fixture is an Alliance character
-  (Horde-only NPCs are hidden, neutrals kept) and Stormwind is a zone map, so the pins belong there.
+  `OverlapGroups` against the client's 1002 by 668 map canvas: same-service pins merge first, different services only
+  at the plain pin size, and full zoom splits every NPC, spreading the closest ones around their shared centre. A
+  same-service group wears `UI/NearbyGroups.lua`'s tracking icon, and a mixed group the addon's market stall. The
+  fixture is an Alliance character (Horde-only NPCs are hidden, neutrals kept) and Stormwind is a zone map, so the
+  pins belong there.
 
 ## Visual review and limits
 

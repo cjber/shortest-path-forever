@@ -93,8 +93,8 @@ L["Friendly nameplates must be on to see them."] =
 	"Las placas de nombre de los aliados deben estar activadas para verlas."
 L["Go through to %s"] = "Atravesar hacia %s"
 L["Guidance"] = "Guía"
-L["Guide marks the next boat, lift, flight master or your destination, not each turn of the walk on the way."] =
-	"La guía marca el siguiente barco, elevador, maestro de vuelo o tu destino, no cada giro del camino a pie."
+L["Guide marks where each step ends, not each turn of the walk on the way. The arrow still follows the walk."] =
+	"La guía marca dónde termina cada paso, no cada giro del camino a pie. La flecha sigue el camino a pie."
 L["Guide me"] = "Guiarme"
 L["Guidelime"] = "Guidelime"
 L["Horde"] = "Horda"
