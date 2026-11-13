@@ -14,7 +14,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
-- **The arrow follows the walk even when only step ends are marked.** With *Mark only where steps end* on, the screen arrow now points at each bend of the walk while the map still marks only where each step ends, and the distance under it counts the whole walk rather than a straight line. Thanks to esc_return on Discord (#817).
+- **The arrow follows the walk even when only step ends are marked.** With *Mark only where steps end* on, the game's own on-screen marker no longer appears, so the screen arrow leads you round each bend of the walk while the map still marks only where each step ends. The arrow now turns around the next step's numbered marker, the same one the compass shows, instead of a pin whose point looked like a second arrow, and the distance under it counts the whole walk rather than a straight line. Thanks to esc_return on Discord (#817).
 - **Kaliel's Tracker players find the journey entry in its quest menu.** Shortest Path Forever now loads after Kaliel's Tracker when it is installed, so its quest menu entry is added to that tracker's menus.
 - **Russian players no longer see an empty box between parts of a tracker line.** The Russian client's font has no middle dot, so the tracker now separates those parts with a bullet, spaced as before. Reported by XaksFlaX on GitHub (#838).
 

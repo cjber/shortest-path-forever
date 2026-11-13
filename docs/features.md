@@ -37,7 +37,10 @@ With RestedXP or Guidelime installed, **Resume guide** in Guidance or the Journe
   on the map and minimap, walking legs dotted, and the steps sit in the objective tracker like a tracked
   quest. It replans as you move but only switches to a clearly faster way (a tenth quicker or 30 seconds sooner,
   whichever is the smaller saving), and stays aboard if you are already riding. **Guide**, on from the start
-  of every journey (click the tracker header to turn it off), moves the game's own waypoint marker to where each step ends, the next boat, lift or flight master (or, with *Mark only where steps end* off in `/path`, along the route turn by turn, round walls), and hands your tracked quest back when you finish. To head for a quest, pick **Plan journey** from its right-click menu in the objective
+  of every journey (click the tracker header to turn it off), marks where each step ends on the map, the next boat,
+  lift or flight master, and leads you there round every bend: by the screen arrow, or with *Mark only where steps
+  end* off in `/path`, by the game's own waypoint marker moving along the route turn by turn. It hands your tracked
+  quest back when you finish. To head for a quest, pick **Plan journey** from its right-click menu in the objective
   tracker or quest log, or Shift-click its marker on the map; a finished quest routes to its turn-in.
   Walks keep away from danger. A zone whose lowest level is 4 or more above yours costs four times as much to
   walk through and the other faction's towns and capitals six times as much, so a walk goes round them when there

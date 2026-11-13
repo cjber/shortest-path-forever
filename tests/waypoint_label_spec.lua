@@ -28,6 +28,8 @@ local setup = [[
 setMapShown(true)
 posX, posY, posMap, facing = 0, 0, 1, 0
 ns.CurrentRide = noop
+-- The native waypoint these labels name exists only with "Mark only where steps end" off.
+ns.db.guideStops = false
 local mid = { map=1, x=300, y=100, label="Dock" }
 ns.Planner.Plan = function(o)
  return {now=o.now, arrive=o.now+200000, legs={

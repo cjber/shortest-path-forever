@@ -3,10 +3,24 @@ local driver = assert(loadfile("tests/journey_driver.lua"))()
 local ns, frame = driver.ns, nil
 local env = driver.env
 local create = env.CreateFrame
-local createFontString
+local createFontString, createTexture
 env.CreateFrame = function(...)
 	frame = create(...)
 	createFontString = createFontString or frame.CreateFontString
+	createTexture = createTexture or frame.CreateTexture
+	frame.CreateTexture = function(self, ...)
+		local texture = createTexture(self, ...)
+		texture.SetTexture = function(drawn, file)
+			drawn.texture = file
+		end
+		texture.SetTexCoord = function(drawn, ...)
+			drawn.coords = { ... }
+		end
+		texture.SetSize = function(drawn, width, height)
+			drawn.width, drawn.height = width, height
+		end
+		return texture
+	end
 	frame.CreateFontString = function(self, ...)
 		local text = createFontString(self, ...)
 		local setText = text.SetText
@@ -247,6 +261,20 @@ ns.PointGuideArrow(bends, function(point)
 end)
 assert(math.abs(frame.angle) < 1e-9, "the arrow points at the next bend, not the step's end")
 assert(frame.Distance.text == "400 yd", "the distance counts the walk to the step's end, bend by bend")
-assert(marks[#marks] == bends[#bends], "the map still marks only the step's end")
+assert(marks[#marks] == bends[2], "the guide marks the bend the arrow is walking to, not the step's end")
 assert(select(1, ns.GuideTargets()) == bends[#bends], "the compass marks only the step's end too")
+-- The arrow turns around the next step's numbered marker, the compass's own art; a target with no number keeps the
+-- gold pin until ForeverCore's ring marker lands (#817).
+ns.db.guideStops = false
+ns.PointGuideArrow(bends, place, { number = 3 })
+assert(frame.Icon.texture == ns.NumberFile(3), "the centre wears the step's numbered marker")
+assert(frame.Icon.width == 32 and frame.Icon.height == 32, "at the marker's native 64 pixels")
+ns.PointGuideArrow(bends, place, { label = "A corpse" })
+assert(frame.Icon.texture == ns.PIN_FILE, "a target with no step number keeps the gold pin")
+assert(frame.Icon.width == 36 and frame.Icon.height == 36, "at the pin's own square size")
+-- The setting swaps which pointer leads at once, not at the next poll.
+local pointed = placed
+ns.db.guideStops = true
+ns.GuideStopsChanged()
+assert(placed == pointed + 1, "changing the setting re-points the arrow and the guide's marker at once")
 print("arrow_spec: ok")
