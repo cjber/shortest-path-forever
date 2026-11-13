@@ -88,8 +88,8 @@ L["Forever addons"] = "Forever插件"
 L["Friendly nameplates must be on to see them."] = "需要开启友方姓名板才能看到。"
 L["Go through to %s"] = "穿过前往%s"
 L["Guidance"] = "引导"
-L["Guide marks the next boat, lift, flight master or your destination, not each turn of the walk on the way."] =
-	"引导会标记下一艘船、升降梯、飞行管理员或你的目的地，而不是步行途中的每个转弯。"
+L["Guide marks where each step ends, not each turn of the walk on the way. The arrow still follows the walk."] =
+	"引导会标记每一步的终点，而不是步行途中的每个转弯。箭头仍会沿着步行路线指引。"
 L["Guide me"] = "为我引路"
 L["Guidelime"] = "Guidelime"
 L["Horde"] = "部落"

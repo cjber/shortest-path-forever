@@ -485,7 +485,7 @@ ns.Init(function()
 	Checkbox(
 		"guideStops",
 		L["Mark only where steps end"],
-		L["Guide marks the next boat, lift, flight master or your destination, not each turn of the walk on the way."],
+		L["Guide marks where each step ends, not each turn of the walk on the way. The arrow still follows the walk."],
 		ns.RefreshGuideStops
 	)
 	Checkbox(
