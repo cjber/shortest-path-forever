@@ -37,6 +37,7 @@ Data\Taxi.lua
 Data\Portals.lua
 Data\Teleports.lua
 Data\Zones.lua
+Data\TownAreas.lua
 Data\Services.lua
 Data\Walks.lua
 Data\RoadCells.lua
@@ -54,6 +55,7 @@ UI\MenuModifier.lua
 UI\NearbyGroups.lua
 UI\NearbyQuestie.lua
 UI\NearbyEntrances.lua
+UI\NearbyRoles.lua
 UI\Nearby.lua
 Transport\Observer.lua
 UI\Map.xml

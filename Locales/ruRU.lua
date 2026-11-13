@@ -46,6 +46,7 @@ L["Avoid zones far above my level"] = "Избегать зон намного в
 L["Avoids %s (level %s)"] = "Обходит %s (уровень %s)"
 L["Bags"] = "Сумки"
 L["Bank"] = "Банк"
+L["Battlemaster"] = "Военачальник"
 L["Boat and Zeppelin Routes"] = "Маршруты кораблей и дирижаблей"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Маршруты кораблей и дирижаблей, когда вы наводите курсор на причал."
@@ -171,6 +172,7 @@ L["Play a sound when you reach the goal"] = "Звук по прибытии к �
 L["Play a sound with alerts"] = "Звук при оповещениях"
 L["Plays even with the game in the background."] = "Звучит, даже когда игра в фоне."
 L["Portal to %s"] = "Портал: %s"
+L["Portal trainer"] = "Учитель порталов"
 L["Portals"] = "Порталы"
 L["Reagents"] = "Реагенты"
 L["Repair"] = "Ремонт"
@@ -180,6 +182,7 @@ L["Resume RestedXP guide"] = "Продолжить руководство Rested
 L["Resume guide"] = "Продолжить руководство"
 L["Return to your corpse"] = "Вернуться к телу"
 L["Right-click to clear"] = "Правый щелчок – сбросить"
+L["Route to the focused quest"] = "Отправиться к выбранному заданию"
 L["S"] = "Ю"
 L["Scales the arrow and the cast prompt."] =
 	"Меняет размер стрелки и подсказки применения."
@@ -224,6 +227,8 @@ L["Sizes flight master icons on the world map."] =
 L["Sizes transport icons on the minimap."] =
 	"Размер значков транспорта на мини-карте."
 L["Stable master"] = "Хозяин стойл"
+L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no Shift-click. A guide addon's own journey is left alone."] =
+	"Начинает маршрут, когда вы выбираете задание или ставите метку на карте игры, так что геймпаду не нужен Shift+щелчок. Маршрут аддона-гида не затрагивается."
 L["Stop %d of %d"] = "Остановка %d из %d" -- mt
 L["Stop %d of %d: %s"] = "Остановка %d из %d: %s"
 L["Suggest quests for my level: Adventure Guide Forever"] =
@@ -438,8 +443,7 @@ L["Stops before the last on a multi-stop route keep 15 yards."] =
 L["Dungeons and raids"] = "Подземелья и рейды" -- mt
 L["Town services"] = "Городские услуги" -- mt
 L["Town services on the world map"] = "Городские услуги на карте мира" -- mt
-L["The arrow and the tracker no longer flash while a guide moves between objectives."] =
-	"Стрелка и трекер больше не мигают, когда гайд переходит между целями." -- mt
+L["The compass is easier to see."] = "Компас теперь лучше видно." -- mt
 L["Capitals only"] = "Только столицы" -- mt
 L["Capitals and important services"] = "Столицы и важные услуги" -- mt
 L["All towns"] = "Все города" -- mt

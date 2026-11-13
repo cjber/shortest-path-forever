@@ -16,9 +16,22 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 - **Guidance no longer blinks off and on when another addon points at the destination your journey already has.** When TomTom's arrow, or a guide, took the objective the journey was already going to under its own name, Shortest Path started the journey over: the arrow, the tracker and the game's own map pin dropped away and came back while the same way was searched again. The journey now stays exactly as it is and only changes hands. The game's map pin also stays put for a moment when the game cannot say which map you are on, instead of vanishing and coming back. Thanks to kindguydev on Discord and user_sggieekz05hc7uxt on CurseForge for the reports (#693, #826).
 
+- **Horde walks stay out of Southshore.** A journey from Dun Garok to a quest west of Southshore was routed through the town, past its guards, because a hostile town counted only the ground within 150 yards of its flight master, and Southshore's town hall and most of its guards stand further west than that. A town's ground is now the ground the game itself names the town, so the walk goes round all of it. Thanks to Nivlemoth_Nathrezim on CurseForge for the report (#719).
+
+- **Battlemaster pins can be hidden.** *Town services* in the world map's filter menu now has a *Battlemaster* checkbox, beside the switches for the other services, so you can keep battlemasters off the map and leave the rest (#833).
+
 ### For addon authors
 
 - `NavigateRoute` and `Navigate` hand a journey over when the only stop they send is the place the journey already goes to: the new owner's `CurrentStop` answers and the previous owner's `Ended` reads `"replaced"`, while the stop, progress, arrow and drawn route stay exactly as they are. A route with several stops still replaces the journey.
+
+## [1.35.0] - 2026-11-13
+
+<!-- discord-image: docs/screenshots/compass.png -->
+
+- **The compass is easier to see.** Its ticks are thicker and longer, the direction letters are larger and sit further below their ticks, and the straight-ahead mark is a solid gold bar. Thanks to user_rnkfwc696ynt7c0k on CurseForge (#807).
+- **Controller players can route to a focused quest or map pin.** *Route to the focused quest* in Guidance starts a journey when you super-track a quest or place the game's own map pin, so a controller needs no Shift-click. Quests a guide addon focuses are left alone while that guide's journey is leading. The three journey bindings under Key Bindings > AddOns, Travel to my map pin, Travel to my tracked quest and Clear journey, also take a gamepad button. Asked on CurseForge by cwebbx and lone_viking1921 (#687).
+- **Hovering a map pin on the minimap no longer gives a Lua error.** Where the game keeps the pin's name from addons, the pin shows the game's own tooltip. Thanks to user_10oietw0rdrgk4le and ubrider on CurseForge for the report (#824).
+- **Battlemasters and portal trainers join Nearby services.** The list now finds the closest battlemaster on your side, and mages also get a portal trainer row beside their class trainer. Each row plans the journey and shows the time, as the other services do. The class trainer row stays your own class, so a mage sees the mage trainer and a warrior the warrior trainer. Asked on CurseForge by Wraith12 (#688).
 
 ## [1.34.3] - 2026-11-12
 

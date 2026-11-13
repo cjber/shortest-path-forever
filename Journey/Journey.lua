@@ -950,6 +950,9 @@ ns.Init(function()
 		if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
 			Guide.ClearOrphan()
 			EnteredInstance()
+			if ns.FocusedTrackingReset then
+				ns.FocusedTrackingReset()
+			end
 		elseif
 			event == "PLAYER_REGEN_DISABLED"
 			and not (goal and goal.hold and (goal.radius or goal.shapes or goal.questIDs))
@@ -966,6 +969,9 @@ ns.Init(function()
 			ns.ClearJourney()
 		elseif event == "SUPER_TRACKING_CHANGED" or event == "USER_WAYPOINT_UPDATED" then
 			Guide.TrackingChanged(event)
+			if ns.FocusedTrackingChanged then
+				ns.FocusedTrackingChanged(event)
+			end
 		end
 	end)
 	driver:Hide()

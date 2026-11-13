@@ -15,14 +15,18 @@
 ---@field Drink number[] items whose use spell restores mana (Data/Services.lua)
 ---@field ProfessionTrainers table<number, number> trainer NPC -> its profession skill line (Data/Services.lua)
 ---@field ClassTrainers table<number, number> class trainer NPC -> its class (Data/Services.lua)
+---@field PortalTrainers table<number, number> portal trainer NPC -> its class (Data/Services.lua)
+---@field Battlemasters table<number, number> battlemaster NPC -> its battleground template (Data/Services.lua)
 ---@field Walks table<number, table<string, (number|false)[]>>
 ---@field WalkPlaces table<number, table<string, number[]>>
 ---@field RoadCells table<number, table<number, string>>
 ---@field RoadEdges table<number, table<number, string>>
 ---@field SpawnHeights table<number, table<number, string>> spawns over or under another surface (Data/Heights.lua)
+---@field TownAreas table<number, SPFTownArea> the client's town ground per flight master (Data/TownAreas.lua)
 ---@field db SPFDatabase
 ---@field charDB SPFCharacterDatabase
 ---@field Defaults table<string, boolean|number|string>
+---@field NearbyRoles SPFNearbyRolesAPI the class, portal and battlemaster groups (UI/NearbyRoles.lua)
 ---@field NearbyServices SPFNearbyServices
 ---@field NearbyGroups SPFNearbyGroups the vendor and service groups the list and the map share (UI/NearbyGroups.lua)
 ---@field TownServiceChoices SPFTownServiceChoice[] the town services' four levels (UI/TownServices.lua)
@@ -146,6 +150,15 @@
 ---@class SPFPartyPortal : SPFTeleportPlace
 ---@field partyMage string
 ---@field destination string
+-- The ground the client names a town over (Data/TownAreas.lua), as its terrain chunks around a flight master.
+---@class SPFTownArea
+---@field area number the client's AreaTable id for the town
+---@field map number
+---@field i0 number the first chunk's x index, in chunks of 100/3 yards from the world origin
+---@field j0 number the first chunk's y index
+---@field w number chunks across x
+---@field h number chunks across y
+---@field cells string an x-major bitmask of the w x h chunks, six bits a base64 symbol
 -- A zone a continent's map names on hover (Data/Zones.lua): its level range or a capital's side and surrounding
 -- zone, and its map's box.
 ---@class SPFZone
@@ -223,6 +236,7 @@
 ---@field townServiceRepair? boolean whether repair pins show; off by default
 ---@field townServiceBank? boolean whether bank pins show
 ---@field townServiceAuction? boolean whether auction house pins show
+---@field townServiceBattlemaster? boolean whether battlemaster pins show
 ---@field townServiceClass? boolean whether class trainer pins show
 ---@field townServiceProfessions? boolean whether profession trainer pins show
 ---@field townServiceFood? boolean whether food and drink vendor pins show
@@ -237,6 +251,7 @@
 ---@field alertSound? boolean
 ---@field flightPathReminder? boolean
 ---@field journey? boolean
+---@field focusedQuest? boolean -- a super-tracked quest or the player's map pin starts a journey (JourneyInput.lua)
 ---@field compassTime? boolean -- the whole journey's time left under the compass distance (Compass.lua)
 ---@field arrivalSound? boolean -- the map ping when a journey the player planned reaches its goal (Alert.lua)
 ---@field resumeJourney? boolean -- start the player's own journey again after a reload or relog (Resume.lua)

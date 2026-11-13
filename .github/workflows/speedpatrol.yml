@@ -2,7 +2,10 @@ name: Speedpatrol
 
 # Times this PR against its base branch in alternating A/B rounds on one runner, comments the table on the PR and
 # fails on a regression. Only the planner benches run here.
-on: pull_request
+on:
+  pull_request:
+    # labeled re-runs the timing when the "speedpatrol: accept" label is added; naming types replaces the defaults.
+    types: [opened, synchronize, reopened, labeled]
 
 permissions: {}
 
@@ -47,7 +50,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends --allow-downgrades \
             "luajit=$LUAJIT" "libluajit-5.1-2=$LUAJIT" "libluajit-5.1-common=$LUAJIT"
-      - uses: agent-labs-dev/speedpatrol@06264b336597ed9977b289a3a86c1a0ce4c3fe62 # v0
+      - uses: agent-labs-dev/speedpatrol@6f86e2ea61e004c78c18de41ad052c9f55ab5a19 # v0
         with:
           benchmarks: planner.journey planner.hearth
           fail-on-regression: true

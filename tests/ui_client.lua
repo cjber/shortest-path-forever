@@ -1052,6 +1052,16 @@ _G.GameTooltipTextLeft1 = tipTitle
 -- GlobalStrings at the pinned build: the minimap says MAP_PIN, the map's waypoint pin says MAP_PIN_SHARING.
 _G.MAP_PIN = "Map Pin"
 _G.MAP_PIN_SHARING = "Map Pin Sharing"
+-- The client's readability test, and the values it hands back unreadable: the minimap's tooltip title is one on 1.60.1,
+-- which addon code may keep but not compare (#824).
+local secrets = setmetatable({}, { __mode = "k" })
+_G.canaccessvalue = function(value)
+	return secrets[value] == nil
+end
+local function secret(value)
+	secrets[value] = true
+	return value
+end
 -- TooltipDataHandler.lua: each tooltip type's post-call runs once the client's own lines are in place.
 local tooltipCallbacks = {}
 _G.TooltipDataProcessor = {
