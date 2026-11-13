@@ -1,31 +1,25 @@
 {
-  "input_digest": "f1a3c5eab0a8f3bf80a324b704da249a25d57088b8550ed69fb5b3079f43e8f9",
-  "runtime_sha256": "f1a3c5eab0a8f3bf80a324b704da249a25d57088b8550ed69fb5b3079f43e8f9",
-  "candidate": "2f561bfdd2b099dc1d308410b650b905da540929aa92513dc64c33330ae6f09c",
+  "input_digest": "0863c16f511dac38d6491088243d9eb319952d49261663e7976efebcd8ff18b6",
+  "runtime_sha256": "0863c16f511dac38d6491088243d9eb319952d49261663e7976efebcd8ff18b6",
+  "candidate": "5071a5376decf552ce7011ba1556b9e956b73fda126f6c6708d5e2e11a734999",
   "tested_artifact": "source-tree",
   "client_build": "1.60.1.70888 (Interface 16001)",
-  "source_commit": "3c0fce338a95e94d00fb6f3f0b09be213a039932",
-  "notes": "Recorded on Hel Io in the player's live client from an installed source-tree build of this commit (git archive); --compare reported no missing or differing runtime files, the install additionally carries the ignored store icon. Every other Forever addon's 1.9.0 sync build was loaded in the same session. The only BugGrabber entries this session were the recorder's own over-long /run lines.",
   "flows": [
     {
-      "name": "Shortest Path's Thanks entries on ForeverCore 1.9.0",
+      "name": "The compass shows its bolder ticks and larger direction letters during a journey",
       "steps": [
-        "Install the candidate with the store ForeverCore v1.9.0 and /reload",
-        "Print every Forever addon's loaded version into a chat tab with no channels: store ForeverCore v1.9.0 plus each 1.9.0 sync build, all loaded, and BugGrabber shows no addon errors this session",
-        "Run ForeverCore.Credits.Open(\"Shortest Path Forever\") and scroll the list to hervad",
-        "hervad shows with 'No more short hitches during play'; the journey retime has no visible change"
+        "Install the PR's shipped files as the ShortestPathForever folder (compare: no differing files; extra media/icon-400.png) beside ForeverCore and /reload",
+        "Follow a journey so the compass shows at the top of the screen",
+        "Confirm the ticks are 2 wide and the major tick taller, the gold centre bar is solid, and the W sits in the larger gold font a clear gap under its tick",
+        "Confirm the goal pin and its distance sit below the letters without touching them"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/627a1b4cf36d973bb26ba262c81eb601/raw/67bd0b623f26040eed9f66dd363a477dbb684579/sync190-spf-thanks.png",
-      "sha256": "090d7046a3131a8f542ad75629669fb00cb8f3117441a5a5904efb6ecd47c0cc"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/627a1b4cf36d973bb26ba262c81eb601/raw/67bd0b623f26040eed9f66dd363a477dbb684579/sync190-versions.png",
-      "sha256": "9731b84977a7daf94152f9129b9ea996b4c467006f822f7acc430332fa8f08ec"
+      "url": "https://gist.githubusercontent.com/cjber/506297733782163ef6b44f041ccaae05/raw/bb5835fddfc79765f254a160ee13c900408b4073/spf815-compass-ingame.png",
+      "sha256": "70bd7ee9d534107ebda8a838ae1f9375d99fd6dbf5a52abfa14a97435d2809c9"
     }
   ]
 }
