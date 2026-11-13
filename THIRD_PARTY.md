@@ -156,6 +156,7 @@ Credit for the reports and requests behind the addon.
 | ubrider | Hovering the minimap map pin no longer errors | CurseForge; #824 |
 | cwebbx | Journeys start from a focused quest or map pin | CurseForge; #687 |
 | lone\_viking1921 | Journeys start from a focused quest or map pin | CurseForge; #687 |
+| Nivlemoth\_Nathrezim | Horde walks stay out of Southshore | CurseForge; #719 |
 
 ## Inspired by
 

@@ -22,6 +22,7 @@
 ---@field RoadCells table<number, table<number, string>>
 ---@field RoadEdges table<number, table<number, string>>
 ---@field SpawnHeights table<number, table<number, string>> spawns over or under another surface (Data/Heights.lua)
+---@field TownAreas table<number, SPFTownArea> the client's town ground per flight master (Data/TownAreas.lua)
 ---@field db SPFDatabase
 ---@field charDB SPFCharacterDatabase
 ---@field Defaults table<string, boolean|number|string>
@@ -149,6 +150,15 @@
 ---@class SPFPartyPortal : SPFTeleportPlace
 ---@field partyMage string
 ---@field destination string
+-- The ground the client names a town over (Data/TownAreas.lua), as its terrain chunks around a flight master.
+---@class SPFTownArea
+---@field area number the client's AreaTable id for the town
+---@field map number
+---@field i0 number the first chunk's x index, in chunks of 100/3 yards from the world origin
+---@field j0 number the first chunk's y index
+---@field w number chunks across x
+---@field h number chunks across y
+---@field cells string an x-major bitmask of the w x h chunks, six bits a base64 symbol
 -- A zone a continent's map names on hover (Data/Zones.lua): its level range or a capital's side and surrounding
 -- zone, and its map's box.
 ---@class SPFZone

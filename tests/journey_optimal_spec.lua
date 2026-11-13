@@ -7,6 +7,7 @@ for _, file in ipairs({
 	"Data/Taxi.lua",
 	"Data/Portals.lua",
 	"Data/Walks.lua",
+	"Data/TownAreas.lua",
 	"Routing/PathGrid.lua",
 	"Routing/Path.lua",
 	"Routing/PathJobs.lua",

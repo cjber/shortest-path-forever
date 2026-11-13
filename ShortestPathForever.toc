@@ -37,6 +37,7 @@ Data\Taxi.lua
 Data\Portals.lua
 Data\Teleports.lua
 Data\Zones.lua
+Data\TownAreas.lua
 Data\Services.lua
 Data\Walks.lua
 Data\RoadCells.lua
