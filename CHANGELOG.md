@@ -14,6 +14,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Hovering a quest stop shows the quest's area.** The game's "..." pin showed a quest's blue area when you hovered it, and a journey stop that marks the same quest replaced that pin with nothing to hover. Hovering the stop now shows the area of the quest it marks, hand-in stops included, and the area goes again when the pointer leaves or the journey ends (#859).
+
 ## [1.35.2] - 2026-11-13
 
 - **Guidance no longer blinks off and on when another addon points at the destination your journey already has.** When TomTom's arrow, or a guide, took the objective the journey was already going to under its own name, Shortest Path started the journey over: the arrow, the tracker and the game's own map pin dropped away and came back while the same way was searched again. The journey now stays exactly as it is and only changes hands. The game's map pin also stays put for a moment when the game cannot say which map you are on, instead of vanishing and coming back. Thanks to kindguydev on Discord and user_sggieekz05hc7uxt on CurseForge for the reports (#693, #826).
