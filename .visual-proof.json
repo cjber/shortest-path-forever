@@ -1,26 +1,23 @@
 {
-  "input_digest": "72800b2b21ae0f00f481876ea78fcf5bad81cc8f4c14078437fe5c641afa8e7a",
-  "runtime_sha256": "72800b2b21ae0f00f481876ea78fcf5bad81cc8f4c14078437fe5c641afa8e7a",
-  "candidate": "07667432362247d6c06e0f254f3e6f91b49e495f4f964fb38072fcb3229f0e46",
-  "tested_artifact": "source-tree",
+  "input_digest": "aa1432d4b11ac7750ed8d7cef540144cea8fed89c82f7e6b686cda4c7115c0cc",
+  "runtime_sha256": "aa1432d4b11ac7750ed8d7cef540144cea8fed89c82f7e6b686cda4c7115c0cc",
+  "candidate": "217b935f306f938ca3f9efe766e50f0fea200c2efff68d8320af6055756f4b23",
   "client_build": "1.60.1.70938 (Interface 16001)",
-  "source_commit": "65fa3f9ac1b6de7166f689a99bf8aa571bbc176d",
-  "notes": "Recorded in the client from a git archive of this commit linked as the ShortestPathForever folder (visual_proof --compare: equivalent, extra media/icon-400.png only; the client reported version 1.36.0), beside a ForeverCore dev build. No Lua errors this session.",
+  "tested_artifact": "source-tree",
+  "source_commit": "4803badbac5edd7a8f904dce7c8c87c3cfbbaeae",
   "flows": [
     {
-      "name": "After an update to 1.36.0 the chat says once what changed",
+      "name": "arrow",
       "steps": [
-        "Link the release candidate with its TOC version at 1.36.0 over a saved seenVersion of v1.35.2",
-        "Log in",
-        "Read the chat: one Shortest Path Forever line names 1.36.0 and the new headline"
+        "../../../.cache/agent-scratch/wow-sweep/proofs/arrow.lua"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/c90a8346c79f3f71e2902a0ea76b8c2a/raw/7d2d41be9bbe53cba1f89cfb8c2c97935b553933/861-update-notice.png",
-      "sha256": "e1a09f41c2d331db7f0ec5dda96f4689327e625d68275558894d8d9c454c39d7"
+      "url": "https://gist.githubusercontent.com/cjber/f17f555277a104f904502114ffd770b8/raw/036155c66d742598312a12078144907f10e60902/1-arrow.png",
+      "sha256": "856ec87bc86aa8f6d5c7e7ef06130061ab2dc999d9650114ae6c3c42cb41d8ab"
     }
   ]
 }
