@@ -329,9 +329,6 @@ _G.GameTooltip = setmetatable({
 }, mt)
 local nativeProvider = CreateFromMixins(FlightPointDataProviderMixin)
 WorldMapFrame:AddDataProvider(nativeProvider)
-_G.canaccessvalue = function()
-	return true
-end
 -- Use Blizzard's acquisition and event paths so pin visibility tests also cover pooled frames.
 _G.SlashCommandUtil = { CheckAddSlashCommand = noop }
 _G.SLASH_COMMAND, _G.SLASH_COMMAND_CATEGORY = { MAPPIN = 1 }, { MAP = 1 }

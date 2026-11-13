@@ -16,6 +16,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 - **The compass is easier to see.** Its ticks are thicker and longer, the direction letters are larger and sit further below their ticks, and the straight-ahead mark is a solid gold bar. Thanks to user_rnkfwc696ynt7c0k on CurseForge (#807).
 - **Controller players can route to a focused quest or map pin.** *Route to the focused quest* in Guidance starts a journey when you super-track a quest or place the game's own map pin, so a controller needs no Shift-click. Quests a guide addon focuses are left alone while that guide's journey is leading. The three journey bindings under Key Bindings > AddOns, Travel to my map pin, Travel to my tracked quest and Clear journey, also take a gamepad button. Asked on CurseForge by cwebbx and lone_viking1921 (#687).
+- **Hovering a map pin on the minimap no longer gives a Lua error.** Where the game keeps the pin's name from addons, the pin shows the game's own tooltip. Thanks to user_10oietw0rdrgk4le and ubrider on CurseForge for the report (#824).
 
 ## [1.34.3] - 2026-11-12
 
