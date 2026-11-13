@@ -78,9 +78,17 @@ assert(ShortestPathForeverMinimapRoute.Goal.texture == ns.PIN_FILE, "its minimap
 ns.db.journeyTracker = true
 ns.RefreshTracker()
 assert(#tracker.blocks > 0, "on brings the journey block back")
--- The world map's own waypoint pin steps aside at an intermediate stop: it marks our waypoint, not the player's,
--- so the journey's own pins are the only ones on the map.
+-- With only step ends marked the guide places no native waypoint: the screen arrow leads (#817).
+assert(not C_SuperTrack.IsSuperTrackingUserWaypoint(), "no native marker while only step ends are marked")
+-- With every bend marked, the world map's own waypoint pin steps aside at an intermediate stop: it marks our
+-- waypoint, not the player's, so the journey's own pins are the only ones on the map.
+ns.db.guideStops = false
+ns.GuideStopsChanged()
+settle()
 assert(waypointProvider.pin and not waypointProvider.pin:IsShown(), "the native waypoint pin hides at a later stop")
+ns.db.guideStops = true
+ns.GuideStopsChanged()
+settle()
 -- Map closure/reopening and canvas resizes keep the full itinerary, without reallocating pins.
 local created = lineCreations
 first:OnCanvasScaleChanged()

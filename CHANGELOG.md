@@ -14,6 +14,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **One pointer leads, round every bend, with only step ends marked.** With *Mark only where steps end* on, the game's own on-screen marker no longer appears, so Shortest Path's arrow alone leads you round each bend while the map marks where each step ends. The centre of the arrow now shows the next step's number in the same gold marker the compass uses, or, when the step has no number, a gold ring with a diamond inside, instead of a pin whose point looked like a second arrow. Thanks to esc_return on Discord (#817).
+
 ## [1.36.1] - 2026-11-13
 
 <!-- forever-core-sync -->

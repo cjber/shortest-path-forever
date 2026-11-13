@@ -109,6 +109,7 @@ ns.Credits = {
 		{ name = "lone_viking1921", what = "Journeys start from a focused quest or map pin" },
 		{ name = "Nivlemoth_Nathrezim", what = "Horde walks stay out of Southshore" },
 		{ name = "Lůca [Luutsa]", what = "Town services of the same kind share one icon" },
+		{ name = "esc_return", what = "Arrow follows the walk with only step ends marked" },
 	},
 	inspired = {
 		{ name = "Polestar by Fitz", what = "Ideas for many features" },

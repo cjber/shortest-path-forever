@@ -9,6 +9,9 @@ end
 local setup = [[
 setMapShown(true)
 posX, posY, posMap, facing = 0, 0, 1, 0
+-- These cases check the native waypoint contract, so every bend is marked and the guide writes and tracks the
+-- client's marker. "Mark only where steps end" places none and is checked in its own case below (#817).
+ns.db.guideStops = false
 ns.CurrentRide = noop
 ns.Planner.Plan = function(o)
  return {now=o.now, arrive=o.now+200000, legs={{mode="walk", from=o.from, to=o.to,
@@ -103,6 +106,25 @@ assert(not waypoint and not supertracked, "a new journey must not restore the or
 )
 
 check(
+	"default step-end marks: no native waypoint, the arrow leads",
+	"",
+	[[
+-- The cases above mark every bend; this one restores the default a new player gets (#817).
+ns.db.guideStops = true
+posX, posY, posMap = 0, 0, 1
+mapID, cursorX, cursorY = 1414, 0.5, 0.452
+assert(clickHandlers[1](map, "LeftButton"))
+settle()
+assert(ns.IsJourneyGuided() and ns.HasJourney(), "the journey is still guided")
+assert(not waypoint and not supertracked, "only step ends marked: no native waypoint is placed")
+assert(not ns.charDB.guideWaypoint, "and nothing is persisted as the guide's")
+assert(arrowFrame:IsShown(), "the screen arrow leads the walk instead")
+ns.ClearJourney()
+assert(not waypoint and not supertracked)
+]]
+)
+
+check(
 	"entering world and active journey",
 	"",
 	[[
@@ -135,8 +157,7 @@ check(
 	"quantized read-back stays owned",
 	"",
 	[[
--- Turn by turn, so Guide moves along the walk's bends (step-end marks are the default since #44).
-ns.db.guideStops = false
+-- Turn by turn, so Guide moves along the walk's bends.
 start()
 waypoint = UiMapPoint.CreateFromCoordinates(1414, waypoint.position.x + 0.00001, waypoint.position.y)
 fireEvent("USER_WAYPOINT_UPDATED")
@@ -443,6 +464,9 @@ end
 ]]
 
 check("waypoint UI tracking: hands over, never writes the waypoint", "", wpu .. [[
+-- A straight walk keeps this case about the handover: the guide hands over the bend it marks, and on a straight
+-- line that bend is the destination the assertions name.
+path.draw = function(a, b) return {a, b} end
 wStart()
 assert(waypointCalls == 0, "must not set the native waypoint Waypoint UI owns")
 assert(cleared == 0, "must not clear the native waypoint Waypoint UI owns")
