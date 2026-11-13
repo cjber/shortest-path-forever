@@ -14,9 +14,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
-- **Horde walks stay out of Southshore.** A journey from Dun Garok to a quest west of Southshore was routed through the town, past its guards, because a hostile town counted only the ground within 150 yards of its flight master, and Southshore's town hall and most of its guards stand further west than that. A town's ground is now the ground the game itself names the town, so the walk goes round all of it. Thanks to Nivlemoth_Nathrezim on CurseForge for the report (#719).
+## [1.35.1] - 2026-11-13
 
 - **Battlemaster pins can be hidden.** *Town services* in the world map's filter menu now has a *Battlemaster* checkbox, beside the switches for the other services, so you can keep battlemasters off the map and leave the rest (#833).
+- **Horde walks stay out of Southshore.** A journey from Dun Garok to a quest west of Southshore was routed through the town, past its guards, because a hostile town counted only the ground within 150 yards of its flight master, and Southshore's town hall and most of its guards stand further west than that. A town's ground is now the ground the game itself names the town, so the walk goes round all of it. Thanks to Nivlemoth_Nathrezim on CurseForge for the report (#719).
 
 ## [1.35.0] - 2026-11-13
 

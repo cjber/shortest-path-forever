@@ -47,6 +47,7 @@ L["Avoids %s (level %s)"] = "Обходит %s (уровень %s)"
 L["Bags"] = "Сумки"
 L["Bank"] = "Банк"
 L["Battlemaster"] = "Военачальник"
+L["Battlemaster pins can be hidden."] = "Метки военачальников можно скрыть." -- mt
 L["Boat and Zeppelin Routes"] = "Маршруты кораблей и дирижаблей"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Маршруты кораблей и дирижаблей, когда вы наводите курсор на причал."
@@ -443,7 +444,6 @@ L["Stops before the last on a multi-stop route keep 15 yards."] =
 L["Dungeons and raids"] = "Подземелья и рейды" -- mt
 L["Town services"] = "Городские услуги" -- mt
 L["Town services on the world map"] = "Городские услуги на карте мира" -- mt
-L["The compass is easier to see."] = "Компас теперь лучше видно." -- mt
 L["Capitals only"] = "Только столицы" -- mt
 L["Capitals and important services"] = "Столицы и важные услуги" -- mt
 L["All towns"] = "Все города" -- mt
