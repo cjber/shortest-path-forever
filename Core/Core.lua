@@ -45,6 +45,7 @@ local DEFAULTS = {
 	townServiceRepair = false,
 	townServiceBank = true,
 	townServiceAuction = true,
+	townServiceBattlemaster = true,
 	townServiceClass = true,
 	townServiceProfessions = true,
 	townServiceFood = true,
@@ -70,6 +71,9 @@ local DEFAULTS = {
 	flightPathReminder = true,
 	arrivalSound = false,
 	journey = true,
+	-- Off by default: a journey starts when the player super-tracks a quest or places a map pin, so a controller
+	-- needs no Shift-click and a plain map pin changes what it does.
+	focusedQuest = false,
 	-- An on-screen marker over the destination, like the client's own waypoint pin. Off by default: it is
 	-- new screen furniture, and a player asks for it from Settings > Guidance.
 	destinationPin = false,

@@ -355,6 +355,7 @@ for _, file in ipairs({
 	"UI/NearbyGroups.lua",
 	"UI/NearbyQuestie.lua",
 	"UI/NearbyEntrances.lua",
+	"UI/NearbyRoles.lua",
 	"UI/Nearby.lua",
 }) do
 	setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
@@ -651,6 +652,8 @@ local function fresh(questie, away, L)
 		Drink = ns.Drink,
 		ProfessionTrainers = ns.ProfessionTrainers,
 		ClassTrainers = ns.ClassTrainers,
+		PortalTrainers = ns.PortalTrainers,
+		Battlemasters = ns.Battlemasters,
 		Init = function(fn)
 			starts[#starts + 1] = fn
 		end,
@@ -880,6 +883,7 @@ do
 		"UI/NearbyGroups.lua",
 		"UI/NearbyQuestie.lua",
 		"UI/NearbyEntrances.lua",
+		"UI/NearbyRoles.lua",
 		"UI/Nearby.lua",
 	}) do
 		driver.load(file)

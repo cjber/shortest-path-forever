@@ -45,6 +45,8 @@ L["Avoid zones far above my level"] = "내 레벨보다 훨씬 높은 지역 피
 L["Avoids %s (level %s)"] = "%s 우회 (레벨 %s)"
 L["Bags"] = "가방"
 L["Bank"] = "은행"
+L["Battlemaster"] = "전장 지휘관"
+L["Battlemaster pins can be hidden."] = "전장 지휘관 핀을 숨길 수 있습니다." -- mt
 L["Boat and Zeppelin Routes"] = "배와 비행선 노선"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"배와 비행선 노선. 부두를 가리키는 동안 그려집니다."
@@ -167,6 +169,7 @@ L["Play a sound when you reach the goal"] = "목적지에 도착하면 소리 �
 L["Play a sound with alerts"] = "알림과 함께 소리 재생"
 L["Plays even with the game in the background."] = "게임이 백그라운드에 있어도 재생합니다."
 L["Portal to %s"] = "%s행 차원문"
+L["Portal trainer"] = "차원문 상급자"
 L["Portals"] = "차원문"
 L["Reagents"] = "마법 재료"
 L["Repair"] = "장비 수리"
@@ -176,6 +179,7 @@ L["Resume RestedXP guide"] = "RestedXP 가이드 재개"
 L["Resume guide"] = "가이드 재개"
 L["Return to your corpse"] = "시체로 돌아가기"
 L["Right-click to clear"] = "오른쪽 클릭으로 지우기"
+L["Route to the focused quest"] = "집중한 퀘스트로 이동"
 L["S"] = "남"
 L["Scales the arrow and the cast prompt."] = "화살표와 시전 안내의 크기를 조절합니다."
 L["Scales the compass. 100% matches the game's own art."] =
@@ -217,6 +221,8 @@ L["Sizes flight master icons on the world map."] =
 	"세계 지도의 비행 조련사 아이콘 크기를 조절합니다."
 L["Sizes transport icons on the minimap."] = "미니맵의 교통수단 아이콘 크기를 조절합니다."
 L["Stable master"] = "야수 관리인"
+L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no Shift-click. A guide addon's own journey is left alone."] =
+	"퀘스트를 집중하거나 게임의 지도 핀을 놓으면 여정을 시작하므로 컨트롤러에서 Shift-클릭이 필요 없습니다. 가이드 애드온의 자체 여정은 그대로 둡니다."
 L["Stop %d of %d"] = "정거장 %d/%d" -- mt
 L["Stop %d of %d: %s"] = "정거장 %d/%d: %s"
 L["Suggest quests for my level: Adventure Guide Forever"] =
@@ -423,8 +429,6 @@ L["Stops before the last on a multi-stop route keep 15 yards."] =
 L["Dungeons and raids"] = "던전 및 공격대" -- mt
 L["Town services"] = "마을 서비스" -- mt
 L["Town services on the world map"] = "세계 지도에 마을 서비스 표시" -- mt
-L["The arrow and the tracker no longer flash while a guide moves between objectives."] =
-	"가이드가 목표를 옮길 때 화살표와 추적기가 더 이상 깜박이지 않습니다." -- mt
 L["Capitals only"] = "수도만" -- mt
 L["Capitals and important services"] = "수도 및 주요 서비스" -- mt
 L["All towns"] = "모든 마을" -- mt

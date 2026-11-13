@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate food, drink and trainer tables for the pinned Forever client (stdlib)."""
+"""Generate food, drink, trainer and battlemaster tables for the pinned Forever client (stdlib)."""
 
 import argparse
 import csv
@@ -28,14 +28,25 @@ ON_USE = 0
 TRIGGER_SPELL = 64
 # SpellEffect.Effect: a trainer spell teaches the spell it triggers.
 LEARN_SPELL = 36
+# SpellEffect.Effect: the spell opens a portal's transit door.
+TRANS_DOOR = 50
 # SkillLine.CategoryID: professions (11) and secondary skills (9).
 PROFESSION_CATEGORIES = {11, 9}
-TRAINER_TABLES = ("creature_template", "npc_trainer", "npc_trainer_template")
+# Mage, whose portal trainers teach only the teleport spells that land at a fixed place.
+MAGE = 8
+CLASSIC_TABLES = (
+    "creature_template",
+    "npc_trainer",
+    "npc_trainer_template",
+    "battlemaster_entry",
+    "spell_template",
+    "spell_target_position",
+)
 TUPLES = re.compile(r"\(((?:'(?:\\.|[^'\\])*'|[^()'])*)\)")
 
 
 def classicdb(refresh=False, offline=False):
-    """The trainer columns of classic-db, read by the CREATE TABLE order rather than a guessed position."""
+    """The classic-db tables this generator reads, in their CREATE TABLE order rather than a guessed position."""
     path = CACHE / f"classicdb-{DB_REV[:8]}.sql.gz"
     fetch(
         DB_URL,
@@ -46,8 +57,8 @@ def classicdb(refresh=False, offline=False):
         timeout=60,
         validate=gzip.decompress,
     )
-    headers = {name: [] for name in TRAINER_TABLES}
-    rows = {name: [] for name in TRAINER_TABLES}
+    headers = {name: [] for name in CLASSIC_TABLES}
+    rows = {name: [] for name in CLASSIC_TABLES}
     table = None
     with gzip.open(path, "rt", encoding="utf-8") as stream:
         for line in stream:
@@ -71,10 +82,10 @@ def classicdb(refresh=False, offline=False):
                     if len(values) != len(headers[name]):
                         raise ValueError(f"classic-db {name}: {len(values)} values for {len(headers[name])} columns")
                     rows[name].append(dict(zip(headers[name], values, strict=True)))
-    for name in TRAINER_TABLES:
+    for name in CLASSIC_TABLES:
         if not headers[name] or not rows[name]:
             raise ValueError(f"classic-db: missing {name}")
-    return rows["creature_template"], rows["npc_trainer"], rows["npc_trainer_template"]
+    return rows
 
 
 def food_and_drink(item_x_item_effect, item_effect, spell_effect):
@@ -165,6 +176,54 @@ def class_trainers(creatures):
     return dict(sorted(result.items()))
 
 
+def portal_trainers(creatures, trainer_rows, template_rows, spell_rows, teleport_spells):
+    """A mage class trainer whose every taught spell opens or lands at a destination: the client's portal trainers."""
+    spells = {int(row["Id"]): row for row in spell_rows}
+
+    def opens_or_lands(row, spell):
+        if spell in teleport_spells:
+            return True
+        for index in (1, 2, 3):
+            effect = int(row[f"Effect{index}"])
+            trigger = int(row[f"EffectTriggerSpell{index}"])
+            if effect == TRANS_DOOR or trigger in teleport_spells:
+                return True
+            learned = spells.get(trigger) if effect == LEARN_SPELL else None
+            if learned and any(int(learned[f"Effect{at}"]) == TRANS_DOOR for at in (1, 2, 3)):
+                return True
+        return False
+
+    def destination(spell):
+        row = spells.get(spell)
+        return row is not None and opens_or_lands(row, spell)
+
+    trainers, templates = defaultdict(set), defaultdict(set)
+    for row in trainer_rows:
+        trainers[int(row["entry"])].add(int(row["spell"]))
+    for row in template_rows:
+        templates[int(row["entry"])].add(int(row["spell"]))
+    result = {}
+    for creature in creatures:
+        if int(creature["TrainerType"]) != 0 or int(creature["TrainerClass"]) != MAGE:
+            continue
+        entry = int(creature["Entry"])
+        taught = trainers.get(entry, set()) | templates.get(int(creature["TrainerTemplateId"]), set())
+        if taught and all(destination(spell) for spell in taught):
+            result[entry] = MAGE
+    return dict(sorted(result.items()))
+
+
+def battlemasters(creatures, rows):
+    """Battlemaster NPC -> its battleground template, from the table that links the two."""
+    known = {int(creature["Entry"]) for creature in creatures}
+    result = {}
+    for row in rows:
+        entry = int(row["entry"])
+        if entry in known:
+            result[entry] = int(row["bg_template"])
+    return dict(sorted(result.items()))
+
+
 def render_array(values, depth=0, width=116):
     if not values:
         return "{ }"
@@ -205,28 +264,41 @@ def main():
         name: db2(name, args.refresh, args.offline)
         for name in ("ItemXItemEffect", "ItemEffect", "SpellEffect", "SkillLine", "SkillLineAbility")
     }
-    creatures, trainers, templates = classicdb(args.refresh, args.offline)
+    db = classicdb(args.refresh, args.offline)
+    creatures = db["creature_template"]
+    trainers = db["npc_trainer"]
+    templates = db["npc_trainer_template"]
     food, drink = food_and_drink(tables["ItemXItemEffect"], tables["ItemEffect"], tables["SpellEffect"])
     categories = skill_line_categories(tables["SkillLine"])
     skill_spells = profession_skill_spells(tables["SkillLineAbility"], categories)
     professions = profession_trainers(creatures, trainers, templates, tables["SpellEffect"], skill_spells)
     classes = class_trainers(creatures)
-    lines = header("ItemXItemEffect/ItemEffect/SpellEffect, SkillLine/SkillLineAbility and classic-db trainer tables.")
+    teleports = {int(row["id"]) for row in db["spell_target_position"]}
+    portals = portal_trainers(creatures, trainers, templates, db["spell_template"], teleports)
+    battlemasters_by_npc = battlemasters(creatures, db["battlemaster_entry"])
+    lines = header(
+        "DB2 item, spell and skill-line tables; classic-db creature, trainer, battlemaster and spell tables."
+    )
     lines += [
         "-- Food: items whose use spell has a MOD_REGEN aura (84); Drink: MOD_POWER_REGEN (85), one TRIGGER_SPELL",
         "-- (64) hop included. An item can be both.",
         "-- ProfessionTrainers: [npc] = skill line (CategoryID 11 or 9) of the spells a TrainerType 2 NPC teaches.",
         "-- ClassTrainers: [npc] = TrainerClass of a TrainerType 0 trainer; TrainerClass 0 is not a class.",
+        "-- PortalTrainers: [npc] = class of a mage trainer whose every taught spell opens or lands at a destination.",
+        "-- Battlemasters: [npc] = battleground template, from classic-db battlemaster_entry.",
         "",
     ]
     lines += assignment("ns.Food", render_array(food))
     lines += assignment("ns.Drink", render_array(drink))
     lines += assignment("ns.ProfessionTrainers", render(professions))
     lines += assignment("ns.ClassTrainers", render(classes))
+    lines += assignment("ns.PortalTrainers", render(portals))
+    lines += assignment("ns.Battlemasters", render(battlemasters_by_npc))
     publish({ROOT / "Data" / "Services.lua": "\n".join(lines)})
     print(
         f"Services: {len(food)} food, {len(drink)} drink, {len(professions)} profession trainers, "
-        f"{len(classes)} class trainers"
+        f"{len(classes)} class trainers, {len(portals)} portal trainers, "
+        f"{len(battlemasters_by_npc)} battlemasters"
     )
 
 

@@ -178,6 +178,7 @@ local function load()
 	setfenv(assert(loadfile("UI/NearbyGroups.lua")), env)("ShortestPathForever", ns)
 	setfenv(assert(loadfile("UI/NearbyQuestie.lua")), env)("ShortestPathForever", ns)
 	setfenv(assert(loadfile("UI/NearbyEntrances.lua")), env)("ShortestPathForever", ns)
+	setfenv(assert(loadfile("UI/NearbyRoles.lua")), env)("ShortestPathForever", ns)
 	setfenv(assert(loadfile("UI/Nearby.lua")), env)("ShortestPathForever", ns)
 	for _, fn in ipairs(initializers) do
 		fn()

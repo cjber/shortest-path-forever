@@ -830,11 +830,12 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 			local nodes = trace(tree, entrance(st, a), {})
 			addAll(gk, nodes, 1, #nodes, 1)
 		else
-			-- A mid-route cluster's walk is refined on its baked cost, which the hazard profile does not weight, so it
-			-- is drawn without one: a detour drawn here would not be paid for in the reported cost.
+			-- A mid-route cluster's walk is refined with the hazard profile: the entrance edge the search chose was
+			-- charged for the ground it crosses, and the drawn line must keep out of the same ground rather than
+			-- cut across it. The reported cost stays the search's real cost.
 			local ka, kb = floor(a / 4096), floor(b / 4096)
 			local ea, eb = entrance(st, a), entrance(st, b)
-			if ka == kb and search(st, ka, swim, ea, R, eb, nil, nil, roadsOn and Grid.roads(st, ka)) then
+			if ka == kb and search(st, ka, swim, ea, R, eb, nil, nil, roadsOn and Grid.roads(st, ka), hz) then
 				local nodes = trace(R, eb, {})
 				addAll(ka, nodes, #nodes, 1, -1)
 			else -- neighbouring entrances across a cluster border

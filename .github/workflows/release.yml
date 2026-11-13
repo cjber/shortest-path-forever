@@ -29,6 +29,7 @@ jobs:
     permissions:
       contents: write # the packager creates the GitHub release; a manual release creates its tag
       actions: read # release_check.py reads the commit's CI runs
+      statuses: read # release_check.py reads the commit's headless-smoke status
     steps:
       - name: Choose the tag and commit
         id: target
