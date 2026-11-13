@@ -212,11 +212,17 @@ local env = setmetatable({
 env.UnitIsDeadOrGhost = function()
 	return env.UnitIsGhost ~= nil and env.UnitIsGhost()
 end
--- ForeverCore's error capture and the API kit behind Subscribe: the only shared services these files read at run time,
--- without the tracker and leaderboards a full core load would start in this small client.
+-- ForeverCore's error capture, the API kit behind Subscribe and the step markers UI/Art.lua and UI/Arrow.lua draw: the
+-- shared services these files read at run time, without the tracker and leaderboards a full core load would start in
+-- this small client.
 local ForeverCore = dofile(root .. "/tests/forever_core.lua")
-local coreNs = ForeverCore.load(env, "ForeverCore", { "Core/SafeCall.lua", "Core/Text.lua", "Core/APIKit.lua" })
-env.ForeverCore = { Text = coreNs.Text, APIKit = coreNs.APIKit }
+local coreNs = ForeverCore.load(env, "ForeverCore", {
+	"Core/SafeCall.lua",
+	"Core/Text.lua",
+	"Core/APIKit.lua",
+	"UI/Art.lua",
+})
+env.ForeverCore = { Text = coreNs.Text, APIKit = coreNs.APIKit, Art = coreNs.Art }
 local safe = coreNs.SafeCallFor("ShortestPathForever")
 ns.core = {
 	SafeCall = function(label, fn, ...)

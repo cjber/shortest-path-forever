@@ -129,7 +129,10 @@ driver.move({ map = 1, x = 1000, y = 0, z = 0 })
 assert(ns.StartJourney(stop))
 driver.path.settle()
 local frame = assert(arrowFrame(), "the journey's arrow is built")
-assert(not ns.ArrivalStop() and frame.Icon.texture == ns.PIN_FILE, "on the way, it is still the direction arrow")
+assert(
+	not ns.ArrivalStop() and frame.Icon.texture == env.ForeverCore.Art.Diamond(),
+	"on the way, the centre is still the direction arrow"
+)
 
 -- Standing in the stop's area: the pin, the title and the objective lines, capped at a few.
 driver.move({ map = 1, x = 0, y = 0, z = 0 })
@@ -153,7 +156,10 @@ assert(frame.Arrow.hidden and frame.Distance.hidden and frame.Progress.hidden, "
 driver.move({ map = 1, x = 1000, y = 0, z = 0 })
 driver.update(0.1)
 assert(not ns.ArrivalStop() and not frame.arrival, "leaving the area ends the arrival")
-assert(frame.Icon.texture == ns.PIN_FILE and not frame.Arrow.hidden, "and the direction arrow returns")
+assert(
+	frame.Icon.texture == env.ForeverCore.Art.Diamond() and not frame.Arrow.hidden,
+	"and the direction arrow returns"
+)
 
 -- Coming back shows it again; a new stop then replaces it with the arrow.
 driver.move({ map = 1, x = 0, y = 0, z = 0 })
@@ -162,7 +168,10 @@ assert(ns.ArrivalStop() == stop, "walking back into the area shows the arrival p
 assert(ns.StartJourney({ map = 1, x = 500, y = 0, hold = true, radius = 50, label = "Elsewhere" }))
 driver.path.settle()
 assert(not ns.ArrivalStop() and not frame.arrival, "a new stop ends the arrival")
-assert(frame.Icon.texture == ns.PIN_FILE and not frame.Arrow.hidden, "with the arrow leading to the new stop")
+assert(
+	frame.Icon.texture == env.ForeverCore.Art.Diamond() and not frame.Arrow.hidden,
+	"with the arrow leading to the new stop"
+)
 
 -- Back in the area, turning the setting off gives the old hide at once, without waiting to leave.
 driver.move({ map = 1, x = 500, y = 0, z = 0 })
@@ -173,7 +182,7 @@ ns.JourneyGuide.Pause()
 assert(not ns.ArrivalStop() and frame.hidden, "with the setting off, arrival hides as it did before")
 assert(ns.StartJourney({ map = 1, x = 1000, y = 0, hold = true, radius = 50, label = "Quiet" }))
 driver.path.settle()
-assert(not frame.hidden and frame.Icon.texture == ns.PIN_FILE, "the arrow leads to the next stop")
+assert(not frame.hidden and frame.Icon.texture == env.ForeverCore.Art.Diamond(), "the arrow leads to the next stop")
 driver.move({ map = 1, x = 1000, y = 0, z = 0 })
 driver.update(0.1)
 assert(not ns.ArrivalStop() and frame.hidden, "arriving with the setting off still hides the arrow")

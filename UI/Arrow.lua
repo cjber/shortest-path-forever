@@ -7,9 +7,10 @@ end
 local L = ns.L
 
 -- Guide follows the map's walking path bend by bend, whatever the map marks. Journey places Blizzard's native
--- navigation marker at that mark (the step's end while only step ends are marked); our screen arrow is the fallback
--- when the marker is unavailable or the player owns tracking.
--- Camelot omits the navigation setting, but its native super-tracked marker does work while its CVar is on.
+-- navigation marker at that bend; with "Mark only where steps end" on it places none, since one marker cannot lead
+-- round the walk's bends, and this arrow leads instead. The arrow is also the fallback when the marker is unavailable
+-- or the player owns tracking. Camelot omits the navigation setting, but its native super-tracked marker does work
+-- while its CVar is on.
 
 -- Polled this often while still; every frame while you move or turn, and while the arrow eases round.
 local POLL_EVERY = 0.1
@@ -17,6 +18,9 @@ local POLL_EVERY = 0.1
 local TURN, EASE, SETTLED = 2 * math.pi, 18, 0.001
 -- The native marker's arrow sits this far from its icon.
 local RADIUS = 36
+-- The arrow turns around the next step's marker at its native 64 pixels, 32 units, inside the arrow's 36-unit orbit;
+-- an arrived stop's goal pin is the pin's own square 36.
+local ICON_SIZE, STEP_SIZE = 36, 32
 -- A bend this close counts as passed, and the arrow turns to the next one.
 local PASSED = 25
 -- The stock place, under the top of the screen; the cast prompt stands there too.
@@ -26,6 +30,7 @@ local TOP = -120
 local ARRIVAL_WIDTH, ARRIVAL_TITLE_LINES, ARRIVAL_LINE_LIMIT = 240, 2, 3
 ---@class SPFArrowFrame : Frame
 ---@field Icon Texture
+---@field iconFile? string the art drawn at the centre, so it is only reset when the step changes
 ---@field Arrow Texture
 ---@field Distance FontString
 ---@field Progress FontString
@@ -89,6 +94,17 @@ local function Draw(angle)
 	frame.Arrow:SetPoint("CENTER", frame.Icon, "CENTER", -math.sin(angle) * RADIUS, math.cos(angle) * RADIUS)
 end
 
+-- The arrow turns around the step it is walking to, wearing that step's numbered marker, the same art the compass
+-- shows for it. A target with no step number (a corpse run, a leg with no stop) wears ForeverCore's ring and diamond
+-- (#817).
+local function StepIcon()
+	local file = (stepEnd and ns.NumberFile(stepEnd.number)) or ForeverCore.Art.Diamond()
+	if frame.iconFile ~= file then
+		frame.iconFile = file
+		ns.Art.Icon(frame.Icon, file, STEP_SIZE)
+	end
+end
+
 -- What the label under the arrow says: the distance to walk, the journey's time left as the tracker's header gives it,
 -- or both, time first. Until the journey has a time, every choice shows the distance.
 ---@param yards number
@@ -121,16 +137,6 @@ local function Settle(elapsed, easing, moved)
 	SetUpdating(easing or frame.idle < 0.15)
 end
 
--- The point the map marks: the step's end while set to mark only where steps end, else the bend the arrow follows.
--- The arrow's own path never thins, so it still leads you round every bend (#817).
----@return SPFPoint?
-local function MarkTarget()
-	if not path then
-		return nil
-	end
-	return ns.db.guideStops and path[#path] or target
-end
-
 ---@param elapsed number seconds since the last update
 local function Update(elapsed)
 	-- Arrived: the pin stands until the player leaves the stop's area, then the arrow or nothing takes over.
@@ -151,6 +157,7 @@ local function Update(elapsed)
 		SetUpdating(false)
 		return
 	end
+	StepIcon()
 	local updating = revision
 	local x, y, _, map = ns.JourneyPosition()
 	local facing = GetPlayerFacing()
@@ -168,7 +175,8 @@ local function Update(elapsed)
 		index = index + 1
 		target = path[index]
 	end
-	local placed = placeTarget and placeTarget(MarkTarget(), false)
+	-- The guide places its native marker at this bend, unless "Mark only where steps end" keeps it off the walk.
+	local placed = placeTarget and placeTarget(target, false)
 	-- Waypoint callbacks can stop or replace guidance synchronously.
 	if revision ~= updating then
 		return
@@ -287,8 +295,9 @@ local function Create()
 	frame.MoverHint:SetText(L["Drag to move; Shift-drag or the arrow keys to nudge. Right-click to reset."])
 	frame.MoverHint:Hide()
 	frame.Icon = frame:CreateTexture(nil, "BACKGROUND")
-	-- The journey's own gold goal pin, square at 36 pixels like the compass Goal marker and the map's pins.
-	ns.Art.Icon(frame.Icon, ns.PIN_FILE, 36)
+	-- The next step's numbered marker, or ForeverCore's ring and diamond while it has no number, square at its size.
+	frame.iconFile = ForeverCore.Art.Diamond()
+	ns.Art.Icon(frame.Icon, frame.iconFile, STEP_SIZE)
 	frame.Icon:SetPoint("CENTER")
 	frame.Arrow = frame:CreateTexture(nil, "BACKGROUND")
 	frame.Arrow:SetAtlas("Navigation-Tracked-Arrow", true)
@@ -377,7 +386,8 @@ ShowArrival = function(stop)
 		frame.Lines:Hide()
 		-- The same gold goal pin the compass Goal marker and the map draw: arriving puts only the arrow, distance
 		-- and progress away, leaving the pin at its normal size.
-		ns.Art.Icon(frame.Icon, ns.PIN_FILE, 36)
+		frame.iconFile = ns.PIN_FILE
+		ns.Art.Icon(frame.Icon, ns.PIN_FILE, ICON_SIZE)
 		frame.ArrivalTitle:Show()
 		frame.ArrivalLines:Show()
 	end
@@ -454,7 +464,9 @@ local function RestoreArrow()
 		return
 	end
 	frame.arrival = nil
-	ns.Art.Icon(frame.Icon, ns.PIN_FILE, 36)
+	-- Back to the step the journey is walking to: its numbered marker, or the ring and diamond while it has no number.
+	frame.iconFile = nil
+	StepIcon()
 	frame.Arrow:Show()
 	frame.Distance:Show()
 	frame.Progress:Show()
@@ -540,6 +552,19 @@ function ns.RefreshGuideStops()
 		end
 	end
 	target = path and path[index]
+end
+
+-- Settings: "Mark only where steps end" swaps which pointer leads, so the arrow and the guide's own marker change
+-- over at once rather than at the next poll.
+function ns.GuideStopsChanged()
+	ns.RefreshGuideStops()
+	if frame then
+		Wake()
+		Update(0)
+	end
+	if ns.RefreshCompass then
+		ns.RefreshCompass()
+	end
 end
 
 -- placeBend owns waypoint placement and returns whether native tracking is ours. Progress lives only here.

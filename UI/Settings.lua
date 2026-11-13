@@ -492,8 +492,8 @@ ns.Init(function()
 	Checkbox(
 		"guideStops",
 		L["Mark only where steps end"],
-		L["Guide marks where each step ends, not each turn of the walk on the way. The arrow still follows the walk."],
-		ns.RefreshGuideStops
+		L["Guide marks where each step ends on the map, not each turn of the walk. The arrow still follows the walk."],
+		ns.GuideStopsChanged
 	)
 	Checkbox(
 		"taxiRoute",

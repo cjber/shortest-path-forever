@@ -227,6 +227,9 @@ local env = setmetatable({
 env.CreateFromMixins = function()
 	return {}
 end
+-- The step markers are ForeverCore's own, so the real shared module is loaded, as the client loads it.
+local ForeverCore = dofile("tests/forever_core.lua")
+env.ForeverCore = { Art = ForeverCore.load(env, "ForeverCore", { "UI/Art.lua" }).Art }
 -- UI/Map.lua's pins build on UI/Canvas.lua, which the compass never reaches.
 ns.Canvas = { PinMixin = {} }
 ns.Init = function() end
