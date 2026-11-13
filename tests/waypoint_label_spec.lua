@@ -79,6 +79,18 @@ end
 assert(GameTooltipTextLeft1:GetText() == "Dock", "the minimap's waypoint title names the leg's destination")
 assert(tip[#tip] == "  " .. goalTitle, "the minimap's waypoint adds the journey's goal under a hop")
 
+-- The client hands some minimap mouseovers (Questie's icons among them) a secret title; tainted code must not
+-- compare it, so even a secret "Map Pin" stays the client's.
+local readable = _G.canaccessvalue
+_G.canaccessvalue = function(value) return value ~= MAP_PIN end
+GameTooltip_SetTitle(GameTooltip, MAP_PIN)
+for _, post in ipairs(callbacks) do
+ post(GameTooltip)
+end
+_G.canaccessvalue = readable
+assert(GameTooltipTextLeft1:GetText() == MAP_PIN, "a secret minimap title is left to the client")
+assert(#tip == 1, "a secret minimap title keeps the client's lines")
+
 -- A pin the player places is not Guide's, so the client's own title and lines stay.
 ns.ClearJourney()
 C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(1414, 0.7, 0.8, 42))

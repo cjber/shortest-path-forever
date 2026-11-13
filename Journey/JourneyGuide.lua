@@ -231,8 +231,11 @@ local function NameWaypointTooltip(tooltip)
 		return
 	end
 	local titleLine = GameTooltipTextLeft1
+	-- The client fills the minimap tooltip with secret text for some mouseovers; a secret title is never a map pin.
 	local clientTitle = titleLine and titleLine.GetText and titleLine:GetText()
-	if not (clientTitle and (clientTitle == MAP_PIN or clientTitle == MAP_PIN_SHARING)) then
+	if
+		not (canaccessvalue(clientTitle) and clientTitle and (clientTitle == MAP_PIN or clientTitle == MAP_PIN_SHARING))
+	then
 		return
 	end
 	local title, goalTitle = WaypointNames()
