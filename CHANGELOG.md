@@ -15,6 +15,9 @@ optional `### For addon authors` subsection after a version's player bullets.
 ## [Unreleased]
 
 - **Fewer market stalls on the map, and every NPC apart at full zoom.** Nearby services of the same kind now share that service's icon, so three leatherworking trainers become one leatherworking pin with all three in its tooltip. A market stall appears only where different kinds of service share a spot, and only when their pins truly overlap, so there are fewer of them. Zooming right in splits every NPC into its own icon, spreading those standing in the same doorway so each can be hovered and clicked, and a pin follows each zoom step back onto its own NPC. A wandering NPC shows one pin per map rather than one at every spawn along its route. A flight master no longer gets a second pin beside its flight point, since the flight point's own pin already stands for that NPC, so the Town services filter no longer offers a Flight master switch. Weapons and armour vendors wear the game's tunic mark instead of the plain gold coin that read as a bare dot. Thanks to Lůca [Luutsa] on Discord for the idea (#812, #816).
+
+## [1.35.2] - 2026-11-13
+
 - **Guidance no longer blinks off and on when another addon points at the destination your journey already has.** When TomTom's arrow, or a guide, took the objective the journey was already going to under its own name, Shortest Path started the journey over: the arrow, the tracker and the game's own map pin dropped away and came back while the same way was searched again. The journey now stays exactly as it is and only changes hands. The game's map pin also stays put for a moment when the game cannot say which map you are on, instead of vanishing and coming back. Thanks to kindguydev on Discord and user_sggieekz05hc7uxt on CurseForge for the reports (#693, #826).
 
 ### For addon authors
