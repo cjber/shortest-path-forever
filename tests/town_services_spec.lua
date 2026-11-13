@@ -1,7 +1,7 @@
--- UI/TownServices.lua on the world map: one client service icon per pin, the addon's own market stall on a pin that
--- stands for a group of NPCs, the tooltip that names a town's services and the click that plans a journey, the four
--- levels of detail, each service's own Map Filter checkbox with repairers hidden by default, the battlemaster's
--- own switch (#833), and the maps the pins belong on.
+-- UI/TownServices.lua on the world map: one client service icon per pin, a service's own icon when every member shows
+-- that service, the addon's own market stall when a group stands for different services, the tooltip that names them
+-- and the click that plans a journey, the four levels of detail, each service's own Map Filter checkbox with
+-- repairers hidden by default, the battlemaster's own switch (#833), and the maps the pins belong on.
 local dir = arg[0]:match("^(.*)/") or "tests"
 
 local probe = "tools/.cache/blizzard-ui/Interface/AddOns/Blizzard_SharedXML/Spinner.lua"
@@ -144,16 +144,16 @@ local bank, inn = find(1), find(2)
 check(bank == inn, "the two Orgrimmar services share one pin at this zoom")
 check(#bank.cluster.services == 2, "the group pin carries both services")
 
--- No pin wears a town or city mark: a pin that stands for several NPCs wears the addon's own market stall, and a
--- pin for one NPC its own client icon.
-check(bank.Texture.atlas ~= "poi-majorcity" and bank.Texture.atlas ~= "poi-town", "a group pin wears no town mark")
+-- No pin wears a town or city mark: a pin that stands for different services wears the addon's own market stall, and
+-- a pin for one service its own client icon.
+check(bank.Texture.atlas ~= "poi-majorcity" and bank.Texture.atlas ~= "poi-town", "a mixed pin wears no town mark")
 check(
 	bank.Texture.texture == "Interface\\AddOns\\ShortestPathForever\\media\\TownGroup" and bank.Texture.atlas == nil,
-	"a group pin wears the addon's market stall, not one service's atlas"
+	"a mixed pin wears the addon's market stall, not one service's atlas"
 )
 check(
 	bank.HighlightTexture.texture == bank.Texture.texture and bank.HighlightTexture.atlas == nil,
-	"the group pin's highlight wears the stall too"
+	"the mixed pin's highlight wears the stall too"
 )
 check(bank.Texture.width == 20 and bank.Texture.height == 20, "the stall fills the same 20 unit box as the atlases")
 local groupCluster = bank.cluster
@@ -258,7 +258,7 @@ check(#linesOf(food) == 0, "the hidden repair is not listed in the tooltip")
 check(not find(5), "an NPC whose only service is hidden draws no pin")
 check(find(4).Texture.atlas == "Reagents", "the trade supplier keeps its own icon while repair is hidden")
 
--- Showing repair at once brings its pins back, makes the shared NPC wear repair, and the group keep its stall.
+-- Showing repair at once brings its pins back, makes the shared NPC wear repair, and the mixed group keep its stall.
 ns.SetTownServiceShown("townServiceRepair", true)
 check(count() == 4 and find(5), "showing repair draws its alone pin")
 check(find(3).Texture.atlas == "Repair", "the food seller keeps its own atlas for the shown repairer")
@@ -267,11 +267,11 @@ local shared = find(4)
 check(
 	#shared.cluster.services == 2
 		and shared.Texture.texture == "Interface\\AddOns\\ShortestPathForever\\media\\TownGroup",
-	"a cluster wears the stall"
+	"a mixed cluster wears the stall"
 )
 check(
 	table.concat(linesOf(shared), ", ") == "Trade supplies, Repair",
-	"the group tooltip lists every shown service in the list's own order, not a pinned service first"
+	"the mixed tooltip lists every shown service in the list's own order, not a pinned service first"
 )
 ns.SetTownServiceShown("townServiceRepair", false)
 check(count() == 3 and not find(5), "hiding repair drops its pin again")
@@ -299,7 +299,7 @@ local menuRoot = {
 }
 menus.MENU_WORLD_MAP_TRACKING(nil, menuRoot)
 check(#radios == 4, "the submenu still has the four town levels")
-check(#checkboxes == 15, "one checkbox for every service the pins show")
+check(#checkboxes == 14, "one checkbox for every service the pins show")
 local box = {}
 for _, row in ipairs(checkboxes) do
 	box[row.label] = row
@@ -362,6 +362,58 @@ check(
 )
 box["Battlemaster"].click()
 check(count() == 4 and find(7), "checking it brings the battlemaster's pin back")
+-- A wandering NPC: QuestieDB lists every spawn along its route, but the town layer draws the NPC, not each of its
+-- spawns. One pin per map at every zoom, on the spawn nearest the mean of its spawns there, which is still a real
+-- spawn a journey can go to.
+local function spawn(x, y)
+	return {
+		id = 20,
+		name = "Fritz Fizzle",
+		title = "Engineer",
+		map = 14,
+		x = x,
+		y = y,
+		-- The test client's zone-to-world mapping, the inverse of its C_Map.GetMapPosFromWorldPos
+		-- (tests/ui_client.lua), so the projection puts each spawn back on these map fractions.
+		world = { map = 1, x = (0.5 - y) * 25000, y = (0.5 - x) * 25000 },
+	}
+end
+local wander = {
+	spawn(0.3, 0.4),
+	spawn(0.4, 0.42),
+	spawn(0.35, 0.5),
+	spawn(0.44, 0.48),
+	spawn(0.55, 0.6),
+}
+index = { books = wander }
+groups = { group("vendors", "books", "Books and recipes", "Books") }
+ns.db.townServices = "all"
+zoom = 0
+canvasScaled()
+ns.RefreshTownServices()
+check(count() == 1, "a wandering NPC draws one pin zoomed out")
+zoom = 1
+canvasScaled()
+ns.RefreshTownServices()
+check(count() == 1, "and still one at full zoom, not one pin per spawn")
+local wanderer = find(20)
+check(wanderer ~= nil, "the wandering NPC still shows")
+local middleX, middleY = ns.MapPinPosition(wander[4].world, 1414)
+check(
+	wanderer.mapX == middleX and wanderer.mapY == middleY,
+	"the pin stands on the spawn nearest the mean of its spawns"
+)
+ns.Canvas.Click(wanderer, "LeftButton")
+check(
+	navigated ~= nil
+		and navigated.spot.id == 20
+		and navigated.spot.x == wander[4].x
+		and navigated.spot.y == wander[4].y
+		and navigated.spot.world.x == wander[4].world.x
+		and navigated.spot.world.y == wander[4].world.y,
+	"a journey goes to that real spawn, not the mean"
+)
+navigated = nil
 
 check(#errors == 0, table.concat(errors, "\n"))
 

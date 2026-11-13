@@ -43,8 +43,8 @@ L["Avoids %s (level %s)"] = "Contorna %s (nível %s)"
 L["Bags"] = "Bolsas"
 L["Bank"] = "Banco"
 L["Battlemaster"] = "Mestre de batalha"
-L["Guidance no longer blinks off and on when another addon points at the destination your journey already has."] =
-	"A orientação não pisca mais quando outro addon aponta para o destino que sua jornada já tem." -- mt
+L["Fewer market stalls on the map, and every NPC apart at full zoom."] =
+	"Menos barracas de mercado no mapa, e cada PNJ separado no zoom máximo." -- mt
 L["Boat and Zeppelin Routes"] = "Rotas de barcos e zepelins"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Rotas de barcos e zepelins, desenhadas enquanto você aponta para um cais."

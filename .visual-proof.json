@@ -1,27 +1,26 @@
 {
-  "input_digest": "ad9df99a719f3ffe80ee4dbdbd42d6e40faab20dbc6d485905f69c321db61c20",
-  "runtime_sha256": "ad9df99a719f3ffe80ee4dbdbd42d6e40faab20dbc6d485905f69c321db61c20",
-  "candidate": "3ddc77cc588a807a27fe145742694a95781ee982cbb7a6c99fabe4075e821785",
+  "input_digest": "72800b2b21ae0f00f481876ea78fcf5bad81cc8f4c14078437fe5c641afa8e7a",
+  "runtime_sha256": "72800b2b21ae0f00f481876ea78fcf5bad81cc8f4c14078437fe5c641afa8e7a",
+  "candidate": "07667432362247d6c06e0f254f3e6f91b49e495f4f964fb38072fcb3229f0e46",
   "tested_artifact": "source-tree",
   "client_build": "1.60.1.70938 (Interface 16001)",
-  "source_commit": "ee3487a14c338afa66c03fd4219e16a7434f45eb",
-  "notes": "Recorded in the client from a git archive of this commit linked as the ShortestPathForever folder (visual_proof --compare: equivalent, extra media/icon-400.png only; the client reported version v1.35.2-dev+ee3487a), beside a ForeverCore dev build. No Lua errors this session.",
+  "source_commit": "65fa3f9ac1b6de7166f689a99bf8aa571bbc176d",
+  "notes": "Recorded in the client from a git archive of this commit linked as the ShortestPathForever folder (visual_proof --compare: equivalent, extra media/icon-400.png only; the client reported version 1.36.0), beside a ForeverCore dev build. No Lua errors this session.",
   "flows": [
     {
-      "name": "With Mark only where steps end on and the game's own navigation marker off, the screen arrow follows the walk",
+      "name": "After an update to 1.36.0 the chat says once what changed",
       "steps": [
-        "Install the candidate and /reload",
-        "Turn off the game's in-game navigation and turn on Mark only where steps end",
-        "Start a journey from Lakeshire to Stonewatch in Redridge Mountains",
-        "The compass marker reads the straight-line 679 yd, while the screen arrow and the tracker read 719 yd along the walk"
+        "Link the release candidate with its TOC version at 1.36.0 over a saved seenVersion of v1.35.2",
+        "Log in",
+        "Read the chat: one Shortest Path Forever line names 1.36.0 and the new headline"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/6a695e608f08d51ec5f7566305a03a6f/raw/b482dc7f2d7caedacd2a7280df9aa5cffa0b5e52/830-arrow-bends.png",
-      "sha256": "64009ebb9ee5d5bec6d3a86ba145f5debcfd42aaa2159c0c0fee8681b5daebd7"
+      "url": "https://gist.githubusercontent.com/cjber/c90a8346c79f3f71e2902a0ea76b8c2a/raw/7d2d41be9bbe53cba1f89cfb8c2c97935b553933/861-update-notice.png",
+      "sha256": "e1a09f41c2d331db7f0ec5dda96f4689327e625d68275558894d8d9c454c39d7"
     }
   ]
 }
