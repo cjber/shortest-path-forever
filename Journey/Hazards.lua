@@ -14,8 +14,10 @@ local L = ns.L
 local LEVEL_GAP = 4 -- a zone whose lowest level is this many above yours is avoided
 local ZONE_COST, TOWN_COST = 4, 6
 -- A hostile town: around one of the other faction's flight masters with none of your own this near (a town both
--- sides share, like Booty Bay, has both). A walk is said to pass through one only nearer its middle: the search keeps
--- the whole radius dear, but its walk may still clip the edge.
+-- sides share, like Booty Bay, has both). Its ground is the client's own town area around that flight master, where
+-- Data/TownAreas.lua has one (the terrain the client calls Southshore), and a circle around it where it has not. A
+-- walk is said to pass through one only nearer its middle: the search keeps the whole ground dear, but its walk may
+-- still clip the edge.
 local TOWN_RADIUS, SHARED, THROUGH = 150, 400, 100
 -- Zone answers are kept per square of this many yards, and a hazard is sampled at most this far apart along a walk.
 local CELL, STEP, SAMPLES = 64, 32, 32
@@ -40,6 +42,7 @@ local KEEP = 50000
 ---@field map number
 ---@field x number
 ---@field y number
+---@field area? SPFTownArea -- the client's own ground for it (Data/TownAreas.lua), where it has one
 ---@field exempt? boolean -- the journey starts or ends in it
 
 ---@class SPFHazardsModule
@@ -99,6 +102,87 @@ local function ShareInCircle(cx, cy, r, ax, ay, bx, by)
 	end
 	local root = math.sqrt(disc)
 	return math.max(0, math.min(1, (-b + root) / (2 * a)) - math.max(0, (-b - root) / (2 * a)))
+end
+
+-- A town's ground from Data/TownAreas.lua: the 100/3-yard terrain chunks the client calls that town, kept once per
+-- area as a set of cell numbers, x-major from the area's corner.
+local TOWN_CELL = 100 / 3
+local B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+local townCells = setmetatable({}, { __mode = "k" })
+---@param area SPFTownArea
+---@return table<number, boolean>
+local function Cells(area)
+	local cells = townCells[area]
+	if not cells then
+		cells = {}
+		local cell = 0
+		for symbol in area.cells:gmatch(".") do
+			local value = (B64:find(symbol, 1, true) or 1) - 1
+			for bit = 5, 0, -1 do
+				if value >= 2 ^ bit then
+					cells[cell] = true
+					value = value - 2 ^ bit
+				end
+				cell = cell + 1
+			end
+		end
+		townCells[area] = cells
+	end
+	return cells
+end
+
+-- Whether a world point is on a town's ground: its area's own chunk, or the fallback circle around its flight master.
+---@param town SPFHazardTown
+---@param map number
+---@param x number
+---@param y number
+---@return boolean
+local function InTown(town, map, x, y)
+	if town.map ~= map then
+		return false
+	end
+	local area = town.area
+	if not area then
+		return Distance2(x, y, town.x, town.y) <= TOWN_RADIUS ^ 2
+	end
+	local i, j = math.floor(x / TOWN_CELL) - area.i0, math.floor(y / TOWN_CELL) - area.j0
+	if i < 0 or i >= area.w or j < 0 or j >= area.h then
+		return false
+	end
+	return Cells(area)[i * area.h + j] == true
+end
+
+-- The box a town's ground fits in, which is all the walking search's per-cluster test needs.
+---@param town SPFHazardTown
+---@return number, number, number, number
+local function TownBox(town)
+	local area = town.area
+	if not area then
+		return town.x - TOWN_RADIUS, town.y - TOWN_RADIUS, town.x + TOWN_RADIUS, town.y + TOWN_RADIUS
+	end
+	return area.i0 * TOWN_CELL, area.j0 * TOWN_CELL, (area.i0 + area.w) * TOWN_CELL, (area.j0 + area.h) * TOWN_CELL
+end
+
+-- The share of a segment on a town's ground: exact for a circle, and sampled at the step a walk's hazards are for an
+-- area, since a town's own chunks are square and not a shape a segment can be clipped against.
+---@param town SPFHazardTown
+---@return number
+local function TownShare(town, map, ax, ay, bx, by)
+	if town.map ~= map then
+		return 0
+	end
+	if not town.area then
+		return ShareInCircle(town.x, town.y, TOWN_RADIUS, ax, ay, bx, by)
+	end
+	local samples = math.max(1, math.ceil(math.sqrt(Distance2(ax, ay, bx, by)) / STEP))
+	local inside = 0
+	for i = 1, samples do
+		local t = (i - 0.5) / samples
+		if InTown(town, map, ax + (bx - ax) * t, ay + (by - ay) * t) then
+			inside = inside + 1
+		end
+	end
+	return inside / samples
 end
 
 -- The part of a segment inside a zone's box, as the fractions t0 < t1 along it, or nil.
@@ -199,15 +283,19 @@ function Hazards.Profile(from, goal)
 		keys[#keys + 1] = id
 	end
 	local towns, active = {}, {}
+	local areas = ns.TownAreas or {}
 	-- A flight master inside a hostile capital is that capital's: the city itself is the hazard, named once.
 	for _, town in ipairs(faction and HostileTowns(faction) or {}) do
 		if not cities[ZoneAt(town.map, town.x, town.y) or 0] then
+			town.area = areas[town.id]
 			towns[#towns + 1] = town
 		end
 	end
+	-- The town the journey starts or ends in is never avoided, though a walk through it is still named. Its ground is
+	-- only charged where the walk enters a town it does not start or end in.
 	for _, town in ipairs(towns) do
 		for _, point in ipairs({ from, goal }) do
-			if point.map == town.map and Distance2(point.x, point.y, town.x, town.y) <= TOWN_RADIUS ^ 2 then
+			if InTown(town, point.map, point.x, point.y) then
 				town.exempt = true
 			end
 		end
@@ -220,7 +308,7 @@ function Hazards.Profile(from, goal)
 	local function Point(map, x, y)
 		local factor = 1
 		for _, town in ipairs(active) do
-			if town.map == map and Distance2(x, y, town.x, town.y) <= TOWN_RADIUS ^ 2 then
+			if InTown(town, map, x, y) then
 				factor = TOWN_COST
 				break
 			end
@@ -237,21 +325,14 @@ function Hazards.Profile(from, goal)
 	local function Chord(map, ax, ay, bx, by)
 		local extra = 0
 		for _, town in ipairs(active) do
-			if town.map == map then
-				extra = extra + ShareInCircle(town.x, town.y, TOWN_RADIUS, ax, ay, bx, by) * (TOWN_COST - 1)
-			end
+			extra = extra + TownShare(town, map, ax, ay, bx, by) * (TOWN_COST - 1)
 		end
 		return 1 + extra
 	end
 	local function Near(map, minX, minY, maxX, maxY)
 		for _, town in ipairs(active) do
-			if
-				town.map == map
-				and town.x >= minX - TOWN_RADIUS
-				and town.x <= maxX + TOWN_RADIUS
-				and town.y >= minY - TOWN_RADIUS
-				and town.y <= maxY + TOWN_RADIUS
-			then
+			local x0, y0, x1, y1 = TownBox(town)
+			if town.map == map and x0 <= maxX and x1 >= minX and y0 <= maxY and y1 >= minY then
 				return true
 			end
 		end
@@ -300,9 +381,7 @@ function Hazards.Profile(from, goal)
 	local function Segment(map, ax, ay, bx, by)
 		local extra, length = 0, math.sqrt(Distance2(ax, ay, bx, by))
 		for _, town in ipairs(active) do
-			if town.map == map then
-				extra = extra + ShareInCircle(town.x, town.y, TOWN_RADIUS, ax, ay, bx, by) * (TOWN_COST - 1)
-			end
+			extra = extra + TownShare(town, map, ax, ay, bx, by) * (TOWN_COST - 1)
 		end
 		for _, id in ipairs(ids) do
 			local zone = ns.Zones[id]
@@ -369,7 +448,13 @@ local function Met(hazards, points)
 			for step = 0, n do
 				local x, y = a.x + (b.x - a.x) * step / n, a.y + (b.y - a.y) * step / n
 				for _, town in ipairs(hazards.towns) do
-					if town.map == a.map and Distance2(x, y, town.x, town.y) <= THROUGH ^ 2 then
+					local through
+					if town.area then
+						through = InTown(town, a.map, x, y)
+					else
+						through = town.map == a.map and Distance2(x, y, town.x, town.y) <= THROUGH ^ 2
+					end
+					if through then
 						add("town", town.id, function()
 							return TownName(town)
 						end)
