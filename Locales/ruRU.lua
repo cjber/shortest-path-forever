@@ -180,6 +180,7 @@ L["Resume RestedXP guide"] = "Продолжить руководство Rested
 L["Resume guide"] = "Продолжить руководство"
 L["Return to your corpse"] = "Вернуться к телу"
 L["Right-click to clear"] = "Правый щелчок – сбросить"
+L["Route to the focused quest"] = "Отправиться к выбранному заданию"
 L["S"] = "Ю"
 L["Scales the arrow and the cast prompt."] =
 	"Меняет размер стрелки и подсказки применения."
@@ -224,6 +225,8 @@ L["Sizes flight master icons on the world map."] =
 L["Sizes transport icons on the minimap."] =
 	"Размер значков транспорта на мини-карте."
 L["Stable master"] = "Хозяин стойл"
+L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no Shift-click. A guide addon's own journey is left alone."] =
+	"Начинает маршрут, когда вы выбираете задание или ставите метку на карте игры, так что геймпаду не нужен Shift+щелчок. Маршрут аддона-гида не затрагивается."
 L["Stop %d of %d"] = "Остановка %d из %d" -- mt
 L["Stop %d of %d: %s"] = "Остановка %d из %d: %s"
 L["Suggest quests for my level: Adventure Guide Forever"] =

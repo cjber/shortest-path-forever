@@ -275,6 +275,113 @@ function ns.JourneyToTrackedQuest()
 	return PlanQuest(questID)
 end
 
+-- Route to the focused quest: an opt-in journey from the quest the client is super-tracking, or from the map pin
+-- the player placed, so a controller needs no Shift-click. A guide's own journey is left alone: its focus changes
+-- are its steps, not the player's choice. Journey.lua calls these after Guide.TrackingChanged, so a guide the
+-- player took over has already yielded.
+---@type number?
+local focusedQuest
+---@type table?
+local focusedWaypoint
+
+---@return number?
+local function SuperTrackedQuest()
+	local get = C_SuperTrack and C_SuperTrack.GetSuperTrackedQuestID
+	local questID = get and get()
+	if type(questID) == "number" and questID > 0 then
+		return questID
+	end
+end
+
+---@return table?
+local function UserWaypoint()
+	local get = C_Map and C_Map.GetUserWaypoint
+	return get and get() or nil
+end
+
+local function RememberFocused()
+	focusedQuest, focusedWaypoint = SuperTrackedQuest(), UserWaypoint()
+end
+
+-- A loading screen starts from the focus the player already has; only a later change is theirs to route.
+function ns.FocusedTrackingReset()
+	RememberFocused()
+end
+
+-- Whether another addon leads the journey. The player's own journeys start without an API owner, or under this
+-- addon's name through Nearby services.
+---@return boolean
+local function GuideLeads()
+	local owner = ns.JourneyOwner and ns.JourneyOwner()
+	return owner ~= nil and owner ~= "Shortest Path Forever"
+end
+
+---@param questID number
+---@return boolean
+local function GoalIsQuest(questID)
+	local goal = ns.JourneyGoal and ns.JourneyGoal()
+	if not goal then
+		return false
+	end
+	if goal.questID == questID then
+		return true
+	end
+	for _, id in ipairs(goal.questIDs or {}) do
+		if id == questID then
+			return true
+		end
+	end
+	return false
+end
+
+---@param waypoint table
+---@return boolean
+local function GoalIsWaypoint(waypoint)
+	local goal = ns.JourneyGoal and ns.JourneyGoal()
+	local position = waypoint.position
+	if not (goal and position) then
+		return false
+	end
+	local point = ns.WorldPoint(waypoint.uiMapID, position.x, position.y)
+	return point ~= nil and goal.map == point.map and goal.x == point.x and goal.y == point.y
+end
+
+---@param event string
+function ns.FocusedTrackingChanged(event)
+	local guide = ns.JourneyGuide
+	local owned = guide and guide.OwnsReported and guide.OwnsReported(event) or false
+	if event == "SUPER_TRACKING_CHANGED" then
+		local questID = SuperTrackedQuest()
+		local changed = questID ~= focusedQuest
+		focusedQuest = questID
+		if
+			owned
+			or not changed
+			or not questID
+			or not (ns.db and ns.db.focusedQuest and ns.db.journey)
+			or GuideLeads()
+			or GoalIsQuest(questID)
+		then
+			return
+		end
+		ns.JourneyToTrackedQuest()
+		return
+	end
+	local waypoint = UserWaypoint()
+	local changed = not (guide and guide.SameWaypoint and guide.SameWaypoint(waypoint, focusedWaypoint))
+	focusedWaypoint = waypoint
+	if
+		owned
+		or not changed
+		or not waypoint
+		or not (ns.db and ns.db.focusedQuest and ns.db.journey)
+		or GoalIsWaypoint(waypoint)
+	then
+		return
+	end
+	ns.JourneyToUserWaypoint()
+end
+
 local function OnCanvasClick(map, button)
 	if not ns.db.journey or button ~= "LeftButton" or not IsShiftKeyDown() or ChatBoxOpen() then
 		return false
@@ -512,6 +619,7 @@ local function QuestieIconSpot()
 end
 
 ns.Init(function()
+	RememberFocused()
 	Binding("ShortestPathForeverTravelToPinButton", ns.JourneyToUserWaypoint)
 	Binding("ShortestPathForeverTravelToTrackedQuestButton", ns.JourneyToTrackedQuest)
 	Binding("ShortestPathForeverClearJourneyButton", ns.ClearJourney)

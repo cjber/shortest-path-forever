@@ -98,6 +98,8 @@ ns.Credits = {
 		{ name = "caghanpekin-prog", what = "No more brief stutters during play" },
 		{ name = "Zwaffelmagic", what = "Clear the destination on arrival" },
 		{ name = "CptShooter", what = "Hide the objective lines under the arrow" },
+		{ name = "cwebbx", what = "Journeys start from a focused quest or map pin" },
+		{ name = "lone_viking1921", what = "Journeys start from a focused quest or map pin" },
 	},
 	inspired = {
 		{ name = "Polestar by Fitz", what = "Ideas for many features" },
