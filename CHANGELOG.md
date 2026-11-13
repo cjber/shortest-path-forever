@@ -14,6 +14,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Routes no longer climb hills the game will not let you climb.** The walking maps now use your own movement limits: a slope is walkable up to 50 degrees, a step reaches 2 yards, and ground from 50 to just over 61 degrees can be walked down but never up. A route over a face that would slide you back down now goes around it, and a walk still drops off a ledge where the game lets you. Walking speed is the same uphill, downhill and on the flat, so no route is charged extra for a slope (#639).
+
 ## [1.34.2] - 2026-11-12
 
 - **The arrow and the tracker no longer flash while a guide moves between objectives.** The route line, arrow and tracker stay put while the next objective's route is found, and selecting a quest in another addon no longer takes the arrow away. Thanks to Blast22 and user_sggieekz05hc7uxt on CurseForge and kindguydev on Discord (#693).

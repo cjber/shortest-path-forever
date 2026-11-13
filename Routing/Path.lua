@@ -667,15 +667,19 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 		end
 
 		-- Abstract A* from START to GOAL through the entrance graph.
-		-- Rounded graph edges and snapping must not let the heuristic overstate the remaining cost.
+		-- Rounded graph edges and snapping must not let the heuristic overstate the remaining cost: a point can
+		-- snap to a surface up to SNAP cells from the cell centre the heuristic measures to, and a drop shortens a
+		-- fall to less than the cell-centre distance it replaces. Subtract that reach before scaling.
 		local goalCell = cellOf(st, gk, gc)
 		local goalX = x0 + (floor(gk / st.ny) * C + floor(goalCell / C) + 0.5) * cs
 		local goalY = y0 + (gk % st.ny * C + goalCell % C + 0.5) * cs
 		local lower = max(0, 1 - 0.5 / cs)
+		local margin = SNAP * SQRT2 * cs
 		local function h(id)
 			local x, y = nodeXY(st, id)
 			local dx, dy = abs(x - goalX), abs(y - goalY)
-			return (dx > dy and dx + (SQRT2 - 1) * dy or dy + (SQRT2 - 1) * dx) * lower
+			local gap = dx > dy and dx + (SQRT2 - 1) * dy or dy + (SQRT2 - 1) * dx
+			return max(0, gap - margin) * lower
 		end
 		agen = agen + 1
 		local gen = agen

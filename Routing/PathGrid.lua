@@ -13,12 +13,14 @@ end
 -- Coordinates are UnitPosition's frame (x north, y west).
 -- A cell holds its base surface and, where surfaces overlap (a tunnel under a mountain, a city under ruins, both
 -- ends of a lift), floors above or below it. A node is a local cell (the base surface) or C * C + a floor's index.
--- Format 2 maps carry directed links, so a ledge can be dropped off but not climbed, steep ground walked down but
--- not up. A step both ways take is one bit, as format 1 writes it; in a `steep` map a ground cell's flag 8 and a
--- floor value of 3 mark steep ground, and the decoder compares the two stored heights so only the downhill direction
--- passes. Only a non-steep one-way step or a cost of its own is a record, and the decoder mirrors each link into the
--- reverse lists a reverse search walks rather than storing them.
--- Format 1 maps (every map shipped before format 2) keep symmetric links and pick a floor step's surface by height.
+-- Format 3 maps carry directed links, so a ledge can be dropped off but not climbed, steep ground walked down but
+-- not up. A step both ways take is one bit, and its floor node's landings name the layer it lands on, so the decoder
+-- resolves the pair the bake linked; in a `steep` map a ground cell's flag 8 and a floor value of 3 mark steep
+-- ground, and the decoder compares the two stored heights so only the downhill direction passes. Only a step one way
+-- takes or a cost of its own is a record, and the decoder mirrors each link into the reverse lists a reverse search
+-- walks rather than storing them.
+-- Format 2 maps keep symmetric links but resolve a floor step bit by height; format 1 maps (every map shipped before
+-- format 2) keep symmetric links and pick a floor step's surface by height too.
 -- This file holds the decoded maps, their memory ceilings, frame slicing and string-pulling; Path.lua searches them
 -- and PathJobs.lua schedules the searches.
 ---@class SPFPath
@@ -153,8 +155,8 @@ local function steepStep(valA, zA, from, valB, zB, to)
 	return zB[to + 1] <= zA[from + 1]
 end
 
--- May a base step feed a diagonal detour? A steep step only does when its stored heights match, exactly as the
--- format 2 bake left a one-way steep step as its own record instead of a symmetric bit.
+-- May a base step feed a diagonal detour? A steep step only does when its stored heights match: a step that only
+-- goes downhill is one direction, and a detour through it would turn that into a climb.
 local function bitStep(val, z, a, b)
 	return (val[a] ~= 3 and val[b] ~= 3) or z[a] == z[b]
 end
@@ -370,9 +372,11 @@ end
 -- where a layer byte of 0 (a step bit) means the surface nearest the node's height. Nothing stores a link's reverse:
 -- the decoder mirrors each link on the surface it lands on, which is a reverse search's edge and, for a step both
 -- ways take, that surface's own outbound link too.
-local function decodeLinks(st, k, val, z, at, links, s, pos, masks, last)
+-- Format 3 names each bit's landing layer, one layer per set direction in ascending order at the node's landing run
+-- (lpos), and a record's node is a delta from the record before it, so both read the pair the bake linked.
+local function decodeLinks(st, k, val, z, at, links, s, pos, masks, last, lpos)
 	local C, N = st.C, st.C * st.C
-	local back = {}
+	local back, fmt = {}, st.fmt
 	local function add(into, node, entry)
 		local list = into[node + 1]
 		if list then
@@ -404,22 +408,44 @@ local function decodeLinks(st, k, val, z, at, links, s, pos, masks, last)
 	for index = N + 1, last do
 		local bits = masks[index]
 		if bits then
+			local p = lpos and lpos[index]
 			for d = 0, 7 do
 				if bits % 2 == 1 then
-					link(index - 1, DX[d], DY[d], -1, 0, true)
+					local layer = -1
+					if p then
+						layer, p = B64[byte(s, p)], p + 1
+					end
+					link(index - 1, DX[d], DY[d], layer, 0, true)
 				end
 				bits = floor(bits / 2)
 			end
 		end
 	end
 	local steps, at_step = num(s, pos, 3), pos + 3
+	local record = 0
 	for i = 1, steps do
 		if i % 64 == 0 then
 			slice()
 		end
-		local node, kind = num(s, at_step, 3), B64[byte(s, at_step + 3)]
-		link(node, DX[kind % 8], DY[kind % 8], B64[byte(s, at_step + 4)], 0, kind < 8)
-		at_step = at_step + 5
+		if fmt >= 3 then
+			-- a record's node is the delta from the record before it: symbol 0-62 is the delta, 63 is followed by
+			-- the delta - 63 in three symbols
+			local sym = B64[byte(s, at_step)]
+			at_step = at_step + 1
+			if sym < 63 then
+				record = record + sym
+			else
+				record, at_step = record + 63 + num(s, at_step, 3), at_step + 3
+			end
+			local kind = B64[byte(s, at_step)]
+			link(record, DX[kind % 8], DY[kind % 8], B64[byte(s, at_step + 1)], 0, kind < 8)
+			at_step = at_step + 2
+		else
+			record = num(s, at_step, 3)
+			local kind = B64[byte(s, at_step + 3)]
+			link(record, DX[kind % 8], DY[kind % 8], B64[byte(s, at_step + 4)], 0, kind < 8)
+			at_step = at_step + 5
+		end
 	end
 	local drops, at_drop = num(s, at_step, 3), at_step + 3
 	for i = 1, drops do
@@ -440,6 +466,16 @@ local function decodeLinks(st, k, val, z, at, links, s, pos, masks, last)
 	return back
 end
 
+-- A format 3 floor node stores one landing layer per set direction of its step mask.
+local function landingCount(mask)
+	local n = 0
+	for _ = 1, 8 do
+		n = n + mask % 2
+		mask = floor(mask / 2)
+	end
+	return n
+end
+
 local function decodeFloors(st, k, val, z, chunks)
 	local at, links = {}, {}
 	if not chunks then
@@ -447,6 +483,32 @@ local function decodeFloors(st, k, val, z, chunks)
 	end
 	local s, C = chunks, st.C
 	local node, pos = C * C, 4
+	if st.fmt >= 3 then
+		-- Format 3: a floor node per record, its cell a delta from the node before it, then value, stored height,
+		-- step mask, and one landing layer per set direction.
+		local masks, lpos, lc = {}, {}, 0
+		for _ = 1, num(s, 1, 3) do
+			if node % 64 == 0 then
+				slice()
+			end
+			local sym = B64[byte(s, pos)]
+			pos = pos + 1
+			if sym < 63 then
+				lc = lc + sym
+			else
+				lc, pos = lc + 63 + num(s, pos, 3), pos + 3
+			end
+			val[node + 1], z[node + 1], at[node + 1] = B64[byte(s, pos)], num(s, pos + 1, 2) - 2048, lc
+			if at[-(lc + 1)] == nil then
+				at[-(lc + 1)] = node
+			end
+			local mask = num(s, pos + 3, 2)
+			masks[node + 1], lpos[node + 1] = mask, pos + 5
+			pos = pos + 5 + landingCount(mask)
+			node = node + 1
+		end
+		return at, links, decodeLinks(st, k, val, z, at, links, s, pos, masks, node, lpos)
+	end
 	local masks = st.fmt >= 2 and {} or nil
 	for _ = 1, num(s, 1, 3) do
 		local lc, count = num(s, pos, 3), B64[byte(s, pos + 3)]
@@ -1217,9 +1279,10 @@ local function baseAt(st, gx, gy)
 	return k, (gx % C) * C + gy % C
 end
 
--- An orthogonal base step as the player walks it: the grid's own bit, and a steep step downhill only. Decoding a
--- step reads the same stored heights, so a detour leg cannot climb a face the step itself refuses.
-local function stepLegal(st, gx, gy, dx, dy, water)
+-- An L-shaped detour leg: the step is open, and a steep leg feeds a detour only when its two stored heights match,
+-- the rule decodeGrid applies to a detour inside one cluster. The base grid's own bits let a steep step be walked
+-- downhill, and no detour may turn that into a climb.
+local function detourStep(st, gx, gy, dx, dy, water)
 	if not stepOpen(st, gx, gy, dx, dy, water) then
 		return false
 	end
@@ -1229,7 +1292,10 @@ local function stepLegal(st, gx, gy, dx, dy, water)
 	end
 	local ak, an = baseAt(st, gx, gy)
 	local bk, bn = baseAt(st, gx + dx, gy + dy)
-	return steep(st.val[ak], st.z[ak], an, st.val[bk], st.z[bk], bn)
+	if st.val[ak][an + 1] ~= 3 and st.val[bk][bn + 1] ~= 3 then
+		return true
+	end
+	return st.z[ak][an + 1] == st.z[bk][bn + 1]
 end
 
 -- Is the base surface's diagonal step from (gx, gy) by (dx, dy) walkable in that direction? Either L-shaped detour,
@@ -1242,8 +1308,8 @@ local function diagonalStep(st, gx, gy, dx, dy, water)
 		return false
 	end
 	if
-		(stepLegal(st, gx, gy, dx, 0, water) and stepLegal(st, gx + dx, gy, 0, dy, water))
-		or (stepLegal(st, gx, gy, 0, dy, water) and stepLegal(st, gx, gy + dy, dx, 0, water))
+		(detourStep(st, gx, gy, dx, 0, water) and detourStep(st, gx + dx, gy, 0, dy, water))
+		or (detourStep(st, gx, gy, 0, dy, water) and detourStep(st, gx, gy + dy, dx, 0, water))
 	then
 		return true
 	end
