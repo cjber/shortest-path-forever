@@ -429,3 +429,6 @@ L["Ammunition"] = "Munição" -- mt
 L["Bags and trade supplies"] = "Bolsas e bens de comércio" -- mt
 L["Food and drink"] = "Comida e bebida" -- mt
 L["Profession trainers"] = "Instrutores de profissão" -- mt
+L["Hide the game's quest markers at journey stops"] = "Ocultar os marcadores de missão nas paradas da jornada" -- mt
+L["Off, the game's own quest markers stay beside your journey's pins, showing the other places a quest can be done."] =
+	"Desativado, os marcadores de missão do jogo ficam ao lado dos marcadores da sua jornada, para você ver os outros lugares onde uma missão pode ser concluída." -- mt

@@ -3,7 +3,8 @@
 -- the pins for quests no stop marks stay; the quest provider's own refreshes (on its events, on the map changing and
 -- on the map opening) hide the marked ones again at the end of the same frame, after its event handlers, never on a
 -- timer (#783); a stop that only hands a quest in hides its pin too; and a map provider whose GetPinTemplate needs an
--- argument is never asked for one (#491, #494). No provider is hooked or called to find the pins.
+-- argument is never asked for one (#491, #494). No provider is hooked or called to find the pins. The switch that
+-- hands the game's own markers back keeps every pin and quest area on the map and is on by default (#871).
 local dir = arg[0]:match("^(.*)/") or "tests"
 
 local probe = "tools/.cache/blizzard-ui/Interface/AddOns/Blizzard_SharedXML/Spinner.lua"
@@ -214,6 +215,32 @@ assert(ShortestPathForever.API.Cancel("Test"))
 pins = nativeActive.QuestPinTemplate
 assert(not pins[1].hidden and not pins[2].hidden and not pins[3].hidden, "clearing the journey restores every pin")
 assert(ns.JourneyGoal() == nil, "the journey is gone")
+
+-- The switch that hands the game's own markers back (#871): on by default, so a journey still hides the quests its
+-- stops carry as a lone questID, a questIDs list or a hand-in; off, nothing is marked and a pin hidden before comes
+-- back at once from the settings row, with the same saved switch the world map's filter menu reads.
+assert(ns.Defaults.hideQuestPins == true, "the game's quest markers hide at journey stops by default")
+assert(ShortestPathForever.API.NavigateRoute("Test", {
+	{ map = 1414, x = 0.53, y = 0.5, title = "Quests", questID = 101, questIDs = { 202 }, handins = { 303 } },
+}))
+settle()
+pins = nativeActive.QuestPinTemplate
+assert(pins[1].hidden and pins[2].hidden and pins[3].hidden, "on, every quest a stop carries keeps its pin hidden")
+ns.SetOption("hideQuestPins", false)
+pins = nativeActive.QuestPinTemplate
+assert(ns.db.hideQuestPins == false, "the settings row saves the switch off")
+assert(
+	not pins[1].hidden and not pins[2].hidden and not pins[3].hidden,
+	"off, the hidden pins come back at once, whatever quest a stop carries"
+)
+ns.SetOption("hideQuestPins", true)
+pins = nativeActive.QuestPinTemplate
+assert(ns.db.hideQuestPins == true, "the settings row saves the switch back on")
+assert(pins[1].hidden and pins[2].hidden and pins[3].hidden, "on again, the journey's quest pins hide at once")
+ns.SetOption("hideQuestPins", false)
+pins = nativeActive.QuestPinTemplate
+assert(ns.db.hideQuestPins == false and not pins[1].hidden, "off again, the game's markers stay beside the journey")
+assert(ShortestPathForever.API.Cancel("Test"))
 
 print("quest pin spec: marked pins hidden, unmarked shown, restored on clear and after provider refreshes")
 ]==]))()

@@ -182,6 +182,7 @@ local tomtomFollowRefreshed, ways = 0, {}
 local routeColour = nil
 local routeLinesRefreshed = 0
 local journeyPreviewRefreshed = 0
+local questPinsRefreshed = 0
 -- Core/Core.lua's defaults: every row on.
 local ns = {
 	core = {
@@ -270,6 +271,9 @@ local ns = {
 	RefreshMap = function()
 		refreshed = refreshed + 1
 	end,
+	RefreshQuestPins = function()
+		questPinsRefreshed = questPinsRefreshed + 1
+	end,
 	RefreshTownServices = function()
 		townRefreshed = townRefreshed + 1
 	end,
@@ -342,6 +346,7 @@ local groups = {
 		"portals",
 		"mapFlightMasters",
 		"minimapPins",
+		"hideQuestPins",
 		"mapPinScale",
 		"flightPinScale",
 		"minimapPinScale",
@@ -417,7 +422,7 @@ local order = {
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
 -- Main's arrival pin added arrivalPin, the line switches added mapLine, minimapLine and laterLegs, and the
 -- town services added townServices; the travel stats and departure sharing switches are gone with their sharing.
-assert(#rows == 64, #rows)
+assert(#rows == 65, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -458,6 +463,25 @@ assert(
 	Row("minimapPins").tooltip
 		== "Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."
 )
+-- The game's own quest markers give way to a journey's stop pins by default; off, every marker stays and the map
+-- reconciles at once (#871).
+local questPins = Row("hideQuestPins")
+assert(
+	questPins.kind == "checkbox" and questPins.setting.default == true,
+	"the quest markers hide at journey stops by default"
+)
+assert(questPins.setting.variable == "ShortestPathForever_hideQuestPins", "the quest marker switch is saved")
+assert(
+	questPins.setting.name == "Hide the game's quest markers at journey stops",
+	"the switch names the markers and where they hide"
+)
+assert(
+	questPins.tooltip:find("other places a quest can be done", 1, true),
+	"the tooltip says the other places a quest can be done stay when it is off"
+)
+local questPinRefreshes = questPinsRefreshed
+questPins.setting.onChanged()
+assert(questPinsRefreshed == questPinRefreshes + 1, "the switch reconciles the game's quest pins at once")
 -- The walking line's colour is a preset dropdown, gold by default, and it repaints without replanning.
 local routeColor = Row("routeColor")
 assert(routeColor.kind == "dropdown" and routeColor.setting.default == "gold", "the route line starts gold")

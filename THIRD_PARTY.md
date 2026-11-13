@@ -162,6 +162,7 @@ Credit for the reports and requests behind the addon.
 | Nivlemoth\_Nathrezim | Horde walks stay out of Southshore | CurseForge; #719 |
 | Lůca [Luutsa] | Town services of the same kind share one icon | Discord; #812 |
 | esc\_return | Arrow follows the walk with only step ends marked | Discord; #817 |
+| MrOxiMoron | The game's quest markers can stay on the map during a journey | CurseForge; #871; thread 8698185 |
 
 ## Inspired by
 

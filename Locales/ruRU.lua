@@ -455,3 +455,7 @@ L["Ammunition"] = "Боеприпасы" -- mt
 L["Bags and trade supplies"] = "Сумки и хозяйственные товары" -- mt
 L["Food and drink"] = "Еда и напитки" -- mt
 L["Profession trainers"] = "Учителя профессий" -- mt
+L["Hide the game's quest markers at journey stops"] =
+	"Скрывать игровые метки заданий в точках маршрута" -- mt
+L["Off, the game's own quest markers stay beside your journey's pins, showing the other places a quest can be done."] =
+	"Если выключено, игровые метки заданий остаются рядом с метками вашего маршрута, чтобы вы видели другие места, где можно выполнить задание." -- mt

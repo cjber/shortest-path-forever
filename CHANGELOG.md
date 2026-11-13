@@ -15,6 +15,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 ## [Unreleased]
 
 - **One pointer leads, round every bend, with only step ends marked.** With *Mark only where steps end* on, the game's own on-screen marker no longer appears, so Shortest Path's arrow alone leads you round each bend while the map marks where each step ends. The centre of the arrow now shows the next step's number in the same gold marker the compass uses, or, when the step has no number, a gold ring with a diamond inside, instead of a pin whose point looked like a second arrow. Thanks to esc_return on Discord (#817).
+- **The game's own quest markers can stay on the map.** A journey hides the game's markers for the quests its stops cover, so each stop shows once, but a quest can often be finished in another place too. Turn *Hide the game's quest markers at journey stops* off under Map marks, or in the world map's filter menu, and every one of the game's markers and quest areas stays beside your journey's pins. It is on by default, so nothing changes unless you turn it off. Thanks to MrOxiMoron for the request (#871).
 
 ## [1.36.1] - 2026-11-13
 
