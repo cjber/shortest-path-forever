@@ -538,6 +538,17 @@ local function GuideWaypoint(point, fading)
 	if guide.yielded then
 		return false
 	end
+	-- "Mark only where steps end" leaves the step's end to the map's own pins and lets the screen arrow lead the walk
+	-- bend by bend: the client's single marker cannot point at the step and follow the bends at once, so it is not
+	-- placed. A marker this guide placed before the setting changed is taken back, and the player's own waypoint,
+	-- saved at the start, is restored when the journey stops as it always was.
+	if ns.db.guideStops then
+		if guide.waypoint then
+			ClearGuideWaypoint()
+			RefreshTracker()
+		end
+		return false
+	end
 	local uiMap = C_Map.GetBestMapForUnit("player")
 	-- A frame with no map for the player is no place to move the marker, or to take it away: the waypoint Guide
 	-- already placed is still the guidance the player has, and the client draws it on the map it names next. Taking it
@@ -728,15 +739,15 @@ function Guide.Yielded()
 	return guide ~= nil and guide.yielded == true
 end
 
--- Whether the journey's goal is tracked as the client's waypoint right now. The goal pin is gold only then; a
--- paused, yielded or stopped guide is the bronze untracked state, and a planned route with no guide is too.
+-- Whether the journey's goal is guided right now, and so wears the gold pin. With "Mark only where steps end" on the
+-- guide places no native waypoint but still leads by the arrow, so the goal stays gold. The goal pin is gold only
+-- then; a paused, yielded or stopped guide is the bronze untracked state, and a planned route with no guide is too.
 ---@return boolean
 function ns.JourneyPinTracked()
 	return guide ~= nil
 		and not guide.paused
 		and not guide.yielded
-		and guide.waypoint ~= nil
-		and C_SuperTrack.IsSuperTrackingUserWaypoint()
+		and (ns.db.guideStops or (guide.waypoint ~= nil and C_SuperTrack.IsSuperTrackingUserWaypoint()))
 end
 
 function Guide.Start()

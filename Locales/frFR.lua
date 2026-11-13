@@ -95,8 +95,8 @@ L["Friendly nameplates must be on to see them."] =
 	"Les plaques de nom des unités amies doivent être activées pour les voir."
 L["Go through to %s"] = "Passer vers %s" -- mt
 L["Guidance"] = "Guidage" -- mt
-L["Guide marks where each step ends, not each turn of the walk on the way. The arrow still follows the walk."] =
-	"Le guidage marque la fin de chaque étape, pas chaque virage du trajet à pied. La flèche suit toujours le trajet à pied." -- mt
+L["Guide marks where each step ends on the map, not each turn of the walk. The arrow still follows the walk."] =
+	"Le guidage marque sur la carte la fin de chaque étape, pas chaque virage du trajet à pied. La flèche suit toujours le trajet à pied." -- mt
 L["Guide me"] = "Me guider" -- mt
 L["Guidelime"] = "Guidelime" -- mt
 L["Horde"] = "Horde" -- mt

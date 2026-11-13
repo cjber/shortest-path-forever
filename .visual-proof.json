@@ -1,25 +1,23 @@
 {
-  "input_digest": "ada83a1532ea1b6efe837e1c65ce2681285268e569077fd335e1ab66f11f16b6",
-  "runtime_sha256": "ada83a1532ea1b6efe837e1c65ce2681285268e569077fd335e1ab66f11f16b6",
-  "candidate": "9c52488632ca2413d759d03eaea1be796c1999b371d34cf136c7fe149f1671df",
-  "tested_artifact": "source-tree",
+  "input_digest": "7bfc23f2f06beea472d92aaffc4aecfad08857538b36863747ab90436f3c7c27",
+  "runtime_sha256": "7bfc23f2f06beea472d92aaffc4aecfad08857538b36863747ab90436f3c7c27",
+  "candidate": "f4658f476e6b1aff4a81ce41ebe32909ceb35210328dfa8fa59a288e5c115de4",
   "client_build": "1.60.1.70938 (Interface 16001)",
-  "source_commit": "d637542cab99fbd9e9372d8e88a3465aa789f9bc",
-  "notes": "Recorded on Hel Io (level 21 hunter) in Redridge Mountains from a source-tree build of this commit linked into AddOns, with the nav headers rebaked on client 70938.",
+  "tested_artifact": "source-tree",
+  "source_commit": "e8e2c5a4a849e90a9aa48421b01c0088eccf9d5f",
   "flows": [
     {
-      "name": "Walking route on the rebaked nav mesh",
+      "name": "arrow",
       "steps": [
-        "Start a journey to Riverglades from the Redridge hills",
-        "The tracker shows Journey 1:07, 465 yd, Walk to Riverglades; the waypoint pin and arrow lead along the slope"
+        "../../../.cache/agent-scratch/wow-sweep/proofs/arrow.lua"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/b238e645887ffbeb53f11afb2f54a0cc/raw/55fb3f3af2c0de32325ced751c167cd61c32c301/828-way.png",
-      "sha256": "e239ef4cef8fb928dd952f2d8c25db455ec0c4f6401f2af8693ae44dd18ae92a"
+      "url": "https://gist.githubusercontent.com/cjber/868a9139830baf3d89f43dd8ccf26994/raw/036e05c1e0b88b5e9656463f831592287c4c5cc0/1-arrow.png",
+      "sha256": "9a01e1c5c6c92b94fdfd35443b3e5409564a5a88cfcba911de34555bf85e3a5c"
     }
   ]
 }
