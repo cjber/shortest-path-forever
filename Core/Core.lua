@@ -83,6 +83,8 @@ local DEFAULTS = {
 	restedxpHideArrow = true,
 	guidelime = true,
 	taxiRoute = true,
+	hearth = true,
+	-- Class teleports (a destination of their own); hearth covers the ones that land at the bind point.
 	teleports = true,
 	-- Another player's spellbook is not queryable, so a party mage's portals are declared. Off by default; when on,
 	-- every capital portal of the player's faction is offered until the player unticks one.
@@ -94,6 +96,7 @@ local DEFAULTS = {
 	partyMageThunderBluff = true,
 	partyMageOrgrimmar = true,
 	hearthMinimumSavings = 0,
+	teleportMinimumSavings = 0,
 	-- Existing saved false choices remain off; missing settings join the travel journal.
 	stats = true,
 	guideStops = true,
@@ -356,6 +359,10 @@ frame:SetScript("OnEvent", function(self, _, name)
 	self:UnregisterEvent("ADDON_LOADED")
 	ShortestPathForeverDB = ShortestPathForeverDB or {}
 	ns.db = ShortestPathForeverDB
+	-- `teleports` once covered the Hearthstone as well; a save that turned it off keeps the Hearthstone off too.
+	if ns.db.hearth == nil and ns.db.teleports == false then
+		ns.db.hearth = false
+	end
 	for key, value in pairs(DEFAULTS) do
 		if ns.db[key] == nil then
 			ns.db[key] = value

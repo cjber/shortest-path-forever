@@ -103,8 +103,10 @@ L["Journey  %s · %s"] = "旅程  %s · %s"
 L["Journey to %s"] = "前往%s的旅程"
 L["Journeys are off. Turn on Shift-click to plan journeys in settings."] =
 	"旅程已关闭。请在设置中开启“Shift点击规划旅程”。"
-L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."] =
-	"旅程以及其他插件从这里算起的估计，可以从炉石或传送开始，并计入冷却时间。"
+L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
+	"旅程以及其他插件从这里算起的估计，可以从法师的城市传送或传送：月光林地开始，并计入冷却时间。" -- mt
+L["Journeys, and other addons' estimates from here, can start with your Hearthstone or Astral Recall, cooldown counted."] =
+	"旅程以及其他插件从这里算起的估计，可以从炉石或星界传送开始，并计入冷却时间。" -- mt
 L["Keep journeys after a reload"] = "重载后保留旅程"
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"将共享的 Forever 追踪器保持在您放置的位置。顶部的拖拽手柄不再移动它。"
@@ -124,6 +126,7 @@ L["Map marks"] = "地图标记"
 L["Mark only where steps end"] = "只标记步骤终点"
 L["Minimap icon size"] = "微缩地图图标大小"
 L["Minimum Hearthstone saving"] = "炉石最少节省时间"
+L["Minimum teleport saving"] = "传送最少节省时间" -- mt
 L["Move the arrow"] = "移动箭头"
 L["Move the compass"] = "移动指南针"
 L["N"] = "北"
@@ -141,6 +144,8 @@ L["Off keeps the arrow, pin, map line and minimap route, with no journey block i
 L["On board to %s"] = "乘坐前往%s"
 L["On the world map."] = "显示在世界地图上。"
 L["One line in chat the first time you log in after an update."] = "更新后首次登录时在聊天中显示一行。"
+L["Only use a class teleport when it saves at least this much time."] =
+	"只在职业传送至少节省这么多时间时使用。" -- mt
 L["Only use the Hearthstone when it saves at least this much time."] =
 	"只在炉石至少节省这么多时间时使用。"
 L["Open"] = "打开"
@@ -229,7 +234,8 @@ L["Turning this off leaves RestedXP's arrow visible."] = "关闭此选项后，R
 L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
 	"关闭此项可将共享Forever追踪栏拖到屏幕上任意位置。"
 L["Use %s"] = "使用%s"
-L["Use hearth and teleports"] = "使用炉石和传送"
+L["Use class teleports"] = "使用职业传送" -- mt
+L["Use your Hearthstone"] = "使用炉石" -- mt
 L["Vendors"] = "商人"
 L["W"] = "西"
 L["Walk to %s"] = "步行前往%s"

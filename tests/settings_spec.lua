@@ -246,6 +246,7 @@ local ns = {
 		stats = true,
 		partyMagePortals = false,
 		hearthMinimumSavings = 0,
+		teleportMinimumSavings = 0,
 		compassScale = 100,
 		arrowScale = 100,
 		arrowLabel = "distance",
@@ -369,8 +370,10 @@ local groups = {
 		"guidelime",
 		"avoidHighZones",
 		"followRoads",
-		"teleports",
+		"hearth",
 		"hearthMinimumSavings",
+		"teleports",
+		"teleportMinimumSavings",
 		"guideStops",
 		"taxiRoute",
 		"corpse",
@@ -414,8 +417,9 @@ local order = {
 
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
 -- Main's arrival pin added arrivalPin, the line switches added mapLine, minimapLine and laterLegs, and the
--- town services added townServices; the travel stats and departure sharing switches are gone with their sharing.
-assert(#rows == 63, #rows)
+-- town services added townServices; the travel stats and departure sharing switches are gone with their sharing,
+-- and the Hearthstone's own switch and a class teleport saving joined them.
+assert(#rows == 65, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -535,6 +539,17 @@ assert(hearth.options.format(0) == "Off" and hearth.options.format(90) == "90 Se
 hearth.setting.onChanged()
 assert(policyChanged == 1, "changing Hearthstone savings invalidates the current travel policy")
 assert(hearth.options.minValue == 0 and hearth.options.maxValue == 600 and hearth.options.step == 30)
+local teleportSaving = Row("teleportMinimumSavings")
+assert(
+	teleportSaving.kind == "slider" and teleportSaving.setting.default == 0,
+	"class teleports need no saving by default"
+)
+teleportSaving.setting.onChanged()
+assert(policyChanged == 2, "changing the teleport saving invalidates the current travel policy")
+Row("hearth").setting.onChanged()
+assert(policyChanged == 3, "the Hearthstone switch replans the journey")
+Row("teleports").setting.onChanged()
+assert(policyChanged == 4, "the class teleport switch replans the journey")
 assert(Row("taxiRoute").tooltip:find("flight master", 1, true))
 Row("taxiRoute").setting.onChanged()
 assert(taxiRefreshed == 1, "flight route updates when its setting changes")

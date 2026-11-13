@@ -20,8 +20,8 @@ later, the API is also listed by `ForeverCore.APIKit.Addons()`.
 - `Estimate(fromMap, fromX, fromY, toMap, toX, toY)` returns travel seconds, or `nil` and why (`"combat"`,
   `"loading"`, `"invalid"` or `"unreachable"`), without changing guidance. It omits endpoint terrain searches and caches
   estimates for five seconds, rounding origins to 0.0001. An estimate from where the player stands counts their
-  hearthstone and class teleports, with cooldowns, unless the setting *Use hearth and teleports* is off;
-  from anywhere else it leaves them out.
+  hearthstone and class teleports, with cooldowns, unless the settings *Use your Hearthstone* and *Use class
+  teleports* turn them off; from anywhere else it leaves them out.
 - `EstimateDetail(fromMap, fromX, fromY, toMap, toX, toY)` takes the same arguments and cache and returns
   `{seconds, legs}`, each leg a fresh
   `{mode, to, seconds, wait?, newFlightPath?}`.

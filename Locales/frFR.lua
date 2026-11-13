@@ -107,8 +107,10 @@ L["Journey  %s · %s"] = "Trajet  %s · %s" -- mt
 L["Journey to %s"] = "Trajet vers %s" -- mt
 L["Journeys are off. Turn on Shift-click to plan journeys in settings."] =
 	"Les trajets sont désactivés. Activez « Maj-clic pour planifier » dans les réglages." -- mt
-L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."] =
-	"Les trajets, et les estimations d'autres addons depuis ici, peuvent commencer par votre pierre de foyer ou une téléportation, temps de recharge compris." -- mt
+L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
+	"Les trajets, et les estimations d'autres addons depuis ici, peuvent commencer par une téléportation de mage vers une ville ou Téléportation : Reflet-de-Lune, temps de recharge compris." -- mt
+L["Journeys, and other addons' estimates from here, can start with your Hearthstone or Astral Recall, cooldown counted."] =
+	"Les trajets, et les estimations d'autres addons depuis ici, peuvent commencer par votre pierre de foyer ou Rappel astral, temps de recharge compris." -- mt
 L["Keep journeys after a reload"] = "Garder les trajets après un rechargement" -- mt
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"Garde le suivi Forever partagé là où vous l'avez placé. La poignée en haut ne le déplace plus." -- mt
@@ -128,6 +130,7 @@ L["Map marks"] = "Repères sur la carte" -- mt
 L["Mark only where steps end"] = "Marquer seulement la fin des étapes" -- mt
 L["Minimap icon size"] = "Taille des icônes de la minicarte" -- mt
 L["Minimum Hearthstone saving"] = "Gain minimum de la pierre de foyer" -- mt
+L["Minimum teleport saving"] = "Gain minimum de la téléportation" -- mt
 L["Move the arrow"] = "Déplacer la flèche" -- mt
 L["Move the compass"] = "Déplacer la boussole" -- mt
 L["N"] = "N" -- mt
@@ -146,6 +149,8 @@ L["On board to %s"] = "À bord pour %s" -- mt
 L["On the world map."] = "Sur la carte du monde." -- mt
 L["One line in chat the first time you log in after an update."] =
 	"Une ligne dans la discussion à la première connexion après une mise à jour." -- mt
+L["Only use a class teleport when it saves at least this much time."] =
+	"N'utiliser une téléportation de classe que si elle fait gagner au moins ce temps." -- mt
 L["Only use the Hearthstone when it saves at least this much time."] =
 	"N'utiliser la pierre de foyer que si elle fait gagner au moins ce temps." -- mt
 L["Open"] = "Ouvrir"
@@ -238,7 +243,8 @@ L["Turning this off leaves RestedXP's arrow visible."] =
 L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
 	"Désactivez cette option pour déplacer le suivi Forever partagé n'importe où à l'écran."
 L["Use %s"] = "Utiliser %s" -- mt
-L["Use hearth and teleports"] = "Utiliser foyer et téléportations" -- mt
+L["Use class teleports"] = "Utiliser les téléportations de classe" -- mt
+L["Use your Hearthstone"] = "Utiliser votre pierre de foyer" -- mt
 L["Vendors"] = "Marchands"
 L["W"] = "O" -- mt
 L["Walk to %s"] = "Marcher jusqu'à %s" -- mt
