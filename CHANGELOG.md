@@ -15,6 +15,11 @@ optional `### For addon authors` subsection after a version's player bullets.
 ## [Unreleased]
 
 - **Hovering a quest stop shows the quest's area.** The game's "..." pin showed a quest's blue area when you hovered it, and a journey stop that marks the same quest replaced that pin with nothing to hover. Hovering the stop now shows the area of the quest it marks, hand-in stops included, and the area goes again when the pointer leaves or the journey ends (#859).
+
+## [1.36.0] - 2026-11-13
+
+<!-- discord-image: docs/screenshots/town_services_zoom.png -->
+
 - **Fewer market stalls on the map, and every NPC apart at full zoom.** Nearby services of the same kind now share that service's icon, so three leatherworking trainers become one leatherworking pin with all three in its tooltip. A market stall appears only where different kinds of service share a spot, and only when their pins truly overlap, so there are fewer of them. Zooming right in splits every NPC into its own icon, spreading those standing in the same doorway so each can be hovered and clicked, and a pin follows each zoom step back onto its own NPC. A wandering NPC shows one pin per map rather than one at every spawn along its route. A flight master no longer gets a second pin beside its flight point, since the flight point's own pin already stands for that NPC, so the Town services filter no longer offers a Flight master switch. Weapons and armour vendors wear the game's tunic mark instead of the plain gold coin that read as a bare dot. Thanks to Lůca [Luutsa] on Discord for the idea (#812, #816).
 - **The arrow follows the walk even when only step ends are marked.** With *Mark only where steps end* on, the screen arrow now points at each bend of the walk while the map still marks only where each step ends, and the distance under it counts the whole walk rather than a straight line. Thanks to esc_return on Discord (#817).
 - **Kaliel's Tracker players find the journey entry in its quest menu.** Shortest Path Forever now loads after Kaliel's Tracker when it is installed, so its quest menu entry is added to that tracker's menus.
