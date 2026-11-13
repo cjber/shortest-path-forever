@@ -374,6 +374,7 @@ local function BuildGroups()
 			key = group.key,
 			label = group.label,
 			icon = group.icon,
+			tracking = group.tracking,
 			npcs = GroupNPCs(group.key),
 		})
 	end
@@ -396,6 +397,7 @@ local function BuildGroups()
 				skill = skill,
 				label = label,
 				icon = "Profession",
+				tracking = "Profession",
 				npcs = GroupNPCs("profession:" .. skill),
 			})
 		end
@@ -406,6 +408,7 @@ local function BuildGroups()
 			key = service.key,
 			label = service.label,
 			icon = service.icon,
+			tracking = service.tracking,
 			npcs = GroupNPCs(service.key),
 		})
 	end
@@ -753,6 +756,7 @@ end
 ---@field key string
 ---@field label string
 ---@field icon number|string
+---@field tracking string the client's minimap tracking atlas the world map's service pins wear
 ---@field npcs number[]
 ---@field skill? integer a profession group's skill line
 ---@field entrance? integer a dungeon or raid group's instance map ID

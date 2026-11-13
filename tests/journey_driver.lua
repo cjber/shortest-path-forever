@@ -7,7 +7,7 @@ end
 assert(loadfile(root .. "/Locales/enUS.lua"))("ShortestPathForever", ns)
 local now, here, target, shown, click, minimapClick = 0, { map = 1, x = 0, y = 0, z = 0 }
 local function noop() end
-local frames, events, waypoint, tracked, quest = {}, {}, nil, false, 0
+local frames, events, waypoint, tracked, quest, trackingType = {}, {}, nil, false, 0, nil
 local secret = setmetatable({}, {
 	__sub = function()
 		error("secret position used")
@@ -173,14 +173,18 @@ local env = setmetatable({
 			return tracked
 		end,
 		GetHighestPrioritySuperTrackingType = function()
-			return tracked and "waypoint" or quest
+			return trackingType or (tracked and "waypoint" or quest)
 		end,
+		-- The client reports which destination it currently draws. A guide that selects a quest on top of our waypoint
+		-- can transiently leave the waypoint super-tracked with another type in front (#535, #693).
 		SetSuperTrackedUserWaypoint = function(value)
 			tracked = value
+			trackingType = nil
 			defer("SUPER_TRACKING_CHANGED")
 		end,
 		SetSuperTrackedQuestID = function(value)
 			quest, tracked = value, false
+			trackingType = nil
 			defer("SUPER_TRACKING_CHANGED")
 		end,
 	},
@@ -303,6 +307,11 @@ return {
 	fire = fire,
 	waypoint = function()
 		return waypoint, tracked
+	end,
+	-- The priority the client reports while the waypoint stays super-tracked (a guide's quest selection on top).
+	setTrackingType = function(value)
+		trackingType = value
+		defer("SUPER_TRACKING_CHANGED")
 	end,
 	load = load,
 	begin = function(from, to)

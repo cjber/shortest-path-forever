@@ -9,11 +9,17 @@ local L = ns.L
 
 local settings = {}
 
--- Change an option from anywhere (the map's filter menu) with the settings panel kept in step.
+-- Change an option from anywhere (the map's filter menu) with the settings panel kept in step. A menu-only setting
+-- has no row to move, so its saved value is written directly.
 ---@param key string
 ---@param value boolean|number|string
 function ns.SetOption(key, value)
-	settings[key]:SetValue(value)
+	local setting = settings[key]
+	if setting then
+		setting:SetValue(value)
+	else
+		ns.db[key] = value
+	end
 end
 
 local category
@@ -325,6 +331,13 @@ ns.Init(function()
 			-- The guide follower only ticks while journeys are on; turning them back on starts it again.
 			ns.RefreshGuidelime()
 		end
+	)
+	Checkbox(
+		"focusedQuest",
+		L["Route to the focused quest"],
+		-- luacheck: push ignore 631
+		L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no Shift-click. A guide addon's own journey is left alone."]
+		-- luacheck: pop
 	)
 	Checkbox(
 		"journeyTracker",

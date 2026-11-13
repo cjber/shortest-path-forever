@@ -60,12 +60,14 @@ end
 
 -- Slicing yields at the shared deadline; pump swaps each coroutine's private search scratch before resuming it.
 local deadline, ops, expansions = huge, 0, 0
+-- Set while this module answers a question asked from outside a job's own search (Quiet).
+local quiet = false
 local clock = function()
 	return Path.clock()
 end
 
 local function slice()
-	if deadline < huge and clock() > deadline then
+	if not quiet and deadline < huge and clock() > deadline then
 		yield()
 	end
 end
@@ -74,6 +76,23 @@ end
 -- job's callback asks for must not slice: the client can reach a callback from C (a secure hook, another addon's
 -- estimate), and no yield may cross that (#717).
 Path.Checkpoint = slice
+
+-- A question this module answers for a caller outside a job's own search — a stop's ground, the node an endpoint
+-- snaps to for a batch that may be reused — is asked from a path job's callback, where the client may be inside a C
+-- call it cannot yield across: the journey's route setter is a hooksecurefunc trampoline (Transport/Taxi.lua), and the
+-- map it refreshes asks each stop for its ground. Quiet decodes what such a question reads whole, in the asking frame,
+-- so no grid read taken to answer a question pauses the work that asked it (#803). Slicing comes back with the next
+-- Deadline, which pump arms before every resume, so a query that raises cannot leave it off.
+---@param fn fun(...): any
+---@return any ...
+local function Quiet(fn, ...)
+	local was = quiet
+	quiet = true
+	local a, b, c = fn(...)
+	quiet = was
+	-- the queries this serves answer with at most three values
+	return a, b, c
+end
 
 local function tick()
 	expansions = expansions + 1
@@ -86,7 +105,7 @@ end
 
 -- Pump and the synchronous searches arm the deadline; math.huge never yields.
 local function Deadline(limit)
-	deadline, ops = limit, 0
+	deadline, ops, quiet = limit, 0, false
 end
 
 -- The running expansion count, replaced when count is given.
@@ -1059,12 +1078,12 @@ end
 -- Otherwise the ground is the cell's stored ground layer, or its base when the cell is left out; a cell with floors
 -- over no terrain stores the no-ground marker and says nothing. An undecoded cell says nothing too: the map's own
 -- asynchronous decoding fills it, so a caller on hover never forces a grid decode. The exceptions themselves are
--- decoded here, on first use.
+-- decoded here, on first use, without slicing: ground is asked for from a path job's callback.
 local function terrain(st, k)
 	local exceptions = st.terrain[k]
 	if exceptions == nil then
-		local s = unpackField(st.D, "terrain", k + 1)
-		exceptions = s and decodeTerrain(s) or {}
+		local s = Quiet(unpackField, st.D, "terrain", k + 1)
+		exceptions = s and Quiet(decodeTerrain, s) or {}
 		st.terrain[k] = exceptions
 	end
 	return exceptions
@@ -1694,6 +1713,7 @@ ns.PathGrid = {
 	neighbour = neighbour,
 	Pin = Pin,
 	Ready = Ready,
+	Quiet = Quiet,
 	Idle = Idle,
 	Reset = Reset,
 	TILE = TILE,

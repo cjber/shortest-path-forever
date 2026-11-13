@@ -433,6 +433,12 @@ assert(
 menuEntry(minimap.children, "Class trainer").callback()
 assert(navigated[#navigated][5] == "Warrior trainer", "a service chosen from the minimap routes to the nearest")
 assert(mapOpens == opensBefore, "the minimap's menu routes without opening the world map")
+for _, item in ipairs(groups) do
+	assert(
+		type(item.tracking) == "string" and item.tracking ~= "",
+		"every group carries the tracking atlas its world map pin wears: " .. item.key
+	)
+end
 local places = ns.NearbyServices.Index()
 local function group(key)
 	for _, item in ipairs(groups) do

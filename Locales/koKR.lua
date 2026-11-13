@@ -57,6 +57,7 @@ L["Bullets"] = "탄환"
 L["Cast %s"] = "%s 시전"
 L["Class trainer"] = "직업 상급자"
 L["Clear journey"] = "여정 지우기"
+L["Click to plan a journey here."] = "클릭하면 이곳까지 여정을 계획합니다."
 L["Click to show %s"] = "클릭하여 %s 표시"
 L["Click to show where they go"] = "클릭하여 행선지 표시"
 L["Compass background"] = "나침반 배경"
@@ -177,6 +178,7 @@ L["Resume RestedXP guide"] = "RestedXP 가이드 재개"
 L["Resume guide"] = "가이드 재개"
 L["Return to your corpse"] = "시체로 돌아가기"
 L["Right-click to clear"] = "오른쪽 클릭으로 지우기"
+L["Route to the focused quest"] = "집중한 퀘스트로 이동"
 L["S"] = "남"
 L["Scales the arrow and the cast prompt."] = "화살표와 시전 안내의 크기를 조절합니다."
 L["Scales the compass. 100% matches the game's own art."] =
@@ -218,6 +220,8 @@ L["Sizes flight master icons on the world map."] =
 	"세계 지도의 비행 조련사 아이콘 크기를 조절합니다."
 L["Sizes transport icons on the minimap."] = "미니맵의 교통수단 아이콘 크기를 조절합니다."
 L["Stable master"] = "야수 관리인"
+L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no Shift-click. A guide addon's own journey is left alone."] =
+	"퀘스트를 집중하거나 게임의 지도 핀을 놓으면 여정을 시작하므로 컨트롤러에서 Shift-클릭이 필요 없습니다. 가이드 애드온의 자체 여정은 그대로 둡니다."
 L["Stop %d of %d"] = "정거장 %d/%d" -- mt
 L["Stop %d of %d: %s"] = "정거장 %d/%d: %s"
 L["Suggest quests for my level: Adventure Guide Forever"] =
@@ -424,10 +428,15 @@ L["Stops before the last on a multi-stop route keep 15 yards."] =
 L["Dungeons and raids"] = "던전 및 공격대" -- mt
 L["Town services"] = "마을 서비스" -- mt
 L["Town services on the world map"] = "세계 지도에 마을 서비스 표시" -- mt
-L["Town services show on the world map."] = "도시 서비스가 세계 지도에 표시됩니다." -- mt
+L["The arrow and the tracker no longer flash while a guide moves between objectives."] =
+	"가이드가 목표를 옮길 때 화살표와 추적기가 더 이상 깜박이지 않습니다." -- mt
 L["Capitals only"] = "수도만" -- mt
 L["Capitals and important services"] = "수도 및 주요 서비스" -- mt
 L["All towns"] = "모든 마을" -- mt
 L["Books and recipes"] = "책과 조리법" -- mt
 L["One icon per town, or one per service as you zoom in."] =
 	"마을마다 아이콘 하나, 확대하면 서비스마다 아이콘 하나." -- mt
+L["Ammunition"] = "탄약" -- mt
+L["Bags and trade supplies"] = "가방 및 전문 기술" -- mt
+L["Food and drink"] = "음식 및 음료" -- mt
+L["Profession trainers"] = "전문 기술 상급자" -- mt

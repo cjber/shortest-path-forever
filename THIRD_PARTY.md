@@ -17,10 +17,11 @@ it, so a data refresh that moves the pin never leaves this file behind. The addo
 
 No embedded libraries ship. `media/` is this addon's own: the icon is drawn in `media/icon.svg`, the feathered
 `Dot.tga` is the route-stroke brush, `Zeppelin.tga` is the zeppelin map marker, `Pin.tga` is the gold goal pin and
-`PinInactive.tga` its bronze untracked twin, and `Numbers/1.tga` to `Numbers/25.tga` are the gold numbered markers,
-all original assets made for this addon with AI assistance and no Blizzard art; the pins and the numbered markers are
-generated from `tools/pin_source` and `tools/pin_source/numbers` by `tools/export_pin.py`. Boat markers use
-Blizzard's `flightmasterferry` atlas, which has no zeppelin equivalent.
+`PinInactive.tga` its bronze untracked twin, `Numbers/1.tga` to `Numbers/25.tga` are the gold numbered markers, and
+`TownGroup.tga` is the town services group pin: a market stall for a pin that stands for more than one NPC, generated
+from `tools/pin_source/town-group.png` by `tools/export_pin.py`, as are the pins and the numbered markers from
+`tools/pin_source` and `tools/pin_source/numbers`. All of it is original art made for this addon with AI assistance
+and no Blizzard art. Boat markers use Blizzard's `flightmasterferry` atlas, which has no zeppelin equivalent.
 `Locales/*.lua` are machine translated, using the client's own GlobalStrings for the pinned build (via wago.tools)
 as the glossary for game terms; eight frFR lines are Brainc3ll's.
 
@@ -138,9 +139,21 @@ Credit for the reports and requests behind the addon.
 | spidersylar | Known flight points kept per character | CurseForge; #685 |
 | Acem | Known flight points kept per character | CurseForge; #685 |
 | tgkGate | Fixed the path job yield error | CurseForge; #717 |
+| user\_efwsfml273dlvfm5 | Fixed the remaining path job yield error | CurseForge; #803 |
 | IronmanBG | Plan journey back in Kaliel's Tracker | CurseForge; #718 |
 | vladsnz | Quest list More options works with a controller | CurseForge; #788 |
 | vcatalin | Forever Core bundled in the download again | GitHub; #731 |
+| sdtom | Town service pins wear their own icons | CurseForge; #794 |
+| Bervath | Town service pins wear their own icons | CurseForge; #794 |
+| Blast22 | Guidance no longer flickers between two objectives | CurseForge; 8693782 |
+| user_sggieekz05hc7uxt | Guidance no longer flickers between two objectives | CurseForge; 8685196 |
+| kindguydev | Guidance no longer flickers while a guide re-points | Discord; #693 |
+| [hervad](https://github.com/hervad) | No more short hitches during play | GitHub; #759 |
+| [caghanpekin-prog](https://github.com/caghanpekin-prog) | No more brief stutters during play | GitHub; #772 |
+| Zwaffelmagic | Clear the destination on arrival | CurseForge; #733 |
+| CptShooter | Hide the objective lines under the arrow | CurseForge; #691 |
+| cwebbx | Journeys start from a focused quest or map pin | CurseForge; #687 |
+| lone\_viking1921 | Journeys start from a focused quest or map pin | CurseForge; #687 |
 
 ## Inspired by
 

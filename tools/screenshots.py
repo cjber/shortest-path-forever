@@ -17,7 +17,7 @@ import math
 import os
 import subprocess
 import sys
-from functools import cache, lru_cache
+from functools import lru_cache
 from pathlib import Path
 from typing import cast
 
@@ -32,25 +32,26 @@ from screenshot_docks import dock_kinds, number_art, pin_art, zeppelin_art
 from screenshots_arrival import render as render_arrival
 from screenshots_art import Art
 from screenshots_floors import render as render_floors
+from screenshots_maps import icon, map_base
 from screenshots_services import render as render_services
 from screenshots_services import render_better as render_services_better
 from screenshots_services import render_roles as render_services_roles
 from screenshots_services import render_search as render_services_search
+from screenshots_town import render as render_town_services
+from screenshots_town import render_zoom as render_town_services_zoom
 from screenshots_tracker import detached_tracker
 from screenshots_tracker import tracker_canvas as journey_tracker
 from wowmock import (
     FONTS,
+    FRIZQT,
     NORMAL,
+    Font,
     TooltipLine,
     backdrop,
-    draw_overlay,
-    map_art,
-    map_overlays,
     minimap_art,
     rgba255,
     scene,
     tooltip,
-    world_map_frame,
 )
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -247,13 +248,6 @@ def flush_strokes(canvas, small=False, marks=()):
     canvas.strokes = []
 
 
-def icon(canvas, name, x, y, size=None, alpha=1):
-    art = canvas.ui.atlas(name)
-    factor = size / max(art.width, art.height) if size else 1
-    w, h = art.width * factor, art.height * factor
-    canvas.draw(art, x - w / 2, y - h / 2, w, h, (1, 1, 1, alpha))
-
-
 def pin_icon(canvas, x, y, size, alpha=1):
     """The addon's own square goal pin, media/Pin.tga, at its native aspect."""
     canvas.draw(pin_art(), x - size / 2, y - size / 2, size, size, (1, 1, 1, alpha))
@@ -314,22 +308,6 @@ def map_landmarks(canvas, map_id, rect):
         if p and portal["kind"] == "portal" and portal.get("faction", "Alliance") == "Alliance":
             # The map legend's teleport atlas (MapLegendFrameData.lua), fitted by Art.Fit as Map.lua draws it.
             icon(canvas, "TaxiNode_Continent_Neutral", *p, size=20)
-
-
-@cache
-def map_base(ui, map_id):
-    art = map_art(ui.data, map_id)
-    for overlay in map_overlays(ui.data, map_id):
-        draw_overlay(ui.data, art, overlay.offset_x, overlay.offset_y, overlay.width, overlay.height, overlay.tiles)
-    names = {
-        947: ("World",),
-        1414: ("World", "Kalimdor"),
-        1439: ("World", "Kalimdor", "Darkshore"),
-        1429: ("World", "Eastern Kingdoms", "Elwynn Forest"),
-        1436: ("World", "Eastern Kingdoms", "Westfall"),
-        1432: ("World", "Eastern Kingdoms", "Loch Modan"),
-    }
-    return world_map_frame(ui, art, names[map_id], arrows=names[map_id][1:])
 
 
 def route_curve(route, a, b, control, color, alpha, fade=False):
@@ -571,21 +549,26 @@ def render_tracker(ui):
     return scene(ui, [(journey_tracker(ui, dock_title), 0, 0)])
 
 
+# Compass.lua's direction letters: Blizzard's FontStyles.xml gives GameFontNormalMed3 as SystemFont_Shadow_Med3, Friz
+# 14 in the parchment gold with a shadow, which wowmock's FONTS carries no entry for.
+LETTER_FONT = Font(FRIZQT, 14, NORMAL, (1, -1))
+
+
 def compass_canvas(ui, facing=math.pi - 0.2, distance=780, overhang=0, arrived=False):
     # Compass.lua's ribbon: no panel and no border. Its ticks and their letters fade out towards the ends, so
     # the compass dissolves into the world, and its turns are the addon's own gold numbered markers.
     # The client draws a texture past its frame, so `overhang` keeps room beside the ribbon for a marker clamped
     # to its end and the distance under it, which the scene would otherwise cut at the canvas edge.
     # Compass.lua's Paint: the parchment gold, or the quieter green of standing in an arrived stop's area (#627).
-    tick = (0.6, 0.76, 0.58, 0.7) if arrived else (0.72, 0.67, 0.55, 0.7)
-    center = (0.62, 0.9, 0.55, 0.85) if arrived else (1, 0.82, 0, 0.85)
-    canvas = ui.canvas(360 + overhang, 65)
+    tick = (0.6, 0.76, 0.58, 0.9) if arrived else (0.72, 0.67, 0.55, 0.9)
+    center = (0.62, 0.9, 0.55, 1) if arrived else (1, 0.82, 0, 1)
+    canvas = ui.canvas(360 + overhang, 70)
 
     def offset(angle):
         return -((angle - facing + math.pi) % (2 * math.pi) - math.pi) * 360 / math.pi
 
     # Compass.lua's FADE, the ramp a tick dissolves over at each end, and its major/minor strengths.
-    fade, major_alpha, minor_alpha = 80, 0.85, 0.5
+    fade, major_alpha, minor_alpha = 80, 1, 0.65
     for index in range(24):
         x = offset(index * math.pi / 12)
         if abs(x) > 180:
@@ -593,19 +576,19 @@ def compass_canvas(ui, facing=math.pi - 0.2, distance=780, overhang=0, arrived=F
         major = index % 6 == 0
         edge = min(1, max(0, (180 - abs(x)) / fade))
         alpha = edge * edge * (major_alpha if major else minor_alpha)
-        height = 5 if major else 3
-        canvas.fill(180 + x - 0.5, 6, 1, height, (*tick[:3], tick[3] * alpha))
+        height = 10 if major else 6
+        canvas.fill(180 + x - 1, 6, 2, height, (*tick[:3], tick[3] * alpha))
         if major:
             canvas.text(
                 180 + x - 10,
-                12,
+                20,
                 ("N", "W", "S", "E")[index // 6],
-                FONTS["GameFontNormalSmall"],
+                LETTER_FONT,
                 (*NORMAL, alpha),
                 justify="CENTER",
                 width=20,
             )
-    canvas.fill(179.5, 3, 1, 6, center)
+    canvas.fill(179, 3, 2, 12, center)
     # The guide has no targets while it waits in the area, so the ribbon keeps its ticks and centre alone.
     if arrived:
         return canvas
@@ -615,16 +598,17 @@ def compass_canvas(ui, facing=math.pi - 0.2, distance=780, overhang=0, arrived=F
         canvas.draw(number_art(number), x - size / 2, y - size / 2, size, size, (1, 1, 1, alpha))
 
     # Compass.lua's marker row: the bend (next turn) is 1 at 20 units and the turn after is 2 at 16, dimmer. The goal
-    # pin stands down while a bend is ahead, and facing away dims the row to DestinationPin's behind alpha.
+    # pin stands down while a bend is ahead, and facing away dims the row to DestinationPin's behind alpha. The row's
+    # markers are centred 45 units under the ribbon's top, clear of the taller ticks' 14-unit letters.
     bend = math.pi
     behind = abs((bend - facing + math.pi) % (2 * math.pi) - math.pi) * 180 / math.pi > 120
     x = 180 + max(-180, min(180, offset(bend)))
-    number_marker(1, x, 36, 20, 0.4 if behind else 1)
+    number_marker(1, x, 45, 20, 0.4 if behind else 1)
     if not behind:
-        number_marker(2, 180 + max(-180, min(180, offset(bend + 0.15))), 36, 16, 0.6)
+        number_marker(2, 180 + max(-180, min(180, offset(bend + 0.15))), 45, 16, 0.6)
     canvas.text(
         x - 40,
-        36 + 20 / 2 + 2,
+        45 + 20 / 2 + 2,
         f"{distance} yd",
         FONTS["GameFontHighlightSmall"],
         (*NORMAL, 0.4 if behind else 1),
@@ -776,6 +760,8 @@ SCENES = {
     "services_search": render_services_search,
     "services_better": render_services_better,
     "services_roles": render_services_roles,
+    "town_services": render_town_services,
+    "town_services_zoom": render_town_services_zoom,
 }
 
 

@@ -143,16 +143,14 @@ local env = setmetatable({
 	SlashCmdList = {},
 }, { __index = _G })
 -- ForeverCore's secure settings opener runs the client's restricted C_SettingsUtil.OpenSettingsPanel through
--- CreateSecureDelegate, and records what it opened.
+-- securecallfunction, and records what it opened.
 local secureCalls = 0
 env.InCombatLockdown = function()
 	return false
 end
-env.CreateSecureDelegate = function(fn)
-	return function(...)
-		secureCalls = secureCalls + 1
-		return fn(...)
-	end
+env.securecallfunction = function(fn, ...)
+	secureCalls = secureCalls + 1
+	return fn(...)
 end
 env.C_SettingsUtil = {
 	OpenSettingsPanel = function(categoryID)
@@ -256,6 +254,7 @@ local ns = {
 		compassTime = false,
 		arrivalSound = false,
 		resumeJourney = false,
+		focusedQuest = false,
 		routeColor = "gold",
 		followRoads = false,
 		arrivalDistance = 15,
@@ -358,6 +357,7 @@ local groups = {
 		"trackerAttached",
 		"trackerLocked",
 		"journey",
+		"focusedQuest",
 		"journeyTracker",
 		"resumeJourney",
 		"destinationPin",
@@ -417,7 +417,7 @@ local order = {
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
 -- Main's arrival pin added arrivalPin, the line switches added mapLine, minimapLine and laterLegs, and the
 -- town services added townServices; the travel stats and departure sharing switches are gone with their sharing.
-assert(#rows == 63, #rows)
+assert(#rows == 64, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -513,6 +513,15 @@ assert(journeyPreviewRefreshed == previews + 1, "the switch redraws the route wi
 assert(
 	Row("tracker").setting.name == "Show boat, lift and tram departures in the tracker",
 	"the departures switch names boats, lifts and the tram"
+)
+-- Route to the focused quest is opt-in: a plain map pin changes what it does, so it starts off.
+local focused = Row("focusedQuest")
+assert(focused.kind == "checkbox" and focused.setting.default == false, "focused routing is off by default")
+assert(focused.setting.variable == "ShortestPathForever_focusedQuest", "the switch is saved")
+assert(focused.setting.name == "Route to the focused quest", "the switch names the focused quest")
+assert(
+	focused.tooltip:find("map pin", 1, true) and focused.tooltip:find("Shift-click", 1, true),
+	"the tooltip says a map pin counts and a controller needs no Shift-click"
 )
 -- The journey's own block has its switch in Guidance, on by default, and turning it off redraws the tracker.
 local journeySteps = Row("journeyTracker")

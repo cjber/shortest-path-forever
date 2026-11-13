@@ -1,0 +1,25 @@
+{
+  "input_digest": "0863c16f511dac38d6491088243d9eb319952d49261663e7976efebcd8ff18b6",
+  "runtime_sha256": "0863c16f511dac38d6491088243d9eb319952d49261663e7976efebcd8ff18b6",
+  "candidate": "5071a5376decf552ce7011ba1556b9e956b73fda126f6c6708d5e2e11a734999",
+  "tested_artifact": "source-tree",
+  "client_build": "1.60.1.70888 (Interface 16001)",
+  "flows": [
+    {
+      "name": "The compass shows its bolder ticks and larger direction letters during a journey",
+      "steps": [
+        "Install the PR's shipped files as the ShortestPathForever folder (compare: no differing files; extra media/icon-400.png) beside ForeverCore and /reload",
+        "Follow a journey so the compass shows at the top of the screen",
+        "Confirm the ticks are 2 wide and the major tick taller, the gold centre bar is solid, and the W sits in the larger gold font a clear gap under its tick",
+        "Confirm the goal pin and its distance sit below the letters without touching them"
+      ],
+      "result": "pass"
+    }
+  ],
+  "images": [
+    {
+      "url": "https://gist.githubusercontent.com/cjber/506297733782163ef6b44f041ccaae05/raw/bb5835fddfc79765f254a160ee13c900408b4073/spf815-compass-ingame.png",
+      "sha256": "70bd7ee9d534107ebda8a838ae1f9375d99fd6dbf5a52abfa14a97435d2809c9"
+    }
+  ]
+}

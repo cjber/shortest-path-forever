@@ -74,7 +74,14 @@ end
 ---@param Add fun(group: SPFNearbyGroup)
 ---@param GroupNPCs fun(key: string): number[]
 function Roles.AddClassGroup(Add, GroupNPCs)
-	Add({ section = "trainers", key = "class", label = L["Class trainer"], icon = "Class", npcs = GroupNPCs("class") })
+	Add({
+		section = "trainers",
+		key = "class",
+		label = L["Class trainer"],
+		icon = "Class",
+		tracking = "Class",
+		npcs = GroupNPCs("class"),
+	})
 end
 
 -- The portal trainer group, offered to a class that can train from one.
@@ -89,6 +96,8 @@ function Roles.AddPortalGroup(Add, GroupNPCs)
 		key = "portal",
 		label = L["Portal trainer"],
 		icon = "TaxiNode_Continent_Neutral",
+		-- A portal trainer is a mage trainer, so its map pin wears the minimap's trainer icon.
+		tracking = "Class",
 		npcs = GroupNPCs("portal"),
 	})
 end
@@ -105,6 +114,7 @@ function Roles.AddBattlemasterGroup(Add, GroupNPCs)
 		key = "battlemaster",
 		label = L["Battlemaster"],
 		icon = "BattleMaster",
+		tracking = "BattleMaster",
 		npcs = GroupNPCs("battlemaster"),
 	})
 end

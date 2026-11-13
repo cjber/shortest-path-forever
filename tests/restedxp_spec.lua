@@ -292,6 +292,31 @@ assert(reentered > 0, "the restart re-enters the guide's hooks")
 assert(navigations == 1, "(e) hooks fired by our own navigation do not plan again")
 assert(API.CurrentStop("RestedXP") == 1, "the re-entrant hooks leave the journey under way")
 ns.ItineraryChanged = itineraryChanged
+
+-- RestedXP picks the next objective of its step as the player moves, and moves its arrow there. That is the journey's
+-- own destination moving, not a new journey: the drawn line, the arrow and the tracker stay while the new plan is
+-- searched, so nothing flashes between the two objectives (#693).
+local restarted = 0
+local restartJourney = ns.StartJourney
+ns.StartJourney = function(...)
+	restarted = restarted + 1
+	return restartJourney(...)
+end
+rxp.UpdateGotoSteps()
+driver.path.settle()
+local held = driver.shown()
+restarted, navigations = 0, 0
+frame.element.x = 70.4
+rxp.UpdateGotoSteps()
+assert(navigations == 1, "the guide's arrow reports the new objective")
+assert(restarted == 0, "a moved objective does not restart the journey")
+assert(held and driver.shown(), "the route already drawn stays while the new plan is searched")
+assert(ns.IsJourneyGuided(), "guidance is kept, not stopped and started")
+assert(API.CurrentStop("RestedXP") == 1, "the guide still owns the journey")
+driver.path.settle()
+assert(driver.shown() and driver.shown() ~= held, "the new plan replaces the drawn route once")
+ns.StartJourney = restartJourney
+
 API.NavigateRoute = navigate
 navigations = 0
 ns.db.journey = false
