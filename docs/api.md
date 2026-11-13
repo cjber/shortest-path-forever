@@ -32,6 +32,10 @@ later, the API is also listed by `ForeverCore.APIKit.Addons()`.
 - `Navigate(owner, map, x, y, title, kind)` is the one-stop form.
 
   Both return a boolean; invalid input, combat or disabled Journeys return `false` without replacing guidance.
+  A route whose only stop is the place the journey already goes to hands the journey over rather than starting it
+  again: `CurrentStop` answers for the new owner, the previous owner's `Ended` reads `"replaced"`, and the stop, the
+  progress, the arrow and the drawn route stay exactly as they are. A route with several stops is a different
+  itinerary, and still replaces the journey.
   Titles are optional, as is `tooltip`, a destination detail shown on the stop pin's tooltip and under the arrival
   pin while the player stands in a held stop's area. It is never used as the arrow label; each newline in it starts a
   line of its own, and a line an earlier stop on the same pin already shows is not repeated. Optional `z` is the

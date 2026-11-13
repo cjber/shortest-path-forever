@@ -555,6 +555,32 @@ function API.NavigateRoute(owner, stops)
 		end
 		points[index] = point
 	end
+	-- Another owner asking for the place the journey already goes to hands the journey over: a guide or TomTom
+	-- re-pointing at the destination under its own name used to stop the guide, take the native waypoint away and
+	-- search again for a place that had not moved, so guidance blinked off and on while the journey scanned (#826).
+	-- The stop, the progress and the drawn route stay; only who owns them changes. A route with several stops is a
+	-- different itinerary, and a journey waiting behind a corpse run is not this submission's to take.
+	if
+		count == 1
+		and (route == nil or route.owner ~= owner)
+		and (route == nil or #route.points == 1)
+		and ns.HasJourney
+		and ns.HasJourney()
+		and not (ns.Corpse and ns.Corpse.Active())
+	then
+		local goal = ns.JourneyGoal and ns.JourneyGoal()
+		local stop = points[1]
+		if goal and goal.map == stop.map and goal.x == stop.x and goal.y == stop.y then
+			if route then
+				ended[route.owner] = { reason = "replaced", at = GetTime() }
+			end
+			ended[owner] = nil
+			-- The stop the journey follows stays the object it is: Journey.lua recognises its own goal by identity.
+			route = { owner = owner, points = { goal }, index = 1 }
+			Settle()
+			return true
+		end
+	end
 	-- Validate and copy every stop before replacing guidance. Caller mutations cannot redirect a journey.
 	if route and route.owner ~= owner then
 		ended[route.owner] = { reason = "replaced", at = GetTime() }
