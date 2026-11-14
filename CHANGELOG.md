@@ -14,14 +14,13 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.37.0] - 2026-11-14
+
+<!-- discord-image: docs/screenshots/stops.png -->
+
 - **Routes no longer climb hills the game will not let you climb.** The walking maps now use your own movement limits: a slope is walkable up to 50 degrees, a step reaches 2 yards, and ground from 50 to just over 61 degrees can be walked down but never up. A route over a face that would slide you back down now goes around it, and a walk still drops off a ledge where the game lets you. Walking speed is the same uphill, downhill and on the flat, so no route is charged extra for a slope (#639).
 - **One pointer leads, round every bend, with only step ends marked.** With *Mark only where steps end* on, the game's own on-screen marker no longer appears, so Shortest Path's arrow alone leads you round each bend while the map marks where each step ends. The centre of the arrow now shows the next step's number in the same gold marker the compass uses, or, when the step has no number, a gold ring with a diamond inside, instead of a pin whose point looked like a second arrow. Thanks to esc_return on Discord (#817).
 - **The game's own quest markers can stay on the map.** A journey hides the game's markers for the quests its stops cover, so each stop shows once, but a quest can often be finished in another place too. Turn *Hide game quest markers* off under Map marks, or in the world map's filter menu, and every one of the game's markers and quest areas stays beside your journey's pins. It is on by default, so nothing changes unless you turn it off. Thanks to MrOxiMoron for the request (#871).
-
-## [1.36.1] - 2026-11-13
-
-<!-- forever-core-sync -->
-
 - Ships with the same shared code as your other Forever addons, so they keep working together.
 
 ## [1.36.0] - 2026-11-13
