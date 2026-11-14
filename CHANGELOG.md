@@ -14,6 +14,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Hovering a quest stop shows the quest's area.** The game's "..." pin showed a quest's blue area when you hovered it, and a journey stop that marks the same quest replaced that pin with nothing to hover. Hovering the stop now shows the area of the quest it marks, hand-in stops included, and the area goes again when the pointer leaves or the journey ends (#859).
 - **A Horde zeppelin's timetable follows the latest game build.** One zeppelin now waits a full minute at its dock instead of half a minute, and the boarding countdown on its journey step counts to the new departure.
 
 ## [1.37.0] - 2026-11-14

@@ -44,6 +44,8 @@ ns.StopSize = STOP_SIZE
 ---@field stopCount? integer
 ---@field stopDetails? string[][] a stop's own detail lines, by the stop's place in this pin
 ---@field stopGround? (string|false)[] how each stop stands against the terrain: "up", "down" or false
+---@field stopQuests? integer[] the quests the stops this pin marks name, in order
+---@field questHighlight? boolean this pin set the map's highlighted quest
 ---@field later? boolean
 ---@field current? boolean -- marks the stop being travelled to, whose steps the tooltip lists
 local GoalPin = CreateFromMixins(ns.Canvas.PinMixin)
@@ -78,7 +80,8 @@ end
 ---@param details? string[]
 ---@param pinBadge? boolean
 ---@param ground? (string|false)[] how each stop stands against the terrain
-function GoalPin:OnAcquired(x, y, numbers, count, labels, later, look, details, pinBadge, ground)
+---@param quests? integer[] the quests the stops this pin marks name, in order
+function GoalPin:OnAcquired(x, y, numbers, count, labels, later, look, details, pinBadge, ground, quests)
 	self:SetPosition(x, y)
 	-- The disc's shadow stays opaque, so a faded button still hides the POI beneath it.
 	self:SetStopAlpha(later and ns.LaterAlpha or 1)
@@ -87,6 +90,7 @@ function GoalPin:OnAcquired(x, y, numbers, count, labels, later, look, details, 
 	self.stopCount = count
 	self.stopDetails = details and details[1] and details or nil
 	self.stopGround = ground and ground[1] ~= nil and ground or nil
+	self.stopQuests = quests and quests[1] and quests or nil
 	self.later = later
 	self.current = not later
 	-- A planned route nobody is guided along is an untracked goal: its pin is the bronze twin.
@@ -199,8 +203,29 @@ local function AddTitleLine(text, right)
 	end
 end
 
+-- The world map's own quest highlight (Blizzard_WorldMap.lua), which draws the blue area the game's "..." pin showed
+-- before this addon hid it (#859). Only the highlight this pin set is cleared; the gamepad interface takes no map Lua
+-- from the addon (#158).
+---@param questID integer? nil clears the highlight this pin set
+function GoalPin:ShowQuestArea(questID)
+	local map = self:GetMap()
+	if map ~= WorldMapFrame or ns.GamepadUI() or not (map.SetHighlightedQuestID and map.ClearHighlightedQuestID) then
+		return
+	end
+	if questID then
+		map:SetHighlightedQuestID(questID)
+		self.questHighlight = true
+	elseif self.questHighlight then
+		self.questHighlight = nil
+		map:ClearHighlightedQuestID()
+	end
+end
+
 function GoalPin:OnMouseEnter()
 	self:SetStopAlpha(1)
+	if self.stopQuests then
+		self:ShowQuestArea(self.stopQuests[1])
+	end
 	if ns.HoverStop then
 		ns.HoverStop(self.stopNumbers)
 	end
@@ -282,6 +307,7 @@ function GoalPin:OnMouseLeave()
 		GameTooltip:Hide()
 	end
 	self:SetStopAlpha(self.later and ns.LaterAlpha or 1)
+	self:ShowQuestArea(nil)
 	if ns.HoverStop then
 		ns.HoverStop(nil)
 	end
@@ -305,6 +331,9 @@ function GoalPin:OnReleased()
 	self.stopCount = nil
 	self.stopDetails = nil
 	self.stopGround = nil
+	self.stopQuests = nil
+	-- The journey can end under the pointer: the map's area goes with the pin (#859).
+	self:ShowQuestArea(nil)
 	self.Arrow:Hide()
 	self.later = nil
 	self.current = nil

@@ -1,23 +1,45 @@
 {
-  "input_digest": "20b37981804eff0a8d23fba8debe3acb8587a56a8e7d726db2a873c45b1ca6f0",
-  "runtime_sha256": "20b37981804eff0a8d23fba8debe3acb8587a56a8e7d726db2a873c45b1ca6f0",
-  "candidate": "c0cc54d8a9fe394aa8ca5a99eb98e9a0a6420f10f1fad963bb10f61247af3267",
+  "input_digest": "c9b5d20b28567280a69752c52aa6da4f918938f0cde04fa493e63b13fdf69a0c",
+  "runtime_sha256": "c9b5d20b28567280a69752c52aa6da4f918938f0cde04fa493e63b13fdf69a0c",
+  "candidate": "ea3b6217a318b3a98171bb1869aaec914b4b401c1f6d550b01249d52ef2794c6",
   "client_build": "1.60.1.70938 (Interface 16001)",
   "tested_artifact": "source-tree",
-  "source_commit": "2ce55479d3008653071d13ddf562a98e65b5d427",
+  "source_commit": "d5376c59ee4e97a4b0bcae3b610529442dd59c38",
   "flows": [
     {
-      "name": "journey planner",
+      "name": "before hover",
       "steps": [
-        "/path"
+        "/tmp/claude-1000/-home-cjber-drive-proj-wow/96278b5e-cf85-4235-8891-e9e108e85748/scratchpad/flow863.lua"
+      ],
+      "result": "pass"
+    },
+    {
+      "name": "hovering a stop",
+      "steps": [
+        "/wait 25"
+      ],
+      "result": "pass"
+    },
+    {
+      "name": "pointer left",
+      "steps": [
+        "/wait 25"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/f237694c1924e935141cba0968677aed/raw/0b7ac1d9877f09020df783b56324660f86166511/1-journey-planner.png",
-      "sha256": "0b1ceacf839a9cb8d8425aa47fcd13a44acfe0b90dcf4f0abe9104734b126496"
+      "url": "https://gist.githubusercontent.com/cjber/85d1531f24f82a5db91f8dc5568d1e81/raw/fbbb67753425006538f7aa3e184e655836d7da7f/1-before-hover.png",
+      "sha256": "d3d82e57c03e5596d27cc8741af01f99ed4e4219629cf07e0c0cd8cfb5df1b5b"
+    },
+    {
+      "url": "https://gist.githubusercontent.com/cjber/85d1531f24f82a5db91f8dc5568d1e81/raw/fbbb67753425006538f7aa3e184e655836d7da7f/2-hovering-a-stop.png",
+      "sha256": "192c20203a5e1b58f841ec7318b0eb0163052fe53977f381684474c364ab4087"
+    },
+    {
+      "url": "https://gist.githubusercontent.com/cjber/85d1531f24f82a5db91f8dc5568d1e81/raw/fbbb67753425006538f7aa3e184e655836d7da7f/3-pointer-left.png",
+      "sha256": "41cc477ce42fba3cc97ddaec90605ac985cf7d54c95f2f2ab5a8cc0ad68ce569"
     }
   ]
 }
