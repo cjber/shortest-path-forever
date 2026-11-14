@@ -1,37 +1,23 @@
 {
-  "input_digest": "e1e10fffead4ff8f486a38b0c97d175c4f02faa3f9cc060999aee49ffcbcbb03",
-  "runtime_sha256": "e1e10fffead4ff8f486a38b0c97d175c4f02faa3f9cc060999aee49ffcbcbb03",
-  "candidate": "16b420c4fb6acdbdfc85519c9a15872488750e60e19b2a5cbf3ab414d3bfd78f",
+  "input_digest": "1b537ca5ad0d96ad9329a956492cc0089171a0527cd74d99cfb0f21102e0277f",
+  "runtime_sha256": "1b537ca5ad0d96ad9329a956492cc0089171a0527cd74d99cfb0f21102e0277f",
+  "candidate": "4bca63a063f9c47b764c6046720f8c2f612ca36513b1f4d2b0fa9adf63e1578d",
   "client_build": "1.60.1.70938 (Interface 16001)",
   "tested_artifact": "source-tree",
-  "source_commit": "808c460f006dadf96a317820a3a434cd61e51403",
+  "source_commit": "0775074f328fcac70faeca95d74069c3590988fd",
   "flows": [
     {
-      "name": "Map marks settings with the quest marker option",
+      "name": "settings",
       "steps": [
-        "Install the candidate and /reload",
-        "Open Options, AddOns, Shortest Path Forever, Map marks",
-        "Hide game quest markers shows under the minimap option, ticked by default, with its label in full"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "Shortest Path settings",
-      "steps": [
-        "/path",
-        "The settings index opens"
+        "/path"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/951f980800b4382be0ea46871e416ef4/raw/29bb7e841575af9467ad19a43b469905d85eeb00/1-map-marks-settings-with-the-quest-marker-option.png",
-      "sha256": "2e68f5fa61f5a0d9b6601c492aaadc5392c883795afeca548f9cab58bd3b4579"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/951f980800b4382be0ea46871e416ef4/raw/29bb7e841575af9467ad19a43b469905d85eeb00/2-shortest-path-settings.png",
-      "sha256": "52e81397247bbe125cd3781eba5d394c1bda1c88d1b7a0385957e89a93acfdda"
+      "url": "https://gist.githubusercontent.com/cjber/66f5d2c93e4556988d7ca224166c6439/raw/7eaa1e2139a5485c7b24739a1904cf606cd87c3e/1-settings.png",
+      "sha256": "a2b57f5916801620b790e75ef73de8271c23dfccedc6dcf34503651fb6ea9f1d"
     }
   ]
 }

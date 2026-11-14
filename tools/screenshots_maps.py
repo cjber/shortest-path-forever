@@ -2,7 +2,7 @@
 
 from functools import cache
 
-from wowmock import draw_overlay, map_art, map_overlays, world_map_frame
+from wowmock import draw_overlay, map_art, map_overlays, world_map_frame  # ty: ignore[import-not-found]
 
 MAP_NAMES = {
     947: ("World",),

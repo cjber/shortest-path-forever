@@ -9,6 +9,8 @@ from pathlib import Path
 ROOT = Path(__file__).parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 SPEC = importlib.util.spec_from_file_location("gen_routes", ROOT / "tools/gen_routes.py")
+if SPEC is None or SPEC.loader is None:
+    raise RuntimeError("cannot load tools/gen_routes.py")
 GEN = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(GEN)
 
