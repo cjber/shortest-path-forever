@@ -256,6 +256,7 @@ local ns = {
 		arrivalSound = false,
 		resumeJourney = false,
 		focusedQuest = false,
+		journeyKey = "shift",
 		routeColor = "gold",
 		followRoads = false,
 		arrivalDistance = 15,
@@ -276,6 +277,11 @@ local ns = {
 	end,
 	RefreshTownServices = function()
 		townRefreshed = townRefreshed + 1
+	end,
+	JourneyKeys = { "shift", "alt" },
+	JourneyKeyName = function(key)
+		key = key or "shift"
+		return key:sub(1, 1):upper() .. key:sub(2)
 	end,
 	TownServiceChoices = {
 		{ key = "capitals", label = "Capitals only" },
@@ -362,6 +368,7 @@ local groups = {
 		"trackerAttached",
 		"trackerLocked",
 		"journey",
+		"journeyKey",
 		"focusedQuest",
 		"journeyTracker",
 		"resumeJourney",
@@ -422,7 +429,7 @@ local order = {
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
 -- Main's arrival pin added arrivalPin, the line switches added mapLine, minimapLine and laterLegs, and the
 -- town services added townServices; the travel stats and departure sharing switches are gone with their sharing.
-assert(#rows == 65, #rows)
+assert(#rows == 66, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -535,14 +542,26 @@ assert(
 	Row("tracker").setting.name == "Show boat, lift and tram departures in the tracker",
 	"the departures switch names boats, lifts and the tram"
 )
+-- The key held to plan a journey is the player's choice: Shift or Alt, Shift first and by default.
+local journeyKey = Row("journeyKey")
+assert(journeyKey.kind == "dropdown" and journeyKey.setting.default == "shift", "journeys start on Shift")
+assert(journeyKey.setting.variable == "ShortestPathForever_journeyKey", "the key is saved")
+local journeyKeys = journeyKey.getData()
+assert(
+	#journeyKeys == 2 and journeyKeys[1].value == "shift" and journeyKeys[2].value == "alt",
+	"Shift and Alt are listed in that order"
+)
+assert(journeyKeys[1].text == "Shift" and journeyKeys[2].text == "Alt", "each key is named")
+assert(journeyKey.tooltip:find("Questie", 1, true), "the tooltip says what Questie keeps")
+assert(Row("journey").setting.name == "Click the map to plan journeys", "the journey switch does not name a key")
 -- Route to the focused quest is opt-in: a plain map pin changes what it does, so it starts off.
 local focused = Row("focusedQuest")
 assert(focused.kind == "checkbox" and focused.setting.default == false, "focused routing is off by default")
 assert(focused.setting.variable == "ShortestPathForever_focusedQuest", "the switch is saved")
 assert(focused.setting.name == "Route to the focused quest", "the switch names the focused quest")
 assert(
-	focused.tooltip:find("map pin", 1, true) and focused.tooltip:find("Shift-click", 1, true),
-	"the tooltip says a map pin counts and a controller needs no Shift-click"
+	focused.tooltip:find("map pin", 1, true) and focused.tooltip:find("map click", 1, true),
+	"the tooltip says a map pin counts and a controller needs no map click"
 )
 -- The journey's own block has its switch in Guidance, on by default, and turning it off redraws the tracker.
 local journeySteps = Row("journeyTracker")

@@ -109,8 +109,6 @@ L["Interface"] = "인터페이스"
 L["Journey"] = "여정"
 L["Journey  %s · %s"] = "여정  %s · %s"
 L["Journey to %s"] = "%s(으)로 가는 여정"
-L["Journeys are off. Turn on Shift-click to plan journeys in settings."] =
-	"여정이 꺼져 있습니다. 설정에서 'Shift-클릭으로 여정 계획'을 켜십시오."
 L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."] =
 	"여정과 다른 애드온의 이곳 기준 예상 시간은 재사용 대기시간을 포함해 귀환석이나 순간이동으로 시작할 수 있습니다."
 L["Keep journeys after a reload"] = "재시작 후 여정 유지"
@@ -189,9 +187,6 @@ L["Scales the shared Forever tracker. 100% matches the game's own tracker."] =
 	"공유 Forever 추적기의 크기를 조절합니다. 100%는 게임 추적기와 같습니다."
 L["Search services and goods"] = "편의시설 및 물품 검색"
 L["Services"] = "편의시설"
-L["Shift-click the world map or the minimap to plan a journey there."] =
-	"세계 지도나 미니맵을 Shift-클릭하면 그곳까지 여정을 계획합니다."
-L["Shift-click to plan journeys"] = "Shift-클릭으로 여정 계획"
 L["Shortest Path report"] = "Shortest Path 보고서"
 L["Show boats and zeppelins"] = "배와 비행선 표시"
 L["Show direction arrow"] = "방향 화살표 표시"
@@ -222,8 +217,8 @@ L["Sizes flight master icons on the world map."] =
 	"세계 지도의 비행 조련사 아이콘 크기를 조절합니다."
 L["Sizes transport icons on the minimap."] = "미니맵의 교통수단 아이콘 크기를 조절합니다."
 L["Stable master"] = "야수 관리인"
-L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no Shift-click. A guide addon's own journey is left alone."] =
-	"퀘스트를 집중하거나 게임의 지도 핀을 놓으면 여정을 시작하므로 컨트롤러에서 Shift-클릭이 필요 없습니다. 가이드 애드온의 자체 여정은 그대로 둡니다."
+L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no map click. A guide addon's own journey is left alone."] =
+	"퀘스트를 집중하거나 게임의 지도 핀을 놓으면 여정을 시작하므로 컨트롤러에서 지도 클릭이 필요 없습니다. 가이드 애드온의 자체 여정은 그대로 둡니다."
 L["Stop %d of %d"] = "정거장 %d/%d" -- mt
 L["Stop %d of %d: %s"] = "정거장 %d/%d: %s"
 L["Suggest quests for my level: Adventure Guide Forever"] =
@@ -443,3 +438,15 @@ L["Profession trainers"] = "전문 기술 상급자" -- mt
 L["Hide game quest markers"] = "게임 퀘스트 표시 숨기기" -- mt
 L["Off, the game's own quest markers stay beside your journey's pins, showing the other places a quest can be done."] =
 	"끄면 게임의 퀘스트 표시가 여정 표시 옆에 그대로 남아, 퀘스트를 완료할 수 있는 다른 장소를 볼 수 있습니다." -- mt
+L["Shift"] = "Shift" -- mt
+L["Alt"] = "Alt" -- mt
+L["Click the map to plan journeys"] = "지도를 클릭하여 여정 계획" -- mt
+L["Hold your journey key and click the world map or the minimap to plan a journey there."] =
+	"여정 키를 누른 채 세계 지도나 미니맵을 클릭하면 그곳까지 여정을 계획합니다." -- mt
+L["Journeys are off. Turn on Click the map to plan journeys in settings."] =
+	"여정이 꺼져 있습니다. 설정에서 '지도를 클릭하여 여정 계획'을 켜십시오." -- mt
+L["Key to plan a journey"] = "여정 계획 키" -- mt
+L["The key you hold to plan a journey from the world map or the minimap."] =
+	"세계 지도나 미니맵에서 여정을 계획하려면 누르고 있는 키입니다." -- mt
+L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
+	"Questie 아이콘에서는 Shift-클릭이 Questie의 것이며, Alt-클릭은 두 키 중 어느 쪽이든 그곳까지 여정을 계획합니다." -- mt

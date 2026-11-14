@@ -4,7 +4,7 @@ The detail behind each feature in the [README](../README.md).
 
 ## Guidance controls
 
-Alt-click the world map to place a destination directly over a Questie icon. Shift-click remains available on the map, minimap and Shortest Path icons.
+Alt-click the world map to place a destination directly over a Questie icon. Shift-click remains available on the map, minimap and Shortest Path icons. **Key to plan a journey** in Guidance chooses Shift or Alt: with Alt, that one key works everywhere, Questie icons included, and Shift no longer plans a journey.
 
 In **Map marks**, scale transport, flight master and minimap icons separately from 25% to 200%. Right-click a flight master icon to mark its path as known or unknown; opening a flight master's map also syncs paths reported by the client.
 
@@ -12,7 +12,7 @@ In **Guidance**, turn **Show journey steps in the objective tracker** off to lea
 
 The direction arrow swings smoothly to each new bearing and rests while you stand still. **Move the arrow** and **Arrow scale** in Interface place and size it, together with the cast prompt that takes its place on a Hearthstone or teleport step. **Arrow label** chooses what shows under it: the distance, the journey's time left or both, and **Objectives under the arrow** shows or hides the stop's live objectives beneath that label. While moving the arrow or the compass, hold Shift as you drag to move it a quarter as far as the mouse, or rest the pointer on it and press the arrow keys to nudge it (ten times as far with Shift). The arrow keys walk as usual everywhere else and in combat. **Show the time left under the compass** (off by default) puts the journey's time left beside the distance to your next turn.
 
-**Route to the focused quest** in Guidance (off by default) starts a journey when you super-track a quest or place the game's own map pin, so a controller needs no Shift-click. A guide addon's own journey is left alone while it leads.
+**Route to the focused quest** in Guidance (off by default) starts a journey when you super-track a quest or place the game's own map pin, so a controller needs no map click. A guide addon's own journey is left alone while it leads.
 
 **Keep journeys after a reload** in Guidance (off by default) starts a journey you planned yourself (a map click, `/way`, a quest or Nearby services) again after a `/reload`, or when you log back in within 30 minutes. Guides and other addons start their own again, and one that does so first wins.
 
@@ -30,8 +30,8 @@ With RestedXP or Guidelime installed, **Resume guide** in Guidance or the Journe
 
 ## Routes and map marks
 
-- **Journey planner.** Shift-click anywhere on the world map or minimap for the fastest way there from where you
-  stand: walking, the flight points you know, boats and zeppelins with their live waits, lifts, the tram and
+- **Journey planner.** Click anywhere on the world map or minimap with your journey key held for the fastest way
+  there from where you stand: walking, the flight points you know, boats and zeppelins with their live waits, lifts, the tram and
   portals, including a flight master you haven't found yet if walking to it pays off. Walks go through
   tunnels and between a city's levels, such as Dun Algaz and the Undercity, and walks keep out of water, which is slow and risky, unless you have Water Walking or Levitate (the step asks you to cast it). The route is drawn
   on the map and minimap, walking legs dotted, and the steps sit in the objective tracker like a tracked
@@ -41,7 +41,7 @@ With RestedXP or Guidelime installed, **Resume guide** in Guidance or the Journe
   lift or flight master, and leads you there round every bend: by the screen arrow, or with *Mark only where steps
   end* off in `/path`, by the game's own waypoint marker moving along the route turn by turn. It hands your tracked
   quest back when you finish. To head for a quest, pick **Plan journey** from its right-click menu in the objective
-  tracker or quest log, or Shift-click its marker on the map; a finished quest routes to its turn-in.
+  tracker or quest log, or click its marker on the map with your journey key held; a finished quest routes to its turn-in.
   Walks keep away from danger. A zone whose lowest level is 4 or more above yours costs four times as much to
   walk through and the other faction's towns and capitals six times as much, so a walk goes round them when there
   is a way, and is planned again when you level up. The zones and towns you start and end in are never avoided.
@@ -177,7 +177,7 @@ With RestedXP or Guidelime installed, **Resume guide** in Guidance or the Journe
 ## With my other Forever addons
 
 - **Adventure Guide's suggestions.** With Adventure Guide Forever on (a version whose API offers suggestions) and
-  *Shift-click to plan journeys* on, right-click a quest in the tracker or the quest log: under *Plan journey*,
+  *Click the map to plan journeys* on, right-click a quest in the tracker or the quest log: under *Plan journey*,
   *Adventure Guide suggests* lists up to three of its suggestions as `[level] title`, in its own order. Choosing one
   starts it as Adventure Guide's own Start does. If its route has moved on since the menu opened, one chat line says
   so.

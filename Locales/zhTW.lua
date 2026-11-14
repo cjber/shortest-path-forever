@@ -103,8 +103,6 @@ L["Interface"] = "介面"
 L["Journey"] = "旅程"
 L["Journey  %s · %s"] = "旅程  %s · %s"
 L["Journey to %s"] = "前往%s的旅程"
-L["Journeys are off. Turn on Shift-click to plan journeys in settings."] =
-	"旅程已關閉。請在設定中開啟「Shift點擊規劃旅程」。"
 L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."] =
 	"旅程以及其他插件從這裡算起的估計，可以從爐石或傳送開始，並計入冷卻時間。"
 L["Keep journeys after a reload"] = "重載後保留旅程"
@@ -180,9 +178,6 @@ L["Scales the shared Forever tracker. 100% matches the game's own tracker."] =
 	"調整共用Forever追蹤器的大小。100%與遊戲本身的追蹤器一致。"
 L["Search services and goods"] = "搜尋服務和物品"
 L["Services"] = "服務"
-L["Shift-click the world map or the minimap to plan a journey there."] =
-	"Shift點擊世界地圖或小地圖以規劃前往該處的旅程。"
-L["Shift-click to plan journeys"] = "Shift點擊規劃旅程"
 L["Shortest Path report"] = "Shortest Path報告"
 L["Show boats and zeppelins"] = "顯示船隻與飛艇"
 L["Show direction arrow"] = "顯示方向箭頭"
@@ -211,8 +206,8 @@ L["Sizes boat, lift, tram and portal icons on the world map."] =
 L["Sizes flight master icons on the world map."] = "調整世界地圖上飛行管理員圖示的大小。"
 L["Sizes transport icons on the minimap."] = "調整小地圖上交通圖示的大小。"
 L["Stable master"] = "獸欄管理員"
-L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no Shift-click. A guide addon's own journey is left alone."] =
-	"當您聚焦任務或放置遊戲地圖標記時開始旅程，因此控制器無需 Shift 點擊。指南插件的自有旅程不受影響。"
+L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no map click. A guide addon's own journey is left alone."] =
+	"當您聚焦任務或放置遊戲地圖標記時開始旅程，因此控制器無需 地圖點擊。指南插件的自有旅程不受影響。"
 L["Stop %d of %d"] = "第%d站，共%d站" -- mt
 L["Stop %d of %d: %s"] = "第%d站，共%d站：%s"
 L["Suggest quests for my level: Adventure Guide Forever"] = "推薦適合我等級的任務：Adventure Guide Forever"
@@ -428,3 +423,15 @@ L["Profession trainers"] = "專業訓練師" -- mt
 L["Hide game quest markers"] = "隱藏遊戲的任務標記" -- mt
 L["Off, the game's own quest markers stay beside your journey's pins, showing the other places a quest can be done."] =
 	"關閉後，遊戲自帶的任務標記會留在旅程標記旁邊，讓你看見任務還能在哪些地方完成。" -- mt
+L["Shift"] = "Shift" -- mt
+L["Alt"] = "Alt" -- mt
+L["Click the map to plan journeys"] = "點擊地圖規劃旅程" -- mt
+L["Hold your journey key and click the world map or the minimap to plan a journey there."] =
+	"按住旅程按鍵並點擊世界地圖或小地圖，即可規劃前往該處的旅程。" -- mt
+L["Journeys are off. Turn on Click the map to plan journeys in settings."] =
+	"旅程已關閉。請在設定中開啟「點擊地圖規劃旅程」。" -- mt
+L["Key to plan a journey"] = "規劃旅程的按鍵" -- mt
+L["The key you hold to plan a journey from the world map or the minimap."] =
+	"在世界地圖或小地圖上規劃旅程時按住的按鍵。" -- mt
+L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
+	"在 Questie 圖示上，Shift 點擊仍歸 Questie 所有；Alt 點擊則可用任一按鍵規劃前往該處的旅程。" -- mt

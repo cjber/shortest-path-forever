@@ -107,8 +107,6 @@ L["Interface"] = "Interface" -- mt
 L["Journey"] = "Trajet" -- mt
 L["Journey  %s · %s"] = "Trajet  %s · %s" -- mt
 L["Journey to %s"] = "Trajet vers %s" -- mt
-L["Journeys are off. Turn on Shift-click to plan journeys in settings."] =
-	"Les trajets sont désactivés. Activez « Maj-clic pour planifier » dans les réglages." -- mt
 L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."] =
 	"Les trajets, et les estimations d'autres addons depuis ici, peuvent commencer par votre pierre de foyer ou une téléportation, temps de recharge compris." -- mt
 L["Keep journeys after a reload"] = "Garder les trajets après un rechargement" -- mt
@@ -186,9 +184,6 @@ L["Scales the shared Forever tracker. 100% matches the game's own tracker."] =
 	"Ajuste la taille du suivi Forever partagé. 100 % correspond au suivi du jeu." -- mt
 L["Search services and goods"] = "Rechercher des services et des biens"
 L["Services"] = "Services"
-L["Shift-click the world map or the minimap to plan a journey there."] =
-	"Maj-clic sur la carte du monde ou la minicarte pour y planifier un trajet." -- mt
-L["Shift-click to plan journeys"] = "Maj-clic pour planifier" -- mt
 L["Shortest Path report"] = "Rapport Shortest Path" -- mt
 L["Show boats and zeppelins"] = "Afficher bateaux et zeppelins" -- mt
 L["Show direction arrow"] = "Afficher la flèche de direction" -- mt
@@ -218,8 +213,8 @@ L["Sizes boat, lift, tram and portal icons on the world map."] =
 L["Sizes flight master icons on the world map."] = "Taille des icônes des maîtres de vol sur la carte du monde." -- mt
 L["Sizes transport icons on the minimap."] = "Taille des icônes de transport sur la minicarte." -- mt
 L["Stable master"] = "Maître des écuries" -- mt
-L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no Shift-click. A guide addon's own journey is left alone."] =
-	"Lance un trajet quand vous suivez une quête ou placez le repère de carte du jeu, ainsi une manette n'a pas besoin de Maj-clic. Le trajet propre à un addon de guide n'est pas touché." -- mt
+L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no map click. A guide addon's own journey is left alone."] =
+	"Lance un trajet quand vous suivez une quête ou placez le repère de carte du jeu, ainsi une manette n'a pas besoin de clic sur la carte. Le trajet propre à un addon de guide n'est pas touché." -- mt
 L["Stop %d of %d"] = "Arrêt %d sur %d" -- mt
 L["Stop %d of %d: %s"] = "Arrêt %d sur %d : %s" -- mt
 L["Suggest quests for my level: Adventure Guide Forever"] =
@@ -437,3 +432,15 @@ L["Profession trainers"] = "Maîtres de métier" -- mt
 L["Hide game quest markers"] = "Masquer les marqueurs de quête" -- mt
 L["Off, the game's own quest markers stay beside your journey's pins, showing the other places a quest can be done."] =
 	"Désactivé, les marqueurs de quête du jeu restent à côté de ceux de votre trajet, pour que vous voyiez les autres endroits où une quête peut être accomplie." -- mt
+L["Shift"] = "Maj" -- mt
+L["Alt"] = "Alt" -- mt
+L["Click the map to plan journeys"] = "Cliquez sur la carte pour planifier des trajets" -- mt
+L["Hold your journey key and click the world map or the minimap to plan a journey there."] =
+	"Maintenez votre touche de trajet et cliquez sur la carte du monde ou la minicarte pour y planifier un trajet." -- mt
+L["Journeys are off. Turn on Click the map to plan journeys in settings."] =
+	"Les trajets sont désactivés. Activez « Cliquez sur la carte pour planifier des trajets » dans les options." -- mt
+L["Key to plan a journey"] = "Touche pour planifier un trajet" -- mt
+L["The key you hold to plan a journey from the world map or the minimap."] =
+	"La touche à maintenir pour planifier un trajet depuis la carte du monde ou la minicarte." -- mt
+L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
+	"Sur une icône Questie, le clic avec Maj reste à Questie ; Alt-clic y planifie le trajet avec l'une ou l'autre touche." -- mt

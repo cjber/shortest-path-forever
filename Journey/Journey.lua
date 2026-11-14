@@ -6,7 +6,8 @@ if ns.broken then
 end
 local L = ns.L
 
--- Shift-click the world map: the fastest way there from here, by foot, flight, boat, zeppelin, tram and portal,
+-- A map click with the journey key held: the fastest way there from here, by foot, flight, boat, zeppelin, tram and
+-- portal,
 -- with the boats' live waits. JourneySearch.lua finds the way; this follows it: the goal, the route and how far
 -- along it you are, Guide and the frame driver. The tracker owns the list; closing the map leaves the journey running.
 local REPLAN_EVERY = 5

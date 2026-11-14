@@ -39,6 +39,9 @@
 ---@field Icon string the one client icon every in-game identity surface draws, read from the TOC
 ---@field NearbyQuestie SPFNearbyQuestie the QuestieDB read behind the Nearby list (UI/NearbyQuestie.lua)
 ---@field ProgressJourneyChanged? fun(point: SPFPoint?, reason?: "arrived"|"cleared")
+---@field JourneyKeys string[] the modifier keys a journey click can wait for: "shift" and "alt" (JourneyInput.lua)
+---@field JourneyKeyDown fun(): boolean whether the chosen journey key is held (JourneyInput.lua)
+---@field JourneyKeyName fun(key?: string): string what the chosen key, or the one named, is called (JourneyInput.lua)
 ---@field TravelStats fun(): SPFProgressData?
 
 ---@class SPFVendorGroup
@@ -250,6 +253,7 @@
 ---@field alertSound? boolean
 ---@field flightPathReminder? boolean
 ---@field journey? boolean
+---@field journeyKey? string -- the modifier held to plan a journey from a map click: "shift" or "alt" (JourneyInput.lua)
 ---@field focusedQuest? boolean -- a super-tracked quest or the player's map pin starts a journey (JourneyInput.lua)
 ---@field compassTime? boolean -- the whole journey's time left under the compass distance (Compass.lua)
 ---@field arrivalSound? boolean -- the map ping when a journey the player planned reaches its goal (Alert.lua)
