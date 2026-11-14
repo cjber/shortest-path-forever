@@ -34,6 +34,7 @@ local KEEP = 50000
 ---@field ConnectorWalk fun(from: SPFPoint, to: SPFPoint): boolean -- a short walk next to a dock or flight master
 ---@field Segment fun(map: number, ax: number, ay: number, bx: number, by: number): number -- mean factor along it
 ---@field roads? true -- Follow roads is on: walks prefer road cells (Path.lua)
+---@field roadFactor? number -- cost of an off-road yard while choosing a walk, at least 1
 ---@field zones table<number, number> -- [uiMap] = factor, for the avoided zones and hostile capitals
 ---@field cities table<number, boolean> -- every hostile capital, exempt ones included
 ---@field towns SPFHazardTown[] -- every hostile town, exempt ones included
@@ -461,9 +462,15 @@ function Hazards.Profile(from, goal)
 		end
 		return 1 + extra
 	end
+	-- A saved percentage is an explicit cost tradeoff, not a hard limit on the whole walk's length.
+	local detour = ns.db.roadDetour
+	if type(detour) ~= "number" or detour ~= detour then
+		detour = 50
+	end
+	local roadFactor = ns.db.followRoads and (1 + math.max(0, math.min(200, detour)) / 100) or nil
 	return {
 		-- What is avoided, not why: a level-up that crosses no zone's threshold keeps every search.
-		key = (faction or "") .. ":" .. table.concat(keys, ",") .. (ns.db.followRoads and ":roads" or ""),
+		key = (faction or "") .. ":" .. table.concat(keys, ",") .. (roadFactor and ":roads:" .. roadFactor or ""),
 		Point = Point,
 		Charged = Charged,
 		Chord = Chord,
@@ -472,6 +479,7 @@ function Hazards.Profile(from, goal)
 		ConnectorWalk = ConnectorWalk,
 		Segment = Segment,
 		roads = ns.db.followRoads and true or nil,
+		roadFactor = roadFactor,
 		zones = zones,
 		cities = cities,
 		towns = towns,

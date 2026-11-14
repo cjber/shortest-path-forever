@@ -35,6 +35,7 @@ end
 ---@field anchors table<number, SPFAnchor>
 ---@field teleports SPFTeleportPlace[]
 ---@field teleportReady table<number, number>
+---@field teleportState table<number, number>
 ---@field partyPortals SPFPartyPortal[]
 ---@field routePolicy? SPFRoutePolicy
 
@@ -44,7 +45,7 @@ end
 ---@return SPFContextOptions
 function Context.Options(from, to, policy)
 	local now = ns.NowMs()
-	local teleports, ready = ns.UsableTeleports(now)
+	local teleports, ready, state = ns.UsableTeleports(now)
 	local partyPortals = ns.PartyPortalPlaces and ns.PartyPortalPlaces(from) or nil
 	local walking = policy == "walking"
 	return {
@@ -65,6 +66,7 @@ function Context.Options(from, to, policy)
 		portals = walking and empty or ns.Portals,
 		teleports = walking and empty or teleports,
 		teleportReady = walking and empty or ready,
+		teleportState = walking and empty or state or empty,
 		partyPortals = walking and empty or partyPortals,
 		hearthMinimumSavings = ns.db and ns.db.hearthMinimumSavings or 0,
 		landmasses = ns.Landmasses,

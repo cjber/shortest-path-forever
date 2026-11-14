@@ -384,8 +384,6 @@ L["Hide departures"] = "Ocultar partidas"
 -- Travel stats.
 
 L["Follow roads"] = "Seguir estradas" -- mt
-L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =
-	"Os trajetos a pé ficam em estradas e ruas pavimentadas quando isso acrescenta menos da metade ao trajeto. Estradas pintadas com a terra comum de uma zona não são reconhecidas." -- mt
 L["A flight would be quicker. Open a flight master's map in %s once to sync your flight points."] =
 	"Voar seria mais rápido. Abra uma vez o mapa de um mestre de voo em %s para sincronizar seus pontos de voo." -- mt
 L["Eastern Kingdoms"] = "Reinos do Leste" -- mt
@@ -489,3 +487,45 @@ L["A recorded location is outside the walking map. The farming tour has stopped.
 L["A recorded location could not be reached. The farming tour has stopped."] =
 	"Não foi possível alcançar um local registrado. O circuito de coleta parou." -- mt
 L["/path farm - choose recorded gathering locations"] = "/path farm - escolher locais de coleta registrados" -- mt
+L["%d. %s (%.1f, %.1f)"] = "%d. %s (%.1f, %.1f)" -- mt
+L["A journey can have up to 64 stops."] = "Uma jornada pode ter até 64 paradas." -- mt
+L["A stop could not be reached. Remove it or choose your own order."] =
+	"Não foi possível alcançar uma parada. Remova-a ou escolha sua própria ordem." -- mt
+L["Add at least one stop."] = "Adicione pelo menos uma parada." -- mt
+L["Add map waypoint"] = "Adicionar ponto de rota do mapa" -- mt
+L["Already in this journey."] = "Já está nesta jornada." -- mt
+L["Clear"] = "Limpar" -- mt
+L["Close"] = "Fechar" -- mt
+L["Down"] = "Descer" -- mt
+L["Estimated travel-time order"] = "Ordem por tempo de viagem estimado" -- mt
+L["Journey complete."] = "Jornada concluída." -- mt
+L["Journey paused."] = "Jornada pausada." -- mt
+L["Journey stopped."] = "Jornada interrompida." -- mt
+L["Journey stops"] = "Paradas da jornada" -- mt
+L["Ordering stops by estimated travel time..."] = "Ordenando paradas por tempo de viagem estimado..." -- mt
+L["Orders the next stop by estimated travel time. You can change the order."] =
+	"Escolhe a próxima parada pelo tempo de viagem estimado. Você pode alterar a ordem." -- mt
+L["Place a map waypoint, then add it to this journey."] =
+	"Coloque um ponto de rota no mapa e adicione-o a esta jornada." -- mt
+L["Remove"] = "Remover" -- mt
+L["Stop %d of %d."] = "Parada %d de %d." -- mt
+L["Stop your current journey before starting this journey."] =
+	"Interrompa sua jornada atual antes de iniciar esta jornada." -- mt
+L["That destination is unavailable."] = "Esse destino está indisponível." -- mt
+L["The journey could not start."] = "Não foi possível iniciar a jornada." -- mt
+L["Up"] = "Subir" -- mt
+L["Your journey changed."] = "Sua jornada mudou." -- mt
+L["Your order"] = "Sua ordem" -- mt
+L["Your position changed. Start again to order these stops."] =
+	"Sua posição mudou. Comece novamente para ordenar estas paradas." -- mt
+L["Combat interrupted ordering. Start again when combat ends."] =
+	"O combate interrompeu a ordenação. Comece novamente quando o combate terminar." -- mt
+L["Ordering stopped while you are dead. Start again when you are alive."] =
+	"A ordenação parou porque você morreu. Comece novamente quando estiver vivo." -- mt
+L["Travel options changed. Start again to order these stops."] =
+	"As opções de viagem mudaram. Comece novamente para ordenar estas paradas." -- mt
+L["Prefer roads and paved streets. Roads painted with a zone's plain dirt are not known."] =
+	"Prefere estradas e ruas pavimentadas. Caminhos com a textura de terra comum da zona não são reconhecidos." -- mt
+L["Road detour allowance"] = "Desvio permitido por estradas" -- mt
+L["With Follow roads on, how much extra distance is worth taking to avoid the same distance off-road. 50% keeps the usual preference; 0% gives no road preference. This is not a limit on the whole walk."] =
+	"Com Seguir estradas ativado, quanta distância extra vale a pena para evitar a mesma distância fora da estrada. 50% mantém a preferência habitual; 0% não dá preferência às estradas. Não é um limite para o trajeto inteiro." -- mt

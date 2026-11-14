@@ -385,8 +385,6 @@ L["Hide departures"] = "Abfahrten ausblenden"
 -- Travel stats.
 
 L["Follow roads"] = "Straßen folgen" -- mt
-L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =
-	"Wege bleiben auf Straßen und gepflasterten Wegen, wenn das den Weg um weniger als die Hälfte verlängert. Straßen, die mit dem schlichten Erdboden einer Zone gemalt wurden, sind nicht bekannt." -- mt
 L["A flight would be quicker. Open a flight master's map in %s once to sync your flight points."] =
 	"Ein Flug wäre schneller. Öffnet einmal die Karte eines Flugmeisters in %s, um Eure Flugpunkte abzugleichen." -- mt
 L["Eastern Kingdoms"] = "Östliche Königreiche" -- mt
@@ -490,3 +488,45 @@ L["A recorded location is outside the walking map. The farming tour has stopped.
 L["A recorded location could not be reached. The farming tour has stopped."] =
 	"Ein aufgezeichneter Ort konnte nicht erreicht werden. Die Sammeltour wurde gestoppt." -- mt
 L["/path farm - choose recorded gathering locations"] = "/path farm - aufgezeichnete Sammelorte auswählen" -- mt
+L["%d. %s (%.1f, %.1f)"] = "%d. %s (%.1f, %.1f)" -- mt
+L["A journey can have up to 64 stops."] = "Eine Reise kann bis zu 64 Halte haben." -- mt
+L["A stop could not be reached. Remove it or choose your own order."] =
+	"Ein Halt konnte nicht erreicht werden. Entferne ihn oder wähle deine eigene Reihenfolge." -- mt
+L["Add at least one stop."] = "Füge mindestens einen Halt hinzu." -- mt
+L["Add map waypoint"] = "Kartenwegpunkt hinzufügen" -- mt
+L["Already in this journey."] = "Bereits in dieser Reise." -- mt
+L["Clear"] = "Leeren" -- mt
+L["Close"] = "Schließen" -- mt
+L["Down"] = "Nach unten" -- mt
+L["Estimated travel-time order"] = "Reihenfolge nach geschätzter Reisezeit" -- mt
+L["Journey complete."] = "Reise abgeschlossen." -- mt
+L["Journey paused."] = "Reise pausiert." -- mt
+L["Journey stopped."] = "Reise gestoppt." -- mt
+L["Journey stops"] = "Reisehalte" -- mt
+L["Ordering stops by estimated travel time..."] = "Halte werden nach geschätzter Reisezeit geordnet..." -- mt
+L["Orders the next stop by estimated travel time. You can change the order."] =
+	"Ordnet den nächsten Halt nach geschätzter Reisezeit. Du kannst die Reihenfolge ändern." -- mt
+L["Place a map waypoint, then add it to this journey."] =
+	"Setze einen Kartenwegpunkt und füge ihn dann dieser Reise hinzu." -- mt
+L["Remove"] = "Entfernen" -- mt
+L["Stop %d of %d."] = "Halt %d von %d." -- mt
+L["Stop your current journey before starting this journey."] =
+	"Beende deine aktuelle Reise, bevor du diese Reise startest." -- mt
+L["That destination is unavailable."] = "Dieses Ziel ist nicht verfügbar." -- mt
+L["The journey could not start."] = "Die Reise konnte nicht gestartet werden." -- mt
+L["Up"] = "Nach oben" -- mt
+L["Your journey changed."] = "Deine Reise hat sich geändert." -- mt
+L["Your order"] = "Deine Reihenfolge" -- mt
+L["Your position changed. Start again to order these stops."] =
+	"Deine Position hat sich geändert. Starte erneut, um diese Halte zu ordnen." -- mt
+L["Combat interrupted ordering. Start again when combat ends."] =
+	"Der Kampf hat das Ordnen unterbrochen. Starte nach dem Kampf erneut." -- mt
+L["Ordering stopped while you are dead. Start again when you are alive."] =
+	"Das Ordnen wurde unterbrochen, weil du tot bist. Starte erneut, wenn du wieder lebst." -- mt
+L["Travel options changed. Start again to order these stops."] =
+	"Die Reiseoptionen haben sich geändert. Starte erneut, um diese Halte zu ordnen." -- mt
+L["Prefer roads and paved streets. Roads painted with a zone's plain dirt are not known."] =
+	"Straßen und gepflasterte Wege bevorzugen. Straßen mit der normalen Bodentextur einer Zone sind nicht bekannt." -- mt
+L["Road detour allowance"] = "Erlaubter Umweg für Straßen" -- mt
+L["With Follow roads on, how much extra distance is worth taking to avoid the same distance off-road. 50% keeps the usual preference; 0% gives no road preference. This is not a limit on the whole walk."] =
+	"Bei aktivierter Option Straßen folgen: wie viel zusätzliche Strecke sich lohnt, um dieselbe Strecke abseits der Straße zu vermeiden. 50% behält die übliche Bevorzugung bei; 0% bevorzugt Straßen nicht. Dies begrenzt nicht die Länge des gesamten Wegs." -- mt

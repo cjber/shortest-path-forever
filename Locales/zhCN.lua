@@ -379,8 +379,6 @@ L["Hide departures"] = "隐藏班次"
 -- Travel stats.
 
 L["Follow roads"] = "沿道路行走" -- mt
-L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =
-	"当绕行不到一半时，步行路线会沿道路和铺装街道前进。用区域普通泥土绘制的道路尚无法识别。" -- mt
 L["A flight would be quicker. Open a flight master's map in %s once to sync your flight points."] =
 	"飞行会更快。在%s打开一次飞行管理员的地图，以同步你的飞行点。" -- mt
 L["Eastern Kingdoms"] = "东部王国" -- mt
@@ -481,3 +479,44 @@ L["A recorded location is outside the walking map. The farming tour has stopped.
 L["A recorded location could not be reached. The farming tour has stopped."] =
 	"无法到达一个已记录的位置。采集巡回已停止。" -- mt
 L["/path farm - choose recorded gathering locations"] = "/path farm - 选择已记录的采集位置" -- mt
+L["%d. %s (%.1f, %.1f)"] = "%d. %s (%.1f, %.1f)" -- mt
+L["A journey can have up to 64 stops."] = "一次旅程最多可有64个停靠点。" -- mt
+L["A stop could not be reached. Remove it or choose your own order."] =
+	"无法到达某个停靠点。请移除该点或自行安排顺序。" -- mt
+L["Add at least one stop."] = "请至少添加一个停靠点。" -- mt
+L["Add map waypoint"] = "添加地图路点" -- mt
+L["Already in this journey."] = "已在此旅程中。" -- mt
+L["Clear"] = "清空" -- mt
+L["Close"] = "关闭" -- mt
+L["Down"] = "下移" -- mt
+L["Estimated travel-time order"] = "按预计旅行时间排序" -- mt
+L["Journey complete."] = "旅程已完成。" -- mt
+L["Journey paused."] = "旅程已暂停。" -- mt
+L["Journey stopped."] = "旅程已停止。" -- mt
+L["Journey stops"] = "旅程停靠点" -- mt
+L["Ordering stops by estimated travel time..."] = "正在按预计旅行时间排列停靠点..." -- mt
+L["Orders the next stop by estimated travel time. You can change the order."] =
+	"按预计旅行时间选择下一个停靠点。你可以更改顺序。" -- mt
+L["Place a map waypoint, then add it to this journey."] =
+	"请先在地图上设置路点，再将其添加到此旅程。" -- mt
+L["Remove"] = "移除" -- mt
+L["Stop %d of %d."] = "第%d个停靠点，共%d个。" -- mt
+L["Stop your current journey before starting this journey."] = "请先停止当前旅程，再开始此旅程。" -- mt
+L["That destination is unavailable."] = "该目的地不可用。" -- mt
+L["The journey could not start."] = "无法开始旅程。" -- mt
+L["Up"] = "上移" -- mt
+L["Your journey changed."] = "你的旅程已更改。" -- mt
+L["Your order"] = "自定顺序" -- mt
+L["Your position changed. Start again to order these stops."] =
+	"你的位置已更改。请重新开始以排列这些停靠点。" -- mt
+L["Combat interrupted ordering. Start again when combat ends."] =
+	"战斗中断了排序。请在战斗结束后重新开始。" -- mt
+L["Ordering stopped while you are dead. Start again when you are alive."] =
+	"你已死亡，排序已停止。请在复活后重新开始。" -- mt
+L["Travel options changed. Start again to order these stops."] =
+	"旅行选项已更改。请重新开始以排列这些停靠点。" -- mt
+L["Prefer roads and paved streets. Roads painted with a zone's plain dirt are not known."] =
+	"优先选择道路和铺装街道。无法识别使用区域普通泥土地表纹理的道路。" -- mt
+L["Road detour allowance"] = "道路绕行余量" -- mt
+L["With Follow roads on, how much extra distance is worth taking to avoid the same distance off-road. 50% keeps the usual preference; 0% gives no road preference. This is not a limit on the whole walk."] =
+	"启用沿道路行走时，为避开等长的非道路路段，愿意多走的距离。50%保持通常的道路偏好；0%不优先选择道路。这不是整段步行距离的上限。" -- mt

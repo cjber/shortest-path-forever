@@ -124,7 +124,23 @@ do
 	ns.db.followRoads = true
 	local withRoads = Hazards.Profile(west, east)
 	assert(withRoads.roads == true and withRoads.key ~= profile.key, "a road search is keyed apart")
+	assert(withRoads.roadFactor == 1.5, "missing saved allowance preserves the old 1.5 factor")
+	ns.db.roadDetour = 200
+	local stronger = Hazards.Profile(west, east)
+	assert(stronger.roadFactor == 3 and stronger.key ~= withRoads.key, "the allowance invalidates cost caches")
+	ns.db.roadDetour = 0
+	assert(Hazards.Profile(west, east).roadFactor == 1, "zero gives no road preference")
+	for _, invalid in ipairs({ false, "bad", 0 / 0 }) do
+		ns.db.roadDetour = invalid
+		assert(Hazards.Profile(west, east).roadFactor == 1.5, "invalid saves retain the default")
+	end
+	ns.db.roadDetour = math.huge
+	assert(Hazards.Profile(west, east).roadFactor == 3, "out-of-range saves cannot create infinite costs")
 	ns.db.followRoads = false
+	local roadsOff = Hazards.Profile(west, east)
+	ns.db.roadDetour = 0
+	assert(Hazards.Profile(west, east).key == roadsOff.key, "the allowance has no effect with Follow roads off")
+	ns.db.roadDetour = nil
 
 	-- Where the journey starts or ends is never avoided: a goal in the high zone, or in the town.
 	profile = Hazards.Profile(west, { map = 1, x = 500, y = 0 })

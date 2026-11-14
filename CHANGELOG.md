@@ -12,6 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Plan a journey with several stops.** Open *Journey stops* from the map tracking menu or `/path stops`, add map waypoints, then let the addon choose each next stop by estimated travel time or arrange your own order. Pause, resume or stop the journey while keeping your list. Thanks to user_lsqt69ps7bgb5p7e for the request (#846).
+
+- **Choose how strongly journeys prefer roads.** The road detour slider sets the extra cost of walking off-road. Its default keeps the usual preference, and 0% removes it. Thanks to Enel3008 for the idea (#848).
+
 - **Walk a farming tour through GatherMate2's recorded locations.** Open *Farming tour* from the map tracking menu or `/path farm`, choose herb or ore types in your current zone, then start, pause or stop the circuit. These are recorded locations, so a node may be absent or unreachable. Thanks to user_lsqt69ps7bgb5p7e for the request (#847).
 
 - **Choose each service pin from Nearby services.** Every service row has its own map checkbox, so hiding one profession leaves the others visible. The world map filter uses the same choices. Thanks to cotijelucie for the request (#866).

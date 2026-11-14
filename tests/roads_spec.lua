@@ -69,10 +69,11 @@ local function share(points)
 	return on / total
 end
 
-local function profile(key, roads)
+local function profile(key, roads, roadFactor)
 	return {
 		key = key,
 		roads = roads and true or nil,
+		roadFactor = roadFactor,
 		Point = function()
 			return 1
 		end,
@@ -112,3 +113,33 @@ print(
 	("roads: plain share %.3f cost %.1f, road share %.3f cost %.1f"):format(plainShare, plainCost, roadShare, roadCost)
 )
 print("roads_spec: ok")
+
+-- The explicit default must preserve both the old physical cost and every drawn point, bit for bit.
+local explicit, explicitCost = Path.FindSync(0, from, to, false, profile("default", true, 1.5))
+assert(explicitCost == roadCost and #explicit == #road, "50% preserves the default road walk")
+for i, point in ipairs(road) do
+	assert(explicit[i].x == point.x and explicit[i].y == point.y, "50% preserves default geometry")
+end
+local shortest, shortestCost = Path.FindSync(0, from, to, false, profile("zero", true, 1))
+assert(shortestCost == plainCost and #shortest == #plain, "0% removes all road preference")
+for i, point in ipairs(plain) do
+	assert(shortest[i].x == point.x and shortest[i].y == point.y, "0% preserves plain geometry")
+end
+-- Real shipped Elwynn terrain: a stronger preference takes a longer walk with more road coverage.
+local strong, strongCost = Path.FindSync(0, from, to, false, profile("strong", true, 3))
+assert(strongCost > roadCost and share(strong) > roadShare, "200% takes a larger detour onto roads")
+assert(strongCost < roadCost * 3 / 1.5, "the reported cost is physical travel, not the preference weight")
+-- Forward and inbound batches must use the same cost model as the rendered walk, including cached endpoints.
+for _, case in ipairs({ { 1, plainCost }, { 1.5, roadCost }, { 3, strongCost } }) do
+	local hz = profile("batch" .. case[1], true, case[1])
+	local forward = Path.FindManySync(0, from, { to }, false, false, hz)[1]
+	local inbound = Path.FindManySync(0, to, { from }, false, true, hz)[1]
+	assert(
+		math.abs(forward - case[2]) < 1e-9 and math.abs(inbound - case[2]) < 1e-9,
+		"batches return the selected walk's real cost"
+	)
+end
+-- Return to the default after changing it: neither the path nor endpoint cache may retain the stronger cost.
+local restored, restoredCost = Path.FindSync(0, from, to, false, profile("default", true, 1.5))
+assert(restoredCost == roadCost and #restored == #road, "restoring 50% restores the cached default walk")
+print("road detour: default geometry, zero, stronger preference and both batch directions ok")

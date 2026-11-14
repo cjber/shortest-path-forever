@@ -4,6 +4,8 @@ local _, ns = ...
 
 ns.Credits = {
 	players = {
+		{ name = "user_lsqt69ps7bgb5p7e", what = "Journeys with several chosen stops" },
+		{ name = "Enel3008", what = "Choose how strongly journeys prefer roads" },
 		{ name = "user_lsqt69ps7bgb5p7e", what = "Farming tours through GatherMate2 recorded locations" },
 		{ name = "azure463", what = "Choose whether journeys use water walking" },
 		{ name = "AsimRamay", what = "Journeys recover after walking away without boarding a boat" },

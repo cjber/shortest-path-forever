@@ -260,6 +260,7 @@ local ns = {
 		journeyKey = "shift",
 		routeColor = "gold",
 		followRoads = false,
+		roadDetour = 50,
 		arrivalDistance = 15,
 		townServices = "capitals",
 	}, {
@@ -388,6 +389,7 @@ local groups = {
 		"guidelime",
 		"avoidHighZones",
 		"followRoads",
+		"roadDetour",
 		"useWaterWalking",
 		"teleports",
 		"hearthMinimumSavings",
@@ -436,7 +438,7 @@ assert(#buttons == #order + 1, "one index button per group, then the Forever add
 -- Main's arrival pin added arrivalPin, the line switches added mapLine, minimapLine and laterLegs, the town services
 -- added townServices, and the tab switch added nearbyTab; the travel stats and departure sharing switches are gone
 -- with their sharing.
-assert(#rows == 68, #rows)
+assert(#rows == 69, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -799,3 +801,14 @@ local policies = policyChanged
 waterWalking.setting:SetValue(false)
 waterWalking.setting:SetValue(true)
 assert(policyChanged == policies + 2, "both checkbox transitions invalidate travel policy")
+
+local roadDetour = Row("roadDetour")
+assert(roadDetour.kind == "slider" and roadDetour.setting.default == 50, "the road allowance preserves 50%")
+assert(roadDetour.setting.variable == "ShortestPathForever_roadDetour", "the allowance is saved")
+assert(roadDetour.setting.category.name == "Guidance", "the allowance belongs beside Follow roads")
+assert(roadDetour.options.minValue == 0 and roadDetour.options.maxValue == 200 and roadDetour.options.step == 25)
+assert(roadDetour.options.format(0) == "0%" and roadDetour.options.format(200) == "200%")
+assert(roadDetour.tooltip:find("not a limit on the whole walk", 1, true), "the preference is no hard detour cap")
+local roadPolicies = policyChanged
+roadDetour.setting:SetValue(200)
+assert(policyChanged == roadPolicies + 1, "changing the allowance replans the current journey")

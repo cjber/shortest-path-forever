@@ -44,6 +44,11 @@
 ---@field JourneyKeyDown fun(): boolean whether the chosen journey key is held (JourneyInput.lua)
 ---@field JourneyKeyName fun(key?: string): string what the chosen key, or the one named, is called (JourneyInput.lua)
 ---@field TravelStats fun(): SPFProgressData?
+---@field StopOrder SPFStopOrder
+---@field JourneyStopsEditor SPFJourneyStopsModule
+---@field ShowJourneyStops fun()
+---@field EstimateContextRevision fun(): integer
+---@field WorldPoint fun(uiMapID: integer, x: number, y: number): SPFPoint?
 ---@field FarmingCursor SPFFarmingCursorFactory
 ---@field NavigateFarmingRoute fun(owner: string, stops: SPFAPIStop[]): boolean
 ---@field JourneyRoutePolicy fun(): SPFRoutePolicy
@@ -54,6 +59,7 @@
 ---@field journeyKey string
 ---@field arrivalDistance number
 ---@field hearthMinimumSavings number
+---@field roadDetour number
 ---@field arrowScale number
 ---@field arrowLabel string
 ---@field compassScale number
@@ -318,7 +324,8 @@
 ---@field compassY? number
 ---@field corpse? boolean
 ---@field avoidHighZones? boolean -- walks go round zones whose lowest level is 4 or more above yours (Hazards.lua)
----@field followRoads? boolean -- walks keep to roads where the detour is short (Data/RoadCells.lua)
+---@field followRoads? boolean -- walks prefer roads (Data/RoadCells.lua)
+---@field roadDetour? number -- extra off-road cost in percent, 0 to 200, default 50
 ---@field whatsNew? boolean
 ---@field seenVersion? string -- the version last loaded, for the line after an update (WhatsNew.lua)
 ---@field debug? boolean

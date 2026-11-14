@@ -129,6 +129,7 @@ local DEFAULTS = {
 	corpse = true,
 	avoidHighZones = true,
 	followRoads = false,
+	roadDetour = 50,
 	whatsNew = true,
 }
 ns.Defaults = DEFAULTS

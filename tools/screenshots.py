@@ -935,11 +935,17 @@ def compare_references(refs, tooltip_ref=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--scenes", nargs="+", choices=(*SCENES, "demo"), default=[*SCENES, "demo"])
+    parser.add_argument("--stops-previews", action="store_true", help="render illustrative journey editor states twice")
     parser.add_argument("--farming-previews", action="store_true", help="render labelled farming proposals twice")
     parser.add_argument("--verify", action="store_true", help="render twice and require identical bytes")
     parser.add_argument("--refs", type=Path, help="write enlarged comparisons against the owner's captures")
     parser.add_argument("--tooltip-ref", type=Path, help="optional real stock tooltip capture; absent from refs 11-21")
     args = parser.parse_args()
+    if args.stops_previews:
+        from screenshots_stops import render_stops_previews
+
+        render_stops_previews(ROOT, WOWMOCK, Art, backdrop, FONTS)
+        return
     if args.farming_previews:
         from screenshots_farming import render_farming_previews
 

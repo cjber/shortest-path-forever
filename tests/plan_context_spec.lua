@@ -6,7 +6,8 @@ local secret = setmetatable({}, {
 	end,
 })
 local client = { speed = 7, moving = 0, faction = "Alliance", now = 100000 }
-local known, teleports, ready = { [1] = true }, { { spell = 5, map = 1, x = 0, y = 0, cast = 10000 } }, { 0 }
+local known, teleports, ready, teleportState =
+	{ [1] = true }, { { spell = 5, map = 1, x = 0, y = 0, cast = 10000 } }, { 0 }, { [1] = 0 }
 local ns = {
 	db = { otherFaction = true, hearthMinimumSavings = 90 },
 	Docks = {
@@ -42,7 +43,7 @@ local ns = {
 	Init = function() end,
 	UsableTeleports = function(now)
 		assert(now == client.now, "teleport readiness is read at the plan's own time")
-		return teleports, ready
+		return teleports, ready, teleportState
 	end,
 	CurrentRide = function()
 		return client.ride
@@ -106,6 +107,7 @@ local expected = {
 	portals = ns.Portals,
 	teleports = teleports,
 	teleportReady = ready,
+	teleportState = teleportState,
 	hearthMinimumSavings = 90,
 	landmasses = ns.Landmasses,
 	baked = ns.Walks,

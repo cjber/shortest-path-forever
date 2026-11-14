@@ -42,7 +42,7 @@ end
 
 -- Seconds of cooldown left, or nil while the client keeps it secret.
 ---@param teleport SPFTeleport
----@return number?
+---@return number?, number?
 local function Cooldown(teleport)
 	local start, duration
 	if teleport.item then
@@ -56,7 +56,11 @@ local function Cooldown(teleport)
 	if not (canaccessvalue(start) and canaccessvalue(duration)) then
 		return nil
 	end
-	return start and duration and start > 0 and math.max(0, start + duration - GetTime()) or 0
+	if start and duration and start > 0 then
+		local deadline = start + duration
+		return math.max(0, deadline - GetTime()), deadline
+	end
+	return 0, 0
 end
 
 -- The cast time the client reports for the spell now, in ms; the shipped one when it reports none.
@@ -71,12 +75,13 @@ end
 -- The places keep their identity while the set is unchanged, so the planner keeps its topology; only readiness
 -- ([index] = server ms when it can be cast) is read afresh.
 ---@param now number server ms
----@return SPFTeleportPlace[] places, table<number, number> ready
+---@return SPFTeleportPlace[] places, table<number, number> ready, table<number, number> state
 function ns.UsableTeleports(now)
 	if not ns.db.teleports then
-		return NONE, NONE
+		return NONE, NONE, NONE
 	end
 	local bind, known, keys = Bind(), {}, {}
+	local state = {}
 	for _, teleport in ipairs(ns.Teleports) do
 		if (teleport.to or (teleport.bind and bind)) and Known(teleport) then
 			known[#known + 1] = teleport
@@ -103,12 +108,16 @@ function ns.UsableTeleports(now)
 	end
 	local ready = {}
 	for index, teleport in ipairs(sources) do
-		local wait = Stocked(teleport) and Cooldown(teleport)
+		local wait, deadline
+		if Stocked(teleport) then
+			wait, deadline = Cooldown(teleport)
+		end
 		if wait then
 			ready[index] = now + wait * 1000
+			state[index] = deadline > GetTime() and deadline or 0
 		end
 	end
-	return places, ready
+	return places, ready, state
 end
 
 -- A bind teleport's landing: after the cast, the travel clock samples where you are, and the first jump faster than

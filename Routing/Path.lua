@@ -21,6 +21,15 @@ local toward, peak = Grid.toward, Grid.peak
 
 local TILE, SNAP, ZTOL, DX, DY = Grid.TILE, Grid.SNAP, Grid.ZTOL, Grid.DX, Grid.DY
 local OFFROAD = Grid.OFFROAD
+
+-- Baked ratios contain both the 1.5-weighted cost and the real cost of the baked road walk.
+-- Their difference is the off-road part times 0.5. Reweight that part only; ETA keeps the real ratio.
+local function roadChoice(choice, real, factor)
+	if factor == OFFROAD then
+		return choice -- keep the existing default's arithmetic exactly
+	end
+	return real + (choice - real) * (factor - 1) / (OFFROAD - 1)
+end
 local RETRIES = 8 -- other cells tried for an endpoint stuck in a pocket
 -- How far below its surface a stuck endpoint may move. Format 1 keeps the bake it shipped with; format 2 knows the
 -- player's falling limit, and past 14.57 yards the drop hurts.
@@ -154,6 +163,7 @@ local function search(st, k, swim, source, tree, goal, targets, left, roads, hz,
 	local N = C * C
 	local g, r, par, stamp, closed = tree.g, tree.r, tree.par, tree.stamp, tree.closed
 	local factor = hz and cellFactors(st, hz, k) or nil
+	local offroad = hz and hz.roadFactor or OFFROAD
 	tree.gen = tree.gen + 1
 	local gen = tree.gen
 	tree.k = k
@@ -183,7 +193,7 @@ local function search(st, k, swim, source, tree, goal, targets, left, roads, hz,
 		local entered = reverse and u or v
 		local step = override or length * cs * (val[entered + 1] == 2 and swim or 1)
 		local base = entered < N and entered or at[entered + 1]
-		local choice = roads and not roads[base] and step * OFFROAD or step
+		local choice = roads and not roads[base] and step * offroad or step
 		if factor then
 			local f = factor[base]
 			if not f then
@@ -456,8 +466,8 @@ end
 -- outbound search.
 local function connect(st, swim, k, node, roadsOn, hz, reverse)
 	nodesOf(st, k)
-	if reverse and st.fmt < 2 then
-		reverse = nil -- format 1's links are symmetric, so its outbound search already answers
+	if reverse and st.fmt < 2 and not (roadsOn and hz and hz.roadFactor and hz.roadFactor ~= OFFROAD) then
+		reverse = nil -- preserve the legacy/default cache; custom road costs depend on the entered cell
 	end
 	local key = k
 		.. ":"
@@ -485,6 +495,23 @@ local function connect(st, swim, k, node, roadsOn, hz, reverse)
 		st.ends[key], st.endCount = entry, st.endCount + 1
 	end
 	return entry.node, entry.edges, entry.reals, entry.tree
+end
+
+-- A baked shortcut chose its interior walk at OFFROAD. A different preference
+-- needs new entrance costs before the abstract search chooses its next cluster.
+-- Reuse endpoint vectors, including their profile and direction cache keys.
+local function customRoadEdges(st, swim, u, hz, reverse)
+	local keys, values, size = hk, hv, hn
+	hk, hv, hn = {}, {}, 0
+	local k = floor(u / 4096)
+	local node = entrance(st, u)
+	local edges, reals = {}, {}
+	if node then
+		local _
+		_, edges, reals = connect(st, swim, k, node, true, hz, reverse)
+	end
+	hk, hv, hn = keys, values, size
+	return edges, reals
 end
 
 -- A point without a height (the player, whose UnitPosition height is a placeholder 0, or a map click) could stand on
@@ -621,7 +648,8 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 		return nil, "offmesh"
 	end
 	local C = st.C
-	local roadsOn = hz and hz.roads
+	local roadsOn = hz and hz.roads and hz.roadFactor ~= 1
+	local offroad = hz and hz.roadFactor or OFFROAD
 
 	local S, G = trees.S, trees.G
 	local starts, source, sourceReal, sourceVia = connectPoint(st, swim, sk, sc, from.z, roadsOn, hz)
@@ -714,17 +742,28 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 				nodesOf(st, floor(u / 4096))
 				local adj = adjacent(st, u)
 				local ratios = roadsOn and Grid.roadEdges(st, u) or nil
+				local custom, customReal
+				if roadsOn and offroad ~= OFFROAD then
+					custom, customReal = customRoadEdges(st, swim, u, hz)
+				end
 				for e = 1, #adj, 3 do
 					local v = adj[e]
 					if aclosed[v] ~= gen then
 						nodesOf(st, floor(v / 4096))
 						local yards = adj[e + cost2]
 						local factor = hz and hazard(st, hz, u, v) or 1
-						if ratios then
+						if custom and floor(v / 4096) == floor(u / 4096) then
+							if custom[v] then
+								relax(v, gu + custom[v], ru + customReal[v], u)
+							end
+						elseif ratios then
 							local ei, m = (e + 2) / 3, cost2 == 2 and 2 or 0
 							relax(
 								v,
-								gu + yards * ratios[ei * 4 - 3 + m] * factor,
+								gu
+									+ yards
+										* roadChoice(ratios[ei * 4 - 3 + m], ratios[ei * 4 - 2 + m], offroad)
+										* factor,
 								ru + yards * ratios[ei * 4 - 2 + m],
 								u
 							)
@@ -954,7 +993,8 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 		end
 	end
 	local swim, cost2 = waterWalking and 1 or st.swim, waterWalking and 2 or 1
-	local roadsOn = hz and hz.roads
+	local roadsOn = hz and hz.roads and hz.roadFactor ~= 1
+	local offroad = hz and hz.roadFactor or OFFROAD
 	local starts, source, sourceReal, _, sourceIn, sourceInReal =
 		connectPoint(st, swim, sk, sc, from.z, roadsOn, hz, reverse)
 	local clusters, links, dist, real, closed, left = {}, {}, {}, {}, {}, #targets
@@ -1075,16 +1115,27 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 				local ratios = roadsOn
 						and (reverse and st.fmt >= 2 and Grid.roadEdgesIn(st, u) or Grid.roadEdges(st, u))
 					or nil
+				local custom, customReal
+				if roadsOn and offroad ~= OFFROAD then
+					custom, customReal = customRoadEdges(st, swim, u, hz, reverse)
+				end
 				for e = 1, #adj, 3 do
 					local v = adj[e]
 					if not closed[v] then
 						local yards = adj[e + cost2]
 						local factor = hz and hazard(st, hz, u, v) or 1
-						if ratios then
+						if custom and floor(v / 4096) == k then
+							if custom[v] then
+								relax(v, dist[u] + custom[v], real[u] + customReal[v])
+							end
+						elseif ratios then
 							local ei, m = (e + 2) / 3, cost2 == 2 and 2 or 0
 							relax(
 								v,
-								dist[u] + yards * ratios[ei * 4 - 3 + m] * factor,
+								dist[u]
+									+ yards
+										* roadChoice(ratios[ei * 4 - 3 + m], ratios[ei * 4 - 2 + m], offroad)
+										* factor,
 								real[u] + yards * ratios[ei * 4 - 2 + m]
 							)
 						else

@@ -60,6 +60,8 @@ Credit for the reports and requests behind the addon.
 
 | Who | What | Notes |
 |---|---|---|
+| user\_lsqt69ps7bgb5p7e | Journeys with several chosen stops | CurseForge thread 8705002, #846 |
+| Enel3008 | Choose how strongly journeys prefer roads | CurseForge thread 8705155, #848 |
 | user\_lsqt69ps7bgb5p7e | Farming tours through GatherMate2 recorded locations | CurseForge; thread 8705002; #847 |
 | [azure463](https://github.com/azure463) | Choose whether journeys use water walking | GitHub; #878 |
 | AsimRamay | Journeys recover after walking away without boarding a boat | GitHub; #764 |

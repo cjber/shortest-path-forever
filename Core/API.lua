@@ -14,6 +14,15 @@ local plannerCache, knownSnapshot = {}, {}
 ---@type table<string, {at: number, seconds: number|false, legs?: SPFLeg[]}>
 local estimates, order, slot = {}, {}, 1
 local anchorSnapshot, context = {}, {}
+local teleportReadySnapshot = {}
+local estimateRevision = 0
+local revisionPartyPortals
+
+-- Incremental callers compare this after each estimate, which refreshes its context.
+---@return integer
+function ns.EstimateContextRevision()
+	return estimateRevision
+end
 local CACHE_LIMIT, CACHE_MS = 256, 5000
 -- Teleports are cast from where you stand, now: only an estimate that starts within this many yards of you counts
 -- them. Anywhere else is a later leg of the caller's route, when their cooldowns are unknown.
@@ -348,6 +357,22 @@ local function Differs(a, b)
 	return false
 end
 
+-- Absolute cooldown deadlines stay stable as the clock advances. A missing slot
+-- means unavailable, and zero means ready, so expiry changes the routing input.
+local function ReadyDiffers(a, b)
+	for key, value in pairs(a or {}) do
+		if not (b and b[key] == value) then
+			return true
+		end
+	end
+	for key in pairs(b or {}) do
+		if not (a and a[key] ~= nil) then
+			return true
+		end
+	end
+	return false
+end
+
 -- The planner options from here and now; a changed context drops every cached estimate.
 ---@param from SPFPoint
 ---@param to SPFPoint
@@ -355,8 +380,10 @@ end
 local function Options(from, to, policy)
 	local options = ns.PlanContext.Options(from, to, policy)
 	local known, now, anchors = options.taxiKnown, options.now, options.anchors
+	local readiness = options.teleportState or {}
 	-- Discovery updates the same saved table in place; topology identity alone cannot detect it.
 	local changed = Differs(known, knownSnapshot)
+	local revisionChanged = changed
 	if changed then
 		plannerCache, knownSnapshot = {}, {}
 		for id, value in pairs(known) do
@@ -367,14 +394,21 @@ local function Options(from, to, policy)
 	if not (x and map == from.map and (x - from.x) ^ 2 + (y - from.y) ^ 2 <= HERE ^ 2) then
 		options.teleportReady = {}
 	end
+	if options.routePolicy ~= "walking" and ReadyDiffers(readiness, teleportReadySnapshot) then
+		changed, revisionChanged = true, true
+		teleportReadySnapshot = {}
+		for index, value in pairs(readiness) do
+			teleportReadySnapshot[index] = value
+		end
+	end
 	for id, anchor in pairs(anchors) do
 		if anchorSnapshot[id] ~= anchor.epoch then
-			changed = true
+			changed, revisionChanged = true, true
 		end
 	end
 	for id in pairs(anchorSnapshot) do
 		if not anchors[id] then
-			changed = true
+			changed, revisionChanged = true, true
 		end
 	end
 	-- Same multimodal planner and baked walks as the arrow's initial plan. Endpoint terrain searches
@@ -383,7 +417,20 @@ local function Options(from, to, policy)
 	for _, name in ipairs(CONTEXT_KEYS) do
 		if context[name] ~= options[name] then
 			changed = true
+			if name ~= "partyPortals" then
+				revisionChanged = true
+			end
 		end
+	end
+	-- Party portals are intentionally unavailable from later itinerary origins.
+	-- Compare their declaration at the player, so changing an estimate endpoint
+	-- clears its cache without pretending the player's routing inputs changed.
+	local party = x and y and map and ns.PartyPortalPlaces and ns.PartyPortalPlaces({ map = map, x = x, y = y }) or nil
+	if revisionPartyPortals ~= party then
+		revisionPartyPortals, revisionChanged = party, true
+	end
+	if revisionChanged then
+		estimateRevision = estimateRevision + 1
 	end
 	if changed then
 		estimates, order, slot, anchorSnapshot = {}, {}, 1, {}

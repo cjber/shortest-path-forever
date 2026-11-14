@@ -1,0 +1,38 @@
+---@meta
+
+---@class SPFJourneyStopsController
+---@field stops SPFAPIStop[] copied draft, never the API's active snapshot
+---@field activeStops? SPFAPIStop[] submitted order, shown while this exact journey is owned
+---@field selected integer
+---@field manual boolean
+---@field generation integer
+---@field session integer
+---@field state string
+---@field owner? string unique owner of exactly one finite submission
+---@field index? integer
+---@field from? SPFAPIPlace
+---@field job? SPFStopOrderJob
+---@field unsubscribe? fun()
+---@field CancelOrder fun(self: SPFJourneyStopsController)
+---@field Observe fun(self: SPFJourneyStopsController)
+---@field Editable fun(self: SPFJourneyStopsController): boolean
+---@field Add fun(self: SPFJourneyStopsController, point: SPFAPIStop): boolean
+---@field AddWaypoint fun(self: SPFJourneyStopsController): boolean
+---@field Move fun(self: SPFJourneyStopsController, delta: integer): boolean
+---@field Remove fun(self: SPFJourneyStopsController): boolean
+---@field Clear fun(self: SPFJourneyStopsController): boolean
+---@field Submit fun(self: SPFJourneyStopsController, points: SPFAPIStop[]): boolean
+---@field Start fun(self: SPFJourneyStopsController): boolean
+---@field Step fun(self: SPFJourneyStopsController)
+---@field Pause fun(self: SPFJourneyStopsController): boolean
+---@field Resume fun(self: SPFJourneyStopsController): boolean
+---@field Stop fun(self: SPFJourneyStopsController)
+---@field Attach fun(self: SPFJourneyStopsController, callback: fun())
+---@field Detach fun(self: SPFJourneyStopsController)
+
+---@class SPFJourneyStopsModule
+---@field new fun(): SPFJourneyStopsController
+
+---@class SPFJourneyStopsWindow : Frame
+---@field SetTitle fun(self: SPFJourneyStopsWindow, title: string)
+---@field GetPortrait fun(self: SPFJourneyStopsWindow): Texture

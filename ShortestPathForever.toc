@@ -113,6 +113,8 @@ Journey\FarmingCursor.lua
 Journey\Farming.lua
 Journey\FarmingOrder.lua
 UI\Farming.lua
+Journey\StopOrder.lua
+UI\JourneyStops.lua
 Core\Zygor.lua
 Core\TomTom.lua
 Core\Way.lua
