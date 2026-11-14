@@ -14,6 +14,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **The destination pin can be made smaller.** *Destination pin size* in Guidance, directly under *Show a pin over the destination*, scales the world map's journey goal pin from 50% to 100%. The pin keeps its shape and its point stays on the destination at every size, and 100% is how it always drew (#778).
+- **The Hearthstone can be kept out of a journey without opening settings.** Right-click the Journey header in the tracker and untick *Use Hearthstone*, or click the innkeeper button at your bind point on the world map. Both flip the same saved switch, replan the journey, and leave your class teleports on offer. The button greys out while the Hearthstone is saved and its tooltip says how much time the Hearthstone saves (cjber/adventure-guide-forever#707).
 - **Choose the key that plans a journey from a map click.** *Key to plan a journey* in Guidance offers Shift or Alt, with Shift by default. Choose Alt and that one key plans a journey everywhere, Questie icons included, so Shift-click stays free for Questie's untrack. Asked on CurseForge by Zhiroc (#882).
 
 ## [1.37.1] - 2026-11-14

@@ -395,6 +395,33 @@ ns.Init(function()
 			ns.DestinationPinChanged()
 		end
 	)
+	local destinationPinSize = Settings.RegisterAddOnSetting(
+		page,
+		"ShortestPathForever_destinationPinSize",
+		"destinationPinSize",
+		ns.db,
+		Settings.VarType.Number,
+		L["Destination pin size"],
+		ns.Defaults.destinationPinSize
+	)
+	destinationPinSize:SetValueChangedCallback(function(_, value)
+		if type(value) == "number" then
+			ns.RefreshDestinationPinSize()
+		end
+	end)
+	settings.destinationPinSize = destinationPinSize
+	local destinationPinOptions = Settings.CreateSliderOptions(50, 100, 5)
+	destinationPinOptions:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
+		return value .. "%"
+	end)
+	Settings.RegisterInitializer(
+		page,
+		Settings.CreateSliderInitializer(
+			destinationPinSize,
+			destinationPinOptions,
+			L["Scales the pin over the destination on the world map."]
+		)
+	)
 	Checkbox(
 		"arrivalPin",
 		L["Show a pin when you reach a stop"],
@@ -497,6 +524,14 @@ ns.Init(function()
 		"teleports",
 		L["Use hearth and teleports"],
 		L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."]
+	)
+	Checkbox(
+		"useHearthstone",
+		L["Use Hearthstone"],
+		L["Journeys can start with your Hearthstone. Turn it off to save it for later; class teleports are still offered."],
+		function(_, value)
+			ns.SetHearthstoneEnabled(type(value) == "boolean" and value or (ns.db.useHearthstone == true))
+		end
 	)
 	local hearth = Settings.RegisterAddOnSetting(
 		page,

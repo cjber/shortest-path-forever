@@ -446,6 +446,17 @@ L["All towns"] = "Все города" -- mt
 L["Books and recipes"] = "Книги и рецепты" -- mt
 L["One icon per town, or one per service as you zoom in."] =
 	"Один значок на город или на услугу при приближении." -- mt
+L["Click to save it."] = "Нажмите, чтобы сохранить." -- mt
+L["Click to use it."] = "Нажмите, чтобы использовать." -- mt
+L["Destination pin size"] = "Размер метки пункта назначения" -- mt
+L["Hearthstone"] = "Камень возвращения" -- mt
+L["Saved for later."] = "Сохранено на потом." -- mt
+L["Scales the pin over the destination on the world map."] =
+	"Меняет размер метки над пунктом назначения на карте мира." -- mt
+L["This journey uses it: %s faster."] = "Этот маршрут использует его: на %s быстрее." -- mt
+L["Use Hearthstone"] = "Использовать камень возвращения" -- mt
+L["Journeys can start with your Hearthstone. Turn it off to save it for later; class teleports are still offered."] =
+	"Путешествие может начаться с камня возвращения. Отключите его, чтобы сохранить на потом; классовые телепорты по-прежнему доступны." -- mt
 L["Ammunition"] = "Боеприпасы" -- mt
 L["Bags and trade supplies"] = "Сумки и хозяйственные товары" -- mt
 L["Food and drink"] = "Еда и напитки" -- mt

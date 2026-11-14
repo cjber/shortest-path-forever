@@ -20,6 +20,17 @@ ns.RouteUnderAlpha = UNDER_ALPHA
 local RING_ATLAS, STOP_SIZE = "adventureguide-ring", ns.StopSize
 local MINIMAP_GOAL, MINIMAP_RING = 16, 22
 
+-- The destination pin's share of its stock size (UI/StopPin.lua), clamped to the 50 to 100 the Settings slider
+-- offers. A saved value from another client, or none at all, draws the pin as it always was.
+---@return number
+function ns.DestinationPinScale()
+	local value = ns.db and ns.db.destinationPinSize
+	if type(value) ~= "number" or value ~= value then
+		return 1
+	end
+	return math.max(50, math.min(100, value)) / 100
+end
+
 -- A stop with a known mark is only ringed, so the game's icon shows through; every other goal wears our own pin,
 -- gold while Guide tracks it and bronze while the route is only planned.
 ---@param texture Texture
@@ -524,8 +535,13 @@ function Layer:RefreshStops()
 	-- of the key: tracking, pausing, yielding or turning Guide off turns the goal pin gold or bronze. So is everything
 	-- a button shows, since a new route keeps the buttons when the key is the same.
 	local groups, keys =
-		ns.OverlapGroups(map, marks, STOP_SIZE),
-		{ mapID, ns.GoalPinActive() and "tracked" or "untracked", first, stops and #stops or 0 }
+		ns.OverlapGroups(map, marks, STOP_SIZE), {
+			mapID,
+			ns.GoalPinActive() and "tracked" or "untracked",
+			first,
+			stops and #stops or 0,
+			ns.DestinationPinScale(),
+		}
 	for _, group in ipairs(groups) do
 		for _, mark in ipairs(group) do
 			keys[#keys + 1] = string.format(
@@ -828,6 +844,14 @@ function ns.RefreshRouteLines()
 	if minimap and minimap:IsShown() then
 		DrawMinimap(minimap)
 		WakeMinimap(minimap)
+	end
+end
+
+-- The Destination pin size slider changed: the goal pins are grouped by their size, so the map takes them back and
+-- sets them again, without replanning the journey.
+function ns.RefreshDestinationPinSize()
+	if provider and WorldMapFrame:IsShown() then
+		provider:RefreshAllData()
 	end
 end
 

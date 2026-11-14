@@ -80,6 +80,8 @@ local DEFAULTS = {
 	-- An on-screen marker over the destination, like the client's own waypoint pin. Off by default: it is
 	-- new screen furniture, and a player asks for it from Settings > Guidance.
 	destinationPin = false,
+	-- The world map's journey goal pin, as a share of its stock size. 100 keeps the pin exactly as it was.
+	destinationPinSize = 100,
 	-- Bouncing arrows beside the nameplate of the NPC a Nearby services journey walks to.
 	npcArrows = true,
 	resumeJourney = false,
@@ -91,6 +93,8 @@ local DEFAULTS = {
 	guidelime = true,
 	taxiRoute = true,
 	teleports = true,
+	-- The Hearthstone alone can be kept out of journeys, with class teleports still offered (Transport/Teleports.lua).
+	useHearthstone = true,
 	-- Another player's spellbook is not queryable, so a party mage's portals are declared. Off by default; when on,
 	-- every capital portal of the player's faction is offered until the player unticks one.
 	partyMagePortals = false,

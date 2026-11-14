@@ -8,7 +8,7 @@ local L = ns.L
 
 -- The addon's own goal pin: a square file whose point is the bottom centre of the square, gold while Guide tracks
 -- the goal and bronze while it does not. 29 tall: the stock pin at the 0.8 scale the map drew it, so the goal sits
--- no heavier on the map than before.
+-- no heavier on the map than before. The player's Destination pin size (UI/Settings.lua) scales it from 50% to 100%.
 local GOAL_SIZE = 29
 -- The map's own quest button (POIButtonTemplate): a 20-unit button whose 32-unit disc art overhangs it. A numbered
 -- stop up to 25 wears the addon's numbered marker instead, square and 24 units across.
@@ -67,6 +67,14 @@ function GoalPin:OnLoad()
 	self.Button:SetVertexColor(1, 0.9, 0.7)
 end
 
+-- The destination pin's size at the player's chosen share, the frame and its art square so neither stretches. The
+-- frame stays centred on the goal, and the art's bottom sits on that centre, so the pin's point stays on the
+-- destination at every size.
+---@return number
+local function GoalSize()
+	return GOAL_SIZE * (ns.DestinationPinScale and ns.DestinationPinScale() or 1)
+end
+
 -- A lone destination wears the addon's own goal pin; a numbered stop up to 25 wears the numbered marker, and a later
 -- stop the map's quest button with its font number.
 -- Stops whose buttons would overlap, a place visited twice among them, share one: it shows the first stop's number
@@ -117,14 +125,15 @@ function GoalPin:OnAcquired(x, y, numbers, count, labels, later, look, details, 
 		self.Button:SetAtlas(current and CURRENT_ATLAS or STOP_ATLAS)
 		self.Number:SetTextColor(unpack(current and NUMBER_DARK or NUMBER_YELLOW))
 	end
+	local goalSize = GoalSize()
 	if numbers then
 		self:SetSize(STOP_SIZE, STOP_SIZE)
 	elseif marked then
 		self:SetSize(LOOK_SIZE, LOOK_SIZE)
 	else
 		-- The addon's own goal pin, square, so its shape is not stretched.
-		self:SetSize(GOAL_SIZE, GOAL_SIZE)
-		ns.Art.Icon(self.Texture, goalFile, GOAL_SIZE)
+		self:SetSize(goalSize, goalSize)
+		ns.Art.Icon(self.Texture, goalFile, goalSize)
 	end
 	self.Texture:ClearAllPoints()
 	if numbered then
@@ -142,7 +151,7 @@ function GoalPin:OnAcquired(x, y, numbers, count, labels, later, look, details, 
 		-- The pin's point marks the goal: the map centres the frame on it, so the pin stands on the centre and the
 		-- hit rect rises with it.
 		self.Texture:SetPoint("BOTTOM", self, "CENTER")
-		self:SetHitRectInsets(0, 0, -GOAL_SIZE / 2, GOAL_SIZE / 2)
+		self:SetHitRectInsets(0, 0, -goalSize / 2, goalSize / 2)
 	else
 		self.Texture:SetAllPoints()
 	end
@@ -176,7 +185,7 @@ function GoalPin:OnAcquired(x, y, numbers, count, labels, later, look, details, 
 		ns.SetStopLook(highlight, look --[[@as SPFAPIStopKind]], numbers and BADGE_SIZE or LOOK_SIZE)
 		highlight:SetAllPoints(self.Icon)
 	else
-		ns.Art.Icon(highlight, goalFile, GOAL_SIZE)
+		ns.Art.Icon(highlight, goalFile, goalSize)
 		highlight:SetAllPoints(self.Texture)
 	end
 	highlight:SetShown(self.highlighted == true)

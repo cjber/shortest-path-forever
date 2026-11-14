@@ -416,6 +416,16 @@ L["All towns"] = "所有城镇" -- mt
 L["Books and recipes"] = "书籍和配方" -- mt
 L["One icon per town, or one per service as you zoom in."] =
 	"缩小显示每个城镇一个图标，放大后每个服务一个图标。" -- mt
+L["Click to save it."] = "点击以留待后用。" -- mt
+L["Click to use it."] = "点击以使用。" -- mt
+L["Destination pin size"] = "目的地标记大小" -- mt
+L["Hearthstone"] = "炉石" -- mt
+L["Saved for later."] = "已留待后用。" -- mt
+L["Scales the pin over the destination on the world map."] = "调整世界地图上目的地标记的大小。" -- mt
+L["This journey uses it: %s faster."] = "此旅程使用它：快 %s。" -- mt
+L["Use Hearthstone"] = "使用炉石" -- mt
+L["Journeys can start with your Hearthstone. Turn it off to save it for later; class teleports are still offered."] =
+	"旅程可以从炉石开始。关闭后可留待后用；职业传送仍然可用。" -- mt
 L["Ammunition"] = "弹药" -- mt
 L["Bags and trade supplies"] = "背包和贸易品" -- mt
 L["Food and drink"] = "食物和饮水" -- mt

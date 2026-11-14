@@ -61,6 +61,7 @@ function ModuleMixin:OnBlockHeaderClick(block, button)
 		elseif button == "RightButton" then
 			ForeverCore.ContextMenu(block, function(_, root)
 				root:CreateCheckbox(L["Guide me"], ns.IsJourneyGuided, ns.ToggleJourneyGuide)
+				root:CreateCheckbox(L["Use Hearthstone"], ns.HearthstoneEnabled, ns.ToggleHearthstone)
 				root:CreateButton(L["Show on map"], ns.ShowJourneyMap)
 				root:CreateButton(L["Resume RestedXP guide"], function()
 					ns.ResumeRestedXP()
