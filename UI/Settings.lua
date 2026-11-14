@@ -836,6 +836,10 @@ ns.Init(function()
 		if ns.core.Report.Command(message) then
 			return
 		end
+		if message == "farm" then
+			ns.OpenFarming()
+			return
+		end
 		local way = message == "way" and "" or message:match("^way%s+(.*)$")
 		if way then
 			ns.Way(way)
@@ -884,6 +888,7 @@ ns.Init(function()
 			)
 			return
 		elseif message == "help" then
+			ns.Print(L["/path farm - choose recorded gathering locations"])
 			ns.Print(L["/path report - show a report to copy into a bug report"])
 			ns.Print(L["/path issue - report a bug or request a feature with a ready-made GitHub issue link"])
 			return

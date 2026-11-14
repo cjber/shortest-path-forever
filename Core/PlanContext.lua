@@ -14,6 +14,8 @@ local Context = {}
 ns.PlanContext = Context
 
 local lastSpeed = 7
+-- Stable identities let the planner reuse its walking topology between frames.
+local empty = {}
 
 -- Run speed stays meaningful while standing still. Secret combat values retain the last readable speed.
 ---@return number
@@ -34,15 +36,19 @@ end
 ---@field teleports SPFTeleportPlace[]
 ---@field teleportReady table<number, number>
 ---@field partyPortals SPFPartyPortal[]
+---@field routePolicy? SPFRoutePolicy
 
 ---@param from SPFPoint
 ---@param to SPFPoint
+---@param policy? SPFRoutePolicy
 ---@return SPFContextOptions
-function Context.Options(from, to)
+function Context.Options(from, to, policy)
 	local now = ns.NowMs()
 	local teleports, ready = ns.UsableTeleports(now)
 	local partyPortals = ns.PartyPortalPlaces and ns.PartyPortalPlaces(from) or nil
+	local walking = policy == "walking"
 	return {
+		routePolicy = walking and "walking" or nil,
 		from = from,
 		to = to,
 		now = now,
@@ -51,15 +57,15 @@ function Context.Options(from, to)
 		otherFaction = ns.db and ns.db.otherFaction or false,
 		taxiKnown = ns.KnownTaxiNodes(),
 		anchors = ns.Timetable.Anchors(),
-		docks = ns.Docks,
-		routes = ns.Routes,
-		taxiNodes = ns.TaxiNodes,
-		taxiPaths = ns.TaxiPaths,
-		taxiTimes = ns.TaxiTimes and ns.TaxiTimes.Snapshot(),
-		portals = ns.Portals,
-		teleports = teleports,
-		teleportReady = ready,
-		partyPortals = partyPortals,
+		docks = walking and empty or ns.Docks,
+		routes = walking and empty or ns.Routes,
+		taxiNodes = walking and empty or ns.TaxiNodes,
+		taxiPaths = walking and empty or ns.TaxiPaths,
+		taxiTimes = walking and empty or ns.TaxiTimes and ns.TaxiTimes.Snapshot(),
+		portals = walking and empty or ns.Portals,
+		teleports = walking and empty or teleports,
+		teleportReady = walking and empty or ready,
+		partyPortals = walking and empty or partyPortals,
 		hearthMinimumSavings = ns.db and ns.db.hearthMinimumSavings or 0,
 		landmasses = ns.Landmasses,
 		baked = ns.Walks,
@@ -70,6 +76,9 @@ end
 ---@param options SPFContextOptions from Options, planned from where you stand
 ---@return {route: number, dock: number, arrive: number}?
 function Context.Ride(options)
+	if options.routePolicy == "walking" then
+		return nil
+	end
 	local here, now = options.from, options.now
 	local routeID = ns.CurrentRide()
 	if not routeID then
@@ -95,15 +104,17 @@ end
 -- The fixed places your faction can use, with these teleport destinations (none for a bind point's own landing).
 ---@param teleports? SPFTeleportPlace[]
 ---@param partyPortals? SPFPartyPortal[]
+---@param policy? SPFRoutePolicy
 ---@return SPFPlace[] places, string faction the faction they were chosen for
-function Context.Places(teleports, partyPortals)
+function Context.Places(teleports, partyPortals, policy)
 	local faction = UnitFactionGroup("player")
+	local walking = policy == "walking"
 	return ns.Planner.Places({
-		docks = ns.Docks,
-		taxiNodes = ns.TaxiNodes,
-		portals = ns.Portals,
-		teleports = teleports,
-		partyPortals = partyPortals,
+		docks = walking and empty or ns.Docks,
+		taxiNodes = walking and empty or ns.TaxiNodes,
+		portals = walking and empty or ns.Portals,
+		teleports = walking and empty or teleports,
+		partyPortals = walking and empty or partyPortals,
 		faction = faction,
 	}),
 		faction

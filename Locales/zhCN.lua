@@ -441,3 +441,43 @@ L["The tab in the world map's quest log. Off, /spfnear and the tracking menu sti
 L["Use Water Walking and Levitate"] = "使用水上行走和漂浮术" -- mt
 L["Use Water Walking or Levitate when available. When off, routes use swimming times and may still cross water."] =
 	"可用时按水上行走或漂浮术规划路线。关闭后使用正常游泳时间；路线仍可能经过水域。" -- mt
+L["Farming tour"] = "采集巡回" -- mt
+L["Herbs"] = "草药" -- mt
+L["Mining"] = "采矿" -- mt
+L["All"] = "全部" -- mt
+L["None"] = "无" -- mt
+L["Start"] = "开始" -- mt
+L["Pause"] = "暂停" -- mt
+L["Resume"] = "继续" -- mt
+L["Stop"] = "停止" -- mt
+L["Ready to start."] = "准备就绪。" -- mt
+L["Farming tour running."] = "采集巡回进行中。" -- mt
+L["Farming tour paused."] = "采集巡回已暂停。" -- mt
+L["Farming tour stopped."] = "采集巡回已停止。" -- mt
+L["Farming tour waiting."] = "采集巡回等待中。" -- mt
+L["Ordering recorded locations..."] = "正在排列已记录的位置..." -- mt
+L["Farming needs the GatherMate2 addon."] = "采集需要 GatherMate2 插件。" -- mt
+L["Your current zone is unavailable."] = "无法获取你当前所在的区域。" -- mt
+L["No recorded locations for these choices in your current zone."] =
+	"当前区域没有符合所选类型的已记录位置。" -- mt
+L["Choose at least two different recorded locations."] = "请至少选择两个不同的已记录位置。" -- mt
+L["Stop your current journey before starting a farming tour."] = "开始采集巡回前，请先停止当前旅程。" -- mt
+L["Next location: %d. Completed circuits: %d."] = "下一个位置：%d。已完成圈数：%d。" -- mt
+L["Visit GatherMate2 recorded locations in your current zone. Nodes may be absent or unreachable."] =
+	"前往当前区域中 GatherMate2 已记录的位置。资源可能不存在，位置也可能无法到达。" -- mt
+L["Waiting for combat to end."] = "正在等待战斗结束。" -- mt
+L["Waiting until you are alive."] = "正在等待你复活。" -- mt
+L["GatherMate2 recorded locations could not be read."] = "无法读取 GatherMate2 已记录的位置。" -- mt
+L["These recorded locations could not be ordered."] = "无法排列这些已记录的位置。" -- mt
+L["Farming could not continue. Start a new tour when you are ready."] =
+	"无法继续采集。准备好后请开始新的巡回。" -- mt
+L["Arrival could not be confirmed. The farming tour has stopped."] = "无法确认到达。采集巡回已停止。" -- mt
+L["Your journey changed. The farming tour has stopped."] = "你的旅程已改变。采集巡回已停止。" -- mt
+L["No walking route was found. The farming tour has stopped."] = "未找到步行路线。采集巡回已停止。" -- mt
+L["Walking map data is unavailable. The farming tour has stopped."] =
+	"步行地图数据不可用。采集巡回已停止。" -- mt
+L["A recorded location is outside the walking map. The farming tour has stopped."] =
+	"一个已记录的位置位于步行地图之外。采集巡回已停止。" -- mt
+L["A recorded location could not be reached. The farming tour has stopped."] =
+	"无法到达一个已记录的位置。采集巡回已停止。" -- mt
+L["/path farm - choose recorded gathering locations"] = "/path farm - 选择已记录的采集位置" -- mt

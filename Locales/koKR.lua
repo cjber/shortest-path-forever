@@ -456,3 +456,48 @@ L["The tab in the world map's quest log. Off, /spfnear and the tracking menu sti
 L["Use Water Walking and Levitate"] = "수면 걷기와 공중 부양 사용" -- mt
 L["Use Water Walking or Levitate when available. When off, routes use swimming times and may still cross water."] =
 	"사용 가능한 수면 걷기 또는 공중 부양으로 경로를 계획합니다. 끄면 일반 수영 시간을 사용하며, 경로가 여전히 물을 건널 수 있습니다." -- mt
+L["Farming tour"] = "채집 순회" -- mt
+L["Herbs"] = "약초" -- mt
+L["Mining"] = "채광" -- mt
+L["All"] = "모두" -- mt
+L["None"] = "없음" -- mt
+L["Start"] = "시작" -- mt
+L["Pause"] = "일시 정지" -- mt
+L["Resume"] = "재개" -- mt
+L["Stop"] = "중지" -- mt
+L["Ready to start."] = "시작할 준비가 되었습니다." -- mt
+L["Farming tour running."] = "채집 순회 진행 중입니다." -- mt
+L["Farming tour paused."] = "채집 순회가 일시 정지되었습니다." -- mt
+L["Farming tour stopped."] = "채집 순회가 중지되었습니다." -- mt
+L["Farming tour waiting."] = "채집 순회 대기 중입니다." -- mt
+L["Ordering recorded locations..."] = "기록된 위치의 순서를 정하는 중..." -- mt
+L["Farming needs the GatherMate2 addon."] = "채집하려면 GatherMate2 애드온이 필요합니다." -- mt
+L["Your current zone is unavailable."] = "현재 지역을 확인할 수 없습니다." -- mt
+L["No recorded locations for these choices in your current zone."] =
+	"현재 지역에 선택한 종류의 기록된 위치가 없습니다." -- mt
+L["Choose at least two different recorded locations."] =
+	"서로 다른 기록된 위치를 두 곳 이상 선택하세요." -- mt
+L["Stop your current journey before starting a farming tour."] =
+	"채집 순회를 시작하기 전에 현재 여정을 중지하세요." -- mt
+L["Next location: %d. Completed circuits: %d."] = "다음 위치: %d. 완료한 순회: %d회." -- mt
+L["Visit GatherMate2 recorded locations in your current zone. Nodes may be absent or unreachable."] =
+	"현재 지역에서 GatherMate2에 기록된 위치를 방문합니다. 자원이 없거나 도달할 수 없는 곳일 수 있습니다." -- mt
+L["Waiting for combat to end."] = "전투가 끝나기를 기다리는 중입니다." -- mt
+L["Waiting until you are alive."] = "부활하기를 기다리는 중입니다." -- mt
+L["GatherMate2 recorded locations could not be read."] = "GatherMate2에 기록된 위치를 읽을 수 없습니다." -- mt
+L["These recorded locations could not be ordered."] = "기록된 위치의 순서를 정할 수 없습니다." -- mt
+L["Farming could not continue. Start a new tour when you are ready."] =
+	"채집을 계속할 수 없습니다. 준비되면 새 순회를 시작하세요." -- mt
+L["Arrival could not be confirmed. The farming tour has stopped."] =
+	"도착을 확인할 수 없어 채집 순회가 중지되었습니다." -- mt
+L["Your journey changed. The farming tour has stopped."] =
+	"여정이 변경되어 채집 순회가 중지되었습니다." -- mt
+L["No walking route was found. The farming tour has stopped."] =
+	"도보 경로를 찾지 못해 채집 순회가 중지되었습니다." -- mt
+L["Walking map data is unavailable. The farming tour has stopped."] =
+	"도보 지도 데이터가 없어 채집 순회가 중지되었습니다." -- mt
+L["A recorded location is outside the walking map. The farming tour has stopped."] =
+	"기록된 위치가 도보 지도 밖에 있어 채집 순회가 중지되었습니다." -- mt
+L["A recorded location could not be reached. The farming tour has stopped."] =
+	"기록된 위치에 도달할 수 없어 채집 순회가 중지되었습니다." -- mt
+L["/path farm - choose recorded gathering locations"] = "/path farm - 기록된 채집 위치 선택" -- mt

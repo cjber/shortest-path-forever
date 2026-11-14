@@ -259,7 +259,8 @@ check(not find(5), "an NPC whose only service is hidden draws no pin")
 check(find(4).Texture.atlas == "Reagents", "the trade supplier keeps its own icon while repair is hidden")
 
 -- Showing repair at once brings its pins back, makes the shared NPC wear repair, and the mixed group keep its stall.
-ns.SetTownServiceShown("townServiceRepair", true)
+ns.SetOption("townServiceRepair", true)
+ns.RefreshTownServices()
 check(count() == 4 and find(5), "showing repair draws its alone pin")
 check(find(3).Texture.atlas == "Repair", "the food seller keeps its own atlas for the shown repairer")
 check(table.concat(linesOf(find(3)), " ") == "Food", "the tooltip lists the other shown service")
@@ -273,7 +274,8 @@ check(
 	table.concat(linesOf(shared), ", ") == "Trade supplies, Repair",
 	"the mixed tooltip lists every shown service in the list's own order, not a pinned service first"
 )
-ns.SetTownServiceShown("townServiceRepair", false)
+ns.SetOption("townServiceRepair", false)
+ns.RefreshTownServices()
 check(count() == 3 and not find(5), "hiding repair drops its pin again")
 check(
 	find(3).Texture.atlas == "Food" and find(4).Texture.atlas == "Reagents",
@@ -320,7 +322,8 @@ check(ns.db.townServiceKinds.repair == false and count() == 3, "unchecking it hi
 
 -- A saved choice survives the next load's defaults merge, and the shipped default stays hidden.
 ns.db.townServiceKinds = nil
-ns.SetTownServiceShown("townServiceRepair", true)
+ns.SetOption("townServiceRepair", true)
+ns.RefreshTownServices()
 for key, value in pairs(ns.Defaults) do
 	if ns.db[key] == nil then
 		ns.db[key] = value
@@ -328,7 +331,8 @@ for key, value in pairs(ns.Defaults) do
 end
 check(ns.db.townServiceRepair == true, "a fresh defaults merge keeps the player's shown repairer")
 check(ns.Defaults.townServiceRepair == false, "the shipped default is still hidden")
-ns.SetTownServiceShown("townServiceRepair", false)
+ns.SetOption("townServiceRepair", false)
+ns.RefreshTownServices()
 
 -- A setting that turns them back on redraws the map, through the same entry the settings page and filter menu call.
 ns.db.townServices = "capitals"

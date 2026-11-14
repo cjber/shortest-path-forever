@@ -1,0 +1,1299 @@
+{
+  "label": "Illustrative mocks, not client captures",
+  "art_build": "1.60.1.70124",
+  "sources": {
+    "UI/Farming.lua": "f3e5efd64a74f83c95c8def5f945e4cf48b409a7443fbfc90c2db0db73fcd7a1",
+    "UI/Art.lua": "1309cbbe9e72823235af14652ab883f7acddd288553eb380073592a7ead2f4cb",
+    "Core/GatherMate.lua": "6be4c8d62a570b2510aa8a9fa131de6a87412c15f5df990731d1b63ee7f6bfd2",
+    "Journey/Farming.lua": "e6813c9ef5b60c420de32b9d05f3c00588bd9348c40ad6967cfff1dcd8fa4f16",
+    "tools/screenshots.py": "91bd802a3d0b20b357a2439941120ba11a779cc3eeb90b6caa436cd16862f469",
+    "tools/screenshots_farming.py": "82bcb6dd1a373294592da55cdc421e8886c0d969028413d4fd62bf62231d56ae",
+    "tools/screenshots_art.py": "94e9c8bbd25f35c2f101631bac0a1c9a7f317c66dc99b7ce3585d5b1832a670f",
+    "media/Icon.tga": "2923cd3d2694f440586fff0760a190876e6a6768956a5c093617df1dee754f38"
+  },
+  "renderer_sha256": "c86a59f18b30c89d0b9bbc1918d33fae13728cc8a59db919f6c7584fdd4ceed1",
+  "pillow_version": "13.0.0",
+  "scenes": {
+    "ready": {
+      "frame": [
+        32,
+        40,
+        480,
+        520
+      ],
+      "canvas": [
+        544,
+        600
+      ],
+      "controls": [
+        {
+          "name": "description",
+          "role": "text",
+          "x": 104,
+          "y": 80,
+          "w": 392,
+          "h": 36,
+          "enabled": true
+        },
+        {
+          "name": "Herbs",
+          "role": "button",
+          "x": 48,
+          "y": 128,
+          "w": 104,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "Mining",
+          "role": "button",
+          "x": 160,
+          "y": 128,
+          "w": 104,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "All",
+          "role": "button",
+          "x": 272,
+          "y": 128,
+          "w": 104,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "None",
+          "role": "button",
+          "x": 384,
+          "y": 128,
+          "w": 104,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "inset",
+          "role": "container",
+          "x": 48,
+          "y": 160,
+          "w": 448,
+          "h": 270,
+          "enabled": true
+        },
+        {
+          "name": "scroll viewport",
+          "role": "viewport",
+          "x": 54,
+          "y": 166,
+          "w": 414,
+          "h": 258,
+          "enabled": true
+        },
+        {
+          "name": "Earthroot",
+          "role": "checkbox",
+          "x": 58,
+          "y": 166,
+          "w": 26,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "Earthroot label",
+          "role": "text",
+          "x": 88,
+          "y": 166,
+          "w": 372,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "Mageroyal",
+          "role": "checkbox",
+          "x": 58,
+          "y": 194,
+          "w": 26,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "Mageroyal label",
+          "role": "text",
+          "x": 88,
+          "y": 194,
+          "w": 372,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "Peacebloom",
+          "role": "checkbox",
+          "x": 58,
+          "y": 222,
+          "w": 26,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "Peacebloom label",
+          "role": "text",
+          "x": 88,
+          "y": 222,
+          "w": 372,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "Silverleaf",
+          "role": "checkbox",
+          "x": 58,
+          "y": 250,
+          "w": 26,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "Silverleaf label",
+          "role": "text",
+          "x": 88,
+          "y": 250,
+          "w": 372,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "scrollbar",
+          "role": "scrollbar",
+          "x": 471,
+          "y": 164,
+          "w": 14,
+          "h": 255,
+          "enabled": true
+        },
+        {
+          "name": "status",
+          "role": "text",
+          "x": 48,
+          "y": 440,
+          "w": 448,
+          "h": 24,
+          "enabled": true
+        },
+        {
+          "name": "Start",
+          "role": "button",
+          "x": 48,
+          "y": 518,
+          "w": 104,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "Pause",
+          "role": "button",
+          "x": 160,
+          "y": 518,
+          "w": 104,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "Resume",
+          "role": "button",
+          "x": 272,
+          "y": 518,
+          "w": 104,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "Stop",
+          "role": "button",
+          "x": 384,
+          "y": 518,
+          "w": 104,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "Portrait",
+          "role": "host-art",
+          "x": 27,
+          "y": 33,
+          "w": 62,
+          "h": 62
+        },
+        {
+          "name": "Title",
+          "role": "text",
+          "x": 90,
+          "y": 46,
+          "w": 398,
+          "h": 12
+        },
+        {
+          "name": "Close",
+          "role": "host-button",
+          "x": 486,
+          "y": 39,
+          "w": 24,
+          "h": 24,
+          "enabled": true
+        }
+      ],
+      "sha256": "01b92d9eccdd4a0e84629937d355ac8add563a09d9acecef4299997630b71494"
+    },
+    "empty": {
+      "frame": [
+        32,
+        40,
+        480,
+        520
+      ],
+      "canvas": [
+        544,
+        600
+      ],
+      "controls": [
+        {
+          "name": "description",
+          "role": "text",
+          "x": 104,
+          "y": 80,
+          "w": 392,
+          "h": 36,
+          "enabled": true
+        },
+        {
+          "name": "Herbs",
+          "role": "button",
+          "x": 48,
+          "y": 128,
+          "w": 104,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "Mining",
+          "role": "button",
+          "x": 160,
+          "y": 128,
+          "w": 104,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "All",
+          "role": "button",
+          "x": 272,
+          "y": 128,
+          "w": 104,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "None",
+          "role": "button",
+          "x": 384,
+          "y": 128,
+          "w": 104,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "inset",
+          "role": "container",
+          "x": 48,
+          "y": 160,
+          "w": 448,
+          "h": 270,
+          "enabled": true
+        },
+        {
+          "name": "scroll viewport",
+          "role": "viewport",
+          "x": 54,
+          "y": 166,
+          "w": 414,
+          "h": 258,
+          "enabled": true
+        },
+        {
+          "name": "scrollbar",
+          "role": "scrollbar",
+          "x": 471,
+          "y": 164,
+          "w": 14,
+          "h": 255,
+          "enabled": true
+        },
+        {
+          "name": "status",
+          "role": "text",
+          "x": 48,
+          "y": 440,
+          "w": 448,
+          "h": 12,
+          "enabled": true
+        },
+        {
+          "name": "Start",
+          "role": "button",
+          "x": 48,
+          "y": 518,
+          "w": 104,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "Pause",
+          "role": "button",
+          "x": 160,
+          "y": 518,
+          "w": 104,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "Resume",
+          "role": "button",
+          "x": 272,
+          "y": 518,
+          "w": 104,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "Stop",
+          "role": "button",
+          "x": 384,
+          "y": 518,
+          "w": 104,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "Portrait",
+          "role": "host-art",
+          "x": 27,
+          "y": 33,
+          "w": 62,
+          "h": 62
+        },
+        {
+          "name": "Title",
+          "role": "text",
+          "x": 90,
+          "y": 46,
+          "w": 398,
+          "h": 12
+        },
+        {
+          "name": "Close",
+          "role": "host-button",
+          "x": 486,
+          "y": 39,
+          "w": 24,
+          "h": 24,
+          "enabled": true
+        }
+      ],
+      "sha256": "1d1be84c069fdd8d577896b259dd9b990e229b82b4846f40af689a382fdd8191"
+    },
+    "running": {
+      "frame": [
+        32,
+        40,
+        480,
+        520
+      ],
+      "canvas": [
+        544,
+        600
+      ],
+      "controls": [
+        {
+          "name": "description",
+          "role": "text",
+          "x": 104,
+          "y": 80,
+          "w": 392,
+          "h": 36,
+          "enabled": true
+        },
+        {
+          "name": "Herbs",
+          "role": "button",
+          "x": 48,
+          "y": 128,
+          "w": 104,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "Mining",
+          "role": "button",
+          "x": 160,
+          "y": 128,
+          "w": 104,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "All",
+          "role": "button",
+          "x": 272,
+          "y": 128,
+          "w": 104,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "None",
+          "role": "button",
+          "x": 384,
+          "y": 128,
+          "w": 104,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "inset",
+          "role": "container",
+          "x": 48,
+          "y": 160,
+          "w": 448,
+          "h": 270,
+          "enabled": true
+        },
+        {
+          "name": "scroll viewport",
+          "role": "viewport",
+          "x": 54,
+          "y": 166,
+          "w": 414,
+          "h": 258,
+          "enabled": true
+        },
+        {
+          "name": "Earthroot",
+          "role": "checkbox",
+          "x": 58,
+          "y": 166,
+          "w": 26,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "Earthroot label",
+          "role": "text",
+          "x": 88,
+          "y": 166,
+          "w": 372,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "Mageroyal",
+          "role": "checkbox",
+          "x": 58,
+          "y": 194,
+          "w": 26,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "Mageroyal label",
+          "role": "text",
+          "x": 88,
+          "y": 194,
+          "w": 372,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "Peacebloom",
+          "role": "checkbox",
+          "x": 58,
+          "y": 222,
+          "w": 26,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "Peacebloom label",
+          "role": "text",
+          "x": 88,
+          "y": 222,
+          "w": 372,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "Silverleaf",
+          "role": "checkbox",
+          "x": 58,
+          "y": 250,
+          "w": 26,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "Silverleaf label",
+          "role": "text",
+          "x": 88,
+          "y": 250,
+          "w": 372,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "scrollbar",
+          "role": "scrollbar",
+          "x": 471,
+          "y": 164,
+          "w": 14,
+          "h": 255,
+          "enabled": true
+        },
+        {
+          "name": "status",
+          "role": "text",
+          "x": 48,
+          "y": 440,
+          "w": 448,
+          "h": 24,
+          "enabled": true
+        },
+        {
+          "name": "Start",
+          "role": "button",
+          "x": 48,
+          "y": 518,
+          "w": 104,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "Pause",
+          "role": "button",
+          "x": 160,
+          "y": 518,
+          "w": 104,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "Resume",
+          "role": "button",
+          "x": 272,
+          "y": 518,
+          "w": 104,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "Stop",
+          "role": "button",
+          "x": 384,
+          "y": 518,
+          "w": 104,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "Portrait",
+          "role": "host-art",
+          "x": 27,
+          "y": 33,
+          "w": 62,
+          "h": 62
+        },
+        {
+          "name": "Title",
+          "role": "text",
+          "x": 90,
+          "y": 46,
+          "w": 398,
+          "h": 12
+        },
+        {
+          "name": "Close",
+          "role": "host-button",
+          "x": 486,
+          "y": 39,
+          "w": 24,
+          "h": 24,
+          "enabled": true
+        }
+      ],
+      "sha256": "5f91b14501c4338d4aef3738e791d51c86e526be1418168b204a2238db62d23f"
+    },
+    "paused": {
+      "frame": [
+        32,
+        40,
+        480,
+        520
+      ],
+      "canvas": [
+        544,
+        600
+      ],
+      "controls": [
+        {
+          "name": "description",
+          "role": "text",
+          "x": 104,
+          "y": 80,
+          "w": 392,
+          "h": 36,
+          "enabled": true
+        },
+        {
+          "name": "Herbs",
+          "role": "button",
+          "x": 48,
+          "y": 128,
+          "w": 104,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "Mining",
+          "role": "button",
+          "x": 160,
+          "y": 128,
+          "w": 104,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "All",
+          "role": "button",
+          "x": 272,
+          "y": 128,
+          "w": 104,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "None",
+          "role": "button",
+          "x": 384,
+          "y": 128,
+          "w": 104,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "inset",
+          "role": "container",
+          "x": 48,
+          "y": 160,
+          "w": 448,
+          "h": 270,
+          "enabled": true
+        },
+        {
+          "name": "scroll viewport",
+          "role": "viewport",
+          "x": 54,
+          "y": 166,
+          "w": 414,
+          "h": 258,
+          "enabled": true
+        },
+        {
+          "name": "Earthroot",
+          "role": "checkbox",
+          "x": 58,
+          "y": 166,
+          "w": 26,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "Earthroot label",
+          "role": "text",
+          "x": 88,
+          "y": 166,
+          "w": 372,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "Mageroyal",
+          "role": "checkbox",
+          "x": 58,
+          "y": 194,
+          "w": 26,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "Mageroyal label",
+          "role": "text",
+          "x": 88,
+          "y": 194,
+          "w": 372,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "Peacebloom",
+          "role": "checkbox",
+          "x": 58,
+          "y": 222,
+          "w": 26,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "Peacebloom label",
+          "role": "text",
+          "x": 88,
+          "y": 222,
+          "w": 372,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "Silverleaf",
+          "role": "checkbox",
+          "x": 58,
+          "y": 250,
+          "w": 26,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "Silverleaf label",
+          "role": "text",
+          "x": 88,
+          "y": 250,
+          "w": 372,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "scrollbar",
+          "role": "scrollbar",
+          "x": 471,
+          "y": 164,
+          "w": 14,
+          "h": 255,
+          "enabled": true
+        },
+        {
+          "name": "status",
+          "role": "text",
+          "x": 48,
+          "y": 440,
+          "w": 448,
+          "h": 24,
+          "enabled": true
+        },
+        {
+          "name": "Start",
+          "role": "button",
+          "x": 48,
+          "y": 518,
+          "w": 104,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "Pause",
+          "role": "button",
+          "x": 160,
+          "y": 518,
+          "w": 104,
+          "h": 26,
+          "enabled": false
+        },
+        {
+          "name": "Resume",
+          "role": "button",
+          "x": 272,
+          "y": 518,
+          "w": 104,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "Stop",
+          "role": "button",
+          "x": 384,
+          "y": 518,
+          "w": 104,
+          "h": 26,
+          "enabled": true
+        },
+        {
+          "name": "Portrait",
+          "role": "host-art",
+          "x": 27,
+          "y": 33,
+          "w": 62,
+          "h": 62
+        },
+        {
+          "name": "Title",
+          "role": "text",
+          "x": 90,
+          "y": 46,
+          "w": 398,
+          "h": 12
+        },
+        {
+          "name": "Close",
+          "role": "host-button",
+          "x": 486,
+          "y": 39,
+          "w": 24,
+          "h": 24,
+          "enabled": true
+        }
+      ],
+      "sha256": "8323ec42500e347ca19831c9febac6ba40ddd67722fc3eaeab9bcb8d209b17fd"
+    }
+  },
+  "assets": {
+    "!UI-Frame-InnerLeftTile": {
+      "member": "!UI-Frame-InnerLeftTile",
+      "set": "0",
+      "file_data_id": "1723832",
+      "size": [
+        3.0,
+        256.0
+      ],
+      "texcoords_pixels": [
+        "31",
+        "0",
+        "34",
+        "256"
+      ]
+    },
+    "!UI-Frame-InnerRightTile": {
+      "member": "!UI-Frame-InnerRightTile",
+      "set": "0",
+      "file_data_id": "1723832",
+      "size": [
+        3.0,
+        256.0
+      ],
+      "texcoords_pixels": [
+        "36",
+        "0",
+        "39",
+        "256"
+      ]
+    },
+    "!UI-Frame-Metal-EdgeLeft": {
+      "member": "!ui-frame-metal-edgeleft-c60-2x",
+      "set": "1",
+      "file_data_id": "8069114",
+      "size": [
+        95.0,
+        128.0
+      ],
+      "texcoords_pixels": [
+        "1",
+        "0",
+        "191",
+        "256"
+      ]
+    },
+    "!UI-Frame-Metal-EdgeRight": {
+      "member": "!ui-frame-metal-edgeright-c60-2x",
+      "set": "1",
+      "file_data_id": "8069114",
+      "size": [
+        95.0,
+        128.0
+      ],
+      "texcoords_pixels": [
+        "193",
+        "0",
+        "383",
+        "256"
+      ]
+    },
+    "!minimal-scrollbar-track-middle": {
+      "member": "!minimal-scrollbar-track-middle-c60",
+      "set": "1",
+      "file_data_id": "8086478",
+      "size": [
+        8.0,
+        1.0
+      ],
+      "texcoords_pixels": [
+        "1",
+        "0",
+        "9",
+        "1"
+      ]
+    },
+    "128-RedButton-Left": {
+      "member": "128-redbutton-left-c60",
+      "set": "1",
+      "file_data_id": "8063723",
+      "size": [
+        114.0,
+        128.0
+      ],
+      "texcoords_pixels": [
+        "391",
+        "781",
+        "505",
+        "909"
+      ]
+    },
+    "128-RedButton-Left-Disabled": {
+      "member": "128-redbutton-left-disabled-c60",
+      "set": "1",
+      "file_data_id": "8063723",
+      "size": [
+        114.0,
+        128.0
+      ],
+      "texcoords_pixels": [
+        "391",
+        "911",
+        "505",
+        "1039"
+      ]
+    },
+    "128-RedButton-Right": {
+      "member": "128-redbutton-right-c60",
+      "set": "1",
+      "file_data_id": "8063723",
+      "size": [
+        292.0,
+        128.0
+      ],
+      "texcoords_pixels": [
+        "1",
+        "391",
+        "293",
+        "519"
+      ]
+    },
+    "128-RedButton-Right-Disabled": {
+      "member": "128-redbutton-right-disabled-c60",
+      "set": "1",
+      "file_data_id": "8063723",
+      "size": [
+        292.0,
+        128.0
+      ],
+      "texcoords_pixels": [
+        "1",
+        "521",
+        "293",
+        "649"
+      ]
+    },
+    "RedButton-Exit": {
+      "member": "redbutton-exit-c60-2x",
+      "set": "1",
+      "file_data_id": "8107305",
+      "size": [
+        32.0,
+        32.0
+      ],
+      "texcoords_pixels": [
+        "67",
+        "1",
+        "131",
+        "65"
+      ]
+    },
+    "UI-Frame-InnerBotLeftCorner": {
+      "member": "UI-Frame-InnerBotLeftCorner",
+      "set": "0",
+      "file_data_id": "1723831",
+      "size": [
+        6.0,
+        6.0
+      ],
+      "texcoords_pixels": [
+        "81",
+        "71",
+        "87",
+        "77"
+      ]
+    },
+    "UI-Frame-InnerBotRight": {
+      "member": "UI-Frame-InnerBotRight",
+      "set": "0",
+      "file_data_id": "1723831",
+      "size": [
+        6.0,
+        6.0
+      ],
+      "texcoords_pixels": [
+        "89",
+        "71",
+        "95",
+        "77"
+      ]
+    },
+    "UI-Frame-InnerTopLeft": {
+      "member": "UI-Frame-InnerTopLeft",
+      "set": "0",
+      "file_data_id": "1723831",
+      "size": [
+        6.0,
+        6.0
+      ],
+      "texcoords_pixels": [
+        "97",
+        "71",
+        "103",
+        "77"
+      ]
+    },
+    "UI-Frame-InnerTopRight": {
+      "member": "UI-Frame-InnerTopRight",
+      "set": "0",
+      "file_data_id": "1723831",
+      "size": [
+        6.0,
+        6.0
+      ],
+      "texcoords_pixels": [
+        "105",
+        "71",
+        "111",
+        "77"
+      ]
+    },
+    "UI-Frame-Metal-CornerBottomLeft": {
+      "member": "ui-frame-metal-cornerbottomleft-c60-2x",
+      "set": "1",
+      "file_data_id": "8069116",
+      "size": [
+        95.0,
+        100.0
+      ],
+      "texcoords_pixels": [
+        "1",
+        "1",
+        "191",
+        "201"
+      ]
+    },
+    "UI-Frame-Metal-CornerBottomRight": {
+      "member": "ui-frame-metal-cornerbottomright-c60-2x",
+      "set": "1",
+      "file_data_id": "8069116",
+      "size": [
+        95.0,
+        100.0
+      ],
+      "texcoords_pixels": [
+        "1",
+        "203",
+        "191",
+        "403"
+      ]
+    },
+    "UI-Frame-Metal-CornerTopRight": {
+      "member": "ui-frame-metal-cornertopright-c60-2x",
+      "set": "1",
+      "file_data_id": "8069116",
+      "size": [
+        95.0,
+        95.0
+      ],
+      "texcoords_pixels": [
+        "193",
+        "193",
+        "383",
+        "383"
+      ]
+    },
+    "UI-Frame-PortraitMetal-CornerTopLeft": {
+      "member": "ui-frame-portraitmetal-cornertopleft-c60-2x",
+      "set": "1",
+      "file_data_id": "8069116",
+      "size": [
+        95.0,
+        95.0
+      ],
+      "texcoords_pixels": [
+        "385",
+        "193",
+        "575",
+        "383"
+      ]
+    },
+    "_128-RedButton-Center": {
+      "member": "_128-redbutton-center-c60",
+      "set": "1",
+      "file_data_id": "8063723",
+      "size": [
+        64.0,
+        128.0
+      ],
+      "texcoords_pixels": [
+        "0",
+        "1",
+        "64",
+        "129"
+      ]
+    },
+    "_128-RedButton-Center-Disabled": {
+      "member": "_128-redbutton-center-disabled-c60",
+      "set": "1",
+      "file_data_id": "8063723",
+      "size": [
+        64.0,
+        128.0
+      ],
+      "texcoords_pixels": [
+        "0",
+        "131",
+        "64",
+        "259"
+      ]
+    },
+    "_UI-Frame-InnerBotTile": {
+      "member": "_UI-Frame-InnerBotTile",
+      "set": "0",
+      "file_data_id": "1723833",
+      "size": [
+        256.0,
+        3.0
+      ],
+      "texcoords_pixels": [
+        "0",
+        "111",
+        "256",
+        "114"
+      ]
+    },
+    "_UI-Frame-InnerTopTile": {
+      "member": "_UI-Frame-InnerTopTile",
+      "set": "0",
+      "file_data_id": "1723833",
+      "size": [
+        256.0,
+        3.0
+      ],
+      "texcoords_pixels": [
+        "0",
+        "116",
+        "256",
+        "119"
+      ]
+    },
+    "_UI-Frame-Metal-EdgeBottom": {
+      "member": "_ui-frame-metal-edgebottom-c60-2x",
+      "set": "1",
+      "file_data_id": "8069118",
+      "size": [
+        128.0,
+        100.0
+      ],
+      "texcoords_pixels": [
+        "0",
+        "1",
+        "256",
+        "201"
+      ]
+    },
+    "_UI-Frame-Metal-EdgeTop": {
+      "member": "_ui-frame-metal-edgetop-c60-2x",
+      "set": "1",
+      "file_data_id": "8069118",
+      "size": [
+        128.0,
+        95.0
+      ],
+      "texcoords_pixels": [
+        "0",
+        "203",
+        "256",
+        "393"
+      ]
+    },
+    "_UI-Frame-TopTileStreaks": {
+      "member": "_UI-Frame-TopTileStreaks",
+      "set": "0",
+      "file_data_id": "1723833",
+      "size": [
+        256.0,
+        43.0
+      ],
+      "texcoords_pixels": [
+        "0",
+        "1",
+        "256",
+        "44"
+      ]
+    },
+    "minimal-scrollbar-arrow-bottom": {
+      "member": "minimal-scrollbar-arrow-bottom-c60",
+      "set": "1",
+      "file_data_id": "8069102",
+      "size": [
+        17.0,
+        11.0
+      ],
+      "texcoords_pixels": [
+        "31",
+        "52",
+        "48",
+        "63"
+      ]
+    },
+    "minimal-scrollbar-arrow-top": {
+      "member": "minimal-scrollbar-arrow-top-c60",
+      "set": "1",
+      "file_data_id": "8069102",
+      "size": [
+        17.0,
+        11.0
+      ],
+      "texcoords_pixels": [
+        "88",
+        "1",
+        "105",
+        "12"
+      ]
+    },
+    "minimal-scrollbar-track-bottom": {
+      "member": "minimal-scrollbar-track-bottom-c60",
+      "set": "1",
+      "file_data_id": "8069102",
+      "size": [
+        8.0,
+        8.0
+      ],
+      "texcoords_pixels": [
+        "11",
+        "49",
+        "19",
+        "57"
+      ]
+    },
+    "minimal-scrollbar-track-top": {
+      "member": "minimal-scrollbar-track-top-c60",
+      "set": "1",
+      "file_data_id": "8069102",
+      "size": [
+        8.0,
+        8.0
+      ],
+      "texcoords_pixels": [
+        "21",
+        "39",
+        "29",
+        "47"
+      ]
+    }
+  }
+}

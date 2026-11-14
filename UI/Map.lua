@@ -771,6 +771,10 @@ local function AddFilters(_, rootDescription)
 	AddFilter("portals", L["Portals"])
 	AddFilter("otherFaction", L["Other Faction's Routes"])
 	AddFilter("hideQuestPins", L["Hide game quest markers"])
+	rootDescription:CreateDivider()
+	rootDescription:CreateButton(L["Farming tour"], function()
+		ns.OpenFarming()
+	end)
 end
 
 ns.Init(function()

@@ -445,3 +445,47 @@ L["The tab in the world map's quest log. Off, /spfnear and the tracking menu sti
 L["Use Water Walking and Levitate"] = "Usar Andar sobre a Água e Levitar" -- mt
 L["Use Water Walking or Levitate when available. When off, routes use swimming times and may still cross water."] =
 	"Planeja com Andar sobre a Água ou Levitar quando disponíveis. Desative para usar os tempos normais de natação; as rotas ainda podem cruzar a água." -- mt
+L["Farming tour"] = "Circuito de coleta" -- mt
+L["Herbs"] = "Ervas" -- mt
+L["Mining"] = "Mineração" -- mt
+L["All"] = "Todos" -- mt
+L["None"] = "Nenhum" -- mt
+L["Start"] = "Iniciar" -- mt
+L["Pause"] = "Pausar" -- mt
+L["Resume"] = "Retomar" -- mt
+L["Stop"] = "Parar" -- mt
+L["Ready to start."] = "Pronto para iniciar." -- mt
+L["Farming tour running."] = "Circuito de coleta em andamento." -- mt
+L["Farming tour paused."] = "Circuito de coleta pausado." -- mt
+L["Farming tour stopped."] = "Circuito de coleta parado." -- mt
+L["Farming tour waiting."] = "Circuito de coleta em espera." -- mt
+L["Ordering recorded locations..."] = "Ordenando locais registrados..." -- mt
+L["Farming needs the GatherMate2 addon."] = "A coleta precisa do addon GatherMate2." -- mt
+L["Your current zone is unavailable."] = "Sua zona atual está indisponível." -- mt
+L["No recorded locations for these choices in your current zone."] =
+	"Não há locais registrados para essas escolhas na sua zona atual." -- mt
+L["Choose at least two different recorded locations."] = "Escolha pelo menos dois locais registrados diferentes." -- mt
+L["Stop your current journey before starting a farming tour."] =
+	"Pare sua jornada atual antes de iniciar um circuito de coleta." -- mt
+L["Next location: %d. Completed circuits: %d."] = "Próximo local: %d. Circuitos concluídos: %d." -- mt
+L["Visit GatherMate2 recorded locations in your current zone. Nodes may be absent or unreachable."] =
+	"Visite locais registrados pelo GatherMate2 na sua zona atual. Os pontos podem estar ausentes ou inacessíveis." -- mt
+L["Waiting for combat to end."] = "Aguardando o fim do combate." -- mt
+L["Waiting until you are alive."] = "Aguardando você voltar à vida." -- mt
+L["GatherMate2 recorded locations could not be read."] =
+	"Não foi possível ler os locais registrados pelo GatherMate2." -- mt
+L["These recorded locations could not be ordered."] = "Não foi possível ordenar esses locais registrados." -- mt
+L["Farming could not continue. Start a new tour when you are ready."] =
+	"A coleta não pôde continuar. Inicie um novo circuito quando estiver pronto." -- mt
+L["Arrival could not be confirmed. The farming tour has stopped."] =
+	"Não foi possível confirmar a chegada. O circuito de coleta parou." -- mt
+L["Your journey changed. The farming tour has stopped."] = "Sua jornada mudou. O circuito de coleta parou." -- mt
+L["No walking route was found. The farming tour has stopped."] =
+	"Nenhuma rota a pé foi encontrada. O circuito de coleta parou." -- mt
+L["Walking map data is unavailable. The farming tour has stopped."] =
+	"Os dados do mapa de caminhada estão indisponíveis. O circuito de coleta parou." -- mt
+L["A recorded location is outside the walking map. The farming tour has stopped."] =
+	"Um local registrado está fora do mapa de caminhada. O circuito de coleta parou." -- mt
+L["A recorded location could not be reached. The farming tour has stopped."] =
+	"Não foi possível alcançar um local registrado. O circuito de coleta parou." -- mt
+L["/path farm - choose recorded gathering locations"] = "/path farm - escolher locais de coleta registrados" -- mt

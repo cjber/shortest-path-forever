@@ -44,6 +44,9 @@
 ---@field JourneyKeyDown fun(): boolean whether the chosen journey key is held (JourneyInput.lua)
 ---@field JourneyKeyName fun(key?: string): string what the chosen key, or the one named, is called (JourneyInput.lua)
 ---@field TravelStats fun(): SPFProgressData?
+---@field FarmingCursor SPFFarmingCursorFactory
+---@field NavigateFarmingRoute fun(owner: string, stops: SPFAPIStop[]): boolean
+---@field JourneyRoutePolicy fun(): SPFRoutePolicy
 
 ---@class SPFDefaults: table<string, boolean|number|string>
 ---@field townServices string

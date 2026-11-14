@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Walk a farming tour through GatherMate2's recorded locations.** Open *Farming tour* from the map tracking menu or `/path farm`, choose herb or ore types in your current zone, then start, pause or stop the circuit. These are recorded locations, so a node may be absent or unreachable. Thanks to user_lsqt69ps7bgb5p7e for the request (#847).
+
 - **Choose each service pin from Nearby services.** Every service row has its own map checkbox, so hiding one profession leaves the others visible. The world map filter uses the same choices. Thanks to cotijelucie for the request (#866).
 
 - **Choose whether journeys use water walking.** Turn off *Use Water Walking and Levitate* in Guidance to plan with ordinary swimming costs, even when you know a water-walking spell. Routes can still cross water. Thanks to azure463 for the request (#878).

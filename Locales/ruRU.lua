@@ -472,3 +472,52 @@ L["The tab in the world map's quest log. Off, /spfnear and the tracking menu sti
 L["Use Water Walking and Levitate"] = "Использовать Хождение по воде и Левитацию" -- mt
 L["Use Water Walking or Levitate when available. When off, routes use swimming times and may still cross water."] =
 	"Планировать с Хождением по воде или Левитацией, если они доступны. Отключите для расчёта обычного времени плавания; маршруты всё ещё могут пересекать воду." -- mt
+L["Farming tour"] = "Маршрут сбора" -- mt
+L["Herbs"] = "Травы" -- mt
+L["Mining"] = "Горное дело" -- mt
+L["All"] = "Все" -- mt
+L["None"] = "Ничего" -- mt
+L["Start"] = "Начать" -- mt
+L["Pause"] = "Пауза" -- mt
+L["Resume"] = "Продолжить" -- mt
+L["Stop"] = "Остановить" -- mt
+L["Ready to start."] = "Можно начинать." -- mt
+L["Farming tour running."] = "Маршрут сбора выполняется." -- mt
+L["Farming tour paused."] = "Маршрут сбора приостановлен." -- mt
+L["Farming tour stopped."] = "Маршрут сбора остановлен." -- mt
+L["Farming tour waiting."] = "Маршрут сбора ожидает." -- mt
+L["Ordering recorded locations..."] = "Упорядочивание записанных мест..." -- mt
+L["Farming needs the GatherMate2 addon."] = "Для сбора требуется аддон GatherMate2." -- mt
+L["Your current zone is unavailable."] = "Текущая зона недоступна." -- mt
+L["No recorded locations for these choices in your current zone."] =
+	"В текущей зоне нет записанных мест для выбранных типов." -- mt
+L["Choose at least two different recorded locations."] =
+	"Выберите как минимум два разных записанных места." -- mt
+L["Stop your current journey before starting a farming tour."] =
+	"Остановите текущее путешествие перед началом маршрута сбора." -- mt
+L["Next location: %d. Completed circuits: %d."] =
+	"Следующее место: %d. Завершено кругов: %d." -- mt
+L["Visit GatherMate2 recorded locations in your current zone. Nodes may be absent or unreachable."] =
+	"Посещайте записанные GatherMate2 места в текущей зоне. Ресурсы могут отсутствовать, а места могут быть недоступны." -- mt
+L["Waiting for combat to end."] = "Ожидание окончания боя." -- mt
+L["Waiting until you are alive."] = "Ожидание воскрешения." -- mt
+L["GatherMate2 recorded locations could not be read."] =
+	"Не удалось прочитать записанные GatherMate2 места." -- mt
+L["These recorded locations could not be ordered."] =
+	"Не удалось упорядочить эти записанные места." -- mt
+L["Farming could not continue. Start a new tour when you are ready."] =
+	"Не удалось продолжить сбор. Начните новый маршрут, когда будете готовы." -- mt
+L["Arrival could not be confirmed. The farming tour has stopped."] =
+	"Не удалось подтвердить прибытие. Маршрут сбора остановлен." -- mt
+L["Your journey changed. The farming tour has stopped."] =
+	"Ваше путешествие изменилось. Маршрут сбора остановлен." -- mt
+L["No walking route was found. The farming tour has stopped."] =
+	"Пеший путь не найден. Маршрут сбора остановлен." -- mt
+L["Walking map data is unavailable. The farming tour has stopped."] =
+	"Данные карты пеших путей недоступны. Маршрут сбора остановлен." -- mt
+L["A recorded location is outside the walking map. The farming tour has stopped."] =
+	"Записанное место находится за пределами карты пеших путей. Маршрут сбора остановлен." -- mt
+L["A recorded location could not be reached. The farming tour has stopped."] =
+	"Не удалось добраться до записанного места. Маршрут сбора остановлен." -- mt
+L["/path farm - choose recorded gathering locations"] =
+	"/path farm - выбрать записанные места сбора" -- mt

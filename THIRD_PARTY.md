@@ -60,6 +60,7 @@ Credit for the reports and requests behind the addon.
 
 | Who | What | Notes |
 |---|---|---|
+| user\_lsqt69ps7bgb5p7e | Farming tours through GatherMate2 recorded locations | CurseForge; thread 8705002; #847 |
 | [azure463](https://github.com/azure463) | Choose whether journeys use water walking | GitHub; #878 |
 | AsimRamay | Journeys recover after walking away without boarding a boat | GitHub; #764 |
 | nookie909 | Reported the removed Stormwind to Dalaran portal | CurseForge; thread 8682913; #684 |

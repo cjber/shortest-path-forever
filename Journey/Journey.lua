@@ -328,10 +328,14 @@ function ns.StopInside(point)
 	return point.radius ~= nil and (x - point.x) ^ 2 + (y - point.y) ^ 2 <= point.radius ^ 2
 end
 
+---@type SPFRoutePolicy
+local journeyPolicy = "normal"
+
 ---@param reason "arrived"|"cleared"
 local function EndJourney(reason)
 	Search.Reset()
 	goal, result, nextPoint = nil, nil, nil
+	journeyPolicy = "normal"
 	withoutHearth = false
 	if ns.JourneyChanged then
 		ns.JourneyChanged(nil, reason)
@@ -353,6 +357,9 @@ end
 -- Completion may run inside a planner callback. Start at most one next stop on the driver's next step,
 -- after that callback unwinds; coincident stops must never recurse through the whole route in one frame.
 local function Arrive()
+	if ns.FarmingJourneyProof then
+		ns.FarmingJourneyProof("arrived", goal, result)
+	end
 	nextPoint = ns.NextJourneyStop and ns.NextJourneyStop(goal)
 	if not nextPoint then
 		EndJourney("arrived")
@@ -392,7 +399,7 @@ local function EnteredInstance()
 	if goal and goal.entrance and not nextPoint and select(8, GetInstanceInfo()) == goal.entrance then
 		Arrive()
 		if nextPoint then
-			ns.StartJourney(nextPoint)
+			ns.StartJourney(nextPoint, journeyPolicy)
 		end
 	end
 end
@@ -721,6 +728,9 @@ local function Follow(route, news)
 	elseif news == "walks" then
 		Guide.Retarget()
 	end
+	if ns.FarmingJourneyProof then
+		ns.FarmingJourneyProof("settled", goal, result)
+	end
 	UpdateProgress()
 	AnnounceUnsyncedFlightPoints()
 	if news == "times" then
@@ -779,7 +789,7 @@ local function Update(self, elapsed)
 	local index = progress.index
 	UpdateProgress()
 	if nextPoint then
-		ns.StartJourney(nextPoint)
+		ns.StartJourney(nextPoint, journeyPolicy)
 		return
 	end
 	if not goal then
@@ -821,7 +831,11 @@ end
 -- You are alive again: the journey plans afresh from wherever that is, guided as it was.
 function ns.ResumeJourney()
 	if goal then
-		ns.StartJourney(goal)
+		ns.StartJourney(goal, journeyPolicy)
+		-- A route submitted while dead used the corpse run's effective policy for its previews.
+		if ns.ItineraryChanged then
+			ns.ItineraryChanged()
+		end
 		-- The route you were on shows again at once, until the new plan replaces it.
 		if result then
 			Refresh()
@@ -841,7 +855,7 @@ end
 -- journey is restarted.
 function ns.RefreshJourneySearch()
 	if goal and not result and not CorpseRun() and Search.Status() > 0 then
-		Search.Start(goal, result, progress, Follow)
+		Search.Start(goal, result, progress, Follow, nil, journeyPolicy)
 	end
 end
 
@@ -853,7 +867,7 @@ end
 ---@return boolean
 function ns.RetargetJourney(point)
 	if CorpseRun() or not goal or point.map ~= goal.map then
-		return ns.StartJourney(point)
+		return ns.StartJourney(point, journeyPolicy)
 	end
 	if Search.SamePlace(goal, point) then
 		ns.RefreshJourneySearch()
@@ -872,7 +886,7 @@ function ns.RetargetJourney(point)
 	end
 	ns.WakeTravel()
 	-- Replacing: the plan under way leads to the place this one leaves, so the next plan takes over whatever it costs.
-	Search.Start(goal, result, progress, Follow, true)
+	Search.Start(goal, result, progress, Follow, true, journeyPolicy)
 	-- A guide that yielded to the player's own destination leads again for a destination the player did not choose.
 	if Guide.Yielded() then
 		StopGuide()
@@ -885,17 +899,20 @@ function ns.RetargetJourney(point)
 end
 
 ---@param point SPFPoint
+---@param policy? SPFRoutePolicy
 ---@return boolean
-function ns.StartJourney(point)
+function ns.StartJourney(point, policy)
+	policy = policy or "normal"
 	point = ns.InstanceEntrance(point)
 	if CorpseRun() then
 		-- Queued behind the corpse run, which ResumeJourney plans from where you come back to life.
-		if not (goal and SamePlace(goal, point)) then
+		if not (goal and SamePlace(goal, point) and journeyPolicy == policy) then
 			result = nil
 			withoutHearth = false
-			Search.Clear(false)
+			Search.Clear(false, policy)
 			progress.index, progress.departed = 1, false
 		end
+		journeyPolicy = policy
 		goal, nextPoint, waitingGuided = point, nil, true
 		if ns.JourneyChanged then
 			ns.JourneyChanged(point)
@@ -903,7 +920,8 @@ function ns.StartJourney(point)
 		RefreshTracker()
 		return true
 	end
-	local previous = Search.Clear(goal and SamePlace(goal, point)) and result
+	local previous = Search.Clear(goal and SamePlace(goal, point), policy) and result
+	journeyPolicy = policy
 	withoutHearth = false
 	if previous then
 		for _, leg in ipairs(previous.legs) do
@@ -927,7 +945,7 @@ function ns.StartJourney(point)
 		driver:Show()
 	end
 	ns.WakeTravel()
-	Search.Start(goal, result, progress, Follow)
+	Search.Start(goal, result, progress, Follow, nil, journeyPolicy)
 	-- Every journey starts guided; the tracker header turns it off.
 	if goal then
 		StartGuide()

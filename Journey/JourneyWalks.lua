@@ -31,6 +31,30 @@ local pendingWalks = 0
 local hazards
 local landings
 
+-- The same journey replanned from a few yards on: every leg goes the same way to the same place.
+function Walks.SameJourney(a, b, start, here)
+	if not (a and b) or a.waterMode ~= b.waterMode or #a.legs ~= #b.legs - start + 1 then
+		return false
+	end
+	for index, leg in ipairs(a.legs) do
+		local other = b.legs[index + start - 1]
+		if
+			leg.mode ~= other.mode
+			or leg.route ~= other.route
+			or not SamePlace(leg.to, other.to)
+			or (index > 1 and not SamePlace(leg.from, other.from))
+		then
+			return false
+		end
+	end
+	-- A walk you have strayed from is searched again from where you are.
+	local walk = b.legs[start]
+	if walk and walk.walkError then
+		return here and SamePlace(walk.from, here)
+	end
+	return not (walk and walk.mode == "walk" and walk.measured) or ns.OnWalk(walk.walkPoints, here) ~= nil
+end
+
 local function WalkKey(from, to)
 	return table.concat({ from.map, from.x, from.y, from.z or "", to.x, to.y, to.z or "" }, ":")
 end

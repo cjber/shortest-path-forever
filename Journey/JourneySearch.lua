@@ -48,6 +48,8 @@ local search
 local FinishSearch
 -- The mode this journey's walks were searched in, and the hazards they keep away from (Hazards.lua).
 local waterMode
+---@type SPFRoutePolicy
+local routePolicy = "normal"
 ---@type SPFHazards?
 local hazards
 local lastRunSpeed = 7
@@ -149,31 +151,6 @@ local function Provisional()
 	return followed ~= nil and followed.provisional == true
 end
 
--- The same journey replanned from a few yards on: every leg goes the same way to the same place.
-local function SameJourney(a, b)
-	if not (a and b) or a.waterMode ~= b.waterMode or #a.legs ~= #b.legs - progress.index + 1 then
-		return false
-	end
-	for index, leg in ipairs(a.legs) do
-		local other = b.legs[index + progress.index - 1]
-		if
-			leg.mode ~= other.mode
-			or leg.route ~= other.route
-			or not SamePlace(leg.to, other.to)
-			or (index > 1 and not SamePlace(leg.from, other.from))
-		then
-			return false
-		end
-	end
-	-- A walk you have strayed from is searched again from where you are.
-	local walk = b.legs[progress.index]
-	if walk and walk.walkError then
-		local here = Here()
-		return here and SamePlace(walk.from, here)
-	end
-	return not (walk and walk.mode == "walk" and walk.measured) or ns.OnWalk(walk.walkPoints, Here()) ~= nil
-end
-
 -- Only the timings move, so the drawn route, Guide and any walk still being searched carry on undisturbed.
 local function Retime(planned)
 	followed.now, followed.arrive = planned.now, planned.arrive
@@ -198,7 +175,7 @@ local function EstimateKept(now)
 			index == progress.index
 			and leg.route
 			and not progress.departed
-			and (leg.mode == "boat" or leg.depart < now)
+			and (leg.mode == "boat" and (not here or not SamePlace(leg.from, here)) or leg.depart < now)
 		then
 			-- An unboarded boat still needs an approach from here. This estimate starts at the boat and has
 			-- no measured approach, so only a fresh plan can price the walk back to its dock.
@@ -326,7 +303,7 @@ FinishSearch = function()
 	end
 	local planned, forced = search.candidate, search.forced
 	local estimate = EstimateKept(planned and planned.now or ns.NowMs())
-	local same = SameJourney(planned, followed)
+	local same = Walks.SameJourney(planned, followed, progress.index, Here())
 	local gain = estimate and planned and estimate.arrive - planned.arrive
 	-- A ride the planner preferred to a long walk is later than that walk by design, so its gain cannot argue for it
 	-- against the walk already shown.
@@ -435,7 +412,7 @@ local function Render(planned, forced)
 		end
 	end
 	-- Reusing the followed walk needs no new geometry and preserves Guide's passed bends.
-	if search.refine or not SameJourney(planned, followed) then
+	if search.refine or not Walks.SameJourney(planned, followed, progress.index, Here()) then
 		PrepareWalks(planned)
 	end
 	FinishSearch()
@@ -455,7 +432,7 @@ local function Plan(feasible, incumbent)
 		lastRunSpeed, followed.now = Context.RunSpeed(), ns.NowMs()
 		return followed
 	end
-	local options = Context.Options(here, goal)
+	local options = Context.Options(here, goal, routePolicy)
 	-- This is a manual refusal for the active journey only. Keep it out of Context.Options so
 	-- public estimates and nearby-service planning retain the normal Hearthstone policy.
 	options.withoutHearth = ns.JourneyWithoutHearth and ns.JourneyWithoutHearth() or false
@@ -492,9 +469,9 @@ local function RefreshCosts(includeGoal, forced, replace)
 	search = { initial = not followed, forced = forced, replace = replace }
 	local owner = search
 	local version = pathVersion
-	local teleports = ns.UsableTeleports(ns.NowMs())
-	local partyPortals = ns.PartyPortalPlaces and ns.PartyPortalPlaces(here) or nil
-	local places, faction = Context.Places(teleports, partyPortals)
+	local options = Context.Options(here, goal, routePolicy)
+	local teleports, partyPortals = options.teleports, options.partyPortals
+	local places, faction = Context.Places(teleports, partyPortals, routePolicy)
 	local function targets(point, withGoal)
 		local list = {}
 		local mass = Context.Landmass(point)
@@ -512,6 +489,7 @@ local function RefreshCosts(includeGoal, forced, replace)
 	local function reuse(batch, point, reverse)
 		if
 			not batch
+			or batch.policy ~= routePolicy
 			or batch.water ~= waterMode
 			or batch.faction ~= faction
 			or batch.teleports ~= teleports
@@ -537,6 +515,7 @@ local function RefreshCosts(includeGoal, forced, replace)
 			goal = goal,
 			targets = targets(point, not reverse),
 			reverse = reverse,
+			policy = routePolicy,
 			water = waterMode,
 			faction = faction,
 			teleports = teleports,
@@ -854,9 +833,11 @@ end
 -- journey may reuse. Walks drawn for the same goal in the same water mode are kept too, and only then is the journey
 -- a repeat whose route and progress carry on.
 ---@param same boolean? the new goal is the place the last one was
+---@param policy? SPFRoutePolicy
 ---@return boolean? repeated
-function Search.Clear(same)
-	local repeated = same and (ns.JourneyWaterWalking()) == waterMode
+function Search.Clear(same, policy)
+	policy = policy or "normal"
+	local repeated = same and policy == routePolicy and (ns.JourneyWaterWalking()) == waterMode
 	CancelPaths()
 	costsWaiting = nil
 	settleRound, costError = 0, nil
@@ -907,7 +888,14 @@ end
 ---@param state {index: integer, departed?: boolean}
 ---@param listener fun(route: SPFPlan?, news: SPFSearchNews)
 ---@param replace? boolean the route being replaced leads somewhere else, so the next plan takes over
-function Search.Start(point, route, state, listener, replace)
+---@param policy? SPFRoutePolicy
+function Search.Start(point, route, state, listener, replace, policy)
+	policy = policy or "normal"
+	if policy ~= routePolicy then
+		Search.Clear(false, policy)
+		route = nil
+	end
+	routePolicy = policy
 	goal, followed, progress, publish = point, route, state, listener
 	search = nil
 	waterMode = (ns.JourneyWaterWalking())
@@ -947,7 +935,8 @@ end
 ---@param changedSpeed boolean the run speed changed since the last plan
 function Search.Replan(riding, flying, changedRide, changedSpeed)
 	local mode = ns.JourneyWaterWalking()
-	local partyPortals = ns.PartyPortalPlaces and ns.PartyPortalPlaces(Here() or goal) or nil
+	local options = Context.Options(Here() or goal, goal, routePolicy)
+	local partyPortals = options.partyPortals
 	if mode ~= waterMode then
 		-- Walks searched in another water mode no longer apply.
 		waterMode = mode
@@ -955,8 +944,7 @@ function Search.Replan(riding, flying, changedRide, changedSpeed)
 		startCosts, goalCosts = {}, {}
 		RefreshCosts(true, false)
 	elseif
-		goalBatch ~= nil
-		and (goalBatch.teleports ~= ns.UsableTeleports(ns.NowMs()) or goalBatch.partyPortals ~= partyPortals)
+		goalBatch ~= nil and (goalBatch.teleports ~= options.teleports or goalBatch.partyPortals ~= partyPortals)
 	then
 		-- A new bind point, teleport or party mage: measure the walks on from where it lands.
 		RefreshCosts(true, false)

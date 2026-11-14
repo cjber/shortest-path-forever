@@ -1,0 +1,110 @@
+{
+  "evidence_type": "Illustrative source-derived mocks, not client captures",
+  "composition_verdict": "Source-derived composition passes visual inspection after parent runtime anchor correction; exact target-client appearance remains unverified.",
+  "geometry_verdict": "Content controls inside 480x520 host; button gaps8; native checkbox gaps2 on28 pitch. Parent description anchor(72,40), width392, wraps two12-unit lines, clears portrait right57 by15 and top button y88 by24.",
+  "finding": {
+    "runtime_source": "UI/Farming.lua Build description Text at -40",
+    "portrait_relative_to_host": [
+      -5,
+      -7,
+      62,
+      62
+    ],
+    "description_relative_to_host": [
+      16,
+      40,
+      448,
+      36
+    ],
+    "bounding_intersection": [
+      16,
+      40,
+      41,
+      15
+    ],
+    "observed_pixels": "Visit and beginning of GatherMate2 obscured beneath native portrait overlay",
+    "runtime_edited": false,
+    "resolution": "Parent changed runtime description TOPLEFT to(72,-40), TOPRIGHT(-16,-40); renderer updated to match. All4 rerendered twice byte-identical and visually inspected.",
+    "history": "/home/cjber/.cache/agent-scratch/spf847-preview/before-parent-anchor-* retains initial PNGs/layout/audit",
+    "runtime_edit_owner": "parent, not renderer worker"
+  },
+  "control_coverage": [
+    "portrait, title, close",
+    "description",
+    "Herbs, Mining, All, None",
+    "inset, scroll viewport, native scrollbar steppers/track",
+    "all four checkboxes and labels",
+    "status, next location and zero completed circuits",
+    "Start, Pause, Resume, Stop with state-dependent enabled appearance"
+  ],
+  "edge_review": "Full frames plus enlarged top/bottom/left/right/portrait crops inspected. Complete metal border and inset, correct native red button family, one portrait chrome owner; no outer canvas clipping. No tabs or rails in runtime.",
+  "native_comparison": {
+    "reference": "skillup-forever be11638:docs/screenshots/window.png",
+    "review": "Viewed historic native capture; matching portrait metal family and button treatment. Not a farming dialog capture; target-client geometry, scale, rasterization and actual enabled/disabled behavior remain unverified.",
+    "framexml": "Gethe/wow-ui-source 70ef1b2fd78061a73f886c4a1e79dc5b5cff6d5e (older discovery extract)",
+    "ui_art_build": "1.60.1.70124",
+    "set0_note": "Inset NineSlice and top streaks resolve set0 because no preferred set1 member selected. Native InsetFrameTemplate/PortraitFrameTextureBaseTemplate source establishes host use; no target-client farming capture verifies appearance."
+  },
+  "approximation": {
+    "states": [
+      "running",
+      "paused"
+    ],
+    "detail": "Native disabled-checked texture rejected by renderer asset gate; permitted normal check tinted 0.5 grey. Explicitly labelled in each affected PNG.",
+    "issue": "https://github.com/cjber/forever-core/issues/605"
+  },
+  "data_provenance": {
+    "report": "/home/cjber/.cache/agent-scratch/spf847-research/report.md",
+    "proof": "/home/cjber/.cache/agent-scratch/spf847-research/prototype-output.txt",
+    "requested_provider_directory": "/home/cjber/.cache/agent-scratch/spf847-provider absent",
+    "names": [
+      "Earthroot",
+      "Mageroyal",
+      "Peacebloom",
+      "Silverleaf"
+    ],
+    "source": "https://github.com/Nevcairiel/GatherMate2/blob/b8a6ff4dc6f39bdf39f7f1fb619cc9c67886e831/GatherMate2.lua#L549",
+    "release": "https://www.wowace.com/projects/gathermate2_data/files/9601113",
+    "redistribution": "Factual names only, no provider code, icons, database rows or coordinates copied. Running/paused cursor values are illustrative."
+  },
+  "composition_ownership": [
+    {
+      "template": "PortraitFrameTemplate",
+      "edge": "outer host",
+      "asset": "PORTRAIT_FRAME_TEMPLATE_LAYOUT Camelot-adjusted, resolved assets in layout.json",
+      "texcoords": "native atlas crop and portrait mask",
+      "owner": "host NineSlice",
+      "layer": "rock BACKGROUND; portrait400; metal500; title/close510"
+    },
+    {
+      "template": "InsetFrameTemplate",
+      "edge": "(16,120) to (-16,-130)",
+      "asset": "INSET_FRAME_LAYOUT and native tiled marble",
+      "owner": "inset NineSlice",
+      "layer": "background then inset border"
+    },
+    {
+      "template": "SharedButtonSmallTemplate",
+      "asset": "128-RedButton normal/disabled, resolved set1",
+      "owner": "native three-slice",
+      "layer": "native art then text"
+    },
+    {
+      "template": "InterfaceOptionsCheckButtonTemplate",
+      "asset": "UI-CheckBox-Up/Check, 26x26; disabled approximation above",
+      "texcoords": "whole square",
+      "owner": "single native checkbox",
+      "layer": "normal, checked overlay, label"
+    },
+    {
+      "template": "ScrollFrameTemplate",
+      "edge": "inset top-left(6,6), bottom-right(-28,-6)",
+      "asset": "minimal-scrollbar family; native offsets(+6,+2)/(+6,+5)",
+      "owner": "scrollbar template",
+      "layer": "above inset"
+    }
+  ],
+  "reproducibility": "Every final PNG rendered twice with fresh Art objects and compared byte-for-byte before writing; SHA256 in layout.json.",
+  "freshness": "layout.json hashes runtime sources, preview renderer, branding and Core renderer. Existing public gallery hashes untouched; tools/screenshots.py is a global gallery dependency so parent must rerender/check that gallery before integration.",
+  "acceptance": "No client launched, no actual movement/provider-installation claim. Core491 Google login remains NOT complete."
+}

@@ -21,6 +21,8 @@ end
 -- sending the same stops again. Only the current route's hops are kept, at most one per stop (64).
 ---@type table<string, SPFHop>
 local hops = {}
+---@type SPFRoutePolicy
+local policy = "normal"
 local scheduled, wait, dirty
 -- Redrawing the map's route line redraws every hop, so ready hops are drawn together at most once a second, in a
 -- frame of their own, and once more when nothing is left to do.
@@ -51,7 +53,7 @@ end
 
 ---@param hop SPFHop
 local function PlanHop(hop)
-	local legs = ns.EstimateLegs(hop.from, hop.to)
+	local legs = ns.EstimateLegs(hop.from, hop.to, policy)
 	hop.paths = legs and {} or false
 	for index, leg in ipairs(legs or {}) do
 		local walk = leg.mode == "walk"
@@ -163,6 +165,9 @@ end
 -- The route was replaced, advanced or cancelled: keep only the hops still ahead, dropping a search for any other.
 ---@param invalidate? boolean
 function ns.ItineraryChanged(invalidate)
+	local current = ns.JourneyRoutePolicy and ns.JourneyRoutePolicy() or "normal"
+	invalidate = invalidate or current ~= policy
+	policy = current
 	local points, index = ns.JourneyStops()
 	local kept = {}
 	if points and index then

@@ -776,14 +776,6 @@ function ns.RefreshTownServices()
 	end
 end
 
--- Shows or hides one service on every pin, as the Map Filter's checkbox does, and redraws the map at once.
----@param option string
----@param shown boolean
-function ns.SetTownServiceShown(option, shown)
-	ns.SetOption(option, shown)
-	ns.RefreshTownServices()
-end
-
 -- The world map's Map Filter ("Show:") menu gets the same four levels as the settings page, then a checkbox for each
 -- service the pins can wear.
 local function AddFilter(_, root)
