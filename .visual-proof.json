@@ -1,45 +1,23 @@
 {
-  "input_digest": "c9b5d20b28567280a69752c52aa6da4f918938f0cde04fa493e63b13fdf69a0c",
-  "runtime_sha256": "c9b5d20b28567280a69752c52aa6da4f918938f0cde04fa493e63b13fdf69a0c",
-  "candidate": "ea3b6217a318b3a98171bb1869aaec914b4b401c1f6d550b01249d52ef2794c6",
+  "input_digest": "94d3737bfcd7b631a8b81921e79240bfeb1f8c29f7816f55e987ba2ae99b61d0",
+  "runtime_sha256": "94d3737bfcd7b631a8b81921e79240bfeb1f8c29f7816f55e987ba2ae99b61d0",
+  "candidate": "cc06904f9546af9a1e8b53ec30c7b8c89826033bbaaed0fe9bcac17234a0b143",
   "client_build": "1.60.1.70938 (Interface 16001)",
   "tested_artifact": "source-tree",
-  "source_commit": "d5376c59ee4e97a4b0bcae3b610529442dd59c38",
+  "source_commit": "379e3e8550be981bcc695a1c1624792c37e06113",
   "flows": [
     {
-      "name": "before hover",
+      "name": "journey planner",
       "steps": [
-        "/tmp/claude-1000/-home-cjber-drive-proj-wow/96278b5e-cf85-4235-8891-e9e108e85748/scratchpad/flow863.lua"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "hovering a stop",
-      "steps": [
-        "/wait 25"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "pointer left",
-      "steps": [
-        "/wait 25"
+        "/path"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/85d1531f24f82a5db91f8dc5568d1e81/raw/fbbb67753425006538f7aa3e184e655836d7da7f/1-before-hover.png",
-      "sha256": "d3d82e57c03e5596d27cc8741af01f99ed4e4219629cf07e0c0cd8cfb5df1b5b"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/85d1531f24f82a5db91f8dc5568d1e81/raw/fbbb67753425006538f7aa3e184e655836d7da7f/2-hovering-a-stop.png",
-      "sha256": "192c20203a5e1b58f841ec7318b0eb0163052fe53977f381684474c364ab4087"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/85d1531f24f82a5db91f8dc5568d1e81/raw/fbbb67753425006538f7aa3e184e655836d7da7f/3-pointer-left.png",
-      "sha256": "41cc477ce42fba3cc97ddaec90605ac985cf7d54c95f2f2ab5a8cc0ad68ce569"
+      "url": "https://gist.githubusercontent.com/cjber/c8f87f816acacd61807657d291faf616/raw/6acc1278adc976daad0e642e954f1a56a0b6580e/1-journey-planner.png",
+      "sha256": "ee6bfe1aa865c32879aa52f6bb76d50f397d38ab704a67f64734e11e678385dc"
     }
   ]
 }
