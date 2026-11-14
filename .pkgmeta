@@ -36,3 +36,6 @@ externals:
 
 move-folders:
   ShortestPathForever/ForeverCore: ForeverCore
+
+required-dependencies:
+  - forevercore
