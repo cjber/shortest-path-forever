@@ -156,6 +156,10 @@ With RestedXP or Guidelime installed, **Resume guide** in Guidance or the Journe
 - **In the map's filter menu.** *Flight Masters*, *Boat and Zeppelin Routes*, *Boats & Zeppelins*, *Lifts &
   Tram* and *Portals* turn each layer off; *Other Faction's Routes* shows the
   boats and zeppelins run by the other faction (anyone can ride them, but they are hidden by default).
+- **The game's own quest markers.** While a journey draws, *Hide game quest markers* (on by
+  default) takes the game's marker off the map for each quest a stop covers, so the stop stands for it once. Turn it
+  off under Map marks or in the map's filter menu and every one of the game's markers and quest areas stays visible,
+  showing the other places those quests can be done.
 - **The next departures in the objective tracker.** Walk up to a dock, lift or tram station and a section
   appears beside your quests, counting down to the next arrival and departure of everything that calls there.
   On board, it shows where the boat calls next and when it arrives.

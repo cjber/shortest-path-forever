@@ -1,34 +1,37 @@
 {
-  "input_digest": "2e86a3014e4e4150735d3c10bc569cf4fd262c958af1ca1d1572c2493f6ecda8",
-  "runtime_sha256": "2e86a3014e4e4150735d3c10bc569cf4fd262c958af1ca1d1572c2493f6ecda8",
-  "candidate": "d8d4880f69e3aa9f7df9cabd122accecb45e338c60f9d3a444e4bf53d9366f03",
+  "input_digest": "e1e10fffead4ff8f486a38b0c97d175c4f02faa3f9cc060999aee49ffcbcbb03",
+  "runtime_sha256": "e1e10fffead4ff8f486a38b0c97d175c4f02faa3f9cc060999aee49ffcbcbb03",
+  "candidate": "16b420c4fb6acdbdfc85519c9a15872488750e60e19b2a5cbf3ab414d3bfd78f",
   "client_build": "1.60.1.70938 (Interface 16001)",
   "tested_artifact": "source-tree",
-  "source_commit": "727dcb3de4a7bdb901d233077c82f2a9c8932156",
+  "source_commit": "808c460f006dadf96a317820a3a434cd61e51403",
   "flows": [
     {
-      "name": "start route",
+      "name": "Map marks settings with the quest marker option",
       "steps": [
-        "/home/cjber/.cache/agent-scratch/proof-e6a4/flows/spf-route.lua"
+        "Install the candidate and /reload",
+        "Open Options, AddOns, Shortest Path Forever, Map marks",
+        "Hide game quest markers shows under the minimap option, ticked by default, with its label in full"
       ],
       "result": "pass"
     },
     {
-      "name": "route on the slope",
+      "name": "Shortest Path settings",
       "steps": [
-        "/home/cjber/.cache/agent-scratch/proof-e6a4/flows/look.lua"
+        "/path",
+        "The settings index opens"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/8ee664d8337205ecb89a986ed513a46e/raw/156f0d1827670663323b99cf2d3c365ff1d6e0bf/1-start-route.png",
-      "sha256": "9ebe2d80b819807904b2279c79ecbf64664de15752f0c4e4efa28cad6befb066"
+      "url": "https://gist.githubusercontent.com/cjber/951f980800b4382be0ea46871e416ef4/raw/29bb7e841575af9467ad19a43b469905d85eeb00/1-map-marks-settings-with-the-quest-marker-option.png",
+      "sha256": "2e68f5fa61f5a0d9b6601c492aaadc5392c883795afeca548f9cab58bd3b4579"
     },
     {
-      "url": "https://gist.githubusercontent.com/cjber/8ee664d8337205ecb89a986ed513a46e/raw/156f0d1827670663323b99cf2d3c365ff1d6e0bf/2-route-on-the-slope.png",
-      "sha256": "c52d2643ebc0b3d54db4bd7f87690fbb32921636f9bb13da890a95afa681a482"
+      "url": "https://gist.githubusercontent.com/cjber/951f980800b4382be0ea46871e416ef4/raw/29bb7e841575af9467ad19a43b469905d85eeb00/2-shortest-path-settings.png",
+      "sha256": "52e81397247bbe125cd3781eba5d394c1bda1c88d1b7a0385957e89a93acfdda"
     }
   ]
 }

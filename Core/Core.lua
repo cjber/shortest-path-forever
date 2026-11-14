@@ -63,6 +63,8 @@ local DEFAULTS = {
 	minimapLine = true,
 	-- The faded legs after the stop being guided to stay on by default; a fresh route shows the whole journey.
 	laterLegs = true,
+	-- On, the game's own quest markers give way to a journey's stop pins (UI/QuestPins.lua); off, every marker stays.
+	hideQuestPins = true,
 	otherFaction = false,
 	tracker = true,
 	alerts = true,

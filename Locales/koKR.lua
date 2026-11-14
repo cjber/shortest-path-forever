@@ -440,3 +440,6 @@ L["Ammunition"] = "탄약" -- mt
 L["Bags and trade supplies"] = "가방 및 전문 기술" -- mt
 L["Food and drink"] = "음식 및 음료" -- mt
 L["Profession trainers"] = "전문 기술 상급자" -- mt
+L["Hide game quest markers"] = "게임 퀘스트 표시 숨기기" -- mt
+L["Off, the game's own quest markers stay beside your journey's pins, showing the other places a quest can be done."] =
+	"끄면 게임의 퀘스트 표시가 여정 표시 옆에 그대로 남아, 퀘스트를 완료할 수 있는 다른 장소를 볼 수 있습니다." -- mt

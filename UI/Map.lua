@@ -770,6 +770,7 @@ local function AddFilters(_, rootDescription)
 	AddFilter("transit", L["Lifts & Tram"])
 	AddFilter("portals", L["Portals"])
 	AddFilter("otherFaction", L["Other Faction's Routes"])
+	AddFilter("hideQuestPins", L["Hide game quest markers"])
 end
 
 ns.Init(function()
