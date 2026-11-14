@@ -154,4 +154,7 @@ def render_farming_previews(root, wowmock, art, backdrop, fonts):
         path.write_bytes(outputs[0])
         record["scenes"][state] = dict(layout, sha256=hashlib.sha256(outputs[0]).hexdigest())
         print(path.relative_to(root), record["scenes"][state]["sha256"], flush=True)
+    assets = json.dumps({"art_build": record["art_build"], "assets": record.pop("assets")}, indent=2) + "\n"
+    (out / "assets.json").write_text(assets)
+    record["assets"] = {"path": "assets.json", "sha256": hashlib.sha256(assets.encode()).hexdigest()}
     (out / "layout.json").write_text(json.dumps(record, indent=2) + "\n")

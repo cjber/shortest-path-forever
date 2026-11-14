@@ -1,0 +1,440 @@
+{
+  "art_build": "1.60.1.70124",
+  "assets": {
+    "!UI-Frame-InnerLeftTile": {
+      "member": "!UI-Frame-InnerLeftTile",
+      "set": "0",
+      "file_data_id": "1723832",
+      "size": [
+        3.0,
+        256.0
+      ],
+      "texcoords_pixels": [
+        "31",
+        "0",
+        "34",
+        "256"
+      ]
+    },
+    "!UI-Frame-InnerRightTile": {
+      "member": "!UI-Frame-InnerRightTile",
+      "set": "0",
+      "file_data_id": "1723832",
+      "size": [
+        3.0,
+        256.0
+      ],
+      "texcoords_pixels": [
+        "36",
+        "0",
+        "39",
+        "256"
+      ]
+    },
+    "!UI-Frame-Metal-EdgeLeft": {
+      "member": "!ui-frame-metal-edgeleft-c60-2x",
+      "set": "1",
+      "file_data_id": "8069114",
+      "size": [
+        95.0,
+        128.0
+      ],
+      "texcoords_pixels": [
+        "1",
+        "0",
+        "191",
+        "256"
+      ]
+    },
+    "!UI-Frame-Metal-EdgeRight": {
+      "member": "!ui-frame-metal-edgeright-c60-2x",
+      "set": "1",
+      "file_data_id": "8069114",
+      "size": [
+        95.0,
+        128.0
+      ],
+      "texcoords_pixels": [
+        "193",
+        "0",
+        "383",
+        "256"
+      ]
+    },
+    "!minimal-scrollbar-track-middle": {
+      "member": "!minimal-scrollbar-track-middle-c60",
+      "set": "1",
+      "file_data_id": "8086478",
+      "size": [
+        8.0,
+        1.0
+      ],
+      "texcoords_pixels": [
+        "1",
+        "0",
+        "9",
+        "1"
+      ]
+    },
+    "128-RedButton-Left": {
+      "member": "128-redbutton-left-c60",
+      "set": "1",
+      "file_data_id": "8063723",
+      "size": [
+        114.0,
+        128.0
+      ],
+      "texcoords_pixels": [
+        "391",
+        "781",
+        "505",
+        "909"
+      ]
+    },
+    "128-RedButton-Left-Disabled": {
+      "member": "128-redbutton-left-disabled-c60",
+      "set": "1",
+      "file_data_id": "8063723",
+      "size": [
+        114.0,
+        128.0
+      ],
+      "texcoords_pixels": [
+        "391",
+        "911",
+        "505",
+        "1039"
+      ]
+    },
+    "128-RedButton-Right": {
+      "member": "128-redbutton-right-c60",
+      "set": "1",
+      "file_data_id": "8063723",
+      "size": [
+        292.0,
+        128.0
+      ],
+      "texcoords_pixels": [
+        "1",
+        "391",
+        "293",
+        "519"
+      ]
+    },
+    "128-RedButton-Right-Disabled": {
+      "member": "128-redbutton-right-disabled-c60",
+      "set": "1",
+      "file_data_id": "8063723",
+      "size": [
+        292.0,
+        128.0
+      ],
+      "texcoords_pixels": [
+        "1",
+        "521",
+        "293",
+        "649"
+      ]
+    },
+    "RedButton-Exit": {
+      "member": "redbutton-exit-c60-2x",
+      "set": "1",
+      "file_data_id": "8107305",
+      "size": [
+        32.0,
+        32.0
+      ],
+      "texcoords_pixels": [
+        "67",
+        "1",
+        "131",
+        "65"
+      ]
+    },
+    "UI-Frame-InnerBotLeftCorner": {
+      "member": "UI-Frame-InnerBotLeftCorner",
+      "set": "0",
+      "file_data_id": "1723831",
+      "size": [
+        6.0,
+        6.0
+      ],
+      "texcoords_pixels": [
+        "81",
+        "71",
+        "87",
+        "77"
+      ]
+    },
+    "UI-Frame-InnerBotRight": {
+      "member": "UI-Frame-InnerBotRight",
+      "set": "0",
+      "file_data_id": "1723831",
+      "size": [
+        6.0,
+        6.0
+      ],
+      "texcoords_pixels": [
+        "89",
+        "71",
+        "95",
+        "77"
+      ]
+    },
+    "UI-Frame-InnerTopLeft": {
+      "member": "UI-Frame-InnerTopLeft",
+      "set": "0",
+      "file_data_id": "1723831",
+      "size": [
+        6.0,
+        6.0
+      ],
+      "texcoords_pixels": [
+        "97",
+        "71",
+        "103",
+        "77"
+      ]
+    },
+    "UI-Frame-InnerTopRight": {
+      "member": "UI-Frame-InnerTopRight",
+      "set": "0",
+      "file_data_id": "1723831",
+      "size": [
+        6.0,
+        6.0
+      ],
+      "texcoords_pixels": [
+        "105",
+        "71",
+        "111",
+        "77"
+      ]
+    },
+    "UI-Frame-Metal-CornerBottomLeft": {
+      "member": "ui-frame-metal-cornerbottomleft-c60-2x",
+      "set": "1",
+      "file_data_id": "8069116",
+      "size": [
+        95.0,
+        100.0
+      ],
+      "texcoords_pixels": [
+        "1",
+        "1",
+        "191",
+        "201"
+      ]
+    },
+    "UI-Frame-Metal-CornerBottomRight": {
+      "member": "ui-frame-metal-cornerbottomright-c60-2x",
+      "set": "1",
+      "file_data_id": "8069116",
+      "size": [
+        95.0,
+        100.0
+      ],
+      "texcoords_pixels": [
+        "1",
+        "203",
+        "191",
+        "403"
+      ]
+    },
+    "UI-Frame-Metal-CornerTopRight": {
+      "member": "ui-frame-metal-cornertopright-c60-2x",
+      "set": "1",
+      "file_data_id": "8069116",
+      "size": [
+        95.0,
+        95.0
+      ],
+      "texcoords_pixels": [
+        "193",
+        "193",
+        "383",
+        "383"
+      ]
+    },
+    "UI-Frame-PortraitMetal-CornerTopLeft": {
+      "member": "ui-frame-portraitmetal-cornertopleft-c60-2x",
+      "set": "1",
+      "file_data_id": "8069116",
+      "size": [
+        95.0,
+        95.0
+      ],
+      "texcoords_pixels": [
+        "385",
+        "193",
+        "575",
+        "383"
+      ]
+    },
+    "_128-RedButton-Center": {
+      "member": "_128-redbutton-center-c60",
+      "set": "1",
+      "file_data_id": "8063723",
+      "size": [
+        64.0,
+        128.0
+      ],
+      "texcoords_pixels": [
+        "0",
+        "1",
+        "64",
+        "129"
+      ]
+    },
+    "_128-RedButton-Center-Disabled": {
+      "member": "_128-redbutton-center-disabled-c60",
+      "set": "1",
+      "file_data_id": "8063723",
+      "size": [
+        64.0,
+        128.0
+      ],
+      "texcoords_pixels": [
+        "0",
+        "131",
+        "64",
+        "259"
+      ]
+    },
+    "_UI-Frame-InnerBotTile": {
+      "member": "_UI-Frame-InnerBotTile",
+      "set": "0",
+      "file_data_id": "1723833",
+      "size": [
+        256.0,
+        3.0
+      ],
+      "texcoords_pixels": [
+        "0",
+        "111",
+        "256",
+        "114"
+      ]
+    },
+    "_UI-Frame-InnerTopTile": {
+      "member": "_UI-Frame-InnerTopTile",
+      "set": "0",
+      "file_data_id": "1723833",
+      "size": [
+        256.0,
+        3.0
+      ],
+      "texcoords_pixels": [
+        "0",
+        "116",
+        "256",
+        "119"
+      ]
+    },
+    "_UI-Frame-Metal-EdgeBottom": {
+      "member": "_ui-frame-metal-edgebottom-c60-2x",
+      "set": "1",
+      "file_data_id": "8069118",
+      "size": [
+        128.0,
+        100.0
+      ],
+      "texcoords_pixels": [
+        "0",
+        "1",
+        "256",
+        "201"
+      ]
+    },
+    "_UI-Frame-Metal-EdgeTop": {
+      "member": "_ui-frame-metal-edgetop-c60-2x",
+      "set": "1",
+      "file_data_id": "8069118",
+      "size": [
+        128.0,
+        95.0
+      ],
+      "texcoords_pixels": [
+        "0",
+        "203",
+        "256",
+        "393"
+      ]
+    },
+    "_UI-Frame-TopTileStreaks": {
+      "member": "_UI-Frame-TopTileStreaks",
+      "set": "0",
+      "file_data_id": "1723833",
+      "size": [
+        256.0,
+        43.0
+      ],
+      "texcoords_pixels": [
+        "0",
+        "1",
+        "256",
+        "44"
+      ]
+    },
+    "minimal-scrollbar-arrow-bottom": {
+      "member": "minimal-scrollbar-arrow-bottom-c60",
+      "set": "1",
+      "file_data_id": "8069102",
+      "size": [
+        17.0,
+        11.0
+      ],
+      "texcoords_pixels": [
+        "31",
+        "52",
+        "48",
+        "63"
+      ]
+    },
+    "minimal-scrollbar-arrow-top": {
+      "member": "minimal-scrollbar-arrow-top-c60",
+      "set": "1",
+      "file_data_id": "8069102",
+      "size": [
+        17.0,
+        11.0
+      ],
+      "texcoords_pixels": [
+        "88",
+        "1",
+        "105",
+        "12"
+      ]
+    },
+    "minimal-scrollbar-track-bottom": {
+      "member": "minimal-scrollbar-track-bottom-c60",
+      "set": "1",
+      "file_data_id": "8069102",
+      "size": [
+        8.0,
+        8.0
+      ],
+      "texcoords_pixels": [
+        "11",
+        "49",
+        "19",
+        "57"
+      ]
+    },
+    "minimal-scrollbar-track-top": {
+      "member": "minimal-scrollbar-track-top-c60",
+      "set": "1",
+      "file_data_id": "8069102",
+      "size": [
+        8.0,
+        8.0
+      ],
+      "texcoords_pixels": [
+        "21",
+        "39",
+        "29",
+        "47"
+      ]
+    }
+  }
+}
