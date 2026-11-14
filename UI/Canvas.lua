@@ -725,8 +725,8 @@ end
 
 --[[ Clicks ]]
 
--- `filter(pin, button)` sees a pin's click before the pin does, and takes it by returning true (Shift-click plans a
--- journey there, JourneyInput.lua).
+-- `filter(pin, button)` sees a pin's click before the pin does, and takes it by returning true (a click with the
+-- journey key plans a journey there, JourneyInput.lua).
 ---@param filter fun(pin: SPFCanvasPin, button: string): boolean?
 function Canvas.OnClick(filter)
 	clickFilters[#clickFilters + 1] = filter

@@ -14,6 +14,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Choose the key that plans a journey from a map click.** *Key to plan a journey* in Guidance offers Shift or Alt, with Shift by default. Choose Alt and that one key plans a journey everywhere, Questie icons included, so Shift-click stays free for Questie's untrack. Asked on CurseForge by Zhiroc (#882).
+
 ## [1.37.1] - 2026-11-14
 
 <!-- discord-image: docs/screenshots/stops.png -->

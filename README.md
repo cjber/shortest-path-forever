@@ -10,7 +10,7 @@ Plan journeys in WoW: Forever, on foot, by air, by sea and through portals.<br>
 <br><br><a href="https://github.com/sponsors/cjber"><img src="docs/github-sponsors-button.png" alt="Sponsor me on GitHub"></a> <a href="https://ko-fi.com/cjber"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Support me on Ko-fi"></a>
 </p>
 
-Shift-click the world map or minimap, or choose a quest, to plan a journey. Shortest Path Forever gives directions in the objective tracker and on both maps.
+Click the world map or minimap with your journey key held (Shift by default), or choose a quest, to plan a journey. Shortest Path Forever gives directions in the objective tracker and on both maps.
 
 Need a vendor, a trainer or an inn? The **Nearby services** tab on the world map finds the closest one, tells you how long it takes to get there, and takes you there in one click. Search for any item to see who sells it.
 
@@ -27,7 +27,7 @@ with you.
 
 - **Keep a private travel journal.** `/path stats` reports this character's approximate walking distance, completed journeys and transport use.
 
-- **Plan a journey.** Shift-click the world map or minimap, or choose *Plan journey* on a quest. Routes combine walking, flights, boats, zeppelins, lifts, the tram, portals and teleports, and replan as you move. A spot inside a dungeon or raid leads to its entrance. Walks go round zones whose lowest level is 4 or more above yours and round the other faction's towns, and say so in the tracker when they can't. *Keep journeys after a reload* in Guidance restarts your own journey after a `/reload`.
+- **Plan a journey.** Click the world map or minimap with your journey key held, or choose *Plan journey* on a quest. *Key to plan a journey* in Guidance chooses Shift or Alt so a key another addon wants can be left to it. Routes combine walking, flights, boats, zeppelins, lifts, the tram, portals and teleports, and replan as you move. A spot inside a dungeon or raid leads to its entrance. Walks go round zones whose lowest level is 4 or more above yours and round the other faction's towns, and say so in the tracker when they can't. *Keep journeys after a reload* in Guidance restarts your own journey after a `/reload`.
   ![Journey steps from Auberdine to Silithus](docs/screenshots/tracker.png)
   The tracker shows each step, with time and distance remaining. Hover the destination's pin on the world map for the same steps, and, with the other faction's routes hidden, whether their boats would be at least two minutes faster.
 - **Follow your guide.** Journeys follow RestedXP's or Guidelime's current step by default, without TomTom or a bridge addon; *Resume guide* returns to it after another journey, unless Adventure Guide's RestedXP display leads instead. With TomTom absent, other guides' TomTom waypoints start journeys here.
@@ -64,9 +64,9 @@ the WoW: Forever client's `Interface/AddOns/` folder (`_forever_` on the live cl
 
 ## Usage
 
-Alt-click the world map to choose a destination over a Questie icon. Shift-click works on empty map space and Shortest Path icons. With the gamepad interface on, Shortest Path never opens or turns the world map, or opens a menu, itself; it asks you to.
+Alt-click the world map to choose a destination over a Questie icon. Shift-click works on empty map space and Shortest Path icons. Choose Alt as *Key to plan a journey* in Guidance, and that one key works everywhere, Questie icons included. With the gamepad interface on, Shortest Path never opens or turns the world map, or opens a menu, itself; it asks you to.
 
-The settings have six pages. **Transport** draws routes and shows the other faction's boats and zeppelins (off by default). **Guidance** holds journey behaviour: *Route to the focused quest*, *Show journey steps in the objective tracker*, *Resume guide*, *Keep journeys after a reload*, *Arrival distance*, *Minimum Hearthstone saving* and *Attach to quest tracker*. **Map marks** scales each kind of icon from 25% to 200% and can keep the game's own quest markers on the map beside a journey. **Interface** shows or hides the arrow and compass, sizes them, and labels distances in metres. **Alerts** covers the boat warning and the arrival sound. **Forever addons** holds the hint setting. [docs/features.md](docs/features.md) has the detail.
+The settings have six pages. **Transport** draws routes and shows the other faction's boats and zeppelins (off by default). **Guidance** holds journey behaviour: *Key to plan a journey*, *Route to the focused quest*, *Show journey steps in the objective tracker*, *Resume guide*, *Keep journeys after a reload*, *Arrival distance*, *Minimum Hearthstone saving* and *Attach to quest tracker*. **Map marks** scales each kind of icon from 25% to 200% and can keep the game's own quest markers on the map beside a journey. **Interface** shows or hides the arrow and compass, sizes them, and labels distances in metres. **Alerts** covers the boat warning and the arrival sound. **Forever addons** holds the hint setting. [docs/features.md](docs/features.md) has the detail.
 
 Right-click a flight master icon to mark its flight path as known if a flight map missed it. Open a flight master's map once after installing to sync the flight points you know.
 
@@ -156,7 +156,7 @@ Travel data comes from [wago.tools](https://wago.tools), [CMaNGOS](https://githu
 
 <!-- forever-credits:start -->
 
-Thanks to Alex21xx, Maggew, MacieGx, Stiandresius, The___Fast, Joster91, GenericP, cotijelucie, vladsnz, user_sggieekz05hc7uxt, kindguydev, Fitz, TRDeadbeat, tallsmartman, Sol_Deus, Zavian, Osipanda, Nightwind416, wfournier, cidolfus27, o0saw0o, Merlinqt, team_Brigade, phear, Testvonfarkle, rydoc, deathmvp1, saikoso, Ragnarok11B, Brainc3ll, Mouchoir, z1ck, Oxds, sean16981, aryaxo, Exo_NA, legortiz, JohnChrin, wheelbarrel00, lkshrk, HeartOfD2, rml9ty, hwalflor, chris-chrysos, Quantity-4, Bolton_wow, Aldericdevir, joaocjesus, jakerist (Grayburn), borick7318, sampconrad, jixxor, Gaafah, _spada, macwire, scraak, overspark, TeeRKee, Speaker1264, SuubzTV, Fel7, Kragmars, spidersylar, Acem, tgkGate, user_efwsfml273dlvfm5, IronmanBG, vcatalin, sdtom, Bervath, Blast22, hervad, caghanpekin-prog, Zwaffelmagic, CptShooter, user_10oietw0rdrgk4le, ubrider, cwebbx, lone_viking1921, Nivlemoth_Nathrezim, Lůca [Luutsa], esc_return, MrOxiMoron and everyone who reported a bug or asked for a feature.
+Thanks to Alex21xx, Maggew, MacieGx, Stiandresius, The___Fast, Joster91, GenericP, cotijelucie, vladsnz, user_sggieekz05hc7uxt, kindguydev, Fitz, TRDeadbeat, tallsmartman, Sol_Deus, Zavian, Osipanda, Nightwind416, wfournier, cidolfus27, o0saw0o, Merlinqt, team_Brigade, phear, Testvonfarkle, rydoc, deathmvp1, saikoso, Ragnarok11B, Brainc3ll, Mouchoir, z1ck, Oxds, sean16981, aryaxo, Exo_NA, legortiz, JohnChrin, wheelbarrel00, lkshrk, HeartOfD2, rml9ty, hwalflor, chris-chrysos, Quantity-4, Bolton_wow, Aldericdevir, joaocjesus, jakerist (Grayburn), borick7318, sampconrad, jixxor, Gaafah, _spada, macwire, scraak, overspark, TeeRKee, Speaker1264, SuubzTV, Fel7, Kragmars, spidersylar, Acem, tgkGate, user_efwsfml273dlvfm5, IronmanBG, vcatalin, sdtom, Bervath, Blast22, hervad, caghanpekin-prog, Zwaffelmagic, CptShooter, user_10oietw0rdrgk4le, ubrider, cwebbx, lone_viking1921, Nivlemoth_Nathrezim, Lůca [Luutsa], esc_return, MrOxiMoron, Zhiroc and everyone who reported a bug or asked for a feature.
 
 <!-- forever-credits:end -->
 

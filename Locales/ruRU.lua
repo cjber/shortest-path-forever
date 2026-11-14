@@ -110,8 +110,6 @@ L["Interface"] = "Интерфейс"
 L["Journey"] = "Маршрут"
 L["Journey  %s · %s"] = "Маршрут  %s • %s"
 L["Journey to %s"] = "Маршрут: %s"
-L["Journeys are off. Turn on Shift-click to plan journeys in settings."] =
-	"Маршруты отключены. Включите «Shift+щелчок для маршрута» в настройках."
 L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."] =
 	"Маршруты, а также оценки других модификаций отсюда, могут начинаться с камня возвращения или телепорта с учетом восстановления."
 L["Keep journeys after a reload"] = "Сохранять маршрут после перезагрузки"
@@ -194,9 +192,6 @@ L["Scales the shared Forever tracker. 100% matches the game's own tracker."] =
 	"Меняет размер общей панели отслеживания Forever. 100% – как панель отслеживания игры."
 L["Search services and goods"] = "Поиск услуг и товаров"
 L["Services"] = "Услуги"
-L["Shift-click the world map or the minimap to plan a journey there."] =
-	"Shift+щелчок по карте мира или мини-карте прокладывает туда маршрут."
-L["Shift-click to plan journeys"] = "Shift+щелчок для маршрута"
 L["Shortest Path report"] = "Отчет Shortest Path"
 L["Show boats and zeppelins"] = "Показывать корабли и дирижабли"
 L["Show direction arrow"] = "Показывать стрелку направления"
@@ -229,8 +224,8 @@ L["Sizes flight master icons on the world map."] =
 L["Sizes transport icons on the minimap."] =
 	"Размер значков транспорта на мини-карте."
 L["Stable master"] = "Хозяин стойл"
-L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no Shift-click. A guide addon's own journey is left alone."] =
-	"Начинает маршрут, когда вы выбираете задание или ставите метку на карте игры, так что геймпаду не нужен Shift+щелчок. Маршрут аддона-гида не затрагивается."
+L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no map click. A guide addon's own journey is left alone."] =
+	"Начинает маршрут, когда вы выбираете задание или ставите метку на карте игры, так что геймпаду не нужен щелчок по карте. Маршрут аддона-гида не затрагивается."
 L["Stop %d of %d"] = "Остановка %d из %d" -- mt
 L["Stop %d of %d: %s"] = "Остановка %d из %d: %s"
 L["Suggest quests for my level: Adventure Guide Forever"] =
@@ -458,3 +453,16 @@ L["Profession trainers"] = "Учителя профессий" -- mt
 L["Hide game quest markers"] = "Скрывать игровые метки заданий" -- mt
 L["Off, the game's own quest markers stay beside your journey's pins, showing the other places a quest can be done."] =
 	"Если выключено, игровые метки заданий остаются рядом с метками вашего маршрута, чтобы вы видели другие места, где можно выполнить задание." -- mt
+L["Shift"] = "Shift" -- mt
+L["Alt"] = "Alt" -- mt
+L["Click the map to plan journeys"] =
+	"Щелкните по карте, чтобы планировать маршруты" -- mt
+L["Hold your journey key and click the world map or the minimap to plan a journey there."] =
+	"Удерживайте клавишу маршрута и щелкните по карте мира или мини-карте, чтобы проложить туда маршрут." -- mt
+L["Journeys are off. Turn on Click the map to plan journeys in settings."] =
+	"Маршруты отключены. Включите «Щелкните по карте, чтобы планировать маршруты» в настройках." -- mt
+L["Key to plan a journey"] = "Клавиша для планирования маршрута" -- mt
+L["The key you hold to plan a journey from the world map or the minimap."] =
+	"Клавиша, которую вы удерживаете, чтобы проложить маршрут с карты мира или мини-карты." -- mt
+L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
+	"На значке Questie Shift+щелчок остается за Questie; Alt+щелчок прокладывает туда маршрут при любой из двух клавиш." -- mt

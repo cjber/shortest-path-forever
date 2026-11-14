@@ -104,8 +104,6 @@ L["Interface"] = "Interface"
 L["Journey"] = "Reise"
 L["Journey  %s · %s"] = "Reise  %s · %s"
 L["Journey to %s"] = "Reise nach %s"
-L["Journeys are off. Turn on Shift-click to plan journeys in settings."] =
-	"Reisen sind aus. Schaltet in den Optionen „Umschaltklick plant Reisen“ ein."
 L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."] =
 	"Reisen, und die Schätzungen anderer Addons von hier, können mit Eurem Ruhestein oder einem Teleport beginnen, Abklingzeit eingerechnet."
 L["Keep journeys after a reload"] = "Reisen nach /reload behalten"
@@ -183,9 +181,6 @@ L["Scales the shared Forever tracker. 100% matches the game's own tracker."] =
 	"Skaliert die gemeinsame Forever-Verfolgung. 100 % entspricht der Verfolgung des Spiels."
 L["Search services and goods"] = "Dienste und Waren durchsuchen"
 L["Services"] = "Dienste"
-L["Shift-click the world map or the minimap to plan a journey there."] =
-	"Umschaltklick auf die Weltkarte oder die Minikarte plant eine Reise dorthin."
-L["Shift-click to plan journeys"] = "Umschaltklick plant Reisen"
 L["Shortest Path report"] = "Shortest Path-Bericht"
 L["Show boats and zeppelins"] = "Schiffe und Zeppeline zeigen"
 L["Show direction arrow"] = "Richtungspfeil zeigen"
@@ -215,8 +210,8 @@ L["Sizes boat, lift, tram and portal icons on the world map."] =
 L["Sizes flight master icons on the world map."] = "Größe der Flugmeistersymbole auf der Weltkarte."
 L["Sizes transport icons on the minimap."] = "Größe der Transportsymbole auf der Minikarte."
 L["Stable master"] = "Stallmeister"
-L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no Shift-click. A guide addon's own journey is left alone."] =
-	"Startet eine Reise, wenn Ihr eine Quest fokussiert oder die Kartenmarkierung des Spiels setzt, sodass ein Controller keinen Umschaltklick braucht. Eine Reise eines Leitfaden-Addons bleibt unangetastet."
+L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no map click. A guide addon's own journey is left alone."] =
+	"Startet eine Reise, wenn Ihr eine Quest fokussiert oder die Kartenmarkierung des Spiels setzt, sodass ein Controller keinen Kartenklick braucht. Eine Reise eines Leitfaden-Addons bleibt unangetastet."
 L["Stop %d of %d"] = "Halt %d von %d" -- mt
 L["Stop %d of %d: %s"] = "Halt %d von %d: %s"
 L["Suggest quests for my level: Adventure Guide Forever"] =
@@ -433,3 +428,15 @@ L["Profession trainers"] = "Berufslehrer" -- mt
 L["Hide game quest markers"] = "Questmarkierungen ausblenden" -- mt
 L["Off, the game's own quest markers stay beside your journey's pins, showing the other places a quest can be done."] =
 	"Ist die Option aus, bleiben die Questmarkierungen des Spiels neben den Markierungen Eurer Reise sichtbar, sodass Ihr die anderen Orte seht, an denen eine Quest erledigt werden kann." -- mt
+L["Shift"] = "Umschalt" -- mt
+L["Alt"] = "Alt" -- mt
+L["Click the map to plan journeys"] = "Klicke auf die Karte, um Reisen zu planen" -- mt
+L["Hold your journey key and click the world map or the minimap to plan a journey there."] =
+	"Halte deine Reisetaste gedrückt und klicke auf die Weltkarte oder die Minikarte, um eine Reise dorthin zu planen." -- mt
+L["Journeys are off. Turn on Click the map to plan journeys in settings."] =
+	"Reisen sind aus. Aktiviere in den Einstellungen „Klicke auf die Karte, um Reisen zu planen“." -- mt
+L["Key to plan a journey"] = "Taste zum Planen einer Reise" -- mt
+L["The key you hold to plan a journey from the world map or the minimap."] =
+	"Die Taste, die du hältst, um von der Weltkarte oder der Minikarte aus eine Reise zu planen." -- mt
+L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
+	"Auf einem Questie-Symbol bleibt Shift-Klick bei Questie; Alt-Klick plant dort mit beiden Tasten die Reise." -- mt
