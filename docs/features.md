@@ -4,13 +4,15 @@ The detail behind each feature in the [README](../README.md).
 
 ## Guidance controls
 
-Alt-click the world map to place a destination directly over a Questie icon. Shift-click remains available on the map, minimap and Shortest Path icons.
+Alt-click the world map to place a destination directly over a Questie icon. Shift-click remains available on the map, minimap and Shortest Path icons. **Key to plan a journey** in Guidance chooses Shift or Alt: with Alt, that one key works everywhere, Questie icons included, and Shift no longer plans a journey.
 
 In **Map marks**, scale transport, flight master and minimap icons separately from 25% to 200%. Right-click a flight master icon to mark its path as known or unknown; opening a flight master's map also syncs paths reported by the client.
 
 In **Guidance**, turn **Show journey steps in the objective tracker** off to leave the arrow, pin, map line and minimap route without a journey block in the tracker; **Interface**'s **Show direction arrow** turns the arrow off too. Choose yards or metres, resize the tracker and compass, give the compass a background, or enable the optional minimap settings button. Turn off **Attach to quest tracker** in Guidance, or in the right-click menu of the tracker's "Journey to …" line (out of combat), to drag the Forever column by its heading.
 
 The direction arrow swings smoothly to each new bearing and rests while you stand still. **Move the arrow** and **Arrow scale** in Interface place and size it, together with the cast prompt that takes its place on a Hearthstone or teleport step. **Arrow label** chooses what shows under it: the distance, the journey's time left or both, and **Objectives under the arrow** shows or hides the stop's live objectives beneath that label. While moving the arrow or the compass, hold Shift as you drag to move it a quarter as far as the mouse, or rest the pointer on it and press the arrow keys to nudge it (ten times as far with Shift). The arrow keys walk as usual everywhere else and in combat. **Show the time left under the compass** (off by default) puts the journey's time left beside the distance to your next turn.
+
+**Route to the focused quest** in Guidance (off by default) starts a journey when you super-track a quest or place the game's own map pin, so a controller needs no map click. A guide addon's own journey is left alone while it leads.
 
 **Keep journeys after a reload** in Guidance (off by default) starts a journey you planned yourself (a map click, `/way`, a quest or Nearby services) again after a `/reload`, or when you log back in within 30 minutes. Guides and other addons start their own again, and one that does so first wins.
 
@@ -20,7 +22,7 @@ The direction arrow swings smoothly to each new bearing and rests while you stan
 
 `/path report` opens a window with a report already selected: addon and game versions, your character and position, the journey and its steps, your ride, the ride trace when `/path debug` is on, errors from earlier sessions and this one with when each was first and last seen, the recent log lines, and your other addons. Press Ctrl+C and paste it into a bug report. `/forever debug` turns on detailed log lines for the session, and `/forever debug show` opens the log to copy.
 
-With the game's gamepad interface on, Shortest Path never opens or turns the world map, opens a menu of its own, or takes the keyboard: the game would block its controller target for the rest of that call. *Show on map*, tracker dock lines and route ends use a map you have open on the place, or ask you to open or turn it; its right-click menus and Nearby services say they need mouse and keyboard; and the game's own tracking menus keep their entries, without ours, so nothing of the addon's taints the controller's focus. Its map pins are frames of its own over the map, which it only reads, and a pin under the gamepad's map cursor shows its tooltip.
+With the game's gamepad interface on, Shortest Path never opens or turns the world map, opens a menu of its own, or takes the keyboard: the game would block its controller target for the rest of that call. *Show on map*, tracker dock lines and route ends use a map you have open on the place, or ask you to open or turn it; its right-click menus and Nearby services say they need mouse and keyboard; and the game's own tracking menus keep their entries, without ours, so nothing of the addon's taints the controller's focus. Its map pins are frames of its own over the map, which it only reads, and a pin under the gamepad's map cursor shows its tooltip. Its three journey actions are bindings under Key Bindings > AddOns, and a gamepad button works too.
 
 Click the current journey step and choose **Complete this step** to advance it. Skipping a Hearthstone leaves it out of plans for that journey. Other steps may return if your actual position still requires them.
 
@@ -28,22 +30,26 @@ With RestedXP, Guidelime or Dugi Guides installed, **Resume guide** in Guidance 
 
 ## Routes and map marks
 
-- **Journey planner.** Shift-click anywhere on the world map or minimap for the fastest way there from where you
-  stand: walking, the flight points you know, boats and zeppelins with their live waits, lifts, the tram and
+- **Journey planner.** Click anywhere on the world map or minimap with your journey key held for the fastest way
+  there from where you stand: walking, the flight points you know, boats and zeppelins with their live waits, lifts, the tram and
   portals, including a flight master you haven't found yet if walking to it pays off. Walks go through
   tunnels and between a city's levels, such as Dun Algaz and the Undercity, and walks keep out of water, which is slow and risky, unless you have Water Walking or Levitate (the step asks you to cast it). The route is drawn
   on the map and minimap, walking legs dotted, and the steps sit in the objective tracker like a tracked
   quest. It replans as you move but only switches to a clearly faster way (a tenth quicker or 30 seconds sooner,
   whichever is the smaller saving), and stays aboard if you are already riding. **Guide**, on from the start
-  of every journey (click the tracker header to turn it off), moves the game's own waypoint marker to where each step ends, the next boat, lift or flight master (or, with *Mark only where steps end* off in `/path`, along the route turn by turn, round walls), and hands your tracked quest back when you finish. To head for a quest, pick **Plan journey** from its right-click menu in the objective
-  tracker or quest log, or Shift-click its marker on the map; a finished quest routes to its turn-in.
+  of every journey (click the tracker header to turn it off), marks where each step ends on the map, the next boat,
+  lift or flight master, and leads you there round every bend: by the screen arrow, or with *Mark only where steps
+  end* off in `/path`, by the game's own waypoint marker moving along the route turn by turn. It hands your tracked
+  quest back when you finish. To head for a quest, pick **Plan journey** from its right-click menu in the objective
+  tracker or quest log, or click its marker on the map with your journey key held; a finished quest routes to its turn-in.
   Walks keep away from danger. A zone whose lowest level is 4 or more above yours costs four times as much to
   walk through and the other faction's towns and capitals six times as much, so a walk goes round them when there
-  is a way, and is planned again when you level up. The zones and towns you start and end in are never avoided. Under
-  the walk's step, grey lines say what it did: *Avoids Duskwood (level 18-30)*, *Crosses Wetlands (level 20-30)*
+  is a way, and is planned again when you level up. The zones and towns you start and end in are never avoided.
+  Under the walk's step, grey lines say what it did: *Avoids Duskwood (level 18-30)*, *Crosses Wetlands (level 20-30)*
   where there is no way round, and *Hostile town: Crossroads*. Zone levels are the original game's published
-  ranges; Forever's own zones use their subzones' exploration levels. A hostile town is the ground around one of
-  the other faction's flight masters with none of yours beside it, so Booty Bay and Gadgetzan don't count. Untick
+  ranges; Forever's own zones use their subzones' exploration levels. A hostile town is the ground the game itself
+  calls that town, around one of the other faction's flight masters with none of yours beside it, so Booty Bay and
+  Gadgetzan don't count. Untick
   *Avoid zones far above my level* in Guidance to walk anywhere; the towns are always avoided. The walk's time
   counts these costs, so a walk that must cross one reads a little long.
   A goal inside a dungeon or raid, which has no walking map, is planned to the instance's entrance from outside
@@ -114,9 +120,9 @@ With RestedXP, Guidelime or Dugi Guides installed, **Resume guide** in Guidance 
 
 - **Find nearby services.** Open the minimap's tracking menu or the world map's and pick *Nearby services*, or use
   `/spfnear`. Vendors are grouped by what they sell: arrows, bullets, food, drink, bags, trade supplies, reagents,
-  and weapons and armour. Trainers are grouped by class or profession. It also lists repairs, innkeepers, banks,
-  auction houses, flight masters and stable masters. Pick a group to route to the nearest friendly location in your
-  installed QuestieDB. Arrows, shot, food and drink go to the best goods for your level sold around you; when better
+  and weapons and armour. Trainers are grouped by your own class, by portal training for mages, and by profession.
+  It also lists battlemasters, repairs, innkeepers, banks, auction houses, flight masters and stable masters. Pick a
+  group to route to the nearest friendly location in your installed QuestieDB. Arrows, shot, food and drink go to the best goods for your level sold around you; when better
   ones are sold farther away on your continent, a row under the group offers that trip with its own travel time.
   Dungeons and raids have a section of their own: every door on your continent, nearest first by travel time, and a
   row starts a journey to that door which ends when you go in.
@@ -150,24 +156,28 @@ With RestedXP, Guidelime or Dugi Guides installed, **Resume guide** in Guidance 
 - **In the map's filter menu.** *Flight Masters*, *Boat and Zeppelin Routes*, *Boats & Zeppelins*, *Lifts &
   Tram* and *Portals* turn each layer off; *Other Faction's Routes* shows the
   boats and zeppelins run by the other faction (anyone can ride them, but they are hidden by default).
+- **The game's own quest markers.** While a journey draws, *Hide game quest markers* (on by
+  default) takes the game's marker off the map for each quest a stop covers, so the stop stands for it once. Turn it
+  off under Map marks or in the map's filter menu and every one of the game's markers and quest areas stays visible,
+  showing the other places those quests can be done.
 - **The next departures in the objective tracker.** Walk up to a dock, lift or tram station and a section
   appears beside your quests, counting down to the next arrival and departure of everything that calls there.
   On board, it shows where the boat calls next and when it arrives.
 - **A heads-up when your boat is due.** A raid-warning banner, a sound and a flashing taskbar icon, half a
   minute before a timed boat reaches your dock and just before your own boat docks, for anyone waiting AFK.
 - **Times from real rides.** Each route's loop time comes from the game's own path data, so one ride tells
-  the addon where that boat is for hours. Ride a boat, lift or tram once and its schedule syncs. Until then
-  its dock says *no sighting yet*, and a journey counts half a loop as its wait, shown as *leaves in about 2:45*.
-  A flight is timed from take-off to landing, and that time is preferred over the shipped estimate from then on. A
-  flight's remaining time counts down from how far along the drawn route you are, so it holds steady on a slow or
-  fast ride.
-- **Shared between players.** Sightings are passed on quietly over guild, party and yell at the docks, so
-  someone else's ride can time your boat. No chat messages are shown; turn it off in the settings.
+  the addon where that boat is from then on. Ride a boat, lift or tram once and its schedule is recorded. Until
+  then its dock says *no sighting yet*, and a journey counts half a loop as its wait, shown as *leaves in about
+  2:45*. A flight is timed from take-off to landing, and that time is preferred over the shipped estimate from
+  then on. A flight's remaining time counts down from how far along the drawn route you are, so it holds steady
+  on a slow or fast ride.
+- **Kept on your account.** A sighting stays until a newer ride of the same route replaces it, across sessions
+  and characters. Timetables come from your own sightings, and nothing is sent to other players.
 
 ## With my other Forever addons
 
 - **Adventure Guide's suggestions.** With Adventure Guide Forever on (a version whose API offers suggestions) and
-  *Shift-click to plan journeys* on, right-click a quest in the tracker or the quest log: under *Plan journey*,
+  *Click the map to plan journeys* on, right-click a quest in the tracker or the quest log: under *Plan journey*,
   *Adventure Guide suggests* lists up to three of its suggestions as `[level] title`, in its own order. Choosing one
   starts it as Adventure Guide's own Start does. If its route has moved on since the menu opened, one chat line says
   so.

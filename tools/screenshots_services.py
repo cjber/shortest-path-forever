@@ -5,13 +5,14 @@ Trainers and Services sections, with 44-unit rows 2 apart, 30-unit icons and the
 NPCs, their titles and the goods that group them are Auberdine's, from QuestieDB. A time is the straight line at
 7 yards a second over Darkshore's 6,550 by 4,366 yards, or the boat to Darnassus where no local NPC serves. The
 search scene types an item word into the same box and keeps the groups whose goods match it. The better scene is the
-same hunter at level 25, offered better arrows farther away in a one-line row under Arrows.
+same hunter at level 25, offered better arrows farther away in a one-line row under Arrows. The roles scene shows
+the class, portal and battlemaster rows on their own.
 """
 
 import math
 
 from PIL import Image, ImageChops, ImageDraw
-from wowmock import (
+from wowmock import (  # ty: ignore[import-not-found]
     ARIALN,
     FONTS,
     FRIZQT,
@@ -73,7 +74,8 @@ VENDORS = [
     ("Weapons and armour", ("item", 851), "Harlon Thornguard", "Armorer & Shieldsmith", 37.0, 41.3, None),
 ]
 TRAINERS = [
-    ("Hunter trainer", ("atlas", "Class"), "Jocaste", "Darnassus", None, None, "6:20"),
+    ("Class trainer", ("atlas", "Class"), "Jocaste", "Darnassus", None, None, "6:20"),
+    ("Portal trainer", ("atlas", "TaxiNode_Continent_Neutral"), "Elissa Dumas", "Darnassus", None, None, "6:25"),
     ("Blacksmithing", ("atlas", "Profession"), "Delfrum Flintbeard", "Journeyman Blacksmith", 38.2, 40.9, None),
     ("Engineering", ("atlas", "Profession"), "Jenna Lemkenilli", "Journeyman Engineer", 38.3, 41.1, None),
     ("Mining", ("atlas", "Profession"), "Kurdram Stonehammer", "Mining Trainer", 38.2, 41.0, None),
@@ -86,6 +88,7 @@ SERVICES = [
     ("Repair", ("atlas", "Repair"), "Harlon Thornguard", "Armorer & Shieldsmith", 37.0, 41.3, None),
     ("Bank", ("atlas", "Banker"), "Idriana", "Darnassus", None, None, "6:05"),
     ("Auction house", ("atlas", "Auctioneer"), "Auctioneer Tolon", "Darnassus", None, None, "6:40"),
+    ("Battlemaster", ("atlas", "BattleMaster"), "Aethalas", "Warsong Gulch Battlemaster", None, None, "6:35"),
 ]
 
 # The search scene types "water", the first thing a player runs out of. UI/Nearby.lua's Matching keeps an NPC when
@@ -146,6 +149,14 @@ BETTER_VENDORS = [
     *VENDORS[4:],
 ]
 BETTER_SECTIONS = (("Vendors", BETTER_VENDORS), ("Trainers", TRAINERS), ("Services", SERVICES))
+
+# The class, portal and battlemaster rows on their own, so the roles added beside the existing services are visible
+# without scrolling past the vendors. Elissa Dumas is Darnassus's portal trainer and Aethalas its Warsong Gulch
+# battlemaster; the times are the same Teldrassil boat the class trainer row takes.
+ROLES = (
+    ("Trainers", TRAINERS[:2]),
+    ("Services", [SERVICES[-1]]),
+)
 
 
 def walk(x, y):
@@ -398,3 +409,7 @@ def render_search(ui):
 
 def render_better(ui):
     return scene(ui, [(panel(ui, groups=BETTER_SECTIONS), 0, 0)])
+
+
+def render_roles(ui):
+    return scene(ui, [(panel(ui, groups=ROLES), 0, 0)])

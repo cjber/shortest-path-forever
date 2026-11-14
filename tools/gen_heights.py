@@ -94,7 +94,12 @@ def cluster(x, y, nav):
 def nav_origin(map_id):
     """The walking map's first tile, tile row length and cells per tile side, from its Nav<map>.lua header."""
     text = (ROOT / "Nav" / f"Nav{map_id}.lua").read_text(encoding="utf-8")
-    values = {key: int(re.search(rf"\b{key} = (-?\d+)", text)[1]) for key in ("cx0", "cy0", "ny", "cells")}
+    values = {}
+    for key in ("cx0", "cy0", "ny", "cells"):
+        match = re.search(rf"\b{key} = (-?\d+)", text)
+        if match is None:
+            raise ValueError(f"Nav{map_id}.lua has no {key} header")
+        values[key] = int(match[1])
     return values["cx0"], values["cy0"], values["ny"], values["cells"]
 
 

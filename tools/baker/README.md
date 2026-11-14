@@ -103,7 +103,8 @@ The bake uses the player's own collision limits, not a server creature's:
 
 | Limit | Setting | Player (source) |
 |---|---|---|
-| Walkable slope | `walkableSlopeAngle` and `walkableSlopeAngleNotSteep` 55, TrinityCore's own | the player's limit is 50 degrees (benilla-re `systems/collision/walking.md`, cos 50 `0x3f248dbb`; the Forever client's float pool holds the same constants), but see below |
+| Walkable slope | `walkableSlopeAngleNotSteep` 50 | a face is walkable while its normal's z is above cos 50 (benilla-re `systems/collision/walking.md`, cos 50 `0x3f248dbb`; the Forever client's float pool holds the same constant) |
+| Steep ground, walked down only | `walkableSlopeAngle` 61.6 | the settle sweep reaches `t * tan 61.6 + 1/36` below the move (tan 61.6 `1.8493990`, also in the Forever client's pool); ground from 50 to 61.6 degrees is `NAV_AREA_GROUND_STEEP`, area 10 |
 | Step height | `walkableClimb` 4 x `ch` 0.5 = 2.0 yd | H = 2.0 yd (`0x617430` in the 1.12.1 client; the same value in Forever's build) |
 | Agent clearance | `walkableHeight` 3 x 0.5 = 1.5 yd | close to the 1.6 yd the older 0.533 yd voxel reached; a player is not a tall creature |
 | Falling | `NAV_DROP_REACH` 14.57 yd | fall damage starts here (TrinityCore `Player::HandleFall` at the pinned commit) |
@@ -115,12 +116,9 @@ stair tread no longer turns the tread unwalkable and cuts the stair (the Underci
 below the top liquid surface of its own voxel column is a bed nobody stands on: the patched `TileBuilder` gives it
 `NAV_AREA_UNDER_LIQUID` (area 7) and flag `0x40`, so Recast splits it into polygons of its own and the generator never
 joins sealed terrain to the world through a canal floor (Stormwind's under-city ground was reached this way). Slope
-never changes speed, so no slope cost is charged. The bake keeps TrinityCore's single 55 degree slope, so it marks no
-steep ground. A 50 degree limit with 50 to 61.6 degrees as `NAV_AREA_GROUND_STEEP` (area 10) marks ground players
-climb every day as steep, such as the Deeprun Tram ramp in Stormwind, and the slide it opens off Stormwind's Cathedral Square reaches the terrain under the city,
-where a walk with no height can wrongly start. The generator is ready for the band: it turns steps into and out of
-area 10 into directed links, downhill only, and its search between cells never climbs through it. It waits for a
-step-onto-tread rule and for walks that start from the player's measured floor (#639, #737). A
+never changes speed, so no slope cost is charged. Ground from 50 to 61.6 degrees is `NAV_AREA_GROUND_STEEP` (area 10),
+which the generator keeps as a distinct layer and turns into downhill-only steps: its search between cells never
+climbs through it, so a route goes around a face the player would slide back down. A
 landing between 2.0 and 14.57 yards below a ledge is baked as a one-way Detour
 off-mesh connection (`DT_OFFMESH_CON_BIDIR` never set) by the patched `TileBuilder`, which looks outwards from every
 walkable span with no walkable neighbour, rejects a landing whose fall column or path crosses a wall or a shelf, and
@@ -129,18 +127,21 @@ landing may lie in the next tile; the heightfield border bounds how far out it c
 floor surfaces, and the generator charges the walk plus free fall's time at the client's gravity (19.2911 yd/s²) run
 at 7 yd/s. `tools/baker/check_drops.py` compiles and exercises that helper alongside `check_hazards.py`.
 
-Maps are written in format 2. A step both ways take is one bit in a floor's step mask, exactly as format 1 writes
-it, and the decoder resolves that bit by height and mirrors it on the surface it lands on. Only a step one way takes
-(steep ground, a ledge drop) or one with a cost of its own is a record, so a ledge is dropped off but never climbed
-and steep ground is never walked up. The file stores each single link once, from the node that leaves it: a step's
-[node, direction, layer], or a drop's [node, x, y, layer, cost in whole yards]. An offset of (0, 0) is a link within
-one cell, so a drop from a ledge to a distinct floor of the same cell is stored too, and the generator maps a drop to
-the surfaces its endpoints lie on (the poly's own height, not the nearest cell anchor), linking the ledge to the
-landing's floor or, when that floor is rasterized in a neighbouring cell, to that cell's matching layer. The tile
+Maps are written in format 3. A step both ways take is one bit in a floor's step mask, and the node stores the layer
+each set direction lands on, so the decoder resolves the pair the bake linked rather than a surface merely near its
+height. A step one way takes because one end is steep rides the same bit: the decoder's stored-height test refuses the
+climb, so a ledge is dropped off but never climbed and steep ground is never walked up. Only a step one way takes for
+a reason the decoder cannot decide for itself (a wall, ground it cannot pass) or one with a cost of its own is a
+record. The file stores each single link once, from the node that leaves it: a step's [node, direction, layer], or a
+drop's [node, x, y, layer, cost in whole yards]. Floors, record nodes and cells are written as deltas, so a cluster's
+list of surfaces and its records cost a fraction of the absolute indices they used to. An offset of (0, 0) is a link
+within one cell, so a drop from a ledge to a distinct floor of the same cell is stored too, and the generator maps a
+drop to the surfaces its endpoints lie on (the poly's own height, not the nearest cell anchor), linking the ledge to
+the landing's floor or, when that floor is rasterized in a neighbouring cell, to that cell's matching layer. The tile
 graph keeps one record per edge from the node that leaves it as well, and the decoder builds every node's
-predecessors from those records. Nothing is stored twice, so a format 2 map costs about what a format 1 map of the
-same bake does. `Routing/PathGrid.lua` still decodes format 1, which every map shipped so far uses and which keeps its
-symmetric links and height-matched floor steps.
+predecessors from those records. `Routing/PathGrid.lua` still decodes format 2, whose floor step bits it resolves by
+height, and format 1, which every map shipped before format 2 uses and which keeps its symmetric links and
+height-matched floor steps.
 
 The generator emits raw base64 cluster fields. `pack_nav.py --root <addon root> NavN.lua...` compresses them
 with zlib into blocks that expand to at most 16 KiB and bundles them under `Nav/`, each Lua file at most

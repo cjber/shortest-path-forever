@@ -55,6 +55,10 @@ local ns = {
 	Init = function(fn)
 		fn()
 	end,
+	-- UI/MenuModifier.lua's entry point; this spec only loads the file, so the tag is recorded and unused.
+	ModifyMenu = function(tag, _, build)
+		env.Menu.ModifyMenu(tag, build)
+	end,
 	Planner = {
 		QuestDestination = function()
 			return { uiMapID = 1440, x = 0.5, y = 0.5, label = "Tracked" }
@@ -207,7 +211,7 @@ ns.Planner.QuestDestination = plan
 ns.db.journey, destination, printed = false, nil, {}
 Press(env.ShortestPathForeverTravelToTrackedQuestButton)
 assert(
-	destination == nil and printed[1] == "Journeys are off. Turn on Shift-click to plan journeys in settings.",
+	destination == nil and printed[1] == "Journeys are off. Turn on Click the map to plan journeys in settings.",
 	"journeys turned off say so"
 )
 ns.db.journey = true

@@ -134,7 +134,7 @@ index a16d1669425eec2d87ebf283079d1acbefa96bc1..9ce24c7113ecbb34cf92f26d07f9ac62
 +
              /// Get the vector coordinate for a specific position
 diff --git a/src/common/mmaps_common/Generator/TileBuilder.cpp b/src/common/mmaps_common/Generator/TileBuilder.cpp
-index 31ec90a83da290e58acdff60d1efae02363dcb52..beeeca0cf4d94d569c5ca43c25f781fc64498b7d 100644
+index 31ec90a83da290e58acdff60d1efae02363dcb52..05edcaa187e7cdba913ee099f858572a3b29645e 100644
 --- a/src/common/mmaps_common/Generator/TileBuilder.cpp
 +++ b/src/common/mmaps_common/Generator/TileBuilder.cpp
 @@ -25,2 +25,8 @@
@@ -146,13 +146,27 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..beeeca0cf4d94d569c5ca43c25f781fc
 +#include <fstream>
 +#include <unordered_map>
  
-@@ -47,4 +53,52 @@ namespace
+@@ -47,4 +53,66 @@ namespace
  
 +// A tile's outcome is recorded in mmaps/status/MMMM_RR_CC: FAILED from before any work until the tile is proven,
 +// then "ok bytes=N" once its mmtile is fully saved or "empty" when it legitimately has nothing to walk on.
 +namespace
 +{
 +    constexpr uint8 NAV_FLAG_UNDER_HAZARD = 0x80; // ground below magma or slime; gen_nav treats it as not walkable
++
++    // The player's own collision limits, not a server creature's:
++    //  * Walkable slope: a face is walkable while its normal's z is above cos 50 degrees (benilla-re
++    //    systems/collision/walking.md, "Rise along a face"; the constant is 0x3f248dbb). The Forever client's float
++    //    literal pool holds exactly one cos 50 and one tan 50 (0x3f988b62), and no cos or tan 55, 60 or 70.
++    //  * Steep ground: the same document's settle sweep reaches t * tan 61.6 degrees + 1/36 below the move, and the
++    //    Forever client's pool holds tan 61.6 (1.8493990). Ground between 50 and 61.6 degrees is kept as
++    //    NAV_AREA_GROUND_STEEP and walked down only, so no slope cost is charged.
++    //  * Step up: H = 2.0 yards (the routine at 0x617430 returns it; the same value in Forever's build). Counted in
++    //    the 0.5 yard vertical cell, that is four voxels.
++    //  * Falling: fall damage starts at 14.57 yards (TrinityCore Player::HandleFall at the pinned commit).
++    constexpr float NAV_PLAYER_SLOPE = 50.0f;        // cos 50: a face's normal z must be above this
++    constexpr float NAV_PLAYER_STEEP_SLOPE = 61.6f;  // the settle sweep's steep band, walked down only
++    constexpr float NAV_PLAYER_STEP = 2.0f;          // H, the step up, in yards
 +
 +    boost::filesystem::path TileStatusPath(boost::filesystem::path const& outputDirectory, uint32 mapID, uint32 tileX, uint32 tileY)
 +    {
@@ -199,17 +213,17 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..beeeca0cf4d94d569c5ca43c25f781fc
 +    std::atomic<uint32> FailedTiles = 0;
 +
      struct TileConfig
-@@ -57,2 +111,5 @@ namespace MMAP
+@@ -57,2 +125,5 @@ namespace MMAP
              BASE_UNIT_DIM = bigBaseUnit ? 0.5333333f : 0.2666666f;
 +            // The player's step height is 2.0 yards, which no multiple of the horizontal cell reaches exactly, so the
 +            // vertical cell is 0.5 yards at either horizontal cell, and a step is four of them.
 +            CELL_HEIGHT = 0.5f;
  
-@@ -65,2 +122,3 @@ namespace MMAP
+@@ -65,2 +136,3 @@ namespace MMAP
          float BASE_UNIT_DIM;
 +        float CELL_HEIGHT;
          int VERTEX_PER_MAP;
-@@ -97,2 +155,22 @@ namespace MMAP
+@@ -97,2 +169,22 @@ namespace MMAP
  
 +        // FAILED stands until the tile is proven, and no earlier mmtile can outlive a rebuild
 +        boost::filesystem::path const statusPath = TileStatusPath(m_outputDirectory, mapID, tileX, tileY);
@@ -232,11 +246,11 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..beeeca0cf4d94d569c5ca43c25f781fc
 +        };
 +
          MeshData meshData;
-@@ -100,2 +178,3 @@ namespace MMAP
+@@ -100,2 +192,3 @@ namespace MMAP
          std::unique_ptr<VMAP::VMapManager> vmapManager = CreateVMapManager(mapID);
 +        m_terrainBuilder.clearFailure();
  
-@@ -107,8 +186,8 @@ namespace MMAP
+@@ -107,8 +200,8 @@ namespace MMAP
  
 +        if (m_terrainBuilder.failed())
 +            return finish("FAILED", true);
@@ -249,7 +263,7 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..beeeca0cf4d94d569c5ca43c25f781fc
 -        }
 +            return finish("empty", false);
  
-@@ -119,6 +198,3 @@ namespace MMAP
+@@ -119,6 +212,3 @@ namespace MMAP
          if (meshData.liquidVerts.empty() && meshData.solidVerts.empty())
 -        {
 -            OnTileDone();
@@ -257,7 +271,7 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..beeeca0cf4d94d569c5ca43c25f781fc
 -        }
 +            return finish("empty", false);
  
-@@ -138,8 +214,372 @@ namespace MMAP
+@@ -138,7 +228,371 @@ namespace MMAP
          TileResult tileResult = buildMoveMapTile(mapID, tileX, tileY, meshData, bmin, bmax, navMesh->getParams());
 -        if (tileResult.data)
 -            saveMoveMapTileToFile(mapID, tileX, tileY, navMesh, tileResult);
@@ -272,8 +286,7 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..beeeca0cf4d94d569c5ca43c25f781fc
 +
 +        finish(Trinity::StringFormat("ok bytes={}", tileResult.size), false);
 +    }
- 
--        OnTileDone();
++
 +
 +    // SPF-HAZARD-BEGIN
 +    struct HazardPoint { float x, y, z; };
@@ -353,8 +366,8 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..beeeca0cf4d94d569c5ca43c25f781fc
 +                return true;
 +
 +        return false;
-     }
- 
++    }
++
 +    // Terrain is dropped where a quad's liquid lies wholly above it, but model floors and partly submerged quads keep
 +    // ground below the surface. MarkGroundUnderLiquid gives the voxels of such a bed an area of their own; a ground
 +    // polygon partly under magma or slime is flagged here as well, because ground is the area recast prefers over the
@@ -435,11 +448,12 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..beeeca0cf4d94d569c5ca43c25f781fc
 +                if (under)
 +                    break;
 +            }
-+
+ 
+-        OnTileDone();
 +            if (under)
 +                mesh.flags[i] |= NAV_FLAG_UNDER_HAZARD;
 +        }
-+    }
+     }
 +    // SPF-HAZARD-END
 +
 +    // SPF-DROP-BEGIN
@@ -631,30 +645,29 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..beeeca0cf4d94d569c5ca43c25f781fc
 +        }
 +    }
 +    // SPF-DROP-END
-+
-     /**************************************************************************/
-@@ -211,2 +651,3 @@ namespace MMAP
+ 
+@@ -211,2 +665,3 @@ namespace MMAP
                      TC_LOG_ERROR("maps.mmapgen", "{} Failed building heightfield!", tileString);
 +                    tileResult.failed = true;
                      continue;
-@@ -240,2 +681,3 @@ namespace MMAP
+@@ -240,2 +695,3 @@ namespace MMAP
                      TC_LOG_ERROR("maps.mmapgen", "{} Failed compacting heightfield!", tileString);
 +                    tileResult.failed = true;
                      continue;
-@@ -243,2 +685,4 @@ namespace MMAP
+@@ -243,2 +699,4 @@ namespace MMAP
  
 +                MarkGroundUnderLiquid(*tile.chf);
 +
                  // build polymesh intermediates
-@@ -247,2 +691,3 @@ namespace MMAP
+@@ -247,2 +705,3 @@ namespace MMAP
                      TC_LOG_ERROR("maps.mmapgen", "{} Failed eroding area!", tileString);
 +                    tileResult.failed = true;
                      continue;
-@@ -253,2 +698,3 @@ namespace MMAP
+@@ -253,2 +712,3 @@ namespace MMAP
                      TC_LOG_ERROR("maps.mmapgen", "{} Failed filtering area!", tileString);
 +                    tileResult.failed = true;
                      continue;
-@@ -256,2 +702,13 @@ namespace MMAP
+@@ -256,2 +716,13 @@ namespace MMAP
  
 +                // one-way drops off ledges, appended to this tile's own connections
 +                for (LedgeDrop const& drop : CollectLedgeDrops(*tile.chf, bmin, bmax))
@@ -668,27 +681,27 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..beeeca0cf4d94d569c5ca43c25f781fc
 +                }
 +
                  if (!rcBuildDistanceField(&m_rcContext, *tile.chf))
-@@ -259,2 +716,3 @@ namespace MMAP
+@@ -259,2 +730,3 @@ namespace MMAP
                      TC_LOG_ERROR("maps.mmapgen", "{} Failed building distance field!", tileString);
 +                    tileResult.failed = true;
                      continue;
-@@ -265,2 +723,3 @@ namespace MMAP
+@@ -265,2 +737,3 @@ namespace MMAP
                      TC_LOG_ERROR("maps.mmapgen", "{} Failed building regions!", tileString);
 +                    tileResult.failed = true;
                      continue;
-@@ -272,2 +731,3 @@ namespace MMAP
+@@ -272,2 +745,3 @@ namespace MMAP
                      TC_LOG_ERROR("maps.mmapgen", "{} Failed building contours!", tileString);
 +                    tileResult.failed = true;
                      continue;
-@@ -280,2 +740,3 @@ namespace MMAP
+@@ -280,2 +754,3 @@ namespace MMAP
                      TC_LOG_ERROR("maps.mmapgen", "{} Failed building polymesh!", tileString);
 +                    tileResult.failed = true;
                      continue;
-@@ -287,2 +748,3 @@ namespace MMAP
+@@ -287,2 +762,3 @@ namespace MMAP
                      TC_LOG_ERROR("maps.mmapgen", "{} Failed building polymesh detail!", tileString);
 +                    tileResult.failed = true;
                      continue;
-@@ -310,5 +772,14 @@ namespace MMAP
+@@ -310,5 +786,14 @@ namespace MMAP
              TC_LOG_ERROR("maps.mmapgen", "{} alloc iv.polyMesh FAILED!", tileString);
 +            tileResult.failed = true;
 +            return tileResult;
@@ -704,7 +717,7 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..beeeca0cf4d94d569c5ca43c25f781fc
          }
 -        rcMergePolyMeshes(&m_rcContext, pmmerge.get(), nmerge, *iv.polyMesh);
  
-@@ -318,5 +789,11 @@ namespace MMAP
+@@ -318,5 +803,11 @@ namespace MMAP
              TC_LOG_ERROR("maps.mmapgen", "{} alloc m_dmesh FAILED!", tileString);
 +            tileResult.failed = true;
 +            return tileResult;
@@ -717,19 +730,19 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..beeeca0cf4d94d569c5ca43c25f781fc
          }
 -        rcMergePolyMeshDetails(&m_rcContext, dmmerge.get(), nmerge, *iv.polyMeshDetail);
  
-@@ -333,3 +810,5 @@ namespace MMAP
+@@ -333,3 +824,5 @@ namespace MMAP
              {
 -                if (area >= NAV_AREA_MIN_VALUE)
 +                if (area == NAV_AREA_UNDER_LIQUID)
 +                    iv.polyMesh->flags[i] = NAV_UNDER_LIQUID;
 +                else if (area >= NAV_AREA_MIN_VALUE)
                      iv.polyMesh->flags[i] = 1 << (NAV_AREA_MAX_VALUE - area);
-@@ -340,2 +819,4 @@ namespace MMAP
+@@ -340,2 +833,4 @@ namespace MMAP
  
 +        MarkGroundUnderHazard(*iv.polyMesh, lVerts, lTris, lTriFlags, lTriCount);
 +
          // setup mesh parameters
-@@ -362,5 +843,5 @@ namespace MMAP
+@@ -362,5 +857,5 @@ namespace MMAP
  
 -        params.walkableHeight = BASE_UNIT_DIM * config.walkableHeight;    // agent height
 +        params.walkableHeight = config.ch * config.walkableHeight;        // agent height, in vertical cells
@@ -737,43 +750,43 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..beeeca0cf4d94d569c5ca43c25f781fc
 -        params.walkableClimb = BASE_UNIT_DIM * config.walkableClimb;      // keep less that walkableHeight (aka agent height)!
 +        params.walkableClimb = config.ch * config.walkableClimb;          // keep less that walkableHeight (aka agent height)!
          params.tileX = (((bmin[0] + bmax[0]) / 2) - navMeshParams->orig[0]) / GRID_SIZE;
-@@ -399,2 +880,3 @@ namespace MMAP
+@@ -399,2 +894,3 @@ namespace MMAP
              TC_LOG_ERROR("maps.mmapgen", "{} Invalid verts-per-polygon value!", tileString);
 +            tileResult.failed = true;
              return tileResult;
-@@ -405,2 +887,3 @@ namespace MMAP
+@@ -405,2 +901,3 @@ namespace MMAP
              TC_LOG_ERROR("maps.mmapgen", "{} Too many vertices!", tileString);
 +            tileResult.failed = true;
              return tileResult;
-@@ -429,2 +912,3 @@ namespace MMAP
+@@ -429,2 +926,3 @@ namespace MMAP
              TC_LOG_ERROR("maps.mmapgen", "{} No detail mesh to build tile!", tileString);
 +            tileResult.failed = true;
              return tileResult;
-@@ -436,2 +920,3 @@ namespace MMAP
+@@ -436,2 +934,3 @@ namespace MMAP
              TC_LOG_ERROR("maps.mmapgen", "{} Failed building navmesh tile!", tileString);
 +            tileResult.failed = true;
              return tileResult;
-@@ -443,3 +928,3 @@ namespace MMAP
+@@ -443,3 +942,3 @@ namespace MMAP
  
 -    void TileBuilder::saveMoveMapTileToFile(uint32 mapID, uint32 tileX, uint32 tileY, dtNavMesh* navMesh,
 +    bool TileBuilder::saveMoveMapTileToFile(uint32 mapID, uint32 tileX, uint32 tileY, dtNavMesh* navMesh,
          TileResult const& tileResult, std::string_view fileNameSuffix)
-@@ -461,3 +946,3 @@ namespace MMAP
+@@ -461,3 +960,3 @@ namespace MMAP
                  TC_LOG_ERROR("maps.mmapgen", "[Map {:04}] [{:02},{:02}]: Failed adding tile to navmesh!", mapID, tileX, tileY);
 -                return;
 +                return false;
              }
-@@ -469,3 +954,3 @@ namespace MMAP
+@@ -469,3 +968,3 @@ namespace MMAP
          std::string fileName = Trinity::StringFormat("{}/mmaps/{:04}_{:02}_{:02}{}.mmtile", m_outputDirectory.generic_string(), mapID, tileX, tileY, fileNameSuffix);
 -        auto file = Trinity::make_unique_ptr_with_deleter<&::fclose>(fopen(fileName.c_str(), "wb"));
 +        FILE* file = fopen(fileName.c_str(), "wb");
          if (!file)
-@@ -473,3 +958,3 @@ namespace MMAP
+@@ -473,3 +972,3 @@ namespace MMAP
              TC_LOG_ERROR("maps.mmapgen", "[Map {:04}] [{:02},{:02}]: {}: Failed to open {} for writing!", mapID, tileX, tileY, strerror(errno), fileName);
 -            return;
 +            return false;
          }
-@@ -482,6 +967,15 @@ namespace MMAP
+@@ -482,6 +981,15 @@ namespace MMAP
          header.size = uint32(tileResult.size);
 -        fwrite(&header, sizeof(MmapTileHeader), 1, file.get());
 +        bool written = fwrite(&header, sizeof(MmapTileHeader), 1, file) == 1;
@@ -791,12 +804,12 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..beeeca0cf4d94d569c5ca43c25f781fc
 +
 +        return written;
      }
-@@ -508,3 +1002,3 @@ namespace MMAP
+@@ -508,3 +1016,3 @@ namespace MMAP
      /**************************************************************************/
 -    bool TileBuilder::shouldSkipTile(uint32 /*mapID*/, uint32 /*tileX*/, uint32 /*tileY*/) const
 +    bool TileBuilder::shouldSkipTile(uint32 mapID, uint32 tileX, uint32 tileY) const
      {
-@@ -513,3 +1007,45 @@ namespace MMAP
+@@ -513,3 +1021,45 @@ namespace MMAP
  
 -        return true;
 +        // only a tile recorded as proven is skipped; anything else, including a bare mmtile, is rebuilt
@@ -843,17 +856,21 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..beeeca0cf4d94d569c5ca43c25f781fc
 +
 +        return false;
      }
-@@ -525,3 +1061,3 @@ namespace MMAP
+@@ -525,7 +1075,8 @@ namespace MMAP
          config.cs = tileConfig.BASE_UNIT_DIM;
 -        config.ch = tileConfig.BASE_UNIT_DIM;
+-        // Keeping these 2 slope angles the same reduces a lot the number of polys.
+-        // 55 should be the minimum, maybe 70 is ok (keep in mind blink uses mmaps), 85 is too much for players
+-        config.walkableSlopeAngle = m_maxWalkableAngle.value_or(55.0f);
+-        config.walkableSlopeAngleNotSteep = m_maxWalkableAngleNotSteep.value_or(55.0f);
 +        config.ch = tileConfig.CELL_HEIGHT;
-         // Keeping these 2 slope angles the same reduces a lot the number of polys.
-@@ -530,2 +1066,4 @@ namespace MMAP
-         config.walkableSlopeAngleNotSteep = m_maxWalkableAngleNotSteep.value_or(55.0f);
-+        // The player's step reaches 2.0 yards, and 1.5 yards of clearance keeps the agent close to the 1.6 yards this
-+        // baked before.
++        // The player's limits from the constants at the top of this file: a face up to 50 degrees is walkable
++        // (normal z above cos 50), ground from 50 to 61.6 degrees is steep and down-only, and nothing steeper is
++        // walked. bake.sh passes no override, so these defaults are the bake's recipe.
++        config.walkableSlopeAngle = m_maxWalkableAngle.value_or(NAV_PLAYER_STEEP_SLOPE);
++        config.walkableSlopeAngleNotSteep = m_maxWalkableAngleNotSteep.value_or(NAV_PLAYER_SLOPE);
          config.tileSize = tileConfig.VERTEX_PER_TILE;
-@@ -534,6 +1072,6 @@ namespace MMAP
+@@ -534,6 +1085,6 @@ namespace MMAP
          config.maxEdgeLen = tileConfig.VERTEX_PER_TILE + 1;        // anything bigger than tileSize
 -        config.walkableHeight = m_bigBaseUnit ? 3 : 6;
 -        // a value >= 3|6 allows npcs to walk over some fences
@@ -862,9 +879,9 @@ index 31ec90a83da290e58acdff60d1efae02363dcb52..beeeca0cf4d94d569c5ca43c25f781fc
 +        // Counted in the 0.5 yard vertical cell, which is the same at either horizontal cell: 1.5 yards of clearance
 +        // and the player's 2.0 yard step.
 +        config.walkableHeight = 3;
-+        config.walkableClimb = 4;
++        config.walkableClimb = int(NAV_PLAYER_STEP / tileConfig.CELL_HEIGHT);
          config.minRegionArea = rcSqr(60);
-@@ -555,2 +1093,3 @@ namespace MMAP
+@@ -555,2 +1106,3 @@ namespace MMAP
                  config.ch *= 2;
 +                config.walkableClimb /= 2; // keep the player's 2.0 yard step in the doubled vertical cell
                  break;

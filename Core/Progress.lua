@@ -37,7 +37,7 @@ local function Ensure()
 		stats.milestones = {}
 	end
 	-- Peer snapshots belonged to the retired Forever Leaderboards feature. Clear them once on load.
-	stats.peers = nil
+	rawset(stats, "peers", nil)
 	localStats = stats
 	return stats
 end

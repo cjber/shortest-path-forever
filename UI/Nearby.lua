@@ -8,6 +8,7 @@ local L = ns.L
 -- The groups' labels and icons, and the service flags, live in UI/NearbyGroups.lua so the world map's town services
 -- draw the same ones.
 local GROUPS = ns.NearbyGroups
+local ROLES = ns.NearbyRoles
 local VENDOR_GROUPS, SERVICES, SECTION_LABELS = GROUPS.vendors, GROUPS.services, GROUPS.sections
 -- Groups whose goods come in level tiers (QuestieDB's requiredLevel): Rough to Jagged Arrow, Tough Hunk of Bread
 -- to Homemade Cherry Pie, Spring Water to Morning Glory Dew. The nearest arrow seller in Orgrimmar sells Rough and
@@ -253,10 +254,13 @@ local function Zone(place)
 	local info = C_Map.GetMapInfo(place.map)
 	return info and info.name ~= "" and info.name or nil
 end
--- The trainer groups are the class one and one per profession skill line.
+-- The trainer groups are the class, portal and profession ones; battlemasters wear the client's own mark.
 local function Kind(key)
-	if key == "class" or key:sub(1, 11) == "profession:" then
+	if key == "class" or key == "portal" or key:sub(1, 11) == "profession:" then
 		return "trainer"
+	end
+	if key == "battlemaster" then
+		return "battlemaster"
 	end
 	if key == "innkeeper" then
 		return "innkeeper"
@@ -335,31 +339,6 @@ local function AddVendorItem(key, npc, itemID)
 	end
 	items[#items + 1] = itemID
 end
--- The class trainer group: the companion addon's list, merged with the class trainers in Data/Services.lua for
--- the player's own class.
-local function ClassTrainerIDs(tweaks)
-	local ids = {}
-	if
-		tweaks
-		and tweaks.API
-		and type(tweaks.API.version) == "number"
-		and tweaks.API.version >= 2
-		and tweaks.API.Trainers
-	then
-		for _, trainer in ipairs(tweaks.API.Trainers()) do
-			ids[trainer.npc] = true
-		end
-	end
-	local classID = UnitClass and select(3, UnitClass("player"))
-	if type(classID) == "number" then
-		for npc, class in pairs(ns.ClassTrainers or {}) do
-			if class == classID then
-				ids[npc] = true
-			end
-		end
-	end
-	return ids
-end
 -- A profession group's label is the client's localised name for its skill line, as the Professions book shows it.
 local function ProfessionName(skill)
 	local name = C_TradeSkillUI and C_TradeSkillUI.GetTradeSkillDisplayName(skill)
@@ -395,16 +374,12 @@ local function BuildGroups()
 			key = group.key,
 			label = group.label,
 			icon = group.icon,
+			tracking = group.tracking,
 			npcs = GroupNPCs(group.key),
 		})
 	end
-	Add({
-		section = "trainers",
-		key = "class",
-		label = L["Class trainer"],
-		icon = "Class",
-		npcs = GroupNPCs("class"),
-	})
+	ROLES.AddClassGroup(Add, GroupNPCs)
+	ROLES.AddPortalGroup(Add, GroupNPCs)
 	local skills, seen = {}, {}
 	for _, skill in pairs(ns.ProfessionTrainers or {}) do
 		if not seen[skill] then
@@ -422,6 +397,7 @@ local function BuildGroups()
 				skill = skill,
 				label = label,
 				icon = "Profession",
+				tracking = "Profession",
 				npcs = GroupNPCs("profession:" .. skill),
 			})
 		end
@@ -432,9 +408,11 @@ local function BuildGroups()
 			key = service.key,
 			label = service.label,
 			icon = service.icon,
+			tracking = service.tracking,
 			npcs = GroupNPCs(service.key),
 		})
 	end
+	ROLES.AddBattlemasterGroup(Add, GroupNPCs)
 	ns.NearbyEntrances.Add(index, Add)
 	groupByKey = byKey
 	return list
@@ -522,8 +500,9 @@ local function Assemble(read)
 			end
 			coroutine.yield()
 		end
-		local classIds = ClassTrainerIDs(rawget(_G, "TweaksForever"))
-		-- Every NPC the read kept, in each group its flags, its goods and its training put it in.
+		local classIds = ROLES.ClassTrainerIDs(rawget(_G, "TweaksForever"))
+		local classID = ROLES.PlayerClass()
+		-- Every NPC the read kept, in each group its flags, its goods, its training and its role put it in.
 		for id, row in pairs(read.npcs) do
 			local keys = {}
 			for _, service in ipairs(SERVICES) do
@@ -537,9 +516,7 @@ local function Assemble(read)
 					keys[#keys + 1] = group.key
 				end
 			end
-			if classIds[id] then
-				keys[#keys + 1] = "class"
-			end
+			ROLES.AddKeys(keys, id, classIds, classID)
 			local skill = ns.ProfessionTrainers and ns.ProfessionTrainers[id]
 			if skill then
 				keys[#keys + 1] = "profession:" .. skill
@@ -779,6 +756,7 @@ end
 ---@field key string
 ---@field label string
 ---@field icon number|string
+---@field tracking string the client's minimap tracking atlas the world map's service pins wear
 ---@field npcs number[]
 ---@field skill? integer a profession group's skill line
 ---@field entrance? integer a dungeon or raid group's instance map ID

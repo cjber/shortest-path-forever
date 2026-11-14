@@ -31,18 +31,22 @@ _G.InCombatLockdown = function()
 	return combat
 end
 -- The client's own restricted openers (C_Map.OpenWorldMap, C_SettingsUtil.OpenSettingsPanel) are run through
--- CreateSecureDelegate by ForeverCore, and map pins set their button passthrough through it (#645). The stubs below
--- record whether a call came that way, so a call site back on the restricted function fails here.
+-- securecallfunction by ForeverCore, and map pins set their button passthrough through CreateSecureDelegate (#645).
+-- The stubs below record whether a call came that way, so a call site back on the restricted function fails here.
 local viaDelegate = false
+local function secure(fn, ...)
+	viaDelegate = true
+	local result = { pcall(fn, ...) }
+	viaDelegate = false
+	if not result[1] then
+		error(result[2], 0)
+	end
+	return unpack(result, 2)
+end
+_G.securecallfunction = secure
 _G.CreateSecureDelegate = function(fn)
 	return function(...)
-		viaDelegate = true
-		local result = { pcall(fn, ...) }
-		viaDelegate = false
-		if not result[1] then
-			error(result[2], 0)
-		end
-		return unpack(result, 2)
+		return secure(fn, ...)
 	end
 end
 _G.GameTooltip_Hide = function() end
@@ -260,6 +264,27 @@ local function stubframe()
 	function f:GetHeight()
 		return self.height
 	end
+	function f:GetParent()
+		return self.parent
+	end
+	-- The client moves a frame under another without a script; setting a parent keeps the child's own shown
+	-- state, and the child is recorded so a hidden parent hides it.
+	function f:SetParent(parent)
+		local old = self.parent
+		if old and old.children then
+			for index, child in ipairs(old.children) do
+				if child == self then
+					table.remove(old.children, index)
+					break
+				end
+			end
+		end
+		self.parent = parent
+		if parent then
+			parent.children = parent.children or {}
+			parent.children[#parent.children + 1] = self
+		end
+	end
 	function f:GetTop()
 		return self.top or (self.parent and self.parent.GetHeight and self.parent:GetHeight()) or 0
 	end
@@ -418,6 +443,10 @@ _G.CreateFrame = function(_, name, parent, template)
 	end
 	if template == "ObjectiveTrackerModuleTemplate" then
 		f.liveBlocks, f.layoutOrder = {}, {}
+		-- The template's own contents frame, under which the module places its blocks and their item buttons.
+		f.ContentsFrame = stubframe()
+		-- ObjectiveTrackerModuleMixin's own header height, the room its header takes in the column.
+		f.headerHeight = 25
 		function f:SetContainer(container)
 			self.parentContainer = container
 		end
@@ -765,11 +794,6 @@ _G.Enum = {
 	FlightPathFaction = { Neutral = 0, Horde = 1, Alliance = 2 },
 	FlightPathState = { Current = 0, Reachable = 1, Unreachable = 2 },
 	UIMapType = { Continent = 2, Zone = 3 },
-	SendAddonMessageResult = {
-		InvalidPrefix = 1,
-		InvalidChatType = 4,
-		InvalidChannel = 7,
-	},
 	TooltipDataType = { MinimapMouseover = 21 },
 }
 _G.CreateVector2D = function(x, y)
@@ -872,12 +896,6 @@ _G.C_Timer = {
 		end
 		tickers[#tickers + 1] = ticker
 		return ticker
-	end,
-}
-_G.C_ChatInfo = {
-	RegisterAddonMessagePrefix = noop,
-	SendAddonMessage = function()
-		return 0
 	end,
 }
 -- The settings surface, recorded so a UI check can drive the real rows and index buttons: each option's own
@@ -1059,6 +1077,16 @@ _G.GameTooltipTextLeft1 = tipTitle
 -- GlobalStrings at the pinned build: the minimap says MAP_PIN, the map's waypoint pin says MAP_PIN_SHARING.
 _G.MAP_PIN = "Map Pin"
 _G.MAP_PIN_SHARING = "Map Pin Sharing"
+-- The client's readability test, and the values it hands back unreadable: the minimap's tooltip title is one on 1.60.1,
+-- which addon code may keep but not compare (#824).
+local secrets = setmetatable({}, { __mode = "k" })
+_G.canaccessvalue = function(value)
+	return secrets[value] == nil
+end
+local function secret(value)
+	secrets[value] = true
+	return value
+end
 -- TooltipDataHandler.lua: each tooltip type's post-call runs once the client's own lines are in place.
 local tooltipCallbacks = {}
 _G.TooltipDataProcessor = {

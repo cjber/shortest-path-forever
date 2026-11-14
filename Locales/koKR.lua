@@ -45,6 +45,9 @@ L["Avoid zones far above my level"] = "내 레벨보다 훨씬 높은 지역 피
 L["Avoids %s (level %s)"] = "%s 우회 (레벨 %s)"
 L["Bags"] = "가방"
 L["Bank"] = "은행"
+L["Battlemaster"] = "전장 지휘관"
+L["Hovering a quest stop shows the quest's area."] =
+	"퀘스트 정류 지점에 마우스를 올리면 퀘스트 지역이 표시됩니다." -- mt
 L["Boat and Zeppelin Routes"] = "배와 비행선 노선"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"배와 비행선 노선. 부두를 가리키는 동안 그려집니다."
@@ -56,6 +59,7 @@ L["Bullets"] = "탄환"
 L["Cast %s"] = "%s 시전"
 L["Class trainer"] = "직업 상급자"
 L["Clear journey"] = "여정 지우기"
+L["Click to plan a journey here."] = "클릭하면 이곳까지 여정을 계획합니다."
 L["Click to show %s"] = "클릭하여 %s 표시"
 L["Click to show where they go"] = "클릭하여 행선지 표시"
 L["Compass background"] = "나침반 배경"
@@ -93,8 +97,8 @@ L["Friendly nameplates must be on to see them."] =
 	"우호적인 유닛의 이름표가 켜져 있어야 볼 수 있습니다."
 L["Go through to %s"] = "%s(으)로 통과"
 L["Guidance"] = "안내"
-L["Guide marks the next boat, lift, flight master or your destination, not each turn of the walk on the way."] =
-	"안내는 다음 배, 승강기, 비행 조련사 또는 목적지를 표시하며, 걷는 길의 모든 갈림길을 표시하지는 않습니다."
+L["Guide marks where each step ends on the map, not each turn of the walk. The arrow still follows the walk."] =
+	"안내는 지도에서 각 단계가 끝나는 곳을 표시하며, 걷는 길의 모든 갈림길을 표시하지는 않습니다. 화살표는 계속 걷는 길을 따라갑니다."
 L["Guide me"] = "안내 받기"
 L["Guidelime"] = "Guidelime"
 L["Horde"] = "호드"
@@ -106,8 +110,6 @@ L["Interface"] = "인터페이스"
 L["Journey"] = "여정"
 L["Journey  %s · %s"] = "여정  %s · %s"
 L["Journey to %s"] = "%s(으)로 가는 여정"
-L["Journeys are off. Turn on Shift-click to plan journeys in settings."] =
-	"여정이 꺼져 있습니다. 설정에서 'Shift-클릭으로 여정 계획'을 켜십시오."
 L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."] =
 	"여정과 다른 애드온의 이곳 기준 예상 시간은 재사용 대기시간을 포함해 귀환석이나 순간이동으로 시작할 수 있습니다."
 L["Keep journeys after a reload"] = "재시작 후 여정 유지"
@@ -115,8 +117,7 @@ L["Keeps the shared Forever tracker where you put it. The grip at its top no lon
 	"공유 Forever 추적기를 놓은 자리에 유지합니다. 위쪽 손잡이로 더 이상 끌 수 없습니다."
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
 	"게임의 미터법 언어 클라이언트처럼 거리에 미터 단위를 붙입니다. 숫자는 게임의 야드 값 그대로입니다."
-L["Last seen %d min ago by another player"] = "다른 플레이어가 %d분 전에 마지막으로 목격"
-L["Last seen %d min ago by you"] = "내가 %d분 전에 마지막으로 목격"
+L["Last seen %s ago"] = "%s 전에 마지막으로 목격" -- mt
 L["Legacy Forever shows the Legacy challenges this counts toward."] =
 	"Legacy Forever가 이 항목이 포함되는 유산 도전을 보여줍니다."
 L["Let guides set TomTom waypoints"] = "가이드가 TomTom 웨이포인트를 설정하도록 허용"
@@ -170,6 +171,7 @@ L["Play a sound when you reach the goal"] = "목적지에 도착하면 소리 �
 L["Play a sound with alerts"] = "알림과 함께 소리 재생"
 L["Plays even with the game in the background."] = "게임이 백그라운드에 있어도 재생합니다."
 L["Portal to %s"] = "%s행 차원문"
+L["Portal trainer"] = "차원문 상급자"
 L["Portals"] = "차원문"
 L["Reagents"] = "마법 재료"
 L["Repair"] = "장비 수리"
@@ -180,6 +182,7 @@ L["Resume RestedXP guide"] = "RestedXP 가이드 재개"
 L["Resume guide"] = "가이드 재개"
 L["Return to your corpse"] = "시체로 돌아가기"
 L["Right-click to clear"] = "오른쪽 클릭으로 지우기"
+L["Route to the focused quest"] = "집중한 퀘스트로 이동"
 L["S"] = "남"
 L["Scales the arrow and the cast prompt."] = "화살표와 시전 안내의 크기를 조절합니다."
 L["Scales the compass. 100% matches the game's own art."] =
@@ -187,13 +190,7 @@ L["Scales the compass. 100% matches the game's own art."] =
 L["Scales the shared Forever tracker. 100% matches the game's own tracker."] =
 	"공유 Forever 추적기의 크기를 조절합니다. 100%는 게임 추적기와 같습니다."
 L["Search services and goods"] = "편의시설 및 물품 검색"
-L["Sends and receives sighting times over guild, party and at the dock. No chat messages are shown."] =
-	"길드, 파티, 부두에서 목격 시간을 주고받습니다. 대화창에는 메시지가 표시되지 않습니다."
 L["Services"] = "편의시설"
-L["Share departure times"] = "출발 시간 공유"
-L["Shift-click the world map or the minimap to plan a journey there."] =
-	"세계 지도나 미니맵을 Shift-클릭하면 그곳까지 여정을 계획합니다."
-L["Shift-click to plan journeys"] = "Shift-클릭으로 여정 계획"
 L["Shortest Path report"] = "Shortest Path 보고서"
 L["Show boats and zeppelins"] = "배와 비행선 표시"
 L["Show direction arrow"] = "방향 화살표 표시"
@@ -224,6 +221,8 @@ L["Sizes flight master icons on the world map."] =
 	"세계 지도의 비행 조련사 아이콘 크기를 조절합니다."
 L["Sizes transport icons on the minimap."] = "미니맵의 교통수단 아이콘 크기를 조절합니다."
 L["Stable master"] = "야수 관리인"
+L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no map click. A guide addon's own journey is left alone."] =
+	"퀘스트를 집중하거나 게임의 지도 핀을 놓으면 여정을 시작하므로 컨트롤러에서 지도 클릭이 필요 없습니다. 가이드 애드온의 자체 여정은 그대로 둡니다."
 L["Stop %d of %d"] = "정거장 %d/%d" -- mt
 L["Stop %d of %d: %s"] = "정거장 %d/%d: %s"
 L["Suggest quests for my level: Adventure Guide Forever"] =
@@ -396,7 +395,7 @@ L["Show boat, lift and tram departures in the tracker"] = "추적기에서 배, 
 L["Hide RestedXP's arrow"] = "RestedXP 화살표 숨기기" -- mt
 L["Hide departures"] = "출발 숨기기"
 
--- Travel stats and the shared Forever Leaderboards.
+-- Travel stats.
 
 L["Follow roads"] = "도로 따라가기" -- mt
 L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =
@@ -431,7 +430,6 @@ L["Dugi Guides"] = "Dugi Guides" -- mt
 L["Dungeons and raids"] = "던전 및 공격대" -- mt
 L["Town services"] = "마을 서비스" -- mt
 L["Town services on the world map"] = "세계 지도에 마을 서비스 표시" -- mt
-L["Town services show on the world map."] = "도시 서비스가 세계 지도에 표시됩니다." -- mt
 L["Capitals only"] = "수도만" -- mt
 L["Capitals and important services"] = "수도 및 주요 서비스" -- mt
 L["All towns"] = "모든 마을" -- mt
@@ -441,3 +439,22 @@ L["One icon per town, or one per service as you zoom in."] =
 L["Show Nearby services tab"] = "주변 편의시설 탭 표시"
 L["The Nearby services tab in the world map and quest log."] =
 	"세계 지도와 퀘스트 로그의 주변 편의시설 탭입니다."
+L["Ammunition"] = "탄약" -- mt
+L["Bags and trade supplies"] = "가방 및 전문 기술" -- mt
+L["Food and drink"] = "음식 및 음료" -- mt
+L["Profession trainers"] = "전문 기술 상급자" -- mt
+L["Hide game quest markers"] = "게임 퀘스트 표시 숨기기" -- mt
+L["Off, the game's own quest markers stay beside your journey's pins, showing the other places a quest can be done."] =
+	"끄면 게임의 퀘스트 표시가 여정 표시 옆에 그대로 남아, 퀘스트를 완료할 수 있는 다른 장소를 볼 수 있습니다." -- mt
+L["Shift"] = "Shift" -- mt
+L["Alt"] = "Alt" -- mt
+L["Click the map to plan journeys"] = "지도를 클릭하여 여정 계획" -- mt
+L["Hold your journey key and click the world map or the minimap to plan a journey there."] =
+	"여정 키를 누른 채 세계 지도나 미니맵을 클릭하면 그곳까지 여정을 계획합니다." -- mt
+L["Journeys are off. Turn on Click the map to plan journeys in settings."] =
+	"여정이 꺼져 있습니다. 설정에서 '지도를 클릭하여 여정 계획'을 켜십시오." -- mt
+L["Key to plan a journey"] = "여정 계획 키" -- mt
+L["The key you hold to plan a journey from the world map or the minimap."] =
+	"세계 지도나 미니맵에서 여정을 계획하려면 누르고 있는 키입니다." -- mt
+L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
+	"Questie 아이콘에서는 Shift-클릭이 Questie의 것이며, Alt-클릭은 두 키 중 어느 쪽이든 그곳까지 여정을 계획합니다." -- mt

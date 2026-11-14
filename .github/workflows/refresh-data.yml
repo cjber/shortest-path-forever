@@ -48,26 +48,19 @@ jobs:
       - name: Pin the newest Forever build and InFlight flight times
         id: pins
         run: python3 tools/refresh_pins.py
-      # Ubuntu 24.04's release-pocket builds, which the archive never replaces.
-      - name: Install LuaJIT and luacheck
+      # Every tool version lives in this checkout's tools/toolchain.json, which the action reads and installs and
+      # verifies each pin from.
+      - name: Install the Lua toolchain
         if: steps.pins.outputs.changed == 'true'
-        env:
-          LUAJIT: 2.1.0+git20231223.c525bcb+dfsg-1
-          LUACHECK: 1.1.2-1
-        run: |
-          # Fall back to a mirror of Ubuntu's signed archives when the runner's Azure mirror cannot resolve.
-          mirror_list=/etc/apt/apt-mirrors.txt
-          if [ -f "$mirror_list" ] && ! getent ahosts azure.archive.ubuntu.com >/dev/null; then
-            printf '%s\n' https://mirrors.mit.edu/ubuntu | sudo tee "$mirror_list" >/dev/null
-          fi
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends --allow-downgrades \
-            "luajit=$LUAJIT" "libluajit-5.1-2=$LUAJIT" "libluajit-5.1-common=$LUAJIT" "lua-check=$LUACHECK"
+        uses: cjber/forever-core/.github/actions/toolchain@2596f68e68f9a727496a19f3f801c8a7039357d2 # main
+        with:
+          tools: lua stylua
       - name: Regenerate
         if: steps.pins.outputs.changed == 'true'
         run: |
           python3 tools/gen_routes.py
           python3 tools/gen_transit.py
+          python3 tools/gen_towns.py
           python3 tools/gen_services.py
           luajit tools/bake_walks.lua > "$RUNNER_TEMP/Walks.lua"
           mv "$RUNNER_TEMP/Walks.lua" Data/Walks.lua
@@ -83,11 +76,7 @@ jobs:
           python3 -m tools.forever_tools.specs
           luajit -joff tests/hearth_savings_bench.lua
       - if: steps.pins.outputs.changed == 'true'
-        uses: JohnnyMorganz/stylua-action@76fd70c03e6340ceaf673366712db9b20560b402 # v5.0.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          version: 2.5.2
-          args: --check .
+        run: stylua --check .
       - if: steps.pins.outputs.changed == 'true'
         id: pr
         uses: peter-evans/create-pull-request@3ffccacd46053766916f087ce41d627c0b8cf2d1 # v8.1.3

@@ -16,8 +16,20 @@ local TICK = 0.5
 
 ---@type SPFGuidelimeArrow?
 local hooked
----@type string?
-local target
+-- The last target's rounded map and position, its element snapshot and the arrow setting, so an unchanged guide
+-- stops before any label, quest or key string is built.
+local targetMap, targetX, targetY
+local targetElement, targetTitleRaw, targetElementCompleted, targetCompletedCount, targetAttached, targetAttachedTitle
+local targetStep, targetElements, targetElementCount, targetArrow, targetRunning
+
+-- Forget what the last tick saw, so the next one plans even at the same place.
+local function ForgetTarget()
+	targetMap, targetX, targetY = nil, nil, nil
+	targetElement, targetTitleRaw, targetElementCompleted, targetCompletedCount = nil, nil, nil, nil
+	targetAttached, targetAttachedTitle, targetStep, targetElements, targetElementCount, targetArrow, targetRunning =
+		nil, nil, nil, nil, nil, nil, nil
+end
+
 -- The label of the running journey's target, which a renamed step may update in place.
 ---@type string?
 local targetTitle
@@ -42,7 +54,8 @@ end
 
 local function Clear()
 	API.Cancel(OWNER)
-	target, targetTitle, targetQuests = nil, nil, nil
+	targetTitle, targetQuests = nil, nil
+	ForgetTarget()
 	Restore()
 end
 
@@ -52,9 +65,43 @@ end
 ---@param map integer
 ---@param x number
 ---@param y number
----@return string
-local function Key(map, x, y)
-	return string.format("%d:%d:%d", map, math.floor(x * 10 + 0.5), math.floor(y * 10 + 0.5))
+---@return integer, integer, integer
+local function KeyParts(map, x, y)
+	return map, math.floor(x * 10 + 0.5), math.floor(y * 10 + 0.5)
+end
+
+-- What the last Sync saw, compared field by field so a still guide allocates nothing on its ticker (#784). The
+-- arrow's element is replaced when its step moves on; a step that merely relabels or completes a quest in place
+-- changes one of these values.
+---@param element SPFGuidelimeElement
+---@return table, string?, boolean?, table?, string?, table?, table?, integer, integer
+local function Snapshot(element)
+	local attached = type(element.attached) == "table" and element.attached or nil
+	local step = type(element.step) == "table" and element.step or nil
+	local elements = step and type(step.elements) == "table" and step.elements or nil
+	local completed = 0
+	if element.completed then
+		completed = completed + 1
+	end
+	if attached and attached.completed then
+		completed = completed + 1
+	end
+	if elements then
+		for _, part in ipairs(elements) do
+			if type(part) == "table" and part.completed then
+				completed = completed + 1
+			end
+		end
+	end
+	return element,
+		type(element.title) == "string" and element.title or nil,
+		element.completed,
+		attached,
+		attached and type(attached.title) == "string" and attached.title or nil,
+		step,
+		elements,
+		completed,
+		elements and #elements or 0
 end
 
 -- The current stop's label, renamed without replanning: a guide relabels its step as quests complete at one spot.
@@ -223,7 +270,8 @@ local function Sync()
 	-- guide's step, so Guidelime's arrow stays out of the way while we draw one.
 	local owner = ns.JourneyOwner()
 	if owner and owner ~= OWNER and (owner == "RestedXP" or owner == "AdventureGuideForever") then
-		target, targetTitle, targetQuests = nil, nil, nil
+		targetTitle, targetQuests = nil, nil
+		ForgetTarget()
 		if ns.db.arrow ~= false then
 			Suppress()
 		else
@@ -254,18 +302,40 @@ local function Sync()
 	---@cast map integer
 	---@cast x number
 	---@cast y number
-	local title = Label(element)
-	local quests, actions, questKey = StepQuests(element)
-	local key = Key(map, x, y)
+	local kMap, kX, kY = KeyParts(map, x, y)
+	local elem, titleRaw, elementCompleted, attached, attachedTitle, step, elements, completedCount, elementCount =
+		Snapshot(element)
+	local arrowOn = ns.db.arrow ~= false
+	local running = API.CurrentStop(OWNER) ~= nil
+	local samePlace = kMap == targetMap and kX == targetX and kY == targetY
+	local unchanged = samePlace
+		and elem == targetElement
+		and titleRaw == targetTitleRaw
+		and elementCompleted == targetElementCompleted
+		and completedCount == targetCompletedCount
+		and attached == targetAttached
+		and attachedTitle == targetAttachedTitle
+		and step == targetStep
+		and elements == targetElements
+		and elementCount == targetElementCount
+		and arrowOn == targetArrow
+		and running == targetRunning
 	if InCombatLockdown() then
-		if key ~= target then
+		if not samePlace then
 			API.Cancel(OWNER)
 			Restore()
 		end
 		watcher:RegisterEvent("PLAYER_REGEN_ENABLED")
 		return
 	end
-	if key ~= target then
+	-- Nothing the guide or our setting shows has changed since the last tick: no label, quest collector or key is
+	-- built, so the ticker allocates nothing while the player stands on the same step (#784).
+	if unchanged then
+		return
+	end
+	local title = Label(element)
+	local quests, actions, questKey = StepQuests(element)
+	if not samePlace then
 		-- Guidelime decides when a step is complete, including its arrival radius; the journey holds the stop until
 		-- the guide moves on to the next one.
 		local started = API.NavigateRoute(OWNER, {
@@ -283,7 +353,7 @@ local function Sync()
 			Clear()
 			return
 		end
-		target, targetTitle, targetQuests = key, title, questKey
+		targetTitle, targetQuests = title, questKey
 	elseif questKey ~= targetQuests then
 		-- The step moved on at the same place (a turn-in at the NPC just left): only its quests changed, so the stop
 		-- gets the new live objectives without the route being planned again.
@@ -293,7 +363,14 @@ local function Sync()
 			ns.SetStopQuests(OWNER, stop, quests, actions)
 		end
 	end
-	if API.CurrentStop(OWNER) then
+	targetMap, targetX, targetY = kMap, kX, kY
+	targetElement, targetTitleRaw, targetElementCompleted, targetCompletedCount =
+		elem, titleRaw, elementCompleted, completedCount
+	targetAttached, targetAttachedTitle = attached, attachedTitle
+	running = API.CurrentStop(OWNER) ~= nil
+	targetStep, targetElements, targetElementCount, targetArrow, targetRunning =
+		step, elements, elementCount, arrowOn, running
+	if running then
 		Rename(title)
 		-- Guidelime owns the arrow when Shortest Path is not drawing one of its own.
 		if ns.db.arrow ~= false then
@@ -315,7 +392,8 @@ end
 
 -- Let the player hand control back after pausing a guide, without waiting for its next step.
 function ns.ResumeGuidelime()
-	target, targetTitle, targetQuests = nil, nil, nil
+	targetTitle, targetQuests = nil, nil
+	ForgetTarget()
 	Sync()
 end
 

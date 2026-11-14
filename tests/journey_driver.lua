@@ -75,7 +75,7 @@ local env = setmetatable({
 			return "|cffff2020" .. text .. "|r"
 		end,
 	},
-	-- ns.serverTime: the server clock sightings age by.
+	-- ns.serverTime: the server clock a sighting is saved with.
 	GetServerTime = function()
 		return ns.serverTime or 0
 	end,
@@ -175,6 +175,8 @@ local env = setmetatable({
 		GetHighestPrioritySuperTrackingType = function()
 			return trackingType or (tracked and "waypoint" or quest)
 		end,
+		-- The client reports which destination it currently draws. A guide that selects a quest on top of our waypoint
+		-- can transiently leave the waypoint super-tracked with another type in front (#535, #693).
 		SetSuperTrackedUserWaypoint = function(value)
 			tracked = value
 			trackingType = nil
@@ -210,11 +212,17 @@ local env = setmetatable({
 env.UnitIsDeadOrGhost = function()
 	return env.UnitIsGhost ~= nil and env.UnitIsGhost()
 end
--- ForeverCore's error capture and the API kit behind Subscribe: the only shared services these files read at run time,
--- without the tracker and leaderboards a full core load would start in this small client.
+-- ForeverCore's error capture, the API kit behind Subscribe and the step markers UI/Art.lua and UI/Arrow.lua draw: the
+-- shared services these files read at run time, without the tracker and leaderboards a full core load would start in
+-- this small client.
 local ForeverCore = dofile(root .. "/tests/forever_core.lua")
-local coreNs = ForeverCore.load(env, "ForeverCore", { "Core/SafeCall.lua", "Core/Text.lua", "Core/APIKit.lua" })
-env.ForeverCore = { Text = coreNs.Text, APIKit = coreNs.APIKit }
+local coreNs = ForeverCore.load(env, "ForeverCore", {
+	"Core/SafeCall.lua",
+	"Core/Text.lua",
+	"Core/APIKit.lua",
+	"UI/Art.lua",
+})
+env.ForeverCore = { Text = coreNs.Text, APIKit = coreNs.APIKit, Art = coreNs.Art }
 local safe = coreNs.SafeCallFor("ShortestPathForever")
 ns.core = {
 	SafeCall = function(label, fn, ...)
@@ -229,6 +237,10 @@ local function load(file)
 end
 ns.Init = function(fn)
 	fn()
+end
+-- UI/MenuModifier.lua's entry point; this small client does not check the game's menus.
+ns.ModifyMenu = function(tag, _, build)
+	env.Menu.ModifyMenu(tag, build)
 end
 -- UI/Canvas.lua is not loaded here: the addon's own map pins hand Shift-clicks to JourneyInput.lua through it.
 ns.Canvas = { OnClick = noop }
@@ -302,6 +314,7 @@ return {
 	waypoint = function()
 		return waypoint, tracked
 	end,
+	-- The priority the client reports while the waypoint stays super-tracked (a guide's quest selection on top).
 	setTrackingType = function(value)
 		trackingType = value
 		defer("SUPER_TRACKING_CHANGED")

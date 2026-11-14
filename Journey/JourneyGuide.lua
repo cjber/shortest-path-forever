@@ -221,19 +221,26 @@ local function Usable(tooltip)
 	return tooltip ~= nil and not tooltip:IsForbidden()
 end
 
--- The client's generic titles for a user waypoint: MAP_PIN is "Map Pin" on the minimap, whose tooltip the client
--- builds from C_TooltipInfo.GetMinimapMouseover, and MAP_PIN_SHARING is "Map Pin Sharing" on the map's
--- WaypointLocationPin. Replace either only for the waypoint Guide holds, keeping the client's own instructions and
--- adding the journey's goal under a hop.
+-- Name the client's user waypoint tooltip for the waypoint Guide holds, keeping the client's own instructions and
+-- adding the journey's goal under a hop. The map's WaypointLocationPin is the waypoint by its own OnEnter, so its
+-- title is never read; the minimap names whatever the pointer is over, and only its readable MAP_PIN title says it
+-- is the waypoint. 1.60.1 hands that title back as a secret value, which addon code may keep but not compare, so a
+-- secret title leaves the client's tooltip as it is rather than guess whose it is.
 ---@param tooltip GameTooltip
-local function NameWaypointTooltip(tooltip)
+---@param fromWaypointPin boolean? the client waypoint pin's own OnEnter, which is the waypoint or nothing
+local function NameWaypointTooltip(tooltip, fromWaypointPin)
 	if not Usable(tooltip) then
 		return
 	end
 	local titleLine = GameTooltipTextLeft1
-	local clientTitle = titleLine and titleLine.GetText and titleLine:GetText()
-	if not (clientTitle and (clientTitle == MAP_PIN or clientTitle == MAP_PIN_SHARING)) then
+	if not titleLine then
 		return
+	end
+	if not fromWaypointPin then
+		local clientTitle = titleLine.GetText and titleLine:GetText()
+		if not canaccessvalue(clientTitle) or clientTitle ~= MAP_PIN then
+			return
+		end
 	end
 	local title, goalTitle = WaypointNames()
 	if not title then
@@ -258,7 +265,7 @@ local function HideGuideWaypointPin(provider)
 		if not hookedPins[provider.pin] then
 			hookedPins[provider.pin] = true
 			provider.pin:HookScript("OnEnter", function()
-				NameWaypointTooltip(GameTooltip)
+				NameWaypointTooltip(GameTooltip, true)
 			end)
 		end
 		local owned = guide and (guide.writingWaypoint or guide.waypoint)
@@ -307,8 +314,10 @@ local function SameTracking(state)
 	local quest = C_SuperTrack.GetSuperTrackedQuestID()
 	local waypoint = C_SuperTrack.IsSuperTrackingUserWaypoint()
 	local kind = C_SuperTrack.GetHighestPrioritySuperTrackingType()
-	-- A guide may change the selected quest while its waypoint remains super-tracked. The waypoint is still the
-	-- navigation destination, so a changed priority type is not player takeover and must not recreate the guide.
+	-- Another addon may select the quest whose area the player walks into (Adventure Guide's focus, RestedXP pointing
+	-- at a quest of its own now and then) while the guide's waypoint stays the super-tracked destination. The priority
+	-- type only says which icon the client draws this moment, not who owns navigation, so a selection on top of our
+	-- waypoint is not a takeover: our waypoint is still the one super-tracked and still leads.
 	if state.expectedTrackedWaypoint and waypoint then
 		return true
 	end
@@ -327,6 +336,93 @@ local function PinAtGoal(waypoint, point)
 		return false
 	end
 	return SameWaypoint(waypoint, UiMapPoint.CreateFromCoordinates(location.uiMap, location.x, location.y))
+end
+
+-- Tracking Guide itself wrote and the client has not reported yet: the pin it restored when it stopped, and the
+-- quest and waypoint it handed back. Auto-routing (JourneyInput.lua) reads these so none of them counts as the
+-- player focusing a quest or placing a pin.
+---@class SPFGuideSettled
+---@field waypoint table?
+---@field waypointPending boolean?
+---@field quest number?
+---@field tracked boolean?
+---@field kind Enum.SuperTrackingType?
+---@field trackingPending boolean?
+
+---@type SPFGuideSettled?
+local settled
+local stopping
+
+---@param waypoint table?
+---@return table?
+local function CopyWaypoint(waypoint)
+	if not waypoint then
+		return nil
+	end
+	local position = waypoint.position
+	return { uiMapID = waypoint.uiMapID, position = { x = position.x, y = position.y }, z = waypoint.z }
+end
+
+-- Record what Guide left behind after its final writes, for the deferred events those writes raise.
+---@param waypoint boolean whether it wrote the user waypoint
+---@param tracking boolean whether it wrote the super-tracked state
+local function Settled(waypoint, tracking)
+	settled = {
+		waypoint = waypoint and CopyWaypoint(C_Map.GetUserWaypoint()) or nil,
+		waypointPending = waypoint or nil,
+		quest = C_SuperTrack.GetSuperTrackedQuestID(),
+		tracked = C_SuperTrack.IsSuperTrackingUserWaypoint(),
+		kind = C_SuperTrack.GetHighestPrioritySuperTrackingType(),
+		trackingPending = tracking or nil,
+	}
+	if not (settled.waypointPending or settled.trackingPending) then
+		settled = nil
+	end
+end
+
+local function SettledChanged(event)
+	if not settled then
+		return false
+	end
+	if event == "USER_WAYPOINT_UPDATED" and settled.waypointPending then
+		local wasOurs = SameWaypoint(C_Map.GetUserWaypoint(), settled.waypoint)
+		settled.waypointPending = nil
+		if not settled.trackingPending then
+			settled = nil
+		end
+		return wasOurs
+	end
+	if event == "SUPER_TRACKING_CHANGED" and settled.trackingPending then
+		local wasOurs = C_SuperTrack.GetSuperTrackedQuestID() == settled.quest
+			and C_SuperTrack.IsSuperTrackingUserWaypoint() == settled.tracked
+			and C_SuperTrack.GetHighestPrioritySuperTrackingType() == settled.kind
+		settled.trackingPending = nil
+		if not settled.waypointPending then
+			settled = nil
+		end
+		return wasOurs
+	end
+	return false
+end
+
+-- Whether the client's report is Guide's own write rather than the player's choice. Called after
+-- Guide.TrackingChanged, so a guide the player just took over has already yielded or stopped.
+---@param event string
+---@return boolean
+function Guide.OwnsReported(event)
+	if stopping or (guide and guide.writing) or SettledChanged(event) then
+		return true
+	end
+	if not guide then
+		return false
+	end
+	if WaypointUIHolding() then
+		return true
+	end
+	if event == "USER_WAYPOINT_UPDATED" then
+		return SameWaypoint(C_Map.GetUserWaypoint(), guide.expectedWaypoint)
+	end
+	return SameTracking(guide)
 end
 
 -- End the guide. `reason` is Journey's end reason: on arrival, a pin that was the journey's own destination is
@@ -358,20 +454,27 @@ local function StopGuide(reason)
 	if reason == "arrived" and PinAtGoal(previous.previousWaypoint, previous.goal) then
 		previous.previousWaypoint = nil
 	end
+	stopping = true
 	local restored = previous.previousWaypoint and C_Map.SetUserWaypoint(previous.previousWaypoint)
 	-- A rejected restoration must still remove our bend, rather than leave it behind without an ownership record.
 	if not restored and previous.waypoint then
 		C_Map.ClearUserWaypoint()
 	end
+	local wroteWaypoint = previous.previousWaypoint ~= nil or previous.waypoint ~= nil
+	local wroteTracking = false
 	if ownsTracking then
 		local tracked = restored and previous.previousTrackedWaypoint or false
 		C_SuperTrack.SetSuperTrackedUserWaypoint(tracked)
 		if not tracked then
 			C_SuperTrack.SetSuperTrackedQuestID(previous.previousQuest or 0)
 		end
+		wroteTracking = true
 	elseif not restored and C_SuperTrack.IsSuperTrackingUserWaypoint() then
 		C_SuperTrack.SetSuperTrackedUserWaypoint(false)
+		wroteTracking = true
 	end
+	stopping = nil
+	Settled(wroteWaypoint, wroteTracking)
 	RefreshWaypointPins()
 	RefreshNativeMarker()
 	if ns.RefreshJourneyPin then
@@ -435,7 +538,25 @@ local function GuideWaypoint(point, fading)
 	if guide.yielded then
 		return false
 	end
+	-- "Mark only where steps end" leaves the step's end to the map's own pins and lets the screen arrow lead the walk
+	-- bend by bend: the client's single marker cannot point at the step and follow the bends at once, so it is not
+	-- placed. A marker this guide placed before the setting changed is taken back, and the player's own waypoint,
+	-- saved at the start, is restored when the journey stops as it always was.
+	if ns.db.guideStops then
+		if guide.waypoint then
+			ClearGuideWaypoint()
+			RefreshTracker()
+		end
+		return false
+	end
 	local uiMap = C_Map.GetBestMapForUnit("player")
+	-- A frame with no map for the player is no place to move the marker, or to take it away: the waypoint Guide
+	-- already placed is still the guidance the player has, and the client draws it on the map it names next. Taking it
+	-- away drops the game's own pin and writes it back on the next readable frame, so guidance blinks while the
+	-- journey scans (#826).
+	if not uiMap then
+		return guide.waypoint ~= nil and C_SuperTrack.IsSuperTrackingUserWaypoint()
+	end
 	local bend = guide.bend
 	if
 		not bend
@@ -496,6 +617,19 @@ local function GuideWaypoint(point, fading)
 	return guide.waypoint ~= nil and C_SuperTrack.IsSuperTrackingUserWaypoint()
 end
 
+-- The title Guide shows, built only when the goal or the strings it is named from change: Guide.To runs on the
+-- journey's tick, and rebuilding a formatted title there would allocate every tick (#784).
+---@param goal table?
+---@return string?
+local function GuideTitle(goal)
+	local source = goal and (goal.routeTitleFormat or goal.routeTitle or goal.label)
+	if goal ~= guide.titleGoal or source ~= guide.titleSource then
+		guide.titleGoal, guide.titleSource = goal, source
+		guide.title = DestinationTitle(goal)
+	end
+	return guide.title
+end
+
 ---@param node table
 ---@param points table?
 ---@param goal table?
@@ -506,7 +640,7 @@ function Guide.To(node, points, goal, leg)
 	end
 	guide.leg, guide.goal = leg, goal
 	if guide.target == node and guide.points == points then
-		guide.title = DestinationTitle(goal)
+		GuideTitle(goal)
 		return
 	end
 	if guide.paused then
@@ -522,7 +656,7 @@ function Guide.To(node, points, goal, leg)
 	end
 	guide.points = points
 	guide.target = node
-	guide.title = DestinationTitle(goal)
+	GuideTitle(goal)
 	local point = node.kind == "dock" and ns.DockPoint(node.id) or node
 	ns.PointGuideArrow(points or { point }, GuideWaypoint, node, goal)
 end
@@ -606,19 +740,26 @@ function Guide.Active()
 	return guide ~= nil
 end
 
--- Whether the journey's goal is tracked as the client's waypoint right now. The goal pin is gold only then; a
--- paused, yielded or stopped guide is the bronze untracked state, and a planned route with no guide is too.
+-- Whether the player took native navigation over: the route arrow still leads, the client's marker is theirs.
+---@return boolean
+function Guide.Yielded()
+	return guide ~= nil and guide.yielded == true
+end
+
+-- Whether the journey's goal is guided right now, and so wears the gold pin. With "Mark only where steps end" on the
+-- guide places no native waypoint but still leads by the arrow, so the goal stays gold. The goal pin is gold only
+-- then; a paused, yielded or stopped guide is the bronze untracked state, and a planned route with no guide is too.
 ---@return boolean
 function ns.JourneyPinTracked()
 	return guide ~= nil
 		and not guide.paused
 		and not guide.yielded
-		and guide.waypoint ~= nil
-		and C_SuperTrack.IsSuperTrackingUserWaypoint()
+		and (ns.db.guideStops or (guide.waypoint ~= nil and C_SuperTrack.IsSuperTrackingUserWaypoint()))
 end
 
 function Guide.Start()
 	ClearOrphanWaypoint()
+	settled = nil
 	local previous = C_Map.HasUserWaypoint() and C_Map.GetUserWaypoint()
 	local saved = previous
 		and UiMapPoint.CreateFromCoordinates(previous.uiMapID, previous.position.x, previous.position.y, previous.z)
@@ -659,6 +800,7 @@ end
 
 Guide.Stop = StopGuide
 Guide.ClearOrphan = ClearOrphanWaypoint
+Guide.SameWaypoint = SameWaypoint
 Guide.RefreshWaypointPins = RefreshWaypointPins
 Guide.RefreshTracker = RefreshTracker
 Guide.WaypointNames = WaypointNames

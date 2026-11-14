@@ -3,6 +3,7 @@
 local root = "."
 local driver = assert(loadfile("tests/journey_driver.lua"))(root)
 local ns = driver.ns
+local env = driver.env
 
 -- Only the pure placement and the wanted test are reached here: no frame is created.
 local loaded = pcall(driver.load, "UI/DestinationPin.lua")
@@ -94,5 +95,101 @@ local cut = ns.PinStepText(string.rep("word ", 12), nil)
 assert(#cut <= 32, "the line is cut to fit the pin")
 assert(cut:sub(-3) == "...", "a cut line says so")
 assert(not cut:find(" $"), "a cut line never ends on a space")
+
+-- The pin's poll runs while a journey is drawn: with the goal, the position, the facing and the step wording
+-- unchanged it returns before building a distance or a step line, so it allocates nothing (#784).
+-- Font strings are kept in creation order, the pin's distance line first and its step line second, so the line
+-- the pin shows can be read back.
+local fontStrings = {}
+local create = env.CreateFrame
+env.CreateFrame = function(...)
+	local f = create(...)
+	f.IsShown = function(self)
+		return not self.hidden
+	end
+	f.CreateFontString = function()
+		local text = setmetatable({}, getmetatable(f))
+		function text:SetText(value)
+			self.text = value
+		end
+		fontStrings[#fontStrings + 1] = text
+		return text
+	end
+	return f
+end
+ns.db.destinationPin = true
+ns.db.metres = false
+local steadyGoal = { map = 1, x = 100, y = 100 }
+ns.JourneyGoal = function()
+	return steadyGoal
+end
+ns.JourneyPosition = function()
+	return 2827, -289, nil, 1
+end
+ns.WaypointUIPinOwned = nil
+ns.GoalPinFile = function()
+	return "pin"
+end
+ns.Art = { Icon = function() end }
+-- One table and one index, as the real stops are: a stub that built them per call would count its own allocation.
+local stops, stopIndex = { {}, {} }, 1
+ns.JourneyStops = function()
+	return stops, stopIndex
+end
+local rows = { { text = "1. Walk to the inn", current = true } }
+local infoBuilds = 0
+ns.JourneyInfo = function()
+	infoBuilds = infoBuilds + 1
+	return "Journey", rows
+end
+env.GetPlayerFacing = function()
+	return 0
+end
+ns.RefreshDestinationPin()
+assert(ns.DestinationPinWanted(), "the steady journey wants its pin")
+local formatted = 0
+local formatDistance = ns.FormatDistance
+ns.FormatDistance = function(...)
+	formatted = formatted + 1
+	return formatDistance(...)
+end
+for _ = 1, 100 do
+	ns.RefreshDestinationPin()
+end
+assert(formatted == 0, "an unchanged pin builds no distance string")
+assert(infoBuilds == 1, "an unchanged step is not rebuilt")
+-- Warm the call and its loop so the JIT's own compilation is not counted as the pin's allocation.
+for _ = 1, 2000 do
+	ns.RefreshDestinationPin()
+end
+local function measured(fn)
+	for _ = 1, 2000 do
+		fn()
+	end
+	-- Count the code's own allocations, not the JIT's traces: the paths under test are plain Lua work.
+	jit.off()
+	collectgarbage("collect")
+	collectgarbage("stop")
+	local before = collectgarbage("count")
+	for _ = 1, 1000 do
+		fn()
+	end
+	local grew = collectgarbage("count") - before
+	collectgarbage("restart")
+	return grew
+end
+local control = measured(function() end)
+local grew = measured(ns.RefreshDestinationPin)
+assert(grew - control < 0.5, "an unchanged destination pin allocates nothing (" .. (grew - control) .. " KB)")
+
+-- The stop index moves on while the player stands still (a turn-in at the NPC): the goal, the position and the
+-- facing are all as they were, and the next refresh still brings the new step line rather than the old one.
+local stepLine = fontStrings[2]
+assert(stepLine and stepLine.text == "1. Walk to the inn", "the pin shows the step the route is on")
+stopIndex = 2
+rows = { { text = "2. Speak to Marshal Dughan", current = true } }
+ns.RefreshDestinationPin()
+assert(infoBuilds == 2, "the step is rebuilt when the stop index moves on")
+assert(stepLine.text == "2. Speak to Marshal Dughan", "a stop index that moves on updates the step line")
 
 print("destination pin: ok")

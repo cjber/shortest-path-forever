@@ -15,25 +15,15 @@ local Model = ns.Model
 local Timetable = {}
 ns.Timetable = Timetable
 
--- Saved as ShortestPathForeverDB.anchors[realm][routeID] = { epoch = server ms at phase 0, seen = server s,
--- source = "you"|"player" }; nothing outside this file reads that table.
+-- Saved as ShortestPathForeverDB.anchors[routeID] = { epoch = server ms at phase 0, seen = server s }, one table
+-- for the account: Forever is one server for every ruleset. Nothing outside this file reads it.
 local function Store()
 	local saved = ns.db.anchors
 	if not saved then
 		saved = {}
 		ns.db.anchors = saved
 	end
-	local realm = GetRealmName()
-	local store = saved[realm]
-	if not store then
-		store = {}
-		saved[realm] = store
-	end
-	return store
-end
-
-local function Fresh(anchor, now)
-	return anchor and now - anchor.seen <= Model.MAX_AGE and anchor or nil
+	return saved
 end
 
 -- Where in its loop a route is at server time `at` (ms).
@@ -60,10 +50,10 @@ end
 ---@return boolean
 function Timetable.Sighted(routeID, anchor)
 	local store = Store()
-	if not Model.Newer(anchor, store[routeID], GetServerTime()) then
+	if not Model.Newer(anchor, store[routeID]) then
 		return false
 	end
-	store[routeID] = { epoch = anchor.epoch, seen = anchor.seen, source = anchor.source }
+	store[routeID] = { epoch = anchor.epoch, seen = anchor.seen }
 	version = version + 1
 	for _, fn in ipairs(listeners) do
 		fn()
@@ -71,23 +61,21 @@ function Timetable.Sighted(routeID, anchor)
 	return true
 end
 
--- The route's sighting while it is fresh enough to count down from.
+-- The route's sighting, kept until a newer sighting replaces it.
 ---@param routeID number
 ---@return SPFAnchor?
 function Timetable.Anchor(routeID)
-	return Fresh(Store()[routeID], GetServerTime())
+	return Store()[routeID]
 end
 
--- Every fresh sighting, as the plain data the planner and the sync message take.
+-- Every sighting, as the plain data the planner takes.
 ---@return table<number, SPFAnchor>
 function Timetable.Anchors()
-	local fresh, now = {}, GetServerTime()
+	local anchors = {}
 	for routeID, anchor in pairs(Store()) do
-		if Fresh(anchor, now) then
-			fresh[routeID] = anchor
-		end
+		anchors[routeID] = anchor
 	end
-	return fresh
+	return anchors
 end
 
 -- The route's next visit of `stop` as of server time `at` (ms): Model.Visit's answer, or nothing while the
@@ -141,14 +129,13 @@ function Timetable.Departures(dockID)
 		local routeID = visit.route
 		local route = ns.Routes[routeID]
 		if ns.RouteShown(route) then
-			local anchor = Fresh(store[routeID], serverNow)
+			local anchor = store[routeID]
 			local departure = { route = routeID, kind = route.kind, to = visit.to, known = false }
 			if anchor then
 				departure.known = true
 				departure.docked, departure.arriveIn, departure.departIn =
 					Model.Visit(route, visit.stop, Phase(route, anchor, now))
 				departure.seen = serverNow - anchor.seen
-				departure.source = anchor.source
 			end
 			departures[#departures + 1] = departure
 		end
@@ -237,12 +224,49 @@ function Timetable.Status(departure)
 	)
 end
 
--- Sightings too stale to count down from are dropped from the saved file at login.
+-- Older saves kept sightings per realm, and the retired swap stored other players' sightings among them. On load,
+-- keep the newest sighting of each route that is yours, drop the realm level, and forget who reported it.
 ns.Init(function()
-	local store, now = Store(), GetServerTime()
-	for routeID, anchor in pairs(store) do
-		if not Fresh(anchor, now) then
-			store[routeID] = nil
+	local saved = ns.db.anchors
+	if type(saved) ~= "table" then
+		ns.db.anchors = {}
+		return
+	end
+	local best, realms = {}, {}
+	for key, value in pairs(saved) do
+		if type(key) == "string" and type(value) == "table" and value.epoch == nil then
+			realms[#realms + 1] = key
+			for routeID, anchor in pairs(value) do
+				if
+					type(routeID) == "number"
+					and type(anchor) == "table"
+					and anchor.epoch
+					and anchor.seen
+					and rawget(anchor, "source") ~= "player"
+				then
+					local held = best[routeID] or saved[routeID]
+					if not held or anchor.seen > held.seen then
+						best[routeID] = { epoch = anchor.epoch, seen = anchor.seen }
+					end
+				end
+			end
+		end
+	end
+	for _, realm in ipairs(realms) do
+		saved[realm] = nil
+	end
+	for routeID, anchor in pairs(best) do
+		saved[routeID] = anchor
+	end
+	-- The source field belonged to the retired swap; a sighting it marks as another player's goes, and every one
+	-- kept here is the player's own.
+	for routeID, anchor in pairs(saved) do
+		if type(routeID) == "number" and type(anchor) == "table" then
+			if rawget(anchor, "source") == "player" then
+				saved[routeID] = nil
+			else
+				rawset(anchor, "source", nil)
+			end
 		end
 	end
 end)

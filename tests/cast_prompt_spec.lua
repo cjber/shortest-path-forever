@@ -35,6 +35,10 @@ ns.Art = {
 		icon = file
 	end,
 }
+-- The arrow turns around the step's numbered marker when the target has a step number; this spec only casts.
+ns.NumberFile = function()
+	return nil
+end
 driver.load("UI/Mover.lua")
 driver.load("UI/TurnAround.lua")
 driver.load("UI/Arrow.lua")

@@ -12,6 +12,8 @@ ns.FamilyHints = { AddQuestMenu = function() end }
 ns.Init = function(fn)
 	fn()
 end
+-- UI/MenuModifier.lua's entry point; this spec does not check the game's menus.
+ns.ModifyMenu = function() end
 
 local destination, printed
 ns.StartJourney = function(point)

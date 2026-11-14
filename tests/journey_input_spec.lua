@@ -1,9 +1,12 @@
-local handler, destination, mouseEvent, ownClick
+local handler, destination, mouseEvent, ownClick, canvasClick, minimapClick
 local questTrackerMenu, questMapLogMenu
 local alt, overMap, shown = false, true, true
 local map = {
 	GetMapID = function()
 		return 1440
+	end,
+	GetNormalizedCursorPosition = function()
+		return 0.25, 0.75
 	end,
 }
 local pin = {
@@ -15,15 +18,32 @@ local pin = {
 }
 local shift = true
 local chatBox
+local function Record(tag, fn)
+	if tag == "MENU_QUEST_OBJECTIVE_TRACKER" then
+		questTrackerMenu = fn
+	elseif tag == "MENU_QUEST_MAP_LOG_TITLE" then
+		questMapLogMenu = fn
+	end
+end
 local ns = {
 	db = { journey = true },
-	L = {},
+	L = setmetatable({}, {
+		__index = function(_, key)
+			return key
+		end,
+	}),
 	TaxiNodes = { [26] = { map = 1, x = 100, y = 200 } },
 	StartJourney = function(point)
 		destination = point
 	end,
 	Locate = function()
 		return { uiMap = 1440, x = 0.5, y = 0.5 }
+	end,
+	MinimapPoint = function()
+		return { map = 1, x = 1, y = 2 }
+	end,
+	SpawnHeight = function()
+		return -10
 	end,
 	Init = function(fn)
 		fn()
@@ -35,6 +55,11 @@ local ns = {
 		end,
 	},
 	FamilyHints = { AddQuestMenu = function() end },
+	-- UI/MenuModifier.lua's entry point, which owns the registration; tests/quest_menu_spec.lua checks its gamepad
+	-- handling. Here it only records the tag's description builder.
+	ModifyMenu = function(tag, _, build)
+		Record(tag, build)
+	end,
 }
 local env = setmetatable({
 	CreateFrame = function()
@@ -67,21 +92,19 @@ local env = setmetatable({
 		GetNormalizedCursorPosition = function()
 			return 0.25, 0.75
 		end,
-		AddCanvasClickHandler = function() end,
+		AddCanvasClickHandler = function(_, fn)
+			canvasClick = fn
+		end,
 		AddGlobalPinMouseActionHandler = function(_, fn)
 			handler = fn
 		end,
 	},
-	Minimap = { HookScript = function() end },
-	Menu = {
-		ModifyMenu = function(tag, fn)
-			if tag == "MENU_QUEST_OBJECTIVE_TRACKER" then
-				questTrackerMenu = fn
-			elseif tag == "MENU_QUEST_MAP_LOG_TITLE" then
-				questMapLogMenu = fn
-			end
+	Minimap = {
+		HookScript = function(_, _, fn)
+			minimapClick = fn
 		end,
 	},
+	Menu = { ModifyMenu = Record },
 	MapCanvasMixin = { MouseAction = { Click = 3 } },
 	C_Map = {
 		GetWorldPosFromMapPos = function(_, pos)
@@ -199,6 +222,63 @@ chatBox = {}
 destination = nil
 assert(not handler(map, 3, "LeftButton") and destination == nil, "Shift+click must share to an open chat box")
 chatBox = nil
+
+-- The journey key is the player's choice. Shift is the default, and the one chosen key plans every map click: the
+-- world map and its pins, our own icons, the minimap, and Questie's icons through the global mouse handler.
+ns.db.journeyKey, shift, alt = nil, true, false
+assert(ns.JourneyKeyDown() and ns.JourneyKeyName() == "Shift", "Shift plans a journey by default")
+shift = false
+assert(not ns.JourneyKeyDown() and ns.JourneyKeyName() == "Shift", "the default key is named Shift")
+ns.db.journeyKey, shift = "meta", true
+assert(ns.JourneyKeyDown() and ns.JourneyKeyName() == "Shift", "an unknown saved key plans with Shift")
+ns.db.journeyKey, alt = "alt", true
+assert(ns.JourneyKeyDown() and ns.JourneyKeyName() == "Alt", "Alt can be the journey key")
+
+-- The world map: a pin, the canvas, and our own icons all follow the chosen key.
+pin.pinTemplate, pin.poiInfo = "FlightPointPinTemplate", { nodeID = 26, name = "Astranaar" }
+pin.GetGlobalPosition = nil
+shift, destination = false, nil
+assert(handler(map, 3, "LeftButton"), "Alt-clicking a flight-master pin with Alt chosen plans a journey")
+assert(destination and destination.map == 1, "the pin's own journey is planned")
+destination = nil
+assert(canvasClick(map, "LeftButton") and destination, "Alt-clicking the map with Alt chosen plans a journey")
+assert(destination.x == 0.25 and destination.y == 0.75, "the map click keeps its spot")
+own.marker, destination = "dock", nil
+assert(ownClick(own, "LeftButton") and destination, "Alt-clicking our own icon with Alt chosen plans a journey")
+destination = nil
+minimapClick(nil, "LeftButton")
+assert(destination and destination.x == 1 and destination.y == 2, "Alt-clicking the minimap with Alt chosen plans")
+
+-- Shift no longer plans a journey once Alt is chosen.
+shift, alt, destination = true, false, nil
+assert(not handler(map, 3, "LeftButton") and not canvasClick(map, "LeftButton"), "Shift leaves pins and the map alone")
+assert(not ownClick(own, "LeftButton"), "Shift leaves our own icons alone")
+minimapClick(nil, "LeftButton")
+assert(destination == nil, "Shift leaves the minimap alone")
+
+-- Questie keeps Shift-click on its icons. With Alt chosen, that key plans there instead; with Shift chosen,
+-- Alt-click still plans the journey, as it always has.
+shown, overMap, shift, alt = true, true, false, false
+_G.Questie = {}
+env.GetMouseFoci = function()
+	return { { miniMapIcon = false, data = {}, UiMapID = 1440, x = 50, y = 50 } }
+end
+mouseEvent(nil, "GLOBAL_MOUSE_DOWN", "LeftButton")
+assert(destination == nil, "Shift does not plan over a Questie icon with Alt chosen")
+alt = true
+mouseEvent(nil, "GLOBAL_MOUSE_DOWN", "LeftButton")
+assert(
+	destination and destination.map == 1 and destination.x == 0.5 and destination.y == 0.5,
+	"Alt plans over a Questie icon with Alt chosen"
+)
+ns.db.journeyKey, shift, alt, destination = "shift", false, true, nil
+mouseEvent(nil, "GLOBAL_MOUSE_DOWN", "LeftButton")
+assert(destination and destination.x == 0.5, "with Shift chosen, Alt-click still plans over a Questie icon")
+_G.Questie = nil
+ns.db.journeyKey, shift, alt = nil, true, false
+env.GetMouseFoci = function()
+	return { pin }
+end
 
 -- A spot inside a dungeon has no walking map: from outside, the journey goes to its door, named in the game's
 -- language, and a label the caller gave stands. Inside that dungeon the spot is left as it is.

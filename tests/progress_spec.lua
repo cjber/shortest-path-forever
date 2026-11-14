@@ -51,8 +51,8 @@ local env = setmetatable({
 	CreateFrame = function()
 		local frame = {}
 		frame.RegisterEvent = function() end
-		frame.SetScript = function(selfFrame, _, fn)
-			selfFrame.OnEvent = fn
+		frame.SetScript = function(self, _, fn)
+			self.OnEvent = fn
 		end
 		frames[#frames + 1] = frame
 		return frame
@@ -65,6 +65,7 @@ env.ForeverCore = {
 	APIKit = { Hub = function() end, NotReady = function() end },
 	TrackerSection = { Create = function() end, UpdateText = function() end },
 	TrackerLine = { SetInteractive = function() end },
+	Art = { minor = 2, Marker = function() end, Ring = function() end, Diamond = function() end },
 }
 setfenv(assert(loadfile("Core/ForeverRequire.lua")), env)("ShortestPathForever", ns)
 setfenv(assert(loadfile("Core/Require.lua")), env)("ShortestPathForever", ns)

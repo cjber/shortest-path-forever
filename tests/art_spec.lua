@@ -42,6 +42,10 @@ local env = setmetatable({
 		end,
 	},
 }, { __index = _G })
+-- NumberFile serves ForeverCore's step markers, so the real shared module is loaded, as the client loads it.
+local Core = dofile("tests/forever_core.lua")
+local coreArt = Core.load(env, "ForeverCore", { "UI/Art.lua" }).Art
+env.ForeverCore = { Art = coreArt }
 setfenv(assert(loadfile("UI/Art.lua")), env)("ShortestPathForever", ns)
 local Art = ns.Art
 
@@ -64,9 +68,10 @@ check(icon.file == "Interface\\AddOns\\ShortestPathForever\\media\\Zeppelin" and
 check(icon.crop == nil, "the crop is reset")
 check(icon.width == 18 and icon.height == 18, "square at its size")
 
--- NumberFile: the shipped numbered markers, 1 to 25; above the art, nothing, so the caller keeps the font.
-check(ns.NumberFile(1) == "Interface\\AddOns\\ShortestPathForever\\media\\Numbers\\1", "the first numbered marker")
-check(ns.NumberFile(25) == "Interface\\AddOns\\ShortestPathForever\\media\\Numbers\\25", "the last")
+-- NumberFile: ForeverCore's shipped numbered markers, 1 to 25; above the art, nothing, so the caller keeps the font.
+check(ns.NumberFile(1) == "Interface\\AddOns\\ForeverCore\\media\\Numbers\\1", "the first marker is ForeverCore's own")
+check(ns.NumberFile(1) == coreArt.Marker(1), "NumberFile serves the shared module's marker")
+check(ns.NumberFile(25) == "Interface\\AddOns\\ForeverCore\\media\\Numbers\\25", "the last")
 check(ns.NumberFile(26) == nil, "above 25 there is no marker art")
 check(ns.NumberFile(0) == nil and ns.NumberFile(nil) == nil, "no marker for an impossible number")
 check(ns.NumberFile(1.5) == nil, "whole numbers only")

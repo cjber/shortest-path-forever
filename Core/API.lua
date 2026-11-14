@@ -180,11 +180,12 @@ local ended = {}
 -- Subscribe's hub (ForeverCore.APIKit): told once per burst what happened to guidance, after every change in it has
 -- landed. Each channel is a comparable key the hub reads when it dispatches. The event channels count the notices
 -- queued, so a caller hears the same changes it used to, and "active" is the answer itself, so a guide switched off and
--- on again within one burst stays quiet. "guidance" counts the arrow's own progress: a bend passed, the source walk
--- replaced, or the guideStops setting changing what the arrow draws.
-local notices = { started = 0, changed = 0, ended = 0, stop = 0, leg = 0, guidance = 0 }
+-- on again within one burst stays quiet. "guidance" counts the arrow's own progress: a bend passed or the source walk
+-- replaced. "replan" counts a plan worked out again: the first one is ready, a new route replaced the followed one,
+-- or its walks were redrawn.
+local notices = { started = 0, changed = 0, ended = 0, stop = 0, leg = 0, guidance = 0, replan = 0 }
 
----@param name "started"|"changed"|"ended"|"stop"|"leg"|"guidance"
+---@param name "started"|"changed"|"ended"|"stop"|"leg"|"guidance"|"replan"
 ---@return fun(): integer|false
 local function Counter(name)
 	return function()
@@ -199,6 +200,7 @@ local hub = APIKit.Hub("ShortestPathForever", {
 	stop = Counter("stop"),
 	leg = Counter("leg"),
 	guidance = Counter("guidance"),
+	replan = Counter("replan"),
 	active = function()
 		return ns.IsJourneyGuided() == true
 	end,
@@ -214,7 +216,7 @@ local stopOwner
 local stopIndex
 local active = false
 
----@param kind "started"|"changed"|"ended"|"stop"|"leg"|"guidance"
+---@param kind "started"|"changed"|"ended"|"stop"|"leg"|"guidance"|"replan"
 local function Notify(kind)
 	notices[kind] = notices[kind] + 1
 	hub.Queue()
@@ -257,6 +259,13 @@ end
 -- stop and leg are unchanged, so the public guidance read is the one that now answers differently.
 function ns.GuideGuidanceChanged()
 	Notify("guidance")
+end
+
+-- Journey.lua: the search settled a plan for the journey under way. The first plan is ready, a new route replaced the
+-- followed one, or its walks were redrawn, so the legs Journey() reports, and where each starts and ends, may have
+-- changed. The goal and the leg under way need not have.
+function ns.JourneyReplanned()
+	Notify("replan")
 end
 
 ---@param point SPFPoint?
@@ -321,7 +330,7 @@ function ns.JourneyStops()
 end
 
 ---@class SPFPublicAPI
-local API = { version = 2, minor = 1 }
+local API = { version = 2, minor = 2 }
 
 local function Differs(a, b)
 	for key, value in pairs(a) do
@@ -571,9 +580,46 @@ function API.NavigateRoute(owner, stops)
 		end
 		points[index] = point
 	end
+	-- Another owner asking for the place the journey already goes to hands the journey over: a guide or TomTom
+	-- re-pointing at the destination under its own name used to stop the guide, take the native waypoint away and
+	-- search again for a place that had not moved, so guidance blinked off and on while the journey scanned (#826).
+	-- The stop, the progress and the drawn route stay; only who owns them changes. A route with several stops is a
+	-- different itinerary, and a journey waiting behind a corpse run is not this submission's to take.
+	if
+		count == 1
+		and (route == nil or route.owner ~= owner)
+		and (route == nil or #route.points == 1)
+		and ns.HasJourney
+		and ns.HasJourney()
+		and not (ns.Corpse and ns.Corpse.Active())
+	then
+		local goal = ns.JourneyGoal and ns.JourneyGoal()
+		local stop = points[1]
+		if goal and goal.map == stop.map and goal.x == stop.x and goal.y == stop.y then
+			if route then
+				ended[route.owner] = { reason = "replaced", at = GetTime() }
+			end
+			ended[owner] = nil
+			-- The stop the journey follows stays the object it is: Journey.lua recognises its own goal by identity.
+			route = { owner = owner, points = { goal }, index = 1 }
+			Settle()
+			return true
+		end
+	end
 	-- Validate and copy every stop before replacing guidance. Caller mutations cannot redirect a journey.
 	if route and route.owner ~= owner then
 		ended[route.owner] = { reason = "replaced", at = GetTime() }
+	end
+	if
+		route
+		and route.owner == owner
+		and ns.HasJourney
+		and ns.HasJourney()
+		and not (ns.Corpse and ns.Corpse.Active())
+		and ns.ResubmitRoute
+		and ns.ResubmitRoute(route, points)
+	then
+		return true
 	end
 	ended[owner] = nil
 	route = { owner = owner, points = points, index = 1 }
@@ -620,8 +666,20 @@ local function Whole(ms)
 	return math.max(0, math.ceil(ms / 1000))
 end
 
+-- Where a leg starts and ends, as the planner's own leg points name them: the first and last point of the line it
+-- draws, copied to uiMapID and 0-1 fractions. A leg with no such line, or an end this client cannot place, keeps that
+-- field nil. Nothing is estimated here.
+---@param leg SPFLeg
+---@return SPFAPIPlace?, SPFAPIPlace?
+local function LegEnds(leg)
+	local points = ns.PlanContext.LegPoints(leg)
+	local first, last = points[1], points[#points]
+	return first and Place(first), last and Place(last)
+end
+
 -- The planner's legs from the one under way on, as fresh copies: the tracker's plain action words, the mode's own
--- name and the leg's whole seconds including its wait, which is how JourneyTime adds the header up.
+-- name and the leg's whole seconds including its wait, which is how JourneyTime adds the header up, and the leg's own
+-- ends as the planner drew them. Every table is new, so a caller never reaches the plan.
 ---@param plan SPFPlan
 ---@param index integer
 ---@return SPFAPIJourneyLeg[]
@@ -629,10 +687,13 @@ local function JourneyLegs(plan, index)
 	local legs = {}
 	for legIndex = index, #plan.legs do
 		local leg = plan.legs[legIndex]
+		local from, to = LegEnds(leg)
 		legs[#legs + 1] = {
 			mode = leg.mode,
 			text = ns.StepText(leg),
 			seconds = Whole(ns.LegSpan(leg)) + Whole(leg.wait or 0),
+			from = from,
+			to = to,
 		}
 	end
 	return legs
@@ -698,9 +759,10 @@ function API.Journey()
 end
 
 -- The guidance another addon steers by: the point the arrow is leading to, every bend of the leg under way as fresh
--- uiMapID/0-1 copies, and where that point stands in them. guideStops only collapses what the arrow draws, so the
--- waypoints stay the leg's original walk and index names the same point in it. A point this client cannot place makes
--- the whole answer unavailable rather than leaving a hole in the walk a caller steers along.
+-- uiMapID/0-1 copies, and where that point stands in them. guideStops changes only the point the map and compass mark,
+-- never the walk the arrow follows, so the waypoints are the leg's original walk and index names the same point in it.
+-- A point this client cannot place makes the whole answer unavailable rather than leaving a hole in the walk a caller
+-- steers along.
 ---@return SPFAPIGuidance?, SPFAPIGuidanceReason?
 function API.Guidance()
 	if not Loaded() then
@@ -808,6 +870,23 @@ function API.SkipLeg(owner, index)
 		return false
 	end
 	return ns.SkipJourneyStep(index) == true
+end
+
+-- Resume the RestedXP guide the player follows, as the tracker menu's and Settings' own *Resume guide* do, so a macro
+-- can bring it back without opening either. There is nothing to act on before the saved variables load (unavailable)
+-- and guidance cannot start in combat (invalid); a guide RestedXP is not showing now leaves nothing to resume.
+---@return true?, ("invalid"|"unavailable")?
+function API.ResumeRestedXP()
+	if not Loaded() then
+		return nil, "unavailable"
+	end
+	if InCombatLockdown() then
+		return nil, "invalid"
+	end
+	if ns.ResumeRestedXP() ~= true then
+		return nil, "unavailable"
+	end
+	return true
 end
 
 -- Relabel a running route's stop in place: a guide renames a step whose position did not move, which must not cost a

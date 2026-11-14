@@ -28,6 +28,8 @@ local setup = [[
 setMapShown(true)
 posX, posY, posMap, facing = 0, 0, 1, 0
 ns.CurrentRide = noop
+-- The native waypoint these labels name exists only with "Mark only where steps end" off.
+ns.db.guideStops = false
 local mid = { map=1, x=300, y=100, label="Dock" }
 ns.Planner.Plan = function(o)
  return {now=o.now, arrive=o.now+200000, legs={
@@ -67,7 +69,7 @@ assert(title == "Dock", "the waypoint names the leg's destination, got " .. tost
 assert(goalTitle and goalTitle:find("^Journey to "), "an intermediate hop also names the journey's goal")
 
 GameTooltip_SetTitle(GameTooltip, MAP_PIN_SHARING)
-guide.NameWaypointTooltip(GameTooltip)
+guide.NameWaypointTooltip(GameTooltip, true)
 assert(GameTooltipTextLeft1:GetText() == "Dock", "the map's waypoint title names the leg's destination")
 assert(tip[#tip] == "  " .. goalTitle, "the map's waypoint adds the journey's goal under a hop")
 
@@ -78,6 +80,23 @@ for _, post in ipairs(callbacks) do
 end
 assert(GameTooltipTextLeft1:GetText() == "Dock", "the minimap's waypoint title names the leg's destination")
 assert(tip[#tip] == "  " .. goalTitle, "the minimap's waypoint adds the journey's goal under a hop")
+
+-- 1.60.1 hands the minimap's title over as a secret value: readable, never comparable. Nothing readable says that
+-- tooltip is the waypoint, so the client's title stays and no error reaches the player (#824). Both sides of the
+-- addon's compare are secret objects here so Lua reaches __eq, as the client's own comparison of a secret does.
+local readablePin = MAP_PIN
+local secretTitle = setmetatable({}, {
+	__eq = function()
+		error("attempt to compare a secret string value", 0)
+	end,
+})
+MAP_PIN = setmetatable({}, getmetatable(secretTitle))
+GameTooltipTextLeft1:SetText(secret(secretTitle))
+for _, post in ipairs(callbacks) do
+	post(GameTooltip)
+end
+assert(rawequal(GameTooltipTextLeft1:GetText(), secretTitle), "a secret minimap title keeps the client's tooltip")
+MAP_PIN = readablePin
 
 -- A pin the player places is not Guide's, so the client's own title and lines stay.
 ns.ClearJourney()

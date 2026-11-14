@@ -306,6 +306,47 @@ assert(#bit.linksIn[0][over + 1] == 1 and #bit.linksIn[0][beside + 1] == 1, "bot
 local bk, bn = Grid.neighbour(bit, 0, over, 20, 10, 0, 1, false)
 assert(bk == 0 and bn == beside, "the floor walks +y onto the base surface")
 
+-- A format 3 bit names the layer it lands on, so it resolves the pair the bake linked even where a surface of the
+-- target cell is nearer the floor's height: the base here is 3 yards off and a floor is half a yard off. The same
+-- map in format 2 lands on the nearer floor instead, which is the approximation format 3 removes.
+local named = { [20] = { [10] = at(20), [11] = at(20) } }
+fixture.install(
+	60,
+	fixture.format3({
+		map = 60,
+		nx = 1,
+		ny = 1,
+		cell = named,
+		floor = { { 20, 10, 23, 1, { [2] = 0 } }, { 20, 11, 23.5, 1 } }, -- +y onto the base surface of (20, 11)
+		node = { { 20, 10, 1 } },
+	})
+)
+fixture.install(
+	61,
+	fixture.format2({
+		map = 61,
+		nx = 1,
+		ny = 1,
+		cell = named,
+		floor = { { 20, 10, 23, 1, 2 ^ 2 }, { 20, 11, 23.5, 1 } },
+		node = { { 20, 10, 1 } },
+	})
+)
+local namedState = Grid.State(60)
+assert(namedState.fmt == 3 and Grid.grid(namedState, 0))
+local namedLink = namedState.links[0][over + 1]
+assert(namedLink and #namedLink == 1, "the floor's step bit is its own link")
+assert(math.floor(namedLink[1] / 256) % 64 - 1 == 0, "the bit carries the base surface's layer")
+local nk3, nn3 = Grid.neighbour(namedState, 0, over, 20, 10, 0, 1, false)
+assert(nk3 == 0 and nn3 == beside, "the bit lands on the layer it names")
+local mirrored = namedState.links[0][beside + 1]
+assert(mirrored and #mirrored == 1 and math.floor(mirrored[1] / 256) % 64 - 1 == 1, "the base has the mirror")
+local oldState = Grid.State(61)
+assert(oldState.fmt == 2 and Grid.grid(oldState, 0))
+local oldK, oldN = Grid.neighbour(oldState, 0, over, 20, 10, 0, 1, false)
+local nearer = 67 * 67 + 1 -- the target cell's floor, half a yard from the source's height
+assert(oldK == 0 and oldN == nearer, "format 2 still resolves a bit by height")
+
 -- A goal is judged by the walks into it, not out of it. This pit is entered by a one-way drop from the ground above
 -- and cannot be left forward, so only the reverse search sees that it is reachable; the higher ground beside it is
 -- merely where the old forward rescue would have moved it, and nothing leaves there to the start either.
@@ -457,6 +498,29 @@ assert(
 local levelFrom = 66 * 67 + 20
 local lk, ln = Grid.neighbour(acrossState, 0, levelFrom, 66, 20, 1, 1, false)
 assert(lk == 1 and ln == 21, "a level cross-cluster diagonal stays open")
+
+-- A cross-cluster detour leg follows the same rule as one inside a cluster: a steep step that only goes downhill is
+-- still not a detour, so the two ordinary steps are the way down. The corner's height alone used to open it, which
+-- the bake never does, so the graph and the runtime disagreed about the crossing.
+local steepDown = {
+	[66] = { [10] = at(32) },
+	[67] = { [10] = at(20, { steep = true }), [11] = at(20) },
+}
+fixture.install(
+	59,
+	fixture.format2({ map = 59, nx = 2, ny = 1, cell = steepDown, node = { { 66, 10, 1 }, { 67, 11, 1 } } })
+)
+local downState = Grid.State(59)
+assert(Grid.grid(downState, 0) and Grid.grid(downState, 1))
+local downFrom = 66 * 67 + 10
+assert(
+	Grid.neighbour(downState, 0, downFrom, 66, 10, 1, 1, false) == nil,
+	"a steep downhill leg must not open the cross-cluster diagonal"
+)
+local dk, dn = Grid.neighbour(downState, 0, downFrom, 66, 10, 1, 0, false)
+assert(dk == 1 and dn == 10, "the ordinary step across the border stays open")
+local sk, sn = Grid.neighbour(downState, 1, 10, 67, 10, 0, 1, false)
+assert(sk == 1 and sn == 11, "and the step down the face stays open")
 
 -- A reverse batch's road ratios come from the edges that reach a node, wherever that node lives: the source's
 -- cluster must not already have been visited for its outbound record to be readable.
