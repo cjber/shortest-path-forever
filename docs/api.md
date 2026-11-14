@@ -35,6 +35,10 @@ later, the API is also listed by `ForeverCore.APIKit.Addons()`.
 - `Navigate(owner, map, x, y, title, kind)` is the one-stop form.
 
   Both return a boolean; invalid input, combat or disabled Journeys return `false` without replacing guidance.
+  A route whose only stop is the place the journey already goes to hands the journey over rather than starting it
+  again: `CurrentStop` answers for the new owner, the previous owner's `Ended` reads `"replaced"`, and the stop, the
+  progress, the arrow and the drawn route stay exactly as they are. A route with several stops is a different
+  itinerary, and still replaces the journey.
   Titles are optional, as is `tooltip`, a destination detail shown on the stop pin's tooltip and under the arrival
   pin while the player stands in a held stop's area. It is never used as the arrow label; each newline in it starts a
   line of its own, and a line an earlier stop on the same pin already shows is not repeated. Optional `z` is the
@@ -77,7 +81,7 @@ later, the API is also listed by `ForeverCore.APIKit.Addons()`.
   on to its next stop; sending the same destination again is no change), `ended` (it ended with nothing after it),
   `stop` (what `CurrentStop` answers changed: an addon's route started, moved on or ended), `leg` (the leg under way
   moved on without the goal changing: the player or an owner skipped it), `guidance` (the point `Guidance` answers
-  changed: a bend passed within the leg, a new leg or source walk, the guide-stops switch, or guidance starting or
+  changed: a bend passed within the leg, a new leg or source walk, or guidance starting or
   ending), `replan` (the plan was worked out again: the first plan is ready, a new route replaced the followed one,
   or its walks were redrawn, so the legs `Journey` reports may differ) and `active` (what `Active` answers changed,
   including the player turning guidance off or a corpse run guiding after a journey ends). Several can be set together,
@@ -93,7 +97,7 @@ later, the API is also listed by `ForeverCore.APIKit.Addons()`.
   It returns `nil` and a reason when there is no point: `"loading"` while the addon or its first plan is still being
   built, `"none"` with no journey, `"paused"` while guidance is off or waiting at a held stop, `"disabled"` while
   Journeys is switched off, `"cast"` on a teleport to cast where you stand, or `"unavailable"` when a point cannot be
-  placed on this client. A bend inside the leg, a new leg or source walk, the guide-stops switch and guidance ending
+  placed on this client. A bend inside the leg, a new leg or source walk and guidance ending
   all arrive as the `guidance` change.
 - `Pause(owner)` and `Resume(owner)` stop and restart that owner's guidance on the same goal, as the tracker's own
   guidance switch does. `SkipLeg(owner, index?)` advances that owner's current leg. Each returns `true` when it acted
@@ -174,6 +178,8 @@ if journey then
 	end
 end
 ```
+
+## Stats
 
 `Stats()` returns a fresh array of this character's travel records, one row per metric:
 

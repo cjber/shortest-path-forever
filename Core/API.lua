@@ -180,9 +180,9 @@ local ended = {}
 -- Subscribe's hub (ForeverCore.APIKit): told once per burst what happened to guidance, after every change in it has
 -- landed. Each channel is a comparable key the hub reads when it dispatches. The event channels count the notices
 -- queued, so a caller hears the same changes it used to, and "active" is the answer itself, so a guide switched off and
--- on again within one burst stays quiet. "guidance" counts the arrow's own progress: a bend passed, the source walk
--- replaced, or the guideStops setting changing what the arrow draws. "replan" counts a plan worked out again: the first
--- one is ready, a new route replaced the followed one, or its walks were redrawn.
+-- on again within one burst stays quiet. "guidance" counts the arrow's own progress: a bend passed or the source walk
+-- replaced. "replan" counts a plan worked out again: the first one is ready, a new route replaced the followed one,
+-- or its walks were redrawn.
 local notices = { started = 0, changed = 0, ended = 0, stop = 0, leg = 0, guidance = 0, replan = 0 }
 
 ---@param name "started"|"changed"|"ended"|"stop"|"leg"|"guidance"|"replan"
@@ -580,9 +580,46 @@ function API.NavigateRoute(owner, stops)
 		end
 		points[index] = point
 	end
+	-- Another owner asking for the place the journey already goes to hands the journey over: a guide or TomTom
+	-- re-pointing at the destination under its own name used to stop the guide, take the native waypoint away and
+	-- search again for a place that had not moved, so guidance blinked off and on while the journey scanned (#826).
+	-- The stop, the progress and the drawn route stay; only who owns them changes. A route with several stops is a
+	-- different itinerary, and a journey waiting behind a corpse run is not this submission's to take.
+	if
+		count == 1
+		and (route == nil or route.owner ~= owner)
+		and (route == nil or #route.points == 1)
+		and ns.HasJourney
+		and ns.HasJourney()
+		and not (ns.Corpse and ns.Corpse.Active())
+	then
+		local goal = ns.JourneyGoal and ns.JourneyGoal()
+		local stop = points[1]
+		if goal and goal.map == stop.map and goal.x == stop.x and goal.y == stop.y then
+			if route then
+				ended[route.owner] = { reason = "replaced", at = GetTime() }
+			end
+			ended[owner] = nil
+			-- The stop the journey follows stays the object it is: Journey.lua recognises its own goal by identity.
+			route = { owner = owner, points = { goal }, index = 1 }
+			Settle()
+			return true
+		end
+	end
 	-- Validate and copy every stop before replacing guidance. Caller mutations cannot redirect a journey.
 	if route and route.owner ~= owner then
 		ended[route.owner] = { reason = "replaced", at = GetTime() }
+	end
+	if
+		route
+		and route.owner == owner
+		and ns.HasJourney
+		and ns.HasJourney()
+		and not (ns.Corpse and ns.Corpse.Active())
+		and ns.ResubmitRoute
+		and ns.ResubmitRoute(route, points)
+	then
+		return true
 	end
 	ended[owner] = nil
 	route = { owner = owner, points = points, index = 1 }
@@ -722,9 +759,10 @@ function API.Journey()
 end
 
 -- The guidance another addon steers by: the point the arrow is leading to, every bend of the leg under way as fresh
--- uiMapID/0-1 copies, and where that point stands in them. guideStops only collapses what the arrow draws, so the
--- waypoints stay the leg's original walk and index names the same point in it. A point this client cannot place makes
--- the whole answer unavailable rather than leaving a hole in the walk a caller steers along.
+-- uiMapID/0-1 copies, and where that point stands in them. guideStops changes only the point the map and compass mark,
+-- never the walk the arrow follows, so the waypoints are the leg's original walk and index names the same point in it.
+-- A point this client cannot place makes the whole answer unavailable rather than leaving a hole in the walk a caller
+-- steers along.
 ---@return SPFAPIGuidance?, SPFAPIGuidanceReason?
 function API.Guidance()
 	if not Loaded() then

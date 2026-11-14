@@ -105,7 +105,7 @@ print(
 if scenario == "dock" or scenario == "ride" then
 	local dock = ns.Docks[1]
 	driver.move(dock.x, dock.y, dock.map)
-	ns.db.anchors.Test[241] = { epoch = ns.NowMs(), seen = GetServerTime(), source = "you" }
+	ns.db.anchors[241] = { epoch = ns.NowMs(), seen = GetServerTime() }
 else
 	driver.move(0, 0, 1)
 end

@@ -1,4 +1,4 @@
-"""Exact food, drink and profession trainer readings from tiny fixture rows."""
+"""Exact food, drink, trainer and battlemaster readings from tiny fixture rows."""
 
 import sys
 import unittest
@@ -6,8 +6,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from gen_services import (
+    battlemasters,
     class_trainers,
     food_and_drink,
+    portal_trainers,
     profession_skill_spells,
     profession_trainers,
     skill_line_categories,
@@ -32,6 +34,14 @@ def effect(spell, aura=0, effect=0, trigger=0, misc=0):
         "EffectTriggerSpell": str(trigger),
         "EffectMiscValue_0": str(misc),
     }
+
+
+def spell(entry, effect=0, trigger=0):
+    row = {"Id": str(entry)}
+    for index in (1, 2, 3):
+        row[f"Effect{index}"] = str(effect if index == 1 else 0)
+        row[f"EffectTriggerSpell{index}"] = str(trigger if index == 1 else 0)
+    return row
 
 
 class FoodDrinkTest(unittest.TestCase):
@@ -113,6 +123,45 @@ class TrainerTest(unittest.TestCase):
         self.assertEqual(
             class_trainers([creature(7, 0, trainer_class=3), creature(8, 0), creature(9, 2, trainer_class=3)]),
             {7: 3},
+        )
+
+    def test_portal_trainers_are_mages_whose_every_lesson_opens_or_lands(self):
+        creatures = [
+            creature(20, 0, trainer_class=8),
+            creature(21, 0, trainer_class=8),
+            creature(22, 0, trainer_class=3),
+            creature(23, 0, trainer_class=8),
+        ]
+        trainers = [
+            {"entry": "20", "spell": "100"},
+            {"entry": "20", "spell": "101"},
+            {"entry": "21", "spell": "102"},
+            {"entry": "22", "spell": "103"},
+            {"entry": "22", "spell": "104"},
+        ]
+        spells = [
+            spell(100, effect=36, trigger=110),
+            spell(110, effect=50),
+            spell(101, effect=36, trigger=111),
+            spell(102, effect=36, trigger=112),
+            spell(103, effect=36, trigger=110),
+            spell(104, effect=36, trigger=111),
+            spell(111),
+            spell(112),
+        ]
+        self.assertEqual(portal_trainers(creatures, trainers, [], spells, {111}), {20: 8})
+
+    def test_battlemasters_are_the_entries_that_link_to_a_battleground(self):
+        self.assertEqual(
+            battlemasters(
+                [creature(10, 0), creature(11, 0)],
+                [
+                    {"entry": "11", "bg_template": "3"},
+                    {"entry": "10", "bg_template": "1"},
+                    {"entry": "12", "bg_template": "2"},
+                ],
+            ),
+            {10: 1, 11: 3},
         )
 
 

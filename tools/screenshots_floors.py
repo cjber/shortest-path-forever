@@ -8,7 +8,7 @@ three-stop guide route: the count with the journey's time and distance, the plac
 detail line and the clear hint, placed as ANCHOR_RIGHT puts it.
 """
 
-from wowmock import NORMAL, WHITE, TooltipLine, scene, tooltip
+from wowmock import NORMAL, WHITE, TooltipLine, scene, tooltip  # ty: ignore[import-not-found]
 
 SCOUT_RIELL = {"map": 0, "x": -10504.8, "y": 1033.25}
 WESTFALL = 1436

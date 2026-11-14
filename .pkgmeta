@@ -26,12 +26,13 @@ optional-dependencies:
   - tweaks-forever
   - restedxp-guide
   - guidelime
+  - kaliels-tracker
 
 # ForeverCore ships inside this zip as its own folder, at the release tools/forever-core.txt pins, so an
 # update brings it along: players who updated did not get it as a required dependency, and Wago's uploads
 # carry no dependencies at all.
 externals:
-  ForeverCore: https://github.com/cjber/forever-core/releases/download/v1.7.4/ForeverCore-v1.7.4-forever.zip
+  ForeverCore: https://github.com/cjber/forever-core/releases/download/v1.12.0/ForeverCore-v1.12.0-forever.zip
 
 move-folders:
   ShortestPathForever/ForeverCore: ForeverCore

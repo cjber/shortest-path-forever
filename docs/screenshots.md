@@ -25,7 +25,7 @@ pixels never enter product media.
 | `kalimdor.png` | Auberdine → Menethil → Theramore → Cenarion Hold, Silithus |
 | `darkshore.png` | A measured walk south from Auberdine to the Grove of the Ancients |
 | `docks.png` | Auberdine's clustered piers; arrivals/departures and hover highlighting |
-| `stops.png` | A four-stop API route through Thelsamar (three places): the current stop at full strength and the later ones as faded as their lines, each on the addon's gold numbered marker with its action badge |
+| `stops.png` | A four-stop API route through Thelsamar (three places): the current stop at full strength and the later ones as faded as their lines, each on ForeverCore's gold numbered marker with its action badge |
 | `floors.png` | Westfall at Sentinel Hill: the current guide stop, Scout Riell at the top of the tower, wears the map's up arrow at its upper right, and its tooltip says "Above ground level" |
 | `tracker.png` | Capture 21's five Auberdine → Silithus steps, with the current totals header |
 | `detached.png` | The Journey tracker detached from the quest tracker, under its draggable "Forever tracker" heading |
@@ -37,9 +37,13 @@ pixels never enter product media.
 | `services.png` | The Nearby services tab in the world map's quest log, its bags tab selected: Auberdine's vendors for a level 15 hunter, each with the nearest NPC and walking time, and the arrows, shot, food and drink for that level |
 | `services_better.png` | The same tab for that hunter at level 25 with a bow: Dalmond still sells only Sharp Arrow, so a one-line row under Arrows offers Razor Arrow in Darnassus with its own time and the upgrade arrow on its icon; Auberdine already sells the best food and drink for 25 |
 | `services_search.png` | The same tab while `water` is typed into its search box: the nearest food and drink vendors selling something that matches, each row naming only the item that matched |
+| `services_roles.png` | The same tab's class, portal and battlemaster rows on their own: the class trainer and portal trainer in Darnassus, and the battlemaster there, each with the boat's time |
+| `town_services.png` | Stormwind City zoomed out: services of the same kind share that kind's tracking icon, and only different kinds of service that truly overlap share the addon's own market stall, with the group's services and the click journey hint in the tooltip |
+| `town_services_zoom.png` | The same city zoomed into the Trade District at full zoom: one pin per NPC, each wearing its own tracking icon (the repairer's anvil, the auctioneer's coins, the baker's bread and milk), with close pins spread so none is hidden |
 | `demo.gif` | Eight-second montage: route pulse/settle, tracker countdown and gliding compass; under 0.5 MB |
 
 `tools/screenshots_services.py` draws the services scene,
+`tools/screenshots_town.py` the two town services scenes, on `tools/screenshots_maps.py`'s shared map frame;
 `tools/screenshots_tracker.py` the detached tracker's heading, and
 `tools/screenshots_arrival.py` the arrival pin and its tinted compass.
 `tools/screenshots_floors.py` draws the stop above the ground at Sentinel Hill.
@@ -58,7 +62,7 @@ remains 8,000 ms. The animation uses fixed time steps, never the wall clock.
 - `UI/Strokes.lua` and `UI/Route.lua` supply 2-pixel cores in 4-pixel outlines, 4-pixel walk dots in 6-pixel rims 9 apart, colours,
   overview curves, fading continent-edge curves and the 1.2-second settling pulse.
   Outlines render below all cores. The destination uses the addon's own pin at 0.8 scale.
-- `UI/StopPin.lua` gives every numbered stop up to 25 the addon's own gold numbered marker at 24 units, the current
+- `UI/StopPin.lua` gives every numbered stop up to 25 ForeverCore's gold numbered marker at 24 units, the current
   stop at full strength and later stops at the 0.4 alpha they share with the lines leading to them, and keeps above 25
   the tracked quest's `UI-QuestPoi-QuestNumber-SuperTracked` button and the font number. Each stop keeps the caller's
   action badge over its lower right.
@@ -94,6 +98,15 @@ remains 8,000 ms. The animation uses fixed time steps, never the wall clock.
   holds no targets while it waits in the area. The stop is quest 878, *Tribes at War* in the
   Barrens, whose three objectives are the lines shown; the fixture names the kills rather than a
   recorded character's progress.
+- The two town services scenes are Stormwind City's services from QuestieDB 1.0.13's Forever bake
+  (`X-BUILD-COMMIT 0f7d8adc`), Npc spawns in area 1519 as map percent: the bank, inn, auction house, flight
+  master, weapons merchant, baker and trade supplier around the Trade District, and the stable master, hunter
+  trainer and engineering trainer in the Dwarven District. Clustering is `UI/Map.lua`'s transitive
+  `OverlapGroups` against the client's 1002 by 668 map canvas: same-service pins merge first, different services only
+  at the plain pin size, and full zoom splits every NPC, spreading the closest ones around their shared centre. A
+  same-service group wears `UI/NearbyGroups.lua`'s tracking icon, and a mixed group the addon's market stall. The
+  fixture is an Alliance character (Horde-only NPCs are hidden, neutrals kept) and Stormwind is a zone map, so the
+  pins belong there.
 
 ## Visual review and limits
 

@@ -151,7 +151,8 @@ near(afterTo.y, 0.52, "the replanned leg's end")
 frameEnd()
 local before = #heard
 equal(API.NavigateRoute("AGF", { { map = 1, x = 0.5, y = 0.54, title = "Elsewhere" } }), true, "the goal changes")
-settle()
+-- A moved goal keeps the plan and drawn route until the new plan lands, so let the search answer first.
+driver.path.settle()
 frameEnd()
 assert(#heard > before, "the replacement journey is heard")
 local changedFrom, changedTo = ends(API.Journey().legs[1], "the replacement plan")

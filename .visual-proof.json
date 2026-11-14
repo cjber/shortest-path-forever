@@ -1,56 +1,23 @@
 {
-  "input_digest": "2beef74cfc85da38be3e3915d89cef8520b14892f8c13483a456131203c02ca4",
-  "runtime_sha256": "2beef74cfc85da38be3e3915d89cef8520b14892f8c13483a456131203c02ca4",
-  "candidate": "aeeb7f8361f1bd59d3c33b3230350c17456ea32a1d99f66698c4bbbf7fd991f8",
-  "client_build": "1.60.1.70888 (Interface 16001)",
-  "source_commit": "132267da8d12a6bc0a4e1ea403e7e65252185f99",
+  "input_digest": "2ae4bc7a9f7d0b515ba9c29b256c817fcdd17f352b402a3e3bd1b74706bd344a",
+  "runtime_sha256": "2ae4bc7a9f7d0b515ba9c29b256c817fcdd17f352b402a3e3bd1b74706bd344a",
+  "candidate": "709d78e8d0538800daa43222c6ec491d6abb71d77f2adb713e5758b2ecda61f2",
+  "client_build": "1.60.1.70938 (Interface 16001)",
+  "tested_artifact": "source-tree",
+  "source_commit": "5273027ef31b00206d4b93cd817d1c377a8db749",
   "flows": [
     {
-      "name": "Nearby services list and search",
+      "name": "Guidance settings with the journey key",
       "steps": [
-        "Open map quest-log Nearby services tab in Lakeshire",
-        "Inspect list without overlapping rows",
-        "Search arrows and inspect Kimberly Hiett Sharp Arrow result",
-        "Clear search and collapse Vendors group, inspect Trainers"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "Nearby services tab visibility and restoration",
-      "steps": [
-        "Open native settings Map marks",
-        "Disable Show Nearby services tab",
-        "Reopen map and confirm only native and Adventure Guide tabs remain",
-        "Restore setting to enabled",
-        "Reload and reopen Nearby services, inspect restored list"
+        "/home/cjber/.cache/agent-scratch/sweep/wow/spf882/guidance-settings.lua"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/7fc2ed1d32eeb2320e3f50eb5fc4ca41/raw/8ba5f98093a1f7d29272a61d913ef08b30d69a83/spf762-services-fced13d.png",
-      "sha256": "0e319261b89d760f9b4f946e5176c794067ef3b1dfe91e816195f9da8692cfed"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/7fc2ed1d32eeb2320e3f50eb5fc4ca41/raw/8ba5f98093a1f7d29272a61d913ef08b30d69a83/spf762-search-fced13d.png",
-      "sha256": "be01879afa994bbbabe9beb9555e15e014c20d5c02942e26ce987b738320d7f5"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/7fc2ed1d32eeb2320e3f50eb5fc4ca41/raw/8ba5f98093a1f7d29272a61d913ef08b30d69a83/spf762-collapsed-fced13d.png",
-      "sha256": "c61d0c47f9ba65527ed77388ff76910cd9344914b4c810fa4b1d87a4a25b0d0d"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/7fc2ed1d32eeb2320e3f50eb5fc4ca41/raw/8ba5f98093a1f7d29272a61d913ef08b30d69a83/spf762-toggle-off-fced13d.png",
-      "sha256": "15e4078e45fc939ee915040c4a7a43c5aa0ef1b5244467262c7848a0d6ce03d6"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/7fc2ed1d32eeb2320e3f50eb5fc4ca41/raw/8ba5f98093a1f7d29272a61d913ef08b30d69a83/spf762-hidden-tab-fced13d.png",
-      "sha256": "4dcb463fa568b288785fd9ce4cad6eb1f60ee7a95d702f6d3e952060231d5eb7"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/7fc2ed1d32eeb2320e3f50eb5fc4ca41/raw/8ba5f98093a1f7d29272a61d913ef08b30d69a83/spf762-restored-tab-fced13d.png",
-      "sha256": "b09b8b4ea5990d60d6d2ddc49bab687ba83a8c3f4fcdf797e87d589ed8c74c46"
+      "url": "https://gist.githubusercontent.com/cjber/ef9dbbcaece652d96048a70aa3f78a35/raw/962c3236d19340aa3ff1d7fff1b6020924d2c093/1-guidance-settings-with-the-journey-key.png",
+      "sha256": "ec9a02bb4cd22dca7bda7f836ccf9f41780e4e5282922284c6859e5e03df6bee"
     }
   ]
 }

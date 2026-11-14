@@ -312,6 +312,61 @@ for _, owner in ipairs({ active[lineTemplate][1], mini }) do
 end
 assert(api.Cancel("Colour"))
 ns.SetRouteColor("gold")
+
+-- Hovering a stop shows the quest's own area, as the game's "..." pin did before the stop replaced it (#859).
+do
+	local highlighted, clears = nil, 0
+	WorldMapFrame.SetHighlightedQuestID = function(_, questID)
+		highlighted = questID
+	end
+	WorldMapFrame.ClearHighlightedQuestID = function()
+		highlighted, clears = nil, clears + 1
+	end
+	assert(api.NavigateRoute("Test", {
+		{ map = 1414, x = 0.51, y = 0.5, title = "Quest giver", questID = 4242 },
+		{ map = 1414, x = 0.55, y = 0.5, title = "Hand-in", handins = { 4243 } },
+	}))
+	settle()
+	local questPin, handinPin = active[goalTemplate][1], active[goalTemplate][2]
+	assert(questPin and handinPin, "both stops are drawn")
+	assert(questPin.stopQuests[1] == 4242, "the pin carries the stop's first quest")
+	questPin.scripts.OnEnter(questPin)
+	assert(highlighted == 4242, "hovering a stop highlights its quest's area")
+	questPin.scripts.OnLeave(questPin)
+	assert(highlighted == nil and clears == 1, "leaving clears the area again")
+	handinPin.scripts.OnEnter(handinPin)
+	assert(highlighted == 4243, "a hand-in stop highlights the quest handed in there")
+	-- The journey can end under the pointer, and its area goes with the pin.
+	assert(api.Cancel("Test"))
+	assert(highlighted == nil and clears == 2, "releasing the hovered pin clears the area")
+
+	-- The gamepad interface takes no map Lua from the addon (#158).
+	local gamepad = ns.GamepadUI
+	assert(api.NavigateRoute("Test", { { map = 1414, x = 0.51, y = 0.5, title = "Quest giver", questID = 4242 } }))
+	settle()
+	local gamepadPin = active[goalTemplate][1]
+	ns.GamepadUI = function()
+		return true
+	end
+	gamepadPin.scripts.OnEnter(gamepadPin)
+	assert(highlighted == nil and clears == 2, "under the gamepad interface nothing is highlighted")
+	gamepadPin.scripts.OnLeave(gamepadPin)
+	assert(highlighted == nil and clears == 2, "and nothing is cleared")
+	ns.GamepadUI = gamepad
+	assert(api.Cancel("Test"))
+
+	-- A stop that names no quest has nothing to show.
+	assert(api.NavigateRoute("Test", { { map = 1414, x = 0.51, y = 0.5, title = "Plain" } }))
+	settle()
+	local plainPin = active[goalTemplate][1]
+	assert(plainPin.stopQuests == nil, "a stop with no quest carries none")
+	plainPin.scripts.OnEnter(plainPin)
+	plainPin.scripts.OnLeave(plainPin)
+	assert(highlighted == nil and clears == 2, "hovering a stop with no quest highlights nothing")
+	assert(api.Cancel("Test"))
+	WorldMapFrame.SetHighlightedQuestID, WorldMapFrame.ClearHighlightedQuestID = nil, nil
+end
+
 assert(#errors == 0, table.concat(errors, "\n"))
 print("route_ui: shared stop button, pooled stroke pairs, minimap stop mark and hovered transport routes ok")
 ]]))()

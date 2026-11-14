@@ -175,10 +175,12 @@ ns.PointCastPrompt = prompt
 driver.update(0.1)
 assert(API.Guidance(), "guidance returns after the cast")
 
--- guideStops only collapses what the arrow draws. The API keeps the canonical source walk and names the target
--- inside it, and the switch is a guidance change.
+-- guideStops changes only the point the map and compass mark, never the walk the arrow follows or the point the API
+-- names, so it is not a guidance change.
 driver.move({ map = 1, x = 0, y = 0, z = 0 })
 driver.update(0.1)
+-- Resuming at the nearest bend is itself a guidance change; hear that first.
+ns.RefreshGuideStops()
 frameEnd()
 local before = #heard
 ns.db.guideStops = true
@@ -186,13 +188,13 @@ ns.RefreshGuideStops()
 frameEnd()
 local collapsed = API.Guidance()
 equal(#collapsed.waypoints, 4, "the full source walk survives guideStops")
-equal(collapsed.index, 4, "the target is the source walk's endpoint")
-near(collapsed.point.x, uiX(1000, 0), "the endpoint is the next point")
-assert(#heard > before and heard[#heard].guidance, "the guideStops switch is a guidance change")
+equal(collapsed.index, 2, "the target stays the next bend")
+near(collapsed.point.x, uiX(40, 0), "the point stays the next bend")
+equal(#heard, before, "the step-end switch is not a guidance change")
 ns.db.guideStops = false
 ns.RefreshGuideStops()
 frameEnd()
-equal(API.Guidance().index, 2, "back to the nearest bend")
+equal(API.Guidance().index, 2, "the nearest bend is unchanged")
 
 -- A measured walk replacing a provisional one changes the source and says so.
 local measured = { { map = 1, x = 0, y = 0 }, { map = 1, x = 1000, y = 0 } }

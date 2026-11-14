@@ -8,8 +8,8 @@ local L = ns.L
 
 -- TomTom's /way: `/way [#mapID] [zone] x y [title]`, with x and y as percentages of the map. With no map ID and no
 -- zone, the point is on the map you stand on. A decimal comma reads as a point, and a comma or point straight after
--- x separates it from y, as TomTom reads them. The command plans a journey to that spot, the same way a Shift-click
--- on the world map does. /way is registered only while TomTom has not loaded (nor is enabled to load after
+-- x separates it from y, as TomTom reads them. The command plans a journey to that spot, the same way a map click
+-- with the journey key held does. /way is registered only while TomTom has not loaded (nor is enabled to load after
 -- Shortest Path) and no other addon has taken it; `/path way` always works.
 
 -- Zone names as the client spells them, folded: the suite's one fold from Forever Core's Core/Text.lua (lower case,
@@ -247,7 +247,7 @@ function ns.Way(message)
 		return
 	end
 	if not ns.db.journey then
-		ns.Print(L["Journeys are off. Turn on Shift-click to plan journeys in settings."])
+		ns.Print(L["Journeys are off. Turn on Click the map to plan journeys in settings."])
 		return
 	end
 	local map, x, y, title, err = ns.ParseWay(message)

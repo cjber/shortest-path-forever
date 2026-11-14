@@ -111,7 +111,7 @@
 ---@field stop? boolean -- what CurrentStop answers changed: an addon's route started, moved on to another stop or ended
 ---@field leg? boolean -- the leg under way moved on without the goal changing: the player or an owner skipped it
 ---@field guidance? boolean -- the guidance point changed: a bend passed within the leg, the leg or its source walk
---- replaced, the guideStops switch changed what the arrow draws, or guidance started or ended
+--- replaced, or guidance started or ended
 ---@field replan? boolean -- the plan was worked out again: the first plan is ready, a new route replaced the
 --- followed one, or its walks were redrawn; read Journey() again, since its legs' from and to may have changed
 ---@field active? boolean -- what Active answers changed

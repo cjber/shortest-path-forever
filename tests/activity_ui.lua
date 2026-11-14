@@ -60,7 +60,7 @@ assert(activeTickers() == 0)
 local dock = ns.Docks[1]
 posX, posY, posZ, posMap = dock.x, dock.y, dock.z or 0, dock.map
 fireEvent("ZONE_CHANGED")
-ns.Timetable.Sighted(241, { epoch = ns.NowMs(), seen = GetServerTime(), source = "you" })
+ns.Timetable.Sighted(241, { epoch = ns.NowMs(), seen = GetServerTime() })
 advance(2)
 assert(activeTickers() == 1 and tracker.blocks[1].key == "dock1")
 local block = tracker:GetExistingBlock("dock1")
@@ -147,7 +147,7 @@ assert(context["Boat to Booty Bay"] and contextScroll == 400, "a hub's Ends menu
 local docks = ns.Canvas.Pools(WorldMapFrame)[template]
 local acquisitions, acquire = 0, docks.Acquire
 docks.Acquire = function(self, ...) acquisitions = acquisitions + 1 return acquire(self, ...) end
-ns.Timetable.Sighted(241, { epoch = ns.NowMs(), seen = GetServerTime(), source = "you" })
+ns.Timetable.Sighted(241, { epoch = ns.NowMs(), seen = GetServerTime() })
 assert(acquisitions == 0, "sightings must not rebuild unrelated map layers")
 docks.Acquire = nil
 setMapShown(false)

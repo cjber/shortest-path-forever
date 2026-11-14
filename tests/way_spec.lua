@@ -145,7 +145,7 @@ for _, bad in ipairs({ "", "45", "abc def", "101 50", "50 -1", "#2 50", "#2 x 50
 	equal(type(way.err), "string", "a bad line says why: " .. bad)
 end
 
--- /way plans a journey to the spot through the map's own Shift-click path.
+-- /way plans a journey to the spot through the map's own journey click.
 ns.Way("Westfall 56.3 47.6 Sentinel Hill")
 driver.path.settle()
 equal(ns.HasJourney(), true, "/way starts a journey")
@@ -157,7 +157,7 @@ equal(printed[#printed], "no zone called Atlantis.", "and says why")
 ns.db.journey = false
 ns.Way("45 67")
 equal(ns.HasJourney(), false, "journeys switched off start nothing")
-equal(printed[#printed]:find("Shift-click to plan journeys", 1, true) ~= nil, true, "and names the setting")
+equal(printed[#printed]:find("Click the map to plan journeys", 1, true) ~= nil, true, "and names the setting")
 ns.db.journey = true
 
 -- /way is claimed as Shortest Path loads, while it is free, and given up at login to TomTom or another addon.

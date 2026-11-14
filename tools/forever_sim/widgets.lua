@@ -186,6 +186,7 @@ function M.build(sim)
 	local S = setmetatable({}, { __mode = "k" }) -- object -> state
 	local W = { state = S, all = {}, byType = {}, methods = {}, metas = {} }
 	sim.widgets = W
+	W.isA = isA
 	local layoutGen = 0
 	local function dirty()
 		layoutGen = layoutGen + 1
@@ -652,6 +653,9 @@ function M.build(sim)
 		local s = {
 			kind = kind,
 			id = objectCount,
+			-- The execution that created the object, as the client taints a frame created by addon code. A frame
+			-- an addon creates is the addon's, whether its Lua or its XML made it.
+			creator = Taint.current,
 			points = {},
 			aspects = {},
 			shown = true,
@@ -971,6 +975,23 @@ function M.build(sim)
 	end
 	local function getHeight(self)
 		local s = st(self)
+		-- A FontString with no explicit height takes its text height, even when a RIGHT or CENTER anchor places it
+		-- vertically. Only TOP and BOTTOM together stretch it, as the client does.
+		if s.kind == "FontString" and (Secret.unwrap(s.height) or 0) <= 0 then
+			local hasTop, hasBottom = false, false
+			for _, p in ipairs(s.points) do
+				local vertical = POINTS[p.point] and POINTS[p.point][2]
+				if vertical == "TOP" then
+					hasTop = true
+				elseif vertical == "BOTTOM" then
+					hasBottom = true
+				end
+			end
+			if not (hasTop and hasBottom) then
+				local _, h = textSize(s)
+				return h
+			end
+		end
 		local r = #s.points > 1 and rect(self)
 		if r then
 			return r[4] / effectiveScale(self)
@@ -1344,8 +1365,29 @@ function M.build(sim)
 	impl.Frame.SetAttributeNoHandler = function(self, name, value)
 		st(self).attributes[name] = value
 	end
-	impl.Frame.GetAttribute = function(self, name)
-		return st(self).attributes[name]
+	-- SecureTemplates reads a modified attribute with GetAttribute(prefix, name, suffix), the client's secure form.
+	-- The client returns the first existing of prefix..name..suffix, *name..suffix, prefix..name*, *name*, then name.
+	-- The plain GetAttribute(name) reads the exact key, as addon code does.
+	impl.Frame.GetAttribute = function(self, name, attributeName, suffix)
+		local attributes = st(self).attributes
+		if attributeName == nil then
+			return attributes[name]
+		end
+		local prefix = tostring(name)
+		local key = tostring(attributeName)
+		suffix = tostring(suffix or "")
+		for _, candidate in ipairs({
+			prefix .. key .. suffix,
+			"*" .. key .. suffix,
+			prefix .. key .. "*",
+			"*" .. key .. "*",
+			key,
+		}) do
+			local value = attributes[candidate]
+			if value ~= nil then
+				return value
+			end
+		end
 	end
 	impl.Frame.CreateTexture = function(self, name, layer, template, sublevel)
 		return sim.templates.createRegion("Texture", name, self, template, layer, sublevel)
@@ -2270,25 +2312,35 @@ function M.build(sim)
 		return out
 	end
 
-	-- The wiki's classes for this method, overridden by observed client behaviour for the method's name; a name with
-	-- no applying class keeps the pre-class combat-only rule.
-	local function restrictedNow(kind, name)
-		local classes
-		if sim.restrictionClasses then
-			classes = sim.restrictionClasses(kind .. "_" .. name)
-		else
-			local overrides = sim.restrictionOverrides or {}
-			local override = overrides[name] or overrides[kind .. "_" .. name]
-			if override then
-				classes = type(override.class) == "table" and override.class or { override.class }
-			elseif sim.docs and sim.docs.restrictionClasses then
-				classes = sim.docs.restrictionClasses(kind .. "_" .. name)
-			end
+	-- The classes an observed override gives a widget method (keyed by the method's own name, as the override table
+	-- documents), or nil.
+	local function overrideClasses(name)
+		local override = (sim.restrictionOverrides or {})[name]
+		if not override then
+			return nil
 		end
+		return type(override.class) == "table" and override.class or { override.class }
+	end
+
+	-- The pin's classes for a method: the documented system spelling the wiki writes (`SimpleButtonAPI_SetEnabled`),
+	-- then a block the live client recorded under the method's own name (`SetEnabled`, merged by
+	-- `fetch.py --refresh-restrictions --probe`).
+	local function pinnedClasses(system, name)
+		local d = sim.docs
+		if not (d and d.restrictionClasses) then
+			return nil
+		end
+		local spelled = system and d.restrictionClasses(system .. "_" .. name) or nil
+		return spelled or d.restrictionClasses(name)
+	end
+
+	-- The observed override first, then the pin; a name with no applying class keeps the pre-class combat-only rule.
+	local function restrictedNow(system, name)
+		local classes = overrideClasses(name) or pinnedClasses(system, name)
 		return Docs.applies(classes or { "untagged" }, sim.combatLockdown, sim.hardwareInput)
 	end
 
-	local function wrapMethod(kind, name, fdoc, body)
+	local function wrapMethod(kind, system, name, fdoc, body)
 		if not fdoc then
 			return body
 		end
@@ -2297,7 +2349,7 @@ function M.build(sim)
 		local whenAnchoring = fdoc.SecretWhenAnchoringSecret
 		local secretArgs = fdoc.SecretArguments
 		local protected = fdoc.IsProtectedFunction
-		local restricted = fdoc.HasRestrictions
+		local restricted = fdoc.HasRestrictions or overrideClasses(name) ~= nil or pinnedClasses(system, name) ~= nil
 		local nargs = fdoc.Arguments and #fdoc.Arguments or 0
 		local plainBody = not addAspects
 			and not returnAspects
@@ -2331,7 +2383,7 @@ function M.build(sim)
 				sim.blocked(self, name)
 				return
 			end
-			if restricted and Taint.current and restrictedNow(kind, name) then
+			if restricted and Taint.current and restrictedNow(system, name) then
 				sim.blocked(self, name)
 				return
 			end
@@ -2402,7 +2454,7 @@ function M.build(sim)
 		for _, sys in ipairs(TYPES[kind][2]) do
 			local d = docs.widgets[sys]
 			for _, f in ipairs(d and d.Functions or {}) do
-				out[f.Name] = f
+				out[f.Name] = { doc = f, system = sys }
 			end
 		end
 		return out
@@ -2416,10 +2468,10 @@ function M.build(sim)
 			t = TYPES[t][1]
 		end
 		-- The most derived implementation and documentation entry win.
-		local bodies, fdocs, owner = {}, {}, {}
+		local bodies, fdocs, systems, owner = {}, {}, {}, {}
 		for _, t2 in ipairs(chain) do
-			for name, fdoc in pairs(docMethods(t2)) do
-				fdocs[name] = fdoc
+			for name, entry in pairs(docMethods(t2)) do
+				fdocs[name], systems[name] = entry.doc, entry.system
 				owner[name] = owner[name] or t2
 			end
 			for name, body in pairs(impl[t2]) do
@@ -2430,7 +2482,7 @@ function M.build(sim)
 		local methods = {}
 		for name, t2 in pairs(owner) do
 			local fdoc = fdocs[name]
-			methods[name] = wrapMethod(t2, name, fdoc, bodies[name] or genericMethod(name, fdoc))
+			methods[name] = wrapMethod(t2, systems[name], name, fdoc, bodies[name] or genericMethod(name, fdoc))
 		end
 		return methods
 	end

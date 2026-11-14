@@ -42,6 +42,8 @@ L["Avoid zones far above my level"] = "避開遠高於我等級的區域"
 L["Avoids %s (level %s)"] = "繞開%s（等級 %s）"
 L["Bags"] = "背包"
 L["Bank"] = "銀行"
+L["Battlemaster"] = "戰場指揮官"
+L["Hovering a quest stop shows the quest's area."] = "滑鼠游標停在任務站點上會顯示該任務的區域。" -- mt
 L["Boat and Zeppelin Routes"] = "船隻與飛艇航線"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"船隻與飛艇航線，在你指向碼頭時繪製。"
@@ -53,6 +55,7 @@ L["Bullets"] = "子彈"
 L["Cast %s"] = "施放%s"
 L["Class trainer"] = "職業訓練師"
 L["Clear journey"] = "清除旅程"
+L["Click to plan a journey here."] = "點擊以規劃前往此處的旅程。"
 L["Click to show %s"] = "點擊顯示%s"
 L["Click to show where they go"] = "點擊查看目的地"
 L["Compass background"] = "羅盤背景"
@@ -88,8 +91,8 @@ L["Forever addons"] = "Forever插件"
 L["Friendly nameplates must be on to see them."] = "需要開啟友方姓名板才能看到。"
 L["Go through to %s"] = "穿過前往%s"
 L["Guidance"] = "引導"
-L["Guide marks the next boat, lift, flight master or your destination, not each turn of the walk on the way."] =
-	"引導會標記下一艘船、升降梯、飛行管理員或你的目的地，而不是步行途中的每個轉彎。"
+L["Guide marks where each step ends on the map, not each turn of the walk. The arrow still follows the walk."] =
+	"引導會在地圖上標記每一步的終點，而不是步行途中的每個轉彎。箭頭仍會沿著步行路線指引。"
 L["Guide me"] = "為我引路"
 L["Guidelime"] = "Guidelime"
 L["Horde"] = "部落"
@@ -101,8 +104,6 @@ L["Interface"] = "介面"
 L["Journey"] = "旅程"
 L["Journey  %s · %s"] = "旅程  %s · %s"
 L["Journey to %s"] = "前往%s的旅程"
-L["Journeys are off. Turn on Shift-click to plan journeys in settings."] =
-	"旅程已關閉。請在設定中開啟「Shift點擊規劃旅程」。"
 L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."] =
 	"旅程以及其他插件從這裡算起的估計，可以從爐石或傳送開始，並計入冷卻時間。"
 L["Keep journeys after a reload"] = "重載後保留旅程"
@@ -110,8 +111,7 @@ L["Keeps the shared Forever tracker where you put it. The grip at its top no lon
 	"將共用的 Forever 追蹤器保持在您放置的位置。頂部的拖曳握把不再移動它。"
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
 	"以公尺標註距離，與遊戲採用公制的語言客戶端一致。數字仍為遊戲自身的碼數。"
-L["Last seen %d min ago by another player"] = "%d分鐘前由其他玩家最後看到"
-L["Last seen %d min ago by you"] = "%d分鐘前由你最後看到"
+L["Last seen %s ago"] = "%s前最後看到" -- mt
 L["Legacy Forever shows the Legacy challenges this counts toward."] =
 	"Legacy Forever會顯示此項計入的傳承挑戰。"
 L["Let guides set TomTom waypoints"] = "允許指南設定TomTom路徑點"
@@ -163,6 +163,7 @@ L["Play a sound when you reach the goal"] = "抵達目標時播放音效"
 L["Play a sound with alerts"] = "提醒時播放音效"
 L["Plays even with the game in the background."] = "遊戲在背景時也會播放。"
 L["Portal to %s"] = "前往%s的傳送門"
+L["Portal trainer"] = "傳送門訓練師"
 L["Portals"] = "傳送門"
 L["Reagents"] = "材料"
 L["Repair"] = "修理"
@@ -173,19 +174,14 @@ L["Resume RestedXP guide"] = "繼續RestedXP指南"
 L["Resume guide"] = "繼續指南"
 L["Return to your corpse"] = "返回你的屍體"
 L["Right-click to clear"] = "右鍵點擊清除"
+L["Route to the focused quest"] = "前往目前聚焦的任務"
 L["S"] = "南"
 L["Scales the arrow and the cast prompt."] = "調整箭頭和施法提示的大小。"
 L["Scales the compass. 100% matches the game's own art."] = "調整羅盤大小。100%與遊戲本身的美術一致。"
 L["Scales the shared Forever tracker. 100% matches the game's own tracker."] =
 	"調整共用Forever追蹤器的大小。100%與遊戲本身的追蹤器一致。"
 L["Search services and goods"] = "搜尋服務和物品"
-L["Sends and receives sighting times over guild, party and at the dock. No chat messages are shown."] =
-	"透過公會、隊伍和在碼頭收發目擊時間。不會顯示聊天訊息。"
 L["Services"] = "服務"
-L["Share departure times"] = "共用出發時間"
-L["Shift-click the world map or the minimap to plan a journey there."] =
-	"Shift點擊世界地圖或小地圖以規劃前往該處的旅程。"
-L["Shift-click to plan journeys"] = "Shift點擊規劃旅程"
 L["Shortest Path report"] = "Shortest Path報告"
 L["Show boats and zeppelins"] = "顯示船隻與飛艇"
 L["Show direction arrow"] = "顯示方向箭頭"
@@ -214,6 +210,8 @@ L["Sizes boat, lift, tram and portal icons on the world map."] =
 L["Sizes flight master icons on the world map."] = "調整世界地圖上飛行管理員圖示的大小。"
 L["Sizes transport icons on the minimap."] = "調整小地圖上交通圖示的大小。"
 L["Stable master"] = "獸欄管理員"
+L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no map click. A guide addon's own journey is left alone."] =
+	"當您聚焦任務或放置遊戲地圖標記時開始旅程，因此控制器無需 地圖點擊。指南插件的自有旅程不受影響。"
 L["Stop %d of %d"] = "第%d站，共%d站" -- mt
 L["Stop %d of %d: %s"] = "第%d站，共%d站：%s"
 L["Suggest quests for my level: Adventure Guide Forever"] = "推薦適合我等級的任務：Adventure Guide Forever"
@@ -382,7 +380,7 @@ L["Show boat, lift and tram departures in the tracker"] = "在追蹤器中顯示
 L["Hide RestedXP's arrow"] = "隱藏 RestedXP 的箭頭" -- mt
 L["Hide departures"] = "隱藏班次"
 
--- Travel stats and the shared Forever Leaderboards.
+-- Travel stats.
 
 L["Follow roads"] = "沿道路行走" -- mt
 L["Walks keep to roads and paved streets where that adds less than half again to the walk. Roads painted with a zone's plain dirt are not known."] =
@@ -417,7 +415,6 @@ L["Dugi Guides"] = "Dugi Guides" -- mt
 L["Dungeons and raids"] = "地城與團隊副本" -- mt
 L["Town services"] = "城鎮服務" -- mt
 L["Town services on the world map"] = "世界地圖上的城鎮服務" -- mt
-L["Town services show on the world map."] = "城鎮服務現在顯示在世界地圖上。" -- mt
 L["Capitals only"] = "僅主城" -- mt
 L["Capitals and important services"] = "主城和重要服務" -- mt
 L["All towns"] = "所有城鎮" -- mt
@@ -426,3 +423,22 @@ L["One icon per town, or one per service as you zoom in."] =
 	"縮小顯示每個城鎮一個圖示，放大後每個服務一個圖示。" -- mt
 L["Show Nearby services tab"] = "顯示附近服務分頁"
 L["The Nearby services tab in the world map and quest log."] = "世界地圖與任務日誌中的附近服務分頁。"
+L["Ammunition"] = "彈藥" -- mt
+L["Bags and trade supplies"] = "背包和貿易品" -- mt
+L["Food and drink"] = "食物和飲料" -- mt
+L["Profession trainers"] = "專業訓練師" -- mt
+L["Hide game quest markers"] = "隱藏遊戲的任務標記" -- mt
+L["Off, the game's own quest markers stay beside your journey's pins, showing the other places a quest can be done."] =
+	"關閉後，遊戲自帶的任務標記會留在旅程標記旁邊，讓你看見任務還能在哪些地方完成。" -- mt
+L["Shift"] = "Shift" -- mt
+L["Alt"] = "Alt" -- mt
+L["Click the map to plan journeys"] = "點擊地圖規劃旅程" -- mt
+L["Hold your journey key and click the world map or the minimap to plan a journey there."] =
+	"按住旅程按鍵並點擊世界地圖或小地圖，即可規劃前往該處的旅程。" -- mt
+L["Journeys are off. Turn on Click the map to plan journeys in settings."] =
+	"旅程已關閉。請在設定中開啟「點擊地圖規劃旅程」。" -- mt
+L["Key to plan a journey"] = "規劃旅程的按鍵" -- mt
+L["The key you hold to plan a journey from the world map or the minimap."] =
+	"在世界地圖或小地圖上規劃旅程時按住的按鍵。" -- mt
+L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
+	"在 Questie 圖示上，Shift 點擊仍歸 Questie 所有；Alt 點擊則可用任一按鍵規劃前往該處的旅程。" -- mt

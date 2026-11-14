@@ -355,6 +355,7 @@ for _, file in ipairs({
 	"UI/NearbyGroups.lua",
 	"UI/NearbyQuestie.lua",
 	"UI/NearbyEntrances.lua",
+	"UI/NearbyRoles.lua",
 	"UI/Nearby.lua",
 }) do
 	setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
@@ -432,6 +433,12 @@ assert(
 menuEntry(minimap.children, "Class trainer").callback()
 assert(navigated[#navigated][5] == "Warrior trainer", "a service chosen from the minimap routes to the nearest")
 assert(mapOpens == opensBefore, "the minimap's menu routes without opening the world map")
+for _, item in ipairs(groups) do
+	assert(
+		type(item.tracking) == "string" and item.tracking ~= "",
+		"every group carries the tracking atlas its world map pin wears: " .. item.key
+	)
+end
 local places = ns.NearbyServices.Index()
 local function group(key)
 	for _, item in ipairs(groups) do
@@ -645,6 +652,8 @@ local function fresh(questie, away, L)
 		Drink = ns.Drink,
 		ProfessionTrainers = ns.ProfessionTrainers,
 		ClassTrainers = ns.ClassTrainers,
+		PortalTrainers = ns.PortalTrainers,
+		Battlemasters = ns.Battlemasters,
 		Init = function(fn)
 			starts[#starts + 1] = fn
 		end,
@@ -775,7 +784,7 @@ do
 	driver.move({ map = 1, x = auberdine.x, y = auberdine.y, z = 0 })
 	-- The Teldrassil boat is at Auberdine's dock: one boat ride away is what the planner should see.
 	worldNs.serverTime = 0
-	assert(worldNs.Timetable.Sighted(293, { epoch = -206368, seen = 0, source = "you" }))
+	assert(worldNs.Timetable.Sighted(293, { epoch = -206368, seen = 0 }))
 	local travelTimers = {}
 	travelEnv.C_Timer = {
 		After = function(_, fn)
@@ -874,6 +883,7 @@ do
 		"UI/NearbyGroups.lua",
 		"UI/NearbyQuestie.lua",
 		"UI/NearbyEntrances.lua",
+		"UI/NearbyRoles.lua",
 		"UI/Nearby.lua",
 	}) do
 		driver.load(file)

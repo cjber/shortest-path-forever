@@ -8,17 +8,17 @@ local L = ns.L
 
 -- A thin ribbon of the game's own parchment ticks across the top of the screen: no panel, no border, the
 -- ticks and their letters fading out towards its ends, the destination drawn as the addon's own gold goal pin.
-local WIDTH, HEIGHT, POLL_EVERY = 360, 60, 0.1
+local WIDTH, HEIGHT, POLL_EVERY = 360, 65, 0.1
 local TURN, EASE, SETTLED = 2 * math.pi, 18, 0.001
 local OVERLAP = 6
 -- Pixels over which a tick fades from full strength to nothing at the ribbon's end.
 local FADE = 80
 -- While the player stands in an arrived stop's area the ribbon tints, quietly, with no glow: the same parchment,
 -- nudged towards the green of a finished objective.
-local TICK_COLOR = { 0.72, 0.67, 0.55, 0.7 }
-local ARRIVED_TICK_COLOR = { 0.6, 0.76, 0.58, 0.7 }
-local CENTER_COLOR = { 1, 0.82, 0, 0.85 }
-local ARRIVED_CENTER_COLOR = { 0.62, 0.9, 0.55, 0.85 }
+local TICK_COLOR = { 0.72, 0.67, 0.55, 0.9 }
+local ARRIVED_TICK_COLOR = { 0.6, 0.76, 0.58, 0.9 }
+local CENTER_COLOR = { 1, 0.82, 0, 1 }
+local ARRIVED_CENTER_COLOR = { 0.62, 0.9, 0.55, 1 }
 ---@class SPFCompassFrame : Frame
 ---@field ticks SPFCompassTick[]
 ---@field markers SPFCompassMarker[]
@@ -133,7 +133,10 @@ local function Place(marker, x, y, map, facing, index)
 			return
 		end
 	end
-	marker:SetPoint("CENTER", frame, "CENTER", marker.offset, -6)
+	-- The row hangs low enough that the 14-unit letters under the major ticks clear its top edge: the ticks and their
+	-- gap end 20 units under the frame's top and the letters at 34, so the tallest marker (Bend, 20) is centred at 45,
+	-- a unit clear. The distance, 2 under that marker, ends 2 units past the frame, which the clamp keeps on screen.
+	marker:SetPoint("CENTER", frame, "CENTER", marker.offset, -12.5)
 	marker:Show()
 	marker.visible = true
 end
@@ -144,7 +147,7 @@ local function Render(x, y, map)
 		local visible = math.abs(offset) <= WIDTH / 2
 		-- A smooth ramp rather than a cutoff: the ribbon has no edges of its own, so it dissolves into the world.
 		local edge = math.max(0, math.min(1, (WIDTH / 2 - math.abs(offset)) / FADE))
-		local alpha = edge * edge * (tick.major and 0.85 or 0.5)
+		local alpha = edge * edge * (tick.major and 1 or 0.65)
 		tick:SetShown(visible)
 		if visible then
 			tick:SetPoint("TOP", frame, "TOP", offset, -6)
@@ -406,22 +409,24 @@ local function Create()
 		local tick = frame:CreateTexture(nil, "ARTWORK")
 		tick.angle = index * TURN / 24
 		tick.major = index % 6 == 0
-		-- The parchment gold the map's own marks are drawn in, faint enough to read as a compass, not a UI.
+		-- The parchment gold the map's own marks are drawn in, bold enough to read over stone or snow, with no
+		-- panel behind it.
 		tick:SetColorTexture(TICK_COLOR[1], TICK_COLOR[2], TICK_COLOR[3], TICK_COLOR[4])
-		tick:SetSize(1, tick.major and 5 or 3)
+		tick:SetSize(2, tick.major and 10 or 6)
 		if tick.major then
-			-- The game's own label font: the parchment gold of its map labels, with the shadow that keeps
-			-- them legible over snow or sand, instead of a panel behind them (FontStyles.xml).
-			tick.label = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+			-- The game's own medium label font: Friz 14 in the gold it gives its interface text, with the shadow
+			-- that keeps the letters legible over snow or sand, instead of a panel behind them (FontStyles.xml,
+			-- SystemFont_Shadow_Med3).
+			tick.label = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalMed3")
 			tick.label:SetText(directions[index / 6 + 1])
-			tick.label:SetPoint("TOP", tick, "BOTTOM", 0, -1)
+			tick.label:SetPoint("TOP", tick, "BOTTOM", 0, -4)
 		end
 		frame.ticks[#frame.ticks + 1] = tick
 	end
 	frame.Center = frame:CreateTexture(nil, "OVERLAY")
 	-- Straight ahead of you, in the gold the game marks your own place in the world with.
 	frame.Center:SetColorTexture(CENTER_COLOR[1], CENTER_COLOR[2], CENTER_COLOR[3], CENTER_COLOR[4])
-	frame.Center:SetSize(1, 6)
+	frame.Center:SetSize(2, 12)
 	frame.Center:SetPoint("TOP", frame, "TOP", 0, -3)
 	for _, name in ipairs({ "Goal", "Stop", "Next", "Bend" }) do
 		---@class SPFCompassMarker : Texture

@@ -13,9 +13,6 @@ end
 ns.PIN_FILE = "Interface\\AddOns\\ShortestPathForever\\media\\Pin"
 -- The bronze twin of the goal pin, media/PinInactive.tga, for a goal the journey does not currently track.
 ns.PIN_INACTIVE_FILE = "Interface\\AddOns\\ShortestPathForever\\media\\PinInactive"
--- The numbered markers, media/Numbers/<n>.tga: gold notched rings with the numeral painted in. Stops and turns
--- above this many keep the font.
-local MAX_NUMBER_ART = 25
 
 ---@class SPFArt
 local Art = {}
@@ -23,6 +20,10 @@ ns.Art = Art
 
 -- The addon's own zeppelin art (media/Zeppelin.tga): the client has no zeppelin icon (docs/asset-registry.md).
 Art.ZEPPELIN_FILE = "Interface\\AddOns\\ShortestPathForever\\media\\Zeppelin"
+
+-- The addon's own town services group pin (media/TownGroup.tga): a market stall for the pin that stands for more than
+-- one NPC, since no one service's icon can speak for the rest.
+Art.TOWN_GROUP_FILE = "Interface\\AddOns\\ShortestPathForever\\media\\TownGroup"
 
 -- The client art each journey mode wears, the same choice the map's own pins make (UI/Map.lua's SetTransportIcon,
 -- UI/Looks.lua's flight master), so a mode looks alike on the map, the minimap and the tracker. Each is looked up in
@@ -69,14 +70,13 @@ function Art.ModeAtlas(mode, nodeFaction)
 	return MODE_ATLAS[mode]
 end
 
--- The numbered marker for `number`, or nil when there is no art for it.
+-- The step's numbered marker, ForeverCore's own art (ForeverCore.Art.Marker): gold notched rings with the numeral
+-- painted in, the same step art every Forever addon draws. Stops and turns above 25, or an impossible number, keep
+-- the font.
 ---@param number integer?
 ---@return string?
 function ns.NumberFile(number)
-	if type(number) ~= "number" or number < 1 or number > MAX_NUMBER_ART or number % 1 ~= 0 then
-		return nil
-	end
-	return string.format("Interface\\AddOns\\ShortestPathForever\\media\\Numbers\\%d", number)
+	return ForeverCore.Art.Marker(number)
 end
 
 ---@type table<string, AtlasInfo|false>

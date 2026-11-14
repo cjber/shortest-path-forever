@@ -6,6 +6,43 @@ if ns.broken then
 end
 local L = ns.L
 
+-- The keys a journey click can wait for, in the order the settings list them. Shift has always planned a journey;
+-- Alt is for players whose other addons take Shift, Questie's untrack among them.
+ns.JourneyKeys = { "shift", "alt" }
+
+-- What each key is called in the settings row. English stands in when a locale has no translation, as every
+-- phrase does.
+local KEY_NAMES = {
+	shift = L["Shift"],
+	alt = L["Alt"],
+}
+
+-- The saved key, and never an unknown one: an older or hand-edited setting plans journeys with Shift.
+---@return string
+local function JourneyKey()
+	local key = ns.db and ns.db.journeyKey
+	if key == "alt" then
+		return key
+	end
+	return "shift"
+end
+
+-- Whether the key chosen in Guidance is held: the one gesture behind every map click that plans a journey.
+---@return boolean
+function ns.JourneyKeyDown()
+	if JourneyKey() == "alt" then
+		return IsAltKeyDown() == true
+	end
+	return IsShiftKeyDown() == true
+end
+
+-- What the chosen key is called, for the settings row.
+---@param key? string
+---@return string
+function ns.JourneyKeyName(key)
+	return KEY_NAMES[key or JourneyKey()] or KEY_NAMES.shift
+end
+
 -- The bindings UI reads these names from the global namespace. They are set here from L so each locale translates
 -- them with the rest of the addon; Bindings.xml lists the hidden buttons they click.
 _G.BINDING_HEADER_SHORTESTPATHFOREVER = L["Shortest Path Forever"]
@@ -140,7 +177,7 @@ end
 
 local function PlanQuest(questID, clickedMap, isWaypoint)
 	if not ns.db.journey then
-		ns.Print(L["Journeys are off. Turn on Shift-click to plan journeys in settings."])
+		ns.Print(L["Journeys are off. Turn on Click the map to plan journeys in settings."])
 		return false
 	end
 	-- Forever takes questID and ignoreWaypoint; Ketho's Wiki stub incorrectly has zero parameters.
@@ -202,7 +239,7 @@ local function OnZone(point)
 	return not info or info.mapType > Enum.UIMapType.Continent
 end
 
--- Shift+click inserts a link into an open chat box; leave that click to Blizzard's own handlers.
+-- A modified click inserts a link into an open chat box; leave that click to Blizzard's own handlers.
 -- Both globals may be absent (older builds, the headless harness); guard the call so a missing
 -- one never errors inside a click handler.
 local function ChatBoxOpen()
@@ -210,7 +247,7 @@ local function ChatBoxOpen()
 	return active ~= nil and active() ~= nil
 end
 
--- A spot on a map, as a Shift-click on the world map or /way names it, with what to call it if anything.
+-- A spot on a map, as a map click with the journey key held or /way names it, with what to call it if anything.
 ---@param uiMapID integer
 ---@param x number
 ---@param y number
@@ -228,11 +265,11 @@ function ns.JourneyToMapPoint(uiMapID, x, y, label)
 end
 
 -- The client's own map pin (the user waypoint a player drops from the map) as a journey, for the key binding a
--- controller player has instead of Shift-click.
+-- controller player has instead of a map click.
 ---@return boolean
 function ns.JourneyToUserWaypoint()
 	if not ns.db.journey then
-		ns.Print(L["Journeys are off. Turn on Shift-click to plan journeys in settings."])
+		ns.Print(L["Journeys are off. Turn on Click the map to plan journeys in settings."])
 		return false
 	end
 	local waypoint = C_Map.GetUserWaypoint()
@@ -263,7 +300,7 @@ local function TrackedQuestID()
 	end
 end
 
--- The quest the client is super-tracking, or the top tracked quest when none is, as the Shift-click on its tracker
+-- The quest the client is super-tracking, or the top tracked quest when none is, as the journey key on its tracker
 -- block would plan it.
 ---@return boolean
 function ns.JourneyToTrackedQuest()
@@ -275,8 +312,115 @@ function ns.JourneyToTrackedQuest()
 	return PlanQuest(questID)
 end
 
+-- Route to the focused quest: an opt-in journey from the quest the client is super-tracking, or from the map pin
+-- the player placed, so a controller needs no map click. A guide's own journey is left alone: its focus changes
+-- are its steps, not the player's choice. Journey.lua calls these after Guide.TrackingChanged, so a guide the
+-- player took over has already yielded.
+---@type number?
+local focusedQuest
+---@type table?
+local focusedWaypoint
+
+---@return number?
+local function SuperTrackedQuest()
+	local get = C_SuperTrack and C_SuperTrack.GetSuperTrackedQuestID
+	local questID = get and get()
+	if type(questID) == "number" and questID > 0 then
+		return questID
+	end
+end
+
+---@return table?
+local function UserWaypoint()
+	local get = C_Map and C_Map.GetUserWaypoint
+	return get and get() or nil
+end
+
+local function RememberFocused()
+	focusedQuest, focusedWaypoint = SuperTrackedQuest(), UserWaypoint()
+end
+
+-- A loading screen starts from the focus the player already has; only a later change is theirs to route.
+function ns.FocusedTrackingReset()
+	RememberFocused()
+end
+
+-- Whether another addon leads the journey. The player's own journeys start without an API owner, or under this
+-- addon's name through Nearby services.
+---@return boolean
+local function GuideLeads()
+	local owner = ns.JourneyOwner and ns.JourneyOwner()
+	return owner ~= nil and owner ~= "Shortest Path Forever"
+end
+
+---@param questID number
+---@return boolean
+local function GoalIsQuest(questID)
+	local goal = ns.JourneyGoal and ns.JourneyGoal()
+	if not goal then
+		return false
+	end
+	if goal.questID == questID then
+		return true
+	end
+	for _, id in ipairs(goal.questIDs or {}) do
+		if id == questID then
+			return true
+		end
+	end
+	return false
+end
+
+---@param waypoint table
+---@return boolean
+local function GoalIsWaypoint(waypoint)
+	local goal = ns.JourneyGoal and ns.JourneyGoal()
+	local position = waypoint.position
+	if not (goal and position) then
+		return false
+	end
+	local point = ns.WorldPoint(waypoint.uiMapID, position.x, position.y)
+	return point ~= nil and goal.map == point.map and goal.x == point.x and goal.y == point.y
+end
+
+---@param event string
+function ns.FocusedTrackingChanged(event)
+	local guide = ns.JourneyGuide
+	local owned = guide and guide.OwnsReported and guide.OwnsReported(event) or false
+	if event == "SUPER_TRACKING_CHANGED" then
+		local questID = SuperTrackedQuest()
+		local changed = questID ~= focusedQuest
+		focusedQuest = questID
+		if
+			owned
+			or not changed
+			or not questID
+			or not (ns.db and ns.db.focusedQuest and ns.db.journey)
+			or GuideLeads()
+			or GoalIsQuest(questID)
+		then
+			return
+		end
+		ns.JourneyToTrackedQuest()
+		return
+	end
+	local waypoint = UserWaypoint()
+	local changed = not (guide and guide.SameWaypoint and guide.SameWaypoint(waypoint, focusedWaypoint))
+	focusedWaypoint = waypoint
+	if
+		owned
+		or not changed
+		or not waypoint
+		or not (ns.db and ns.db.focusedQuest and ns.db.journey)
+		or GoalIsWaypoint(waypoint)
+	then
+		return
+	end
+	ns.JourneyToUserWaypoint()
+end
+
 local function OnCanvasClick(map, button)
-	if not ns.db.journey or button ~= "LeftButton" or not IsShiftKeyDown() or ChatBoxOpen() then
+	if not ns.db.journey or button ~= "LeftButton" or not ns.JourneyKeyDown() or ChatBoxOpen() then
 		return false
 	end
 	ns.JourneyToMapPoint(map:GetMapID(), map:GetNormalizedCursorPosition())
@@ -284,7 +428,7 @@ local function OnCanvasClick(map, button)
 end
 
 local function OnMinimapClick(_, button)
-	if not ns.db.journey or button ~= "LeftButton" or not IsShiftKeyDown() then
+	if not ns.db.journey or button ~= "LeftButton" or not ns.JourneyKeyDown() then
 		return
 	end
 	local point = ns.MinimapPoint()
@@ -295,8 +439,8 @@ local function OnMinimapClick(_, button)
 	end
 end
 
--- A journey to a Shift-clicked pin, labelled by its name if it has one: a flight point by its node, anything else by
--- where it stands on the map. False when there is nowhere to plan to.
+-- A journey to a pin clicked with the journey key, labelled by its name if it has one: a flight point by its node,
+-- anything else by where it stands on the map. False when there is nowhere to plan to.
 ---@param mapID number
 ---@param info? {nodeID?: number, name?: string}
 ---@param flight boolean
@@ -337,7 +481,7 @@ local function OnPinClick(map, action, button)
 		not ns.db.journey
 		or action ~= MapCanvasMixin.MouseAction.Click
 		or button ~= "LeftButton"
-		or not IsShiftKeyDown()
+		or not ns.JourneyKeyDown()
 		or ChatBoxOpen()
 	then
 		return false
@@ -365,13 +509,13 @@ local function OnPinClick(map, action, button)
 	return false
 end
 
--- Shift-click on one of the addon's own map pins (UI/Canvas.lua), as OnPinClick does for the map's. The stop
--- buttons keep their own click.
+-- A click with the journey key on one of the addon's own map pins (UI/Canvas.lua), as OnPinClick does for the map's.
+-- The stop buttons keep their own click.
 ---@param pin SPFCanvasPin
 ---@param button string
 ---@return boolean
 local function OnOwnPinClick(pin, button)
-	if not ns.db.journey or button ~= "LeftButton" or not IsShiftKeyDown() or ChatBoxOpen() then
+	if not ns.db.journey or button ~= "LeftButton" or not ns.JourneyKeyDown() or ChatBoxOpen() then
 		return false
 	end
 	local marker = pin.marker
@@ -469,7 +613,7 @@ local function QuestIDFromTrackerFocus(owner)
 end
 
 -- Bindings.xml's CLICK bindings name these hidden buttons, so a key or a controller button reaches the same actions
--- the map's Shift-click does. A hidden button takes a CLICK binding without drawing anything.
+-- the map's journey click does. A hidden button takes a CLICK binding without drawing anything.
 ---@param name string
 ---@param onClick fun()
 local function Binding(name, onClick)
@@ -512,20 +656,20 @@ local function QuestieIconSpot()
 end
 
 ns.Init(function()
+	RememberFocused()
 	Binding("ShortestPathForeverTravelToPinButton", ns.JourneyToUserWaypoint)
 	Binding("ShortestPathForeverTravelToTrackedQuestButton", ns.JourneyToTrackedQuest)
 	Binding("ShortestPathForeverClearJourneyButton", ns.ClearJourney)
-	-- Questie owns Shift-click on its icons. Alt-click observes the map cursor
-	-- through our own event frame, including icons that swallow canvas clicks.
-	-- TomTom's map overlay passes LeftButton through; its waypoint gesture uses RightButton.
+	-- Questie owns Shift-click on its icons. While Shift is the journey key, Alt-click observes the map cursor
+	-- through our own event frame, including icons that swallow canvas clicks. When Alt is chosen, that one key
+	-- plans everywhere, Questie icons included, and Shift no longer plans a journey. TomTom's map overlay passes
+	-- LeftButton through; its waypoint gesture uses RightButton.
 	local clicks = CreateFrame("Frame")
 	clicks:RegisterEvent("GLOBAL_MOUSE_DOWN")
 	clicks:SetScript("OnEvent", function(_, _, button)
 		if
 			not ns.db.journey
 			or button ~= "LeftButton"
-			or not IsAltKeyDown()
-			or IsShiftKeyDown()
 			or not WorldMapFrame:IsShown()
 			or not WorldMapFrame.ScrollContainer:IsMouseOver()
 		then
@@ -533,6 +677,18 @@ ns.Init(function()
 		end
 		-- Over a Questie icon the journey goes to the spawn it marks, on that spawn's floor.
 		local iconMap, iconX, iconY = QuestieIconSpot()
+		if JourneyKey() == "shift" then
+			-- Questie keeps Shift-click to untrack its quest; Alt-click plans the journey there.
+			if not IsAltKeyDown() or IsShiftKeyDown() then
+				return
+			end
+		else
+			-- The chosen key plans everywhere. On empty map space the canvas already answers this same click, so
+			-- only a Questie icon, whose own frame swallows it, needs this handler.
+			if not ns.JourneyKeyDown() or not (iconMap and iconX and iconY) then
+				return
+			end
+		end
 		local point
 		if iconMap and iconX and iconY then
 			point = ns.WorldPoint(iconMap, iconX, iconY)
@@ -555,13 +711,16 @@ ns.Init(function()
 	ns.Canvas.OnClick(OnOwnPinClick)
 	-- The stock handler still pings the spot, which marks where the journey goes for your group too.
 	Minimap:HookScript("OnMouseUp", OnMinimapClick)
-	Menu.ModifyMenu("MENU_QUEST_OBJECTIVE_TRACKER", function(owner, root)
+	-- Our entries in the game's quest menus go through ns.ModifyMenu like every other menu this addon adds to: under
+	-- the gamepad interface the game builds these menus itself and takes them into its focus in the same call, and a
+	-- menu an addon added to is tainted, so the quest list's More options action on Y did nothing (#788).
+	ns.ModifyMenu("MENU_QUEST_OBJECTIVE_TRACKER", "quest tracker", function(owner, root)
 		---@cast owner Frame
 		-- The native menu owner is the tracker container, with no quest ID/context data.
 		-- Resolve the right-clicked HeaderButton's block; never reuse a previous hover's quest.
 		ns.AddQuestMenuEntry(root, QuestIDFromTrackerFocus(owner))
 	end)
-	Menu.ModifyMenu("MENU_QUEST_MAP_LOG_TITLE", function(owner, root)
+	ns.ModifyMenu("MENU_QUEST_MAP_LOG_TITLE", "quest log", function(owner, root)
 		---@cast owner SPFQuestMenuOwner
 		-- Waypoint menus share this tag, but have no questID; the client also spells it questId.
 		ns.AddQuestMenuEntry(root, owner.questID or owner.questId)

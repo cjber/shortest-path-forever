@@ -236,10 +236,8 @@ function ns.AddDockTooltip(cluster)
 		end
 	end
 	if freshest then
-		local text = string.format(
-			freshest.source == "you" and L["Last seen %d min ago by you"] or L["Last seen %d min ago by another player"],
-			math.floor(freshest.seen / 60)
-		)
+		local ago = SecondsToTime(math.max(freshest.seen, 60), true, false, 1)
+		local text = string.format(L["Last seen %s ago"], ago)
 		GameTooltip_AddNormalLine(GameTooltip, GRAY_FONT_COLOR:WrapTextInColorCode(text))
 	end
 end
@@ -772,6 +770,7 @@ local function AddFilters(_, rootDescription)
 	AddFilter("transit", L["Lifts & Tram"])
 	AddFilter("portals", L["Portals"])
 	AddFilter("otherFaction", L["Other Faction's Routes"])
+	AddFilter("hideQuestPins", L["Hide game quest markers"])
 end
 
 ns.Init(function()

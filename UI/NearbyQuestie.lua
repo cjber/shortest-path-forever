@@ -229,13 +229,18 @@ local function Scan(fit, wanted, yield)
 			yield()
 		end
 	end
-	-- Every NPC that sells something, keeps one of the caller's services or trains a class or a profession.
-	local trainers = {}
-	for npc in pairs(ns.ClassTrainers or {}) do
-		trainers[npc] = true
-	end
-	for npc in pairs(ns.ProfessionTrainers or {}) do
-		trainers[npc] = true
+	-- Every NPC that sells something, keeps one of the caller's services, trains a class or a profession, or is a
+	-- battlemaster: classic-db knows these roles, while QuestieDB's NPC rows carry only a generic service flag.
+	local known = {}
+	for _, roles in ipairs({
+		ns.ClassTrainers,
+		ns.ProfessionTrainers,
+		ns.PortalTrainers,
+		ns.Battlemasters,
+	}) do
+		for npc in pairs(roles or {}) do
+			known[npc] = true
+		end
 	end
 	local npcs = {}
 	-- The NPCs whose spawns the read still owes, in the order they were found.
@@ -248,7 +253,7 @@ local function Scan(fit, wanted, yield)
 				type(name) == "string"
 				and type(friendly) == "string"
 				and type(flags) == "number"
-				and (sells[id] or trainers[id] or bit.band(flags, mask) ~= 0)
+				and (sells[id] or known[id] or bit.band(flags, mask) ~= 0)
 				and (friendly == "AH" or friendly == faction)
 			then
 				kept[#kept + 1] = { id = id, name = name, flags = flags, title = title }
