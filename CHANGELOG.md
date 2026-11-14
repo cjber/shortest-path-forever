@@ -14,6 +14,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.37.1] - 2026-11-14
+
+<!-- discord-image: docs/screenshots/stops.png -->
+
 - **Hovering a quest stop shows the quest's area.** The game's "..." pin showed a quest's blue area when you hovered it, and a journey stop that marks the same quest replaced that pin with nothing to hover. Hovering the stop now shows the area of the quest it marks, hand-in stops included, and the area goes again when the pointer leaves or the journey ends (#859).
 
 ## [1.37.0] - 2026-11-14
