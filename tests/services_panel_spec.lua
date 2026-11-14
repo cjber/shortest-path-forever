@@ -207,6 +207,7 @@ end
 
 local ns = {
 	Init = function() end,
+	db = { nearbyTab = true },
 	L = setmetatable({}, {
 		__index = function(_, key)
 			return key
@@ -336,6 +337,16 @@ local QuestLogTabs = {
 		ns.tab = { Icon = region() }
 		return ns.tab
 	end,
+	-- ForeverCore's shared column takes a registered tab out or puts it back (UI/QuestLogTabs.lua: SetTabShown). The
+	-- panel keeps its state, so Select still opens a hidden tab's panel, as /spfnear and the tracking menu do.
+	SetTabShown = function(key, shown)
+		if not (ns.registered and ns.registered.key == key) then
+			return false
+		end
+		ns.tabHidden = shown == false
+		ns.tabShownCalls[#ns.tabShownCalls + 1] = { key = key, shown = shown }
+		return true
+	end,
 	Select = function(key)
 		if ns.registered and ns.registered.key == key then
 			ns.registered.spec.panel:Show()
@@ -345,6 +356,7 @@ local QuestLogTabs = {
 		end
 	end,
 }
+ns.tabShownCalls = {}
 local map = frame("Frame", "QuestMapFrame")
 map.ContentsAnchor = frame("Frame", "ContentsAnchor", map)
 map.sized, map.ContentsAnchor.sized = true, true
@@ -424,6 +436,26 @@ local fit = ns.tab.Icon.fit
 assert(fit and fit.atlas == "Banker" and fit.width == 32 and fit.height == 32, "the tab shows the bank bags at 32")
 assert(ns.registered.spec.tooltip == "Nearby services", "its tooltip")
 assert(panel and not panel:IsShown(), "the panel starts hidden")
+-- The tab belongs to ForeverCore's shared column, so the setting asks core to take it out or put it back. The key
+-- stays registered either way, so /spfnear and the tracking menu still open the services with the tab off.
+assert(ns.RefreshNearbyTab, "the setting has a way to apply itself")
+assert(
+	ns.tabShownCalls[1] and ns.tabShownCalls[1].key == "services" and ns.tabShownCalls[1].shown == true,
+	"the tab shows at load, as it does by default"
+)
+ns.db.nearbyTab = false
+ns.RefreshNearbyTab()
+assert(
+	ns.tabShownCalls[#ns.tabShownCalls].key == "services" and ns.tabShownCalls[#ns.tabShownCalls].shown == false,
+	"turning the setting off asks core to hide the tab"
+)
+assert(ns.tabHidden, "the tab is out of the column")
+ns.db.nearbyTab = true
+ns.RefreshNearbyTab()
+assert(
+	ns.tabShownCalls[#ns.tabShownCalls].shown == true and not ns.tabHidden,
+	"turning the setting back on restores the tab"
+)
 
 local search = assert(byTemplate("SearchBoxTemplate"), "a search box")
 local scroll = assert(byTemplate("ScrollFrameTemplate"), "a scroll frame")
@@ -586,4 +618,14 @@ assert(edges.TOPLEFT and edges.TOPRIGHT, "the loading line spans the list by its
 assert(edges.TOPLEFT[3] == edges.TOPRIGHT[3], "both corners sit on one line")
 assert(ns.registered.spec.panel == panel, "the tab keeps the one panel")
 assert(not navigated, "a build never navigates by itself")
+
+-- With the tab out of the column, /spfnear and the tracking menu still reach the services: both select the key, and
+-- ForeverCore opens a hidden tab's panel rather than dropping the selection.
+ns.db.nearbyTab = false
+ns.RefreshNearbyTab()
+assert(ns.tabHidden, "the tab is out of the column")
+env.ForeverCore.QuestLogTabs.Select("services")
+assert(panel:IsShown(), "the services stay reachable through /spfnear and the tracking menu")
+ns.db.nearbyTab = true
+ns.RefreshNearbyTab()
 print("services_panel: tab registration, shown, scroll preservation and query reset: ok")

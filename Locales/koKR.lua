@@ -450,3 +450,6 @@ L["The key you hold to plan a journey from the world map or the minimap."] =
 	"세계 지도나 미니맵에서 여정을 계획하려면 누르고 있는 키입니다." -- mt
 L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
 	"Questie 아이콘에서는 Shift-클릭이 Questie의 것이며, Alt-클릭은 두 키 중 어느 쪽이든 그곳까지 여정을 계획합니다." -- mt
+L["Show the Nearby services tab"] = "주변 편의시설 탭 표시"
+L["The tab in the world map's quest log. Off, /spfnear and the tracking menu still open it."] =
+	"세계 지도 퀘스트 로그의 탭입니다. 꺼도 /spfnear와 추적 메뉴로 계속 열 수 있습니다."

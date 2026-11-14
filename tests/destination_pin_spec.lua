@@ -136,6 +136,11 @@ local stops, stopIndex = { {}, {} }, 1
 ns.JourneyStops = function()
 	return stops, stopIndex
 end
+-- The plan and the leg of it being walked, as Journey.lua's JourneyPlan returns them.
+local plan, legIndex = {}, 1
+ns.JourneyPlan = function()
+	return plan, legIndex
+end
 local rows = { { text = "1. Walk to the inn", current = true } }
 local infoBuilds = 0
 ns.JourneyInfo = function()
@@ -191,5 +196,19 @@ rows = { { text = "2. Speak to Marshal Dughan", current = true } }
 ns.RefreshDestinationPin()
 assert(infoBuilds == 2, "the step is rebuilt when the stop index moves on")
 assert(stepLine.text == "2. Speak to Marshal Dughan", "a stop index that moves on updates the step line")
+
+-- A journey to one place has no stop index to move on: its walk, lift and flight all lead to the same goal. Finishing
+-- a leg still brings the next leg's line, rather than the first leg's wording all the way there.
+legIndex = 2
+rows = { { text = "3. Lift to the bottom", current = true } }
+ns.RefreshDestinationPin()
+assert(infoBuilds == 3, "the step is rebuilt when the journey's leg moves on")
+assert(stepLine.text == "3. Lift to the bottom", "a leg that moves on updates the step line")
+-- A new plan for the same goal (a replan from where the player stands) is a new step line too.
+plan, legIndex = {}, 1
+rows = { { text = "1. Walk to Tirisfal", current = true } }
+ns.RefreshDestinationPin()
+assert(infoBuilds == 4, "the step is rebuilt for a new plan")
+assert(stepLine.text == "1. Walk to Tirisfal", "a new plan updates the step line")
 
 print("destination pin: ok")

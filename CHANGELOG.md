@@ -14,6 +14,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **The destination pin's step line follows the journey.** Under the pin's distance, the line now names the step you are on for the whole journey to one place, instead of keeping the first leg's wording until you arrive. Thanks to jakerist (#875).
+- **The Nearby services tab can be hidden.** *Show the Nearby services tab* under Map marks takes the tab out of the world map's quest log when another addon needs that space. It is on by default, and `/spfnear` and the tracking menu still open the services with the tab off. Asked on CurseForge by cobalt_44, Xeteskian and DaFrozenMage (#767).
 - **Choose the key that plans a journey from a map click.** *Key to plan a journey* in Guidance offers Shift or Alt, with Shift by default. Choose Alt and that one key plans a journey everywhere, Questie icons included, so Shift-click stays free for Questie's untrack. Asked on CurseForge by Zhiroc (#882).
 
 ## [1.37.1] - 2026-11-14

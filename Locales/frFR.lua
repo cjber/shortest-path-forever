@@ -444,3 +444,6 @@ L["The key you hold to plan a journey from the world map or the minimap."] =
 	"La touche à maintenir pour planifier un trajet depuis la carte du monde ou la minicarte." -- mt
 L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
 	"Sur une icône Questie, le clic avec Maj reste à Questie ; Alt-clic y planifie le trajet avec l'une ou l'autre touche." -- mt
+L["Show the Nearby services tab"] = "Afficher l’onglet des services à proximité" -- mt
+L["The tab in the world map's quest log. Off, /spfnear and the tracking menu still open it."] =
+	"L’onglet dans le journal des quêtes de la carte du monde. Désactivé, /spfnear et le menu de suivi l’ouvrent encore." -- mt
