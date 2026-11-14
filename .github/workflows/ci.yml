@@ -239,3 +239,5 @@ jobs:
           key: forever-sim-${{ hashFiles('tools/forever_sim/fetch.py') }}
       - run: python3 tools/forever_sim/fetch.py
       - run: python3 tools/check_package.py
+        env:
+          GH_TOKEN: ${{ github.token }}
