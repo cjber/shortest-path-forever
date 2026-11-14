@@ -264,6 +264,27 @@ local function stubframe()
 	function f:GetHeight()
 		return self.height
 	end
+	function f:GetParent()
+		return self.parent
+	end
+	-- The client moves a frame under another without a script; setting a parent keeps the child's own shown
+	-- state, and the child is recorded so a hidden parent hides it.
+	function f:SetParent(parent)
+		local old = self.parent
+		if old and old.children then
+			for index, child in ipairs(old.children) do
+				if child == self then
+					table.remove(old.children, index)
+					break
+				end
+			end
+		end
+		self.parent = parent
+		if parent then
+			parent.children = parent.children or {}
+			parent.children[#parent.children + 1] = self
+		end
+	end
 	function f:GetTop()
 		return self.top or (self.parent and self.parent.GetHeight and self.parent:GetHeight()) or 0
 	end
@@ -422,6 +443,10 @@ _G.CreateFrame = function(_, name, parent, template)
 	end
 	if template == "ObjectiveTrackerModuleTemplate" then
 		f.liveBlocks, f.layoutOrder = {}, {}
+		-- The template's own contents frame, under which the module places its blocks and their item buttons.
+		f.ContentsFrame = stubframe()
+		-- ObjectiveTrackerModuleMixin's own header height, the room its header takes in the column.
+		f.headerHeight = 25
 		function f:SetContainer(container)
 			self.parentContainer = container
 		end

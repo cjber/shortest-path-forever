@@ -41,7 +41,7 @@ from screenshots_town import render as render_town_services
 from screenshots_town import render_zoom as render_town_services_zoom
 from screenshots_tracker import detached_tracker
 from screenshots_tracker import tracker_canvas as journey_tracker
-from wowmock import (
+from wowmock import (  # ty: ignore[import-not-found]
     FONTS,
     FRIZQT,
     NORMAL,

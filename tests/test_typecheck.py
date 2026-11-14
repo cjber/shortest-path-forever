@@ -10,10 +10,14 @@ import unittest
 from pathlib import Path
 
 SPEC = importlib.util.spec_from_file_location("lint_multivalue", Path(__file__).parents[1] / "tools/lint_multivalue.py")
+if SPEC is None or SPEC.loader is None:
+    raise RuntimeError("cannot load tools/lint_multivalue.py")
 LINT = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = LINT
 SPEC.loader.exec_module(LINT)
 PACK_SPEC = importlib.util.spec_from_file_location("pack_nav", Path(__file__).parents[1] / "tools/pack_nav.py")
+if PACK_SPEC is None or PACK_SPEC.loader is None:
+    raise RuntimeError("cannot load tools/pack_nav.py")
 PACK = importlib.util.module_from_spec(PACK_SPEC)
 PACK_SPEC.loader.exec_module(PACK)
 

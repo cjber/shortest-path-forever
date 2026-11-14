@@ -33,7 +33,7 @@ from array import array
 from collections import defaultdict
 from pathlib import Path
 from textwrap import wrap
-from typing import cast
+from typing import Any, cast
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from baker.geometry import height, plane, point_in_convex, poly_distance, poly_distance2, seg_in_box  # noqa: E402
@@ -836,7 +836,8 @@ def strong_components(order, out):
     return label
 
 
-_HPA = None  # (grid, cuts, nodes) for the forked graph workers, set by grid_hpa before each pool starts
+# (grid, cuts, nodes) for the forked graph workers, set by grid_hpa before each pool starts.
+_HPA: tuple[Any, Any, Any] | None = None
 
 
 def run_clusters(work, keys, jobs):
@@ -850,6 +851,8 @@ def run_clusters(work, keys, jobs):
 
 def cluster_regions(k):
     """Cluster k's strongly connected parts as (node, label) pairs, under the grid's own directed steps."""
+    if _HPA is None:
+        raise RuntimeError("cluster_regions ran outside grid_hpa")
     grid, cuts, _ = _HPA
     g = lambda gx, gy: grid[gx * GH + gy]  # noqa: E731
     box = cluster_box(k)
@@ -862,6 +865,8 @@ def cluster_regions(k):
 def cluster_edges(k):
     """Cluster k's intra-cluster edges between its entrances: Dijkstra under each of WEIGHTS, dropped when a
     two-hop path is within PRUNE under every weight."""
+    if _HPA is None:
+        raise RuntimeError("cluster_edges ran outside grid_hpa")
     grid, cuts, nodes = _HPA
     g = lambda gx, gy: grid[gx * GH + gy]  # noqa: E731
     found = {}

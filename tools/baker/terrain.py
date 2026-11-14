@@ -76,6 +76,8 @@ class Tile:
                 self.v9 = values[: 129 * 129]
                 self.v8 = values[129 * 129 :]
         if self.step:
+            if self.v9 is None or self.v8 is None:
+                raise ValueError(f"Map tile {self.name} has integer heights but no height grid")
             scale = (self.grid_max_height - self.grid_height) / self.step
             self.v9 = [value * scale + self.grid_height for value in self.v9]
             self.v8 = [value * scale + self.grid_height for value in self.v8]

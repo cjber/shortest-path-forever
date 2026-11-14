@@ -12,7 +12,7 @@ the class, portal and battlemaster rows on their own.
 import math
 
 from PIL import Image, ImageChops, ImageDraw
-from wowmock import (
+from wowmock import (  # ty: ignore[import-not-found]
     ARIALN,
     FONTS,
     FRIZQT,

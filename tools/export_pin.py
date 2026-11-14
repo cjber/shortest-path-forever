@@ -31,9 +31,14 @@ def key_magenta(image: Image.Image) -> Image.Image:
     """Magenta to alpha, with a soft edge and the magenta spill pulled out of the rim."""
     image = image.convert("RGBA")
     pixels = image.load()
+    if pixels is None:
+        raise ValueError(f"cannot load pixels of {image!r}")
     for y in range(image.height):
         for x in range(image.width):
-            r, g, b, _ = pixels[x, y]
+            pixel = pixels[x, y]
+            if not isinstance(pixel, tuple):
+                raise ValueError(f"expected an RGBA pixel at ({x}, {y}), got {pixel!r}")
+            r, g, b, _ = pixel
             distance = max(abs(r - 255), g, abs(b - 255))
             if distance < 60:
                 pixels[x, y] = (r, g, b, 0)
