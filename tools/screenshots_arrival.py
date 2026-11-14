@@ -11,7 +11,7 @@ The stop is Adventure Guide's objective area for quest 878, "Tribes at War" (Man
 objectives are the three lines below the pin.
 """
 
-from wowmock import FONTS, NORMAL, WHITE, scene
+from wowmock import FONTS, NORMAL, WHITE, scene  # ty: ignore[import-not-found]
 
 PIN_BOX = 36
 COLUMN = 240

@@ -16,10 +16,11 @@ so the services separate into a pin each.
 import math
 from functools import cache
 from pathlib import Path
+from typing import Any
 
 from PIL import Image
 from screenshots_maps import icon, map_base
-from wowmock import TooltipLine, scene, tooltip
+from wowmock import TooltipLine, scene, tooltip  # ty: ignore[import-not-found]
 
 ROOT = Path(__file__).resolve().parent.parent
 # The client's map canvas, which UI/Map.lua's OverlapGroups measures against.
@@ -78,12 +79,13 @@ def town_group_art():
 
 def town_entries():
     """The addon's entries: one per NPC, in the order its groups put them in, with the group its pin wears."""
-    entries, by_name = [], {}
+    entries: list[dict[str, Any]] = []
+    by_name: dict[str, Any] = {}
     for group in TOWN_GROUP_ORDER:
         for name, title, x, y, groups in TOWN_SERVICES:
             if group not in groups:
                 continue
-            entry = by_name.get(name)
+            entry: dict[str, Any] | None = by_name.get(name)
             if entry is None:
                 entry = {"name": name, "title": title, "x": x / 100, "y": y / 100, "groups": []}
                 by_name[name] = entry
