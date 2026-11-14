@@ -25,7 +25,7 @@
 ---@field TownAreas table<number, SPFTownArea> the client's town ground per flight master (Data/TownAreas.lua)
 ---@field db SPFDatabase
 ---@field charDB SPFCharacterDatabase
----@field Defaults table<string, boolean|number|string|table<string, boolean>>
+---@field Defaults SPFDefaults
 ---@field NearbyRoles SPFNearbyRolesAPI the class, portal and battlemaster groups (UI/NearbyRoles.lua)
 ---@field NearbyServices SPFNearbyServices
 ---@field NearbyGroups SPFNearbyGroups the vendor and service groups the list and the map share (UI/NearbyGroups.lua)
@@ -44,6 +44,18 @@
 ---@field JourneyKeyDown fun(): boolean whether the chosen journey key is held (JourneyInput.lua)
 ---@field JourneyKeyName fun(key?: string): string what the chosen key, or the one named, is called (JourneyInput.lua)
 ---@field TravelStats fun(): SPFProgressData?
+
+---@class SPFDefaults: table<string, boolean|number|string>
+---@field townServices string
+---@field routeColor string
+---@field journeyKey string
+---@field arrivalDistance number
+---@field hearthMinimumSavings number
+---@field arrowScale number
+---@field arrowLabel string
+---@field compassScale number
+---@field compassBackground number
+---@field townServiceKinds table<string, boolean>
 
 ---@class SPFVendorGroup
 ---@field key string
