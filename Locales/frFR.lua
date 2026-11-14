@@ -45,7 +45,8 @@ L["Avoids %s (level %s)"] = "Contourne %s (niveau %s)" -- mt
 L["Bags"] = "Sacs"
 L["Bank"] = "Banque" -- mt
 L["Battlemaster"] = "Maître de bataille" -- mt
-L["Hovering a quest stop shows the quest's area."] = "Survoler une étape de quête affiche la zone de la quête." -- mt
+L["The destination pin's step line follows the journey."] =
+	"La ligne d'étape du marqueur de destination suit le trajet." -- mt
 L["Boat and Zeppelin Routes"] = "Routes des bateaux et zeppelins" -- mt
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Routes des bateaux et zeppelins, tracées quand vous survolez un quai." -- mt

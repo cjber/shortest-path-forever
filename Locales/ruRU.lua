@@ -47,8 +47,8 @@ L["Avoids %s (level %s)"] = "Обходит %s (уровень %s)"
 L["Bags"] = "Сумки"
 L["Bank"] = "Банк"
 L["Battlemaster"] = "Военачальник"
-L["Hovering a quest stop shows the quest's area."] =
-	"При наведении на остановку задания показывается область задания." -- mt
+L["The destination pin's step line follows the journey."] =
+	"Строка шага у метки цели следует за маршрутом." -- mt
 L["Boat and Zeppelin Routes"] = "Маршруты кораблей и дирижаблей"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Маршруты кораблей и дирижаблей, когда вы наводите курсор на причал."
