@@ -188,4 +188,4 @@ def render_stops_previews(root, wowmock, art, backdrop, fonts):
         record["scenes"][state] = dict(layout, sha256=hashlib.sha256(encoded[0]).hexdigest())
         print(state, record["scenes"][state]["sha256"], flush=True)
     (out / "assets.json").write_text(json.dumps(record.pop("assets"), indent=2) + "\n")
-    (out / "layout.json").write_text(json.dumps(record, indent=2) + "\n")
+    (out / "layout.json").write_text(json.dumps(record, separators=(",", ":")) + "\n")
