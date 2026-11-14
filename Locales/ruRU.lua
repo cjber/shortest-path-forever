@@ -47,8 +47,8 @@ L["Avoids %s (level %s)"] = "Обходит %s (уровень %s)"
 L["Bags"] = "Сумки"
 L["Bank"] = "Банк"
 L["Battlemaster"] = "Военачальник"
-L["Routes no longer climb hills the game will not let you climb."] =
-	"Маршруты больше не ведут по склонам, на которые игра не даёт подняться." -- mt
+L["Hovering a quest stop shows the quest's area."] =
+	"При наведении на остановку задания показывается область задания." -- mt
 L["Boat and Zeppelin Routes"] = "Маршруты кораблей и дирижаблей"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Маршруты кораблей и дирижаблей, когда вы наводите курсор на причал."

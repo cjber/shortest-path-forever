@@ -11,8 +11,8 @@ local L = ns.L
 -- sync's maintenance entry has no headline, so these stay on the release before it: an update to a maintenance
 -- version says nothing new but still remembers the version. Rewrite both lines for each release that has a headline
 -- (tests/whats_new_spec.lua checks them against CHANGELOG.md).
-ns.WHATS_NEW_VERSION = "1.37.0"
-ns.WHATS_NEW = L["Routes no longer climb hills the game will not let you climb."]
+ns.WHATS_NEW_VERSION = "1.37.1"
+ns.WHATS_NEW = L["Hovering a quest stop shows the quest's area."]
 
 -- Once per new version, after an update: never on a first install, nor in a checkout, whose TOC still holds the
 -- packager's version keyword (matched by its "@", as the packager would rewrite the whole keyword here too). The
