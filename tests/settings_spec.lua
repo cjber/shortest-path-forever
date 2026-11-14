@@ -174,6 +174,7 @@ env.ForeverCore = {
 }
 
 local refreshed, taxiRefreshed, policyChanged, tomtomRefreshed, guidelimeRefreshed = 0, 0, 0, 0, 0
+local nearbyTabRefreshed = 0
 local trackerRefreshed = 0
 local compassMoving = false
 local arrowMoving, arrowScaled, arrowLabelSet = false, nil, nil
@@ -272,6 +273,9 @@ local ns = {
 	RefreshMap = function()
 		refreshed = refreshed + 1
 	end,
+	RefreshNearbyTab = function()
+		nearbyTabRefreshed = nearbyTabRefreshed + 1
+	end,
 	RefreshQuestPins = function()
 		questPinsRefreshed = questPinsRefreshed + 1
 	end,
@@ -351,6 +355,7 @@ local groups = {
 		"transit",
 		"portals",
 		"mapFlightMasters",
+		"nearbyTab",
 		"minimapPins",
 		"hideQuestPins",
 		"mapPinScale",
@@ -427,9 +432,10 @@ local order = {
 }
 
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
--- Main's arrival pin added arrivalPin, the line switches added mapLine, minimapLine and laterLegs, and the
--- town services added townServices; the travel stats and departure sharing switches are gone with their sharing.
-assert(#rows == 66, #rows)
+-- Main's arrival pin added arrivalPin, the line switches added mapLine, minimapLine and laterLegs, the town services
+-- added townServices, and the tab switch added nearbyTab; the travel stats and departure sharing switches are gone
+-- with their sharing.
+assert(#rows == 67, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -486,6 +492,19 @@ assert(
 local questPinRefreshes = questPinsRefreshed
 questPins.setting.onChanged()
 assert(questPinsRefreshed == questPinRefreshes + 1, "the switch reconciles the game's quest pins at once")
+-- The Nearby services tab can be taken out of the shared quest log column when another addon needs that space, and
+-- the services stay reachable through /spfnear and the tracking menu. On by default, so nothing changes unasked.
+local nearbyTab = Row("nearbyTab")
+assert(nearbyTab.kind == "checkbox" and nearbyTab.setting.default == true, "the Nearby services tab shows by default")
+assert(nearbyTab.setting.variable == "ShortestPathForever_nearbyTab", "the tab switch is saved")
+assert(nearbyTab.setting.name == "Show the Nearby services tab", "the switch names the tab")
+assert(
+	nearbyTab.tooltip:find("/spfnear", 1, true) and nearbyTab.tooltip:find("tracking menu", 1, true),
+	"the tooltip says the services stay reachable with the tab off"
+)
+local nearbyRefreshes = nearbyTabRefreshed
+nearbyTab.setting.onChanged()
+assert(nearbyTabRefreshed == nearbyRefreshes + 1, "the switch applies itself at once")
 -- The walking line's colour is a preset dropdown, gold by default, and it repaints without replanning.
 local routeColor = Row("routeColor")
 assert(routeColor.kind == "dropdown" and routeColor.setting.default == "gold", "the route line starts gold")

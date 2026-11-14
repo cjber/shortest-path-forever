@@ -614,6 +614,13 @@ local function Requeue()
 	Queue()
 end
 
+-- Whether the Nearby services tab sits in the shared quest log column. Another addon may need that space, and the
+-- column belongs to ForeverCore, so it is asked to take our tab out rather than the tab frame being hidden: the key
+-- stays registered, so /spfnear and the tracking menu still open the panel (cjber/forever-core#583).
+function ns.RefreshNearbyTab()
+	ForeverCore.QuestLogTabs.SetTabShown("services", not ns.db or ns.db.nearbyTab ~= false)
+end
+
 local function Attach()
 	local map = QuestMapFrame
 	panel = CreateFrame("Frame", "ShortestPathForeverServicesPanel", map)
@@ -656,6 +663,7 @@ local function Attach()
 		shown = Shown,
 		safeCall = ns.core.SafeCall,
 	})
+	ns.RefreshNearbyTab()
 	Art.Fit(tab.Icon, SERVICES_ATLAS, TAB_ICON, TAB_ICON)
 	ns.NearbyServices.OnReady(function()
 		if visible then
@@ -667,3 +675,7 @@ end
 if EventUtil and EventUtil.ContinueOnAddOnLoaded then
 	EventUtil.ContinueOnAddOnLoaded("Blizzard_WorldMap", Attach)
 end
+
+-- The saved setting arrives with the character, after this file loads: apply it once it is there, so a tab turned off
+-- stays off when the map loads later.
+ns.Init(ns.RefreshNearbyTab)

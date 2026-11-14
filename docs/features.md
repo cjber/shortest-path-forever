@@ -6,7 +6,7 @@ The detail behind each feature in the [README](../README.md).
 
 Alt-click the world map to place a destination directly over a Questie icon. Shift-click remains available on the map, minimap and Shortest Path icons. **Key to plan a journey** in Guidance chooses Shift or Alt: with Alt, that one key works everywhere, Questie icons included, and Shift no longer plans a journey.
 
-In **Map marks**, scale transport, flight master and minimap icons separately from 25% to 200%. Right-click a flight master icon to mark its path as known or unknown; opening a flight master's map also syncs paths reported by the client.
+In **Map marks**, scale transport, flight master and minimap icons separately from 25% to 200%. Right-click a flight master icon to mark its path as known or unknown; opening a flight master's map also syncs paths reported by the client. **Show the Nearby services tab** takes the tab out of the world map's quest log when another addon needs that space; `/spfnear` and the tracking menu still open the services.
 
 In **Guidance**, turn **Show journey steps in the objective tracker** off to leave the arrow, pin, map line and minimap route without a journey block in the tracker; **Interface**'s **Show direction arrow** turns the arrow off too. Choose yards or metres, resize the tracker and compass, give the compass a background, or enable the optional minimap settings button. Turn off **Attach to quest tracker** in Guidance, or in the right-click menu of the tracker's "Journey to …" line (out of combat), to drag the Forever column by its heading.
 

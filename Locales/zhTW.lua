@@ -435,3 +435,6 @@ L["The key you hold to plan a journey from the world map or the minimap."] =
 	"在世界地圖或小地圖上規劃旅程時按住的按鍵。" -- mt
 L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
 	"在 Questie 圖示上，Shift 點擊仍歸 Questie 所有；Alt 點擊則可用任一按鍵規劃前往該處的旅程。" -- mt
+L["Show the Nearby services tab"] = "顯示附近服務分頁"
+L["The tab in the world map's quest log. Off, /spfnear and the tracking menu still open it."] =
+	"世界地圖任務日誌中的分頁。關閉後，/spfnear 與追蹤選單仍可開啟它。"

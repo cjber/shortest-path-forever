@@ -60,6 +60,11 @@ Credit for the reports and requests behind the addon.
 
 | Who | What | Notes |
 |---|---|---|
+| jakerist | Destination pin step line follows the journey | GitHub; #875 |
+| cobalt\_44 | Nearby services tab can be hidden | CurseForge; #767 |
+| Xeteskian | Nearby services tab can be hidden | CurseForge; #767 |
+| DaFrozenMage | Nearby services tab can be hidden | CurseForge; #767 |
+| user\_zbqhuuoypkkr46x1 | Nearby services tab can be hidden | CurseForge; #767 |
 | Fitz | Walks checked at both ends | GitHub; #144 |
 | TRDeadbeat | Gamepad interface no longer freezes or blocks | CurseForge; #158 |
 | tallsmartman | Gamepad interface no longer freezes or blocks | CurseForge; #158 |

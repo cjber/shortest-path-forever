@@ -151,6 +151,12 @@ ns.Init(function()
 	Checkbox("portals", L["Show portals"], L["On the world map."], ns.RefreshMap)
 	Checkbox("mapFlightMasters", L["Show flight masters"], L["On the world map."], ns.RefreshMap)
 	Checkbox(
+		"nearbyTab",
+		L["Show the Nearby services tab"],
+		L["The tab in the world map's quest log. Off, /spfnear and the tracking menu still open it."],
+		ns.RefreshNearbyTab
+	)
+	Checkbox(
 		"minimapPins",
 		L["Show marks on the minimap"],
 		L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."],

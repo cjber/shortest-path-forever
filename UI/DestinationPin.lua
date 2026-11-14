@@ -141,10 +141,11 @@ function ns.PinStepText(title, rows)
 	return wording
 end
 
--- The step wording costs a JourneyInfo build, so it is read only when the step changes: the goal and the stop index
--- the route is on. The two are held as they are, never joined into a key string, so an unchanged step allocates
--- nothing on the pin's poll (#784).
-local stepGoal, stepIndex, stepText
+-- The step wording costs a JourneyInfo build, so it is read only when the step changes: the goal, the stop index
+-- the route is on, and the plan and the leg of it being walked. A journey to one place has no stop index, so
+-- without the leg the line kept the first leg's wording all the way there. They are held as they are, never
+-- joined into a key string, so an unchanged step allocates nothing on the pin's poll (#784).
+local stepGoal, stepIndex, stepPlan, stepLeg, stepText
 
 ---@param goal SPFPoint
 ---@return string?
@@ -153,8 +154,12 @@ local function StepText(goal)
 		return nil
 	end
 	local _, index = ns.JourneyStops()
-	if goal ~= stepGoal or index ~= stepIndex then
-		stepGoal, stepIndex = goal, index
+	local plan, leg
+	if ns.JourneyPlan then
+		plan, leg = ns.JourneyPlan()
+	end
+	if goal ~= stepGoal or index ~= stepIndex or plan ~= stepPlan or leg ~= stepLeg then
+		stepGoal, stepIndex, stepPlan, stepLeg = goal, index, plan, leg
 		local title, rows = ns.JourneyInfo()
 		stepText = ns.PinStepText(title, rows)
 	end
@@ -163,8 +168,9 @@ end
 
 -- One update of the pin: where it goes, how strong it is and how far there is to go. Nothing moves while the goal,
 -- the position, the facing, the distance and the step wording stay put, so that update returns before any text is
--- built (#784). The step is included because the stop index moves on while the player stands still, at a turn-in,
--- and StepText already hands back its cached line, so the check costs no build and no allocation.
+-- built (#784). The step is included because the stop index or the leg moves on while the player stands still, at a
+-- turn-in or when a leg ends, and StepText already hands back its cached line, so the check costs no build and no
+-- allocation.
 function ns.RefreshDestinationPin()
 	if not ns.DestinationPinWanted() then
 		Hide()

@@ -4,6 +4,11 @@ local _, ns = ...
 
 ns.Credits = {
 	players = {
+		{ name = "jakerist", what = "Destination pin step line follows the journey" },
+		{ name = "cobalt_44", what = "Nearby services tab can be hidden" },
+		{ name = "Xeteskian", what = "Nearby services tab can be hidden" },
+		{ name = "DaFrozenMage", what = "Nearby services tab can be hidden" },
+		{ name = "user_zbqhuuoypkkr46x1", what = "Nearby services tab can be hidden" },
 		{ name = "Fitz", what = "Walks checked at both ends" },
 		{ name = "TRDeadbeat", what = "Gamepad interface no longer freezes or blocks" },
 		{ name = "tallsmartman", what = "Gamepad interface no longer freezes or blocks" },
