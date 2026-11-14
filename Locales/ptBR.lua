@@ -43,8 +43,8 @@ L["Avoids %s (level %s)"] = "Contorna %s (nível %s)"
 L["Bags"] = "Bolsas"
 L["Bank"] = "Banco"
 L["Battlemaster"] = "Mestre de batalha"
-L["Fewer market stalls on the map, and every NPC apart at full zoom."] =
-	"Menos barracas de mercado no mapa, e cada PNJ separado no zoom máximo." -- mt
+L["Routes no longer climb hills the game will not let you climb."] =
+	"As rotas não sobem mais morros que o jogo não deixa você subir." -- mt
 L["Boat and Zeppelin Routes"] = "Rotas de barcos e zepelins"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Rotas de barcos e zepelins, desenhadas enquanto você aponta para um cais."
