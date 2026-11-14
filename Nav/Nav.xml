@@ -6,6 +6,15 @@
 	<Script file="Nav0_4.lua"/>
 	<Script file="Nav0_5.lua"/>
 	<Script file="Nav0_6.lua"/>
+	<Script file="Nav0_7.lua"/>
+	<Script file="Nav0_8.lua"/>
+	<Script file="Nav0_9.lua"/>
+	<Script file="Nav0_10.lua"/>
+	<Script file="Nav0_11.lua"/>
+	<Script file="Nav0_12.lua"/>
+	<Script file="Nav0_13.lua"/>
+	<Script file="Nav0_14.lua"/>
+	<Script file="Nav0_15.lua"/>
 	<Script file="Nav1.lua"/>
 	<Script file="Nav1_1.lua"/>
 	<Script file="Nav1_2.lua"/>
@@ -15,6 +24,18 @@
 	<Script file="Nav1_6.lua"/>
 	<Script file="Nav1_7.lua"/>
 	<Script file="Nav1_8.lua"/>
+	<Script file="Nav1_9.lua"/>
+	<Script file="Nav1_10.lua"/>
+	<Script file="Nav1_11.lua"/>
+	<Script file="Nav1_12.lua"/>
+	<Script file="Nav1_13.lua"/>
+	<Script file="Nav1_14.lua"/>
+	<Script file="Nav1_15.lua"/>
+	<Script file="Nav1_16.lua"/>
+	<Script file="Nav1_17.lua"/>
+	<Script file="Nav1_18.lua"/>
+	<Script file="Nav1_19.lua"/>
+	<Script file="Nav1_20.lua"/>
 	<Script file="Nav2991.lua"/>
 	<Script file="Nav2991_1.lua"/>
 </Ui>

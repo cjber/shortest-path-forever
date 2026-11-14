@@ -43,8 +43,8 @@ L["Avoids %s (level %s)"] = "绕开%s（等级 %s）"
 L["Bags"] = "背包"
 L["Bank"] = "银行"
 L["Battlemaster"] = "战场指挥官"
-L["Fewer market stalls on the map, and every NPC apart at full zoom."] =
-	"地图上的集市摊位更少，完全放大时每个NPC都单独显示。" -- mt
+L["Routes no longer climb hills the game will not let you climb."] =
+	"路线不再翻越游戏不允许你攀爬的山坡。" -- mt
 L["Boat and Zeppelin Routes"] = "船只和飞艇航线"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"船只和飞艇航线，在你指向码头时绘制。"
@@ -426,3 +426,6 @@ L["Ammunition"] = "弹药" -- mt
 L["Bags and trade supplies"] = "背包和贸易品" -- mt
 L["Food and drink"] = "食物和饮水" -- mt
 L["Profession trainers"] = "专业训练师" -- mt
+L["Hide game quest markers"] = "隐藏游戏的任务标记" -- mt
+L["Off, the game's own quest markers stay beside your journey's pins, showing the other places a quest can be done."] =
+	"关闭后，游戏自带的任务标记会留在旅程标记旁边，让你看到任务还能在哪些地方完成。" -- mt

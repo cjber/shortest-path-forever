@@ -46,8 +46,8 @@ L["Avoids %s (level %s)"] = "%s 우회 (레벨 %s)"
 L["Bags"] = "가방"
 L["Bank"] = "은행"
 L["Battlemaster"] = "전장 지휘관"
-L["Fewer market stalls on the map, and every NPC apart at full zoom."] =
-	"지도의 시장 노점이 줄고, 최대 확대 시 모든 NPC가 따로 표시됩니다." -- mt
+L["Routes no longer climb hills the game will not let you climb."] =
+	"이제 경로가 게임에서 오를 수 없는 언덕을 넘지 않습니다." -- mt
 L["Boat and Zeppelin Routes"] = "배와 비행선 노선"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"배와 비행선 노선. 부두를 가리키는 동안 그려집니다."
@@ -440,3 +440,6 @@ L["Ammunition"] = "탄약" -- mt
 L["Bags and trade supplies"] = "가방 및 전문 기술" -- mt
 L["Food and drink"] = "음식 및 음료" -- mt
 L["Profession trainers"] = "전문 기술 상급자" -- mt
+L["Hide game quest markers"] = "게임 퀘스트 표시 숨기기" -- mt
+L["Off, the game's own quest markers stay beside your journey's pins, showing the other places a quest can be done."] =
+	"끄면 게임의 퀘스트 표시가 여정 표시 옆에 그대로 남아, 퀘스트를 완료할 수 있는 다른 장소를 볼 수 있습니다." -- mt

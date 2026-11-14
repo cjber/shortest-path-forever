@@ -45,8 +45,8 @@ L["Avoids %s (level %s)"] = "Contourne %s (niveau %s)" -- mt
 L["Bags"] = "Sacs"
 L["Bank"] = "Banque" -- mt
 L["Battlemaster"] = "Maître de bataille" -- mt
-L["Fewer market stalls on the map, and every NPC apart at full zoom."] =
-	"Moins d'étals sur la carte, et chaque PNJ à part au zoom maximal." -- mt
+L["Routes no longer climb hills the game will not let you climb."] =
+	"Les itinéraires ne gravissent plus les pentes que le jeu ne vous laisse pas monter." -- mt
 L["Boat and Zeppelin Routes"] = "Routes des bateaux et zeppelins" -- mt
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Routes des bateaux et zeppelins, tracées quand vous survolez un quai." -- mt
@@ -435,3 +435,6 @@ L["Ammunition"] = "Munitions" -- mt
 L["Bags and trade supplies"] = "Sacs et artisanat" -- mt
 L["Food and drink"] = "Nourriture et boissons" -- mt
 L["Profession trainers"] = "Maîtres de métier" -- mt
+L["Hide game quest markers"] = "Masquer les marqueurs de quête" -- mt
+L["Off, the game's own quest markers stay beside your journey's pins, showing the other places a quest can be done."] =
+	"Désactivé, les marqueurs de quête du jeu restent à côté de ceux de votre trajet, pour que vous voyiez les autres endroits où une quête peut être accomplie." -- mt

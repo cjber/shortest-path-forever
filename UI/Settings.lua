@@ -156,6 +156,12 @@ ns.Init(function()
 		L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."],
 		ns.RefreshMinimapPins
 	)
+	Checkbox(
+		"hideQuestPins",
+		L["Hide game quest markers"],
+		L["Off, the game's own quest markers stay beside your journey's pins, showing the other places a quest can be done."],
+		ns.RefreshQuestPins
+	)
 
 	Scale(
 		"mapPinScale",

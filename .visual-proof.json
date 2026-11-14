@@ -1,28 +1,23 @@
 {
-  "input_digest": "f56c63b4b4534fc31462ef75d658d92f6facef271e7d80896dc7db8b5a753653",
-  "runtime_sha256": "f56c63b4b4534fc31462ef75d658d92f6facef271e7d80896dc7db8b5a753653",
-  "candidate": "ec4f3abe5068dd3b048e5081cd28f63ddddc88045ad44a4e8564873830d05950",
+  "input_digest": "20b37981804eff0a8d23fba8debe3acb8587a56a8e7d726db2a873c45b1ca6f0",
+  "runtime_sha256": "20b37981804eff0a8d23fba8debe3acb8587a56a8e7d726db2a873c45b1ca6f0",
+  "candidate": "c0cc54d8a9fe394aa8ca5a99eb98e9a0a6420f10f1fad963bb10f61247af3267",
+  "client_build": "1.60.1.70938 (Interface 16001)",
   "tested_artifact": "source-tree",
-  "client_build": "1.60.1.70888 (Interface 16001)",
+  "source_commit": "2ce55479d3008653071d13ddf562a98e65b5d427",
   "flows": [
     {
-      "name": "Hovering a quest stop on the world map shows that quest's blue area",
+      "name": "journey planner",
       "steps": [
-        "Install the PR's shipped files as the ShortestPathForever folder (compare: no differing files; extra media/icon-400.png) beside ForeverCore v1.10.0 and /reload",
-        "With a journey of quest stops in Redridge Mountains and no quest super-tracked, open the world map: the stops are drawn and no quest area shows",
-        "Hover stop 5 (Collect 0/10 Shadowhide Pendant, Solomon's Law): the game draws Solomon's Law's blue area around the stop, and no other"
+        "/path"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/d74b0095aa2ebbf2ab78a9bf8fa51fe8/raw/32c1d4e9f7a983e061dd72d9546e45cb0c7938b6/spf863-before-286d60d.png",
-      "sha256": "1f0a41c2ed4f9626a35e84d0f7beece2bdbe52f258072d6f5edea2811224bcd2"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/d74b0095aa2ebbf2ab78a9bf8fa51fe8/raw/32c1d4e9f7a983e061dd72d9546e45cb0c7938b6/spf863-hover-286d60d.png",
-      "sha256": "59775d0ff0ea4995226a250e085b20479de59975cea58083d08c64c93c97ced9"
+      "url": "https://gist.githubusercontent.com/cjber/f237694c1924e935141cba0968677aed/raw/0b7ac1d9877f09020df783b56324660f86166511/1-journey-planner.png",
+      "sha256": "0b1ceacf839a9cb8d8425aa47fcd13a44acfe0b90dcf4f0abe9104734b126496"
     }
   ]
 }

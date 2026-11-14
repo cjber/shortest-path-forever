@@ -8,7 +8,8 @@ end
 -- The game's own quest pins repeat a journey's stops (#472): QuestDataProvider's QuestPinTemplate draws a dark circle
 -- with "..." or "?" for each quest on the map, and a stop that marks the same quest draws its number beside it. While
 -- the stop is drawn, the game's pin goes; a quest no stop marks keeps its pin; and every pin hidden here comes back
--- when its stop is passed, the journey ends, or journey drawing is turned off. Pins are hidden one by one through
+-- when its stop is passed, the journey ends, journey drawing is turned off, or the player hands the game's markers
+-- back (#871). Pins are hidden one by one through
 -- their own Hide: the questPOI CVar and the quest data provider stay as the player and other addons set them.
 --
 -- This module never hooks or calls into a data provider (WFA-38, #486): whichever provider acquired a pin, its own
@@ -34,12 +35,13 @@ local PROVIDER_EVENTS = {
 }
 
 -- The quests the drawn stops mark: the stops from the one being travelled to, as Route.lua draws them, and a lone
--- destination. A corpse run's goal marks no quest.
+-- destination. A corpse run's goal marks no quest, and a player who turned the switch off keeps every marker the
+-- game draws (#871).
 ---@return table<number, boolean>
 local function Marked()
 	local marked = {}
 	local goal = ns.JourneyGoal()
-	if not (goal and ns.db and ns.db.journey and not goal.corpse) then
+	if not (goal and ns.db and ns.db.journey and ns.db.hideQuestPins ~= false and not goal.corpse) then
 		return marked
 	end
 	---@param point SPFPoint?

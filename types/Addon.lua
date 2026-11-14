@@ -279,6 +279,7 @@
 ---@field mapLine? boolean the walking line draws on the world map (Route.lua)
 ---@field minimapLine? boolean the walking line draws on the minimap (Route.lua)
 ---@field laterLegs? boolean the world map draws the faded legs after the current stop (Route.lua)
+---@field hideQuestPins? boolean the game's own quest markers give way to a journey's stops (QuestPins.lua)
 ---@field journeyTracker? boolean
 ---@field arrow? boolean
 ---@field metres? boolean

@@ -264,7 +264,9 @@ for _, destination in ipairs({ { map = 1, x = 6400, y = 100 }, { map = 0, x = 22
 			break
 		end
 	end
-	assert(changes >= 2 and searches == 2, "following bends reuses settled costs")
+	-- How many bends the first 180 yards holds is the walking map's shape; the point is that each one is followed,
+	-- and that following them costs no search.
+	assert(changes >= 1 and searches == 2, "following bends reuses settled costs")
 	-- A minute and an off-route move each replace only the start-side search.
 	for _ = 1, 3600 do
 		frame()

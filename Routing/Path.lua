@@ -667,15 +667,19 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 		end
 
 		-- Abstract A* from START to GOAL through the entrance graph.
-		-- Rounded graph edges and snapping must not let the heuristic overstate the remaining cost.
+		-- Rounded graph edges and snapping must not let the heuristic overstate the remaining cost: a point can
+		-- snap to a surface up to SNAP cells from the cell centre the heuristic measures to, and a drop shortens a
+		-- fall to less than the cell-centre distance it replaces. Subtract that reach before scaling.
 		local goalCell = cellOf(st, gk, gc)
 		local goalX = x0 + (floor(gk / st.ny) * C + floor(goalCell / C) + 0.5) * cs
 		local goalY = y0 + (gk % st.ny * C + goalCell % C + 0.5) * cs
 		local lower = max(0, 1 - 0.5 / cs)
+		local margin = SNAP * SQRT2 * cs
 		local function h(id)
 			local x, y = nodeXY(st, id)
 			local dx, dy = abs(x - goalX), abs(y - goalY)
-			return (dx > dy and dx + (SQRT2 - 1) * dy or dy + (SQRT2 - 1) * dx) * lower
+			local gap = dx > dy and dx + (SQRT2 - 1) * dy or dy + (SQRT2 - 1) * dx
+			return max(0, gap - margin) * lower
 		end
 		agen = agen + 1
 		local gen = agen
@@ -826,11 +830,12 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 			local nodes = trace(tree, entrance(st, a), {})
 			addAll(gk, nodes, 1, #nodes, 1)
 		else
-			-- A mid-route cluster's walk is refined on its baked cost, which the hazard profile does not weight, so it
-			-- is drawn without one: a detour drawn here would not be paid for in the reported cost.
+			-- A mid-route cluster's walk is refined with the hazard profile: the entrance edge the search chose was
+			-- charged for the ground it crosses, and the drawn line must keep out of the same ground rather than
+			-- cut across it. The reported cost stays the search's real cost.
 			local ka, kb = floor(a / 4096), floor(b / 4096)
 			local ea, eb = entrance(st, a), entrance(st, b)
-			if ka == kb and search(st, ka, swim, ea, R, eb, nil, nil, roadsOn and Grid.roads(st, ka)) then
+			if ka == kb and search(st, ka, swim, ea, R, eb, nil, nil, roadsOn and Grid.roads(st, ka), hz) then
 				local nodes = trace(R, eb, {})
 				addAll(ka, nodes, #nodes, 1, -1)
 			else -- neighbouring entrances across a cluster border
@@ -1117,14 +1122,157 @@ local function wetCluster(st, k)
 	return false
 end
 
--- The bake relaxes hundreds of thousands of edges against one cluster's roads. Its sparse set (only road cells) reads
--- as a hash lookup there, so expand it to a dense array once per cluster.
-local function denseRoads(st, road)
-	local set = {}
-	for cell = 0, st.C * st.C - 1 do
-		set[cell] = road[cell] == true
+-- A bake search walks one cluster's grid from each of its entrances in turn, so the work search() repeats for every
+-- expansion (the move masks, the heights a step may not climb, the water each cell enters, whether the landing cell is
+-- road) is resolved once per cluster instead: flat arrays hold, per exit, the node it reaches, its cost swimming and
+-- water walking, and the preference multiplier a road cell changes. The order is search()'s: the base grid's eight
+-- directions, then the cluster's explicit links, so equal costs settle in the same order and every ratio is unchanged.
+---@return table<number, number>? flat, table<number, number>?
+local function bakeEdges(st, k, road)
+	local val = grid(st, k)
+	if not val then
+		return nil
 	end
-	return set
+	local m, z, at, links = st.moves[k], st.z[k], st.at[k], st.links[k]
+	local steep, fmt, C, cs, swim = st.steep, st.fmt, st.C, st.cs, st.swim
+	local N = C * C
+	-- Floor nodes follow the base cells; the highest one bounds the head table.
+	local top = N
+	for node in pairs(at) do
+		if node > top then
+			top = node
+		end
+	end
+	local flat, head, size = {}, {}, 0
+	local function add(from, v, length, override)
+		if steep and not steep(val, z, from, val, z, v) then
+			return
+		end
+		local i = v + 1
+		local step, wet
+		if override then
+			step, wet = override, override
+		else
+			local bare = length * cs
+			step, wet = bare * (val[i] == 2 and swim or 1), bare
+		end
+		local base = v < N and v or at[i]
+		size = size + 4
+		flat[size - 3], flat[size - 2], flat[size - 1], flat[size] = v, step, wet, road[base] == true and 1 or OFFROAD
+	end
+	for node = 0, top - 1 do
+		head[node + 1] = size + 1
+		local i = node + 1
+		if node < N then
+			local mi = m[i] % 16
+			local ux, uy = floor(node / C), node % C
+			if val[i] ~= 0 then
+				local px, mx = mi % 2 == 1, ux > 0 and m[i - C] % 2 == 1
+				local py, my = mi % 4 >= 2, uy > 0 and m[i - 1] % 4 >= 2
+				if px then
+					add(node, node + C, 1)
+				end
+				if mx then
+					add(node, node - C, 1)
+				end
+				if py then
+					add(node, node + 1, 1)
+				end
+				if my then
+					add(node, node - 1, 1)
+				end
+				if mi % 8 >= 4 then
+					add(node, node + C + 1, SQRT2)
+				end
+				if mi >= 8 then
+					add(node, node + C - 1, SQRT2)
+				end
+				if ux > 0 and uy > 0 and m[i - C - 1] % 8 >= 4 then
+					add(node, node - C - 1, SQRT2)
+				end
+				if ux > 0 and uy < C - 1 and m[i - C + 1] % 16 >= 8 then
+					add(node, node - C + 1, SQRT2)
+				end
+			end
+		end
+		local list = links[i]
+		if list then
+			local cell = node < N and node or at[i]
+			local ux, uy = floor(cell / C), cell % C
+			for e = 1, #list do
+				local v, length, override
+				local entry = list[e]
+				if fmt >= 2 then
+					-- the cell offset, the landing layer and the cost in whole yards (0 for an ordinary step)
+					local tx, ty = ux + entry % 16 - 8, uy + floor(entry / 16) % 16 - 8
+					if tx >= 0 and ty >= 0 and tx < C and ty < C then
+						v = surface(st, k, tx * C + ty, floor(entry / 256) % 64 - 1, z[i], val, z, at)
+						if v then
+							local cost = floor(entry / 16384)
+							if cost > 0 then
+								override = cost
+							else
+								length = (tx ~= ux and ty ~= uy) and SQRT2 or 1
+							end
+						end
+					end
+				else
+					local d = entry % 8
+					local tx, ty = ux + DX[d], uy + DY[d]
+					if tx >= 0 and ty >= 0 and tx < C and ty < C then
+						v = surface(st, k, tx * C + ty, floor(entry / 8) - 1, z[i], val, z, at)
+						length = d >= 4 and SQRT2 or 1
+					end
+				end
+				if v then
+					add(node, v, length, override)
+				end
+			end
+		end
+	end
+	head[top + 1] = size + 1
+	return flat, head
+end
+
+-- One cluster's Dijkstra from a bake source, over bakeEdges' arrays, settling every target. It is search() with the
+-- bake's fixed arguments (no goal, hazards or reverse) and its exits already resolved, on one of the bake's trees.
+local function bakeSearch(tree, source, targets, left, flat, head, waterWalking)
+	local g, r, stamp, closed = tree.g, tree.r, tree.stamp, tree.closed
+	tree.gen = tree.gen + 1
+	local gen = tree.gen
+	hn = 0
+	local i = source + 1
+	g[i], r[i], stamp[i] = 0, 0, gen
+	push(0, source)
+	while hn > 0 do
+		local u = pop()
+		local ui = u + 1
+		if closed[ui] ~= gen then
+			closed[ui] = gen
+			tick()
+			if targets[u] then
+				left = left - 1
+				if left <= 0 then
+					return
+				end
+			end
+			local gu, ru = g[ui], r[ui]
+			-- A node whose exits bakeEdges skipped has none.
+			local stop = head[u + 2]
+			if stop then
+				local column = waterWalking and 2 or 1
+				for e = head[u + 1], stop - 1, 4 do
+					local v, vi = flat[e], flat[e] + 1
+					local step = flat[e + column]
+					local gv = gu + step * flat[e + 3]
+					if stamp[vi] ~= gen or gv < g[vi] then
+						g[vi], r[vi], stamp[vi] = gv, ru + step, gen
+						push(gv, v)
+					end
+				end
+			end
+		end
+	end
 end
 
 -- Bake RoadEdges.lua: each entrance graph edge's road ratios, four base64 symbols per non-default edge, or a
@@ -1155,11 +1303,25 @@ function Path.BakeRoadEdges(map)
 		end
 		return value
 	end
+	-- Every edge asks for the node at one of its ends, and each cross-cluster edge asks after a neighbour's cluster:
+	-- answer each id once so a bake decodes a cluster's grid once, however many edges point into it.
+	local seen = {}
+	local function nodeAt(id)
+		local node = seen[id]
+		if node == nil then
+			node = entrance(st, id) or false
+			seen[id] = node
+		end
+		return node or nil
+	end
 	for k = 0, st.D.nx * st.ny - 1 do
 		local nodes = nodesOf(st, k)
 		if #nodes > 0 then
 			local road = Grid.roads(st, k)
-			local wet, roadDense
+			local flat, head, wet
+			if road then
+				flat, head = bakeEdges(st, k, road)
+			end
 			local parts, defaults, any = {}, 0, false
 			local function flush()
 				while defaults > 0 do
@@ -1173,63 +1335,62 @@ function Path.BakeRoadEdges(map)
 			for _, u in ipairs(nodes) do
 				local adj = adjacent(st, u)
 				local degree = #adj / 3
-				local uNode = entrance(st, u)
+				local uNode = nodeAt(u)
 				local targets, left = {}, 0
 				if road and uNode then
 					for e = 1, degree do
 						local v = adj[e * 3 - 2]
 						if floor(v / 4096) == k then
-							local target = entrance(st, v)
+							local target = nodeAt(v)
 							if target and not targets[target] then
 								targets[target], left = true, left + 1
 							end
 						end
 					end
 				end
-				local searches
-				if left > 0 then
+				local dry, wetTree
+				if left > 0 and flat then
 					if wet == nil then
 						wet = st.swim ~= 1 and wetCluster(st, k)
 					end
-					roadDense = roadDense or denseRoads(st, road)
-					searches = {}
-					local tree = bakeTrees[1]
-					search(st, k, st.swim, uNode, tree, nil, targets, left, roadDense)
-					searches[1] = tree
+					dry = bakeTrees[1]
+					bakeSearch(dry, uNode, targets, left, flat, head)
+					-- A grid with no water enters every cell at the same cost either way, so one tree answers both.
+					wetTree = wet and bakeTrees[2] or dry
 					if wet then
-						tree = bakeTrees[2]
-						search(st, k, 1, uNode, tree, nil, targets, left, roadDense)
+						bakeSearch(wetTree, uNode, targets, left, flat, head, true)
 					end
-					searches[2] = tree
 				end
 				for e = 1, degree do
 					local v = adj[e * 3 - 2]
 					local c1, c2 = adj[e * 3 - 1], adj[e * 3]
-					local target = entrance(st, v)
 					local q1, q2, q3, q4
 					if floor(v / 4096) == k then
-						if searches and target then
-							local tree = searches[1]
-							if c1 == 0 or not reached(tree, target) then
+						local target = nodeAt(v)
+						if dry and target then
+							if c1 == 0 or not reached(dry, target) then
 								q1, q2 = 63, 0
 							else
-								q1, q2 = ratioQ(ratio(tree.g[target + 1] / c1)), ratioQ(ratio(tree.r[target + 1] / c1))
+								q1, q2 = ratioQ(ratio(dry.g[target + 1] / c1)), ratioQ(ratio(dry.r[target + 1] / c1))
 							end
-							tree = searches[2]
-							if c2 == 0 or not reached(tree, target) then
+							if c2 == 0 or not reached(wetTree, target) then
 								q3, q4 = 63, 0
 							else
-								q3, q4 = ratioQ(ratio(tree.g[target + 1] / c2)), ratioQ(ratio(tree.r[target + 1] / c2))
+								q3, q4 =
+									ratioQ(ratio(wetTree.g[target + 1] / c2)), ratioQ(ratio(wetTree.r[target + 1] / c2))
 							end
 						else
 							q1, q2, q3, q4 = 63, 0, 63, 0
 						end
 					else
+						-- A cluster with no road cells answers false however its neighbour decodes, so the grid of a
+						-- cross-cluster edge's far end is only read when that cluster paints roads.
 						local on = false
-						if target then
-							local other = Grid.roads(st, floor(v / 4096))
+						local other = Grid.roads(st, floor(v / 4096))
+						if other then
+							-- A landing that the neighbour's grid cannot place is no road, as before.
 							local cell = metadata(st, v)
-							on = other and cell and other[cell] or false
+							on = cell ~= nil and other[cell] == true and nodeAt(v) ~= nil
 						end
 						if c1 == 0 then
 							q1, q2 = 63, 0

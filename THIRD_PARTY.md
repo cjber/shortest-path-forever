@@ -13,7 +13,7 @@ it, so a data refresh that moves the pin never leaves this file behind. The addo
 | [CMaNGOS classic-db](https://github.com/cmangos/classic-db) | Portal and teleport destinations, transport spawns and periods, trainer NPCs and spells, and the heights of NPC and quest object spawns in `Data/*.lua` | `DB_REV` in `tools/gen_transit.py` (`tools/gen_services.py` and `tools/gen_heights.py` import it) | GPL-3.0 |
 | [CMaNGOS mangos-classic](https://github.com/cmangos/mangos-classic) | The transport timetable model and flight speed, reimplemented in `tools/gen_routes.py` and `tools/gen_transit.py` | Cited by source file in those scripts; no code copied | GPL-2.0-or-later |
 | [InFlight](https://github.com/LudiusMaximus/InFlight) | Recorded flight durations in `Data/Taxi.lua` | `INFLIGHT_REV` in `tools/gen_transit.py` | MIT |
-| Local client terrain, baked with TrinityCore's tools | The walkable cells in `Nav/*.lua` (`tools/baker/README.md`) | `TRINITY_REV` in `tools/baker/bake.sh` and the client build baked | Derived data, GPL-3.0-or-later; Blizzard's EULA applies to the client files |
+| Local client terrain, baked with TrinityCore's tools and the player's collision limits from benilla-re | The walkable cells, their steep down-only ground, steps and ledge drops in `Nav/*.lua` (`tools/baker/README.md`) | `TRINITY_REV` in `tools/baker/bake.sh` and the client build baked | Derived data, GPL-3.0-or-later; Blizzard's EULA applies to the client files |
 
 No embedded libraries ship. `media/` is this addon's own: the icon is drawn in `media/icon.svg`, the feathered
 `Dot.tga` is the route-stroke brush, `Zeppelin.tga` is the zeppelin map marker, `Pin.tga` is the gold goal pin and
@@ -39,7 +39,8 @@ as the glossary for game terms; eight frFR lines are Brainc3ll's.
 
 | Input | Used for | Pin | Licence |
 |---|---|---|---|
-| [TrinityCore](https://github.com/TrinityCore/TrinityCore) with its vendored CascLib (MIT) and Recast/Detour (zlib) | Terrain extraction for the navigation bake, fetched and patched in `tools/baker/` | `TRINITY_REV` in `tools/baker/bake.sh` | GPL-2.0-or-later |
+| [TrinityCore](https://github.com/TrinityCore/TrinityCore) with its vendored CascLib (MIT) and Recast/Detour (zlib) | Terrain extraction for the navigation bake, fetched and patched in `tools/baker/`; its `Player::HandleFall` sets the 14.57 yard fall limit | `TRINITY_REV` in `tools/baker/bake.sh` | GPL-2.0-or-later |
+| [benilla-re](https://github.com/samwhosung/benilla-re) | The player's collision limits in the navigation bake, from `systems/collision/walking.md`: the 50 degree walkable slope, the 2.0 yard step, and the 61.6 degree settle sweep that makes steeper ground down-only | Cited by document and address in `tools/baker/README.md`; no code copied | MIT OR Apache-2.0 |
 | [WoWDBDefs](https://github.com/wowdev/WoWDBDefs) | Reference for the Forever table layouts the baker reads | The commit linked in `tools/baker/README.md` | CC BY-SA 4.0 |
 | [Blizzard UI source](https://github.com/Gethe/wow-ui-source) | The map and spinner specs, fetched into `tools/.cache/` | `revision` in `tools/fetch_blizzard_ui.sh`; the simulator pin in `tools/forever_sim/fetch.py` | Blizzard Entertainment's; fetched, never committed |
 | [Ketho's WoW API annotations](https://github.com/Ketho/vscode-wow-api) | lua-language-server types in `tools/typecheck.sh` | `revision` in `tools/typecheck.sh` | MIT |
@@ -162,6 +163,7 @@ Credit for the reports and requests behind the addon.
 | Nivlemoth\_Nathrezim | Horde walks stay out of Southshore | CurseForge; #719 |
 | Lůca [Luutsa] | Town services of the same kind share one icon | Discord; #812 |
 | esc\_return | Arrow follows the walk with only step ends marked | Discord; #817 |
+| MrOxiMoron | The game's quest markers can stay on the map during a journey | CurseForge; #871; thread 8698185 |
 
 ## Inspired by
 
