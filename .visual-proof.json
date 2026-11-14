@@ -1,13 +1,13 @@
 {
-  "input_digest": "f6ef15f53ec9f8f8ee348c84cb16cb71b7b941241e81dff0f4a36f3b0c70d030",
-  "runtime_sha256": "f6ef15f53ec9f8f8ee348c84cb16cb71b7b941241e81dff0f4a36f3b0c70d030",
-  "candidate": "afc5d8c135d1bfa1c022fd496964e4cde24ffc1bcded1c93b8165e60773519b5",
+  "input_digest": "20b37981804eff0a8d23fba8debe3acb8587a56a8e7d726db2a873c45b1ca6f0",
+  "runtime_sha256": "20b37981804eff0a8d23fba8debe3acb8587a56a8e7d726db2a873c45b1ca6f0",
+  "candidate": "c0cc54d8a9fe394aa8ca5a99eb98e9a0a6420f10f1fad963bb10f61247af3267",
   "client_build": "1.60.1.70938 (Interface 16001)",
   "tested_artifact": "source-tree",
-  "source_commit": "f35dd0c29ce571ed25cf024fb4be4756726de26a",
+  "source_commit": "2ce55479d3008653071d13ddf562a98e65b5d427",
   "flows": [
     {
-      "name": "settings",
+      "name": "journey planner",
       "steps": [
         "/path"
       ],
@@ -16,8 +16,8 @@
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/a91ba185aca08126c4a3e7e434b13288/raw/73b0377951698d548a3e062f13c36589a0cb3515/1-settings.png",
-      "sha256": "d551e5a04d91d0b90da6610b949fded50908ccb96f35193d258422c81b1ef11c"
+      "url": "https://gist.githubusercontent.com/cjber/f237694c1924e935141cba0968677aed/raw/0b7ac1d9877f09020df783b56324660f86166511/1-journey-planner.png",
+      "sha256": "0b1ceacf839a9cb8d8425aa47fcd13a44acfe0b90dcf4f0abe9104734b126496"
     }
   ]
 }

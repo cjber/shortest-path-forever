@@ -21,6 +21,14 @@ for _, map in ipairs({ 0, 1, 2991 }) do
 end
 local Path = ns.Path
 
+-- Every fixed place is a source for one search over the map's whole entrance graph, so the decoded graphs and grids of
+-- a map are read again and again. The client's ceilings are sized for a journey that touches a handful of clusters; a
+-- batch tool that walks one map end to end would spend most of the bake re-decoding what the last search evicted
+-- (58 s to 11 s over this map's places, at about 410 MB instead of 140 MB).
+Path.graphKB = 131072
+Path.cacheKB = 196608
+Path.clusters = 2048
+
 local places = {}
 local function Add(key, point)
 	places[point.map] = places[point.map] or {}
