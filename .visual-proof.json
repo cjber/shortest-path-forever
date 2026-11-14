@@ -4,7 +4,7 @@
   "candidate": "9a92e7dc3bb0b19fdff11ce9d0569e65f1c0ad1e4861326985a295de61c01a88",
   "client_build": "1.60.1.70938 (Interface 16001)",
   "tested_artifact": "source-tree",
-  "source_commit": "c2aefc0e6c2628bff446bfdbdcf32e5e4211a89c",
+  "source_commit": "1715c2f3711fa12a7dc55fe8a1bdece4c5a505c5",
   "flows": [
     {
       "name": "map marks settings with the new option",
@@ -14,14 +14,14 @@
       "result": "pass"
     },
     {
-      "name": "world map with the tab turned off",
+      "name": "quest log with the tab turned off",
       "steps": [
         "/home/cjber/.cache/agent-scratch/sweep/wow/spf1246/2-tab-off.lua"
       ],
       "result": "pass"
     },
     {
-      "name": "world map with the tab turned back on",
+      "name": "quest log with the tab turned back on",
       "steps": [
         "/home/cjber/.cache/agent-scratch/sweep/wow/spf1246/3-tab-on.lua"
       ],
@@ -30,16 +30,16 @@
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/50291e67aff7265b00199b2bb7a95656/raw/85dbf118d695eb390436df60c81cca0c6caaf89a/1-map-marks-settings-with-the-new-option.png",
-      "sha256": "7c527dd72ef3bdd114ffedcd28843bc12def321083cfbc6061f6896063850cd3"
+      "url": "https://gist.githubusercontent.com/cjber/df1354d3197820a63bb648a49de5ad79/raw/889eb18fb1ec0de4d338716a81fe2cec74b53312/1-map-marks-settings-with-the-new-option.png",
+      "sha256": "0b6597151201fc78f734cc00d9154ce5c520564458a273a2a179818cebad06cf"
     },
     {
-      "url": "https://gist.githubusercontent.com/cjber/50291e67aff7265b00199b2bb7a95656/raw/85dbf118d695eb390436df60c81cca0c6caaf89a/2-world-map-with-the-tab-turned-off.png",
-      "sha256": "51fdb640ddbc8608fe55266c0ecc450bd1ef4235b9b7faa4a5a979aefd3e45c1"
+      "url": "https://gist.githubusercontent.com/cjber/df1354d3197820a63bb648a49de5ad79/raw/889eb18fb1ec0de4d338716a81fe2cec74b53312/2-quest-log-with-the-tab-turned-off.png",
+      "sha256": "6b424ff5efaa60b83bf36e23ed9b9ff537fed0736d9f779da0cfc30b3d145727"
     },
     {
-      "url": "https://gist.githubusercontent.com/cjber/50291e67aff7265b00199b2bb7a95656/raw/85dbf118d695eb390436df60c81cca0c6caaf89a/3-world-map-with-the-tab-turned-back-on.png",
-      "sha256": "6a4f16286014d8fc308b5cccb274deabcc8f311efab60383998eeee44c090218"
+      "url": "https://gist.githubusercontent.com/cjber/df1354d3197820a63bb648a49de5ad79/raw/889eb18fb1ec0de4d338716a81fe2cec74b53312/3-quest-log-with-the-tab-turned-back-on.png",
+      "sha256": "08e8e7bba59198b8a3d09463e3665cbcd22badf61bd905c553605d5bfe580cc2"
     }
   ]
 }
