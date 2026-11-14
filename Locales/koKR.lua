@@ -46,8 +46,7 @@ L["Avoids %s (level %s)"] = "%s 우회 (레벨 %s)"
 L["Bags"] = "가방"
 L["Bank"] = "은행"
 L["Battlemaster"] = "전장 지휘관"
-L["Hovering a quest stop shows the quest's area."] =
-	"퀘스트 정류 지점에 마우스를 올리면 퀘스트 지역이 표시됩니다." -- mt
+L["The destination pin's step line follows the journey."] = "목적지 핀의 단계 줄이 여정을 따라갑니다." -- mt
 L["Boat and Zeppelin Routes"] = "배와 비행선 노선"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"배와 비행선 노선. 부두를 가리키는 동안 그려집니다."

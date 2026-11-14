@@ -43,7 +43,7 @@ L["Avoids %s (level %s)"] = "繞開%s（等級 %s）"
 L["Bags"] = "背包"
 L["Bank"] = "銀行"
 L["Battlemaster"] = "戰場指揮官"
-L["Hovering a quest stop shows the quest's area."] = "滑鼠游標停在任務站點上會顯示該任務的區域。" -- mt
+L["The destination pin's step line follows the journey."] = "目的地標記的步驟行會跟隨旅程更新。" -- mt
 L["Boat and Zeppelin Routes"] = "船隻與飛艇航線"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"船隻與飛艇航線，在你指向碼頭時繪製。"
