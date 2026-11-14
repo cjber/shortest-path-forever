@@ -139,6 +139,12 @@ end
 
 ---@param elapsed number seconds since the last update
 local function Update(elapsed)
+	-- Timers and already queued frame ticks outlive hiding the frame. Keep the route for the compass,
+	-- but never let disabled directions place the native marker again (#881).
+	if ns.db.arrow == false then
+		SetUpdating(false)
+		return
+	end
 	-- Arrived: the pin stands until the player leaves the stop's area, then the arrow or nothing takes over.
 	if arrival then
 		if ns.StopInside and not ns.StopInside(arrival) then
@@ -596,6 +602,7 @@ function ns.PointGuideArrow(points, placeBend, stop, goal)
 	if not points or ns.db.arrow == false then
 		native = nil
 		if frame then
+			SetUpdating(false)
 			frame:SetShown(moving)
 		end
 		return

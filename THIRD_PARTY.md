@@ -60,6 +60,10 @@ Credit for the reports and requests behind the addon.
 
 | Who | What | Notes |
 |---|---|---|
+| [azure463](https://github.com/azure463) | Choose whether journeys use water walking | GitHub; #878 |
+| AsimRamay | Journeys recover after walking away without boarding a boat | GitHub; #764 |
+| nookie909 | Reported the removed Stormwind to Dalaran portal | CurseForge; thread 8682913; #684 |
+| Zerhathos | Reported a navigation marker remaining with the arrow off | CurseForge; thread 8706138; #881 |
 | jakerist | Destination pin step line follows the journey | GitHub; #875 |
 | cobalt\_44 | Nearby services tab can be hidden | CurseForge; #767 |
 | Xeteskian | Nearby services tab can be hidden | CurseForge; #767 |
@@ -129,7 +133,7 @@ Credit for the reports and requests behind the addon.
 | MacieGx | Your own profession trainers come first (code) | GitHub; PR #704 |
 | borick7318 | Metres match the game's distances | Discord; #668 |
 | cotijelucie | Hide travel marks on the world map | Discord; #635 |
-| cotijelucie | Town services drawn on the world map | Discord; #739 |
+| cotijelucie | Town services drawn on the world map and a map checkbox for each Nearby service | Discord; #739, #866 |
 | sampconrad | Arrow becomes a pin on arrival | CurseForge; #627 |
 | jixxor | Stormwind walks follow the streets | Discord; #602 |
 | Gaafah | Option to hide the walking line | CurseForge; #576 |

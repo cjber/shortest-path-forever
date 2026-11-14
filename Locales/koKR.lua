@@ -453,3 +453,6 @@ L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey
 L["Show the Nearby services tab"] = "주변 편의시설 탭 표시"
 L["The tab in the world map's quest log. Off, /spfnear and the tracking menu still open it."] =
 	"세계 지도 퀘스트 로그의 탭입니다. 꺼도 /spfnear와 추적 메뉴로 계속 열 수 있습니다."
+L["Use Water Walking and Levitate"] = "수면 걷기와 공중 부양 사용" -- mt
+L["Use Water Walking or Levitate when available. When off, routes use swimming times and may still cross water."] =
+	"사용 가능한 수면 걷기 또는 공중 부양으로 경로를 계획합니다. 끄면 일반 수영 시간을 사용하며, 경로가 여전히 물을 건널 수 있습니다." -- mt

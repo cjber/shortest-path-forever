@@ -109,9 +109,9 @@ PORTAL_NAMES = {
     2173: ("Passage to Deeprun Tram (Stormwind)", "passage"),
     2175: ("Passage to Deeprun Tram (Ironforge)", "passage"),
 }
-# The Alliance-only Skyborne portal pair is a Forever addition, absent from the classic-db AreaTrigger table.
-# Its endpoints are the portal thresholds reported in Forever's travel guide and player reports; there is no Horde
-# equivalent in Dalaran or an opposing-faction portal in Stormwind.
+# The Alliance-only Skyborne portal from Dalaran is absent from the classic-db AreaTrigger table.
+# Forever's travel guide documents it as one-way: the Stormwind return portal was removed (#684).
+# https://wow-travelcraft.com/guide.html
 SKYBORNE_PORTALS = [
     {
         "name": "Portal to Stormwind",
@@ -119,14 +119,6 @@ SKYBORNE_PORTALS = [
         "faction": "Alliance",
         "from": {"map": 571, "x": 5807.06, "y": 506.244, "z": 657.576},
         "to": {"map": 0, "x": -8842.09, "y": 626.358, "z": 94.087},
-        "seconds": 5,
-    },
-    {
-        "name": "Portal to Dalaran",
-        "kind": "portal",
-        "faction": "Alliance",
-        "from": {"map": 0, "x": -9017.0, "y": 889.0, "z": 132.0},
-        "to": {"map": 571, "x": 5807.06, "y": 506.244, "z": 657.576},
         "seconds": 5,
     },
 ]
@@ -751,7 +743,7 @@ def main():
         "-- Excludes Stormwind's Wizard's Sanctum 702/704: a hop up and down one tower, 12 yd apart on the map,",
         "-- that never shortens a flat route and would stack two pins. Also the unused vault 107/109 (map 35), the",
         "-- Leap of Faith fall 943, and PvP barracks 2527-2534, which have no AreaTrigger in this build.",
-        "-- Skyborne Dalaran <-> Stormwind: manually mapped Alliance-only portal thresholds; no Horde portal exists.",
+        "-- Skyborne Dalaran -> Stormwind: manually mapped Alliance-only portal; the return portal was removed.",
         "-- https://wow-travelcraft.com/guide.html (Alliance portal; Horde Skyborne has no Dalaran portal).",
         "",
         "-- stylua: ignore",

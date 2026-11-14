@@ -500,6 +500,12 @@ ns.Init(function()
 		ns.TravelPolicyChanged
 	)
 	Checkbox(
+		"useWaterWalking",
+		L["Use Water Walking and Levitate"],
+		L["Use Water Walking or Levitate when available. When off, routes use swimming times and may still cross water."],
+		ns.TravelPolicyChanged
+	)
+	Checkbox(
 		"teleports",
 		L["Use hearth and teleports"],
 		L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."]

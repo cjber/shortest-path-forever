@@ -388,6 +388,7 @@ local groups = {
 		"guidelime",
 		"avoidHighZones",
 		"followRoads",
+		"useWaterWalking",
 		"teleports",
 		"hearthMinimumSavings",
 		"guideStops",
@@ -435,7 +436,7 @@ assert(#buttons == #order + 1, "one index button per group, then the Forever add
 -- Main's arrival pin added arrivalPin, the line switches added mapLine, minimapLine and laterLegs, the town services
 -- added townServices, and the tab switch added nearbyTab; the travel stats and departure sharing switches are gone
 -- with their sharing.
-assert(#rows == 67, #rows)
+assert(#rows == 68, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -788,3 +789,13 @@ lock:SetValue(true)
 assert(trackerState.locked == true and lock:GetValue(), "locking writes the shared host settings")
 lock:SetValue(false)
 assert(trackerState.locked == false and not lock:GetValue(), "unlocking writes them back")
+
+local waterWalking = Row("useWaterWalking")
+assert(waterWalking.kind == "checkbox", "water walking uses a native Settings checkbox initializer")
+assert(waterWalking.setting.default == true, "water walking stays enabled by default")
+assert(waterWalking.setting.category.name == "Guidance", "water walking belongs to Guidance")
+assert(waterWalking.tooltip:find("may still cross water", 1, true), "the tooltip does not promise a dry route")
+local policies = policyChanged
+waterWalking.setting:SetValue(false)
+waterWalking.setting:SetValue(true)
+assert(policyChanged == policies + 2, "both checkbox transitions invalidate travel policy")

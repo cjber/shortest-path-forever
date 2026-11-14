@@ -215,17 +215,28 @@ def section_header(canvas, x, y, width, name, count):
     canvas.draw(sign, x + width - 16 - sign.width / 2, y + (SECTION_HEIGHT - sign.height) / 2)
 
 
-def row(canvas, x, y, width, entry):
-    """CreateRow: the Who list's 44-high card, a 30-unit icon at LEFT 8, the label, its NPC and title, and the time."""
+def row(canvas, x, y, width, entry, checked=None, entrance=False):
+    """CreateRow: 44-high card, native filter at LEFT 0, icon at LEFT 34 (8 without a filter), and time."""
     label, ref, npc, place, _, _, _ = entry[:7]
     detail = entry[7] if len(entry) > 7 else f"{npc} · {place}"
     canvas.draw(canvas.ui.atlas("common-button-list-large"), x, y, width, ROW_HEIGHT)
     icon_top = y + (ROW_HEIGHT - ICON) / 2
-    icon(canvas, ref, x + 8, icon_top, ICON)
+    # UICheckButtonTemplate inherits 32x32 UICheckButtonArtTemplate. These are its
+    # native NormalTexture and CheckedTexture, whole-file texcoords, template-owned
+    # border on the row's left edge; the check is drawn above the normal texture.
+    filterable = not entrance and label != "Flight master"
+    icon_left = 34 if filterable else 8
+    if filterable:
+        check_top = y + (ROW_HEIGHT - 32) / 2
+        canvas.draw(canvas.ui.texture("interface/buttons/ui-checkbox-up.blp"), x, check_top, 32, 32)
+        shown = (checked or {}).get(label, label != "Repair")
+        if shown:
+            canvas.draw(canvas.ui.texture("interface/buttons/ui-checkbox-check.blp"), x, check_top, 32, 32)
+    icon(canvas, ref, x + icon_left, icon_top, ICON)
     when = time_of(entry)
     time_font = FONTS["GameFontHighlight"]
     time_width = canvas.text_width(when, time_font)
-    text_x = x + 8 + ICON + 8
+    text_x = x + icon_left + ICON + 8
     text_width = x + width - 8 - 6 - time_width - text_x
     label_top = icon_top + 4
     canvas.text(x, y + 8, when, time_font, justify="RIGHT", width=width - 8)
@@ -258,7 +269,7 @@ def better_row(canvas, x, y, width, entry):
     )
 
 
-def sections(canvas, x, y, width, groups=SECTIONS):
+def sections(canvas, x, y, width, groups=SECTIONS, checked=None):
     """Refresh: one header per section and its rows below, 44 high and 2 apart, a better trip's 28 high and indented
     under its group's; the count is the groups', and the list ends at the last row."""
     top = 0
@@ -271,7 +282,7 @@ def sections(canvas, x, y, width, groups=SECTIONS):
                 better_row(canvas, x + BETTER_INDENT, y + top, width - BETTER_INDENT, entry)
                 top += BETTER_HEIGHT + ROW_GAP
             else:
-                row(canvas, x, y + top, width, entry)
+                row(canvas, x, y + top, width, entry, checked, entrance=name == "Dungeons and raids")
                 top += ROW_HEIGHT + ROW_GAP
     return top
 
@@ -348,7 +359,7 @@ def search_box_text(canvas, x, y, width, height, text):
     canvas.draw(ui.atlas("common-search-clearbutton"), button_x + 3, button_y + 3, 10, 10, (1, 1, 1, 0.5))
 
 
-def panel(ui, query="", groups=SECTIONS):
+def panel(ui, query="", groups=SECTIONS, checked=None):
     """The quest log's right-hand panel, cropped to the panel and its tabs as the preview is."""
     canvas = ui.canvas(QUESTLOG_WIDTH + 64 + 2 * FRAME_MARGIN, QUESTLOG_HEIGHT + 28 + 2 * FRAME_MARGIN)
     fx, fy = FRAME_MARGIN, FRAME_MARGIN
@@ -373,7 +384,7 @@ def panel(ui, query="", groups=SECTIONS):
 
     def content(layer):
         title(layer, header_x, by + 4, header_width, ("atlas", "Banker"))
-        top = sections(layer, list_x + 6, by + LIST_TOP, list_width - 12, groups)
+        top = sections(layer, list_x + 6, by + LIST_TOP, list_width - 12, groups, checked)
         return LIST_TOP + top + PAD
 
     content_height = clipped(canvas, bx, by, bw, bh, content)
@@ -413,3 +424,14 @@ def render_better(ui):
 
 def render_roles(ui):
     return scene(ui, [(panel(ui, groups=ROLES), 0, 0)])
+
+
+def render_filters(ui):
+    """Independent saved choices, plus the default unchecked Repair and unfiltered flight row.
+
+    This illustrative state uses the same Auberdine NPCs as the default scenes.
+    It keeps paired legacy groups visible together to expose independent switches.
+    """
+    groups = (("Trainers", TRAINERS[:4]), ("Services", SERVICES[:4]))
+    checked = {"Portal trainer": False, "Blacksmithing": False}
+    return scene(ui, [(panel(ui, groups=groups, checked=checked), 0, 0)])

@@ -1,3 +1,5 @@
+---@class SPFNamespace
+---@field RefreshServiceFilters fun() refreshes visible map filter checkboxes
 ---@type string, SPFNamespace
 local _, ns = ...
 
@@ -117,6 +119,7 @@ local Refresh, Queue
 ---@field seconds number?
 ---@field query string
 ---@field itemID integer? the goods the row names first (NearbyServices.Goods), which its icon shows
+---@field Filter CheckButton? map visibility, on ordinary service rows only
 ---@field Item Button the icon's hover and click: the item's own tooltip, and Shift-click links it
 ---@field Icon Texture
 ---@field Label FontString
@@ -137,6 +140,13 @@ end
 ---@param row SPFServicesRow
 local function PaintRow(row)
 	local group, place = row.group, row.place
+	if row.Filter then
+		local filterable = ns.TownServiceFilterable(group)
+		row.Filter:SetShown(filterable)
+		row.Filter:SetChecked(filterable and ns.TownServiceGroupShown(group))
+		row.Icon:ClearAllPoints()
+		row.Icon:SetPoint("LEFT", filterable and 34 or 8, 0)
+	end
 	local goods = ns.NearbyServices.Goods(group.key, place, row.query)
 	row.itemID = goods and goods[1]
 	local icon = group.icon
@@ -214,6 +224,21 @@ end
 local function CreateRow(parent)
 	local row = CreateFrame("Button", nil, parent) --[[@as SPFServicesRow]]
 	row:SetHeight(ROW_HEIGHT)
+	row.Filter = CreateFrame("CheckButton", nil, row, "UICheckButtonTemplate") --[[@as CheckButton]]
+	row.Filter:SetPoint("LEFT", 0, 0)
+	row.Filter:SetScript("OnEnter", function(button)
+		GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
+		GameTooltip:SetText(L["Show on map"])
+		GameTooltip:Show()
+	end)
+	row.Filter:SetScript("OnLeave", function(button)
+		if GameTooltip:IsOwned(button) then
+			GameTooltip:Hide()
+		end
+	end)
+	row.Filter:SetScript("OnClick", function(button)
+		ns.SetTownServiceGroupShown(row.group, button:GetChecked())
+	end)
 	Art.RowArt(row)
 	row.Icon = row:CreateTexture(nil, "ARTWORK")
 	row.Icon:SetPoint("LEFT", 8, 0)
@@ -589,6 +614,9 @@ function Refresh()
 	subtitle:SetShown(where ~= nil)
 	subtitle:SetText(where or "")
 end
+
+-- A map-menu change updates visible row checkboxes without moving the scroll offset.
+ns.RefreshServiceFilters = Refresh
 
 ---@param shown boolean
 local function StartTicker(shown)

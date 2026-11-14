@@ -12,6 +12,13 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Choose each service pin from Nearby services.** Every service row has its own map checkbox, so hiding one profession leaves the others visible. The world map filter uses the same choices. Thanks to cotijelucie for the request (#866).
+
+- **Choose whether journeys use water walking.** Turn off *Use Water Walking and Levitate* in Guidance to plan with ordinary swimming costs, even when you know a water-walking spell. Routes can still cross water. Thanks to azure463 for the request (#878).
+
+- **Walking away from a boat dock keeps the journey recoverable.** Until you board, guidance stays on the departure dock and recalculates the walk back when you move away. Thanks to AsimRamay for the report (#764).
+- **Routes no longer use the removed Stormwind to Dalaran portal.** The Dalaran to Stormwind portal remains available to Alliance characters. Thanks to nookie909 for the report (#684).
+- **Turning off the direction arrow also stops its navigation marker.** A queued update can no longer put the game's waypoint back after guidance clears it. Thanks to Zerhathos for the report (#881).
 - **A journey can walk to a new flight master when flying from there is quicker.** When the nearest flight master on the way is one the character has not discovered, and flying from that point would arrive sooner than walking the whole way, the route now walks there first, learns the flight point, and then flies from it. Every landing and connecting flight still uses only flight points already known. Thanks to Crypa7 for the idea (#868).
 - **The destination pin's step line follows the journey.** Under the pin's distance, the line now names the step you are on for the whole journey to one place, instead of keeping the first leg's wording until you arrive. Thanks to jakerist (#875).
 - **The Nearby services tab can be hidden.** *Show the Nearby services tab* under Map marks takes the tab out of the world map's quest log when another addon needs that space. It is on by default, and `/spfnear` and the tracking menu still open the services with the tab off. Asked on CurseForge by cobalt_44, Xeteskian and DaFrozenMage (#767).

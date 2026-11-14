@@ -148,6 +148,12 @@ local function frame(frameType, name, parent, template)
 	function f.GetFrameLevel()
 		return 1
 	end
+	function f:SetChecked(value)
+		self.checked = value
+	end
+	function f:GetChecked()
+		return self.checked
+	end
 	function f.EnableMouse() end
 	function f:RegisterEvent(event)
 		self.events[event] = true
@@ -214,6 +220,12 @@ local ns = {
 		end,
 	}),
 }
+ns.TownServiceFilterable = function(group)
+	return group.section ~= "entrances" and group.key ~= "flight"
+end
+ns.TownServiceGroupShown = function()
+	return true
+end
 ns.FormatCountdown = function(ms)
 	local seconds = math.ceil(ms / 1000)
 	return string.format("%d:%02d", math.floor(seconds / 60), seconds % 60)

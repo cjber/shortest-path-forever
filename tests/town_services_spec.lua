@@ -281,12 +281,13 @@ check(
 )
 
 -- The Map Filter's Town services submenu has the four levels, then one checkbox per service the pins can wear.
-local radios, checkboxes = {}, {}
+local radios, checkboxes, scrollExtent = {}, {}, nil
 local menuRoot = {
 	CreateDivider = function() end,
 	CreateButton = function(_, text)
 		check(text == "Town services", "the submenu is still named Town services")
 		return {
+			SetScrollMode = function(_, extent) scrollExtent = extent end,
 			CreateDivider = function() end,
 			CreateRadio = function(_, label, get, click)
 				radios[#radios + 1] = { label = label, get = get, click = click }
@@ -299,25 +300,26 @@ local menuRoot = {
 }
 menus.MENU_WORLD_MAP_TRACKING(nil, menuRoot)
 check(#radios == 4, "the submenu still has the four town levels")
-check(#checkboxes == 14, "one checkbox for every service the pins show")
+check(scrollExtent == 400, "the per-kind catalogue scrolls after twenty rows")
+check(#checkboxes == #groups, "one checkbox for every service in the catalogue")
+for at, entry in ipairs(groups) do
+	check(checkboxes[at].label == entry.label, "checkbox labels follow the authoritative catalogue order")
+end
 local box = {}
 for _, row in ipairs(checkboxes) do
 	box[row.label] = row
 end
 check(box["Repair"] and box["Repair"].get() == false, "repair starts unchecked")
 check(box["Innkeeper"] and box["Innkeeper"].get() == true, "the other services start checked")
-check(box["Battlemaster"] and box["Battlemaster"].get() == true, "the battlemaster has a checkbox of its own, checked")
-check(
-	box["Profession trainers"] and box["Food and drink"] and box["Ammunition"] and box["Bags and trade supplies"],
-	"the grouped services have one checkbox each"
-)
+check(box["Food"] and box["Trade supplies"], "each vendor kind uses its own catalogue label")
 check(not box["Dungeons and raids"], "a dungeon entrance gets no checkbox")
 box["Repair"].click()
-check(ns.db.townServiceRepair == true and count() == 4, "checking repair shows its pins at once")
+check(ns.db.townServiceKinds.repair == true and count() == 4, "checking repair shows its pins at once")
 box["Repair"].click()
-check(ns.db.townServiceRepair == false and count() == 3, "unchecking it hides them again")
+check(ns.db.townServiceKinds.repair == false and count() == 3, "unchecking it hides them again")
 
 -- A saved choice survives the next load's defaults merge, and the shipped default stays hidden.
+ns.db.townServiceKinds = nil
 ns.SetTownServiceShown("townServiceRepair", true)
 for key, value in pairs(ns.Defaults) do
 	if ns.db[key] == nil then
@@ -347,8 +349,14 @@ ns.RefreshTownServices()
 check(count() == 4, "all towns draws the battlemaster beside the other services")
 check(find(7) and find(7).Texture.atlas == "BattleMaster", "the battlemaster pin wears the client's own mark")
 check(find(7).Texture.texture == nil, "and no file art")
+radios, checkboxes = {}, {}
+menus.MENU_WORLD_MAP_TRACKING(nil, menuRoot)
+for _, row in ipairs(checkboxes) do
+	box[row.label] = row
+end
+check(box["Battlemaster"] and box["Battlemaster"].get(), "a newly available battlemaster has its own checkbox")
 box["Battlemaster"].click()
-check(ns.db.townServiceBattlemaster == false, "unchecking the battlemaster writes its switch")
+check(ns.db.townServiceKinds.battlemaster == false, "unchecking the battlemaster writes its switch")
 check(not find(7), "its pin goes")
 check(count() == 3, "and no other service's pin goes with it")
 check(find(1) == find(2) and find(3) and find(4), "the capital's services and both outlying sellers stay")

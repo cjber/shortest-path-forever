@@ -4,6 +4,10 @@ local _, ns = ...
 
 ns.Credits = {
 	players = {
+		{ name = "azure463", what = "Choose whether journeys use water walking" },
+		{ name = "AsimRamay", what = "Journeys recover after walking away without boarding a boat" },
+		{ name = "nookie909", what = "Reported the removed Stormwind to Dalaran portal" },
+		{ name = "Zerhathos", what = "Reported a navigation marker remaining with the arrow off" },
 		{ name = "jakerist", what = "Destination pin step line follows the journey" },
 		{ name = "cobalt_44", what = "Nearby services tab can be hidden" },
 		{ name = "Xeteskian", what = "Nearby services tab can be hidden" },
@@ -73,7 +77,10 @@ ns.Credits = {
 		{ name = "MacieGx", what = "Your own profession trainers come first (code)" },
 		{ name = "borick7318", what = "Metres match the game's distances" },
 		{ name = "cotijelucie", what = "Hide travel marks on the world map" },
-		{ name = "cotijelucie", what = "Town services drawn on the world map" },
+		{
+			name = "cotijelucie",
+			what = "Town services drawn on the world map and a map checkbox for each Nearby service",
+		},
 		{ name = "sampconrad", what = "Arrow becomes a pin on arrival" },
 		{ name = "jixxor", what = "Stormwind walks follow the streets" },
 		{ name = "Gaafah", what = "Option to hide the walking line" },

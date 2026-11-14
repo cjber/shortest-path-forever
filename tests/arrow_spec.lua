@@ -73,6 +73,14 @@ driver.load("UI/Art.lua")
 driver.load("UI/Mover.lua")
 driver.load("UI/TurnAround.lua")
 driver.load("UI/Arrow.lua")
+
+-- Clearing or disabling guidance must also work before the lazy arrow frame exists.
+ns.PointGuideArrow(nil)
+assert(frame == nil, "clearing initial guidance must not create an arrow")
+ns.db.arrow = false
+ns.PointGuideArrow({ { map = 1, x = 200, y = 0 } })
+assert(frame == nil, "initial disabled guidance must not create an arrow")
+ns.db.arrow = true
 local points = { { map = 1, x = 0, y = 0 }, { map = 1, x = 200, y = 0 } }
 local placed = 0
 local function place()
@@ -184,6 +192,18 @@ assert(frame.alpha == 1, "and it does not dim until the bend is past 120 again")
 face(130)
 assert(frame.alpha == 0.4, "past 120 degrees it dims again")
 
+-- Turning directions off must also retire callbacks the client already queued (#881).
+ns.PointGuideArrow(points, place)
+local beforeOff, queuedOff = placed, frame.OnUpdate
+ns.db.arrow = false
+ns.PointGuideArrow(points, place)
+queuedOff(frame, 0.1)
+assert(placed == beforeOff, "a queued tick with the arrow off cannot place a native marker")
+assert(frame.hidden and rawget(frame, "OnUpdate") == nil, "disabled directions stop their frame callback")
+ns.db.arrow = true
+ns.PointGuideArrow(points, place)
+assert(placed == beforeOff + 1 and not frame.hidden, "directions resume when enabled again")
+
 -- Move the arrow: dragged, saved in screen pixels, scaled, and reset with a right-click.
 assert(not frame.mouse, "click-through until Move the arrow is on")
 ns.MoveArrow(true)
@@ -277,4 +297,23 @@ local pointed = placed
 ns.db.guideStops = true
 ns.GuideStopsChanged()
 assert(placed == pointed + 1, "changing the setting re-points the arrow and the guide's marker at once")
+-- Exercise the native placement callback too: disabling clears the owned waypoint, and a queued tick cannot
+-- write it back. The same route resumes normally when directions are enabled.
+ns.db.guideStops = false
+ns.JourneyGuide.Start()
+local nativeGoal = { map = 1, x = 1200, y = 0 }
+ns.JourneyGuide.To(nativeGoal, { nativeGoal }, nativeGoal)
+assert(driver.waypoint() and select(2, driver.waypoint()), "native guidance starts tracked")
+local nativeQueued = frame.OnUpdate
+ns.db.arrow = false
+ns.JourneyGuide.Retarget()
+ns.JourneyGuide.To(nativeGoal, { nativeGoal }, nativeGoal)
+assert(not driver.waypoint(), "disabling takes the guide's waypoint back")
+nativeQueued(frame, 0.1)
+assert(not driver.waypoint(), "a queued arrow tick cannot restore the native marker while disabled")
+ns.db.arrow = true
+ns.JourneyGuide.Retarget()
+ns.JourneyGuide.To(nativeGoal, { nativeGoal }, nativeGoal)
+assert(driver.waypoint() and select(2, driver.waypoint()), "enabling restores native guidance")
+ns.JourneyGuide.Stop()
 print("arrow_spec: ok")

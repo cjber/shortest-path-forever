@@ -469,3 +469,6 @@ L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey
 L["Show the Nearby services tab"] = "Показывать вкладку услуг поблизости"
 L["The tab in the world map's quest log. Off, /spfnear and the tracking menu still open it."] =
 	"Вкладка в журнале заданий на карте мира. Если выключить, /spfnear и меню отслеживания всё равно её откроют."
+L["Use Water Walking and Levitate"] = "Использовать Хождение по воде и Левитацию" -- mt
+L["Use Water Walking or Levitate when available. When off, routes use swimming times and may still cross water."] =
+	"Планировать с Хождением по воде или Левитацией, если они доступны. Отключите для расчёта обычного времени плавания; маршруты всё ещё могут пересекать воду." -- mt

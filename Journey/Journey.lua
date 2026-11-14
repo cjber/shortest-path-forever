@@ -199,6 +199,9 @@ end
 
 -- Whether walks may cross water, and the spell to cast first when none is up.
 local function WaterWalking()
+	if ns.db.useWaterWalking == false then
+		return false
+	end
 	for _, id in ipairs(WATER_AURAS) do
 		if C_UnitAuras.GetPlayerAuraBySpellID(id) then
 			return true

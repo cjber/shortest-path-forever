@@ -194,7 +194,14 @@ local function EstimateKept(now)
 	local estimate = { now = now, arrive = now, legs = {} }
 	for index = progress.index, #followed.legs do
 		local leg = followed.legs[index]
-		if index == progress.index and leg.route and not progress.departed and leg.depart < now then
+		if
+			index == progress.index
+			and leg.route
+			and not progress.departed
+			and (leg.mode == "boat" or leg.depart < now)
+		then
+			-- An unboarded boat still needs an approach from here. This estimate starts at the boat and has
+			-- no measured approach, so only a fresh plan can price the walk back to its dock.
 			return nil
 		end
 		local duration, wait = leg.arrive - leg.depart, leg.wait or 0
@@ -963,8 +970,9 @@ function Search.Replan(riding, flying, changedRide, changedSpeed)
 			and moved
 			and (not followed or (leg and leg.walkError) or here.map ~= startAt.map)
 		-- A teleport is cast where you stand, so its time holds wherever you go, while the walks searched from where
-		-- you stood stop describing here: walked on before casting, they are searched again.
-		local walkedOn = moved and leg and leg.mode == "teleport"
+		-- you stood stop describing here: walked on before casting, they are searched again. An unboarded boat
+		-- likewise needs the approach searched from here when the player leaves its dock.
+		local walkedOn = moved and leg and (leg.mode == "teleport" or leg.mode == "boat" and not progress.departed)
 		if not flying and not riding and (off or retry or walkedOn or GetTime() - refreshedAt >= REFRESH_EVERY) then
 			RefreshCosts(false, off or retry)
 		elseif changedRide or changedSpeed or not RetimeKept() then

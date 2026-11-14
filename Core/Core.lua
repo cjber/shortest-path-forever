@@ -39,9 +39,8 @@ local DEFAULTS = {
 	mapRoutes = true,
 	-- The town services' level of detail: "capitals", "important", "all" or "off" (UI/TownServices.lua).
 	townServices = "capitals",
-	-- The services a town pin may wear, each with its own checkbox under the world map's Town services filter. A flat
-	-- key per service keeps the defaults merge from sharing a table with the saved settings, and gives an existing
-	-- player every key it is missing. Repair starts hidden: most players do not want an anvil in every town.
+	-- Legacy grouped choices remain the fallback until a service has its own townServiceKinds override.
+	-- Repair starts hidden: most players do not want an anvil in every town.
 	townServiceInnkeeper = true,
 	townServiceStable = true,
 	townServiceRepair = false,
@@ -94,6 +93,8 @@ local DEFAULTS = {
 	guidelime = true,
 	taxiRoute = true,
 	teleports = true,
+	useWaterWalking = true,
+	townServiceKinds = {},
 	-- Another player's spellbook is not queryable, so a party mage's portals are declared. Off by default; when on,
 	-- every capital portal of the player's faction is offered until the player unticks one.
 	partyMagePortals = false,
