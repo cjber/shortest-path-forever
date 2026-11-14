@@ -11,6 +11,9 @@ setMapShown(true)
 posX, posY, posMap, facing = 0, 0, 1, 0
 mapID, cursorX, cursorY, shiftDown = 1414, 0.5, 0.496, true
 ns.db.tracker, ns.db.compass = false, true
+-- These checks read the native waypoint as the journey's guidance, so every bend is marked and the guide writes and
+-- tracks the client's marker. "Mark only where steps end" places none and is checked by the navigation specs (#817).
+ns.db.guideStops = false
 -- Zoomed in on a zone-sized canvas, so the dots between here and a 100-yard goal clear the stop gaps (#51).
 zoom, canvas.width, canvas.height = 1, 10000, 7000
 -- This check answers the walking search itself.

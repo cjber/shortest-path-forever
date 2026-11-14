@@ -25,9 +25,7 @@ Things reached indirectly: none of them is dead code, even when no file calls it
   (and by specs via `loadfile(...)("ShortestPathForever", ns)`). Search every `.lua`, not just the file.
 - `Nav/Nav.xml` loads compressed walking-map fields; `Routing/PathGrid.lua` decodes them on demand.
 - SavedVariables `ShortestPathForeverDB` / `ShortestPathForeverCharDB`: keys (settings in Core/Core.lua
-  `DEFAULTS`, `anchors` owned by Transport/Timetable.lua, debug trace) persist in players' saved files.
-- Sync wire format (Transport/Sync.lua, prefix `ShortPath1`): other players run older versions; message fields are
-  a compatibility contract.
+  `DEFAULTS`, account-wide `anchors` owned by Transport/Timetable.lua, debug trace) persist in players' saved files.
 - Slash commands `/path`, `/shortestpath` (`SLASH_SHORTESTPATHFOREVER*`, `SlashCmdList`) and `/spfnear`
   (`SLASH_SPFNEAR1`, `SlashCmdList.SPFNEAR`, UI/Nearby.lua).
 - UI/Nearby.lua reads two optional globals other addons define: `LibQuestieDB` and `TweaksForever.API`.

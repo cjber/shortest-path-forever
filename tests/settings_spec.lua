@@ -9,7 +9,7 @@ local familyPage
 local attachmentNotified, attachmentChanged
 local trackerState = { attached = true }
 local trackerScale, compassScaled, compassBackdrop = 1, nil, nil
-local sharingChanges, leaderboardOpened, townRefreshed = 0, nil, 0
+local townRefreshed = 0
 local env = setmetatable({
 	MinimalSliderWithSteppersMixin = { Label = { Right = 1 } },
 	OFF = "Off",
@@ -143,16 +143,14 @@ local env = setmetatable({
 	SlashCmdList = {},
 }, { __index = _G })
 -- ForeverCore's secure settings opener runs the client's restricted C_SettingsUtil.OpenSettingsPanel through
--- CreateSecureDelegate, and records what it opened.
+-- securecallfunction, and records what it opened.
 local secureCalls = 0
 env.InCombatLockdown = function()
 	return false
 end
-env.CreateSecureDelegate = function(fn)
-	return function(...)
-		secureCalls = secureCalls + 1
-		return fn(...)
-	end
+env.securecallfunction = function(fn, ...)
+	secureCalls = secureCalls + 1
+	return fn(...)
 end
 env.C_SettingsUtil = {
 	OpenSettingsPanel = function(categoryID)
@@ -185,6 +183,7 @@ local routeColour = nil
 local routeLinesRefreshed = 0
 local journeyPreviewRefreshed = 0
 local destinationPinSizeRefreshed = 0
+local questPinsRefreshed = 0
 -- Core/Core.lua's defaults: every row on.
 local ns = {
 	core = {
@@ -243,17 +242,10 @@ local ns = {
 			}
 		end,
 	},
-	TravelSharingChanged = function()
-		sharingChanges = sharingChanges + 1
-	end,
-	OpenTravelLeaderboard = function()
-		leaderboardOpened = true
-	end,
 	db = {},
 	Defaults = setmetatable({
 		-- Travel participation defaults are explicit, matching Core/Core.lua.
 		stats = true,
-		statsShare = true,
 		partyMagePortals = false,
 		hearthMinimumSavings = 0,
 		compassScale = 100,
@@ -264,6 +256,8 @@ local ns = {
 		compassTime = false,
 		arrivalSound = false,
 		resumeJourney = false,
+		focusedQuest = false,
+		journeyKey = "shift",
 		routeColor = "gold",
 		followRoads = false,
 		arrivalDistance = 15,
@@ -280,8 +274,16 @@ local ns = {
 	RefreshMap = function()
 		refreshed = refreshed + 1
 	end,
+	RefreshQuestPins = function()
+		questPinsRefreshed = questPinsRefreshed + 1
+	end,
 	RefreshTownServices = function()
 		townRefreshed = townRefreshed + 1
+	end,
+	JourneyKeys = { "shift", "alt" },
+	JourneyKeyName = function(key)
+		key = key or "shift"
+		return key:sub(1, 1):upper() .. key:sub(2)
 	end,
 	TownServiceChoices = {
 		{ key = "capitals", label = "Capitals only" },
@@ -355,6 +357,7 @@ local groups = {
 		"portals",
 		"mapFlightMasters",
 		"minimapPins",
+		"hideQuestPins",
 		"mapPinScale",
 		"flightPinScale",
 		"minimapPinScale",
@@ -364,12 +367,14 @@ local groups = {
 		"minimapLine",
 		"laterLegs",
 	},
-	Transport = { "mapRoutes", "otherFaction", "tracker", "share" },
-	["Travel journal"] = { "stats", "statsShare" },
+	Transport = { "mapRoutes", "otherFaction", "tracker" },
+	["Travel journal"] = { "stats" },
 	Guidance = {
 		"trackerAttached",
 		"trackerLocked",
 		"journey",
+		"journeyKey",
+		"focusedQuest",
 		"journeyTracker",
 		"resumeJourney",
 		"destinationPin",
@@ -430,8 +435,9 @@ local order = {
 
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
 -- Main's arrival pin added arrivalPin, the line switches added mapLine, minimapLine and laterLegs, and the
--- town services added townServices.
-assert(#rows == 67, #rows)
+-- town services added townServices; the travel stats and departure sharing switches are gone with their sharing,
+-- and the destination pin size slider and Hearthstone switch are this branch's two rows.
+assert(#rows == 68, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -472,6 +478,22 @@ assert(
 	Row("minimapPins").tooltip
 		== "Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."
 )
+-- The game's own quest markers give way to a journey's stop pins by default; off, every marker stays and the map
+-- reconciles at once (#871).
+local questPins = Row("hideQuestPins")
+assert(
+	questPins.kind == "checkbox" and questPins.setting.default == true,
+	"the quest markers hide at journey stops by default"
+)
+assert(questPins.setting.variable == "ShortestPathForever_hideQuestPins", "the quest marker switch is saved")
+assert(questPins.setting.name == "Hide game quest markers", "the switch names the markers and where they hide")
+assert(
+	questPins.tooltip:find("other places a quest can be done", 1, true),
+	"the tooltip says the other places a quest can be done stay when it is off"
+)
+local questPinRefreshes = questPinsRefreshed
+questPins.setting.onChanged()
+assert(questPinsRefreshed == questPinRefreshes + 1, "the switch reconciles the game's quest pins at once")
 -- The walking line's colour is a preset dropdown, gold by default, and it repaints without replanning.
 local routeColor = Row("routeColor")
 assert(routeColor.kind == "dropdown" and routeColor.setting.default == "gold", "the route line starts gold")
@@ -527,6 +549,27 @@ assert(journeyPreviewRefreshed == previews + 1, "the switch redraws the route wi
 assert(
 	Row("tracker").setting.name == "Show boat, lift and tram departures in the tracker",
 	"the departures switch names boats, lifts and the tram"
+)
+-- The key held to plan a journey is the player's choice: Shift or Alt, Shift first and by default.
+local journeyKey = Row("journeyKey")
+assert(journeyKey.kind == "dropdown" and journeyKey.setting.default == "shift", "journeys start on Shift")
+assert(journeyKey.setting.variable == "ShortestPathForever_journeyKey", "the key is saved")
+local journeyKeys = journeyKey.getData()
+assert(
+	#journeyKeys == 2 and journeyKeys[1].value == "shift" and journeyKeys[2].value == "alt",
+	"Shift and Alt are listed in that order"
+)
+assert(journeyKeys[1].text == "Shift" and journeyKeys[2].text == "Alt", "each key is named")
+assert(journeyKey.tooltip:find("Questie", 1, true), "the tooltip says what Questie keeps")
+assert(Row("journey").setting.name == "Click the map to plan journeys", "the journey switch does not name a key")
+-- Route to the focused quest is opt-in: a plain map pin changes what it does, so it starts off.
+local focused = Row("focusedQuest")
+assert(focused.kind == "checkbox" and focused.setting.default == false, "focused routing is off by default")
+assert(focused.setting.variable == "ShortestPathForever_focusedQuest", "the switch is saved")
+assert(focused.setting.name == "Route to the focused quest", "the switch names the focused quest")
+assert(
+	focused.tooltip:find("map pin", 1, true) and focused.tooltip:find("map click", 1, true),
+	"the tooltip says a map pin counts and a controller needs no map click"
 )
 -- The journey's own block has its switch in Guidance, on by default, and turning it off redraws the tracker.
 local journeySteps = Row("journeyTracker")
@@ -693,16 +736,7 @@ assert(ways[2] == "", "a bare /path way still answers, with its usage")
 assert(Row("whatsNew").setting.default == true)
 -- New participation defaults on, while the runtime preserves every saved false choice.
 assert(Row("stats").setting.default == true, "the travel journal is on by default")
-assert(Row("statsShare").setting.default == true, "and sharing its stats is too")
 assert(Row("stats").tooltip:find("On by default", 1, true), "the journal's tooltip says it is on")
-assert(Row("statsShare").tooltip:find("On unless you turn it off", 1, true), "sharing is opt-out")
-assert(Row("statsShare").tooltip:find("Forever Leaderboards", 1, true), "sharing puts the player on the boards")
-assert(Row("statsShare").tooltip:find("player-reported", 1, true), "shared records are still marked unverified")
-Row("stats").setting.onChanged()
-Row("statsShare").setting.onChanged()
-assert(sharingChanges == 2, "both recording and sharing switches update the active transport")
-env.SlashCmdList.SHORTESTPATHFOREVER("leaderboard")
-assert(leaderboardOpened == true, "the leaderboard command opens the shared window on this addon's tab")
 local trackerSlider = Row("trackerScale")
 assert(trackerSlider.kind == "slider" and trackerSlider.setting.default == 100, "tracker scale defaults to 100%")
 assert(trackerSlider.options.minValue == 50 and trackerSlider.options.maxValue == 200, "tracker scale is a percentage")

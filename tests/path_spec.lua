@@ -247,14 +247,16 @@ assert(pts and len < 350, len)
 for i = 2, #pts - 1 do
 	assert(pts[i].z > 85, "walks the canal bed")
 end
--- The bed under it is sealed ground no player can reach (#602), so the walking map leaves it out and even a start at
--- its height walks the streets out by the gate.
+-- The bed under it is sealed ground no player can stand on (#602). The 50 to 61.6 degree band (#639) keeps the
+-- slide into it as a down-only step, so a point at the bed's height starts on the bed until walks begin from the
+-- player's measured floor (#737); it must not climb back into the streets, and a street point still walks out by
+-- the gate.
 local BED = { x = TRADE_STREET.x, y = TRADE_STREET.y, z = 74 }
 local street = Path.FindSync(0, TRADE_STREET, GOLDSHIRE)
 assert(passes(street, -8520, 960) > 100 and passes(Path.FindSync(0, BED, GOLDSHIRE), -8520, 960) > 100, "goes round")
 pts = Path.FindSync(0, BED, { x = -9068, y = 417 })
 for i = 2, #pts - 1 do
-	assert(pts[i].z > 85, "walks the ground under the city")
+	assert(pts[i].z < 85, "climbs out of the bed into the streets")
 end
 -- A zeppelin dock stands at its transport's height: Grom'gol's tower platform, not the beach below it.
 assert(loadfile("Data/Routes.lua"))("ShortestPathForever", ns)

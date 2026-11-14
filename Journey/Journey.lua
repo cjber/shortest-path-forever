@@ -6,7 +6,8 @@ if ns.broken then
 end
 local L = ns.L
 
--- Shift-click the world map: the fastest way there from here, by foot, flight, boat, zeppelin, tram and portal,
+-- A map click with the journey key held: the fastest way there from here, by foot, flight, boat, zeppelin, tram and
+-- portal,
 -- with the boats' live waits. JourneySearch.lua finds the way; this follows it: the goal, the route and how far
 -- along it you are, Guide and the frame driver. The tracker owns the list; closing the map leaves the journey running.
 local REPLAN_EVERY = 5
@@ -819,7 +820,7 @@ local function Update(self, elapsed)
 	self.speed = speed
 	if self.elapsed >= REPLAN_EVERY or changedRide or changedSpeed then
 		self.elapsed, self.replannedAt = 0, GetTime()
-		Search.Replan(riding, flying, changedRide)
+		Search.Replan(riding, flying, changedRide, changedSpeed)
 	elseif index ~= progress.index then
 		Refresh()
 	end
@@ -858,6 +859,54 @@ function ns.ResumeJourney()
 		ns.SetJourneyRoute(nil)
 	end
 	RefreshTracker()
+end
+
+-- An owner sent the destination the journey already has; only the stop's words may have changed. A first search
+-- still owing its answer is asked to read what it has, as sending the same route again always did, but nothing of the
+-- journey is restarted.
+function ns.RefreshJourneySearch()
+	if goal and not result and not CorpseRun() and Search.Status() > 0 then
+		Search.Start(goal, result, progress, Follow)
+	end
+end
+
+-- An owner moved the destination of a journey it already owns (a guide's next objective in the area, or the same
+-- waypoint re-pointed). The owner, the stop and the progress stay, and so does the route already drawn, until the
+-- search for the new place settles: tearing all of it down and starting again flashed the arrow, the line and the
+-- tracker for every objective the guide moved to (#693).
+---@param point SPFPoint
+---@return boolean
+function ns.RetargetJourney(point)
+	if CorpseRun() or not goal or point.map ~= goal.map then
+		return ns.StartJourney(point)
+	end
+	if Search.SamePlace(goal, point) then
+		ns.RefreshJourneySearch()
+		return true
+	end
+	goal, nextPoint = point, nil
+	withoutHearth = false
+	if ns.JourneyChanged then
+		ns.JourneyChanged(point)
+	end
+	-- The hops after this stop start from where it now is.
+	ns.ItineraryChanged()
+	driver.elapsed, driver.progressElapsed = 0, 0
+	if not InCombatLockdown() then
+		driver:Show()
+	end
+	ns.WakeTravel()
+	-- Replacing: the plan under way leads to the place this one leaves, so the next plan takes over whatever it costs.
+	Search.Start(goal, result, progress, Follow, true)
+	-- A guide that yielded to the player's own destination leads again for a destination the player did not choose.
+	if Guide.Yielded() then
+		StopGuide()
+	end
+	if not Guide.Active() then
+		StartGuide()
+	end
+	Refresh()
+	return true
 end
 
 ---@param point SPFPoint
@@ -930,6 +979,9 @@ ns.Init(function()
 		if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
 			Guide.ClearOrphan()
 			EnteredInstance()
+			if ns.FocusedTrackingReset then
+				ns.FocusedTrackingReset()
+			end
 		elseif
 			event == "PLAYER_REGEN_DISABLED"
 			and not (goal and goal.hold and (goal.radius or goal.shapes or goal.questIDs))
@@ -946,6 +998,9 @@ ns.Init(function()
 			ns.ClearJourney()
 		elseif event == "SUPER_TRACKING_CHANGED" or event == "USER_WAYPOINT_UPDATED" then
 			Guide.TrackingChanged(event)
+			if ns.FocusedTrackingChanged then
+				ns.FocusedTrackingChanged(event)
+			end
 		end
 	end)
 	driver:Hide()

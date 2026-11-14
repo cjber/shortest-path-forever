@@ -61,34 +61,47 @@ authorization. A preparation-only request ends before tags or uploads.
 7. Run the fast lint/type gate from `AGENTS.md`, focused checks for changed
    behaviour, generated-data verification and
    `python3 tools/forever_tools/sync.py check`. Full suites run in CI. Record
-   user `/reload` checks and their results separately: agents do not drive the
-   game, and headless checks do not establish client visual or combat correctness.
+   user `/reload` checks and their results separately: agents test in game only
+   through the headless client (`forever_client.py`), and `/reload` checks in the
+   user's own client are recorded separately.
 8. Commit the release preparation with a signed commit and ship its reviewed,
    green PR. Merge only within the user's authorization. Wait for the complete
    `ci.yml` **push run on main at the exact commit to be tagged**. PR checks and
    workflow-dispatch runs do not satisfy `tools/release_check.py`. Confirm the
    primary checkout is clean main at that commit before proceeding.
-9. Inspect `.github/workflows/release.yml`, `.pkgmeta` and `ShortestPathForever.toc`.
-   Confirm `X-Curse-Project-ID`, `X-Wago-ID`, interface and dependencies are right.
-   Check secret names with `gh secret list`: `CF_API_KEY` and `WAGO_API_TOKEN`
-   must both be present; never print their values. Create a new signed `vX.Y.Z`
-   tag at the verified main commit and push that exact tag. Preserve existing tags.
-10. Watch the tag's release workflow through completion. Inspect its log for both
+9. Run the release smoke on that exact commit from the workspace:
+   `python3 ../forever-core/tools/headless/forever_client.py smoke --repo shortest-path-forever --ref <full sha>`.
+   It builds the commit, loads it in the headless client, runs `/forever selftest`
+   and `errors --addon`, and posts the green `headless-smoke` commit status
+   `tools/release_check.py` requires. Exit 3 means another session or the player
+   holds the client: wait and retry, never start the game another way. While
+   launcher OCR misses Play (cjber/forever-core#547) pass `--manual-launcher`, run
+   it in the background, take `forever_client.py shot` and click Play yourself
+   after checking the account; if the game shows its own Email/Password form, stop
+   the smoke with Ctrl-C (SIGINT to the python process) and ask the user to log in
+   once through Faugus. Never type credentials. A failed smoke is a release
+   blocker: fix the errors it names.
+10. Inspect `.github/workflows/release.yml`, `.pkgmeta` and `ShortestPathForever.toc`.
+    Confirm `X-Curse-Project-ID`, `X-Wago-ID`, interface and dependencies are right.
+    Check secret names with `gh secret list`: `CF_API_KEY` and `WAGO_API_TOKEN`
+    must both be present; never print their values. Create a new signed `vX.Y.Z`
+    tag at the verified main commit and push that exact tag. Preserve existing tags.
+11. Watch the tag's release workflow through completion. Inspect its log for both
     store IDs with `[token set]` and successful uploads to each provider. A green
     workflow can silently skip a provider with a missing token. Download and
     inspect the GitHub release zip: substituted version, TOC/XML load graph,
     runtime files, media, required bundled data and libraries must be present;
     development files and third-party companion databases must remain excluded.
-11. Apply the prepared summary, description, logo and gallery to both stores.
+12. Apply the prepared summary, description, logo and gallery to both stores.
     Save, reopen and verify each surface, including captions/order and removed
     duplicates. Check GitHub's rendered README, release notes and image links too.
     An upload does not update store descriptions or galleries automatically.
-12. Verify the public CurseForge files page and Wago version page show this version
+13. Verify the public CurseForge files page and Wago version page show this version
     for the intended client, with the correct notes and downloadable artifact.
     Report moderation or an unavailable surface as pending, with its URL; uploaded
     or workflow-green does not mean publicly live. Retry without creating another
     version or tag to mask a failed upload.
-13. If installation was requested, update every authorized client copy/symlink to
+14. If installation was requested, update every authorized client copy/symlink to
     the released version or verified main commit, preserve saved variables and
     backups, include any `.pkgmeta` moved companion folders, and verify targets
     and the load graph. Retire named obsolete addon folders/links outside AddOns

@@ -337,7 +337,8 @@ function M.build(sim)
 	end
 
 	-- The wiki's classes for a restricted function, overridden by observed client behaviour. A name with no applying
-	-- class keeps the pre-class combat-only rule.
+	-- class keeps the pre-class combat-only rule; an override applies even where the documentation carries neither
+	-- HasRestrictions nor IsProtectedFunction, since the live client refused the call.
 	local function restrictedNow(name)
 		local classes
 		if sim.restrictionClasses then
@@ -351,7 +352,8 @@ function M.build(sim)
 	local function stub(qualified, fdoc)
 		local nargs = #(fdoc.Arguments or {})
 		local protected = fdoc.IsProtectedFunction or protectedNames[qualified]
-		local restricted = fdoc.HasRestrictions
+		local overridden = (sim.restrictionOverrides or {})[qualified] ~= nil
+		local restricted = fdoc.HasRestrictions or overridden
 		local secretArgs = fdoc.SecretArguments
 		local returns = fdoc.Returns or {}
 		local f = function(...)
@@ -397,8 +399,11 @@ function M.build(sim)
 			local out
 			if impl then
 				out = { n = 0 }
-				-- The C function's synchronous Blizzard Lua runs in the caller's taint (Taint.callSecure).
-				local r = { Taint.callSecure(impl, ...) }
+				-- SettingsPanel's restricted C opener enters Blizzard's panel callback through an engine-owned
+				-- secure boundary. This is deliberately per-native, not a change to securecallfunction or C APIs generally.
+				local call = qualified == "C_SettingsUtil.OpenSettingsPanel" and Taint.securecallIsolated
+					or Taint.callSecure
+				local r = { call(impl, ...) }
 				out.n = table.maxn(r)
 				for i = 1, out.n do
 					out[i] = r[i]

@@ -109,27 +109,53 @@ local function routes(departures)
 	end
 	return table.concat(ids, " ")
 end
+local function byRoute(departures, routeID)
+	for _, departure in ipairs(departures) do
+		if departure.route == routeID then
+			return departure
+		end
+	end
+end
 
--- The saved file: a fresh install gains this realm's table; a stale sighting is dropped at login, nothing else moves.
-local MAX_AGE = 6 * 3600
-equal(next(login(nil).db.anchors.Test), nil, "a new install starts with no sightings")
+-- The saved file: a fresh install starts empty; an older save's realm level is migrated once, keeping the newest
+-- sighting of each route that is yours and dropping the retired peer sightings and sharing switch.
+equal(next(login(nil).db.anchors), nil, "a new install starts with no sightings")
 local saved = {
+	share = true,
 	anchors = {
 		Test = {
-			[10] = { epoch = 5, seen = clock.server - MAX_AGE - 1, source = "you" },
-			[11] = { epoch = 7, seen = clock.server - MAX_AGE, source = "player" },
+			[10] = { epoch = 5000, seen = clock.server - 30, source = "you" },
+			[11] = { epoch = 7000, seen = clock.server - 20, source = "player" },
+			[12] = { epoch = 9000, seen = clock.server - 40, source = "you" },
 		},
-		Other = { [10] = { epoch = 9, seen = 1 } },
+		Other = {
+			[10] = { epoch = 11000, seen = clock.server - 10, source = "you" },
+			[12] = { epoch = 13000, seen = clock.server - 50, source = "you" },
+		},
+		[13] = { epoch = 15000, seen = clock.server - 5, source = "player" },
+		[14] = { epoch = 17000, seen = clock.server - 5, source = "you" },
 	},
 }
-local held = saved.anchors.Test[11]
 local ns, Timetable = login(saved)
-assert(ns.db == saved and saved.anchors.Test[10] == nil, "a sighting too stale to count down from is dropped")
-assert(saved.anchors.Test[11] == held and saved.anchors.Other[10].epoch == 9, "fresh and other-realm sightings stay")
-assert(Timetable.Anchor(11) == held and Timetable.Anchors()[11] == held and Timetable.Anchor(10) == nil)
-advance(1)
-assert(Timetable.Anchor(11) == nil and next(Timetable.Anchors()) == nil, "a sighting ages out while you play")
-assert(saved.anchors.Test[11] == held, "and is only dropped from the file at the next login")
+assert(ns.db == saved and saved.share == nil, "the retired sharing switch is cleared")
+assert(saved.anchors.Test == nil and saved.anchors.Other == nil, "the realm level is gone")
+assert(
+	saved.anchors[10].epoch == 11000 and saved.anchors[10].seen == clock.server - 10,
+	"the newest sighting across realms"
+)
+assert(saved.anchors[11] == nil and saved.anchors[13] == nil, "a peer's sighting is dropped")
+assert(saved.anchors[12].epoch == 9000, "the newest sighting of each route is kept")
+assert(saved.anchors[14].epoch == 17000, "an account-wide sighting keeps its times")
+for routeID, anchor in pairs(saved.anchors) do
+	assert(type(routeID) == "number" and anchor.epoch and anchor.seen, "the saved shape")
+	for key in pairs(anchor) do
+		assert(key == "epoch" or key == "seen", "the saved shape gained " .. key)
+	end
+end
+-- A sighting from days ago still predicts departures; only a newer ride of the same route replaces it.
+advance(3 * 24 * 3600)
+assert(Timetable.Anchor(10) == saved.anchors[10], "a sighting from days ago still counts")
+assert(Timetable.Anchors()[12] == saved.anchors[12], "every account-wide sighting is read")
 
 -- Untimed: every shown route in route order, with no times.
 ns, Timetable = login({})
@@ -151,21 +177,21 @@ equal(#Timetable.Departures(99), 0, "a dock no route calls at")
 assert(Timetable.NextStop(10) == nil and Timetable.Visit(10, ns.Routes[10].stops[1], ns.NowMs()) == nil, "untimed")
 
 -- One boat timed, docked at One with 15 s left.
-local function sight(routeID, phase, source)
-	return Timetable.Sighted(routeID, { epoch = ns.NowMs() - phase, seen = clock.server, source = source })
+local function sight(routeID, phase)
+	return Timetable.Sighted(routeID, { epoch = ns.NowMs() - phase, seen = clock.server })
 end
-assert(sight(10, 5000, "you"), "a first sighting is kept")
+assert(sight(10, 5000), "a first sighting is kept")
 assert(changes == 1 and Timetable.Version() == 1, "a kept sighting tells the listeners once")
-local stored = saved.anchors.Test[10]
-assert(stored.epoch == ns.NowMs() - 5000 and stored.seen == clock.server and stored.source == "you", "saved shape")
+local stored = saved.anchors[10]
+assert(stored.epoch == ns.NowMs() - 5000 and stored.seen == clock.server, "saved shape")
 for key in pairs(stored) do
-	assert(key == "epoch" or key == "seen" or key == "source", "saved shape gained " .. key)
+	assert(key == "epoch" or key == "seen", "saved shape gained " .. key)
 end
 departures = Timetable.Departures(1)
 equal(routes(departures), "10 11", "timed boats come before untimed ones")
 local first = departures[1]
 assert(first.known and first.docked and first.arriveIn == nil and first.departIn == 15000, "docked now")
-assert(first.seen == 0 and first.source == "you", "when and by whom it was timed")
+assert(first.seen == 0, "when it was timed")
 equal(Timetable.Status(first), "docked · leaves 0:15", "docked status")
 equal(Timetable.ByDestination(1)[1].thenIn, nil, "the lane's other boat is untimed")
 local docked, arriveIn, departIn = Timetable.Visit(10, ns.Routes[10].stops[2], ns.NowMs())
@@ -175,8 +201,8 @@ assert(docked == true and arriveIn == nil and departIn == 15000, "and as of a la
 local nextDock, nextIn = Timetable.NextStop(10)
 assert(nextDock == 2 and nextIn == 45000, "the docked stop is not the next one")
 
--- The lane's second boat, timed by someone else: arrives in 10 s, leaves in 20 s.
-assert(sight(11, 20000, "player"))
+-- The lane's second boat, timed by its own ride: arrives in 10 s, leaves in 20 s.
+assert(sight(11, 20000))
 departures = Timetable.Departures(1)
 equal(routes(departures), "10 11", "soonest to leave first")
 equal(Timetable.Status(departures[2]), "arrives 0:10 · leaves 0:20", "arriving status")
@@ -189,12 +215,7 @@ equal(routes(Timetable.Departures(2)), "10 11", "the far dock, by its own depart
 advance(16)
 departures = Timetable.Departures(1)
 equal(routes(departures), "11 10", "order follows the clock")
-assert(
-	departures[1].docked
-		and departures[1].departIn == 4000
-		and departures[1].seen == 16
-		and departures[1].source == "player"
-)
+assert(departures[1].docked and departures[1].departIn == 4000 and departures[1].seen == 16)
 assert(not departures[2].docked and departures[2].arriveIn == 79000 and departures[2].departIn == 99000)
 lines = Timetable.ByDestination(1)
 assert(lines[1].route == 11 and lines[1].thenIn == 99000, "the line leads with whichever leaves next")
@@ -203,11 +224,11 @@ assert(nextDock == 2 and nextIn == 29000, "under way to Two")
 
 -- Which sighting stands.
 local version = Timetable.Version()
-assert(not Timetable.Sighted(10, { epoch = 1, seen = clock.server - 20, source = "you" }), "an older sighting")
-assert(not Timetable.Sighted(10, { epoch = 1, seen = clock.server, source = "player" }), "your own recent ride stands")
+assert(not Timetable.Sighted(10, { epoch = 1, seen = clock.server - 20 }), "an older sighting")
+assert(not Timetable.Sighted(10, { epoch = 1, seen = stored.seen }), "a sighting of the same moment changes nothing")
 assert(Timetable.Version() == version and changes == 2, "a rejected sighting changes nothing")
-assert(saved.anchors.Test[10] == stored, "nor the saved file")
-assert(Timetable.Sighted(11, { epoch = stored.epoch, seen = clock.server, source = "player" }), "a newer sighting")
+assert(saved.anchors[10] == stored, "nor the saved file")
+assert(Timetable.Sighted(11, { epoch = stored.epoch, seen = clock.server }), "a newer sighting")
 assert(Timetable.Version() == version + 1 and changes == 3)
 equal(Timetable.Departures(1)[1].departIn, 19000, "the newer sighting is the one counted down from")
 
@@ -224,19 +245,20 @@ faction = "Alliance"
 equal(#Timetable.Visits(1), 3, "visits list every route, shown or not")
 
 -- Each kind's word for being here.
-assert(sight(13, 2000, "you"))
+assert(sight(13, 2000))
 equal(Timetable.Status(Timetable.Departures(4)[1]), "boarding · leaves 0:08", "tram status")
 departures = Timetable.Departures(5)
 equal(Timetable.Status(departures[1]), "arrives 0:28 · leaves 0:38", "the far station")
 ns.Routes[13].kind = "lift"
 equal(Timetable.Status(Timetable.Departures(4)[1]), "here · leaves 0:08", "lift status")
 
--- Freshness: six hours after its sighting a route is untimed again.
-advance(MAX_AGE - 16)
-assert(Timetable.Anchor(10) and Timetable.Departures(1)[2].known, "still fresh at exactly six hours")
-advance(1)
-assert(Timetable.Anchor(10) == nil and Timetable.Anchors()[10] == nil and Timetable.Anchors()[11], "aged out")
-departures = Timetable.Departures(1)
-assert(routes(departures) == "11 10" and not departures[2].known, "the fresher boat still counts down")
-assert(Timetable.NextStop(10) == nil and Timetable.Visit(10, ns.Routes[10].stops[1], ns.NowMs()) == nil)
+-- A sighting is kept until a newer ride replaces it, however long ago it was seen.
+advance(30 * 24 * 3600)
+assert(Timetable.Anchor(10) == saved.anchors[10], "still timed weeks later")
+local old = byRoute(Timetable.Departures(1), 10)
+assert(old.known and old.seen > 30 * 24 * 3600, "the old sighting still counts down")
+local newer = { epoch = ns.NowMs(), seen = clock.server }
+assert(Timetable.Sighted(10, newer), "a newer sighting replaces it")
+assert(saved.anchors[10].seen == newer.seen and saved.anchors[10].epoch == newer.epoch, "and is saved")
+equal(byRoute(Timetable.Departures(1), 10).seen, 0, "the newer sighting is the one counted down from")
 print("timetable_spec: ok")

@@ -13,7 +13,8 @@ end
 -- adds sits in map.dataProviders, and a pin it acquires puts the addon's template, pool and frame in map.pinPools, so
 -- that secure walk ran through the addon's values and tainted, and the gamepad action bar's later protected call
 -- (SetPreferredGamepadInteractTarget) was blocked. So the addon adds no data provider, acquires no pin, and calls no
--- map method that writes. It only reads the map, through
+-- map method that writes. The one write is a stop pin's hover outside the gamepad interface, which sets the map's
+-- highlighted quest so the game draws its area (UI/StopPin.lua, #859). Otherwise it only reads the map, through
 --   map:GetMapID(), map:GetCanvas(), map:GetCanvasScale(), map:GetCanvasZoomPercent(), map:GetGlobalPinScale(),
 --   map:IsVisible() and map:GetPinFrameLevelsManager():GetValidFrameLevel(type, index)
 -- (each returns a field or works one out from fields; Blizzard_MapCanvas.lua, MapCanvas_PinFrameLevelsManager.lua),
@@ -724,8 +725,8 @@ end
 
 --[[ Clicks ]]
 
--- `filter(pin, button)` sees a pin's click before the pin does, and takes it by returning true (Shift-click plans a
--- journey there, JourneyInput.lua).
+-- `filter(pin, button)` sees a pin's click before the pin does, and takes it by returning true (a click with the
+-- journey key plans a journey there, JourneyInput.lua).
 ---@param filter fun(pin: SPFCanvasPin, button: string): boolean?
 function Canvas.OnClick(filter)
 	clickFilters[#clickFilters + 1] = filter

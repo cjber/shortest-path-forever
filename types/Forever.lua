@@ -95,6 +95,8 @@ function GameTooltip_AddColoredDoubleLine(tooltip, left, right, leftColor, right
 ---@field AddCanvasClickHandler fun(self: WorldMapFrame, handler: fun(map: WorldMapFrame, button: string): boolean)
 ---@field AddGlobalPinMouseActionHandler fun(self: WorldMapFrame, handler: fun(map: WorldMapFrame, action: number, button: string): boolean)
 ---@field RegisterCallback fun(self: WorldMapFrame, event: string, callback: function, owner: any) -- the map's own callback registry (SetFocusedQuestID)
+---@field SetHighlightedQuestID fun(self: WorldMapFrame, questID: number) -- draws that quest's own area (UI/StopPin.lua)
+---@field ClearHighlightedQuestID fun(self: WorldMapFrame)
 
 -- The levels manager's own extra argument, which core's annotation leaves out.
 ---@class ForeverCanvasLevels

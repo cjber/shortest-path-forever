@@ -7,7 +7,7 @@ end
 assert(loadfile(root .. "/Locales/enUS.lua"))("ShortestPathForever", ns)
 local now, here, target, shown, click, minimapClick = 0, { map = 1, x = 0, y = 0, z = 0 }
 local function noop() end
-local frames, events, waypoint, tracked, quest = {}, {}, nil, false, 0
+local frames, events, waypoint, tracked, quest, trackingType = {}, {}, nil, false, 0, nil
 local secret = setmetatable({}, {
 	__sub = function()
 		error("secret position used")
@@ -75,7 +75,7 @@ local env = setmetatable({
 			return "|cffff2020" .. text .. "|r"
 		end,
 	},
-	-- ns.serverTime: the server clock sightings age by.
+	-- ns.serverTime: the server clock a sighting is saved with.
 	GetServerTime = function()
 		return ns.serverTime or 0
 	end,
@@ -173,14 +173,18 @@ local env = setmetatable({
 			return tracked
 		end,
 		GetHighestPrioritySuperTrackingType = function()
-			return tracked and "waypoint" or quest
+			return trackingType or (tracked and "waypoint" or quest)
 		end,
+		-- The client reports which destination it currently draws. A guide that selects a quest on top of our waypoint
+		-- can transiently leave the waypoint super-tracked with another type in front (#535, #693).
 		SetSuperTrackedUserWaypoint = function(value)
 			tracked = value
+			trackingType = nil
 			defer("SUPER_TRACKING_CHANGED")
 		end,
 		SetSuperTrackedQuestID = function(value)
 			quest, tracked = value, false
+			trackingType = nil
 			defer("SUPER_TRACKING_CHANGED")
 		end,
 	},
@@ -208,11 +212,17 @@ local env = setmetatable({
 env.UnitIsDeadOrGhost = function()
 	return env.UnitIsGhost ~= nil and env.UnitIsGhost()
 end
--- ForeverCore's error capture and the API kit behind Subscribe: the only shared services these files read at run time,
--- without the tracker and leaderboards a full core load would start in this small client.
+-- ForeverCore's error capture, the API kit behind Subscribe and the step markers UI/Art.lua and UI/Arrow.lua draw: the
+-- shared services these files read at run time, without the tracker and leaderboards a full core load would start in
+-- this small client.
 local ForeverCore = dofile(root .. "/tests/forever_core.lua")
-local coreNs = ForeverCore.load(env, "ForeverCore", { "Core/SafeCall.lua", "Core/Text.lua", "Core/APIKit.lua" })
-env.ForeverCore = { Text = coreNs.Text, APIKit = coreNs.APIKit }
+local coreNs = ForeverCore.load(env, "ForeverCore", {
+	"Core/SafeCall.lua",
+	"Core/Text.lua",
+	"Core/APIKit.lua",
+	"UI/Art.lua",
+})
+env.ForeverCore = { Text = coreNs.Text, APIKit = coreNs.APIKit, Art = coreNs.Art }
 local safe = coreNs.SafeCallFor("ShortestPathForever")
 ns.core = {
 	SafeCall = function(label, fn, ...)
@@ -303,6 +313,11 @@ return {
 	fire = fire,
 	waypoint = function()
 		return waypoint, tracked
+	end,
+	-- The priority the client reports while the waypoint stays super-tracked (a guide's quest selection on top).
+	setTrackingType = function(value)
+		trackingType = value
+		defer("SUPER_TRACKING_CHANGED")
 	end,
 	load = load,
 	begin = function(from, to)

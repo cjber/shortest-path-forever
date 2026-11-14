@@ -329,9 +329,6 @@ _G.GameTooltip = setmetatable({
 }, mt)
 local nativeProvider = CreateFromMixins(FlightPointDataProviderMixin)
 WorldMapFrame:AddDataProvider(nativeProvider)
-_G.canaccessvalue = function()
-	return true
-end
 -- Use Blizzard's acquisition and event paths so pin visibility tests also cover pooled frames.
 _G.SlashCommandUtil = { CheckAddSlashCommand = noop }
 _G.SLASH_COMMAND, _G.SLASH_COMMAND_CATEGORY = { MAPPIN = 1 }, { MAP = 1 }
@@ -468,6 +465,17 @@ local function runPending()
 		end
 		local timer = table.remove(pending, due)
 		timer.fn()
+	end
+end
+-- The addon's frame scripts the client runs at the end of a frame, after its events: one OnUpdate pass each, so a
+-- check can tell one-shot frame work from a C_Timer callback.
+local function runOnUpdate()
+	for index = coreFrames + 1, #frames do
+		local f = frames[index]
+		local fn = f.scripts and f.scripts.OnUpdate
+		if fn then
+			fn(f, 0.016)
+		end
 	end
 end
 -- The map closed and opened again: the addon's layers redraw as they do on the map's show, and Blizzard's own

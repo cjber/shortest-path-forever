@@ -36,6 +36,14 @@ local PIN_SIZE = 36
 ---@field Distance FontString
 ---@field Step FontString
 ---@field step string? the wording the step line shows, so it is only reset when it changes
+---@field goal? SPFPoint the goal the pin was last placed for
+---@field goalX? number the goal's place when it was last drawn, since a followed goal may move in place
+---@field goalY? number
+---@field x? number the player position it was last placed from
+---@field y? number
+---@field facing? number the facing it was last placed with
+---@field distanceYards? number the rounded distance its text shows
+---@field distanceMetres? boolean the distance setting its text was built for
 ---@field elapsed number
 ---@type SPFDestinationPinFrame?
 local frame
@@ -109,7 +117,6 @@ end
 -- Longest step wording the pin shows: one short line under the distance, since the map pin's
 -- tooltip carries the full text of every step.
 local STEP_MAX = 32
-local stepText, stepKey
 
 -- The current step's wording, as the tracker and the map pin's tooltip put it, cut to one line.
 -- rows are JourneyInfo's, whose current row is the step being walked.
@@ -134,8 +141,11 @@ function ns.PinStepText(title, rows)
 	return wording
 end
 
--- The step wording costs a JourneyInfo build, so it is read only when the step changes: the goal
--- and the stop index the route is on. Between steps the pin reuses the line it already has.
+-- The step wording costs a JourneyInfo build, so it is read only when the step changes: the goal and the stop index
+-- the route is on. The two are held as they are, never joined into a key string, so an unchanged step allocates
+-- nothing on the pin's poll (#784).
+local stepGoal, stepIndex, stepText
+
 ---@param goal SPFPoint
 ---@return string?
 local function StepText(goal)
@@ -143,16 +153,18 @@ local function StepText(goal)
 		return nil
 	end
 	local _, index = ns.JourneyStops()
-	local key = tostring(goal) .. ":" .. tostring(index)
-	if key ~= stepKey then
-		stepKey = key
+	if goal ~= stepGoal or index ~= stepIndex then
+		stepGoal, stepIndex = goal, index
 		local title, rows = ns.JourneyInfo()
 		stepText = ns.PinStepText(title, rows)
 	end
 	return stepText
 end
 
--- One update of the pin: where it goes, how strong it is and how far there is to go.
+-- One update of the pin: where it goes, how strong it is and how far there is to go. Nothing moves while the goal,
+-- the position, the facing, the distance and the step wording stay put, so that update returns before any text is
+-- built (#784). The step is included because the stop index moves on while the player stands still, at a turn-in,
+-- and StepText already hands back its cached line, so the check costs no build and no allocation.
 function ns.RefreshDestinationPin()
 	if not ns.DestinationPinWanted() then
 		Hide()
@@ -164,24 +176,48 @@ function ns.RefreshDestinationPin()
 		Hide()
 		return
 	end
+	local facing = GetPlayerFacing() or 0
+	local pin = frame
+	-- Gold while Guide tracks the goal; bronze while the journey is planned but not guided.
+	local pinFile = ns.GoalPinFile()
+	local metres = ns.db and ns.db.metres
+	local step = StepText(goal)
+	if
+		pin
+		and pin:IsShown()
+		and goal == pin.goal
+		and goal.x == pin.goalX
+		and goal.y == pin.goalY
+		and x == pin.x
+		and y == pin.y
+		and facing == pin.facing
+		and pinFile == pin.pinFile
+		and metres == pin.distanceMetres
+		and step == pin.step
+	then
+		return
+	end
 	local dx, dy = goal.x - x, goal.y - y
 	local distance = math.sqrt(dx * dx + dy * dy)
-	local offsetX, offsetY, alpha = ns.PinPlace(math.atan2(dy, dx), GetPlayerFacing() or 0, distance)
+	local offsetX, offsetY, alpha = ns.PinPlace(math.atan2(dy, dx), facing, distance)
 	if not (offsetX and offsetY and alpha) then
 		Hide()
 		return
 	end
-	local pin = frame or Create()
-	-- Gold while Guide tracks the goal; bronze while the journey is planned but not guided.
-	local pinFile = ns.GoalPinFile()
+	pin = pin or Create()
+	pin.goal, pin.goalX, pin.goalY, pin.x, pin.y, pin.facing = goal, goal.x, goal.y, x, y, facing
 	if pin.pinFile ~= pinFile then
 		pin.pinFile = pinFile
 		ns.Art.Icon(pin.Pin, pinFile, PIN_SIZE)
 	end
 	pin:SetPoint("CENTER", UIParent, "CENTER", offsetX, offsetY)
 	pin:SetAlpha(alpha)
-	pin.Distance:SetText(ns.FormatDistance(distance, true))
-	local step = StepText(goal)
+	-- The distance string is rebuilt only when its rounded yards or the metres setting changes.
+	local yards = math.floor(distance + 0.5)
+	if pin.distanceYards ~= yards or pin.distanceMetres ~= metres then
+		pin.distanceYards, pin.distanceMetres = yards, metres
+		pin.Distance:SetText(ns.FormatDistance(distance, true))
+	end
 	if pin.step ~= step then
 		pin.step = step
 		pin.Step:SetText(step or "")

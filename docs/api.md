@@ -1,13 +1,13 @@
 # Addon API
 
-Addons can use `ShortestPathForever.API` (`version = 1`, `minor = 3`) with uiMapIDs and normalized 0-1 coordinates.
-Additions keep `version` at 1 and raise `minor`; check that a function exists before calling it, because an older
+Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 0`) with uiMapIDs and normalized 0-1 coordinates.
+Version 2 removes peer sharing and `Leaderboard`; callers must accept versions 1 and 2 and reject future versions. Check that a function exists before calling it, because an older
 addon may not have it yet. The full types are in [`types/API.lua`](../types/API.lua). On ForeverCore 1.3.2 or
 later, the API is also listed by `ForeverCore.APIKit.Addons()`.
 
 ## Minor history
 
-- `minor = 3`: adds `Journey`, `Pause`, `Resume`, `SkipLeg`, `Stats` and `Leaderboard`, and the `leg` change in
+- Version 1, `minor = 3`: adds `Journey`, `Pause`, `Resume`, `SkipLeg`, `Stats` and the `leg` change in
   `Subscribe`.
 - `minor = 2`: adds `RenameStop`, the stop fields `npc` and `handins`, and the `"vendor"` stop kind. They shipped
   while `minor` stayed 1, so they are listed together here.
@@ -33,6 +33,10 @@ later, the API is also listed by `ForeverCore.APIKit.Addons()`.
 - `Navigate(owner, map, x, y, title, kind)` is the one-stop form.
 
   Both return a boolean; invalid input, combat or disabled Journeys return `false` without replacing guidance.
+  A route whose only stop is the place the journey already goes to hands the journey over rather than starting it
+  again: `CurrentStop` answers for the new owner, the previous owner's `Ended` reads `"replaced"`, and the stop, the
+  progress, the arrow and the drawn route stay exactly as they are. A route with several stops is a different
+  itinerary, and still replaces the journey.
   Titles are optional, as is `tooltip`, a destination detail shown on the stop pin's tooltip and under the arrival
   pin while the player stands in a held stop's area. It is never used as the arrow label; each newline in it starts a
   line of its own, and a line an earlier stop on the same pin already shows is not repeated. Optional `z` is the
@@ -86,8 +90,7 @@ later, the API is also listed by `ForeverCore.APIKit.Addons()`.
 - `Pause(owner)` and `Resume(owner)` stop and restart that owner's guidance on the same goal, as the tracker's own
   guidance switch does. `SkipLeg(owner, index?)` advances that owner's current leg. Each returns `true` when it acted
   and `false` for any other owner, no journey, the state already asked for, or combat.
-- `Stats()` and `Leaderboard(limit)` publish this character's travel records and the all-time completed journeys board
-  in the suite's statistics shape.
+- `Stats()` publishes this character's travel records in the suite's statistics shape.
 
 Use your addon's name as `owner`; starting another journey replaces ownership.
 
@@ -104,9 +107,8 @@ A read with nothing to answer returns `nil, reason`. `Estimate` and `EstimateDet
 
 `CurrentStop` and `Ended` use `"loading"` while the addon is still building its data, and `"none"` when there is
 nothing to answer: no current stop, or no ended journey to report. `Journey` uses `"loading"` while the saved
-variables are not loaded or the planner has no route yet, and `"none"` when there is no journey. `Stats` and
-`Leaderboard` use `"loading"` until the saved variables are loaded; `Leaderboard` answers a limit that is not a whole
-number of zero or more with plain `nil, "invalid"`, because the argument is wrong rather than the data unready.
+variables are not loaded or the planner has no route yet, and `"none"` when there is no journey. `Stats` uses
+`"loading"` until the saved variables are loaded.
 
 ## The journey under way
 
@@ -149,7 +151,7 @@ if journey then
 end
 ```
 
-## Stats and Leaderboard
+## Stats
 
 `Stats()` returns a fresh array of this character's travel records, one row per metric:
 
@@ -160,21 +162,6 @@ end
 | `subject` | always `"all"` |
 | `value` | the recorded total: estimated yards walked, journeys reached their last stop, boat, zeppelin, lift and tram rides, taxi flights, or portals and passages |
 | `eventUnix` | absent: the travel journal records no event time |
-
-`Leaderboard(limit)` returns the all-time completed journeys board:
-
-| Field | |
-|---|---|
-| `metric` | always `"routes_completed"` |
-| `scope` | always `"guild_group"` |
-| `sharing` | whether this character sends and receives totals |
-| `total` | every eligible row, before the limit |
-| `rows` | fresh ranked rows: `rank`, `name`, `value`, and `self` on this character's row; `eventUnix` is absent, as the travel journal records no event time |
-
-The default limit is 10, capped at 25. Zero asks for only the player's own row, which is kept even below the limit.
-A negative, fractional or non-number limit returns `nil, "invalid"`. There is no `ruleset` field: the travel records
-name no game-mode ruleset, so the all-time board compares every row it holds. Peer values are player reports and are
-not proof of travel.
 
 ## World map markers
 

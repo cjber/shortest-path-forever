@@ -36,6 +36,23 @@ local DEFAULTS = {
 	mapRoutes = true,
 	-- The town services' level of detail: "capitals", "important", "all" or "off" (UI/TownServices.lua).
 	townServices = "capitals",
+	-- The services a town pin may wear, each with its own checkbox under the world map's Town services filter. A flat
+	-- key per service keeps the defaults merge from sharing a table with the saved settings, and gives an existing
+	-- player every key it is missing. Repair starts hidden: most players do not want an anvil in every town.
+	townServiceInnkeeper = true,
+	townServiceStable = true,
+	townServiceRepair = false,
+	townServiceBank = true,
+	townServiceAuction = true,
+	townServiceBattlemaster = true,
+	townServiceClass = true,
+	townServiceProfessions = true,
+	townServiceFood = true,
+	townServiceAmmunition = true,
+	townServiceBags = true,
+	townServiceReagents = true,
+	townServiceBooks = true,
+	townServiceGear = true,
 	mapPinScale = 100,
 	flightPinScale = 100,
 	minimapPinScale = 100,
@@ -46,6 +63,8 @@ local DEFAULTS = {
 	minimapLine = true,
 	-- The faded legs after the stop being guided to stay on by default; a fresh route shows the whole journey.
 	laterLegs = true,
+	-- On, the game's own quest markers give way to a journey's stop pins (UI/QuestPins.lua); off, every marker stays.
+	hideQuestPins = true,
 	otherFaction = false,
 	tracker = true,
 	alerts = true,
@@ -53,6 +72,11 @@ local DEFAULTS = {
 	flightPathReminder = true,
 	arrivalSound = false,
 	journey = true,
+	-- The key held while clicking a map to plan a journey: "shift", the long-standing gesture, or "alt".
+	journeyKey = "shift",
+	-- Off by default: a journey starts when the player super-tracks a quest or places a map pin, so a controller
+	-- needs no map click and a plain map pin changes what it does.
+	focusedQuest = false,
 	-- An on-screen marker over the destination, like the client's own waypoint pin. Off by default: it is
 	-- new screen furniture, and a player asks for it from Settings > Guidance.
 	destinationPin = false,
@@ -81,11 +105,8 @@ local DEFAULTS = {
 	partyMageThunderBluff = true,
 	partyMageOrgrimmar = true,
 	hearthMinimumSavings = 0,
-	share = true,
 	-- Existing saved false choices remain off; missing settings join the travel journal.
 	stats = true,
-	-- Sharing is opt-out: only an explicit off stops the travel records leaving this character.
-	statsShare = true,
 	guideStops = true,
 	journeyTracker = true,
 	arrow = true,
@@ -351,6 +372,9 @@ frame:SetScript("OnEvent", function(self, _, name)
 			ns.db[key] = value
 		end
 	end
+	-- Departure-time sharing is retired, and no other player's sighting can reach this save now. Clear the switch
+	-- once so an old save carries no dead setting.
+	rawset(ns.db, "share", nil)
 	-- ForeverCore keeps the shared error journal under `errors` and the debug log under `log` in this saved table, so
 	-- the report lists earlier sessions' errors and the lines that led to them after a /reload. Attach also merges
 	-- what the shared files saw before the saved variables arrived.

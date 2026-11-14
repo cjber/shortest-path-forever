@@ -15,14 +15,18 @@
 ---@field Drink number[] items whose use spell restores mana (Data/Services.lua)
 ---@field ProfessionTrainers table<number, number> trainer NPC -> its profession skill line (Data/Services.lua)
 ---@field ClassTrainers table<number, number> class trainer NPC -> its class (Data/Services.lua)
+---@field PortalTrainers table<number, number> portal trainer NPC -> its class (Data/Services.lua)
+---@field Battlemasters table<number, number> battlemaster NPC -> its battleground template (Data/Services.lua)
 ---@field Walks table<number, table<string, (number|false)[]>>
 ---@field WalkPlaces table<number, table<string, number[]>>
 ---@field RoadCells table<number, table<number, string>>
 ---@field RoadEdges table<number, table<number, string>>
 ---@field SpawnHeights table<number, table<number, string>> spawns over or under another surface (Data/Heights.lua)
+---@field TownAreas table<number, SPFTownArea> the client's town ground per flight master (Data/TownAreas.lua)
 ---@field db SPFDatabase
 ---@field charDB SPFCharacterDatabase
 ---@field Defaults table<string, boolean|number|string>
+---@field NearbyRoles SPFNearbyRolesAPI the class, portal and battlemaster groups (UI/NearbyRoles.lua)
 ---@field NearbyServices SPFNearbyServices
 ---@field NearbyGroups SPFNearbyGroups the vendor and service groups the list and the map share (UI/NearbyGroups.lua)
 ---@field TownServiceChoices SPFTownServiceChoice[] the town services' four levels (UI/TownServices.lua)
@@ -35,10 +39,10 @@
 ---@field Icon string the one client icon every in-game identity surface draws, read from the TOC
 ---@field NearbyQuestie SPFNearbyQuestie the QuestieDB read behind the Nearby list (UI/NearbyQuestie.lua)
 ---@field ProgressJourneyChanged? fun(point: SPFPoint?, reason?: "arrived"|"cleared")
----@field TravelSharingChanged fun()
+---@field JourneyKeys string[] the modifier keys a journey click can wait for: "shift" and "alt" (JourneyInput.lua)
+---@field JourneyKeyDown fun(): boolean whether the chosen journey key is held (JourneyInput.lua)
+---@field JourneyKeyName fun(key?: string): string what the chosen key, or the one named, is called (JourneyInput.lua)
 ---@field TravelStats fun(): SPFProgressData?
----@field TravelBoard fun(scope: ForeverLeaderboardsScope): ForeverLeaderboardsRow[] this addon's board for the shared window
----@field OpenTravelLeaderboard fun() opens Forever Leaderboards on this addon's tab
 ---@field DestinationPinScale fun(): number the world map journey goal pin's share of its stock size (UI/StopPin.lua)
 ---@field RefreshDestinationPinSize fun() redraws the world map goal pins at the player's size (UI/Route.lua)
 ---@field HearthstoneEnabled fun(): boolean whether journeys may use the Hearthstone (Journey/Journey.lua)
@@ -53,11 +57,13 @@
 ---@field key string
 ---@field label string
 ---@field icon integer|string an item whose icon stands for the goods, or the client's tracking atlas
+---@field tracking string the client's minimap tracking atlas the world map's pins wear for the group
 ---@class SPFServiceGroup
 ---@field key string
 ---@field flag string the QuestieDB NPC flag that puts an NPC in the group
 ---@field label string
 ---@field icon string the client's own tracking atlas
+---@field tracking string the client's minimap tracking atlas the world map's pins wear for the group
 ---@class SPFNearbyGroups
 ---@field vendors SPFVendorGroup[]
 ---@field services SPFServiceGroup[]
@@ -165,6 +171,15 @@
 ---@class SPFPartyPortal : SPFTeleportPlace
 ---@field partyMage string
 ---@field destination string
+-- The ground the client names a town over (Data/TownAreas.lua), as its terrain chunks around a flight master.
+---@class SPFTownArea
+---@field area number the client's AreaTable id for the town
+---@field map number
+---@field i0 number the first chunk's x index, in chunks of 100/3 yards from the world origin
+---@field j0 number the first chunk's y index
+---@field w number chunks across x
+---@field h number chunks across y
+---@field cells string an x-major bitmask of the w x h chunks, six bits a base64 symbol
 -- A zone a continent's map names on hover (Data/Zones.lua): its level range or a capital's side and surrounding
 -- zone, and its map's box.
 ---@class SPFZone
@@ -186,7 +201,6 @@
 ---@class SPFAnchor
 ---@field epoch number
 ---@field seen number
----@field source? string
 ---@class SPFSample
 ---@field now number
 ---@field phases number[]
@@ -209,7 +223,6 @@
 ---@field departIn? number
 ---@field thenIn? number
 ---@field seen? number
----@field source? string
 ---@class SPFRow
 ---@field key number|string
 ---@field text string
@@ -239,12 +252,28 @@
 ---@field mapFlightMasters? boolean
 ---@field mapRoutes? boolean
 ---@field townServices? string the town services' level of detail: "capitals", "important", "all" or "off" (TownServices.lua)
+---@field townServiceInnkeeper? boolean whether innkeeper pins show (TownServices.lua)
+---@field townServiceStable? boolean whether stable master pins show
+---@field townServiceRepair? boolean whether repair pins show; off by default
+---@field townServiceBank? boolean whether bank pins show
+---@field townServiceAuction? boolean whether auction house pins show
+---@field townServiceBattlemaster? boolean whether battlemaster pins show
+---@field townServiceClass? boolean whether class trainer pins show
+---@field townServiceProfessions? boolean whether profession trainer pins show
+---@field townServiceFood? boolean whether food and drink vendor pins show
+---@field townServiceAmmunition? boolean whether ammunition vendor pins show
+---@field townServiceBags? boolean whether bags and trade supply pins show
+---@field townServiceReagents? boolean whether reagent vendor pins show
+---@field townServiceBooks? boolean whether books and recipe pins show
+---@field townServiceGear? boolean whether weapon and armour pins show
 ---@field otherFaction? boolean
 ---@field tracker? boolean
 ---@field alerts? boolean
 ---@field alertSound? boolean
 ---@field flightPathReminder? boolean
 ---@field journey? boolean
+---@field journeyKey? string -- the modifier held to plan a journey from a map click: "shift" or "alt" (JourneyInput.lua)
+---@field focusedQuest? boolean -- a super-tracked quest or the player's map pin starts a journey (JourneyInput.lua)
 ---@field compassTime? boolean -- the whole journey's time left under the compass distance (Compass.lua)
 ---@field arrivalSound? boolean -- the map ping when a journey the player planned reaches its goal (Alert.lua)
 ---@field resumeJourney? boolean -- start the player's own journey again after a reload or relog (Resume.lua)
@@ -264,9 +293,7 @@
 ---@field partyMageThunderBluff? boolean
 ---@field partyMageOrgrimmar? boolean
 ---@field hearthMinimumSavings? number -- seconds the Hearthstone must save over the best non-hearth plan
----@field share? boolean
 ---@field stats? boolean -- collect per-character travel totals
----@field statsShare? boolean -- exchange travel snapshots over supported addon channels
 ---@field guideStops? boolean
 ---@field compass? boolean
 ---@field mapPinScale? number
@@ -276,6 +303,7 @@
 ---@field mapLine? boolean the walking line draws on the world map (Route.lua)
 ---@field minimapLine? boolean the walking line draws on the minimap (Route.lua)
 ---@field laterLegs? boolean the world map draws the faded legs after the current stop (Route.lua)
+---@field hideQuestPins? boolean the game's own quest markers give way to a journey's stops (QuestPins.lua)
 ---@field journeyTracker? boolean
 ---@field arrow? boolean
 ---@field metres? boolean
@@ -295,7 +323,7 @@
 ---@field whatsNew? boolean
 ---@field seenVersion? string -- the version last loaded, for the line after an update (WhatsNew.lua)
 ---@field debug? boolean
----@field anchors table<string, table<number, SPFAnchor>>
+---@field anchors table<number, SPFAnchor> -- the newest sighting of each route, kept across sessions and characters
 ---@field nearbyRead? SPFNearbyQuestieRead the last QuestieDB read the Nearby list kept (UI/NearbyQuestie.lua)
 ---@field taxiTimes? table<string, number> -- measured seconds per directed flight path, "from:to"
 ---@field trace? (number|string)[][]
@@ -316,12 +344,6 @@
 ---@field flightsTaken number
 ---@field portalsUsed number
 ---@field milestones table<string, number>
----@field peers table<string, table<string, SPFSharedPeer>> addon ID → sender identity → metric/subject records
----@class SPFSharedPeer
----@field [string] table<string, SPFSharedMetric>
----@class SPFSharedMetric
----@field value number
----@field eventUnix number
 -- A journey's goal as Resume.lua keeps it, with the GetServerTime() it was planned.
 ---@class SPFKeptJourney
 ---@field map number

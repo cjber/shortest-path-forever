@@ -4,7 +4,7 @@ import csv
 from pathlib import Path
 
 from gen_routes import BUILD as DATA_BUILD
-from wowmock import Ui
+from wowmock import Ui  # ty: ignore[import-not-found]
 
 ROOT = Path(__file__).resolve().parent.parent
 UI_ART_BUILD = "1.60.1.70124"

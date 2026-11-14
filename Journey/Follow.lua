@@ -184,6 +184,12 @@ function ns.FollowTick(elapsed)
 		ns.StopFollowing()
 		return
 	end
+	-- The throttle is counted first: inside it there is nothing to draw, so the member's position is not read and no
+	-- table is made (the position read allocates a point, WFA-13, #784).
+	following.waiting = following.waiting - elapsed
+	if following.waiting > 0 then
+		return
+	end
 	local here = Here()
 	local point = ns.FollowPoint(unit)
 	if not point then
@@ -191,7 +197,6 @@ function ns.FollowTick(elapsed)
 		-- ending it under the player's feet would be worse than one stale destination.
 		return
 	end
-	following.waiting = following.waiting - elapsed
 	local close = here and Distance(here, point)
 	if close and close <= ARRIVE then
 		if not following.arrived then
@@ -201,9 +206,6 @@ function ns.FollowTick(elapsed)
 		return
 	end
 	following.arrived = false
-	if following.waiting > 0 then
-		return
-	end
 	local moved = following.point and Distance(following.point, point)
 	if moved and moved < MOVED then
 		-- Nothing the player could see has changed since the last replan.

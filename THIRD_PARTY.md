@@ -13,14 +13,16 @@ it, so a data refresh that moves the pin never leaves this file behind. The addo
 | [CMaNGOS classic-db](https://github.com/cmangos/classic-db) | Portal and teleport destinations, transport spawns and periods, trainer NPCs and spells, and the heights of NPC and quest object spawns in `Data/*.lua` | `DB_REV` in `tools/gen_transit.py` (`tools/gen_services.py` and `tools/gen_heights.py` import it) | GPL-3.0 |
 | [CMaNGOS mangos-classic](https://github.com/cmangos/mangos-classic) | The transport timetable model and flight speed, reimplemented in `tools/gen_routes.py` and `tools/gen_transit.py` | Cited by source file in those scripts; no code copied | GPL-2.0-or-later |
 | [InFlight](https://github.com/LudiusMaximus/InFlight) | Recorded flight durations in `Data/Taxi.lua` | `INFLIGHT_REV` in `tools/gen_transit.py` | MIT |
-| Local client terrain, baked with TrinityCore's tools | The walkable cells in `Nav/*.lua` (`tools/baker/README.md`) | `TRINITY_REV` in `tools/baker/bake.sh` and the client build baked | Derived data, GPL-3.0-or-later; Blizzard's EULA applies to the client files |
+| Local client terrain, baked with TrinityCore's tools and the player's collision limits from benilla-re | The walkable cells, their steep down-only ground, steps and ledge drops in `Nav/*.lua` (`tools/baker/README.md`) | `TRINITY_REV` in `tools/baker/bake.sh` and the client build baked | Derived data, GPL-3.0-or-later; Blizzard's EULA applies to the client files |
 
 No embedded libraries ship. `media/` is this addon's own: the icon is drawn in `media/icon.svg`, the feathered
 `Dot.tga` is the route-stroke brush, `Zeppelin.tga` is the zeppelin map marker, `Pin.tga` is the gold goal pin and
-`PinInactive.tga` its bronze untracked twin, and `Numbers/1.tga` to `Numbers/25.tga` are the gold numbered markers,
-all original assets made for this addon with AI assistance and no Blizzard art; the pins and the numbered markers are
-generated from `tools/pin_source` and `tools/pin_source/numbers` by `tools/export_pin.py`. Boat markers use
-Blizzard's `flightmasterferry` atlas, which has no zeppelin equivalent.
+`PinInactive.tga` its bronze untracked twin, and `TownGroup.tga` is the town services group pin: a market stall for a
+pin that stands for more than one NPC, generated from `tools/pin_source/town-group.png` by `tools/export_pin.py`, as
+are the pins from `tools/pin_source`. All of it is original art made for this addon with AI assistance and no
+Blizzard art. The numbered step markers are ForeverCore's own (`ForeverCore.Art.Marker`, `Ring` and `Diamond`), drawn
+by its `tools/export_markers.py`, so one addon's step looks like the next. Boat markers use Blizzard's
+`flightmasterferry` atlas, which has no zeppelin equivalent.
 `Locales/*.lua` are machine translated, using the client's own GlobalStrings for the pinned build (via wago.tools)
 as the glossary for game terms; eight frFR lines are Brainc3ll's.
 
@@ -37,7 +39,8 @@ as the glossary for game terms; eight frFR lines are Brainc3ll's.
 
 | Input | Used for | Pin | Licence |
 |---|---|---|---|
-| [TrinityCore](https://github.com/TrinityCore/TrinityCore) with its vendored CascLib (MIT) and Recast/Detour (zlib) | Terrain extraction for the navigation bake, fetched and patched in `tools/baker/` | `TRINITY_REV` in `tools/baker/bake.sh` | GPL-2.0-or-later |
+| [TrinityCore](https://github.com/TrinityCore/TrinityCore) with its vendored CascLib (MIT) and Recast/Detour (zlib) | Terrain extraction for the navigation bake, fetched and patched in `tools/baker/`; its `Player::HandleFall` sets the 14.57 yard fall limit | `TRINITY_REV` in `tools/baker/bake.sh` | GPL-2.0-or-later |
+| [benilla-re](https://github.com/samwhosung/benilla-re) | The player's collision limits in the navigation bake, from `systems/collision/walking.md`: the 50 degree walkable slope, the 2.0 yard step, and the 61.6 degree settle sweep that makes steeper ground down-only | Cited by document and address in `tools/baker/README.md`; no code copied | MIT OR Apache-2.0 |
 | [WoWDBDefs](https://github.com/wowdev/WoWDBDefs) | Reference for the Forever table layouts the baker reads | The commit linked in `tools/baker/README.md` | CC BY-SA 4.0 |
 | [Blizzard UI source](https://github.com/Gethe/wow-ui-source) | The map and spinner specs, fetched into `tools/.cache/` | `revision` in `tools/fetch_blizzard_ui.sh`; the simulator pin in `tools/forever_sim/fetch.py` | Blizzard Entertainment's; fetched, never committed |
 | [Ketho's WoW API annotations](https://github.com/Ketho/vscode-wow-api) | lua-language-server types in `tools/typecheck.sh` | `revision` in `tools/typecheck.sh` | MIT |
@@ -138,9 +141,30 @@ Credit for the reports and requests behind the addon.
 | spidersylar | Known flight points kept per character | CurseForge; #685 |
 | Acem | Known flight points kept per character | CurseForge; #685 |
 | tgkGate | Fixed the path job yield error | CurseForge; #717 |
+| user\_efwsfml273dlvfm5 | Fixed the remaining path job yield error | CurseForge; #803 |
 | IronmanBG | Plan journey back in Kaliel's Tracker | CurseForge; #718 |
 | vladsnz | Quest list More options works with a controller | CurseForge; #788 |
 | vcatalin | Forever Core bundled in the download again | GitHub; #731 |
+| sdtom | Town service pins wear their own icons | CurseForge; #794 |
+| Bervath | Town service pins wear their own icons | CurseForge; #794 |
+| Blast22 | Guidance no longer flickers between two objectives | CurseForge; 8693782 |
+| user_sggieekz05hc7uxt | Guidance no longer flickers between two objectives | CurseForge; 8685196 |
+| kindguydev | Guidance no longer flickers while a guide re-points | Discord; #693 |
+| kindguydev | Guidance no longer restarts when another addon points at the same destination | Discord; #826 |
+| user_sggieekz05hc7uxt | Guidance no longer restarts when another addon points at the same destination | CurseForge; 8685196 |
+| [hervad](https://github.com/hervad) | No more short hitches during play | GitHub; #759 |
+| [caghanpekin-prog](https://github.com/caghanpekin-prog) | No more brief stutters during play | GitHub; #772 |
+| Zwaffelmagic | Clear the destination on arrival | CurseForge; #733 |
+| CptShooter | Hide the objective lines under the arrow | CurseForge; #691 |
+| user\_10oietw0rdrgk4le | Hovering the minimap map pin no longer errors | CurseForge; #824 |
+| ubrider | Hovering the minimap map pin no longer errors | CurseForge; #824 |
+| cwebbx | Journeys start from a focused quest or map pin | CurseForge; #687 |
+| lone\_viking1921 | Journeys start from a focused quest or map pin | CurseForge; #687 |
+| Nivlemoth\_Nathrezim | Horde walks stay out of Southshore | CurseForge; #719 |
+| Lůca [Luutsa] | Town services of the same kind share one icon | Discord; #812 |
+| esc\_return | Arrow follows the walk with only step ends marked | Discord; #817 |
+| MrOxiMoron | The game's quest markers can stay on the map during a journey | CurseForge; #871; thread 8698185 |
+| Zhiroc | A choice of key for planning a journey from a map click | CurseForge; #882; thread 8712334 |
 
 ## Inspired by
 

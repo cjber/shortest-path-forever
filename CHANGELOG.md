@@ -1,5 +1,7 @@
 # Changelog
 
+<!-- rule-ignore: file-size-no-growth - every release's notes, kept verbatim in one history -->
+
 What changed in each release, in the terms someone finding their way would notice. Dates are UTC.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versions follow
@@ -14,7 +16,82 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 - **The destination pin can be made smaller.** *Destination pin size* in Guidance, directly under *Show a pin over the destination*, scales the world map's journey goal pin from 50% to 100%. The pin keeps its shape and its point stays on the destination at every size, and 100% is how it always drew (#778).
 - **The Hearthstone can be kept out of a journey without opening settings.** Right-click the Journey header in the tracker and untick *Use Hearthstone*, or click the innkeeper button at your bind point on the world map. Both flip the same saved switch, replan the journey, and leave your class teleports on offer. The button greys out while the Hearthstone is saved and its tooltip says how much time the Hearthstone saves (cjber/adventure-guide-forever#707).
+- **Choose the key that plans a journey from a map click.** *Key to plan a journey* in Guidance offers Shift or Alt, with Shift by default. Choose Alt and that one key plans a journey everywhere, Questie icons included, so Shift-click stays free for Questie's untrack. Asked on CurseForge by Zhiroc (#882).
+
+## [1.37.1] - 2026-11-14
+
+<!-- discord-image: docs/screenshots/stops.png -->
+
+- **Hovering a quest stop shows the quest's area.** The game's "..." pin showed a quest's blue area when you hovered it, and a journey stop that marks the same quest replaced that pin with nothing to hover. Hovering the stop now shows the area of the quest it marks, hand-in stops included, and the area goes again when the pointer leaves or the journey ends (#859).
+- **A Horde zeppelin's timetable follows the latest game build.** One zeppelin now waits a full minute at its dock instead of half a minute, and the boarding countdown on its journey step counts to the new departure.
+
+## [1.37.0] - 2026-11-14
+
+<!-- discord-image: docs/screenshots/stops.png -->
+
+- **Routes no longer climb hills the game will not let you climb.** The walking maps now use your own movement limits: a slope is walkable up to 50 degrees, a step reaches 2 yards, and ground from 50 to just over 61 degrees can be walked down but never up. A route over a face that would slide you back down now goes around it, and a walk still drops off a ledge where the game lets you. Walking speed is the same uphill, downhill and on the flat, so no route is charged extra for a slope (#639).
+- **One pointer leads, round every bend, with only step ends marked.** With *Mark only where steps end* on, the game's own on-screen marker no longer appears, so Shortest Path's arrow alone leads you round each bend while the map marks where each step ends. The centre of the arrow now shows the next step's number in the same gold marker the compass uses, or, when the step has no number, a gold ring with a diamond inside, instead of a pin whose point looked like a second arrow. Thanks to esc_return on Discord (#817).
+- **The game's own quest markers can stay on the map.** A journey hides the game's markers for the quests its stops cover, so each stop shows once, but a quest can often be finished in another place too. Turn *Hide game quest markers* off under Map marks, or in the world map's filter menu, and every one of the game's markers and quest areas stays beside your journey's pins. It is on by default, so nothing changes unless you turn it off. Thanks to MrOxiMoron for the request (#871).
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
+## [1.36.0] - 2026-11-13
+
+<!-- discord-image: docs/screenshots/town_services_zoom.png -->
+
+- **Fewer market stalls on the map, and every NPC apart at full zoom.** Nearby services of the same kind now share that service's icon, so three leatherworking trainers become one leatherworking pin with all three in its tooltip. A market stall appears only where different kinds of service share a spot, and only when their pins truly overlap, so there are fewer of them. Zooming right in splits every NPC into its own icon, spreading those standing in the same doorway so each can be hovered and clicked, and a pin follows each zoom step back onto its own NPC. A wandering NPC shows one pin per map rather than one at every spawn along its route. A flight master no longer gets a second pin beside its flight point, since the flight point's own pin already stands for that NPC, so the Town services filter no longer offers a Flight master switch. Weapons and armour vendors wear the game's tunic mark instead of the plain gold coin that read as a bare dot. Thanks to Lůca [Luutsa] on Discord for the idea (#812, #816).
+- **The arrow follows the walk even when only step ends are marked.** With *Mark only where steps end* on, the screen arrow now points at each bend of the walk while the map still marks only where each step ends, and the distance under it counts the whole walk rather than a straight line. Thanks to esc_return on Discord (#817).
+- **Kaliel's Tracker players find the journey entry in its quest menu.** Shortest Path Forever now loads after Kaliel's Tracker when it is installed, so its quest menu entry is added to that tracker's menus.
+- **Russian players no longer see an empty box between parts of a tracker line.** The Russian client's font has no middle dot, so the tracker now separates those parts with a bullet, spaced as before. Reported by XaksFlaX on GitHub (#838).
+
+## [1.35.2] - 2026-11-13
+
+- **Guidance no longer blinks off and on when another addon points at the destination your journey already has.** When TomTom's arrow, or a guide, took the objective the journey was already going to under its own name, Shortest Path started the journey over: the arrow, the tracker and the game's own map pin dropped away and came back while the same way was searched again. The journey now stays exactly as it is and only changes hands. The game's map pin also stays put for a moment when the game cannot say which map you are on, instead of vanishing and coming back. Thanks to kindguydev on Discord and user_sggieekz05hc7uxt on CurseForge for the reports (#693, #826).
+
+### For addon authors
+
+- `NavigateRoute` and `Navigate` hand a journey over when the only stop they send is the place the journey already goes to: the new owner's `CurrentStop` answers and the previous owner's `Ended` reads `"replaced"`, while the stop, progress, arrow and drawn route stay exactly as they are. A route with several stops still replaces the journey.
+
+## [1.35.1] - 2026-11-13
+
+- **Battlemaster pins can be hidden.** *Town services* in the world map's filter menu now has a *Battlemaster* checkbox, beside the switches for the other services, so you can keep battlemasters off the map and leave the rest (#833).
+- **Horde walks stay out of Southshore.** A journey from Dun Garok to a quest west of Southshore was routed through the town, past its guards, because a hostile town counted only the ground within 150 yards of its flight master, and Southshore's town hall and most of its guards stand further west than that. A town's ground is now the ground the game itself names the town, so the walk goes round all of it. Thanks to Nivlemoth_Nathrezim on CurseForge for the report (#719).
+
+## [1.35.0] - 2026-11-13
+
+<!-- discord-image: docs/screenshots/compass.png -->
+
+- **The compass is easier to see.** Its ticks are thicker and longer, the direction letters are larger and sit further below their ticks, and the straight-ahead mark is a solid gold bar. Thanks to user_rnkfwc696ynt7c0k on CurseForge (#807).
+- **Controller players can route to a focused quest or map pin.** *Route to the focused quest* in Guidance starts a journey when you super-track a quest or place the game's own map pin, so a controller needs no Shift-click. Quests a guide addon focuses are left alone while that guide's journey is leading. The three journey bindings under Key Bindings > AddOns, Travel to my map pin, Travel to my tracked quest and Clear journey, also take a gamepad button. Asked on CurseForge by cwebbx and lone_viking1921 (#687).
+- **Hovering a map pin on the minimap no longer gives a Lua error.** Where the game keeps the pin's name from addons, the pin shows the game's own tooltip. Thanks to user_10oietw0rdrgk4le and ubrider on CurseForge for the report (#824).
+- **Battlemasters and portal trainers join Nearby services.** The list now finds the closest battlemaster on your side, and mages also get a portal trainer row beside their class trainer. Each row plans the journey and shows the time, as the other services do. The class trainer row stays your own class, so a mage sees the mage trainer and a warrior the warrior trainer. Asked on CurseForge by Wraith12 (#688).
+
+## [1.34.3] - 2026-11-12
+
+<!-- forever-core-sync -->
+
+- Two more players are on the Thanks page: hervad and caghanpekin-prog reported the short hitches during play, which stopped when travel stats stopped being shared with your guild and group. Thanks to hervad and caghanpekin-prog on GitHub for the reports (#759, #772).
+- A journey left running no longer re-plans itself every five seconds. The boats and zeppelins a journey waits for were worked out again every five seconds even when nothing about them had changed. Now a journey works out its waits once and plans again only when a departure it counts on leaves without you, so a journey left running in the background costs next to nothing.
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
+## [1.34.2] - 2026-11-12
+
+- **The arrow and the tracker no longer flash while a guide moves between objectives.** The route line, arrow and tracker stay put while the next objective's route is found, and selecting a quest in another addon no longer takes the arrow away. Thanks to Blast22 and user_sggieekz05hc7uxt on CurseForge and kindguydev on Discord (#693).
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
+## [1.34.1] - 2026-11-12
+
+- **Journeys no longer stop without a route.** Now and then planning a journey stopped with "attempt to yield across metamethod/C-call boundary" and left you with no route, usually with the world map open. It now finishes and the journey gets its route. Thanks to user_efwsfml273dlvfm5 on CurseForge for the report. (#803)
+
+## [1.34.0] - 2026-11-12
+
+<!-- discord-image: docs/screenshots/town_services.png -->
+
+- **Town services wear their own icons.** The pins no longer use a town or city mark: each one shows the same icon the game's minimap tracking menu gives that service, such as the repairer's anvil, the banker's money bags or the baker's bread and milk. A group of nearby services wears a market stall rather than any one service's icon, and its tooltip lists the group's services; zooming in splits the group into one pin per NPC. Click a pin to plan a journey to that NPC, and its tooltip says so. The pins now show only on zone and city maps, never on a continent or the world map. Under *Town services* in the map's filter menu you can now hide any kind of service you never use; repairers start hidden. Thanks to sdtom and Bervath for the reports (#794).
+- **Your travel stats stay on your computer.** Shortest Path no longer shares journey and travel stats with your guild or group, and the leaderboard tab is gone with the rest of Forever Leaderboards. This also stops the short hitch every 10 seconds some players saw with sharing on. Departure times are no longer swapped with other players either, and timetables come from your own sightings, kept across sessions and characters on your account. Your own journey, distance and transport totals stay as they were.
 - **The quest list's More options works with a controller.** On the gamepad interface, pressing Y on a quest in the quest log's list opened nothing, because the *Plan journey* entry this addon adds to that menu had tainted it and the game's gamepad focus then refused to run. The game's quest menus are now left to the game while the gamepad interface is on, as the map and minimap menus already were, and our entries return with mouse and keyboard. Reported on CurseForge by vladsnz (#788).
+- **Quest pins stop blinking at journey stops.** The game's quest pin at a stop the route already marks no longer shows for a frame every time your quest log changes, so the world map stays steady while a journey is drawn.
+- **Standing still costs less.** The destination pin, the Guidelime step and the map's own checks now skip their work when nothing has changed, and following a party member reads their position once a second instead of every frame, so ordinary play leaves more time for the game.
+- Ships with the same shared code as your other Forever addons, so they keep working together.
 
 ## [1.33.1] - 2026-11-12
 

@@ -4,14 +4,14 @@
 ## Author: cjber
 ## Version: @project-version@
 ## Category: Map
-## OptionalDeps: QuestieDB, TweaksForever, RXPGuides, Guidelime
+## OptionalDeps: QuestieDB, TweaksForever, RXPGuides, Guidelime, !KalielsTracker
 ## X-License: GPL-3.0-or-later
 ## X-Website: https://github.com/cjber/shortest-path-forever
 ## X-Donate: https://github.com/sponsors/cjber
 ## X-Curse-Project-ID: 1708599
 ## X-Wago-ID: b6Xy1wKp
 ## Dependencies: ForeverCore
-## X-Forever-Core: v1.7.4
+## X-Forever-Core: v1.12.0
 ## SavedVariables: ShortestPathForeverDB
 ## SavedVariablesPerCharacter: ShortestPathForeverCharDB
 ## IconTexture: Interface\AddOns\ShortestPathForever\media\Icon
@@ -37,6 +37,7 @@ Data\Taxi.lua
 Data\Portals.lua
 Data\Teleports.lua
 Data\Zones.lua
+Data\TownAreas.lua
 Data\Services.lua
 Data\Walks.lua
 Data\RoadCells.lua
@@ -54,9 +55,9 @@ UI\MenuModifier.lua
 UI\NearbyGroups.lua
 UI\NearbyQuestie.lua
 UI\NearbyEntrances.lua
+UI\NearbyRoles.lua
 UI\Nearby.lua
 Transport\Observer.lua
-Transport\Sync.lua
 UI\Map.xml
 Transport\Taxi.lua
 Core\Progress.lua

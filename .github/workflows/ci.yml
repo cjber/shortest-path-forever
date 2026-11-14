@@ -43,20 +43,13 @@ jobs:
           ref: ${{ steps.forever-core-ref.outputs.ref }}
           path: forever-core
           persist-credentials: false
-      # Ubuntu 24.04's release-pocket builds, which the archive never replaces.
-      - name: Install LuaJIT and luacheck
-        env:
-          LUAJIT: 2.1.0+git20231223.c525bcb+dfsg-1
-          LUACHECK: 1.1.2-1
-        run: |
-          # Fall back to a mirror of Ubuntu's signed archives when the runner's Azure mirror cannot resolve.
-          mirror_list=/etc/apt/apt-mirrors.txt
-          if [ -f "$mirror_list" ] && ! getent ahosts azure.archive.ubuntu.com >/dev/null; then
-            printf '%s\n' https://mirrors.mit.edu/ubuntu | sudo tee "$mirror_list" >/dev/null
-          fi
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends --allow-downgrades \
-            "luajit=$LUAJIT" "libluajit-5.1-2=$LUAJIT" "libluajit-5.1-common=$LUAJIT" "lua-check=$LUACHECK"
+      # Every tool version lives in this checkout's tools/toolchain.json, which the action reads and installs and
+      # verifies each pin from.
+      - uses: cjber/forever-core/.github/actions/toolchain@2596f68e68f9a727496a19f3f801c8a7039357d2 # main
+        id: toolchain
+        with:
+          tools: lua stylua
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
       - run: luacheck .
       - run: python3 -m tools.forever_tools.assets
       - run: python3 tools/check_api_docs.py
@@ -76,15 +69,11 @@ jobs:
       - run: luajit -joff tests/hearth_savings_bench.lua
       - run: luajit -joff tests/journey_bench.lua
       - run: tests/ui.sh
-      - uses: JohnnyMorganz/stylua-action@76fd70c03e6340ceaf673366712db9b20560b402 # v5.0.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          version: 2.5.2
-          args: --check .
-      - run: pipx run ruff==0.16.8 check .
-      - run: pipx run ruff==0.16.8 format --check .
-      - run: pipx run --spec shellcheck-py==0.11.0.1 shellcheck tools/baker/bake.sh tools/typecheck.sh tools/fetch_blizzard_ui.sh tests/ui.sh
-      - run: pipx run --spec shfmt-py==4.2.0 shfmt -d tools/baker/bake.sh tools/typecheck.sh tools/fetch_blizzard_ui.sh tests/ui.sh
+      - run: stylua --check .
+      - run: uv run --project tools --frozen --group dev ruff check .
+      - run: uv run --project tools --frozen --group dev ruff format --check .
+      - run: uv run --project tools --frozen --group dev shellcheck tools/baker/bake.sh tools/typecheck.sh tools/fetch_blizzard_ui.sh tests/ui.sh
+      - run: uv run --project tools --frozen --group dev shfmt -d tools/baker/bake.sh tools/typecheck.sh tools/fetch_blizzard_ui.sh tests/ui.sh
 
   bake-provenance:
     runs-on: ubuntu-24.04
@@ -127,19 +116,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # Ubuntu 24.04's release-pocket builds, which the archive never replaces.
-      - name: Install LuaJIT
-        env:
-          LUAJIT: 2.1.0+git20231223.c525bcb+dfsg-1
-        run: |
-          # Fall back to a mirror of Ubuntu's signed archives when the runner's Azure mirror cannot resolve.
-          mirror_list=/etc/apt/apt-mirrors.txt
-          if [ -f "$mirror_list" ] && ! getent ahosts azure.archive.ubuntu.com >/dev/null; then
-            printf '%s\n' https://mirrors.mit.edu/ubuntu | sudo tee "$mirror_list" >/dev/null
-          fi
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends --allow-downgrades \
-            "luajit=$LUAJIT" "libluajit-5.1-2=$LUAJIT" "libluajit-5.1-common=$LUAJIT"
+      - uses: cjber/forever-core/.github/actions/toolchain@2596f68e68f9a727496a19f3f801c8a7039357d2 # main
+        with:
+          tools: lua
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: tools/.cache
@@ -171,30 +150,10 @@ jobs:
           path: forever-core
           persist-credentials: false
       # tools/check_locales.py parses each translation with LuaJIT.
-      # Ubuntu 24.04's release-pocket builds, which the archive never replaces.
-      - name: Install LuaJIT
-        env:
-          LUAJIT: 2.1.0+git20231223.c525bcb+dfsg-1
-        run: |
-          # Fall back to a mirror of Ubuntu's signed archives when the runner's Azure mirror cannot resolve.
-          mirror_list=/etc/apt/apt-mirrors.txt
-          if [ -f "$mirror_list" ] && ! getent ahosts azure.archive.ubuntu.com >/dev/null; then
-            printf '%s\n' https://mirrors.mit.edu/ubuntu | sudo tee "$mirror_list" >/dev/null
-          fi
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends --allow-downgrades \
-            "luajit=$LUAJIT" "libluajit-5.1-2=$LUAJIT" "libluajit-5.1-common=$LUAJIT"
-      - name: lua-language-server
-        env:
-          LUALS_VERSION: 3.19.1
-          LUALS_SHA256: e9235d2d72ef55bc41cf8c99cda2ed64777682024b4bb81f5dea425060c5cbb8
-        run: |
-          # GitHub's release CDN answers 502/504 under load; retry rather than fail the job.
-          curl -fsSLo luals.tar.gz --retry 8 --retry-delay 5 --retry-all-errors --connect-timeout 20 --max-time 300 \
-            "https://github.com/LuaLS/lua-language-server/releases/download/${LUALS_VERSION}/lua-language-server-${LUALS_VERSION}-linux-x64.tar.gz"
-          echo "${LUALS_SHA256}  luals.tar.gz" | sha256sum -c -
-          mkdir "$RUNNER_TEMP/luals" && tar -xzf luals.tar.gz -C "$RUNNER_TEMP/luals" && rm luals.tar.gz
-          echo "$RUNNER_TEMP/luals/bin" >> "$GITHUB_PATH"
+      - uses: cjber/forever-core/.github/actions/toolchain@2596f68e68f9a727496a19f3f801c8a7039357d2 # main
+        id: toolchain
+        with:
+          tools: lua luals
       - run: tools/typecheck.sh
 
   secrets:
@@ -205,17 +164,11 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - uses: cjber/forever-core/.github/actions/toolchain@2596f68e68f9a727496a19f3f801c8a7039357d2 # main
+        with:
+          tools: gitleaks
       - name: gitleaks
-        env:
-          GITLEAKS_VERSION: 8.30.1
-          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
-        run: |
-          # GitHub's release CDN answers 502/504 under load; retry rather than fail the job.
-          curl -fsSLo gitleaks.tar.gz --retry 8 --retry-delay 5 --retry-all-errors --connect-timeout 20 --max-time 300 \
-            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
-          echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum -c -
-          tar -xzf gitleaks.tar.gz -C "$RUNNER_TEMP" gitleaks && rm gitleaks.tar.gz
-          "$RUNNER_TEMP/gitleaks" git --redact --no-banner .
+        run: gitleaks git --redact --no-banner .
 
   project-rules:
     runs-on: ubuntu-24.04
@@ -238,15 +191,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # PyPI answers 502/504 under load; pip's own retries cover it.
-      - env:
-          PIP_RETRIES: 5
-          PIP_DEFAULT_TIMEOUT: 60
-        run: pipx run --spec actionlint-py==1.7.12.25 actionlint
-      - env:
-          PIP_RETRIES: 5
-          PIP_DEFAULT_TIMEOUT: 60
-        run: pipx run zizmor==1.30.1 --offline .github
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - run: uv run --project tools --frozen --group dev actionlint
+      - run: uv run --project tools --frozen --group dev zizmor --offline .github
 
   # What a tag would ship, checked before it ships: the release workflow's packager without uploading or zipping,
   # then tools/check_package.py on .release/ (every loaded file present, no development folders, specs pass on it).
@@ -272,19 +219,9 @@ jobs:
           ref: ${{ steps.forever-core-ref.outputs.ref }}
           path: forever-core
           persist-credentials: false
-      # Ubuntu 24.04's release-pocket builds, which the archive never replaces.
-      - name: Install LuaJIT
-        env:
-          LUAJIT: 2.1.0+git20231223.c525bcb+dfsg-1
-        run: |
-          # Fall back to a mirror of Ubuntu's signed archives when the runner's Azure mirror cannot resolve.
-          mirror_list=/etc/apt/apt-mirrors.txt
-          if [ -f "$mirror_list" ] && ! getent ahosts azure.archive.ubuntu.com >/dev/null; then
-            printf '%s\n' https://mirrors.mit.edu/ubuntu | sudo tee "$mirror_list" >/dev/null
-          fi
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends --allow-downgrades \
-            "luajit=$LUAJIT" "libluajit-5.1-2=$LUAJIT" "libluajit-5.1-common=$LUAJIT" "lua5.1=5.1.5-9build2"
+      - uses: cjber/forever-core/.github/actions/toolchain@2596f68e68f9a727496a19f3f801c8a7039357d2 # main
+        with:
+          tools: lua
       # .pkgmeta's manual changelog, which the release fills with the version's entry.
       - run: printf 'Package check\n' > .release-notes.md
       # The packager skips a push build when HEAD carries a tag ("Found future tag, not packaging"), so a tag that
