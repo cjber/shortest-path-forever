@@ -1,23 +1,23 @@
 {
-  "input_digest": "4a469715662db930ab0ff4d4ea8bfd73db27152f32949b876dc5384527955ec9",
-  "runtime_sha256": "4a469715662db930ab0ff4d4ea8bfd73db27152f32949b876dc5384527955ec9",
-  "candidate": "68b6f3c2f3a77c263b98227ad05e30418d57946727fa1a9d651d98c2e633e279",
+  "input_digest": "2ae4bc7a9f7d0b515ba9c29b256c817fcdd17f352b402a3e3bd1b74706bd344a",
+  "runtime_sha256": "2ae4bc7a9f7d0b515ba9c29b256c817fcdd17f352b402a3e3bd1b74706bd344a",
+  "candidate": "709d78e8d0538800daa43222c6ec491d6abb71d77f2adb713e5758b2ecda61f2",
   "client_build": "1.60.1.70938 (Interface 16001)",
   "tested_artifact": "source-tree",
-  "source_commit": "9d560487df6b2aace290beec0e0acc066a0b373f",
+  "source_commit": "5273027ef31b00206d4b93cd817d1c377a8db749",
   "flows": [
     {
-      "name": "update notice and journey planner",
+      "name": "Guidance settings with the journey key",
       "steps": [
-        "/path"
+        "/home/cjber/.cache/agent-scratch/sweep/wow/spf882/guidance-settings.lua"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/98d0fd3a6ff1a1d0addd8d4c97b4af2d/raw/4427878e61744ce2c1c0e1ae5003095edf14a736/1-update-notice-and-journey-planner.png",
-      "sha256": "a9a4e18c2b16ad8ed839fa64e988c263a3d79721d5c631490564b9e4c841ef62"
+      "url": "https://gist.githubusercontent.com/cjber/ef9dbbcaece652d96048a70aa3f78a35/raw/962c3236d19340aa3ff1d7fff1b6020924d2c093/1-guidance-settings-with-the-journey-key.png",
+      "sha256": "ec9a02bb4cd22dca7bda7f836ccf9f41780e4e5282922284c6859e5e03df6bee"
     }
   ]
 }
