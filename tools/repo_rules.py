@@ -31,6 +31,8 @@ EXCLUDE = (
     "tools/forever_tools/*",
     # Upstream diffs: a patch mirrors the producer files it changes, and its first line cannot carry a marker.
     "tools/baker/*.patch",
+    # A changelog is one history, never split: its length records releases, not a file to grow a responsibility into.
+    "CHANGELOG.md",
 )
 
 

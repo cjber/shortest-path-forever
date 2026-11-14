@@ -1,6 +1,7 @@
 -- The reported Stormwind to Wailing Caverns journey (#465): a flight point the client has reported, Booty Bay,
--- makes the route fly and sail instead of running the whole way. With no flight point known, the same journey
--- walks to the boat, and the plan says an unknown flight point would have shortened it.
+-- makes the route walk to Stormwind's unknown flight master, learn it there, and fly and sail instead of running
+-- the whole way. With no flight point known, the same journey walks to the boat, and the plan says an unknown
+-- flight point would have shortened it.
 local ns = {}
 assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", ns)
 for _, file in ipairs({
@@ -65,19 +66,28 @@ assert(
 	"with no flight point the whole way to the boat is walked"
 )
 
--- Knowing only Booty Bay is not enough (#537): a flight cannot leave Stormwind's flight master before the
--- character has learned it, so the same journey still walks and reports the unknown flight point.
+-- Knowing only Booty Bay is enough for the feature (#868): the route walks to Stormwind's undiscovered flight
+-- master, learns it there, then flies to the known Booty Bay. Only the departure point is learned in person; the
+-- landing is known, so the flight is one the client will let the character take.
 local booty = assert(Plan(from, entrance, { [BOOTY_BAY] = true }))
-assert(not Has(booty, "flight"), "a flight cannot depart an unknown flight point")
-assert(booty.unknownFlight == true, "the plan explains the flight point it could not use")
-assert(booty.arrive == walked.arrive, "knowing only the arrival changes nothing")
+assert(Has(booty, "flight"), "walking to the unknown departure learns it and flies")
+assert(
+	booty.legs[1].mode == "walk"
+		and booty.legs[1].to.kind == "taxi"
+		and booty.legs[1].to.id == STORMWIND
+		and booty.legs[1].to.undiscovered,
+	"the route first walks to Stormwind's undiscovered flight master"
+)
+assert(booty.legs[2].mode == "flight" and booty.legs[2].to.id == BOOTY_BAY, "then flies from the learned point")
+assert(not booty.unknownFlight, "a plan that flies needs no unknown-flight notice")
+assert(booty.arrive < walked.arrive, "learning Stormwind beats walking the whole way")
 
 -- With Stormwind also known the same journey walks to its flight master and flies to Booty Bay, so the long run
--- to the boat is gone.
+-- to the boat is gone. Learning the unknown point on the way costs no time.
 local known = assert(Plan(from, entrance, { [STORMWIND] = true, [BOOTY_BAY] = true }))
 assert(Has(known, "flight"), "both known flight points fly")
 assert(known.legs[1].to.kind == "taxi" and known.legs[1].to.id == STORMWIND, "the flight starts at Stormwind")
-assert(known.arrive <= booty.arrive, "knowing the nearer flight point cannot make the journey slower")
+assert(known.arrive == booty.arrive, "the learned departure takes the same route as a known one")
 assert(known.arrive < walked.arrive, "a known taxi node beats the walked leg")
 
 local gromgol = { map = 0, x = -12414, y = 146, label = "Grom'gol" }

@@ -81,6 +81,7 @@ jobs:
         id: pr
         uses: peter-evans/create-pull-request@3ffccacd46053766916f087ce41d627c0b8cf2d1 # v8.1.3
         with:
+          sign-commits: true
           branch: data/refresh
           title: "data: refresh travel data"
           commit-message: "data: refresh travel data (${{ steps.pins.outputs.summary }})"

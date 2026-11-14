@@ -30,6 +30,11 @@ class FileSizeTest(unittest.TestCase):
     def test_shrinking_a_large_file_passes(self):
         self.assertEqual(check([("M", "a.lua", "a.lua")], {"a.lua": BIG}, {"a.lua": BIGGER}), [])
 
+    def test_a_changelog_is_one_history(self):
+        self.assertEqual(
+            check([("M", "CHANGELOG.md", "CHANGELOG.md")], {"CHANGELOG.md": BIGGER}, {"CHANGELOG.md": BIG}), []
+        )
+
     def test_a_marker_needs_a_reason(self):
         marked = b"-- rule-ignore: file-size-no-growth - one generated lookup table\n" + BIG
         bare = b"-- rule-ignore: file-size-no-growth - ok\n" + BIG

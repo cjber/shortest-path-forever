@@ -1,7 +1,5 @@
 # Changelog
 
-<!-- rule-ignore: file-size-no-growth - every release's notes, kept verbatim in one history -->
-
 What changed in each release, in the terms someone finding their way would notice. Dates are UTC.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versions follow
@@ -14,6 +12,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **A journey can walk to a new flight master when flying from there is quicker.** When the nearest flight master on the way is one the character has not discovered, and flying from that point would arrive sooner than walking the whole way, the route now walks there first, learns the flight point, and then flies from it. Every landing and connecting flight still uses only flight points already known. Thanks to Crypa7 for the idea (#868).
 - **The destination pin's step line follows the journey.** Under the pin's distance, the line now names the step you are on for the whole journey to one place, instead of keeping the first leg's wording until you arrive. Thanks to jakerist (#875).
 - **The Nearby services tab can be hidden.** *Show the Nearby services tab* under Map marks takes the tab out of the world map's quest log when another addon needs that space. It is on by default, and `/spfnear` and the tracking menu still open the services with the tab off. Asked on CurseForge by cobalt_44, Xeteskian and DaFrozenMage (#767).
 - **Choose the key that plans a journey from a map click.** *Key to plan a journey* in Guidance offers Shift or Alt, with Shift by default. Choose Alt and that one key plans a journey everywhere, Questie icons included, so Shift-click stays free for Questie's untrack. Asked on CurseForge by Zhiroc (#882).

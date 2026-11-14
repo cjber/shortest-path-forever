@@ -869,16 +869,21 @@ equal(boat.wait ~= nil and boat.wait >= 60, true, "an untimed boat's average wai
 equal(estimate(26, 67, API.EstimateDetail).legs[4].wait, nil, "flight boarding is too short to report")
 ns.known[26] = nil
 local learn = estimate(26, 39, API.EstimateDetail, 300)
+equal(learn.legs[1].mode, "walk", "the route walks to the unknown flight master")
+equal(learn.legs[1].newFlightPath, true, "the walk is the one that learns the unknown departure")
+local learnedFlight
 for _, leg in ipairs(learn.legs) do
-	equal(leg.newFlightPath, nil, "walking to an unknown flight point does not learn it")
+	learnedFlight = learnedFlight or (leg.mode == "flight" and leg or nil)
 end
+equal(learnedFlight ~= nil, true, "the learned departure flies to the known destination")
 local auberdine, gadgetzan = ns.TaxiNodes[26], ns.TaxiNodes[39]
 local walkStart = { map = auberdine.map, x = auberdine.x + 300, y = auberdine.y + 300 }
 local to = { map = gadgetzan.map, x = gadgetzan.x, y = gadgetzan.y }
 local unknownDeparture = ns.EstimateLegs(walkStart, to)
-for _, leg in ipairs(unknownDeparture) do
-	equal(leg.mode ~= "flight" or leg.from.id ~= 26, true, "no flight departs an unknown flight point")
-end
+equal(unknownDeparture[1].mode, "walk", "the route walks to the unknown departure")
+equal(unknownDeparture[1].to.id, 26, "that walk reaches Auberdine")
+equal(unknownDeparture[1].to.undiscovered, true, "Auberdine is the unknown point it learns")
+equal(unknownDeparture[2].mode, "flight", "then flies from the learned point")
 ns.known[26] = true
 local knownDeparture = ns.EstimateLegs(walkStart, to)
 equal(knownDeparture[2].mode, "flight", "knowing Auberdine flies from it")

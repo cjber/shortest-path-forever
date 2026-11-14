@@ -623,6 +623,9 @@ local function Plan(options)
 	-- invents fresh straight-line shortcuts around a measured detour (or a blocked walk), so it must be one search.
 	-- Zero-length transfers still connect co-located places and break a flight for boarding costs.
 	local count = #nodes
+	-- A fourth copy of the nodes marks the one unknown flight point this route walked up to and learned in person.
+	-- Only that departure may then fly: every landing and connecting point still comes from the known set.
+	local FLIGHT, WALKED, LEARNED = count, count * 2, count * 3
 	-- Ignoring arrival modes and revisits gives an admissible remaining-time bound. It keeps the extra
 	-- labels needed for correctness from exploring unrelated routes before reaching the destination.
 	local backward, lower, done = {}, { [goal] = 0 }, {}
@@ -730,19 +733,20 @@ local function Plan(options)
 					finishAt = current
 					break
 				end
-				local flying, walked = state > count and state <= count * 2, state > count * 2
-				-- A flight may only leave, land at or connect through flight points the character knows: walking to
-				-- an unknown flight master does not learn it, and the client routes connecting flights only through
-				-- known points. Walking may still reach an unknown flight point, ready to be learned in person.
+				local flying = state > FLIGHT and state <= WALKED
+				local walked = state > WALKED
+				local learned = state > LEARNED
+				-- A flight may only leave, land at or connect through flight points the character knows. Walking to
+				-- an unknown flight master learns that one point in person, so only its departure may fly; every
+				-- landing and connecting point still has to be known.
 				local canLeaveNode = assumeKnown or not flying or not nodes[node].undiscovered
 				for _, edge in ipairs(edges[node]) do
 					local canLeave = canLeaveNode
-					if
-						edge.mode == "flight"
-						and not assumeKnown
-						and (nodes[node].undiscovered or nodes[edge.to].undiscovered)
-					then
-						canLeave = false
+					if edge.mode == "flight" and not assumeKnown then
+						local departureKnown = not nodes[node].undiscovered or learned
+						if not departureKnown or nodes[edge.to].undiscovered then
+							canLeave = false
+						end
 					end
 					if withoutHearth and edge.teleport and edge.teleport.item == 6948 then
 						canLeave = false
@@ -774,9 +778,15 @@ local function Plan(options)
 						if edge.mode == "flight" and not flying then
 							finish = finish + BOARDING
 						end
-						local target = edge.to + (edge.mode == "flight" and count or 0)
-						if edge.mode == "walk" and (walked or edge.yards > 0) then
-							target = edge.to + count * 2
+						local target = edge.to + (edge.mode == "flight" and FLIGHT or 0)
+						if edge.mode == "walk" then
+							if nodes[edge.to].undiscovered and not assumeKnown then
+								-- Standing at this master is what unlocks its flights, so this arrival is the one
+								-- departure the route may use while unknown.
+								target = edge.to + LEARNED
+							elseif walked or edge.yards > 0 then
+								target = edge.to + WALKED
+							end
 						end
 						local peers = states[target] or {}
 						-- A label that cannot arrive before the cutoff leads nowhere, and dominates nothing that could: a peer

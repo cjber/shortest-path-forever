@@ -86,12 +86,18 @@ local function Flights(plan)
 	return flights, fromMoonglade
 end
 
--- A flight may leave, land at or connect through only the points the character knows; walking to an unknown
--- flight master does not learn it.
+-- A flight may leave, land at or connect through only the points the character knows, except a departure the
+-- route walks to and learns in person. A landing or connection is never learned that way.
 local function KnownConnections(plan, known)
+	local learned = {}
+	for _, leg in ipairs(plan.legs) do
+		if leg.mode == "walk" and leg.to.undiscovered then
+			learned[leg.to.id] = true
+		end
+	end
 	for _, hops in ipairs((Flights(plan))) do
 		for _, hop in ipairs(hops) do
-			assert(known[hop.from], "no flight departs unknown point " .. hop.from)
+			assert(known[hop.from] or learned[hop.from], "no flight departs unlearned point " .. hop.from)
 			assert(known[hop.to], "no flight lands on unknown point " .. hop.to)
 		end
 	end
@@ -108,8 +114,8 @@ for _, start in ipairs(starts) do
 end
 local goals = { ORGRIMMAR, ZORAMGAR, THUNDER_BLUFF, CROSSROADS, EVERLOOK, VALORMOK }
 
--- Moonglade unknown (the teleport lands beside it, so walking there learns it), and known: either way both its
--- flights land at points this character has not found, so nothing flies out of it.
+-- Moonglade unknown (the teleport lands beside it, so walking there learns that departure), and known: either way
+-- both its flights land at points this character has not found, so nothing flies out of it.
 local teleported = 0
 for _, moongladeKnown in ipairs({ false, true }) do
 	local known = { [ORGRIMMAR] = true, [ZORAMGAR] = true, [MOONGLADE] = moongladeKnown or nil }
