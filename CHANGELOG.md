@@ -12,6 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.38.0] - 2026-11-15
+
+<!-- discord-image: docs/screenshots/stops.png -->
+
 - **Plan a journey with several stops.** Open *Journey stops* from the map tracking menu or `/path stops`, add map waypoints, then let the addon choose each next stop by estimated travel time or arrange your own order. Pause, resume or stop the journey while keeping your list. Thanks to user_lsqt69ps7bgb5p7e for the request (#846).
 
 - **Choose how strongly journeys prefer roads.** The road detour slider sets the extra cost of walking off-road. Its default keeps the usual preference, and 0% removes it. Thanks to Enel3008 for the idea (#848).
