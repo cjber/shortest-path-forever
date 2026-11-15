@@ -149,19 +149,15 @@ do
 			return v == 2
 		end,
 		Enum = {
-			byExpansion = {
-				Classic = {
-					npcFlags = {
-						VENDOR = 4,
-						TRAINER = 16,
-						REPAIR = 16384,
-						INNKEEPER = 128,
-						BANKER = 256,
-						AUCTIONEER = 4096,
-						FLIGHT_MASTER = 8,
-						STABLEMASTER = 8192,
-					},
-				},
+			npcFlags = {
+				VENDOR = 4,
+				TRAINER = 16,
+				REPAIR = 16384,
+				INNKEEPER = 128,
+				BANKER = 256,
+				AUCTIONEER = 4096,
+				FLIGHT_MASTER = 8,
+				STABLEMASTER = 8192,
 			},
 		},
 		Support = {
