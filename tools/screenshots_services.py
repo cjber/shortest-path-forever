@@ -183,7 +183,7 @@ def icon(canvas, ref, x, y, size):
     canvas.draw(art, x + (size - width) / 2, y + (size - height) / 2, width, height)
 
 
-def title(canvas, x, y, width, header_icon):
+def title(canvas, x, y, width, header_icon, location="Auberdine, Darkshore"):
     """BuildHeader: the header's icon at LEFT (2, 0), the title 1 below the header's top and the place 2 under it."""
     icon(canvas, header_icon, x + 2, y + (TITLE_HEIGHT - ICON) / 2, ICON)
     title_font = FONTS["GameFontNormalLarge2"]
@@ -191,7 +191,7 @@ def title(canvas, x, y, width, header_icon):
     canvas.text(
         x,
         y - 1 + title_font.height + 2,
-        "Auberdine, Darkshore",
+        location,
         FONTS["GameFontHighlight"],
         justify="CENTER",
         width=width,
@@ -359,7 +359,7 @@ def search_box_text(canvas, x, y, width, height, text):
     canvas.draw(ui.atlas("common-search-clearbutton"), button_x + 3, button_y + 3, 10, 10, (1, 1, 1, 0.5))
 
 
-def panel(ui, query="", groups=SECTIONS, checked=None):
+def panel(ui, query="", groups=SECTIONS, checked=None, location="Auberdine, Darkshore"):
     """The quest log's right-hand panel, cropped to the panel and its tabs as the preview is."""
     canvas = ui.canvas(QUESTLOG_WIDTH + 64 + 2 * FRAME_MARGIN, QUESTLOG_HEIGHT + 28 + 2 * FRAME_MARGIN)
     fx, fy = FRAME_MARGIN, FRAME_MARGIN
@@ -383,7 +383,7 @@ def panel(ui, query="", groups=SECTIONS, checked=None):
     list_x, list_width = bx + 8, bw - 8
 
     def content(layer):
-        title(layer, header_x, by + 4, header_width, ("atlas", "Banker"))
+        title(layer, header_x, by + 4, header_width, ("atlas", "Banker"), location)
         top = sections(layer, list_x + 6, by + LIST_TOP, list_width - 12, groups, checked)
         return LIST_TOP + top + PAD
 
@@ -435,3 +435,18 @@ def render_filters(ui):
     groups = (("Trainers", TRAINERS[:4]), ("Services", SERVICES[:4]))
     checked = {"Portal trainer": False, "Blacksmithing": False}
     return scene(ui, [(panel(ui, groups=groups, checked=checked), 0, 0)])
+
+
+def render_transmog(ui):
+    """Illustrative search result, using QuestieDB v1.1.1 Forever NPC 270581.
+
+    The released correction places Fyrenz Vishonar at Stormwind 47.96,84.60.
+    Distance and travel time are omitted because this is not a live route capture.
+    """
+    groups = (
+        (
+            "Services",
+            [("Transmogrifier", ("atlas", "poi-transmogrifier"), "Fyrenz Vishonar", "Stormwind City", None, None, "")],
+        ),
+    )
+    return scene(ui, [(panel(ui, query="transmog", groups=groups, location="Trade District, Stormwind City"), 0, 0)])

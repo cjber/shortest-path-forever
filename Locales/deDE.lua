@@ -550,3 +550,5 @@ L["Guide marks where each step ends on the map, not each turn of the walk. Arrow
 	"Die Kartenmarkierungen zeigen das Ende jedes Schritts statt jeder Wegbiegung. Die Pfeilrichtung wird separat eingestellt." -- mt
 L["What the direction arrow shows under it: the distance in the selected arrow mode, the time left in the journey, or both."] =
 	"Die Anzeige unter dem Richtungspfeil: Entfernung im gewählten Pfeilmodus, verbleibende Reisezeit oder beides." -- mt
+
+L["Transmogrifier"] = "Transmogrifizierer" -- mt

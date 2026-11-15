@@ -541,3 +541,5 @@ L["Guide marks where each step ends on the map, not each turn of the walk. Arrow
 	"地圖標記顯示每個步驟的終點，而不是步行路線的每個轉彎。箭頭方向單獨設定。" -- mt
 L["What the direction arrow shows under it: the distance in the selected arrow mode, the time left in the journey, or both."] =
 	"方向箭頭下方顯示的內容：所選箭頭模式的距離、行程剩餘時間或兩者。" -- mt
+
+L["Transmogrifier"] = "塑形師" -- mt

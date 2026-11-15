@@ -55,7 +55,7 @@ end
 
 ---@class SPFNearbyQuestieFit
 ---@field lib table QuestieDB's public API
----@field flags table<string, integer> its Classic NPC flags
+---@field flags table<string, integer> its active NPC flags
 ---@field area table<integer, integer>
 ---@field areaOverride table<integer, integer>
 ---@field parent table<integer, integer>
@@ -89,10 +89,8 @@ local function Fit()
 		return nil, "failed"
 	end
 	local area, parent = Table(private.areaIdToUiMapId), Table(private.subZoneToParentZone)
-	local expansion = type(lib.Enum) == "table"
-		and type(lib.Enum.byExpansion) == "table"
-		and lib.Enum.byExpansion.Classic
-	local flags = type(expansion) == "table" and expansion.npcFlags
+	-- The active provider owns these bits: Forever adds services absent from Classic.
+	local flags = type(lib.Enum) == "table" and lib.Enum.npcFlags
 	local npc = lib.Npc
 	if not (area and parent and type(flags) == "table") then
 		return nil, "failed"
@@ -144,6 +142,7 @@ local function Key()
 		"locale=" .. tostring(locale),
 		"faction=" .. Faction(),
 		"nearby=" .. Metadata(addonName, "Version"),
+		"services=2",
 	}, "\n")
 end
 
@@ -464,12 +463,12 @@ end
 ---@class SPFNearbyNpcRow
 ---@field name string
 ---@field title? string
----@field flags integer QuestieDB's Classic NPC flags
+---@field flags integer QuestieDB's active NPC flags
 ---@field spawns SPFNearbySpawn[] where it stands, on maps the zone tables place
 
 ---@class SPFNearbyQuestieRead
 ---@field key? string the inputs the read was made under
----@field flags table<string, integer> QuestieDB's Classic NPC flags
+---@field flags table<string, integer> QuestieDB's active NPC flags
 ---@field items table<integer, SPFNearbyItemRow>
 ---@field npcs table<integer, SPFNearbyNpcRow>
 

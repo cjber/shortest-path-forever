@@ -4,6 +4,7 @@ local _, ns = ...
 
 ns.Credits = {
 	players = {
+		{ name = "kaelr1", what = "Transmogrifiers in Nearby services and map pins" },
 		{ name = "user_lsqt69ps7bgb5p7e", what = "Journeys with several chosen stops" },
 		{ name = "Enel3008", what = "Choose how strongly journeys prefer roads" },
 		{ name = "user_lsqt69ps7bgb5p7e", what = "Farming tours through GatherMate2 recorded locations" },

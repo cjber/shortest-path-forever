@@ -287,6 +287,7 @@
 ---@field townServiceStable? boolean whether stable master pins show
 ---@field townServiceRepair? boolean whether repair pins show; off by default
 ---@field townServiceBank? boolean whether bank pins show
+---@field townServiceTransmog? boolean whether transmogrifier pins show
 ---@field townServiceAuction? boolean whether auction house pins show
 ---@field townServiceBattlemaster? boolean whether battlemaster pins show
 ---@field townServiceClass? boolean whether class trainer pins show

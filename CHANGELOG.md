@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Find transmogrifiers in Nearby services.** Search for transmog to plan a journey to a transmogrifier, and show or hide their world map pins with their own checkbox. Thanks to kaelr1 for the idea (#909).
+
 - **The arrow can point straight to your destination.** Turn on *Point straight to the destination* to use a direct bearing and straight-line distance, independently of map marks. Destinations on another map lead to the current travel step. Journey time still follows the route. Thanks to Drusangus for the idea (#904).
 
 - **Manual destinations stay selected when RestedXP advances.** A guide update during a flight or after landing keeps your active manual destination. *Resume guide* hands control back. Thanks to ubrider for the report (#905).

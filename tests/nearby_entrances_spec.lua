@@ -42,7 +42,7 @@ local function QuestieDB()
 		RequireContract = function(version)
 			return version == 2
 		end,
-		Enum = { byExpansion = { Classic = { npcFlags = {} } } },
+		Enum = { npcFlags = {}, byExpansion = { Classic = { npcFlags = {} } } },
 		Support = {
 			Get = function(name)
 				assert(name == "ZoneDB", "the zone tables are the support module this file reads")

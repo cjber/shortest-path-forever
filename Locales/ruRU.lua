@@ -585,3 +585,5 @@ L["Guide marks where each step ends on the map, not each turn of the walk. Arrow
 	"Отметки на карте показывают конец каждого этапа, а не каждый поворот пути. Направление стрелки настраивается отдельно." -- mt
 L["What the direction arrow shows under it: the distance in the selected arrow mode, the time left in the journey, or both."] =
 	"Что показано под стрелкой: расстояние в выбранном режиме, оставшееся время путешествия или оба значения." -- mt
+
+L["Transmogrifier"] = "Трансмогрификатор" -- mt

@@ -38,6 +38,7 @@ from screenshots_services import render_better as render_services_better
 from screenshots_services import render_filters as render_services_filters
 from screenshots_services import render_roles as render_services_roles
 from screenshots_services import render_search as render_services_search
+from screenshots_services import render_transmog as render_services_transmog
 from screenshots_town import render as render_town_services
 from screenshots_town import render_zoom as render_town_services_zoom
 from screenshots_tracker import detached_tracker
@@ -759,6 +760,7 @@ SCENES = {
     "cast_prompt": render_cast_prompt,
     "services": render_services,
     "services_search": render_services_search,
+    "services_transmog": render_services_transmog,
     "services_better": render_services_better,
     "services_roles": render_services_roles,
     "services_filters": render_services_filters,

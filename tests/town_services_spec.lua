@@ -427,6 +427,19 @@ check(
 )
 navigated = nil
 
+-- A newly classified service gets its own pin and saved visibility control.
+local transmog = group("services", "transmog", "Transmogrifier", "poi-transmogrifier")
+groups = {transmog}
+index = {transmog = {place(270582, "Mon'ye", 1800, -4900)}}
+ns.RefreshTownServices()
+check(ns.Defaults.townServiceTransmog == true, "transmogrifiers show on old saves by default")
+check(ns.TownServiceFilterable(transmog), "the shared transmog group has a map checkbox")
+check(find(270582) ~= nil, "the shared index produces a transmogrifier town pin")
+ns.SetTownServiceGroupShown(transmog, false)
+check(find(270582) == nil, "the checkbox hides the transmogrifier pin")
+ns.SetTownServiceGroupShown(transmog, true)
+check(find(270582) ~= nil, "the checkbox restores the transmogrifier pin")
+
 check(#errors == 0, table.concat(errors, "\n"))
 
 print(

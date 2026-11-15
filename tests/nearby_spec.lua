@@ -149,7 +149,7 @@ local lib = {
 		assert(v == 2)
 		return true
 	end,
-	Enum = { byExpansion = { Classic = { npcFlags = flags } } },
+	Enum = { npcFlags = flags, byExpansion = { Classic = { npcFlags = flags } } },
 	Support = {
 		Get = function(name)
 			assert(name == "ZoneDB")
@@ -837,7 +837,7 @@ do
 		RequireContract = function(version)
 			return version == 2
 		end,
-		Enum = { byExpansion = { Classic = { npcFlags = flags } } },
+		Enum = { npcFlags = flags, byExpansion = { Classic = { npcFlags = flags } } },
 		Support = {
 			Get = function(name)
 				assert(name == "ZoneDB")

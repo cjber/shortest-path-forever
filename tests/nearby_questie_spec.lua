@@ -31,7 +31,7 @@ local function QuestieDB(count)
 		RequireContract = function(version)
 			return version == 2
 		end,
-		Enum = { byExpansion = { Classic = { npcFlags = FLAGS } } },
+		Enum = { npcFlags = FLAGS, byExpansion = { Classic = { npcFlags = FLAGS } } },
 		Support = {
 			Get = function(name)
 				assert(name == "ZoneDB", "the zone tables are the support module this file reads")
@@ -463,6 +463,57 @@ do
 	run.OpenMenu()
 	assert(run.ns.NearbyServices.State() == "missing")
 	assert(#run.reported == 0)
+end
+
+-- Forever's released corrections mark NPC 270581 at Stormwind 47.96,84.60 with
+-- GOSSIP + TRANSMOGRIFIER. The active enum owns that bit; Classic does not.
+do
+	local count = { items = 0, npcs = 0 }
+	local lib = QuestieDB(count)
+	local active = {}
+	for name, value in pairs(FLAGS) do
+		active[name] = value
+	end
+	active.TRANSMOGRIFIER = 536870912
+	lib.Enum.npcFlags = active
+	local get = lib.Npc.GetAll
+	lib.Npc.GetAllIds = function()
+		return { 270581, 9105 }
+	end
+	lib.Npc.GetAll = function(id, fields)
+		if id ~= 270581 then
+			local row = get(id, fields)
+			if #fields == 4 then
+				row[1], row[3], row[4] = "Transmogrifier", 268435456, "Transmogrifier"
+			end
+			return row
+		end
+		if #fields == 1 then
+			return { { [1519] = { { 47.96, 84.60 } } }, n = 1 }
+		end
+		return { "Fyrenz Vishonar", "A", 536870913, "", n = 4 }
+	end
+	lib.Support.Get = function()
+		return { private = { areaIdToUiMapId = "return {[1519]=1453}", subZoneToParentZone = "return {}" } }
+	end
+	local db = {}
+	local run = Load({ lib = lib, db = db })
+	run.Login()
+	run.Run(true)
+	local entry = run.ns.NearbyServices.Nearest("transmog", { map = 1, x = 480, y = 846 })
+	assert(entry and entry.id == 270581, "the active Forever flag finds the transmogrifier without title matching")
+	assert(db.nearbyRead.npcs[270581].spawns[1][1] == 1453, "the NPC's own city map is retained")
+	assert(not db.nearbyRead.npcs[9105], "neither a matching title nor the other expansion flag classifies an NPC")
+	local sections = run.ns.NearbyServices.Sections({ map = 1, x = 480, y = 846 }, "transmog")
+	assert(#sections == 1 and sections[1].section == "services", "transmog search finds the service section")
+	assert(sections[1].rows[1].npc.id == 270581, "the search row leads to the flagged NPC")
+	-- A saved scan made before services=2 omitted this NPC, even at the same addon version.
+	db.nearbyRead.key = db.nearbyRead.key:gsub("\nservices=2", "")
+	local old = db.nearbyRead
+	local second = Load({ lib = lib, db = db })
+	second.Login()
+	second.Run(true)
+	assert(db.nearbyRead ~= old and db.nearbyRead.npcs[270581], "the old service scan is rebuilt")
 end
 
 print("nearby_questie: Questie's ready wait, the saved read, and a database that does not read: ok")

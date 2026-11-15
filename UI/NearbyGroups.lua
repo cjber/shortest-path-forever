@@ -54,6 +54,13 @@ local SERVICES = {
 	{ key = "repair", flag = "REPAIR", label = L["Repair"], icon = "repair", tracking = "Repair" },
 	{ key = "bank", flag = "BANKER", label = L["Bank"], icon = "banker", tracking = "Banker" },
 	{ key = "auction", flag = "AUCTIONEER", label = L["Auction house"], icon = "auctioneer", tracking = "Auctioneer" },
+	{
+		key = "transmog",
+		flag = "TRANSMOGRIFIER",
+		label = L["Transmogrifier"],
+		icon = "poi-transmogrifier",
+		tracking = "poi-transmogrifier",
+	},
 }
 
 local SECTION_LABELS = {

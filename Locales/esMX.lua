@@ -550,3 +550,5 @@ L["Guide marks where each step ends on the map, not each turn of the walk. Arrow
 	"Las marcas del mapa indican dónde termina cada paso, no cada giro del camino. La dirección de la flecha se configura por separado." -- mt
 L["What the direction arrow shows under it: the distance in the selected arrow mode, the time left in the journey, or both."] =
 	"Lo que aparece bajo la flecha: la distancia según el modo elegido, el tiempo restante del viaje o ambos." -- mt
+
+L["Transmogrifier"] = "Transfigurador" -- mt

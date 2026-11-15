@@ -541,3 +541,5 @@ L["Guide marks where each step ends on the map, not each turn of the walk. Arrow
 	"地图标记显示每个步骤的终点，而不是步行路线的每个转弯。箭头方向单独设置。" -- mt
 L["What the direction arrow shows under it: the distance in the selected arrow mode, the time left in the journey, or both."] =
 	"方向箭头下方显示的内容：所选箭头模式的距离、行程剩余时间或两者。" -- mt
+
+L["Transmogrifier"] = "幻化师" -- mt

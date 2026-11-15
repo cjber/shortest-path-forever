@@ -562,3 +562,5 @@ L["Guide marks where each step ends on the map, not each turn of the walk. Arrow
 	"지도에는 걸어가는 길의 각 모퉁이 대신 각 단계가 끝나는 곳을 표시합니다. 화살표 방향은 별도로 설정합니다." -- mt
 L["What the direction arrow shows under it: the distance in the selected arrow mode, the time left in the journey, or both."] =
 	"방향 화살표 아래에 표시할 정보: 선택한 화살표 모드의 거리, 남은 여정 시간 또는 둘 다." -- mt
+
+L["Transmogrifier"] = "형상변환사" -- mt
