@@ -116,7 +116,7 @@ ns.Init(function()
 		Settings.RegisterInitializer(page, Settings.CreateCheckboxInitializer(setting, nil, tooltip))
 		settings[key] = setting
 	end
-	local function Scale(key, name, tooltip, refresh)
+	local function Scale(key, name, tooltip, refresh, minimum, step)
 		local setting = Settings.RegisterAddOnSetting(
 			page,
 			"ShortestPathForever_" .. key,
@@ -128,7 +128,7 @@ ns.Init(function()
 		)
 		setting:SetValueChangedCallback(refresh)
 		settings[key] = setting
-		local options = Settings.CreateSliderOptions(25, 200, 5)
+		local options = Settings.CreateSliderOptions(minimum or 25, 200, step or 5)
 		options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
 			return value .. "%"
 		end)
@@ -690,27 +690,11 @@ ns.Init(function()
 			L["Shows the arrow to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."]
 		)
 	)
-	local arrowScale = Settings.RegisterAddOnSetting(
-		page,
-		"ShortestPathForever_arrowScale",
-		"arrowScale",
-		ns.db,
-		Settings.VarType.Number,
-		L["Arrow scale"],
-		ns.Defaults.arrowScale
-	)
-	arrowScale:SetValueChangedCallback(function(_, value)
-		ns.SetArrowScale(value)
-	end)
-	settings.arrowScale = arrowScale
-	local arrowOptions = Settings.CreateSliderOptions(50, 200, 10)
-	arrowOptions:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
-		return value .. "%"
-	end)
-	Settings.RegisterInitializer(
-		page,
-		Settings.CreateSliderInitializer(arrowScale, arrowOptions, L["Scales the arrow and the cast prompt."])
-	)
+	Scale("arrowScale", L["Arrow scale"], L["Scales the arrow and the cast prompt."], function(_, value)
+		if type(value) == "number" then
+			ns.SetArrowScale(value)
+		end
+	end, 50, 10)
 	-- stylua: ignore
 	Checkbox(
 		"arrowDirect",
@@ -728,7 +712,9 @@ ns.Init(function()
 		ns.Defaults.arrowLabel
 	)
 	arrowLabel:SetValueChangedCallback(function(_, value)
-		ns.SetArrowLabel(value)
+		if type(value) == "string" then
+			ns.SetArrowLabel(value)
+		end
 	end)
 	settings.arrowLabel = arrowLabel
 	local arrowLabelOptions = Settings.CreateControlTextContainer()
@@ -857,7 +843,9 @@ ns.Init(function()
 		ns.Defaults.compassScale
 	)
 	compassScale:SetValueChangedCallback(function(_, value)
-		ns.SetCompassScale(value)
+		if type(value) == "number" then
+			ns.SetCompassScale(value)
+		end
 	end)
 	settings.compassScale = compassScale
 	local compassOptions = Settings.CreateSliderOptions(50, 200, 10)
