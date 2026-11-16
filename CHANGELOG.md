@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Nearby transport pins avoid work between samples.** Minimap boats and portals keep following movement without a callback on every frame. Polling stops while the minimap is hidden or combat is active (#784).
+
 - **Follow roads keeps the road at either end of a walk.** Shortcuts from your position or into your destination now respect the road route and the surface you stand on (#891).
 
 - **Turning off the direction arrow hides its cast prompt too.** Turning it back on restores the current item or spell without interrupting cast guidance. Thanks to Zerhathos for the report (#881).

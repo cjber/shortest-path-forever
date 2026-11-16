@@ -19,7 +19,7 @@ local MARGIN = 100
 -- Docks this close (yards) are one place: a lift's landings share a spot and differ only in height.
 local SAME_PLACE = 20
 
-local frame, entries
+local frame, entries, ticker
 local pins, used = {}, 0
 local lastX, lastY, lastMap, lastRadius, lastFacing, lastWidth, lastSquare, lastNear
 
@@ -227,22 +227,24 @@ local function Draw()
 	return near
 end
 
--- Redraws run only while a place is on or just off the minimap; away from every dock and portal the addon
--- keeps no frame script of its own.
-local function Update(self, elapsed)
-	self.elapsed = self.elapsed + elapsed
-	if self.elapsed >= INTERVAL then
-		self.elapsed = 0
-		if not Draw() then
-			self:SetScript("OnUpdate", nil)
-		end
+-- Nearby places need view polling for passive transport motion and mouse turns.
+-- A timer avoids an every-frame callback between those samples.
+local function Stop()
+	if ticker then
+		ticker:Cancel()
+		ticker = nil
+	end
+end
+
+local function Update()
+	if not Draw() then
+		Stop()
 	end
 end
 
 local function Wake()
-	if ns.db.minimapPins and Draw() and not frame:GetScript("OnUpdate") then
-		frame.elapsed = 0
-		frame:SetScript("OnUpdate", Update)
+	if frame:IsVisible() and ns.db.minimapPins and Draw() and not ticker then
+		ticker = C_Timer.NewTicker(INTERVAL, Update)
 	end
 end
 
@@ -250,7 +252,7 @@ function ns.HideMinimapPins()
 	for _, pin in ipairs(pins) do
 		pin:Hide()
 	end
-	frame:SetScript("OnUpdate", nil)
+	Stop()
 	lastX, lastY, lastMap, lastRadius, lastFacing, lastWidth, lastSquare = nil, nil, nil, nil, nil, nil, nil
 end
 
@@ -260,7 +262,7 @@ function ns.RefreshMinimapPins()
 		return
 	end
 	entries, lastX, lastRadius = nil, nil, nil
-	frame:SetScript("OnUpdate", nil)
+	Stop()
 	frame:SetShown(ns.db.minimapPins)
 	Wake()
 end
@@ -286,13 +288,15 @@ ns.Init(function()
 	frame = CreateFrame("Frame", "ShortestPathForeverMinimapPins", Minimap)
 	frame:SetAllPoints(Minimap)
 	frame:EnableMouse(false)
+	frame:SetScript("OnHide", Stop)
+	frame:SetScript("OnShow", Wake)
 	-- Zooming changes the view without moving; the travel clock covers movement and arrival.
 	frame:RegisterEvent("MINIMAP_UPDATE_ZOOM")
 	frame:RegisterEvent("PLAYER_REGEN_DISABLED")
 	frame:RegisterEvent("PLAYER_REGEN_ENABLED")
 	frame:SetScript("OnEvent", function(_, event)
 		if event == "PLAYER_REGEN_DISABLED" then
-			frame:SetScript("OnUpdate", nil)
+			Stop()
 		else
 			Wake()
 		end
