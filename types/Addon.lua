@@ -17,6 +17,7 @@
 ---@field ClassTrainers table<number, number> class trainer NPC -> its class (Data/Services.lua)
 ---@field PortalTrainers table<number, number> portal trainer NPC -> its class (Data/Services.lua)
 ---@field Battlemasters table<number, number> battlemaster NPC -> its battleground template (Data/Services.lua)
+---@field VendorProfessions table<number, number[]> vendor NPC -> the profession skill lines its goods supply (Data/Services.lua)
 ---@field Walks table<number, table<string, (number|false)[]>>
 ---@field WalkPlaces table<number, table<string, number[]>>
 ---@field RoadCells table<number, table<number, string>>
@@ -31,6 +32,7 @@
 ---@field charDB SPFCharacterDatabase
 ---@field Defaults SPFDefaults
 ---@field NearbyRoles SPFNearbyRolesAPI the class, portal and battlemaster groups (UI/NearbyRoles.lua)
+---@field NearbyProfessions SPFNearbyProfessionsAPI the "Only my professions" shop rule (UI/NearbyProfessions.lua)
 ---@field NearbyServices SPFNearbyServices
 ---@field NearbyGroups SPFNearbyGroups the vendor and service groups the list and the map share (UI/NearbyGroups.lua)
 ---@field TownServiceChoices SPFTownServiceChoice[] the town services' four levels (UI/TownServices.lua)
@@ -299,6 +301,7 @@
 ---@field townServiceReagents? boolean whether reagent vendor pins show
 ---@field townServiceBooks? boolean whether books and recipe pins show
 ---@field townServiceGear? boolean whether weapon and armour pins show
+---@field onlyMyProfessions? boolean Nearby services and the town pins follow only the professions this character learned
 ---@field otherFaction? boolean
 ---@field tracker? boolean
 ---@field alerts? boolean

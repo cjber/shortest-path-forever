@@ -10,9 +10,11 @@ from gen_services import (
     class_trainers,
     food_and_drink,
     portal_trainers,
+    profession_items,
     profession_skill_spells,
     profession_trainers,
     skill_line_categories,
+    vendor_professions,
 )
 
 
@@ -90,6 +92,59 @@ class SkillTest(unittest.TestCase):
             categories,
         )
         self.assertEqual(learned, {1100: {171}, 1102: {356}})
+
+
+def item(entry, required_skill=0, totem=0):
+    return {"ID": str(entry), "RequiredSkill": str(required_skill), "TotemCategoryID": str(totem)}
+
+
+def reagent(spell, entries):
+    row = {"SpellID": str(spell)}
+    for index in range(8):
+        entry, count = entries[index] if index < len(entries) else (0, 0)
+        row[f"Reagent_{index}"] = str(entry)
+        row[f"ReagentCount_{index}"] = str(count)
+    return row
+
+
+def totem(spell, category):
+    return {
+        "SpellID": str(spell),
+        "RequiredTotemCategoryID_0": str(category),
+        "RequiredTotemCategoryID_1": "0",
+    }
+
+
+class VendorProfessionTest(unittest.TestCase):
+    def test_a_recipe_reagent_and_tool_name_their_profession_and_a_riding_item_does_not(self):
+        items = [
+            item(1, required_skill=197),
+            item(2, required_skill=762),
+            item(3),
+            item(4, totem=165),
+            item(5),
+        ]
+        spells = {100: {171}, 101: {186}}
+        supplied = profession_items(
+            items,
+            spells,
+            [reagent(100, [(3, 2)])],
+            [totem(101, 165)],
+        )
+        self.assertEqual(supplied, {1: [197], 3: [171], 4: [186]})
+
+    def test_a_vendor_takes_every_profession_its_goods_supply_and_none_is_absent(self):
+        vendors = [
+            {"entry": "10", "item": "1"},
+            {"entry": "10", "item": "2"},
+            {"entry": "11", "item": "5"},
+            {"entry": "12", "item": "1"},
+            {"entry": "12", "item": "3"},
+        ]
+        self.assertEqual(
+            vendor_professions(vendors, {1: [197], 3: [171]}),
+            {10: [197], 12: [171, 197]},
+        )
 
 
 class TrainerTest(unittest.TestCase):

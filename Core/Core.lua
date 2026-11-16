@@ -56,6 +56,8 @@ local DEFAULTS = {
 	townServiceReagents = true,
 	townServiceBooks = true,
 	townServiceGear = true,
+	-- Show only the profession trainers and profession supply vendors of professions this character has learned.
+	onlyMyProfessions = false,
 	mapPinScale = 100,
 	flightPinScale = 100,
 	minimapPinScale = 100,

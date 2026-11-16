@@ -279,6 +279,7 @@ local ns = {
 		roadDetour = 50,
 		arrivalDistance = 15,
 		townServices = "capitals",
+		onlyMyProfessions = false,
 		destinationPinSize = 100,
 	}, {
 		__index = function()
@@ -383,6 +384,7 @@ local groups = {
 		"flightPinScale",
 		"minimapPinScale",
 		"townServices",
+		"onlyMyProfessions",
 		"routeColor",
 		"mapLine",
 		"minimapLine",
@@ -460,7 +462,7 @@ local order = {
 }
 
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
-assert(#rows == 74, #rows)
+assert(#rows == 75, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -558,6 +560,19 @@ towns.setting.onChanged(nil, "all")
 assert(townRefreshed == 1, "changing the level redraws the town services")
 ns.SetOption("townServices", "off")
 assert(towns.setting.value == "off" and townRefreshed == 2, "the map filter sets the saved level")
+-- Only my professions: off by default, and a change redraws the map at once.
+local professions = Row("onlyMyProfessions")
+assert(professions.kind == "checkbox" and professions.setting.default == false, "the profession filter starts off")
+assert(professions.setting.variable == "ShortestPathForever_onlyMyProfessions", "the filter is saved")
+assert(professions.setting.name == "Only my professions", "the filter names the professions it follows")
+assert(
+	professions.tooltip:find("professions this character has not learned", 1, true)
+		and professions.tooltip:find("Nearby services", 1, true),
+	"the tooltip says what stays hidden and where"
+)
+local mapRefreshes = refreshed
+professions.setting.onChanged()
+assert(refreshed == mapRefreshes + 1, "the filter redraws the map at once")
 -- The walking line can be turned off on either surface, on by default, beside the colour that draws it.
 for _, key in ipairs({ "mapLine", "minimapLine" }) do
 	local line = Row(key)
@@ -832,8 +847,9 @@ assert(
 )
 backgroundSlider.setting.onChanged(nil, 40)
 assert(compassBackdrop == 40, "the background slider darkens the compass")
+local pinRefreshes = refreshed
 Row("pins").setting.onChanged()
-assert(refreshed == 1, "value callbacks still fire")
+assert(refreshed == pinRefreshes + 1, "value callbacks still fire")
 print("settings: ok")
 
 local attachment = Row("trackerAttached").setting

@@ -97,6 +97,8 @@ L["Go through to %s"] = "Passer vers %s" -- mt
 L["Guidance"] = "Guidage" -- mt
 L["Guide me"] = "Me guider" -- mt
 L["Guidelime"] = "Guidelime" -- mt
+L["Hides profession trainers and their supply vendors for professions this character has not learned."] =
+	"Masque les maîtres de profession et les vendeurs qui vendent les fournitures d'une profession que ce personnage n'a pas apprise." -- mt
 L["Horde"] = "Horde" -- mt
 L["Hostile town: %s"] = "Ville hostile : %s" -- mt
 L["In the objective tracker while you are near a dock, lift or tram."] =
@@ -142,9 +144,11 @@ L["Not discovered"] = "Non découvert" -- mt
 L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."] =
 	"Désactivé garde la flèche, le repère, la ligne de carte et l'itinéraire de la minicarte, sans bloc de trajet dans le suivi." -- mt
 L["On board to %s"] = "À bord pour %s" -- mt
+L["On the world map and in Nearby services."] = "Sur la carte du monde et dans les services à proximité." -- mt
 L["On the world map."] = "Sur la carte du monde." -- mt
 L["One line in chat the first time you log in after an update."] =
 	"Une ligne dans la discussion à la première connexion après une mise à jour." -- mt
+L["Only my professions"] = "Seulement mes professions" -- mt
 L["Only use the Hearthstone when it saves at least this much time."] =
 	"N'utiliser la pierre de foyer que si elle fait gagner au moins ce temps." -- mt
 L["Open"] = "Ouvrir"

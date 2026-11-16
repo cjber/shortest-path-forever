@@ -196,6 +196,19 @@ ns.Init(function()
 			return townOptions:GetData()
 		end, L["One icon per town, or one per service as you zoom in."])
 	)
+	Checkbox(
+		"onlyMyProfessions",
+		L["Only my professions"],
+		L["Hides profession trainers and their supply vendors for professions this character has not learned."]
+			.. " "
+			.. L["On the world map and in Nearby services."],
+		function()
+			ns.RefreshMap()
+			if type(ns.RefreshServiceFilters) == "function" then
+				ns.RefreshServiceFilters()
+			end
+		end
+	)
 
 	-- The walking line's colour, so it stays apart from the herbs and ore a player is gathering.
 	local routeColor = Settings.RegisterAddOnSetting(

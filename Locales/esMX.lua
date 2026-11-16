@@ -95,6 +95,8 @@ L["Go through to %s"] = "Atravesar hacia %s"
 L["Guidance"] = "Guía"
 L["Guide me"] = "Guiarme"
 L["Guidelime"] = "Guidelime"
+L["Hides profession trainers and their supply vendors for professions this character has not learned."] =
+	"Oculta a los maestros de profesión y a los vendedores que venden los suministros de una profesión que este personaje no ha aprendido."
 L["Horde"] = "Horda"
 L["Hostile town: %s"] = "Pueblo hostil: %s"
 L["In the objective tracker while you are near a dock, lift or tram."] =
@@ -140,9 +142,11 @@ L["Not discovered"] = "Sin descubrir"
 L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."] =
 	"Desactivado mantiene la flecha, el marcador, la línea del mapa y la ruta del minimapa, sin bloque de viaje en el rastreador."
 L["On board to %s"] = "A bordo hacia %s"
+L["On the world map and in Nearby services."] = "En el mapa del mundo y en los servicios cercanos."
 L["On the world map."] = "En el mapa del mundo."
 L["One line in chat the first time you log in after an update."] =
 	"Una línea en el chat la primera vez que entras tras una actualización."
+L["Only my professions"] = "Solo mis profesiones"
 L["Only use the Hearthstone when it saves at least this much time."] =
 	"Usar la piedra de hogar solo si ahorra al menos este tiempo."
 L["Open"] = "Abrir"

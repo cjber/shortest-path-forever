@@ -7,6 +7,7 @@ source = source:gsub(
 	[[
 ns.Canvas = { PinMixin = {} }
 env.CreateFromMixins = function() return {} end
+setfenv(assert(loadfile("UI/NearbyProfessions.lua")), env)("ShortestPathForever", ns)
 setfenv(assert(loadfile("UI/TownServices.lua")), env)("ShortestPathForever", ns)
 env._G = env]],
 	1

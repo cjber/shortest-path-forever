@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Nearby services can show only your professions.** *Only my professions* hides profession trainers and the vendors whose goods supply a profession your character has not learned, on the world map and in the Nearby services tab. A vendor is judged by the recipes and materials it actually sells, so a Trade Supplies vendor selling thread and dye follows Tailoring while a general vendor with nothing for a profession stays. Thanks to zhega for the idea (#914).
+
 ## [1.39.0] - 2026-11-16
 
 <!-- discord-image: docs/screenshots/stops.png -->

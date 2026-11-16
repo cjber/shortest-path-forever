@@ -58,6 +58,7 @@ UI\NearbyGroups.lua
 UI\NearbyQuestie.lua
 UI\NearbyEntrances.lua
 UI\NearbyRoles.lua
+UI\NearbyProfessions.lua
 UI\Nearby.lua
 Transport\Observer.lua
 UI\Map.xml

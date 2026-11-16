@@ -98,6 +98,8 @@ L["Go through to %s"] = "%s(으)로 통과"
 L["Guidance"] = "안내"
 L["Guide me"] = "안내 받기"
 L["Guidelime"] = "Guidelime"
+L["Hides profession trainers and their supply vendors for professions this character has not learned."] =
+	"이 캐릭터가 배우지 않은 직업의 직업 훈련장과 그 직업의 재료를 파는 상인을 숨깁니다."
 L["Horde"] = "호드"
 L["Hostile town: %s"] = "적대 마을: %s"
 L["In the objective tracker while you are near a dock, lift or tram."] =
@@ -144,9 +146,11 @@ L["Not discovered"] = "발견하지 않음"
 L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."] =
 	"끄면 화살표, 표식, 지도 선, 미니맵 경로는 유지되고 목표 추적기에는 여정 블록이 표시되지 않습니다."
 L["On board to %s"] = "%s행 탑승 중"
+L["On the world map and in Nearby services."] = "세계 지도와 주변 편의시설에서 적용됩니다."
 L["On the world map."] = "세계 지도에 표시합니다."
 L["One line in chat the first time you log in after an update."] =
 	"업데이트 후 처음 접속할 때 대화창에 한 줄 표시합니다."
+L["Only my professions"] = "내 직업만"
 L["Only use the Hearthstone when it saves at least this much time."] =
 	"최소 이만큼 시간을 절약할 때만 귀환석을 사용합니다."
 L["Open"] = "열기"

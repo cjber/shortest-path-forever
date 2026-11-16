@@ -100,6 +100,8 @@ L["Go through to %s"] = "Пройти: %s"
 L["Guidance"] = "Навигация"
 L["Guide me"] = "Вести меня"
 L["Guidelime"] = "Guidelime"
+L["Hides profession trainers and their supply vendors for professions this character has not learned."] =
+	"Скрывает учителей профессий и торговцев, продающих припасы для профессии, которую этот персонаж не изучил."
 L["Horde"] = "Орда"
 L["Hostile town: %s"] = "Вражеский город: %s"
 L["In the objective tracker while you are near a dock, lift or tram."] =
@@ -148,9 +150,11 @@ L["Not discovered"] = "Не открыто"
 L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."] =
 	"Выключено: стрелка, метка, линия на карте и маршрут на мини-карте остаются, а блока маршрута в панели отслеживания нет."
 L["On board to %s"] = "На борту: %s"
+L["On the world map and in Nearby services."] = "На карте мира и в услугах поблизости."
 L["On the world map."] = "На карте мира."
 L["One line in chat the first time you log in after an update."] =
 	"Одна строка в чате при первом входе после обновления."
+L["Only my professions"] = "Только мои профессии"
 L["Only use the Hearthstone when it saves at least this much time."] =
 	"Использовать камень возвращения, только если он экономит не меньше этого времени."
 L["Open"] = "Открыть"

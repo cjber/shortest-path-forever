@@ -184,9 +184,11 @@ local function Shortlist(key, world, limit, query, tier)
 	local folded = Fold(query)
 	local matching = Matching(key, world, folded)
 	tier = tier or BestTier(key, world, folded, matching, TIER_REACH)
+	local group = groupByKey[key]
 	for _, place in ipairs(index[key] or {}) do
 		if
-			place.world.map == world.map
+			ns.NearbyProfessions.Shown(group, place)
+			and place.world.map == world.map
 			and (not matching or matching[place.id])
 			and (not tier or Tier(key, place.id) == tier)
 		then
@@ -681,35 +683,39 @@ local function AddGroups(root, world)
 	local section, afterYours
 	local ordered, yours = Ordered(world)
 	for _, group in ipairs(ordered) do
-		if group.section ~= section then
-			section = group.section
-			root:CreateTitle(SECTION_LABELS[section])
-		end
-		-- A line between your professions and the others.
-		if group.skill and yours[group.skill] then
-			afterYours = true
-		elseif group.skill and afterYours then
-			afterYours = false
-			root:CreateDivider()
-		end
-		local place = world and Nearest(group.key, world)
-		local label = place and group.label or L["%s — unavailable here"]:format(group.label)
-		local entry = root:CreateButton(label, function()
-			return Pick(group.key, TravelNearest(group.key, world))
-		end)
-		entry:SetEnabled(place ~= nil)
-		local tier = place and Better(group.key, world)
-		local far = tier and Shortlist(group.key, world, 1, nil, tier)[1]
-		local goods = far and Goods(group.key, far)
-		if goods then
-			---@cast far -?
-			local arrow = ns.Art and ns.Art.Markup(UPGRADE_ATLAS, UPGRADE_MARKUP)
-			local better = root:CreateButton((arrow and arrow .. " " or "") .. itemNames[goods[1]], function()
-				return Pick(group.key, TravelNearest(group.key, world, nil, tier))
+		-- A profession the character has not learned has no row to offer under "Only my professions", rather than a
+		-- row that cannot be reached.
+		if not (group.skill and not ns.NearbyProfessions.Shown(group)) then
+			if group.section ~= section then
+				section = group.section
+				root:CreateTitle(SECTION_LABELS[section])
+			end
+			-- A line between your professions and the others.
+			if group.skill and yours[group.skill] then
+				afterYours = true
+			elseif group.skill and afterYours then
+				afterYours = false
+				root:CreateDivider()
+			end
+			local place = world and Nearest(group.key, world)
+			local label = place and group.label or L["%s — unavailable here"]:format(group.label)
+			local entry = root:CreateButton(label, function()
+				return Pick(group.key, TravelNearest(group.key, world))
 			end)
-			better:SetTooltip(function(tooltip)
-				BetterTooltip(tooltip, goods[1], far)
-			end)
+			entry:SetEnabled(place ~= nil)
+			local tier = place and Better(group.key, world)
+			local far = tier and Shortlist(group.key, world, 1, nil, tier)[1]
+			local goods = far and Goods(group.key, far)
+			if goods then
+				---@cast far -?
+				local arrow = ns.Art and ns.Art.Markup(UPGRADE_ATLAS, UPGRADE_MARKUP)
+				local better = root:CreateButton((arrow and arrow .. " " or "") .. itemNames[goods[1]], function()
+					return Pick(group.key, TravelNearest(group.key, world, nil, tier))
+				end)
+				better:SetTooltip(function(tooltip)
+					BetterTooltip(tooltip, goods[1], far)
+				end)
+			end
 		end
 	end
 end

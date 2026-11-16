@@ -9,8 +9,8 @@ it, so a data refresh that moves the pin never leaves this file behind. The addo
 
 | Input | Used for | Pin | Licence |
 |---|---|---|---|
-| WoW: Forever client tables, via [wago.tools](https://wago.tools) | Taxi paths, transports, lifts, portals, teleports, food and drink items, and profession spells in `Data/*.lua` | `BUILD` in `tools/gen_routes.py` (`tools/gen_transit.py` and `tools/gen_services.py` import it) | Blizzard Entertainment's game data |
-| [CMaNGOS classic-db](https://github.com/cmangos/classic-db) | Portal and teleport destinations, transport spawns and periods, trainer NPCs and spells, and the heights of NPC and quest object spawns in `Data/*.lua` | `DB_REV` in `tools/gen_transit.py` (`tools/gen_services.py` and `tools/gen_heights.py` import it) | GPL-3.0 |
+| WoW: Forever client tables, via [wago.tools](https://wago.tools) | Taxi paths, transports, lifts, portals, teleports, food and drink items, profession spells, and the items those spells consume, in `Data/*.lua` | `BUILD` in `tools/gen_routes.py` (`tools/gen_transit.py` and `tools/gen_services.py` import it) | Blizzard Entertainment's game data |
+| [CMaNGOS classic-db](https://github.com/cmangos/classic-db) | Portal and teleport destinations, transport spawns and periods, trainer NPCs and spells, vendor inventories, and the heights of NPC and quest object spawns in `Data/*.lua` | `DB_REV` in `tools/gen_transit.py` (`tools/gen_services.py` and `tools/gen_heights.py` import it) | GPL-3.0 |
 | [CMaNGOS mangos-classic](https://github.com/cmangos/mangos-classic) | The transport timetable model and flight speed, reimplemented in `tools/gen_routes.py` and `tools/gen_transit.py` | Cited by source file in those scripts; no code copied | GPL-2.0-or-later |
 | [InFlight](https://github.com/LudiusMaximus/InFlight) | Recorded flight durations in `Data/Taxi.lua` | `INFLIGHT_REV` in `tools/gen_transit.py` | MIT |
 | Local client terrain, baked with TrinityCore's tools and the player's collision limits from benilla-re | The walkable cells, their steep down-only ground, steps and ledge drops in `Nav/*.lua` (`tools/baker/README.md`) | `TRINITY_REV` in `tools/baker/bake.sh` and the client build baked | Derived data, GPL-3.0-or-later; Blizzard's EULA applies to the client files |
@@ -61,6 +61,7 @@ Credit for the reports and requests behind the addon.
 
 | Who | What | Notes |
 |---|---|---|
+| zhega | Nearby services can show only learned professions | CurseForge thread 8727763, #914 |
 | A player | Journeys avoid opposing-faction guarded lifts | CurseForge thread 8726893, #911 |
 | kaelr1 | Transmogrifiers in Nearby services and map pins | Discord, #909 |
 | user\_lsqt69ps7bgb5p7e | Journeys with several chosen stops | CurseForge thread 8705002, #846 |

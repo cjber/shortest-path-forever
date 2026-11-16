@@ -93,6 +93,8 @@ L["Go through to %s"] = "穿过前往%s"
 L["Guidance"] = "引导"
 L["Guide me"] = "为我引路"
 L["Guidelime"] = "Guidelime"
+L["Hides profession trainers and their supply vendors for professions this character has not learned."] =
+	"隐藏此角色未学习的职业的职业训练师和出售该职业材料的商人。"
 L["Horde"] = "部落"
 L["Hostile town: %s"] = "敌对城镇：%s"
 L["In the objective tracker while you are near a dock, lift or tram."] =
@@ -138,8 +140,10 @@ L["Not discovered"] = "未发现"
 L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."] =
 	"关闭后仍保留箭头、标记、地图路线和小地图路线，但不在目标追踪器中显示旅程区块。"
 L["On board to %s"] = "乘坐前往%s"
+L["On the world map and in Nearby services."] = "在世界地图和附近服务中生效。"
 L["On the world map."] = "显示在世界地图上。"
 L["One line in chat the first time you log in after an update."] = "更新后首次登录时在聊天中显示一行。"
+L["Only my professions"] = "仅我的职业"
 L["Only use the Hearthstone when it saves at least this much time."] =
 	"只在炉石至少节省这么多时间时使用。"
 L["Open"] = "打开"

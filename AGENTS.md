@@ -152,12 +152,13 @@ bold-lead bullets) before its `v*` tag, since the release publishes it as the no
   master's area when that area is a sub-area of its zone (`AreaTable.ParentAreaID`), and `Journey/Hazards.lua` falls
   back to a radius around the flight master where it is not. Neither database holds the town polygons, and a radius
   around the flight master missed Southshore's town hall and western guards (#719).
-- WFA-28: `Data/Services.lua` (food and drink items, profession and class trainers, mage portal trainers and
-  battlemasters): wago.tools `ItemXItemEffect`, `ItemEffect`, `SpellEffect`, `SkillLine` and `SkillLineAbility`, with
-  classic-db `creature_template`, `npc_trainer`, `npc_trainer_template`, `battlemaster_entry`, `spell_template` and
-  `spell_target_position`; QuestieDB's `foodType` is 0 for every vendor item, so it cannot say food from drink,
-  QuestieDB has no trainer spells, `creature_template` has no battlemaster flag, and a portal trainer is a mage
-  trainer whose taught spells all open a portal or land at a destination.
+- WFA-28: `Data/Services.lua` (food and drink items, profession supply vendors, profession and class trainers, mage
+  portal trainers and battlemasters): wago.tools `ItemSparse`, `ItemXItemEffect`, `ItemEffect`, `SpellEffect`,
+  `SpellReagents`, `SpellTotems`, `SkillLine` and `SkillLineAbility`, with classic-db `creature_template`, `npc_vendor`,
+  `npc_trainer`, `npc_trainer_template`, `battlemaster_entry`, `spell_template` and `spell_target_position`; QuestieDB's
+  `foodType` is 0 for every vendor item, so it cannot say food from drink, its vendor items carry no required skill or
+  reagent relationships, it has no trainer spells, `creature_template` has no battlemaster flag, and a portal trainer
+  is a mage trainer whose taught spells all open a portal or land at a destination.
 - WFA-28: `Data/SpellTargets.lua` (spells whose effects target another unit, and usable items whose on-use spell
   does): wago.tools `SpellEffect.ImplicitTarget` at the pinned build splits the spells into those a friendly NPC
   answers (an explicit ally, a chain heal's ally, or any explicit unit) and those a hostile NPC answers (an enemy or

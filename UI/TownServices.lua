@@ -241,6 +241,7 @@ local function Primary(entry)
 		if
 			Drawn(group)
 			and GroupShown(group)
+			and ns.NearbyProfessions.Shown(group, entry)
 			and (not best or (RANK[group.section] or 0) < (RANK[best.section] or 0))
 		then
 			best = group
@@ -326,7 +327,11 @@ local function Shown(entry, level)
 			return true
 		end
 		for _, group in ipairs(entry.groups) do
-			if (group.section == "trainers" or IMPORTANT[group.key]) and GroupShown(group) then
+			if
+				(group.section == "trainers" or IMPORTANT[group.key])
+				and GroupShown(group)
+				and ns.NearbyProfessions.Shown(group, entry)
+			then
 				return true
 			end
 		end
@@ -546,7 +551,7 @@ local function AddTooltip(cluster)
 		GameTooltip_SetTitle(GameTooltip, primary.label)
 		GameTooltip_AddColoredLine(GameTooltip, EntryLine(entry), HIGHLIGHT_FONT_COLOR)
 		for _, group in ipairs(entry.groups) do
-			if group ~= primary and Drawn(group) and GroupShown(group) then
+			if group ~= primary and Drawn(group) and GroupShown(group) and ns.NearbyProfessions.Shown(group, entry) then
 				GameTooltip_AddNormalLine(GameTooltip, group.label)
 			end
 		end
@@ -561,7 +566,13 @@ local function AddTooltip(cluster)
 			end
 			for _, point in ipairs(cluster.services) do
 				for _, group in ipairs(point.entry.groups) do
-					if group ~= shared and Drawn(group) and GroupShown(group) and not seen[group.key] then
+					if
+						group ~= shared
+						and Drawn(group)
+						and GroupShown(group)
+						and ns.NearbyProfessions.Shown(group, point.entry)
+						and not seen[group.key]
+					then
 						seen[group.key] = true
 						GameTooltip_AddNormalLine(GameTooltip, group.label)
 					end
