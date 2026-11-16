@@ -2,6 +2,7 @@
 local ns = {}
 for _, file in ipairs({
 	"Transport/Model.lua",
+	"Routing/Savings.lua",
 	"Routing/Planner.lua",
 	"Data/Routes.lua",
 	"Data/Transports.lua",

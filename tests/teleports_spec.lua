@@ -24,12 +24,14 @@ assert(not bySpell[23442], "the Everlook ripper is not a personal teleport")
 
 -- The planner: a teleport is an edge from where you stand, its remaining cooldown a wait.
 assert(loadfile("Transport/Model.lua"))("ShortestPathForever", ns)
+assert(loadfile("Routing/Savings.lua"))("ShortestPathForever", ns)
 assert(loadfile("Routing/Planner.lua"))("ShortestPathForever", ns)
 local Plan = ns.Planner.Plan
 
 -- 7000 yards on foot is 1000 s; the hearth lands 70 yards short of the goal (10 s) after a 10 s cast and a loading
 -- screen.
-local hearths = { { map = 1, x = 6930, y = 0, spell = 8690, item = 6948, cast = 10000, label = "Goldshire" } }
+local hearths =
+	{ { map = 1, x = 6930, y = 0, spell = 8690, item = 6948, bind = true, cast = 10000, label = "Goldshire" } }
 local function trip(ready, cache, minimum)
 	return Plan({
 		cache = cache,
@@ -78,8 +80,70 @@ local alternatives = Plan({
 })
 assert(alternatives.legs[1].teleport.spell == 3566, "class teleports remain an alternative to Hearthstone")
 assert(alternatives.arrive == 35000, "no invented savings penalty enters the ETA")
+local function rune(minimum)
+	return Plan({
+		from = { map = 1, x = 0, y = 0 },
+		to = { map = 1, x = 7000, y = 0 },
+		now = 0,
+		walkSpeed = 7,
+		teleports = { { map = 1, x = 6930, y = 0, spell = 3561, cast = 10000 } },
+		teleportReady = { 0 },
+		teleportMinimumSavings = minimum,
+	})
+end
+assert(rune(975).legs[1].mode == "teleport", "saving exactly the teleport threshold allows it")
+assert(rune(976).legs[1].mode == "walk", "a smaller saving keeps the rune")
+assert(rune(0).legs[1].mode == "teleport", "no minimum by default")
+local function runeOrHearth(teleportMinimum, hearthMinimum)
+	return Plan({
+		from = { map = 1, x = 0, y = 0 },
+		to = { map = 1, x = 7000, y = 0 },
+		now = 0,
+		walkSpeed = 7,
+		teleports = {
+			{ map = 1, x = 6930, y = 0, spell = 8690, item = 6948, bind = true, cast = 10000 },
+			{ map = 1, x = 7000, y = 0, spell = 3566, cast = 10000 },
+		},
+		teleportReady = { 0, 0 },
+		teleportMinimumSavings = teleportMinimum,
+		hearthMinimumSavings = hearthMinimum,
+	})
+end
+assert(runeOrHearth(11).legs[1].teleport.spell == 8690, "a teleport saving too little over the hearth gives way to it")
+assert(runeOrHearth(11, 980).legs[1].mode == "walk", "the hearth it gives way to still meets its own minimum")
+-- Astral Recall is a bind teleport with no Hearthstone item, so it follows the Hearthstone's minimum and switch.
+local function recall(minimum, withoutHearth)
+	return Plan({
+		from = { map = 1, x = 0, y = 0 },
+		to = { map = 1, x = 7000, y = 0 },
+		now = 1000,
+		walkSpeed = 7,
+		teleports = { { map = 1, x = 6930, y = 0, spell = 556, bind = true, cast = 10000 } },
+		teleportReady = { 1000 },
+		hearthMinimumSavings = minimum,
+		withoutHearth = withoutHearth,
+	})
+end
+assert(recall(975).legs[1].teleport.spell == 556, "Astral Recall is held to the Hearthstone minimum")
+assert(recall(976).legs[1].mode == "walk", "Astral Recall saving less than the Hearthstone minimum is dropped")
+assert(recall(0, true).legs[1].mode == "walk", "the Hearthstone switch keeps Astral Recall out too")
+-- A teleport landing 7000 yards past the goal arrives just after the 1000 s walk, inside the margin a ride gets
+-- over a long walk; it saves nothing, so with a minimum it never stands in for the ride.
+local function overshoot(minimum)
+	return Plan({
+		from = { map = 1, x = 0, y = 0 },
+		to = { map = 1, x = 7000, y = 0 },
+		now = 0,
+		walkSpeed = 7,
+		teleports = { { map = 1, x = 14000, y = 0, spell = 3561, cast = 10000 } },
+		teleportReady = { 0 },
+		teleportMinimumSavings = minimum,
+	})
+end
+local slower = overshoot(60)
+assert(#slower.legs == 1 and slower.legs[1].mode == "walk", "a slower teleport never replaces a long walk")
 -- A new set of destinations (a new bind point) is a new topology.
-hearths = { { map = 1, x = -700, y = 0, spell = 8690, item = 6948, cast = 10000 } }
+hearths = { { map = 1, x = -700, y = 0, spell = 8690, item = 6948, bind = true, cast = 10000 } }
 assert(trip(1000, cache).legs[1].mode == "walk" and cache.topology ~= topology)
 
 -- A teleport adds the loading screen, whatever the continent.
@@ -95,7 +159,7 @@ local onlyHearth = Plan({
 	from = { map = 0, x = 0, y = 0 },
 	to = { map = 1, x = 7000, y = 0 },
 	now = 0,
-	teleports = { { map = 1, x = 7000, y = 0, spell = 8690, item = 6948, cast = 10000 } },
+	teleports = { { map = 1, x = 7000, y = 0, spell = 8690, item = 6948, bind = true, cast = 10000 } },
 	teleportReady = { 0 },
 	hearthMinimumSavings = 600,
 })
@@ -112,7 +176,7 @@ do
 		clock = clock + 1
 		travelTick()
 	end
-	local runtime = { db = { teleports = true }, charDB = {}, Teleports = ns.Teleports }
+	local runtime = { db = { teleports = true, useHearthstone = true }, charDB = {}, Teleports = ns.Teleports }
 	runtime.Init = function(fn)
 		fn()
 	end
@@ -209,10 +273,27 @@ do
 	places, ready = Usable(5000)
 	assert(#places == 1 and places[1].item == 6948 and places[1].x == 10 and places[1].label == "Goldshire")
 	assert(ready[1] == 5000)
-	runtime.db.teleports = false
-	assert(#Usable(5000) == 0 and next((select(2, Usable(5000)))) == nil, "the setting off hides every teleport")
-	runtime.db.teleports = true
+	runtime.db.teleports, runtime.db.useHearthstone = false, false
+	assert(#Usable(5000) == 0 and next((select(2, Usable(5000)))) == nil, "both switches off hide every teleport")
+	runtime.db.teleports, runtime.db.useHearthstone = true, true
 	assert(Usable(5000) == places, "and on again, the same places")
+	-- The two switches are independent, and Astral Recall follows the Hearthstone's.
+	runtime.db.teleports = false
+	local kept = Usable(5000)
+	assert(#kept == 1 and kept[1].item == 6948, "class teleports off leaves the Hearthstone")
+	spells[3561], spells[556], items[17031] = true, true, 1
+	runtime.db.useHearthstone = false
+	kept = Usable(5000)
+	assert(#kept == 0, "both switches off hide every teleport")
+	runtime.db.useHearthstone = true
+	kept = Usable(5000)
+	assert(
+		#kept == 2 and kept[1].spell == 556 and kept[2].item == 6948,
+		"Astral Recall and the Hearthstone follow the Hearthstone switch with class teleports off"
+	)
+	runtime.db.teleports = true
+	assert(#Usable(5000) == 3, "class teleports stay on")
+	spells[3561], spells[556], items[17031] = nil, nil, nil
 	itemCooldowns[6948] = { 50, 3600, true }
 	assert(select(2, Usable(5000))[1] == 5000 + 3550000, "the hearth's own cooldown")
 	bindName = "Razor Hill"

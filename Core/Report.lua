@@ -14,8 +14,8 @@ end
 -- nothing is planned or searched for the report. Field labels are English; place names are the client's.
 
 local TRACE_SHOWN = 5
-local SETTINGS = "Settings: journeys %s, teleports %s (hearth saving %ss), other faction %s, TomTom %s/follow %s, "
-	.. "RestedXP %s, Guidelime %s"
+local SETTINGS = "Settings: journeys %s, hearth %s (saving %ss), class teleports %s (saving %ss), "
+	.. "other faction %s, TomTom %s/follow %s, RestedXP %s, Guidelime %s"
 
 ---@param value any
 ---@return string
@@ -155,8 +155,10 @@ function ns.ReportLines()
 	local lines = {
 		SETTINGS:format(
 			OnOff(db.journey),
-			OnOff(db.teleports),
+			OnOff(db.useHearthstone),
 			tostring(db.hearthMinimumSavings or 0),
+			OnOff(db.teleports),
+			tostring(db.teleportMinimumSavings or 0),
 			OnOff(db.otherFaction),
 			OnOff(db.tomtom),
 			OnOff(db.tomtomFollow),

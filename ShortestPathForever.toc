@@ -47,6 +47,7 @@ Data\IdleSpawns.lua
 Data\SpellTargets.lua
 Data\Credits.lua
 Transport\Model.lua
+Routing\Savings.lua
 Routing\Planner.lua
 Core\Core.lua
 Core\Distance.lua

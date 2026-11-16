@@ -9,7 +9,7 @@ local client = { speed = 7, moving = 0, faction = "Alliance", now = 100000 }
 local known, teleports, ready, teleportState =
 	{ [1] = true }, { { spell = 5, map = 1, x = 0, y = 0, cast = 10000 } }, { 0 }, { [1] = 0 }
 local ns = {
-	db = { otherFaction = true, hearthMinimumSavings = 90 },
+	db = { otherFaction = true, hearthMinimumSavings = 90, teleportMinimumSavings = 45 },
 	Docks = {
 		[1] = { map = 1, x = 0, y = 0 },
 		[2] = { map = 1, x = 5000, y = 0 },
@@ -69,6 +69,7 @@ local env = setmetatable({
 for _, file in ipairs({
 	"Transport/Model.lua",
 	"Transport/Timetable.lua",
+	"Routing/Savings.lua",
 	"Routing/Planner.lua",
 	"Core/PlanContext.lua",
 }) do
@@ -109,6 +110,7 @@ local expected = {
 	teleportReady = ready,
 	teleportState = teleportState,
 	hearthMinimumSavings = 90,
+	teleportMinimumSavings = 45,
 	landmasses = ns.Landmasses,
 	baked = ns.Walks,
 }
@@ -131,7 +133,10 @@ ns.Timetable = {
 }
 options = Context.Options(from, to)
 assert(options.walkSpeed == 7 and options.faction == "Horde", "speed in combat and faction are read per plan")
-assert(options.otherFaction == false and options.hearthMinimumSavings == 0, "settings default before the db loads")
+assert(
+	options.otherFaction == false and options.hearthMinimumSavings == 0 and options.teleportMinimumSavings == 0,
+	"settings default before the db loads"
+)
 ns.db, ns.Timetable = db, timetable
 -- Specs and the UI harness rebind the data tables after load.
 local routes = ns.Routes
@@ -199,6 +204,7 @@ do
 		"faction",
 		"otherFaction",
 		"hearthMinimumSavings",
+		"teleportMinimumSavings",
 		"landmasses",
 		"baked",
 	}) do
@@ -343,7 +349,15 @@ assert(near.cache and near.cache ~= journey.cache, "topology is never shared bet
 for _, name in ipairs({ "walkSpeed", "faction", "otherFaction", "taxiKnown", "docks", "routes", "taxiNodes" }) do
 	assert(near[name] == journey[name], name)
 end
-for _, name in ipairs({ "taxiPaths", "portals", "teleports", "hearthMinimumSavings", "landmasses", "baked" }) do
+for _, name in ipairs({
+	"taxiPaths",
+	"portals",
+	"teleports",
+	"hearthMinimumSavings",
+	"teleportMinimumSavings",
+	"landmasses",
+	"baked",
+}) do
 	assert(near[name] == journey[name], name)
 end
 print("plan context: the journey and the estimate share it, each with its own additions")
