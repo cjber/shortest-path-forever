@@ -10,7 +10,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from .locales import Entry, LocaleError, parse
+from .locales import Entry, LocaleError, _string, parse
 from .lua import LuaSyntaxError, tokenize
 
 # WoW locale alphabets, as named by Fonts XML Member nodes. No character-based
@@ -101,7 +101,7 @@ def read_entries(path):
             prefix = 'local _, ns = ...\nif GetLocale() ~= "enUS" then return end\nlocal L = ns.L\n'
             _, entries = parse(prefix + "".join(lines[token.line - 1 :]))
             return "enUS", {key: Entry(entry.text, entry.line + token.line - 4) for key, entry in entries.items()}
-    raise LocaleError("no English phrase assignments found")
+    return "enUS", {}
 
 
 def check(path, data, font_object, fallback=None):
@@ -129,7 +129,11 @@ def check_bindings(root, data, manifest):
     These are explicit producer contracts, not inferred font choices. A source
     digest covers aliases, callbacks and later SetFont calls, which a nearby
     CreateFontString match alone cannot rule out. Review callers before updating
-    a digest. Dynamic text and unlisted producers have no coverage claim.
+    a digest. English uses an explicit enUS entry when present, otherwise the
+    phrase key, which must occur as an exact decoded Lua string in the producer.
+    A producer is read as Lua only for that fallback, so a reviewed XML template
+    with no bindings still pins its digest.
+    Dynamic text and unlisted producers have no coverage claim.
     """
     problems = []
     locales = {}
@@ -147,6 +151,7 @@ def check_bindings(root, data, manifest):
         if hashlib.sha256(path.read_bytes()).hexdigest() != producer["sha256"]:
             problems.append(f"{path}: font binding source changed; review widget and callers before refreshing digest")
             continue
+        literals = None
         for binding in producer["bindings"]:
             if ("phrase" in binding) == ("literal" in binding):
                 raise ValueError("binding must name exactly one phrase or runtime literal")
@@ -154,10 +159,20 @@ def check_bindings(root, data, manifest):
             for locale, (locale_path, entries) in locales.items():
                 if "phrase" in binding:
                     key = binding["phrase"]
-                    if key not in english:
-                        raise LocaleError(f"{path}: binding names unknown English phrase {key!r}")
-                    entry = entries.get(key, english[key])
-                    origin = locale_path if key in entries else english_path
+                    if key in english:
+                        fallback = english[key]
+                    else:
+                        if literals is None:
+                            tokens, _ = tokenize(path.read_text(encoding="utf-8"))
+                            literals = {_string(t): t.line for t in tokens if t.kind == "string"}
+                        if key not in literals:
+                            raise LocaleError(
+                                f"{path}: binding names unknown English phrase {key!r}: "
+                                "absent from enUS entries and producer string literals"
+                            )
+                        fallback = Entry(key, literals[key])
+                    entry = entries.get(key, fallback)
+                    origin = locale_path if key in entries else english_path if key in english else path
                     location = f"{origin}:{entry.line}"
                     text = entry.text
                 else:
