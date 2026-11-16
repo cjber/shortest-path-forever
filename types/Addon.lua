@@ -56,6 +56,9 @@
 ---@field FarmingCursor SPFFarmingCursorFactory
 ---@field NavigateFarmingRoute fun(owner: string, stops: SPFAPIStop[]): boolean
 ---@field JourneyRoutePolicy fun(): SPFRoutePolicy
+---@field APIInput SPFAPIInput the public API's argument checks and answers (Core/APIInput.lua)
+---@field EstimateWalks fun(owner: string, from: SPFAPIPlace, targets: SPFAPIPlace[], callback: fun(costs: (number|false)[], reason: SPFAPIWalkReason?), opts?: SPFAPIWalkOptions): cancel: fun()?, reason: SPFAPIWalkRefusal? one walking search to every target on the from point's walking map (#913)
+---@field NavVersion fun(): string the walking data this build ships, for dropping cached walk costs
 ---@field DestinationPinScale fun(): number the world map journey goal pin's share of its stock size (UI/StopPin.lua)
 ---@field RefreshDestinationPinSize fun() redraws the world map goal pins at the player's size (UI/Route.lua)
 ---@field HearthstoneEnabled fun(): boolean whether journeys may use the Hearthstone (Journey/Journey.lua)
@@ -72,6 +75,7 @@
 ---@field journeyKey string
 ---@field arrivalDistance number
 ---@field hearthMinimumSavings number
+---@field teleportMinimumSavings number
 ---@field roadDetour number
 ---@field destinationPinSize number
 ---@field arrowScale number
@@ -319,8 +323,9 @@
 ---@field taxiRoute? boolean
 ---@field useWaterWalking? boolean
 ---@field townServiceKinds? table<string, boolean>
----@field teleports? boolean
----@field useHearthstone? boolean the Hearthstone may be used in journeys, while other teleports still are (Teleports.lua)
+---@field teleports? boolean -- plan class teleports with a destination of their own
+---@field useHearthstone? boolean the Hearthstone and Astral Recall may be used in journeys, while class teleports still are (Teleports.lua)
+---@field teleportSplit? integer the one-time move of the old combined teleports switch ran
 ---@field partyMagePortals? boolean -- offer a party mage's capital portals
 ---@field partyMageStormwind? boolean
 ---@field partyMageIronforge? boolean
@@ -328,7 +333,8 @@
 ---@field partyMageUndercity? boolean
 ---@field partyMageThunderBluff? boolean
 ---@field partyMageOrgrimmar? boolean
----@field hearthMinimumSavings? number -- seconds the Hearthstone must save over the best non-hearth plan
+---@field hearthMinimumSavings? number -- seconds the Hearthstone must save over the best plan without it
+---@field teleportMinimumSavings? number -- seconds a class teleport must save over the best plan without it
 ---@field stats? boolean -- collect per-character travel totals
 ---@field guideStops? boolean
 ---@field compass? boolean
@@ -491,6 +497,7 @@ ShortestPathForeverPathData = nil
 ---@field incumbent? number
 ---@field incumbentPlan? SPFPlan
 ---@field hearthMinimumSavings? number
+---@field teleportMinimumSavings? number
 ---@field otherFaction? boolean
 ---@field from SPFPoint
 ---@field to SPFPoint

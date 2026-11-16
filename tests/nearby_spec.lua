@@ -750,6 +750,7 @@ do
 	local travelEnv, worldNs = driver.env, driver.ns
 	travelEnv._G = travelEnv
 	driver.load("UI/Looks.lua")
+	driver.load("Core/APIInput.lua")
 	driver.load("Core/API.lua")
 	for _, file in ipairs({
 		"Data/Routes.lua",

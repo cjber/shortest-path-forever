@@ -93,6 +93,16 @@
 ---@field waypoints SPFAPIPlace[] -- every bend of the leg under way, from the route's original source walk
 ---@field index integer -- where point stands in waypoints: 1-based, so waypoints[index] is that point
 
+--- The options a walk estimate takes.
+---@class SPFAPIWalkOptions
+---@field waterWalking? boolean -- walks may cross water; by default journeys' own setting and known spell decide
+
+--- Why a whole walk batch could not answer. A target with a cost is reachable; one with false is not.
+---@alias SPFAPIWalkReason "nodata"|"outside"|"offmesh"|"unreachable"|"error"
+
+--- Why a walk batch did not start.
+---@alias SPFAPIWalkRefusal "invalid"|"combat"|"loading"|"nodata"
+
 --- One travel record of this character's.
 ---@class SPFAPIStat
 ---@field addon string -- always "ShortestPathForever"
@@ -118,7 +128,7 @@
 
 ---@class SPFPublicAPI
 ---@field version integer -- 2 removes peer sharing and Leaderboard; callers accept 1 or 2 and reject future versions
----@field minor integer -- 2 adds each journey leg's from and to, ResumeRestedXP and the replan change; 1 adds Guidance and the guidance change; version 1 minor 3 added Journey, Pause, Resume, SkipLeg, Stats and the leg change
+---@field minor integer -- 3 adds EstimateWalks and NavVersion; 2 adds each journey leg's from and to, ResumeRestedXP and the replan change; 1 adds Guidance and the guidance change; version 1 minor 3 added Journey, Pause, Resume, SkipLeg, Stats and the leg change
 ---@field Estimate fun(fromMap: integer, fromX: number, fromY: number, toMap: integer, toX: number, toY: number): seconds: number?, reason: SPFAPINoRoute? -- travel seconds; nil comes with the reason
 ---@field Navigate fun(owner: string, map: integer, x: number, y: number, title?: string, kind?: SPFAPIStopKind): boolean -- starts/replaces guidance outside combat when journeys are enabled
 ---@field NavigateRoute fun(owner: string, stops: SPFAPIStop[]): boolean -- starts/replaces guidance through 1-64 stops in order; false leaves the current journey intact
@@ -133,6 +143,8 @@
 ---@field Stats fun(): rows: SPFAPIStat[]?, reason: SPFAPINotReady? -- this character's travel records, one fresh row per metric
 ---@field RenameStop fun(owner: string, index: integer, title: string, renamePoints?: fun(point: SPFPoint): boolean?): boolean -- relabels a running route's stop in place; false leaves it as it was
 ---@field EstimateDetail fun(fromMap: integer, fromX: number, fromY: number, toMap: integer, toX: number, toY: number): detail: SPFAPIDetail?, reason: SPFAPINoRoute? -- Estimate leg by leg, sharing its cache
+---@field EstimateWalks fun(owner: string, from: SPFAPIPlace, targets: SPFAPIPlace[], callback: fun(costs: (number|false)[], reason: SPFAPIWalkReason?), opts?: SPFAPIWalkOptions): cancel: fun()?, reason: SPFAPIWalkRefusal? -- one walking search to every target on the from point's walking map; costs are yards or false, and the cancel function is safe twice
+---@field NavVersion fun(): string -- the walking data this build ships; drop cached walk costs when it changes
 ---@field Active fun(): boolean -- true while any journey is guiding, whoever started it
 ---@field Ended fun(owner: string): reason: (SPFAPIEnded|SPFAPINotReady)?, at: (number|SPFAPINotReady)? -- why owner's last journey ended and its GetTime(), or nil and why there is none
 ---@field Subscribe fun(callback: fun(changes: SPFAPIChanges)): unsubscribe: fun() -- calls back at most once per burst of journey changes, the next frame; errors go to the game's error handler

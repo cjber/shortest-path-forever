@@ -9,6 +9,7 @@ for _, file in ipairs({
 	"Data/Taxi.lua",
 	"Data/Portals.lua",
 	"Data/Walks.lua",
+	"Routing/Savings.lua",
 	"Routing/Planner.lua",
 }) do
 	assert(loadfile(file))("ShortestPathForever", ns)
@@ -32,7 +33,7 @@ local options = {
 	portals = ns.Portals,
 	landmasses = ns.Landmasses,
 	baked = ns.Walks,
-	teleports = { { map = goal.map, x = goal.x, y = goal.y, spell = 8690, item = 6948, cast = 10000 } },
+	teleports = { { map = goal.map, x = goal.x, y = goal.y, spell = 8690, item = 6948, bind = true, cast = 10000 } },
 	teleportReady = { 0 },
 	hearthMinimumSavings = 600,
 }

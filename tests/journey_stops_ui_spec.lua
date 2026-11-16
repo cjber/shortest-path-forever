@@ -138,6 +138,7 @@ env.C_AddOns = {
 }
 driver.load("UI/Looks.lua")
 driver.load("UI/Art.lua")
+driver.load("Core/APIInput.lua")
 driver.load("Core/API.lua")
 driver.load("Journey/Itinerary.lua")
 driver.load("Journey/StopOrder.lua")

@@ -11,16 +11,21 @@ end
 -- client), the names disagree: no bind teleport until you bind or hearth again.
 
 local places, placesKey, sources = {}, nil, {}
--- The setting off: no teleports for any caller.
+-- Both switches off: no teleports for any caller.
 local NONE = {}
--- The Hearthstone itself, whose own switch keeps it out of journeys while other teleports stay.
+-- The Hearthstone itself; its own switch also keeps the other bind teleport, Astral Recall, out of journeys.
 local HEARTHSTONE = 6948
 
--- Whether the Hearthstone may be planned with. The master teleport switch is checked by the callers; this is the
--- saved Use Hearthstone switch (Core/Core.lua), which defaults on.
+-- The Hearthstone and Astral Recall land at the bind point, so the saved Use Hearthstone switch covers them both, while
+-- class teleports keep their own switch (Core/Core.lua). Each defaults on.
 ---@return boolean
 local function HearthAllowed()
 	return ns.db == nil or ns.db.useHearthstone ~= false
+end
+
+---@return boolean
+local function ClassTeleportsAllowed()
+	return ns.db == nil or ns.db.teleports ~= false
 end
 
 ---@return SPFBindPoint?
@@ -81,15 +86,12 @@ local function CastTime(teleport)
 	return canaccessvalue(cast) and cast and cast > 0 and cast or teleport.cast
 end
 
--- The Hearthstone and the bind point it recalls to, when this character could use it: the master switch on, the item
--- in the bags, and a bind point the client and the last binding or landing agree on. The saved Use Hearthstone switch
--- does not hide it, since the map's innkeeper button (UI/HearthPin.lua) is how the player flips that switch.
+-- The Hearthstone and the bind point it recalls to, when this character could use it: the item in the bags and a bind
+-- point the client and the last binding or landing agree on. Neither switch hides it, since the map's innkeeper button
+-- (UI/HearthPin.lua) is how the player flips the Hearthstone one.
 ---@param now? number server ms, for readyAt
 ---@return SPFHearthstone?
 function ns.Hearthstone(now)
-	if not (ns.db and ns.db.teleports) then
-		return nil
-	end
 	local bind = Bind()
 	if not (bind and C_Item.GetItemCount(HEARTHSTONE) > 0) then
 		return nil
@@ -124,17 +126,17 @@ end
 ---@param now number server ms
 ---@return SPFTeleportPlace[] places, table<number, number> ready, table<number, number> state
 function ns.UsableTeleports(now)
-	if not ns.db.teleports then
+	local hearth, class = HearthAllowed(), ClassTeleportsAllowed()
+	if not (hearth or class) then
 		return NONE, NONE, NONE
 	end
 	local bind, known, keys = Bind(), {}, {}
 	local state = {}
 	for _, teleport in ipairs(ns.Teleports) do
-		if
-			(teleport.to or (teleport.bind and bind))
-			and Known(teleport)
-			and (teleport.item ~= HEARTHSTONE or HearthAllowed())
-		then
+		-- A teleport that lands at the bind point is the Hearthstone or Astral Recall; the rest have a place of
+		-- their own and follow the class teleport switch.
+		local wanted = teleport.bind and hearth or (teleport.to and class)
+		if wanted and (teleport.to or (teleport.bind and bind)) and Known(teleport) then
 			known[#known + 1] = teleport
 			keys[#keys + 1] = teleport.spell
 		end

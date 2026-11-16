@@ -1,34 +1,23 @@
 {
-  "input_digest": "5909aeef45fc53f1bd436873a52fc564fe80a8479491063949807bfa9f4c79d8",
-  "runtime_sha256": "5909aeef45fc53f1bd436873a52fc564fe80a8479491063949807bfa9f4c79d8",
-  "candidate": "21a713089be14be455896912eb5559fef8f4ce36edb7b7c8f2e8d89d2ea4f26e",
+  "input_digest": "8bdd39f16292d33085b166a037c008fd0849ebf4894edd187a289c66be3e790f",
+  "runtime_sha256": "8bdd39f16292d33085b166a037c008fd0849ebf4894edd187a289c66be3e790f",
+  "candidate": "2d8d2ff192e648434326626e1dadf2ce9d315ed482601ce4ca1e21554f45b4e1",
   "client_build": "1.60.1.70938 (Interface 16001)",
   "tested_artifact": "source-tree",
-  "source_commit": "9da55bca2c783bfe14cde1b295d338fafae83f40",
+  "source_commit": "90f3f05271b1432b7fed25f4bd2c2968f86a5207",
   "flows": [
     {
-      "name": "journey stops",
+      "name": "walk estimates",
       "steps": [
-        "/path stops"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "map marks",
-      "steps": [
-        "1-map-marks.lua sha256:6fe2dd89d386f7280032c8b9d6f71fae3d7687f4c12d6af0bee77b38f5972638"
+        "spf-walk-estimates.lua sha256:a7c5117ee383b093619065cee1d06bbbc64246ccd703e069021cc02ba93ac65c"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/7f66ddcf7a2dc6ff0544b05da5f8e96c/raw/32b53a1601471baf387668d1468cf924137c8e18/1-journey-stops.png",
-      "sha256": "15a971c4ba38ede2f2b914d265c2a7efc199122358fb8ed0e5c0a78f2756fa98"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/7f66ddcf7a2dc6ff0544b05da5f8e96c/raw/32b53a1601471baf387668d1468cf924137c8e18/2-map-marks.png",
-      "sha256": "5747e74d5bb6d67f75a670365ee282af4ff1e54df5643025a4a9adae45c6f7ea"
+      "url": "https://gist.githubusercontent.com/cjber/d1710f8411d1ce736f709395e4fb06d9/raw/7027b22d7448a94056371b3edf7dbef84bbbb037/1-walk-estimates.png",
+      "sha256": "80b8de555647fe6ebeb3af3a8cb82e64f16ed665477ba5637b031c8aee116df5"
     }
   ]
 }

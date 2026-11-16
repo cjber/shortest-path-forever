@@ -47,6 +47,7 @@ Data\IdleSpawns.lua
 Data\SpellTargets.lua
 Data\Credits.lua
 Transport\Model.lua
+Routing\Savings.lua
 Routing\Planner.lua
 Core\Core.lua
 Core\Distance.lua
@@ -107,6 +108,8 @@ UI\RouteTransports.lua
 UI\Alert.lua
 UI\Settings.lua
 UI\WhatsNew.lua
+Core\APIInput.lua
+Core\APIWalks.lua
 Core\API.lua
 Journey\Resume.lua
 Core\Report.lua

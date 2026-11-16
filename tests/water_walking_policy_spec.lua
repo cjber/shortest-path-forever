@@ -52,6 +52,7 @@ assert(#driver.path.finds > before, "toggle replans an active journey")
 assert(not driver.path.finds[#driver.path.finds].water, "replan uses ordinary swim costs")
 -- Estimates obtain the same policy at the planner boundary and invalidate their cached answer.
 driver.load("UI/Looks.lua")
+driver.load("Core/APIInput.lua")
 driver.load("Core/API.lua")
 local plan, modes = ns.Planner.Plan, {}
 ns.Planner.Plan = function(options)
