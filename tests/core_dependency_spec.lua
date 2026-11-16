@@ -190,8 +190,14 @@ assert(registered.spec.title == "Shortest Path report", "with its own report tit
 assert(type(registered.spec.lines) == "function", "and its own report lines")
 assert(attached == ns.db, "the saved table is attached once it loads")
 
--- The client loads ForeverCore first because the TOC declares it.
+-- The client loads ForeverCore first because the TOC lists it, and the package bundles it.
 local toc = assert(io.open("ShortestPathForever.toc", "rb")):read("*a")
-assert(toc:find("## Dependencies: ForeverCore", 1, true), "the TOC declares ForeverCore")
+local optional = toc:match("\n## OptionalDeps:([^\n]*)") or ""
+assert((", " .. optional .. ","):find("[ ,]ForeverCore[ ,]"), "the TOC lists ForeverCore so it loads first")
+local pkgmeta = assert(io.open(".pkgmeta", "rb")):read("*a")
+assert(
+	pkgmeta:find("\n  ForeverCore: https://github.com/cjber/forever-core/releases/", 1, true),
+	"the package bundles ForeverCore"
+)
 
 print("core_dependency_spec: ok")
