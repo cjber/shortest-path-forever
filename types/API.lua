@@ -114,7 +114,8 @@
 --- One player's row on the all-time travel board.
 --- What happened to guidance since the subscriber was last called; each field is true or absent. Several can be
 --- true together, from one burst of changes.
----@class SPFAPIChanges---@field started? boolean -- a journey began where none was under way
+---@class SPFAPIChanges
+---@field started? boolean -- a journey began where none was under way
 ---@field changed? boolean -- the journey under way now heads somewhere else: replaced by a new one, or on to its next stop
 ---@field ended? boolean -- the journey under way ended, with nothing after it
 ---@field stop? boolean -- what CurrentStop answers changed: an addon's route started, moved on to another stop or ended

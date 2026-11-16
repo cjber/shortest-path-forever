@@ -1,6 +1,5 @@
----@class SPFNamespace
-local addonName = ...
-local ns = select(2, ...)
+---@type string, SPFNamespace
+local addonName, ns = ...
 
 if ns.broken then
 	return
