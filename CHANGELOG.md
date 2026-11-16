@@ -12,6 +12,34 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+## [1.39.0] - 2026-11-16
+
+<!-- discord-image: docs/screenshots/stops.png -->
+
+- **Plan a journey with several stops.** Open *Journey stops* from the map tracking menu or `/path stops`, add map waypoints, then let the addon choose each next stop by estimated travel time or arrange your own order. Pause, resume or stop the journey while keeping your list. Thanks to user_lsqt69ps7bgb5p7e for the request (#846).
+
+- **Choose how strongly journeys prefer roads.** The road detour slider sets the extra cost of walking off-road. Its default keeps the usual preference, and 0% removes it. Thanks to Enel3008 for the idea (#848).
+
+- **Walk a farming tour through GatherMate2's recorded locations.** Open *Farming tour* from the map tracking menu or `/path farm`, choose herb or ore types in your current zone, then start, pause or stop the circuit. These are recorded locations, so a node may be absent or unreachable. Thanks to user_lsqt69ps7bgb5p7e for the request (#847).
+
+- **Choose each service pin from Nearby services.** Every service row has its own map checkbox, so hiding one profession leaves the others visible. The world map filter uses the same choices. Thanks to cotijelucie for the request (#866).
+
+- **Choose whether journeys use water walking.** Turn off *Use Water Walking and Levitate* in Guidance to plan with ordinary swimming costs, even when you know a water-walking spell. Routes can still cross water. Thanks to azure463 for the request (#878).
+
+- **Walking away from a boat dock keeps the journey recoverable.** Until you board, guidance stays on the departure dock and recalculates the walk back when you move away. Thanks to AsimRamay for the report (#764).
+
+- **Routes no longer use the removed Stormwind to Dalaran portal.** The Dalaran to Stormwind portal remains available to Alliance characters. Thanks to nookie909 for the report (#684).
+
+- **Turning off the direction arrow also stops its navigation marker.** A queued update can no longer put the game's waypoint back after guidance clears it. Thanks to Zerhathos for the report (#881).
+
+- **A journey can walk to a new flight master when flying from there is quicker.** When the nearest flight master on the way is one the character has not discovered, and flying from that point would arrive sooner than walking the whole way, the route now walks there first, learns the flight point, and then flies from it. Every landing and connecting flight still uses only flight points already known. Thanks to Crypa7 for the idea (#868).
+
+- **The destination pin's step line follows the journey.** Under the pin's distance, the line now names the step you are on for the whole journey to one place, instead of keeping the first leg's wording until you arrive. Thanks to jakerist (#875).
+
+- **The Nearby services tab can be hidden.** *Show the Nearby services tab* under Map marks takes the tab out of the world map's quest log when another addon needs that space. It is on by default, and `/spfnear` and the tracking menu still open the services with the tab off. Asked on CurseForge by cobalt_44, Xeteskian and DaFrozenMage (#767).
+
+- **Choose the key that plans a journey from a map click.** *Key to plan a journey* in Guidance offers Shift or Alt, with Shift by default. Choose Alt and that one key plans a journey everywhere, Questie icons included, so Shift-click stays free for Questie's untrack. Asked on CurseForge by Zhiroc (#882).
+
 - **Journeys avoid lifts with opposing-faction landing guards.** Horde-guarded approaches are left out of Alliance journeys by default. A lift already being ridden can still reach its next stop. Thanks to a player for the report (#911).
 
 - **Nearby transport pins avoid work between samples.** Minimap boats and portals keep following movement without a callback on every frame. Polling stops while the minimap is hidden or combat is active (#784).
@@ -36,12 +64,15 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 - **NPC arrows keep following the right creature.** A live creature GUID can include an instance field that the old parser discarded, so an arrow could follow a different NPC with the same entry number. The arrow now matches the complete live identity and drops the arrow when that identity no longer matches (#771).
 
-- **Long journeys can stay inside a fixed tracker height.** Set *Journey tracker height* under Interface to keep the Journey section compact; longer journeys scroll inside it while the shared tracker column keeps its width and placement (#887). Requires the matching ForeverCore viewport API before release.
+- **Long journeys can stay inside a fixed tracker height.** Set *Journey tracker height* under Interface to keep the Journey section compact; longer journeys scroll inside it while the shared tracker column keeps its width and placement (#887).
 
 - **Walks start on the floor you are standing on.** Where floors stack, such as the ground under Stormwind or the hall above the Undercity's city, a journey started from whichever surface at your spot walked cheapest, so it could set off on a floor you were not on and run beneath the city. It now reads how far you are from the NPCs standing around you with the game's own range checks, and starts only on the surfaces within that height. Where nothing around you can be measured it starts exactly as it did before. The idea comes from BV Addon Suite - Routing, which works out the player's height the same way. Thanks to jixxor for the Stormwind report (#737, #602).
 
 - **The destination pin can be made smaller.** *Destination pin size* in Guidance, directly under *Show a pin over the destination*, scales the world map's journey goal pin from 50% to 100%. The pin keeps its shape and its point stays on the destination at every size, and 100% is how it always drew (#778).
+
 - **The Hearthstone can be kept out of a journey without opening settings.** Right-click the Journey header in the tracker and untick *Use Hearthstone*, or click the innkeeper button at your bind point on the world map. Both flip the same saved switch, replan the journey, and leave your class teleports on offer. The button greys out while the Hearthstone is saved and its tooltip says how much time the Hearthstone saves (cjber/adventure-guide-forever#707).
+
+- Ships with the same shared code as your other Forever addons, so they keep working together.
 
 ### For addon authors
 
