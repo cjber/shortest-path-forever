@@ -1,10 +1,10 @@
 {
-  "input_digest": "61a863a33815280976bc201d5060a8ca80e2e4396ca5c6543ff9ca5f0ec31537",
-  "runtime_sha256": "61a863a33815280976bc201d5060a8ca80e2e4396ca5c6543ff9ca5f0ec31537",
-  "candidate": "ad4b1408feaeb83842f528604273fcb5408a223c191525eb319c90d65c731c1b",
+  "input_digest": "493c85496a60f82208541265ac941fb3b77ae68bef37b44a349913e9f14ccd52",
+  "runtime_sha256": "493c85496a60f82208541265ac941fb3b77ae68bef37b44a349913e9f14ccd52",
+  "candidate": "f4c24f4a052f62727cbd159fee20c323addb218b3a7eb0bf12bd2b83d6a535a2",
   "client_build": "1.60.1.70938 (Interface 16001)",
   "tested_artifact": "source-tree",
-  "source_commit": "41967ab49f4ff9dfa9460a16ce9f380b46b79454",
+  "source_commit": "488a9811666cb759da5862c473ff6d632f1432d4",
   "flows": [
     {
       "name": "town services on a first login",
@@ -16,8 +16,8 @@
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/dc727d8760e3a619dfc6381cd22bb675/raw/cb53902a0afaedb05043652b30cf026444821fa5/1-town-services-on-a-first-login.png",
-      "sha256": "cda355677b7d6b425b3e510190a07f93e743457d2c90629461b758100fd44946"
+      "url": "https://gist.githubusercontent.com/cjber/d0794c07e6f75b7be6e2b5287785f360/raw/3b8f2e9ce7b75ae3c35031353bc48d2a2dbfe942/1-town-services-on-a-first-login.png",
+      "sha256": "704121eeb5ad07bfccad78e8111ffaab5bba6a71fa4ab4ef331f82b58236db46"
     }
   ]
 }
