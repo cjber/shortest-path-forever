@@ -134,124 +134,39 @@ ns.Init(function()
 		end)
 		Settings.RegisterInitializer(page, Settings.CreateSliderInitializer(setting, options, tooltip))
 	end
-	-- Map marks: what the world map and the minimap draw.
-	Page(L["Map marks"])
-	Checkbox("pins", L["Show boats and zeppelins"], L["On the world map."], ns.RefreshMap)
-	Checkbox("transit", L["Show lifts and the tram"], L["Lifts and the Deeprun Tram, on the world map."], ns.RefreshMap)
-	Checkbox("portals", L["Show portals"], L["On the world map."], ns.RefreshMap)
-	Checkbox("mapFlightMasters", L["Show flight masters"], L["On the world map."], ns.RefreshMap)
-	Checkbox(
-		"nearbyTab",
-		L["Show the Nearby services tab"],
-		L["The tab in the world map's quest log. Off, /spfnear and the tracking menu still open it."],
-		ns.RefreshNearbyTab
-	)
-	Checkbox(
-		"minimapPins",
-		L["Show marks on the minimap"],
-		L["Docks, lifts, the tram and portals. Also under Transport in the minimap's tracking menu."],
-		ns.RefreshMinimapPins
-	)
-	Checkbox(
-		"hideQuestPins",
-		L["Hide game quest markers"],
-		L["Off, the game's own quest markers stay beside your journey's pins, showing the other places a quest can be done."],
-		ns.RefreshQuestPins
-	)
-
-	Scale(
-		"mapPinScale",
-		L["Transport icon size"],
-		L["Sizes boat, lift, tram and portal icons on the world map."],
-		ns.RefreshMap
-	)
-	Scale(
-		"flightPinScale",
-		L["Flight master icon size"],
-		L["Sizes flight master icons on the world map."],
-		ns.RefreshMap
-	)
-	Scale("minimapPinScale", L["Minimap icon size"], L["Sizes transport icons on the minimap."], ns.RefreshMinimapPins)
-
-	-- Town services: one icon per town zoomed out, one per service zoomed in, filtered by how much of a town you want
-	-- on the map. Off and the three levels match the world map's own filter submenu.
-	local townServices = Settings.RegisterAddOnSetting(
-		page,
-		"ShortestPathForever_townServices",
-		"townServices",
-		ns.db,
-		Settings.VarType.String,
-		L["Town services on the world map"],
-		ns.Defaults.townServices
-	)
-	townServices:SetValueChangedCallback(ns.RefreshTownServices)
-	settings.townServices = townServices
-	local townOptions = Settings.CreateControlTextContainer()
-	for _, choice in ipairs(ns.TownServiceChoices) do
-		townOptions:Add(choice.key, choice.label)
-	end
-	Settings.RegisterInitializer(
-		page,
-		Settings.CreateDropdownInitializer(townServices, function()
-			return townOptions:GetData()
-		end, L["One icon per town, or one per service as you zoom in."])
-	)
-	Checkbox(
-		"onlyMyProfessions",
-		L["Only my professions"],
-		L["Hides profession trainers and their supply vendors for professions this character has not learned."]
-			.. " "
-			.. L["On the world map and in Nearby services."],
-		function()
-			ns.RefreshMap()
-			if type(ns.RefreshServiceFilters) == "function" then
-				ns.RefreshServiceFilters()
-			end
+	-- A dropdown over a fixed list of choices: a saved string, one row of labels, and the choice's own key handed
+	-- back to onChanged.
+	local function Dropdown(key, name, tooltip, choices, onChanged)
+		local setting = Settings.RegisterAddOnSetting(
+			page,
+			"ShortestPathForever_" .. key,
+			key,
+			ns.db,
+			Settings.VarType.String,
+			name,
+			ns.Defaults[key]
+		)
+		if onChanged then
+			setting:SetValueChangedCallback(onChanged)
 		end
-	)
-
-	-- The walking line's colour, so it stays apart from the herbs and ore a player is gathering.
-	local routeColor = Settings.RegisterAddOnSetting(
-		page,
-		"ShortestPathForever_routeColor",
-		"routeColor",
-		ns.db,
-		Settings.VarType.String,
-		L["Walking route colour"],
-		ns.Defaults.routeColor
-	)
-	routeColor:SetValueChangedCallback(function(_, value)
-		ns.SetRouteColor(type(value) == "string" and value or nil)
-	end)
-	settings.routeColor = routeColor
-	local routeColorOptions = Settings.CreateControlTextContainer()
-	for _, choice in ipairs(ns.RouteColors) do
-		routeColorOptions:Add(choice.key, choice.label)
+		settings[key] = setting
+		local options = Settings.CreateControlTextContainer()
+		for _, choice in ipairs(choices) do
+			options:Add(choice.key, choice.label)
+		end
+		Settings.RegisterInitializer(
+			page,
+			Settings.CreateDropdownInitializer(setting, function()
+				return options:GetData()
+			end, tooltip)
+		)
 	end
-	Settings.RegisterInitializer(
-		page,
-		Settings.CreateDropdownInitializer(routeColor, function()
-			return routeColorOptions:GetData()
-		end, L["The walking line on the world map and the minimap."])
-	)
-	Checkbox(
-		"mapLine",
-		L["Line on the world map"],
-		L["Draws the walking route on the world map. With it off, the destination pin, arrow and tracker still guide you."],
-		ns.RefreshRouteLines
-	)
-	Checkbox(
-		"minimapLine",
-		L["Line on the minimap"],
-		L["Draws the walking route on the minimap. With it off, the destination pin, arrow and tracker still guide you."],
-		ns.RefreshRouteLines
-	)
-	Checkbox(
-		"laterLegs",
-		L["Line to later stops"],
-		L["Draws the legs after the current stop, faded, on the world map. Off, only the current leg and the pins stay."],
-		ns.RefreshJourneyPreview
-	)
+
+	-- Each page is its own module: UI/SettingsMapMarks.lua opens the Map marks page and adds its rows through these
+	-- builders, so every row registers through the same secure initializer and ns.SetOption finds it.
+	---@type SPFSettingsRows
+	local rows = { Page = Page, Checkbox = Checkbox, Scale = Scale, Dropdown = Dropdown }
+	ns.SettingsMapMarks.Register(rows)
 
 	-- Transport: routes and departure times.
 	Page(L["Transport"])

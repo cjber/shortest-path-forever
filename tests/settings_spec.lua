@@ -367,7 +367,10 @@ local ns = {
 }
 env.ForeverCore.TrackerHost = ns.TrackerHost
 assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", ns)
+-- The Map marks page lives in its own module, loaded before UI/Settings.lua in the TOC.
+setfenv(assert(loadfile("UI/SettingsMapMarks.lua")), env)("ShortestPathForever", ns)
 setfenv(assert(loadfile("UI/Settings.lua")), env)("ShortestPathForever", ns)
+assert(type(ns.SettingsMapMarks.Register) == "function", "the Map marks page is its own module")
 
 -- The index page is one button per group; each opens that group's page. The groups divide the old flat list, and
 -- every row keeps its key, default, tooltip and callback.
