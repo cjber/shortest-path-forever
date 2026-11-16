@@ -62,6 +62,7 @@ Credit for the reports and requests behind the addon.
 | Who | What | Notes |
 |---|---|---|
 | [embiem](https://github.com/embiem) | Separate Hearthstone and class teleport switches | GitHub; #775 |
+| [InfamousMunky](https://github.com/InfamousMunky) | The Hearthstone switch outside settings | GitHub; cjber/adventure-guide-forever#707 |
 | A player | Journeys avoid opposing-faction guarded lifts | CurseForge thread 8726893, #911 |
 | kaelr1 | Transmogrifiers in Nearby services and map pins | Discord, #909 |
 | user\_lsqt69ps7bgb5p7e | Journeys with several chosen stops | CurseForge thread 8705002, #846 |

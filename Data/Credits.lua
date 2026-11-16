@@ -5,6 +5,7 @@ local _, ns = ...
 ns.Credits = {
 	players = {
 		{ name = "embiem", what = "Separate Hearthstone and class teleport switches" },
+		{ name = "InfamousMunky", what = "The Hearthstone switch outside settings" },
 		{ name = "A player", what = "Journeys avoid opposing-faction guarded lifts" },
 		{ name = "kaelr1", what = "Transmogrifiers in Nearby services and map pins" },
 		{ name = "user_lsqt69ps7bgb5p7e", what = "Journeys with several chosen stops" },
