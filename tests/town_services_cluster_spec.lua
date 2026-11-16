@@ -70,6 +70,7 @@ local index = {
 }
 local navigated
 ns.NearbyServices = {
+	Request = function() end,
 	State = function()
 		return "ready"
 	end,

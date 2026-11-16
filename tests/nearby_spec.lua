@@ -671,6 +671,7 @@ local function fresh(questie, away, L)
 	for _, fn in ipairs(starts) do
 		fn()
 	end
+	copy.NearbyServices.Request()
 	while #timers > 0 do
 		pump()
 	end
@@ -888,6 +889,7 @@ do
 	}) do
 		driver.load(file)
 	end
+	worldNs.NearbyServices.Request()
 	local guard = 0
 	while #travelTimers > 0 do
 		guard = guard + 1

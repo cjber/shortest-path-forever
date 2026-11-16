@@ -213,7 +213,7 @@ end
 
 local ns = {
 	Init = function() end,
-	db = { nearbyTab = true },
+	db = { nearbyTab = true, townServices = "off" },
 	L = setmetatable({}, {
 		__index = function(_, key)
 			return key
@@ -280,9 +280,17 @@ ns.Art = {
 	Band = function() end,
 	CoverFrame = function() end,
 }
+local catalogueState, demandCalls, catalogueReads = "idle", 0, 0
 ns.NearbyServices = {
+	Request = function()
+		demandCalls = demandCalls + 1
+		if catalogueState == "idle" then
+			catalogueReads = catalogueReads + 1
+			catalogueState = "ready"
+		end
+	end,
 	State = function()
-		return "ready"
+		return catalogueState
 	end,
 	PlayerWorld = function()
 		return { map = 1, x = 0, y = 0 }
@@ -472,7 +480,16 @@ assert(
 local search = assert(byTemplate("SearchBoxTemplate"), "a search box")
 local scroll = assert(byTemplate("ScrollFrameTemplate"), "a scroll frame")
 assert(search.Instructions.text == "Search services and goods", "the search placeholder")
+ns.registered.spec.shown(false)
+panel.scripts.OnEvent(panel, "ZONE_CHANGED")
+assert(demandCalls == 0 and catalogueReads == 0, "closed panel and unrelated events never demand")
+local state = ns.NearbyServices.State
+ns.NearbyServices.State = function()
+	assert(demandCalls > 0, "direct tab requests before Requeue reads state")
+	return state()
+end
 env.ForeverCore.QuestLogTabs.Select("services")
+assert(demandCalls == 1 and catalogueReads == 1, "direct tab is the first demand with town services off")
 assert(panel:IsShown(), "selecting the tab shows the panel")
 assert(#created > 4, "the panel built its frames")
 
@@ -641,3 +658,40 @@ assert(panel:IsShown(), "the services stay reachable through /spfnear and the tr
 ns.db.nearbyTab = true
 ns.RefreshNearbyTab()
 print("services_panel: tab registration, shown, scroll preservation and query reset: ok")
+
+assert(catalogueReads == 1, "repeated direct selections keep the first catalogue read")
+
+-- A first direct selection must discover unavailable catalogues too, before painting its status.
+for outcome, message in pairs({
+	missing = "Nearby services need the QuestieDB addon.",
+	failed = "Nearby services could not read QuestieDB.",
+}) do
+	ns.registered.spec.shown(false)
+	local calls, reads, current = 0, 0, "idle"
+	ns.NearbyServices.Request = function()
+		calls = calls + 1
+		if current == "idle" then
+			reads = reads + 1
+			current = outcome
+		end
+	end
+	ns.NearbyServices.State = function()
+		assert(calls > 0, "first direct tab demand precedes the status read")
+		return current
+	end
+	panel.scripts.OnEvent(panel, "ZONE_CHANGED")
+	assert(calls == 0 and reads == 0, "a closed panel does not discover " .. outcome)
+	env.ForeverCore.QuestLogTabs.Select("services")
+	assert(calls == 1 and reads == 1, "first direct tab discovers " .. outcome)
+	local status
+	for _, text in ipairs(fontStrings) do
+		if text.text == message and text.shown ~= false then
+			status = text
+		end
+	end
+	assert(status, "direct tab explains " .. outcome)
+	ns.registered.spec.shown(false)
+	env.ForeverCore.QuestLogTabs.Select("services")
+	assert(calls == 2 and reads == 1, "reopening does not retry " .. outcome)
+end
+print("services_panel: direct tab demand, ordering and unavailable status: ok")

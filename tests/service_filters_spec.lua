@@ -14,7 +14,8 @@ local groups = {
 }
 local place = { id = 1, name = "Trainer", map = 14, x = .5, y = .5, world = { map = 1, x = 0, y = 0 } }
 local index = { ["profession:164"] = { place }, ["profession:165"] = { place }, class = { place }, portal = { place } }
-ns.NearbyServices = { State = function() return "ready" end, Index = function() return index end,
+ns.NearbyServices = {
+	Request = function() end, State = function() return "ready" end, Index = function() return index end,
  Groups = function() return groups end }
 local mapInfo = C_Map.GetMapInfo
 C_Map.GetMapInfo = function(id) local info = mapInfo(id); info.mapType = Enum.UIMapType.Zone; return info end

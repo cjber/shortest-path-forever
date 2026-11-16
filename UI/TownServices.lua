@@ -682,16 +682,13 @@ function Services:RefreshAllData()
 	local mapID = map:GetMapID()
 	local level = ns.db and ns.db.townServices or "capitals"
 	local nearby = ns.NearbyServices
-	if
-		not (
-			mapID
-			and ServiceMap(mapID)
-			and map:IsVisible()
-			and level ~= "off"
-			and nearby
-			and nearby.State() == "ready"
-		)
-	then
+	if not (mapID and ServiceMap(mapID) and map:IsVisible() and level ~= "off" and nearby) then
+		self:RemoveAllData()
+		self.mapID = nil
+		return
+	end
+	nearby.Request()
+	if nearby.State() ~= "ready" then
 		self:RemoveAllData()
 		self.mapID = nil
 		return

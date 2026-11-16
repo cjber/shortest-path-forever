@@ -675,6 +675,7 @@ local function Attach()
 	local function Shown(shown)
 		visible = shown
 		if shown then
+			ns.NearbyServices.Request()
 			Requeue()
 			StartTicker(true)
 		else

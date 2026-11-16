@@ -781,6 +781,7 @@ end
 ---@field Index fun(): table<string, SPFNearbyPlace[]>
 ---@field Groups fun(): SPFNearbyGroup[]
 ---@field Items fun(key: string, npc: number): integer[]?
+---@field Request fun() starts the catalogue once, when a consumer needs it
 ---@field State fun(): string
 ---@field OnReady fun(fn: fun())
 ---@field Sections fun(world: SPFPoint, query?: string, collapsed?: SPFClosed, seconds?: SPFSeconds): SPFNearbySection[]
@@ -918,6 +919,7 @@ ns.NearbyServices = {
 	State = function()
 		return state
 	end,
+	Request = Build,
 	OnReady = WhenReady,
 	Sections = Sections,
 	Shortlist = Shortlist,
@@ -935,13 +937,11 @@ ns.NearbyServices = {
 	Open = OpenServices,
 }
 ns.Init(function()
-	-- Questie starts after every addon has loaded and applies its corrections then, so the first read begins at
-	-- PLAYER_LOGIN: a saved read is assembled there at once, and a fresh one waits for Questie's ready callback.
-	EventUtil.ContinueAfterAllEvents(Build, "PLAYER_LOGIN")
 	ns.ModifyMenu("MENU_WORLD_MAP_TRACKING", "nearby", AddTrackingEntry)
 	ns.ModifyMenu("MENU_MINIMAP_TRACKING", "nearby", AddTrackingEntry)
 	SLASH_SPFNEAR1 = "/spfnear"
 	SlashCmdList.SPFNEAR = function(message)
+		Build()
 		local key = string.lower((message or ""):match("^%s*(.-)%s*$"))
 		local world = PlayerWorld()
 		if key ~= "" and state == "ready" and world then

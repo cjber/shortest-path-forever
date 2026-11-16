@@ -115,6 +115,7 @@ local function load(questie)
 	for _, fn in ipairs(starts) do
 		fn()
 	end
+	ns.NearbyServices.Request()
 	while #timers > 0 do
 		table.remove(timers, 1)()
 	end

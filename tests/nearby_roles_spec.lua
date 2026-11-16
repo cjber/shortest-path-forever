@@ -160,6 +160,7 @@ local function load(classID)
 	for _, fn in ipairs(initializers) do
 		fn()
 	end
+	ns.NearbyServices.Request()
 	while #timers > 0 do
 		table.remove(timers, 1)()
 	end

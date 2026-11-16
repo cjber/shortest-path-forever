@@ -67,9 +67,16 @@ local index = {
 	trade = { place(4, "Trade Four", 2000, 0) },
 }
 local navigated
+local catalogueState, catalogueReads = "idle", 0
 ns.NearbyServices = {
+	Request = function()
+		if catalogueState == "idle" then
+			catalogueReads = catalogueReads + 1
+			catalogueState = "building"
+		end
+	end,
 	State = function()
-		return "ready"
+		return catalogueState
 	end,
 	Index = function()
 		return index
@@ -108,8 +115,21 @@ check(saved.townServiceBank == true and saved.townServiceProfessions == true, "a
 saved.townServiceBank = false
 check(ns.Defaults.townServiceBank == true, "a saved switch does not change the shipped defaults")
 mapID, zoom = 1414, 0
+setMapShown(false)
+ns.RefreshTownServices()
+check(catalogueReads == 0, "a closed map does not demand the catalogue")
+ns.db.townServices = "off"
 setMapShown(true)
 ns.RefreshTownServices()
+check(catalogueReads == 0, "disabled town services do not demand the catalogue")
+ns.db.townServices = "all"
+ns.RefreshTownServices()
+check(catalogueReads == 1 and catalogueState == "building", "map-only demand starts before the ready gate")
+ns.RefreshTownServices()
+check(catalogueReads == 1, "a loading map consumer keeps the first request")
+catalogueState = "ready"
+ns.RefreshTownServices()
+check(catalogueReads == 1, "a ready map consumer keeps the completed request")
 
 local function pins()
 	return ns.Canvas.Pools(WorldMapFrame).ShortestPathForeverServicePinTemplate.active

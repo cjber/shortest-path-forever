@@ -200,7 +200,10 @@ local function Load(options)
 	end
 	-- ForeverCore's text helpers, which the Nearby search folds with; this spec never opens the quest log tab.
 	local coreNs = dofile("tests/forever_core.lua").load(env, "ForeverCore", { "Locales/enUS.lua", "Core/Text.lua" })
-	env.ForeverCore = { Text = coreNs.Text }
+	env.ForeverCore = { Text = coreNs.Text, QuestLogTabs = { Select = function() end } }
+	ns.OpenWorldMap = function()
+		return true
+	end
 	ns.WorldPoint = function(_, x, y)
 		return { map = 1, x = x * 1000, y = y * 1000 }
 	end
@@ -224,6 +227,12 @@ local function Load(options)
 	setfenv(assert(loadfile("UI/NearbyEntrances.lua")), env)("ShortestPathForever", ns)
 	setfenv(assert(loadfile("UI/NearbyRoles.lua")), env)("ShortestPathForever", ns)
 	setfenv(assert(loadfile("UI/Nearby.lua")), env)("ShortestPathForever", ns)
+	local requests = 0
+	local read = ns.NearbyQuestie.Read
+	ns.NearbyQuestie.Read = function(...)
+		requests = requests + 1
+		return read(...)
+	end
 	-- Runs the timers the addon scheduled: only the frame's own when `zeroOnly`, all of them (the waits too) when not.
 	---@param zeroOnly boolean
 	local function Run(zeroOnly)
@@ -248,6 +257,9 @@ local function Load(options)
 		env = env,
 		reported = reported,
 		Run = Run,
+		Requests = function()
+			return requests
+		end,
 		-- The client's login events: the addon asks to be called after PLAYER_LOGIN, and nothing reads before it.
 		Login = function(event)
 			local pending = logins
@@ -257,8 +269,8 @@ local function Load(options)
 				login.fn()
 			end
 		end,
-		OpenMenu = function()
-			local menu = trackingMenus.MENU_WORLD_MAP_TRACKING
+		OpenMenu = function(tag)
+			local menu = trackingMenus[tag or "MENU_WORLD_MAP_TRACKING"]
 			assert(menu, "the world map's tracking menu is registered")
 			menu(nil, MenuNode())
 		end,
@@ -284,6 +296,51 @@ local function QuestieAPI()
 		end
 end
 
+-- Login, passive subscribers and unrelated work never request or scan the catalogue.
+do
+	local count = { items = 0, npcs = 0 }
+	local run = Load({ lib = QuestieDB(count) })
+	local notified = 0
+	run.ns.NearbyServices.OnReady(function()
+		notified = notified + 1
+	end)
+	run.Login()
+	run.Login("PLAYER_ENTERING_WORLD")
+	run.Run(false)
+	assert(run.Requests() == 0 and count.items == 0 and count.npcs == 0, "no demand means zero reads or scans")
+	assert(run.ns.NearbyServices.State() == "idle" and notified == 0, "subscription stays passive")
+	run.OpenMenu()
+	run.OpenMenu()
+	assert(run.Requests() == 1, "the first tracking menu requests once")
+	run.Run(true)
+	run.OpenMenu()
+	run.ns.NearbyServices.Request()
+	assert(run.Requests() == 1 and count.items == 1 and count.npcs == 8, "repeated demand keeps the completed read")
+	assert(notified == 1, "the subscriber receives completion")
+end
+
+-- Each public UI entry point can be the first demand, with stable repeat behavior.
+for _, consumer in ipairs({ "panel", "slash", "minimap" }) do
+	local run = Load({ lib = QuestieDB({ items = 0, npcs = 0 }) })
+	local function Demand()
+		if consumer == "panel" then
+			run.ns.NearbyServices.Open()
+		elseif consumer == "slash" then
+			run.env.SlashCmdList.SPFNEAR("innkeeper")
+		else
+			run.OpenMenu("MENU_MINIMAP_TRACKING")
+		end
+	end
+	run.Login()
+	assert(run.Requests() == 0, consumer .. ": login is passive")
+	Demand()
+	Demand()
+	run.Run(true)
+	-- A ready slash navigates, which is covered by nearby_spec; repeat the request seam here.
+	run.ns.NearbyServices.Request()
+	assert(run.Requests() == 1, consumer .. ": first demand requests exactly once")
+end
+
 -- A fresh read waits for Questie's own start, and is kept for the next session, which reads nothing.
 do
 	local count = { items = 0, npcs = 0, spawns = 0 }
@@ -293,6 +350,7 @@ do
 	assert(count.items == 0 and count.npcs == 0, "nothing is read at ADDON_LOADED")
 	assert(run.ns.NearbyServices.State() == "idle", "the list has not started")
 	run.Login()
+	run.ns.NearbyServices.Request()
 	assert(run.ns.NearbyQuestie.State() == "waiting", "a fresh read waits for Questie's own start")
 	assert(count.items == 0 and count.npcs == 0, "and reads nothing before it")
 	assert(run.ns.NearbyServices.State() == "building", "the list says it is still loading")
@@ -323,6 +381,7 @@ do
 	-- The next session, over the same saved variables: nothing is read.
 	local second = Load({ lib = QuestieDB(count), questie = questie, db = db, questieVersion = "12.0" })
 	second.Login()
+	second.ns.NearbyServices.Request()
 	second.Run(true)
 	assert(count.npcs == 8 and count.items == 1, "a later session reads no item and no NPC at all")
 	assert(second.ns.NearbyServices.State() == "ready", "it is ready at once")
@@ -343,6 +402,7 @@ do
 	local db = {}
 	local run = Load({ lib = QuestieDB(count), db = db })
 	run.Login()
+	run.ns.NearbyServices.Request()
 	run.Run(true)
 	assert(run.ns.NearbyServices.State() == "ready", "the list is ready without Questie")
 	assert(count.npcs == 8, "the database was read")
@@ -355,11 +415,13 @@ do
 	local db = {}
 	local first = Load({ lib = QuestieDB(count), db = db })
 	first.Login()
+	first.ns.NearbyServices.Request()
 	first.Run(true)
 	local kept = db.nearbyRead
 	assert(type(kept) == "table")
 	local run = Load({ lib = QuestieDB(count), db = db, questiedbVersion = "1.0.14" })
 	run.Login()
+	run.ns.NearbyServices.Request()
 	run.Run(true)
 	assert(count.npcs == 16, "a read from another QuestieDB version is not used: every NPC is read again")
 	assert(db.nearbyRead ~= kept, "and the saved read is replaced")
@@ -376,6 +438,7 @@ do
 		questie = { API = { isReady = false, RegisterOnReady = function() end } },
 	})
 	run.Login()
+	run.ns.NearbyServices.Request()
 	assert(run.ns.NearbyQuestie.State() == "waiting", "Questie is waited for")
 	run.Run(true)
 	assert(count.npcs == 0, "the wait holds the read, frame after frame")
@@ -391,6 +454,7 @@ do
 	local questie, Ready = QuestieAPI()
 	local run = Load({ lib = QuestieDB(count), db = db, questie = questie })
 	run.Login()
+	run.ns.NearbyServices.Request()
 	run.Run(false)
 	assert(count.npcs == 8 and db.nearbyRead == nil, "read as it stood, and not kept")
 	Ready()
@@ -441,6 +505,7 @@ for _, case in ipairs({
 	case.break_(lib)
 	local run = Load({ lib = lib })
 	run.Login()
+	run.ns.NearbyServices.Request()
 	run.Run(true)
 	assert(
 		run.ns.NearbyServices.State() == "failed",
@@ -458,6 +523,7 @@ end
 do
 	local run = Load({ lib = nil })
 	run.Login()
+	run.ns.NearbyServices.Request()
 	run.Run(true)
 	assert(run.ns.NearbyServices.State() == "missing", "without QuestieDB the list says it is missing")
 	run.OpenMenu()
@@ -499,6 +565,7 @@ do
 	local db = {}
 	local run = Load({ lib = lib, db = db })
 	run.Login()
+	run.ns.NearbyServices.Request()
 	run.Run(true)
 	local entry = run.ns.NearbyServices.Nearest("transmog", { map = 1, x = 480, y = 846 })
 	assert(entry and entry.id == 270581, "the active Forever flag finds the transmogrifier without title matching")
@@ -512,6 +579,7 @@ do
 	local old = db.nearbyRead
 	local second = Load({ lib = lib, db = db })
 	second.Login()
+	second.ns.NearbyServices.Request()
 	second.Run(true)
 	assert(db.nearbyRead ~= old and db.nearbyRead.npcs[270581], "the old service scan is rebuilt")
 end
