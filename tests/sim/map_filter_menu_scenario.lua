@@ -74,7 +74,7 @@ local function FakeQuestieDB()
 	}
 end
 
--- A logged-in Elwynn Forest client with QuestieDB's services indexed. Answers the addon's namespace.
+-- A logged-in Elwynn Forest client whose first visible map indexes QuestieDB's services.
 local function Login(sim, saved)
 	local G = sim.G
 	local player = sim.world.player
@@ -114,9 +114,13 @@ local function Login(sim, saved)
 		end
 	end
 	assert(ns, "full addon namespace loaded")
-	-- The services index builds a slice per frame, out of combat.
+	-- Login stays lazy; the visible map requests the index, sliced per frame out of combat.
+	sim:advance(1)
+	assert(ns.NearbyServices.State() == "idle", "login leaves the services index idle")
+	sim:openWorldMap(1429)
 	sim:advance(1)
 	assert(ns.NearbyServices.State() == "ready", "the services index is ready: " .. tostring(ns.NearbyServices.State()))
+	sim:closeWorldMap()
 	return ns
 end
 
