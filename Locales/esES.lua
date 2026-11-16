@@ -13,6 +13,8 @@ L["%s (new flight path)"] = "%s (nueva ruta de vuelo)"
 L["%s (turn in)"] = "%s (entregar)"
 L["%s could be %s."] = "%s podría ser %s."
 L["%s could not start. Reinstall %s to fix this."] = "%s no pudo iniciarse. Reinstala %s para solucionarlo." -- mt
+L["%s needs ForeverCore. Install it from CurseForge, or choose Reinstall on ForeverCore in the CurseForge app."] =
+	"%s necesita ForeverCore. Instálalo desde CurseForge o elige Reinstalar en ForeverCore en la aplicación de CurseForge." -- mt
 L["%s landing"] = "plataforma %s"
 L["%s pier"] = "muelle %s"
 L["%s station"] = "estación %s"
@@ -24,6 +26,10 @@ L["%s, then %s"] = "%s, luego %s"
 L["%s: %s are out of date. Update them to fix this."] =
 	"%s: %s están desactualizados. Actualízalos para solucionarlo." -- mt
 L["%s: %s is out of date. Update it to fix this."] = "%s: %s está desactualizado. Actualízalo para solucionarlo." -- mt
+L["%s: ForeverCore is turned off. Enable it in the AddOns list to fix this."] =
+	"%s: ForeverCore está desactivado. Actívalo en la lista de accesorios para solucionarlo." -- mt
+L["%s: the installed ForeverCore is another addon (%s). Remove it and install ForeverCore from CurseForge."] =
+	"%s: el ForeverCore instalado es otro accesorio (%s). Elimínalo e instala ForeverCore desde CurseForge." -- mt
 L["/way [zone] x y [title], with x and y from 0 to 100."] = "/way [zona] x y [título], con x e y de 0 a 100."
 L["/way reset all, away, <zone> or not <zone>"] = "/way reset all, away, <zona> o not <zona>"
 L["Adventure Guide couldn't start that just now. Choose it again from its guide."] =

@@ -14,6 +14,8 @@ L["%s (turn in)"] = "%s (완료 보고)"
 L["%s could be %s."] = "%s: %s 중 하나일 수 있습니다."
 L["%s could not start. Reinstall %s to fix this."] =
 	"%s을(를) 시작할 수 없습니다. 이 문제를 해결하려면 %s을(를) 다시 설치하세요." -- mt
+L["%s needs ForeverCore. Install it from CurseForge, or choose Reinstall on ForeverCore in the CurseForge app."] =
+	"%s 실행에는 ForeverCore가 필요합니다. CurseForge에서 설치하거나 CurseForge 앱에서 ForeverCore의 재설치를 선택하세요." -- mt
 L["%s landing"] = "%s 승강장"
 L["%s pier"] = "%s 부두"
 L["%s station"] = "%s 정거장"
@@ -26,6 +28,10 @@ L["%s: %s are out of date. Update them to fix this."] =
 	"%s: %s이(가) 오래되었습니다. 이 문제를 해결하려면 모두 업데이트하세요." -- mt
 L["%s: %s is out of date. Update it to fix this."] =
 	"%s: %s이(가) 오래되었습니다. 이 문제를 해결하려면 업데이트하세요." -- mt
+L["%s: ForeverCore is turned off. Enable it in the AddOns list to fix this."] =
+	"%s: ForeverCore가 비활성화되어 있습니다. 애드온 목록에서 활성화하면 해결됩니다." -- mt
+L["%s: the installed ForeverCore is another addon (%s). Remove it and install ForeverCore from CurseForge."] =
+	"%s: 설치된 ForeverCore는 다른 애드온(%s)입니다. 삭제한 후 CurseForge에서 ForeverCore를 설치하세요." -- mt
 L["/way [zone] x y [title], with x and y from 0 to 100."] = "/way [지역] x y [제목], x와 y는 0에서 100 사이."
 L["/way reset all, away, <zone> or not <zone>"] = "/way reset all, away, <지역> 또는 not <지역>"
 L["Adventure Guide couldn't start that just now. Choose it again from its guide."] =

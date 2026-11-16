@@ -17,8 +17,8 @@ ROOT = Path(__file__).resolve().parent.parent
 TOC = ROOT / "ShortestPathForever.toc"
 PHRASE = re.compile(r'\bL\["((?:\\.|[^"\\])*)"\]')
 # A shared Forever file may choose its English text with a helper, `phrase("%s is out of date.", name)`, and read
-# ns.L by that same key, so those strings are phrases too.
-PHRASE_HELPER = re.compile(r'\bphrase\("((?:\\.|[^"\\])*)"')
+# ns.L by that same key, so those strings are phrases too. StyLua wraps a long string onto the line after `phrase(`.
+PHRASE_HELPER = re.compile(r'\bphrase\(\s*"((?:\\.|[^"\\])*)"')
 # Every phrase is a literal in the addon's own files.
 DYNAMIC = ()
 HEADER = """\

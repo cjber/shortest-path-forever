@@ -14,6 +14,8 @@ L["%s (turn in)"] = "%s (сдать)"
 L["%s could be %s."] = "%s – возможно, %s."
 L["%s could not start. Reinstall %s to fix this."] =
 	"%s не удалось запустить. Переустановите %s, чтобы исправить это." -- mt
+L["%s needs ForeverCore. Install it from CurseForge, or choose Reinstall on ForeverCore in the CurseForge app."] =
+	"%s требуется ForeverCore. Установите его с CurseForge или выберите «Переустановить» для ForeverCore в приложении CurseForge." -- mt
 L["%s landing"] = "площадка (%s)"
 L["%s pier"] = "причал (%s)"
 L["%s station"] = "станция (%s)"
@@ -26,6 +28,10 @@ L["%s: %s are out of date. Update them to fix this."] =
 	"%s: %s устарели. Обновите их, чтобы исправить это." -- mt
 L["%s: %s is out of date. Update it to fix this."] =
 	"%s: %s устарел. Обновите его, чтобы исправить это." -- mt
+L["%s: ForeverCore is turned off. Enable it in the AddOns list to fix this."] =
+	"%s: ForeverCore отключён. Включите его в списке модификаций, чтобы исправить это." -- mt
+L["%s: the installed ForeverCore is another addon (%s). Remove it and install ForeverCore from CurseForge."] =
+	"%s: установленный ForeverCore является другой модификацией (%s). Удалите её и установите ForeverCore с CurseForge." -- mt
 L["/way [zone] x y [title], with x and y from 0 to 100."] =
 	"/way [зона] x y [название], x и y от 0 до 100."
 L["/way reset all, away, <zone> or not <zone>"] = "/way reset all, away, <зона> или not <зона>"

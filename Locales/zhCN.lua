@@ -13,6 +13,8 @@ L["%s (new flight path)"] = "%s（新飞行路线）"
 L["%s (turn in)"] = "%s（交任务）"
 L["%s could be %s."] = "%s可能是%s。"
 L["%s could not start. Reinstall %s to fix this."] = "%s 无法启动。请重新安装 %s 以解决此问题。" -- mt
+L["%s needs ForeverCore. Install it from CurseForge, or choose Reinstall on ForeverCore in the CurseForge app."] =
+	"%s需要ForeverCore。请从CurseForge安装，或在CurseForge应用中为ForeverCore选择重新安装。" -- mt
 L["%s landing"] = "%s平台"
 L["%s pier"] = "%s码头"
 L["%s station"] = "%s车站"
@@ -23,6 +25,10 @@ L["%s, %s"] = "%s，%s"
 L["%s, then %s"] = "%s，然后%s"
 L["%s: %s are out of date. Update them to fix this."] = "%s：%s 已过期。请更新它们以解决此问题。" -- mt
 L["%s: %s is out of date. Update it to fix this."] = "%s：%s 已过期。请更新它以解决此问题。" -- mt
+L["%s: ForeverCore is turned off. Enable it in the AddOns list to fix this."] =
+	"%s：ForeverCore已禁用。请在插件列表中启用它以解决此问题。" -- mt
+L["%s: the installed ForeverCore is another addon (%s). Remove it and install ForeverCore from CurseForge."] =
+	"%s：已安装的ForeverCore是另一个插件（%s）。请将其移除，并从CurseForge安装ForeverCore。" -- mt
 L["/way [zone] x y [title], with x and y from 0 to 100."] = "/way [地区] x y [标题]，x和y为0到100。"
 L["/way reset all, away, <zone> or not <zone>"] = "/way reset all, away, <地区> 或 not <地区>"
 L["Adventure Guide couldn't start that just now. Choose it again from its guide."] =
