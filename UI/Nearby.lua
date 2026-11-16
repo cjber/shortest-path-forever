@@ -185,9 +185,10 @@ local function Shortlist(key, world, limit, query, tier)
 	local matching = Matching(key, world, folded)
 	tier = tier or BestTier(key, world, folded, matching, TIER_REACH)
 	local group = groupByKey[key]
+	local items = vendorItems[key]
 	for _, place in ipairs(index[key] or {}) do
 		if
-			ns.NearbyProfessions.Shown(group, place)
+			ns.NearbyProfessions.Shown(group, place, items and items[place.id])
 			and place.world.map == world.map
 			and (not matching or matching[place.id])
 			and (not tier or Tier(key, place.id) == tier)

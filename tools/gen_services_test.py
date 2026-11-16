@@ -14,7 +14,7 @@ from gen_services import (
     profession_skill_spells,
     profession_trainers,
     skill_line_categories,
-    vendor_professions,
+    vendor_item_professions,
 )
 
 
@@ -133,7 +133,7 @@ class VendorProfessionTest(unittest.TestCase):
         )
         self.assertEqual(supplied, {1: [197], 3: [171], 4: [186]})
 
-    def test_a_vendor_takes_every_profession_its_goods_supply_and_none_is_absent(self):
+    def test_only_the_items_a_vendor_sells_are_classified(self):
         vendors = [
             {"entry": "10", "item": "1"},
             {"entry": "10", "item": "2"},
@@ -142,8 +142,8 @@ class VendorProfessionTest(unittest.TestCase):
             {"entry": "12", "item": "3"},
         ]
         self.assertEqual(
-            vendor_professions(vendors, {1: [197], 3: [171]}),
-            {10: [197], 12: [171, 197]},
+            vendor_item_professions(vendors, {1: [197], 3: [171], 4: [185]}),
+            {1: [197], 3: [171]},
         )
 
 

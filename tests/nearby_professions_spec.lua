@@ -14,13 +14,18 @@ local NPCS = {
 	[3005] = { "General supplier", { [10] = { { 30, 30 } } }, "A", FLAGS.VENDOR, "Trade Supplies" },
 	[3006] = { "Alchemy trainer", { [10] = { { 45, 45 } } }, "A", FLAGS.TRAINER, "Alchemy Trainer" },
 	[3007] = { "Herb and vial supplier", { [10] = { { 40, 40 } } }, "A", FLAGS.VENDOR, "Trade Supplies" },
+	[3008] = { "Bread and spices", { [10] = { { 35, 35 } } }, "A", FLAGS.VENDOR, "Trade Supplies" },
 }
 -- Every vendor sells a trade good, so each sits in the list's own trade supplies group. What the filter reads is the
--- vendor's generated profession set, never the goods' item class or the NPC's title.
+-- generated profession set of the goods it sells in the row being judged, never the goods' item class or the NPC's
+-- title.
 local ITEMS = {
-	[2604] = { { 3003, 3005 }, 7, 0, "Coarse Thread" },
-	[2605] = { { 3004, 3005 }, 7, 0, "Smithing Flux" },
+	[2604] = { { 3003 }, 7, 0, "Coarse Thread" },
+	[2605] = { { 3004 }, 7, 0, "Smithing Flux" },
 	[2606] = { { 3007 }, 7, 9, "Peacebloom" },
+	[2609] = { { 3005 }, 7, 0, "Smooth Pebble" },
+	[4540] = { { 3008 }, 0, 0, "Tough Hunk of Bread" },
+	[2678] = { { 3008 }, 7, 0, "Mild Spices" },
 }
 local itemIDs, npcIDs = {}, {}
 for id in pairs(ITEMS) do
@@ -208,13 +213,7 @@ local ns = {
 	Battlemasters = {},
 }
 setfenv(assert(loadfile("Data/Services.lua")), env)("ShortestPathForever", ns)
--- The generated table covers the classic suppliers, classified by their goods: Tharynn Bouden sells thread, dye,
--- vials, a hammer, a pick and a skinning knife under the title "Trade Supplies", and every profession but two has a
--- hand in those goods.
-local generated = ns.VendorProfessions
-assert(type(generated) == "table", "the generated vendor professions load")
-local tharynn = generated[66]
-assert(type(tharynn) == "table", "a titleless supplier is classified by its goods")
+
 local function carries(skills, skill)
 	for _, value in ipairs(skills) do
 		if value == skill then
@@ -223,18 +222,24 @@ local function carries(skills, skill)
 	end
 	return false
 end
-assert(
-	carries(tharynn, 164) and carries(tharynn, 197) and carries(tharynn, 393),
-	"thread, dye and a knife serve their professions"
-)
-assert(generated[74] == nil, "a weaponsmith with no profession goods is absent, so it always shows")
 
--- The fixture's own vendors and trainers, so a data refresh cannot move the cases below.
+-- The generated table covers the goods the classic suppliers sell, by what each good supplies: thread serves the
+-- professions that use it, an item no vendor sells is absent, and so is bread, which no profession's work consumes.
+local generated = ns.ItemProfessions
+assert(type(generated) == "table", "the generated item professions load")
+local thread = generated[2320]
+assert(type(thread) == "table", "a sold profession good is classified")
+assert(carries(thread, 164) and carries(thread, 197), "thread serves blacksmithing and tailoring")
+assert(generated[2589] == nil, "an item no vendor sells is absent, so it never decides a row")
+assert(generated[4540] == nil, "bread is no profession's good, so a food seller always shows")
+
+-- The fixture's own goods and trainers, so a data refresh cannot move the cases below.
 ns.ProfessionTrainers = { [3001] = 197, [3002] = 164, [3006] = 171 }
-ns.VendorProfessions = {
-	[3003] = { 197 },
-	[3004] = { 164 },
-	[3007] = { 171, 182 },
+ns.ItemProfessions = {
+	[2604] = { 197 },
+	[2605] = { 164 },
+	[2606] = { 171, 182 },
+	[2678] = { 129, 185 },
 }
 for _, file in ipairs({
 	"Locales/enUS.lua",
@@ -266,7 +271,7 @@ local function group(key)
 	end
 end
 local function place(id)
-	for _, groupKey in pairs({ "profession:197", "profession:164", "profession:171", "trade" }) do
+	for _, groupKey in pairs({ "profession:197", "profession:164", "profession:171", "trade", "food" }) do
 		for _, item in ipairs(ns.NearbyServices.Index()[groupKey] or {}) do
 			if item.id == id then
 				return item
@@ -308,6 +313,15 @@ learned = 182
 assert(Professions.Shown(group("trade"), place(3007)) == true, "one learned profession from the goods is enough")
 learned = 164
 assert(Professions.Shown(group("trade"), place(3004)) == true, "the other profession's goods stay when it is learned")
+
+-- The row decides, not the NPC: the bread this vendor sells is no profession's good, so its Food row stays for a
+-- character without Cooking, while the Mild Spices beside it put its Trade supplies row behind Cooking.
+learned = 197
+assert(Professions.Shown(group("food"), place(3008)) == true, "food with no profession goods keeps its Food row")
+assert(Professions.Shown(group("trade"), place(3008)) == false, "the cooking reagent beside it hides the Trade row")
+assert(nearest("food") == 3008, "the Food row still leads with it")
+learned = 185
+assert(Professions.Shown(group("trade"), place(3008)) == true, "learning Cooking brings its row back")
 
 -- The list itself: the panel's sections and the tracking menu follow the same rule.
 learned = 197

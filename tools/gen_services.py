@@ -172,12 +172,10 @@ def profession_items(items, skill_spells, spell_reagents, spell_totems):
     return {item: sorted(lines) for item, lines in result.items() if lines}
 
 
-def vendor_professions(vendor_rows, item_professions):
-    """Vendor NPC -> the profession skill lines its goods supply, from the exact items it sells."""
-    result = defaultdict(set)
-    for row in vendor_rows:
-        result[int(row["entry"])] |= set(item_professions.get(int(row["item"]), ()))
-    return {npc: sorted(lines) for npc, lines in sorted(result.items()) if lines}
+def vendor_item_professions(vendor_rows, item_professions):
+    """Item -> the profession skill lines it supplies, for the items any vendor sells."""
+    sold = {int(row["item"]) for row in vendor_rows}
+    return {item: item_professions[item] for item in sorted(sold) if item in item_professions}
 
 
 def profession_trainers(creatures, trainer_rows, template_rows, spell_effect, skill_spells):
@@ -345,7 +343,7 @@ def main():
     item_professions = profession_items(
         tables["ItemSparse"], skill_spells, tables["SpellReagents"], tables["SpellTotems"]
     )
-    supplies = vendor_professions(db["npc_vendor"], item_professions)
+    supplies = vendor_item_professions(db["npc_vendor"], item_professions)
     lines = header(
         "DB2 item, spell and skill-line tables; classic-db creature, trainer, battlemaster, vendor and spell tables."
     )
@@ -356,9 +354,9 @@ def main():
         "-- ClassTrainers: [npc] = TrainerClass of a TrainerType 0 trainer; TrainerClass 0 is not a class.",
         "-- PortalTrainers: [npc] = class of a mage trainer whose every taught spell opens or lands at a destination.",
         "-- Battlemasters: [npc] = battleground template, from classic-db battlemaster_entry.",
-        "-- VendorProfessions: [npc] = the profession skill lines its goods supply, from a recipe's RequiredSkill and",
-        "-- the reagents and tools or totems a profession's spells use. An NPC with none is absent: it serves every",
-        "-- character.",
+        "-- ItemProfessions: [item] = the profession skill lines its goods supply, from a recipe's RequiredSkill and",
+        "-- the reagents and tools or totems a profession's spells use, for the items a vendor sells. An item with",
+        "-- none is absent: it serves every character.",
         "",
     ]
     lines += assignment("ns.Food", render_array(food))
@@ -367,12 +365,12 @@ def main():
     lines += assignment("ns.ClassTrainers", render(classes))
     lines += assignment("ns.PortalTrainers", render(portals))
     lines += assignment("ns.Battlemasters", render(battlemasters_by_npc))
-    lines += assignment("ns.VendorProfessions", render_lists(supplies))
+    lines += assignment("ns.ItemProfessions", render_lists(supplies))
     publish({ROOT / "Data" / "Services.lua": "\n".join(lines)})
     print(
         f"Services: {len(food)} food, {len(drink)} drink, {len(professions)} profession trainers, "
         f"{len(classes)} class trainers, {len(portals)} portal trainers, "
-        f"{len(battlemasters_by_npc)} battlemasters, {len(supplies)} vendors with profession goods"
+        f"{len(battlemasters_by_npc)} battlemasters, {len(supplies)} vendor items for professions"
     )
 
 

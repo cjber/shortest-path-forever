@@ -6,12 +6,12 @@ if ns.broken then
 end
 
 -- "Only my professions": the shop rule both Nearby services and the world map's town services follow. A profession
--- trainer shows only for a profession this character has learned. A vendor shows only when its goods supply one of
--- those professions: the recipes it sells name a profession's skill line as their required skill, and the materials
--- it sells are reagents or tools of that profession's spells. A vendor supplying nothing from a profession always
--- shows, as does the option off.
+-- trainer shows only for a profession this character has learned. A vendor is judged row by row: in a group it shows
+-- only when the goods it sells in that group supply one of those professions, so a food seller that also stocks a
+-- cooking reagent keeps its Food row for a character without Cooking. A vendor whose goods in the group supply no
+-- profession always shows, as does the option off.
 --
--- Which professions a vendor supplies comes from Data/Services.lua's VendorProfessions, generated from the client's
+-- Which professions an item supplies comes from Data/Services.lua's ItemProfessions, generated from the client's
 -- item, spell and skill-line tables and classic-db's vendor inventories. The game's titles are never read: they are
 -- text, and a supplier called Trade Supplies names no profession at all.
 --
@@ -19,7 +19,7 @@ end
 
 ---@class SPFNearbyProfessionsAPI
 ---@field Learned fun(): table<integer, boolean> the professions this character has learned
----@field Shown fun(group: SPFNearbyGroup?, place: SPFNearbyPlace|SPFTownService?): boolean whether a service shows with the filter on
+---@field Shown fun(group: SPFNearbyGroup?, place: SPFNearbyPlace|SPFTownService?, items?: integer[]): boolean
 local Professions = {}
 ns.NearbyProfessions = Professions
 
@@ -46,13 +46,23 @@ function Professions.Learned()
 	return Collect({}, GetProfessions())
 end
 
+-- The goods a vendor sells in the group being judged, looked up from the list that indexed them.
+---@param group SPFNearbyGroup
+---@param place SPFNearbyPlace|SPFTownService
+---@return integer[]?
+local function GroupItems(group, place)
+	local services = ns.NearbyServices
+	return services and services.Items and services.Items(group.key, place.id)
+end
+
 -- Whether a place shows under the filter: a profession trainer only for a profession this character has learned, and
--- a vendor only when one of the professions its goods supply is learned. Every other service shows, and the option
--- off shows everything.
+-- a vendor only when the goods it sells in the group supply a learned profession. Every other service shows, and the
+-- option off shows everything.
 ---@param group SPFNearbyGroup?
 ---@param place SPFNearbyPlace|SPFTownService?
+---@param items? integer[] the goods the place sells in the group, which a vendor is judged by
 ---@return boolean
-function Professions.Shown(group, place)
+function Professions.Shown(group, place, items)
 	if not (ns.db and ns.db.onlyMyProfessions) then
 		return true
 	end
@@ -63,14 +73,19 @@ function Professions.Shown(group, place)
 	if not (group and group.section == "vendors" and place) then
 		return true
 	end
-	local supplied = ns.VendorProfessions and ns.VendorProfessions[place.id]
+	local supplied = ns.ItemProfessions
 	if not supplied then
 		return true
 	end
-	for _, skill in ipairs(supplied) do
-		if learned[skill] then
-			return true
+	items = items or GroupItems(group, place)
+	local any = false
+	for _, itemID in ipairs(items or {}) do
+		for _, skill in ipairs(supplied[itemID] or {}) do
+			any = true
+			if learned[skill] then
+				return true
+			end
 		end
 	end
-	return false
+	return not any
 end

@@ -17,7 +17,7 @@
 ---@field ClassTrainers table<number, number> class trainer NPC -> its class (Data/Services.lua)
 ---@field PortalTrainers table<number, number> portal trainer NPC -> its class (Data/Services.lua)
 ---@field Battlemasters table<number, number> battlemaster NPC -> its battleground template (Data/Services.lua)
----@field VendorProfessions table<number, number[]> vendor NPC -> the profession skill lines its goods supply (Data/Services.lua)
+---@field ItemProfessions table<number, number[]> item -> the profession skill lines its goods supply, for the items a vendor sells (Data/Services.lua)
 ---@field Walks table<number, table<string, (number|false)[]>>
 ---@field WalkPlaces table<number, table<string, number[]>>
 ---@field RoadCells table<number, table<number, string>>

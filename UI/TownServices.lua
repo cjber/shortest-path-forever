@@ -232,6 +232,18 @@ local function Drawn(group)
 	return group.key ~= "flight"
 end
 
+-- The goods the NPC sells in one group, which the "Only my professions" rule judges a vendor by.
+---@param group SPFNearbyGroup
+---@param entry SPFTownService
+---@return integer[]?
+local function GroupItems(group, entry)
+	if not (ns.db and ns.db.onlyMyProfessions) then
+		return nil
+	end
+	local services = ns.NearbyServices
+	return services.Items and services.Items(group.key, entry.id)
+end
+
 -- The NPC's own mark: the most useful service it offers that still shows, so hiding one leaves the next best icon.
 ---@param entry SPFTownService
 ---@return SPFNearbyGroup?
@@ -241,7 +253,7 @@ local function Primary(entry)
 		if
 			Drawn(group)
 			and GroupShown(group)
-			and ns.NearbyProfessions.Shown(group, entry)
+			and ns.NearbyProfessions.Shown(group, entry, GroupItems(group, entry))
 			and (not best or (RANK[group.section] or 0) < (RANK[best.section] or 0))
 		then
 			best = group
@@ -330,7 +342,7 @@ local function Shown(entry, level)
 			if
 				(group.section == "trainers" or IMPORTANT[group.key])
 				and GroupShown(group)
-				and ns.NearbyProfessions.Shown(group, entry)
+				and ns.NearbyProfessions.Shown(group, entry, GroupItems(group, entry))
 			then
 				return true
 			end
@@ -551,7 +563,12 @@ local function AddTooltip(cluster)
 		GameTooltip_SetTitle(GameTooltip, primary.label)
 		GameTooltip_AddColoredLine(GameTooltip, EntryLine(entry), HIGHLIGHT_FONT_COLOR)
 		for _, group in ipairs(entry.groups) do
-			if group ~= primary and Drawn(group) and GroupShown(group) and ns.NearbyProfessions.Shown(group, entry) then
+			if
+				group ~= primary
+				and Drawn(group)
+				and GroupShown(group)
+				and ns.NearbyProfessions.Shown(group, entry, GroupItems(group, entry))
+			then
 				GameTooltip_AddNormalLine(GameTooltip, group.label)
 			end
 		end
@@ -570,7 +587,7 @@ local function AddTooltip(cluster)
 						group ~= shared
 						and Drawn(group)
 						and GroupShown(group)
-						and ns.NearbyProfessions.Shown(group, point.entry)
+						and ns.NearbyProfessions.Shown(group, point.entry, GroupItems(group, point.entry))
 						and not seen[group.key]
 					then
 						seen[group.key] = true
@@ -586,7 +603,12 @@ local function AddTooltip(cluster)
 			local seen = {}
 			for _, point in ipairs(cluster.services) do
 				for _, group in ipairs(point.entry.groups) do
-					if Drawn(group) and GroupShown(group) and not seen[group.key] then
+					if
+						Drawn(group)
+						and GroupShown(group)
+						and ns.NearbyProfessions.Shown(group, point.entry, GroupItems(group, point.entry))
+						and not seen[group.key]
+					then
 						seen[group.key] = true
 						GameTooltip_AddNormalLine(GameTooltip, group.label)
 					end
