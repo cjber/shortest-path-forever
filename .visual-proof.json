@@ -1,34 +1,20 @@
 {
-  "input_digest": "23ffce4154f9970939f55e060286d8440062b5a8e228cd4a3d70d565df53862e",
-  "runtime_sha256": "23ffce4154f9970939f55e060286d8440062b5a8e228cd4a3d70d565df53862e",
-  "candidate": "e88ebd2519e777a1a544bee78de6cac7f3f6f19b3e2137820c06b8236c25de13",
+  "input_digest": "7025ecdbf0ddcc0387f995aeb9ea535f666d765081f6b902c70b8fb50963b5b4",
+  "runtime_sha256": "7025ecdbf0ddcc0387f995aeb9ea535f666d765081f6b902c70b8fb50963b5b4",
+  "candidate": "08a984f01a043dadbf3a7ec2900fc09660e10514a4105f5c60e659c846895232",
   "client_build": "1.60.1.70938 (Interface 16001)",
   "tested_artifact": "source-tree",
-  "source_commit": "8cbb370d6a12cc07b91ebd81a9ed93a4fef8ba0c",
+  "source_commit": "8493b96ba7ded42a12376d97917b1eb2cea803b8",
   "flows": [
     {
-      "name": "services read saved",
-      "steps": [
-        "spf-nearby-warm.lua sha256:3c6b2fd37e4635da5242a50ed3dea2c98875be325cf4b4589edf8f3fcdef4749"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "only my professions option",
-      "steps": [
-        "spf-mapmarks-on.lua sha256:02121d5c33b164b01e63a4c0eb8630a11a05d6995bb48f7a3249e06f147c4df7"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "stormwind filtered",
+      "name": "only my professions on",
       "steps": [
         "spf-map-true.lua sha256:b96cde2dd71e491a1922be6e14d7fa7ea8a44590b8cbb2927de8918ab225c815"
       ],
       "result": "pass"
     },
     {
-      "name": "stormwind all services",
+      "name": "only my professions off",
       "steps": [
         "spf-map-false.lua sha256:c5c667a8d2d4b9a0eb7df32e05f327c7cb49a0e96e90e3850315a0602c2f8765"
       ],
@@ -37,20 +23,12 @@
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/7f4881c81d211bda8762f8da46ce7751/raw/7f64b5af797a6e3935ff78b958b1782659175a19/1-services-read-saved.png",
-      "sha256": "3fe5ef05bb2016233fb7f6956dce5b6cadd8eded811e6ee5f113606bf7e9fb01"
+      "url": "https://gist.githubusercontent.com/cjber/e9a6409f42379738f808623ea70fe0f8/raw/7806a93b1174ab38fe58f036e8cbd01ea9fb872a/1-only-my-professions-on.png",
+      "sha256": "d808cdcd6c064c15be9bf0fbbbee9693cef657548f31b70f6d3fd3b0b0cc0acc"
     },
     {
-      "url": "https://gist.githubusercontent.com/cjber/7f4881c81d211bda8762f8da46ce7751/raw/7f64b5af797a6e3935ff78b958b1782659175a19/2-only-my-professions-option.png",
-      "sha256": "a2c986fd7f8d67063eee63c6a857b08cd8f84da7bb245ebc45e3a3bde048b6a7"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/7f4881c81d211bda8762f8da46ce7751/raw/7f64b5af797a6e3935ff78b958b1782659175a19/3-stormwind-filtered.png",
-      "sha256": "2eb85159fcf033e67817f7d6df82af75ad5051a36e6dbd35332d7ed145eec5af"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/7f4881c81d211bda8762f8da46ce7751/raw/7f64b5af797a6e3935ff78b958b1782659175a19/4-stormwind-all-services.png",
-      "sha256": "e2125de28fa28ecb6a33a4da29c25603e349c124ac46c6cff004e87f05b273de"
+      "url": "https://gist.githubusercontent.com/cjber/e9a6409f42379738f808623ea70fe0f8/raw/7806a93b1174ab38fe58f036e8cbd01ea9fb872a/2-only-my-professions-off.png",
+      "sha256": "5c3e2cff07922e6ed33e25c1b99961602c7d2a9d014c249a4e701f9df830a3dc"
     }
   ]
 }
