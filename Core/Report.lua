@@ -8,8 +8,9 @@ end
 -- Shortest Path's own lines in /path report (ForeverCore's report window; the pattern is
 -- cjber/adventure-guide-forever docs/report-window.md): the travel settings, the bind point, the ride and, with
 -- /path debug on, the last samples of its trace, then the corpse run and the journey with its goal and every step
--- of its plan. The steps come last, so
--- a long plan is what the report's cap cuts. Read from the journey as it stands, paused or behind a corpse run:
+-- of its plan. Compact steps precede walk evidence, with the active walk first, so
+-- earlier walks do not crowd the active step out of the report's cap. Read from the journey as it stands,
+-- paused or behind a corpse run:
 -- nothing is planned or searched for the report. Field labels are English; place names are the client's.
 
 local TRACE_SHOWN = 5
@@ -43,6 +44,51 @@ local function Place(point)
 	return ("continent %s %.0f, %.0f"):format(tostring(point.map), point.x, point.y)
 end
 
+-- Keep nil distinct from a real zero, and retain the exact world coordinates given to the walk search.
+---@param value any
+---@return string
+local function Value(value)
+	if value == nil then
+		return "unknown"
+	end
+	return type(value) == "number" and ("%.17g"):format(value) or tostring(value)
+end
+
+---@param point SPFPoint
+---@return string
+local function Endpoint(point)
+	return ("map %s x %s y %s z %s"):format(Value(point.map), Value(point.x), Value(point.y), Value(point.z))
+end
+
+---@param lines string[]
+---@param leg SPFLeg
+---@param position integer
+local function WalkEvidence(lines, leg, position)
+	lines[#lines + 1] = ("    Walk %d: "):format(position) .. Endpoint(leg.from) .. " -> " .. Endpoint(leg.to)
+	lines[#lines + 1] = ("    Geometry: measured %s, drawn %s, placeholder %s, deferred %s; estimated cost %s"):format(
+		Value(leg.measured),
+		Value(leg.walkDrawn),
+		Value(leg.walkPlaceholder),
+		Value(leg.walkDeferred),
+		Value(leg.estimated)
+	)
+	local data = ShortestPathForeverPathData and ShortestPathForeverPathData[leg.from.map]
+	if data then
+		lines[#lines + 1] = (
+			"    Nav map %s: format %s, cells %s, zstep %s, steep %s, climbChecked %s" .. "; revision unknown"
+		):format(
+			Value(leg.from.map),
+			Value(data.format),
+			Value(data.cells),
+			Value(data.zstep),
+			Value(data.steep),
+			Value(data.climbChecked)
+		)
+	else
+		lines[#lines + 1] = "    Nav map " .. Value(leg.from.map) .. ": unknown"
+	end
+end
+
 -- Each step as the tracker times it (its own span, the wait apart), the one under way marked, and why a walk failed.
 ---@param lines string[]
 ---@param legs SPFLeg[]
@@ -58,6 +104,15 @@ local function Steps(lines, legs, index)
 			leg.wait and leg.wait > 0 and (", waits %ds"):format(Seconds(leg.wait)) or "",
 			leg.walkError and (", walk failed: %s"):format(leg.walkError) or ""
 		)
+	end
+	local active = legs[index]
+	if active and active.mode == "walk" then
+		WalkEvidence(lines, active, index)
+	end
+	for position, leg in ipairs(legs) do
+		if position ~= index and leg.mode == "walk" then
+			WalkEvidence(lines, leg, position)
+		end
 	end
 end
 
@@ -109,6 +164,9 @@ function ns.ReportLines()
 			OnOff(db.guidelime)
 		),
 	}
+	lines[#lines + 1] = (
+		"Current walk settings: avoidHighZones %s, followRoads %s, roadDetour %s, " .. "useWaterWalking %s"
+	):format(Value(db.avoidHighZones), Value(db.followRoads), Value(db.roadDetour), Value(db.useWaterWalking))
 	local bind = ns.charDB.bind
 	lines[#lines + 1] = ("Bind point: %s"):format(bind and (bind.name .. ", " .. Place(bind)) or "not known")
 	local known = {}
@@ -150,6 +208,7 @@ function ns.ReportLines()
 	)
 	local plan, index = ns.JourneyPlan()
 	if plan then
+		lines[#lines + 1] = "Plan water walking: " .. Value(plan.waterMode)
 		Steps(lines, plan.legs, index)
 	else
 		lines[#lines + 1] = "Plan: none yet"
