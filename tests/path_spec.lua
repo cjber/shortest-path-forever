@@ -134,6 +134,16 @@ for _, pin in ipairs({ { -8840.56, 489.7, 0, -20 }, { -8346.46, 514.031, 8, 0 } 
 	assert(p, "no mesh at pin " .. pin[1] .. "," .. pin[2])
 end
 
+-- Separate doors on one cluster border keep their own entrances even when the rooms join elsewhere (#910).
+-- The source collision connects these places through the northeast corridor, not the Military Ward loop.
+local EXPLORERS = { x = -4739.1, y = -1248, z = 502 }
+local TINKER_TOWN = { x = -4788.7, y = -1249.6, z = 503 }
+for _, ends in ipairs({ { EXPLORERS, TINKER_TOWN }, { TINKER_TOWN, EXPLORERS } }) do
+	pts, len = Path.FindSync(0, ends[1], ends[2])
+	assert(pts and len < 400, len)
+	assert(passes(pts, -4804, -1278) < 15, "misses Ironforge's connecting corridor")
+end
+
 -- Levels: a road through a tunnel under walkable ground, and a city under a city.
 -- Ironforge to Menethil crosses the mountains north, no face steeper than 50 degrees on the way up, rather than round
 -- by Arathi (about 18,600 yards on one level).
@@ -193,7 +203,7 @@ for _, target in ipairs({
 	assert(done)
 end
 
--- The yards a drawn segment spends over water, sampled along it as the router walks the cells it crosses.
+-- Base-water yards for the flat beach and water fixtures below. Layered routes need their own floor checks.
 local function wetYards(map, a, b)
 	local Grid, st = ns.PathGrid, ns.PathGrid.State(map)
 	local length = dist(a.x, a.y, b.x, b.y)
@@ -227,9 +237,19 @@ for i = 2, #bay do
 end
 assert(bayTime <= bayCost, ("the drawn walk is no slower than its route: %.1f against %.1f"):format(bayTime, bayCost))
 
--- A walk that really swam a stretch is still pulled straight across that water: both ends here stand on land, and one
--- drawn segment crosses the water the path's own entries swam.
-local STRAIT_EAST, STRAIT_WEST = { x = -14961.19, y = 274.63 }, { x = -14897.51, y = 274.63 }
+-- The finer entrance graph finds the dry floor above the strait's water. Its explicit downward landing reaches
+-- the shore; sampling only the base water would mistake this layered walk for a swim.
+local dryStrait, dryCost = Path.FindSync(0, { x = -14961.19, y = 274.63 }, { x = -14897.51, y = 274.63 })
+assert(dryStrait and dryStrait.wet == 0 and dryCost < 140, "the strait's dry floor reaches the shore")
+local StraitGrid, straitState = ns.PathGrid, ns.PathGrid.State(0)
+local floorK, floorCell = StraitGrid.locate(straitState, -14969.154228856, 282.58706467662)
+local floorValues = StraitGrid.grid(straitState, floorK)
+local floorNode = StraitGrid.surface(straitState, floorK, floorCell, 1, 14)
+assert(floorValues[floorCell + 1] == 2 and floorNode and floorValues[floorNode + 1] == 1)
+assert(straitState.z[floorK][floorNode + 1] == 14, "the dry floor is above the base water")
+
+-- Nearby, a walk that really swims is still pulled straight across the water its own entries swam.
+local STRAIT_EAST, STRAIT_WEST = { x = -14961.19, y = 250.63 }, { x = -14897.51, y = 250.63 }
 local strait, straitCost = Path.FindSync(0, STRAIT_EAST, STRAIT_WEST)
 assert(strait and straitCost and strait.wet > 15, "the strait walk swims")
 local swam = 0

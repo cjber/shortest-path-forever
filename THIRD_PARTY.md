@@ -184,6 +184,7 @@ Credit for the reports and requests behind the addon.
 | Crypa7 | Walk to a new flight master before flying | CurseForge; #868; thread 8706618 |
 | ghuff07 | Dugi Guides can lead the journey | CurseForge; #689 |
 | nimri82 | The public guidance point for RestedXP-Navigator | CurseForge; #777 |
+| [cmartin303](https://github.com/cmartin303) | Short walks through Ironforge keep nearby doorways | GitHub; #910 |
 
 ## Inspired by
 

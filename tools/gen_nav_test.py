@@ -305,6 +305,61 @@ class GraphLegalityTest(unittest.TestCase):
         with self.world(heights, cuts, links, nx=2, ny=ny) as (grid, g):
             return gen_nav.grid_hpa(grid, set(cuts))[1], g, grid
 
+    def test_separate_doorways_in_the_same_components_keep_their_entrances(self):
+        # Each side joins the two doors behind the wall. Grouping by whole-cluster component alone kept only
+        # one door, so a short walk through the other took the long way round (Ironforge, #910).
+        c = gen_nav.CELLS
+        for transpose in (False, True):
+            with self.subTest(transpose=transpose):
+                nx, ny = (1, 2) if transpose else (2, 1)
+
+                def cell(x, y, ny=ny, transpose=transpose):
+                    return y * ny * c + x if transpose else x * ny * c + y
+
+                heights = {
+                    cell(x, y): (1, 0.0)
+                    for x in range(c - 2, c + 2)
+                    for y in range(10, 21)
+                    if x in (c - 2, c + 1) or y in (10, 20)
+                }
+                with self.world(heights, nx=nx, ny=ny) as (grid, _):
+                    edges = gen_nav.grid_hpa(grid, set())[1]
+                for y in (10, 20):
+                    u, v = cell(c - 1, y), cell(c, y)
+                    self.assertIn((u, v), edges)
+                    self.assertIn((v, u), edges)
+
+    def test_separate_floor_doorways_keep_each_layers_entrances(self):
+        c = gen_nav.CELLS
+        cells = {x * c + y for x in range(c - 2, c + 2) for y in range(10, 21) if x in (c - 2, c + 1) or y in (10, 20)}
+        # Two disconnected storeys occupy the same cells. Each storey's two doors belong to the same pair of
+        # cluster components, but neither the other door nor the other storey may replace one of its entrances.
+        with self.world({cell: (1, 0.0) for cell in cells}, nx=2) as (grid, _):
+            floors = {}
+            for cell in sorted(cells):
+                for layer, z in enumerate((30, 60), 1):
+                    node = len(grid) + len(gen_nav.FLOOR_CELL)
+                    floors[cell, layer] = node
+                    gen_nav.FLOOR_CELL.append(cell)
+                    gen_nav.FLOOR_VAL.append(1)
+                    gen_nav.FLOOR_Z.append(z)
+                    gen_nav.FLOOR_LAYER.append(layer)
+                    gen_nav.FLOORS_OF[gen_nav.cluster_of_cell(node)].append(node)
+                    gen_nav.FLOORS_AT.setdefault(cell, []).append(node)
+            for (cell, layer), node in floors.items():
+                x, y = divmod(cell, c)
+                for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+                    other = floors.get(((x + dx) * c + y + dy, layer))
+                    if other is not None:
+                        gen_nav.LINKS[node][other] = None
+                gen_nav.LINKED_OF[gen_nav.cluster_of_cell(node)].append(node)
+            edges = gen_nav.grid_hpa(grid, set())[1]
+            for layer in (1, 2):
+                for y in (10, 20):
+                    u, v = floors[(c - 1) * c + y, layer], floors[c * c + y, layer]
+                    self.assertIn((u, v), edges)
+                    self.assertIn((v, u), edges)
+
     def test_clusters_that_meet_at_a_corner_keep_the_crossings_between_them(self):
         # Four clusters; the only walkable cells are the two corner cells of clusters 0 and 3, which touch diagonally.
         # The runtime walks the bake's explicit diagonal between them, and a drop record may land across the corner,

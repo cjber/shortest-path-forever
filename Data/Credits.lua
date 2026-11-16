@@ -133,6 +133,7 @@ ns.Credits = {
 		{ name = "Crypa7", what = "Walk to a new flight master before flying" },
 		{ name = "ghuff07", what = "Dugi Guides can lead the journey" },
 		{ name = "nimri82", what = "The public guidance point for RestedXP-Navigator" },
+		{ name = "cmartin303", what = "Short walks through Ironforge keep nearby doorways" },
 	},
 	inspired = {
 		{ name = "Polestar by Fitz", what = "Ideas for many features" },

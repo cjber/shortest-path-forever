@@ -89,6 +89,23 @@ but lack an authoritative tile inventory and cannot prove extraction completenes
 original source label by default; new TrinityCore bakes supply their own source and recipe label.
 A bake never regenerates the walking maps shipped in the repository.
 
+For a graph-only change, the stored grids can supply the graph builder without extracting or rasterizing terrain:
+
+```sh
+python3 tools/refresh_nav_graph.py Nav/Nav0.lua "$HOME/.cache/agent-scratch/spf-graph/Nav0.lua" --jobs 1
+```
+
+Repeat for each map, then pass the resulting raw files to `tools/pack_nav.py`. The output directory must exist.
+`--inspect` counts the entrances and changed clusters without running the intra-cluster searches. Grid, height,
+floor and terrain fields stay byte-identical. The graph uses stored heights and whole-yard drop costs, as the
+runtime does, so its costs can differ from a native bake's unrounded intermediate costs.
+
+The original `Generator` stays attached to the collision fields. `Graph generator` hashes the current generator,
+refresh decoder, packed reader, road data and compatibility declaration; `Graph input` hashes the collision fields.
+`tools/check_nav.py` verifies these hashes. `graph_compatibility.json` permits only reviewed exact producer
+transitions with unchanged collision output. Any further producer edit invalidates that declaration. A geometry
+change requires a terrain bake, rather than a graph refresh.
+
 ## Walking maps
 
 The Python generator builds HPA* graphs and 8-yard grids from Detour polygons. It keeps overlapping walkable

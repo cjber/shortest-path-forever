@@ -897,6 +897,7 @@ def run_clusters(work, keys, jobs):
 
 def cluster_regions(k):
     """Cluster k's strongly connected parts as (node, label) pairs, under the grid's own directed steps."""
+    assert _HPA is not None
     grid, cuts, _ = _HPA
     g = lambda gx, gy: grid[gx * GH + gy]  # noqa: E731
     box = cluster_box(k)
@@ -909,7 +910,9 @@ def cluster_regions(k):
 def cluster_edges(k):
     """Cluster k's intra-cluster edges between its entrances: Dijkstra under each of WEIGHTS, dropped when a
     two-hop path is within PRUNE under every weight."""
+    assert _HPA is not None
     grid, cuts, nodes = _HPA
+    assert nodes is not None
     g = lambda gx, gy: grid[gx * GH + gy]  # noqa: E731
     found = {}
     cells = nodes[k]
@@ -957,11 +960,12 @@ def cluster_edges(k):
     return found
 
 
-def grid_hpa(grid, cuts, jobs=1):
+def grid_entrances(grid, cuts, jobs=1):
     """HPA* over the grid. Every border crossing (orthogonal or diagonal) is grouped by the strongly connected parts
     of its two clusters it leaves and enters, in the direction it is walked: a crossing into a part the route cannot
     leave, or out of a part the route cannot reach, is of no use to it, so one entrance per such group guarantees a
-    route wherever the grid has one. Each group keeps an entrance every ENTRANCE_RUN cells. Intra-cluster edges come
+    route wherever the grid has one. Each contiguous border run keeps an entrance every ENTRANCE_RUN crossings.
+    Separate doorways keep separate entrances even when both clusters join them elsewhere. Intra-cluster edges come
     from Dijkstra under each of WEIGHTS, dropped when a two-hop path is within PRUNE under every weight. An edge
     carries a cost per weight."""
     global _HPA
@@ -999,23 +1003,29 @@ def grid_hpa(grid, cuts, jobs=1):
                     groups[(region[u], region[w])].append((t, int(wx != ux and wy != uy), u, w, cost))
 
     def entrances(groups):
-        """Each group's entrances, one every ENTRANCE_RUN crossings, with the edge the crossing walks."""
+        """Each contiguous run's entrances, with the edge the crossing walks."""
         for crossings in groups.values():
             # A crossing carries its cost: None for an ordinary step, a float for a drop. Two identical crossings
             # (a step and a drop over the same pair) would make the tuple comparison fall through to the cost and
             # raise, so the order is the crossing itself and an ordinary step wins a tie (its reverse is a step).
             crossings.sort(key=lambda c: (c[0], c[1], c[2], c[3], c[4] is not None))
-            for i in range(0, len(crossings), ENTRANCE_RUN):
-                chunk = crossings[i : i + ENTRANCE_RUN]
-                mid = chunk[len(chunk) // 2][0]
-                # prefer orthogonal, then the crossing nearest the chunk's middle
-                _, diagonal, u, v, cost = min(chunk, key=lambda c: (c[1], abs(c[0] - mid)))
-                if cost is not None:
-                    edges[(u, v)] = tuple(cost for _ in WEIGHTS)
-                else:
-                    edges[(u, v)] = step_into(u, v, diagonal)
-                nodes[cluster_of_cell(u)].add(u)
-                nodes[cluster_of_cell(v)].add(v)
+            # A wall between openings ends a run. Whole-cluster connectivity does not make that wall a doorway:
+            # choosing one opening for both can send a walk around an entire district (#910).
+            ends = [i for i in range(1, len(crossings)) if crossings[i][0] > crossings[i - 1][0] + 1]
+            first = 0
+            for end in [*ends, len(crossings)]:
+                for i in range(first, end, ENTRANCE_RUN):
+                    chunk = crossings[i : min(i + ENTRANCE_RUN, end)]
+                    mid = chunk[len(chunk) // 2][0]
+                    # prefer orthogonal, then the crossing nearest the chunk's middle
+                    _, diagonal, u, v, cost = min(chunk, key=lambda c: (c[1], abs(c[0] - mid)))
+                    if cost is not None:
+                        edges[(u, v)] = tuple(cost for _ in WEIGHTS)
+                    else:
+                        edges[(u, v)] = step_into(u, v, diagonal)
+                    nodes[cluster_of_cell(u)].add(u)
+                    nodes[cluster_of_cell(v)].add(v)
+                first = end
             # A road crosses a border at a few points, often midway between the grid's entrances. Place an entrance
             # at each road-to-road crossing too, so a road-following walk does not leave the road to reach one
             # (#892). Roads come from Data/RoadCells.lua; without them nothing is added.
@@ -1069,6 +1079,14 @@ def grid_hpa(grid, cuts, jobs=1):
                     groups[(region[u], region[w])].append((0, 1, u, w, None))
             records(groups, k, (kx + 1) * NY + ky + dy, None)
             entrances(groups)
+    _HPA = None
+    return nodes, edges
+
+
+def grid_hpa(grid, cuts, jobs=1):
+    """Build the border entrances, then their weighted paths inside each cluster."""
+    global _HPA
+    nodes, edges = grid_entrances(grid, cuts, jobs)
     inter = len(edges)
     _HPA = (grid, cuts, nodes)
     for found in run_clusters(cluster_edges, sorted(nodes), jobs):
@@ -1078,7 +1096,7 @@ def grid_hpa(grid, cuts, jobs=1):
     return nodes, edges
 
 
-def encode_map(nodes, edges, grid, cuts):
+def encode_map(nodes, edges, grid, cuts, *, collision=True):
     cells = sorted(c for cs in nodes.values() for c in cs)
     parent = {c: c for c in cells}
 
@@ -1133,6 +1151,8 @@ def encode_map(nodes, edges, grid, cuts):
                     costs = "".join(enc(round(w), 2) for w in d)  # 4095 is ample: the longest baked is 2357
                     erec.append(enc((dx + 1) * 3 + dy + 1, 1) + enc(local[m], 2) + costs)
             graph[k] = "".join(rec) + "".join(erec)
+        if not collision:
+            continue
         vals = []
         for i in range(CELLS):
             for j in range(CELLS):

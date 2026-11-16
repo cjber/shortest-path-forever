@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "generator": "5146eb566baf151b1dcc1acbbb99ead1dc6b3c1eb9c7c0ea878dc054abb2aedb",
+  "collision_generators": [
+    "35d8a83e5bf1b7cde01f22c1b4baa7154b33c15aa07854ff731e8dcce96149ec"
+  ],
+  "reason": "#910 changes HPA entrance selection and graph serialization only; all collision fields remain byte-identical."
+}
