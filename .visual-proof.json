@@ -1,10 +1,10 @@
 {
-  "input_digest": "7554e182c542785e623ae2811c28ffbce547e1d9deeebeb67cbda38958a81904",
-  "runtime_sha256": "7554e182c542785e623ae2811c28ffbce547e1d9deeebeb67cbda38958a81904",
-  "candidate": "c0106d71d1eb4db18f4e52b6ff025a8888ac678e6e4a7dc3d52bd252a0eb635c",
+  "input_digest": "6846db34a365ee19de59a7425c08d5ca3bda20b4a46f213c51b8692e9387c29a",
+  "runtime_sha256": "6846db34a365ee19de59a7425c08d5ca3bda20b4a46f213c51b8692e9387c29a",
+  "candidate": "272765a132d697404076504ea021cc86f003968c282487024f45d788b46d2690",
   "client_build": "1.60.1.70938 (Interface 16001)",
   "tested_artifact": "source-tree",
-  "source_commit": "bef2e6f7a2ce27a0ad213a3b5c48905920296686",
+  "source_commit": "ba75b0be175eddcb1c696be0f92592630e265d48",
   "flows": [
     {
       "name": "only my professions on",
@@ -23,12 +23,12 @@
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/2fa465a393b57d8cbbf500c83ec8959e/raw/9d59fcb470a659cbc6fb85a7ec5aee73136bb5ea/1-only-my-professions-on.png",
-      "sha256": "dc02113706cca4a61240aafdff913faa01601890cee4570e2af03856457870c3"
+      "url": "https://gist.githubusercontent.com/cjber/f186f628567667f4d31384a5d8f03821/raw/02f9a1d0500ffb0c98a2316083ac964146ac265d/1-only-my-professions-on.png",
+      "sha256": "135efb305735b6dd91bfd308d3f1cbee17856aced3eec4b26523c1fe3d45ee6e"
     },
     {
-      "url": "https://gist.githubusercontent.com/cjber/2fa465a393b57d8cbbf500c83ec8959e/raw/9d59fcb470a659cbc6fb85a7ec5aee73136bb5ea/2-town-services-on-a-first-login.png",
-      "sha256": "e3f187b85bfa39627ec67e899db8e61516565e8a60fa4ef081e22196799536f6"
+      "url": "https://gist.githubusercontent.com/cjber/f186f628567667f4d31384a5d8f03821/raw/02f9a1d0500ffb0c98a2316083ac964146ac265d/2-town-services-on-a-first-login.png",
+      "sha256": "d708eb1766931ff56b369b9c43f4e53eb044b0bdbc2f329fb0f7c2128691d7ad"
     }
   ]
 }
