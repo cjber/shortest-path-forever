@@ -1,34 +1,23 @@
 {
-  "input_digest": "7025ecdbf0ddcc0387f995aeb9ea535f666d765081f6b902c70b8fb50963b5b4",
-  "runtime_sha256": "7025ecdbf0ddcc0387f995aeb9ea535f666d765081f6b902c70b8fb50963b5b4",
-  "candidate": "08a984f01a043dadbf3a7ec2900fc09660e10514a4105f5c60e659c846895232",
+  "input_digest": "d2c0c5521f3ec008fed82b9e7310978e8f5a78f1642cd5020ca15cfbbcb36f4f",
+  "runtime_sha256": "d2c0c5521f3ec008fed82b9e7310978e8f5a78f1642cd5020ca15cfbbcb36f4f",
+  "candidate": "31507865f45803f1fac10be29612b3948dda8ac881a998b97b995dcf877973e6",
   "client_build": "1.60.1.70938 (Interface 16001)",
   "tested_artifact": "source-tree",
-  "source_commit": "8493b96ba7ded42a12376d97917b1eb2cea803b8",
+  "source_commit": "ff0ed0fc0d8659acbd298ac2ea4ca6547001bf9d",
   "flows": [
     {
-      "name": "only my professions on",
+      "name": "dugi-loads",
       "steps": [
-        "spf-map-true.lua sha256:b96cde2dd71e491a1922be6e14d7fa7ea8a44590b8cbb2927de8918ab225c815"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "only my professions off",
-      "steps": [
-        "spf-map-false.lua sha256:c5c667a8d2d4b9a0eb7df32e05f327c7cb49a0e96e90e3850315a0602c2f8765"
+        "flow-loaded.lua sha256:c8e59cfcb99a2d0de4791ca6560966b7368fced7d41d3e91ee329cf674ab5900"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/e9a6409f42379738f808623ea70fe0f8/raw/7806a93b1174ab38fe58f036e8cbd01ea9fb872a/1-only-my-professions-on.png",
-      "sha256": "d808cdcd6c064c15be9bf0fbbbee9693cef657548f31b70f6d3fd3b0b0cc0acc"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/e9a6409f42379738f808623ea70fe0f8/raw/7806a93b1174ab38fe58f036e8cbd01ea9fb872a/2-only-my-professions-off.png",
-      "sha256": "5c3e2cff07922e6ed33e25c1b99961602c7d2a9d014c249a4e701f9df830a3dc"
+      "url": "https://gist.githubusercontent.com/cjber/134eca4b45b649d3b35874a26dbf7cb6/raw/fd4550994fea10d12e0efdca80679125a55454b8/1-dugi-loads.png",
+      "sha256": "7eadf1e187b07be39f27c8a5964aab3cc6b4be583e1e304a422f650f04427eab"
     }
   ]
 }
