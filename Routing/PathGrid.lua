@@ -1450,11 +1450,11 @@ end
 ---@param spent number
 ---@param yards number
 ---@param water boolean
----@param budget number
+---@param budget number?
 ---@return number|nil
 local function pace(swim, spent, yards, water, budget, ratio)
 	local time = spent + (water and yards * swim or yards) * (ratio or 1)
-	return time <= budget and time or nil
+	return (not budget or time <= budget) and time or nil
 end
 
 -- Line of sight between two path entries, walking every cell the segment between their cell centres crosses and
@@ -1549,12 +1549,16 @@ end
 -- the segment replaces. With a budget, its own time is charged the way sight charges a pulled segment and the segment
 -- is refused once it would take longer than the walk it replaces. Returns the cluster and node it reaches in the end's
 -- cell; or, when a step is closed, nil and whether every cell from the closed one to the end has no surface at all
--- (the line only runs on into a point the grid has no surface for).
+-- (the line only runs on into a point the grid has no surface for). The third result measures the complete connector
+-- with the same destination-surface intervals, including the terminal tail; real suppresses road preference.
 ---@param P SPFPathPoints
 ---@param limit number?
 ---@param budget number?
-local function toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget)
-	local factor = P.factor
+---@param real boolean? -- measure real travel time without road preference
+---@return number|nil, number|boolean, number? -- reached surface or bare status, and complete connector time
+local function toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget, real)
+	local factor = limit and P.factor
+	local roadFactor = not real and budget and P.roadFactor
 	local swim = P.swim or st.swim
 	local x, y, ex, ey = floor(fx), floor(fy), floor(tx), floor(ty)
 	local dx, dy = tx - fx, ty - fy
@@ -1601,7 +1605,7 @@ local function toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget)
 				end
 			end
 			x, y = x + mx, y + my
-			if budget then
+			do
 				if reached > 1 then
 					reached = 1
 				end
@@ -1611,7 +1615,8 @@ local function toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget)
 				else
 					wet = value(st, x, y) == 2
 				end
-				local paced = pace(swim, spent, (reached - at) * span, wet, budget)
+				local ratio = roadFactor and (not nk or not roadNode(st, nk, nn)) and roadFactor or 1
+				local paced = pace(swim, spent, (reached - at) * span, wet, budget, ratio)
 				if not paced then
 					return nil, false
 				end
@@ -1623,19 +1628,22 @@ local function toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget)
 			end
 		end
 	end
-	if closed then
-		return nil, true
-	end
 	if x ~= ex or y ~= ey then
 		return nil, false
 	end
-	if budget and at < 1 then -- the rest of the segment, inside the end's own cell
-		local paced = pace(swim, spent, (1 - at) * span, value(st, ex, ey) == 2, budget)
+	if at < 1 then -- the rest of the segment, inside the end's own cell
+		local wet = not closed and st.val[k][node + 1] == 2
+		local ratio = roadFactor and (closed or not roadNode(st, k, node)) and roadFactor or 1
+		local paced = pace(swim, spent, (1 - at) * span, wet, budget, ratio)
 		if not paced then
 			return nil, false
 		end
+		spent = paced
 	end
-	return k, node
+	if closed then
+		return nil, true, spent
+	end
+	return k, node, spent
 end
 
 -- The largest factor a hazard profile charges over path entries first..last, keeping the highest limit already seen:

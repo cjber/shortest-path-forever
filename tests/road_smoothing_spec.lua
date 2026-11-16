@@ -26,7 +26,7 @@ end
 for y = 11, 30 do
 	road[10 * C + y] = true
 end
-st.road[1] = road
+st.road[0] = road
 
 local P = { x = {}, y = {}, w = {}, t = {}, k = {}, n = {}, r = {}, roads = true, roadFactor = 1.5, swim = st.swim }
 local function add(x, y)

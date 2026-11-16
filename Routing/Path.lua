@@ -630,18 +630,23 @@ end
 -- the path entries it replaces. A point standing on a surface must be reached on it, or
 -- leave from it; one with no surface in its cell (inside rock or a building the grid has none for) passes when the
 -- segment runs on into it only across cells with no surface at all.
-local function clearEnd(st, P, j, point, outbound, water, limit)
+local function clearEnd(st, P, j, point, outbound, water, limit, budget, real)
 	local fx, fy, k, node = own(st, point)
 	local cx, cy = P.x[j] + 0.5, P.y[j] + 0.5
 	if outbound and node then
-		local tk, tn = toward(st, P, k, node, fx, fy, cx, cy, water, limit)
-		return tk == P.k[j] and tn == P.n[j]
+		local tk, tn, time = toward(st, P, k, node, fx, fy, cx, cy, water, limit, budget, real)
+		return tk == P.k[j] and tn == P.n[j], time
 	end
-	local tk, tn = toward(st, P, P.k[j], P.n[j], cx, cy, fx, fy, water, limit)
+	-- With no start surface this reverse legality check cannot establish a directed outbound reference.
+	-- Keep the assembled fallback, but do not authorize an optional shortcut from an unmeasured connector.
+	if outbound and real then
+		return false
+	end
+	local tk, tn, time = toward(st, P, P.k[j], P.n[j], cx, cy, fx, fy, water, limit, budget, real)
 	if not tk then
-		return tn == true
+		return tn == true, time
 	end
-	return not node or (tk == k and tn == node)
+	return not node or (tk == k and tn == node), time
 end
 
 -- With no pulled vertex between them, the line is the one chord between the two points: walked whole from a start
@@ -946,15 +951,39 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 	-- An end segment that fails is drawn through its end node's centre first: the string was pulled from there, so the
 	-- rest of the line holds as it did. A chord that fails tries each end that way.
 	local startVia, goalVia = #keep > 2 and keep[2] or n, #keep > 2 and keep[#keep - 1] or 1
+	local startOK, startTime = clearEnd(st, P, 1, from, true, P.w[1] > 0, limitOver(P, 1, 1), nil, true)
+	local goalOK, goalTime =
+		clearEnd(st, P, n, to, false, P.w[n] - (P.w[n - 1] or 0) > 0, limitOver(P, n, n), nil, true)
+	-- P.t is the refined walk's real running-yard prefix, independent of reported/cached search cost.
+	local chordBudget = startOK and goalOK and startTime + P.t[n] - P.t[1] + goalTime
 	local startDetour, goalDetour = false, false
-	if #keep > 2 or not clearChord(st, P, from, to, P.w[n] > 0, limitOver(P, 1, n), cost) then
-		startDetour = not clearEnd(st, P, startVia, from, true, P.w[startVia] > 0, limitOver(P, 1, startVia))
+	if #keep > 2 or not chordBudget or not clearChord(st, P, from, to, P.w[n] > 0, limitOver(P, 1, n), chordBudget) then
+		startDetour = not startOK
+			or not clearEnd(
+				st,
+				P,
+				startVia,
+				from,
+				true,
+				P.w[startVia] > 0,
+				limitOver(P, 1, startVia),
+				startTime + P.t[startVia] - P.t[1]
+			)
 		-- A chord whose start detoured now reaches the goal from the start node's centre.
 		if startDetour and #keep <= 2 then
 			goalVia = 1
 		end
-		goalDetour =
-			not clearEnd(st, P, goalVia, to, false, P.w[n] - (P.w[goalVia - 1] or 0) > 0, limitOver(P, goalVia, n))
+		goalDetour = not goalOK
+			or not clearEnd(
+				st,
+				P,
+				goalVia,
+				to,
+				false,
+				P.w[n] - (P.w[goalVia - 1] or 0) > 0,
+				limitOver(P, goalVia, n),
+				P.t[n] - P.t[goalVia] + goalTime
+			)
 	end
 	local drawn = { 1 }
 	if startDetour then

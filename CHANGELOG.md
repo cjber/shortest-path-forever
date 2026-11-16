@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Follow roads keeps the road at either end of a walk.** Shortcuts from your position or into your destination now respect the road route and the surface you stand on (#891).
+
 - **Turning off the direction arrow hides its cast prompt too.** Turning it back on restores the current item or spell without interrupting cast guidance. Thanks to Zerhathos for the report (#881).
 
 - **Short walks through Ironforge keep nearby doorways.** Walking from the Hall of Explorers to Tinker Town uses the connecting corridor instead of looping through the Military Ward. Thanks to cmartin303 for the report (#910).
