@@ -355,14 +355,20 @@ end
 
 local function Watch()
 	local viewer = DugisGuideViewer
-	if type(viewer) ~= "table" then
+	if type(viewer) ~= "table" or not (ns.db and ns.db.dugi) then
 		return
 	end
-	HookOnce(viewer, "ReloadModules", function()
-		TryHook()
-		Watch()
-		Schedule()
+	-- Dugi 1.087 ReloadModules yields through RestIfNeeded/WaitForCombatEnd. A secure hook
+	-- would put a C boundary around it and break loading. Loading ends with UpdateIconStatus,
+	-- whose button/broker updates do not yield, even when called from the loading coroutine.
+	HookOnce(viewer, "UpdateIconStatus", function()
+		if ns.db and ns.db.dugi then
+			Watch()
+			Schedule()
+		end
 	end)
+	-- These 1.087 callbacks do not yield: ClearScreen updates rows/items, LoadNextGuide queues
+	-- DisplayViewTab in a separate thread, and WaypointsChanged updates arrow/target visuals.
 	-- A guide that is cleared or advanced without a waypoint change still ends its journey.
 	HookOnce(viewer, "ClearScreen", Schedule)
 	HookOnce(viewer, "LoadNextGuide", Schedule)

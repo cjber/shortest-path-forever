@@ -12,6 +12,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Dugi Guides can finish loading.** The Dugi follower no longer interrupts Dugi's module-loading coroutine, and installs no Dugi hooks while *Follow Dugi guides* is off (#689).
 - **Nearby services can show only your professions.** *Only my professions* hides profession trainers and the vendor rows whose goods supply a profession your character has not learned, on the world map and in the Nearby services tab. A vendor is judged row by row by what it sells there, so a food seller that also stocks a cooking reagent keeps its Food row, and a general vendor with nothing for a profession stays. Thanks to zhega for the idea (#914).
 - **Town services appear soon after you log in.** The Nearby services list and the service pins on the world map no longer wait for a journey to finish planning after a login or reload, which could keep them empty for about a minute (#925).
 - **Nearby services load sooner after an update.** Reading town services from QuestieDB now continues while your journey is being planned, so the first read no longer waits for the planner to finish (#929).
