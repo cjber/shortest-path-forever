@@ -349,7 +349,9 @@ local function ReadDatabase()
 		return Scan(fit, flagNames, coroutine.yield)
 	end)
 	local function Pump()
-		if InCombatLockdown() or ns.Path.Busy() then
+		-- Waiting for planner idle frames starves a fresh read after login. Row yields keep
+		-- resumes small, so share planner frames with the existing 1 ms slice, outside combat.
+		if InCombatLockdown() then
 			C_Timer.After(0.1, Pump)
 			return
 		end
