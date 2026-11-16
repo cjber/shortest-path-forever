@@ -139,6 +139,97 @@ ns.Routes = {}
 assert(Context.Options(from, to).routes == ns.Routes, "data tables are read per plan")
 ns.Routes, client.faction, client.speed = routes, "Alliance", 7
 
+-- Count each transport boundary exactly, including the real timetable snapshot producer.
+do
+	local common = Context.Options(from, to)
+	local calls, originals = {}, {}
+	local function count(owner, name)
+		local original = owner[name]
+		originals[#originals + 1] = function()
+			owner[name] = original
+		end
+		calls[name] = 0
+		owner[name] = function(...)
+			calls[name] = calls[name] + 1
+			return original(...)
+		end
+	end
+	local party, times = { { map = 1, x = 60, y = 0 } }, { [1] = 42 }
+	ns.PartyPortalPlaces = function(here)
+		assert(here == from, "party portals use the plan's origin")
+		return party
+	end
+	ns.TaxiTimes = {
+		Snapshot = function()
+			return times
+		end,
+	}
+	count(ns, "UsableTeleports")
+	count(ns, "PartyPortalPlaces")
+	count(ns, "KnownTaxiNodes")
+	count(ns.Timetable, "Anchors")
+	count(ns.TaxiTimes, "Snapshot")
+	local walking = Context.Options(from, to, "walking")
+	local again = Context.Options(from, to, "walking")
+	for name, total in pairs(calls) do
+		assert(total == 0, name .. " must not run for walking: " .. total)
+	end
+	for _, name in ipairs({
+		"taxiKnown",
+		"anchors",
+		"docks",
+		"routes",
+		"taxiNodes",
+		"taxiPaths",
+		"taxiTimes",
+		"portals",
+		"teleports",
+		"teleportReady",
+		"teleportState",
+		"partyPortals",
+	}) do
+		assert(next(walking[name]) == nil and walking[name] == again[name], name .. " stays stably empty")
+	end
+	assert(walking ~= again and walking.routePolicy == "walking", "walking options remain caller-owned")
+	for _, name in ipairs({
+		"from",
+		"to",
+		"now",
+		"walkSpeed",
+		"faction",
+		"otherFaction",
+		"hearthMinimumSavings",
+		"landmasses",
+		"baked",
+	}) do
+		assert(walking[name] == common[name], name .. " remains common to both policies")
+	end
+	client.ride = 9
+	assert(Context.Ride(walking) == nil, "walking cannot retain a current ride")
+	client.ride = nil
+	local normal = Context.Options(from, to, "normal")
+	assert(normal.routePolicy == nil and normal.partyPortals == party and normal.taxiTimes == times)
+	assert(normal.taxiKnown == known and normal.teleports == teleports and normal.teleportReady == ready)
+	assert(normal.teleportState == teleportState and normal.routes == ns.Routes)
+	local oldKnown, oldTeleports, oldReady, oldState = known, teleports, ready, teleportState
+	known, teleports, ready, teleportState, party, times = {}, {}, {}, {}, {}, {}
+	client.now = client.now + 1000
+	local fresh = Context.Options(from, to)
+	for name, total in pairs(calls) do
+		assert(total == 2, name .. " runs once per normal plan: " .. total)
+	end
+	assert(fresh ~= normal and fresh.now == client.now, "normal options and time are fresh")
+	assert(fresh.taxiKnown == known and fresh.teleports == teleports and fresh.teleportReady == ready)
+	assert(fresh.teleportState == teleportState and fresh.partyPortals == party and fresh.taxiTimes == times)
+	assert(fresh.anchors ~= normal.anchors, "normal plans collect fresh timetable anchors")
+	known, teleports, ready, teleportState = oldKnown, oldTeleports, oldReady, oldState
+	client.now = client.now - 1000
+	for _, restore in ipairs(originals) do
+		restore()
+	end
+	ns.PartyPortalPlaces, ns.TaxiTimes = nil, nil
+end
+
 local function ride(here)
 	return Context.Ride(Context.Options(here, to))
 end

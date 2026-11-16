@@ -66,9 +66,12 @@ end
 ---@return SPFContextOptions
 function Context.Options(from, to, policy)
 	local now = ns.NowMs()
-	local teleports, ready, state = ns.UsableTeleports(now)
-	local partyPortals = ns.PartyPortalPlaces and ns.PartyPortalPlaces(from) or nil
 	local walking = policy == "walking"
+	local teleports, ready, state, partyPortals
+	if not walking then
+		teleports, ready, state = ns.UsableTeleports(now)
+		partyPortals = ns.PartyPortalPlaces and ns.PartyPortalPlaces(from) or nil
+	end
 	local faction = UnitFactionGroup("player")
 	return {
 		routePolicy = walking and "walking" or nil,
@@ -78,8 +81,8 @@ function Context.Options(from, to, policy)
 		walkSpeed = Context.RunSpeed(),
 		faction = faction,
 		otherFaction = ns.db and ns.db.otherFaction or false,
-		taxiKnown = ns.KnownTaxiNodes(),
-		anchors = ns.Timetable.Anchors(),
+		taxiKnown = walking and empty or ns.KnownTaxiNodes(),
+		anchors = walking and empty or ns.Timetable.Anchors(),
 		docks = walking and empty or ns.Docks,
 		routes = walking and empty or Routes(faction),
 		taxiNodes = walking and empty or ns.TaxiNodes,

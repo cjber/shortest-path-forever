@@ -82,6 +82,8 @@ for _, mode in ipairs({ "portal", "flight", "boat", "lift", "tram", "teleport", 
 	check(walking.arrive > normal.arrive, mode .. " restriction is effective even when transit is faster")
 	local _, again = plan("walking")
 	for _, key in ipairs({
+		"taxiKnown",
+		"anchors",
 		"docks",
 		"routes",
 		"taxiNodes",
@@ -90,6 +92,7 @@ for _, mode in ipairs({ "portal", "flight", "boat", "lift", "tram", "teleport", 
 		"portals",
 		"teleports",
 		"teleportReady",
+		"teleportState",
 		"partyPortals",
 	}) do
 		check(next(o[key]) == nil and o[key] == again[key], key .. " is stably empty")
