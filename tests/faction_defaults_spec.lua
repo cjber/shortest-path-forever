@@ -78,9 +78,16 @@ assert(
 	"an old save that turned off 'Use hearth and teleports' keeps the Hearthstone off"
 )
 assert(loadCore({ teleports = true }).db.useHearthstone == true, "an old save that kept it on keeps the Hearthstone on")
+local migrated = loadCore({ teleports = false, useHearthstone = true })
 assert(
-	loadCore({ teleports = false, useHearthstone = true }).db.useHearthstone == true,
-	"a Hearthstone switch saved since the split wins over the old combined switch"
+	migrated.db.useHearthstone == false,
+	"the split moves an old combined switch off once, whatever was defaulted since"
+)
+migrated.db.useHearthstone = true
+assert(loadCore(migrated.db).db.useHearthstone == true, "turning the Hearthstone back on afterwards keeps it on")
+assert(
+	loadCore({ teleports = true, useHearthstone = true }).db.useHearthstone == true,
+	"a save with both switches on is unchanged"
 )
 assert(loadCore({ useHearthstone = false }).db.teleports == true, "class teleports keep their own default")
 assert(fresh.db.teleportMinimumSavings == 0, "class teleports need no saving by default")

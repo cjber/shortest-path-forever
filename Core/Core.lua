@@ -380,10 +380,14 @@ frame:SetScript("OnEvent", function(self, _, name)
 	self:UnregisterEvent("ADDON_LOADED")
 	ShortestPathForeverDB = ShortestPathForeverDB or {}
 	ns.db = ShortestPathForeverDB
-	-- `teleports` once covered the Hearthstone too; a save that turned it off keeps the Hearthstone off, while a
-	-- switch saved since then stands as the player left it.
-	if ns.db.useHearthstone == nil and ns.db.teleports == false then
-		ns.db.useHearthstone = false
+	-- `teleports` once covered the Hearthstone too, so a save that turned it off gets the Hearthstone off once.
+	-- `teleportSplit` records that this move ran: whatever the player sets afterwards stands, and a save from
+	-- before the split has no `teleports` key to move.
+	if ns.db.teleportSplit == nil then
+		if ns.db.teleports == false then
+			ns.db.useHearthstone = false
+		end
+		ns.db.teleportSplit = 1
 	end
 	for key, value in pairs(DEFAULTS) do
 		if ns.db[key] == nil then

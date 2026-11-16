@@ -30,7 +30,8 @@ local Plan = ns.Planner.Plan
 
 -- 7000 yards on foot is 1000 s; the hearth lands 70 yards short of the goal (10 s) after a 10 s cast and a loading
 -- screen.
-local hearths = { { map = 1, x = 6930, y = 0, spell = 8690, item = 6948, cast = 10000, label = "Goldshire" } }
+local hearths =
+	{ { map = 1, x = 6930, y = 0, spell = 8690, item = 6948, bind = true, cast = 10000, label = "Goldshire" } }
 local function trip(ready, cache, minimum)
 	return Plan({
 		cache = cache,
@@ -110,6 +111,22 @@ local function runeOrHearth(teleportMinimum, hearthMinimum)
 end
 assert(runeOrHearth(11).legs[1].teleport.spell == 8690, "a teleport saving too little over the hearth gives way to it")
 assert(runeOrHearth(11, 980).legs[1].mode == "walk", "the hearth it gives way to still meets its own minimum")
+-- Astral Recall is a bind teleport with no Hearthstone item, so it follows the Hearthstone's minimum and switch.
+local function recall(minimum, withoutHearth)
+	return Plan({
+		from = { map = 1, x = 0, y = 0 },
+		to = { map = 1, x = 7000, y = 0 },
+		now = 1000,
+		walkSpeed = 7,
+		teleports = { { map = 1, x = 6930, y = 0, spell = 556, bind = true, cast = 10000 } },
+		teleportReady = { 1000 },
+		hearthMinimumSavings = minimum,
+		withoutHearth = withoutHearth,
+	})
+end
+assert(recall(975).legs[1].teleport.spell == 556, "Astral Recall is held to the Hearthstone minimum")
+assert(recall(976).legs[1].mode == "walk", "Astral Recall saving less than the Hearthstone minimum is dropped")
+assert(recall(0, true).legs[1].mode == "walk", "the Hearthstone switch keeps Astral Recall out too")
 -- A teleport landing 7000 yards past the goal arrives just after the 1000 s walk, inside the margin a ride gets
 -- over a long walk; it saves nothing, so with a minimum it never stands in for the ride.
 local function overshoot(minimum)
@@ -126,7 +143,7 @@ end
 local slower = overshoot(60)
 assert(#slower.legs == 1 and slower.legs[1].mode == "walk", "a slower teleport never replaces a long walk")
 -- A new set of destinations (a new bind point) is a new topology.
-hearths = { { map = 1, x = -700, y = 0, spell = 8690, item = 6948, cast = 10000 } }
+hearths = { { map = 1, x = -700, y = 0, spell = 8690, item = 6948, bind = true, cast = 10000 } }
 assert(trip(1000, cache).legs[1].mode == "walk" and cache.topology ~= topology)
 
 -- A teleport adds the loading screen, whatever the continent.
@@ -142,7 +159,7 @@ local onlyHearth = Plan({
 	from = { map = 0, x = 0, y = 0 },
 	to = { map = 1, x = 7000, y = 0 },
 	now = 0,
-	teleports = { { map = 1, x = 7000, y = 0, spell = 8690, item = 6948, cast = 10000 } },
+	teleports = { { map = 1, x = 7000, y = 0, spell = 8690, item = 6948, bind = true, cast = 10000 } },
 	teleportReady = { 0 },
 	hearthMinimumSavings = 600,
 })

@@ -37,7 +37,7 @@ function Savings.Apply(planned, search, options)
 	while planned do
 		local minimum, hearth = nil, false
 		for _, leg in ipairs(planned.legs) do
-			if options.hearthMinimum > 0 and leg.teleport and leg.teleport.item == 6948 and not withoutHearth then
+			if options.hearthMinimum > 0 and leg.teleport and leg.teleport.bind and not withoutHearth then
 				minimum, hearth = options.hearthMinimum, true
 				break
 			elseif options.teleportMinimum > 0 and ClassTeleport(leg) and not withoutTeleports then

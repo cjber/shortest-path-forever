@@ -91,7 +91,7 @@ equal(API.Cancel("AGF"), true, "the walking journey clears")
 
 -- A teleport and the walk on: each leg names its own ends, and the walk starts where the teleport lands.
 driver.move({ map = 1, x = 0, y = 0, z = 0 })
-ns.teleports = { { map = 1, x = -930, y = 0, spell = 8690, item = 6948, cast = 10000, label = "Hearth" } }
+ns.teleports = { { map = 1, x = -930, y = 0, spell = 8690, item = 6948, bind = true, cast = 10000, label = "Hearth" } }
 ns.teleportReady = { 0 }
 equal(API.NavigateRoute("AGF", { { map = 1, x = 0.5, y = 0.52, title = "Far" } }), true, "a route with a teleport")
 local hearthed = settle()

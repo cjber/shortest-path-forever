@@ -191,6 +191,16 @@ do
 	ns.db.teleports = true
 	ns.TravelPolicyChanged()
 	driver.update(5)
+
+	-- Astral Recall is a bind teleport too, so skipping its step refuses it like the Hearthstone.
+	local recall = { map = 1, x = 6930, y = 0, spell = 556, bind = true, cast = 10000 }
+	ns.teleports, ns.teleportReady = { recall }, { 0 }
+	-- A goal a yard away is a new journey, so the previous plan is not carried over.
+	driver.begin(origin, { map = 1, x = 7001, y = 0 })
+	planned = assert(driver.shown())
+	check(planned.legs[1].teleport and planned.legs[1].teleport.spell == 556, "the journey starts with Astral Recall")
+	check(ns.SkipJourneyStep(1), "the Astral Recall step can be completed by hand")
+	check(ns.JourneyWithoutHearth(), "a completed Astral Recall step refuses it for this journey")
 end
 
 -- The map button's tooltip and its two looks, without a client frame.
@@ -232,7 +242,7 @@ do
 				map = 1,
 				x = 10,
 				y = 20,
-				place = { map = 1, x = 10, y = 20, item = 6948, spell = 8690, cast = 10000 },
+				place = { map = 1, x = 10, y = 20, item = 6948, spell = 8690, bind = true, cast = 10000 },
 				readyAt = 1000,
 			}
 		end,

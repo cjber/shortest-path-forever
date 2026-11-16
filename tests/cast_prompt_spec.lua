@@ -42,7 +42,7 @@ end
 driver.load("UI/Mover.lua")
 driver.load("UI/TurnAround.lua")
 driver.load("UI/Arrow.lua")
-local hearth = { teleport = { item = 6948, spell = 8690 } }
+local hearth = { teleport = { item = 6948, spell = 8690, bind = true } }
 ns.JourneyGuide.Start()
 ns.JourneyGuide.Cast(hearth)
 assert(

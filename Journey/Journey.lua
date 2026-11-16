@@ -641,7 +641,7 @@ function ns.SkipJourneyStep(index)
 	if not result.legs[current] then
 		return false
 	end
-	if result.legs[current].teleport and result.legs[current].teleport.item == 6948 then
+	if result.legs[current].teleport and result.legs[current].teleport.bind then
 		withoutHearth = true
 	end
 	progress.index = current + 1

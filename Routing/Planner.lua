@@ -759,7 +759,7 @@ local function Plan(options)
 							canLeave = false
 						end
 					end
-					if withoutHearth and edge.teleport and edge.teleport.item == 6948 then
+					if withoutHearth and edge.teleport and edge.teleport.bind then
 						canLeave = false
 					end
 					if withoutTeleports and edge.teleport and not edge.partyPortal and not edge.teleport.bind then
