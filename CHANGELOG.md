@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Nearby services load sooner after an update.** Reading town services from QuestieDB now continues while your journey is being planned, so the first read no longer waits for the planner to finish (#929).
+
 ## [1.40.0] - 2026-11-16
 
 <!-- forever-core-sync -->
