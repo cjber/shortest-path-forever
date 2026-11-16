@@ -61,7 +61,11 @@ scenario(
 			food = { place(3, "Food Three", -9449, 64) },
 		}
 		local navigated
+		local requests = 0
 		ns.NearbyServices = {
+			Request = function()
+				requests = requests + 1
+			end,
 			State = function()
 				return "ready"
 			end,
@@ -84,6 +88,7 @@ scenario(
 			ns.RefreshTownServices()
 		end)
 		sim:advance(0.2)
+		assert(requests > 0, "the visible town-services layer requests the catalogue")
 		local pins = ns.Canvas.Pools(sim.G.WorldMapFrame).ShortestPathForeverServicePinTemplate
 		assert(pins:GetNumActive() == 2, "the capital's grouped services and the outlying seller are drawn")
 		local groupPin
