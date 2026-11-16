@@ -106,7 +106,6 @@ end
 ---@return table
 local function Load(options)
 	local timers, trackingMenus, reported, logins = {}, {}, {}, {}
-	local elapsed = 0
 	local env = setmetatable({
 		Menu = {
 			ModifyMenu = function(tag, callback)
@@ -116,7 +115,7 @@ local function Load(options)
 		MenuResponse = { Open = 1, Refresh = 2, Close = 3, CloseAll = 4 },
 		C_Timer = {
 			After = function(seconds, fn)
-				timers[#timers + 1] = { seconds = seconds, due = elapsed + seconds, fn = fn }
+				timers[#timers + 1] = { seconds = seconds, fn = fn }
 			end,
 		},
 		debugprofilestop = function()
@@ -258,12 +257,13 @@ local function Load(options)
 		env = env,
 		reported = reported,
 		Run = Run,
+		-- Timers queued during a frame run on a later frame, as in the client.
 		Frame = function()
-			elapsed = elapsed + 1 / 60
 			local pending = timers
 			timers = {}
 			for _, timer in ipairs(pending) do
-				if timer.due <= elapsed then
+				timer.seconds = timer.seconds - 1 / 60
+				if timer.seconds <= 0 then
 					timer.fn()
 				else
 					timers[#timers + 1] = timer
@@ -307,6 +307,75 @@ local function QuestieAPI()
 			assert(ready, "the addon registered for Questie's ready callback")
 			ready()
 		end
+end
+
+-- Thousands of ordinary NPCs, service NPCs and vendor items exercise all three scan passes.
+local function LargeQuestieDB()
+	local lib = QuestieDB({ items = 0, npcs = 0 })
+	local items, npcs = {}, {}
+	for id = 1, 8000 do
+		items[id] = id
+	end
+	for id = 1, 12000 do
+		npcs[id] = id
+	end
+	lib.Item.GetAllIds = function()
+		return items
+	end
+	lib.Item.GetAll = function(id)
+		return { { 1 + id % 2000 }, 6, 2, "Arrow " .. id, 1, n = 5 }
+	end
+	lib.Npc.GetAllIds = function()
+		return npcs
+	end
+	lib.Npc.GetAll = function(id, fields)
+		if #fields == 1 then
+			return { { [12] = { { 40, 60 }, { 41, 61 } } }, n = 1 }
+		end
+		return { "NPC " .. id, "AH", id <= 2000 and FLAGS.VENDOR or 0, "", n = 4 }
+	end
+	return lib
+end
+
+-- A fresh scan gets its slice even when the planner never becomes idle.
+do
+	local clock = 0
+	local run = Load({
+		lib = LargeQuestieDB(),
+		clock = function()
+			-- One hundred row resumes per slice, independent of the host's CPU speed.
+			clock = clock + 0.01
+			return clock
+		end,
+	})
+	run.ns.Path.Busy = function()
+		return true
+	end
+	local combat = true
+	run.env.InCombatLockdown = function()
+		return combat
+	end
+	run.Login()
+	local read
+	run.ns.NearbyQuestie.Read({ "VENDOR" }, function(result, state)
+		assert(state == "ready", "the fresh scan succeeds")
+		read = result
+	end)
+	for _ = 1, 60 do
+		run.Frame()
+	end
+	assert(clock == 0 and not read, "combat still holds the scan without doing work")
+	combat = false
+	for _ = 1, 512 do
+		run.Frame()
+		if read then
+			break
+		end
+	end
+	assert(read, "a fresh read finishes within 512 frames while the planner stays busy")
+	assert(read.items[8000] and read.npcs[2000], "the entire database was scanned")
+	assert(#read.npcs[2000].spawns == 2 and not read.npcs[12000], "service spawns survive the scan")
+	assert(#run.reported == 0, "the fresh scan reports no errors")
 end
 
 -- Login, passive subscribers and unrelated work never request or scan the catalogue.
