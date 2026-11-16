@@ -4,14 +4,13 @@
 ## Author: cjber
 ## Version: @project-version@
 ## Category: Map
-## OptionalDeps: QuestieDB, TweaksForever, RXPGuides, Guidelime, !KalielsTracker, GatherMate2, DugisGuideViewerZ
+## OptionalDeps: QuestieDB, TweaksForever, RXPGuides, Guidelime, !KalielsTracker, GatherMate2, DugisGuideViewerZ, ForeverCore
 ## X-License: GPL-3.0-or-later
 ## X-Website: https://github.com/cjber/shortest-path-forever
 ## X-Donate: https://github.com/sponsors/cjber
 ## X-Curse-Project-ID: 1708599
 ## X-Wago-ID: b6Xy1wKp
-## Dependencies: ForeverCore
-## X-Forever-Core: v1.13.0
+## X-Forever-Core: v1.14.0
 ## SavedVariables: ShortestPathForeverDB
 ## SavedVariablesPerCharacter: ShortestPathForeverCharDB
 ## IconTexture: Interface\AddOns\ShortestPathForever\media\Icon
