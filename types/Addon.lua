@@ -322,6 +322,7 @@
 ---@field townServiceKinds? table<string, boolean>
 ---@field teleports? boolean -- plan class teleports with a destination of their own
 ---@field useHearthstone? boolean the Hearthstone and Astral Recall may be used in journeys, while class teleports still are (Teleports.lua)
+---@field teleportSplit? integer the one-time move of the old combined teleports switch ran
 ---@field partyMagePortals? boolean -- offer a party mage's capital portals
 ---@field partyMageStormwind? boolean
 ---@field partyMageIronforge? boolean
