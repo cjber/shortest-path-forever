@@ -53,7 +53,8 @@ L["Journeys, and other addons' estimates from here, can start with a mage's city
 L["Minimum teleport saving"] = "순간이동 최소 절약 시간"
 L["Only use a class teleport when it saves at least this much time."] =
 	"최소 이만큼 시간을 절약할 때만 직업 순간이동을 사용합니다."
-L["Plan a journey with several stops."] = "여러 정류장을 거치는 여정을 계획합니다." -- mt
+L["The Hearthstone and class teleports have their own switches."] =
+	"귀환석과 직업 순간이동에 각각 전용 스위치가 생겼습니다." -- mt
 L["Boat and Zeppelin Routes"] = "배와 비행선 노선"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"배와 비행선 노선. 부두를 가리키는 동안 그려집니다."

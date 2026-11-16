@@ -50,7 +50,8 @@ L["Journeys, and other addons' estimates from here, can start with a mage's city
 L["Minimum teleport saving"] = "傳送最少節省時間"
 L["Only use a class teleport when it saves at least this much time."] =
 	"只在職業傳送至少節省這麼多時間時使用。"
-L["Plan a journey with several stops."] = "規劃包含多個停靠點的旅程。" -- mt
+L["The Hearthstone and class teleports have their own switches."] =
+	"爐石和職業傳送現在各有自己的開關。" -- mt
 L["Boat and Zeppelin Routes"] = "船隻與飛艇航線"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"船隻與飛艇航線，在你指向碼頭時繪製。"

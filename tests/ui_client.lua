@@ -371,6 +371,7 @@ local function stubframe()
 		SetScript = noop,
 		EnableMouse = noop,
 		HookScript = noop,
+		SetWidth = noop,
 	}
 	frames[#frames + 1] = f
 	return f

@@ -12,14 +12,20 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
-- **Nearby services can show only your professions.** *Only my professions* hides profession trainers and the vendor rows whose goods supply a profession your character has not learned, on the world map and in the Nearby services tab. A vendor is judged row by row by what it sells there, so a food seller that also stocks a cooking reagent keeps its Food row, and a general vendor with nothing for a profession stays. Thanks to zhega for the idea (#914).
-- **This is the last update published on Wago.** Future updates come from CurseForge only. If you installed this addon through Wago or the WowUp Wago source, install it from CurseForge to keep getting updates; your settings stay.
+## [1.40.0] - 2026-11-16
+
+<!-- forever-core-sync -->
+
+- This is the last update published on Wago. Future updates come from CurseForge only. If you installed this addon through Wago or the WowUp Wago source, install it from CurseForge to keep getting updates; your settings stay.
 
 - **The Hearthstone and class teleports have their own switches.** *Use hearth and teleports* in Guidance is now *Use class teleports*, for a mage's city teleports and Teleport: Moonglade, beside *Use Hearthstone*, which also covers a shaman's Astral Recall. A new *Minimum teleport saving* keeps class teleports, and their Runes of Teleportation, for trips where they save at least that long, as *Minimum Hearthstone saving* already does for the Hearthstone. If you had turned the old switch off, both stay off, and turning either switch plans the journey you are on again. Thanks to embiem for the change (PR #775) and to InfamousMunky for the Hearthstone switch it sits beside (cjber/adventure-guide-forever#707).
+
+- **Nearby services can show only your professions.** *Only my professions* hides profession trainers and the vendor rows whose goods supply a profession your character has not learned, on the world map and in the Nearby services tab. A vendor is judged row by row by what it sells there, so a food seller that also stocks a cooking reagent keeps its Food row, and a general vendor with nothing for a profession stays. Thanks to zhega for the idea (#914).
 
 ### For addon authors
 
 - **Walk costs and the walking data are public in API 2.3.** `EstimateWalks()` searches the walking maps for another addon's own route under the addon's frame budget, pausing in combat and stopping when cancelled; each cost is walking yards, or `false` when there is no way there with what this character knows. `NavVersion()` names the data those costs were measured against, so a caller can drop cached costs when it changes. Thanks to Chulf58 for the request (#913).
+- Ships with the same shared code as your other Forever addons, so they keep working together.
 
 ## [1.39.0] - 2026-11-16
 
