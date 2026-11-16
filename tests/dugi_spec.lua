@@ -10,13 +10,20 @@ local combat = false
 env.InCombatLockdown = function()
 	return combat
 end
--- The client runs a secure hook's callback after the hooked method; the test does the same, and refuses to wrap a
--- missing method as the client would.
+-- Model the client secure hook boundary explicitly: LuaJIT permits yields through pcall, unlike WoW Lua 5.1.
+-- Running the original in a child coroutine detects a yield and rejects it as the client C wrapper would.
+local dugiHooks = 0
 env.hooksecurefunc = function(object, method, callback)
+	if object ~= ns then
+		dugiHooks = dugiHooks + 1
+	end
 	local original = object[method]
 	assert(type(original) == "function", "hooksecurefunc needs a real method: " .. method)
 	object[method] = function(...)
-		original(...)
+		local thread = coroutine.create(original)
+		local ok, message = coroutine.resume(thread, ...)
+		assert(ok, message)
+		assert(coroutine.status(thread) == "dead", "attempt to yield across metamethod/C-call boundary")
 		callback(...)
 	end
 end
@@ -51,7 +58,13 @@ local viewer = {
 	GetRunningAutoroutine = function(key)
 		return key == "SetSmartWaypoint" and smart or nil
 	end,
-	ReloadModules = function() end,
+	UpdateIconStatus = function() end,
+	ReloadModules = function(self)
+		self.DugiGuidesIsLoading = true
+		coroutine.yield("loading")
+		self.DugiGuidesIsLoading = false
+		self:UpdateIconStatus()
+	end,
 	ClearScreen = function() end,
 	LoadNextGuide = function() end,
 }
@@ -66,23 +79,43 @@ env.C_QuestLog = {
 }
 
 local originalReloadModules = viewer.ReloadModules
+local originalUpdateIconStatus = viewer.UpdateIconStatus
+local function reload()
+	local thread = coroutine.create(function()
+		viewer:ReloadModules()
+	end)
+	local ok, message = coroutine.resume(thread)
+	assert(ok, message)
+	assert(message == "loading" and viewer.DugiGuidesIsLoading, "module loading can suspend")
+	ok, message = coroutine.resume(thread)
+	assert(ok, message)
+	assert(coroutine.status(thread) == "dead" and not viewer.DugiGuidesIsLoading, "module loading finishes")
+end
 local watcher
 local create = env.CreateFrame
 env.CreateFrame = function(...)
 	watcher = create(...)
 	return watcher
 end
-ns.db.dugi = true
+ns.db.dugi = false
 driver.load("Core/Dugi.lua")
+reload()
+assert(dugiHooks == 0, "disabled integration installs no Dugi hooks")
+assert(viewer.ReloadModules == originalReloadModules, "disabled integration leaves module loading untouched")
+assert(viewer.UpdateIconStatus == originalUpdateIconStatus, "disabled integration installs no status hook")
+ns.db.dugi = true
+ns.RefreshDugi()
 
 -- Dugi's arrow module answers missing methods with a callable stub until Initialize runs; the adapter must not hook
 -- that stub. A module load is the signal that the real method exists now.
 assert(rawget(arrow, "WaypointsChanged") == nil, "the uninitialized arrow module exposes no raw callback")
-assert(rawget(viewer, "ReloadModules") ~= originalReloadModules, "the module load is watched")
+assert(viewer.ReloadModules == originalReloadModules, "the yielding module loader is never hooked")
+assert(viewer.UpdateIconStatus ~= originalUpdateIconStatus, "the non-yielding loading status is watched")
 arrow.WaypointsChanged = function() end
-viewer:ReloadModules()
+local originalWaypointsChanged = arrow.WaypointsChanged
+reload()
 flush()
-assert(rawget(arrow, "WaypointsChanged") ~= nil, "the initialized arrow callback is hooked")
+assert(arrow.WaypointsChanged ~= originalWaypointsChanged, "the initialized arrow callback is hooked")
 
 -- A guide's next destination is the first waypoint that is not a travel leg, not the last coordinate of a
 -- multi-coordinate step. The travel leg carries the flight step's quest id, and must never become the stop.
@@ -102,7 +135,15 @@ arrow.waypoints = {
 	{ map = 1, x = 60, y = 50, desc = "|cffffd200Accept 'The Farm'|r", guideIndex = 2, questId = 100 },
 	{ map = 1, x = 70, y = 30, desc = "Last stop of the step", guideIndex = 2, questId = 100 },
 }
-arrow:WaypointsChanged()
+local changes = coroutine.create(function()
+	viewer:ClearScreen()
+	viewer:LoadNextGuide()
+	arrow:WaypointsChanged()
+	coroutine.yield("after callbacks")
+end)
+local ok, message = coroutine.resume(changes)
+assert(ok and message == "after callbacks", "non-yielding callbacks remain callable inside a Dugi coroutine")
+assert(coroutine.resume(changes))
 flush()
 assert(navigations == 1 and API.CurrentStop("Dugi") == 1, "the guide's next destination starts a journey")
 assert(planned.map == 1 and planned.x == 0.6 and planned.y == 0.5, "the first objective is used, not the last")
@@ -339,7 +380,7 @@ assert(viewer.actions[10] == "K" and viewer.guides["Dugi Guide"] == true, "no Du
 -- A guide whose module never initializes leaves the last journey alone and plans nothing.
 local last = API.CurrentStop("Dugi")
 arrow.WaypointsChanged = nil
-viewer:ReloadModules()
+reload()
 flush()
 assert(API.CurrentStop("Dugi") == last, "an uninitialized arrow module does not disturb the stop")
 
