@@ -5,6 +5,10 @@ local _, ns = ...
 ns.Credits = {
 	players = {
 		{ name = "zhega", what = "Nearby services can show only learned professions" },
+		{ name = "catubba", what = "Journey legs name where they start and end" },
+		{ name = "Hatemost", what = "Resume the RestedXP guide from a macro" },
+		{ name = "JaidyEU", what = "Resume the RestedXP guide from a macro" },
+		{ name = "Chulf58", what = "Walking times between places for other addons" },
 		{ name = "embiem", what = "Separate Hearthstone and class teleport switches" },
 		{ name = "InfamousMunky", what = "The Hearthstone switch outside settings" },
 		{ name = "A player", what = "Journeys avoid opposing-faction guarded lifts" },

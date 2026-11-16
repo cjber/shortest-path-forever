@@ -62,6 +62,10 @@ Credit for the reports and requests behind the addon.
 | Who | What | Notes |
 |---|---|---|
 | zhega | Nearby services can show only learned professions | CurseForge thread 8727763, #914 |
+| [catubba](https://github.com/catubba) | Journey legs name where they start and end | GitHub; #782 |
+| Hatemost | Resume the RestedXP guide from a macro | CurseForge thread 8697686; #786 |
+| JaidyEU | Resume the RestedXP guide from a macro | CurseForge thread 8722510; #786 |
+| [Chulf58](https://github.com/Chulf58) | Walking times between places for other addons | GitHub; #913 |
 | [embiem](https://github.com/embiem) | Separate Hearthstone and class teleport switches | GitHub; #775 |
 | [InfamousMunky](https://github.com/InfamousMunky) | The Hearthstone switch outside settings | GitHub; cjber/adventure-guide-forever#707 |
 | A player | Journeys avoid opposing-faction guarded lifts | CurseForge thread 8726893, #911 |

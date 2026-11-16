@@ -12,6 +12,7 @@ for _, file in ipairs({
 	"Routing/Path.lua",
 	"Routing/PathJobs.lua",
 	"UI/Looks.lua",
+	"Core/APIInput.lua",
 	"Core/API.lua",
 	"Journey/Itinerary.lua",
 }) do

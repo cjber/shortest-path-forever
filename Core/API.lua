@@ -48,130 +48,11 @@ local CONTEXT_KEYS = {
 	"teleportMinimumSavings",
 }
 
-local function Number(value)
-	return canaccessvalue(value) and type(value) == "number" and value == value and math.abs(value) < math.huge
-end
-
-local function Point(map, x, y)
-	if
-		not Number(map)
-		or map <= 0
-		or map % 1 ~= 0
-		or not Number(x)
-		or not Number(y)
-		or x < 0
-		or x > 1
-		or y < 0
-		or y > 1
-	then
-		return nil
-	end
-	return ns.WorldPoint(map, x, y)
-end
-
--- A world point as this API names places: the uiMapID C_Map projects it onto and 0-1 fractions there. It is the
--- reverse of Point, so a caller reads back the same shape it sent and never one of ns's own world points.
----@param point SPFPoint?
----@return SPFAPIPlace?
-local function Place(point)
-	if not point then
-		return nil
-	end
-	local uiMap, position = C_Map.GetMapPosFromWorldPos(point.map, CreateVector2D(point.x, point.y))
-	if not (uiMap and position and Number(uiMap) and uiMap > 0 and uiMap % 1 == 0) then
-		return nil
-	end
-	local x, y = position:GetXY()
-	if not (Number(x) and Number(y) and x >= 0 and x <= 1 and y >= 0 and y <= 1) then
-		return nil
-	end
-	return { map = uiMap, x = x, y = y }
-end
-
--- A positive whole number: a quest or NPC id.
-local function ID(value)
-	return Number(value) and value % 1 == 0 and value >= 1
-end
-
--- A stop's detail is one string with one line per quest (Adventure Guide joins its quest lines with newlines).
--- Split it here so every stop keeps its own lines for the pin tooltip (UI/StopPin.lua).
----@param text? string
----@return string[]?
-local function DetailLines(text)
-	if not text then
-		return nil
-	end
-	local lines = {}
-	for line in text:gmatch("[^\n]+") do
-		lines[#lines + 1] = line
-	end
-	return lines[1] and lines or nil
-end
-
--- An objective area list: one or more places on a map, each with a yard radius. Every entry must be one this
--- client can place.
----@param shapes table
----@return boolean
-local function Shapes(shapes)
-	local count = #shapes
-	if count < 1 then
-		return false
-	end
-	for key, shape in pairs(shapes) do
-		if not Number(key) or key % 1 ~= 0 or key < 1 or key > count then
-			return false
-		end
-		if
-			type(shape) ~= "table"
-			or not Point(shape.map, shape.x, shape.y)
-			or not Number(shape.radius)
-			or shape.radius < 0
-		then
-			return false
-		end
-	end
-	return true
-end
-
--- The quests a held area stands for: one or more quest IDs, in order.
----@param quests table
----@return boolean
-local function Quests(quests)
-	local count = #quests
-	if count < 1 then
-		return false
-	end
-	for key, questID in pairs(quests) do
-		if not Number(key) or key % 1 ~= 0 or key < 1 or key > count or not ID(questID) then
-			return false
-		end
-	end
-	return true
-end
-
-local function Loaded()
-	return ns.db ~= nil and ns.charDB ~= nil
-end
-
-local function Ready()
-	return Loaded() and not InCombatLockdown()
-end
-
----@return nil, "loading"
-local function Loading()
-	local _, answer = APIKit.NotReady("loading")
-	return nil, answer --[[@as "loading"]]
-end
-
----@return nil, "none"
-local function None()
-	local _, answer = APIKit.NotReady("none")
-	return nil, answer --[[@as "none"]]
-end
-
-local function Owner(owner)
-	return canaccessvalue(owner) and type(owner) == "string" and owner:find("%S") ~= nil
-end
+-- Core/APIInput.lua checks what callers send and answers while there is nothing to read; the walk estimates share it.
+local Input = assert(ns.APIInput, "Core/APIInput.lua loads first")
+local Number, Point, Place, ID = Input.Number, Input.Point, Input.Place, Input.ID
+local DetailLines, Shapes, Quests = Input.DetailLines, Input.Shapes, Input.Quests
+local Loaded, Ready, Loading, None, Owner = Input.Loaded, Input.Ready, Input.Loading, Input.None, Input.Owner
 
 -- Only this module owns the caller's itinerary. Journey handles one destination at a time.
 ---@type {owner: string, points: SPFPoint[], index: integer, policy: SPFRoutePolicy}?
@@ -361,7 +242,7 @@ function ns.JourneyStops()
 end
 
 ---@class SPFPublicAPI
-local API = { version = 2, minor = 2 }
+local API = { version = 2, minor = 3 }
 
 local function Differs(a, b)
 	for key, value in pairs(a) do
@@ -555,6 +436,10 @@ function API.EstimateDetail(fromMap, fromX, fromY, toMap, toX, toY)
 		legs = legs,
 	}
 end
+
+-- Core/APIWalks.lua owns the walking costs and the identity of the data they are measured against (#913).
+API.EstimateWalks = ns.EstimateWalks
+API.NavVersion = ns.NavVersion
 
 local function NavigateRoute(owner, stops, policy)
 	if not Owner(owner) or not Ready() or not ns.db.journey or type(stops) ~= "table" then

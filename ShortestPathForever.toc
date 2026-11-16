@@ -110,6 +110,8 @@ UI\Alert.lua
 UI\SettingsMapMarks.lua
 UI\Settings.lua
 UI\WhatsNew.lua
+Core\APIInput.lua
+Core\APIWalks.lua
 Core\API.lua
 Journey\Resume.lua
 Core\Report.lua

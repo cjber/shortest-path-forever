@@ -1,12 +1,13 @@
 # Addon API
 
-Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 2`) with uiMapIDs and normalized 0-1 coordinates.
+Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 3`) with uiMapIDs and normalized 0-1 coordinates.
 Version 2 removes peer sharing and `Leaderboard`; callers must accept versions 1 and 2 and reject future versions. Check that a function exists before calling it, because an older
 addon may not have it yet. The full types are in [`types/API.lua`](../types/API.lua). On ForeverCore 1.3.2 or
 later, the API is also listed by `ForeverCore.APIKit.Addons()`.
 
 ## Minor history
 
+- Version 2, `minor = 3`: adds `EstimateWalks` and `NavVersion`.
 - Version 2, `minor = 2`: adds each journey leg's `from` and `to`, `ResumeRestedXP` and the `replan` change in
   `Subscribe`.
 - Version 2, `minor = 1`: adds `Guidance` and the `guidance` change in `Subscribe`.
@@ -27,7 +28,17 @@ later, the API is also listed by `ForeverCore.APIKit.Addons()`.
   is off. From anywhere else it leaves them out.
 - `EstimateDetail(fromMap, fromX, fromY, toMap, toX, toY)` takes the same arguments and cache and returns
   `{seconds, legs}`, each leg a fresh
-  `{mode, to, seconds, wait?, newFlightPath?}`.
+  `{mode, to, seconds, wait?, newFlightPath?}`. Its `to` is the leg's label, not a place.
+- `EstimateWalks(owner, from, targets, callback, opts)` starts one walking search from `from` to every `{map, x, y}`
+  in `targets`, which must all stand on `from`'s walking map, and returns a function that cancels it. The search runs
+  under the addon's own frame budget, pauses in combat and never calls back inside the call. `callback(costs, reason)`
+  runs once when every target has settled: `costs[i]` is that target's walking yards along the route the addon would
+  take, or `false` when there is no way there with what this character knows, and `reason` is `nil` unless the whole
+  batch could not answer. A second call from the same `owner` cancels the one still running. `opts.waterWalking` plans
+  over water as if the player can cross it; without it the same setting and spell as journeys decide. These are plain
+  walking costs: unlike journeys they neither avoid hostile towns nor prefer roads.
+- `NavVersion()` returns a string naming the walking data this build ships. Drop cached walk costs when it changes,
+  which every addon update can do.
 - `NavigateRoute(owner, stops)` guides through 1 to 64 `{map, x, y, title, tooltip, z}` stops in order, advancing on arrival
   and ending after the last. Remaining stops have numbered map pins, and the way between them is drawn as
   planned, walks along the walking map, once worked out behind the current leg; the tracker and arrow show
@@ -128,6 +139,11 @@ variables are not loaded or the planner has no route yet, and `"none"` when ther
 `"paused"`, `"disabled"`, `"cast"` and `"unavailable"` to those two, each described above. `Stats` uses
 `"loading"` until the saved variables are loaded. `ResumeRestedXP` is an action, not a read: `nil` comes with
 `"unavailable"` when there is no guide to resume, or `"invalid"` in combat, as described above.
+
+`EstimateWalks` refuses to start with `nil` and one of `"invalid"` (an owner, place, callback or option it cannot
+use, a target on another walking map, or more than 256 targets), `"combat"`, `"loading"`, or `"nodata"` when this
+build has no walking map for `from`'s map. Once started, its callback's `reason` is `nil` or one of `"nodata"`,
+`"outside"`, `"offmesh"`, `"unreachable"` or `"error"`, and every cost is `false` then.
 
 ## The journey under way
 
