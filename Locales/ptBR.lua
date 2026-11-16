@@ -50,7 +50,8 @@ L["Journeys, and other addons' estimates from here, can start with a mage's city
 L["Minimum teleport saving"] = "Economia mínima do teleporte"
 L["Only use a class teleport when it saves at least this much time."] =
 	"Usar um teleporte de classe só quando ele economizar pelo menos este tempo."
-L["Plan a journey with several stops."] = "Planeje uma jornada com várias paradas." -- mt
+L["The Hearthstone and class teleports have their own switches."] =
+	"A Pedra de Regresso e os teleportes de classe têm seus próprios interruptores." -- mt
 L["Boat and Zeppelin Routes"] = "Rotas de barcos e zepelins"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Rotas de barcos e zepelins, desenhadas enquanto você aponta para um cais."
