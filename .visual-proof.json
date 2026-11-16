@@ -1,23 +1,23 @@
 {
-  "input_digest": "83c73a1b62f253dba8f2298c7803a8d10d44ed3f976f54899f519d50c64bbf6d",
-  "runtime_sha256": "83c73a1b62f253dba8f2298c7803a8d10d44ed3f976f54899f519d50c64bbf6d",
-  "candidate": "a70ea35560a4baae93c9dcfbba70df2853658a01360a5bf6c09ac06d3760e07b",
+  "input_digest": "61a863a33815280976bc201d5060a8ca80e2e4396ca5c6543ff9ca5f0ec31537",
+  "runtime_sha256": "61a863a33815280976bc201d5060a8ca80e2e4396ca5c6543ff9ca5f0ec31537",
+  "candidate": "ad4b1408feaeb83842f528604273fcb5408a223c191525eb319c90d65c731c1b",
   "client_build": "1.60.1.70938 (Interface 16001)",
   "tested_artifact": "source-tree",
-  "source_commit": "194eadc3900ccc5c5c19c87cc1235f09f0829f16",
+  "source_commit": "41967ab49f4ff9dfa9460a16ce9f380b46b79454",
   "flows": [
     {
-      "name": "walk estimates",
+      "name": "town services on a first login",
       "steps": [
-        "spf-walk-estimates.lua sha256:a7c5117ee383b093619065cee1d06bbbc64246ccd703e069021cc02ba93ac65c"
+        "spf-services-login.lua sha256:d5acba3cd10141f499ddfc1b5b9d71bf825b721aef07396eaad6e4b5cd7afc1a"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/19c5b6ffc7ad26640297da8708c7ea1a/raw/2f76dbb1b5c258db4e7a431a31be8af5e5ce9028/1-walk-estimates.png",
-      "sha256": "ad77a13d7541e4efbd45e6ea27467049c639a44d647485bb48009d107f4fada8"
+      "url": "https://gist.githubusercontent.com/cjber/dc727d8760e3a619dfc6381cd22bb675/raw/cb53902a0afaedb05043652b30cf026444821fa5/1-town-services-on-a-first-login.png",
+      "sha256": "cda355677b7d6b425b3e510190a07f93e743457d2c90629461b758100fd44946"
     }
   ]
 }
