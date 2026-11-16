@@ -4,6 +4,7 @@ local _, ns = ...
 
 ns.Credits = {
 	players = {
+		{ name = "A player", what = "Journeys avoid opposing-faction guarded lifts" },
 		{ name = "kaelr1", what = "Transmogrifiers in Nearby services and map pins" },
 		{ name = "user_lsqt69ps7bgb5p7e", what = "Journeys with several chosen stops" },
 		{ name = "Enel3008", what = "Choose how strongly journeys prefer roads" },

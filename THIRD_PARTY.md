@@ -61,6 +61,7 @@ Credit for the reports and requests behind the addon.
 
 | Who | What | Notes |
 |---|---|---|
+| A player | Journeys avoid opposing-faction guarded lifts | CurseForge thread 8726893, #911 |
 | kaelr1 | Transmogrifiers in Nearby services and map pins | Discord, #909 |
 | user\_lsqt69ps7bgb5p7e | Journeys with several chosen stops | CurseForge thread 8705002, #846 |
 | Enel3008 | Choose how strongly journeys prefer roads | CurseForge thread 8705155, #848 |

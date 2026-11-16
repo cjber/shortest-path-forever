@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Journeys avoid lifts with opposing-faction landing guards.** Horde-guarded approaches are left out of Alliance journeys by default. A lift already being ridden can still reach its next stop. Thanks to a player for the report (#911).
+
 - **Nearby transport pins avoid work between samples.** Minimap boats and portals keep following movement without a callback on every frame. Polling stops while the minimap is hidden or combat is active (#784).
 
 - **Follow roads keeps the road at either end of a walk.** Shortcuts from your position or into your destination now respect the road route and the surface you stand on (#891).

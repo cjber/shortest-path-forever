@@ -123,6 +123,10 @@ bold-lead bullets) before its `v*` tag, since the release publishes it as the no
 - WFA-28: `Data/Transports.lua` (lifts and the Deeprun Tram): wago.tools `TransportAnimation` placed at classic-db
   `gameobject` spawns, with hand-curated site names and car pairings; QuestieDB holds none of these fifteen
   objects, and its spawns are zone fractions with no height. Live sightings set each car's phase.
+  `guardedFaction` uses explicit per-site NPC/spawn witnesses in `tools/gen_transit.py` `LIFT_GUARDS`, validated
+  against pinned classic-db `creature`/`creature_template` and the pinned client's `FactionTemplate` friend/enemy
+  groups. This is a default boarding-safety policy, separate from physical ownership. The site associations are
+  curated, not inferred by a radius; classic-era spawns do not establish live Forever guard positions or PvP safety.
 - WFA-28: `Data/Taxi.lua` (flight points, flight paths, durations, island bounds): wago.tools `TaxiNodes`,
   `TaxiPath`, `TaxiPathNode`, `UiMapAssignment` and `Map`, durations from the InFlight addon's defaults, two
   hand-drawn Feralas island boxes; QuestieDB has flight masters' spawns but no flight point IDs, paths or times.

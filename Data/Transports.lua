@@ -9,6 +9,7 @@ local _, ns = ...
 -- UC 20650/51/53/54/56/57 are upperLdoor/lowerLdoor (display 462), not riding platforms.
 -- Tram offsets use (x, -y, z), without rotating by spawn facing, to join station ends.
 -- 176080 leads 176081/176085; 176082 leads 176083/176084. Each train uses its lead track.
+-- guardedFaction: curated landing guard witnesses in gen_transit.LIFT_GUARDS, not physical ownership.
 
 -- stylua: ignore
 ns.Docks[1001] = { map = 1, x = -4668.1, y = -1838.64, z = 85.407, site = "Great Lift", name = "Top" }
@@ -115,6 +116,7 @@ ns.Routes[41701] = {
 		{ 28800, 28800, 1, -1286.24, 189.72, nil, 128.495 },
 		{ 30033, 30033, 1, -1286.24, 189.72, 1, 130.08 },
 	},
+	guardedFaction = "Horde",
 }
 
 -- stylua: ignore
@@ -139,6 +141,7 @@ ns.Routes[41711] = {
 		{ 28967, 28967, 1, -1308.38, 185.29, nil, 70.554 },
 		{ 30000, 30000, 1, -1308.38, 185.29, 1, 68.586 },
 	},
+	guardedFaction = "Horde",
 }
 
 -- stylua: ignore
@@ -178,6 +181,7 @@ ns.Routes[118981] = {
 		{ 28967, 28967, 1, -4670.77, -1849.61, nil, -42.176 },
 		{ 30000, 30000, 1, -4670.77, -1849.61, 1, -44.144 },
 	},
+	guardedFaction = "Horde",
 }
 
 -- stylua: ignore
@@ -217,6 +221,7 @@ ns.Routes[118982] = {
 		{ 28967, 28967, 1, -5382.5, -2489.42, nil, -38.56 },
 		{ 30000, 30000, 1, -5382.5, -2489.42, 1, -40.528 },
 	},
+	guardedFaction = "Horde",
 }
 
 -- stylua: ignore
@@ -363,6 +368,7 @@ ns.Routes[206491] = {
 		{ 10333, 15167, 0, 1596.15, 291.8, nil, 55.718 },
 		{ 16667, 16667, 0, 1596.15, 291.8, 1, 14.682 },
 	},
+	guardedFaction = "Horde",
 }
 
 -- stylua: ignore
@@ -377,6 +383,7 @@ ns.Routes[206521] = {
 		{ 3667, 8500, 0, 1595.26, 188.644, nil, 55.718 },
 		{ 11833, 16667, 0, 1595.26, 188.644, 1, -40.783 },
 	},
+	guardedFaction = "Horde",
 }
 
 -- stylua: ignore
@@ -394,6 +401,7 @@ ns.Routes[206551] = {
 		{ 7000, 11833, 0, 1544.24, 240.773, nil, 55.718 },
 		{ 15167, 16667, 0, 1544.24, 240.773, 1, -40.783 },
 	},
+	guardedFaction = "Horde",
 }
 
 -- stylua: ignore
@@ -418,6 +426,7 @@ ns.Routes[472961] = {
 		{ 28967, 28967, 1, -1028.04, -28.357, nil, 70.991 },
 		{ 30000, 30000, 1, -1028.04, -28.357, 1, 69.023 },
 	},
+	guardedFaction = "Horde",
 }
 
 -- stylua: ignore
@@ -440,4 +449,5 @@ ns.Routes[472971] = {
 		{ 28800, 28800, 1, -1037.27, -49.236, nil, 138.91 },
 		{ 30033, 30033, 1, -1037.27, -49.236, 1, 140.495 },
 	},
+	guardedFaction = "Horde",
 }

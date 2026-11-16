@@ -16,6 +16,27 @@ ns.PlanContext = Context
 local lastSpeed = 7
 -- Stable identities let the planner reuse its walking topology between frames.
 local empty = {}
+local routeSource, routeFaction, unguarded
+
+-- Landing guards affect boarding safety, not physical ownership. Keep landings as walking destinations.
+-- Stable identities let journeys and estimates reuse topology until the route source or faction changes.
+local function Routes(faction)
+	if routeSource ~= ns.Routes or routeFaction ~= faction then
+		routeSource, routeFaction, unguarded = ns.Routes, faction, {}
+		local excluded = false
+		for id, route in pairs(ns.Routes or {}) do
+			if not route.guardedFaction or route.guardedFaction == faction then
+				unguarded[id] = route
+			else
+				excluded = true
+			end
+		end
+		if not excluded then
+			unguarded = ns.Routes
+		end
+	end
+	return unguarded
+end
 
 -- Run speed stays meaningful while standing still. Secret combat values retain the last readable speed.
 ---@return number
@@ -48,18 +69,19 @@ function Context.Options(from, to, policy)
 	local teleports, ready, state = ns.UsableTeleports(now)
 	local partyPortals = ns.PartyPortalPlaces and ns.PartyPortalPlaces(from) or nil
 	local walking = policy == "walking"
+	local faction = UnitFactionGroup("player")
 	return {
 		routePolicy = walking and "walking" or nil,
 		from = from,
 		to = to,
 		now = now,
 		walkSpeed = Context.RunSpeed(),
-		faction = UnitFactionGroup("player"),
+		faction = faction,
 		otherFaction = ns.db and ns.db.otherFaction or false,
 		taxiKnown = ns.KnownTaxiNodes(),
 		anchors = ns.Timetable.Anchors(),
 		docks = walking and empty or ns.Docks,
-		routes = walking and empty or ns.Routes,
+		routes = walking and empty or Routes(faction),
 		taxiNodes = walking and empty or ns.TaxiNodes,
 		taxiPaths = walking and empty or ns.TaxiPaths,
 		taxiTimes = walking and empty or ns.TaxiTimes and ns.TaxiTimes.Snapshot(),
@@ -74,9 +96,9 @@ function Context.Options(from, to, policy)
 	}
 end
 
--- The boat, zeppelin or tram you are aboard and where it next stops, for a plan from where you stand.
+-- The transport you are aboard and where it next stops, for a plan from where you stand.
 ---@param options SPFContextOptions from Options, planned from where you stand
----@return {route: number, dock: number, arrive: number}?
+---@return SPFCurrentRide?
 function Context.Ride(options)
 	if options.routePolicy == "walking" then
 		return nil
@@ -100,7 +122,8 @@ function Context.Ride(options)
 		end
 	end
 	local dock, arriveIn = ns.Timetable.NextStop(routeID)
-	return dock and { route = routeID, dock = dock, arrive = now + arriveIn } or nil
+	-- Already aboard is separate from boarding eligibility: restrictions must still let this ride alight.
+	return dock and { route = routeID, dock = dock, arrive = now + arriveIn, data = (ns.Routes or {})[routeID] } or nil
 end
 
 -- The fixed places your faction can use, with these teleport destinations (none for a bind point's own landing).

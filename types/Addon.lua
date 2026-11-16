@@ -149,6 +149,7 @@
 ---@field kind SPFMode
 ---@field site? string
 ---@field faction? string
+---@field guardedFaction? string -- landing guards favour this faction; distinct from physical ride eligibility
 ---@field period number
 ---@field stops SPFStop[]
 ---@field frames number[][]
@@ -496,10 +497,15 @@ ShortestPathForeverPathData = nil
 ---@field now number
 ---@field walkSpeed? number
 ---@field waterWalking? boolean
----@field ride? {route: number, dock: number, arrive: number}
+---@field ride? SPFCurrentRide
 ---@field unknownFlightNotice? boolean also report a walk caused by an undiscovered flight point
 -- [teleport index] = server ms when it can be cast; absent when it cannot.
 ---@field teleportReady? table<number, number>
+---@class SPFCurrentRide
+---@field route number
+---@field dock number
+---@field arrive number
+---@field data? SPFRoute -- current ride remains usable for alighting when new boarding is excluded
 ---@class SPFPlaceOptions
 ---@field faction? string
 ---@field docks? table<number, SPFDock>

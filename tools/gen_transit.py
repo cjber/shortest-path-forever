@@ -31,6 +31,20 @@ TAXI_SPEED = 32.0
 TAXI_POINT_ERROR = 20.0  # World yards; retain bends, without shipping every spline control point.
 LIFTS = {11898, 11899, 4170, 4171, 47296, 47297, 20649, 20652, 20655}
 TRAMS = {176080, 176081, 176082, 176083, 176084, 176085}
+# Curated landing/approach witnesses, not a proximity classifier or physical lift ownership.
+# Exact classic-db creature GUIDs at DB_REV: Great Lift's upper approach, Freewind's lower approach,
+# Thunder Bluff's city approaches and Undercity's upper doors. FactionTemplate is the pinned Forever client.
+# https://github.com/cmangos/classic-db/tree/22b51464f1625f6ef6275771de1f5466c6f5d19e/Full_DB
+# Classic spawn evidence is not a live Forever guard survey or a guarantee against PvP encounters.
+LIFT_GUARDS = {
+    "Great Lift": (10079, "Brave Moonhorn", 21566, 1),
+    "Freewind Post": (9525, "Freewind Brave", 21478, 1),
+    "Thunder Bluff, west lift": (3084, "Bluffwatcher", 24699, 1),
+    "Thunder Bluff, north lift": (3084, "Bluffwatcher", 24703, 1),
+    "Undercity, west lift": (5624, "Undercity Guardian", 34105, 0),
+    "Undercity, east lift": (5624, "Undercity Guardian", 41887, 0),
+    "Undercity, south lift": (5624, "Undercity Guardian", 38301, 0),
+}
 # Nighthaven is druid-only; Plaguewood tower flights depend on PvP control. Neither restriction can be
 # expressed by the planner's faction/known-node contract. Mount IDs alone also admit quest/test nodes.
 RESTRICTED_NODES = {62, 63, 84, 85, 86, 87}
@@ -176,6 +190,69 @@ def point(row, prefix="Pos_"):
     return tuple(float(row[f"{prefix}{i}"]) for i in range(3))
 
 
+def lift_guard_sources(path):
+    """Read exact witness rows in CREATE TABLE column order; no name or distance matching."""
+    headers, templates, spawns = {}, {}, {}
+    table = None
+    npcs = {npc for npc, _, _, _ in LIFT_GUARDS.values()}
+    guids = {guid for _, _, guid, _ in LIFT_GUARDS.values()}
+    tuples = re.compile(r"\(((?:'(?:\\.|[^'\\])*'|[^()'])*)\)")
+    with gzip.open(path, "rt", encoding="utf-8") as stream:
+        for line in stream:
+            opened = re.match(r"CREATE TABLE `(creature_template|creature)`", line)
+            if opened:
+                table = opened[1]
+                headers[table] = []
+                continue
+            if table:
+                column = re.match(r"\s+`([^`]+)`", line)
+                if column:
+                    headers[table].append(column[1])
+                elif line.startswith(")"):
+                    table = None
+                continue
+            inserted = re.match(r"INSERT INTO `(creature_template|creature)` VALUES ", line)
+            if not inserted:
+                continue
+            name = inserted[1]
+            for match in tuples.finditer(line):
+                # Both tables key their first column by the exact witness identity.
+                key = int(match[1].split(",", 1)[0])
+                if key not in (npcs if name == "creature_template" else guids):
+                    continue
+                values = next(csv.reader([match[1]], quotechar="'", escapechar="\\"))
+                row = dict(zip(headers[name], values, strict=True))
+                (templates if name == "creature_template" else spawns)[key] = row
+    return templates, spawns
+
+
+def lift_guard_factions(templates, spawns, factions):
+    """Validate every curated association and derive its favoured side from the client's faction groups."""
+    result = {}
+    for site, (npc, name, guid, map_id) in LIFT_GUARDS.items():
+        template, spawn = templates.get(npc), spawns.get(guid)
+        if (
+            not template
+            or template["Name"] != name
+            or not spawn
+            or (int(spawn["id"]), int(spawn["map"]))
+            != (
+                npc,
+                map_id,
+            )
+        ):
+            raise ValueError(f"{site}: missing or changed landing guard witness {npc}/{guid}")
+        faction = factions[int(template["Faction"])]
+        friends, enemies = int(faction["FriendGroup"]), int(faction["EnemyGroup"])
+        if friends & 6 == 4 and enemies & 6 == 2:
+            result[site] = "Horde"
+        elif friends & 6 == 2 and enemies & 6 == 4:
+            result[site] = "Alliance"
+        else:
+            raise ValueError(f"{site}: landing guard has no unambiguous opposing-faction reaction")
+    return result
+
+
 def animation_tracks(rows, spawns):
     tracks = defaultdict(list)
     for row in rows:
@@ -202,7 +279,7 @@ def world_track(track, spawn):
     return frames
 
 
-def transports(animation, spawns, triggers):
+def transports(animation, spawns, triggers, guarded_factions):
     tracks = animation_tracks(animation, spawns)
     docks, routes = {}, {}
     # Explicit site/car identities keep IDs stable if the source gains more spawns.
@@ -254,6 +331,8 @@ def transports(animation, spawns, triggers):
                 "stops": stops_of(frames, tracks[template][-1][0]),
                 "frames": frames,
             }
+            if guarded_factions and site in guarded_factions:
+                routes[key]["guardedFaction"] = guarded_factions[site]
     for dock_id, station, trigger in ((1101, "Ironforge", 2175), (1102, "Stormwind", 2173)):
         ends = []
         for template in (176080, 176082):
@@ -662,6 +741,23 @@ def assignment(name, value):
     return ["-- stylua: ignore", name + " = " + render(value), ""]
 
 
+def transport_output(docks, routes):
+    lines = header("TransportAnimation + classic-db gameobject spawns; milliseconds, world yards.")
+    lines += [
+        "-- TB pairs have 30000/30033 ms periods: each car is a separate route.",
+        "-- UC 20650/51/53/54/56/57 are upperLdoor/lowerLdoor (display 462), not riding platforms.",
+        "-- Tram offsets use (x, -y, z), without rotating by spawn facing, to join station ends.",
+        "-- 176080 leads 176081/176085; 176082 leads 176083/176084. Each train uses its lead track.",
+        "-- guardedFaction: curated landing guard witnesses in gen_transit.LIFT_GUARDS, not physical ownership.",
+        "",
+    ]
+    for key, dock in sorted(docks.items()):
+        lines += assignment(f"ns.Docks[{key}]", dock)
+    for key, route in sorted(routes.items()):
+        lines += assignment(f"ns.Routes[{key}]", route)
+    return lines
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group()
@@ -689,11 +785,16 @@ def main():
             "ItemSparse",
             "UiMap",
             "AreaTable",
+            "FactionTemplate",
         )
     }
     spawns, teleports, positions, instance_triggers = classicdb(args.refresh, args.offline)
+    guard_templates, guard_spawns = lift_guard_sources(CACHE / f"classicdb-{DB_REV[:8]}.sql.gz")
+    guarded_factions = lift_guard_factions(
+        guard_templates, guard_spawns, {int(row["ID"]): row for row in tables["FactionTemplate"]}
+    )
     triggers = {int(r["ID"]): r for r in tables["AreaTrigger"]}
-    docks, routes = transports(tables["TransportAnimation"], spawns, triggers)
+    docks, routes = transports(tables["TransportAnimation"], spawns, triggers, guarded_factions)
     durations = inflight(
         download(f"{INFLIGHT_URL}/Defaults.lua", f"InFlight-{INFLIGHT_REV}-Defaults.lua", args.refresh, args.offline)
     )
@@ -703,18 +804,7 @@ def main():
     passages = portals(triggers, teleports)
     instance_maps = {int(r["ID"]): r for r in tables["Map"]}
     doors = entrances(triggers, instance_triggers, instance_maps, tables["UiMapAssignment"])
-    transport_lines = header("TransportAnimation + classic-db gameobject spawns; milliseconds, world yards.")
-    transport_lines += [
-        "-- TB pairs have 30000/30033 ms periods: each car is a separate route.",
-        "-- UC 20650/51/53/54/56/57 are upperLdoor/lowerLdoor (display 462), not riding platforms.",
-        "-- Tram offsets use (x, -y, z), without rotating by spawn facing, to join station ends.",
-        "-- 176080 leads 176081/176085; 176082 leads 176083/176084. Each train uses its lead track.",
-        "",
-    ]
-    for key, dock in sorted(docks.items()):
-        transport_lines += assignment(f"ns.Docks[{key}]", dock)
-    for key, route in sorted(routes.items()):
-        transport_lines += assignment(f"ns.Routes[{key}]", route)
+    transport_lines = transport_output(docks, routes)
     covered = sum(not p.get("estimated") for p in paths)
     taxi_lines = header("TaxiNodes/TaxiPath/TaxiPathNode; InFlight classic directed durations (seconds).")
     taxi_lines += (

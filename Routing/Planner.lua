@@ -568,8 +568,9 @@ local function Plan(options)
 	end
 
 	local ride = options.ride
-	if ride and docks[ride.dock] and (options.routes or {})[ride.route] then
-		local route = options.routes[ride.route]
+	local rideRoute = ride and (ride.data or (options.routes or {})[ride.route])
+	if ride and docks[ride.dock] and rideRoute then
+		local route = rideRoute
 		for _, stop in ipairs(route.stops) do
 			if stop.dock == ride.dock then
 				Edge(start, docks[ride.dock], {
