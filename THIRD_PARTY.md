@@ -61,6 +61,10 @@ Credit for the reports and requests behind the addon.
 
 | Who | What | Notes |
 |---|---|---|
+| [catubba](https://github.com/catubba) | Journey legs name where they start and end | GitHub; #782 |
+| Hatemost | Resume the RestedXP guide from a macro | CurseForge thread 8697686; #786 |
+| JaidyEU | Resume the RestedXP guide from a macro | CurseForge thread 8722510; #786 |
+| [Chulf58](https://github.com/Chulf58) | Walking times between places for other addons | GitHub; #913 |
 | A player | Journeys avoid opposing-faction guarded lifts | CurseForge thread 8726893, #911 |
 | kaelr1 | Transmogrifiers in Nearby services and map pins | Discord, #909 |
 | user\_lsqt69ps7bgb5p7e | Journeys with several chosen stops | CurseForge thread 8705002, #846 |

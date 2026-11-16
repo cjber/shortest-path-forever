@@ -56,6 +56,9 @@
 ---@field FarmingCursor SPFFarmingCursorFactory
 ---@field NavigateFarmingRoute fun(owner: string, stops: SPFAPIStop[]): boolean
 ---@field JourneyRoutePolicy fun(): SPFRoutePolicy
+---@field APIInput SPFAPIInput the public API's argument checks and answers (Core/APIInput.lua)
+---@field EstimateWalks fun(owner: string, from: SPFAPIPlace, targets: SPFAPIPlace[], callback: fun(costs: (number|false)[], reason: SPFAPIWalkReason?), opts?: SPFAPIWalkOptions): cancel: fun()?, reason: SPFAPIWalkRefusal? one walking search to every target on the from point's walking map (#913)
+---@field NavVersion fun(): string the walking data this build ships, for dropping cached walk costs
 ---@field DestinationPinScale fun(): number the world map journey goal pin's share of its stock size (UI/StopPin.lua)
 ---@field RefreshDestinationPinSize fun() redraws the world map goal pins at the player's size (UI/Route.lua)
 ---@field HearthstoneEnabled fun(): boolean whether journeys may use the Hearthstone (Journey/Journey.lua)

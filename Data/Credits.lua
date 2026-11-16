@@ -4,6 +4,10 @@ local _, ns = ...
 
 ns.Credits = {
 	players = {
+		{ name = "catubba", what = "Journey legs name where they start and end" },
+		{ name = "Hatemost", what = "Resume the RestedXP guide from a macro" },
+		{ name = "JaidyEU", what = "Resume the RestedXP guide from a macro" },
+		{ name = "Chulf58", what = "Walking times between places for other addons" },
 		{ name = "A player", what = "Journeys avoid opposing-faction guarded lifts" },
 		{ name = "kaelr1", what = "Transmogrifiers in Nearby services and map pins" },
 		{ name = "user_lsqt69ps7bgb5p7e", what = "Journeys with several chosen stops" },

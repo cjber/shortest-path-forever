@@ -6,6 +6,7 @@
 local driver = assert(loadfile("tests/journey_driver.lua"))()
 local ns, env, checks = driver.ns, driver.env, 0
 driver.load("UI/Looks.lua")
+driver.load("Core/APIInput.lua")
 driver.load("Core/API.lua")
 driver.load("Journey/Itinerary.lua")
 local API = env.ShortestPathForever.API
@@ -39,9 +40,9 @@ local function last()
 	return heard[#heard] or {}
 end
 
--- What is there to call: version 2, minor 2, and every function the hand-off checks before calling it.
+-- What is there to call: version 2, minor 3, and every function the hand-off checks before calling it.
 equal(API.version, 2, "version 2 removes peer and leaderboard APIs")
-equal(API.minor, 2, "minor 2 records journey leg ends, ResumeRestedXP and the replan change")
+equal(API.minor, 3, "minor 3 records the walk costs and the walking data")
 for _, name in ipairs({
 	"NavigateRoute",
 	"Navigate",

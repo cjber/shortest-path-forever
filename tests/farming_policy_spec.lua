@@ -7,6 +7,7 @@ end
 local function harness()
 	local d = assert(loadfile("tests/journey_driver.lua"))()
 	d.load("UI/Looks.lua")
+	d.load("Core/APIInput.lua")
 	d.load("Core/API.lua")
 	d.load("Journey/Itinerary.lua")
 	return d, d.ns, d.env.ShortestPathForever.API

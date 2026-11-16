@@ -11,6 +11,7 @@ end
 local driver = assert(loadfile("tests/journey_driver.lua"))()
 local ns = driver.ns
 driver.load("UI/Looks.lua")
+driver.load("Core/APIInput.lua")
 driver.load("Core/API.lua")
 local Context = ns.PlanContext
 local from, to = { map = 1, x = 0, y = 0 }, { map = 1, x = 7000, y = 0 }
