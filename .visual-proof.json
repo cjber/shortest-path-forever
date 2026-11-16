@@ -1,34 +1,23 @@
 {
-  "input_digest": "5909aeef45fc53f1bd436873a52fc564fe80a8479491063949807bfa9f4c79d8",
-  "runtime_sha256": "5909aeef45fc53f1bd436873a52fc564fe80a8479491063949807bfa9f4c79d8",
-  "candidate": "21a713089be14be455896912eb5559fef8f4ce36edb7b7c8f2e8d89d2ea4f26e",
+  "input_digest": "214c4dfe87c81b47809911148a3d70de7d2beecc78d7e527c426b136dc96c8a4",
+  "runtime_sha256": "214c4dfe87c81b47809911148a3d70de7d2beecc78d7e527c426b136dc96c8a4",
+  "candidate": "a7a2746b4fb643fb97501680384075634a2bdf7c5169672218f4469b87c81c02",
   "client_build": "1.60.1.70938 (Interface 16001)",
   "tested_artifact": "source-tree",
-  "source_commit": "9da55bca2c783bfe14cde1b295d338fafae83f40",
+  "source_commit": "fb7fadabf7f91fcfbd552a906940b1430480c4c7",
   "flows": [
     {
-      "name": "journey stops",
+      "name": "guidance",
       "steps": [
-        "/path stops"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "map marks",
-      "steps": [
-        "1-map-marks.lua sha256:6fe2dd89d386f7280032c8b9d6f71fae3d7687f4c12d6af0bee77b38f5972638"
+        "spf-guidance-end.lua sha256:9d1785b697977352b1db6acf1ac2c13ae640b2d66c04f37f2e526925e324e260"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/7f66ddcf7a2dc6ff0544b05da5f8e96c/raw/32b53a1601471baf387668d1468cf924137c8e18/1-journey-stops.png",
-      "sha256": "15a971c4ba38ede2f2b914d265c2a7efc199122358fb8ed0e5c0a78f2756fa98"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/7f66ddcf7a2dc6ff0544b05da5f8e96c/raw/32b53a1601471baf387668d1468cf924137c8e18/2-map-marks.png",
-      "sha256": "5747e74d5bb6d67f75a670365ee282af4ff1e54df5643025a4a9adae45c6f7ea"
+      "url": "https://gist.githubusercontent.com/cjber/51330311216d0ffe6041009c20da05c4/raw/36d7c5fa5b5001aedb71e60e353e9d7618177eae/1-guidance.png",
+      "sha256": "da593c335b36de3427344d38d316d78a9fb94a55afb68304308a4cac31b7ed7d"
     }
   ]
 }
