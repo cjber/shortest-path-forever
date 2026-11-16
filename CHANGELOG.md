@@ -12,6 +12,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+### For addon authors
+
+- **Walk costs and the walking data are public in API 2.3.** `EstimateWalks()` searches the walking maps for another addon's own route under the addon's frame budget, pausing in combat and stopping when cancelled; each cost is walking yards, or `false` when there is no way there with what this character knows. `NavVersion()` names the data those costs were measured against, so a caller can drop cached costs when it changes. Thanks to Chulf58 for the request (#913).
+
 ## [1.39.0] - 2026-11-16
 
 <!-- discord-image: docs/screenshots/stops.png -->
@@ -76,9 +80,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ### For addon authors
 
-- **Journey API 2.2 includes leg endpoints.** `Journey()` returns copied `from` and `to` map points when the client can place them. `Subscribe` reports replans, and `ResumeRestedXP()` resumes a paused guide outside combat. Thanks to catubba for the idea and to Hatemost and JaidyEU for the request (#782, #786).
-
-- **Walk costs and the walking data are public in API 2.3.** `EstimateWalks()` searches the walking maps for another addon's own route under the addon's frame budget, pausing in combat and stopping when cancelled; each cost is walking yards, or `false` when there is no way there with what this character knows. `NavVersion()` names the data those costs were measured against, so a caller can drop cached costs when it changes. Thanks to Chulf58 for the request (#913).
+- **Journey API 2.2 includes leg endpoints.** `Journey()` returns copied `from` and `to` map points when the client can place them. `Subscribe` reports replans, and `ResumeRestedXP()` resumes a paused guide outside combat (#782, #786).
 
 ## [1.38.0] - 2026-11-15
 
