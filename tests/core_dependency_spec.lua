@@ -192,8 +192,9 @@ assert(attached == ns.db, "the saved table is attached once it loads")
 
 -- The client loads ForeverCore first because the TOC lists it, and the package bundles it.
 local toc = assert(io.open("ShortestPathForever.toc", "rb")):read("*a")
+-- The packager writes the TOC with CRLF line ends, so the list may end in a carriage return.
 local optional = toc:match("\n## OptionalDeps:([^\n]*)") or ""
-assert((", " .. optional .. ","):find("[ ,]ForeverCore[ ,]"), "the TOC lists ForeverCore so it loads first")
+assert((optional .. ","):find("[%s,]ForeverCore[%s,]"), "the TOC lists ForeverCore so it loads first")
 local pkgmeta = assert(io.open(".pkgmeta", "rb")):read("*a")
 assert(
 	pkgmeta:find("\n  ForeverCore: https://github.com/cjber/forever-core/releases/", 1, true),
