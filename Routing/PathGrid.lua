@@ -1349,7 +1349,8 @@ local function neighbour(st, k, node, gx, gy, dx, dy, water)
 	end
 	local C = st.C
 	local tk, tlc = floor(tx / C) * st.ny + floor(ty / C), (tx % C) * C + ty % C
-	if node < C * C then
+	-- A zero-offset move can only be an explicit drop between layers, never an ordinary base step.
+	if node < C * C and (dx ~= 0 or dy ~= 0) then
 		local open
 		local val = tk == k and grid(st, k)
 		-- Most string-pulling steps stay on one base grid. Its decoded moves already check the

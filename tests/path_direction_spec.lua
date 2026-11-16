@@ -241,7 +241,8 @@ assert(#Grid.preceding(roadState, bNode) == 3 and #Grid.adjacent(roadState, bNod
 assert(#Grid.roadEdgesIn(roadState, bNode) == 4, "the predecessor edge has its own ratio")
 
 -- A drop between two floors of one cell is a same-cell link: offset (0, 0), landing on the lower layer.
-local sameCells = { [20] = { [10] = at(20) } }
+-- An ordinary open base step beside it must not turn a zero-offset query into staying on that base.
+local sameCells = { [20] = { [10] = at(20) }, [21] = { [10] = at(20) } }
 fixture.install(
 	47,
 	fixture.format2({

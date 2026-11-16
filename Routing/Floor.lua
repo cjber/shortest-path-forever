@@ -95,7 +95,8 @@ local function Step(st, nodes, ox, oy, gx, gy, reach)
 			for dx = -1, 1 do
 				for dy = -1, 1 do
 					local nx, ny = x + dx, y + dy
-					if (dx ~= 0 or dy ~= 0) and nx >= x0 and nx <= x1 and ny >= y0 and ny <= y1 then
+					-- A ledge and its landing can quantize to the same cell on different floors.
+					if nx >= x0 and nx <= x1 and ny >= y0 and ny <= y1 then
 						local tk, tn = Grid.neighbour(st, k, node, x, y, dx, dy, true)
 						local id = tk and tk * 1048576 + tn
 						if id and not seen[id] then
