@@ -4,31 +4,31 @@
   "candidate": "272765a132d697404076504ea021cc86f003968c282487024f45d788b46d2690",
   "client_build": "1.60.1.70938 (Interface 16001)",
   "tested_artifact": "source-tree",
-  "source_commit": "ba75b0be175eddcb1c696be0f92592630e265d48",
+  "source_commit": "7dea1de8744ca35540de4642b4be3faabad37c0b",
   "flows": [
     {
-      "name": "only my professions on",
+      "name": "destination pin at 50%",
       "steps": [
-        "spf-map-true.lua sha256:b96cde2dd71e491a1922be6e14d7fa7ea8a44590b8cbb2927de8918ab225c815"
+        "spf-pin-50.lua sha256:85a96a931f9f6a9696d236861a9d53c203225aa2dab23b39f8444794ee2fa7a2"
       ],
       "result": "pass"
     },
     {
-      "name": "town services on a first login",
+      "name": "destination pin at 100%",
       "steps": [
-        "spf-services-login.lua sha256:d5acba3cd10141f499ddfc1b5b9d71bf825b721aef07396eaad6e4b5cd7afc1a"
+        "spf-pin-100.lua sha256:eb67ca505224a19b2561beccc07742d08eb4d5330c184dd9e5e8977ee4496c3a"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/f186f628567667f4d31384a5d8f03821/raw/02f9a1d0500ffb0c98a2316083ac964146ac265d/1-only-my-professions-on.png",
-      "sha256": "135efb305735b6dd91bfd308d3f1cbee17856aced3eec4b26523c1fe3d45ee6e"
+      "url": "https://gist.githubusercontent.com/cjber/c0fbc930a2896e13b2217a616586cf8f/raw/3b3af358a7684a599edd276f5716da5758bf9377/1-destination-pin-at-50.png",
+      "sha256": "f8fb11e61738ead3a0ee1afa0a0db88c45133640957a60c813a0dc137d4f267f"
     },
     {
-      "url": "https://gist.githubusercontent.com/cjber/f186f628567667f4d31384a5d8f03821/raw/02f9a1d0500ffb0c98a2316083ac964146ac265d/2-town-services-on-a-first-login.png",
-      "sha256": "d708eb1766931ff56b369b9c43f4e53eb044b0bdbc2f329fb0f7c2128691d7ad"
+      "url": "https://gist.githubusercontent.com/cjber/c0fbc930a2896e13b2217a616586cf8f/raw/3b3af358a7684a599edd276f5716da5758bf9377/2-destination-pin-at-100.png",
+      "sha256": "2ee76b3fea378a30f51ed3ed119422f74f260a5d871935410bc68ecdc6aa394a"
     }
   ]
 }
