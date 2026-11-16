@@ -25,9 +25,11 @@ local function advance(seconds)
   end
  end
 end
-local function activeTickers()
+local function activeTickers(interval)
  local count = 0
- for index, t in ipairs(tickers) do if index > coreTickers and not t.cancelled then count = count + 1 end end
+ for index, t in ipairs(tickers) do
+  if index > coreTickers and not t.cancelled and (not interval or t.every == interval) then count = count + 1 end
+ end
  return count
 end
 local tracker = ShortestPathForeverObjectiveTracker
@@ -62,7 +64,8 @@ posX, posY, posZ, posMap = dock.x, dock.y, dock.z or 0, dock.map
 fireEvent("ZONE_CHANGED")
 ns.Timetable.Sighted(241, { epoch = ns.NowMs(), seen = GetServerTime() })
 advance(2)
-assert(activeTickers() == 1 and tracker.blocks[1].key == "dock1")
+assert(activeTickers() == 2 and activeTickers(1) == 1 and activeTickers(0.1) == 1
+ and tracker.blocks[1].key == "dock1", "nearby dock owns one travel clock and one minimap poller")
 local block = tracker:GetExistingBlock("dock1")
 local line = block:GetExistingLine(241)
 local text, marks = line.Text:GetText(), dirty
@@ -100,7 +103,8 @@ end
 sail(first + 5000)
 fireEvent("PLAYER_ENTERING_WORLD")
 for i = 1, 50 do sail(first + 5000 + i * 1000) advance(1) end
-assert(ns.CurrentRide() == 241 and activeTickers() == 1, "passive boat wake-up")
+assert(ns.CurrentRide() == 241 and activeTickers() == 2 and activeTickers(1) == 1
+ and activeTickers(0.1) == 1, "passive boat wake-up retains one travel clock and one nearby minimap poller")
 posX, posY, posMap = 0, 0, 1
 advance(40)
 assert(not ns.CurrentRide() and activeTickers() == 0, "alighting must retire observation")
