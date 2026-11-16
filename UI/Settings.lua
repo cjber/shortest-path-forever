@@ -670,7 +670,7 @@ ns.Init(function()
 		L["Show direction arrow"],
 		L["Show the next direction and the game's navigation marker."],
 		function()
-			ns.JourneyGuide.Retarget()
+			ns.JourneyGuide.ArrowChanged()
 			ns.WakeTravel()
 		end
 	)

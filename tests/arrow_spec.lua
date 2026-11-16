@@ -331,13 +331,13 @@ ns.JourneyGuide.To(nativeGoal, { nativeGoal }, nativeGoal)
 assert(driver.waypoint() and select(2, driver.waypoint()), "native guidance starts tracked")
 local nativeQueued = frame.OnUpdate
 ns.db.arrow = false
-ns.JourneyGuide.Retarget()
+ns.JourneyGuide.ArrowChanged()
 ns.JourneyGuide.To(nativeGoal, { nativeGoal }, nativeGoal)
 assert(not driver.waypoint(), "disabling takes the guide's waypoint back")
 nativeQueued(frame, 0.1)
 assert(not driver.waypoint(), "a queued arrow tick cannot restore the native marker while disabled")
 ns.db.arrow = true
-ns.JourneyGuide.Retarget()
+ns.JourneyGuide.ArrowChanged()
 ns.JourneyGuide.To(nativeGoal, { nativeGoal }, nativeGoal)
 assert(driver.waypoint() and select(2, driver.waypoint()), "enabling restores native guidance")
 ns.JourneyGuide.Stop()

@@ -179,6 +179,7 @@ local trackerRefreshed = 0
 local compassMoving = false
 local arrowMoving, arrowScaled, arrowLabelSet = false, nil, nil
 local arrowObjectivesChanged = 0
+local arrowVisibilityChanged, travelWoken = 0, 0
 local tomtomFollowRefreshed, ways = 0, {}
 local routeColour = nil
 local routeLinesRefreshed = 0
@@ -187,6 +188,14 @@ local destinationPinSizeRefreshed = 0
 local questPinsRefreshed = 0
 -- Core/Core.lua's defaults: every row on.
 local ns = {
+	JourneyGuide = {
+		ArrowChanged = function()
+			arrowVisibilityChanged = arrowVisibilityChanged + 1
+		end,
+	},
+	WakeTravel = function()
+		travelWoken = travelWoken + 1
+	end,
 	core = {
 		SafeCall = function(_, fn, ...)
 			return pcall(fn, ...)
@@ -675,6 +684,8 @@ assert(
 )
 -- The NPC nameplate arrows are guidance furniture and start on, with the friendly-nameplate condition in the tooltip.
 assert(Row("npcArrows").setting.default == true, "nameplate arrows are on by default")
+Row("arrow").setting.onChanged()
+assert(arrowVisibilityChanged == 1 and travelWoken == 1, "arrow visibility refreshes casting and wakes travel")
 assert(Row("npcArrows").tooltip:find("Friendly nameplates", 1, true), "the tooltip says friendly nameplates must be on")
 -- Party mage portals are opt-in, and every capital starts ticked for the mage to open.
 assert(Row("partyMagePortals").setting.default == false, "party mage portals are off by default")

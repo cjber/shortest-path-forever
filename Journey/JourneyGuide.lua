@@ -735,6 +735,16 @@ function Guide.Retarget()
 	end
 end
 
+-- The arrow switch changes a cast's visibility without resetting its canonical guidance phase.
+function Guide.ArrowChanged()
+	local teleport = guide and guide.target and guide.target.teleport
+	if teleport and Guide.Casting() then
+		ns.PointCastPrompt(teleport)
+	else
+		Guide.Retarget()
+	end
+end
+
 ---@return boolean
 function Guide.Active()
 	return guide ~= nil

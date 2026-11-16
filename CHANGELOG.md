@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Turning off the direction arrow hides its cast prompt too.** Turning it back on restores the current item or spell without interrupting cast guidance. Thanks to Zerhathos for the report (#881).
+
 - **Short walks through Ironforge keep nearby doorways.** Walking from the Hall of Explorers to Tinker Town uses the connecting corridor instead of looping through the Military Ward. Thanks to cmartin303 for the report (#910).
 
 - **Find transmogrifiers in Nearby services.** Search for transmog to plan a journey to a transmogrifier, and show or hide their world map pins with their own checkbox. Thanks to kaelr1 for the idea (#909).

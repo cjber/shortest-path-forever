@@ -737,7 +737,7 @@ end
 local castTarget
 
 local function RenderCastPrompt()
-	if not castPrompt or not castTarget then
+	if not castPrompt or not castTarget or ns.db.arrow == false then
 		return
 	end
 	local action, icon = ns.TeleportAction(castTarget)
@@ -749,7 +749,7 @@ end
 ---@param teleport? SPFTeleportPlace
 function ns.PointCastPrompt(teleport)
 	castTarget = teleport
-	if not teleport then
+	if not teleport or ns.db.arrow == false then
 		if castPrompt then
 			castPrompt:UnregisterAllEvents()
 			castPrompt:Hide()
