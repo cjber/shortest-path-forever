@@ -16,6 +16,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 <!-- forever-core-sync -->
 
+<!-- discord-image: docs/screenshots/cast_prompt.png -->
+
 - This is the last update published on Wago. Future updates come from CurseForge only. If you installed this addon through Wago or the WowUp Wago source, install it from CurseForge to keep getting updates; your settings stay.
 
 - **The Hearthstone and class teleports have their own switches.** *Use hearth and teleports* in Guidance is now *Use class teleports*, for a mage's city teleports and Teleport: Moonglade, beside *Use Hearthstone*, which also covers a shaman's Astral Recall. A new *Minimum teleport saving* keeps class teleports, and their Runes of Teleportation, for trips where they save at least that long, as *Minimum Hearthstone saving* already does for the Hearthstone. If you had turned the old switch off, both stay off, and turning either switch plans the journey you are on again. Thanks to embiem for the change (PR #775) and to InfamousMunky for the Hearthstone switch it sits beside (cjber/adventure-guide-forever#707).
