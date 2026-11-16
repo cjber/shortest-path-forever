@@ -72,6 +72,7 @@
 ---@field journeyKey string
 ---@field arrivalDistance number
 ---@field hearthMinimumSavings number
+---@field teleportMinimumSavings number
 ---@field roadDetour number
 ---@field destinationPinSize number
 ---@field arrowScale number
@@ -319,8 +320,8 @@
 ---@field taxiRoute? boolean
 ---@field useWaterWalking? boolean
 ---@field townServiceKinds? table<string, boolean>
----@field teleports? boolean
----@field useHearthstone? boolean the Hearthstone may be used in journeys, while other teleports still are (Teleports.lua)
+---@field teleports? boolean -- plan class teleports with a destination of their own
+---@field useHearthstone? boolean the Hearthstone and Astral Recall may be used in journeys, while class teleports still are (Teleports.lua)
 ---@field partyMagePortals? boolean -- offer a party mage's capital portals
 ---@field partyMageStormwind? boolean
 ---@field partyMageIronforge? boolean
@@ -328,7 +329,8 @@
 ---@field partyMageUndercity? boolean
 ---@field partyMageThunderBluff? boolean
 ---@field partyMageOrgrimmar? boolean
----@field hearthMinimumSavings? number -- seconds the Hearthstone must save over the best non-hearth plan
+---@field hearthMinimumSavings? number -- seconds the Hearthstone must save over the best plan without it
+---@field teleportMinimumSavings? number -- seconds a class teleport must save over the best plan without it
 ---@field stats? boolean -- collect per-character travel totals
 ---@field guideStops? boolean
 ---@field compass? boolean
@@ -491,6 +493,7 @@ ShortestPathForeverPathData = nil
 ---@field incumbent? number
 ---@field incumbentPlan? SPFPlan
 ---@field hearthMinimumSavings? number
+---@field teleportMinimumSavings? number
 ---@field otherFaction? boolean
 ---@field from SPFPoint
 ---@field to SPFPoint

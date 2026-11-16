@@ -43,6 +43,13 @@ L["Avoids %s (level %s)"] = "Umgeht %s (Stufe %s)"
 L["Bags"] = "Taschen"
 L["Bank"] = "Bank"
 L["Battlemaster"] = "Schlachtfeldmeister"
+L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to save it for later; class teleports are still offered."] =
+	"Reisen können mit Eurem Ruhestein oder Astralem Rückruf beginnen. Schaltet ihn aus, um ihn für später aufzusparen; Klassenteleports werden weiterhin angeboten."
+L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
+	"Reisen, und die Schätzungen anderer Addons von hier, können mit dem Stadtteleport eines Magiers oder Teleportieren: Mondlichtung beginnen, Abklingzeit eingerechnet."
+L["Minimum teleport saving"] = "Mindestersparnis durch Teleport"
+L["Only use a class teleport when it saves at least this much time."] =
+	"Einen Klassenteleport nur nutzen, wenn er mindestens so viel Zeit spart."
 L["Plan a journey with several stops."] = "Plane eine Reise mit mehreren Stationen." -- mt
 L["Boat and Zeppelin Routes"] = "Schiffs- und Zeppelinrouten"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
@@ -102,8 +109,6 @@ L["Interface"] = "Interface"
 L["Journey"] = "Reise"
 L["Journey  %s · %s"] = "Reise  %s · %s"
 L["Journey to %s"] = "Reise nach %s"
-L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."] =
-	"Reisen, und die Schätzungen anderer Addons von hier, können mit Eurem Ruhestein oder einem Teleport beginnen, Abklingzeit eingerechnet."
 L["Keep journeys after a reload"] = "Reisen nach /reload behalten"
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"Hält die gemeinsame Forever-Verfolgung dort, wo Ihr sie hingelegt habt. Der Griff oben zieht sie nicht mehr."
@@ -239,7 +244,7 @@ L["Turning this off leaves RestedXP's arrow visible."] = "Wenn Ihr dies ausschal
 L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
 	"Ausschalten, um die gemeinsame Forever-Verfolgung frei auf dem Bildschirm zu verschieben."
 L["Use %s"] = "%s benutzen"
-L["Use hearth and teleports"] = "Ruhestein und Teleports nutzen"
+L["Use class teleports"] = "Klassenteleports nutzen"
 L["Vendors"] = "Händler"
 L["W"] = "W"
 L["Walk to %s"] = "Zu Fuß nach %s"
@@ -430,8 +435,6 @@ L["Saved for later."] = "Für später aufgehoben." -- mt
 L["Scales the pin over the destination on the world map."] = "Skaliert die Markierung über dem Ziel auf der Weltkarte." -- mt
 L["This journey uses it: %s faster."] = "Diese Reise nutzt ihn: %s schneller." -- mt
 L["Use Hearthstone"] = "Ruhestein verwenden" -- mt
-L["Journeys can start with your Hearthstone. Turn it off to save it for later; class teleports are still offered."] =
-	"Reisen können mit Eurem Ruhestein beginnen. Schaltet ihn aus, um ihn für später aufzusparen; Klassenteleports werden weiterhin angeboten." -- mt
 L["Ammunition"] = "Munition" -- mt
 L["Bags and trade supplies"] = "Taschen und Handwerkswaren" -- mt
 L["Food and drink"] = "Essen und Getränke" -- mt

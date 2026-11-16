@@ -261,6 +261,7 @@ local ns = {
 		stats = true,
 		partyMagePortals = false,
 		hearthMinimumSavings = 0,
+		teleportMinimumSavings = 0,
 		compassScale = 100,
 		arrowScale = 100,
 		arrowLabel = "distance",
@@ -413,9 +414,10 @@ local groups = {
 		"followRoads",
 		"roadDetour",
 		"useWaterWalking",
-		"teleports",
 		"useHearthstone",
 		"hearthMinimumSavings",
+		"teleports",
+		"teleportMinimumSavings",
 		"guideStops",
 		"taxiRoute",
 		"corpse",
@@ -460,7 +462,7 @@ local order = {
 }
 
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
-assert(#rows == 74, #rows)
+assert(#rows == 75, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -639,6 +641,7 @@ assert(hearth.options.minValue == 0 and hearth.options.maxValue == 600 and heart
 local useHearthstone = Row("useHearthstone")
 assert(useHearthstone.kind == "checkbox" and useHearthstone.setting.default == true, "the Hearthstone starts allowed")
 assert(useHearthstone.setting.variable == "ShortestPathForever_useHearthstone", "the switch is saved")
+assert(useHearthstone.tooltip:find("Astral Recall", 1, true), "the tooltip says Astral Recall follows it")
 assert(useHearthstone.tooltip:find("class teleports", 1, true), "the tooltip says class teleports keep working")
 ns.SetHearthstoneEnabled = function(value)
 	useHearthstone.value = value
@@ -649,6 +652,28 @@ assert(useHearthstone.value == false and policyChanged == 2, "turning the Hearth
 ns.db.useHearthstone = true
 useHearthstone.setting.onChanged()
 assert(useHearthstone.value == true and policyChanged == 3, "the row falls back to the saved value")
+-- Class teleports have their own switch and their own minimum saving beside it.
+local teleportSaving = Row("teleportMinimumSavings")
+assert(
+	teleportSaving.kind == "slider" and teleportSaving.setting.default == 0,
+	"class teleports need no saving by default"
+)
+assert(
+	teleportSaving.options.format(0) == "Off" and teleportSaving.options.format(90) == "90 Sec",
+	"the teleport slider shows its value"
+)
+teleportSaving.setting.onChanged()
+assert(policyChanged == 4, "changing the teleport saving invalidates the current travel policy")
+assert(
+	teleportSaving.options.minValue == 0
+		and teleportSaving.options.maxValue == 600
+		and teleportSaving.options.step == 30
+)
+local teleports = Row("teleports")
+assert(teleports.kind == "checkbox" and teleports.setting.default == true, "class teleports start allowed")
+assert(teleports.tooltip:find("mage", 1, true), "the switch names the class teleports it offers")
+teleports.setting.onChanged()
+assert(policyChanged == 5, "the class teleport switch replans the journey")
 assert(Row("taxiRoute").tooltip:find("flight master", 1, true))
 Row("taxiRoute").setting.onChanged()
 assert(taxiRefreshed == 1, "flight route updates when its setting changes")

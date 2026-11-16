@@ -113,6 +113,7 @@ local DEFAULTS = {
 	partyMageThunderBluff = true,
 	partyMageOrgrimmar = true,
 	hearthMinimumSavings = 0,
+	teleportMinimumSavings = 0,
 	-- Existing saved false choices remain off; missing settings join the travel journal.
 	stats = true,
 	guideStops = true,
@@ -379,6 +380,11 @@ frame:SetScript("OnEvent", function(self, _, name)
 	self:UnregisterEvent("ADDON_LOADED")
 	ShortestPathForeverDB = ShortestPathForeverDB or {}
 	ns.db = ShortestPathForeverDB
+	-- `teleports` once covered the Hearthstone too; a save that turned it off keeps the Hearthstone off, while a
+	-- switch saved since then stands as the player left it.
+	if ns.db.useHearthstone == nil and ns.db.teleports == false then
+		ns.db.useHearthstone = false
+	end
 	for key, value in pairs(DEFAULTS) do
 		if ns.db[key] == nil then
 			ns.db[key] = value

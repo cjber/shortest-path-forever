@@ -43,6 +43,13 @@ L["Avoids %s (level %s)"] = "绕开%s（等级 %s）"
 L["Bags"] = "背包"
 L["Bank"] = "银行"
 L["Battlemaster"] = "战场指挥官"
+L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to save it for later; class teleports are still offered."] =
+	"旅程可以从炉石或星界传送开始。关闭后可留待后用；职业传送仍然可用。"
+L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
+	"旅程以及其他插件从这里算起的估计，可以从法师的城市传送或传送：月光林地开始，并计入冷却时间。"
+L["Minimum teleport saving"] = "传送最少节省时间"
+L["Only use a class teleport when it saves at least this much time."] =
+	"只在职业传送至少节省这么多时间时使用。"
 L["Plan a journey with several stops."] = "规划包含多个站点的旅程。" -- mt
 L["Boat and Zeppelin Routes"] = "船只和飞艇航线"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
@@ -102,8 +109,6 @@ L["Interface"] = "界面"
 L["Journey"] = "旅程"
 L["Journey  %s · %s"] = "旅程  %s · %s"
 L["Journey to %s"] = "前往%s的旅程"
-L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."] =
-	"旅程以及其他插件从这里算起的估计，可以从炉石或传送开始，并计入冷却时间。"
 L["Keep journeys after a reload"] = "重载后保留旅程"
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"将共享的 Forever 追踪器保持在您放置的位置。顶部的拖拽手柄不再移动它。"
@@ -235,7 +240,7 @@ L["Turning this off leaves RestedXP's arrow visible."] = "关闭此选项后，R
 L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
 	"关闭此项可将共享Forever追踪栏拖到屏幕上任意位置。"
 L["Use %s"] = "使用%s"
-L["Use hearth and teleports"] = "使用炉石和传送"
+L["Use class teleports"] = "使用职业传送"
 L["Vendors"] = "商人"
 L["W"] = "西"
 L["Walk to %s"] = "步行前往%s"
@@ -426,8 +431,6 @@ L["Saved for later."] = "已留待后用。" -- mt
 L["Scales the pin over the destination on the world map."] = "调整世界地图上目的地标记的大小。" -- mt
 L["This journey uses it: %s faster."] = "此旅程使用它：快 %s。" -- mt
 L["Use Hearthstone"] = "使用炉石" -- mt
-L["Journeys can start with your Hearthstone. Turn it off to save it for later; class teleports are still offered."] =
-	"旅程可以从炉石开始。关闭后可留待后用；职业传送仍然可用。" -- mt
 L["Ammunition"] = "弹药" -- mt
 L["Bags and trade supplies"] = "背包和贸易品" -- mt
 L["Food and drink"] = "食物和饮水" -- mt

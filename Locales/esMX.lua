@@ -44,6 +44,13 @@ L["Avoids %s (level %s)"] = "Rodea %s (nivel %s)"
 L["Bags"] = "Bolsas"
 L["Bank"] = "Banco"
 L["Battlemaster"] = "Maestro de batalla"
+L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to save it for later; class teleports are still offered."] =
+	"Los viajes pueden empezar con tu piedra de hogar o Retirada astral. Desactívala para guardarla para más tarde; los teletransportes de clase se siguen ofreciendo."
+L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
+	"Los viajes, y las estimaciones de otros addons desde aquí, pueden empezar con un teletransporte de mago a una ciudad o Teletransporte: Claro de la Luna, contando el tiempo de reutilización."
+L["Minimum teleport saving"] = "Ahorro mínimo del teletransporte"
+L["Only use a class teleport when it saves at least this much time."] =
+	"Usar un teletransporte de clase solo si ahorra al menos este tiempo."
 L["Plan a journey with several stops."] = "Planifica un viaje con varias paradas." -- mt
 L["Boat and Zeppelin Routes"] = "Rutas de barcos y zepelines"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
@@ -104,8 +111,6 @@ L["Interface"] = "Interfaz"
 L["Journey"] = "Viaje"
 L["Journey  %s · %s"] = "Viaje  %s · %s"
 L["Journey to %s"] = "Viaje a %s"
-L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."] =
-	"Los viajes, y las estimaciones de otros addons desde aquí, pueden empezar con tu piedra de hogar o un teletransporte, contando el tiempo de reutilización."
 L["Keep journeys after a reload"] = "Mantener viajes tras recargar"
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"Mantiene el rastreador compartido Forever donde lo pones. El tirador de arriba ya no lo arrastra."
@@ -240,7 +245,7 @@ L["Turning this off leaves RestedXP's arrow visible."] = "Si lo desactivas, la f
 L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
 	"Desactívalo para arrastrar el rastreador Forever compartido a cualquier parte de la pantalla."
 L["Use %s"] = "Usar %s"
-L["Use hearth and teleports"] = "Usar hogar y teletransportes"
+L["Use class teleports"] = "Usar teletransportes de clase"
 L["Vendors"] = "Vendedores"
 L["W"] = "O"
 L["Walk to %s"] = "Caminar hasta %s"
@@ -431,8 +436,6 @@ L["Saved for later."] = "Guardada para más tarde." -- mt
 L["Scales the pin over the destination on the world map."] = "Escala el marcador sobre el destino en el mapa del mundo." -- mt
 L["This journey uses it: %s faster."] = "Este viaje la usa: %s más rápido." -- mt
 L["Use Hearthstone"] = "Usar piedra de hogar" -- mt
-L["Journeys can start with your Hearthstone. Turn it off to save it for later; class teleports are still offered."] =
-	"Los viajes pueden empezar con tu piedra de hogar. Desactívala para guardarla para más tarde; los teletransportes de clase se siguen ofreciendo." -- mt
 L["Ammunition"] = "Munición" -- mt
 L["Bags and trade supplies"] = "Bolsas y objetos comerciables" -- mt
 L["Food and drink"] = "Comida y bebida" -- mt

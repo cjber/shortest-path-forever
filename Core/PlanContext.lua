@@ -94,6 +94,7 @@ function Context.Options(from, to, policy)
 		teleportState = walking and empty or state or empty,
 		partyPortals = walking and empty or partyPortals,
 		hearthMinimumSavings = ns.db and ns.db.hearthMinimumSavings or 0,
+		teleportMinimumSavings = ns.db and ns.db.teleportMinimumSavings or 0,
 		landmasses = ns.Landmasses,
 		baked = ns.Walks,
 	}

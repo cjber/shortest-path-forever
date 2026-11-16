@@ -1,6 +1,12 @@
 local ns = {}
 assert(loadfile("tools/load_nav.lua"))(1)
-for _, file in ipairs({ "Routing/PathGrid.lua", "Routing/Path.lua", "Routing/PathJobs.lua", "Routing/Planner.lua" }) do
+for _, file in ipairs({
+	"Routing/PathGrid.lua",
+	"Routing/Path.lua",
+	"Routing/PathJobs.lua",
+	"Routing/Savings.lua",
+	"Routing/Planner.lua",
+}) do
 	assert(loadfile(file))("ShortestPathForever", ns)
 end
 assert(loadfile(arg[1] or "Data/Routes.lua"))("ShortestPathForever", ns)

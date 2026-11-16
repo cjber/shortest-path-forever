@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **The Hearthstone and class teleports have their own switches.** *Use hearth and teleports* in Guidance is now *Use class teleports*, for a mage's city teleports and Teleport: Moonglade, beside *Use Hearthstone*, which also covers a shaman's Astral Recall. A new *Minimum teleport saving* keeps class teleports, and their Runes of Teleportation, for trips where they save at least that long, as *Minimum Hearthstone saving* already does for the Hearthstone. If you had turned the old switch off, both stay off, and turning either switch plans the journey you are on again. Thanks to embiem for the change (PR #775).
+
 - **Journeys avoid lifts with opposing-faction landing guards.** Horde-guarded approaches are left out of Alliance journeys by default. A lift already being ridden can still reach its next stop. Thanks to a player for the report (#911).
 
 - **Nearby transport pins avoid work between samples.** Minimap boats and portals keep following movement without a callback on every frame. Polling stops while the minimap is hidden or combat is active (#784).
