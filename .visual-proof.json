@@ -1,45 +1,34 @@
 {
-  "input_digest": "c1296f2ca228f667ba5e8c0a951240757858ea20cd98a2e22b043cb0f10aa39f",
-  "runtime_sha256": "c1296f2ca228f667ba5e8c0a951240757858ea20cd98a2e22b043cb0f10aa39f",
-  "candidate": "9a92e7dc3bb0b19fdff11ce9d0569e65f1c0ad1e4861326985a295de61c01a88",
+  "input_digest": "49286f9ca8d970a5f4be67fe0a5d186453ad31f7fce4253d611a3da3dbf0dc87",
+  "runtime_sha256": "49286f9ca8d970a5f4be67fe0a5d186453ad31f7fce4253d611a3da3dbf0dc87",
+  "candidate": "5b49395e04a8187847c69e5ea19c733bd1168a1bce59e64e8f669a10a50d28b6",
   "client_build": "1.60.1.70938 (Interface 16001)",
   "tested_artifact": "source-tree",
-  "source_commit": "1715c2f3711fa12a7dc55fe8a1bdece4c5a505c5",
+  "source_commit": "4a49a907d41de3a2e34be2da1540d91a448e18ed",
   "flows": [
     {
-      "name": "map marks settings with the new option",
+      "name": "guidance",
       "steps": [
-        "/home/cjber/.cache/agent-scratch/sweep/wow/spf1246/1-map-marks.lua"
+        "spf-guidance.lua sha256:bfc9a182e00e0b17ce2910a9cba5a6e130d7aa1be10b368580813770524e18ab"
       ],
       "result": "pass"
     },
     {
-      "name": "quest log with the tab turned off",
+      "name": "map marks",
       "steps": [
-        "/home/cjber/.cache/agent-scratch/sweep/wow/spf1246/2-tab-off.lua"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "quest log with the tab turned back on",
-      "steps": [
-        "/home/cjber/.cache/agent-scratch/sweep/wow/spf1246/3-tab-on.lua"
+        "1-map-marks.lua sha256:6fe2dd89d386f7280032c8b9d6f71fae3d7687f4c12d6af0bee77b38f5972638"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/df1354d3197820a63bb648a49de5ad79/raw/889eb18fb1ec0de4d338716a81fe2cec74b53312/1-map-marks-settings-with-the-new-option.png",
-      "sha256": "0b6597151201fc78f734cc00d9154ce5c520564458a273a2a179818cebad06cf"
+      "url": "https://gist.githubusercontent.com/cjber/f89d30fc9cba3f946760b46530b5636f/raw/b268b67da9dcaab21ae8babe5fd1f77a2f834d30/1-guidance.png",
+      "sha256": "2db75100976223a4992d9814f8994169db7e20fb4f0c6423d803052735ccd82e"
     },
     {
-      "url": "https://gist.githubusercontent.com/cjber/df1354d3197820a63bb648a49de5ad79/raw/889eb18fb1ec0de4d338716a81fe2cec74b53312/2-quest-log-with-the-tab-turned-off.png",
-      "sha256": "6b424ff5efaa60b83bf36e23ed9b9ff537fed0736d9f779da0cfc30b3d145727"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/df1354d3197820a63bb648a49de5ad79/raw/889eb18fb1ec0de4d338716a81fe2cec74b53312/3-quest-log-with-the-tab-turned-back-on.png",
-      "sha256": "08e8e7bba59198b8a3d09463e3665cbcd22badf61bd905c553605d5bfe580cc2"
+      "url": "https://gist.githubusercontent.com/cjber/f89d30fc9cba3f946760b46530b5636f/raw/b268b67da9dcaab21ae8babe5fd1f77a2f834d30/2-map-marks.png",
+      "sha256": "c400e6dac30f71362d9ea2c217c43f1cee0e333c63bae19f05ba4a7929bf8da8"
     }
   ]
 }
