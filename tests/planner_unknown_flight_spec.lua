@@ -4,6 +4,7 @@
 local ns = {}
 assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", ns)
 assert(loadfile("Transport/Model.lua"))("ShortestPathForever", ns)
+assert(loadfile("Routing/Savings.lua"))("ShortestPathForever", ns)
 assert(loadfile("Routing/Planner.lua"))("ShortestPathForever", ns)
 
 local function point(x)

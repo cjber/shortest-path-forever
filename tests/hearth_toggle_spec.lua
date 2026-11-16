@@ -92,6 +92,15 @@ do
 	runtime.db.useHearthstone = true
 	check(#assert(Usable(5000)) == 2, "and on again, the Hearthstone is back")
 
+	-- Class teleports have their own switch, and it leaves the bind teleports alone.
+	runtime.db.teleports = false
+	places = assert(Usable(5000))
+	check(#places == 1 and places[1].item == 6948, "class teleports off keeps the Hearthstone")
+	runtime.db.useHearthstone = false
+	check(#Usable(5000) == 0, "both switches off have nothing to offer")
+	runtime.db.teleports, runtime.db.useHearthstone = true, true
+	check(#assert(Usable(5000)) == 2, "both on again, both are back")
+
 	-- The map button still knows the Hearthstone while it is saved for later, so it can be turned back on.
 	local hearth = assert(Hearthstone(5000))
 	check(hearth.name == "Goldshire" and hearth.map == 0 and hearth.x == 10 and hearth.y == 20, "the bind point")
@@ -99,7 +108,7 @@ do
 	runtime.db.useHearthstone = false
 	check(Hearthstone(5000) ~= nil, "the saved button still knows where the Hearthstone goes")
 	runtime.db.teleports = false
-	check(Hearthstone(5000) == nil, "with every teleport off, the button has nothing to offer")
+	check(Hearthstone(5000) ~= nil, "class teleports off still leaves the button")
 	runtime.db.teleports = true
 	items[6948] = 0
 	check(Hearthstone(5000) == nil, "without the Hearthstone, no button")
@@ -114,14 +123,15 @@ end
 do
 	local driver = assert(loadfile("tests/journey_driver.lua"))()
 	local ns = driver.ns
-	local hearth = { map = 1, x = 6930, y = 0, spell = 8690, item = 6948, cast = 10000 }
+	local hearth = { map = 1, x = 6930, y = 0, spell = 8690, item = 6948, bind = true, cast = 10000 }
 	local class = { map = 1, x = 3500, y = 0, spell = 3561, cast = 10000 }
 	ns.teleports, ns.teleportReady = { class, hearth }, { 0, 0 }
-	-- What Transport/Teleports.lua returns: the Hearthstone only while the switch allows it.
+	-- What Transport/Teleports.lua returns: each switch allows its own kind of teleport.
 	ns.UsableTeleports = function()
 		local places, ready = {}, {}
 		for index, teleport in ipairs(ns.teleports) do
-			if teleport.item ~= 6948 or ns.db.useHearthstone ~= false then
+			local wanted = teleport.bind and ns.db.useHearthstone ~= false or ns.db.teleports ~= false
+			if wanted then
 				places[#places + 1] = teleport
 				ready[#places] = ns.teleportReady[index]
 			end
@@ -165,6 +175,32 @@ do
 	driver.update(5)
 	planned = assert(driver.shown())
 	check(planned.legs[1].teleport and planned.legs[1].teleport.item == 6948, "the Hearthstone is planned with again")
+
+	-- The class teleport switch takes only the class teleport out of the journey.
+	ns.db.teleports = false
+	ns.TravelPolicyChanged()
+	driver.update(5)
+	planned = assert(driver.shown())
+	check(
+		planned.legs[1].teleport and planned.legs[1].teleport.item == 6948,
+		"class teleports off still plans the Hearthstone"
+	)
+	for _, leg in ipairs(planned.legs) do
+		check(not (leg.teleport and leg.teleport.spell == 3561), "the class teleport is out of the journey")
+	end
+	ns.db.teleports = true
+	ns.TravelPolicyChanged()
+	driver.update(5)
+
+	-- Astral Recall is a bind teleport too, so skipping its step refuses it like the Hearthstone.
+	local recall = { map = 1, x = 6930, y = 0, spell = 556, bind = true, cast = 10000 }
+	ns.teleports, ns.teleportReady = { recall }, { 0 }
+	-- A goal a yard away is a new journey, so the previous plan is not carried over.
+	driver.begin(origin, { map = 1, x = 7001, y = 0 })
+	planned = assert(driver.shown())
+	check(planned.legs[1].teleport and planned.legs[1].teleport.spell == 556, "the journey starts with Astral Recall")
+	check(ns.SkipJourneyStep(1), "the Astral Recall step can be completed by hand")
+	check(ns.JourneyWithoutHearth(), "a completed Astral Recall step refuses it for this journey")
 end
 
 -- The map button's tooltip and its two looks, without a client frame.
@@ -206,7 +242,7 @@ do
 				map = 1,
 				x = 10,
 				y = 20,
-				place = { map = 1, x = 10, y = 20, item = 6948, spell = 8690, cast = 10000 },
+				place = { map = 1, x = 10, y = 20, item = 6948, spell = 8690, bind = true, cast = 10000 },
 				readyAt = 1000,
 			}
 		end,

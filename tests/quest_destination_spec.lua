@@ -5,6 +5,7 @@
 local ns = {}
 assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", ns)
 assert(loadfile("Transport/Model.lua"))("ShortestPathForever", ns)
+assert(loadfile("Routing/Savings.lua"))("ShortestPathForever", ns)
 assert(loadfile("Routing/Planner.lua"))("ShortestPathForever", ns)
 ns.db = { journey = true }
 ns.Canvas = { OnClick = function() end }

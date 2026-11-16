@@ -35,7 +35,7 @@ print("journey_arrival_spec: retained journey refines deferred geometry on arriv
 
 local manual = assert(loadfile("tests/journey_driver.lua"))()
 local journey = manual.ns
-journey.teleports = { { map = 1, x = 6930, y = 0, spell = 8690, item = 6948, cast = 10000 } }
+journey.teleports = { { map = 1, x = 6930, y = 0, spell = 8690, item = 6948, bind = true, cast = 10000 } }
 journey.teleportReady = { 0 }
 local origin, destination = { map = 1, x = 0, y = 0 }, { map = 1, x = 7000, y = 0 }
 manual.begin(origin, destination)

@@ -45,6 +45,7 @@ local CONTEXT_KEYS = {
 	"landmasses",
 	"baked",
 	"hearthMinimumSavings",
+	"teleportMinimumSavings",
 }
 
 -- Core/APIInput.lua checks what callers send and answers while there is nothing to read; the walk estimates share it.

@@ -12,6 +12,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **The Hearthstone and class teleports have their own switches.** *Use hearth and teleports* in Guidance is now *Use class teleports*, for a mage's city teleports and Teleport: Moonglade, beside *Use Hearthstone*, which also covers a shaman's Astral Recall. A new *Minimum teleport saving* keeps class teleports, and their Runes of Teleportation, for trips where they save at least that long, as *Minimum Hearthstone saving* already does for the Hearthstone. If you had turned the old switch off, both stay off, and turning either switch plans the journey you are on again. Thanks to embiem for the change (PR #775) and to InfamousMunky for the Hearthstone switch it sits beside (cjber/adventure-guide-forever#707).
+
 ### For addon authors
 
 - **Walk costs and the walking data are public in API 2.3.** `EstimateWalks()` searches the walking maps for another addon's own route under the addon's frame budget, pausing in combat and stopping when cancelled; each cost is walking yards, or `false` when there is no way there with what this character knows. `NavVersion()` names the data those costs were measured against, so a caller can drop cached costs when it changes. Thanks to Chulf58 for the request (#913).

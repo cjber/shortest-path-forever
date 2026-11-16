@@ -72,6 +72,30 @@ assert(
 	loadCore({ hearthMinimumSavings = 300 }).db.hearthMinimumSavings == 300,
 	"saved savings threshold survives reload"
 )
+assert(fresh.db.useHearthstone == true and fresh.db.teleports == true, "new installs plan every teleport")
+assert(
+	loadCore({ teleports = false }).db.useHearthstone == false,
+	"an old save that turned off 'Use hearth and teleports' keeps the Hearthstone off"
+)
+assert(loadCore({ teleports = true }).db.useHearthstone == true, "an old save that kept it on keeps the Hearthstone on")
+local migrated = loadCore({ teleports = false, useHearthstone = true })
+assert(
+	migrated.db.useHearthstone == false,
+	"the split moves an old combined switch off once, whatever was defaulted since"
+)
+migrated.db.useHearthstone = true
+assert(loadCore(migrated.db).db.useHearthstone == true, "turning the Hearthstone back on afterwards keeps it on")
+assert(
+	loadCore({ teleports = true, useHearthstone = true }).db.useHearthstone == true,
+	"a save with both switches on is unchanged"
+)
+assert(loadCore({ useHearthstone = false }).db.teleports == true, "class teleports keep their own default")
+assert(fresh.db.teleportMinimumSavings == 0, "class teleports need no saving by default")
+assert(loadCore({}).db.teleportMinimumSavings == 0, "old saves acquire the class teleport default")
+assert(
+	loadCore({ teleportMinimumSavings = 120 }).db.teleportMinimumSavings == 120,
+	"saved class teleport threshold survives reload"
+)
 assert(not fresh.RouteShown({ faction = "Horde" }), "hostile route hidden by default")
 assert(fresh.RouteShown({ faction = "Alliance" }), "own faction route remains available")
 assert(fresh.RouteShown({}), "neutral transport remains available")

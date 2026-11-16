@@ -46,6 +46,13 @@ L["Avoids %s (level %s)"] = "%s 우회 (레벨 %s)"
 L["Bags"] = "가방"
 L["Bank"] = "은행"
 L["Battlemaster"] = "전장 지휘관"
+L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to save it for later; class teleports are still offered."] =
+	"여정은 귀환석이나 영혼의 귀환으로 시작할 수 있습니다. 나중을 위해 끄면 직업 순간이동은 계속 제공됩니다."
+L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
+	"여정과 다른 애드온의 이곳 기준 예상 시간은 재사용 대기시간을 포함해 마법사의 도시 순간이동이나 순간이동: 달의 숲으로 시작할 수 있습니다."
+L["Minimum teleport saving"] = "순간이동 최소 절약 시간"
+L["Only use a class teleport when it saves at least this much time."] =
+	"최소 이만큼 시간을 절약할 때만 직업 순간이동을 사용합니다."
 L["Plan a journey with several stops."] = "여러 정류장을 거치는 여정을 계획합니다." -- mt
 L["Boat and Zeppelin Routes"] = "배와 비행선 노선"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
@@ -107,8 +114,6 @@ L["Interface"] = "인터페이스"
 L["Journey"] = "여정"
 L["Journey  %s · %s"] = "여정  %s · %s"
 L["Journey to %s"] = "%s(으)로 가는 여정"
-L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."] =
-	"여정과 다른 애드온의 이곳 기준 예상 시간은 재사용 대기시간을 포함해 귀환석이나 순간이동으로 시작할 수 있습니다."
 L["Keep journeys after a reload"] = "재시작 후 여정 유지"
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"공유 Forever 추적기를 놓은 자리에 유지합니다. 위쪽 손잡이로 더 이상 끌 수 없습니다."
@@ -247,7 +252,7 @@ L["Turning this off leaves RestedXP's arrow visible."] =
 L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
 	"이 옵션을 끄면 공유 Forever 추적기를 화면 어디로든 끌 수 있습니다."
 L["Use %s"] = "%s 사용"
-L["Use hearth and teleports"] = "귀환석과 순간이동 사용"
+L["Use class teleports"] = "직업 순간이동 사용"
 L["Vendors"] = "상인"
 L["W"] = "서"
 L["Walk to %s"] = "%s까지 걷기"
@@ -441,8 +446,6 @@ L["Scales the pin over the destination on the world map."] =
 	"세계 지도의 목적지 위 핀 크기를 조정합니다." -- mt
 L["This journey uses it: %s faster."] = "이 여정에서 사용: %s 더 빠름." -- mt
 L["Use Hearthstone"] = "귀환석 사용" -- mt
-L["Journeys can start with your Hearthstone. Turn it off to save it for later; class teleports are still offered."] =
-	"여정은 귀환석으로 시작할 수 있습니다. 나중을 위해 끄면 직업 순간이동은 계속 제공됩니다." -- mt
 L["Ammunition"] = "탄약" -- mt
 L["Bags and trade supplies"] = "가방 및 전문 기술" -- mt
 L["Food and drink"] = "음식 및 음료" -- mt

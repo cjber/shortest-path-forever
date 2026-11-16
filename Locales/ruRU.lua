@@ -47,6 +47,13 @@ L["Avoids %s (level %s)"] = "Обходит %s (уровень %s)"
 L["Bags"] = "Сумки"
 L["Bank"] = "Банк"
 L["Battlemaster"] = "Военачальник"
+L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to save it for later; class teleports are still offered."] =
+	"Путешествие может начаться с камня возвращения или «Астрального возвращения». Отключите его, чтобы сохранить на потом; классовые телепорты по-прежнему доступны."
+L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
+	"Маршруты, а также оценки других модификаций отсюда, могут начинаться с телепорта мага в город или заклинания «Телепортация: Лунная поляна» с учетом восстановления."
+L["Minimum teleport saving"] = "Минимальная экономия от телепорта"
+L["Only use a class teleport when it saves at least this much time."] =
+	"Использовать классовый телепорт, только если он экономит не меньше этого времени."
 L["Plan a journey with several stops."] =
 	"Спланируйте путешествие с несколькими остановками." -- mt
 L["Boat and Zeppelin Routes"] = "Маршруты кораблей и дирижаблей"
@@ -109,8 +116,6 @@ L["Interface"] = "Интерфейс"
 L["Journey"] = "Маршрут"
 L["Journey  %s · %s"] = "Маршрут  %s • %s"
 L["Journey to %s"] = "Маршрут: %s"
-L["Journeys, and other addons' estimates from here, can start with your hearthstone or a teleport, cooldown counted."] =
-	"Маршруты, а также оценки других модификаций отсюда, могут начинаться с камня возвращения или телепорта с учетом восстановления."
 L["Keep journeys after a reload"] = "Сохранять маршрут после перезагрузки"
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"Оставляет общий трекер Forever там, где вы его поставили. Ручка сверху больше его не перетаскивает."
@@ -256,7 +261,7 @@ L["Turning this off leaves RestedXP's arrow visible."] =
 L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
 	"Отключите, чтобы перетаскивать общую панель отслеживания Forever в любое место экрана."
 L["Use %s"] = "Использовать: %s"
-L["Use hearth and teleports"] = "Камень возвращения и телепорты"
+L["Use class teleports"] = "Использовать классовые телепорты"
 L["Vendors"] = "Торговцы"
 L["W"] = "З"
 L["Walk to %s"] = "Идти: %s"
@@ -457,8 +462,6 @@ L["Scales the pin over the destination on the world map."] =
 	"Меняет размер метки над пунктом назначения на карте мира." -- mt
 L["This journey uses it: %s faster."] = "Этот маршрут использует его: на %s быстрее." -- mt
 L["Use Hearthstone"] = "Использовать камень возвращения" -- mt
-L["Journeys can start with your Hearthstone. Turn it off to save it for later; class teleports are still offered."] =
-	"Путешествие может начаться с камня возвращения. Отключите его, чтобы сохранить на потом; классовые телепорты по-прежнему доступны." -- mt
 L["Ammunition"] = "Боеприпасы" -- mt
 L["Bags and trade supplies"] = "Сумки и хозяйственные товары" -- mt
 L["Food and drink"] = "Еда и напитки" -- mt
