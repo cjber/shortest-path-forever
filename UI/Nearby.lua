@@ -541,7 +541,10 @@ local function Assemble(read)
 		groups = BuildGroups()
 	end)
 	local function Pump()
-		if InCombatLockdown() or ns.Path.Busy() then
+		-- A large saved read takes only a few milliseconds of CPU, but waiting for Path.Busy can starve it
+		-- for the whole login replan. Give the index its existing 1 ms slice independently of the planner's
+		-- own frame budget, so both make progress without changing either budget.
+		if InCombatLockdown() then
 			C_Timer.After(0.1, Pump)
 			return
 		end

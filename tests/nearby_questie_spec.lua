@@ -106,6 +106,7 @@ end
 ---@return table
 local function Load(options)
 	local timers, trackingMenus, reported, logins = {}, {}, {}, {}
+	local elapsed = 0
 	local env = setmetatable({
 		Menu = {
 			ModifyMenu = function(tag, callback)
@@ -115,11 +116,11 @@ local function Load(options)
 		MenuResponse = { Open = 1, Refresh = 2, Close = 3, CloseAll = 4 },
 		C_Timer = {
 			After = function(seconds, fn)
-				timers[#timers + 1] = { seconds = seconds, fn = fn }
+				timers[#timers + 1] = { seconds = seconds, due = elapsed + seconds, fn = fn }
 			end,
 		},
 		debugprofilestop = function()
-			return 0
+			return options.clock and options.clock() or 0
 		end,
 		InCombatLockdown = function()
 			return false
@@ -209,7 +210,7 @@ local function Load(options)
 	end
 	ns.Path = {
 		Busy = function()
-			return false
+			return options.busy and options.busy() or false
 		end,
 	}
 	-- A mouse client: no gamepad interface, so UI/MenuModifier.lua keeps its entries in place.
@@ -257,6 +258,18 @@ local function Load(options)
 		env = env,
 		reported = reported,
 		Run = Run,
+		Frame = function()
+			elapsed = elapsed + 1 / 60
+			local pending = timers
+			timers = {}
+			for _, timer in ipairs(pending) do
+				if timer.due <= elapsed then
+					timer.fn()
+				else
+					timers[#timers + 1] = timer
+				end
+			end
+		end,
 		Requests = function()
 			return requests
 		end,
@@ -585,3 +598,79 @@ do
 end
 
 print("nearby_questie: Questie's ready wait, the saved read, and a database that does not read: ok")
+
+-- A large saved service read: thousands of vendor goods and service NPCs, with multiple spawns.
+-- The matching key comes from the real reader, so this exercises login's saved path without database reads.
+do
+	local count = { items = 0, npcs = 0 }
+	local db = {}
+	local seed = Load({ lib = QuestieDB(count), db = db })
+	seed.Login()
+	seed.ns.NearbyServices.Request()
+	seed.Run(true)
+	local read = assert(db.nearbyRead)
+	read.items, read.npcs = {}, {}
+	for id = 1, 2000 do
+		read.npcs[id] = {
+			name = "Service " .. id,
+			flags = FLAGS.INNKEEPER,
+			spawns = { { 1429, 0.4, 0.6 }, { 1429, 0.5, 0.5 } },
+		}
+	end
+	for id = 1, 8000 do
+		read.items[id] = { name = "Goods " .. id, class = 6, subClass = 2, level = 1, vendors = { id % 2000 + 1 } }
+	end
+	local reads = count.npcs + count.items
+	for _, busySeconds in ipairs({ 0, 60 }) do
+		local frame, cpu = 0, 0
+		local run = Load({
+			lib = QuestieDB(count),
+			db = db,
+			clock = function()
+				return os.clock() * 1000
+			end,
+			busy = function()
+				return frame <= busySeconds * 60
+			end,
+		})
+		run.Login()
+		run.ns.NearbyServices.Request()
+		while run.ns.NearbyServices.State() ~= "ready" and frame < 7200 do
+			frame = frame + 1
+			local start = os.clock()
+			run.Frame()
+			cpu = cpu + os.clock() - start
+		end
+		print(
+			string.format(
+				"nearby assembly: 8000 items, 2000 NPCs, 4000 spawns, busy=%ds, frames=%d, CPU=%.3fms",
+				busySeconds,
+				frame,
+				cpu * 1000
+			)
+		)
+		assert(run.ns.NearbyServices.State() == "ready")
+	end
+	-- Deterministic clock: 100 resumes per slice, independent of machine speed.
+	local clock = 0
+	local run = Load({
+		lib = QuestieDB(count),
+		db = db,
+		clock = function()
+			clock = clock + 0.01
+			return clock
+		end,
+		busy = function()
+			return true
+		end,
+	})
+	run.Login()
+	run.ns.NearbyServices.Request()
+	for _ = 1, 256 do
+		run.Frame()
+	end
+	assert(run.ns.NearbyServices.State() == "ready", "saved assembly must finish while the planner stays busy")
+	assert(count.npcs + count.items == reads, "saved assembly never scans QuestieDB")
+	assert(run.ns.NearbyServices.Nearest("innkeeper", { map = 1, x = 0, y = 0 }), "service pins have indexed spawns")
+	assert(#run.reported == 0)
+end
