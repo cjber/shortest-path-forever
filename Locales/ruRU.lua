@@ -170,12 +170,10 @@ L["Only use the Hearthstone when it saves at least this much time."] =
 	"Использовать камень возвращения, только если он экономит не меньше этого времени."
 L["Open"] = "Открыть"
 L["Open Nearby services"] = "Открыть услуги поблизости"
-L["Open settings."] = "Открыть настройки."
 L["Open the world map to see it."] = "Откройте карту мира, чтобы увидеть."
 L["Turn the world map to %s to see it."] =
 	"Переключите карту мира на %s, чтобы увидеть." -- mt
 L["This menu needs mouse and keyboard."] = "Для этого меню нужны мышь и клавиатура." -- mt
-L["Open these settings from the minimap."] = "Открывать эти настройки с мини-карты."
 L["Other Faction's Routes"] = "Маршруты другой фракции"
 L["Plan journey"] = "Проложить маршрут"
 L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."] =
@@ -218,7 +216,6 @@ L["Show journey steps in the objective tracker"] =
 L["Show lifts and the tram"] = "Показывать подъемники и поезд"
 L["Show marks on the minimap"] = "Показывать отметки на мини-карте"
 L["Show on map"] = "Показать на карте"
-L["Show options button on minimap"] = "Кнопка настроек у мини-карты"
 L["Show other faction's routes"] = "Показывать маршруты другой фракции"
 L["Show portals"] = "Показывать порталы"
 L["Show routes on the world map"] = "Показывать маршруты на карте мира"

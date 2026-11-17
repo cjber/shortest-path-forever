@@ -137,7 +137,6 @@ local DEFAULTS = {
 	-- multi-stop route keep the fixed 15 yards.
 	arrivalDistance = 15,
 	metres = false,
-	minimapButton = false,
 	-- Off by default: the compass is screen furniture a player turns on from Settings > Guidance.
 	compass = false,
 	compassTime = false,
