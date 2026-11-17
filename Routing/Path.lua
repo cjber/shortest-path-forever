@@ -671,7 +671,7 @@ local function limitOver(P, first, last)
 end
 
 -- Sliced A* and refinement share scratch trees; splitting adds hot-path calls and upvalues
-local function run(map, from, to, waterWalking, costOnly, hz)
+local function run(map, from, to, waterWalking, costOnly, hz, job)
 	if hz and hz.ConnectorWalk and hz.ConnectorWalk(from, to) then
 		hz = nil
 	end
@@ -688,6 +688,10 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 	local gk, gc = locate(st, to.x, to.y)
 	if not sk or not gk then
 		return nil, "outside"
+	end
+	if not costOnly then
+		Grid.Hold(job, st, sk)
+		Grid.Hold(job, st, gk)
 	end
 	sc, gc = snap(st, sk, sc, from.x, from.y, from.z), snap(st, gk, gc, to.x, to.y, to.z)
 	if not sc or not gc then
@@ -852,11 +856,17 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 		return cost
 	end
 
+	for _, hop in ipairs(hops) do
+		if hop ~= START and hop ~= GOAL then
+			Grid.Hold(job, st, floor(hop / 4096))
+		end
+	end
+
 	-- Refine each hop into nodes with their global cells and a running count of water nodes. The pruned entrance
 	-- graph may route through an entrance a little off the way, which refines to a spur walked out and back: a node
 	-- reached again cuts the loop since its first visit, so the drawn walk never doubles back.
 	---@type SPFPathPoints
-	local P = { x = {}, y = {}, w = {}, t = {}, k = {}, n = {}, swim = swim }
+	local P = { x = {}, y = {}, z = {}, w = {}, t = {}, k = {}, n = {}, swim = swim }
 	if hz then
 		P.factor = factorOf(st, hz)
 	end
@@ -870,7 +880,7 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 		if at then
 			for j = #P.x, at + 1, -1 do
 				seen[P.k[j] * 1048576 + P.n[j]] = nil
-				P.x[j], P.y[j], P.w[j], P.t[j], P.k[j], P.n[j] = nil, nil, nil, nil, nil, nil
+				P.x[j], P.y[j], P.z[j], P.w[j], P.t[j], P.k[j], P.n[j] = nil, nil, nil, nil, nil, nil, nil
 				if P.r then
 					P.r[j] = nil
 				end
@@ -882,6 +892,7 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 		P.x[n + 1], P.y[n + 1] = floor(k / st.ny) * C + floor(cell / C), (k % st.ny) * C + cell % C
 		P.k[n + 1], P.n[n + 1] = k, node
 		local wet = ((st.val[k] or grid(st, k))[node + 1] == 2)
+		P.z[n + 1] = st.z[k][node + 1]
 		P.w[n + 1] = (P.w[n] or 0) + (wet and 1 or 0)
 		-- The walk's own time to this entry, charged as the search charges a step: the cell it enters, land at run
 		-- speed and water at the map's swim.
@@ -1002,12 +1013,11 @@ local function run(map, from, to, waterWalking, costOnly, hz)
 	local points = { { map = map, x = from.x, y = from.y, z = from.z } }
 	for i = 2, #drawn - 1 do
 		local j = drawn[i]
-		grid(st, P.k[j])
 		points[#points + 1] = {
 			map = map,
 			x = x0 + (P.x[j] + 0.5) * cs,
 			y = y0 + (P.y[j] + 0.5) * cs,
-			z = st.z[P.k[j]][P.n[j] + 1],
+			z = P.z[j],
 		}
 	end
 	points[#points + 1] = { map = map, x = to.x, y = to.y, z = to.z }
@@ -1618,7 +1628,7 @@ local function start(job)
 	if job.targets then
 		return runMany(job.map, job.from, job.targets, job.waterWalking, job.reverse, job, job.hazards)
 	end
-	return run(job.map, job.from, job.to, job.waterWalking, job.costOnly, job.hazards)
+	return run(job.map, job.from, job.to, job.waterWalking, job.costOnly, job.hazards, job)
 end
 
 local spare
@@ -1651,6 +1661,7 @@ function Path.FindSync(map, from, to, waterWalking, hazards)
 	local co = coroutine.create(start)
 	local saved = scratch()
 	local ok, points, cost = coroutine.resume(co, job)
+	Grid.Release(job)
 	scratch(saved)
 	if not ok then
 		error(points)

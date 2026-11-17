@@ -12,6 +12,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [Unreleased]
 
+- **Faster routes from busy cities.** Long walking routes out of cities such as Stormwind appear sooner (#979).
 - **Follow roads keeps its route across tile borders.** Road connections remain available where a shorter off-road connection would otherwise pull the route away from the road (#892).
 - **Settings are easier to scan.** Section headings group related controls on the Guidance, Interface and Map marks pages.
 - **Tracker menus** put journey actions before the shared Tracker controls, keep Clear journey last, and offer Show on map on departure titles.
