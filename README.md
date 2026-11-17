@@ -14,6 +14,14 @@ Click the world map or minimap with your journey key held (Shift by default), or
 
 Need a vendor, a trainer or an inn? The **Nearby services** tab on the world map finds the closest one, tells you how long it takes to get there, and takes you there in one click. Search for any item to see who sells it.
 
+## Known limitations
+
+- The game never says which floor you are on, so in cities like Stormwind and Undercity a walk can start on the wrong level.
+- Walking maps are built ahead of time, so patched terrain can route wrongly until an update.
+- The game does not say where your Hearthstone is bound, so it counts once you bind with the addon on.
+- The game holds no boat, lift or tram timetables, so a departure shows no sighting until you ride that route.
+- The game cannot show another player's spells, so you declare a party mage's portals yourself.
+
 ![Eight-second demo of a route settling, the countdown and the compass](docs/screenshots/demo.gif)
 
 Planning a journey from the map: the route settles, the next boat counts down in the tracker and the compass turns

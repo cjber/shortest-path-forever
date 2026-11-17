@@ -6,6 +6,14 @@ Free, with nothing locked behind it. If it saves you time, you can [sponsor me o
 
 [![Join me on Discord](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/discord-button.png)](https://discord.gg/FpHugGxRJY) [![Sponsor me on GitHub](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/github-sponsors-button.png)](https://github.com/sponsors/cjber) [![Support me on Ko-fi](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/kofi-button.png)](https://ko-fi.com/cjber)
 
+**Known limitations**
+
+- The game never says which floor you are on, so in cities like Stormwind and Undercity a walk can start on the wrong level.
+- Walking maps are built ahead of time, so patched terrain can route wrongly until an update.
+- The game does not say where your Hearthstone is bound, so it counts once you bind with the addon on.
+- The game holds no boat, lift or tram timetables, so a departure shows no sighting until you ride that route.
+- The game cannot show another player's spells, so you declare a party mage's portals yourself.
+
 ![A route settling, the departure countdown and compass](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/demo.gif)
 
 The route settles, the next boat counts down and the compass turns with you.
