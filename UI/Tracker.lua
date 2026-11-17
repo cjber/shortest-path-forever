@@ -320,12 +320,15 @@ function ModuleMixin:LayoutContents()
 							ns.FamilyHints.OpenFooter()
 							return
 						end
+						-- A row's key counts from the step under way, so the step is the one under way when the menu
+						-- opens; SkipJourneyStep refuses it if the journey has moved on before the click.
+						local _, _, plan, index = ns.JourneyInfo()
+						if not plan then
+							return
+						end
 						ForeverCore.ContextMenu(line, function(_, root)
 							root:CreateButton(L["Complete this step"], function()
-								local index = row.key
-								if type(index) == "number" then
-									ns.SkipJourneyStep(index)
-								end
+								ns.SkipJourneyStep(index)
 							end)
 						end)
 					end,

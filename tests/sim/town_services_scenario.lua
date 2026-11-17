@@ -85,6 +85,8 @@ scenario(
 		sim:openWorldMap(1429)
 		sim:input(function()
 			ns.db.townServices = "all"
+			-- The vendor kinds start hidden (#978); this player shows food to see the outlying seller.
+			ns.db.townServiceFood = true
 			ns.RefreshTownServices()
 		end)
 		sim:advance(0.2)
