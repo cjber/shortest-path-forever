@@ -60,8 +60,8 @@ L["Journeys, and other addons' estimates from here, can start with a mage's city
 L["Minimum teleport saving"] = "Минимальная экономия от телепорта"
 L["Only use a class teleport when it saves at least this much time."] =
 	"Использовать классовый телепорт, только если он экономит не меньше этого времени."
-L["Nearby services can show only your professions."] =
-	"Ближайшие услуги могут показывать только ваши профессии." -- mt
+L["Recognise profession trainers and find weapon masters."] =
+	"Узнавайте наставников профессий и находите учителей владения оружием." -- mt
 L["Boat and Zeppelin Routes"] = "Маршруты кораблей и дирижаблей"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Маршруты кораблей и дирижаблей, когда вы наводите курсор на причал."

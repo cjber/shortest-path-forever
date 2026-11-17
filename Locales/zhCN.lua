@@ -56,7 +56,7 @@ L["Journeys, and other addons' estimates from here, can start with a mage's city
 L["Minimum teleport saving"] = "传送最少节省时间"
 L["Only use a class teleport when it saves at least this much time."] =
 	"只在职业传送至少节省这么多时间时使用。"
-L["Nearby services can show only your professions."] = "附近服务可以只显示你的专业。" -- mt
+L["Recognise profession trainers and find weapon masters."] = "识别专业训练师，找到武器大师。" -- mt
 L["Boat and Zeppelin Routes"] = "船只和飞艇航线"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"船只和飞艇航线，在你指向码头时绘制。"

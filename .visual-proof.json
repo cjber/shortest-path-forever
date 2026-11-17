@@ -1,276 +1,34 @@
 {
-  "input_digest": "adf5229ab19fb70e989a35a55d326ffb1ad596db464c8b2b343733bb44c8201b",
-  "runtime_sha256": "adf5229ab19fb70e989a35a55d326ffb1ad596db464c8b2b343733bb44c8201b",
-  "candidate": "d02091f5c82fa4ef7f10b2555edf2ff9c634f3bd7ef7f2c8a9a4dad53d4e00ed",
+  "input_digest": "a4150fa80462d1a194ff19cf84bb6f605dac6ec21dc802e02352499eed449d79",
+  "runtime_sha256": "a4150fa80462d1a194ff19cf84bb6f605dac6ec21dc802e02352499eed449d79",
+  "candidate": "f1f366e1d2e3cf9a9290e660383e53720342870cd2f4efbc7a50a907e11a66ea",
   "client_build": "1.60.1.70938 (Interface 16001)",
   "tested_artifact": "source-tree",
-  "source_commit": "fa76d661249502607d7884ac613b38692d234c1f",
+  "source_commit": "626688d4d9a772b43b20474bbd14731ad6344f0a",
   "flows": [
     {
-      "name": "direct stops on (#941)",
-      "steps": [
-        "sha256:7058955879af061d2f536ff3d5d1096968de21bee57df8ea277e8f0ddc4a5c78 spf-direct-stops-on.lua"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "direct stops off (#941)",
-      "steps": [
-        "sha256:f1d976977012b8840faf05b090e4078ee36c72a382ca5ec8a0d903911b921d38 spf-direct-stops-off.lua"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "restore (#941)",
-      "steps": [
-        "sha256:f8049e3ad99c52ab4947050101ca5228053a4251634b43af6fd47585fa9921ba spf-restore.lua"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "menu section (#945)",
-      "steps": [
-        "sha256:78ea9c5d33435e57f24a34da96b15cfced7332c037a53934a4f932615765f5b7 menu_section.lua"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "menu block (#945)",
-      "steps": [
-        "sha256:99955294ce32522042b36fa03b828c186cf82ed690e271e7200297e1290bc1bb menu_block.lua"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "guidance (#946)",
-      "steps": [
-        "sha256:18840a7194fbaf7b8af0d8073165e8158ae4dee1a67f4b5e8ba738e91c70e4a2 spf-guidance.lua"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "guidance end (#946)",
-      "steps": [
-        "sha256:88d80ad8a0ac0763b28a3a10d94019beb7398c3b937a8a612f44f45ac2331718 spf-guidance-end.lua"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "guidance small (#946)",
-      "steps": [
-        "sha256:b2e0f9c2473bddeec649bd68eaa97ebe4b919963e8481fd0e9d532ec6a9f3457 spf-guidance-small.lua"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "guidance large (#946)",
-      "steps": [
-        "sha256:f729161bfc48e5743cd983b8678d607a5eb578e0841c3d6ff985432308699ae2 spf-guidance-large.lua"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "interface (#946)",
-      "steps": [
-        "sha256:caecd8e786fc48c630fee66d7e10fff7300afc5f77a6f1eea19faa66361d29fb spf-interface.lua"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "map marks (#946)",
-      "steps": [
-        "sha256:cf4f2b3988386adb5aebc82bfb19469fb2c9e62798c5f31ee1a6150571ec82e9 spf-mapmarks.lua"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "walk elwynn road (#948/#944)",
-      "steps": [
-        "sha256:f963823b6732a17d578ac25b1b592a2c23f7c057f4b20378a923d9cdac4bc505 spf-walk-elwynn-road.lua"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "walk keep (#948/#944)",
-      "steps": [
-        "sha256:90681f785cf870ea5525ecc9f1f2e084efd4eff8aad1c6f03aa7ddd24ba276f1 spf-walk-keep.lua"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "walk dwarven (#944)",
-      "steps": [
-        "sha256:1728b2755376484bdce7e3e132046ffbe92c22591fb19330619b66eb8170cb26 spf-walk-dwarven.lua"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "journey idle (#967)",
-      "steps": [
-        "sha256:a7c3721daee99bc91fd87c9b2373656b06e2540ba13aa16fa2d819f52efcdebc journey_idle_api.lua"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "westfall ridge (#968)",
-      "steps": [
-        "sha256:2414a9205bf82a22b168e97888d60f4291821ab6b8beb23043a0b8ee4958b1b8 westfall_ridge_api.lua"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "hearthstone on (#951)",
-      "steps": [
-        "sha256:536921a2abf3b3672c86fc9e1059c0efe16d7691582f06a1f65c9b05e9708553 spf951_on.lua"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "hearthstone off (#951)",
-      "steps": [
-        "sha256:52ac5a2fcf15991cb7bdd974dd3dec971a148b4c859f0d3566747857afe2e0dd spf951_off.lua"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "hearthstone back on (#951)",
-      "steps": [
-        "sha256:7684a79b93ba2206e2e5cd9decf8bddfb703644d163d6d6c684024fb5595cf0e spf951_back_on.lua"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "settings (#942/#962)",
-      "steps": [
-        "/path"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "services (#970)",
+      "name": "services",
       "steps": [
         "/spfnear"
       ],
       "result": "pass"
     },
     {
-      "name": "weapon master journey (#970)",
+      "name": "settings",
       "steps": [
-        "/spfnear weapon"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "journey stops (#970)",
-      "steps": [
-        "/path stops"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "farming tour (#970)",
-      "steps": [
-        "/path farm"
+        "/path"
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/da87b3a8280ebb0f300ac6ccb7a11a0d/raw/3e1437fc624fe34abe1e953691ec7d7331e011c3/1-direct-stops-on-941.png",
-      "sha256": "5cad4a457b06eaae74c3763541e453e5f55c9d5c4aba4ab2ec37a063886b5e70"
+      "url": "https://gist.githubusercontent.com/cjber/a350c4169e122332d64303b21b3b260c/raw/11dcaf098e9f7c1bc55ce26ffb948800e63a7c43/1-services.png",
+      "sha256": "92cdbdd16437718370cfc1a6ba9dbc8a2114808942b3d93f9bcb07a62f497552"
     },
     {
-      "url": "https://gist.githubusercontent.com/cjber/da87b3a8280ebb0f300ac6ccb7a11a0d/raw/3e1437fc624fe34abe1e953691ec7d7331e011c3/2-direct-stops-off-941.png",
-      "sha256": "2cb4a18a94a2a6f67cdadd1c2b3047e106cc6edc6a7915d069e6f3e40a32bcf1"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/da87b3a8280ebb0f300ac6ccb7a11a0d/raw/3e1437fc624fe34abe1e953691ec7d7331e011c3/3-restore-941.png",
-      "sha256": "8e353e8535f4d262ccdb320e896ecb11cd59a40e35f85c691f668b56a19f79db"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/da87b3a8280ebb0f300ac6ccb7a11a0d/raw/3e1437fc624fe34abe1e953691ec7d7331e011c3/4-menu-section-945.png",
-      "sha256": "36c108497a5d30244f2da4b1a6978b90c0e27dadb110123e16952c1c014168eb"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/da87b3a8280ebb0f300ac6ccb7a11a0d/raw/3e1437fc624fe34abe1e953691ec7d7331e011c3/5-menu-block-945.png",
-      "sha256": "7a2b67451c0f1075d9e8681fa6ec280c11b4bc76c55c2629efc2bd0f0f6420e0"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/da87b3a8280ebb0f300ac6ccb7a11a0d/raw/3e1437fc624fe34abe1e953691ec7d7331e011c3/6-guidance-946.png",
-      "sha256": "819ded34478970a4c5917e896bc1bfaffc949a8302b811935de4ebcd0f7eb3d1"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/da87b3a8280ebb0f300ac6ccb7a11a0d/raw/3e1437fc624fe34abe1e953691ec7d7331e011c3/7-guidance-end-946.png",
-      "sha256": "09e4f69bbc17ca37a74b31f09bc6137fea462e2d40588d8cc72e9fdd6ce5b74a"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/da87b3a8280ebb0f300ac6ccb7a11a0d/raw/3e1437fc624fe34abe1e953691ec7d7331e011c3/8-guidance-small-946.png",
-      "sha256": "d562d05a3387f87496bdf2803a4916a2e290f8a36800d4c79ccfbc692696a05f"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/da87b3a8280ebb0f300ac6ccb7a11a0d/raw/3e1437fc624fe34abe1e953691ec7d7331e011c3/9-guidance-large-946.png",
-      "sha256": "a5d3a08d494a0d8a1cbcd5725397c705f69b50a9d3e81bf20a11892019d79c20"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/da87b3a8280ebb0f300ac6ccb7a11a0d/raw/3e1437fc624fe34abe1e953691ec7d7331e011c3/10-interface-946.png",
-      "sha256": "c0c28e616c0819a33dc6babfafb55b68c20e3f6e23aed740746dd918948f8c6f"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/da87b3a8280ebb0f300ac6ccb7a11a0d/raw/3e1437fc624fe34abe1e953691ec7d7331e011c3/11-map-marks-946.png",
-      "sha256": "980e45ee4a0134b671f30b46f0ed6faeb062eed0a01a5de88ddeb3a0c2622cae"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/da87b3a8280ebb0f300ac6ccb7a11a0d/raw/3e1437fc624fe34abe1e953691ec7d7331e011c3/12-walk-elwynn-road-948-944.png",
-      "sha256": "5b41f6b4839cdd67176c5f49d1419750a2eca04a4a710ef1977732a84925a1fc"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/da87b3a8280ebb0f300ac6ccb7a11a0d/raw/3e1437fc624fe34abe1e953691ec7d7331e011c3/13-walk-keep-948-944.png",
-      "sha256": "f121f24f4315350a43005ea9ad0d098bd078c52d23172f933468293d4327dfe2"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/da87b3a8280ebb0f300ac6ccb7a11a0d/raw/3e1437fc624fe34abe1e953691ec7d7331e011c3/14-walk-dwarven-944.png",
-      "sha256": "6f2d482115b81a327616e9f189573e52efda26ed8b4700aab53e9ccc697325d4"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/da87b3a8280ebb0f300ac6ccb7a11a0d/raw/3e1437fc624fe34abe1e953691ec7d7331e011c3/15-journey-idle-967.png",
-      "sha256": "566e3705b4e08d0307890c034b391b1ad4dfaa58bd2f11a6b73475ab99763901"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/da87b3a8280ebb0f300ac6ccb7a11a0d/raw/3e1437fc624fe34abe1e953691ec7d7331e011c3/16-westfall-ridge-968.png",
-      "sha256": "933fc8530fe28eb479dd7d1da270065e8cb7bfa0ea79c019bc8cf4c3e530c5e3"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/da87b3a8280ebb0f300ac6ccb7a11a0d/raw/3e1437fc624fe34abe1e953691ec7d7331e011c3/17-hearthstone-on-951.png",
-      "sha256": "f3c1ee5fab07eaf6c2131bb6eeda6ff4505881915fa2c2d9fb08ea1d269166cb"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/da87b3a8280ebb0f300ac6ccb7a11a0d/raw/3e1437fc624fe34abe1e953691ec7d7331e011c3/18-hearthstone-off-951.png",
-      "sha256": "fdac01f23e4189a9e75d67d8c483535b41b118109e95e4f3089a5331c4e3e510"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/da87b3a8280ebb0f300ac6ccb7a11a0d/raw/3e1437fc624fe34abe1e953691ec7d7331e011c3/19-hearthstone-back-on-951.png",
-      "sha256": "67886c3096b9da71f1bdcf32a7ca69e0f0556d19adf963ee4b546de11af91880"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/da87b3a8280ebb0f300ac6ccb7a11a0d/raw/3e1437fc624fe34abe1e953691ec7d7331e011c3/20-settings-942-962.png",
-      "sha256": "94ac8a51c56c538a1dd8830a06f23c58230b255a1c7fbaaf1c0072788d3b3d4a"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/da87b3a8280ebb0f300ac6ccb7a11a0d/raw/3e1437fc624fe34abe1e953691ec7d7331e011c3/21-services-970.png",
-      "sha256": "9bf058e868c797f102a635ebc4e48a8d7aa56ec675600c02d7fa61f16acb8e5b"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/da87b3a8280ebb0f300ac6ccb7a11a0d/raw/3e1437fc624fe34abe1e953691ec7d7331e011c3/22-weapon-master-journey-970.png",
-      "sha256": "c84b742179372fe26906352773f0ba93f1f39f558ecb8ed7d39f81adf63496b9"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/da87b3a8280ebb0f300ac6ccb7a11a0d/raw/3e1437fc624fe34abe1e953691ec7d7331e011c3/23-journey-stops-970.png",
-      "sha256": "566328b857fb69956a9cc16b5ff01221c6a03c64a422ded7f4a950b345ebf4b4"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/da87b3a8280ebb0f300ac6ccb7a11a0d/raw/3e1437fc624fe34abe1e953691ec7d7331e011c3/24-farming-tour-970.png",
-      "sha256": "418ac32728d7025ce121949cbd90a514c6d65fc63b78e859d8aa15e5f4cdba7e"
+      "url": "https://gist.githubusercontent.com/cjber/a350c4169e122332d64303b21b3b260c/raw/11dcaf098e9f7c1bc55ce26ffb948800e63a7c43/2-settings.png",
+      "sha256": "2f6e5a28c5ca752ce9cd75361f2b5f2fb951464726d5ba7f73a000604d0f4098"
     }
   ]
 }

@@ -59,7 +59,8 @@ L["Journeys, and other addons' estimates from here, can start with a mage's city
 L["Minimum teleport saving"] = "순간이동 최소 절약 시간"
 L["Only use a class teleport when it saves at least this much time."] =
 	"최소 이만큼 시간을 절약할 때만 직업 순간이동을 사용합니다."
-L["Nearby services can show only your professions."] = "주변 서비스에 내 직업만 표시할 수 있습니다." -- mt
+L["Recognise profession trainers and find weapon masters."] =
+	"전문 기술 상급자를 알아보고 무기 전문가를 찾으세요." -- mt
 L["Boat and Zeppelin Routes"] = "배와 비행선 노선"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"배와 비행선 노선. 부두를 가리키는 동안 그려집니다."
