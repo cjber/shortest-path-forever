@@ -5,6 +5,7 @@ local _, ns = ...
 ns.Credits = {
 	players = {
 		{ name = "user_u3k9hweaatfhnjs0", what = "Profession trainer icons, weapon masters and service filters" },
+		{ name = "treadpool", what = "Undercity journeys leave the city by a lift" },
 		{ name = "user_g496wu46adiwjuc5", what = "Hearthstone map button respects Use Hearthstone" },
 		{ name = "emmiehbun", what = "Walking routes over Westfall ridges" },
 		{ name = "VolomonBeddarm", what = "Walking routes up impassable Barrens terrain" },
