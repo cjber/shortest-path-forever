@@ -109,6 +109,6 @@ for cells in nodes.values():
         print(f"{{{x},{y},1,base={base},out={{" + ",".join(out) + "}},")
 print("},road={")
 for k in nodes:
-    cells = [f"[{(u // nav.GH % 67) * 67 + u % nav.GH % 67}]=true" for u in sorted(road) if nav.cluster_of_cell(u) == k]
+    cells = [f"[{(u // nav.GH % 67) * 67 + u % nav.GH % 67}]=1" for u in sorted(road) if nav.cluster_of_cell(u) == k]
     print(f"[{k}]={{" + ",".join(cells) + "},")
 print("}}")
