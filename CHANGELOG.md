@@ -22,6 +22,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 - **The Hearthstone button stays off the world map while Use Hearthstone is off.** Thanks to user_g496wu46adiwjuc5 for the report (#951).
 
+### For addon authors
+
+- **Journey and guidance places carry height in API 2.4.** `Journey().goal`, each leg's `from` and `to`, `Guidance().point` and each guidance waypoint include optional `z`, world height in yards, when the planner holds it. Companion addons can follow the same floor where surfaces stack. Thanks to catubba for the request (#959).
+
 ## [1.41.1] - 2026-11-17
 
 <!-- forever-core-sync -->

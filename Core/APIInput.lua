@@ -55,7 +55,7 @@ function Input.Place(point)
 	if not (Input.Number(x) and Input.Number(y) and x >= 0 and x <= 1 and y >= 0 and y <= 1) then
 		return nil
 	end
-	return { map = uiMap, x = x, y = y }
+	return { map = uiMap, x = x, y = y, z = Input.Number(point.z) and point.z or nil }
 end
 
 -- A positive whole number: a quest or NPC id.

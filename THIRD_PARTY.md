@@ -63,7 +63,7 @@ Credit for the reports and requests behind the addon.
 |---|---|---|
 | user\_g496wu46adiwjuc5 | Hearthstone map button respects Use Hearthstone | CurseForge thread 8732965; #951 |
 | zhega | Nearby services can show only learned professions | CurseForge thread 8727763, #914 |
-| [catubba](https://github.com/catubba) | Journey legs name where they start and end | GitHub; #782 |
+| [catubba](https://github.com/catubba) | Journey legs name where they start and end; journey and guidance places carry height | GitHub; #782, #959 |
 | Hatemost | Resume the RestedXP guide from a macro | CurseForge thread 8697686; #786 |
 | JaidyEU | Resume the RestedXP guide from a macro | CurseForge thread 8722510; #786 |
 | [Chulf58](https://github.com/Chulf58) | Walking times between places for other addons | GitHub; #913 |

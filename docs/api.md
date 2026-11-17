@@ -1,12 +1,13 @@
 # Addon API
 
-Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 3`) with uiMapIDs and normalized 0-1 coordinates.
+Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 4`) with uiMapIDs and normalized 0-1 coordinates.
 Version 2 removes peer sharing and `Leaderboard`; callers must accept versions 1 and 2 and reject future versions. Check that a function exists before calling it, because an older
 addon may not have it yet. The full types are in [`types/API.lua`](../types/API.lua). On ForeverCore 1.3.2 or
 later, the API is also listed by `ForeverCore.APIKit.Addons()`.
 
 ## Minor history
 
+- Version 2, `minor = 4`: adds optional world height `z` to journey goals, leg ends and guidance places.
 - Version 2, `minor = 3`: adds `EstimateWalks` and `NavVersion`.
 - Version 2, `minor = 2`: adds each journey leg's `from` and `to`, `ResumeRestedXP` and the `replan` change in
   `Subscribe`.
@@ -104,7 +105,9 @@ later, the API is also listed by `ForeverCore.APIKit.Addons()`.
   `nil, "loading"` while the saved variables are not loaded or the planner has no route yet, and `nil, "none"` with no
   journey.
 - `Guidance()` reads the point the arrow is leading to, for an addon that steers with its own arrow: the owner, the
-  leg under way, the point, every bend of that leg as uiMapID and 0-1 copies, and the point's 1-based index in them.
+  leg under way, `point` and `waypoints` as fresh `{map, x, y, z?}` copies of the target and every bend, and the
+  point's 1-based index in them.
+  Their optional `z` is world height in yards, present only when the planner holds a finite height.
   It returns `nil` and a reason when there is no point: `"loading"` while the addon or its first plan is still being
   built, `"none"` with no journey, `"paused"` while guidance is off or waiting at a held stop, `"disabled"` while
   Journeys is switched off, `"cast"` on a teleport to cast where you stand, or `"unavailable"` when a point cannot be
@@ -154,7 +157,7 @@ this API uses.
 | Field | |
 |---|---|
 | `owner` | the addon that owns the journey; absent for the player's own |
-| `goal` | a fresh `{map, x, y, title}`: where the journey ends, and the stop's own title or where it stands |
+| `goal` | a fresh `{map, x, y, z?, title}`: where the journey ends, and the stop's own title or where it stands |
 | `legs` | the planner's legs from the current one on, each a fresh `{mode, text, seconds, from?, to?}` |
 | `index` | the 1-based leg under way |
 | `guided` | whether guidance is on, as `Active` asks it |
@@ -164,7 +167,10 @@ A leg's `text` is the step's action words exactly as the tracker has them, witho
 its `seconds` is that leg's own whole seconds including the wait for a boat, zeppelin, lift, tram or teleport. The
 legs add up to `secondsLeft`.
 
-A leg's `from` and `to` are fresh `{map, x, y}` copies of the planner's own leg points where that leg starts and ends,
+The goal and each leg end carry optional `z`, world height in yards, only when the planner holds a finite
+height for that point. An unknown height stays absent; no floor is guessed.
+
+A leg's `from` and `to` are fresh `{map, x, y, z?}` copies of the planner's own leg points where that leg starts and ends,
 in uiMapID and 0-1 fractions: the first and last point of the line it draws for the leg, which for a walk is its
 planned walking line, for a flight or boat is the route it takes, and for a teleport is its two ends alone. A leg
 with no line here, or an end this client

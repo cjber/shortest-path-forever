@@ -61,7 +61,7 @@ near(from.y, 0.5, "the start's y")
 equal(to.map, 1, "the end's map")
 near(to.x, 0.5, "the end's x")
 near(to.y, 0.52, "the end's y")
-equal(from.z, nil, "only map, x and y are copied")
+equal(from.z, nil, "an unknown start height stays absent")
 equal(to.title, nil, "a leg end is a place, not a goal")
 
 -- Copies only: changing or keeping one reaches neither the plan nor the next read.

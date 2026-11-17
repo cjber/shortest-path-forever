@@ -6,7 +6,10 @@ ns.Credits = {
 	players = {
 		{ name = "user_g496wu46adiwjuc5", what = "Hearthstone map button respects Use Hearthstone" },
 		{ name = "zhega", what = "Nearby services can show only learned professions" },
-		{ name = "catubba", what = "Journey legs name where they start and end" },
+		{
+			name = "catubba",
+			what = "Journey legs name where they start and end; journey and guidance places carry height",
+		},
 		{ name = "Hatemost", what = "Resume the RestedXP guide from a macro" },
 		{ name = "JaidyEU", what = "Resume the RestedXP guide from a macro" },
 		{ name = "Chulf58", what = "Walking times between places for other addons" },

@@ -110,7 +110,7 @@ end
 ---@param a SPFPoint?
 ---@param b SPFPoint?
 local function SamePlace(a, b)
-	return a == b or (a and b and a.map == b.map and a.x == b.x and a.y == b.y) or false
+	return a == b or (a and b and a.map == b.map and a.x == b.x and a.y == b.y and a.z == b.z) or false
 end
 
 -- The stop and guide state as callers read them, compared with what subscribers last heard.
@@ -242,7 +242,7 @@ function ns.JourneyStops()
 end
 
 ---@class SPFPublicAPI
-local API = { version = 2, minor = 3 }
+local API = { version = 2, minor = 4 }
 
 local function Differs(a, b)
 	for key, value in pairs(a) do

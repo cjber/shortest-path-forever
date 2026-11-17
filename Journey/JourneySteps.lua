@@ -314,5 +314,5 @@ function ns.JourneyGoalDetails(project, point)
 	if not place then
 		return nil
 	end
-	return { map = place.map, x = place.x, y = place.y, title = point.label or ns.JourneyTitle(point) }
+	return { map = place.map, x = place.x, y = place.y, z = place.z, title = point.label or ns.JourneyTitle(point) }
 end
