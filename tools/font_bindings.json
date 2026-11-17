@@ -51,7 +51,7 @@
     },
     {
       "source": "UI/Settings.lua",
-      "sha256": "6084c4ee5de5131b28b651e4402d7595c14c28727c5589f4fe3a8cf284fa2f56",
+      "sha256": "a04f20dc66a5a56412b705356f2e3fbd73f8d10a03600dc8da45ed82d8992381",
       "review": "Read Page, Checkbox, Scale, Dropdown and Saving and their registration calls. Settings rows, index buttons and option labels delegate to Blizzard secure initializers; this file creates no FontString and establishes no explicit FontObject. Minimap button text, tooltip text, chat output and helper arguments are excluded rather than assigned an assumed settings font.",
       "bindings": []
     },

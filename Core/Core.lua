@@ -135,7 +135,6 @@ local DEFAULTS = {
 	-- multi-stop route keep the fixed 15 yards.
 	arrivalDistance = 15,
 	metres = false,
-	minimapButton = false,
 	compass = true,
 	compassTime = false,
 	compassScale = 100,

@@ -456,7 +456,6 @@ local groups = {
 		"compassScale",
 		"compassBackground",
 		"metres",
-		"minimapButton",
 		"stats",
 		"whatsNew",
 	},
@@ -470,7 +469,7 @@ local order = {
 }
 
 assert(#buttons == #order, "one index button per group, and no Forever addons page")
-assert(#rows == 76, #rows)
+assert(#rows == 75, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer

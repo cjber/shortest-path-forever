@@ -25,6 +25,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 - **The Hearthstone button stays off the world map while Use Hearthstone is off.** Thanks to user_g496wu46adiwjuc5 for the report (#951).
 - **Faint and narrow roads stay connected.** Follow roads now weighs each cell by its painted road coverage, keeping partial-alpha roads in the route and drawn line (refs #893).
 - **Walks stay off steep faces they cannot climb.** Walking routes in Westfall and the Barrens no longer climb a ridge whose only way up lies outside the next few yards (#950; refs #897), thanks to emmiehbun and VolomonBeddarm for the reports.
+- **The minimap button is gone.** Open Shortest Path Forever with /path, from the game's settings or from the AddOn compartment.
 - Ships with the same shared code as your other Forever addons, so they keep working together.
 
 ### For addon authors
