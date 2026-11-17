@@ -1,6 +1,6 @@
 -- The quick Use Hearthstone switch (#707): the saved flag keeps only the Hearthstone out of journeys, the tracker's
 -- journey menu and the world map's innkeeper button flip it, a flip replans the journey, and the button's tooltip
--- reads both states.
+-- describes saving it for later.
 local function check(value, label)
 	assert(value, label)
 end
@@ -101,14 +101,14 @@ do
 	runtime.db.teleports, runtime.db.useHearthstone = true, true
 	check(#assert(Usable(5000)) == 2, "both on again, both are back")
 
-	-- The map button still knows the Hearthstone while it is saved for later, so it can be turned back on.
+	-- The Hearthstone lookup stays available independently of the journey setting.
 	local hearth = assert(Hearthstone(5000))
 	check(hearth.name == "Goldshire" and hearth.map == 0 and hearth.x == 10 and hearth.y == 20, "the bind point")
 	check(hearth.place.item == 6948 and hearth.readyAt == 5000, "the Hearthstone's own place, ready now")
 	runtime.db.useHearthstone = false
-	check(Hearthstone(5000) ~= nil, "the saved button still knows where the Hearthstone goes")
+	check(Hearthstone(5000) ~= nil, "the lookup still knows where the Hearthstone goes")
 	runtime.db.teleports = false
-	check(Hearthstone(5000) ~= nil, "class teleports off still leaves the button")
+	check(Hearthstone(5000) ~= nil, "class teleports off still leaves the Hearthstone lookup")
 	runtime.db.teleports = true
 	items[6948] = 0
 	check(Hearthstone(5000) == nil, "without the Hearthstone, no button")
@@ -203,19 +203,47 @@ do
 	check(ns.JourneyWithoutHearth(), "a completed Astral Recall step refuses it for this journey")
 end
 
--- The map button's tooltip and its two looks, without a client frame.
+-- The map button, its tooltip and visibility, without a client frame.
 do
 	local answers = { enabled = true }
 	local looked = {}
 	local sharedPlaces, planCalls = {}, 0
+	local acquired, active, released = 0, 0, 0
+	local pool = {
+		ReleaseAll = function()
+			released = released + active
+			active = 0
+		end,
+		Acquire = function(_, hearth, x, y)
+			check(hearth.map == 1 and x == 0.4 and y == 0.6, "the pin uses the bind point on the shown map")
+			acquired, active = acquired + 1, active + 1
+		end,
+	}
 	local ns = {
 		L = setmetatable({}, {
 			__index = function(_, key)
 				return key
 			end,
 		}),
-		Canvas = { PinMixin = {} },
-		Init = function() end,
+		Canvas = {
+			PinMixin = {},
+			Pool = function()
+				return pool
+			end,
+			Watch = function() end,
+		},
+		Init = function(fn)
+			fn()
+		end,
+		JourneyMapPosition = function(_, mapID)
+			check(mapID == 1, "the visible map is used")
+			return 0.4, 0.6
+		end,
+		OpenMapAddon = {
+			Stitched = function()
+				return false
+			end,
+		},
 		SetStopLook = function(_, kind, size)
 			looked[#looked + 1] = { kind = kind, size = size }
 			return true
@@ -262,6 +290,15 @@ do
 		end,
 	}
 	local env = setmetatable({
+		WorldMapFrame = {
+			IsVisible = function()
+				return true
+			end,
+			GetMapID = function()
+				return 1
+			end,
+		},
+		hooksecurefunc = function() end,
 		CreateFromMixins = function(mixin)
 			return setmetatable({}, { __index = mixin })
 		end,
@@ -271,22 +308,28 @@ do
 	}, { __index = _G })
 	setfenv(assert(loadfile("UI/HearthPin.lua")), env)("ShortestPathForever", ns)
 
+	ns.RefreshHearthPin()
+	check(acquired == 1 and active == 1, "enabled Hearthstone acquires one map pin")
+	answers.enabled = false
+	ns.RefreshHearthPin()
+	check(acquired == 1 and active == 0, "disabled Hearthstone acquires no map pin")
+	check(released == 1, "turning Hearthstone off releases its map pin")
+	ns.RefreshHearthPin()
+	check(acquired == 1 and active == 0, "Hearthstone stays absent while disabled")
+	answers.enabled = true
+
 	-- The comparison plans the same journey with and without the Hearthstone, without leaking it into the planner's
 	-- shared place list (which Transport/Teleports.lua keeps between calls).
 	check(ns.HearthSaving() == 5000, "the comparison measures the journey with and without the Hearthstone")
 	check(#sharedPlaces == 0, "the comparison keeps the Hearthstone out of the shared place list")
 	check(planCalls == 2, "a plan is made for each side of the comparison")
 
-	local title, lines = ns.HearthPinTooltip("Goldshire", 85000, true)
+	local title, lines = ns.HearthPinTooltip("Goldshire", 85000)
 	check(title == "Hearthstone", "the tooltip's title")
 	check(lines[1] == "Goldshire", "the bind location comes first")
 	check(lines[2] == "This journey uses it: 1:25 faster.", "the used state counts the time saved")
 	check(lines[3] == "Click to save it.", "the used state says what a click does")
-	title, lines = ns.HearthPinTooltip("Goldshire", nil, false)
-	check(title == "Hearthstone" and lines[1] == "Goldshire", "the saved state still names the bind point")
-	check(lines[2] == "Saved for later.", "the saved state says it waits")
-	check(lines[3] == "Click to use it.", "the saved state says what a click does")
-	local ignored, noTime = ns.HearthPinTooltip("Goldshire", nil, true)
+	local ignored, noTime = ns.HearthPinTooltip("Goldshire", nil)
 	lines = noTime
 	check(ignored == "Hearthstone", "the title is still there without a comparison")
 	check(#lines == 2 and lines[2] == "Click to save it.", "no time line when no comparison could be made")
@@ -299,9 +342,6 @@ do
 		end
 		function t:SetAlpha(alpha)
 			self.alpha = alpha
-		end
-		function t:SetDesaturated(value)
-			self.desaturated = value
 		end
 		function t.SetBlendMode() end
 		return t
@@ -329,12 +369,6 @@ do
 	check(looked[1].kind == "innkeeper" and looked[1].size == 22, "the client's innkeeper atlas, never an item icon")
 	check(looked[2].kind == "innkeeper", "its highlight wears the same art")
 	check(button.x == 0.4 and button.y == 0.6, "it stands at the bind point")
-	check(button.Texture.alpha == 1 and not button.Texture.desaturated, "the used state is full strength and coloured")
-	answers.enabled = false
-	local saved = pin()
-	saved:OnAcquired({ name = "Goldshire", map = 1, x = 10, y = 20 }, 0.4, 0.6)
-	check(saved.Texture.alpha == 0.75 and saved.Texture.desaturated, "a saved Hearthstone is faded and greyed")
-	answers.enabled = true
 end
 
 print("hearth toggle: ok")

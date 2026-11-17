@@ -434,10 +434,8 @@ L["Books and recipes"] = "書籍和配方" -- mt
 L["One icon per town, or one per service as you zoom in."] =
 	"縮小顯示每個城鎮一個圖示，放大後每個服務一個圖示。" -- mt
 L["Click to save it."] = "點擊以留待後用。" -- mt
-L["Click to use it."] = "點擊以使用。" -- mt
 L["Destination pin size"] = "目的地標記大小" -- mt
 L["Hearthstone"] = "爐石" -- mt
-L["Saved for later."] = "已留待後用。" -- mt
 L["Scales the pin over the destination on the world map."] = "調整世界地圖上目的地標記的大小。" -- mt
 L["This journey uses it: %s faster."] = "此旅程使用它：快 %s。" -- mt
 L["Use Hearthstone"] = "使用爐石" -- mt

@@ -8,12 +8,10 @@ local L = ns.L
 
 local MapCanvas = ns.Canvas
 
--- A button on the world map at the Hearthstone's bind point: click it to keep the Hearthstone out of journeys, or to
--- let them use it again. It and the tracker's journey menu (UI/Tracker.lua) flip the same saved switch
--- (Journey/Journey.lua). The art is the client's innkeeper minimap button, never an item icon.
+-- A button at the Hearthstone's bind point while Use Hearthstone is on: click it to save the Hearthstone for later.
+-- It and the tracker's journey menu (UI/Tracker.lua) share the switch in Journey/Journey.lua.
+-- The art is the client's innkeeper minimap button, never an item icon.
 local HEARTH_SIZE = 22
--- How a saved Hearthstone reads: the stock button faded and greyed, like an option that is off.
-local SAVED_ALPHA = 0.75
 -- A comparison stands this long (ms) for the same goal and much the same place, as the other-faction hint's does.
 local KEEP, MOVED = 30000, 50
 
@@ -50,11 +48,6 @@ function HearthPin:OnAcquired(hearth, x, y)
 	self:SetSize(HEARTH_SIZE, HEARTH_SIZE)
 	ns.SetStopLook(self.Texture, "innkeeper", HEARTH_SIZE)
 	ns.SetStopLook(self.HighlightTexture, "innkeeper", HEARTH_SIZE)
-	local saved = not ns.HearthstoneEnabled()
-	self.Texture:SetAlpha(saved and SAVED_ALPHA or 1)
-	self.Texture:SetDesaturated(saved)
-	self.HighlightTexture:SetDesaturated(saved)
-	self.HighlightTexture:SetAlpha((saved and SAVED_ALPHA or 1) * 0.4)
 	self:SetPosition(x, y)
 end
 
@@ -63,7 +56,7 @@ function HearthPin:OnMouseEnter()
 	if not hearth then
 		return
 	end
-	local title, lines = ns.HearthPinTooltip(hearth.name, ns.HearthSaving(), ns.HearthstoneEnabled())
+	local title, lines = ns.HearthPinTooltip(hearth.name, ns.HearthSaving())
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 	GameTooltip_SetTitle(GameTooltip, title)
 	for index, text in ipairs(lines) do
@@ -99,20 +92,14 @@ end
 -- click does. `saving` is in ms and may be nil when no comparison could be made; the time line is left out then.
 ---@param name string the bind location, as the client names it
 ---@param saving number? ms the Hearthstone saves on this journey
----@param enabled boolean whether journeys may use it
 ---@return string title, string[] lines
-function ns.HearthPinTooltip(name, saving, enabled)
+function ns.HearthPinTooltip(name, saving)
 	local lines = { name }
-	if enabled then
-		if saving then
-			lines[#lines + 1] =
-				string.format(L["This journey uses it: %s faster."], ns.FormatCountdown(math.max(0, saving)))
-		end
-		lines[#lines + 1] = L["Click to save it."]
-	else
-		lines[#lines + 1] = L["Saved for later."]
-		lines[#lines + 1] = L["Click to use it."]
+	if saving then
+		lines[#lines + 1] =
+			string.format(L["This journey uses it: %s faster."], ns.FormatCountdown(math.max(0, saving)))
 	end
+	lines[#lines + 1] = L["Click to save it."]
 	return L["Hearthstone"], lines
 end
 
@@ -199,7 +186,7 @@ local function MapPlace(hearth, mapID)
 end
 
 -- Draw the button at the bind point, or take it back: it shows while a journey exists, the Hearthstone could be used
--- and its bind point is on the map now shown. The saved switch changes only its look, so it stays clickable.
+-- and Use Hearthstone is on, with its bind point on the map now shown.
 function ns.RefreshHearthPin()
 	if not hearthPins then
 		return
@@ -213,7 +200,7 @@ function ns.RefreshHearthPin()
 	end
 	local goal = ns.JourneyGoal()
 	local hearth = goal and ns.Hearthstone()
-	if not (goal and hearth) then
+	if not (goal and hearth and ns.HearthstoneEnabled()) then
 		return
 	end
 	local mapID = map:GetMapID()

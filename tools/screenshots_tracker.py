@@ -3,7 +3,15 @@
 import math
 
 from screenshot_docks import pin_art
-from wowmock import DISABLED, FONTS, TrackerBlock, TrackerModule, colored, objective_tracker, scene  # ty: ignore[import-not-found]
+from wowmock import (  # ty: ignore[import-not-found]
+    DISABLED,
+    FONTS,
+    TrackerBlock,
+    TrackerModule,
+    colored,
+    objective_tracker,
+    scene,
+)
 
 
 def countdown(seconds):

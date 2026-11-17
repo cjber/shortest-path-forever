@@ -69,7 +69,7 @@
 ---@field ToggleHearthstone fun() flips the saved Hearthstone switch (Journey/Journey.lua)
 ---@field Hearthstone fun(now?: number): SPFHearthstone? the Hearthstone and its bind point, when it could be used (Transport/Teleports.lua)
 ---@field HearthSaving fun(): number? ms the Hearthstone saves on the journey, nil when it cannot be told (UI/HearthPin.lua)
----@field HearthPinTooltip fun(name: string, saving: number?, enabled: boolean): string, string[] (UI/HearthPin.lua)
+---@field HearthPinTooltip fun(name: string, saving: number?): string, string[] (UI/HearthPin.lua)
 ---@field RefreshHearthPin fun() redraws the Hearthstone's button on the world map (UI/HearthPin.lua)
 
 ---@class SPFDefaults: table<string, boolean|number|string>

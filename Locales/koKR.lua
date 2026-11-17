@@ -448,10 +448,8 @@ L["Books and recipes"] = "책과 조리법" -- mt
 L["One icon per town, or one per service as you zoom in."] =
 	"마을마다 아이콘 하나, 확대하면 서비스마다 아이콘 하나." -- mt
 L["Click to save it."] = "저장하려면 클릭하세요." -- mt
-L["Click to use it."] = "사용하려면 클릭하세요." -- mt
 L["Destination pin size"] = "목적지 핀 크기" -- mt
 L["Hearthstone"] = "귀환석" -- mt
-L["Saved for later."] = "나중을 위해 저장됨." -- mt
 L["Scales the pin over the destination on the world map."] =
 	"세계 지도의 목적지 위 핀 크기를 조정합니다." -- mt
 L["This journey uses it: %s faster."] = "이 여정에서 사용: %s 더 빠름." -- mt
