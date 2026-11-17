@@ -398,58 +398,6 @@ setfenv(assert(loadfile("UI/SettingsMapMarks.lua")), env)("ShortestPathForever",
 setfenv(assert(loadfile("UI/Settings.lua")), env)("ShortestPathForever", ns)
 assert(type(ns.SettingsMapMarks.Register) == "function", "the Map marks page is its own module")
 
--- Check every Guidance initializer, including the resume buttons, between the native headings.
-local expected = {
-	"#Tracker",
-	"trackerAttached",
-	"trackerLocked",
-	"journeyTracker",
-	"resumeJourney",
-	"#Planning",
-	"journey",
-	"journeyKey",
-	"focusedQuest",
-	"#Destination",
-	"destinationPin",
-	"destinationPinSize",
-	"arrivalPin",
-	"arrivalDistance",
-	"npcArrows",
-	"#Guides",
-	"tomtom",
-	"tomtomFollow",
-	"restedxp",
-	"restedxpHideArrow",
-	"guidelime",
-	"dugi",
-	"@RestedXP guide",
-	"@Guidelime",
-	"@Dugi Guides",
-	"#Route choices",
-	"avoidHighZones",
-	"followRoads",
-	"roadDetour",
-	"useWaterWalking",
-	"useHearthstone",
-	"hearthMinimumSavings",
-	"teleports",
-	"teleportMinimumSavings",
-	"#Map",
-	"guideStops",
-	"taxiRoute",
-	"corpse",
-}
-local actual = {}
-for _, entry in ipairs(registered) do
-	if entry.target.name == "Guidance" then
-		local row = entry.initializer
-		actual[#actual + 1] = row.kind == "section" and "#" .. row.name
-			or row.kind == "button" and "@" .. row.name
-			or row.setting.key
-	end
-end
-assert(table.concat(actual, ",") == table.concat(expected, ","), "Guidance headings and controls stay in order")
-
 -- The index page is one button per group; each opens that group's page. The groups divide the old flat list, and
 -- every row keeps its key, default, tooltip and callback.
 local groups = {
@@ -996,36 +944,18 @@ local roadPolicies = policyChanged
 roadDetour.setting:SetValue(200)
 assert(policyChanged == roadPolicies + 1, "changing the allowance replans the current journey")
 
--- Rebuild with an older core: all controls still register and retain their declarations.
-local previousRows = rows
-rows, settings, buttons, registered = {}, {}, {}, {}
-env.ForeverCore.SettingsSections = nil
-setfenv(assert(loadfile("UI/Settings.lua")), env)("ShortestPathForever", ns)
-assert(#rows == #previousRows, "an older core keeps every control")
-for index, entry in ipairs(rows) do
-	local before, after = previousRows[index].initializer, entry.initializer
-	assert(after.setting.key == before.setting.key and after.setting.default == before.setting.default)
-	assert(after.kind == before.kind and after.tooltip == before.tooltip)
-end
-for _, entry in ipairs(registered) do
-	assert(entry.initializer.kind ~= "section", "an older core omits headings")
-end
-print("settings sections: ok")
--- The probe client omits CreateSecureDelegate and must still register every settings page.
-local expectedRows, expectedButtons = #rows, #buttons
-local expectedPages = {}
-for _, button in ipairs(buttons) do
-	expectedPages[button.initializer.name] = true
-end
-env.CreateSecureDelegate = nil
-rows, buttons, settings = {}, {}, {}
-familyPage = nil
-setfenv(assert(loadfile("UI/Settings.lua")), env)("ShortestPathForever", ns)
-assert(#rows == expectedRows, "every settings row registers without secure delegates")
-assert(#buttons == expectedButtons, "every settings page registers without secure delegates")
-for _, button in ipairs(buttons) do
-	assert(expectedPages[button.initializer.name], "the same settings pages register without secure delegates")
-	expectedPages[button.initializer.name] = nil
-end
-assert(next(expectedPages) == nil, "no settings page is missing without secure delegates")
-assert(familyPage, "the Forever addons page registers without secure delegates")
+-- tests/settings_layout_spec.lua reuses this harness for the heading order and the reduced clients.
+return {
+	env = env,
+	ns = ns,
+	rows = rows,
+	buttons = buttons,
+	settings = settings,
+	registered = registered,
+	familyPage = function()
+		return familyPage
+	end,
+	clearFamilyPage = function()
+		familyPage = nil
+	end,
+}
