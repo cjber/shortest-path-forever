@@ -76,10 +76,10 @@ VENDORS = [
 TRAINERS = [
     ("Class trainer", ("atlas", "Class"), "Jocaste", "Darnassus", None, None, "6:20"),
     ("Portal trainer", ("atlas", "TaxiNode_Continent_Neutral"), "Elissa Dumas", "Darnassus", None, None, "6:25"),
-    ("Blacksmithing", ("atlas", "Profession"), "Delfrum Flintbeard", "Journeyman Blacksmith", 38.2, 40.9, None),
-    ("Engineering", ("atlas", "Profession"), "Jenna Lemkenilli", "Journeyman Engineer", 38.3, 41.1, None),
-    ("Mining", ("atlas", "Profession"), "Kurdram Stonehammer", "Mining Trainer", 38.2, 41.0, None),
-    ("Tailoring", ("atlas", "Profession"), "Grondal Moonbreeze", "Journeyman Tailor", 38.2, 40.5, None),
+    ("Blacksmithing", ("profession", 164), "Delfrum Flintbeard", "Journeyman Blacksmith", 38.2, 40.9, None),
+    ("Engineering", ("profession", 202), "Jenna Lemkenilli", "Journeyman Engineer", 38.3, 41.1, None),
+    ("Mining", ("profession", 186), "Kurdram Stonehammer", "Mining Trainer", 38.2, 41.0, None),
+    ("Tailoring", ("profession", 197), "Grondal Moonbreeze", "Journeyman Tailor", 38.2, 40.5, None),
 ]
 SERVICES = [
     ("Innkeeper", ("atlas", "Innkeeper"), "Innkeeper Shaussiy", "Innkeeper", 37.0, 44.1, None),
@@ -154,7 +154,13 @@ BETTER_SECTIONS = (("Vendors", BETTER_VENDORS), ("Trainers", TRAINERS), ("Servic
 # without scrolling past the vendors. Elissa Dumas is Darnassus's portal trainer and Aethalas its Warsong Gulch
 # battlemaster; the times are the same Teldrassil boat the class trainer row takes.
 ROLES = (
-    ("Trainers", TRAINERS[:2]),
+    (
+        "Trainers",
+        TRAINERS[:2]
+        + [
+            ("Weapon master", ("atlas", "Class"), "Ilyenia Moonfire", "Darnassus", None, None, "6:20"),
+        ],
+    ),
     ("Services", [SERVICES[-1]]),
 )
 
@@ -176,6 +182,10 @@ def icon(canvas, ref, x, y, size):
         image = canvas.ui.texture(canvas.ui.item(ref[1]).icon)
         trim = round(image.width * 0.08)
         canvas.draw(image.crop((trim, trim, image.width - trim, image.height - trim)), x, y, size, size)
+        return
+    if ref[0] == "profession":
+        file = int(canvas.ui.data.table("SkillLine")[str(ref[1])]["SpellIconFileID"])
+        canvas.draw(canvas.ui.texture(file), x, y, size, size)
         return
     art = canvas.ui.atlas(ref[1])
     scale = min(size / art.width, size / art.height)

@@ -657,8 +657,8 @@ do
 	local sections = run.ns.NearbyServices.Sections({ map = 1, x = 480, y = 846 }, "transmog")
 	assert(#sections == 1 and sections[1].section == "services", "transmog search finds the service section")
 	assert(sections[1].rows[1].npc.id == 270581, "the search row leads to the flagged NPC")
-	-- A saved scan made before services=2 omitted this NPC, even at the same addon version.
-	db.nearbyRead.key = db.nearbyRead.key:gsub("\nservices=2", "")
+	-- A saved scan made before services=3 omitted newly classified service NPCs, even at the same addon version.
+	db.nearbyRead.key = db.nearbyRead.key:gsub("\nservices=3", "\nservices=2")
 	local old = db.nearbyRead
 	local second = Load({ lib = lib, db = db })
 	second.Login()

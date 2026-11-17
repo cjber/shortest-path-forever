@@ -152,6 +152,8 @@ local function PaintRow(row)
 	local icon = group.icon
 	if row.itemID then
 		Art.Icon(row.Icon, ItemIcon(row.itemID), ICON)
+	elseif group.iconFile then
+		Art.Icon(row.Icon, group.iconFile, ICON)
 	elseif type(icon) == "number" then
 		Art.Icon(row.Icon, ItemIcon(icon), ICON)
 	else

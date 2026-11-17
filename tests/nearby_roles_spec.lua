@@ -12,6 +12,7 @@ local NPCS = {
 	[1003] = { "Mage trainer", "A", FLAGS.TRAINER, "Mage Trainer", { [10] = { { 40, 40 } } } },
 	[1004] = { "Warrior trainer", "A", FLAGS.TRAINER, "Warrior Trainer", { [10] = { { 50, 50 } } } },
 	[1005] = { "Portal trainer", "A", FLAGS.TRAINER, "Portal Trainer", { [10] = { { 60, 60 } } } },
+	[1007] = { "Weapon teacher", "A", 0, "Unrelated title", { [10] = { { 65, 65 } } } },
 	[1006] = { "Horde portal trainer", "H", FLAGS.TRAINER, "Portal Trainer", { [10] = { { 70, 70 } } } },
 }
 
@@ -29,7 +30,7 @@ local function QuestieDB()
 		},
 		Npc = {
 			GetAllIds = function()
-				return { 1001, 1002, 1003, 1004, 1005, 1006 }
+				return { 1001, 1002, 1003, 1004, 1005, 1006, 1007 }
 			end,
 			GetAll = function(id, fields)
 				local row = NPCS[id]
@@ -142,6 +143,7 @@ local function load(classID)
 		end,
 		-- The roles classic-db names, as Data/Services.lua ships them: two mage trainers are portal trainers, and
 		-- the battlemasters on either side.
+		WeaponMasters = { [1007] = { 43, 55 } },
 		ClassTrainers = { [1003] = 8, [1004] = 1 },
 		ProfessionTrainers = {},
 		PortalTrainers = { [1005] = 8, [1006] = 8 },
@@ -229,7 +231,7 @@ for _, section in ipairs(mageSections) do
 		trainers = section
 	end
 end
-assert(trainers and trainers.count == 2, "the class and portal trainers are two rows under Trainers")
+assert(trainers and trainers.count == 3, "class, portal and weapon training have separate rows under Trainers")
 assert(mage.NearbyServices.Navigate("portal", mage.NearbyServices.Index().portal[1]))
 assert(
 	navigated[#navigated].kind == "trainer" and navigated[#navigated].npc == 1005,
@@ -237,3 +239,8 @@ assert(
 )
 
 print("nearby_roles: battlemasters, portal trainers and own-class trainers: ok")
+
+assert(same(npcs(warrior, "weapon"), { 1007 }), "weapon masters are kept even without a trainer flag or title")
+assert(group(warrior, "weapon").section == "trainers")
+assert(warrior.NearbyServices.Navigate("weapon", warrior.NearbyServices.Index().weapon[1]))
+assert(navigated[#navigated].kind == "trainer", "weapon masters navigate as trainers")

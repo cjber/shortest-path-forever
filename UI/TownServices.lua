@@ -41,6 +41,7 @@ local FILTERS = {
 	{ option = "townServiceTransmog", label = L["Transmogrifier"], groups = { transmog = true } },
 	{ option = "townServiceAuction", label = L["Auction house"], groups = { auction = true } },
 	{ option = "townServiceBattlemaster", label = L["Battlemaster"], groups = { battlemaster = true } },
+	{ option = "townServiceWeapon", label = L["Weapon master"], groups = { weapon = true } },
 	{ option = "townServiceClass", label = L["Class trainer"], groups = { class = true, portal = true } },
 	{ option = "townServiceProfessions", label = L["Profession trainers"], profession = true },
 	{ option = "townServiceFood", label = L["Food and drink"], groups = { food = true, drink = true } },
@@ -526,7 +527,9 @@ end
 ---@param cluster SPFTownServiceCluster
 local function PaintPin(texture, cluster)
 	local shared = SharedService(cluster)
-	if shared then
+	if shared and shared.iconFile then
+		Art.Icon(texture, shared.iconFile, PIN_SIZE)
+	elseif shared then
 		Art.Fit(texture, shared.tracking, PIN_SIZE, PIN_SIZE)
 	else
 		-- A pin for different services speaks for no one service, so it wears the addon's own stall, square as file

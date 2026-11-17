@@ -233,7 +233,7 @@ end
 local groups = {
 	{ section = "vendors", key = "arrows", label = "Arrows", icon = 2512 },
 	{ section = "vendors", key = "bank", label = "Bank", icon = 4496 },
-	{ section = "trainers", key = "class", label = "Class trainer", icon = "Class" },
+	{ section = "trainers", key = "class", label = "Class trainer", icon = "Class", iconFile = 136249 },
 	{ section = "entrances", key = "entrance:36", label = "The Deadmines", icon = "questlog-questtypeicon-dungeon" },
 }
 local places = {
@@ -536,6 +536,13 @@ for _, f in ipairs(created) do
 		bankRow = f
 	end
 end
+local trainerRow
+for _, f in ipairs(created) do
+	if f.group and f.group.key == "class" then
+		trainerRow = f
+	end
+end
+assert(trainerRow and trainerRow.Icon.icon == 136249, "a service row draws its content file without an item lookup")
 assert(arrowRow and arrowRow.itemID == 3030 and arrowRow.Icon.icon == "icon:3030", "the arrow row shows Razor Arrow")
 arrowRow.Item.scripts.OnEnter(arrowRow.Item)
 assert(tooltip.shown and tooltip.itemID == 3030 and tooltip:IsOwned(arrowRow.Item), "its icon shows the item tooltip")

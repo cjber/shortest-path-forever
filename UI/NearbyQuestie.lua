@@ -142,7 +142,7 @@ local function Key()
 		"locale=" .. tostring(locale),
 		"faction=" .. Faction(),
 		"nearby=" .. Metadata(addonName, "Version"),
-		"services=2",
+		"services=3",
 	}, "\n")
 end
 
@@ -236,6 +236,7 @@ local function Scan(fit, wanted, yield)
 		ns.ProfessionTrainers,
 		ns.PortalTrainers,
 		ns.Battlemasters,
+		ns.WeaponMasters,
 	}) do
 		for npc in pairs(roles or {}) do
 			known[npc] = true

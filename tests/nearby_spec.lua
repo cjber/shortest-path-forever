@@ -625,13 +625,14 @@ for _, item in ipairs(menuEntries[1].children) do
 end
 assert(
 	trainers[1] == "Class trainer"
-		and trainers[2] == "Profession 803"
-		and trainers[3] == "Profession 815"
-		and trainers[4] == "|",
+		and trainers[2] == "Weapon master"
+		and trainers[3] == "Profession 803"
+		and trainers[4] == "Profession 815"
+		and trainers[5] == "|",
 	"your primary profession, then your secondary one, then a line"
 )
-assert(trainers[5] == "Alchemy" and #trainers == 15, "then every other profession")
-for at = 6, #trainers do
+assert(trainers[6] == "Alchemy" and #trainers == 16, "then every other profession")
+for at = 7, #trainers do
 	assert(trainers[at - 1]:lower() < trainers[at]:lower(), "the other professions by name, case folded")
 end
 env.GetProfessions, env.GetProfessionInfo = nil, nil

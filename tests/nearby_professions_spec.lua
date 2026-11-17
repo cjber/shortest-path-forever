@@ -270,6 +270,9 @@ local function group(key)
 		end
 	end
 end
+assert(group("profession:197").iconFile == ns.ProfessionIcons[197], "tailoring uses its generated client icon")
+assert(group("profession:164").iconFile == ns.ProfessionIcons[164], "smithing uses its generated client icon")
+assert(group("profession:197").iconFile ~= group("profession:164").iconFile, "professions have distinct icons")
 local function place(id)
 	for _, groupKey in pairs({ "profession:197", "profession:164", "profession:171", "trade", "food" }) do
 		for _, item in ipairs(ns.NearbyServices.Index()[groupKey] or {}) do

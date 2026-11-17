@@ -131,6 +131,38 @@ scenario(
 		sim:advance(0.5)
 		sim:gamepadNavigate()
 
+		groups[3] = group("trainers", "profession:164", "Blacksmithing", "Profession")
+		groups[3].iconFile = ns.ProfessionIcons[164]
+		index = { bank = index.bank, innkeeper = index.innkeeper }
+		index["profession:164"] = { place(4, "Smith", -9449, 64) }
+		groups[4] = group("trainers", "weapon", "Weapon master", "Class")
+		index.weapon = { place(5, "Weapon teacher", -10000, 500) }
+		sim:input(function()
+			ns.RefreshTownServices()
+		end)
+		sim:advance(0.2)
+		local foundIcon, foundWeapon
+		for _, pin in ipairs(pins.active) do
+			if pin.Texture:GetTexture() == ns.ProfessionIcons[164] then
+				foundIcon = true
+			end
+			for _, point in ipairs(pin.cluster.services) do
+				if point.entry.id == 5 then
+					foundWeapon = true
+				end
+			end
+		end
+		assert(foundIcon and foundWeapon, "profession file icon and weapon master are drawn")
+		sim:input(function()
+			ns.SetTownServiceGroupShown(groups[4], false)
+		end)
+		sim:advance(0.2)
+		for _, pin in ipairs(pins.active) do
+			for _, point in ipairs(pin.cluster.services) do
+				assert(point.entry.id ~= 5, "weapon master filter removes its map pin")
+			end
+		end
+
 		-- Capitals only: the outlying seller goes, the capital keeps its icon.
 		sim:input(function()
 			ns.db.townServices = "capitals"

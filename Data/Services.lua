@@ -8,6 +8,8 @@ local _, ns = ...
 -- Food: items whose use spell has a MOD_REGEN aura (84); Drink: MOD_POWER_REGEN (85), one TRIGGER_SPELL
 -- (64) hop included. An item can be both.
 -- ProfessionTrainers: [npc] = skill line (CategoryID 11 or 9) of the spells a TrainerType 2 NPC teaches.
+-- ProfessionIcons: [skill line] = SkillLine.SpellIconFileID, the client's square profession icon.
+-- WeaponMasters: [npc] = weapon skill lines (CategoryID 6) taught by classic-db trainer spells.
 -- ClassTrainers: [npc] = TrainerClass of a TrainerType 0 trainer; TrainerClass 0 is not a class.
 -- PortalTrainers: [npc] = class of a mage trainer whose every taught spell opens or lands at a destination.
 -- Battlemasters: [npc] = battleground template, from classic-db battlemaster_entry.
@@ -286,6 +288,30 @@ ns.ProfessionTrainers = {
 	[12939] = 129,
 	[12961] = 356,
 	[14740] = 356,
+}
+
+-- stylua: ignore
+ns.ProfessionIcons = {
+	[129] = 135966,
+	[164] = 136241,
+	[165] = 136247,
+	[171] = 136240,
+	[182] = 136246,
+	[185] = 133971,
+	[186] = 136248,
+	[197] = 136249,
+	[202] = 136243,
+	[333] = 136244,
+	[356] = 136245,
+	[393] = 134366,
+	[633] = 136058,
+}
+
+-- stylua: ignore
+ns.WeaponMasters = {
+	[2704] = { 44, 45, 136, 172, 176 }, [11865] = { 44, 46, 54, 160, 172 }, [11866] = { 45, 136, 173, 176 },
+	[11867] = { 43, 55, 136, 173, 226, 229 }, [11868] = { 44, 45, 172, 173, 176 }, [11869] = { 46, 54, 136, 160 },
+	[11870] = { 43, 55, 173, 226, 229 }, [13084] = { 173, 176, 226 },
 }
 
 -- stylua: ignore

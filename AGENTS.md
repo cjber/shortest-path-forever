@@ -152,7 +152,7 @@ bold-lead bullets) before its `v*` tag, since the release publishes it as the no
   master's area when that area is a sub-area of its zone (`AreaTable.ParentAreaID`), and `Journey/Hazards.lua` falls
   back to a radius around the flight master where it is not. Neither database holds the town polygons, and a radius
   around the flight master missed Southshore's town hall and western guards (#719).
-- WFA-28: `Data/Services.lua` (food and drink items, the profession goods vendors sell, profession and class trainers,
+- WFA-28: `Data/Services.lua` (food and drink items, the profession goods vendors sell, profession, class and weapon trainers,
   mage portal trainers and battlemasters): wago.tools `ItemSparse`, `ItemXItemEffect`, `ItemEffect`, `SpellEffect`,
   `SpellReagents`, `SpellTotems`, `SkillLine` and `SkillLineAbility`, with classic-db `creature_template`, `npc_vendor`,
   `npc_trainer`, `npc_trainer_template`, `battlemaster_entry`, `spell_template` and `spell_target_position`; QuestieDB's

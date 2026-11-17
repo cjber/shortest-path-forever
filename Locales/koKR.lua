@@ -593,3 +593,5 @@ L["show it on the map"] = "지도에 표시" -- mt
 L["show the Adventure Guide Forever link"] = "Adventure Guide Forever 링크를 표시" -- mt
 L["Show link"] = "링크 표시" -- mt
 L["That guide has no step to follow."] = "해당 가이드에 따라갈 단계가 없습니다." -- mt
+
+L["Weapon master"] = "무기 전문가"

@@ -259,7 +259,7 @@ local function Zone(place)
 end
 -- The trainer groups are the class, portal and profession ones; battlemasters wear the client's own mark.
 local function Kind(key)
-	if key == "class" or key == "portal" or key:sub(1, 11) == "profession:" then
+	if key == "class" or key == "portal" or key == "weapon" or key:sub(1, 11) == "profession:" then
 		return "trainer"
 	end
 	if key == "battlemaster" then
@@ -383,6 +383,7 @@ local function BuildGroups()
 	end
 	ROLES.AddClassGroup(Add, GroupNPCs)
 	ROLES.AddPortalGroup(Add, GroupNPCs)
+	ROLES.AddWeaponGroup(Add, GroupNPCs)
 	local skills, seen = {}, {}
 	for _, skill in pairs(ns.ProfessionTrainers or {}) do
 		if not seen[skill] then
@@ -400,6 +401,7 @@ local function BuildGroups()
 				skill = skill,
 				label = label,
 				icon = "Profession",
+				iconFile = ns.ProfessionIcons and ns.ProfessionIcons[skill],
 				tracking = "Profession",
 				npcs = GroupNPCs("profession:" .. skill),
 			})
@@ -766,6 +768,7 @@ end
 ---@field key string
 ---@field label string
 ---@field icon number|string
+---@field iconFile? integer a square client content icon, shared by the row and map pin
 ---@field tracking string the client's minimap tracking atlas the world map's service pins wear
 ---@field npcs number[]
 ---@field skill? integer a profession group's skill line

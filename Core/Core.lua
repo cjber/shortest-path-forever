@@ -49,6 +49,7 @@ local DEFAULTS = {
 	townServiceTransmog = true,
 	townServiceBattlemaster = true,
 	townServiceClass = true,
+	townServiceWeapon = true,
 	townServiceProfessions = true,
 	townServiceFood = true,
 	townServiceAmmunition = true,

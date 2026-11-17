@@ -13,6 +13,7 @@ local L = ns.L
 ---@field PlayerClass fun(): integer?
 ---@field ClassTrainerIDs fun(tweaks: table?): table<number, boolean>
 ---@field AddClassGroup fun(Add: fun(group: SPFNearbyGroup), GroupNPCs: fun(key: string): number[])
+---@field AddWeaponGroup fun(Add: fun(group: SPFNearbyGroup), GroupNPCs: fun(key: string): number[])
 ---@field AddPortalGroup fun(Add: fun(group: SPFNearbyGroup), GroupNPCs: fun(key: string): number[])
 ---@field AddBattlemasterGroup fun(Add: fun(group: SPFNearbyGroup), GroupNPCs: fun(key: string): number[])
 ---@field AddKeys fun(keys: string[], id: integer, classIDs: table<number, boolean>, classID: integer?)
@@ -84,6 +85,23 @@ function Roles.AddClassGroup(Add, GroupNPCs)
 	})
 end
 
+-- Weapon masters are derived from taught weapon skills, independently of class trainers.
+---@param Add fun(group: SPFNearbyGroup)
+---@param GroupNPCs fun(key: string): number[]
+function Roles.AddWeaponGroup(Add, GroupNPCs)
+	if not next(ns.WeaponMasters or {}) then
+		return
+	end
+	Add({
+		section = "trainers",
+		key = "weapon",
+		label = L["Weapon master"],
+		icon = "Class",
+		tracking = "Class",
+		npcs = GroupNPCs("weapon"),
+	})
+end
+
 -- The portal trainer group, offered to a class that can train from one.
 ---@param Add fun(group: SPFNearbyGroup)
 ---@param GroupNPCs fun(key: string): number[]
@@ -125,6 +143,9 @@ end
 ---@param classIDs table<number, boolean>
 ---@param classID integer?
 function Roles.AddKeys(keys, id, classIDs, classID)
+	if ns.WeaponMasters and ns.WeaponMasters[id] then
+		keys[#keys + 1] = "weapon"
+	end
 	if classIDs[id] then
 		keys[#keys + 1] = "class"
 	end

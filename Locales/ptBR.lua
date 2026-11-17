@@ -582,3 +582,5 @@ L["show it on the map"] = "mostrar no mapa" -- mt
 L["show the Adventure Guide Forever link"] = "mostrar o link do Adventure Guide Forever" -- mt
 L["Show link"] = "Mostrar link" -- mt
 L["That guide has no step to follow."] = "Esse guia não tem nenhuma etapa para seguir." -- mt
+
+L["Weapon master"] = "Mestre de armas"

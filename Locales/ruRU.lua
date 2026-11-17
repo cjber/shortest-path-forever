@@ -617,3 +617,5 @@ L["show the Adventure Guide Forever link"] = "показать ссылку на
 L["Show link"] = "Показать ссылку" -- mt
 L["That guide has no step to follow."] =
 	"В этом руководстве нет шага для следования." -- mt
+
+L["Weapon master"] = "Оружейный мастер"

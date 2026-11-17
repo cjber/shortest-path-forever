@@ -13,6 +13,8 @@
 ---@field Zones table<number, SPFZone>
 ---@field Food number[] items whose use spell restores health (Data/Services.lua)
 ---@field Drink number[] items whose use spell restores mana (Data/Services.lua)
+---@field ProfessionIcons table<number, integer> profession skill line -> client icon file ID
+---@field WeaponMasters table<number, number[]> NPC -> taught weapon skill lines
 ---@field ProfessionTrainers table<number, number> trainer NPC -> its profession skill line (Data/Services.lua)
 ---@field ClassTrainers table<number, number> class trainer NPC -> its class (Data/Services.lua)
 ---@field PortalTrainers table<number, number> portal trainer NPC -> its class (Data/Services.lua)
@@ -316,6 +318,7 @@
 ---@field townServiceTransmog? boolean whether transmogrifier pins show
 ---@field townServiceAuction? boolean whether auction house pins show
 ---@field townServiceBattlemaster? boolean whether battlemaster pins show
+---@field townServiceWeapon? boolean whether weapon master pins show
 ---@field townServiceClass? boolean whether class trainer pins show
 ---@field townServiceProfessions? boolean whether profession trainer pins show
 ---@field townServiceFood? boolean whether food and drink vendor pins show

@@ -206,6 +206,34 @@ def profession_trainers(creatures, trainer_rows, template_rows, spell_effect, sk
     return dict(sorted(result.items()))
 
 
+def weapon_masters(creatures, trainer_rows, template_rows, spell_rows, abilities, categories):
+    """NPC -> weapon skill lines taught by its trainer spells, including trainer templates."""
+    weapons = defaultdict(set)
+    for row in abilities:
+        skill = int(row["SkillLine"])
+        if categories.get(skill) == 6:  # SkillLine's weapon category.
+            weapons[int(row["Spell"])].add(skill)
+    # A weapon proficiency spell has WEAPON (25), unlike attacks also listed under a weapon skill.
+    proficiencies = {
+        int(row["Id"]) for row in spell_rows if any(int(row[f"Effect{index}"]) == 25 for index in (1, 2, 3))
+    }
+    taught = defaultdict(set)
+    for row in spell_rows:
+        for index in (1, 2, 3):
+            if int(row[f"Effect{index}"]) == LEARN_SPELL and int(row[f"EffectTriggerSpell{index}"]) in proficiencies:
+                taught[int(row["Id"])] |= weapons[int(row[f"EffectTriggerSpell{index}"])]
+    trainers, templates = defaultdict(set), defaultdict(set)
+    for row in trainer_rows:
+        trainers[int(row["entry"])] |= taught[int(row["spell"])]
+    for row in template_rows:
+        templates[int(row["entry"])] |= taught[int(row["spell"])]
+    return {
+        int(row["Entry"]): sorted(skills)
+        for row in sorted(creatures, key=lambda row: int(row["Entry"]))
+        if (skills := trainers[int(row["Entry"])] | templates[int(row["TrainerTemplateId"])])
+    }
+
+
 def class_trainers(creatures):
     """TrainerType 0 NPC -> the player class it trains. TrainerClass 0 is not a class."""
     result = {}
@@ -336,6 +364,14 @@ def main():
     categories = skill_line_categories(tables["SkillLine"])
     skill_spells = profession_skill_spells(tables["SkillLineAbility"], categories)
     professions = profession_trainers(creatures, trainers, templates, tables["SpellEffect"], skill_spells)
+    icons = {
+        int(row["ID"]): int(row["SpellIconFileID"])
+        for row in tables["SkillLine"]
+        if int(row["ID"]) in set(professions.values()) and int(row["SpellIconFileID"])
+    }
+    weapons = weapon_masters(
+        creatures, trainers, templates, db["spell_template"], tables["SkillLineAbility"], categories
+    )
     classes = class_trainers(creatures)
     teleports = {int(row["id"]) for row in db["spell_target_position"]}
     portals = portal_trainers(creatures, trainers, templates, db["spell_template"], teleports)
@@ -351,6 +387,8 @@ def main():
         "-- Food: items whose use spell has a MOD_REGEN aura (84); Drink: MOD_POWER_REGEN (85), one TRIGGER_SPELL",
         "-- (64) hop included. An item can be both.",
         "-- ProfessionTrainers: [npc] = skill line (CategoryID 11 or 9) of the spells a TrainerType 2 NPC teaches.",
+        "-- ProfessionIcons: [skill line] = SkillLine.SpellIconFileID, the client's square profession icon.",
+        "-- WeaponMasters: [npc] = weapon skill lines (CategoryID 6) taught by classic-db trainer spells.",
         "-- ClassTrainers: [npc] = TrainerClass of a TrainerType 0 trainer; TrainerClass 0 is not a class.",
         "-- PortalTrainers: [npc] = class of a mage trainer whose every taught spell opens or lands at a destination.",
         "-- Battlemasters: [npc] = battleground template, from classic-db battlemaster_entry.",
@@ -362,6 +400,8 @@ def main():
     lines += assignment("ns.Food", render_array(food))
     lines += assignment("ns.Drink", render_array(drink))
     lines += assignment("ns.ProfessionTrainers", render(professions))
+    lines += assignment("ns.ProfessionIcons", render(icons))
+    lines += assignment("ns.WeaponMasters", render_lists(weapons))
     lines += assignment("ns.ClassTrainers", render(classes))
     lines += assignment("ns.PortalTrainers", render(portals))
     lines += assignment("ns.Battlemasters", render(battlemasters_by_npc))
@@ -369,6 +409,7 @@ def main():
     publish({ROOT / "Data" / "Services.lua": "\n".join(lines)})
     print(
         f"Services: {len(food)} food, {len(drink)} drink, {len(professions)} profession trainers, "
+        f"{len(icons)} profession icons, {len(weapons)} weapon masters, "
         f"{len(classes)} class trainers, {len(portals)} portal trainers, "
         f"{len(battlemasters_by_npc)} battlemasters, {len(supplies)} vendor items for professions"
     )

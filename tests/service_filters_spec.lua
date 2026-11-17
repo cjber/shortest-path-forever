@@ -73,5 +73,19 @@ assert(ns.TownServiceGroupShown(groups[1]) and not ns.TownServiceGroupShown(grou
 assert(not ns.TownServiceFilterable({ key = "flight", section = "services" }),
  "flight points keep their own map controls")
 assert(not ns.TownServiceFilterable({ key = "entrance:36", section = "entrances" }), "entrances are not town services")
+groups[1].iconFile = 136249
+ns.db.townServiceKinds = { ["profession:164"] = true, ["profession:165"] = false, class = false, portal = false }
+ns.RefreshTownServices()
+assert(pin().Texture.texture == 136249, "a profession pin uses the same file icon as its Nearby row")
+local weapon = { section = "trainers", key = "weapon", label = "Weapon master", tracking = "Class" }
+groups[#groups + 1] = weapon
+index.weapon = { place }
+assert(ns.TownServiceFilterable(weapon), "weapon masters have a Nearby checkbox")
+assert(ns.TownServiceGroupShown(weapon), "old saves show weapon masters by default")
+ns.SetTownServiceGroupShown(weapon, false)
+assert(not ns.TownServiceGroupShown(weapon), "weapon master visibility can be saved independently")
+boxes = {}
+menus.MENU_WORLD_MAP_TRACKING(nil, root)
+assert(boxes[#boxes].label == "Weapon master", "weapon masters appear in the map filter menu")
 print("service_filters_spec: passed")
 ]==]))()

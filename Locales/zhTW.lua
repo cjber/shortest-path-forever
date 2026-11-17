@@ -572,3 +572,5 @@ L["show it on the map"] = "在地圖上顯示" -- mt
 L["show the Adventure Guide Forever link"] = "顯示 Adventure Guide Forever 連結" -- mt
 L["Show link"] = "顯示連結" -- mt
 L["That guide has no step to follow."] = "此指南沒有可跟隨的步驟。" -- mt
+
+L["Weapon master"] = "武器大師"

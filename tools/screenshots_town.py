@@ -20,13 +20,16 @@ from typing import Any
 
 from PIL import Image
 from screenshots_maps import icon, map_base
+from screenshots_services import icon as ref_icon
 from wowmock import TooltipLine, scene, tooltip  # ty: ignore[import-not-found]
 
 ROOT = Path(__file__).resolve().parent.parent
 # The client's map canvas, which UI/Map.lua's OverlapGroups measures against.
 TOWN_CANVAS = (1002, 668)
 # The Nearby services list's groups, in its order: vendors first, then the trainers, then the services. Each entry is
-# the section that ranks it and the client tracking atlas the map wears for it (UI/NearbyGroups.lua).
+# the section that ranks it and the art the map wears for it (UI/NearbyGroups.lua): the client tracking atlas's name,
+# or, for a profession trainer, the ("profession", skill line) ref whose SkillLine icon file UI/TownServices.lua
+# paints in place of that atlas.
 TOWN_GROUPS = {
     "Innkeeper": ("services", "Innkeeper"),
     "Flight master": ("services", "FlightMaster"),
@@ -35,7 +38,7 @@ TOWN_GROUPS = {
     "Bank": ("services", "Banker"),
     "Auction house": ("services", "Auctioneer"),
     "Class trainer": ("trainers", "Class"),
-    "Engineering": ("trainers", "Profession"),
+    "Engineering": ("trainers", ("profession", 202)),
     "Food": ("vendors", "Food"),
     "Trade supplies": ("vendors", "Reagents"),
     "Weapons and armour": ("vendors", "poi-transmogrifier"),
@@ -180,6 +183,14 @@ def town_clusters(zoom):
     return clusters
 
 
+def group_icon(canvas, art, x, y, size=PIN_SIZE):
+    """A group's pin art centred on x, y: an atlas at its native shape, or a profession's skill line icon file."""
+    if isinstance(art, str):
+        icon(canvas, art, x, y, size=size)
+    else:
+        ref_icon(canvas, art, x - size / 2, y - size / 2, size)
+
+
 def town_canvas(ui, zoom):
     """Stormwind City with its service pins at a zoom: the whole city, or the Trade District enlarged 2x."""
     base, rects = map_base(ui, 1453)
@@ -204,7 +215,7 @@ def town_canvas(ui, zoom):
     for cluster in town_clusters(zoom):
         x, y = to_x(cluster["x"]), to_y(cluster["y"])
         if cluster["shared"]:
-            icon(canvas, TOWN_GROUPS[cluster["shared"]][1], x, y, size=20)
+            group_icon(canvas, TOWN_GROUPS[cluster["shared"]][1], x, y)
         else:
             # UI/TownServices.lua paints a pin of different services with the addon's stall, whole in the same 20
             # unit box.

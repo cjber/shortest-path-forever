@@ -15,6 +15,7 @@ from gen_services import (
     profession_trainers,
     skill_line_categories,
     vendor_item_professions,
+    weapon_masters,
 )
 
 
@@ -44,6 +45,19 @@ def spell(entry, effect=0, trigger=0):
         row[f"Effect{index}"] = str(effect if index == 1 else 0)
         row[f"EffectTriggerSpell{index}"] = str(trigger if index == 1 else 0)
     return row
+
+
+class WeaponMastersTest(unittest.TestCase):
+    def test_direct_and_template_proficiencies_exclude_attacks_and_other_skills(self):
+        result = weapon_masters(
+            [creature(1, 0), creature(2, 0, template=10), creature(3, 0)],
+            [{"entry": "1", "spell": "100"}, {"entry": "3", "spell": "101"}],
+            [{"entry": "10", "spell": "100"}],
+            [spell(100, 36, 200), spell(101, 36, 201), spell(200, 25), spell(201, 2)],
+            [{"SkillLine": "43", "Spell": "200"}, {"SkillLine": "43", "Spell": "201"}],
+            {43: 6},
+        )
+        self.assertEqual(result, {1: [43], 2: [43]})
 
 
 class FoodDrinkTest(unittest.TestCase):
