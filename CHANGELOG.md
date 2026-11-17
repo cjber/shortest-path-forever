@@ -14,6 +14,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 <!-- discord-image: docs/screenshots/services_roles.png -->
 
+- **The minimap button is gone.** Open Shortest Path Forever with /path, from the game's settings or from the AddOn compartment.
 - **Recognise profession trainers and find weapon masters.** Each profession uses its own icon in Nearby services and on the map. Weapon masters have their own service filter. Thanks to user_u3k9hweaatfhnjs0 for the ideas (#952).
 - **Follow roads keeps its route across tile borders.** Road connections remain available where a shorter off-road connection would otherwise pull the route away from the road (#892).
 - **Settings are easier to scan.** Section headings group related controls on the Guidance, Interface and Map marks pages.

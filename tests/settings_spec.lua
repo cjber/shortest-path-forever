@@ -477,7 +477,6 @@ local groups = {
 		"trackerScale",
 		"trackerHeight",
 		"metres",
-		"minimapButton",
 		"whatsNew",
 	},
 }
@@ -492,7 +491,7 @@ local order = {
 }
 
 assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
-assert(#rows == 76, #rows)
+assert(#rows == 75, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
