@@ -41,13 +41,62 @@ scenario(
 		sim:input(function()
 			G.Settings.OpenToCategory(category:GetID())
 		end)
+		local guidance
+		for _, child in ipairs(category:GetSubcategories()) do
+			if child:GetName() == ns.L["Guidance"] then
+				guidance = child
+			end
+		end
+		assert(guidance, "Guidance is a native settings page")
 		sim:input(function()
-			G.SettingsPanel:SelectCategory(sub)
+			G.SettingsPanel:SelectCategory(guidance)
+			G.SettingsPanel:FocusContainer()
+		end)
+		assert(G.SmartNavigation.activeInfo, "Settings has active smart navigation")
+		local initializers = G.SettingsPanel:GetLayout(guidance):GetInitializers()
+		assert(#initializers > 0, "Guidance has settings to navigate")
+		local scrollBox = G.SettingsPanel:GetSettingsList().ScrollBox
+		for _, initializer in ipairs(initializers) do
+			sim:input(function()
+				scrollBox:ScrollToElementData(initializer, G.ScrollBoxConstants.AlignBegin)
+			end)
+			sim:advance(0.1)
+			local row = assert(scrollBox:FindFrame(initializer), "Guidance row scrolled into view")
+			sim:input(function()
+				G.SmartNavigation:SelectButton(row.smartNavigationProxyTarget or row)
+				assert(
+					G.SmartNavigation:GetCurrentButton() == (row.smartNavigationProxyTarget or row),
+					"gamepad selects each Guidance row"
+				)
+			end)
+			for key, binding in pairs(G.GamepadSharedUtility.InputBindingManager.activeBindings) do
+				assert(
+					G.issecurevariable(binding, "isActive"),
+					"Guidance tainted " .. key .. " for " .. initializer:GetName()
+				)
+			end
+			sim:gamepadNavigate()
+			sim:expectNoGamepadTaint(ADDON)
+		end
+		sim:input(function()
+			G.SmartNavigation:AttemptClose()
+			G.SettingsPanel:Hide()
+		end)
+		sim:gamepadNavigate()
+		sim:expectNoGamepadTaint(ADDON)
+		sim:input(function()
+			G.Settings.OpenToCategory(sub:GetID())
 		end)
 		sim:advance(0.1)
 		local first = G.SettingsPanel:GetFirstSmartNavFocusableSettingFrame()
 		assert(first, "the gamepad cursor has a row to land on")
 		assert(first:IsVisible(), "the first row the cursor lands on is visible")
+		sim:input(function()
+			G.SmartNavigation:AttemptClose()
+			G.SettingsPanel:Hide()
+		end)
+		sim:gamepadNavigate()
+		sim:expectNoGamepadTaint(ADDON)
 		sim:expectNoErrors(ADDON)
 	end
 )

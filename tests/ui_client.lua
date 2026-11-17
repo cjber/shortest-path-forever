@@ -49,6 +49,11 @@ _G.CreateSecureDelegate = function(fn)
 		return secure(fn, ...)
 	end
 end
+_G.GenerateClosure = function(fn, bound)
+	return function(...)
+		return fn(bound, ...)
+	end
+end
 _G.GameTooltip_Hide = function() end
 local cvars = { rotateMinimap = "0", questPOI = "1" }
 local function noop() end

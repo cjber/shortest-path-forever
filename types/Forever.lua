@@ -3,6 +3,12 @@
 -- FrameXML is empty at the pinned Ketho revision. These signatures describe the Forever
 -- UI sources (Gethe/wow-ui-source, forever), not replacements loaded by the addon.
 
+-- Blizzard_SharedXMLBase/FunctionUtil.lua: prepends bound arguments to each invocation of the returned closure.
+---@param callback function
+---@param ... any
+---@return function
+function GenerateClosure(callback, ...) end
+
 ---@type string
 UNKNOWN = nil
 ---@type number

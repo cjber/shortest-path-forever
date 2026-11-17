@@ -324,11 +324,21 @@ do
 	check(#sharedPlaces == 0, "the comparison keeps the Hearthstone out of the shared place list")
 	check(planCalls == 2, "a plan is made for each side of the comparison")
 
+	local plan = { legs = { { teleport = { bind = true, item = 6948 } } } }
+	ns.JourneyPlan = function()
+		return plan
+	end
 	local title, lines = ns.HearthPinTooltip("Goldshire", 85000)
 	check(title == "Hearthstone", "the tooltip's title")
 	check(lines[1] == "Goldshire", "the bind location comes first")
 	check(lines[2] == "This journey uses it: 1:25 faster.", "the used state counts the time saved")
 	check(lines[3] == "Click to save it.", "the used state says what a click does")
+	plan = { legs = { { kind = "walk" } } }
+	local _, unused = ns.HearthPinTooltip("Goldshire", 0)
+	check(
+		#unused == 2 and unused[2] == "Click to save it.",
+		"a zero saving without a bind leg never claims the journey uses it"
+	)
 	local ignored, noTime = ns.HearthPinTooltip("Goldshire", nil)
 	lines = noTime
 	check(ignored == "Hearthstone", "the title is still there without a comparison")

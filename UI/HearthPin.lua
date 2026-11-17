@@ -95,7 +95,15 @@ end
 ---@return string title, string[] lines
 function ns.HearthPinTooltip(name, saving)
 	local lines = { name }
-	if saving then
+	local plan = ns.JourneyPlan()
+	local usesBind = false
+	for _, leg in ipairs(plan and plan.legs or {}) do
+		if leg.teleport and leg.teleport.bind then
+			usesBind = true
+			break
+		end
+	end
+	if usesBind and saving then
 		lines[#lines + 1] =
 			string.format(L["This journey uses it: %s faster."], ns.FormatCountdown(math.max(0, saving)))
 	end

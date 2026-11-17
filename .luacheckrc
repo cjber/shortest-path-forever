@@ -239,3 +239,5 @@ files["tests/companion_maps_spec.lua"] = { globals = { "C_AddOns", "GetTime" } }
 read_globals[#read_globals + 1] = "CreateSecureDelegate"
 
 read_globals[#read_globals + 1] = "GatherMate2"
+
+read_globals[#read_globals + 1] = "GenerateClosure"

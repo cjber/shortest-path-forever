@@ -12,6 +12,14 @@ local trackerState = { attached = true }
 local trackerScale, compassScaled, compassBackdrop = 1, nil, nil
 local townRefreshed = 0
 local env = setmetatable({
+	CreateSecureDelegate = function(fn)
+		return fn
+	end,
+	GenerateClosure = function(fn, bound)
+		return function(...)
+			return fn(bound, ...)
+		end
+	end,
 	MinimalSliderWithSteppersMixin = { Label = { Right = 1 } },
 	OFF = "Off",
 	SecondsToTime = function(seconds)
@@ -154,7 +162,9 @@ env.InCombatLockdown = function()
 	return false
 end
 env.securecallfunction = function(fn, ...)
-	secureCalls = secureCalls + 1
+	if fn == env.C_SettingsUtil.OpenSettingsPanel then
+		secureCalls = secureCalls + 1
+	end
 	return fn(...)
 end
 env.C_SettingsUtil = {
@@ -1001,3 +1011,21 @@ for _, entry in ipairs(registered) do
 	assert(entry.initializer.kind ~= "section", "an older core omits headings")
 end
 print("settings sections: ok")
+-- The probe client omits CreateSecureDelegate and must still register every settings page.
+local expectedRows, expectedButtons = #rows, #buttons
+local expectedPages = {}
+for _, button in ipairs(buttons) do
+	expectedPages[button.initializer.name] = true
+end
+env.CreateSecureDelegate = nil
+rows, buttons, settings = {}, {}, {}
+familyPage = nil
+setfenv(assert(loadfile("UI/Settings.lua")), env)("ShortestPathForever", ns)
+assert(#rows == expectedRows, "every settings row registers without secure delegates")
+assert(#buttons == expectedButtons, "every settings page registers without secure delegates")
+for _, button in ipairs(buttons) do
+	assert(expectedPages[button.initializer.name], "the same settings pages register without secure delegates")
+	expectedPages[button.initializer.name] = nil
+end
+assert(next(expectedPages) == nil, "no settings page is missing without secure delegates")
+assert(familyPage, "the Forever addons page registers without secure delegates")

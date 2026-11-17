@@ -7,6 +7,26 @@ if ns.broken then
 end
 local L = ns.L
 
+-- Native initializers and their options must be produced in secure execution. The list reads them while
+-- constructing shared gamepad binding footers, including rows beside the selected one.
+local delegates = {}
+local function Secure(fn)
+	-- A client without CreateSecureDelegate (UI/Canvas.lua guards it too) gets the plain initializers.
+	if type(CreateSecureDelegate) ~= "function" then
+		return fn
+	end
+	if not delegates[fn] then
+		delegates[fn] = CreateSecureDelegate(fn)
+	end
+	return delegates[fn]
+end
+
+-- Blizzard calls slider formatters directly. A native closure isolates our formatting callback so its taint
+-- cannot escape into the rest of the native row initialization or the shared binding stack.
+local function Label(options, callback)
+	local formatter = Secure(GenerateClosure)(securecallfunction, callback)
+	Secure(options.SetLabelFormatter)(options, MinimalSliderWithSteppersMixin.Label.Right, formatter)
+end
 local settings = {}
 
 -- Change an option from anywhere and keep the settings panel in step.
@@ -95,7 +115,7 @@ ns.Init(function()
 		page = subcategory
 		Settings.RegisterInitializer(
 			category,
-			CreateSettingsButtonInitializer(name, L["Open"], function()
+			Secure(CreateSettingsButtonInitializer)(name, L["Open"], function()
 				ForeverCore.OpenSettingsPanel(subcategory:GetID())
 			end, nil, false)
 		)
@@ -119,7 +139,7 @@ ns.Init(function()
 		if onChanged then
 			setting:SetValueChangedCallback(onChanged)
 		end
-		Settings.RegisterInitializer(page, Settings.CreateCheckboxInitializer(setting, nil, tooltip))
+		Settings.RegisterInitializer(page, Secure(Settings.CreateCheckboxInitializer)(setting, nil, tooltip))
 		settings[key] = setting
 	end
 	local function Scale(key, name, tooltip, refresh, minimum, step)
@@ -134,11 +154,11 @@ ns.Init(function()
 		)
 		setting:SetValueChangedCallback(refresh)
 		settings[key] = setting
-		local options = Settings.CreateSliderOptions(minimum or 25, 200, step or 5)
-		options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
+		local options = Secure(Settings.CreateSliderOptions)(minimum or 25, 200, step or 5)
+		Label(options, function(value)
 			return value .. "%"
 		end)
-		Settings.RegisterInitializer(page, Settings.CreateSliderInitializer(setting, options, tooltip))
+		Settings.RegisterInitializer(page, Secure(Settings.CreateSliderInitializer)(setting, options, tooltip))
 	end
 	-- A dropdown over a fixed list of choices: a saved string, one row of labels, and the choice's own key handed
 	-- back to onChanged.
@@ -156,15 +176,17 @@ ns.Init(function()
 			setting:SetValueChangedCallback(onChanged)
 		end
 		settings[key] = setting
-		local options = Settings.CreateControlTextContainer()
+		local options = Secure(Settings.CreateControlTextContainer)()
 		for _, choice in ipairs(choices) do
-			options:Add(choice.key, choice.label)
+			Secure(options.Add)(options, choice.key, choice.label)
 		end
 		Settings.RegisterInitializer(
 			page,
-			Settings.CreateDropdownInitializer(setting, function()
-				return options:GetData()
-			end, tooltip)
+			Secure(Settings.CreateDropdownInitializer)(
+				setting,
+				Secure(GenerateClosure)(options.GetData, options),
+				tooltip
+			)
 		)
 	end
 	-- A minimum time a teleport must save, in seconds; 0 is off.
@@ -180,11 +202,11 @@ ns.Init(function()
 		)
 		setting:SetValueChangedCallback(ns.TravelPolicyChanged)
 		settings[key] = setting
-		local options = Settings.CreateSliderOptions(0, 600, 30)
-		options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
+		local options = Secure(Settings.CreateSliderOptions)(0, 600, 30)
+		Label(options, function(value)
 			return value > 0 and SecondsToTime(value) or OFF
 		end)
-		Settings.RegisterInitializer(page, Settings.CreateSliderInitializer(setting, options, tooltip))
+		Settings.RegisterInitializer(page, Secure(Settings.CreateSliderInitializer)(setting, options, tooltip))
 	end
 
 	-- Each page is its own module: UI/SettingsMapMarks.lua opens the Map marks page and adds its rows through these
@@ -244,7 +266,7 @@ ns.Init(function()
 	)
 	Settings.RegisterInitializer(
 		page,
-		Settings.CreateCheckboxInitializer(
+		Secure(Settings.CreateCheckboxInitializer)(
 			attachment,
 			nil,
 			L["Turn this off to drag the shared Forever tracker anywhere on screen."]
@@ -270,7 +292,7 @@ ns.Init(function()
 	)
 	Settings.RegisterInitializer(
 		page,
-		Settings.CreateCheckboxInitializer(
+		Secure(Settings.CreateCheckboxInitializer)(
 			lock,
 			nil,
 			L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."]
@@ -313,17 +335,15 @@ ns.Init(function()
 		ns.Defaults.journeyKey
 	)
 	settings.journeyKey = journeyKey
-	local journeyKeyOptions = Settings.CreateControlTextContainer()
+	local journeyKeyOptions = Secure(Settings.CreateControlTextContainer)()
 	for _, key in ipairs(ns.JourneyKeys) do
-		journeyKeyOptions:Add(key, ns.JourneyKeyName(key))
+		Secure(journeyKeyOptions.Add)(journeyKeyOptions, key, ns.JourneyKeyName(key))
 	end
 	Settings.RegisterInitializer(
 		page,
-		Settings.CreateDropdownInitializer(
+		Secure(Settings.CreateDropdownInitializer)(
 			journeyKey,
-			function()
-				return journeyKeyOptions:GetData()
-			end,
+			Secure(GenerateClosure)(journeyKeyOptions.GetData, journeyKeyOptions),
 			L["The key you hold to plan a journey from the world map or the minimap."]
 				.. " "
 				.. L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."]
@@ -362,13 +382,13 @@ ns.Init(function()
 		end
 	end)
 	settings.destinationPinSize = destinationPinSize
-	local destinationPinOptions = Settings.CreateSliderOptions(50, 100, 5)
-	destinationPinOptions:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
+	local destinationPinOptions = Secure(Settings.CreateSliderOptions)(50, 100, 5)
+	Label(destinationPinOptions, function(value)
 		return value .. "%"
 	end)
 	Settings.RegisterInitializer(
 		page,
-		Settings.CreateSliderInitializer(
+		Secure(Settings.CreateSliderInitializer)(
 			destinationPinSize,
 			destinationPinOptions,
 			L["Scales the pin over the destination on the world map."]
@@ -392,13 +412,13 @@ ns.Init(function()
 		ns.Defaults.arrivalDistance
 	)
 	settings.arrivalDistance = arrivalDistance
-	local arrivalOptions = Settings.CreateSliderOptions(5, 50, 5)
-	arrivalOptions:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
+	local arrivalOptions = Secure(Settings.CreateSliderOptions)(5, 50, 5)
+	Label(arrivalOptions, function(value)
 		return ns.FormatDistance(value)
 	end)
 	Settings.RegisterInitializer(
 		page,
-		Settings.CreateSliderInitializer(
+		Secure(Settings.CreateSliderInitializer)(
 			arrivalDistance,
 			arrivalOptions,
 			L["How close you must get to a journey's destination for it to count as reached."]
@@ -469,19 +489,19 @@ ns.Init(function()
 	)
 	Settings.RegisterInitializer(
 		page,
-		CreateSettingsButtonInitializer(L["RestedXP guide"], L["Resume guide"], function()
+		Secure(CreateSettingsButtonInitializer)(L["RestedXP guide"], L["Resume guide"], function()
 			ns.ResumeRestedXP()
 		end, nil, false)
 	)
 	Settings.RegisterInitializer(
 		page,
-		CreateSettingsButtonInitializer(L["Guidelime"], L["Resume guide"], function()
+		Secure(CreateSettingsButtonInitializer)(L["Guidelime"], L["Resume guide"], function()
 			ns.ResumeGuidelime()
 		end, nil, false)
 	)
 	Settings.RegisterInitializer(
 		page,
-		CreateSettingsButtonInitializer(L["Dugi Guides"], L["Resume guide"], function()
+		Secure(CreateSettingsButtonInitializer)(L["Dugi Guides"], L["Resume guide"], function()
 			ns.ResumeDugi()
 		end, nil, false)
 	)
@@ -510,13 +530,13 @@ ns.Init(function()
 	)
 	roadDetour:SetValueChangedCallback(ns.TravelPolicyChanged)
 	settings.roadDetour = roadDetour
-	local roadOptions = Settings.CreateSliderOptions(0, ns.Hazards.ROAD_DETOUR_MAX, 25)
-	roadOptions:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
+	local roadOptions = Secure(Settings.CreateSliderOptions)(0, ns.Hazards.ROAD_DETOUR_MAX, 25)
+	Label(roadOptions, function(value)
 		return value .. "%"
 	end)
 	Settings.RegisterInitializer(
 		page,
-		Settings.CreateSliderInitializer(
+		Secure(Settings.CreateSliderInitializer)(
 			roadDetour,
 			roadOptions,
 			-- luacheck: push ignore 631
@@ -629,7 +649,7 @@ ns.Init(function()
 	)
 	Settings.RegisterInitializer(
 		page,
-		Settings.CreateCheckboxInitializer(
+		Secure(Settings.CreateCheckboxInitializer)(
 			Settings.RegisterProxySetting(
 				page,
 				"ShortestPathForever_arrowMove",
@@ -670,16 +690,14 @@ ns.Init(function()
 		end
 	end)
 	settings.arrowLabel = arrowLabel
-	local arrowLabelOptions = Settings.CreateControlTextContainer()
-	arrowLabelOptions:Add("distance", L["Distance"])
-	arrowLabelOptions:Add("time", L["Time left"])
-	arrowLabelOptions:Add("both", L["Both"])
+	local arrowLabelOptions = Secure(Settings.CreateControlTextContainer)()
+	Secure(arrowLabelOptions.Add)(arrowLabelOptions, "distance", L["Distance"])
+	Secure(arrowLabelOptions.Add)(arrowLabelOptions, "time", L["Time left"])
+	Secure(arrowLabelOptions.Add)(arrowLabelOptions, "both", L["Both"])
 	-- stylua: ignore
 	Settings.RegisterInitializer(
 		page,
-		Settings.CreateDropdownInitializer(arrowLabel, function()
-			return arrowLabelOptions:GetData()
-		end, L["What the direction arrow shows under it: the distance in the selected arrow mode, the time left in the journey, or both."]) -- luacheck: ignore 631
+		Secure(Settings.CreateDropdownInitializer)(arrowLabel, Secure(GenerateClosure)(arrowLabelOptions.GetData, arrowLabelOptions), L["What the direction arrow shows under it: the distance in the selected arrow mode, the time left in the journey, or both."]) -- luacheck: ignore 631
 	)
 	Checkbox(
 		"arrowObjectives",
@@ -704,7 +722,7 @@ ns.Init(function()
 	)
 	Settings.RegisterInitializer(
 		page,
-		Settings.CreateCheckboxInitializer(
+		Secure(Settings.CreateCheckboxInitializer)(
 			Settings.RegisterProxySetting(
 				page,
 				"ShortestPathForever_compassMove",
@@ -733,13 +751,13 @@ ns.Init(function()
 		end
 	end)
 	settings.compassScale = compassScale
-	local compassOptions = Settings.CreateSliderOptions(50, 200, 10)
-	compassOptions:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
+	local compassOptions = Secure(Settings.CreateSliderOptions)(50, 200, 10)
+	Label(compassOptions, function(value)
 		return value .. "%"
 	end)
 	Settings.RegisterInitializer(
 		page,
-		Settings.CreateSliderInitializer(
+		Secure(Settings.CreateSliderInitializer)(
 			compassScale,
 			compassOptions,
 			L["Scales the compass. 100% matches the game's own art."]
@@ -760,13 +778,13 @@ ns.Init(function()
 		end
 	end)
 	settings.compassBackground = compassBackground
-	local backgroundOptions = Settings.CreateSliderOptions(0, 80, 10)
-	backgroundOptions:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
+	local backgroundOptions = Secure(Settings.CreateSliderOptions)(0, 80, 10)
+	Label(backgroundOptions, function(value)
 		return value .. "%"
 	end)
 	Settings.RegisterInitializer(
 		page,
-		Settings.CreateSliderInitializer(
+		Secure(Settings.CreateSliderInitializer)(
 			compassBackground,
 			backgroundOptions,
 			L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."]
@@ -787,13 +805,13 @@ ns.Init(function()
 				host.SetScale(value / 100)
 			end
 		)
-		local scaleOptions = Settings.CreateSliderOptions(50, 200, 10)
-		scaleOptions:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
+		local scaleOptions = Secure(Settings.CreateSliderOptions)(50, 200, 10)
+		Label(scaleOptions, function(value)
 			return value .. "%"
 		end)
 		Settings.RegisterInitializer(
 			page,
-			Settings.CreateSliderInitializer(
+			Secure(Settings.CreateSliderInitializer)(
 				scale,
 				scaleOptions,
 				L["Scales the shared Forever tracker. 100% matches the game's own tracker."]
@@ -814,13 +832,13 @@ ns.Init(function()
 		db.trackerHeight = value
 		ns.SetTrackerHeight(value)
 	end)
-	local trackerHeightOptions = Settings.CreateSliderOptions(100, 400, 20)
-	trackerHeightOptions:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
+	local trackerHeightOptions = Secure(Settings.CreateSliderOptions)(100, 400, 20)
+	Label(trackerHeightOptions, function(value)
 		return value .. " UI units"
 	end)
 	Settings.RegisterInitializer(
 		page,
-		Settings.CreateSliderInitializer(
+		Secure(Settings.CreateSliderInitializer)(
 			trackerHeight,
 			trackerHeightOptions,
 			L["Limits the Journey section to this height; longer journeys scroll inside it."]
@@ -855,7 +873,7 @@ ns.Init(function()
 	local family = ForeverCore.Family.Register(category, ns.db, addonName, ns.core.SafeCall)
 	Settings.RegisterInitializer(
 		category,
-		CreateSettingsButtonInitializer(L["Forever addons"], L["Open"], function()
+		Secure(CreateSettingsButtonInitializer)(L["Forever addons"], L["Open"], function()
 			ForeverCore.OpenSettingsPanel(family:GetID())
 		end, nil, false)
 	)
