@@ -8,7 +8,7 @@ Alt-click the world map to place a destination directly over a Questie icon. Shi
 
 In **Map marks**, scale transport, flight master and minimap icons separately from 25% to 200%. Right-click a flight master icon to mark its path as known or unknown; opening a flight master's map also syncs paths reported by the client. **Show the Nearby services tab** takes the tab out of the world map's quest log when another addon needs that space; `/spfnear` and the tracking menu still open the services.
 
-In **Guidance**, turn **Show journey steps in the objective tracker** off to leave the arrow, pin, map line and minimap route without a journey block in the tracker; **Interface**'s **Show direction arrow** turns the arrow off too. Choose yards or metres, resize the tracker and compass, give the compass a background, or enable the optional minimap settings button. Turn off **Attach to quest tracker** in Guidance, or in the right-click menu of the tracker's "Journey to …" line (out of combat), to drag the Forever column by its heading.
+In **Guidance**, turn **Show the journey tracker** off to leave the arrow, pin, map line and minimap route without a journey block in the tracker; **Interface**'s **Show direction arrow** turns the arrow off too. Choose yards or metres, resize the tracker and compass, give the compass a background, or enable the optional minimap settings button. Turn off **Attach to quest tracker** in Guidance, or in the right-click menu of the tracker's "Journey to …" line (out of combat), to drag the Forever column by its heading.
 
 The direction arrow swings smoothly to each new bearing and rests while you stand still. **Move the arrow** and **Arrow scale** in Interface place and size it, together with the cast prompt that takes its place on a Hearthstone or teleport step. **Arrow label** chooses what shows under it: the distance, the journey's time left or both, and **Objectives under the arrow** shows or hides the stop's live objectives beneath that label. While moving the arrow or the compass, hold Shift as you drag to move it a quarter as far as the mouse, or rest the pointer on it and press the arrow keys to nudge it (ten times as far with Shift). The arrow keys walk as usual everywhere else and in combat. **Show the time left under the compass** (off by default) puts the journey's time left beside the distance to your next turn.
 
@@ -183,18 +183,6 @@ With RestedXP, Guidelime or Dugi Guides installed, **Resume guide** in Guidance 
   *Adventure Guide suggests* lists up to three of its suggestions as `[level] title`, in its own order. Choosing one
   starts it as Adventure Guide's own Start does. If its route has moved on since the menu opened, one chat line says
   so.
-- **The Forever addons page.** *Forever addons*, the last page of the settings, lists my five WoW: Forever addons
-  with a line on each and whether you have it: on, installed but turned off, or not installed. *Copy link* opens a
-  small window with the addon's CurseForge address selected, to copy into your browser. It never opens in combat.
-- **Quiet hints.** Only for an addon that isn't installed at all, and only while *Suggest my other Forever addons*
-  on that page is ticked (it is by default):
-  - with Adventure Guide missing, a grey *Suggest quests for my level: Adventure Guide Forever* under *Plan journey*;
-  - with Adventure Guide missing, once a session, a grey "What next?" line under a journey you planned yourself
-    that arrives with nothing more planned, for two minutes or until another journey starts;
-  - with Legacy missing, a grey line on the tooltip of the pin you're heading for when it's a dungeon or raid door.
-    Shortest Path can't tell which instances Legacy covers, so it shows on every door.
-
-  Clicking the menu entry or the tracker line opens the link window with *Don't suggest this again*.
 
 ## Languages
 

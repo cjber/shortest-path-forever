@@ -105,7 +105,6 @@ L["Follow Guidelime guides"] = "Guidelime 가이드 따르기"
 L["Follow RestedXP guides"] = "RestedXP 가이드 따르기"
 L["Follow TomTom's arrow"] = "TomTom 화살표 따르기"
 L["Food"] = "음식"
-L["Forever addons"] = "Forever 애드온"
 L["Friendly nameplates must be on to see them."] =
 	"우호적인 유닛의 이름표가 켜져 있어야 볼 수 있습니다."
 L["Go through to %s"] = "%s(으)로 통과"
@@ -116,8 +115,6 @@ L["Hides profession trainers and their supply vendors for professions this chara
 	"이 캐릭터가 배우지 않은 직업의 직업 훈련장과 그 직업의 재료를 파는 상인을 숨깁니다."
 L["Horde"] = "호드"
 L["Hostile town: %s"] = "적대 마을: %s"
-L["In the objective tracker while you are near a dock, lift or tram."] =
-	"부두, 승강기, 지하철 근처에 있을 때 목표 추적기에 표시합니다."
 L["Innkeeper"] = "여관주인"
 L["Interface"] = "인터페이스"
 L["Journey"] = "여정"
@@ -129,8 +126,6 @@ L["Keeps the shared Forever tracker where you put it. The grip at its top no lon
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
 	"게임의 미터법 언어 클라이언트처럼 거리에 미터 단위를 붙입니다. 숫자는 게임의 야드 값 그대로입니다."
 L["Last seen %s ago"] = "%s 전에 마지막으로 목격" -- mt
-L["Legacy Forever shows the Legacy challenges this counts toward."] =
-	"Legacy Forever가 이 항목이 포함되는 유산 도전을 보여줍니다."
 L["Let guides set TomTom waypoints"] = "가이드가 TomTom 웨이포인트를 설정하도록 허용"
 L["Lift to %s"] = "%s행 승강기"
 L["Lifts"] = "승강기"
@@ -155,8 +150,6 @@ L["No location for that quest yet."] = "이 퀘스트의 위치가 아직 없습
 L["No services nearby."] = "주변에 편의시설이 없습니다."
 L["No way there from here."] = "여기서 그곳까지 가는 길이 없습니다."
 L["Not discovered"] = "발견하지 않음"
-L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."] =
-	"끄면 화살표, 표식, 지도 선, 미니맵 경로는 유지되고 목표 추적기에는 여정 블록이 표시되지 않습니다."
 L["On board to %s"] = "%s행 탑승 중"
 L["On the world map and in Nearby services."] = "세계 지도와 주변 편의시설에서 적용됩니다."
 L["On the world map."] = "세계 지도에 표시합니다."
@@ -208,7 +201,6 @@ L["Shortest Path report"] = "Shortest Path 보고서"
 L["Show boats and zeppelins"] = "배와 비행선 표시"
 L["Show direction arrow"] = "방향 화살표 표시"
 L["Show flight masters"] = "비행 조련사 표시"
-L["Show journey steps in the objective tracker"] = "목표 추적기에서 여정 단계 표시"
 L["Show lifts and the tram"] = "승강기와 지하철 표시"
 L["Show marks on the minimap"] = "미니맵에 표시"
 L["Show on map"] = "지도에 표시"
@@ -238,8 +230,6 @@ L["Starts a journey when you super-track a quest or place the game's map pin, so
 	"퀘스트를 집중하거나 게임의 지도 핀을 놓으면 여정을 시작하므로 컨트롤러에서 지도 클릭이 필요 없습니다. 가이드 애드온의 자체 여정은 그대로 둡니다."
 L["Stop %d of %d"] = "정거장 %d/%d" -- mt
 L["Stop %d of %d: %s"] = "정거장 %d/%d: %s"
-L["Suggest quests for my level: Adventure Guide Forever"] =
-	"내 레벨에 맞는 퀘스트 추천: Adventure Guide Forever"
 L["Teleport to %s"] = "%s(으)로 순간이동"
 L["The journey's time left, as the tracker shows it, beside the distance to your next turn."] =
 	"추적기에 표시되는 여정의 남은 시간을 다음 갈림길까지의 거리 옆에 표시합니다."
@@ -270,8 +260,6 @@ L["Walk to %s"] = "%s까지 걷기"
 L["Walks go round zones whose lowest level is 4 or more above yours, but never the ones you start or end in."] =
 	"최저 레벨이 내 레벨보다 4 이상 높은 지역은 걸어서 돌아가지만, 출발 지역과 도착 지역은 예외입니다."
 L["Weapons and armour"] = "무기 및 방어구"
-L["What next? Adventure Guide Forever suggests quests for your level."] =
-	"다음은? Adventure Guide Forever가 레벨에 맞는 퀘스트를 추천합니다."
 L["What's new after an update"] = "업데이트 후 새로운 소식"
 L["While Guide is on: your next turns, the next stop and your destination across the top of the screen."] =
 	"안내가 켜져 있는 동안: 다음 갈림길, 다음 정거장, 목적지를 화면 위쪽에 표시합니다."
@@ -347,7 +335,6 @@ L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d
 	"로컬 이동 일지 — 약 %d야드 이동, 여정 %d회, 교통수단 %d회, 비행 %d회, 차원문 구간 %d회."
 L["Record travel stats"] = "이동 통계 기록"
 L["Time left"] = "남은 시간" -- mt
-L["Travel journal"] = "이동 일지"
 L["Travel milestone reached: %s"] = "이동 이정표 달성: %s"
 L["Travel stats are not ready yet."] = "이동 통계가 아직 준비되지 않았습니다."
 L["Party member"] = "파티원" -- mt
@@ -441,13 +428,10 @@ L["Stops before the last on a multi-stop route keep 15 yards."] =
 L["Dugi Guides"] = "Dugi Guides" -- mt
 L["Dungeons and raids"] = "던전 및 공격대" -- mt
 L["Town services"] = "마을 서비스" -- mt
-L["Town services on the world map"] = "세계 지도에 마을 서비스 표시" -- mt
 L["Capitals only"] = "수도만" -- mt
 L["Capitals and important services"] = "수도 및 주요 서비스" -- mt
 L["All towns"] = "모든 마을" -- mt
 L["Books and recipes"] = "책과 조리법" -- mt
-L["One icon per town, or one per service as you zoom in."] =
-	"마을마다 아이콘 하나, 확대하면 서비스마다 아이콘 하나." -- mt
 L["Click to save it."] = "저장하려면 클릭하세요." -- mt
 L["Destination pin size"] = "목적지 핀 크기" -- mt
 L["Hearthstone"] = "귀환석" -- mt
@@ -591,8 +575,14 @@ L["Walking route"] = "도보 경로"
 L["stop guiding"] = "길 안내를 중지" -- mt
 L["guide this journey"] = "이 여정의 길을 안내" -- mt
 L["show it on the map"] = "지도에 표시" -- mt
-L["show the Adventure Guide Forever link"] = "Adventure Guide Forever 링크를 표시" -- mt
-L["Show link"] = "링크 표시" -- mt
 L["That guide has no step to follow."] = "해당 가이드에 따라갈 단계가 없습니다." -- mt
 
 L["Weapon master"] = "무기 전문가"
+L["Show the journey tracker"] = "여정 추적기 표시" -- mt
+L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the tracker."] =
+	"끄면 화살표, 표시, 지도 선, 미니맵 경로는 유지되고 추적기에 여정 블록이 나타나지 않습니다." -- mt
+L["In the tracker while you are near a dock, lift or tram."] =
+	"부두, 승강기 또는 트램 근처에 있는 동안 추적기에 표시됩니다." -- mt
+L["Town service icons"] = "도시 서비스 아이콘" -- mt
+L["Off hides them. Otherwise one icon per town, or one per service as you zoom in."] =
+	"끄면 숨깁니다. 켜면 확대할 때 도시당 아이콘 하나 또는 서비스당 아이콘 하나가 표시됩니다." -- mt

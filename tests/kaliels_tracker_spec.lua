@@ -69,8 +69,8 @@ env.C_QuestLog = {
 		return false
 	end,
 }
--- UI/FamilyHints.lua is not loaded here; its own suggestions go through the same menu description.
-ns.FamilyHints = {
+-- UI/QuestSuggestions.lua is not loaded here; its own suggestions go through the same menu description.
+ns.QuestSuggestions = {
 	AddQuestMenu = function(root)
 		root:CreateTitle("Adventure Guide suggests")
 		root:CreateButton("Suggestion", function() end)

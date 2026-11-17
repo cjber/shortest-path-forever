@@ -18,6 +18,21 @@ ns.SettingsMapMarks = MapMarks
 function MapMarks.Register(rows)
 	rows.Page(L["Map marks"])
 	rows.Section(L["Map icons"])
+	rows.Checkbox(
+		"mapRoutes",
+		L["Show routes on the world map"],
+		L["Boat and zeppelin routes, drawn while you point at a dock."],
+		ns.RefreshMap
+	)
+	rows.Checkbox(
+		"otherFaction",
+		L["Show other faction's routes"],
+		L["Either faction can ride any boat or zeppelin."],
+		function()
+			ns.RefreshMap()
+			ns.RefreshTracker()
+		end
+	)
 	rows.Checkbox("pins", L["Show boats and zeppelins"], L["On the world map."], ns.RefreshMap)
 	rows.Checkbox(
 		"transit",
@@ -70,8 +85,8 @@ function MapMarks.Register(rows)
 	)
 	rows.Dropdown(
 		"townServices",
-		L["Town services on the world map"],
-		L["One icon per town, or one per service as you zoom in."],
+		L["Town service icons"],
+		L["Off hides them. Otherwise one icon per town, or one per service as you zoom in."],
 		ns.TownServiceChoices,
 		ns.RefreshTownServices
 	)

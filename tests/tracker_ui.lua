@@ -247,16 +247,6 @@ assert(tracker.blocks[1].rows[1].key == 1, "the warning leaves with its row")
 route = nil
 refresh(true)
 assert(tracker.Header.text == "Boats" and #tracker.blocks == 0 and not tracker.distance)
--- A family footer row goes through the same layout: it must not borrow a stock line either.
-ns.FamilyHints.Footer = function()
- return { key = "family", title = "What next?", rows = { { key = "family", text = "Adventure Guide", grey = true } } }
-end
-refresh(true)
-checkLines()
-assert(
- tracker:GetExistingBlock("family"):GetExistingLine("family").template == LINE_TEMPLATE,
- "family rows also use SPF's line template"
-)
 assert(#errors == 0, table.concat(errors, "\n"))
 print("tracker_ui: remaining walking/transport yards, step times, geometry cache and no header layout churn ok")
 ]]))()

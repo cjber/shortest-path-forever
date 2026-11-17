@@ -119,19 +119,6 @@ for _, readyAtLoad in ipairs({ false, true }) do
 	)
 	assert(ns.db.trackerHost == nil, "and cleared once it is offered")
 	assert(module.AddHeaderMenuEntries == nil, "only the declarative menu is registered")
-	local opened = 0
-	ns.FamilyHints = {
-		OpenFooter = function()
-			opened = opened + 1
-		end,
-	}
-	ns.JourneyInfo = noop
-	module.mapDock, module.blocks = nil, { { key = "family" } }
-	module.trackerClick({ kind = "section", module = module }, "LeftButton")
-	module.trackerClick({ kind = "block", id = "family", module = module }, "LeftButton")
-	assert(opened == 2, "both footer titles retain their left click")
-	module.trackerClick({ kind = "section", module = module }, "RightButton")
-	assert(opened == 2, "right clicks stay with Core")
 	checks = checks + 1
 end
 print("tracker_lifecycle_spec: " .. checks .. " load-order cases passed")

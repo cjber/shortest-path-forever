@@ -106,7 +106,6 @@ L["Follow Guidelime guides"] = "Следовать руководствам Guid
 L["Follow RestedXP guides"] = "Следовать руководствам RestedXP"
 L["Follow TomTom's arrow"] = "Следовать стрелке TomTom"
 L["Food"] = "Еда"
-L["Forever addons"] = "Модификации Forever"
 L["Friendly nameplates must be on to see them."] =
 	"Чтобы их увидеть, включите таблички с именами дружественных существ."
 L["Go through to %s"] = "Пройти: %s"
@@ -117,8 +116,6 @@ L["Hides profession trainers and their supply vendors for professions this chara
 	"Скрывает учителей профессий и торговцев, продающих припасы для профессии, которую этот персонаж не изучил."
 L["Horde"] = "Орда"
 L["Hostile town: %s"] = "Вражеский город: %s"
-L["In the objective tracker while you are near a dock, lift or tram."] =
-	"На панели отслеживания, когда вы рядом с причалом, подъемником или поездом."
 L["Innkeeper"] = "Хозяин таверны"
 L["Interface"] = "Интерфейс"
 L["Journey"] = "Маршрут"
@@ -130,8 +127,6 @@ L["Keeps the shared Forever tracker where you put it. The grip at its top no lon
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
 	"Подписывать расстояния в метрах, как это делают метрические языковые версии игры. Числа остаются игровыми."
 L["Last seen %s ago"] = "Замечен %s назад" -- mt
-L["Legacy Forever shows the Legacy challenges this counts toward."] =
-	"Legacy Forever показывает старинные испытания, в которые это засчитывается."
 L["Let guides set TomTom waypoints"] = "Разрешить руководствам ставить точки TomTom"
 L["Lift to %s"] = "Подъемник: %s"
 L["Lifts"] = "Подъемники"
@@ -158,8 +153,6 @@ L["No location for that quest yet."] = "Для этого задания пок�
 L["No services nearby."] = "Поблизости нет услуг."
 L["No way there from here."] = "Отсюда туда нет пути."
 L["Not discovered"] = "Не открыто"
-L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."] =
-	"Выключено: стрелка, метка, линия на карте и маршрут на мини-карте остаются, а блока маршрута в панели отслеживания нет."
 L["On board to %s"] = "На борту: %s"
 L["On the world map and in Nearby services."] = "На карте мира и в услугах поблизости."
 L["On the world map."] = "На карте мира."
@@ -213,8 +206,6 @@ L["Shortest Path report"] = "Отчет Shortest Path"
 L["Show boats and zeppelins"] = "Показывать корабли и дирижабли"
 L["Show direction arrow"] = "Показывать стрелку направления"
 L["Show flight masters"] = "Показывать распорядителей полетов"
-L["Show journey steps in the objective tracker"] =
-	"Показывать этапы маршрута в панели отслеживания заданий"
 L["Show lifts and the tram"] = "Показывать подъемники и поезд"
 L["Show marks on the minimap"] = "Показывать отметки на мини-карте"
 L["Show on map"] = "Показать на карте"
@@ -245,8 +236,6 @@ L["Starts a journey when you super-track a quest or place the game's map pin, so
 	"Начинает маршрут, когда вы выбираете задание или ставите метку на карте игры, так что геймпаду не нужен щелчок по карте. Маршрут аддона-гида не затрагивается."
 L["Stop %d of %d"] = "Остановка %d из %d" -- mt
 L["Stop %d of %d: %s"] = "Остановка %d из %d: %s"
-L["Suggest quests for my level: Adventure Guide Forever"] =
-	"Предлагать задания по уровню: Adventure Guide Forever"
 L["Teleport to %s"] = "Телепорт: %s"
 L["The journey's time left, as the tracker shows it, beside the distance to your next turn."] =
 	"Оставшееся время маршрута, как на панели отслеживания, рядом с расстоянием до следующего поворота."
@@ -278,8 +267,6 @@ L["Walk to %s"] = "Идти: %s"
 L["Walks go round zones whose lowest level is 4 or more above yours, but never the ones you start or end in."] =
 	"Пешие маршруты обходят зоны, минимальный уровень которых на 4 и более выше вашего, но не зоны начала и конца пути."
 L["Weapons and armour"] = "Оружие и доспехи"
-L["What next? Adventure Guide Forever suggests quests for your level."] =
-	"Что дальше? Adventure Guide Forever предлагает задания по вашему уровню."
 L["What's new after an update"] = "Новое после обновления"
 L["While Guide is on: your next turns, the next stop and your destination across the top of the screen."] =
 	"Пока включена навигация: ближайшие повороты, следующая остановка и цель вверху экрана."
@@ -358,7 +345,6 @@ L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d
 	"Дневник путешествий — около %d ярдов пешком; %d маршрутов; %d поездок на транспорте; %d полетов; %d переходов через портал."
 L["Record travel stats"] = "Записывать статистику путешествий"
 L["Time left"] = "Оставшееся время" -- mt
-L["Travel journal"] = "Дневник путешествий"
 L["Travel milestone reached: %s"] = "Достигнут рубеж путешествий: %s"
 L["Travel stats are not ready yet."] = "Статистика путешествий еще не готова."
 L["Party member"] = "Участник группы" -- mt
@@ -456,13 +442,10 @@ L["Stops before the last on a multi-stop route keep 15 yards."] =
 L["Dugi Guides"] = "Dugi Guides" -- mt
 L["Dungeons and raids"] = "Подземелья и рейды" -- mt
 L["Town services"] = "Городские услуги" -- mt
-L["Town services on the world map"] = "Городские услуги на карте мира" -- mt
 L["Capitals only"] = "Только столицы" -- mt
 L["Capitals and important services"] = "Столицы и важные услуги" -- mt
 L["All towns"] = "Все города" -- mt
 L["Books and recipes"] = "Книги и рецепты" -- mt
-L["One icon per town, or one per service as you zoom in."] =
-	"Один значок на город или на услугу при приближении." -- mt
 L["Click to save it."] = "Нажмите, чтобы сохранить." -- mt
 L["Destination pin size"] = "Размер метки пункта назначения" -- mt
 L["Hearthstone"] = "Камень возвращения" -- mt
@@ -613,9 +596,15 @@ L["Walking route"] = "Пеший маршрут"
 L["stop guiding"] = "остановить сопровождение" -- mt
 L["guide this journey"] = "начать сопровождение в этом путешествии" -- mt
 L["show it on the map"] = "показать на карте" -- mt
-L["show the Adventure Guide Forever link"] = "показать ссылку на Adventure Guide Forever" -- mt
-L["Show link"] = "Показать ссылку" -- mt
 L["That guide has no step to follow."] =
 	"В этом руководстве нет шага для следования." -- mt
 
 L["Weapon master"] = "Оружейный мастер"
+L["Show the journey tracker"] = "Показывать трекер путешествия" -- mt
+L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the tracker."] =
+	"Если выключено, стрелка, метка, линия на карте и маршрут на миникарте остаются, но блока путешествия в трекере нет." -- mt
+L["In the tracker while you are near a dock, lift or tram."] =
+	"В трекере, пока вы рядом с причалом, подъёмником или трамваем." -- mt
+L["Town service icons"] = "Значки городских служб" -- mt
+L["Off hides them. Otherwise one icon per town, or one per service as you zoom in."] =
+	"Если выключено, значки скрыты. Иначе один значок на город или на службу при приближении." -- mt

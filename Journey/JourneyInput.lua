@@ -536,7 +536,7 @@ function ns.AddQuestMenuEntry(root, questID)
 		root:CreateButton(L["Plan journey"], function()
 			PlanQuest(questID)
 		end)
-		ns.FamilyHints.AddQuestMenu(root)
+		ns.QuestSuggestions.AddQuestMenu(root)
 	end
 end
 

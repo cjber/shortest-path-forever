@@ -54,7 +54,7 @@ local ns = {
 	NewMenuDescription = function(kind, text)
 		return { kind = kind, text = text }
 	end,
-	FamilyHints = { AddQuestMenu = function() end },
+	QuestSuggestions = { AddQuestMenu = function() end },
 	Canvas = { OnClick = function() end },
 }
 local env = setmetatable({

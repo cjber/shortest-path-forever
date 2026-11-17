@@ -101,7 +101,6 @@ L["Follow Guidelime guides"] = "Seguir guias do Guidelime"
 L["Follow RestedXP guides"] = "Seguir guias do RestedXP"
 L["Follow TomTom's arrow"] = "Seguir a seta do TomTom"
 L["Food"] = "Comida"
-L["Forever addons"] = "AddOns Forever"
 L["Friendly nameplates must be on to see them."] = "As placas de nome de aliados precisam estar ativadas para vê-las."
 L["Go through to %s"] = "Atravessar para %s"
 L["Guidance"] = "Orientação"
@@ -111,8 +110,6 @@ L["Hides profession trainers and their supply vendors for professions this chara
 	"Oculta treinadores de profissão e vendedores que vendem os suprimentos de uma profissão que este personagem não aprendeu."
 L["Horde"] = "Horda"
 L["Hostile town: %s"] = "Vila hostil: %s"
-L["In the objective tracker while you are near a dock, lift or tram."] =
-	"No rastreador de objetivos quando você está perto de um cais, elevador ou metrô."
 L["Innkeeper"] = "Estalajadeiro"
 L["Interface"] = "Interface"
 L["Journey"] = "Jornada"
@@ -124,8 +121,6 @@ L["Keeps the shared Forever tracker where you put it. The grip at its top no lon
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
 	"Rotular as distâncias em metros, como fazem os clientes do jogo em sistema métrico. Os números continuam sendo os do jogo."
 L["Last seen %s ago"] = "Visto há %s" -- mt
-L["Legacy Forever shows the Legacy challenges this counts toward."] =
-	"O Legacy Forever mostra os Desafios de Legado para os quais isso conta."
 L["Let guides set TomTom waypoints"] = "Deixar guias criarem pontos do TomTom"
 L["Lift to %s"] = "Elevador para %s"
 L["Lifts"] = "Elevadores"
@@ -149,8 +144,6 @@ L["No location for that quest yet."] = "Ainda não há local para essa missão."
 L["No services nearby."] = "Nenhum serviço próximo."
 L["No way there from here."] = "Não há caminho daqui até lá."
 L["Not discovered"] = "Não descoberto"
-L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."] =
-	"Desativado mantém a seta, o marcador, a linha do mapa e a rota do minimapa, sem bloco de jornada no rastreador."
 L["On board to %s"] = "A bordo para %s"
 L["On the world map and in Nearby services."] = "No mapa-múndi e nos serviços próximos."
 L["On the world map."] = "No mapa-múndi."
@@ -202,7 +195,6 @@ L["Shortest Path report"] = "Relatório do Shortest Path"
 L["Show boats and zeppelins"] = "Mostrar barcos e zepelins"
 L["Show direction arrow"] = "Mostrar seta de direção"
 L["Show flight masters"] = "Mostrar mestres de voo"
-L["Show journey steps in the objective tracker"] = "Mostrar as etapas da jornada no rastreador de objetivos"
 L["Show lifts and the tram"] = "Mostrar elevadores e metrô"
 L["Show marks on the minimap"] = "Mostrar marcas no minimapa"
 L["Show on map"] = "Mostrar no mapa"
@@ -231,7 +223,6 @@ L["Starts a journey when you super-track a quest or place the game's map pin, so
 	"Inicia uma jornada quando você foca uma missão ou coloca o marcador do mapa do jogo, então um controle não precisa de clique no mapa. A jornada de um addon de guia não é alterada."
 L["Stop %d of %d"] = "Parada %d de %d" -- mt
 L["Stop %d of %d: %s"] = "Parada %d de %d: %s"
-L["Suggest quests for my level: Adventure Guide Forever"] = "Sugerir missões do meu nível: Adventure Guide Forever"
 L["Teleport to %s"] = "Teleporte para %s"
 L["The journey's time left, as the tracker shows it, beside the distance to your next turn."] =
 	"O tempo restante da jornada, como o rastreador mostra, ao lado da distância até a próxima curva."
@@ -261,8 +252,6 @@ L["Walk to %s"] = "Caminhar até %s"
 L["Walks go round zones whose lowest level is 4 or more above yours, but never the ones you start or end in."] =
 	"As caminhadas contornam zonas cujo nível mínimo é 4 ou mais acima do seu, mas nunca aquelas onde você começa ou termina."
 L["Weapons and armour"] = "Armas e armaduras"
-L["What next? Adventure Guide Forever suggests quests for your level."] =
-	"E agora? O Adventure Guide Forever sugere missões para o seu nível."
 L["What's new after an update"] = "Novidades após uma atualização"
 L["While Guide is on: your next turns, the next stop and your destination across the top of the screen."] =
 	"Com a orientação ativa: suas próximas curvas, a próxima parada e seu destino no topo da tela."
@@ -337,7 +326,6 @@ L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d
 	"Diário de viagem local — aprox. %d jardas caminhadas; %d jornadas; %d transportes; %d voos; %d trechos de portal."
 L["Record travel stats"] = "Registrar estatísticas de viagem"
 L["Time left"] = "Tempo restante" -- mt
-L["Travel journal"] = "Diário de viagem"
 L["Travel milestone reached: %s"] = "Marco de viagem alcançado: %s"
 L["Travel stats are not ready yet."] = "As estatísticas de viagem ainda não estão prontas."
 L["Party member"] = "Membro do grupo" -- mt
@@ -431,12 +419,10 @@ L["Stops before the last on a multi-stop route keep 15 yards."] =
 L["Dugi Guides"] = "Dugi Guides" -- mt
 L["Dungeons and raids"] = "Masmorras e raides" -- mt
 L["Town services"] = "Serviços da cidade" -- mt
-L["Town services on the world map"] = "Serviços da cidade no mapa do mundo" -- mt
 L["Capitals only"] = "Apenas capitais" -- mt
 L["Capitals and important services"] = "Capitais e serviços importantes" -- mt
 L["All towns"] = "Todas as cidades" -- mt
 L["Books and recipes"] = "Livros e receitas" -- mt
-L["One icon per town, or one per service as you zoom in."] = "Um ícone por cidade, ou um por serviço ao aproximar." -- mt
 L["Click to save it."] = "Clique para guardá-la." -- mt
 L["Destination pin size"] = "Tamanho do marcador de destino" -- mt
 L["Hearthstone"] = "Pedra de Regresso" -- mt
@@ -579,8 +565,14 @@ L["Walking route"] = "Rota a pé"
 L["stop guiding"] = "parar de guiar" -- mt
 L["guide this journey"] = "guiar esta jornada" -- mt
 L["show it on the map"] = "mostrar no mapa" -- mt
-L["show the Adventure Guide Forever link"] = "mostrar o link do Adventure Guide Forever" -- mt
-L["Show link"] = "Mostrar link" -- mt
 L["That guide has no step to follow."] = "Esse guia não tem nenhuma etapa para seguir." -- mt
 
 L["Weapon master"] = "Mestre de armas"
+L["Show the journey tracker"] = "Mostrar o rastreador da jornada" -- mt
+L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the tracker."] =
+	"Desativado, a seta, o marcador, a linha do mapa e a rota do minimapa permanecem, sem bloco de jornada no rastreador." -- mt
+L["In the tracker while you are near a dock, lift or tram."] =
+	"No rastreador enquanto você está perto de um cais, de um elevador ou do bondinho." -- mt
+L["Town service icons"] = "Ícones de serviços da cidade" -- mt
+L["Off hides them. Otherwise one icon per town, or one per service as you zoom in."] =
+	"Desativado os oculta. Caso contrário, um ícone por cidade ou por serviço ao aproximar." -- mt

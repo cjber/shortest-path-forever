@@ -100,7 +100,6 @@ L["Follow Guidelime guides"] = "跟随 Guidelime 攻略"
 L["Follow RestedXP guides"] = "跟随RestedXP指南"
 L["Follow TomTom's arrow"] = "跟随TomTom的箭头"
 L["Food"] = "食物"
-L["Forever addons"] = "Forever插件"
 L["Friendly nameplates must be on to see them."] = "需要开启友方姓名板才能看到。"
 L["Go through to %s"] = "穿过前往%s"
 L["Guidance"] = "引导"
@@ -110,8 +109,6 @@ L["Hides profession trainers and their supply vendors for professions this chara
 	"隐藏此角色未学习的职业的职业训练师和出售该职业材料的商人。"
 L["Horde"] = "部落"
 L["Hostile town: %s"] = "敌对城镇：%s"
-L["In the objective tracker while you are near a dock, lift or tram."] =
-	"在你靠近码头、升降梯或地铁时显示在目标追踪栏中。"
 L["Innkeeper"] = "旅店老板"
 L["Interface"] = "界面"
 L["Journey"] = "旅程"
@@ -123,8 +120,6 @@ L["Keeps the shared Forever tracker where you put it. The grip at its top no lon
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
 	"以米标注距离，与游戏采用公制的语言客户端一致。数字仍为游戏自身的码数。"
 L["Last seen %s ago"] = "%s前最后看到" -- mt
-L["Legacy Forever shows the Legacy challenges this counts toward."] =
-	"Legacy Forever会显示此项计入的传承挑战。"
 L["Let guides set TomTom waypoints"] = "允许指南设置TomTom路径点"
 L["Lift to %s"] = "前往%s的升降梯"
 L["Lifts"] = "升降梯"
@@ -148,8 +143,6 @@ L["No location for that quest yet."] = "该任务还没有位置。"
 L["No services nearby."] = "附近没有服务。"
 L["No way there from here."] = "从这里无法到达那里。"
 L["Not discovered"] = "未发现"
-L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."] =
-	"关闭后仍保留箭头、标记、地图路线和小地图路线，但不在目标追踪器中显示旅程区块。"
 L["On board to %s"] = "乘坐前往%s"
 L["On the world map and in Nearby services."] = "在世界地图和附近服务中生效。"
 L["On the world map."] = "显示在世界地图上。"
@@ -199,7 +192,6 @@ L["Shortest Path report"] = "Shortest Path报告"
 L["Show boats and zeppelins"] = "显示船只和飞艇"
 L["Show direction arrow"] = "显示方向箭头"
 L["Show flight masters"] = "显示飞行管理员"
-L["Show journey steps in the objective tracker"] = "在目标追踪器中显示旅程步骤"
 L["Show lifts and the tram"] = "显示升降梯和地铁"
 L["Show marks on the minimap"] = "在微缩地图上显示标记"
 L["Show on map"] = "在地图上显示"
@@ -227,7 +219,6 @@ L["Starts a journey when you super-track a quest or place the game's map pin, so
 	"当您聚焦任务或放置游戏地图标记时开始旅程，因此控制器无需 地图点击。指南插件的自有旅程不受影响。"
 L["Stop %d of %d"] = "第%d站，共%d站" -- mt
 L["Stop %d of %d: %s"] = "第%d站，共%d站：%s"
-L["Suggest quests for my level: Adventure Guide Forever"] = "推荐适合我等级的任务：Adventure Guide Forever"
 L["Teleport to %s"] = "传送到%s"
 L["The journey's time left, as the tracker shows it, beside the distance to your next turn."] =
 	"旅程剩余时间（与追踪栏显示的一致），显示在到下一个转弯的距离旁。"
@@ -257,8 +248,6 @@ L["Walk to %s"] = "步行前往%s"
 L["Walks go round zones whose lowest level is 4 or more above yours, but never the ones you start or end in."] =
 	"步行路线会绕开最低等级比你高 4 级或以上的区域，但不会绕开起点和终点所在的区域。"
 L["Weapons and armour"] = "武器和护甲"
-L["What next? Adventure Guide Forever suggests quests for your level."] =
-	"接下来做什么？Adventure Guide Forever会推荐适合你等级的任务。"
 L["What's new after an update"] = "更新后的新内容"
 L["While Guide is on: your next turns, the next stop and your destination across the top of the screen."] =
 	"引导开启时：在屏幕顶部显示你接下来的转弯、下一站和目的地。"
@@ -333,7 +322,6 @@ L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d
 	"本地旅行日志 — 步行约%d码；%d次旅程；%d次交通；%d次飞行；%d段传送门。"
 L["Record travel stats"] = "记录旅行统计"
 L["Time left"] = "剩余时间" -- mt
-L["Travel journal"] = "旅行日志"
 L["Travel milestone reached: %s"] = "达成旅行里程碑：%s"
 L["Travel stats are not ready yet."] = "旅行统计尚未准备好。"
 L["Party member"] = "队员" -- mt
@@ -426,13 +414,10 @@ L["Stops before the last on a multi-stop route keep 15 yards."] =
 L["Dugi Guides"] = "Dugi Guides" -- mt
 L["Dungeons and raids"] = "地下城与团队副本" -- mt
 L["Town services"] = "城镇服务" -- mt
-L["Town services on the world map"] = "世界地图上的城镇服务" -- mt
 L["Capitals only"] = "仅主城" -- mt
 L["Capitals and important services"] = "主城和重要服务" -- mt
 L["All towns"] = "所有城镇" -- mt
 L["Books and recipes"] = "书籍和配方" -- mt
-L["One icon per town, or one per service as you zoom in."] =
-	"缩小显示每个城镇一个图标，放大后每个服务一个图标。" -- mt
 L["Click to save it."] = "点击以留待后用。" -- mt
 L["Destination pin size"] = "目的地标记大小" -- mt
 L["Hearthstone"] = "炉石" -- mt
@@ -569,8 +554,14 @@ L["Walking route"] = "步行路线"
 L["stop guiding"] = "停止引导" -- mt
 L["guide this journey"] = "引导此次旅程" -- mt
 L["show it on the map"] = "在地图上显示" -- mt
-L["show the Adventure Guide Forever link"] = "显示 Adventure Guide Forever 链接" -- mt
-L["Show link"] = "显示链接" -- mt
 L["That guide has no step to follow."] = "该指南没有可跟随的步骤。" -- mt
 
 L["Weapon master"] = "武器大师"
+L["Show the journey tracker"] = "显示旅程追踪" -- mt
+L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the tracker."] =
+	"关闭后保留箭头、标记、地图线和小地图路线，追踪中不再显示旅程块。" -- mt
+L["In the tracker while you are near a dock, lift or tram."] =
+	"当你靠近码头、升降梯或矿道车时显示在追踪中。" -- mt
+L["Town service icons"] = "城镇服务图标" -- mt
+L["Off hides them. Otherwise one icon per town, or one per service as you zoom in."] =
+	"关闭则隐藏。否则放大时每个城镇一个图标，或每项服务一个图标。" -- mt
