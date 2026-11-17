@@ -8,11 +8,10 @@ Free, with nothing locked behind it. If it saves you time, you can [sponsor me o
 
 **Known limitations**
 
-- The game never says which floor you are on, so in cities like Stormwind and Undercity a walk can start on the wrong level.
 - Walking maps are built ahead of time, so patched terrain can route wrongly until an update.
-- The game does not say where your Hearthstone is bound, so it counts once you bind with the addon on.
-- The game holds no boat, lift or tram timetables, so a departure shows no sighting until you ride that route.
-- The game cannot show another player's spells, so you declare a party mage's portals yourself.
+- The game names your bind point but not where it is, so the Hearthstone counts once you bind or hearth with the addon on.
+- A boat, lift or tram shows "no sighting yet" until you have ridden that route once, because the game holds no timetables.
+- The game cannot show another player's spells, so you list a party mage's portals yourself in the settings (Party mage portals).
 
 ![A route settling, the departure countdown and compass](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/demo.gif)
 

@@ -374,7 +374,6 @@
 ---@field journeyTracker? boolean
 ---@field arrow? boolean
 ---@field metres? boolean
----@field minimapButton? boolean
 ---@field compassScale? number percent, 100 is the stock size
 ---@field arrowScale? number percent, 100 is the stock size (Arrow.lua)
 ---@field arrowDirect? boolean point straight to the destination instead of following walking bends
