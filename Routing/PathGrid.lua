@@ -222,7 +222,7 @@ local function State(map)
 			baseIn = {},
 			ends = {}, -- bounded local connections, shared by successive endpoint batches
 			endCount = 0,
-			road = {}, -- [k] = road cells (local cell -> true), false when the cluster has none
+			road = {}, -- [k] = road cells (local cell -> coverage), false when the cluster has none
 			roadEdges = {}, -- [k] = baked entrance edge ratios (RoadEdges.lua)
 			roadIn = {}, -- [k] = the same for the edges that reach a node, aligned with preceding()
 			nodeZ = {}, -- [id] = an entrance's stored height, kept after its cluster is released
@@ -1023,7 +1023,7 @@ local function preceding(st, id, roads)
 	return lists[id] or noEdges
 end
 
--- Road cells of cluster k (RoadCells.lua), decoded once: a set of local cell -> true, or false when it has none.
+-- Road cells of cluster k (RoadCells.lua), decoded once: a set of local cell -> coverage, or false when it has none.
 -- Only read while Follow roads is on.
 local function decodeRoads(st, k)
 	local list = ns.RoadCells and ns.RoadCells[st.map]
@@ -1031,19 +1031,19 @@ local function decodeRoads(st, k)
 	if not s then
 		return false
 	end
-	local set, lc, on, pos = {}, 0, false, 1
+	local set, lc, pos = {}, 0, 1
 	while pos <= #s do
 		local run = num(s, pos, 2)
-		pos = pos + 2
+		local coverage = B64[byte(s, pos + 2)] / 63
+		pos = pos + 3
 		if run > 0 then
-			if on then
+			if coverage > 0 then
 				for cell = lc, lc + run - 1 do
-					set[cell] = true
+					set[cell] = coverage
 				end
 			end
 			lc = lc + run
 		end
-		on = not on
 	end
 	return set
 end
@@ -1057,15 +1057,15 @@ local function roads(st, k)
 	return set or nil
 end
 
--- Is this node's base cell a road cell of its cluster?
+-- Painted road coverage of this node's base cell, zero without paint.
 local function roadNode(st, k, node)
 	local set = roads(st, k)
 	if not set then
-		return false
+		return 0
 	end
 	local C = st.C
 	local cell = node < C * C and node or st.at[k][node + 1]
-	return cell ~= nil and set[cell] == true
+	return cell ~= nil and set[cell] or 0
 end
 
 -- RoadEdges.lua's edge ratios for cluster k: a default run is "=" and its length in two base64 symbols, any other
@@ -1555,7 +1555,7 @@ local function sight(st, P, a, b, water, road, limit, budget, roadFactor)
 		if not nk or not nn then
 			return false
 		end
-		if road and not roadNode(st, nk, nn) then
+		if road and roadNode(st, nk, nn) == 0 then
 			return false
 		end
 		if factor and factor(nk, nn) > limit then
@@ -1564,7 +1564,7 @@ local function sight(st, P, a, b, water, road, limit, budget, roadFactor)
 		if budget then
 			-- A pulled segment that leaves the road is charged the off-road preference too: a straight cut across a
 			-- field must not beat the road bend the walk took just because its own time is shorter (#891).
-			local ratio = roadFactor and not roadNode(st, nk, nn) and roadFactor or 1
+			local ratio = roadFactor and (1 + (roadFactor - 1) * (1 - roadNode(st, nk, nn))) or 1
 			local paced = pace(swim, spent, (next2 - at) * span, st.val[nk][nn + 1] == 2, budget, ratio)
 			if not paced then
 				return false
@@ -1576,7 +1576,7 @@ local function sight(st, P, a, b, water, road, limit, budget, roadFactor)
 		ix, iy = ix + mx * sx, iy + my * sy
 	end
 	if budget and k == P.k[b] and node == P.n[b] then -- the rest of the segment, inside the far entry's own cell
-		local ratio = roadFactor and not roadNode(st, k, node) and roadFactor or 1
+		local ratio = roadFactor and (1 + (roadFactor - 1) * (1 - roadNode(st, k, node))) or 1
 		local paced = pace(swim, spent, (1 - at) * span, st.val[k][node + 1] == 2, budget, ratio)
 		if not paced then
 			return false
@@ -1671,7 +1671,7 @@ local function toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget, real
 				else
 					wet = value(st, x, y) == 2
 				end
-				local ratio = roadFactor and (not nk or not roadNode(st, nk, nn)) and roadFactor or 1
+				local ratio = roadFactor and (1 + (roadFactor - 1) * (1 - (nk and roadNode(st, nk, nn) or 0))) or 1
 				local paced = pace(swim, spent, (reached - at) * span, wet, budget, ratio)
 				if not paced then
 					return nil, false
@@ -1689,7 +1689,7 @@ local function toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget, real
 	end
 	if at < 1 then -- the rest of the segment, inside the end's own cell
 		local wet = not closed and st.val[k][node + 1] == 2
-		local ratio = roadFactor and (closed or not roadNode(st, k, node)) and roadFactor or 1
+		local ratio = roadFactor and (1 + (roadFactor - 1) * (1 - (not closed and roadNode(st, k, node) or 0))) or 1
 		local paced = pace(swim, spent, (1 - at) * span, wet, budget, ratio)
 		if not paced then
 			return nil, false

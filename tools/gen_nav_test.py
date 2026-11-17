@@ -522,7 +522,7 @@ class EmitDeltaTest(unittest.TestCase):
 class RoadsTest(unittest.TestCase):
     def test_a_run_string_names_its_road_cells(self):
         # An off run of 10 then an on run of 3: cells 10, 11 and 12 are road.
-        self.assertEqual(decode_road_runs("AKAD"), {10, 11, 12})
+        self.assertEqual(decode_road_runs("AKAAD/"), {10, 11, 12})
 
 
 class RoadEntranceTest(unittest.TestCase):

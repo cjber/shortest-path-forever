@@ -143,16 +143,13 @@ def places(map_id):
 
 
 def decode_road_runs(s):
-    """The local cells a Data/RoadCells.lua run string calls road: alternating off/on run lengths, two symbols each."""
-    cells, at, on, pos = set(), 0, False, 0
-    while pos < len(s):
+    """Positive-painted cells: two base64 length symbols, then one coverage symbol per run."""
+    cells, at = set(), 0
+    for pos in range(0, len(s), 3):
         run = B64.index(s[pos]) * 64 + B64.index(s[pos + 1])
-        pos += 2
-        if run > 0:
-            if on:
-                cells.update(range(at, at + run))
-            at += run
-        on = not on
+        if B64.index(s[pos + 2]) > 0:
+            cells.update(range(at, at + run))
+        at += run
     return cells
 
 

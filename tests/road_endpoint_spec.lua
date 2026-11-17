@@ -45,10 +45,10 @@ end
 for scenario, mode in ipairs({ "road", "water", "hazard", "chord" }) do
 	local road = {}
 	for x = 10, 20 do
-		road[x * C + x] = true
+		road[x * C + x] = 1
 	end
 	for x = 21, 30 do
-		road[x * C + (mode == "chord" and x or 40 - x)] = true
+		road[x * C + (mode == "chord" and x or 40 - x)] = 1
 	end
 	local cells = {}
 	for x = 5, 40 do

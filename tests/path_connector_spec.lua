@@ -25,7 +25,7 @@ end
 for _, wet in ipairs({ false, true }) do
 	local st = install({ [10] = { [10] = { z = 0, water = not wet } } }, { { 10, 10, 30, wet and 2 or 1, 0 } })
 	local floorNode = C * C
-	st.road[0] = { [10 * C + 10] = true }
+	st.road[0] = { [10 * C + 10] = 1 }
 	assert(G.roads(st, 0)[G.cellOf(st, 0, floorNode)], "selected floor uses its cluster-0 road cell")
 	for _, x in ipairs({ 10.1, 10.9 }) do
 		local exact = 0.4 * CS * (wet and 3 or 1)
@@ -60,7 +60,7 @@ assert(not G.toward(st, {
 		return 4
 	end,
 }, 0, land, 10.2, 10.5, 11.5, 10.5, true, 1, nil, true))
-st.road[0] = { [land] = true }
+st.road[0] = { [land] = 1 }
 assert(not G.toward(st, { swim = 3, roadFactor = 3 }, 0, land, 10.2, 10.5, 11.5, 10.5, true, nil, forward + 1e-10))
 local _, _, reference =
 	G.toward(st, { swim = 3, roadFactor = 3 }, 0, land, 10.2, 10.5, 11.5, 10.5, true, nil, nil, true)
@@ -87,7 +87,7 @@ assert(dk == nil and dn == false and dt == nil)
 
 -- Bare continuation is dry and off-road, including its final interval. A closed cell with any surface is blocked.
 local bare, bareMap = install({ [10] = { [10] = { z = 20 } } })
-bare.road[0] = { [land] = true }
+bare.road[0] = { [land] = 1 }
 local bk, bn, bt = G.toward(bare, { roadFactor = 3 }, 0, land, 10.5, 10.5, 12.2, 10.5, false, nil, nil, true)
 assert(bk == nil and bn == true)
 near(bt, 1.7 * CS)

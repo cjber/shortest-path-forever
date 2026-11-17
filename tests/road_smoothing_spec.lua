@@ -21,10 +21,10 @@ local st = Grid.State(MAP)
 -- An L-shaped road with one gap at its corner; the walk follows it rather than cutting the corner.
 local road = {}
 for x = 11, 30 do
-	road[x * C + 10] = true
+	road[x * C + 10] = 1
 end
 for y = 11, 30 do
-	road[10 * C + y] = true
+	road[10 * C + y] = 1
 end
 st.road[0] = road
 
@@ -55,6 +55,23 @@ for i = 2, #keep do
 		local x, y = math.floor(ax + (bx - ax) * t), math.floor(ay + (by - ay) * t)
 		local cell = x * C + y
 		assert(road[cell] or cell == 10 * C + 10, ("the drawn line leaves the road at %d, %d"):format(x, y))
+	end
+end
+-- A low-alpha painted run has the same no-field-crossing rule as a fully painted one.
+for cell in pairs(road) do
+	road[cell] = 0.2
+end
+local faint = Grid.smooth(st, P)
+assert(#faint > 2, "partial paint must keep the drawn road bend")
+for i = 2, #faint do
+	local a, b = faint[i - 1], faint[i]
+	local dx, dy = P.x[b] - P.x[a], P.y[b] - P.y[a]
+	local steps = math.max(1, math.ceil(math.sqrt(dx * dx + dy * dy) * 4))
+	for step = 0, steps do
+		local t = step / steps
+		local x, y = math.floor(P.x[a] + dx * t), math.floor(P.y[a] + dy * t)
+		local cell = x * C + y
+		assert(road[cell] or cell == 10 * C + 10, "partial-paint drawn line leaves the road")
 	end
 end
 print("road_smoothing_spec: ok")

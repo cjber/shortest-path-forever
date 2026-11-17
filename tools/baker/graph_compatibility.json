@@ -1,6 +1,8 @@
 {
   "schema": 1,
-  "generator": "a8a5016e76c43a420aece4696d5ce8ee272af469e1716fa847cb9175864c1769",
-  "collision_generators": [],
-  "reason": "Portal clipping changes steep-ground step admission; collision fields require a native terrain bake."
+  "generator": "99a99c2156fff8660725a37ef51a7a1eac77434ad853492f8ca6d097bb28f128",
+  "collision_generators": [
+    "a8a5016e76c43a420aece4696d5ce8ee272af469e1716fa847cb9175864c1769"
+  ],
+  "reason": "#892 (road-connection pruning, base-edge prefix) and #893 (painted-road coverage in HPA entrance selection) change only the graph over #950's native bake; collision fields remain byte-identical."
 }

@@ -26,6 +26,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 ### For addon authors
 
 - **Journey and guidance places carry height in API 2.4.** `Journey().goal`, each leg's `from` and `to`, `Guidance().point` and each guidance waypoint include optional `z`, world height in yards, when the planner holds it. Companion addons can follow the same floor where surfaces stack. Thanks to catubba for the request (#959).
+- **Faint and narrow roads stay connected.** Follow roads now weighs each cell by its painted road coverage, keeping partial-alpha roads in the route and drawn line.
 
 ## [1.41.1] - 2026-11-17
 - **Walks stay off steep faces they cannot climb.** Walking routes in Westfall and the Barrens no longer climb a ridge whose only way up lies outside the next few yards (#950, #897), thanks to emmiehbun and VolomonBeddarm for the reports.

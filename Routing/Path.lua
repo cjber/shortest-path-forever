@@ -164,6 +164,8 @@ local function search(st, k, swim, source, tree, goal, targets, left, roads, hz,
 	local g, r, par, stamp, closed = tree.g, tree.r, tree.par, tree.stamp, tree.closed
 	local factor = hz and cellFactors(st, hz, k) or nil
 	local offroad = hz and hz.roadFactor or OFFROAD
+	-- No road record means unpainted ground; it does not switch the preference off.
+	local roadsOn = hz and hz.roads and offroad ~= 1
 	tree.gen = tree.gen + 1
 	local gen = tree.gen
 	tree.k = k
@@ -194,7 +196,7 @@ local function search(st, k, swim, source, tree, goal, targets, left, roads, hz,
 		local entered = reverse and u or v
 		local step = override or length * cs * (val[entered + 1] == 2 and swim or 1)
 		local base = entered < N and entered or at[entered + 1]
-		local choice = roads and not roads[base] and step * offroad or step
+		local choice = roadsOn and step * (1 + (offroad - 1) * (1 - (roads and roads[base] or 0))) or step
 		if factor then
 			local f = factor[base]
 			if not f then
@@ -1290,7 +1292,8 @@ local function bakeEdges(st, k, road)
 		end
 		local base = v < N and v or at[i]
 		size = size + 4
-		flat[size - 3], flat[size - 2], flat[size - 1], flat[size] = v, step, wet, road[base] == true and 1 or OFFROAD
+		flat[size - 3], flat[size - 2], flat[size - 1], flat[size] =
+			v, step, wet, 1 + (OFFROAD - 1) * (1 - (road[base] or 0))
 	end
 	for node = 0, top - 1 do
 		head[node + 1] = size + 1
@@ -1517,22 +1520,22 @@ function Path.BakeRoadEdges(map)
 					else
 						-- A cluster with no road cells answers false however its neighbour decodes, so the grid of a
 						-- cross-cluster edge's far end is only read when that cluster paints roads.
-						local on = false
+						local coverage = 0
 						local other = Grid.roads(st, floor(v / 4096))
 						if other then
 							-- A landing that the neighbour's grid cannot place is no road, as before.
 							local cell = metadata(st, v)
-							on = cell ~= nil and other[cell] == true and nodeAt(v) ~= nil
+							coverage = cell ~= nil and nodeAt(v) ~= nil and other[cell] or 0
 						end
 						if c1 == 0 then
 							q1, q2 = 63, 0
 						else
-							q1, q2 = on and 0 or 63, 0
+							q1, q2 = ratioQ(1 + (OFFROAD - 1) * (1 - coverage)), 0
 						end
 						if c2 == 0 then
 							q3, q4 = 63, 0
 						else
-							q3, q4 = on and 0 or 63, 0
+							q3, q4 = ratioQ(1 + (OFFROAD - 1) * (1 - coverage)), 0
 						end
 					end
 					if q1 == 63 and q2 == 0 and q3 == 63 and q4 == 0 then

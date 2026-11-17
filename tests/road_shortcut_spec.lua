@@ -38,11 +38,11 @@ assert(loadfile("Routing/PathJobs.lua"))("ShortestPathForever", ns)
 local st, Path = ns.PathGrid.State(MAP), ns.Path
 st.road[1] = {}
 for y = 10, 30 do
-	st.road[1][y] = true
-	st.road[1][66 * C + y] = true
+	st.road[1][y] = 1
+	st.road[1][66 * C + y] = 1
 end
 for x = 0, 66 do
-	st.road[1][x * C + 10] = true
+	st.road[1][x * C + 10] = 1
 end
 local function point(x, y)
 	return { x = (x + 0.5) * CS, y = (y + 0.5) * CS }
@@ -87,4 +87,17 @@ for _, factor in ipairs({ 1.5, 3, 1.5, 3 }) do
 	assert(math.abs(forward - expected) < 1e-8, "forward batch uses new shortcut")
 	assert(math.abs(inbound - expected) < 1e-8, "inbound batch uses new shortcut")
 end
+
+-- The same U has only faint paint: at 10% it cannot justify the detour even at 3x.
+for roadCell in pairs(st.road[1]) do
+	st.road[1][roadCell] = 0.1
+end
+local faint = profile(3)
+faint.key = "faint-road"
+local _, faintCost = Path.FindSync(MAP, from, to, false, faint)
+assert(
+	math.abs(faintCost - default - (66 * CS - straight)) < 1e-8,
+	"partial paint must not receive full-road preference"
+)
+
 print("road_shortcut_spec: ok")
