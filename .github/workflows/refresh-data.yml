@@ -89,7 +89,7 @@ jobs:
           body: |
             Regenerated `Data/*.lua` after moving the pins: ${{ steps.pins.outputs.summary }}.
 
-            Before merging, read the diffs of `Data/Routes.lua` and `Data/Transports.lua` for boats, zeppelins, lifts or trams that appeared, moved or dropped out, `Data/Taxi.lua` for flight points and flight times, and `Data/Portals.lua` and `Data/Teleports.lua` for entries that dropped out. The route specs passed on this data, so a changed journey would have failed the run. Add a `CHANGELOG.md` line under Unreleased saying what a player would notice.
+            Before merging, read the diffs of `Data/Routes.lua` and `Data/Transports.lua` for boats, zeppelins, lifts or trams that appeared, moved or dropped out, `Data/Taxi.lua` for flight points and flight times, and `Data/Portals.lua` and `Data/Teleports.lua` for entries that dropped out. The route specs passed on this data, so a changed journey would have failed the run. Add a `changes/<pr>.md` fragment saying what a player would notice.
 
             The workflow that opened this PR also approved its CI, so the required checks run without a maintainer's approval.
 

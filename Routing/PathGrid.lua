@@ -30,7 +30,7 @@ ns.Path = Path
 Path.budget = 2 -- milliseconds of path work, leaving headroom under the 3 ms frame ceiling
 Path.clusters = 64 -- secondary count ceiling per map (at least 4)
 Path.graphKB = 4096 -- decoded entrances/edges across all maps
-Path.cacheKB = 24576 -- decoded grids across all maps; active coroutine locals are additional
+Path.cacheKB = 24576 -- decoded grids across all maps; active corridors may exceed it
 Path.clock = debugprofilestop or function()
 	return os.clock() * 1000
 end
@@ -714,13 +714,38 @@ local function evict(st, oldest)
 	st.decoded = st.decoded - 1
 end
 
+-- Each search owns its corridor until its scheduler releases it, including abandoned coroutines.
+local holds = {}
+
+local function Hold(job, st, k)
+	local held = holds[job]
+	if not held then
+		held = { state = st, clusters = {} }
+		holds[job] = held
+	end
+	held.clusters[k] = true
+end
+
+local function Release(job)
+	holds[job] = nil
+end
+
+local function held(st, k)
+	for _, corridor in pairs(holds) do
+		if corridor.state == st and corridor.clusters[k] then
+			return true
+		end
+	end
+	return false
+end
+
 local function trim(st, size)
 	while (decodedKB + size > Path.cacheKB and decodedCount >= 4) or st.decoded >= max(Path.clusters, 4) do
 		local owner, oldest, age = nil, nil, huge
 		for _, candidate in pairs(states) do
 			if st.decoded < max(Path.clusters, 4) or candidate == st then
 				for k, used in pairs(candidate.used) do
-					if used < age then
+					if used < age and not held(candidate, k) then
 						owner, oldest, age = candidate, k, used
 					end
 				end
@@ -1489,6 +1514,7 @@ end
 ---@class SPFPathPoints
 ---@field x number[] -- global cell x of each entry
 ---@field y number[] -- global cell y of each entry
+---@field z number[] -- surface height captured during refinement
 ---@field w number[] -- water entries up to each entry
 ---@field t number[] -- walking time up to each entry, in running yards
 ---@field k number[] -- cluster of each entry
@@ -1796,6 +1822,7 @@ end
 
 -- With no search queued, drop decoded grids and local trees; exact endpoint costs stay.
 local function Idle()
+	holds = {}
 	for map, st in pairs(states) do
 		for _, entry in ipairs(st.endTrees or {}) do
 			entry.tree = nil
@@ -1815,6 +1842,7 @@ local function Idle()
 end
 
 local function Reset()
+	holds = {}
 	for _, st in pairs(states) do
 		if st.D.packed then
 			st.D.graph, st.D.grid, st.D.height, st.D.floor = {}, {}, {}, {}
@@ -1999,6 +2027,8 @@ ns.PathGrid = {
 	toward = toward,
 	bare = bare,
 	neighbour = neighbour,
+	Hold = Hold,
+	Release = Release,
 	Pin = Pin,
 	Ready = Ready,
 	Quiet = Quiet,

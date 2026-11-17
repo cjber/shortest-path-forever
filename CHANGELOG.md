@@ -10,9 +10,12 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
-## [Unreleased]
+## [1.42.0] - 2026-11-17
 
 - **A journey to the Ruins of Lordaeron leaves the Undercity.** A spot picked on the map above the city now ends on that surface, so the route takes a lift and walks across the ruins instead of wandering the city's corridors to the floor underneath it. Thanks to treadpool for the report (#923).
+<!-- discord-image: docs/screenshots/services_roles.png -->
+
+- **Recognise profession trainers and find weapon masters.** Each profession uses its own icon in Nearby services and on the map. Weapon masters have their own service filter. Thanks to user_u3k9hweaatfhnjs0 for the ideas (#952).
 - **Follow roads keeps its route across tile borders.** Road connections remain available where a shorter off-road connection would otherwise pull the route away from the road (#892).
 - **Settings are easier to scan.** Section headings group related controls on the Guidance, Interface and Map marks pages.
 - **Tracker menus** put journey actions before the shared Tracker controls, keep Clear journey last, and offer Show on map on departure titles.
@@ -20,21 +23,14 @@ optional `### For addon authors` subsection after a version's player bullets.
 - **Guidance settings keep gamepad navigation working.** Walking the settings list no longer taints the shared controller bindings (#943).
 - **The Hearthstone tooltip only says a journey uses it when that journey includes a bind teleport.** Its time saving no longer appears on journeys that leave it unused (#960).
 - **Standing still with a journey drawn does less work.** Unchanged directions and map views no longer rebuild each poll, and following a stationary party member keeps its position checks spaced apart (#784).
-- **Recognise profession trainers and find weapon masters.** Each profession uses its own icon in Nearby services and on the map. Weapon masters have their own service filter. Thanks to user_u3k9hweaatfhnjs0 for the ideas (#952).
-
 - **The Hearthstone button stays off the world map while Use Hearthstone is off.** Thanks to user_g496wu46adiwjuc5 for the report (#951).
-- **Faint and narrow roads stay connected.** Follow roads now weighs each cell by its painted road coverage, keeping partial-alpha roads in the route and drawn line.
-- **Walks stay off steep faces they cannot climb.** Walking routes in Westfall and the Barrens no longer climb a ridge whose only way up lies outside the next few yards (#950, #897), thanks to emmiehbun and VolomonBeddarm for the reports.
+- **Faint and narrow roads stay connected.** Follow roads now weighs each cell by its painted road coverage, keeping partial-alpha roads in the route and drawn line (refs #893).
+- **Walks stay off steep faces they cannot climb.** Walking routes in Westfall and the Barrens no longer climb a ridge whose only way up lies outside the next few yards (#950; refs #897), thanks to emmiehbun and VolomonBeddarm for the reports.
+- Ships with the same shared code as your other Forever addons, so they keep working together.
 
 ### For addon authors
 
 - **Journey and guidance places carry height in API 2.4.** `Journey().goal`, each leg's `from` and `to`, `Guidance().point` and each guidance waypoint include optional `z`, world height in yards, when the planner holds it. Companion addons can follow the same floor where surfaces stack. Thanks to catubba for the request (#959).
-
-## [1.41.1] - 2026-11-16
-
-<!-- forever-core-sync -->
-
-- Ships with the same shared code as your other Forever addons, so they keep working together.
 
 ## [1.41.0] - 2026-11-16
 

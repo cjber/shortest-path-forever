@@ -15,6 +15,11 @@ on:
         description: Full SHA of the main commit to release; main's head when empty
         required: false
         type: string
+      skip_visual_proof:
+        description: Accept a full CI run whose only failed job is visual-proof (a maintainer's waiver; the headless smoke still applies)
+        required: false
+        type: boolean
+        default: false
 
 permissions: {}
 
@@ -70,6 +75,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_COMMIT: ${{ steps.target.outputs.commit }}
+          SKIP_VISUAL_PROOF: ${{ inputs.skip_visual_proof }}
         run: |
           for attempt in $(seq 1 90); do
             state=$(gh api \
@@ -79,6 +85,15 @@ jobs:
               completed/success)
                 echo "Full CI on main is green for $RELEASE_COMMIT"
                 exit 0
+                ;;
+              completed/failure)
+                # The next step decides whether visual-proof is the only failed job, the one failure the skip waives.
+                if [ "$SKIP_VISUAL_PROOF" = "true" ]; then
+                  echo "Full CI on main failed for $RELEASE_COMMIT; the release check decides whether the skip covers it"
+                  exit 0
+                fi
+                echo "::error::Full CI on main finished without success ($state) for $RELEASE_COMMIT"
+                exit 1
                 ;;
               completed/*)
                 echo "::error::Full CI on main finished without success ($state) for $RELEASE_COMMIT"
@@ -100,10 +115,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_COMMIT: ${{ steps.target.outputs.commit }}
+          SKIP_VISUAL_PROOF: ${{ inputs.skip_visual_proof }}
         run: |
           python3 -c 'import os; os.environ["GITHUB_SHA"] = os.environ["RELEASE_COMMIT"]
           from tools.release_check import main
-          main()'
+          main(["--skip-visual-proof"] if os.environ.get("SKIP_VISUAL_PROOF") == "true" else [])'
       # The release notes are this version's CHANGELOG entry, not the whole file;
       # a tag without one fails here rather than shipping empty notes.
       - name: Release notes

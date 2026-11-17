@@ -30,6 +30,18 @@ end
 _G.InCombatLockdown = function()
 	return combat
 end
+-- ForeverCore drives the game's tracker visibility through a state driver; only the fixed "show"/"hide" states it
+-- registers are modelled.
+_G.RegisterStateDriver = function(frame, attribute, state)
+	if attribute == "visibility" then
+		if state == "hide" then
+			frame:Hide()
+		elseif state == "show" then
+			frame:Show()
+		end
+	end
+end
+_G.UnregisterStateDriver = function() end
 -- The client's own restricted openers (C_Map.OpenWorldMap, C_SettingsUtil.OpenSettingsPanel) are run through
 -- securecallfunction by ForeverCore, and map pins set their button passthrough through CreateSecureDelegate (#645).
 -- The stubs below record whether a call came that way, so a call site back on the restricted function fails here.

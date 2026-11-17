@@ -9,7 +9,10 @@ a synchronous planner call or garbage collection can exceed it. Combat pauses qu
 
 Decoded grids and graph nodes have separate memory ceilings. Completed grids release their raw strings;
 compressed blocks stay available for cache eviction and revisits. Cancellation stops queued work and discards
-partial decoded fields. Offline tools use system zlib to implement the client's encoding API.
+partial decoded fields. A walking job holds its endpoint and refined corridor grids through smoothing and
+point construction, temporarily exceeding the grid ceiling when the corridor needs it. Each refined point keeps
+its surface height so drawing does not decode terrain again. Completion, errors and cancellation release only
+that job's holds; idle cleanup still preserves only Floor's pinned clusters. Offline tools use system zlib to implement the client's encoding API.
 
 The journey search uses lower bounds to decide which endpoint walks still need exact costs. A feasible plan
 uses a single earliest label per arrival state to find a valid incumbent quickly. The final optimiser keeps

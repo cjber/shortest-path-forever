@@ -10,7 +10,7 @@
 ## X-Donate: https://github.com/sponsors/cjber
 ## X-Curse-Project-ID: 1708599
 ## X-Wago-ID: b6Xy1wKp
-## X-Forever-Core: v1.14.2
+## X-Forever-Core: v1.14.4
 ## SavedVariables: ShortestPathForeverDB
 ## SavedVariablesPerCharacter: ShortestPathForeverCharDB
 ## IconTexture: Interface\AddOns\ShortestPathForever\media\Icon

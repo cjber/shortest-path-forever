@@ -69,6 +69,7 @@ pump = function()
 		job.cpu = job.cpu + clock() - t0
 		Deadline(math.huge)
 		if not ok or coroutine.status(job.co) == "dead" then
+			Grid.Release(job)
 			if not job.targets and not job.notify then
 				Spare(job.scratch)
 			end
@@ -247,6 +248,7 @@ end
 ---@param job SPFPathJob
 function Path.ReleaseMany(job)
 	Path.Pause(job)
+	Grid.Release(job)
 	job.co, job.scratch, job.callback, job.progress = nil, nil, nil, nil
 end
 
@@ -262,5 +264,6 @@ end
 ---@param job SPFPathJob
 function Path.Cancel(job)
 	Path.Pause(job)
+	Grid.Release(job)
 	job.cancelled, job.scratch, job.co = true, nil, nil
 end
