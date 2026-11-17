@@ -101,6 +101,10 @@ local function TrackerMenu(target, menu)
 		if not ns.Corpse.Active() then
 			menu:End(L["Clear journey"], ns.ClearJourney)
 		end
+		-- The journey block's own off-switch, the same as the setting: the arrow, pins and map line keep guiding (#991).
+		menu:Action(L["Hide the journey tracker"], function()
+			ns.SetOption("journeyTracker", false)
+		end)
 	elseif kind == "family" then
 		menu:Open(L["Show link"], ns.FamilyHints.OpenFooter)
 	else

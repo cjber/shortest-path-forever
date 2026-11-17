@@ -405,6 +405,7 @@ L["Magenta"] = "자홍색"
 L["Show boat, lift and tram departures in the tracker"] = "추적기에서 배, 승강기, 지하철 출발 표시"
 L["Hide RestedXP's arrow"] = "RestedXP 화살표 숨기기" -- mt
 L["Hide departures"] = "출발 숨기기"
+L["Hide the journey tracker"] = "여정 추적기 숨기기"
 
 -- Travel stats.
 
