@@ -874,6 +874,7 @@ end
 -- no longer apply. A boat can leave the character in a zone the origin never named, and the walk after it starts
 -- there: neither may be charged for the character to escape (#895).
 local origin, hereZone, landingZone
+local avoided
 local function WalkLanding()
 	local leg = followed and progress and followed.legs[progress.index]
 	if leg and leg.mode ~= "walk" then
@@ -885,6 +886,7 @@ local function WalkLanding()
 end
 local function Avoid()
 	local here = Here()
+	avoided = here ~= nil
 	origin = origin or here
 	hereZone = here and ns.Hazards.ZoneAt(here.map, here.x, here.y)
 	local landing = WalkLanding()
@@ -926,8 +928,8 @@ end
 -- for a position.
 ---@param changed? boolean the travel policy changed since the last frame
 function Search.Poll(changed)
-	local here = Here()
-	local zone = here and ns.Hazards.ZoneAt(here.map, here.x, here.y)
+	local x, y, _, map = ns.JourneyPosition()
+	local zone = x and y and map and ns.Hazards.ZoneAt(map, x, y)
 	local landing = WalkLanding()
 	local landZone = landing and ns.Hazards.ZoneAt(landing.map, landing.x, landing.y)
 	if changed or zone ~= hereZone or landZone ~= landingZone then
@@ -939,7 +941,7 @@ function Search.Poll(changed)
 	local stale = not startAt or costsWaiting
 	costsWaiting = nil
 	-- A journey started where no position could be read takes its hazards from the first one that can.
-	if not hazards then
+	if not avoided then
 		Avoid()
 	end
 	-- Search callbacks may finish while position is unavailable; resume from readable endpoints.
@@ -983,7 +985,12 @@ function Search.Replan(riding, flying, changedRide, changedSpeed)
 		-- you stood stop describing here: walked on before casting, they are searched again. An unboarded boat
 		-- likewise needs the approach searched from here when the player leaves its dock.
 		local walkedOn = moved and leg and (leg.mode == "teleport" or leg.mode == "boat" and not progress.departed)
-		if not flying and not riding and (off or retry or walkedOn or GetTime() - refreshedAt >= REFRESH_EVERY) then
+		-- Exact endpoint costs do not expire at an unchanged position and floor.
+		if
+			not flying
+			and not riding
+			and (off or retry or walkedOn or moved and GetTime() - refreshedAt >= REFRESH_EVERY)
+		then
 			RefreshCosts(false, off or retry)
 		elseif changedRide or changedSpeed or not RetimeKept() then
 			local planned = Plan()

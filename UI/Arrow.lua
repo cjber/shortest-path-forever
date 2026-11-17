@@ -64,6 +64,7 @@ local frame
 local source, path, index, target, placeTarget, native
 local stepEnd, destination
 local revision = 0
+local renderedRevision, renderedMetres, renderedMode, renderedSecond, renderedNative
 local moving = false
 local OnUpdate
 ---@type SPFCastPromptFrame?
@@ -171,7 +172,6 @@ local function Update(elapsed)
 		SetUpdating(false)
 		return
 	end
-	StepIcon()
 	local updating = revision
 	local x, y, _, map = ns.JourneyPosition()
 	local facing = GetPlayerFacing()
@@ -184,6 +184,25 @@ local function Update(elapsed)
 		return
 	end
 	local moved = x ~= frame.x or y ~= frame.y or map ~= frame.map or facing ~= frame.facing
+	-- The slow poll still detects mouse turns and passive transport motion. Once settled,
+	-- identical inputs must not place a waypoint, redraw textures or walk the path again.
+	local markerShown = NativeMarkerShown()
+	local mode = ns.db.arrowLabel
+	local second = (mode == "time" or mode == "both") and math.floor(GetTime()) or nil
+	if
+		not frame.updating
+		and not moved
+		and renderedRevision == revision
+		and renderedMetres == ns.db.metres
+		and renderedMode == mode
+		and renderedSecond == second
+		and renderedNative == markerShown
+	then
+		return
+	end
+	renderedRevision, renderedMetres, renderedMode, renderedSecond = revision, ns.db.metres, mode, second
+	renderedNative = markerShown
+	StepIcon()
 	frame.x, frame.y, frame.map, frame.facing = x, y, map, facing
 	ns.AdvanceGuide()
 	-- Direct bearing uses the final destination on this map. Across maps, keep leading to the active
@@ -196,7 +215,7 @@ local function Update(elapsed)
 		return
 	end
 	native = placed
-	if not (facing and map == pointing.map) or (native and NativeMarkerShown()) then
+	if not (facing and map == pointing.map) or (native and markerShown) then
 		-- The native marker leads; nothing to draw, so only the slow poll runs, moving or not.
 		frame.behind = false
 		frame:SetAlpha(moving and 1 or 0)
@@ -219,11 +238,8 @@ local function Update(elapsed)
 		distance = distance + math.sqrt((path[i].x - path[i - 1].x) ^ 2 + (path[i].y - path[i - 1].y) ^ 2)
 	end
 	local yards = math.floor(distance)
-	local mode = ns.db.arrowLabel
 	-- The time counts down every second while the distance may not move, so read it with the header's own tick. The
 	-- final label is cached as a whole, and only written when it changes.
-	local timed = mode == "time" or mode == "both"
-	local second = timed and math.floor(GetTime()) or nil
 	if
 		yards ~= frame.yards
 		or frame.metres ~= ns.db.metres

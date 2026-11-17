@@ -56,6 +56,9 @@ driver.env.C_Texture = {
 		return { width = 32, height = 32 }
 	end,
 }
+ns.GoalPinFile = function()
+	return ns.PIN_FILE
+end
 ns.PIN_FILE = "Interface\\AddOns\\ShortestPathForever\\media\\Pin"
 ns.Art = {
 	Fit = function(texture)

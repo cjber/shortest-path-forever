@@ -150,6 +150,32 @@ frames()
 assert(journeys == 4, "an unplaceable member does not replan")
 assert(ns.IsFollowing(), "and does not end the follow")
 
+-- Every completed sample keeps its throttle, including unchanged, arrived and unavailable
+-- targets. Previously each of those outcomes allocated two points on every following frame.
+jit.off()
+local function quiet(label)
+	local before = reads
+	collectgarbage("collect")
+	collectgarbage("stop")
+	local memory = collectgarbage("count")
+	for _ = 1, 30 do
+		ns.FollowTick(1 / 60)
+	end
+	local growth = collectgarbage("count") - memory
+	collectgarbage("restart")
+	assert(reads == before, label .. " must wait before reading another point")
+	assert(growth == 0, label .. " must allocate zero bytes between samples")
+end
+quiet("unavailable member")
+member = { map = 1, x = 2010, y = -1795 }
+ns.FollowTick(1)
+quiet("arrived member")
+member = { map = 1, x = 2400, y = -1800 }
+ns.FollowTick(1)
+frames()
+ns.FollowTick(1)
+quiet("unchanged member")
+
 -- The member leaving the group ends it.
 member = { map = 1, x = 2000, y = -1800 }
 exists = false

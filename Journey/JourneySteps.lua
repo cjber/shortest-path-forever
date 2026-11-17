@@ -148,6 +148,63 @@ function ns.JourneyTime(legs, index)
 	return seconds * 1000
 end
 
+-- Inputs which last produced walking progress. Quest blob and floor answers can change
+-- in place; transport legs also depend on elapsed ride time and are never memoized here.
+-- Weak values keep this memo from retaining a completed journey and its walking geometry.
+local progressInput = setmetatable({}, { __mode = "v" })
+---@param goal SPFPoint
+---@param result SPFPlan
+---@param progress {index: integer, departed?: boolean}
+---@param inside boolean?
+---@return boolean changed, number? riding, boolean? flying
+function ns.JourneyProgressChanged(goal, result, progress, inside)
+	local x, y, _, map = ns.JourneyPosition()
+	local height = x and y and map and ns.Floor and ns.Floor.Height(map, x, y)
+	local riding, flying = ns.CurrentRide(), UnitOnTaxi("player")
+	local active, paused = ns.JourneyGuide.Active(), ns.JourneyGuide.Paused()
+	local last = progressInput
+	local leg = result.legs[progress.index]
+	local nextStop = not goal.hold and not goal.entrance and ns.NextJourneyStop and ns.NextJourneyStop(goal)
+	if
+		leg
+		and leg.mode == "walk"
+		and (not active or inside and paused or ns.JourneyGuide.PointsTo(leg.to, leg.walkPoints))
+		and last.nextStop == nextStop
+		and last.walk == leg.walkPoints
+		and last.goal == goal
+		and last.result == result
+		and last.index == progress.index
+		and last.departed == progress.departed
+		and last.x == x
+		and last.y == y
+		and last.map == map
+		and last.height == height
+		and last.riding == riding
+		and last.flying == flying
+		and last.inside == inside
+		and last.active == active
+		and last.paused == paused
+		and last.reach == ns.db.arrivalDistance
+		and last.hold == goal.hold
+		and last.goalX == goal.x
+		and last.goalY == goal.y
+		and last.goalZ == goal.z
+		and last.radius == goal.radius
+		and last.shapes == goal.shapes
+		and last.questIDs == goal.questIDs
+	then
+		return false, riding, flying
+	end
+	last.goal, last.result, last.index, last.departed = goal, result, progress.index, progress.departed
+	last.x, last.y, last.map, last.height = x, y, map, height
+	last.riding, last.flying, last.inside = riding, flying, inside
+	last.active, last.paused, last.reach = active, paused, ns.db.arrivalDistance
+	last.hold, last.goalX, last.goalY, last.goalZ = goal.hold, goal.x, goal.y, goal.z
+	last.radius, last.shapes, last.questIDs = goal.radius, goal.shapes, goal.questIDs
+	last.nextStop, last.walk = nextStop, leg and leg.walkPoints
+	return true, riding, flying
+end
+
 -- Whether a leg has reached its far end. A lift's landings share a spot on the map and the player's height is unknown
 -- (UnitPosition's is a placeholder 0), so standing at the shaft cannot tell the top from the bottom. Such a leg is
 -- over when you step away from the shaft after being there for at least the ride; stepping away sooner means you

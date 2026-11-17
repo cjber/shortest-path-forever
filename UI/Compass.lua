@@ -206,7 +206,9 @@ end
 -- run's while you run back, none while a plan is being worked out). Read once per second of GetTime, the header's own
 -- tick, or when the journey changes; written only when it changes, so a turning compass costs nothing.
 local function HideTime()
-	frame.Time:Hide()
+	if frame.timeText ~= nil or frame.timeAt ~= nil then
+		frame.Time:Hide()
+	end
 	frame.timeText, frame.timeAt = nil, nil
 end
 
@@ -257,7 +259,6 @@ local function Update(elapsed)
 		SetUpdating(false)
 		return
 	end
-	frame:SetAlpha(1)
 	local moved = x ~= frame.x or y ~= frame.y or map ~= frame.map or facing ~= frame.rawFacing
 	-- The goal pin leaves the compass while a turn stands between you and it, so the turn's 1 is the only thing to
 	-- aim for; it returns when the bend has merged into the goal.
@@ -289,6 +290,7 @@ local function Update(elapsed)
 		frame.facing = facing
 	end
 	if moved or changed or delta ~= 0 then
+		frame:SetAlpha(1)
 		Render(x, y, map)
 	end
 	RenderTime(changed)

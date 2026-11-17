@@ -190,6 +190,7 @@ function ns.FollowTick(elapsed)
 	if following.waiting > 0 then
 		return
 	end
+	following.waiting = following.throttle
 	local here = Here()
 	local point = ns.FollowPoint(unit)
 	if not point then
@@ -209,7 +210,6 @@ function ns.FollowTick(elapsed)
 	local moved = following.point and Distance(following.point, point)
 	if moved and moved < MOVED then
 		-- Nothing the player could see has changed since the last replan.
-		following.waiting = 0
 		return
 	end
 	following.waiting = following.throttle

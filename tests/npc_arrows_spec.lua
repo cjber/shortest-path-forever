@@ -1,6 +1,6 @@
 -- The two bouncing arrows beside the nameplate of the NPC a Nearby services journey walks to (UI/NpcArrows.lua):
 -- matching by the GUID's creature entry with the stop's title as the unreadable-GUID fallback, the target the journey
--- sets and keeps on arrival until that plate goes away, the setting, the bob's own OnUpdate, and that the nameplate is
+-- sets and keeps on arrival until that plate goes away, the setting, the native animation, and that the nameplate is
 -- never written to.
 local checks = 0
 local function equal(actual, expected, label)
@@ -45,6 +45,37 @@ local function widget(kind, name, parent)
 	end
 	function methods:SetPoint(...)
 		self.point = { ... }
+	end
+	function methods.CreateAnimationGroup()
+		local animation = { playing = false }
+		function animation.CreateAnimation(group, animationKind)
+			group.kind = animationKind
+			local translation = {}
+			function translation:SetOffset(x, y)
+				self.x, self.y = x, y
+			end
+			function translation:SetDuration(value)
+				self.duration = value
+			end
+			function translation:SetSmoothing(value)
+				self.smoothing = value
+			end
+			group.translation = translation
+			return translation
+		end
+		function animation:SetLooping(value)
+			self.looping = value
+		end
+		function animation:IsPlaying()
+			return self.playing
+		end
+		function animation:Play()
+			self.playing = true
+		end
+		function animation:Stop()
+			self.playing = false
+		end
+		return animation
 	end
 	function methods:RegisterEvent(event)
 		self.events[event] = true
@@ -201,9 +232,15 @@ equal(frame.Left.width, 22, "the left arrow is 22 wide")
 equal(frame.Right.height, 22, "the right arrow is 22 high")
 check(frame.point[1] == "CENTER" and frame.point[2] == healthBar, "the arrows anchor to the health bar")
 check(frame.Left.point[2] == healthBar and frame.Right.point[2] == healthBar, "and each arrow to the same bar")
-equal(frame.Left.point[4], -6, "the left arrow keeps its gap")
-equal(frame.Right.point[4], 6, "the right arrow keeps its gap")
-check(frame.scripts.OnUpdate ~= nil, "the bob runs while the arrows show")
+check(frame.scripts.OnUpdate == nil, "the bob must never run Lua each frame")
+equal(frame.Left.point[4], -9, "the left arrow starts at the outer end of its bob")
+equal(frame.Right.point[4], 9, "the right arrow starts at the outer end of its bob")
+check(frame.LeftAnimation:IsPlaying() and frame.RightAnimation:IsPlaying(), "the client animates both arrows")
+equal(frame.LeftAnimation.looping, "BOUNCE", "the client reverses the bob")
+equal(frame.LeftAnimation.translation.x, 6, "left bob spans six pixels")
+equal(frame.RightAnimation.translation.x, -6, "right bob spans six pixels")
+equal(frame.LeftAnimation.translation.duration, 0.5, "the complete bob takes one second")
+equal(frame.LeftAnimation.translation.smoothing, "IN_OUT", "the bob eases at its ends")
 
 -- Another plate of the same or another NPC does not steal the arrows from the matching one.
 fire("NAME_PLATE_UNIT_ADDED", "other")
@@ -214,7 +251,10 @@ guid.fallback, unitName.fallback = secret, "Innkeeper"
 plateFor.fallback = plate
 fire("NAME_PLATE_UNIT_REMOVED", "npc")
 fire("NAME_PLATE_UNIT_REMOVED", "other")
-check(arrow().shown == false and arrow().scripts.OnUpdate == nil, "a removed plate takes the arrows and the bob")
+check(
+	arrow().shown == false and not arrow().LeftAnimation:IsPlaying() and not arrow().RightAnimation:IsPlaying(),
+	"a removed plate stops both animations"
+)
 fire("NAME_PLATE_UNIT_ADDED", "fallback")
 check(arrow().shown, "an unreadable GUID falls back to the exact name")
 unitName.fallback = "Innkeeper's assistant"
@@ -226,7 +266,7 @@ check(arrow().shown, "the fallback matches again")
 
 -- Arrival keeps the arrows on the plate the player reached, and that plate going away ends them.
 ns.JourneyChanged(nil, "arrived")
-check(arrow().shown and arrow().scripts.OnUpdate ~= nil, "arrival keeps the arrows on the matched plate")
+check(arrow().shown and arrow().LeftAnimation:IsPlaying(), "arrival keeps the arrows on the matched plate")
 equal(NpcArrows.ArrowUnit(), "fallback", "and on the same plate")
 fire("NAME_PLATE_UNIT_REMOVED", "fallback")
 check(not arrow().shown and arrow().scripts.OnUpdate == nil, "that plate going away ends the arrived arrows")
@@ -267,7 +307,7 @@ ns.RefreshNpcArrows()
 check(not arrow().shown and arrow().scripts.OnUpdate == nil, "the setting off hides them")
 ns.db.npcArrows = true
 ns.RefreshNpcArrows()
-check(arrow().shown and arrow().scripts.OnUpdate ~= nil, "turning it back on restores them and the bob")
+check(arrow().shown and arrow().LeftAnimation:IsPlaying(), "turning it back on restores them and the bob")
 
 -- The nameplate and its health bar were read through a method and anchored to, never written to.
 equal(#writes, 0, "no call or write reaches the nameplate")

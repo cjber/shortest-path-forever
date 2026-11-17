@@ -17,7 +17,7 @@ ns.CompanionMaps = Maps
 ---@field node? number
 ---@field kind? string
 
----@type {kind: string, x: number, y: number}[]
+---@type {kind: string, x: number, y: number, key: string}[]
 local pins = {}
 local signature, nextScan = "", 0
 -- The string Scan returns, built only when the pins or the journey it stands for change: UI/Canvas.lua reads it every
@@ -33,6 +33,55 @@ local function Signature()
 	return key
 end
 
+-- Reuse scan storage as well as the final key. GetChildren returns multiple values, so
+-- walking those values directly avoids a fresh child array at every level of a stitched map.
+local scan = { used = 0 }
+local entries, keys = {}, {}
+local Visit
+local function Children(recursive, ...)
+	for index = 1, select("#", ...) do
+		Visit(select(index, ...), recursive)
+	end
+end
+
+Visit = function(child, recursive)
+	if not child:IsVisible() then
+		return
+	end
+	local kind
+	if scan.lea and child.isLeaMapsPin and child.data then
+		local category = child.data[1]
+		kind = type(category) == "string"
+				and (category:match("^Flight") and "flight" or category:match("^Travel") and "travel" or category:match(
+					"^Portal"
+				) and "portal")
+			or nil
+	elseif scan.open and child.u and child.v and child.look then
+		kind = child.node and "flight" or (child.kind == "boat" or child.kind == "zeppelin") and child.kind or nil
+	end
+	if kind then
+		local x, y = child:GetCenter()
+		if x and scan.left and scan.top and scan.width > 0 and scan.height > 0 then
+			local scale = child:GetEffectiveScale() / scan.canvas:GetEffectiveScale()
+			x, y = (x * scale - scan.left) / scan.width, (scan.top - y * scale) / scan.height
+			scan.used = scan.used + 1
+			local entry = entries[scan.used]
+			if not entry then
+				entry = {}
+				entries[scan.used] = entry
+			end
+			if entry.kind ~= kind or entry.x ~= x or entry.y ~= y then
+				entry.kind, entry.x, entry.y = kind, x, y
+				entry.key = string.format("%s:%.5f:%.5f", kind, x, y)
+				scan.changed = true
+			end
+			pins[scan.used] = entry
+		end
+	elseif recursive then
+		Children(true, child:GetChildren())
+	end
+end
+
 -- Read visible pins, rather than private settings: coverage, faction and zoom rules belong to their producer.
 ---@param map SPFMapCanvas
 ---@return string
@@ -42,51 +91,35 @@ function Maps.Scan(map)
 		return Signature()
 	end
 	nextScan = now + 0.25
+	scan.lea = C_AddOns.IsAddOnLoaded("Leatrix_Maps")
+	scan.open = C_AddOns.IsAddOnLoaded("OpenMap") and ns.OpenMapAddon.Stitched()
+	if not scan.lea and not scan.open and #pins == 0 then
+		return Signature()
+	end
 	local canvas = map:GetCanvas()
-	local width, height = canvas:GetWidth(), canvas:GetHeight()
-	local left, top = canvas:GetLeft(), canvas:GetTop()
-	local lea = C_AddOns.IsAddOnLoaded("Leatrix_Maps")
-	local open = C_AddOns.IsAddOnLoaded("OpenMap") and ns.OpenMapAddon.Stitched()
-	local found, keys = {}, {}
-	local function Visit(parent, recursive)
-		for _, child in ipairs({ parent:GetChildren() }) do
-			---@cast child SPFCompanionPin
-			if child:IsVisible() then
-				local kind
-				if lea and child.isLeaMapsPin and child.data then
-					local category = child.data[1]
-					kind = type(category) == "string"
-							and (category:match("^Flight") and "flight" or category:match("^Travel") and "travel" or category:match(
-								"^Portal"
-							) and "portal")
-						or nil
-				elseif open and child.u and child.v and child.look then
-					kind = child.node and "flight"
-						or (child.kind == "boat" or child.kind == "zeppelin") and child.kind
-						or nil
-				end
-				if kind then
-					local x, y = child:GetCenter()
-					if x and left and top and width > 0 and height > 0 then
-						local scale = child:GetEffectiveScale() / canvas:GetEffectiveScale()
-						x, y = (x * scale - left) / width, (top - y * scale) / height
-						found[#found + 1] = { kind = kind, x = x, y = y }
-						keys[#keys + 1] = string.format("%s:%.5f:%.5f", kind, x, y)
-					end
-				elseif recursive then
-					Visit(child, true)
-				end
-			end
+	scan.canvas, scan.width, scan.height = canvas, canvas:GetWidth(), canvas:GetHeight()
+	scan.left, scan.top = canvas:GetLeft(), canvas:GetTop()
+	scan.used, scan.changed = 0, false
+	local previous = #pins
+	if scan.lea then
+		Children(false, canvas:GetChildren())
+	end
+	if scan.open then
+		Children(true, (canvas:GetParent() or canvas):GetChildren())
+	end
+	for index = scan.used + 1, previous do
+		pins[index] = nil
+	end
+	if scan.changed or scan.used ~= previous then
+		for index, pin in ipairs(pins) do
+			keys[index] = pin.key
 		end
+		for index = #pins + 1, #keys do
+			keys[index] = nil
+		end
+		table.sort(keys)
+		signature = table.concat(keys, ";")
 	end
-	if lea then
-		Visit(canvas, false)
-	end
-	if open then
-		Visit(canvas:GetParent() or canvas, true)
-	end
-	table.sort(keys)
-	pins, signature = found, table.concat(keys, ";")
 	return Signature()
 end
 

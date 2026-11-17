@@ -15,3 +15,5 @@ C_NamePlate = nil
 ---@class SPFNpcArrowsFrame : Frame
 ---@field Left Texture
 ---@field Right Texture
+---@field LeftAnimation AnimationGroup
+---@field RightAnimation AnimationGroup

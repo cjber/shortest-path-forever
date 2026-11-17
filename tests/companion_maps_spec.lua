@@ -125,4 +125,20 @@ end
 rawset(_G, "tostring", toString)
 assert(built == 0, "an unchanged companion scan builds no key string")
 
+-- Include scans whose quarter-second poll is due, with a visible external pin. A steady
+-- map cannot allocate child arrays, visitor closures, descriptor tables or formatted keys.
+pin.shown = true
+local stable = scan()
+jit.off()
+collectgarbage("collect")
+collectgarbage("stop")
+local memory = collectgarbage("count")
+for _ = 1, 1000 do
+	assert(scan() == stable, "unchanged external pins keep the scan signature")
+end
+local growth = collectgarbage("count") - memory
+collectgarbage("restart")
+print(string.format("companion scans: %.3f KB over 1000 due scans", growth))
+assert(growth == 0, "unchanged external pins must allocate zero bytes")
+
 print("companion_maps_spec: visible coverage, categories, unload, zoom and a free unchanged scan passed")

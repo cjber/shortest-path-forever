@@ -9,14 +9,17 @@ revision=${pins% *}
 luals=${pins#* }
 library=.types/vscode-wow-api
 mkdir -p .types
+# Serialize the existence check and installation, including validation of an existing checkout.
+exec 9>.types/.annotations.lock
+flock -x 9
 if [[ ! -e "$library" ]]; then
 	checkout=$(mktemp -d .types/wow-api.XXXXXX)
-	trap 'rm -rf "$checkout"' EXIT
+	trap 'command rm -rf -- "$checkout"' EXIT
 	git init -q "$checkout"
-	git -C "$checkout" remote add origin https://github.com/Ketho/vscode-wow-api.git
+	git -C "$checkout" remote add origin "${WOW_API_REMOTE:-https://github.com/Ketho/vscode-wow-api.git}"
 	git -C "$checkout" fetch --quiet --depth=1 origin "$revision"
 	git -C "$checkout" checkout --quiet --detach FETCH_HEAD
-	mv "$checkout" "$library"
+	mv -T -- "$checkout" "$library"
 	trap - EXIT
 fi
 if [[ $(git -C "$library" rev-parse HEAD) != "$revision" ]] ||
@@ -24,6 +27,8 @@ if [[ $(git -C "$library" rev-parse HEAD) != "$revision" ]] ||
 	echo "Expected clean WoW annotations at $revision in $library" >&2
 	exit 1
 fi
+flock -u 9
+exec 9>&-
 if [[ $(lua-language-server --version) != "$luals" ]]; then
 	echo "Install lua-language-server $luals to match CI." >&2
 	exit 1
@@ -45,7 +50,7 @@ python3 tools/check_family.py
 python3 tools/check_store_page.py
 # An interrupted check must never leave a stale report looking like this run's result.
 report=.types/diagnostics.json
-rm -f "$report"
+command rm -f -- "$report"
 status=0
 lua-language-server --check . --checklevel=Information --check_format=json \
 	--check_out_path="$report" --logpath=.types/luals-log || status=$?

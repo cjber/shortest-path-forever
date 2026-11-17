@@ -54,8 +54,6 @@ local target
 -- The plate the arrows were on at arrival, whose removal ends them.
 ---@type string?
 local arrivedUnit
-local bounce = 0
-local bobbing = false
 
 local function Enabled()
 	return ns.db ~= nil and ns.db.npcArrows == true
@@ -81,10 +79,10 @@ end
 
 local function Hide()
 	if arrowFrame then
-		arrowFrame:SetScript("OnUpdate", nil)
+		arrowFrame.LeftAnimation:Stop()
+		arrowFrame.RightAnimation:Stop()
 		arrowFrame:Hide()
 	end
-	bobbing = false
 	arrowBar = nil
 	arrowUnit = nil
 end
@@ -102,9 +100,19 @@ local function Place(shift)
 	arrowFrame.Right:SetPoint("LEFT", arrowBar, "RIGHT", ARROW_GAP - shift, 0)
 end
 
-local function Bob(_, elapsed)
-	bounce = (bounce + elapsed) % 1
-	Place(math.sin(bounce * math.pi * 2) * ARROW_BOB)
+-- The client animates the textures, so a visible nameplate needs no Lua frame callback.
+-- BOUNCE reverses the half-second translation; IN_OUT eases at both ends of the bob.
+---@param texture Texture
+---@param offset number
+---@return AnimationGroup
+local function Bob(texture, offset)
+	local animation = texture:CreateAnimationGroup()
+	local translation = animation:CreateAnimation("Translation") --[[@as Translation]]
+	translation:SetOffset(offset, 0)
+	translation:SetDuration(0.5)
+	translation:SetSmoothing("IN_OUT")
+	animation:SetLooping("BOUNCE")
+	return animation
 end
 
 ---@return SPFNpcArrowsFrame
@@ -117,6 +125,8 @@ local function EnsureArrow()
 		ns.Art.Fit(frame.Left, ARROW_LEFT_ATLAS, ARROW_SIZE, ARROW_SIZE)
 		frame.Right = frame:CreateTexture(nil, "ARTWORK")
 		ns.Art.Fit(frame.Right, ARROW_RIGHT_ATLAS, ARROW_SIZE, ARROW_SIZE)
+		frame.LeftAnimation = Bob(frame.Left, ARROW_BOB * 2)
+		frame.RightAnimation = Bob(frame.Right, -ARROW_BOB * 2)
 		arrowFrame = frame
 	end
 	return arrowFrame
@@ -172,10 +182,10 @@ function NpcArrows.Refresh()
 	arrowBar = (unitFrame and unitFrame.healthBar) or plate
 	frame:ClearAllPoints()
 	frame:SetPoint("CENTER", arrowBar, "CENTER")
-	Place(0)
-	if not bobbing then
-		bobbing = true
-		frame:SetScript("OnUpdate", Bob)
+	Place(-ARROW_BOB)
+	if not frame.LeftAnimation:IsPlaying() then
+		frame.LeftAnimation:Play()
+		frame.RightAnimation:Play()
 	end
 	frame:Show()
 end

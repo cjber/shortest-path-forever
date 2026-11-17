@@ -365,7 +365,12 @@ local function UpdateProgress()
 	if not (goal and result) or nextPoint or CorpseRun() then
 		return
 	end
-	if goal.hold and ns.StopInside(goal) then
+	local inside = goal.hold and ns.StopInside(goal)
+	local changed, riding, flying = ns.JourneyProgressChanged(goal, result, progress, inside)
+	if not changed then
+		return
+	end
+	if inside then
 		Guide.Pause()
 		return
 	end
@@ -382,7 +387,6 @@ local function UpdateProgress()
 			return
 		end
 	end
-	local riding, flying = ns.CurrentRide(), UnitOnTaxi("player")
 	if ns.AdvanceJourneyProgress(result.legs, progress, goal, riding, flying, Near, Guide, reach) or goal.entrance then
 		return
 	end

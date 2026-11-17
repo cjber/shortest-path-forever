@@ -629,6 +629,15 @@ local function GuideTitle(goal)
 	return guide.title
 end
 
+-- Whether the guide still owns this walk's output. A restart, cast or explicit retarget
+-- clears it even when the player and route have not changed.
+---@param node SPFPoint|SPFPlace
+---@param points? SPFWalkPoints
+---@return boolean
+function Guide.PointsTo(node, points)
+	return guide ~= nil and guide.target == node and guide.points == points
+end
+
 ---@param node table
 ---@param points table?
 ---@param goal table?
