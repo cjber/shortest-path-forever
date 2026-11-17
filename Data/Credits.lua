@@ -5,6 +5,8 @@ local _, ns = ...
 ns.Credits = {
 	players = {
 		{ name = "user_g496wu46adiwjuc5", what = "Hearthstone map button respects Use Hearthstone" },
+		{ name = "emmiehbun", what = "Walking routes over Westfall ridges" },
+		{ name = "VolomonBeddarm", what = "Walking routes up impassable Barrens terrain" },
 		{ name = "zhega", what = "Nearby services can show only learned professions" },
 		{
 			name = "catubba",

@@ -36,7 +36,7 @@ from textwrap import wrap
 from typing import cast
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from baker.geometry import height, plane, point_in_convex, poly_distance, poly_distance2, seg_in_box  # noqa: E402
+from baker.geometry import clip_segment, height, plane, point_in_convex, poly_distance, poly_distance2, seg_in_box  # noqa: E402
 from baker.inputs import arguments, generator_digest, source_label  # noqa: E402
 from baker.measure import record, tile_hashes  # noqa: E402
 from baker.terrain import encode_sparse as encode_terrain  # noqa: E402
@@ -544,8 +544,10 @@ def rasterize_tile(rc):
             u = stack.pop()
             ceiling = best[u]
             for v in adj.get(u, ()):
-                ends = portal[(u, v)]
-                if not seg_in_box(*ends, box=box):
+                # Only this part of the portal belongs to the step. Remote ends must not supply a higher
+                # entry ceiling or a lower exit from steep ground outside the two cells.
+                ends = clip_segment(*portal[(u, v)], box=box)
+                if ends is None:
                     continue
                 if polys[u]["steep"] and min(height(polys[u], *e) for e in ends) > ceiling + 0.01:
                     continue

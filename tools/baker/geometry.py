@@ -37,15 +37,15 @@ def point_in_convex(px, py, pts):
     return True
 
 
-def seg_in_box(a, b, box):
-    """Does segment a-b touch the axis-aligned box (x0, x1, y0, y1)? (Liang-Barsky clip.)"""
+def clip_segment(a, b, box):
+    """The part of segment a-b inside (x0, x1, y0, y1), or None (Liang-Barsky clip)."""
     x0, x1, y0, y1 = box
     t0, t1 = 0.0, 1.0
     dx, dy = b[0] - a[0], b[1] - a[1]
     for p, q in ((-dx, a[0] - x0), (dx, x1 - a[0]), (-dy, a[1] - y0), (dy, y1 - a[1])):
         if p == 0:
             if q < 0:
-                return False
+                return None
             continue
         r = q / p
         if p < 0:
@@ -53,8 +53,13 @@ def seg_in_box(a, b, box):
         else:
             t1 = min(t1, r)
         if t0 > t1:
-            return False
-    return True
+            return None
+    return ((a[0] + t0 * dx, a[1] + t0 * dy), (a[0] + t1 * dx, a[1] + t1 * dy))
+
+
+def seg_in_box(a, b, box):
+    """Does segment a-b touch the axis-aligned box (x0, x1, y0, y1)?"""
+    return clip_segment(a, b, box) is not None
 
 
 def poly_distance2(px, py, pts):

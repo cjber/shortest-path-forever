@@ -15,11 +15,12 @@ from refresh_nav_graph import COMPATIBILITY, collision_compatible, decode, nav  
 class StoredGridTest(unittest.TestCase):
     def test_only_the_reviewed_exact_producer_transition_is_accepted(self):
         compatibility = json.loads(COMPATIBILITY.read_text())
-        current, original = compatibility["generator"], compatibility["collision_generators"][0]
-        self.assertTrue(collision_compatible(original, current))
+        current = compatibility["generator"]
+        for original in compatibility["collision_generators"]:
+            self.assertTrue(collision_compatible(original, current))
+            self.assertFalse(collision_compatible(original, "futureGraphOrGeometry"))
         self.assertTrue(collision_compatible(current, current))
         self.assertFalse(collision_compatible("unlisted", current))
-        self.assertFalse(collision_compatible(original, "futureGraphOrGeometry"))
 
     def test_missing_metadata_and_older_formats_are_rejected(self):
         fields = {name: {} for name in ("graph", "grid", "height", "floor", "terrain")}

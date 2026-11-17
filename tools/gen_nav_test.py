@@ -550,6 +550,38 @@ class RoadEntranceTest(unittest.TestCase):
 
 
 class LinkedPortalBoxTest(unittest.TestCase):
+    def test_a_steep_portal_cannot_borrow_height_outside_the_cells(self):
+        c = gen_nav.CELLS
+        i, j = 10 * c + 10, 11 * c + 10
+        polys = {
+            0: flat(0.0),
+            1: {**flat(0.0), "steep": True, "plane": (85.0, 0.0, 0.0, 2.0, 0.0)},
+            2: flat(8.0),
+        }
+        layers = {i: [(0.0, 1, (0, (83.0, 83.0)))], j: [(8.0, 1, (2, (91.0, 83.0)))]}
+        # The entry touches the two-cell box near x=85, where the face is low. Its far end at x=95 is above
+        # the exit, but outside the box in y: using that height invents a climb across the steep face.
+        entry, exit = ((85.0, 86.0), (95.0, 100.0)), ((89.0, 82.0), (89.0, 84.0))
+        portal = {(0, 1): entry, (1, 0): entry, (1, 2): exit, (2, 1): exit}
+        with (
+            patch.object(gen_nav, "TILES", {(0, 0): "tile"}),
+            patch.object(gen_nav, "NX", 1),
+            patch.object(gen_nav, "NY", 1),
+            patch.object(gen_nav, "CX0", 31),
+            patch.object(gen_nav, "CY0", 31),
+            patch.object(gen_nav, "GW", c),
+            patch.object(gen_nav, "GH", c),
+            patch.object(gen_nav, "X0", 0.0),
+            patch.object(gen_nav, "Y0", 0.0),
+            patch.object(gen_nav, "load_window", lambda window: (polys, {0: {1}, 1: {0, 2}, 2: {1}}, portal)),
+            patch.object(gen_nav, "rasterize_layers", lambda polys, adj, portal, bounds: layers),
+            patch.object(gen_nav, "read_tile", lambda rc: ([], [], [], [])),
+        ):
+            _, _, _, _, links, own, _ = gen_nav.rasterize_tile((0, 0))
+        self.assertIn(i * 4, own, "the ordinary two-way step is cut")
+        self.assertNotIn((i, 0.0, j, 8.0, None), links, "no uphill link borrows the remote portal height")
+        self.assertIn((j, 8.0, i, 0.0, None), links, "the downhill direction remains walkable")
+
     def test_a_shared_edge_outside_the_cells_does_not_link_them(self):
         # Two surfaces whose polygons meet only at a doorway far outside the two cells: the old early return counted
         # that shared edge as a path between every facing pair of cells (#890).
