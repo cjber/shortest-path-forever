@@ -1710,8 +1710,8 @@ function M.build(sim)
 	function W.flushEditText()
 		local pending = pendingEditText
 		pendingEditText = {}
-		for _, edit in ipairs(pending) do
-			W.dispatch(edit, "OnTextChanged", false)
+		for _, entry in ipairs(pending) do
+			W.dispatch(entry[1], "OnTextChanged", entry[2])
 		end
 	end
 	local function setEditText(self, text)
@@ -1727,9 +1727,11 @@ function M.build(sim)
 			return
 		end
 		s.text = text
+		s.cursor = Secret.is(text) and 0 or #text
+		s.highlightStart, s.highlightEnd = nil, nil
 		-- Live client probe 2026-11-17: OnTextSet is synchronous, OnTextChanged is next-frame.
 		-- Keep notification scheduling here so same-text and coalescing rules have one producer.
-		pendingEditText[#pendingEditText + 1] = self
+		pendingEditText[#pendingEditText + 1] = { self, false }
 		fire(self, "OnTextSet")
 	end
 	impl.EditBox.SetText = function(self, text)
@@ -1740,8 +1742,34 @@ function M.build(sim)
 	end
 	impl.EditBox.Insert = function(self, text)
 		local s = st(self)
-		s.text = (s.text or "") .. tostring(text)
-		fire(self, "OnTextChanged", true)
+		local value = s.text or ""
+		local first = s.highlightStart or s.cursor or #value
+		local last = s.highlightEnd or first
+		text = tostring(text)
+		if s.maxLetters and s.maxLetters > 0 then
+			text = text:sub(1, math.max(0, s.maxLetters - (#value - (last - first))))
+		end
+		s.text = value:sub(1, first) .. text .. value:sub(last + 1)
+		s.cursor = first + #text
+		s.highlightStart, s.highlightEnd = nil, nil
+		-- Live client probe (#755): the text and caret change at once, OnTextChanged(self, true) fires once next frame.
+		pendingEditText[#pendingEditText + 1] = { self, true }
+	end
+	impl.EditBox.SetCursorPosition = function(self, position)
+		local s = st(self)
+		s.cursor = math.max(0, math.min(position, #(s.text or "")))
+		s.highlightStart, s.highlightEnd = nil, nil
+	end
+	impl.EditBox.GetCursorPosition = function(self)
+		return st(self).cursor or 0
+	end
+	impl.EditBox.HighlightText = function(self, first, last)
+		local s = st(self)
+		local length = #(s.text or "")
+		first = math.max(0, math.min(first or 0, length))
+		last = (last == nil or last < 0) and length or last
+		last = math.max(0, math.min(last, length))
+		s.highlightStart, s.highlightEnd = math.min(first, last), math.max(first, last)
 	end
 	impl.EditBox.GetNumber = function(self)
 		return tonumber(st(self).text) or 0
