@@ -44,7 +44,8 @@
 ---@field SettingsMapMarks SPFSettingsMapMarks the Map marks settings page (UI/SettingsMapMarks.lua)
 ---@field core ForeverCoreAddon the addon's own ForeverCore services: journal, log, report and map canvas
 ---@field broken? boolean set when ForeverCore is missing a member this addon calls, so the addon's files stop
----@field ForeverRequire fun(ready: boolean): boolean the shared out-of-date warning, from Core/ForeverRequire.lua
+---@field ForeverRequire fun(ready: boolean, slash?: { key: string, [integer]: string }): boolean the shared out-of-date warning, from Core/ForeverRequire.lua
+---@field Slash { key: string, [integer]: string } UI/Settings.lua's slash words and their SlashCmdList key, from Core/Require.lua
 ---@field ReportTitle string the localized title shown by the shared report window
 ---@field Icon string the one client icon every in-game identity surface draws, read from the TOC
 ---@field NearbyQuestie SPFNearbyQuestie the QuestieDB read behind the Nearby list (UI/NearbyQuestie.lua)

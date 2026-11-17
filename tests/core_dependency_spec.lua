@@ -98,6 +98,7 @@ local function Load(foreverCore)
 			end,
 		},
 		CreateFrame = frame,
+		SlashCmdList = {},
 		C_Timer = {
 			NewTicker = function()
 				return { Cancel = function() end }
@@ -145,7 +146,7 @@ local function Load(foreverCore)
 			end
 		end
 	end
-	return ns, lines, registered, attached
+	return ns, lines, registered, attached, env
 end
 
 -- A ForeverCore missing a member this addon calls stops the addon's own files with one line in the error frame,
@@ -153,6 +154,24 @@ end
 local missing, missingLines = Load(nil)
 assert(missing.broken == true and missing.core == nil, "a missing ForeverCore stops the addon")
 assert(#missingLines == 1, "one line in the error frame")
+-- A stopped addon still answers its slash words and its compartment entry with that line, so a player who tries it
+-- learns why it does nothing (#996), and a compartment click raises no Lua error.
+local _, stoppedLines, _, _, stopped = Load(nil)
+local compartment = TOC["AddonCompartmentFunc"]
+stopped.SlashCmdList.SHORTESTPATHFOREVER("")
+assert(#stoppedLines == 2 and stoppedLines[2] == stoppedLines[1], "/path repeats the line")
+local settings = read("UI/Settings.lua")
+local words = {}
+for index, word in settings:gmatch('SLASH_SHORTESTPATHFOREVER(%d+) = "([^"]+)"') do
+	words[tonumber(index)] = word
+end
+assert(#words > 0, "UI/Settings.lua registers slash words")
+assert(stopped["SLASH_SHORTESTPATHFOREVER" .. (#words + 1)] == nil, "the stopped addon adds no word of its own")
+for index, word in ipairs(words) do
+	assert(stopped["SLASH_SHORTESTPATHFOREVER" .. index] == word, "the stopped addon keeps " .. word)
+end
+stopped[compartment]("ShortestPathForever", "LeftButton")
+assert(#stoppedLines == 3 and stoppedLines[3] == stoppedLines[1], "a compartment click repeats the line")
 local noKit, noKitLines = Load({ TrackerSection = {}, TrackerLine = {} })
 assert(noKit.broken == true, "a ForeverCore without the API kit stops the addon too")
 assert(#noKitLines == 1, "one line in the error frame")
