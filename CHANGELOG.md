@@ -12,7 +12,6 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [1.42.0] - 2026-11-17
 
-- **A journey to the Ruins of Lordaeron leaves the Undercity.** A spot picked on the map above the city now ends on that surface, so the route takes a lift and walks across the ruins instead of wandering the city's corridors to the floor underneath it. Thanks to treadpool for the report (#923).
 <!-- discord-image: docs/screenshots/services_roles.png -->
 
 - **Recognise profession trainers and find weapon masters.** Each profession uses its own icon in Nearby services and on the map. Weapon masters have their own service filter. Thanks to user_u3k9hweaatfhnjs0 for the ideas (#952).
