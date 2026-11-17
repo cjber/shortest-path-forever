@@ -59,28 +59,23 @@ authorization. A preparation-only request ends before tags or uploads.
 ## Verify and publish
 
 7. Run the fast lint/type gate from `AGENTS.md`, focused checks for changed
-   behaviour, generated-data verification and
-   `python3 tools/forever_tools/sync.py check`. Full suites run in CI. Record
-   user `/reload` checks and their results separately: agents test in game only
-   through the headless client (`forever_client.py`), and `/reload` checks in the
-   user's own client are recorded separately.
+   behaviour, generated-data verification and `python3
+   tools/forever_tools/sync.py check`. Full suites run in CI. Agents test in
+   game only through `INGAME` requests to the `wow in-game` agent
+   (`wow-forever-addon/in-game.md#requesting-a-check`); record the user's own
+   `/reload` checks and their results separately.
 8. Commit the release preparation with a signed commit and ship its reviewed,
    green PR. Merge only within the user's authorization. Wait for the complete
    `ci.yml` **push run on main at the exact commit to be tagged**. PR checks and
    workflow-dispatch runs do not satisfy `tools/release_check.py`. Confirm the
    primary checkout is clean main at that commit before proceeding.
-9. Run the release smoke on that exact commit from the workspace:
-   `python3 ../forever-core/tools/headless/forever_client.py smoke --repo shortest-path-forever --ref <full sha>`.
-   It builds the commit, loads it in the headless client, runs `/forever selftest`
-   and `errors --addon`, and posts the green `headless-smoke` commit status
-   `tools/release_check.py` requires. Exit 3 means another session or the player
-   holds the client: wait and retry, never start the game another way. While
-   launcher OCR misses Play (cjber/forever-core#547) pass `--manual-launcher`, run
-   it in the background, take `forever_client.py shot` and click Play yourself
-   after checking the account; if the game shows its own Email/Password form, stop
-   the smoke with Ctrl-C (SIGINT to the python process) and ask the user to log in
-   once through Faugus. Never type credentials. A failed smoke is a release
-   blocker: fix the errors it names.
+9. Get that commit smoked. Every release needs a green `headless-smoke` commit status on the exact commit it ships, and
+   `tools/release_check.py` refuses without one. The `forever-smoke` timer posts it for every commit a release would
+   ship; read it with `gh api repos/cjber/shortest-path-forever/commits/<full sha>/statuses </dev/null`. When it is
+   missing, send the `wow in-game` agent `INGAME shortest-path-forever <full sha> from <your kiln id>` with `kind:
+   smoke` (`wow-forever-addon/in-game.md#requesting-a-check`) and wait for its reply; never run the client yourself.
+   `INGAME FAIL` is a release blocker: fix the errors it names. `INGAME BLOCKED` goes to the user as the release's
+   blocker.
 10. Inspect `.github/workflows/release.yml`, `.pkgmeta` and `ShortestPathForever.toc`.
     Confirm `X-Curse-Project-ID`, `X-Wago-ID`, interface and dependencies are right.
     Check secret names with `gh secret list`: `CF_API_KEY` and `WAGO_API_TOKEN`
