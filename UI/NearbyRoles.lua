@@ -80,7 +80,7 @@ function Roles.AddClassGroup(Add, GroupNPCs)
 		key = "class",
 		label = L["Class trainer"],
 		icon = "Class",
-		tracking = "Class",
+		tracking = ns.NearbyGroups.roles.class,
 		npcs = GroupNPCs("class"),
 	})
 end
@@ -97,7 +97,7 @@ function Roles.AddWeaponGroup(Add, GroupNPCs)
 		key = "weapon",
 		label = L["Weapon master"],
 		icon = "Class",
-		tracking = "Class",
+		tracking = ns.NearbyGroups.roles.weapon,
 		npcs = GroupNPCs("weapon"),
 	})
 end
@@ -114,8 +114,8 @@ function Roles.AddPortalGroup(Add, GroupNPCs)
 		key = "portal",
 		label = L["Portal trainer"],
 		icon = "TaxiNode_Continent_Neutral",
-		-- A portal trainer is a mage trainer, so its map pin wears the minimap's trainer icon.
-		tracking = "Class",
+		-- A portal trainer is a mage trainer, so its map pin wears the class trainer's icon.
+		tracking = ns.NearbyGroups.roles.portal,
 		npcs = GroupNPCs("portal"),
 	})
 end
@@ -132,7 +132,7 @@ function Roles.AddBattlemasterGroup(Add, GroupNPCs)
 		key = "battlemaster",
 		label = L["Battlemaster"],
 		icon = "BattleMaster",
-		tracking = "BattleMaster",
+		tracking = ns.NearbyGroups.roles.battlemaster,
 		npcs = GroupNPCs("battlemaster"),
 	})
 end

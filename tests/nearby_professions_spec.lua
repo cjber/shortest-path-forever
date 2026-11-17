@@ -213,6 +213,7 @@ local ns = {
 	Battlemasters = {},
 }
 setfenv(assert(loadfile("Data/Services.lua")), env)("ShortestPathForever", ns)
+local shippedTrainers = ns.ProfessionTrainers
 
 local function carries(skills, skill)
 	for _, value in ipairs(skills) do
@@ -359,4 +360,11 @@ local listed = table.concat(trainerRows, ",")
 assert(listed:find("Tailoring", 1, true), "the menu keeps the learned profession")
 assert(not listed:find("Blacksmithing", 1, true), "the menu leaves the unlearned profession out")
 
+-- Every profession a shipped trainer teaches has its own map mark, so no trainer pin falls back to the generic one.
+for npc, skill in pairs(shippedTrainers) do
+	assert(
+		ns.NearbyGroups.professions[skill],
+		("trainer %d teaches skill %d, which has no map mark"):format(npc, skill)
+	)
+end
 print("nearby_professions_spec: without the filter every service shows; with it only the character's professions ok")

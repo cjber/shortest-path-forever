@@ -104,6 +104,8 @@
 ---@class SPFNearbyGroups
 ---@field vendors SPFVendorGroup[]
 ---@field services SPFServiceGroup[]
+---@field roles table<string, string> the trainer and battlemaster groups' map atlases, by group key
+---@field professions table<integer, string> each profession trainer's map atlas, by skill line
 ---@field sections table<string, string>
 ---@class SPFTownServiceChoice
 ---@field key string
@@ -351,6 +353,7 @@
 ---@field teleports? boolean -- plan class teleports with a destination of their own
 ---@field useHearthstone? boolean the Hearthstone and Astral Recall may be used in journeys, while class teleports still are (Teleports.lua)
 ---@field teleportSplit? integer the one-time move of the old combined teleports switch ran
+---@field quietDefaults? integer the one-time clear of the old on-by-default town services and compass ran
 ---@field partyMagePortals? boolean -- offer a party mage's capital portals
 ---@field partyMageStormwind? boolean
 ---@field partyMageIronforge? boolean
