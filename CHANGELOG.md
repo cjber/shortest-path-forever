@@ -15,6 +15,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 - **The Hearthstone button stays off the world map while Use Hearthstone is off.** Thanks to user_g496wu46adiwjuc5 for the report (#951).
 
 ## [1.41.1] - 2026-11-16
+## [1.41.1] - 2026-11-17
 
 <!-- forever-core-sync -->
 
