@@ -6,7 +6,6 @@ local rows, buttons, settings = {}, {}, {}
 local opened = {}
 local registered = {}
 
-local attachmentNotified, attachmentChanged
 local trackerState = { attached = true }
 local trackerScale, compassScaled, compassBackdrop = 1, nil, nil
 local townRefreshed = 0
@@ -41,9 +40,7 @@ local env = setmetatable({
 			settings[#settings + 1] = setting
 			return setting
 		end,
-		NotifyUpdate = function(variable)
-			attachmentNotified = variable
-		end,
+		NotifyUpdate = function() end,
 		VarType = { Boolean = "boolean", Number = "number", String = "string" },
 		RegisterVerticalLayoutCategory = function(name)
 			return {
@@ -216,10 +213,6 @@ local ns = {
 		end,
 		SetAttached = function(value)
 			trackerState.attached = value
-			attachmentChanged()
-		end,
-		OnAttachmentChanged = function(callback)
-			attachmentChanged = callback
 		end,
 		SetLocked = function(value)
 			trackerState.locked = value
@@ -402,7 +395,6 @@ local groups = {
 	Guidance = {
 		"journeyTracker",
 		"tracker",
-		"trackerAttached",
 		"trackerLocked",
 		"resumeJourney",
 		"trackerScale",
@@ -469,7 +461,7 @@ local order = {
 }
 
 assert(#buttons == #order, "one index button per group, and no Forever addons page")
-assert(#rows == 75, #rows)
+assert(#rows == 74, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -879,16 +871,7 @@ Row("pins").setting.onChanged()
 assert(refreshed == pinRefreshes + 1, "value callbacks still fire")
 print("settings: ok")
 
-local attachment = Row("trackerAttached").setting
-assert(attachment:GetValue() == true, "tracker starts attached")
-attachment:SetValue(false)
-assert(not attachment:GetValue(), "toggle changes shared host")
-assert(attachmentNotified == "ShortestPathForever_trackerAttached", "proxy notified")
-trackerState.attached = true
-attachmentChanged()
-assert(attachment:GetValue(), "external reattach updates proxy")
-
--- Lock starts off, sits right after the detach row, and drives the shared host rather than a copy of its own.
+-- Lock starts off, and drives the shared host rather than a copy of its own.
 local lock = Row("trackerLocked").setting
 assert(lock.name == "Lock the tracker" and lock.default == false, "the lock row is named and off by default")
 assert(lock:GetValue() == false, "the tracker starts unlocked")

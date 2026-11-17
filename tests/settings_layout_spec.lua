@@ -16,7 +16,6 @@ local expected = {
 	"#Tracker",
 	"journeyTracker",
 	"tracker",
-	"trackerAttached",
 	"trackerLocked",
 	"resumeJourney",
 	"trackerScale",

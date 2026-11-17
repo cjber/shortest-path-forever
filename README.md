@@ -73,7 +73,7 @@ the WoW: Forever client's `Interface/AddOns/` folder (`_forever_` on the live cl
 
 Alt-click the world map to choose a destination over a Questie icon. Shift-click works on empty map space and Shortest Path icons. Choose Alt as *Key to plan a journey* in Guidance, and that one key works everywhere, Questie icons included. With the gamepad interface on, Shortest Path never opens or turns the world map, or opens a menu, itself; it asks you to.
 
-The settings have five pages. **Guidance** holds journey behaviour: the tracker (*Show the journey tracker*, *Show boat, lift and tram departures in the tracker*, *Attach to quest tracker*), *Key to plan a journey*, *Route to the focused quest*, *Arrival distance*, the guide addons, and route choices such as *Use Hearthstone* and *Use class teleports*. **Map marks** holds the icons on the world map and minimap (including *Town service icons* and *Show the Nearby services tab*), their sizes from 25% to 200%, the route lines, and the other faction's boats and zeppelins (off by default). **Party mage portals** lists the capitals a mage in your group can open. **Alerts** covers the boat warning and the arrival sound. **Interface** shows or hides the arrow and compass, sizes them, and labels distances in metres. [docs/features.md](docs/features.md) has the detail.
+The settings have five pages. **Guidance** holds journey behaviour: the tracker (*Show the journey tracker*, *Show boat, lift and tram departures in the tracker*), *Key to plan a journey*, *Route to the focused quest*, *Arrival distance*, the guide addons, and route choices such as *Use Hearthstone* and *Use class teleports*. **Map marks** holds the icons on the world map and minimap (including *Town service icons* and *Show the Nearby services tab*), their sizes from 25% to 200%, the route lines, and the other faction's boats and zeppelins (off by default). **Party mage portals** lists the capitals a mage in your group can open. **Alerts** covers the boat warning and the arrival sound. **Interface** shows or hides the arrow and compass, sizes them, and labels distances in metres. [docs/features.md](docs/features.md) has the detail.
 
 Right-click a flight master icon to mark its flight path as known if a flight map missed it. Open a flight master's map once after installing to sync the flight points you know.
 
@@ -91,7 +91,7 @@ The world map's filter menu and the minimap's tracking menu hide each kind of ma
 
 ## Move the tracker
 
-Turn off **Attach to quest tracker** in Guidance, or right-click the tracker's "Journey to …" line and untick it, then drag the Forever column by its heading. The column hides while nothing is tracked; turn the setting back on to reattach it.
+The Forever column pins beside the game's tracker; **Lock the tracker** in Guidance keeps it where it is.
 
 ![Detached Forever tracker](docs/screenshots/detached.png)
 

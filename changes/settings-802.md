@@ -6,3 +6,4 @@
 ### Removed
 
 - **The Forever addons page and its hints are gone.** The grey "Adventure Guide" and "Legacy" suggestions in quest menus, the arrival line in the tracker and on dungeon doors no longer appear. Adventure Guide's own quest suggestions still show when it is installed.
+- **The "Attach to quest tracker" switch is gone.** The Forever column now always sits beside the game's tracker, so the switch did nothing. *Lock the tracker* stays.
