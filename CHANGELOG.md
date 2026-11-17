@@ -12,7 +12,6 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [1.42.1] - 2026-11-17
 
-- **Faster routes from busy cities.** Long walking routes out of cities such as Stormwind appear sooner (#979).
 <!-- forever-core-sync -->
 
 - Ships with the same shared code as your other Forever addons, so they keep working together.
