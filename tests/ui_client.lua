@@ -5,7 +5,7 @@ local BLIZZARD_UI = (os.getenv("SPF_BLIZZARD_UI") or "tools/.cache/blizzard-ui")
 -- Loads the addon in toc order against stubs, fires ADDON_LOADED, runs tickers and a fake ride.
 local T, frames, tickers = 0, {}, {}
 local TOC = dofile("tests/toc_fields.lua").read("ShortestPathForever.toc")
-C_AddOns = {
+_G.C_AddOns = {
 	IsAddOnLoaded = function()
 		return false
 	end,
@@ -703,12 +703,40 @@ _G.GetQuestUiMapID = function()
 	return 0
 end
 _G.C_QuestLog = {
+	GetNumQuestLogEntries = function()
+		return 0, 0
+	end,
+	GetNumQuestWatches = function()
+		return 0
+	end,
+	GetInfo = noop,
+	GetLogIndexForQuestID = noop,
+	GetQuestIDForQuestWatchIndex = noop,
+	GetDistanceSqToQuest = noop,
+	GetMapForQuestPOIs = noop,
 	GetQuestsOnMap = function()
+		return {}
+	end,
+	GetQuestObjectives = function()
 		return {}
 	end,
 	GetNextWaypoint = noop,
 	GetNextWaypointForMap = noop,
+	GetNextWaypointText = noop,
 	GetTitleForQuestID = noop,
+	RemoveQuestWatch = noop,
+	IsPushableQuest = function()
+		return false
+	end,
+	IsQuestDisabledForSession = function()
+		return false
+	end,
+	ReadyForTurnIn = function()
+		return false
+	end,
+	IsFailed = function()
+		return false
+	end,
 	IsComplete = function()
 		return false
 	end,
