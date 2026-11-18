@@ -29,8 +29,7 @@ optional-dependencies:
   - kaliels-tracker
 
 # ForeverCore ships inside this zip as its own folder, at the release tools/forever-core.txt pins, so an
-# update brings it along: players who updated did not get it as a required dependency, and Wago's uploads
-# carry no dependencies at all.
+# update brings it along: players who updated did not get it as a required dependency.
 externals:
   ForeverCore: https://github.com/cjber/forever-core/releases/download/v1.14.5/ForeverCore-v1.14.5-forever.zip
 
