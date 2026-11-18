@@ -92,13 +92,18 @@ function ns.InstanceEntrance(point)
 	return ns.EntranceStop(point.map, point) or point
 end
 
--- A map of a place under another one you can walk on, and the height of its floor. A spot gives no height, and a walk
--- ends on the cheapest surface there: a spot picked on the Undercity's map ended on the Ruins of Lordaeron overhead.
--- With this height the walk ends on the floor nearest it (Path.lua's snap), in the city; a spot with no city under it
--- keeps the ruins. The Tirisfal Glades map names the same spots on the surface and gets no height. Ironforge's
--- mountain top cannot be walked to, so its city is already the cheapest.
+-- A map of a place under another one you can walk on: the height of its floor, and the height of the surface above
+-- it. A click on the city's own map names the floor, because its spots are rooms under the ground; a click on a map
+-- that lies over it names the surface above, since the same 2D spot there holds both floors (#923). The Undercity's
+-- floor is its flight master's (Data/Taxi.lua node 11), and the surface above is the Ruins of Lordaeron, at the height
+-- of the three lift tops (Data/Transports.lua docks 1009, 1011 and 1013). Ironforge is not listed: a click on its own
+-- map already ends on its city floor.
+---@class SPFUnderground
+---@field floor number
+---@field surface number
+---@type table<number, SPFUnderground>
 local UNDERGROUND = {
-	[1458] = -43.1, -- Undercity: the flight master's floor (Data/Taxi.lua node 11)
+	[1458] = { floor = -43.1, surface = 55.718 },
 }
 
 -- The height of the NPC or quest object spawn nearest (x, y) on map, within radius yards, when it stands over or
@@ -135,6 +140,22 @@ function ns.SpawnHeight(map, x, y, radius)
 	return best
 end
 
+-- The stack whose map covers a world position: the client puts the position on that map in [0, 1] when it does.
+---@param continent number
+---@param world Vector2DMixin
+---@return SPFUnderground?
+local function StackOver(continent, world)
+	for id, stack in pairs(UNDERGROUND) do
+		local map, position = C_Map.GetMapPosFromWorldPos(continent, world, id)
+		if map == id and position then
+			local x, y = position:GetXY()
+			if x >= 0 and x <= 1 and y >= 0 and y <= 1 then
+				return stack
+			end
+		end
+	end
+end
+
 ---@param uiMapID integer
 ---@param x number
 ---@param y number
@@ -143,7 +164,15 @@ function ns.WorldPoint(uiMapID, x, y)
 	local continent, world = C_Map.GetWorldPosFromMapPos(uiMapID, CreateVector2D(x, y))
 	if continent and world then
 		local worldX, worldY = world:GetXY()
-		return { map = continent, x = worldX, y = worldY, z = UNDERGROUND[uiMapID] }
+		local z
+		local own = UNDERGROUND[uiMapID]
+		if own then
+			z = own.floor
+		else
+			local over = StackOver(continent, world)
+			z = over and over.surface
+		end
+		return { map = continent, x = worldX, y = worldY, z = z }
 	end
 end
 

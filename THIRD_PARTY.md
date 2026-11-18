@@ -62,6 +62,7 @@ Credit for the reports and requests behind the addon.
 | Who | What | Notes |
 |---|---|---|
 | user\_u3k9hweaatfhnjs0 | Profession trainer icons, weapon masters and service filters | CurseForge comment 8734926, thread 8731864; #952 |
+| treadpool | Undercity journeys leave the city by a lift | CurseForge thread 8729181; #923 |
 | user\_g496wu46adiwjuc5 | Hearthstone map button respects Use Hearthstone | CurseForge thread 8732965; #951 |
 | emmiehbun | Walking routes over Westfall ridges | CurseForge thread 8733369; #950 |
 | VolomonBeddarm | Walking routes up impassable Barrens terrain | CurseForge thread 8724226; #897 |

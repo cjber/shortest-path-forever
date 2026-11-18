@@ -843,7 +843,7 @@ _G.UiMapPoint = {
 _G.Enum = {
 	FlightPathFaction = { Neutral = 0, Horde = 1, Alliance = 2 },
 	FlightPathState = { Current = 0, Reachable = 1, Unreachable = 2 },
-	UIMapType = { Continent = 2, Zone = 3 },
+	UIMapType = { Cosmic = 0, World = 1, Continent = 2, Zone = 3, Dungeon = 4, Micro = 5, Orphan = 6 },
 	TooltipDataType = { MinimapMouseover = 21 },
 }
 _G.CreateVector2D = function(x, y)

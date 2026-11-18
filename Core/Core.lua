@@ -37,10 +37,12 @@ local DEFAULTS = {
 	-- and /spfnear and the tracking menu still open the services.
 	nearbyTab = true,
 	mapRoutes = true,
-	-- The town services' level of detail: "capitals", "important", "all" or "off" (UI/TownServices.lua).
-	townServices = "capitals",
+	-- The town services' level of detail: "capitals", "important", "all" or "off" (UI/TownServices.lua). Off by
+	-- default: the pins are something a player asks for from the map filter menu or Settings > Map marks.
+	townServices = "off",
 	-- Legacy grouped choices remain the fallback until a service has its own townServiceKinds override.
-	-- Repair starts hidden: most players do not want an anvil in every town.
+	-- Repair and the vendors start hidden: a player looks a town up for its services and trainers, and an anvil or a
+	-- vendor at every door buries them (#978). Each vendor kind is a checkbox under Town services in the map's filter.
 	townServiceInnkeeper = true,
 	townServiceStable = true,
 	townServiceRepair = false,
@@ -51,12 +53,12 @@ local DEFAULTS = {
 	townServiceClass = true,
 	townServiceWeapon = true,
 	townServiceProfessions = true,
-	townServiceFood = true,
-	townServiceAmmunition = true,
-	townServiceBags = true,
-	townServiceReagents = true,
-	townServiceBooks = true,
-	townServiceGear = true,
+	townServiceFood = false,
+	townServiceAmmunition = false,
+	townServiceBags = false,
+	townServiceReagents = false,
+	townServiceBooks = false,
+	townServiceGear = false,
 	-- Show only the profession trainers and profession supply vendors of professions this character has learned.
 	onlyMyProfessions = false,
 	mapPinScale = 100,
@@ -135,7 +137,8 @@ local DEFAULTS = {
 	-- multi-stop route keep the fixed 15 yards.
 	arrivalDistance = 15,
 	metres = false,
-	compass = true,
+	-- Off by default: the compass is screen furniture a player turns on from Settings > Guidance.
+	compass = false,
 	compassTime = false,
 	compassScale = 100,
 	arrowScale = 100,
@@ -147,6 +150,15 @@ local DEFAULTS = {
 	whatsNew = true,
 }
 ns.Defaults = DEFAULTS
+-- The vendor kinds' grouped town service switches, on by default until #978 (UI/TownServices.lua).
+local VENDOR_SWITCHES = {
+	"townServiceFood",
+	"townServiceAmmunition",
+	"townServiceBags",
+	"townServiceReagents",
+	"townServiceBooks",
+	"townServiceGear",
+}
 
 -- Whether the game's gamepad interface is up. Under it, Forever's FrameControlsManager takes every menu and UI panel
 -- that shows into its focus, in the same call: it pushes a binding set, and the gamepad action bar's
@@ -390,6 +402,27 @@ frame:SetScript("OnEvent", function(self, _, name)
 			ns.db.useHearthstone = false
 		end
 		ns.db.teleportSplit = 1
+	end
+	-- Town services, the vendor kinds and the compass were on by default and are off now (#978, #982). The fill below
+	-- writes every missing default into the save, so a save from before holds the old default whether or not the player
+	-- chose it; a value that differs from the old default is the only one the save proves was chosen, and it stands.
+	-- `quietDefaults` records that this ran once: whatever the player sets afterwards stands, and a new save has nothing
+	-- to clear.
+	if ns.db.quietDefaults == nil then
+		if ns.db.townServices == "capitals" then
+			ns.db.townServices = nil
+		end
+		if ns.db.compass == true then
+			ns.db.compass = nil
+		end
+		-- No settings page ever wrote the vendor switches, so a save's `true` is the fill's old default; a vendor
+		-- kind turned on in the map's filter lives in townServiceKinds and stands.
+		for _, key in ipairs(VENDOR_SWITCHES) do
+			if ns.db[key] == true then
+				ns.db[key] = nil
+			end
+		end
+		ns.db.quietDefaults = 1
 	end
 	for key, value in pairs(DEFAULTS) do
 		if ns.db[key] == nil then

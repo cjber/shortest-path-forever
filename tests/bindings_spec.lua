@@ -123,6 +123,8 @@ env = setmetatable({
 		GetWorldPosFromMapPos = function(_, point)
 			return 1, vector(point.x, point.y)
 		end,
+		-- No map here is stacked under another, so no spot is over one.
+		GetMapPosFromWorldPos = function() end,
 		GetMapInfo = function()
 			return { mapType = 3 }
 		end,

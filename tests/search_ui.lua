@@ -20,9 +20,15 @@ zoom, canvas.width, canvas.height = 1, 10000, 7000
 path.auto = false
 local function batches() return path.waiting(path.batches) end
 local function jobs() return path.waiting(path.finds) end
-local splitRoute = false
+local splitRoute, fromMid = false, false
 ns.Planner.Plan = function(o)
  if o.feasibleOnly then return nil end
+ if fromMid then
+  -- Planned again from the bend: the step left is the same walk on.
+  return {now=o.now, arrive=o.now+50000, legs={
+   {mode="walk", from=o.from, to=o.to, yards=350, depart=o.now, arrive=o.now+50000},
+  }}
+ end
  if splitRoute then
   local mid = {map=1, x=50, y=40}
   return {now=o.now, arrive=o.now+100000, legs={
@@ -168,6 +174,67 @@ pulse(mini, false)
 assert(not spinner.Anim:IsPlaying() and not spinner:IsShown())
 assert(mini.Goal.hidden and not ns.GuideTargets())
 assert(not mini.scripts.OnUpdate)
+
+-- forever-core#795: walking on with the same steps changes the section's text, never its layout. Finishing a step
+-- lays it out once; the timed replan from where you stand numbers the same steps from 1 again and must not.
+setMapShown(true)
+begin()
+splitRoute = true
+ready()
+finish()
+drawn(false)
+local dirty, markDirty = 0, tracker.MarkDirty
+tracker.MarkDirty = function(self) dirty = dirty + 1 return markDirty(self) end
+local function settle() ready() finish() end
+local function rowKeys()
+ local keys = {}
+ for _, row in ipairs(tracker.blocks[1].rows) do keys[#keys + 1] = tostring(row.key) end
+ return table.concat(keys, ",")
+end
+assert(rowKeys() == "1,2", rowKeys())
+for step = 1, 6 do
+ posX, posY = step * 5, step * 4
+ tick(0.6)
+ settle()
+end
+assert(dirty == 0, "walking the same steps laid the section out " .. dirty .. " times")
+posX, posY, fromMid = 50, 40, true
+tick(0.6)
+settle()
+assert(rowKeys() == "1", "the finished step leaves: " .. rowKeys())
+local finished = dirty
+assert(finished == 1, "finishing a step lays the section out once, not " .. finished)
+for step = 1, 12 do
+ posX = 50 + step
+ tick(0.6)
+ settle()
+end
+assert(rowKeys() == "1" and dirty == finished, "the replan from here laid out the same step again: " .. dirty)
+
+-- A new goal's search keeps the route it replaces on screen, greyed under the header spinner, until its own lands.
+local lines = 0
+for _ in pairs(tracker:GetExistingBlock("journey").lines) do lines = lines + 1 end
+local before = dirty
+cursorY = 0.49
+assert(clickHandlers[1](map, "LeftButton"))
+assert(ns.JourneyStatus() and spinner:IsShown(), "the new goal is searching")
+local rows = tracker.blocks[1].rows
+assert(#rows == 1 and rows[1].key == 1 and rows[1].grey, "the replaced route stays, greyed")
+assert(rows[1].text ~= "Finding the fastest way…")
+local kept = 0
+for _ in pairs(tracker:GetExistingBlock("journey").lines) do kept = kept + 1 end
+assert(dirty == before and kept == lines, "the section keeps its rows and height while it searches")
+for _ = 1, 3 do
+ tick(0.6)
+ assert(#tracker.blocks[1].rows == 1 and tracker.blocks[1].rows[1].grey and dirty == before)
+end
+fromMid, splitRoute = false, false
+settle()
+assert(not ns.JourneyStatus() and not tracker.blocks[1].rows[1].grey, "the new route replaces it")
+assert(not spinner:IsShown())
+tracker.MarkDirty = markDirty
+ns.ClearJourney()
+
 assert(#errors == 0, table.concat(errors, "\n"))
 print("search_ui: Group Finder spinner, private guesses, measured guidance and silent replans: ok")
 ]]))()
