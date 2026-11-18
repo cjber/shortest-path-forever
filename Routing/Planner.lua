@@ -185,7 +185,7 @@ end
 -- options.baked holds walks searched ahead of time between fixed places, per map; options.waterWalking picks
 -- which of their two costs applies. They were searched without hazards, so options.hazards weights one by the hazards
 -- on the straight way between its ends, as the walking search would weight the yards it walks inside them.
-local function BakedCost(options, a, b, check)
+local function BakedCost(options, a, b, weigh)
 	local ka, kb = a.bakedKey, b.bakedKey
 	local baked = ka and kb and options.baked and options.baked[a.map]
 	local pair = baked and baked[ka < kb and ka .. " " .. kb or kb .. " " .. ka]
@@ -195,7 +195,8 @@ local function BakedCost(options, a, b, check)
 		local reverse = pair[mode + (ka < kb and pair[3] ~= nil and 2 or 0)]
 		local hazards = options.hazards
 		if hazards and (yards or reverse) then
-			local factor = hazards.Segment(a.map, a.x, a.y, b.x, b.y, check)
+			weigh() -- a cold zone cache sends Segment to the client's map API per sample
+			local factor = hazards.Segment(a.map, a.x, a.y, b.x, b.y)
 			yards, reverse = yards and yards * factor, reverse and reverse * factor
 		end
 		return true, yards, reverse
@@ -318,10 +319,11 @@ local CACHE_KEYS = {
 -- that. A sliced plan holds options.cache while it is paused, and any other plan meanwhile builds its own graph.
 ---@param options SPFPlanOptions
 ---@param cache table?
----@param check fun()
+---@param check fun() reads the budget every CHECK_EVERY calls
+---@param weigh fun() reads the budget on every call, before work that can ask the client
 ---@return SPFPlan?
 -- Bounded label search shares topology and heap locals; splitting adds hot-path upvalues
-local function Solve(options, cache, check)
+local function Solve(options, cache, check, weigh)
 	local topology = cache and cache.topology
 	if topology then
 		for _, key in ipairs(CACHE_KEYS) do
@@ -464,7 +466,7 @@ local function Solve(options, cache, check)
 				if endpoint then
 					pairs[#pairs + 1], pairs[#pairs + 2] = from, to
 				elseif to > from then
-					local baked, yards, reverse = BakedCost(options, nodes[from], nodes[to], check)
+					local baked, yards, reverse = BakedCost(options, nodes[from], nodes[to], weigh)
 					if not baked then
 						pairs[#pairs + 1], pairs[#pairs + 2] = from, to
 					else
@@ -964,9 +966,10 @@ local function Plan(options, job)
 			cache = nil
 		end
 	end
-	local check = NoCheck
+	local check, weigh = NoCheck, NoCheck
 	if job then
 		local checkpoint, count = ns.Path.Checkpoint, 0
+		weigh = checkpoint
 		check = function()
 			count = count + 1
 			if count >= CHECK_EVERY then
@@ -978,7 +981,7 @@ local function Plan(options, job)
 			cache.busy = job
 		end
 	end
-	local planned = Solve(options, cache, check)
+	local planned = Solve(options, cache, check, weigh)
 	if cache and cache.busy == job then
 		cache.busy = nil
 	end
