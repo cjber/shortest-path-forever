@@ -11,7 +11,7 @@ local t = harness.new()
 local env, shared = t.env, t.ns
 local function noop() end
 local journey, corpse, guided = true, false, false
-local guide, footer, maps, cleared, hearth, resumes = 0, 0, {}, 0, false, 0
+local guide, maps, cleared, hearth, resumes = 0, {}, 0, false, 0
 local ns = {
 	L = shared.L,
 	core = {
@@ -68,11 +68,6 @@ local ns = {
 	ClearJourney = function()
 		cleared = cleared + 1
 	end,
-	FamilyHints = {
-		OpenFooter = function()
-			footer = footer + 1
-		end,
-	},
 	DockLocation = function(id)
 		return { uiMap = id }
 	end,
@@ -137,15 +132,15 @@ local function order(root, expected)
 		labels[#labels + 1] = item.text or item.kind
 	end
 	assert(table.concat(labels, ",") == expected, table.concat(labels, ","))
-	assert(not entry(root, "Attach to quest tracker"), "Attach belongs only in Tracker")
-	local tracker = assert(entry(root, "Tracker"))
-	local count = 0
+	local tracker = assert(entry(root, "Tracker"), "Core's Tracker submenu follows the entries")
+	local locks = 0
 	for _, item in ipairs(tracker.entries) do
-		if item.text == "Attach to quest tracker" then
-			count = count + 1
+		if item.text == "Lock the tracker" then
+			locks = locks + 1
 		end
 	end
-	assert(count == 1, "exactly one Attach entry")
+	assert(locks == 1, "exactly one Lock the tracker entry")
+	assert(not entry(root, "Attach to quest tracker"), "the attach entry is gone with core 1.15.0")
 end
 local expected = table.concat({
 	"Guide me",
@@ -196,15 +191,9 @@ assert(maps[#maps] == 42, "a dock block opens its map even alongside a journey")
 module:OnBlockHeaderClick({ id = "journey" }, "LeftButton")
 module.Header.scripts.OnMouseUp(module.Header, "LeftButton")
 assert(guide == 3, "both journey titles toggle guidance")
-module:OnBlockHeaderClick({ id = "family" }, "LeftButton")
-journey, module.mapDock, module.blocks = false, nil, { { key = "family" } }
-module.Header.scripts.OnMouseUp(module.Header, "LeftButton")
-assert(footer == 2, "both family titles open the footer")
 local function hint(target, expectedHint)
 	assert(module.trackerClickHint(target) == expectedHint)
 end
-hint({ kind = "block", id = "family" }, "show the Adventure Guide Forever link")
-hint({ kind = "section" }, "show the Adventure Guide Forever link")
 hint({ kind = "block", id = "journey" }, "guide this journey")
 guided = true
 hint({ kind = "block", id = "journey" }, "stop guiding")
@@ -213,9 +202,6 @@ hint({ kind = "section" }, "stop guiding")
 guided = false
 hint({ kind = "section" }, "guide this journey")
 hint({ kind = "block", id = 42 }, "show it on the map")
-order(menu("family"), "Show link,divider,Tracker")
-entry(menu("family"), "Show link").callback()
-assert(footer == 3, "the short family action still opens the link")
 journey, module.mapDock = false, 42
 hint({ kind = "section" }, "show it on the map")
 order(menu(), "Show on map,divider,Tracker")

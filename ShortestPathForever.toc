@@ -67,7 +67,7 @@ Transport\Teleports.lua
 Transport\PartyPortals.lua
 UI\Art.lua
 UI\ServicesPanel.lua
-UI\FamilyHints.lua
+UI\AdventureSuggestions.lua
 UI\OpenMap.lua
 UI\CompanionMaps.lua
 UI\Canvas.lua

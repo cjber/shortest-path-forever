@@ -304,7 +304,6 @@ function GoalPin:OnMouseEnter()
 				GameTooltip_AddColoredLine(GameTooltip, row.text, color)
 			end
 		end
-		ns.FamilyHints.AddEntranceLine(GameTooltip)
 	end
 	GameTooltip_AddBlankLineToTooltip(GameTooltip)
 	GameTooltip_AddNormalLine(GameTooltip, L["Right-click to clear"])

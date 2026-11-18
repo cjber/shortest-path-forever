@@ -104,7 +104,6 @@ L["Follow Guidelime guides"] = "Guidelime 가이드 따르기"
 L["Follow RestedXP guides"] = "RestedXP 가이드 따르기"
 L["Follow TomTom's arrow"] = "TomTom 화살표 따르기"
 L["Food"] = "음식"
-L["Forever addons"] = "Forever 애드온"
 L["Friendly nameplates must be on to see them."] =
 	"우호적인 유닛의 이름표가 켜져 있어야 볼 수 있습니다."
 L["Go through to %s"] = "%s(으)로 통과"
@@ -128,8 +127,6 @@ L["Keeps the shared Forever tracker where you put it. The grip at its top no lon
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
 	"게임의 미터법 언어 클라이언트처럼 거리에 미터 단위를 붙입니다. 숫자는 게임의 야드 값 그대로입니다."
 L["Last seen %s ago"] = "%s 전에 마지막으로 목격" -- mt
-L["Legacy Forever shows the Legacy challenges this counts toward."] =
-	"Legacy Forever가 이 항목이 포함되는 유산 도전을 보여줍니다."
 L["Let guides set TomTom waypoints"] = "가이드가 TomTom 웨이포인트를 설정하도록 허용"
 L["Lift to %s"] = "%s행 승강기"
 L["Lifts"] = "승강기"
@@ -234,8 +231,6 @@ L["Starts a journey when you super-track a quest or place the game's map pin, so
 	"퀘스트를 집중하거나 게임의 지도 핀을 놓으면 여정을 시작하므로 컨트롤러에서 지도 클릭이 필요 없습니다. 가이드 애드온의 자체 여정은 그대로 둡니다."
 L["Stop %d of %d"] = "정거장 %d/%d" -- mt
 L["Stop %d of %d: %s"] = "정거장 %d/%d: %s"
-L["Suggest quests for my level: Adventure Guide Forever"] =
-	"내 레벨에 맞는 퀘스트 추천: Adventure Guide Forever"
 L["Teleport to %s"] = "%s(으)로 순간이동"
 L["The journey's time left, as the tracker shows it, beside the distance to your next turn."] =
 	"추적기에 표시되는 여정의 남은 시간을 다음 갈림길까지의 거리 옆에 표시합니다."
@@ -266,8 +261,6 @@ L["Walk to %s"] = "%s까지 걷기"
 L["Walks go round zones whose lowest level is 4 or more above yours, but never the ones you start or end in."] =
 	"최저 레벨이 내 레벨보다 4 이상 높은 지역은 걸어서 돌아가지만, 출발 지역과 도착 지역은 예외입니다."
 L["Weapons and armour"] = "무기 및 방어구"
-L["What next? Adventure Guide Forever suggests quests for your level."] =
-	"다음은? Adventure Guide Forever가 레벨에 맞는 퀘스트를 추천합니다."
 L["What's new after an update"] = "업데이트 후 새로운 소식"
 L["While Guide is on: your next turns, the next stop and your destination across the top of the screen."] =
 	"안내가 켜져 있는 동안: 다음 갈림길, 다음 정거장, 목적지를 화면 위쪽에 표시합니다."
@@ -587,8 +580,6 @@ L["Walking route"] = "도보 경로"
 L["stop guiding"] = "길 안내를 중지" -- mt
 L["guide this journey"] = "이 여정의 길을 안내" -- mt
 L["show it on the map"] = "지도에 표시" -- mt
-L["show the Adventure Guide Forever link"] = "Adventure Guide Forever 링크를 표시" -- mt
-L["Show link"] = "링크 표시" -- mt
 L["That guide has no step to follow."] = "해당 가이드에 따라갈 단계가 없습니다." -- mt
 
 L["Weapon master"] = "무기 전문가"

@@ -556,8 +556,8 @@ local function OnOwnPinClick(pin, button)
 	return JourneyToPin(pin:GetMap():GetMapID() --[[@as number]], info, marker == "flight", x, y)
 end
 
--- A quest menu's entry and the family hint under it, wherever the menu is described: the client's own menus below,
--- and Kaliel's Tracker's dropdown (Core/KalielsTracker.lua), which is filled through the same calls.
+-- A quest menu's entry and Adventure Guide's suggestions under it, wherever the menu is described: the client's own
+-- menus below, and Kaliel's Tracker's dropdown (Core/KalielsTracker.lua), which is filled through the same calls.
 ---@param root table a menu description with CreateButton and CreateTitle
 ---@param questID number|string?
 function ns.AddQuestMenuEntry(root, questID)
@@ -565,7 +565,7 @@ function ns.AddQuestMenuEntry(root, questID)
 		root:CreateButton(L["Plan journey"], function()
 			PlanQuest(questID)
 		end)
-		ns.FamilyHints.AddQuestMenu(root)
+		ns.AdventureSuggestions.AddQuestMenu(root)
 	end
 end
 

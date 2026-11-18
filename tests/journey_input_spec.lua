@@ -54,7 +54,7 @@ local ns = {
 			ownClick = fn
 		end,
 	},
-	FamilyHints = { AddQuestMenu = function() end },
+	AdventureSuggestions = { AddQuestMenu = function() end },
 	-- UI/MenuModifier.lua's entry point, which owns the registration; tests/quest_menu_spec.lua checks its gamepad
 	-- handling. Here it only records the tag's description builder.
 	ModifyMenu = function(tag, _, build)

@@ -5,7 +5,6 @@
 local rows, buttons, settings = {}, {}, {}
 local opened = {}
 local registered = {}
-local familyPage
 
 local attachmentNotified, attachmentChanged
 local trackerState = { attached = true }
@@ -59,7 +58,7 @@ local env = setmetatable({
 			}
 		end,
 		RegisterCanvasLayoutSubcategory = function()
-			error("the Forever addons page registers with ForeverCore.Family.Register, not a canvas")
+			error("no settings page is a canvas")
 		end,
 		RegisterVerticalLayoutSubcategory = function(parent, name)
 			return {
@@ -181,16 +180,6 @@ end
 env.ForeverCore = {
 	SettingsSections = coreNs.SettingsSections,
 	OpenSettingsPanel = coreNs.OpenSettingsPanel,
-	Family = {
-		Register = function(category, db, current, safeCall)
-			familyPage = { category = category, db = db, current = current, safeCall = safeCall }
-			return {
-				GetID = function()
-					return "Forever addons"
-				end,
-			}
-		end,
-	},
 }
 
 local refreshed, taxiRefreshed, policyChanged, tomtomRefreshed, guidelimeRefreshed, dugiRefreshed = 0, 0, 0, 0, 0, 0
@@ -264,17 +253,6 @@ local ns = {
 	Way = function(message)
 		ways[#ways + 1] = message
 	end,
-	Family = {
-		Register = function(category, db, current, locale)
-			familyPage = { category = category, db = db, current = current, locale = locale }
-			return {
-				name = "Forever addons",
-				GetID = function(self)
-					return self.name
-				end,
-			}
-		end,
-	},
 	db = {},
 	Defaults = setmetatable({
 		-- Travel participation defaults are explicit, matching Core/Core.lua.
@@ -491,7 +469,7 @@ local order = {
 	"Interface",
 }
 
-assert(#buttons == #order + 1, "one index button per group, then the Forever addons page")
+assert(#buttons == #order, "one index button per group")
 assert(#rows == 75, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
@@ -508,15 +486,6 @@ for index, name in ipairs(order) do
 end
 assert(cursor == #rows, "every row belongs to a group")
 
--- ForeverCore's Forever addons page is the last subpage, with this addon's saved variables.
-local family = buttons[#order + 1]
-assert(family.target.name == "Shortest Path Forever" and family.initializer.name == "Forever addons")
-assert(familyPage and familyPage.category.name == "Shortest Path Forever", "the page sits under the addon's category")
-assert(familyPage.db == ns.db, "the page reads and writes this addon's settings")
-assert(familyPage.current == "ShortestPathForever", "its own row is this addon's")
-assert(familyPage.safeCall == ns.core.SafeCall, "and reports its failures through this addon's SafeCall")
-family.initializer.callback()
-assert(opened[#opened] == "Forever addons", "the button opens the page")
 assert(#opened == secureCalls, "every settings open went through ForeverCore's secure opener (#333)")
 
 -- The rows themselves are unchanged: keys, defaults, tooltips and callbacks.
@@ -952,10 +921,4 @@ return {
 	buttons = buttons,
 	settings = settings,
 	registered = registered,
-	familyPage = function()
-		return familyPage
-	end,
-	clearFamilyPage = function()
-		familyPage = nil
-	end,
 }

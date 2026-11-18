@@ -295,7 +295,7 @@
 ---@field warning? boolean
 ---@field color? colorRGBA|ForeverObjectiveTrackerColor -- the colour a text-only refresh rewrites the line in
 
----@class SPFDatabase : ForeverFamilyDB
+---@class SPFDatabase
 ---@field errors? ForeverCaughtError[] ForeverCore's shared error journal: earlier sessions' errors, for the report
 ---@field log? ForeverDebugLogStore ForeverCore's shared debug log ring: recent lines, for the report
 ---@field destinationPin boolean an on-screen marker over the journey's destination

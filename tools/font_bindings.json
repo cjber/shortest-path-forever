@@ -3,8 +3,8 @@
   "producers": [
     {
       "source": "UI/Tracker.lua",
-      "sha256": "59da96aec73418421d4734dc32c22003a6e97646f1ad9783aef1e08f796eb379",
-      "review": "Read all of Tracker.lua, Tracker.xml and ForeverCore TrackerSection.Create, UpdateText and TrackerLine.SetInteractive. Confirmed pinned client Blizzard_ObjectiveTrackerModule.xml: ObjectiveTrackerModuleTemplate Header inherits ObjectiveTrackerModuleHeaderTemplate, whose Text uses ObjectiveTrackerHeaderFont. Blizzard_ObjectiveTrackerBlock.xml HeaderText uses ObjectiveTrackerLineFont; Blizzard_ObjectiveTrackerShared.xml ObjectiveTrackerLineTemplate Text uses ObjectiveTrackerLineFont, inherited without overrides by ShortestPathForeverTrackerLineTemplate. Bound every local phrase sent to section headers, block headers and rows, including Journey  %s · %s from #838. RefreshBlockText preserves these widgets. Client tracker text-size changes and optional Kaliels font overrides are outside the pinned native-font coverage. Menus, chat, tooltips and dynamic text from JourneyInfo, DockTitle, DepartureText and FamilyHints are excluded.",
+      "sha256": "0b5f5e2cfc75d12a68029c881bbec7f91c56f8e62172c08054958b35801101af",
+      "review": "Read all of Tracker.lua, Tracker.xml and ForeverCore TrackerSection.Create, UpdateText and TrackerLine.SetInteractive. Confirmed pinned client Blizzard_ObjectiveTrackerModule.xml: ObjectiveTrackerModuleTemplate Header inherits ObjectiveTrackerModuleHeaderTemplate, whose Text uses ObjectiveTrackerHeaderFont. Blizzard_ObjectiveTrackerBlock.xml HeaderText uses ObjectiveTrackerLineFont; Blizzard_ObjectiveTrackerShared.xml ObjectiveTrackerLineTemplate Text uses ObjectiveTrackerLineFont, inherited without overrides by ShortestPathForeverTrackerLineTemplate. Bound every local phrase sent to section headers, block headers and rows, including Journey  %s · %s from #838. RefreshBlockText preserves these widgets. Client tracker text-size changes and optional Kaliels font overrides are outside the pinned native-font coverage. Menus, chat, tooltips and dynamic text from JourneyInfo, DockTitle, and DepartureText are excluded.",
       "bindings": [
         {
           "font": "ObjectiveTrackerHeaderFont",
@@ -51,7 +51,7 @@
     },
     {
       "source": "UI/Settings.lua",
-      "sha256": "b620c250d36a5fbd041c561cb1b7c2c671ed19111594d2e87c77472a864b36b1",
+      "sha256": "adf78300ff76b8b684688b409a2be89b798e96f7556499a363a9556e53f1ec54",
       "review": "Read Page, Checkbox, Scale, Dropdown and Saving and their registration calls. Settings rows, index buttons and option labels delegate to Blizzard secure initializers; this file creates no FontString and establishes no explicit FontObject. Minimap button text, tooltip text, chat output and helper arguments are excluded rather than assigned an assumed settings font.",
       "bindings": []
     },
@@ -69,7 +69,7 @@
     },
     {
       "source": "UI/StopPin.lua",
-      "sha256": "ccbc203b15e233d26ab23495c7aafe76963336135e2a4f45ec6db76a36b69acf",
+      "sha256": "28eb803df69a66be0fc877d242c60bed6c78909afcf6ac61ea4faa0c8c589a23",
       "review": "Read Number creation and SetStop/tooltip paths. Number explicitly uses GameFontNormal but displays a dynamic stop number, not a locale phrase. The time-distance phrase and stop descriptions are tooltip text owned by the tooltip template; none is bound to Number.",
       "bindings": []
     },

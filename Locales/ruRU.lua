@@ -106,7 +106,6 @@ L["Follow Guidelime guides"] = "Следовать руководствам Guid
 L["Follow RestedXP guides"] = "Следовать руководствам RestedXP"
 L["Follow TomTom's arrow"] = "Следовать стрелке TomTom"
 L["Food"] = "Еда"
-L["Forever addons"] = "Модификации Forever"
 L["Friendly nameplates must be on to see them."] =
 	"Чтобы их увидеть, включите таблички с именами дружественных существ."
 L["Go through to %s"] = "Пройти: %s"
@@ -130,8 +129,6 @@ L["Keeps the shared Forever tracker where you put it. The grip at its top no lon
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
 	"Подписывать расстояния в метрах, как это делают метрические языковые версии игры. Числа остаются игровыми."
 L["Last seen %s ago"] = "Замечен %s назад" -- mt
-L["Legacy Forever shows the Legacy challenges this counts toward."] =
-	"Legacy Forever показывает старинные испытания, в которые это засчитывается."
 L["Let guides set TomTom waypoints"] = "Разрешить руководствам ставить точки TomTom"
 L["Lift to %s"] = "Подъемник: %s"
 L["Lifts"] = "Подъемники"
@@ -242,8 +239,6 @@ L["Starts a journey when you super-track a quest or place the game's map pin, so
 	"Начинает маршрут, когда вы выбираете задание или ставите метку на карте игры, так что геймпаду не нужен щелчок по карте. Маршрут аддона-гида не затрагивается."
 L["Stop %d of %d"] = "Остановка %d из %d" -- mt
 L["Stop %d of %d: %s"] = "Остановка %d из %d: %s"
-L["Suggest quests for my level: Adventure Guide Forever"] =
-	"Предлагать задания по уровню: Adventure Guide Forever"
 L["Teleport to %s"] = "Телепорт: %s"
 L["The journey's time left, as the tracker shows it, beside the distance to your next turn."] =
 	"Оставшееся время маршрута, как на панели отслеживания, рядом с расстоянием до следующего поворота."
@@ -275,8 +270,6 @@ L["Walk to %s"] = "Идти: %s"
 L["Walks go round zones whose lowest level is 4 or more above yours, but never the ones you start or end in."] =
 	"Пешие маршруты обходят зоны, минимальный уровень которых на 4 и более выше вашего, но не зоны начала и конца пути."
 L["Weapons and armour"] = "Оружие и доспехи"
-L["What next? Adventure Guide Forever suggests quests for your level."] =
-	"Что дальше? Adventure Guide Forever предлагает задания по вашему уровню."
 L["What's new after an update"] = "Новое после обновления"
 L["While Guide is on: your next turns, the next stop and your destination across the top of the screen."] =
 	"Пока включена навигация: ближайшие повороты, следующая остановка и цель вверху экрана."
@@ -610,8 +603,6 @@ L["Walking route"] = "Пеший маршрут"
 L["stop guiding"] = "остановить сопровождение" -- mt
 L["guide this journey"] = "начать сопровождение в этом путешествии" -- mt
 L["show it on the map"] = "показать на карте" -- mt
-L["show the Adventure Guide Forever link"] = "показать ссылку на Adventure Guide Forever" -- mt
-L["Show link"] = "Показать ссылку" -- mt
 L["That guide has no step to follow."] =
 	"В этом руководстве нет шага для следования." -- mt
 

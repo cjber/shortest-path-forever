@@ -100,7 +100,6 @@ L["Follow Guidelime guides"] = "跟随 Guidelime 攻略"
 L["Follow RestedXP guides"] = "跟随RestedXP指南"
 L["Follow TomTom's arrow"] = "跟随TomTom的箭头"
 L["Food"] = "食物"
-L["Forever addons"] = "Forever插件"
 L["Friendly nameplates must be on to see them."] = "需要开启友方姓名板才能看到。"
 L["Go through to %s"] = "穿过前往%s"
 L["Guidance"] = "引导"
@@ -123,8 +122,6 @@ L["Keeps the shared Forever tracker where you put it. The grip at its top no lon
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
 	"以米标注距离，与游戏采用公制的语言客户端一致。数字仍为游戏自身的码数。"
 L["Last seen %s ago"] = "%s前最后看到" -- mt
-L["Legacy Forever shows the Legacy challenges this counts toward."] =
-	"Legacy Forever会显示此项计入的传承挑战。"
 L["Let guides set TomTom waypoints"] = "允许指南设置TomTom路径点"
 L["Lift to %s"] = "前往%s的升降梯"
 L["Lifts"] = "升降梯"
@@ -224,7 +221,6 @@ L["Starts a journey when you super-track a quest or place the game's map pin, so
 	"当您聚焦任务或放置游戏地图标记时开始旅程，因此控制器无需 地图点击。指南插件的自有旅程不受影响。"
 L["Stop %d of %d"] = "第%d站，共%d站" -- mt
 L["Stop %d of %d: %s"] = "第%d站，共%d站：%s"
-L["Suggest quests for my level: Adventure Guide Forever"] = "推荐适合我等级的任务：Adventure Guide Forever"
 L["Teleport to %s"] = "传送到%s"
 L["The journey's time left, as the tracker shows it, beside the distance to your next turn."] =
 	"旅程剩余时间（与追踪栏显示的一致），显示在到下一个转弯的距离旁。"
@@ -254,8 +250,6 @@ L["Walk to %s"] = "步行前往%s"
 L["Walks go round zones whose lowest level is 4 or more above yours, but never the ones you start or end in."] =
 	"步行路线会绕开最低等级比你高 4 级或以上的区域，但不会绕开起点和终点所在的区域。"
 L["Weapons and armour"] = "武器和护甲"
-L["What next? Adventure Guide Forever suggests quests for your level."] =
-	"接下来做什么？Adventure Guide Forever会推荐适合你等级的任务。"
 L["What's new after an update"] = "更新后的新内容"
 L["While Guide is on: your next turns, the next stop and your destination across the top of the screen."] =
 	"引导开启时：在屏幕顶部显示你接下来的转弯、下一站和目的地。"
@@ -566,8 +560,6 @@ L["Walking route"] = "步行路线"
 L["stop guiding"] = "停止引导" -- mt
 L["guide this journey"] = "引导此次旅程" -- mt
 L["show it on the map"] = "在地图上显示" -- mt
-L["show the Adventure Guide Forever link"] = "显示 Adventure Guide Forever 链接" -- mt
-L["Show link"] = "显示链接" -- mt
 L["That guide has no step to follow."] = "该指南没有可跟随的步骤。" -- mt
 
 L["Weapon master"] = "武器大师"
