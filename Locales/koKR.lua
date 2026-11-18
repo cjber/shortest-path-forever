@@ -57,9 +57,9 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"여정과 다른 애드온의 이곳 기준 예상 시간은 재사용 대기시간을 포함해 마법사의 도시 순간이동이나 순간이동: 달의 숲으로 시작할 수 있습니다."
 L["Minimum teleport saving"] = "순간이동 최소 절약 시간"
+L["No more stutters from route planning."] = "경로 계산 중 더 이상 끊김이 없습니다." -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"최소 이만큼 시간을 절약할 때만 직업 순간이동을 사용합니다."
-L["Faster routes from busy cities."] = "붐비는 도시에서 더 빠른 경로." -- mt
 L["Boat and Zeppelin Routes"] = "배와 비행선 노선"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"배와 비행선 노선. 부두를 가리키는 동안 그려집니다."

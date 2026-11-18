@@ -54,9 +54,9 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"旅程以及其他插件从这里算起的估计，可以从法师的城市传送或传送：月光林地开始，并计入冷却时间。"
 L["Minimum teleport saving"] = "传送最少节省时间"
+L["No more stutters from route planning."] = "规划路线时不再卡顿。" -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"只在职业传送至少节省这么多时间时使用。"
-L["Faster routes from busy cities."] = "从繁忙城市出发的路线更快。" -- mt
 L["Boat and Zeppelin Routes"] = "船只和飞艇航线"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"船只和飞艇航线，在你指向码头时绘制。"

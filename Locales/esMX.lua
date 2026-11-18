@@ -55,9 +55,9 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"Los viajes, y las estimaciones de otros addons desde aquí, pueden empezar con un teletransporte de mago a una ciudad o Teletransporte: Claro de la Luna, contando el tiempo de reutilización."
 L["Minimum teleport saving"] = "Ahorro mínimo del teletransporte"
+L["No more stutters from route planning."] = "Se acabaron los tirones al planificar rutas." -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"Usar un teletransporte de clase solo si ahorra al menos este tiempo."
-L["Faster routes from busy cities."] = "Rutas más rápidas desde las ciudades concurridas." -- mt
 L["Boat and Zeppelin Routes"] = "Rutas de barcos y zepelines"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Rutas de barcos y zepelines, dibujadas al señalar un muelle."

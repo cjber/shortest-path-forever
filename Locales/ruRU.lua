@@ -58,10 +58,10 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"Маршруты, а также оценки других модификаций отсюда, могут начинаться с телепорта мага в город или заклинания «Телепортация: Лунная поляна» с учетом восстановления."
 L["Minimum teleport saving"] = "Минимальная экономия от телепорта"
+L["No more stutters from route planning."] =
+	"Больше никаких подтормаживаний при прокладке маршрута." -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"Использовать классовый телепорт, только если он экономит не меньше этого времени."
-L["Faster routes from busy cities."] =
-	"Более быстрые маршруты из оживлённых городов." -- mt
 L["Boat and Zeppelin Routes"] = "Маршруты кораблей и дирижаблей"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Маршруты кораблей и дирижаблей, когда вы наводите курсор на причал."
