@@ -3,7 +3,7 @@
 
     python3 tools/gate.py             # every step
     python3 tools/gate.py --changed   # only the steps the diff against origin/main reaches; tools/ reaches all
-                                      # but the typecheck, and the linters read only the changed Lua files
+                                      # but the typecheck, which stays in CI
 
 Every step runs even after one fails, as in CI, and the exit status is 1 when any failed. The specs load ForeverCore
 from $FOREVER_CORE, else the sibling ../forever-core checkout; set it when working from a worktree. The simulator,
@@ -33,15 +33,11 @@ class Step:
     reaches: tuple[str, ...] = ()
     # False for a step too heavy for the shared machine: --changed leaves it to CI and says so.
     local: bool = True
-    # True for a linter whose trailing "." --changed swaps for the changed Lua files, unless its own config changed.
-    files: bool = False
 
 
 STEPS = (
-    Step(
-        "stylua", ("stylua", "--check", "--respect-ignores", "."), ("*.lua", "stylua.toml", ".styluaignore"), files=True
-    ),
-    Step("luacheck", ("luacheck", "."), ("*.lua", ".luacheckrc"), files=True),
+    Step("stylua", ("stylua", "--check", "."), ("*.lua", "stylua.toml", ".styluaignore")),
+    Step("luacheck", ("luacheck", "."), ("*.lua", ".luacheckrc")),
     Step(
         "typecheck",
         ("bash", "tools/typecheck.sh"),
@@ -94,10 +90,17 @@ def git(*args: str) -> list[str]:
     return done.stdout.split("\n") if done.stdout else []
 
 
+def git_paths(*args: str) -> list[str]:
+    # NUL-separated, so a name git would C-quote (non-ASCII, a tab) arrives as the path itself.
+    done = subprocess.run(["git", *args, "-z"], cwd=ROOT, capture_output=True, check=True)
+    return [os.fsdecode(path) for path in done.stdout.split(b"\0") if path]
+
+
 def changed_paths(base: str) -> set[str]:
     merge_base = git("merge-base", base, "HEAD")[0]
-    paths = git("diff", "--name-only", merge_base) + git("ls-files", "--others", "--exclude-standard")
-    return {path for path in paths if path}
+    # --no-renames reports a rename as its deletion and its addition, so the old path reaches its checks too.
+    paths = git_paths("diff", "--name-only", "--no-renames", merge_base)
+    return set(paths + git_paths("ls-files", "--others", "--exclude-standard"))
 
 
 def main() -> int:
@@ -107,7 +110,7 @@ def main() -> int:
     args = parser.parse_args()
     env = dict(os.environ)
     core = Path(env.get("FOREVER_CORE") or ROOT.parent / "forever-core")
-    if not core.is_dir():
+    if not (core / "ForeverCore.toc").is_file():
         print(
             f"ForeverCore checkout not found at {core}: set FOREVER_CORE to a cjber/forever-core checkout",
             file=sys.stderr,
@@ -125,18 +128,9 @@ def main() -> int:
         if args.changed and not step.local:
             print(f"-- {step.name}: left to CI under --changed; run {' '.join(step.argv)} to check it here", flush=True)
             continue
-        argv = step.argv
-        if args.changed and step.files:
-            reached = [p for p in changed if any(fnmatch.fnmatch(p, g) for g in step.reaches)]
-            if all(fnmatch.fnmatch(p, "*.lua") for p in reached):
-                lua = sorted(p for p in reached if (ROOT / p).is_file())
-                if not lua:
-                    print(f"-- {step.name}: skipped, no changed Lua file remains", flush=True)
-                    continue
-                argv = (*argv[:-1], *lua)
-        print(f"== {step.name}: {' '.join(argv)}", flush=True)
+        print(f"== {step.name}: {' '.join(step.argv)}", flush=True)
         started = time.monotonic()
-        code = subprocess.run(argv, cwd=ROOT, env=env, stdin=subprocess.DEVNULL).returncode
+        code = subprocess.run(step.argv, cwd=ROOT, env=env, stdin=subprocess.DEVNULL).returncode
         print(
             f"== {step.name}: {'ok' if code == 0 else f'FAILED (exit {code})'} in {time.monotonic() - started:.1f}s",
             flush=True,
