@@ -91,6 +91,23 @@ class RasterizeLayersTest(unittest.TestCase):
         layers = self.layers(polys, {}, {})
         self.assertEqual(sorted(z for z, _, _ in layers[0]), [10.0, 30.0])
 
+    def test_a_passage_cell_takes_the_ramps_height_where_the_passage_crosses_it(self):
+        # A ramp a yard wide climbs one yard per yard north, so the cell centre is off the mesh and only the passage
+        # fill reaches the cell. The lower poly's centroid stands six yards south of the cell and six yards below it,
+        # and stored there it made the next step up read as a climb past 50 degrees (#1011, the Dun Algaz tunnel).
+        def ramp(x0, x1):
+            pts = [(x0, 0.0, x0), (x1, 0.0, x1), (x1, 2.0, x1), (x0, 2.0, x0)]
+            c = tuple(sum(p[a] for p in pts) / len(pts) for a in range(3))
+            return {"pts": [(p[0], p[1]) for p in pts], "plane": plane(pts, c), "c": c, "steep": False,
+                    "water": False, "size": 1}  # fmt: skip
+
+        portal = {(0, 1): ((4.0, 0.0), (4.0, 2.0)), (1, 0): ((4.0, 2.0), (4.0, 0.0))}
+        layers = self.layers({0: ramp(-16.0, 4.0), 1: ramp(4.0, 24.0)}, {0: {1}, 1: {0}}, portal)
+        self.assertEqual(len(layers[0]), 1)
+        z, _, (_, point) = layers[0][0]
+        self.assertTrue(0.0 <= z <= gen_nav.CS, z)
+        self.assertAlmostEqual(z, point[0])  # the ramp's own height at the anchor
+
     def test_steep_ground_is_never_the_same_layer_as_the_ground_it_leads_to(self):
         # A face from 50 to 61.6 degrees is walked down and never across, so joining it to the flat ground beside it
         # inside one cell must not lose the level it leads up to.

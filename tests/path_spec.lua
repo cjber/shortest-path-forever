@@ -159,6 +159,17 @@ for _, ends in ipairs({ { ALGAZ_SOUTH, ALGAZ_NORTH }, { ALGAZ_NORTH, ALGAZ_SOUTH
 	assert(pts and passes(pts, -4220, -2464) < 30, "misses the Dun Algaz tunnel")
 end
 
+-- Up the pass from the tunnel to Loch Modan, and on from the Wetlands to Thelsamar: the walk climbs the Dun Algaz road
+-- rather than looping round Grim Batol past Stonewrought Dam. The ramp's floor cells once stored a poly centroid's
+-- height, five yards off, so one step up read as a climb past 50 degrees and the pass walked one way only (#1011).
+local PASS_TOP, THELSAMAR = { x = -4668.7, y = -2694.5, z = 323 }, { x = -5378, y = -2973 }
+for _, ends in ipairs({ { ALGAZ_SOUTH, PASS_TOP }, { PASS_TOP, ALGAZ_SOUTH } }) do
+	pts, len = Path.FindSync(0, ends[1], ends[2])
+	assert(pts and len < 800, "the Dun Algaz pass walks both ways: " .. tostring(len))
+end
+pts, len = Path.FindSync(0, { x = -3900, y = -2500 }, THELSAMAR)
+assert(pts and len < 2500 and passes(pts, -4220, -2464) < 30, "Wetlands to Thelsamar misses Dun Algaz: " .. tostring(len))
+
 -- Undercity: the flight master stands by the west lift's bottom landing, and its top is a long way round on foot.
 local UNDERCITY_FM = { x = 1568.62, y = 267.97, z = -43.1 } -- node 11
 local WEST_LIFT = { x = 1596.15, y = 291.8 } -- Data/Transports.lua docks 1009 (top) and 1010 (bottom)

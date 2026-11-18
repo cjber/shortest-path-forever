@@ -381,8 +381,8 @@ def rasterize_layers(polys, adj, portal, bounds):
     its own floors, and each of those cost a node and its links. Surfaces that only meet elsewhere (a bridge over a
     road, a tunnel under ground) stay floors, and so does steep ground, which the player walks down and never across.
     Prefer the largest component, then the highest surface, so roofs cannot displace the city below; keep the other
-    pieces at least CLIMB apart as floors; omit lake beds under water. Narrow passages anchor on the poly centroid,
-    because their cells may have no centre inside the mesh.
+    pieces at least CLIMB apart as floors; omit lake beds under water. Narrow passages anchor on a point of the
+    passage at the poly's height there, because their cells may have no centre inside the mesh.
     """
     ax0, ax1, ay0, ay1 = bounds
     surf = defaultdict(list)  # cell -> [(component size, height, value, poly, point, late)]
@@ -413,8 +413,10 @@ def rasterize_layers(polys, adj, portal, bounds):
             for gy in range(gy0, gy1 + 1):
                 edges[gx * GH + gy].append((u, w))
     # Passages narrower than a cell: centroid -> shared edge midpoint -> centroid stays inside the two convex polygons.
-    # These surfaces anchor on the poly centroid, since the cell centre may lie off the mesh. Only the first passage
-    # through an empty cell may become its base; later ones can only add a floor.
+    # These surfaces anchor on the sampled point of that line, since the cell centre may lie off the mesh, and take the
+    # poly's own height there. The centroid's height is the poly's height somewhere else: on a ramp it misplaced a cell
+    # by several yards, and the step beside it read as a climb past 50 degrees, so the Dun Algaz tunnel walked one way
+    # only (#1011). Only the first passage through an empty cell may become its base; later ones can only add a floor.
     for u in sorted(adj):
         for w in sorted(adj[u]):
             if w <= u:
@@ -425,10 +427,11 @@ def rasterize_layers(polys, adj, portal, bounds):
             for a, b, p, pid in ((pu["c"], mid, pu, u), (mid, pw["c"], pw, w)):
                 steps = int(math.dist(a[:2], b[:2]) / (CS / 4)) + 1
                 for t in range(steps + 1):
-                    i = at(a[0] + (b[0] - a[0]) * t / steps, a[1] + (b[1] - a[1]) * t / steps)
-                    z = p["c"][2]
+                    q = (a[0] + (b[0] - a[0]) * t / steps, a[1] + (b[1] - a[1]) * t / steps)
+                    i = at(*q)
+                    z = height(p, *q)
                     if i >= 0 and not any(abs(s[1] - z) < CLIMB for s in surf[i]):
-                        surf[i].append((p["size"], z, 2 if p["water"] else 1, pid, p["c"][:2], bool(surf[i])))
+                        surf[i].append((p["size"], z, 2 if p["water"] else 1, pid, q, bool(surf[i])))
 
     def pieces(ss, i):
         """The piece of surface each of the cell's candidates stands on, as a group number."""
@@ -466,6 +469,11 @@ def rasterize_layers(polys, adj, portal, bounds):
                 taken.add(piece[n])
         chosen[1:] = sorted(chosen[1:], key=lambda n: ss[n][1])
         layers[i] = [(ss[n][1], 3 if polys[ss[n][3]]["steep"] else ss[n][2], (ss[n][3], ss[n][4])) for n in chosen]
+        # Every layer's height is its own poly's height at its anchor, whichever pass found it: the runtime judges a
+        # climb by these heights, so a stand-in (a centroid, another poly's level) turns a walkable step one-way (#1011).
+        for z, _, (pid, point) in layers[i]:
+            if abs(z - height(polys[pid], *point)) > 0.01:
+                raise ValueError(f"cell {i}: layer height {z:.2f} is not poly {pid}'s height at its anchor {point}")
 
     return layers
 
