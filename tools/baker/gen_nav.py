@@ -36,7 +36,17 @@ from textwrap import wrap
 from typing import cast
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from baker.geometry import clip_segment, height, plane, point_in_convex, poly_distance, poly_distance2, seg_in_box  # noqa: E402
+from baker.geometry import (
+    centroid,
+    clip_convex,
+    clip_segment,
+    height,
+    plane,
+    point_in_convex,
+    poly_distance,
+    poly_distance2,
+    seg_in_box,
+)  # noqa: E402
 from baker.inputs import arguments, generator_digest, source_label  # noqa: E402
 from baker.measure import record, tile_hashes  # noqa: E402
 from baker.terrain import encode_sparse as encode_terrain  # noqa: E402
@@ -439,6 +449,26 @@ def rasterize_layers(polys, adj, portal, bounds):
                     z = height(p, *q)
                     if i >= 0 and not any(abs(s[1] - z) < CLIMB for s in surf[i]):
                         surf[i].append((p["size"], z, 2 if p["water"] else 1, pid, q, bool(surf[i])))
+    # A poly covering part of a cell but not its centre is still ground the player stands on in that cell: a stall or
+    # a lamp post on a street's cell centre must not leave the cell only the ground under the city (#1046). It anchors
+    # on the centroid of its part inside the cell and only adds a floor, never the base, so a cell's base and its
+    # empty cells stay as the centre sample decides.
+    stood = {i for i, ss in surf.items() if ss}
+    for pid in sorted(polys):
+        p = polys[pid]
+        xs, ys = [q[0] for q in p["pts"]], [q[1] for q in p["pts"]]
+        for gx in range(max(ax0, int((min(xs) - X0) // CS)), min(ax1 + 1, int((max(xs) - X0) // CS) + 1)):
+            for gy in range(max(ay0, int((min(ys) - Y0) // CS)), min(ay1 + 1, int((max(ys) - Y0) // CS) + 1)):
+                i = gx * GH + gy
+                if i not in stood:
+                    continue
+                x0, y0 = X0 + gx * CS, Y0 + gy * CS
+                c = centroid(clip_convex(p["pts"], (x0, x0 + CS, y0, y0 + CS)))
+                if c is None:
+                    continue
+                z = height(p, *c)
+                if not any(abs(s[1] - z) < CLIMB for s in surf[i]):
+                    surf[i].append((p["size"], z, 2 if p["water"] else 1, pid, c, True))
 
     def pieces(ss, i):
         """The piece of surface each of the cell's candidates stands on, as a group number."""

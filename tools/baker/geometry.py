@@ -57,6 +57,42 @@ def clip_segment(a, b, box):
     return ((a[0] + t0 * dx, a[1] + t0 * dy), (a[0] + t1 * dx, a[1] + t1 * dy))
 
 
+def clip_convex(pts, box):
+    """The part of convex outline pts inside the box (x0, x1, y0, y1), as an outline (Sutherland-Hodgman)."""
+    x0, x1, y0, y1 = box
+    out = list(pts)
+    for inside, cut in (
+        (lambda p: p[0] >= x0, lambda a, b: (x0, a[1] + (b[1] - a[1]) * (x0 - a[0]) / (b[0] - a[0]))),
+        (lambda p: p[0] <= x1, lambda a, b: (x1, a[1] + (b[1] - a[1]) * (x1 - a[0]) / (b[0] - a[0]))),
+        (lambda p: p[1] >= y0, lambda a, b: (a[0] + (b[0] - a[0]) * (y0 - a[1]) / (b[1] - a[1]), y0)),
+        (lambda p: p[1] <= y1, lambda a, b: (a[0] + (b[0] - a[0]) * (y1 - a[1]) / (b[1] - a[1]), y1)),
+    ):
+        src, out = out, []
+        for i, b in enumerate(src):
+            a = src[i - 1]
+            if inside(b):
+                if not inside(a):
+                    out.append(cut(a, b))
+                out.append(b)
+            elif inside(a):
+                out.append(cut(a, b))
+    return out
+
+
+def centroid(pts):
+    """The area centroid of a simple outline in the horizontal plane, or None when it has no area."""
+    a = cx = cy = 0.0
+    for i, (x2, y2) in enumerate(pts):
+        x1, y1 = pts[i - 1]
+        w = x1 * y2 - x2 * y1
+        a += w
+        cx += (x1 + x2) * w
+        cy += (y1 + y2) * w
+    if abs(a) < 1e-12:
+        return None
+    return (cx / (3 * a), cy / (3 * a))
+
+
 def seg_in_box(a, b, box):
     """Does segment a-b touch the axis-aligned box (x0, x1, y0, y1)?"""
     return clip_segment(a, b, box) is not None
