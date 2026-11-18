@@ -23,6 +23,8 @@ function ns.CheckWhatsNew()
 	if not version or version:find("^@") then
 		return
 	end
+	-- The packager writes the release tag, v1.2.3, while the releases here are named without the v.
+	version = version:gsub("^v", "", 1)
 	local seen = db.seenVersion
 	db.seenVersion = version
 	if seen and seen ~= version and version == ns.WHATS_NEW_VERSION and db.whatsNew then
