@@ -24,7 +24,7 @@ env.CreateFrame = function(...)
 	return frame
 end
 ns.Art = { Icon = function() end }
-ns.Mover = { Attach = function() end }
+ns.Mover = { Attach = function() end, Stock = function() end }
 local reads = 0
 ns.TeleportAction = function(teleport)
 	reads = reads + 1

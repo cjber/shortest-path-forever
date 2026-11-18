@@ -33,9 +33,18 @@ local function frame()
 	function f:SetAlpha(value)
 		self.alpha = value
 	end
-	-- Unscaled, as UIParent is at the default UI scale.
+	-- Unscaled, as UIParent is at the default UI scale, and laid out at its default 1366 by 768 until sized.
 	f.GetEffectiveScale = function()
 		return 1
+	end
+	function f:SetSize(width, height)
+		self.width, self.height = width, height
+	end
+	function f:GetWidth()
+		return self.width or 1366
+	end
+	function f:GetHeight()
+		return self.height or 768
 	end
 	function f:CreateTexture()
 		return setmetatable({}, getmetatable(self))
