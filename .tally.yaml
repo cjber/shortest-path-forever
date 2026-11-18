@@ -10,11 +10,3 @@ keys:
       - github: CF_API_KEY
     expires: unknown
     limit: unknown
-  - id: wago-api-token
-    service: wago
-    group: shortest-path-forever
-    owner: unknown
-    locations:
-      - github: WAGO_API_TOKEN
-    expires: unknown
-    limit: unknown
