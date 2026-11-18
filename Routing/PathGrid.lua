@@ -150,18 +150,26 @@ local function unpackField(data, field, key)
 end
 
 -- The client walks a slope up to 50 degrees; the bake marks the faces from 50 to 61.6 degrees as steep, and those
--- may only go downhill. The height check is kept even when a map's steep flag is missing: stored heights can still
--- show a climb the player cannot make, so the decoder refuses it rather than trusting the flag alone (#897).
-local TAN50 = math.tan(50 * math.pi / 180)
-local function steepStep(valA, zA, from, valB, zB, to, distance)
-	local rise = zB[to + 1] - zA[from + 1]
-	if distance and rise > TAN50 * distance then
-		return false
-	end
+-- may only go downhill.
+local function steepGround(valA, zA, from, valB, zB, to)
 	if valA[from + 1] ~= 3 and valB[to + 1] ~= 3 then
 		return true
 	end
-	return rise <= 0
+	return zB[to + 1] <= zA[from + 1]
+end
+
+-- A format 2 map's links are symmetric, so nothing in it says a step is one-way but the steep flag, and its stored
+-- heights also refuse a climb past 50 degrees (#897). A format 3 map's links are directed: the bake links two cells
+-- only the ways the navmesh walks between them, and that navmesh holds the player's slope and 2.0 yd step, so it
+-- already refuses a climb the client refuses and joins real stairs steeper than 50 degrees. There the stored heights
+-- judge steep ground alone; the climb test refused stairs and ramps the navmesh joins, and one stored height off its
+-- ground turned the Dun Algaz pass one-way (#1011).
+local TAN50 = math.tan(50 * math.pi / 180)
+local function climbStep(valA, zA, from, valB, zB, to, distance)
+	if distance and zB[to + 1] - zA[from + 1] > TAN50 * distance then
+		return false
+	end
+	return steepGround(valA, zA, from, valB, zB, to)
 end
 
 -- May a base step feed a diagonal detour? A steep step only does when its stored heights match: a step that only
@@ -186,8 +194,8 @@ local function State(map)
 			map = map,
 			C = C,
 			fmt = D.format or 1,
-			-- Only format 2 carries steep ground, so a format 1 map takes the plain step and never reads a height.
-			steep = (D.format or 1) >= 2 and steepStep or nil,
+			-- Format 1 carries no steep ground, so it takes the plain step and never reads a height.
+			steep = (D.format or 1) >= 3 and steepGround or (D.format == 2 and climbStep) or nil,
 			ny = D.ny,
 			GX = D.nx * C,
 			GY = D.ny * C,
@@ -1387,8 +1395,7 @@ local function detourStep(st, gx, gy, dx, dy, water)
 	local ak, an = baseAt(st, gx, gy)
 	local bk, bn = baseAt(st, gx + dx, gy + dy)
 	if st.val[ak][an + 1] ~= 3 and st.val[bk][bn + 1] ~= 3 then
-		-- A detour's leg is an ordinary step too: the stored heights must clear the client's climb limit even
-		-- when the bake left the steep flag off the face (#897).
+		-- A detour's leg is an ordinary step too, judged by the map's own rule (climbStep in format 2, #897).
 		return steep(st.val[ak], st.z[ak], an, st.val[bk], st.z[bk], bn, st.cs)
 	end
 	return st.z[ak][an + 1] == st.z[bk][bn + 1]
@@ -1944,8 +1951,8 @@ local function entranceHeight(st, id)
 end
 
 -- Whether an abstract graph edge u -> v climbs more than the client allows. Graph edges join border entrances one
--- cell apart; the same stored-height rule the grid applies therefore refuses a baked edge too, even if its map's
--- steep flag missed the face (#897).
+-- cell apart; the same stored-height rule the grid applies therefore refuses a baked edge too: steep ground goes
+-- downhill only, and a format 2 map also refuses a climb past 50 degrees (#897; see climbStep).
 ---@param st table
 ---@param a number
 ---@param b number
@@ -1977,7 +1984,7 @@ local function climbNodes(st, a, b)
 		return true
 	end
 	local rise = zb - za
-	if rise > TAN50 * distance then
+	if st.fmt < 3 and rise > TAN50 * distance then
 		return false
 	end
 	return not (steepA or steepB) or rise <= 0
@@ -2006,7 +2013,6 @@ ns.PathGrid = {
 	Expansions = Expansions,
 	State = State,
 	surface = surface,
-	steepStep = steepStep,
 	grid = grid,
 	cellOf = cellOf,
 	nodesOf = nodesOf,

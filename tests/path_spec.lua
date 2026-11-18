@@ -170,6 +170,14 @@ end
 pts, len = Path.FindSync(0, { x = -3900, y = -2500 }, THELSAMAR)
 assert(pts and len < 2500 and passes(pts, -4220, -2464) < 30, "Wetlands to Thelsamar misses Dun Algaz: " .. tostring(len))
 
+-- An Ironforge ramp the navmesh walks (ordinary ground) rises 10.5 yards over one 8 yard cell, past 50 degrees: the
+-- walk takes it both ways rather than a detour up, as the client does (#1011).
+local RAMP_FOOT, RAMP_TOP = { x = -4971.1, y = -991.0, z = 718 }, { x = -4963.2, y = -991.0, z = 728 }
+for _, ends in ipairs({ { RAMP_FOOT, RAMP_TOP }, { RAMP_TOP, RAMP_FOOT } }) do
+	pts, len = Path.FindSync(0, ends[1], ends[2])
+	assert(pts and len < 10, "the Ironforge ramp is walked straight: " .. tostring(len))
+end
+
 -- Undercity: the flight master stands by the west lift's bottom landing, and its top is a long way round on foot.
 local UNDERCITY_FM = { x = 1568.62, y = 267.97, z = -43.1 } -- node 11
 local WEST_LIFT = { x = 1596.15, y = 291.8 } -- Data/Transports.lua docks 1009 (top) and 1010 (bottom)

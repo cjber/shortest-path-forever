@@ -404,15 +404,28 @@ class GraphLegalityTest(unittest.TestCase):
         self.assertIn(b, self.steps({a: (3, 20.4), b: (1, 18.0)}, a))  # 18 <= 20: downhill
         self.assertNotIn(a, self.steps({a: (3, 20.4), b: (1, 18.0)}, b))  # 20 > 18: not uphill
 
-    def test_an_unflagged_cliff_is_refused_by_grid_and_cluster_graph(self):
+    def test_an_open_step_on_ordinary_ground_is_walked_both_ways_whatever_its_rise(self):
+        # Stairs rise ten yards in one cell, steeper than 50 degrees, in steps the client climbs. The bake leaves a
+        # step open only where the navmesh walks it, so its stored heights must not close it again (#1011).
         c = gen_nav.CELLS
         a, b = 10 * c + 10, 11 * c + 10
-        self.assertNotIn(b, self.steps({a: (1, 10.0), b: (1, 30.0)}, a))
-        self.assertIn(a, self.steps({a: (1, 10.0), b: (1, 30.0)}, b))
+        self.assertIn(b, self.steps({a: (1, 10.0), b: (1, 20.0)}, a))
+        self.assertIn(a, self.steps({a: (1, 10.0), b: (1, 20.0)}, b))
         u, v = (c - 1) * c + 10, c * c + 10
-        edges, _, _ = self.crossings({u: (1, 10.0), v: (1, 30.0)})
-        self.assertNotIn((u, v), edges)
+        edges, _, _ = self.crossings({u: (1, 10.0), v: (1, 20.0)})
+        self.assertIn((u, v), edges)
         self.assertIn((v, u), edges)
+
+    def test_a_cliff_is_refused_by_its_cut_not_its_heights(self):
+        # linked() finds no navmesh walk up a cliff, so the bake cuts the step; the grid and the graph honour the cut.
+        c = gen_nav.CELLS
+        a, b = 10 * c + 10, 11 * c + 10
+        self.assertNotIn(b, self.steps({a: (1, 10.0), b: (1, 30.0)}, a, cuts={a * 4}))
+        self.assertNotIn(a, self.steps({a: (1, 10.0), b: (1, 30.0)}, b, cuts={a * 4}))
+        u, v = (c - 1) * c + 10, c * c + 10
+        edges, _, _ = self.crossings({u: (1, 10.0), v: (1, 30.0)}, cuts={u * 4})
+        self.assertNotIn((u, v), edges)
+        self.assertNotIn((v, u), edges)
 
     def test_a_two_way_record_with_a_steep_end_is_one_way(self):
         # The bake writes a steep pair both ways as a record so the decoder can decide its direction by stored height;

@@ -1,9 +1,10 @@
--- Every shipped walking map: a step the bake joined both ways on ordinary ground must pass the runtime's climb test
--- both ways. The bake links two neighbouring surfaces when the navmesh walks between them, and that walk already
--- holds the player's 50 degree limit. If the stored heights then refuse one direction, a height is wrong (#1011: a
--- tunnel floor stored a poly centroid's height and the Dun Algaz pass walked one way only). Steep ground is exempt:
--- it is walked down only by design.
+-- Every shipped walking map: a step the bake joined both ways on ordinary ground must be walkable both ways at
+-- runtime. The bake links two neighbouring surfaces only the ways the navmesh walks between them, and that navmesh
+-- holds the player's slope and step limits, so a two-way link the runtime refuses one way is a wrong stored value
+-- or a runtime rule judging what the bake already judged (#1011: a tunnel floor stored a poly centroid's height, and
+-- the 50 degree height test turned the Dun Algaz pass one-way). Steep ground is exempt: it is walked down only.
 -- Usage: luajit tools/check_nav_steps.lua [map ...]   (default: every map Nav/Nav.xml lists)
+-- SPF_STEPS_ALL=1 lists every failure rather than the first 20.
 
 local maps = {}
 for i = 1, #arg do
@@ -23,7 +24,6 @@ local source = assert(io.open("Routing/PathGrid.lua")):read("*a")
 source = source
 	.. "\nns.StepCheck = { State = State, grid = grid, neighbour = neighbour, cellOf = cellOf, states = states }\n"
 
-local TAN50 = math.tan(50 * math.pi / 180) -- the runtime's climb limit (Routing/PathGrid.lua)
 local failures = 0
 for _, map in ipairs(maps) do
 	local ns = {}
@@ -44,6 +44,21 @@ for _, map in ipairs(maps) do
 		return tk, tn
 	end
 
+	-- A diagonal walks through one of its corner cells; steep ground there refuses it uphill by design.
+	local function steepCorner(gx, gy, dx, dy)
+		if dx == 0 or dy == 0 then
+			return false
+		end
+		for _, c in ipairs({ { gx + dx, gy }, { gx, gy + dy } }) do
+			local ck = math.floor(c[1] / C) * st.ny + math.floor(c[2] / C)
+			local v = P.grid(st, ck)
+			if v and v[(c[1] % C) * C + c[2] % C + 1] == 3 then
+				return true
+			end
+		end
+		return false
+	end
+
 	for k = 0, clusters - 1 do
 		local val = P.grid(st, k)
 		if val then
@@ -60,8 +75,9 @@ for _, map in ipairs(maps) do
 							local bk, bn = raw(tk, tn, gx + dx, gy + dy, -dx, -dy)
 							if bk == k and bn == node then
 								checked = checked + 1
-								local rise = math.abs(st.z[tk][tn + 1] - st.z[k][node + 1])
-								if rise > TAN50 * math.sqrt(dx * dx + dy * dy) * st.cs then
+								local fk, fn = P.neighbour(st, k, node, gx, gy, dx, dy, false)
+								local rk, rn = P.neighbour(st, tk, tn, gx + dx, gy + dy, -dx, -dy, false)
+								if (fk ~= tk or fn ~= tn or rk ~= k or rn ~= node) and not steepCorner(gx, gy, dx, dy) then
 									bad[#bad + 1] = string.format(
 										"(%.1f, %.1f) z%d <-> (%.1f, %.1f) z%d",
 										st.x0 + (gx + 0.5) * st.cs,
@@ -85,13 +101,13 @@ for _, map in ipairs(maps) do
 			end
 		end
 	end
-	print(string.format("map %d: %d two-way steps on ordinary ground, %d refused one way by stored heights", map, checked, #bad))
+	print(string.format("map %d: %d two-way steps on ordinary ground, %d refused one way at runtime", map, checked, #bad))
 	for i = 1, os.getenv("SPF_STEPS_ALL") and #bad or math.min(#bad, 20) do
 		print("  " .. bad[i])
 	end
 	failures = failures + #bad
 end
 if failures > 0 then
-	io.stderr:write(string.format("%d two-way steps are refused one way by their stored heights\n", failures))
+	io.stderr:write(string.format("%d two-way steps are refused one way at runtime\n", failures))
 	os.exit(1)
 end

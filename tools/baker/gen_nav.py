@@ -50,7 +50,6 @@ ROOT = Path(__file__).resolve().parents[2]
 T = 1600 / 3
 CELLS = 67
 CS = T / CELLS
-TAN50 = math.tan(math.radians(50))
 # A swum yard counts as three running ones: beyond the slower pace (4.7 against 7 yd/s), swimming means climbing
 # out at a bank that may be a cliff, aggro from things that cannot be outrun, and fatigue far from shore.
 SWIM = 3.0
@@ -784,13 +783,9 @@ def steep_ok(grid, ux, uy, vx, vy):
 
 def steep_node_ok(grid, u, v):
     """The runtime's steep test between two nodes, base cells or floors: a step with a steep end goes downhill only,
-    by the stored heights the file holds."""
-    ux, uy = divmod(cell_of(u), GH)
-    vx, vy = divmod(cell_of(v), GH)
-    rise = stored_z(v) - stored_z(u)
-    if rise > TAN50 * math.hypot(vx - ux, vy - uy) * CS:
-        return False
-    return (value_of(grid, u) != 3 and value_of(grid, v) != 3) or rise <= 0
+    by the stored heights the file holds. Ordinary ground has no height test: the step exists only the ways linked()
+    found a navmesh walk, and that navmesh holds the player's slope and step limits (#1011)."""
+    return (value_of(grid, u) != 3 and value_of(grid, v) != 3) or stored_z(v) <= stored_z(u)
 
 
 def bit_step(g, grid, cuts, ux, uy, vx, vy):
@@ -1281,7 +1276,7 @@ def emit(nodes, edges, grid, cuts, out, name):
         "-- Only a step one way takes, a ledge drop or a step carrying a cost is its own record. A map without",
         "-- `steep` is the older format 2, whose flag 8 opens the -x-y diagonal and whose bits pick the surface",
         "-- nearest their height; without `format` it is format 1, whose links are symmetric.",
-        "-- climbChecked: every cluster crossing passes the stored-height 50 degree climb rule at bake time.",
+        "-- climbChecked: every cluster crossing passes the steep-ground rule at bake time.",
         "-- graph[k + 1]: n(2) | n x [cell(3) layer(1) component(2) degree(degreeWidth or 1) "
         "baseDegree(baseDegreeWidth or 0)] "
         "| n x degree edges in node order, each",
