@@ -642,7 +642,7 @@ local function clearEnd(st, P, j, point, outbound, water, limit, budget, real)
 	local fx, fy, k, node = own(st, point)
 	local cx, cy = P.x[j] + 0.5, P.y[j] + 0.5
 	if outbound and node then
-		local tk, tn, time = toward(st, P, k, node, fx, fy, cx, cy, water, limit, budget, real)
+		local tk, tn, time = toward(st, P, k, node, fx, fy, cx, cy, water, limit, budget, real, P.k[j], P.n[j])
 		return tk == P.k[j] and tn == P.n[j], time
 	end
 	-- With no start surface this reverse legality check cannot establish a directed outbound reference.
@@ -650,7 +650,7 @@ local function clearEnd(st, P, j, point, outbound, water, limit, budget, real)
 	if outbound and real then
 		return false
 	end
-	local tk, tn, time = toward(st, P, P.k[j], P.n[j], cx, cy, fx, fy, water, limit, budget, real)
+	local tk, tn, time = toward(st, P, P.k[j], P.n[j], cx, cy, fx, fy, water, limit, budget, real, k, node)
 	if not tk then
 		return tn == true, time
 	end
@@ -666,7 +666,7 @@ local function clearChord(st, P, from, to, water, limit, budget)
 		return false
 	end
 	local tx, ty, gk, goal = own(st, to)
-	local tk, tn = toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget)
+	local tk, tn = toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget, nil, gk, goal)
 	return tk ~= nil and (not goal or (tk == gk and tn == goal))
 end
 

@@ -61,9 +61,9 @@ function F.new(ns)
 	-- Every node one move (dx, dy) reaches from node at global cell (x, y): the ordinary step and every link entry
 	-- with that offset.
 	local function targets(st, k, node, x, y, dx, dy, add)
-		local tk, tn = Grid.neighbour(st, k, node, x, y, dx, dy, true)
-		if tk and tn then
-			add(tk, tn)
+		local ks, ns2 = {}, {}
+		for i = 1, Grid.neighbours(st, k, node, x, y, dx, dy, true, ks, ns2) do
+			add(ks[i], ns2[i])
 		end
 		Grid.grid(st, k)
 		local l = st.links[k][node + 1]
