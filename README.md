@@ -16,11 +16,10 @@ Need a vendor, a trainer or an inn? The **Nearby services** tab on the world map
 
 ## Known limitations
 
-- The game never says which floor you are on, so in cities like Stormwind and Undercity a walk can start on the wrong level.
 - Walking maps are built ahead of time, so patched terrain can route wrongly until an update.
-- The game does not say where your Hearthstone is bound, so it counts once you bind with the addon on.
-- The game holds no boat, lift or tram timetables, so a departure shows no sighting until you ride that route.
-- The game cannot show another player's spells, so you declare a party mage's portals yourself.
+- The game names your bind point but not where it is, so the Hearthstone counts once you bind or hearth with the addon on.
+- A boat, lift or tram shows "no sighting yet" until you have ridden that route once, because the game holds no timetables.
+- The game cannot show another player's spells, so you list a party mage's portals yourself in the settings (Party mage portals).
 
 ![Eight-second demo of a route settling, the countdown and the compass](docs/screenshots/demo.gif)
 
@@ -65,8 +64,7 @@ More detail: [features](docs/features.md) and [API](docs/api.md).
 
 ## Install
 
-Install it from [CurseForge](https://www.curseforge.com/wow/addons/shortest-path-forever) or
-[Wago Addons](https://addons.wago.io/addons/shortest-path-forever), or download the zip from
+Install it from [CurseForge](https://www.curseforge.com/wow/addons/shortest-path-forever), or download the zip from
 [Releases](https://github.com/cjber/shortest-path-forever/releases). Everything it needs comes inside the download. To install the zip by hand, extract it into
 the WoW: Forever client's `Interface/AddOns/` folder (`_forever_` on the live client, `_classic_beta_` on the beta) so you end up with `AddOns/ShortestPathForever/ShortestPathForever.toc`.
 
