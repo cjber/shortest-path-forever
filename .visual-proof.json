@@ -1,20 +1,13 @@
 {
-  "input_digest": "a4150fa80462d1a194ff19cf84bb6f605dac6ec21dc802e02352499eed449d79",
-  "runtime_sha256": "a4150fa80462d1a194ff19cf84bb6f605dac6ec21dc802e02352499eed449d79",
-  "candidate": "f1f366e1d2e3cf9a9290e660383e53720342870cd2f4efbc7a50a907e11a66ea",
+  "input_digest": "e5ad5c75634ac6a87f59d2f48091726d828e60a7c82d766e19b53874fa70b687",
+  "runtime_sha256": "e5ad5c75634ac6a87f59d2f48091726d828e60a7c82d766e19b53874fa70b687",
+  "candidate": "01ed2b4d894ab55a5a2ce756a38d7c8dfa231a061a1e57713b77cb8708364a99",
   "client_build": "1.60.1.70938 (Interface 16001)",
   "tested_artifact": "source-tree",
-  "source_commit": "626688d4d9a772b43b20474bbd14731ad6344f0a",
+  "source_commit": "8e6fe7e434b699ba3fa24035833687463f88b744",
   "flows": [
     {
-      "name": "services",
-      "steps": [
-        "/spfnear"
-      ],
-      "result": "pass"
-    },
-    {
-      "name": "settings",
+      "name": "core-off",
       "steps": [
         "/path"
       ],
@@ -23,12 +16,8 @@
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/a350c4169e122332d64303b21b3b260c/raw/11dcaf098e9f7c1bc55ce26ffb948800e63a7c43/1-services.png",
-      "sha256": "92cdbdd16437718370cfc1a6ba9dbc8a2114808942b3d93f9bcb07a62f497552"
-    },
-    {
-      "url": "https://gist.githubusercontent.com/cjber/a350c4169e122332d64303b21b3b260c/raw/11dcaf098e9f7c1bc55ce26ffb948800e63a7c43/2-settings.png",
-      "sha256": "2f6e5a28c5ca752ce9cd75361f2b5f2fb951464726d5ba7f73a000604d0f4098"
+      "url": "https://gist.githubusercontent.com/cjber/088c22cbab45ada79210ab719b9f6eb9/raw/e6dd69bdc865e733a40078c41f773d1d615e3676/1-core-off.png",
+      "sha256": "c5905cb2eeaa8eb17b692b1205ef91848861d2bf2a2078045f3ca0529b15ea09"
     }
   ]
 }
