@@ -90,7 +90,7 @@ The world map's filter menu and the minimap's tracking menu hide each kind of ma
 
 ## Move the tracker
 
-The Forever column sits to the left of the game's quest tracker and follows it when you move that tracker in Edit Mode. Drag a section's heading to put the column anywhere; it stays there after `/reload`. Right-click a heading for **Lock**, which stops dragging, and **Reset position**, which puts it back beside the quest tracker. The column hides while nothing is tracked.
+The Forever column sits to the left of the game's quest tracker and follows it when you move that tracker in Edit Mode. Drag a section's heading to put the column anywhere; it stays there after `/reload`. Right-click a heading for **Lock the tracker**, which stops dragging. The column hides while nothing is tracked.
 
 ![The Forever column dragged away from the quest tracker](docs/screenshots/detached.png)
 
