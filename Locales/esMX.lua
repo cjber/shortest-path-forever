@@ -57,8 +57,7 @@ L["Journeys, and other addons' estimates from here, can start with a mage's city
 L["Minimum teleport saving"] = "Ahorro mínimo del teletransporte"
 L["Only use a class teleport when it saves at least this much time."] =
 	"Usar un teletransporte de clase solo si ahorra al menos este tiempo."
-L["Recognise profession trainers and find weapon masters."] =
-	"Reconoce a los instructores de profesión y encuentra maestros de armas." -- mt
+L["Faster routes from busy cities."] = "Rutas más rápidas desde las ciudades concurridas." -- mt
 L["Boat and Zeppelin Routes"] = "Rutas de barcos y zepelines"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Rutas de barcos y zepelines, dibujadas al señalar un muelle."
