@@ -1,10 +1,10 @@
 {
-  "input_digest": "75bfeb3e3606f600cb5840eb620d5a238256b8b624c85a32b9af6f392c324599",
-  "runtime_sha256": "75bfeb3e3606f600cb5840eb620d5a238256b8b624c85a32b9af6f392c324599",
-  "candidate": "a0f76cba3b671c19b6fbfb5a2b601aa4eba56b3dd3a983576cfecae63a1df5ef",
+  "input_digest": "4f5811a4a46b0c1b687cef214288dc38ead29c7dd2673b2a3ebf0f94054c511b",
+  "runtime_sha256": "4f5811a4a46b0c1b687cef214288dc38ead29c7dd2673b2a3ebf0f94054c511b",
+  "candidate": "0900d3ab2adae82a40406537283bf1d11bea1fc1e204279fe15986031847fa56",
   "client_build": "1.60.1.70959 (Interface 16001)",
   "tested_artifact": "source-tree",
-  "source_commit": "d4a471f57585dea6f893c11047185b3c30d8dd4a",
+  "source_commit": "76e55d3a33e6b1cd7c161bc410c525aacc018e7a",
   "flows": [
     {
       "name": "journey",
@@ -16,8 +16,8 @@
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/376c9d0e30cee42479abc052fd54461d/raw/6cc264b55a2b892f207277a50fa89ce74e515414/1-journey.png",
-      "sha256": "402ae63428c2d8744e3d4575b55323ac9e739849b1b35acc74330febb410e058"
+      "url": "https://gist.githubusercontent.com/cjber/b5890b4562b2966eb5015b2785a853de/raw/31a2c2b7a6b4da6ed978ef177d244e7551b5d3da/1-journey.png",
+      "sha256": "b1f2967137f9eb410542d3b0b685aa9206fad733444e0419c32f63a1c0b4a7c7"
     }
   ]
 }
