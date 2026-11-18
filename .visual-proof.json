@@ -1,13 +1,13 @@
 {
-  "input_digest": "d68ad83a90f578e6e77830eeabd6241bc3e0c5d46bf268697ca23263b82bdb90",
-  "runtime_sha256": "d68ad83a90f578e6e77830eeabd6241bc3e0c5d46bf268697ca23263b82bdb90",
-  "candidate": "c0d64bacb5deb83fd2fa257885eb6aaebe44baf847bfaca0e16911bbb20fdb58",
-  "client_build": "1.60.1.70938 (Interface 16001)",
+  "input_digest": "2f9e679e6901a897b32fbadd49fe70ee22b5aa25e6dfc880921b48b1bed3ce00",
+  "runtime_sha256": "2f9e679e6901a897b32fbadd49fe70ee22b5aa25e6dfc880921b48b1bed3ce00",
+  "candidate": "a8d0b9d74d03d1c66b8cd68990034828b1068b44eb478044770d14a2116157f1",
+  "client_build": "1.60.1.70959 (Interface 16001)",
   "tested_artifact": "source-tree",
-  "source_commit": "938a8dcfd232de557b20efcc11bf24e2f445b619",
+  "source_commit": "71bd2b1ef92a8be09b74e66bd3a14e3cbe21a340",
   "flows": [
     {
-      "name": "core-off",
+      "name": "journey",
       "steps": [
         "/path"
       ],
@@ -16,8 +16,8 @@
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/9604dbd3170aca2aa75048ed6737eeeb/raw/9a6593e61faeae5773e32951a2815b92c681f06b/1-core-off.png",
-      "sha256": "9fa975059eeb6f7da3061a0e992f824bd688f6489870d7f017396e5cf3428dfb"
+      "url": "https://gist.githubusercontent.com/cjber/9ef4c188e4dd03cd1639e03bdb0cc4ef/raw/facb28ac1462ee218d99502e6433a7e1fb82eb57/1-journey.png",
+      "sha256": "1cf6a494410dfed01b5e57a6811cfed174298d81f3f189015adb77f0f9b95c7d"
     }
   ]
 }
