@@ -34,7 +34,7 @@ if [[ $(git -C "$library" rev-parse HEAD) != "$revision" ]] ||
 fi
 flock -u 9
 exec 9>&-
-if (( run_luals )) && [[ $(lua-language-server --version) != "$luals" ]]; then
+if ((run_luals)) && [[ $(lua-language-server --version) != "$luals" ]]; then
 	echo "Install lua-language-server $luals to match CI." >&2
 	exit 1
 fi
@@ -42,7 +42,7 @@ fi
 python3 tools/forever_tools/sync.py check
 python3 tools/typecheck_coverage.py
 # These tests run LuaLS on probe files (about 3.4 GB), so they go with the LuaLS run below.
-if (( run_luals )); then
+if ((run_luals)); then
 	python3 -m unittest discover -s tests -p 'test_typecheck.py'
 fi
 python3 -m unittest discover -s tools -p '*_test.py'
@@ -57,7 +57,7 @@ python3 tools/check_locales.py --release
 python3 tools/check_family.py
 python3 tools/check_store_page.py
 # --no-luals (gate --changed): the checks above run, and the whole-repo LuaLS run is left to CI.
-if (( ! run_luals )); then
+if ((! run_luals)); then
 	echo "typecheck: LuaLS left to CI (--no-luals)"
 	exit 0
 fi
