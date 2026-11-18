@@ -28,6 +28,9 @@ env.C_AddOns = {
 env.UnitName = function()
 	return "Tester"
 end
+env.UnitGUID = function()
+	return "Player-1-TESTER"
+end
 env.hooksecurefunc = function(target, key, hook)
 	local original = target[key] or function() end
 	target[key] = function(...)
