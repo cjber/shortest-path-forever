@@ -109,8 +109,8 @@ local function States()
 	end
 	states, list, fresh, expires = {}, ns.Teleports, true, math.huge
 	for _, teleport in ipairs(ns.Teleports or {}) do
-		local deadline
-		if Stocked(teleport) then
+		local known, deadline = Known(teleport), nil
+		if known and Stocked(teleport) then
 			deadline = select(2, Cooldown(teleport))
 			if not deadline then
 				-- A secret cooldown is never kept: the next read asks again.
@@ -120,7 +120,7 @@ local function States()
 		if deadline and deadline > now then
 			expires = math.min(expires, deadline)
 		end
-		states[teleport] = { known = Known(teleport), deadline = deadline }
+		states[teleport] = { known = known, deadline = deadline }
 	end
 	return states
 end
