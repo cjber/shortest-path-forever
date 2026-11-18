@@ -111,9 +111,12 @@ do
 	check(Hearthstone(5000) ~= nil, "class teleports off still leaves the Hearthstone lookup")
 	runtime.db.teleports = true
 	items[6948] = 0
+	onEvent(nil, "BAG_UPDATE_DELAYED")
 	check(Hearthstone(5000) == nil, "without the Hearthstone, no button")
 	items[6948] = 1
 	itemCooldowns[6948] = { 50, 3600, true }
+	onEvent(nil, "BAG_UPDATE_DELAYED")
+	onEvent(nil, "BAG_UPDATE_COOLDOWN")
 	check(assert(Hearthstone(5000)).readyAt == 5000 + 3550000, "the Hearthstone's cooldown is its readiness")
 	tick()
 	check(registered.HEARTHSTONE_BOUND and registered.PLAYER_ENTERING_WORLD, "the bind events are watched")

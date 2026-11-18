@@ -147,33 +147,15 @@ local function Combine(spellByRange, spellRanges, itemByRange, itemRanges)
 	return out
 end
 
--- The spells the spellbook holds, split by the units they can be asked about, read once per class and level rather
--- than once per measurement. A pet spell would answer for the pet and a self spell for the caster, neither of which
--- is the NPC the band measured, so Data/SpellTargets.lua keeps only spells that target another unit.
-local spellCache, spellKey
-
+-- The spells the spellbook holds, split by the units they can be asked about. A pet spell would answer for the pet
+-- and a self spell for the caster, neither of which is the NPC the band measured, so Data/SpellTargets.lua keeps only
+-- spells that target another unit.
 ---@return { friendly: SPFBandChecks, hostile: SPFBandChecks }?
 local function SpellLadders()
-	-- A client with no spellbook to read, or no class and level to key it by, has no spell ladder.
-	if
-		not (
-			UnitClass
-			and UnitLevel
-			and C_SpellBook
-			and C_SpellBook.GetNumSpellBookSkillLines
-			and C_Spell
-			and C_Spell.GetSpellInfo
-		)
-	then
+	-- A client with no spellbook to read has no spell ladder.
+	if not (C_SpellBook and C_SpellBook.GetNumSpellBookSkillLines and C_Spell and C_Spell.GetSpellInfo) then
 		return nil
 	end
-	local _, class = UnitClass("player")
-	local level = UnitLevel("player")
-	local key = tostring(class) .. ":" .. tostring(level)
-	if key == spellKey then
-		return spellCache
-	end
-	spellKey = key
 	local friendly = { byRange = {}, ranges = {} }
 	local hostile = { byRange = {}, ranges = {} }
 	local allowedFriendly = ns.SpellTargets
@@ -201,12 +183,11 @@ local function SpellLadders()
 			end
 		end
 	end
-	spellCache = { friendly = friendly, hostile = hostile }
-	return spellCache
+	return { friendly = friendly, hostile = hostile }
 end
 
 -- The usable items the player carries whose on-use spell targets another unit, split by the units that spell can be
--- asked about. Read per measurement because the bags change; only an item held right now counts.
+-- asked about; only an item held now counts.
 ---@return SPFBandChecks, SPFBandChecks
 local function ItemLadders()
 	local friendly = { byRange = {}, ranges = {} }
@@ -241,8 +222,13 @@ local function ItemLadders()
 	return friendly, hostile
 end
 
+-- The ladders, read once and kept until the bags or the spellbook change (Init below): a measurement runs on every
+-- replan, and reading them is a client call per spellbook slot and per item that can answer a range check.
+---@type SPFBandLadders?
+local kept
+
 ---@return SPFBandLadders
-local function Ladder()
+local function Read()
 	local spells = SpellLadders()
 	if not spells then
 		return { friendly = {}, hostile = {} }
@@ -258,6 +244,21 @@ local function Ladder()
 		hostile = Combine(spells.hostile.byRange, spells.hostile.ranges, hostileItems.byRange, hostileItems.ranges),
 	}
 end
+
+---@return SPFBandLadders
+local function Ladder()
+	kept = kept or Read()
+	return kept
+end
+
+ns.Init(function()
+	local events = CreateFrame("Frame")
+	events:RegisterEvent("BAG_UPDATE_DELAYED")
+	events:RegisterEvent("SPELLS_CHANGED")
+	events:SetScript("OnEvent", function()
+		kept = nil
+	end)
+end)
 
 -- The one spawn a creature of npc on map stands still at, from Data/IdleSpawns.lua, or nil where the creature has
 -- none or more than one: two spawns leave which one the range check answered about unknown. The generated row holds
