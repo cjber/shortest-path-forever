@@ -185,7 +185,7 @@ end
 -- options.baked holds walks searched ahead of time between fixed places, per map; options.waterWalking picks
 -- which of their two costs applies. They were searched without hazards, so options.hazards weights one by the hazards
 -- on the straight way between its ends, as the walking search would weight the yards it walks inside them.
-local function BakedCost(options, a, b)
+local function BakedCost(options, a, b, check)
 	local ka, kb = a.bakedKey, b.bakedKey
 	local baked = ka and kb and options.baked and options.baked[a.map]
 	local pair = baked and baked[ka < kb and ka .. " " .. kb or kb .. " " .. ka]
@@ -195,7 +195,7 @@ local function BakedCost(options, a, b)
 		local reverse = pair[mode + (ka < kb and pair[3] ~= nil and 2 or 0)]
 		local hazards = options.hazards
 		if hazards and (yards or reverse) then
-			local factor = hazards.Segment(a.map, a.x, a.y, b.x, b.y)
+			local factor = hazards.Segment(a.map, a.x, a.y, b.x, b.y, check)
 			yards, reverse = yards and yards * factor, reverse and reverse * factor
 		end
 		return true, yards, reverse
@@ -464,7 +464,7 @@ local function Solve(options, cache, check)
 				if endpoint then
 					pairs[#pairs + 1], pairs[#pairs + 2] = from, to
 				elseif to > from then
-					local baked, yards, reverse = BakedCost(options, nodes[from], nodes[to])
+					local baked, yards, reverse = BakedCost(options, nodes[from], nodes[to], check)
 					if not baked then
 						pairs[#pairs + 1], pairs[#pairs + 2] = from, to
 					else

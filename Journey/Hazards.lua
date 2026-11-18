@@ -33,7 +33,7 @@ local KEEP = 50000
 ---@field Near fun(map: number, minX: number, minY: number, maxX: number, maxY: number): boolean -- a town in the box
 ---@field TransportNear fun(map: number, x: number, y: number): boolean -- a dock or flight master within 200 yards
 ---@field ConnectorWalk fun(from: SPFPoint, to: SPFPoint): boolean -- a short walk next to a dock or flight master
----@field Segment fun(map: number, ax: number, ay: number, bx: number, by: number): number -- mean factor along it
+---@field Segment fun(map: number, ax: number, ay: number, bx: number, by: number, check?: fun()): number -- mean factor along it
 ---@field roads? true -- Follow roads is on: walks prefer road cells (Path.lua)
 ---@field roadFactor? number -- cost of an off-road yard while choosing a walk, at least 1
 ---@field zones table<number, number> -- [uiMap] = factor, for the avoided zones and hostile capitals
@@ -447,8 +447,9 @@ function Hazards.Profile(from, goal, here, landing)
 			and (TransportNear(start.map, start.x, start.y) or TransportNear(target.map, target.x, target.y))
 	end
 	-- The mean factor along a straight walk: what a walk baked without hazards costs here. A town counts the share of
-	-- the walk inside it; a zone, the share of samples inside its map's box that the zone's map holds.
-	local function Segment(map, ax, ay, bx, by)
+	-- the walk inside it; a zone, the share of samples inside its map's box that the zone's map holds. A sample the
+	-- zone cache has not seen asks the client's map API, so a planner passes its budget check to run between samples.
+	local function Segment(map, ax, ay, bx, by, check)
 		local extra, length = 0, math.sqrt(Distance2(ax, ay, bx, by))
 		for _, town in ipairs(active) do
 			extra = extra + TownShare(town, map, ax, ay, bx, by) * (TOWN_COST - 1)
@@ -460,6 +461,9 @@ function Hazards.Profile(from, goal, here, landing)
 				local n = math.min(SAMPLES, math.max(1, math.ceil((t1 - t0) * length / CELL)))
 				local inside = 0
 				for i = 1, n do
+					if check then
+						check()
+					end
 					local t = t0 + (t1 - t0) * (i - 0.5) / n
 					if ZoneAt(map, ax + (bx - ax) * t, ay + (by - ay) * t) == id then
 						inside = inside + 1
