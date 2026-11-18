@@ -3,7 +3,7 @@
   "producers": [
     {
       "source": "UI/Tracker.lua",
-      "sha256": "0b5f5e2cfc75d12a68029c881bbec7f91c56f8e62172c08054958b35801101af",
+      "sha256": "b6d1a635325fe07ebda48ed3d2041b019916b68ee2dd6996cbf767b83c88d9cf",
       "review": "Read all of Tracker.lua, Tracker.xml and ForeverCore TrackerSection.Create, UpdateText and TrackerLine.SetInteractive. Confirmed pinned client Blizzard_ObjectiveTrackerModule.xml: ObjectiveTrackerModuleTemplate Header inherits ObjectiveTrackerModuleHeaderTemplate, whose Text uses ObjectiveTrackerHeaderFont. Blizzard_ObjectiveTrackerBlock.xml HeaderText uses ObjectiveTrackerLineFont; Blizzard_ObjectiveTrackerShared.xml ObjectiveTrackerLineTemplate Text uses ObjectiveTrackerLineFont, inherited without overrides by ShortestPathForeverTrackerLineTemplate. Bound every local phrase sent to section headers, block headers and rows, including Journey  %s · %s from #838. RefreshBlockText preserves these widgets. Client tracker text-size changes and optional Kaliels font overrides are outside the pinned native-font coverage. Menus, chat, tooltips and dynamic text from JourneyInfo, DockTitle, and DepartureText are excluded.",
       "bindings": [
         {
@@ -75,7 +75,7 @@
     },
     {
       "source": "UI/Arrow.lua",
-      "sha256": "5e6186471b49b74a385c869f45ba9e125be189cf6c582e3ff826a4e9d9d4c845",
+      "sha256": "dd6c962e9e48794b80463b5f52a823be6c100dfc8b64f54e21d3f7780430024c",
       "review": "Read Create, ArrowLabel, distance updates, arrival labels, progress and cast prompt. MoverHint uses GameFontHighlightSmall and Distance uses GameFontNormal, including the formatted time-distance phrase. No later font override occurs. Dynamic objective lines, arrival titles, route titles and actions from helpers are excluded; this review does not claim coverage for their inserted text.",
       "bindings": [
         {
@@ -92,7 +92,7 @@
     },
     {
       "source": "UI/Compass.lua",
-      "sha256": "1e49a415b5c860e5d352aef66cd49fd386461e30020fae79cff324c6d8a7b841",
+      "sha256": "bb44f8bc7d40dc4f81c5309a70ab777ba091a3e4c858e62669e8305c46c3eaf9",
       "review": "Read frame construction, cardinal tick labels, mover hint and RenderTime. Cardinal labels use GameFontNormalMed3 and MoverHint uses GameFontHighlightSmall, with no later font override. Distance and time are dynamic helper output and marker titles/tooltips have no coverage claim.",
       "bindings": [
         {
