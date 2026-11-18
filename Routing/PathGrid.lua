@@ -760,8 +760,9 @@ local function trim(st, size)
 		local owner, oldest, age = nil, nil, huge
 		for _, candidate in pairs(states) do
 			if st.decoded < max(Path.clusters, 4) or candidate == st then
+				-- Never the grid touched last: a step reads the cluster it stands in while it decodes the next one.
 				for k, used in pairs(candidate.used) do
-					if used < age and not held(candidate, k) then
+					if used < age and used < useClock and not held(candidate, k) then
 						owner, oldest, age = candidate, k, used
 					end
 				end
@@ -1863,13 +1864,19 @@ local function peak(P, factor, first, last, limit)
 	return limit
 end
 
--- Collapse a node path to its turns, then pull the string: from each anchor, jump to the furthest point in sight.
+-- Collapse a node path to its turns, then pull the string: the shortest line through the turns in which each pulled
+-- segment is in sight (#1024). Joining the furthest point in sight from each anchor is not the shortest line.
 -- Water may only be crossed where the path itself swam, and neither a hazard profile's cost nor a pulled segment's own
 -- time may be higher along the pulled segment than along the entries it replaces, so a walk drawn round a town stays
 -- round it and a walk round a bay is not drawn across the water (#742).
 ---@param P SPFPathPoints
----@return number[]
-local function smooth(st, P)
+---@param ends table? how the line is drawn from the start and to the goal (Path.lua): sx, sy and gx, gy, the points in
+--- cells; start(j) and goal(j), whether the segment between that point and entry j is clear; chord(), the one segment
+--- between the two. Without start (or goal) the line is drawn through the first (or last) entry's centre.
+---@return number[] keep -- the entries kept
+---@return boolean startVia -- the line runs from the start through its end entry's centre, not straight from the point
+---@return boolean goalVia -- the same at the goal
+local function smooth(st, P, ends)
 	local PX, PY, PW, PR, PT = P.x, P.y, P.w, P.r, P.t
 	local factor = P.factor
 	local n = #PX
@@ -1887,28 +1894,89 @@ local function smooth(st, P)
 	if n > 1 then
 		keep[#keep + 1] = n
 	end
-	local out, a = { keep[1] }, 1
-	while a < #keep do
-		local b, p = a + 1, keep[a]
-		local limit = 1
-		if factor then
-			limit = peak(P, factor, p, keep[b], limit)
-		end
-		for j = a + 2, #keep do
-			local q = keep[j]
-			if factor then
-				limit = peak(P, factor, keep[j - 1] + 1, q, limit)
-			end
-			local road = PR and PR[q] - PR[p] == 0
-			if not sight(st, P, p, q, PW[q] - PW[p] > 0, road, factor and limit, PT[q] - PT[p], P.roadFactor) then
-				break
-			end
-			b = j
-		end
-		out[#out + 1] = keep[b]
-		a = b
+	-- The line runs through nodes: the start and goal points when it is drawn from them (Path.lua), and the kept
+	-- entries between. best[b]: the shortest line to node b, in cells; from[b]: the node before it. Neighbouring nodes
+	-- are joined as the walk goes, so a start or goal segment that is not clear detours through its end entry's centre.
+	local m = #keep
+	local start, goal = ends and ends.start, ends and ends.goal
+	local X, Y, at = {}, {}, {}
+	if start then
+		X[1], Y[1] = ends.sx, ends.sy
 	end
-	return out
+	for i = 1, m do
+		local j = #X + 1
+		X[j], Y[j], at[j] = PX[keep[i]] + 0.5, PY[keep[i]] + 0.5, keep[i]
+	end
+	local N = #X
+	if goal then
+		N = N + 1
+		X[N], Y[N] = ends.gx, ends.gy
+	end
+	local function clear(a, b)
+		slice() -- a long walk measures many segments; each is one sight, and a sight may already slice to decode
+		local p, q = at[a] or 1, at[b] or n
+		-- A segment from or to an end point is the one drawn from the point itself, so the end's own check is the whole
+		-- check; between entries the line runs centre to centre.
+		if not at[a] and not at[b] then
+			return ends.chord()
+		elseif not at[a] then
+			return start(q)
+		elseif not at[b] then
+			return goal(p)
+		end
+		return sight(
+			st,
+			P,
+			p,
+			q,
+			PW[q] - PW[p] > 0,
+			PR and PR[q] - PR[p] == 0,
+			factor and peak(P, factor, p, q, 1),
+			PT[q] - PT[p],
+			P.roadFactor
+		)
+	end
+	-- Nodes are reached in order, so best[b] already holds the shortest line from every earlier node: a segment that
+	-- cannot shorten it needs no check, and an equal line from an earlier node (fewer points) is never replaced. From
+	-- each entry the line reaches forward until the first entry it checks out of sight, as the walk pulls the string;
+	-- the start and goal points are each one segment checked on its own, so every one they clear counts.
+	local best, from = { 0 }, { 0 }
+	for b = 2, N do
+		best[b] = huge
+	end
+	for a = 1, N - 1 do
+		for b = a + 1, N do
+			local d = best[a] + sqrt((X[a] - X[b]) ^ 2 + (Y[a] - Y[b]) ^ 2)
+			if d < best[b] - 1e-9 then
+				if b == a + 1 or clear(a, b) then
+					best[b], from[b] = d, a
+				elseif at[a] and at[b] then
+					break
+				end
+			end
+		end
+	end
+	-- The first and last entries stand for the start and goal (Path.lua draws them from the points), so they are
+	-- always kept; any other entry kept is a corner of the line.
+	local corners, b = {}, N
+	local startVia, goalVia = not start, not goal
+	while b > 0 do
+		local j = at[b]
+		if j and j ~= 1 and j ~= n then
+			corners[#corners + 1] = j
+		elseif j and b > 1 and b < N then
+			startVia, goalVia = startVia or j == 1, goalVia or j == n
+		end
+		b = from[b]
+	end
+	local out = { 1 }
+	for i = #corners, 1, -1 do
+		out[#out + 1] = corners[i]
+	end
+	if n > 1 then
+		out[#out + 1] = n
+	end
+	return out, startVia, goalVia
 end
 
 -- The clusters around the player that Floor.lua follows the player's floor on, by map. Idle keeps them decoded; the

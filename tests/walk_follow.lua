@@ -259,7 +259,12 @@ function F.new(ns)
 		if floor(ax) ~= cx or floor(ay) ~= cy then
 			ax, ay = cx + 0.5, cy + 0.5
 		end
-		local nxt, ex, ey, f = segment(st, cur, cx, cy, ax, ay, gx + 0.5, gy + 0.5)
+		-- The line is drawn to the goal itself when it stands in its own cell, else to the cell it snaps to.
+		local bx, by = gx + 0.5, gy + 0.5
+		if floor(P[n][1]) == gx and floor(P[n][2]) == gy then
+			bx, by = P[n][1], P[n][2]
+		end
+		local nxt, ex, ey, f = segment(st, cur, cx, cy, ax, ay, bx, by)
 		if not nxt then
 			return at(f, ex, ey, n)
 		end

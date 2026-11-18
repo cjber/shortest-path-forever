@@ -667,7 +667,10 @@ local function clearChord(st, P, from, to, water, limit, budget)
 	end
 	local tx, ty, gk, goal = own(st, to)
 	local tk, tn = toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget, nil, gk, goal)
-	return tk ~= nil and (not goal or (tk == gk and tn == goal))
+	if not tk then -- a goal with no surface in its cell, reached across cells with none, as clearEnd allows
+		return tn == true
+	end
+	return not goal or (tk == gk and tn == goal)
 end
 
 -- The largest factor a hazard profile charges over path entries first..last, or nil without a profile: a drawn segment
@@ -972,48 +975,41 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 
 	-- Points carry the height of the surface they stand on; the returned cost uses real walking/swimming time, with
 	-- hazards affecting only the route chosen. points.wet is the yards over water, which call for Water Walking.
-	local keep = smooth(st, P)
-	if #keep == 1 then -- both ends on one node
-		keep[2] = keep[1]
-	end
 	local n = #P.x
-	-- An end segment that fails is drawn through its end node's centre first: the string was pulled from there, so the
-	-- rest of the line holds as it did. A chord that fails tries each end that way.
-	local startVia, goalVia = #keep > 2 and keep[2] or n, #keep > 2 and keep[#keep - 1] or 1
 	local startOK, startTime = clearEnd(st, P, 1, from, true, P.w[1] > 0, limitOver(P, 1, 1), nil, true)
 	local goalOK, goalTime =
 		clearEnd(st, P, n, to, false, P.w[n] - (P.w[n - 1] or 0) > 0, limitOver(P, n, n), nil, true)
 	-- P.t is the refined walk's real running-yard prefix, independent of reported/cached search cost.
 	local chordBudget = startOK and goalOK and startTime + P.t[n] - P.t[1] + goalTime
-	local startDetour, goalDetour = false, false
-	if #keep > 2 or not chordBudget or not clearChord(st, P, from, to, P.w[n] > 0, limitOver(P, 1, n), chordBudget) then
-		startDetour = not startOK
-			or not clearEnd(
-				st,
-				P,
-				startVia,
-				from,
-				true,
-				P.w[startVia] > 0,
-				limitOver(P, 1, startVia),
-				startTime + P.t[startVia] - P.t[1]
-			)
-		-- A chord whose start detoured now reaches the goal from the start node's centre.
-		if startDetour and #keep <= 2 then
-			goalVia = 1
-		end
-		goalDetour = not goalOK
-			or not clearEnd(
-				st,
-				P,
-				goalVia,
-				to,
-				false,
-				P.w[n] - (P.w[goalVia - 1] or 0) > 0,
-				limitOver(P, goalVia, n),
-				P.t[n] - P.t[goalVia] + goalTime
-			)
+	-- The end segments the line is drawn with, for the pull to measure and check as drawn.
+	local function startClear(j)
+		return clearEnd(st, P, j, from, true, P.w[j] > 0, limitOver(P, 1, j), startTime + P.t[j] - P.t[1])
 	end
+	local function goalClear(j)
+		return clearEnd(
+			st,
+			P,
+			j,
+			to,
+			false,
+			P.w[n] - (P.w[j - 1] or 0) > 0,
+			limitOver(P, j, n),
+			P.t[n] - P.t[j] + goalTime
+		)
+	end
+	local keep, startDetour, goalDetour = smooth(st, P, {
+		sx = (from.x - x0) / cs,
+		sy = (from.y - y0) / cs,
+		gx = (to.x - x0) / cs,
+		gy = (to.y - y0) / cs,
+		start = startOK and startClear,
+		goal = goalOK and goalClear,
+		chord = function()
+			return chordBudget and clearChord(st, P, from, to, P.w[n] > 0, limitOver(P, 1, n), chordBudget)
+		end,
+	})
+	-- The pull chose whether each end is drawn through its end entry's centre: a start or goal segment that is not
+	-- clear detours that way, so the rest of the line holds as it was pulled.
 	local drawn = { 1 }
 	if startDetour then
 		drawn[#drawn + 1] = 1

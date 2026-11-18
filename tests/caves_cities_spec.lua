@@ -70,7 +70,7 @@ for _, w in ipairs(fixture.walks) do
 	if dump then
 		local p = {}
 		for _, q in ipairs(points or {}) do
-			p[#p + 1] = format("%.1f,%.1f,%.1f", q.x, q.y, q.z or 0)
+			p[#p + 1] = format("%.2f,%.2f,%.2f", q.x, q.y, q.z or 0)
 		end
 		dump:write(
 			format(
