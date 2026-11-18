@@ -115,4 +115,23 @@ for _, saved in ipairs({
 	local reloaded = loadCore(loaded.db)
 	assert(reloaded.db.stats == loaded.db.stats, "reload retains choices")
 end
+assert(fresh.db.townServices == "off", "new installs draw no town service pins")
+assert(fresh.db.compass == false, "new installs leave the compass off")
+local quieted = loadCore({ townServices = "capitals", compass = true })
+assert(quieted.db.townServices == "off", "an old save holding the old pin default turns the pins off once")
+assert(quieted.db.compass == false, "an old save holding the old compass default turns the compass off once")
+assert(loadCore({ townServices = "all" }).db.townServices == "all", "a chosen pin level survives the change")
+assert(loadCore({ townServices = "important" }).db.townServices == "important", "every chosen level survives")
+assert(loadCore({ compass = false }).db.compass == false, "a compass turned off stays off")
+quieted.db.townServices = "capitals"
+quieted.db.compass = true
+local chosen = loadCore(quieted.db)
+assert(chosen.db.townServices == "capitals", "capitals chosen after the change stays chosen")
+assert(chosen.db.compass == true, "the compass turned on after the change stays on")
+assert(fresh.db.townServiceFood == false and fresh.db.townServiceGear == false, "new installs hide the vendor pins")
+local vendors = loadCore({ townServiceFood = true, townServiceBags = true, townServiceKinds = { gear = true } })
+assert(vendors.db.townServiceFood == false and vendors.db.townServiceBags == false, "old vendor defaults turn off once")
+assert(vendors.db.townServiceKinds.gear == true, "a vendor kind turned on in the map's filter stays on")
+vendors.db.townServiceFood = true
+assert(loadCore(vendors.db).db.townServiceFood == true, "a vendor switch turned on after the change stays on")
 print("faction_defaults_spec: defaults and saved preferences passed")

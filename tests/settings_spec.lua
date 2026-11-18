@@ -299,7 +299,8 @@ local ns = {
 		followRoads = true,
 		roadDetour = 50,
 		arrivalDistance = 15,
-		townServices = "capitals",
+		townServices = "off",
+		compass = false,
 		onlyMyProfessions = false,
 		destinationPinSize = 100,
 	}, {
@@ -575,9 +576,9 @@ assert(#choices == 5 and choices[1].value == "gold", "gold leads the presets")
 assert(choices[2].text == "White" and choices[5].value == "magenta", "every preset has a label and a key")
 routeColor.setting.onChanged(nil, "cyan")
 assert(routeColour == "cyan", "choosing a preset repaints the walking line")
--- Town services are a level of detail: capitals first, then important services, all towns, and off.
+-- Town services are a level of detail: capitals first, then important services, all towns, and off, the default.
 local towns = Row("townServices")
-assert(towns.kind == "dropdown" and towns.setting.default == "capitals", "town services start at the capitals")
+assert(towns.kind == "dropdown" and towns.setting.default == "off", "town services start off")
 assert(towns.setting.variable == "ShortestPathForever_townServices", "the level is saved")
 local levels = towns.getData()
 assert(
@@ -769,8 +770,8 @@ end
 local policyBeforeParty = policyChanged
 Row("partyMagePortals").setting.onChanged()
 assert(policyChanged == policyBeforeParty + 1, "the party portal setting replans the journey")
--- The compass is on by default: it is the game's own palette rather than a panel on the screen.
-assert(Row("compass").setting.default == true)
+-- The compass is off by default: a player turns it on here.
+assert(Row("compass").setting.default == false, "the compass starts off")
 local mover = Row("compassMove").setting
 assert(mover.default == false and mover:GetValue() == false, "the compass starts locked")
 mover:SetValue(true)

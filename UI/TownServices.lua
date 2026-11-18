@@ -9,13 +9,13 @@ local Art = ns.Art
 local Canvas = ns.Canvas
 
 -- The town services on the world map: every trainer, vendor, banker and the rest the Nearby services list finds,
--- drawn at the NPC's own place in the client's minimap tracking icon for that service (a bank's money bags, a
--- repairer's anvil), never a town or city mark. Zoomed out, pins of the same service merge first into one pin wearing
--- that service's own icon, with every member in its tooltip; pins of different services merge only where they truly
--- overlap, into a pin wearing the addon's own market stall (media/TownGroup.tga) with every service in its tooltip.
--- Each zoom step merges less, the way UI/Map.lua separates the docks of a harbour, and full zoom splits every NPC into
--- its own pin. A click plans a journey to the NPC. The setting chooses which towns show: the capitals, the capitals
--- and the services worth a detour, every town, or none.
+-- drawn at the NPC's own place in the client's map art for that service (a bank's money bags, a repairer's anvil,
+-- a skinner's hide; UI/NearbyGroups.lua), never a town or city mark. Zoomed out, pins of the same service merge first
+-- into one pin wearing that service's own icon, with every member in its tooltip; pins of different services merge only
+-- where they truly overlap, into a pin wearing the addon's own market stall (media/TownGroup.tga) with every service in
+-- its tooltip. Each zoom step merges less, the way UI/Map.lua separates the docks of a harbour, and full zoom splits
+-- every NPC into its own pin. A click plans a journey to the NPC. The setting chooses which towns show: none, the
+-- default, the capitals, the capitals and the services worth a detour, or every town.
 local TEMPLATE = "ShortestPathForeverServicePinTemplate"
 local PIN_SIZE = 20
 -- The groups that make a town worth showing under "Capitals and important services": every trainer, the profession
@@ -527,9 +527,8 @@ end
 ---@param cluster SPFTownServiceCluster
 local function PaintPin(texture, cluster)
 	local shared = SharedService(cluster)
-	if shared and shared.iconFile then
-		Art.Icon(texture, shared.iconFile, PIN_SIZE)
-	elseif shared then
+	if shared then
+		-- Map art only (UI/NearbyGroups.lua): the square icon a Nearby services row shows never reaches the map.
 		Art.Fit(texture, shared.tracking, PIN_SIZE, PIN_SIZE)
 	else
 		-- A pin for different services speaks for no one service, so it wears the addon's own stall, square as file
@@ -716,7 +715,7 @@ function Services:RefreshAllData()
 	local pins = servicePins
 	local map = WorldMapFrame
 	local mapID = map:GetMapID()
-	local level = ns.db and ns.db.townServices or "capitals"
+	local level = ns.db and ns.db.townServices or "off"
 	local nearby = ns.NearbyServices
 	if not (mapID and ServiceMap(mapID) and map:IsVisible() and level ~= "off" and nearby) then
 		self:RemoveAllData()

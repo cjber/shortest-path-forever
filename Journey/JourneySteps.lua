@@ -373,3 +373,92 @@ function ns.JourneyGoalDetails(project, point)
 	end
 	return { map = place.map, x = place.x, y = place.y, z = place.z, title = point.label or ns.JourneyTitle(point) }
 end
+
+-- A teleport step, by the item's or spell's own name in the game's language, after its own icon at the font's
+-- height: the one step you act on from your bags or spellbook stands out from the travel around it.
+-- art-ok: a square item or spell icon, square at the font's height (size 0)
+local ICON = "|T%d:0|t "
+-- Yards over water worth casting for.
+local WATER_HINT = 20
+
+-- One step's words with its suffixes. The tracker asks for a second copy with the place wrapped; the plain copy stays
+-- for the goal pin's tooltip, the arrow's progress line and other addons.
+---@param leg SPFLeg
+---@param spell number?
+---@param formatPlace? fun(place: string): string
+---@return string action, number? icon
+local function StepText(leg, spell, formatPlace)
+	local action, icon
+	if leg.teleport then
+		action, icon = ns.TeleportAction(leg.teleport, formatPlace)
+	else
+		action = ns.LegStep(leg, formatPlace)
+	end
+	if leg.mode == "walk" and leg.to.undiscovered then
+		action = string.format(L["%s (new flight path)"], action)
+	end
+	if leg.walkError then
+		action = action .. " (" .. (ns.WalkFailure[leg.walkError] or L["walking search failed"]) .. ")"
+	end
+	if spell and leg.wet and leg.wet >= WATER_HINT then
+		action = string.format(L["%s (cast %s)"], action, C_Spell.GetSpellName(spell))
+	end
+	return action, icon
+end
+
+-- The step's plain words, as the tracker's row has them without its number, mark or colours. Core/API.lua's Journey
+-- reads a leg's action from here so another addon's line says exactly what the arrow says.
+---@param leg SPFLeg
+---@return string
+function ns.StepText(leg)
+	local _, spell = ns.JourneyWaterWalking()
+	return (StepText(leg, spell))
+end
+
+-- The plan's rows from its step `first` on. A step's key counts from the step under way, not from where the plan
+-- began: a replan plans from where you stand and numbers the same steps from 1 again, and a key that followed the
+-- plan's own index made the tracker lay the same steps out again after every step you finished (forever-core#795).
+-- `grey` draws a route a new search is replacing, all of it in grey.
+---@param rows SPFRow[]
+---@param plan SPFPlan
+---@param first integer
+---@param formatPlace? fun(place: string): string
+---@param loading boolean?
+---@param grey boolean
+function ns.StepRows(rows, plan, first, formatPlace, loading, grey)
+	local _, spell = ns.JourneyWaterWalking()
+	local unsynced = ns.UnsyncedFlightPointRows(plan)
+	local reminder = ns.NewFlightPathReminderRow(plan, first)
+	if reminder and not (unsynced[1] and reminder.key == "unknown-flight-path") then
+		rows[#rows + 1] = reminder
+	end
+	for _, row in ipairs(unsynced) do
+		rows[#rows + 1] = row
+	end
+	for index = first, #plan.legs do
+		local leg = plan.legs[index]
+		local action, icon = StepText(leg, spell)
+		local shown = formatPlace and StepText(leg, spell, formatPlace) or action
+		-- The tracker draws the mode's mark and the time in its quieter colour.
+		local time = not loading and ns.LegTime(leg) or nil
+		local text = string.format("%d. %s%s", index, icon and ICON:format(icon) or "", action)
+		if time then
+			text = text .. "   " .. time
+		end
+		local key = index - first + 1
+		rows[#rows + 1] = {
+			key = key,
+			text = text,
+			mode = leg.mode,
+			action = shown,
+			time = time,
+			icon = icon,
+			current = index == first,
+			grey = grey or nil,
+		}
+		-- Hostile towns and high zones on this walk, under its step.
+		for note, line in ipairs(leg.hazardNotes or {}) do
+			rows[#rows + 1] = { key = key .. ":" .. note, text = line, grey = true }
+		end
+	end
+end

@@ -106,9 +106,13 @@ C_Map.GetMapInfo = function(id)
 end
 ns.db.journey = true
 ns.db.townServices = "all"
--- Repair starts hidden; the other services start shown, including for a saved table that predates the switches.
+-- Repair and the vendors start hidden; the other services start shown, including for a saved table that predates the
+-- switches (#978).
 check(ns.db.townServiceRepair == false, "a repairer is hidden by default")
-check(ns.db.townServiceBank == true and ns.db.townServiceFood == true, "the other services start shown")
+check(ns.db.townServiceFood == false and ns.db.townServiceBags == false, "and so are the vendors")
+check(ns.db.townServiceBank == true and ns.db.townServiceClass == true, "the other services start shown")
+-- The checks below are a player who shows food and trade supplies.
+ns.db.townServiceFood, ns.db.townServiceBags = true, true
 check(ns.Defaults.townServiceRepair == false, "the shipped defaults hide repair")
 local saved = { townServices = "all" }
 for key, value in pairs(ns.Defaults) do
@@ -275,6 +279,62 @@ check(count() == 0, "a continent map draws no service pins")
 mapTypes[1414] = Enum.UIMapType.Zone
 ns.RefreshTownServices()
 check(count() == 3, "the zone map draws them again")
+-- The map's own type decides, never its zoom: zone and city maps draw pins, the maps above them none.
+for _, case in ipairs({
+	{ Enum.UIMapType.Cosmic, false, "the cosmic map" },
+	{ Enum.UIMapType.World, false, "the world map" },
+	{ Enum.UIMapType.Continent, false, "a continent" },
+	{ Enum.UIMapType.Zone, true, "a zone" },
+	{ Enum.UIMapType.Micro, true, "a city" },
+}) do
+	for _, level in ipairs({ 0, 1 }) do
+		zoom = level
+		mapTypes[1414] = case[1]
+		canvasScaled()
+		ns.RefreshTownServices()
+		check((count() > 0) == case[2], case[3] .. (case[2] and " draws" or " hides") .. " service pins at zoom " .. level)
+	end
+end
+zoom = 0
+mapTypes[1414] = Enum.UIMapType.Zone
+-- Off is the shipped level: a fresh profile draws no service pins on any map.
+check(ns.Defaults.townServices == "off", "town services ship off")
+ns.db.townServices = ns.Defaults.townServices
+ns.RefreshTownServices()
+check(count() == 0, "the shipped level draws nothing")
+ns.db.townServices = "all"
+ns.RefreshTownServices()
+
+-- One map atlas per kind of service the map filter lists, and never an icon file: a pin looks like the map's own.
+local kinds = {}
+local function wear(kind, tracking)
+	check(type(tracking) == "string" and not tracking:find("\\", 1, true), kind .. " wears an atlas name")
+	check(not tracking:lower():find("interface", 1, true), kind .. " wears no Interface\\Icons texture")
+	kinds[kind] = tracking
+end
+for _, group in ipairs(ns.NearbyGroups.vendors) do
+	wear(ns.TownServiceKind and ns.TownServiceKind(group) or group.key, group.tracking)
+end
+for _, group in ipairs(ns.NearbyGroups.services) do
+	wear(group.key, group.tracking)
+end
+for key, tracking in pairs(ns.NearbyGroups.roles) do
+	wear(key, tracking)
+end
+for skill, tracking in pairs(ns.NearbyGroups.professions) do
+	wear("profession:" .. skill, tracking)
+end
+-- Kinds the map filter treats as one share an atlas; every other pair differs.
+local same = { arrows = "ammo", bullets = "ammo", food = "food", drink = "food", bags = "supplies", trade = "supplies" }
+same.class, same.portal = "class", "class"
+local owner = {}
+for kind, tracking in pairs(kinds) do
+	local family = same[kind] or kind
+	check(owner[tracking] == nil or owner[tracking] == family, tracking .. " is worn by " .. kind .. " and another kind")
+	owner[tracking] = family
+end
+check(kinds.gear ~= "poi-transmogrifier", "weapons and armour no longer wear the transmogrifier's banner")
+check(kinds["profession:393"] == "worldquest-icon-skinning", "a skinning trainer wears the skinning mark")
 
 -- A hidden service drops out of every pin: the food seller keeps its food icon and lists no repair, and the NPC
 -- that only repairs draws nothing.
@@ -426,6 +486,7 @@ local wander = {
 index = { books = wander }
 groups = { group("vendors", "books", "Books and recipes", "Books") }
 ns.db.townServices = "all"
+ns.db.townServiceBooks = true
 zoom = 0
 canvasScaled()
 ns.RefreshTownServices()

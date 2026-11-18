@@ -116,8 +116,8 @@ With RestedXP, Guidelime or Dugi Guides installed, **Resume guide** in Guidance 
 
 - **A compass that looks like the game.** A slim strip at the top of the screen follows your facing and marks
   Guide's next two turns, the next stop and your destination, in the map's own parchment ticks and gold letters,
-  fading out at each end, with your destination drawn as the game's own waypoint pin. On by default; *Show the
-  compass* in `/path` turns it off.
+  fading out at each end, with your destination drawn as the game's own waypoint pin. Off by default; *Show the
+  compass* in `/path` turns it on.
   ![The compass strip with the next turns and destination](screenshots/compass.png)
 
 - **Find nearby services.** Open the minimap's tracking menu or the world map's and pick *Nearby services*, or use

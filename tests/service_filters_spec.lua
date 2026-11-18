@@ -74,9 +74,11 @@ assert(not ns.TownServiceFilterable({ key = "flight", section = "services" }),
  "flight points keep their own map controls")
 assert(not ns.TownServiceFilterable({ key = "entrance:36", section = "entrances" }), "entrances are not town services")
 groups[1].iconFile = 136249
+groups[1].tracking = "worldquest-icon-blacksmithing"
 ns.db.townServiceKinds = { ["profession:164"] = true, ["profession:165"] = false, class = false, portal = false }
 ns.RefreshTownServices()
-assert(pin().Texture.texture == 136249, "a profession pin uses the same file icon as its Nearby row")
+assert(pin().Texture.atlas == "worldquest-icon-blacksmithing" and pin().Texture.texture == nil,
+ "a profession pin wears its map atlas, never the square file icon its Nearby row shows")
 local weapon = { section = "trainers", key = "weapon", label = "Weapon master", tracking = "Class" }
 groups[#groups + 1] = weapon
 index.weapon = { place }

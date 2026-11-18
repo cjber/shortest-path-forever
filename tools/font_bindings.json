@@ -3,7 +3,7 @@
   "producers": [
     {
       "source": "UI/Tracker.lua",
-      "sha256": "c82a3438a711f35b8c331868c57b7b52001e9e26945b1692cd804eb05e0f3af6",
+      "sha256": "59da96aec73418421d4734dc32c22003a6e97646f1ad9783aef1e08f796eb379",
       "review": "Read all of Tracker.lua, Tracker.xml and ForeverCore TrackerSection.Create, UpdateText and TrackerLine.SetInteractive. Confirmed pinned client Blizzard_ObjectiveTrackerModule.xml: ObjectiveTrackerModuleTemplate Header inherits ObjectiveTrackerModuleHeaderTemplate, whose Text uses ObjectiveTrackerHeaderFont. Blizzard_ObjectiveTrackerBlock.xml HeaderText uses ObjectiveTrackerLineFont; Blizzard_ObjectiveTrackerShared.xml ObjectiveTrackerLineTemplate Text uses ObjectiveTrackerLineFont, inherited without overrides by ShortestPathForeverTrackerLineTemplate. Bound every local phrase sent to section headers, block headers and rows, including Journey  %s · %s from #838. RefreshBlockText preserves these widgets. Client tracker text-size changes and optional Kaliels font overrides are outside the pinned native-font coverage. Menus, chat, tooltips and dynamic text from JourneyInfo, DockTitle, DepartureText and FamilyHints are excluded.",
       "bindings": [
         {
