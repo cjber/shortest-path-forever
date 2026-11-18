@@ -3,12 +3,12 @@
 
     python3 tools/gate.py             # every step
     python3 tools/gate.py --changed   # only the steps the diff against origin/main reaches; tools/ reaches all
-                                      # but the typecheck, which stays in CI
+                                      # but LuaLS itself, which stays in CI
 
 Every step runs even after one fails, as in CI, and the exit status is 1 when any failed. The specs load ForeverCore
 from $FOREVER_CORE, else the sibling ../forever-core checkout; set it when working from a worktree. The simulator,
-package, workflow and secret jobs stay in CI, and so does the whole-repo LuaLS typecheck under --changed: it holds about
-5 GB on a machine other sessions share.
+package, workflow and secret jobs stay in CI. Under --changed, so does the whole-repo LuaLS run inside typecheck.sh: it
+holds about 5 GB on a machine other sessions share. The script's other checks still run.
 """
 
 import argparse
@@ -31,8 +31,8 @@ class Step:
     argv: tuple[str, ...]
     # fnmatch patterns over changed paths ("*" crosses folders); empty means the step runs for any change.
     reaches: tuple[str, ...] = ()
-    # False for a step too heavy for the shared machine: --changed leaves it to CI and says so.
-    local: bool = True
+    # Arguments --changed adds, for a step with a part too heavy for the shared machine that it leaves to CI.
+    changed_args: tuple[str, ...] = ()
 
 
 STEPS = (
@@ -53,7 +53,7 @@ STEPS = (
             "ruff.toml",
             ".pkgmeta",
         ),
-        local=False,
+        changed_args=("--no-luals",),
     ),
     Step("specs", ("python3", "-m", "tools.forever_tools.specs"), LUA),
     Step("deadcode", ("python3", "tools/deadcode.py", "--check"), LUA),
@@ -125,12 +125,15 @@ def main() -> int:
         if not everything and step.reaches and not any(fnmatch.fnmatch(p, g) for p in changed for g in step.reaches):
             print(f"-- {step.name}: skipped, the diff does not reach it", flush=True)
             continue
-        if args.changed and not step.local:
-            print(f"-- {step.name}: left to CI under --changed; run {' '.join(step.argv)} to check it here", flush=True)
-            continue
+        argv = step.argv
+        if args.changed and step.changed_args:
+            argv = (*step.argv, *step.changed_args)
+            print(
+                f"-- {step.name}: LuaLS left to CI under --changed; run {' '.join(step.argv)} for all of it", flush=True
+            )
         print(f"== {step.name}: {' '.join(step.argv)}", flush=True)
         started = time.monotonic()
-        code = subprocess.run(step.argv, cwd=ROOT, env=env, stdin=subprocess.DEVNULL).returncode
+        code = subprocess.run(argv, cwd=ROOT, env=env, stdin=subprocess.DEVNULL).returncode
         print(
             f"== {step.name}: {'ok' if code == 0 else f'FAILED (exit {code})'} in {time.monotonic() - started:.1f}s",
             flush=True,
