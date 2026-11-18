@@ -593,6 +593,9 @@ local function Reset()
 			ns.SetOption(key, ns.Defaults[key])
 		end
 	end
+	-- The compass and the town service pins start off; a player turns them on, so every profile sweeps them too.
+	ns.SetOption("compass", true)
+	ns.SetOption("townServices", "all")
 	ns.ClearJourney()
 	Flush()
 end

@@ -56,7 +56,7 @@ L["Journeys, and other addons' estimates from here, can start with a mage's city
 L["Minimum teleport saving"] = "傳送最少節省時間"
 L["Only use a class teleport when it saves at least this much time."] =
 	"只在職業傳送至少節省這麼多時間時使用。"
-L["Recognise profession trainers and find weapon masters."] = "辨識專業訓練師，找到武器大師。" -- mt
+L["Faster routes from busy cities."] = "從繁忙城市出發的路線更快。" -- mt
 L["Boat and Zeppelin Routes"] = "船隻與飛艇航線"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"船隻與飛艇航線，在你指向碼頭時繪製。"
@@ -159,11 +159,9 @@ L["Only use the Hearthstone when it saves at least this much time."] =
 	"只在爐石至少節省這麼多時間時使用。"
 L["Open"] = "開啟"
 L["Open Nearby services"] = "開啟附近服務"
-L["Open settings."] = "開啟設定。"
 L["Open the world map to see it."] = "開啟世界地圖查看。"
 L["Turn the world map to %s to see it."] = "將世界地圖切換到%s查看。" -- mt
 L["This menu needs mouse and keyboard."] = "此選單需要滑鼠和鍵盤。" -- mt
-L["Open these settings from the minimap."] = "從小地圖開啟這些設定。"
 L["Other Faction's Routes"] = "另一陣營的航線"
 L["Plan journey"] = "規劃旅程"
 L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."] =
@@ -203,7 +201,6 @@ L["Show journey steps in the objective tracker"] = "在目標追蹤器中顯示�
 L["Show lifts and the tram"] = "顯示升降梯與地鐵"
 L["Show marks on the minimap"] = "在小地圖上顯示標記"
 L["Show on map"] = "在地圖上顯示"
-L["Show options button on minimap"] = "在小地圖上顯示選項按鈕"
 L["Show other faction's routes"] = "顯示另一陣營的航線"
 L["Show portals"] = "顯示傳送門"
 L["Show routes on the world map"] = "在世界地圖上顯示航線"

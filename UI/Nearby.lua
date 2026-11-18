@@ -402,7 +402,8 @@ local function BuildGroups()
 				label = label,
 				icon = "Profession",
 				iconFile = ns.ProfessionIcons and ns.ProfessionIcons[skill],
-				tracking = "Profession",
+				-- A skill with no profession mark of its own wears the tracking sheet's profession book.
+				tracking = GROUPS.professions[skill] or "Profession",
 				npcs = GroupNPCs("profession:" .. skill),
 			})
 		end
@@ -768,7 +769,7 @@ end
 ---@field key string
 ---@field label string
 ---@field icon number|string
----@field iconFile? integer a square client content icon, shared by the row and map pin
+---@field iconFile? integer a square client content icon the Nearby services row shows; never drawn on a map
 ---@field tracking string the client's minimap tracking atlas the world map's service pins wear
 ---@field npcs number[]
 ---@field skill? integer a profession group's skill line

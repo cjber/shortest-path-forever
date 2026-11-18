@@ -341,7 +341,8 @@ for _, case in ipairs({
 		{ addons = ForeverCore.addons() },
 		function(sim)
 			local G = sim.G
-			local ns = Login(sim, { ShortestPathForeverDB = { menuTest = case.value } })
+			-- Town services on, so the open map still builds the services index with the Nearby tab left out.
+			local ns = Login(sim, { ShortestPathForeverDB = { menuTest = case.value, townServices = "all" } })
 			sim:openWorldMap(1429)
 			local button = G.WorldMapFrame.WorldMapTrackingOptionsButton
 			sim:input(function()

@@ -44,7 +44,8 @@
 ---@field SettingsMapMarks SPFSettingsMapMarks the Map marks settings page (UI/SettingsMapMarks.lua)
 ---@field core ForeverCoreAddon the addon's own ForeverCore services: journal, log, report and map canvas
 ---@field broken? boolean set when ForeverCore is missing a member this addon calls, so the addon's files stop
----@field ForeverRequire fun(ready: boolean): boolean the shared out-of-date warning, from Core/ForeverRequire.lua
+---@field ForeverRequire fun(ready: boolean, slash?: { key: string, [integer]: string }): boolean the shared out-of-date warning, from Core/ForeverRequire.lua
+---@field Slash { key: string, [integer]: string } UI/Settings.lua's slash words and their SlashCmdList key, from Core/Require.lua
 ---@field ReportTitle string the localized title shown by the shared report window
 ---@field Icon string the one client icon every in-game identity surface draws, read from the TOC
 ---@field NearbyQuestie SPFNearbyQuestie the QuestieDB read behind the Nearby list (UI/NearbyQuestie.lua)
@@ -104,6 +105,8 @@
 ---@class SPFNearbyGroups
 ---@field vendors SPFVendorGroup[]
 ---@field services SPFServiceGroup[]
+---@field roles table<string, string> the trainer and battlemaster groups' map atlases, by group key
+---@field professions table<integer, string> each profession trainer's map atlas, by skill line
 ---@field sections table<string, string>
 ---@class SPFTownServiceChoice
 ---@field key string
@@ -351,6 +354,7 @@
 ---@field teleports? boolean -- plan class teleports with a destination of their own
 ---@field useHearthstone? boolean the Hearthstone and Astral Recall may be used in journeys, while class teleports still are (Teleports.lua)
 ---@field teleportSplit? integer the one-time move of the old combined teleports switch ran
+---@field quietDefaults? integer the one-time clear of the old on-by-default town services and compass ran
 ---@field partyMagePortals? boolean -- offer a party mage's capital portals
 ---@field partyMageStormwind? boolean
 ---@field partyMageIronforge? boolean
@@ -374,7 +378,6 @@
 ---@field journeyTracker? boolean
 ---@field arrow? boolean
 ---@field metres? boolean
----@field minimapButton? boolean
 ---@field compassScale? number percent, 100 is the stock size
 ---@field arrowScale? number percent, 100 is the stock size (Arrow.lua)
 ---@field arrowDirect? boolean point straight to the destination instead of following walking bends

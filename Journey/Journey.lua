@@ -13,12 +13,12 @@ local L = ns.L
 local REPLAN_EVERY = 5
 local REPLAN_DUE = REPLAN_EVERY - 0.5 -- from here Itinerary.lua leaves the frames to the timed replan
 local DRAW_EVERY = 0.5
--- A teleport step, by the item's or spell's own name in the game's language, after its own icon at the font's
--- height: the one step you act on from your bags or spellbook stands out from the travel around it.
--- art-ok: a square item or spell icon, square at the font's height (size 0)
-local ICON = "|T%d:0|t "
 
 local goal, result
+-- The route a search for a new goal replaces, and the step it was on: the tracker draws it greyed until the new
+-- route lands, so the section keeps its rows and height while it searches (forever-core#795).
+---@type { plan: SPFPlan, index: integer }?
+local replaced
 local policyChanged
 local nextPoint
 local progress = { index = 1 }
@@ -48,8 +48,6 @@ local OTHER_FLOOR = 10
 -- asks you to cast it.
 local WATER_AURAS = { 546, 1706, 11319 }
 local WATER_SPELLS = { 546, 1706 }
--- Yards over water worth casting for.
-local WATER_HINT = 20
 local WALK_FAILURE = ns.WalkFailure
 
 -- While you are a ghost, Corpse.lua's run borrows the route drawing, the tracker and Guide; the journey waits.
@@ -329,7 +327,7 @@ local journeyPolicy = "normal"
 ---@param reason "arrived"|"cleared"
 local function EndJourney(reason)
 	Search.Reset()
-	goal, result, nextPoint = nil, nil, nil
+	goal, result, nextPoint, replaced = nil, nil, nil, nil
 	journeyPolicy = "normal"
 	withoutHearth = false
 	if ns.JourneyChanged then
@@ -463,40 +461,6 @@ function ns.JourneyTitle(point, formatPlace)
 	return string.format(L["Journey to %s"], place(ns.PlaceLabel(point)))
 end
 
--- One step's words with its suffixes. The tracker asks for a second copy with the place wrapped; the plain copy stays
--- for the goal pin's tooltip, the arrow's progress line and other addons.
----@param leg SPFLeg
----@param spell number?
----@param formatPlace? fun(place: string): string
----@return string action, number? icon
-local function StepText(leg, spell, formatPlace)
-	local action, icon
-	if leg.teleport then
-		action, icon = ns.TeleportAction(leg.teleport, formatPlace)
-	else
-		action = ns.LegStep(leg, formatPlace)
-	end
-	if leg.mode == "walk" and leg.to.undiscovered then
-		action = string.format(L["%s (new flight path)"], action)
-	end
-	if leg.walkError then
-		action = action .. " (" .. (WALK_FAILURE[leg.walkError] or L["walking search failed"]) .. ")"
-	end
-	if spell and leg.wet and leg.wet >= WATER_HINT then
-		action = string.format(L["%s (cast %s)"], action, C_Spell.GetSpellName(spell))
-	end
-	return action, icon
-end
-
--- The step's plain words, as the tracker's row has them without its number, mark or colours. Core/API.lua's Journey
--- reads a leg's action from here so another addon's line says exactly what the arrow says.
----@param leg SPFLeg
----@return string
-function ns.StepText(leg)
-	local _, spell = WaterWalking()
-	return (StepText(leg, spell))
-end
-
 -- Shared by the tracker and the goal pin, including on a fullscreen map. `formatPlace` asks for the places in the
 -- title and each step already wrapped in the tracker's colour; the plain text is left as it is.
 ---@param formatPlace? fun(place: string): string
@@ -511,42 +475,14 @@ function ns.JourneyInfo(formatPlace)
 	local title = ns.JourneyTitle(goal, formatPlace)
 	local rows = {}
 	local _, _, costError, loading = Search.Status()
-	if not result and loading then
+	local plan, index = result, progress.index
+	if not result and loading and replaced then
+		plan, index = replaced.plan, replaced.index
+	end
+	if plan then
+		ns.StepRows(rows, plan, index, formatPlace, loading, plan ~= result)
+	elseif loading then
 		rows[1] = { key = "searching", text = L["Finding the fastest way…"], grey = true }
-	elseif result then
-		local _, spell = WaterWalking()
-		local unsynced = ns.UnsyncedFlightPointRows(result)
-		local reminder = ns.NewFlightPathReminderRow(result, progress.index)
-		if reminder and not (unsynced[1] and reminder.key == "unknown-flight-path") then
-			rows[#rows + 1] = reminder
-		end
-		for _, row in ipairs(unsynced) do
-			rows[#rows + 1] = row
-		end
-		for index = progress.index, #result.legs do
-			local leg = result.legs[index]
-			local action, icon = StepText(leg, spell)
-			local shown = formatPlace and StepText(leg, spell, formatPlace) or action
-			-- The tracker draws the mode's mark and the time in its quieter colour.
-			local time = not loading and ns.LegTime(leg) or nil
-			local text = string.format("%d. %s%s", index, icon and ICON:format(icon) or "", action)
-			if time then
-				text = text .. "   " .. time
-			end
-			rows[#rows + 1] = {
-				key = index,
-				text = text,
-				mode = leg.mode,
-				action = shown,
-				time = time,
-				icon = icon,
-				current = index == progress.index,
-			}
-			-- Hostile towns and high zones on this walk, under its step.
-			for note, line in ipairs(leg.hazardNotes or {}) do
-				rows[#rows + 1] = { key = index .. ":" .. note, text = line, grey = true }
-			end
-		end
 	else
 		rows[1] = { key = "unreachable", text = costError and WALK_FAILURE[costError] or L["No way there from here."] }
 	end
@@ -697,7 +633,7 @@ local function Follow(route, news)
 		return Refresh()
 	end
 	if news == "route" then
-		result = route
+		result, replaced = route, nil
 		progress.index, progress.departed = 1, false
 		Guide.Retarget()
 		if not result then
@@ -904,7 +840,7 @@ function ns.StartJourney(point, policy)
 	if CorpseRun() then
 		-- Queued behind the corpse run, which ResumeJourney plans from where you come back to life.
 		if not (goal and SamePlace(goal, point) and journeyPolicy == policy) then
-			result = nil
+			result, replaced = nil, nil
 			withoutHearth = false
 			Search.Clear(false, policy)
 			progress.index, progress.departed = 1, false
@@ -934,6 +870,11 @@ function ns.StartJourney(point, policy)
 	goal, nextPoint = point, nil
 	if ns.JourneyChanged then
 		ns.JourneyChanged(point)
+	end
+	-- A new goal's search draws the route it replaces until its own lands; a goal changed again before then keeps
+	-- the route still on screen.
+	if not previous and result and result.legs[progress.index] then
+		replaced = { plan = result, index = progress.index }
 	end
 	result = previous or nil
 	progress.index, progress.departed = previous and index or 1, previous and departed or false

@@ -20,16 +20,13 @@ from typing import Any
 
 from PIL import Image
 from screenshots_maps import icon, map_base
-from screenshots_services import icon as ref_icon
 from wowmock import TooltipLine, scene, tooltip  # ty: ignore[import-not-found]
 
 ROOT = Path(__file__).resolve().parent.parent
 # The client's map canvas, which UI/Map.lua's OverlapGroups measures against.
 TOWN_CANVAS = (1002, 668)
 # The Nearby services list's groups, in its order: vendors first, then the trainers, then the services. Each entry is
-# the section that ranks it and the art the map wears for it (UI/NearbyGroups.lua): the client tracking atlas's name,
-# or, for a profession trainer, the ("profession", skill line) ref whose SkillLine icon file UI/TownServices.lua
-# paints in place of that atlas.
+# the section that ranks it and the map atlas its pins wear (UI/NearbyGroups.lua).
 TOWN_GROUPS = {
     "Innkeeper": ("services", "Innkeeper"),
     "Flight master": ("services", "FlightMaster"),
@@ -38,10 +35,10 @@ TOWN_GROUPS = {
     "Bank": ("services", "Banker"),
     "Auction house": ("services", "Auctioneer"),
     "Class trainer": ("trainers", "Class"),
-    "Engineering": ("trainers", ("profession", 202)),
+    "Engineering": ("trainers", "worldquest-icon-engineering"),
     "Food": ("vendors", "Food"),
-    "Trade supplies": ("vendors", "Reagents"),
-    "Weapons and armour": ("vendors", "poi-transmogrifier"),
+    "Trade supplies": ("vendors", "Professions-Crafting-Orders-Icon"),
+    "Weapons and armour": ("vendors", "Warfronts-BaseMapIcons-Empty-Armory-Minimap"),
 }
 TOWN_GROUP_RANK = {"services": 1, "trainers": 2, "vendors": 3}
 # UI/Nearby.lua's group order: the vendor groups, the class trainer, the profession trainers, then the services.
@@ -184,11 +181,8 @@ def town_clusters(zoom):
 
 
 def group_icon(canvas, art, x, y, size=PIN_SIZE):
-    """A group's pin art centred on x, y: an atlas at its native shape, or a profession's skill line icon file."""
-    if isinstance(art, str):
-        icon(canvas, art, x, y, size=size)
-    else:
-        ref_icon(canvas, art, x - size / 2, y - size / 2, size)
+    """A group's pin art centred on x, y: its map atlas at its native shape."""
+    icon(canvas, art, x, y, size=size)
 
 
 def town_canvas(ui, zoom):

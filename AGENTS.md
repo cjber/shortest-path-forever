@@ -73,7 +73,7 @@ bold-lead bullets) before its `v*` tag, since the release publishes it as the no
 - `Locales/` — `Locales/enUS.lua` makes `L`, whose English phrases are their own keys; a translation is a
   `Locales/<locale>.lua` listed after it (`Locales/README.md`). After changing a phrase,
   `python3 tools/phrases.py > Locales/phrases.txt`. No packager localization keyword: CurseForge no longer serves translations.
-- `docs/curseforge.md` — the store description, pasted into CurseForge and Wago by hand.
+- `docs/curseforge.md` — the store description, pasted into CurseForge by hand.
 
 ## Rules
 
@@ -117,8 +117,6 @@ bold-lead bullets) before its `v*` tag, since the release publishes it as the no
 - `repo-standards`: the RS-* requirements every cjber repo meets (repo, Actions and security settings, rulesets, CI hardening, community files), a skill in cjber/skills whose `audit.py` checks this repo
 
 ## Waivers
-
-- WFA-3: an optional stock button below the minimap opens the existing Settings page, for players who request minimap access. It is off by default.
 
 - WFA-28: `Data/Routes.lua` (boat and zeppelin routes, docks, periods): wago.tools `TaxiPathNode` for the pinned
   build, timed by the CMaNGOS mangos-classic transport model and stretched onto classic-db `transports.period`;

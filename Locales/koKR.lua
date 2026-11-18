@@ -59,8 +59,7 @@ L["Journeys, and other addons' estimates from here, can start with a mage's city
 L["Minimum teleport saving"] = "순간이동 최소 절약 시간"
 L["Only use a class teleport when it saves at least this much time."] =
 	"최소 이만큼 시간을 절약할 때만 직업 순간이동을 사용합니다."
-L["Recognise profession trainers and find weapon masters."] =
-	"전문 기술 상급자를 알아보고 무기 전문가를 찾으세요." -- mt
+L["Faster routes from busy cities."] = "붐비는 도시에서 더 빠른 경로." -- mt
 L["Boat and Zeppelin Routes"] = "배와 비행선 노선"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"배와 비행선 노선. 부두를 가리키는 동안 그려집니다."
@@ -167,11 +166,9 @@ L["Only use the Hearthstone when it saves at least this much time."] =
 	"최소 이만큼 시간을 절약할 때만 귀환석을 사용합니다."
 L["Open"] = "열기"
 L["Open Nearby services"] = "주변 편의시설 열기"
-L["Open settings."] = "설정을 엽니다."
 L["Open the world map to see it."] = "세계 지도를 열어 확인하십시오."
 L["Turn the world map to %s to see it."] = "%s 지역으로 세계 지도를 돌려 확인하십시오." -- mt
 L["This menu needs mouse and keyboard."] = "이 메뉴는 마우스와 키보드가 필요합니다." -- mt
-L["Open these settings from the minimap."] = "미니맵에서 이 설정을 엽니다."
 L["Other Faction's Routes"] = "다른 진영의 노선"
 L["Plan journey"] = "여정 계획"
 L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."] =
@@ -212,7 +209,6 @@ L["Show journey steps in the objective tracker"] = "목표 추적기에서 여�
 L["Show lifts and the tram"] = "승강기와 지하철 표시"
 L["Show marks on the minimap"] = "미니맵에 표시"
 L["Show on map"] = "지도에 표시"
-L["Show options button on minimap"] = "미니맵에 설정 버튼 표시"
 L["Show other faction's routes"] = "다른 진영의 노선 표시"
 L["Show portals"] = "차원문 표시"
 L["Show routes on the world map"] = "세계 지도에 노선 표시"

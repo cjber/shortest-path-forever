@@ -58,8 +58,7 @@ L["Journeys, and other addons' estimates from here, can start with a mage's city
 L["Minimum teleport saving"] = "Gain minimum de la téléportation" -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"N'utiliser une téléportation de classe que si elle fait gagner au moins ce temps." -- mt
-L["Recognise profession trainers and find weapon masters."] =
-	"Reconnaissez les maîtres de métier et trouvez les maîtres d’armes." -- mt
+L["Faster routes from busy cities."] = "Des itinéraires plus rapides depuis les villes animées." -- mt
 L["Boat and Zeppelin Routes"] = "Routes des bateaux et zeppelins" -- mt
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Routes des bateaux et zeppelins, tracées quand vous survolez un quai." -- mt
@@ -165,11 +164,9 @@ L["Only use the Hearthstone when it saves at least this much time."] =
 	"N'utiliser la pierre de foyer que si elle fait gagner au moins ce temps." -- mt
 L["Open"] = "Ouvrir"
 L["Open Nearby services"] = "Ouvrir Services à proximité"
-L["Open settings."] = "Ouvrir les réglages." -- mt
 L["Open the world map to see it."] = "Ouvrez la carte du monde pour le voir." -- mt
 L["Turn the world map to %s to see it."] = "Tournez la carte du monde vers %s pour le voir." -- mt
 L["This menu needs mouse and keyboard."] = "Ce menu nécessite la souris et le clavier." -- mt
-L["Open these settings from the minimap."] = "Ouvrir ces réglages depuis la minicarte." -- mt
 L["Other Faction's Routes"] = "Routes de l'autre faction" -- mt
 L["Plan journey"] = "Planifier un trajet" -- mt
 L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."] =
@@ -210,7 +207,6 @@ L["Show journey steps in the objective tracker"] = "Afficher les étapes du traj
 L["Show lifts and the tram"] = "Afficher ascenseurs et tram" -- mt
 L["Show marks on the minimap"] = "Afficher les repères sur la minicarte" -- mt
 L["Show on map"] = "Afficher sur la carte" -- mt
-L["Show options button on minimap"] = "Bouton d'options sur la minicarte" -- mt
 L["Show other faction's routes"] = "Afficher les routes de l'autre faction" -- mt
 L["Show portals"] = "Afficher les portails" -- mt
 L["Show routes on the world map"] = "Afficher les routes sur la carte du monde" -- mt

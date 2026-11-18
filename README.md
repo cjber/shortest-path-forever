@@ -16,11 +16,10 @@ Need a vendor, a trainer or an inn? The **Nearby services** tab on the world map
 
 ## Known limitations
 
-- The game never says which floor you are on, so in cities like Stormwind and Undercity a walk can start on the wrong level.
 - Walking maps are built ahead of time, so patched terrain can route wrongly until an update.
-- The game does not say where your Hearthstone is bound, so it counts once you bind with the addon on.
-- The game holds no boat, lift or tram timetables, so a departure shows no sighting until you ride that route.
-- The game cannot show another player's spells, so you declare a party mage's portals yourself.
+- The game names your bind point but not where it is, so the Hearthstone counts once you bind or hearth with the addon on.
+- A boat, lift or tram shows "no sighting yet" until you have ridden that route once, because the game holds no timetables.
+- The game cannot show another player's spells, so you list a party mage's portals yourself in the settings (Party mage portals).
 
 ![Eight-second demo of a route settling, the countdown and the compass](docs/screenshots/demo.gif)
 
@@ -29,7 +28,7 @@ with you.
 
 ## Features
 
-- **Find nearby services.** A tab in the world map's quest log lists vendors by what they sell, your own class trainer, profession trainers, battlemasters, portal trainers for mages, inns, banks, auction houses, flight masters, stables and repairs, and every dungeon and raid door on your continent. Each row shows the nearest one and how long it takes to get there, and the dungeon and raid rows are ordered by that time. Arrows, shot, food and drink are the best for your level, and a row under them offers better ones farther away. Search for a group, an NPC, an item or an instance, then click a row to start the journey; a dungeon row takes you to the door and ends when you go in. Arrows mark that NPC's nameplate when you get there. Zone and city maps show the same services where they stand, each in the game's own minimap icon. Services of the same kind share one of those icons, and a market stall appears only where different kinds of service truly share a spot; click one to go there, and hide any service under *Town services* in the map's filter menu. Requires installed QuestieDB; class trainers also use Tweaks Forever.
+- **Find nearby services.** A tab in the world map's quest log lists vendors by what they sell, your own class trainer, profession trainers, battlemasters, portal trainers for mages, inns, banks, auction houses, flight masters, stables and repairs, and every dungeon and raid door on your continent. Each row shows the nearest one and how long it takes to get there, and the dungeon and raid rows are ordered by that time. Arrows, shot, food and drink are the best for your level, and a row under them offers better ones farther away. Search for a group, an NPC, an item or an instance, then click a row to start the journey; a dungeon row takes you to the door and ends when you go in. Arrows mark that NPC's nameplate when you get there. Pick a level under *Town services* in the map's filter menu and zone and city maps show the same services where they stand, each kind in its own map icon, with a market stall only where different kinds truly share a spot; click one to go there, or hide any one kind from that menu. Requires installed QuestieDB; class trainers also use Tweaks Forever.
   ![The Nearby services tab in the world map's quest log](docs/screenshots/services.png)
   The tracking menus and `/spfnear` open the same tab.
 
@@ -65,8 +64,7 @@ More detail: [features](docs/features.md) and [API](docs/api.md).
 
 ## Install
 
-Install it from [CurseForge](https://www.curseforge.com/wow/addons/shortest-path-forever) or
-[Wago Addons](https://addons.wago.io/addons/shortest-path-forever), or download the zip from
+Install it from [CurseForge](https://www.curseforge.com/wow/addons/shortest-path-forever), or download the zip from
 [Releases](https://github.com/cjber/shortest-path-forever/releases). Everything it needs comes inside the download. To install the zip by hand, extract it into
 the WoW: Forever client's `Interface/AddOns/` folder (`_forever_` on the live client, `_classic_beta_` on the beta) so you end up with `AddOns/ShortestPathForever/ShortestPathForever.toc`.
 
@@ -160,7 +158,7 @@ Travel data comes from [wago.tools](https://wago.tools), [CMaNGOS](https://githu
 
 <!-- forever-credits:start -->
 
-Thanks to Alex21xx, Maggew, MacieGx, Stiandresius, user_lsqt69ps7bgb5p7e, The___Fast, Joster91, GenericP, cotijelucie, vladsnz, user_sggieekz05hc7uxt, kindguydev, ubrider, Drusangus, user_u3k9hweaatfhnjs0, user_g496wu46adiwjuc5, emmiehbun, VolomonBeddarm, zhega, catubba, Hatemost, JaidyEU, Chulf58, embiem, InfamousMunky, A player, kaelr1, Enel3008, azure463, AsimRamay, nookie909, Zerhathos, jakerist, cobalt_44, Xeteskian, DaFrozenMage, user_zbqhuuoypkkr46x1, Fitz, TRDeadbeat, tallsmartman, Sol_Deus, Zavian, Osipanda, Nightwind416, wfournier, cidolfus27, o0saw0o, Merlinqt, team_Brigade, phear, Testvonfarkle, rydoc, deathmvp1, saikoso, Ragnarok11B, Brainc3ll, Mouchoir, z1ck, Oxds, sean16981, aryaxo, Exo_NA, legortiz, JohnChrin, wheelbarrel00, lkshrk, HeartOfD2, rml9ty, hwalflor, chris-chrysos, Quantity-4, Bolton_wow, Aldericdevir, joaocjesus, jakerist (Grayburn), borick7318, sampconrad, jixxor, Gaafah, _spada, macwire, scraak, overspark, TeeRKee, Speaker1264, SuubzTV, Fel7, Kragmars, spidersylar, Acem, tgkGate, user_efwsfml273dlvfm5, IronmanBG, vcatalin, sdtom, Bervath, Blast22, hervad, caghanpekin-prog, Zwaffelmagic, CptShooter, user_10oietw0rdrgk4le, cwebbx, lone_viking1921, Nivlemoth_Nathrezim, Lůca [Luutsa], esc_return, MrOxiMoron, Zhiroc, Crypa7, ghuff07, nimri82, cmartin303 and everyone who reported a bug or asked for a feature.
+Thanks to Alex21xx, Maggew, MacieGx, Stiandresius, user_lsqt69ps7bgb5p7e, The___Fast, Joster91, GenericP, cotijelucie, vladsnz, user_sggieekz05hc7uxt, kindguydev, ubrider, Drusangus, user_u3k9hweaatfhnjs0, treadpool, user_g496wu46adiwjuc5, emmiehbun, VolomonBeddarm, zhega, catubba, Hatemost, JaidyEU, Chulf58, embiem, InfamousMunky, A player, kaelr1, Enel3008, azure463, AsimRamay, nookie909, Zerhathos, jakerist, cobalt_44, Xeteskian, DaFrozenMage, user_zbqhuuoypkkr46x1, Fitz, TRDeadbeat, tallsmartman, Sol_Deus, Zavian, Osipanda, Nightwind416, wfournier, cidolfus27, o0saw0o, Merlinqt, team_Brigade, phear, Testvonfarkle, rydoc, deathmvp1, saikoso, Ragnarok11B, Brainc3ll, Mouchoir, z1ck, Oxds, sean16981, aryaxo, Exo_NA, legortiz, JohnChrin, wheelbarrel00, lkshrk, HeartOfD2, rml9ty, hwalflor, chris-chrysos, Quantity-4, Bolton_wow, Aldericdevir, joaocjesus, jakerist (Grayburn), borick7318, sampconrad, jixxor, Gaafah, _spada, macwire, scraak, overspark, TeeRKee, Speaker1264, SuubzTV, Fel7, Kragmars, spidersylar, Acem, tgkGate, user_efwsfml273dlvfm5, IronmanBG, vcatalin, sdtom, Bervath, Blast22, hervad, caghanpekin-prog, Zwaffelmagic, CptShooter, user_10oietw0rdrgk4le, cwebbx, lone_viking1921, Nivlemoth_Nathrezim, Lůca [Luutsa], esc_return, MrOxiMoron, Zhiroc, Crypa7, ghuff07, nimri82, cmartin303 and everyone who reported a bug or asked for a feature.
 
 <!-- forever-credits:end -->
 

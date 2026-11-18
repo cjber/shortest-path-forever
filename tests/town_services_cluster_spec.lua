@@ -95,6 +95,8 @@ C_Map.GetMapInfo = function(id)
 end
 ns.db.journey = true
 ns.db.townServices = "all"
+-- The vendors start hidden (#978); this player shows food and weapons and armour.
+ns.db.townServiceFood, ns.db.townServiceGear = true, true
 mapID, zoom = 1414, 0
 setMapShown(true)
 ns.RefreshTownServices()

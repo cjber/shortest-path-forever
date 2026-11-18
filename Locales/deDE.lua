@@ -56,7 +56,7 @@ L["Journeys, and other addons' estimates from here, can start with a mage's city
 L["Minimum teleport saving"] = "Mindestersparnis durch Teleport"
 L["Only use a class teleport when it saves at least this much time."] =
 	"Einen Klassenteleport nur nutzen, wenn er mindestens so viel Zeit spart."
-L["Recognise profession trainers and find weapon masters."] = "Berufslehrer erkennen und Waffenmeister finden." -- mt
+L["Faster routes from busy cities."] = "Schnellere Routen aus belebten Städten." -- mt
 L["Boat and Zeppelin Routes"] = "Schiffs- und Zeppelinrouten"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Schiffs- und Zeppelinrouten, gezeichnet, während Ihr auf eine Anlegestelle zeigt."
@@ -160,11 +160,9 @@ L["Only use the Hearthstone when it saves at least this much time."] =
 	"Den Ruhestein nur nutzen, wenn er mindestens so viel Zeit spart."
 L["Open"] = "Öffnen"
 L["Open Nearby services"] = "Dienste in der Nähe öffnen"
-L["Open settings."] = "Optionen öffnen."
 L["Open the world map to see it."] = "Öffnet die Weltkarte, um es zu sehen."
 L["Turn the world map to %s to see it."] = "Dreht die Weltkarte auf %s, um es zu sehen." -- mt
 L["This menu needs mouse and keyboard."] = "Dieses Menü braucht Maus und Tastatur." -- mt
-L["Open these settings from the minimap."] = "Diese Optionen über die Minikarte öffnen."
 L["Other Faction's Routes"] = "Routen der anderen Fraktion"
 L["Plan journey"] = "Reise planen"
 L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."] =
@@ -205,7 +203,6 @@ L["Show journey steps in the objective tracker"] = "Reiseschritte in der Verfolg
 L["Show lifts and the tram"] = "Aufzüge und die Bahn zeigen"
 L["Show marks on the minimap"] = "Markierungen auf der Minikarte zeigen"
 L["Show on map"] = "Auf Karte zeigen"
-L["Show options button on minimap"] = "Optionsknopf an der Minikarte zeigen"
 L["Show other faction's routes"] = "Routen der anderen Fraktion zeigen"
 L["Show portals"] = "Portale zeigen"
 L["Show routes on the world map"] = "Routen auf der Weltkarte zeigen"

@@ -85,6 +85,8 @@ scenario(
 		sim:openWorldMap(1429)
 		sim:input(function()
 			ns.db.townServices = "all"
+			-- The vendor kinds start hidden (#978); this player shows food to see the outlying seller.
+			ns.db.townServiceFood = true
 			ns.RefreshTownServices()
 		end)
 		sim:advance(0.2)
@@ -131,7 +133,24 @@ scenario(
 		sim:advance(0.5)
 		sim:gamepadNavigate()
 
-		groups[3] = group("trainers", "profession:164", "Blacksmithing", "Profession")
+		-- Every map atlas the pins wear is in the client's own atlas table.
+		local wears = {}
+		for _, list in ipairs({ ns.NearbyGroups.vendors, ns.NearbyGroups.services }) do
+			for _, entry in ipairs(list) do
+				wears[#wears + 1] = entry.tracking
+			end
+		end
+		for _, map in ipairs({ ns.NearbyGroups.roles, ns.NearbyGroups.professions }) do
+			for _, tracking in pairs(map) do
+				wears[#wears + 1] = tracking
+			end
+		end
+		for _, tracking in ipairs(wears) do
+			assert(sim:global("C_Texture").GetAtlasInfo(tracking), tracking .. " is an atlas the client has")
+		end
+
+		local smithing = ns.NearbyGroups.professions[164]
+		groups[3] = group("trainers", "profession:164", "Blacksmithing", smithing)
 		groups[3].iconFile = ns.ProfessionIcons[164]
 		index = { bank = index.bank, innkeeper = index.innkeeper }
 		index["profession:164"] = { place(4, "Smith", -9449, 64) }
@@ -143,7 +162,8 @@ scenario(
 		sim:advance(0.2)
 		local foundIcon, foundWeapon
 		for _, pin in ipairs(pins.active) do
-			if pin.Texture:GetTexture() == ns.ProfessionIcons[164] then
+			assert(pin.Texture:GetTexture() ~= ns.ProfessionIcons[164], "no pin wears the Nearby row's file icon")
+			if pin.Texture:GetAtlas() == smithing then
 				foundIcon = true
 			end
 			for _, point in ipairs(pin.cluster.services) do
@@ -152,7 +172,7 @@ scenario(
 				end
 			end
 		end
-		assert(foundIcon and foundWeapon, "profession file icon and weapon master are drawn")
+		assert(foundIcon and foundWeapon, "the blacksmithing mark and the weapon master are drawn")
 		sim:input(function()
 			ns.SetTownServiceGroupShown(groups[4], false)
 		end)

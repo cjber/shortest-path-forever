@@ -32,4 +32,8 @@ local ready = ForeverCore ~= nil
 	and type(ForeverCore.Art.Marker) == "function"
 	and type(ForeverCore.Art.Diamond) == "function"
 
-ns.ForeverRequire(ready)
+-- UI/Settings.lua's slash words (tests/core_dependency_spec.lua keeps the two lists equal). A stopped addon still
+-- answers them with the line that names the fix, as its addon compartment entry does (#996).
+ns.Slash = { key = "SHORTESTPATHFOREVER", "/path", "/shortestpath" }
+
+ns.ForeverRequire(ready, ns.Slash)

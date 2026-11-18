@@ -10,6 +10,30 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.43.0] - 2026-11-18
+
+<!-- discord-image: docs/screenshots/town_services.png -->
+
+This release also carries every change from 1.42.0, which was not published on its own: profession trainer and weapon master icons, roads that stay connected, walks that stay off steep faces, and more. See the [full changelog](https://github.com/cjber/shortest-path-forever/blob/main/CHANGELOG.md#1420---2026-11-17).
+
+### Changed
+
+- **Faster routes from busy cities.** Long walking routes out of cities such as Stormwind appear sooner (#979).
+- **Town service pins start off.** The map stays clear until you pick a level under *Town services* in the map's filter menu or in Settings > Map marks, and the pins then show only on zone and city maps, never on a continent or the world map. A level you had changed from capitals only is kept (#985).
+- **Vendor pins start hidden, like repairs.** With town services on, the map shows trainers and services first; turn on food, ammunition, bags, reagents, books or weapons and armour under *Town services* in the map's filter menu, and a kind you turned on there stays on (#978).
+- **The compass starts off.** Turn it on with *Show the compass* in Settings > Interface; a compass you had turned off stays off (#985).
+- **Each kind of service has its own map icon.** Every town service pin wears the game's own map art, so profession trainers show their profession's mark (a hide for skinning, a spool for tailoring), and bags, books and weapon masters each have an icon of their own instead of a square item icon (#985).
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+- **Updates are published on CurseForge and GitHub.** Wago publishing has ended, so install and update from CurseForge. (cjber/forever-core#649)
+
+### Fixed
+
+- **A journey to the Ruins of Lordaeron leaves the Undercity.** A spot picked on the map above the city now ends on that surface, so the route takes a lift and walks across the ruins instead of wandering the city's corridors to the floor underneath it. Thanks to treadpool for the report (#923).
+- **Weapons and armour vendors no longer wear the transmogrifier's purple banner.** They now show the minimap's armoury shield, so the two are easy to tell apart (#978).
+- **The journey list holds still while you travel.** Finishing a step no longer lays the list out a second time a few seconds later, and choosing a new destination keeps the route you were on in grey, under the spinner, until the new one is found, so the list no longer shrinks to one line and grows back and the sections below it stay where they are (cjber/forever-core#795).
+- **With ForeverCore turned off, Shortest Path says so when you try it.** `/path` and its entry in the addon compartment now repeat the line asking you to turn ForeverCore back on in the AddOns list, instead of doing nothing or raising a Lua error. Thanks to Hex_512 and klessky92_ for the reports. (#996)
+- **A TomTom turned off for this character alone counts as off.** Shortest Path now answers waypoints in its place, as it does when TomTom is off for every character. (#996)
+
 ## [1.42.0] - 2026-11-17
 
 <!-- discord-image: docs/screenshots/services_roles.png -->
@@ -25,6 +49,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 - **The Hearthstone button stays off the world map while Use Hearthstone is off.** Thanks to user_g496wu46adiwjuc5 for the report (#951).
 - **Faint and narrow roads stay connected.** Follow roads now weighs each cell by its painted road coverage, keeping partial-alpha roads in the route and drawn line (refs #893).
 - **Walks stay off steep faces they cannot climb.** Walking routes in Westfall and the Barrens no longer climb a ridge whose only way up lies outside the next few yards (#950; refs #897), thanks to emmiehbun and VolomonBeddarm for the reports.
+- **The minimap button is gone.** Open Shortest Path Forever with /path, from the game's settings or from the AddOn compartment.
 - Ships with the same shared code as your other Forever addons, so they keep working together.
 
 ### For addon authors

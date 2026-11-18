@@ -56,8 +56,7 @@ L["Journeys, and other addons' estimates from here, can start with a mage's city
 L["Minimum teleport saving"] = "Economia mínima do teleporte"
 L["Only use a class teleport when it saves at least this much time."] =
 	"Usar um teleporte de classe só quando ele economizar pelo menos este tempo."
-L["Recognise profession trainers and find weapon masters."] =
-	"Reconheça os instrutores de profissão e encontre mestres de armas." -- mt
+L["Faster routes from busy cities."] = "Rotas mais rápidas a partir de cidades movimentadas." -- mt
 L["Boat and Zeppelin Routes"] = "Rotas de barcos e zepelins"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Rotas de barcos e zepelins, desenhadas enquanto você aponta para um cais."
@@ -161,11 +160,9 @@ L["Only use the Hearthstone when it saves at least this much time."] =
 	"Usar a pedra de regresso só quando ela economizar pelo menos este tempo."
 L["Open"] = "Abrir"
 L["Open Nearby services"] = "Abrir serviços próximos"
-L["Open settings."] = "Abrir configurações."
 L["Open the world map to see it."] = "Abra o mapa-múndi para ver."
 L["Turn the world map to %s to see it."] = "Mude o mapa-múndi para %s para ver." -- mt
 L["This menu needs mouse and keyboard."] = "Este menu precisa de mouse e teclado." -- mt
-L["Open these settings from the minimap."] = "Abrir estas configurações pelo minimapa."
 L["Other Faction's Routes"] = "Rotas da outra facção"
 L["Plan journey"] = "Planejar jornada"
 L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."] =
@@ -206,7 +203,6 @@ L["Show journey steps in the objective tracker"] = "Mostrar as etapas da jornada
 L["Show lifts and the tram"] = "Mostrar elevadores e metrô"
 L["Show marks on the minimap"] = "Mostrar marcas no minimapa"
 L["Show on map"] = "Mostrar no mapa"
-L["Show options button on minimap"] = "Botão de opções no minimapa"
 L["Show other faction's routes"] = "Mostrar rotas da outra facção"
 L["Show portals"] = "Mostrar portais"
 L["Show routes on the world map"] = "Mostrar rotas no mapa-múndi"

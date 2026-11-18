@@ -1,6 +1,6 @@
 ---
 name: release
-description: "Prepare, publish and verify a complete Shortest Path Forever release. Use for /release or cutting a release, including data, README and store copy, screenshots, both stores and client installation."
+description: "Prepare, publish and verify a complete Shortest Path Forever release. Use for /release or cutting a release, including data, README and store copy, screenshots, CurseForge and client installation."
 ---
 
 # Release Shortest Path Forever
@@ -50,8 +50,8 @@ authorization. A preparation-only request ends before tags or uploads.
    references. Regenerate icon art if changed. Check README image links against
    the files that will exist on main.
 6. Record the intended store summary, description, logo and gallery set with exact
-   filenames, captions and order. Use current committed assets for GitHub,
-   CurseForge and Wago. Gallery refresh includes replacing stale screenshots and
+   filenames, captions and order. Use current committed assets for GitHub
+   and CurseForge. Gallery refresh includes replacing stale screenshots and
    duplicates, not merely appending the new set. Preserve any intentionally kept
    images; identify the exact stale images before deleting them. Use authorized
    browser/connector tooling for changes the packager does not perform.
@@ -77,21 +77,21 @@ authorization. A preparation-only request ends before tags or uploads.
    `INGAME FAIL` is a release blocker: fix the errors it names. `INGAME BLOCKED` goes to the user as the release's
    blocker.
 10. Inspect `.github/workflows/release.yml`, `.pkgmeta` and `ShortestPathForever.toc`.
-    Confirm `X-Curse-Project-ID`, `X-Wago-ID`, interface and dependencies are right.
-    Check secret names with `gh secret list`: `CF_API_KEY` and `WAGO_API_TOKEN`
-    must both be present; never print their values. Create a new signed `vX.Y.Z`
+    Confirm `X-Curse-Project-ID`, interface and dependencies are right.
+    Check secret names with `gh secret list`: `CF_API_KEY`
+    must be present; never print their values. Create a new signed `vX.Y.Z`
     tag at the verified main commit and push that exact tag. Preserve existing tags.
-11. Watch the tag's release workflow through completion. Inspect its log for both
-    store IDs with `[token set]` and successful uploads to each provider. A green
+11. Watch the tag's release workflow through completion. Inspect its log for the
+    CurseForge ID with `[token set]` and a successful upload to each provider. A green
     workflow can silently skip a provider with a missing token. Download and
     inspect the GitHub release zip: substituted version, TOC/XML load graph,
     runtime files, media, required bundled data and libraries must be present;
     development files and third-party companion databases must remain excluded.
-12. Apply the prepared summary, description, logo and gallery to both stores.
+12. Apply the prepared summary, description, logo and gallery to CurseForge.
     Save, reopen and verify each surface, including captions/order and removed
     duplicates. Check GitHub's rendered README, release notes and image links too.
     An upload does not update store descriptions or galleries automatically.
-13. Verify the public CurseForge files page and Wago version page show this version
+13. Verify the public CurseForge files page shows this version
     for the intended client, with the correct notes and downloadable artifact.
     Report moderation or an unavailable surface as pending, with its URL; uploaded
     or workflow-green does not mean publicly live. Retry without creating another

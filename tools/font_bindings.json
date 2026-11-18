@@ -3,7 +3,7 @@
   "producers": [
     {
       "source": "UI/Tracker.lua",
-      "sha256": "c82a3438a711f35b8c331868c57b7b52001e9e26945b1692cd804eb05e0f3af6",
+      "sha256": "59da96aec73418421d4734dc32c22003a6e97646f1ad9783aef1e08f796eb379",
       "review": "Read all of Tracker.lua, Tracker.xml and ForeverCore TrackerSection.Create, UpdateText and TrackerLine.SetInteractive. Confirmed pinned client Blizzard_ObjectiveTrackerModule.xml: ObjectiveTrackerModuleTemplate Header inherits ObjectiveTrackerModuleHeaderTemplate, whose Text uses ObjectiveTrackerHeaderFont. Blizzard_ObjectiveTrackerBlock.xml HeaderText uses ObjectiveTrackerLineFont; Blizzard_ObjectiveTrackerShared.xml ObjectiveTrackerLineTemplate Text uses ObjectiveTrackerLineFont, inherited without overrides by ShortestPathForeverTrackerLineTemplate. Bound every local phrase sent to section headers, block headers and rows, including Journey  %s · %s from #838. RefreshBlockText preserves these widgets. Client tracker text-size changes and optional Kaliels font overrides are outside the pinned native-font coverage. Menus, chat, tooltips and dynamic text from JourneyInfo, DockTitle, DepartureText and FamilyHints are excluded.",
       "bindings": [
         {
@@ -51,7 +51,7 @@
     },
     {
       "source": "UI/Settings.lua",
-      "sha256": "e1c8b7c6fb9c1e666e8aef9d04596fb941b190b53cb12d046940c8d832437d73",
+      "sha256": "b620c250d36a5fbd041c561cb1b7c2c671ed19111594d2e87c77472a864b36b1",
       "review": "Read Page, Checkbox, Scale, Dropdown and Saving and their registration calls. Settings rows, index buttons and option labels delegate to Blizzard secure initializers; this file creates no FontString and establishes no explicit FontObject. Minimap button text, tooltip text, chat output and helper arguments are excluded rather than assigned an assumed settings font.",
       "bindings": []
     },

@@ -57,8 +57,7 @@ L["Journeys, and other addons' estimates from here, can start with a mage's city
 L["Minimum teleport saving"] = "Ahorro mínimo del teletransporte"
 L["Only use a class teleport when it saves at least this much time."] =
 	"Usar un teletransporte de clase solo si ahorra al menos este tiempo."
-L["Recognise profession trainers and find weapon masters."] =
-	"Reconoce a los instructores de profesión y encuentra maestros de armas." -- mt
+L["Faster routes from busy cities."] = "Rutas más rápidas desde las ciudades concurridas." -- mt
 L["Boat and Zeppelin Routes"] = "Rutas de barcos y zepelines"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Rutas de barcos y zepelines, dibujadas al señalar un muelle."
@@ -163,11 +162,9 @@ L["Only use the Hearthstone when it saves at least this much time."] =
 	"Usar la piedra de hogar solo si ahorra al menos este tiempo."
 L["Open"] = "Abrir"
 L["Open Nearby services"] = "Abrir servicios cercanos"
-L["Open settings."] = "Abrir la configuración."
 L["Open the world map to see it."] = "Abre el mapa del mundo para verlo."
 L["Turn the world map to %s to see it."] = "Gira el mapa del mundo hacia %s para verlo." -- mt
 L["This menu needs mouse and keyboard."] = "Este menú necesita ratón y teclado." -- mt
-L["Open these settings from the minimap."] = "Abrir esta configuración desde el minimapa."
 L["Other Faction's Routes"] = "Rutas de la otra facción"
 L["Plan journey"] = "Planear viaje"
 L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."] =
@@ -208,7 +205,6 @@ L["Show journey steps in the objective tracker"] = "Mostrar los pasos del viaje 
 L["Show lifts and the tram"] = "Mostrar ascensores y tranvía"
 L["Show marks on the minimap"] = "Mostrar marcas en el minimapa"
 L["Show on map"] = "Mostrar en el mapa"
-L["Show options button on minimap"] = "Botón de opciones en el minimapa"
 L["Show other faction's routes"] = "Mostrar rutas de la otra facción"
 L["Show portals"] = "Mostrar portales"
 L["Show routes on the world map"] = "Mostrar rutas en el mapa del mundo"

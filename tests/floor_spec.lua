@@ -186,7 +186,8 @@ do
 	assert(not jns.JourneyGoal(), "with the floor unknown the spot decides")
 end
 
--- A spot picked on the Undercity's map is on the city's floor; one on Tirisfal's names the surface.
+-- A spot picked on the Undercity's map is on the city's floor; one on Tirisfal's names the surface, and one on Tirisfal
+-- away from the city names nothing, since only the city's own corner of that map lies over it.
 do
 	local input = assert(loadfile("tests/journey_driver.lua"))()
 	input.env.C_Map.GetWorldPosFromMapPos = function(_, pos)
@@ -196,8 +197,18 @@ do
 			end,
 		}
 	end
+	-- The Undercity's map, 1458, covers world x 0.4 to 0.6 and y 0.4 to 0.6 in this small client (Data/Zones.lua).
+	input.env.C_Map.GetMapPosFromWorldPos = function(_, world, id)
+		local x, y = world:GetXY()
+		return id, {
+			GetXY = function()
+				return (x - 0.4) / 0.2, (y - 0.4) / 0.2
+			end,
+		}
+	end
 	assert(input.ns.WorldPoint(1458, 0.5, 0.5).z == -43.1, "the Undercity's map is the city")
-	assert(input.ns.WorldPoint(1420, 0.5, 0.5).z == nil, "Tirisfal's is the surface")
+	assert(input.ns.WorldPoint(1420, 0.5, 0.5).z == 55.718, "Tirisfal over the city is the Ruins above it")
+	assert(input.ns.WorldPoint(1420, 0.8, 0.8).z == nil, "Tirisfal away from the city is the open surface")
 end
 
 print("floor_spec: ok")

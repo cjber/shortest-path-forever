@@ -46,30 +46,6 @@ local category
 function ns.OpenSettings()
 	ForeverCore.OpenSettingsPanel(category:GetID())
 end
-local optionsButton
-function ns.RefreshOptionsButton()
-	if ns.db.minimapButton and not optionsButton then
-		-- Named: a template button under an unnamed frame gives its `$parent` label a bare global name
-		-- (`MinimapText` here), which another addon or a Blizzard layout could read as its own (#457).
-		optionsButton = CreateFrame("Button", "ShortestPathForeverOptionsButton", Minimap, "SharedButtonSmallTemplate")
-		optionsButton:SetSize(70, 22)
-		optionsButton:SetPoint("TOP", Minimap, "BOTTOM", 0, -2)
-		optionsButton:SetText(L["Journey"])
-		optionsButton:SetScript("OnClick", ns.OpenSettings)
-		optionsButton:SetScript("OnEnter", function(self)
-			GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-			GameTooltip_SetTitle(GameTooltip, "Shortest Path Forever")
-			GameTooltip_AddNormalLine(GameTooltip, L["Open settings."])
-			GameTooltip:Show()
-		end)
-		optionsButton:SetScript("OnLeave", function()
-			GameTooltip:Hide()
-		end)
-	end
-	if optionsButton then
-		optionsButton:SetShown(ns.db.minimapButton)
-	end
-end
 local function Perf()
 	local profiler, metrics = C_AddOnProfiler, Enum.AddOnProfilerMetric
 	if profiler and profiler.GetAddOnMetric and metrics and (not profiler.IsEnabled or profiler.IsEnabled()) then
@@ -856,12 +832,6 @@ ns.Init(function()
 		end
 	)
 	Checkbox(
-		"minimapButton",
-		L["Show options button on minimap"],
-		L["Open these settings from the minimap."],
-		ns.RefreshOptionsButton
-	)
-	Checkbox(
 		"whatsNew",
 		L["What's new after an update"],
 		L["One line in chat the first time you log in after an update."]
@@ -879,7 +849,6 @@ ns.Init(function()
 	)
 
 	Settings.RegisterAddOnCategory(category)
-	ns.RefreshOptionsButton()
 	SLASH_SHORTESTPATHFOREVER1 = "/path"
 	SLASH_SHORTESTPATHFOREVER2 = "/shortestpath"
 	SlashCmdList.SHORTESTPATHFOREVER = function(message)
