@@ -134,10 +134,12 @@ marks, tall, suffix = dirty, 12, " 0:59"
 tick()
 tall, suffix = 24, " 0:58"
 tick()
-assert(dirty == marks, "a row that fits in fewer lines keeps its place, so a ticking timer cannot shake the column")
+-- ForeverCore lays a section out again whenever a row's height changes, either way, so it never leaves a gap under it.
+assert(dirty == marks + 2, "a row that shrinks and grows again is laid out each time")
 block.SetStringText, suffix = setText, nil
 tick()
 for _, row in pairs(block.lines) do row.GetHeight = function() return 12 end end
+marks = dirty
 index, onTaxi = 2, true
 assert(refresh(true) == "Journey  44:00 · 8.5k yd")
 assert(dirty == marks + 1 and not block:GetExistingLine(1), "leg changes still relayout rows")
