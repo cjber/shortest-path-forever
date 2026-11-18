@@ -3,10 +3,12 @@
 
     python3 tools/gate.py             # every step
     python3 tools/gate.py --changed   # only the steps the diff against origin/main reaches; tools/ reaches all
+                                      # but the typecheck, and the linters read only the changed Lua files
 
 Every step runs even after one fails, as in CI, and the exit status is 1 when any failed. The specs load ForeverCore
 from $FOREVER_CORE, else the sibling ../forever-core checkout; set it when working from a worktree. The simulator,
-package, workflow and secret jobs stay in CI.
+package, workflow and secret jobs stay in CI, and so does the whole-repo LuaLS typecheck under --changed: it holds about
+5 GB on a machine other sessions share.
 """
 
 import argparse
@@ -29,11 +31,17 @@ class Step:
     argv: tuple[str, ...]
     # fnmatch patterns over changed paths ("*" crosses folders); empty means the step runs for any change.
     reaches: tuple[str, ...] = ()
+    # False for a step too heavy for the shared machine: --changed leaves it to CI and says so.
+    local: bool = True
+    # True for a linter whose trailing "." --changed swaps for the changed Lua files, unless its own config changed.
+    files: bool = False
 
 
 STEPS = (
-    Step("stylua", ("stylua", "--check", "."), ("*.lua", "stylua.toml", ".styluaignore")),
-    Step("luacheck", ("luacheck", "."), ("*.lua", ".luacheckrc")),
+    Step(
+        "stylua", ("stylua", "--check", "--respect-ignores", "."), ("*.lua", "stylua.toml", ".styluaignore"), files=True
+    ),
+    Step("luacheck", ("luacheck", "."), ("*.lua", ".luacheckrc"), files=True),
     Step(
         "typecheck",
         ("bash", "tools/typecheck.sh"),
@@ -49,6 +57,7 @@ STEPS = (
             "ruff.toml",
             ".pkgmeta",
         ),
+        local=False,
     ),
     Step("specs", ("python3", "-m", "tools.forever_tools.specs"), LUA),
     Step("deadcode", ("python3", "tools/deadcode.py", "--check"), LUA),
@@ -113,9 +122,21 @@ def main() -> int:
         if not everything and step.reaches and not any(fnmatch.fnmatch(p, g) for p in changed for g in step.reaches):
             print(f"-- {step.name}: skipped, the diff does not reach it", flush=True)
             continue
-        print(f"== {step.name}: {' '.join(step.argv)}", flush=True)
+        if args.changed and not step.local:
+            print(f"-- {step.name}: left to CI under --changed; run {' '.join(step.argv)} to check it here", flush=True)
+            continue
+        argv = step.argv
+        if args.changed and step.files:
+            reached = [p for p in changed if any(fnmatch.fnmatch(p, g) for g in step.reaches)]
+            if all(fnmatch.fnmatch(p, "*.lua") for p in reached):
+                lua = sorted(p for p in reached if (ROOT / p).is_file())
+                if not lua:
+                    print(f"-- {step.name}: skipped, no changed Lua file remains", flush=True)
+                    continue
+                argv = (*argv[:-1], *lua)
+        print(f"== {step.name}: {' '.join(argv)}", flush=True)
         started = time.monotonic()
-        code = subprocess.run(step.argv, cwd=ROOT, env=env, stdin=subprocess.DEVNULL).returncode
+        code = subprocess.run(argv, cwd=ROOT, env=env, stdin=subprocess.DEVNULL).returncode
         print(
             f"== {step.name}: {'ok' if code == 0 else f'FAILED (exit {code})'} in {time.monotonic() - started:.1f}s",
             flush=True,
