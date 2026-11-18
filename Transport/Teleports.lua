@@ -112,6 +112,10 @@ local function States()
 		local deadline
 		if Stocked(teleport) then
 			deadline = select(2, Cooldown(teleport))
+			if not deadline then
+				-- A secret cooldown is never kept: the next read asks again.
+				expires = now
+			end
 		end
 		if deadline and deadline > now then
 			expires = math.min(expires, deadline)

@@ -150,6 +150,9 @@ end
 -- The spells the spellbook holds, split by the units they can be asked about. A pet spell would answer for the pet
 -- and a self spell for the caster, neither of which is the NPC the band measured, so Data/SpellTargets.lua keeps only
 -- spells that target another unit.
+-- Whether the client refused a value while the ladders were read (Ladder below).
+local refused = false
+
 ---@return { friendly: SPFBandChecks, hostile: SPFBandChecks }?
 local function SpellLadders()
 	-- A client with no spellbook to read has no spell ladder.
@@ -163,6 +166,7 @@ local function SpellLadders()
 	local lines = C_SpellBook.GetNumSpellBookSkillLines() or 0
 	for index = 1, lines do
 		local line = C_SpellBook.GetSpellBookSkillLineInfo(index)
+		refused = refused or (line ~= nil and not canaccessvalue(line.numSpellBookItems))
 		if line and canaccessvalue(line.numSpellBookItems) and line.numSpellBookItems then
 			local first = (line.itemIndexOffset or 0) + 1
 			for slot = first, first + line.numSpellBookItems - 1 do
@@ -171,6 +175,7 @@ local function SpellLadders()
 				local info = spell and C_Spell.GetSpellInfo(spell)
 				local high = info and info.maxRange
 				-- The minimum range is not read: a true answer still says the unit is no farther than the maximum.
+				refused = refused or (high ~= nil and not canaccessvalue(high))
 				if high and canaccessvalue(high) and high > SHORTEST then
 					local check = { kind = "spell", id = spell, range = high }
 					if allowedFriendly and allowedFriendly[spell] then
@@ -200,7 +205,9 @@ local function ItemLadders()
 	end
 	local carried = {}
 	for item in pairs(items) do
-		local held = Readable(count(item))
+		local raw = count(item)
+		local held = Readable(raw)
+		refused = refused or (raw ~= nil and held == nil)
 		if type(held) == "number" and held > 0 then
 			carried[#carried + 1] = item
 		end
@@ -247,8 +254,16 @@ end
 
 ---@return SPFBandLadders
 local function Ladder()
-	kept = kept or Read()
-	return kept
+	if kept then
+		return kept
+	end
+	refused = false
+	local read = Read()
+	-- A ladder the client kept a value from is never kept: the next measurement asks again.
+	if not refused then
+		kept = read
+	end
+	return read
 end
 
 ns.Init(function()

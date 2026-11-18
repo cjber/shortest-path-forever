@@ -273,6 +273,8 @@ do
 	cooldowns[3561] = { startTime = secret, duration = secret }
 	changed("SPELL_UPDATE_COOLDOWN")
 	assert(not select(2, Usable(5000))[1], "a secret cooldown is never guessed")
+	cooldowns[3561] = { startTime = 0, duration = 0 }
+	assert(select(2, Usable(5000))[1] == 5000, "nor kept: the next read asks again")
 	cooldowns[3561], spells[3561] = nil, nil
 	-- The cast time is the client's own where it reports one, and the shipped one where it does not.
 	assert(places[1].cast == 10000, "the shipped cast time")
