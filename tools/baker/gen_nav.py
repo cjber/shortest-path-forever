@@ -99,7 +99,7 @@ LINKED_OF = defaultdict(list)  # cluster -> its nodes with LINKS, sorted
 FLOORS_AT = {}  # cell -> its floor nodes, lowest first
 TERRAIN = {}  # cluster -> its terrain field (tools/baker/terrain.py)
 KINDS = defaultdict(int)  # how the encoded links came out: step bits, one-way records, drops
-ROAD_CELLS = set()  # global cells Data/RoadCells.lua calls road, so a road crossing can be an entrance
+ROAD_CELLS = {}  # global cell -> road coverage (0 to 1) from Data/RoadCells.lua, as the runtime charges it
 
 
 def configure(map_id, rows=None, cols=None):
@@ -142,21 +142,29 @@ def places(map_id):
 
 
 def decode_road_runs(s):
-    """Positive-painted cells: two base64 length symbols, then one coverage symbol per run."""
-    cells, at = set(), 0
+    """Positive-painted cells and their coverage (symbol / 63, as Routing/PathGrid.lua reads it): two base64 length
+    symbols, then one coverage symbol per run."""
+    cells, at = {}, 0
     for pos in range(0, len(s), 3):
         run = B64.index(s[pos]) * 64 + B64.index(s[pos + 1])
-        if B64.index(s[pos + 2]) > 0:
-            cells.update(range(at, at + run))
+        coverage = B64.index(s[pos + 2]) / 63
+        if coverage > 0:
+            cells.update(dict.fromkeys(range(at, at + run), coverage))
         at += run
     return cells
 
 
+def off_road(cell, base):
+    """The part of a step's cost the road factor scales: Routing/Path.lua charges 1 + (OFFROAD - 1) * (1 - coverage),
+    so faint paint is nearly off road and only full coverage is free."""
+    return base * (1 - ROAD_CELLS.get(cell, 0.0))
+
+
 def read_roads(map_id):
-    """Data/RoadCells.lua's road cells for a map, as global cell ids; empty before a road bake."""
+    """Data/RoadCells.lua's road cells for a map, as global cell id -> coverage; empty before a road bake."""
     path = ROOT / "Data" / "RoadCells.lua"
     if not path.exists():
-        return set()
+        return {}
     found, inside = {}, False
     for line in path.read_text().splitlines():
         if line.strip() == f"[{map_id}] = {{":
@@ -168,10 +176,10 @@ def read_roads(map_id):
             m = re.match(r'\s*\[(\d+)\] = "([^"]+)"', line)
             if m:
                 found[int(m.group(1)) - 1] = decode_road_runs(m.group(2))
-    roads = set()
+    roads = {}
     for k, locals_ in found.items():
-        for cell in locals_:
-            roads.add((k // NY * CELLS + cell // CELLS) * GH + (k % NY * CELLS + cell % CELLS))
+        for cell, coverage in locals_.items():
+            roads[(k // NY * CELLS + cell // CELLS) * GH + (k % NY * CELLS + cell % CELLS)] = coverage
     return roads
 
 
@@ -947,7 +955,7 @@ def cluster_edges(k):
                     )
                 for v, costs in adjacency[u]:
                     base = costs[mode % len(WEIGHTS)]
-                    step_off = base if cell_of(v) not in ROAD_CELLS else 0.0
+                    step_off = off_road(cell_of(v), base)
                     candidate = du + base + (factor - 1) * step_off
                     if candidate < gd.get(v, 1e18):
                         gd[v], off[v] = candidate, off[u] + step_off

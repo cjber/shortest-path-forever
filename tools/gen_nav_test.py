@@ -552,7 +552,12 @@ class EmitDeltaTest(unittest.TestCase):
 class RoadsTest(unittest.TestCase):
     def test_a_run_string_names_its_road_cells(self):
         # An off run of 10 then an on run of 3: cells 10, 11 and 12 are road.
-        self.assertEqual(decode_road_runs("AKAAD/"), {10, 11, 12})
+        self.assertEqual(decode_road_runs("AKAAD/"), {10: 1.0, 11: 1.0, 12: 1.0})
+
+    def test_a_run_keeps_its_coverage(self):
+        # Off for 10, then 3 cells at coverage 1/63: faint paint is a road cell with its own coverage, as the runtime
+        # reads it, not a full road.
+        self.assertEqual(decode_road_runs("AKAADB"), dict.fromkeys((10, 11, 12), 1 / 63))
 
 
 class RoadEntranceTest(unittest.TestCase):
@@ -570,13 +575,50 @@ class RoadEntranceTest(unittest.TestCase):
             patch.object(gen_nav, "LINKS", defaultdict(dict)),
             patch.object(gen_nav, "LINKED_OF", defaultdict(list)),
             patch.object(gen_nav, "FLOOR_CELL", array("i")),
-            patch.object(gen_nav, "ROAD_CELLS", {u, w}),
+            patch.object(gen_nav, "ROAD_CELLS", {u: 1.0, w: 1.0}),
             patch.object(gen_nav, "BASE_Z", array("f", [0.0]) * len(grid)),
         ):
             nodes, edges = gen_nav.grid_hpa(grid, set())
         self.assertIn((u, w), edges, "the road crossing is an entrance")
         self.assertIn(u, nodes[0])
         self.assertIn(w, nodes[1])
+
+
+class RoadCoveragePruneTest(unittest.TestCase):
+    def test_faint_paint_does_not_prune_the_road_edge(self):
+        # Entrances A, X and B on a straight lane painted at 1/63 coverage; a fully painted road bends from A to B
+        # beside it. At the road factor the runtime charges the faint lane nearly the full off-road penalty, so the
+        # road edge (A, B) is the only cheap way and must stay (#972). Counting faint cells as road would certify
+        # A, X, B as a two-hop path at every factor and drop it.
+        c = gen_nav.CELLS
+        grid = bytearray(c * c)
+        roads = {}
+        for y in range(10, 51):
+            grid[10 * c + y] = 1
+            roads[10 * c + y] = 1 / 63
+            grid[14 * c + y] = 1
+            roads[14 * c + y] = 1.0
+        for x in range(11, 14):
+            for y in (10, 50):
+                grid[x * c + y] = 1
+                roads[x * c + y] = 1.0
+        a, x, b = 10 * c + 10, 10 * c + 30, 10 * c + 50
+        with (
+            patch.object(gen_nav, "CELLS", c),
+            patch.object(gen_nav, "NX", 1),
+            patch.object(gen_nav, "NY", 1),
+            patch.object(gen_nav, "GW", c),
+            patch.object(gen_nav, "GH", c),
+            patch.object(gen_nav, "LINKS", defaultdict(dict)),
+            patch.object(gen_nav, "LINKED_OF", defaultdict(list)),
+            patch.object(gen_nav, "FLOOR_CELL", array("i")),
+            patch.object(gen_nav, "ROAD_CELLS", roads),
+            patch.object(gen_nav, "BASE_Z", array("f", [0.0]) * len(grid)),
+            patch.object(gen_nav, "_HPA", (grid, set(), {0: {a, x, b}})),
+        ):
+            found = gen_nav.cluster_edges(0)
+        self.assertIn((a, x), found)
+        self.assertIn((a, b), found, "the road edge survives faint paint beside it")
 
 
 class LinkedPortalBoxTest(unittest.TestCase):
