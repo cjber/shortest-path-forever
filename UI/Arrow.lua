@@ -299,7 +299,6 @@ local function Anchor(placed)
 	if Placed() then
 		local scale = placed:GetEffectiveScale() / UIParent:GetEffectiveScale()
 		scale = scale > 0 and scale or 1
-		placed.spfStock = nil
 		placed:ClearAllPoints()
 		placed:SetPoint("CENTER", UIParent, "BOTTOMLEFT", ns.db.arrowX / scale, ns.db.arrowY / scale)
 	else

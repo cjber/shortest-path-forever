@@ -197,11 +197,13 @@ end
 -- frame at its stock place keeps clear of both, read from where they are now, so the column's place and size and an
 -- Edit Mode move of the tracker are all followed.
 local GAP = 8
+-- Each frame's offset as last set, so an unchanged poll sets no point.
+local stocked = setmetatable({}, { __mode = "k" })
 
 -- A region's box in UIParent's units, nil while it is hidden or not yet laid out.
 ---@param region Region?
 ---@param scale number? the region's scale relative to UIParent; a frame's own when nil
----@return number? left, number right, number bottom, number top
+---@return number? left, number? right, number? bottom, number? top
 local function Box(region, scale)
 	if not (region and region:IsVisible()) then
 		return nil
@@ -276,8 +278,8 @@ function Mover.Stock(frame, top, parts, force)
 		x = Beside(_G.ObjectiveTrackerFrame, best, y, half, depth, width) or x
 	end
 	local offset = (x - width / 2) / scale
-	if force or frame.spfStock ~= offset then
-		frame.spfStock = offset
+	if force or stocked[frame] ~= offset then
+		stocked[frame] = offset
 		frame:ClearAllPoints()
 		frame:SetPoint("TOP", UIParent, "TOP", offset, top / scale)
 	end

@@ -75,7 +75,7 @@
     },
     {
       "source": "UI/Arrow.lua",
-      "sha256": "dd6c962e9e48794b80463b5f52a823be6c100dfc8b64f54e21d3f7780430024c",
+      "sha256": "27d46d3ff2871e4cadf453e1dd61860bde64649a85333ecd20d465a3be007255",
       "review": "Read Create, ArrowLabel, distance updates, arrival labels, progress and cast prompt. MoverHint uses GameFontHighlightSmall and Distance uses GameFontNormal, including the formatted time-distance phrase. No later font override occurs. Dynamic objective lines, arrival titles, route titles and actions from helpers are excluded; this review does not claim coverage for their inserted text.",
       "bindings": [
         {
@@ -92,7 +92,7 @@
     },
     {
       "source": "UI/Compass.lua",
-      "sha256": "bb44f8bc7d40dc4f81c5309a70ab777ba091a3e4c858e62669e8305c46c3eaf9",
+      "sha256": "42e2412026c5ab0df97a4fe2e45ad3a64e80dd75411042eca773cfdbdfcaf62a",
       "review": "Read frame construction, cardinal tick labels, mover hint and RenderTime. Cardinal labels use GameFontNormalMed3 and MoverHint uses GameFontHighlightSmall, with no later font override. Distance and time are dynamic helper output and marker titles/tooltips have no coverage claim.",
       "bindings": [
         {

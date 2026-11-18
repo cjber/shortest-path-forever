@@ -356,7 +356,6 @@ end
 local function Anchor()
 	if Placed() then
 		local scale = RelativeScale()
-		frame.spfStock = nil
 		frame:ClearAllPoints()
 		frame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", ns.db.compassX / scale, ns.db.compassY / scale)
 	else

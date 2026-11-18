@@ -184,6 +184,9 @@ ForeverMapMarkers = nil
 ---@field GetContextMenuParent fun(self: SPFTrackerModule): Frame
 ---@type ForeverNativeTrackerFrame
 ObjectiveTrackerFrame = nil
+-- ForeverCore's tracker column, beside the quest tracker or wherever the player dragged it; nil before it is built.
+---@type Frame?
+ForeverTrackerCompanion = nil
 ---@class SPFTrackerManager
 ---@type SPFTrackerManager
 ObjectiveTrackerManager = nil
