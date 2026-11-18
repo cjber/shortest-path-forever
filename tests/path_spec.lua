@@ -159,24 +159,47 @@ for _, ends in ipairs({ { ALGAZ_SOUTH, ALGAZ_NORTH }, { ALGAZ_NORTH, ALGAZ_SOUTH
 	assert(pts and passes(pts, -4220, -2464) < 30, "misses the Dun Algaz tunnel")
 end
 
+-- A walk against its reference: the shortest walk on the raw navmesh the map was baked from (A* over its walkable
+-- polys, then funnel string-pulling, horizontal yards; tools/nav_reference.py over the client 1.60.1.70938 tiles).
+-- The grid's eight directions make a walk up to 1 / cos 22.5 degrees longer than the straight path, and each end may
+-- stand its distance from its cell's centre away from the grid.
+local OCTILE = 1 / math.cos(math.pi / 8)
+local function nearReference(from, to, reference, what)
+	local st = ns.PathGrid.State(0)
+	local slack = 0
+	for _, p in ipairs({ from, to }) do
+		local cx = st.x0 + (math.floor((p.x - st.x0) / st.cs) + 0.5) * st.cs
+		local cy = st.y0 + (math.floor((p.y - st.y0) / st.cs) + 0.5) * st.cs
+		slack = slack + dist(p.x, p.y, cx, cy)
+	end
+	local points, cost = Path.FindSync(0, from, to)
+	assert(points, what .. " is unreachable")
+	assert(
+		cost >= reference - slack and cost <= reference * OCTILE + slack,
+		("%s costs %.1f, reference %.1f"):format(what, cost, reference)
+	)
+	return points
+end
+
 -- Up the pass from the tunnel to Loch Modan, and on from the Wetlands to Thelsamar: the walk climbs the Dun Algaz road
 -- rather than looping round Grim Batol past Stonewrought Dam. The ramp's floor cells once stored a poly centroid's
 -- height, five yards off, so one step up read as a climb past 50 degrees and the pass walked one way only (#1011).
-local PASS_TOP, THELSAMAR = { x = -4668.7, y = -2694.5, z = 323 }, { x = -5378, y = -2973 }
-for _, ends in ipairs({ { ALGAZ_SOUTH, PASS_TOP }, { PASS_TOP, ALGAZ_SOUTH } }) do
-	pts, len = Path.FindSync(0, ends[1], ends[2])
-	assert(pts and len < 800, "the Dun Algaz pass walks both ways: " .. tostring(len))
-end
-pts, len = Path.FindSync(0, { x = -3900, y = -2500 }, THELSAMAR)
-assert(pts and len < 2500 and passes(pts, -4220, -2464) < 30, "Wetlands to Thelsamar misses Dun Algaz: " .. tostring(len))
+local PASS_TOP = { x = -4668.7, y = -2694.5, z = 323 }
+nearReference(ALGAZ_SOUTH, PASS_TOP, 486.5, "up the Dun Algaz pass")
+nearReference(PASS_TOP, ALGAZ_SOUTH, 486.3, "down the Dun Algaz pass")
+pts = nearReference(
+	{ x = -3900, y = -2500, z = 108 },
+	{ x = -5378, y = -2973, z = 324 },
+	2024.4,
+	"Wetlands to Thelsamar"
+)
+assert(passes(pts, -4220, -2464) < 30, "Wetlands to Thelsamar misses the Dun Algaz tunnel")
 
 -- An Ironforge ramp the navmesh walks (ordinary ground) rises 10.5 yards over one 8 yard cell, past 50 degrees: the
 -- walk takes it both ways rather than a detour up, as the client does (#1011).
 local RAMP_FOOT, RAMP_TOP = { x = -4971.1, y = -991.0, z = 718 }, { x = -4963.2, y = -991.0, z = 728 }
-for _, ends in ipairs({ { RAMP_FOOT, RAMP_TOP }, { RAMP_TOP, RAMP_FOOT } }) do
-	pts, len = Path.FindSync(0, ends[1], ends[2])
-	assert(pts and len < 10, "the Ironforge ramp is walked straight: " .. tostring(len))
-end
+nearReference(RAMP_FOOT, RAMP_TOP, 7.9, "up the Ironforge ramp")
+nearReference(RAMP_TOP, RAMP_FOOT, 7.9, "down the Ironforge ramp")
 
 -- Undercity: the flight master stands by the west lift's bottom landing, and its top is a long way round on foot.
 local UNDERCITY_FM = { x = 1568.62, y = 267.97, z = -43.1 } -- node 11
