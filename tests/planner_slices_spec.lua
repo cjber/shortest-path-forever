@@ -100,4 +100,34 @@ frame()
 Path.Cancel(cut.job)
 same(Planner.Plan(options(shared)), "the next plan after one cancelled part way")
 assert(cut.plan == nil, "the cancelled plan never answers")
+
+-- Weighing a baked walk for hazards can ask the client's map API once per sample, so a sliced plan reads the budget
+-- before each walk it weighs, not only every 16 labels.
+local checkpoint, reads, seen, weighed, unread = Path.Checkpoint, 0, -1, 0, 0
+Path.Checkpoint = function()
+	reads = reads + 1
+	return checkpoint()
+end
+local weighing = options({})
+weighing.hazards = {
+	key = "spec",
+	Segment = function()
+		weighed = weighed + 1
+		if reads == seen then
+			unread = unread + 1
+		end
+		seen = reads
+		return 1
+	end,
+}
+local hazarded = {}
+Path.Run(function(job)
+	return Planner.Plan(weighing, job)
+end, function(plan)
+	hazarded.plan = plan
+end)
+settle()
+Path.Checkpoint = checkpoint
+same(hazarded.plan, "a sliced plan that weighs hazards")
+assert(weighed > 0 and unread == 0, "the budget is read before every hazard weighing")
 print(string.format("planner_slices_spec: a plan over %d frames answers as the whole plan", count))
