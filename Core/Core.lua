@@ -208,6 +208,13 @@ function ns.Print(message)
 	print(NORMAL_FONT_COLOR:WrapTextInColorCode("Shortest Path Forever:") .. " " .. message)
 end
 
+-- A line for the player on screen, in the game's own message area (UIErrorsFrame) in its yellow notice colour, for a
+-- gesture that did nothing: addon notices never go to chat.
+---@param message string
+function ns.Notice(message)
+	UIErrorsFrame:AddMessage(message, YELLOW_FONT_COLOR:GetRGB())
+end
+
 -- Each module starts on its own, so one that fails (reported as usual, and kept for /path report) does not stop
 -- the rest.
 local function Start(fn)

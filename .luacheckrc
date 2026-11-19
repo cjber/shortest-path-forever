@@ -69,6 +69,9 @@ read_globals = {
 	"ObjectiveTrackerFrame",
 	"ObjectiveTrackerManager",
 	"ORANGE_FONT_COLOR",
+	-- Core.lua's ns.Notice: a one-line notice on screen, in the client's yellow.
+	"UIErrorsFrame",
+	"YELLOW_FONT_COLOR",
 	"Settings",
 	"MinimalSliderWithSteppersMixin",
 	"SecondsToTime",
