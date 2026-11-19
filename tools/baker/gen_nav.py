@@ -476,8 +476,9 @@ def rasterize_layers(polys, adj, portal, bounds):
                 taken.add(piece[n])
         chosen[1:] = sorted(chosen[1:], key=lambda n: ss[n][1])
         layers[i] = [(ss[n][1], 3 if polys[ss[n][3]]["steep"] else ss[n][2], (ss[n][3], ss[n][4])) for n in chosen]
-        # Every layer's height is its own poly's height at its anchor, whichever pass found it: the runtime judges a
-        # climb by these heights, so a stand-in (a centroid, another poly's level) turns a walkable step one-way (#1011).
+        # Every layer's height is its own poly's height at its anchor, whichever pass found it: the runtime judges
+        # a climb by these heights, so a stand-in (a centroid, another poly's level) turns a walkable step one-way
+        # (#1011).
         for z, _, (pid, point) in layers[i]:
             if abs(z - height(polys[pid], *point)) > 0.01:
                 raise ValueError(f"cell {i}: layer height {z:.2f} is not poly {pid}'s height at its anchor {point}")
@@ -964,11 +965,20 @@ def cluster_edges(k):
         slopes.append(slope)
     el = sorted(cells)
 
+    def shorter(a, x, b, weight):
+        # A certificate's two hops must each cost less than the edge it prunes, so every pruned edge rests on shorter
+        # ones and the kept graph still holds a walk for it. Without that order, PRUNE's slack lets two entrances a
+        # step apart certify each other's long edge, and both are dropped (#1063).
+        plain = dists[weight]
+        return plain.get((a, x), 1e18) < plain[a, b] and plain.get((x, b), 1e18) < plain[a, b]
+
     def redundant(a, b, weight, plain=False):
         if plain or not has_roads:
             dist = dists[weight]
             return any(
-                dist.get((a, x), 1e18) + dist.get((x, b), 1e18) <= dist[a, b] * PRUNE for x in el if x not in (a, b)
+                dist.get((a, x), 1e18) + dist.get((x, b), 1e18) <= dist[a, b] * PRUNE and shorter(a, x, b, weight)
+                for x in el
+                if x not in (a, b)
             )
         low, high = dists[weight][a, b], dists[weight + len(WEIGHTS)][a, b]
         # Shortest costs are minima of affine path costs, hence concave and above their endpoint chord.
@@ -979,7 +989,7 @@ def cluster_edges(k):
             dist, slope = dists[mode], slopes[mode]
             factor = modes[mode][1]
             for x in el:
-                if x in (a, b) or (a, x) not in dist or (x, b) not in dist:
+                if x in (a, b) or (a, x) not in dist or (x, b) not in dist or not shorter(a, x, b, weight):
                     continue
                 cost, off = dist[a, x] + dist[x, b], slope[a, x] + slope[x, b]
                 if cost + (1 - factor) * off <= low * PRUNE and cost + (ROAD_FACTOR_MAX - factor) * off <= high * PRUNE:

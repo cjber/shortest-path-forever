@@ -621,6 +621,39 @@ class RoadCoveragePruneTest(unittest.TestCase):
         self.assertIn((a, b), found, "the road edge survives faint paint beside it")
 
 
+class MutualPruneTest(unittest.TestCase):
+    def test_two_close_entrances_cannot_prune_each_others_edge(self):
+        # A long corridor from A ends at a cell beside two entrances X and B, two cells apart. A to X and A to B cost
+        # the same, and each is within the 2% prune slack of the other plus the short hop between them. Pruning
+        # either against the other is fine alone, but both at once leave A with no edge to either (#1063): a
+        # certificate's hops must each be shorter than the edge it prunes.
+        c, length = 130, 120
+        grid = bytearray(c * c)
+        for y in range(0, length + 1):
+            grid[10 * c + y] = 1
+        for x in (9, 10, 11):
+            grid[x * c + length + 1] = 1
+        a, x, b = 10 * c, 9 * c + length + 1, 11 * c + length + 1
+        with (
+            patch.object(gen_nav, "CELLS", c),
+            patch.object(gen_nav, "NX", 1),
+            patch.object(gen_nav, "NY", 1),
+            patch.object(gen_nav, "GW", c),
+            patch.object(gen_nav, "GH", c),
+            patch.object(gen_nav, "LINKS", defaultdict(dict)),
+            patch.object(gen_nav, "LINKED_OF", defaultdict(list)),
+            patch.object(gen_nav, "FLOOR_CELL", array("i")),
+            patch.object(gen_nav, "ROAD_CELLS", {}),
+            patch.object(gen_nav, "BASE_Z", array("f", [0.0]) * len(grid)),
+            patch.object(gen_nav, "_HPA", (grid, set(), {0: {a, x, b}})),
+        ):
+            found = gen_nav.cluster_edges(0)
+        self.assertTrue((a, x) in found or (a, b) in found, "A keeps an edge towards the pair")
+        for edge in ((a, x), (a, b)):
+            if edge in found:
+                self.assertTrue(found[edge][-1], "the kept edge is a base edge")
+
+
 class LinkedPortalBoxTest(unittest.TestCase):
     def test_a_steep_portal_cannot_borrow_height_outside_the_cells(self):
         c = gen_nav.CELLS
