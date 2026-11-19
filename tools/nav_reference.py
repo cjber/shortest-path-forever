@@ -144,45 +144,61 @@ class Reference:
                 d = poly_distance(point, p["pts"]) + 50
             if best is None or d < best[0]:
                 best = (d, key)
-        return best and best[1]
+        if best is None or best[0] > 50 + 24:
+            return None
+        return best[1]
 
     def walk(self, a, b):
         """The reference walk from point a to point b, (x, y, z) each, or None when the navmesh has none."""
         s, t = self.locate(a), self.locate(b)
+        if s is None or t is None:
+            return None
         goal = (b[0], b[1])
-        dist, prev, at = {s: 0.0}, {}, {s: (a[0], a[1])}
-        entry = {s: a[2]}  # the height the walk entered each poly at
-        heap = [(math.dist(at[s], goal), 0.0, s)]
+
+        # Whether steep ground can be left by a portal depends on the height the walk came onto it at, so a steep
+        # poly is a separate search state per entry height; other polys are one state each.
+        def state(poly, z):
+            return (poly, round(z, 2)) if self.polys[poly]["steep"] else (poly, None)
+
+        s0 = state(s, a[2])
+        dist, prev, at, entry = {s0: 0.0}, {}, {s0: (a[0], a[1])}, {s0: a[2]}
+        heap = [(math.dist(at[s0], goal), 0.0, s0)]
+        end = None
         while heap:
-            _, d, u = heapq.heappop(heap)
-            if u == t:
-                break
-            if d > dist[u]:
+            _, d, su = heapq.heappop(heap)
+            if d > dist[su]:
                 continue
+            u = su[0]
+            if u == t:
+                end = su
+                break
             steps = [(w, None) for w in self.adj.get(u, ()) if w in self.polys]
-            steps += [(w, (start, end)) for w, start, end in self.drops.get(u, ())]
+            steps += [(w, (start, stop)) for w, start, stop in self.drops.get(u, ())]
             for w, drop in steps:
                 if drop:
                     m = drop[1][:2]
-                    nd = d + math.dist(at[u], drop[0][:2]) + math.dist(drop[0][:2], m)
+                    nd = d + math.dist(at[su], drop[0][:2]) + math.dist(drop[0][:2], m)
+                    z = drop[1][2]
                 else:
                     p1, p2 = self.portal[(u, w)]
                     m = ((p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2)
-                    if self.polys[u]["steep"] and self.height(u, *m) > entry[u] + 0.01:
+                    if self.polys[u]["steep"] and self.height(u, *m) > entry[su] + 0.01:
                         continue  # steep ground is left only below where the walk came onto it
-                    nd = d + math.dist(at[u], m)
-                if nd < dist.get(w, math.inf):
-                    dist[w], prev[w], at[w] = nd, (u, drop), m
-                    entry[w] = drop[1][2] if drop else self.height(w, *m)
-                    heapq.heappush(heap, (nd + math.dist(m, goal), nd, w))
-        if t not in dist:
+                    nd = d + math.dist(at[su], m)
+                    z = self.height(w, *m)
+                sw = state(w, z)
+                if nd < dist.get(sw, math.inf):
+                    dist[sw], prev[sw], at[sw], entry[sw] = nd, (su, drop), m, z
+                    heapq.heappush(heap, (nd + math.dist(m, goal), nd, sw))
+        if end is None:
             return None
-        corridor = [(t, None)]
-        while corridor[-1][0] != s:
-            u, drop = prev[corridor[-1][0]]
+        corridor = [(end, None)]
+        while corridor[-1][0] != s0:
+            su, drop = prev[corridor[-1][0]]
             corridor[-1] = (corridor[-1][0], drop)
-            corridor.append((u, None))
+            corridor.append((su, None))
         corridor.reverse()
+        corridor = [(su[0], drop) for su, drop in corridor]
         # A drop has no portal: pull the string to its ledge, then on from its landing.
         points, portals, start = [], [], (a[0], a[1])
         for (u, _), (w, drop) in zip(corridor, corridor[1:], strict=False):
