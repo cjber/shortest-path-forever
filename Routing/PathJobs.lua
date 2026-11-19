@@ -18,6 +18,31 @@ local queue = {}
 local scheduled, pumped = false, false
 local pump, combatWait
 
+-- A journey searches its walks again every few seconds as the player moves, over the terrain the last search
+-- decoded. Dropping the grids the moment the queue drained made each of those searches decode its clusters from
+-- nothing, so the sweep waits until no search has run for this long. The grid and graph ceilings still bound what
+-- is kept meanwhile.
+Path.linger = 30 -- seconds
+-- drains counts the times the queue emptied; waiting is the count the pending sweep was armed at.
+local drains, waiting = 0, nil
+
+local function sweep()
+	local armed = waiting
+	waiting = nil
+	if #queue > 0 or scheduled then
+		return -- work is queued or a pump is due: the drain after it arms the next sweep
+	end
+	if drains ~= armed then
+		-- Searched since this sweep was armed: wait once more, so the grids outlive the last search by the linger.
+		waiting = drains
+		Path.after(sweep, Path.linger)
+		return
+	end
+	-- Exact endpoint costs survive; decoded grids and local trees are only useful during active work.
+	Grid.Idle()
+	Spare(nil)
+end
+
 -- A callback runs as a job of its own at the head of the queue, under the budget left in the frame. It is meant to
 -- record the answer and schedule what follows (Path.Run), never to plan or decode itself.
 local function notify(job, callback, points, cost)
@@ -118,9 +143,12 @@ pump = function()
 	until clock() >= finish
 	Path.work.frames, Path.work.cpu = Path.work.frames + 1, Path.work.cpu + clock() - began
 	if #queue == 0 then
-		-- Exact endpoint costs survive; decoded grids and local trees are only useful during active work.
-		Grid.Idle()
-		Spare(nil)
+		drains = drains + 1
+		-- A pump a callback scheduled is still due: it finds the queue empty and arms the sweep itself.
+		if not waiting and not scheduled then
+			waiting = drains
+			Path.after(sweep, Path.linger)
+		end
 	end
 	schedule()
 end
@@ -132,10 +160,11 @@ function Path.Busy()
 	return busy
 end
 
--- Next-frame scheduling; tests replace it.
+-- Next-frame scheduling, or after `seconds`; tests replace it.
 ---@param fn fun()
-function Path.after(fn)
-	C_Timer.After(0, fn)
+---@param seconds? number
+function Path.after(fn, seconds)
+	C_Timer.After(seconds or 0, fn)
 end
 
 local function enqueue(job)
@@ -208,8 +237,9 @@ end
 ---@param map number?
 ---@param clusters table<number, true>?
 function Path.Pin(map, clusters)
-	-- A released cluster goes now when no job runs: otherwise it stays decoded until the next job drains the queue.
-	if Grid.Pin(map, clusters) and #queue == 0 then
+	-- A released cluster goes now when no job runs and no sweep is due: otherwise it stays decoded until the next
+	-- job drains the queue. Within the linger the pending sweep takes it, with the grids a journey is still reusing.
+	if Grid.Pin(map, clusters) and #queue == 0 and not waiting then
 		Grid.Idle()
 	end
 end
