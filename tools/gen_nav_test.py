@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 from tools.baker import gen_nav
 from tools.baker.gen_nav import decode_road_runs, drop_cost, pick_surface, walkable
-from tools.baker.geometry import plane
+from tools.baker.geometry import centroid, clip_convex, height, plane
 
 
 class WalkableTest(unittest.TestCase):
@@ -727,3 +727,28 @@ class LinkedPortalBoxTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SliverTest(unittest.TestCase):
+    """Map 0 tile (46, 34) poly 7089: a triangle whose float32 vertices are collinear in the horizontal plane."""
+
+    PTS = [
+        (-7565.86669921875, -1355.199951171875, 331.0),
+        (-7565.33349609375, -1353.066650390625, 332.5),
+        (-7566.39990234375, -1357.3333740234375, 333.0),
+    ]
+    BOX = (-7570.149253731344, -7562.188, -1353.233830845771, -1345.2736)
+
+    def test_clipped_centroid_stays_inside_the_piece(self):
+        piece = clip_convex([p[:2] for p in self.PTS], self.BOX)
+        c = centroid(piece)
+        self.assertIsNotNone(c)
+        xs, ys = [p[0] for p in piece], [p[1] for p in piece]
+        self.assertTrue(min(xs) - 1e-6 <= c[0] <= max(xs) + 1e-6, (c, piece))
+        self.assertTrue(min(ys) - 1e-6 <= c[1] <= max(ys) + 1e-6, (c, piece))
+
+    def test_height_stays_within_the_vertices(self):
+        c = tuple(sum(p[a] for p in self.PTS) / 3 for a in range(3))
+        p = {"plane": plane(self.PTS, c), "zs": (331.0, 333.0)}
+        for x, y in ((-7549.0, -1350.2523148148148), (-7565.847040024495, -1355.2023423371702)):
+            self.assertTrue(331.0 <= height(p, x, y) <= 333.0)

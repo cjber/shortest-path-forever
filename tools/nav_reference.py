@@ -24,7 +24,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent / "baker"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import gen_nav  # noqa: E402
-from baker.geometry import plane, point_in_convex, poly_distance  # noqa: E402
+from baker.geometry import height, plane, point_in_convex, poly_distance  # noqa: E402
 
 
 def tri2(a, b, c):
@@ -110,7 +110,13 @@ class Reference:
         tp, links, edges, drops = gen_nav.read_tile(rc)
         for i, pts, _, s in tp:
             c = tuple(sum(p[a] for p in pts) / len(pts) for a in range(3))
-            self.polys[(rc, i)] = {"pts": pts, "xy": [p[:2] for p in pts], "plane": plane(pts, c), "steep": s}
+            self.polys[(rc, i)] = {
+                "pts": pts,
+                "xy": [p[:2] for p in pts],
+                "plane": plane(pts, c),
+                "steep": s,
+                "zs": (min(q[2] for q in pts), max(q[2] for q in pts)),
+            }
             xs, ys = [p[0] for p in pts], [p[1] for p in pts]
             for bx in range(int(min(xs) // 8), int(max(xs) // 8) + 1):
                 for by in range(int(min(ys) // 8), int(max(ys) // 8) + 1):
@@ -123,8 +129,7 @@ class Reference:
         return drops
 
     def height(self, key, x, y):
-        cx, cy, cz, gx, gy = self.polys[key]["plane"]
-        return cz + gx * (x - cx) + gy * (y - cy)
+        return height(self.polys[key], x, y)
 
     def locate(self, point):
         """The poly a point stands on: one containing it at the nearest height, else the nearest poly within 24 yd."""

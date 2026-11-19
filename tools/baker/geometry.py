@@ -17,8 +17,13 @@ def plane(pts, c):
 
 
 def height(p, x, y):
+    """The poly's height at (x, y) on its plane, kept within its vertices' heights when it has them ("zs"). Every point
+    of a convex flat poly lies within that range, and a near-vertical sliver's plane rises tens of thousands of yards
+    per yard, so a rounding error in the point moved its height by thousands of yards."""
     cx, cy, cz, gx, gy = p["plane"]
-    return cz + gx * (x - cx) + gy * (y - cy)
+    z = cz + gx * (x - cx) + gy * (y - cy)
+    zs = p.get("zs")
+    return min(max(z, zs[0]), zs[1]) if zs else z
 
 
 def point_in_convex(px, py, pts):
@@ -80,17 +85,23 @@ def clip_convex(pts, box):
 
 
 def centroid(pts):
-    """The area centroid of a simple outline in the horizontal plane, or None when it has no area."""
+    """The area centroid of a simple outline in the horizontal plane, or None when it has no area. The sums run
+    relative to the first vertex: on world coordinates (thousands of yards) a thin piece's cross products cancel, and
+    a clipped corner of a sliver put its centroid 16 yards outside the outline."""
+    if not pts:
+        return None
+    ox, oy = pts[0]
     a = cx = cy = 0.0
     for i, (x2, y2) in enumerate(pts):
         x1, y1 = pts[i - 1]
+        x1, y1, x2, y2 = x1 - ox, y1 - oy, x2 - ox, y2 - oy
         w = x1 * y2 - x2 * y1
         a += w
         cx += (x1 + x2) * w
         cy += (y1 + y2) * w
     if abs(a) < 1e-12:
         return None
-    return (cx / (3 * a), cy / (3 * a))
+    return (ox + cx / (3 * a), oy + cy / (3 * a))
 
 
 def seg_in_box(a, b, box):

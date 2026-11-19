@@ -375,6 +375,7 @@ def load_window(tiles):
                 size=SIZE[base + n],
                 pts=[(p[0], p[1]) for p in pts],
                 plane=plane(pts, c),
+                zs=(min(q[2] for q in pts), max(q[2] for q in pts)),
             )
         for i, j, p1, p2 in links:
             if i in kept and j in kept:
