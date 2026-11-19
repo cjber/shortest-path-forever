@@ -10,6 +10,16 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.43.4] - 2026-11-19
+
+### Changed
+
+- **Routes show on the map straight away.** A rough line appears as soon as you click, and the exact route replaces it moments later. The arrow and waypoints wait for the exact route, and short routes settle sooner (#1080).
+
+### Fixed
+
+- With "Click the map to plan journeys" off, a journey click on the map, a map icon, the minimap or a quest now says so on screen, naming the setting, instead of doing nothing. The click still goes to the map as before (#1076).
+
 ## [1.43.3] - 2026-11-19
 
 ### Fixed
