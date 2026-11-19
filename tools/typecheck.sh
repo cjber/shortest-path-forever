@@ -41,10 +41,8 @@ fi
 
 python3 tools/forever_tools/sync.py check
 python3 tools/typecheck_coverage.py
-# These tests run LuaLS on probe files (about 3.4 GB), so they go with the LuaLS run below.
-if ((run_luals)); then
-	python3 -m unittest discover -s tests -p 'test_typecheck.py'
-fi
+# LuaLSGateTests run LuaLS on probe files (about 3.4 GB), so --no-luals skips only that class.
+TYPECHECK_NO_LUALS=$((1 - run_luals)) python3 -m unittest discover -s tests -p 'test_typecheck.py'
 python3 -m unittest discover -s tools -p '*_test.py'
 python3 tools/lint_multivalue.py
 python3 tools/lint_art.py
