@@ -28,6 +28,9 @@ for _, case in ipairs(cases) do
 		"Data/Portals.lua",
 		"Data/Walks.lua",
 		"Data/TownAreas.lua",
+		"Data/Zones.lua",
+		"Data/ZoneCells.lua",
+		"Data/WalkZones.lua",
 		"Routing/PathGrid.lua",
 		"Routing/Path.lua",
 		"Routing/PathJobs.lua",
@@ -45,6 +48,23 @@ for _, case in ipairs(cases) do
 		assert(to.name:find(toName, 1, true), "wrong benchmark destination")
 	end
 	ns.faction, ns.db.debug = case[4], true
+	-- Level 15 with high zones avoided, the default: every walk is weighed by the zones on its way. In the client each
+	-- zone the shipped cells do not cover is several C_Map calls, so the bench counts them.
+	ns.db.avoidHighZones, ns.level = true, 15
+	local lookups = 0
+	ns.zoneAt = function(map, x, y)
+		lookups = lookups + 1
+		local best, size
+		for id, zone in pairs(ns.Zones) do
+			if zone.map == map and x >= zone.minX and x <= zone.maxX and y >= zone.minY and y <= zone.maxY then
+				local area = (zone.maxX - zone.minX) * (zone.maxY - zone.minY)
+				if not size or area < size then
+					best, size = id, area
+				end
+			end
+		end
+		return best
+	end
 	ns.Print = function(message)
 		error(message)
 	end
@@ -118,7 +138,8 @@ for _, case in ipairs(cases) do
 	print(
 		string.format(
 			"%s: %d searches (%d many, %d probes), %d planner calls, %d settle rounds, %d frames, "
-				.. "%.1f ms search, %.1f ms planner, %d straight resets, usable frame %s, %.3f ms worst frame",
+				.. "%.1f ms search, %.1f ms planner, %d straight resets, usable frame %s, %.3f ms worst frame, "
+				.. "%d client zone lookups",
 			case[1],
 			#jobs,
 			many,
@@ -130,10 +151,13 @@ for _, case in ipairs(cases) do
 			plannerCPU,
 			resets,
 			tostring(usable),
-			worst
+			worst,
+			lookups
 		)
 	)
 	assert(many == 2 and round == 1 and rounds >= 2, "one committed route")
 	assert(resets == 0, "drawn walks cannot revert to straight lines")
+	-- Hazards.Profile asks for the zone of each of the journey's own ends (at most four); every walk reads the cells.
+	assert(lookups <= 4, lookups .. " zone lookups reach the client")
 	ns.ClearJourney()
 end

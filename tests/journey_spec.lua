@@ -48,21 +48,33 @@ assert(
 )
 ns.TaxiNodes, ns.known = {}, nil
 
--- Journey follows what its search reports: nothing is drawn while it searches, then the one route, from where you
--- stand.
+-- Journey follows what its search reports: at most the rough route from baked data while it searches, then the one
+-- route, from where you stand.
 walking.auto = false
 driver.begin(here, target)
 local settling, round = ns.JourneyStatus()
-assert(settling and round == 0 and not driver.shown())
-assert(select(2, ns.JourneyInfo())[1].text == "Finding the fastest way…")
+-- The rough route's walks are straight lines: no walk of it has been searched.
+local function rough()
+	local route = driver.shown()
+	if route then
+		for _, leg in ipairs(route.legs) do
+			if leg.walkPoints and #leg.walkPoints > 2 then
+				return false
+			end
+		end
+	end
+	return true
+end
+assert(settling and round == 0 and rough())
+assert(select(2, ns.JourneyInfo())[1].key ~= "unreachable", "a search under way names a step or that it searches")
 driver.move({ map = 1, x = 7, y = 0, z = 0 })
 driver.update(0.6)
-assert(not driver.shown(), "searching must not draw previews while walking")
+assert(rough(), "searching draws nothing past the rough route while walking")
 driver.move(here)
 for _, batch in ipairs(walking.batches) do
 	walking.costs(batch, 1400)
 end
-assert(not driver.shown(), "wait for all chosen geometry before committing")
+assert(rough(), "wait for all chosen geometry before committing")
 local first = walking.finds[1]
 local points = { first.from, { map = 1, x = 600, y = 300 }, first.to }
 walking.finish(first, points, 1400)

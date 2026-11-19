@@ -669,6 +669,7 @@ do
 	assert(loadfile("Transport/Model.lua"))("ShortestPathForever", planning)
 	assert(loadfile("Routing/Savings.lua"))("ShortestPathForever", planning)
 	assert(loadfile("Routing/Planner.lua"))("ShortestPathForever", planning)
+	assert(loadfile("Routing/LegPoints.lua"))("ShortestPathForever", planning)
 	local nodes = { [1] = { map = 1, x = 0, y = 0 }, [2] = { map = 1, x = 2000, y = 0 } }
 	local function plan(hazards)
 		return planning.Planner.Plan({
@@ -767,5 +768,97 @@ do
 	assert(rows[2] and rows[2].text == L["Hostile town: %s"]:format("Crossroads") and not rows[3], "the town stays")
 	jns.ClearJourney()
 	print("hazards: journey: ok")
+end
+-- Data/WalkZones.lua holds every baked walk's shares as sampling its way gives them, to the four places it keeps, and
+-- weighing a baked walk by them gives the sampled weight for any side, level and setting.
+do
+	local data = { L = L, db = { avoidHighZones = true }, charDB = {}, Init = function() end }
+	for _, file in ipairs({
+		"Data/Routes.lua",
+		"Data/Transports.lua",
+		"Data/Taxi.lua",
+		"Data/Portals.lua",
+		"Data/Teleports.lua",
+		"Data/Zones.lua",
+		"Data/ZoneCells.lua",
+		"Data/TownAreas.lua",
+		"Data/Walks.lua",
+		"Data/WalkZones.lua",
+	}) do
+		assert(loadfile(file))("ShortestPathForever", data)
+	end
+	data.ZoneMap = function(map, x, y)
+		return data.Hazards.ZoneAt(map, x, y)
+	end
+	setfenv(assert(loadfile("Journey/Hazards.lua")), env)("ShortestPathForever", data)
+	local places = assert(loadfile("tools/walk_places.lua"))(data)
+	local walks, profiles = {}, {}
+	local HALF = 5e-5 + 1e-12 -- half the fourth place a share keeps
+	for map, pairs_ in pairs(data.WalkZones) do
+		local points = {}
+		for _, place in ipairs(places[map]) do
+			points[place.key] = place.point
+		end
+		for key in pairs(data.Walks[map]) do
+			local a, b = key:match("^(%S+) (%S+)$")
+			walks[#walks + 1] = { map, points[a], points[b], pairs_[key] or {}, key }
+		end
+	end
+	assert(#walks > 2500, "every baked walk on the zone cells' maps")
+	for _, walk in ipairs(walks) do
+		local map, a, b, baked, key = walk[1], walk[2], walk[3], walk[4], walk[5]
+		local live, seen = data.Hazards.Shares(map, a.x, a.y, b.x, b.y), {}
+		walk[6] = #live / 2
+		for k = 1, #live, 2 do
+			seen[live[k]] = live[k + 1]
+		end
+		for k = 1, #baked, 2 do
+			local id = baked[k]
+			assert(math.abs((seen[id] or 0) - baked[k + 1]) <= HALF, key .. ": " .. id)
+			seen[id] = nil
+		end
+		for id, share in pairs(seen) do
+			assert(share <= HALF, key .. ": " .. id .. " is not baked")
+		end
+	end
+	for _, side in ipairs({ { "Alliance", 1 }, { "Horde", 1 }, { "Horde", 30 } }) do
+		faction, level = side[1], side[2]
+		profiles[#profiles + 1] = data.Hazards.Profile({ map = 1, x = 0, y = 0 }, { map = 1, x = 1, y = 0 })
+	end
+	data.db.avoidHighZones = false
+	profiles[#profiles + 1] = data.Hazards.Profile({ map = 1, x = 0, y = 0 }, { map = 1, x = 1, y = 0 })
+	for _, hz in ipairs(profiles) do
+		for _, walk in ipairs(walks) do
+			local map, a, b, baked, key = walk[1], walk[2], walk[3], walk[4], walk[5]
+			local live = hz.Segment(map, a.x, a.y, b.x, b.y)
+			-- Each share is off by at most HALF, weighed at most by a town's extra cost.
+			local bound = walk[6] * HALF * 5
+			assert(math.abs(hz.Segment(map, a.x, a.y, b.x, b.y, baked) - live) <= bound, key .. " " .. hz.key)
+		end
+	end
+	level, faction = 10, "Alliance"
+	print("hazards: baked walk shares: ok")
+end
+
+-- The zone of a square comes from Data/ZoneCells.lua where it covers the square, and from C_Map only off its grid.
+do
+	local asked = 0
+	local data = setmetatable({
+		ZoneMap = function(map, x, y)
+			asked = asked + 1
+			return ns.ZoneMap(map, x, y)
+		end,
+		-- Map 1, columns -2 and -1 (x from -128 to 0), rows from -1: 100 for one square then none, all 100.
+		ZoneCells = { [1] = { i0 = -2, j0 = -1, columns = { "100 1 0 2", "100 3" } } },
+	}, { __index = ns })
+	setfenv(assert(loadfile("Journey/Hazards.lua")), env)("ShortestPathForever", data)
+	local ZoneAt = data.Hazards.ZoneAt
+	assert(ZoneAt(1, -100, -10) == 100 and asked == 0, "a baked square")
+	assert(ZoneAt(1, -100, 10) == nil and asked == 0, "a baked square in no zone")
+	assert(ZoneAt(1, -10, 100) == 100 and asked == 0, "the next column")
+	assert(ZoneAt(1, -10, 200) == 100 and asked == 1, "past the column's rows")
+	assert(ZoneAt(1, 500, 0) == 200 and asked == 2, "off the grid")
+	assert(ZoneAt(2, 0, 0) == 500 and asked == 3, "a map with no grid")
+	print("hazards: baked zone cells: ok")
 end
 print("hazards_spec: ok")

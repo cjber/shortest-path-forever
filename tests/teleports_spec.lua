@@ -26,6 +26,7 @@ assert(not bySpell[23442], "the Everlook ripper is not a personal teleport")
 assert(loadfile("Transport/Model.lua"))("ShortestPathForever", ns)
 assert(loadfile("Routing/Savings.lua"))("ShortestPathForever", ns)
 assert(loadfile("Routing/Planner.lua"))("ShortestPathForever", ns)
+assert(loadfile("Routing/LegPoints.lua"))("ShortestPathForever", ns)
 local Plan = ns.Planner.Plan
 
 -- 7000 yards on foot is 1000 s; the hearth lands 70 yards short of the goal (10 s) after a 10 s cast and a loading

@@ -532,8 +532,9 @@ local function OnWalk(points, here, reach)
 end
 
 ns.OnWalk = OnWalk -- Corpse.lua trims its walk the same way.
--- The route last handed to the map, kept so a retime moves its arrival without redrawing it.
-local drawn
+-- The route last handed to the map, kept so a retime moves its arrival without redrawing it, and a first search's
+-- rough route, drawn while nothing is followed yet until its proved route or a new search replaces it.
+local drawn, rough
 local function Refresh()
 	local remaining
 	if result then
@@ -562,7 +563,7 @@ local function Refresh()
 	end
 	if not CorpseRun() then
 		drawn = remaining
-		ns.SetJourneyRoute(goal, remaining)
+		ns.SetJourneyRoute(goal, remaining or goal and rough)
 	end
 	RefreshTracker()
 end
@@ -630,11 +631,13 @@ end
 ---@param route SPFPlan?
 ---@param news SPFSearchNews
 local function Follow(route, news)
-	if news == "searching" then
+	if news == "searching" or news == "rough" then
+		-- Only drawn: guidance, subscribers and farming wait for the proved route.
+		rough = news == "rough" and route or nil
 		return Refresh()
 	end
 	if news == "route" then
-		result, replaced = route, nil
+		result, replaced, rough = route, nil, nil
 		progress.index, progress.departed = 1, false
 		Guide.Retarget()
 		if not result then

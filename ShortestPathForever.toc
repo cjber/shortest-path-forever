@@ -36,8 +36,10 @@ Data\Portals.lua
 Data\Teleports.lua
 Data\Zones.lua
 Data\TownAreas.lua
+Data\ZoneCells.lua
 Data\Services.lua
 Data\Walks.lua
+Data\WalkZones.lua
 Data\RoadCells.lua
 Data\RoadEdges.lua
 Data\Heights.lua
@@ -47,6 +49,7 @@ Data\Credits.lua
 Transport\Model.lua
 Routing\Savings.lua
 Routing\Planner.lua
+Routing\LegPoints.lua
 Routing\QuestDestination.lua
 Core\Core.lua
 Core\Distance.lua

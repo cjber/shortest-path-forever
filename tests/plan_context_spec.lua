@@ -74,6 +74,7 @@ for _, file in ipairs({
 	"Transport/Timetable.lua",
 	"Routing/Savings.lua",
 	"Routing/Planner.lua",
+	"Routing/LegPoints.lua",
 	"Core/PlanContext.lua",
 }) do
 	setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)

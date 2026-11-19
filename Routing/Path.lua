@@ -1085,6 +1085,79 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 			yield()
 		end
 	end
+	local swim, cost2 = waterWalking and 1 or st.swim, waterWalking and 2 or 1
+	local roadsOn = hz and hz.roads and hz.roadFactor ~= 1
+	local offroad = hz and hz.roadFactor or OFFROAD
+	local starts, source, sourceReal, _, sourceIn, sourceInReal =
+		connectPoint(st, swim, sk, sc, from, roadsOn, hz, reverse)
+	-- A target's connection to its own cluster, made once: false when it stands on no node.
+	local linked = {}
+	local function link(i, k)
+		if linked[i] == nil then
+			local _, node = pointNode(st, targets[i])
+			if node then
+				-- A forward batch costs a walk into each target, so a drop is not climbed to reach it; a reverse batch
+				-- costs a walk out of it, and its meeting point is whatever reaches `from`.
+				local goals, ends, realEnds, _, into, intoReal =
+					connectPoint(st, swim, k, node, targets[i], roadsOn, hz, not reverse)
+				if not reverse then
+					ends, realEnds = into, intoReal
+				end
+				linked[i] = { goals = goals, ends = ends, realEnds = realEnds }
+			else
+				linked[i] = false
+			end
+		end
+		return linked[i]
+	end
+	-- A target on the source's own node is a transfer. Settle its zero before any other search, so a batch paused early
+	-- still tells a transfer from a walk: once job.snapped is set, every unsettled target is a real walk away.
+	-- connectPoint reuses the shared heap, which still holds the source connection's frontier.
+	local heldKeys, heldValues, heldSize = hk, hv, hn
+	hk, hv, hn = {}, {}, 0
+	for i, point in ipairs(targets) do
+		if costs[i] == nil and locate(st, point.x, point.y) == sk then
+			local target = link(i, sk)
+			for _, a in ipairs(target and starts or {}) do
+				for _, b in ipairs(target and target.goals or {}) do
+					if costs[i] == nil and (reverse and b.node or a.node) == (reverse and a.own or b.own) then
+						costs[i] = 0
+						if job then
+							job.revision = job.revision + 1
+						end
+					end
+				end
+			end
+		end
+	end
+	-- Both ends rescued onto one entrance at no cost are a transfer too, even from different clusters. Only a source
+	-- with such an entrance needs the check, and only targets in that entrance's own cluster can share it: a point
+	-- connects to its own cluster's entrances, and an entrance id names its cluster. The rest stay unlinked until the
+	-- search reaches them.
+	local zeros, zeroClusters = {}, {}
+	for id, cost in pairs((reverse and sourceIn) or source) do
+		if cost == 0 then
+			zeros[id], zeroClusters[floor(id / 4096)] = true, true
+		end
+	end
+	if next(zeros) then
+		for i, point in ipairs(targets) do
+			local k = costs[i] == nil and locate(st, point.x, point.y)
+			local target = k and zeroClusters[k] and link(i, k)
+			for id, cost in pairs(target and target.ends or {}) do
+				if costs[i] == nil and cost == 0 and zeros[id] then
+					costs[i] = 0
+					if job then
+						job.revision = job.revision + 1
+					end
+				end
+			end
+		end
+	end
+	hk, hv, hn = heldKeys, heldValues, heldSize
+	if job then
+		job.snapped = true
+	end
 	-- Resolve a short dock/flight-master connector on its own. FindMany shares one frontier among its targets, so a
 	-- single target cannot remove hazard weights from the rest of that frontier.
 	if hz and hz.ConnectorWalk then
@@ -1101,11 +1174,6 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 			end
 		end
 	end
-	local swim, cost2 = waterWalking and 1 or st.swim, waterWalking and 2 or 1
-	local roadsOn = hz and hz.roads and hz.roadFactor ~= 1
-	local offroad = hz and hz.roadFactor or OFFROAD
-	local starts, source, sourceReal, _, sourceIn, sourceInReal =
-		connectPoint(st, swim, sk, sc, from, roadsOn, hz, reverse)
 	local clusters, links, dist, real, closed, left = {}, {}, {}, {}, {}, #targets
 	for i, point in ipairs(targets) do
 		local k = locate(st, point.x, point.y)
@@ -1134,19 +1202,21 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 		-- Local searches need their own heap, including across a yield midway through a connection.
 		local keys, values, size = hk, hv, hn
 		hk, hv, hn = {}, {}, 0
-		local direct, directReal, ends, realEnds = {}, {}, {}, {}
+		local direct, directReal, ends, realEnds, goalsOf = {}, {}, {}, {}, {}
 		for _, i in ipairs(list) do
-			local _, node = pointNode(st, targets[i])
-			if node then
-				local goals
-				-- A forward batch costs a walk into each target, so a drop is not climbed to reach it; a reverse batch
-				-- costs a walk out of it, and its meeting point is whatever reaches `from`.
-				local into, intoReal
-				goals, ends[i], realEnds[i], _, into, intoReal =
-					connectPoint(st, swim, k, node, targets[i], roadsOn, hz, not reverse)
-				if not reverse then
-					ends[i], realEnds[i] = into, intoReal
+			local target = link(i, k)
+			if target then
+				goalsOf[i], ends[i], realEnds[i] = target.goals, target.ends, target.realEnds
+			else
+				costs[i], left = false, left - 1
+				if job then
+					job.revision = job.revision + 1
 				end
+			end
+		end
+		for _, i in ipairs(list) do
+			local goals = goalsOf[i]
+			if goals then
 				for _, a in ipairs(k == sk and starts or {}) do
 					for _, b in ipairs(goals) do
 						-- Both trees search outward from their endpoint; a reverse batch walks to the source. A local
@@ -1169,11 +1239,6 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 							direct[i], directReal[i] = cost, realCost
 						end
 					end
-				end
-			else
-				costs[i], left = false, left - 1
-				if job then
-					job.revision = job.revision + 1
 				end
 			end
 		end

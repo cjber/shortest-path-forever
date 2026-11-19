@@ -234,6 +234,8 @@ files["Data/RoadEdges.lua"] = { max_line_length = false }
 files["Data/Heights.lua"] = { max_line_length = false }
 files["Data/IdleSpawns.lua"] = { max_line_length = false }
 files["Data/TownAreas.lua"] = { max_line_length = false }
+files["Data/ZoneCells.lua"] = { max_line_length = false }
+files["Data/WalkZones.lua"] = { max_line_length = false }
 
 files["tests/companion_maps_spec.lua"] = { globals = { "C_AddOns", "GetTime" } }
 -- The client's secure delegate: map pins set their restricted button passthrough through it (#645).

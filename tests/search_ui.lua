@@ -101,8 +101,14 @@ local function begin()
  splitRoute = false
  assert(clickHandlers[1](map, "LeftButton"))
 end
-local function hiddenRoute()
- assert(#(active[routeTemplate] or {}) == 0 and mini.used == 0)
+-- A search shows the goal and a "finding" row, and nothing guides until a walk is measured. Once the endpoint costs
+-- are in, the rough route from the baked hub costs is drawn, pulsing, though nothing follows it.
+local function searching(rough)
+ if rough then
+  assert(#active[routeTemplate] == 1 and mini.used > 0, "the rough route is drawn")
+ else
+  assert(#(active[routeTemplate] or {}) == 0 and mini.used == 0)
+ end
  assert(#active[goalTemplate] == 1 and not mini.Goal.hidden, "only the goal pins are drawn")
  assert(not waypoint and not ns.GuideTargets())
  assert(not ShortestPathForeverCompass or not ShortestPathForeverCompass:IsShown())
@@ -112,12 +118,18 @@ local function hiddenRoute()
  assert(tracker.blocks[1].rows[1].text == "Finding the fastest way…")
  assert(tracker.Header.Text:GetText() == "Journey")
  assert(spinner.Anim:IsPlaying() and spinner:IsShown())
- pulse(mini, false)
+ pulse(mini, rough)
+end
+local function hiddenRoute()
+ searching(false)
+end
+local function roughRoute()
+ searching(true)
 end
 hiddenRoute()
 for _, batch in ipairs(batches()) do
  path.costs(batch, 1400)
- hiddenRoute()
+ roughRoute()
 end
 assert(#jobs() == 1)
 finish()
@@ -125,7 +137,8 @@ drawn(false)
 assert(tracker.blocks[1].rows[1].key == 1 and tracker.Header.Text:GetText():find("yd",1,true))
 assert(not spinner.Anim:IsPlaying() and spinner.hidden)
 
--- Even a long search keeps guessed geometry private until the first walk is measured.
+-- Even a long search guides nowhere until the first walk is measured; the rough route draws once the endpoints
+-- are costed.
 for _, replace in ipairs({false, true}) do
  begin()
  hiddenRoute()
@@ -133,7 +146,7 @@ for _, replace in ipairs({false, true}) do
  hiddenRoute()
  splitRoute = replace
  ready()
- hiddenRoute()
+ roughRoute()
  assert(#jobs() > 0)
  finish()
  drawn(false)
