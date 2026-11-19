@@ -211,7 +211,42 @@ local function byTemplate(template)
 	end
 end
 
+-- The path queue: a job runs on a later frame, never in the frame that asked; pump() is that frame.
+local runs = {}
+local function pump()
+	while #runs > 0 do
+		local job = table.remove(runs, 1)
+		if not job.cancelled then
+			local a, b = job.fn(job)
+			job.done = true
+			if job.callback then
+				job.callback(a, b, job)
+			end
+		end
+	end
+end
+local function ranking()
+	for _, job in ipairs(runs) do
+		if not job.cancelled then
+			return true
+		end
+	end
+	return false
+end
 local ns = {
+	Path = {
+		Run = function(fn, callback)
+			local job = { fn = fn, callback = callback }
+			runs[#runs + 1] = job
+			return job
+		end,
+		Cancel = function(job)
+			job.cancelled = true
+		end,
+	},
+	EstimateIn = function()
+		return 10
+	end,
 	Init = function() end,
 	db = { nearbyTab = true, townServices = "off" },
 	L = setmetatable({}, {
@@ -510,7 +545,7 @@ for _, f in ipairs(created) do
 	end
 end
 assert(#tickers == 1 and tickers[1].seconds == 10, "a ten second ticker starts while shown")
-assert(panel.scripts.OnUpdate, "ranking starts while shown")
+assert(ranking() and not panel.scripts.OnUpdate, "ranking starts while shown, as a path job")
 
 -- A refresh while open, from a zone change, leaves the player's scroll offset alone.
 scroll:SetVerticalScroll(42)
@@ -523,7 +558,7 @@ search:SetText("bank")
 assert(scroll:GetVerticalScroll() == 0, "a new query scrolls back to the top")
 assert(panel:IsShown(), "searching keeps the panel open")
 assert(tickers[1].cancelled == false, "the ticker still runs while shown")
-assert(panel.scripts.OnUpdate, "searching requeues the ranking")
+assert(ranking(), "searching requeues the ranking")
 
 -- A row's icon is the goods it names: over it, the item's own tooltip with the row still lit; Shift-click links the
 -- item, a plain click goes there. A row that names no goods keeps its group's icon and shows no tooltip.
@@ -590,11 +625,7 @@ assert(badge and badge.atlas == "bags-greenarrow" and badge.width == 11, "and th
 assert(betterRow.Label.text == "|cffffffffJagged Arrow|r · Orgrimmar", "the goods in their colour, and the zone")
 local under = betterRow.points[1]
 assert(under[1] == "TOPLEFT" and under[2] == 22 and under[3] == -(22 + 4 + 44 + 2), "indented under Arrows")
-for _ = 1, 10 do
-	if panel.scripts.OnUpdate then
-		panel.scripts.OnUpdate(panel)
-	end
-end
+pump()
 local tiers = {}
 for _, call in ipairs(shortlisted) do
 	tiers[call.key .. ":" .. tostring(call.tier)] = true
@@ -616,15 +647,16 @@ assert(not betterRow:IsShown(), "a search with no trip hides the row")
 search:SetText("")
 
 -- The tab module reports the panel hidden when another tab, Quests or the map takes it away.
+assert(ranking(), "a search ranks again")
 ns.registered.spec.shown(false)
 assert(tickers[1].cancelled, "shown(false) cancels the ticker")
-assert(panel.scripts.OnUpdate == nil, "shown(false) drops the queue")
+assert(not ranking(), "shown(false) drops the ranking")
 assert(#tickers == 1, "shown(false) starts no ticker")
 
 -- A zone event follows the reported visibility, not the panel frame's own shown flag.
 scroll:SetVerticalScroll(42)
 panel.scripts.OnEvent(panel, "ZONE_CHANGED")
-assert(panel.scripts.OnUpdate == nil and scroll:GetVerticalScroll() == 42, "a zone change while hidden does nothing")
+assert(not ranking() and scroll:GetVerticalScroll() == 42, "a zone change while hidden does nothing")
 
 -- Nothing under the world map may carry a show or hide script (#158), and a resize must not refresh the panel.
 for _, event in ipairs({ "OnShow", "OnHide", "OnSizeChanged" }) do

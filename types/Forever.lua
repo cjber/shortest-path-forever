@@ -245,3 +245,11 @@ UiMapPoint = nil
 ---@field Icon Texture the tab's art, fitted to its template
 ---@class ForeverQuestMapFrame : Frame
 ---@field ContentsAnchor Frame
+
+-- The client's objective tracker palette (Blizzard_ObjectiveTracker). ForeverCore 1.15.0 no longer declares it.
+---@class ForeverObjectiveTrackerColor
+---@field r number
+---@field g number
+---@field b number
+---@type table<string, ForeverObjectiveTrackerColor>
+OBJECTIVE_TRACKER_COLOR = nil

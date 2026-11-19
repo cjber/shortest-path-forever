@@ -391,6 +391,7 @@ local function stubframe()
 	f.Header = {
 		SetScript = noop,
 		EnableMouse = noop,
+		RegisterForDrag = noop,
 		HookScript = noop,
 		SetWidth = noop,
 	}

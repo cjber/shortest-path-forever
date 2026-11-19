@@ -837,17 +837,6 @@ ns.Init(function()
 		L["One line in chat the first time you log in after an update."]
 	)
 
-	-- The Forever addons page is ForeverCore's, with the hint setting on it.
-	-- With the gamepad interface on the page is the client's own rows so the Options navigation can enter it
-	-- (cjber/tweaks-forever#382).
-	local family = ForeverCore.Family.Register(category, ns.db, addonName, ns.core.SafeCall)
-	Settings.RegisterInitializer(
-		category,
-		Secure(CreateSettingsButtonInitializer)(L["Forever addons"], L["Open"], function()
-			ForeverCore.OpenSettingsPanel(family:GetID())
-		end, nil, false)
-	)
-
 	Settings.RegisterAddOnCategory(category)
 	SLASH_SHORTESTPATHFOREVER1 = "/path"
 	SLASH_SHORTESTPATHFOREVER2 = "/shortestpath"

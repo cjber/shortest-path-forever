@@ -10,6 +10,23 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.43.2] - 2026-11-18
+
+### Changed
+
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
+### Fixed
+
+- **No more stutters from route planning.** Working out a journey, its later stops, the Hearthstone and other-faction comparisons you see on hover, and the travel times under Nearby and Services no longer freeze the game for a moment. A journey you are following no longer hitches every few seconds either (#1023).
+- **Smoother play while the teleport prompt is up.** The prompt that names a teleport item now updates only when that item's details arrive, not every time any addon looks up an item (#1029).
+
+## [1.43.1] - 2026-11-18
+
+<!-- forever-core-sync -->
+
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
 ## [1.43.0] - 2026-11-18
 
 <!-- discord-image: docs/screenshots/town_services.png -->

@@ -84,8 +84,9 @@ assert(reported == nil, "a stop's ground must not yield across a C call: " .. to
 assert(ground == "down", "the city floor below the ruins is down: " .. tostring(ground))
 assert(decoded, "the answer decoded the cluster's terrain")
 
--- Reusing an endpoint: a released batch's source cluster has been let go, so asking whether a point is still its
--- start reads that cluster whole, in the frame that asks, and a search from elsewhere runs for the asking.
+-- Reusing an endpoint: a released batch's source cluster has been let go. Asked in the frame (a callback, maybe under
+-- a C call), the answer never decodes it whole, which would be a frame spike: the batch is searched again instead.
+-- Asked from inside a path job (sliced), the cluster is decoded under the frame budget and the endpoint recognised.
 local batch
 batch = Path.FindMany(0, GOLDSHIRE, { STORMWIND }, function(costs, reason, finished)
 	assert(finished == batch and costs[1] and not reason, "the batch found its walk")
@@ -107,8 +108,14 @@ end)
 drain(20000)
 assert(not crossed, "a reuse was asked for under a C call")
 assert(reported == nil, "a reuse must not yield across a C call: " .. tostring(reported))
-assert(reused == true, "the released batch still recognises its endpoint")
-assert(decodedSource, "the answer decoded the endpoint's cluster")
+assert(reused == false, "a cold endpoint is not recognised in the asking frame")
+assert(not decodedSource, "and its cluster is not decoded there")
+local sliced
+Path.Run(function()
+	sliced = Path.ReuseMany(batch, batch.from, true)
+end)
+drain(20000)
+assert(sliced == true, "from a path job, the released batch still recognises its endpoint")
 assert(
 	Path.ReuseMany(batch, { map = 0, x = GOLDSHIRE.x + 30, y = GOLDSHIRE.y }) == false,
 	"a point 30 yd away is not its start"

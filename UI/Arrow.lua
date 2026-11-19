@@ -756,6 +756,12 @@ local function RenderCastPrompt()
 	if not castPrompt or not castTarget or ns.db.arrow == false then
 		return
 	end
+	-- Until the client has the item's name and icon it says "Use Unknown"; its own answer for that item redraws.
+	if castTarget.item and not C_Item.GetItemNameByID(castTarget.item) then
+		castPrompt:RegisterEvent("GET_ITEM_INFO_RECEIVED")
+	else
+		castPrompt:UnregisterEvent("GET_ITEM_INFO_RECEIVED")
+	end
 	local action, icon = ns.TeleportAction(castTarget)
 	castPrompt.Action:SetText(action)
 	ns.Art.Icon(castPrompt.Icon, icon or 134400, 36)
@@ -791,9 +797,13 @@ function ns.PointCastPrompt(teleport)
 		created.Action = created:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 		created.Action:SetPoint("TOP", created.Icon, "BOTTOM", 0, -6)
 		created.Action:SetWidth(320)
-		created:SetScript("OnEvent", RenderCastPrompt)
+		created:SetScript("OnEvent", function(_, event, itemID)
+			-- Item answers arrive for every item any addon asks about: only the prompt's own redraws it.
+			if event ~= "GET_ITEM_INFO_RECEIVED" or castTarget and itemID == castTarget.item then
+				RenderCastPrompt()
+			end
+		end)
 	end
-	castPrompt:RegisterEvent("GET_ITEM_INFO_RECEIVED")
 	castPrompt:RegisterEvent("SPELLS_CHANGED")
 	RenderCastPrompt()
 	castPrompt:Show()

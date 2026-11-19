@@ -54,10 +54,10 @@ for _, case in ipairs({
 		draw(g, r)
 	end
 	local plan = ns.Planner.Plan
-	ns.Planner.Plan = function(options)
+	ns.Planner.Plan = function(options, job)
 		rounds = rounds + 1
 		local started = os.clock()
-		local planned = plan(options)
+		local planned = plan(options, job)
 		plannerCPU = plannerCPU + (os.clock() - started) * 1000
 		return planned
 	end

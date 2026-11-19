@@ -134,10 +134,12 @@ marks, tall, suffix = dirty, 12, " 0:59"
 tick()
 tall, suffix = 24, " 0:58"
 tick()
-assert(dirty == marks, "a row that fits in fewer lines keeps its place, so a ticking timer cannot shake the column")
+-- ForeverCore lays a section out again whenever a row's height changes, either way, so it never leaves a gap under it.
+assert(dirty == marks + 2, "a row that shrinks and grows again is laid out each time")
 block.SetStringText, suffix = setText, nil
 tick()
 for _, row in pairs(block.lines) do row.GetHeight = function() return 12 end end
+marks = dirty
 index, onTaxi = 2, true
 assert(refresh(true) == "Journey  44:00 · 8.5k yd")
 assert(dirty == marks + 1 and not block:GetExistingLine(1), "leg changes still relayout rows")
@@ -247,16 +249,6 @@ assert(tracker.blocks[1].rows[1].key == 1, "the warning leaves with its row")
 route = nil
 refresh(true)
 assert(tracker.Header.text == "Boats" and #tracker.blocks == 0 and not tracker.distance)
--- A family footer row goes through the same layout: it must not borrow a stock line either.
-ns.FamilyHints.Footer = function()
- return { key = "family", title = "What next?", rows = { { key = "family", text = "Adventure Guide", grey = true } } }
-end
-refresh(true)
-checkLines()
-assert(
- tracker:GetExistingBlock("family"):GetExistingLine("family").template == LINE_TEMPLATE,
- "family rows also use SPF's line template"
-)
 assert(#errors == 0, table.concat(errors, "\n"))
 print("tracker_ui: remaining walking/transport yards, step times, geometry cache and no header layout churn ok")
 ]]))()

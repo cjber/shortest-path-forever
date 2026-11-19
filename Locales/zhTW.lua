@@ -54,9 +54,9 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"旅程以及其他插件從這裡算起的估計，可以從法師的城市傳送或傳送：月光林地開始，並計入冷卻時間。"
 L["Minimum teleport saving"] = "傳送最少節省時間"
+L["No more stutters from route planning."] = "規劃路線時不再卡頓。" -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"只在職業傳送至少節省這麼多時間時使用。"
-L["Faster routes from busy cities."] = "從繁忙城市出發的路線更快。" -- mt
 L["Boat and Zeppelin Routes"] = "船隻與飛艇航線"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"船隻與飛艇航線，在你指向碼頭時繪製。"
@@ -100,7 +100,6 @@ L["Follow Guidelime guides"] = "跟隨 Guidelime 攻略"
 L["Follow RestedXP guides"] = "跟隨RestedXP指南"
 L["Follow TomTom's arrow"] = "跟隨TomTom的箭頭"
 L["Food"] = "食物"
-L["Forever addons"] = "Forever插件"
 L["Friendly nameplates must be on to see them."] = "需要開啟友方姓名板才能看到。"
 L["Go through to %s"] = "穿過前往%s"
 L["Guidance"] = "引導"
@@ -123,8 +122,6 @@ L["Keeps the shared Forever tracker where you put it. The grip at its top no lon
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
 	"以公尺標註距離，與遊戲採用公制的語言客戶端一致。數字仍為遊戲自身的碼數。"
 L["Last seen %s ago"] = "%s前最後看到" -- mt
-L["Legacy Forever shows the Legacy challenges this counts toward."] =
-	"Legacy Forever會顯示此項計入的傳承挑戰。"
 L["Let guides set TomTom waypoints"] = "允許指南設定TomTom路徑點"
 L["Lift to %s"] = "前往%s的升降梯"
 L["Lifts"] = "升降梯"
@@ -224,7 +221,6 @@ L["Starts a journey when you super-track a quest or place the game's map pin, so
 	"當您聚焦任務或放置遊戲地圖標記時開始旅程，因此控制器無需 地圖點擊。指南插件的自有旅程不受影響。"
 L["Stop %d of %d"] = "第%d站，共%d站" -- mt
 L["Stop %d of %d: %s"] = "第%d站，共%d站：%s"
-L["Suggest quests for my level: Adventure Guide Forever"] = "推薦適合我等級的任務：Adventure Guide Forever"
 L["Teleport to %s"] = "傳送到%s"
 L["The journey's time left, as the tracker shows it, beside the distance to your next turn."] =
 	"旅程剩餘時間（與追蹤器顯示的一致），顯示在到下一個轉彎的距離旁。"
@@ -254,8 +250,6 @@ L["Walk to %s"] = "步行前往%s"
 L["Walks go round zones whose lowest level is 4 or more above yours, but never the ones you start or end in."] =
 	"步行路線會繞開最低等級比你高 4 級或以上的區域，但不會繞開起點和終點所在的區域。"
 L["Weapons and armour"] = "武器與護甲"
-L["What next? Adventure Guide Forever suggests quests for your level."] =
-	"接下來做什麼？Adventure Guide Forever會推薦適合你等級的任務。"
 L["What's new after an update"] = "更新後的新內容"
 L["While Guide is on: your next turns, the next stop and your destination across the top of the screen."] =
 	"引導開啟時：在螢幕頂端顯示你接下來的轉彎、下一站和目的地。"
@@ -566,8 +560,6 @@ L["Walking route"] = "步行路線"
 L["stop guiding"] = "停止引導" -- mt
 L["guide this journey"] = "引導此旅程" -- mt
 L["show it on the map"] = "在地圖上顯示" -- mt
-L["show the Adventure Guide Forever link"] = "顯示 Adventure Guide Forever 連結" -- mt
-L["Show link"] = "顯示連結" -- mt
 L["That guide has no step to follow."] = "此指南沒有可跟隨的步驟。" -- mt
 
 L["Weapon master"] = "武器大師"

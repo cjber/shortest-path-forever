@@ -290,7 +290,12 @@ function GoalPin:OnMouseEnter()
 	end
 	-- The pin you are travelling to lists the steps there, as the tracker does, when the trip has more than one.
 	if self.current then
-		local hint = ns.OtherFactionHint()
+		-- Planned under the frame budget: the line joins the tooltip when it lands, if the pointer is still here.
+		local hint = ns.OtherFactionHint(function()
+			if self.current and GameTooltip:IsOwned(self) then
+				self:OnMouseEnter()
+			end
+		end)
 		if hint then
 			GameTooltip_AddNormalLine(GameTooltip, hint)
 		end
@@ -304,7 +309,6 @@ function GoalPin:OnMouseEnter()
 				GameTooltip_AddColoredLine(GameTooltip, row.text, color)
 			end
 		end
-		ns.FamilyHints.AddEntranceLine(GameTooltip)
 	end
 	GameTooltip_AddBlankLineToTooltip(GameTooltip)
 	GameTooltip_AddNormalLine(GameTooltip, L["Right-click to clear"])

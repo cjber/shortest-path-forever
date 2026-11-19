@@ -243,6 +243,9 @@ do
 	check(api.NavigateRoute("normal", { stop(3000), stop(5000) }), "normal itinerary")
 	d.path.settle()
 	frame()
+	-- The hop plans in a path job on a later frame, then publishes on the next.
+	d.path.runAll()
+	frame()
 	local preview = ns.JourneyPreview()
 	local transit = false
 	for _, path in ipairs(preview) do
@@ -251,6 +254,8 @@ do
 	check(transit, "normal hop uses faster transport")
 	check(ns.NavigateFarmingRoute("farm", { stop(3000), stop(5000) }), "walking same-geometry itinerary")
 	d.path.settle()
+	frame()
+	d.path.runAll()
 	frame()
 	preview = ns.JourneyPreview()
 	check(#preview > 0, "walking hop exists")
@@ -265,6 +270,8 @@ do
 	check(late.cancelled, "old hop search cancelled on policy change")
 	d.path.settle()
 	frame()
+	frame()
+	d.path.runAll()
 	frame()
 	local restored = ns.JourneyPreview()[1]
 	d.path.finish(late, { point(3000), point(5000) }, 2000)
@@ -302,6 +309,8 @@ do
 		end,
 	}
 	check(ns.NavigateFarmingRoute("farm", { stop(3000), stop(5000) }), "walking route queued behind corpse")
+	frame()
+	d.path.runAll()
 	frame()
 	local transit = false
 	for _, path in ipairs(ns.JourneyPreview()) do

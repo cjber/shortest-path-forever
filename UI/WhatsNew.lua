@@ -11,8 +11,8 @@ local L = ns.L
 -- sync's maintenance entry has no headline, so these stay on the release before it: an update to a maintenance
 -- version says nothing new but still remembers the version. Rewrite both lines for each release that has a headline
 -- (tests/whats_new_spec.lua checks them against CHANGELOG.md).
-ns.WHATS_NEW_VERSION = "1.43.0"
-ns.WHATS_NEW = L["Faster routes from busy cities."]
+ns.WHATS_NEW_VERSION = "1.43.2"
+ns.WHATS_NEW = L["No more stutters from route planning."]
 
 -- Once per new version, after an update: never on a first install, nor in a checkout, whose TOC still holds the
 -- packager's version keyword (matched by its "@", as the packager would rewrite the whole keyword here too). The
@@ -23,6 +23,8 @@ function ns.CheckWhatsNew()
 	if not version or version:find("^@") then
 		return
 	end
+	-- The packager writes the release tag, v1.2.3, while the releases here are named without the v.
+	version = version:gsub("^v", "", 1)
 	local seen = db.seenVersion
 	db.seenVersion = version
 	if seen and seen ~= version and version == ns.WHATS_NEW_VERSION and db.whatsNew then

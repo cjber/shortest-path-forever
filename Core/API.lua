@@ -350,7 +350,8 @@ end
 ---@param from SPFPoint
 ---@param to SPFPoint
 ---@param key string
-local function Answer(from, to, key)
+---@param job? SPFPathJob the path job asking, whose plan pauses at the frame budget; nil plans whole
+local function Answer(from, to, key, job)
 	local options, now = Options(from, to)
 	local cached = estimates[key]
 	if cached and now >= cached.at and now - cached.at < CACHE_MS then
@@ -359,17 +360,22 @@ local function Answer(from, to, key)
 		end
 		return nil, "unreachable"
 	end
-	local plan = ns.Planner.Plan(options)
+	local generation = estimates
+	local plan = ns.Planner.Plan(options, job)
 	local seconds = plan and math.max(0, (plan.arrive - now) / 1000) or nil
-	if not cached then
-		if order[slot] then
-			estimates[order[slot]] = nil
-		end
-		order[slot] = key
-		slot = slot % CACHE_LIMIT + 1
-	end
 	local entry = { at = now, seconds = seconds or false, legs = plan and plan.legs }
-	estimates[key] = entry
+	-- A plan that paused may answer for inputs another estimate has since replaced: it keeps its answer
+	-- out of the cache that replaced them.
+	if estimates == generation then
+		if not estimates[key] then
+			if order[slot] then
+				estimates[order[slot]] = nil
+			end
+			order[slot] = key
+			slot = slot % CACHE_LIMIT + 1
+		end
+		estimates[key] = entry
+	end
 	if seconds then
 		return entry
 	end
@@ -379,7 +385,7 @@ end
 -- The reason tells a caller whether asking again later can help: "combat" after combat, "loading" when the addon is
 -- still building its data, "invalid" never for bad input, "unreachable" when known flight paths or boat timings change.
 ---@return { at: number, seconds: number|false, legs?: SPFLeg[] }?, ("combat"|"invalid"|"unreachable"|"loading")?
-local function Lookup(fromMap, fromX, fromY, toMap, toX, toY)
+local function Lookup(fromMap, fromX, fromY, toMap, toX, toY, job)
 	if not Ready() then
 		if InCombatLockdown() then
 			return nil, "combat"
@@ -390,7 +396,7 @@ local function Lookup(fromMap, fromX, fromY, toMap, toX, toY)
 	if not from or not to then
 		return nil, "invalid"
 	end
-	return Answer(from, to, string.format("%d:%.4f:%.4f:%d:%.17g:%.17g", fromMap, fromX, fromY, toMap, toX, toY))
+	return Answer(from, to, string.format("%d:%.4f:%.4f:%d:%.17g:%.17g", fromMap, fromX, fromY, toMap, toX, toY), job)
 end
 
 -- Itinerary.lua draws the hops between later stops with this cheap planner; no terrain searches. It keeps each
@@ -398,10 +404,23 @@ end
 ---@param from SPFPoint
 ---@param to SPFPoint
 ---@param policy? SPFRoutePolicy
+---@param job? SPFPathJob the path job asking, whose plan pauses at the frame budget; nil plans whole
 ---@return SPFLeg[]?
-function ns.EstimateLegs(from, to, policy)
-	local plan = ns.Planner.Plan((Options(from, to, policy)))
+function ns.EstimateLegs(from, to, policy, job)
+	local plan = ns.Planner.Plan((Options(from, to, policy)), job)
 	return plan and plan.legs
+end
+
+-- API.Estimate for the addon's own callers, which ask from inside a path job (ns.Path.Run): an uncached plan pauses at
+-- the frame budget instead of taking the asking frame. Same answers and cache as API.Estimate.
+---@param job SPFPathJob
+---@return number?, ("combat"|"invalid"|"unreachable"|"loading")?
+function ns.EstimateIn(job, fromMap, fromX, fromY, toMap, toX, toY)
+	local entry, reason = Lookup(fromMap, fromX, fromY, toMap, toX, toY, job)
+	if not entry then
+		return nil, reason
+	end
+	return entry.seconds --[[@as number]]
 end
 
 function API.Estimate(fromMap, fromX, fromY, toMap, toX, toY)

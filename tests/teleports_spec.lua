@@ -170,7 +170,7 @@ do
 	local secret = {}
 	local items, spells, cooldowns, itemCooldowns, casts = {}, {}, {}, {}, {}
 	local bindName, position, onEvent = "Goldshire", { 10, 20, 30, 0 }, nil
-	local registered, clock, travelTick, wakes = {}, 100, nil, 0
+	local registered, clock, travelTick, wakes, reads = {}, 100, nil, 0, 0
 	-- One second on the travel clock, as Core's ticker samples it.
 	local function tick()
 		clock = clock + 1
@@ -193,14 +193,17 @@ do
 	local env = setmetatable({
 		C_Item = {
 			GetItemCount = function(id)
+				reads = reads + 1
 				return items[id] or 0
 			end,
 			GetItemCooldown = function(id)
+				reads = reads + 1
 				return unpack(itemCooldowns[id] or { 0, 0, true })
 			end,
 		},
 		C_SpellBook = {
 			IsSpellKnown = function(id)
+				reads = reads + 1
 				return spells[id] or false
 			end,
 		},
@@ -209,6 +212,7 @@ do
 				return casts[id] and { castTime = casts[id] }
 			end,
 			GetSpellCooldown = function(id)
+				reads = reads + 1
 				return cooldowns[id] or { startTime = 0, duration = 0 }
 			end,
 		},
@@ -238,34 +242,55 @@ do
 	}, { __index = _G })
 	setfenv(assert(loadfile("Transport/Teleports.lua")), env)("ShortestPathForever", runtime)
 	local Usable = runtime.UsableTeleports
+	-- The client changed what the teleports read: the event it fires for that.
+	local function changed(event)
+		assert(registered[event], event .. " is watched")
+		onEvent(nil, event)
+	end
 
 	local places, ready = Usable(5000)
 	assert(#places == 0 and next(ready) == nil, "nothing known, nothing usable")
 
 	spells[3561] = true
+	reads = 0
+	assert(#Usable(5000) == 0 and reads == 0, "a replan between events asks the client nothing")
+	changed("SPELLS_CHANGED")
 	places, ready = Usable(5000)
 	assert(#places == 1 and places[1].spell == 3561 and places[1].map == 0, "a known teleport is a place")
 	assert(not ready[1], "without its rune it cannot be cast")
 	items[17031] = 1
+	changed("BAG_UPDATE_DELAYED")
 	local same
 	same, ready = Usable(5000)
 	assert(same == places and ready[1] == 5000, "the same places, now ready")
 	cooldowns[3561] = { startTime = 90, duration = 60 }
+	changed("SPELL_UPDATE_COOLDOWN")
 	assert(select(2, Usable(5000))[1] == 55000, "the cooldown left delays it")
+	-- The cooldown it read ends at 150: then it reads again, with no event.
+	clock, cooldowns[3561] = 150, { startTime = 150, duration = 30 }
+	assert(select(2, Usable(5000))[1] == 35000, "a cooldown that ran out is read again")
+	clock = 100
 	cooldowns[3561] = { startTime = secret, duration = secret }
+	changed("SPELL_UPDATE_COOLDOWN")
 	assert(not select(2, Usable(5000))[1], "a secret cooldown is never guessed")
+	cooldowns[3561] = { startTime = 0, duration = 0 }
+	assert(select(2, Usable(5000))[1] == 5000, "nor kept: the next read asks again")
 	cooldowns[3561], spells[3561] = nil, nil
 	-- The cast time is the client's own where it reports one, and the shipped one where it does not.
 	assert(places[1].cast == 10000, "the shipped cast time")
 	casts[3562], spells[3562] = 8500, true
+	changed("SPELLS_CHANGED")
 	assert(Usable(5000)[1].cast == 8500, "the client's cast time")
 	casts[3562] = secret
 	spells[3561] = true
+	changed("SPELLS_CHANGED")
 	places = Usable(5000)
 	assert(places[2].spell == 3562 and places[2].cast == 10000, "a secret cast time is never used")
 	casts[3562], spells[3561], spells[3562] = nil, nil, nil
 
 	items[6948] = 1
+	changed("SPELLS_CHANGED")
+	changed("BAG_UPDATE_DELAYED")
 	assert(#Usable(5000) == 0, "no hearth before a bind point is recorded")
 	onEvent(nil, "HEARTHSTONE_BOUND")
 	local bind = runtime.charDB.bind
@@ -282,6 +307,7 @@ do
 	local kept = Usable(5000)
 	assert(#kept == 1 and kept[1].item == 6948, "class teleports off leaves the Hearthstone")
 	spells[3561], spells[556], items[17031] = true, true, 1
+	changed("SPELLS_CHANGED")
 	runtime.db.useHearthstone = false
 	kept = Usable(5000)
 	assert(#kept == 0, "both switches off hide every teleport")
@@ -295,6 +321,8 @@ do
 	assert(#Usable(5000) == 3, "class teleports stay on")
 	spells[3561], spells[556], items[17031] = nil, nil, nil
 	itemCooldowns[6948] = { 50, 3600, true }
+	changed("SPELLS_CHANGED")
+	changed("BAG_UPDATE_COOLDOWN")
 	assert(select(2, Usable(5000))[1] == 5000 + 3550000, "the hearth's own cooldown")
 	bindName = "Razor Hill"
 	assert(#Usable(5000) == 0, "bound elsewhere since: no bind teleport")

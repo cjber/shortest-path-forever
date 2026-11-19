@@ -69,8 +69,8 @@ env.C_QuestLog = {
 		return false
 	end,
 }
--- UI/FamilyHints.lua is not loaded here; its own suggestions go through the same menu description.
-ns.FamilyHints = {
+-- UI/AdventureSuggestions.lua is not loaded here; its own suggestions go through the same menu description.
+ns.AdventureSuggestions = {
 	AddQuestMenu = function(root)
 		root:CreateTitle("Adventure Guide suggests")
 		root:CreateButton("Suggestion", function() end)
@@ -125,7 +125,10 @@ assert(buttons[1] and buttons[1].text == "Plan journey", "the quest menu offers 
 assert(not buttons[1].title and buttons[1].notCheckable, "it is an ordinary, uncheckable entry")
 assert(buttons[1].level == 1, "it is added to the open menu's level")
 assert(buttons[2] and buttons[2].text == "Adventure Guide suggests" and buttons[2].title, "titles pass through")
-assert(buttons[3] and buttons[3].text == "Suggestion" and buttons[3].func, "so do the family hints' entries")
+assert(
+	buttons[3] and buttons[3].text == "Suggestion" and buttons[3].func,
+	"so do the Adventure Guide suggestions' entries"
+)
 assert(info.KTmenuExtended, "later extensions group after the same separator")
 destination = nil
 buttons[1].func()

@@ -4,7 +4,6 @@ local ns = select(2, ...)
 if ns.broken then
 	return
 end
-local L = ns.L
 
 local Model = ns.Model
 ---@class SPFPlanner
@@ -22,53 +21,6 @@ local HEARTH_MINIMUM_SAVING = 20
 -- A journey that would be one walk of at least LONG_WALK takes a ride instead when that arrives within RIDE_MARGIN
 -- of the walk's time.
 local LONG_WALK, RIDE_MARGIN = 600000, 1.1
-
-local function QuestPointValid(point)
-	return point
-		and type(point.uiMapID) == "number"
-		and point.uiMapID > 0
-		and type(point.x) == "number"
-		and point.x >= 0
-		and point.x <= 1
-		and type(point.y) == "number"
-		and point.y >= 0
-		and point.y <= 1
-end
-
--- Native POIs already describe the quest's current state. A completed quest prefers its
--- destination POI (turn-in) over a next waypoint that may still describe the last objective.
----@param questID number
----@param title string?
----@param complete boolean
----@param uiMapID number?
----@param pois QuestPOIMapInfo[]?
----@param waypoint {uiMapID: number?, x: number?, y: number?}?
-function Planner.QuestDestination(questID, title, complete, uiMapID, pois, waypoint)
-	local destination, start
-	for _, poi in ipairs(pois or {}) do
-		if poi.questID == questID then
-			-- As in QuestDataProvider, x/y belong to the queried map, even for child-map POIs.
-			local point = { uiMapID = uiMapID, x = poi.x, y = poi.y }
-			if QuestPointValid(point) then
-				if not poi.isQuestStart then
-					destination = point
-					break
-				end
-				-- Some quests start and end with one NPC and have no objective area, so the client reports only
-				-- that start pin. It is still the only place it names, and better than no journey at all.
-				start = start or point
-			end
-		end
-	end
-	if waypoint and QuestPointValid(waypoint) and (not complete or not destination) then
-		destination = { uiMapID = waypoint.uiMapID, x = waypoint.x, y = waypoint.y }
-	end
-	destination = destination or start
-	if destination and title and title ~= "" then
-		destination.label = complete and string.format(L["%s (turn in)"], title) or title
-		return destination
-	end
-end
 
 -- Preview geometry while a walking leg is still pending.
 ---@param from SPFPoint
@@ -233,7 +185,7 @@ end
 -- options.baked holds walks searched ahead of time between fixed places, per map; options.waterWalking picks
 -- which of their two costs applies. They were searched without hazards, so options.hazards weights one by the hazards
 -- on the straight way between its ends, as the walking search would weight the yards it walks inside them.
-local function BakedCost(options, a, b)
+local function BakedCost(options, a, b, weigh)
 	local ka, kb = a.bakedKey, b.bakedKey
 	local baked = ka and kb and options.baked and options.baked[a.map]
 	local pair = baked and baked[ka < kb and ka .. " " .. kb or kb .. " " .. ka]
@@ -243,6 +195,7 @@ local function BakedCost(options, a, b)
 		local reverse = pair[mode + (ka < kb and pair[3] ~= nil and 2 or 0)]
 		local hazards = options.hazards
 		if hazards and (yards or reverse) then
+			weigh() -- a cold zone cache sends Segment to the client's map API per sample
 			local factor = hazards.Segment(a.map, a.x, a.y, b.x, b.y)
 			yards, reverse = yards and yards * factor, reverse and reverse * factor
 		end
@@ -360,16 +313,17 @@ local CACHE_KEYS = {
 	"hazards",
 }
 
--- A plan runs to its answer in one plain Lua frame. Its callers are not this module's own: another addon's estimate
--- inside a secure hook, a tooltip, and a path job's callback replanning from newly settled costs. Some of those run
--- under a C call the client makes (a hook, pcall or sort), and Lua 5.1 cannot yield across one, so a checkpoint here
--- died as "attempt to yield across metamethod/C-call boundary" (#717). A plan is small enough to finish in its
--- caller's frame (tests/journey_performance.md).
+-- A plan from its caller's own frame runs to its answer there and never yields: another addon's estimate inside a
+-- secure hook can ask for one, and Lua 5.1 cannot yield across that C call (#717). A plan given its path job runs
+-- there instead, pausing at the shared frame budget and going on next frame; every caller of this addon's own does
+-- that. A sliced plan holds options.cache while it is paused, and any other plan meanwhile builds its own graph.
 ---@param options SPFPlanOptions
+---@param cache table?
+---@param check fun() reads the budget every CHECK_EVERY calls
+---@param weigh fun() reads the budget on every call, before work that can ask the client
 ---@return SPFPlan?
 -- Bounded label search shares topology and heap locals; splitting adds hot-path upvalues
-local function Plan(options)
-	local cache = options.cache
+local function Solve(options, cache, check, weigh)
 	local topology = cache and cache.topology
 	if topology then
 		for _, key in ipairs(CACHE_KEYS) do
@@ -403,6 +357,7 @@ local function Plan(options)
 	end
 	local walkIndex = {}
 	for _, walk in ipairs(options.walks or {}) do
+		check()
 		local from, to = PointKey(walk.from), PointKey(walk.to)
 		walkIndex[from] = walkIndex[from] or {}
 		local previous = walkIndex[from][to]
@@ -441,6 +396,7 @@ local function Plan(options)
 		Add("start", nil, options.from)
 		Add("goal", nil, options.to)
 		for _, place in ipairs(Planner.Places(options)) do
+			check()
 			local index = Add(place.kind, place.id, place)
 			if place.kind == "dock" then
 				docks[place.id] = index
@@ -459,6 +415,7 @@ local function Plan(options)
 			end
 		end
 		for _, path in ipairs(options.taxiPaths or {}) do
+			check()
 			if taxis[path.from] and taxis[path.to] then
 				-- A ride this character has flown overrides the shipped estimate for that directed path.
 				local measured = options.taxiTimes and options.taxiTimes[path.from .. ":" .. path.to]
@@ -473,6 +430,7 @@ local function Plan(options)
 		for _, id in ipairs(Keys(options.routes or {})) do
 			local route = options.routes[id]
 			for index, stop in ipairs(route.stops) do
+				check()
 				if docks[stop.dock] and (options.otherFaction ~= false or Eligible(route, options)) then
 					for offset = 1, #route.stops - 1 do
 						local onward = route.stops[(index + offset - 1) % #route.stops + 1]
@@ -502,11 +460,13 @@ local function Plan(options)
 			local endpoint = from <= 2
 			local targets = endpoint and nodes or groups[nodes[from].map][masses[from] or 0]
 			for index = endpoint and from + 1 or 1, #targets do
+				-- a baked pair weighs the hazards on its way, so each pair counts
+				check()
 				local to = endpoint and index or targets[index]
 				if endpoint then
 					pairs[#pairs + 1], pairs[#pairs + 2] = from, to
 				elseif to > from then
-					local baked, yards, reverse = BakedCost(options, nodes[from], nodes[to])
+					local baked, yards, reverse = BakedCost(options, nodes[from], nodes[to], weigh)
 					if not baked then
 						pairs[#pairs + 1], pairs[#pairs + 2] = from, to
 					else
@@ -522,6 +482,7 @@ local function Plan(options)
 		end
 		local counts, saved = {}, {}
 		for i, adjacent in ipairs(edges) do
+			check()
 			counts[i] = #adjacent
 		end
 		for _, key in ipairs(CACHE_KEYS) do
@@ -609,6 +570,7 @@ local function Plan(options)
 		end
 	end
 	for pair = 1, #topology.pairs, 2 do
+		check()
 		local from, to = topology.pairs[pair], topology.pairs[pair + 1]
 		local a, b = nodes[from], nodes[to]
 		if a.map == b.map and masses[from] == masses[to] and not (ride and from == start) then
@@ -643,6 +605,7 @@ local function Plan(options)
 	---@type table<number, SPFAnchor>?
 	local anchors = options.anchors
 	for from, adjacent in ipairs(edges) do
+		check()
 		for _, edge in ipairs(adjacent) do
 			local duration = edge.duration
 			if edge.route and not edge.aboard and not (anchors and anchors[edge.route]) then
@@ -654,6 +617,7 @@ local function Plan(options)
 		end
 	end
 	for _ = 1, count do
+		check()
 		local current, best
 		for node, cost in pairs(lower) do
 			if not done[node] and (not best or cost < best) then
@@ -733,6 +697,7 @@ local function Plan(options)
 		end
 		local finishAt
 		while #heap > 0 do
+			check()
 			local current = pop()
 			if cutoff and labels.key[current] >= cutoff then
 				return nil
@@ -978,6 +943,47 @@ local function Plan(options)
 	end
 	if planned then
 		MarkUnknownFlight(planned)
+	end
+	return planned
+end
+
+local CHECK_EVERY = 16
+local function NoCheck() end
+
+---@param options SPFPlanOptions
+---@param job SPFPathJob? the path job this plan runs in ; nil runs it whole in the caller's frame
+---@return SPFPlan?
+local function Plan(options, job)
+	local cache = options.cache
+	local holder = cache and cache.busy
+	if cache and holder and holder ~= job then
+		if holder.done or holder.cancelled then
+			-- Its plan stopped part way: the topology it was building is not trusted.
+			for key in pairs(cache) do
+				cache[key] = nil
+			end
+		else
+			cache = nil
+		end
+	end
+	local check, weigh = NoCheck, NoCheck
+	if job then
+		local checkpoint, count = ns.Path.Checkpoint, 0
+		weigh = checkpoint
+		check = function()
+			count = count + 1
+			if count >= CHECK_EVERY then
+				count = 0
+				checkpoint()
+			end
+		end
+		if cache then
+			cache.busy = job
+		end
+	end
+	local planned = Solve(options, cache, check, weigh)
+	if cache and cache.busy == job then
+		cache.busy = nil
 	end
 	return planned
 end

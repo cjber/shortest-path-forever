@@ -11,6 +11,23 @@ local ns = {
 			queued[#queued + 1] = fn
 		end,
 		Busy = function() end,
+		-- A path job runs on the next frame, as the pump's does.
+		Run = function(fn, callback)
+			local job = {}
+			queued[#queued + 1] = function()
+				if not job.cancelled then
+					fn(job)
+					job.done = true
+					callback(nil, nil, job)
+				end
+			end
+			return job
+		end,
+		Pause = function() end,
+		Resume = function() end,
+		Cancel = function(job)
+			job.cancelled = true
+		end,
 		HasData = function()
 			return false
 		end,

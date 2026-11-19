@@ -75,6 +75,7 @@ local function settle(batch, costOf)
 	end
 	batch.costs, batch.valid, batch.revision = costs, true, batch.revision + 1
 	batch.progress(costs, nil, batch)
+	walking.runAll()
 end
 -- The start batch knows A; the goal batch knows everything: B is the walk still being searched.
 local function half()

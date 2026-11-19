@@ -451,4 +451,30 @@ do
 	h.clear()
 end
 
+-- A timed replan stays cancellable until it renders: a newer tick cancels one paused at its last checkpoint.
+do
+	local h = harness(function(a, b)
+		return math.sqrt((a.x - b.x) ^ 2 + (a.y - b.y) ^ 2)
+	end)
+	h.start({ map = 1, x = 0, y = 0 }, { map = 1, x = 1000, y = 0 })
+	for _ = 1, 3 do
+		h.costs()
+		h.geometry()
+		h.walking.runAll()
+	end
+	h.Search.Replan(nil, nil, true)
+	local first = assert(h.walking.runs[#h.walking.runs], "a timed replan runs in a path job")
+	local checkpoint = h.ns.Path.Checkpoint
+	h.ns.Path.Checkpoint = function()
+		-- The replan's own pause before it renders, not the planner's inside it.
+		if debug.getinfo(2, "S").short_src:find("JourneySearch") then
+			h.ns.Path.Checkpoint = checkpoint
+			h.Search.Replan(nil, nil, true)
+		end
+	end
+	h.walking.runAll()
+	h.ns.Path.Checkpoint = checkpoint
+	assert(first.cancelled, "the newer tick cancelled the paused replan")
+end
+
 print("search_spec: measured guidance, private guesses, background replans, switch gains, reuse and cancellation: ok")

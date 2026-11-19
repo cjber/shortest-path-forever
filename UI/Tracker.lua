@@ -27,7 +27,6 @@ end
 ---@field riding? number|false
 ---@field second number
 ---@field journeyVersion? number
----@field familyVersion? integer
 ---@field sightingVersion? number
 ---@field tracker? boolean
 ---@field otherFaction? boolean
@@ -56,9 +55,6 @@ local function TargetKind(target)
 	if ns.JourneyInfo() then
 		return "journey"
 	end
-	if not module.mapDock and module.blocks[1] and module.blocks[1].key == "family" then
-		return "family"
-	end
 	return "dock"
 end
 
@@ -69,8 +65,6 @@ local function TrackerClick(target, button)
 	local kind = TargetKind(target)
 	if kind == "journey" then
 		return ns.ToggleJourneyGuide()
-	elseif kind == "family" then
-		return ns.FamilyHints.OpenFooter()
 	end
 	return OpenDockMap(module.mapDock)
 end
@@ -101,8 +95,6 @@ local function TrackerMenu(target, menu)
 		if not ns.Corpse.Active() then
 			menu:End(L["Clear journey"], ns.ClearJourney)
 		end
-	elseif kind == "family" then
-		menu:Open(L["Show link"], ns.FamilyHints.OpenFooter)
 	else
 		menu:Open(L["Show on map"], function()
 			return OpenDockMap(module.mapDock)
@@ -119,8 +111,6 @@ local function TrackerClickHint(target)
 	local kind = TargetKind(target)
 	if kind == "journey" then
 		return ns.IsJourneyGuided() and L["stop guiding"] or L["guide this journey"]
-	elseif kind == "family" then
-		return L["show the Adventure Guide Forever link"]
 	end
 	return L["show it on the map"]
 end
@@ -311,15 +301,10 @@ function ModuleMixin:LayoutContents()
 			local line = block:AddObjective(row.key, row.text, nil, true, nil, RowColor(row))
 			SetLineMark(line, RowMark(row))
 			SetPulse(line, row.warning == true)
-			local family = entry.key == "family"
-			local clickable = family or entry.key == "journey" and row.current and not ns.Corpse.Active()
+			local clickable = entry.key == "journey" and row.current and not ns.Corpse.Active()
 			if clickable then
 				Line.SetInteractive(line, {
 					onClick = function()
-						if family then
-							ns.FamilyHints.OpenFooter()
-							return
-						end
 						-- A row's key counts from the step under way, so the step is the one under way when the menu
 						-- opens; SkipJourneyStep refuses it if the journey has moved on before the click.
 						local _, _, plan, index = ns.JourneyInfo()
@@ -497,8 +482,6 @@ local function RefreshTracker(dockID, yards)
 	local riding = ns.db.tracker and ns.CurrentRide()
 	local journey = ns.HasJourney() and ns.db.journeyTracker ~= false
 	local second = (dockID or riding or journey) and math.floor(GetTime()) or 0
-	-- After a journey arrives, Hints.Footer (UI/FamilyHints.lua) may add a grey line under it.
-	local familyBlock = ns.FamilyHints.Footer()
 	-- Compare scalar render inputs before allocating blocks or formatting rows. Unrelated tracker
 	-- layouts can replay the saved blocks; they never need to query timetables or rebuild the model.
 	if
@@ -506,7 +489,6 @@ local function RefreshTracker(dockID, yards)
 		and module.riding == riding
 		and module.second == second
 		and module.journeyVersion == ns.journeyVersion
-		and module.familyVersion == ns.FamilyHints.Version()
 		and module.sightingVersion == ns.Timetable.Version()
 		and module.tracker == ns.db.tracker
 		and module.otherFaction == ns.db.otherFaction
@@ -517,7 +499,6 @@ local function RefreshTracker(dockID, yards)
 	end
 	module.riding, module.second = riding, second
 	module.journeyVersion, module.sightingVersion = ns.journeyVersion, ns.Timetable.Version()
-	module.familyVersion = ns.FamilyHints.Version()
 	module.tracker, module.otherFaction = ns.db.tracker, ns.db.otherFaction
 	module.journeyTracker, module.metres = ns.db.journeyTracker, ns.db.metres
 	if dockID then
@@ -541,17 +522,12 @@ local function RefreshTracker(dockID, yards)
 			end
 		end
 		blocks[#blocks + 1] = { key = "journey", title = JourneyTitle(journeyTitle), rows = journeyRows }
-	elseif familyBlock then
-		blocks[#blocks + 1] = familyBlock
 	end
 	if blockKey then
 		blocks[#blocks + 1] = { key = blockKey, title = title, rows = rows }
 	end
 	module.dockID, module.mapDock = dockID, mapDock
-	local section = journeyTitle and L["Journey"]
-		or kind and HEADER[kind]
-		or familyBlock and L["Journey"]
-		or ModuleMixin.headerText
+	local section = journeyTitle and L["Journey"] or kind and HEADER[kind] or ModuleMixin.headerText
 	local header = journeyTitle and JourneyHeader(journeyResult, journeyIndex, loading) or section
 	if not journeyTitle then
 		distanceCache = nil

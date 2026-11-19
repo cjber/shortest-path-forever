@@ -88,9 +88,9 @@ local collapsed = {}
 local estimates = {}
 ---@type table<string, SPFNearbyPlace>
 local chosen = {}
----@type SPFNearbyRank[]?
-local rankQueue
-local rankAt = 1
+-- The path job ranking the rows (Queue), while one runs.
+---@type SPFPathJob?
+local ranking
 ---@type table?
 local ticker
 local query = ""
@@ -448,49 +448,24 @@ local function UpdateRow(key)
 	Paint(row)
 end
 
--- One Estimate a frame, only while the panel is shown. The frame script is cleared as soon as the queue empties,
--- so nothing runs idle (AGENTS.md).
-local function StepQueue()
-	if not panel then
-		return
-	end
-	local rank = rankQueue and rankQueue[rankAt]
-	if not rank then
-		rankQueue = nil
-		panel:SetScript("OnUpdate", nil)
-		return
-	end
-	local place, seconds, more = rank:Step()
-	if place then
-		chosen[rank.key] = place
-	end
-	if seconds then
-		estimates[rank.key] = seconds
-	end
-	if not more then
-		UpdateRow(rank.key)
-		rankAt = rankAt + 1
-	end
-	if rankAt > #rankQueue then
-		rankQueue = nil
-		panel:SetScript("OnUpdate", nil)
-		-- Every row has its travel time now: the dungeons and raids reorder by it, once.
-		Refresh()
+-- Rank each shown group's shortlist in one path job, under the shared frame budget: an uncached estimate pauses at
+-- the budget and goes on next frame. Each row takes the cheapest of its shortlist as it lands; nothing runs once the
+-- job ends or the panel hides (AGENTS.md).
+local function StopRanking()
+	if ranking then
+		ns.Path.Cancel(ranking)
+		ranking = nil
 	end
 end
 
--- Rank each shown group's shortlist through the queue: one Estimate per frame, cheapest wins once it lands.
 function Queue()
 	if not visible then
 		return
 	end
-	---@cast panel -?
-	rankQueue, rankAt = nil, 1
-	panel:SetScript("OnUpdate", nil)
+	StopRanking()
 	local world = ns.NearbyServices.PlayerWorld()
 	local map, x, y = ns.NearbyServices.PlayerUi()
-	local api = ShortestPathForever and ShortestPathForever.API
-	if not (world and map and x and y and api and api.Estimate) then
+	if not (world and map and x and y and ns.EstimateIn) then
 		return
 	end
 	local queue = {}
@@ -499,9 +474,7 @@ function Queue()
 			for _, entry in ipairs(section.rows) do
 				local candidates = ns.NearbyServices.Shortlist(entry.group.key, world, SHORTLIST, query, entry.tier)
 				if #candidates > 0 then
-					local rank = ns.NearbyServices.Rank(candidates, api.Estimate, map, x, y)
-					rank.key = entry.id
-					queue[#queue + 1] = rank
+					queue[#queue + 1] = { key = entry.id, candidates = candidates }
 				end
 			end
 		end
@@ -509,8 +482,33 @@ function Queue()
 	if #queue == 0 then
 		return
 	end
-	rankQueue = queue
-	panel:SetScript("OnUpdate", StepQueue)
+	local this
+	this = ns.Path.Run(function(job)
+		local function estimate(...)
+			return ns.EstimateIn(job, ...)
+		end
+		for _, item in ipairs(queue) do
+			local rank = ns.NearbyServices.Rank(item.candidates, estimate, map, x, y)
+			local place, seconds, more
+			repeat
+				place, seconds, more = rank:Step()
+			until not more
+			if place then
+				chosen[item.key] = place
+			end
+			if seconds then
+				estimates[item.key] = seconds
+			end
+			UpdateRow(item.key)
+		end
+	end, function()
+		if ranking == this then
+			ranking = nil
+			-- Every row has its travel time now: the dungeons and raids reorder by it, once.
+			Refresh()
+		end
+	end)
+	ranking = this
 end
 
 -- A fresh look at the player's place: zones change and the ticker both come through here.
@@ -681,8 +679,7 @@ local function Attach()
 			Requeue()
 			StartTicker(true)
 		else
-			rankQueue = nil
-			panel:SetScript("OnUpdate", nil)
+			StopRanking()
 			StartTicker(false)
 		end
 	end

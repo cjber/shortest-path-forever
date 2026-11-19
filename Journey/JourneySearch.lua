@@ -56,6 +56,8 @@ local hazards
 local lastRunSpeed = 7
 local plannerCache = {}
 local probeJobs, pathVersion = {}, 0
+-- The timed replan's path job while it plans.
+local replanning
 local startBatch, goalBatch, startAt
 local refreshedAt = 0
 local startCosts, goalCosts = {}, {}
@@ -93,7 +95,7 @@ local function CancelPaths()
 		end
 	end
 	pendingCosts = 0
-	probeJobs = {}
+	probeJobs, replanning = {}, nil
 end
 
 -- How much of the chosen walk is still ahead of here, from 0 to 1, or nil when here is off it.
@@ -424,8 +426,9 @@ end
 -- Feasible plans use known walks; the incumbent bounds the exact search while preserving journey preferences.
 ---@param feasible boolean?
 ---@param incumbent SPFPlan?
+---@param job SPFPathJob the path job planning, which pauses at the frame budget
 ---@return SPFPlan?
-local function Plan(feasible, incumbent)
+local function Plan(feasible, incumbent, job)
 	local here = Here()
 	if not (here and goal) then
 		return nil
@@ -435,22 +438,26 @@ local function Plan(feasible, incumbent)
 		lastRunSpeed, followed.now = Context.RunSpeed(), ns.NowMs()
 		return followed
 	end
+	-- Where you stand, the context and the walks below each read the client; the budget is checked between them.
+	ns.Path.Checkpoint()
 	local options = Context.Options(here, goal, routePolicy)
 	-- This is a manual refusal for the active journey only. Keep it out of Context.Options so
 	-- public estimates and nearby-service planning retain the normal Hearthstone policy.
 	options.withoutHearth = ns.JourneyWithoutHearth and ns.JourneyWithoutHearth() or false
 	local now = options.now
 	lastRunSpeed = options.walkSpeed
+	ns.Path.Checkpoint()
 	local walks = MeasuredWalks(here)
 	for _, walk in ipairs(Walks.Landings(options.teleports, waterMode)) do
 		walks[#walks + 1] = walk
 	end
+	ns.Path.Checkpoint()
 	options.cache, options.walks, options.waterWalking, options.hazards = plannerCache, walks, waterMode, hazards
 	options.feasibleOnly = feasible
 	options.incumbent, options.incumbentPlan = incumbent and incumbent.arrive, incumbent
 	options.ride = Context.Ride(options)
 	options.unknownFlightNotice = true
-	local planned = ns.Planner.Plan(options)
+	local planned = ns.Planner.Plan(options, job)
 	if planned then
 		planned.now, planned.preview, planned.waterMode = now, nil, waterMode
 		planned.hazards = hazards and hazards.key
@@ -547,7 +554,7 @@ local function RefreshCosts(includeGoal, forced, replace)
 				place.map == batch.point.map
 				and math.abs(place.x - batch.point.x) < 0.00001
 				and math.abs(place.y - batch.point.y) < 0.00001
-				and ns.Path.ReuseMany(batch.job, place)
+				and ns.Path.ReuseMany(batch.job, place, true)
 			then
 				batch.fixedKey = place.kind .. place.id
 				return
@@ -605,18 +612,20 @@ local function RefreshCosts(includeGoal, forced, replace)
 		end
 	end
 	local preview
-	if not followed then
+	local wantPreview = not followed
+	if wantPreview then
 		startCosts, goalCosts = walks(startBatch), walks(goalBatch)
-		preview = Plan()
-		if preview then
-			preview.preview, search.candidate = true, preview
-		end
 	end
-	local consider
-	-- Bounded search callback; splitting adds calls and upvalues on every frontier update
-	consider = function(final)
-		-- A search that has published (FinishSearch forgets it) or was replaced is never heard from again.
-		if version ~= pathVersion or search ~= owner or not goal then
+	-- A search that has published (FinishSearch forgets it) or was replaced is never heard from again.
+	local function stale()
+		return version ~= pathVersion or search ~= owner or not goal
+	end
+	local consider, request
+	-- Bounded search callback; splitting adds calls and upvalues on every frontier update. It runs only in the
+	-- search's own path job (request), where each plan pauses at the frame budget; anything a pause let change is
+	-- checked again after it.
+	consider = function(final, job)
+		if stale() then
 			return
 		end
 		if not ns.JourneyPosition() then
@@ -632,6 +641,9 @@ local function RefreshCosts(includeGoal, forced, replace)
 		local hadFixed = startBatch.fixedKey or goalBatch.fixedKey
 		fixedPlace(startBatch)
 		fixedPlace(goalBatch)
+		if stale() then
+			return
+		end
 		if not hadFixed and (startBatch.fixedKey or goalBatch.fixedKey) then
 			preview = nil
 		end
@@ -656,10 +668,13 @@ local function RefreshCosts(includeGoal, forced, replace)
 		end
 		-- What the settled walks alone give: the arrival every other route must beat, and a route to follow if the
 		-- proof still has far to go.
-		local feasible = Plan(true)
+		local feasible = Plan(true, nil, job)
+		if stale() then
+			return
+		end
 		local bound = feasible and feasible.arrive
 		local function best()
-			return Plan(false, feasible)
+			return Plan(false, feasible, job)
 		end
 		-- Reuse the bounded preview once for probes; commit only after planning with current exact costs.
 		local previewed = preview
@@ -668,6 +683,9 @@ local function RefreshCosts(includeGoal, forced, replace)
 			and not (bound and preview.arrive >= bound)
 		local planned = previewed and preview or best()
 		preview = nil
+		if stale() then
+			return
+		end
 		if
 			feasible
 			and planned
@@ -681,6 +699,11 @@ local function RefreshCosts(includeGoal, forced, replace)
 			search.offer = feasible
 			PrepareWalks(feasible)
 		end
+		-- Publishing starts in a frame of its own when the plans spent this one's budget.
+		ns.Path.Checkpoint()
+		if stale() then
+			return
+		end
 		-- Drawing the offer's first walk takes the frame budget until it lands, then the proof goes on.
 		local offering = Offer()
 		-- Publishing an offer can synchronously stop or replace this journey.
@@ -691,7 +714,7 @@ local function RefreshCosts(includeGoal, forced, replace)
 			active(startBatch, false)
 			active(goalBatch, false)
 			search.resume = function()
-				consider(true)
+				request(true)
 			end
 			return
 		end
@@ -721,7 +744,7 @@ local function RefreshCosts(includeGoal, forced, replace)
 				local left = #probes
 				for _, probe in ipairs(probes) do
 					local leg, batch = probe.leg, probe.batch
-					local job = ns.Path.FindCost(leg.from.map, leg.from, leg.to, function(cost, reason, finished)
+					local probeJob = ns.Path.FindCost(leg.from.map, leg.from, leg.to, function(cost, reason, finished)
 						probeJobs[finished] = nil
 						if version ~= pathVersion then
 							return
@@ -733,16 +756,19 @@ local function RefreshCosts(includeGoal, forced, replace)
 						probeCPU = probeCPU + finished.cpu
 						left = left - 1
 						if left == 0 then
-							consider(true)
+							request(true)
 						end
 					end, waterMode, hazards)
-					probeJobs[job] = true
+					probeJobs[probeJob] = true
 				end
 				return
 			end
 		end
 		if previewed then
 			planned = best()
+			if stale() then
+				return
+			end
 		end
 		local needStart = planned and planned.needsStart and ns.Path.HasData(here.map)
 		local needGoal = planned and planned.needsGoal and ns.Path.HasData(goal.map)
@@ -763,6 +789,10 @@ local function RefreshCosts(includeGoal, forced, replace)
 			)
 		if not needStart and not needGoal and not landing then
 			pendingCosts, settleRound = 0, settleRound + 1
+			ns.Path.Checkpoint()
+			if stale() then
+				return
+			end
 			Render(planned, forced)
 		else
 			if planned and planned ~= followed then
@@ -770,6 +800,37 @@ local function RefreshCosts(includeGoal, forced, replace)
 			end
 			search.candidate = planned
 		end
+	end
+	-- The search's own path job: the preview a first search shows, then consider again for as long as new costs
+	-- arrived while it ran. Callbacks only ask for it, so none of them plans in its own frame.
+	local considering, again, againFinal = nil, false, false
+	local function work(job)
+		if wantPreview then
+			wantPreview = false
+			preview = Plan(nil, nil, job)
+			if stale() then
+				return
+			end
+			if preview then
+				preview.preview, search.candidate = true, preview
+			end
+		end
+		while again do
+			local final = againFinal
+			again, againFinal = false, false
+			consider(final, job)
+		end
+		considering = nil
+	end
+	local function schedule()
+		if not considering and not stale() then
+			considering = ns.Path.Run(work)
+			probeJobs[considering] = true
+		end
+	end
+	request = function(final)
+		again, againFinal = true, againFinal or final == true
+		schedule()
 	end
 	-- A finished batch's answer: its costs, why it found none, and false for each target it never reached.
 	local function settle(batch, costs, reason, job)
@@ -789,7 +850,7 @@ local function RefreshCosts(includeGoal, forced, replace)
 				return
 			end
 			settle(batch, costs, reason, job)
-			consider(batch.done)
+			request(batch.done)
 		end
 		local job = batch.job
 		if job then
@@ -818,11 +879,13 @@ local function RefreshCosts(includeGoal, forced, replace)
 	attach(startBatch)
 	attach(goalBatch)
 	Walks.LandingPending(teleports, waterMode, function()
-		consider(true)
+		request(true)
 	end)
 	-- Existing settled costs can prove a repeated journey without advancing either frontier.
 	if (startBatch.job.valid or startBatch.done) and (goalBatch.job.valid or goalBatch.done) then
-		consider(true)
+		request(true)
+	elseif wantPreview then
+		schedule()
 	end
 end
 
@@ -993,20 +1056,42 @@ function Search.Replan(riding, flying, changedRide, changedSpeed)
 		then
 			RefreshCosts(false, off or retry)
 		elseif changedRide or changedSpeed or not RetimeKept() then
-			local planned = Plan()
-			if
-				planned
-				and (
-					(planned.needsStart and here and ns.Path.HasData(here.map))
-					or (planned.needsGoal and ns.Path.HasData(goal.map))
-				)
-			then
-				-- A timed replan can expose an alternative left bounded by the previous proof.
-				-- Resume its costs before letting it replace the route with settled geometry.
-				RefreshCosts(false, changedRide)
-			else
-				Render(planned, changedRide)
+			-- Planned in a path job of its own; a newer tick's replan replaces one still running.
+			if replanning then
+				ns.Path.Cancel(replanning)
 			end
+			local version = pathVersion
+			-- Held until it renders, so a newer tick cancels it at any pause.
+			local this
+			this = ns.Path.Run(function(job)
+				local planned = Plan(nil, nil, job)
+				if version ~= pathVersion or not goal then
+					return
+				end
+				here = Here()
+				if
+					planned
+					and (
+						(planned.needsStart and here and ns.Path.HasData(here.map))
+						or (planned.needsGoal and ns.Path.HasData(goal.map))
+					)
+				then
+					-- A timed replan can expose an alternative left bounded by the previous proof.
+					-- Resume its costs before letting it replace the route with settled geometry.
+					RefreshCosts(false, changedRide)
+				else
+					ns.Path.Checkpoint()
+					if version == pathVersion and goal then
+						Render(planned, changedRide)
+					end
+				end
+			end, function()
+				if replanning == this then
+					replanning = nil
+				end
+			end)
+			replanning = this
+			probeJobs[this] = true
 		end
 	end
 end

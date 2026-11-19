@@ -9,7 +9,7 @@
 ## X-Website: https://github.com/cjber/shortest-path-forever
 ## X-Donate: https://github.com/sponsors/cjber
 ## X-Curse-Project-ID: 1708599
-## X-Forever-Core: v1.14.5
+## X-Forever-Core: v1.15.1
 ## SavedVariables: ShortestPathForeverDB
 ## SavedVariablesPerCharacter: ShortestPathForeverCharDB
 ## IconTexture: Interface\AddOns\ShortestPathForever\media\Icon
@@ -47,6 +47,7 @@ Data\Credits.lua
 Transport\Model.lua
 Routing\Savings.lua
 Routing\Planner.lua
+Routing\QuestDestination.lua
 Core\Core.lua
 Core\Distance.lua
 Transport\Timetable.lua
@@ -67,7 +68,7 @@ Transport\Teleports.lua
 Transport\PartyPortals.lua
 UI\Art.lua
 UI\ServicesPanel.lua
-UI\FamilyHints.lua
+UI\AdventureSuggestions.lua
 UI\OpenMap.lua
 UI\CompanionMaps.lua
 UI\Canvas.lua

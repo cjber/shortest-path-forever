@@ -18,11 +18,15 @@ local queue = {}
 local scheduled, pumped = false, false
 local pump, combatWait
 
+-- A callback runs as a job of its own at the head of the queue, under the budget left in the frame. It is meant to
+-- record the answer and schedule what follows (Path.Run), never to plan or decode itself.
 local function notify(job, callback, points, cost)
 	if callback then
 		table.insert(queue, 1, {
 			co = coroutine.create(start),
 			notify = callback,
+			front = true,
+			plain = true,
 			owner = job,
 			points = points,
 			cost = cost,
@@ -59,18 +63,29 @@ pump = function()
 			break
 		end
 		local t0 = clock()
-		Deadline(math.min(finish, t0 + (not job.notify and #queue > 0 and Path.budget / 2 or Path.budget)))
+		Deadline(math.min(finish, t0 + (not job.front and #queue > 0 and Path.budget / 2 or Path.budget)))
 		Expansions(job.expansions or 0)
-		local saved = scratch(job.scratch)
-		local ok, points, cost = coroutine.resume(job.co, job)
-		job.scratch = scratch(saved)
+		-- Plain jobs (callbacks, plans) have no walking search, so no search scratch to swap in.
+		local saved = not job.plain and scratch(job.scratch)
+		local co = job.co
+		local ok, points, cost = coroutine.resume(co, job)
+		if saved then
+			job.scratch = scratch(saved)
+		end
 		job.expansions = Expansions()
 		job.frames = job.frames + 1
 		job.cpu = job.cpu + clock() - t0
 		Deadline(math.huge)
-		if not ok or coroutine.status(job.co) == "dead" then
+		if job.cancelled then
+			-- Cancelled from inside its own resume (a plan's answer that replaced its journey): nothing more runs.
 			Grid.Release(job)
-			if not job.targets and not job.notify then
+			job.scratch, job.co = nil, nil
+			if not ok then
+				geterrorhandler()(points)
+			end
+		elseif not ok or coroutine.status(co) == "dead" then
+			Grid.Release(job)
+			if not job.targets and not job.plain then
 				Spare(job.scratch)
 			end
 			job.done, job.scratch, job.co = true, nil, nil
@@ -87,7 +102,7 @@ pump = function()
 			if points == "load" then
 				finish = 0
 			end
-			if job.notify then
+			if job.front then
 				table.insert(queue, 1, job)
 			else
 				queue[#queue + 1] = job
@@ -221,7 +236,8 @@ function Path.FindMany(map, from, targets, callback, waterWalking, reverse, prog
 	})
 end
 
--- Paused batches retain their settled costs and frontier for later replans, without consuming frames.
+-- Paused batches retain their settled costs and frontier for later replans, without consuming frames. A callback
+-- still queued for the job is dropped for good.
 ---@param job SPFPathJob
 function Path.Pause(job)
 	job.paused = true
@@ -229,8 +245,26 @@ function Path.Pause(job)
 		local queued = queue[i]
 		if queued == job or queued.owner == job then
 			table.remove(queue, i)
+			if queued ~= job then
+				queued.cancelled = true
+			end
 		end
 	end
+end
+
+-- Plain Lua work under the same frame budget: a plan, an ordering, a callback's follow-up. fn runs in the job's own
+-- coroutine, so Path.Checkpoint inside it yields at the deadline and the work goes on next frame; callback(a, b, job)
+-- receives fn's first two results. Nothing between fn and a checkpoint may be a C call (pcall, a hook, a sort's
+-- comparator): Lua 5.1 cannot yield across one (#717). It runs ahead of walking searches, as a callback does.
+---@param fn fun(job: SPFPathJob): any, any
+---@param callback? fun(a: any, b: any, job: SPFPathJob)
+---@return SPFPathJob
+function Path.Run(fn, callback)
+	local job = { callback = callback, front = true, plain = true, frames = 0, cpu = 0 }
+	job.co = coroutine.create(fn)
+	table.insert(queue, 1, job)
+	schedule()
+	return job
 end
 
 ---@param job SPFPathJob

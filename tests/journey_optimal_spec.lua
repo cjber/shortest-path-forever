@@ -155,6 +155,8 @@ ns.Path.FindMany = function(...)
 end
 ns.faction, ns.water, ns.speed, ns.known = "Alliance", false, 7, {}
 local from, destination = ns.TaxiNodes[26], ns.TaxiNodes[39]
+-- Floor.lua keeps the player's own cluster decoded, so a reuse asked in the frame can answer there.
+ns.Path.Pin(from.map, { [ns.PathGrid.locate(ns.PathGrid.State(from.map), from.x, from.y)] = true })
 driver.begin(from, destination)
 drain()
 local count = #batches

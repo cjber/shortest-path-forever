@@ -4,8 +4,11 @@ Terrain is compressed inside the main addon. The client parses the compressed st
 `C_EncodingUtil` to decode only the fields a search needs. A compressed block expands to at most 16 KB.
 No terrain helper addons or `LoadAddOn` calls are needed during a route search.
 
-Searches share a 2 ms frame budget, with periodic checkpoints. The budget is cooperative: one native call,
-a synchronous planner call or garbage collection can exceed it. Combat pauses queued searches until combat ends.
+Searches and plans share a 2 ms frame budget, with periodic checkpoints. The budget is cooperative: one native
+call or garbage collection can exceed it. Combat pauses queued searches until combat ends. No event, tooltip,
+click or callback plans in its own frame: it starts a path job and shows the answer when it lands
+(`tests/frame_budget_spec.lua`). A cluster's graph decodes in slices of 512 nodes; a reuse asked in a frame
+answers only from a decoded cluster.
 
 Decoded grids and graph nodes have separate memory ceilings. Completed grids release their raw strings;
 compressed blocks stay available for cache eviction and revisits. Cancellation stops queued work and discards
@@ -18,8 +21,8 @@ The journey search uses lower bounds to decide which endpoint walks still need e
 uses a single earliest label per arrival state to find a valid incumbent quickly. The final optimiser keeps
 visited-set alternatives to prove the optimum. The incumbent arrival allows the planner to discard labels that
 cannot beat it. The route's current walking leg gets its geometry first. Later legs with known costs wait until they become the next walk to follow.
-The planner itself never yields: a plan can be asked for from inside a C call (a secure hook, another addon's
-estimate), where Lua 5.1 cannot yield across, and it finishes inside its caller's frame (#717).
+A plan given its path job pauses at the budget. The public `Estimate` and `EstimateDetail` still plan whole in
+their caller's frame: another addon may ask from inside a C call (a secure hook), where Lua 5.1 cannot yield (#717).
 
 A feasible route can be followed while the search continues to prove the final route. The first walking leg
 must be measured before that route is offered. Cancellation, destination changes and water-mode changes
@@ -32,6 +35,7 @@ luajit tests/nav_loading_spec.lua
 luajit tests/path_many_spec.lua
 luajit tests/journey_progressive_spec.lua
 luajit tests/journey_optimal_spec.lua
+luajit tests/frame_budget_spec.lua
 luajit -joff tests/journey_bench.lua
 luajit -joff tests/runtime_bench.lua cold gc
 SPF_BENCH_STRICT=1 luajit -joff tests/hearth_savings_bench.lua

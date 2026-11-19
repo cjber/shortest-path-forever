@@ -429,6 +429,9 @@ local function decodeLinks(st, k, val, z, at, links, s, pos, masks, last, lpos)
 		end
 	end
 	for index = N + 1, last do
+		if index % 64 == 0 then
+			slice()
+		end
 		local bits = masks[index]
 		if bits then
 			local p = lpos and lpos[index]
@@ -842,26 +845,41 @@ local function decodeGraph(st, k)
 		return st.nodes[k]
 	end
 	local ids = {}
-	st.nodes[k] = ids
 	if not chunks then
+		st.nodes[k] = ids
 		return ids
 	end
+	-- Built aside and published whole: the loops pause at the frame budget, and another job running meanwhile must
+	-- never find the cluster half decoded.
 	local s = chunks
 	local n, pos = num(s, 1, 2), 3
-	st.graphSize[k] = (n * 288 + 128 + (st.D.packed and #s or 0)) / 1024
-	graphKB = graphKB + st.graphSize[k]
 	local degree = {}
-	st.outDeg[k] = degree
+	local width, step = st.D.degreeWidth or 1, 6 + (st.D.degreeWidth or 1) + (st.D.baseDegreeWidth or 0)
 	for i = 0, n - 1 do
-		local id = k * 4096 + i
-		ids[i + 1] = id
-		degree[i + 1] = num(s, pos + 6, st.D.degreeWidth or 1)
-		pos = pos + 6 + (st.D.degreeWidth or 1) + (st.D.baseDegreeWidth or 0)
+		if i % 512 == 511 then
+			slice()
+		end
+		ids[i + 1] = k * 4096 + i
+		degree[i + 1] = num(s, pos + 6, width)
+		pos = pos + step
 	end
+	local adj = {}
 	for i = 1, n do
-		st.nadj[ids[i]] = pos
+		if i % 512 == 0 then
+			slice()
+		end
+		adj[i] = pos
 		pos = pos + degree[i] * 7
 	end
+	if st.nodes[k] then
+		return st.nodes[k]
+	end
+	for i = 1, n do
+		st.nadj[ids[i]] = adj[i]
+	end
+	st.nodes[k], st.outDeg[k] = ids, degree
+	st.graphSize[k] = (n * 288 + 128 + (st.D.packed and #s or 0)) / 1024
+	graphKB = graphKB + st.graphSize[k]
 	return ids
 end
 

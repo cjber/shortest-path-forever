@@ -72,7 +72,7 @@ the WoW: Forever client's `Interface/AddOns/` folder (`_forever_` on the live cl
 
 Alt-click the world map to choose a destination over a Questie icon. Shift-click works on empty map space and Shortest Path icons. Choose Alt as *Key to plan a journey* in Guidance, and that one key works everywhere, Questie icons included. With the gamepad interface on, Shortest Path never opens or turns the world map, or opens a menu, itself; it asks you to.
 
-The settings have six pages. **Transport** draws routes and shows the other faction's boats and zeppelins (off by default). **Guidance** holds journey behaviour: *Key to plan a journey*, *Route to the focused quest*, *Show journey steps in the objective tracker*, *Resume guide*, *Keep journeys after a reload*, *Arrival distance*, *Use Hearthstone* with *Minimum Hearthstone saving*, *Use class teleports* with *Minimum teleport saving*, and *Attach to quest tracker*. **Map marks** scales each kind of icon from 25% to 200%, can keep the game's own quest markers on the map beside a journey, and can hide the Nearby services tab when another addon needs that space. **Interface** shows or hides the arrow and compass, sizes them, and labels distances in metres. **Alerts** covers the boat warning and the arrival sound. **Forever addons** holds the hint setting. [docs/features.md](docs/features.md) has the detail.
+In the settings, **Transport** draws routes and shows the other faction's boats and zeppelins (off by default). **Guidance** holds journey behaviour: *Key to plan a journey*, *Route to the focused quest*, *Show journey steps in the objective tracker*, *Resume guide*, *Keep journeys after a reload*, *Arrival distance*, *Use Hearthstone* with *Minimum Hearthstone saving*, and *Use class teleports* with *Minimum teleport saving*. **Map marks** scales each kind of icon from 25% to 200%, can keep the game's own quest markers on the map beside a journey, and can hide the Nearby services tab when another addon needs that space. **Interface** shows or hides the arrow and compass, sizes them, and labels distances in metres. **Alerts** covers the boat warning and the arrival sound. [docs/features.md](docs/features.md) has the detail.
 
 Right-click a flight master icon to mark its flight path as known if a flight map missed it. Open a flight master's map once after installing to sync the flight points you know.
 
@@ -90,11 +90,11 @@ The world map's filter menu and the minimap's tracking menu hide each kind of ma
 
 ## Move the tracker
 
-Turn off **Attach to quest tracker** in Guidance, or right-click the tracker's "Journey to …" line and untick it, then drag the Forever column by its heading. The column hides while nothing is tracked; turn the setting back on to reattach it.
+The Forever column sits to the left of the game's quest tracker and follows it when you move that tracker in Edit Mode. Drag a section's heading to put the column anywhere; it stays there after `/reload`. Right-click a heading for **Lock the tracker**, which stops dragging. The column hides while nothing is tracked.
 
-![Detached Forever tracker](docs/screenshots/detached.png)
+![The Forever column dragged away from the quest tracker](docs/screenshots/detached.png)
 
-The heading moves the Forever sections; your quests keep their own position.
+Moving it moves only the Forever sections; the game's quest tracker keeps its own position.
 
 ## Works alongside
 
@@ -102,8 +102,6 @@ Other addons can plan and guide journeys through `ShortestPathForever.API`, ask 
 to journey changes. [docs/api.md](docs/api.md) has the calls and what they return.
 
 With *Follow RestedXP guides* on (the default), leave RestedXP's TomTom option off so only one addon follows the guide.
-
-With Questie's tracker on, the Forever sections move clear of its quest list.
 
 Alt-left-click on the world map plans a journey even with TomTom installed. TomTom keeps its modified right-click waypoint gesture.
 
@@ -134,9 +132,7 @@ For help, ideas and each day's release notes, join [cjber's Workshop on Discord]
 
 Installed together, the others send Shortest Path their destinations: an Adventure Guide journey or quest-menu suggestion, a RestedXP, Guidelime or Dugi Guides step, a trainer or vendor in a SkillUp route, a Legacy dungeon or raid pin, or a dungeon or raid entrance Tweaks adds to the map.
 
-Journey steps share one tracker column with the Adventure Guide, SkillUp and Legacy sections, above your quests.
-
-If Adventure Guide or Legacy isn't installed, a grey hint suggests it where it would help.
+Journey steps share one tracker column with the Adventure Guide, SkillUp and Legacy sections, beside the game's quest tracker.
 
 ## Ways to help
 

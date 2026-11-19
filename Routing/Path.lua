@@ -1592,8 +1592,9 @@ end
 
 ---@param job SPFPathJob?
 ---@param point SPFPoint
+---@param sliced? boolean asked from inside a path job, which may pause to decode the point's cluster
 ---@return boolean
-function Path.ReuseMany(job, point)
+function Path.ReuseMany(job, point, sliced)
 	if not job or job.map ~= point.map or not job.sourceNode then
 		return false
 	end
@@ -1610,8 +1611,19 @@ function Path.ReuseMany(job, point)
 	if not st then
 		return false
 	end
-	-- Asked from a batch's callback, where the client may be inside a C call no yield crosses: the endpoint's cluster
-	-- is decoded whole to answer, never sliced (#803).
+	if Grid.locate(st, point.x, point.y) ~= job.sourceCluster then
+		return false
+	end
+	if sliced then
+		local k, node = pointNode(st, point)
+		return k == job.sourceCluster and node == job.sourceNode
+	end
+	-- Asked in the caller's frame, where the client may be inside a C call no yield crosses (#803): only a decoded
+	-- cluster answers, since decoding one whole is a frame spike. The player's own cluster is normally decoded (Floor
+	-- pins it); otherwise the batch is searched again, sliced.
+	if not Grid.Ready(st, job.sourceCluster) then
+		return false
+	end
 	local k, node = Grid.Quiet(pointNode, st, point)
 	return k == job.sourceCluster and node == job.sourceNode
 end

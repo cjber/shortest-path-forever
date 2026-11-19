@@ -1061,6 +1061,32 @@ do
 	env.C_Timer = previousTimer
 end
 
+-- A plan that paused keeps its answer out of a cache another estimate has replaced while it waited.
+do
+	local whole, context = ns.Planner.Plan, ns.PlanContext.Options
+	local speed = 1
+	ns.PlanContext.Options = function(...)
+		local options = context(...)
+		options.walkSpeed = options.walkSpeed * speed
+		return options
+	end
+	ns.Planner.Plan = function(options, job)
+		if job then
+			-- Paused: the run speed changes and another addon's estimate caches the answer for it.
+			speed = 2
+			API.Estimate(1, 0.5, 0.5, 1, 0.5016, 0.5)
+			return { arrive = options.now + 999000, legs = {} }
+		end
+		return { arrive = options.now + 5000, legs = {} }
+	end
+	ns.EstimateIn({}, 1, 0.5, 0.5, 1, 0.5016, 0.5)
+	ns.Planner.Plan = function()
+		error("answered from the cache")
+	end
+	equal(API.Estimate(1, 0.5, 0.5, 1, 0.5016, 0.5), 5, "the newer inputs' answer stays cached")
+	ns.Planner.Plan, ns.PlanContext.Options = whole, context
+end
+
 -- The suite's list of addon APIs names this one with its version and minor, and a core whose kit is still at minor 1
 -- has no Publish, so the API loads without being handed over.
 do

@@ -609,9 +609,9 @@ local function PlayerWorld()
 		return ns.WorldPoint(map, x, y)
 	end
 end
--- One row's shortlist ranked by the planner's own journey cost, one Estimate per Step. The panel calls one Step a
--- frame; the tracking menu and /spfnear drain it at once on the click. The best starts as the straight-line nearest,
--- so a row always has an NPC, and stays so when no estimate can be made.
+-- One row's shortlist ranked by the planner's own journey cost, one Estimate per Step. The panel, the tracking menu and
+-- /spfnear drain it inside a path job, whose estimates pause at the frame budget. The best starts as the straight-line
+-- nearest, so a row always has an NPC, and stays so when no estimate can be made.
 ---@class SPFNearbyRank
 ---@field key? string
 ---@field candidates SPFNearbyPlace[]
@@ -649,23 +649,47 @@ local function NewRank(candidates, estimate, fromMap, fromX, fromY)
 	}, Rank)
 end
 
--- The chosen place: the closest few by straight line, then the cheapest of those by the planner's own journey cost.
--- A boat or flight can beat a shorter walk across the hills. Planned here, on the click, so opening or refreshing a
--- menu never starts a plan, and only the shortlist is planned.
-local function TravelNearest(key, world, query, tier)
+-- The ranking a click started, while it runs: a later click replaces it.
+---@type SPFPathJob?
+local traveling
+
+-- Go to the chosen place: the closest few by straight line, then the cheapest of those by the planner's own journey
+-- cost. A boat or flight can beat a shorter walk across the hills. Planned on the click, so opening or refreshing a
+-- menu never starts a plan, and only the shortlist is planned: in a path job under the frame budget, never in the
+-- clicking frame, the journey starting once the ranking lands. Returns the menu's response.
+local function Travel(key, world, query, tier)
+	if traveling then
+		ns.Path.Cancel(traveling)
+		traveling = nil
+	end
 	local candidates = Shortlist(key, world, SHORTLIST, query, tier)
 	local best = candidates[1]
-	local api = ShortestPathForever and ShortestPathForever.API
 	local map, x, y = PlayerUi()
-	if #candidates < 2 or not (api and api.Estimate and map and x and y) then
-		return best
+	if #candidates < 2 or not (ns.EstimateIn and map and x and y) then
+		return Pick(key, best)
 	end
-	local rank = NewRank(candidates, api.Estimate, map, x, y)
-	local more = true
-	while more do
-		_, _, more = rank:Step()
-	end
-	return rank.best or best
+	-- A destination chosen while the ranking runs is the newer request: the ranking then starts nothing.
+	local goal = ns.JourneyGoal()
+	local this
+	this = ns.Path.Run(function(job)
+		local rank = NewRank(candidates, function(...)
+			return ns.EstimateIn(job, ...)
+		end, map, x, y)
+		local more = true
+		while more do
+			_, _, more = rank:Step()
+		end
+		return rank.best or best
+	end, function(place)
+		if traveling == this then
+			traveling = nil
+			if ns.JourneyGoal() == goal then
+				Navigate(key, place)
+			end
+		end
+	end)
+	traveling = this
+	return MenuResponse.CloseAll
 end
 
 -- The tooltip an upgrade's row and menu button share: the goods, why they are offered, and who sells them where.
@@ -707,7 +731,7 @@ local function AddGroups(root, world)
 			local place = world and Nearest(group.key, world)
 			local label = place and group.label or L["%s — unavailable here"]:format(group.label)
 			local entry = root:CreateButton(label, function()
-				return Pick(group.key, TravelNearest(group.key, world))
+				return Travel(group.key, world)
 			end)
 			entry:SetEnabled(place ~= nil)
 			local tier = place and Better(group.key, world)
@@ -717,7 +741,7 @@ local function AddGroups(root, world)
 				---@cast far -?
 				local arrow = ns.Art and ns.Art.Markup(UPGRADE_ATLAS, UPGRADE_MARKUP)
 				local better = root:CreateButton((arrow and arrow .. " " or "") .. itemNames[goods[1]], function()
-					return Pick(group.key, TravelNearest(group.key, world, nil, tier))
+					return Travel(group.key, world, nil, tier)
 				end)
 				better:SetTooltip(function(tooltip)
 					BetterTooltip(tooltip, goods[1], far)
@@ -961,7 +985,7 @@ ns.Init(function()
 		if key ~= "" and state == "ready" and world then
 			for _, group in ipairs(groups) do
 				if group.key == key then
-					Navigate(group.key, TravelNearest(group.key, world))
+					Travel(group.key, world)
 					return
 				end
 			end

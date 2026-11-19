@@ -21,6 +21,16 @@ local FACTIONS = { Horde = L["Horde"], Alliance = L["Alliance"] }
 local cache = {}
 ---@type {goal: SPFPoint, at: number, x: number, y: number, map: number, text: string|false}?
 local last
+-- The comparison still being planned.
+---@type {goal: SPFPoint, x: number, y: number, map: number, job: SPFPathJob, ready: fun()?}?
+local planning
+
+local function Stop()
+	if planning then
+		ns.Path.Cancel(planning.job)
+		planning = nil
+	end
+end
 
 -- The other faction's transport a plan rides, if any.
 ---@param plan SPFPlan
@@ -38,8 +48,9 @@ end
 ---@param from SPFPoint
 ---@param goal SPFPoint
 ---@param own SPFPlan? the plan being followed; nil when the journey found no way
+---@param job SPFPathJob the path job the comparison plans in
 ---@return string|false
-local function Compare(from, goal, own)
+local function Compare(from, goal, own, job)
 	local options = ns.PlanContext.Options(from, goal)
 	local faction = options.faction
 	if not (faction and FACTIONS[faction]) then
@@ -47,7 +58,7 @@ local function Compare(from, goal, own)
 	end
 	options.cache, options.otherFaction = cache, true
 	options.waterWalking, options.withoutHearth = ns.JourneyWaterWalking(), ns.JourneyWithoutHearth()
-	local other = ns.Planner.Plan(options)
+	local other = ns.Planner.Plan(options, job)
 	local through = other and OtherFaction(other, faction)
 	if not (other and through) then
 		return false
@@ -67,11 +78,14 @@ local function Compare(from, goal, own)
 end
 
 -- The goal pin's line, or nil: only with the setting off, out of combat, on foot, for the journey under way once its
--- search has settled.
+-- search has settled. The comparison plans in path jobs under the frame budget, never in the asking frame: nil while
+-- it is planned, then ready() once it has its answer.
+---@param ready? fun()
 ---@return string?
-function ns.OtherFactionHint()
+function ns.OtherFactionHint(ready)
 	local goal = ns.JourneyGoal()
 	if not goal or ns.db.otherFaction then
+		Stop()
 		cache, last = {}, nil
 		return nil
 	end
@@ -92,15 +106,38 @@ function ns.OtherFactionHint()
 	local now = ns.NowMs()
 	local kept = last
 	if
-		not kept
-		or kept.goal ~= goal
-		or kept.map ~= map
-		or now - kept.at > KEEP
-		or (kept.x - x) ^ 2 + (kept.y - y) ^ 2 > MOVED ^ 2
+		kept
+		and kept.goal == goal
+		and kept.map == map
+		and now - kept.at <= KEEP
+		and (kept.x - x) ^ 2 + (kept.y - y) ^ 2 <= MOVED ^ 2
 	then
-		kept =
-			{ goal = goal, at = now, x = x, y = y, map = map, text = Compare({ map = map, x = x, y = y }, goal, own) }
-		last = kept
+		return kept.text or nil
 	end
-	return kept.text or nil
+	local asking = planning
+	if
+		asking
+		and asking.goal == goal
+		and asking.map == map
+		and (asking.x - x) ^ 2 + (asking.y - y) ^ 2 <= MOVED ^ 2
+	then
+		asking.ready = ready or asking.ready
+		return nil
+	end
+	Stop()
+	local this = { goal = goal, x = x, y = y, map = map, ready = ready }
+	planning = this
+	this.job = ns.Path.Run(function(job)
+		return Compare({ map = map, x = x, y = y }, goal, own, job)
+	end, function(text)
+		if planning ~= this then
+			return
+		end
+		planning = nil
+		last = { goal = goal, at = now, x = x, y = y, map = map, text = text }
+		if this.ready then
+			this.ready()
+		end
+	end)
+	return nil
 end

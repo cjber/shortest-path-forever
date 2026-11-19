@@ -31,10 +31,7 @@ env.C_Spell = {
 		return { castTime = 10000 }
 	end,
 }
-local init = ns.Init
-ns.Init = function() end
 driver.load("Transport/Teleports.lua")
-ns.Init = init
 
 local stops = {
 	{ map = 1, x = 0.4, y = 0.5, title = "Far teleport" },
@@ -56,10 +53,12 @@ local removed = ns.StopOrder.Begin(stops, origin)
 assert(step(removed) == "working")
 local before = ns.EstimateContextRevision()
 stocked = false
+driver.fire("BAG_UPDATE_DELAYED")
 assert(step(removed) == "invalid" and removed.reason == "context-changed", "reagent loss invalidates partial order")
 assert(ns.EstimateContextRevision() > before, "reagent loss advances context revision")
 
 stocked = true
+driver.fire("BAG_UPDATE_DELAYED")
 local restored = ns.StopOrder.Begin(stops, origin)
 assert(step(restored) == "working")
 for _ = 1, 8 do
@@ -76,14 +75,17 @@ assert(
 env.ShortestPathForever.API.Estimate(1, 0.5, 0.5, 1, 0.49, 0.5)
 local firstRevision = ns.EstimateContextRevision()
 cooldown = { startTime = env.GetTime() + 30, duration = 30 }
+driver.fire("SPELL_UPDATE_COOLDOWN")
 env.ShortestPathForever.API.Estimate(1, 0.5, 0.5, 1, 0.49, 0.5)
 local resetRevision = ns.EstimateContextRevision()
 assert(resetRevision > firstRevision, "cooldown start invalidates the estimate context")
 cooldown = { startTime = env.GetTime() + 60, duration = 30 }
+driver.fire("SPELL_UPDATE_COOLDOWN")
 env.ShortestPathForever.API.Estimate(1, 0.5, 0.5, 1, 0.49, 0.5)
 local resetAgain = ns.EstimateContextRevision()
 assert(resetAgain > resetRevision, "cooldown reset invalidates with stable membership")
 cooldown = { startTime = env.GetTime() + 1, duration = 30 }
+driver.fire("SPELL_UPDATE_COOLDOWN")
 env.ShortestPathForever.API.Estimate(1, 0.5, 0.5, 1, 0.49, 0.5)
 local activeRevision = ns.EstimateContextRevision()
 driver.update(31)
