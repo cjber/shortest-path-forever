@@ -14,8 +14,6 @@ end
 -- Check every Guidance initializer, including the resume buttons, between the native headings.
 local expected = {
 	"#Tracker",
-	"trackerAttached",
-	"trackerLocked",
 	"journeyTracker",
 	"resumeJourney",
 	"#Planning",
@@ -63,8 +61,14 @@ for _, entry in ipairs(registered) do
 end
 assert(table.concat(actual, ",") == table.concat(expected, ","), "Guidance headings and controls stay in order")
 
--- Rebuild with an older core: all controls still register and retain their declarations.
-local previousRows = { unpack(rows) }
+-- Rebuild with an older core: all controls still register and retain their declarations, except the shared attach
+-- row, which only a core with RegisterTrackerAttach provides.
+local previousRows = {}
+for _, entry in ipairs(rows) do
+	if entry.initializer.setting.key ~= "trackerAttached" then
+		previousRows[#previousRows + 1] = entry
+	end
+end
 clear(rows, settings, buttons, registered)
 env.ForeverCore.SettingsSections = nil
 setfenv(assert(loadfile("UI/Settings.lua")), env)("ShortestPathForever", ns)
