@@ -56,9 +56,9 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"Les trajets, et les estimations d'autres addons depuis ici, peuvent commencer par une téléportation de mage vers une ville ou Téléportation : Reflet-de-Lune, temps de recharge compris." -- mt
 L["Minimum teleport saving"] = "Gain minimum de la téléportation" -- mt
+L["Routes show on the map straight away."] = "Les itinéraires s'affichent tout de suite sur la carte." -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"N'utiliser une téléportation de classe que si elle fait gagner au moins ce temps." -- mt
-L["Faster routes from busy cities."] = "Des itinéraires plus rapides depuis les villes animées." -- mt
 L["Boat and Zeppelin Routes"] = "Routes des bateaux et zeppelins" -- mt
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Routes des bateaux et zeppelins, tracées quand vous survolez un quai." -- mt
@@ -71,6 +71,7 @@ L["Cast %s"] = "Lancer %s" -- mt
 L["Class trainer"] = "Maître de classe" -- mt
 L["Clear journey"] = "Effacer le trajet" -- mt
 L["Click to plan a journey here."] = "Cliquez pour planifier un trajet jusqu'ici."
+L["%s-click to plan a journey here"] = "%s-clic pour planifier un trajet jusqu’ici" -- mt
 L["Click to show %s"] = "Cliquez pour afficher %s" -- mt
 L["Click to show where they go"] = "Cliquez pour voir les destinations" -- mt
 L["Compass background"] = "Fond de la boussole" -- mt
@@ -198,6 +199,7 @@ L["Search services and goods"] = "Rechercher des services et des biens"
 L["Services"] = "Services"
 L["Shortest Path report"] = "Rapport Shortest Path" -- mt
 L["Show boats and zeppelins"] = "Afficher bateaux et zeppelins" -- mt
+L["Show cast prompt"] = "Afficher l'invite de sort" -- mt
 L["Show direction arrow"] = "Afficher la flèche de direction" -- mt
 L["Show flight masters"] = "Afficher les maîtres de vol" -- mt
 L["Show journey steps in the objective tracker"] = "Afficher les étapes du trajet dans le suivi des objectifs" -- mt
@@ -215,6 +217,8 @@ L["Show the time left under the compass"] = "Temps restant sous la boussole" -- 
 L["Show the way to your corpse"] = "Afficher le chemin vers votre cadavre" -- mt
 L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =
 	"Les affiche sur la plaque de nom du PNJ vers lequel mène un trajet de services à proximité."
+L["Shows the Hearthstone or teleport to use in the arrow's place. Off, journeys still use them and the tracker still names the step."] =
+	"Affiche la pierre de foyer ou la téléportation à utiliser à la place de la flèche. Désactivé, les trajets les utilisent toujours et le suivi nomme toujours l'étape." -- mt
 L["Shows the arrow to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =
 	"Affiche la flèche pour la déplacer où vous voulez ; Maj-glisser ou les flèches l'ajustent. Clic droit pour la remettre en place." -- mt
 L["Shows the compass to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =

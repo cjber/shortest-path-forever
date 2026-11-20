@@ -13,6 +13,7 @@ for _, file in ipairs({
 	"Routing/Path.lua",
 	"Routing/PathJobs.lua",
 	"Routing/Planner.lua",
+	"Routing/LegPoints.lua",
 }) do
 	assert(loadfile(file))("ShortestPathForever", ns)
 end
@@ -29,27 +30,7 @@ Path.graphKB = 131072
 Path.cacheKB = 196608
 Path.clusters = 2048
 
-local places = {}
-local function Add(key, point)
-	places[point.map] = places[point.map] or {}
-	table.insert(places[point.map], { key = key, point = point })
-end
-for id, dock in pairs(ns.Docks) do
-	Add("dock" .. id, dock.walk or dock)
-end
-for id, node in pairs(ns.TaxiNodes) do
-	Add("taxi" .. id, node)
-end
-for id, portal in ipairs(ns.Portals) do
-	Add("portal" .. (id * 2 - 1), portal.from)
-	Add("portal" .. id * 2, portal.to)
-end
--- Where a class teleport lands; the bind point moves, so Journey measures its walks in game.
-for _, teleport in ipairs(ns.Teleports) do
-	if teleport.to then
-		Add("teleport" .. teleport.spell, teleport.to)
-	end
-end
+local places = assert(loadfile("tools/walk_places.lua"))(ns)
 
 local maps = {}
 for map in pairs(places) do
@@ -66,9 +47,6 @@ print("-- Fixed place coordinates rounded to yards, so tests can detect stale wa
 print("ns.WalkPlaces = {")
 for _, map in ipairs(maps) do
 	local list = places[map]
-	table.sort(list, function(a, b)
-		return a.key < b.key
-	end)
 	print(("\t[%d] = {"):format(map))
 	for _, place in ipairs(list) do
 		print(

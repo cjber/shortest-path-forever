@@ -30,13 +30,17 @@ local lineTemplate, goalTemplate = "ShortestPathForeverRoutePinTemplate", "Short
 local DOT = "Interface\\AddOns\\ShortestPathForever\\media\\Dot"
 
 local clicked = assert(ns.WorldPoint(1414, 0.52, 0.5))
-clicked.label, clicked.pinBadge = "Flight master", true
+clicked.label = "Flight master"
 ns.StartJourney(clicked)
 settle()
-local badgePin = active[goalTemplate][1]
-assert(badgePin.Texture.anchor[3] == "BOTTOMRIGHT", "a clicked icon keeps its destination tag at the corner")
-assert(badgePin.Texture.width <= 11 and badgePin.Texture.height <= 11 and not badgePin.Texture.hidden,
- "the corner tag stays small without stretching")
+-- A journey to a clicked flight point wears the full goal pin standing on it, not a speck at its corner, and sits
+-- under the client's quest marks so a "?" beside the flight point stays in sight (#1079).
+local clickedPin = active[goalTemplate][1]
+assert(clickedPin.Texture.anchor[1] == "BOTTOM" and clickedPin.Texture.anchor[3] == "CENTER",
+ "a clicked icon's goal pin stands on its point")
+assert(clickedPin.Texture.width == 29 and clickedPin.Texture.height == 29 and not clickedPin.Texture.hidden,
+ "a clicked icon's goal pin is full size")
+assert(clickedPin.levelType == "PIN_FRAME_LEVEL_ENCOUNTER", "a lone destination stands under the client's quest marks")
 ns.ClearJourney()
 ns.StartJourney(assert(ns.WorldPoint(1414, 0.53, 0.5)))
 settle()

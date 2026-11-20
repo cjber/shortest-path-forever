@@ -297,7 +297,8 @@ end
 ---@return boolean
 function ns.SetTaxiKnown(nodeID, known)
 	local node = ns.TaxiNodes[nodeID]
-	if not node or type(known) ~= "boolean" then
+	-- A class flight master is always known to its class and to no one else, so it has no discovery to set.
+	if not node or node.class or type(known) ~= "boolean" then
 		return false
 	end
 	local faction = UnitFactionGroup("player")

@@ -202,12 +202,24 @@ function ns.ReportLines()
 		OnOff(ns.IsJourneyGuided())
 	)
 	lines[#lines + 1] = "Goal: " .. Place(goal)
-	local pending, rounds, costError = ns.JourneyStatus()
+	local pending, rounds, costError, _, timing = ns.JourneyStatus()
 	lines[#lines + 1] = ("Search: %s, %d settle rounds%s"):format(
 		pending and "under way" or "settled",
 		rounds or 0,
 		costError and (", walk failed: %s"):format(costError) or ""
 	)
+	for _, mark in ipairs({ "first", "last" }) do
+		local at = timing and timing[mark]
+		if at then
+			lines[#lines + 1] = ("Search %s route: %.2f s, %d work frames, %.0f ms path work, %.0f fps"):format(
+				mark,
+				at.ms / 1000,
+				at.frames,
+				at.cpu,
+				at.fps or 0
+			)
+		end
+	end
 	local plan, index = ns.JourneyPlan()
 	if plan then
 		lines[#lines + 1] = "Plan water walking: " .. Value(plan.waterMode)

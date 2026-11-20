@@ -1,6 +1,7 @@
 -- After an update the addon says once what changed; a first install, the same version, a maintenance release, a
 -- checkout and the setting turned off stay quiet, and a missing saved table never errors.
-local version, printed, frame, handler = "1.4.0", {}, nil, nil
+-- The packager writes the release tag, so a store install reads its version with a leading v.
+local version, printed, frame, handler = "v1.4.0", {}, nil, nil
 local env = setmetatable({
 	C_AddOns = {
 		GetAddOnMetadata = function(name, field)
@@ -57,7 +58,7 @@ login(db)
 assert(#printed == 0)
 
 -- A release with a headline: one line, then quiet on the next login.
-version = shippedVersion
+version = "v" .. shippedVersion
 login(db)
 assert(#printed == 1 and printed[1] == "updated to " .. shippedVersion .. ". " .. ns.WHATS_NEW, printed[1])
 assert(db.seenVersion == shippedVersion)
@@ -65,15 +66,15 @@ login(db)
 assert(#printed == 1)
 
 -- A maintenance release above it, as a core sync adds: silent, and still remembered.
-version = Bump(shippedVersion)
+version = "v" .. Bump(shippedVersion)
 login(db)
 assert(#printed == 1, "a maintenance release prints nothing new")
-assert(db.seenVersion == version)
+assert(db.seenVersion == Bump(shippedVersion))
 
 -- The setting off: quiet, and the version still moves on.
-version, db.whatsNew = Bump(version), false
+version, db.whatsNew = "v" .. Bump(Bump(shippedVersion)), false
 login(db)
-assert(#printed == 1 and db.seenVersion == version)
+assert(#printed == 1 and db.seenVersion == Bump(Bump(shippedVersion)))
 
 -- A checkout reads the packager's keyword, not a version: quiet, and nothing stored.
 version = "@" .. "project-version@"

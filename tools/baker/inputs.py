@@ -97,9 +97,17 @@ def generator_files() -> list[Path]:
     return sorted(seen | {baker.parents[1] / "Journey/Hazards.lua"})
 
 
+def generator_bytes(path: Path) -> bytes:
+    """What a generator file contributes to a digest: Journey/Hazards.lua only through the one constant gen_nav.py
+    reads from it, so the runtime's other hazard edits leave every walking map current."""
+    if path.name == "Hazards.lua":
+        return re.search(rb"^local ROAD_DETOUR_MAX = .*$", path.read_bytes(), re.M)[0]
+    return path.read_bytes()
+
+
 def generator_digest() -> str:
     """The sha256 over the generator's files, each by name and content."""
     digest = hashlib.sha256()
     for path in generator_files():
-        digest.update(path.name.encode() + b"\0" + path.read_bytes() + b"\0")
+        digest.update(path.name.encode() + b"\0" + generator_bytes(path) + b"\0")
     return digest.hexdigest()

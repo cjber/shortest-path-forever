@@ -3,6 +3,7 @@ assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", ns)
 assert(loadfile("Transport/Model.lua"))("ShortestPathForever", ns)
 assert(loadfile("Routing/Savings.lua"))("ShortestPathForever", ns)
 assert(loadfile("Routing/Planner.lua"))("ShortestPathForever", ns)
+assert(loadfile("Routing/LegPoints.lua"))("ShortestPathForever", ns)
 assert(loadfile("Routing/QuestDestination.lua"))("ShortestPathForever", ns)
 local Plan = ns.Planner.Plan
 local LegPoints = ns.Planner.LegPoints
@@ -602,6 +603,28 @@ do
 	assert(not measured.needsStart)
 	o.walks[3] = { from = o.from, to = o.to, cost = 50 }
 	near(only(Plan(o), "walk").yards, 50)
+end
+
+-- A walk then a walk is one search: only a zero walk joins them. A lower bound of zero may still measure zero (both
+-- ends on one node), so it joins walks until the batch knows the place is apart; then the measured direct walk is the
+-- plan and nothing waits on the start's probe.
+do
+	local o = options()
+	o.to, o.exactMaps = point(1, 100), nil
+	local place = point(1, 30)
+	o.taxiNodes = { place }
+	o.walks = {
+		{ from = o.from, to = o.to, cost = 100 },
+		{ from = o.from, to = place, cost = 0, estimated = true },
+		{ from = place, to = o.to, cost = 69 },
+	}
+	local bound = Plan(o)
+	near(bound.arrive, o.now + 69 / o.walkSpeed * 1000)
+	assert(bound.needsStart, "a zero bound that may be a transfer is probed")
+	o.walks[2].apart = true
+	local direct = Plan(o)
+	near(only(direct, "walk").yards, 100)
+	assert(not direct.needsStart, "a bound to a place apart from the start must not split the direct walk")
 end
 
 -- The earlier flight arrival has already visited the only onward stop. A later arrival without that

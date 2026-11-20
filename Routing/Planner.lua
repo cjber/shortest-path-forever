@@ -22,96 +22,6 @@ local HEARTH_MINIMUM_SAVING = 20
 -- of the walk's time.
 local LONG_WALK, RIDE_MARGIN = 600000, 1.1
 
--- Preview geometry while a walking leg is still pending.
----@param from SPFPoint
----@param to SPFPoint
----@return SPFWalkPoints
-function Planner.WalkPoints(from, to)
-	return { { map = from.map, x = from.x, y = from.y }, { map = to.map, x = to.x, y = to.y } }
-end
-
--- Whether a walk's searched cost (a reason or nil when it has no route) contradicts the leg's planned yards. An
--- estimated leg holds a lower bound, which a longer or unreachable walk refutes without contradicting: a search that
--- outlasts the grace period shows such a candidate, and only its proof decides.
----@param leg SPFLeg
----@param cost number|string?
----@return boolean
-function Planner.WalkContradicts(leg, cost)
-	local tolerance = math.max(1, leg.yards * 0.1)
-	if type(cost) ~= "number" then
-		return not leg.estimated
-	elseif leg.estimated then
-		return cost < leg.yards - tolerance
-	end
-	return math.abs(cost - leg.yards) > tolerance
-end
-
--- World points in travel order; jump marks a teleport to the next point. Keep this free of map APIs.
----@param leg SPFLeg
----@param routes table<number, SPFRoute>
----@return SPFWalkPoints
-function Planner.LegPoints(leg, routes)
-	if leg.mode == "walk" then
-		return leg.walkPoints or Planner.WalkPoints(leg.from, leg.to)
-	end
-	local points = { { map = leg.from.map, x = leg.from.x, y = leg.from.y } }
-	if leg.mode == "flight" then
-		for _, hop in ipairs(leg.hops or {}) do
-			for i = 1, #hop.points, 3 do
-				points[#points + 1] = { map = hop.points[i], x = hop.points[i + 1], y = hop.points[i + 2] }
-			end
-		end
-	elseif leg.mode == "teleport" then
-		-- Nothing to draw between the ends: a jump, marked at both.
-		points[1].jump = 1
-	elseif leg.route then
-		local route = routes[leg.route]
-		local boarding, alighting = leg.boarding, leg.alighting
-		if route and route.frames and leg.aboard and alighting then
-			-- Only the remaining geometry, including any continent jump ahead of the player.
-			local remaining = leg.arrive - leg.depart
-			local ordered = {}
-			for index, frame in ipairs(route.frames) do
-				local untilDock = (alighting.arrive - frame[1]) % route.period
-				if untilDock > 0 and untilDock < remaining then
-					ordered[#ordered + 1] = { frame = frame, remaining = untilDock, index = index }
-				end
-			end
-			table.sort(ordered, function(a, b)
-				return a.remaining > b.remaining or (a.remaining == b.remaining and a.index < b.index)
-			end)
-			for _, entry in ipairs(ordered) do
-				local frame = entry.frame
-				points[#points + 1] = { map = frame[3], x = frame[4], y = frame[5], jump = frame[6] }
-			end
-		elseif route and route.frames and boarding and alighting then
-			local duration = Model.RideTime(route, boarding, alighting)
-			for index, frame in ipairs(route.frames) do
-				if frame[2] % route.period == boarding.depart % route.period then
-					points[1].jump = frame[6]
-					for offset = 1, #route.frames - 1 do
-						local nextFrame = route.frames[(index + offset - 1) % #route.frames + 1]
-						local elapsed = (nextFrame[1] - boarding.depart) % route.period
-						if elapsed >= duration then
-							break
-						end
-						points[#points + 1] = {
-							map = nextFrame[3],
-							x = nextFrame[4],
-							y = nextFrame[5],
-							jump = nextFrame[6],
-						}
-					end
-					break
-				end
-			end
-		end
-	end
-	-- Portal endpoints are drawn as separate marks.
-	points[#points + 1] = { map = leg.to.map, x = leg.to.x, y = leg.to.y }
-	return points
-end
-
 ---@param node SPFPoint
 ---@param landmasses SPFLandmass[]
 ---@return number?
@@ -130,7 +40,7 @@ function Planner.Landmass(node, landmasses)
 end
 
 local function Eligible(node, options)
-	return not node.faction or node.faction == options.faction
+	return (not node.faction or node.faction == options.faction) and (not node.class or node.class == options.class)
 end
 
 local function Keys(values)
@@ -167,13 +77,15 @@ local function WalkCost(options, a, b, index)
 		if options.feasibleOnly and walk.estimated then
 			return false, false
 		end
-		return walk.cost, walk.estimated or false
+		return walk.cost, walk.estimated or false, walk.apart
 	end
 	if options.feasibleOnly or (options.exactMaps and options.exactMaps[a.map]) then
 		return false, false
 	end
 	return Gap(a, b), true
 end
+
+local NO_SHARES = {}
 
 -- A fixed place's key in the baked walk table (Data/Walks.lua); nil for where you stand and where you are going.
 local function PlaceKey(node)
@@ -188,15 +100,18 @@ end
 local function BakedCost(options, a, b, weigh)
 	local ka, kb = a.bakedKey, b.bakedKey
 	local baked = ka and kb and options.baked and options.baked[a.map]
-	local pair = baked and baked[ka < kb and ka .. " " .. kb or kb .. " " .. ka]
+	local key = baked and (ka < kb and ka .. " " .. kb or kb .. " " .. ka)
+	local pair = key and baked[key]
 	if pair then
 		local mode = options.waterWalking and 2 or 1
 		local yards = pair[mode + (ka > kb and pair[3] ~= nil and 2 or 0)]
 		local reverse = pair[mode + (ka < kb and pair[3] ~= nil and 2 or 0)]
 		local hazards = options.hazards
 		if hazards and (yards or reverse) then
-			weigh() -- a cold zone cache sends Segment to the client's map API per sample
-			local factor = hazards.Segment(a.map, a.x, a.y, b.x, b.y)
+			weigh() -- a walk with no baked zone shares samples the zone map along its way
+			-- A map's baked shares cover every baked walk on it; one it leaves out crosses nothing charged.
+			local shares = options.bakedZones and options.bakedZones[a.map]
+			local factor = hazards.Segment(a.map, a.x, a.y, b.x, b.y, shares and (shares[key] or NO_SHARES))
 			yards, reverse = yards and yards * factor, reverse and reverse * factor
 		end
 		return true, yards, reverse
@@ -306,8 +221,10 @@ local CACHE_KEYS = {
 	"partyPortals",
 	"landmasses",
 	"baked",
+	"bakedZones",
 	"taxiTimes",
 	"faction",
+	"class",
 	"otherFaction",
 	"waterWalking",
 	"hazards",
@@ -327,7 +244,12 @@ local function Solve(options, cache, check, weigh)
 	local topology = cache and cache.topology
 	if topology then
 		for _, key in ipairs(CACHE_KEYS) do
-			if topology.options[key] ~= options[key] then
+			local was, now = topology.options[key], options[key]
+			-- A hazard profile is rebuilt for every search; its key names everything that weighs a walk.
+			if key == "hazards" and was and now then
+				was, now = was.key, now.key
+			end
+			if was ~= now then
 				topology = nil
 				break
 			end
@@ -422,6 +344,8 @@ local function Solve(options, cache, check, weigh)
 				Edge(taxis[path.from], taxis[path.to], {
 					mode = "flight",
 					path = path,
+					-- A class flight master flies you by gossip, straight to its landing whether you know it or not.
+					gossip = options.taxiNodes[path.from].class ~= nil or nil,
 					duration = (measured or path.seconds) * 1000,
 					estimated = not measured and path.estimated,
 				})
@@ -471,10 +395,20 @@ local function Solve(options, cache, check, weigh)
 						pairs[#pairs + 1], pairs[#pairs + 2] = from, to
 					else
 						if yards then
-							Edge(from, to, { mode = "walk", duration = yards / speed * 1000, yards = yards })
+							Edge(from, to, {
+								mode = "walk",
+								duration = yards / speed * 1000,
+								yards = yards,
+								transfer = yards == 0 or nil,
+							})
 						end
 						if reverse then
-							Edge(to, from, { mode = "walk", duration = reverse / speed * 1000, yards = reverse })
+							Edge(to, from, {
+								mode = "walk",
+								duration = reverse / speed * 1000,
+								yards = reverse,
+								transfer = reverse == 0 or nil,
+							})
 						end
 					end
 				end
@@ -521,7 +455,8 @@ local function Solve(options, cache, check, weigh)
 	end
 	local undiscovered = false
 	for id, index in pairs(taxis) do
-		local known = options.taxiKnown == nil or options.taxiKnown[id] and true or false
+		-- A class flight master has no discovery: every character it serves has it.
+		local known = options.taxiKnown == nil or options.taxiKnown[id] and true or options.taxiNodes[id].class ~= nil
 		nodes[index].undiscovered = not known
 		if not known then
 			undiscovered = true
@@ -577,9 +512,9 @@ local function Solve(options, cache, check, weigh)
 			for direction = 1, 2 do
 				local first, last = direction == 1 and from or to, direction == 1 and to or from
 				local origin, destination = nodes[first], nodes[last]
-				local yards, estimated
+				local yards, estimated, apart
 				if first ~= goal and last ~= start then
-					yards, estimated = WalkCost(options, origin, destination, walkIndex)
+					yards, estimated, apart = WalkCost(options, origin, destination, walkIndex)
 				end
 				if yards then
 					Edge(first, last, {
@@ -587,6 +522,9 @@ local function Solve(options, cache, check, weigh)
 						duration = yards / speed * 1000,
 						yards = yards,
 						estimated = estimated,
+						-- Zero yards join two walks unless the walk's batch knows the ends are on different nodes: an
+						-- estimate of zero is then only a lower bound on a real walk.
+						transfer = yards == 0 and not apart or nil,
 					})
 				end
 			end
@@ -649,13 +587,6 @@ local function Solve(options, cache, check, weigh)
 			estimated = {},
 			discarded = {},
 		}
-	end
-	-- options.withoutOpening bars one step where it leaves, so a connecting flight is barred at its first hop.
-	local opening = options.withoutOpening
-	local function Opens(node, edge, step)
-		local from, at = nodes[node], step.from
-		local same = edge.mode == step.mode and edge.route == step.route and edge.teleport == step.teleport
-		return same and from.map == at.map and from.x == at.x and from.y == at.y
 	end
 	local function Search(withoutHearth, withoutTeleports, cutoff, ridden, assumeKnown, ownLabels)
 		local labels
@@ -721,13 +652,14 @@ local function Solve(options, cache, check, weigh)
 				local learned = state > LEARNED
 				-- A flight may only leave, land at or connect through flight points the character knows. Walking to
 				-- an unknown flight master learns that one point in person, so only its departure may fly; every
-				-- landing and connecting point still has to be known.
+				-- landing and connecting point still has to be known. A gossip landing is the same in-person arrival.
 				local canLeaveNode = assumeKnown or not flying or not nodes[node].undiscovered
+				learned = learned or (labels.edge[current] ~= nil and labels.edge[current].gossip == true)
 				for _, edge in ipairs(edges[node]) do
 					local canLeave = canLeaveNode
 					if edge.mode == "flight" and not assumeKnown then
 						local departureKnown = not nodes[node].undiscovered or learned
-						if not departureKnown or nodes[edge.to].undiscovered then
+						if not departureKnown or (nodes[edge.to].undiscovered and not edge.gossip) then
 							canLeave = false
 						end
 					end
@@ -737,8 +669,7 @@ local function Solve(options, cache, check, weigh)
 					if withoutTeleports and edge.teleport and not edge.partyPortal and not edge.teleport.bind then
 						canLeave = false
 					end
-					canLeave = canLeave and not (opening and Opens(node, edge, opening))
-					if walked and edge.mode == "walk" and edge.yards > 0 then
+					if walked and edge.mode == "walk" and not edge.transfer then
 						canLeave = false
 					end
 					if ridden and edge.to == goal and edge.mode == "walk" and not Rode(labels, current) then
@@ -765,13 +696,14 @@ local function Solve(options, cache, check, weigh)
 						if edge.mode == "flight" and not flying then
 							finish = finish + BOARDING
 						end
-						local target = edge.to + (edge.mode == "flight" and FLIGHT or 0)
+						-- A gossip flight ends on the ground at its landing: flying on means talking to that flight master.
+						local target = edge.to + (edge.mode == "flight" and not edge.gossip and FLIGHT or 0)
 						if edge.mode == "walk" then
 							if nodes[edge.to].undiscovered and not assumeKnown then
 								-- Standing at this master is what unlocks its flights, so this arrival is the one
 								-- departure the route may use while unknown.
 								target = edge.to + LEARNED
-							elseif walked or edge.yards > 0 then
+							elseif walked or not edge.transfer then
 								target = edge.to + WALKED
 							end
 						end
@@ -838,6 +770,7 @@ local function Solve(options, cache, check, weigh)
 				boarding = edge.stop,
 				alighting = edge.alighting,
 				hops = edge.path and { edge.path } or nil,
+				gossip = edge.gossip,
 				yards = edge.yards,
 				teleport = edge.teleport,
 				partyPortal = edge.partyPortal,
@@ -846,7 +779,8 @@ local function Solve(options, cache, check, weigh)
 			-- Zero-cost lower bounds may disappear from the displayed steps, but still need proof.
 			if leg.mode == "walk" and leg.estimated then
 				if leg.from.kind == "start" or leg.to.kind == "goal" then
-					pendingWalks[#pendingWalks + 1] = leg
+					-- Its own record, so the probe costs this estimated walk, not one merged below (#1080).
+					pendingWalks[#pendingWalks + 1] = { mode = "walk", from = leg.from, to = leg.to, estimated = true }
 				end
 				needsStart = needsStart or leg.from.kind == "start"
 				needsGoal = needsGoal or (leg.to.kind == "goal" and leg.from.kind ~= "start")
@@ -857,7 +791,8 @@ local function Solve(options, cache, check, weigh)
 		for index = #reversed, 1, -1 do
 			local leg, last = reversed[index], legs[#legs]
 			local preceding = reversed[index + 1]
-			if leg.mode == "flight" and last and preceding.mode == "flight" then
+			local chained = leg.mode == "flight" and preceding.mode == "flight" and not (leg.gossip or preceding.gossip)
+			if chained and last then
 				last.to, last.arrive = leg.to, leg.arrive
 				last.hops[#last.hops + 1] = leg.hops[1]
 				-- Connecting hops stay in flight; only the initial departure pays boarding.

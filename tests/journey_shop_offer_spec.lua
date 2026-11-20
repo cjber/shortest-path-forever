@@ -1,8 +1,8 @@
 -- #1032: from inside a Stormwind Trade District shop, the Cooking trainer is a short walk away. While the walk out of
--- the shop is still being searched, the journey once offered the only plan with no walk to wait for: Hearthstone to
--- Westfall and a flight back. A first step that cannot be undone is offered only when the best plan the lower bounds
--- allow starts with it too, so the journey waits for the walk and shows that alone. Nearby listed the trainer at the
--- straight line's time; it now plans on the walk the journey's own search measures, so both say the same.
+-- the shop is still being searched, the journey once followed the only plan with no walk to wait for: Hearthstone to
+-- Westfall and a flight back. Every route shown while that walk is held must start with a walk, and the journey must
+-- settle on the walk alone. Nearby listed the trainer at the straight line's time; it now plans on the walk the
+-- journey's own search measures, so both say the same.
 local driver = assert(loadfile("tests/journey_driver.lua"))()
 local ns = driver.ns
 for _, file in ipairs({

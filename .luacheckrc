@@ -55,6 +55,7 @@ read_globals = {
 	"GetRealZoneText",
 	"GetServerTime",
 	"GetTime",
+	"GetFramerate",
 	"GRAY_FONT_COLOR",
 	"RED_FONT_COLOR",
 	"HIGHLIGHT_FONT_COLOR",
@@ -68,6 +69,9 @@ read_globals = {
 	"ObjectiveTrackerFrame",
 	"ObjectiveTrackerManager",
 	"ORANGE_FONT_COLOR",
+	-- Core.lua's ns.Notice: a one-line notice on screen, in the client's yellow.
+	"UIErrorsFrame",
+	"YELLOW_FONT_COLOR",
 	"Settings",
 	"MinimalSliderWithSteppersMixin",
 	"SecondsToTime",
@@ -181,9 +185,9 @@ read_globals[#read_globals + 1] = "GetAddOnMemoryUsage"
 read_globals[#read_globals + 1] = "C_Item"
 read_globals[#read_globals + 1] = "C_SpellBook"
 read_globals[#read_globals + 1] = "GetBindLocation"
--- Floor.lua: indoors, where floors stack, the floor is followed whenever you move; swimming, you are on water.
-read_globals[#read_globals + 1] = "IsIndoors"
+-- Floor.lua: swimming, you are on water.
 read_globals[#read_globals + 1] = "IsSwimming"
+read_globals[#read_globals + 1] = "IsFalling"
 -- tests/ui_client.lua and tests/ui_map.lua are one chunk defining the client for the UI checks, which append code
 -- reading their locals. 2xx: locals and arguments only the appended checks use; 43x: stub methods named like the
 -- client's.
@@ -233,6 +237,9 @@ files["Data/RoadEdges.lua"] = { max_line_length = false }
 files["Data/Heights.lua"] = { max_line_length = false }
 files["Data/IdleSpawns.lua"] = { max_line_length = false }
 files["Data/TownAreas.lua"] = { max_line_length = false }
+files["Data/ZoneCells.lua"] = { max_line_length = false }
+files["Data/WalkZones.lua"] = { max_line_length = false }
+files["tests/fixtures/caves_cities.lua"] = { max_line_length = false } -- generated, one walk per row
 
 files["tests/companion_maps_spec.lua"] = { globals = { "C_AddOns", "GetTime" } }
 -- The client's secure delegate: map pins set their restricted button passthrough through it (#645).

@@ -238,6 +238,11 @@ jobs:
       # push to main builds.
       - name: Package this commit as an untagged build
         run: git tag --points-at HEAD | xargs -r git tag --delete
+      # The packager fills @project-version@ with the tag, v and all; write the bare version first.
+      - name: Write the bare version into the TOC
+        run: python3 -m tools.forever_tools.toc_version
+      - name: Embed ForeverCore
+        run: python3 -m tools.forever_tools.embed
       - uses: BigWigsMods/packager@01e8631a69c69d7654c788d152630d5fed9e3812 # v2.7.0
         with:
           args: -d -z

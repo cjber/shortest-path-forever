@@ -790,6 +790,10 @@ equal(calls, beforeFactionSetting + 1, "opposing transport setting invalidates e
 ns.db.otherFaction = false
 API.Estimate(1, 0.5, 0.5, 1, 0.4001, 0.5)
 equal(calls, beforeFactionSetting + 2, "disabling opposing transport invalidates estimates")
+ns.class = "DRUID"
+API.Estimate(1, 0.5, 0.5, 1, 0.4001, 0.5)
+equal(calls, beforeFactionSetting + 3, "the character's class invalidates estimates: class flights are its own")
+ns.class = nil
 ns.speed, ns.water, ns.faction = nil, nil, "Alliance"
 ns.Planner.Plan = planner
 

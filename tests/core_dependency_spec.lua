@@ -16,10 +16,9 @@ local function read(path)
 end
 local pin = read("tools/forever-core.txt"):gsub("%s+$", "")
 assert(TOC["X-Forever-Core"] == pin, "the TOC records the pinned core, " .. pin)
-assert(
-	read(".pkgmeta"):find("releases/download/" .. pin .. "/ForeverCore-" .. pin .. "-forever.zip", 1, true),
-	"the package bundles the pinned core, " .. pin
-)
+-- The release embeds that core under Libs/ForeverCore (tools/forever_tools/embed.py reads the pin), so the TOC opts in
+-- and CurseForge lists core as an embedded library, never a required install.
+assert(TOC["X-Forever-Core-Embed"] == "1", "the TOC opts in to the embedded core")
 
 -- The client's addon list: this addon, which requires ForeverCore, and ForeverCore itself.
 local function Addons()
@@ -191,6 +190,17 @@ local noArt, noArtLines = Load({
 })
 assert(noArt.broken == true, "a ForeverCore without the step markers stops the addon too")
 assert(#noArtLines == 1, "one line in the error frame")
+-- ForeverCore 1.11 has every member above but not QuestLogTabs.SetTabShown (1.12.0), which UI/ServicesPanel.lua calls
+-- as it loads: that core must stop the addon with its line, not let it reach a Lua error (#1060).
+local noTabShown, noTabShownLines = Load({
+	APIKit = { Hub = function() end, NotReady = function() end },
+	TrackerSection = { Create = function() end, UpdateText = function() end },
+	TrackerLine = { SetInteractive = function() end },
+	Art = { minor = 2, Marker = function() end, Ring = function() end, Diamond = function() end },
+	QuestLogTabs = { Register = function() end, Select = function() end },
+})
+assert(noTabShown.broken == true, "a ForeverCore without QuestLogTabs.SetTabShown stops the addon too")
+assert(#noTabShownLines == 1, "one line in the error frame")
 
 -- Every member this addon calls is there: the addon runs, says nothing, and registers its services once: the report
 -- title and its own report lines.
@@ -199,6 +209,7 @@ local ns, quiet, registered, attached = Load({
 	TrackerSection = { Create = function() end, UpdateText = function() end },
 	TrackerLine = { SetInteractive = function() end },
 	Art = { minor = 2, Marker = function() end, Ring = function() end, Diamond = function() end },
+	QuestLogTabs = { Register = function() end, Select = function() end, SetTabShown = function() end },
 	TrackerHost = {}, -- A foreign host has no menu contract.
 })
 assert(quiet and #quiet == 0, "a complete ForeverCore runs the addon and says nothing")
@@ -210,15 +221,13 @@ assert(registered.spec.title == "Shortest Path report", "with its own report tit
 assert(type(registered.spec.lines) == "function", "and its own report lines")
 assert(attached == ns.db, "the saved table is attached once it loads")
 
--- The client loads ForeverCore first because the TOC lists it, and the package bundles it.
+-- The client loads a standalone ForeverCore first because the TOC lists it, and the package carries its own.
 local toc = assert(io.open("ShortestPathForever.toc", "rb")):read("*a")
 -- The packager writes the TOC with CRLF line ends, so the list may end in a carriage return.
 local optional = toc:match("\n## OptionalDeps:([^\n]*)") or ""
 assert((optional .. ","):find("[%s,]ForeverCore[%s,]"), "the TOC lists ForeverCore so it loads first")
 local pkgmeta = assert(io.open(".pkgmeta", "rb")):read("*a")
-assert(
-	pkgmeta:find("\n  ForeverCore: https://github.com/cjber/forever-core/releases/", 1, true),
-	"the package bundles ForeverCore"
-)
+assert(pkgmeta:find("\nembedded%-libraries:\n  %- forevercore"), "CurseForge lists ForeverCore as an embedded library")
+assert(not pkgmeta:find("\nexternals:"), "no separate ForeverCore folder ships beside the addon")
 
 print("core_dependency_spec: ok")

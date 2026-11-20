@@ -261,6 +261,9 @@ end
 ns.TownServiceGroupShown = function()
 	return true
 end
+ns.TownServiceOnMap = function()
+	return true
+end
 ns.FormatCountdown = function(ms)
 	local seconds = math.ceil(ms / 1000)
 	return string.format("%d:%02d", math.floor(seconds / 60), seconds % 60)
