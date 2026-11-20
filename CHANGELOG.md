@@ -10,6 +10,14 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.43.7] - 2026-11-20
+
+### Fixed
+
+- Nearby times a trainer or vendor by the walk the journey takes from where you stand, so a shop's walls no longer make a far NPC look closer than it is.
+- Following a RestedXP or Guidelime step, the guide's own arrow now stays up until Shortest Path's arrow has a route to point along, so you are never left with no arrow while a route is still being worked out.
+- Following a journey on foot uses far less processor time. As you move, the route is checked again every few seconds, and each check used to rebuild the walking map around you from scratch; it now reuses the map it already has.
+
 ## [1.43.6] - 2026-11-20
 
 ### Added
