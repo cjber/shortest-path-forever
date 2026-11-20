@@ -22,6 +22,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ### Fixed
 
+- A new journey's tracker and destination tooltip no longer list the steps of the journey it replaced while its route is found (#1107).
 - With "Click the map to plan journeys" off, a journey click on the map, a map icon, the minimap or a quest now says so on screen, naming the setting, instead of doing nothing. The click still goes to the map as before (#1076).
 - Druids now get routes that use their own class flight paths, Moonglade from Rut'theran Village or Thunder Bluff, wherever that is quicker.
 - On the world map, only the waypoint modifier picked in the settings creates a waypoint, so Alt-clicking another addon's map icon no longer plans a journey as well.

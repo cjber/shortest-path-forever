@@ -418,14 +418,12 @@ end
 -- The plan's rows from its step `first` on. A step's key counts from the step under way, not from where the plan
 -- began: a replan plans from where you stand and numbers the same steps from 1 again, and a key that followed the
 -- plan's own index made the tracker lay the same steps out again after every step you finished (forever-core#795).
--- `grey` draws a route a new search is replacing, all of it in grey.
 ---@param rows SPFRow[]
 ---@param plan SPFPlan
 ---@param first integer
 ---@param formatPlace? fun(place: string): string
 ---@param loading boolean?
----@param grey boolean
-function ns.StepRows(rows, plan, first, formatPlace, loading, grey)
+function ns.StepRows(rows, plan, first, formatPlace, loading)
 	local _, spell = ns.JourneyWaterWalking()
 	local unsynced = ns.UnsyncedFlightPointRows(plan)
 	local reminder = ns.NewFlightPathReminderRow(plan, first)
@@ -454,7 +452,6 @@ function ns.StepRows(rows, plan, first, formatPlace, loading, grey)
 			time = time,
 			icon = icon,
 			current = index == first,
-			grey = grey or nil,
 		}
 		-- Hostile towns and high zones on this walk, under its step.
 		for note, line in ipairs(leg.hazardNotes or {}) do

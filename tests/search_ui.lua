@@ -224,22 +224,19 @@ for step = 1, 12 do
 end
 assert(rowKeys() == "1" and dirty == finished, "the replan from here laid out the same step again: " .. dirty)
 
--- A new goal's search keeps the route it replaces on screen, greyed under the header spinner, until its own lands.
-local lines = 0
-for _ in pairs(tracker:GetExistingBlock("journey").lines) do lines = lines + 1 end
-local before = dirty
+-- A new goal's search lists none of the steps of the journey it replaces, under the new goal's title, until its own
+-- plan lands (#1107): the tracker and the goal pin's tooltip read the same rows.
+local oldStep = tracker.blocks[1].rows[1].text
 cursorY = 0.49
 assert(clickHandlers[1](map, "LeftButton"))
 assert(ns.JourneyStatus() and spinner:IsShown(), "the new goal is searching")
-local rows = tracker.blocks[1].rows
-assert(#rows == 1 and rows[1].key == 1 and rows[1].grey, "the replaced route stays, greyed")
-assert(rows[1].text ~= "Finding the fastest way…")
-local kept = 0
-for _ in pairs(tracker:GetExistingBlock("journey").lines) do kept = kept + 1 end
-assert(dirty == before and kept == lines, "the section keeps its rows and height while it searches")
-for _ = 1, 3 do
+for _ = 1, 4 do
+ local title, rows = ns.JourneyInfo()
+ assert(title and title:find("Journey to ", 1, true))
+ assert(#rows == 1 and rows[1].key == "searching", "the replaced journey's steps are gone: " .. tostring(rows[1].text))
+ local shown = tracker.blocks[1].rows
+ assert(#shown == 1 and shown[1].text == "Finding the fastest way…" and shown[1].text ~= oldStep)
  tick(0.6)
- assert(#tracker.blocks[1].rows == 1 and tracker.blocks[1].rows[1].grey and dirty == before)
 end
 fromMid, splitRoute = false, false
 settle()

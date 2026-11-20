@@ -15,10 +15,6 @@ local REPLAN_DUE = REPLAN_EVERY - 0.5 -- from here Itinerary.lua leaves the fram
 local DRAW_EVERY = 0.5
 
 local goal, result
--- The route a search for a new goal replaces, and the step it was on: the tracker draws it greyed until the new
--- route lands, so the section keeps its rows and height while it searches (forever-core#795).
----@type { plan: SPFPlan, index: integer }?
-local replaced
 local policyChanged
 local nextPoint
 local progress = { index = 1 }
@@ -327,7 +323,7 @@ local journeyPolicy = "normal"
 ---@param reason "arrived"|"cleared"
 local function EndJourney(reason)
 	Search.Reset()
-	goal, result, nextPoint, replaced = nil, nil, nil, nil
+	goal, result, nextPoint = nil, nil, nil
 	journeyPolicy = "normal"
 	withoutHearth = false
 	if ns.JourneyChanged then
@@ -476,12 +472,9 @@ function ns.JourneyInfo(formatPlace)
 	local title = ns.JourneyTitle(goal, formatPlace)
 	local rows = {}
 	local _, _, costError, loading = Search.Status()
-	local plan, index = result, progress.index
-	if not result and loading and replaced then
-		plan, index = replaced.plan, replaced.index
-	end
-	if plan then
-		ns.StepRows(rows, plan, index, formatPlace, loading, plan ~= result)
+	-- Only this goal's own proved steps: a new goal lists none until its plan lands, never the journey it replaced.
+	if result then
+		ns.StepRows(rows, result, progress.index, formatPlace, loading)
 	elseif loading then
 		rows[1] = { key = "searching", text = L["Finding the fastest way…"], grey = true }
 	else
@@ -637,7 +630,7 @@ local function Follow(route, news)
 		return Refresh()
 	end
 	if news == "route" then
-		result, replaced, rough = route, nil, nil
+		result, rough = route, nil
 		progress.index, progress.departed = 1, false
 		Guide.Retarget()
 		if not result then
@@ -844,7 +837,7 @@ function ns.StartJourney(point, policy)
 	if CorpseRun() then
 		-- Queued behind the corpse run, which ResumeJourney plans from where you come back to life.
 		if not (goal and SamePlace(goal, point) and journeyPolicy == policy) then
-			result, replaced = nil, nil
+			result = nil
 			withoutHearth = false
 			Search.Clear(false, policy)
 			progress.index, progress.departed = 1, false
@@ -874,11 +867,6 @@ function ns.StartJourney(point, policy)
 	goal, nextPoint = point, nil
 	if ns.JourneyChanged then
 		ns.JourneyChanged(point)
-	end
-	-- A new goal's search draws the route it replaces until its own lands; a goal changed again before then keeps
-	-- the route still on screen.
-	if not previous and result and result.legs[progress.index] then
-		replaced = { plan = result, index = progress.index }
 	end
 	result = previous or nil
 	progress.index, progress.departed = previous and index or 1, previous and departed or false
