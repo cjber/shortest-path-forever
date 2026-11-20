@@ -95,6 +95,10 @@ local function TrackerMenu(target, menu)
 		if not ns.Corpse.Active() then
 			menu:End(L["Clear journey"], ns.ClearJourney)
 		end
+		-- The journey block's own off-switch, the same as the setting: the arrow, pins and map line keep guiding (#991).
+		menu:Action(L["Hide the journey tracker"], function()
+			ns.SetOption("journeyTracker", false)
+		end)
 	else
 		menu:Open(L["Show on map"], function()
 			return OpenDockMap(module.mapDock)

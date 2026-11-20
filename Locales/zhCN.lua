@@ -379,6 +379,7 @@ L["Magenta"] = "洋红色"
 L["Show boat, lift and tram departures in the tracker"] = "在追踪器中显示船只、升降梯和地铁的班次"
 L["Hide RestedXP's arrow"] = "隐藏 RestedXP 的箭头" -- mt
 L["Hide departures"] = "隐藏班次"
+L["Hide the journey tracker"] = "隐藏旅程追踪"
 
 -- Travel stats.
 

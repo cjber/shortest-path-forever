@@ -388,6 +388,7 @@ L["Show boat, lift and tram departures in the tracker"] =
 	"Afficher les départs des bateaux, ascenseurs et du tram dans le suivi"
 L["Hide RestedXP's arrow"] = "Masquer la flèche de RestedXP" -- mt
 L["Hide departures"] = "Masquer les départs"
+L["Hide the journey tracker"] = "Masquer le suivi du trajet"
 
 -- Travel stats.
 
