@@ -4,15 +4,11 @@
 -- repairers hidden by default, the battlemaster's own switch (#833), and the maps the pins belong on.
 local dir = arg[0]:match("^(.*)/") or "tests"
 
-local probe = "tools/.cache/blizzard-ui/Interface/AddOns/Blizzard_SharedXML/Spinner.lua"
+-- Every spec runs the fetch: it checksums each pinned file and fetches any that is missing, so a spec started while
+-- another is still fetching never reads a file that is not there yet.
 do
-	local handle = io.open(probe)
-	if handle then
-		handle:close()
-	else
-		local ok = os.execute("bash tools/fetch_blizzard_ui.sh")
-		assert(ok == true or ok == 0, "could not fetch the pinned Blizzard UI fixture for tests/town_services_spec.lua")
-	end
+	local ok = os.execute("bash tools/fetch_blizzard_ui.sh")
+	assert(ok == true or ok == 0, "could not fetch the pinned Blizzard UI fixture for tests/town_services_spec.lua")
 end
 
 local source = ""

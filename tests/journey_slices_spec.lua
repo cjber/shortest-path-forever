@@ -31,7 +31,8 @@ end
 local commit = ns.SetJourneyRoute
 ns.SetJourneyRoute = function(g, route)
 	local first = route and route.legs[1]
-	assert(not first or first.mode ~= "walk" or first.measured, "guidance requires measured geometry")
+	-- A rough route is only drawn, its walks as straight hints; what is followed has measured walks.
+	assert(not first or first.mode ~= "walk" or first.measured or route.rough, "guidance requires measured geometry")
 	commit(g, route)
 end
 driver.begin(ns.TaxiNodes[25], ns.TaxiNodes[22])

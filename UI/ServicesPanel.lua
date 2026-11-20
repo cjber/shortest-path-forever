@@ -137,13 +137,37 @@ local function ItemIcon(itemID)
 	return C_Item.GetItemIconByID(itemID) or QUESTION_MARK
 end
 
+-- A row's "Show on map" switch. The flight master's NPCs are the flight point pins (UI/FlightPins.lua), so its row
+-- switches those, as the map menu's Flight Masters choice does; every other service with a pin switches its own
+-- town service pins. nil for a row with no pin of its own, such as an entrance.
+---@param group SPFNearbyGroup
+---@return boolean?
+local function OnMap(group)
+	if group.key == "flight" then
+		return ns.db.mapFlightMasters and true or false
+	elseif ns.TownServiceFilterable(group) then
+		return ns.TownServiceOnMap(group)
+	end
+end
+
+---@param group SPFNearbyGroup
+---@param shown boolean
+local function SetOnMap(group, shown)
+	if group.key == "flight" then
+		ns.SetOption("mapFlightMasters", shown)
+	else
+		ns.SetTownServiceGroupShown(group, shown)
+	end
+end
+
 ---@param row SPFServicesRow
 local function PaintRow(row)
 	local group, place = row.group, row.place
 	if row.Filter then
-		local filterable = ns.TownServiceFilterable(group)
+		local shown = OnMap(group)
+		local filterable = shown ~= nil
 		row.Filter:SetShown(filterable)
-		row.Filter:SetChecked(filterable and ns.TownServiceGroupShown(group))
+		row.Filter:SetChecked(shown == true)
 		row.Icon:ClearAllPoints()
 		row.Icon:SetPoint("LEFT", filterable and 34 or 8, 0)
 	end
@@ -239,7 +263,7 @@ local function CreateRow(parent)
 		end
 	end)
 	row.Filter:SetScript("OnClick", function(button)
-		ns.SetTownServiceGroupShown(row.group, button:GetChecked())
+		SetOnMap(row.group, button:GetChecked())
 	end)
 	Art.RowArt(row)
 	row.Icon = row:CreateTexture(nil, "ARTWORK")

@@ -71,6 +71,7 @@ local env = setmetatable({
 		return {}
 	end,
 	Minimap = { HookScript = function() end },
+	GameTooltip = { HookScript = function() end },
 	WorldMapFrame = {
 		IsShown = function()
 			return false
