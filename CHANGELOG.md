@@ -10,6 +10,13 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.43.9] - 2026-11-20
+
+### Fixed
+
+- With Waypoint UI installed and "Mark only where steps end" on, the arrow shows again beside Waypoint UI's marker. It had been hidden since 1.43.3, which with a guide addon's arrow hidden too left no arrow at all (#1124).
+- A guide addon's arrow (RestedXP, Guidelime) comes back whenever Shortest Path's arrow has nothing to draw, such as where the game gives no facing (#1124).
+
 ## [1.43.8] - 2026-11-20
 
 ### Fixed
