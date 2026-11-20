@@ -38,7 +38,9 @@ end
 local FM = { x = 1568.62, y = 267.97, z = -43.1 } -- Data/Taxi.lua node 11, on the Undercity's floor
 local MAGIC = { x = 1773.47, y = 61.121, z = -46.321 } -- the Magic Quarter
 local LIFT_TOP = { x = 1596.15, y = 291.8, z = 55.718 } -- Data/Transports.lua dock 1009, in the hall above
-local UNDER_HALL = { x = 1588, y = 237 } -- a city cell with the ruins' hall above it
+-- A city cell with the ruins' hall above it and one city floor: nearby cells hold the canal's floor and a walkway
+-- above it, two city floors the walk cannot tell apart.
+local UNDER_HALL = { x = 1604, y = 219 }
 
 -- Walk the drawn line from a to b, sampling every five yards as the journey's frame would; check is called at each
 -- sample with the point, the line's height there and the tracked height.

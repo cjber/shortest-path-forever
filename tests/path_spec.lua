@@ -290,8 +290,9 @@ local floorNode = StraitGrid.surface(straitState, floorK, floorCell, 1, 14)
 assert(floorValues[floorCell + 1] == 2 and floorNode and floorValues[floorNode + 1] == 1)
 assert(straitState.z[floorK][floorNode + 1] == 14, "the dry floor is above the base water")
 
--- Nearby, a walk that really swims is still pulled straight across the water its own entries swam.
-local STRAIT_EAST, STRAIT_WEST = { x = -14961.19, y = 250.63 }, { x = -14897.51, y = 250.63 }
+-- Nearby, a walk that really swims is still pulled straight across the water its own entries swam. The row holds the
+-- water entrance on the cluster border at x -14933, so the swim's route is the straight one.
+local STRAIT_EAST, STRAIT_WEST = { x = -14961.19, y = 242.83 }, { x = -14897.51, y = 242.83 }
 local strait, straitCost = Path.FindSync(0, STRAIT_EAST, STRAIT_WEST)
 assert(strait and straitCost and strait.wet > 15, "the strait walk swims")
 local swam = 0
