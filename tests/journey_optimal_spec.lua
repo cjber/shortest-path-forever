@@ -40,7 +40,13 @@ local start = ns.JourneySearch.Start
 ns.JourneySearch.Start = function(point, route, state, listener)
 	return start(point, route, state, function(planned, news)
 		if (news == "route" or news == "rough") and planned then
-			published[#published + 1] = { rough = news == "rough" and planned.rough }
+			published[#published + 1] = {
+				rough = news == "rough" and planned.rough,
+				arrive = planned.arrive,
+				provisional = planned.provisional,
+				leg = planned.legs[1],
+				legs = planned.legs,
+			}
 		end
 		return listener(planned, news)
 	end)
@@ -85,6 +91,27 @@ local function full(o)
 	o.walks, o.exactMaps = walks, { [0] = true, [1] = true }
 	return plan(o)
 end
+-- Theramore to Feralas (#1062): the goal's search settles the walk from Theramore's flight master before the start's
+-- reaches Feralas. The route shown meanwhile walks there through that flight master, not by boat and back by air.
+do
+	local master = ns.TaxiNodes[32]
+	ns.faction, ns.water, ns.speed, ns.known = "Alliance", false, 7, { [32] = true, [26] = true }
+	driver.begin(
+		{ map = 1, x = master.x + 40, y = master.y - 20, z = master.z },
+		{ map = 1, x = -4450, y = -500, z = 0 }
+	)
+	drain()
+	assert(#published >= 1)
+	for _, route in ipairs(published) do
+		for _, leg in ipairs(route.legs) do
+			assert(leg.mode == "walk", "a route shown from Theramore to Feralas walks: " .. leg.mode)
+		end
+	end
+	published = {}
+	ns.ClearJourney()
+	print("journey_optimal_spec: Theramore to Feralas shows walks only: ok")
+end
+
 local reachable, findCost = 0, ns.Path.FindCost
 -- A probe that learns nothing and spends the whole probe budget: the endpoint searches must prove the route alone.
 local function spent(map, from, to, callback, water)
