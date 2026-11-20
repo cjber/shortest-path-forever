@@ -510,6 +510,12 @@ ns.db.guideStops = false
 ns.RefreshGuideStops()
 arrowFrame.scripts.OnUpdate(arrowFrame, 0.1)
 assert(arrowFrame.alpha == 0, "every bend marked: the marker leads and the arrow stands down")
+-- A frame with no position leaves that marker up, so it still leads and a guide addon's arrow stays away.
+local wasX = posX
+posX = nil
+if arrowFrame.updating then arrowFrame.scripts.OnUpdate(arrowFrame, 0.1) else arrowFrame.ticker.fn() end
+assert(ns.ArrowLeads(), "the marker still leads where the client gives no position")
+posX = wasX
 ns.ClearJourney()
 ]])
 

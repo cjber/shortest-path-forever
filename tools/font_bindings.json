@@ -75,7 +75,7 @@
     },
     {
       "source": "UI/Arrow.lua",
-      "sha256": "328ed4c7bbdd9be7268ba2d72266cfe8e5a694c3c6f3ce62d62dffbca5821945",
+      "sha256": "e9418b41a31ea839b7a1b5401116188595a1a87ba86c82f2e9ca3df077c95d3f",
       "review": "Read Create, ArrowLabel, distance updates, arrival labels, progress and cast prompt. MoverHint uses GameFontHighlightSmall and Distance uses GameFontNormal, including the formatted time-distance phrase. No later font override occurs. Dynamic objective lines, arrival titles, route titles and actions from helpers are excluded; this review does not claim coverage for their inserted text.",
       "bindings": [
         {

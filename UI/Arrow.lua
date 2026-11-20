@@ -203,7 +203,8 @@ local function Update(elapsed)
 		frame:SetAlpha(moving and 1 or 0)
 		frame.angle = nil
 		SetUpdating(false)
-		Unseen(true)
+		-- A marker that led before the position went still leads: Guide keeps it through a frame with no map (#826).
+		Unseen(not (native and NativeMarkerShown()))
 		return
 	end
 	local moved = x ~= frame.x or y ~= frame.y or map ~= frame.map or facing ~= frame.facing
