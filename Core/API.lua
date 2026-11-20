@@ -53,6 +53,7 @@ local CONTEXT_KEYS = {
 local Input = assert(ns.APIInput, "Core/APIInput.lua loads first")
 local Number, Point, Place, ID = Input.Number, Input.Point, Input.Place, Input.ID
 local DetailLines, Shapes, Quests = Input.DetailLines, Input.Shapes, Input.Quests
+local Stops = assert(ns.APIStops, "Core/APIStops.lua loads first")
 local Loaded, Ready, Loading, None, Owner = Input.Loaded, Input.Ready, Input.Loading, Input.None, Input.Owner
 
 -- Only this module owns the caller's itinerary. Journey handles one destination at a time.
@@ -181,86 +182,15 @@ function ns.JourneyChanged(point, reason)
 	ns.ItineraryChanged()
 end
 
--- What a consumer driving a route needs to tell busy, still working, failed and blocked apart, copied fresh:
--- planner's own status and legs read in one place, so API.JourneyState and the stop observers answer the same.
----@return SPFAPIJourneyState
-local function JourneyState()
-	local pending, _, costError, settling, _, replanning = ns.JourneyStatus()
-	local plan, index = ns.JourneyPlan()
-	local legs, failure = {}, costError
-	for legIndex, leg in ipairs(plan and plan.legs or {}) do
-		legs[legIndex] = { mode = leg.mode, measured = leg.measured == true, walkError = leg.walkError }
-		failure = failure or leg.walkError
-	end
-	local blocked
-	if InCombatLockdown() then
-		blocked = "combat" -- the standard reason (forever-core#961)
-	elseif ns.Corpse and ns.Corpse.Active() then
-		blocked = "corpse"
-	end
-	local goal, distance = ns.JourneyGoal(), nil
-	if goal then
-		local x, y, _, map = ns.JourneyPosition()
-		if x and y and map == goal.map then
-			distance = math.sqrt((x - goal.x) ^ 2 + (y - goal.y) ^ 2)
-		end
-	end
-	return {
-		owner = route and route.owner,
-		policy = route and route.policy or "normal",
-		busy = ns.HasJourney() or route ~= nil,
-		pending = pending or replanning == true,
-		settling = settling == true,
-		failure = failure,
-		blocked = blocked,
-		preview = plan ~= nil and plan.preview == true,
-		index = plan and index or nil,
-		legs = legs,
-		distance = distance,
-		reach = ns.db.arrivalDistance or 15,
-	}
-end
-
--- API.ObserveStops' subscribers (the synchronous, owner-scoped per-stop channel); filled once the API exists below.
----@alias SPFStopObserver fun(phase: "arrived"|"settled", i: integer, stop: SPFAPIObservedStop, s: SPFAPIJourneyState)
----@type table<{owner: string, callback: SPFStopObserver}, true>
-local stopObservers = {}
-
 -- Journey.lua: the stop under way was reached ("arrived") or the planner settled a plan for it ("settled"), inside the
--- same call that did it. Only a route's own owner hears it, and only about the stop the route is on.
+-- same call that did it (Core/APIStops.lua).
 ---@param phase "arrived"|"settled"
 ---@param point SPFPoint
 ---@return boolean? alive false when an observer replaced or ended the route, so the caller must not go on with it
 function ns.JourneyStopObserved(phase, point)
-	if not route or route.points[route.index] ~= point or next(stopObservers) == nil then
-		return
-	end
-	local watched, watchedIndex = route, route.index
-	local heard = {}
-	for entry in pairs(stopObservers) do
-		if entry.owner == route.owner then
-			heard[#heard + 1] = entry
-		end
-	end
-	if #heard == 0 then
-		return
-	end
-	local index = route.index
-	local stop = ns.JourneyGoalDetails(Place, point) or point.submitted
-	if not stop then
-		return
-	end
-	local title = point.label or stop.title
-	for _, entry in ipairs(heard) do
-		if stopObservers[entry] then
-			-- Each observer gets its own copy: one cannot change what the next one sees.
-			local seen = { map = stop.map, x = stop.x, y = stop.y, z = stop.z, title = title }
-			ns.core.SafeCall("stop observer", entry.callback, phase, index, seen, JourneyState())
-			if route ~= watched or route.index ~= watchedIndex then
-				return false
-			end
-		end
-	end
+	return Stops.Dispatch(phase, point, function()
+		return route
+	end)
 end
 
 -- A running route's stop was relabelled in place (API.RenameStop, from a guide renaming its step): the tracker names
@@ -823,7 +753,7 @@ function API.JourneyState()
 	if not Loaded() then
 		return Loading()
 	end
-	return JourneyState()
+	return Stops.State(route)
 end
 
 -- A synchronous, owner-scoped per-stop observer: called inside the planner's own step, so what it reads is what the
@@ -836,11 +766,7 @@ function API.ObserveStops(owner, callback)
 	if not Owner(owner) or type(callback) ~= "function" then
 		return APIKit.Invalid()
 	end
-	local entry = { owner = owner, callback = callback }
-	stopObservers[entry] = true
-	return function()
-		stopObservers[entry] = nil
-	end
+	return Stops.Observe(owner, callback)
 end
 
 ---@return SPFAPIGuidance?, SPFAPIGuidanceReason?

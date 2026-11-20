@@ -17,6 +17,7 @@ local function scenario(final)
 	end
 	d.load("UI/Looks.lua")
 	d.load("Core/APIInput.lua")
+	d.load("Core/APIStops.lua")
 	d.load("Core/API.lua")
 	d.load("Journey/Itinerary.lua")
 	d.load("Journey/FarmingOrder.lua")

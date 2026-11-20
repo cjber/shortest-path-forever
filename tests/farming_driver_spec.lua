@@ -1,4 +1,4 @@
--- luacheck: globals C_Timer InCombatLockdown CreateFrame
+-- luacheck: globals C_Timer InCombatLockdown CreateFrame canaccessvalue CreateVector2D C_Map
 local queue, listeners, frames, submissions = {}, {}, {}, {}
 local combat, corpse, occupied, owner, index, ended, failure, walkError, measured, accept, steer
 local proofListeners = {}
@@ -38,7 +38,7 @@ CreateVector2D = function(x, y)
 	return { x = x, y = y }
 end
 C_Map = {
-	GetWorldPosFromMapPos = function(map, at)
+	GetWorldPosFromMapPos = function(_, at)
 		return 1, {
 			GetXY = function()
 				return at.x * 1000, at.y * 1000

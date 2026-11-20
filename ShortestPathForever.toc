@@ -115,6 +115,7 @@ UI\SettingsMapMarks.lua
 UI\Settings.lua
 UI\WhatsNew.lua
 Core\APIInput.lua
+Core\APIStops.lua
 Core\APIWalks.lua
 Core\API.lua
 Journey\Resume.lua

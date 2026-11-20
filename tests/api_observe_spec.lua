@@ -4,6 +4,7 @@ local d = assert(loadfile("tests/journey_driver.lua"))()
 local ns, env, checks = d.ns, d.env, 0
 d.load("UI/Looks.lua")
 d.load("Core/APIInput.lua")
+d.load("Core/APIStops.lua")
 d.load("Core/API.lua")
 d.load("Journey/Itinerary.lua")
 local API = env.ShortestPathForever.API

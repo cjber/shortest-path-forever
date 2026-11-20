@@ -256,7 +256,7 @@
     },
     {
       "source": "UI/Farming.lua",
-      "sha256": "f3e5efd64a74f83c95c8def5f945e4cf48b409a7443fbfc90c2db0db73fcd7a1",
+      "sha256": "fe64c066e0c6334af763548201dc6abecc7ed857708cc8e38369fc830053faa8",
       "review": "Read Text, Build, Message, Paint, Start and Refresh. Description and statusText call Text without the optional font argument, fixing GameFontHighlight; all local messages and progress phrases reach statusText. No font overrides follow. Node titles are external dynamic text; button and window title fonts belong to templates and are excluded, as are unused helper arguments.",
       "bindings": [
         {

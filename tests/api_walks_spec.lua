@@ -5,6 +5,7 @@ local ns, env, checks = driver.ns, driver.env, 0
 driver.load("UI/Looks.lua")
 driver.load("Core/APIInput.lua")
 driver.load("Core/APIWalks.lua")
+driver.load("Core/APIStops.lua")
 driver.load("Core/API.lua")
 local API = env.ShortestPathForever.API
 local path = driver.path

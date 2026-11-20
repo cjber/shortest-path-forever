@@ -3,6 +3,7 @@ local driver = assert(loadfile("tests/journey_driver.lua"))()
 local ns, env, checks = driver.ns, driver.env, 0
 driver.load("UI/Looks.lua")
 driver.load("Core/APIInput.lua")
+driver.load("Core/APIStops.lua")
 driver.load("Core/API.lua")
 driver.load("Journey/Itinerary.lua")
 local API = env.ShortestPathForever.API
@@ -1123,12 +1124,14 @@ do
 		end,
 	}
 	driver.load("Core/APIInput.lua")
+	driver.load("Core/APIStops.lua")
 	driver.load("Core/API.lua")
 	equal(published, 0, "a kit at minor 1 publishes nothing")
 	equal(env.ShortestPathForever.API.version, 2, "and still exposes the API")
 
 	env.ForeverCore.APIKit = kit
 	driver.load("Core/APIInput.lua")
+	driver.load("Core/APIStops.lua")
 	driver.load("Core/API.lua")
 	equal(listing(kit).api, env.ShortestPathForever.API, "a kit at minor 2 publishes what it loaded")
 end

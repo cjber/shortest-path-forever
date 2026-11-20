@@ -11,6 +11,7 @@ local function harness()
 	local d = assert(loadfile("tests/journey_driver.lua"))()
 	d.load("UI/Looks.lua")
 	d.load("Core/APIInput.lua")
+	d.load("Core/APIStops.lua")
 	d.load("Core/API.lua")
 	d.load("Journey/Itinerary.lua")
 	ShortestPathForever = d.env.ShortestPathForever
@@ -82,9 +83,9 @@ for _, mode in ipairs({ "portal", "flight", "boat", "lift", "tram", "teleport", 
 	end
 	local normal = plan("normal")
 	check(normal and not allWalk(normal), mode .. " is used in normal mode")
-	local walking, o = plan("walking")
-	check(allWalk(walking), mode .. " is excluded from walking mode")
-	check(walking.arrive > normal.arrive, mode .. " restriction is effective even when transit is faster")
+	local walked, o = plan("walking")
+	check(allWalk(walked), mode .. " is excluded from walking mode")
+	check(walked.arrive > normal.arrive, mode .. " restriction is effective even when transit is faster")
 	local _, again = plan("walking")
 	for _, key in ipairs({
 		"taxiKnown",
