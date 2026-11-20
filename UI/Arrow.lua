@@ -281,7 +281,23 @@ OnUpdate = function(_, elapsed)
 	Update(elapsed)
 end
 
+local function Placed()
+	return type(ns.db.arrowX) == "number" and type(ns.db.arrowY) == "number"
+end
+
+-- The text under the arrow and the stop's pin, wider than the frame, which the stock place keeps clear too.
+local parts
+local function Parts()
+	parts = parts or { frame.Distance, frame.Progress, frame.Lines, frame.ArrivalTitle, frame.ArrivalLines }
+	return parts
+end
+
 local function Poll()
+	-- The column grows, moves and hides as its sections change; a stock-placed arrow follows it. Not while it is being
+	-- placed: the mouse is on only then, and the drag owns the point.
+	if not Placed() and not frame:IsMouseEnabled() then
+		ns.Mover.Stock(frame, TOP, Parts())
+	end
 	-- Mouse turns and moving transports need not send a player movement event.
 	if not frame.updating then
 		Update(POLL_EVERY)
@@ -293,17 +309,17 @@ local function Wake()
 	SetUpdating(true)
 end
 
--- Where it was dragged (screen pixels from the bottom left), else the stock place under the top of the screen.
+-- Where it was dragged (screen pixels from the bottom left), else the stock place under the top of the screen, beside
+-- the quest tracker and ForeverCore's column when they reach it (Mover.Stock).
 ---@param placed Frame
 local function Anchor(placed)
-	local scale = placed:GetEffectiveScale() / UIParent:GetEffectiveScale()
-	scale = scale > 0 and scale or 1
-	placed:ClearAllPoints()
-	local x, y = ns.db.arrowX, ns.db.arrowY
-	if type(x) == "number" and type(y) == "number" then
-		placed:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x / scale, y / scale)
+	if Placed() then
+		local scale = placed:GetEffectiveScale() / UIParent:GetEffectiveScale()
+		scale = scale > 0 and scale or 1
+		placed:ClearAllPoints()
+		placed:SetPoint("CENTER", UIParent, "BOTTOMLEFT", ns.db.arrowX / scale, ns.db.arrowY / scale)
 	else
-		placed:SetPoint("TOP", UIParent, "TOP", 0, TOP / scale)
+		ns.Mover.Stock(placed, TOP, Parts(), true)
 	end
 end
 

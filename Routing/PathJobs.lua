@@ -43,6 +43,16 @@ local function sweep()
 	Spare(nil)
 end
 
+-- The queue emptied: arm the sweep. A pump a callback scheduled is still due: it finds the queue empty and arms the
+-- sweep itself.
+local function drained()
+	drains = drains + 1
+	if not waiting and not scheduled then
+		waiting = drains
+		Path.after(sweep, Path.linger)
+	end
+end
+
 -- A callback runs as a job of its own at the head of the queue, under the budget left in the frame. It is meant to
 -- record the answer and schedule what follows (Path.Run), never to plan or decode itself.
 local function notify(job, callback, points, cost)
@@ -143,12 +153,7 @@ pump = function()
 	until clock() >= finish
 	Path.work.frames, Path.work.cpu = Path.work.frames + 1, Path.work.cpu + clock() - began
 	if #queue == 0 then
-		drains = drains + 1
-		-- A pump a callback scheduled is still due: it finds the queue empty and arms the sweep itself.
-		if not waiting and not scheduled then
-			waiting = drains
-			Path.after(sweep, Path.linger)
-		end
+		drained()
 	end
 	schedule()
 end
@@ -279,14 +284,20 @@ end
 ---@param job SPFPathJob
 function Path.Pause(job)
 	job.paused = true
+	local removed = false
 	for i = #queue, 1, -1 do
 		local queued = queue[i]
 		if queued == job or queued.owner == job then
 			table.remove(queue, i)
+			removed = true
 			if queued ~= job then
 				queued.cancelled = true
 			end
 		end
+	end
+	-- No pump may come to drain it (one waiting out combat schedules nothing for an empty queue), so arm the sweep.
+	if removed and #queue == 0 then
+		drained()
 	end
 end
 

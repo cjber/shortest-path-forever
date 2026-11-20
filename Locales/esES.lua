@@ -43,7 +43,6 @@ L["Arrow label"] = "Etiqueta de la flecha" -- mt
 L["Arrow scale"] = "Tamaño de la flecha"
 L["Arrows"] = "Flechas"
 L["Arrows on the NPC's nameplate"] = "Flechas en la placa de nombre del PNJ"
-L["Attach to quest tracker"] = "Fijar al rastreador de misiones"
 L["Auction house"] = "Casa de subastas"
 L["Avoid zones far above my level"] = "Evitar zonas muy por encima de mi nivel"
 L["Avoids %s (level %s)"] = "Rodea %s (nivel %s)"
@@ -112,8 +111,6 @@ L["Hides profession trainers and their supply vendors for professions this chara
 	"Oculta a los maestros de profesión y a los vendedores que venden los suministros de una profesión que este personaje no ha aprendido."
 L["Horde"] = "Horda"
 L["Hostile town: %s"] = "Pueblo hostil: %s"
-L["In the objective tracker while you are near a dock, lift or tram."] =
-	"En el rastreador de objetivos cuando estás cerca de un muelle, ascensor o tranvía."
 L["Innkeeper"] = "Tabernero"
 L["Interface"] = "Interfaz"
 L["Journey"] = "Viaje"
@@ -148,8 +145,6 @@ L["No location for that quest yet."] = "Aún no hay ubicación para esa misión.
 L["No services nearby."] = "No hay servicios cercanos."
 L["No way there from here."] = "No hay camino desde aquí."
 L["Not discovered"] = "Sin descubrir"
-L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."] =
-	"Desactivado mantiene la flecha, el marcador, la línea del mapa y la ruta del minimapa, sin bloque de viaje en el rastreador."
 L["On board to %s"] = "A bordo hacia %s"
 L["On the world map and in Nearby services."] = "En el mapa del mundo y en los servicios cercanos."
 L["On the world map."] = "En el mapa del mundo."
@@ -200,7 +195,6 @@ L["Show boats and zeppelins"] = "Mostrar barcos y zepelines"
 L["Show cast prompt"] = "Mostrar aviso de lanzamiento" -- mt
 L["Show direction arrow"] = "Mostrar flecha de dirección"
 L["Show flight masters"] = "Mostrar maestros de vuelo"
-L["Show journey steps in the objective tracker"] = "Mostrar los pasos del viaje en el rastreador de objetivos"
 L["Show lifts and the tram"] = "Mostrar ascensores y tranvía"
 L["Show marks on the minimap"] = "Mostrar marcas en el minimapa"
 L["Show on map"] = "Mostrar en el mapa"
@@ -249,8 +243,6 @@ L["Tram to %s arrives in %s"] = "El tranvía a %s llega en %s"
 L["Transport"] = "Transporte"
 L["Transport icon size"] = "Tamaño de iconos de transporte"
 L["Turning this off leaves RestedXP's arrow visible."] = "Si lo desactivas, la flecha de RestedXP permanece visible." -- mt
-L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
-	"Desactívalo para arrastrar el rastreador Forever compartido a cualquier parte de la pantalla."
 L["Use %s"] = "Usar %s"
 L["Use class teleports"] = "Usar teletransportes de clase"
 L["Vendors"] = "Vendedores"
@@ -333,7 +325,6 @@ L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d
 	"Diario de viaje local: aprox. %d yd andados; %d viajes; %d transportes; %d vuelos; %d tramos de portal."
 L["Record travel stats"] = "Registrar estadísticas de viaje"
 L["Time left"] = "Tiempo restante" -- mt
-L["Travel journal"] = "Diario de viaje"
 L["Travel milestone reached: %s"] = "Hito de viaje alcanzado: %s"
 L["Travel stats are not ready yet."] = "Las estadísticas de viaje aún no están listas."
 L["Party member"] = "Miembro del grupo" -- mt
@@ -394,6 +385,7 @@ L["Show boat, lift and tram departures in the tracker"] =
 	"Mostrar salidas de barcos, ascensores y tranvía en el seguimiento"
 L["Hide RestedXP's arrow"] = "Ocultar la flecha de RestedXP" -- mt
 L["Hide departures"] = "Ocultar salidas"
+L["Hide the journey tracker"] = "Ocultar el seguimiento del viaje"
 
 -- Travel stats.
 
@@ -427,12 +419,10 @@ L["Stops before the last on a multi-stop route keep 15 yards."] =
 L["Dugi Guides"] = "Dugi Guides" -- mt
 L["Dungeons and raids"] = "Mazmorras y bandas" -- mt
 L["Town services"] = "Servicios de la ciudad" -- mt
-L["Town services on the world map"] = "Servicios de la ciudad en el mapa del mundo" -- mt
 L["Capitals only"] = "Solo capitales" -- mt
 L["Capitals and important services"] = "Capitales y servicios importantes" -- mt
 L["All towns"] = "Todas las ciudades" -- mt
 L["Books and recipes"] = "Libros y recetas" -- mt
-L["One icon per town, or one per service as you zoom in."] = "Un icono por ciudad, o uno por servicio al acercar." -- mt
 L["Click to save it."] = "Haz clic para guardarla." -- mt
 L["Destination pin size"] = "Tamaño del marcador de destino" -- mt
 L["Hearthstone"] = "Piedra de hogar" -- mt
@@ -576,3 +566,11 @@ L["show it on the map"] = "mostrarlo en el mapa" -- mt
 L["That guide has no step to follow."] = "Esa guía no tiene ningún paso que seguir." -- mt
 
 L["Weapon master"] = "Maestro de armas"
+L["Show the journey tracker"] = "Mostrar el seguimiento del viaje" -- mt
+L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the tracker."] =
+	"Desactivado, se mantienen la flecha, la marca, la línea del mapa y la ruta del minimapa, sin bloque de viaje en el seguimiento." -- mt
+L["In the tracker while you are near a dock, lift or tram."] =
+	"En el seguimiento mientras estás cerca de un muelle, un ascensor o el tranvía." -- mt
+L["Town service icons"] = "Iconos de servicios de la ciudad" -- mt
+L["Off hides them. Otherwise one icon per town, or one per service as you zoom in."] =
+	"Desactivado los oculta. Si no, un icono por ciudad o por servicio al acercar." -- mt

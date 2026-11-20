@@ -85,4 +85,24 @@ Path.Pin(0, { [pinned] = true })
 assert(st.val[pinned], "a pinned cluster stays decoded")
 Path.Pin()
 assert(not st.val[pinned], "a released pin outlived an idle queue with no sweep due")
+-- A search held by combat and then cancelled leaves an empty queue that no pump drains: the sweep still comes.
+search()
+rawset(_G, "InCombatLockdown", function()
+	return true
+end)
+rawset(_G, "CreateFrame", function()
+	local frame = {}
+	function frame.SetScript() end
+	function frame.RegisterEvent() end
+	function frame.UnregisterEvent() end
+	return frame
+end)
+local held = Path.Find(0, from, to, function() end)
+drain()
+elapse()
+assert(#timers == 0 and next(st.used) ~= nil, "the sweep ran under a search waiting out combat")
+Path.Cancel(held)
+elapse()
+assert(#timers == 0 and next(st.used) == nil, "a search cancelled in combat left its decoded grids for good")
+rawset(_G, "InCombatLockdown", nil)
 print("linger_spec: repeated searches reuse decoded terrain, and the idle sweep still clears it: ok")
