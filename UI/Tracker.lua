@@ -95,6 +95,10 @@ local function TrackerMenu(target, menu)
 		if not ns.Corpse.Active() then
 			menu:End(L["Clear journey"], ns.ClearJourney)
 		end
+		-- The journey block's own off-switch, the same as the setting: the arrow, pins and map line keep guiding (#991).
+		menu:Action(L["Hide the journey tracker"], function()
+			ns.SetOption("journeyTracker", false)
+		end)
 	else
 		menu:Open(L["Show on map"], function()
 			return OpenDockMap(module.mapDock)
@@ -511,8 +515,15 @@ local function RefreshTracker(dockID, yards)
 	module.journeyTracker, module.metres = ns.db.journeyTracker, ns.db.metres
 	if dockID then
 		rows, kind = DockRows(dockID)
-		title, blockKey, mapDock = ns.DockTitle(dockID), "dock" .. dockID, dockID
-	elseif riding then
+		-- A dock whose every route is hidden (another faction's, with those routes off) has nothing to list, and a
+		-- block with no departures would leave the section's header standing over its bare title.
+		if rows[1] then
+			title, blockKey, mapDock = ns.DockTitle(dockID), "dock" .. dockID, dockID
+		else
+			dockID = nil
+		end
+	end
+	if not dockID and riding then
 		rows, kind, mapDock = RideRows(riding)
 		if rows and mapDock then
 			title, blockKey = string.format(L["On board to %s"], ns.DockTitle(mapDock)), "ride" .. mapDock

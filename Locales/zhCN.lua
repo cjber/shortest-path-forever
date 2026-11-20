@@ -42,7 +42,6 @@ L["Arrow label"] = "箭头标签" -- mt
 L["Arrow scale"] = "箭头大小"
 L["Arrows"] = "箭"
 L["Arrows on the NPC's nameplate"] = "NPC姓名板上的箭头"
-L["Attach to quest tracker"] = "附着到任务追踪器"
 L["Auction house"] = "拍卖行"
 L["Avoid zones far above my level"] = "避开远高于我等级的区域"
 L["Avoids %s (level %s)"] = "绕开%s（等级 %s）"
@@ -110,8 +109,6 @@ L["Hides profession trainers and their supply vendors for professions this chara
 	"隐藏此角色未学习的职业的职业训练师和出售该职业材料的商人。"
 L["Horde"] = "部落"
 L["Hostile town: %s"] = "敌对城镇：%s"
-L["In the objective tracker while you are near a dock, lift or tram."] =
-	"在你靠近码头、升降梯或地铁时显示在目标追踪栏中。"
 L["Innkeeper"] = "旅店老板"
 L["Interface"] = "界面"
 L["Journey"] = "旅程"
@@ -146,8 +143,6 @@ L["No location for that quest yet."] = "该任务还没有位置。"
 L["No services nearby."] = "附近没有服务。"
 L["No way there from here."] = "从这里无法到达那里。"
 L["Not discovered"] = "未发现"
-L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."] =
-	"关闭后仍保留箭头、标记、地图路线和小地图路线，但不在目标追踪器中显示旅程区块。"
 L["On board to %s"] = "乘坐前往%s"
 L["On the world map and in Nearby services."] = "在世界地图和附近服务中生效。"
 L["On the world map."] = "显示在世界地图上。"
@@ -196,7 +191,6 @@ L["Show boats and zeppelins"] = "显示船只和飞艇"
 L["Show cast prompt"] = "显示施法提示" -- mt
 L["Show direction arrow"] = "显示方向箭头"
 L["Show flight masters"] = "显示飞行管理员"
-L["Show journey steps in the objective tracker"] = "在目标追踪器中显示旅程步骤"
 L["Show lifts and the tram"] = "显示升降梯和地铁"
 L["Show marks on the minimap"] = "在微缩地图上显示标记"
 L["Show on map"] = "在地图上显示"
@@ -244,8 +238,6 @@ L["Tram to %s arrives in %s"] = "前往%s的地铁将在%s后到达"
 L["Transport"] = "交通"
 L["Transport icon size"] = "交通图标大小"
 L["Turning this off leaves RestedXP's arrow visible."] = "关闭此选项后，RestedXP 的箭头仍会显示。" -- mt
-L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
-	"关闭此项可将共享Forever追踪栏拖到屏幕上任意位置。"
 L["Use %s"] = "使用%s"
 L["Use class teleports"] = "使用职业传送"
 L["Vendors"] = "商人"
@@ -328,7 +320,6 @@ L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d
 	"本地旅行日志 — 步行约%d码；%d次旅程；%d次交通；%d次飞行；%d段传送门。"
 L["Record travel stats"] = "记录旅行统计"
 L["Time left"] = "剩余时间" -- mt
-L["Travel journal"] = "旅行日志"
 L["Travel milestone reached: %s"] = "达成旅行里程碑：%s"
 L["Travel stats are not ready yet."] = "旅行统计尚未准备好。"
 L["Party member"] = "队员" -- mt
@@ -388,6 +379,7 @@ L["Magenta"] = "洋红色"
 L["Show boat, lift and tram departures in the tracker"] = "在追踪器中显示船只、升降梯和地铁的班次"
 L["Hide RestedXP's arrow"] = "隐藏 RestedXP 的箭头" -- mt
 L["Hide departures"] = "隐藏班次"
+L["Hide the journey tracker"] = "隐藏旅程追踪"
 
 -- Travel stats.
 
@@ -421,13 +413,10 @@ L["Stops before the last on a multi-stop route keep 15 yards."] =
 L["Dugi Guides"] = "Dugi Guides" -- mt
 L["Dungeons and raids"] = "地下城与团队副本" -- mt
 L["Town services"] = "城镇服务" -- mt
-L["Town services on the world map"] = "世界地图上的城镇服务" -- mt
 L["Capitals only"] = "仅主城" -- mt
 L["Capitals and important services"] = "主城和重要服务" -- mt
 L["All towns"] = "所有城镇" -- mt
 L["Books and recipes"] = "书籍和配方" -- mt
-L["One icon per town, or one per service as you zoom in."] =
-	"缩小显示每个城镇一个图标，放大后每个服务一个图标。" -- mt
 L["Click to save it."] = "点击以留待后用。" -- mt
 L["Destination pin size"] = "目的地标记大小" -- mt
 L["Hearthstone"] = "炉石" -- mt
@@ -567,3 +556,11 @@ L["show it on the map"] = "在地图上显示" -- mt
 L["That guide has no step to follow."] = "该指南没有可跟随的步骤。" -- mt
 
 L["Weapon master"] = "武器大师"
+L["Show the journey tracker"] = "显示旅程追踪" -- mt
+L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the tracker."] =
+	"关闭后保留箭头、标记、地图线和小地图路线，追踪中不再显示旅程块。" -- mt
+L["In the tracker while you are near a dock, lift or tram."] =
+	"当你靠近码头、升降梯或矿道车时显示在追踪中。" -- mt
+L["Town service icons"] = "城镇服务图标" -- mt
+L["Off hides them. Otherwise one icon per town, or one per service as you zoom in."] =
+	"关闭则隐藏。否则放大时每个城镇一个图标，或每项服务一个图标。" -- mt

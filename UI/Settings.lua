@@ -189,68 +189,28 @@ ns.Init(function()
 	-- builders, so every row registers through the same secure initializer and ns.SetOption finds it.
 	---@type SPFSettingsRows
 	local rows = { Page = Page, Section = Section, Checkbox = Checkbox, Scale = Scale, Dropdown = Dropdown }
-	ns.SettingsMapMarks.Register(rows)
-
-	-- Transport: routes and departure times.
-	Page(L["Transport"])
+	-- Guidance: how a journey is planned and led.
+	Page(L["Guidance"])
+	Section(L["Tracker"])
 	Checkbox(
-		"mapRoutes",
-		L["Show routes on the world map"],
-		L["Boat and zeppelin routes, drawn while you point at a dock."],
-		ns.RefreshMap
-	)
-	Checkbox(
-		"otherFaction",
-		L["Show other faction's routes"],
-		L["Either faction can ride any boat or zeppelin."],
-		function()
-			ns.RefreshMap()
-			ns.RefreshTracker()
-		end
+		"journeyTracker",
+		L["Show the journey tracker"],
+		L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the tracker."],
+		ns.RefreshTracker
 	)
 	Checkbox(
 		"tracker",
 		L["Show boat, lift and tram departures in the tracker"],
-		L["In the objective tracker while you are near a dock, lift or tram."],
+		L["In the tracker while you are near a dock, lift or tram."],
 		ns.RefreshTracker
 	)
-
-	Page(L["Travel journal"])
-	Checkbox(
-		"stats",
-		L["Record travel stats"],
-		L["On by default. Records approximate walking distance, completed journeys and transport use."]
-	)
-
-	-- Guidance: how a journey is planned and led.
-	Page(L["Guidance"])
-	Section(L["Tracker"])
 	local host = ForeverCore.TrackerHost --[[@as ForeverTrackerHostAPI]]
-	local variable = "ShortestPathForever_trackerAttached"
-	local attachment = Settings.RegisterProxySetting(
-		page,
-		variable,
-		Settings.VarType.Boolean,
-		L["Attach to quest tracker"],
-		true,
-		function()
-			return host.GetSettings().attached
-		end,
-		function(value)
-			host.SetAttached(value == true)
-		end
-	)
-	Settings.RegisterInitializer(
-		page,
-		Secure(Settings.CreateCheckboxInitializer)(
-			attachment,
-			nil,
-			L["Turn this off to drag the shared Forever tracker anywhere on screen."]
-		)
-	)
-	host.OnAttachmentChanged(function()
-		Settings.NotifyUpdate(variable)
-	end)
+	-- The shared column's attach choice, the same row and words in every Forever addon (forever-core#910). It sits by
+	-- the scale and lock, the other rows that place the shared tracker.
+	local sections = ForeverCore.SettingsSections
+	if sections and sections.RegisterTrackerAttach then
+		sections.RegisterTrackerAttach(page, "ShortestPathForever_trackerAttached")
+	end
 	-- Lock keeps the detached column where it is: the grip ignores drag while it is on. Off by default, and safe to
 	-- toggle in combat, since it only writes the saved switch.
 	local lock = Settings.RegisterProxySetting(
@@ -274,11 +234,58 @@ ns.Init(function()
 			L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."]
 		)
 	)
-	Checkbox(
-		"journeyTracker",
-		L["Show journey steps in the objective tracker"],
-		L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."],
-		ns.RefreshTracker
+	if host and host.GetScale and host.SetScale then
+		local scale = Settings.RegisterProxySetting(
+			page,
+			"ShortestPathForever_trackerScale",
+			Settings.VarType.Number,
+			L["Tracker scale"],
+			100,
+			function()
+				return math.floor(host.GetScale() * 100 + 0.5)
+			end,
+			function(value)
+				host.SetScale(value / 100)
+			end
+		)
+		local scaleOptions = Secure(Settings.CreateSliderOptions)(50, 200, 10)
+		Label(scaleOptions, function(value)
+			return value .. "%"
+		end)
+		Settings.RegisterInitializer(
+			page,
+			Secure(Settings.CreateSliderInitializer)(
+				scale,
+				scaleOptions,
+				L["Scales the shared Forever tracker. 100% matches the game's own tracker."]
+			)
+		)
+	end
+	local trackerHeight = Settings.RegisterAddOnSetting(
+		page,
+		"ShortestPathForever_trackerHeight",
+		"trackerHeight",
+		ns.db,
+		Settings.VarType.Number,
+		L["Journey tracker height"],
+		(ns.Defaults --[[@as any]]).trackerHeight
+	)
+	trackerHeight:SetValueChangedCallback(function(_, value)
+		local db = ns.db --[[@as any]]
+		db.trackerHeight = value
+		ns.SetTrackerHeight(value)
+	end)
+	local trackerHeightOptions = Secure(Settings.CreateSliderOptions)(100, 400, 20)
+	Label(trackerHeightOptions, function(value)
+		return value .. " UI units"
+	end)
+	Settings.RegisterInitializer(
+		page,
+		Secure(Settings.CreateSliderInitializer)(
+			trackerHeight,
+			trackerHeightOptions,
+			L["Limits the Journey section to this height; longer journeys scroll inside it."]
+		)
 	)
 	Checkbox(
 		"resumeJourney",
@@ -574,6 +581,8 @@ ns.Init(function()
 		ns.RefreshCorpseRun
 	)
 
+	ns.SettingsMapMarks.Register(rows)
+
 	-- Party portals: another player's mage portals, declared because the client cannot read their spellbook. The
 	-- planner only offers them while another mage is in the party or raid.
 	Page(L["Party mage portals"])
@@ -776,60 +785,6 @@ ns.Init(function()
 			L["Darkens the ground behind the compass so its marks stay readable on snow or sand. 0% shows none."]
 		)
 	)
-	Section(L["Tracker"])
-	if host and host.GetScale and host.SetScale then
-		local scale = Settings.RegisterProxySetting(
-			page,
-			"ShortestPathForever_trackerScale",
-			Settings.VarType.Number,
-			L["Tracker scale"],
-			100,
-			function()
-				return math.floor(host.GetScale() * 100 + 0.5)
-			end,
-			function(value)
-				host.SetScale(value / 100)
-			end
-		)
-		local scaleOptions = Secure(Settings.CreateSliderOptions)(50, 200, 10)
-		Label(scaleOptions, function(value)
-			return value .. "%"
-		end)
-		Settings.RegisterInitializer(
-			page,
-			Secure(Settings.CreateSliderInitializer)(
-				scale,
-				scaleOptions,
-				L["Scales the shared Forever tracker. 100% matches the game's own tracker."]
-			)
-		)
-	end
-	local trackerHeight = Settings.RegisterAddOnSetting(
-		page,
-		"ShortestPathForever_trackerHeight",
-		"trackerHeight",
-		ns.db,
-		Settings.VarType.Number,
-		L["Journey tracker height"],
-		(ns.Defaults --[[@as any]]).trackerHeight
-	)
-	trackerHeight:SetValueChangedCallback(function(_, value)
-		local db = ns.db --[[@as any]]
-		db.trackerHeight = value
-		ns.SetTrackerHeight(value)
-	end)
-	local trackerHeightOptions = Secure(Settings.CreateSliderOptions)(100, 400, 20)
-	Label(trackerHeightOptions, function(value)
-		return value .. " UI units"
-	end)
-	Settings.RegisterInitializer(
-		page,
-		Secure(Settings.CreateSliderInitializer)(
-			trackerHeight,
-			trackerHeightOptions,
-			L["Limits the Journey section to this height; longer journeys scroll inside it."]
-		)
-	)
 	Section(L["General"])
 	Checkbox(
 		"metres",
@@ -840,6 +795,11 @@ ns.Init(function()
 			ns.RefreshTracker()
 			ns.WakeTravel()
 		end
+	)
+	Checkbox(
+		"stats",
+		L["Record travel stats"],
+		L["On by default. Records approximate walking distance, completed journeys and transport use."]
 	)
 	Checkbox(
 		"whatsNew",

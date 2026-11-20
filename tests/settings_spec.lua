@@ -172,8 +172,11 @@ env.C_SettingsUtil = {
 	end,
 }
 local ForeverCore = dofile("tests/forever_core.lua")
-local coreNs =
-	ForeverCore.load(env, "ForeverCore", { "Locales/enUS.lua", "Core/OpenSettings.lua", "UI/SettingsSections.lua" })
+local coreNs = ForeverCore.load(
+	env,
+	"ForeverCore",
+	{ "Locales/enUS.lua", "Core/OpenSettings.lua", "UI/SettingsPage.lua", "UI/SettingsSections.lua" }
+)
 env.CreateSettingsListSectionHeaderInitializer = function(name)
 	return { kind = "section", name = name }
 end
@@ -366,6 +369,8 @@ local ns = {
 	},
 }
 env.ForeverCore.TrackerHost = ns.TrackerHost
+-- Core's attach row reads core's own host, the same one the global exposes.
+coreNs.TrackerHost = ns.TrackerHost
 assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", ns)
 -- Read the road allowance from the real policy module; this UI harness does not run its world events.
 local init = ns.Init
@@ -381,6 +386,8 @@ assert(type(ns.SettingsMapMarks.Register) == "function", "the Map marks page is 
 -- every row keeps its key, default, tooltip and callback.
 local groups = {
 	["Map marks"] = {
+		"mapRoutes",
+		"otherFaction",
 		"pins",
 		"transit",
 		"portals",
@@ -398,12 +405,13 @@ local groups = {
 		"minimapLine",
 		"laterLegs",
 	},
-	Transport = { "mapRoutes", "otherFaction", "tracker" },
-	["Travel journal"] = { "stats" },
 	Guidance = {
+		"journeyTracker",
+		"tracker",
 		"trackerAttached",
 		"trackerLocked",
-		"journeyTracker",
+		"trackerScale",
+		"trackerHeight",
 		"resumeJourney",
 		"journey",
 		"journeyKey",
@@ -454,17 +462,14 @@ local groups = {
 		"compassMove",
 		"compassScale",
 		"compassBackground",
-		"trackerScale",
-		"trackerHeight",
 		"metres",
+		"stats",
 		"whatsNew",
 	},
 }
 local order = {
-	"Map marks",
-	"Transport",
-	"Travel journal",
 	"Guidance",
+	"Map marks",
 	"Party mage portals",
 	"Alerts",
 	"Interface",
@@ -498,6 +503,11 @@ local function Row(key)
 	end
 	error("no row for " .. key)
 end
+-- The opt-outs players ask for are one plainly named row each, none behind a page of its own.
+assert(Row("townServices").setting.name == "Town service icons", "town service icons have one row")
+assert(Row("nearbyTab").setting.name == "Show the Nearby services tab", "the Nearby services tab has one row")
+assert(Row("compass").setting.name == "Show the compass", "the compass has one row")
+assert(Row("journeyTracker").setting.name == "Show the journey tracker", "the journey tracker has one row")
 assert(Row("pins").setting.variable == "ShortestPathForever_pins" and Row("pins").setting.default)
 local trackerHeight = Row("trackerHeight")
 assert(trackerHeight.kind == "slider", "the Journey tracker height is a slider")
@@ -630,12 +640,12 @@ assert(
 -- The journey's own block has its switch in Guidance, on by default, and turning it off redraws the tracker.
 local journeySteps = Row("journeyTracker")
 assert(
-	journeySteps.setting.name == "Show journey steps in the objective tracker",
+	journeySteps.setting.name == "Show the journey tracker",
 	"the journey switch names the steps and where they show"
 )
 assert(journeySteps.setting.default == true, "journey steps show in the tracker by default")
 assert(
-	journeySteps.tooltip:find("arrow", 1, true) and journeySteps.tooltip:find("objective tracker", 1, true),
+	journeySteps.tooltip:find("arrow", 1, true) and journeySteps.tooltip:find("tracker", 1, true),
 	"the tooltip says the guidance stays and the block goes"
 )
 local trackerRefreshes = trackerRefreshed
@@ -888,7 +898,7 @@ trackerState.attached = true
 attachmentChanged()
 assert(attachment:GetValue(), "external reattach updates proxy")
 
--- Lock starts off, sits right after the detach row, and drives the shared host rather than a copy of its own.
+-- Lock starts off, sits right after the attach row, and drives the shared host rather than a copy of its own.
 local lock = Row("trackerLocked").setting
 assert(lock.name == "Lock the tracker" and lock.default == false, "the lock row is named and off by default")
 assert(lock:GetValue() == false, "the tracker starts unlocked")
