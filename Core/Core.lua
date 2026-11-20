@@ -82,6 +82,8 @@ local DEFAULTS = {
 	journey = true,
 	-- The key held while clicking a map to plan a journey: "shift", the long-standing gesture, or "alt".
 	journeyKey = "shift",
+	-- The "Shift-click to plan a journey here" line on map, flight point and minimap tooltips (#1142).
+	journeyHint = true,
 	-- Off by default: a journey starts when the player super-tracks a quest or places a map pin, so a controller
 	-- needs no map click and a plain map pin changes what it does.
 	focusedQuest = false,

@@ -341,6 +341,7 @@
 ---@field flightPathReminder? boolean
 ---@field journey? boolean
 ---@field journeyKey? string -- the modifier held to plan a journey from a map click: "shift" or "alt" (JourneyInput.lua)
+---@field journeyHint? boolean -- tooltips on map, flight and minimap pins end with the journey key's click hint (JourneyInput.lua)
 ---@field focusedQuest? boolean -- a super-tracked quest or the player's map pin starts a journey (JourneyInput.lua)
 ---@field compassTime? boolean -- the whole journey's time left under the compass distance (Compass.lua)
 ---@field arrivalSound? boolean -- the map ping when a journey the player planned reaches its goal (Alert.lua)

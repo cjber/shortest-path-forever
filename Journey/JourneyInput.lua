@@ -46,10 +46,11 @@ end
 -- The line a tooltip ends with on every map pin the journey key plans a journey to (#1078): the addon's flight
 -- points, docks and portals, and the map's own pins OnPinClick takes. One producer, so the wording and the key match
 -- everywhere.
--- Nothing while journeys are off, or under the gamepad interface, whose map cursor has no key to hold.
+-- Nothing while journeys are off, while the player turned the hint off (#1142; the key still plans), or under the
+-- gamepad interface, whose map cursor has no key to hold.
 ---@return string?
 function ns.JourneyClickHint()
-	if not (ns.db and ns.db.journey) or ns.GamepadUI() then
+	if not (ns.db and ns.db.journey) or ns.db.journeyHint == false or ns.GamepadUI() then
 		return nil
 	end
 	return string.format(L["%s-click to plan a journey here"], ns.JourneyKeyName())
