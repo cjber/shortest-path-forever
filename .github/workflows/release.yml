@@ -177,9 +177,9 @@ jobs:
             echo "::error::$RELEASE_TAG does not name $RELEASE_COMMIT in this checkout."
             exit 1
           fi
-          other=$(git tag --points-at "$RELEASE_COMMIT" | grep -vxF "$RELEASE_TAG" || true)
+          other=$(git tag --points-at "$RELEASE_COMMIT" | grep -vxF "$RELEASE_TAG" | tr '\n' ' ' || true)
           if [ -n "$other" ]; then
-            echo "::error::$RELEASE_COMMIT already carries $(echo $other); release a commit with no other tag."
+            echo "::error::$RELEASE_COMMIT already carries $other; release a commit with no other tag."
             exit 1
           fi
       # The packager fills @project-version@ with the tag, v and all; write the bare version first.
