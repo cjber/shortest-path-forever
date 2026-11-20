@@ -1360,12 +1360,15 @@ local function stepOpen(st, gx, gy, dx, dy, water)
 	if dx < 0 or dy < 0 then
 		ax, ay = gx + dx, gy + dy
 	end
-	local a, b = value(st, ax, ay), value(st, ax + (dx ~= 0 and 1 or 0), ay + (dy ~= 0 and 1 or 0))
+	local C = st.C
+	local a = value(st, ax, ay)
+	-- Held before b's lookup: decoding b's cluster may evict a's from the cache.
+	local m = a ~= 0 and st.moves[floor(ax / C) * st.ny + floor(ay / C)]
+	local b = value(st, ax + (dx ~= 0 and 1 or 0), ay + (dy ~= 0 and 1 or 0))
 	if a == 0 or b == 0 or (not water and (a == 2 or b == 2)) then
 		return false
 	end
-	local C = st.C
-	local f = floor(st.moves[floor(ax / C) * st.ny + floor(ay / C)][(ax % C) * C + ay % C + 1] / 16)
+	local f = floor(m[(ax % C) * C + ay % C + 1] / 16)
 	if dx ~= 0 then
 		return f % 2 == 0
 	end
@@ -1391,12 +1394,13 @@ local function diagonalBit(st, gx, gy, sx, sy, water)
 	return f >= 8
 end
 
--- The base surface's cell and node in its own cluster, decoded.
+-- The base surface's node in its own cluster, with that cluster's values and heights. A caller holds these arrays
+-- rather than looking the cluster up again: decoding another cluster may evict this one from the cache.
 local function baseAt(st, gx, gy)
 	local C = st.C
 	local k = floor(gx / C) * st.ny + floor(gy / C)
 	grid(st, k)
-	return k, (gx % C) * C + gy % C
+	return (gx % C) * C + gy % C, st.val[k], st.z[k]
 end
 
 -- An L-shaped detour leg: the step is open, and a steep leg feeds a detour only when its two stored heights match,
@@ -1410,13 +1414,13 @@ local function detourStep(st, gx, gy, dx, dy, water)
 	if not steep then
 		return true
 	end
-	local ak, an = baseAt(st, gx, gy)
-	local bk, bn = baseAt(st, gx + dx, gy + dy)
-	if st.val[ak][an + 1] ~= 3 and st.val[bk][bn + 1] ~= 3 then
+	local an, av, az = baseAt(st, gx, gy)
+	local bn, bv, bz = baseAt(st, gx + dx, gy + dy)
+	if av[an + 1] ~= 3 and bv[bn + 1] ~= 3 then
 		-- A detour's leg is an ordinary step too, judged by the map's own rule (climbStep in format 2, #897).
-		return steep(st.val[ak], st.z[ak], an, st.val[bk], st.z[bk], bn, st.cs)
+		return steep(av, az, an, bv, bz, bn, st.cs)
 	end
-	return st.z[ak][an + 1] == st.z[bk][bn + 1]
+	return az[an + 1] == bz[bn + 1]
 end
 
 -- Is the base surface's diagonal step from (gx, gy) by (dx, dy) walkable in that direction? Either L-shaped detour,
@@ -1441,24 +1445,29 @@ local function diagonalStep(st, gx, gy, dx, dy, water)
 	if not steep then
 		return true
 	end
-	local ak, an = baseAt(st, gx, gy)
-	local bk, bn = baseAt(st, tx, ty)
-	return steep(st.val[ak], st.z[ak], an, st.val[bk], st.z[bk], bn, st.cs * math.sqrt(2))
+	local an, av, az = baseAt(st, gx, gy)
+	local bn, bv, bz = baseAt(st, tx, ty)
+	return steep(av, az, an, bv, bz, bn, st.cs * math.sqrt(2))
 end
 
 -- The node one step (dx, dy) on from node of cluster k at global cell (gx, gy): the base surface's own step first,
--- then the node's floor links. Nil when the step is closed.
-local function neighbour(st, k, node, gx, gy, dx, dy, water)
+-- then the node's floor links. Nil when the step is closed. With out, every node the search may step to that way is
+-- appended to it as cluster, node pairs instead: a ramp's link can climb from a cell whose base step stays on the
+-- floor below, and one answer would hide it.
+local function neighbour(st, k, node, gx, gy, dx, dy, water, out)
 	local tx, ty = gx + dx, gy + dy
 	if tx < 0 or ty < 0 or tx >= st.GX or ty >= st.GY then
 		return nil
 	end
 	local C = st.C
 	local tk, tlc = floor(tx / C) * st.ny + floor(ty / C), (tx % C) * C + ty % C
+	-- k's arrays are held: the step checks below decode other clusters, which may evict k's from the cache.
+	local kval = grid(st, k)
+	local kz, km, kl = st.z[k], st.moves[k], st.links[k]
 	-- A zero-offset move can only be an explicit drop between layers, never an ordinary base step.
 	if node < C * C and (dx ~= 0 or dy ~= 0) then
 		local open
-		local val = tk == k and grid(st, k)
+		local val = tk == k and kval
 		-- Most string-pulling steps stay on one base grid. Its decoded moves already check the
 		-- same detours; only a dry diagonal beside water needs the stricter surface checks below.
 		if
@@ -1472,7 +1481,7 @@ local function neighbour(st, k, node, gx, gy, dx, dy, water)
 				)
 			)
 		then
-			local m = st.moves[k]
+			local m = km
 			if dy == 0 then
 				open = m[(dx > 0 and node or tlc) + 1] % 2 == 1
 			elseif dx == 0 then
@@ -1491,17 +1500,19 @@ local function neighbour(st, k, node, gx, gy, dx, dy, water)
 			grid(st, tk)
 			local steep = st.steep
 			local distance = math.sqrt(dx * dx + dy * dy) * st.cs
-			if not steep or steep(st.val[k], st.z[k], node, st.val[tk], st.z[tk], tlc, distance) then
-				return tk, tlc
+			if not steep or steep(kval, kz, node, st.val[tk], st.z[tk], tlc, distance) then
+				if not out then
+					return tk, tlc
+				end
+				out[#out + 1], out[#out + 2] = tk, tlc
 			end
 		end
 	end
-	grid(st, k)
-	local l = st.links[k][node + 1]
+	local l = kl[node + 1]
 	if not l then
-		return nil
+		return out
 	end
-	local here, h = st.val[k][node + 1], st.z[k][node + 1]
+	local here, h = kval[node + 1], kz[node + 1]
 	local steep = st.steep
 	for e = 1, #l do
 		if st.fmt >= 2 then
@@ -1512,8 +1523,11 @@ local function neighbour(st, k, node, gx, gy, dx, dy, water)
 				local v = surface(st, tk, tlc, floor(entry / 256) % 64 - 1, h)
 				if v and (water or (here ~= 2 and st.val[tk][v + 1] ~= 2)) then
 					local distance = math.sqrt((entry % 16 - 8) ^ 2 + (floor(entry / 16) % 16 - 8) ^ 2) * st.cs
-					if not steep or steep(st.val[k], st.z[k], node, st.val[tk], st.z[tk], v, distance) then
-						return tk, v
+					if not steep or steep(kval, kz, node, st.val[tk], st.z[tk], v, distance) then
+						if not out then
+							return tk, v
+						end
+						out[#out + 1], out[#out + 2] = tk, v
 					end
 				end
 			end
@@ -1524,14 +1538,17 @@ local function neighbour(st, k, node, gx, gy, dx, dy, water)
 				local v = surface(st, tk, tlc, floor(l[e] / 8) - 1, h)
 				if v and (water or (here ~= 2 and st.val[tk][v + 1] ~= 2)) then
 					local distance = math.sqrt(DX[d] ^ 2 + DY[d] ^ 2) * st.cs
-					if not steep or steep(st.val[k], st.z[k], node, st.val[tk], st.z[tk], v, distance) then
-						return tk, v
+					if not steep or steep(kval, kz, node, st.val[tk], st.z[tk], v, distance) then
+						if not out then
+							return tk, v
+						end
+						out[#out + 1], out[#out + 2] = tk, v
 					end
 				end
 			end
 		end
 	end
-	return nil
+	return out
 end
 
 -- A path entry list built by Path.lua's refinement and drawn here. factor is a hazard profile's cost at an entry,

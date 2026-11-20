@@ -97,11 +97,15 @@ local function Step(st, nodes, ox, oy, gx, gy, reach)
 					local nx, ny = x + dx, y + dy
 					-- A ledge and its landing can quantize to the same cell on different floors.
 					if nx >= x0 and nx <= x1 and ny >= y0 and ny <= y1 then
-						local tk, tn = Grid.neighbour(st, k, node, x, y, dx, dy, true)
-						local id = tk and tk * 1048576 + tn
-						if id and not seen[id] then
-							seen[id] = true
-							queue[#queue + 1] = { tk, tn, nx, ny, depth + 1 }
+						-- Every surface the step reaches: a ramp's link climbs beside a base step on the floor below.
+						local next = Grid.neighbour(st, k, node, x, y, dx, dy, true, {})
+						for i = 1, next and #next or 0, 2 do
+							local tk, tn = next[i], next[i + 1]
+							local id = tk * 1048576 + tn
+							if not seen[id] then
+								seen[id] = true
+								queue[#queue + 1] = { tk, tn, nx, ny, depth + 1 }
+							end
 						end
 					end
 				end
