@@ -400,7 +400,10 @@ local ns = {}
 for line in io.lines("ShortestPathForever.toc") do
 	-- The packager writes CRLF; tools/check_package.py runs this on its output.
 	line = line:gsub("\r$", "")
-	if line:match("%.lua$") then
+	-- A packaged TOC also lists the embedded ForeverCore copy and the files that defer the addon's own until a core is
+	-- ready. The standalone ForeverCore is loaded above, and beside it each wrapped file runs at once in TOC order, so
+	-- those files are skipped here; the embedded copy's own boot is tests/embedded_scenario.lua.
+	if line:match("%.lua$") and not line:find("^Libs\\ForeverCore\\") and not line:find("^ForeverCore%u%l+%.lua$") then
 		assert(loadfile((line:gsub("\\", "/"))))("ShortestPathForever", ns)
 	end
 end

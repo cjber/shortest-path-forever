@@ -192,3 +192,95 @@ function Mover.Attach(frame, placed)
 		end
 	end)
 end
+
+-- The game's quest tracker and ForeverCore's column, which stands left of it or wherever the player dragged it. A
+-- frame at its stock place keeps clear of both, read from where they are now, so the column's place and size and an
+-- Edit Mode move of the tracker are all followed.
+local GAP = 8
+-- Each frame's offset as last set, so an unchanged poll sets no point.
+local stocked = setmetatable({}, { __mode = "k" })
+
+-- A region's box in UIParent's units, nil while it is hidden or not yet laid out.
+---@param region Region?
+---@param scale number? the region's scale relative to UIParent; a frame's own when nil
+---@return number? left, number? right, number? bottom, number? top
+local function Box(region, scale)
+	if not (region and region:IsVisible()) then
+		return nil
+	end
+	local left, bottom, width, height = region:GetRect()
+	if not left then
+		return nil
+	end
+	scale = scale or region--[[@as Frame]]:GetEffectiveScale() / UIParent:GetEffectiveScale()
+	return left * scale, (left + width) * scale, bottom * scale, (bottom + height) * scale
+end
+
+-- Whether a box centred at `x` meets `blocker`.
+local function Meets(blocker, x, y, half, depth)
+	local l, r, b, t = Box(blocker)
+	return l ~= nil and b < y and t > y - depth and l < x + half + GAP and r > x - half - GAP
+end
+
+-- Whether a box centred at `x` fits on the screen clear of both.
+local function Fits(x, y, half, depth, width)
+	return x - half >= 0
+		and x + half <= width
+		and not Meets(_G.ForeverTrackerCompanion, x, y, half, depth)
+		and not Meets(_G.ObjectiveTrackerFrame, x, y, half, depth)
+end
+
+-- The place beside `blocker` nearest the centre that fits, or `best` when that is nearer.
+local function Beside(blocker, best, y, half, depth, width)
+	local l, r = Box(blocker)
+	if not l then
+		return best
+	end
+	local centre = width / 2
+	local left, right = l - half - GAP, r + half + GAP
+	if Fits(left, y, half, depth, width) and (not best or math.abs(left - centre) < math.abs(best - centre)) then
+		best = left
+	end
+	if Fits(right, y, half, depth, width) and (not best or math.abs(right - centre) < math.abs(best - centre)) then
+		best = right
+	end
+	return best
+end
+
+-- Anchors `frame` by its top centre `top` units under the top of the screen, centred unless the quest tracker or the
+-- column would cover it; then it stands beside them, as near the centre as fits. `parts` are the regions
+-- it draws beyond its own box (text hanging under it), so their extent counts too. Sets the point only when it moves,
+-- so a caller may run this on every poll; `force` sets it anyway, after ClearAllPoints or a saved place.
+---@param frame Frame
+---@param top number
+---@param parts Region[]?
+---@param force boolean?
+function Mover.Stock(frame, top, parts, force)
+	local scale = frame:GetEffectiveScale() / UIParent:GetEffectiveScale()
+	scale = scale > 0 and scale or 1
+	local half, depth = frame:GetWidth() * scale / 2, frame:GetHeight() * scale
+	local left, right, _, ceiling = Box(frame, scale)
+	if left and parts then
+		local centre = (left + right) / 2
+		for index = 1, #parts do
+			local l, r, b = Box(parts[index], scale)
+			if l then
+				half, depth = math.max(half, centre - l, r - centre), math.max(depth, ceiling - b)
+			end
+		end
+	end
+	local width = UIParent:GetWidth()
+	local x, y = width / 2, UIParent:GetHeight() + top
+	-- Centred when it fits, else the nearest place beside the column or the tracker that is clear of both. With none,
+	-- it stays centred: the screen is too narrow for anything else.
+	if not Fits(x, y, half, depth, width) then
+		local best = Beside(_G.ForeverTrackerCompanion, nil, y, half, depth, width)
+		x = Beside(_G.ObjectiveTrackerFrame, best, y, half, depth, width) or x
+	end
+	local offset = (x - width / 2) / scale
+	if force or stocked[frame] ~= offset then
+		stocked[frame] = offset
+		frame:ClearAllPoints()
+		frame:SetPoint("TOP", UIParent, "TOP", offset, top / scale)
+	end
+end

@@ -33,7 +33,7 @@ env.C_Item = env.C_Item or {}
 env.C_Item.GetItemNameByID = function(itemID)
 	return cachedItems[itemID]
 end
-ns.Mover = { Attach = function() end }
+ns.Mover = { Attach = function() end, Stock = function() end }
 local reads = 0
 ns.TeleportAction = function(teleport)
 	reads = reads + 1
