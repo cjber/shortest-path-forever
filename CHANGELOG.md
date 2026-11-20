@@ -16,14 +16,13 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 - **Routes show on the map straight away.** A rough line appears as soon as you click, and the exact route replaces it moments later. The arrow and waypoints wait for the exact route, and short routes settle sooner (#1080).
 
+### Added
+
+- **Hide the cast prompt.** A new "Show cast prompt" switch under Settings > Interface hides the Hearthstone or teleport prompt in the middle of the screen. Journeys still use your Hearthstone and the tracker step still names it (#1086).
+
 ### Fixed
 
 - With "Click the map to plan journeys" off, a journey click on the map, a map icon, the minimap or a quest now says so on screen, naming the setting, instead of doing nothing. The click still goes to the map as before (#1076).
-
-## [1.43.3] - 2026-11-19
-
-### Fixed
-
 - Druids now get routes that use their own class flight paths, Moonglade from Rut'theran Village or Thunder Bluff, wherever that is quicker.
 - On the world map, only the waypoint modifier picked in the settings creates a waypoint, so Alt-clicking another addon's map icon no longer plans a journey as well.
 - A dock's departure lines in the tracker name every call the boat makes, as the map does: the Southshore boat reads "Darkshore, then Wetlands" instead of only Darkshore, and Auberdine's two Menethil boats are told apart.
@@ -41,10 +40,6 @@ optional `### For addon authors` subsection after a version's player bullets.
 - Journey: short routes settle on their final plan sooner (#1080).
 - **Shift-click shows a Waypoint UI marker again.** With Waypoint UI loaded, a journey hands it each turn from the start, even with no pin placed and with *Mark only where steps end* on. Clearing the journey clears the marker. Turn off Waypoint UI's own pathfinding to follow the journey's directions.
 - Ships with ForeverCore 1.15.3, the same shared code as your other Forever addons, so they keep working together.
-
-### Added
-
-- **Hide the cast prompt.** A new "Show cast prompt" switch under Settings > Interface hides the Hearthstone or teleport prompt in the middle of the screen. Journeys still use your Hearthstone and the tracker step still names it (#1086).
 
 ## [1.43.2] - 2026-11-18
 
