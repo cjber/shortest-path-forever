@@ -12,6 +12,7 @@
 ## X-Forever-Core: v1.15.4
 ## SavedVariables: ShortestPathForeverDB
 ## SavedVariablesPerCharacter: ShortestPathForeverCharDB
+## X-Forever-Core-Embed: 1
 ## IconTexture: Interface\AddOns\ShortestPathForever\media\Icon
 ## X-Forever-Icon: Interface\Icons\INV_Misc_Spyglass_03
 ## AddonCompartmentFunc: ShortestPathForever_OnAddonCompartmentClick

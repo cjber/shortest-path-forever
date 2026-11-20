@@ -164,6 +164,27 @@ jobs:
           # The packager reads the version from the tag on the checked-out commit. The full-history checkout
           # already holds a tag that existed before this run, so only a new one is created here.
           git rev-parse -q --verify "refs/tags/$RELEASE_TAG" > /dev/null || git tag "$RELEASE_TAG" "$RELEASE_COMMIT"
+      # The packager picks the GitHub release tag from the tags on the commit, not from this run, and any tag can
+      # outrank this one in its sort (an annotated tag beats a lightweight one), so a commit that carries another tag
+      # could have the checked ZIP built and attached under that one instead. Both a manual release and a tag push
+      # pass through here.
+      - name: Refuse a commit with another tag
+        env:
+          RELEASE_TAG: ${{ steps.target.outputs.tag }}
+          RELEASE_COMMIT: ${{ steps.target.outputs.commit }}
+        run: |
+          if [ "$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")" != "$RELEASE_COMMIT" ]; then
+            echo "::error::$RELEASE_TAG does not name $RELEASE_COMMIT in this checkout."
+            exit 1
+          fi
+          other=$(git tag --points-at "$RELEASE_COMMIT" | grep -vxF "$RELEASE_TAG" | tr '\n' ' ' || true)
+          if [ -n "$other" ]; then
+            echo "::error::$RELEASE_COMMIT already carries $other; release a commit with no other tag."
+            exit 1
+          fi
+      # The packager fills @project-version@ with the tag, v and all; write the bare version first.
+      - name: Write the bare version into the TOC
+        run: python3 -m tools.forever_tools.toc_version
       # A ForeverCore release can land between this commit's CI and this upload, and the zip carries the
       # core its pin names. The package job already gates the pin; run the same gate once more here, with
       # nothing between it and the packager.
@@ -171,7 +192,48 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python3 -m tools.forever_tools.core_pin --latest
-      - uses: BigWigsMods/packager@01e8631a69c69d7654c788d152630d5fed9e3812 # v2.7.0
+      # While any published addon still ships the shared top-level ForeverCore folder, removing that addon would take
+      # core away from this one (cjber/forever-core#448), so an embedded release waits until every addon embeds.
+      - name: Hold until every Forever addon embeds ForeverCore
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 -m tools.forever_tools.fleet
+      # The TOC sets X-Forever-Core-Embed, so the zip carries the pinned core inside the addon at Libs/ForeverCore/
+      # and runs without the standalone addon. The embed step plans that copy from a core checkout at the pin.
+      - name: Read the ForeverCore ref
+        id: forever-core-ref
+        run: echo "ref=$(cat tools/forever-core.txt)" >> "$GITHUB_OUTPUT"
+      - name: Check out ForeverCore
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: cjber/forever-core
+          ref: ${{ steps.forever-core-ref.outputs.ref }}
+          path: forever-core
+          persist-credentials: false
+      - name: Embed ForeverCore
+        run: python3 -m tools.forever_tools.embed --core forever-core
+      - name: Build the release ZIP
+        uses: BigWigsMods/packager@01e8631a69c69d7654c788d152630d5fed9e3812 # v2.7.0
+        with:
+          args: -d
+      - name: Check packaged ForeverCore
+        id: validated
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 -m tools.forever_tools.core_archive --release-dir .release --latest
+      - name: Verify the release ZIP checksum
+        env:
+          ARCHIVE: ${{ steps.validated.outputs.archive }}
+          ARCHIVE_SHA256: ${{ steps.validated.outputs.sha256 }}
+        run: printf '%s  %s\n' "$ARCHIVE_SHA256" "$ARCHIVE" | sha256sum --check --status
+      - name: Upload the validated ZIP
+        uses: BigWigsMods/packager@01e8631a69c69d7654c788d152630d5fed9e3812 # v2.7.0
+        with:
+          args: -c -z
+        env:
+          archive: ${{ steps.validated.outputs.archive }}
+          archive_name: ${{ steps.validated.outputs.archive_name }}
+          archive_label: ${{ steps.target.outputs.tag }}-forever
+          archive_version: ${{ steps.target.outputs.tag }}
           CF_API_KEY: ${{ secrets.CF_API_KEY }}
           GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}

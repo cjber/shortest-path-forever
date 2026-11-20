@@ -28,13 +28,7 @@ optional-dependencies:
   - guidelime
   - kaliels-tracker
 
-# ForeverCore ships inside this zip as its own folder, at the release tools/forever-core.txt pins, so an
-# update brings it along: players who updated did not get it as a required dependency.
-externals:
-  ForeverCore: https://github.com/cjber/forever-core/releases/download/v1.15.4/ForeverCore-v1.15.4-forever.zip
-
-move-folders:
-  ShortestPathForever/ForeverCore: ForeverCore
-
-required-dependencies:
+# ForeverCore is embedded under Libs/ForeverCore, so it is listed as an embedded library: the CurseForge app links
+# it on the project page but never installs it as a required dependency.
+embedded-libraries:
   - forevercore

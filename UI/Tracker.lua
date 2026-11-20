@@ -301,23 +301,31 @@ function ModuleMixin:LayoutContents()
 			local line = block:AddObjective(row.key, row.text, nil, true, nil, RowColor(row))
 			SetLineMark(line, RowMark(row))
 			SetPulse(line, row.warning == true)
-			local clickable = entry.key == "journey" and row.current and not ns.Corpse.Active()
-			if clickable then
-				Line.SetInteractive(line, {
-					onClick = function()
-						-- A row's key counts from the step under way, so the step is the one under way when the menu
-						-- opens; SkipJourneyStep refuses it if the journey has moved on before the click.
-						local _, _, plan, index = ns.JourneyInfo()
-						if not plan then
-							return
-						end
-						ForeverCore.ContextMenu(line, function(_, root)
-							root:CreateButton(L["Complete this step"], function()
-								ns.SkipJourneyStep(index)
-							end)
+			if entry.key == "journey" then
+				local current = row.current and not ns.Corpse.Active()
+				-- Core's line takes the mouse but answers only the left button, so SPF sets its own OnMouseUp after.
+				Line.SetInteractive(line, {})
+				line:SetScript("OnMouseUp", function(_, button)
+					-- A right click on any journey line opens the journey's own menu, as its title does (Lock, Clear
+					-- journey).
+					if button == "RightButton" then
+						return self:OnBlockHeaderClick(block, button)
+					end
+					if button ~= "LeftButton" or not current then
+						return
+					end
+					-- A row's key counts from the step under way, so the step is the one under way when the menu
+					-- opens; SkipJourneyStep refuses it if the journey has moved on before the click.
+					local _, _, plan, index = ns.JourneyInfo()
+					if not plan then
+						return
+					end
+					ForeverCore.ContextMenu(line, function(_, root)
+						root:CreateButton(L["Complete this step"], function()
+							ns.SkipJourneyStep(index)
 						end)
-					end,
-				})
+					end)
+				end)
 			else
 				-- A line reused from a clickable row must stop answering the mouse.
 				line:EnableMouse(false)
