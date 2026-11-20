@@ -832,11 +832,18 @@ ns.Init(function()
 	end)
 	-- The minimap's tooltip, over what it tracks, is owned by UIParent, not the minimap: Minimap_OnUpdate
 	-- (Blizzard_Minimap/Mainline/Minimap.lua) anchors it there and fills it with SetMinimapMouseover. Its tooltip data
-	-- type is what says it is the minimap's, so the hint joins it there; a click on that spot plans to it.
+	-- type is what says it is the minimap's, so the hint joins it there; a click on that spot plans to it. That update
+	-- runs on every hover, with nothing tracked under the pointer too: the client's tooltip is empty then and stays
+	-- hidden, so the hint only joins lines the client drew and never raises a tooltip of its own (#1128).
 	local minimapTooltip = Enum and Enum.TooltipDataType and Enum.TooltipDataType.MinimapMouseover
 	if minimapTooltip and TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall then
 		TooltipDataProcessor.AddTooltipPostCall(minimapTooltip, function(tooltip)
-			if tooltip ~= GameTooltip or tooltip:IsForbidden() or not ns.JourneyClickHint() then
+			if
+				tooltip ~= GameTooltip
+				or tooltip:IsForbidden()
+				or tooltip:NumLines() == 0
+				or not ns.JourneyClickHint()
+			then
 				return
 			end
 			ns.AddJourneyClickHint(tooltip)

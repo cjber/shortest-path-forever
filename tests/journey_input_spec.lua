@@ -276,20 +276,32 @@ do
 	function minimapTip.IsForbidden()
 		return false
 	end
+	function minimapTip.NumLines(self)
+		return #self.lines
+	end
 	env.GameTooltip.lines, env.GameTooltip.shows = {}, 0
 	env.GameTooltip.Show, env.GameTooltip.IsForbidden = minimapTip.Show, minimapTip.IsForbidden
+	env.GameTooltip.NumLines = minimapTip.NumLines
 	assert(minimapTooltipPost, "the minimap's tooltip data must be hooked")
+	-- Minimap_OnUpdate fills the tooltip on every hover; with nothing tracked under the pointer it has no lines and
+	-- the client leaves it hidden (#1128).
 	minimapTooltipPost(env.GameTooltip)
 	assert(
-		env.GameTooltip.lines[1] == hint and env.GameTooltip.shows == 1,
-		"the minimap's tooltip: a click there plans"
+		not env.GameTooltip.lines[1] and env.GameTooltip.shows == 0,
+		"hovering bare minimap raises no tooltip of ours"
+	)
+	env.GameTooltip.lines = { "Copper Vein" }
+	minimapTooltipPost(env.GameTooltip)
+	assert(
+		env.GameTooltip.lines[2] == hint and env.GameTooltip.shows == 1,
+		"the minimap's tooltip over what it tracks: a click there plans"
 	)
 	minimapTooltipPost(minimapTip)
 	assert(not minimapTip.lines[1], "another tooltip showing minimap data is not the one a click answers")
 	ns.db.journey = false
-	env.GameTooltip.lines = {}
+	env.GameTooltip.lines = { "Copper Vein" }
 	minimapTooltipPost(env.GameTooltip)
-	assert(not env.GameTooltip.lines[1], "nothing on the minimap while journeys are off")
+	assert(not env.GameTooltip.lines[2], "nothing on the minimap while journeys are off")
 	ns.db.journey = true
 	shown = false
 	assert(not tooltipFor(poi.GetOwner()).lines[1], "nothing while the world map is closed")
