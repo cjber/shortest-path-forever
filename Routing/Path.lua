@@ -1054,9 +1054,9 @@ end
 -- a spot is a plateau ringed by faces past the player's slope and step limits, which nobody can walk onto (#1113): the
 -- closest a player can stand is the honest end of the route. reach holds the entrances the places walk to; clusters
 -- are tried nearest first until one starts farther away than the best node found.
-local nearTree
 local function nearestGround(st, swim, gk, gnode, reach)
-	nearTree = nearTree or Tree()
+	-- its own tree: a search can yield, and another job's search would overwrite a shared one meanwhile
+	local tree = Tree()
 	local C, cs, ny = st.C, st.cs, st.ny
 	local nx, N = st.GX / C, C * C
 	grid(st, gk)
@@ -1070,29 +1070,37 @@ local function nearestGround(st, swim, gk, gnode, reach)
 		if r > 1 and ((r - 1) * C * cs) ^ 2 >= best then
 			break
 		end
-		for dx = -r, r do
-			for dy = -r, r do
+		-- only ring r itself: its top and bottom rows, then the sides between them
+		for side = 1, r == 0 and 1 or 4 do
+			local n = side <= 2 and 2 * r + 1 or max(0, 2 * r - 1)
+			for i = 0, n - 1 do
+				local dx, dy
+				if side == 1 then
+					dx, dy = i - r, -r
+				elseif side == 2 then
+					dx, dy = i - r, r
+				elseif side == 3 then
+					dx, dy = -r, i - r + 1
+				else
+					dx, dy = r, i - r + 1
+				end
 				local kx, ky = cx + dx, cy + dy
 				-- the cluster's nearest cell, in cells along each axis: no node in it is closer
 				local ox = max(0, kx * C - gx, gx - kx * C - C + 1)
 				local oy = max(0, ky * C - gy, gy - ky * C - C + 1)
-				if
-					max(abs(dx), abs(dy)) == r
-					and kx >= 0
-					and ky >= 0
-					and kx < nx
-					and ky < ny
-					and (ox * cs) ^ 2 + (oy * cs) ^ 2 < best
-				then
+				if kx >= 0 and ky >= 0 and kx < nx and ky < ny and (ox * cs) ^ 2 + (oy * cs) ^ 2 < best then
 					local k = kx * ny + ky
 					local val = grid(st, k)
-					local z, at, seen = st.z[k], st.at[k], {}
+					local seen = {}
 					for _, id in ipairs(val and nodesOf(st, k) or {}) do
 						local e = reach[id] and entrance(st, id)
 						if e and not seen[e] then
-							search(st, k, swim, e, nearTree, nil, nil, nil, nil, nil, false)
+							search(st, k, swim, e, tree, nil, nil, nil, nil, nil, false)
+							-- the search may have yielded: read the cluster's heights and cells after it
+							grid(st, k)
+							local z, at = st.z[k], st.at[k]
 							for v = 0, #val - 1 do
-								if not seen[v] and reached(nearTree, v) then
+								if not seen[v] and reached(tree, v) then
 									seen[v] = true
 									local c = v < N and v or at[v + 1]
 									local x, y = kx * C + floor(c / C), ky * C + c % C
@@ -1105,6 +1113,7 @@ local function nearestGround(st, swim, gk, gnode, reach)
 						end
 					end
 				end
+				tick()
 			end
 		end
 	end
@@ -1394,6 +1403,10 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 	end
 	local moved
 	if reverse and not any then
+		-- no target is settled yet, and the move below may take several frames: the batch is still running
+		if job then
+			job.radius = huge
+		end
 		-- Every entrance the targets walk to. Entrance-graph components join ground that is only walked downhill, so
 		-- sharing one proves nothing: the walk is followed edge by edge, as the forward search would.
 		-- The flood takes a cluster's entrances together, so each cluster's graph is decoded about once.

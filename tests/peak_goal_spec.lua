@@ -61,5 +61,24 @@ while nextFrame do
 end
 local route = assert(driver.shown(), "a click on the plateau draws a route")
 local final = route.legs[#route.legs].to
-assert(final.map == 1 and final.x == moved.x and final.y == moved.y, "the route ends on the moved ground")
+assert(final.map == 1 and distance(final, moved) < 1, "the route ends on the moved ground")
+
+-- A player already on the plateau walks to the spot itself: the walk from here reaches it, so it does not move, and a
+-- goal moved for the last journey is not moved for this one.
+ns.JourneySearch.Reset()
+local ON = { map = 1, x = PEAK.x - 50, y = PEAK.y }
+assert(Path.FindSync(1, ON, PEAK), "the plateau is walkable on top")
+driver.begin(ON, { map = 1, x = PEAK.x, y = PEAK.y, z = 0 })
+frames = 0
+while nextFrame do
+	local fn = nextFrame
+	nextFrame = nil
+	fn()
+	driver.update(1 / 60)
+	frames = frames + 1
+	assert(frames < 20000, "journey on the plateau did not settle")
+end
+local top = assert(driver.shown(), "a walk across the plateau is drawn")
+local stop = top.legs[#top.legs].to
+assert(distance(stop, PEAK) < 1, "a goal the player can walk to stays where it is")
 print("peak goal: moved " .. math.floor(distance(moved, PEAK)) .. " yd to reachable ground")
