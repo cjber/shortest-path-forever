@@ -671,14 +671,15 @@ def rasterize_tile(rc):
                 if inside(jx, jy) and linked(j, 0, i, 0):
                     links.append((j, layers[j][0][0], i, layers[i][0][0], FREE_STEP))
     # Diagonal walkways narrower than a cell: open the diagonal step explicitly where both L-shaped detours are closed.
+    # A pair across the tile's edge is looked at from both tiles, each writing what its own cells hold.
     own = set()
-    for gx in range(tx0, min(tx1 + 1, GW - 1)):
-        for gy in range(ty0, ty1 + 1):
+    for gx in range(max(0, tx0 - 1), min(tx1 + 1, GW - 1)):
+        for gy in range(max(0, ty0 - 1), min(GH, ty1 + 2)):
             i = gx * GH + gy
             if not g(gx, gy):
                 continue
             for d, dy in ((2, 1), (3, -1)):
-                if not 0 <= gy + dy < GH:
+                if not 0 <= gy + dy < GH or not (inside(gx, gy) or inside(gx + 1, gy + dy)):
                     continue
                 j = i + GH + dy
                 if g(gx + 1, gy + dy) and not diag_ok(g, cuts, gx, gy, gx + 1, gy + dy, step=bit_step_ok):
@@ -687,7 +688,8 @@ def rasterize_tile(rc):
                     # water can still use the flag for its own diagonal.
                     flag = d == 2 or g(gx, gy) == 2
                     if flag and forward and back and bit_carries(i, 0, j, 0):
-                        own.add(i * 4 + d)  # the symmetric diagonal; the decoder reads it as the walk does
+                        if inside(gx, gy):
+                            own.add(i * 4 + d)  # the symmetric diagonal; the decoder reads it as the walk does
                     else:
                         # Each direction the walk takes is its own record, as for orthogonal steps; the symmetric
                         # diagonal stays closed because both L-shaped detours are cut.

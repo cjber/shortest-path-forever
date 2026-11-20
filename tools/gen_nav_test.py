@@ -152,6 +152,36 @@ class DiagonalTest(unittest.TestCase):
         self.assertEqual(sorted(links), sorted(free), "the walk climbs back up, which no bit can say (#1101)")
         self.assertNotIn(i * 4 + 2, own, "a bit would read the climb with the downhill-only rule")
 
+    def test_a_ground_diagonal_across_a_cluster_edge_keeps_both_directions(self):
+        # A -y diagonal on ground is a pair of records. Each tile writes the records whose source it holds, so the
+        # pair must be looked at from both sides of the edge, or the reverse is lost and the crossing is one-way.
+        c = gen_nav.CELLS
+        polys = {1: {**flat(10.0), "pts": [(-1e4, -1e4), (1e4, -1e4), (1e4, 1e4), (-1e4, 1e4)]}}
+        for nx, ny, (ix, iy), (jx, jy) in ((2, 1, (c - 1, 10), (c, 9)), (1, 2, (10, c), (11, c - 1))):
+            gh = ny * c
+            i, j = ix * gh + iy, jx * gh + jy
+            layers = {i: [(10.0, 1, (1, (0.0, 0.0)))], j: [(10.0, 1, (1, (0.0, 0.0)))]}
+            tiles = {(31 - x, 31 - y): "tile" for x in range(nx) for y in range(ny)}
+            links = []
+            with (
+                patch.object(gen_nav, "TILES", tiles),
+                patch.object(gen_nav, "NX", nx),
+                patch.object(gen_nav, "NY", ny),
+                patch.object(gen_nav, "CX0", 0),
+                patch.object(gen_nav, "CY0", 0),
+                patch.object(gen_nav, "GW", nx * c),
+                patch.object(gen_nav, "GH", gh),
+                patch.object(gen_nav, "X0", 0.0),
+                patch.object(gen_nav, "Y0", 0.0),
+                patch.object(gen_nav, "load_window", lambda window: (polys, {}, {})),
+                patch.object(gen_nav, "rasterize_layers", lambda polys, adj, portal, bounds, layers=layers: layers),
+                patch.object(gen_nav, "read_tile", lambda rc: ([], [], [], [])),
+            ):
+                for rc in tiles:
+                    links += gen_nav.rasterize_tile(rc)[4]
+            both = [(i, 10.0, j, 10.0, "free"), (j, 10.0, i, 10.0, "free")]
+            self.assertEqual(sorted(links), sorted(both), f"each direction once, edge {'x' if nx > 1 else 'y'}")
+
 
 class SteepStepTest(unittest.TestCase):
     def tile(self, polys, adj, portal, layers):
@@ -768,7 +798,8 @@ class LinkedPortalBoxTest(unittest.TestCase):
         ):
             _, _, _, _, links, own, _ = gen_nav.rasterize_tile((0, 0))
         self.assertIn(i * 4, own, "the ordinary two-way step is cut")
-        self.assertNotIn((i, 0.0, j, 8.0, None), links, "no uphill link borrows the remote portal height")
+        uphill = [link for link in links if link[:4] == (i, 0.0, j, 8.0)]
+        self.assertEqual(uphill, [], "no uphill link borrows the remote portal height")
         self.assertIn((j, 8.0, i, 0.0, "free"), links, "the downhill direction remains walkable")
 
     def test_a_shared_edge_outside_the_cells_does_not_link_them(self):
