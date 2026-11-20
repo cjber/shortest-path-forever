@@ -264,6 +264,11 @@ ns.NowMs = function()
 end
 ns.CurrentRide, ns.RefreshTracker, ns.PointGuideArrow, ns.PointCastPrompt, ns.Print = noop, noop, noop, noop, noop
 ns.Notice = noop
+-- UI/Arrow.lua is not loaded here: its arrow leads whenever the setting is on, with no search to wait for.
+ns.ArrowLeadChanged = noop
+ns.ArrowLeads = function()
+	return ns.db.arrow ~= false
+end
 ns.KnownTaxiNodes = function()
 	return ns.known or {}
 end

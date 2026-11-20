@@ -85,7 +85,7 @@ local castPrompt
 -- The stop whose area the player is in, drawn as a pin with what to do there (#627).
 ---@type SPFPoint?
 local arrival
-local ShowArrival, RefreshTravelLines
+local ShowArrival, RefreshTravelLines, NotifyLead
 
 -- Guidance changes that are not a new journey stop or leg: a bend passed, the source walk replaced, or the
 -- guideStops setting collapsing what the arrow draws. Core/API.lua turns it into the public Subscribe notice.
@@ -570,6 +570,7 @@ function ns.PointArrivalPin(stop)
 			if ns.RefreshCompass then
 				ns.RefreshCompass()
 			end
+			NotifyLead()
 		end
 		return
 	end
@@ -584,6 +585,7 @@ function ns.PointArrivalPin(stop)
 	if ns.RefreshCompass then
 		ns.RefreshCompass()
 	end
+	NotifyLead()
 end
 
 -- Settings: turning the arrival pin off returns a paused guide to the old hide, at once.
@@ -643,6 +645,7 @@ function ns.RefreshGuideStops()
 	if path ~= previousPath or target ~= previousTarget then
 		NotifyGuidance()
 	end
+	NotifyLead()
 end
 
 -- Refresh arrow rendering without changing the canonical walk or its progress.
@@ -693,6 +696,7 @@ function ns.PointGuideArrow(points, placeBend, stop, goal)
 			SetUpdating(false)
 			frame:SetShown(moving)
 		end
+		NotifyLead()
 		return
 	end
 	if not frame then
@@ -704,6 +708,7 @@ function ns.PointGuideArrow(points, placeBend, stop, goal)
 	frame:Show()
 	Wake()
 	Update(0)
+	NotifyLead()
 end
 
 ---@return boolean
@@ -807,10 +812,34 @@ function ns.CastPromptShown()
 	return ns.db.arrow ~= false and ns.db.castPrompt ~= false
 end
 
+-- Whether the arrow leads now: a bend to point at, a reached stop's pin or a cast to make. A journey that is still
+-- being searched has none of them. A guide addon's own arrow stands down only while this holds (Core/RestedXP.lua,
+-- Guidelime.lua), so the player always has one arrow to follow.
+---@return boolean
+function ns.ArrowLeads()
+	if not ns.db or ns.db.arrow == false then
+		return false
+	end
+	return (path ~= nil and target ~= nil) or arrival ~= nil or (castTarget ~= nil and ns.CastPromptShown())
+end
+
+-- The guide bridges hook this to hand their addon's arrow back or take it over again.
+function ns.ArrowLeadChanged() end
+
+local leads = false
+NotifyLead = function()
+	local now = ns.ArrowLeads()
+	if now ~= leads then
+		leads = now
+		ns.ArrowLeadChanged()
+	end
+end
+
 -- Casting needs an action rather than a bearing, shown in the arrow's usual place.
 ---@param teleport? SPFTeleportPlace
 function ns.PointCastPrompt(teleport)
 	castTarget = teleport
+	NotifyLead()
 	if not teleport or not ns.CastPromptShown() then
 		if castPrompt then
 			castPrompt:UnregisterAllEvents()

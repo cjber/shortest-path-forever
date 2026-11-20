@@ -220,7 +220,8 @@ local function StepQuests(element)
 	return collector.finish()
 end
 
--- Guidelime's arrow steps aside while ours draws, the way RestedXP's does. Guidelime resets its arrow's alpha only
+-- Guidelime's arrow steps aside while ours leads (UI/Arrow.lua), the way RestedXP's does: a journey still searching
+-- for its route has no arrow to show yet. Guidelime resets its arrow's alpha only
 -- when it creates the frame, so fading the frame keeps every part of it, text included, out of the way without
 -- touching the player's guide settings.
 local function Suppress()
@@ -272,7 +273,7 @@ local function Sync()
 	if owner and owner ~= OWNER and (owner == "RestedXP" or owner == "AdventureGuideForever") then
 		targetTitle, targetQuests = nil, nil
 		ForgetTarget()
-		if ns.db.arrow ~= false then
+		if ns.ArrowLeads() then
 			Suppress()
 		else
 			Restore()
@@ -305,7 +306,7 @@ local function Sync()
 	local kMap, kX, kY = KeyParts(map, x, y)
 	local elem, titleRaw, elementCompleted, attached, attachedTitle, step, elements, completedCount, elementCount =
 		Snapshot(element)
-	local arrowOn = ns.db.arrow ~= false
+	local arrowOn = ns.ArrowLeads()
 	local running = API.CurrentStop(OWNER) ~= nil
 	local samePlace = kMap == targetMap and kX == targetX and kY == targetY
 	local unchanged = samePlace
@@ -373,7 +374,7 @@ local function Sync()
 	if running then
 		Rename(title)
 		-- Guidelime owns the arrow when Shortest Path is not drawing one of its own.
-		if ns.db.arrow ~= false then
+		if ns.ArrowLeads() then
 			Suppress()
 		else
 			Restore()
@@ -413,6 +414,23 @@ hooksecurefunc(ns, "JourneyChanged", function()
 		return
 	end
 	Restore()
+end)
+
+-- Our arrow began or stopped leading: a route landed, a stop was reached or left, the arrow was switched off.
+-- Only the arrow changes hands here: the ticker's Sync alone starts or replans the guide's journey.
+hooksecurefunc(ns, "ArrowLeadChanged", function()
+	local owner = ns.JourneyOwner()
+	if not (ns.db and ns.db.guidelime and ns.db.journey) then
+		return
+	end
+	if owner ~= OWNER and owner ~= "RestedXP" and owner ~= "AdventureGuideForever" then
+		return
+	end
+	if ns.ArrowLeads() then
+		Suppress()
+	else
+		Restore()
+	end
 end)
 
 ns.Init(function()

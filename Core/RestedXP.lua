@@ -111,9 +111,10 @@ local function Suppress()
 	frame:EnableMouse(false)
 end
 
--- The arrow takeover alone: a player may keep RestedXP's arrow while still following its guide.
+-- The arrow takeover alone: a player may keep RestedXP's arrow while still following its guide. RestedXP's arrow
+-- stands down only while ours leads (UI/Arrow.lua): a journey still searching for its route has no arrow to show yet.
 local function HoldArrow()
-	if ns.db and ns.db.restedxpHideArrow == false then
+	if (ns.db and ns.db.restedxpHideArrow == false) or not ns.ArrowLeads() then
 		Restore()
 	else
 		Suppress()
@@ -233,11 +234,7 @@ local function Sync()
 			end
 		end
 		-- RestedXP owns the arrow when Shortest Path is not drawing one of its own.
-		if ns.db.arrow ~= false then
-			HoldArrow()
-		else
-			Restore()
-		end
+		HoldArrow()
 	else
 		Restore()
 	end
@@ -285,6 +282,13 @@ hooksecurefunc(ns, "JourneyChanged", function()
 		HoldArrow()
 	else
 		Restore()
+	end
+end)
+
+-- Our arrow began or stopped leading: a route landed, a stop was reached or left, the arrow was switched off.
+hooksecurefunc(ns, "ArrowLeadChanged", function()
+	if hooked and ns.db and (API.CurrentStop(OWNER) or Integrated()) then
+		HoldArrow()
 	end
 end)
 
