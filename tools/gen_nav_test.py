@@ -147,8 +147,9 @@ class DiagonalTest(unittest.TestCase):
             patch.object(gen_nav, "read_tile", lambda rc: ([], [], [], [])),
         ):
             _, _, _, _, links, own, _ = gen_nav.rasterize_tile((0, 0))
-        self.assertEqual(links, [])
-        self.assertIn(i * 4 + 2, own, "the symmetric diagonal opens for the decoder's height check")
+        free = [(i, 20.0, j, 10.0, "free"), (j, 10.0, i, 20.0, "free")]
+        self.assertEqual(sorted(links), sorted(free), "the walk climbs back up, which no bit can say (#1101)")
+        self.assertNotIn(i * 4 + 2, own, "a bit would read the climb with the downhill-only rule")
 
 
 class SteepStepTest(unittest.TestCase):
@@ -179,10 +180,9 @@ class SteepStepTest(unittest.TestCase):
         return {"pts": [(p[0], p[1]) for p in pts], "plane": plane(pts, c), "c": c, "steep": steep,
                 "water": False, "size": 1}  # fmt: skip
 
-    def test_a_steep_step_the_walk_refuses_uphill_rides_the_bit(self):
-        # The navmesh walk leaves a steep face downhill only, and the decoder's own stored-height rule refuses the
-        # same crawl back up. One symmetric bit carries that pair: a record each way is what made a map of a
-        # continent 27 MB of Lua.
+    def test_a_steep_step_the_walk_climbs_is_taken_as_written(self):
+        # The navmesh walk climbs off the steep face onto the ground above, which the decoder's stored-height rule
+        # refuses: a bit would lose that direction, so each walked direction is a record taken as written (#1101).
         c = gen_nav.CELLS
         i, j = 10 * c + 10, 11 * c + 10
         cs = gen_nav.CS
@@ -198,9 +198,9 @@ class SteepStepTest(unittest.TestCase):
         }
         ends = ((11 * cs, 10 * cs), (11 * cs, 11 * cs))
         links, _ = self.tile(polys, {1: {3}, 3: {1}}, {(1, 3): ends, (3, 1): ends[::-1]}, layers)
-        both = [(i, 240.4, j, 250.0, None), (j, 250.0, i, 240.4, None)]
-        for edge in both:
-            self.assertIn(edge, links, f"the pair rides one bit both ways, so no record is needed: {edge}")
+        for edge in [(i, 240.4, j, 250.0, "free"), (j, 250.0, i, 240.4, "free")]:
+            self.assertIn(edge, links, f"each walked direction is its own record: {edge}")
+        self.assertNotIn((i, 240.4, j, 250.0, None), links, "and none rides a bit")
 
     def test_a_one_way_step_the_heights_refuse_rides_one_bit(self):
         # The walk takes the face down and refuses the climb; the stored heights refuse it too, and the far end is
@@ -221,7 +221,7 @@ class SteepStepTest(unittest.TestCase):
         self.assertTrue(gen_nav.pair_carries_bit(20.0, 0, 30.0, 0, True, True, False))
         self.assertTrue(gen_nav.pair_carries_bit(20.0, 1, 20.0, 0, True, True, True))
 
-    def test_a_steep_orthogonal_pair_keeps_its_symmetric_bit(self):
+    def test_a_steep_orthogonal_pair_the_walk_climbs_is_taken_as_written(self):
         c = gen_nav.CELLS
         i, j = 10 * c + 10, 11 * c + 10
         polys = {1: {**flat(10.0), "steep": True}}
@@ -241,8 +241,9 @@ class SteepStepTest(unittest.TestCase):
             patch.object(gen_nav, "read_tile", lambda rc: ([], [], [], [])),
         ):
             _, _, _, _, links, own, _ = gen_nav.rasterize_tile((0, 0))
-        self.assertEqual(links, [])
-        self.assertNotIn(i * 4, own, "the steep step is not cut")
+        free = [(i, 20.0, j, 10.0, "free"), (j, 10.0, i, 20.0, "free")]
+        self.assertEqual(sorted(links), sorted(free), "both walked directions survive the downhill-only rule")
+        self.assertIn(i * 4, own, "the bit is cut: the records carry the pair")
 
     def test_steep_step_uses_the_stored_heights(self):
         # Base heights are stored on the 2-yard grid; a floor is stored at whole yards, like gen_nav.stored_z.
@@ -731,7 +732,7 @@ class LinkedPortalBoxTest(unittest.TestCase):
             _, _, _, _, links, own, _ = gen_nav.rasterize_tile((0, 0))
         self.assertIn(i * 4, own, "the ordinary two-way step is cut")
         self.assertNotIn((i, 0.0, j, 8.0, None), links, "no uphill link borrows the remote portal height")
-        self.assertIn((j, 8.0, i, 0.0, None), links, "the downhill direction remains walkable")
+        self.assertIn((j, 8.0, i, 0.0, "free"), links, "the downhill direction remains walkable")
 
     def test_a_shared_edge_outside_the_cells_does_not_link_them(self):
         # Two surfaces whose polygons meet only at a doorway far outside the two cells: the old early return counted

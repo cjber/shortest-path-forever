@@ -254,6 +254,10 @@ local function State(map)
 end
 
 -- Directions of floor links: +x, -x, +y, -y, +x+y, +x-y, -x+y, -x-y.
+-- A decoded link entry at or above FREE is a step the bake's navmesh walk decided, taken as written: the steep test
+-- never judges it by stored height (#1101). It sits above every cost a record can hold (two symbols, below 4096), so
+-- the cost reads floor(entry / 16384) % 8192.
+local FREE = 2 ^ 27
 local DX = { [0] = 1, -1, 0, 0, 1, 1, -1, -1 }
 local DY = { [0] = 0, 0, 1, -1, 1, -1, 1, -1 }
 local OPPOSITE = { [0] = 1, 0, 3, 2, 7, 6, 5, 4 }
@@ -409,6 +413,8 @@ end
 -- ways take, that surface's own outbound link too.
 -- Format 3 names each bit's landing layer, one layer per set direction in ascending order at the node's landing run
 -- (lpos), and a record's node is a delta from the record before it, so both read the pair the bake linked.
+-- A step record's direction + 16 is taken as written: the bake's navmesh walk decided it where the steep test's
+-- stored heights would misread it (#1101), so the search skips that test for it. The link entry carries FREE.
 local function decodeLinks(st, k, val, z, at, links, s, pos, masks, last, lpos)
 	local C, N = st.C, st.C * st.C
 	local back, fmt = {}, st.fmt
@@ -420,8 +426,9 @@ local function decodeLinks(st, k, val, z, at, links, s, pos, masks, last, lpos)
 			into[node + 1] = { entry }
 		end
 	end
-	local function link(node, dx, dy, layer, cost, both)
-		local entry = dx + 8 + 16 * (dy + 8) + 256 * (layer + 1) + 16384 * cost
+	local function link(node, dx, dy, layer, cost, both, free)
+		local flag = free and FREE or 0
+		local entry = dx + 8 + 16 * (dy + 8) + 256 * (layer + 1) + 16384 * cost + flag
 		add(links, node, entry)
 		local cell = node < N and node or at[node + 1]
 		local tx, ty = floor(cell / C) + dx, cell % C + dy
@@ -433,7 +440,7 @@ local function decodeLinks(st, k, val, z, at, links, s, pos, masks, last, lpos)
 			return
 		end
 		local source = node < N and 1 or node - at[-(cell + 1)] + 2
-		local mirror = -dx + 8 + 16 * (-dy + 8) + 256 * source + 16384 * cost
+		local mirror = -dx + 8 + 16 * (-dy + 8) + 256 * source + 16384 * cost + flag
 		add(back, target, mirror)
 		if both then
 			add(links, target, mirror)
@@ -476,12 +483,12 @@ local function decodeLinks(st, k, val, z, at, links, s, pos, masks, last, lpos)
 				record, at_step = record + 63 + num(s, at_step, 3), at_step + 3
 			end
 			local kind = B64[byte(s, at_step)]
-			link(record, DX[kind % 8], DY[kind % 8], B64[byte(s, at_step + 1)], 0, kind < 8)
+			link(record, DX[kind % 8], DY[kind % 8], B64[byte(s, at_step + 1)], 0, kind % 16 < 8, kind >= 16)
 			at_step = at_step + 2
 		else
 			record = num(s, at_step, 3)
 			local kind = B64[byte(s, at_step + 3)]
-			link(record, DX[kind % 8], DY[kind % 8], B64[byte(s, at_step + 4)], 0, kind < 8)
+			link(record, DX[kind % 8], DY[kind % 8], B64[byte(s, at_step + 4)], 0, kind % 16 < 8, kind >= 16)
 			at_step = at_step + 5
 		end
 	end
@@ -1536,11 +1543,11 @@ local function neighbour(st, k, node, gx, gy, dx, dy, water, out)
 				local v = surface(st, tk, tlc, floor(entry / 256) % 64 - 1, h)
 				if v and (water or (here ~= 2 and vt[v + 1] ~= 2)) then
 					local distance = math.sqrt((entry % 16 - 8) ^ 2 + (floor(entry / 16) % 16 - 8) ^ 2) * st.cs
-					if not steep or steep(vk, zk, node, vt, st.z[tk], v, distance) then
+					if not steep or entry >= FREE or steep(vk, zk, node, vt, st.z[tk], v, distance) then
 						if not out then
 							return tk, v
 						end
-						out[#out + 1], out[#out + 2], out[#out + 3] = tk, v, floor(entry / 16384)
+						out[#out + 1], out[#out + 2], out[#out + 3] = tk, v, floor(entry / 16384) % 8192
 					end
 				end
 			end
@@ -2107,6 +2114,7 @@ ns.PathGrid = {
 	SNAP = SNAP,
 	ZTOL = ZTOL,
 	OFFROAD = OFFROAD,
+	FREE = FREE,
 	DX = DX,
 	DY = DY,
 }

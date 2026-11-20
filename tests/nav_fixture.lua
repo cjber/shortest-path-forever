@@ -177,7 +177,8 @@ local function build(spec, format)
 					-- a step's direction, + 8 when only that way takes it
 					local d = gen_direction(l[3], l[4])
 					assert(d, "fixture link is not one cell step")
-					steps[#steps + 1] = { local_cell(l[1], l[2]), d + (l[7] and 0 or 8), l[6] or 0 }
+					steps[#steps + 1] =
+						{ local_cell(l[1], l[2]), d + (l[7] and 0 or 8) + (l[8] and 16 or 0), l[6] or 0 }
 				end
 			end
 		end
@@ -286,9 +287,10 @@ end
 --   map = 42, nx = 2, ny = 1,
 --   cell = { [gx] = { [gy] = { z = 20, water = false, steep = false, flags = 0 } } }, -- steep writes flag 8
 --   floor = { { gx, gy, z, value, steps } },   -- a floor surface; value 3 is steep, steps is the 8-bit mask
---   link = { { gx, gy, dx, dy, cost, layer, both } },   -- one record: a step only that way (both = a step both
---                                                       -- ways, at least one of whose ends is a floor), or, with a
---                                                       -- cost, a drop
+--   link = { { gx, gy, dx, dy, cost, layer, both, free } },   -- one record: a step only that way (both = a step
+--                                                       -- both ways, at least one of whose ends is a floor; free =
+--                                                       -- taken as written, with no steep test), or, with a cost, a
+--                                                       -- drop
 --   node = { { gx, gy, comp, out = { { gx, gy, c1, c2 } } } },
 -- }
 -- A step both ways take normally lives in a floor's step mask, so a plain link is a one-way step.
