@@ -919,6 +919,11 @@ local function RefreshCosts(includeGoal, forced, replace)
 	end
 	attach(startBatch)
 	attach(goalBatch)
+	-- Both batches may have finished while no search listened (a replan drops queued answers): attach took their
+	-- results from the jobs, so the move a callback would have made is made here.
+	if Ground() then
+		return
+	end
 	Walks.LandingPending(teleports, waterMode, function()
 		request(true)
 	end)
