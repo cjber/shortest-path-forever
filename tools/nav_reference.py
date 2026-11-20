@@ -217,8 +217,12 @@ class Reference:
             portals.append((p1[:2], p2[:2]) if tri2(c, m, p1) < 0 else (p2[:2], p1[:2]))
         points += funnel(start, goal, portals)
         flat = sum(math.dist(p, q) for p, q in zip(points, points[1:], strict=False) if p != q)
-        lifted = [(x, y, self.height(self.locate((x, y, a[2])), x, y)) for x, y in points]
-        lifted[0], lifted[-1] = tuple(a), tuple(b)
+        # Each corner is looked up from the previous one's height: a corner sits on a poly edge, and on a long walk
+        # the start's height can be far beyond the nearest-poly fallback.
+        lifted = [tuple(a)]
+        for x, y in points[1:]:
+            lifted.append((x, y, self.height(self.locate((x, y, lifted[-1][2])), x, y)))
+        lifted[-1] = tuple(b)
         return Walk(
             flat,
             sum(math.dist(p, q) for p, q in zip(lifted, lifted[1:], strict=False)),

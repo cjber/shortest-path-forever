@@ -182,8 +182,9 @@ class SteepStepTest(unittest.TestCase):
                 "water": False, "size": 1}  # fmt: skip
 
     def test_a_steep_step_the_walk_climbs_is_taken_as_written(self):
-        # The navmesh walk climbs off the steep face onto the ground above, which the decoder's stored-height rule
-        # refuses: a bit would lose that direction, so each walked direction is a record taken as written (#1101).
+        # The steep floor's anchor is the face's top edge, where the navmesh walk steps up a 2 yard lip onto the
+        # ground above. The decoder's stored-height rule refuses that step off steep ground: a bit would lose that
+        # direction, so each walked direction is a record taken as written (#1101).
         c = gen_nav.CELLS
         i, j = 10 * c + 10, 11 * c + 10
         cs = gen_nav.CS
@@ -194,14 +195,40 @@ class SteepStepTest(unittest.TestCase):
             3: self.face(j * cs, (j % c + 1) * cs, 250.0, 250.0, False),  # the ground it leads up to
         }
         layers = {
-            i: [(236.0, 1, (0, (i * cs + 2.0, 2.0))), (240.4, 3, (1, (i * cs + 2.0, 2.0)))],
+            i: [(236.0, 1, (0, (i * cs + 2.0, 2.0))), (248.0, 3, (1, (11 * cs, 2.0)))],
             j: [(250.0, 1, (2, (j * cs + 2.0, 2.0))), (250.0, 1, (3, (j * cs + 2.0, 2.0)))],
         }
         ends = ((11 * cs, 10 * cs), (11 * cs, 11 * cs))
         links, _ = self.tile(polys, {1: {3}, 3: {1}}, {(1, 3): ends, (3, 1): ends[::-1]}, layers)
-        for edge in [(i, 240.4, j, 250.0, "free"), (j, 250.0, i, 240.4, "free")]:
+        for edge in [(i, 248.0, j, 250.0, "free"), (j, 250.0, i, 248.0, "free")]:
             self.assertIn(edge, links, f"each walked direction is its own record: {edge}")
-        self.assertNotIn((i, 240.4, j, 250.0, None), links, "and none rides a bit")
+        self.assertNotIn((i, 248.0, j, 250.0, None), links, "and none rides a bit")
+
+    def test_ground_beside_a_steep_face_does_not_climb_it(self):
+        # A flat cell shares an edge with the foot of a steep face whose anchor stands 6.75 yards up it. The walk
+        # comes down the face onto the ground and cannot climb it, so the pair rides the downhill-only bit and no
+        # record climbs it as written: a shortcut for neighbouring polys did, up the mountain outside Ironforge (#1011).
+        c = gen_nav.CELLS
+        i, j = 10 * c + 10, 11 * c + 10
+        cs = gen_nav.CS
+
+        def poly(pts, steep):
+            centre = tuple(sum(p[a] for p in pts) / len(pts) for a in range(3))
+            return {"pts": [p[:2] for p in pts], "plane": plane(pts, centre), "c": centre, "steep": steep,
+                    "water": False, "size": 1}  # fmt: skip
+
+        x0, x1, x2, y0, y1 = 10 * cs, 11 * cs, 12 * cs, 10 * cs, 11 * cs
+        polys = {
+            0: poly([(x0, y0, 437.0), (x1, y0, 437.0), (x1, y1, 437.0), (x0, y1, 437.0)], False),
+            1: poly([(x1, y0, 437.0), (x2, y0, 446.0), (x2, y1, 446.0), (x1, y1, 437.0)], True),
+        }
+        a, b = (x0 + 4.0, y0 + 4.0), (x1 + 6.0, y0 + 4.0)
+        zb = height(polys[1], *b)
+        layers = {i: [(437.0, 1, (0, a))], j: [(zb, 3, (1, b))]}
+        ends = ((x1, y0), (x1, y1))
+        links, own = self.tile(polys, {0: {1}, 1: {0}}, {(0, 1): ends, (1, 0): ends[::-1]}, layers)
+        self.assertNotIn((i, 437.0, j, zb, "free"), links, "the face is never climbed as written")
+        self.assertNotIn(i * 4, own, "the downhill-only bit carries the pair")
 
     def test_a_one_way_step_the_heights_refuse_rides_one_bit(self):
         # The walk takes the face down and refuses the climb; the stored heights refuse it too, and the far end is

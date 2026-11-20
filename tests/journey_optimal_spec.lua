@@ -434,7 +434,7 @@ print("hearth journey: a short walk past the bind point needs no hearth: ok")
 
 -- A half-hour walk gives way to boats that arrive within a tenth of its time; a clearly quicker walk does not.
 ns.faction, ns.water, ns.speed, ns.known = "Alliance", false, 7, {}
-local ironforge = { map = 0, x = -4918, y = -940 }
+local ironforge = { map = 0, x = -4918, y = -940, z = 502 }
 local silverpine = { map = 0, x = 500, y = 1000 }
 driver.begin(ironforge, silverpine)
 drain()

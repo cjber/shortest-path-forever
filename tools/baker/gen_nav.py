@@ -573,7 +573,8 @@ def rasterize_tile(rc):
         ceiling, and leaves it at most as high as that portal's top. Without it a path could climb a steep face between
         two ordinary surfaces, such as the slope that joins the terrain under Stormwind to its streets."""
         (pa, a), (pb, b) = layers[i][la][2], layers[j][lb][2]
-        if pa == pb:
+        steep = polys[pa]["steep"] or polys[pb]["steep"]
+        if pa == pb and (not steep or height(polys[pb], *b) <= height(polys[pa], *a) + 0.01):
             return True
         (xi, yi), (xj, yj) = divmod(i, GH), divmod(j, GH)
         box = (
@@ -582,7 +583,10 @@ def rasterize_tile(rc):
             Y0 + min(yi, yj) * CS - MARGIN,
             Y0 + (max(yi, yj) + 1) * CS + MARGIN,
         )
-        if pb in adj.get(pa, ()):
+        # Steep anchors go through the search below, which holds them to the downhill rule: a shortcut that joined
+        # one poly or two neighbours outright let a flat cell climb onto the steep face beside it, and the step was
+        # taken as written, up the mountain outside Ironforge's gate (#1011).
+        if pb in adj.get(pa, ()) and not steep:
             # An edge shared anywhere is not a path between these two cells: a street and a keep floor that meet
             # only at a doorway far outside the box must not link every pair of cells facing each other (#890).
             return seg_in_box(*portal[(pa, pb)], box=box)
