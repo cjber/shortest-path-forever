@@ -583,6 +583,3 @@ L["In the tracker while you are near a dock, lift or tram."] =
 L["Town service icons"] = "도시 서비스 아이콘" -- mt
 L["Off hides them. Otherwise one icon per town, or one per service as you zoom in."] =
 	"끄면 숨깁니다. 켜면 확대할 때 도시당 아이콘 하나 또는 서비스당 아이콘 하나가 표시됩니다." -- mt
-L["Attach to quest tracker"] = "퀘스트 추적기에 붙이기"
-L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
-	"이 옵션을 끄면 공유 Forever 추적기를 화면 어디로든 끌 수 있습니다."

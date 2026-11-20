@@ -573,6 +573,3 @@ L["In the tracker while you are near a dock, lift or tram."] =
 L["Town service icons"] = "Ícones de serviços da cidade" -- mt
 L["Off hides them. Otherwise one icon per town, or one per service as you zoom in."] =
 	"Desativado os oculta. Caso contrário, um ícone por cidade ou por serviço ao aproximar." -- mt
-L["Attach to quest tracker"] = "Prender ao rastreador de missões"
-L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
-	"Desative para arrastar o rastreador Forever compartilhado para qualquer lugar da tela."

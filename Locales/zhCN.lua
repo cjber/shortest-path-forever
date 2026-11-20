@@ -563,6 +563,3 @@ L["In the tracker while you are near a dock, lift or tram."] =
 L["Town service icons"] = "城镇服务图标" -- mt
 L["Off hides them. Otherwise one icon per town, or one per service as you zoom in."] =
 	"关闭则隐藏。否则放大时每个城镇一个图标，或每项服务一个图标。" -- mt
-L["Attach to quest tracker"] = "附着到任务追踪器"
-L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
-	"关闭此项可将共享Forever追踪栏拖到屏幕上任意位置。"

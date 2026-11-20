@@ -605,6 +605,3 @@ L["In the tracker while you are near a dock, lift or tram."] =
 L["Town service icons"] = "Значки городских служб" -- mt
 L["Off hides them. Otherwise one icon per town, or one per service as you zoom in."] =
 	"Если выключено, значки скрыты. Иначе один значок на город или на службу при приближении." -- mt
-L["Attach to quest tracker"] = "Прикрепить к отслеживанию заданий"
-L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
-	"Отключите, чтобы перетаскивать общую панель отслеживания Forever в любое место экрана."

@@ -3,7 +3,7 @@
   "producers": [
     {
       "source": "UI/Tracker.lua",
-      "sha256": "f463ff5d79c33eea22fc9b863e5f74e8c5eea89dc1d31cd7cc6835691f3a3170",
+      "sha256": "43f884e496b446a9fe640288d21332139784a350e6e6c6fe572f6c3fd3885ae6",
       "review": "Read all of Tracker.lua, Tracker.xml and ForeverCore TrackerSection.Create, UpdateText and TrackerLine.SetInteractive. Confirmed pinned client Blizzard_ObjectiveTrackerModule.xml: ObjectiveTrackerModuleTemplate Header inherits ObjectiveTrackerModuleHeaderTemplate, whose Text uses ObjectiveTrackerHeaderFont. Blizzard_ObjectiveTrackerBlock.xml HeaderText uses ObjectiveTrackerLineFont; Blizzard_ObjectiveTrackerShared.xml ObjectiveTrackerLineTemplate Text uses ObjectiveTrackerLineFont, inherited without overrides by ShortestPathForeverTrackerLineTemplate. Bound every local phrase sent to section headers, block headers and rows, including Journey  %s · %s from #838. RefreshBlockText preserves these widgets. Client tracker text-size changes and optional Kaliels font overrides are outside the pinned native-font coverage. Menus, chat, tooltips and dynamic text from JourneyInfo, DockTitle, and DepartureText are excluded.",
       "bindings": [
         {
@@ -51,8 +51,8 @@
     },
     {
       "source": "UI/Settings.lua",
-      "sha256": "1c34ec28900c549996ad6bc8a06e88e5b17478ec82dca603b1a9abd04c0a91f2",
-      "review": "Read Page, Checkbox, Scale, Dropdown and Saving and their registration calls. Settings rows, index buttons and option labels delegate to Blizzard secure initializers; this file creates no FontString and establishes no explicit FontObject. Minimap button text, tooltip text, chat output and helper arguments are excluded rather than assigned an assumed settings font.",
+      "sha256": "65258cca8c1c0d00090627e72d8b7bb54da8071a2bd4be3362b1eb39ba96dec4",
+      "review": "Read Page, Checkbox, Scale, Dropdown and Saving and their registration calls. Settings rows, index buttons and option labels delegate to Blizzard secure initializers; this file creates no FontString and establishes no explicit FontObject. Minimap button text, tooltip text, chat output and helper arguments are excluded rather than assigned an assumed settings font. Reviewed #1094: the Tracker heading's Attach to quest tracker row is ForeverCore.SettingsSections.RegisterTrackerAttach, a core-owned initializer, registered only when the running core has it (an older adopted standalone does not); excluded with the other settings fonts.",
       "bindings": []
     },
     {
@@ -75,7 +75,7 @@
     },
     {
       "source": "UI/Arrow.lua",
-      "sha256": "8feffc46007d2e59f2668dbe955735f64ded361773f31d54335d80d908771910",
+      "sha256": "5ec91a9084c2d68b75e324755655962d2dff2c46e99236c2dce6f6094ebfdb5b",
       "review": "Read Create, ArrowLabel, distance updates, arrival labels, progress and cast prompt. MoverHint uses GameFontHighlightSmall and Distance uses GameFontNormal, including the formatted time-distance phrase. No later font override occurs. Dynamic objective lines, arrival titles, route titles and actions from helpers are excluded; this review does not claim coverage for their inserted text.",
       "bindings": [
         {
@@ -92,7 +92,7 @@
     },
     {
       "source": "UI/Compass.lua",
-      "sha256": "1e49a415b5c860e5d352aef66cd49fd386461e30020fae79cff324c6d8a7b841",
+      "sha256": "42e2412026c5ab0df97a4fe2e45ad3a64e80dd75411042eca773cfdbdfcaf62a",
       "review": "Read frame construction, cardinal tick labels, mover hint and RenderTime. Cardinal labels use GameFontNormalMed3 and MoverHint uses GameFontHighlightSmall, with no later font override. Distance and time are dynamic helper output and marker titles/tooltips have no coverage claim.",
       "bindings": [
         {
