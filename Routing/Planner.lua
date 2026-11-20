@@ -19,7 +19,8 @@ local LOADING = 5000
 -- A Hearthstone spends a long cooldown, so it must save at least 20 s over walking before it is chosen.
 local HEARTH_MINIMUM_SAVING = 20
 -- A journey that would be one walk of at least LONG_WALK takes a ride instead when that arrives within RIDE_MARGIN
--- of the walk's time.
+-- of the walk's time and is mostly riding: a ride that only trims the walk, such as a short flight away from the goal
+-- and a long walk back past where it started, is still a long way on foot and arrives later (#1102).
 local LONG_WALK, RIDE_MARGIN = 600000, 1.1
 
 -- Preview geometry while a walking leg is still pending.
@@ -944,7 +945,16 @@ local function Solve(options, cache, check, weigh)
 	then
 		withoutTeleports = withoutTeleports or teleportMinimum > 0
 		local ridden = Search(true, withoutTeleports, options.now + (planned.arrive - options.now) * RIDE_MARGIN, true)
-		if ridden then
+		-- The preference swaps a long walk for a ride (#86), so the ride it takes must be one: a plan that rides more
+		-- than it walks. A short ride that leaves most of the walk in place only arrives later (#1102).
+		local walking, at = 0, options.now
+		for _, leg in ipairs(ridden and ridden.legs or {}) do
+			if leg.mode == "walk" then
+				walking = walking + leg.arrive - at
+			end
+			at = leg.arrive
+		end
+		if ridden and walking * 2 < ridden.arrive - options.now then
 			ridden.preferred = true
 			MarkUnknownFlight(ridden)
 			return ridden

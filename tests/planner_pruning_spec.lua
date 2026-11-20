@@ -172,6 +172,31 @@ do
 	assert(bounded.preferred and bounded.arrive == preferred.arrive and modes(bounded) == modes(preferred))
 end
 
+-- A short flight away from the goal and a long walk back is not the ride a long walk gives way to: it is still mostly
+-- on foot, and arrives later. Orgrimmar to Azshara on foot flew to Splintertree Post and walked back east (#1102).
+do
+	local from, away, to = point(0), point(0, 600), point(4300)
+	local o = {
+		from = from,
+		to = to,
+		now = 0,
+		walkSpeed = 7,
+		exactMaps = { [1] = true },
+		taxiNodes = { from, away },
+		taxiPaths = { { from = 1, to = 2, seconds = 89 } },
+		walks = {
+			walk(from, to, 4315),
+			walk(away, to, 3800),
+			walk(from, from, 0),
+			walk(away, away, 0),
+			walk(to, to, 0),
+		},
+	}
+	local planned = assert(Plan(o))
+	assert(modes(planned) == "walk" and not planned.preferred, "the walk stays: got " .. modes(planned))
+	assert(math.abs(planned.arrive - 4315 / 7 * 1000) < 1, "and arrives first")
+end
+
 -- A cached topology and an incumbent compose: feasible, full and bounded plans share one cache.
 do
 	local o = line(8)
