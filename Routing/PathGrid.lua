@@ -1832,7 +1832,7 @@ local function toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget, real
 		end
 		if time then
 			if fk[i] == wk and fn[i] == wn then
-				return wk, wn, time
+				return fk[i], fn[i], time
 			end
 			if not bestTime or time < bestTime then
 				best, bestTime = i, time
@@ -1898,10 +1898,11 @@ local function smooth(st, P, ends)
 	-- entries between. best[b]: the shortest line to node b, in cells; from[b]: the node before it. Neighbouring nodes
 	-- are joined as the walk goes, so a start or goal segment that is not clear detours through its end entry's centre.
 	local m = #keep
-	local start, goal = ends and ends.start, ends and ends.goal
+	local E = ends or {}
+	local start, goal = E.start, E.goal
 	local X, Y, at = {}, {}, {}
 	if start then
-		X[1], Y[1] = ends.sx, ends.sy
+		X[1], Y[1] = E.sx, E.sy
 	end
 	for i = 1, m do
 		local j = #X + 1
@@ -1910,7 +1911,7 @@ local function smooth(st, P, ends)
 	local N = #X
 	if goal then
 		N = N + 1
-		X[N], Y[N] = ends.gx, ends.gy
+		X[N], Y[N] = E.gx, E.gy
 	end
 	local function clear(a, b)
 		slice() -- a long walk measures many segments; each is one sight, and a sight may already slice to decode
@@ -1918,7 +1919,7 @@ local function smooth(st, P, ends)
 		-- A segment from or to an end point is the one drawn from the point itself, so the end's own check is the whole
 		-- check; between entries the line runs centre to centre.
 		if not at[a] and not at[b] then
-			return ends.chord()
+			return E.chord()
 		elseif not at[a] then
 			return start(q)
 		elseif not at[b] then
