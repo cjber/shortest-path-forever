@@ -14,7 +14,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ### Added
 
-- **Show the journey key hint in tooltips** in Guidance, Planning. Turn it off to hide the "Shift-click to plan a journey here" line on map, flight point and minimap tooltips; your journey key still plans journeys.
+- **Hide the journey key hint in tooltips.** Turn off *Show the journey key hint in tooltips* in Guidance, Planning to hide the "Shift-click to plan a journey here" line on map, flight point and minimap tooltips; your journey key still plans journeys.
 
 ### Fixed
 
