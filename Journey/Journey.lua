@@ -494,15 +494,42 @@ end
 -- Where here falls on a walk: the segment ending at points[index], how far along it (t), and the yards still to walk
 -- from there, or nil when here is more than reach (ON_PATH by default) off the walk. A here with a height (the floor
 -- Floor.lua follows) is not on a segment drawn on another floor.
+-- Segment lengths of a walk, built once per points table: OnWalk runs on every progress tick for the same
+-- walk, and rebuilding them allocated a table and re-rooted every segment each time (WFA-13). Weak keys let
+-- a replaced walk's lengths go with it. The cache keeps each point's coordinates too, so a points table edited
+-- in place is measured again; comparing them costs no square roots and allocates nothing.
+local walkLengths = setmetatable({}, { __mode = "k" })
 local function OnWalk(points, here, reach)
 	if not here then
 		return nil
 	end
-	local lengths, total = {}, 0
-	for index = 2, #points do
-		local a, b = points[index - 1], points[index]
-		lengths[index] = math.sqrt((b.x - a.x) ^ 2 + (b.y - a.y) ^ 2)
-		total = total + lengths[index]
+	local cached = walkLengths[points]
+	local fresh = cached ~= nil and cached.count == #points
+	if fresh then
+		local xs, ys = cached.xs, cached.ys
+		for index = 1, #points do
+			local point = points[index]
+			if point.x ~= xs[index] or point.y ~= ys[index] then
+				fresh = false
+				break
+			end
+		end
+	end
+	local lengths, total
+	if fresh then
+		lengths, total = cached.lengths, cached.total
+	else
+		lengths, total = {}, 0
+		local xs, ys = {}, {}
+		for index = 1, #points do
+			xs[index], ys[index] = points[index].x, points[index].y
+		end
+		for index = 2, #points do
+			local a, b = points[index - 1], points[index]
+			lengths[index] = math.sqrt((b.x - a.x) ^ 2 + (b.y - a.y) ^ 2)
+			total = total + lengths[index]
+		end
+		walkLengths[points] = { lengths = lengths, total = total, count = #points, xs = xs, ys = ys }
 	end
 	local walked, best, found, along, after = 0, nil, nil, nil, nil
 	for index = 2, #points do

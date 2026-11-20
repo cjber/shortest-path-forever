@@ -24,7 +24,7 @@ ns.JourneyPosition = function()
 		return journeyAt.x, journeyAt.y, nil, 0
 	end
 end
-ns.NearestDock = function()
+ns.NearestDockSpot = function()
 	if nearDock then
 		return nearDock, 5
 	end
@@ -322,9 +322,41 @@ end
 do
 	Floor.Forget()
 	walk(FM, MAGIC, function() end)
+	local walkedIn = assert(Floor.Height(0, MAGIC.x, MAGIC.y))
 	nearDock = 1009
 	Floor.Sample(0, MAGIC.x, MAGIC.y)
 	assert(Floor.Height(0, MAGIC.x, MAGIC.y) == nil, "beside a lift the floor is not followed")
+	-- The floor you walked onto the landing on names the landing (#1059), and holds while you stand there.
+	local at, z = Floor.Landing(0)
+	assert(at and z == walkedIn, "the landing keeps the floor you walked in on")
+	Floor.Sample(0, MAGIC.x + 1, MAGIC.y)
+	at, z = Floor.Landing(0)
+	assert(at and z == walkedIn and not Floor.Landing(1), "standing there it holds, on its own map only")
+	-- A ride moves you to another landing without moving you on the map: the floor you walked in on goes.
+	ns.IsObservingRide = function()
+		return true
+	end
+	Floor.Sample(0, MAGIC.x + 1, MAGIC.y)
+	ns.IsObservingRide = nil
+	Floor.Sample(0, MAGIC.x + 1, MAGIC.y)
+	at, z = Floor.Landing(0)
+	assert(at and z == nil, "after a ride the walked-in floor is gone for as long as you stay")
+	nearDock = nil
+	Floor.Sample(0, MAGIC.x, MAGIC.y)
+	assert(not Floor.Landing(0), "walked off the landing, following starts again")
+	Floor.Forget()
+	walk(FM, MAGIC, function() end)
+	nearDock = 1009
+	Floor.Sample(0, MAGIC.x, MAGIC.y)
+	Floor.Forget()
+	assert(not Floor.Landing(0), "forgotten, it goes too")
+	-- Arriving at a landing far from the floor last followed (a portal on the same map) names no floor.
+	nearDock = nil
+	walk(FM, MAGIC, function() end)
+	nearDock = 1009
+	Floor.Sample(0, MAGIC.x + 40, MAGIC.y)
+	at, z = Floor.Landing(0)
+	assert(at and z == nil, "a floor followed elsewhere does not name the landing")
 	nearDock = nil
 end
 
