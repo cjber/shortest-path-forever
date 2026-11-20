@@ -69,6 +69,23 @@ for _, entry in ipairs(rows) do
 		previousRows[#previousRows + 1] = entry
 	end
 end
+-- ForeverCore 1.15.3 has SettingsSections but no RegisterTrackerAttach (added in 1.15.4), and the loader adopts an
+-- installed standalone as it is: the page loads with every other control.
+local olderSections = {}
+for name, member in pairs(env.ForeverCore.SettingsSections) do
+	olderSections[name] = member
+end
+olderSections.RegisterTrackerAttach = nil
+clear(rows, settings, buttons, registered)
+env.ForeverCore.SettingsSections = olderSections
+setfenv(assert(loadfile("UI/Settings.lua")), env)("ShortestPathForever", ns)
+assert(#rows == #previousRows, "a core without RegisterTrackerAttach keeps every other control")
+for index, entry in ipairs(rows) do
+	assert(
+		entry.initializer.setting.key == previousRows[index].initializer.setting.key,
+		"the controls keep their order"
+	)
+end
 clear(rows, settings, buttons, registered)
 env.ForeverCore.SettingsSections = nil
 setfenv(assert(loadfile("UI/Settings.lua")), env)("ShortestPathForever", ns)
