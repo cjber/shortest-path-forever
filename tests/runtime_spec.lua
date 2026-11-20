@@ -4,6 +4,7 @@ for _, file in ipairs({
 	"Transport/Model.lua",
 	"Routing/Savings.lua",
 	"Routing/Planner.lua",
+	"Routing/LegPoints.lua",
 	"Data/Routes.lua",
 	"Data/Transports.lua",
 	"Data/Taxi.lua",

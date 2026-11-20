@@ -205,7 +205,32 @@ ns.Init(function()
 		ns.RefreshTracker
 	)
 	local host = ForeverCore.TrackerHost --[[@as ForeverTrackerHostAPI]]
-	-- Lock keeps the column where it is: the grip ignores drag while it is on. Off by default, and safe to
+	local variable = "ShortestPathForever_trackerAttached"
+	local attachment = Settings.RegisterProxySetting(
+		page,
+		variable,
+		Settings.VarType.Boolean,
+		L["Attach to quest tracker"],
+		true,
+		function()
+			return host.GetSettings().attached
+		end,
+		function(value)
+			host.SetAttached(value == true)
+		end
+	)
+	Settings.RegisterInitializer(
+		page,
+		Secure(Settings.CreateCheckboxInitializer)(
+			attachment,
+			nil,
+			L["Turn this off to drag the shared Forever tracker anywhere on screen."]
+		)
+	)
+	host.OnAttachmentChanged(function()
+		Settings.NotifyUpdate(variable)
+	end)
+	-- Lock keeps the detached column where it is: the grip ignores drag while it is on. Off by default, and safe to
 	-- toggle in combat, since it only writes the saved switch.
 	local lock = Settings.RegisterProxySetting(
 		page,
@@ -641,6 +666,16 @@ ns.Init(function()
 			nil,
 			L["Shows the arrow to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."]
 		)
+	)
+	Checkbox(
+		"castPrompt",
+		L["Show cast prompt"],
+		-- luacheck: push ignore 631
+		L["Shows the Hearthstone or teleport to use in the arrow's place. Off, journeys still use them and the tracker still names the step."],
+		-- luacheck: pop
+		function()
+			ns.JourneyGuide.ArrowChanged()
+		end
 	)
 	Scale("arrowScale", L["Arrow scale"], L["Scales the arrow and the cast prompt."], function(_, value)
 		if type(value) == "number" then

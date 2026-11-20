@@ -49,6 +49,10 @@ local ns = {
 	Print = function(message)
 		printed[#printed + 1] = message
 	end,
+	-- Core/Core.lua's on-screen line; this spec reads both channels from one list.
+	Notice = function(message)
+		printed[#printed + 1] = message
+	end,
 	Locate = function()
 		return { uiMap = 1440, x = 0.5, y = 0.5 }
 	end,
@@ -113,6 +117,7 @@ env = setmetatable({
 		end,
 	},
 	Minimap = { HookScript = function() end },
+	GameTooltip = { HookScript = function() end },
 	Menu = { ModifyMenu = function() end },
 	MapCanvasMixin = { MouseAction = { Click = 3 } },
 	Enum = { UIMapType = { Continent = 2 } },
@@ -123,6 +128,8 @@ env = setmetatable({
 		GetWorldPosFromMapPos = function(_, point)
 			return 1, vector(point.x, point.y)
 		end,
+		-- No map here is stacked under another, so no spot is over one.
+		GetMapPosFromWorldPos = function() end,
 		GetMapInfo = function()
 			return { mapType = 3 }
 		end,

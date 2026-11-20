@@ -8,7 +8,7 @@ end
 
 -- The search for a journey's fastest way: one bounded FindMany from where you stand and one back from the goal,
 -- short A* probes for the candidate's own walks, the plan they settle, that plan's walking geometry (JourneyWalks.lua)
--- and whether it replaces the route you are following. A feasible route can be followed while the proof continues.
+-- and whether it replaces the route you are following. A first search draws its estimate until the proof ends.
 -- Journey.lua starts, steps and cancels the search and follows what it publishes.
 local PROBE_BUDGET = 60 -- ms before switching from candidate costs to shared endpoint searches
 local REFRESH_EVERY = 60
@@ -24,6 +24,7 @@ end
 
 local Context = ns.PlanContext
 ---@class SPFJourneySearch
+---@field timing {at: number, frames: integer, cpu: number, first: table?, last: table?}? the last search's timings
 local Search = {}
 ns.JourneySearch = Search
 -- JourneyWalks.lua fills this in; nothing outside the search uses it.
@@ -33,13 +34,17 @@ Search.Walks = Walks
 
 ---@alias SPFSearchNews
 ---| "searching" a first search began: nothing to follow yet
+---| "rough" a first search's estimate, drawn until its proved route replaces it, never followed
 ---| "route" this route replaces the followed one (nil: no way there)
 ---| "walks" the followed route was retimed and its walks redrawn
 ---| "times" the followed route was retimed
 
--- The journey being searched for, as Start received it. followed is the route Journey is on: the one Start passed
--- or the last one published as "route". progress is Journey's own record, read here and never written.
+-- The journey being searched for, as Start received it, or the nearest ground a player can walk to when nobody can
+-- walk onto it (grounded, #1113). followed is the route Journey is on: the one Start passed or the last one published
+-- as "route". progress is Journey's own record, read here and never written.
 local goal, followed
+---@type {from: SPFPoint, to: SPFPoint}?
+local grounded
 ---@type {index: integer, departed?: boolean}
 local progress
 ---@type fun(route: SPFPlan?, news: SPFSearchNews)
@@ -56,6 +61,8 @@ local hazards
 local lastRunSpeed = 7
 local plannerCache = {}
 local probeJobs, pathVersion = {}, 0
+-- The timed replan's path job while it plans.
+local replanning
 local startBatch, goalBatch, startAt
 local refreshedAt = 0
 local startCosts, goalCosts = {}, {}
@@ -93,7 +100,7 @@ local function CancelPaths()
 		end
 	end
 	pendingCosts = 0
-	probeJobs = {}
+	probeJobs, replanning = {}, nil
 end
 
 -- How much of the chosen walk is still ahead of here, from 0 to 1, or nil when here is off it.
@@ -121,7 +128,8 @@ local function MeasuredWalks(here)
 	end
 	if startAt and startAt.map == here.map then
 		for _, walk in ipairs(startCosts) do
-			walks[#walks + 1] = { from = here, to = walk.to, cost = walk.cost, estimated = walk.estimated }
+			walks[#walks + 1] =
+				{ from = here, to = walk.to, cost = walk.cost, estimated = walk.estimated, apart = walk.apart }
 		end
 	end
 	local leg = followed and followed.legs[progress.index]
@@ -146,12 +154,6 @@ local function PrepareWalks(planned)
 		FinishSearch,
 		planned == followed and progress.index or 1
 	)
-end
-
--- A route committed before its proof ended: the optimum replaces it once, whatever the gain, unless it is the same
--- journey.
-local function Provisional()
-	return followed ~= nil and followed.provisional == true
 end
 
 -- Only the timings move, so the drawn route, Guide and any walk still being searched carry on undisturbed.
@@ -252,9 +254,50 @@ local function RetimeKept()
 	return true
 end
 
+-- Since the journey's search started: wall milliseconds, frames that ran path work, their milliseconds and the
+-- frame rate, for the report.
+local function Elapsed(timing)
+	local work = ns.Path.work
+	return {
+		ms = ns.Path.clock() - timing.at,
+		frames = work.frames - timing.frames,
+		cpu = work.cpu - timing.cpu,
+		fps = GetFramerate and GetFramerate() or nil,
+	}
+end
+
+-- The route a first search draws before any walk is searched: a copy of its estimate, so the proof's own candidate
+-- and the drawn route never share legs that drawing fills in. Its walks are straight hints until the proof draws them.
+---@param planned SPFPlan
+---@return SPFPlan
+local function Rough(planned)
+	local rough = {}
+	for key, value in pairs(planned) do
+		rough[key] = value
+	end
+	rough.legs = {}
+	for index, leg in ipairs(planned.legs) do
+		local copy = {}
+		for key, value in pairs(leg) do
+			copy[key] = value
+		end
+		if copy.mode == "walk" and not copy.measured then
+			copy.walkPlaceholder = true
+		end
+		rough.legs[index] = copy
+	end
+	rough.preview, rough.rough = nil, true
+	return rough
+end
+
 ---@param planned SPFPlan?
 local function Commit(planned)
 	followed = planned
+	local timing = Search.timing
+	if timing then
+		timing.last = Elapsed(timing)
+		timing.first = timing.first or timing.last
+	end
 	return publish(planned, "route")
 end
 
@@ -267,40 +310,7 @@ local function ReleaseCosts()
 	end
 end
 
--- The first usable route of a search: a plan of settled walks alone, shown once the walk to take first is drawn.
--- The proof goes on, and its optimum replaces this route once. Returns whether that walk is still being drawn.
----@return boolean
-local function Offer()
-	local offer = search and search.offer
-	if not offer or followed or pendingCosts == 0 then
-		return false
-	end
-	local first = offer.legs[1]
-	if first.walkError or first.walkDeferred then
-		Walks.Drop(offer)
-		search.offer = nil
-	elseif first.mode ~= "walk" or first.measured then
-		offer.provisional = true
-		Commit(offer)
-	else
-		return true
-	end
-	return false
-end
-
 FinishSearch = function()
-	local drawing = search and search.offer ~= nil and not followed
-	if drawing and not Offer() and search and search.resume then
-		-- The first walk is drawn, or failed: the proof it held back goes on.
-		local resume = search.resume
-		search.resume = nil
-		resume()
-	end
-	-- The proof is in: an offer still drawing its first walk would only delay the route that beats it.
-	if search and search.offer and not followed and pendingCosts == 0 and search.offer ~= search.candidate then
-		Walks.Drop(search.offer)
-		search.offer, search.resume = nil, nil
-	end
 	if not search or pendingCosts > 0 or Walks.Pending() > 0 then
 		return
 	end
@@ -332,19 +342,10 @@ FinishSearch = function()
 			valid = false
 		end
 	end
-	-- A route shown before its proof ended gives way to the proved one, whatever it gained or whether its walks
-	-- failed, as a first search's route would have been committed; only the same journey stays.
-	local provisional = Provisional()
-	-- A first search draws every walk anew; a route shown before its proof ended already drew its first.
-	local refine = search.refine or search.initial and not provisional
+	-- A first search draws every walk anew.
+	local refine = search.refine or search.initial
 	-- A search replacing a destination that moved cannot be answered by the plan that led to the old place.
-	local keep = followed
-		and planned
-		and estimate
-		and (
-			provisional and not forced and same
-			or not provisional and (not valid or (not forced and (same or not better)))
-		)
+	local keep = followed and planned and estimate and (not valid or (not forced and (same or not better)))
 	if search.replace then
 		keep = false
 	end
@@ -357,7 +358,6 @@ FinishSearch = function()
 	search = nil
 	ReleaseCosts()
 	if keep then
-		followed.provisional = nil
 		if same then
 			followed.unknownFlight, followed.unknownFlightMaps = planned.unknownFlight, planned.unknownFlightMaps
 		end
@@ -403,10 +403,7 @@ local function Render(planned, forced)
 		end
 		PrepareWalks(kept)
 	end
-	local estimate = not search.initial
-		and not forced
-		and not Provisional()
-		and EstimateKept(planned and planned.now or ns.NowMs())
+	local estimate = not search.initial and not forced and EstimateKept(planned and planned.now or ns.NowMs())
 	if estimate and planned and Walks.Pending() == 0 and not search.refine then
 		local gain = estimate.arrive - planned.arrive
 		if not Worthwhile(gain, estimate.arrive - planned.now) then
@@ -424,8 +421,9 @@ end
 -- Feasible plans use known walks; the incumbent bounds the exact search while preserving journey preferences.
 ---@param feasible boolean?
 ---@param incumbent SPFPlan?
+---@param job SPFPathJob the path job planning, which pauses at the frame budget
 ---@return SPFPlan?
-local function Plan(feasible, incumbent)
+local function Plan(feasible, incumbent, job)
 	local here = Here()
 	if not (here and goal) then
 		return nil
@@ -435,22 +433,26 @@ local function Plan(feasible, incumbent)
 		lastRunSpeed, followed.now = Context.RunSpeed(), ns.NowMs()
 		return followed
 	end
+	-- Where you stand, the context and the walks below each read the client; the budget is checked between them.
+	ns.Path.Checkpoint()
 	local options = Context.Options(here, goal, routePolicy)
 	-- This is a manual refusal for the active journey only. Keep it out of Context.Options so
 	-- public estimates and nearby-service planning retain the normal Hearthstone policy.
 	options.withoutHearth = ns.JourneyWithoutHearth and ns.JourneyWithoutHearth() or false
 	local now = options.now
 	lastRunSpeed = options.walkSpeed
+	ns.Path.Checkpoint()
 	local walks = MeasuredWalks(here)
 	for _, walk in ipairs(Walks.Landings(options.teleports, waterMode)) do
 		walks[#walks + 1] = walk
 	end
+	ns.Path.Checkpoint()
 	options.cache, options.walks, options.waterWalking, options.hazards = plannerCache, walks, waterMode, hazards
 	options.feasibleOnly = feasible
 	options.incumbent, options.incumbentPlan = incumbent and incumbent.arrive, incumbent
 	options.ride = Context.Ride(options)
 	options.unknownFlightNotice = true
-	local planned = ns.Planner.Plan(options)
+	local planned = ns.Planner.Plan(options, job)
 	if planned then
 		planned.now, planned.preview, planned.waterMode = now, nil, waterMode
 		planned.hazards = hazards and hazards.key
@@ -547,7 +549,7 @@ local function RefreshCosts(includeGoal, forced, replace)
 				place.map == batch.point.map
 				and math.abs(place.x - batch.point.x) < 0.00001
 				and math.abs(place.y - batch.point.y) < 0.00001
-				and ns.Path.ReuseMany(batch.job, place)
+				and ns.Path.ReuseMany(batch.job, place, true)
 			then
 				batch.fixedKey = place.kind .. place.id
 				return
@@ -593,6 +595,8 @@ local function RefreshCosts(includeGoal, forced, replace)
 				to = batch.reverse and batch.point or target,
 				cost = cost,
 				estimated = estimated,
+				-- Once the batch has settled every target on its own node, an unmeasured one is a real walk away.
+				apart = estimated and batch.job and batch.job.snapped or nil,
 			}
 		end
 		return list
@@ -605,18 +609,36 @@ local function RefreshCosts(includeGoal, forced, replace)
 		end
 	end
 	local preview
-	if not followed then
+	local wantPreview = not followed
+	if wantPreview then
 		startCosts, goalCosts = walks(startBatch), walks(goalBatch)
-		preview = Plan()
-		if preview then
-			preview.preview, search.candidate = true, preview
-		end
 	end
-	local consider
-	-- Bounded search callback; splitting adds calls and upvalues on every frontier update
-	consider = function(final)
-		-- A search that has published (FinishSearch forgets it) or was replaced is never heard from again.
-		if version ~= pathVersion or search ~= owner or not goal then
+	-- A search that has published (FinishSearch forgets it) or was replaced is never heard from again.
+	local function stale()
+		return version ~= pathVersion or search ~= owner or not goal
+	end
+	-- Does the walk from here reach the goal itself? true when it does (a cost or a successful probe), false once the
+	-- start batch has ruled it out or never measured the goal (another landmass), nil while it may still.
+	local function Direct()
+		for i, point in ipairs(startBatch.targets) do
+			if SamePlace(point, goal) then
+				if startBatch.costs[i] or (startBatch.probes and startBatch.probes[i]) then
+					return true
+				end
+				if startBatch.done then
+					return false
+				end
+				return nil
+			end
+		end
+		return false
+	end
+	local consider, request
+	-- Bounded search callback; splitting adds calls and upvalues on every frontier update. It runs only in the
+	-- search's own path job (request), where each plan pauses at the frame budget; anything a pause let change is
+	-- checked again after it.
+	consider = function(final, job)
+		if stale() then
 			return
 		end
 		if not ns.JourneyPosition() then
@@ -632,6 +654,9 @@ local function RefreshCosts(includeGoal, forced, replace)
 		local hadFixed = startBatch.fixedKey or goalBatch.fixedKey
 		fixedPlace(startBatch)
 		fixedPlace(goalBatch)
+		if stale() then
+			return
+		end
 		if not hadFixed and (startBatch.fixedKey or goalBatch.fixedKey) then
 			preview = nil
 		end
@@ -656,10 +681,13 @@ local function RefreshCosts(includeGoal, forced, replace)
 		end
 		-- What the settled walks alone give: the arrival every other route must beat, and a route to follow if the
 		-- proof still has far to go.
-		local feasible = Plan(true)
+		local feasible = Plan(true, nil, job)
+		if stale() then
+			return
+		end
 		local bound = feasible and feasible.arrive
 		local function best()
-			return Plan(false, feasible)
+			return Plan(false, feasible, job)
 		end
 		-- Reuse the bounded preview once for probes; commit only after planning with current exact costs.
 		local previewed = preview
@@ -668,31 +696,28 @@ local function RefreshCosts(includeGoal, forced, replace)
 			and not (bound and preview.arrive >= bound)
 		local planned = previewed and preview or best()
 		preview = nil
-		if
-			feasible
-			and planned
-			and planned ~= feasible
-			and (planned.needsStart or planned.needsGoal)
-			and search.initial
-			and (not startBatch.done or not goalBatch.done)
-			and not search.offer
-			and #feasible.legs > 0
-		then
-			search.offer = feasible
-			PrepareWalks(feasible)
-		end
-		-- Drawing the offer's first walk takes the frame budget until it lands, then the proof goes on.
-		local offering = Offer()
-		-- Publishing an offer can synchronously stop or replace this journey.
-		if version ~= pathVersion then
+		if stale() then
 			return
 		end
-		if offering and planned and (planned.needsStart or planned.needsGoal) then
-			active(startBatch, false)
-			active(goalBatch, false)
-			search.resume = function()
-				consider(true)
+		-- Publishing starts in a frame of its own when the plans spent this one's budget.
+		ns.Path.Checkpoint()
+		if stale() then
+			return
+		end
+		-- A batch that has not yet settled the targets on its own node may still find a zero, a transfer, for a walk
+		-- this candidate needs: it learns that sooner than a probe would, so it runs first.
+		-- A zero joined into a transfer leaves no pending walk behind, so every batch the plan used is checked.
+		local unsnapped = {}
+		if planned then
+			for _, batch in ipairs({ startBatch, goalBatch }) do
+				if batch.job and not batch.job.snapped and not batch.done then
+					unsnapped[batch] = true
+				end
 			end
+		end
+		if next(unsnapped) then
+			active(startBatch, unsnapped[startBatch] or false)
+			active(goalBatch, unsnapped[goalBatch] or false)
 			return
 		end
 		-- Short A* cost probes let easy routes prove themselves before expanding a wide frontier. Bound
@@ -721,7 +746,7 @@ local function RefreshCosts(includeGoal, forced, replace)
 				local left = #probes
 				for _, probe in ipairs(probes) do
 					local leg, batch = probe.leg, probe.batch
-					local job = ns.Path.FindCost(leg.from.map, leg.from, leg.to, function(cost, reason, finished)
+					local probeJob = ns.Path.FindCost(leg.from.map, leg.from, leg.to, function(cost, reason, finished)
 						probeJobs[finished] = nil
 						if version ~= pathVersion then
 							return
@@ -733,22 +758,29 @@ local function RefreshCosts(includeGoal, forced, replace)
 						probeCPU = probeCPU + finished.cpu
 						left = left - 1
 						if left == 0 then
-							consider(true)
+							request(true)
 						end
 					end, waterMode, hazards)
-					probeJobs[job] = true
+					probeJobs[probeJob] = true
 				end
 				return
 			end
 		end
 		if previewed then
 			planned = best()
+			if stale() then
+				return
+			end
 		end
 		local needStart = planned and planned.needsStart and ns.Path.HasData(here.map)
 		local needGoal = planned and planned.needsGoal and ns.Path.HasData(goal.map)
 		-- Missing-map estimates remain the existing terminal fallback, never an endless search.
 		needStart = needStart and not startBatch.done
-		needGoal = needGoal and not goalBatch.done
+		-- A goal no place walks to waits on the walk from here before it moves (Ground).
+		needStart = (needStart or goalBatch.done and goalBatch.job.moved and Direct() == nil) and not startBatch.done
+		-- A goal batch whose frontier is spent is finishing, and one that no place walked to still moves its goal to the
+		-- ground they reach (Ground): it runs to its end rather than leaving the goal where nobody can stand.
+		needGoal = (needGoal or goalBatch.job.radius == math.huge) and not goalBatch.done
 		active(startBatch, needStart)
 		active(goalBatch, needGoal)
 		-- A bind point's walks still being searched, for a teleport that could be faster: settle when they end.
@@ -763,6 +795,10 @@ local function RefreshCosts(includeGoal, forced, replace)
 			)
 		if not needStart and not needGoal and not landing then
 			pendingCosts, settleRound = 0, settleRound + 1
+			ns.Path.Checkpoint()
+			if stale() then
+				return
+			end
 			Render(planned, forced)
 		else
 			if planned and planned ~= followed then
@@ -770,6 +806,46 @@ local function RefreshCosts(includeGoal, forced, replace)
 			end
 			search.candidate = planned
 		end
+	end
+	-- The search's own path job: the preview a first search shows, then consider again for as long as new costs
+	-- arrived while it ran. Callbacks only ask for it, so none of them plans in its own frame.
+	local considering, again, againFinal = nil, false, false
+	local function work(job)
+		if wantPreview then
+			wantPreview = false
+			preview = Plan(nil, nil, job)
+			if stale() then
+				return
+			end
+			if preview then
+				preview.preview, search.candidate = true, preview
+				-- A first search draws this estimate at once and offers no walk of its own: the proved route replaces it.
+				-- An estimate whose zero walks left no legs would read as arrival, so it waits for the proof.
+				if not followed and search.initial and not search.rough and #preview.legs > 0 then
+					search.rough = true
+					publish(Rough(preview), "rough")
+					if stale() then
+						return
+					end
+				end
+			end
+		end
+		while again do
+			local final = againFinal
+			again, againFinal = false, false
+			consider(final, job)
+		end
+		considering = nil
+	end
+	local function schedule()
+		if not considering and not stale() then
+			considering = ns.Path.Run(work)
+			probeJobs[considering] = true
+		end
+	end
+	request = function(final)
+		again, againFinal = true, againFinal or final == true
+		schedule()
 	end
 	-- A finished batch's answer: its costs, why it found none, and false for each target it never reached.
 	local function settle(batch, costs, reason, job)
@@ -783,13 +859,39 @@ local function RefreshCosts(includeGoal, forced, replace)
 			end
 		end
 	end
+	-- No place on the goal's landmass walks to it: a plateau ringed by faces past the player's slope and step limits
+	-- (#1113). The route ends instead at the nearest ground those places reach, the closest a player can stand, unless
+	-- the walk from here reaches the goal itself (a player already on the plateau), so the move waits until that walk
+	-- is ruled out. The search starts again toward that ground.
+	local function Ground()
+		local moved = goalBatch.done and goalBatch.job and goalBatch.job.moved
+		if not moved or Direct() ~= false then
+			return false
+		end
+		local point = {}
+		for key, value in pairs(goal) do
+			point[key] = value
+		end
+		point.x, point.y, point.z = moved.x, moved.y, moved.z
+		grounded, goal = { from = goal, to = point }, point
+		-- The rough route already drawn stays until the proved route replaces it, so a journey draws one estimate.
+		local drew = search and search.rough
+		RefreshCosts(true, true, search and search.replace)
+		if search then
+			search.rough = drew
+		end
+		return true
+	end
 	local function attach(batch)
 		local function update(costs, reason, job)
 			if version ~= pathVersion or not goal then
 				return
 			end
 			settle(batch, costs, reason, job)
-			consider(batch.done)
+			if Ground() then
+				return
+			end
+			request(batch.done)
 		end
 		local job = batch.job
 		if job then
@@ -817,12 +919,19 @@ local function RefreshCosts(includeGoal, forced, replace)
 	end
 	attach(startBatch)
 	attach(goalBatch)
+	-- Both batches may have finished while no search listened (a replan drops queued answers): attach took their
+	-- results from the jobs, so the move a callback would have made is made here.
+	if Ground() then
+		return
+	end
 	Walks.LandingPending(teleports, waterMode, function()
-		consider(true)
+		request(true)
 	end)
 	-- Existing settled costs can prove a repeated journey without advancing either frontier.
 	if (startBatch.job.valid or startBatch.done) and (goalBatch.job.valid or goalBatch.done) then
-		consider(true)
+		request(true)
+	elseif wantPreview then
+		schedule()
 	end
 end
 
@@ -861,6 +970,8 @@ function Search.Reset()
 	end
 	startBatch, goalBatch = nil, nil
 	search = nil
+	-- A goal moved for this journey is not moved for the next: the player may stand on it by then.
+	grounded = nil
 	-- plannerCache is kept: Planner.Plan rebuilds the graph itself whenever an input it was built from differs (its
 	-- CACHE_KEYS, waterWalking and hazards among them) and rewrites the two endpoints for the new journey, so a
 	-- journey started after this one plans against a warm graph instead of paying the whole build on its first
@@ -916,10 +1027,18 @@ function Search.Start(point, route, state, listener, replace, policy)
 		route = nil
 	end
 	routePolicy = policy
+	if grounded and SamePlace(point, grounded.from) then
+		point = grounded.to
+	end
 	goal, followed, progress, publish = point, route, state, listener
 	search = nil
 	waterMode = (ns.JourneyWaterWalking())
 	origin = nil
+	-- Timed only where the path jobs run: specs may stand in a bare Path.
+	local work = ns.Path.work
+	if not replace and work then
+		Search.timing = { at = ns.Path.clock(), frames = work.frames, cpu = work.cpu }
+	end
 	Avoid()
 	RefreshCosts(true, false, replace == true)
 end
@@ -993,20 +1112,42 @@ function Search.Replan(riding, flying, changedRide, changedSpeed)
 		then
 			RefreshCosts(false, off or retry)
 		elseif changedRide or changedSpeed or not RetimeKept() then
-			local planned = Plan()
-			if
-				planned
-				and (
-					(planned.needsStart and here and ns.Path.HasData(here.map))
-					or (planned.needsGoal and ns.Path.HasData(goal.map))
-				)
-			then
-				-- A timed replan can expose an alternative left bounded by the previous proof.
-				-- Resume its costs before letting it replace the route with settled geometry.
-				RefreshCosts(false, changedRide)
-			else
-				Render(planned, changedRide)
+			-- Planned in a path job of its own; a newer tick's replan replaces one still running.
+			if replanning then
+				ns.Path.Cancel(replanning)
 			end
+			local version = pathVersion
+			-- Held until it renders, so a newer tick cancels it at any pause.
+			local this
+			this = ns.Path.Run(function(job)
+				local planned = Plan(nil, nil, job)
+				if version ~= pathVersion or not goal then
+					return
+				end
+				here = Here()
+				if
+					planned
+					and (
+						(planned.needsStart and here and ns.Path.HasData(here.map))
+						or (planned.needsGoal and ns.Path.HasData(goal.map))
+					)
+				then
+					-- A timed replan can expose an alternative left bounded by the previous proof.
+					-- Resume its costs before letting it replace the route with settled geometry.
+					RefreshCosts(false, changedRide)
+				else
+					ns.Path.Checkpoint()
+					if version == pathVersion and goal then
+						Render(planned, changedRide)
+					end
+				end
+			end, function()
+				if replanning == this then
+					replanning = nil
+				end
+			end)
+			replanning = this
+			probeJobs[this] = true
 		end
 	end
 end

@@ -391,6 +391,7 @@ local function stubframe()
 	f.Header = {
 		SetScript = noop,
 		EnableMouse = noop,
+		RegisterForDrag = noop,
 		HookScript = noop,
 		SetWidth = noop,
 	}
@@ -843,7 +844,7 @@ _G.UiMapPoint = {
 _G.Enum = {
 	FlightPathFaction = { Neutral = 0, Horde = 1, Alliance = 2 },
 	FlightPathState = { Current = 0, Reachable = 1, Unreachable = 2 },
-	UIMapType = { Continent = 2, Zone = 3 },
+	UIMapType = { Cosmic = 0, World = 1, Continent = 2, Zone = 3, Dungeon = 4, Micro = 5, Orphan = 6 },
 	TooltipDataType = { MinimapMouseover = 21 },
 }
 _G.CreateVector2D = function(x, y)
@@ -954,6 +955,17 @@ local addonSettings, settingsRows, settingsButtons, openedCategories = {}, {}, {
 _G.MinimalSliderWithSteppersMixin = { Label = { Right = 1 } }
 -- The frames Escape closes (UIParent.lua); the report and Forever family windows add themselves.
 _G.UISpecialFrames = _G.UISpecialFrames or {}
+-- Blizzard_SharedXML/InputUtil.lua, under a mouse: core opens its right-click menus at the cursor.
+_G.InputUtil = _G.InputUtil
+	or {
+		IsGamepadUIEnabled = function()
+			return false
+		end,
+		AnchorRegionToCursor = function(region, point)
+			region:ClearAllPoints()
+			region:SetPoint(point, _G.UIParent, "BOTTOMLEFT", 0, 0)
+		end,
+	}
 -- Blizzard_SharedXML/TableUtil.lua.
 _G.tContains = _G.tContains
 	or function(list, item)
@@ -1105,6 +1117,9 @@ _G.Menu = {
 }
 _G.UnitFactionGroup = function()
 	return "Alliance"
+end
+_G.UnitClass = _G.UnitClass or function()
+	return "Hunter", "HUNTER"
 end
 _G.UnitLevel = function()
 	return 60

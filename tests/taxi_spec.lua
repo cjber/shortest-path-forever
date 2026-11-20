@@ -244,6 +244,9 @@ assert(ns.SetTaxiKnown(101, false), "manual toggle clears a valid node")
 assert(not ns.KnownTaxiNodes()[101], "manual clear removes the node")
 assert(not ns.SetTaxiKnown(103, true), "manual toggle rejects the opposing faction")
 assert(not ns.SetTaxiKnown(999, true), "manual toggle rejects an unknown node")
+ns.TaxiNodes[900] = { map = 0, faction = "Alliance", class = "DRUID" }
+assert(not ns.SetTaxiKnown(900, false), "a class flight master has no discovery to toggle")
+ns.TaxiNodes[900] = nil
 local function event(name)
 	assert(eventFrame.events[name])
 	eventFrame:Run("OnEvent", name)

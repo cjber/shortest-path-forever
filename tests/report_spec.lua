@@ -111,6 +111,17 @@ contains(text, "map 0 x 3 y 4 z 0")
 contains(text, "measured false, drawn false, placeholder true, deferred true; estimated cost false")
 contains(text, "format 3, cells 67, zstep 2, steep true, climbChecked true; revision unknown")
 contains(text, "Plan water walking: false")
+assert(not text:find("Search first route", 1, true), "no timings before a journey search has any")
+-- The client's own timings, to compare with the simulator's: wall time, frames that ran path work, and their cost.
+local status = ns.JourneyStatus
+local first = { ms = 5020, frames = 120, cpu = 301.4, fps = 24.2 }
+ns.JourneyStatus = function()
+	return false, 1, nil, false, { first = first, last = { ms = 6100, frames = 150, cpu = 380, fps = 30 } }
+end
+text = report()
+contains(text, "Search first route: 5.02 s, 120 work frames, 301 ms path work, 24 fps")
+contains(text, "Search last route: 6.10 s, 150 work frames, 380 ms path work, 30 fps")
+ns.JourneyStatus = status
 leg.from.z, leg.to.z = 0, nil
 leg.measured, leg.walkDrawn, leg.walkPlaceholder, leg.walkDeferred = true, true, nil, nil
 text = report()

@@ -22,13 +22,17 @@ env.C_AddOns = {
 	IsAddOnLoaded = function()
 		return loaded
 	end,
+	-- The client keys a character by GUID; a name is ignored and reads 2 for every addon.
 	GetAddOnEnableState = function(_, character)
-		assert(character == "Tester", "enabled for this character")
+		assert(character == "Player-1-TESTER", "enabled for this character, by GUID")
 		return installed and 2 or 0
 	end,
 }
 env.UnitName = function()
 	return "Tester"
+end
+env.UnitGUID = function()
+	return "Player-1-TESTER"
 end
 -- The real hooksecurefunc runs the hook after the function it hooks.
 env.hooksecurefunc = function(target, key, hook)

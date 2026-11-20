@@ -19,6 +19,7 @@ Need a vendor, a trainer or an inn? The **Nearby services** tab on the world map
 - Walking maps are built ahead of time, so patched terrain can route wrongly until an update.
 - The game names your bind point but not where it is, so the Hearthstone counts once you bind or hearth with the addon on.
 - A boat, lift or tram shows "no sighting yet" until you have ridden that route once, because the game holds no timetables.
+- The game gives no player height, so standing still at a lift's landing right after a ride, the tracker can name the landing you rode from until you step off it.
 - The game cannot show another player's spells, so you list a party mage's portals yourself in the settings (Party mage portals).
 
 ![Eight-second demo of a route settling, the countdown and the compass](docs/screenshots/demo.gif)
@@ -28,7 +29,7 @@ with you.
 
 ## Features
 
-- **Find nearby services.** A tab in the world map's quest log lists vendors by what they sell, your own class trainer, profession trainers, battlemasters, portal trainers for mages, inns, banks, auction houses, flight masters, stables and repairs, and every dungeon and raid door on your continent. Each row shows the nearest one and how long it takes to get there, and the dungeon and raid rows are ordered by that time. Arrows, shot, food and drink are the best for your level, and a row under them offers better ones farther away. Search for a group, an NPC, an item or an instance, then click a row to start the journey; a dungeon row takes you to the door and ends when you go in. Arrows mark that NPC's nameplate when you get there. Zone and city maps show the same services where they stand, each in the game's own minimap icon. Services of the same kind share one of those icons, and a market stall appears only where different kinds of service truly share a spot; click one to go there, and hide any service under *Town services* in the map's filter menu. Requires installed QuestieDB; class trainers also use Tweaks Forever.
+- **Find nearby services.** A tab in the world map's quest log lists vendors by what they sell, your own class trainer, profession trainers, battlemasters, portal trainers for mages, inns, banks, auction houses, flight masters, stables and repairs, and every dungeon and raid door on your continent. Each row shows the nearest one and how long it takes to get there, and the dungeon and raid rows are ordered by that time. Arrows, shot, food and drink are the best for your level, and a row under them offers better ones farther away. Search for a group, an NPC, an item or an instance, then click a row to start the journey; a dungeon row takes you to the door and ends when you go in. Arrows mark that NPC's nameplate when you get there. Pick a level under *Town services* in the map's filter menu and zone and city maps show the same services where they stand, each kind in its own map icon, with a market stall only where different kinds truly share a spot; click one to go there, or hide any one kind from that menu. Requires installed QuestieDB; class trainers also use Tweaks Forever.
   ![The Nearby services tab in the world map's quest log](docs/screenshots/services.png)
   The tracking menus and `/spfnear` open the same tab.
 
@@ -64,14 +65,13 @@ More detail: [features](docs/features.md) and [API](docs/api.md).
 
 ## Install
 
-Install it from [CurseForge](https://www.curseforge.com/wow/addons/shortest-path-forever) or
-[Wago Addons](https://addons.wago.io/addons/shortest-path-forever), or download the zip from
+Install it from [CurseForge](https://www.curseforge.com/wow/addons/shortest-path-forever), or download the zip from
 [Releases](https://github.com/cjber/shortest-path-forever/releases). Everything it needs comes inside the download. To install the zip by hand, extract it into
 the WoW: Forever client's `Interface/AddOns/` folder (`_forever_` on the live client, `_classic_beta_` on the beta) so you end up with `AddOns/ShortestPathForever/ShortestPathForever.toc`.
 
 ## Usage
 
-Alt-click the world map to choose a destination over a Questie icon. Shift-click works on empty map space and Shortest Path icons. Choose Alt as *Key to plan a journey* in Guidance, and that one key works everywhere, Questie icons included. With the gamepad interface on, Shortest Path never opens or turns the world map, or opens a menu, itself; it asks you to.
+Alt-click a Questie icon on the world map to choose its spot as the destination. Shift-click works on empty map space and Shortest Path icons, and Alt-click elsewhere is left to other addons, such as OpenMap's marker delete. Choose Alt as *Key to plan a journey* in Guidance, and that one key works everywhere, Questie icons included. With the gamepad interface on, Shortest Path never opens or turns the world map, or opens a menu, itself; it asks you to.
 
 The settings have five pages. **Guidance** holds journey behaviour: the tracker (*Show the journey tracker*, *Show boat, lift and tram departures in the tracker*), *Key to plan a journey*, *Route to the focused quest*, *Arrival distance*, the guide addons, and route choices such as *Use Hearthstone* and *Use class teleports*. **Map marks** holds the icons on the world map and minimap (including *Town service icons* and *Show the Nearby services tab*), their sizes from 25% to 200%, the route lines, and the other faction's boats and zeppelins (off by default). **Party mage portals** lists the capitals a mage in your group can open. **Alerts** covers the boat warning and the arrival sound. **Interface** shows or hides the arrow and compass, sizes them, and labels distances in metres. [docs/features.md](docs/features.md) has the detail.
 
@@ -91,11 +91,11 @@ The world map's filter menu and the minimap's tracking menu hide each kind of ma
 
 ## Move the tracker
 
-The Forever column pins beside the game's tracker; **Lock the tracker** in Guidance keeps it where it is.
+The Forever column sits to the left of the game's quest tracker and follows it when you move that tracker in Edit Mode. Drag a section's heading to put the column anywhere; it stays there after `/reload`. Right-click a heading for **Lock the tracker**, which stops dragging. The column hides while nothing is tracked.
 
-![Detached Forever tracker](docs/screenshots/detached.png)
+![The Forever column dragged away from the quest tracker](docs/screenshots/detached.png)
 
-The heading moves the Forever sections; your quests keep their own position.
+Moving it moves only the Forever sections; the game's quest tracker keeps its own position.
 
 ## Works alongside
 
@@ -104,9 +104,7 @@ to journey changes. [docs/api.md](docs/api.md) has the calls and what they retur
 
 With *Follow RestedXP guides* on (the default), leave RestedXP's TomTom option off so only one addon follows the guide.
 
-With Questie's tracker on, the Forever sections move clear of its quest list.
-
-Alt-left-click on the world map plans a journey even with TomTom installed. TomTom keeps its modified right-click waypoint gesture.
+Your journey key plans a journey on the world map even with TomTom installed. TomTom keeps its modified right-click waypoint gesture.
 
 With OpenMap on, the route and its stops draw across its stitched world map and carry on into the zones either side, over OpenMap's own art.
 
@@ -135,9 +133,7 @@ For help, ideas and each day's release notes, join [cjber's Workshop on Discord]
 
 Installed together, the others send Shortest Path their destinations: an Adventure Guide journey or quest-menu suggestion, a RestedXP, Guidelime or Dugi Guides step, a trainer or vendor in a SkillUp route, a Legacy dungeon or raid pin, or a dungeon or raid entrance Tweaks adds to the map.
 
-Journey steps share one tracker column with the Adventure Guide, SkillUp and Legacy sections, above your quests.
-
-If Adventure Guide or Legacy isn't installed, a grey hint suggests it where it would help.
+Journey steps share one tracker column with the Adventure Guide, SkillUp and Legacy sections, beside the game's quest tracker.
 
 ## Ways to help
 
@@ -163,7 +159,7 @@ Travel data comes from [wago.tools](https://wago.tools), [CMaNGOS](https://githu
 
 <!-- forever-credits:start -->
 
-Thanks to Alex21xx, Maggew, MacieGx, Stiandresius, user_lsqt69ps7bgb5p7e, The___Fast, Joster91, GenericP, cotijelucie, vladsnz, user_sggieekz05hc7uxt, kindguydev, ubrider, Drusangus, user_u3k9hweaatfhnjs0, user_g496wu46adiwjuc5, emmiehbun, VolomonBeddarm, zhega, catubba, Hatemost, JaidyEU, Chulf58, embiem, InfamousMunky, A player, kaelr1, Enel3008, azure463, AsimRamay, nookie909, Zerhathos, jakerist, cobalt_44, Xeteskian, DaFrozenMage, user_zbqhuuoypkkr46x1, Fitz, TRDeadbeat, tallsmartman, Sol_Deus, Zavian, Osipanda, Nightwind416, wfournier, cidolfus27, o0saw0o, Merlinqt, team_Brigade, phear, Testvonfarkle, rydoc, deathmvp1, saikoso, Ragnarok11B, Brainc3ll, Mouchoir, z1ck, Oxds, sean16981, aryaxo, Exo_NA, legortiz, JohnChrin, wheelbarrel00, lkshrk, HeartOfD2, rml9ty, hwalflor, chris-chrysos, Quantity-4, Bolton_wow, Aldericdevir, joaocjesus, jakerist (Grayburn), borick7318, sampconrad, jixxor, Gaafah, _spada, macwire, scraak, overspark, TeeRKee, Speaker1264, SuubzTV, Fel7, Kragmars, spidersylar, Acem, tgkGate, user_efwsfml273dlvfm5, IronmanBG, vcatalin, sdtom, Bervath, Blast22, hervad, caghanpekin-prog, Zwaffelmagic, CptShooter, user_10oietw0rdrgk4le, cwebbx, lone_viking1921, Nivlemoth_Nathrezim, Lůca [Luutsa], esc_return, MrOxiMoron, Zhiroc, Crypa7, ghuff07, nimri82, cmartin303 and everyone who reported a bug or asked for a feature.
+Thanks to Alex21xx, Maggew, MacieGx, Stiandresius, user_lsqt69ps7bgb5p7e, The___Fast, Joster91, GenericP, cotijelucie, vladsnz, user_sggieekz05hc7uxt, kindguydev, ubrider, Drusangus, user_u3k9hweaatfhnjs0, treadpool, user_g496wu46adiwjuc5, emmiehbun, VolomonBeddarm, zhega, catubba, Hatemost, JaidyEU, Chulf58, embiem, InfamousMunky, A player, kaelr1, Enel3008, azure463, AsimRamay, nookie909, Zerhathos, jakerist, cobalt_44, Xeteskian, DaFrozenMage, user_zbqhuuoypkkr46x1, Fitz, TRDeadbeat, tallsmartman, Sol_Deus, Zavian, Osipanda, Nightwind416, wfournier, cidolfus27, o0saw0o, Merlinqt, team_Brigade, phear, Testvonfarkle, rydoc, deathmvp1, saikoso, Ragnarok11B, Brainc3ll, Mouchoir, z1ck, Oxds, sean16981, aryaxo, Exo_NA, legortiz, JohnChrin, wheelbarrel00, lkshrk, HeartOfD2, rml9ty, hwalflor, chris-chrysos, Quantity-4, Bolton_wow, Aldericdevir, joaocjesus, jakerist (Grayburn), borick7318, sampconrad, jixxor, Gaafah, _spada, macwire, scraak, overspark, TeeRKee, Speaker1264, SuubzTV, Fel7, Kragmars, spidersylar, Acem, tgkGate, user_efwsfml273dlvfm5, IronmanBG, vcatalin, sdtom, Bervath, Blast22, hervad, caghanpekin-prog, Zwaffelmagic, CptShooter, user_10oietw0rdrgk4le, cwebbx, lone_viking1921, Nivlemoth_Nathrezim, Lůca [Luutsa], esc_return, MrOxiMoron, Zhiroc, Crypa7, ghuff07, nimri82, cmartin303 and everyone who reported a bug or asked for a feature.
 
 <!-- forever-credits:end -->
 

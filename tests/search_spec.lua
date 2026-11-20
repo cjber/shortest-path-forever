@@ -129,7 +129,8 @@ do
 	assert(h.heard() == "searching" and not h.route and select(2, h.status()))
 	h.frame(1)
 	h.costs("B")
-	assert(h.heard() == "" and not h.route)
+	-- The estimate is drawn at once and never followed.
+	assert(h.heard() == "rough" and not h.route)
 	h.geometry()
 	local pending, loading = h.status()
 	local news = h.heard()
@@ -143,7 +144,8 @@ end
 for _, case in ipairs({ { 300, 275 }, { 600, 560 }, { 200, 175 }, { 270, 240 } }) do
 	local h = scenario(case[1], case[2])
 	h.frame(2.9)
-	assert(h.heard() == "searching" and not h.route)
+	-- The estimate is drawn at once and never followed.
+	assert(h.heard() == "searching rough" and not h.route)
 	h.frame(0.1)
 	assert(h.heard() == "" and not h.route, "elapsed time cannot validate a guessed walk")
 	h.costs("B")
@@ -164,7 +166,7 @@ do
 	h.costs("A")
 	h.geometry()
 	local route = h.route
-	assert(h.heard():gsub(" times", "") == "searching route")
+	assert(h.heard():gsub(" times", "") == "searching rough route")
 	h.refresh()
 	assert(not select(2, h.status()) and h.status() > 0)
 	h.costs("B")
@@ -281,7 +283,8 @@ do
 		h.frame(0.5, true)
 	end
 	walking.costs(batches[2], 1400)
-	assert(h.heard() == "" and #finds == 0 and #batches == 2)
+	-- Only the estimate is drawn meanwhile, and it is never followed.
+	assert(h.heard() == "rough" and not h.route and #finds == 0 and #batches == 2)
 	walking.costs(batches[1], 1400)
 	assert(h.heard() == "" and h.status() == 1 and round() == 1 and #finds == 1, "wait for the chosen geometry")
 	local first = finds[1]
@@ -333,7 +336,8 @@ do
 	begin()
 	walking.costs(batches[#batches], false)
 	walking.costs(batches[#batches - 1], false)
-	assert(h.heard() == "searching route" and not h.route and h.status() == 0)
+	-- The estimate drawn first is cleared by the answer that there is no way.
+	assert(h.heard() == "searching rough route" and not h.route and h.status() == 0)
 	local count = #batches
 	h.frame(5, true)
 	assert(#batches == count)
@@ -449,6 +453,32 @@ do
 	h.geometry()
 	assert(cache.topology ~= topology, "a changed input still rebuilds the topology")
 	h.clear()
+end
+
+-- A timed replan stays cancellable until it renders: a newer tick cancels one paused at its last checkpoint.
+do
+	local h = harness(function(a, b)
+		return math.sqrt((a.x - b.x) ^ 2 + (a.y - b.y) ^ 2)
+	end)
+	h.start({ map = 1, x = 0, y = 0 }, { map = 1, x = 1000, y = 0 })
+	for _ = 1, 3 do
+		h.costs()
+		h.geometry()
+		h.walking.runAll()
+	end
+	h.Search.Replan(nil, nil, true)
+	local first = assert(h.walking.runs[#h.walking.runs], "a timed replan runs in a path job")
+	local checkpoint = h.ns.Path.Checkpoint
+	h.ns.Path.Checkpoint = function()
+		-- The replan's own pause before it renders, not the planner's inside it.
+		if debug.getinfo(2, "S").short_src:find("JourneySearch") then
+			h.ns.Path.Checkpoint = checkpoint
+			h.Search.Replan(nil, nil, true)
+		end
+	end
+	h.walking.runAll()
+	h.ns.Path.Checkpoint = checkpoint
+	assert(first.cancelled, "the newer tick cancelled the paused replan")
 end
 
 print("search_spec: measured guidance, private guesses, background replans, switch gains, reuse and cancellation: ok")

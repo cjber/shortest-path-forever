@@ -23,7 +23,7 @@
 ---@field Clear fun(self: SPFJourneyStopsController): boolean
 ---@field Submit fun(self: SPFJourneyStopsController, points: SPFAPIStop[]): boolean
 ---@field Start fun(self: SPFJourneyStopsController): boolean
----@field Step fun(self: SPFJourneyStopsController)
+---@field Step fun(self: SPFJourneyStopsController, pathJob?: SPFPathJob)
 ---@field Pause fun(self: SPFJourneyStopsController): boolean
 ---@field Resume fun(self: SPFJourneyStopsController): boolean
 ---@field Stop fun(self: SPFJourneyStopsController)

@@ -31,7 +31,7 @@ pixels never enter product media.
 | `detached.png` | The Journey tracker detached from the quest tracker, under its draggable "Forever tracker" heading |
 | `minimap.png` | Auberdine's piers as minimap pins, the last dotted stretch to the south pier, the addon's own goal pin |
 | `cast_prompt.png` | The current Hearthstone action, using the same icon, label and spacing as the screen prompt |
-| `compass.png` | The compass: the game's own ticks and gold letters fading out at each end, turns 1 and 2 and the yards under the next, no panel (on by default) |
+| `compass.png` | The compass: the game's own ticks and gold letters fading out at each end, turns 1 and 2 and the yards under the next, no panel (off by default) |
 | `compass_behind.png` | The same compass facing about 140 degrees away: the markers and distance dim to 40 percent and only turn 1 shows |
 | `arrival.png` | Standing in a quest's area: the arrow is the addon's gold goal pin with the stop's title and three objectives, and the compass ribbon is tinted green with no turns or distance |
 | `services.png` | The Nearby services tab in the world map's quest log, its bags tab selected: Auberdine's vendors for a level 15 hunter, each with the nearest NPC and walking time, and the arrows, shot, food and drink for that level |

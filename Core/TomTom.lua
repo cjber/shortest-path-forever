@@ -420,7 +420,7 @@ function ns.TomTomEnabled()
 		return false
 	end
 	if C_AddOns.GetAddOnEnableState then
-		local state = C_AddOns.GetAddOnEnableState("TomTom", UnitName("player"))
+		local state = C_AddOns.GetAddOnEnableState("TomTom", UnitGUID("player"))
 		return state == nil or state > 0
 	end
 	return true

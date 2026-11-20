@@ -60,9 +60,12 @@ env.SlashCmdList = {}
 ns.TomTomEnabled = function()
 	return loaded.TomTom == true
 end
-local printed = {}
+local printed, noticed = {}, {}
 ns.Print = function(message)
 	printed[#printed + 1] = message
+end
+ns.Notice = function(message)
+	noticed[#noticed + 1] = message
 end
 
 local created = {}
@@ -157,7 +160,11 @@ equal(printed[#printed], "no zone called Atlantis.", "and says why")
 ns.db.journey = false
 ns.Way("45 67")
 equal(ns.HasJourney(), false, "journeys switched off start nothing")
-equal(printed[#printed]:find("Click the map to plan journeys", 1, true) ~= nil, true, "and names the setting")
+equal(
+	noticed[#noticed],
+	"Journeys are off. Turn on Click the map to plan journeys in settings.",
+	"and names the setting on screen, not in chat"
+)
 ns.db.journey = true
 
 -- /way is claimed as Shortest Path loads, while it is free, and given up at login to TomTom or another addon.

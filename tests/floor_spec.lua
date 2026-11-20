@@ -2,7 +2,7 @@
 -- of Lordaeron starts in the Undercity rather than on the ruins above it.
 local ns = {}
 assert(loadfile("tools/load_nav.lua"))(0)
-local swimming, nearDock, inCombat = false, nil, false
+local swimming, falling, nearDock, inCombat = false, false, nil, false
 _G.UnitOnTaxi = function()
 	return false
 end
@@ -12,10 +12,19 @@ end
 _G.IsSwimming = function()
 	return swimming
 end
-_G.IsIndoors = function()
-	return true
+_G.IsFalling = function()
+	return falling
 end
-ns.NearestDock = function()
+local tick, journeyAt
+ns.OnTravelTick = function(fn)
+	tick = fn
+end
+ns.JourneyPosition = function()
+	if journeyAt then
+		return journeyAt.x, journeyAt.y, nil, 0
+	end
+end
+ns.NearestDockSpot = function()
 	if nearDock then
 		return nearDock, 5
 	end
@@ -40,13 +49,13 @@ local MAGIC = { x = 1773.47, y = 61.121, z = -46.321 } -- the Magic Quarter
 local LIFT_TOP = { x = 1596.15, y = 291.8, z = 55.718 } -- Data/Transports.lua dock 1009, in the hall above
 local UNDER_HALL = { x = 1588, y = 237 } -- a city cell with the ruins' hall above it
 
--- Walk the drawn line from a to b, sampling every five yards as the journey's frame would; check is called at each
--- sample with the point, the line's height there and the tracked height.
-local function walk(from, to, check)
+-- Walk the drawn line from a to b, sampling every five yards (or spacing) as the journey's frame would; check is
+-- called at each sample with the point, the line's height there and the tracked height.
+local function walk(from, to, check, spacing)
 	local points = assert(Path.FindSync(0, from, to))
 	for i = 2, #points do
 		local a, b = points[i - 1], points[i]
-		local steps = math.max(1, math.ceil(math.sqrt((b.x - a.x) ^ 2 + (b.y - a.y) ^ 2) / 5))
+		local steps = math.max(1, math.ceil(math.sqrt((b.x - a.x) ^ 2 + (b.y - a.y) ^ 2) / (spacing or 5)))
 		for j = 1, steps do
 			local t = j / steps
 			local x, y = a.x + t * (b.x - a.x), a.y + t * (b.y - a.y)
@@ -72,8 +81,9 @@ do
 	assert(st.val[k], "the job decoded the player's cluster, and the idle sweep after it kept it")
 end
 
--- Both ways across the city, from an unknown floor: the floor settles within a few dozen yards and is never another
--- floor than the one the line is drawn on.
+-- Both ways across the city, from an unknown floor: the floor settles within a block or so and is never another
+-- floor than the one the line is drawn on. A surface the map has no way from is held a few cells, so settling waits
+-- for that.
 for _, ends in ipairs({ { FM, MAGIC }, { MAGIC, FM } }) do
 	Floor.Forget()
 	local walked, settled, wrong, last = 0, nil, 0, nil
@@ -89,7 +99,7 @@ for _, ends in ipairs({ { FM, MAGIC }, { MAGIC, FM } }) do
 			end
 		end
 	end)
-	assert(settled and settled < 100, "the floor settles soon: " .. tostring(settled))
+	assert(settled and settled < 150, "the floor settles soon: " .. tostring(settled))
 	assert(wrong == 0, "the tracked floor is the line's floor: " .. wrong)
 end
 
@@ -120,14 +130,267 @@ do
 	assert(Floor.Height(0, UNDER_HALL.x + 20, UNDER_HALL.y) == nil, "and Height answers only near the last sample")
 end
 
+-- Outdoors too (#737): Stormwind's streets stand over open ground the walking map reaches, and with no height a walk
+-- from the street below the Keep starts down there. Walking in from the flight master, the travel tick follows the
+-- streets.
+do
+	local SW_FM = { x = -8832.77, y = 478.62, z = 109.6 } -- Data/Taxi.lua node 2
+	local STREET = { x = -8485, y = 446 } -- the street below the Keep, z 96
+	local guessed = assert(Path.FindSync(0, STREET, SW_FM))
+	assert(guessed[2].z < 80, "with no height the walk starts under the city: " .. guessed[2].z)
+	Floor.Forget()
+	local line = assert(Path.FindSync(0, SW_FM, { x = STREET.x, y = STREET.y, z = 96 }))
+	for i = 2, #line do
+		local a, b = line[i - 1], line[i]
+		local steps = math.max(1, math.ceil(math.sqrt((b.x - a.x) ^ 2 + (b.y - a.y) ^ 2) / 5))
+		for j = 1, steps do
+			journeyAt = { x = a.x + j / steps * (b.x - a.x), y = a.y + j / steps * (b.y - a.y) }
+			tick()
+			drain()
+			tick()
+		end
+	end
+	local height = Floor.Height(0, STREET.x, STREET.y)
+	assert(height and height > 85, "the street is followed outdoors: " .. tostring(height))
+	local tracked = assert(Path.FindSync(0, { x = STREET.x, y = STREET.y, z = height }, SW_FM))
+	for _, p in ipairs(tracked) do
+		assert(not p.z or p.z > 85, "from the followed street the walk stays on the streets: " .. tostring(p.z))
+	end
+	journeyAt = nil
+	tick()
+	assert(Floor.Height(0, STREET.x, STREET.y) == nil, "with no position the floor is forgotten")
+end
+
+-- The Trade District (#1046): the walking map has a cell beside the street that holds only the ground under the city.
+-- Walking in from the flight master at a run's pace per travel tick, with each decode one frame behind, the street is
+-- held through that cell, and a walk from it climbs straight to the roost. A fall or a swim there takes the lower
+-- surface instead.
+local SW_FM = { x = -8832.77, y = 478.62, z = 109.6 } -- Data/Taxi.lua node 2
+local GAP = { x = -8851, y = 589 } -- the street stands at z 94; the cell's only surface is the ground, z 74
+local ON_STREET = { x = -8838, y = 580, z = 97 }
+local function surfaces(p)
+	Path.FindSync(0, { x = p.x, y = p.y }, { x = p.x + 1, y = p.y + 1 })
+	local st = Grid.State(0)
+	local k, lc = Grid.locate(st, p.x, p.y)
+	local val, z, at = st.val[k], st.z[k], st.at[k]
+	local out = {}
+	if val[lc + 1] ~= 0 then
+		out[#out + 1] = z[lc + 1]
+	end
+	local n = at[-(lc + 1)]
+	while n and at[n + 1] == lc do
+		out[#out + 1] = z[n + 1]
+		n = n + 1
+	end
+	return out
+end
+local function walkIn(stop)
+	Floor.Forget()
+	local line = assert(Path.FindSync(0, SW_FM, ON_STREET))
+	line[#line + 1] = stop or GAP
+	for i = 2, #line do
+		local a, b = line[i - 1], line[i]
+		local steps = math.max(1, math.ceil(math.sqrt((b.x - a.x) ^ 2 + (b.y - a.y) ^ 2) / 7))
+		for j = 1, steps do
+			journeyAt = { x = a.x + j / steps * (b.x - a.x), y = a.y + j / steps * (b.y - a.y) }
+			tick()
+			if frames[1] then
+				table.remove(frames, 1)()
+			end
+		end
+	end
+	drain()
+	tick()
+	tick()
+end
+do
+	local gap = surfaces(GAP)
+	assert(#gap == 1 and gap[1] < 80, "the gap cell holds only the ground: " .. table.concat(gap, " "))
+	walkIn()
+	local height = Floor.Height(0, GAP.x, GAP.y)
+	assert(height and height > 85, "the street is held through the gap: " .. tostring(height))
+	local route = assert(Path.FindSync(0, { x = GAP.x, y = GAP.y, z = height }, SW_FM))
+	for _, p in ipairs(route) do
+		assert(not p.z or p.z > 85, "from the held street the walk stays on the streets: " .. tostring(p.z))
+	end
+
+	walkIn()
+	falling = true
+	journeyAt = { x = GAP.x + 1, y = GAP.y }
+	tick()
+	falling = false
+	tick()
+	height = Floor.Height(0, GAP.x + 1, GAP.y)
+	assert(height and height < 80, "a fall there lands on the ground: " .. tostring(height))
+
+	-- Seen in the air over the street a tick before, the fall still counts where you land.
+	local STREET_CELL = { x = -8839.8, y = 593 } -- the street's last cell the walking map reaches before the gap
+	walkIn()
+	falling = true
+	journeyAt = STREET_CELL
+	tick()
+	assert((Floor.Height(0, STREET_CELL.x, STREET_CELL.y) or 0) > 85, "in the air over the street")
+	falling = false
+	journeyAt = { x = GAP.x + 1, y = GAP.y }
+	tick()
+	drain()
+	tick()
+	height = Floor.Height(0, GAP.x + 1, GAP.y)
+	assert(height and height < 80, "a fall seen a tick before the landing lands on the ground: " .. tostring(height))
+	journeyAt = nil
+	tick()
+end
+
+-- Knocked off a canal's bank into the water, you swim: the floor is the water's, not the street's above it.
+do
+	local CANAL = { x = -8920, y = 496 } -- the street at z 94 over the canal's water at z 72
+	Floor.Forget()
+	journeyAt = { x = CANAL.x, y = CANAL.y - 8 }
+	tick()
+	drain()
+	tick()
+	swimming = true
+	journeyAt = CANAL
+	tick()
+	drain()
+	tick()
+	swimming = false
+	local height = Floor.Height(0, CANAL.x, CANAL.y)
+	assert(height and height < 80, "swimming in the canal: " .. tostring(height))
+
+	-- Followed on the street in the canal's cell, then swimming there without moving cell.
+	Floor.Forget()
+	journeyAt = { x = CANAL.x, y = CANAL.y - 8 }
+	tick()
+	drain()
+	tick()
+	journeyAt = CANAL
+	tick()
+	drain()
+	tick()
+	height = Floor.Height(0, CANAL.x, CANAL.y)
+	-- The street and the canal's water stack along the bank, so walking it never settles on one; it is never the water.
+	assert(not height or height > 85, "walking, the street over the canal: " .. tostring(height))
+	swimming = true
+	journeyAt = { x = CANAL.x + 0.5, y = CANAL.y }
+	tick()
+	swimming = false
+	height = Floor.Height(0, CANAL.x, CANAL.y)
+	assert(height and height < 80, "swimming in the same cell, the water: " .. tostring(height))
+	journeyAt = nil
+	tick()
+end
+
+-- Trade District streets have cells the walking map gives only the ground under the city (z 60, #1046): a street
+-- surface that cannot step into one is held, not ruled out, so the floor never settles on the ground beneath you.
+-- Ruled out, it did, and a journey planned there walked the ground through the Mage Quarter and replanned as the
+-- floor changed. From a fresh start in such a cell, the street around you is held the same way.
+do
+	local TRADE = { x = -8849, y = 647.9, z = 98 }
+	for _, ends in ipairs({
+		{ TRADE, { x = -8980.3, y = 941 } }, -- through cell 900,1021 to the Mage Quarter
+		{ { x = -8829.9, y = 722.2, z = 98 }, TRADE }, -- from cell 900,1027, the ground's alone
+	}) do
+		Floor.Forget()
+		local wrong = 0
+		walk(ends[1], ends[2], function(_, _, z, height, startZ, endZ)
+			if height and z and math.abs(height - z) > 10 then
+				-- On a ramp the floor may still be the segment's start or end.
+				local atEnd = (startZ and math.abs(height - startZ) <= 10) or (endZ and math.abs(height - endZ) <= 10)
+				wrong = wrong + (atEnd and 0 or 1)
+			end
+		end, 3)
+		assert(wrong == 0, "on the Trade District's street the floor is never the ground under it: " .. wrong)
+	end
+end
+
+-- A cluster released from the pin goes as soon as no job runs, not at the next job.
+do
+	Floor.Forget()
+	journeyAt = { x = SW_FM.x, y = SW_FM.y }
+	tick()
+	drain()
+	tick()
+	local st = Grid.State(0)
+	assert(next(st.used), "the clusters around you are decoded")
+	journeyAt = nil
+	tick()
+	assert(next(st.used) == nil, "with nothing followed they are released")
+end
+
 -- At a lift's landing the floor is unknown: the lift changes it without moving you.
 do
 	Floor.Forget()
 	walk(FM, MAGIC, function() end)
+	local walkedIn = assert(Floor.Height(0, MAGIC.x, MAGIC.y))
 	nearDock = 1009
 	Floor.Sample(0, MAGIC.x, MAGIC.y)
 	assert(Floor.Height(0, MAGIC.x, MAGIC.y) == nil, "beside a lift the floor is not followed")
+	-- The floor you walked onto the landing on names the landing (#1059), and holds while you stand there.
+	local at, z = Floor.Landing(0)
+	assert(at and z == walkedIn, "the landing keeps the floor you walked in on")
+	Floor.Sample(0, MAGIC.x + 1, MAGIC.y)
+	at, z = Floor.Landing(0)
+	assert(at and z == walkedIn and not Floor.Landing(1), "standing there it holds, on its own map only")
+	-- A ride moves you to another landing without moving you on the map: the floor you walked in on goes.
+	ns.IsObservingRide = function()
+		return true
+	end
+	Floor.Sample(0, MAGIC.x + 1, MAGIC.y)
+	ns.IsObservingRide = nil
+	Floor.Sample(0, MAGIC.x + 1, MAGIC.y)
+	at, z = Floor.Landing(0)
+	assert(at and z == nil, "after a ride the walked-in floor is gone for as long as you stay")
 	nearDock = nil
+	Floor.Sample(0, MAGIC.x, MAGIC.y)
+	assert(not Floor.Landing(0), "walked off the landing, following starts again")
+	Floor.Forget()
+	walk(FM, MAGIC, function() end)
+	nearDock = 1009
+	Floor.Sample(0, MAGIC.x, MAGIC.y)
+	Floor.Forget()
+	assert(not Floor.Landing(0), "forgotten, it goes too")
+	-- Arriving at a landing far from the floor last followed (a portal on the same map) names no floor.
+	nearDock = nil
+	walk(FM, MAGIC, function() end)
+	nearDock = 1009
+	Floor.Sample(0, MAGIC.x + 40, MAGIC.y)
+	at, z = Floor.Landing(0)
+	assert(at and z == nil, "a floor followed elsewhere does not name the landing")
+	nearDock = nil
+end
+
+-- Knocked off the street in combat, the fall still counts where you land once it ends.
+do
+	walkIn()
+	inCombat = true
+	falling = true
+	journeyAt = { x = -8839.8, y = 593 }
+	tick()
+	inCombat = false
+	falling = false
+	journeyAt = { x = GAP.x + 1, y = GAP.y }
+	tick()
+	drain()
+	tick()
+	local height = Floor.Height(0, GAP.x + 1, GAP.y)
+	assert(height and height < 80, "a fall in combat lands on the ground: " .. tostring(height))
+	journeyAt = nil
+	tick()
+end
+
+-- A finished decode wakes the travel clock, so a player standing still is weighed without moving again.
+do
+	local woken = 0
+	ns.WakeTravel = function()
+		woken = woken + 1
+	end
+	Floor.Forget()
+	Grid.Idle()
+	Floor.Sample(0, SW_FM.x, SW_FM.y)
+	drain()
+	ns.WakeTravel = nil
+	assert(woken > 0, "the decode woke the travel clock")
 end
 
 -- In combat the floor is held, not followed.
@@ -186,7 +449,8 @@ do
 	assert(not jns.JourneyGoal(), "with the floor unknown the spot decides")
 end
 
--- A spot picked on the Undercity's map is on the city's floor; one on Tirisfal's names the surface.
+-- A spot picked on the Undercity's map is on the city's floor; one on Tirisfal's names the surface, and one on Tirisfal
+-- away from the city names nothing, since only the city's own corner of that map lies over it.
 do
 	local input = assert(loadfile("tests/journey_driver.lua"))()
 	input.env.C_Map.GetWorldPosFromMapPos = function(_, pos)
@@ -196,8 +460,18 @@ do
 			end,
 		}
 	end
+	-- The Undercity's map, 1458, covers world x 0.4 to 0.6 and y 0.4 to 0.6 in this small client (Data/Zones.lua).
+	input.env.C_Map.GetMapPosFromWorldPos = function(_, world, id)
+		local x, y = world:GetXY()
+		return id, {
+			GetXY = function()
+				return (x - 0.4) / 0.2, (y - 0.4) / 0.2
+			end,
+		}
+	end
 	assert(input.ns.WorldPoint(1458, 0.5, 0.5).z == -43.1, "the Undercity's map is the city")
-	assert(input.ns.WorldPoint(1420, 0.5, 0.5).z == nil, "Tirisfal's is the surface")
+	assert(input.ns.WorldPoint(1420, 0.5, 0.5).z == 55.718, "Tirisfal over the city is the Ruins above it")
+	assert(input.ns.WorldPoint(1420, 0.8, 0.8).z == nil, "Tirisfal away from the city is the open surface")
 end
 
 print("floor_spec: ok")

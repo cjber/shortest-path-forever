@@ -6,14 +6,14 @@ if ns.broken then
 end
 local L = ns.L
 
--- With Adventure Guide loaded, its top suggestions appear in the quest menus under Plan journey.
+-- With Adventure Guide on, its suggestions in the quest menus, under Plan journey.
 
 -- At most this many Adventure Guide suggestions in a quest menu.
 local SUGGESTIONS = 3
 
----@class SPFQuestSuggestions
+---@class SPFAdventureSuggestions
 local Suggestions = {}
-ns.QuestSuggestions = Suggestions
+ns.AdventureSuggestions = Suggestions
 
 -- With Adventure Guide loaded, its top suggestions (AdventureGuideForever.API.Suggestions, API minor 2), each started
 -- as the guide's own Start does. Found by the functions, not a version. An answer other than a list of cards shows

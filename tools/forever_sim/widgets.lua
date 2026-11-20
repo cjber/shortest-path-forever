@@ -364,6 +364,12 @@ function M.build(sim)
 		return false
 	end
 
+	-- The client places a scroll child with no anchors of its own at its scroll frame's top-left corner.
+	local function unanchoredScrollChild(s)
+		local parent = s.parent and S[s.parent]
+		return #s.points == 0 and parent and parent.scrollChild ~= nil and S[parent.scrollChild] == s
+	end
+
 	local function targetsOf(obj)
 		local s = S[obj]
 		local out = {}
@@ -373,6 +379,9 @@ function M.build(sim)
 				target = s.parent or root
 			end
 			out[i] = target
+		end
+		if unanchoredScrollChild(s) then
+			out[1] = s.parent
 		end
 		return out
 	end
@@ -414,6 +423,12 @@ function M.build(sim)
 			end
 			local _ = i
 		end
+		if unanchoredScrollChild(s) then
+			local _, pr = cachedRect(s.parent)
+			if pr then
+				L, T = pr[1], pr[2] + pr[4]
+			end
+		end
 		local w, h = Secret.unwrap(s.width), Secret.unwrap(s.height)
 		-- One point on an axis places the region only with an extent there: a size it was given, or a font string's
 		-- text. Without one the client resolves no rect, so the getters return nil and regions anchored to it get none.
@@ -444,6 +459,14 @@ function M.build(sim)
 			left, width = R - w, w
 		elseif sizedX and CX then
 			left, width = CX - w / 2, w
+		end
+		-- Text with no height of its own wraps at the width its anchors stretched it to, as the client's does.
+		if s.kind == "FontString" and width and (Secret.unwrap(s.height) or 0) <= 0 and L and R then
+			local saved = s.width
+			s.width = width / es
+			local _, th = textSize(s)
+			s.width = saved
+			h = th * es
 		end
 		-- Side anchors position a sized region without stretching it on the other axis.
 		-- Intrinsic text is sized too; opposite edges still explicitly stretch either kind.
@@ -1014,6 +1037,10 @@ function M.build(sim)
 			return r[4] / effectiveScale(self)
 		end
 		if s.kind == "FontString" and (Secret.unwrap(s.height) or 0) <= 0 then
+			local placed = rect(self)
+			if placed then
+				return placed[4] / effectiveScale(self)
+			end
 			local _, h = textSize(s)
 			return h
 		end
@@ -1908,6 +1935,8 @@ function M.build(sim)
 		if child and S[child] then
 			impl.Region.SetParent(child, self)
 		end
+		-- The child's implicit anchor follows the scroll frame, so cached rects are stale either way.
+		dirty()
 	end
 	impl.ScrollFrame.GetScrollChild = function(self)
 		return st(self).scrollChild
@@ -2040,8 +2069,22 @@ function M.build(sim)
 		s.width = saved
 		return w
 	end
+	-- A string with no width of its own wraps at the width its anchors give it, as the client's does.
+	local function anchoredSize(self)
+		local s = st(self)
+		local w = Secret.unwrap(s.width)
+		if w and w > 0 then
+			return textSize(s)
+		end
+		local r = rect(self)
+		local saved = s.width
+		s.width = r and r[3] > 0 and r[3] / effectiveScale(self) or nil
+		local tw, th = textSize(s)
+		s.width = saved
+		return tw, th
+	end
 	impl.FontString.GetStringHeight = function(self)
-		local _, h = textSize(st(self))
+		local _, h = anchoredSize(self)
 		return h
 	end
 	impl.FontString.GetLineHeight = function(self)
@@ -2049,7 +2092,7 @@ function M.build(sim)
 	end
 	impl.FontString.GetNumLines = function(self)
 		local s = st(self)
-		local _, h = textSize(s)
+		local _, h = anchoredSize(self)
 		return math.max(1, math.floor(h / (s.fontHeight or 12) + 0.5))
 	end
 	impl.FontString.IsTruncated = function(self)

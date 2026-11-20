@@ -13,6 +13,4 @@ ns.L = L
 L["stop guiding"] = "stop guiding"
 L["guide this journey"] = "guide this journey"
 L["show it on the map"] = "show it on the map"
-L["show the Adventure Guide Forever link"] = "show the Adventure Guide Forever link"
-L["Show link"] = "Show link"
 L["That guide has no step to follow."] = "That guide has no step to follow."

@@ -10,6 +10,83 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.43.5] - 2026-11-20
+
+### Changed
+
+- **Routes show on the map straight away.** A rough line appears as soon as you click, and the exact route replaces it moments later. The arrow and waypoints wait for the exact route, and short routes settle sooner (#1080).
+- **A lighter guide arrow on long walks.** While you walk, the arrow reuses the distance of the bends still ahead instead of measuring each one again every frame, and journey progress reuses each segment's length instead of measuring the whole walk on every update.
+
+### Added
+
+- **Hide the cast prompt.** A new "Show cast prompt" switch under Settings > Interface hides the Hearthstone or teleport prompt in the middle of the screen. Journeys still use your Hearthstone and the tracker step still names it (#1086).
+
+### Fixed
+
+- **Walks in cities and caves are drawn shorter and straighter.** Where one step can lead onto two surfaces, such as a stair beside the drop off its side, the line now follows the one the walk takes, and takes the shortest line through the walk's turns. Some walks through Ironforge, Thunder Bluff and five caves that were drawn through a floor or off the ground now draw correctly. (#1015)
+- Standing at a lift in Thunder Bluff, the Undercity, the Great Lift or Freewind Post, the tracker shows the departures from the landing you are on, not always the top one.
+- A new journey's tracker and destination tooltip no longer list the steps of the journey it replaced while its route is found (#1107).
+- With "Click the map to plan journeys" off, a journey click on the map, a map icon, the minimap or a quest now says so on screen, naming the setting, instead of doing nothing. The click still goes to the map as before (#1076).
+- Druids now get routes that use their own class flight paths, Moonglade from Rut'theran Village or Thunder Bluff, wherever that is quicker.
+- On the world map, only the waypoint modifier picked in the settings creates a waypoint, so Alt-clicking another addon's map icon no longer plans a journey as well.
+- A dock's departure lines in the tracker name every call the boat makes, as the map does: the Southshore boat reads "Darkshore, then Wetlands" instead of only Darkshore, and Auberdine's two Menethil boats are told apart.
+- With an outdated ForeverCore (1.11), the addon shows its on-screen line saying how to fix it, instead of stopping with a Lua error.
+- **Walks in Stormwind start from the street you are on.** The addon now follows which floor you stand on outdoors as well as indoors, and keeps it through spots at a building's edge the walking map has no street for. A walk from the city's streets no longer starts on the open ground under the city (#737).
+- **Journeys from Stormwind's Trade District settle on the first plan.** The route no longer replans over and over as you walk the Trade District, and no longer sends you through the Mage Quarter on a loop before you cross the canal (#1071).
+- **No more "PathGrid.lua:1360" error while a route is planned.** A search paused while you move between areas resumes correctly (#1071).
+- Nearby services: a row's map checkbox is ticked only when that service's pins are on the map. With the town services layer off, ticking a row turns it on and shows that service in every town.
+- Nearby services: the Flight master row has a map checkbox again. It shows or hides the flight master pins, like the map menu's Flight Masters choice.
+- **Alt-click plans with OpenMap.** With Alt as your journey key and OpenMap's seamless map on, an Alt-click on the map zoomed in and planned nothing. Shortest Path now takes its own key's click first.
+- **Clicked destinations are easy to see.** Shift-clicking a flight point or another map icon marks it with the full destination pin instead of a speck at its corner, and the quest marks beside it stay on top. A flight point you click to track starts the journey there too when Route to the focused quest is on.
+- **Map tooltips say how to travel.** Flight points, docks, portals, the game's quest and area icons, and the minimap end their tooltip with Shift-click to plan a journey here, or Alt-click if that is your key.
+- The minimap's tooltip now ends with the Shift-click (or Alt-click) hint too: it was missing on every minimap blip.
+- Nearby services lists Forever's own class and profession trainers, such as the Zephras Isle trainers, under Trainers (#1082).
+- Journey: a route that has to search most of a continent on foot, such as Stormwind to central Feralas, settles about a quarter faster.
+- Journey: short routes settle on their final plan sooner (#1080).
+- **Shift-click shows a Waypoint UI marker again.** With Waypoint UI loaded, a journey hands it each turn from the start, even with no pin placed and with *Mark only where steps end* on. Clearing the journey clears the marker. Turn off Waypoint UI's own pathfinding to follow the journey's directions.
+- Ships with ForeverCore 1.15.4, the same shared code as your other Forever addons, so they keep working together.
+
+## [1.43.2] - 2026-11-18
+
+### Changed
+
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
+### Fixed
+
+- **No more stutters from route planning.** Working out a journey, its later stops, the Hearthstone and other-faction comparisons you see on hover, and the travel times under Nearby and Services no longer freeze the game for a moment. A journey you are following no longer hitches every few seconds either (#1023).
+- **Smoother play while the teleport prompt is up.** The prompt that names a teleport item now updates only when that item's details arrive, not every time any addon looks up an item (#1029).
+
+## [1.43.1] - 2026-11-18
+
+<!-- forever-core-sync -->
+
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
+## [1.43.0] - 2026-11-18
+
+<!-- discord-image: docs/screenshots/town_services.png -->
+
+This release also carries every change from 1.42.0, which was not published on its own: profession trainer and weapon master icons, roads that stay connected, walks that stay off steep faces, and more. See the [full changelog](https://github.com/cjber/shortest-path-forever/blob/main/CHANGELOG.md#1420---2026-11-17).
+
+### Changed
+
+- **Faster routes from busy cities.** Long walking routes out of cities such as Stormwind appear sooner (#979).
+- **Town service pins start off.** The map stays clear until you pick a level under *Town services* in the map's filter menu or in Settings > Map marks, and the pins then show only on zone and city maps, never on a continent or the world map. A level you had changed from capitals only is kept (#985).
+- **Vendor pins start hidden, like repairs.** With town services on, the map shows trainers and services first; turn on food, ammunition, bags, reagents, books or weapons and armour under *Town services* in the map's filter menu, and a kind you turned on there stays on (#978).
+- **The compass starts off.** Turn it on with *Show the compass* in Settings > Interface; a compass you had turned off stays off (#985).
+- **Each kind of service has its own map icon.** Every town service pin wears the game's own map art, so profession trainers show their profession's mark (a hide for skinning, a spool for tailoring), and bags, books and weapon masters each have an icon of their own instead of a square item icon (#985).
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+- **Updates are published on CurseForge and GitHub.** Wago publishing has ended, so install and update from CurseForge. (cjber/forever-core#649)
+
+### Fixed
+
+- **A journey to the Ruins of Lordaeron leaves the Undercity.** A spot picked on the map above the city now ends on that surface, so the route takes a lift and walks across the ruins instead of wandering the city's corridors to the floor underneath it. Thanks to treadpool for the report (#923).
+- **Weapons and armour vendors no longer wear the transmogrifier's purple banner.** They now show the minimap's armoury shield, so the two are easy to tell apart (#978).
+- **The journey list holds still while you travel.** Finishing a step no longer lays the list out a second time a few seconds later, and choosing a new destination keeps the route you were on in grey, under the spinner, until the new one is found, so the list no longer shrinks to one line and grows back and the sections below it stay where they are (cjber/forever-core#795).
+- **With ForeverCore turned off, Shortest Path says so when you try it.** `/path` and its entry in the addon compartment now repeat the line asking you to turn ForeverCore back on in the AddOns list, instead of doing nothing or raising a Lua error. Thanks to Hex_512 and klessky92_ for the reports. (#996)
+- **A TomTom turned off for this character alone counts as off.** Shortest Path now answers waypoints in its place, as it does when TomTom is off for every character. (#996)
+
 ## [1.42.0] - 2026-11-17
 
 <!-- discord-image: docs/screenshots/services_roles.png -->

@@ -54,10 +54,9 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"Los viajes, y las estimaciones de otros addons desde aquí, pueden empezar con un teletransporte de mago a una ciudad o Teletransporte: Claro de la Luna, contando el tiempo de reutilización."
 L["Minimum teleport saving"] = "Ahorro mínimo del teletransporte"
+L["Routes show on the map straight away."] = "Las rutas aparecen en el mapa al instante." -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"Usar un teletransporte de clase solo si ahorra al menos este tiempo."
-L["Recognise profession trainers and find weapon masters."] =
-	"Reconoce a los instructores de profesión y encuentra maestros de armas." -- mt
 L["Boat and Zeppelin Routes"] = "Rutas de barcos y zepelines"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Rutas de barcos y zepelines, dibujadas al señalar un muelle."
@@ -70,6 +69,7 @@ L["Cast %s"] = "Lanzar %s"
 L["Class trainer"] = "Instructor de clase"
 L["Clear journey"] = "Borrar viaje"
 L["Click to plan a journey here."] = "Haz clic para planear un viaje hasta aquí."
+L["%s-click to plan a journey here"] = "%s-clic para planear un viaje hasta aquí"
 L["Click to show %s"] = "Haz clic para mostrar %s"
 L["Click to show where they go"] = "Haz clic para ver adónde van"
 L["Compass background"] = "Fondo de la brújula"
@@ -192,6 +192,7 @@ L["Search services and goods"] = "Buscar servicios y bienes"
 L["Services"] = "Servicios"
 L["Shortest Path report"] = "Informe de Shortest Path"
 L["Show boats and zeppelins"] = "Mostrar barcos y zepelines"
+L["Show cast prompt"] = "Mostrar aviso de lanzamiento" -- mt
 L["Show direction arrow"] = "Mostrar flecha de dirección"
 L["Show flight masters"] = "Mostrar maestros de vuelo"
 L["Show lifts and the tram"] = "Mostrar ascensores y tranvía"
@@ -208,6 +209,8 @@ L["Show the time left under the compass"] = "Tiempo restante bajo la brújula"
 L["Show the way to your corpse"] = "Mostrar el camino a tu cadáver"
 L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =
 	"Las muestra sobre la placa de nombre del PNJ al que lleva un viaje de servicios cercanos."
+L["Shows the Hearthstone or teleport to use in the arrow's place. Off, journeys still use them and the tracker still names the step."] =
+	"Muestra la piedra de hogar o el teletransporte que usar en el lugar de la flecha. Desactivado, los viajes los siguen usando y el seguimiento sigue nombrando el paso." -- mt
 L["Shows the arrow to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =
 	"Muestra la flecha para arrastrarla a cualquier sitio; Mayús+arrastrar o las flechas la ajustan. Clic derecho para devolverla."
 L["Shows the compass to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =
@@ -570,3 +573,6 @@ L["In the tracker while you are near a dock, lift or tram."] =
 L["Town service icons"] = "Iconos de servicios de la ciudad" -- mt
 L["Off hides them. Otherwise one icon per town, or one per service as you zoom in."] =
 	"Desactivado los oculta. Si no, un icono por ciudad o por servicio al acercar." -- mt
+L["Attach to quest tracker"] = "Fijar al rastreador de misiones"
+L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
+	"Desactívalo para arrastrar el rastreador Forever compartido a cualquier parte de la pantalla."

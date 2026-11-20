@@ -180,7 +180,7 @@ function ModuleMixin.OnHeaderClick(_, button)
 end
 
 local function DepartureText(departure)
-	local text = ns.DockLabel(departure.to[1]) .. "   " .. ns.Timetable.Status(departure)
+	local text = ns.Timetable.Destination(departure) .. "   " .. ns.Timetable.Status(departure)
 	return departure.known and text or GRAY_FONT_COLOR:WrapTextInColorCode(text)
 end
 
@@ -305,12 +305,15 @@ function ModuleMixin:LayoutContents()
 			if clickable then
 				Line.SetInteractive(line, {
 					onClick = function()
+						-- A row's key counts from the step under way, so the step is the one under way when the menu
+						-- opens; SkipJourneyStep refuses it if the journey has moved on before the click.
+						local _, _, plan, index = ns.JourneyInfo()
+						if not plan then
+							return
+						end
 						ForeverCore.ContextMenu(line, function(_, root)
 							root:CreateButton(L["Complete this step"], function()
-								local index = row.key
-								if type(index) == "number" then
-									ns.SkipJourneyStep(index)
-								end
+								ns.SkipJourneyStep(index)
 							end)
 						end)
 					end,

@@ -62,6 +62,7 @@ Credit for the reports and requests behind the addon.
 | Who | What | Notes |
 |---|---|---|
 | user\_u3k9hweaatfhnjs0 | Profession trainer icons, weapon masters and service filters | CurseForge comment 8734926, thread 8731864; #952 |
+| treadpool | Undercity journeys leave the city by a lift | CurseForge thread 8729181; #923 |
 | user\_g496wu46adiwjuc5 | Hearthstone map button respects Use Hearthstone | CurseForge thread 8732965; #951 |
 | emmiehbun | Walking routes over Westfall ridges | CurseForge thread 8733369; #950 |
 | VolomonBeddarm | Walking routes up impassable Barrens terrain | CurseForge thread 8724226; #897 |
@@ -205,7 +206,8 @@ Credit for the addons and projects an idea came from.
 
 | Who | What | Notes |
 |---|---|---|
-| [Polestar](https://github.com/fitzforge/polestar) by Fitz | Ideas for many features | Hearthstone learning, journeys after `/reload`, the fallback arrow, flight tooltips, instance routing, compass time, minimap rim, own map frames, and the shared report window and tooling. GPL-3.0. Inspired only; no code was copied. Fitz is welcome to use our code. |
+| [Polestar](https://github.com/fitzforge/polestar) by Fitz | Ideas for many features | Hearthstone learning, journeys after `/reload`, the fallback arrow, flight tooltips, instance routing, compass time, minimap rim, own map frames, the shared report window and tooling, and, for caves and cities, placing each service on its own floor, lifts as wait steps, and walking to a cave's mouth before its inside. GPL-3.0. Inspired only; no code was copied. Fitz is welcome to use our code. |
+| [AzerothGPS](https://github.com/AzerothGPS/AzerothGPS) | Caves and cities as a test target | Its per-floor Undercity guide and its cave and mine catalogue, as the places every walk must reach. Inspired only; no code or data was copied. |
 | Ding! by Yendi | Walks that keep out of zones far above your level | Inspired only; no code was copied. |
 | [BV Addon Suite - Routing](https://www.curseforge.com/wow/addons/bv-addon-suite-routing) | Walks that start on the floor you are standing on | Its idea of working out the player's height from the game's range checks to nearby NPCs, instead of guessing a surface. All rights reserved; inspired only, no code was copied. |
 

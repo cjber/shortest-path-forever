@@ -6,6 +6,7 @@ local rows, buttons, settings = {}, {}, {}
 local opened = {}
 local registered = {}
 
+local attachmentNotified, attachmentChanged
 local trackerState = { attached = true }
 local trackerScale, compassScaled, compassBackdrop = 1, nil, nil
 local townRefreshed = 0
@@ -40,7 +41,9 @@ local env = setmetatable({
 			settings[#settings + 1] = setting
 			return setting
 		end,
-		NotifyUpdate = function() end,
+		NotifyUpdate = function(variable)
+			attachmentNotified = variable
+		end,
 		VarType = { Boolean = "boolean", Number = "number", String = "string" },
 		RegisterVerticalLayoutCategory = function(name)
 			return {
@@ -55,7 +58,7 @@ local env = setmetatable({
 			}
 		end,
 		RegisterCanvasLayoutSubcategory = function()
-			error("no canvas pages")
+			error("no settings page is a canvas")
 		end,
 		RegisterVerticalLayoutSubcategory = function(parent, name)
 			return {
@@ -213,6 +216,10 @@ local ns = {
 		end,
 		SetAttached = function(value)
 			trackerState.attached = value
+			attachmentChanged()
+		end,
+		OnAttachmentChanged = function(callback)
+			attachmentChanged = callback
 		end,
 		SetLocked = function(value)
 			trackerState.locked = value
@@ -270,7 +277,8 @@ local ns = {
 		followRoads = true,
 		roadDetour = 50,
 		arrivalDistance = 15,
-		townServices = "capitals",
+		townServices = "off",
+		compass = false,
 		onlyMyProfessions = false,
 		destinationPinSize = 100,
 	}, {
@@ -395,6 +403,7 @@ local groups = {
 	Guidance = {
 		"journeyTracker",
 		"tracker",
+		"trackerAttached",
 		"trackerLocked",
 		"resumeJourney",
 		"trackerScale",
@@ -438,6 +447,7 @@ local groups = {
 	Interface = {
 		"arrow",
 		"arrowMove",
+		"castPrompt",
 		"arrowScale",
 		"arrowDirect",
 		"arrowLabel",
@@ -460,8 +470,8 @@ local order = {
 	"Interface",
 }
 
-assert(#buttons == #order, "one index button per group, and no Forever addons page")
-assert(#rows == 74, #rows)
+assert(#buttons == #order, "one index button per group")
+assert(#rows == 76, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -477,7 +487,6 @@ for index, name in ipairs(order) do
 end
 assert(cursor == #rows, "every row belongs to a group")
 
-assert(env.ForeverCore.Family == nil, "ForeverCore.Family is not used")
 assert(#opened == secureCalls, "every settings open went through ForeverCore's secure opener (#333)")
 
 -- The rows themselves are unchanged: keys, defaults, tooltips and callbacks.
@@ -542,9 +551,9 @@ assert(#choices == 5 and choices[1].value == "gold", "gold leads the presets")
 assert(choices[2].text == "White" and choices[5].value == "magenta", "every preset has a label and a key")
 routeColor.setting.onChanged(nil, "cyan")
 assert(routeColour == "cyan", "choosing a preset repaints the walking line")
--- Town services are a level of detail: capitals first, then important services, all towns, and off.
+-- Town services are a level of detail: capitals first, then important services, all towns, and off, the default.
 local towns = Row("townServices")
-assert(towns.kind == "dropdown" and towns.setting.default == "capitals", "town services start at the capitals")
+assert(towns.kind == "dropdown" and towns.setting.default == "off", "town services start off")
 assert(towns.setting.variable == "ShortestPathForever_townServices", "the level is saved")
 local levels = towns.getData()
 assert(
@@ -720,6 +729,10 @@ assert(
 assert(Row("npcArrows").setting.default == true, "nameplate arrows are on by default")
 Row("arrow").setting.onChanged()
 assert(arrowVisibilityChanged == 1 and travelWoken == 1, "arrow visibility refreshes casting and wakes travel")
+-- "Show cast prompt" starts on and redraws the current cast at once; it does not replan (#1086).
+assert(Row("castPrompt").setting.default == true, "the cast prompt shows by default")
+Row("castPrompt").setting.onChanged()
+assert(arrowVisibilityChanged == 2 and travelWoken == 1, "the cast prompt switch redraws the cast without replanning")
 assert(Row("npcArrows").tooltip:find("Friendly nameplates", 1, true), "the tooltip says friendly nameplates must be on")
 -- Party mage portals are opt-in, and every capital starts ticked for the mage to open.
 assert(Row("partyMagePortals").setting.default == false, "party mage portals are off by default")
@@ -736,8 +749,8 @@ end
 local policyBeforeParty = policyChanged
 Row("partyMagePortals").setting.onChanged()
 assert(policyChanged == policyBeforeParty + 1, "the party portal setting replans the journey")
--- The compass is on by default: it is the game's own palette rather than a panel on the screen.
-assert(Row("compass").setting.default == true)
+-- The compass is off by default: a player turns it on here.
+assert(Row("compass").setting.default == false, "the compass starts off")
 local mover = Row("compassMove").setting
 assert(mover.default == false and mover:GetValue() == false, "the compass starts locked")
 mover:SetValue(true)
@@ -871,7 +884,16 @@ Row("pins").setting.onChanged()
 assert(refreshed == pinRefreshes + 1, "value callbacks still fire")
 print("settings: ok")
 
--- Lock starts off, and drives the shared host rather than a copy of its own.
+local attachment = Row("trackerAttached").setting
+assert(attachment:GetValue() == true, "tracker starts attached")
+attachment:SetValue(false)
+assert(not attachment:GetValue(), "toggle changes shared host")
+assert(attachmentNotified == "ShortestPathForever_trackerAttached", "proxy notified")
+trackerState.attached = true
+attachmentChanged()
+assert(attachment:GetValue(), "external reattach updates proxy")
+
+-- Lock starts off, sits right after the attach row, and drives the shared host rather than a copy of its own.
 local lock = Row("trackerLocked").setting
 assert(lock.name == "Lock the tracker" and lock.default == false, "the lock row is named and off by default")
 assert(lock:GetValue() == false, "the tracker starts unlocked")

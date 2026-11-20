@@ -13,10 +13,6 @@ local L = ns.L
 local REPLAN_EVERY = 5
 local REPLAN_DUE = REPLAN_EVERY - 0.5 -- from here Itinerary.lua leaves the frames to the timed replan
 local DRAW_EVERY = 0.5
--- A teleport step, by the item's or spell's own name in the game's language, after its own icon at the font's
--- height: the one step you act on from your bags or spellbook stands out from the travel around it.
--- art-ok: a square item or spell icon, square at the font's height (size 0)
-local ICON = "|T%d:0|t "
 
 local goal, result
 local policyChanged
@@ -48,8 +44,6 @@ local OTHER_FLOOR = 10
 -- asks you to cast it.
 local WATER_AURAS = { 546, 1706, 11319 }
 local WATER_SPELLS = { 546, 1706 }
--- Yards over water worth casting for.
-local WATER_HINT = 20
 local WALK_FAILURE = ns.WalkFailure
 
 -- While you are a ghost, Corpse.lua's run borrows the route drawing, the tracker and Guide; the journey waits.
@@ -409,10 +403,11 @@ function ns.IsJourneyGuided()
 end
 
 -- costError says why no walk could be measured, if one could not; loading says a first search is still working.
----@return boolean pending, integer settleRound, string? costError, boolean loading
+-- timing is the search's own clock since the journey started, to its first and latest route (JourneySearch.lua).
+---@return boolean pending, integer settleRound, string? costError, boolean loading, table? timing
 function ns.JourneyStatus()
 	local pending, settleRound, costError, loading = Search.Status()
-	return pending > 0, settleRound, costError, loading
+	return pending > 0, settleRound, costError, loading, Search.timing
 end
 
 local function StartGuide()
@@ -463,40 +458,6 @@ function ns.JourneyTitle(point, formatPlace)
 	return string.format(L["Journey to %s"], place(ns.PlaceLabel(point)))
 end
 
--- One step's words with its suffixes. The tracker asks for a second copy with the place wrapped; the plain copy stays
--- for the goal pin's tooltip, the arrow's progress line and other addons.
----@param leg SPFLeg
----@param spell number?
----@param formatPlace? fun(place: string): string
----@return string action, number? icon
-local function StepText(leg, spell, formatPlace)
-	local action, icon
-	if leg.teleport then
-		action, icon = ns.TeleportAction(leg.teleport, formatPlace)
-	else
-		action = ns.LegStep(leg, formatPlace)
-	end
-	if leg.mode == "walk" and leg.to.undiscovered then
-		action = string.format(L["%s (new flight path)"], action)
-	end
-	if leg.walkError then
-		action = action .. " (" .. (WALK_FAILURE[leg.walkError] or L["walking search failed"]) .. ")"
-	end
-	if spell and leg.wet and leg.wet >= WATER_HINT then
-		action = string.format(L["%s (cast %s)"], action, C_Spell.GetSpellName(spell))
-	end
-	return action, icon
-end
-
--- The step's plain words, as the tracker's row has them without its number, mark or colours. Core/API.lua's Journey
--- reads a leg's action from here so another addon's line says exactly what the arrow says.
----@param leg SPFLeg
----@return string
-function ns.StepText(leg)
-	local _, spell = WaterWalking()
-	return (StepText(leg, spell))
-end
-
 -- Shared by the tracker and the goal pin, including on a fullscreen map. `formatPlace` asks for the places in the
 -- title and each step already wrapped in the tracker's colour; the plain text is left as it is.
 ---@param formatPlace? fun(place: string): string
@@ -511,42 +472,11 @@ function ns.JourneyInfo(formatPlace)
 	local title = ns.JourneyTitle(goal, formatPlace)
 	local rows = {}
 	local _, _, costError, loading = Search.Status()
-	if not result and loading then
+	-- Only this goal's own proved steps: a new goal lists none until its plan lands, never the journey it replaced.
+	if result then
+		ns.StepRows(rows, result, progress.index, formatPlace, loading)
+	elseif loading then
 		rows[1] = { key = "searching", text = L["Finding the fastest way…"], grey = true }
-	elseif result then
-		local _, spell = WaterWalking()
-		local unsynced = ns.UnsyncedFlightPointRows(result)
-		local reminder = ns.NewFlightPathReminderRow(result, progress.index)
-		if reminder and not (unsynced[1] and reminder.key == "unknown-flight-path") then
-			rows[#rows + 1] = reminder
-		end
-		for _, row in ipairs(unsynced) do
-			rows[#rows + 1] = row
-		end
-		for index = progress.index, #result.legs do
-			local leg = result.legs[index]
-			local action, icon = StepText(leg, spell)
-			local shown = formatPlace and StepText(leg, spell, formatPlace) or action
-			-- The tracker draws the mode's mark and the time in its quieter colour.
-			local time = not loading and ns.LegTime(leg) or nil
-			local text = string.format("%d. %s%s", index, icon and ICON:format(icon) or "", action)
-			if time then
-				text = text .. "   " .. time
-			end
-			rows[#rows + 1] = {
-				key = index,
-				text = text,
-				mode = leg.mode,
-				action = shown,
-				time = time,
-				icon = icon,
-				current = index == progress.index,
-			}
-			-- Hostile towns and high zones on this walk, under its step.
-			for note, line in ipairs(leg.hazardNotes or {}) do
-				rows[#rows + 1] = { key = index .. ":" .. note, text = line, grey = true }
-			end
-		end
 	else
 		rows[1] = { key = "unreachable", text = costError and WALK_FAILURE[costError] or L["No way there from here."] }
 	end
@@ -564,15 +494,42 @@ end
 -- Where here falls on a walk: the segment ending at points[index], how far along it (t), and the yards still to walk
 -- from there, or nil when here is more than reach (ON_PATH by default) off the walk. A here with a height (the floor
 -- Floor.lua follows) is not on a segment drawn on another floor.
+-- Segment lengths of a walk, built once per points table: OnWalk runs on every progress tick for the same
+-- walk, and rebuilding them allocated a table and re-rooted every segment each time (WFA-13). Weak keys let
+-- a replaced walk's lengths go with it. The cache keeps each point's coordinates too, so a points table edited
+-- in place is measured again; comparing them costs no square roots and allocates nothing.
+local walkLengths = setmetatable({}, { __mode = "k" })
 local function OnWalk(points, here, reach)
 	if not here then
 		return nil
 	end
-	local lengths, total = {}, 0
-	for index = 2, #points do
-		local a, b = points[index - 1], points[index]
-		lengths[index] = math.sqrt((b.x - a.x) ^ 2 + (b.y - a.y) ^ 2)
-		total = total + lengths[index]
+	local cached = walkLengths[points]
+	local fresh = cached ~= nil and cached.count == #points
+	if fresh then
+		local xs, ys = cached.xs, cached.ys
+		for index = 1, #points do
+			local point = points[index]
+			if point.x ~= xs[index] or point.y ~= ys[index] then
+				fresh = false
+				break
+			end
+		end
+	end
+	local lengths, total
+	if fresh then
+		lengths, total = cached.lengths, cached.total
+	else
+		lengths, total = {}, 0
+		local xs, ys = {}, {}
+		for index = 1, #points do
+			xs[index], ys[index] = points[index].x, points[index].y
+		end
+		for index = 2, #points do
+			local a, b = points[index - 1], points[index]
+			lengths[index] = math.sqrt((b.x - a.x) ^ 2 + (b.y - a.y) ^ 2)
+			total = total + lengths[index]
+		end
+		walkLengths[points] = { lengths = lengths, total = total, count = #points, xs = xs, ys = ys }
 	end
 	local walked, best, found, along, after = 0, nil, nil, nil, nil
 	for index = 2, #points do
@@ -595,8 +552,9 @@ local function OnWalk(points, here, reach)
 end
 
 ns.OnWalk = OnWalk -- Corpse.lua trims its walk the same way.
--- The route last handed to the map, kept so a retime moves its arrival without redrawing it.
-local drawn
+-- The route last handed to the map, kept so a retime moves its arrival without redrawing it, and a first search's
+-- rough route, drawn while nothing is followed yet until its proved route or a new search replaces it.
+local drawn, rough
 local function Refresh()
 	local remaining
 	if result then
@@ -625,7 +583,7 @@ local function Refresh()
 	end
 	if not CorpseRun() then
 		drawn = remaining
-		ns.SetJourneyRoute(goal, remaining)
+		ns.SetJourneyRoute(goal, remaining or goal and rough)
 	end
 	RefreshTracker()
 end
@@ -693,11 +651,13 @@ end
 ---@param route SPFPlan?
 ---@param news SPFSearchNews
 local function Follow(route, news)
-	if news == "searching" then
+	if news == "searching" or news == "rough" then
+		-- Only drawn: guidance, subscribers and farming wait for the proved route.
+		rough = news == "rough" and route or nil
 		return Refresh()
 	end
 	if news == "route" then
-		result = route
+		result, rough = route, nil
 		progress.index, progress.departed = 1, false
 		Guide.Retarget()
 		if not result then

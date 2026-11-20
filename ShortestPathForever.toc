@@ -9,8 +9,7 @@
 ## X-Website: https://github.com/cjber/shortest-path-forever
 ## X-Donate: https://github.com/sponsors/cjber
 ## X-Curse-Project-ID: 1708599
-## X-Wago-ID: b6Xy1wKp
-## X-Forever-Core: v1.14.5
+## X-Forever-Core: v1.15.4
 ## SavedVariables: ShortestPathForeverDB
 ## SavedVariablesPerCharacter: ShortestPathForeverCharDB
 ## IconTexture: Interface\AddOns\ShortestPathForever\media\Icon
@@ -37,8 +36,10 @@ Data\Portals.lua
 Data\Teleports.lua
 Data\Zones.lua
 Data\TownAreas.lua
+Data\ZoneCells.lua
 Data\Services.lua
 Data\Walks.lua
+Data\WalkZones.lua
 Data\RoadCells.lua
 Data\RoadEdges.lua
 Data\Heights.lua
@@ -48,6 +49,8 @@ Data\Credits.lua
 Transport\Model.lua
 Routing\Savings.lua
 Routing\Planner.lua
+Routing\LegPoints.lua
+Routing\QuestDestination.lua
 Core\Core.lua
 Core\Distance.lua
 Transport\Timetable.lua
@@ -68,7 +71,7 @@ Transport\Teleports.lua
 Transport\PartyPortals.lua
 UI\Art.lua
 UI\ServicesPanel.lua
-UI\QuestSuggestions.lua
+UI\AdventureSuggestions.lua
 UI\OpenMap.lua
 UI\CompanionMaps.lua
 UI\Canvas.lua

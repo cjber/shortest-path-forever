@@ -63,6 +63,28 @@ return function()
 		return false
 	end
 	function Path.after() end
+	-- Plain work (a plan) waits for the next settle() or runs(), as the real queue runs it on a later frame; it runs
+	-- whole here, so a checkpoint never pauses it.
+	fake.runs = {}
+	function Path.Run(fn, callback)
+		local new = { fn = fn, callback = callback, cpu = 0 }
+		fake.runs[#fake.runs + 1] = new
+		return new
+	end
+	function Path.Checkpoint() end
+	-- Runs every queued plain job, and those they queue.
+	function fake.runAll()
+		while #fake.runs > 0 do
+			local ran = table.remove(fake.runs, 1)
+			if not ran.cancelled then
+				local a, b = ran.fn(ran)
+				ran.done = true
+				if ran.callback and not ran.cancelled then
+					ran.callback(a, b, ran)
+				end
+			end
+		end
+	end
 
 	-- Ends a search with what it found: Find's (points, cost) or (nil, reason), FindCost's (cost, reason), FindMany's
 	-- (costs, reason). A spec may end a cancelled search to prove its late answer is ignored.
@@ -74,6 +96,8 @@ return function()
 		if ended.callback then
 			ended.callback(found, detail, ended)
 		end
+		-- The real queue runs what the callback scheduled next, at its head, in the same pump.
+		fake.runAll()
 	end
 	-- Ends an endpoint batch with one cost for every target.
 	function fake.costs(batch, cost, reason)
@@ -95,7 +119,8 @@ return function()
 	-- While auto, answers every search still waiting, and those their answers ask for.
 	function fake.settle()
 		for _ = 1, 100 do
-			local ran = false
+			local ran = #fake.runs > 0
+			fake.runAll()
 			for _, batch in ipairs(fake.auto and fake.waiting(fake.batches) or {}) do
 				local costs = {}
 				for i, target in ipairs(batch.targets) do

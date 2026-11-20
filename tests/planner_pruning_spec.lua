@@ -5,6 +5,7 @@ assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", ns)
 assert(loadfile("Transport/Model.lua"))("ShortestPathForever", ns)
 assert(loadfile("Routing/Savings.lua"))("ShortestPathForever", ns)
 assert(loadfile("Routing/Planner.lua"))("ShortestPathForever", ns)
+assert(loadfile("Routing/LegPoints.lua"))("ShortestPathForever", ns)
 local Plan = ns.Planner.Plan
 
 local function point(x, y)
@@ -75,6 +76,24 @@ do
 	assert(planned and modes(planned) == "walk,flight,walk", planned and modes(planned))
 	o.walks[2] = walk(o.taxiNodes[3], o.to, 1000, true)
 	assert(not Plan(o), "an unproved landing walk leaves no route")
+end
+
+-- A goal beside a flight point: the guessed walk to the flight point and the zero-time walk on to the goal show as one
+-- walk, but the walk still to prove is the guessed one. Its probe must cost the walk to the flight point (#1080).
+do
+	local o = line(1)
+	o.to = point(1001)
+	o.walks = {
+		walk(o.from, o.taxiNodes[1], 900, true),
+		walk(o.taxiNodes[1], o.to, 0),
+		walk(o.from, o.to, 1500),
+	}
+	local planned = Plan(o)
+	assert(planned and modes(planned) == "walk" and planned.legs[1].to.kind == "goal", planned and modes(planned))
+	assert(planned.legs[1].estimated and planned.needsStart)
+	local pending = planned.pendingWalks
+	assert(#pending == 1, #pending)
+	assert(pending[1].from.kind == "start" and pending[1].to.kind == "taxi", pending[1].to.kind)
 end
 
 -- A baked walk between two fixed places is a known cost and stays: here the only way from one flight to the next.
