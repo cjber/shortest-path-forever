@@ -10,6 +10,12 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.43.8] - 2026-11-20
+
+### Fixed
+
+- Hovering the minimap no longer raises a "click to plan a journey here" tooltip over it. The hint now only joins the tooltip the game already shows over something the minimap tracks.
+
 ## [1.43.7] - 2026-11-20
 
 ### Fixed
