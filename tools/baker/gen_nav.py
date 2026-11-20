@@ -1766,7 +1766,8 @@ def main():
     phases["raster"] = time.perf_counter() - checkpoint
     checkpoint = time.perf_counter()
     assemble_floors(floors, links)
-    del floors, links  # matched into FLOORS_AT and LINKS; the raw lists are not needed again
+    # matched into FLOORS_AT and LINKS; the raw lists, the last tile's included, are not needed again
+    del floors, links, tf, tl
     phases["floors"] = time.perf_counter() - checkpoint
     checkpoint = time.perf_counter()
     # The graph is built from the very links and cuts the grid is emitted with, so the two cannot disagree.
