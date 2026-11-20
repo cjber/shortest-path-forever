@@ -171,4 +171,28 @@ do
 	equal(API.Ended("o"), "cancelled", "the route ended as cancelled")
 	stopObserving()
 end
+-- An observer handing the stop to another owner leaves that owner's route running; observers get their own copies.
+do
+	d.move(point(0))
+	local seenBy = {}
+	local first = API.ObserveStops("o", function(phase, _, seen, st)
+		if phase == "arrived" then
+			seen.x, st.owner = -1, "changed"
+			check(API.NavigateRoute("new", { stop(1000) }, { policy = "walking" }), "handed to another owner")
+		end
+	end)
+	local second = API.ObserveStops("o", function(phase, _, seen, st)
+		seenBy[#seenBy + 1] = { phase, seen.x, st.owner }
+	end)
+	check(API.NavigateRoute("o", { stop(1000) }, { policy = "walking" }), "route to hand over")
+	d.path.settle()
+	d.move(point(1000))
+	d.update(1)
+	equal(API.JourneyState().owner, "new", "the new owner's route runs on")
+	check(API.Ended("new") == nil, "and has not ended")
+	check(#seenBy == 0 or seenBy[#seenBy][2] ~= -1, "an observer cannot change what another sees")
+	first()
+	second()
+	API.Cancel("new")
+end
 print("api_observe_spec: " .. checks .. " checks passed")

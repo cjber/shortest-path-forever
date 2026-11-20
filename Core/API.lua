@@ -181,12 +181,11 @@ function ns.JourneyChanged(point, reason)
 	ns.ItineraryChanged()
 end
 
--- What a consumer driving a route needs to tell busy, still working, failed and blocked apart, copied fresh: the
--- planner's state, never its tables.
--- own status and legs read in one place, so API.JourneyState and the stop observers answer the same.
+-- What a consumer driving a route needs to tell busy, still working, failed and blocked apart, copied fresh:
+-- planner's own status and legs read in one place, so API.JourneyState and the stop observers answer the same.
 ---@return SPFAPIJourneyState
 local function JourneyState()
-	local pending, _, costError, settling = ns.JourneyStatus()
+	local pending, _, costError, settling, _, replanning = ns.JourneyStatus()
 	local plan, index = ns.JourneyPlan()
 	local legs, failure = {}, costError
 	for legIndex, leg in ipairs(plan and plan.legs or {}) do
@@ -210,7 +209,7 @@ local function JourneyState()
 		owner = route and route.owner,
 		policy = route and route.policy or "normal",
 		busy = ns.HasJourney() or route ~= nil,
-		pending = pending,
+		pending = pending or replanning == true,
 		settling = settling == true,
 		failure = failure,
 		blocked = blocked,
@@ -231,10 +230,12 @@ local stopObservers = {}
 -- same call that did it. Only a route's own owner hears it, and only about the stop the route is on.
 ---@param phase "arrived"|"settled"
 ---@param point SPFPoint
+---@return boolean? alive false when an observer replaced or ended the route, so the caller must not go on with it
 function ns.JourneyStopObserved(phase, point)
 	if not route or route.points[route.index] ~= point or next(stopObservers) == nil then
 		return
 	end
+	local watched, watchedIndex = route, route.index
 	local heard = {}
 	for entry in pairs(stopObservers) do
 		if entry.owner == route.owner then
@@ -244,17 +245,20 @@ function ns.JourneyStopObserved(phase, point)
 	if #heard == 0 then
 		return
 	end
-	local index, stop = route.index, ns.JourneyGoalDetails(Place, point)
+	local index = route.index
+	local stop = ns.JourneyGoalDetails(Place, point) or point.submitted
 	if not stop then
 		return
 	end
-	local state = JourneyState()
-	local function copy()
-		return { map = stop.map, x = stop.x, y = stop.y, z = stop.z, title = stop.title }
-	end
+	local title = point.label or stop.title
 	for _, entry in ipairs(heard) do
 		if stopObservers[entry] then
-			ns.core.SafeCall("stop observer", entry.callback, phase, index, copy(), state)
+			-- Each observer gets its own copy: one cannot change what the next one sees.
+			local seen = { map = stop.map, x = stop.x, y = stop.y, z = stop.z, title = title }
+			ns.core.SafeCall("stop observer", entry.callback, phase, index, seen, JourneyState())
+			if route ~= watched or route.index ~= watchedIndex then
+				return false
+			end
 		end
 	end
 end
@@ -586,6 +590,8 @@ local function NavigateRoute(owner, stops, policy)
 			return false
 		end
 		point.label = stop.title
+		-- The place as submitted: what a stop observer hears even where the world cannot be projected back to it.
+		point.submitted = { map = stop.map, x = stop.x, y = stop.y, z = stop.z }
 		point.details = DetailLines(stop.tooltip)
 		-- A caller's world height lets the stop pin compare its surface with the terrain under that spot.
 		if stop.z ~= nil then

@@ -348,9 +348,9 @@ end
 local function Arrive()
 	local reached = goal
 	if ns.JourneyStopObserved then
-		ns.JourneyStopObserved("arrived", reached)
-		-- An observer may cancel or replace the route: that journey, not this arrival, is what goes on.
-		if goal ~= reached then
+		local alive = ns.JourneyStopObserved("arrived", reached)
+		-- An observer may cancel, replace or hand over the route: that journey, not this arrival, is what goes on.
+		if alive == false or goal ~= reached then
 			return
 		end
 	end
@@ -409,10 +409,10 @@ end
 
 -- costError says why no walk could be measured, if one could not; loading says a first search is still working.
 -- timing is the search's own clock since the journey started, to its first and latest route (JourneySearch.lua).
----@return boolean pending, integer settleRound, string? costError, boolean loading, table? timing
+---@return boolean pending, integer settleRound, string? costError, boolean loading, table? timing, boolean replanning
 function ns.JourneyStatus()
 	local pending, settleRound, costError, loading = Search.Status()
-	return pending > 0, settleRound, costError, loading, Search.timing
+	return pending > 0, settleRound, costError, loading, Search.timing, Search.Replanning()
 end
 
 local function StartGuide()

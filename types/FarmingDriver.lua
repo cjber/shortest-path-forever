@@ -20,4 +20,4 @@
 ---@field unobserve? fun()
 
 ---@class SPFNamespace
----@field JourneyStopObserved fun(phase: "arrived"|"settled", goal: SPFPoint) the planner's own step to API.ObserveStops (Core/API.lua)
+---@field JourneyStopObserved fun(phase: "arrived"|"settled", goal: SPFPoint): boolean? the planner's own step to API.ObserveStops (Core/API.lua)

@@ -143,6 +143,7 @@
 ---@field jump? number
 ---@field label? string
 ---@field details? string[] -- a stop's own detail lines, in the caller's order (API.lua)
+---@field submitted? {map: number, x: number, y: number, z?: number} -- the place as the caller gave it, for stop observers (API.lua)
 ---@field routeTitle? string
 ---@field routeTitleFormat? string -- the locale format behind an addon-built routeTitle (API.lua)
 ---@field routeCount? integer -- stops in a multi-stop routeTitle (API.lua)
