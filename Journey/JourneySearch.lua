@@ -866,7 +866,9 @@ local function RefreshCosts(includeGoal, forced, replace)
 	-- is ruled out. The search starts again toward that ground.
 	local function Ground()
 		local moved = goalBatch.done and goalBatch.job and goalBatch.job.moved
-		if not moved or Direct() ~= false then
+		-- The ground is found by a flood over cluster entrances, which can name ground the walks never reach. A goal
+		-- moved once is not moved again: it has no route, and moving it onto itself restarted the search forever (#1141).
+		if not moved or Direct() ~= false or (grounded and SamePlace(goal, grounded.to)) then
 			return false
 		end
 		local point = {}
