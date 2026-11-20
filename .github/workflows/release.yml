@@ -164,9 +164,19 @@ jobs:
           # The packager reads the version from the tag on the checked-out commit. The full-history checkout
           # already holds a tag that existed before this run, so only a new one is created here.
           git rev-parse -q --verify "refs/tags/$RELEASE_TAG" > /dev/null || git tag "$RELEASE_TAG" "$RELEASE_COMMIT"
-          # The packager picks the GitHub release tag from the tags on the commit, not from this run, and any tag can
-          # outrank this one in its sort (an annotated tag beats a lightweight one), so a commit that carries another
-          # tag could have the checked ZIP built and attached under that one instead.
+      # The packager picks the GitHub release tag from the tags on the commit, not from this run, and any tag can
+      # outrank this one in its sort (an annotated tag beats a lightweight one), so a commit that carries another tag
+      # could have the checked ZIP built and attached under that one instead. Both a manual release and a tag push
+      # pass through here.
+      - name: Refuse a commit with another tag
+        env:
+          RELEASE_TAG: ${{ steps.target.outputs.tag }}
+          RELEASE_COMMIT: ${{ steps.target.outputs.commit }}
+        run: |
+          if [ "$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")" != "$RELEASE_COMMIT" ]; then
+            echo "::error::$RELEASE_TAG does not name $RELEASE_COMMIT in this checkout."
+            exit 1
+          fi
           other=$(git tag --points-at "$RELEASE_COMMIT" | grep -vxF "$RELEASE_TAG" || true)
           if [ -n "$other" ]; then
             echo "::error::$RELEASE_COMMIT already carries $(echo $other); release a commit with no other tag."
