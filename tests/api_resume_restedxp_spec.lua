@@ -1,5 +1,5 @@
 -- ResumeRestedXP is the tracker's and Settings' own resume through the public API, so a macro can hand the guide
--- back: true when a guide is followed, unavailable with no guide to resume, invalid in combat where guidance cannot
+-- back: true when a guide is followed, unavailable with no guide to resume, combat, retryable, where guidance cannot
 -- start.
 local driver = assert(loadfile("tests/journey_driver.lua"))()
 local ns, env, checks = driver.ns, driver.env, 0
@@ -90,7 +90,7 @@ driver.path.settle()
 -- Combat cannot start guidance: the request is refused and starts nothing.
 equal(API.Cancel("RestedXP"), true, "the guide's journey clears again")
 combat = true
-why("invalid", "resume in combat", API.ResumeRestedXP())
+why("combat", "resume in combat", API.ResumeRestedXP())
 equal(API.CurrentStop("RestedXP"), nil, "combat starts nothing")
 combat = false
 

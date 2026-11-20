@@ -1,10 +1,9 @@
 -- Synthetic coordinates only. World projection deliberately has unequal axes.
-local ns = {
-	WorldPoint = function(map, x, y)
-		return { map = map, x = 100 * x, y = 10 * y }
-	end,
-}
+local ns = {}
 assert(loadfile("Journey/FarmingOrder.lua"))("test", ns)
+ns.FarmingOrder.World = function(map, x, y)
+	return { map = map, x = 100 * x, y = 10 * y }
+end
 local checks = 0
 local function check(ok)
 	assert(ok)
@@ -194,17 +193,17 @@ check(emptyStatus == "ready" and #empty == 0)
 local bad = { node(1, 0, 0), node(2, 0 / 0, 0) }
 local result, status = finish(bad)
 check(result == nil and status == "invalid-input")
-ns.WorldPoint = function()
+ns.FarmingOrder.World = function()
 	return nil
 end
 result, status = finish({ node(1, 0, 0) })
 check(result == nil and status == "invalid-world")
-ns.WorldPoint = function()
+ns.FarmingOrder.World = function()
 	return { map = 2, x = 0, y = 0 }
 end
 result, status = finish({ node(1, 0, 0) })
 check(result == nil and status == "invalid-world")
-ns.WorldPoint = function()
+ns.FarmingOrder.World = function()
 	return { map = 1, x = math.huge, y = 0 }
 end
 result, status = finish({ node(1, 0, 0) })

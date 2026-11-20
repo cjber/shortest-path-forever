@@ -11,6 +11,33 @@ end
 local function Point(p)
 	return type(p) == "table" and Finite(p.map) and Finite(p.x) and Finite(p.y)
 end
+-- A recorded node's place on its continent's world plane, and the player's: the frame the order measures in, read
+-- through the client's map API alone.
+---@param uiMapID number
+---@param x number
+---@param y number
+---@return SPFPoint?
+function Order.World(uiMapID, x, y)
+	local continent, world = C_Map.GetWorldPosFromMapPos(uiMapID, CreateVector2D(x, y))
+	if continent and world then
+		local worldX, worldY = world:GetXY()
+		return { map = continent, x = worldX, y = worldY }
+	end
+end
+
+---@return SPFPoint?
+function Order.Player()
+	local uiMap = C_Map.GetBestMapForUnit("player")
+	local position = uiMap and canaccessvalue(uiMap) and C_Map.GetPlayerMapPosition(uiMap, "player")
+	if not (position and canaccessvalue(position)) then
+		return nil
+	end
+	local x, y = position:GetXY()
+	if canaccessvalue(x) and canaccessvalue(y) and x and y then
+		return Order.World(uiMap, x, y)
+	end
+end
+
 local function Identity(a, b)
 	for _, key in ipairs({ "uiMapID", "kind", "coord", "nodeID" }) do
 		if a[key] ~= b[key] then
@@ -88,7 +115,7 @@ function Order.Begin(nodes, player)
 			then
 				return "invalid-input"
 			end
-			local p = ns.WorldPoint(n.uiMapID, n.x, n.y)
+			local p = Order.World(n.uiMapID, n.x, n.y)
 			if not p or not Point(p) or p.map ~= origin.map then
 				return "invalid-world"
 			end

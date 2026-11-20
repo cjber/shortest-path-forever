@@ -346,8 +346,13 @@ end
 -- Completion may run inside a planner callback. Start at most one next stop on the driver's next step,
 -- after that callback unwinds; coincident stops must never recurse through the whole route in one frame.
 local function Arrive()
-	if ns.FarmingJourneyProof then
-		ns.FarmingJourneyProof("arrived", goal, result)
+	local reached = goal
+	if ns.JourneyStopObserved then
+		ns.JourneyStopObserved("arrived", reached)
+		-- An observer may cancel or replace the route: that journey, not this arrival, is what goes on.
+		if goal ~= reached then
+			return
+		end
 	end
 	nextPoint = ns.NextJourneyStop and ns.NextJourneyStop(goal)
 	if not nextPoint then
@@ -675,8 +680,8 @@ local function Follow(route, news)
 			ns.JourneyReplanned()
 		end
 	end
-	if ns.FarmingJourneyProof then
-		ns.FarmingJourneyProof("settled", goal, result)
+	if ns.JourneyStopObserved then
+		ns.JourneyStopObserved("settled", goal)
 	end
 	UpdateProgress()
 	AnnounceUnsyncedFlightPoints()

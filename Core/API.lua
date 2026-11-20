@@ -181,23 +181,80 @@ function ns.JourneyChanged(point, reason)
 	ns.ItineraryChanged()
 end
 
--- Private synchronous proof channel. Public subscribers still receive coalesced lifecycle changes.
-local farmingObservers = {}
-function ns.ObserveFarmingJourney(owner, callback)
-	local entry = { owner = owner, callback = callback }
-	farmingObservers[entry] = true
-	return function()
-		farmingObservers[entry] = nil
+-- What a consumer driving a route needs to tell busy, still working, failed and blocked apart, copied fresh: the
+-- planner's state, never its tables.
+-- own status and legs read in one place, so API.JourneyState and the stop observers answer the same.
+---@return SPFAPIJourneyState
+local function JourneyState()
+	local pending, _, costError, settling = ns.JourneyStatus()
+	local plan, index = ns.JourneyPlan()
+	local legs, failure = {}, costError
+	for legIndex, leg in ipairs(plan and plan.legs or {}) do
+		legs[legIndex] = { mode = leg.mode, measured = leg.measured == true, walkError = leg.walkError }
+		failure = failure or leg.walkError
 	end
+	local blocked
+	if InCombatLockdown() then
+		blocked = "combat" -- the standard reason (forever-core#961)
+	elseif ns.Corpse and ns.Corpse.Active() then
+		blocked = "corpse"
+	end
+	local goal, distance = ns.JourneyGoal(), nil
+	if goal then
+		local x, y, _, map = ns.JourneyPosition()
+		if x and y and map == goal.map then
+			distance = math.sqrt((x - goal.x) ^ 2 + (y - goal.y) ^ 2)
+		end
+	end
+	return {
+		owner = route and route.owner,
+		policy = route and route.policy or "normal",
+		busy = ns.HasJourney() or route ~= nil,
+		pending = pending,
+		settling = settling == true,
+		failure = failure,
+		blocked = blocked,
+		preview = plan ~= nil and plan.preview == true,
+		index = plan and index or nil,
+		legs = legs,
+		distance = distance,
+		reach = ns.db.arrivalDistance or 15,
+	}
 end
 
-function ns.FarmingJourneyProof(phase, point, plan)
-	if not route or route.policy ~= "walking" or route.points[route.index] ~= point then
+-- API.ObserveStops' subscribers (the synchronous, owner-scoped per-stop channel); filled once the API exists below.
+---@alias SPFStopObserver fun(phase: "arrived"|"settled", i: integer, stop: SPFAPIObservedStop, s: SPFAPIJourneyState)
+---@type table<{owner: string, callback: SPFStopObserver}, true>
+local stopObservers = {}
+
+-- Journey.lua: the stop under way was reached ("arrived") or the planner settled a plan for it ("settled"), inside the
+-- same call that did it. Only a route's own owner hears it, and only about the stop the route is on.
+---@param phase "arrived"|"settled"
+---@param point SPFPoint
+function ns.JourneyStopObserved(phase, point)
+	if not route or route.points[route.index] ~= point or next(stopObservers) == nil then
 		return
 	end
-	for entry in pairs(farmingObservers) do
+	local heard = {}
+	for entry in pairs(stopObservers) do
 		if entry.owner == route.owner then
-			entry.callback(phase, route.index, point, plan)
+			heard[#heard + 1] = entry
+		end
+	end
+	if #heard == 0 then
+		return
+	end
+	local index, stop = route.index, ns.JourneyGoalDetails(Place, point)
+	if not stop then
+		return
+	end
+	local state = JourneyState()
+	local function copy()
+		return { map = stop.map, x = stop.x, y = stop.y, z = stop.z, title = stop.title }
+	end
+	for _, entry in ipairs(heard) do
+		if stopObservers[entry] then
+			ns.core.SafeCall("stop observer", entry.callback, phase, index, copy(), state)
 		end
 	end
 end
@@ -243,7 +300,7 @@ function ns.JourneyStops()
 end
 
 ---@class SPFPublicAPI
-local API = { version = 2, minor = 4 }
+local API = { version = 2, minor = 5 }
 
 local function Differs(a, b)
 	for key, value in pairs(a) do
@@ -635,13 +692,42 @@ local function NavigateRoute(owner, stops, policy)
 	return ns.StartJourney(points[1], policy)
 end
 
-function API.NavigateRoute(owner, stops)
-	return NavigateRoute(owner, stops, "normal")
+local POLICIES = { normal = true, walking = true }
+
+-- A route's options: its travel policy, "normal" or "walking". Anything else is the caller's mistake, answered as one.
+---@param options any
+---@return SPFRoutePolicy?
+local function RoutePolicy(options)
+	if options == nil then
+		return "normal"
+	end
+	if type(options) ~= "table" or not canaccessvalue(options) then
+		return nil
+	end
+	for key in pairs(options) do
+		if key ~= "policy" then
+			return nil
+		end
+	end
+	local policy = options.policy
+	if policy == nil then
+		return "normal"
+	end
+	if type(policy) == "string" and canaccessvalue(policy) and POLICIES[policy] then
+		return policy --[[@as SPFRoutePolicy]]
+	end
 end
 
--- Internal farming submissions share every validation and copy rule with the public API.
-function ns.NavigateFarmingRoute(owner, stops)
-	return NavigateRoute(owner, stops, "walking")
+---@param owner string
+---@param stops SPFAPIStop[]
+---@param options? SPFAPIRouteOptions
+---@return boolean|nil, ForeverCoreAPIInvalid?
+function API.NavigateRoute(owner, stops, options)
+	local policy = RoutePolicy(options)
+	if not policy then
+		return APIKit.Invalid()
+	end
+	return NavigateRoute(owner, stops, policy)
 end
 
 function API.Navigate(owner, map, x, y, title, kind)
@@ -725,6 +811,32 @@ function API.Journey()
 	}
 end
 
+-- What a consumer driving its own route reads to tell busy, still working, failed and blocked apart.
+---@return SPFAPIJourneyState?, SPFAPINotReady?
+function API.JourneyState()
+	if not Loaded() then
+		return Loading()
+	end
+	return JourneyState()
+end
+
+-- A synchronous, owner-scoped per-stop observer: called inside the planner's own step, so what it reads is what the
+-- phase is about. Subscribe's coalesced next-frame changes cannot say which stop, or whether the plan behind an
+-- arrival was a measured one.
+---@param owner string
+---@param callback fun(phase: "arrived"|"settled", index: integer, stop: SPFAPIObservedStop, state: SPFAPIJourneyState)
+---@return (fun())?, ForeverCoreAPIInvalid?
+function API.ObserveStops(owner, callback)
+	if not Owner(owner) or type(callback) ~= "function" then
+		return APIKit.Invalid()
+	end
+	local entry = { owner = owner, callback = callback }
+	stopObservers[entry] = true
+	return function()
+		stopObservers[entry] = nil
+	end
+end
+
 ---@return SPFAPIGuidance?, SPFAPIGuidanceReason?
 function API.Guidance()
 	if not Loaded() then
@@ -784,7 +896,7 @@ function API.ResumeRestedXP()
 		return nil, "unavailable"
 	end
 	if InCombatLockdown() then
-		return nil, "invalid"
+		return nil, "combat" -- retryable once combat ends, the standard reason (forever-core#961)
 	end
 	if ns.ResumeRestedXP() ~= true then
 		return nil, "unavailable"

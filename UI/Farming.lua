@@ -118,14 +118,13 @@ local function Start()
 		Paint()
 		return
 	end
-	-- PlayerPosition is the journey's exact world producer, including its secret-safe map fallback.
-	local x, y, _, map = ns.PlayerPosition()
-	if not (x and y and map) then
+	local player = ns.FarmingOrder.Player()
+	if not player then
 		notice = L["Your position is unavailable"]
 		Paint()
 		return
 	end
-	job = ns.FarmingOrder.Begin(nodes, { map = map, x = x, y = y })
+	job = ns.FarmingOrder.Begin(nodes, player)
 	local pending, token = job, generation
 	notice = messages.ordering
 	Paint()
