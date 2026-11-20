@@ -21,7 +21,7 @@ env.C_Item = env.C_Item or {}
 env.C_Item.GetItemNameByID = function()
 	return "Hearthstone"
 end
-ns.Mover = { Attach = function() end }
+ns.Mover = { Attach = function() end, Stock = function() end }
 ns.TeleportAction = function()
 	return "Use Hearthstone", 134414
 end
