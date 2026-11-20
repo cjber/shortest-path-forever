@@ -10,6 +10,27 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.43.6] - 2026-11-20
+
+### Added
+
+- **Hide the journey tracker from its own menu.** Right-click the journey in the objective tracker and choose "Hide the journey tracker". The arrow, pins and map line keep guiding, and the setting under Guidance > Tracker turns it back on (#991).
+
+### Changed
+
+- **Attach to quest tracker sits with the tracker scale and lock.** The row moves to the Tracker heading beside the other rows that place the Forever tracker, and reads the same in every Forever addon (cjber/forever-core#910).
+- **Shortest Path Forever carries ForeverCore inside itself.** It now works with ForeverCore turned off or uninstalled, and your ForeverCore settings carry over. You no longer need to install ForeverCore separately. If you have it installed, you can keep it or remove it. (cjber/forever-core#801)
+- **Settings have five pages instead of eight.** Boat and zeppelin routes now sit with the other map icons on *Map marks*, the departures switch and the tracker size sliders sit with the other tracker options on *Guidance*, and *Record travel stats* moved to the end of *Interface*. Guidance opens first.
+- **The things you may want off each have one plain row.** *Town service icons* (set it to Off), *Show the Nearby services tab*, *Show the compass* and *Show the journey tracker*, which replaces the old "journey steps in the objective tracker" wording.
+
+### Fixed
+
+- **No empty Boats header near another faction's dock.** Standing by a dock whose only boats or zeppelins belong to the other faction, with their routes hidden, no longer leaves a Boats header with nothing under it in the tracker (#1017).
+- **The waypoint arrow and compass stay clear of the tracker.** At their usual place under the top of the screen they now stand beside the Forever tracker column and the quest tracker whenever those would cover them, wherever the column sits. An arrow or compass you dragged keeps its place (#1018).
+- Tracker: a right click on any journey line opens the journey menu (Lock the tracker, Clear journey), as the journey title does.
+- A destination on ground nobody can walk onto, such as a Feralas plateau ringed by cliffs, now gets a route to the nearest spot you can reach instead of no route.
+- **No error with an older ForeverCore installed.** With a separate ForeverCore 1.15.3 installed, the settings page still loads in full; the Attach to quest tracker row appears once ForeverCore is updated or removed.
+
 ## [1.43.5] - 2026-11-20
 
 ### Changed
