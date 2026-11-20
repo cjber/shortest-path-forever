@@ -19,6 +19,7 @@ Need a vendor, a trainer or an inn? The **Nearby services** tab on the world map
 - Walking maps are built ahead of time, so patched terrain can route wrongly until an update.
 - The game names your bind point but not where it is, so the Hearthstone counts once you bind or hearth with the addon on.
 - A boat, lift or tram shows "no sighting yet" until you have ridden that route once, because the game holds no timetables.
+- The game gives no player height, so standing still at a lift's landing right after a ride, the tracker can name the landing you rode from until you step off it.
 - The game cannot show another player's spells, so you list a party mage's portals yourself in the settings (Party mage portals).
 
 ![Eight-second demo of a route settling, the countdown and the compass](docs/screenshots/demo.gif)

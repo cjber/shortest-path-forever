@@ -50,6 +50,12 @@ local FIRST_LIFT = 1001 -- Data/Transports.lua numbers lift and tram landings fr
 
 ---@type SPFFloorState?
 local here
+-- The lift landing you stand at, where the floor is not followed, and the height of the floor you walked onto it on:
+-- a lift's landings share a spot on the map, one above the other, so that height names the landing (Core.lua's
+-- NearestDock). A ride takes you to another landing without moving you on the map, so a ride seen there
+-- (Transport/Observer.lua) drops the height.
+---@type { map: number, z: number? }?
+local landing
 local decoding -- the queued Path.Decode job, one at a time
 
 -- Cluster and local cell of global cell (gx, gy).
@@ -119,16 +125,16 @@ end
 
 -- A lift changes floor without moving you on the map.
 local function NearLift()
-	if not ns.NearestDock then
+	if not ns.NearestDockSpot then
 		return false
 	end
-	local dock, yards = ns.NearestDock()
+	local dock, yards = ns.NearestDockSpot()
 	return dock ~= nil and dock >= FIRST_LIFT and yards ~= nil and yards <= LIFT
 end
 
 ---Stop following: the floor is unknown and the clusters kept for it can go.
 function Floor.Forget()
-	here = nil
+	here, landing = nil, nil
 	if Path and Path.Pin then
 		Path.Pin()
 	end
@@ -140,9 +146,22 @@ end
 ---@param x number
 ---@param y number
 function Floor.Sample(map, x, y)
-	if not (Grid and Path and Path.HasData(map)) or UnitOnTaxi("player") or NearLift() then
+	if not (Grid and Path and Path.HasData(map)) or UnitOnTaxi("player") then
 		return Floor.Forget()
 	end
+	if NearLift() then
+		-- Arriving, the floor you walked in on names the landing; standing there it is kept, until a ride.
+		if not (landing and landing.map == map) then
+			landing = { map = map, z = Floor.Height(map, x, y) }
+		end
+		if ns.IsObservingRide and ns.IsObservingRide() then
+			landing.z = nil
+		end
+		here = nil
+		Path.Pin()
+		return
+	end
+	landing = nil
 	if InCombatLockdown() then
 		-- Held, not followed; a knockback seen here still counts once combat ends.
 		if here and IsFalling and IsFalling() then
@@ -291,6 +310,17 @@ function Floor.Sample(map, x, y)
 	end
 	-- Still in the air, the fall is weighed again where you land; landed on a floor the map reaches, it was a jump.
 	here = { map = map, gx = gx, gy = gy, x = x, y = y, nodes = nodes, swam = swimming, fell = falling or nil }
+end
+
+---Whether you stand at a lift's landing on map, and the height of the floor you walked onto it on: nil when it was
+---not known (Floor.Height's rule) or a ride has moved you since.
+---@param map number
+---@return boolean atLanding, number? z
+function Floor.Landing(map)
+	if landing and landing.map == map then
+		return true, landing.z
+	end
+	return false, nil
 end
 
 ---The height of the floor you are on at (x, y) on map, when it is known: nil while the surfaces you may be on lie on
