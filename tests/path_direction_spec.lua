@@ -6,6 +6,13 @@ for _, file in ipairs({ "Routing/PathGrid.lua", "Routing/Path.lua", "Routing/Pat
 	assert(loadfile(file))("ShortestPathForever", ns)
 end
 local Path, Grid = ns.Path, ns.PathGrid
+-- The one surface a step lands on, or nil: every step these maps test lands on at most one.
+local function stepTo(st, k, node, gx, gy, dx, dy, water)
+	local ks, ls = {}, {}
+	local count = Grid.neighbours(st, k, node, gx, gy, dx, dy, water, ks, ls)
+	assert(count <= 1, "one landing")
+	return ks[1], ls[1]
+end
 local TILE = 1600 / 3
 local CS = TILE / 67
 
@@ -273,7 +280,7 @@ assert(
 	"the reverse record stays in the cell"
 )
 assert(math.floor(reverseSame[1] / 256) % 64 - 1 == 0, "the reverse record lands on the base surface")
-local nk, nn = Grid.neighbour(same, 0, spot, 20, 10, 0, 0, false)
+local nk, nn = stepTo(same, 0, spot, 20, 10, 0, 0, false)
 assert(nk == 0 and nn == floorNode, "the decoder walks a same-cell link")
 
 -- A step both ways take is one bit on the floor, as format 1 writes it: the decoder resolves it by height and mirrors
@@ -304,7 +311,7 @@ assert(dropped and #dropped == 1, "the surface it lands on has the same step the
 assert(dropped[1] % 16 - 8 == 0 and math.floor(dropped[1] / 16) % 16 - 8 == -1, "it steps back -y")
 assert(math.floor(dropped[1] / 256) % 64 - 1 == 1, "and lands on floor 1")
 assert(#bit.linksIn[0][over + 1] == 1 and #bit.linksIn[0][beside + 1] == 1, "both ends are entered")
-local bk, bn = Grid.neighbour(bit, 0, over, 20, 10, 0, 1, false)
+local bk, bn = stepTo(bit, 0, over, 20, 10, 0, 1, false)
 assert(bk == 0 and bn == beside, "the floor walks +y onto the base surface")
 
 -- A format 3 bit names the layer it lands on, so it resolves the pair the bake linked even where a surface of the
@@ -338,15 +345,41 @@ assert(namedState.fmt == 3 and Grid.grid(namedState, 0))
 local namedLink = namedState.links[0][over + 1]
 assert(namedLink and #namedLink == 1, "the floor's step bit is its own link")
 assert(math.floor(namedLink[1] / 256) % 64 - 1 == 0, "the bit carries the base surface's layer")
-local nk3, nn3 = Grid.neighbour(namedState, 0, over, 20, 10, 0, 1, false)
+local nk3, nn3 = stepTo(namedState, 0, over, 20, 10, 0, 1, false)
 assert(nk3 == 0 and nn3 == beside, "the bit lands on the layer it names")
 local mirrored = namedState.links[0][beside + 1]
 assert(mirrored and #mirrored == 1 and math.floor(mirrored[1] / 256) % 64 - 1 == 1, "the base has the mirror")
 local oldState = Grid.State(61)
 assert(oldState.fmt == 2 and Grid.grid(oldState, 0))
-local oldK, oldN = Grid.neighbour(oldState, 0, over, 20, 10, 0, 1, false)
+local oldK, oldN = stepTo(oldState, 0, over, 20, 10, 0, 1, false)
 local nearer = 67 * 67 + 1 -- the target cell's floor, half a yard from the source's height
 assert(oldK == 0 and oldN == nearer, "format 2 still resolves a bit by height")
+
+-- One step can land on two surfaces: the base step onto the next cell's ground and a link onto the floor above it.
+-- Every caller following a walk gets both, as search() expands both (#1015); the first alone is the wrong floor for a
+-- walk going up.
+fixture.install(
+	62,
+	fixture.format3({
+		map = 62,
+		nx = 1,
+		ny = 1,
+		cell = { [20] = { [10] = at(20), [11] = at(20) } },
+		floor = { { 20, 11, 24, 1 } },
+		link = { { 20, 10, 0, 1, 0, 1 } }, -- +y onto floor 1 of (20, 11)
+		node = { { 20, 10, 1 } },
+	})
+)
+local both = Grid.State(62)
+assert(Grid.grid(both, 0))
+local landK, landN = {}, {}
+local landings = Grid.neighbours(both, 0, 20 * 67 + 10, 20, 10, 0, 1, false, landK, landN)
+assert(landings == 2, "the step lands on both surfaces")
+local landed = {}
+for i = 1, landings do
+	landed[both.z[landK[i]][landN[i] + 1]] = true
+end
+assert(landed[20] and landed[24], "the ground and the floor above it")
 
 -- A goal is judged by the walks into it, not out of it. This pit is entered by a one-way drop from the ground above
 -- and cannot be left forward, so only the reverse search sees that it is reachable; the higher ground beside it is
@@ -467,7 +500,7 @@ local cornerState = Grid.State(54)
 assert(cornerState.fmt == 2 and Grid.grid(cornerState, 0))
 local cornerHigh = 10 * 67 + 10
 assert(cornerState.moves[0][cornerHigh + 1] % 16 < 8, "the diagonal must not open through a steep leg")
-assert(Grid.neighbour(cornerState, 0, cornerHigh, 10, 10, 1, -1, false) == nil, "nor be walked")
+assert(stepTo(cornerState, 0, cornerHigh, 10, 10, 1, -1, false) == nil, "nor be walked")
 local climb, climbWhy = Path.FindSync(54, point(11, 9, 16), point(10, 10, 32))
 assert(climb == nil and climbWhy == "unreachable", "the search must not climb the steep face diagonally")
 local descend, descendCost = Path.FindSync(54, point(10, 10, 32), point(11, 9, 16))
@@ -493,11 +526,11 @@ local acrossState = Grid.State(55)
 assert(Grid.grid(acrossState, 0) and Grid.grid(acrossState, 1))
 local acrossFrom = 66 * 67 + 10
 assert(
-	Grid.neighbour(acrossState, 0, acrossFrom, 66, 10, 1, 1, false) == nil,
+	stepTo(acrossState, 0, acrossFrom, 66, 10, 1, 1, false) == nil,
 	"the diagonal must not climb through its corner cell"
 )
 local levelFrom = 66 * 67 + 20
-local lk, ln = Grid.neighbour(acrossState, 0, levelFrom, 66, 20, 1, 1, false)
+local lk, ln = stepTo(acrossState, 0, levelFrom, 66, 20, 1, 1, false)
 assert(lk == 1 and ln == 21, "a level cross-cluster diagonal stays open")
 
 -- A cross-cluster detour leg follows the same rule as one inside a cluster: a steep step that only goes downhill is
@@ -515,12 +548,12 @@ local downState = Grid.State(59)
 assert(Grid.grid(downState, 0) and Grid.grid(downState, 1))
 local downFrom = 66 * 67 + 10
 assert(
-	Grid.neighbour(downState, 0, downFrom, 66, 10, 1, 1, false) == nil,
+	stepTo(downState, 0, downFrom, 66, 10, 1, 1, false) == nil,
 	"a steep downhill leg must not open the cross-cluster diagonal"
 )
-local dk, dn = Grid.neighbour(downState, 0, downFrom, 66, 10, 1, 0, false)
+local dk, dn = stepTo(downState, 0, downFrom, 66, 10, 1, 0, false)
 assert(dk == 1 and dn == 10, "the ordinary step across the border stays open")
-local sk, sn = Grid.neighbour(downState, 1, 10, 67, 10, 0, 1, false)
+local sk, sn = stepTo(downState, 1, 10, 67, 10, 0, 1, false)
 assert(sk == 1 and sn == 11, "and the step down the face stays open")
 
 -- A reverse batch's road ratios come from the edges that reach a node, wherever that node lives: the source's

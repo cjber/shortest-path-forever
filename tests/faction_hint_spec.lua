@@ -21,42 +21,50 @@ local clock = 0
 ns.NowMs = function()
 	return clock
 end
+-- The comparison plans in a path job: ask, let the queue run a frame, ask again.
+local function Hint()
+	local first = ns.OtherFactionHint()
+	driver.path.runAll()
+	return ns.OtherFactionHint(), first
+end
 local function Other(arrive, route)
 	return { arrive = arrive, legs = { { mode = route and "boat" or "walk", route = route } } }
 end
 
-assert(ns.OtherFactionHint() == nil, "no journey, no line")
+assert(Hint() == nil, "no journey, no line")
 driver.begin({ map = 1, x = 0, y = 0 }, { map = 1, x = 2000, y = 0 })
 local _, _, own = ns.JourneyInfo()
 local arrive = own.arrive
 other = Other(arrive - 240000, 1)
-assert(ns.OtherFactionHint() == "Through Horde transport: about 4 min faster", "four minutes through Horde transport")
+local answer, first = Hint()
+assert(first == nil, "nothing is planned in the asking frame")
+assert(answer == "Through Horde transport: about 4 min faster", "four minutes through Horde transport")
 assert(#calls == 1, "one plan: the journey's own is the other side")
-assert(ns.OtherFactionHint() and #calls == 1, "the comparison stands a while")
+assert(Hint() and #calls == 1, "the comparison stands a while")
 
 -- Under two minutes is no line: the comparison can be out by about that much.
 clock = clock + 31000
 other = Other(arrive - 119000, 1)
-assert(ns.OtherFactionHint() == nil, "119 seconds is not worth a line")
+assert(Hint() == nil, "119 seconds is not worth a line")
 clock = clock + 31000
 other = Other(arrive - 120000, 1)
-assert(ns.OtherFactionHint() == "Through Horde transport: about 2 min faster", "two minutes is")
+assert(Hint() == "Through Horde transport: about 2 min faster", "two minutes is")
 
 -- Faster without any of the other faction's transport (a neutral boat, or the player's own) is no line either.
 clock = clock + 31000
 other = Other(arrive - 600000, 3)
-assert(ns.OtherFactionHint() == nil, "a neutral route is not the other faction's")
+assert(Hint() == nil, "a neutral route is not the other faction's")
 clock = clock + 31000
 other = Other(arrive - 600000, 2)
-assert(ns.OtherFactionHint() == nil, "the player's own faction's route")
+assert(Hint() == nil, "the player's own faction's route")
 
 -- Moving on compares again before the half minute is up.
 clock = clock + 31000
 other = Other(arrive - 300000, 1)
-assert(ns.OtherFactionHint() == "Through Horde transport: about 5 min faster")
+assert(Hint() == "Through Horde transport: about 5 min faster")
 other = Other(arrive, 1)
 driver.move({ map = 1, x = 0, y = 100 })
-assert(ns.OtherFactionHint() == nil, "a new place is compared again")
+assert(Hint() == nil, "a new place is compared again")
 driver.move({ map = 1, x = 0, y = 0 })
 
 -- On a ride, a flight or a corpse run, in combat or with the setting on: no line, and no planning.
@@ -64,7 +72,7 @@ other = Other(arrive - 300000, 1)
 clock = clock + 31000
 calls = {}
 local function quiet(label)
-	assert(ns.OtherFactionHint() == nil and #calls == 0, label)
+	assert(Hint() == nil and #calls == 0, label)
 end
 ns.CurrentRide = function()
 	return 1
@@ -93,10 +101,10 @@ quiet("the setting on")
 ns.db.otherFaction = false
 local faction = env.UnitFactionGroup
 env.UnitFactionGroup = function() end
-assert(ns.OtherFactionHint() == nil, "no faction yet (loading)")
+assert(Hint() == nil, "no faction yet (loading)")
 env.UnitFactionGroup = faction
 clock = clock + 31000
-assert(ns.OtherFactionHint() == "Through Horde transport: about 5 min faster", "and back")
+assert(Hint() == "Through Horde transport: about 5 min faster", "and back")
 assert(calls[#calls].withoutHearth == ns.JourneyWithoutHearth(), "a refused Hearthstone stays refused")
 
 -- No way for the journey: the line says there is one through the other faction's transport.
@@ -108,9 +116,9 @@ driver.update(0.1)
 local _, _, none, _, loading = ns.JourneyInfo()
 assert(none == nil and not loading, "the journey found no way")
 clock = clock + 31000
-assert(ns.OtherFactionHint() == "Through Horde transport, there is a way", "a way only through it")
+assert(Hint() == "Through Horde transport, there is a way", "a way only through it")
 other = nil
 clock = clock + 31000
-assert(ns.OtherFactionHint() == nil, "no way either way")
+assert(Hint() == nil, "no way either way")
 
 print("faction_hint_spec: ok")

@@ -639,6 +639,16 @@ ns.Init(function()
 			L["Shows the arrow to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."]
 		)
 	)
+	Checkbox(
+		"castPrompt",
+		L["Show cast prompt"],
+		-- luacheck: push ignore 631
+		L["Shows the Hearthstone or teleport to use in the arrow's place. Off, journeys still use them and the tracker still names the step."],
+		-- luacheck: pop
+		function()
+			ns.JourneyGuide.ArrowChanged()
+		end
+	)
 	Scale("arrowScale", L["Arrow scale"], L["Scales the arrow and the cast prompt."], function(_, value)
 		if type(value) == "number" then
 			ns.SetArrowScale(value)

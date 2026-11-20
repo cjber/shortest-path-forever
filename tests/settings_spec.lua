@@ -444,6 +444,7 @@ local groups = {
 	Interface = {
 		"arrow",
 		"arrowMove",
+		"castPrompt",
 		"arrowScale",
 		"arrowDirect",
 		"arrowLabel",
@@ -470,7 +471,7 @@ local order = {
 }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 75, #rows)
+assert(#rows == 76, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -723,6 +724,10 @@ assert(
 assert(Row("npcArrows").setting.default == true, "nameplate arrows are on by default")
 Row("arrow").setting.onChanged()
 assert(arrowVisibilityChanged == 1 and travelWoken == 1, "arrow visibility refreshes casting and wakes travel")
+-- "Show cast prompt" starts on and redraws the current cast at once; it does not replan (#1086).
+assert(Row("castPrompt").setting.default == true, "the cast prompt shows by default")
+Row("castPrompt").setting.onChanged()
+assert(arrowVisibilityChanged == 2 and travelWoken == 1, "the cast prompt switch redraws the cast without replanning")
 assert(Row("npcArrows").tooltip:find("Friendly nameplates", 1, true), "the tooltip says friendly nameplates must be on")
 -- Party mage portals are opt-in, and every capital starts ticked for the mage to open.
 assert(Row("partyMagePortals").setting.default == false, "party mage portals are off by default")

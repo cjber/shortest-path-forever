@@ -14,8 +14,7 @@ ns.JourneyGuide = Guide
 local guide
 
 -- Waypoint UI (github.com/Adaptvx/Waypoint-UI) drives the same native user waypoint we borrow. It is detected at the
--- point of use, because it may load after us. While it is tracking a navigation it owns the marker: we hand our
--- destination over through its public API instead of writing the waypoint and clearing each other's pin.
+-- point of use, because it may load after us. Use its public API to publish every bend while it is available.
 ---@return table? navigation
 local function WaypointUINavigation()
 	local api = rawget(_G, "WaypointUIAPI")
@@ -72,25 +71,24 @@ local function DestinationTitle(goal)
 	return goal.label
 end
 
--- Hand our destination to Waypoint UI rather than writing the waypoint it is already tracking. Wrapped in
--- ns.core.SafeCall so a renamed or absent member can never raise into the guide. Waypoint UI's public API takes
--- coordinates as percent,
--- while our bend coordinates are normalized 0-1, so we scale them by 100 here.
+-- Waypoint UI expects coordinates as percentages. Suppress placement audio on each turn.
 ---@param navigation table
 ---@param title string?
----@param uiMap number
----@param x number
----@param y number
-local function HandOverToWaypointUI(navigation, title, uiMap, x, y)
+---@param waypoint table
+---@return boolean
+local function HandOverToWaypointUI(navigation, title, waypoint)
 	if type(navigation.NewUserNavigation) ~= "function" then
-		return
+		return false
 	end
-	ns.core.SafeCall("Waypoint UI handover", navigation.NewUserNavigation, {
+	local ok, marker = ns.core.SafeCall("Waypoint UI handover", navigation.NewUserNavigation, {
 		name = title,
-		mapID = uiMap,
-		x = x * 100,
-		y = y * 100,
+		mapID = waypoint.uiMapID,
+		x = waypoint.position.x * 100,
+		y = waypoint.position.y * 100,
+		flags = "ShortestPathForever",
+		suppressAudio = true,
 	})
+	return ok and type(marker) == "table"
 end
 
 local function RefreshTracker()
@@ -164,7 +162,7 @@ local function RefreshNativeMarker()
 	if not (frame and frame.Icon) then
 		return
 	end
-	local ours = MarkerIsOurs()
+	local ours = MarkerIsOurs() and not ns.WaypointUIPinOwned()
 	if ours then
 		MarkerPin(frame):Show()
 	elseif markerPin then
@@ -416,7 +414,7 @@ function Guide.OwnsReported(event)
 	if not guide then
 		return false
 	end
-	if WaypointUIHolding() then
+	if not guide.hasDriven and WaypointUIHolding() then
 		return true
 	end
 	if event == "USER_WAYPOINT_UPDATED" then
@@ -483,8 +481,8 @@ local function StopGuide(reason)
 end
 
 local function OwnsWaypoint()
-	-- Waypoint UI holds the native waypoint while it navigates; a change to it is not the player taking over.
-	if WaypointUIHolding() then
+	-- Before SPF publishes a bend, Waypoint UI may already have a tracked pin to hand over.
+	if not guide.hasDriven and WaypointUIHolding() then
 		return true
 	end
 	if not SameWaypoint(C_Map.GetUserWaypoint(), guide.expectedWaypoint) then
@@ -538,10 +536,10 @@ local function GuideWaypoint(point, fading)
 	if guide.yielded then
 		return false
 	end
-	-- In route mode, "Mark only where steps end" leaves the step's end to the map's own pins and lets the screen
-	-- arrow lead the bends. Direct mode has one bearing, so the native marker leads at the supplied destination
-	-- or travel endpoint regardless of map mark density. Returning to route mode takes our marker back.
-	if ns.db.guideStops and not ns.db.arrowDirect then
+	-- Waypoint UI can show each turn in-world while SPF's map marks still show step ends.
+	local navigation = WaypointUINavigation()
+	local nativeAllowed = not ns.db.guideStops or ns.db.arrowDirect
+	if not nativeAllowed and not navigation then
 		if guide.waypoint then
 			ClearGuideWaypoint()
 			RefreshTracker()
@@ -568,8 +566,6 @@ local function GuideWaypoint(point, fading)
 		guide.bend, guide.uiMap = { map = point.map, x = point.x, y = point.y }, uiMap
 		guide.fading = fading
 		local waypoint
-		local navigation = WaypointUINavigation()
-		local yielding = navigation ~= nil and WaypointUITracking(navigation)
 		-- The native waypoint has no per-pin alpha; near the goal, use the fading fallback instead of stacking icons.
 		if not fading and uiMap and C_Map.CanSetUserWaypointOnMap(uiMap) then
 			local projectedMap, position =
@@ -577,27 +573,27 @@ local function GuideWaypoint(point, fading)
 			if projectedMap == uiMap and position then
 				local x, y = position:GetXY()
 				if x >= 0 and x <= 1 and y >= 0 and y <= 1 then
-					if yielding and navigation then
-						-- Waypoint UI owns the native marker: hand the bend over and never write the waypoint ourselves.
-						-- The second test narrows `navigation` to non-nil for LuaLS: `yielding` already implies it, and nil can
-						-- never reach here because a nil navigation makes it false.
-						HandOverToWaypointUI(navigation, guide.title, uiMap, x, y)
-						guide.waypoint, guide.expectedWaypoint = nil, nil
-						ns.charDB.guideWaypoint = nil
-					else
-						waypoint = UiMapPoint.CreateFromVector2D(uiMap, position)
-					end
+					waypoint = UiMapPoint.CreateFromVector2D(uiMap, position)
 				end
 			end
 		end
 		-- These APIs may dispatch events synchronously. Only our own writes bypass ownership checks.
 		guide.writing = true
 		guide.writingWaypoint = waypoint
-		if waypoint and C_Map.SetUserWaypoint(waypoint) then
+		local waypointUITracking = navigation ~= nil and WaypointUITracking(navigation)
+		local handedOver = waypoint
+			and navigation
+			and HandOverToWaypointUI(navigation, guide.title, waypoint)
+			and SameWaypoint(C_Map.GetUserWaypoint(), waypoint)
+		if
+			waypoint and (handedOver or (nativeAllowed and not waypointUITracking and C_Map.SetUserWaypoint(waypoint)))
+		then
 			guide.waypoint, guide.expectedWaypoint = waypoint, waypoint
 			ns.charDB.guideWaypoint = { uiMapID = waypoint.uiMapID, x = waypoint.position.x, y = waypoint.position.y }
 			guide.hasDriven = true
-			C_SuperTrack.SetSuperTrackedUserWaypoint(true)
+			if not handedOver then
+				C_SuperTrack.SetSuperTrackedUserWaypoint(true)
+			end
 		elseif guide.waypoint then
 			-- Never leave a stale native marker pointing at the preceding bend when projection fails.
 			ClearGuideWaypoint()
@@ -805,7 +801,7 @@ function Guide.TrackingChanged(event)
 	if not guide or guide.writing then
 		return
 	end
-	if WaypointUIHolding() then
+	if not guide.hasDriven and WaypointUIHolding() then
 		-- Waypoint UI's own write or tracking change: keep steering and never treat it as the player taking over.
 		return
 	end

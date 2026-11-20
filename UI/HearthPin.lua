@@ -56,7 +56,14 @@ function HearthPin:OnMouseEnter()
 	if not hearth then
 		return
 	end
-	local title, lines = ns.HearthPinTooltip(hearth.name, ns.HearthSaving())
+	-- The comparison is planned in path jobs, never in the hovering frame: the tooltip shows at once and gains its time
+	-- line when the answer lands, if the pointer is still on this button.
+	local saving = ns.HearthSaving(function()
+		if self.hearth == hearth and GameTooltip:IsOwned(self) then
+			self:OnMouseEnter()
+		end
+	end)
+	local title, lines = ns.HearthPinTooltip(hearth.name, saving)
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 	GameTooltip_SetTitle(GameTooltip, title)
 	for index, text in ipairs(lines) do
@@ -111,14 +118,19 @@ function ns.HearthPinTooltip(name, saving)
 	return L["Hearthstone"], lines
 end
 
--- The last comparison, kept while the player stands near the same place on the same journey.
+-- The last comparison, kept while the player stands near the same place on the same journey, and the one still being
+-- planned.
 ---@type {goal: SPFPoint, at: number, x: number, y: number, map: number, saving: number?}?
 local comparison
+---@type {goal: SPFPoint, map: number, x: number, y: number, job: SPFPathJob, ready: fun()?}?
+local planning
 
 -- How much faster the journey is with the Hearthstone, in ms: the planner's answer with it and without it, from where
--- the player stands now, in the same frame of reference. nil without a journey, a readable position or a Hearthstone.
+-- the player stands now, in the same frame of reference. nil without a journey, a readable position or a Hearthstone,
+-- and while the comparison is still being planned: it plans in path jobs under the frame budget, then calls ready().
+---@param ready? fun() called once a comparison this call started (or joined) has its answer
 ---@return number?
-function ns.HearthSaving()
+function ns.HearthSaving(ready)
 	local goal = ns.JourneyGoal()
 	local x, y, _, map = ns.JourneyPosition()
 	if not (goal and x and y and map) or InCombatLockdown() then
@@ -164,19 +176,44 @@ function ns.HearthSaving()
 		end
 		copy[#copy + 1] = hearth.place
 		options.teleports = copy
-		local ready = {}
+		local readyAt = {}
 		for index, at in pairs(options.teleportReady or {}) do
-			ready[index] = at
+			readyAt[index] = at
 		end
-		ready[#copy] = hearth.readyAt
-		options.teleportReady = ready
+		readyAt[#copy] = hearth.readyAt
+		options.teleportReady = readyAt
 	end
-	local with = ns.Planner.Plan(options)
-	options.withoutHearth = true
-	local without = ns.Planner.Plan(options)
-	local saving = with and without and (without.arrive - with.arrive) or nil
-	comparison = { goal = goal, at = now, x = x, y = y, map = map, saving = saving }
-	return saving
+	if
+		planning
+		and planning.goal == goal
+		and planning.map == map
+		and (planning.x - x) ^ 2 + (planning.y - y) ^ 2 <= MOVED ^ 2
+		and not planning.job.done
+	then
+		planning.ready = ready or planning.ready
+		return nil
+	end
+	if planning then
+		ns.Path.Cancel(planning.job)
+	end
+	local this = { goal = goal, map = map, x = x, y = y, ready = ready }
+	planning = this
+	this.job = ns.Path.Run(function(job)
+		local with = ns.Planner.Plan(options, job)
+		options.withoutHearth = true
+		local without = ns.Planner.Plan(options, job)
+		return with and without and (without.arrive - with.arrive) or nil
+	end, function(saving)
+		if planning ~= this then
+			return
+		end
+		planning = nil
+		comparison = { goal = goal, at = now, x = x, y = y, map = map, saving = saving }
+		if this.ready then
+			this.ready()
+		end
+	end)
+	return nil
 end
 
 -- The bind point's place on the map now shown, or nil when it is off this map.

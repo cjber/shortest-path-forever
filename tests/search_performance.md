@@ -61,7 +61,8 @@ from **3,276 to 111 KB**. Packed maps remain loaded.
 The walk cache is bounded to 64 entries. Endpoint results retain only the latest start and goal;
 their suspended stacks/callbacks are released after settlement and rebuild only if another bound
 is needed. Path retains at most 256 endpoint vectors and 16 abstract paths per map, releases local
-trees at idle, and keeps its existing 24 MB active-grid / 4 MB graph accounting budgets. The planner
+trees at idle, and keeps its 24 MB active-grid / 8 MB graph accounting budgets; idle keeps graphs up to the graph budget,
+which a continent-wide reverse search fills (#1074). The planner
 has one topology. Transport geometry is bounded by current route IDs and invalidates with data
 replacement. Each line pool is capped at 4,096 paired strokes. Clear releases journey caches,
 Path state and pooled journey geometry. `/path perf` explicitly collects before addon accounting.

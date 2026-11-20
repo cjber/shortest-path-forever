@@ -102,6 +102,7 @@ scenario(
 			-- A carried bandage adds its on-use spell's 15 yd range to the ladder, so a friendly NPC is measured by an
 			-- item as well as by a spell.
 			sim.world.items[1251] = { name = "Linen Bandage", count = 1 }
+			sim.events.fire("BAG_UPDATE_DELAYED")
 			local before = itemAsks
 			local band = assert(ns.Band.At(0, HERE.x, HERE.y), "the carried bandage answers")
 			assert(itemAsks > before, "the item ladder asked the carried bandage")

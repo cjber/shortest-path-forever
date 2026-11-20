@@ -524,7 +524,6 @@ function Layer:RefreshStops()
 				label = point.stopLabel,
 				details = point.details,
 				look = point.look,
-				pinBadge = point.pinBadge,
 				ground = ns.PathGrid.ground(point.map, point.x, point.y, point.z),
 				quests = StopQuests(point),
 				handins = point.handins,
@@ -545,14 +544,13 @@ function Layer:RefreshStops()
 	for _, group in ipairs(groups) do
 		for _, mark in ipairs(group) do
 			keys[#keys + 1] = string.format(
-				"%d:%.6f:%.6f:%s:%s:%s:%s:%s:%s:%s",
+				"%d:%.6f:%.6f:%s:%s:%s:%s:%s:%s",
 				mark.index,
 				mark.x,
 				mark.y,
 				tostring(mark.label),
 				tostring(mark.detail),
 				tostring(mark.look),
-				tostring(mark.pinBadge),
 				tostring(mark.ground),
 				tostring(mark.quests and table.concat(mark.quests, ",")),
 				tostring(mark.handins and table.concat(mark.handins, ","))
@@ -600,19 +598,7 @@ function Layer:RefreshStops()
 		else
 			x, y, numbered = lead.x, lead.y, stops and numbers
 		end
-		local pin = goalPins:Acquire(
-			x,
-			y,
-			numbered,
-			stops and #stops,
-			labels,
-			later,
-			look,
-			details,
-			lead.pinBadge,
-			ground,
-			quests
-		)
+		local pin = goalPins:Acquire(x, y, numbered, stops and #stops, labels, later, look, details, ground, quests)
 		self.stopMarks[#self.stopMarks + 1] = { x = x, y = y, radius = pin:GetWidth() / 2 }
 	end
 	for pin in linePins:EnumerateActive() do

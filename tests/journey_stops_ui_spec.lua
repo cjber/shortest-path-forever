@@ -162,6 +162,8 @@ local function flush()
 	for _, fn in ipairs(pending) do
 		fn()
 	end
+	-- The frame's path jobs run after its timers, as the pump's do.
+	driver.path.runAll()
 end
 local function waypoint(x)
 	env.C_Map.SetUserWaypoint({ uiMapID = 1, position = { x = x, y = 0.5 } })
@@ -211,7 +213,8 @@ window.scripts.OnEvent(window, "PLAYER_UNGHOST")
 eq(find("Start").enabled, true, "alive event restores start without polling")
 local api, estimates = env.ShortestPathForever.API, 0
 debug.sethook(function(event)
-	if event == "call" and debug.getinfo(2, "f").func == api.Estimate then
+	local func = debug.getinfo(2, "f").func
+	if event == "call" and (func == api.Estimate or func == ns.EstimateIn) then
 		estimates = estimates + 1
 	end
 end, "c")

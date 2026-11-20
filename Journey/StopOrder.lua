@@ -105,7 +105,8 @@ local function Stop(point)
 end
 
 -- Directed nearest-next estimates, not a globally optimal itinerary. The caller
--- schedules at most one Step per frame and cancels on changes to its draft/context.
+-- steps from a path job (Step(pathJob)), whose uncached estimates pause at the frame
+-- budget, and cancels on changes to its draft/context.
 -- Loading/combat leave the candidate pending: a later Step retries it. Unreachable
 -- candidates are reconsidered from the next chosen stop, not discarded forever.
 ---@param stops SPFAPIStop[]
@@ -137,7 +138,8 @@ function Order.Begin(stops, from)
 		cancelled = true
 		self.points = nil
 	end
-	function job:Step()
+	---@param pathJob? SPFPathJob the path job stepping, whose estimate pauses at the frame budget
+	function job:Step(pathJob)
 		if cancelled or self.status == "ready" or self.status == "invalid" or self.status == "unreachable" then
 			return self.status, self.points
 		end
@@ -151,7 +153,13 @@ function Order.Begin(stops, from)
 			self.status, self.reason = "loading", "loading"
 			return self.status
 		end
-		local time, reason = api.Estimate(origin.map, origin.x, origin.y, candidate.map, candidate.x, candidate.y)
+		local time, reason
+		if pathJob then
+			time, reason =
+				ns.EstimateIn(pathJob, origin.map, origin.x, origin.y, candidate.map, candidate.x, candidate.y)
+		else
+			time, reason = api.Estimate(origin.map, origin.x, origin.y, candidate.map, candidate.x, candidate.y)
+		end
 		if cancelled then
 			return self.status
 		end

@@ -245,8 +245,10 @@ function Editor.new()
 		self.from, self.state = from, "ordering"
 		return true
 	end
-	function controller:Step()
-		if not self.job then
+	---@param pathJob? SPFPathJob the path job stepping (ns.Path.Run), so an uncached estimate pauses at the frame budget
+	function controller:Step(pathJob)
+		local job = self.job
+		if not job then
 			return
 		end
 		local reason = Blocked()
@@ -255,7 +257,11 @@ function Editor.new()
 			self.state = reason == "combat" and "order-combat" or reason == "corpse" and "order-corpse" or "occupied"
 			return
 		end
-		local state, points = self.job:Step()
+		local state, points = job:Step(pathJob)
+		-- Cleared or restarted while its estimate paused: that order no longer owns the editor.
+		if self.job ~= job then
+			return
+		end
 		if state == "working" or state == "loading" then
 			self.state = state == "working" and "ordering" or "loading"
 			return
@@ -441,15 +447,21 @@ local function Build()
 	startButton = Button(L["Start"], 16, 16, function()
 		controller:Start()
 		local generation = controller.generation
+		-- One estimate a step, each in a path job: the frame that clicked or the next never plans whole.
 		local function Step()
 			if generation ~= controller.generation or not window:IsShown() or not controller.job then
 				return
 			end
-			controller:Step()
-			refresh()
-			if controller.job then
-				C_Timer.After(0, Step)
-			end
+			ns.Path.Run(function(pathJob)
+				if generation == controller.generation and controller.job then
+					controller:Step(pathJob)
+				end
+			end, function()
+				refresh()
+				if generation == controller.generation and window:IsShown() and controller.job then
+					C_Timer.After(0, Step)
+				end
+			end)
 		end
 		if controller.job then
 			C_Timer.After(0, Step)

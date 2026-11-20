@@ -877,8 +877,8 @@ do
 		return true
 	end
 	local estimates = 0
-	local estimate = api.Estimate
-	api.Estimate = function(...)
+	local estimate = worldNs.EstimateIn
+	worldNs.EstimateIn = function(...)
 		estimates = estimates + 1
 		return estimate(...)
 	end
@@ -948,6 +948,8 @@ do
 	build()
 	assert(estimates == 0, "building or refreshing the menu plans nothing")
 	assert(build().callback() == travelEnv.MenuResponse.CloseAll)
+	assert(routed == nil and estimates == 0, "the click plans nothing in its own frame")
+	driver.path.runAll()
 	assert(routed.title == "Darnassus hunter trainer", "the boat's Teldrassil trainer beats the short walk to Kaerbrus")
 	assert(routed.npc == 5503, "the chosen trainer rides along as the stop's NPC id")
 	assert(estimates == 3, "only the clicked service's shortlist is planned")
@@ -957,6 +959,16 @@ do
 		boat = boat or leg.mode == "boat"
 	end
 	assert(boat, "the chosen trainer is reached by boat")
+	-- A destination chosen while the ranking runs is the newer request: the ranking then starts nothing.
+	routed = nil
+	assert(build().callback() == travelEnv.MenuResponse.CloseAll)
+	local journeyGoal = worldNs.JourneyGoal
+	worldNs.JourneyGoal = function()
+		return { map = 1, x = 0.5, y = 0.5 }
+	end
+	driver.path.runAll()
+	worldNs.JourneyGoal = journeyGoal
+	assert(routed == nil, "a destination set during the ranking is kept")
 end
 print(
 	"nearby: installed QuestieDB contract, sliced loading, faction/class/profession grouping, "

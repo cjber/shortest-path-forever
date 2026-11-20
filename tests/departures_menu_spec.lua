@@ -84,6 +84,11 @@ local env = setmetatable({
 	},
 }, { __index = _G })
 ns.TrackerHost = env.ForeverCore.TrackerHost
+-- Core's tracker host waits for the world and saved variables before a section attaches; the stand-in host here
+-- waits on the same two events.
+ns.AfterWorldEvents = function(callback)
+	env.EventUtil.ContinueAfterAllEvents(callback, "PLAYER_ENTERING_WORLD", "VARIABLES_LOADED")
+end
 setfenv(assert(loadfile(core.directory() .. "/UI/TrackerSection.lua")), env)("ForeverCore", ns)
 env.ForeverCore.TrackerSection, env.ForeverCore.TrackerLine = ns.TrackerSection, ns.TrackerLine
 setfenv(assert(loadfile("UI/Tracker.lua")), env)("ShortestPathForever", ns)
