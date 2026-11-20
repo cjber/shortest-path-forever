@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "generator": "f9c311b5c031ca57612d2b2c8e3116dd24c1a5e46ef5effd33f5a18584aecb3d",
+  "generator": "7ea498c5d5e77bb7dbf2c0939e38c6f91a2c6c86e3ac2a82d93a92782411d60e",
   "collision_generators": [
     "a8a5016e76c43a420aece4696d5ce8ee272af469e1716fa847cb9175864c1769"
   ],
-  "reason": "#892 and #893 changed only the graph over #950's native bake; #1084 changes only a town's hazard key string in Journey/Hazards.lua, and the baker reads ROAD_DETOUR_MAX alone from that file, unchanged. Collision fields remain byte-identical."
+  "reason": "#892 and #893 changed only the graph over #950's native bake. The generator digest now takes from Journey/Hazards.lua only the ROAD_DETOUR_MAX line gen_nav.py reads, unchanged, so runtime hazard edits no longer touch it. Collision fields remain byte-identical."
 }

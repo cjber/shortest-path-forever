@@ -22,10 +22,12 @@
 ---@field ItemProfessions table<number, number[]> item -> the profession skill lines its goods supply, for the items a vendor sells (Data/Services.lua)
 ---@field Walks table<number, table<string, (number|false)[]>>
 ---@field WalkPlaces table<number, table<string, number[]>>
+---@field WalkZones table<number, table<string, number[]>>? each baked walk's zone shares (Data/WalkZones.lua)
 ---@field RoadCells table<number, table<number, string>>
 ---@field RoadEdges table<number, table<number, string>>
 ---@field SpawnHeights table<number, table<number, string>> spawns over or under another surface (Data/Heights.lua)
 ---@field TownAreas table<number, SPFTownArea> the client's town ground per flight master (Data/TownAreas.lua)
+---@field ZoneCells table<number, {i0: number, j0: number, columns: string[]}>? the client's zone per 64-yard square (Data/ZoneCells.lua)
 ---@field IdleSpawns table<number, table<number, string>> spawns an NPC stands still at, by creature ID (Data/IdleSpawns.lua)
 ---@field SpellTargets table<number, boolean> friendly spells whose effects target another unit (Data/SpellTargets.lua)
 ---@field HostileSpells table<number, boolean> hostile spells whose effects target another unit (Data/SpellTargets.lua)
@@ -511,7 +513,7 @@ ShortestPathForeverPathData = nil
 ---@field estimated true
 
 ---@class SPFPlan
----@field provisional? boolean
+---@field rough? true -- a first search's estimate, drawn before its proof and never followed
 ---@field arrive number
 ---@field legs SPFLeg[]
 ---@field needsStart boolean
@@ -567,6 +569,7 @@ ShortestPathForeverPathData = nil
 ---@field landmasses? SPFLandmass[]
 ---@field anchors? table<number, SPFAnchor>
 ---@field baked? table<number, table<string, (number|false)[]>>
+---@field bakedZones? table<number, table<string, number[]>> each baked walk's zone shares (Data/WalkZones.lua)
 ---@field exactMaps? table<number, boolean>
 ---@field walks? SPFWalkCost[]
 ---@field hazards? SPFHazards -- weights baked walks that cross a hazard (Journey/Hazards.lua)

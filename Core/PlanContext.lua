@@ -98,6 +98,7 @@ function Context.Options(from, to, policy)
 		teleportMinimumSavings = ns.db and ns.db.teleportMinimumSavings or 0,
 		landmasses = ns.Landmasses,
 		baked = ns.Walks,
+		bakedZones = ns.WalkZones,
 	}
 end
 

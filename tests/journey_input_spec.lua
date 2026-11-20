@@ -25,7 +25,8 @@ local function Record(tag, fn)
 		questMapLogMenu = fn
 	end
 end
-local gamepad, tooltipShown = false, nil
+local gamepad, tooltipShown, minimapTooltipPost = false, nil, nil
+local noticed = {}
 local ns = {
 	db = { journey = true },
 	L = setmetatable({}, {
@@ -51,6 +52,9 @@ local ns = {
 	end,
 	GamepadUI = function()
 		return gamepad
+	end,
+	Notice = function(message)
+		noticed[#noticed + 1] = message
 	end,
 	-- UI/Canvas.lua: the addon's own pins hand their clicks to this filter.
 	Canvas = {
@@ -108,6 +112,12 @@ local env = setmetatable({
 			minimapClick = fn
 		end,
 	},
+	TooltipDataProcessor = {
+		AddTooltipPostCall = function(kind, fn)
+			assert(kind == 21, "only the minimap's tooltip data type")
+			minimapTooltipPost = fn
+		end,
+	},
 	GameTooltip = {
 		HookScript = function(_, script, fn)
 			assert(script == "OnShow")
@@ -133,7 +143,7 @@ local env = setmetatable({
 			return { mapType = 3 }
 		end,
 	},
-	Enum = { UIMapType = { Continent = 2 } },
+	Enum = { UIMapType = { Continent = 2 }, TooltipDataType = { MinimapMouseover = 21 } },
 	CreateVector2D = function(x, y)
 		return { x = x, y = y }
 	end,
@@ -252,10 +262,35 @@ do
 	ns.db.journey, gamepad = true, true
 	assert(ns.JourneyClickHint() == nil, "nothing under the gamepad interface, which has no key to hold")
 	gamepad = false
-	env.Minimap.IsForbidden = function()
+	-- Minimap_OnUpdate owns the minimap's tooltip by UIParent and fills it with SetMinimapMouseover (#1083 step 3).
+	local parent = {
+		IsForbidden = function()
+			return false
+		end,
+	}
+	assert(not tooltipFor(parent).lines[1], "a UIParent tooltip on its own is no map pin")
+	local minimapTip = { lines = {}, shows = 0 }
+	function minimapTip.Show(self)
+		self.shows = self.shows + 1
+	end
+	function minimapTip.IsForbidden()
 		return false
 	end
-	assert(tooltipFor(env.Minimap).lines[1] == hint, "the minimap's tooltip: a click there plans to the spot")
+	env.GameTooltip.lines, env.GameTooltip.shows = {}, 0
+	env.GameTooltip.Show, env.GameTooltip.IsForbidden = minimapTip.Show, minimapTip.IsForbidden
+	assert(minimapTooltipPost, "the minimap's tooltip data must be hooked")
+	minimapTooltipPost(env.GameTooltip)
+	assert(
+		env.GameTooltip.lines[1] == hint and env.GameTooltip.shows == 1,
+		"the minimap's tooltip: a click there plans"
+	)
+	minimapTooltipPost(minimapTip)
+	assert(not minimapTip.lines[1], "another tooltip showing minimap data is not the one a click answers")
+	ns.db.journey = false
+	env.GameTooltip.lines = {}
+	minimapTooltipPost(env.GameTooltip)
+	assert(not env.GameTooltip.lines[1], "nothing on the minimap while journeys are off")
+	ns.db.journey = true
 	shown = false
 	assert(not tooltipFor(poi.GetOwner()).lines[1], "nothing while the world map is closed")
 	shown = true
@@ -372,6 +407,58 @@ _G.Questie = nil
 ns.db.journeyKey, shift, alt = nil, true, false
 env.GetMouseFoci = function()
 	return { pin }
+end
+
+-- With journeys off, every journey-key click says so on screen and leaves the click to the game (#1076): the map,
+-- its pins, our own icons, the minimap, a Questie icon, and the waypoint and tracked quest keys. A click without
+-- the key says nothing.
+do
+	local off = "Journeys are off. Turn on Click the map to plan journeys in settings."
+	local function Off(what, click)
+		noticed, destination = {}, nil
+		local taken = click()
+		assert(
+			not taken and destination == nil and noticed[1] == off and #noticed == 1,
+			what .. " says journeys are off"
+		)
+	end
+	ns.db.journey, ns.db.journeyKey, shift, alt = false, nil, true, false
+	Off("a map pin", function()
+		return handler(map, 3, "LeftButton")
+	end)
+	Off("the map", function()
+		return canvasClick(map, "LeftButton")
+	end)
+	own.marker = "dock"
+	Off("our own icon", function()
+		return ownClick(own, "LeftButton")
+	end)
+	Off("the minimap", function()
+		return minimapClick(nil, "LeftButton")
+	end)
+	_G.Questie = {}
+	local pinFoci = env.GetMouseFoci
+	env.GetMouseFoci = function()
+		return { { miniMapIcon = false, data = {}, UiMapID = 1440, x = 50, y = 50 } }
+	end
+	shift, alt = false, true
+	Off("a Questie icon", function()
+		return mouseEvent(nil, "GLOBAL_MOUSE_DOWN", "LeftButton")
+	end)
+	_G.Questie, env.GetMouseFoci = nil, pinFoci
+	Off("the waypoint key", ns.JourneyToUserWaypoint)
+	local superTrack = env.C_SuperTrack
+	env.C_SuperTrack = {
+		GetSuperTrackedQuestID = function()
+			return 42
+		end,
+	}
+	Off("the tracked quest key", ns.JourneyToTrackedQuest)
+	env.C_SuperTrack = superTrack
+	shift, alt, noticed = false, false, {}
+	assert(not canvasClick(map, "LeftButton") and not noticed[1], "a plain click says nothing")
+	ns.db.journey, shift = true, true
+	print("journey input: journeys off says so on screen ok")
 end
 
 -- A spot inside a dungeon has no walking map: from outside, the journey goes to its door, named in the game's

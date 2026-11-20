@@ -10,10 +10,23 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
-## [1.43.3] - 2026-11-19
+## [1.43.5] - 2026-11-20
+
+### Changed
+
+- **Routes show on the map straight away.** A rough line appears as soon as you click, and the exact route replaces it moments later. The arrow and waypoints wait for the exact route, and short routes settle sooner (#1080).
+- **A lighter guide arrow on long walks.** While you walk, the arrow reuses the distance of the bends still ahead instead of measuring each one again every frame, and journey progress reuses each segment's length instead of measuring the whole walk on every update.
+
+### Added
+
+- **Hide the cast prompt.** A new "Show cast prompt" switch under Settings > Interface hides the Hearthstone or teleport prompt in the middle of the screen. Journeys still use your Hearthstone and the tracker step still names it (#1086).
 
 ### Fixed
 
+- **Walks in cities and caves are drawn shorter and straighter.** Where one step can lead onto two surfaces, such as a stair beside the drop off its side, the line now follows the one the walk takes, and takes the shortest line through the walk's turns. Some walks through Ironforge, Thunder Bluff and five caves that were drawn through a floor or off the ground now draw correctly. (#1015)
+- Standing at a lift in Thunder Bluff, the Undercity, the Great Lift or Freewind Post, the tracker shows the departures from the landing you are on, not always the top one.
+- A new journey's tracker and destination tooltip no longer list the steps of the journey it replaced while its route is found (#1107).
+- With "Click the map to plan journeys" off, a journey click on the map, a map icon, the minimap or a quest now says so on screen, naming the setting, instead of doing nothing. The click still goes to the map as before (#1076).
 - Druids now get routes that use their own class flight paths, Moonglade from Rut'theran Village or Thunder Bluff, wherever that is quicker.
 - On the world map, only the waypoint modifier picked in the settings creates a waypoint, so Alt-clicking another addon's map icon no longer plans a journey as well.
 - A dock's departure lines in the tracker name every call the boat makes, as the map does: the Southshore boat reads "Darkshore, then Wetlands" instead of only Darkshore, and Auberdine's two Menethil boats are told apart.
@@ -26,15 +39,12 @@ optional `### For addon authors` subsection after a version's player bullets.
 - **Alt-click plans with OpenMap.** With Alt as your journey key and OpenMap's seamless map on, an Alt-click on the map zoomed in and planned nothing. Shortest Path now takes its own key's click first.
 - **Clicked destinations are easy to see.** Shift-clicking a flight point or another map icon marks it with the full destination pin instead of a speck at its corner, and the quest marks beside it stay on top. A flight point you click to track starts the journey there too when Route to the focused quest is on.
 - **Map tooltips say how to travel.** Flight points, docks, portals, the game's quest and area icons, and the minimap end their tooltip with Shift-click to plan a journey here, or Alt-click if that is your key.
+- The minimap's tooltip now ends with the Shift-click (or Alt-click) hint too: it was missing on every minimap blip.
 - Nearby services lists Forever's own class and profession trainers, such as the Zephras Isle trainers, under Trainers (#1082).
 - Journey: a route that has to search most of a continent on foot, such as Stormwind to central Feralas, settles about a quarter faster.
 - Journey: short routes settle on their final plan sooner (#1080).
 - **Shift-click shows a Waypoint UI marker again.** With Waypoint UI loaded, a journey hands it each turn from the start, even with no pin placed and with *Mark only where steps end* on. Clearing the journey clears the marker. Turn off Waypoint UI's own pathfinding to follow the journey's directions.
-- Ships with ForeverCore 1.15.3, the same shared code as your other Forever addons, so they keep working together.
-
-### Added
-
-- **Hide the cast prompt.** A new "Show cast prompt" switch under Settings > Interface hides the Hearthstone or teleport prompt in the middle of the screen. Journeys still use your Hearthstone and the tracker step still names it (#1086).
+- Ships with ForeverCore 1.15.4, the same shared code as your other Forever addons, so they keep working together.
 
 ## [1.43.2] - 2026-11-18
 

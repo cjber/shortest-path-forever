@@ -154,6 +154,7 @@ ns.Credits = {
 	},
 	inspired = {
 		{ name = "Polestar by Fitz", what = "Ideas for many features" },
+		{ name = "AzerothGPS", what = "Caves and cities as a test target" },
 		{ name = "Ding! by Yendi", what = "Walks that keep out of zones far above your level" },
 		{ name = "BV Addon Suite - Routing", what = "Walks that start on the floor you are standing on" },
 	},

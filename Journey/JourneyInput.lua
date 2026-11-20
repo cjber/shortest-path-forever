@@ -224,9 +224,19 @@ local function QuestPOIs(questID, uiMapID, here)
 	return mapID, pois
 end
 
+-- A gesture that plans a journey says so on screen while journeys are off (#1076). A map click otherwise falls to
+-- the map, which zooms, with nothing to say why. True when they are off; the click is still the game's.
+---@return boolean
+local function JourneysOff()
+	if ns.db.journey then
+		return false
+	end
+	ns.Notice(L["Journeys are off. Turn on Click the map to plan journeys in settings."])
+	return true
+end
+
 local function PlanQuest(questID, clickedMap, isWaypoint)
-	if not ns.db.journey then
-		ns.Print(L["Journeys are off. Turn on Click the map to plan journeys in settings."])
+	if JourneysOff() then
 		return false
 	end
 	-- Forever takes questID and ignoreWaypoint; Ketho's Wiki stub incorrectly has zero parameters.
@@ -317,8 +327,7 @@ end
 -- controller player has instead of a map click.
 ---@return boolean
 function ns.JourneyToUserWaypoint()
-	if not ns.db.journey then
-		ns.Print(L["Journeys are off. Turn on Click the map to plan journeys in settings."])
+	if JourneysOff() then
 		return false
 	end
 	local waypoint = C_Map.GetUserWaypoint()
@@ -515,13 +524,13 @@ end
 local CANVAS_CLICK_PRIORITY = 1001
 
 local function OnCanvasClick(map, button)
-	if not ns.db.journey or button ~= "LeftButton" or not ns.JourneyKeyDown() or ChatBoxOpen() then
+	if button ~= "LeftButton" or not ns.JourneyKeyDown() or ChatBoxOpen() then
 		return false
 	end
 	-- Past the shown map's edge (OpenMap's stitched view) the spot is on no map this addon can read. OpenMap's
 	-- own handler plans a Shift-click there through API.Navigate, on the zone under the cursor.
 	local x, y = map:GetNormalizedCursorPosition()
-	if not (x and y and x >= 0 and x <= 1 and y >= 0 and y <= 1) then
+	if not (x and y and x >= 0 and x <= 1 and y >= 0 and y <= 1) or JourneysOff() then
 		return false
 	end
 	ns.JourneyToMapPoint(map:GetMapID(), x, y)
@@ -529,7 +538,7 @@ local function OnCanvasClick(map, button)
 end
 
 local function OnMinimapClick(_, button)
-	if not ns.db.journey or button ~= "LeftButton" or not ns.JourneyKeyDown() then
+	if button ~= "LeftButton" or not ns.JourneyKeyDown() or JourneysOff() then
 		return
 	end
 	local point = ns.MinimapPoint()
@@ -578,11 +587,11 @@ end
 
 local function OnPinClick(map, action, button)
 	if
-		not ns.db.journey
-		or action ~= MapCanvasMixin.MouseAction.Click
+		action ~= MapCanvasMixin.MouseAction.Click
 		or button ~= "LeftButton"
 		or not ns.JourneyKeyDown()
 		or ChatBoxOpen()
+		or JourneysOff()
 	then
 		return false
 	end
@@ -615,11 +624,11 @@ end
 ---@param button string
 ---@return boolean
 local function OnOwnPinClick(pin, button)
-	if not ns.db.journey or button ~= "LeftButton" or not ns.JourneyKeyDown() or ChatBoxOpen() then
+	if button ~= "LeftButton" or not ns.JourneyKeyDown() or ChatBoxOpen() then
 		return false
 	end
 	local marker = pin.marker
-	if marker ~= "flight" and marker ~= "dock" and marker ~= "portal" then
+	if (marker ~= "flight" and marker ~= "dock" and marker ~= "portal") or JourneysOff() then
 		return false
 	end
 	local x, y = pin:GetPosition()
@@ -767,12 +776,7 @@ ns.Init(function()
 	local clicks = CreateFrame("Frame")
 	clicks:RegisterEvent("GLOBAL_MOUSE_DOWN")
 	clicks:SetScript("OnEvent", function(_, _, button)
-		if
-			not ns.db.journey
-			or button ~= "LeftButton"
-			or not WorldMapFrame:IsShown()
-			or not WorldMapFrame.ScrollContainer:IsMouseOver()
-		then
+		if button ~= "LeftButton" or not WorldMapFrame:IsShown() or not WorldMapFrame.ScrollContainer:IsMouseOver() then
 			return
 		end
 		-- Only a Questie icon, whose own frame swallows the click, needs this handler: everywhere else the canvas and
@@ -790,6 +794,9 @@ ns.Init(function()
 		elseif not ns.JourneyKeyDown() then
 			return
 		end
+		if JourneysOff() then
+			return
+		end
 		local point = ns.WorldPoint(iconMap, iconX, iconY)
 		if point and point.z == nil then
 			point.z = ns.SpawnHeight(point.map, point.x, point.y, QUESTIE_ICON_REACH)
@@ -804,16 +811,10 @@ ns.Init(function()
 	-- The map's own pins write their tooltips themselves. The hint joins one owned by a pin OnPinClick plans to, found
 	-- from the pin's fields alone (MapCanvasPinMixin's owningMap and normalizedX, QuestPinMixin's questID): none of its
 	-- methods is called and nothing is written to it (WFA-38).
-	-- The minimap's own tooltip, over what it tracks, is the minimap's: a click there plans to that spot.
 	GameTooltip:HookScript("OnShow", function(tooltip)
 		local pin = tooltip:GetOwner()
 		---@cast pin SPFMapPin?
 		if not (pin and ns.JourneyClickHint()) or pin:IsForbidden() then
-			return
-		end
-		if pin == Minimap then
-			ns.AddJourneyClickHint(tooltip)
-			tooltip:Show()
 			return
 		end
 		local template = rawget(pin, "pinTemplate")
@@ -829,6 +830,19 @@ ns.Init(function()
 		ns.AddJourneyClickHint(tooltip)
 		tooltip:Show()
 	end)
+	-- The minimap's tooltip, over what it tracks, is owned by UIParent, not the minimap: Minimap_OnUpdate
+	-- (Blizzard_Minimap/Mainline/Minimap.lua) anchors it there and fills it with SetMinimapMouseover. Its tooltip data
+	-- type is what says it is the minimap's, so the hint joins it there; a click on that spot plans to it.
+	local minimapTooltip = Enum and Enum.TooltipDataType and Enum.TooltipDataType.MinimapMouseover
+	if minimapTooltip and TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall then
+		TooltipDataProcessor.AddTooltipPostCall(minimapTooltip, function(tooltip)
+			if tooltip ~= GameTooltip or tooltip:IsForbidden() or not ns.JourneyClickHint() then
+				return
+			end
+			ns.AddJourneyClickHint(tooltip)
+			tooltip:Show()
+		end)
+	end
 	WorldMapFrame:AddCanvasClickHandler(OnCanvasClick, CANVAS_CLICK_PRIORITY)
 	WorldMapFrame:AddGlobalPinMouseActionHandler(OnPinClick)
 	ns.Canvas.OnClick(OnOwnPinClick)

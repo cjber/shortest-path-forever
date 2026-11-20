@@ -95,6 +95,13 @@ function ForeverCore.load(env, name, names, ns)
 	local directory = ForeverCore.directory()
 	local selected = Wanted(names)
 	ns = ns or {}
+	-- Core.lua defines AtStart and runs the queued client work in Start. A load of chosen files has neither, so its
+	-- work runs at once, as an unwrapped core's does (Core/SafeCall.lua installs its error handler through it).
+	if selected ~= nil and ns.AtStart == nil then
+		ns.AtStart = function(work)
+			work()
+		end
+	end
 	local prefix = directory .. "/"
 	for _, entry in ipairs(Toc.files(directory, "ForeverCore.toc")) do
 		local path = entry.path
