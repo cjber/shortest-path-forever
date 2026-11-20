@@ -66,6 +66,7 @@ local env = setmetatable({
 		end,
 	},
 	Minimap = { HookScript = function() end },
+	GameTooltip = { HookScript = function() end },
 	Menu = { ModifyMenu = function() end },
 	MapCanvasMixin = { MouseAction = { Click = 3 } },
 	Enum = { UIMapType = { Continent = 2 } },

@@ -753,7 +753,7 @@ end
 local castTarget
 
 local function RenderCastPrompt()
-	if not castPrompt or not castTarget or ns.db.arrow == false then
+	if not castPrompt or not castTarget or not ns.CastPromptShown() then
 		return
 	end
 	-- Until the client has the item's name and icon it says "Use Unknown"; its own answer for that item redraws.
@@ -767,11 +767,17 @@ local function RenderCastPrompt()
 	ns.Art.Icon(castPrompt.Icon, icon or 134400, 36)
 end
 
+-- The prompt shows with the arrow, unless "Show cast prompt" is off; planning never reads this.
+---@return boolean
+function ns.CastPromptShown()
+	return ns.db.arrow ~= false and ns.db.castPrompt ~= false
+end
+
 -- Casting needs an action rather than a bearing, shown in the arrow's usual place.
 ---@param teleport? SPFTeleportPlace
 function ns.PointCastPrompt(teleport)
 	castTarget = teleport
-	if not teleport or ns.db.arrow == false then
+	if not teleport or not ns.CastPromptShown() then
 		if castPrompt then
 			castPrompt:UnregisterAllEvents()
 			castPrompt:Hide()

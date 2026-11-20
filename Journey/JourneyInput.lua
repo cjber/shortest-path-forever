@@ -43,6 +43,26 @@ function ns.JourneyKeyName(key)
 	return KEY_NAMES[key or JourneyKey()] or KEY_NAMES.shift
 end
 
+-- The line a tooltip ends with on every map pin the journey key plans a journey to (#1078): the addon's flight
+-- points, docks and portals, and the map's own pins OnPinClick takes. One producer, so the wording and the key match
+-- everywhere.
+-- Nothing while journeys are off, or under the gamepad interface, whose map cursor has no key to hold.
+---@return string?
+function ns.JourneyClickHint()
+	if not (ns.db and ns.db.journey) or ns.GamepadUI() then
+		return nil
+	end
+	return string.format(L["%s-click to plan a journey here"], ns.JourneyKeyName())
+end
+
+---@param tooltip GameTooltip
+function ns.AddJourneyClickHint(tooltip)
+	local hint = ns.JourneyClickHint()
+	if hint then
+		GameTooltip_AddInstructionLine(tooltip, hint)
+	end
+end
+
 -- The bindings UI reads these names from the global namespace. They are set here from L so each locale translates
 -- them with the rest of the addon; Bindings.xml lists the hidden buttons they click.
 _G.BINDING_HEADER_SHORTESTPATHFOREVER = L["Shortest Path Forever"]
@@ -248,7 +268,7 @@ local function PlanQuest(questID, clickedMap, isWaypoint)
 		ns.Print(L["No location for that quest yet."])
 		return false
 	end
-	point.label, point.questID, point.pinBadge = location.label, questID, clickedMap ~= nil
+	point.label, point.questID = location.label, questID
 	-- The goal's live objectives: the arrow and any pin read them from the client's quest log.
 	point.questIDs = { questID }
 	ns.StartJourney(point)
@@ -349,6 +369,9 @@ end
 local focusedQuest
 ---@type table?
 local focusedWaypoint
+-- The flight point a left click on the map super-tracks (UI/FlightPins.lua): the same choice of destination (#1079).
+---@type number?
+local focusedNode
 
 ---@return number?
 local function SuperTrackedQuest()
@@ -365,8 +388,20 @@ local function UserWaypoint()
 	return get and get() or nil
 end
 
+---@return number?
+local function SuperTrackedNode()
+	local get = C_SuperTrack and C_SuperTrack.GetSuperTrackedMapPin
+	if not (get and Enum.SuperTrackingMapPinType) then
+		return nil
+	end
+	local kind, id = get()
+	if kind == Enum.SuperTrackingMapPinType.TaxiNode and type(id) == "number" then
+		return id
+	end
+end
+
 local function RememberFocused()
-	focusedQuest, focusedWaypoint = SuperTrackedQuest(), UserWaypoint()
+	focusedQuest, focusedWaypoint, focusedNode = SuperTrackedQuest(), UserWaypoint(), SuperTrackedNode()
 end
 
 -- A loading screen starts from the focus the player already has; only a later change is theirs to route.
@@ -412,14 +447,41 @@ local function GoalIsWaypoint(waypoint)
 	return point ~= nil and goal.map == point.map and goal.x == point.x and goal.y == point.y
 end
 
+---@param node number
+---@return boolean
+local function GoalIsNode(node)
+	local goal, at = ns.JourneyGoal and ns.JourneyGoal(), ns.TaxiNodes[node]
+	return goal ~= nil and at ~= nil and goal.map == at.map and goal.x == at.x and goal.y == at.y
+end
+
+local JourneyToPin
+
+---@param node number
+local function JourneyToNode(node)
+	JourneyToPin(nil, { nodeID = node, name = ns.TaxiName and ns.TaxiName(node) or nil }, true)
+end
+
 ---@param event string
 function ns.FocusedTrackingChanged(event)
 	local guide = ns.JourneyGuide
 	local owned = guide and guide.OwnsReported and guide.OwnsReported(event) or false
 	if event == "SUPER_TRACKING_CHANGED" then
-		local questID = SuperTrackedQuest()
-		local changed = questID ~= focusedQuest
-		focusedQuest = questID
+		local questID, node = SuperTrackedQuest(), SuperTrackedNode()
+		local changed, nodeChanged = questID ~= focusedQuest, node ~= focusedNode
+		focusedQuest, focusedNode = questID, node
+		if
+			nodeChanged
+			and node
+			and not owned
+			and ns.db
+			and ns.db.focusedQuest
+			and ns.db.journey
+			and not GuideLeads()
+			and not GoalIsNode(node)
+		then
+			JourneyToNode(node)
+			return
+		end
 		if
 			owned
 			or not changed
@@ -448,11 +510,21 @@ function ns.FocusedTrackingChanged(event)
 	ns.JourneyToUserWaypoint()
 end
 
+-- The journey key is this addon's gesture, so its canvas handler asks first. Higher priorities run first, and
+-- OpenMap takes every plain or Alt left click on its stitched map at 1000 to zoom in (#1076).
+local CANVAS_CLICK_PRIORITY = 1001
+
 local function OnCanvasClick(map, button)
 	if not ns.db.journey or button ~= "LeftButton" or not ns.JourneyKeyDown() or ChatBoxOpen() then
 		return false
 	end
-	ns.JourneyToMapPoint(map:GetMapID(), map:GetNormalizedCursorPosition())
+	-- Past the shown map's edge (OpenMap's stitched view) the spot is on no map this addon can read. OpenMap's
+	-- own handler plans a Shift-click there through API.Navigate, on the zone under the cursor.
+	local x, y = map:GetNormalizedCursorPosition()
+	if not (x and y and x >= 0 and x <= 1 and y >= 0 and y <= 1) then
+		return false
+	end
+	ns.JourneyToMapPoint(map:GetMapID(), x, y)
 	return true
 end
 
@@ -470,25 +542,24 @@ end
 
 -- A journey to a pin clicked with the journey key, labelled by its name if it has one: a flight point by its node,
 -- anything else by where it stands on the map. False when there is nowhere to plan to.
----@param mapID number
+---@param mapID? number
 ---@param info? {nodeID?: number, name?: string}
 ---@param flight boolean
 ---@param x? number
 ---@param y? number
 ---@return boolean
-local function JourneyToPin(mapID, info, flight, x, y)
+function JourneyToPin(mapID, info, flight, x, y)
 	local node = flight and info and ns.TaxiNodes[info.nodeID]
 	local point
 	if node then
 		point = { map = node.map, x = node.x, y = node.y, z = node.z }
-	elseif x and y then
+	elseif mapID and x and y then
 		point = ns.WorldPoint(mapID, x, y)
 	end
 	if not (point and OnZone(ns.InstanceEntrance(point))) then
 		return false
 	end
 	point.label = info and info.name
-	point.pinBadge = true
 	ns.StartJourney(point)
 	return true
 end
@@ -689,8 +760,8 @@ ns.Init(function()
 	Binding("ShortestPathForeverTravelToPinButton", ns.JourneyToUserWaypoint)
 	Binding("ShortestPathForeverTravelToTrackedQuestButton", ns.JourneyToTrackedQuest)
 	Binding("ShortestPathForeverClearJourneyButton", ns.ClearJourney)
-	-- Questie owns Shift-click on its icons. While Shift is the journey key, Alt-click observes the map cursor
-	-- through our own event frame, including icons that swallow canvas clicks. When Alt is chosen, that one key
+	-- Questie owns Shift-click on its icons. While Shift is the journey key, Alt-click over a Questie icon plans
+	-- there through our own event frame, and Alt-click anywhere else is left alone. When Alt is chosen, that one key
 	-- plans everywhere, Questie icons included, and Shift no longer plans a journey. TomTom's map overlay passes
 	-- LeftButton through; its waypoint gesture uses RightButton.
 	local clicks = CreateFrame("Frame")
@@ -704,29 +775,24 @@ ns.Init(function()
 		then
 			return
 		end
-		-- Over a Questie icon the journey goes to the spawn it marks, on that spawn's floor.
+		-- Only a Questie icon, whose own frame swallows the click, needs this handler: everywhere else the canvas and
+		-- pin handlers answer the chosen key, and any other modified click is left to other addons (OpenMap's
+		-- Alt-click deletes its markers). Over the icon the journey goes to the spawn it marks, on that spawn's floor.
 		local iconMap, iconX, iconY = QuestieIconSpot()
+		if not (iconMap and iconX and iconY) then
+			return
+		end
 		if JourneyKey() == "shift" then
 			-- Questie keeps Shift-click to untrack its quest; Alt-click plans the journey there.
 			if not IsAltKeyDown() or IsShiftKeyDown() then
 				return
 			end
-		else
-			-- The chosen key plans everywhere. On empty map space the canvas already answers this same click, so
-			-- only a Questie icon, whose own frame swallows it, needs this handler.
-			if not ns.JourneyKeyDown() or not (iconMap and iconX and iconY) then
-				return
-			end
+		elseif not ns.JourneyKeyDown() then
+			return
 		end
-		local point
-		if iconMap and iconX and iconY then
-			point = ns.WorldPoint(iconMap, iconX, iconY)
-			if point and point.z == nil then
-				point.z = ns.SpawnHeight(point.map, point.x, point.y, QUESTIE_ICON_REACH)
-			end
-		else
-			point =
-				ns.WorldPoint(WorldMapFrame:GetMapID() --[[@as number]], WorldMapFrame:GetNormalizedCursorPosition())
+		local point = ns.WorldPoint(iconMap, iconX, iconY)
+		if point and point.z == nil then
+			point.z = ns.SpawnHeight(point.map, point.x, point.y, QUESTIE_ICON_REACH)
 		end
 		if point and OnZone(ns.InstanceEntrance(point)) then
 			ns.StartJourney(point)
@@ -735,7 +801,35 @@ ns.Init(function()
 	-- The map's click registries are Blizzard's own for addons (MapCanvasSecureUtil.CreateHandlerRegistry): it keeps
 	-- them outside the map's fields and calls each handler through securecallfunction, so the map's code never runs
 	-- the addon's. The addon's own pins take their clicks through UI/Canvas.lua instead.
-	WorldMapFrame:AddCanvasClickHandler(OnCanvasClick)
+	-- The map's own pins write their tooltips themselves. The hint joins one owned by a pin OnPinClick plans to, found
+	-- from the pin's fields alone (MapCanvasPinMixin's owningMap and normalizedX, QuestPinMixin's questID): none of its
+	-- methods is called and nothing is written to it (WFA-38).
+	-- The minimap's own tooltip, over what it tracks, is the minimap's: a click there plans to that spot.
+	GameTooltip:HookScript("OnShow", function(tooltip)
+		local pin = tooltip:GetOwner()
+		---@cast pin SPFMapPin?
+		if not (pin and ns.JourneyClickHint()) or pin:IsForbidden() then
+			return
+		end
+		if pin == Minimap then
+			ns.AddJourneyClickHint(tooltip)
+			tooltip:Show()
+			return
+		end
+		local template = rawget(pin, "pinTemplate")
+		if
+			not WorldMapFrame:IsShown()
+			or rawget(pin, "owningMap") ~= WorldMapFrame
+			or type(template) ~= "string"
+			or (template == "QuestPinTemplate" and not rawget(pin, "questID"))
+			or (template ~= "QuestPinTemplate" and rawget(pin, "normalizedX") == nil)
+		then
+			return
+		end
+		ns.AddJourneyClickHint(tooltip)
+		tooltip:Show()
+	end)
+	WorldMapFrame:AddCanvasClickHandler(OnCanvasClick, CANVAS_CLICK_PRIORITY)
 	WorldMapFrame:AddGlobalPinMouseActionHandler(OnPinClick)
 	ns.Canvas.OnClick(OnOwnPinClick)
 	-- The stock handler still pings the spot, which marks where the journey goes for your group too.

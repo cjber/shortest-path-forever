@@ -1,11 +1,24 @@
--- Real Journey + nav data, one pump per simulated 60 Hz frame. Optional arg: a baseline source directory.
+-- Real Journey + nav data, one pump per simulated 60 Hz frame. Optional args: a baseline source directory, then
+-- "continent" for the continent-wide case alone (kept out of the default set speedpatrol times).
 local root = arg[1] or "."
-for _, case in ipairs({
+local cases = {
 	{ "Auberdine -> Tanaris", 26, 39, "Alliance" },
 	{ "Auberdine -> Eastern Plaguelands", 26, 67, "Alliance" },
 	{ "Crossroads -> Thunder Bluff", 25, 22, "Horde" },
 	{ "Ironforge -> Menethil", 6, 7, "Alliance" },
-}) do
+}
+if arg[2] == "continent" then
+	-- A goal search over most of Kalimdor: the Auberdine boat stays a contender until about 13.5k yards (#1074).
+	cases = {
+		{
+			"Stormwind -> Feralas",
+			{ map = 0, x = -8849, y = 647.9, z = 98 },
+			{ map = 1, x = -4450, y = 1350, z = 0 },
+			"Alliance",
+		},
+	}
+end
+for _, case in ipairs(cases) do
 	local driver = assert(loadfile("tests/journey_driver.lua"))(root)
 	local ns = driver.ns
 	for _, file in ipairs({
@@ -25,8 +38,12 @@ for _, case in ipairs({
 		assert(loadfile("tools/load_nav.lua"))(map)
 	end
 	local fromName, toName = case[1]:match("^(.-) %-> (.+)$")
-	assert(ns.TaxiNodes[case[2]].name:find(fromName, 1, true), "wrong benchmark origin")
-	assert(ns.TaxiNodes[case[3]].name:find(toName, 1, true), "wrong benchmark destination")
+	local from, to = case[2], case[3]
+	if type(from) == "number" then
+		from, to = ns.TaxiNodes[from], ns.TaxiNodes[to]
+		assert(from.name:find(fromName, 1, true), "wrong benchmark origin")
+		assert(to.name:find(toName, 1, true), "wrong benchmark destination")
+	end
 	ns.faction, ns.db.debug = case[4], true
 	ns.Print = function(message)
 		error(message)
@@ -73,7 +90,7 @@ for _, case in ipairs({
 	ns.Path.after = function(fn)
 		nextFrame = fn
 	end
-	driver.begin(ns.TaxiNodes[case[2]], ns.TaxiNodes[case[3]])
+	driver.begin(from, to)
 	while nextFrame do
 		local fn = nextFrame
 		nextFrame = nil

@@ -59,6 +59,9 @@ local env = setmetatable({
 	UnitFactionGroup = function()
 		return client.faction
 	end,
+	UnitClass = function()
+		return "Hunter", "HUNTER"
+	end,
 	GetRealmName = function()
 		return "Test"
 	end,
@@ -99,6 +102,7 @@ local expected = {
 	now = client.now,
 	walkSpeed = 7,
 	faction = "Alliance",
+	class = "HUNTER",
 	otherFaction = true,
 	taxiKnown = known,
 	docks = ns.Docks,
@@ -347,7 +351,16 @@ assert(near.ride == nil and near.walks == nil, "an estimate plans no ride and no
 assert(near.teleportReady == fixture.teleportReady, "an estimate from where you stand may cast")
 assert(next(far.teleportReady) == nil, "an estimate from elsewhere does not know the cooldowns")
 assert(near.cache and near.cache ~= journey.cache, "topology is never shared between the two")
-for _, name in ipairs({ "walkSpeed", "faction", "otherFaction", "taxiKnown", "docks", "routes", "taxiNodes" }) do
+for _, name in ipairs({
+	"walkSpeed",
+	"faction",
+	"class",
+	"otherFaction",
+	"taxiKnown",
+	"docks",
+	"routes",
+	"taxiNodes",
+}) do
 	assert(near[name] == journey[name], name)
 end
 for _, name in ipairs({

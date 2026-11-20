@@ -58,8 +58,8 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"Маршруты, а также оценки других модификаций отсюда, могут начинаться с телепорта мага в город или заклинания «Телепортация: Лунная поляна» с учетом восстановления."
 L["Minimum teleport saving"] = "Минимальная экономия от телепорта"
-L["No more stutters from route planning."] =
-	"Больше никаких подтормаживаний при прокладке маршрута." -- mt
+L["Walks in Stormwind start from the street you are on."] =
+	"Пешие маршруты в Штормграде начинаются с улицы, на которой вы стоите." -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"Использовать классовый телепорт, только если он экономит не меньше этого времени."
 L["Boat and Zeppelin Routes"] = "Маршруты кораблей и дирижаблей"
@@ -74,6 +74,7 @@ L["Cast %s"] = "Применить: %s"
 L["Class trainer"] = "Учитель классовых навыков"
 L["Clear journey"] = "Сбросить маршрут"
 L["Click to plan a journey here."] = "Щелкните, чтобы проложить маршрут сюда."
+L["%s-click to plan a journey here"] = "%s-щелчок, чтобы проложить маршрут сюда"
 L["Click to show %s"] = "Щелкните, чтобы показать: %s"
 L["Click to show where they go"] = "Щелкните, чтобы увидеть, куда они идут"
 L["Compass background"] = "Фон компаса"
@@ -206,6 +207,7 @@ L["Search services and goods"] = "Поиск услуг и товаров"
 L["Services"] = "Услуги"
 L["Shortest Path report"] = "Отчет Shortest Path"
 L["Show boats and zeppelins"] = "Показывать корабли и дирижабли"
+L["Show cast prompt"] = "Показывать подсказку применения" -- mt
 L["Show direction arrow"] = "Показывать стрелку направления"
 L["Show flight masters"] = "Показывать распорядителей полетов"
 L["Show journey steps in the objective tracker"] =
@@ -224,6 +226,8 @@ L["Show the time left under the compass"] = "Оставшееся время п�
 L["Show the way to your corpse"] = "Показывать путь к телу"
 L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =
 	"Показывает их над табличкой с именем НИП, к которому ведёт маршрут к услугам поблизости."
+L["Shows the Hearthstone or teleport to use in the arrow's place. Off, journeys still use them and the tracker still names the step."] =
+	"Показывает камень возвращения или телепорт, который нужно использовать, на месте стрелки. Если выключено, путешествия по-прежнему их используют, а трекер по-прежнему называет шаг." -- mt
 L["Shows the arrow to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =
 	"Показывает стрелку, которую можно перетащить куда угодно; Shift+перетаскивание или стрелки двигают ее точнее. Правый щелчок возвращает ее на место."
 L["Shows the compass to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =

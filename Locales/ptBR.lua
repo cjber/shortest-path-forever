@@ -54,7 +54,8 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"As jornadas, e as estimativas de outros AddOns a partir daqui, podem começar com o teleporte de mago para uma cidade ou Teleport: Moonglade, contando a recarga."
 L["Minimum teleport saving"] = "Economia mínima do teleporte"
-L["No more stutters from route planning."] = "Sem mais travadas ao planejar rotas." -- mt
+L["Walks in Stormwind start from the street you are on."] =
+	"Caminhadas em Ventobravo começam na rua em que você está." -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"Usar um teleporte de classe só quando ele economizar pelo menos este tempo."
 L["Boat and Zeppelin Routes"] = "Rotas de barcos e zepelins"
@@ -69,6 +70,7 @@ L["Cast %s"] = "Lançar %s"
 L["Class trainer"] = "Instrutor de classe"
 L["Clear journey"] = "Limpar jornada"
 L["Click to plan a journey here."] = "Clique para planejar uma jornada até aqui."
+L["%s-click to plan a journey here"] = "%s-clique para planejar uma jornada até aqui"
 L["Click to show %s"] = "Clique para mostrar %s"
 L["Click to show where they go"] = "Clique para ver para onde vão"
 L["Compass background"] = "Fundo da bússola"
@@ -194,6 +196,7 @@ L["Search services and goods"] = "Pesquisar serviços e bens"
 L["Services"] = "Serviços"
 L["Shortest Path report"] = "Relatório do Shortest Path"
 L["Show boats and zeppelins"] = "Mostrar barcos e zepelins"
+L["Show cast prompt"] = "Mostrar aviso de lançamento" -- mt
 L["Show direction arrow"] = "Mostrar seta de direção"
 L["Show flight masters"] = "Mostrar mestres de voo"
 L["Show journey steps in the objective tracker"] = "Mostrar as etapas da jornada no rastreador de objetivos"
@@ -211,6 +214,8 @@ L["Show the time left under the compass"] = "Tempo restante sob a bússola"
 L["Show the way to your corpse"] = "Mostrar o caminho até seu corpo"
 L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =
 	"Mostra-as sobre a placa de nome do NPC para onde uma jornada de serviços próximos leva."
+L["Shows the Hearthstone or teleport to use in the arrow's place. Off, journeys still use them and the tracker still names the step."] =
+	"Mostra a Pedra de Regresso ou o teleporte a usar no lugar da seta. Desligado, as jornadas continuam a usá-los e o rastreador continua a nomear a etapa." -- mt
 L["Shows the arrow to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =
 	"Mostra a seta para arrastar para qualquer lugar; Shift+arrastar ou as setas a ajustam. Clique com o botão direito para devolvê-la."
 L["Shows the compass to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =

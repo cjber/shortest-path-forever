@@ -110,6 +110,9 @@ local env = setmetatable({
 	UnitFactionGroup = function()
 		return ns.faction or "Alliance"
 	end,
+	UnitClass = function()
+		return ns.className or "Hunter", ns.class or "HUNTER"
+	end,
 	UnitLevel = function()
 		return ns.level or 60
 	end,
@@ -195,6 +198,7 @@ local env = setmetatable({
 		end,
 		AddGlobalPinMouseActionHandler = noop,
 	},
+	GameTooltip = { HookScript = noop },
 	Minimap = {
 		HookScript = function(_, _, fn)
 			minimapClick = fn

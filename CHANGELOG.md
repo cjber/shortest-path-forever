@@ -10,6 +10,38 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.43.4] - 2026-11-20
+
+<!-- forever-core-sync -->
+
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
+## [1.43.3] - 2026-11-19
+
+### Fixed
+
+- Druids now get routes that use their own class flight paths, Moonglade from Rut'theran Village or Thunder Bluff, wherever that is quicker.
+- On the world map, only the waypoint modifier picked in the settings creates a waypoint, so Alt-clicking another addon's map icon no longer plans a journey as well.
+- A dock's departure lines in the tracker name every call the boat makes, as the map does: the Southshore boat reads "Darkshore, then Wetlands" instead of only Darkshore, and Auberdine's two Menethil boats are told apart.
+- With an outdated ForeverCore (1.11), the addon shows its on-screen line saying how to fix it, instead of stopping with a Lua error.
+- **Walks in Stormwind start from the street you are on.** The addon now follows which floor you stand on outdoors as well as indoors, and keeps it through spots at a building's edge the walking map has no street for. A walk from the city's streets no longer starts on the open ground under the city (#737).
+- **Journeys from Stormwind's Trade District settle on the first plan.** The route no longer replans over and over as you walk the Trade District, and no longer sends you through the Mage Quarter on a loop before you cross the canal (#1071).
+- **No more "PathGrid.lua:1360" error while a route is planned.** A search paused while you move between areas resumes correctly (#1071).
+- Nearby services: a row's map checkbox is ticked only when that service's pins are on the map. With the town services layer off, ticking a row turns it on and shows that service in every town.
+- Nearby services: the Flight master row has a map checkbox again. It shows or hides the flight master pins, like the map menu's Flight Masters choice.
+- **Alt-click plans with OpenMap.** With Alt as your journey key and OpenMap's seamless map on, an Alt-click on the map zoomed in and planned nothing. Shortest Path now takes its own key's click first.
+- **Clicked destinations are easy to see.** Shift-clicking a flight point or another map icon marks it with the full destination pin instead of a speck at its corner, and the quest marks beside it stay on top. A flight point you click to track starts the journey there too when Route to the focused quest is on.
+- **Map tooltips say how to travel.** Flight points, docks, portals, the game's quest and area icons, and the minimap end their tooltip with Shift-click to plan a journey here, or Alt-click if that is your key.
+- Nearby services lists Forever's own class and profession trainers, such as the Zephras Isle trainers, under Trainers (#1082).
+- Journey: a route that has to search most of a continent on foot, such as Stormwind to central Feralas, settles about a quarter faster.
+- Journey: short routes settle on their final plan sooner (#1080).
+- **Shift-click shows a Waypoint UI marker again.** With Waypoint UI loaded, a journey hands it each turn from the start, even with no pin placed and with *Mark only where steps end* on. Clearing the journey clears the marker. Turn off Waypoint UI's own pathfinding to follow the journey's directions.
+- Ships with ForeverCore 1.15.3, the same shared code as your other Forever addons, so they keep working together.
+
+### Added
+
+- **Hide the cast prompt.** A new "Show cast prompt" switch under Settings > Interface hides the Hearthstone or teleport prompt in the middle of the screen. Journeys still use your Hearthstone and the tracker step still names it (#1086).
+
 ## [1.43.2] - 2026-11-18
 
 ### Changed

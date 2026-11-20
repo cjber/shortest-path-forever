@@ -98,7 +98,7 @@ function GameTooltip_AddColoredDoubleLine(tooltip, left, right, leftColor, right
 ---@field GetViewRect fun(self: WorldMapFrame): {left: number, right: number, top: number, bottom: number}
 ---@field GetNormalizedCursorPosition fun(self: WorldMapFrame): number, number
 ---@field EnumeratePinsByTemplate fun(self: WorldMapFrame, template: string): fun(): SPFMapPin
----@field AddCanvasClickHandler fun(self: WorldMapFrame, handler: fun(map: WorldMapFrame, button: string): boolean)
+---@field AddCanvasClickHandler fun(self: WorldMapFrame, handler: (fun(map: WorldMapFrame, button: string): boolean), priority?: number)
 ---@field AddGlobalPinMouseActionHandler fun(self: WorldMapFrame, handler: fun(map: WorldMapFrame, action: number, button: string): boolean)
 ---@field RegisterCallback fun(self: WorldMapFrame, event: string, callback: function, owner: any) -- the map's own callback registry (SetFocusedQuestID)
 ---@field SetHighlightedQuestID fun(self: WorldMapFrame, questID: number) -- draws that quest's own area (UI/StopPin.lua)

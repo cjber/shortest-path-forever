@@ -24,6 +24,7 @@ end
 
 local Context = ns.PlanContext
 ---@class SPFJourneySearch
+---@field timing {at: number, frames: integer, cpu: number, first: table?, last: table?}? the last search's timings
 local Search = {}
 ns.JourneySearch = Search
 -- JourneyWalks.lua fills this in; nothing outside the search uses it.
@@ -254,9 +255,26 @@ local function RetimeKept()
 	return true
 end
 
+-- Since the journey's search started: wall milliseconds, frames that ran path work, their milliseconds and the
+-- frame rate, for the report.
+local function Elapsed(timing)
+	local work = ns.Path.work
+	return {
+		ms = ns.Path.clock() - timing.at,
+		frames = work.frames - timing.frames,
+		cpu = work.cpu - timing.cpu,
+		fps = GetFramerate and GetFramerate() or nil,
+	}
+end
+
 ---@param planned SPFPlan?
 local function Commit(planned)
 	followed = planned
+	local timing = Search.timing
+	if timing then
+		timing.last = Elapsed(timing)
+		timing.first = timing.first or timing.last
+	end
 	return publish(planned, "route")
 end
 
@@ -983,6 +1001,11 @@ function Search.Start(point, route, state, listener, replace, policy)
 	search = nil
 	waterMode = (ns.JourneyWaterWalking())
 	origin = nil
+	-- Timed only where the path jobs run: specs may stand in a bare Path.
+	local work = ns.Path.work
+	if not replace and work then
+		Search.timing = { at = ns.Path.clock(), frames = work.frames, cpu = work.cpu }
+	end
 	Avoid()
 	RefreshCosts(true, false, replace == true)
 end

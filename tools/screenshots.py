@@ -303,7 +303,8 @@ def map_landmarks(canvas, map_id, rect):
         # A zone's art also contains adjacent terrain; Map.lua only includes that zone's flight masters.
         if map_id == 1439 and taxi["name"].split(", ")[-1] != "Darkshore":
             continue
-        if p and taxi.get("faction") != "Horde":
+        # ns.TaxiNodeServes for the pictured Alliance hunter: no Horde or class-only flight masters.
+        if p and taxi.get("faction") != "Horde" and not taxi.get("class"):
             icon(canvas, "taxinode_undiscovered", *p)
     for portal in ordered(data()["portals"]):
         p = point(portal["from"])

@@ -517,19 +517,11 @@ local function customRoadEdges(st, swim, u, hz, reverse)
 	return edges, reals
 end
 
--- A point without a height (the player, whose UnitPosition height is a placeholder 0, or a map click) could stand on
--- any surface at its spot, so it starts from each one within a cell of it at a distinct height and the search keeps
--- the cheapest: a street beside or over a canal is not walked from the canal bed. The player's measured height band
--- (Band.lua) narrows those surfaces to the ones they can be standing on; a band that fits none of them is no
--- measurement and every surface stays, exactly as a point with no band. Returns each surface's connection, the
--- entrance costs merged by minimum and, per entrance, the surface it came from. inbound returns the costs into the
--- point instead, which is what a goal needs, in the fifth to seventh places, and leaves the outbound ones empty: each
--- caller walks a point one way, and on format 2 the other way is a second grid search. The surfaces themselves are
--- returned too: a walk drawn or searched to a point ends on them, never on wherever the outbound rescue moved it.
-local function connectPoint(st, swim, k, node, point, roadsOn, hz, inbound)
+-- The surfaces a point stands on: its snapped node, or for a point without a height every distinct surface within
+-- a cell of it, dry before water, narrowed by the player's height band.
+local function surfaces(st, k, node, point)
 	local nodes = { node }
-	local h = point.z
-	if not h then
+	if not point.z then
 		local values = grid(st, k)
 		assert(values)
 		local C, val, z, at = st.C, values, st.z[k], st.at[k]
@@ -601,6 +593,20 @@ local function connectPoint(st, swim, k, node, point, roadsOn, hz, inbound)
 			end
 		end
 	end
+	return nodes
+end
+
+-- A point without a height (the player, whose UnitPosition height is a placeholder 0, or a map click) could stand on
+-- any surface at its spot, so it starts from each one within a cell of it at a distinct height and the search keeps
+-- the cheapest: a street beside or over a canal is not walked from the canal bed. The player's measured height band
+-- (Band.lua) narrows those surfaces to the ones they can be standing on; a band that fits none of them is no
+-- measurement and every surface stays, exactly as a point with no band. Returns each surface's connection, the
+-- entrance costs merged by minimum and, per entrance, the surface it came from. inbound returns the costs into the
+-- point instead, which is what a goal needs, in the fifth to seventh places, and leaves the outbound ones empty: each
+-- caller walks a point one way, and on format 2 the other way is a second grid search. The surfaces themselves are
+-- returned too: a walk drawn or searched to a point ends on them, never on wherever the outbound rescue moved it.
+local function connectPoint(st, swim, k, node, point, roadsOn, hz, inbound)
+	local nodes = surfaces(st, k, node, point)
 	local ends, merged, mergedReal, via = {}, {}, {}, {}
 	for _, start in ipairs(nodes) do
 		local n, edges, reals, tree = connect(st, swim, k, start, roadsOn, hz, inbound)
@@ -696,6 +702,16 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 	sc, gc = snap(st, sk, sc, from.x, from.y, from.z), snap(st, gk, gc, to.x, to.y, to.z)
 	if not sc or not gc then
 		return nil, "offmesh"
+	end
+	-- A start at a known height on a surface the goal can stand on walks nowhere: a map click on a flight master is
+	-- probed from that flight master. The search below answers 0 for it too, after connecting both ends to their
+	-- cluster, which is most of a probe's time (#1080).
+	if costOnly and from.z and sk == gk then
+		for _, n in ipairs(surfaces(st, gk, gc, to)) do
+			if n == sc then
+				return 0
+			end
+		end
 	end
 	local C = st.C
 	local roadsOn = hz and hz.roads and hz.roadFactor ~= 1

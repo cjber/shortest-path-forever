@@ -365,7 +365,8 @@ function Hazards.Profile(from, goal, here, landing)
 		end
 		if not town.exempt then
 			active[#active + 1] = town
-			keys[#keys + 1] = "t" .. town.id
+			-- Its ground is the client's town area or, with none, a circle: different costs, so a different key.
+			keys[#keys + 1] = "t" .. town.id .. (town.area and "a" or "")
 		end
 	end
 

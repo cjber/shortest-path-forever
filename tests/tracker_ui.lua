@@ -249,6 +249,35 @@ assert(tracker.blocks[1].rows[1].key == 1, "the warning leaves with its row")
 route = nil
 refresh(true)
 assert(tracker.Header.text == "Boats" and #tracker.blocks == 0 and not tracker.distance)
+-- A dock's row names every call its boat makes, as the map's dock tooltip does (#1057): the Southshore boat
+-- sails to Auberdine and then Menethil, so a row naming only Darkshore hides that it reaches the Wetlands.
+local nearestDock, dockLabel = ns.NearestDock, ns.DockLabel
+local labels = { [9] = "Wetlands", [10] = "Darkshore", [17] = "Hillsbrad Foothills" }
+ns.NearestDock = function() return 17, 0 end
+ns.DockLabel = function(id) return labels[id] or ("dock " .. id) end
+ns.db.tracker = true
+refresh(true)
+local southshore = tracker.blocks[1]
+assert(southshore and southshore.key == "dock17", "Southshore's dock block")
+assert(#southshore.rows == 1, "one boat leaves Southshore")
+local text = southshore.rows[1].text
+assert(text:find("Darkshore, then Wetlands", 1, true), text)
+-- Auberdine's two Menethil boats, one of them sailing on to Southshore, read as two trips.
+ns.NearestDock = function() return 10, 0 end
+refresh(true)
+local auberdine = tracker.blocks[1]
+assert(auberdine and auberdine.key == "dock10", "Auberdine's dock block")
+local direct, onward
+for _, row in ipairs(auberdine.rows) do
+  if row.text:find("Wetlands, then Hillsbrad Foothills", 1, true) then
+    onward = true
+  elseif row.text:find("Wetlands", 1, true) then
+    direct = true
+  end
+end
+assert(direct and onward, "Auberdine names the direct and the onward Menethil boat")
+ns.NearestDock, ns.DockLabel, ns.db.tracker = nearestDock, dockLabel, false
+refresh(true)
 assert(#errors == 0, table.concat(errors, "\n"))
 print("tracker_ui: remaining walking/transport yards, step times, geometry cache and no header layout churn ok")
 ]]))()

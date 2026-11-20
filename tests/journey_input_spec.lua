@@ -1,4 +1,4 @@
-local handler, destination, mouseEvent, ownClick, canvasClick, minimapClick
+local handler, destination, mouseEvent, ownClick, canvasClick, canvasPriority, minimapClick
 local questTrackerMenu, questMapLogMenu
 local alt, overMap, shown = false, true, true
 local map = {
@@ -25,6 +25,7 @@ local function Record(tag, fn)
 		questMapLogMenu = fn
 	end
 end
+local gamepad, tooltipShown = false, nil
 local ns = {
 	db = { journey = true },
 	L = setmetatable({}, {
@@ -47,6 +48,9 @@ local ns = {
 	end,
 	Init = function(fn)
 		fn()
+	end,
+	GamepadUI = function()
+		return gamepad
 	end,
 	-- UI/Canvas.lua: the addon's own pins hand their clicks to this filter.
 	Canvas = {
@@ -92,8 +96,8 @@ local env = setmetatable({
 		GetNormalizedCursorPosition = function()
 			return 0.25, 0.75
 		end,
-		AddCanvasClickHandler = function(_, fn)
-			canvasClick = fn
+		AddCanvasClickHandler = function(_, fn, priority)
+			canvasClick, canvasPriority = fn, priority
 		end,
 		AddGlobalPinMouseActionHandler = function(_, fn)
 			handler = fn
@@ -104,6 +108,15 @@ local env = setmetatable({
 			minimapClick = fn
 		end,
 	},
+	GameTooltip = {
+		HookScript = function(_, script, fn)
+			assert(script == "OnShow")
+			tooltipShown = fn
+		end,
+	},
+	GameTooltip_AddInstructionLine = function(tooltip, text)
+		tooltip.lines[#tooltip.lines + 1] = text
+	end,
 	Menu = { ModifyMenu = Record },
 	MapCanvasMixin = { MouseAction = { Click = 3 } },
 	C_Map = {
@@ -138,7 +151,7 @@ local chunk = assert(loadfile("Journey/JourneyInput.lua"))
 setfenv(chunk, env)("ShortestPathForever", ns)
 assert(handler(map, 3, "LeftButton"), "Shift-clicking a flight-master pin must start a journey")
 assert(destination.map == 1 and destination.x == 100 and destination.y == 200)
-assert(destination.label == "Astranaar" and destination.pinBadge, "keep the clicked icon's corner marker")
+assert(destination.label == "Astranaar")
 assert(ns.TaxiNodes[26].label == nil, "do not mutate the shared taxi node")
 destination, shift = nil, false
 assert(not handler(map, 3, "LeftButton") and destination == nil)
@@ -156,7 +169,7 @@ pin.GetGlobalPosition = function()
 	return 0.3, 0.4
 end
 assert(handler(map, 3, "LeftButton") and destination.x == 0.3 and destination.y == 0.4)
-assert(destination.label == "Camp" and destination.pinBadge, "other point icons keep their corner tag")
+assert(destination.label == "Camp")
 pin.GetGlobalPosition = function() end
 destination = nil
 assert(not handler(map, 3, "LeftButton") and destination == nil, "non-point pins cannot start journeys")
@@ -174,7 +187,6 @@ local own = {
 }
 destination = nil
 assert(ownClick(own, "LeftButton") and destination.x == 100 and destination.label == "Astranaar", "own flight pin")
-assert(destination.pinBadge, "keep the clicked icon's corner marker")
 own.marker, own.poiInfo, destination = "dock", nil, nil
 assert(ownClick(own, "LeftButton") and destination.x == 0.6 and destination.y == 0.7, "a dock by where it stands")
 own.marker, destination = "stop", nil
@@ -187,13 +199,83 @@ chatBox = nil
 assert(not ownClick(own, "RightButton") and destination == nil)
 print("journey input ok")
 
--- The global mouse event still fires over a Questie-owned icon that swallowed canvas clicks.
+-- Every map pin the journey key plans to ends its tooltip with how (#1078): one line from one producer, naming the
+-- chosen key, and only where the click would plan.
+do
+	local function tooltipFor(owner)
+		local tooltip = { lines = {}, shows = 0 }
+		function tooltip.GetOwner()
+			return owner
+		end
+		function tooltip.Show(self)
+			self.shows = self.shows + 1
+		end
+		tooltipShown(tooltip)
+		return tooltip
+	end
+	local function blizzardPin(fields)
+		local mapPin = { owningMap = env.WorldMapFrame }
+		for key, value in pairs(fields) do
+			mapPin[key] = value
+		end
+		function mapPin.IsForbidden()
+			return false
+		end
+		return mapPin
+	end
+	shown = true
+	local hint = "Shift-click to plan a journey here"
+	assert(ns.JourneyClickHint() == hint, "the line names the chosen key")
+	ns.db.journeyKey = "alt"
+	assert(ns.JourneyClickHint() == "Alt-click to plan a journey here", "and follows the setting")
+	ns.db.journeyKey = nil
+	local quest = tooltipFor(blizzardPin({ pinTemplate = "QuestPinTemplate", questID = 7 }))
+	assert(quest.lines[1] == hint and quest.shows == 1, "a quest pin's tooltip gains the line")
+	local poi = tooltipFor(blizzardPin({ pinTemplate = "AreaPOIPinTemplate", normalizedX = 0.3 }))
+	assert(poi.lines[1] == hint, "an area pin's tooltip gains the line")
+	assert(
+		not tooltipFor(blizzardPin({ pinTemplate = "AreaPOIPinTemplate" })).lines[1],
+		"a pin with no spot plans nothing"
+	)
+	assert(not tooltipFor(blizzardPin({ pinTemplate = "QuestPinTemplate" })).lines[1], "nor a quest pin with no quest")
+	local other = blizzardPin({ pinTemplate = "AreaPOIPinTemplate", normalizedX = 0.3 })
+	other.owningMap = {}
+	assert(not tooltipFor(other).lines[1], "a pin on another map is not the world map's")
+	assert(not tooltipFor({
+		IsForbidden = function()
+			return false
+		end,
+	}).lines[1], "a frame that is no pin")
+	assert(not tooltipFor(nil).lines[1], "a tooltip with no owner")
+	ns.db.journey = false
+	assert(ns.JourneyClickHint() == nil and not tooltipFor(poi.GetOwner()).lines[1], "nothing while journeys are off")
+	ns.db.journey, gamepad = true, true
+	assert(ns.JourneyClickHint() == nil, "nothing under the gamepad interface, which has no key to hold")
+	gamepad = false
+	env.Minimap.IsForbidden = function()
+		return false
+	end
+	assert(tooltipFor(env.Minimap).lines[1] == hint, "the minimap's tooltip: a click there plans to the spot")
+	shown = false
+	assert(not tooltipFor(poi.GetOwner()).lines[1], "nothing while the world map is closed")
+	shown = true
+	print("journey input: pin hints ok")
+end
+
+-- With Shift chosen, Alt-click on the map is not a journey gesture: OpenMap's Alt-click deletes its markers, and
+-- other icons keep their own Alt-click (#1050).
 alt, shift, destination = true, false, nil
 mouseEvent(nil, "GLOBAL_MOUSE_DOWN", "LeftButton")
-assert(
-	destination and destination.x == 0.25 and destination.y == 0.75,
-	"Alt-click uses the exact map cursor over icons"
-)
+assert(destination == nil, "with Shift chosen, Alt-click off a Questie icon is left to other addons")
+-- The global mouse event still fires over a Questie-owned icon that swallowed canvas clicks.
+local foci = env.GetMouseFoci
+_G.Questie = {}
+env.GetMouseFoci = function()
+	return { { miniMapIcon = false, data = {}, UiMapID = 1440, x = 40, y = 60 } }
+end
+mouseEvent(nil, "GLOBAL_MOUSE_DOWN", "LeftButton")
+-- The icon stands away from the map cursor (0.25, 0.75), so this is the icon's spot and not the cursor's.
+assert(destination and destination.x == 0.4 and destination.y == 0.6, "Alt-click plans to the Questie icon's spot")
 -- TomTom v4.3.13 CreateWorldMapClickHandler passes LeftButton through even while its modifier matches.
 -- Its waypoint gesture is right-click, so active or stale saved options must not disable our left-click.
 for _, options in ipairs({
@@ -204,7 +286,7 @@ for _, options in ipairs({
 }) do
 	env.TomTomDB, destination = options, nil
 	mouseEvent(nil, "GLOBAL_MOUSE_DOWN", "LeftButton")
-	assert(destination and destination.x == 0.25, "TomTom options must not claim Alt-left-click")
+	assert(destination and destination.x == 0.4, "TomTom options must not claim Alt-left-click on a Questie icon")
 	destination = nil
 	mouseEvent(nil, "GLOBAL_MOUSE_DOWN", "RightButton")
 	assert(destination == nil, "TomTom keeps its right-click gesture")
@@ -220,6 +302,7 @@ for _, state in ipairs({ { false, true, true }, { true, false, true }, { true, t
 	mouseEvent(nil, "GLOBAL_MOUSE_DOWN", "LeftButton")
 	assert(destination == nil, "ordinary clicks and clicks outside the visible map remain untouched")
 end
+_G.Questie, env.GetMouseFoci = nil, foci
 chatBox = {}
 destination = nil
 assert(not handler(map, 3, "LeftButton") and destination == nil, "Shift+click must share to an open chat box")
@@ -245,6 +328,15 @@ assert(destination and destination.map == 1, "the pin's own journey is planned")
 destination = nil
 assert(canvasClick(map, "LeftButton") and destination, "Alt-clicking the map with Alt chosen plans a journey")
 assert(destination.x == 0.25 and destination.y == 0.75, "the map click keeps its spot")
+-- OpenMap's handler zooms in on every Alt-click at priority 1000, so ours must ask first (#1076).
+assert(canvasPriority and canvasPriority > 1000, "the journey key's canvas click runs before OpenMap's")
+local cursor = map.GetNormalizedCursorPosition
+map.GetNormalizedCursorPosition = function()
+	return 1.4, 0.5
+end
+destination = nil
+assert(not canvasClick(map, "LeftButton") and destination == nil, "a click past the map's edge is left to OpenMap")
+map.GetNormalizedCursorPosition = cursor
 own.marker, destination = "dock", nil
 assert(ownClick(own, "LeftButton") and destination, "Alt-clicking our own icon with Alt chosen plans a journey")
 destination = nil

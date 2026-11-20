@@ -70,7 +70,7 @@ the WoW: Forever client's `Interface/AddOns/` folder (`_forever_` on the live cl
 
 ## Usage
 
-Alt-click the world map to choose a destination over a Questie icon. Shift-click works on empty map space and Shortest Path icons. Choose Alt as *Key to plan a journey* in Guidance, and that one key works everywhere, Questie icons included. With the gamepad interface on, Shortest Path never opens or turns the world map, or opens a menu, itself; it asks you to.
+Alt-click a Questie icon on the world map to choose its spot as the destination. Shift-click works on empty map space and Shortest Path icons, and Alt-click elsewhere is left to other addons, such as OpenMap's marker delete. Choose Alt as *Key to plan a journey* in Guidance, and that one key works everywhere, Questie icons included. With the gamepad interface on, Shortest Path never opens or turns the world map, or opens a menu, itself; it asks you to.
 
 In the settings, **Transport** draws routes and shows the other faction's boats and zeppelins (off by default). **Guidance** holds journey behaviour: *Key to plan a journey*, *Route to the focused quest*, *Show journey steps in the objective tracker*, *Resume guide*, *Keep journeys after a reload*, *Arrival distance*, *Use Hearthstone* with *Minimum Hearthstone saving*, and *Use class teleports* with *Minimum teleport saving*. **Map marks** scales each kind of icon from 25% to 200%, can keep the game's own quest markers on the map beside a journey, and can hide the Nearby services tab when another addon needs that space. **Interface** shows or hides the arrow and compass, sizes them, and labels distances in metres. **Alerts** covers the boat warning and the arrival sound. [docs/features.md](docs/features.md) has the detail.
 
@@ -103,7 +103,7 @@ to journey changes. [docs/api.md](docs/api.md) has the calls and what they retur
 
 With *Follow RestedXP guides* on (the default), leave RestedXP's TomTom option off so only one addon follows the guide.
 
-Alt-left-click on the world map plans a journey even with TomTom installed. TomTom keeps its modified right-click waypoint gesture.
+Your journey key plans a journey on the world map even with TomTom installed. TomTom keeps its modified right-click waypoint gesture.
 
 With OpenMap on, the route and its stops draw across its stitched world map and carry on into the zones either side, over OpenMap's own art.
 

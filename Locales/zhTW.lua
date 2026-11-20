@@ -54,7 +54,7 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"旅程以及其他插件從這裡算起的估計，可以從法師的城市傳送或傳送：月光林地開始，並計入冷卻時間。"
 L["Minimum teleport saving"] = "傳送最少節省時間"
-L["No more stutters from route planning."] = "規劃路線時不再卡頓。" -- mt
+L["Walks in Stormwind start from the street you are on."] = "暴風城中的步行路線從你所在的街道出發。" -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"只在職業傳送至少節省這麼多時間時使用。"
 L["Boat and Zeppelin Routes"] = "船隻與飛艇航線"
@@ -69,6 +69,7 @@ L["Cast %s"] = "施放%s"
 L["Class trainer"] = "職業訓練師"
 L["Clear journey"] = "清除旅程"
 L["Click to plan a journey here."] = "點擊以規劃前往此處的旅程。"
+L["%s-click to plan a journey here"] = "%s-點擊以規劃前往此處的旅程"
 L["Click to show %s"] = "點擊顯示%s"
 L["Click to show where they go"] = "點擊查看目的地"
 L["Compass background"] = "羅盤背景"
@@ -192,6 +193,7 @@ L["Search services and goods"] = "搜尋服務和物品"
 L["Services"] = "服務"
 L["Shortest Path report"] = "Shortest Path報告"
 L["Show boats and zeppelins"] = "顯示船隻與飛艇"
+L["Show cast prompt"] = "顯示施法提示" -- mt
 L["Show direction arrow"] = "顯示方向箭頭"
 L["Show flight masters"] = "顯示飛行管理員"
 L["Show journey steps in the objective tracker"] = "在目標追蹤器中顯示旅程步驟"
@@ -208,6 +210,8 @@ L["Show the time left under the compass"] = "在羅盤下顯示剩餘時間"
 L["Show the way to your corpse"] = "顯示前往屍體的路"
 L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =
 	"顯示在附近服務旅程所前往的NPC姓名板上方。"
+L["Shows the Hearthstone or teleport to use in the arrow's place. Off, journeys still use them and the tracker still names the step."] =
+	"在箭頭的位置顯示要使用的爐石或傳送。關閉後，旅程仍會使用它們，追蹤器仍會顯示該步驟。" -- mt
 L["Shows the arrow to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =
 	"顯示箭頭，可拖曳到任意位置；Shift拖曳或方向鍵微調。右鍵點擊使其復位。"
 L["Shows the compass to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =

@@ -407,10 +407,11 @@ function ns.IsJourneyGuided()
 end
 
 -- costError says why no walk could be measured, if one could not; loading says a first search is still working.
----@return boolean pending, integer settleRound, string? costError, boolean loading
+-- timing is the search's own clock since the journey started, to its first and latest route (JourneySearch.lua).
+---@return boolean pending, integer settleRound, string? costError, boolean loading, table? timing
 function ns.JourneyStatus()
 	local pending, settleRound, costError, loading = Search.Status()
-	return pending > 0, settleRound, costError, loading
+	return pending > 0, settleRound, costError, loading, Search.timing
 end
 
 local function StartGuide()

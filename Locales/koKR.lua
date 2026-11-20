@@ -57,7 +57,8 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"여정과 다른 애드온의 이곳 기준 예상 시간은 재사용 대기시간을 포함해 마법사의 도시 순간이동이나 순간이동: 달의 숲으로 시작할 수 있습니다."
 L["Minimum teleport saving"] = "순간이동 최소 절약 시간"
-L["No more stutters from route planning."] = "경로 계산 중 더 이상 끊김이 없습니다." -- mt
+L["Walks in Stormwind start from the street you are on."] =
+	"스톰윈드에서 도보 경로가 지금 서 있는 거리에서 시작됩니다." -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"최소 이만큼 시간을 절약할 때만 직업 순간이동을 사용합니다."
 L["Boat and Zeppelin Routes"] = "배와 비행선 노선"
@@ -72,6 +73,7 @@ L["Cast %s"] = "%s 시전"
 L["Class trainer"] = "직업 상급자"
 L["Clear journey"] = "여정 지우기"
 L["Click to plan a journey here."] = "클릭하면 이곳까지 여정을 계획합니다."
+L["%s-click to plan a journey here"] = "%s-클릭하면 이곳까지 여정을 계획합니다"
 L["Click to show %s"] = "클릭하여 %s 표시"
 L["Click to show where they go"] = "클릭하여 행선지 표시"
 L["Compass background"] = "나침반 배경"
@@ -200,6 +202,7 @@ L["Search services and goods"] = "편의시설 및 물품 검색"
 L["Services"] = "편의시설"
 L["Shortest Path report"] = "Shortest Path 보고서"
 L["Show boats and zeppelins"] = "배와 비행선 표시"
+L["Show cast prompt"] = "시전 안내 표시" -- mt
 L["Show direction arrow"] = "방향 화살표 표시"
 L["Show flight masters"] = "비행 조련사 표시"
 L["Show journey steps in the objective tracker"] = "목표 추적기에서 여정 단계 표시"
@@ -217,6 +220,8 @@ L["Show the time left under the compass"] = "나침반 아래에 남은 시간 �
 L["Show the way to your corpse"] = "시체까지 가는 길 표시"
 L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =
 	"주변 편의시설 여정이 향하는 NPC의 이름표 위에 표시합니다."
+L["Shows the Hearthstone or teleport to use in the arrow's place. Off, journeys still use them and the tracker still names the step."] =
+	"화살표 자리에 사용할 귀환석이나 순간이동을 표시합니다. 끄면 여정은 계속 이를 사용하고 추적기도 계속 해당 단계를 표시합니다." -- mt
 L["Shows the arrow to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =
 	"화살표를 표시해 어디로든 끌 수 있습니다. Shift-끌기나 화살표 키로 미세 조정하고, 오른쪽 클릭하면 제자리로 돌아갑니다."
 L["Shows the compass to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =
