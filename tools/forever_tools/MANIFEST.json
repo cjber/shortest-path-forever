@@ -3,7 +3,7 @@
   "source": {
     "repository": "https://github.com/cjber/forever-core",
     "path": ".agents/skills/wow-forever-addon/tooling/forever_tools",
-    "revision": "b3af57a6219c6abd7b829d87dd2eebce37d97e7b"
+    "revision": "d6fe64e20d60254287c7669ef6adf13c41b07e5f"
   },
   "files": {
     "__init__.py": "845dbed90ad519817771603e96839d1ba970007d5a6d997a4a13fef416b8bcd1",
@@ -11,7 +11,7 @@
     "assets.py": "18a092e60f2bb23e62bf7857906c4af1d0d9efdbd265202f0cba3738ca9e0c21",
     "backdrops.txt": "815f66269b9159e8672e8f684318ceb58509758d26f9d03eed02a75c1a0962c3",
     "changelog.py": "a46d9646a30d343b24d68179735f004e7da88be70072b2212208e63f1d501aa2",
-    "client_calls.py": "380b55664605cec3d294b8e4814dcd84e36ecabddce9bb3aa86bc5e6ce410dd0",
+    "client_calls.py": "2b9f60cab6047d40baa41ea062d81131598b841bbd258f9832ef1d27d0b39634",
     "client_names.txt": "7c0518a6078c5ba5c20f746b989bdf6bdd9660607849394fb631e3788525e000",
     "core_pin.py": "59b35da7e8dc98289a2d7fd613d81db1c00e13c4d44aff472fd26ab08a3f997e",
     "credits.py": "a9527fe1d97b001492d9bb6a5713a3439f1b69cfed21d26c1e55236c500c7e98",
