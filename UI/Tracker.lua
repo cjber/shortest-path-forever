@@ -180,7 +180,7 @@ function ModuleMixin.OnHeaderClick(_, button)
 end
 
 local function DepartureText(departure)
-	local text = ns.DockLabel(departure.to[1]) .. "   " .. ns.Timetable.Status(departure)
+	local text = ns.Timetable.Destination(departure) .. "   " .. ns.Timetable.Status(departure)
 	return departure.known and text or GRAY_FONT_COLOR:WrapTextInColorCode(text)
 end
 

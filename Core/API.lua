@@ -33,6 +33,7 @@ local SPAWN_REACH = 8
 local CONTEXT_KEYS = {
 	"walkSpeed",
 	"faction",
+	"class",
 	"otherFaction",
 	"waterWalking",
 	"docks",

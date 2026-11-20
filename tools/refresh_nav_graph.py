@@ -13,7 +13,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from baker import gen_nav as nav
-from baker.inputs import generator_digest, generator_files
+from baker.inputs import generator_bytes, generator_digest, generator_files
 from forever_tools.fsio import atomic_write
 from pack_nav import FIELDS, SECTION, read_map, read_packed
 
@@ -201,7 +201,7 @@ def refresh_digest(root=nav.ROOT):
         root / "Data" / "RoadCells.lua",
     ]
     for path in sorted(paths):
-        digest.update(path.name.encode() + b"\0" + path.read_bytes() + b"\0")
+        digest.update(path.name.encode() + b"\0" + generator_bytes(path) + b"\0")
     return digest.hexdigest()
 
 

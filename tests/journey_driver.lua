@@ -110,6 +110,9 @@ local env = setmetatable({
 	UnitFactionGroup = function()
 		return ns.faction or "Alliance"
 	end,
+	UnitClass = function()
+		return ns.className or "Hunter", ns.class or "HUNTER"
+	end,
 	UnitLevel = function()
 		return ns.level or 60
 	end,
@@ -195,6 +198,7 @@ local env = setmetatable({
 		end,
 		AddGlobalPinMouseActionHandler = noop,
 	},
+	GameTooltip = { HookScript = noop },
 	Minimap = {
 		HookScript = function(_, _, fn)
 			minimapClick = fn
@@ -250,6 +254,7 @@ ns.NowMs = function()
 	return now
 end
 ns.CurrentRide, ns.RefreshTracker, ns.PointGuideArrow, ns.PointCastPrompt, ns.Print = noop, noop, noop, noop, noop
+ns.Notice = noop
 ns.KnownTaxiNodes = function()
 	return ns.known or {}
 end
@@ -283,6 +288,7 @@ load("Transport/TaxiTimes.lua")
 load("Core/PlanContext.lua")
 load("Routing/Savings.lua")
 load("Routing/Planner.lua")
+load("Routing/LegPoints.lua")
 load("Routing/QuestDestination.lua")
 load("Journey/JourneySteps.lua")
 load("Journey/Hazards.lua")

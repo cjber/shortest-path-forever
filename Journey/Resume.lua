@@ -78,7 +78,6 @@ local function Keep(point)
 		label = canaccessvalue(label) and type(label) == "string" and label or nil,
 		questID = point.questID,
 		handins = Handins(point.handins),
-		pinBadge = point.pinBadge or nil,
 		at = GetServerTime(),
 	}
 end
@@ -126,7 +125,6 @@ local function Resume()
 		label = type(resume.label) == "string" and resume.label or nil,
 		questID = Finite(resume.questID),
 		handins = Handins(resume.handins),
-		pinBadge = resume.pinBadge == true or nil,
 	})
 end
 

@@ -245,6 +245,7 @@ end
 function DockPin:RefreshTooltip()
 	ns.AddDockTooltip(self.cluster)
 	AddEndsLine(self:GetEnds())
+	ns.AddJourneyClickHint(GameTooltip)
 	GameTooltip:Show()
 end
 
@@ -663,6 +664,7 @@ function PortalPin:OnMouseEnter()
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 	ns.AddPortalTooltip(self.portal)
 	AddEndsLine(self:GetEnds())
+	ns.AddJourneyClickHint(GameTooltip)
 	GameTooltip:Show()
 end
 

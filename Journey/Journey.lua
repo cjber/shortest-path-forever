@@ -15,10 +15,6 @@ local REPLAN_DUE = REPLAN_EVERY - 0.5 -- from here Itinerary.lua leaves the fram
 local DRAW_EVERY = 0.5
 
 local goal, result
--- The route a search for a new goal replaces, and the step it was on: the tracker draws it greyed until the new
--- route lands, so the section keeps its rows and height while it searches (forever-core#795).
----@type { plan: SPFPlan, index: integer }?
-local replaced
 local policyChanged
 local nextPoint
 local progress = { index = 1 }
@@ -327,7 +323,7 @@ local journeyPolicy = "normal"
 ---@param reason "arrived"|"cleared"
 local function EndJourney(reason)
 	Search.Reset()
-	goal, result, nextPoint, replaced = nil, nil, nil, nil
+	goal, result, nextPoint = nil, nil, nil
 	journeyPolicy = "normal"
 	withoutHearth = false
 	if ns.JourneyChanged then
@@ -407,10 +403,11 @@ function ns.IsJourneyGuided()
 end
 
 -- costError says why no walk could be measured, if one could not; loading says a first search is still working.
----@return boolean pending, integer settleRound, string? costError, boolean loading
+-- timing is the search's own clock since the journey started, to its first and latest route (JourneySearch.lua).
+---@return boolean pending, integer settleRound, string? costError, boolean loading, table? timing
 function ns.JourneyStatus()
 	local pending, settleRound, costError, loading = Search.Status()
-	return pending > 0, settleRound, costError, loading
+	return pending > 0, settleRound, costError, loading, Search.timing
 end
 
 local function StartGuide()
@@ -475,12 +472,9 @@ function ns.JourneyInfo(formatPlace)
 	local title = ns.JourneyTitle(goal, formatPlace)
 	local rows = {}
 	local _, _, costError, loading = Search.Status()
-	local plan, index = result, progress.index
-	if not result and loading and replaced then
-		plan, index = replaced.plan, replaced.index
-	end
-	if plan then
-		ns.StepRows(rows, plan, index, formatPlace, loading, plan ~= result)
+	-- Only this goal's own proved steps: a new goal lists none until its plan lands, never the journey it replaced.
+	if result then
+		ns.StepRows(rows, result, progress.index, formatPlace, loading)
 	elseif loading then
 		rows[1] = { key = "searching", text = L["Finding the fastest way…"], grey = true }
 	else
@@ -500,15 +494,42 @@ end
 -- Where here falls on a walk: the segment ending at points[index], how far along it (t), and the yards still to walk
 -- from there, or nil when here is more than reach (ON_PATH by default) off the walk. A here with a height (the floor
 -- Floor.lua follows) is not on a segment drawn on another floor.
+-- Segment lengths of a walk, built once per points table: OnWalk runs on every progress tick for the same
+-- walk, and rebuilding them allocated a table and re-rooted every segment each time (WFA-13). Weak keys let
+-- a replaced walk's lengths go with it. The cache keeps each point's coordinates too, so a points table edited
+-- in place is measured again; comparing them costs no square roots and allocates nothing.
+local walkLengths = setmetatable({}, { __mode = "k" })
 local function OnWalk(points, here, reach)
 	if not here then
 		return nil
 	end
-	local lengths, total = {}, 0
-	for index = 2, #points do
-		local a, b = points[index - 1], points[index]
-		lengths[index] = math.sqrt((b.x - a.x) ^ 2 + (b.y - a.y) ^ 2)
-		total = total + lengths[index]
+	local cached = walkLengths[points]
+	local fresh = cached ~= nil and cached.count == #points
+	if fresh then
+		local xs, ys = cached.xs, cached.ys
+		for index = 1, #points do
+			local point = points[index]
+			if point.x ~= xs[index] or point.y ~= ys[index] then
+				fresh = false
+				break
+			end
+		end
+	end
+	local lengths, total
+	if fresh then
+		lengths, total = cached.lengths, cached.total
+	else
+		lengths, total = {}, 0
+		local xs, ys = {}, {}
+		for index = 1, #points do
+			xs[index], ys[index] = points[index].x, points[index].y
+		end
+		for index = 2, #points do
+			local a, b = points[index - 1], points[index]
+			lengths[index] = math.sqrt((b.x - a.x) ^ 2 + (b.y - a.y) ^ 2)
+			total = total + lengths[index]
+		end
+		walkLengths[points] = { lengths = lengths, total = total, count = #points, xs = xs, ys = ys }
 	end
 	local walked, best, found, along, after = 0, nil, nil, nil, nil
 	for index = 2, #points do
@@ -531,8 +552,9 @@ local function OnWalk(points, here, reach)
 end
 
 ns.OnWalk = OnWalk -- Corpse.lua trims its walk the same way.
--- The route last handed to the map, kept so a retime moves its arrival without redrawing it.
-local drawn
+-- The route last handed to the map, kept so a retime moves its arrival without redrawing it, and a first search's
+-- rough route, drawn while nothing is followed yet until its proved route or a new search replaces it.
+local drawn, rough
 local function Refresh()
 	local remaining
 	if result then
@@ -561,7 +583,7 @@ local function Refresh()
 	end
 	if not CorpseRun() then
 		drawn = remaining
-		ns.SetJourneyRoute(goal, remaining)
+		ns.SetJourneyRoute(goal, remaining or goal and rough)
 	end
 	RefreshTracker()
 end
@@ -629,11 +651,13 @@ end
 ---@param route SPFPlan?
 ---@param news SPFSearchNews
 local function Follow(route, news)
-	if news == "searching" then
+	if news == "searching" or news == "rough" then
+		-- Only drawn: guidance, subscribers and farming wait for the proved route.
+		rough = news == "rough" and route or nil
 		return Refresh()
 	end
 	if news == "route" then
-		result, replaced = route, nil
+		result, rough = route, nil
 		progress.index, progress.departed = 1, false
 		Guide.Retarget()
 		if not result then
@@ -840,7 +864,7 @@ function ns.StartJourney(point, policy)
 	if CorpseRun() then
 		-- Queued behind the corpse run, which ResumeJourney plans from where you come back to life.
 		if not (goal and SamePlace(goal, point) and journeyPolicy == policy) then
-			result, replaced = nil, nil
+			result = nil
 			withoutHearth = false
 			Search.Clear(false, policy)
 			progress.index, progress.departed = 1, false
@@ -870,11 +894,6 @@ function ns.StartJourney(point, policy)
 	goal, nextPoint = point, nil
 	if ns.JourneyChanged then
 		ns.JourneyChanged(point)
-	end
-	-- A new goal's search draws the route it replaces until its own lands; a goal changed again before then keeps
-	-- the route still on screen.
-	if not previous and result and result.legs[progress.index] then
-		replaced = { plan = result, index = progress.index }
 	end
 	result = previous or nil
 	progress.index, progress.departed = previous and index or 1, previous and departed or false

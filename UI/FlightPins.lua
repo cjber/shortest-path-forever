@@ -65,7 +65,9 @@ function FlightPin:ShouldMouseButtonBePassthrough(button)
 end
 
 function FlightPin:OnMouseClickAction(button)
-	if button == "RightButton" then
+	-- A class flight master has no discovery to mark: its class always has it.
+	local node = ns.TaxiNodes[self.poiInfo.nodeID]
+	if button == "RightButton" and not (node and node.class) then
 		ForeverCore.ContextMenu(self, function(_, root)
 			root:CreateCheckbox(L["Flight path known"], function()
 				local known = ns.KnownTaxiNodes()
@@ -93,12 +95,11 @@ local FLIGHTS_SHOWN = 8
 ---@param nodeID number
 ---@param undiscovered? boolean the hovered point itself is not known yet: nothing flies from it for you
 local function AddFlights(nodeID, undiscovered)
-	local known, faction = ns.KnownTaxiNodes(), UnitFactionGroup("player")
-	-- The flight points the planner flies to (Planner.lua's Eligible): neutral ones and your faction's, whatever the
-	-- boat and zeppelin setting says.
+	local known = ns.KnownTaxiNodes()
+	-- The flight points the planner flies to, whatever the boat and zeppelin setting says.
 	local flights = ns.TaxiTimes.FlightsFrom(nodeID, function(to)
 		local node = ns.TaxiNodes[to]
-		return node ~= nil and (not node.faction or node.faction == faction)
+		return node ~= nil and ns.TaxiNodeServes(node)
 	end)
 	if not flights[1] then
 		return
@@ -127,6 +128,7 @@ function FlightPin:OnMouseEnter()
 		GameTooltip_AddNormalLine(GameTooltip, L["Not discovered"])
 	end
 	AddFlights(self.poiInfo.nodeID, self.poiInfo.isUndiscovered)
+	ns.AddJourneyClickHint(GameTooltip)
 	GameTooltip:Show()
 end
 
@@ -190,7 +192,7 @@ function Flights:RefreshAllData()
 	self.force = nil
 	self:RemoveAllData()
 	self.signature = signature
-	local known, faction = ns.KnownTaxiNodes(), UnitFactionGroup("player")
+	local known, faction, class = ns.KnownTaxiNodes(), UnitFactionGroup("player"), select(2, UnitClass("player"))
 	local queried, reported = {}, {}
 	local function Query(id)
 		if id and not queried[id] then
@@ -211,9 +213,17 @@ function Flights:RefreshAllData()
 	for id, node in pairs(ns.TaxiNodes) do
 		local location = ns.Locate(node)
 		local x, y = ns.MapPinPosition(node, mapID)
-		if x and y and location and ns.IsDockMap(location, mapID) and not nativeShown[id] then
+		-- A class flight master is drawn only for its class, which always has it: it has no discovery.
+		if
+			x
+			and y
+			and location
+			and ns.IsDockMap(location, mapID)
+			and not nativeShown[id]
+			and (not node.class or node.class == class)
+		then
 			Query(location.uiMap)
-			local unknown = known ~= nil and not known[id]
+			local unknown = known ~= nil and not known[id] and not node.class
 			local native = reported[id]
 			-- The API's nodeID is the TaxiNodes DB2 key, also used by Taxi.lua; no name/position guessing. Its name is
 			-- the client's own; its position is on whichever map was asked, so the shipped world point places the pin.

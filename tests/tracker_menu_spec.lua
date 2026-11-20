@@ -134,6 +134,11 @@ local function order(root, expected)
 	assert(table.concat(labels, ",") == expected, table.concat(labels, ","))
 	local tracker = assert(entry(root, "Tracker"), "Core's Tracker submenu follows the entries")
 	local locks = 0
+	for _, item in ipairs(root.entries) do
+		if item.text == "Lock the tracker" then
+			locks = locks + 1
+		end
+	end
 	for _, item in ipairs(tracker.entries) do
 		if item.text == "Lock the tracker" then
 			locks = locks + 1
@@ -151,6 +156,7 @@ local expected = table.concat({
 	"Show on map",
 	"Clear journey",
 	"divider",
+	"Lock the tracker",
 	"Tracker",
 }, ",")
 local block = menu("journey")
@@ -185,7 +191,7 @@ assert(entry(menu(), "Hide departures"), "riding also shows departures")
 module.riding = nil
 assert(not entry(menu(), "Hide departures"))
 module.mapDock = 42
-order(menu(42), "Show on map,divider,Tracker")
+order(menu(42), "Show on map,divider,Lock the tracker,Tracker")
 module:OnBlockHeaderClick({ id = 42 }, "LeftButton")
 assert(maps[#maps] == 42, "a dock block opens its map even alongside a journey")
 module:OnBlockHeaderClick({ id = "journey" }, "LeftButton")
@@ -204,7 +210,7 @@ hint({ kind = "section" }, "guide this journey")
 hint({ kind = "block", id = 42 }, "show it on the map")
 journey, module.mapDock = false, 42
 hint({ kind = "section" }, "show it on the map")
-order(menu(), "Show on map,divider,Tracker")
+order(menu(), "Show on map,divider,Lock the tracker,Tracker")
 module.Header.scripts.OnMouseUp(module.Header, "LeftButton")
 assert(maps[#maps] == 42)
 t.setCombat(true)
@@ -221,6 +227,7 @@ env.ForeverCore.TrackerHost = shared.TrackerHost
 env.ForeverCore.ContextMenu = shared.ContextMenu
 env.ForeverCore.APIKit = { Hub = noop, NotReady = noop }
 env.ForeverCore.Art = { Marker = noop, Diamond = noop }
+env.ForeverCore.QuestLogTabs = { SetTabShown = noop }
 env.C_AddOns = { GetAddOnMetadata = noop }
 ns.ForeverRequire = function(ready)
 	assert(ready, "the addon loads with a foreign host")
@@ -236,7 +243,8 @@ local labels = {}
 for _, item in ipairs(foreign.entries) do
 	labels[#labels + 1] = item.text
 end
-assert(table.concat(labels, ",") == expected:gsub(",divider,Tracker$", ""), "foreign menus preserve slot order")
+local foreignOrder = expected:gsub(",divider,Lock the tracker,Tracker$", "")
+assert(table.concat(labels, ",") == foreignOrder, "foreign menus preserve slot order")
 local previousGuide, previousCleared = guide, cleared
 entry(foreign, "Guide me").callback()
 entry(foreign, "Clear journey").callback()

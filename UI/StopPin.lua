@@ -20,7 +20,7 @@ local NUMBER_YELLOW, NUMBER_DARK = { 1, 0.82, 0.25 }, { 0.1, 0.05, 0 }
 -- A lone stop's own mark stands alone at the size of the map's quest marks. A numbered one wears the mark as a badge
 -- over the marker's lower right, as Legacy Forever's entrance pins wear the Legacy shield; the pin's hit rect reaches
 -- out over the badge.
-local LOOK_SIZE, BADGE_SIZE, BADGE_OFFSET, TAG_SIZE = 22, 16, 4, 11
+local LOOK_SIZE, BADGE_SIZE, BADGE_OFFSET = 22, 16, 4
 -- A stop above or below the ground wears the map's own floor arrow at the upper right, opposite the action badge:
 -- both atlases are 13 by 14, fitted at their own shape.
 local ARROW_UP, ARROW_DOWN, ARROW_WIDTH, ARROW_HEIGHT = "poi-door-arrow-up", "poi-door-arrow-down", 13, 14
@@ -52,9 +52,14 @@ local GoalPin = CreateFromMixins(ns.Canvas.PinMixin)
 -- Route.lua's pool puts it on.
 ns.GoalPinMixin = GoalPin
 
+-- A numbered stop stands at the user waypoint's level (WaypointLocationDataProvider), above every quest POI,
+-- super-tracked ones included. A lone destination stands just above the pins it can be placed on (flight points, area
+-- POIs, gossip pins, this addon's services) and below the client's vignettes, quest givers and quest marks, so a "?"
+-- beside a flight point stays in sight over it (#1079).
+local STOP_LEVEL, GOAL_LEVEL = "PIN_FRAME_LEVEL_WAYPOINT_LOCATION", "PIN_FRAME_LEVEL_ENCOUNTER"
+
 function GoalPin:OnLoad()
-	-- The user waypoint's level (WaypointLocationDataProvider), above every quest POI, super-tracked ones included.
-	self:UseFrameLevelType("PIN_FRAME_LEVEL_WAYPOINT_LOCATION")
+	self:UseFrameLevelType(STOP_LEVEL)
 	self:SetIgnoreGlobalPinScale(true)
 	self:SetScalingLimits(1, 1, 1)
 	self.takesMouse = true
@@ -86,11 +91,11 @@ end
 ---@param labels? string[] what to do at each stop this pin marks
 ---@param look? SPFAPIStopKind
 ---@param details? string[]
----@param pinBadge? boolean
 ---@param ground? (string|false)[] how each stop stands against the terrain
 ---@param quests? integer[] the quests the stops this pin marks name, in order
-function GoalPin:OnAcquired(x, y, numbers, count, labels, later, look, details, pinBadge, ground, quests)
+function GoalPin:OnAcquired(x, y, numbers, count, labels, later, look, details, ground, quests)
 	self:SetPosition(x, y)
+	self:UseFrameLevelType(numbers and STOP_LEVEL or GOAL_LEVEL)
 	-- The disc's shadow stays opaque, so a faded button still hides the POI beneath it.
 	self:SetStopAlpha(later and ns.LaterAlpha or 1)
 	self.stopLabels = labels and labels[1] and labels or nil
@@ -142,11 +147,6 @@ function GoalPin:OnAcquired(x, y, numbers, count, labels, later, look, details, 
 		local right = badge and -BADGE_OFFSET or -MARKER_INSET
 		local bottom = badge and -BADGE_OFFSET or -MARKER_INSET
 		self:SetHitRectInsets(-MARKER_INSET, right, -MARKER_INSET, bottom)
-	elseif pinBadge and not numbers and not marked then
-		self:SetSize(LOOK_SIZE, LOOK_SIZE)
-		ns.Art.Icon(self.Texture, goalFile, TAG_SIZE)
-		self.Texture:SetPoint("CENTER", self, "BOTTOMRIGHT", 0, 0)
-		self:SetHitRectInsets(0, -TAG_SIZE / 2, 0, -TAG_SIZE / 2)
 	elseif not numbers and not marked then
 		-- The pin's point marks the goal: the map centres the frame on it, so the pin stands on the centre and the
 		-- hit rect rises with it.

@@ -15,7 +15,10 @@ ns.Icon = C_AddOns.GetAddOnMetadata(addonName, "X-Forever-Icon")
 -- Section.UpdateText and makes its objectives clickable with Line.SetInteractive. Publishing to the suite's list
 -- (APIKit.Publish) is guarded by the kit's minor, so an older kit is not a reason to stop. The step markers arrived in
 -- ForeverCore 1.11.0 (Art minor 2): UI/Art.lua's NumberFile is Art.Marker and UI/Arrow.lua's no-number centre is
--- Art.Diamond, so the addon's own media/Numbers art is gone.
+-- Art.Diamond, so the addon's own media/Numbers art is gone. QuestLogTabs.SetTabShown arrived in ForeverCore 1.12.0,
+-- and UI/ServicesPanel.lua calls it unguarded once the world map loads, so a 1.11 core stopped the addon with a Lua
+-- error instead of this line (#1060). Members the addon checks where it calls them (Credits, SettingsSections,
+-- APIKit.Publish) stay out.
 --
 -- The warning itself is Core/ForeverRequire.lua, shared by every Forever addon: one line on screen, never a chat
 -- message, naming the addon to update and never ForeverCore.
@@ -31,6 +34,8 @@ local ready = ForeverCore ~= nil
 	and type(ForeverCore.Art) == "table"
 	and type(ForeverCore.Art.Marker) == "function"
 	and type(ForeverCore.Art.Diamond) == "function"
+	and type(ForeverCore.QuestLogTabs) == "table"
+	and type(ForeverCore.QuestLogTabs.SetTabShown) == "function"
 
 -- UI/Settings.lua's slash words (tests/core_dependency_spec.lua keeps the two lists equal). A stopped addon still
 -- answers them with the line that names the fix, as its addon compartment entry does (#996).

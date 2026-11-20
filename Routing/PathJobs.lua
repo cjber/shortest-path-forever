@@ -43,6 +43,9 @@ local function schedule()
 	end
 end
 
+-- Path work so far, for the report's journey timings: frames that ran a slice, and their milliseconds.
+Path.work = { frames = 0, cpu = 0 }
+
 pump = function()
 	scheduled, pumped = false, true
 	if InCombatLockdown and InCombatLockdown() then
@@ -56,7 +59,8 @@ pump = function()
 		combatWait:RegisterEvent("PLAYER_REGEN_ENABLED")
 		return
 	end
-	local finish = clock() + Path.budget
+	local began = clock()
+	local finish = began + Path.budget
 	repeat
 		local job = table.remove(queue, 1)
 		if not job then
@@ -112,6 +116,7 @@ pump = function()
 			end
 		end
 	until clock() >= finish
+	Path.work.frames, Path.work.cpu = Path.work.frames + 1, Path.work.cpu + clock() - began
 	if #queue == 0 then
 		-- Exact endpoint costs survive; decoded grids and local trees are only useful during active work.
 		Grid.Idle()
@@ -203,7 +208,10 @@ end
 ---@param map number?
 ---@param clusters table<number, true>?
 function Path.Pin(map, clusters)
-	Grid.Pin(map, clusters)
+	-- A released cluster goes now when no job runs: otherwise it stays decoded until the next job drains the queue.
+	if Grid.Pin(map, clusters) and #queue == 0 then
+		Grid.Idle()
+	end
 end
 
 -- callback(costs, reason, job) completes once; optional progress(costs, nil, job) runs after each slice.

@@ -734,6 +734,32 @@ function M.build(sim)
 	G.GetCursorPosition = function()
 		return sim.mouseX or 0, sim.mouseY or 0
 	end
+	-- Blizzard_SharedXML's cursor anchor and screen quadrant, as the client has them, for specs that load no Blizzard
+	-- UI; a scenario that loads SharedXML replaces them with Blizzard's own. sim.gamepad is the gamepad interface.
+	G.InputUtil = {
+		IsGamepadUIEnabled = function()
+			return sim.gamepad == true
+		end,
+		AnchorRegionToCursor = function(region, point)
+			local x, y = G.GetCursorPosition()
+			local scale = G.UIParent:GetEffectiveScale()
+			region:ClearAllPoints()
+			region:SetPoint(point, G.UIParent, "BOTTOMLEFT", x / scale, y / scale)
+		end,
+	}
+	G.FrameUtilQuadrantEnum = { BottomLeft = 1, BottomRight = 2, TopLeft = 3, TopRight = 4 }
+	G.FrameUtil = {
+		GetScreenQuadrant = function(frame)
+			local x, y = frame:GetCenter()
+			x, y = x * frame:GetScale(), y * frame:GetScale()
+			local left, bottom = x < G.UIParent:GetWidth() / 2, y < G.UIParent:GetHeight() / 2
+			local quadrant = G.FrameUtilQuadrantEnum
+			if bottom then
+				return left and quadrant.BottomLeft or quadrant.BottomRight
+			end
+			return left and quadrant.TopLeft or quadrant.TopRight
+		end,
+	}
 	G.GetMouseFoci = function()
 		return { sim.mouseFocus }
 	end
@@ -794,7 +820,8 @@ function M.build(sim)
 
 	-- CVars.
 	-- Numeric CVars client code reads through GetCVarNumberOrDefault even when tainted (an unset one reads nil
-	-- then, and tonumber(nil) errors). The gamepad interface transition reads these; the values are stand-ins.
+	-- then, and tonumber(nil) errors). The gamepad interface transition reads the Gamepad ones (stand-in values);
+	-- every StaticPopup reads userFontScale through TextSizeManager, at the client default of 1.
 	local cvarDefaults = {
 		GamepadMapScrollSpeed = "1",
 		GamepadMapScrollSpeedFullScreen = "1",
@@ -803,6 +830,7 @@ function M.build(sim)
 		GamepadTargetingModifierVisualDelay = "0.5",
 		GamepadPossessBarOverride = "1",
 		GamepadStanceBarOverride = "1",
+		userFontScale = "1",
 	}
 	sim.cvars = {}
 	for name, value in pairs(cvarDefaults) do
