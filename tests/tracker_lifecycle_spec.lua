@@ -93,6 +93,11 @@ for _, readyAtLoad in ipairs({ false, true }) do
 		NearestDock = noop,
 	}
 	-- The real section API, as ForeverCore publishes it in 1.2.0.
+	-- Core's tracker host waits for the world and saved variables before a section attaches; the stand-in host here
+	-- waits on the same two events.
+	ns.AfterWorldEvents = function(callback)
+		env.EventUtil.ContinueAfterAllEvents(callback, "PLAYER_ENTERING_WORLD", "VARIABLES_LOADED")
+	end
 	setfenv(assert(loadfile(coreDirectory .. "/UI/TrackerSection.lua")), env)("ForeverCore", ns)
 	env.ForeverCore = { TrackerHost = host, TrackerSection = ns.TrackerSection, TrackerLine = ns.TrackerLine }
 	setfenv(assert(loadfile("UI/Tracker.lua")), env)("Addon", ns)
@@ -119,19 +124,6 @@ for _, readyAtLoad in ipairs({ false, true }) do
 	)
 	assert(ns.db.trackerHost == nil, "and cleared once it is offered")
 	assert(module.AddHeaderMenuEntries == nil, "only the declarative menu is registered")
-	local opened = 0
-	ns.FamilyHints = {
-		OpenFooter = function()
-			opened = opened + 1
-		end,
-	}
-	ns.JourneyInfo = noop
-	module.mapDock, module.blocks = nil, { { key = "family" } }
-	module.trackerClick({ kind = "section", module = module }, "LeftButton")
-	module.trackerClick({ kind = "block", id = "family", module = module }, "LeftButton")
-	assert(opened == 2, "both footer titles retain their left click")
-	module.trackerClick({ kind = "section", module = module }, "RightButton")
-	assert(opened == 2, "right clicks stay with Core")
 	checks = checks + 1
 end
 print("tracker_lifecycle_spec: " .. checks .. " load-order cases passed")

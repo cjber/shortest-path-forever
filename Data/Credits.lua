@@ -5,6 +5,7 @@ local _, ns = ...
 ns.Credits = {
 	players = {
 		{ name = "user_u3k9hweaatfhnjs0", what = "Profession trainer icons, weapon masters and service filters" },
+		{ name = "treadpool", what = "Undercity journeys leave the city by a lift" },
 		{ name = "user_g496wu46adiwjuc5", what = "Hearthstone map button respects Use Hearthstone" },
 		{ name = "emmiehbun", what = "Walking routes over Westfall ridges" },
 		{ name = "VolomonBeddarm", what = "Walking routes up impassable Barrens terrain" },
@@ -153,6 +154,7 @@ ns.Credits = {
 	},
 	inspired = {
 		{ name = "Polestar by Fitz", what = "Ideas for many features" },
+		{ name = "AzerothGPS", what = "Caves and cities as a test target" },
 		{ name = "Ding! by Yendi", what = "Walks that keep out of zones far above your level" },
 		{ name = "BV Addon Suite - Routing", what = "Walks that start on the floor you are standing on" },
 	},

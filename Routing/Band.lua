@@ -147,33 +147,18 @@ local function Combine(spellByRange, spellRanges, itemByRange, itemRanges)
 	return out
 end
 
--- The spells the spellbook holds, split by the units they can be asked about, read once per class and level rather
--- than once per measurement. A pet spell would answer for the pet and a self spell for the caster, neither of which
--- is the NPC the band measured, so Data/SpellTargets.lua keeps only spells that target another unit.
-local spellCache, spellKey
+-- The spells the spellbook holds, split by the units they can be asked about. A pet spell would answer for the pet
+-- and a self spell for the caster, neither of which is the NPC the band measured, so Data/SpellTargets.lua keeps only
+-- spells that target another unit.
+-- Whether the client refused a value while the ladders were read (Ladder below).
+local refused = false
 
 ---@return { friendly: SPFBandChecks, hostile: SPFBandChecks }?
 local function SpellLadders()
-	-- A client with no spellbook to read, or no class and level to key it by, has no spell ladder.
-	if
-		not (
-			UnitClass
-			and UnitLevel
-			and C_SpellBook
-			and C_SpellBook.GetNumSpellBookSkillLines
-			and C_Spell
-			and C_Spell.GetSpellInfo
-		)
-	then
+	-- A client with no spellbook to read has no spell ladder.
+	if not (C_SpellBook and C_SpellBook.GetNumSpellBookSkillLines and C_Spell and C_Spell.GetSpellInfo) then
 		return nil
 	end
-	local _, class = UnitClass("player")
-	local level = UnitLevel("player")
-	local key = tostring(class) .. ":" .. tostring(level)
-	if key == spellKey then
-		return spellCache
-	end
-	spellKey = key
 	local friendly = { byRange = {}, ranges = {} }
 	local hostile = { byRange = {}, ranges = {} }
 	local allowedFriendly = ns.SpellTargets
@@ -181,6 +166,7 @@ local function SpellLadders()
 	local lines = C_SpellBook.GetNumSpellBookSkillLines() or 0
 	for index = 1, lines do
 		local line = C_SpellBook.GetSpellBookSkillLineInfo(index)
+		refused = refused or (line ~= nil and not canaccessvalue(line.numSpellBookItems))
 		if line and canaccessvalue(line.numSpellBookItems) and line.numSpellBookItems then
 			local first = (line.itemIndexOffset or 0) + 1
 			for slot = first, first + line.numSpellBookItems - 1 do
@@ -189,6 +175,7 @@ local function SpellLadders()
 				local info = spell and C_Spell.GetSpellInfo(spell)
 				local high = info and info.maxRange
 				-- The minimum range is not read: a true answer still says the unit is no farther than the maximum.
+				refused = refused or (high ~= nil and not canaccessvalue(high))
 				if high and canaccessvalue(high) and high > SHORTEST then
 					local check = { kind = "spell", id = spell, range = high }
 					if allowedFriendly and allowedFriendly[spell] then
@@ -201,12 +188,11 @@ local function SpellLadders()
 			end
 		end
 	end
-	spellCache = { friendly = friendly, hostile = hostile }
-	return spellCache
+	return { friendly = friendly, hostile = hostile }
 end
 
 -- The usable items the player carries whose on-use spell targets another unit, split by the units that spell can be
--- asked about. Read per measurement because the bags change; only an item held right now counts.
+-- asked about; only an item held now counts.
 ---@return SPFBandChecks, SPFBandChecks
 local function ItemLadders()
 	local friendly = { byRange = {}, ranges = {} }
@@ -219,7 +205,9 @@ local function ItemLadders()
 	end
 	local carried = {}
 	for item in pairs(items) do
-		local held = Readable(count(item))
+		local raw = count(item)
+		local held = Readable(raw)
+		refused = refused or (raw ~= nil and held == nil)
 		if type(held) == "number" and held > 0 then
 			carried[#carried + 1] = item
 		end
@@ -241,8 +229,13 @@ local function ItemLadders()
 	return friendly, hostile
 end
 
+-- The ladders, read once and kept until the bags or the spellbook change (Init below): a measurement runs on every
+-- replan, and reading them is a client call per spellbook slot and per item that can answer a range check.
+---@type SPFBandLadders?
+local kept
+
 ---@return SPFBandLadders
-local function Ladder()
+local function Read()
 	local spells = SpellLadders()
 	if not spells then
 		return { friendly = {}, hostile = {} }
@@ -258,6 +251,29 @@ local function Ladder()
 		hostile = Combine(spells.hostile.byRange, spells.hostile.ranges, hostileItems.byRange, hostileItems.ranges),
 	}
 end
+
+---@return SPFBandLadders
+local function Ladder()
+	if kept then
+		return kept
+	end
+	refused = false
+	local read = Read()
+	-- A ladder the client kept a value from is never kept: the next measurement asks again.
+	if not refused then
+		kept = read
+	end
+	return read
+end
+
+ns.Init(function()
+	local events = CreateFrame("Frame")
+	events:RegisterEvent("BAG_UPDATE_DELAYED")
+	events:RegisterEvent("SPELLS_CHANGED")
+	events:SetScript("OnEvent", function()
+		kept = nil
+	end)
+end)
 
 -- The one spawn a creature of npc on map stands still at, from Data/IdleSpawns.lua, or nil where the creature has
 -- none or more than one: two spawns leave which one the range check answered about unknown. The generated row holds

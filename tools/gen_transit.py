@@ -45,9 +45,14 @@ LIFT_GUARDS = {
     "Undercity, east lift": (5624, "Undercity Guardian", 41887, 0),
     "Undercity, south lift": (5624, "Undercity Guardian", 38301, 0),
 }
-# Nighthaven is druid-only; Plaguewood tower flights depend on PvP control. Neither restriction can be
-# expressed by the planner's faction/known-node contract. Mount IDs alone also admit quest/test nodes.
-RESTRICTED_NODES = {62, 63, 84, 85, 86, 87}
+# Plaguewood tower flights depend on PvP control, which the planner's faction/known-node contract cannot express.
+# Mount IDs alone also admit quest/test nodes.
+RESTRICTED_NODES = {84, 85, 86, 87}
+# Nighthaven's druid flight masters (Silva Fil'naveth, Bunthen Plainswind) fly druids, by gossip, to Rut'theran
+# Village and Thunder Bluff. The nodes have no discovery bit (TaxiNodes.CharacterBitNumber 0) and the paths are free
+# (TaxiPath.Cost 0): a druid of the node's faction always has them, and the flight lands without the landing being
+# known.
+CLASS_NODES = {62: "DRUID", 63: "DRUID"}
 # Continents with walking maps: the only places a route can continue from.
 MAPS = (0, 1, 2991)
 # SpellEffect.Effect TELEPORT_UNITS (the classic number, and the number this client uses) and its destinations:
@@ -446,6 +451,10 @@ def taxis(node_rows, path_rows, geometry, durations):
         node = {**location(int(row["ContinentID"]), point(row)), "name": row["Name_lang"]}
         if not (horde and alliance):
             node["faction"] = "Horde" if horde else "Alliance"
+        if node_id in CLASS_NODES:
+            if int(row["CharacterBitNumber"]):
+                raise ValueError(f"class flight node {node_id} has a discovery bit")
+            node["class"] = CLASS_NODES[node_id]
         nodes[node_id] = node
     for row in geometry:
         by_path[int(row["PathID"])].append(row)
@@ -813,7 +822,8 @@ def main():
             f"-- Measured durations: {covered}/{len(paths)} ({covered / len(paths):.1%}); "
             "remaining paths estimated at 32 yd/s.",
             "-- Speed: cmangos/mangos-classic src/game/MotionGenerators/PathMovementGenerator.cpp, TAXI_FLIGHT_SPEED.",
-            "-- Only ordinary, unrestricted flight-map nodes; quest/test/transport/PvP/druid-only paths excluded.",
+            "-- Only ordinary flight-map nodes and the druid flight masters (class); "
+            "quest/test/transport/PvP paths excluded.",
             "-- Path points: flattened map/x/y triples, simplified within 20 yd in XY, rounded to 0.1 yd.",
             "-- InFlight duration data license:",
         ]

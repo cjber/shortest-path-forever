@@ -109,6 +109,9 @@ local function Boot(o)
 	env.UnitName = function()
 		return "Tester"
 	end
+	env.UnitGUID = function()
+		return "Player-1-TESTER"
+	end
 	-- The real hooksecurefunc runs the hook after the function it hooks, with the same arguments.
 	env.hooksecurefunc = function(target, key, hook)
 		local original = target[key]

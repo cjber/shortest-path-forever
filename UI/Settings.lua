@@ -639,6 +639,16 @@ ns.Init(function()
 			L["Shows the arrow to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."]
 		)
 	)
+	Checkbox(
+		"castPrompt",
+		L["Show cast prompt"],
+		-- luacheck: push ignore 631
+		L["Shows the Hearthstone or teleport to use in the arrow's place. Off, journeys still use them and the tracker still names the step."],
+		-- luacheck: pop
+		function()
+			ns.JourneyGuide.ArrowChanged()
+		end
+	)
 	Scale("arrowScale", L["Arrow scale"], L["Scales the arrow and the cast prompt."], function(_, value)
 		if type(value) == "number" then
 			ns.SetArrowScale(value)
@@ -835,17 +845,6 @@ ns.Init(function()
 		"whatsNew",
 		L["What's new after an update"],
 		L["One line in chat the first time you log in after an update."]
-	)
-
-	-- The Forever addons page is ForeverCore's, with the hint setting on it.
-	-- With the gamepad interface on the page is the client's own rows so the Options navigation can enter it
-	-- (cjber/tweaks-forever#382).
-	local family = ForeverCore.Family.Register(category, ns.db, addonName, ns.core.SafeCall)
-	Settings.RegisterInitializer(
-		category,
-		Secure(CreateSettingsButtonInitializer)(L["Forever addons"], L["Open"], function()
-			ForeverCore.OpenSettingsPanel(family:GetID())
-		end, nil, false)
 	)
 
 	Settings.RegisterAddOnCategory(category)

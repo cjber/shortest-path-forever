@@ -54,9 +54,9 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"旅程以及其他插件从这里算起的估计，可以从法师的城市传送或传送：月光林地开始，并计入冷却时间。"
 L["Minimum teleport saving"] = "传送最少节省时间"
+L["Routes show on the map straight away."] = "路线会立即显示在地图上。" -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"只在职业传送至少节省这么多时间时使用。"
-L["Recognise profession trainers and find weapon masters."] = "识别专业训练师，找到武器大师。" -- mt
 L["Boat and Zeppelin Routes"] = "船只和飞艇航线"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"船只和飞艇航线，在你指向码头时绘制。"
@@ -69,6 +69,7 @@ L["Cast %s"] = "施放%s"
 L["Class trainer"] = "职业训练师"
 L["Clear journey"] = "清除旅程"
 L["Click to plan a journey here."] = "点击以规划前往这里的旅程。"
+L["%s-click to plan a journey here"] = "%s-点击以规划前往这里的旅程"
 L["Click to show %s"] = "点击显示%s"
 L["Click to show where they go"] = "点击查看目的地"
 L["Compass background"] = "指南针背景"
@@ -100,7 +101,6 @@ L["Follow Guidelime guides"] = "跟随 Guidelime 攻略"
 L["Follow RestedXP guides"] = "跟随RestedXP指南"
 L["Follow TomTom's arrow"] = "跟随TomTom的箭头"
 L["Food"] = "食物"
-L["Forever addons"] = "Forever插件"
 L["Friendly nameplates must be on to see them."] = "需要开启友方姓名板才能看到。"
 L["Go through to %s"] = "穿过前往%s"
 L["Guidance"] = "引导"
@@ -123,8 +123,6 @@ L["Keeps the shared Forever tracker where you put it. The grip at its top no lon
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
 	"以米标注距离，与游戏采用公制的语言客户端一致。数字仍为游戏自身的码数。"
 L["Last seen %s ago"] = "%s前最后看到" -- mt
-L["Legacy Forever shows the Legacy challenges this counts toward."] =
-	"Legacy Forever会显示此项计入的传承挑战。"
 L["Let guides set TomTom waypoints"] = "允许指南设置TomTom路径点"
 L["Lift to %s"] = "前往%s的升降梯"
 L["Lifts"] = "升降梯"
@@ -195,6 +193,7 @@ L["Search services and goods"] = "搜索服务和物品"
 L["Services"] = "服务"
 L["Shortest Path report"] = "Shortest Path报告"
 L["Show boats and zeppelins"] = "显示船只和飞艇"
+L["Show cast prompt"] = "显示施法提示" -- mt
 L["Show direction arrow"] = "显示方向箭头"
 L["Show flight masters"] = "显示飞行管理员"
 L["Show journey steps in the objective tracker"] = "在目标追踪器中显示旅程步骤"
@@ -211,6 +210,8 @@ L["Show the time left under the compass"] = "在指南针下显示剩余时间"
 L["Show the way to your corpse"] = "显示前往尸体的路"
 L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =
 	"显示在附近服务旅程所前往的NPC姓名板上方。"
+L["Shows the Hearthstone or teleport to use in the arrow's place. Off, journeys still use them and the tracker still names the step."] =
+	"在箭头的位置显示要使用的炉石或传送。关闭后，旅程仍会使用它们，追踪器仍会显示该步骤。" -- mt
 L["Shows the arrow to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =
 	"显示箭头，可拖到任意位置；Shift拖动或方向键微调。右键点击使其复位。"
 L["Shows the compass to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =
@@ -224,7 +225,6 @@ L["Starts a journey when you super-track a quest or place the game's map pin, so
 	"当您聚焦任务或放置游戏地图标记时开始旅程，因此控制器无需 地图点击。指南插件的自有旅程不受影响。"
 L["Stop %d of %d"] = "第%d站，共%d站" -- mt
 L["Stop %d of %d: %s"] = "第%d站，共%d站：%s"
-L["Suggest quests for my level: Adventure Guide Forever"] = "推荐适合我等级的任务：Adventure Guide Forever"
 L["Teleport to %s"] = "传送到%s"
 L["The journey's time left, as the tracker shows it, beside the distance to your next turn."] =
 	"旅程剩余时间（与追踪栏显示的一致），显示在到下一个转弯的距离旁。"
@@ -254,8 +254,6 @@ L["Walk to %s"] = "步行前往%s"
 L["Walks go round zones whose lowest level is 4 or more above yours, but never the ones you start or end in."] =
 	"步行路线会绕开最低等级比你高 4 级或以上的区域，但不会绕开起点和终点所在的区域。"
 L["Weapons and armour"] = "武器和护甲"
-L["What next? Adventure Guide Forever suggests quests for your level."] =
-	"接下来做什么？Adventure Guide Forever会推荐适合你等级的任务。"
 L["What's new after an update"] = "更新后的新内容"
 L["While Guide is on: your next turns, the next stop and your destination across the top of the screen."] =
 	"引导开启时：在屏幕顶部显示你接下来的转弯、下一站和目的地。"
@@ -567,8 +565,6 @@ L["Walking route"] = "步行路线"
 L["stop guiding"] = "停止引导" -- mt
 L["guide this journey"] = "引导此次旅程" -- mt
 L["show it on the map"] = "在地图上显示" -- mt
-L["show the Adventure Guide Forever link"] = "显示 Adventure Guide Forever 链接" -- mt
-L["Show link"] = "显示链接" -- mt
 L["That guide has no step to follow."] = "该指南没有可跟随的步骤。" -- mt
 
 L["Weapon master"] = "武器大师"

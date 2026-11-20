@@ -22,10 +22,12 @@
 ---@field ItemProfessions table<number, number[]> item -> the profession skill lines its goods supply, for the items a vendor sells (Data/Services.lua)
 ---@field Walks table<number, table<string, (number|false)[]>>
 ---@field WalkPlaces table<number, table<string, number[]>>
+---@field WalkZones table<number, table<string, number[]>>? each baked walk's zone shares (Data/WalkZones.lua)
 ---@field RoadCells table<number, table<number, string>>
 ---@field RoadEdges table<number, table<number, string>>
 ---@field SpawnHeights table<number, table<number, string>> spawns over or under another surface (Data/Heights.lua)
 ---@field TownAreas table<number, SPFTownArea> the client's town ground per flight master (Data/TownAreas.lua)
+---@field ZoneCells table<number, {i0: number, j0: number, columns: string[]}>? the client's zone per 64-yard square (Data/ZoneCells.lua)
 ---@field IdleSpawns table<number, table<number, string>> spawns an NPC stands still at, by creature ID (Data/IdleSpawns.lua)
 ---@field SpellTargets table<number, boolean> friendly spells whose effects target another unit (Data/SpellTargets.lua)
 ---@field HostileSpells table<number, boolean> hostile spells whose effects target another unit (Data/SpellTargets.lua)
@@ -44,7 +46,8 @@
 ---@field SettingsMapMarks SPFSettingsMapMarks the Map marks settings page (UI/SettingsMapMarks.lua)
 ---@field core ForeverCoreAddon the addon's own ForeverCore services: journal, log, report and map canvas
 ---@field broken? boolean set when ForeverCore is missing a member this addon calls, so the addon's files stop
----@field ForeverRequire fun(ready: boolean): boolean the shared out-of-date warning, from Core/ForeverRequire.lua
+---@field ForeverRequire fun(ready: boolean, slash?: { key: string, [integer]: string }): boolean the shared out-of-date warning, from Core/ForeverRequire.lua
+---@field Slash { key: string, [integer]: string } UI/Settings.lua's slash words and their SlashCmdList key, from Core/Require.lua
 ---@field ReportTitle string the localized title shown by the shared report window
 ---@field Icon string the one client icon every in-game identity surface draws, read from the TOC
 ---@field NearbyQuestie SPFNearbyQuestie the QuestieDB read behind the Nearby list (UI/NearbyQuestie.lua)
@@ -70,7 +73,7 @@
 ---@field SetHearthstoneEnabled fun(enabled: boolean) flips the saved Hearthstone switch and replans (Journey/Journey.lua)
 ---@field ToggleHearthstone fun() flips the saved Hearthstone switch (Journey/Journey.lua)
 ---@field Hearthstone fun(now?: number): SPFHearthstone? the Hearthstone and its bind point, when it could be used (Transport/Teleports.lua)
----@field HearthSaving fun(): number? ms the Hearthstone saves on the journey, nil when it cannot be told (UI/HearthPin.lua)
+---@field HearthSaving fun(ready?: fun()): number? ms the Hearthstone saves on the journey, nil when it cannot be told (UI/HearthPin.lua)
 ---@field HearthPinTooltip fun(name: string, saving: number?): string, string[] (UI/HearthPin.lua)
 ---@field RefreshHearthPin fun() redraws the Hearthstone's button on the world map (UI/HearthPin.lua)
 
@@ -104,6 +107,8 @@
 ---@class SPFNearbyGroups
 ---@field vendors SPFVendorGroup[]
 ---@field services SPFServiceGroup[]
+---@field roles table<string, string> the trainer and battlemaster groups' map atlases, by group key
+---@field professions table<integer, string> each profession trainer's map atlas, by skill line
 ---@field sections table<string, string>
 ---@class SPFTownServiceChoice
 ---@field key string
@@ -149,7 +154,6 @@
 ---@field look? SPFAPIStopKind -- what the caller said stands there (API.lua)
 ---@field questID? number
 ---@field npc? integer -- the service NPC this stop reaches: Shortest Path marks its nameplate while the stop is current (Nearby services)
----@field pinBadge? boolean -- destination marker beside an existing map icon
 ---@field questIDs? number[] -- the quests whose client areas a held stop stands for (API.lua)
 ---@field handins? number[] -- the quests handed in at an API stop, hidden from the game's own map pins (API.lua)
 ---@field corpse? boolean -- where your corpse lies (Corpse.lua)
@@ -184,6 +188,7 @@
 ---@class SPFTaxiNode : SPFPoint
 ---@field name string
 ---@field faction? string
+---@field class? string the only class this flight master serves (UnitClass's file name), by gossip
 ---@class SPFTaxiPath
 ---@field from number
 ---@field to number
@@ -292,7 +297,7 @@
 ---@field warning? boolean
 ---@field color? colorRGBA|ForeverObjectiveTrackerColor -- the colour a text-only refresh rewrites the line in
 
----@class SPFDatabase : ForeverFamilyDB
+---@class SPFDatabase
 ---@field errors? ForeverCaughtError[] ForeverCore's shared error journal: earlier sessions' errors, for the report
 ---@field log? ForeverDebugLogStore ForeverCore's shared debug log ring: recent lines, for the report
 ---@field destinationPin boolean an on-screen marker over the journey's destination
@@ -351,6 +356,7 @@
 ---@field teleports? boolean -- plan class teleports with a destination of their own
 ---@field useHearthstone? boolean the Hearthstone and Astral Recall may be used in journeys, while class teleports still are (Teleports.lua)
 ---@field teleportSplit? integer the one-time move of the old combined teleports switch ran
+---@field quietDefaults? integer the one-time clear of the old on-by-default town services and compass ran
 ---@field partyMagePortals? boolean -- offer a party mage's capital portals
 ---@field partyMageStormwind? boolean
 ---@field partyMageIronforge? boolean
@@ -373,6 +379,7 @@
 ---@field hideQuestPins? boolean the game's own quest markers give way to a journey's stops (QuestPins.lua)
 ---@field journeyTracker? boolean
 ---@field arrow? boolean
+---@field castPrompt? boolean the cast prompt for a teleport step; off hides only the prompt (Arrow.lua)
 ---@field metres? boolean
 ---@field compassScale? number percent, 100 is the stock size
 ---@field arrowScale? number percent, 100 is the stock size (Arrow.lua)
@@ -421,7 +428,6 @@
 ---@field label? string
 ---@field questID? number
 ---@field handins? number[] -- the quests handed in at the kept stop, validated on the way in and out (Resume.lua)
----@field pinBadge? boolean
 ---@field at number
 -- Where the character stood when it last bound at an inn, with GetBindLocation's name then.
 ---@class SPFBindPoint : SPFPoint
@@ -471,6 +477,7 @@ ShortestPathForeverPathData = nil
 ---@field color? ColorMixin
 ---@class SPFLeg
 ---@field mode SPFMode
+---@field gossip? true a class flight master's flight: talk to it, there is no flight map
 ---@field from SPFPlace
 ---@field to SPFPlace
 ---@field depart number
@@ -497,13 +504,21 @@ ShortestPathForeverPathData = nil
 ---@field color? ColorMixin -- drawn in this colour rather than its mode's
 ---@field hazardNotes? string[] -- the hostile towns and high zones a measured walk meets or goes round (Hazards.lua)
 ---@field reachedAt? number -- when you reached a lift's shaft, whose landings share a spot (JourneySteps.lua)
+-- A guessed walk from where you stand or to the goal that a plan still has to prove, with the ends it was guessed
+-- between (Planner.lua).
+---@class SPFPendingWalk
+---@field mode "walk"
+---@field from SPFPlace
+---@field to SPFPlace
+---@field estimated true
+
 ---@class SPFPlan
----@field provisional? boolean
+---@field rough? true -- a first search's estimate, drawn before its proof and never followed
 ---@field arrive number
 ---@field legs SPFLeg[]
 ---@field needsStart boolean
 ---@field needsGoal boolean
----@field pendingWalks SPFLeg[]
+---@field pendingWalks SPFPendingWalk[]
 ---@field now? number
 ---@field preview? boolean
 ---@field prepared? boolean
@@ -541,6 +556,7 @@ ShortestPathForeverPathData = nil
 ---@field data? SPFRoute -- current ride remains usable for alighting when new boarding is excluded
 ---@class SPFPlaceOptions
 ---@field faction? string
+---@field class? string your class (UnitClass's file name): class flight masters serve only theirs
 ---@field docks? table<number, SPFDock>
 ---@field routes? table<number, SPFRoute>
 ---@field taxiNodes? table<number, SPFTaxiNode>
@@ -553,11 +569,13 @@ ShortestPathForeverPathData = nil
 ---@field landmasses? SPFLandmass[]
 ---@field anchors? table<number, SPFAnchor>
 ---@field baked? table<number, table<string, (number|false)[]>>
+---@field bakedZones? table<number, table<string, number[]>> each baked walk's zone shares (Data/WalkZones.lua)
 ---@field exactMaps? table<number, boolean>
 ---@field walks? SPFWalkCost[]
 ---@field hazards? SPFHazards -- weights baked walks that cross a hazard (Journey/Hazards.lua)
 ---@field cache? SPFPlannerCache
 ---@class SPFPlannerCache
+---@field busy? SPFPathJob the path job whose plan is building this cache now (Routing/Planner.lua)
 ---@field topology? SPFTopology
 ---@class SPFTopology
 ---@field nodes SPFPlace[]
@@ -584,6 +602,7 @@ ShortestPathForeverPathData = nil
 ---@field teleport? SPFTeleportPlace
 ---@field partyPortal? SPFPartyPortal
 ---@field ready? number
+---@field gossip? true a class flight master's flight, which lands whether its landing is known or not
 ---@class SPFLabels
 ---@field node number[]
 ---@field state number[]

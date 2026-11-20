@@ -50,7 +50,8 @@ GetMinimapShape = nil
 -- waypoint tooltip from C_TooltipInfo.GetMinimapMouseover on every mouseover update.
 ---@type {AddTooltipPostCall: fun(tooltipType: number, callback: fun(tooltip: GameTooltip, data: table))}
 TooltipDataProcessor = nil
--- Blizzard_UIErrorsFrame: the client's one-line errors, where a stopped addon says why it did not start.
+-- Blizzard_UIErrorsFrame: the client's one-line errors, where a stopped addon says why it did not start and
+-- ns.Notice says why a gesture did nothing.
 ---@type {AddMessage: fun(self: any, message: string, red?: number, green?: number, blue?: number, ...: any)}
 UIErrorsFrame = nil
 -- GlobalStrings: the generic "Map Pin" title the minimap gives a user waypoint.
@@ -98,7 +99,7 @@ function GameTooltip_AddColoredDoubleLine(tooltip, left, right, leftColor, right
 ---@field GetViewRect fun(self: WorldMapFrame): {left: number, right: number, top: number, bottom: number}
 ---@field GetNormalizedCursorPosition fun(self: WorldMapFrame): number, number
 ---@field EnumeratePinsByTemplate fun(self: WorldMapFrame, template: string): fun(): SPFMapPin
----@field AddCanvasClickHandler fun(self: WorldMapFrame, handler: fun(map: WorldMapFrame, button: string): boolean)
+---@field AddCanvasClickHandler fun(self: WorldMapFrame, handler: (fun(map: WorldMapFrame, button: string): boolean), priority?: number)
 ---@field AddGlobalPinMouseActionHandler fun(self: WorldMapFrame, handler: fun(map: WorldMapFrame, action: number, button: string): boolean)
 ---@field RegisterCallback fun(self: WorldMapFrame, event: string, callback: function, owner: any) -- the map's own callback registry (SetFocusedQuestID)
 ---@field SetHighlightedQuestID fun(self: WorldMapFrame, questID: number) -- draws that quest's own area (UI/StopPin.lua)
@@ -245,3 +246,11 @@ UiMapPoint = nil
 ---@field Icon Texture the tab's art, fitted to its template
 ---@class ForeverQuestMapFrame : Frame
 ---@field ContentsAnchor Frame
+
+-- The client's objective tracker palette (Blizzard_ObjectiveTracker). ForeverCore 1.15.0 no longer declares it.
+---@class ForeverObjectiveTrackerColor
+---@field r number
+---@field g number
+---@field b number
+---@type table<string, ForeverObjectiveTrackerColor>
+OBJECTIVE_TRACKER_COLOR = nil

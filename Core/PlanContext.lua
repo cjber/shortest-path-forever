@@ -75,6 +75,7 @@ function Context.Options(from, to, policy)
 	local faction = UnitFactionGroup("player")
 	return {
 		routePolicy = walking and "walking" or nil,
+		class = select(2, UnitClass("player")),
 		from = from,
 		to = to,
 		now = now,
@@ -97,6 +98,7 @@ function Context.Options(from, to, policy)
 		teleportMinimumSavings = ns.db and ns.db.teleportMinimumSavings or 0,
 		landmasses = ns.Landmasses,
 		baked = ns.Walks,
+		bakedZones = ns.WalkZones,
 	}
 end
 
@@ -145,6 +147,7 @@ function Context.Places(teleports, partyPortals, policy)
 		teleports = walking and empty or teleports,
 		partyPortals = walking and empty or partyPortals,
 		faction = faction,
+		class = select(2, UnitClass("player")),
 	}),
 		faction
 end

@@ -54,10 +54,9 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"As jornadas, e as estimativas de outros AddOns a partir daqui, podem começar com o teleporte de mago para uma cidade ou Teleport: Moonglade, contando a recarga."
 L["Minimum teleport saving"] = "Economia mínima do teleporte"
+L["Routes show on the map straight away."] = "As rotas aparecem no mapa na hora." -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"Usar um teleporte de classe só quando ele economizar pelo menos este tempo."
-L["Recognise profession trainers and find weapon masters."] =
-	"Reconheça os instrutores de profissão e encontre mestres de armas." -- mt
 L["Boat and Zeppelin Routes"] = "Rotas de barcos e zepelins"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Rotas de barcos e zepelins, desenhadas enquanto você aponta para um cais."
@@ -70,6 +69,7 @@ L["Cast %s"] = "Lançar %s"
 L["Class trainer"] = "Instrutor de classe"
 L["Clear journey"] = "Limpar jornada"
 L["Click to plan a journey here."] = "Clique para planejar uma jornada até aqui."
+L["%s-click to plan a journey here"] = "%s-clique para planejar uma jornada até aqui"
 L["Click to show %s"] = "Clique para mostrar %s"
 L["Click to show where they go"] = "Clique para ver para onde vão"
 L["Compass background"] = "Fundo da bússola"
@@ -101,7 +101,6 @@ L["Follow Guidelime guides"] = "Seguir guias do Guidelime"
 L["Follow RestedXP guides"] = "Seguir guias do RestedXP"
 L["Follow TomTom's arrow"] = "Seguir a seta do TomTom"
 L["Food"] = "Comida"
-L["Forever addons"] = "AddOns Forever"
 L["Friendly nameplates must be on to see them."] = "As placas de nome de aliados precisam estar ativadas para vê-las."
 L["Go through to %s"] = "Atravessar para %s"
 L["Guidance"] = "Orientação"
@@ -124,8 +123,6 @@ L["Keeps the shared Forever tracker where you put it. The grip at its top no lon
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
 	"Rotular as distâncias em metros, como fazem os clientes do jogo em sistema métrico. Os números continuam sendo os do jogo."
 L["Last seen %s ago"] = "Visto há %s" -- mt
-L["Legacy Forever shows the Legacy challenges this counts toward."] =
-	"O Legacy Forever mostra os Desafios de Legado para os quais isso conta."
 L["Let guides set TomTom waypoints"] = "Deixar guias criarem pontos do TomTom"
 L["Lift to %s"] = "Elevador para %s"
 L["Lifts"] = "Elevadores"
@@ -198,6 +195,7 @@ L["Search services and goods"] = "Pesquisar serviços e bens"
 L["Services"] = "Serviços"
 L["Shortest Path report"] = "Relatório do Shortest Path"
 L["Show boats and zeppelins"] = "Mostrar barcos e zepelins"
+L["Show cast prompt"] = "Mostrar aviso de lançamento" -- mt
 L["Show direction arrow"] = "Mostrar seta de direção"
 L["Show flight masters"] = "Mostrar mestres de voo"
 L["Show journey steps in the objective tracker"] = "Mostrar as etapas da jornada no rastreador de objetivos"
@@ -215,6 +213,8 @@ L["Show the time left under the compass"] = "Tempo restante sob a bússola"
 L["Show the way to your corpse"] = "Mostrar o caminho até seu corpo"
 L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =
 	"Mostra-as sobre a placa de nome do NPC para onde uma jornada de serviços próximos leva."
+L["Shows the Hearthstone or teleport to use in the arrow's place. Off, journeys still use them and the tracker still names the step."] =
+	"Mostra a Pedra de Regresso ou o teleporte a usar no lugar da seta. Desligado, as jornadas continuam a usá-los e o rastreador continua a nomear a etapa." -- mt
 L["Shows the arrow to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =
 	"Mostra a seta para arrastar para qualquer lugar; Shift+arrastar ou as setas a ajustam. Clique com o botão direito para devolvê-la."
 L["Shows the compass to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =
@@ -228,7 +228,6 @@ L["Starts a journey when you super-track a quest or place the game's map pin, so
 	"Inicia uma jornada quando você foca uma missão ou coloca o marcador do mapa do jogo, então um controle não precisa de clique no mapa. A jornada de um addon de guia não é alterada."
 L["Stop %d of %d"] = "Parada %d de %d" -- mt
 L["Stop %d of %d: %s"] = "Parada %d de %d: %s"
-L["Suggest quests for my level: Adventure Guide Forever"] = "Sugerir missões do meu nível: Adventure Guide Forever"
 L["Teleport to %s"] = "Teleporte para %s"
 L["The journey's time left, as the tracker shows it, beside the distance to your next turn."] =
 	"O tempo restante da jornada, como o rastreador mostra, ao lado da distância até a próxima curva."
@@ -258,8 +257,6 @@ L["Walk to %s"] = "Caminhar até %s"
 L["Walks go round zones whose lowest level is 4 or more above yours, but never the ones you start or end in."] =
 	"As caminhadas contornam zonas cujo nível mínimo é 4 ou mais acima do seu, mas nunca aquelas onde você começa ou termina."
 L["Weapons and armour"] = "Armas e armaduras"
-L["What next? Adventure Guide Forever suggests quests for your level."] =
-	"E agora? O Adventure Guide Forever sugere missões para o seu nível."
 L["What's new after an update"] = "Novidades após uma atualização"
 L["While Guide is on: your next turns, the next stop and your destination across the top of the screen."] =
 	"Com a orientação ativa: suas próximas curvas, a próxima parada e seu destino no topo da tela."
@@ -577,8 +574,6 @@ L["Walking route"] = "Rota a pé"
 L["stop guiding"] = "parar de guiar" -- mt
 L["guide this journey"] = "guiar esta jornada" -- mt
 L["show it on the map"] = "mostrar no mapa" -- mt
-L["show the Adventure Guide Forever link"] = "mostrar o link do Adventure Guide Forever" -- mt
-L["Show link"] = "Mostrar link" -- mt
 L["That guide has no step to follow."] = "Esse guia não tem nenhuma etapa para seguir." -- mt
 
 L["Weapon master"] = "Mestre de armas"

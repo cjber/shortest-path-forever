@@ -54,7 +54,7 @@ local function Stocked(teleport)
 	return true
 end
 
--- Seconds of cooldown left, or nil while the client keeps it secret.
+-- Seconds of cooldown left and the GetTime() it ends at, or nil while the client keeps it secret.
 ---@param teleport SPFTeleport
 ---@return number?, number?
 local function Cooldown(teleport)
@@ -86,6 +86,53 @@ local function CastTime(teleport)
 	return canaccessvalue(cast) and cast and cast > 0 and cast or teleport.cast
 end
 
+-- What the client says about each teleport: whether this character has it, and when it can be cast (nil without its
+-- reagents or while the cooldown is secret). A replan reads this every few seconds and the bags alone are many client
+-- calls, so it is read once and kept until an event says the bags, the spellbook or a cooldown changed (Init below),
+-- or until the earliest cooldown it holds ends.
+---@class SPFTeleportState
+---@field known boolean
+---@field deadline number? the GetTime() its cooldown ends at, 0 when there is none
+---@type table<SPFTeleport, SPFTeleportState>
+local states = {}
+local list, fresh, expires = nil, false, math.huge
+
+---@return table<SPFTeleport, SPFTeleportState>
+local function States()
+	local now = GetTime()
+	if fresh and list == ns.Teleports and now < expires then
+		return states
+	end
+	if list ~= ns.Teleports then
+		-- Another teleport list: the places built from the last one go with it.
+		placesKey = nil
+	end
+	states, list, fresh, expires = {}, ns.Teleports, true, math.huge
+	for _, teleport in ipairs(ns.Teleports or {}) do
+		local known, deadline = Known(teleport), nil
+		if known and Stocked(teleport) then
+			deadline = select(2, Cooldown(teleport))
+			if not deadline then
+				-- A secret cooldown is never kept: the next read asks again.
+				expires = now
+			end
+		end
+		if deadline and deadline > now then
+			expires = math.min(expires, deadline)
+		end
+		states[teleport] = { known = known, deadline = deadline }
+	end
+	return states
+end
+
+-- Seconds until the teleport can be cast, or nil when it cannot be.
+---@param state SPFTeleportState
+---@return number?
+local function Wait(state)
+	local deadline = state.deadline
+	return deadline and math.max(0, deadline - GetTime())
+end
+
 -- The Hearthstone and the bind point it recalls to, when this character could use it: the item in the bags and a bind
 -- point the client and the last binding or landing agree on. Neither switch hides it, since the map's innkeeper button
 -- (UI/HearthPin.lua) is how the player flips the Hearthstone one.
@@ -93,12 +140,16 @@ end
 ---@return SPFHearthstone?
 function ns.Hearthstone(now)
 	local bind = Bind()
-	if not (bind and C_Item.GetItemCount(HEARTHSTONE) > 0) then
+	if not bind then
 		return nil
 	end
 	for _, teleport in ipairs(ns.Teleports or {}) do
-		if teleport.item == HEARTHSTONE then
-			local wait = Stocked(teleport) and Cooldown(teleport)
+		local state = teleport.item == HEARTHSTONE and States()[teleport]
+		if state then
+			if not state.known then
+				return nil
+			end
+			local wait = Wait(state)
 			return {
 				name = bind.name,
 				map = bind.map,
@@ -131,12 +182,12 @@ function ns.UsableTeleports(now)
 		return NONE, NONE, NONE
 	end
 	local bind, known, keys = Bind(), {}, {}
-	local state = {}
+	local state, read = {}, States()
 	for _, teleport in ipairs(ns.Teleports) do
 		-- A teleport that lands at the bind point is the Hearthstone or Astral Recall; the rest have a place of
 		-- their own and follow the class teleport switch.
 		local wanted = teleport.bind and hearth or (teleport.to and class)
-		if wanted and (teleport.to or (teleport.bind and bind)) and Known(teleport) then
+		if wanted and (teleport.to or (teleport.bind and bind)) and read[teleport].known then
 			known[#known + 1] = teleport
 			keys[#keys + 1] = teleport.spell
 		end
@@ -161,12 +212,9 @@ function ns.UsableTeleports(now)
 	end
 	local ready = {}
 	for index, teleport in ipairs(sources) do
-		local wait, deadline
-		if Stocked(teleport) then
-			wait, deadline = Cooldown(teleport)
-		end
-		if wait then
-			ready[index] = now + wait * 1000
+		local deadline = read[teleport].deadline
+		if deadline then
+			ready[index] = now + Wait(read[teleport]) * 1000
 			state[index] = deadline > GetTime() and deadline or 0
 		end
 	end
@@ -178,6 +226,9 @@ end
 -- screen's end looks again; the wait ends a minute after the cast, or after the loading screen it ends in.
 local JUMP_YARDS, JUMP_SPEED, WAIT, AFTER_LOADING = 100, 20, 60, 10
 local bindSpells = {}
+-- The events that change what States() read: the bags (items and reagents), the spellbook, and cooldowns.
+local CHANGES =
+	{ BAG_UPDATE_DELAYED = true, SPELLS_CHANGED = true, SPELL_UPDATE_COOLDOWN = true, BAG_UPDATE_COOLDOWN = true }
 ---@type {name: string, map?: number, x?: number, y?: number, at: number, deadline: number}?
 local landing
 
@@ -236,7 +287,14 @@ ns.Init(function()
 	frame:RegisterEvent("HEARTHSTONE_BOUND")
 	frame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
 	frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+	for event in pairs(CHANGES) do
+		frame:RegisterEvent(event)
+	end
 	frame:SetScript("OnEvent", function(_, event, _, _, spell)
+		if CHANGES[event] then
+			fresh = false
+			return
+		end
 		if event == "PLAYER_ENTERING_WORLD" then
 			if landing then
 				landing.deadline = GetTime() + AFTER_LOADING

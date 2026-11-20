@@ -50,7 +50,7 @@ RXP = nil
 ---@field x? number
 ---@field y? number
 
--- Adventure Guide's API once it has both suggestion calls (UI/FamilyHints.lua checks before using them).
+-- Adventure Guide's API once it has both suggestion calls (UI/AdventureSuggestions.lua checks before using them).
 ---@class SPFAdventureSuggestionsAPI
 ---@field Suggestions fun(limit?: integer): SPFAdventureSuggestion[]?
 ---@field StartSuggestion fun(id: string): boolean

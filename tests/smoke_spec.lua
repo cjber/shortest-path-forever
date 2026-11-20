@@ -10,15 +10,11 @@ local dir = arg[0]:match("^(.*)/") or "tests"
 
 -- The map pins and the Spinner run against checksum-pinned Blizzard source, which tests/ui.sh fetches. A spec run
 -- on a fresh checkout fetches it here so both "luajit tests/*_spec.lua" and tests/ui.sh see the same client.
-local probe = "tools/.cache/blizzard-ui/Interface/AddOns/Blizzard_SharedXML/Spinner.lua"
+-- Every spec runs the fetch: it checksums each pinned file and fetches any that is missing, so a spec started while
+-- another is still fetching never reads a file that is not there yet.
 do
-	local handle = io.open(probe)
-	if handle then
-		handle:close()
-	else
-		local ok = os.execute("bash tools/fetch_blizzard_ui.sh")
-		assert(ok == true or ok == 0, "could not fetch the pinned Blizzard UI fixture for tests/smoke_spec.lua")
-	end
+	local ok = os.execute("bash tools/fetch_blizzard_ui.sh")
+	assert(ok == true or ok == 0, "could not fetch the pinned Blizzard UI fixture for tests/smoke_spec.lua")
 end
 
 local source = ""
@@ -593,6 +589,9 @@ local function Reset()
 			ns.SetOption(key, ns.Defaults[key])
 		end
 	end
+	-- The compass and the town service pins start off; a player turns them on, so every profile sweeps them too.
+	ns.SetOption("compass", true)
+	ns.SetOption("townServices", "all")
 	ns.ClearJourney()
 	Flush()
 end
@@ -897,36 +896,6 @@ Run("stale dock cluster tooltip", function()
 		"the stale cluster has no remaining departures")
 	ns.AddDockTooltip(cluster)
 end)
--- The Forever family footer (UI/FamilyHints.lua): after an arrival with Adventure Guide missing, a grey line under
--- the finished journey, drawn with Blizzard's tracker code; clicking it opens the shared link window.
-Reset()
-local clientAddOns = C_AddOns
-Run("forever family arrival footer", function()
-	_G.C_AddOns = {
-		IsAddOnLoaded = function()
-			return false
-		end,
-		DoesAddOnExist = function()
-			return false
-		end,
-	}
-	ns.JourneyChanged({ map = 1, x = 0.5, y = 0.5, label = "Footer" })
-	ns.JourneyChanged(nil, "arrived")
-	-- EndJourney redraws the tracker right after it tells ns.JourneyChanged.
-	ns.RefreshTracker()
-	Flush()
-	assert(ns.FamilyHints.Footer(), "the footer shows after arriving")
-	local tracker = _G.ShortestPathForeverObjectiveTracker
-	local block = tracker:GetExistingBlock("family")
-	assert(block and block.used, "the tracker draws the footer's block")
-	tracker:OnBlockHeaderClick(block, "LeftButton")
-	Flush()
-	assert(_G.ForeverFamilyLink and _G.ForeverFamilyLink:IsShown(), "clicking it opens the link window")
-	assert(not ns.FamilyHints.Footer(), "and takes the footer away")
-	_G.ForeverFamilyLink:Hide()
-	_G.C_AddOns = clientAddOns
-end)
-_G.C_AddOns = clientAddOns
 stats.profiles = stats.profiles + 1
 for step = 1, 400 do
 	Fuzz(("fuzz %d"):format(step))

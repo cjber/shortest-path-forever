@@ -86,7 +86,6 @@ for _, button in ipairs(buttons) do
 end
 env.CreateSecureDelegate = nil
 clear(rows, buttons, settings)
-h.clearFamilyPage()
 setfenv(assert(loadfile("UI/Settings.lua")), env)("ShortestPathForever", ns)
 assert(#rows == expectedRows, "every settings row registers without secure delegates")
 assert(#buttons == expectedButtons, "every settings page registers without secure delegates")
@@ -95,5 +94,4 @@ for _, button in ipairs(buttons) do
 	expectedPages[button.initializer.name] = nil
 end
 assert(next(expectedPages) == nil, "no settings page is missing without secure delegates")
-assert(h.familyPage(), "the Forever addons page registers without secure delegates")
 print("settings layout: ok")

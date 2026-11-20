@@ -63,8 +63,9 @@ local function Settling()
 end
 
 ---@param hop SPFHop
-local function PlanHop(hop)
-	local legs = ns.EstimateLegs(hop.from, hop.to, policy)
+---@param pathJob SPFPathJob the path job planning it, which pauses at the frame budget
+local function PlanHop(hop, pathJob)
+	local legs = ns.EstimateLegs(hop.from, hop.to, policy, pathJob)
 	hop.paths = legs and {} or false
 	for index, leg in ipairs(legs or {}) do
 		local walk = leg.mode == "walk"
@@ -157,7 +158,7 @@ Step = function()
 		Schedule()
 		return
 	end
-	-- The journey's timed replan also comes first: it plans in the frame like a hop does.
+	-- The journey's timed replan also comes first.
 	if ns.Path.Busy() or Settling() or ns.JourneyReplanning() then
 		Schedule()
 		return
@@ -169,8 +170,18 @@ Step = function()
 		Schedule()
 	elseif plan then
 		---@cast hop -?
-		PlanHop(hop)
-		dirty = true
+		-- Planned in a path job, as a walk is searched: it pauses at the frame budget.
+		searching = hop
+		job = ns.Path.Run(function(pathJob)
+			PlanHop(hop, pathJob)
+		end, function(_, _, finished)
+			if job ~= finished then
+				return
+			end
+			job, searching = nil, nil
+			dirty = true
+			Schedule()
+		end)
 		Schedule()
 	elseif hop then
 		SearchWalk(hop)

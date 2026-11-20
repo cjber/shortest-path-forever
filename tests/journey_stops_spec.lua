@@ -106,6 +106,21 @@ for _ = 1, 4 do
 	driver.update(0.1)
 end
 eq(ns.HasJourney(), false, "no idle loop")
+-- An order cleared while its estimate paused leaves the editor idle, not ordering with no order.
+do
+	local e = ns.JourneyStopsEditor.new()
+	e.job = {
+		Step = function()
+			e:Clear()
+			return "working"
+		end,
+		Cancel = function() end,
+	}
+	e.state = "ordering"
+	e:Step()
+	eq(e.job, nil, "the cleared order is gone")
+	eq(e.state, "idle", "a cleared order leaves the editor idle")
+end
 -- An external journey is never replaced or cancelled by controller actions.
 driver.move({ map = 1, x = 0, y = 0, z = 0 })
 eq(c:Start(), true, "restart reusable draft")

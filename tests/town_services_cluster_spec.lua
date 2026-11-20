@@ -3,18 +3,14 @@
 -- NPC, spreading the ones that share a doorway so each keeps its own hover and click.
 local dir = arg[0]:match("^(.*)/") or "tests"
 
-local probe = "tools/.cache/blizzard-ui/Interface/AddOns/Blizzard_SharedXML/Spinner.lua"
+-- Every spec runs the fetch: it checksums each pinned file and fetches any that is missing, so a spec started while
+-- another is still fetching never reads a file that is not there yet.
 do
-	local handle = io.open(probe)
-	if handle then
-		handle:close()
-	else
-		local ok = os.execute("bash tools/fetch_blizzard_ui.sh")
-		assert(
-			ok == true or ok == 0,
-			"could not fetch the pinned Blizzard UI fixture for tests/town_services_cluster_spec.lua"
-		)
-	end
+	local ok = os.execute("bash tools/fetch_blizzard_ui.sh")
+	assert(
+		ok == true or ok == 0,
+		"could not fetch the pinned Blizzard UI fixture for tests/town_services_cluster_spec.lua"
+	)
 end
 
 local source = ""
@@ -95,6 +91,8 @@ C_Map.GetMapInfo = function(id)
 end
 ns.db.journey = true
 ns.db.townServices = "all"
+-- The vendors start hidden (#978); this player shows food and weapons and armour.
+ns.db.townServiceFood, ns.db.townServiceGear = true, true
 mapID, zoom = 1414, 0
 setMapShown(true)
 ns.RefreshTownServices()

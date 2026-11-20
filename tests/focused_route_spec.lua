@@ -127,4 +127,41 @@ ns.ClearJourney()
 clearPin()
 assert(not ns.HasJourney(), "removing the pin starts no journey")
 
+-- A flight point the player super-tracks with a plain left click on the map (UI/FlightPins.lua) is the same choice of
+-- destination as Shift-click: with the setting on it starts the journey there (#1079).
+local trackedPin
+env.Enum = env.Enum or {}
+env.Enum.SuperTrackingMapPinType = { TaxiNode = 2 }
+env.C_SuperTrack.GetSuperTrackedMapPin = function()
+	if trackedPin then
+		return 2, trackedPin
+	end
+end
+ns.TaxiNodes[26] = { map = 1, x = 3000, y = -2000 }
+ns.TaxiName = function(node)
+	return node == 26 and "Sentinel Hill" or nil
+end
+local function trackNode(node)
+	trackedPin = node
+	driver.fire("SUPER_TRACKING_CHANGED")
+	driver.update(0)
+end
+ns.db.focusedQuest = false
+trackNode(26)
+assert(not ns.HasJourney(), "a tracked flight point starts nothing with the setting off")
+trackNode(nil)
+ns.db.focusedQuest = true
+trackNode(26)
+goal = ns.JourneyGoal()
+assert(goal and goal.map == 1 and goal.x == 3000 and goal.y == -2000, "a tracked flight point starts a journey")
+assert(goal.label == "Sentinel Hill", "named for the flight point")
+assert(ns.TaxiNodes[26].label == nil, "the shared node is left as it is")
+local flown = ns.JourneyGoal()
+driver.fire("SUPER_TRACKING_CHANGED")
+driver.update(0)
+assert(ns.JourneyGoal() == flown, "the same tracked flight point does not replan")
+ns.ClearJourney()
+trackNode(nil)
+assert(not ns.HasJourney(), "letting the flight point go starts nothing")
+
 print("focused route: ok")

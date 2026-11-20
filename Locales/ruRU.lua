@@ -58,10 +58,9 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"Маршруты, а также оценки других модификаций отсюда, могут начинаться с телепорта мага в город или заклинания «Телепортация: Лунная поляна» с учетом восстановления."
 L["Minimum teleport saving"] = "Минимальная экономия от телепорта"
+L["Routes show on the map straight away."] = "Маршруты сразу появляются на карте." -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"Использовать классовый телепорт, только если он экономит не меньше этого времени."
-L["Recognise profession trainers and find weapon masters."] =
-	"Узнавайте наставников профессий и находите учителей владения оружием." -- mt
 L["Boat and Zeppelin Routes"] = "Маршруты кораблей и дирижаблей"
 L["Boat and zeppelin routes, drawn while you point at a dock."] =
 	"Маршруты кораблей и дирижаблей, когда вы наводите курсор на причал."
@@ -74,6 +73,7 @@ L["Cast %s"] = "Применить: %s"
 L["Class trainer"] = "Учитель классовых навыков"
 L["Clear journey"] = "Сбросить маршрут"
 L["Click to plan a journey here."] = "Щелкните, чтобы проложить маршрут сюда."
+L["%s-click to plan a journey here"] = "%s-щелчок, чтобы проложить маршрут сюда"
 L["Click to show %s"] = "Щелкните, чтобы показать: %s"
 L["Click to show where they go"] = "Щелкните, чтобы увидеть, куда они идут"
 L["Compass background"] = "Фон компаса"
@@ -106,7 +106,6 @@ L["Follow Guidelime guides"] = "Следовать руководствам Guid
 L["Follow RestedXP guides"] = "Следовать руководствам RestedXP"
 L["Follow TomTom's arrow"] = "Следовать стрелке TomTom"
 L["Food"] = "Еда"
-L["Forever addons"] = "Модификации Forever"
 L["Friendly nameplates must be on to see them."] =
 	"Чтобы их увидеть, включите таблички с именами дружественных существ."
 L["Go through to %s"] = "Пройти: %s"
@@ -130,8 +129,6 @@ L["Keeps the shared Forever tracker where you put it. The grip at its top no lon
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
 	"Подписывать расстояния в метрах, как это делают метрические языковые версии игры. Числа остаются игровыми."
 L["Last seen %s ago"] = "Замечен %s назад" -- mt
-L["Legacy Forever shows the Legacy challenges this counts toward."] =
-	"Legacy Forever показывает старинные испытания, в которые это засчитывается."
 L["Let guides set TomTom waypoints"] = "Разрешить руководствам ставить точки TomTom"
 L["Lift to %s"] = "Подъемник: %s"
 L["Lifts"] = "Подъемники"
@@ -209,6 +206,7 @@ L["Search services and goods"] = "Поиск услуг и товаров"
 L["Services"] = "Услуги"
 L["Shortest Path report"] = "Отчет Shortest Path"
 L["Show boats and zeppelins"] = "Показывать корабли и дирижабли"
+L["Show cast prompt"] = "Показывать подсказку применения" -- mt
 L["Show direction arrow"] = "Показывать стрелку направления"
 L["Show flight masters"] = "Показывать распорядителей полетов"
 L["Show journey steps in the objective tracker"] =
@@ -227,6 +225,8 @@ L["Show the time left under the compass"] = "Оставшееся время п�
 L["Show the way to your corpse"] = "Показывать путь к телу"
 L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =
 	"Показывает их над табличкой с именем НИП, к которому ведёт маршрут к услугам поблизости."
+L["Shows the Hearthstone or teleport to use in the arrow's place. Off, journeys still use them and the tracker still names the step."] =
+	"Показывает камень возвращения или телепорт, который нужно использовать, на месте стрелки. Если выключено, путешествия по-прежнему их используют, а трекер по-прежнему называет шаг." -- mt
 L["Shows the arrow to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =
 	"Показывает стрелку, которую можно перетащить куда угодно; Shift+перетаскивание или стрелки двигают ее точнее. Правый щелчок возвращает ее на место."
 L["Shows the compass to drag anywhere; Shift-drag or the arrow keys nudge it. Right-click it to put it back."] =
@@ -242,8 +242,6 @@ L["Starts a journey when you super-track a quest or place the game's map pin, so
 	"Начинает маршрут, когда вы выбираете задание или ставите метку на карте игры, так что геймпаду не нужен щелчок по карте. Маршрут аддона-гида не затрагивается."
 L["Stop %d of %d"] = "Остановка %d из %d" -- mt
 L["Stop %d of %d: %s"] = "Остановка %d из %d: %s"
-L["Suggest quests for my level: Adventure Guide Forever"] =
-	"Предлагать задания по уровню: Adventure Guide Forever"
 L["Teleport to %s"] = "Телепорт: %s"
 L["The journey's time left, as the tracker shows it, beside the distance to your next turn."] =
 	"Оставшееся время маршрута, как на панели отслеживания, рядом с расстоянием до следующего поворота."
@@ -275,8 +273,6 @@ L["Walk to %s"] = "Идти: %s"
 L["Walks go round zones whose lowest level is 4 or more above yours, but never the ones you start or end in."] =
 	"Пешие маршруты обходят зоны, минимальный уровень которых на 4 и более выше вашего, но не зоны начала и конца пути."
 L["Weapons and armour"] = "Оружие и доспехи"
-L["What next? Adventure Guide Forever suggests quests for your level."] =
-	"Что дальше? Adventure Guide Forever предлагает задания по вашему уровню."
 L["What's new after an update"] = "Новое после обновления"
 L["While Guide is on: your next turns, the next stop and your destination across the top of the screen."] =
 	"Пока включена навигация: ближайшие повороты, следующая остановка и цель вверху экрана."
@@ -611,8 +607,6 @@ L["Walking route"] = "Пеший маршрут"
 L["stop guiding"] = "остановить сопровождение" -- mt
 L["guide this journey"] = "начать сопровождение в этом путешествии" -- mt
 L["show it on the map"] = "показать на карте" -- mt
-L["show the Adventure Guide Forever link"] = "показать ссылку на Adventure Guide Forever" -- mt
-L["Show link"] = "Показать ссылку" -- mt
 L["That guide has no step to follow."] =
 	"В этом руководстве нет шага для следования." -- mt
 

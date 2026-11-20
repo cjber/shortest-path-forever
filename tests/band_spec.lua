@@ -5,6 +5,21 @@
 -- group (#737). A friendly NPC answers spells and items that target an ally or any unit; a hostile one those that
 -- target an enemy or any unit, and a carried item's range comes from its on-use spell in Data/SpellTargets.lua.
 local ns = {}
+-- The bag and spellbook events Band.lua watches.
+local onEvent, watched = nil, {}
+ns.Init = function(fn)
+	fn()
+end
+_G.CreateFrame = function()
+	return {
+		RegisterEvent = function(_, event)
+			watched[event] = true
+		end,
+		SetScript = function(_, _, fn)
+			onEvent = fn
+		end,
+	}
+end
 assert(loadfile("tools/load_nav.lua"))(0)
 for _, file in ipairs({
 	"Routing/PathGrid.lua",
@@ -176,9 +191,15 @@ local function placed(npc, dx, dy, z, hostile)
 	return { x = x, y = y, z = z, guid = GUID(npc), hostile = hostile }
 end
 
+-- The bags change, and the client says so.
+local function carry(items)
+	carried = items
+	onEvent(nil, "BAG_UPDATE_DELAYED")
+end
+
 local function reset()
 	asked, itemAsked, restricted, combat = {}, {}, nil, false
-	carried = {}
+	carry({})
 end
 
 ns.IdleSpawns[0][5694] = string.format("%d %d 100", HERE.x, HERE.y + 29)
@@ -219,7 +240,7 @@ end
 -- and 30 yd spells, and a bandage the player does not carry is never asked.
 do
 	reset()
-	carried = { [LINEN] = 1 }
+	carry({ [LINEN] = 1 })
 	units = { target = placed(5698, 12, 0, 100) }
 	local band = assert(Band.Measure(0, HERE.x, HERE.y), "the carried bandage answers")
 	near(band.hi, 100 + sqrt(225 - 144) + 0.5, "the 15 yd item bounds the height")
@@ -264,7 +285,7 @@ end
 -- An item whose use spell targets an enemy is asked of a hostile NPC and never of a friendly one.
 do
 	reset()
-	carried = { [ENEMY_ITEM] = 1 }
+	carry({ [ENEMY_ITEM] = 1 })
 	units = { target = placed(5697, 12, 0, 100, true) }
 	local band = assert(Band.Measure(0, HERE.x, HERE.y), "a hostile NPC answers a hostile item")
 	assert(itemAsked[1] == ENEMY_ITEM, "the 20 yd hostile item answers before the 30 yd spell")
@@ -273,7 +294,7 @@ do
 end
 do
 	reset()
-	carried = { [ENEMY_ITEM] = 1 }
+	carry({ [ENEMY_ITEM] = 1 })
 	units = { target = placed(5698, 12, 0, 100) }
 	assert(Band.Measure(0, HERE.x, HERE.y), "the friendly NPC is measured by a spell")
 	assert(itemAsked[1] ~= ENEMY_ITEM, "a friendly NPC is not asked about a hostile-only item")
@@ -282,7 +303,7 @@ end
 -- A friendly unit's item check is the legacy #nocombat call: it waits for combat to end, while an enemy's is asked.
 do
 	reset()
-	carried = { [LINEN] = 1 }
+	carry({ [LINEN] = 1 })
 	combat = true
 	units = { target = placed(5698, 12, 0, 100) }
 	assert(Band.Measure(0, HERE.x, HERE.y), "the 25 yd spell answers while the item waits")
@@ -291,7 +312,7 @@ do
 end
 do
 	reset()
-	carried = { [ENEMY_ITEM] = 1 }
+	carry({ [ENEMY_ITEM] = 1 })
 	combat = true
 	units = { target = placed(5697, 12, 0, 100, true) }
 	assert(Band.Measure(0, HERE.x, HERE.y), "an enemy item check is asked in combat")
@@ -341,7 +362,7 @@ end
 -- A restricted answer is not read: the band is no measurement rather than a guess, and nothing else is called.
 do
 	reset()
-	carried = { [LINEN] = 1 }
+	carry({ [LINEN] = 1 })
 	units = { target = placed(5698, 12, 0, 100) }
 	restricted = true
 	assert(Band.Measure(0, HERE.x, HERE.y) == nil, "a secret answer measures nothing")
@@ -409,6 +430,35 @@ do
 	-- A band that fits no surface is no measurement: the surfaces are all still there to start from.
 	local other = assert(Path.FindSync(0, { x = HERE.x, y = HERE.y, band = { lo = 10, hi = 20 } }, GOAL))
 	assert(other[2].z == 106, "a band with no surface in it leaves today's start: " .. tostring(other[2].z))
+end
+
+-- A replan measures every few seconds: between bag and spellbook events that reads neither, and each event reads
+-- them again.
+do
+	reset()
+	local bagReads, bookReads = 0, 0
+	local count, info = C_Item.GetItemCount, C_SpellBook.GetSpellBookItemInfo
+	_G.C_Item.GetItemCount = function(id)
+		bagReads = bagReads + 1
+		return count(id)
+	end
+	_G.C_SpellBook.GetSpellBookItemInfo = function(...)
+		bookReads = bookReads + 1
+		return info(...)
+	end
+	Band.At(0, HERE.x, HERE.y)
+	bagReads, bookReads = 0, 0
+	Band.At(0, HERE.x, HERE.y)
+	assert(bagReads == 0 and bookReads == 0, "no bag or spellbook read between events")
+	assert(watched.BAG_UPDATE_DELAYED and watched.SPELLS_CHANGED, "the bag and spellbook events are watched")
+	carry({ [LINEN] = 1 })
+	Band.At(0, HERE.x, HERE.y)
+	assert(bagReads > 0, "a bag change reads the bags again")
+	bookReads = 0
+	onEvent(nil, "SPELLS_CHANGED")
+	Band.At(0, HERE.x, HERE.y)
+	assert(bookReads > 0, "a spellbook change reads the spellbook again")
+	_G.C_Item.GetItemCount, _G.C_SpellBook.GetSpellBookItemInfo = count, info
 end
 
 print("band: the creature ID in UnitGUID bounds the player's height, and a walk starts on the floor inside it: ok")

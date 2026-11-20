@@ -134,10 +134,12 @@ marks, tall, suffix = dirty, 12, " 0:59"
 tick()
 tall, suffix = 24, " 0:58"
 tick()
-assert(dirty == marks, "a row that fits in fewer lines keeps its place, so a ticking timer cannot shake the column")
+-- ForeverCore lays a section out again whenever a row's height changes, either way, so it never leaves a gap under it.
+assert(dirty == marks + 2, "a row that shrinks and grows again is laid out each time")
 block.SetStringText, suffix = setText, nil
 tick()
 for _, row in pairs(block.lines) do row.GetHeight = function() return 12 end end
+marks = dirty
 index, onTaxi = 2, true
 assert(refresh(true) == "Journey  44:00 · 8.5k yd")
 assert(dirty == marks + 1 and not block:GetExistingLine(1), "leg changes still relayout rows")
@@ -247,16 +249,35 @@ assert(tracker.blocks[1].rows[1].key == 1, "the warning leaves with its row")
 route = nil
 refresh(true)
 assert(tracker.Header.text == "Boats" and #tracker.blocks == 0 and not tracker.distance)
--- A family footer row goes through the same layout: it must not borrow a stock line either.
-ns.FamilyHints.Footer = function()
- return { key = "family", title = "What next?", rows = { { key = "family", text = "Adventure Guide", grey = true } } }
-end
+-- A dock's row names every call its boat makes, as the map's dock tooltip does (#1057): the Southshore boat
+-- sails to Auberdine and then Menethil, so a row naming only Darkshore hides that it reaches the Wetlands.
+local nearestDock, dockLabel = ns.NearestDock, ns.DockLabel
+local labels = { [9] = "Wetlands", [10] = "Darkshore", [17] = "Hillsbrad Foothills" }
+ns.NearestDock = function() return 17, 0 end
+ns.DockLabel = function(id) return labels[id] or ("dock " .. id) end
+ns.db.tracker = true
 refresh(true)
-checkLines()
-assert(
- tracker:GetExistingBlock("family"):GetExistingLine("family").template == LINE_TEMPLATE,
- "family rows also use SPF's line template"
-)
+local southshore = tracker.blocks[1]
+assert(southshore and southshore.key == "dock17", "Southshore's dock block")
+assert(#southshore.rows == 1, "one boat leaves Southshore")
+local text = southshore.rows[1].text
+assert(text:find("Darkshore, then Wetlands", 1, true), text)
+-- Auberdine's two Menethil boats, one of them sailing on to Southshore, read as two trips.
+ns.NearestDock = function() return 10, 0 end
+refresh(true)
+local auberdine = tracker.blocks[1]
+assert(auberdine and auberdine.key == "dock10", "Auberdine's dock block")
+local direct, onward
+for _, row in ipairs(auberdine.rows) do
+  if row.text:find("Wetlands, then Hillsbrad Foothills", 1, true) then
+    onward = true
+  elseif row.text:find("Wetlands", 1, true) then
+    direct = true
+  end
+end
+assert(direct and onward, "Auberdine names the direct and the onward Menethil boat")
+ns.NearestDock, ns.DockLabel, ns.db.tracker = nearestDock, dockLabel, false
+refresh(true)
 assert(#errors == 0, table.concat(errors, "\n"))
 print("tracker_ui: remaining walking/transport yards, step times, geometry cache and no header layout churn ok")
 ]]))()

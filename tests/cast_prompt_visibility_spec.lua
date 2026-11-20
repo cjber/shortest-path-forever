@@ -9,6 +9,9 @@ env.CreateFrame = function(...)
 	function frame:RegisterEvent(event)
 		self.events[event] = true
 	end
+	function frame:UnregisterEvent(event)
+		self.events[event] = nil
+	end
 	function frame:UnregisterAllEvents()
 		self.events = {}
 	end
@@ -24,6 +27,12 @@ env.CreateFrame = function(...)
 	return frame
 end
 ns.Art = { Icon = function() end }
+-- The Hearthstone's name is not in the client's cache yet.
+local cachedItems = {}
+env.C_Item = env.C_Item or {}
+env.C_Item.GetItemNameByID = function(itemID)
+	return cachedItems[itemID]
+end
 ns.Mover = { Attach = function() end }
 local reads = 0
 ns.TeleportAction = function(teleport)
@@ -48,16 +57,22 @@ assert(prompt.Action.text == "Use Hearthstone", "the restored prompt uses the re
 assert(prompt.events.GET_ITEM_INFO_RECEIVED and prompt.events.SPELLS_CHANGED, "visible prompt listens for updates")
 local queued = prompt.OnEvent
 local before = reads
-queued(prompt, "GET_ITEM_INFO_RECEIVED")
+queued(prompt, "GET_ITEM_INFO_RECEIVED", 2589)
+assert(reads == before, "another item's answer does not redraw the prompt (#1029)")
+cachedItems[6948] = "Hearthstone"
+queued(prompt, "GET_ITEM_INFO_RECEIVED", 6948)
+assert(reads == before + 1, "the prompt's own item answer redraws it")
+assert(not prompt.events.GET_ITEM_INFO_RECEIVED, "a named item stops listening for item answers")
 queued(prompt, "SPELLS_CHANGED")
-assert(reads == before + 2, "enabled item and spell events refresh the prompt")
+assert(reads == before + 2, "spell changes refresh the prompt")
+cachedItems[6948] = nil
 
 ns.db.arrow = false
 ns.JourneyGuide.ArrowChanged()
 assert(prompt.hidden and next(prompt.events) == nil, "live disable hides and unregisters the prompt immediately")
 assert(ns.JourneyGuide.Casting(), "live disable preserves the cast target")
 before = reads
-queued(prompt, "GET_ITEM_INFO_RECEIVED")
+queued(prompt, "GET_ITEM_INFO_RECEIVED", 6948)
 queued(prompt, "SPELLS_CHANGED")
 assert(prompt.hidden and reads == before, "queued refreshes cannot render a disabled prompt")
 ns.db.arrow = true

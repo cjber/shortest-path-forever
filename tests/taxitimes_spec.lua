@@ -16,6 +16,9 @@ ns = {
 		[1] = { map = 1, x = 0, y = 0, name = "A" },
 		[2] = { map = 1, x = 1000, y = 0, name = "B" },
 		[3] = { map = 1, x = 2000, y = 0, name = "C" },
+		-- Nighthaven's druid masters: one per faction, side by side.
+		[4] = { map = 1, x = 0, y = 5000, name = "Silva", faction = "Alliance", class = "DRUID" },
+		[5] = { map = 1, x = 0, y = 5040, name = "Bunthen", faction = "Horde", class = "DRUID" },
 	},
 	Init = function(fn)
 		ns.start = fn
@@ -26,6 +29,8 @@ ns.TaxiPaths = {
 	-- Shares the first stretch from A, then turns away, so the flown path is not clear at take-off.
 	{ from = 1, to = 3, seconds = 60, points = { 1, 0, 0, 1, 400, 300, 1, 1000, 600, 1, 2000, 0 } },
 	{ from = 2, to = 3, seconds = 30, points = { 1, 1000, 0, 1, 1500, 0, 1, 2000, 0 } },
+	{ from = 4, to = 1, seconds = 30, points = { 1, 0, 5000, 1, 0, 2500, 1, 0, 0 } },
+	{ from = 5, to = 3, seconds = 30, points = { 1, 0, 5040, 1, 1000, 2500, 1, 2000, 0 } },
 }
 local now, onTaxi, map, x, y = 0, false, 1, 0, 0
 -- Journey.lua's guarded read of UnitPosition.
@@ -42,6 +47,12 @@ local env = setmetatable({
 	end,
 	UnitOnTaxi = function()
 		return onTaxi
+	end,
+	UnitFactionGroup = function()
+		return "Alliance"
+	end,
+	UnitClass = function()
+		return "Druid", "DRUID"
 	end,
 	geterrorhandler = function()
 		return error
@@ -115,6 +126,14 @@ local second = TaxiTimes.Snapshot()
 assert(second ~= first, "a new measurement is a fresh snapshot")
 equal(second["1:2"], 9, "the fresh snapshot carries the measured time")
 assert(TaxiTimes.Remaining(leg) == nil, "no remaining time once landed")
+
+-- An Alliance druid taking off from Silva, nearer the Horde master beside it: the ride is still Silva's.
+onTaxi = true
+step(20, 0, 5030)
+step(23, 0, 4000)
+assert(TaxiTimes.CurrentPath() == ns.TaxiPaths[4], "the ride leaves from the master this character may use")
+onTaxi = false
+step(26, 0, 4000)
 
 -- A flight point's direct flights for its tooltip: your own timings first, then the shipped, quickest first, only
 -- to the points the caller allows.

@@ -11,7 +11,7 @@ local t = harness.new()
 local env, shared = t.env, t.ns
 local function noop() end
 local journey, corpse, guided = true, false, false
-local guide, footer, maps, cleared, hearth, resumes = 0, 0, {}, 0, false, 0
+local guide, maps, cleared, hearth, resumes = 0, {}, 0, false, 0
 local options = {}
 local ns = {
 	L = shared.L,
@@ -69,11 +69,6 @@ local ns = {
 	ClearJourney = function()
 		cleared = cleared + 1
 	end,
-	FamilyHints = {
-		OpenFooter = function()
-			footer = footer + 1
-		end,
-	},
 	DockLocation = function(id)
 		return { uiMap = id }
 	end,
@@ -139,15 +134,20 @@ local function order(root, expected)
 		labels[#labels + 1] = item.text or item.kind
 	end
 	assert(table.concat(labels, ",") == expected, table.concat(labels, ","))
-	assert(not entry(root, "Attach to quest tracker"), "Attach belongs only in Tracker")
-	local tracker = assert(entry(root, "Tracker"))
-	local count = 0
-	for _, item in ipairs(tracker.entries) do
-		if item.text == "Attach to quest tracker" then
-			count = count + 1
+	local tracker = assert(entry(root, "Tracker"), "Core's Tracker submenu follows the entries")
+	local locks = 0
+	for _, item in ipairs(root.entries) do
+		if item.text == "Lock the tracker" then
+			locks = locks + 1
 		end
 	end
-	assert(count == 1, "exactly one Attach entry")
+	for _, item in ipairs(tracker.entries) do
+		if item.text == "Lock the tracker" then
+			locks = locks + 1
+		end
+	end
+	assert(locks == 1, "exactly one Lock the tracker entry")
+	assert(not entry(root, "Attach to quest tracker"), "the attach entry is gone with core 1.15.0")
 end
 local expected = table.concat({
 	"Guide me",
@@ -159,6 +159,7 @@ local expected = table.concat({
 	"Show on map",
 	"Clear journey",
 	"divider",
+	"Lock the tracker",
 	"Tracker",
 }, ",")
 local block = menu("journey")
@@ -195,21 +196,15 @@ assert(entry(menu(), "Hide departures"), "riding also shows departures")
 module.riding = nil
 assert(not entry(menu(), "Hide departures"))
 module.mapDock = 42
-order(menu(42), "Show on map,divider,Tracker")
+order(menu(42), "Show on map,divider,Lock the tracker,Tracker")
 module:OnBlockHeaderClick({ id = 42 }, "LeftButton")
 assert(maps[#maps] == 42, "a dock block opens its map even alongside a journey")
 module:OnBlockHeaderClick({ id = "journey" }, "LeftButton")
 module.Header.scripts.OnMouseUp(module.Header, "LeftButton")
 assert(guide == 3, "both journey titles toggle guidance")
-module:OnBlockHeaderClick({ id = "family" }, "LeftButton")
-journey, module.mapDock, module.blocks = false, nil, { { key = "family" } }
-module.Header.scripts.OnMouseUp(module.Header, "LeftButton")
-assert(footer == 2, "both family titles open the footer")
 local function hint(target, expectedHint)
 	assert(module.trackerClickHint(target) == expectedHint)
 end
-hint({ kind = "block", id = "family" }, "show the Adventure Guide Forever link")
-hint({ kind = "section" }, "show the Adventure Guide Forever link")
 hint({ kind = "block", id = "journey" }, "guide this journey")
 guided = true
 hint({ kind = "block", id = "journey" }, "stop guiding")
@@ -218,12 +213,9 @@ hint({ kind = "section" }, "stop guiding")
 guided = false
 hint({ kind = "section" }, "guide this journey")
 hint({ kind = "block", id = 42 }, "show it on the map")
-order(menu("family"), "Show link,divider,Tracker")
-entry(menu("family"), "Show link").callback()
-assert(footer == 3, "the short family action still opens the link")
 journey, module.mapDock = false, 42
 hint({ kind = "section" }, "show it on the map")
-order(menu(), "Show on map,divider,Tracker")
+order(menu(), "Show on map,divider,Lock the tracker,Tracker")
 module.Header.scripts.OnMouseUp(module.Header, "LeftButton")
 assert(maps[#maps] == 42)
 t.setCombat(true)
@@ -240,6 +232,7 @@ env.ForeverCore.TrackerHost = shared.TrackerHost
 env.ForeverCore.ContextMenu = shared.ContextMenu
 env.ForeverCore.APIKit = { Hub = noop, NotReady = noop }
 env.ForeverCore.Art = { Marker = noop, Diamond = noop }
+env.ForeverCore.QuestLogTabs = { SetTabShown = noop }
 env.C_AddOns = { GetAddOnMetadata = noop }
 ns.ForeverRequire = function(ready)
 	assert(ready, "the addon loads with a foreign host")
@@ -255,7 +248,8 @@ local labels = {}
 for _, item in ipairs(foreign.entries) do
 	labels[#labels + 1] = item.text
 end
-assert(table.concat(labels, ",") == expected:gsub(",divider,Tracker$", ""), "foreign menus preserve slot order")
+local foreignOrder = expected:gsub(",divider,Lock the tracker,Tracker$", "")
+assert(table.concat(labels, ",") == foreignOrder, "foreign menus preserve slot order")
 local previousGuide, previousCleared = guide, cleared
 entry(foreign, "Guide me").callback()
 entry(foreign, "Clear journey").callback()

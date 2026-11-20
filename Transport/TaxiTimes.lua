@@ -29,6 +29,15 @@ local AT_START = 250
 ---@type table<number, SPFTaxiPath[]>
 local byFrom = {}
 
+-- Whether this character may use a flight point: neutral ones and its faction's, and a class flight master only for
+-- its class (the rule Planner.lua's Eligible applies to a plan's own faction and class).
+---@param node SPFTaxiNode
+---@return boolean
+function ns.TaxiNodeServes(node)
+	return (not node.faction or node.faction == UnitFactionGroup("player"))
+		and (not node.class or node.class == select(2, UnitClass("player")))
+end
+
 ---@class SPFTaxiFlight
 ---@field candidates SPFTaxiPath[]
 ---@field startedAt number seconds the ride began
@@ -105,8 +114,9 @@ end
 ---@return number? nodeID
 local function NearestNode(map, x, y)
 	local bestID, best
+	-- Only a point this character may fly from: Nighthaven's Alliance and Horde druid masters stand side by side.
 	for id, node in pairs(ns.TaxiNodes or {}) do
-		if node.map == map then
+		if node.map == map and ns.TaxiNodeServes(node) then
 			local dx, dy = node.x - x, node.y - y
 			local distance = dx * dx + dy * dy
 			if not best or distance < best then

@@ -233,7 +233,17 @@ local released = incremental[1]
 local callback, progressCallback, savedCosts = released.callback, released.progress, released.costs
 Path.ReleaseMany(released)
 assert(not released.co and not released.scratch and not released.callback and not released.progress)
-assert(released.costs == savedCosts and Path.ReuseMany(released, sources[1]))
+-- Asked from a path job, as the journey search asks: its source cluster may have been let go meanwhile.
+local reused
+Path.Run(function()
+	reused = Path.ReuseMany(released, sources[1], true)
+end)
+while frame do
+	local fn = frame
+	frame = nil
+	fn()
+end
+assert(released.costs == savedCosts and reused)
 released.callback, released.progress = callback, progressCallback
 Path.Resume(released)
 while frame do

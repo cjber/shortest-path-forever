@@ -62,7 +62,7 @@ ns.JourneyGuide.To({ map = 1, x = 200, y = 0 }, nil, nil)
 assert(castFrame.hidden, "walking clears the cast prompt")
 ns.JourneyGuide.Cast(hearth)
 itemName = "Hearthstone (cached)"
-castFrame:OnEvent("GET_ITEM_INFO_RECEIVED")
+castFrame:OnEvent("GET_ITEM_INFO_RECEIVED", 6948)
 assert(label == "Use Hearthstone (cached)", "cached item names refresh without polling")
 ns.JourneyGuide.Retarget()
 assert(castFrame.hidden, "retargeting clears the old action")

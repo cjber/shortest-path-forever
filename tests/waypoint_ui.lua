@@ -463,6 +463,32 @@ local function wStart()
 end
 ]]
 
+check("waypoint UI starts and advances from step-end marks", "", wpu .. [[
+ns.db.guideStops, navTracking = true, false
+_G.WaypointUIAPI.Navigation.NewUserNavigation = function(opts)
+ newCalls[#newCalls + 1] = opts
+ navWaypoint, navTracking = opts, true
+ C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(opts.mapID, opts.x / 100, opts.y / 100))
+ C_SuperTrack.SetSuperTrackedUserWaypoint(true)
+ return opts
+end
+wStart()
+assert(#newCalls == 1 and supertracked, "create a Waypoint UI marker without an existing pin")
+assert(newCalls[1].suppressAudio, "turns do not play pin-placement sounds")
+record()
+posX, posY = 100, 100
+arrowFrame.scripts.OnUpdate(arrowFrame, 0.1)
+local _, world = C_Map.GetWorldPosFromMapPos(waypoint.uiMapID, waypoint.position)
+assert(#newCalls == 2 and math.abs(world.x - 300) < 0.001, "publish the next bend")
+ns.ClearJourney()
+assert(not waypoint and not supertracked and not ns.charDB.guideWaypoint, "clear the route's marker")
+wStart()
+local replacement = UiMapPoint.CreateFromCoordinates(1414, 0.2, 0.1)
+C_Map.SetUserWaypoint(replacement)
+ns.ClearJourney()
+assert(waypoint == replacement, "keep a player pin that replaces the route's marker")
+]])
+
 check("waypoint UI tracking: hands over, never writes the waypoint", "", wpu .. [[
 -- A straight walk keeps this case about the handover: the guide hands over the bend it marks, and on a straight
 -- line that bend is the destination the assertions name.

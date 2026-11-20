@@ -67,6 +67,7 @@ env.ForeverCore = {
 	TrackerLine = { SetInteractive = function() end },
 	TrackerHost = { HandleBlockHeaderClick = function() end },
 	Art = { minor = 2, Marker = function() end, Ring = function() end, Diamond = function() end },
+	QuestLogTabs = { SetTabShown = function() end },
 }
 setfenv(assert(loadfile("Core/ForeverRequire.lua")), env)("ShortestPathForever", ns)
 setfenv(assert(loadfile("Core/Require.lua")), env)("ShortestPathForever", ns)

@@ -11,6 +11,7 @@ for _, file in ipairs({
 	"Data/Walks.lua",
 	"Routing/Savings.lua",
 	"Routing/Planner.lua",
+	"Routing/LegPoints.lua",
 }) do
 	assert(loadfile(file))("ShortestPathForever", ns)
 end

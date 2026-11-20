@@ -111,9 +111,12 @@ do
 	check(Hearthstone(5000) ~= nil, "class teleports off still leaves the Hearthstone lookup")
 	runtime.db.teleports = true
 	items[6948] = 0
+	onEvent(nil, "BAG_UPDATE_DELAYED")
 	check(Hearthstone(5000) == nil, "without the Hearthstone, no button")
 	items[6948] = 1
 	itemCooldowns[6948] = { 50, 3600, true }
+	onEvent(nil, "BAG_UPDATE_DELAYED")
+	onEvent(nil, "BAG_UPDATE_COOLDOWN")
 	check(assert(Hearthstone(5000)).readyAt == 5000 + 3550000, "the Hearthstone's cooldown is its readiness")
 	tick()
 	check(registered.HEARTHSTONE_BOUND and registered.PLAYER_ENTERING_WORLD, "the bind events are watched")
@@ -208,6 +211,20 @@ do
 	local answers = { enabled = true }
 	local looked = {}
 	local sharedPlaces, planCalls = {}, 0
+	local runs = {}
+	local standX = 0
+	-- The journey keeps one goal table while it lasts.
+	local journeyGoal = { map = 1, x = 100, y = 100 }
+	local function pump()
+		while #runs > 0 do
+			local job = table.remove(runs, 1)
+			if not job.cancelled then
+				local a = job.fn(job)
+				job.done = true
+				job.callback(a)
+			end
+		end
+	end
 	local acquired, active, released = 0, 0, 0
 	local pool = {
 		ReleaseAll = function()
@@ -256,10 +273,10 @@ do
 			return string.format("%d:%02d", math.floor(seconds / 60), seconds % 60)
 		end,
 		JourneyGoal = function()
-			return { map = 1, x = 100, y = 100 }
+			return journeyGoal
 		end,
 		JourneyPosition = function()
-			return 0, 0, nil, 1
+			return standX, 0, nil, 1
 		end,
 		NowMs = function()
 			return 1000
@@ -277,6 +294,17 @@ do
 		PlanContext = {
 			Options = function()
 				return { now = 1000, teleports = sharedPlaces, teleportReady = {} }
+			end,
+		},
+		Path = {
+			-- The path queue: a plan runs on a later frame, never in the frame that asked.
+			Run = function(fn, callback)
+				local job = { fn = fn, callback = callback }
+				runs[#runs + 1] = job
+				return job
+			end,
+			Cancel = function(job)
+				job.cancelled = true
 			end,
 		},
 		Planner = {
@@ -320,9 +348,23 @@ do
 
 	-- The comparison plans the same journey with and without the Hearthstone, without leaking it into the planner's
 	-- shared place list (which Transport/Teleports.lua keeps between calls).
+	local answered = 0
+	check(ns.HearthSaving(function()
+		answered = answered + 1
+	end) == nil and planCalls == 0, "hovering plans nothing in its own frame")
+	check(ns.HearthSaving() == nil and #runs == 1, "a second ask joins the comparison being planned")
+	pump()
+	check(answered == 1, "the answer calls back once it lands")
 	check(ns.HearthSaving() == 5000, "the comparison measures the journey with and without the Hearthstone")
 	check(#sharedPlaces == 0, "the comparison keeps the Hearthstone out of the shared place list")
 	check(planCalls == 2, "a plan is made for each side of the comparison")
+	-- Moved on while a comparison is still planning: an ask from well past it plans from where it stands.
+	standX = 100
+	check(ns.HearthSaving() == nil and #runs == 1, "moving on plans the comparison again")
+	standX = 200
+	check(ns.HearthSaving() == nil and #runs == 2 and runs[1].cancelled, "a farther ask replaces the one in flight")
+	pump()
+	standX = 0
 
 	local plan = { legs = { { teleport = { bind = true, item = 6948 } } } }
 	ns.JourneyPlan = function()

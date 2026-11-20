@@ -71,7 +71,9 @@ def data():
     program = r"""
 local ns = {}
 local files = { "Locales/enUS", "Data/Routes", "Data/Transports", "Data/Portals", "Data/Taxi" }
-for _, name in ipairs({ "Transport/Model", "Routing/PathGrid", "Routing/Path", "Routing/Planner", "UI/FlightLines" }) do
+local runtime = { "Transport/Model", "Routing/PathGrid", "Routing/Path", "Routing/Planner", "Routing/LegPoints" }
+runtime[#runtime + 1] = "UI/FlightLines"
+for _, name in ipairs(runtime) do
 	files[#files + 1] = name
 end
 for _, name in ipairs(files) do
@@ -303,7 +305,8 @@ def map_landmarks(canvas, map_id, rect):
         # A zone's art also contains adjacent terrain; Map.lua only includes that zone's flight masters.
         if map_id == 1439 and taxi["name"].split(", ")[-1] != "Darkshore":
             continue
-        if p and taxi.get("faction") != "Horde":
+        # ns.TaxiNodeServes for the pictured Alliance hunter: no Horde or class-only flight masters.
+        if p and taxi.get("faction") != "Horde" and not taxi.get("class"):
             icon(canvas, "taxinode_undiscovered", *p)
     for portal in ordered(data()["portals"]):
         p = point(portal["from"])

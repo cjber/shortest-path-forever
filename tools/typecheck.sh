@@ -2,6 +2,11 @@
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
+# --no-luals runs every check here but LuaLS itself, which holds gigabytes; CI always runs it.
+run_luals=1
+if [[ ${1:-} == --no-luals ]]; then
+	run_luals=0
+fi
 # The annotation checkout and the LuaLS version come from tools/toolchain.json, synced from ForeverCore: the one
 # place either is pinned, and the file CI installs LuaLS from.
 pins=$(python3 -c 'import json; t = json.load(open("tools/toolchain.json"))["tools"]; print(t["annotations"]["commit"], t["luals"]["version"])')
@@ -29,14 +34,15 @@ if [[ $(git -C "$library" rev-parse HEAD) != "$revision" ]] ||
 fi
 flock -u 9
 exec 9>&-
-if [[ $(lua-language-server --version) != "$luals" ]]; then
+if ((run_luals)) && [[ $(lua-language-server --version) != "$luals" ]]; then
 	echo "Install lua-language-server $luals to match CI." >&2
 	exit 1
 fi
 
 python3 tools/forever_tools/sync.py check
 python3 tools/typecheck_coverage.py
-python3 -m unittest discover -s tests -p 'test_typecheck.py'
+# LuaLSGateTests run LuaLS on probe files (about 3.4 GB), so --no-luals skips only that class.
+TYPECHECK_NO_LUALS=$((1 - run_luals)) python3 -m unittest discover -s tests -p 'test_typecheck.py'
 python3 -m unittest discover -s tools -p '*_test.py'
 python3 tools/lint_multivalue.py
 python3 tools/lint_art.py
@@ -48,6 +54,11 @@ python3 tools/check_editorconfig.py
 python3 tools/check_locales.py --release
 python3 tools/check_family.py
 python3 tools/check_store_page.py
+# --no-luals (gate --changed): the checks above run, and the whole-repo LuaLS run is left to CI.
+if ((! run_luals)); then
+	echo "typecheck: LuaLS left to CI (--no-luals)"
+	exit 0
+fi
 # An interrupted check must never leave a stale report looking like this run's result.
 report=.types/diagnostics.json
 command rm -f -- "$report"

@@ -54,7 +54,7 @@ local ns = {
 	NewMenuDescription = function(kind, text)
 		return { kind = kind, text = text }
 	end,
-	FamilyHints = { AddQuestMenu = function() end },
+	AdventureSuggestions = { AddQuestMenu = function() end },
 	Canvas = { OnClick = function() end },
 }
 local env = setmetatable({
@@ -71,6 +71,7 @@ local env = setmetatable({
 		return {}
 	end,
 	Minimap = { HookScript = function() end },
+	GameTooltip = { HookScript = function() end },
 	WorldMapFrame = {
 		IsShown = function()
 			return false
