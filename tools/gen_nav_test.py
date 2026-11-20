@@ -616,6 +616,25 @@ class AssembleFloorsTest(unittest.TestCase):
         free = pickle.loads(pickle.dumps(gen_nav.FREE_STEP))
         self.assertEqual(self.assemble([(0, 10.0, 0, 20.0, 4.0), (0, 10.0, 0, 20.0, free)]), (None, True))
 
+    def test_raw_links_read_back_exactly(self):
+        # main holds the tiles' links in RawLinks, so it must hand assemble_floors the very tuples a list would.
+        free = pickle.loads(pickle.dumps(gen_nav.FREE_STEP))
+        sent = [
+            (7, 0.1 + 0.2, 4_000_000, -1e-300, None),
+            (0, 10.0, 3, 20.5, free),
+            (5, 1.25, 6, 2.5, 3.0000000000000004),
+        ]
+        raw = gen_nav.RawLinks()
+        raw.extend(sent[:1])
+        raw.extend(sent[1:])
+        self.assertEqual(len(raw), 3)
+        self.assertEqual(list(raw), sent)
+        for got, want in zip(raw, sent, strict=True):
+            self.assertEqual([type(v) for v in got], [type(v) for v in want])
+        both = gen_nav.RawLinks()
+        both.extend([(0, 10.0, 0, 20.0, 5.0), (0, 10.0, 0, 20.0, 3.0), (0, 10.0, 0, 20.0, free)])
+        self.assertEqual(self.assemble(both), (None, True))
+
 
 class ReachableTest(unittest.TestCase):
     def components(self, spots):

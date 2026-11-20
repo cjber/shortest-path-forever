@@ -1155,6 +1155,9 @@ def grid_entrances(grid, cuts, jobs=1):
                     nodes[cluster_of_cell(v)].add(v)
 
     for k in range(NX * NY):
+        # beside() only asks about cells of the clusters next to k, so its cache need not outlive them: kept for the
+        # whole map it held a neighbour set for every border cell at once.
+        near.clear()
         kx, ky = divmod(k, NY)
         for axis in (0, 1):
             if (axis == 0 and kx + 1 >= NX) or (axis == 1 and ky + 1 >= NY):
@@ -1444,6 +1447,44 @@ def surface_node(c, z):
     return best if gap < CLIMB else None
 
 
+class RawLinks:
+    """The tiles' links as they come back from the workers, (i, za, j, zb, cost), held in flat arrays until
+    assemble_floors matches them to surfaces. Map 0 returns over six million, and as tuples of boxed floats they
+    held gigabytes through the whole graph build. Heights and costs are the workers' own doubles, so every value
+    reads back exactly as it was sent."""
+
+    NONE, FREE, COST = 0, 1, 2
+
+    def __init__(self):
+        self.i, self.j = array("i"), array("i")
+        self.za, self.zb, self.cost = array("d"), array("d"), array("d")
+        self.kind = bytearray()
+
+    def extend(self, links):
+        for i, za, j, zb, cost in links:
+            self.i.append(i)
+            self.za.append(za)
+            self.j.append(j)
+            self.zb.append(zb)
+            if cost is None:
+                self.kind.append(self.NONE)
+                self.cost.append(0.0)
+            elif cost == FREE_STEP:
+                self.kind.append(self.FREE)
+                self.cost.append(0.0)
+            else:
+                self.kind.append(self.COST)
+                self.cost.append(cost)
+
+    def __len__(self):
+        return len(self.kind)
+
+    def __iter__(self):
+        for n, kind in enumerate(self.kind):
+            cost = None if kind == self.NONE else FREE_STEP if kind == self.FREE else self.cost[n]
+            yield self.i[n], self.za[n], self.j[n], self.zb[n], cost
+
+
 def assemble_floors(floors, links):
     """Floor nodes in (cell, height) order, and links between nodes, matched to surfaces by height."""
     nb = GW * GH
@@ -1703,7 +1744,7 @@ def main():
     checkpoint = time.perf_counter()
     grid, cuts = bytearray(GW * GH), set()
     BASE_Z.frombytes(bytes(4 * GW * GH))
-    floors, links = [], []
+    floors, links = [], RawLinks()
     order = sorted(TILES, key=ORD.__getitem__)
     with multiprocessing.get_context("fork").Pool(jobs) as pool:  # workers inherit the pass-1 globals
         for n, (rc, vals, zs, tf, tl, own, terrain) in enumerate(pool.imap(rasterize_tile, order, chunksize=2)):
@@ -1717,7 +1758,7 @@ def main():
             if terrain is not None:
                 TERRAIN[cluster_of_tile(*rc)] = terrain
             floors += tf
-            links += tl
+            links.extend(tl)
             cuts.update(own)
             if (n + 1) % 100 == 0:
                 print(f"  rasterized {n + 1}/{len(order)} tiles", flush=True)
@@ -1725,6 +1766,7 @@ def main():
     phases["raster"] = time.perf_counter() - checkpoint
     checkpoint = time.perf_counter()
     assemble_floors(floors, links)
+    del floors, links  # matched into FLOORS_AT and LINKS; the raw lists are not needed again
     phases["floors"] = time.perf_counter() - checkpoint
     checkpoint = time.perf_counter()
     # The graph is built from the very links and cuts the grid is emitted with, so the two cannot disagree.
