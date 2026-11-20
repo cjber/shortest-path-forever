@@ -84,8 +84,10 @@ local function Surfaces(st, gx, gy)
 end
 
 -- The surfaces of cell (gx, gy) the walking map reaches within reach steps from nodes at cell (ox, oy), staying in
--- the box around both cells. Water steps count: you may have swum.
+-- the box around both cells. Water steps count: you may have swum. Only the first surface a step lands on is followed:
+-- every one, as search() expands them, leaves a street ambiguous with a ledge beside it under the held rule (#1114).
 local function Step(st, nodes, ox, oy, gx, gy, reach)
+	local landK, landN = {}, {}
 	local x0, x1, y0, y1 = min(ox, gx) - 1, max(ox, gx) + 1, min(oy, gy) - 1, max(oy, gy) + 1
 	local seen, queue, found = {}, {}, {}
 	for _, s in ipairs(nodes) do
@@ -109,11 +111,13 @@ local function Step(st, nodes, ox, oy, gx, gy, reach)
 					local nx, ny = x + dx, y + dy
 					-- A ledge and its landing can quantize to the same cell on different floors.
 					if nx >= x0 and nx <= x1 and ny >= y0 and ny <= y1 then
-						local tk, tn = Grid.neighbour(st, k, node, x, y, dx, dy, true)
-						local id = tk and tk * 1048576 + tn
-						if id and not seen[id] then
-							seen[id] = true
-							queue[#queue + 1] = { tk, tn, nx, ny, depth + 1 }
+						if Grid.neighbours(st, k, node, x, y, dx, dy, true, landK, landN) > 0 then
+							local tk, tn = landK[1], landN[1]
+							local id = tk * 1048576 + tn
+							if not seen[id] then
+								seen[id] = true
+								queue[#queue + 1] = { tk, tn, nx, ny, depth + 1 }
+							end
 						end
 					end
 				end

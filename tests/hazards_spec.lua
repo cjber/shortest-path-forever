@@ -556,7 +556,9 @@ do
 	assert(roundCost > plainCost, "the way round is longer")
 	-- The route chosen is weighted; the cost shown is the walk's own, without the hazard multiplier.
 	local yards = drawn(round)
-	assert(roundCost >= yards and roundCost < yards * 1.1, string.format("%s against %s drawn", roundCost, yards))
+	-- The drawn line cuts the corners of the eight-direction walk the cost measures: up to 1 / cos 22.5 degrees on a
+	-- straight run and more round a bend, so it is up to about 15% shorter. The town's multiplier (6) would add far more.
+	assert(roundCost >= yards and roundCost < yards * 1.15, string.format("%s against %s drawn", roundCost, yards))
 	-- It goes round, so the tracker says nothing about the town.
 	local notes = data.Hazards.Notes(hz, { from = dunGarok, to = quest }, round)
 	for _, note in ipairs(notes or {}) do
