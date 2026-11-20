@@ -1456,7 +1456,7 @@ def assemble_floors(floors, links):
         a, b = surface_node(i, za), surface_node(j, zb)
         if a is None or b is None:
             continue
-        if cost is FREE_STEP:
+        if cost == FREE_STEP:  # links come back pickled from worker processes, so compare by value
             FREE.add((a, b))
             cost = None
         current = LINKS[a]

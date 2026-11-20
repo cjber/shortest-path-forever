@@ -1,4 +1,5 @@
 import math
+import pickle
 import unittest
 from array import array
 from collections import defaultdict
@@ -526,11 +527,10 @@ class GraphLegalityTest(unittest.TestCase):
 
 
 class AssembleFloorsTest(unittest.TestCase):
-    def test_duplicate_collapsed_links_keep_the_cheapest(self):
+    def assemble(self, links):
         c = gen_nav.CELLS
         base = array("f", [10.0] + [0.0] * (c * c - 1))
         floors = [(0, [(1, 20.0)])]
-        links = [(0, 10.0, 0, 20.0, 5.0), (0, 10.0, 0, 20.0, 3.0), (0, 10.0, 0, 20.0, 4.0)]
         with (
             patch.object(gen_nav, "GW", c),
             patch.object(gen_nav, "GH", c),
@@ -545,9 +545,19 @@ class AssembleFloorsTest(unittest.TestCase):
             patch.object(gen_nav, "FLOORS_OF", defaultdict(list)),
             patch.object(gen_nav, "LINKED_OF", defaultdict(list)),
             patch.object(gen_nav, "FLOORS_AT", {}),
+            patch.object(gen_nav, "FREE", set()),
         ):
             gen_nav.assemble_floors(floors, links)
-            self.assertEqual(gen_nav.LINKS[0][c * c], 3.0)
+            return gen_nav.LINKS[0][c * c], (0, c * c) in gen_nav.FREE
+
+    def test_duplicate_collapsed_links_keep_the_cheapest(self):
+        links = [(0, 10.0, 0, 20.0, 5.0), (0, 10.0, 0, 20.0, 3.0), (0, 10.0, 0, 20.0, 4.0)]
+        self.assertEqual(self.assemble(links), (3.0, False))
+
+    def test_a_free_step_from_a_worker_is_marked_free(self):
+        # Tile links come back pickled from worker processes, so the marker is an equal string, not the same object.
+        free = pickle.loads(pickle.dumps(gen_nav.FREE_STEP))
+        self.assertEqual(self.assemble([(0, 10.0, 0, 20.0, 4.0), (0, 10.0, 0, 20.0, free)]), (None, True))
 
 
 class ReachableTest(unittest.TestCase):
