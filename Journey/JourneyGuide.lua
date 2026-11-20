@@ -521,6 +521,16 @@ local function YieldGuide()
 	end
 end
 
+local function MarkerAllowed()
+	return not ns.db.guideStops or ns.db.arrowDirect
+end
+
+-- Whether the marker leads, which stands the screen arrow down. With "Mark only where steps end" the arrow leads,
+-- and the marker Waypoint UI was handed shows beside it (#1124).
+local function MarkerLeads()
+	return MarkerAllowed() and guide.waypoint ~= nil and C_SuperTrack.IsSuperTrackingUserWaypoint()
+end
+
 local function GuideWaypoint(point, fading)
 	if not guide then
 		return false
@@ -538,7 +548,7 @@ local function GuideWaypoint(point, fading)
 	end
 	-- Waypoint UI can show each turn in-world while SPF's map marks still show step ends.
 	local navigation = WaypointUINavigation()
-	local nativeAllowed = not ns.db.guideStops or ns.db.arrowDirect
+	local nativeAllowed = MarkerAllowed()
 	if not nativeAllowed and not navigation then
 		if guide.waypoint then
 			ClearGuideWaypoint()
@@ -552,7 +562,7 @@ local function GuideWaypoint(point, fading)
 	-- away drops the game's own pin and writes it back on the next readable frame, so guidance blinks while the
 	-- journey scans (#826).
 	if not uiMap then
-		return guide.waypoint ~= nil and C_SuperTrack.IsSuperTrackingUserWaypoint()
+		return MarkerLeads()
 	end
 	local bend = guide.bend
 	if
@@ -609,7 +619,7 @@ local function GuideWaypoint(point, fading)
 			ns.RefreshJourneyPin()
 		end
 	end
-	return guide.waypoint ~= nil and C_SuperTrack.IsSuperTrackingUserWaypoint()
+	return MarkerLeads()
 end
 
 -- The title Guide shows, built only when the goal or the strings it is named from change: Guide.To runs on the
