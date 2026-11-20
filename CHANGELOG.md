@@ -35,6 +35,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 - **Alt-click plans with OpenMap.** With Alt as your journey key and OpenMap's seamless map on, an Alt-click on the map zoomed in and planned nothing. Shortest Path now takes its own key's click first.
 - **Clicked destinations are easy to see.** Shift-clicking a flight point or another map icon marks it with the full destination pin instead of a speck at its corner, and the quest marks beside it stay on top. A flight point you click to track starts the journey there too when Route to the focused quest is on.
 - **Map tooltips say how to travel.** Flight points, docks, portals, the game's quest and area icons, and the minimap end their tooltip with Shift-click to plan a journey here, or Alt-click if that is your key.
+- The minimap's tooltip now ends with the Shift-click (or Alt-click) hint too: it was missing on every minimap blip.
 - Nearby services lists Forever's own class and profession trainers, such as the Zephras Isle trainers, under Trainers (#1082).
 - Journey: a route that has to search most of a continent on foot, such as Stormwind to central Feralas, settles about a quarter faster.
 - Journey: short routes settle on their final plan sooner (#1080).

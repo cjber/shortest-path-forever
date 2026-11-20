@@ -811,16 +811,10 @@ ns.Init(function()
 	-- The map's own pins write their tooltips themselves. The hint joins one owned by a pin OnPinClick plans to, found
 	-- from the pin's fields alone (MapCanvasPinMixin's owningMap and normalizedX, QuestPinMixin's questID): none of its
 	-- methods is called and nothing is written to it (WFA-38).
-	-- The minimap's own tooltip, over what it tracks, is the minimap's: a click there plans to that spot.
 	GameTooltip:HookScript("OnShow", function(tooltip)
 		local pin = tooltip:GetOwner()
 		---@cast pin SPFMapPin?
 		if not (pin and ns.JourneyClickHint()) or pin:IsForbidden() then
-			return
-		end
-		if pin == Minimap then
-			ns.AddJourneyClickHint(tooltip)
-			tooltip:Show()
 			return
 		end
 		local template = rawget(pin, "pinTemplate")
@@ -836,6 +830,19 @@ ns.Init(function()
 		ns.AddJourneyClickHint(tooltip)
 		tooltip:Show()
 	end)
+	-- The minimap's tooltip, over what it tracks, is owned by UIParent, not the minimap: Minimap_OnUpdate
+	-- (Blizzard_Minimap/Mainline/Minimap.lua) anchors it there and fills it with SetMinimapMouseover. Its tooltip data
+	-- type is what says it is the minimap's, so the hint joins it there; a click on that spot plans to it.
+	local minimapTooltip = Enum and Enum.TooltipDataType and Enum.TooltipDataType.MinimapMouseover
+	if minimapTooltip and TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall then
+		TooltipDataProcessor.AddTooltipPostCall(minimapTooltip, function(tooltip)
+			if tooltip ~= GameTooltip or tooltip:IsForbidden() or not ns.JourneyClickHint() then
+				return
+			end
+			ns.AddJourneyClickHint(tooltip)
+			tooltip:Show()
+		end)
+	end
 	WorldMapFrame:AddCanvasClickHandler(OnCanvasClick, CANVAS_CLICK_PRIORITY)
 	WorldMapFrame:AddGlobalPinMouseActionHandler(OnPinClick)
 	ns.Canvas.OnClick(OnOwnPinClick)

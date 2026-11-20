@@ -25,7 +25,7 @@ local function Record(tag, fn)
 		questMapLogMenu = fn
 	end
 end
-local gamepad, tooltipShown = false, nil
+local gamepad, tooltipShown, minimapTooltipPost = false, nil, nil
 local noticed = {}
 local ns = {
 	db = { journey = true },
@@ -112,6 +112,12 @@ local env = setmetatable({
 			minimapClick = fn
 		end,
 	},
+	TooltipDataProcessor = {
+		AddTooltipPostCall = function(kind, fn)
+			assert(kind == 21, "only the minimap's tooltip data type")
+			minimapTooltipPost = fn
+		end,
+	},
 	GameTooltip = {
 		HookScript = function(_, script, fn)
 			assert(script == "OnShow")
@@ -137,7 +143,7 @@ local env = setmetatable({
 			return { mapType = 3 }
 		end,
 	},
-	Enum = { UIMapType = { Continent = 2 } },
+	Enum = { UIMapType = { Continent = 2 }, TooltipDataType = { MinimapMouseover = 21 } },
 	CreateVector2D = function(x, y)
 		return { x = x, y = y }
 	end,
@@ -256,10 +262,35 @@ do
 	ns.db.journey, gamepad = true, true
 	assert(ns.JourneyClickHint() == nil, "nothing under the gamepad interface, which has no key to hold")
 	gamepad = false
-	env.Minimap.IsForbidden = function()
+	-- Minimap_OnUpdate owns the minimap's tooltip by UIParent and fills it with SetMinimapMouseover (#1083 step 3).
+	local parent = {
+		IsForbidden = function()
+			return false
+		end,
+	}
+	assert(not tooltipFor(parent).lines[1], "a UIParent tooltip on its own is no map pin")
+	local minimapTip = { lines = {}, shows = 0 }
+	function minimapTip.Show(self)
+		self.shows = self.shows + 1
+	end
+	function minimapTip.IsForbidden()
 		return false
 	end
-	assert(tooltipFor(env.Minimap).lines[1] == hint, "the minimap's tooltip: a click there plans to the spot")
+	env.GameTooltip.lines, env.GameTooltip.shows = {}, 0
+	env.GameTooltip.Show, env.GameTooltip.IsForbidden = minimapTip.Show, minimapTip.IsForbidden
+	assert(minimapTooltipPost, "the minimap's tooltip data must be hooked")
+	minimapTooltipPost(env.GameTooltip)
+	assert(
+		env.GameTooltip.lines[1] == hint and env.GameTooltip.shows == 1,
+		"the minimap's tooltip: a click there plans"
+	)
+	minimapTooltipPost(minimapTip)
+	assert(not minimapTip.lines[1], "another tooltip showing minimap data is not the one a click answers")
+	ns.db.journey = false
+	env.GameTooltip.lines = {}
+	minimapTooltipPost(env.GameTooltip)
+	assert(not env.GameTooltip.lines[1], "nothing on the minimap while journeys are off")
+	ns.db.journey = true
 	shown = false
 	assert(not tooltipFor(poi.GetOwner()).lines[1], "nothing while the world map is closed")
 	shown = true
