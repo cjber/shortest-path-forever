@@ -11,7 +11,7 @@ local L = ns.L
 -- sync's maintenance entry has no headline, so these stay on the release before it: an update to a maintenance
 -- version says nothing new but still remembers the version. Rewrite both lines for each release that has a headline
 -- (tests/whats_new_spec.lua checks them against CHANGELOG.md).
-ns.WHATS_NEW_VERSION = "1.43.4"
+ns.WHATS_NEW_VERSION = "1.43.5"
 ns.WHATS_NEW = L["Routes show on the map straight away."]
 
 -- Once per new version, after an update: never on a first install, nor in a checkout, whose TOC still holds the
