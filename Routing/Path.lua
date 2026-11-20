@@ -1050,6 +1050,67 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 	return points, cost
 end
 
+-- A goal no walk reaches from any place on its landmass moves to the nearest node those places do reach. In game such
+-- a spot is a plateau ringed by faces past the player's slope and step limits, which nobody can walk onto (#1113): the
+-- closest a player can stand is the honest end of the route. reach holds the entrances the places walk to; clusters
+-- are tried nearest first until one starts farther away than the best node found.
+local nearTree
+local function nearestGround(st, swim, gk, gnode, reach)
+	nearTree = nearTree or Tree()
+	local C, cs, ny = st.C, st.cs, st.ny
+	local nx, N = st.GX / C, C * C
+	grid(st, gk)
+	local cell = cellOf(st, gk, gnode)
+	local cx, cy = floor(gk / ny), gk % ny
+	local gx, gy, h = cx * C + floor(cell / C), cy * C + cell % C, st.z[gk][gnode + 1]
+	-- the best node found, in grid cells and yards: a yield may evict its cluster before the search ends
+	local best, bx, by, bz = huge, nil, nil, nil
+	for r = 0, max(nx, ny) do
+		-- every cluster on ring r starts at least r - 1 whole clusters away
+		if r > 1 and ((r - 1) * C * cs) ^ 2 >= best then
+			break
+		end
+		for dx = -r, r do
+			for dy = -r, r do
+				local kx, ky = cx + dx, cy + dy
+				-- the cluster's nearest cell, in cells along each axis: no node in it is closer
+				local ox = max(0, kx * C - gx, gx - kx * C - C + 1)
+				local oy = max(0, ky * C - gy, gy - ky * C - C + 1)
+				if
+					max(abs(dx), abs(dy)) == r
+					and kx >= 0
+					and ky >= 0
+					and kx < nx
+					and ky < ny
+					and (ox * cs) ^ 2 + (oy * cs) ^ 2 < best
+				then
+					local k = kx * ny + ky
+					local val = grid(st, k)
+					local z, at, seen = st.z[k], st.at[k], {}
+					for _, id in ipairs(val and nodesOf(st, k) or {}) do
+						local e = reach[id] and entrance(st, id)
+						if e and not seen[e] then
+							search(st, k, swim, e, nearTree, nil, nil, nil, nil, nil, false)
+							for v = 0, #val - 1 do
+								if not seen[v] and reached(nearTree, v) then
+									seen[v] = true
+									local c = v < N and v or at[v + 1]
+									local x, y = kx * C + floor(c / C), ky * C + c % C
+									local d = ((x - gx) * cs) ^ 2 + ((y - gy) * cs) ^ 2 + (z[v + 1] - h) ^ 2
+									if d < best then
+										best, bx, by, bz = d, x, y, z[v + 1]
+									end
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+	return bx and { map = st.map, x = st.x0 + (bx + 0.5) * cs, y = st.y0 + (by + 0.5) * cs, z = bz }
+end
+
 -- Lazy terminal-node connections let nearby targets settle without first searching every faraway endpoint.
 -- One sliced Dijkstra owns the heap swap and frontier locals across endpoint searches
 local function runMany(map, from, targets, waterWalking, reverse, job, hz)
@@ -1324,12 +1385,81 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 		end
 		tick()
 	end
+	local any = false
 	for i = 1, #targets do
 		if costs[i] == nil then
 			costs[i] = false
 		end
+		any = any or costs[i] ~= false
 	end
-	return costs
+	local moved
+	if reverse and not any then
+		-- Every entrance the targets walk to. Entrance-graph components join ground that is only walked downhill, so
+		-- sharing one proves nothing: the walk is followed edge by edge, as the forward search would.
+		-- The flood takes a cluster's entrances together, so each cluster's graph is decoded about once.
+		local reach, pending, clusterQueue = {}, {}, {}
+		local function add(id)
+			if not reach[id] then
+				reach[id] = true
+				local k = floor(id / 4096)
+				if not pending[k] then
+					pending[k], clusterQueue[#clusterQueue + 1] = {}, k
+				end
+				pending[k][#pending[k] + 1] = id
+			end
+		end
+		local head = 1
+		local function drain()
+			while clusterQueue[head] do
+				local k = clusterQueue[head]
+				head = head + 1
+				local list = pending[k]
+				pending[k] = nil
+				nodesOf(st, k)
+				local i = 1
+				while list[i] do
+					local u = list[i]
+					i = i + 1
+					local adj = adjacent(st, u, true)
+					for e = 1, #adj, 3 do
+						local v = adj[e]
+						if not reach[v] and climbNodes(st, u, v) then
+							if floor(v / 4096) == k then
+								reach[v], list[#list + 1] = true, v
+							else
+								add(v)
+							end
+						end
+					end
+					tick()
+				end
+			end
+		end
+		local keys, values, size = hk, hv, hn
+		hk, hv, hn = {}, {}, 0
+		for _, point in ipairs(targets) do
+			-- A target walks only to its own cluster's entrances: once the flood holds them all, it adds nothing. The walk
+			-- is measured without the batch's hazards, which weigh a walk but never stop one.
+			local k, node = pointNode(st, point)
+			local covered = true
+			for _, id in ipairs(node and nodesOf(st, k) or {}) do
+				covered = covered and reach[id]
+			end
+			if node and not covered then
+				local _, ends = connectPoint(st, swim, k, node, point, false, nil, false)
+				for id in pairs(ends) do
+					add(id)
+				end
+				drain()
+			end
+		end
+		moved = head > 1 and nearestGround(st, swim, sk, sc, reach) or nil
+		hk, hv, hn = keys, values, size
+		if job then
+			job.moved = moved
+		end
+	end
+	return costs, nil, moved
 end
 
 -- Does this cluster's grid contain water? Walking with water walking and swimming costs the same over a grid with
@@ -1763,7 +1893,8 @@ function Path.FindSync(map, from, to, waterWalking, hazards)
 end
 
 -- Costs indexed like targets, false for unreachable/off-mesh points; no geometry is built. reverse returns
--- target -> from costs, including the directed same-cluster water step: format 2's abstract edges are directed.
+-- target -> from costs, including the directed same-cluster water step: format 2's abstract edges are directed. A
+-- reverse batch none of whose targets reaches from also returns the nearest point they do reach, when there is one.
 ---@param map number
 ---@param from SPFPoint
 ---@param targets SPFPoint[]
@@ -1774,9 +1905,9 @@ function Path.FindManySync(map, from, targets, waterWalking, reverse, hazards)
 	Deadline(huge)
 	Expansions(0)
 	local saved = scratch()
-	local costs, reason = runMany(map, from, targets, waterWalking, reverse, nil, hazards)
+	local costs, reason, moved = runMany(map, from, targets, waterWalking, reverse, nil, hazards)
 	scratch(saved)
-	return costs, reason, Expansions()
+	return costs, reason, Expansions(), moved
 end
 
 -- PathJobs.lua resumes start in a coroutine between scratch swaps; a finished search's scratch is kept as spare.
