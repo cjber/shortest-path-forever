@@ -385,6 +385,44 @@ class GraphLegalityTest(unittest.TestCase):
                     self.assertIn((u, v), edges)
                     self.assertIn((v, u), edges)
 
+    def test_a_bridge_over_the_ground_keeps_its_own_entrance(self):
+        # A bridge crosses the border over open ground, joined to it only at its far ends, so both share one pair of
+        # cluster components and their crossings sit side by side along the border. Read as one run, its entrance
+        # landed on the ground and a walk off the bridge went down and back up round its ends (Thunder Bluff).
+        c = gen_nav.CELLS
+        cells = {x * c + y for x in range(c - 2, c + 2) for y in range(10, 21)}
+        with self.world({cell: (1, 0.0) for cell in cells}, nx=2) as (grid, _):
+            bridge = {}
+            for x in range(c - 2, c + 2):
+                for y in range(10, 14):
+                    node = len(grid) + len(gen_nav.FLOOR_CELL)
+                    bridge[x, y] = node
+                    gen_nav.FLOOR_CELL.append(x * c + y)
+                    gen_nav.FLOOR_VAL.append(1)
+                    gen_nav.FLOOR_Z.append(30)
+                    gen_nav.FLOOR_LAYER.append(1)
+                    gen_nav.FLOORS_OF[gen_nav.cluster_of_cell(node)].append(node)
+                    gen_nav.FLOORS_AT.setdefault(x * c + y, []).append(node)
+            for (x, y), node in bridge.items():
+                for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+                    other = bridge.get((x + dx, y + dy))
+                    if other is not None:
+                        gen_nav.LINKS[node][other] = None
+            for x in (c - 2, c + 1):
+                gen_nav.LINKS[bridge[x, 10]][x * c + 10] = None
+                gen_nav.LINKS[x * c + 10][bridge[x, 10]] = None
+            for node in gen_nav.LINKS:
+                gen_nav.LINKED_OF[gen_nav.cluster_of_cell(node)].append(node)
+            edges = gen_nav.grid_hpa(grid, set())[1]
+            on_bridge = set(bridge.values())
+            for side in (0, 1):
+                crossing = [
+                    (u, v)
+                    for u, v in edges
+                    if {u, v} <= on_bridge and gen_nav.cluster_of_cell(u) == side != gen_nav.cluster_of_cell(v)
+                ]
+                self.assertTrue(crossing, f"the bridge keeps an entrance out of cluster {side}")
+
     def test_clusters_that_meet_at_a_corner_keep_the_crossings_between_them(self):
         # Four clusters; the only walkable cells are the two corner cells of clusters 0 and 3, which touch diagonally.
         # The runtime walks the bake's explicit diagonal between them, and a drop record may land across the corner,

@@ -1043,8 +1043,9 @@ def grid_entrances(grid, cuts, jobs=1):
     """HPA* over the grid. Every border crossing (orthogonal or diagonal) is grouped by the strongly connected parts
     of its two clusters it leaves and enters, in the direction it is walked: a crossing into a part the route cannot
     leave, or out of a part the route cannot reach, is of no use to it, so one entrance per such group guarantees a
-    route wherever the grid has one. Each contiguous border run keeps an entrance every ENTRANCE_RUN crossings.
-    Separate doorways keep separate entrances even when both clusters join them elsewhere. Intra-cluster edges come
+    route wherever the grid has one. Each border run keeps an entrance every ENTRANCE_RUN crossings: a run is
+    crossings a step apart on both sides, so separate doorways, and a bridge over the street it crosses, keep separate
+    entrances even when both clusters join them elsewhere. Intra-cluster edges come
     from Dijkstra under each of WEIGHTS, dropped when a two-hop path is within PRUNE under every weight. An edge
     carries a cost per weight."""
     global _HPA
@@ -1081,20 +1082,54 @@ def grid_entrances(grid, cuts, jobs=1):
                     t = 0 if axis is None else uy - ky * CELLS if axis == 0 else ux - kx * CELLS
                     groups[(region[u], region[w])].append((t, int(wx != ux and wy != uy), u, w, cost))
 
+    near = {}
+
+    def beside(a, b):
+        """Whether nodes a and b of one cluster are the same or one step apart, either way."""
+        if a == b:
+            return True
+        for x, y in ((a, b), (b, a)):
+            if x not in near:
+                near[x] = {v for v, _ in moves(g, grid, cuts, x, cluster_box(cluster_of_cell(x)))}
+            if y in near[x]:
+                return True
+        return False
+
+    def runs(crossings):
+        """The sorted crossings split into runs: neighbours along the border join one when both their ends are a step
+        apart. A wall between openings ends a run, and so does a height between them: whole-cluster connectivity does
+        not make a wall a doorway, nor the street under a bridge the bridge's way across, and one opening for both
+        can send a walk round an entire district (#910) or down off the bridge and back up."""
+        root = list(range(len(crossings)))
+
+        def find(i):
+            while root[i] != i:
+                root[i] = root[root[i]]
+                i = root[i]
+            return i
+
+        first = 0
+        for i, (t, _, u, w, _) in enumerate(crossings):
+            while crossings[first][0] < t - 1:
+                first += 1
+            for j in range(first, i):
+                if beside(u, crossings[j][2]) and beside(w, crossings[j][3]):
+                    root[find(i)] = find(j)
+        out = defaultdict(list)
+        for i, crossing in enumerate(crossings):
+            out[find(i)].append(crossing)
+        return out.values()
+
     def entrances(groups):
-        """Each contiguous run's entrances, with the edge the crossing walks."""
+        """Each run's entrances, with the edge the crossing walks."""
         for crossings in groups.values():
             # A crossing carries its cost: None for an ordinary step, a float for a drop. Two identical crossings
             # (a step and a drop over the same pair) would make the tuple comparison fall through to the cost and
             # raise, so the order is the crossing itself and an ordinary step wins a tie (its reverse is a step).
             crossings.sort(key=lambda c: (c[0], c[1], c[2], c[3], c[4] is not None))
-            # A wall between openings ends a run. Whole-cluster connectivity does not make that wall a doorway:
-            # choosing one opening for both can send a walk around an entire district (#910).
-            ends = [i for i in range(1, len(crossings)) if crossings[i][0] > crossings[i - 1][0] + 1]
-            first = 0
-            for end in [*ends, len(crossings)]:
-                for i in range(first, end, ENTRANCE_RUN):
-                    chunk = crossings[i : min(i + ENTRANCE_RUN, end)]
+            for run in runs(crossings):
+                for i in range(0, len(run), ENTRANCE_RUN):
+                    chunk = run[i : i + ENTRANCE_RUN]
                     mid = chunk[len(chunk) // 2][0]
                     # prefer orthogonal, then the crossing nearest the chunk's middle
                     _, diagonal, u, v, cost = min(chunk, key=lambda c: (c[1], abs(c[0] - mid)))
@@ -1104,7 +1139,6 @@ def grid_entrances(grid, cuts, jobs=1):
                         edges[(u, v)] = step_into(u, v, diagonal)
                     nodes[cluster_of_cell(u)].add(u)
                     nodes[cluster_of_cell(v)].add(v)
-                first = end
             # A road crosses a border at a few points, often midway between the grid's entrances. Place an entrance
             # at each road-to-road crossing too, so a road-following walk does not leave the road to reach one
             # (#892). Roads come from Data/RoadCells.lua; without them nothing is added.
