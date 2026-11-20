@@ -39,7 +39,10 @@ function Rank:Step()
 	if bound then
 		walk = bound
 	end
-	local seconds = self.estimate(self.fromMap, self.fromX, self.fromY, place.map, place.x, place.y, walk)
+	-- On a bound the estimate skips the planner's preferences: a Hearthstone dropped for saving too little on the bound
+	-- may save enough on the longer walk measured, so the preferred route is no lower bound (#1034 review).
+	local seconds =
+		self.estimate(self.fromMap, self.fromX, self.fromY, place.map, place.x, place.y, walk, bound and true)
 	local exact = not bound
 	if seconds and (not self.seconds or seconds < self.seconds or seconds == self.seconds and exact) then
 		self.best, self.seconds, self.exact = place, seconds, exact

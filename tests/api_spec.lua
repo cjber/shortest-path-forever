@@ -806,6 +806,12 @@ near(API.Estimate(1, 0.49, 0.5, 1, 0.4, 0.5), 4500 / 7, "no hearth on a later le
 ns.db.hearthMinimumSavings = 300
 near(API.Estimate(1, 0.5, 0.5, 1, 0.43, 0.5), 500, "minimum saving prefers the walk")
 equal(API.EstimateDetail(1, 0.5, 0.5, 1, 0.43, 0.5).legs[1].mode, "walk", "route detail applies the same minimum")
+-- A walk still searched may come out longer and unlock the hearth: its lower bound keeps every route the minimum drops.
+near(
+	ns.EstimateIn(nil, 1, 0.5, 0.5, 1, 0.43, 0.5, nil, true),
+	15 + 1490 / 7,
+	"a lower bound is the soonest route, before the minimum"
+)
 ns.db.hearthMinimumSavings = 270
 near(API.Estimate(1, 0.5, 0.5, 1, 0.43, 0.5), 15 + 1490 / 7, "changing minimum invalidates cached estimate")
 ns.db.hearthMinimumSavings = 0

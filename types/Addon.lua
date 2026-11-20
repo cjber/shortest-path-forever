@@ -539,6 +539,7 @@ ShortestPathForeverPathData = nil
 ---@field withoutOpening? SPFLeg plan as if this step, from where it leaves, were not there
 ---@field incumbent? number
 ---@field incumbentPlan? SPFPlan
+---@field lowerBound? boolean the soonest any route could arrive, before the hearth, teleport and ride preferences
 ---@field hearthMinimumSavings? number
 ---@field teleportMinimumSavings? number
 ---@field otherFaction? boolean

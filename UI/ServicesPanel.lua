@@ -521,9 +521,8 @@ local function RankRows(queue, walks, pending, map, x, y, callback)
 					if place then
 						chosen[item.key] = place
 					end
-					if seconds then
-						estimates[item.key] = seconds
-					end
+					-- No time clears the one a row had from where you stood before.
+					estimates[item.key] = seconds
 					UpdateRow(item.key)
 				else
 					open = open + 1
@@ -571,7 +570,7 @@ function Queue()
 			places[#places + 1] = place
 		end
 	end
-	local this, latest, again
+	local this, latest, again, sorted
 	local function Rank()
 		if ranking then
 			again = true
@@ -582,13 +581,10 @@ function Queue()
 			if again then
 				again = false
 				Rank()
-			elseif open == 0 then
-				-- Every row is decided: the walks to the far places are not needed.
-				if measuring and measuring == this then
-					ns.NearbyServices.Cancel(measuring)
-					measuring = nil
-				end
-				-- Every row has its travel time now: the dungeons and raids reorder by it, once.
+			elseif open == 0 and not sorted then
+				-- Every row has its travel time now: the dungeons and raids reorder by it, once. The measure runs on
+				-- to its far places, so the next tick from this spot reuses it rather than searching again.
+				sorted = true
 				Refresh()
 			end
 		end)

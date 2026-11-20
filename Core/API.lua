@@ -354,9 +354,11 @@ end
 ---@param job? SPFPathJob the path job asking, whose plan pauses at the frame budget; nil plans whole
 ---@param walk? number|false the walk from `from` to `to` the journey's own search measured, in running yards; false
 ---when it found none. Without one the walk is the planner's lower bound.
-local function Answer(from, to, key, job, walk)
+---@param bound? boolean the soonest any route could arrive, `walk` being only a lower bound on the walk
+local function Answer(from, to, key, job, walk, bound)
 	local options, now = Options(from, to)
 	options.walks = walk ~= nil and { { from = from, to = to, cost = walk } } or nil
+	options.lowerBound = bound or nil
 	local cached = estimates[key]
 	if cached and now >= cached.at and now - cached.at < CACHE_MS then
 		if cached.seconds then
@@ -389,7 +391,7 @@ end
 -- The reason tells a caller whether asking again later can help: "combat" after combat, "loading" when the addon is
 -- still building its data, "invalid" never for bad input, "unreachable" when known flight paths or boat timings change.
 ---@return { at: number, seconds: number|false, legs?: SPFLeg[] }?, ("combat"|"invalid"|"unreachable"|"loading")?
-local function Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk)
+local function Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk, bound)
 	if not Ready() then
 		if InCombatLockdown() then
 			return nil, "combat"
@@ -400,8 +402,18 @@ local function Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk)
 	if not from or not to then
 		return nil, "invalid"
 	end
-	local key = string.format("%d:%.4f:%.4f:%d:%.17g:%.17g:%s", fromMap, fromX, fromY, toMap, toX, toY, tostring(walk))
-	return Answer(from, to, key, job, walk)
+	local key = string.format(
+		"%d:%.4f:%.4f:%d:%.17g:%.17g:%s:%s",
+		fromMap,
+		fromX,
+		fromY,
+		toMap,
+		toX,
+		toY,
+		tostring(walk),
+		tostring(bound == true)
+	)
+	return Answer(from, to, key, job, walk, bound)
 end
 
 -- Itinerary.lua draws the hops between later stops with this cheap planner; no terrain searches. It keeps each
@@ -418,12 +430,14 @@ end
 
 -- API.Estimate for the addon's own callers, which ask from inside a path job (ns.Path.Run): an uncached plan pauses at
 -- the frame budget instead of taking the asking frame. Same answers and cache as API.Estimate. walk is the walk there
--- the journey's own search measured (UI/NearbyRank.lua), so the time is the one the journey will show.
+-- the journey's own search measured (UI/NearbyRank.lua), so the time is the one the journey will show. With bound,
+-- walk is only a lower bound on a walk still searched, and the answer the soonest any route could arrive.
 ---@param job SPFPathJob
 ---@param walk? number|false
+---@param bound? boolean
 ---@return number?, ("combat"|"invalid"|"unreachable"|"loading")?
-function ns.EstimateIn(job, fromMap, fromX, fromY, toMap, toX, toY, walk)
-	local entry, reason = Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk)
+function ns.EstimateIn(job, fromMap, fromX, fromY, toMap, toX, toY, walk, bound)
+	local entry, reason = Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk, bound)
 	if not entry then
 		return nil, reason
 	end

@@ -856,6 +856,11 @@ local function Solve(options, cache, check, weigh)
 	-- options.incumbent, an arrival already in hand, ends the search for anything that cannot beat it: no route
 	-- then means the incumbent stands. Its plan still passes through hearth, teleport and long-walk preferences below.
 	local planned = Search(withoutHearth, withoutTeleports, options.incumbent) or options.incumbentPlan
+	-- options.lowerBound asks how soon any route could arrive. The preferences below trade arrival for a cooldown or a
+	-- ride, so a walk measured longer could unlock a faster route they dropped here: a bound skips them.
+	if options.lowerBound then
+		return planned
+	end
 	local hearthMinimum = math.max(options.hearthMinimumSavings or 0, HEARTH_MINIMUM_SAVING) * 1000
 	local teleportMinimum = (options.teleportMinimumSavings or 0) * 1000
 	---@type SPFSavingsOptions

@@ -655,6 +655,40 @@ search:SetText("bank")
 assert(not betterRow:IsShown(), "a search with no trip hides the row")
 search:SetText("")
 
+-- Every row decided on the nearest walks: the measure runs on to its far places rather than stopping, so the next
+-- tick from this spot reuses its walks instead of searching from scratch again.
+do
+	local services = ns.NearbyServices
+	local measure, rank, holds = services.MeasureWalks, services.Rank, services.Holds
+	local measured, publish, job = 0, nil, nil
+	services.MeasureWalks = function(_, callback)
+		measured, publish, job = measured + 1, callback, { walking = {} }
+		return job
+	end
+	services.Rank = function(candidates)
+		return {
+			exact = true,
+			Step = function()
+				return candidates[1], 31, false
+			end,
+		}
+	end
+	services.Holds = function()
+		return true
+	end
+	search:SetText("bank")
+	search:SetText("")
+	assert(measured == 2 and publish, "a requeue measures")
+	publish({}, {})
+	pump()
+	assert(not job.cancelled, "the measure runs on once every row is decided")
+	tickers[1].callback()
+	assert(measured == 2, "a tick waits on the measure still running from here")
+	services.MeasureWalks, services.Rank, services.Holds = measure, rank, holds
+	search:SetText("bank")
+	search:SetText("")
+end
+
 -- The tab module reports the panel hidden when another tab, Quests or the map takes it away.
 assert(ranking(), "a search ranks again")
 ns.registered.spec.shown(false)
