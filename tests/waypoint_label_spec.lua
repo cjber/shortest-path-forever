@@ -3,18 +3,11 @@
 local dir = arg[0]:match("^(.*)/") or "tests"
 
 -- The whole-client layer runs against checksum-pinned Blizzard source, which tests/ui.sh fetches.
-local probe = "tools/.cache/blizzard-ui/Interface/AddOns/Blizzard_SharedXML/Spinner.lua"
+-- Every spec runs the fetch: it checksums each pinned file and fetches any that is missing, so a spec started while
+-- another is still fetching never reads a file that is not there yet.
 do
-	local handle = io.open(probe)
-	if handle then
-		handle:close()
-	else
-		local ok = os.execute("bash tools/fetch_blizzard_ui.sh")
-		assert(
-			ok == true or ok == 0,
-			"could not fetch the pinned Blizzard UI fixture for tests/waypoint_label_spec.lua"
-		)
-	end
+	local ok = os.execute("bash tools/fetch_blizzard_ui.sh")
+	assert(ok == true or ok == 0, "could not fetch the pinned Blizzard UI fixture for tests/waypoint_label_spec.lua")
 end
 
 local source = ""
@@ -79,7 +72,10 @@ for _, post in ipairs(callbacks) do
  post(GameTooltip)
 end
 assert(GameTooltipTextLeft1:GetText() == "Dock", "the minimap's waypoint title names the leg's destination")
-assert(tip[#tip] == "  " .. goalTitle, "the minimap's waypoint adds the journey's goal under a hop")
+assert(tip[#tip - 1] == "  " .. goalTitle, "the minimap's waypoint adds the journey's goal under a hop")
+-- The minimap's click hint (Journey/JourneyInput.lua) joins every minimap tooltip, after Guide's lines.
+local clickHint = "Shift%-click to plan a journey here"
+assert(tip[#tip]:find(clickHint), "then the minimap's own click hint, got " .. tostring(tip[#tip]))
 
 -- 1.60.1 hands the minimap's title over as a secret value: readable, never comparable. Nothing readable says that
 -- tooltip is the waypoint, so the client's title stays and no error reaches the player (#824). Both sides of the
@@ -106,7 +102,7 @@ for _, post in ipairs(callbacks) do
  post(GameTooltip)
 end
 assert(GameTooltipTextLeft1:GetText() == MAP_PIN, "a player's own pin keeps the minimap's title")
-assert(#tip == 1, "a player's own pin keeps the client's lines")
+assert(#tip == 2 and tip[2]:find(clickHint), "a player's own pin keeps the client's lines, then the click hint")
 
 -- The final leg already ends where our own goal pin stands, so only the destination line is needed.
 start()

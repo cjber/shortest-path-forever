@@ -19,6 +19,7 @@ Need a vendor, a trainer or an inn? The **Nearby services** tab on the world map
 - Walking maps are built ahead of time, so patched terrain can route wrongly until an update.
 - The game names your bind point but not where it is, so the Hearthstone counts once you bind or hearth with the addon on.
 - A boat, lift or tram shows "no sighting yet" until you have ridden that route once, because the game holds no timetables.
+- The game gives no player height, so standing still at a lift's landing right after a ride, the tracker can name the landing you rode from until you step off it.
 - The game cannot show another player's spells, so you list a party mage's portals yourself in the settings (Party mage portals).
 
 ![Eight-second demo of a route settling, the countdown and the compass](docs/screenshots/demo.gif)
@@ -70,7 +71,7 @@ the WoW: Forever client's `Interface/AddOns/` folder (`_forever_` on the live cl
 
 ## Usage
 
-Alt-click the world map to choose a destination over a Questie icon. Shift-click works on empty map space and Shortest Path icons. Choose Alt as *Key to plan a journey* in Guidance, and that one key works everywhere, Questie icons included. With the gamepad interface on, Shortest Path never opens or turns the world map, or opens a menu, itself; it asks you to.
+Alt-click a Questie icon on the world map to choose its spot as the destination. Shift-click works on empty map space and Shortest Path icons, and Alt-click elsewhere is left to other addons, such as OpenMap's marker delete. Choose Alt as *Key to plan a journey* in Guidance, and that one key works everywhere, Questie icons included. With the gamepad interface on, Shortest Path never opens or turns the world map, or opens a menu, itself; it asks you to.
 
 In the settings, **Transport** draws routes and shows the other faction's boats and zeppelins (off by default). **Guidance** holds journey behaviour: *Key to plan a journey*, *Route to the focused quest*, *Show journey steps in the objective tracker*, *Resume guide*, *Keep journeys after a reload*, *Arrival distance*, *Use Hearthstone* with *Minimum Hearthstone saving*, and *Use class teleports* with *Minimum teleport saving*. **Map marks** scales each kind of icon from 25% to 200%, can keep the game's own quest markers on the map beside a journey, and can hide the Nearby services tab when another addon needs that space. **Interface** shows or hides the arrow and compass, sizes them, and labels distances in metres. **Alerts** covers the boat warning and the arrival sound. [docs/features.md](docs/features.md) has the detail.
 
@@ -103,7 +104,7 @@ to journey changes. [docs/api.md](docs/api.md) has the calls and what they retur
 
 With *Follow RestedXP guides* on (the default), leave RestedXP's TomTom option off so only one addon follows the guide.
 
-Alt-left-click on the world map plans a journey even with TomTom installed. TomTom keeps its modified right-click waypoint gesture.
+Your journey key plans a journey on the world map even with TomTom installed. TomTom keeps its modified right-click waypoint gesture.
 
 With OpenMap on, the route and its stops draw across its stitched world map and carry on into the zones either side, over OpenMap's own art.
 

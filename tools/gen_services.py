@@ -38,6 +38,108 @@ PROFESSION_CATEGORIES = {11, 9}
 LEARNABLE_PROFESSIONS = (129, 164, 165, 171, 182, 185, 186, 197, 202, 333, 356, 393)
 # Mage, whose portal trainers teach only the teleport spells that land at a fixed place.
 MAGE = 8
+# Forever's own trainers, which classic-db does not hold and no client table names: the NPCs QuestieDB's Forever store
+# flags as trainers (npcFlags TRAINER) that are absent from classic-db, each typed with the role it trains (facts, no
+# text copied). Without them Zephras Isle, its own world map, lists no trainer at all (#1082). NPCs whose role is not
+# clear (riding, a "?" title, none) are left out. main() refuses an entry that classic-db also holds.
+FOREVER_CLASS_TRAINERS = {
+    244808: 2,  # Aramis Hammerhand, Paladin Trainer
+    246152: 2,  # Shari Stilwell, Paladin Trainer
+    246344: 2,  # Alodan the Hopeful, Paladin Trainer
+    246389: 2,  # Hilda the Breaker, Paladin Trainer
+    246797: 8,  # Jessa Weaver, Mage Trainer
+    248415: 3,  # Tordrin Sternblade, Hunter Trainer
+    251373: 11,  # Xyton Silverwind, Druid Trainer
+    251374: 7,  # Windshaper Boro, Shaman Trainer
+    251376: 3,  # Tai'ree Farsight, Hunter Trainer
+    251379: 8,  # Dorii Brightwhisper, Mage Trainer
+    251389: 4,  # Akeri Duskblade, Rogue Trainer
+    251507: 3,  # Josephine Carson, Hunter Trainer
+    251964: 1,  # Blademaster Ren, Warrior Trainer
+    252359: 11,  # Lotheluum Starbreeze, Druid Trainer
+    252373: 8,  # Anathamaas Aetherwind, Mage Trainer
+    252377: 1,  # Seena Skybreaker, Warrior Trainer
+    252379: 4,  # Eltheen Nightbreeze, Rogue Trainer
+    252382: 7,  # Sessaria Skystride, Shaman Trainer
+    252389: 3,  # Quel'ana Quickgale, Hunter Trainer
+    254081: 11,  # Naeluna Swiftmend, Druid Trainer
+    254082: 7,  # Aarnor Galestrike, Shaman Trainer
+    254084: 3,  # Elayaa Easewind, Hunter Trainer
+    254086: 8,  # Shenaan Spellwind, Mage Trainer
+    254087: 4,  # Miriaan Mistblade, Rogue Trainer
+    254088: 1,  # Corsan Earthrazer, Warrior Trainer
+    257446: 7,  # Teo Hammerstorm, Shaman Trainer
+    258098: 7,  # Eldrun Stormbreaker, Shaman Trainer
+    258113: 7,  # Ingrid Dunwald, Shaman Trainer
+    258785: 5,  # High Priestess Mims, Priest Trainer
+    260093: 2,  # Garen Largo, Paladin Trainer
+    262558: 7,  # Palah Thunderhoof, Shaman Trainer
+    262560: 11,  # Hana Lighthoof, Druid Trainer
+    270263: 7,  # Farseer Maret Firetend, Shaman Trainer
+    270278: 1,  # Bordolf Axegrim, Warrior Trainer
+    270280: 3,  # Torin Treehame, Hunter Trainer
+    270459: 11,  # Alfina Nightgaze, Druid Trainer
+}
+FOREVER_PROFESSION_TRAINERS = {
+    246795: 171,  # Linzy Blackbolt, Alchemist (Alchemy)
+    247223: 182,  # Nancy Songflower, Junior Herbalism Trainer (Herbalism)
+    247226: 186,  # Kelsey Fargo, Junior Mining Trainer (Mining)
+    247227: 393,  # Riley Peltskinner, Junior Skinning Trainer (Skinning)
+    251905: 185,  # Zerril Softbreeze, Cook (Cooking)
+    251913: 164,  # Aedi Thriceforged, Blacksmith (Blacksmithing)
+    251972: 197,  # Charles Worth, Expert Tailor (Tailoring)
+    251977: 129,  # Angelique Butler, First Aid Trainer (First Aid)
+    251978: 333,  # Vanessa Sellers, Enchanting Trainer (Enchanting)
+    251991: 197,  # Taleen Shimmerthread, Tailor (Tailoring)
+    251992: 356,  # Fenn Fairweather, Fisherman (Fishing)
+    251993: 165,  # Indari Sunseam, Leatherworker (Leatherworking)
+    252084: 185,  # Katherine Lee, Cooking Trainer (Cooking)
+    252376: 165,  # Emerii Tallgust, Leatherworker (Leatherworking)
+    252380: 197,  # Othesia Evengale, Tailor (Tailoring)
+    252388: 186,  # Halavuul Cragwind, Mining Trainer (Mining)
+    252479: 164,  # Daeann Steelwind, Blacksmith (Blacksmithing)
+    253004: 171,  # Iaadaria Bitterwind, Alchemist (Alchemy)
+    254345: 182,  # Syriel Nightrain, Herbalist (Herbalism)
+    255877: 356,  # Hunter Moore, Fisherman (Fishing)
+    255891: 186,  # Grungle, Miner (Mining)
+    256655: 185,  # Gorg, Cook (Cooking)
+    256658: 164,  # Gur'dok, Journeyman Blacksmith (Blacksmithing)
+    257003: 393,  # Ishlee Breezewhisper, Skinner (Skinning)
+    257004: 333,  # Eaysaa Brightgust, Enchanter (Enchanting)
+    257005: 171,  # Valiena Swiftgale, Alchemist (Alchemy)
+    257006: 185,  # Nyalah Brightfire, Cook (Cooking)
+    257007: 129,  # Melasa Fairmend, Medic (First Aid)
+    257008: 356,  # Baelann Swiftcurrent, Fisher (Fishing)
+    257018: 129,  # Naleeia Tattermend, Medic (First Aid)
+    257019: 171,  # Nyassa Swiftdraught, Alchemist (Alchemy)
+    257020: 333,  # Nasalanna Windsinger, Enchanter (Enchanting)
+    257021: 182,  # Halassa Fernbreeze, Herbalist (Herbalism)
+    257022: 186,  # Messana Crestwind, Miner (Mining)
+    257024: 393,  # Mendalass Tattermend, Skinner (Skinning)
+    259250: 164,  # Alphonse Dumas, Journeyman Blacksmith (Blacksmithing)
+    260558: 356,  # Krix, Superior Fisherman (Fishing)
+    260562: 202,  # Melbin Powderfuse, Master Goblin Engineer (Engineering)
+    265944: 185,  # William Pickman, Cooking Trainer (Cooking)
+    266881: 333,  # Pa'zula, Journeyman Enchanter (Enchanting)
+    267324: 393,  # Margaret Weaver, Junior Skinning Trainer (Skinning)
+    267325: 186,  # Walter Mason, Junior Mining Trainer (Mining)
+    267326: 182,  # Florence Nightshade, Junior Herbalism Trainer (Herbalism)
+    267327: 393,  # Kagil, Junior Skinning Trainer (Skinning)
+    267328: 186,  # Norzsh, Junior Mining Trainer (Mining)
+    267329: 182,  # Zor'la, Junior Herbalism Trainer (Herbalism)
+    267330: 393,  # Nawka Wildsong, Junior Skinning Trainer (Skinning)
+    267331: 186,  # Vartha Rockmane, Junior Mining Trainer (Mining)
+    267332: 182,  # Garan Sunstrider, Junior Herbalism Trainer (Herbalism)
+    267333: 393,  # Terunne Bearshaper, Junior Skinning Trainer (Skinning)
+    267334: 186,  # Fanorran Stilloak, Junior Mining Trainer (Mining)
+    267335: 182,  # Eleyna Duskbreeze, Junior Herbalism Trainer (Herbalism)
+    267336: 393,  # Brighid Stormflayer, Junior Skinning Trainer (Skinning)
+    267337: 186,  # Sally Swiftwrench, Junior Mining Trainer (Mining)
+    267338: 182,  # Emrys Flintbeard, Junior Herbalism Trainer (Herbalism)
+    275321: 182,  # Edward Egan, Herbalist (Herbalism)
+    275322: 171,  # Patricia Egan, Alchemist (Alchemy)
+    276067: 164,  # Angus Hammerhand, Blacksmith (Blacksmithing)
+}
 CLASSIC_TABLES = (
     "creature_template",
     "npc_trainer",
@@ -364,6 +466,11 @@ def main():
     categories = skill_line_categories(tables["SkillLine"])
     skill_spells = profession_skill_spells(tables["SkillLineAbility"], categories)
     professions = profession_trainers(creatures, trainers, templates, tables["SpellEffect"], skill_spells)
+    entries = {int(row["Entry"]) for row in creatures}
+    for npc in (*FOREVER_CLASS_TRAINERS, *FOREVER_PROFESSION_TRAINERS):
+        if npc in entries:
+            raise ValueError(f"Forever trainer {npc} is in classic-db: derive it there instead")
+    professions = dict(sorted({**professions, **FOREVER_PROFESSION_TRAINERS}.items()))
     icons = {
         int(row["ID"]): int(row["SpellIconFileID"])
         for row in tables["SkillLine"]
@@ -372,7 +479,7 @@ def main():
     weapons = weapon_masters(
         creatures, trainers, templates, db["spell_template"], tables["SkillLineAbility"], categories
     )
-    classes = class_trainers(creatures)
+    classes = dict(sorted({**class_trainers(creatures), **FOREVER_CLASS_TRAINERS}.items()))
     teleports = {int(row["id"]) for row in db["spell_target_position"]}
     portals = portal_trainers(creatures, trainers, templates, db["spell_template"], teleports)
     battlemasters_by_npc = battlemasters(creatures, db["battlemaster_entry"])
@@ -387,6 +494,7 @@ def main():
         "-- Food: items whose use spell has a MOD_REGEN aura (84); Drink: MOD_POWER_REGEN (85), one TRIGGER_SPELL",
         "-- (64) hop included. An item can be both.",
         "-- ProfessionTrainers: [npc] = skill line (CategoryID 11 or 9) of the spells a TrainerType 2 NPC teaches.",
+        "-- ClassTrainers and ProfessionTrainers also hold Forever's own trainers, typed in tools/gen_services.py.",
         "-- ProfessionIcons: [skill line] = SkillLine.SpellIconFileID, the client's square profession icon.",
         "-- WeaponMasters: [npc] = weapon skill lines (CategoryID 6) taught by classic-db trainer spells.",
         "-- ClassTrainers: [npc] = TrainerClass of a TrainerType 0 trainer; TrainerClass 0 is not a class.",

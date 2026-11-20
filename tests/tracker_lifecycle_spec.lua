@@ -93,6 +93,11 @@ for _, readyAtLoad in ipairs({ false, true }) do
 		NearestDock = noop,
 	}
 	-- The real section API, as ForeverCore publishes it in 1.2.0.
+	-- Core's tracker host waits for the world and saved variables before a section attaches; the stand-in host here
+	-- waits on the same two events.
+	ns.AfterWorldEvents = function(callback)
+		env.EventUtil.ContinueAfterAllEvents(callback, "PLAYER_ENTERING_WORLD", "VARIABLES_LOADED")
+	end
 	setfenv(assert(loadfile(coreDirectory .. "/UI/TrackerSection.lua")), env)("ForeverCore", ns)
 	env.ForeverCore = { TrackerHost = host, TrackerSection = ns.TrackerSection, TrackerLine = ns.TrackerLine }
 	setfenv(assert(loadfile("UI/Tracker.lua")), env)("Addon", ns)

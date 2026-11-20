@@ -221,7 +221,9 @@ do
 	for _, batch in ipairs(old) do
 		d.path.costs(batch, 0)
 	end
-	check(d.shown() == nil, "late endpoint callbacks cannot publish old transit")
+	-- At most the new search's own walking estimate is drawn.
+	local drawn = d.shown()
+	check(drawn == nil or drawn.rough and allWalk(drawn), "late endpoint callbacks cannot publish old transit")
 	for _, batch in ipairs(d.path.waiting(d.path.batches)) do
 		check(#batch.targets <= 1, "walking endpoint searches contain no transport places")
 	end

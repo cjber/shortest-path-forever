@@ -62,6 +62,19 @@ local ARRIVAL_WIDTH, ARRIVAL_TITLE_LINES, ARRIVAL_LINE_LIMIT = 240, 2, 3
 ---@type SPFArrowFrame
 local frame
 local source, path, index, target, placeTarget, native
+-- suffix[i] is the walking distance from path[i] to the last bend along the bends, built when the guide's stops
+-- refresh so a moving frame reads it instead of re-walking every remaining segment (WFA-13).
+local suffix, suffixCount = {}, 0
+local function BuildSuffix()
+	suffix, suffixCount = {}, #(path or {})
+	local total = 0
+	suffix[suffixCount] = 0
+	for i = suffixCount, 2, -1 do
+		local a, b = path[i - 1], path[i]
+		total = total + math.sqrt((b.x - a.x) ^ 2 + (b.y - a.y) ^ 2)
+		suffix[i - 1] = total
+	end
+end
 local stepEnd, destination
 local revision = 0
 local renderedRevision, renderedMetres, renderedMode, renderedSecond, renderedNative
@@ -234,8 +247,12 @@ local function Update(elapsed)
 	Draw(frame.angle)
 	-- Direct mode measures the displayed bearing; route mode adds the remaining walking bends.
 	local distance = math.sqrt((pointing.x - x) ^ 2 + (pointing.y - y) ^ 2)
-	for i = index + 1, direct and 0 or #path do
-		distance = distance + math.sqrt((path[i].x - path[i - 1].x) ^ 2 + (path[i].y - path[i - 1].y) ^ 2)
+	if not direct then
+		-- A path that grew or shrank since the stops last refreshed gets its distances again rather than a nil.
+		if #path ~= suffixCount then
+			BuildSuffix()
+		end
+		distance = distance + (suffix[index] or 0)
 	end
 	local yards = math.floor(distance)
 	-- The time counts down every second while the distance may not move, so read it with the header's own tick. The
@@ -589,6 +606,7 @@ function ns.RefreshGuideStops()
 	revision = revision + 1
 	local previousPath, previousTarget = path, target
 	path = source
+	BuildSuffix()
 	index = 1
 	local x, y, _, map = ns.JourneyPosition()
 	local nearest
@@ -753,7 +771,7 @@ end
 local castTarget
 
 local function RenderCastPrompt()
-	if not castPrompt or not castTarget or ns.db.arrow == false then
+	if not castPrompt or not castTarget or not ns.CastPromptShown() then
 		return
 	end
 	-- Until the client has the item's name and icon it says "Use Unknown"; its own answer for that item redraws.
@@ -767,11 +785,17 @@ local function RenderCastPrompt()
 	ns.Art.Icon(castPrompt.Icon, icon or 134400, 36)
 end
 
+-- The prompt shows with the arrow, unless "Show cast prompt" is off; planning never reads this.
+---@return boolean
+function ns.CastPromptShown()
+	return ns.db.arrow ~= false and ns.db.castPrompt ~= false
+end
+
 -- Casting needs an action rather than a bearing, shown in the arrow's usual place.
 ---@param teleport? SPFTeleportPlace
 function ns.PointCastPrompt(teleport)
 	castTarget = teleport
-	if not teleport or ns.db.arrow == false then
+	if not teleport or not ns.CastPromptShown() then
 		if castPrompt then
 			castPrompt:UnregisterAllEvents()
 			castPrompt:Hide()

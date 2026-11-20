@@ -289,6 +289,11 @@ _G.ObjectiveTrackerFrame:SetSize(250, 600)
 _G.ObjectiveTrackerFrame.Header.IsShown = function()
 	return false
 end
+-- Core 1.15.3 reads whether the tracker is collapsed and, while it lists quests, the bottom of its NineSlice border.
+_G.ObjectiveTrackerFrame.IsCollapsed = function()
+	return false
+end
+_G.ObjectiveTrackerFrame.NineSlice = CreateFrame("Frame", nil, _G.ObjectiveTrackerFrame)
 _G.CreateFramePoolCollection = function()
 	return {
 		GetOrCreatePool = function()

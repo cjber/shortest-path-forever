@@ -2,6 +2,7 @@
 
 import importlib.util
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -217,6 +218,8 @@ ns.NoSuchExport()
 """)
 
 
+# tools/typecheck.sh --no-luals (gate --changed) sets this: the rest of the module runs, and the LuaLS run is CI's.
+@unittest.skipIf(os.environ.get("TYPECHECK_NO_LUALS") == "1", "LuaLS runs in CI")
 class LuaLSGateTests(unittest.TestCase):
     def test_clean_report_and_information_diagnostic(self):
         reporter = Path(__file__).parents[1] / "tools/typecheck_report.py"

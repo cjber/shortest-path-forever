@@ -49,6 +49,8 @@ ns.TownAreas = {
 	[56] = { area = 75, map = 0, i0 = -319, j0 = -102, w = 10, h = 7, cells = "//////////Hg" }, -- Stonard (64 chunks)
 	[58] = { area = 2897, map = 1, i0 = 98, j0 = 28, w = 5, h = 5, cells = "d//3A" }, -- Zoram'gar Outpost (21 chunks)
 	[61] = { area = 431, map = 1, i0 = 59, j0 = -79, w = 14, h = 9, cells = "A4PH4/Hg4eHw+Hw+Hw+Bw" }, -- Splintertree Post (63 chunks)
+	[62] = { area = 2361, map = 1, i0 = 232, j0 = -83, w = 13, h = 13, cells = "B3B/g/wf4H+D/H/n/3///7/4P8AeA" }, -- Nighthaven (114 chunks)
+	[63] = { area = 2361, map = 1, i0 = 232, j0 = -83, w = 13, h = 13, cells = "B3B/g/wf4H+D/H/n/3///7/4P8AeA" }, -- Nighthaven (114 chunks)
 	[64] = { area = 3137, map = 1, i0 = 79, j0 = -118, w = 4, h = 4, cells = "L+4" }, -- Talrendis Point (11 chunks)
 	[65] = { area = 1998, map = 1, i0 = 180, j0 = -66, w = 14, h = 14, cells = "f/3/9//f/3/9//////7/+//P/z/48AOAA" }, -- Talonbranch Glade  (160 chunks)
 	[66] = { area = 3197, map = 0, i0 = 26, j0 = -47, w = 4, h = 6, cells = "///P" }, -- Chillwind Camp (22 chunks)
