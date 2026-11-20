@@ -45,7 +45,6 @@ L["Arrow label"] = "화살표 라벨" -- mt
 L["Arrow scale"] = "화살표 크기"
 L["Arrows"] = "화살"
 L["Arrows on the NPC's nameplate"] = "NPC 이름표의 화살표"
-L["Attach to quest tracker"] = "퀘스트 추적기에 붙이기"
 L["Auction house"] = "경매장"
 L["Avoid zones far above my level"] = "내 레벨보다 훨씬 높은 지역 피하기"
 L["Avoids %s (level %s)"] = "%s 우회 (레벨 %s)"
@@ -255,8 +254,6 @@ L["Transport"] = "교통수단"
 L["Transport icon size"] = "교통수단 아이콘 크기"
 L["Turning this off leaves RestedXP's arrow visible."] =
 	"이 옵션을 끄면 RestedXP의 화살표가 계속 표시됩니다." -- mt
-L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
-	"이 옵션을 끄면 공유 Forever 추적기를 화면 어디로든 끌 수 있습니다."
 L["Use %s"] = "%s 사용"
 L["Use class teleports"] = "직업 순간이동 사용"
 L["Vendors"] = "상인"

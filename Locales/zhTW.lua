@@ -42,7 +42,6 @@ L["Arrow label"] = "箭頭標籤" -- mt
 L["Arrow scale"] = "箭頭大小"
 L["Arrows"] = "箭"
 L["Arrows on the NPC's nameplate"] = "NPC姓名板上的箭頭"
-L["Attach to quest tracker"] = "附著到任務追蹤器"
 L["Auction house"] = "拍賣場"
 L["Avoid zones far above my level"] = "避開遠高於我等級的區域"
 L["Avoids %s (level %s)"] = "繞開%s（等級 %s）"
@@ -244,8 +243,6 @@ L["Tram to %s arrives in %s"] = "前往%s的地鐵將在%s後抵達"
 L["Transport"] = "交通"
 L["Transport icon size"] = "交通圖示大小"
 L["Turning this off leaves RestedXP's arrow visible."] = "關閉此選項後，RestedXP 的箭頭仍會顯示。" -- mt
-L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
-	"關閉此項可將共用Forever追蹤器拖曳到螢幕上任意位置。"
 L["Use %s"] = "使用%s"
 L["Use class teleports"] = "使用職業傳送"
 L["Vendors"] = "商人"

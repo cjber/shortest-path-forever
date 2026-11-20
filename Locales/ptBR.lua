@@ -42,7 +42,6 @@ L["Arrow label"] = "Rótulo da seta" -- mt
 L["Arrow scale"] = "Tamanho da seta"
 L["Arrows"] = "Flechas"
 L["Arrows on the NPC's nameplate"] = "Setas na placa de nome do NPC"
-L["Attach to quest tracker"] = "Prender ao rastreador de missões"
 L["Auction house"] = "Casa de leilões"
 L["Avoid zones far above my level"] = "Evitar zonas muito acima do meu nível"
 L["Avoids %s (level %s)"] = "Contorna %s (nível %s)"
@@ -247,8 +246,6 @@ L["Tram to %s arrives in %s"] = "Metrô para %s chega em %s"
 L["Transport"] = "Transporte"
 L["Transport icon size"] = "Tamanho dos ícones de transporte"
 L["Turning this off leaves RestedXP's arrow visible."] = "Desativar esta opção deixa a seta do RestedXP visível." -- mt
-L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
-	"Desative para arrastar o rastreador Forever compartilhado para qualquer lugar da tela."
 L["Use %s"] = "Usar %s"
 L["Use class teleports"] = "Usar teleportes de classe"
 L["Vendors"] = "Vendedores"

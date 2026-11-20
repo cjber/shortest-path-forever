@@ -44,7 +44,6 @@ L["Arrow label"] = "Libellé de la flèche" -- mt
 L["Arrow scale"] = "Taille de la flèche" -- mt
 L["Arrows"] = "Flèches"
 L["Arrows on the NPC's nameplate"] = "Flèches sur la plaque de nom du PNJ"
-L["Attach to quest tracker"] = "Attacher au suivi des quêtes"
 L["Auction house"] = "Hôtel des ventes" -- mt
 L["Avoid zones far above my level"] = "Éviter les zones bien au-dessus de mon niveau" -- mt
 L["Avoids %s (level %s)"] = "Contourne %s (niveau %s)" -- mt
@@ -252,8 +251,6 @@ L["Transport"] = "Transport" -- mt
 L["Transport icon size"] = "Taille des icônes de transport" -- mt
 L["Turning this off leaves RestedXP's arrow visible."] =
 	"Désactiver cette option laisse la flèche de RestedXP visible." -- mt
-L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
-	"Désactivez cette option pour déplacer le suivi Forever partagé n'importe où à l'écran."
 L["Use %s"] = "Utiliser %s" -- mt
 L["Use class teleports"] = "Utiliser les téléportations de classe" -- mt
 L["Vendors"] = "Marchands"

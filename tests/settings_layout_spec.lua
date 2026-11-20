@@ -14,8 +14,6 @@ end
 -- Check every Guidance initializer, including the resume buttons, between the native headings.
 local expected = {
 	"#Tracker",
-	"trackerAttached",
-	"trackerLocked",
 	"journeyTracker",
 	"resumeJourney",
 	"#Planning",
@@ -63,8 +61,31 @@ for _, entry in ipairs(registered) do
 end
 assert(table.concat(actual, ",") == table.concat(expected, ","), "Guidance headings and controls stay in order")
 
--- Rebuild with an older core: all controls still register and retain their declarations.
-local previousRows = { unpack(rows) }
+-- Rebuild with an older core: all controls still register and retain their declarations, except the shared attach
+-- row, which only a core with RegisterTrackerAttach provides.
+local previousRows = {}
+for _, entry in ipairs(rows) do
+	if entry.initializer.setting.key ~= "trackerAttached" then
+		previousRows[#previousRows + 1] = entry
+	end
+end
+-- ForeverCore 1.15.3 has SettingsSections but no RegisterTrackerAttach (added in 1.15.4), and the loader adopts an
+-- installed standalone as it is: the page loads with every other control.
+local olderSections = {}
+for name, member in pairs(env.ForeverCore.SettingsSections) do
+	olderSections[name] = member
+end
+olderSections.RegisterTrackerAttach = nil
+clear(rows, settings, buttons, registered)
+env.ForeverCore.SettingsSections = olderSections
+setfenv(assert(loadfile("UI/Settings.lua")), env)("ShortestPathForever", ns)
+assert(#rows == #previousRows, "a core without RegisterTrackerAttach keeps every other control")
+for index, entry in ipairs(rows) do
+	assert(
+		entry.initializer.setting.key == previousRows[index].initializer.setting.key,
+		"the controls keep their order"
+	)
+end
 clear(rows, settings, buttons, registered)
 env.ForeverCore.SettingsSections = nil
 setfenv(assert(loadfile("UI/Settings.lua")), env)("ShortestPathForever", ns)

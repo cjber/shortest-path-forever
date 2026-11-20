@@ -46,7 +46,6 @@ L["Arrow label"] = "Подпись стрелки" -- mt
 L["Arrow scale"] = "Размер стрелки"
 L["Arrows"] = "Стрелы"
 L["Arrows on the NPC's nameplate"] = "Стрелки на табличке с именем НИП"
-L["Attach to quest tracker"] = "Прикрепить к отслеживанию заданий"
 L["Auction house"] = "Аукционный дом"
 L["Avoid zones far above my level"] = "Избегать зон намного выше моего уровня"
 L["Avoids %s (level %s)"] = "Обходит %s (уровень %s)"
@@ -263,8 +262,6 @@ L["Transport"] = "Транспорт"
 L["Transport icon size"] = "Размер значков транспорта"
 L["Turning this off leaves RestedXP's arrow visible."] =
 	"Если отключить эту опцию, стрелка RestedXP останется видимой." -- mt
-L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
-	"Отключите, чтобы перетаскивать общую панель отслеживания Forever в любое место экрана."
 L["Use %s"] = "Использовать: %s"
 L["Use class teleports"] = "Использовать классовые телепорты"
 L["Vendors"] = "Торговцы"

@@ -226,54 +226,6 @@ ns.Init(function()
 	Page(L["Guidance"])
 	Section(L["Tracker"])
 	local host = ForeverCore.TrackerHost --[[@as ForeverTrackerHostAPI]]
-	local variable = "ShortestPathForever_trackerAttached"
-	local attachment = Settings.RegisterProxySetting(
-		page,
-		variable,
-		Settings.VarType.Boolean,
-		L["Attach to quest tracker"],
-		true,
-		function()
-			return host.GetSettings().attached
-		end,
-		function(value)
-			host.SetAttached(value == true)
-		end
-	)
-	Settings.RegisterInitializer(
-		page,
-		Secure(Settings.CreateCheckboxInitializer)(
-			attachment,
-			nil,
-			L["Turn this off to drag the shared Forever tracker anywhere on screen."]
-		)
-	)
-	host.OnAttachmentChanged(function()
-		Settings.NotifyUpdate(variable)
-	end)
-	-- Lock keeps the detached column where it is: the grip ignores drag while it is on. Off by default, and safe to
-	-- toggle in combat, since it only writes the saved switch.
-	local lock = Settings.RegisterProxySetting(
-		page,
-		"ShortestPathForever_trackerLocked",
-		Settings.VarType.Boolean,
-		L["Lock the tracker"],
-		false,
-		function()
-			return host.GetSettings().locked == true
-		end,
-		function(value)
-			host.SetLocked(value == true)
-		end
-	)
-	Settings.RegisterInitializer(
-		page,
-		Secure(Settings.CreateCheckboxInitializer)(
-			lock,
-			nil,
-			L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."]
-		)
-	)
 	Checkbox(
 		"journeyTracker",
 		L["Show journey steps in the objective tracker"],
@@ -777,6 +729,35 @@ ns.Init(function()
 		)
 	)
 	Section(L["Tracker"])
+	-- The shared column's attach choice, the same row and words in every Forever addon (forever-core#910). It sits by
+	-- the scale and lock, the other rows that place the shared tracker.
+	local sections = ForeverCore.SettingsSections
+	if sections and sections.RegisterTrackerAttach then
+		sections.RegisterTrackerAttach(page, "ShortestPathForever_trackerAttached")
+	end
+	-- Lock keeps the detached column where it is: the grip ignores drag while it is on. Off by default, and safe to
+	-- toggle in combat, since it only writes the saved switch.
+	local lock = Settings.RegisterProxySetting(
+		page,
+		"ShortestPathForever_trackerLocked",
+		Settings.VarType.Boolean,
+		L["Lock the tracker"],
+		false,
+		function()
+			return host.GetSettings().locked == true
+		end,
+		function(value)
+			host.SetLocked(value == true)
+		end
+	)
+	Settings.RegisterInitializer(
+		page,
+		Secure(Settings.CreateCheckboxInitializer)(
+			lock,
+			nil,
+			L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."]
+		)
+	)
 	if host and host.GetScale and host.SetScale then
 		local scale = Settings.RegisterProxySetting(
 			page,

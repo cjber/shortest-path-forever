@@ -42,7 +42,6 @@ L["Arrow label"] = "Pfeilbeschriftung" -- mt
 L["Arrow scale"] = "Pfeilgröße"
 L["Arrows"] = "Pfeile"
 L["Arrows on the NPC's nameplate"] = "Pfeile auf der Namensplakette des NPC"
-L["Attach to quest tracker"] = "An Questverfolgung anheften"
 L["Auction house"] = "Auktionshaus"
 L["Avoid zones far above my level"] = "Gebiete weit über meiner Stufe meiden"
 L["Avoids %s (level %s)"] = "Umgeht %s (Stufe %s)"
@@ -247,8 +246,6 @@ L["Tram to %s arrives in %s"] = "Bahn nach %s kommt in %s an"
 L["Transport"] = "Transport"
 L["Transport icon size"] = "Größe der Transportsymbole"
 L["Turning this off leaves RestedXP's arrow visible."] = "Wenn Ihr dies ausschaltet, bleibt RestedXPs Pfeil sichtbar." -- mt
-L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
-	"Ausschalten, um die gemeinsame Forever-Verfolgung frei auf dem Bildschirm zu verschieben."
 L["Use %s"] = "%s benutzen"
 L["Use class teleports"] = "Klassenteleports nutzen"
 L["Vendors"] = "Händler"

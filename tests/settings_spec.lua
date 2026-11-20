@@ -172,8 +172,11 @@ env.C_SettingsUtil = {
 	end,
 }
 local ForeverCore = dofile("tests/forever_core.lua")
-local coreNs =
-	ForeverCore.load(env, "ForeverCore", { "Locales/enUS.lua", "Core/OpenSettings.lua", "UI/SettingsSections.lua" })
+local coreNs = ForeverCore.load(
+	env,
+	"ForeverCore",
+	{ "Locales/enUS.lua", "Core/OpenSettings.lua", "UI/SettingsPage.lua", "UI/SettingsSections.lua" }
+)
 env.CreateSettingsListSectionHeaderInitializer = function(name)
 	return { kind = "section", name = name }
 end
@@ -366,6 +369,8 @@ local ns = {
 	},
 }
 env.ForeverCore.TrackerHost = ns.TrackerHost
+-- Core's attach row reads core's own host, the same one the global exposes.
+coreNs.TrackerHost = ns.TrackerHost
 assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", ns)
 -- Read the road allowance from the real policy module; this UI harness does not run its world events.
 local init = ns.Init
@@ -401,8 +406,6 @@ local groups = {
 	Transport = { "mapRoutes", "otherFaction", "tracker" },
 	["Travel journal"] = { "stats" },
 	Guidance = {
-		"trackerAttached",
-		"trackerLocked",
 		"journeyTracker",
 		"resumeJourney",
 		"journey",
@@ -454,6 +457,8 @@ local groups = {
 		"compassMove",
 		"compassScale",
 		"compassBackground",
+		"trackerAttached",
+		"trackerLocked",
 		"trackerScale",
 		"trackerHeight",
 		"metres",
