@@ -14,6 +14,7 @@ mapID = 1414
 zoom = 1
 ns.Docks, ns.Routes, ns.TaxiNodes, ns.TaxiPaths, ns.Portals, ns.Landmasses = {}, {}, {}, {}, {}, {}
 local api = ShortestPathForever.API
+local trackerClearHint = "  Or choose Clear journey in the journey tracker menu."
 local lineTemplate, goalTemplate = "ShortestPathForeverRoutePinTemplate", "ShortestPathForeverGoalPinTemplate"
 local stops = {
  {map=1414,x=0.51,y=0.5,title="First"},
@@ -160,7 +161,8 @@ assert(tip[2] == "  A", tip[2])
 assert(tip[3] == "  Stop 2 of 7" and tip[4] == "  B" and tip[7] == "  Stop 4 of 7" and tip[8] == "  D")
 assert(tipColors[2] == HIGHLIGHT_FONT_COLOR and tipColors[4] == HIGHLIGHT_FONT_COLOR, "labels in white")
 assert(tipColors[8] == HIGHLIGHT_FONT_COLOR, "the last shared stop's label in white")
-assert(tip[#tip] == "  Right-click to clear" and tip[#tip - 1] == " " and tipColors[#tip] == NORMAL_FONT_COLOR)
+assert(tip[#tip] == trackerClearHint, "the stop tooltip names the tracker fallback")
+assert(tip[#tip - 1] == "  Right-click to clear" and tip[#tip - 2] == " " and tipColors[#tip] == NORMAL_FONT_COLOR)
 zoomedOut[1]:OnMouseLeave()
 -- A canvas refresh that keeps the grouping keeps the rings, hover and all.
 local goalPool = ns.Canvas.Pools(WorldMapFrame)[goalTemplate]
@@ -221,7 +223,8 @@ assert(tip[1] == "  Journey to Only | " .. left .. " · " .. far, tip[1])
 assert(#plan.legs - planIndex + 1 <= 1, "this journey is one leg")
 assert(
 	#rows > 0
-		and #tip == 3
+		and #tip == 4
+		and tip[4] == trackerClearHint
 		and tip[2] == " "
 		and tip[3] == "  Right-click to clear",
 	"no step list, then a blank line and how to clear"
@@ -289,11 +292,13 @@ active[goalTemplate][1]:OnMouseEnter()
 local firstLeft, firstDistance = ns.JourneyLeft()
 assert(tip[1] == "  Stop 1 of 4 | " .. firstLeft .. " · " .. firstDistance, tip[1])
 assert(tip[2] == "  First" and tipColors[2] == HIGHLIGHT_FONT_COLOR, tip[2])
-assert(tip[3] == " " and tip[4] == "  Right-click to clear" and #tip == 4, "one leg: no step list, then the hint")
+assert(tip[3] == " " and tip[4] == "  Right-click to clear", "one leg: no step list, then the hint")
+assert(tip[5] == trackerClearHint and #tip == 5)
 active[goalTemplate][1]:OnMouseLeave()
 active[goalTemplate][2]:OnMouseEnter()
 assert(tip[1] == "# Stop 2 of 4" and tip[2] == "  Second" and tipColors[2] == HIGHLIGHT_FONT_COLOR)
-assert(tip[3] == " " and tip[4] == "  Right-click to clear" and #tip == 4, "then a blank line and the hint")
+assert(tip[3] == " " and tip[4] == "  Right-click to clear", "then a blank line and the hint")
+assert(tip[5] == trackerClearHint and #tip == 5)
 active[goalTemplate][2]:OnMouseLeave()
 active[goalTemplate][3]:OnMouseClickAction("RightButton")
 assert(not api.CurrentStop("Test") and #active[goalTemplate] == 0)
@@ -327,7 +332,7 @@ assert(tip[2] == "  Mist Veil's Lockbox" and tipColors[2] == HIGHLIGHT_FONT_COLO
 assert(tip[3] == "  [17] Deep Ocean, Vast Sea" and tip[4] == "  Chapter 2 of 2", "the first stop's details")
 assert(tip[5] == "  Stop 2 of 2", "the second stop's count")
 assert(tip[6] == "  Silver Dawning's Lockbox" and tipColors[6] == HIGHLIGHT_FONT_COLOR, "the second action in white")
-assert(tip[7] == " " and tip[8] == "  Right-click to clear" and #tip == 8,
+assert(tip[7] == " " and tip[8] == "  Right-click to clear" and tip[9] == trackerClearHint and #tip == 9,
 	"shared details shown once, then a blank line and the hint, with no step list for one leg")
 sharedPin:OnMouseLeave()
 assert(api.Cancel("Test"))
@@ -393,6 +398,7 @@ assert(laterPin.Texture.alpha == 1 and laterPin.Button.alpha == 1)
 assert(tip[1] == "# Stop 2 of 2" and tip[2] == "  Second" and tipColors[2] == HIGHLIGHT_FONT_COLOR)
 assert(tip[3] == "  Quest detail" and tipColors[3] == NORMAL_FONT_COLOR)
 assert(tip[4] == " " and tip[5] == "  Right-click to clear" and tipColors[5] == NORMAL_FONT_COLOR)
+assert(tip[6] == trackerClearHint and #tip == 6)
 for i = 1, laterLine.used do
  assert(laterLine.lines[i].alpha == 1, "the hovered stop's leg at full strength")
 end

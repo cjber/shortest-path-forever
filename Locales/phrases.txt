@@ -249,6 +249,7 @@ L["Only your faction's capital portals are used."] = "Only your faction's capita
 L["Open"] = "Open"
 L["Open Nearby services"] = "Open Nearby services"
 L["Open the world map to see it."] = "Open the world map to see it."
+L["Or choose %s in the journey tracker menu."] = "Or choose %s in the journey tracker menu."
 L["Ordering recorded locations..."] = "Ordering recorded locations..."
 L["Ordering stopped while you are dead. Start again when you are alive."] = "Ordering stopped while you are dead. Start again when you are alive."
 L["Ordering stops by estimated travel time..."] = "Ordering stops by estimated travel time..."
