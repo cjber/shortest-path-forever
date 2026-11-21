@@ -348,7 +348,6 @@
 ---@field focusedQuest? boolean -- a super-tracked quest or the player's map pin starts a journey (JourneyInput.lua)
 ---@field compassTime? boolean -- the whole journey's time left under the compass distance (Compass.lua)
 ---@field arrivalSound? boolean -- the map ping when a journey the player planned reaches its goal (Alert.lua)
----@field resumeJourney? boolean -- start the player's own journey again after a reload or relog (Resume.lua)
 ---@field restedxp? boolean -- follow RestedXP guide targets
 ---@field restedxpHideArrow? boolean -- Shortest Path's arrow replaces the guide's while a guide target is followed (RestedXP.lua)
 ---@field guidelime? boolean -- follow Guidelime's current guide step (Guidelime.lua)
@@ -430,7 +429,7 @@
 ---@field flightsTaken number
 ---@field portalsUsed number
 ---@field milestones table<string, number>
--- A journey's goal as Resume.lua keeps it, with the GetServerTime() it was planned.
+-- A journey's goal as Resume.lua keeps it.
 ---@class SPFKeptJourney
 ---@field map number
 ---@field x number
@@ -439,7 +438,6 @@
 ---@field label? string
 ---@field questID? number
 ---@field handins? number[] -- the quests handed in at the kept stop, validated on the way in and out (Resume.lua)
----@field at number
 -- Where the character stood when it last bound at an inn, with GetBindLocation's name then.
 ---@class SPFBindPoint : SPFPoint
 ---@field name string

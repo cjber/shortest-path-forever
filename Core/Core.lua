@@ -103,7 +103,6 @@ local DEFAULTS = {
 	destinationPinSize = 100,
 	-- Bouncing arrows beside the nameplate of the NPC a Nearby services journey walks to.
 	npcArrows = true,
-	resumeJourney = false,
 	tomtom = true,
 	tomtomFollow = false,
 	restedxp = true,
@@ -505,6 +504,8 @@ frame:SetScript("OnEvent", function(self, _, name)
 		end
 		ns.db.teleportSplit = 1
 	end
+	-- Keep journeys after a reload is no longer a setting: your own journey always comes back (#1216).
+	rawset(ns.db, "resumeJourney", nil)
 	-- Town services, the vendor kinds and the compass were on by default and are off now (#978, #982). The fill below
 	-- writes every missing default into the save, so a save from before holds the old default whether or not the player
 	-- chose it; a value that differs from the old default is the only one the save proves was chosen, and it stands.
