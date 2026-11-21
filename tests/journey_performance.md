@@ -47,7 +47,7 @@ python3 tools/check_generated.py --offline
 ```
 
 The runtime benchmark reports first usable guidance separately from completed proof, and includes compressed
-terrain startup and memory. Figures are headless LuaJIT with JIT disabled, not in-game profiling. The offline
+terrain startup and memory. Figures are offline LuaJIT with JIT disabled, not in-game profiling. The offline
 base64 implementation is Lua; the client uses native encoding APIs.
 
 Check in game with a fresh login, a local walk, a journey with transport, and a cross-continent journey. Cancel
