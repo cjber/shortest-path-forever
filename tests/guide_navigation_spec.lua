@@ -43,37 +43,64 @@ driver.update(0)
 assert(driver.waypoint() == nil, "the player's quest selection ends the guide's waypoint")
 assert(not ns.JourneyPinTracked(), "and the guide has yielded")
 
--- "Mark only where steps end": one native marker cannot sit at the step's end and follow the walk's bends, so the
--- guide places no marker at all and the screen arrow leads instead (#817).
+-- The native waypoint marks the step destination while the screen arrow leads the walk.
 ns.ClearJourney()
 ns.db.guideStops = true
 driver.begin({ map = 1, x = 0, y = 0, z = 0 }, { map = 1, x = 1200, y = 0 })
-assert(placeBend({ map = 1, x = 1200, y = 0 }) == false, "with only step ends marked the guide places no marker")
-assert(driver.waypoint() == nil, "so the game's navigation marker is not set")
+local bend = { map = 1, x = 200, y = 0 }
+assert(placeBend(bend) == false, "the arrow leads with step-end marks")
+local stepWaypoint = assert(driver.waypoint(), "the native waypoint marks the destination")
 assert(ns.JourneyPinTracked(), "the guide still leads, so the goal keeps its gold pin")
 
--- Turning the setting off mid-journey places the marker again, and turning it back on takes the marker it placed
--- away, so the arrow leads and the step's end stays on the map alone.
+-- Changing mark density updates both the waypoint's position and which pointer leads.
 ns.db.guideStops = false
-assert(placeBend({ map = 1, x = 1200, y = 0 }), "with the setting off the guide places its marker again")
+assert(placeBend(bend), "the native marker leads with every bend marked")
+assert(driver.waypoint().position.y ~= stepWaypoint.position.y, "the waypoint moves to the bend")
 assert(ns.JourneyPinTracked(), "and still leads")
 ns.db.guideStops = true
-assert(placeBend({ map = 1, x = 1200, y = 0 }) == false, "turning it on takes the marker back")
-assert(driver.waypoint() == nil, "so no marker is left on the walk")
+assert(placeBend(bend) == false, "with step-end marks the arrow leads again")
+assert(driver.waypoint().position.y == stepWaypoint.position.y, "the waypoint returns to the step end")
 
--- The player's own waypoint and super-track are untouched by a guide that places none, and given back as before
--- when the journey stops.
+-- The guide restores the player's waypoint and tracking when the journey stops.
 ns.ClearJourney()
-env.C_Map.SetUserWaypoint(env.UiMapPoint.CreateFromCoordinates(1, 0.2, 0.3))
+local saved = env.UiMapPoint.CreateFromCoordinates(1, 0.2, 0.3, 42)
+env.C_Map.SetUserWaypoint(saved)
 env.C_SuperTrack.SetSuperTrackedUserWaypoint(true)
 driver.update(0)
-ns.db.guideStops = true
 driver.begin({ map = 1, x = 0, y = 0, z = 0 }, { map = 1, x = 1200, y = 0 })
-assert(placeBend({ map = 1, x = 1200, y = 0 }) == false, "the guide places nothing over the player's pin")
-local owned, ownedTracked = driver.waypoint()
-assert(owned and ownedTracked, "the player's own waypoint stays exactly where it was")
+assert(placeBend(bend) == false, "the arrow leads while the guide borrows the player's waypoint")
+local active, activeTracked = driver.waypoint()
+assert(ns.JourneyGuide.SameWaypoint(active, stepWaypoint) and activeTracked, "the borrowed pin marks the step end")
 ns.ClearJourney()
 local kept, keptTracked = driver.waypoint()
-assert(kept and keptTracked, "and is still there and tracked when the journey stops")
+assert(kept and kept.position.x == 0.2 and kept.position.y == 0.3 and keptTracked, "restore the player's waypoint")
+
+-- Reload the guide while retaining the saved variables and the client's waypoint slot.
+for _, case in ipairs({ "tracked", "untracked", "replaced" }) do
+	env.C_Map.SetUserWaypoint(saved)
+	env.C_SuperTrack.SetSuperTrackedUserWaypoint(case == "tracked")
+	local guide = ns.JourneyGuide
+	guide.Start()
+	guide.To(bend, { bend }, { map = 1, x = 1200, y = 0 })
+	placeBend(bend)
+	assert(ns.JourneyGuide.SameWaypoint(driver.waypoint(), stepWaypoint), "the guide owns the slot before reload")
+	local expected = saved
+	if case == "replaced" then
+		expected = env.UiMapPoint.CreateFromCoordinates(1, 0.7, 0.8)
+		env.C_Map.SetUserWaypoint(expected)
+		env.C_SuperTrack.SetSuperTrackedUserWaypoint(true)
+	end
+	driver.load("Journey/JourneyGuide.lua")
+	ns.JourneyGuide.ClearOrphan()
+	local point, tracked = driver.waypoint()
+	assert(point and point.uiMapID == expected.uiMapID, "login leaves the expected pin on the map")
+	assert(
+		point.position.x == expected.position.x and point.position.y == expected.position.y,
+		"login restores only the borrowed pin"
+	)
+	assert(point.z == expected.z, "login preserves the pin altitude")
+	assert(tracked == (case ~= "untracked"), "login restores tracking only for the borrowed pin")
+	assert(not ns.charDB.guideWaypoint, "login consumes the ownership record")
+end
 
 print("guide navigation: a focused quest does not take the guide's waypoint")

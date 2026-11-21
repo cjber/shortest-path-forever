@@ -312,6 +312,10 @@ function GoalPin:OnMouseEnter()
 	end
 	GameTooltip_AddBlankLineToTooltip(GameTooltip)
 	GameTooltip_AddNormalLine(GameTooltip, L["Right-click to clear"])
+	GameTooltip_AddNormalLine(
+		GameTooltip,
+		string.format(L["Or choose %s in the journey tracker menu."], L["Clear journey"])
+	)
 	GameTooltip:Show()
 end
 

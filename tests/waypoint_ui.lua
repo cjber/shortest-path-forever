@@ -10,7 +10,7 @@ local setup = [[
 setMapShown(true)
 posX, posY, posMap, facing = 0, 0, 1, 0
 -- These cases check the native waypoint contract, so every bend is marked and the guide writes and tracks the
--- client's marker. "Mark only where steps end" places none and is checked in its own case below (#817).
+-- client's marker. A separate case below checks step-end marks.
 ns.db.guideStops = false
 ns.CurrentRide = noop
 ns.Planner.Plan = function(o)
@@ -106,7 +106,7 @@ assert(not waypoint and not supertracked, "a new journey must not restore the or
 )
 
 check(
-	"default step-end marks: no native waypoint, the arrow leads",
+	"default step-end marks: native waypoint at the destination, the arrow leads",
 	"",
 	[[
 -- The cases above mark every bend; this one restores the default a new player gets (#817).
@@ -116,8 +116,9 @@ mapID, cursorX, cursorY = 1414, 0.5, 0.452
 assert(clickHandlers[1](map, "LeftButton"))
 settle()
 assert(ns.IsJourneyGuided() and ns.HasJourney(), "the journey is still guided")
-assert(not waypoint and not supertracked, "only step ends marked: no native waypoint is placed")
-assert(not ns.charDB.guideWaypoint, "and nothing is persisted as the guide's")
+assert(waypoint and supertracked, "the native waypoint marks the step destination")
+assert(math.abs(waypoint.position.x - 0.5) < 1e-6 and math.abs(waypoint.position.y - 0.452) < 1e-6)
+record()
 assert(arrowFrame:IsShown(), "the screen arrow leads the walk instead")
 ns.ClearJourney()
 assert(not waypoint and not supertracked)
@@ -463,7 +464,7 @@ local function wStart()
 end
 ]]
 
-check("waypoint UI starts and advances from step-end marks", "", wpu .. [[
+check("waypoint UI holds the step destination as the arrow advances", "", wpu .. [[
 ns.db.guideStops, navTracking = true, false
 _G.WaypointUIAPI.Navigation.NewUserNavigation = function(opts)
  newCalls[#newCalls + 1] = opts
@@ -474,12 +475,13 @@ _G.WaypointUIAPI.Navigation.NewUserNavigation = function(opts)
 end
 wStart()
 assert(#newCalls == 1 and supertracked, "create a Waypoint UI marker without an existing pin")
-assert(newCalls[1].suppressAudio, "turns do not play pin-placement sounds")
+assert(newCalls[1].suppressAudio, "guide updates do not play pin-placement sounds")
 record()
 posX, posY = 100, 100
 arrowFrame.scripts.OnUpdate(arrowFrame, 0.1)
 local _, world = C_Map.GetWorldPosFromMapPos(waypoint.uiMapID, waypoint.position)
-assert(#newCalls == 2 and math.abs(world.x - 300) < 0.001, "publish the next bend")
+assert(#newCalls == 1 and math.abs(world.x - 1200) < 0.001, "keep the step destination")
+assert(ns.GuideState().x == 300, "the arrow advances to the next bend")
 ns.ClearJourney()
 assert(not waypoint and not supertracked and not ns.charDB.guideWaypoint, "clear the route's marker")
 wStart()
@@ -502,7 +504,7 @@ _G.WaypointUIAPI.Navigation.NewUserNavigation = function(opts)
  return opts
 end
 wStart()
-assert(#newCalls == 1 and supertracked, "Waypoint UI still gets the turn")
+assert(#newCalls == 1 and supertracked, "Waypoint UI gets the destination")
 assert(ns.ArrowLeads(), "the arrow leads, which keeps a guide addon's own arrow hidden")
 assert(arrowFrame:IsShown() and arrowFrame.alpha == 1, "so it is drawn: alpha " .. tostring(arrowFrame.alpha))
 -- Marking every bend lets the marker lead instead, as it does without Waypoint UI.
@@ -510,6 +512,8 @@ ns.db.guideStops = false
 ns.RefreshGuideStops()
 arrowFrame.scripts.OnUpdate(arrowFrame, 0.1)
 assert(arrowFrame.alpha == 0, "every bend marked: the marker leads and the arrow stands down")
+local _, world = C_Map.GetWorldPosFromMapPos(waypoint.uiMapID, waypoint.position)
+assert(#newCalls == 2 and math.abs(world.x - 100) < 0.001, "every bend marked: publish the bend")
 -- A frame with no position leaves that marker up, so it still leads and a guide addon's arrow stays away.
 local wasX = posX
 posX = nil

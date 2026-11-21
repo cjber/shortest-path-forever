@@ -51,7 +51,7 @@
     },
     {
       "source": "UI/Settings.lua",
-      "sha256": "a606fdae2c506268fdb7bed137d965bb542b868ada73bfa801295a742392d4ab",
+      "sha256": "24bd4c2bd195587e4ffb3f5ebd195b621eeb63ba4683e29c477e4af0066997d5",
       "review": "Read Page, Checkbox, Scale, Dropdown and Saving and their registration calls. Settings rows, index buttons and option labels delegate to Blizzard secure initializers; this file creates no FontString and establishes no explicit FontObject. Minimap button text, tooltip text, chat output and helper arguments are excluded rather than assigned an assumed settings font. Reviewed #1094: the Tracker heading's Attach to quest tracker row is ForeverCore.SettingsSections.RegisterTrackerAttach, a core-owned initializer, registered only when the running core has it (an older adopted standalone does not); excluded with the other settings fonts. Reviewed #1142: the journeyHint row is one more Checkbox helper call, a Blizzard secure initializer with no FontString or FontObject of its own.",
       "bindings": []
     },
@@ -63,14 +63,14 @@
     },
     {
       "source": "UI/Map.lua",
-      "sha256": "25467bad8fa1ebe24caa2725d3312be083939613820dc923c09fff7b9a84816a",
+      "sha256": "38a26f1dbc69eb8905eefe8a0554494202b0e25226a1ea6d75cb570bd960a169",
       "review": "Read dock, service and portal pin creation and tooltip callbacks. Map.xml defines textures without label FontStrings; localized destination, landing and direction phrases flow into tooltips or helper results, as does the journey click hint (ns.AddJourneyClickHint). Tooltip fonts belong to their templates, menu fonts are not established here, and dynamic location names are excluded.",
       "bindings": []
     },
     {
       "source": "UI/StopPin.lua",
-      "sha256": "8d6a041846ddbe20fc91721a702c2618073f3f32a802f6d08f3d70351a8130cd",
-      "review": "Read Number creation and SetStop/tooltip paths. Number explicitly uses GameFontNormal but displays a dynamic stop number, not a locale phrase. The time-distance phrase and stop descriptions are tooltip text owned by the tooltip template; none is bound to Number.",
+      "sha256": "dae768e055e64ed0a1bb9b94cf2cf2e91d2ce13dc8b5ea402e35913b8f76d946",
+      "review": "Read Number creation and SetStop/tooltip paths. Number explicitly uses GameFontNormal but displays a dynamic stop number, not a locale phrase. The time-distance phrase, stop descriptions and clear hints are tooltip text owned by the tooltip template; none is bound to Number.",
       "bindings": []
     },
     {

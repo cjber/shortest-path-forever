@@ -173,6 +173,102 @@ do
 	assert(bounded.preferred and bounded.arrive == preferred.arrive and modes(bounded) == modes(preferred))
 end
 
+-- A short flight away from the goal and a long walk back is not the ride a long walk gives way to: it is still mostly
+-- on foot, and arrives later. Orgrimmar to Azshara on foot flew to Splintertree Post and walked back east (#1102).
+do
+	local from, away, to = point(0), point(0, 600), point(4300)
+	local o = {
+		from = from,
+		to = to,
+		now = 0,
+		walkSpeed = 7,
+		exactMaps = { [1] = true },
+		taxiNodes = { from, away },
+		taxiPaths = { { from = 1, to = 2, seconds = 89 } },
+		walks = {
+			walk(from, to, 4315),
+			walk(away, to, 3800),
+			walk(from, from, 0),
+			walk(away, away, 0),
+			walk(to, to, 0),
+		},
+	}
+	local planned = assert(Plan(o))
+	assert(modes(planned) == "walk" and not planned.preferred, "the walk stays: got " .. modes(planned))
+	assert(math.abs(planned.arrive - 4315 / 7 * 1000) < 1, "and arrives first")
+end
+
+-- The first ride within the cutoff still leaves most of the journey on foot (#1104).
+do
+	local from, away, near, to = point(0), point(0, 600), point(4200), point(4300)
+	local o = {
+		from = from,
+		to = to,
+		now = 1000,
+		walkSpeed = 7,
+		exactMaps = { [1] = true },
+		taxiNodes = { from, away, near },
+		taxiPaths = { { from = 1, to = 2, seconds = 89 }, { from = 1, to = 3, seconds = 630 } },
+		walks = {
+			walk(from, to, 4315),
+			walk(away, to, 3800),
+			walk(near, to, 100),
+			walk(from, from, 0),
+			walk(away, away, 0),
+			walk(near, near, 0),
+			walk(to, to, 0),
+		},
+	}
+	local planned = assert(Plan(o))
+	assert(
+		planned.preferred and modes(planned) == "flight,walk",
+		"expected the mostly ridden plan, got " .. modes(planned)
+	)
+	assert(planned.legs[1].hops[1].to == 3, "the preferred flight lands near the goal")
+
+	-- Two flights can share a landing and walk. The faster flight still spends most of its time walking.
+	o.taxiPaths = { { from = 1, to = 2, seconds = 300 }, { from = 1, to = 2, seconds = 350 } }
+	o.walks[2] = walk(away, to, 2240)
+	planned = assert(Plan(o))
+	assert(planned.preferred and modes(planned) == "flight,walk")
+	assert(planned.legs[1].hops[1].seconds == 350, "the longer flight makes the shared walk less than half the trip")
+	-- A label reaching the dock first catches an earlier boat and still walks half the way. The one that misses it waits
+	-- for the next, and that wait keeps its walking under half: arriving first does not dominate in the ride search.
+	local function at(x, z)
+		return { map = 1, x = x, y = 0, z = z }
+	end
+	local start, goal, master, dock, side, landing =
+		at(0, 0), at(300, 0), at(100, 0), at(200, 0), at(200, 1), at(300, 0)
+	planned = assert(Plan({
+		from = start,
+		to = goal,
+		now = 0,
+		walkSpeed = 7,
+		faction = "Alliance",
+		exactMaps = { [1] = true },
+		docks = { [1] = dock, [2] = side, [3] = landing },
+		routes = {
+			[1] = {
+				kind = "boat",
+				period = 50000,
+				stops = { { dock = 1, arrive = 0, depart = 0 }, { dock = 3, arrive = 40000, depart = 40000 } },
+			},
+		},
+		anchors = { [1] = { epoch = 950000 } },
+		taxiNodes = { [1] = start, [2] = master },
+		taxiPaths = { { from = 1, to = 2, seconds = 437 } },
+		walks = {
+			walk(start, goal, 6895),
+			walk(start, start, 0),
+			walk(master, dock, 3570),
+			walk(master, side, 3605),
+			walk(side, dock, 0),
+			walk(landing, goal, 0),
+		},
+	}))
+	assert(planned.preferred and planned.arrive == 1040000, "the later boat mostly rides: got " .. planned.arrive)
+end
+
 -- A cached topology and an incumbent compose: feasible, full and bounded plans share one cache.
 do
 	local o = line(8)
