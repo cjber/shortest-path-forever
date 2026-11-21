@@ -103,7 +103,9 @@ CMaNGOS classic-db where named. Live client values win wherever the client offer
 - `Data/Walks.lua` and `Nav/` (walking costs, maps): baked from a local client install's terrain by
   `tools/bake_walks.lua` and `tools/baker/`. `Data/RoadCells.lua` and `Data/RoadEdges.lua` (roads): `tools/gen_roads.py`
   reads ADT texture layers from wago.tools' CASC mirror (33 road textures checked against the minimap) and
-  `tools/bake_roads.lua` derives the edge ratios. Neither database holds terrain or roads.
+  `tools/bake_roads.lua` derives the edge ratios. Neither database holds terrain or roads. `tools/gen_roads.py` also
+  pins and imports player-recorded capital trails from Fitz's Polestar. Neither database holds trails, and the client
+  has no live trail layer.
 
 ## Standards
 

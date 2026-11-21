@@ -28,10 +28,12 @@ for y = 11, 30 do
 end
 st.road[0] = road
 
-local P = { x = {}, y = {}, w = {}, t = {}, k = {}, n = {}, r = {}, roads = true, roadFactor = 1.5, swim = st.swim }
+local P =
+	{ x = {}, y = {}, z = {}, w = {}, t = {}, k = {}, n = {}, r = {}, roads = true, roadFactor = 1.5, swim = st.swim }
 local function add(x, y)
 	local i = #P.x + 1
 	P.x[i], P.y[i], P.k[i], P.n[i], P.w[i] = x, y, 0, x * C + y, 0
+	P.z[i] = 20
 	P.t[i] = (P.t[i - 1] or 0) + (i > 1 and CS or 0)
 	P.r[i] = (P.r[i - 1] or 0) + (road[x * C + y] and 0 or 1)
 end
@@ -74,4 +76,12 @@ for i = 2, #faint do
 		assert(road[cell] or cell == 10 * C + 10, "partial-paint drawn line leaves the road")
 	end
 end
+
+-- A straight run across a raised platform must retain the ends of its ramps.
+P.x, P.y, P.z, P.w, P.t, P.k, P.n, P.r = {}, {}, {}, {}, {}, {}, {}, {}
+for x = 11, 17 do
+	add(x, 10)
+end
+P.z = { 20, 20, 22, 22, 22, 20, 20 }
+assert(table.concat(Grid.smooth(st, P), ",") == "1,2,3,5,6,7", "the drawn chord keeps the platform's grade changes")
 print("road_smoothing_spec: ok")

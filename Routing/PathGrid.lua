@@ -1108,12 +1108,14 @@ local function preceding(st, id, roads)
 	return lists[id] or noEdges
 end
 
--- Road cells of cluster k (RoadCells.lua), decoded once: a set of local cell -> coverage, or false when it has none.
+-- Road coverage of cluster k (RoadCells.lua), decoded once by local node, or false when it has none.
 -- Only read while Follow roads is on.
 local function decodeRoads(st, k)
 	local list = ns.RoadCells and ns.RoadCells[st.map]
-	local s = list and list[k + 1]
-	if not s then
+	local trails = ns.RoadTrails and ns.RoadTrails[st.map]
+	local trail = trails and trails[k + 1]
+	local s = list and list[k + 1] or ""
+	if s == "" and not trail then
 		return false
 	end
 	local set, lc, pos = {}, 0, 1
@@ -1130,6 +1132,24 @@ local function decodeRoads(st, k)
 			lc = lc + run
 		end
 	end
+	if trail and grid(st, k) then
+		local at = st.at[k]
+		for i = 1, #trail, 6 do
+			local cell, level = num(trail, i, 3), num(trail, i + 3, 3)
+			local height = (floor(level / 4) - 32768) / 4
+			local node, gap = surface(st, k, cell, -1, height)
+			-- Use the walking map's same-layer limit (CLIMB in gen_nav.py).
+			if node and gap < 3 then
+				-- Keep the painted coverage on every sibling before the base can gain any trail coverage.
+				local sibling = at[-(cell + 1)]
+				while sibling and at[sibling + 1] == cell do
+					set[sibling] = set[sibling] or set[cell] or 0
+					sibling = sibling + 1
+				end
+				set[node] = math.max(set[node] or 0, level % 4 / 3)
+			end
+		end
+	end
 	return set
 end
 
@@ -1142,11 +1162,15 @@ local function roads(st, k)
 	return set or nil
 end
 
--- Painted road coverage of this node's base cell, zero without paint.
+-- Trail coverage belongs to a node. Painted coverage applies to every floor of the cell.
 local function roadNode(st, k, node)
 	local set = roads(st, k)
 	if not set then
 		return 0
+	end
+	local coverage = set[node]
+	if coverage ~= nil then
+		return coverage
 	end
 	local cell = cellOf(st, k, node)
 	return cell ~= nil and set[cell] or 0
@@ -2008,11 +2032,37 @@ local function smooth(st, P, ends)
 		b = from[b]
 	end
 	local out = { 1 }
+	local function append(last)
+		local first = out[#out]
+		local dx, dy = PX[last] - PX[first], PY[last] - PY[first]
+		local steps = last - first
+		-- A straight grid run already traces the drawn chord. Keep its changes of grade so that the
+		-- heights on the drawn line still describe that surface, including ramps and raised platforms.
+		if steps > 1 and (first > 1 or startVia) and (last < n or goalVia) and max(abs(dx), abs(dy)) == steps then
+			local x, y = dx / steps, dy / steps
+			local straight = true
+			for j = first + 1, last - 1 do
+				if PX[j] ~= PX[first] + x * (j - first) or PY[j] ~= PY[first] + y * (j - first) then
+					straight = false
+					break
+				end
+			end
+			if straight then
+				local z = P.z
+				for j = first + 1, last - 1 do
+					if z[j] - z[j - 1] ~= z[j + 1] - z[j] then
+						out[#out + 1] = j
+					end
+				end
+			end
+		end
+		out[#out + 1] = last
+	end
 	for i = #corners, 1, -1 do
-		out[#out + 1] = corners[i]
+		append(corners[i])
 	end
 	if n > 1 then
-		out[#out + 1] = n
+		append(n)
 	end
 	return out, startVia, goalVia
 end
@@ -2255,6 +2305,7 @@ ns.PathGrid = {
 	ground = ground,
 	snap = snap,
 	roads = roads,
+	roadNode = roadNode,
 	roadEdges = roadEdges,
 	roadEdgesIn = roadEdgesIn,
 	smooth = smooth,

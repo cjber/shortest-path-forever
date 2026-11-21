@@ -155,7 +155,7 @@ The addon is free and stays GPL-3.0. If it saves you time, you can [sponsor me o
 
 ## Credits
 
-Travel data comes from [wago.tools](https://wago.tools), [CMaNGOS](https://github.com/cmangos/classic-db) (GPL-3.0) and [InFlight](https://github.com/LudiusMaximus/InFlight) (MIT). Some features were inspired by [Polestar](https://github.com/fitzforge/polestar) by Fitz; no code was copied. Fitz is welcome to use our code.
+Travel data comes from [wago.tools](https://wago.tools), [CMaNGOS](https://github.com/cmangos/classic-db) (GPL-3.0) and [InFlight](https://github.com/LudiusMaximus/InFlight) (MIT). Thanks to Fitz for [Polestar](https://github.com/fitzforge/polestar), which inspired some features and supplies player-recorded capital trails used with permission (GPL-3.0-or-later).
 
 <!-- forever-credits:start -->
 
