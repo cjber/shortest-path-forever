@@ -1,9 +1,22 @@
 -- Guarded landings gate boarding by default without claiming physical lift ownership.
 local shipped = { Docks = {}, Routes = {} }
 assert(loadfile("Data/Transports.lua"))("ShortestPathForever", shipped)
+-- The lifts with a landing guard witness in tools/gen_transit.py LIFT_GUARDS; no other lift has guards at its landings.
+local guarded = {
+	["Great Lift"] = true,
+	["Freewind Post"] = true,
+	["Thunder Bluff, west lift"] = true,
+	["Thunder Bluff, north lift"] = true,
+	["Undercity, west lift"] = true,
+	["Undercity, east lift"] = true,
+	["Undercity, south lift"] = true,
+}
 for _, route in pairs(shipped.Routes) do
 	if route.kind == "lift" then
-		assert(route.guardedFaction == "Horde", "each shipped lift has validated landing guard metadata")
+		assert(
+			route.guardedFaction == (guarded[route.site] and "Horde" or nil),
+			"each shipped lift has validated landing guard metadata: " .. route.site
+		)
 	else
 		assert(route.guardedFaction == nil, "tram boarding is unchanged")
 	end

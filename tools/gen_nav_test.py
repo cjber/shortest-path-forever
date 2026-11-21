@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from unittest.mock import patch
 
 from tools.baker import gen_nav
-from tools.baker.gen_nav import decode_road_runs, drop_cost, pick_surface, walkable
+from tools.baker.gen_nav import decode_road_runs, drop_cost, pick_floor, pick_surface, walkable
 from tools.baker.geometry import centroid, clip_convex, height, plane
 
 
@@ -55,6 +55,47 @@ class PickSurfaceTest(unittest.TestCase):
         layers = {0: [(10.0, 1, (0, (0.0, 0.0))), (20.0, 1, (1, (0.0, 0.0)))]}
         self.assertEqual(pick_surface(layers, polys, [(0, 0, 0)], 0.5, 0.5, 20.2), (0, 1))
         self.assertEqual(pick_surface(layers, polys, [(0, 0, 0)], 0.5, 0.5, 9.8), (0, 0))
+
+
+def square(x0, y0, side, z):
+    """A square poly from (x0, y0) at height z."""
+    pts = [(x0, y0, z), (x0 + side, y0, z), (x0 + side, y0 + side, z), (x0, y0 + side, z)]
+    c = tuple(sum(p[a] for p in pts) / len(pts) for a in range(3))
+    return {"pts": [(p[0], p[1]) for p in pts], "plane": plane(pts, c), "steep": False}
+
+
+def one_cell(_x, _y):
+    return [(0, 0, 0)]
+
+
+class PickFloorTest(unittest.TestCase):
+    def test_a_trigger_above_its_floor_finds_the_floor_under_it(self):
+        # Stormwind's Sanctum trigger 702 floats 3.9 yards over the basement floor, past pick_surface's CLIMB; the
+        # tower room 115 yards up is no floor of it.
+        polys = {0: flat(29.6), 1: flat(148.6)}
+        layers = {0: [(29.6, 1, (0, (0.0, 0.0))), (148.6, 1, (1, (0.0, 0.0)))]}
+        self.assertIsNone(pick_surface(layers, polys, [(0, 0, 0)], 0.5, 0.5, 33.5))
+        self.assertEqual(pick_floor(layers, polys, one_cell, 0.5, 0.5, 33.5, 7.0), (0, 0))
+        self.assertEqual(pick_floor(layers, polys, one_cell, 0.5, 0.5, 151.6, 7.0), (0, 1))
+        self.assertIsNone(pick_floor(layers, polys, one_cell, 0.5, 0.5, 40.0, 7.0))
+
+    def test_the_floor_is_any_poly_under_the_trigger_not_only_the_layer_anchor(self):
+        # The basement layer's anchor lies 1.8 yards from trigger 702; another poly of that floor lies under it.
+        polys = {0: square(3.0, -1.0, 2.0, 29.6), 1: square(-0.5, -1.0, 2.0, 29.8), 2: flat(148.6)}
+        layers = {0: [(29.6, 1, (0, (4.0, 0.5))), (148.6, 1, (2, (0.0, 0.0)))], 1: [(29.7, 1, (1, (0.5, 0.5)))]}
+        self.assertEqual(pick_floor(layers, polys, lambda x, y: [(0, 0, 0), (1, 1, 0)], 0.5, 0.5, 33.5, 7.0), (0, 0))
+
+    def test_a_trigger_over_a_hole_finds_the_floor_around_it(self):
+        # Trigger 704's centre floats over the tower portal, where the navmesh has a hole; the floor beside it, inside
+        # the trigger's radius, is its floor, in the cell of the floor's nearest point.
+        polys = {0: square(4.0, -2.0, 4.0, 148.7), 1: square(-2.0, -2.0, 1.0, 30.0)}
+        layers = {0: [(30.0, 1, (1, (0.0, 0.0)))], 1: [(148.7, 1, (0, (5.0, 0.0)))]}
+
+        def around(x, _y):
+            return [(1 if x >= 4.0 else 0, 0, 0)]
+
+        self.assertEqual(pick_floor(layers, polys, around, 0.0, 0.0, 151.6, 7.0), (1, 0))
+        self.assertIsNone(pick_floor(layers, polys, around, 0.0, 0.0, 151.6, 3.0))
 
 
 class RasterizeLayersTest(unittest.TestCase):
@@ -637,7 +678,7 @@ class AssembleFloorsTest(unittest.TestCase):
 
 
 class ReachableTest(unittest.TestCase):
-    def components(self, spots):
+    def components(self, spots, joins=()):
         # A street and, 40 yards under it, sealed ground with no way between them, as under Stormwind.
         def square(z):
             return [(-8800.0, 800.0, z), (-8790.0, 800.0, z), (-8790.0, 810.0, z), (-8800.0, 810.0, z)]
@@ -649,12 +690,17 @@ class ReachableTest(unittest.TestCase):
             patch.object(gen_nav, "SIZE", array("i")),
             patch.object(gen_nav, "read_tile", lambda rc: (polys, [], [], [])),
         ):
-            gen_nav.components(spots)
+            gen_nav.components(spots, joins)
             return list(gen_nav.SIZE)
 
     def test_ground_no_fixed_place_stands_on_is_dropped(self):
         self.assertEqual(self.components([(-8795.0, 805.0, 101.0)]), [1, 0])
         self.assertEqual(self.components([(-8795.0, 815.0, 58.0)]), [0, 1])
+
+    def test_a_hop_joins_the_ground_it_lands_on(self):
+        # A teleport from the street down to the sealed ground keeps that ground, as one component with the street.
+        hop = ((-8795.0, 805.0, 101.0), 7.0, (-8795.0, 805.0, 60.0))
+        self.assertEqual(self.components([(-8795.0, 805.0, 101.0)], [hop]), [2, 2])
 
     def test_tiles_without_a_fixed_place_are_refused(self):
         with self.assertRaises(SystemExit):
