@@ -642,6 +642,8 @@ ShortestPathForeverPathData = nil
 ---@field sourceCluster? number
 ---@field radius? number
 ---@field revision? number
+---@field into? table<number, boolean> -- a spent reverse batch's closed entrances: every one that walks to its goal
+---@field moved? SPFPoint -- the nearest ground a spent reverse batch's places reach, for a goal none of them reach
 ---@field valid? boolean
 ---@field costs? (number|false)[]
 ---@field co? thread
