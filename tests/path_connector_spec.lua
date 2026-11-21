@@ -82,8 +82,43 @@ local directed = install(
 	{ { 10, 10, 1, 0, 16 } }
 )
 assert(G.toward(directed, {}, 0, land, 10.5, 10.5, 11.5, 10.5, false, nil, nil, true))
+-- Format 4's move bit certifies the centre line, as for a doorway at y = .4 through .6.
+local directedLink = directed.links[0][land + 1]
+directed.links[0][land + 1] = nil
+directed.fmt = 4
+directed.moves[0][land + 1] = 1
+assert(G.toward(directed, {}, 0, land, 10.5, 10.9, 11.5, 10.9, false, nil, nil, true))
+directed.links[0].narrow = { [land * 512] = true }
+assert(G.toward(directed, {}, 0, land, 10.5, 10.5, 11.5, 10.5, false, nil, nil, true))
+assert(
+	not G.toward(directed, {}, 0, land, 10.5, 10.9, 11.5, 10.9, false, nil, nil, true),
+	"a clear centre line does not certify an off-centre doorway crossing"
+)
+directed.links[0][land + 1] = directedLink
+directed.fmt = 2
 local dk, dn, dt = G.toward(directed, {}, 0, water, 11.5, 10.5, 10.5, 10.5, false, nil, nil, true)
 assert(dk == nil and dn == false and dt == nil)
+
+-- A shallow chord between centres can still leave the certified lines of its individual steps.
+local turn = install({
+	[10] = { [10] = { z = 20 } },
+	[11] = { [10] = { z = 20 }, [11] = { z = 20 } },
+	[12] = { [11] = { z = 20 } },
+})
+turn.fmt = 4
+turn.moves[0][land + 1], turn.moves[0][water + 1], turn.moves[0][water + 2] = 17, 20, 1
+local pathPoints = {
+	x = { 10, 11, 11, 12 },
+	y = { 10, 10, 11, 11 },
+	n = { land, water, water + 1, 12 * C + 11 },
+	k = { 0, 0, 0, 0 },
+	z = { 20, 20, 20, 20 },
+	t = { 0, CS, 2 * CS, 3 * CS },
+	w = { 0, 0, 0, 0 },
+}
+assert(#G.smooth(turn, pathPoints) == 2, "wide dry steps permit smoothing on shallow chords")
+turn.links[0].narrow = { [land * 512] = true }
+assert(#G.smooth(turn, pathPoints) == 3, "a narrow step requires a chord on the certified line")
 
 -- Bare continuation is dry and off-road, including its final interval. A closed cell with any surface is blocked.
 local bare, bareMap = install({ [10] = { [10] = { z = 20 } } })

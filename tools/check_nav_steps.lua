@@ -1,4 +1,4 @@
--- Every shipped walking map: a step the bake joined both ways on ordinary ground must be walkable both ways at
+-- Legacy walking maps: a step the bake joined both ways on ordinary ground must be walkable both ways at
 -- runtime. The bake links two neighbouring surfaces only the ways the navmesh walks between them, and that navmesh
 -- holds the player's slope and step limits, so a two-way link the runtime refuses one way is a wrong stored value
 -- or a runtime rule judging what the bake already judged (#1011: a tunnel floor stored a poly centroid's height, and
@@ -37,7 +37,8 @@ for _, map in ipairs(maps) do
 	ns.Path.cacheKB = 1e9 -- clusters are walked in order and released below, not evicted mid-walk
 	local st = P.State(map)
 	local C, steep = st.C, st.steep
-	local clusters = st.GX / C * st.ny
+	-- Format 4 has no stored-height step gate. Its outgoing links are checked by nav_directed_spec.
+	local clusters = st.fmt < 4 and st.GX / C * st.ny or 0
 	local checked, bad = 0, {}
 
 	-- Raw: the bake's own link, before any height test.
@@ -107,9 +108,18 @@ for _, map in ipairs(maps) do
 			end
 		end
 	end
-	print(
-		string.format("map %d: %d two-way steps on ordinary ground, %d refused one way at runtime", map, checked, #bad)
-	)
+	if st.fmt < 4 then
+		print(
+			string.format(
+				"map %d: %d two-way steps on ordinary ground, %d refused one way at runtime",
+				map,
+				checked,
+				#bad
+			)
+		)
+	else
+		print(string.format("map %d: format 4 has no legacy height gate", map))
+	end
 	for i = 1, os.getenv("SPF_STEPS_ALL") and #bad or math.min(#bad, 20) do
 		print("  " .. bad[i])
 	end

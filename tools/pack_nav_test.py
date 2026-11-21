@@ -24,6 +24,28 @@ class NavigationPackingTest(unittest.TestCase):
         (directory / "ShortestPathForever_Nav0.toc").write_text("## LoadOnDemand: 1\n\nNav0.lua\n")
         return path
 
+    def test_indexed_graph_keeps_arbitrary_bytes(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            src = self.source(root)
+            graph = bytes(range(256)) * 65
+            encoded = base64.b64encode(graph).decode("ascii").rstrip("=")
+            source = src.read_text().replace('"AAA"', f'"{encoded}"')
+            source = source.replace("\tcells = 67,", "\tcells = 67,\n\tgraphFormat = 1,")
+            src.write_text(source)
+            _, before, *_ = read_map(src, 0)
+            write_bundle(root, [src])
+            _, after, *_ = read_packed(root / "Nav/Nav0.lua", 0)
+            self.assertEqual(before, after)
+            part = (root / "Nav/Nav0_1.lua").read_text()
+
+            def inflate(field):
+                row = next(line for line in part.splitlines() if line.startswith(f"data.packed.{field}[1]"))
+                return b"".join(zlib.decompress(base64.b64decode(block)) for block in re.findall(r'"([^"]+)"', row))
+
+            self.assertEqual(inflate("graph"), graph)
+            self.assertEqual(inflate("grid"), b"ABCD" * 9000)
+
     def test_bundle_preserves_data_and_is_stable(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

@@ -141,6 +141,22 @@ local function factorOf(st, hz)
 	end
 end
 
+local opposite = Grid.OPPOSITE
+local function directedBaseSteps(m, C, u, ux, uy, reverse, visit)
+	for d = 0, 7 do
+		local dx, dy = DX[d], DY[d]
+		local x, y = ux + dx, uy + dy
+		if x >= 0 and x < C and y >= 0 and y < C then
+			local v = u + dx * C + dy
+			local mask = m[(reverse and v or u) + 1]
+			local bit = 2 ^ (reverse and opposite[d] or d)
+			if floor(mask / bit) % 2 == 1 then
+				visit(v, d < 4 and 1 or SQRT2)
+			end
+		end
+	end
+end
+
 -- Grid search inside one cluster, entering water costing swim times its length. tree holds g/parent keyed by
 -- node + 1. With goal set it is A*, otherwise Dijkstra that stops once every node in targets (a set of nodes) is
 -- settled.
@@ -244,7 +260,9 @@ local function search(st, k, swim, source, tree, goal, targets, left, roads, hz,
 			end
 			local cell = u < N and u or at[i]
 			gu, ru, ux, uy = g[i], r[i], floor(cell / C), cell % C
-			if u < N then
+			if u < N and fmt >= 4 then
+				directedBaseSteps(m, C, u, ux, uy, reverse, relax)
+			elseif u < N then
 				local mi = m[i] % 16
 				local px, mx = mi % 2 == 1, ux > 0 and m[i - C] % 2 == 1
 				local py, my = mi % 4 >= 2, uy > 0 and m[i - 1] % 4 >= 2
@@ -1620,10 +1638,17 @@ local function bakeEdges(st, k, road)
 		flat[size - 3], flat[size - 2], flat[size - 1], flat[size] =
 			v, step, wet, 1 + (OFFROAD - 1) * (1 - (road[base] or 0))
 	end
+	local from
+	local function addBase(v, length)
+		add(from, v, length)
+	end
 	for node = 0, top - 1 do
 		head[node + 1] = size + 1
 		local i = node + 1
-		if node < N then
+		if node < N and fmt >= 4 then
+			from = node
+			directedBaseSteps(m, C, node, floor(node / C), node % C, false, addBase)
+		elseif node < N then
 			local mi = m[i] % 16
 			local ux, uy = floor(node / C), node % C
 			if val[i] ~= 0 then

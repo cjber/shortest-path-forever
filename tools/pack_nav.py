@@ -92,8 +92,13 @@ BLOCK_BYTES = 16 * 1024
 PACKED_ENTRY = re.compile(r"data\.packed\.(graph|grid|height|floor|terrain)\[(\d+)\] = \{([^}]+)\}")
 
 
+def indexed_graph(source):
+    return re.search(r"^\tgraphFormat = 1,$", source, re.MULTILINE) is not None
+
+
 def read_packed(path, map_id):
     source = path.read_text()
+    binary_graph = indexed_graph(source)
     fields = {field: {} for field in FIELDS}
     for part in sorted(path.parent.glob(f"Nav{map_id}_*.lua")):
         content = part.read_text()
@@ -104,9 +109,10 @@ def read_packed(path, map_id):
             if key in fields[field]:
                 raise ValueError(f"Duplicate navigation entry: {field}[{key}]")
             values = re.findall(r'"([A-Za-z0-9+/=]+)"', blocks)
-            fields[field][key] = "".join(
-                zlib.decompress(base64.b64decode(value, validate=True)).decode("ascii") for value in values
-            )
+            raw = b"".join(zlib.decompress(base64.b64decode(value, validate=True)) for value in values)
+            if field == "graph" and binary_graph:
+                raw = base64.b64encode(raw).rstrip(b"=")
+            fields[field][key] = raw.decode("ascii")
     counts = dict(
         (field, int(count)) for field, count in re.findall(r"(graph|grid|height|floor|terrain) = (\d+)", source)
     )
@@ -174,12 +180,15 @@ def write_bundle(root, sources, limit=PART_BYTES, extra=None):
             PACKED_HEADER
             + f"---@type SPFNavData\nlocal data = ShortestPathForeverPathData[{map_id}]\n-- stylua: ignore start\n"
         )
+        binary_graph = indexed_graph(source)
         part, content = 1, header
         for key in sorted(set().union(*(values.keys() for values in fields.values()))):
             for field in FIELDS:
                 if key not in fields[field]:
                     continue
                 raw = fields[field][key].encode("ascii")
+                if field == "graph" and binary_graph:
+                    raw = base64.b64decode(raw + b"=" * (-len(raw) % 4), validate=True)
                 blocks = [
                     base64.b64encode(zlib.compress(raw[offset : offset + BLOCK_BYTES], 9)).decode("ascii")
                     for offset in range(0, len(raw), BLOCK_BYTES)
