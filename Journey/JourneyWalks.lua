@@ -274,14 +274,16 @@ end
 -- The bind point moves, so its walks on to the fixed places cannot be baked like a class teleport's: each is searched
 -- once per bind point and water mode, alongside the journey's own endpoint searches.
 landings = {}
----@param place SPFTeleportPlace
----@param water boolean?
+
 ---@class SPFLanding
 ---@field targets SPFPlace[]
 ---@field costs? (number|false)[]
 ---@field waiting? fun()[]
 ---@field beyond? table<fun(), number>
 ---@field job SPFPathJob
+
+---@param place SPFTeleportPlace
+---@param water boolean?
 ---@return SPFLanding?
 local function Landing(place, water)
 	if not (place.bind and ns.Path.HasData(place.map)) then
