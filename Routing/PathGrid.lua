@@ -1111,12 +1111,14 @@ local function preceding(st, id, roads)
 	return lists[id] or noEdges
 end
 
--- Road cells of cluster k (RoadCells.lua), decoded once: a set of local cell -> coverage, or false when it has none.
+-- Road coverage of cluster k (RoadCells.lua), decoded once by local node, or false when it has none.
 -- Only read while Follow roads is on.
 local function decodeRoads(st, k)
 	local list = ns.RoadCells and ns.RoadCells[st.map]
-	local s = list and list[k + 1]
-	if not s then
+	local nodes = ns.RoadNodeCoverage and ns.RoadNodeCoverage[st.map]
+	local overrides = nodes and nodes[k + 1] or ""
+	local s = list and list[k + 1] or ""
+	if s == "" and overrides == "" then
 		return false
 	end
 	local set, lc, pos = {}, 0, 1
@@ -1133,6 +1135,9 @@ local function decodeRoads(st, k)
 			lc = lc + run
 		end
 	end
+	for i = 1, #overrides, 4 do
+		set[num(overrides, i, 3)] = B64[byte(overrides, i + 3)] / 63
+	end
 	return set
 end
 
@@ -1145,11 +1150,15 @@ local function roads(st, k)
 	return set or nil
 end
 
--- Painted road coverage of this node's base cell, zero without paint.
+-- Trail coverage belongs to a node. Painted coverage applies to every floor of the cell.
 local function roadNode(st, k, node)
 	local set = roads(st, k)
 	if not set then
 		return 0
+	end
+	local coverage = set[node]
+	if coverage ~= nil then
+		return coverage
 	end
 	local cell = cellOf(st, k, node)
 	return cell ~= nil and set[cell] or 0
@@ -1171,7 +1180,7 @@ local function roadDistance(st, ax, ay, bx, by)
 		tick()
 		local nextAt = min(nextX, nextY, 1)
 		local set = x >= 0 and x < st.GX and y >= 0 and y < st.GY and roads(st, floor(x / C) * st.ny + floor(y / C))
-		if not set or not set[(x % C) * C + y % C] then
+		if not set or (set[(x % C) * C + y % C] or 0) == 0 then
 			off = off + nextAt - at
 		end
 		if nextX == nextAt then
@@ -2069,11 +2078,51 @@ local function smooth(st, P, ends)
 		b = from[b]
 	end
 	local out = { 1 }
+	local function append(last)
+		local first = out[#out]
+		local dx, dy = PX[last] - PX[first], PY[last] - PY[first]
+		local steps = last - first
+		-- Only restore grades along the chord actually drawn, including its real endpoints.
+		local ax, ay = PX[first] + 0.5, PY[first] + 0.5
+		local bx, by = PX[last] + 0.5, PY[last] + 0.5
+		if first == 1 and not startVia then
+			ax, ay = E.sx, E.sy
+		end
+		if last == n and not goalVia then
+			bx, by = E.gx, E.gy
+		end
+		if steps > 1 and max(abs(dx), abs(dy)) == steps then
+			local x, y = dx / steps, dy / steps
+			local straight = true
+			for j = first + 1, last - 1 do
+				local cx, cy = PX[j] + 0.5, PY[j] + 0.5
+				if
+					PX[j] ~= PX[first] + x * (j - first)
+					or PY[j] ~= PY[first] + y * (j - first)
+					-- Endpoint coordinates have been converted from world yards to cells.
+					or abs((cx - ax) * (by - ay) - (cy - ay) * (bx - ax)) > 1e-9
+				then
+					straight = false
+					break
+				end
+			end
+			if straight then
+				-- Nav stores base heights in two-yard steps and upper floors in whole yards.
+				local z = P.z
+				for j = first + 1, last - 1 do
+					if z[j] - z[j - 1] ~= z[j + 1] - z[j] then
+						out[#out + 1] = j
+					end
+				end
+			end
+		end
+		out[#out + 1] = last
+	end
 	for i = #corners, 1, -1 do
-		out[#out + 1] = corners[i]
+		append(corners[i])
 	end
 	if n > 1 then
-		out[#out + 1] = n
+		append(n)
 	end
 	return out, startVia, goalVia
 end
@@ -2316,6 +2365,7 @@ ns.PathGrid = {
 	ground = ground,
 	snap = snap,
 	roads = roads,
+	roadNode = roadNode,
 	roadDistance = roadDistance,
 	roadClear = roadClear,
 	roadEdges = roadEdges,

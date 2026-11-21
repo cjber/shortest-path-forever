@@ -1,6 +1,6 @@
 import unittest
 
-from tools.gen_roads import TEXELS, cells_of, encode
+from tools.gen_roads import TEXELS, cells_of, decode_trail_tile, encode, encode_trails
 
 
 def painted(cells, cover):
@@ -22,6 +22,13 @@ def painted(cells, cover):
 
 
 class RoadCellsTest(unittest.TestCase):
+    def test_polestar_levels_and_axis_order(self):
+        # Same cell twice with a falling level, then the next row (a multibyte cell delta).
+        tiles = list(decode_trail_tile(rb"\005(\003\005\254\003\002"))
+        self.assertEqual(tiles, [(1, 20, 1), (1, 17, 3), (128, 18, 2)])
+        # Polestar advances south and east, while the walking grid advances north and west.
+        self.assertEqual(encode_trails([(0, 0, 3), (128, 0, 1)], 128), "D9/gABD//gAD")
+
     def test_a_narrow_diagonal_road_stays_joined(self):
         # A one-cell diagonal road covers only part of each crossed cell; each painted cell must survive.
         cells = 67

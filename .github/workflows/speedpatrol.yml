@@ -5,7 +5,7 @@ name: Speedpatrol
 on:
   pull_request:
     # labeled re-runs the timing when the "speedpatrol: accept" label is added; naming types replaces the defaults.
-    types: [opened, synchronize, reopened, labeled]
+    types: [opened, synchronize, reopened, labeled, ready_for_review]
 
 permissions: {}
 
@@ -15,6 +15,7 @@ concurrency:
 
 jobs:
   speedpatrol:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:

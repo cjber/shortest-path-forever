@@ -221,7 +221,7 @@ local function search(st, k, swim, source, tree, goal, targets, left, roads, hz,
 		if roadsOn or factor then
 			local base = entered < N and entered or at[entered + 1]
 			if roadsOn then
-				choice = step * (1 + roadExtra * (1 - (roads and roads[base] or 0)))
+				choice = step * (1 + roadExtra * (1 - (roads and (roads[entered] or roads[base]) or 0)))
 			end
 			if factor then
 				local f = factor[base]
@@ -950,8 +950,7 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 		local length = sqrt(dx * dx + dy * dy)
 		P.t[n + 1] = (P.t[n] or 0) + length * st.cs * (wet and swim or 1)
 		if P.r and P.distance and P.field then
-			local roadSet = Grid.roads(st, k)
-			local outside = (not roadSet or not roadSet[cell]) and 1 or 0
+			local outside = Grid.roadNode(st, k, node) == 0 and 1 or 0
 			P.r[n + 1] = (P.r[n] or 0) + outside
 			local field = 0
 			if n > 0 then
@@ -1659,7 +1658,7 @@ local function bakeEdges(st, k, road)
 		local base = v < N and v or at[i]
 		size = size + 4
 		flat[size - 3], flat[size - 2], flat[size - 1], flat[size] =
-			v, step, wet, 1 + (OFFROAD - 1) * (1 - (road[base] or 0))
+			v, step, wet, 1 + (OFFROAD - 1) * (1 - (road[v] or road[base] or 0))
 	end
 	for node = 0, top - 1 do
 		head[node + 1] = size + 1
@@ -1885,15 +1884,10 @@ function Path.BakeRoadEdges(map)
 							q1, q2, q3, q4 = 63, 0, 63, 0
 						end
 					else
-						-- A cluster with no road cells answers false however its neighbour decodes, so the grid of a
-						-- cross-cluster edge's far end is only read when that cluster paints roads.
-						local coverage = 0
-						local other = Grid.roads(st, floor(v / 4096))
-						if other then
-							-- A landing that the neighbour's grid cannot place is no road, as before.
-							local cell = metadata(st, v)
-							coverage = cell ~= nil and nodeAt(v) ~= nil and other[cell] or 0
-						end
+						local otherK = floor(v / 4096)
+						local other = Grid.roads(st, otherK)
+						local landing = other and nodeAt(v)
+						local coverage = landing and Grid.roadNode(st, otherK, landing) or 0
 						if c1 == 0 then
 							q1, q2 = 63, 0
 						else

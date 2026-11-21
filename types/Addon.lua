@@ -24,6 +24,7 @@
 ---@field WalkPlaces table<number, table<string, number[]>>
 ---@field WalkZones table<number, table<string, number[]>>? each baked walk's zone shares (Data/WalkZones.lua)
 ---@field RoadCells table<number, table<number, string>>
+---@field RoadNodeCoverage table<number, table<number, string>>
 ---@field RoadEdges table<number, table<number, string>>
 ---@field SpawnHeights table<number, table<number, string>> spawns over or under another surface (Data/Heights.lua)
 ---@field TownAreas table<number, SPFTownArea> the client's town ground per flight master (Data/TownAreas.lua)

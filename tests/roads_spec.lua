@@ -147,3 +147,25 @@ local restored, restoredCost = Path.FindSync(0, from, to, false, profile("defaul
 assert(restoredCost == roadCost, "restoring 50% restores the cached default cost")
 assert(share(restored) >= roadShare, "restoring 50% keeps the drawn line on the road")
 print("road detour: default geometry, zero, stronger preference and both batch directions ok")
+
+-- Ironforge's outer ring from Innkeeper Firebrew to Jemma Quikswitch. The recorded track uses the outer
+-- lane on the far side of the ring; the painted-road-only route cuts across its inside edge.
+local ironforge = assert(
+	Path.FindSync(
+		0,
+		{ x = -4840.7, y = -857.1, z = 502 },
+		{ x = -4802.5, y = -1248.5, z = 502.1 },
+		false,
+		profile("ironforge", true)
+	)
+)
+local outerLane = false
+for i = 2, #ironforge do
+	local a, b = ironforge[i - 1], ironforge[i]
+	if a.y > -1130 and b.y <= -1130 then
+		local t = (-1130 - a.y) / (b.y - a.y)
+		outerLane = a.x + t * (b.x - a.x) < -4991
+		break
+	end
+end
+assert(outerLane, "Ironforge follows the recorded outer lane")

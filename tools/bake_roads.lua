@@ -1,5 +1,5 @@
--- How each entrance graph edge weighs road travel while Follow roads is on, baked from the roads painted on the
--- walking maps. Run from the repo root after rebaking a walking map or changing Data/RoadCells.lua:
+-- How each entrance graph edge weighs painted roads and recorded trails while Follow roads is on.
+-- After rebaking Nav, run python3 tools/gen_roads.py, then run from the repo root:
 -- luajit tools/bake_roads.lua > Data/RoadEdges.lua
 -- Each map bakes in its own child process (`--map <id>`) at the same time; the parent writes their blocks in map
 -- order, so the output does not depend on which child finishes first.
@@ -25,18 +25,28 @@ local function BakeMap(map)
 	for _, nav in ipairs(MAPS) do
 		assert(loadfile("tools/load_nav.lua"))(nav)
 	end
+	local trails = assert(loadfile("tools/RoadTrails.lua"))()
+	local match = assert(loadfile("tools/bake_road_coverage.lua"))()
+	local coverage = match(ns.PathGrid, map, trails[map] or {})
+	ns.RoadNodeCoverage = { [map] = coverage }
 	local edges = ns.Path.BakeRoadEdges(map)
-	local keys = {}
-	for k in pairs(edges) do
-		keys[#keys + 1] = k
+	local function writeMap(records, offset)
+		local keys = {}
+		for k in pairs(records) do
+			keys[#keys + 1] = k
+		end
+		table.sort(keys)
+		print(("\t[%d] = {"):format(map))
+		for _, k in ipairs(keys) do
+			print(('\t\t[%d] = "%s",'):format(k + offset, records[k]))
+		end
+		print("\t},")
 	end
-	table.sort(keys)
-	io.stderr:write(("map %d: %d clusters with road edges\n"):format(map, #keys))
-	print(("\t[%d] = {"):format(map))
-	for _, k in ipairs(keys) do
-		print(('\t\t[%d] = "%s",'):format(k + 1, edges[k]))
+	writeMap(edges, 1)
+	print("-- coverage")
+	if next(coverage) then
+		writeMap(coverage, 0)
 	end
-	print("\t},")
 	-- The parent checks for this line: LuaJIT's pipe close does not report a child's exit status.
 	print(("-- end of map %d"):format(map))
 end
@@ -65,11 +75,22 @@ print("local ns = select(2, ...)")
 print("")
 print("-- stylua: ignore")
 print("ns.RoadEdges = {")
+local coverage = {}
 for i, map in ipairs(MAPS) do
 	local out = children[i]:read("*a")
 	children[i]:close()
 	local body, finished = out:match("^(.*)%-%- end of map (%d+)\n$")
 	assert(tonumber(finished) == map, ("the bake of map %d did not finish"):format(map))
-	io.write(body)
+	local edges, nodes = body:match("^(.*)%-%- coverage\n(.*)$")
+	io.write(edges)
+	coverage[i] = nodes
 end
+print("}")
+print("")
+print("-- Sparse trail overrides matched to Nav surfaces from tools/RoadTrails.lua.")
+print("-- Each record is a local node ID (three base64 symbols) and coverage 0-63 (one symbol).")
+print("-- Explicit zero coverage prevents a sibling floor from inheriting a base trail.")
+print("-- stylua: ignore")
+print("ns.RoadNodeCoverage = {")
+io.write(table.concat(coverage))
 print("}")
