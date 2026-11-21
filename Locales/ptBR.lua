@@ -602,3 +602,22 @@ L["Avoided transport"] = "Transportes evitados"
 L["Clear avoided transport"] = "Limpar transportes evitados"
 L["Clear this character's avoided transport so the planner can use it again."] =
 	"Limpa a lista deste personagem para que o planejador possa voltar a usar esses transportes."
+L["%s-right-click the map to mark a road or wall for a report."] =
+	"Segure %s e clique com o botão direito no mapa para marcar uma estrada ou parede para um relatório." -- mt
+L["Mark: road missing here"] = "Marcar: falta uma estrada aqui" -- mt
+L["Mark: wall here"] = "Marcar: há uma parede aqui" -- mt
+L["%s-right-click the map to copy the report or clear its marks."] =
+	"Segure %s e clique com o botão direito no mapa para copiar o relatório ou limpar suas marcações." -- mt
+L["Save this spot in the report to help fix the walking map."] =
+	"Salva este ponto no relatório para ajudar a corrigir o mapa de trajetos a pé." -- mt
+L["This spot has no world coordinates. Choose another spot."] =
+	"Este ponto não tem coordenadas no mundo. Escolha outro ponto." -- mt
+L["Copy road and wall report"] = "Copiar relatório de estradas e paredes" -- mt
+L["Open the report so you can copy and paste it into a bug report."] =
+	"Abre o relatório para que você possa copiá-lo e colá-lo em um relato de erro." -- mt
+L["Clear marks"] = "Limpar marcações" -- mt
+L["Remove all saved road and wall marks from the map and report."] =
+	"Remove do mapa e do relatório todas as marcações salvas de estradas e paredes." -- mt
+L["Road and wall report"] = "Relatório de estradas e paredes" -- mt
+L["Journey start: %s"] = "Ponto de partida da jornada: %s" -- mt
+L["Journey goal: %s"] = "Destino da jornada: %s" -- mt

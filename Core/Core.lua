@@ -165,7 +165,7 @@ local DEFAULTS = {
 	whatsNew = true,
 }
 ns.Defaults = DEFAULTS
-local CHARACTER_DEFAULTS = { avoided = {} }
+local CHARACTER_DEFAULTS = { avoided = {}, mapReportMarks = {} }
 -- The vendor kinds' grouped town service switches, on by default until #978 (UI/TownServices.lua).
 local VENDOR_SWITCHES = {
 	"townServiceFood",
@@ -504,6 +504,7 @@ frame:SetScript("OnEvent", function(self, _, name)
 			ShortestPathForeverCharDB[key] = value
 		end
 	end
+	ns.charDB = ShortestPathForeverCharDB
 	-- `teleports` once covered the Hearthstone too, so a save that turned it off gets the Hearthstone off once.
 	-- `teleportSplit` records that this move ran: whatever the player sets afterwards stands, and a save from
 	-- before the split has no `teleports` key to move.

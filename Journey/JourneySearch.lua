@@ -1126,6 +1126,13 @@ end
 -- there: neither may be charged for the character to escape (#895).
 local origin, hereZone, landingZone
 local avoided
+
+---@param point SPFPoint
+---@return SPFPoint?
+function Search.Origin(point)
+	return goal == point and origin or nil
+end
+
 local function WalkLanding()
 	local leg = followed and progress and followed.legs[progress.index]
 	if leg and leg.mode ~= "walk" then

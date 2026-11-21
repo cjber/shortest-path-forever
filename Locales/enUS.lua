@@ -36,6 +36,25 @@ L["Avoided transport"] = "Avoided transport"
 L["Clear avoided transport"] = "Clear avoided transport"
 L["Clear this character's avoided transport so the planner can use it again."] =
 	"Clear this character's avoided transport so the planner can use it again."
+L["%s-right-click the map to mark a road or wall for a report."] =
+	"%s-right-click the map to mark a road or wall for a report."
+L["Mark: road missing here"] = "Mark: road missing here"
+L["Mark: wall here"] = "Mark: wall here"
+L["%s-right-click the map to copy the report or clear its marks."] =
+	"%s-right-click the map to copy the report or clear its marks."
+L["Save this spot in the report to help fix the walking map."] =
+	"Save this spot in the report to help fix the walking map."
+L["This spot has no world coordinates. Choose another spot."] =
+	"This spot has no world coordinates. Choose another spot."
+L["Copy road and wall report"] = "Copy road and wall report"
+L["Open the report so you can copy and paste it into a bug report."] =
+	"Open the report so you can copy and paste it into a bug report."
+L["Clear marks"] = "Clear marks"
+L["Remove all saved road and wall marks from the map and report."] =
+	"Remove all saved road and wall marks from the map and report."
+L["Road and wall report"] = "Road and wall report"
+L["Journey start: %s"] = "Journey start: %s"
+L["Journey goal: %s"] = "Journey goal: %s"
 L["Rides to spend less time walking through %s (level %s)"] = "Rides to spend less time walking through %s (level %s)"
 L["Walk less in zones with a minimum level 4 or more above yours, even at your destination."] =
 	"Walk less in zones with a minimum level 4 or more above yours, even at your destination."

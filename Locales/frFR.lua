@@ -609,3 +609,22 @@ L["Avoided transport"] = "Transports évités" -- mt
 L["Clear avoided transport"] = "Effacer les exclusions" -- mt
 L["Clear this character's avoided transport so the planner can use it again."] =
 	"Efface la liste de ce personnage pour que le planificateur puisse de nouveau utiliser ces transports." -- mt
+L["%s-right-click the map to mark a road or wall for a report."] =
+	"Maintenez %s et faites un clic droit sur la carte pour signaler une route ou un mur." -- mt
+L["Mark: road missing here"] = "Marquer : il manque une route ici" -- mt
+L["Mark: wall here"] = "Marquer : il y a un mur ici" -- mt
+L["%s-right-click the map to copy the report or clear its marks."] =
+	"Maintenez %s et faites un clic droit sur la carte pour copier le rapport ou effacer ses repères." -- mt
+L["Save this spot in the report to help fix the walking map."] =
+	"Enregistre cet endroit dans le rapport pour aider à corriger la carte des trajets à pied." -- mt
+L["This spot has no world coordinates. Choose another spot."] =
+	"Cet endroit n’a pas de coordonnées dans le monde. Choisissez un autre endroit." -- mt
+L["Copy road and wall report"] = "Copier le rapport sur les routes et les murs" -- mt
+L["Open the report so you can copy and paste it into a bug report."] =
+	"Ouvre le rapport pour que vous puissiez le copier et le coller dans un signalement de bug." -- mt
+L["Clear marks"] = "Effacer les repères" -- mt
+L["Remove all saved road and wall marks from the map and report."] =
+	"Supprime tous les repères de routes et de murs de la carte et du rapport." -- mt
+L["Road and wall report"] = "Rapport sur les routes et les murs" -- mt
+L["Journey start: %s"] = "Départ du trajet : %s" -- mt
+L["Journey goal: %s"] = "Destination du trajet : %s" -- mt

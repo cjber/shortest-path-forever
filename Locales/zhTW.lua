@@ -592,3 +592,21 @@ L["Avoided transport"] = "避用的交通方式"
 L["Clear avoided transport"] = "清除避用交通方式"
 L["Clear this character's avoided transport so the planner can use it again."] =
 	"清除此角色的避用清單，讓路線規劃重新考慮這些交通方式。"
+L["%s-right-click the map to mark a road or wall for a report."] =
+	"按住 %s 並右鍵點擊地圖，將道路或牆壁標記到回報中。" -- mt
+L["Mark: road missing here"] = "標記：此處缺少道路" -- mt
+L["Mark: wall here"] = "標記：此處有牆" -- mt
+L["%s-right-click the map to copy the report or clear its marks."] =
+	"按住 %s 並右鍵點擊地圖，可複製回報或清除標記。" -- mt
+L["Save this spot in the report to help fix the walking map."] =
+	"將此位置儲存到回報中，協助修正步行路線地圖。" -- mt
+L["This spot has no world coordinates. Choose another spot."] = "此位置沒有世界座標。請選擇其他位置。" -- mt
+L["Copy road and wall report"] = "複製道路與牆壁回報" -- mt
+L["Open the report so you can copy and paste it into a bug report."] =
+	"開啟回報，以便複製並貼到錯誤回報中。" -- mt
+L["Clear marks"] = "清除標記" -- mt
+L["Remove all saved road and wall marks from the map and report."] =
+	"從地圖和回報中移除所有已儲存的道路與牆壁標記。" -- mt
+L["Road and wall report"] = "道路與牆壁回報" -- mt
+L["Journey start: %s"] = "旅程起點：%s" -- mt
+L["Journey goal: %s"] = "旅程目的地：%s" -- mt

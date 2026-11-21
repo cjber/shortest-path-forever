@@ -415,8 +415,17 @@
 ---@field taxiTimes? table<string, number> -- measured seconds per directed flight path, "from:to"
 ---@field trace? (number|string)[][]
 ---@field taxiLog? table<string, {seen: number, showsNodes: boolean, nodes: string[]}>
+---@alias SPFMapReportKind "road"|"wall"
+---@class SPFMapReportMark
+---@field kind SPFMapReportKind
+---@field map integer
+---@field x number
+---@field y number
+---@field world SPFPoint
+
 ---@class SPFCharacterDatabase
 ---@field avoided? SPFAvoidedTransport[]
+---@field mapReportMarks SPFMapReportMark[]
 ---@field progress? SPFProgressData
 ---@field taxi table<number, boolean>
 ---@field taxiNames? table<number, string> -- flight points by the name a flight map gave them

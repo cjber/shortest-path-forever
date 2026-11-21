@@ -371,6 +371,25 @@ assert(ns.JourneyKeyDown() and ns.JourneyKeyName() == "Shift", "an unknown saved
 ns.db.journeyKey, alt = "alt", true
 assert(ns.JourneyKeyDown() and ns.JourneyKeyName() == "Alt", "Alt can be the journey key")
 
+local reportClick
+ns.OpenMapReportMenu = function(clickedMap, mapID, x, y)
+	reportClick = { clickedMap, mapID, x, y }
+	return true
+end
+shift, alt, destination = false, false, nil
+assert(canvasClick(map, "RightButton") == false and not reportClick, "plain right-click still zooms out")
+alt = true
+assert(canvasClick(map, "RightButton"), "the journey-key right-click opens the map report menu")
+assert(reportClick[1] == map and reportClick[2] == 1440 and reportClick[3] == 0.25 and reportClick[4] == 0.75)
+assert(not destination, "report clicks never start a journey")
+local reportHint = { lines = {} }
+ns.AddJourneyClickHint(reportHint)
+assert(
+	reportHint.lines[2] == "Alt-right-click the map to mark a road or wall for a report.",
+	"the map hint explains the report gesture with the chosen key"
+)
+ns.OpenMapReportMenu = nil
+
 -- The world map: a pin, the canvas, and our own icons all follow the chosen key.
 pin.pinTemplate, pin.poiInfo = "FlightPointPinTemplate", { nodeID = 26, name = "Astranaar" }
 pin.GetGlobalPosition = nil

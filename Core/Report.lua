@@ -1,3 +1,5 @@
+---@type string
+local addonName = ...
 ---@class SPFNamespace
 local ns = select(2, ...)
 
@@ -29,17 +31,22 @@ local function Seconds(ms)
 	return math.floor(ms / 1000 + 0.5)
 end
 
+---@param uiMap integer
+---@param x number
+---@param y number
+---@return string
+local function MapPlace(uiMap, x, y)
+	local percent = ns.core.Report.Percent
+	return ("map %d %s, %s"):format(uiMap, percent(x), percent(y))
+end
+
 -- A world point as the map shows it: "map 1429 42.1, 65.3", or its world yards when no zone holds it.
 ---@param point SPFPoint
 ---@return string
 local function Place(point)
 	local location = ns.Locate(point)
 	if location then
-		return ("map %d %s, %s"):format(
-			location.uiMap,
-			ns.core.Report.Percent(location.x),
-			ns.core.Report.Percent(location.y)
-		)
+		return MapPlace(location.uiMap, location.x, location.y)
 	end
 	return ("continent %s %.0f, %.0f"):format(tostring(point.map), point.x, point.y)
 end
@@ -58,6 +65,37 @@ end
 ---@return string
 local function Endpoint(point)
 	return ("map %s x %s y %s z %s"):format(Value(point.map), Value(point.x), Value(point.y), Value(point.z))
+end
+
+-- Compact evidence for a bug report, with the clicked map coordinates and the exact world point.
+---@param marks SPFMapReportMark[]
+---@return string
+function ns.MapReportText(marks)
+	local version = C_AddOns.GetAddOnMetadata(addonName, "Version") or "-"
+	local gameVersion, build = GetBuildInfo()
+	local L = ns.L
+	local lines = {
+		("%s %s | WoW %s (%s) | %s"):format(addonName, version, gameVersion, build, L["Road and wall report"]),
+	}
+	local goal = ns.JourneyGoal()
+	if goal then
+		local plan = ns.JourneyPlan()
+		local first = plan and plan.legs[1]
+		local start = first and first.from or ns.JourneySearch.Origin(goal)
+		lines[#lines + 1] = L["Journey start: %s"]:format(start and Endpoint(start) or Value(nil))
+		lines[#lines + 1] = L["Journey goal: %s"]:format(Endpoint(goal))
+	end
+	for _, mark in ipairs(marks) do
+		local location = ns.Locate(mark.world)
+		local mapInfo = not location and C_Map.GetMapInfo(mark.map) or nil
+		lines[#lines + 1] = ("%s | %s | %s | %s"):format(
+			mark.kind,
+			MapPlace(mark.map, mark.x, mark.y),
+			Endpoint(mark.world),
+			location and location.zone or mapInfo and mapInfo.name or "unknown"
+		)
+	end
+	return table.concat(lines, "\n")
 end
 
 ---@param lines string[]
