@@ -273,7 +273,6 @@ local ns = {
 		dugi = false,
 		compassTime = false,
 		arrivalSound = false,
-		resumeJourney = false,
 		focusedQuest = false,
 		journeyKey = "shift",
 		routeColor = "gold",
@@ -412,7 +411,6 @@ local groups = {
 		"trackerLocked",
 		"trackerScale",
 		"trackerHeight",
-		"resumeJourney",
 		"journey",
 		"journeyKey",
 		"journeyHint",
@@ -477,7 +475,7 @@ local order = {
 }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 77, #rows)
+assert(#rows == 76, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -790,14 +788,6 @@ assert(Row("tomtomFollow").tooltip:find("TomTom", 1, true), "the row names the a
 Row("tomtomFollow").setting.onChanged()
 assert(tomtomFollowRefreshed == 1, "the follower follows its setting")
 assert(Row("arrivalSound").setting.default == false, "the arrival sound is off by default")
--- Keeping your own journey across a reload is opt-in; turning it off forgets the one kept.
-assert(Row("resumeJourney").setting.default == false, "keeping journeys after a reload is off by default")
-local keepChanged = 0
-ns.KeepJourneyChanged = function()
-	keepChanged = keepChanged + 1
-end
-Row("resumeJourney").setting.onChanged()
-assert(keepChanged == 1, "the kept journey follows its setting")
 -- /path report shows the report, its lines run through SafeCall; lines that fail still show the rest.
 local shownReport
 ns.core.SafeCall = function(_, fn, ...)

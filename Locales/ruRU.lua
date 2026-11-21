@@ -121,7 +121,6 @@ L["Interface"] = "Интерфейс"
 L["Journey"] = "Маршрут"
 L["Journey  %s · %s"] = "Маршрут  %s • %s"
 L["Journey to %s"] = "Маршрут: %s"
-L["Keep journeys after a reload"] = "Сохранять маршрут после перезагрузки"
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"Оставляет общий трекер Forever там, где вы его поставили. Ручка сверху больше его не перетаскивает."
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
@@ -280,8 +279,6 @@ L["With TomTom installed, a journey here follows the waypoint its arrow points t
 	"Если TomTom установлен, маршрут здесь следует к точке, на которую указывает его стрелка."
 L["Your journey's next flight is drawn on the flight master's map, with its destination lit up."] =
 	"Следующий полет маршрута рисуется на карте распорядителя полетов, а пункт назначения подсвечивается."
-L["Your own journey starts again after a /reload, or logging back in within 30 minutes. Guides start theirs."] =
-	"Ваш собственный маршрут возобновляется после /reload или повторного входа в течение 30 минут. Руководства запускают свои."
 L["Your position is unavailable"] = "Ваше местоположение недоступно"
 L["Zeppelin to %s"] = "Дирижабль: %s"
 L["Zeppelin to %s arrives in %s"] = "Дирижабль (%s) прибудет через %s"

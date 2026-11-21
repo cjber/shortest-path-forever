@@ -114,7 +114,6 @@ L["Interface"] = "介面"
 L["Journey"] = "旅程"
 L["Journey  %s · %s"] = "旅程  %s · %s"
 L["Journey to %s"] = "前往%s的旅程"
-L["Keep journeys after a reload"] = "重載後保留旅程"
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"將共用的 Forever 追蹤器保持在您放置的位置。頂部的拖曳握把不再移動它。"
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
@@ -261,8 +260,6 @@ L["With TomTom installed, a journey here follows the waypoint its arrow points t
 	"安裝TomTom後，這裡的旅程會跟隨其箭頭指向的路徑點。"
 L["Your journey's next flight is drawn on the flight master's map, with its destination lit up."] =
 	"旅程的下一段航班會畫在飛行管理員的地圖上，並醒目顯示其目的地。"
-L["Your own journey starts again after a /reload, or logging back in within 30 minutes. Guides start theirs."] =
-	"你自己的旅程會在/reload後或30分鐘內重新登入時重新開始。指南會開始各自的旅程。"
 L["Your position is unavailable"] = "無法取得你的位置"
 L["Zeppelin to %s"] = "前往%s的飛艇"
 L["Zeppelin to %s arrives in %s"] = "前往%s的飛艇將在%s後抵達"

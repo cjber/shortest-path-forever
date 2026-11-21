@@ -115,7 +115,6 @@ L["Interface"] = "Interface"
 L["Journey"] = "Jornada"
 L["Journey  %s · %s"] = "Jornada  %s · %s"
 L["Journey to %s"] = "Jornada para %s"
-L["Keep journeys after a reload"] = "Manter jornadas após recarregar"
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"Mantém o rastreador Forever compartilhado onde você o colocou. A alça no topo não o arrasta mais."
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
@@ -264,8 +263,6 @@ L["With TomTom installed, a journey here follows the waypoint its arrow points t
 	"Com o TomTom instalado, uma jornada aqui segue o ponto para onde a seta dele aponta."
 L["Your journey's next flight is drawn on the flight master's map, with its destination lit up."] =
 	"O próximo voo da sua jornada é desenhado no mapa do mestre de voo, com o destino destacado."
-L["Your own journey starts again after a /reload, or logging back in within 30 minutes. Guides start theirs."] =
-	"Sua própria jornada recomeça após um /reload, ou ao entrar de novo em até 30 minutos. Os guias recomeçam as deles."
 L["Your position is unavailable"] = "Sua posição está indisponível"
 L["Zeppelin to %s"] = "Zepelim para %s"
 L["Zeppelin to %s arrives in %s"] = "Zepelim para %s chega em %s"

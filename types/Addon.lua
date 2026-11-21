@@ -348,7 +348,6 @@
 ---@field focusedQuest? boolean -- a super-tracked quest or the player's map pin starts a journey (JourneyInput.lua)
 ---@field compassTime? boolean -- the whole journey's time left under the compass distance (Compass.lua)
 ---@field arrivalSound? boolean -- the map ping when a journey the player planned reaches its goal (Alert.lua)
----@field resumeJourney? boolean -- start the player's own journey again after a reload or relog (Resume.lua)
 ---@field restedxp? boolean -- follow RestedXP guide targets
 ---@field restedxpHideArrow? boolean -- Shortest Path's arrow replaces the guide's while a guide target is followed (RestedXP.lua)
 ---@field guidelime? boolean -- follow Guidelime's current guide step (Guidelime.lua)
@@ -362,7 +361,6 @@
 ---@field useHearthstone? boolean the Hearthstone and Astral Recall may be used in journeys, while class teleports still are (Teleports.lua)
 ---@field teleportSplit? integer the one-time move of the old combined teleports switch ran
 ---@field quietDefaults? integer the one-time clear of the old on-by-default town services and compass ran
----@field keepDefault? integer the one-time clear of the old off-by-default Keep journeys after a reload ran
 ---@field partyMagePortals? boolean -- offer a party mage's capital portals
 ---@field partyMageStormwind? boolean
 ---@field partyMageIronforge? boolean

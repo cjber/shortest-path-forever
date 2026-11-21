@@ -287,14 +287,6 @@ ns.Init(function()
 			L["Limits the Journey section to this height; longer journeys scroll inside it."]
 		)
 	)
-	Checkbox(
-		"resumeJourney",
-		L["Keep journeys after a reload"],
-		L["Your own journey starts again after a /reload, or logging back in within 30 minutes. Guides start theirs."],
-		function()
-			ns.KeepJourneyChanged()
-		end
-	)
 	Section(L["Planning"])
 	Checkbox(
 		"journey",
