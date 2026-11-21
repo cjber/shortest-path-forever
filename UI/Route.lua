@@ -628,6 +628,11 @@ end
 -- The minimap's transport pins look through the same view.
 ns.MinimapView = MinimapView
 
+local function IsSquareMinimap()
+	-- client-ok: GetMinimapShape is a minimap addon convention (HBD-Pins), nil without one
+	return GetMinimapShape and GetMinimapShape() == "SQUARE"
+end
+
 -- The world point under the cursor on the minimap, undoing Strokes.Project; nil off its face.
 function ns.MinimapPoint()
 	local x, y, _, map = ns.JourneyPosition()
@@ -637,7 +642,15 @@ function ns.MinimapPoint()
 	local cx, cy = Minimap:GetCenter()
 	local mx, my = GetCursorPosition()
 	local u, v = (mx / scale - cx) / (Minimap:GetWidth() / 2), (my / scale - cy) / (Minimap:GetHeight() / 2)
-	if not (x and canaccessvalue(radius) and canaccessvalue(facing) and radius and facing) or u * u + v * v > 1 then
+	if not (x and canaccessvalue(radius) and canaccessvalue(facing) and radius and facing) then
+		return nil
+	end
+	-- The visible face is in frame coordinates, before undoing the minimap's rotation.
+	if IsSquareMinimap() then
+		if math.abs(u) > 1 or math.abs(v) > 1 then
+			return nil
+		end
+	elseif u * u + v * v > 1 then
 		return nil
 	end
 	local cosine, sine = math.cos(facing), math.sin(facing)
@@ -655,8 +668,7 @@ local function DrawMinimap(self)
 	end
 	local width, height = self:GetWidth(), self:GetHeight()
 	local scale = self:GetEffectiveScale()
-	-- client-ok: GetMinimapShape is a minimap addon convention (HBD-Pins), nil without one
-	local square = GetMinimapShape and GetMinimapShape() == "SQUARE"
+	local square = IsSquareMinimap()
 	if
 		self.lastX == x
 		and self.lastY == y

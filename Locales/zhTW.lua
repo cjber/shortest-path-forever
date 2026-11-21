@@ -465,6 +465,7 @@ L["Farming tour running."] = "採集巡迴進行中。" -- mt
 L["Farming tour paused."] = "採集巡迴已暫停。" -- mt
 L["Farming tour stopped."] = "採集巡迴已停止。" -- mt
 L["Farming tour waiting."] = "採集巡迴等待中。" -- mt
+L["Or choose %s in the journey tracker menu."] = "也可以在旅程追蹤器選單中選擇「%s」。" -- mt
 L["Ordering recorded locations..."] = "正在排列已記錄的位置..." -- mt
 L["Farming needs the GatherMate2 addon."] = "採集需要 GatherMate2 插件。" -- mt
 L["Your current zone is unavailable."] = "無法取得你目前所在的區域。" -- mt

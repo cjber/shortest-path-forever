@@ -129,7 +129,7 @@
 
 ---@class SPFPublicAPI
 ---@field version integer -- 2 removes peer sharing and Leaderboard; callers accept 1 or 2 and reject future versions
----@field minor integer -- 4 adds optional z on returned places; 3 adds EstimateWalks and NavVersion; 2 adds each journey leg's from and to, ResumeRestedXP and the replan change; 1 adds Guidance and the guidance change; version 1 minor 3 added Journey, Pause, Resume, SkipLeg, Stats and the leg change
+---@field minor integer -- 5 standardizes ResumeRestedXP reasons; 4 adds optional z on returned places; 3 adds EstimateWalks and NavVersion; 2 adds each journey leg's from and to, ResumeRestedXP and the replan change; 1 adds Guidance and the guidance change; version 1 minor 3 added Journey, Pause, Resume, SkipLeg, Stats and the leg change
 ---@field Estimate fun(fromMap: integer, fromX: number, fromY: number, toMap: integer, toX: number, toY: number): seconds: number?, reason: SPFAPINoRoute? -- travel seconds; nil comes with the reason
 ---@field Navigate fun(owner: string, map: integer, x: number, y: number, title?: string, kind?: SPFAPIStopKind): boolean -- starts/replaces guidance outside combat when journeys are enabled
 ---@field NavigateRoute fun(owner: string, stops: SPFAPIStop[]): boolean -- starts/replaces guidance through 1-64 stops in order; false leaves the current journey intact
@@ -140,7 +140,7 @@
 ---@field Pause fun(owner: string): boolean -- stops that owner's guidance and keeps its goal; false for another owner, no journey, an already stopped journey or combat
 ---@field Resume fun(owner: string): boolean -- starts that owner's guidance again on the same goal; false for another owner, no journey, an already guided journey or combat
 ---@field SkipLeg fun(owner: string, index?: integer): boolean -- advances that owner's current leg; false for another owner or when nothing was skipped
----@field ResumeRestedXP fun(): success: true?, reason: ("invalid"|"unavailable")? -- resumes the RestedXP guide the player follows, or nil and why it could not
+---@field ResumeRestedXP fun(): success: true?, reason: ("none"|"combat")? -- resumes the RestedXP guide the player follows, or nil and why it could not
 ---@field Stats fun(): rows: SPFAPIStat[]?, reason: SPFAPINotReady? -- this character's travel records, one fresh row per metric
 ---@field RenameStop fun(owner: string, index: integer, title: string, renamePoints?: fun(point: SPFPoint): boolean?): boolean -- relabels a running route's stop in place; false leaves it as it was
 ---@field EstimateDetail fun(fromMap: integer, fromX: number, fromY: number, toMap: integer, toX: number, toY: number): detail: SPFAPIDetail?, reason: SPFAPINoRoute? -- Estimate leg by leg, sharing its cache

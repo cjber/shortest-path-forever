@@ -1,4 +1,6 @@
 import json
+import runpy
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -8,6 +10,49 @@ from unittest.mock import patch
 from tools.baker import trinity
 from tools.baker.inputs import arguments, complete, source_label
 from tools.pack_nav import read_packed, write_bundle
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from baker.inputs import generator_bytes, generator_digest  # noqa: E402
+from refresh_nav_graph import refresh_digest  # noqa: E402
+
+
+class NavDigestTest(unittest.TestCase):
+    hazards = Path(__file__).resolve().parents[1] / "Journey/Hazards.lua"
+    road_limit = b"local ROAD_DETOUR_MAX = 25"
+
+    def digests(self, hazards_bytes):
+        read_bytes = Path.read_bytes
+
+        def read(path):
+            return hazards_bytes if path == self.hazards else read_bytes(path)
+
+        with patch.object(Path, "read_bytes", read):
+            return generator_digest(), refresh_digest(), generator_bytes(self.hazards)
+
+    def test_hazard_edit_leaves_both_digests_unchanged(self):
+        before = self.digests(self.road_limit + b"\n-- Before\n")
+        after = self.digests(self.road_limit + b"\n-- After\n")
+        self.assertEqual(before[:2], after[:2])
+
+    def test_road_limit_change_changes_both_digests(self):
+        before_bake, before_refresh, _ = self.digests(self.road_limit + b"\n-- Unrelated\n")
+        changed_line = b"local ROAD_DETOUR_MAX = 40"
+        after_bake, after_refresh, contribution = self.digests(changed_line + b"\n-- Unrelated\n")
+        self.assertNotEqual(before_bake, after_bake)
+        self.assertNotEqual(before_refresh, after_refresh)
+        self.assertEqual(contribution, changed_line)
+
+    def test_baker_parses_the_digested_road_limit_line(self):
+        _, _, contribution = self.digests(b"-- Unrelated\n" + self.road_limit + b"\n")
+        read_text = Path.read_text
+
+        def read(path, *args, **kwargs):
+            return contribution.decode() if path == self.hazards else read_text(path, *args, **kwargs)
+
+        with patch.object(Path, "read_text", read), patch.object(sys, "path", sys.path.copy()):
+            generator = runpy.run_path(str(self.hazards.parents[1] / "tools/baker/gen_nav.py"))
+        self.assertEqual(generator["ROAD_FACTOR_MAX"], 1.25)
+        self.assertEqual(contribution, self.road_limit)
 
 
 class BakeInputTest(unittest.TestCase):
