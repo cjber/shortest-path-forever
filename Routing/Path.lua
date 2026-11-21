@@ -995,6 +995,11 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 	local startOK, startTime = clearEnd(st, P, 1, from, true, P.w[1] > 0, limitOver(P, 1, 1), nil, true)
 	local goalOK, goalTime =
 		clearEnd(st, P, n, to, false, P.w[n] - (P.w[n - 1] or 0) > 0, limitOver(P, n, n), nil, true)
+	local snappedGoal = false
+	if job.snapGoal then
+		local _, _, _, goalNode = own(st, to)
+		snappedGoal = not goalOK or not goalNode
+	end
 	-- P.t is the refined walk's real running-yard prefix, independent of reported/cached search cost.
 	local chordBudget = startOK and goalOK and startTime + P.t[n] - P.t[1] + goalTime
 	local sx, sy = (from.x - x0) / cs, (from.y - y0) / cs
@@ -1049,7 +1054,7 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 		gx = gx,
 		gy = gy,
 		start = startOK and startClear,
-		goal = goalOK and goalClear,
+		goal = not snappedGoal and goalOK and goalClear,
 		chord = function()
 			return chordBudget
 				and roadClear(sx, sy, gx, gy, 1, n, startLength + goalLength, startField + goalField)
@@ -1059,14 +1064,14 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 	-- The pull chose whether each end is drawn through its end entry's centre: a start or goal segment that is not
 	-- clear detours that way, so the rest of the line holds as it was pulled.
 	local drawn = { 1 }
-	if startDetour then
+	if startDetour and not (snappedGoal and n == 1) then
 		drawn[#drawn + 1] = 1
 	end
 	for i = 2, #keep - 1 do
 		drawn[#drawn + 1] = keep[i]
 	end
 	-- Both ends on one node already pass through its centre once the start has detoured.
-	if goalDetour and not (startDetour and n == 1) then
+	if goalDetour and not snappedGoal and not (startDetour and n == 1) then
 		drawn[#drawn + 1] = n
 	end
 	drawn[#drawn + 1] = n
@@ -1080,7 +1085,10 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 			z = P.z[j],
 		}
 	end
-	points[#points + 1] = { map = map, x = to.x, y = to.y, z = to.z }
+	-- A steering caller needs a walkable end even when the requested point has no clear final segment.
+	points[#points + 1] = snappedGoal
+			and { map = map, x = x0 + (P.x[n] + 0.5) * cs, y = y0 + (P.y[n] + 0.5) * cs, z = P.z[n] }
+		or { map = map, x = to.x, y = to.y, z = to.z }
 	local wetYards = 0
 	for i = 2, #points do
 		local p, q = drawn[i - 1], drawn[i]

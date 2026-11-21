@@ -71,6 +71,7 @@ Credit for the reports and requests behind the addon.
 | Hatemost | Resume the RestedXP guide from a macro | CurseForge thread 8697686; #786 |
 | JaidyEU | Resume the RestedXP guide from a macro | CurseForge thread 8722510; #786 |
 | [Chulf58](https://github.com/Chulf58) | Walking times between places for other addons | GitHub; #913 |
+| [Chulf58](https://github.com/Chulf58) | Walking paths for other addons to guide along | GitHub; #1026 |
 | [embiem](https://github.com/embiem) | Separate Hearthstone and class teleport switches | GitHub; #775 |
 | [InfamousMunky](https://github.com/InfamousMunky) | The Hearthstone switch outside settings | GitHub; cjber/adventure-guide-forever#707 |
 | A player | Journeys avoid opposing-faction guarded lifts | CurseForge thread 8726893, #911 |

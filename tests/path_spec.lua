@@ -65,6 +65,23 @@ end
 -- A rooftop endpoint moves to the street below instead of failing.
 assert(Path.FindSync(0, { x = -9010, y = 870 }, STORMWIND_FM))
 
+-- An addon steering to that rooftop needs the walkable end of the route. The estimate still prices the same walk.
+local rooftop = { x = -9010, y = 870 }
+local steered, steeredYards, estimatedYards
+Path.Find(0, STORMWIND_FM, rooftop, function(points, cost)
+	steered, steeredYards = points, cost
+end, false, nil, true)
+Path.FindMany(0, STORMWIND_FM, { rooftop }, function(costs)
+	estimatedYards = costs[1]
+end)
+drain()
+assert(steered and #steered > 1 and steeredYards == estimatedYards, "steering uses the estimated running yards")
+assert(steered[1].x == STORMWIND_FM.x and steered[1].y == STORMWIND_FM.y, "steering starts at the requested point")
+local endpoint = steered[#steered]
+assert(dist(endpoint.x, endpoint.y, rooftop.x, rooftop.y) > 0, "steering ends off the unreachable rooftop")
+local legacy = assert(Path.FindSync(0, STORMWIND_FM, rooftop))
+assert(legacy[#legacy].x == rooftop.x and legacy[#legacy].y == rooftop.y, "journey paths retain their requested end")
+
 local none, why = Path.FindSync(0, { x = 0, y = 6000 }, GOLDSHIRE)
 assert(none == nil and why == "outside", why)
 none, why = Path.FindSync(1, { x = 0, y = 0 }, { x = 1, y = 1 })

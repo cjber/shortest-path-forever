@@ -130,14 +130,19 @@
 ---@field distance? number -- yards from the player to the stop under way; absent with no stop or on another map
 ---@field reach number -- the player's arrival distance setting, in yards
 
---- The options a walk estimate takes.
+---@class SPFAPIWalkPath
+---@field waypoints SPFAPIPlace[] -- the start, bends and snapped destination in uiMap fractions
+---@field yards number -- the running-yard cost
+---@field navVersion string -- the walking data used to find the path
+
+--- The options a walking search takes.
 ---@class SPFAPIWalkOptions
 ---@field waterWalking? boolean -- walks may cross water; by default journeys' own setting and known spell decide
 
---- Why a whole walk batch could not answer. A target with a cost is reachable; one with false is not.
+--- Why a walking search could not answer.
 ---@alias SPFAPIWalkReason "nodata"|"outside"|"offmesh"|"unreachable"|"error"
 
---- Why a walk batch did not start.
+--- Why a walking search did not start.
 ---@alias SPFAPIWalkRefusal "invalid"|"combat"|"loading"|"nodata"
 
 --- One travel record of this character's.
@@ -165,7 +170,7 @@
 
 ---@class SPFPublicAPI
 ---@field version integer -- 2 removes peer sharing and Leaderboard; callers accept 1 or 2 and reject future versions
----@field minor integer -- 6 adds NavigateRoute's options, ObserveStops and JourneyState; 5 standardizes ResumeRestedXP reasons; 4 adds optional z on returned places; 3 adds EstimateWalks and NavVersion; 2 adds each journey leg's from and to, ResumeRestedXP and the replan change; 1 adds Guidance and the guidance change; version 1 minor 3 added Journey, Pause, Resume, SkipLeg, Stats and the leg change
+---@field minor integer -- 7 adds WalkPath; 6 adds NavigateRoute's options, ObserveStops and JourneyState; 5 standardizes ResumeRestedXP reasons; 4 adds optional z on returned places; 3 adds EstimateWalks and NavVersion; 2 adds each journey leg's from and to, ResumeRestedXP and the replan change; 1 adds Guidance and the guidance change; version 1 minor 3 added Journey, Pause, Resume, SkipLeg, Stats and the leg change
 ---@field Estimate fun(fromMap: integer, fromX: number, fromY: number, toMap: integer, toX: number, toY: number): seconds: number?, reason: SPFAPINoRoute? -- travel seconds; nil comes with the reason
 ---@field Navigate fun(owner: string, map: integer, x: number, y: number, title?: string, kind?: SPFAPIStopKind): boolean -- starts/replaces guidance outside combat when journeys are enabled
 ---@field NavigateRoute fun(owner: string, stops: SPFAPIStop[], options?: SPFAPIRouteOptions): ok: boolean?, reason: ForeverCoreAPIInvalid? -- starts/replaces guidance through 1-64 stops in order; false leaves the current journey intact; nil and "invalid" for bad options
@@ -183,6 +188,7 @@
 ---@field RenameStop fun(owner: string, index: integer, title: string, renamePoints?: fun(point: SPFPoint): boolean?): boolean -- relabels a running route's stop in place; false leaves it as it was
 ---@field EstimateDetail fun(fromMap: integer, fromX: number, fromY: number, toMap: integer, toX: number, toY: number): detail: SPFAPIDetail?, reason: SPFAPINoRoute? -- Estimate leg by leg, sharing its cache
 ---@field EstimateWalks fun(owner: string, from: SPFAPIPlace, targets: SPFAPIPlace[], callback: fun(costs: (number|false)[], reason: SPFAPIWalkReason?), opts?: SPFAPIWalkOptions): cancel: fun()?, reason: SPFAPIWalkRefusal? -- one walking search to every target on the from point's walking map; costs are yards or false, and the cancel function is safe twice
+---@field WalkPath fun(owner: string, from: SPFAPIPlace, to: SPFAPIPlace, callback: fun(path: SPFAPIWalkPath?, reason: SPFAPIWalkReason?), opts?: SPFAPIWalkOptions): cancel: fun()?, reason: SPFAPIWalkRefusal?
 ---@field NavVersion fun(): string -- the walking data this build ships; drop cached walk costs when it changes
 ---@field Active fun(): boolean -- true while any journey is guiding, whoever started it
 ---@field Ended fun(owner: string): reason: (SPFAPIEnded|SPFAPINotReady)?, at: (number|SPFAPINotReady)? -- why owner's last journey ended and its GetTime(), or nil and why there is none
