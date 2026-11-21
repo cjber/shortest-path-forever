@@ -35,6 +35,7 @@ local FIRST_LIFT = 1001 -- Data/Transports.lua numbers lift and tram landings fr
 ---@field gx number global cell the surface was last seen on
 ---@field gy number
 ---@field held true? held where it was last seen, or a fresh start's neighbour: no way from it to you yet
+---@field root number? the surface this one stepped on from, as k * 1048576 + node, once it has stepped
 
 ---@class SPFFloorState
 ---@field map number
@@ -84,10 +85,11 @@ local function Surfaces(st, gx, gy)
 end
 
 -- The surfaces of cell (gx, gy) the walking map reaches within reach steps from nodes at cell (ox, oy), staying in
--- the box around both cells. Water steps count: you may have swum. Only the first surface a step lands on is followed:
--- every one, as search() expands them, leaves a street ambiguous with a ledge beside it under the held rule (#1114).
-local function Step(st, nodes, ox, oy, gx, gy, reach)
-	local landK, landN = {}, {}
+-- the box around both cells. Water steps count: you may have swum. Every surface a step walks onto is followed, as
+-- search() expands them (a ramp's link climbs beside a base step on the floor below); a drop off a ledge counts only
+-- once you fell: walking, the client shows no fall, and a drop beside every walkway would hold the floor below it too.
+local function Step(st, nodes, ox, oy, gx, gy, reach, fell)
+	local landK, landN, landC = {}, {}, {}
 	local x0, x1, y0, y1 = min(ox, gx) - 1, max(ox, gx) + 1, min(oy, gy) - 1, max(oy, gy) + 1
 	local seen, queue, found = {}, {}, {}
 	for _, s in ipairs(nodes) do
@@ -111,10 +113,10 @@ local function Step(st, nodes, ox, oy, gx, gy, reach)
 					local nx, ny = x + dx, y + dy
 					-- A ledge and its landing can quantize to the same cell on different floors.
 					if nx >= x0 and nx <= x1 and ny >= y0 and ny <= y1 then
-						if Grid.neighbours(st, k, node, x, y, dx, dy, true, landK, landN) > 0 then
-							local tk, tn = landK[1], landN[1]
+						for i = 1, Grid.neighbours(st, k, node, x, y, dx, dy, true, landK, landN, landC) do
+							local tk, tn = landK[i], landN[i]
 							local id = tk * 1048576 + tn
-							if not seen[id] then
+							if (fell or landC[i] == 0) and not seen[id] then
 								seen[id] = true
 								queue[#queue + 1] = { tk, tn, nx, ny, depth + 1 }
 							end
@@ -251,21 +253,24 @@ function Floor.Sample(map, x, y)
 		-- it. A held surface steps again from its own cell, so it settles on the way out; past REACH cells from that
 		-- cell, or a JUMP between samples, it is gone. A jump in such a cell reads as a fall.
 		-- After a fall only a surface you could have been on counts as a jump: a held one is a guess.
-		local seen, held = {}, {}
+		local seen, held, moved = {}, {}, {}
 		nodes = {}
 		for _, s in ipairs(last.nodes) do
 			local reach = max(abs(gx - s.gx), abs(gy - s.gy))
 			if reach <= REACH and not (last.fell and s.held) then
-				local found = Step(st, { s }, s.gx, s.gy, gx, gy, reach + 1)
+				local found = Step(st, { s }, s.gx, s.gy, gx, gy, reach + 1, last.fell)
+				local root = s.root or s.k * 1048576 + s.node
 				if #found == 0 then
-					s.held = true
+					s.held, s.root = true, root
 					held[#held + 1] = s
+				else
+					moved[root] = true
 				end
 				for _, f in ipairs(found) do
 					local id = f.k * 1048576 + f.node
 					if not seen[id] then
 						seen[id] = true
-						f.gx, f.gy = gx, gy
+						f.gx, f.gy, f.root = gx, gy, root
 						nodes[#nodes + 1] = f
 					end
 				end
@@ -278,8 +283,13 @@ function Floor.Sample(map, x, y)
 			end
 			nodes = Surfaces(st, gx, gy)
 		elseif not last.fell then
+			-- A held surface is a floor the map may lack. One that branched off a floor which stepped on, stairs beside a
+			-- street, is not: the map shows that floor's way here. One on a floor of its own, the street over the ground
+			-- under the city, stays held.
 			for _, s in ipairs(held) do
-				nodes[#nodes + 1] = s
+				if not moved[s.root] then
+					nodes[#nodes + 1] = s
+				end
 			end
 		end
 	else

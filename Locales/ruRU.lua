@@ -57,8 +57,8 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"Маршруты, а также оценки других модификаций отсюда, могут начинаться с телепорта мага в город или заклинания «Телепортация: Лунная поляна» с учетом восстановления."
 L["Minimum teleport saving"] = "Минимальная экономия от телепорта"
-L["Hide the journey tracker from its own menu."] =
-	"Отслеживание маршрута можно скрыть через его собственное меню." -- mt
+L["Hide the journey key hint in tooltips."] =
+	"Подсказку о клавише маршрута во всплывающих подсказках можно скрыть." -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"Использовать классовый телепорт, только если он экономит не меньше этого времени."
 L["Boat and Zeppelin Routes"] = "Маршруты кораблей и дирижаблей"
@@ -472,6 +472,10 @@ L["The key you hold to plan a journey from the world map or the minimap."] =
 	"Клавиша, которую вы удерживаете, чтобы проложить маршрут с карты мира или мини-карты." -- mt
 L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
 	"На значке Questie Shift+щелчок остается за Questie; Alt+щелчок прокладывает туда маршрут при любой из двух клавиш." -- mt
+L["Show the journey key hint in tooltips"] =
+	"Показывать подсказку о клавише маршрута во всплывающих подсказках" -- mt
+L["Adds a line naming your journey key to tooltips on the world map, flight points and the minimap. Off, the key still plans journeys."] =
+	"Добавляет строку с клавишей маршрута в подсказки на карте мира, у точек полёта и на миникарте. Если выключено, клавиша всё равно прокладывает маршруты." -- mt
 L["Show the Nearby services tab"] = "Показывать вкладку услуг поблизости"
 L["The tab in the world map's quest log. Off, /spfnear and the tracking menu still open it."] =
 	"Вкладка в журнале заданий на карте мира. Если выключить, /spfnear и меню отслеживания всё равно её откроют."

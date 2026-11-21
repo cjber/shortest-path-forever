@@ -53,7 +53,7 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"旅程以及其他插件從這裡算起的估計，可以從法師的城市傳送或傳送：月光林地開始，並計入冷卻時間。"
 L["Minimum teleport saving"] = "傳送最少節省時間"
-L["Hide the journey tracker from its own menu."] = "可在旅程追蹤自己的選單中將其隱藏。" -- mt
+L["Hide the journey key hint in tooltips."] = "可在滑鼠提示中隱藏旅程按鍵提示。" -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"只在職業傳送至少節省這麼多時間時使用。"
 L["Boat and Zeppelin Routes"] = "船隻與飛艇航線"
@@ -442,6 +442,9 @@ L["The key you hold to plan a journey from the world map or the minimap."] =
 	"在世界地圖或小地圖上規劃旅程時按住的按鍵。" -- mt
 L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
 	"在 Questie 圖示上，Shift 點擊仍歸 Questie 所有；Alt 點擊則可用任一按鍵規劃前往該處的旅程。" -- mt
+L["Show the journey key hint in tooltips"] = "在滑鼠提示中顯示旅程按鍵提示" -- mt
+L["Adds a line naming your journey key to tooltips on the world map, flight points and the minimap. Off, the key still plans journeys."] =
+	"在世界地圖、飛行點和小地圖的滑鼠提示中加入一行，說明你的旅程按鍵。關閉後，按鍵仍可規劃旅程。" -- mt
 L["Show the Nearby services tab"] = "顯示附近服務分頁"
 L["The tab in the world map's quest log. Off, /spfnear and the tracking menu still open it."] =
 	"世界地圖任務日誌中的分頁。關閉後，/spfnear 與追蹤選單仍可開啟它。"

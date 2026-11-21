@@ -20,7 +20,7 @@ local entrance, locate, standing, snap, smooth = Grid.entrance, Grid.locate, Gri
 local toward, peak, climbNodes = Grid.toward, Grid.peak, Grid.climbNodes
 
 local TILE, SNAP, ZTOL, DX, DY = Grid.TILE, Grid.SNAP, Grid.ZTOL, Grid.DX, Grid.DY
-local OFFROAD = Grid.OFFROAD
+local OFFROAD, FREE = Grid.OFFROAD, Grid.FREE
 
 -- Baked ratios contain both the 1.5-weighted cost and the real cost of the baked road walk.
 -- Their difference is the off-road part times 0.5. Reweight that part only; ETA keeps the real ratio.
@@ -180,15 +180,18 @@ local function search(st, k, swim, source, tree, goal, targets, left, roads, hz,
 
 	---@type number, number, number, number, number
 	local u, ux, uy, gu, ru
-	local function relax(v, length, override)
-		-- Forward walks u -> v; a reverse tree walks the stored edge the other way, v -> u, into the source.
-		local distance = (length or 1) * cs
-		if reverse then
-			if steep and not steep(val, z, v, val, z, u, distance) then
+	local function relax(v, length, override, free)
+		-- Forward walks u -> v; a reverse tree walks the stored edge the other way, v -> u, into the source. A step
+		-- the bake's walk decided is taken as written.
+		if steep and not free then
+			local distance = (length or 1) * cs
+			if reverse then
+				if not steep(val, z, v, val, z, u, distance) then
+					return
+				end
+			elseif not steep(val, z, u, val, z, v, distance) then
 				return
 			end
-		elseif steep and not steep(val, z, u, val, z, v, distance) then
-			return
 		end
 		local i = v + 1
 		-- A step is charged for the cell it enters, whichever way the tree walks it: water, Follow roads and a
@@ -285,11 +288,11 @@ local function search(st, k, swim, source, tree, goal, targets, left, roads, hz,
 						if tx >= 0 and ty >= 0 and tx < C and ty < C then
 							local v = surface(st, k, tx * C + ty, floor(entry / 256) % 64 - 1, z[i], val, z, at)
 							if v then
-								local cost = floor(entry / 16384)
+								local cost, free = floor(entry / 16384) % 8192, entry >= FREE
 								if cost > 0 then
-									relax(v, nil, cost)
+									relax(v, nil, cost, free)
 								else
-									relax(v, (tx ~= ux and ty ~= uy) and SQRT2 or 1)
+									relax(v, (tx ~= ux and ty ~= uy) and SQRT2 or 1, nil, free)
 								end
 							end
 						end
@@ -1508,8 +1511,8 @@ local function bakeEdges(st, k, road)
 		end
 	end
 	local flat, head, size = {}, {}, 0
-	local function add(from, v, length, override)
-		if steep and not steep(val, z, from, val, z, v, (length or 1) * cs) then
+	local function add(from, v, length, override, free)
+		if steep and not free and not steep(val, z, from, val, z, v, (length or 1) * cs) then
 			return
 		end
 		local i = v + 1
@@ -1565,7 +1568,7 @@ local function bakeEdges(st, k, road)
 			local cell = node < N and node or at[i]
 			local ux, uy = floor(cell / C), cell % C
 			for e = 1, #list do
-				local v, length, override
+				local v, length, override, free
 				local entry = list[e]
 				if fmt >= 2 then
 					-- the cell offset, the landing layer and the cost in whole yards (0 for an ordinary step)
@@ -1573,7 +1576,8 @@ local function bakeEdges(st, k, road)
 					if tx >= 0 and ty >= 0 and tx < C and ty < C then
 						v = surface(st, k, tx * C + ty, floor(entry / 256) % 64 - 1, z[i], val, z, at)
 						if v then
-							local cost = floor(entry / 16384)
+							local cost = floor(entry / 16384) % 8192
+							free = entry >= FREE
 							if cost > 0 then
 								override = cost
 							else
@@ -1590,7 +1594,7 @@ local function bakeEdges(st, k, road)
 					end
 				end
 				if v then
-					add(node, v, length, override)
+					add(node, v, length, override, free)
 				end
 			end
 		end

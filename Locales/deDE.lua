@@ -53,7 +53,7 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"Reisen, und die Schätzungen anderer Addons von hier, können mit dem Stadtteleport eines Magiers oder Teleportieren: Mondlichtung beginnen, Abklingzeit eingerechnet."
 L["Minimum teleport saving"] = "Mindestersparnis durch Teleport"
-L["Hide the journey tracker from its own menu."] = "Die Reiseverfolgung lässt sich über ihr eigenes Menü ausblenden." -- mt
+L["Hide the journey key hint in tooltips."] = "Der Reisetasten-Hinweis in Tooltips lässt sich ausblenden." -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"Einen Klassenteleport nur nutzen, wenn er mindestens so viel Zeit spart."
 L["Boat and Zeppelin Routes"] = "Schiffs- und Zeppelinrouten"
@@ -446,6 +446,9 @@ L["The key you hold to plan a journey from the world map or the minimap."] =
 	"Die Taste, die du hältst, um von der Weltkarte oder der Minikarte aus eine Reise zu planen." -- mt
 L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
 	"Auf einem Questie-Symbol bleibt Shift-Klick bei Questie; Alt-Klick plant dort mit beiden Tasten die Reise." -- mt
+L["Show the journey key hint in tooltips"] = "Hinweis zur Reisetaste in Tooltips anzeigen" -- mt
+L["Adds a line naming your journey key to tooltips on the world map, flight points and the minimap. Off, the key still plans journeys."] =
+	"Fügt Tooltips auf der Weltkarte, an Flugpunkten und auf der Minikarte eine Zeile mit deiner Reisetaste hinzu. Ist die Option aus, plant die Taste weiterhin Reisen." -- mt
 L["Show the Nearby services tab"] = "Tab für Dienste in der Nähe anzeigen"
 L["The tab in the world map's quest log. Off, /spfnear and the tracking menu still open it."] =
 	"Der Tab im Questlog der Weltkarte. Aus öffnen /spfnear und das Verfolgungsmenü ihn weiterhin."

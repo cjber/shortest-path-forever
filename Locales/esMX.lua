@@ -54,7 +54,8 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"Los viajes, y las estimaciones de otros addons desde aquí, pueden empezar con un teletransporte de mago a una ciudad o Teletransporte: Claro de la Luna, contando el tiempo de reutilización."
 L["Minimum teleport saving"] = "Ahorro mínimo del teletransporte"
-L["Hide the journey tracker from its own menu."] = "Oculta el seguimiento del viaje desde su propio menú." -- mt
+L["Hide the journey key hint in tooltips."] =
+	"Oculta la indicación de la tecla de viaje en los recuadros de información." -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"Usar un teletransporte de clase solo si ahorra al menos este tiempo."
 L["Boat and Zeppelin Routes"] = "Rutas de barcos y zepelines"
@@ -448,6 +449,9 @@ L["The key you hold to plan a journey from the world map or the minimap."] =
 	"La tecla que mantienes para planear un viaje desde el mapa del mundo o el minimapa." -- mt
 L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
 	"Sobre un icono de Questie, el clic con Mayús sigue siendo de Questie; Alt+clic planea allí el viaje con cualquiera de las dos teclas." -- mt
+L["Show the journey key hint in tooltips"] = "Mostrar la pista de la tecla de viaje en las descripciones emergentes" -- mt
+L["Adds a line naming your journey key to tooltips on the world map, flight points and the minimap. Off, the key still plans journeys."] =
+	"Añade una línea con tu tecla de viaje a las descripciones del mapa del mundo, los puntos de vuelo y el minimapa. Desactivada, la tecla sigue planeando viajes." -- mt
 L["Show the Nearby services tab"] = "Mostrar pestaña de servicios cercanos"
 L["The tab in the world map's quest log. Off, /spfnear and the tracking menu still open it."] =
 	"La pestaña en el registro de misiones del mapa del mundo. Desactivada, /spfnear y el menú de seguimiento siguen abriéndola."

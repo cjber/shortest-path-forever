@@ -60,6 +60,10 @@ scenario("a RestedXP step always has an arrow: RestedXP's until the route lands,
 		local x, y = world:GetXY()
 		return 1429, sim.G.CreateVector2D((LEFT - y) / (LEFT - RIGHT), (TOP - x) / (TOP - BOTTOM))
 	end
+	-- A player out in the world has a facing; without one the arrow has nothing to draw and leaves RestedXP's up.
+	sim.impl["GetPlayerFacing"] = function()
+		return 0
+	end
 	-- The client's own decoders, which the walking maps unpack with.
 	local encoding = dofile("tools/nav_encoding.lua")
 	sim.impl["C_EncodingUtil.DecodeBase64"] = encoding.DecodeBase64

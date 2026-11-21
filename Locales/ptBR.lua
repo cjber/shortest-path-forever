@@ -53,7 +53,7 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"As jornadas, e as estimativas de outros AddOns a partir daqui, podem começar com o teleporte de mago para uma cidade ou Teleport: Moonglade, contando a recarga."
 L["Minimum teleport saving"] = "Economia mínima do teleporte"
-L["Hide the journey tracker from its own menu."] = "Oculte o rastreador de jornada pelo próprio menu." -- mt
+L["Hide the journey key hint in tooltips."] = "Oculte a dica da tecla de jornada nas dicas de ferramenta." -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"Usar um teleporte de classe só quando ele economizar pelo menos este tempo."
 L["Boat and Zeppelin Routes"] = "Rotas de barcos e zepelins"
@@ -447,6 +447,9 @@ L["The key you hold to plan a journey from the world map or the minimap."] =
 	"A tecla que você mantém para planejar uma jornada a partir do mapa-múndi ou do minimapa." -- mt
 L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
 	"Sobre um ícone do Questie, o Shift+clique continua sendo do Questie; o Alt+clique planeja a jornada até lá com qualquer uma das teclas." -- mt
+L["Show the journey key hint in tooltips"] = "Mostrar a dica da tecla de jornada nas dicas de ferramenta" -- mt
+L["Adds a line naming your journey key to tooltips on the world map, flight points and the minimap. Off, the key still plans journeys."] =
+	"Adiciona uma linha com a sua tecla de jornada às dicas do mapa-múndi, dos pontos de voo e do minimapa. Desligada, a tecla ainda planeja jornadas." -- mt
 L["Show the Nearby services tab"] = "Mostrar aba de serviços próximos"
 L["The tab in the world map's quest log. Off, /spfnear and the tracking menu still open it."] =
 	"A aba no diário de missões do mapa-múndi. Desativada, /spfnear e o menu de rastreamento ainda a abrem."

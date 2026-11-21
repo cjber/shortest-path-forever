@@ -51,12 +51,12 @@ class StoredGridTest(unittest.TestCase):
             "LINKS": defaultdict(dict),
             "LINKED_OF": defaultdict(list),
             "TERRAIN": {},
-            "ROAD_CELLS": set(),
+            "ROAD_CELLS": {},
         }
         with ExitStack() as stack:
             for name, value in state.items():
                 stack.enter_context(patch.object(nav, name, value))
-            stack.enter_context(patch.object(nav, "read_roads", return_value=set()))
+            stack.enter_context(patch.object(nav, "read_roads", return_value={}))
             grid, cuts = bytearray([1] * 32), {12 * 4, 9 * 4 + 1, 10 * 4 + 2}
             grid[0], grid[2], grid[7] = 0, 2, 3
             nav.BASE_Z[7], nav.BASE_Z[8], nav.BASE_Z[31] = 12, 6, 300

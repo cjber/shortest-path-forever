@@ -10,6 +10,23 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.43.10] - 2026-11-20
+
+### Added
+
+- **Hide the journey key hint in tooltips.** Turn off *Show the journey key hint in tooltips* in Guidance, Planning to hide the "Shift-click to plan a journey here" line on map, flight point and minimap tooltips; your journey key still plans journeys.
+
+### Fixed
+
+- A destination on ground the route search cannot reach no longer leaves the map line straight and the Journey bar on loading forever. Since 1.43.6 such a goal could keep being moved onto itself and the search started again without end; it now says there is no way there (#1141).
+
+## [1.43.9] - 2026-11-20
+
+### Fixed
+
+- With Waypoint UI installed and "Mark only where steps end" on, the arrow shows again beside Waypoint UI's marker. It had been hidden since 1.43.3, which with a guide addon's arrow hidden too left no arrow at all (#1124).
+- A guide addon's arrow (RestedXP, Guidelime) comes back whenever Shortest Path's arrow has nothing to draw, such as where the game gives no facing (#1124).
+
 ## [1.43.8] - 2026-11-20
 
 ### Fixed

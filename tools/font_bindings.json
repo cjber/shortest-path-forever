@@ -51,8 +51,8 @@
     },
     {
       "source": "UI/Settings.lua",
-      "sha256": "65258cca8c1c0d00090627e72d8b7bb54da8071a2bd4be3362b1eb39ba96dec4",
-      "review": "Read Page, Checkbox, Scale, Dropdown and Saving and their registration calls. Settings rows, index buttons and option labels delegate to Blizzard secure initializers; this file creates no FontString and establishes no explicit FontObject. Minimap button text, tooltip text, chat output and helper arguments are excluded rather than assigned an assumed settings font. Reviewed #1094: the Tracker heading's Attach to quest tracker row is ForeverCore.SettingsSections.RegisterTrackerAttach, a core-owned initializer, registered only when the running core has it (an older adopted standalone does not); excluded with the other settings fonts.",
+      "sha256": "a606fdae2c506268fdb7bed137d965bb542b868ada73bfa801295a742392d4ab",
+      "review": "Read Page, Checkbox, Scale, Dropdown and Saving and their registration calls. Settings rows, index buttons and option labels delegate to Blizzard secure initializers; this file creates no FontString and establishes no explicit FontObject. Minimap button text, tooltip text, chat output and helper arguments are excluded rather than assigned an assumed settings font. Reviewed #1094: the Tracker heading's Attach to quest tracker row is ForeverCore.SettingsSections.RegisterTrackerAttach, a core-owned initializer, registered only when the running core has it (an older adopted standalone does not); excluded with the other settings fonts. Reviewed #1142: the journeyHint row is one more Checkbox helper call, a Blizzard secure initializer with no FontString or FontObject of its own.",
       "bindings": []
     },
     {
@@ -75,7 +75,7 @@
     },
     {
       "source": "UI/Arrow.lua",
-      "sha256": "4f94d60e40c77107194c08770929659df31b549d84c7b1b49e64dab1d46a391d",
+      "sha256": "e9418b41a31ea839b7a1b5401116188595a1a87ba86c82f2e9ca3df077c95d3f",
       "review": "Read Create, ArrowLabel, distance updates, arrival labels, progress and cast prompt. MoverHint uses GameFontHighlightSmall and Distance uses GameFontNormal, including the formatted time-distance phrase. No later font override occurs. Dynamic objective lines, arrival titles, route titles and actions from helpers are excluded; this review does not claim coverage for their inserted text.",
       "bindings": [
         {

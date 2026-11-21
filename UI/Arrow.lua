@@ -86,6 +86,15 @@ local castPrompt
 ---@type SPFPoint?
 local arrival
 local ShowArrival, RefreshTravelLines, NotifyLead
+-- Set while the route has a bend but nothing of ours points at it: no position to point from, or a bend on another
+-- map with no marker leading there.
+local unseen = false
+local function Unseen(value)
+	if unseen ~= value then
+		unseen = value
+		NotifyLead()
+	end
+end
 
 -- Guidance changes that are not a new journey stop or leg: a bend passed, the source walk replaced, or the
 -- guideStops setting collapsing what the arrow draws. Core/API.lua turns it into the public Subscribe notice.
@@ -194,6 +203,8 @@ local function Update(elapsed)
 		frame:SetAlpha(moving and 1 or 0)
 		frame.angle = nil
 		SetUpdating(false)
+		-- A marker that led before the position went still leads: Guide keeps it through a frame with no map (#826).
+		Unseen(not (native and NativeMarkerShown()))
 		return
 	end
 	local moved = x ~= frame.x or y ~= frame.y or map ~= frame.map or facing ~= frame.facing
@@ -234,8 +245,10 @@ local function Update(elapsed)
 		frame:SetAlpha(moving and 1 or 0)
 		frame.angle = nil
 		SetUpdating(false)
+		Unseen(not (native and markerShown))
 		return
 	end
+	Unseen(false)
 	local angle = Difference(Bearing(x, y, pointing), facing)
 	-- The arrow still points the way, and dims with the compass when that way is behind you.
 	frame.behind = ns.TurnAround.Behind(angle, frame.behind)
@@ -691,7 +704,7 @@ function ns.PointGuideArrow(points, placeBend, stop, goal)
 		return
 	end
 	if not points or ns.db.arrow == false then
-		native = nil
+		native, unseen = nil, false
 		if frame then
 			SetUpdating(false)
 			frame:SetShown(moving)
@@ -812,15 +825,17 @@ function ns.CastPromptShown()
 	return ns.db.arrow ~= false and ns.db.castPrompt ~= false
 end
 
--- Whether the arrow leads now: a bend to point at, a reached stop's pin or a cast to make. A journey that is still
--- being searched has none of them. A guide addon's own arrow stands down only while this holds (Core/RestedXP.lua,
--- Guidelime.lua), so the player always has one arrow to follow.
+-- Whether the arrow leads now: a bend it or the marker points at, a reached stop's pin or a cast to make. A journey
+-- that is still being searched has none of them. A guide addon's own arrow stands down only while this holds
+-- (Core/RestedXP.lua, Guidelime.lua), so the player always has one arrow to follow.
 ---@return boolean
 function ns.ArrowLeads()
 	if not ns.db or ns.db.arrow == false then
 		return false
 	end
-	return (path ~= nil and target ~= nil) or arrival ~= nil or (castTarget ~= nil and ns.CastPromptShown())
+	return (path ~= nil and target ~= nil and not unseen)
+		or arrival ~= nil
+		or (castTarget ~= nil and ns.CastPromptShown())
 end
 
 -- The guide bridges hook this to hand their addon's arrow back or take it over again.

@@ -83,7 +83,7 @@ def decode(source, fields, map_id):
     nav.FLOOR_CELL, nav.FLOOR_Z = array("i"), array("f")
     nav.FLOOR_VAL, nav.FLOOR_LAYER = bytearray(), bytearray()
     nav.FLOORS_OF, nav.FLOORS_AT = defaultdict(list), {}
-    nav.LINKS, nav.LINKED_OF = defaultdict(dict), defaultdict(list)
+    nav.LINKS, nav.LINKED_OF, nav.FREE = defaultdict(dict), defaultdict(list), set()
     nav.TERRAIN = {}
 
     def global_cell(k, local):
@@ -151,12 +151,12 @@ def decode(source, fields, map_id):
             mask = reader.take(2)
             for d in range(8):
                 if mask & (1 << d):
-                    pending.append((node, *directions[d], reader.take(), None, True))
+                    pending.append((node, *directions[d], reader.take(), None, True, False))
         local = 0
         for _ in range(reader.take(3)):
             local += reader.delta()
             kind, layer = reader.take(), reader.take()
-            pending.append((global_node(k, local), *directions[kind % 8], layer, None, kind < 8))
+            pending.append((global_node(k, local), *directions[kind % 8], layer, None, kind % 16 < 8, kind >= 16))
         for _ in range(reader.take(3)):
             local, dx, dy, layer, cost = (
                 reader.take(3),
@@ -165,17 +165,21 @@ def decode(source, fields, map_id):
                 reader.take(),
                 reader.take(2),
             )
-            pending.append((global_node(k, local), dx, dy, layer, cost, False))
+            pending.append((global_node(k, local), dx, dy, layer, cost, False, False))
         assert reader.pos == len(reader.values)
-    for node, dx, dy, layer, cost, both in pending:
+    for node, dx, dy, layer, cost, both, free in pending:
         x, y = divmod(nav.cell_of(node), nav.GH)
         if not (0 <= x + dx < nav.GW and 0 <= y + dy < nav.GH):
             raise ValueError("Navigation link lands outside map")
         target = (x + dx) * nav.GH + y + dy
         target = nav.FLOORS_AT[target][layer - 1] if layer else target
         nav.LINKS[node][target] = cost
+        if free:
+            nav.FREE.add((node, target))
         if both:
             nav.LINKS[target][node] = cost
+            if free:
+                nav.FREE.add((target, node))
     for node in sorted(nav.LINKS):
         nav.LINKED_OF[nav.cluster_of_cell(node)].append(node)
     nav.ROAD_CELLS = nav.read_roads(map_id)

@@ -333,6 +333,13 @@ ns.Init(function()
 		)
 	)
 	Checkbox(
+		"journeyHint",
+		L["Show the journey key hint in tooltips"],
+		-- luacheck: push ignore 631
+		L["Adds a line naming your journey key to tooltips on the world map, flight points and the minimap. Off, the key still plans journeys."]
+		-- luacheck: pop
+	)
+	Checkbox(
 		"focusedQuest",
 		L["Route to the focused quest"],
 		-- luacheck: push ignore 631
