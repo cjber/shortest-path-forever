@@ -42,8 +42,7 @@ A change's player-facing notes go in `changes/<issue>.md`; only the release comm
 
 - Lua 5.1 in the game's sandbox: no `require`; a new file goes in `ShortestPathForever.toc` or never runs.
 - Specs load ForeverCore first through `tests/forever_core.lua`, so they exercise the real shared modules. Frames,
-  menus, tooltips and the tracker are checked in the headless client (`wow-forever-addon` `in-game.md`); the PR
-  lists what was checked.
+  menus, tooltips and the tracker are checked in game; the PR lists what was checked.
 - A flight point is known only when its flight-master slot is CURRENT or REACHABLE; DISTANT is undiscovered on this
   client (`tests/taxi_known_client_spec.lua` guards the fixture).
 - Searches and tracker updates wait until combat ends; no idle `OnUpdate` (the map view in `UI/Canvas.lua` runs one
@@ -85,7 +84,7 @@ CMaNGOS classic-db where named. Live client values win wherever the client offer
 - `Data/TownAreas.lua` (ground a hostile town's flight master stands in): CASC ADT tile MCNK `AreaTable` ids via
   `tools/gen_towns.py`; `Journey/Hazards.lua` falls back to a radius where the area is not a sub-area (#719).
 - `Data/ZoneCells.lua` (the zone of every 64-yard square of the continents): the client's own `C_Map` answers,
-  dumped in game by `tools/zone_cells_dump.lua` (a DevSmoke eval) and written by `tools/gen_zone_cells.py DUMP`.
+  dumped in game by `tools/zone_cells_dump.lua` and written by `tools/gen_zone_cells.py DUMP`.
   No offline source reproduces `C_Map`, so `check_generated.py` does not rebuild it; redump after a client patch
   that moves zone borders. `Data/WalkZones.lua` (each baked walk's share in each zone) is derived from it by
   `tools/bake_walk_zones.lua`.

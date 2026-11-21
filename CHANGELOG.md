@@ -16,6 +16,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 - Ships with the same shared code as your other Forever addons, so they keep working together.
 
+### Fixed
+
+- Opening the game's settings no longer shows a blocked action error naming Shortest Path Forever. Browsing or searching the settings could leave the Social page's Discord button blocked and blamed on this addon. Its tracker, arrow and compass options now run apart from the rest of the panel (#1219).
+
 ## [1.43.12] - 2026-11-21
 
 ### Changed

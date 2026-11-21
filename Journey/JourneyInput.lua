@@ -300,7 +300,7 @@ local function OnZone(point)
 end
 
 -- A modified click inserts a link into an open chat box; leave that click to Blizzard's own handlers.
--- Both globals may be absent (older builds, the headless harness); guard the call so a missing
+-- Both globals may be absent (older builds, the offline spec harness); guard the call so a missing
 -- one never errors inside a click handler.
 local function ChatBoxOpen()
 	local active = (ChatFrameUtil and ChatFrameUtil.GetActiveWindow) or ChatEdit_GetActiveWindow

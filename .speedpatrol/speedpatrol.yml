@@ -16,7 +16,7 @@ defaults:
   iterations: 7
   warmup: 1
 benchmarks:
-  # The planner's own benches, run headless. journey_bench exits non-zero when a journey does not
+  # The planner's own benches, run offline. journey_bench exits non-zero when a journey does not
   # settle into one committed route. These are wall times, so
   # luajit's own startup is in the number: the threshold is loose on purpose, and a change worth
   # keeping is one that also passes the repo gate.

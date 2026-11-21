@@ -330,7 +330,7 @@ scenario(
 )
 
 -- `/path menutest` leaves one of our two modifiers out of the world map filter menu from the next /reload, so the
--- owner can A/B #161 in game without editing files. Each value is a fresh client logged in with it saved.
+-- owner can A/B #161 in game without editing files. Each value is a fresh client session with it saved.
 for _, case in ipairs({
 	{ value = "map", filters = false, nearby = true },
 	{ value = "nearby", filters = true, nearby = false },
