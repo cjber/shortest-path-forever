@@ -366,7 +366,8 @@ assert(
 assert(frame.hidden or frame.alpha == 0, "native direct guidance hides the addon arrow with stop-only marks")
 ns.db.arrowDirect = false
 ns.ArrowBearingChanged()
-assert(not driver.waypoint(), "route mode with stop-only marks clears the guide waypoint immediately")
+assert(driver.waypoint(), "route mode with stop-only marks keeps a waypoint at the step destination")
+assert(not frame.hidden and frame.alpha > 0, "the route arrow leads beside the destination waypoint")
 ns.db.arrowDirect = true
 ns.ArrowBearingChanged()
 assert(driver.waypoint(), "direct mode restores native guidance immediately with stop-only marks")

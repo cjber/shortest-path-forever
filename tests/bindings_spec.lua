@@ -218,7 +218,7 @@ ns.Planner.QuestDestination = plan
 ns.db.journey, destination, printed = false, nil, {}
 Press(env.ShortestPathForeverTravelToTrackedQuestButton)
 assert(
-	destination == nil and printed[1] == "Journeys are off. Turn on Click the map to plan journeys in settings.",
+	destination == nil and printed[1] == "Journeys are off. Turn on Enable journeys in settings.",
 	"journeys turned off say so"
 )
 ns.db.journey = true

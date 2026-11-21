@@ -1,12 +1,15 @@
 # Addon API
 
-Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 4`) with uiMapIDs and normalized 0-1 coordinates.
+Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 6`) with uiMapIDs and normalized 0-1 coordinates.
 Version 2 removes peer sharing and `Leaderboard`; callers must accept versions 1 and 2 and reject future versions. Check that a function exists before calling it, because an older
 addon may not have it yet. The full types are in [`types/API.lua`](../types/API.lua). On ForeverCore 1.3.2 or
 later, the API is also listed by `ForeverCore.APIKit.Addons()`.
 
 ## Minor history
 
+- Version 2, `minor = 6`: adds `NavigateRoute`'s `options` (`policy`), `ObserveStops` and `JourneyState`.
+- Version 2, `minor = 5`: `ResumeRestedXP` now returns the standard reasons `"none"` and `"combat"`
+  (previously `"unavailable"` and `"invalid"`).
 - Version 2, `minor = 4`: adds optional world height `z` to journey goals, leg ends and guidance places.
 - Version 2, `minor = 3`: adds `EstimateWalks` and `NavVersion`.
 - Version 2, `minor = 2`: adds each journey leg's `from` and `to`, `ResumeRestedXP` and the `replan` change in
@@ -40,13 +43,19 @@ later, the API is also listed by `ForeverCore.APIKit.Addons()`.
   walking costs: unlike journeys they neither avoid hostile towns nor prefer roads.
 - `NavVersion()` returns a string naming the walking data this build ships. Drop cached walk costs when it changes,
   which every addon update can do.
-- `NavigateRoute(owner, stops)` guides through 1 to 64 `{map, x, y, title, tooltip, z}` stops in order, advancing on arrival
+- `NavigateRoute(owner, stops, options)` guides through 1 to 64 `{map, x, y, title, tooltip, z}` stops in order, advancing on arrival
   and ending after the last. Remaining stops have numbered map pins, and the way between them is drawn as
   planned, walks along the walking map, once worked out behind the current leg; the tracker and arrow show
   “Stop 2 of 4: …”.
 - `Navigate(owner, map, x, y, title, kind)` is the one-stop form.
 
-  Both return a boolean; invalid input, combat or disabled Journeys return `false` without replacing guidance.
+  Invalid stops, combat or disabled Journeys make either call return `false` without replacing guidance. A successful
+  call returns `true`.
+  `options` is optional: `{ policy = "normal" }` (the default) plans by every transport, and `{ policy = "walking" }`
+  keeps every leg a walk along the walking map, with no flight, boat, portal, teleport or Hearthstone, so the route
+  is walking yards between the stops. A walk that cannot be measured shows in `JourneyState().failure`. Any other
+  options table, key or policy answers `nil, "invalid"` and changes nothing. A route keeps its policy until the
+  same owner or another one submits again.
   A route whose only stop is the place the journey already goes to hands the journey over rather than starting it
   again: `CurrentStop` answers for the new owner, the previous owner's `Ended` reads `"replaced"`, and the stop, the
   progress, the arrow and the drawn route stay exactly as they are. A route with several stops is a different
@@ -118,9 +127,21 @@ later, the API is also listed by `ForeverCore.APIKit.Addons()`.
   and `false` for any other owner, no journey, the state already asked for, or combat.
 - `ResumeRestedXP()` resumes the RestedXP guide the player follows, as *Resume guide* in Settings and in the tracker
   menu does, so a macro can call it: `/run ShortestPathForever.API.ResumeRestedXP()`. It returns `true` when a guide
-  is now followed. It returns `nil, "unavailable"` when there is no RestedXP guide to resume, because RestedXP is not
+  is now followed. It returns `nil, "none"` when there is no RestedXP guide to resume, because RestedXP is not
   running, following its guide is off, it has no current step, or the saved variables are not loaded yet, and
-  `nil, "invalid"` in combat, where guidance cannot start.
+  `nil, "combat"` when combat blocks guidance.
+- `JourneyState()` reads where the journey under way stands, for an addon driving its own route: busy, still
+  working, failed or blocked, and what each leg of its plan is. It returns `nil, "loading"` until the saved variables
+  are loaded, and otherwise always a table, described under [Journey state](#journey-state).
+- `ObserveStops(owner, callback)` calls `callback(phase, index, stop, state)` for `owner`'s own running route, inside
+  the planner's step that did it, so what a read gives there is what the phase is about. `phase` is `"arrived"` when
+  the stop under way is reached, before the route moves to the next one, and `"settled"` when the planner settled a
+  plan for it (the first plan, a new route, redrawn walks or a time update). `index` is the 1-based stop, `stop` a
+  fresh `{map, x, y, z?, title}` copy of it, and `state` the same table `JourneyState()` answers at that moment, so
+  no read is needed to see the plan that led to an arrival. Only that owner's route and only its stop under way are
+  reported. Calls are synchronous. A callback may cancel or replace the route; the arrival it was called for is then
+  not processed further. An error in a callback goes to the game's error handler without stopping the journey. It returns a function that unsubscribes, safe to call twice, or `nil, "invalid"` for an
+  owner that is not a nonblank string or a callback that is not a function.
 - `Stats()` publishes this character's travel records in the suite's statistics shape.
 
 Use your addon's name as `owner`; starting another journey replaces ownership.
@@ -140,8 +161,8 @@ A read with nothing to answer returns `nil, reason`. `Estimate` and `EstimateDet
 nothing to answer: no current stop, or no ended journey to report. `Journey` uses `"loading"` while the saved
 variables are not loaded or the planner has no route yet, and `"none"` when there is no journey. `Guidance` adds
 `"paused"`, `"disabled"`, `"cast"` and `"unavailable"` to those two, each described above. `Stats` uses
-`"loading"` until the saved variables are loaded. `ResumeRestedXP` is an action, not a read: `nil` comes with
-`"unavailable"` when there is no guide to resume, or `"invalid"` in combat, as described above.
+`"loading"` until the saved variables are loaded. `ResumeRestedXP` returns `nil, "none"` when there is no guide
+to resume or `nil, "combat"` when combat blocks guidance. `JourneyState` uses `"loading"` alone.
 
 `EstimateWalks` refuses to start with `nil` and one of `"invalid"` (an owner, place, callback or option it cannot
 use, a target on another walking map, or more than 256 targets), `"combat"`, `"loading"`, or `"nodata"` when this
@@ -210,6 +231,28 @@ end
 | `subject` | always `"all"` |
 | `value` | the recorded total: estimated yards walked, journeys reached their last stop, boat, zeppelin, lift and tram rides, taxi flights, or portals and passages |
 | `eventUnix` | absent: the travel journal records no event time |
+
+## Journey state
+
+`JourneyState()` returns a fresh table, whoever owns the journey, and `ObserveStops` hands its callback the same shape.
+
+| Field | |
+|---|---|
+| `owner` | the addon whose route it is; absent for the player's own journey. Kept while a corpse run guides in its place |
+| `policy` | `"normal"` or `"walking"`, the route's policy; `"normal"` with none |
+| `busy` | whether any journey exists: the player's, an addon's or a corpse run |
+| `pending` | whether searches or walk measurements are still running |
+| `settling` | whether the first search is still running, so there may be no final plan yet |
+| `failure` | why the plan failed, or absent: the search's own error, else the first leg's walk error. The strings are the walk failures `"nodata"`, `"outside"`, `"offmesh"`, `"unreachable"` and `"error"` |
+| `blocked` | `"combat"` or `"corpse"` while no route can be driven, else absent. A corpse run is the player's own guidance, and the route waits behind it |
+| `preview` | whether the plan is a preview, not the planner's final one |
+| `index` | the 1-based leg under way in `legs`; absent with no plan |
+| `legs` | every leg of the plan, a fresh `{mode, measured, walkError?}` each: its mode, whether a walk is measured along the walking map rather than drawn straight, and why it could not be measured. Empty with no plan |
+| `distance` | yards from the player to the stop under way, absent with no stop or when the player is on another continent |
+| `reach` | the player's *Arrival distance* setting in yards, the distance within which the last stop counts as reached |
+
+A route that has arrived is complete when its last stop's `"arrived"` call has `distance <= reach`, `legs` all
+measured walks, and none of `pending`, `settling`, `preview` or `failure`.
 
 ## World map markers
 

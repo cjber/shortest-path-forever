@@ -297,6 +297,7 @@ print("plan context: speed, options, ride, places, landmass and leg points passe
 local driver = assert(loadfile("tests/journey_driver.lua"))()
 driver.load("UI/Looks.lua")
 driver.load("Core/APIInput.lua")
+driver.load("Core/APIStops.lua")
 driver.load("Core/API.lua")
 local fixture, API = driver.ns, driver.env.ShortestPathForever.API
 local function estimate(seconds)

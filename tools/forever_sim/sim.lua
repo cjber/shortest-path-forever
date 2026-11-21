@@ -131,6 +131,13 @@ Sim.CORE = {
 	"Blizzard_ObjectiveTracker",
 	"Blizzard_ContentTracking",
 	"Blizzard_TrainerUI",
+	"Blizzard_RaidWarning/RaidWarningUtil.lua",
+	"Blizzard_RaidWarning/RaidWarning.lua",
+	"Blizzard_RaidWarning/RaidWarning.xml",
+	"Blizzard_NamePlates/Blizzard_NamePlateConstants.lua",
+	"Blizzard_NamePlates/Blizzard_NamePlateFrameOptions.lua",
+	"Blizzard_NamePlates/Blizzard_NamePlates.lua",
+	"Blizzard_NamePlates/Blizzard_NamePlates.xml",
 }
 
 local docsCache = {}
@@ -240,6 +247,12 @@ function Sim.new(opts)
 			sim.G.Mixin(bar, sim.G.TextStatusBarMixin)
 		end
 	end
+	-- The raid warning anchors below Blizzard_BuffFrame's DeadlyDebuffFrame, which needs the omitted unit frames: the
+	-- hidden frame it reads stands in for it.
+	if sim.G.RaidWarningFrame and not sim.G.DeadlyDebuffFrame then
+		sim.G.CreateFrame("Frame", "DeadlyDebuffFrame", sim.G.UIParent):Hide()
+	end
+	sim.events.watchRegistry(rawget(sim.G, "EventRegistry"))
 	sim.loader.bootstrap()
 	sim.createChat()
 	sim.bootSeconds = os.clock() - sim.started
@@ -352,6 +365,48 @@ function Sim:expectNoErrors(addon)
 	end
 	if #found > 0 then
 		error("expected no errors, got " .. #found .. ":\n" .. describe(found), 2)
+	end
+end
+
+-- The waits that can never call back (client.lua, E.late): registrations for PLAYER_LOGIN or VARIABLES_LOADED made
+-- after the event fired and still pending, optionally only `addon`'s, as { addon, event, kind, site }.
+function Sim:strandedWaits(addon)
+	local out = {}
+	for _, kind in ipairs({ "frame", "callback" }) do
+		for _, waits in pairs(self.events.late[kind]) do
+			for _, wait in pairs(waits) do
+				if not addon or wait.addon == addon then
+					out[#out + 1] = wait
+				end
+			end
+		end
+	end
+	table.sort(out, function(a, b)
+		local sa, sb = a.site or {}, b.site or {}
+		return string.format("%s:%08d:%s", tostring(sa.file), sa.line or 0, a.event)
+			< string.format("%s:%08d:%s", tostring(sb.file), sb.line or 0, b.event)
+	end)
+	return out
+end
+
+-- Fails when `addon` (any addon when nil) waits for a loading event that already fired: its files ran after it,
+-- as they do when a packaged ForeverCore is elected at PLAYER_LOGIN. Wait with ns.AfterEvents instead.
+function Sim:expectNoStrandedWaits(addon)
+	local waits = self:strandedWaits(addon)
+	if #waits > 0 then
+		local lines = {}
+		for _, wait in ipairs(waits) do
+			local site = wait.site or {}
+			lines[#lines + 1] = string.format(
+				"%s:%s: %s waits for %s, which already fired (%s); it never calls back. Use ns.AfterEvents",
+				tostring(site.file or "?"),
+				tostring(site.line or "?"),
+				tostring(wait.addon),
+				wait.event,
+				wait.kind == "frame" and "a frame registered for it" or "an EventRegistry callback"
+			)
+		end
+		error("expected no stranded waits, got " .. #waits .. ":\n" .. table.concat(lines, "\n"), 2)
 	end
 end
 

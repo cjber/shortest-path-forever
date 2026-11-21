@@ -175,11 +175,6 @@ local ns = {
 			return controller
 		end,
 	},
-	PlayerPosition = function()
-		if world then
-			return world.x, world.y, 999, world.map
-		end
-	end,
 	GatherMate = {
 		CurrentZone = function(kind, selected)
 			snapshots[#snapshots + 1] = { kind = kind, selected = selected }
@@ -196,6 +191,9 @@ local ns = {
 		end,
 	},
 	FarmingOrder = {
+		Player = function()
+			return world and { map = world.map, x = world.x, y = world.y }
+		end,
 		Begin = function(nodes, point)
 			assert(
 				point.map == 1 and point.x == 10 and point.y == 20 and point.z == nil,

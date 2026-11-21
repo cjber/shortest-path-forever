@@ -28,6 +28,7 @@ env.hooksecurefunc = function(target, key, hook)
 end
 driver.load("UI/Looks.lua")
 driver.load("Core/APIInput.lua")
+driver.load("Core/APIStops.lua")
 driver.load("Core/API.lua")
 driver.load("Journey/Itinerary.lua")
 driver.load("UI/Alert.lua")

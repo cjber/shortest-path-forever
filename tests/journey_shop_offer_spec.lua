@@ -21,6 +21,7 @@ for _, file in ipairs({
 end
 assert(loadfile("tools/load_nav.lua"))(0)
 driver.load("Core/APIInput.lua")
+driver.load("Core/APIStops.lua")
 driver.load("Core/API.lua")
 driver.env._G = driver.env
 -- Stormwind City's map projects onto Eastern Kingdoms.

@@ -446,11 +446,11 @@ L["Off, the game's own quest markers stay beside your journey's pins, showing th
 	"끄면 게임의 퀘스트 표시가 여정 표시 옆에 그대로 남아, 퀘스트를 완료할 수 있는 다른 장소를 볼 수 있습니다." -- mt
 L["Shift"] = "Shift" -- mt
 L["Alt"] = "Alt" -- mt
-L["Click the map to plan journeys"] = "지도를 클릭하여 여정 계획" -- mt
-L["Hold your journey key and click the world map or the minimap to plan a journey there."] =
-	"여정 키를 누른 채 세계 지도나 미니맵을 클릭하면 그곳까지 여정을 계획합니다." -- mt
-L["Journeys are off. Turn on Click the map to plan journeys in settings."] =
-	"여정이 꺼져 있습니다. 설정에서 '지도를 클릭하여 여정 계획'을 켜십시오." -- mt
+L["Enable journeys"] = "여정 사용" -- mt
+L["Off clears your journey, and map clicks, quests, guides and waypoints no longer start one."] =
+	"끄면 현재 여정이 지워지고, 지도 클릭, 퀘스트, 가이드, 웨이포인트로 여정이 시작되지 않습니다." -- mt
+L["Journeys are off. Turn on Enable journeys in settings."] =
+	"여정이 꺼져 있습니다. 설정에서 '여정 사용'을 켜십시오." -- mt
 L["Key to plan a journey"] = "여정 계획 키" -- mt
 L["The key you hold to plan a journey from the world map or the minimap."] =
 	"세계 지도나 미니맵에서 여정을 계획하려면 누르고 있는 키입니다." -- mt
@@ -479,6 +479,7 @@ L["Farming tour running."] = "채집 순회 진행 중입니다." -- mt
 L["Farming tour paused."] = "채집 순회가 일시 정지되었습니다." -- mt
 L["Farming tour stopped."] = "채집 순회가 중지되었습니다." -- mt
 L["Farming tour waiting."] = "채집 순회 대기 중입니다." -- mt
+L["Or choose %s in the journey tracker menu."] = "또는 여정 추적기 메뉴에서 ‘%s’를 선택하세요." -- mt
 L["Ordering recorded locations..."] = "기록된 위치의 순서를 정하는 중..." -- mt
 L["Farming needs the GatherMate2 addon."] = "채집하려면 GatherMate2 애드온이 필요합니다." -- mt
 L["Your current zone is unavailable."] = "현재 지역을 확인할 수 없습니다." -- mt

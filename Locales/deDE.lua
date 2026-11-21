@@ -436,11 +436,11 @@ L["Off, the game's own quest markers stay beside your journey's pins, showing th
 	"Ist die Option aus, bleiben die Questmarkierungen des Spiels neben den Markierungen Eurer Reise sichtbar, sodass Ihr die anderen Orte seht, an denen eine Quest erledigt werden kann." -- mt
 L["Shift"] = "Umschalt" -- mt
 L["Alt"] = "Alt" -- mt
-L["Click the map to plan journeys"] = "Klicke auf die Karte, um Reisen zu planen" -- mt
-L["Hold your journey key and click the world map or the minimap to plan a journey there."] =
-	"Halte deine Reisetaste gedrückt und klicke auf die Weltkarte oder die Minikarte, um eine Reise dorthin zu planen." -- mt
-L["Journeys are off. Turn on Click the map to plan journeys in settings."] =
-	"Reisen sind aus. Aktiviere in den Einstellungen „Klicke auf die Karte, um Reisen zu planen“." -- mt
+L["Enable journeys"] = "Reisen aktivieren" -- mt
+L["Off clears your journey, and map clicks, quests, guides and waypoints no longer start one."] =
+	"Aus löscht deine Reise, und Kartenklicks, Quests, Guides und Wegpunkte starten keine mehr." -- mt
+L["Journeys are off. Turn on Enable journeys in settings."] =
+	"Reisen sind aus. Aktiviere in den Einstellungen „Reisen aktivieren“." -- mt
 L["Key to plan a journey"] = "Taste zum Planen einer Reise" -- mt
 L["The key you hold to plan a journey from the world map or the minimap."] =
 	"Die Taste, die du hältst, um von der Weltkarte oder der Minikarte aus eine Reise zu planen." -- mt
@@ -469,6 +469,7 @@ L["Farming tour running."] = "Sammeltour läuft." -- mt
 L["Farming tour paused."] = "Sammeltour pausiert." -- mt
 L["Farming tour stopped."] = "Sammeltour gestoppt." -- mt
 L["Farming tour waiting."] = "Sammeltour wartet." -- mt
+L["Or choose %s in the journey tracker menu."] = "Oder wähle im Menü der Reiseverfolgung „%s“." -- mt
 L["Ordering recorded locations..."] = "Aufgezeichnete Orte werden geordnet..." -- mt
 L["Farming needs the GatherMate2 addon."] = "Zum Sammeln wird das Addon GatherMate2 benötigt." -- mt
 L["Your current zone is unavailable."] = "Dein aktuelles Gebiet ist nicht verfügbar." -- mt
