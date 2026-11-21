@@ -439,11 +439,11 @@ L["Off, the game's own quest markers stay beside your journey's pins, showing th
 	"Si está desactivado, los marcadores de misión del juego se quedan junto a los de tu viaje, para que veas los demás lugares donde se puede completar una misión." -- mt
 L["Shift"] = "Mayús" -- mt
 L["Alt"] = "Alt" -- mt
-L["Click the map to plan journeys"] = "Haz clic en el mapa para planear viajes" -- mt
-L["Hold your journey key and click the world map or the minimap to plan a journey there."] =
-	"Mantén pulsada tu tecla de viaje y haz clic en el mapa del mundo o el minimapa para planear un viaje hasta allí." -- mt
-L["Journeys are off. Turn on Click the map to plan journeys in settings."] =
-	"Los viajes están desactivados. Activa «Haz clic en el mapa para planear viajes» en los ajustes." -- mt
+L["Enable journeys"] = "Activar viajes" -- mt
+L["Off clears your journey, and map clicks, quests, guides and waypoints no longer start one."] =
+	"Desactivado, borra tu viaje y ni los clics en el mapa ni las misiones, guías o puntos de ruta inician otro." -- mt
+L["Journeys are off. Turn on Enable journeys in settings."] =
+	"Los viajes están desactivados. Activa «Activar viajes» en los ajustes." -- mt
 L["Key to plan a journey"] = "Tecla para planear un viaje" -- mt
 L["The key you hold to plan a journey from the world map or the minimap."] =
 	"La tecla que mantienes para planear un viaje desde el mapa del mundo o el minimapa." -- mt
