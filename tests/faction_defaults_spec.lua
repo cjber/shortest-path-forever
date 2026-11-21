@@ -134,4 +134,9 @@ assert(vendors.db.townServiceFood == false and vendors.db.townServiceBags == fal
 assert(vendors.db.townServiceKinds.gear == true, "a vendor kind turned on in the map's filter stays on")
 vendors.db.townServiceFood = true
 assert(loadCore(vendors.db).db.townServiceFood == true, "a vendor switch turned on after the change stays on")
+assert(fresh.db.resumeJourney == true, "new installs keep journeys after a reload")
+local kept = loadCore({ resumeJourney = false })
+assert(kept.db.resumeJourney == true, "an old save holding the old off default keeps journeys once")
+kept.db.resumeJourney = false
+assert(loadCore(kept.db).db.resumeJourney == false, "turned off after the change stays off")
 print("faction_defaults_spec: defaults and saved preferences passed")

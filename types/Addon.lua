@@ -362,6 +362,7 @@
 ---@field useHearthstone? boolean the Hearthstone and Astral Recall may be used in journeys, while class teleports still are (Teleports.lua)
 ---@field teleportSplit? integer the one-time move of the old combined teleports switch ran
 ---@field quietDefaults? integer the one-time clear of the old on-by-default town services and compass ran
+---@field keepDefault? integer the one-time clear of the old off-by-default Keep journeys after a reload ran
 ---@field partyMagePortals? boolean -- offer a party mage's capital portals
 ---@field partyMageStormwind? boolean
 ---@field partyMageIronforge? boolean
