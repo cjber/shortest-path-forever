@@ -61,7 +61,7 @@ local ARRIVAL_WIDTH, ARRIVAL_TITLE_LINES, ARRIVAL_LINE_LIMIT = 240, 2, 3
 ---@field facing? number
 ---@type SPFArrowFrame
 local frame
-local source, path, index, target, placeTarget, native
+local source, path, index, target, placeTarget, native, shared
 -- suffix[i] is the walking distance from path[i] to the last bend along the bends, built when the guide's stops
 -- refresh so a moving frame reads it instead of re-walking every remaining segment (WFA-13).
 local suffix, suffixCount = {}, 0
@@ -77,7 +77,7 @@ local function BuildSuffix()
 end
 local stepEnd, destination
 local revision = 0
-local renderedRevision, renderedMetres, renderedMode, renderedSecond, renderedNative
+local renderedRevision, renderedMetres, renderedMode, renderedSecond, renderedNative, renderedShared
 local moving = false
 local OnUpdate
 ---@type SPFCastPromptFrame?
@@ -118,6 +118,49 @@ end
 -- still has a navigation frame but keeps the marker at no alpha, so the arrow has to lead.
 local function NativeMarkerShown()
 	return C_Navigation.GetFrame() ~= nil and GetCVarBool("showInGameNavigation")
+end
+
+-- The client can draw a quest marker even when Guide owns no waypoint. Compare its actual navigation target
+-- with the active bend, since a shared journey destination does not mean the marker can lead the next turn.
+---@param point SPFPoint
+local function NativeMarkerAt(point)
+	local nextWaypoint = C_Navigation.GetNextWaypointForMap
+	local uiMap = nextWaypoint and C_Map.GetBestMapForUnit("player")
+	if not (uiMap and canaccessvalue(uiMap)) then
+		return false
+	end
+	local state = C_Navigation.GetTargetState()
+	if
+		(state ~= Enum.NavigationState.InRange and state ~= Enum.NavigationState.Occluded)
+		or not C_Navigation.HasValidScreenPosition()
+	then
+		return false
+	end
+	local x, y = nextWaypoint(uiMap)
+	if not (x and y and canaccessvalue(x) and canaccessvalue(y)) then
+		return false
+	end
+	local map, world = C_Map.GetWorldPosFromMapPos(uiMap, CreateVector2D(x, y))
+	if not (map and world and canaccessvalue(map) and canaccessvalue(world)) then
+		return false
+	end
+	local worldX, worldY = world:GetXY()
+	-- Map projections can round the same location differently. Allow the same one yard as Guide's waypoint
+	-- read-back, comparing locations in world space rather than distances from the player.
+	if
+		not (canaccessvalue(worldX) and canaccessvalue(worldY))
+		or map ~= point.map
+		or (worldX - point.x) ^ 2 + (worldY - point.y) ^ 2 > 1
+	then
+		return false
+	end
+	-- Waypoint UI's step-end handover intentionally keeps both its marker and the route arrow (#1124).
+	return not (C_SuperTrack.IsSuperTrackingUserWaypoint() and ns.WaypointUIPinOwned())
+end
+
+-- Direct bearing uses the destination on this map. Across maps, use the active leg's endpoint.
+local function Pointing(direct, map)
+	return direct and ((destination and destination.map == map and destination) or path[#path]) or target
 end
 
 local function Draw(angle)
@@ -204,13 +247,17 @@ local function Update(elapsed)
 		frame.angle = nil
 		SetUpdating(false)
 		-- A marker that led before the position went still leads: Guide keeps it through a frame with no map (#826).
-		Unseen(not (native and NativeMarkerShown()))
+		Unseen(not ((native or shared) and NativeMarkerShown()))
 		return
 	end
 	local moved = x ~= frame.x or y ~= frame.y or map ~= frame.map or facing ~= frame.facing
 	-- The slow poll still detects mouse turns and passive transport motion. Once settled,
 	-- identical inputs must not place a waypoint, redraw textures or walk the path again.
 	local markerShown = NativeMarkerShown()
+	local direct = ns.db.arrowDirect == true
+	local pointing = Pointing(direct, map)
+	-- A marker Guide placed already leads; only a marker someone else drew needs reading back.
+	local sharedMarker = markerShown and not native and NativeMarkerAt(pointing)
 	local mode = ns.db.arrowLabel
 	local second = (mode == "time" or mode == "both") and math.floor(GetTime()) or nil
 	if
@@ -221,6 +268,7 @@ local function Update(elapsed)
 		and renderedMode == mode
 		and renderedSecond == second
 		and renderedNative == markerShown
+		and renderedShared == sharedMarker
 	then
 		return
 	end
@@ -229,23 +277,30 @@ local function Update(elapsed)
 	StepIcon()
 	frame.x, frame.y, frame.map, frame.facing = x, y, map, facing
 	ns.AdvanceGuide()
-	-- Direct bearing uses the final destination on this map. Across maps, keep leading to the active
-	-- leg's endpoint so boats, flights and portals still have a reachable boarding point.
-	local direct = ns.db.arrowDirect == true
-	local pointing = direct and ((destination and destination.map == map and destination) or path[#path]) or target
+	local nextPoint = Pointing(direct, map)
+	if nextPoint ~= pointing then
+		pointing = nextPoint
+		sharedMarker = markerShown and not native and NativeMarkerAt(pointing)
+	end
 	local placed = placeTarget and placeTarget(pointing, false)
 	-- Waypoint callbacks can stop or replace guidance synchronously.
 	if revision ~= updating then
 		return
 	end
-	native = placed
-	if not (facing and map == pointing.map) or (native and markerShown) then
+	if native and not placed then
+		-- Guide's marker led last frame and no longer does, so the read above was skipped.
+		sharedMarker = markerShown and NativeMarkerAt(pointing)
+	end
+	renderedShared = sharedMarker
+	native, shared = placed, sharedMarker
+	local markerLeads = (native or shared) and markerShown
+	if not (facing and map == pointing.map) or markerLeads then
 		-- The native marker leads; nothing to draw, so only the slow poll runs, moving or not.
 		frame.behind = false
 		frame:SetAlpha(moving and 1 or 0)
 		frame.angle = nil
 		SetUpdating(false)
-		Unseen(not (native and markerShown))
+		Unseen(not markerLeads)
 		return
 	end
 	Unseen(false)
@@ -704,7 +759,7 @@ function ns.PointGuideArrow(points, placeBend, stop, goal)
 		return
 	end
 	if not points or ns.db.arrow == false then
-		native, unseen = nil, false
+		native, shared, unseen = nil, nil, false
 		if frame then
 			SetUpdating(false)
 			frame:SetShown(moving)

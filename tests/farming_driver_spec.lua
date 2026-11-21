@@ -1,9 +1,9 @@
--- luacheck: globals C_Timer InCombatLockdown CreateFrame
+-- luacheck: globals C_Timer InCombatLockdown CreateFrame canaccessvalue CreateVector2D C_Map
 local queue, listeners, frames, submissions = {}, {}, {}, {}
 local combat, corpse, occupied, owner, index, ended, failure, walkError, measured, accept, steer
 local proofListeners = {}
 local position = 0
-local ns = { db = {}, Corpse = {} }
+local ns = {}
 local function reset()
 	queue, listeners, submissions = {}, {}, {}
 	combat, corpse, occupied, owner, index, ended, failure, walkError = false, false, false, nil, nil, nil, nil, nil
@@ -26,28 +26,48 @@ CreateFrame = function()
 	frames[#frames + 1] = frame
 	return frame
 end
-ns.Corpse.Active = function()
-	return corpse
+local function worldOf(stop)
+	return stop.x * 1000, stop.y * 1000
 end
-ns.HasJourney = function()
-	return occupied
+local api = {}
+ShortestPathForever = { API = api }
+canaccessvalue = function()
+	return true
 end
-ns.JourneyOwner = function()
-	return owner
+CreateVector2D = function(x, y)
+	return { x = x, y = y }
 end
-ns.WorldPoint = function(map, x, y)
-	return { map = map, x = x * 1000, y = y * 1000 }
+C_Map = {
+	GetWorldPosFromMapPos = function(_, at)
+		return 1, {
+			GetXY = function()
+				return at.x * 1000, at.y * 1000
+			end,
+		}
+	end,
+}
+api.JourneyState = function()
+	local stop = submissions[#submissions] and index and submissions[#submissions][index]
+	local distance
+	if stop then
+		local x, y = worldOf(stop)
+		distance = math.sqrt((position - x) ^ 2 + (position - y) ^ 2)
+	end
+	return {
+		owner = owner,
+		policy = "walking",
+		busy = occupied or owner ~= nil,
+		pending = false,
+		settling = false,
+		failure = failure or walkError,
+		blocked = combat and "combat" or corpse and "corpse" or nil,
+		preview = false,
+		legs = { { mode = "walk", measured = measured, walkError = walkError } },
+		distance = distance,
+		reach = 15,
+	}
 end
-ns.JourneyPosition = function()
-	return position, position, 0, 1
-end
-ns.JourneyStatus = function()
-	return false, 0, failure, false
-end
-ns.JourneyPlan = function()
-	return { legs = { { mode = "walk", measured = measured, walkError = walkError } } }
-end
-ns.ObserveFarmingJourney = function(who, fn)
+api.ObserveStops = function(who, fn)
 	local entry = { owner = who, fn = fn, active = true }
 	proofListeners[#proofListeners + 1] = entry
 	return function()
@@ -58,12 +78,10 @@ local function proof(phase)
 	local stop = submissions[#submissions][index]
 	for _, entry in ipairs(proofListeners) do
 		if entry.active and entry.owner == owner then
-			entry.fn(phase, index, ns.WorldPoint(stop.map, stop.x, stop.y), ns.JourneyPlan())
+			entry.fn(phase, index, { map = stop.map, x = stop.x, y = stop.y, title = stop.title }, api.JourneyState())
 		end
 	end
 end
-local api = {}
-ShortestPathForever = { API = api }
 api.CurrentStop = function(who)
 	return owner == who and index or nil
 end
@@ -86,7 +104,8 @@ api.Pause = function()
 	return steer and not combat and not corpse
 end
 api.Resume = api.Pause
-ns.NavigateFarmingRoute = function(who, stops)
+api.NavigateRoute = function(who, stops, options)
+	assert(options and options.policy == "walking" and not next(options, next(options)), "walking policy only")
 	assert(not occupied and not owner, "atomic ownership check")
 	if not accept then
 		return false
@@ -116,6 +135,7 @@ local function nodes(n)
 	end
 	return out
 end
+assert(loadfile("Journey/FarmingOrder.lua"))("SPF", ns)
 assert(loadfile("Journey/FarmingCursor.lua"))("SPF", ns)
 -- This is deliberately red before the driver exists.
 assert(loadfile("Journey/Farming.lua"))("SPF", ns)
@@ -285,14 +305,14 @@ owner, index, occupied, ended = nil, nil, false, "arrived"
 notify()
 assert(select(2, c:Status()) == "unverified-arrival")
 reset()
-local navigate = ns.NavigateFarmingRoute
-ns.NavigateFarmingRoute = function(who, stops)
-	navigate(who, stops)
+local navigate = api.NavigateRoute
+api.NavigateRoute = function(who, stops, options)
+	navigate(who, stops, options)
 	error("navigation producer failed")
 end
 assert(not c:Start(nodes(2)))
 assert(select(2, c:Status()) == "navigation-error" and not occupied)
-ns.NavigateFarmingRoute = navigate
+api.NavigateRoute = navigate
 flush()
 assert(#queue == 0)
 print("PASS: ownership, 300/tail/cycles, stale callbacks, pause/resume, verified arrival, path failures, event wake")

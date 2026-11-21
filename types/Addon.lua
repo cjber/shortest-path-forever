@@ -63,8 +63,8 @@
 ---@field EstimateContextRevision fun(): integer
 ---@field WorldPoint fun(uiMapID: integer, x: number, y: number): SPFPoint?
 ---@field FarmingCursor SPFFarmingCursorFactory
----@field NavigateFarmingRoute fun(owner: string, stops: SPFAPIStop[]): boolean
 ---@field JourneyRoutePolicy fun(): SPFRoutePolicy
+---@field APIStops SPFAPIStops the public API journey state and stop observers (Core/APIStops.lua)
 ---@field APIInput SPFAPIInput the public API's argument checks and answers (Core/APIInput.lua)
 ---@field EstimateWalks fun(owner: string, from: SPFAPIPlace, targets: SPFAPIPlace[], callback: fun(costs: (number|false)[], reason: SPFAPIWalkReason?), opts?: SPFAPIWalkOptions): cancel: fun()?, reason: SPFAPIWalkRefusal? one walking search to every target on the from point's walking map (#913)
 ---@field NavVersion fun(): string the walking data this build ships, for dropping cached walk costs
@@ -144,6 +144,7 @@
 ---@field jump? number
 ---@field label? string
 ---@field details? string[] -- a stop's own detail lines, in the caller's order (API.lua)
+---@field submitted? {map: number, x: number, y: number, z?: number} -- the place as the caller gave it, for stop observers (API.lua)
 ---@field routeTitle? string
 ---@field routeTitleFormat? string -- the locale format behind an addon-built routeTitle (API.lua)
 ---@field routeCount? integer -- stops in a multi-stop routeTitle (API.lua)

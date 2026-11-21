@@ -1176,6 +1176,12 @@ function Search.Speed()
 	return lastRunSpeed
 end
 
+-- A timed replan is running in a path job of its own, so the plan on show is about to be replaced.
+---@return boolean
+function Search.Replanning()
+	return replanning ~= nil
+end
+
 -- loading: a first search is still running, with at most a measured route to follow.
 ---@return number pending, number round, string? error, boolean loading
 function Search.Status()

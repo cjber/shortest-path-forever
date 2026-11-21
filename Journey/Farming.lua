@@ -9,13 +9,17 @@ local Farming = {}
 ns.Farming = Farming
 local instance = 0
 
-local function Blocked()
-	if InCombatLockdown() then
-		return "combat"
-	end
-	if ns.Corpse and ns.Corpse.Active() then
-		return "corpse"
-	end
+-- The tour drives Shortest Path only through its public API.
+---@return SPFAPIJourneyState?
+local function State()
+	return (ShortestPathForever.API.JourneyState())
+end
+
+---@param state? SPFAPIJourneyState
+---@return SPFAPIBlocked?
+local function Blocked(state)
+	state = state or State()
+	return state and state.blocked
 end
 
 -- Input order is the caller's decision. Copy only flat records, before touching a live route.
@@ -64,7 +68,7 @@ local function Snapshot(nodes)
 		if node.title ~= nil and type(node.title) ~= "string" then
 			return nil, "invalid"
 		end
-		local point = ns.WorldPoint(map, x, y)
+		local point = ns.FarmingOrder.World(map, x, y)
 		if not point then
 			return nil, "invalid"
 		end
@@ -117,33 +121,24 @@ function Farming.new()
 		end
 		current = nil
 		detach(batch)
-		if reason ~= "arrived" and ns.JourneyOwner() == batch.owner and not Blocked() then
+		local state = State()
+		if reason ~= "arrived" and state and state.owner == batch.owner and not state.blocked then
 			api.Cancel(batch.owner)
 		end
 		batch.done(reason)
 	end
 	local function inspect(batch)
-		if current ~= batch or Blocked() then
+		local state = State()
+		if current ~= batch or not state or state.blocked then
 			return
 		end
 		local index = api.CurrentStop(batch.owner)
 		if not index then
 			---@type string?
 			local reason = api.Ended(batch.owner)
-			if reason == "arrived" then
-				local x, y, _, map = ns.JourneyPosition()
-				local goal = batch.goal
-				local reach = ns.db.arrivalDistance or 15
-				if
-					not batch.arrived
-					or not goal
-					or not x
-					or not y
-					or map ~= goal.map
-					or (x - goal.x) ^ 2 + (y - goal.y) ^ 2 > reach ^ 2
-				then
-					reason = "unverified-arrival"
-				end
+			-- The proof was taken when the last stop was reached: a measured walk plan and the player inside reach.
+			if reason == "arrived" and not batch.arrived then
+				reason = "unverified-arrival"
 			end
 			if reason == "none" or reason == "loading" or not reason then
 				reason = "ownership-lost"
@@ -151,21 +146,15 @@ function Farming.new()
 			finish(batch, reason)
 			return
 		end
-		if ns.JourneyOwner() ~= batch.owner then
+		if state.owner ~= batch.owner then
 			finish(batch, "ownership-lost")
 			return
 		end
-		local _, _, failure = ns.JourneyStatus()
-		if failure then
-			finish(batch, failure)
+		if state.failure then
+			finish(batch, state.failure)
 			return
 		end
-		local plan = ns.JourneyPlan()
-		for _, leg in ipairs(plan and plan.legs or {}) do
-			if leg.walkError then
-				finish(batch, leg.walkError)
-				return
-			end
+		for _, leg in ipairs(state.legs) do
 			if leg.mode ~= "walk" then
 				finish(batch, "non-walking-plan")
 				return
@@ -187,7 +176,8 @@ function Farming.new()
 	end
 	cursor = ns.FarmingCursor.new({
 		busy = function()
-			return ns.HasJourney() or ns.JourneyOwner() ~= nil
+			local state = State()
+			return not state or state.busy
 		end,
 		defer = deferred,
 		submit = function(nodes, token, done)
@@ -202,50 +192,34 @@ function Farming.new()
 			for i, node in ipairs(nodes) do
 				stops[i] = { map = node.uiMapID, x = node.x, y = node.y, title = node.title }
 			end
-			local final = stops[#stops]
-			batch.goal = ns.WorldPoint(final.map, final.x, final.y)
-			if not batch.goal or Blocked() or ns.HasJourney() or ns.JourneyOwner() ~= nil then
+			local state = State()
+			if not state or state.blocked or state.busy then
 				return false
 			end
 			current = batch
 			batch.unsubscribe = api.Subscribe(function()
 				inspect(batch)
 			end)
-			batch.unobserve = ns.ObserveFarmingJourney(batch.owner, function(phase, index, goal, plan)
-				if current ~= batch or Blocked() or ns.JourneyOwner() ~= batch.owner then
+			batch.unobserve = api.ObserveStops(batch.owner, function(phase, index, _, seen)
+				if current ~= batch or seen.blocked or seen.owner ~= batch.owner then
 					return
 				end
 				inspect(batch)
 				if current ~= batch or phase ~= "arrived" or index ~= batch.count then
 					return
 				end
-				local expected = batch.goal
-				local pending, _, failure, loading = ns.JourneyStatus()
-				local valid = expected
-					and goal
-					and goal.map == expected.map
-					and goal.x == expected.x
-					and goal.y == expected.y
-					and plan ~= nil
-					and #plan.legs > 0
-					and not plan.preview
-					and not pending
-					and not failure
-					and not loading
-				for _, leg in ipairs(plan and plan.legs or {}) do
-					valid = valid and leg.mode == "walk" and leg.measured == true and not leg.walkError
+				local valid = #seen.legs > 0
+					and not seen.preview
+					and not seen.pending
+					and not seen.failure
+					and not seen.settling
+				for _, leg in ipairs(seen.legs) do
+					valid = valid and leg.mode == "walk" and leg.measured and not leg.walkError
 				end
-				local x, y, _, map = ns.JourneyPosition()
-				local reach = ns.db.arrivalDistance or 15
-				batch.arrived = valid
-						and x ~= nil
-						and y ~= nil
-						and map == goal.map
-						and (x - goal.x) ^ 2 + (y - goal.y) ^ 2 <= reach ^ 2
-					or false
+				batch.arrived = valid and seen.distance ~= nil and seen.distance <= seen.reach or false
 			end)
-			-- No yield between the final ownership check and the internal walking submission.
-			local ok, accepted = pcall(ns.NavigateFarmingRoute, batch.owner, stops)
+			-- No yield between the final ownership check and the walking submission.
+			local ok, accepted = pcall(api.NavigateRoute, batch.owner, stops, { policy = "walking" })
 			if not ok then
 				finish(batch, "navigation-error")
 				return false
@@ -269,9 +243,7 @@ function Farming.new()
 			if batch and batch.token == token then
 				current = nil
 				detach(batch)
-				if ns.JourneyOwner() == batch.owner then
-					api.Cancel(batch.owner)
-				end
+				api.Cancel(batch.owner)
 			end
 		end,
 	})
@@ -303,11 +275,13 @@ function Farming.new()
 		if not snapshot then
 			return false, reason
 		end
-		if ns.HasJourney() and (not current or ns.JourneyOwner() ~= current.owner) then
+		local state = State()
+		if state and state.busy and (not current or state.owner ~= current.owner) then
 			return false, "occupied"
 		end
-		if Blocked() then
-			return false, Blocked()
+		local blocked = Blocked(state)
+		if blocked then
+			return false, blocked
 		end
 		waiting = nil
 		return cursor:start(snapshot)

@@ -17,12 +17,15 @@ local function scenario(final)
 	end
 	d.load("UI/Looks.lua")
 	d.load("Core/APIInput.lua")
+	d.load("Core/APIStops.lua")
 	d.load("Core/API.lua")
 	d.load("Journey/Itinerary.lua")
+	d.load("Journey/FarmingOrder.lua")
 	d.load("Journey/FarmingCursor.lua")
 	d.load("Journey/Farming.lua")
-	local observe, callbacks = ns.ObserveFarmingJourney, {}
-	ns.ObserveFarmingJourney = function(owner, callback)
+	local api = d.env.ShortestPathForever.API
+	local observe, callbacks = api.ObserveStops, {}
+	api.ObserveStops = function(owner, callback)
 		callbacks[#callbacks + 1] = callback
 		return observe(owner, callback)
 	end
@@ -34,7 +37,7 @@ local function scenario(final)
 	d.path.settle()
 	flush()
 	local oldOwner = ns.JourneyOwner()
-	local oldGoal, oldPlan = ns.JourneyGoal(), ns.JourneyPlan()
+	local oldGoal = ns.JourneyGoal()
 	-- Every batch is validated before replacement, including a middle stop in a later batch.
 	local large = {}
 	for i = 1, 130 do
@@ -43,15 +46,15 @@ local function scenario(final)
 	large[80].title = false
 	assert(not c:Start(large) and ns.JourneyOwner() == oldOwner)
 	large[80].title = nil
-	local project = ns.WorldPoint
-	ns.WorldPoint = function(map, x, y)
+	local project = ns.FarmingOrder.World
+	ns.FarmingOrder.World = function(map, x, y)
 		if y == large[80].y then
 			return nil
 		end
 		return project(map, x, y)
 	end
 	assert(not c:Start(large) and ns.JourneyOwner() == oldOwner)
-	ns.WorldPoint = project
+	ns.FarmingOrder.World = project
 	local corpse = false
 	ns.Corpse = {
 		Active = function()
@@ -75,8 +78,8 @@ local function scenario(final)
 	assert(c:Status() == "running" and select(4, c:Status()) == 1, "native close final stop completes")
 	flush()
 	local replacement = ns.JourneyOwner()
-	ns.FarmingJourneyProof("arrived", oldGoal, oldPlan)
-	callbacks[1]("arrived", 2, oldGoal, oldPlan)
+	ns.JourneyStopObserved("arrived", oldGoal)
+	callbacks[1]("arrived", 2, { map = 1, x = 0, y = 0 }, api.JourneyState())
 	flush()
 	assert(ns.JourneyOwner() == replacement and select(4, c:Status()) == 1, "late proof cannot complete replacement")
 	c:Stop()

@@ -3,6 +3,7 @@ local driver = assert(loadfile("tests/journey_driver.lua"))()
 local ns, env = driver.ns, driver.env
 driver.load("UI/Looks.lua")
 driver.load("Core/APIInput.lua")
+driver.load("Core/APIStops.lua")
 driver.load("Core/API.lua")
 local API = env.ShortestPathForever.API
 local first = { map = 1, x = 0, y = 0, z = -40 }

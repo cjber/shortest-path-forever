@@ -346,8 +346,13 @@ end
 -- Completion may run inside a planner callback. Start at most one next stop on the driver's next step,
 -- after that callback unwinds; coincident stops must never recurse through the whole route in one frame.
 local function Arrive()
-	if ns.FarmingJourneyProof then
-		ns.FarmingJourneyProof("arrived", goal, result)
+	local reached = goal
+	if ns.JourneyStopObserved then
+		local alive = ns.JourneyStopObserved("arrived", reached)
+		-- An observer may cancel, replace or hand over the route: that journey, not this arrival, is what goes on.
+		if alive == false or goal ~= reached then
+			return
+		end
 	end
 	nextPoint = ns.NextJourneyStop and ns.NextJourneyStop(goal)
 	if not nextPoint then
@@ -404,10 +409,10 @@ end
 
 -- costError says why no walk could be measured, if one could not; loading says a first search is still working.
 -- timing is the search's own clock since the journey started, to its first and latest route (JourneySearch.lua).
----@return boolean pending, integer settleRound, string? costError, boolean loading, table? timing
+---@return boolean pending, integer settleRound, string? costError, boolean loading, table? timing, boolean replanning
 function ns.JourneyStatus()
 	local pending, settleRound, costError, loading = Search.Status()
-	return pending > 0, settleRound, costError, loading, Search.timing
+	return pending > 0, settleRound, costError, loading, Search.timing, Search.Replanning()
 end
 
 local function StartGuide()
@@ -675,8 +680,9 @@ local function Follow(route, news)
 			ns.JourneyReplanned()
 		end
 	end
-	if ns.FarmingJourneyProof then
-		ns.FarmingJourneyProof("settled", goal, result)
+	local settled = goal
+	if (ns.JourneyStopObserved and ns.JourneyStopObserved("settled", settled) == false) or goal ~= settled then
+		return
 	end
 	UpdateProgress()
 	AnnounceUnsyncedFlightPoints()
