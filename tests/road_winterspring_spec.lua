@@ -1,4 +1,4 @@
--- Winterspring's roads are painted with winterspringdirt, a texture Polestar's reviewed list holds that we lacked (#1224):
+-- Winterspring's roads are painted with winterspringdirt, on Polestar's reviewed list but missing from ours (#1224):
 -- the walk up its main road follows it with Follow roads on.
 local ns = {}
 assert(loadfile("tools/load_nav.lua"))(1)
