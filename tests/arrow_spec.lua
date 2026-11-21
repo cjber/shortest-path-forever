@@ -396,4 +396,59 @@ ns.ArrowBearingChanged()
 assert(driver.waypoint() == playerReplacement, "direct guidance yields immediately to the player's playerReplacement")
 ns.JourneyGuide.Stop()
 assert(driver.waypoint() == playerReplacement, "stopping direct guidance preserves the player's playerReplacement")
+-- Adventure Guide focuses the quest on entering its area. Stop-only guidance owns no native waypoint.
+env.C_Map.ClearUserWaypoint()
+env.C_SuperTrack.SetSuperTrackedUserWaypoint(false)
+env.C_SuperTrack.SetSuperTrackedQuestID(0)
+ns.db.arrowDirect = false
+-- The quest's area is the arrow's next bend; the step's waypoint stays on its destination beyond it (#1138).
+local questBend = { map = 1, x = 1200, y = 0 }
+local stepEnd = { map = 1, x = 1200, y = 300 }
+ns.JourneyGuide.Start()
+ns.JourneyGuide.To(questBend, { questBend }, stepEnd)
+assert(frame.alpha == 1, "stop-only guidance leads the bend with the route arrow")
+local validScreenPosition = true
+env.Enum.NavigationState = { InRange = 2, Occluded = 1 }
+env.C_Navigation.GetTargetState = function()
+	return env.Enum.NavigationState.InRange
+end
+env.C_Navigation.HasValidScreenPosition = function()
+	return validScreenPosition
+end
+local markerX, markerY = 0.5, 0.476
+env.C_Navigation.GetNextWaypointForMap = function(map)
+	assert(map == 1)
+	return markerX, markerY
+end
+env.C_SuperTrack.SetSuperTrackedQuestID(1161)
+ns.JourneyGuide.TrackingChanged("SUPER_TRACKING_CHANGED")
+frame.OnUpdate(frame, 0.1)
+assert(frame.alpha == 0, "the matching native quest marker replaces the route arrow")
+assert(ns.ArrowLeads(), "the matching native quest marker keeps other guide arrows handed over")
+assert(ns.JourneyGuide.Yielded() and not driver.waypoint(), "tracking changes still yield waypoint ownership")
+
+-- An external addon can change the target while the native frame stays visible and the player stands still.
+local poll
+env.C_Timer = {
+	NewTicker = function(_, callback)
+		poll = callback
+		return { Cancel = function() end }
+	end,
+}
+frame.OnShow(frame)
+frame.OnUpdate(frame, 0.1)
+assert(not rawget(frame, "OnUpdate"), "the matching marker leaves only the slow poll")
+markerX = 0.51
+poll()
+assert(frame.alpha == 1, "a quest marker at another location leaves the route arrow visible")
+markerX = 0.5
+validScreenPosition = false
+ns.ArrowBearingChanged()
+assert(frame.alpha == 1, "a marker without a valid screen position leaves the route arrow visible")
+validScreenPosition = true
+cvars.showInGameNavigation = "0"
+ns.ArrowBearingChanged()
+assert(frame.alpha == 1, "a hidden native quest marker leaves the route arrow visible")
+frame.OnHide(frame)
+ns.JourneyGuide.Stop()
 print("arrow_spec: ok")

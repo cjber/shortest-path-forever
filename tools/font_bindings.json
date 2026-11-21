@@ -75,8 +75,8 @@
     },
     {
       "source": "UI/Arrow.lua",
-      "sha256": "e9418b41a31ea839b7a1b5401116188595a1a87ba86c82f2e9ca3df077c95d3f",
-      "review": "Read Create, ArrowLabel, distance updates, arrival labels, progress and cast prompt. MoverHint uses GameFontHighlightSmall and Distance uses GameFontNormal, including the formatted time-distance phrase. No later font override occurs. Dynamic objective lines, arrival titles, route titles and actions from helpers are excluded; this review does not claim coverage for their inserted text.",
+      "sha256": "b9ca1a88836f41e0d0b9aafd9af5c83025a6ef65f46c22095da2794c35cd25a5",
+      "review": "Read Create, ArrowLabel, distance updates, arrival labels, progress and cast prompt. MoverHint uses GameFontHighlightSmall and Distance uses GameFontNormal, including the formatted time-distance phrase. No later font override occurs. Dynamic objective lines, arrival titles, route titles and actions from helpers are excluded; this review does not claim coverage for their inserted text. Reviewed #1161: NativeMarkerAt and the shared-marker stand-down read C_Navigation and C_Map only; no FontString, FontObject or text change.",
       "bindings": [
         {
           "font": "GameFontHighlightSmall",
