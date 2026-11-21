@@ -347,7 +347,8 @@ end
 ---@param walk? number|false the walk from `from` to `to` the journey's own search measured, in running yards; false
 ---when it found none. Without one the walk is the planner's lower bound.
 ---@param bound? boolean the soonest any route could arrive, `walk` being only a lower bound on the walk
-local function Answer(from, to, key, job, walk, bound)
+---@param place? SPFNearbyPlace a Nearby place, whose ride endpoint walks are measured on its NPC's floor
+local function Answer(from, to, key, job, walk, bound, place)
 	local options, now = Options(from, to)
 	options.walks = walk ~= nil and { { from = from, to = to, cost = walk } } or nil
 	options.lowerBound = bound or nil
@@ -359,7 +360,13 @@ local function Answer(from, to, key, job, walk, bound)
 		return nil, "unreachable"
 	end
 	local generation = estimates
-	local plan = ns.Planner.Plan(options, job)
+	local plan
+	if place then
+		-- Only a Nearby ranking job passes a place.
+		plan = ns.NearbyRank.Plan(job --[[@as SPFPathJob]], options, place, walk, bound)
+	else
+		plan = ns.Planner.Plan(options, job)
+	end
 	local seconds = plan and math.max(0, (plan.arrive - now) / 1000) or nil
 	local entry = { at = now, seconds = seconds or false, legs = plan and plan.legs }
 	-- A plan that paused may answer for inputs another estimate has since replaced: it keeps its answer
@@ -383,7 +390,7 @@ end
 -- The reason tells a caller whether asking again later can help: "combat" after combat, "loading" when the addon is
 -- still building its data, "invalid" never for bad input, "unreachable" when known flight paths or boat timings change.
 ---@return { at: number, seconds: number|false, legs?: SPFLeg[] }?, ("combat"|"invalid"|"unreachable"|"loading")?
-local function Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk, bound)
+local function Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk, bound, place)
 	if not Ready() then
 		if InCombatLockdown() then
 			return nil, "combat"
@@ -395,7 +402,7 @@ local function Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk, bound)
 		return APIKit.Invalid()
 	end
 	local key = string.format(
-		"%d:%.4f:%.4f:%d:%.17g:%.17g:%s:%s",
+		"%d:%.4f:%.4f:%d:%.17g:%.17g:%s:%s:%s",
 		fromMap,
 		fromX,
 		fromY,
@@ -403,9 +410,10 @@ local function Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk, bound)
 		toX,
 		toY,
 		tostring(walk),
-		tostring(bound == true)
+		tostring(bound == true),
+		tostring(place ~= nil)
 	)
-	return Answer(from, to, key, job, walk, bound)
+	return Answer(from, to, key, job, walk, bound, place)
 end
 
 -- Itinerary.lua draws the hops between later stops with this cheap planner; no terrain searches. It keeps each
@@ -427,9 +435,10 @@ end
 ---@param job SPFPathJob
 ---@param walk? number|false
 ---@param bound? boolean
+---@param place? SPFNearbyPlace refine Nearby's transit endpoint walks on the NPC's floor
 ---@return number?, ("combat"|"invalid"|"unreachable"|"loading")?
-function ns.EstimateIn(job, fromMap, fromX, fromY, toMap, toX, toY, walk, bound)
-	local entry, reason = Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk, bound)
+function ns.EstimateIn(job, fromMap, fromX, fromY, toMap, toX, toY, walk, bound, place)
+	local entry, reason = Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk, bound, place)
 	if not entry then
 		return nil, reason
 	end

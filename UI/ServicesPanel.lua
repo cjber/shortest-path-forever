@@ -484,7 +484,7 @@ local function StopRanking()
 		measuring = nil
 	end
 	if ranking then
-		ns.Path.Cancel(ranking)
+		ns.NearbyServices.Cancel(ranking)
 		ranking = nil
 	end
 end

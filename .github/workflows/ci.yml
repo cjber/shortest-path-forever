@@ -63,7 +63,7 @@ jobs:
       - run: python3 tools/forever_sim/sync.py check
       - run: python3 tools/forever_sim/fetch.py
       - run: luajit tools/forever_sim/run.lua
-      # A screenshot older than the code it is drawn from (docs/screenshots/scenes.sha256).
+      # A screenshot older than the code it is drawn from (docs/screenshots/scenes/<image>.sha256).
       - run: python3 tools/check_screenshots.py
       - run: luajit -joff tests/runtime_bench.lua cold
       - run: luajit -joff tests/hearth_savings_bench.lua

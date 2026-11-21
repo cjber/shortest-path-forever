@@ -549,11 +549,13 @@ local function DrivePaths(label)
 	end)
 	Run(label .. " show on map", function()
 		local before = mapOpens
-		ns.ShowJourneyMap()
+		local accepted, reason = _G.ForeverCore.Open("ShortestPathForever", "journey")
 		Flush()
 		if InCombatLockdown() then
+			assert(accepted == false and reason == "Unavailable in combat", "Core refuses to open the map in combat")
 			assert(mapOpens == before, "in combat show on map leaves opening the map to the player (#444)")
 		else
+			assert(accepted == true, reason)
 			assert(mapOpens == before + 1, "show on map asks the game to open the map")
 		end
 	end)

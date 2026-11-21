@@ -20,9 +20,9 @@ zoom, canvas.width, canvas.height = 1, 10000, 7000
 path.auto = false
 local function batches() return path.waiting(path.batches) end
 local function jobs() return path.waiting(path.finds) end
-local splitRoute, fromMid = false, false
+local splitRoute, fromMid, proving = false, false, false
 ns.Planner.Plan = function(o)
- if o.feasibleOnly then return nil end
+ if o.feasibleOnly and not proving then return nil end
  if fromMid then
   -- Planned again from the bend: the step left is the same walk on.
   return {now=o.now, arrive=o.now+50000, legs={
@@ -36,7 +36,8 @@ ns.Planner.Plan = function(o)
    {mode="walk", from=mid, to=o.to, yards=350, depart=o.now+50000, arrive=o.now+100000},
   }}
  end
- return {now=o.now, arrive=o.now+200000, legs={{mode="walk", from=o.from, to=o.to,
+ return {now=o.now, arrive=o.now+200000, needsStart=proving and not o.feasibleOnly,
+  legs={{mode="walk", from=o.from, to=o.to,
   yards=1400, depart=o.now, arrive=o.now+200000}}}
 end
 assert(clickHandlers[1](map, "LeftButton"))
@@ -137,8 +138,27 @@ drawn(false)
 assert(tracker.blocks[1].rows[1].key == 1 and tracker.Header.Text:GetText():find("yd",1,true))
 assert(not spinner.Anim:IsPlaying() and spinner.hidden)
 
--- Even a long search guides nowhere until the first walk is measured; the rough route draws once the endpoints
--- are costed.
+-- The rough line gives way to measured guidance before the proof finishes.
+begin()
+proving = true
+for _, batch in ipairs(batches()) do
+ batch.valid, batch.snapped, batch.revision = true, true, 1
+ batch.progress(batch.costs, nil, batch)
+end
+path.runAll()
+roughRoute()
+finish()
+assert(waypoint and ns.GuideTargets(), "measured guidance starts during the proof")
+local offered = select(3, ns.JourneyInfo())
+assert(offered.provisional and tracker.blocks[1].rows[1].key == 1)
+assert(ShortestPathForeverCompass:IsShown())
+local pin = drawn(true)
+proving = false
+ready()
+assert(drawn(false) == pin and select(3, ns.JourneyInfo()) == offered, "the same proof keeps the route")
+assert(#jobs() == 0)
+
+-- If the proof finishes before geometry is available, the rough line stays until the proved walk is drawn.
 for _, replace in ipairs({false, true}) do
  begin()
  hiddenRoute()

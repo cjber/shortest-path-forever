@@ -80,3 +80,51 @@ do
 	path.settle()
 	assert(test.shown() and not journey.JourneyStatus(), "proof publishes the real walk")
 end
+
+do
+	local test = assert(loadfile("tests/journey_driver.lua"))()
+	local journey, path = test.ns, test.path
+	path.auto = false
+	local proving = true
+	journey.Planner.Plan = function(options)
+		return {
+			now = options.now,
+			arrive = options.now + 50000,
+			needsStart = proving and not options.feasibleOnly,
+			legs = {
+				{
+					mode = "walk",
+					from = options.from,
+					to = options.to,
+					yards = 350,
+					depart = options.now,
+					arrive = options.now + 50000,
+				},
+			},
+		}
+	end
+	test.begin({ map = 1, x = 0, y = 0, z = 0 }, { map = 1, x = 350, y = 0 })
+	local rough = test.shown()
+	assert(rough.rough and not select(3, journey.JourneyInfo()))
+	for _, batch in ipairs(path.batches) do
+		batch.valid, batch.snapped, batch.revision = true, true, 1
+		batch.progress(batch.costs, nil, batch)
+	end
+	path.runAll()
+	assert(test.shown() == rough, "keep the placeholder until the geometry is measured")
+	for _, find in ipairs(path.waiting(path.finds)) do
+		path.finish(find, { find.from, find.to }, 350)
+	end
+	local followed = select(3, journey.JourneyInfo())
+	assert(
+		followed and followed.legs[1].measured and journey.JourneyStatus(),
+		"measured route replaces the rough line during proof"
+	)
+	local shown = test.shown()
+	assert(not shown.rough and shown.legs[1].measured)
+	proving = false
+	for _, batch in ipairs(path.batches) do
+		path.costs(batch, 350)
+	end
+	assert(test.shown() == shown and not journey.JourneyStatus(), "the same proved route needs no map redraw")
+end
