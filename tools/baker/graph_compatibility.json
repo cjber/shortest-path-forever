@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "generator": "00d5dc963e6e37368f8d351b10e4605cfcc03adce2b6de8e95646a3c547ebaca",
+  "generator": "7ea498c5d5e77bb7dbf2c0939e38c6f91a2c6c86e3ac2a82d93a92782411d60e",
   "collision_generators": [
     "a8a5016e76c43a420aece4696d5ce8ee272af469e1716fa847cb9175864c1769"
   ],
-  "reason": "#1149 changed only the graph: pruning takes edges cheapest first and drops one only when edges already kept walk between its ends, so pruning never cuts a cluster apart. Collision fields remain byte-identical over #950's native bake."
+  "reason": "#892 and #893 changed only the graph over #950's native bake. The generator digest now takes from Journey/Hazards.lua only the ROAD_DETOUR_MAX line gen_nav.py reads, unchanged, so runtime hazard edits no longer touch it. Collision fields remain byte-identical."
 }

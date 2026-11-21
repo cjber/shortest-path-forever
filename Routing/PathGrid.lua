@@ -159,18 +159,26 @@ local function unpackField(data, field, key)
 end
 
 -- The client walks a slope up to 50 degrees; the bake marks the faces from 50 to 61.6 degrees as steep, and those
--- may only go downhill. The height check is kept even when a map's steep flag is missing: stored heights can still
--- show a climb the player cannot make, so the decoder refuses it rather than trusting the flag alone (#897).
-local TAN50 = math.tan(50 * math.pi / 180)
-local function steepStep(valA, zA, from, valB, zB, to, distance)
-	local rise = zB[to + 1] - zA[from + 1]
-	if distance and rise > TAN50 * distance then
-		return false
-	end
+-- may only go downhill.
+local function steepGround(valA, zA, from, valB, zB, to)
 	if valA[from + 1] ~= 3 and valB[to + 1] ~= 3 then
 		return true
 	end
-	return rise <= 0
+	return zB[to + 1] <= zA[from + 1]
+end
+
+-- A format 2 map's links are symmetric, so nothing in it says a step is one-way but the steep flag, and its stored
+-- heights also refuse a climb past 50 degrees (#897). A format 3 map's links are directed: the bake links two cells
+-- only the ways the navmesh walks between them, and that navmesh holds the player's slope and 2.0 yd step, so it
+-- already refuses a climb the client refuses and joins real stairs steeper than 50 degrees. There the stored heights
+-- judge steep ground alone; the climb test refused stairs and ramps the navmesh joins, and one stored height off its
+-- ground turned the Dun Algaz pass one-way (#1011).
+local TAN50 = math.tan(50 * math.pi / 180)
+local function climbStep(valA, zA, from, valB, zB, to, distance)
+	if distance and zB[to + 1] - zA[from + 1] > TAN50 * distance then
+		return false
+	end
+	return steepGround(valA, zA, from, valB, zB, to)
 end
 
 -- May a base step feed a diagonal detour? A steep step only does when its stored heights match: a step that only
@@ -195,8 +203,8 @@ local function State(map)
 			map = map,
 			C = C,
 			fmt = D.format or 1,
-			-- Only format 2 carries steep ground, so a format 1 map takes the plain step and never reads a height.
-			steep = (D.format or 1) >= 2 and steepStep or nil,
+			-- Format 1 carries no steep ground, so it takes the plain step and never reads a height.
+			steep = (D.format or 1) >= 3 and steepGround or (D.format == 2 and climbStep) or nil,
 			ny = D.ny,
 			GX = D.nx * C,
 			GY = D.ny * C,
@@ -247,6 +255,10 @@ local function State(map)
 end
 
 -- Directions of floor links: +x, -x, +y, -y, +x+y, +x-y, -x+y, -x-y.
+-- A decoded link entry at or above FREE is a step the bake's navmesh walk decided, taken as written: the steep test
+-- never judges it by stored height (#1101). It sits above every cost a record can hold (two symbols, below 4096), so
+-- the cost reads floor(entry / 16384) % 8192.
+local FREE = 2 ^ 27
 local DX = { [0] = 1, -1, 0, 0, 1, 1, -1, -1 }
 local DY = { [0] = 0, 0, 1, -1, 1, -1, 1, -1 }
 local OPPOSITE = { [0] = 1, 0, 3, 2, 7, 6, 5, 4 }
@@ -402,6 +414,8 @@ end
 -- ways take, that surface's own outbound link too.
 -- Format 3 names each bit's landing layer, one layer per set direction in ascending order at the node's landing run
 -- (lpos), and a record's node is a delta from the record before it, so both read the pair the bake linked.
+-- A step record's direction + 16 is taken as written: the bake's navmesh walk decided it where the steep test's
+-- stored heights would misread it (#1101), so the search skips that test for it. The link entry carries FREE.
 local function decodeLinks(st, k, val, z, at, links, s, pos, masks, last, lpos)
 	local C, N = st.C, st.C * st.C
 	local back, fmt = {}, st.fmt
@@ -413,8 +427,9 @@ local function decodeLinks(st, k, val, z, at, links, s, pos, masks, last, lpos)
 			into[node + 1] = { entry }
 		end
 	end
-	local function link(node, dx, dy, layer, cost, both)
-		local entry = dx + 8 + 16 * (dy + 8) + 256 * (layer + 1) + 16384 * cost
+	local function link(node, dx, dy, layer, cost, both, free)
+		local flag = free and FREE or 0
+		local entry = dx + 8 + 16 * (dy + 8) + 256 * (layer + 1) + 16384 * cost + flag
 		add(links, node, entry)
 		local cell = node < N and node or at[node + 1]
 		local tx, ty = floor(cell / C) + dx, cell % C + dy
@@ -426,7 +441,7 @@ local function decodeLinks(st, k, val, z, at, links, s, pos, masks, last, lpos)
 			return
 		end
 		local source = node < N and 1 or node - at[-(cell + 1)] + 2
-		local mirror = -dx + 8 + 16 * (-dy + 8) + 256 * source + 16384 * cost
+		local mirror = -dx + 8 + 16 * (-dy + 8) + 256 * source + 16384 * cost + flag
 		add(back, target, mirror)
 		if both then
 			add(links, target, mirror)
@@ -469,12 +484,12 @@ local function decodeLinks(st, k, val, z, at, links, s, pos, masks, last, lpos)
 				record, at_step = record + 63 + num(s, at_step, 3), at_step + 3
 			end
 			local kind = B64[byte(s, at_step)]
-			link(record, DX[kind % 8], DY[kind % 8], B64[byte(s, at_step + 1)], 0, kind < 8)
+			link(record, DX[kind % 8], DY[kind % 8], B64[byte(s, at_step + 1)], 0, kind % 16 < 8, kind >= 16)
 			at_step = at_step + 2
 		else
 			record = num(s, at_step, 3)
 			local kind = B64[byte(s, at_step + 3)]
-			link(record, DX[kind % 8], DY[kind % 8], B64[byte(s, at_step + 4)], 0, kind < 8)
+			link(record, DX[kind % 8], DY[kind % 8], B64[byte(s, at_step + 4)], 0, kind % 16 < 8, kind >= 16)
 			at_step = at_step + 5
 		end
 	end
@@ -755,6 +770,16 @@ local function held(st, k)
 	return false
 end
 
+-- The job its scheduler is resuming. A cluster it decodes is held with its corridor: line pulling reads clusters
+-- beside the corridor, and once the held corridor fills the cache those would evict each other within one search,
+-- so the same walk searched again would decode them again.
+local running
+
+---@param job table?
+local function Running(job)
+	running = job
+end
+
 local function trim(st, size)
 	while (decodedKB + size > Path.cacheKB and decodedCount >= 4) or st.decoded >= max(Path.clusters, 4) do
 		local owner, oldest, age = nil, nil, huge
@@ -793,6 +818,9 @@ local function grid(st, k)
 		st.linksIn[k] = back
 		st.sizes[k], st.decoded, decodedKB = size, st.decoded + 1, decodedKB + size
 		decodedCount = decodedCount + 1
+		if running then
+			Hold(running, st, k)
+		end
 		if st.D.packed then
 			st.D.grid[k + 1], st.D.height[k + 1], st.D.floor[k + 1] = nil, nil, nil
 		end
@@ -1423,8 +1451,7 @@ local function detourStep(st, gx, gy, dx, dy, water)
 	local an, av, az = baseAt(st, gx, gy)
 	local bn, bv, bz = baseAt(st, gx + dx, gy + dy)
 	if av[an + 1] ~= 3 and bv[bn + 1] ~= 3 then
-		-- A detour's leg is an ordinary step too: the stored heights must clear the client's climb limit even
-		-- when the bake left the steep flag off the face (#897).
+		-- A detour's leg is an ordinary step too, judged by the map's own rule (climbStep in format 2, #897).
 		return steep(av, az, an, bv, bz, bn, st.cs)
 	end
 	return az[an + 1] == bz[bn + 1]
@@ -1460,8 +1487,9 @@ end
 -- Every node one step (dx, dy) on from node of cluster k at global cell (gx, gy) lands on, as search() expands it:
 -- the base surface's own step, then each of the node's floor links with that offset. They go into outK and outN from
 -- index 1, and the count is returned. One step can land on several surfaces (a stair beside the drop off its side),
--- and a caller following a walk keeps them all: the first alone can be another floor than the walk's (#1015).
-local function neighbours(st, k, node, gx, gy, dx, dy, water, outK, outN)
+-- and a caller following a walk keeps them all: the first alone can be another floor than the walk's (#1015). With
+-- outC, each landing's cost goes there too: 0 for a walked step, a drop's whole yards otherwise.
+local function neighbours(st, k, node, gx, gy, dx, dy, water, outK, outN, outC)
 	local tx, ty = gx + dx, gy + dy
 	if tx < 0 or ty < 0 or tx >= st.GX or ty >= st.GY then
 		return 0
@@ -1511,6 +1539,9 @@ local function neighbours(st, k, node, gx, gy, dx, dy, water, outK, outN)
 			if not steep or steep(vk, zk, node, vt, st.z[tk], tlc, distance) then
 				count = 1
 				outK[1], outN[1] = tk, tlc
+				if outC then
+					outC[1] = 0
+				end
 			end
 		end
 	end
@@ -1530,9 +1561,12 @@ local function neighbours(st, k, node, gx, gy, dx, dy, water, outK, outN)
 				local v = surface(st, tk, tlc, floor(entry / 256) % 64 - 1, h)
 				if v and (water or (here ~= 2 and vt[v + 1] ~= 2)) then
 					local distance = math.sqrt((entry % 16 - 8) ^ 2 + (floor(entry / 16) % 16 - 8) ^ 2) * st.cs
-					if not steep or steep(vk, zk, node, vt, st.z[tk], v, distance) then
+					if not steep or entry >= FREE or steep(vk, zk, node, vt, st.z[tk], v, distance) then
 						count = count + 1
 						outK[count], outN[count] = tk, v
+						if outC then
+							outC[count] = floor(entry / 16384) % 8192
+						end
 					end
 				end
 			end
@@ -1546,6 +1580,9 @@ local function neighbours(st, k, node, gx, gy, dx, dy, water, outK, outN)
 					if not steep or steep(vk, zk, node, vt, st.z[tk], v, distance) then
 						count = count + 1
 						outK[count], outN[count] = tk, v
+						if outC then
+							outC[count] = 0
+						end
 					end
 				end
 			end
@@ -2144,8 +2181,8 @@ local function entranceHeight(st, id)
 end
 
 -- Whether an abstract graph edge u -> v climbs more than the client allows. Graph edges join border entrances one
--- cell apart; the same stored-height rule the grid applies therefore refuses a baked edge too, even if its map's
--- steep flag missed the face (#897).
+-- cell apart; the same stored-height rule the grid applies therefore refuses a baked edge too: steep ground goes
+-- downhill only, and a format 2 map also refuses a climb past 50 degrees (#897; see climbStep).
 ---@param st table
 ---@param a number
 ---@param b number
@@ -2177,7 +2214,7 @@ local function climbNodes(st, a, b)
 		return true
 	end
 	local rise = zb - za
-	if rise > TAN50 * distance then
+	if st.fmt < 3 and rise > TAN50 * distance then
 		return false
 	end
 	return not (steepA or steepB) or rise <= 0
@@ -2206,7 +2243,6 @@ ns.PathGrid = {
 	Expansions = Expansions,
 	State = State,
 	surface = surface,
-	steepStep = steepStep,
 	grid = grid,
 	cellOf = cellOf,
 	nodesOf = nodesOf,
@@ -2228,6 +2264,7 @@ ns.PathGrid = {
 	bare = bare,
 	neighbours = neighbours,
 	Hold = Hold,
+	Running = Running,
 	Release = Release,
 	Pin = Pin,
 	Ready = Ready,
@@ -2238,6 +2275,7 @@ ns.PathGrid = {
 	SNAP = SNAP,
 	ZTOL = ZTOL,
 	OFFROAD = OFFROAD,
+	FREE = FREE,
 	DX = DX,
 	DY = DY,
 }

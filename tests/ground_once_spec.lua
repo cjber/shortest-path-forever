@@ -1,9 +1,11 @@
--- A goal no place walks to moves once to the nearest ground the places reach (#1113), and the search starts again
--- toward it. The Arathi hills above Refuge Pointe were such a goal only because the base walking graph was cut apart:
--- pruning dropped two entrances' edges each in favour of the other, so the walks never left a small pocket while the
--- flood that names ground took every edge (#1141, #1149). Pruning now keeps a way on, the flood takes the edges the
--- walks take, and a goal batch whose frontier is spent proves on its own that here cannot walk in, so the walk from
--- here no longer searches the whole landmass before the goal moves. A goal still moves at most once (#1141).
+-- A goal no place walks to moves once to the nearest ground the places reach (#1113). That ground is found by a flood
+-- over cluster entrances, which can name ground the walks themselves never reach: in the Arathi hills above Refuge
+-- Pointe the moved goal was no more reachable than the click. The search then moved the goal onto itself and started
+-- again forever, so the rough line stayed and the journey never left loading (#1141). A goal moves at most once.
+-- The map baked for #1011 walks up that hill as the raw navmesh does (5191 yards from Refuge Pointe), so the click
+-- there no longer moves; the journey to it must still settle.
+-- A goal batch whose frontier is spent proves on its own that here cannot walk in (#1149): the walk from here no
+-- longer searches the whole landmass before a goal no place walks to moves.
 local driver = assert(loadfile("tests/journey_driver.lua"))()
 local ns = driver.ns
 for _, file in ipairs({
@@ -24,6 +26,7 @@ for _, map in ipairs({ 0, 1, 2991 }) do
 end
 local Path = ns.Path
 
+local HILLS = { map = 0, x = -593.3, y = -4001.9 }
 local places = {}
 for _, node in pairs(ns.TaxiNodes) do
 	if node.map == 0 then
@@ -39,8 +42,10 @@ local function reached(costs)
 	return false
 end
 
-local HILLS = { map = 0, x = -593.3, y = -4001.9 }
-assert(reached(Path.FindManySync(0, HILLS, places, false, true)), "a place walks to the hills above Refuge Pointe")
+-- The hill is ground the places walk to, so the goal stays where it was clicked.
+local _, _, _, hillMoved = Path.FindManySync(0, HILLS, places, false, true)
+assert(not hillMoved, "the goal moved off ground the places walk to")
+assert(reached(Path.FindManySync(0, HILLS, places, false, true)), "no place walks up the hill the raw navmesh climbs")
 
 -- Ground in the hills no place walks to: the moved goal is ground the walks reach.
 local WALLED = { map = 0, x = -1200, y = -4000 }

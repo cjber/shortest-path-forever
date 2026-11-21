@@ -47,7 +47,7 @@ class RoadCellsTest(unittest.TestCase):
         from tools.baker.gen_nav import decode_road_runs
 
         for road, count in [({10: 1, 11: 32, 12: 63}, 4489), ({}, 4489), ({4488: 63}, 4489)]:
-            self.assertEqual(decode_road_runs(encode(road, count)), set(road))
+            self.assertEqual(decode_road_runs(encode(road, count)), {cell: level / 63 for cell, level in road.items()})
 
 
 if __name__ == "__main__":
