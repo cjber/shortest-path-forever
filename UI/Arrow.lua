@@ -126,7 +126,7 @@ end
 local function NativeMarkerAt(point)
 	local nextWaypoint = C_Navigation.GetNextWaypointForMap
 	local uiMap = nextWaypoint and C_Map.GetBestMapForUnit("player")
-	if not uiMap then
+	if not (uiMap and canaccessvalue(uiMap)) then
 		return false
 	end
 	local state = C_Navigation.GetTargetState()
@@ -141,9 +141,17 @@ local function NativeMarkerAt(point)
 		return false
 	end
 	local map, world = C_Map.GetWorldPosFromMapPos(uiMap, CreateVector2D(x, y))
+	if not (map and world and canaccessvalue(map) and canaccessvalue(world)) then
+		return false
+	end
+	local worldX, worldY = world:GetXY()
 	-- Map projections can round the same location differently. Allow the same one yard as Guide's waypoint
 	-- read-back, comparing locations in world space rather than distances from the player.
-	if not world or map ~= point.map or (world.x - point.x) ^ 2 + (world.y - point.y) ^ 2 > 1 then
+	if
+		not (canaccessvalue(worldX) and canaccessvalue(worldY))
+		or map ~= point.map
+		or (worldX - point.x) ^ 2 + (worldY - point.y) ^ 2 > 1
+	then
 		return false
 	end
 	-- Waypoint UI's step-end handover intentionally keeps both its marker and the route arrow (#1124).
@@ -248,7 +256,8 @@ local function Update(elapsed)
 	local markerShown = NativeMarkerShown()
 	local direct = ns.db.arrowDirect == true
 	local pointing = Pointing(direct, map)
-	local sharedMarker = markerShown and NativeMarkerAt(pointing)
+	-- A marker Guide placed already leads; only a marker someone else drew needs reading back.
+	local sharedMarker = markerShown and not native and NativeMarkerAt(pointing)
 	local mode = ns.db.arrowLabel
 	local second = (mode == "time" or mode == "both") and math.floor(GetTime()) or nil
 	if
@@ -271,7 +280,7 @@ local function Update(elapsed)
 	local nextPoint = Pointing(direct, map)
 	if nextPoint ~= pointing then
 		pointing = nextPoint
-		sharedMarker = markerShown and NativeMarkerAt(pointing)
+		sharedMarker = markerShown and not native and NativeMarkerAt(pointing)
 	end
 	local placed = placeTarget and placeTarget(pointing, false)
 	-- Waypoint callbacks can stop or replace guidance synchronously.
