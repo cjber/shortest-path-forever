@@ -169,6 +169,7 @@ function ns.JourneyChanged(point, reason)
 		Settle()
 		return
 	end
+	point = point and (point.stop or point)
 	if point and point == route.points[route.index + 1] then
 		route.index = route.index + 1
 	elseif not point or point ~= route.points[route.index] then
@@ -594,13 +595,14 @@ local function NavigateRoute(owner, stops, policy)
 		and not (ns.Corpse and ns.Corpse.Active())
 	then
 		local goal = ns.JourneyGoal and ns.JourneyGoal()
+		goal = goal and (goal.stop or goal)
 		local stop = points[1]
 		if goal and goal.map == stop.map and goal.x == stop.x and goal.y == stop.y then
 			if route then
 				ended[route.owner] = { reason = "replaced", at = GetTime() }
 			end
 			ended[owner] = nil
-			-- The stop the journey follows stays the object it is: Journey.lua recognises its own goal by identity.
+			-- Keep the tracked stop's identity so journey events still match it after the handover.
 			route = { owner = owner, points = { goal }, index = 1, policy = policy }
 			Settle()
 			return true

@@ -79,6 +79,8 @@ end
 ---@param current fun(): SPFAPIRoute?
 ---@return boolean? alive
 function Stops.Dispatch(phase, point, current)
+	-- A door stands in for the stop inside its instance (JourneyInput.lua).
+	point = point.stop or point
 	local watched = current()
 	if not watched or watched.points[watched.index] ~= point or next(observers) == nil then
 		return

@@ -161,6 +161,43 @@ d.update(1)
 equal(#heard, 0, "unsubscribed")
 equal(#others, 0, "another owner still hears nothing")
 unsubscribeOther()
+
+-- Planning to an instance door and entering it both notify observers about the submitted stop.
+do
+	d.move(point(0))
+	local instance = 0
+	local getInstanceInfo, getRealZoneText, entrances = env.GetInstanceInfo, env.GetRealZoneText, ns.Entrances
+	env.GetInstanceInfo = function()
+		return "", "none", 0, "", 0, 0, false, instance
+	end
+	env.GetRealZoneText = function()
+		return "Deadmines"
+	end
+	ns.Entrances = { [36] = { name = "Deadmines", map = 1, x = 3000, y = 0 } }
+	local phases = {}
+	local unsubscribeDungeon = API.ObserveStops("o", function(phase, index, seen)
+		phases[phase] = { index = index, stop = seen }
+	end)
+	check(API.NavigateRoute("o", { { map = 36, x = 0.5, y = 0.5, title = "Boss" } }), "route into a dungeon")
+	d.path.settle()
+	check(phases.settled, "the instance stop notifies on settlement")
+	d.move(point(3000))
+	d.update(1)
+	equal(phases.arrived, nil, "standing at the door does not notify arrival")
+	instance = 36
+	d.fire("PLAYER_ENTERING_WORLD")
+	check(phases.arrived, "the instance stop notifies on entry")
+	for _, phase in ipairs({ "settled", "arrived" }) do
+		local event = phases[phase]
+		equal(event.index, 1, "the instance stop's route index")
+		equal(event.stop.map, 36, "the observed place is inside the instance")
+		equal(event.stop.title, "Boss", "the observed title is the submitted title")
+	end
+	equal(API.Ended("o"), "arrived", "the instance route completed")
+	unsubscribeDungeon()
+	env.GetInstanceInfo, env.GetRealZoneText, ns.Entrances = getInstanceInfo, getRealZoneText, entrances
+end
+
 -- An observer may cancel the route it hears the arrival of: nothing runs on for that stop, and no error is raised.
 do
 	d.move(point(0))
