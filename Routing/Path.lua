@@ -20,7 +20,7 @@ local entrance, locate, standing, snap, smooth = Grid.entrance, Grid.locate, Gri
 local toward, peak, climbNodes = Grid.toward, Grid.peak, Grid.climbNodes
 
 local TILE, SNAP, ZTOL, DX, DY = Grid.TILE, Grid.SNAP, Grid.ZTOL, Grid.DX, Grid.DY
-local OFFROAD = Grid.OFFROAD
+local OFFROAD, FREE = Grid.OFFROAD, Grid.FREE
 
 -- Baked ratios contain both the 1.5-weighted cost and the real cost of the baked road walk.
 -- Their difference is the off-road part times 0.5. Reweight that part only; ETA keeps the real ratio.
@@ -180,15 +180,18 @@ local function search(st, k, swim, source, tree, goal, targets, left, roads, hz,
 
 	---@type number, number, number, number, number
 	local u, ux, uy, gu, ru
-	local function relax(v, length, override)
-		-- Forward walks u -> v; a reverse tree walks the stored edge the other way, v -> u, into the source.
-		local distance = (length or 1) * cs
-		if reverse then
-			if steep and not steep(val, z, v, val, z, u, distance) then
+	local function relax(v, length, override, free)
+		-- Forward walks u -> v; a reverse tree walks the stored edge the other way, v -> u, into the source. A step
+		-- the bake's walk decided is taken as written.
+		if steep and not free then
+			local distance = (length or 1) * cs
+			if reverse then
+				if not steep(val, z, v, val, z, u, distance) then
+					return
+				end
+			elseif not steep(val, z, u, val, z, v, distance) then
 				return
 			end
-		elseif steep and not steep(val, z, u, val, z, v, distance) then
-			return
 		end
 		local i = v + 1
 		-- A step is charged for the cell it enters, whichever way the tree walks it: water, Follow roads and a
@@ -285,11 +288,11 @@ local function search(st, k, swim, source, tree, goal, targets, left, roads, hz,
 						if tx >= 0 and ty >= 0 and tx < C and ty < C then
 							local v = surface(st, k, tx * C + ty, floor(entry / 256) % 64 - 1, z[i], val, z, at)
 							if v then
-								local cost = floor(entry / 16384)
+								local cost, free = floor(entry / 16384) % 8192, entry >= FREE
 								if cost > 0 then
-									relax(v, nil, cost)
+									relax(v, nil, cost, free)
 								else
-									relax(v, (tx ~= ux and ty ~= uy) and SQRT2 or 1)
+									relax(v, (tx ~= ux and ty ~= uy) and SQRT2 or 1, nil, free)
 								end
 							end
 						end
@@ -1390,6 +1393,8 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 		end
 		tick()
 	end
+	-- A reverse frontier spent is a proof: closed holds every entrance that walks into from, and nothing else does.
+	local exhausted = reverse and hn == 0
 	local any = false
 	for i = 1, #targets do
 		if costs[i] == nil then
@@ -1402,6 +1407,10 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 		-- no target is settled yet, and the move below may take several frames: the batch is still running
 		if job then
 			job.radius = huge
+			-- kept only for a goal no target reaches, where it is the small pocket that walks into it
+			if exhausted then
+				job.into, job.revision = closed, job.revision + 1
+			end
 		end
 		-- Every entrance the targets walk to. Entrance-graph components join ground that is only walked downhill, so
 		-- sharing one proves nothing: the walk is followed edge by edge, as the forward search would.
@@ -1429,7 +1438,8 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 				while list[i] do
 					local u = list[i]
 					i = i + 1
-					local adj = adjacent(st, u, true)
+					-- the edges the walks themselves take, or the flood names ground they never reach (#1149)
+					local adj = adjacent(st, u, roadsOn == true)
 					for e = 1, #adj, 3 do
 						local v = adj[e]
 						if not reach[v] and climbNodes(st, u, v) then
@@ -1471,6 +1481,46 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 	return costs, nil, moved
 end
 
+-- Does a walk from point reach the goal of an exhausted reverse batch? Every such walk either leaves point's cluster
+-- through an entrance that walks into the goal, which the batch closed, or stays in the goal's own cluster. It
+-- answers from the batch and one local search, never a search of the continent.
+local function walksInto(st, job, point)
+	local k, node = pointNode(st, point)
+	if not node then
+		return nil
+	end
+	local hz = job.hazards
+	local roadsOn = hz and hz.roads and hz.roadFactor ~= 1
+	local swim = job.waterWalking and 1 or st.swim
+	local into = job.into
+	local keys, values, size = hk, hv, hn
+	hk, hv, hn = {}, {}, 0
+	local _, out = connectPoint(st, swim, k, node, point, roadsOn, hz, false)
+	local found = false
+	for id in pairs(out) do
+		found = found or into[id] == true
+	end
+	hk, hv, hn = keys, values, size
+	-- A walk that never leaves the goal's own cluster passes no entrance, so there the batch proves nothing.
+	if found or k ~= job.sourceCluster then
+		return found
+	end
+end
+
+-- For a reverse batch none of whose targets is reached: true when a walk from point reaches its goal, false when none
+-- does, nil while the batch has not proved it.
+---@param job SPFPathJob?
+---@param point SPFPoint
+---@return boolean?
+function Path.WalksInto(job, point)
+	local st = job and job.into and job.map == point.map and State(job.map)
+	if not st then
+		return nil
+	end
+	-- One cluster's search at most, and the point's own connection is cached by the batch that walked from it.
+	return (Grid.Quiet(walksInto, st, job, point))
+end
+
 -- Does this cluster's grid contain water? Walking with water walking and swimming costs the same over a grid with
 -- none, so the bake can answer both modes from one search.
 local function wetCluster(st, k)
@@ -1508,8 +1558,8 @@ local function bakeEdges(st, k, road)
 		end
 	end
 	local flat, head, size = {}, {}, 0
-	local function add(from, v, length, override)
-		if steep and not steep(val, z, from, val, z, v, (length or 1) * cs) then
+	local function add(from, v, length, override, free)
+		if steep and not free and not steep(val, z, from, val, z, v, (length or 1) * cs) then
 			return
 		end
 		local i = v + 1
@@ -1565,7 +1615,7 @@ local function bakeEdges(st, k, road)
 			local cell = node < N and node or at[i]
 			local ux, uy = floor(cell / C), cell % C
 			for e = 1, #list do
-				local v, length, override
+				local v, length, override, free
 				local entry = list[e]
 				if fmt >= 2 then
 					-- the cell offset, the landing layer and the cost in whole yards (0 for an ordinary step)
@@ -1573,7 +1623,8 @@ local function bakeEdges(st, k, road)
 					if tx >= 0 and ty >= 0 and tx < C and ty < C then
 						v = surface(st, k, tx * C + ty, floor(entry / 256) % 64 - 1, z[i], val, z, at)
 						if v then
-							local cost = floor(entry / 16384)
+							local cost = floor(entry / 16384) % 8192
+							free = entry >= FREE
 							if cost > 0 then
 								override = cost
 							else
@@ -1590,7 +1641,7 @@ local function bakeEdges(st, k, road)
 					end
 				end
 				if v then
-					add(node, v, length, override)
+					add(node, v, length, override, free)
 				end
 			end
 		end

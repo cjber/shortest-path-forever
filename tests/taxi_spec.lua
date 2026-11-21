@@ -214,6 +214,16 @@ ns.TaxiNodes = {
 	[107] = { name = "Sentinel Hill", map = 0 },
 }
 ns.TaxiNodes[101].faction, ns.TaxiNodes[103].faction = "Alliance", "Horde"
+ns.TaxiNodes[108] = { name = "Thelsamar", map = 0 }
+-- 102, 104 and 107 are one flight from a listed node, so a scan that leaves them out rules them out; 108 is not,
+-- and 106 is on another continent, whose points this continent's list never holds.
+ns.TaxiPaths = {
+	{ from = 101, to = 102 },
+	{ from = 103, to = 104 },
+	{ from = 101, to = 107 },
+	{ from = 108, to = 104 },
+	{ from = 101, to = 106 },
+}
 ns.SetJourneyRoute = function() end
 ns.JourneyChanged = function() end
 -- A list saved under any older taxiVersion is kept: an update never forgets learned flight points.
@@ -396,8 +406,8 @@ assert(
 )
 
 -- #593: this client reports points the character has not discovered as DISTANT in the flight master's list, so a
--- scan learns only CURRENT and REACHABLE slots. A previously saved wrong point on that continent goes too, while
--- points on another continent stay.
+-- scan learns only CURRENT and REACHABLE slots. A previously saved wrong point one flight from a listed one goes
+-- too, while a point no listed one flies to (another network or continent) stays.
 numNodes = 3
 nodeTypes[1], nodeTypes[2], nodeTypes[3] = "REACHABLE", "DISTANT", "CURRENT"
 env.ShortestPathForeverCharDB.taxi = {
@@ -407,6 +417,7 @@ env.ShortestPathForeverCharDB.taxi = {
 	[104] = true,
 	[106] = true,
 	[107] = true,
+	[108] = true,
 }
 env.ShortestPathForeverCharDB.taxiNames = {
 	[101] = "Ironforge",
@@ -420,8 +431,9 @@ event("TAXI_NODE_STATUS_CHANGED")
 assert(ns.KnownTaxiNodes()[103] and ns.KnownTaxiNodes()[101], "the current and reachable nodes are known")
 assert(
 	not ns.KnownTaxiNodes()[102] and not ns.KnownTaxiNodes()[104] and not ns.KnownTaxiNodes()[107],
-	"unlisted nodes on that continent are dropped"
+	"unlisted nodes one flight from a listed node are dropped"
 )
+assert(ns.KnownTaxiNodes()[108], "a node no listed node flies to is kept")
 assert(not ns.KnownTaxiNodes()[105], "a distant node is not learned")
 assert(ns.KnownTaxiNodes()[106], "an unlisted node on another continent is kept")
 assert(

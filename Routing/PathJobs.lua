@@ -107,7 +107,9 @@ pump = function()
 		-- Plain jobs (callbacks, plans) have no walking search, so no search scratch to swap in.
 		local saved = not job.plain and scratch(job.scratch)
 		local co = job.co
+		Grid.Running(job)
 		local ok, points, cost = coroutine.resume(co, job)
+		Grid.Running(nil)
 		if saved then
 			job.scratch = scratch(saved)
 		end

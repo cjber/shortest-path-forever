@@ -37,9 +37,13 @@ for _, case in ipairs(cases) do
 	}) do
 		driver.load(file)
 	end
+	local loadStarted = os.clock()
 	for _, map in ipairs({ 0, 1, 2991 }) do
-		assert(loadfile("tools/load_nav.lua"))(map)
+		-- Packed, as the client loads them: each cluster is inflated and decoded when a search first reads it, so
+		-- the search times include that work.
+		assert(loadfile("tools/load_nav.lua"))(map, nil, driver.env, true)
 	end
+	local loadMS = (os.clock() - loadStarted) * 1000
 	local fromName, toName = case[1]:match("^(.-) %-> (.+)$")
 	local from, to = case[2], case[3]
 	if type(from) == "number" then
@@ -132,6 +136,8 @@ for _, case in ipairs(cases) do
 			print(string.format("  FindMany map %d: %.1f ms, %d slices", job.map, job.cpu, job.frames))
 		end
 	end
+	collectgarbage("collect")
+	local residentKB = collectgarbage("count")
 	local settling, round = ns.JourneyStatus()
 	assert(not settling)
 	assert(driver.shown(), "expected reachable journey")
@@ -139,7 +145,7 @@ for _, case in ipairs(cases) do
 		string.format(
 			"%s: %d searches (%d many, %d probes), %d planner calls, %d settle rounds, %d frames, "
 				.. "%.1f ms search, %.1f ms planner, %d straight resets, usable frame %s, %.3f ms worst frame, "
-				.. "%d client zone lookups",
+				.. "%d client zone lookups, %.1f ms map load, %.1f MB Lua heap after it",
 			case[1],
 			#jobs,
 			many,
@@ -152,7 +158,9 @@ for _, case in ipairs(cases) do
 			resets,
 			tostring(usable),
 			worst,
-			lookups
+			lookups,
+			loadMS,
+			residentKB / 1024
 		)
 	)
 	assert(many == 2 and round == 1 and rounds >= 2, "one committed route")

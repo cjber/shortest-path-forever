@@ -259,7 +259,12 @@ do
 	assert(not tooltipFor(nil).lines[1], "a tooltip with no owner")
 	ns.db.journey = false
 	assert(ns.JourneyClickHint() == nil and not tooltipFor(poi.GetOwner()).lines[1], "nothing while journeys are off")
-	ns.db.journey, gamepad = true, true
+	ns.db.journey, ns.db.journeyHint = true, false
+	assert(
+		ns.JourneyClickHint() == nil and not tooltipFor(poi.GetOwner()).lines[1],
+		"nothing once the hint is off (#1142)"
+	)
+	ns.db.journeyHint, gamepad = nil, true
 	assert(ns.JourneyClickHint() == nil, "nothing under the gamepad interface, which has no key to hold")
 	gamepad = false
 	-- Minimap_OnUpdate owns the minimap's tooltip by UIParent and fills it with SetMinimapMouseover (#1083 step 3).

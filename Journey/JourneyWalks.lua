@@ -274,9 +274,17 @@ end
 -- The bind point moves, so its walks on to the fixed places cannot be baked like a class teleport's: each is searched
 -- once per bind point and water mode, alongside the journey's own endpoint searches.
 landings = {}
+
+---@class SPFLanding
+---@field targets SPFPlace[]
+---@field costs? (number|false)[]
+---@field waiting? fun()[]
+---@field beyond? table<fun(), number>
+---@field job SPFPathJob
+
 ---@param place SPFTeleportPlace
 ---@param water boolean?
----@return {targets: SPFPlace[], costs?: (number|false)[], waiting?: fun()[]}?
+---@return SPFLanding?
 local function Landing(place, water)
 	if not (place.bind and ns.Path.HasData(place.map)) then
 		return nil
@@ -291,34 +299,72 @@ local function Landing(place, water)
 				targets[#targets + 1] = target
 			end
 		end
-		entry = { targets = targets, waiting = {} }
+		-- waiting: called when the search ends; beyond: called once its frontier passes their radius, or it ends.
+		entry = { targets = targets, waiting = {}, beyond = {} }
 		landings[key] = entry
-		entry.job = ns.Path.FindMany(place.map, place, targets, function(costs)
-			local waiting = entry.waiting or {}
-			entry.costs, entry.waiting = costs, nil
-			for _, callback in ipairs(waiting) do
+		local function wake(radius)
+			local due = {}
+			for callback, reach in pairs(entry.beyond or {}) do
+				if radius >= reach then
+					due[#due + 1] = callback
+				end
+			end
+			for _, callback in ipairs(due) do
+				entry.beyond[callback] = nil
 				callback()
 			end
-		end, water, nil, nil, hazards)
+		end
+		entry.job = ns.Path.FindMany(
+			place.map,
+			place,
+			targets,
+			function(costs)
+				local waiting = entry.waiting or {}
+				entry.costs, entry.waiting = costs, nil
+				for _, callback in ipairs(waiting) do
+					callback()
+				end
+				wake(math.huge)
+				entry.beyond = nil
+			end,
+			water,
+			nil,
+			function(_, _, job)
+				wake(job.radius)
+			end,
+			hazards
+		)
 	end
 	return entry
 end
 
--- Whether a bind point's walks are still being searched; callback, when given, runs once each search ends. With
--- ready, only a teleport castable before `before` counts: one ready later cannot beat a route arriving then.
+-- Whether a bind point's walks are still being searched for a teleport that could still beat a route arriving at
+-- `before`. A walk the search has not settled is at least its frontier (job.radius) long, so a way on from the landing
+-- arrives no sooner than the teleport is ready, cast and that walk at speed: past that the landing cannot win and the
+-- journey need not wait for its walks to every flight point on the continent (#1154). callback, when given, runs once
+-- the search ends, or with speed once its frontier passes the walk that would tie `before`.
 ---@param teleports SPFTeleportPlace[]?
 ---@param water boolean?
 ---@param callback? fun()
 ---@param ready? table<number, number>
 ---@param before? number
+---@param speed? number yards a second a walk is timed at
 ---@return boolean
-function Walks.LandingPending(teleports, water, callback, ready, before)
+function Walks.LandingPending(teleports, water, callback, ready, before, speed)
 	local pending = false
 	for index, place in ipairs(teleports or {}) do
 		local entry = Landing(place, water)
-		if entry and entry.waiting and (not ready or (ready[index] and ready[index] < before)) then
+		local reach = math.huge
+		if ready and speed then
+			reach = ready[index] and (before - ready[index] - (place.cast or 0)) * speed / 1000 or -math.huge
+		elseif ready then
+			reach = ready[index] and ready[index] < before and math.huge or -math.huge
+		end
+		if entry and entry.waiting and entry.job.radius < reach then
 			pending = true
-			if callback then
+			if callback and reach < math.huge then
+				entry.beyond[callback] = reach
+			elseif callback then
 				entry.waiting[#entry.waiting + 1] = callback
 			end
 		end
@@ -326,7 +372,9 @@ function Walks.LandingPending(teleports, water, callback, ready, before)
 	return pending
 end
 
--- The measured walks on from each usable bind point.
+-- The measured walks on from each usable bind point. While its search runs, a walk it has settled is exact and one it
+-- has not is at least the frontier's radius: LandingPending lets a plan go on once that bound rules the landing out,
+-- and the plan still sees the near walks that let a hearth win.
 ---@param teleports SPFTeleportPlace[]?
 ---@param water boolean?
 ---@return SPFWalkCost[]
@@ -334,10 +382,14 @@ function Walks.Landings(teleports, water)
 	local walks = {}
 	for _, place in ipairs(teleports or {}) do
 		local entry = Landing(place, water)
-		local costs = entry and entry.costs
-		if entry and costs then
-			for i, target in ipairs(entry.targets) do
-				walks[#walks + 1] = { from = place, to = target, cost = costs[i] }
+		local costs = entry and (entry.costs or entry.job.costs)
+		local radius = entry and not entry.costs and entry.job.radius or 0
+		for i, target in ipairs(entry and entry.targets or {}) do
+			local cost = costs and costs[i]
+			if cost ~= nil then
+				walks[#walks + 1] = { from = place, to = target, cost = cost }
+			elseif radius > math.sqrt((target.x - place.x) ^ 2 + (target.y - place.y) ^ 2) then
+				walks[#walks + 1] = { from = place, to = target, cost = radius, estimated = true }
 			end
 		end
 	end

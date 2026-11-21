@@ -55,7 +55,7 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"Les trajets, et les estimations d'autres addons depuis ici, peuvent commencer par une téléportation de mage vers une ville ou Téléportation : Reflet-de-Lune, temps de recharge compris." -- mt
 L["Minimum teleport saving"] = "Gain minimum de la téléportation" -- mt
-L["Hide the journey tracker from its own menu."] = "Masquez le suivi du trajet depuis son propre menu." -- mt
+L["Hide the journey key hint in tooltips."] = "Masquez l'indication de la touche de trajet dans les infobulles." -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"N'utiliser une téléportation de classe que si elle fait gagner au moins ce temps." -- mt
 L["Boat and Zeppelin Routes"] = "Routes des bateaux et zeppelins" -- mt
@@ -452,6 +452,9 @@ L["The key you hold to plan a journey from the world map or the minimap."] =
 	"La touche à maintenir pour planifier un trajet depuis la carte du monde ou la minicarte." -- mt
 L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
 	"Sur une icône Questie, le clic avec Maj reste à Questie ; Alt-clic y planifie le trajet avec l'une ou l'autre touche." -- mt
+L["Show the journey key hint in tooltips"] = "Afficher l'indication de la touche de trajet dans les infobulles" -- mt
+L["Adds a line naming your journey key to tooltips on the world map, flight points and the minimap. Off, the key still plans journeys."] =
+	"Ajoute une ligne indiquant votre touche de trajet aux infobulles de la carte du monde, des points de vol et de la minicarte. Désactivée, la touche planifie toujours les trajets." -- mt
 L["Show the Nearby services tab"] = "Afficher l’onglet des services à proximité" -- mt
 L["The tab in the world map's quest log. Off, /spfnear and the tracking menu still open it."] =
 	"L’onglet dans le journal des quêtes de la carte du monde. Désactivé, /spfnear et le menu de suivi l’ouvrent encore." -- mt

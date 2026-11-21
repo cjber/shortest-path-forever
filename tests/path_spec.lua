@@ -159,6 +159,48 @@ for _, ends in ipairs({ { ALGAZ_SOUTH, ALGAZ_NORTH }, { ALGAZ_NORTH, ALGAZ_SOUTH
 	assert(pts and passes(pts, -4220, -2464) < 30, "misses the Dun Algaz tunnel")
 end
 
+-- A walk against its reference: the shortest walk on the raw navmesh the map was baked from (A* over its walkable
+-- polys, then funnel string-pulling, horizontal yards; tools/nav_reference.py over the client 1.60.1.70938 tiles).
+-- The grid's eight directions make a walk up to 1 / cos 22.5 degrees longer than the straight path, and each end may
+-- stand its distance from its cell's centre away from the grid.
+local OCTILE = 1 / math.cos(math.pi / 8)
+local function nearReference(from, to, reference, what)
+	local st = ns.PathGrid.State(0)
+	local slack = 0
+	for _, p in ipairs({ from, to }) do
+		local cx = st.x0 + (math.floor((p.x - st.x0) / st.cs) + 0.5) * st.cs
+		local cy = st.y0 + (math.floor((p.y - st.y0) / st.cs) + 0.5) * st.cs
+		slack = slack + dist(p.x, p.y, cx, cy)
+	end
+	local points, cost = Path.FindSync(0, from, to)
+	assert(points, what .. " is unreachable")
+	assert(
+		cost >= reference - slack and cost <= reference * OCTILE + slack,
+		("%s costs %.1f, reference %.1f"):format(what, cost, reference)
+	)
+	return points
+end
+
+-- Up the pass from the tunnel to Loch Modan, and on from the Wetlands to Thelsamar: the walk climbs the Dun Algaz road
+-- rather than looping round Grim Batol past Stonewrought Dam. The ramp's floor cells once stored a poly centroid's
+-- height, five yards off, so one step up read as a climb past 50 degrees and the pass walked one way only (#1011).
+local PASS_TOP = { x = -4668.7, y = -2694.5, z = 323 }
+nearReference(ALGAZ_SOUTH, PASS_TOP, 486.5, "up the Dun Algaz pass")
+nearReference(PASS_TOP, ALGAZ_SOUTH, 486.3, "down the Dun Algaz pass")
+pts = nearReference(
+	{ x = -3900, y = -2500, z = 108 },
+	{ x = -5378, y = -2973, z = 324 },
+	2024.4,
+	"Wetlands to Thelsamar"
+)
+assert(passes(pts, -4220, -2464) < 30, "Wetlands to Thelsamar misses the Dun Algaz tunnel")
+
+-- An Ironforge ramp the navmesh walks (ordinary ground) rises 10.5 yards over one 8 yard cell, past 50 degrees: the
+-- walk takes it both ways rather than a detour up, as the client does (#1011).
+local RAMP_FOOT, RAMP_TOP = { x = -4971.1, y = -991.0, z = 718 }, { x = -4963.2, y = -991.0, z = 728 }
+nearReference(RAMP_FOOT, RAMP_TOP, 7.9, "up the Ironforge ramp")
+nearReference(RAMP_TOP, RAMP_FOOT, 7.9, "down the Ironforge ramp")
+
 -- Undercity: the flight master stands by the west lift's bottom landing, and its top is a long way round on foot.
 local UNDERCITY_FM = { x = 1568.62, y = 267.97, z = -43.1 } -- node 11
 local WEST_LIFT = { x = 1596.15, y = 291.8 } -- Data/Transports.lua docks 1009 (top) and 1010 (bottom)
@@ -248,8 +290,9 @@ local floorNode = StraitGrid.surface(straitState, floorK, floorCell, 1, 14)
 assert(floorValues[floorCell + 1] == 2 and floorNode and floorValues[floorNode + 1] == 1)
 assert(straitState.z[floorK][floorNode + 1] == 14, "the dry floor is above the base water")
 
--- Nearby, a walk that really swims is still pulled straight across the water its own entries swam.
-local STRAIT_EAST, STRAIT_WEST = { x = -14961.19, y = 250.63 }, { x = -14897.51, y = 250.63 }
+-- Nearby, a walk that really swims is still pulled straight across the water its own entries swam. The row holds the
+-- water entrance on the cluster border at x -14933, so the swim's route is the straight one.
+local STRAIT_EAST, STRAIT_WEST = { x = -14961.19, y = 242.83 }, { x = -14897.51, y = 242.83 }
 local strait, straitCost = Path.FindSync(0, STRAIT_EAST, STRAIT_WEST)
 assert(strait and straitCost and strait.wet > 15, "the strait walk swims")
 local swam = 0

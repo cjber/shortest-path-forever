@@ -24,6 +24,7 @@ local expected = {
 	"#Planning",
 	"journey",
 	"journeyKey",
+	"journeyHint",
 	"focusedQuest",
 	"#Destination",
 	"destinationPin",

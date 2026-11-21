@@ -10,6 +10,36 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.43.11] - 2026-11-21
+
+### Fixed
+
+- Walks between Wetlands and Loch Modan take the Dun Algaz tunnel instead of climbing over the Grim Batol mountains (#1011).
+- Walks in the Trade District start on the street rather than underneath it (#1046).
+- Walks from the Hinterlands to Western Plaguelands take the direct path between the zones (#1063).
+- Walking up a ramp in the Undercity, the route follows the floor you are on (#1099).
+- A small rise in the Searing Gorge cave no longer blocks the walk through it (#1101).
+- Routes follow roads more closely where a road is only partly painted on the map (#972).
+- A short journey with your Hearthstone ready, such as across Stormwind, no longer sits on "Finding the fastest way..." while the planner measures the walks on from your bind point to every flight point on the continent. It now waits only until those walks are long enough that the Hearthstone cannot win (#1154).
+- Opening a flight master no longer forgets flight points on a network it does not link to. As Horde, Booty Bay's flight master forgot every Undercity point you had learned (#1165).
+
+## [1.43.10] - 2026-11-20
+
+### Added
+
+- **Hide the journey key hint in tooltips.** Turn off *Show the journey key hint in tooltips* in Guidance, Planning to hide the "Shift-click to plan a journey here" line on map, flight point and minimap tooltips; your journey key still plans journeys.
+
+### Fixed
+
+- A destination on ground the route search cannot reach no longer leaves the map line straight and the Journey bar on loading forever. Since 1.43.6 such a goal could keep being moved onto itself and the search started again without end; it now says there is no way there (#1141).
+
+## [1.43.9] - 2026-11-20
+
+### Fixed
+
+- With Waypoint UI installed and "Mark only where steps end" on, the arrow shows again beside Waypoint UI's marker. It had been hidden since 1.43.3, which with a guide addon's arrow hidden too left no arrow at all (#1124).
+- A guide addon's arrow (RestedXP, Guidelime) comes back whenever Shortest Path's arrow has nothing to draw, such as where the game gives no facing (#1124).
+
 ## [1.43.8] - 2026-11-20
 
 ### Fixed

@@ -36,7 +36,17 @@ from textwrap import wrap
 from typing import cast
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from baker.geometry import clip_segment, height, plane, point_in_convex, poly_distance, poly_distance2, seg_in_box  # noqa: E402
+from baker.geometry import (
+    centroid,
+    clip_convex,
+    clip_segment,
+    height,
+    plane,
+    point_in_convex,
+    poly_distance,
+    poly_distance2,
+    seg_in_box,
+)  # noqa: E402
 from baker.inputs import arguments, generator_digest, source_label  # noqa: E402
 from baker.measure import record, tile_hashes  # noqa: E402
 from baker.terrain import encode_sparse as encode_terrain  # noqa: E402
@@ -50,7 +60,6 @@ ROOT = Path(__file__).resolve().parents[2]
 T = 1600 / 3
 CELLS = 67
 CS = T / CELLS
-TAN50 = math.tan(math.radians(50))
 # A swum yard counts as three running ones: beyond the slower pace (4.7 against 7 yd/s), swimming means climbing
 # out at a bank that may be a cliff, aggro from things that cannot be outrun, and fatigue far from shore.
 SWIM = 3.0
@@ -95,12 +104,16 @@ SIZE = array("i")  # dense poly id -> poly count of its navmesh component; kept 
 FLOOR_CELL, FLOOR_VAL, FLOOR_Z, FLOOR_LAYER = array("i"), bytearray(), array("f"), bytearray()  # layer: 1 = lowest
 BASE_Z = array("f")  # cell -> height of its base surface
 LINKS = defaultdict(dict)  # node -> {node it steps to besides the base grid's own: cost in yards, or None for the step}
+# (node, node) steps whose direction the navmesh walk decided where the stored heights would not: the runtime takes them
+# as written, with no steep test (#1101). A rasterize_tile link marks one with the cost FREE_STEP.
+FREE = set()
+FREE_STEP = "free"
 FLOORS_OF = defaultdict(list)  # cluster -> its floor nodes, by (cell, height)
 LINKED_OF = defaultdict(list)  # cluster -> its nodes with LINKS, sorted
 FLOORS_AT = {}  # cell -> its floor nodes, lowest first
 TERRAIN = {}  # cluster -> its terrain field (tools/baker/terrain.py)
 KINDS = defaultdict(int)  # how the encoded links came out: step bits, one-way records, drops
-ROAD_CELLS = set()  # global cells Data/RoadCells.lua calls road, so a road crossing can be an entrance
+ROAD_CELLS = {}  # global cell -> road coverage (0 to 1) from Data/RoadCells.lua, as the runtime charges it
 
 
 def configure(map_id, rows=None, cols=None):
@@ -143,21 +156,29 @@ def places(map_id):
 
 
 def decode_road_runs(s):
-    """Positive-painted cells: two base64 length symbols, then one coverage symbol per run."""
-    cells, at = set(), 0
+    """Positive-painted cells and their coverage (symbol / 63, as Routing/PathGrid.lua reads it): two base64 length
+    symbols, then one coverage symbol per run."""
+    cells, at = {}, 0
     for pos in range(0, len(s), 3):
         run = B64.index(s[pos]) * 64 + B64.index(s[pos + 1])
-        if B64.index(s[pos + 2]) > 0:
-            cells.update(range(at, at + run))
+        coverage = B64.index(s[pos + 2]) / 63
+        if coverage > 0:
+            cells.update(dict.fromkeys(range(at, at + run), coverage))
         at += run
     return cells
 
 
+def off_road(cell, base):
+    """The part of a step's cost the road factor scales: Routing/Path.lua charges 1 + (OFFROAD - 1) * (1 - coverage),
+    so faint paint is nearly off road and only full coverage is free."""
+    return base * (1 - ROAD_CELLS.get(cell, 0.0))
+
+
 def read_roads(map_id):
-    """Data/RoadCells.lua's road cells for a map, as global cell ids; empty before a road bake."""
+    """Data/RoadCells.lua's road cells for a map, as global cell id -> coverage; empty before a road bake."""
     path = ROOT / "Data" / "RoadCells.lua"
     if not path.exists():
-        return set()
+        return {}
     found, inside = {}, False
     for line in path.read_text().splitlines():
         if line.strip() == f"[{map_id}] = {{":
@@ -169,10 +190,10 @@ def read_roads(map_id):
             m = re.match(r'\s*\[(\d+)\] = "([^"]+)"', line)
             if m:
                 found[int(m.group(1)) - 1] = decode_road_runs(m.group(2))
-    roads = set()
+    roads = {}
     for k, locals_ in found.items():
-        for cell in locals_:
-            roads.add((k // NY * CELLS + cell // CELLS) * GH + (k % NY * CELLS + cell % CELLS))
+        for cell, coverage in locals_.items():
+            roads[(k // NY * CELLS + cell // CELLS) * GH + (k % NY * CELLS + cell % CELLS)] = coverage
     return roads
 
 
@@ -197,17 +218,17 @@ def steep_step(za, la, zb, lb):
 def pair_carries_bit(za, la, zb, lb, forward, back, steep):
     """May a pair of surfaces ride the symmetric step bits, so neither direction needs a record of its own?
 
-    A pair the navmesh walk joins both ways may. It also may when the walk refuses one direction, one end is steep,
-    and the runtime's own steep test refuses that same direction on the same stored heights: the bit is mirrored at
-    the far end and refused there, which is the one-way step the pair means. Ordinary ground has no such test, so a
-    refusal there, a wall or a ledge, stays a record, and a pair neither direction joins is no step at all."""
-    if forward and back:
-        return True
-    if not (forward or back) or not steep:
+    The runtime reads a bit both ways, and where an end is steep it lets each way through only downhill by stored
+    height. A bit carries the pair exactly when that reading is the navmesh walk's: ordinary ground the walk joins both
+    ways, or steep ground whose stored heights allow the very directions the walk takes, such as a face it walks down
+    and not up. Any other pair the walk joins is a record per direction, taken as written: one stored height per
+    surface cannot say which way every neighbour may step onto a steep face, and judging by it refused walks the
+    navmesh takes, a 1 yard rise onto a cave floor among them (#1101). A pair neither direction joins is no step."""
+    if not (forward or back):
         return False
-    if forward:
-        return not steep_step(zb, lb, za, la)  # the walk refuses the way back, and so must the heights
-    return not steep_step(za, la, zb, lb)  # the walk refuses the way forward, and so must the heights
+    if not steep:
+        return forward and back
+    return forward == steep_step(za, la, zb, lb) and back == steep_step(zb, lb, za, la)
 
 
 def walkable(pts, flags, area, typ):
@@ -358,6 +379,7 @@ def load_window(tiles):
                 size=SIZE[base + n],
                 pts=[(p[0], p[1]) for p in pts],
                 plane=plane(pts, c),
+                zs=(min(q[2] for q in pts), max(q[2] for q in pts)),
             )
         for i, j, p1, p2 in links:
             if i in kept and j in kept:
@@ -381,8 +403,8 @@ def rasterize_layers(polys, adj, portal, bounds):
     its own floors, and each of those cost a node and its links. Surfaces that only meet elsewhere (a bridge over a
     road, a tunnel under ground) stay floors, and so does steep ground, which the player walks down and never across.
     Prefer the largest component, then the highest surface, so roofs cannot displace the city below; keep the other
-    pieces at least CLIMB apart as floors; omit lake beds under water. Narrow passages anchor on the poly centroid,
-    because their cells may have no centre inside the mesh.
+    pieces at least CLIMB apart as floors; omit lake beds under water. Narrow passages anchor on a point of the
+    passage at the poly's height there, because their cells may have no centre inside the mesh.
     """
     ax0, ax1, ay0, ay1 = bounds
     surf = defaultdict(list)  # cell -> [(component size, height, value, poly, point, late)]
@@ -413,8 +435,10 @@ def rasterize_layers(polys, adj, portal, bounds):
             for gy in range(gy0, gy1 + 1):
                 edges[gx * GH + gy].append((u, w))
     # Passages narrower than a cell: centroid -> shared edge midpoint -> centroid stays inside the two convex polygons.
-    # These surfaces anchor on the poly centroid, since the cell centre may lie off the mesh. Only the first passage
-    # through an empty cell may become its base; later ones can only add a floor.
+    # These surfaces anchor on the sampled point of that line, since the cell centre may lie off the mesh, and take the
+    # poly's own height there. The centroid's height is the poly's height somewhere else: on a ramp it misplaced a cell
+    # by several yards, and the step beside it read as a climb past 50 degrees, so the Dun Algaz tunnel walked one way
+    # only (#1011). Only the first passage through an empty cell may become its base; later ones can only add a floor.
     for u in sorted(adj):
         for w in sorted(adj[u]):
             if w <= u:
@@ -425,10 +449,31 @@ def rasterize_layers(polys, adj, portal, bounds):
             for a, b, p, pid in ((pu["c"], mid, pu, u), (mid, pw["c"], pw, w)):
                 steps = int(math.dist(a[:2], b[:2]) / (CS / 4)) + 1
                 for t in range(steps + 1):
-                    i = at(a[0] + (b[0] - a[0]) * t / steps, a[1] + (b[1] - a[1]) * t / steps)
-                    z = p["c"][2]
+                    q = (a[0] + (b[0] - a[0]) * t / steps, a[1] + (b[1] - a[1]) * t / steps)
+                    i = at(*q)
+                    z = height(p, *q)
                     if i >= 0 and not any(abs(s[1] - z) < CLIMB for s in surf[i]):
-                        surf[i].append((p["size"], z, 2 if p["water"] else 1, pid, p["c"][:2], bool(surf[i])))
+                        surf[i].append((p["size"], z, 2 if p["water"] else 1, pid, q, bool(surf[i])))
+    # A poly covering part of a cell but not its centre is still ground the player stands on in that cell: a stall or
+    # a lamp post on a street's cell centre must not leave the cell only the ground under the city (#1046). It anchors
+    # on the centroid of its part inside the cell and only adds a floor, never the base, so a cell's base and its
+    # empty cells stay as the centre sample decides.
+    stood = {i for i, ss in surf.items() if ss}
+    for pid in sorted(polys):
+        p = polys[pid]
+        xs, ys = [q[0] for q in p["pts"]], [q[1] for q in p["pts"]]
+        for gx in range(max(ax0, int((min(xs) - X0) // CS)), min(ax1 + 1, int((max(xs) - X0) // CS) + 1)):
+            for gy in range(max(ay0, int((min(ys) - Y0) // CS)), min(ay1 + 1, int((max(ys) - Y0) // CS) + 1)):
+                i = gx * GH + gy
+                if i not in stood:
+                    continue
+                x0, y0 = X0 + gx * CS, Y0 + gy * CS
+                c = centroid(clip_convex(p["pts"], (x0, x0 + CS, y0, y0 + CS)))
+                if c is None:
+                    continue
+                z = height(p, *c)
+                if not any(abs(s[1] - z) < CLIMB for s in surf[i]):
+                    surf[i].append((p["size"], z, 2 if p["water"] else 1, pid, c, True))
 
     def pieces(ss, i):
         """The piece of surface each of the cell's candidates stands on, as a group number."""
@@ -466,6 +511,12 @@ def rasterize_layers(polys, adj, portal, bounds):
                 taken.add(piece[n])
         chosen[1:] = sorted(chosen[1:], key=lambda n: ss[n][1])
         layers[i] = [(ss[n][1], 3 if polys[ss[n][3]]["steep"] else ss[n][2], (ss[n][3], ss[n][4])) for n in chosen]
+        # Every layer's height is its own poly's height at its anchor, whichever pass found it: the runtime judges
+        # a climb by these heights, so a stand-in (a centroid, another poly's level) turns a walkable step one-way
+        # (#1011).
+        for z, _, (pid, point) in layers[i]:
+            if abs(z - height(polys[pid], *point)) > 0.01:
+                raise ValueError(f"cell {i}: layer height {z:.2f} is not poly {pid}'s height at its anchor {point}")
 
     return layers
 
@@ -497,10 +548,11 @@ def rasterize_tile(rc):
 
     A step between neighbouring cells is cut unless a 2D ray along the navmesh surface from one cell's anchor reaches
     the other's surface poly, so the grid cannot climb a cliff, pass a fence or wall, or drop off a bridge. A step
-    onto or off steep ground keeps the ordinary symmetric code: the decoder allows it downhill only, comparing the
-    stored heights the file holds, so no per-step record is needed. A step the navmesh joins one way only is cut and
-    each legal direction is written out on its own. Floors link to neighbouring surfaces by the same test, and the
-    local bake's one-way ledge drops become links from the ledge's surface to the landing's.
+    onto or off steep ground keeps the ordinary symmetric code where the decoder's downhill-only test on the stored
+    heights reads it as the walk does, so no per-step record is needed. Any other step the navmesh joins one way, or
+    steep ground the heights misread, is cut and each direction the walk takes is a record taken as written. Floors
+    link to neighbouring surfaces by the same test, and the local bake's one-way ledge drops become links from the
+    ledge's surface to the landing's.
     Surfaces are computed LAYER_MARGIN cells beyond the tile, which is all its own steps, diagonals and drop landings
     read; everything comes from the 3x3 tiles around it.
     """
@@ -521,7 +573,8 @@ def rasterize_tile(rc):
         ceiling, and leaves it at most as high as that portal's top. Without it a path could climb a steep face between
         two ordinary surfaces, such as the slope that joins the terrain under Stormwind to its streets."""
         (pa, a), (pb, b) = layers[i][la][2], layers[j][lb][2]
-        if pa == pb:
+        steep = polys[pa]["steep"] or polys[pb]["steep"]
+        if pa == pb and (not steep or height(polys[pb], *b) <= height(polys[pa], *a) + 0.01):
             return True
         (xi, yi), (xj, yj) = divmod(i, GH), divmod(j, GH)
         box = (
@@ -530,7 +583,10 @@ def rasterize_tile(rc):
             Y0 + min(yi, yj) * CS - MARGIN,
             Y0 + (max(yi, yj) + 1) * CS + MARGIN,
         )
-        if pb in adj.get(pa, ()):
+        # Steep anchors go through the search below, which holds them to the downhill rule: a shortcut that joined
+        # one poly or two neighbours outright let a flat cell climb onto the steep face beside it, and the step was
+        # taken as written, up the mountain outside Ironforge's gate (#1011).
+        if pb in adj.get(pa, ()) and not steep:
             # An edge shared anywhere is not a path between these two cells: a street and a keep floor that meet
             # only at a doorway far outside the box must not link every pair of cells facing each other (#890).
             return seg_in_box(*portal[(pa, pb)], box=box)
@@ -561,15 +617,6 @@ def rasterize_tile(rc):
                 best[v] = top
                 stack.append(v)
         return False
-
-    def allows(i, la, j, lb):
-        """May the player step from cell i's surface la to cell j's surface lb? Steep ground is entered and left
-        downhill only, so the destination must not be above the source; ordinary ground keeps its two directions."""
-        if not linked(i, la, j, lb):
-            return False
-        if layers[i][la][1] == 3 or layers[j][lb][1] == 3:
-            return steep_step(layers[i][la][0], la, layers[j][lb][0], lb)
-        return True
 
     def bit_carries(i, la, j, lb, one_cluster=False):
         """pair_carries_bit for two surfaces the walk has just been asked about.
@@ -614,43 +661,42 @@ def rasterize_tile(rc):
                 if jx >= GW or jy >= GH or not g(jx, jy):
                     continue
                 j = jx * GH + jy
-                # Steep ground keeps the ordinary symmetric bit: the decoder allows it downhill only, from the same
-                # stored heights. A pair whose refusal the heights do not explain still needs its own record.
+                # A steep pair keeps the symmetric bit where the decoder's stored-height test reads it as the walk
+                # does; any other pair is cut and each direction the walk takes is a record taken as written.
                 if bit_carries(i, 0, j, 0):
                     continue
                 cuts.add(i * 4 + d)
-                # the pair's step codes are symmetric, so an allowed direction is written out as its own link
-                if inside(gx, gy) and allows(i, 0, j, 0):
-                    links.append((i, layers[i][0][0], j, layers[j][0][0], None))
-                if inside(jx, jy) and allows(j, 0, i, 0):
-                    links.append((j, layers[j][0][0], i, layers[i][0][0], None))
+                if inside(gx, gy) and linked(i, 0, j, 0):
+                    links.append((i, layers[i][0][0], j, layers[j][0][0], FREE_STEP))
+                if inside(jx, jy) and linked(j, 0, i, 0):
+                    links.append((j, layers[j][0][0], i, layers[i][0][0], FREE_STEP))
     # Diagonal walkways narrower than a cell: open the diagonal step explicitly where both L-shaped detours are closed.
+    # A pair across the tile's edge is looked at from both tiles, each writing what its own cells hold.
     own = set()
-    for gx in range(tx0, min(tx1 + 1, GW - 1)):
-        for gy in range(ty0, ty1 + 1):
+    for gx in range(max(0, tx0 - 1), min(tx1 + 1, GW - 1)):
+        for gy in range(max(0, ty0 - 1), min(GH, ty1 + 2)):
             i = gx * GH + gy
             if not g(gx, gy):
                 continue
             for d, dy in ((2, 1), (3, -1)):
-                if not 0 <= gy + dy < GH:
+                if not 0 <= gy + dy < GH or not (inside(gx, gy) or inside(gx + 1, gy + dy)):
                     continue
                 j = i + GH + dy
                 if g(gx + 1, gy + dy) and not diag_ok(g, cuts, gx, gy, gx + 1, gy + dy, step=bit_step_ok):
-                    if linked(i, 0, j, 0) and linked(j, 0, i, 0):
-                        if d == 3 and g(gx, gy) != 2:
-                            # Flag 8 marks steep ground on a ground cell, so this diagonal stays a pair of records
-                            # rather than a bit; water can still use the flag for its own diagonal.
-                            links.append((i, layers[i][0][0], j, layers[j][0][0], None))
-                            links.append((j, layers[j][0][0], i, layers[i][0][0], None))
-                        else:
-                            own.add(i * 4 + d)  # the symmetric diagonal; the decoder allows it downhill only
+                    forward, back = linked(i, 0, j, 0), linked(j, 0, i, 0)
+                    # Flag 8 marks steep ground on a ground cell, so a ground cell's -x-y diagonal is never a bit;
+                    # water can still use the flag for its own diagonal.
+                    flag = d == 2 or g(gx, gy) == 2
+                    if flag and forward and back and bit_carries(i, 0, j, 0):
+                        if inside(gx, gy):
+                            own.add(i * 4 + d)  # the symmetric diagonal; the decoder reads it as the walk does
                     else:
-                        # Each legal direction is its own link, as for orthogonal steps; the symmetric diagonal
-                        # stays closed because both L-shaped detours are cut.
-                        if allows(i, 0, j, 0) and inside(gx, gy):
-                            links.append((i, layers[i][0][0], j, layers[j][0][0], None))
-                        if allows(j, 0, i, 0) and inside(gx + 1, gy + dy):
-                            links.append((j, layers[j][0][0], i, layers[i][0][0], None))
+                        # Each direction the walk takes is its own record, as for orthogonal steps; the symmetric
+                        # diagonal stays closed because both L-shaped detours are cut.
+                        if forward and inside(gx, gy):
+                            links.append((i, layers[i][0][0], j, layers[j][0][0], FREE_STEP))
+                        if back and inside(gx + 1, gy + dy):
+                            links.append((j, layers[j][0][0], i, layers[i][0][0], FREE_STEP))
     own |= {c for c in cuts if tx0 <= c // 4 // GH <= tx1 and ty0 <= c // 4 % GH <= ty1}
     # Floors: every surface pair between a cell and a neighbour that involves a floor, by height at both ends. Both
     # directions are written out, since nothing is derived from a floor's own links any more.
@@ -673,16 +719,17 @@ def rasterize_tile(rc):
                     for lb, (zb, _, _) in enumerate(layers[j]):
                         if not (la or lb):
                             continue
-                        # A steep pair keeps both directions as an ordinary (no-cost) link, so encode_floors can
-                        # carry it as a symmetric step bit; the decoder allows it downhill only.
+                        # A pair the decoder's stored-height test reads as the walk does keeps both directions as an
+                        # ordinary (no-cost) link, so encode_floors can carry it as a symmetric step bit; any other
+                        # direction the walk takes is a record taken as written.
                         if bit_carries(i, la, j, lb, one_cluster=True):
                             links.append((i, za, j, zb, None))
                             links.append((j, zb, i, za, None))
                         else:
-                            if allows(i, la, j, lb):
-                                links.append((i, za, j, zb, None))
-                            if allows(j, lb, i, la):
-                                links.append((j, zb, i, za, None))
+                            if linked(i, la, j, lb):
+                                links.append((i, za, j, zb, FREE_STEP))
+                            if linked(j, lb, i, la):
+                                links.append((j, zb, i, za, FREE_STEP))
 
     # Ledge drops: the local bake's one-way off-mesh connections, from a ledge to a landing below it, as the surface
     # nodes the local bake's endpoints stand on. The fall costs free fall's time in running yards on top of the
@@ -774,15 +821,17 @@ def steep_ok(grid, ux, uy, vx, vy):
     return steep_node_ok(grid, ux * GH + uy, vx * GH + vy)
 
 
+def link_ok(grid, u, v):
+    """May the runtime take the link u -> v? A step the bake's walk decided is taken as written; any other goes
+    through the steep test."""
+    return (u, v) in FREE or steep_node_ok(grid, u, v)
+
+
 def steep_node_ok(grid, u, v):
     """The runtime's steep test between two nodes, base cells or floors: a step with a steep end goes downhill only,
-    by the stored heights the file holds."""
-    ux, uy = divmod(cell_of(u), GH)
-    vx, vy = divmod(cell_of(v), GH)
-    rise = stored_z(v) - stored_z(u)
-    if rise > TAN50 * math.hypot(vx - ux, vy - uy) * CS:
-        return False
-    return (value_of(grid, u) != 3 and value_of(grid, v) != 3) or rise <= 0
+    by the stored heights the file holds. Ordinary ground has no height test: the step exists only the ways linked()
+    found a navmesh walk, and that navmesh holds the player's slope and step limits (#1011)."""
+    return (value_of(grid, u) != 3 and value_of(grid, v) != 3) or stored_z(v) <= stored_z(u)
 
 
 def bit_step(g, grid, cuts, ux, uy, vx, vy):
@@ -827,9 +876,9 @@ def moves(g, grid, cuts, u, box, swim=SWIM):
     for v, cost in sorted(LINKS.get(u, {}).items()):
         vx, vy = divmod(cell_of(v), GH)
         if gx0 <= vx <= gx1 and gy0 <= vy <= gy1:
-            # A floor pair is written out both ways even where a steep end makes it one-way; the decoder decides the
-            # direction by stored height, and so must the graph.
-            if not steep_node_ok(grid, u, v):
+            # A floor pair carried by a bit is written out both ways even where a steep end makes it one-way; the
+            # decoder decides that direction by stored height, and so must the graph.
+            if not link_ok(grid, u, v):
                 continue
             if cost is not None:
                 yield v, cost
@@ -944,7 +993,7 @@ def cluster_edges(k):
                     )
                 for v, costs in adjacency[u]:
                     base = costs[mode % len(WEIGHTS)]
-                    step_off = base if cell_of(v) not in ROAD_CELLS else 0.0
+                    step_off = off_road(cell_of(v), base)
                     candidate = du + base + (factor - 1) * step_off
                     if candidate < gd.get(v, 1e18):
                         gd[v], off[v] = candidate, off[u] + step_off
@@ -953,11 +1002,20 @@ def cluster_edges(k):
         slopes.append(slope)
     el = sorted(cells)
 
+    def shorter(a, x, b, weight):
+        # A certificate's two hops must each cost less than the edge it prunes, so every pruned edge rests on shorter
+        # ones and the kept graph still holds a walk for it. Without that order, PRUNE's slack lets two entrances a
+        # step apart certify each other's long edge, and both are dropped (#1063).
+        plain = dists[weight]
+        return plain.get((a, x), 1e18) < plain[a, b] and plain.get((x, b), 1e18) < plain[a, b]
+
     def redundant(a, b, weight, plain=False):
         if plain or not has_roads:
             dist = dists[weight]
             return any(
-                dist.get((a, x), 1e18) + dist.get((x, b), 1e18) <= dist[a, b] * PRUNE for x in el if x not in (a, b)
+                dist.get((a, x), 1e18) + dist.get((x, b), 1e18) <= dist[a, b] * PRUNE and shorter(a, x, b, weight)
+                for x in el
+                if x not in (a, b)
             )
         low, high = dists[weight][a, b], dists[weight + len(WEIGHTS)][a, b]
         # Shortest costs are minima of affine path costs, hence concave and above their endpoint chord.
@@ -968,7 +1026,7 @@ def cluster_edges(k):
             dist, slope = dists[mode], slopes[mode]
             factor = modes[mode][1]
             for x in el:
-                if x in (a, b) or (a, x) not in dist or (x, b) not in dist:
+                if x in (a, b) or (a, x) not in dist or (x, b) not in dist or not shorter(a, x, b, weight):
                     continue
                 cost, off = dist[a, x] + dist[x, b], slope[a, x] + slope[x, b]
                 if cost + (1 - factor) * off <= low * PRUNE and cost + (ROAD_FACTOR_MAX - factor) * off <= high * PRUNE:
@@ -991,8 +1049,9 @@ def grid_entrances(grid, cuts, jobs=1):
     """HPA* over the grid. Every border crossing (orthogonal or diagonal) is grouped by the strongly connected parts
     of its two clusters it leaves and enters, in the direction it is walked: a crossing into a part the route cannot
     leave, or out of a part the route cannot reach, is of no use to it, so one entrance per such group guarantees a
-    route wherever the grid has one. Each contiguous border run keeps an entrance every ENTRANCE_RUN crossings.
-    Separate doorways keep separate entrances even when both clusters join them elsewhere. Intra-cluster edges come
+    route wherever the grid has one. Each border run keeps an entrance every ENTRANCE_RUN crossings: a run is
+    crossings a step apart on both sides, so separate doorways, and a bridge over the street it crosses, keep separate
+    entrances even when both clusters join them elsewhere. Intra-cluster edges come
     from Dijkstra under each of WEIGHTS, dropped when a two-hop path is within PRUNE under every weight. An edge
     carries a cost per weight."""
     global _HPA
@@ -1022,27 +1081,61 @@ def grid_entrances(grid, cuts, jobs=1):
                 for w, cost in sorted(LINKS[u].items()):
                     if cluster_of_cell(w) != across:
                         continue
-                    # a two-way record is still one-way at a steep pair, as the decoder reads it
-                    if not steep_node_ok(grid, u, w):
+                    # a step bit is still one-way at a steep pair, as the decoder reads it
+                    if not link_ok(grid, u, w):
                         continue
                     wx, wy = divmod(cell_of(w), GH)
                     t = 0 if axis is None else uy - ky * CELLS if axis == 0 else ux - kx * CELLS
                     groups[(region[u], region[w])].append((t, int(wx != ux and wy != uy), u, w, cost))
 
+    near = {}
+
+    def beside(a, b):
+        """Whether nodes a and b of one cluster are the same or one step apart, either way."""
+        if a == b:
+            return True
+        for x, y in ((a, b), (b, a)):
+            if x not in near:
+                near[x] = {v for v, _ in moves(g, grid, cuts, x, cluster_box(cluster_of_cell(x)))}
+            if y in near[x]:
+                return True
+        return False
+
+    def runs(crossings):
+        """The sorted crossings split into runs: neighbours along the border join one when both their ends are a step
+        apart. A wall between openings ends a run, and so does a height between them: whole-cluster connectivity does
+        not make a wall a doorway, nor the street under a bridge the bridge's way across, and one opening for both
+        can send a walk round an entire district (#910) or down off the bridge and back up."""
+        root = list(range(len(crossings)))
+
+        def find(i):
+            while root[i] != i:
+                root[i] = root[root[i]]
+                i = root[i]
+            return i
+
+        first = 0
+        for i, (t, _, u, w, _) in enumerate(crossings):
+            while crossings[first][0] < t - 1:
+                first += 1
+            for j in range(first, i):
+                if beside(u, crossings[j][2]) and beside(w, crossings[j][3]):
+                    root[find(i)] = find(j)
+        out = defaultdict(list)
+        for i, crossing in enumerate(crossings):
+            out[find(i)].append(crossing)
+        return out.values()
+
     def entrances(groups):
-        """Each contiguous run's entrances, with the edge the crossing walks."""
+        """Each run's entrances, with the edge the crossing walks."""
         for crossings in groups.values():
             # A crossing carries its cost: None for an ordinary step, a float for a drop. Two identical crossings
             # (a step and a drop over the same pair) would make the tuple comparison fall through to the cost and
             # raise, so the order is the crossing itself and an ordinary step wins a tie (its reverse is a step).
             crossings.sort(key=lambda c: (c[0], c[1], c[2], c[3], c[4] is not None))
-            # A wall between openings ends a run. Whole-cluster connectivity does not make that wall a doorway:
-            # choosing one opening for both can send a walk around an entire district (#910).
-            ends = [i for i in range(1, len(crossings)) if crossings[i][0] > crossings[i - 1][0] + 1]
-            first = 0
-            for end in [*ends, len(crossings)]:
-                for i in range(first, end, ENTRANCE_RUN):
-                    chunk = crossings[i : min(i + ENTRANCE_RUN, end)]
+            for run in runs(crossings):
+                for i in range(0, len(run), ENTRANCE_RUN):
+                    chunk = run[i : i + ENTRANCE_RUN]
                     mid = chunk[len(chunk) // 2][0]
                     # prefer orthogonal, then the crossing nearest the chunk's middle
                     _, diagonal, u, v, cost = min(chunk, key=lambda c: (c[1], abs(c[0] - mid)))
@@ -1052,7 +1145,6 @@ def grid_entrances(grid, cuts, jobs=1):
                         edges[(u, v)] = step_into(u, v, diagonal)
                     nodes[cluster_of_cell(u)].add(u)
                     nodes[cluster_of_cell(v)].add(v)
-                first = end
             # A road crosses a border at a few points, often midway between the grid's entrances. Place an entrance
             # at each road-to-road crossing too, so a road-following walk does not leave the road to reach one
             # (#892). Roads come from Data/RoadCells.lua; without them nothing is added.
@@ -1063,6 +1155,9 @@ def grid_entrances(grid, cuts, jobs=1):
                     nodes[cluster_of_cell(v)].add(v)
 
     for k in range(NX * NY):
+        # beside() only asks about cells of the clusters next to k, so its cache need not outlive them: kept for the
+        # whole map it held a neighbour set for every border cell at once.
+        near.clear()
         kx, ky = divmod(k, NY)
         for axis in (0, 1):
             if (axis == 0 and kx + 1 >= NX) or (axis == 1 and ky + 1 >= NY):
@@ -1255,7 +1350,7 @@ def terrain_header():
 
 
 def emit(nodes, edges, grid, cuts, out, name):
-    assert all(steep_node_ok(grid, u, v) for u, v in edges if cluster_of_cell(u) != cluster_of_cell(v)), (
+    assert all(link_ok(grid, u, v) for u, v in edges if cluster_of_cell(u) != cluster_of_cell(v)), (
         "a cluster crossing exceeds the runtime climb limit"
     )
     graph, grids, heights, floors, terrains, components = encode_map(nodes, edges, grid, cuts)
@@ -1270,10 +1365,11 @@ def emit(nodes, edges, grid, cuts, out, name):
         "-- layer it lands on, so the decoder resolves the pair the bake linked. `steep = true` marks steep ground in",
         "-- this map: a ground cell with flag 8, and a floor whose value is 3, are steep. A step with a steep end is a",
         "-- bit too, but the decoder allows it only when the destination's stored height is not above the source's.",
-        "-- Only a step one way takes, a ledge drop or a step carrying a cost is its own record. A map without",
+        "-- Only a step one way takes, a ledge drop or a step carrying a cost is its own record; a step record whose",
+        "-- direction is + 16 is taken as written, with no steep test, as the bake's walk decided it. A map without",
         "-- `steep` is the older format 2, whose flag 8 opens the -x-y diagonal and whose bits pick the surface",
         "-- nearest their height; without `format` it is format 1, whose links are symmetric.",
-        "-- climbChecked: every cluster crossing passes the stored-height 50 degree climb rule at bake time.",
+        "-- climbChecked: every cluster crossing passes the steep-ground rule at bake time.",
         "-- graph[k + 1]: n(2) | n x [cell(3) layer(1) component(2) degree(degreeWidth or 1) "
         "baseDegree(baseDegreeWidth or 0)] "
         "| n x degree edges in node order, each",
@@ -1351,6 +1447,44 @@ def surface_node(c, z):
     return best if gap < CLIMB else None
 
 
+class RawLinks:
+    """The tiles' links as they come back from the workers, (i, za, j, zb, cost), held in flat arrays until
+    assemble_floors matches them to surfaces. Map 0 returns over six million, and as tuples of boxed floats they
+    held gigabytes through the whole graph build. Heights and costs are the workers' own doubles, so every value
+    reads back exactly as it was sent."""
+
+    NONE, FREE, COST = 0, 1, 2
+
+    def __init__(self):
+        self.i, self.j = array("i"), array("i")
+        self.za, self.zb, self.cost = array("d"), array("d"), array("d")
+        self.kind = bytearray()
+
+    def extend(self, links):
+        for i, za, j, zb, cost in links:
+            self.i.append(i)
+            self.za.append(za)
+            self.j.append(j)
+            self.zb.append(zb)
+            if cost is None:
+                self.kind.append(self.NONE)
+                self.cost.append(0.0)
+            elif cost == FREE_STEP:
+                self.kind.append(self.FREE)
+                self.cost.append(0.0)
+            else:
+                self.kind.append(self.COST)
+                self.cost.append(cost)
+
+    def __len__(self):
+        return len(self.kind)
+
+    def __iter__(self):
+        for n, kind in enumerate(self.kind):
+            cost = None if kind == self.NONE else FREE_STEP if kind == self.FREE else self.cost[n]
+            yield self.i[n], self.za[n], self.j[n], self.zb[n], cost
+
+
 def assemble_floors(floors, links):
     """Floor nodes in (cell, height) order, and links between nodes, matched to surfaces by height."""
     nb = GW * GH
@@ -1369,6 +1503,9 @@ def assemble_floors(floors, links):
         a, b = surface_node(i, za), surface_node(j, zb)
         if a is None or b is None:
             continue
+        if cost == FREE_STEP:  # links come back pickled from worker processes, so compare by value
+            FREE.add((a, b))
+            cost = None
         current = LINKS[a]
         if b not in current or cheaper(current[b], cost):
             current[b] = cost
@@ -1455,7 +1592,8 @@ def encode_floors(grid, k, lnode):
     direction in ascending direction order. Layer 0 is the base surface, i the cell's ith floor from the bottom, so
     the decoder resolves the pair the bake linked and never a surface merely near its height. A bit with a steep end
     is allowed downhill only, by stored height. Every other link is one record from the node that owns it, once per
-    pair: m's direction is a one-way step; q's is a drop, which lands on the surface (x, y) cells away (stored + 8,
+    pair: m's direction + 8 is a one-way step, and + 16 a step the bake's walk decided, taken with no steep test; q's
+    is a drop, which lands on the surface (x, y) cells away (stored + 8,
     so (8, 8) is within the cell) at cost whole yards. Value 3 is steep ground."""
     floors = FLOORS_OF[k]
     out, extra, drops = [enc(len(floors), 3)], [], []
@@ -1469,8 +1607,11 @@ def encode_floors(grid, k, lnode):
         return FLOOR_LAYER[v - GW * GH] if v >= GW * GH else 0
 
     def both_ways(u, v):
-        """u steps to v and back at no cost: the pair is symmetric, so one bit or one record carries it."""
-        return LINKS[u].get(v, 1) is None and LINKS.get(v, {}).get(u, 1) is None
+        """u steps to v and back at no cost, both read alike: the pair is symmetric, so one bit or one record carries
+        it."""
+        return (
+            LINKS[u].get(v, 1) is None and LINKS.get(v, {}).get(u, 1) is None and ((u, v) in FREE) == ((v, u) in FREE)
+        )
 
     def steps_of(u):
         """The step pairs out of u by direction: a pair that has a cost, a drop, is no step and is written apart."""
@@ -1501,7 +1642,7 @@ def encode_floors(grid, k, lnode):
         bits[n] = {}
         for v in LINKS[n]:
             d = DIRS.get(offset(n, v))
-            if d is None or d in bits[n] or cluster_of_cell(v) != k or not both_ways(n, v):
+            if d is None or d in bits[n] or cluster_of_cell(v) != k or not both_ways(n, v) or (n, v) in FREE:
                 continue
             if matched(grid, n, d) == v:
                 bits[n][d] = v
@@ -1522,7 +1663,7 @@ def encode_floors(grid, k, lnode):
                 continue
             v = vs[0]
             back = DIRS.get(offset(v, u))
-            if back is None or cluster_of_cell(v) != k or not both_ways(u, v):
+            if back is None or cluster_of_cell(v) != k or not both_ways(u, v) or (u, v) in FREE:
                 continue
             if len(dirs.get(v, {}).get(back, ())) != 1 or dirs[v][back][0] != u:
                 continue
@@ -1556,14 +1697,16 @@ def encode_floors(grid, k, lnode):
             assert d is not None, (u, v)
             if (u, v) in carried:
                 continue  # a step bit carries both directions
+            free = 16 if (u, v) in FREE else 0
             if both_ways(u, v):
                 if u > v and cluster_of_cell(v) == k:
                     continue  # one record per pair; the lower node writes the two-way step
                 KINDS["two-way records"] += 1
-                extra.append((lnode(u), d, layer(v)))
+                extra.append((lnode(u), d + free, layer(v)))
             else:
                 KINDS["one-way records"] += 1
-                extra.append((lnode(u), d + 8, layer(v)))
+                extra.append((lnode(u), d + 8 + free, layer(v)))
+            KINDS["records taken as written"] += free > 0
     KINDS["drop records"] += len(drops)
     extra.sort()
     out.append(enc(len(extra), 3))
@@ -1601,7 +1744,7 @@ def main():
     checkpoint = time.perf_counter()
     grid, cuts = bytearray(GW * GH), set()
     BASE_Z.frombytes(bytes(4 * GW * GH))
-    floors, links = [], []
+    floors, links = [], RawLinks()
     order = sorted(TILES, key=ORD.__getitem__)
     with multiprocessing.get_context("fork").Pool(jobs) as pool:  # workers inherit the pass-1 globals
         for n, (rc, vals, zs, tf, tl, own, terrain) in enumerate(pool.imap(rasterize_tile, order, chunksize=2)):
@@ -1615,7 +1758,7 @@ def main():
             if terrain is not None:
                 TERRAIN[cluster_of_tile(*rc)] = terrain
             floors += tf
-            links += tl
+            links.extend(tl)
             cuts.update(own)
             if (n + 1) % 100 == 0:
                 print(f"  rasterized {n + 1}/{len(order)} tiles", flush=True)
@@ -1623,6 +1766,8 @@ def main():
     phases["raster"] = time.perf_counter() - checkpoint
     checkpoint = time.perf_counter()
     assemble_floors(floors, links)
+    # matched into FLOORS_AT and LINKS; the raw lists, the last tile's included, are not needed again
+    del floors, links, tf, tl
     phases["floors"] = time.perf_counter() - checkpoint
     checkpoint = time.perf_counter()
     # The graph is built from the very links and cuts the grid is emitted with, so the two cannot disagree.

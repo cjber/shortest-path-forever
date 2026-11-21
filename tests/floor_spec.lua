@@ -46,11 +46,15 @@ end
 
 local FM = { x = 1568.62, y = 267.97, z = -43.1 } -- Data/Taxi.lua node 11, on the Undercity's floor
 local MAGIC = { x = 1773.47, y = 61.121, z = -46.321 } -- the Magic Quarter
+local QUARTER_CANAL = { x = 1747.3, y = 107.5, z = -62 } -- the canal below the Magic Quarter's ramp
 local LIFT_TOP = { x = 1596.15, y = 291.8, z = 55.718 } -- Data/Transports.lua dock 1009, in the hall above
-local UNDER_HALL = { x = 1588, y = 237 } -- a city cell with the ruins' hall above it
+-- A city cell with the ruins' hall above it and one city floor: nearby cells hold the canal's floor and a walkway
+-- above it, two city floors the walk cannot tell apart.
+local UNDER_HALL = { x = 1604, y = 219 }
 
 -- Walk the drawn line from a to b, sampling every five yards (or spacing) as the journey's frame would; check is
--- called at each sample with the point, the line's height there and the tracked height.
+-- called at each sample with the point, the line's height there and the tracked height. A vertical segment is a drop
+-- off a ledge: the client shows the fall while you are in the air.
 local function walk(from, to, check, spacing)
 	local points = assert(Path.FindSync(0, from, to))
 	for i = 2, #points do
@@ -60,9 +64,11 @@ local function walk(from, to, check, spacing)
 			local t = j / steps
 			local x, y = a.x + t * (b.x - a.x), a.y + t * (b.y - a.y)
 			local z = a.z and b.z and a.z + t * (b.z - a.z) or b.z or a.z
+			falling = a.x == b.x and a.y == b.y and a.z and b.z and b.z < a.z or false
 			Floor.Sample(0, x, y)
 			drain()
 			Floor.Sample(0, x, y)
+			falling = false
 			check(x, y, z, Floor.Height(0, x, y), a.z, b.z)
 		end
 	end
@@ -99,7 +105,9 @@ for _, ends in ipairs({ { FM, MAGIC }, { MAGIC, FM } }) do
 			end
 		end
 	end)
-	assert(settled and settled < 150, "the floor settles soon: " .. tostring(settled))
+	-- From the flight master the canal's bed, its ledges and the walkway above run side by side, each a step from the
+	-- next, and a ledge left behind is held REACH cells: about 170 yd on the rebaked map.
+	assert(settled and settled < 180, "the floor settles soon: " .. tostring(settled))
 	assert(wrong == 0, "the tracked floor is the line's floor: " .. wrong)
 end
 
@@ -118,11 +126,12 @@ do
 end
 
 -- A move further than a step between samples (a hearth, a teleport) forgets the floor: under the hall that leaves
--- two floors, so nothing is known.
+-- two floors, so nothing is known. It starts on the canal below the Magic Quarter, where one floor is a step away; the
+-- quarter itself stands over a lower walkway its ramp reaches, so its floor stays open.
 do
 	Floor.Forget()
-	walk(FM, MAGIC, function() end)
-	assert(Floor.Height(0, MAGIC.x, MAGIC.y), "known at the Magic Quarter")
+	walk(FM, QUARTER_CANAL, function() end)
+	assert(Floor.Height(0, QUARTER_CANAL.x, QUARTER_CANAL.y), "known on the canal")
 	Floor.Sample(0, UNDER_HALL.x, UNDER_HALL.y)
 	drain()
 	Floor.Sample(0, UNDER_HALL.x, UNDER_HALL.y)
@@ -161,12 +170,12 @@ do
 	assert(Floor.Height(0, STREET.x, STREET.y) == nil, "with no position the floor is forgotten")
 end
 
--- The Trade District (#1046): the walking map has a cell beside the street that holds only the ground under the city.
--- Walking in from the flight master at a run's pace per travel tick, with each decode one frame behind, the street is
--- held through that cell, and a walk from it climbs straight to the roost. A fall or a swim there takes the lower
--- surface instead.
+-- The Trade District (#1046): the walking map had a cell beside the street that held only the ground under the city,
+-- because a stall stood on its centre. The bake now gives a cell every surface covering part of it, so the street
+-- runs through that cell. Walking in from the flight master at a run's pace per travel tick, with each decode one
+-- frame behind, the street is followed, and a walk from it climbs straight to the roost.
 local SW_FM = { x = -8832.77, y = 478.62, z = 109.6 } -- Data/Taxi.lua node 2
-local GAP = { x = -8851, y = 589 } -- the street stands at z 94; the cell's only surface is the ground, z 74
+local GAP = { x = -8851, y = 589 } -- the street at z 95 over the ground, z 74
 local ON_STREET = { x = -8838, y = 580, z = 97 }
 local function surfaces(p)
 	Path.FindSync(0, { x = p.x, y = p.y }, { x = p.x + 1, y = p.y + 1 })
@@ -205,40 +214,39 @@ local function walkIn(stop)
 end
 do
 	local gap = surfaces(GAP)
-	assert(#gap == 1 and gap[1] < 80, "the gap cell holds only the ground: " .. table.concat(gap, " "))
+	assert(gap[#gap] > 85, "the gap cell holds the street: " .. table.concat(gap, " "))
 	walkIn()
 	local height = Floor.Height(0, GAP.x, GAP.y)
-	assert(height and height > 85, "the street is held through the gap: " .. tostring(height))
+	assert(height and height > 85, "the street is followed through the gap cell: " .. tostring(height))
 	local route = assert(Path.FindSync(0, { x = GAP.x, y = GAP.y, z = height }, SW_FM))
 	for _, p in ipairs(route) do
-		assert(not p.z or p.z > 85, "from the held street the walk stays on the streets: " .. tostring(p.z))
+		assert(not p.z or p.z > 85, "from the followed street the walk stays on the streets: " .. tostring(p.z))
 	end
-
-	walkIn()
-	falling = true
-	journeyAt = { x = GAP.x + 1, y = GAP.y }
-	tick()
-	falling = false
-	tick()
-	height = Floor.Height(0, GAP.x + 1, GAP.y)
-	assert(height and height < 80, "a fall there lands on the ground: " .. tostring(height))
-
-	-- Seen in the air over the street a tick before, the fall still counts where you land.
-	local STREET_CELL = { x = -8839.8, y = 593 } -- the street's last cell the walking map reaches before the gap
-	walkIn()
-	falling = true
-	journeyAt = STREET_CELL
-	tick()
-	assert((Floor.Height(0, STREET_CELL.x, STREET_CELL.y) or 0) > 85, "in the air over the street")
-	falling = false
-	journeyAt = { x = GAP.x + 1, y = GAP.y }
-	tick()
-	drain()
-	tick()
-	height = Floor.Height(0, GAP.x + 1, GAP.y)
-	assert(height and height < 80, "a fall seen a tick before the landing lands on the ground: " .. tostring(height))
 	journeyAt = nil
 	tick()
+end
+
+-- A ledge on the Trade District's street: the cell north of it holds only the street below, which the walking map
+-- reaches from the ledge by a drop. Walking, the ledge is held there; a fall seen at the edge, or a sample before the
+-- landing, lands on the street below.
+local LEDGE = { x = -8847.8, y = 831.8, z = 106 }
+local BELOW = { x = LEDGE.x, y = LEDGE.y + 7.96 } -- z 98
+local function offLedge(fall, combat)
+	Floor.Forget()
+	walk(SW_FM, LEDGE, function() end)
+	inCombat, falling = combat or false, fall
+	Floor.Sample(0, LEDGE.x, LEDGE.y + 3)
+	inCombat, falling = false, false
+	Floor.Sample(0, BELOW.x, BELOW.y)
+	drain()
+	Floor.Sample(0, BELOW.x, BELOW.y)
+	return Floor.Height(0, BELOW.x, BELOW.y)
+end
+do
+	local height = offLedge(false)
+	assert(height and height > 103, "walking, the ledge is held past its edge: " .. tostring(height))
+	height = offLedge(true)
+	assert(height and height < 101, "a fall seen a sample before the landing lands below: " .. tostring(height))
 end
 
 -- Knocked off a canal's bank into the water, you swim: the floor is the water's, not the street's above it.
@@ -360,23 +368,10 @@ do
 	nearDock = nil
 end
 
--- Knocked off the street in combat, the fall still counts where you land once it ends.
+-- Knocked off the ledge in combat, the fall still counts where you land once it ends.
 do
-	walkIn()
-	inCombat = true
-	falling = true
-	journeyAt = { x = -8839.8, y = 593 }
-	tick()
-	inCombat = false
-	falling = false
-	journeyAt = { x = GAP.x + 1, y = GAP.y }
-	tick()
-	drain()
-	tick()
-	local height = Floor.Height(0, GAP.x + 1, GAP.y)
-	assert(height and height < 80, "a fall in combat lands on the ground: " .. tostring(height))
-	journeyAt = nil
-	tick()
+	local height = offLedge(true, true)
+	assert(height and height < 101, "a fall in combat lands below: " .. tostring(height))
 end
 
 -- A finished decode wakes the travel clock, so a player standing still is weighed without moving again.
@@ -472,6 +467,68 @@ do
 	assert(input.ns.WorldPoint(1458, 0.5, 0.5).z == -43.1, "the Undercity's map is the city")
 	assert(input.ns.WorldPoint(1420, 0.5, 0.5).z == 55.718, "Tirisfal over the city is the Ruins above it")
 	assert(input.ns.WorldPoint(1420, 0.8, 0.8).z == nil, "Tirisfal away from the city is the open surface")
+end
+
+-- A ramp's link can climb from a cell whose base step in the same direction stays on the floor below. Every surface
+-- the step reaches stays a candidate, so the tracked floor never settles on the floor below while you climb the ramp.
+do
+	local st = Grid.State(0)
+	local C = st.C
+	local gx0, gy0 = math.floor((1400 - st.x0) / st.cs), math.floor((100 - st.y0) / st.cs)
+	local gx1, gy1 = math.floor((1800 - st.x0) / st.cs), math.floor((400 - st.y0) / st.cs)
+	local checked, wrong = 0, {}
+	for gx = gx0, gx1 do
+		for gy = gy0, gy1 do
+			local k, lc = math.floor(gx / C) * st.ny + math.floor(gy / C), (gx % C) * C + gy % C
+			local val = Grid.grid(st, k)
+			local l = val and val[lc + 1] ~= 0 and st.links[k][lc + 1]
+			for e = 1, l and #l or 0 do
+				local entry = l[e]
+				local dx, dy = entry % 16 - 8, math.floor(entry / 16) % 16 - 8
+				local tx, ty = gx + dx, gy + dy
+				local tk, tlc = math.floor(tx / C) * st.ny + math.floor(ty / C), (tx % C) * C + ty % C
+				local v = (dx ~= 0 or dy ~= 0)
+					and math.abs(dx) <= 1
+					and math.abs(dy) <= 1
+					and Grid.surface(st, tk, tlc, math.floor(entry / 256) % 64 - 1, st.z[k][lc + 1])
+				if v and v >= C * C then
+					local z = st.z[tk][v + 1]
+					local x, y = st.x0 + (gx + 0.5) * st.cs, st.y0 + (gy + 0.5) * st.cs
+					Floor.Forget()
+					Floor.Sample(0, x, y)
+					drain()
+					Floor.Sample(0, x, y)
+					local h = Floor.Height(0, x, y)
+					if h and math.abs(h - st.z[k][lc + 1]) <= 3 then
+						checked = checked + 1
+						local nx, ny = x + dx * st.cs, y + dy * st.cs
+						Floor.Sample(0, nx, ny)
+						drain()
+						Floor.Sample(0, nx, ny)
+						local after = Floor.Height(0, nx, ny)
+						if after and math.abs(after - z) > 3 then
+							wrong[#wrong + 1] = ("(%.1f, %.1f) z %s to z %s, tracked %s"):format(
+								x,
+								y,
+								st.z[k][lc + 1],
+								z,
+								after
+							)
+						end
+					end
+				end
+			end
+		end
+	end
+	assert(checked > 0, "the Undercity has ramps to climb")
+	assert(
+		#wrong == 0,
+		("%d of %d ramp steps leave the tracked floor below the ramp: %s"):format(
+			#wrong,
+			checked,
+			table.concat(wrong, "; ", 1, math.min(#wrong, 3))
+		)
+	)
 end
 
 print("floor_spec: ok")

@@ -15,7 +15,7 @@ low = 41 if deep else 51
 nav.NX, nav.NY, nav.GW, nav.GH = 3, 2, 201, 134
 nav.BASE_Z = array("f", [0.0]) * (nav.GW * nav.GH)
 grid = bytearray(nav.GW * nav.GH)
-road = set()
+road = {}  # cell -> road coverage
 for x in range(60, 141):
     for y in range(low, 72):
         grid[x * nav.GH + y] = 1
@@ -24,7 +24,7 @@ for x in range(60, 141):
             or (y == bend and 67 <= x <= 133)
             or (x in (67, 133) and bend <= y <= 66)
         ):
-            road.add(x * nav.GH + y)
+            road[x * nav.GH + y] = 1.0
 nav.ROAD_CELLS = road
 
 
@@ -42,7 +42,7 @@ nodes = {
 }
 nav._HPA = grid, set(), nodes
 edges = nav.cluster_edges(2)
-nav.ROAD_CELLS = set()
+nav.ROAD_CELLS = {}
 plain = nav.cluster_edges(2)
 nav.ROAD_CELLS = road
 assert {edge for edge, costs in edges.items() if costs[2]} == set(plain), "base edges must match plain pruning exactly"
@@ -79,7 +79,7 @@ if deep:
     arcs = {0: ((3, 1), (4, 3), (2, 12)), 3: ((1, 10),), 4: ((2, 6),), 2: ((1, 1),)}
     try:
         nav.moves = lambda _g, _grid, _cuts, u, _box, _water: arcs.get(u, ())
-        nav.ROAD_CELLS = {0, 1, 2}
+        nav.ROAD_CELLS = dict.fromkeys((0, 1, 2), 1.0)
         synthetic_grid = bytearray([1]) * len(grid)
         nav._HPA = synthetic_grid, set(), {0: {0, 1, 2}}
         assert (0, 1) in nav.cluster_edges(0), "interior road factor needs a connection redundant at both endpoints"

@@ -413,13 +413,16 @@ do
 	assert(Band.Holds(band, 152) and Band.Holds(band, 150), "the Keep's floor is in the band")
 	assert(not Band.Holds(band, 106) and not Band.Holds(band, 112), "the ground under it is not")
 
-	-- Walked from the Keep's floor, the walk starts on a surface inside that band; without a band it starts 46 yd
-	-- below, on the cheapest surface at the same spot, which is the shape of #602's walks under the city.
+	-- Walked from the Keep's floor, the walk starts on a surface inside that band; without a band it starts below it,
+	-- on the cheapest surface at the same spot, which is the shape of #602's walks under the city.
 	local GOAL = { x = -8832.77, y = 478.623 } -- the flight master
 	local heard = assert(Band.At(0, HERE.x, HERE.y), "the kept band is the measured one")
 	local banded = assert(Path.FindSync(0, { x = HERE.x, y = HERE.y, band = heard }, GOAL))
 	local today = assert(Path.FindSync(0, { x = HERE.x, y = HERE.y }, GOAL))
-	assert(today[2].z == 106, "with no measurement the walk starts on the ground, as before: " .. tostring(today[2].z))
+	assert(
+		today[2].z < heard.lo,
+		"with no measurement the walk starts under the Keep's floor: " .. tostring(today[2].z)
+	)
 	assert(Band.Holds(heard, banded[2].z), "with the band it starts inside it: " .. tostring(banded[2].z))
 	assert(banded[2].z > today[2].z, "and above the ground, not on it")
 
@@ -429,7 +432,7 @@ do
 
 	-- A band that fits no surface is no measurement: the surfaces are all still there to start from.
 	local other = assert(Path.FindSync(0, { x = HERE.x, y = HERE.y, band = { lo = 10, hi = 20 } }, GOAL))
-	assert(other[2].z == 106, "a band with no surface in it leaves today's start: " .. tostring(other[2].z))
+	assert(other[2].z == today[2].z, "a band with no surface in it leaves today's start: " .. tostring(other[2].z))
 end
 
 -- A replan measures every few seconds: between bag and spellbook events that reads neither, and each event reads

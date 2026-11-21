@@ -489,6 +489,65 @@ ns.ClearJourney()
 assert(waypoint == replacement, "keep a player pin that replaces the route's marker")
 ]])
 
+check("waypoint UI with step-end marks: its marker is an extra, the arrow still leads", "", wpu .. [[
+-- The client draws its marker, so a waypoint that leads would stand the screen arrow down (#1124).
+C_Navigation.GetFrame = function() return {} end
+cvars.showInGameNavigation = "1"
+ns.db.guideStops, navTracking = true, false
+_G.WaypointUIAPI.Navigation.NewUserNavigation = function(opts)
+ newCalls[#newCalls + 1] = opts
+ navWaypoint, navTracking = opts, true
+ C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(opts.mapID, opts.x / 100, opts.y / 100))
+ C_SuperTrack.SetSuperTrackedUserWaypoint(true)
+ return opts
+end
+wStart()
+assert(#newCalls == 1 and supertracked, "Waypoint UI still gets the turn")
+assert(ns.ArrowLeads(), "the arrow leads, which keeps a guide addon's own arrow hidden")
+assert(arrowFrame:IsShown() and arrowFrame.alpha == 1, "so it is drawn: alpha " .. tostring(arrowFrame.alpha))
+-- Marking every bend lets the marker lead instead, as it does without Waypoint UI.
+ns.db.guideStops = false
+ns.RefreshGuideStops()
+arrowFrame.scripts.OnUpdate(arrowFrame, 0.1)
+assert(arrowFrame.alpha == 0, "every bend marked: the marker leads and the arrow stands down")
+-- A frame with no position leaves that marker up, so it still leads and a guide addon's arrow stays away.
+local wasX = posX
+posX = nil
+if arrowFrame.updating then arrowFrame.scripts.OnUpdate(arrowFrame, 0.1) else arrowFrame.ticker.fn() end
+assert(ns.ArrowLeads(), "the marker still leads where the client gives no position")
+posX = wasX
+ns.ClearJourney()
+]])
+
+check(
+	"nothing to point from: the arrow does not claim to lead",
+	"",
+	[[
+ns.db.guideStops = true
+posX, posY, posMap = 0, 0, 1
+mapID, cursorX, cursorY = 1414, 0.5, 0.452
+assert(clickHandlers[1](map, "LeftButton"))
+settle()
+local changes = 0
+-- The frame's own update while it moves or eases, its slow poll once it has settled.
+local function tick()
+ if arrowFrame.updating then arrowFrame.scripts.OnUpdate(arrowFrame, 0.1) else arrowFrame.ticker.fn() end
+end
+local heard = ns.ArrowLeadChanged
+ns.ArrowLeadChanged = function() changes = changes + 1; return heard() end
+assert(ns.ArrowLeads() and arrowFrame.alpha == 1, "the arrow leads the walk")
+-- The client gives no facing where it hides the player's place, so the arrow is drawn at no alpha: a guide addon
+-- hears that and shows its own arrow again (#1124).
+facing = nil
+tick()
+assert(arrowFrame.alpha == 0 and not ns.ArrowLeads() and changes == 1, "nothing drawn, so nothing leads")
+facing = 0
+tick()
+assert(arrowFrame.alpha == 1 and ns.ArrowLeads() and changes == 2, "it leads again once it can point")
+ns.ClearJourney()
+]]
+)
+
 check("waypoint UI tracking: hands over, never writes the waypoint", "", wpu .. [[
 -- A straight walk keeps this case about the handover: the guide hands over the bend it marks, and on a straight
 -- line that bend is the destination the assertions name.
