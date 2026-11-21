@@ -232,7 +232,7 @@ local function JourneysOff()
 	if ns.db.journey then
 		return false
 	end
-	ns.Notice(L["Journeys are off. Turn on Click the map to plan journeys in settings."])
+	ns.Notice(L["Journeys are off. Turn on Enable journeys in settings."])
 	return true
 end
 

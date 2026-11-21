@@ -274,7 +274,7 @@ function ns.AdvanceJourneyProgress(legs, progress, goal, riding, flying, near, g
 			end
 		end
 		if leg.mode == "teleport" and not near(leg.to, finalReach) then
-			guide.Cast(leg)
+			guide.Cast(leg, goal)
 			return true
 		end
 		if not Landed(leg, progress, near, finalReach) or (leg.mode == "flight" and flying) then

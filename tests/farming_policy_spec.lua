@@ -1,15 +1,20 @@
--- The internal walking submission through the real journey, planner and estimate producers.
+-- The public walking submission through the real journey, planner and estimate producers.
 local checks = 0
 local function check(value, label)
 	checks = checks + 1
 	assert(value, label)
 end
+local function walking(owner, stops)
+	return ShortestPathForever.API.NavigateRoute(owner, stops, { policy = "walking" })
+end
 local function harness()
 	local d = assert(loadfile("tests/journey_driver.lua"))()
 	d.load("UI/Looks.lua")
 	d.load("Core/APIInput.lua")
+	d.load("Core/APIStops.lua")
 	d.load("Core/API.lua")
 	d.load("Journey/Itinerary.lua")
+	ShortestPathForever = d.env.ShortestPathForever
 	return d, d.ns, d.env.ShortestPathForever.API
 end
 local function point(x)
@@ -78,9 +83,9 @@ for _, mode in ipairs({ "portal", "flight", "boat", "lift", "tram", "teleport", 
 	end
 	local normal = plan("normal")
 	check(normal and not allWalk(normal), mode .. " is used in normal mode")
-	local walking, o = plan("walking")
-	check(allWalk(walking), mode .. " is excluded from walking mode")
-	check(walking.arrive > normal.arrive, mode .. " restriction is effective even when transit is faster")
+	local walked, o = plan("walking")
+	check(allWalk(walked), mode .. " is excluded from walking mode")
+	check(walked.arrive > normal.arrive, mode .. " restriction is effective even when transit is faster")
 	local _, again = plan("walking")
 	for _, key in ipairs({
 		"taxiKnown",
@@ -108,7 +113,7 @@ for _, mode in ipairs({ "portal", "flight", "boat", "lift", "tram", "teleport", 
 		ns.db.journey == true and o.baked == ns.Walks and o.landmasses == ns.Landmasses,
 		"walking preserves terrain and preferences"
 	)
-	check(api.version == version and api.minor == minor, "internal policy preserves the public API version")
+	check(api.version == version and api.minor == minor, "the walking policy preserves the public API version")
 end
 -- Route replacement, both same-owner resubmission and different-owner same-goal adoption.
 do
@@ -119,7 +124,7 @@ do
 	d.path.settle()
 	check(not allWalk(d.shown()), "normal journey uses transit")
 	local old = d.shown()
-	check(ns.NavigateFarmingRoute("farm", stops), "walking submission")
+	check(walking("farm", stops), "walking submission")
 	d.path.settle()
 	check(
 		ns.JourneyRoutePolicy() == "walking" and allWalk(d.shown()) and d.shown() ~= old,
@@ -128,24 +133,24 @@ do
 	check(api.Ended("public") == "replaced", "old owner replaced")
 	check(api.Pause("farm") and api.Resume("farm"), "pause and resume accepted")
 	check(ns.JourneyRoutePolicy() == "walking", "pause and resume retain walking")
-	check(not ns.NavigateFarmingRoute("bad", { stop(100), { map = 0 } }), "invalid route refused")
+	check(not walking("bad", { stop(100), { map = 0 } }), "invalid route refused")
 	check(ns.JourneyOwner() == "farm" and ns.JourneyRoutePolicy() == "walking", "validation precedes replacement")
 	check(api.NavigateRoute("farm", stops), "same-owner switch to normal")
 	d.path.settle()
 	check(ns.JourneyRoutePolicy() == "normal" and not allWalk(d.shown()), "resubmit cannot retain walking plan")
-	check(ns.NavigateFarmingRoute("farm", stops), "same-owner switch back to walking")
+	check(walking("farm", stops), "same-owner switch back to walking")
 	d.path.settle()
 	check(allWalk(d.shown()), "same-owner walking recomputed")
 	check(api.NavigateRoute("other", stops), "normal adoption after walking")
 	d.path.settle()
 	check(ns.JourneyRoutePolicy() == "normal" and not allWalk(d.shown()), "normal adoption cannot retain walking")
-	check(ns.NavigateFarmingRoute("farm", stops), "walking before user replacement")
+	check(walking("farm", stops), "walking before user replacement")
 	d.path.settle()
 	check(ns.StartJourney(point(5000)), "user chooses same destination")
 	d.path.settle()
 	check(ns.JourneyRoutePolicy() == "normal" and not allWalk(d.shown()), "user replacement defaults normal")
 	check(ns.JourneyOwner() == nil and api.Ended("farm") == "replaced", "user replacement drops owner")
-	check(ns.NavigateFarmingRoute("farm", stops) and api.Cancel("farm"), "owner cancels")
+	check(walking("farm", stops) and api.Cancel("farm"), "owner cancels")
 	check(ns.JourneyRoutePolicy() == "normal", "cancel resets policy")
 end
 -- Internal hop estimates cannot poison the public normal estimate cache.
@@ -163,13 +168,13 @@ end
 do
 	local d, ns, api = harness()
 	portal(ns)
-	check(ns.NavigateFarmingRoute("farm", { stop(1000), stop(5000) }), "multi-stop walking")
+	check(walking("farm", { stop(1000), stop(5000) }), "multi-stop walking")
 	d.path.settle()
 	d.move(point(1000))
 	d.update(1)
 	check(api.CurrentStop("farm") == 2 and ns.JourneyRoutePolicy() == "walking", "next stop retains policy")
 	check(allWalk(d.shown()), "next stop still walks")
-	check(ns.NavigateFarmingRoute("farm", { stop(1000), stop(4500) }), "retarget current stop")
+	check(walking("farm", { stop(1000), stop(4500) }), "retarget current stop")
 	d.path.settle()
 	check(ns.JourneyRoutePolicy() == "walking" and allWalk(d.shown()), "retarget retains walking")
 	local corpse = true
@@ -217,7 +222,7 @@ do
 	d.path.auto = false
 	check(api.NavigateRoute("normal", { stop(3000), stop(5000) }), "pending normal route")
 	local old = d.path.waiting(d.path.batches)
-	check(ns.NavigateFarmingRoute("farm", { stop(3000), stop(5000) }), "replace pending search")
+	check(walking("farm", { stop(3000), stop(5000) }), "replace pending search")
 	for _, batch in ipairs(old) do
 		d.path.costs(batch, 0)
 	end
@@ -254,7 +259,7 @@ do
 		transit = transit or path.mode ~= "walk"
 	end
 	check(transit, "normal hop uses faster transport")
-	check(ns.NavigateFarmingRoute("farm", { stop(3000), stop(5000) }), "walking same-geometry itinerary")
+	check(walking("farm", { stop(3000), stop(5000) }), "walking same-geometry itinerary")
 	d.path.settle()
 	frame()
 	d.path.runAll()
@@ -310,7 +315,7 @@ do
 			return point(2000)
 		end,
 	}
-	check(ns.NavigateFarmingRoute("farm", { stop(3000), stop(5000) }), "walking route queued behind corpse")
+	check(walking("farm", { stop(3000), stop(5000) }), "walking route queued behind corpse")
 	frame()
 	d.path.runAll()
 	frame()
@@ -336,7 +341,7 @@ for _, reason in ipairs({ "nodata", "outside", "unreachable", "error" }) do
 	if reason == "nodata" then
 		d.path.data = false
 	end
-	check(ns.NavigateFarmingRoute("farm", { stop(5000) }), "submission accepted before terrain answer")
+	check(walking("farm", { stop(5000) }), "submission accepted before terrain answer")
 	for _, batch in ipairs(d.path.waiting(d.path.batches)) do
 		d.path.costs(batch, false, reason)
 	end

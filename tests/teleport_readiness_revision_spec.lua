@@ -1,7 +1,13 @@
 -- Regression for incremental StopOrder context invalidation at the real teleport producer seam.
 local driver = assert(loadfile("tests/journey_driver.lua"))()
 local ns, env = driver.ns, driver.env
-for _, file in ipairs({ "UI/Looks.lua", "Core/APIInput.lua", "Core/API.lua", "Journey/StopOrder.lua" }) do
+for _, file in ipairs({
+	"UI/Looks.lua",
+	"Core/APIInput.lua",
+	"Core/APIStops.lua",
+	"Core/API.lua",
+	"Journey/StopOrder.lua",
+}) do
 	driver.load(file)
 end
 

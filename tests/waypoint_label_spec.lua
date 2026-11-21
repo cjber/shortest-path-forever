@@ -21,7 +21,7 @@ local setup = [[
 setMapShown(true)
 posX, posY, posMap, facing = 0, 0, 1, 0
 ns.CurrentRide = noop
--- The native waypoint these labels name exists only with "Mark only where steps end" off.
+-- These cases exercise the leg labels shown while the waypoint marks bends.
 ns.db.guideStops = false
 local mid = { map=1, x=300, y=100, label="Dock" }
 ns.Planner.Plan = function(o)

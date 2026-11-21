@@ -11,6 +11,28 @@ end
 local function Point(p)
 	return type(p) == "table" and Finite(p.map) and Finite(p.x) and Finite(p.y)
 end
+-- The continent's world plane is the frame the order measures in.
+---@param uiMapID number
+---@param x number
+---@param y number
+---@return SPFPoint?
+function Order.World(uiMapID, x, y)
+	local continent, world = C_Map.GetWorldPosFromMapPos(uiMapID, CreateVector2D(x, y))
+	if continent and world then
+		local worldX, worldY = world:GetXY()
+		return { map = continent, x = worldX, y = worldY }
+	end
+end
+
+-- Use the same readable world position as guidance, dropping height for the geometric order.
+---@return SPFPoint?
+function Order.Player()
+	local x, y, _, map = ns.PlayerPosition()
+	if x and y and map then
+		return { map = map, x = x, y = y }
+	end
+end
+
 local function Identity(a, b)
 	for _, key in ipairs({ "uiMapID", "kind", "coord", "nodeID" }) do
 		if a[key] ~= b[key] then
@@ -88,7 +110,7 @@ function Order.Begin(nodes, player)
 			then
 				return "invalid-input"
 			end
-			local p = ns.WorldPoint(n.uiMapID, n.x, n.y)
+			local p = Order.World(n.uiMapID, n.x, n.y)
 			if not p or not Point(p) or p.map ~= origin.map then
 				return "invalid-world"
 			end
