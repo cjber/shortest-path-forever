@@ -19,7 +19,7 @@ local LOADING = 5000
 -- A Hearthstone spends a long cooldown, so it must save at least 20 s over walking before it is chosen.
 local HEARTH_MINIMUM_SAVING = 20
 -- A journey that would be one walk of at least LONG_WALK takes a ride instead when that arrives within RIDE_MARGIN
--- of the walk's time.
+-- of the walk's time and spends less than half its elapsed time walking (#1102).
 local LONG_WALK, RIDE_MARGIN = 600000, 1.1
 
 ---@param node SPFPoint
@@ -579,6 +579,7 @@ local function Solve(options, cache, check, weigh)
 			node = {},
 			state = {},
 			time = {},
+			walking = {},
 			key = {},
 			parent = {},
 			edge = {},
@@ -595,11 +596,13 @@ local function Solve(options, cache, check, weigh)
 		else
 			labels = topology.labels or NewLabels()
 			for i = 1, labels.count or 0 do
-				labels.discarded[i], labels.edge[i] = nil, nil
+				labels.discarded[i], labels.edge[i], labels.walking[i] = nil, nil, nil
 			end
 			topology.labels = labels
 		end
 		labels.node[1], labels.state[1], labels.time[1] = start, start, options.now
+		labels.walking[1] = 0
+		local walkingLimit = ridden and (cutoff - options.now) / 2
 		labels.key[1], labels.parent[1] = options.now + (lower[start] or math.huge), nil
 		local labelCount = 1
 		labels.count = 1
@@ -711,6 +714,18 @@ local function Solve(options, cache, check, weigh)
 						-- A label that cannot arrive before the cutoff leads nowhere, and dominates nothing that could: a peer
 						-- at the same node has the same remaining bound.
 						local dominated = cutoff ~= nil and finish + lower[edge.to] >= cutoff
+						local walking
+						if ridden and not dominated then
+							walking = labels.walking[current] + (edge.mode == "walk" and finish - earliest or 0)
+							-- A short flight that leaves most of the trip on foot is still a long walk (#86, #1102).
+							-- Reject those goals before they can dominate a qualifying arrival (#1104).
+							dominated = walking >= walkingLimit
+								or (edge.to == goal and walking * 2 >= finish - options.now)
+						end
+						-- A ridden label dominates only by arriving at the same time with no more walking. An earlier arrival can
+						-- catch an earlier boat, and the later label's wait for the next one counts as riding, so arriving first
+						-- does not keep the walking share below half. At the goal there is no suffix: first and least walking wins.
+						local sameTime = ridden and edge.to ~= goal
 						if not dominated then
 							-- The first offer only needs a valid incumbent. The exact proof retains the visited-set
 							-- alternatives that this preliminary search can discard.
@@ -718,6 +733,8 @@ local function Solve(options, cache, check, weigh)
 								if
 									not labels.discarded[peer]
 									and labels.time[peer] <= finish
+									and (not ridden or labels.walking[peer] <= walking)
+									and (not sameTime or labels.time[peer] == finish)
 									and (options.feasibleOnly or Subset(labels, peer, current, edge.to))
 								then
 									dominated = true
@@ -730,12 +747,17 @@ local function Solve(options, cache, check, weigh)
 							labels.count = labelCount
 							local id = labelCount
 							labels.node[id], labels.state[id], labels.time[id] = edge.to, target, finish
+							if ridden then
+								labels.walking[id] = walking
+							end
 							labels.key[id], labels.parent[id], labels.edge[id] = finish + lower[edge.to], current, edge
 							labels.depart[id], labels.wait[id], labels.estimated[id] = depart, wait, estimated
 							for _, peer in ipairs(peers) do
 								if
 									not labels.discarded[peer]
 									and finish <= labels.time[peer]
+									and (not ridden or walking <= labels.walking[peer])
+									and (not sameTime or finish == labels.time[peer])
 									and (options.feasibleOnly or Subset(labels, id, peer))
 								then
 									labels.discarded[peer] = true

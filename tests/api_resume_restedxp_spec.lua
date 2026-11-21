@@ -1,6 +1,5 @@
 -- ResumeRestedXP is the tracker's and Settings' own resume through the public API, so a macro can hand the guide
--- back: true when a guide is followed, unavailable with no guide to resume, invalid in combat where guidance cannot
--- start.
+-- back: true when a guide is followed, "none" with no guide to resume, or "combat" when guidance cannot start.
 local driver = assert(loadfile("tests/journey_driver.lua"))()
 local ns, env, checks = driver.ns, driver.env, 0
 driver.load("UI/Looks.lua")
@@ -41,7 +40,7 @@ ns.db.restedxp = true
 driver.load("Core/RestedXP.lua")
 
 -- Nothing to resume before RestedXP is there, and still nothing while it has no guide.
-why("unavailable", "RestedXP does not run", API.ResumeRestedXP())
+why("none", "RestedXP does not run", API.ResumeRestedXP())
 assert(not API.CurrentStop("RestedXP"), "and no guide is followed")
 
 local function Region()
@@ -90,13 +89,13 @@ driver.path.settle()
 -- Combat cannot start guidance: the request is refused and starts nothing.
 equal(API.Cancel("RestedXP"), true, "the guide's journey clears again")
 combat = true
-why("invalid", "resume in combat", API.ResumeRestedXP())
+why("combat", "resume in combat", API.ResumeRestedXP())
 equal(API.CurrentStop("RestedXP"), nil, "combat starts nothing")
 combat = false
 
 -- Following RestedXP's guide off leaves nothing to resume.
 ns.db.restedxp = false
-why("unavailable", "following the guide is off", API.ResumeRestedXP())
+why("none", "following the guide is off", API.ResumeRestedXP())
 ns.db.restedxp = true
 
 -- An integrated frontend owns the guide; its own answer is the API's.
@@ -113,7 +112,7 @@ env.AdventureGuideForever = {
 }
 equal(API.ResumeRestedXP(), true, "the frontend accepts the request")
 accepted = false
-why("unavailable", "the frontend refuses", API.ResumeRestedXP())
+why("none", "the frontend refuses", API.ResumeRestedXP())
 accepted, integrated = true, false
 watcher:OnEvent("ADDON_LOADED", "RXPGuides")
 driver.path.settle()
@@ -123,7 +122,7 @@ env.AdventureGuideForever = nil
 -- Before the saved variables load there is nothing to act on.
 local db = ns.db
 ns.db = nil
-why("unavailable", "saved variables are not loaded", API.ResumeRestedXP())
+why("none", "saved variables are not loaded", API.ResumeRestedXP())
 ns.db = db
 
 print(("api_resume_restedxp_spec: ok (%d checks)"):format(checks))
