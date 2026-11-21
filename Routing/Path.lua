@@ -1104,9 +1104,9 @@ end
 
 -- A goal no walk reaches from any place on its landmass moves to the nearest node those places do reach. In game such
 -- a spot is a plateau ringed by faces past the player's slope and step limits, which nobody can walk onto (#1113): the
--- closest a player can stand is the honest end of the route. reach holds the entrances the places walk to; clusters
+-- closest a player can stand is the honest end of the route. Test whether the places reach each entrance; clusters
 -- are tried nearest first until one starts farther away than the best node found.
-local function nearestGround(st, swim, gk, gnode, reach)
+local function nearestGround(st, swim, gk, gnode, reachable)
 	-- its own tree: a search can yield, and another job's search would overwrite a shared one meanwhile
 	local tree = Tree()
 	local C, cs, ny = st.C, st.cs, st.ny
@@ -1145,8 +1145,8 @@ local function nearestGround(st, swim, gk, gnode, reach)
 					local val = grid(st, k)
 					local seen = {}
 					for _, id in ipairs(val and nodesOf(st, k) or {}) do
-						local e = reach[id] and entrance(st, id)
-						if e and not seen[e] then
+						local e = entrance(st, id)
+						if e and not seen[e] and reachable(id) then
 							search(st, k, swim, e, tree, nil, nil, nil, nil, nil, false)
 							-- the search may have yielded: read the cluster's heights and cells after it
 							grid(st, k)
@@ -1170,6 +1170,69 @@ local function nearestGround(st, swim, gk, gnode, reach)
 		end
 	end
 	return bx and { map = st.map, x = st.x0 + (bx + 0.5) * cs, y = st.y0 + (by + 0.5) * cs, z = bz }
+end
+
+-- Walk backwards from a candidate entrance until a transport place can walk to one of its predecessors.
+-- Link places only in clusters the reverse search visits. Exhausting the frontier proves the entrance unreachable.
+local function groundReachability(st, swim, targets, roads)
+	local places, seeds = {}, {}
+	for _, point in ipairs(targets) do
+		local k = locate(st, point.x, point.y)
+		if k then
+			if not places[k] then
+				places[k] = {}
+			end
+			table.insert(places[k], point)
+		end
+	end
+	if not next(places) then
+		return nil
+	end
+	local verdict = {}
+	return function(id)
+		if verdict[id] ~= nil then
+			return verdict[id]
+		end
+		local parent, queue, head = { [id] = id }, { id }, 1
+		while queue[head] do
+			local u = queue[head]
+			head = head + 1
+			local k = floor(u / 4096)
+			local list = places[k]
+			if list then
+				places[k] = nil
+				for _, point in ipairs(list) do
+					local _, node = pointNode(st, point)
+					if node then
+						local _, ends = connectPoint(st, swim, k, node, point, false, nil, false)
+						for seed in pairs(ends) do
+							seeds[seed] = true
+						end
+					end
+				end
+			end
+			if seeds[u] or verdict[u] then
+				while u ~= id do
+					verdict[u], u = true, parent[u]
+				end
+				verdict[id] = true
+				return true
+			end
+			local edges = preceding(st, u, roads)
+			for i = 1, #edges, 3 do
+				local v = edges[i]
+				if not parent[v] and verdict[v] ~= false and climbNodes(st, v, u) then
+					parent[v] = u
+					queue[#queue + 1] = v
+				end
+			end
+			tick()
+		end
+		for u in pairs(parent) do
+			verdict[u] = false
+		end
+		return false
+	end
 end
 
 -- Lazy terminal-node connections let nearby targets settle without first searching every faraway endpoint.
@@ -1465,67 +1528,12 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 				job.into, job.revision = closed, job.revision + 1
 			end
 		end
-		-- Every entrance the targets walk to. Entrance-graph components join ground that is only walked downhill, so
-		-- sharing one proves nothing: the walk is followed edge by edge, as the forward search would.
-		-- The flood takes a cluster's entrances together, so each cluster's graph is decoded about once.
-		local reach, pending, clusterQueue = {}, {}, {}
-		local function add(id)
-			if not reach[id] then
-				reach[id] = true
-				local k = floor(id / 4096)
-				if not pending[k] then
-					pending[k], clusterQueue[#clusterQueue + 1] = {}, k
-				end
-				pending[k][#pending[k] + 1] = id
-			end
-		end
-		local head = 1
-		local function drain()
-			while clusterQueue[head] do
-				local k = clusterQueue[head]
-				head = head + 1
-				local list = pending[k]
-				pending[k] = nil
-				nodesOf(st, k)
-				local i = 1
-				while list[i] do
-					local u = list[i]
-					i = i + 1
-					-- the edges the walks themselves take, or the flood names ground they never reach (#1149)
-					local adj = adjacent(st, u, roadsOn == true)
-					for e = 1, #adj, 3 do
-						local v = adj[e]
-						if not reach[v] and climbNodes(st, u, v) then
-							if floor(v / 4096) == k then
-								reach[v], list[#list + 1] = true, v
-							else
-								add(v)
-							end
-						end
-					end
-					tick()
-				end
-			end
-		end
 		local keys, values, size = hk, hv, hn
 		hk, hv, hn = {}, {}, 0
-		for _, point in ipairs(targets) do
-			-- A target walks only to its own cluster's entrances: once the flood holds them all, it adds nothing. The walk
-			-- is measured without the batch's hazards, which weigh a walk but never stop one.
-			local k, node = pointNode(st, point)
-			local covered = true
-			for _, id in ipairs(node and nodesOf(st, k) or {}) do
-				covered = covered and reach[id]
-			end
-			if node and not covered then
-				local _, ends = connectPoint(st, swim, k, node, point, false, nil, false)
-				for id in pairs(ends) do
-					add(id)
-				end
-				drain()
-			end
+		local reachable = groundReachability(st, swim, targets, roadsOn == true)
+		if reachable then
+			moved = nearestGround(st, swim, sk, sc, reachable)
 		end
-		moved = head > 1 and nearestGround(st, swim, sk, sc, reach) or nil
 		hk, hv, hn = keys, values, size
 		if job then
 			job.moved = moved

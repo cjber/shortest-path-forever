@@ -726,6 +726,7 @@ local function RefreshCosts(includeGoal, forced, replace)
 		end
 	end
 	local consider, request
+	local ruleOutDirect
 	-- Asks again once a bind point's walks have gone far enough that it cannot beat the plan (LandingPending). One
 	-- function per search, so each consider moves its radius rather than adding a listener.
 	local function landed()
@@ -817,6 +818,9 @@ local function RefreshCosts(includeGoal, forced, replace)
 			active(goalBatch, unsnapped[goalBatch] or false)
 			return
 		end
+		if ruleOutDirect then
+			return
+		end
 		-- Short A* cost probes let easy routes prove themselves before expanding a wide frontier. Bound
 		-- their total work, then let shared Dijkstras settle harder alternatives. Finish an active probe:
 		-- abandoning it near completion would make the batch repeat its work.
@@ -843,14 +847,28 @@ local function RefreshCosts(includeGoal, forced, replace)
 				end
 				planned.preview, search.candidate = true, planned
 				active(startBatch, false)
-				active(goalBatch, false)
+				local only = #probes == 1 and probes[1]
+				local direct = only and only.batch == startBatch and SamePlace(only.leg.to, goal) and not goalBatch.done
+				if direct then
+					for _, cost in pairs(goalBatch.costs) do
+						if cost then
+							direct = false
+							break
+						end
+					end
+				end
+				-- A reverse frontier may prove the direct walk impossible before its forward probe does.
+				active(goalBatch, direct)
 				local left = #probes
 				for _, probe in ipairs(probes) do
 					local leg, batch = probe.leg, probe.batch
-					local probeJob = ns.Path.FindCost(leg.from.map, leg.from, leg.to, function(cost, reason, finished)
+					local function answer(cost, reason, finished)
 						probeJobs[finished] = nil
 						if version ~= pathVersion then
 							return
+						end
+						if direct then
+							ruleOutDirect = nil
 						end
 						if cost or reason == "unreachable" or reason == "offmesh" or reason == "outside" then
 							batch.probes = batch.probes or {}
@@ -861,8 +879,15 @@ local function RefreshCosts(includeGoal, forced, replace)
 						if left == 0 then
 							request(true)
 						end
-					end, waterMode, hazards)
+					end
+					local probeJob = ns.Path.FindCost(leg.from.map, leg.from, leg.to, answer, waterMode, hazards)
 					probeJobs[probeJob], probeJob.onError = true, Search.JobFailed
+					if direct then
+						ruleOutDirect = function()
+							ns.Path.Cancel(probeJob)
+							answer(nil, "unreachable", probeJob)
+						end
+					end
 				end
 				return
 			end
@@ -1003,10 +1028,15 @@ local function RefreshCosts(includeGoal, forced, replace)
 				return
 			end
 			settle(batch, costs, reason, job)
+			if batch == goalBatch and ruleOutDirect and ns.Path.WalksInto(job, startBatch.point) == false then
+				ruleOutDirect()
+			end
 			if Ground() then
 				return
 			end
-			request(batch.done)
+			if batch ~= goalBatch or not ruleOutDirect then
+				request(batch.done)
+			end
 		end
 		local job = batch.job
 		if job then

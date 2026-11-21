@@ -1,5 +1,5 @@
 -- Real Journey + nav data, one pump per simulated 60 Hz frame. Optional args: a baseline source directory, then
--- "continent" for the continent-wide case alone (kept out of the default set speedpatrol times).
+-- "continent" or "orgrimmar" for cases kept out of the default set Speedpatrol times.
 local root = arg[1] or "."
 local cases = {
 	{ "Auberdine -> Tanaris", 26, 39, "Alliance" },
@@ -7,7 +7,8 @@ local cases = {
 	{ "Crossroads -> Thunder Bluff", 25, 22, "Horde" },
 	{ "Ironforge -> Menethil", 6, 7, "Alliance" },
 }
-if arg[2] == "continent" then
+local mode = arg[2]
+if mode == "continent" then
 	-- A goal search over most of Kalimdor: the Auberdine boat stays a contender until about 13.5k yards (#1074).
 	cases = {
 		{
@@ -16,6 +17,12 @@ if arg[2] == "continent" then
 			{ map = 1, x = -4450, y = 1350, z = 0 },
 			"Alliance",
 		},
+	}
+elseif mode == "orgrimmar" then
+	local from = { map = 1, x = 1630, y = -4420, z = 15 }
+	cases = {
+		{ "Orgrimmar -> Azshara 2600", from, { map = 1, x = 2600, y = -4300 }, "Horde" },
+		{ "Orgrimmar -> Azshara 3900", from, { map = 1, x = 3900, y = -4200 }, "Horde" },
 	}
 end
 local eplEarly
@@ -171,7 +178,9 @@ for _, case in ipairs(cases) do
 			residentKB / 1024
 		)
 	)
-	assert(many == 2 and round == 1 and rounds >= 2, "one completed proof")
+	-- These clicks are on isolated ground. Moving the goal replaces both endpoint searches once.
+	assert(many == (mode == "orgrimmar" and 4 or 2), "expected endpoint batches")
+	assert(round == 1 and rounds >= 2, "one completed proof")
 	assert(resets == 0, "drawn walks cannot revert to straight lines")
 	-- Hazards.Profile asks for the zone of each of the journey's own ends (at most four); every walk reads the cells.
 	assert(lookups <= 4, lookups .. " zone lookups reach the client")
