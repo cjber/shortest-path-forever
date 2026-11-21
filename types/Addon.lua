@@ -529,6 +529,7 @@ ShortestPathForeverPathData = nil
 ---@field preferred? boolean a ride the planner chose over a slightly quicker long walk
 ---@field unknownFlight? boolean the route walks only because a flight point it would use is undiscovered
 ---@field rideNote? string why it rides: walking straight there crosses the goal's high-level zone (#1007)
+---@field charged? number a direct walk's arrival with the goal zone's charge, which chose it over `arrive`
 ---@field unknownFlightMaps? table<number, true> the continents whose undiscovered flight points would shorten the route
 ---@class SPFWalkCost
 ---@field from SPFPoint

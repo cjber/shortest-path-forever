@@ -43,6 +43,15 @@ assert(
 	"a high-level goal is still reachable on foot"
 )
 assert(ns.LegSpan(only.legs[1]) == ns.LegSpan(walk.legs[1]), "the zone charge does not inflate the walking ETA")
+-- A teleport slower than the walk but quicker than its charge is chosen without the ride's explanation.
+local cast = ns.LegSpan(walk.legs[1]) * 1.6
+ns.teleports = { { map = 0, x = bootyBay.x, y = bootyBay.y, z = bootyBay.z, spell = 3561, cast = cast } }
+ns.teleportReady = { 0 }
+driver.env.C_Spell = { GetSpellName = tostring, GetSpellTexture = tostring }
+local teleportFlight, teleportReason, teleported = journey(true)
+assert(teleported.legs[1].mode == "teleport", "the teleport beats the charged walk")
+assert(not teleportFlight and not teleportReason, "a teleport is not explained as a ride")
+ns.teleports, ns.teleportReady = nil, nil
 ns.TaxiPaths = { { from = 12, to = 19, seconds = 100 } }
 local fasterFlight, fasterReason = journey(true)
 assert(fasterFlight and not fasterReason, "a flight that already beats walking needs no hazard explanation")

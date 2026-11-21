@@ -819,14 +819,17 @@ local function Solve(options, cache, check, weigh)
 				legs[#legs + 1] = leg
 			end
 		end
-		local arrive = labels.time[finishAt]
+		local arrive, charged = labels.time[finishAt], nil
 		if #legs == 1 and labels.edge[finishAt] == direct then
-			-- The charge only weighs the choice: the walk itself takes its real time.
+			-- The charge only weighs the choice: the walk itself takes its real time. A later search bounded by this plan
+			-- compares charged labels, so it is bounded by the charged arrival.
+			charged = arrive
 			arrive = legs[1].depart + direct.yards / speed * 1000
 			legs[1].arrive = arrive
 		end
 		return {
 			arrive = arrive,
+			charged = charged,
 			legs = legs,
 			needsStart = needsStart,
 			needsGoal = needsGoal,
@@ -908,10 +911,14 @@ local function Solve(options, cache, check, weigh)
 	if planned then
 		MarkUnknownFlight(planned)
 		-- The charge decided it when walking straight there would have won on real time, by the same margin a long walk
-		-- gives a ride, but the ride won once the yards inside the goal's zone were charged.
+		-- gives a ride, but the ride won once the yards inside the goal's zone were charged. A teleport is no ride.
 		local walked = direct and direct.yards / speed * 1000
 		local margin = walked and walked >= LONG_WALK and RIDE_MARGIN or 1
-		if walked and #planned.legs > 1 and walked * margin < planned.arrive - options.now then
+		local rides = #planned.legs > 1
+		for _, leg in ipairs(planned.legs) do
+			rides = rides and leg.mode ~= "teleport"
+		end
+		if walked and rides and walked * margin < planned.arrive - options.now then
 			planned.rideNote = ns.Hazards.RideNote(options.hazards)
 		end
 	end

@@ -451,7 +451,8 @@ local function Plan(feasible, incumbent, job)
 	ns.Path.Checkpoint()
 	options.cache, options.walks, options.waterWalking, options.hazards = plannerCache, walks, waterMode, hazards
 	options.feasibleOnly = feasible
-	options.incumbent, options.incumbentPlan = incumbent and incumbent.arrive, incumbent
+	-- A walk through the goal's high-level zone shows its real arrival but was chosen on its charged one (#1007).
+	options.incumbent, options.incumbentPlan = incumbent and (incumbent.charged or incumbent.arrive), incumbent
 	options.ride = Context.Ride(options)
 	options.unknownFlightNotice = true
 	local planned = ns.Planner.Plan(options, job)
