@@ -12,6 +12,15 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ## [1.43.11] - 2026-11-21
 
+### Changed
+
+- Journeys can choose a ride to shorten the walk through a high-level zone, even when your destination is there. The tracker tells you why it chose the ride. Thanks to Travelcraft on CurseForge for the idea (#1007).
+- Travel, service and spell-range data follow game build 1.60.1.70959: five spells changed which units they can target, so range checks use the current lists (#1038).
+- The farming tour now drives Shortest Path only through its public API, so a gathering addon can do the same.
+- The setting that turns journeys on and off is now called "Enable journeys", and its tooltip says that off clears your journey and stops map clicks, quests, guides and waypoints from starting one. It was labelled "Click the map to plan journeys", which read as if it only stopped map clicks (#1150).
+- Follow roads also prefers paths recorded by players in the six capitals, thanks to Fitz and Polestar (#1178).
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
 ### Fixed
 
 - Walks between Wetlands and Loch Modan take the Dun Algaz tunnel instead of climbing over the Grim Batol mountains (#1011).
@@ -22,6 +31,24 @@ optional `### For addon authors` subsection after a version's player bullets.
 - Routes follow roads more closely where a road is only partly painted on the map (#972).
 - A short journey with your Hearthstone ready, such as across Stormwind, no longer sits on "Finding the fastest way..." while the planner measures the walks on from your bind point to every flight point on the continent. It now waits only until those walks are long enough that the Hearthstone cannot win (#1154).
 - Opening a flight master no longer forgets flight points on a network it does not link to. As Horde, Booty Bay's flight master forgot every Undercity point you had learned (#1165).
+- Nearby service times include the terrain detours to and from flights and boats, so they agree with the journey from where you stand (#1036).
+- A long walk now gives way only to a route that mostly rides. Before, a short flight away from your goal followed by a long walk back could replace a direct walk and arrive later, as on foot from Orgrimmar to central Azshara (#1102).
+- When the quickest ride still leaves most of the way on foot, a slightly later ride that carries you most of the way is now offered in its place (#1104).
+- Destination tooltips now point to Clear journey in the journey tracker menu when another map pin covers the destination (#1105).
+- With "Mark only where steps end" enabled, your waypoint stays at the current step's destination, including with Waypoint UI. Shortest Path's arrow still guides you around each turn (#1138).
+- A destination no one can walk to, such as a plateau ringed by cliffs, now moves to the nearest ground you can reach without first searching every walk from where you stand (#1149).
+- Shortest Path's world map icons now hide when combat starts and come back when it ends, as the minimap's already did (#1151).
+- You can now start a journey by clicking in the corners of a square minimap, thanks to lukehmu (#1152).
+- When Adventure Guide focuses a quest at the next turn, the game's marker guides you without a second arrow beside your character (#1161).
+- Walking lines drawn with Follow roads stay closer to the painted road through bends and gaps.
+- Show on map in the tracker tells you when combat prevents it from opening the map (#965).
+- Long journeys can now give walking directions while the addon is still checking for a faster route (#997).
+
+### For addon authors
+
+- **Walking routes, stop observers and journey state in API 2.6.** `NavigateRoute(owner, stops, options)` takes `options.policy`, `"normal"` (the default) or `"walking"`, which keeps every leg a walk along the walking map; bad options answer `nil, "invalid"`. `ObserveStops(owner, callback)` calls `callback(phase, index, stop, state)` for that owner's running route, inside the planner's own step, with phase `"arrived"` or `"settled"`. `JourneyState()` reads whether the journey is busy, pending, settling, failed or blocked by combat or a corpse run, and every leg's mode, measured walk and walk error.
+- `ResumeRestedXP()` returns `nil, "none"` when there is no guide to resume and `nil, "combat"` when combat blocks guidance (#1148).
+- **`WalkPath` in API 2.7** returns walking waypoints and distance for an addon's own guidance, thanks to Chulf58 for the idea (#1026).
 
 ## [1.43.10] - 2026-11-20
 
