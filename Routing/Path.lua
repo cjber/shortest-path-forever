@@ -49,10 +49,11 @@ local function push(k, v)
 	local i = hn
 	while i > 1 do
 		local p = floor(i / 2)
-		if hk[p] <= k then
+		local parent = hk[p]
+		if parent <= k then
 			break
 		end
-		hk[i], hv[i] = hk[p], hv[p]
+		hk[i], hv[i] = parent, hv[p]
 		i = p
 	end
 	hk[i], hv[i] = k, v
@@ -62,19 +63,24 @@ local function pop()
 	local top = hv[1]
 	local k, v = hk[hn], hv[hn]
 	hn = hn - 1
+	local size = hn
 	local i = 1
 	while true do
 		local c = i * 2
-		if c > hn then
+		if c > size then
 			break
 		end
-		if c < hn and hk[c + 1] < hk[c] then
-			c = c + 1
+		local child = hk[c]
+		if c < size then
+			local right = hk[c + 1]
+			if right < child then
+				c, child = c + 1, right
+			end
 		end
-		if hk[c] >= k then
+		if child >= k then
 			break
 		end
-		hk[i], hv[i] = hk[c], hv[c]
+		hk[i], hv[i] = child, hv[c]
 		i = c
 	end
 	hk[i], hv[i] = k, v
@@ -158,7 +164,7 @@ local function search(st, k, swim, source, tree, goal, targets, left, roads, hz,
 	-- A paused search retains these arrays even if another job evicts its cluster.
 	local m, z, at, links = st.moves[k], st.z[k], st.at[k], st.links[k]
 	local fmt, back = st.fmt, reverse and st.linksIn[k]
-	local steep = st.steep
+	local steep, bakedClimb = st.steep, fmt >= 3
 	local C, cs = st.C, st.cs
 	local N = C * C
 	local g, r, par, stamp, closed = tree.g, tree.r, tree.par, tree.stamp, tree.closed
@@ -166,6 +172,7 @@ local function search(st, k, swim, source, tree, goal, targets, left, roads, hz,
 	local offroad = hz and hz.roadFactor or OFFROAD
 	-- No road record means unpainted ground; it does not switch the preference off.
 	local roadsOn = hz and hz.roads and offroad ~= 1
+	local roadExtra = offroad - 1
 	tree.gen = tree.gen + 1
 	local gen = tree.gen
 	tree.k = k
@@ -178,38 +185,55 @@ local function search(st, k, swim, source, tree, goal, targets, left, roads, hz,
 	g[source + 1], r[source + 1], par[source + 1], stamp[source + 1] = 0, 0, -1, gen
 	push(0, source)
 
-	---@type number, number, number, number, number
-	local u, ux, uy, gu, ru
+	---@type number, number, number, number, number, number
+	local u, ux, uy, gu, ru, ui
 	local function relax(v, length, override, free)
+		local i = v + 1
+		local previous = stamp[i] == gen and g[i]
+		-- Every edge adds a nonnegative cost. This also rejects most back edges before testing their terrain.
+		if previous and previous <= gu then
+			return
+		end
 		-- Forward walks u -> v; a reverse tree walks the stored edge the other way, v -> u, into the source. A step
 		-- the bake's walk decided is taken as written.
 		if steep and not free then
-			local distance = (length or 1) * cs
-			if reverse then
-				if not steep(val, z, v, val, z, u, distance) then
+			if bakedClimb then
+				-- Format 3's steepGround check only needs heights when either surface is flagged.
+				if val[ui] == 3 or val[i] == 3 then
+					local from, to = z[ui], z[i]
+					if (reverse and from > to) or (not reverse and to > from) then
+						return
+					end
+				end
+			elseif reverse then
+				if not steep(val, z, v, val, z, u, (length or 1) * cs) then
 					return
 				end
-			elseif not steep(val, z, u, val, z, v, distance) then
+			elseif not steep(val, z, u, val, z, v, (length or 1) * cs) then
 				return
 			end
 		end
-		local i = v + 1
 		-- A step is charged for the cell it enters, whichever way the tree walks it: water, Follow roads and a
 		-- hazard profile's weight are all properties of that cell.
 		local entered = reverse and u or v
 		local step = override or length * cs * (val[entered + 1] == 2 and swim or 1)
-		local base = entered < N and entered or at[entered + 1]
-		local choice = roadsOn and step * (1 + (offroad - 1) * (1 - (roads and roads[base] or 0))) or step
-		if factor then
-			local f = factor[base]
-			if not f then
-				f = cellFactor(st, hz, k, base)
-				factor[base] = f
+		local choice = step
+		if roadsOn or factor then
+			local base = entered < N and entered or at[entered + 1]
+			if roadsOn then
+				choice = step * (1 + roadExtra * (1 - (roads and roads[base] or 0)))
 			end
-			choice = choice * f
+			if factor then
+				local f = factor[base]
+				if not f then
+					f = cellFactor(st, hz, k, base)
+					factor[base] = f
+				end
+				choice = choice * f
+			end
 		end
 		local gv = gu + choice
-		if stamp[i] ~= gen or gv < g[i] then
+		if not previous or gv < previous then
 			g[i], r[i], par[i], stamp[i] = gv, ru + step, u, gen
 			local h = 0
 			if goal then
@@ -229,7 +253,8 @@ local function search(st, k, swim, source, tree, goal, targets, left, roads, hz,
 
 	while hn > 0 do
 		u = pop()
-		local i = u + 1
+		ui = u + 1
+		local i = ui
 		if closed[i] ~= gen then
 			closed[i] = gen
 			tick()
