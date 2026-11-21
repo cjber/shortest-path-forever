@@ -722,9 +722,10 @@ local function Solve(options, cache, check, weigh)
 							dominated = walking >= walkingLimit
 								or (edge.to == goal and walking * 2 >= finish - options.now)
 						end
-						-- A ridden label dominates only with no later arrival and no less slack under the half-walking share
-						-- (elapsed time less twice the walking, which also means no more walking): any common suffix then leaves
-						-- it qualifying whenever the other does, since a wait adds elapsed time and no walking.
+						-- A ridden label dominates only by arriving at the same time with no more walking. An earlier arrival can
+						-- catch an earlier boat, and the later label's wait for the next one counts as riding, so arriving first
+						-- does not keep the walking share below half. At the goal there is no suffix: first and least walking wins.
+						local sameTime = ridden and edge.to ~= goal
 						if not dominated then
 							-- The first offer only needs a valid incumbent. The exact proof retains the visited-set
 							-- alternatives that this preliminary search can discard.
@@ -732,7 +733,8 @@ local function Solve(options, cache, check, weigh)
 								if
 									not labels.discarded[peer]
 									and labels.time[peer] <= finish
-									and (not ridden or labels.time[peer] - 2 * labels.walking[peer] >= finish - 2 * walking)
+									and (not ridden or labels.walking[peer] <= walking)
+									and (not sameTime or labels.time[peer] == finish)
 									and (options.feasibleOnly or Subset(labels, peer, current, edge.to))
 								then
 									dominated = true
@@ -754,7 +756,8 @@ local function Solve(options, cache, check, weigh)
 								if
 									not labels.discarded[peer]
 									and finish <= labels.time[peer]
-									and (not ridden or finish - 2 * walking >= labels.time[peer] - 2 * labels.walking[peer])
+									and (not ridden or walking <= labels.walking[peer])
+									and (not sameTime or finish == labels.time[peer])
 									and (options.feasibleOnly or Subset(labels, id, peer))
 								then
 									labels.discarded[peer] = true
