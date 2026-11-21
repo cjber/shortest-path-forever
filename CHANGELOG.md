@@ -28,7 +28,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 - Walking up a ramp in the Undercity, the route follows the floor you are on (#1099).
 - A small rise in the Searing Gorge cave no longer blocks the walk through it (#1101).
 - Routes follow roads more closely, through bends and gaps and where a road is only partly painted on the map (#891, #972).
-- A short journey with your Hearthstone ready, such as across Stormwind, no longer sits on "Finding the fastest way..." while the planner measures the walks on from your bind point to every flight point on the continent. It now waits only until those walks are long enough that the Hearthstone cannot win (#1154).
+- **Short journeys no longer wait on your Hearthstone.** A short journey with your Hearthstone ready, such as across Stormwind, no longer sits on "Finding the fastest way..." while the planner measures the walks on from your bind point to every flight point on the continent. It now waits only until those walks are long enough that the Hearthstone cannot win (#1154).
 - Opening a flight master no longer forgets flight points on a network it does not link to. As Horde, Booty Bay's flight master forgot every Undercity point you had learned (#1165).
 - Nearby service times include the terrain detours to and from flights and boats, so they agree with the journey from where you stand (#1036).
 - A long walk now gives way only to a route that mostly rides. Before, a short flight away from your goal followed by a long walk back could replace a direct walk and arrive later, as on foot from Orgrimmar to central Azshara (#1102).
@@ -44,9 +44,9 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ### For addon authors
 
-- **Walking routes, stop observers and journey state in API 2.6.** `NavigateRoute(owner, stops, options)` takes `options.policy`, `"normal"` (the default) or `"walking"`, which keeps every leg a walk along the walking map; bad options answer `nil, "invalid"`. `ObserveStops(owner, callback)` calls `callback(phase, index, stop, state)` for that owner's running route, inside the planner's own step, with phase `"arrived"` or `"settled"`. `JourneyState()` reads whether the journey is busy, pending, settling, failed or blocked by combat or a corpse run, and every leg's mode, measured walk and walk error. The farming tour now drives Shortest Path only through this API, so a gathering addon can do the same.
+- Walking routes, stop observers and journey state in API 2.6: `NavigateRoute(owner, stops, options)` takes `options.policy`, `"normal"` (the default) or `"walking"`, which keeps every leg a walk along the walking map; bad options answer `nil, "invalid"`. `ObserveStops(owner, callback)` calls `callback(phase, index, stop, state)` for that owner's running route, inside the planner's own step, with phase `"arrived"` or `"settled"`. `JourneyState()` reads whether the journey is busy, pending, settling, failed or blocked by combat or a corpse run, and every leg's mode, measured walk and walk error. The farming tour now drives Shortest Path only through this API, so a gathering addon can do the same.
 - `ResumeRestedXP()` returns `nil, "none"` when there is no guide to resume and `nil, "combat"` when combat blocks guidance (#1148).
-- **`WalkPath` in API 2.7** finds a walking path and passes its waypoints and distance to your callback, for an addon's own guidance, thanks to Chulf58 for the idea (#1026).
+- `WalkPath`, in API 2.7, finds a walking path and passes its waypoints and distance to your callback, for an addon's own guidance, thanks to Chulf58 for the idea (#1026).
 
 ## [1.43.10] - 2026-11-20
 

@@ -53,7 +53,8 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"As jornadas, e as estimativas de outros AddOns a partir daqui, podem começar com o teleporte de mago para uma cidade ou Teleport: Moonglade, contando a recarga."
 L["Minimum teleport saving"] = "Economia mínima do teleporte"
-L["Hide the journey key hint in tooltips."] = "Oculte a dica da tecla de jornada nas dicas de ferramenta." -- mt
+L["Short journeys no longer wait on your Hearthstone."] =
+	"Jornadas curtas não esperam mais pela sua pedra de regresso." -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"Usar um teleporte de classe só quando ele economizar pelo menos este tempo."
 L["Boat and Zeppelin Routes"] = "Rotas de barcos e zepelins"
