@@ -11,12 +11,21 @@ if L then
 end
 
 -- The addon's own ForeverCore services: the error journal, the debug log, the report window and the map canvas. The
--- report's own lines are read when the window opens, after Core/Report.lua has defined them.
+-- callbacks resolve the report and journey when requested, after their modules have loaded.
 ns.core = ForeverCore.Register(addonName, {
 	title = ns.ReportTitle,
 	lines = function()
 		return ns.ReportLines()
 	end,
+	open = function(where)
+		if where == "journey" then
+			where = ns.JourneyMapID()
+		elseif where ~= nil and (type(where) ~= "number" or where < 1 or where % 1 ~= 0) then
+			return false
+		end
+		return ns.TryOpenWorldMap(where)
+	end,
+	openSecure = true,
 })
 
 -- Hands the generated player credits to the shared Thanks page (WFA-31). An older core has no Credits module, and the
@@ -182,11 +191,11 @@ end
 -- this addon's call. In combat the call is protected (#444), so it is left to the player the same way. Otherwise the
 -- shared secure opener (ForeverCore.OpenMap) runs the client's own C_Map.OpenWorldMap, which refuses a direct call
 -- from addon code (cjber/forever-core#333). A map the player already has on uiMap (or any map, with no uiMap) is used
--- as it is; otherwise the player is told what to open (`hint`, or the plain line) and false comes back.
+-- as it is; otherwise return false and the localized hint for the caller to report.
 ---@param uiMap? number
 ---@param hint? string
----@return boolean
-function ns.OpenWorldMap(uiMap, hint)
+---@return boolean, string?
+function ns.TryOpenWorldMap(uiMap, hint)
 	if not ns.GamepadUI() and not InCombatLockdown() and ForeverCore.OpenMap(uiMap) then
 		return true
 	end
@@ -197,12 +206,21 @@ function ns.OpenWorldMap(uiMap, hint)
 		end
 		local info = C_Map.GetMapInfo(uiMap)
 		if info and info.name then
-			ns.Print(ns.L["Turn the world map to %s to see it."]:format(info.name))
-			return false
+			return false, ns.L["Turn the world map to %s to see it."]:format(info.name)
 		end
 	end
-	ns.Print(hint or ns.L["Open the world map to see it."])
-	return false
+	return false, hint or ns.L["Open the world map to see it."]
+end
+
+---@param uiMap? number
+---@param hint? string
+---@return boolean
+function ns.OpenWorldMap(uiMap, hint)
+	local accepted, reason = ns.TryOpenWorldMap(uiMap, hint)
+	if reason then
+		ns.Print(reason)
+	end
+	return accepted
 end
 
 ---@param message string

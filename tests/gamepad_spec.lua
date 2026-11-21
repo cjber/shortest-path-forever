@@ -6,6 +6,7 @@ local style, opened, printed, mapShown, mapID, combat = 0, {}, {}, false, 1429, 
 -- The client's own opener is restricted: ForeverCore.OpenMap runs it through securecallfunction, and the stub
 -- records whether the call came that way.
 local viaDelegate = false
+local chat = {}
 local env = setmetatable({
 	ShortestPathForeverDB = {},
 	SlashCmdList = {},
@@ -66,21 +67,37 @@ local env = setmetatable({
 			return text
 		end,
 	},
+	DEFAULT_CHAT_FRAME = {
+		AddMessage = function(_, message)
+			chat[#chat + 1] = message
+		end,
+	},
 	print = function(text)
 		printed[#printed + 1] = text
 	end,
 }, { __index = _G })
 local ForeverCore = dofile("tests/forever_core.lua")
 ForeverCore.load(env, "ForeverCore")
+local corpseActive = true
 local ns = {
 	Model = {},
+	JourneyGuide = { RefreshTracker = function() end },
+	JourneySearch = { Clear = function() end },
+	Corpse = {
+		Active = function()
+			return corpseActive
+		end,
+		Point = function()
+			return { uiMap = 1415 }
+		end,
+	},
 	L = setmetatable({}, {
 		__index = function(_, phrase)
 			return phrase
 		end,
 	}),
 }
-for _, file in ipairs({ "Locales/enUS.lua", "Core/Core.lua" }) do
+for _, file in ipairs({ "Locales/enUS.lua", "Core/Core.lua", "Journey/Journey.lua" }) do
 	setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
 end
 
@@ -105,4 +122,39 @@ assert(printed[3]:find("Turn the world map to Eastern Kingdoms to see it.", 1, t
 assert(not ns.OpenWorldMap(1446) and printed[4]:find("Open the world map", 1, true), "an unnamed map: the hint")
 env.C_InputInterfaceStyle = nil
 assert(not ns.GamepadUI(), "a client without the interface style API is mouse and keyboard")
-print("gamepad_spec: the world map is left to the game under the gamepad interface: ok")
+ns.Locate = function(point)
+	return point
+end
+ns.InstanceEntrance = function(point)
+	return point
+end
+
+local function open(where)
+	return env.ForeverCore.Open("ShortestPathForever", where)
+end
+local directMessages, mapOpens = #printed, #opened
+assert(ns.StartJourney({ uiMap = 1429 }), "queue a journey behind the corpse run")
+assert(open(1429) == true and opened[mapOpens + 1].uiMap == 1429)
+assert(open("journey") == true and opened[mapOpens + 2].uiMap == 1415, "a corpse run opens the corpse point")
+corpseActive = false
+assert(open("journey") == true and opened[mapOpens + 3].uiMap == 1429, "the journey opens its goal after recovery")
+assert(open() == true and opened[mapOpens + 4].uiMap == "here")
+for _, where in ipairs({ "invalid", {}, 0, -1, 1.5, math.huge, 0 / 0 }) do
+	assert(open(where) == false, "invalid targets are refused")
+end
+assert(#opened == mapOpens + 4 and #chat == 0)
+corpseActive = true
+env.C_InputInterfaceStyle = {
+	GetCurrentStyle = function()
+		return 1
+	end,
+}
+assert(open(1429) == true and #opened == mapOpens + 4 and #chat == 0)
+local accepted, reason = open("journey")
+assert(accepted == false and reason == "Turn the world map to Eastern Kingdoms to see it.")
+assert(#chat == 1 and chat[1] == reason and #printed == directMessages and #opened == mapOpens + 4)
+combat = true
+accepted, reason = open(1429)
+assert(accepted == false and reason == "Unavailable in combat", "Core refuses combat even with the requested map up")
+assert(#chat == 2 and chat[2] == reason and #printed == directMessages and #opened == mapOpens + 4)
+print("gamepad_spec: direct and registered map openers passed")

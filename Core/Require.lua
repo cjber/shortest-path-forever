@@ -18,11 +18,12 @@ ns.Icon = C_AddOns.GetAddOnMetadata(addonName, "X-Forever-Icon")
 -- Art.Diamond, so the addon's own media/Numbers art is gone. QuestLogTabs.SetTabShown arrived in ForeverCore 1.12.0,
 -- and UI/ServicesPanel.lua calls it unguarded once the world map loads, so a 1.11 core stopped the addon with a Lua
 -- error instead of this line (#1060). Members the addon checks where it calls them (Credits, SettingsSections,
--- APIKit.Publish) stay out.
+-- APIKit.Publish) stay out. The tracker map menu requires ForeverCore.Open.
 --
 -- The warning itself is Core/ForeverRequire.lua, shared by every Forever addon: one line on screen, never a chat
 -- message, naming the addon to update and never ForeverCore.
 local ready = ForeverCore ~= nil
+	and type(ForeverCore.Open) == "function"
 	and type(ForeverCore.APIKit) == "table"
 	and type(ForeverCore.APIKit.Hub) == "function"
 	and type(ForeverCore.APIKit.NotReady) == "function"

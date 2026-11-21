@@ -1,3 +1,4 @@
+local addonName = ...
 ---@class SPFNamespace
 local ns = select(2, ...)
 
@@ -42,9 +43,9 @@ local function HasDepartures()
 	return not not (module and (module.dockID or module.riding))
 end
 
-local function OpenDockMap(dockID)
+local function DockMapID(dockID)
 	local location = dockID and ns.DockLocation(dockID)
-	return ns.OpenWorldMap(location and location.uiMap)
+	return location and location.uiMap
 end
 
 ---@param target ForeverTrackerTarget
@@ -66,7 +67,7 @@ local function TrackerClick(target, button)
 	if kind == "journey" then
 		return ns.ToggleJourneyGuide()
 	end
-	return OpenDockMap(module.mapDock)
+	return ns.OpenWorldMap(DockMapID(module.mapDock))
 end
 
 local function TrackerMenu(target, menu)
@@ -90,7 +91,7 @@ local function TrackerMenu(target, menu)
 				return ns.ResumeDugi(), L["That guide has no step to follow."]
 			end)
 		end
-		menu:Open(L["Show on map"], ns.ShowJourneyMap)
+		menu:Open(L["Show on map"], addonName, "journey")
 		-- A corpse run ends only when you live again.
 		if not ns.Corpse.Active() then
 			menu:End(L["Clear journey"], ns.ClearJourney)
@@ -100,9 +101,7 @@ local function TrackerMenu(target, menu)
 			ns.SetOption("journeyTracker", false)
 		end)
 	else
-		menu:Open(L["Show on map"], function()
-			return OpenDockMap(module.mapDock)
-		end)
+		menu:Open(L["Show on map"], addonName, DockMapID(module.mapDock))
 	end
 	if target.kind == "section" and HasDepartures() then
 		menu:Action(L["Hide departures"], function()
@@ -139,8 +138,10 @@ local function LegacyTrackerMenu(root, target)
 		return entry
 	end
 	menu.Submenu = menu.Action
-	function menu.Open(_, text, callback)
-		slots.open = Entry(text, callback)
+	function menu.Open(_, text, addon, where)
+		slots.open = Entry(text, function()
+			return ForeverCore.Open(addon, where)
+		end)
 		return slots.open
 	end
 	function menu.End(_, text, callback)

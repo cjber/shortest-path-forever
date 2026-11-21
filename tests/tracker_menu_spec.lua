@@ -10,9 +10,23 @@ local harness = setfenv(assert(loadfile(directory .. "/tests/tracker_host_harnes
 local t = harness.new()
 local env, shared = t.env, t.ns
 local function noop() end
+core.load(env, "ForeverCore", { "Core/SafeCall.lua" }, shared)
+local messages, refused = {}, false
+env.DEFAULT_CHAT_FRAME = {
+	AddMessage = function(_, message)
+		messages[#messages + 1] = message
+	end,
+}
 local journey, corpse, guided = true, false, false
 local guide, maps, cleared, hearth, resumes = 0, {}, 0, false, 0
 local options = {}
+shared.RegisterOpener("ShortestPathForever", function(where)
+	if refused then
+		return false, "Open the world map to see it."
+	end
+	maps[#maps + 1] = where
+	return true
+end, true)
 local ns = {
 	L = shared.L,
 	core = {
@@ -63,9 +77,6 @@ local ns = {
 		resumes = resumes + 1
 		return true
 	end,
-	ShowJourneyMap = function()
-		maps[#maps + 1] = "journey"
-	end,
 	ClearJourney = function()
 		cleared = cleared + 1
 	end,
@@ -97,8 +108,12 @@ env.EventUtil.ContinueAfterAllEvents = function(fn)
 	fn()
 end
 setfenv(assert(loadfile(directory .. "/UI/TrackerSection.lua")), env)("ForeverCore", shared)
-env.ForeverCore =
-	{ TrackerHost = shared.TrackerHost, TrackerSection = shared.TrackerSection, TrackerLine = shared.TrackerLine }
+env.ForeverCore = {
+	TrackerHost = shared.TrackerHost,
+	TrackerSection = shared.TrackerSection,
+	TrackerLine = shared.TrackerLine,
+	Open = shared.Open,
+}
 t.setCombat(true)
 setfenv(assert(loadfile("UI/Tracker.lua")), env)("ShortestPathForever", ns)
 t.setCombat(false)
@@ -178,7 +193,13 @@ for _, name in ipairs({ "RestedXP", "Guidelime", "Dugi" }) do
 	local accepted, reason = entry(block, "Resume " .. name .. " guide").callback()
 	assert(accepted == false and reason == "That guide has no step to follow.", "an empty guide reports why")
 end
-entry(block, "Show on map").callback()
+assert(entry(block, "Show on map").callback() == true and maps[1] == "journey", "the journey menu calls Core's opener")
+refused = true
+local beforeRefusal = #messages
+local accepted, reason = entry(block, "Show on map").callback()
+assert(accepted == false and reason == "Open the world map to see it.")
+assert(#messages == beforeRefusal + 1 and messages[#messages] == reason, "the menu reports a map refusal once")
+refused = false
 entry(block, "Clear journey").callback()
 entry(block, "Hide the journey tracker").callback()
 assert(options.journeyTracker == false, "the journey block turns its own tracker off")
@@ -196,7 +217,9 @@ assert(entry(menu(), "Hide departures"), "riding also shows departures")
 module.riding = nil
 assert(not entry(menu(), "Hide departures"))
 module.mapDock = 42
-order(menu(42), "Show on map,divider,Lock the tracker,Tracker")
+local dock = menu(42)
+order(dock, "Show on map,divider,Lock the tracker,Tracker")
+assert(entry(dock, "Show on map").callback() == true and maps[#maps] == 42, "the dock menu passes its map ID to Core")
 module:OnBlockHeaderClick({ id = 42 }, "LeftButton")
 assert(maps[#maps] == 42, "a dock block opens its map even alongside a journey")
 module:OnBlockHeaderClick({ id = "journey" }, "LeftButton")
@@ -219,8 +242,17 @@ order(menu(), "Show on map,divider,Lock the tracker,Tracker")
 module.Header.scripts.OnMouseUp(module.Header, "LeftButton")
 assert(maps[#maps] == 42)
 t.setCombat(true)
-assert(not entry(menu(42), "Show on map"):IsEnabled(), "Open is disabled in combat")
-assert(entry(block, "Show on map").callback() == false, "an already open menu also refuses combat")
+local beforeCombat = #messages
+local mapCount = #maps
+local combatOpen = entry(menu(42), "Show on map")
+assert(combatOpen:IsEnabled(), "the named action stays available to explain a refusal")
+for _, action in ipairs({ entry(block, "Show on map"), combatOpen }) do
+	local combatAccepted, combatReason = action.callback()
+	assert(combatAccepted == false and combatReason == "Unavailable in combat")
+end
+assert(#maps == mapCount, "combat never reaches the opener")
+assert(#messages == beforeCombat + 2, "Core reports combat once per click")
+assert(messages[beforeCombat + 1] == "Unavailable in combat" and messages[#messages] == "Unavailable in combat")
 print("tracker_menu_spec: contract menus and clicks passed")
 
 -- Reload Core against the existing column, just as another addon or an earlier UI boot leaves it.
@@ -251,6 +283,7 @@ end
 local foreignOrder = expected:gsub(",divider,Lock the tracker,Tracker$", "")
 assert(table.concat(labels, ",") == foreignOrder, "foreign menus preserve slot order")
 local previousGuide, previousCleared = guide, cleared
+assert(entry(foreign, "Show on map").callback() == true and maps[#maps] == "journey", "foreign menus use Core too")
 entry(foreign, "Guide me").callback()
 entry(foreign, "Clear journey").callback()
 module:OnBlockHeaderClick({ id = "journey" }, "LeftButton")

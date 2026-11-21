@@ -59,9 +59,10 @@ local env = setmetatable({
 	end,
 }, { __index = _G })
 env._G = env
-dofile("tests/forever_core.lua")
+local core = dofile("tests/forever_core.lua")
 env.ForeverCore = {
 	API = 1,
+	Open = core.load(env, "ForeverCore", { "Core/Open.lua" }).Open,
 	APIKit = { Hub = function() end, NotReady = function() end },
 	TrackerSection = { Create = function() end, UpdateText = function() end },
 	TrackerLine = { SetInteractive = function() end },
