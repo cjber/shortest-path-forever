@@ -130,7 +130,10 @@ exhaust()
 finish(start)
 finish(back)
 geometry()
-assert(heard() == "route" and via() == "B" and not route.provisional and Search.Status() == 0, "the optimum is the route")
+assert(
+	heard() == "route" and via() == "B" and not route.provisional and Search.Status() == 0,
+	"the optimum is the route"
+)
 Search.Reset()
 
 -- With the first walk settled and shared by every route the bounds still allow, the player follows it while the goal
