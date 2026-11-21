@@ -62,20 +62,3 @@ function Savings.Apply(planned, search, options)
 	end
 	return planned, withoutHearth, withoutTeleports
 end
-
--- Whether a plan rides more than it walks. The planner swaps a long walk for a ride (#86) only when the ride is one:
--- a short flight away from the goal that leaves most of the walk in place is still a long way on foot, and only
--- arrives later (#1102). Leg arrivals are on the planner's clock, from `now`.
----@param plan SPFPlan
----@param now number
----@return boolean
-function Savings.MostlyRides(plan, now)
-	local walking, at = 0, now
-	for _, leg in ipairs(plan.legs) do
-		if leg.mode == "walk" then
-			walking = walking + leg.arrive - at
-		end
-		at = leg.arrive
-	end
-	return walking * 2 < plan.arrive - now
-end

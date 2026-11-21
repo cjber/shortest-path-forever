@@ -198,6 +198,42 @@ do
 	assert(math.abs(planned.arrive - 4315 / 7 * 1000) < 1, "and arrives first")
 end
 
+-- The first ride within the cutoff still leaves most of the journey on foot (#1104).
+do
+	local from, away, near, to = point(0), point(0, 600), point(4200), point(4300)
+	local o = {
+		from = from,
+		to = to,
+		now = 1000,
+		walkSpeed = 7,
+		exactMaps = { [1] = true },
+		taxiNodes = { from, away, near },
+		taxiPaths = { { from = 1, to = 2, seconds = 89 }, { from = 1, to = 3, seconds = 630 } },
+		walks = {
+			walk(from, to, 4315),
+			walk(away, to, 3800),
+			walk(near, to, 100),
+			walk(from, from, 0),
+			walk(away, away, 0),
+			walk(near, near, 0),
+			walk(to, to, 0),
+		},
+	}
+	local planned = assert(Plan(o))
+	assert(
+		planned.preferred and modes(planned) == "flight,walk",
+		"expected the mostly ridden plan, got " .. modes(planned)
+	)
+	assert(planned.legs[1].hops[1].to == 3, "the preferred flight lands near the goal")
+
+	-- Two flights can share a landing and walk. The faster flight still spends most of its time walking.
+	o.taxiPaths = { { from = 1, to = 2, seconds = 300 }, { from = 1, to = 2, seconds = 350 } }
+	o.walks[2] = walk(away, to, 2240)
+	planned = assert(Plan(o))
+	assert(planned.preferred and modes(planned) == "flight,walk")
+	assert(planned.legs[1].hops[1].seconds == 350, "the longer flight makes the shared walk less than half the trip")
+end
+
 -- A cached topology and an incumbent compose: feasible, full and bounded plans share one cache.
 do
 	local o = line(8)
