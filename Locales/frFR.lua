@@ -50,6 +50,8 @@ L["Avoids %s (level %s)"] = "Contourne %s (niveau %s)" -- mt
 L["Bags"] = "Sacs"
 L["Bank"] = "Banque" -- mt
 L["Battlemaster"] = "Maître de bataille" -- mt
+L["Click to cast %s"] = "Cliquer pour lancer %s" -- mt
+L["Click to use %s"] = "Cliquer pour utiliser %s" -- mt
 L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to save it for later; class teleports are still offered."] =
 	"Les trajets peuvent commencer par votre pierre de foyer ou Rappel astral. Désactivez-la pour la garder pour plus tard ; les téléportations de classe restent proposées." -- mt
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
@@ -158,6 +160,7 @@ L["Only use the Hearthstone when it saves at least this much time."] =
 L["Open"] = "Ouvrir"
 L["Open Nearby services"] = "Ouvrir Services à proximité"
 L["Open the world map to see it."] = "Ouvrez la carte du monde pour le voir." -- mt
+L["The travel action will update after combat."] = "L’action de voyage sera mise à jour après le combat." -- mt
 L["Rides to spend less time walking through %s (level %s)"] =
 	"Prend un transport pour moins marcher dans %s (niveau %s)" -- mt
 L["Walk less in zones with a minimum level 4 or more above yours, even at your destination."] =

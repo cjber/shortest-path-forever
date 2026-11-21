@@ -51,6 +51,8 @@ L["Avoids %s (level %s)"] = "%s 우회 (레벨 %s)"
 L["Bags"] = "가방"
 L["Bank"] = "은행"
 L["Battlemaster"] = "전장 지휘관"
+L["Click to cast %s"] = "클릭하여 %s 시전"
+L["Click to use %s"] = "클릭하여 %s 사용"
 L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to save it for later; class teleports are still offered."] =
 	"여정은 귀환석이나 영혼의 귀환으로 시작할 수 있습니다. 나중을 위해 끄면 직업 순간이동은 계속 제공됩니다."
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
@@ -160,6 +162,7 @@ L["Only use the Hearthstone when it saves at least this much time."] =
 L["Open"] = "열기"
 L["Open Nearby services"] = "주변 편의시설 열기"
 L["Open the world map to see it."] = "세계 지도를 열어 확인하십시오."
+L["The travel action will update after combat."] = "전투가 끝나면 이동 행동이 갱신됩니다."
 L["Rides to spend less time walking through %s (level %s)"] =
 	"이동 수단을 이용해 %s (레벨 %s)에서 걷는 구간을 줄임"
 L["Walk less in zones with a minimum level 4 or more above yours, even at your destination."] =

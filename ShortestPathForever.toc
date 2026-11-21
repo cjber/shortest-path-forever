@@ -86,6 +86,7 @@ UI\Tracker.xml
 UI\Tracker.lua
 UI\Mover.lua
 UI\TurnAround.lua
+UI\CastButton.lua
 UI\Arrow.lua
 UI\Compass.lua
 Nav\Nav.xml

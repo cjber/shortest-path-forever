@@ -75,8 +75,8 @@
     },
     {
       "source": "UI/Arrow.lua",
-      "sha256": "b9ca1a88836f41e0d0b9aafd9af5c83025a6ef65f46c22095da2794c35cd25a5",
-      "review": "Read Create, ArrowLabel, distance updates, arrival labels, progress and cast prompt. MoverHint uses GameFontHighlightSmall and Distance uses GameFontNormal, including the formatted time-distance phrase. No later font override occurs. Dynamic objective lines, arrival titles, route titles and actions from helpers are excluded; this review does not claim coverage for their inserted text. Reviewed #1161: NativeMarkerAt and the shared-marker stand-down read C_Navigation and C_Map only; no FontString, FontObject or text change.",
+      "sha256": "9e5948281ee4c7d11064158e4230528b3fc7e36f89d7fc118f01bca2e683b9cd",
+      "review": "Read Create, ArrowLabel, distance updates, arrival labels, progress and cast prompt. MoverHint uses GameFontHighlightSmall and Distance uses GameFontNormal, including the formatted time-distance phrase. No later font override occurs. Dynamic objective lines, arrival titles, route titles and actions from helpers are excluded; this review does not claim coverage for their inserted text. Reviewed #1161: NativeMarkerAt and the shared-marker stand-down read C_Navigation and C_Map only; no FontString, FontObject or text change. Reviewed #1035: the cast prompt's secure button moved to UI/CastButton.lua and writes only GameTooltip text; no FontString, FontObject or text change here.",
       "bindings": [
         {
           "font": "GameFontHighlightSmall",

@@ -17,6 +17,9 @@ L["That guide has no step to follow."] = "That guide has no step to follow."
 L["Off-path tolerance"] = "Off-path tolerance"
 L["How far you can stray from a walking path before a new one is searched."] =
 	"How far you can stray from a walking path before a new one is searched."
+L["Click to use %s"] = "Click to use %s"
+L["Click to cast %s"] = "Click to cast %s"
+L["The travel action will update after combat."] = "The travel action will update after combat."
 L["Rides to spend less time walking through %s (level %s)"] = "Rides to spend less time walking through %s (level %s)"
 L["Walk less in zones with a minimum level 4 or more above yours, even at your destination."] =
 	"Walk less in zones with a minimum level 4 or more above yours, even at your destination."

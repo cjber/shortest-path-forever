@@ -48,6 +48,8 @@ L["Avoids %s (level %s)"] = "繞開%s（等級 %s）"
 L["Bags"] = "背包"
 L["Bank"] = "銀行"
 L["Battlemaster"] = "戰場指揮官"
+L["Click to cast %s"] = "點擊施放%s"
+L["Click to use %s"] = "點擊使用%s"
 L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to save it for later; class teleports are still offered."] =
 	"旅程可以從爐石或星界傳送開始。關閉後可留待後用；職業傳送仍然可用。"
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
@@ -153,6 +155,7 @@ L["Only use the Hearthstone when it saves at least this much time."] =
 L["Open"] = "開啟"
 L["Open Nearby services"] = "開啟附近服務"
 L["Open the world map to see it."] = "開啟世界地圖查看。"
+L["The travel action will update after combat."] = "旅行動作將在戰鬥結束後更新。"
 L["Rides to spend less time walking through %s (level %s)"] =
 	"搭乘交通工具以減少在%s（等級%s）內步行的路程"
 L["Walk less in zones with a minimum level 4 or more above yours, even at your destination."] =
