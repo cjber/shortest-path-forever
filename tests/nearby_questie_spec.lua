@@ -227,6 +227,7 @@ local function Load(options)
 	setfenv(assert(loadfile("UI/NearbyEntrances.lua")), env)("ShortestPathForever", ns)
 	setfenv(assert(loadfile("UI/NearbyRoles.lua")), env)("ShortestPathForever", ns)
 	setfenv(assert(loadfile("UI/NearbyProfessions.lua")), env)("ShortestPathForever", ns)
+	setfenv(assert(loadfile("UI/NearbyRank.lua")), env)("ShortestPathForever", ns)
 	setfenv(assert(loadfile("UI/Nearby.lua")), env)("ShortestPathForever", ns)
 	local requests = 0
 	local read = ns.NearbyQuestie.Read

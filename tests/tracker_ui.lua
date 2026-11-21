@@ -90,6 +90,23 @@ assert(
  flightLine:find("Fly to [gold]Place 2[/gold]", 1, true) == 1 and not flightLine:find("^%d+%."),
  "the place is gold and no number leads: " .. flightLine
 )
+-- Every journey line answers a right click with the journey's own menu (Lock, Clear journey), as its title does.
+do
+ local opened = {}
+ local onBlockHeaderClick = tracker.OnBlockHeaderClick
+ tracker.OnBlockHeaderClick = function(self, target, button)
+  opened[#opened + 1] = { target = target, button = button }
+ end
+ for _, row in ipairs({ line, flight }) do
+  assert(row.mouseEnabled and row.OnMouseUp, "a journey line takes the mouse")
+  row.OnMouseUp(row, "RightButton")
+ end
+ tracker.OnBlockHeaderClick = onBlockHeaderClick
+ assert(#opened == 2, "a right click on any journey line opens the journey menu: " .. #opened)
+ for _, call in ipairs(opened) do
+  assert(call.target == block and call.button == "RightButton", "the menu is the journey block's own")
+ end
+end
 -- SPF's lines live in a pool of their own. A line that carried a leg's mark is released back there, never to the
 -- stock pool every other tracker module draws from.
 local LINE_TEMPLATE = "ShortestPathForeverTrackerLineTemplate"

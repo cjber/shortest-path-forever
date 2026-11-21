@@ -357,6 +357,7 @@ for _, file in ipairs({
 	"UI/NearbyEntrances.lua",
 	"UI/NearbyRoles.lua",
 	"UI/NearbyProfessions.lua",
+	"UI/NearbyRank.lua",
 	"UI/Nearby.lua",
 }) do
 	setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
@@ -889,6 +890,7 @@ do
 		"UI/NearbyEntrances.lua",
 		"UI/NearbyRoles.lua",
 		"UI/NearbyProfessions.lua",
+		"UI/NearbyRank.lua",
 		"UI/Nearby.lua",
 	}) do
 		driver.load(file)
@@ -949,7 +951,8 @@ do
 	assert(estimates == 0, "building or refreshing the menu plans nothing")
 	assert(build().callback() == travelEnv.MenuResponse.CloseAll)
 	assert(routed == nil and estimates == 0, "the click plans nothing in its own frame")
-	driver.path.runAll()
+	-- The walks from where you stand are searched first, then the shortlist is planned on them.
+	driver.path.settle()
 	assert(routed.title == "Darnassus hunter trainer", "the boat's Teldrassil trainer beats the short walk to Kaerbrus")
 	assert(routed.npc == 5503, "the chosen trainer rides along as the stop's NPC id")
 	assert(estimates == 3, "only the clicked service's shortlist is planned")

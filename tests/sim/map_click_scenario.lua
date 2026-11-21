@@ -71,3 +71,43 @@ for _, key in ipairs({ "shift", "alt" }) do
 		assert(sim.G.OpenMapStandInZooms() == 0, key .. "-click was not also taken as a zoom")
 	end)
 end
+
+scenario("a journey-key click with journeys off says so on screen and leaves the map its click (#1076)", {
+	addons = ForeverCore.addons(),
+}, function(sim)
+	local player = sim.world.player
+	player.faction, player.race, player.raceFile = "Alliance", "Human", "Human"
+	player.map, player.x, player.y = 1429, 0.42, 0.65
+	player.worldX, player.worldY, player.instance = -9449, 64, 0
+	sim.world.maps[947] = { name = "Azeroth", mapType = 1 }
+	sim.world.maps[1415] = { name = "Eastern Kingdoms", parent = 947, mapType = 2 }
+	sim.world.maps[1429] = { name = "Elwynn Forest", parent = 1415, mapType = 3 }
+	sim:login()
+	local ns
+	for _, entry in ipairs(sim.loader.addons) do
+		if entry.name == ADDON then
+			ns = entry.ns
+		end
+	end
+	assert(ns, "full addon namespace loaded")
+	sim:runAs("OpenMap", OPENMAP)
+	ns.db.journey = false
+	sim:openWorldMap(1429)
+	sim:advance(0.5)
+	-- Blizzard's own UIErrorsFrame, with the client's colour constants: what reaches it is the line on screen.
+	local errors, shown = sim.G.UIErrorsFrame, {}
+	local add = errors.AddMessage
+	errors.AddMessage = function(self, text, ...)
+		shown[#shown + 1] = text
+		return add(self, text, ...)
+	end
+	local chat = #sim.chat
+	Click(sim, "shift")
+	errors.AddMessage = add
+	assert(
+		shown[1] == "Journeys are off. Turn on Click the map to plan journeys in settings.",
+		"the click says journeys are off on screen"
+	)
+	assert(#sim.chat == chat, "and nothing goes to chat")
+	assert(not ns.HasJourney(), "nothing is planned")
+end)

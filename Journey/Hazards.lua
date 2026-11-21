@@ -33,7 +33,8 @@ local KEEP = 50000
 ---@field Near fun(map: number, minX: number, minY: number, maxX: number, maxY: number): boolean -- a town in the box
 ---@field TransportNear fun(map: number, x: number, y: number): boolean -- a dock or flight master within 200 yards
 ---@field ConnectorWalk fun(from: SPFPoint, to: SPFPoint): boolean -- a short walk next to a dock or flight master
----@field Segment fun(map: number, ax: number, ay: number, bx: number, by: number): number -- mean factor along it
+-- The mean factor along it; shares are its baked Hazards.Shares, when it has them.
+---@field Segment fun(map: number, ax: number, ay: number, bx: number, by: number, shares: number[]?): number
 ---@field roads? true -- Follow roads is on: walks prefer road cells (Path.lua)
 ---@field roadFactor? number -- cost of an off-road yard while choosing a walk, at least 1
 ---@field zones table<number, number> -- [uiMap] = factor, for the avoided zones and hostile capitals
@@ -57,6 +58,46 @@ ns.Hazards = Hazards
 
 -- The zone map under a world point, kept per CELL square: a search asks for thousands of points.
 local zoneCells, zoneCount = {}, 0
+-- Data/ZoneCells.lua holds the client's answer for every CELL square of the continents, as runs per column: reading
+-- it costs a table lookup where C_Map costs several calls, and a first journey asks for about 20000 squares.
+local baked = {}
+---@return number|false|nil zone # false for no zone, nil off the baked grid
+local function Baked(map, i, j)
+	local grid = ns.ZoneCells and ns.ZoneCells[map]
+	if not grid then
+		return nil
+	end
+	local columns = baked[map]
+	if not columns then
+		columns = {}
+		baked[map] = columns
+	end
+	local runs = columns[i]
+	if runs == nil then
+		local text = grid.columns[i - grid.i0 + 1]
+		runs = false
+		if text then
+			-- "zone count zone count …" from row j0 up; zone 0 is no zone.
+			runs = {}
+			local at = grid.j0
+			for zone, count in text:gmatch("(%d+) (%d+)") do
+				at = at + tonumber(count)
+				runs[#runs + 1], runs[#runs + 2] = at, tonumber(zone)
+			end
+		end
+		columns[i] = runs
+	end
+	if not runs or j < grid.j0 then
+		return nil
+	end
+	for k = 1, #runs, 2 do
+		if j < runs[k] then
+			return runs[k + 1] ~= 0 and runs[k + 1] or false
+		end
+	end
+	return nil
+end
+
 ---@param map number
 ---@param x number
 ---@param y number
@@ -74,8 +115,11 @@ local function ZoneAt(map, x, y)
 			zoneCells, zoneCount, cells = { [map] = {} }, 0, {}
 			zoneCells[map] = cells
 		end
-		local cx, cy = (math.floor(x / CELL) + 0.5) * CELL, (math.floor(y / CELL) + 0.5) * CELL
-		zone = ns.ZoneMap(map, cx, cy) or false
+		zone = Baked(map, math.floor(x / CELL), math.floor(y / CELL))
+		if zone == nil then
+			local cx, cy = (math.floor(x / CELL) + 0.5) * CELL, (math.floor(y / CELL) + 0.5) * CELL
+			zone = ns.ZoneMap(map, cx, cy) or false
+		end
 		cells[key], zoneCount = zone, zoneCount + 1
 	end
 	return zone or nil
@@ -267,6 +311,24 @@ local function Clip(zone, map, ax, ay, bx, by)
 	return t0, t1
 end
 
+-- The share of a straight walk in a zone: the part inside the zone's box, times the share of samples along that part
+-- the zone holds. It depends on no profile, so Data/WalkZones.lua ships it for the baked walks.
+local function ZoneShare(id, map, ax, ay, bx, by, length)
+	local t0, t1 = Clip(ns.Zones[id], map, ax, ay, bx, by)
+	if not t0 then
+		return 0
+	end
+	local n = math.min(SAMPLES, math.max(1, math.ceil((t1 - t0) * length / CELL)))
+	local inside = 0
+	for i = 1, n do
+		local t = t0 + (t1 - t0) * (i - 0.5) / n
+		if ZoneAt(map, ax + (bx - ax) * t, ay + (by - ay) * t) == id then
+			inside = inside + 1
+		end
+	end
+	return (t1 - t0) * inside / n
+end
+
 -- The other faction's towns: its flight masters with none of yours within SHARED.
 ---@param faction string
 ---@return SPFHazardTown[]
@@ -294,6 +356,50 @@ local function HostileTowns(faction)
 		return a.id < b.id
 	end)
 	return towns
+end
+
+-- Every share of a straight walk a profile can charge for, in order: each zone's as zone, share, and each town's
+-- that either side can meet as -flight master, share. None depends on the profile, so tools/bake_walk_zones.lua
+-- ships them for the baked walks, and Segment sums them instead of sampling the way.
+local everyTown
+---@return number[]
+function Hazards.Shares(map, ax, ay, bx, by)
+	local ids, shares = {}, {}
+	for id in pairs(ns.Zones) do
+		ids[#ids + 1] = id
+	end
+	table.sort(ids)
+	local length = math.sqrt(Distance2(ax, ay, bx, by))
+	for _, id in ipairs(ids) do
+		local share = ZoneShare(id, map, ax, ay, bx, by, length)
+		if share > 0 then
+			shares[#shares + 1], shares[#shares + 2] = id, share
+		end
+	end
+	if not everyTown then
+		local seen = {}
+		everyTown = {}
+		for _, faction in ipairs({ "Alliance", "Horde" }) do
+			for _, town in ipairs(HostileTowns(faction)) do
+				if not seen[town.id] then
+					seen[town.id] = true
+					town.area = ns.TownAreas and ns.TownAreas[town.id]
+					TownBox(town)
+					everyTown[#everyTown + 1] = town
+				end
+			end
+		end
+		table.sort(everyTown, function(a, b)
+			return a.id < b.id
+		end)
+	end
+	for _, town in ipairs(everyTown) do
+		local share = TownShare(town, map, ax, ay, bx, by)
+		if share > 0 then
+			shares[#shares + 1], shares[#shares + 2] = -town.id, share
+		end
+	end
+	return shares
 end
 
 -- The radius in which a short walk can connect a dock or flight master to the walking network.
@@ -345,7 +451,7 @@ function Hazards.Profile(from, goal, here, landing)
 	for _, id in ipairs(ids) do
 		keys[#keys + 1] = id
 	end
-	local towns, active = {}, {}
+	local towns, active, charged = {}, {}, {}
 	local areas = ns.TownAreas or {}
 	-- A flight master inside a hostile capital is that capital's: the city itself is the hazard, named once.
 	for _, town in ipairs(faction and HostileTowns(faction) or {}) do
@@ -365,6 +471,7 @@ function Hazards.Profile(from, goal, here, landing)
 		end
 		if not town.exempt then
 			active[#active + 1] = town
+			charged[town.id] = true
 			-- Its ground is the client's town area or, with none, a circle: different costs, so a different key.
 			keys[#keys + 1] = "t" .. town.id .. (town.area and "a" or "")
 		end
@@ -448,26 +555,26 @@ function Hazards.Profile(from, goal, here, landing)
 			and (TransportNear(start.map, start.x, start.y) or TransportNear(target.map, target.x, target.y))
 	end
 	-- The mean factor along a straight walk: what a walk baked without hazards costs here. A town counts the share of
-	-- the walk inside it; a zone, the share of samples inside its map's box that the zone's map holds.
-	local function Segment(map, ax, ay, bx, by)
-		local extra, length = 0, math.sqrt(Distance2(ax, ay, bx, by))
+	-- the walk inside it; a zone, the share of samples inside its map's box that the zone's map holds. shares, when
+	-- given, are the walk's baked Hazards.Shares, which a first plan reads for thousands of walks instead of sampling.
+	local function Segment(map, ax, ay, bx, by, shares)
+		local extra = 0
+		if shares then
+			for k = 1, #shares, 2 do
+				local id = shares[k]
+				local factor = id < 0 and charged[-id] and TOWN_COST or zones[id]
+				if factor then
+					extra = extra + shares[k + 1] * (factor - 1)
+				end
+			end
+			return 1 + extra
+		end
 		for _, town in ipairs(active) do
 			extra = extra + TownShare(town, map, ax, ay, bx, by) * (TOWN_COST - 1)
 		end
+		local length = math.sqrt(Distance2(ax, ay, bx, by))
 		for _, id in ipairs(ids) do
-			local zone = ns.Zones[id]
-			local t0, t1 = Clip(zone, map, ax, ay, bx, by)
-			if t0 then
-				local n = math.min(SAMPLES, math.max(1, math.ceil((t1 - t0) * length / CELL)))
-				local inside = 0
-				for i = 1, n do
-					local t = t0 + (t1 - t0) * (i - 0.5) / n
-					if ZoneAt(map, ax + (bx - ax) * t, ay + (by - ay) * t) == id then
-						inside = inside + 1
-					end
-				end
-				extra = extra + (t1 - t0) * inside / n * (zones[id] - 1)
-			end
+			extra = extra + ZoneShare(id, map, ax, ay, bx, by, length) * (zones[id] - 1)
 		end
 		return 1 + extra
 	end

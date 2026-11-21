@@ -45,7 +45,6 @@ L["Arrow label"] = "화살표 라벨" -- mt
 L["Arrow scale"] = "화살표 크기"
 L["Arrows"] = "화살"
 L["Arrows on the NPC's nameplate"] = "NPC 이름표의 화살표"
-L["Attach to quest tracker"] = "퀘스트 추적기에 붙이기"
 L["Auction house"] = "경매장"
 L["Avoid zones far above my level"] = "내 레벨보다 훨씬 높은 지역 피하기"
 L["Avoids %s (level %s)"] = "%s 우회 (레벨 %s)"
@@ -57,8 +56,7 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"여정과 다른 애드온의 이곳 기준 예상 시간은 재사용 대기시간을 포함해 마법사의 도시 순간이동이나 순간이동: 달의 숲으로 시작할 수 있습니다."
 L["Minimum teleport saving"] = "순간이동 최소 절약 시간"
-L["Walks in Stormwind start from the street you are on."] =
-	"스톰윈드에서 도보 경로가 지금 서 있는 거리에서 시작됩니다." -- mt
+L["Hide the journey key hint in tooltips."] = "툴팁에서 여정 키 안내를 숨길 수 있습니다." -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"최소 이만큼 시간을 절약할 때만 직업 순간이동을 사용합니다."
 L["Boat and Zeppelin Routes"] = "배와 비행선 노선"
@@ -116,8 +114,6 @@ L["Hides profession trainers and their supply vendors for professions this chara
 	"이 캐릭터가 배우지 않은 직업의 직업 훈련장과 그 직업의 재료를 파는 상인을 숨깁니다."
 L["Horde"] = "호드"
 L["Hostile town: %s"] = "적대 마을: %s"
-L["In the objective tracker while you are near a dock, lift or tram."] =
-	"부두, 승강기, 지하철 근처에 있을 때 목표 추적기에 표시합니다."
 L["Innkeeper"] = "여관주인"
 L["Interface"] = "인터페이스"
 L["Journey"] = "여정"
@@ -153,8 +149,6 @@ L["No location for that quest yet."] = "이 퀘스트의 위치가 아직 없습
 L["No services nearby."] = "주변에 편의시설이 없습니다."
 L["No way there from here."] = "여기서 그곳까지 가는 길이 없습니다."
 L["Not discovered"] = "발견하지 않음"
-L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."] =
-	"끄면 화살표, 표식, 지도 선, 미니맵 경로는 유지되고 목표 추적기에는 여정 블록이 표시되지 않습니다."
 L["On board to %s"] = "%s행 탑승 중"
 L["On the world map and in Nearby services."] = "세계 지도와 주변 편의시설에서 적용됩니다."
 L["On the world map."] = "세계 지도에 표시합니다."
@@ -205,7 +199,6 @@ L["Show boats and zeppelins"] = "배와 비행선 표시"
 L["Show cast prompt"] = "시전 안내 표시" -- mt
 L["Show direction arrow"] = "방향 화살표 표시"
 L["Show flight masters"] = "비행 조련사 표시"
-L["Show journey steps in the objective tracker"] = "목표 추적기에서 여정 단계 표시"
 L["Show lifts and the tram"] = "승강기와 지하철 표시"
 L["Show marks on the minimap"] = "미니맵에 표시"
 L["Show on map"] = "지도에 표시"
@@ -256,8 +249,6 @@ L["Transport"] = "교통수단"
 L["Transport icon size"] = "교통수단 아이콘 크기"
 L["Turning this off leaves RestedXP's arrow visible."] =
 	"이 옵션을 끄면 RestedXP의 화살표가 계속 표시됩니다." -- mt
-L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
-	"이 옵션을 끄면 공유 Forever 추적기를 화면 어디로든 끌 수 있습니다."
 L["Use %s"] = "%s 사용"
 L["Use class teleports"] = "직업 순간이동 사용"
 L["Vendors"] = "상인"
@@ -341,7 +332,6 @@ L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d
 	"로컬 이동 일지 — 약 %d야드 이동, 여정 %d회, 교통수단 %d회, 비행 %d회, 차원문 구간 %d회."
 L["Record travel stats"] = "이동 통계 기록"
 L["Time left"] = "남은 시간" -- mt
-L["Travel journal"] = "이동 일지"
 L["Travel milestone reached: %s"] = "이동 이정표 달성: %s"
 L["Travel stats are not ready yet."] = "이동 통계가 아직 준비되지 않았습니다."
 L["Party member"] = "파티원" -- mt
@@ -402,6 +392,7 @@ L["Magenta"] = "자홍색"
 L["Show boat, lift and tram departures in the tracker"] = "추적기에서 배, 승강기, 지하철 출발 표시"
 L["Hide RestedXP's arrow"] = "RestedXP 화살표 숨기기" -- mt
 L["Hide departures"] = "출발 숨기기"
+L["Hide the journey tracker"] = "여정 추적기 숨기기"
 
 -- Travel stats.
 
@@ -435,13 +426,10 @@ L["Stops before the last on a multi-stop route keep 15 yards."] =
 L["Dugi Guides"] = "Dugi Guides" -- mt
 L["Dungeons and raids"] = "던전 및 공격대" -- mt
 L["Town services"] = "마을 서비스" -- mt
-L["Town services on the world map"] = "세계 지도에 마을 서비스 표시" -- mt
 L["Capitals only"] = "수도만" -- mt
 L["Capitals and important services"] = "수도 및 주요 서비스" -- mt
 L["All towns"] = "모든 마을" -- mt
 L["Books and recipes"] = "책과 조리법" -- mt
-L["One icon per town, or one per service as you zoom in."] =
-	"마을마다 아이콘 하나, 확대하면 서비스마다 아이콘 하나." -- mt
 L["Click to save it."] = "저장하려면 클릭하세요." -- mt
 L["Destination pin size"] = "목적지 핀 크기" -- mt
 L["Hearthstone"] = "귀환석" -- mt
@@ -468,6 +456,9 @@ L["The key you hold to plan a journey from the world map or the minimap."] =
 	"세계 지도나 미니맵에서 여정을 계획하려면 누르고 있는 키입니다." -- mt
 L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
 	"Questie 아이콘에서는 Shift-클릭이 Questie의 것이며, Alt-클릭은 두 키 중 어느 쪽이든 그곳까지 여정을 계획합니다." -- mt
+L["Show the journey key hint in tooltips"] = "툴팁에 여정 키 안내 표시" -- mt
+L["Adds a line naming your journey key to tooltips on the world map, flight points and the minimap. Off, the key still plans journeys."] =
+	"세계 지도, 비행 지점, 미니맵 툴팁에 여정 키를 알려 주는 줄을 추가합니다. 꺼도 키로 여정을 계속 계획할 수 있습니다." -- mt
 L["Show the Nearby services tab"] = "주변 편의시설 탭 표시"
 L["The tab in the world map's quest log. Off, /spfnear and the tracking menu still open it."] =
 	"세계 지도 퀘스트 로그의 탭입니다. 꺼도 /spfnear와 추적 메뉴로 계속 열 수 있습니다."
@@ -588,3 +579,11 @@ L["show it on the map"] = "지도에 표시" -- mt
 L["That guide has no step to follow."] = "해당 가이드에 따라갈 단계가 없습니다." -- mt
 
 L["Weapon master"] = "무기 전문가"
+L["Show the journey tracker"] = "여정 추적기 표시" -- mt
+L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the tracker."] =
+	"끄면 화살표, 표시, 지도 선, 미니맵 경로는 유지되고 추적기에 여정 블록이 나타나지 않습니다." -- mt
+L["In the tracker while you are near a dock, lift or tram."] =
+	"부두, 승강기 또는 트램 근처에 있는 동안 추적기에 표시됩니다." -- mt
+L["Town service icons"] = "도시 서비스 아이콘" -- mt
+L["Off hides them. Otherwise one icon per town, or one per service as you zoom in."] =
+	"끄면 숨깁니다. 켜면 확대할 때 도시당 아이콘 하나 또는 서비스당 아이콘 하나가 표시됩니다." -- mt

@@ -42,7 +42,6 @@ L["Arrow label"] = "箭頭標籤" -- mt
 L["Arrow scale"] = "箭頭大小"
 L["Arrows"] = "箭"
 L["Arrows on the NPC's nameplate"] = "NPC姓名板上的箭頭"
-L["Attach to quest tracker"] = "附著到任務追蹤器"
 L["Auction house"] = "拍賣場"
 L["Avoid zones far above my level"] = "避開遠高於我等級的區域"
 L["Avoids %s (level %s)"] = "繞開%s（等級 %s）"
@@ -54,7 +53,7 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"旅程以及其他插件從這裡算起的估計，可以從法師的城市傳送或傳送：月光林地開始，並計入冷卻時間。"
 L["Minimum teleport saving"] = "傳送最少節省時間"
-L["Walks in Stormwind start from the street you are on."] = "暴風城中的步行路線從你所在的街道出發。" -- mt
+L["Hide the journey key hint in tooltips."] = "可在滑鼠提示中隱藏旅程按鍵提示。" -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"只在職業傳送至少節省這麼多時間時使用。"
 L["Boat and Zeppelin Routes"] = "船隻與飛艇航線"
@@ -110,8 +109,6 @@ L["Hides profession trainers and their supply vendors for professions this chara
 	"隱藏此角色未學習的職業的職業訓練師和販售該職業材料的商人。"
 L["Horde"] = "部落"
 L["Hostile town: %s"] = "敵對城鎮：%s"
-L["In the objective tracker while you are near a dock, lift or tram."] =
-	"在你靠近碼頭、升降梯或地鐵時顯示在目標追蹤器中。"
 L["Innkeeper"] = "旅店老闆"
 L["Interface"] = "介面"
 L["Journey"] = "旅程"
@@ -146,8 +143,6 @@ L["No location for that quest yet."] = "該任務還沒有位置。"
 L["No services nearby."] = "附近沒有服務。"
 L["No way there from here."] = "從這裡無法抵達那裡。"
 L["Not discovered"] = "未發現"
-L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the objective tracker."] =
-	"關閉後仍保留箭頭、標記、地圖路線和小地圖路線，但不在目標追蹤器中顯示旅程區塊。"
 L["On board to %s"] = "搭乘前往%s"
 L["On the world map and in Nearby services."] = "在世界地圖和附近服務中生效。"
 L["On the world map."] = "顯示在世界地圖上。"
@@ -196,7 +191,6 @@ L["Show boats and zeppelins"] = "顯示船隻與飛艇"
 L["Show cast prompt"] = "顯示施法提示" -- mt
 L["Show direction arrow"] = "顯示方向箭頭"
 L["Show flight masters"] = "顯示飛行管理員"
-L["Show journey steps in the objective tracker"] = "在目標追蹤器中顯示旅程步驟"
 L["Show lifts and the tram"] = "顯示升降梯與地鐵"
 L["Show marks on the minimap"] = "在小地圖上顯示標記"
 L["Show on map"] = "在地圖上顯示"
@@ -244,8 +238,6 @@ L["Tram to %s arrives in %s"] = "前往%s的地鐵將在%s後抵達"
 L["Transport"] = "交通"
 L["Transport icon size"] = "交通圖示大小"
 L["Turning this off leaves RestedXP's arrow visible."] = "關閉此選項後，RestedXP 的箭頭仍會顯示。" -- mt
-L["Turn this off to drag the shared Forever tracker anywhere on screen."] =
-	"關閉此項可將共用Forever追蹤器拖曳到螢幕上任意位置。"
 L["Use %s"] = "使用%s"
 L["Use class teleports"] = "使用職業傳送"
 L["Vendors"] = "商人"
@@ -328,7 +320,6 @@ L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d
 	"本地旅行日誌 — 步行約%d碼；%d次旅程；%d次交通；%d次飛行；%d段傳送門。"
 L["Record travel stats"] = "記錄旅行統計"
 L["Time left"] = "剩餘時間" -- mt
-L["Travel journal"] = "旅行日誌"
 L["Travel milestone reached: %s"] = "達成旅行里程碑：%s"
 L["Travel stats are not ready yet."] = "旅行統計尚未準備好。"
 L["Party member"] = "隊友" -- mt
@@ -388,6 +379,7 @@ L["Magenta"] = "洋紅色"
 L["Show boat, lift and tram departures in the tracker"] = "在追蹤器中顯示船隻、升降梯和地鐵的班次"
 L["Hide RestedXP's arrow"] = "隱藏 RestedXP 的箭頭" -- mt
 L["Hide departures"] = "隱藏班次"
+L["Hide the journey tracker"] = "隱藏旅程追蹤"
 
 -- Travel stats.
 
@@ -421,13 +413,10 @@ L["Stops before the last on a multi-stop route keep 15 yards."] =
 L["Dugi Guides"] = "Dugi Guides" -- mt
 L["Dungeons and raids"] = "地城與團隊副本" -- mt
 L["Town services"] = "城鎮服務" -- mt
-L["Town services on the world map"] = "世界地圖上的城鎮服務" -- mt
 L["Capitals only"] = "僅主城" -- mt
 L["Capitals and important services"] = "主城和重要服務" -- mt
 L["All towns"] = "所有城鎮" -- mt
 L["Books and recipes"] = "書籍和配方" -- mt
-L["One icon per town, or one per service as you zoom in."] =
-	"縮小顯示每個城鎮一個圖示，放大後每個服務一個圖示。" -- mt
 L["Click to save it."] = "點擊以留待後用。" -- mt
 L["Destination pin size"] = "目的地標記大小" -- mt
 L["Hearthstone"] = "爐石" -- mt
@@ -453,6 +442,9 @@ L["The key you hold to plan a journey from the world map or the minimap."] =
 	"在世界地圖或小地圖上規劃旅程時按住的按鍵。" -- mt
 L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
 	"在 Questie 圖示上，Shift 點擊仍歸 Questie 所有；Alt 點擊則可用任一按鍵規劃前往該處的旅程。" -- mt
+L["Show the journey key hint in tooltips"] = "在滑鼠提示中顯示旅程按鍵提示" -- mt
+L["Adds a line naming your journey key to tooltips on the world map, flight points and the minimap. Off, the key still plans journeys."] =
+	"在世界地圖、飛行點和小地圖的滑鼠提示中加入一行，說明你的旅程按鍵。關閉後，按鍵仍可規劃旅程。" -- mt
 L["Show the Nearby services tab"] = "顯示附近服務分頁"
 L["The tab in the world map's quest log. Off, /spfnear and the tracking menu still open it."] =
 	"世界地圖任務日誌中的分頁。關閉後，/spfnear 與追蹤選單仍可開啟它。"
@@ -567,3 +559,11 @@ L["show it on the map"] = "在地圖上顯示" -- mt
 L["That guide has no step to follow."] = "此指南沒有可跟隨的步驟。" -- mt
 
 L["Weapon master"] = "武器大師"
+L["Show the journey tracker"] = "顯示旅程追蹤" -- mt
+L["Off keeps the arrow, pin, map line and minimap route, with no journey block in the tracker."] =
+	"關閉後保留箭頭、標記、地圖線和小地圖路線，追蹤中不再顯示旅程區塊。" -- mt
+L["In the tracker while you are near a dock, lift or tram."] =
+	"當你靠近碼頭、升降梯或礦道車時顯示在追蹤中。" -- mt
+L["Town service icons"] = "城鎮服務圖示" -- mt
+L["Off hides them. Otherwise one icon per town, or one per service as you zoom in."] =
+	"關閉則隱藏。否則放大時每個城鎮一個圖示，或每項服務一個圖示。" -- mt

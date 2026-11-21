@@ -95,6 +95,10 @@ local function TrackerMenu(target, menu)
 		if not ns.Corpse.Active() then
 			menu:End(L["Clear journey"], ns.ClearJourney)
 		end
+		-- The journey block's own off-switch, the same as the setting: the arrow, pins and map line keep guiding (#991).
+		menu:Action(L["Hide the journey tracker"], function()
+			ns.SetOption("journeyTracker", false)
+		end)
 	else
 		menu:Open(L["Show on map"], function()
 			return OpenDockMap(module.mapDock)
@@ -301,23 +305,31 @@ function ModuleMixin:LayoutContents()
 			local line = block:AddObjective(row.key, row.text, nil, true, nil, RowColor(row))
 			SetLineMark(line, RowMark(row))
 			SetPulse(line, row.warning == true)
-			local clickable = entry.key == "journey" and row.current and not ns.Corpse.Active()
-			if clickable then
-				Line.SetInteractive(line, {
-					onClick = function()
-						-- A row's key counts from the step under way, so the step is the one under way when the menu
-						-- opens; SkipJourneyStep refuses it if the journey has moved on before the click.
-						local _, _, plan, index = ns.JourneyInfo()
-						if not plan then
-							return
-						end
-						ForeverCore.ContextMenu(line, function(_, root)
-							root:CreateButton(L["Complete this step"], function()
-								ns.SkipJourneyStep(index)
-							end)
+			if entry.key == "journey" then
+				local current = row.current and not ns.Corpse.Active()
+				-- Core's line takes the mouse but answers only the left button, so SPF sets its own OnMouseUp after.
+				Line.SetInteractive(line, {})
+				line:SetScript("OnMouseUp", function(_, button)
+					-- A right click on any journey line opens the journey's own menu, as its title does (Lock, Clear
+					-- journey).
+					if button == "RightButton" then
+						return self:OnBlockHeaderClick(block, button)
+					end
+					if button ~= "LeftButton" or not current then
+						return
+					end
+					-- A row's key counts from the step under way, so the step is the one under way when the menu
+					-- opens; SkipJourneyStep refuses it if the journey has moved on before the click.
+					local _, _, plan, index = ns.JourneyInfo()
+					if not plan then
+						return
+					end
+					ForeverCore.ContextMenu(line, function(_, root)
+						root:CreateButton(L["Complete this step"], function()
+							ns.SkipJourneyStep(index)
 						end)
-					end,
-				})
+					end)
+				end)
 			else
 				-- A line reused from a clickable row must stop answering the mouse.
 				line:EnableMouse(false)
@@ -503,8 +515,15 @@ local function RefreshTracker(dockID, yards)
 	module.journeyTracker, module.metres = ns.db.journeyTracker, ns.db.metres
 	if dockID then
 		rows, kind = DockRows(dockID)
-		title, blockKey, mapDock = ns.DockTitle(dockID), "dock" .. dockID, dockID
-	elseif riding then
+		-- A dock whose every route is hidden (another faction's, with those routes off) has nothing to list, and a
+		-- block with no departures would leave the section's header standing over its bare title.
+		if rows[1] then
+			title, blockKey, mapDock = ns.DockTitle(dockID), "dock" .. dockID, dockID
+		else
+			dockID = nil
+		end
+	end
+	if not dockID and riding then
 		rows, kind, mapDock = RideRows(riding)
 		if rows and mapDock then
 			title, blockKey = string.format(L["On board to %s"], ns.DockTitle(mapDock)), "ride" .. mapDock

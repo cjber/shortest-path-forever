@@ -15,7 +15,9 @@ compressed blocks stay available for cache eviction and revisits. Cancellation s
 partial decoded fields. A walking job holds its endpoint and refined corridor grids through smoothing and
 point construction, temporarily exceeding the grid ceiling when the corridor needs it. Each refined point keeps
 its surface height so drawing does not decode terrain again. Completion, errors and cancellation release only
-that job's holds; idle cleanup still preserves only Floor's pinned clusters. Offline tools use system zlib to implement the client's encoding API.
+that job's holds; idle cleanup still preserves only Floor's pinned clusters. It runs once no search has run for
+`Path.linger` (30 s) rather than whenever the queue drains: a journey searches its walks again every few seconds,
+and reuses the clusters the last search decoded (`tests/linger_spec.lua`). Offline tools use system zlib to implement the client's encoding API.
 
 The journey search uses lower bounds to decide which endpoint walks still need exact costs. A feasible plan
 uses a single earliest label per arrival state to find a valid incumbent quickly. The final optimiser keeps
@@ -33,6 +35,7 @@ invalidate outstanding work. The completed initial search must match an unrestri
 ```sh
 luajit tests/nav_loading_spec.lua
 luajit tests/path_many_spec.lua
+luajit tests/linger_spec.lua
 luajit tests/journey_progressive_spec.lua
 luajit tests/journey_optimal_spec.lua
 luajit tests/frame_budget_spec.lua

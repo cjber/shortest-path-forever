@@ -1,5 +1,6 @@
 ---@class SPFNamespace
 ---@field RefreshServiceFilters fun() refreshes visible map filter checkboxes
+---@field StopServiceRanking? fun() stops the panel's walk measure and ranking
 ---@type string, SPFNamespace
 local _, ns = ...
 
@@ -88,9 +89,11 @@ local collapsed = {}
 local estimates = {}
 ---@type table<string, SPFNearbyPlace>
 local chosen = {}
--- The path job ranking the rows (Queue), while one runs.
+-- The path job ranking the rows (Queue), and the walking measure it ranks on, while they run.
 ---@type SPFPathJob?
 local ranking
+---@type SPFPathJob?
+local measuring
 ---@type table?
 local ticker
 local query = ""
@@ -472,14 +475,68 @@ local function UpdateRow(key)
 	Paint(row)
 end
 
--- Rank each shown group's shortlist in one path job, under the shared frame budget: an uncached estimate pauses at
--- the budget and goes on next frame. Each row takes the cheapest of its shortlist as it lands; nothing runs once the
--- job ends or the panel hides (AGENTS.md).
+-- Rank each shown group's shortlist in path jobs, under the shared frame budget: an uncached estimate pauses at the
+-- budget and goes on next frame. A row takes its cheapest NPC once that is decided (NearbyRank), as the walks land
+-- nearest first; nothing runs once every row is decided or the panel hides (AGENTS.md).
 local function StopRanking()
+	if measuring then
+		ns.NearbyServices.Cancel(measuring)
+		measuring = nil
+	end
 	if ranking then
 		ns.Path.Cancel(ranking)
 		ranking = nil
 	end
+end
+-- A journey started from Nearby needs the frame budget for its own searches.
+ns.StopServiceRanking = StopRanking
+
+-- Ranks the rows not yet decided on the walks measured so far; callback(open) with how many are still open.
+local function RankRows(queue, walks, pending, map, x, y, callback)
+	local this
+	this = ns.Path.Run(function(job)
+		local function estimate(...)
+			return ns.EstimateIn(job, ...)
+		end
+		local open = 0
+		for _, item in ipairs(queue) do
+			-- A row none of whose walks changed since it was last ranked ranks the same: only changed rows rank again.
+			local settled = 0
+			for _, place in ipairs(item.candidates) do
+				if walks[place] ~= nil then
+					settled = settled + 1
+				end
+			end
+			if not item.decided and item.settled == settled and pending then
+				open = open + 1
+			elseif not item.decided then
+				item.settled = settled
+				local rank = ns.NearbyServices.Rank(item.candidates, estimate, map, x, y, walks, pending)
+				local place, seconds, more
+				repeat
+					place, seconds, more = rank:Step()
+				until not more
+				item.decided = rank.exact or not pending
+				if item.decided then
+					if place then
+						chosen[item.key] = place
+					end
+					-- No time clears the one a row had from where you stood before.
+					estimates[item.key] = seconds
+					UpdateRow(item.key)
+				else
+					open = open + 1
+				end
+			end
+		end
+		return open
+	end, function(open)
+		if ranking == this then
+			ranking = nil
+			callback(open)
+		end
+	end)
+	ranking = this
 end
 
 function Queue()
@@ -506,33 +563,45 @@ function Queue()
 	if #queue == 0 then
 		return
 	end
-	local this
-	this = ns.Path.Run(function(job)
-		local function estimate(...)
-			return ns.EstimateIn(job, ...)
+	-- Every row's shortlist in one walking measure, so each row's time is the journey's.
+	local places = {}
+	for _, item in ipairs(queue) do
+		for _, place in ipairs(item.candidates) do
+			places[#places + 1] = place
 		end
-		for _, item in ipairs(queue) do
-			local rank = ns.NearbyServices.Rank(item.candidates, estimate, map, x, y)
-			local place, seconds, more
-			repeat
-				place, seconds, more = rank:Step()
-			until not more
-			if place then
-				chosen[item.key] = place
+	end
+	local this, latest, again, sorted
+	local function Rank()
+		if ranking then
+			again = true
+			return
+		end
+		local walks, pending = latest.walks, latest.pending
+		RankRows(queue, walks, pending, map, x, y, function(open)
+			if again then
+				again = false
+				Rank()
+			elseif open == 0 and not sorted then
+				-- Every row has its travel time now: the dungeons and raids reorder by it, once. The measure runs on
+				-- to its far places, so the next tick from this spot reuses it rather than searching again.
+				sorted = true
+				Refresh()
 			end
-			if seconds then
-				estimates[item.key] = seconds
-			end
-			UpdateRow(item.key)
+		end)
+	end
+	this = ns.NearbyServices.MeasureWalks(places, function(walks, pending)
+		if measuring ~= this then
+			return
 		end
-	end, function()
-		if ranking == this then
-			ranking = nil
-			-- Every row has its travel time now: the dungeons and raids reorder by it, once.
-			Refresh()
+		if not pending then
+			measuring = nil
 		end
+		latest = { walks = walks, pending = pending }
+		Rank()
 	end)
-	ranking = this
+	if this and not latest then
+		measuring = this
+	end
 end
 
 -- A fresh look at the player's place: zones change and the ticker both come through here.
@@ -649,7 +718,15 @@ local function StartTicker(shown)
 			ticker = C_Timer.NewTicker(TICK, function()
 				if visible then
 					Refresh()
-					Queue()
+					-- A measure still running finishes first, while it answers for where you stand: restarting it every
+					-- tick would rank nothing. A journey still searching has the frame budget first.
+					local searching = ns.JourneyStatus and ns.JourneyStatus()
+					if
+						not searching
+						and (not (ranking or measuring) or measuring and not ns.NearbyServices.Holds(measuring))
+					then
+						Queue()
+					end
 				end
 			end)
 		end

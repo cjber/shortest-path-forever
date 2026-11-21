@@ -303,7 +303,16 @@ OnUpdate = function(_, elapsed)
 	Update(elapsed)
 end
 
+local TOP = -42
+
+local function Placed()
+	return type(ns.db.compassX) == "number" and type(ns.db.compassY) == "number"
+end
+
 local function Poll()
+	if not Placed() and not frame:IsMouseEnabled() then
+		ns.Mover.Stock(frame, TOP)
+	end
 	-- Mouse turns and moving transports need not send a player movement event.
 	if not frame.updating then
 		Update(0)
@@ -343,14 +352,14 @@ local function RelativeScale()
 	return scale > 0 and scale or 1
 end
 
+-- The stock place stands beside the quest tracker and ForeverCore's column when they reach it (Mover.Stock).
 local function Anchor()
-	frame:ClearAllPoints()
-	local scale = RelativeScale()
-	local x, y = ns.db.compassX, ns.db.compassY
-	if type(x) == "number" and type(y) == "number" then
-		frame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x / scale, y / scale)
+	if Placed() then
+		local scale = RelativeScale()
+		frame:ClearAllPoints()
+		frame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", ns.db.compassX / scale, ns.db.compassY / scale)
 	else
-		frame:SetPoint("TOP", UIParent, "TOP", 0, -42 / scale)
+		ns.Mover.Stock(frame, TOP, nil, true)
 	end
 end
 

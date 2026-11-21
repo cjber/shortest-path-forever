@@ -95,6 +95,13 @@ function ForeverCore.load(env, name, names, ns)
 	local directory = ForeverCore.directory()
 	local selected = Wanted(names)
 	ns = ns or {}
+	-- Core.lua defines AtStart and runs the queued client work in Start. A load of chosen files has neither, so its
+	-- work runs at once, as an unwrapped core's does (Core/SafeCall.lua installs its error handler through it).
+	if selected ~= nil and ns.AtStart == nil then
+		ns.AtStart = function(work)
+			work()
+		end
+	end
 	local prefix = directory .. "/"
 	for _, entry in ipairs(Toc.files(directory, "ForeverCore.toc")) do
 		local path = entry.path
@@ -131,9 +138,16 @@ function ForeverCore.install(env, names)
 end
 
 -- ForeverCore as an extra addon for the client simulator: the folder and its addon name, registered next to the
--- one under test so the TOC's dependency resolves to the real checkout.
+-- one under test so the TOC's dependency resolves to the real checkout. None in the packed addon, which carries its
+-- own under Libs/ForeverCore (the embed step writes bundle.json there): an unpackaged checkout beside it reads as an
+-- older standalone, so the loader would adopt it and the scenarios would not run on the embedded copy.
 ---@return { [1]: string, [2]: string }[]
 function ForeverCore.addons()
+	local bundle = io.open("Libs/ForeverCore/bundle.json", "rb")
+	if bundle then
+		bundle:close()
+		return {}
+	end
 	return { { ForeverCore.directory(), "ForeverCore" } }
 end
 

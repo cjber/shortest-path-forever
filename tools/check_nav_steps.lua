@@ -22,6 +22,10 @@ end
 -- PathGrid keeps its decoder local; expose the pieces this check walks with, without changing the shipped file.
 local source = assert(io.open("Routing/PathGrid.lua")):read("*a")
 source = source
+	.. "\nlocal function neighbour(st, k, node, gx, gy, dx, dy, water)"
+	.. "\n\tlocal ks, ns2 = {}, {}"
+	.. "\n\tif neighbours(st, k, node, gx, gy, dx, dy, water, ks, ns2) > 0 then return ks[1], ns2[1] end"
+	.. "\nend"
 	.. "\nns.StepCheck = { State = State, grid = grid, neighbour = neighbour, cellOf = cellOf, states = states }\n"
 
 local failures = 0
@@ -77,7 +81,9 @@ for _, map in ipairs(maps) do
 								checked = checked + 1
 								local fk, fn = P.neighbour(st, k, node, gx, gy, dx, dy, false)
 								local rk, rn = P.neighbour(st, tk, tn, gx + dx, gy + dy, -dx, -dy, false)
-								if (fk ~= tk or fn ~= tn or rk ~= k or rn ~= node) and not steepCorner(gx, gy, dx, dy) then
+								if
+									(fk ~= tk or fn ~= tn or rk ~= k or rn ~= node) and not steepCorner(gx, gy, dx, dy)
+								then
 									bad[#bad + 1] = string.format(
 										"(%.1f, %.1f) z%d <-> (%.1f, %.1f) z%d",
 										st.x0 + (gx + 0.5) * st.cs,
@@ -101,7 +107,9 @@ for _, map in ipairs(maps) do
 			end
 		end
 	end
-	print(string.format("map %d: %d two-way steps on ordinary ground, %d refused one way at runtime", map, checked, #bad))
+	print(
+		string.format("map %d: %d two-way steps on ordinary ground, %d refused one way at runtime", map, checked, #bad)
+	)
 	for i = 1, os.getenv("SPF_STEPS_ALL") and #bad or math.min(#bad, 20) do
 		print("  " .. bad[i])
 	end

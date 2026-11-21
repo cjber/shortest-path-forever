@@ -6,6 +6,7 @@ assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", ns)
 assert(loadfile("Transport/Model.lua"))("ShortestPathForever", ns)
 assert(loadfile("Routing/Savings.lua"))("ShortestPathForever", ns)
 assert(loadfile("Routing/Planner.lua"))("ShortestPathForever", ns)
+assert(loadfile("Routing/LegPoints.lua"))("ShortestPathForever", ns)
 
 local function point(x)
 	return { map = 1, x = x, y = 0 }

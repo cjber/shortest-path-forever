@@ -33,9 +33,18 @@ local function frame()
 	function f:SetAlpha(value)
 		self.alpha = value
 	end
-	-- Unscaled, as UIParent is at the default UI scale.
+	-- Unscaled, as UIParent is at the default UI scale, and laid out at its default 1366 by 768 until sized.
 	f.GetEffectiveScale = function()
 		return 1
+	end
+	function f:SetSize(width, height)
+		self.width, self.height = width, height
+	end
+	function f:GetWidth()
+		return self.width or 1366
+	end
+	function f:GetHeight()
+		return self.height or 768
 	end
 	function f:CreateTexture()
 		return setmetatable({}, getmetatable(self))
@@ -254,6 +263,12 @@ ns.NowMs = function()
 	return now
 end
 ns.CurrentRide, ns.RefreshTracker, ns.PointGuideArrow, ns.PointCastPrompt, ns.Print = noop, noop, noop, noop, noop
+ns.Notice = noop
+-- UI/Arrow.lua is not loaded here: its arrow leads whenever the setting is on, with no search to wait for.
+ns.ArrowLeadChanged = noop
+ns.ArrowLeads = function()
+	return ns.db.arrow ~= false
+end
 ns.KnownTaxiNodes = function()
 	return ns.known or {}
 end
@@ -287,6 +302,7 @@ load("Transport/TaxiTimes.lua")
 load("Core/PlanContext.lua")
 load("Routing/Savings.lua")
 load("Routing/Planner.lua")
+load("Routing/LegPoints.lua")
 load("Routing/QuestDestination.lua")
 load("Journey/JourneySteps.lua")
 load("Journey/Hazards.lua")
