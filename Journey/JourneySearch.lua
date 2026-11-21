@@ -116,6 +116,20 @@ local function CancelPaths()
 	probeJobs, replanning = {}, nil
 end
 
+-- Both a path job and its queued callbacks can fail after the search has yielded.
+function Search.JobFailed()
+	if not goal then
+		return
+	end
+	local listener = publish
+	Search.Reset()
+	-- A thrown landing walk would stay pending for every later journey; the graph may be half-built.
+	Walks.ClearLandings()
+	plannerCache = {}
+	costError = "error"
+	ns.core.SafeCall("journey search failure", listener, nil, "route")
+end
+
 -- How much of the chosen walk is still ahead of here, from 0 to 1, or nil when here is off it.
 local function RemainingShare(leg, here)
 	local found, _, after, total = ns.OnWalk(leg.walkPoints, here)
@@ -848,7 +862,7 @@ local function RefreshCosts(includeGoal, forced, replace)
 							request(true)
 						end
 					end, waterMode, hazards)
-					probeJobs[probeJob] = true
+					probeJobs[probeJob], probeJob.onError = true, Search.JobFailed
 				end
 				return
 			end
@@ -939,7 +953,7 @@ local function RefreshCosts(includeGoal, forced, replace)
 	local function schedule()
 		if not considering and not stale() then
 			considering = ns.Path.Run(work)
-			probeJobs[considering] = true
+			probeJobs[considering], considering.onError = true, Search.JobFailed
 		end
 	end
 	request = function(final)
@@ -1017,6 +1031,7 @@ local function RefreshCosts(includeGoal, forced, replace)
 				hazards
 			)
 		end
+		batch.job.onError = Search.JobFailed
 	end
 	attach(startBatch)
 	attach(goalBatch)
@@ -1121,7 +1136,8 @@ end
 ---@param listener fun(route: SPFPlan?, news: SPFSearchNews)
 ---@param replace? boolean the route being replaced leads somewhere else, so the next plan takes over
 ---@param policy? SPFRoutePolicy
-function Search.Start(point, route, state, listener, replace, policy)
+local function Start(point, route, state, listener, replace, policy)
+	goal, publish, costError = point, listener, nil
 	policy = policy or "normal"
 	if policy ~= routePolicy then
 		Search.Clear(false, policy)
@@ -1147,7 +1163,7 @@ end
 -- Once per driver frame with a readable position: restarts a search whose inputs changed or whose callbacks waited
 -- for a position.
 ---@param changed? boolean the travel policy changed since the last frame
-function Search.Poll(changed)
+local function Poll(changed)
 	local x, y, _, map = ns.JourneyPosition()
 	local zone = x and y and map and ns.Hazards.ZoneAt(map, x, y)
 	local landing = WalkLanding()
@@ -1177,7 +1193,7 @@ end
 ---@param flying boolean? on a taxi
 ---@param changedRide boolean either changed since the last frame
 ---@param changedSpeed boolean the run speed changed since the last plan
-function Search.Replan(riding, flying, changedRide, changedSpeed)
+local function Replan(riding, flying, changedRide, changedSpeed)
 	local mode = ns.JourneyWaterWalking()
 	local options = Context.Options(Here() or goal, goal, routePolicy)
 	local partyPortals = options.partyPortals
@@ -1248,8 +1264,37 @@ function Search.Replan(riding, flying, changedRide, changedSpeed)
 				end
 			end)
 			replanning = this
-			probeJobs[this] = true
+			probeJobs[this], this.onError = true, Search.JobFailed
 		end
+	end
+end
+
+-- Frame entry points cannot yield. The planner and path callbacks use the coroutine boundary instead.
+local function Checked(fn, ...)
+	if not ns.core.SafeCall("journey search", fn, ...) then
+		Search.JobFailed()
+	end
+end
+
+function Search.Start(point, route, state, listener, replace, policy)
+	Checked(Start, point, route, state, listener, replace, policy)
+end
+
+function Search.Poll(changed)
+	if not goal then
+		return
+	end
+	-- The unchanged poll allocates nothing. Enter the journal only after a throw.
+	local ok, message = pcall(Poll, changed)
+	if not ok then
+		ns.core.RecordError("journey search poll", message)
+		Search.JobFailed()
+	end
+end
+
+function Search.Replan(riding, flying, changedRide, changedSpeed)
+	if goal then
+		Checked(Replan, riding, flying, changedRide, changedSpeed)
 	end
 end
 

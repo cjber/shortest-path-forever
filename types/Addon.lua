@@ -648,6 +648,7 @@ ShortestPathForeverPathData = nil
 ---@field cancelled? boolean
 ---@field paused? boolean
 ---@field done? boolean
+---@field onError? fun() -- settles the owning search after a job or its callback throws
 ---@field reason? string -- why a finished job found nothing, kept for a caller that missed its callback
 ---@field frames number
 ---@field cpu number

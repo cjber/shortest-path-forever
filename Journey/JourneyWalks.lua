@@ -122,7 +122,7 @@ local function FindWalk(planned, leg, key, water, done)
 		end
 		done()
 	end, water, hazards)
-	pathJobs[job], walkJobs[key] = true, job
+	pathJobs[job], walkJobs[key], job.onError = true, job, ns.JourneySearch.JobFailed
 end
 
 -- A plan that will not be followed: the searches only it waited for stop.
@@ -263,6 +263,10 @@ end
 function Walks.SetHazards(profile)
 	hazards = profile
 	Walks.Clear()
+	Walks.ClearLandings()
+end
+
+function Walks.ClearLandings()
 	for _, entry in pairs(landings) do
 		if entry.job then
 			ns.Path.Cancel(entry.job)
@@ -334,6 +338,7 @@ local function Landing(place, water)
 			end,
 			hazards
 		)
+		entry.job.onError = ns.JourneySearch.JobFailed
 	end
 	return entry
 end

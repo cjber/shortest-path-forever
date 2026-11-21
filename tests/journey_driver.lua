@@ -241,6 +241,9 @@ ns.core = {
 	SafeCall = function(label, fn, ...)
 		return safe:SafeCall(label, fn, ...)
 	end,
+	RecordError = function(label, message, stack)
+		safe:RecordError(label, message, stack)
+	end,
 	CaughtErrors = function()
 		return safe:CaughtErrors()
 	end,
