@@ -893,7 +893,7 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 		P.factor = factorOf(st, hz)
 	end
 	if roadsOn then
-		P.roads, P.r, P.roadFactor = true, {}, offroad
+		P.distance, P.field, P.r, P.roadFactor = {}, {}, {}, offroad
 	end
 	local seen = {}
 	local function add(k, node)
@@ -903,8 +903,8 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 			for j = #P.x, at + 1, -1 do
 				seen[P.k[j] * 1048576 + P.n[j]] = nil
 				P.x[j], P.y[j], P.z[j], P.w[j], P.t[j], P.k[j], P.n[j] = nil, nil, nil, nil, nil, nil, nil
-				if P.r then
-					P.r[j] = nil
+				if P.r and P.distance and P.field then
+					P.r[j], P.distance[j], P.field[j] = nil, nil, nil
 				end
 			end
 			return
@@ -918,15 +918,28 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 		P.w[n + 1] = (P.w[n] or 0) + (wet and 1 or 0)
 		-- The walk's own time to this entry, charged as the search charges a step: the cell it enters, land at run
 		-- speed and water at the map's swim.
-		local time = P.t[n] or 0
+		local dx, dy = 0, 0
 		if n > 0 then
-			local dx, dy = P.x[n + 1] - P.x[n], P.y[n + 1] - P.y[n]
-			time = time + sqrt(dx * dx + dy * dy) * st.cs * (wet and swim or 1)
+			dx, dy = P.x[n + 1] - P.x[n], P.y[n + 1] - P.y[n]
 		end
-		P.t[n + 1] = time
-		if P.r then
+		local length = sqrt(dx * dx + dy * dy)
+		P.t[n + 1] = (P.t[n] or 0) + length * st.cs * (wet and swim or 1)
+		if P.r and P.distance and P.field then
 			local roadSet = Grid.roads(st, k)
-			P.r[n + 1] = (P.r[n] or 0) + ((not roadSet or not roadSet[cell]) and 1 or 0)
+			local outside = (not roadSet or not roadSet[cell]) and 1 or 0
+			P.r[n + 1] = (P.r[n] or 0) + outside
+			local field = 0
+			if n > 0 then
+				if abs(dx) <= 1 and abs(dy) <= 1 then
+					-- A step between adjacent centres spends half its length in each cell.
+					field = length * (outside + P.r[n] - (P.r[n - 1] or 0)) / 2
+				else
+					length, field =
+						Grid.roadDistance(st, P.x[n] + 0.5, P.y[n] + 0.5, P.x[n + 1] + 0.5, P.y[n + 1] + 0.5)
+				end
+			end
+			P.distance[n + 1] = (P.distance[n] or 0) + length
+			P.field[n + 1] = (P.field[n] or 0) + field
 		end
 		seen[id] = n + 1
 	end
@@ -984,11 +997,41 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 		clearEnd(st, P, n, to, false, P.w[n] - (P.w[n - 1] or 0) > 0, limitOver(P, n, n), nil, true)
 	-- P.t is the refined walk's real running-yard prefix, independent of reported/cached search cost.
 	local chordBudget = startOK and goalOK and startTime + P.t[n] - P.t[1] + goalTime
+	local sx, sy = (from.x - x0) / cs, (from.y - y0) / cs
+	local gx, gy = (to.x - x0) / cs, (to.y - y0) / cs
+	local startLength, startField, goalLength, goalField = 0, 0, 0, 0
+	if P.distance and P.field then
+		startLength, startField = Grid.roadDistance(st, sx, sy, P.x[1] + 0.5, P.y[1] + 0.5)
+		goalLength, goalField = Grid.roadDistance(st, P.x[n] + 0.5, P.y[n] + 0.5, gx, gy)
+		local length = startLength + P.distance[n] + goalLength
+		P.fieldShare = length > 0 and (startField + P.field[n] + goalField) / length or 0
+	end
+	local function roadClear(ax, ay, bx, by, first, last, length, field)
+		local distance, off = P.distance, P.field
+		return not distance
+			or not off
+			or Grid.roadClear(
+				st,
+				ax,
+				ay,
+				bx,
+				by,
+				length + distance[last] - distance[first],
+				field + off[last] - off[first],
+				P.fieldShare or 0
+			)
+	end
 	-- The end segments the line is drawn with, for the pull to measure and check as drawn.
 	local function startClear(j)
+		if not roadClear(sx, sy, P.x[j] + 0.5, P.y[j] + 0.5, 1, j, startLength, startField) then
+			return false
+		end
 		return clearEnd(st, P, j, from, true, P.w[j] > 0, limitOver(P, 1, j), startTime + P.t[j] - P.t[1])
 	end
 	local function goalClear(j)
+		if not roadClear(P.x[j] + 0.5, P.y[j] + 0.5, gx, gy, j, n, goalLength, goalField) then
+			return false
+		end
 		return clearEnd(
 			st,
 			P,
@@ -1001,14 +1044,16 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 		)
 	end
 	local keep, startDetour, goalDetour = smooth(st, P, {
-		sx = (from.x - x0) / cs,
-		sy = (from.y - y0) / cs,
-		gx = (to.x - x0) / cs,
-		gy = (to.y - y0) / cs,
+		sx = sx,
+		sy = sy,
+		gx = gx,
+		gy = gy,
 		start = startOK and startClear,
 		goal = goalOK and goalClear,
 		chord = function()
-			return chordBudget and clearChord(st, P, from, to, P.w[n] > 0, limitOver(P, 1, n), chordBudget)
+			return chordBudget
+				and roadClear(sx, sy, gx, gy, 1, n, startLength + goalLength, startField + goalField)
+				and clearChord(st, P, from, to, P.w[n] > 0, limitOver(P, 1, n), chordBudget)
 		end,
 	})
 	-- The pull chose whether each end is drawn through its end entry's centre: a start or goal segment that is not

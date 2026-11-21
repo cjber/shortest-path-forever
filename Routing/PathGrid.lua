@@ -1152,6 +1152,46 @@ local function roadNode(st, k, node)
 	return cell ~= nil and set[cell] or 0
 end
 
+-- Length in cell widths, and how much of it crosses unpainted cells. Road coverage is attached to the
+-- horizontal cell, so floors on the same cell share the same road classification.
+local function roadDistance(st, ax, ay, bx, by)
+	local dx, dy = bx - ax, by - ay
+	local length = sqrt(dx * dx + dy * dy)
+	local x, y = floor(ax), floor(ay)
+	local sx, sy = dx > 0 and 1 or -1, dy > 0 and 1 or -1
+	local stepX, stepY = dx ~= 0 and 1 / abs(dx) or huge, dy ~= 0 and 1 / abs(dy) or huge
+	local nextX = dx ~= 0 and (sx > 0 and x + 1 - ax or ax - x) * stepX or huge
+	local nextY = dy ~= 0 and (sy > 0 and y + 1 - ay or ay - y) * stepY or huge
+	local C = st.C
+	local at, off = 0, 0
+	while at < 1 do
+		tick()
+		local nextAt = min(nextX, nextY, 1)
+		local set = x >= 0 and x < st.GX and y >= 0 and y < st.GY and roads(st, floor(x / C) * st.ny + floor(y / C))
+		if not set or not set[(x % C) * C + y % C] then
+			off = off + nextAt - at
+		end
+		if nextX == nextAt then
+			x, nextX = x + sx, nextX + stepX
+		end
+		if nextY == nextAt then
+			y, nextY = y + sy, nextY + stepY
+		end
+		at = nextAt
+	end
+	return length, length * off
+end
+
+-- Both the replaced span and the full walk keep their painted share. The full walk's limit is
+-- additive across shortcuts, so shortening a painted span cannot dilute the final line's share.
+local function roadClear(st, ax, ay, bx, by, length, off, routeFieldShare)
+	if length <= 0 or (off >= length and routeFieldShare >= 1) then
+		return true
+	end
+	local span, field = roadDistance(st, ax, ay, bx, by)
+	return field <= span * (off / length) + 1e-9 and field <= off + (span - length) * routeFieldShare + 1e-9
+end
+
 -- RoadEdges.lua's edge ratios for cluster k: a default run is "=" and its length in two base64 symbols, any other
 -- edge is four symbols (preference and real ratio for walking, then for water walking). A ratio q is
 -- 1 + q / 63 * (OFFROAD - 1); a default edge is OFFROAD and 1 in both modes.
@@ -1629,7 +1669,9 @@ end
 ---@field k number[] -- cluster of each entry
 ---@field n number[] -- node in that cluster
 ---@field r number[]? -- off-road entries up to each entry, with Follow roads
----@field roads? boolean -- Follow roads was on
+---@field distance number[]? -- path length in cell widths, with Follow roads
+---@field field number[]? -- path length in unpainted cells, with Follow roads
+---@field fieldShare number? -- share of the whole route in unpainted cells
 ---@field roadFactor? number -- an off-road yard's cost while choosing a walk
 ---@field swim number? -- a water yard's cost in running yards, as the search charged it
 ---@field factor? fun(k: number, node: number): number -- a hazard profile's factor at an entry
@@ -1962,6 +2004,22 @@ local function smooth(st, P, ends)
 		elseif not at[b] then
 			return goal(p)
 		end
+		if
+			P.distance
+			and P.field
+			and not roadClear(
+				st,
+				X[a],
+				Y[a],
+				X[b],
+				Y[b],
+				P.distance[q] - P.distance[p],
+				P.field[q] - P.field[p],
+				P.fieldShare or 0
+			)
+		then
+			return false
+		end
 		return sight(
 			st,
 			P,
@@ -2255,6 +2313,8 @@ ns.PathGrid = {
 	ground = ground,
 	snap = snap,
 	roads = roads,
+	roadDistance = roadDistance,
+	roadClear = roadClear,
 	roadEdges = roadEdges,
 	roadEdgesIn = roadEdgesIn,
 	smooth = smooth,
