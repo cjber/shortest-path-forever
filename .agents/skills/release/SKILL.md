@@ -60,22 +60,17 @@ authorization. A preparation-only request ends before tags or uploads.
 
 7. Run the fast lint/type gate from `AGENTS.md`, focused checks for changed
    behaviour, generated-data verification and `python3
-   tools/forever_tools/sync.py check`. Full suites run in CI. Agents test in
-   game only through `INGAME` requests to the `wow in-game` agent
-   (`wow-forever-addon/in-game.md#requesting-a-check`); record the user's own
-   `/reload` checks and their results separately.
+   tools/forever_tools/sync.py check`. Full suites run in CI. Record manual in-game checks and their results
+   separately.
 8. Commit the release preparation with a signed commit and ship its reviewed,
    green PR. Merge only within the user's authorization. Wait for the complete
    `ci.yml` **push run on main at the exact commit to be tagged**. PR checks and
    workflow-dispatch runs do not satisfy `tools/release_check.py`. Confirm the
    primary checkout is clean main at that commit before proceeding.
-9. Get that commit smoked. Every release needs a green `headless-smoke` commit status on the exact commit it ships, and
-   `tools/release_check.py` refuses without one. The `forever-smoke` timer posts it for every commit a release would
-   ship; read it with `gh api repos/cjber/shortest-path-forever/commits/<full sha>/statuses </dev/null`. When it is
-   missing, send the `wow in-game` agent `INGAME shortest-path-forever <full sha> from <your kiln id>` with `kind:
-   smoke` (`wow-forever-addon/in-game.md#requesting-a-check`) and wait for its reply; never run the client yourself.
-   `INGAME FAIL` is a release blocker: fix the errors it names. `INGAME BLOCKED` goes to the user as the release's
-   blocker.
+9. Check the smoke status. Every release needs a green `headless-smoke` commit status on the exact commit it ships, and
+   `tools/release_check.py` refuses without one. Read it with
+   `gh api repos/cjber/shortest-path-forever/commits/<full sha>/statuses </dev/null`. A missing or pending status
+   means the release is waiting; a failed one is a release blocker.
 10. Inspect `.github/workflows/release.yml`, `.pkgmeta` and `ShortestPathForever.toc`.
     Confirm `X-Curse-Project-ID`, interface and dependencies are right.
     Check secret names with `gh secret list`: `CF_API_KEY`
