@@ -635,6 +635,11 @@ local function RefreshCosts(includeGoal, forced, replace)
 		return false
 	end
 	local consider, request
+	-- Asks again once a bind point's walks have gone far enough that it cannot beat the plan (LandingPending). One
+	-- function per search, so each consider moves its radius rather than adding a listener.
+	local function landed()
+		request(true)
+	end
 	-- Bounded search callback; splitting adds calls and upvalues on every frontier update. It runs only in the
 	-- search's own path job (request), where each plan pauses at the frame budget; anything a pause let change is
 	-- checked again after it.
@@ -790,9 +795,10 @@ local function RefreshCosts(includeGoal, forced, replace)
 			and Walks.LandingPending(
 				teleports,
 				waterMode,
-				nil,
+				landed,
 				select(2, ns.UsableTeleports(ns.NowMs())),
-				planned and planned.arrive or math.huge
+				planned and planned.arrive or math.huge,
+				lastRunSpeed
 			)
 		if not needStart and not needGoal and not landing then
 			pendingCosts, settleRound = 0, settleRound + 1

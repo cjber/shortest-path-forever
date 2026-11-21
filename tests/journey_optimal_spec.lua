@@ -382,7 +382,7 @@ do
 			held = function()
 				callback(ns.Path.FindManySync(map, point, targets, water))
 			end
-			return
+			return { radius = 0 }
 		end
 		return findMany(map, point, targets, callback, ...) -- multi-value: the batch's job
 	end
@@ -403,6 +403,34 @@ do
 	held()
 	drain()
 	assert(driver.shown().legs[1].mode == "teleport")
+	ns.ClearJourney()
+	-- Bound at Auberdine, a ready hearth waits on a 100 yd walk in Gadgetzan only while its walks on have not passed the
+	-- 4 s that walk leaves after the 10 s cast: further on, the landing cannot win and the walk settles without its
+	-- walks to every flight point on Kalimdor (#1154).
+	local landing
+	ns.Path.FindMany = function(map, point, targets, callback, water, reverse, progress, ...)
+		if point == ns.teleports[1] then
+			landing = { radius = 0, progress = progress }
+			return landing
+		end
+		return findMany(map, point, targets, callback, water, reverse, progress, ...) -- multi-value: the batch's job
+	end
+	local auberdine = ns.TaxiNodes[26]
+	ns.teleports[1] = { map = auberdine.map, x = auberdine.x, y = auberdine.y, spell = 8690, cast = 10000, bind = true }
+	local near = { map = gadgetzan.map, x = gadgetzan.x - 100, y = gadgetzan.y, z = gadgetzan.z }
+	driver.begin(near, gadgetzan)
+	while nextFrame do
+		local fn = nextFrame
+		nextFrame = nil
+		fn()
+	end
+	assert(landing and ns.JourneyStatus(), "a hearth that could still win waits for its bind point's walks")
+	landing.radius = 200
+	if landing.progress then
+		landing.progress({}, nil, landing)
+	end
+	drain()
+	assert(driver.shown().legs[1].mode == "walk", "the walk settles once the bind point's walks cannot beat it")
 	ns.Path.FindMany = findMany
 	ns.ClearJourney()
 	ns.teleports, ns.teleportReady, driver.env.C_Item = nil, nil, nil
