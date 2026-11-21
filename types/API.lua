@@ -94,6 +94,42 @@
 ---@field waypoints SPFAPIPlace[] -- every bend of the leg under way, from the route's original source walk
 ---@field index integer -- where point stands in waypoints: 1-based, so waypoints[index] is that point
 
+--- The options NavigateRoute takes.
+---@class SPFAPIRouteOptions
+---@field policy? "normal"|"walking" -- "normal" (the default) plans by every transport; "walking" keeps every leg a walk along the walking map
+
+--- A stop a route observer is told about, as a fresh copy.
+---@class SPFAPIObservedStop
+---@field map integer -- uiMapID
+---@field x number -- normalized 0-1
+---@field y number -- normalized 0-1
+---@field z? number -- world height in yards, present only when the planner holds a finite height
+---@field title string -- the stop's own title, or where it stands when it has none
+
+--- One leg of the plan behind a journey, whole plan rather than from the leg under way.
+---@class SPFAPIStateLeg
+---@field mode SPFAPIMode
+---@field measured boolean -- a walk measured along the walking map, not a straight placeholder
+---@field walkError? string -- why this leg's walk could not be measured
+
+--- Why the journey cannot be driven right now.
+---@alias SPFAPIBlocked "combat"|"corpse"
+
+--- Where the journey under way stands, for a consumer driving its own route.
+---@class SPFAPIJourneyState
+---@field owner? string -- the addon whose route it is; kept while a corpse run guides in its place
+---@field policy "normal"|"walking" -- the route's policy
+---@field busy boolean -- any journey, the player's, an addon's or a corpse run
+---@field pending boolean -- searches or walk measurements are still running
+---@field settling boolean -- the first search is still running, so there may be no final plan yet
+---@field failure? string -- why the plan failed: the search's own error, else the first leg's walkError
+---@field blocked? SPFAPIBlocked -- why no new route can start now
+---@field preview boolean -- the plan is a preview, not the planner's final one
+---@field index? integer -- the 1-based leg under way in legs; absent with no plan
+---@field legs SPFAPIStateLeg[] -- every leg of the plan, empty with no plan
+---@field distance? number -- yards from the player to the stop under way; absent with no stop or on another map
+---@field reach number -- the player's arrival distance setting, in yards
+
 --- The options a walk estimate takes.
 ---@class SPFAPIWalkOptions
 ---@field waterWalking? boolean -- walks may cross water; by default journeys' own setting and known spell decide
@@ -129,18 +165,20 @@
 
 ---@class SPFPublicAPI
 ---@field version integer -- 2 removes peer sharing and Leaderboard; callers accept 1 or 2 and reject future versions
----@field minor integer -- 4 adds optional z on returned places; 3 adds EstimateWalks and NavVersion; 2 adds each journey leg's from and to, ResumeRestedXP and the replan change; 1 adds Guidance and the guidance change; version 1 minor 3 added Journey, Pause, Resume, SkipLeg, Stats and the leg change
+---@field minor integer -- 6 adds NavigateRoute's options, ObserveStops and JourneyState; 5 standardizes ResumeRestedXP reasons; 4 adds optional z on returned places; 3 adds EstimateWalks and NavVersion; 2 adds each journey leg's from and to, ResumeRestedXP and the replan change; 1 adds Guidance and the guidance change; version 1 minor 3 added Journey, Pause, Resume, SkipLeg, Stats and the leg change
 ---@field Estimate fun(fromMap: integer, fromX: number, fromY: number, toMap: integer, toX: number, toY: number): seconds: number?, reason: SPFAPINoRoute? -- travel seconds; nil comes with the reason
 ---@field Navigate fun(owner: string, map: integer, x: number, y: number, title?: string, kind?: SPFAPIStopKind): boolean -- starts/replaces guidance outside combat when journeys are enabled
----@field NavigateRoute fun(owner: string, stops: SPFAPIStop[]): boolean -- starts/replaces guidance through 1-64 stops in order; false leaves the current journey intact
+---@field NavigateRoute fun(owner: string, stops: SPFAPIStop[], options?: SPFAPIRouteOptions): ok: boolean?, reason: ForeverCoreAPIInvalid? -- starts/replaces guidance through 1-64 stops in order; false leaves the current journey intact; nil and "invalid" for bad options
 ---@field CurrentStop fun(owner: string): index: integer?, reason: SPFAPINotReady? -- 1-based current stop, or nil and why there is none
 ---@field Cancel fun(owner: string): boolean -- true only when this owner's current journey was cancelled
 ---@field Journey fun(): journey: SPFAPIJourney?, reason: SPFAPINotReady? -- the journey under way, whoever owns it, or nil and why there is none
+---@field JourneyState fun(): state: SPFAPIJourneyState?, reason: SPFAPINotReady? -- whether the journey is busy, pending, settling, failed or blocked, or nil and why there is none to read
+---@field ObserveStops fun(owner: string, callback: fun(phase: "arrived"|"settled", index: integer, stop: SPFAPIObservedStop, state: SPFAPIJourneyState)): unsubscribe: (fun())?, reason: ForeverCoreAPIInvalid? -- calls back inside the planner's own step for that owner's running route
 ---@field Guidance fun(): guidance: SPFAPIGuidance?, reason: SPFAPIGuidanceReason? -- the next point the arrow leads to and every bend of the leg under way, as fresh copies, or nil and why there is no point
 ---@field Pause fun(owner: string): boolean -- stops that owner's guidance and keeps its goal; false for another owner, no journey, an already stopped journey or combat
 ---@field Resume fun(owner: string): boolean -- starts that owner's guidance again on the same goal; false for another owner, no journey, an already guided journey or combat
 ---@field SkipLeg fun(owner: string, index?: integer): boolean -- advances that owner's current leg; false for another owner or when nothing was skipped
----@field ResumeRestedXP fun(): success: true?, reason: ("invalid"|"unavailable")? -- resumes the RestedXP guide the player follows, or nil and why it could not
+---@field ResumeRestedXP fun(): success: true?, reason: ("none"|"combat")? -- resumes the RestedXP guide the player follows, or nil and why it could not
 ---@field Stats fun(): rows: SPFAPIStat[]?, reason: SPFAPINotReady? -- this character's travel records, one fresh row per metric
 ---@field RenameStop fun(owner: string, index: integer, title: string, renamePoints?: fun(point: SPFPoint): boolean?): boolean -- relabels a running route's stop in place; false leaves it as it was
 ---@field EstimateDetail fun(fromMap: integer, fromX: number, fromY: number, toMap: integer, toX: number, toY: number): detail: SPFAPIDetail?, reason: SPFAPINoRoute? -- Estimate leg by leg, sharing its cache

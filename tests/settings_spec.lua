@@ -509,6 +509,8 @@ assert(Row("townServices").setting.name == "Town service icons", "town service i
 assert(Row("nearbyTab").setting.name == "Show the Nearby services tab", "the Nearby services tab has one row")
 assert(Row("compass").setting.name == "Show the compass", "the compass has one row")
 assert(Row("journeyTracker").setting.name == "Show the journey tracker", "the journey tracker has one row")
+-- The journey switch turns every journey off, not only map clicks, and its name says so (#1150).
+assert(Row("journey").tooltip:find("clears your journey", 1, true), "its tooltip says off clears the journey")
 assert(Row("pins").setting.variable == "ShortestPathForever_pins" and Row("pins").setting.default)
 local trackerHeight = Row("trackerHeight")
 assert(trackerHeight.kind == "slider", "the Journey tracker height is a slider")
@@ -628,7 +630,7 @@ assert(
 )
 assert(journeyKeys[1].text == "Shift" and journeyKeys[2].text == "Alt", "each key is named")
 assert(journeyKey.tooltip:find("Questie", 1, true), "the tooltip says what Questie keeps")
-assert(Row("journey").setting.name == "Click the map to plan journeys", "the journey switch does not name a key")
+assert(Row("journey").setting.name == "Enable journeys", "the journey switch does not name a key")
 -- Route to the focused quest is opt-in: a plain map pin changes what it does, so it starts off.
 local focused = Row("focusedQuest")
 assert(focused.kind == "checkbox" and focused.setting.default == false, "focused routing is off by default")

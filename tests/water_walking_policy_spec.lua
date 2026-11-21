@@ -53,6 +53,7 @@ assert(not driver.path.finds[#driver.path.finds].water, "replan uses ordinary sw
 -- Estimates obtain the same policy at the planner boundary and invalidate their cached answer.
 driver.load("UI/Looks.lua")
 driver.load("Core/APIInput.lua")
+driver.load("Core/APIStops.lua")
 driver.load("Core/API.lua")
 local plan, modes = ns.Planner.Plan, {}
 ns.Planner.Plan = function(options)

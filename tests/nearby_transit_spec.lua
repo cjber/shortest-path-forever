@@ -2,6 +2,7 @@ local driver = assert(loadfile("tests/journey_driver.lua"))()
 local ns, path = driver.ns, driver.path
 driver.env._G = driver.env
 driver.load("Core/APIInput.lua")
+driver.load("Core/APIStops.lua")
 driver.load("Core/API.lua")
 driver.load("UI/NearbyRank.lua")
 

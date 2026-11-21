@@ -15,11 +15,9 @@
 ---@field done fun(reason: string)
 ---@field count integer
 ---@field owner string
----@field goal? SPFPoint
 ---@field unsubscribe? fun()
 ---@field arrived? boolean
 ---@field unobserve? fun()
 
 ---@class SPFNamespace
----@field ObserveFarmingJourney fun(owner: string, callback: fun(phase: string, index: integer, goal: SPFPoint, plan: SPFPlan?)): fun()
----@field FarmingJourneyProof fun(phase: string, goal: SPFPoint?, plan: SPFPlan?)
+---@field JourneyStopObserved fun(phase: "arrived"|"settled", goal: SPFPoint): boolean? the planner's own step to API.ObserveStops (Core/API.lua)

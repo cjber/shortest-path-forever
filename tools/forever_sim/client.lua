@@ -246,7 +246,7 @@ function M.build(sim)
 		end
 		sim.reportError(msg, debug.traceback("", 2), Taint.current)
 	end
-	function sim.reportError(message, traceback, taint, origin, event)
+	local function Record(message, traceback, taint, origin, event)
 		message = tostring(Secret.unwrap(message))
 		if taint and message:find("attempt to compare %a+ with %a+") and message:find("userdata") then
 			-- A secret on one side of an ordering comparison: Lua 5.1 reports the types, the client the secret.
@@ -264,6 +264,13 @@ function M.build(sim)
 			event = event,
 		}
 		table.insert(sim.errors, entry)
+		if sim.verbose then
+			io.stderr:write("[sim error] ", message, "\n", traceback or "", "\n")
+		end
+		return message
+	end
+	function sim.reportError(message, traceback, taint, origin, event)
+		message = Record(message, traceback, taint, origin, event)
 		if handler then
 			local wasDispatching = dispatching
 			dispatching = true
@@ -274,15 +281,24 @@ function M.build(sim)
 			Taint.set(savedTaint, savedOrigin)
 			dispatching = wasDispatching
 		end
-		if sim.verbose then
-			io.stderr:write("[sim error] ", message, "\n", traceback or "", "\n")
-		end
 	end
 	Taint.onError = sim.reportError
 	G.geterrorhandler = function()
 		return handler or DefaultHandler
 	end
 	G.seterrorhandler = function(f)
+		if type(f) == "function" and not Taint.current then
+			-- The client's own handler (Blizzard_ScriptErrors) is where an error reaches the player. Addon code that
+			-- catches an error and hands it to geterrorhandler() (SafeCall's Trace, the embedded runner's Report) ends
+			-- here through each addon handler's saved previous one, so this is where such an error is recorded.
+			local shown = f
+			f = function(message, ...)
+				if not dispatching then
+					Record(message, debug.traceback("", 2), Taint.current)
+				end
+				return shown(message, ...)
+			end
+		end
 		handler = f
 	end
 	G.CallErrorHandler = function(...)
@@ -417,17 +433,81 @@ function M.build(sim)
 	local E = { registered = {}, order = {}, pending = {} }
 	sim.events = E
 	local regSeq = 0
+
+	-- Waits that can never call back: a registration for a loading event the client fires once per UI session, made
+	-- after it fired. An addon whose files run late (a packaged ForeverCore elected at PLAYER_LOGIN runs them then)
+	-- loses such a callback with no error (cjber/forever-core#980, #984). Two kinds are recorded until they are
+	-- unregistered or the event fires again: a frame the addon's own code registers, and a callback the addon's
+	-- execution adds to EventRegistry (EventUtil.ContinueAfterAllEvents waits there, on a frame that may already be
+	-- registered). Sim:strandedWaits reads them.
+	E.once = { PLAYER_LOGIN = true, VARIABLES_LOADED = true }
+	E.fired = {}
+	E.late = { frame = {}, callback = {} }
+	local simDirectory = debug.getinfo(1, "S").source:match("^(@.*[/\\])")
+	-- The addon whose own code made the running call, with its line: the first caller outside the sim and C.
+	local function callingAddon()
+		local level = 3
+		while true do
+			local info = debug.getinfo(level, "Sl")
+			if not info then
+				return nil
+			end
+			local source = info.source
+			if info.what ~= "C" and not (simDirectory and source:sub(1, #simDirectory) == simDirectory) then
+				local addon = Taint.classify(source)
+				return addon or nil, addon and { file = Taint.shortSource(source), line = info.currentline } or nil
+			end
+			level = level + 1
+		end
+	end
+	local function noteLate(kind, event, key, addon, site)
+		if addon and E.once[event] and E.fired[event] then
+			E.late[kind][event] = E.late[kind][event] or {}
+			E.late[kind][event][key] = { addon = addon, event = event, kind = kind, site = site }
+		end
+	end
+	local function forgetLate(kind, event, key)
+		if E.late[kind][event] then
+			E.late[kind][event][key] = nil
+		end
+	end
+	-- Wraps a CallbackRegistry (the client's EventRegistry) so a callback added late for a once-only event is recorded.
+	function E.watchRegistry(registry)
+		if type(registry) ~= "table" or type(registry.RegisterCallback) ~= "function" then
+			return
+		end
+		local register, unregister = registry.RegisterCallback, registry.UnregisterCallback
+		rawset(registry, "RegisterCallback", function(self, event, func, owner, ...)
+			local result = register(self, event, func, owner, ...)
+			if self == registry and result ~= nil then
+				local addon = Taint.current
+				noteLate("callback", event, result, addon, addon and Taint.addonSite(addon) or nil)
+			end
+			return result
+		end)
+		rawset(registry, "UnregisterCallback", function(self, event, owner, ...)
+			if self == registry then
+				forgetLate("callback", event, owner)
+			end
+			return unregister(self, event, owner, ...)
+		end)
+	end
+
 	function E.register(frame, event)
 		E.registered[event] = E.registered[event] or {}
 		if not E.registered[event][frame] then
 			regSeq = regSeq + 1
 			E.registered[event][frame] = regSeq
+			if E.once[event] and E.fired[event] then
+				noteLate("frame", event, frame, callingAddon())
+			end
 		end
 	end
 	function E.unregister(frame, event)
 		if E.registered[event] then
 			E.registered[event][frame] = nil
 		end
+		forgetLate("frame", event, frame)
 	end
 	function E.listeners(event)
 		local list = {}
@@ -497,6 +577,11 @@ function M.build(sim)
 
 	-- Fires an event the way the client does: each registered frame's OnEvent in its own secure dispatch.
 	function E.fire(event, ...)
+		-- The waits so far get this dispatch; one registered during it does not (the listeners are read first).
+		if E.once[event] then
+			E.late.frame[event], E.late.callback[event] = nil, nil
+			E.fired[event] = true
+		end
 		-- A handler's error goes to the client's error handler inside dispatch, as live, so the entry always closes.
 		local entry = workBegin(event)
 		E.dispatchAll(event, ...)

@@ -430,7 +430,7 @@ end
 -- its pins, our own icons, the minimap, a Questie icon, and the waypoint and tracked quest keys. A click without
 -- the key says nothing.
 do
-	local off = "Journeys are off. Turn on Click the map to plan journeys in settings."
+	local off = "Journeys are off. Turn on Enable journeys in settings."
 	local function Off(what, click)
 		noticed, destination = {}, nil
 		local taken = click()

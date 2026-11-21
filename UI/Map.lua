@@ -786,8 +786,9 @@ ns.Init(function()
 	local combat = CreateFrame("Frame")
 	combat:RegisterEvent("PLAYER_REGEN_ENABLED")
 	combat:RegisterEvent("PLAYER_REGEN_DISABLED")
-	combat:SetScript("OnEvent", function()
-		if InCombatLockdown() then
+	-- The event, not InCombatLockdown(): lockdown starts only after PLAYER_REGEN_DISABLED is delivered (#1151).
+	combat:SetScript("OnEvent", function(_, event)
+		if event == "PLAYER_REGEN_DISABLED" then
 			ns.mapRefreshPending = true
 			ns.HideMapPins()
 			ns.HideMinimapPins()

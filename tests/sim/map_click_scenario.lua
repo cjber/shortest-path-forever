@@ -105,7 +105,7 @@ scenario("a journey-key click with journeys off says so on screen and leaves the
 	Click(sim, "shift")
 	errors.AddMessage = add
 	assert(
-		shown[1] == "Journeys are off. Turn on Click the map to plan journeys in settings.",
+		shown[1] == "Journeys are off. Turn on Enable journeys in settings.",
 		"the click says journeys are off on screen"
 	)
 	assert(#sim.chat == chat, "and nothing goes to chat")
