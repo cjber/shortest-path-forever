@@ -14,7 +14,7 @@ ns.JourneyGuide = Guide
 local guide
 
 -- Waypoint UI (github.com/Adaptvx/Waypoint-UI) drives the same native user waypoint we borrow. It is detected at the
--- point of use, because it may load after us. Use its public API to publish every bend while it is available.
+-- point of use, because it may load after us. Use its public API to publish the guide's waypoint.
 ---@return table? navigation
 local function WaypointUINavigation()
 	local api = rawget(_G, "WaypointUIAPI")
@@ -71,7 +71,7 @@ local function DestinationTitle(goal)
 	return goal.label
 end
 
--- Waypoint UI expects coordinates as percentages. Suppress placement audio on each turn.
+-- Waypoint UI expects coordinates as percentages. Suppress placement audio on guide updates.
 ---@param navigation table
 ---@param title string?
 ---@param waypoint table
@@ -175,6 +175,10 @@ local function RefreshNativeMarker()
 	end
 end
 
+local function MarkerFollowsArrow()
+	return not ns.db.guideStops or ns.db.arrowDirect == true
+end
+
 -- What the tracker calls the current leg's destination, with the journey's goal under it while the leg is a hop.
 -- Nil when the client's waypoint is not ours: a player's own pin and Waypoint UI's navigation keep their tooltip.
 ---@return string? title, string? goalTitle
@@ -184,6 +188,9 @@ local function WaypointNames()
 	end
 	if not SameWaypoint(C_Map.GetUserWaypoint(), guide.expectedWaypoint) then
 		return nil
+	end
+	if not MarkerFollowsArrow() then
+		return guide.title
 	end
 	local title
 	if guide.leg then
@@ -454,7 +461,7 @@ local function StopGuide(reason)
 	end
 	stopping = true
 	local restored = previous.previousWaypoint and C_Map.SetUserWaypoint(previous.previousWaypoint)
-	-- A rejected restoration must still remove our bend, rather than leave it behind without an ownership record.
+	-- A rejected restoration must still remove our waypoint to avoid leaving it without an ownership record.
 	if not restored and previous.waypoint then
 		C_Map.ClearUserWaypoint()
 	end
@@ -481,7 +488,7 @@ local function StopGuide(reason)
 end
 
 local function OwnsWaypoint()
-	-- Before SPF publishes a bend, Waypoint UI may already have a tracked pin to hand over.
+	-- Before SPF publishes a waypoint, Waypoint UI may already have a tracked pin to hand over.
 	if not guide.hasDriven and WaypointUIHolding() then
 		return true
 	end
@@ -499,7 +506,7 @@ local function ClearGuideWaypoint()
 	C_Map.ClearUserWaypoint()
 	C_SuperTrack.SetSuperTrackedUserWaypoint(false)
 	guide.waypoint, guide.expectedWaypoint = nil, nil
-	guide.bend, guide.uiMap, guide.fading = nil, nil, nil
+	guide.waypointTarget, guide.uiMap, guide.fading = nil, nil, nil
 	ns.charDB.guideWaypoint = nil
 	RememberTracking(guide)
 	guide.writing = nil
@@ -521,14 +528,10 @@ local function YieldGuide()
 	end
 end
 
-local function MarkerAllowed()
-	return not ns.db.guideStops or ns.db.arrowDirect
-end
-
 -- Whether the marker leads, which stands the screen arrow down. With "Mark only where steps end" the arrow leads,
--- and the marker Waypoint UI was handed shows beside it (#1124).
+-- and the waypoint marks the step destination.
 local function MarkerLeads()
-	return MarkerAllowed() and guide.waypoint ~= nil and C_SuperTrack.IsSuperTrackingUserWaypoint()
+	return MarkerFollowsArrow() and guide.waypoint ~= nil and C_SuperTrack.IsSuperTrackingUserWaypoint()
 end
 
 local function GuideWaypoint(point, fading)
@@ -546,38 +549,40 @@ local function GuideWaypoint(point, fading)
 	if guide.yielded then
 		return false
 	end
-	-- Waypoint UI can show each turn in-world while SPF's map marks still show step ends.
-	local navigation = WaypointUINavigation()
-	local nativeAllowed = MarkerAllowed()
-	if not nativeAllowed and not navigation then
-		if guide.waypoint then
-			ClearGuideWaypoint()
-			RefreshTracker()
+	local followsArrow = MarkerFollowsArrow()
+	local uiMap
+	if followsArrow then
+		uiMap = C_Map.GetBestMapForUnit("player")
+		-- Keep the current marker across frames where the player has no readable map (#826).
+		if not uiMap then
+			return MarkerLeads()
 		end
-		return false
+	else
+		-- The route arrow advances through bends and travel legs independently of the step waypoint.
+		local goal = guide.goal
+		if not (goal and goal.map and goal.x and goal.y) then
+			return false
+		end
+		point, fading = goal, false
 	end
-	local uiMap = C_Map.GetBestMapForUnit("player")
-	-- A frame with no map for the player is no place to move the marker, or to take it away: the waypoint Guide
-	-- already placed is still the guidance the player has, and the client draws it on the map it names next. Taking it
-	-- away drops the game's own pin and writes it back on the next readable frame, so guidance blinks while the
-	-- journey scans (#826).
-	if not uiMap then
-		return MarkerLeads()
-	end
-	local bend = guide.bend
-	if
-		not bend
-		or point.map ~= bend.map
-		or point.x ~= bend.x
-		or point.y ~= bend.y
-		or uiMap ~= guide.uiMap
-		or fading ~= guide.fading
-	then
-		guide.bend, guide.uiMap = { map = point.map, x = point.x, y = point.y }, uiMap
+	if not SamePoint(point, guide.waypointTarget) or uiMap ~= guide.uiMap or fading ~= guide.fading then
+		guide.waypointTarget, guide.uiMap = { map = point.map, x = point.x, y = point.y }, uiMap
 		guide.fading = fading
 		local waypoint
+		if not followsArrow then
+			local location = ns.Locate(point)
+			if
+				location
+				and C_Map.CanSetUserWaypointOnMap(location.uiMap)
+				and location.x >= 0
+				and location.x <= 1
+				and location.y >= 0
+				and location.y <= 1
+			then
+				waypoint = UiMapPoint.CreateFromCoordinates(location.uiMap, location.x, location.y)
+			end
 		-- The native waypoint has no per-pin alpha; near the goal, use the fading fallback instead of stacking icons.
-		if not fading and uiMap and C_Map.CanSetUserWaypointOnMap(uiMap) then
+		elseif not fading and uiMap and C_Map.CanSetUserWaypointOnMap(uiMap) then
 			local projectedMap, position =
 				C_Map.GetMapPosFromWorldPos(point.map, CreateVector2D(point.x, point.y), uiMap)
 			if projectedMap == uiMap and position then
@@ -587,6 +592,7 @@ local function GuideWaypoint(point, fading)
 				end
 			end
 		end
+		local navigation = WaypointUINavigation()
 		-- These APIs may dispatch events synchronously. Only our own writes bypass ownership checks.
 		guide.writing = true
 		guide.writingWaypoint = waypoint
@@ -595,9 +601,7 @@ local function GuideWaypoint(point, fading)
 			and navigation
 			and HandOverToWaypointUI(navigation, guide.title, waypoint)
 			and SameWaypoint(C_Map.GetUserWaypoint(), waypoint)
-		if
-			waypoint and (handedOver or (nativeAllowed and not waypointUITracking and C_Map.SetUserWaypoint(waypoint)))
-		then
+		if waypoint and (handedOver or (not waypointUITracking and C_Map.SetUserWaypoint(waypoint))) then
 			guide.waypoint, guide.expectedWaypoint = waypoint, waypoint
 			ns.charDB.guideWaypoint = { uiMapID = waypoint.uiMapID, x = waypoint.position.x, y = waypoint.position.y }
 			guide.hasDriven = true
@@ -605,7 +609,7 @@ local function GuideWaypoint(point, fading)
 				C_SuperTrack.SetSuperTrackedUserWaypoint(true)
 			end
 		elseif guide.waypoint then
-			-- Never leave a stale native marker pointing at the preceding bend when projection fails.
+			-- Never leave a stale native marker pointing at the previous target when placement fails.
 			ClearGuideWaypoint()
 		end
 		-- Deferred events from our own writes must also agree with the expected tracking state.
@@ -652,8 +656,9 @@ function Guide.To(node, points, goal, leg)
 	if not guide then
 		return
 	end
+	local sameGoal = SamePoint(guide.goal, goal)
 	guide.leg, guide.goal = leg, goal
-	if guide.target == node and guide.points == points then
+	if guide.target == node and guide.points == points and sameGoal then
 		GuideTitle(goal)
 		return
 	end
@@ -696,7 +701,7 @@ function Guide.Pause()
 	local changed = true
 	guide.paused = true
 	guide.pausedGoal = goal
-	guide.points, guide.target, guide.bend, guide.leg, guide.goal = nil, nil, nil, nil, nil
+	guide.points, guide.target, guide.waypointTarget, guide.leg, guide.goal = nil, nil, nil, nil, nil
 	ns.PointGuideArrow(nil)
 	if ns.PointArrivalPin then
 		ns.PointArrivalPin(goal)
@@ -770,8 +775,8 @@ function Guide.Yielded()
 	return guide ~= nil and guide.yielded == true
 end
 
--- Whether the journey's goal is guided right now, and so wears the gold pin. With "Mark only where steps end" on the
--- guide places no native waypoint but still leads by the arrow, so the goal stays gold. The goal pin is gold only
+-- Whether the journey's goal is guided right now, and so wears the gold pin. With step-end marks the arrow
+-- leads independently of the waypoint. The goal pin is gold only
 -- then; a paused, yielded or stopped guide is the bronze untracked state, and a planned route with no guide is too.
 ---@return boolean
 function ns.JourneyPinTracked()
