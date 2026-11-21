@@ -84,6 +84,7 @@
 ---@field routeColor string
 ---@field journeyKey string
 ---@field arrivalDistance number
+---@field offPathTolerance number
 ---@field hearthMinimumSavings number
 ---@field teleportMinimumSavings number
 ---@field roadDetour number
@@ -307,6 +308,7 @@
 ---@field destinationPinSize? number percent, the world map journey goal pin's size (50 to 100, UI/StopPin.lua)
 ---@field arrivalPin? boolean a pin with the stop's objectives while in its area, instead of hiding the arrow
 ---@field arrivalDistance? number yards that count as arrived at a journey's final destination (Journey.lua)
+---@field offPathTolerance number yards from a measured walking path before searching again
 ---@field npcArrows? boolean arrows beside the nameplate of the NPC a Nearby services journey walks to (NpcArrows.lua)
 ---@field trackerHost? ForeverTrackerLegacySettings the old tracker table, offered to ForeverCore once
 ---@field trackerHeight? number the Journey section viewport cap in Core UI units

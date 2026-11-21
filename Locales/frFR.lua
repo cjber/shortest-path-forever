@@ -417,6 +417,9 @@ L["The stop's live objectives under the arrow while it leads."] =
 L["The pin shown when you reach a stop keeps its own lines."] =
 	"L'épingle affichée lorsque vous atteignez une étape garde ses propres lignes." -- mt
 L["Arrival distance"] = "Distance d'arrivée" -- mt
+L["Off-path tolerance"] = "Tolérance hors chemin" -- mt
+L["How far you can stray from a walking path before a new one is searched."] =
+	"Jusqu'où vous pouvez vous écarter d'un chemin à pied avant qu'un nouveau soit cherché." -- mt
 L["How close you must get to a journey's destination for it to count as reached."] =
 	"À quelle distance de la destination d'un trajet vous devez arriver pour qu'il compte comme terminé." -- mt
 L["Stops before the last on a multi-stop route keep 15 yards."] =

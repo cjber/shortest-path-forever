@@ -150,6 +150,7 @@ local DEFAULTS = {
 	-- How close counts as arrived at a journey's final destination, in yards; the stops before the last on a
 	-- multi-stop route keep the fixed 15 yards.
 	arrivalDistance = 15,
+	offPathTolerance = 15,
 	metres = false,
 	-- Off by default: the compass is screen furniture a player turns on from Settings > Guidance.
 	compass = false,

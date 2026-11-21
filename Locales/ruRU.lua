@@ -436,6 +436,9 @@ L["The stop's live objectives under the arrow while it leads."] =
 L["The pin shown when you reach a stop keeps its own lines."] =
 	"Метка, показываемая при прибытии к остановке, сохраняет свои строки." -- mt
 L["Arrival distance"] = "Дистанция прибытия" -- mt
+L["Off-path tolerance"] = "Допуск отклонения от пути" -- mt
+L["How far you can stray from a walking path before a new one is searched."] =
+	"Насколько можно отойти от пешего пути, прежде чем будет найден новый." -- mt
 L["How close you must get to a journey's destination for it to count as reached."] =
 	"Насколько близко нужно подойти к месту назначения, чтобы путешествие считалось завершённым." -- mt
 L["Stops before the last on a multi-stop route keep 15 yards."] =

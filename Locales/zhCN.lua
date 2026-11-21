@@ -408,6 +408,9 @@ L["The stop's live objectives under the arrow while it leads."] =
 L["The pin shown when you reach a stop keeps its own lines."] =
 	"到达站点时显示的图钉保留各自的目标文字。" -- mt
 L["Arrival distance"] = "到达距离" -- mt
+L["Off-path tolerance"] = "偏离路径容差" -- mt
+L["How far you can stray from a walking path before a new one is searched."] =
+	"在重新搜索路线之前，你可以偏离步行路径多远。" -- mt
 L["How close you must get to a journey's destination for it to count as reached."] =
 	"距离旅程目的地多近才算到达。" -- mt
 L["Stops before the last on a multi-stop route keep 15 yards."] =

@@ -421,6 +421,9 @@ L["The stop's live objectives under the arrow while it leads."] =
 L["The pin shown when you reach a stop keeps its own lines."] =
 	"지점에 도착했을 때 표시되는 핀은 자체 목표 줄을 유지합니다." -- mt
 L["Arrival distance"] = "도착 거리" -- mt
+L["Off-path tolerance"] = "경로 이탈 허용 거리" -- mt
+L["How far you can stray from a walking path before a new one is searched."] =
+	"새 경로를 찾기 전에 도보 경로에서 벗어날 수 있는 거리입니다." -- mt
 L["How close you must get to a journey's destination for it to count as reached."] =
 	"여정의 목적지에 얼마나 가까워져야 도착으로 칩니다." -- mt
 L["Stops before the last on a multi-stop route keep 15 yards."] =

@@ -280,6 +280,7 @@ local ns = {
 		followRoads = true,
 		roadDetour = 50,
 		arrivalDistance = 15,
+		offPathTolerance = 15,
 		townServices = "off",
 		compass = false,
 		onlyMyProfessions = false,
@@ -421,6 +422,7 @@ local groups = {
 		"destinationPinSize",
 		"arrivalPin",
 		"arrivalDistance",
+		"offPathTolerance",
 		"npcArrows",
 		"tomtom",
 		"tomtomFollow",
@@ -477,7 +479,7 @@ local order = {
 }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 77, #rows)
+assert(#rows == 78, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -733,6 +735,10 @@ assert(
 	arrivalRow.tooltip:find("Stops before the last on a multi-stop route keep 15 yards", 1, true),
 	"the tooltip says only earlier stops on a multi-stop route keep 15 yards"
 )
+local offPathRow = Row("offPathTolerance")
+assert(offPathRow.kind == "slider" and offPathRow.setting.default == 15)
+assert(offPathRow.options.minValue == 15 and offPathRow.options.maxValue == 100 and offPathRow.options.step == 5)
+assert(offPathRow.options.format(40) == "40 yd")
 -- The NPC nameplate arrows are guidance furniture and start on, with the friendly-nameplate condition in the tooltip.
 assert(Row("npcArrows").setting.default == true, "nameplate arrows are on by default")
 Row("arrow").setting.onChanged()

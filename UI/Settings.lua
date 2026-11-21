@@ -392,29 +392,38 @@ ns.Init(function()
 			.. L["It returns to the arrow when you leave the area or the stop changes."],
 		ns.ArrivalPinChanged
 	)
-	local arrivalDistance = Settings.RegisterAddOnSetting(
-		page,
-		"ShortestPathForever_arrivalDistance",
-		"arrivalDistance",
-		ns.db,
-		Settings.VarType.Number,
-		L["Arrival distance"],
-		ns.Defaults.arrivalDistance
-	)
-	settings.arrivalDistance = arrivalDistance
-	local arrivalOptions = Secure(Settings.CreateSliderOptions)(5, 50, 5)
-	Label(arrivalOptions, function(value)
-		return ns.FormatDistance(value)
-	end)
-	Settings.RegisterInitializer(
-		page,
-		Secure(Settings.CreateSliderInitializer)(
-			arrivalDistance,
-			arrivalOptions,
-			L["How close you must get to a journey's destination for it to count as reached."]
-				.. " "
-				.. L["Stops before the last on a multi-stop route keep 15 yards."]
+	local function DistanceSlider(key, name, tooltip, minimum, maximum)
+		local setting = Settings.RegisterAddOnSetting(
+			page,
+			"ShortestPathForever_" .. key,
+			key,
+			ns.db,
+			Settings.VarType.Number,
+			name,
+			ns.Defaults[key]
 		)
+		settings[key] = setting
+		local options = Secure(Settings.CreateSliderOptions)(minimum, maximum, 5)
+		Label(options, function(value)
+			return ns.FormatDistance(value)
+		end)
+		Settings.RegisterInitializer(page, Secure(Settings.CreateSliderInitializer)(setting, options, tooltip))
+	end
+	DistanceSlider(
+		"arrivalDistance",
+		L["Arrival distance"],
+		L["How close you must get to a journey's destination for it to count as reached."]
+			.. " "
+			.. L["Stops before the last on a multi-stop route keep 15 yards."],
+		5,
+		50
+	)
+	DistanceSlider(
+		"offPathTolerance",
+		L["Off-path tolerance"],
+		L["How far you can stray from a walking path before a new one is searched."],
+		15,
+		100
 	)
 	Checkbox(
 		"npcArrows",

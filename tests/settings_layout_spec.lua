@@ -31,6 +31,7 @@ local expected = {
 	"destinationPinSize",
 	"arrivalPin",
 	"arrivalDistance",
+	"offPathTolerance",
 	"npcArrows",
 	"#Guides",
 	"tomtom",

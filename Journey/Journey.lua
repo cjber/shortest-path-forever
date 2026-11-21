@@ -35,8 +35,6 @@ local driver
 local ARRIVAL = 15
 local Search, Guide = ns.JourneySearch, ns.JourneyGuide
 local RefreshTracker, StopGuide = Guide.RefreshTracker, Guide.Stop
--- Walking along a measured path from where you stood, how far off it you may stray and still be on it.
-local ON_PATH = 15
 -- A walk whose drawn line runs this many yards above or below the floor you are on (Floor.lua) is not the one you are
 -- on: it is on another floor of the same spot. The walking search's own height tolerance.
 local OTHER_FLOOR = 10
@@ -498,8 +496,9 @@ local function SegmentHeight(a, b, t)
 end
 
 -- Where here falls on a walk: the segment ending at points[index], how far along it (t), and the yards still to walk
--- from there, or nil when here is more than reach (ON_PATH by default) off the walk. A here with a height (the floor
--- Floor.lua follows) is not on a segment drawn on another floor.
+-- from there, or nil when here is farther from the walk than reach. Measured walks share the saved tolerance for
+-- replanning, rejoining and corpse runs. Unmeasured walks rejoin at the nearest point, and arrival keeps its own
+-- distance check. A player with a known height can only match a segment on the same floor.
 -- Segment lengths of a walk, built once per points table: OnWalk runs on every progress tick for the same
 -- walk, and rebuilding them allocated a table and re-rooted every segment each time (WFA-13). Weak keys let
 -- a replaced walk's lengths go with it. The cache keeps each point's coordinates too, so a points table edited
@@ -537,6 +536,7 @@ local function OnWalk(points, here, reach)
 		end
 		walkLengths[points] = { lengths = lengths, total = total, count = #points, xs = xs, ys = ys }
 	end
+	reach = reach or ns.db.offPathTolerance
 	local walked, best, found, along, after = 0, nil, nil, nil, nil
 	for index = 2, #points do
 		local a, b = points[index - 1], points[index]
@@ -546,7 +546,7 @@ local function OnWalk(points, here, reach)
 		local height = here.z and SegmentHeight(a, b, t)
 		if
 			here.map == a.map
-			and off <= (reach or ON_PATH)
+			and off <= reach
 			and (not best or off < best)
 			and not (height and math.abs(height - here.z) > OTHER_FLOOR)
 		then
@@ -554,7 +554,7 @@ local function OnWalk(points, here, reach)
 		end
 		walked = walked + length
 	end
-	return found, along, after, total
+	return found, along, after, total, best
 end
 
 ns.OnWalk = OnWalk -- Corpse.lua trims its walk the same way.

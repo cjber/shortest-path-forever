@@ -1,5 +1,5 @@
 local root = ... or "."
-local ns = { db = { journey = true }, charDB = {} }
+local ns = { db = { journey = true, offPathTolerance = 15 }, charDB = {} }
 -- The harness is a mouse client: no gamepad interface, so UI/MenuModifier.lua keeps its entries in place.
 function ns.GamepadUI()
 	return false
