@@ -10,7 +10,7 @@ local L = ns.L
 -- Yendi) and the other faction's towns and capitals (Polestar's). A profile weights path choice: yards inside a
 -- hazard count several times over while the route is chosen, but the walk's displayed time uses its real travel
 -- cost. The zones and towns the journey starts and ends in are never avoided, though a hostile town there is still
--- named.
+-- named, and the walk straight to a goal inside a high-level zone pays for its yards in it (#1007).
 local ROAD_DETOUR_MAX = 200
 local LEVEL_GAP = 4 -- a zone whose lowest level is this many above yours is avoided
 local ZONE_COST, TOWN_COST = 4, 6
@@ -33,6 +33,9 @@ local KEEP = 50000
 ---@field Near fun(map: number, minX: number, minY: number, maxX: number, maxY: number): boolean -- a town in the box
 ---@field TransportNear fun(map: number, x: number, y: number): boolean -- a dock or flight master within 200 yards
 ---@field ConnectorWalk fun(from: SPFPoint, to: SPFPoint): boolean -- a short walk next to a dock or flight master
+-- The factor on the walk straight from the start to the goal.
+---@field Direct fun(map: number, ax: number, ay: number, bx: number, by: number): number
+---@field goalZone? number -- the goal's high-level zone, charged on the walk straight there
 -- The mean factor along it; shares are its baked Hazards.Shares, when it has them.
 ---@field Segment fun(map: number, ax: number, ay: number, bx: number, by: number, shares: number[]?): number
 ---@field roads? true -- Follow roads is on: walks prefer road cells (Path.lua)
@@ -423,6 +426,7 @@ function Hazards.Profile(from, goal, here, landing)
 	local faction = UnitFactionGroup("player")
 	local level = Hazards.Level()
 	local exempt, keys = {}, {}
+	local goalZone, leaving = nil, {}
 	local ends = { from, goal, here, landing }
 	for i = 1, 4 do
 		local point = ends[i]
@@ -430,6 +434,11 @@ function Hazards.Profile(from, goal, here, landing)
 		local zone = point and ns.ZoneMap(point.map, point.x, point.y)
 		if zone then
 			exempt[zone] = true
+			if i == 2 then
+				goalZone = zone
+			else
+				leaving[zone] = true
+			end
 		end
 	end
 	local zones, boxes, cities, ids = {}, {}, {}, {}
@@ -447,9 +456,21 @@ function Hazards.Profile(from, goal, here, landing)
 			ids[#ids + 1] = id
 		end
 	end
+	-- Every route to a goal inside a high-level zone must enter it, so walks to and from departures stay exempt there
+	-- and a ride landing nearer the goal needs no reward. Only the walk straight from the start to the goal pays for
+	-- its yards inside, so a long walk through it loses to a ride that shortens it (#1007). Starting inside it, the
+	-- walk is the escape and pays nothing (#895).
+	local goalCharge
+	local high = goalZone and ns.Zones[goalZone]
+	if high and not high.city and not leaving[goalZone] and ns.db.avoidHighZones and high.low >= level + LEVEL_GAP then
+		goalCharge = goalZone
+	end
 	table.sort(ids)
 	for _, id in ipairs(ids) do
 		keys[#keys + 1] = id
+	end
+	if goalCharge then
+		keys[#keys + 1] = "goal" .. goalCharge
 	end
 	local towns, active, charged = {}, {}, {}
 	local areas = ns.TownAreas or {}
@@ -584,6 +605,14 @@ function Hazards.Profile(from, goal, here, landing)
 		detour = 50
 	end
 	local roadFactor = ns.db.followRoads and (1 + math.max(0, math.min(ROAD_DETOUR_MAX, detour)) / 100) or nil
+	-- The factor on the walk straight from the start to the goal: 1 unless the goal's high-level zone is charged.
+	local function Direct(map, ax, ay, bx, by)
+		if not goalCharge then
+			return 1
+		end
+		local length = math.sqrt(Distance2(ax, ay, bx, by))
+		return 1 + ZoneShare(goalCharge, map, ax, ay, bx, by, length) * (ZONE_COST - 1)
+	end
 	return {
 		-- What is avoided, not why: a level-up that crosses no zone's threshold keeps every search.
 		key = (faction or "") .. ":" .. table.concat(keys, ",") .. (roadFactor and ":roads:" .. roadFactor or ""),
@@ -594,6 +623,8 @@ function Hazards.Profile(from, goal, here, landing)
 		TransportNear = TransportNear,
 		ConnectorWalk = ConnectorWalk,
 		Segment = Segment,
+		Direct = Direct,
+		goalZone = goalCharge,
 		roads = ns.db.followRoads and true or nil,
 		roadFactor = roadFactor,
 		zones = zones,
@@ -688,6 +719,14 @@ function Hazards.Notes(hazards, leg, points)
 		end
 	end
 	return #notes > 0 and notes or nil
+end
+
+-- The tracker's line when the charge on the goal's zone is what made the journey ride rather than walk straight there.
+---@param hazards SPFHazards
+---@return string
+function Hazards.RideNote(hazards)
+	local id = hazards.goalZone
+	return string.format(L["Rides to spend less time walking through %s (level %s)"], ZoneName(id), Levels(id))
 end
 
 ns.Init(function()

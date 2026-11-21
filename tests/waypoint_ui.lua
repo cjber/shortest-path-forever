@@ -494,6 +494,12 @@ assert(waypoint == replacement, "keep a player pin that replaces the route's mar
 check("waypoint UI with step-end marks: its marker is an extra, the arrow still leads", "", wpu .. [[
 -- The client draws its marker, so a waypoint that leads would stand the screen arrow down (#1124).
 C_Navigation.GetFrame = function() return {} end
+Enum.NavigationState = { InRange = 2, Occluded = 1 }
+C_Navigation.GetTargetState = function() return Enum.NavigationState.InRange end
+C_Navigation.HasValidScreenPosition = function() return true end
+C_Navigation.GetNextWaypointForMap = function()
+ if waypoint and supertracked then return waypoint.position:GetXY() end
+end
 cvars.showInGameNavigation = "1"
 ns.db.guideStops, navTracking = true, false
 _G.WaypointUIAPI.Navigation.NewUserNavigation = function(opts)
@@ -505,6 +511,7 @@ _G.WaypointUIAPI.Navigation.NewUserNavigation = function(opts)
 end
 wStart()
 assert(#newCalls == 1 and supertracked, "Waypoint UI gets the destination")
+arrowFrame.scripts.OnUpdate(arrowFrame, 0.1)
 assert(ns.ArrowLeads(), "the arrow leads, which keeps a guide addon's own arrow hidden")
 assert(arrowFrame:IsShown() and arrowFrame.alpha == 1, "so it is drawn: alpha " .. tostring(arrowFrame.alpha))
 -- Marking every bend lets the marker lead instead, as it does without Waypoint UI.

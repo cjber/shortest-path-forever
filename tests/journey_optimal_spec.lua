@@ -34,7 +34,7 @@ ns.Planner.Plan = function(o)
 	options.feasibleOnly, options.incumbent, options.incumbentPlan = nil, nil, nil
 	return plan(o)
 end
--- Every route the search hands Journey: the rough route from baked data may be drawn first, then the one proved route.
+-- Every route the search hands Journey: an estimate, a measured offer and the proved route.
 local published = {}
 local start = ns.JourneySearch.Start
 ns.JourneySearch.Start = function(point, route, state, listener)
@@ -146,14 +146,19 @@ for i = 1, 30 do
 	drain()
 	local bounded, exact = driver.shown(), full(options)
 	assert((bounded ~= nil) == (exact ~= nil), "reachability differs for pair " .. i)
+	local offered = false
 	for at, route in ipairs(published) do
-		-- An estimate can reach a place no walk does: the search then clears it.
-		assert(
-			not route.rough or at == 1 and (#published == 2 or not exact),
-			"a rough route is drawn first, then replaced"
-		)
-		assert(route.rough or at == #published, "the proved route is the only one followed")
+		if route.rough then
+			assert(at == 1, "the rough route is drawn first")
+		elseif route.provisional then
+			assert(not offered and (route.leg.mode == "walk" and route.leg.measured), "only one measured offer")
+			offered = true
+		else
+			assert(at == #published, "the proved route is published last")
+		end
 	end
+	local settled = ns.JourneyPlan()
+	assert(not (settled and settled.provisional), "the proof settles the followed route")
 	published = {}
 	if bounded then
 		reachable = reachable + 1

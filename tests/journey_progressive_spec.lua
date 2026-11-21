@@ -1,6 +1,6 @@
--- A first search draws its estimate at once as a rough route and follows nothing until its proof ends; the proved
--- optimum is the one route. Later walks are drawn only when they are the next on foot, and a cancelled or restarted
--- search never speaks late.
+-- A first search draws its estimate, then follows a route of settled walks while the proof continues, once every
+-- route the bounds still allow starts with the same walk.
+-- Later walks wait until they are next on foot, and a cancelled or restarted search never speaks late.
 local SPEED = 7
 local function at(a, b)
 	return a.map == b.map and a.x == b.x and a.y == b.y
@@ -20,6 +20,7 @@ end
 local from, goal = { map = 1, x = 0, y = 0 }, { map = 1, x = 1000, y = 5000 }
 local enter = { A = { map = 1, x = 500, y = 100 }, B = { map = 1, x = 500, y = 200 } }
 local exit = { map = 1, x = 500, y = 4000 }
+local exit2 = { map = 1, x = 900, y = 4600 }
 ns.Portals = {
 	{ name = "Passage to A", kind = "passage", from = enter.A, to = exit, seconds = 5 },
 	{ name = "Passage to B", kind = "passage", from = enter.B, to = exit, seconds = 5 },
@@ -35,6 +36,8 @@ local function yards(a, b)
 		return seconds.B * SPEED
 	elseif at(b, goal) and at(a, exit) then
 		return 600 * SPEED
+	elseif at(b, goal) and at(a, exit2) then
+		return seconds.D * SPEED
 	end
 	return 100000 * SPEED
 end
@@ -80,6 +83,7 @@ end
 -- The start batch knows A; the goal batch knows everything: B is the walk still being searched.
 local function half()
 	local start, back = walking.batches[made + 1], walking.batches[made + 2]
+	start.snapped, back.snapped = true, true
 	settle(back, function(target)
 		return yards(target, goal)
 	end)
@@ -112,26 +116,74 @@ local function finish(batch)
 	walking.finish(batch, costs)
 end
 
--- A first search draws its estimate at once and follows nothing until the proof ends; its optimum is the route.
+-- While a walk not yet measured could start a faster route, nothing is followed: offering A would send the player one
+-- way while the proof may choose B (#1032). The proof's route is then the one route.
+seconds.B = 280
 begin()
 assert(heard() == "searching" and not route)
 local start, back = half()
 assert(heard() == "rough" and not route, "the estimate is drawn at once, never followed")
+geometry()
+assert(heard() == "" and not route, "no offer while B's bound could beat A")
 assert(#walking.waiting(walking.finds) == 0, "no walk is drawn before the proof")
-seconds.B = 280
 exhaust()
 finish(start)
 finish(back)
-assert(heard() == "" and not route, "the proved route's first walk is drawn before it is shown")
 geometry()
-assert(heard() == "route" and via() == "B" and Search.Status() == 0, "the optimum is the route")
-local leg = route.legs[1]
-assert(leg.measured and not leg.walkDeferred and leg.walkPoints and #leg.walkPoints >= 2)
-driver.update(0.2)
-Search.Poll()
-geometry()
-assert(heard() == "" and via() == "B", "it never swaps back")
+assert(
+	heard() == "route" and via() == "B" and not route.provisional and Search.Status() == 0,
+	"the optimum is the route"
+)
 Search.Reset()
+
+-- With the first walk settled and shared by every route the bounds still allow, the player follows it while the goal
+-- side is proved: two passages lead on from A, and the walk on from the second one is still being searched. The
+-- proof keeps the offered route without redrawing it, or replaces it exactly once.
+local portals = ns.Portals
+ns.Portals = {
+	{ name = "Passage to C", kind = "passage", from = enter.A, to = exit, seconds = 5 },
+	{ name = "Passage to D", kind = "passage", from = enter.A, to = exit2, seconds = 5 },
+}
+local function exitOf(planned)
+	local far = planned.legs[2] and planned.legs[2].to
+	return far and (at(far, exit) and "C" or at(far, exit2) and "D")
+end
+for _, secondsD in ipairs({ 200, 900 }) do
+	seconds.D = secondsD
+	begin()
+	assert(heard() == "searching" and not route)
+	local startBatch, goalBatch = walking.batches[made + 1], walking.batches[made + 2]
+	startBatch.snapped, goalBatch.snapped = true, true
+	settle(goalBatch, function(target)
+		return not at(target, exit2) and yards(target, goal) or nil
+	end)
+	settle(startBatch, function(target)
+		return at(target, enter.A) and yards(origin, target) or at(target, origin) and 0 or nil
+	end)
+	assert(heard() == "rough" and not route)
+	geometry()
+	assert(heard() == "route" and via() == "A" and exitOf(route) == "C" and route.provisional, "follow the shared walk")
+	assert(Search.Status() > 0 and select(2, Search.Status()) == 0, "the proof is still in progress")
+	local first = route
+	local leg = first.legs[1]
+	assert(leg.measured and not leg.walkDeferred and #leg.walkPoints >= 2)
+	exhaust()
+	finish(startBatch)
+	finish(goalBatch)
+	geometry()
+	if secondsD < 600 then
+		assert(heard() == "route" and exitOf(route) == "D" and route ~= first, "replace the offer exactly once")
+	else
+		assert(heard() == "times" and route == first, "keep the offered route without redrawing")
+	end
+	assert(not route.provisional and Search.Status() == 0)
+	driver.update(0.2)
+	Search.Poll()
+	geometry()
+	assert(heard() == "", "the proved route stays in place")
+	Search.Reset()
+end
+ns.Portals = portals
 
 -- A cancelled search is never heard from again, though its rough route was drawn.
 begin()
@@ -261,6 +313,6 @@ assert(heard() == "" and via() == "A", "a search that is over is never heard fro
 walking.bound, ns.teleports, ns.teleportReady = bound, nil, nil
 Search.Reset()
 print(
-	"journey_progressive_spec: the estimate is drawn first, the proved optimum is the route, "
+	"journey_progressive_spec: the measured offer guides before the proof, the optimum replaces it only when different, "
 		.. "later walks wait, a finished search stays quiet: ok"
 )
