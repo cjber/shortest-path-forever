@@ -69,8 +69,8 @@
     },
     {
       "source": "UI/StopPin.lua",
-      "sha256": "8d6a041846ddbe20fc91721a702c2618073f3f32a802f6d08f3d70351a8130cd",
-      "review": "Read Number creation and SetStop/tooltip paths. Number explicitly uses GameFontNormal but displays a dynamic stop number, not a locale phrase. The time-distance phrase and stop descriptions are tooltip text owned by the tooltip template; none is bound to Number.",
+      "sha256": "dae768e055e64ed0a1bb9b94cf2cf2e91d2ce13dc8b5ea402e35913b8f76d946",
+      "review": "Read Number creation and SetStop/tooltip paths. Number explicitly uses GameFontNormal but displays a dynamic stop number, not a locale phrase. The time-distance phrase, stop descriptions and clear hints are tooltip text owned by the tooltip template; none is bound to Number.",
       "bindings": []
     },
     {
