@@ -65,6 +65,7 @@ ROAD_TEXTURES = {
     188508: "feralas/feralasroad",
     188542: "hyjal/alphahyjalroad",
     188566: "ironforge/ironforgerock06road2",
+    188572: "ironforge/ironforgerock09browncracks",
     188584: "kalidar/kalidardarnroad",
     188598: "kalidar/kalidarroad",
     188610: "loch modan/lochmodanbrickroadbase",
