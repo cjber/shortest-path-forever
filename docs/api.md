@@ -5,6 +5,17 @@ Version 2 removes peer sharing and `Leaderboard`; callers must accept versions 1
 addon may not have it yet. The full types are in [`types/API.lua`](../types/API.lua). On ForeverCore 1.3.2 or
 later, the API is also listed by `ForeverCore.APIKit.Addons()`.
 
+## Open the world map
+
+`ForeverCore.Open("ShortestPathForever", where)` accepts `"journey"` for the current journey goal
+or corpse point, a positive integer uiMapID for a specific map, or `nil` for the default world map.
+A journey without a mapped destination also uses the default world map.
+
+The call returns `true` when it opens the map or can use the map already on screen. On refusal it
+returns `false` and, when available, a localized reason that ForeverCore displays in chat. Combat
+blocks the request. With the gamepad interface active, the player opens or changes the map and
+the addon can use it once it shows the requested map.
+
 ## Minor history
 
 - Version 2, `minor = 6`: adds `NavigateRoute`'s `options` (`policy`), `ObserveStops` and `JourneyState`.

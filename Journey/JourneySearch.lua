@@ -89,6 +89,17 @@ local function Here()
 end
 Search.Here = Here
 
+-- Both directions only search fixed places on the endpoint's own landmass.
+function Search.EndpointTargets(point, places)
+	local list, mass = {}, Context.Landmass(point)
+	for _, place in ipairs(places) do
+		if place.map == point.map and Context.Landmass(place) == mass then
+			list[#list + 1] = place
+		end
+	end
+	return list, mass
+end
+
 -- Cancelled searches leave both batches paused with their settled costs.
 local function CancelPaths()
 	pathVersion = pathVersion + 1
@@ -526,13 +537,7 @@ local function RefreshCosts(includeGoal, forced, replace)
 	local teleports, partyPortals = options.teleports, options.partyPortals
 	local places, faction = Context.Places(teleports, partyPortals, routePolicy)
 	local function targets(point, withGoal)
-		local list = {}
-		local mass = Context.Landmass(point)
-		for _, place in ipairs(places) do
-			if place.map == point.map and Context.Landmass(place) == mass then
-				list[#list + 1] = place
-			end
-		end
+		local list, mass = Search.EndpointTargets(point, places)
 		if withGoal and goal.map == point.map and Context.Landmass(goal) == mass then
 			list[#list + 1] = goal
 		end

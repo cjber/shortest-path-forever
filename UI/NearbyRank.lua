@@ -42,7 +42,7 @@ function Rank:Step()
 	-- On a bound the estimate skips the planner's preferences: a Hearthstone dropped for saving too little on the bound
 	-- may save enough on the longer walk measured, so the preferred route is no lower bound (#1034 review).
 	local seconds =
-		self.estimate(self.fromMap, self.fromX, self.fromY, place.map, place.x, place.y, walk, bound and true)
+		self.estimate(self.fromMap, self.fromX, self.fromY, place.map, place.x, place.y, walk, bound and true, place)
 	local exact = not bound
 	if seconds and (not self.seconds or seconds < self.seconds or seconds == self.seconds and exact) then
 		self.best, self.seconds, self.exact = place, seconds, exact
@@ -85,6 +85,154 @@ local function Spawn(place)
 	return point
 end
 
+-- Retain settled costs without retaining Dijkstra frontiers. Departures share a batch across goals with identical
+-- hazards. A reverse batch belongs to its NPC, since it must start on that NPC's own floor.
+---@class SPFNearbyTransitCosts
+---@field here SPFPoint
+---@field anchor? SPFPathJob
+---@field departures table<string, SPFPathJob>
+---@field landings table<SPFNearbyPlace, SPFPathJob>
+---@type SPFNearbyTransitCosts?
+local transit
+
+local function TransitCosts(here)
+	local last = transit
+	local band, previous = here.band, last and last.here.band
+	local sameBand = band == previous or band and previous and band.lo == previous.lo and band.hi == previous.hi
+	if
+		not last
+		or not (sameBand and ns.JourneySearch.SamePlace(last.here, here) or ns.Path.ReuseMany(last.anchor, here, true))
+	then
+		last = { here = here, departures = {}, landings = {} }
+		transit = last
+	end
+	return last
+end
+
+local function TargetIndex(targets, target)
+	for i, point in ipairs(targets) do
+		if ns.JourneySearch.SamePlace(point, target) then
+			return i
+		end
+	end
+end
+
+local function EndpointCost(job, source, target, reverse, options, places, kept, key)
+	local path = ns.Path
+	if not path.HasData(source.map) then
+		return nil
+	end
+	local cache = reverse and kept.landings or kept.departures
+	local batch = cache[key]
+	local index
+	local hazards, water = options.hazards, options.waterWalking
+	if
+		batch
+		and batch.waterWalking == water
+		and batch.hazards.key == hazards.key
+		and (reverse or path.ReuseMany(batch, source, true))
+	then
+		index = TargetIndex(batch.targets, target)
+		if index and batch.costs[index] ~= nil then
+			return batch.costs[index]
+		end
+	end
+
+	local cost
+	local function Update(costs, reason, searched)
+		if job.cancelled or (not searched.done and (not costs or costs[index] == nil)) then
+			return
+		end
+		if reason ~= "nodata" and reason ~= "error" then
+			cost = costs and costs[index]
+			if cost == nil then
+				cost = false
+			end
+			if searched.valid then
+				cache[key] = searched
+				if not reverse then
+					kept.anchor = searched
+				end
+			end
+		end
+		path.ReleaseMany(searched)
+		job.walking[searched] = nil
+		path.Resume(job)
+	end
+
+	-- A second ranking can use another batch while this one owns its callbacks.
+	cache[key] = nil
+	if index then
+		batch.callback, batch.progress = Update, Update
+		path.Resume(batch)
+	else
+		local targets = ns.JourneySearch.EndpointTargets(source, places)
+		index = TargetIndex(targets, target)
+		if not index then
+			return nil
+		end
+		batch = path.FindMany(source.map, source, targets, Update, water, reverse, Update, hazards)
+	end
+	job.walking = job.walking or {}
+	job.walking[batch] = true
+	path.Wait()
+	return cost
+end
+
+-- Replan on the winning candidate's measured legs. Another ride can become cheaper when a walk grows or is ruled
+-- out, so keep the lower-bound alternatives in the graph until a plan needs no further searches.
+---@param job SPFPathJob
+---@param options SPFContextOptions
+---@param place SPFNearbyPlace
+---@param walk? number|false
+---@param bound? boolean
+local function Plan(job, options, place, walk, bound)
+	job.nearbyHere = job.nearbyHere or ns.JourneySearch.Here()
+	local here, goal = job.nearbyHere, Spawn(place)
+	if here and goal then
+		options.from, options.to = here, goal
+		options.hazards = ns.Hazards.Profile(here, goal, here)
+		options.endpointBounds = true
+	end
+	local walks = {}
+	if walk ~= nil then
+		walks[1] = { from = options.from, to = options.to, cost = walk }
+	end
+	options.walks, options.lowerBound = walks, bound
+	local plan = ns.Planner.Plan(options, job)
+	if bound or not (here and goal and plan) then
+		return plan
+	end
+	local rides = false
+	for _, leg in ipairs(plan.legs) do
+		rides = rides or leg.mode ~= "walk"
+	end
+	if not rides then
+		return plan
+	end
+	local kept, places = TransitCosts(here), ns.Planner.Places(options)
+	while plan do
+		local changed = false
+		for _, leg in ipairs(plan.pendingWalks) do
+			local reverse = leg.from.kind ~= "start"
+			local cost
+			if reverse then
+				cost = EndpointCost(job, goal, leg.from, true, options, places, kept, place)
+			elseif leg.to.kind ~= "goal" then
+				cost = EndpointCost(job, here, leg.to, false, options, places, kept, options.hazards.key)
+			end
+			if cost ~= nil then
+				walks[#walks + 1] = { from = leg.from, to = leg.to, cost = cost }
+				changed = true
+			end
+		end
+		if not changed then
+			return plan
+		end
+		plan = ns.Planner.Plan(options, job)
+	end
+end
+
 -- The last finished measures, one per hazard profile: the panel asks again every tick, and while you stand on the
 -- same node with the same settings their walks hold.
 ---@type table<string, { job: SPFPathJob, water: boolean, walks: SPFWalks }>
@@ -120,8 +268,8 @@ end
 
 -- The walks the journey would take from where you stand to each place: its own search, from its own start (your floor,
 -- or your height band) to the spot it walks to (the NPC's own floor), under its own hazards. An estimate built on them
--- prices the direct walk as the journey does, not as the straight line under a shop's walls (#1032); its other legs
--- stay the planner's lower bounds. Calls back as walks settle, nearest first, with each settled place's running yards
+-- prices the direct walk as the journey does, including detours around walls (#1032). Transit endpoint walks settle
+-- inside the ranking job when it finds a ride. Calls back as direct walks settle, nearest first, with running yards
 -- (false where no walk was found) and, for each place still searched, a lower bound on its walk (Path.LowerBound);
 -- then once more with pending nil when done. A place it cannot search is never pending, and its estimate stays the
 -- planner's own. The work runs under the frame budget; Cancel stops it, as a caller does once its rankings are decided
@@ -243,6 +391,7 @@ local function Cancel(job)
 	for walking in pairs(job.walking or {}) do
 		ns.Path.Cancel(walking)
 	end
+	job.walking = nil
 end
 
 -- The cheapest of one shortlist by the journey's cost, on its walks as they land: callback(place) once the ranking is
@@ -315,4 +464,6 @@ end
 ---@field Cancel fun(job: SPFPathJob)
 ---@field Holds fun(job: SPFPathJob): boolean
 ---@field Choose SPFChoose
-ns.NearbyRank = { New = NewRank, MeasureWalks = MeasureWalks, Cancel = Cancel, Holds = Holds, Choose = Choose }
+---@field Plan fun(job: SPFPathJob, options: SPFContextOptions, ...: any): SPFPlan?
+ns.NearbyRank =
+	{ New = NewRank, MeasureWalks = MeasureWalks, Cancel = Cancel, Holds = Holds, Choose = Choose, Plan = Plan }

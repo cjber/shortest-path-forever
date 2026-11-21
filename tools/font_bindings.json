@@ -3,7 +3,7 @@
   "producers": [
     {
       "source": "UI/Tracker.lua",
-      "sha256": "68fa5985c66e7144be18b3bf52cfe1ac4157a0258af8b232e4318544f160bc0c",
+      "sha256": "59f78ba71251bda5237e5896f9ec521eb51663a0888c621304e5492508a8e1d9",
       "review": "Read all of Tracker.lua, Tracker.xml and ForeverCore TrackerSection.Create, UpdateText and TrackerLine.SetInteractive. Confirmed pinned client Blizzard_ObjectiveTrackerModule.xml: ObjectiveTrackerModuleTemplate Header inherits ObjectiveTrackerModuleHeaderTemplate, whose Text uses ObjectiveTrackerHeaderFont. Blizzard_ObjectiveTrackerBlock.xml HeaderText uses ObjectiveTrackerLineFont; Blizzard_ObjectiveTrackerShared.xml ObjectiveTrackerLineTemplate Text uses ObjectiveTrackerLineFont, inherited without overrides by ShortestPathForeverTrackerLineTemplate. Bound every local phrase sent to section headers, block headers and rows, including Journey  %s · %s from #838. RefreshBlockText preserves these widgets. Client tracker text-size changes and optional Kaliels font overrides are outside the pinned native-font coverage. Menus, chat, tooltips and dynamic text from JourneyInfo, DockTitle, and DepartureText are excluded.",
       "bindings": [
         {
@@ -388,8 +388,8 @@
     },
     {
       "source": "UI/ServicesPanel.lua",
-      "sha256": "05cecb570a24c0f8d5b0dd51c2d9cef67def5a0076149e1f4b143a5bbc4dbfc1",
-      "review": "Read BuildHeader, BuildContent, CreateBetterRow, PaintBetter, Where and Refresh. headerTitle uses GameFontNormalLarge2; emptyText uses GameFontDisable for STATUS and empty/position notices; better-row Label uses GameFontHighlight for the name-zone format and subtitle uses GameFontHighlight for Where. No later font override occurs. Search instructions and tooltips are template-owned; external group/section names, service details and countdown helper output are excluded.",
+      "sha256": "4d2bf28fb2a2fc0d7fb31d2671631e5c07e72767d93f354cf8a7cd66eecfc109",
+      "review": "Read BuildHeader, BuildContent, CreateBetterRow, PaintBetter, Where and Refresh. headerTitle uses GameFontNormalLarge2; emptyText uses GameFontDisable for STATUS and empty/position notices; better-row Label uses GameFontHighlight for the name-zone format and subtitle uses GameFontHighlight for Where. No later font override occurs. Search instructions and tooltips are template-owned; external group/section names, service details and countdown helper output are excluded. Reviewed #1036: StopRanking now cancels through NearbyServices.Cancel; no FontString or FontObject change. Reviewed #1036: StopRanking now cancels through NearbyServices.Cancel; no FontString or FontObject change. Reviewed #1036: StopRanking now cancels through NearbyServices.Cancel; no FontString or FontObject change.",
       "bindings": [
         {
           "font": "GameFontNormalLarge2",
