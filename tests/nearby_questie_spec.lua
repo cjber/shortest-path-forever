@@ -537,12 +537,20 @@ do
 	local db = {}
 	local questie, Ready = QuestieAPI()
 	local run = Load({ lib = QuestieDB(count), db = db, questie = questie })
+	-- A layer subscribes once at login (the minimap's service pins do) and must hear every index, not only the first.
+	local heard, indexes = 0, {}
+	run.ns.NearbyServices.OnReady(function()
+		heard = heard + 1
+		indexes[#indexes + 1] = run.ns.NearbyServices.Index()
+	end)
 	run.Login()
 	run.ns.NearbyServices.Request()
 	run.Run(false)
 	assert(count.npcs == 8 and db.nearbyRead == nil, "read as it stood, and not kept")
+	assert(heard == 1, "the subscriber hears the first index")
 	Ready()
 	run.Run(true)
+	assert(heard == 2 and indexes[2] ~= indexes[1], "and the index Questie's late callback has read again")
 	assert(count.npcs == 16, "Questie's late ready callback has the database read again")
 	assert(type(db.nearbyRead) == "table", "and that read, with its corrections, is kept")
 	assert(run.ns.NearbyServices.State() == "ready", "the list stays ready over it")

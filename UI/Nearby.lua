@@ -32,23 +32,21 @@ local itemNames = {}
 local itemLevels = {}
 -- Each tiered group's best tier by NPC for one player level, since the level last asked.
 local tierLevel, tierCache = nil, {}
--- Callers waiting for the index, so an open panel fills as soon as the read finishes, or says why it could not.
+-- Callers that follow the index, so an open panel or layer fills as soon as the read finishes, or says why it could
+-- not. They stay subscribed: Questie's late ready callback has the database read again, and each new index is news.
 local waiting = {}
 
 ---@param fn fun()
 local function WhenReady(fn)
+	waiting[#waiting + 1] = fn
 	if state == "ready" then
 		fn()
-	else
-		waiting[#waiting + 1] = fn
 	end
 end
 
--- Tells those callers the index is ready, or that it never will be.
+-- Tells those callers the index is ready (again), or that it never will be.
 local function Notify()
-	local callers = waiting
-	waiting = {}
-	for _, fn in ipairs(callers) do
+	for _, fn in ipairs({ unpack(waiting) }) do
 		fn()
 	end
 end
@@ -781,7 +779,7 @@ end
 ---@field Items fun(key: string, npc: number): integer[]?
 ---@field Request fun() starts the catalogue once, when a consumer needs it
 ---@field State fun(): string
----@field OnReady fun(fn: fun())
+---@field OnReady fun(fn: fun()) runs fn now when ready, and after every later index build
 ---@field Sections fun(world: SPFPoint, query?: string, collapsed?: SPFClosed, seconds?: SPFSeconds): SPFNearbySection[]
 ---@field Shortlist fun(key: string, world: SPFPoint, limit: integer, query?: string, tier?: integer): SPFNearbyPlace[]
 ---@field Rank SPFRank
