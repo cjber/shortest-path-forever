@@ -232,6 +232,41 @@ do
 	planned = assert(Plan(o))
 	assert(planned.preferred and modes(planned) == "flight,walk")
 	assert(planned.legs[1].hops[1].seconds == 350, "the longer flight makes the shared walk less than half the trip")
+	-- A label reaching the dock first catches an earlier boat and still walks half the way. The one that misses it waits
+	-- for the next, and that wait keeps its walking under half: arriving first does not dominate in the ride search.
+	local function at(x, z)
+		return { map = 1, x = x, y = 0, z = z }
+	end
+	local start, goal, master, dock, side, landing =
+		at(0, 0), at(300, 0), at(100, 0), at(200, 0), at(200, 1), at(300, 0)
+	planned = assert(Plan({
+		from = start,
+		to = goal,
+		now = 0,
+		walkSpeed = 7,
+		faction = "Alliance",
+		exactMaps = { [1] = true },
+		docks = { [1] = dock, [2] = side, [3] = landing },
+		routes = {
+			[1] = {
+				kind = "boat",
+				period = 50000,
+				stops = { { dock = 1, arrive = 0, depart = 0 }, { dock = 3, arrive = 40000, depart = 40000 } },
+			},
+		},
+		anchors = { [1] = { epoch = 950000 } },
+		taxiNodes = { [1] = start, [2] = master },
+		taxiPaths = { { from = 1, to = 2, seconds = 437 } },
+		walks = {
+			walk(start, goal, 6895),
+			walk(start, start, 0),
+			walk(master, dock, 3570),
+			walk(master, side, 3605),
+			walk(side, dock, 0),
+			walk(landing, goal, 0),
+		},
+	}))
+	assert(planned.preferred and planned.arrive == 1040000, "the later boat mostly rides: got " .. planned.arrive)
 end
 
 -- A cached topology and an incumbent compose: feasible, full and bounded plans share one cache.
