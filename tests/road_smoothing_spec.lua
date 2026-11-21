@@ -84,4 +84,33 @@ for x = 11, 17 do
 end
 P.z = { 20, 20, 22, 22, 22, 20, 20 }
 assert(table.concat(Grid.smooth(st, P), ",") == "1,2,3,5,6,7", "the drawn chord keeps the platform's grade changes")
+-- Run the same profile through the real endpoint checks, with endpoints away from their cell centres.
+local PLATFORM = 46
+local platform = {}
+for i, z in ipairs(P.z) do
+	platform[i + 10] = { [10] = { z = z } }
+end
+fixture.install(PLATFORM, fixture.format2({ nx = 1, ny = 1, cell = platform, node = { { 11, 10, 1 } } }))
+local state = Grid.State(PLATFORM)
+local chord
+local smooth = Grid.smooth
+Grid.smooth = function(grid, path, ends)
+	chord = ends.chord()
+	return smooth(grid, path, ends)
+end
+for _, file in ipairs({ "Routing/Path.lua", "Routing/PathJobs.lua" }) do
+	assert(loadfile(file))("ShortestPathForever", ns)
+end
+local function point(x, y)
+	return { x = state.x0 + x * CS, y = state.y0 + y * CS, z = 20 }
+end
+local drawn = assert(ns.Path.FindSync(PLATFORM, point(11.25, 10.5), point(17.75, 10.5)))
+assert(chord, "the production endpoint callback accepts the direct chord")
+local heights = {}
+for i, p in ipairs(drawn) do
+	heights[i] = p.z
+end
+assert(table.concat(heights, ",") == "20,20,22,22,20,20", "the direct chord keeps the platform's grade changes")
+local offset = assert(ns.Path.FindSync(PLATFORM, point(11.25, 10.25), point(17.75, 10.25)))
+assert(chord and #offset == 2, "a clear chord offset from the cell centres must stay straight")
 print("road_smoothing_spec: ok")

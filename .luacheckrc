@@ -234,6 +234,7 @@ files["Locales/*.lua"] = { max_line_length = false }
 -- Generated road data carries long encoded strings; the producers decide their line length.
 files["Data/RoadCells.lua"] = { max_line_length = false }
 files["Data/RoadEdges.lua"] = { max_line_length = false }
+files["tools/RoadTrails.lua"] = { max_line_length = false }
 files["Data/Heights.lua"] = { max_line_length = false }
 files["Data/IdleSpawns.lua"] = { max_line_length = false }
 files["Data/TownAreas.lua"] = { max_line_length = false }
