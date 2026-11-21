@@ -235,7 +235,7 @@ function ns.JourneyStops()
 end
 
 ---@class SPFPublicAPI
-local API = { version = 2, minor = 6 }
+local API = { version = 2, minor = 7 }
 
 local function Differs(a, b)
 	for key, value in pairs(a) do
@@ -478,8 +478,9 @@ function API.EstimateDetail(fromMap, fromX, fromY, toMap, toX, toY)
 	}
 end
 
--- Core/APIWalks.lua owns the walking costs and the identity of the data they are measured against (#913).
+-- Core/APIWalks.lua owns walking searches and the identity of the data they use.
 API.EstimateWalks = ns.EstimateWalks
+API.WalkPath = ns.WalkPath
 API.NavVersion = ns.NavVersion
 
 -- A stop naming the NPC it reaches (Nearby services) stands on that NPC's QuestieDB spawn, which has no height: the

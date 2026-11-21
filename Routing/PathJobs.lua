@@ -196,12 +196,14 @@ end
 ---@param callback fun(points: SPFWalkPoints?, cost: number|string, job: SPFPathJob)
 ---@param waterWalking? boolean
 ---@param hazards? SPFHazards
+---@param snapGoal? boolean End at the final walking node when the requested goal cannot be reached directly.
 ---@return SPFPathJob
-function Path.Find(map, from, to, callback, waterWalking, hazards)
+function Path.Find(map, from, to, callback, waterWalking, hazards, snapGoal)
 	return enqueue({
 		map = map,
 		from = from,
 		to = to,
+		snapGoal = snapGoal,
 		waterWalking = waterWalking,
 		hazards = hazards,
 		callback = callback,

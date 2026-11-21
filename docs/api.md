@@ -1,6 +1,6 @@
 # Addon API
 
-Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 6`) with uiMapIDs and normalized 0-1 coordinates.
+Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 7`) with uiMapIDs and normalized 0-1 coordinates.
 Version 2 removes peer sharing and `Leaderboard`; callers must accept versions 1 and 2 and reject future versions. Check that a function exists before calling it, because an older
 addon may not have it yet. The full types are in [`types/API.lua`](../types/API.lua). On ForeverCore 1.3.2 or
 later, the API is also listed by `ForeverCore.APIKit.Addons()`.
@@ -18,6 +18,7 @@ the addon can use it once it shows the requested map.
 
 ## Minor history
 
+- Version 2, `minor = 7` adds `WalkPath`.
 - Version 2, `minor = 6`: adds `NavigateRoute`'s `options` (`policy`), `ObserveStops` and `JourneyState`.
 - Version 2, `minor = 5`: `ResumeRestedXP` now returns the standard reasons `"none"` and `"combat"`
   (previously `"unavailable"` and `"invalid"`).
@@ -52,8 +53,17 @@ the addon can use it once it shows the requested map.
   batch could not answer. A second call from the same `owner` cancels the one still running. `opts.waterWalking` plans
   over water as if the player can cross it; without it the same setting and spell as journeys decide. These are plain
   walking costs: unlike journeys they neither avoid hostile towns nor prefer roads.
-- `NavVersion()` returns a string naming the walking data this build ships. Drop cached walk costs when it changes,
-  which every addon update can do.
+- `WalkPath(owner, from, to, callback, opts)` finds a plain walking path between two `{map, x, y}` places on the
+  same walking map, without starting a journey or drawing guidance. It returns a cancel function that is safe to
+  call twice and suppresses the callback. A new path request replaces the same owner's pending path request.
+  The owner's `EstimateWalks` requests run independently. As with `EstimateWalks`, the search shares the addon's frame
+  budget, waits out combat and never calls back inside the call. It uses the same `opts.waterWalking` and ignores
+  hostile-town avoidance and road preference. On success, `callback(path, reason)` receives a fresh
+  `{waypoints, yards, navVersion}` table and a nil reason. Each waypoint is a fresh `{map, x, y}` in uiMapID and
+  0-1 fractions. The list starts at `from`, includes the bends in order, and ends at the destination's snapped
+  point. `yards` is the running-yard cost used by `EstimateWalks`.
+- `NavVersion()` returns a string naming the walking data this build ships. Drop cached walk paths and costs when
+  it changes. Compare a path's `navVersion` with `NavVersion()` to check that it is current.
 - `NavigateRoute(owner, stops, options)` guides through 1 to 64 `{map, x, y, title, tooltip, z}` stops in order, advancing on arrival
   and ending after the last. Remaining stops have numbered map pins, and the way between them is drawn as
   planned, walks along the walking map, once worked out behind the current leg; the tracker and arrow show
@@ -175,10 +185,12 @@ variables are not loaded or the planner has no route yet, and `"none"` when ther
 `"loading"` until the saved variables are loaded. `ResumeRestedXP` returns `nil, "none"` when there is no guide
 to resume or `nil, "combat"` when combat blocks guidance. `JourneyState` uses `"loading"` alone.
 
-`EstimateWalks` refuses to start with `nil` and one of `"invalid"` (an owner, place, callback or option it cannot
-use, a target on another walking map, or more than 256 targets), `"combat"`, `"loading"`, or `"nodata"` when this
-build has no walking map for `from`'s map. Once started, its callback's `reason` is `nil` or one of `"nodata"`,
-`"outside"`, `"offmesh"`, `"unreachable"` or `"error"`, and every cost is `false` then.
+`EstimateWalks` and `WalkPath` refuse to start with `nil` and one of `"invalid"` (an owner, place, callback or
+option they cannot use, a target on another walking map, or more than 256 targets for `EstimateWalks`),
+`"combat"`, `"loading"`, or `"nodata"` when this build has no walking map for `from`'s map. Once started,
+both callbacks use `"nodata"`, `"outside"`, `"offmesh"`, `"unreachable"` or `"error"` for failures.
+`EstimateWalks` passes all costs as `false` on a batch failure, and `WalkPath` passes `nil` for the path.
+`WalkPath` also reports `"outside"` if a waypoint cannot be projected onto a uiMap.
 
 ## The journey under way
 

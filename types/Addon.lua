@@ -68,6 +68,7 @@
 ---@field APIStops SPFAPIStops the public API journey state and stop observers (Core/APIStops.lua)
 ---@field APIInput SPFAPIInput the public API's argument checks and answers (Core/APIInput.lua)
 ---@field EstimateWalks fun(owner: string, from: SPFAPIPlace, targets: SPFAPIPlace[], callback: fun(costs: (number|false)[], reason: SPFAPIWalkReason?), opts?: SPFAPIWalkOptions): cancel: fun()?, reason: SPFAPIWalkRefusal? one walking search to every target on the from point's walking map (#913)
+---@field WalkPath fun(owner: string, from: SPFAPIPlace, to: SPFAPIPlace, callback: fun(path: SPFAPIWalkPath?, reason: SPFAPIWalkReason?), opts?: SPFAPIWalkOptions): cancel: fun()?, reason: SPFAPIWalkRefusal?
 ---@field NavVersion fun(): string the walking data this build ships, for dropping cached walk costs
 ---@field DestinationPinScale fun(): number the world map journey goal pin's share of its stock size (UI/StopPin.lua)
 ---@field RefreshDestinationPinSize fun() redraws the world map goal pins at the player's size (UI/Route.lua)
@@ -643,6 +644,7 @@ ShortestPathForeverPathData = nil
 ---@field hazards? SPFHazards
 ---@field reverse? boolean
 ---@field costOnly? boolean
+---@field snapGoal? boolean
 ---@field decode? number[] -- clusters a Path.Decode job decodes for Floor.lua; it searches nothing
 ---@field cancelled? boolean
 ---@field paused? boolean

@@ -17,6 +17,7 @@ ns.Credits = {
 		{ name = "Hatemost", what = "Resume the RestedXP guide from a macro" },
 		{ name = "JaidyEU", what = "Resume the RestedXP guide from a macro" },
 		{ name = "Chulf58", what = "Walking times between places for other addons" },
+		{ name = "Chulf58", what = "Walking paths for other addons to guide along" },
 		{ name = "embiem", what = "Separate Hearthstone and class teleport switches" },
 		{ name = "InfamousMunky", what = "The Hearthstone switch outside settings" },
 		{ name = "A player", what = "Journeys avoid opposing-faction guarded lifts" },
