@@ -151,6 +151,7 @@ ns.Credits = {
 		{ name = "ghuff07", what = "Dugi Guides can lead the journey" },
 		{ name = "nimri82", what = "The public guidance point for RestedXP-Navigator" },
 		{ name = "cmartin303", what = "Short walks through Ironforge keep nearby doorways" },
+		{ name = "lukehmu", what = "Journey clicks in the corners of a square minimap" },
 	},
 	inspired = {
 		{ name = "Polestar by Fitz", what = "Ideas for many features" },
