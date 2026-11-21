@@ -576,3 +576,19 @@ L["In the tracker while you are near a dock, lift or tram."] =
 L["Town service icons"] = "城镇服务图标" -- mt
 L["Off hides them. Otherwise one icon per town, or one per service as you zoom in."] =
 	"关闭则隐藏。否则放大时每个城镇一个图标，或每项服务一个图标。" -- mt
+L["Avoid this boat"] = "避开这艘船"
+L["Avoid this zeppelin"] = "避开这艘飞艇"
+L["Avoid this lift"] = "避开这部升降梯"
+L["Avoid this tram"] = "避开这趟地铁"
+L["Avoid this flight"] = "避开这趟飞行"
+L["Avoid this portal"] = "避开这个传送门"
+L["Avoid this passage"] = "避开这条通道"
+L["Undo"] = "撤销"
+L["Allow this transport again and find a new route."] = "重新允许使用此交通方式，并寻找新路线。"
+L["Find a new route without this transport. You can clear avoided transport in Settings."] =
+	"寻找不经过此交通方式的新路线。你可以在设置中清除避用列表。"
+L["No route remains without %s. Right-click to undo."] = "避开%s后没有可用路线。右键点击可撤销。"
+L["Avoided transport"] = "避用的交通方式"
+L["Clear avoided transport"] = "清除避用交通方式"
+L["Clear this character's avoided transport so the planner can use it again."] =
+	"清除此角色的避用列表，让路线规划重新考虑这些交通方式。"

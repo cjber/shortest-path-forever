@@ -596,3 +596,21 @@ L["In the tracker while you are near a dock, lift or tram."] =
 L["Town service icons"] = "도시 서비스 아이콘" -- mt
 L["Off hides them. Otherwise one icon per town, or one per service as you zoom in."] =
 	"끄면 숨깁니다. 켜면 확대할 때 도시당 아이콘 하나 또는 서비스당 아이콘 하나가 표시됩니다." -- mt
+L["Avoid this boat"] = "이 배 피하기"
+L["Avoid this zeppelin"] = "이 비행선 피하기"
+L["Avoid this lift"] = "이 승강기 피하기"
+L["Avoid this tram"] = "이 지하철 피하기"
+L["Avoid this flight"] = "이 비행편 피하기"
+L["Avoid this portal"] = "이 차원문 피하기"
+L["Avoid this passage"] = "이 통로 피하기"
+L["Undo"] = "되돌리기"
+L["Allow this transport again and find a new route."] =
+	"이 교통수단을 다시 허용하고 새 경로를 찾습니다."
+L["Find a new route without this transport. You can clear avoided transport in Settings."] =
+	"이 교통수단을 제외하고 새 경로를 찾습니다. 설정에서 제외 목록을 지울 수 있습니다."
+L["No route remains without %s. Right-click to undo."] =
+	"%s 항목을 제외하면 남는 경로가 없습니다. 우클릭하여 되돌리세요."
+L["Avoided transport"] = "제외한 교통수단"
+L["Clear avoided transport"] = "제외한 교통수단 지우기"
+L["Clear this character's avoided transport so the planner can use it again."] =
+	"이 캐릭터의 제외 목록을 지워 경로를 찾을 때 해당 교통수단을 다시 이용할 수 있게 합니다."

@@ -529,14 +529,14 @@ end
 -- One search owns the callbacks' shared revision, preview and probe budget across resumes
 ---@param includeGoal boolean?
 ---@param forced boolean?
----@param replace boolean? the destination moved, so the plan under way leads somewhere else
+---@param replace boolean? the followed route is no longer valid
 local function RefreshCosts(includeGoal, forced, replace)
 	local here = Here()
 	if not (here and goal) then
 		return
 	end
 	CancelPaths()
-	search = { initial = not followed, forced = forced, replace = replace }
+	search = { initial = not followed, forced = forced, replace = replace or (search and search.replace) }
 	local owner = search
 	local version = pathVersion
 	local options = Context.Options(here, goal, routePolicy)
@@ -558,6 +558,7 @@ local function RefreshCosts(includeGoal, forced, replace)
 			or batch.faction ~= faction
 			or batch.teleports ~= teleports
 			or batch.partyPortals ~= partyPortals
+			or batch.portals ~= options.portals
 			or batch.hazards ~= hazardKey
 		then
 			return false
@@ -584,6 +585,7 @@ local function RefreshCosts(includeGoal, forced, replace)
 			faction = faction,
 			teleports = teleports,
 			partyPortals = partyPortals,
+			portals = options.portals,
 			hazards = hazardKey,
 			costs = {},
 		}
@@ -1185,7 +1187,8 @@ end
 -- Once per driver frame with a readable position: restarts a search whose inputs changed or whose callbacks waited
 -- for a position.
 ---@param changed? boolean the travel policy changed since the last frame
-local function Poll(changed)
+---@param replace? boolean the followed route may use transport that was just avoided
+local function Poll(changed, replace)
 	local x, y, _, map = ns.JourneyPosition()
 	local zone = x and y and map and ns.Hazards.ZoneAt(map, x, y)
 	local landing = WalkLanding()
@@ -1193,7 +1196,7 @@ local function Poll(changed)
 	if changed or zone ~= hereZone or landZone ~= landingZone then
 		-- A setting, your level or a zone you stand in or land in changed what to avoid, from where you stand now.
 		Avoid()
-		RefreshCosts(true, true)
+		RefreshCosts(true, true, replace)
 	end
 	-- No batch has started, or a callback waited for a readable position.
 	local stale = not startAt or costsWaiting
@@ -1230,7 +1233,7 @@ local function Replan(riding, flying, changedRide, changedSpeed)
 	then
 		-- A new bind point, teleport or party mage: measure the walks on from where it lands.
 		RefreshCosts(true, false)
-	elseif pendingCosts == 0 and Walks.Pending() == 0 then
+	elseif pendingCosts == 0 and Walks.Pending() == 0 and not (search and search.replace) then
 		local here = Here()
 		local leg = followed and followed.legs[progress.index]
 		local off = here and leg and leg.mode == "walk" and leg.measured and not ns.OnWalk(leg.walkPoints, here)
@@ -1302,12 +1305,12 @@ function Search.Start(point, route, state, listener, replace, policy)
 	Checked(Start, point, route, state, listener, replace, policy)
 end
 
-function Search.Poll(changed)
+function Search.Poll(changed, replace)
 	if not goal then
 		return
 	end
 	-- The unchanged poll allocates nothing. Enter the journal only after a throw.
-	local ok, message = pcall(Poll, changed)
+	local ok, message = pcall(Poll, changed, replace)
 	if not ok then
 		ns.core.RecordError("journey search poll", message)
 		Search.JobFailed()

@@ -169,6 +169,11 @@ function ns.ReportLines()
 	lines[#lines + 1] = (
 		"Current walk settings: avoidHighZones %s, followRoads %s, roadDetour %s, " .. "useWaterWalking %s"
 	):format(Value(db.avoidHighZones), Value(db.followRoads), Value(db.roadDetour), Value(db.useWaterWalking))
+	local avoided = ns.charDB.avoided or {}
+	lines[#lines + 1] = ("Avoided transport: %d"):format(#avoided)
+	for _, entry in ipairs(avoided) do
+		lines[#lines + 1] = ("  %s %s (%s)"):format(entry.kind, table.concat(entry.ids, ", "), entry.name)
+	end
 	local bind = ns.charDB.bind
 	lines[#lines + 1] = ("Bind point: %s"):format(bind and (bind.name .. ", " .. Place(bind)) or "not known")
 	local known = {}

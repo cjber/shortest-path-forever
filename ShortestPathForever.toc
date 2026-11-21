@@ -101,6 +101,7 @@ Journey\JourneySearch.lua
 Journey\JourneyWalks.lua
 Journey\JourneyGuide.lua
 Journey\Journey.lua
+Journey\AvoidTransport.lua
 Journey\JourneyInput.lua
 Journey\Follow.lua
 Journey\Corpse.lua

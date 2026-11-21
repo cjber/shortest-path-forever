@@ -3,8 +3,8 @@
   "producers": [
     {
       "source": "UI/Tracker.lua",
-      "sha256": "59f78ba71251bda5237e5896f9ec521eb51663a0888c621304e5492508a8e1d9",
-      "review": "Read all of Tracker.lua, Tracker.xml and ForeverCore TrackerSection.Create, UpdateText and TrackerLine.SetInteractive. Confirmed pinned client Blizzard_ObjectiveTrackerModule.xml: ObjectiveTrackerModuleTemplate Header inherits ObjectiveTrackerModuleHeaderTemplate, whose Text uses ObjectiveTrackerHeaderFont. Blizzard_ObjectiveTrackerBlock.xml HeaderText uses ObjectiveTrackerLineFont; Blizzard_ObjectiveTrackerShared.xml ObjectiveTrackerLineTemplate Text uses ObjectiveTrackerLineFont, inherited without overrides by ShortestPathForeverTrackerLineTemplate. Bound every local phrase sent to section headers, block headers and rows, including Journey  %s · %s from #838. RefreshBlockText preserves these widgets. Client tracker text-size changes and optional Kaliels font overrides are outside the pinned native-font coverage. Menus, chat, tooltips and dynamic text from JourneyInfo, DockTitle, and DepartureText are excluded.",
+      "sha256": "09996f1d988c99bff973d62961829f8ba86bccdfd4d055a32e6e08da1597c057",
+      "review": "Read all of Tracker.lua, Tracker.xml and ForeverCore TrackerSection.Create, UpdateText and TrackerLine.SetInteractive. Confirmed pinned client Blizzard_ObjectiveTrackerModule.xml: ObjectiveTrackerModuleTemplate Header inherits ObjectiveTrackerModuleHeaderTemplate, whose Text uses ObjectiveTrackerHeaderFont. Blizzard_ObjectiveTrackerBlock.xml HeaderText uses ObjectiveTrackerLineFont; Blizzard_ObjectiveTrackerShared.xml ObjectiveTrackerLineTemplate Text uses ObjectiveTrackerLineFont, inherited without overrides by ShortestPathForeverTrackerLineTemplate. Bound every local phrase sent to section headers, block headers and rows, including Journey  %s · %s from #838. RefreshBlockText preserves these widgets. Client tracker text-size changes and optional Kaliels font overrides are outside the pinned native-font coverage. Menus, chat, tooltips and dynamic text from JourneyInfo, DockTitle, and DepartureText are excluded. Reviewed #1005: the transport row menus use ForeverCore.ContextMenu. Its tooltips and labels establish no tracker FontObject.",
       "bindings": [
         {
           "font": "ObjectiveTrackerHeaderFont",
@@ -44,6 +44,18 @@
       ]
     },
     {
+      "source": "Journey/AvoidTransport.lua",
+      "sha256": "ba49797c6a906d2452a4b451b47ff2cb83ea553074d740b871acf265e4173b92",
+      "review": "Reviewed the avoided transport failure row from AvoidTransport.Row, which JourneyInfo returns as its first row. UI/Tracker.lua passes the row text to AddObjective using ShortestPathForeverTrackerLineTemplate, which inherits ObjectiveTrackerLineFont. Pin consumers use template-owned tooltip fonts.",
+      "bindings": [
+        {
+          "font": "ObjectiveTrackerLineFont",
+          "widget": "AvoidTransport.Row via JourneyInfo, Tracker.LayoutContents and RefreshTracker",
+          "phrase": "No route remains without %s. Right-click to undo."
+        }
+      ]
+    },
+    {
       "source": "UI/Tracker.xml",
       "sha256": "6a0f4065d5cb7ae5a3c59d7165eba6a0a075693f4876a3a0d326a615af2c89d9",
       "review": "Read Tracker.xml and its Tracker.lua LINE_TEMPLATE, LayoutContents and RefreshBlockText callers. ShortestPathForeverTrackerLineTemplate inherits ObjectiveTrackerLineTemplate without a font override; pinned Blizzard_ObjectiveTrackerShared.xml gives both Text and Dash ObjectiveTrackerLineFont. TrackerSection.Create passes this line template to the module; TrackerLine.SetInteractive changes mouse scripts only. XML declares no locale phrase or addon runtime text, so bindings live with the phrases in Tracker.lua. Dynamic row text and client QUEST_DASH are excluded.",
@@ -52,7 +64,7 @@
     {
       "source": "UI/Settings.lua",
       "sha256": "2cc5f145f59504a55305209989be5d9a3deddc6a3f988aa5caed3d2e629636a2",
-      "review": "Read Page, Checkbox, Scale, Dropdown and Saving and their registration calls. Settings rows, index buttons and option labels delegate to Blizzard secure initializers; this file creates no FontString and establishes no explicit FontObject. Minimap button text, tooltip text, chat output and helper arguments are excluded rather than assigned an assumed settings font. Reviewed #1094: the Tracker heading's Attach to quest tracker row is ForeverCore.SettingsSections.RegisterTrackerAttach, a core-owned initializer, registered only when the running core has it (an older adopted standalone does not); excluded with the other settings fonts. Reviewed #1142: the journeyHint row is one more Checkbox helper call, a Blizzard secure initializer with no FontString or FontObject of its own. Reviewed #1033: the Off-path tolerance row and Arrival distance share a DistanceSlider helper that registers a Blizzard secure slider initializer, with no FontString or FontObject of its own.",
+      "review": "Read Page, Checkbox, Scale, Dropdown and Saving and their registration calls. Settings rows, index buttons and option labels delegate to Blizzard secure initializers; this file creates no FontString and establishes no explicit FontObject. Minimap button text, tooltip text, chat output and helper arguments are excluded rather than assigned an assumed settings font. Reviewed #1094: the Tracker heading's Attach to quest tracker row is ForeverCore.SettingsSections.RegisterTrackerAttach, a core-owned initializer, registered only when the running core has it (an older adopted standalone does not); excluded with the other settings fonts. Reviewed #1142: the journeyHint row is one more Checkbox helper call, a Blizzard secure initializer with no FontString or FontObject of its own. Reviewed #1033: the Off-path tolerance row and Arrival distance share a DistanceSlider helper that registers a Blizzard secure slider initializer, with no FontString or FontObject of its own. Reviewed #1005: the Avoided transport row is one more native button initializer with plain string text and tooltip; the client owns its fonts.",
       "bindings": []
     },
     {

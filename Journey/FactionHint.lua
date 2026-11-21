@@ -24,6 +24,7 @@ local last
 -- The comparison still being planned.
 ---@type {goal: SPFPoint, x: number, y: number, map: number, job: SPFPathJob, ready: fun()?}?
 local planning
+local avoidedVersion
 
 local function Stop()
 	if planning then
@@ -83,6 +84,11 @@ end
 ---@param ready? fun()
 ---@return string?
 function ns.OtherFactionHint(ready)
+	local avoided = ns.charDB and ns.charDB.avoided
+	if avoidedVersion ~= avoided then
+		Stop()
+		cache, last, avoidedVersion = {}, nil, avoided
+	end
 	local goal = ns.JourneyGoal()
 	if not goal or ns.db.otherFaction then
 		Stop()

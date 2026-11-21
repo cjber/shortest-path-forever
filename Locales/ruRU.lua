@@ -621,3 +621,21 @@ L["In the tracker while you are near a dock, lift or tram."] =
 L["Town service icons"] = "Значки городских служб" -- mt
 L["Off hides them. Otherwise one icon per town, or one per service as you zoom in."] =
 	"Если выключено, значки скрыты. Иначе один значок на город или на службу при приближении." -- mt
+L["Avoid this boat"] = "Избегать этого корабля"
+L["Avoid this zeppelin"] = "Избегать этого дирижабля"
+L["Avoid this lift"] = "Избегать этого лифта"
+L["Avoid this tram"] = "Избегать этого трамвая"
+L["Avoid this flight"] = "Избегать этого перелёта"
+L["Avoid this portal"] = "Избегать этого портала"
+L["Avoid this passage"] = "Избегать этого прохода"
+L["Undo"] = "Отменить"
+L["Allow this transport again and find a new route."] =
+	"Снова разрешить этот транспорт и найти новый маршрут."
+L["Find a new route without this transport. You can clear avoided transport in Settings."] =
+	"Найти новый маршрут без этого транспорта. Список исключений можно очистить в настройках."
+L["No route remains without %s. Right-click to undo."] =
+	"Без «%s» маршрута нет. Щёлкните правой кнопкой мыши, чтобы отменить исключение."
+L["Avoided transport"] = "Исключённый транспорт"
+L["Clear avoided transport"] = "Очистить исключения"
+L["Clear this character's avoided transport so the planner can use it again."] =
+	"Очистить список исключений персонажа, чтобы снова использовать этот транспорт при построении маршрутов."

@@ -299,7 +299,13 @@
 ---@field time? string -- the step's time, greyed after it
 ---@field icon? number -- a teleport's own item or spell icon, leading its line
 ---@field warning? boolean
+---@field undoAvoid? SPFAvoidedTransport
 ---@field color? colorRGBA|ForeverObjectiveTrackerColor -- the colour a text-only refresh rewrites the line in
+
+---@class SPFAvoidedTransport
+---@field kind SPFMode
+---@field ids (number|string)[] route or portal ID, or directed taxi hop IDs
+---@field name string
 
 ---@class SPFDatabase
 ---@field errors? ForeverCaughtError[] ForeverCore's shared error journal: earlier sessions' errors, for the report
@@ -410,6 +416,7 @@
 ---@field trace? (number|string)[][]
 ---@field taxiLog? table<string, {seen: number, showsNodes: boolean, nodes: string[]}>
 ---@class SPFCharacterDatabase
+---@field avoided? SPFAvoidedTransport[]
 ---@field progress? SPFProgressData
 ---@field taxi table<number, boolean>
 ---@field taxiNames? table<number, string> -- flight points by the name a flight map gave them
@@ -496,6 +503,7 @@ ShortestPathForeverPathData = nil
 ---@field arrive number
 ---@field wait number
 ---@field estimated? boolean
+---@field portal? number
 ---@field route? number
 ---@field aboard? boolean
 ---@field boarding? SPFStop
@@ -610,6 +618,7 @@ ShortestPathForeverPathData = nil
 ---@field to number
 ---@field mode SPFMode
 ---@field duration number
+---@field portal? number
 ---@field route? number
 ---@field stop? SPFStop
 ---@field alighting? SPFStop

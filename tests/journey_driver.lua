@@ -313,6 +313,7 @@ load("Journey/JourneySearch.lua")
 load("Journey/JourneyWalks.lua")
 load("Journey/JourneyGuide.lua")
 load("Journey/Journey.lua")
+load("Journey/AvoidTransport.lua")
 load("Journey/JourneyInput.lua")
 
 local map = {

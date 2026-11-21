@@ -586,3 +586,20 @@ L["In the tracker while you are near a dock, lift or tram."] =
 L["Town service icons"] = "Iconos de servicios de la ciudad" -- mt
 L["Off hides them. Otherwise one icon per town, or one per service as you zoom in."] =
 	"Desactivado los oculta. Si no, un icono por ciudad o por servicio al acercar." -- mt
+L["Avoid this boat"] = "Evitar este barco"
+L["Avoid this zeppelin"] = "Evitar este zepelín"
+L["Avoid this lift"] = "Evitar este ascensor"
+L["Avoid this tram"] = "Evitar este tranvía"
+L["Avoid this flight"] = "Evitar este vuelo"
+L["Avoid this portal"] = "Evitar este portal"
+L["Avoid this passage"] = "Evitar este paso"
+L["Undo"] = "Deshacer"
+L["Allow this transport again and find a new route."] = "Volver a permitir este transporte y buscar otra ruta."
+L["Find a new route without this transport. You can clear avoided transport in Settings."] =
+	"Busca otra ruta sin este transporte. Puedes borrar la lista de transportes evitados en Ajustes."
+L["No route remains without %s. Right-click to undo."] =
+	"No queda ninguna ruta sin %s. Haz clic derecho para deshacerlo."
+L["Avoided transport"] = "Transportes evitados"
+L["Clear avoided transport"] = "Borrar transportes evitados"
+L["Clear this character's avoided transport so the planner can use it again."] =
+	"Borra la lista de este personaje para que el planificador pueda volver a usar esos transportes."
