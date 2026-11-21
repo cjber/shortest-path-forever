@@ -135,8 +135,9 @@ local function MeasuredWalks(here)
 		end
 	end
 	-- Drawing an offer must not supply a new cost to the proof that produced it.
-	local leg = followed and not followed.provisional and followed.legs[progress.index]
+	local leg = followed and followed.legs[progress.index]
 	local rest = leg
+		and not followed.provisional
 		and followed.waterMode == waterMode
 		and followed.hazards == (hazards and hazards.key)
 		and leg.mode == "walk"
