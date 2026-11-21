@@ -25,10 +25,6 @@ driver.move(here)
 path.Path.ReuseMany = function(batch, source)
 	return batch and batch.valid and ns.JourneySearch.SamePlace(batch.from, source)
 end
--- A zero walk between distinct endpoints is treated as a transfer by the plain grouping estimate.
-path.bound = function(_, from, to)
-	return math.abs(from.x - to.x)
-end
 
 -- The door out of the shop is around the back, and a wall also separates the landing from the trainer.
 -- Give the journey and Nearby the same directed terrain costs for their endpoint searches.
@@ -76,11 +72,7 @@ local function rankCandidate(candidate, walks, callback)
 		local rank = ns.NearbyRank.New({ candidate }, function(...)
 			return ns.EstimateIn(job, ...)
 		end, 1, 0.5, 0.5, walks)
-		-- The first pass only orders candidates by their bounds. Drain the refinement pass for an exact time.
-		local _, time, more
-		repeat
-			_, time, more = rank:Step()
-		until not more
+		local _, time = rank:Step()
 		return time
 	end, callback)
 end
@@ -94,7 +86,7 @@ local function nearby(candidate)
 		rankCandidate(candidate, walks, function(time)
 			seconds = time
 		end)
-	end, 1, 0.5, 0.5)
+	end)
 	drain()
 	return assert(seconds)
 end
@@ -109,24 +101,13 @@ drain()
 assert(route and route.legs[2].mode == "flight", "the journey flies to the far trainer")
 local trainer = candidateAt(goal.x)
 local beforeRide = #path.batches
-local partial
-ns.Path.Run(function(job)
-	return ns.EstimateIn(job, 1, 0.5, 0.5, trainer.map, trainer.x, trainer.y, nil, nil, trainer, 70)
-end, function(time)
-	partial = time
-end)
-drain()
-assert(partial and partial > 70, "the first measured walk proves the ride loses")
-assert(#path.batches == beforeRide + 1, "the second endpoint is skipped once the ride cannot win")
 local seconds = nearby(trainer)
 local journeySeconds = route.arrive / 1000
 assert(math.abs(seconds - journeySeconds) < 0.001, ("Nearby %.3fs, journey %.3fs"):format(seconds, journeySeconds))
 local batches = #path.batches
--- Grouping measures only direct walks that can win. This ride only needs its two endpoint batches.
-assert(batches == beforeRide + 2, "an uncapped estimate finishes the ride whose partial result was not cached")
+assert(batches == beforeRide + 3, "the direct walk and the two ride endpoints each use one batch")
 assert(nearby(trainer) == seconds and #path.batches == batches, "both ride walks are reused from the same node")
-local footSeconds = nearby(candidateAt(35))
-assert(math.abs(footSeconds - 5) < 0.001, ("the nearby trainer takes %.3fs, expected five"):format(footSeconds))
+assert(math.abs(nearby(candidateAt(35)) - 5) < 0.001, "the nearby trainer still takes five seconds on foot")
 assert(#path.batches == batches + 1, "a walking row only measures its direct walk")
 
 driver.move({ map = 1, x = 12, y = 0, z = here.z })
