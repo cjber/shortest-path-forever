@@ -35,6 +35,7 @@ local FIRST_LIFT = 1001 -- Data/Transports.lua numbers lift and tram landings fr
 ---@field gx number global cell the surface was last seen on
 ---@field gy number
 ---@field held true? held where it was last seen, or a fresh start's neighbour: no way from it to you yet
+---@field root number? the surface this one stepped on from, as k * 1048576 + node, once it has stepped
 
 ---@class SPFFloorState
 ---@field map number
