@@ -179,7 +179,7 @@ With RestedXP, Guidelime or Dugi Guides installed, **Resume guide** in Guidance 
 ## With my other Forever addons
 
 - **Adventure Guide's suggestions.** With Adventure Guide Forever on (a version whose API offers suggestions) and
-  *Click the map to plan journeys* on, right-click a quest in the tracker or the quest log: under *Plan journey*,
+  *Enable journeys* on, right-click a quest in the tracker or the quest log: under *Plan journey*,
   *Adventure Guide suggests* lists up to three of its suggestions as `[level] title`, in its own order. Choosing one
   starts it as Adventure Guide's own Start does. If its route has moved on since the menu opened, one chat line says
   so.

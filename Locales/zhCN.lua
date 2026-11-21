@@ -432,11 +432,11 @@ L["Off, the game's own quest markers stay beside your journey's pins, showing th
 	"关闭后，游戏自带的任务标记会留在旅程标记旁边，让你看到任务还能在哪些地方完成。" -- mt
 L["Shift"] = "Shift" -- mt
 L["Alt"] = "Alt" -- mt
-L["Click the map to plan journeys"] = "点击地图规划旅程" -- mt
-L["Hold your journey key and click the world map or the minimap to plan a journey there."] =
-	"按住旅程按键并点击世界地图或微缩地图，即可规划前往该处的旅程。" -- mt
-L["Journeys are off. Turn on Click the map to plan journeys in settings."] =
-	"旅程已关闭。请在设置中开启“点击地图规划旅程”。" -- mt
+L["Enable journeys"] = "启用旅程" -- mt
+L["Off clears your journey, and map clicks, quests, guides and waypoints no longer start one."] =
+	"关闭后会清除当前旅程，点击地图、任务、指南和路径点也不会再开始旅程。" -- mt
+L["Journeys are off. Turn on Enable journeys in settings."] =
+	"旅程已关闭。请在设置中开启“启用旅程”。" -- mt
 L["Key to plan a journey"] = "规划旅程的按键" -- mt
 L["The key you hold to plan a journey from the world map or the minimap."] =
 	"在世界地图或微缩地图上规划旅程时按住的按键。" -- mt

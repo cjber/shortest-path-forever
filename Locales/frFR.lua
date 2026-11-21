@@ -442,11 +442,11 @@ L["Off, the game's own quest markers stay beside your journey's pins, showing th
 	"Désactivé, les marqueurs de quête du jeu restent à côté de ceux de votre trajet, pour que vous voyiez les autres endroits où une quête peut être accomplie." -- mt
 L["Shift"] = "Maj" -- mt
 L["Alt"] = "Alt" -- mt
-L["Click the map to plan journeys"] = "Cliquez sur la carte pour planifier des trajets" -- mt
-L["Hold your journey key and click the world map or the minimap to plan a journey there."] =
-	"Maintenez votre touche de trajet et cliquez sur la carte du monde ou la minicarte pour y planifier un trajet." -- mt
-L["Journeys are off. Turn on Click the map to plan journeys in settings."] =
-	"Les trajets sont désactivés. Activez « Cliquez sur la carte pour planifier des trajets » dans les options." -- mt
+L["Enable journeys"] = "Activer les trajets" -- mt
+L["Off clears your journey, and map clicks, quests, guides and waypoints no longer start one."] =
+	"Désactivé, votre trajet est effacé et ni les clics sur la carte, ni les quêtes, guides ou points de passage n'en lancent." -- mt
+L["Journeys are off. Turn on Enable journeys in settings."] =
+	"Les trajets sont désactivés. Activez « Activer les trajets » dans les options." -- mt
 L["Key to plan a journey"] = "Touche pour planifier un trajet" -- mt
 L["The key you hold to plan a journey from the world map or the minimap."] =
 	"La touche à maintenir pour planifier un trajet depuis la carte du monde ou la minicarte." -- mt

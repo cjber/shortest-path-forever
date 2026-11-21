@@ -7,4 +7,6 @@
 ---@field Step fun(self: SPFFarmingOrderJob): SPFFarmingOrderStatus, SPFGatherMateNode[]? call at most once per client frame; results owned by this job
 ---@field Cancel fun(self: SPFFarmingOrderJob) permanent, discards any result
 ---@class SPFFarmingOrder
+---@field World fun(uiMapID: number, x: number, y: number): SPFPoint?
+---@field Player fun(): SPFPoint?
 ---@field Begin fun(nodes: SPFGatherMateNode[], player: SPFPoint): SPFFarmingOrderJob captures scalar snapshot; same-world projection required; closed geometric cycle, no terrain/time guarantee

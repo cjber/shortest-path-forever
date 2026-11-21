@@ -51,7 +51,7 @@
     },
     {
       "source": "UI/Settings.lua",
-      "sha256": "a606fdae2c506268fdb7bed137d965bb542b868ada73bfa801295a742392d4ab",
+      "sha256": "24bd4c2bd195587e4ffb3f5ebd195b621eeb63ba4683e29c477e4af0066997d5",
       "review": "Read Page, Checkbox, Scale, Dropdown and Saving and their registration calls. Settings rows, index buttons and option labels delegate to Blizzard secure initializers; this file creates no FontString and establishes no explicit FontObject. Minimap button text, tooltip text, chat output and helper arguments are excluded rather than assigned an assumed settings font. Reviewed #1094: the Tracker heading's Attach to quest tracker row is ForeverCore.SettingsSections.RegisterTrackerAttach, a core-owned initializer, registered only when the running core has it (an older adopted standalone does not); excluded with the other settings fonts. Reviewed #1142: the journeyHint row is one more Checkbox helper call, a Blizzard secure initializer with no FontString or FontObject of its own.",
       "bindings": []
     },
@@ -75,8 +75,8 @@
     },
     {
       "source": "UI/Arrow.lua",
-      "sha256": "e9418b41a31ea839b7a1b5401116188595a1a87ba86c82f2e9ca3df077c95d3f",
-      "review": "Read Create, ArrowLabel, distance updates, arrival labels, progress and cast prompt. MoverHint uses GameFontHighlightSmall and Distance uses GameFontNormal, including the formatted time-distance phrase. No later font override occurs. Dynamic objective lines, arrival titles, route titles and actions from helpers are excluded; this review does not claim coverage for their inserted text.",
+      "sha256": "b9ca1a88836f41e0d0b9aafd9af5c83025a6ef65f46c22095da2794c35cd25a5",
+      "review": "Read Create, ArrowLabel, distance updates, arrival labels, progress and cast prompt. MoverHint uses GameFontHighlightSmall and Distance uses GameFontNormal, including the formatted time-distance phrase. No later font override occurs. Dynamic objective lines, arrival titles, route titles and actions from helpers are excluded; this review does not claim coverage for their inserted text. Reviewed #1161: NativeMarkerAt and the shared-marker stand-down read C_Navigation and C_Map only; no FontString, FontObject or text change.",
       "bindings": [
         {
           "font": "GameFontHighlightSmall",
@@ -256,7 +256,7 @@
     },
     {
       "source": "UI/Farming.lua",
-      "sha256": "f3e5efd64a74f83c95c8def5f945e4cf48b409a7443fbfc90c2db0db73fcd7a1",
+      "sha256": "fe64c066e0c6334af763548201dc6abecc7ed857708cc8e38369fc830053faa8",
       "review": "Read Text, Build, Message, Paint, Start and Refresh. Description and statusText call Text without the optional font argument, fixing GameFontHighlight; all local messages and progress phrases reach statusText. No font overrides follow. Node titles are external dynamic text; button and window title fonts belong to templates and are excluded, as are unused helper arguments.",
       "bindings": [
         {

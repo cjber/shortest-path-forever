@@ -16,6 +16,7 @@ local function Boot(follow)
 	local ns, env = driver.ns, driver.env
 	driver.load("UI/Looks.lua")
 	driver.load("Core/APIInput.lua")
+	driver.load("Core/APIStops.lua")
 	driver.load("Core/API.lua")
 	driver.load("Journey/Itinerary.lua")
 	driver.load("Core/Zygor.lua")

@@ -162,7 +162,7 @@ ns.Way("45 67")
 equal(ns.HasJourney(), false, "journeys switched off start nothing")
 equal(
 	noticed[#noticed],
-	"Journeys are off. Turn on Click the map to plan journeys in settings.",
+	"Journeys are off. Turn on Enable journeys in settings.",
 	"and names the setting on screen, not in chat"
 )
 ns.db.journey = true

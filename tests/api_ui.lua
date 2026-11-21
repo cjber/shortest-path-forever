@@ -79,8 +79,8 @@ assert(ShortestPathForeverMinimapRoute.Goal.texture == ns.PIN_FILE, "its minimap
 ns.db.journeyTracker = true
 ns.RefreshTracker()
 assert(#tracker.blocks > 0, "on brings the journey block back")
--- With only step ends marked the guide places no native waypoint: the screen arrow leads (#817).
-assert(not C_SuperTrack.IsSuperTrackingUserWaypoint(), "no native marker while only step ends are marked")
+-- The waypoint marks the current stop while the screen arrow leads.
+assert(C_SuperTrack.IsSuperTrackingUserWaypoint() and ns.ArrowLeads(), "step-end marks keep both pointers")
 -- With every bend marked, the world map's own waypoint pin steps aside at an intermediate stop: it marks our
 -- waypoint, not the player's, so the journey's own pins are the only ones on the map.
 ns.db.guideStops = false
