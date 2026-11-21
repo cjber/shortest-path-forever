@@ -15,6 +15,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 ### Changed
 
 - A journey you planned yourself now always comes back after a /reload or a relog, until it ends or you clear it. The *Keep journeys after a reload* setting and its 30-minute limit are gone (#1216)
+- Ships ForeverCore 1.16.2, the same shared code as your other Forever addons, so they keep working together.
 
 ### Fixed
 
