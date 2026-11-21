@@ -768,7 +768,7 @@ end
 ---@field count integer
 ---@field collapsed boolean
 ---@field rows SPFNearbyRow[]
----@alias SPFEstimate fun(...: number): number?
+---@alias SPFEstimate fun(map: number, x: number, y: number, dst: number, dx: number, dy: number, ...: any): number?
 -- luacheck: push ignore 631
 ---@alias SPFRank fun(places: SPFNearbyPlace[], estimate: SPFEstimate, map: number, x: number, y: number, walks?: SPFWalks, pending?: SPFWalksPending): SPFNearbyRank
 -- luacheck: pop

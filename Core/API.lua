@@ -435,8 +435,20 @@ end
 ---@param job SPFPathJob
 ---@param walk? number|false
 ---@param bound? boolean
+---@param place? SPFNearbyPlace refine Nearby's transit endpoint walks on the NPC's floor
 ---@return number?, ("combat"|"invalid"|"unreachable"|"loading")?
-function ns.EstimateIn(job, fromMap, fromX, fromY, toMap, toX, toY, walk, bound)
+function ns.EstimateIn(job, fromMap, fromX, fromY, toMap, toX, toY, walk, bound, place)
+	if place and Ready() then
+		local from, to = Point(fromMap, fromX, fromY), Point(toMap, toX, toY)
+		if from and to then
+			local options, now = Options(from, to)
+			local plan = ns.NearbyRank.Plan(job, options, place, walk, bound)
+			if plan then
+				return math.max(0, (plan.arrive - now) / 1000)
+			end
+			return nil, "unreachable"
+		end
+	end
 	local entry, reason = Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk, bound)
 	if not entry then
 		return nil, reason

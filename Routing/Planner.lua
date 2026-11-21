@@ -82,6 +82,10 @@ local function WalkCost(options, a, b, index)
 	if options.feasibleOnly or (options.exactMaps and options.exactMaps[a.map]) then
 		return false, false
 	end
+	if options.endpointBounds and ((a.kind == "start") ~= (b.kind == "goal")) and ns.Path.HasData(a.map) then
+		-- A zero bound is not a proved transfer between walks.
+		return ns.Path.LowerBound(a.map, a, b), true, true
+	end
 	return Gap(a, b), true
 end
 
