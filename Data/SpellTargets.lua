@@ -7,7 +7,7 @@
 -- HostileSpells: spells whose effects target an enemy (TARGET_UNIT_TARGET_ENEMY, 6) or any explicit unit
 -- (25), the rows a hostile NPC answers. BandItems: [item] = its on-use spell's max range and the units
 -- that spell targets; only items the player carries are asked about.
--- DB2: https://wago.tools/db2 (CSV build 1.60.1.70938).
+-- DB2: https://wago.tools/db2 (CSV build 1.60.1.70959).
 ---@type string, SPFNamespace
 local _, ns = ...
 
@@ -175,7 +175,6 @@ ns.SpellTargets = {
 	[6960] = true,
 	[6964] = true,
 	[6966] = true,
-	[6998] = true,
 	[7001] = true,
 	[7033] = true,
 	[7079] = true,
@@ -1042,7 +1041,6 @@ ns.SpellTargets = {
 	[31418] = true,
 	[31419] = true,
 	[31420] = true,
-	[31906] = true,
 	[33389] = true,
 	[33392] = true,
 	[41637] = true,
@@ -2882,7 +2880,6 @@ ns.HostileSpells = {
 	[6980] = true,
 	[6984] = true,
 	[6985] = true,
-	[6998] = true,
 	[7033] = true,
 	[7054] = true,
 	[7057] = true,
@@ -3066,6 +3063,7 @@ ns.HostileSpells = {
 	[8444] = true,
 	[8445] = true,
 	[8446] = true,
+	[8516] = true,
 	[8552] = true,
 	[8554] = true,
 	[8555] = true,
@@ -3258,6 +3256,8 @@ ns.HostileSpells = {
 	[10523] = true,
 	[10578] = true,
 	[10605] = true,
+	[10608] = true,
+	[10610] = true,
 	[10617] = true,
 	[10651] = true,
 	[10653] = true,
@@ -5490,7 +5490,6 @@ ns.HostileSpells = {
 	[31419] = true,
 	[31420] = true,
 	[31751] = true,
-	[31906] = true,
 	[33389] = true,
 	[33392] = true,
 	[41637] = true,

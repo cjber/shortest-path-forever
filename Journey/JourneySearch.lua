@@ -618,15 +618,18 @@ local function RefreshCosts(includeGoal, forced, replace)
 	local function stale()
 		return version ~= pathVersion or search ~= owner or not goal
 	end
-	-- Does the walk from here reach the goal itself? true when it does (a cost or a successful probe), false once the
-	-- start batch has ruled it out or never measured the goal (another landmass), nil while it may still.
+	-- Does the walk from here reach the goal itself? true when it does (a cost or a successful probe), false once
+	-- the start batch or the goal batch has ruled it out or never measured the goal (another landmass), nil while it
+	-- may still.
 	local function Direct()
 		for i, point in ipairs(startBatch.targets) do
 			if SamePlace(point, goal) then
 				if startBatch.costs[i] or (startBatch.probes and startBatch.probes[i]) then
 					return true
 				end
-				if startBatch.done then
+				-- A goal batch that spent its frontier holds every entrance that walks to the goal, so whether here
+				-- leaves through one is known without waiting for the start batch to search the whole landmass.
+				if startBatch.done or ns.Path.WalksInto(goalBatch.job, startBatch.point) == false then
 					return false
 				end
 				return nil
@@ -787,6 +790,12 @@ local function RefreshCosts(includeGoal, forced, replace)
 		-- A goal batch whose frontier is spent is finishing, and one that no place walked to still moves its goal to the
 		-- ground they reach (Ground): it runs to its end rather than leaving the goal where nobody can stand.
 		needGoal = (needGoal or goalBatch.job.radius == math.huge) and not goalBatch.done
+		-- Nor does here (Direct): no route ends at this goal, so the walks from here wait for the ground it moves to.
+		-- A goal with no ground to move to, or moved once already (Ground), keeps them: they still answer the search.
+		local moves = goalBatch.job.moved and not (grounded and SamePlace(goal, grounded.to))
+		if goalBatch.job.into and moves and Direct() == false then
+			needStart = false
+		end
 		active(startBatch, needStart)
 		active(goalBatch, needGoal)
 		-- A bind point's walks still being searched, for a teleport that could be faster: settle when they end.
@@ -872,8 +881,8 @@ local function RefreshCosts(includeGoal, forced, replace)
 	-- is ruled out. The search starts again toward that ground.
 	local function Ground()
 		local moved = goalBatch.done and goalBatch.job and goalBatch.job.moved
-		-- The ground is found by a flood over cluster entrances, which can name ground the walks never reach. A goal
-		-- moved once is not moved again: it has no route, and moving it onto itself restarted the search forever (#1141).
+		-- A goal moved once is not moved again: it has no route, and moving it onto itself restarted the search forever
+		-- (#1141).
 		if not moved or Direct() ~= false or (grounded and SamePlace(goal, grounded.to)) then
 			return false
 		end
