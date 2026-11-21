@@ -321,11 +321,9 @@ local secondPortal = { name = "Portal to Two", from = from, to = across, kind = 
 ns.Portals = { firstPortal, secondPortal }
 ns.charDB.avoided = {
 	{ kind = "flight", ids = { "1:2" }, name = "Flight to Two" },
-	{ kind = "portal", ids = { 1 }, name = "Portal to One" },
 }
 local remaining = Context.Options(from, across)
 assert(#remaining.taxiPaths == 1 and remaining.taxiPaths[1] == reverse, "the reverse flight remains usable")
-assert(not remaining.portals[1] and remaining.portals[2] == secondPortal, "remaining portals keep their IDs")
 local passage = ns.Planner.Plan(remaining)
 assert(passage and passage.legs[1].portal == 2, "the passage leg carries its original portal ID")
 
@@ -359,6 +357,28 @@ journeyFixture.AvoidJourneyTransport(underway.legs[1])
 assert(#journeyFixture.PlanContext.Avoided() == 0, "avoiding the boarded step saves nothing")
 journeyFixture.JourneyPlan = realPlan
 assert(journeyFixture.AvoidTransport.Allowed(underway.legs[1]), "before boarding, the step can be avoided")
+
+-- Save a real passage step, then load that save against reordered and missing portal data.
+journeyFixture.ClearJourney()
+journeyFixture.Routes = {}
+journeyFixture.Portals = { firstPortal, secondPortal }
+journeyDriver.move({ map = 1, x = 100, y = 0 })
+journeyFixture.StartJourney(across)
+journeyDriver.path.settle()
+local portalStep = assert(journeyFixture.JourneyPlan()).legs[2]
+assert(portalStep.portal == 2 and portalStep.mode == "passage")
+journeyFixture.AvoidJourneyTransport(portalStep)
+local saved = journeyFixture.PlanContext.Avoided()
+assert(#saved == 1, "avoiding the unboarded passage saves one entry")
+ns.charDB.avoided = saved
+ns.Portals = { secondPortal, firstPortal }
+remaining = Context.Options(from, across)
+assert(not remaining.portals[1] and remaining.portals[2] == firstPortal, "the saved passage follows its identity")
+ns.Portals = { firstPortal }
+assert(Context.Options(from, across).portals == ns.Portals, "a missing saved passage is inert")
+ns.charDB.avoided = { { kind = "portal", ids = { 1 }, name = "Legacy index" } }
+assert(Context.Options(from, across).portals == ns.Portals, "a legacy portal index must be inert")
+print("plan context: saved passage follows reordered data and legacy indexes are inert")
 
 -- The journey and the estimate plan from the same context. What each adds is listed here so a change to either
 -- shows up as a failure rather than as drift.

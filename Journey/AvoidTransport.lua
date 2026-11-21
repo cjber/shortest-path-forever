@@ -65,8 +65,13 @@ function ns.AvoidJourneyTransport(leg)
 	for index = first, #result.legs do
 		if result.legs[index] == leg then
 			local ids = {}
-			if leg.route or leg.portal then
-				ids[1] = leg.route or leg.portal
+			if leg.route then
+				ids[1] = leg.route
+			elseif leg.portal then
+				local portal = ns.Portals and ns.Portals[leg.portal]
+				if portal then
+					ids[1] = ns.PlanContext.PortalID(portal)
+				end
 			elseif leg.mode == "flight" then
 				-- A displayed flight may combine several taxi edges. Exclude each edge in its flown direction,
 				-- since the planner never searches a combined edge and the reverse ride is a separate connection.

@@ -45,8 +45,8 @@
     },
     {
       "source": "Journey/AvoidTransport.lua",
-      "sha256": "ba49797c6a906d2452a4b451b47ff2cb83ea553074d740b871acf265e4173b92",
-      "review": "Reviewed the avoided transport failure row from AvoidTransport.Row, which JourneyInfo returns as its first row. UI/Tracker.lua passes the row text to AddObjective using ShortestPathForeverTrackerLineTemplate, which inherits ObjectiveTrackerLineFont. Pin consumers use template-owned tooltip fonts.",
+      "sha256": "f7f93d6e9678414cee211d2f2541c4211246c3499bf4be3e56fb28ce4f797091",
+      "review": "Reviewed the avoided transport failure row from AvoidTransport.Row, which JourneyInfo returns as its first row. UI/Tracker.lua passes the row text to AddObjective using ShortestPathForeverTrackerLineTemplate, which inherits ObjectiveTrackerLineFont. Pin consumers use template-owned tooltip fonts. Rechecked tracker rendering after the search retry change. JourneyInfo selects the existing error text for a thrown search. The avoid row uses the same font and phrase when the planner finds no route after filtering.",
       "bindings": [
         {
           "font": "ObjectiveTrackerLineFont",

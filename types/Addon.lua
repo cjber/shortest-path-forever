@@ -304,7 +304,7 @@
 
 ---@class SPFAvoidedTransport
 ---@field kind SPFMode
----@field ids (number|string)[] route or portal ID, or directed taxi hop IDs
+---@field ids (number|string)[] route ID, stable portal identity, or directed taxi hop IDs
 ---@field name string
 
 ---@class SPFDatabase

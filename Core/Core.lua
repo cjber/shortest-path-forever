@@ -505,6 +505,14 @@ frame:SetScript("OnEvent", function(self, _, name)
 		end
 	end
 	ns.charDB = ShortestPathForeverCharDB
+	-- Older test builds saved portal indexes, which can point at a different entrance after a data refresh.
+	local avoided = ns.charDB.avoided
+	for index = #avoided, 1, -1 do
+		local entry = avoided[index]
+		if (entry.kind == "portal" or entry.kind == "passage") and type(entry.ids[1]) == "number" then
+			table.remove(avoided, index)
+		end
+	end
 	-- `teleports` once covered the Hearthstone too, so a save that turned it off gets the Hearthstone off once.
 	-- `teleportSplit` records that this move ran: whatever the player sets afterwards stands, and a save from
 	-- before the split has no `teleports` key to move.

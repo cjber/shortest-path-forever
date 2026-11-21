@@ -491,10 +491,9 @@ function ns.JourneyInfo(formatPlace)
 		ns.StepRows(rows, result, progress.index, formatPlace, loading)
 	elseif loading then
 		rows[1] = { key = "searching", text = L["Finding the fastest way…"], grey = true }
-	elseif ns.AvoidTransport.Row(goal) then
-		rows[1] = ns.AvoidTransport.Row(goal)
 	else
-		rows[1] = { key = "unreachable", text = costError and WALK_FAILURE[costError] or L["No way there from here."] }
+		rows[1] = (costError ~= "error" and ns.AvoidTransport.Row(goal))
+			or { key = "unreachable", text = costError and WALK_FAILURE[costError] or L["No way there from here."] }
 	end
 	return title, rows, result, progress.index, loading
 end
@@ -766,7 +765,11 @@ local function Update(self, elapsed)
 	end
 	local changed, replace = policyChanged, transportChanged
 	policyChanged, transportChanged = nil, nil
-	Search.Poll(changed, replace)
+	if goal and Search.ShouldRetry(changed, map, x, y) then
+		Search.Start(goal, result, progress, Follow, replace, journeyPolicy)
+	else
+		Search.Poll(changed, replace)
+	end
 	local index = progress.index
 	UpdateProgress()
 	if nextPoint then

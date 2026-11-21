@@ -27,6 +27,14 @@ function Context.TaxiHopID(path)
 	return path.from .. ":" .. path.to
 end
 
+-- The planner's portal index addresses baked walks. Persist the named entrance instead.
+---@param portal SPFPortal
+---@return string
+function Context.PortalID(portal)
+	local from = portal.from
+	return ("%d:%.17g:%.17g:%s:%s"):format(from.map, from.x, from.y, portal.kind, portal.name)
+end
+
 -- Each edit replaces the saved list. Its identity versions the filtered tables, which in turn version
 -- the planner topology and the public estimate cache.
 local routeSource, taxiSource, portalSource, routeFaction, version
@@ -77,12 +85,17 @@ local function Transport(faction)
 		end
 	end
 	if next(excludedPortals) and portalSource then
-		portals = {}
+		local remaining, matched = {}, false
 		for id, portal in ipairs(portalSource) do
-			if not excludedPortals[id] then
+			if excludedPortals[Context.PortalID(portal)] then
+				matched = true
+			else
 				-- Keep the original keys: baked walks address portal endpoints by these IDs.
-				portals[id] = portal
+				remaining[id] = portal
 			end
+		end
+		if matched then
+			portals = remaining
 		end
 	end
 	return routes, taxiPaths, portals

@@ -1312,6 +1312,13 @@ function Search.Start(point, route, state, listener, replace, policy)
 	Checked(Start, point, route, state, listener, replace, policy)
 end
 
+-- A thrown search cleared its goal. Stay stopped until the policy or the player's zone changes.
+function Search.ShouldRetry(changed, map, x, y)
+	return goal == nil
+		and costError == "error"
+		and (changed or (map and y and ns.Hazards.ZoneAt(map, x, y) ~= hereZone))
+end
+
 function Search.Poll(changed, replace)
 	if not goal then
 		return
