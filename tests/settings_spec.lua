@@ -157,6 +157,7 @@ local env = setmetatable({
 -- ForeverCore's secure settings opener runs the client's restricted C_SettingsUtil.OpenSettingsPanel through
 -- securecallfunction, and records what it opened.
 local secureCalls = 0
+local isolatedCalls = 0
 env.InCombatLockdown = function()
 	return false
 end
@@ -164,6 +165,7 @@ env.securecallfunction = function(fn, ...)
 	if fn == env.C_SettingsUtil.OpenSettingsPanel then
 		secureCalls = secureCalls + 1
 	end
+	isolatedCalls = isolatedCalls + 1
 	return fn(...)
 end
 env.C_SettingsUtil = {
@@ -866,6 +868,12 @@ assert(
 arrowObjectiveRow.setting.onChanged()
 assert(arrowObjectivesChanged == 1, "the switch redraws the arrow's lines at once")
 local arrowMover = Row("arrowMove").setting
+-- A proxy row's getter and setter are our code called from the list build and the settings search; they run through
+-- securecallfunction so they leave Blizzard's execution secure for Social's rows after ours (#1219).
+local beforeIsolated = isolatedCalls
+arrowMover:GetValue()
+arrowMover:SetValue(false)
+assert(isolatedCalls == beforeIsolated + 2, "the proxy row's getter and setter run isolated")
 arrowMover:SetValue(true)
 assert(arrowMoving == true and arrowMover:GetValue() == true, "the row lets the arrow be dragged")
 arrowMover:SetValue(false)

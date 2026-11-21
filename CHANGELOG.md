@@ -10,11 +10,21 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.43.14] - 2026-11-21
+
+### Changed
+
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
 ## [1.43.13] - 2026-11-21
 
 <!-- forever-core-sync -->
 
 - Ships with the same shared code as your other Forever addons, so they keep working together.
+
+### Fixed
+
+- Opening the game's settings no longer shows a blocked action error naming Shortest Path Forever. Browsing or searching the settings could leave the Social page's Discord button blocked and blamed on this addon. Its tracker, arrow and compass options now run apart from the rest of the panel (#1219).
 
 ## [1.43.12] - 2026-11-21
 

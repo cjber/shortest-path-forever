@@ -27,6 +27,13 @@ local function Label(options, callback)
 	local formatter = Secure(GenerateClosure)(securecallfunction, callback)
 	Secure(options.SetLabelFormatter)(options, MinimalSliderWithSteppersMixin.Label.Right, formatter)
 end
+-- A proxy setting's getter and setter are our code, which the list calls while it builds a row and the search calls
+-- over every layout. Called directly they leave Blizzard's execution tainted for the rows after ours, such as Social's
+-- Discord button, whose protected IsUserOAuthed prereq is then blocked and blamed on us (#1219). A native closure over
+-- securecallfunction runs them isolated, as Label does for formatters.
+local function Isolated(callback)
+	return Secure(GenerateClosure)(securecallfunction, callback)
+end
 local settings = {}
 
 -- Change an option from anywhere and keep the settings panel in step.
@@ -79,6 +86,18 @@ end
 -- Rows go in through Settings.RegisterInitializer, which inserts them from Blizzard's secure delegate.
 -- Settings.CreateCheckbox inserts from our code instead, and the settings search reads every layout, so that
 -- tainted it: a restricted button in the results (Social's Discord Sign In) was then blocked and blamed on us.
+local function Proxy(page, variable, variableType, name, default, getValue, setValue)
+	return Settings.RegisterProxySetting(
+		page,
+		variable,
+		variableType,
+		name,
+		default,
+		Isolated(getValue),
+		Isolated(setValue)
+	)
+end
+
 ns.Init(function()
 	category = Settings.RegisterVerticalLayoutCategory("Shortest Path Forever")
 
@@ -213,7 +232,7 @@ ns.Init(function()
 	end
 	-- Lock keeps the detached column where it is: the grip ignores drag while it is on. Off by default, and safe to
 	-- toggle in combat, since it only writes the saved switch.
-	local lock = Settings.RegisterProxySetting(
+	local lock = Proxy(
 		page,
 		"ShortestPathForever_trackerLocked",
 		Settings.VarType.Boolean,
@@ -235,7 +254,7 @@ ns.Init(function()
 		)
 	)
 	if host and host.GetScale and host.SetScale then
-		local scale = Settings.RegisterProxySetting(
+		local scale = Proxy(
 			page,
 			"ShortestPathForever_trackerScale",
 			Settings.VarType.Number,
@@ -634,7 +653,7 @@ ns.Init(function()
 	Settings.RegisterInitializer(
 		page,
 		Secure(Settings.CreateCheckboxInitializer)(
-			Settings.RegisterProxySetting(
+			Proxy(
 				page,
 				"ShortestPathForever_arrowMove",
 				Settings.VarType.Boolean,
@@ -717,7 +736,7 @@ ns.Init(function()
 	Settings.RegisterInitializer(
 		page,
 		Secure(Settings.CreateCheckboxInitializer)(
-			Settings.RegisterProxySetting(
+			Proxy(
 				page,
 				"ShortestPathForever_compassMove",
 				Settings.VarType.Boolean,
