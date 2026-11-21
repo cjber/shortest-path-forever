@@ -243,7 +243,7 @@ function ns.JourneyStops()
 end
 
 ---@class SPFPublicAPI
-local API = { version = 2, minor = 4 }
+local API = { version = 2, minor = 5 }
 
 local function Differs(a, b)
 	for key, value in pairs(a) do
@@ -400,7 +400,7 @@ local function Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk, bound)
 	end
 	local from, to = Point(fromMap, fromX, fromY), Point(toMap, toX, toY)
 	if not from or not to then
-		return nil, "invalid"
+		return APIKit.Invalid()
 	end
 	local key = string.format(
 		"%d:%.4f:%.4f:%d:%.17g:%.17g:%s:%s",
@@ -778,16 +778,16 @@ function API.SkipLeg(owner, index)
 end
 
 -- Resume the displayed RestedXP guide through the same action as its tracker menu.
----@return true?, ("invalid"|"unavailable")?
+---@return true?, ("none"|"combat")?
 function API.ResumeRestedXP()
 	if not Loaded() then
-		return nil, "unavailable"
+		return nil, "none"
 	end
 	if InCombatLockdown() then
-		return nil, "invalid"
+		return nil, "combat"
 	end
 	if ns.ResumeRestedXP() ~= true then
-		return nil, "unavailable"
+		return nil, "none"
 	end
 	return true
 end
