@@ -910,13 +910,72 @@ def cluster_regions(k):
     return list(strong_components(members, out).items())
 
 
+def prune(cells, dists, slopes, modes, has_roads):
+    """A cluster's retained edges, each with its cost per weight and whether it is a base edge. Edges are taken cheapest
+    first. One is a base edge unless the base edges already kept walk from its start to its end within PRUNE of it,
+    under every weight, by any number of hops: each dropped edge then has a kept walk, so the base edges join whatever
+    the grid joins (#1149) and no walk over them costs more than PRUNE times the grid's. Runtime RoadEdges reweights a
+    road cluster's edges, so there an edge also stays, outside the base, unless one concrete two-hop walk over retained
+    edges is within PRUNE of it over the entire road-factor interval."""
+    el = sorted(cells)
+    index = {cell: i for i, cell in enumerate(el)}
+    n = len(el)
+    # walks[w][i][j]: the cheapest walk from el[i] to el[j] over the base edges kept so far, under weight w
+    walks = [[[0.0 if i == j else math.inf for j in range(n)] for i in range(n)] for _ in WEIGHTS]
+
+    def walked(a, b):
+        i, j = index[a], index[b]
+        return all(walks[w][i][j] <= dists[w][a, b] * PRUNE for w in range(len(WEIGHTS)))
+
+    def keep(a, b):
+        i, j = index[a], index[b]
+        for w, rows in enumerate(walks):
+            cost, onward = dists[w][a, b], list(rows[j])
+            for row in rows:
+                if row[i] < math.inf:
+                    via = row[i] + cost
+                    for t in range(n):
+                        if via + onward[t] < row[t]:
+                            row[t] = via + onward[t]
+
+    def certified(a, b, weight, kept):
+        low, high = dists[weight][a, b], dists[weight + len(WEIGHTS)][a, b]
+        # Shortest costs are minima of affine path costs, hence concave and above their endpoint chord.
+        # Pick ONE concrete two-hop walk (from either endpoint search). Its affine cost below PRUNE times
+        # that chord at both ends stays below it everywhere, certifying all factors, including the default.
+        # Independently optimal two-hop walks at the endpoints would NOT provide that certificate (#892).
+        for mode in (weight, weight + len(WEIGHTS)):
+            dist, slope = dists[mode], slopes[mode]
+            factor = modes[mode][1]
+            for x in el:
+                if x in (a, b) or (a, x) not in kept or (x, b) not in kept:
+                    continue
+                cost, off = dist[a, x] + dist[x, b], slope[a, x] + slope[x, b]
+                if cost + (1 - factor) * off <= low * PRUNE and cost + (ROAD_FACTOR_MAX - factor) * off <= high * PRUNE:
+                    return True
+        return False
+
+    found, kept = {}, set()
+    for a, b in sorted(
+        ((a, b) for a in el for b in el if a != b and (a, b) in dists[0]), key=lambda e: (dists[0][e], e)
+    ):
+        base = not walked(a, b)
+        if base:
+            keep(a, b)
+        elif not has_roads or all(certified(a, b, weight, kept) for weight in range(len(WEIGHTS))):
+            continue
+        kept.add((a, b))
+        # stored travel costs stay physical
+        found[(a, b)] = (*tuple(dist[a, b] for dist in dists[: len(WEIGHTS)]), base)
+    return found
+
+
 def cluster_edges(k):
     """Prune only with a fixed two-hop path certified over the entire road-factor interval."""
     assert _HPA is not None
     grid, cuts, nodes = _HPA
     assert nodes is not None
     g = lambda gx, gy: grid[gx * GH + gy]  # noqa: E731
-    found = {}
     cells = nodes[k]
     box = cluster_box(k)
     dists, slopes = [], []
@@ -951,40 +1010,7 @@ def cluster_edges(k):
                         heapq.heappush(pq, (candidate, v))
         dists.append(dist)
         slopes.append(slope)
-    el = sorted(cells)
-
-    def redundant(a, b, weight, plain=False):
-        if plain or not has_roads:
-            dist = dists[weight]
-            return any(
-                dist.get((a, x), 1e18) + dist.get((x, b), 1e18) <= dist[a, b] * PRUNE for x in el if x not in (a, b)
-            )
-        low, high = dists[weight][a, b], dists[weight + len(WEIGHTS)][a, b]
-        # Shortest costs are minima of affine path costs, hence concave and above their endpoint chord.
-        # Pick ONE concrete two-hop walk (from either endpoint search). Its affine cost below PRUNE times
-        # that chord at both ends stays below it everywhere, certifying all factors, including the default.
-        # Independently optimal two-hop walks at the endpoints would NOT provide that certificate (#892).
-        for mode in (weight, weight + len(WEIGHTS)):
-            dist, slope = dists[mode], slopes[mode]
-            factor = modes[mode][1]
-            for x in el:
-                if x in (a, b) or (a, x) not in dist or (x, b) not in dist:
-                    continue
-                cost, off = dist[a, x] + dist[x, b], slope[a, x] + slope[x, b]
-                if cost + (1 - factor) * off <= low * PRUNE and cost + (ROAD_FACTOR_MAX - factor) * off <= high * PRUNE:
-                    return True
-        return False
-
-    for a in el:
-        for b in el:
-            if a == b or (a, b) not in dists[0]:
-                continue
-            if all(redundant(a, b, weight) for weight in range(len(WEIGHTS))):
-                continue
-            # Runtime RoadEdges reweights these retained edges; stored travel costs stay physical.
-            base = not all(redundant(a, b, weight, plain=True) for weight in range(len(WEIGHTS)))
-            found[(a, b)] = (*tuple(dist[a, b] for dist in dists[: len(WEIGHTS)]), base)
-    return found
+    return prune(cells, dists, slopes, modes, has_roads)
 
 
 def grid_entrances(grid, cuts, jobs=1):

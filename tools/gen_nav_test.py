@@ -614,3 +614,26 @@ class LinkedPortalBoxTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PruneTest(unittest.TestCase):
+    def test_entrances_that_stand_in_for_each_other_keep_a_way_on(self):
+        # Two entrances a step apart each stand in for the other's edge onward. Dropping each by the other left no
+        # edge out of the pair, so the base edges cut the cluster apart and a reachable goal searched the
+        # continent before it said there was no way there (#1149).
+        a, x, b = 0, 1, 2
+        cost = {(a, x): 0.1, (x, a): 0.1, (a, b): 10.0, (b, a): 10.0, (x, b): 10.0, (b, x): 10.0}
+        dists = [dict(cost) for _ in gen_nav.WEIGHTS]
+        found = gen_nav.prune({a, x, b}, dists, [], [], False)
+        for base in (False, True):
+            edges = {edge for edge, value in found.items() if value[-1] or not base}
+            for start in (a, x):
+                seen, stack = {start}, [start]
+                while stack:
+                    u = stack.pop()
+                    for v in {v for w, v in edges if w == u} - seen:
+                        seen.add(v)
+                        stack.append(v)
+                with self.subTest(base=base, start=start):
+                    self.assertIn(b, seen)
+        self.assertEqual(len({(a, b), (x, b)} & found.keys()), 1, "one edge onward stands in for the other")
