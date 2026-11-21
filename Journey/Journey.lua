@@ -472,7 +472,7 @@ function ns.JourneyInfo(formatPlace)
 	local title = ns.JourneyTitle(goal, formatPlace)
 	local rows = {}
 	local _, _, costError, loading = Search.Status()
-	-- Only this goal's own proved steps: a new goal lists none until its plan lands, never the journey it replaced.
+	-- Only this goal's own steps: a new goal lists none until its plan lands, never the journey it replaced.
 	if result then
 		ns.StepRows(rows, result, progress.index, formatPlace, loading)
 	elseif loading then
@@ -553,7 +553,7 @@ end
 
 ns.OnWalk = OnWalk -- Corpse.lua trims its walk the same way.
 -- The route last handed to the map, kept so a retime moves its arrival without redrawing it, and a first search's
--- rough route, drawn while nothing is followed yet until its proved route or a new search replaces it.
+-- rough route, drawn while nothing is followed yet until a followable route or a new search replaces it.
 local drawn, rough
 local function Refresh()
 	local remaining
@@ -652,7 +652,7 @@ end
 ---@param news SPFSearchNews
 local function Follow(route, news)
 	if news == "searching" or news == "rough" then
-		-- Only drawn: guidance, subscribers and farming wait for the proved route.
+		-- The rough line is display-only.
 		rough = news == "rough" and route or nil
 		return Refresh()
 	end
@@ -675,7 +675,7 @@ local function Follow(route, news)
 			ns.JourneyReplanned()
 		end
 	end
-	if ns.FarmingJourneyProof then
+	if ns.FarmingJourneyProof and not (result and result.provisional) then
 		ns.FarmingJourneyProof("settled", goal, result)
 	end
 	UpdateProgress()

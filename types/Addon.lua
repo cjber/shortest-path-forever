@@ -515,6 +515,7 @@ ShortestPathForeverPathData = nil
 ---@field estimated true
 
 ---@class SPFPlan
+---@field provisional? true -- a followable route while the proof is still running
 ---@field rough? true -- a first search's estimate, drawn before its proof and never followed
 ---@field arrive number
 ---@field legs SPFLeg[]
