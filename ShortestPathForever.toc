@@ -9,7 +9,7 @@
 ## X-Website: https://github.com/cjber/shortest-path-forever
 ## X-Donate: https://github.com/sponsors/cjber
 ## X-Curse-Project-ID: 1708599
-## X-Forever-Core: v1.16.2
+## X-Forever-Core: v1.16.3
 ## SavedVariables: ShortestPathForeverDB
 ## SavedVariablesPerCharacter: ShortestPathForeverCharDB
 ## X-Forever-Core-Embed: 1
