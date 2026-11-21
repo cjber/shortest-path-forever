@@ -40,14 +40,16 @@ TRAIL_OUTPUT = ROOT / "tools" / "RoadTrails.lua"
 MAPS = (0, 1, 2991)
 B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
-# The tileset textures that paint roads and paved streets, by file ID. Each was checked by drawing where it shows over
-# the client's own minimap of the tile it covers most: kept when it traces the roads seen there. Left out on that check:
-# general dirt and gravel that also paint fields and slopes (Westfall's and Durotar's dirt, Duskwood and Loch Modan
-# gravel), footprint and scrape overlays (Desolace, Winterspring, Dun Morogh), and textures that only paint plazas,
-# docks' dirt or temple rings (Swamp of Sorrows stone road, Burning Steppes brick, Badlands pillar tiles). Roads painted
-# with a zone's general dirt are therefore not roads here.
+# The tileset textures that paint roads and paved streets, by file ID (the _s diffuse). The list is Polestar's reviewed
+# road textures (fitzforge/polestar data/road-textures.json, build 1.60.1.70425; used with permission, see
+# THIRD_PARTY.md): each name matches road, path, cobble, street or trail, or is dirt, footprint, brick or gravel
+# whose strips follow known roads, or was checked by a person on known roads (Dun Morogh's and Desolace's cracked
+# rock). Kept from our own earlier drawing check although Polestar's shape test leaves them out: Arathi Highlands'
+# city floor and Tanaris' dirt footprint. Left out on both checks: general dirt and gravel that also paint fields and
+# slopes, footprint and scrape overlays and plaza, dock or temple textures that are not roads.
 ROAD_TEXTURES = {
     186766: "aerie peaks/aeriepeaksrockroadbase",
+    186780: "alteracmtns/alteracdirtbase",
     186802: "alteracmtns/alteracrockroadbase",
     186813: "araithihighlands/arathihighlandscityfloor",
     186839: "ashenvale/ashenvaleroad",
@@ -55,12 +57,20 @@ ROAD_TEXTURES = {
     186918: "barrens/barrensroad01",
     186962: "burningstepps/burningsteppsspireroad01",
     186975: "darkshore/darkshoreroad",
+    187000: "desolace/desolacecracks",
     187035: "durotar/durotarroad",
     187066: "duskwallow marsh/duskwallowstoneroad",
     187073: "duskwood/duskwoodcobblestone2",
     187074: "duskwood/duskwoodcobblestone",
     187100: "elwynn/elwynncobblestonebase",
     187104: "elwynn/elwynncobblestonedock",
+    187106: "elwynn/elwynncobblestonedockdirt",
+    187663: "expansion02/dragonblight/db_titanroada",
+    187675: "expansion02/dragonblight/db_titanroadj",
+    187677: "expansion02/dragonblight/db_titanroadk",
+    187679: "expansion02/dragonblight/db_titanroadl",
+    187681: "expansion02/dragonblight/db_titanroadm",
+    188097: "expansion02/lakewintergrasp/wg_titanroad01",
     188478: "felwood/felwoodroad",
     188508: "feralas/feralasroad",
     188542: "hyjal/alphahyjalroad",
@@ -74,13 +84,21 @@ ROAD_TEXTURES = {
     188763: "redridge/redridgerockroadbase",
     188796: "silverpine/silverpineroad",
     188818: "stranglethorn/stranglethorncobblestoneroad",
+    188854: "swamp of sorrows/swampsorrowsstoneroad07",
     188859: "tanaris/tanarisdirtfootprint",
     188911: "the blasted lands/blastedlandsroad",
     188964: "tirisfall/tirisfallstoneroad01",
     188982: "westwood/westfallcobblestonebase",
     189026: "wetlands/wetlandsroad01",
+    189030: "winterspring grove/winterspringdirt",
     189071: "zulgurub/zulgurubroad01",
+    242648: "expansion02/dragonblight/db_titanroadn",
+    242650: "expansion02/dragonblight/db_titanroado",
+    242680: "expansion02/lakewintergrasp/wg_titanroad03",
     304640: "expansion03/gilneas/gn_cobblestonef",
+    304663: "expansion03/gilneas/gn_cobblestoneg",
+    304665: "expansion03/gilneas/gn_cobblestoneh",
+    365792: "orgrimmar/orgrim_road_01",
 }
 TEXELS = 1024  # alpha texels across an ADT tile: 16 chunks of 64
 COMPRESSED = 0x200  # MCLY: the layer's alpha map is run-length encoded
