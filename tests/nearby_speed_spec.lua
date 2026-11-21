@@ -20,6 +20,7 @@ for _, f in ipairs({
 end
 assert(loadfile("tools/load_nav.lua"))(0)
 driver.load("Core/APIInput.lua")
+driver.load("Core/APIStops.lua")
 driver.load("Core/API.lua")
 driver.env._G = driver.env
 local project = driver.env.C_Map.GetWorldPosFromMapPos

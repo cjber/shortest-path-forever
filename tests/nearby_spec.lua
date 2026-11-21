@@ -565,7 +565,7 @@ assert(searched:find("Near vendor · ", 1, true), "the detail line starts with t
 assert(searched:find("Sharp Arrow", 1, true) and searched:find("Rough Arrow", 1, true), "and only the matching items")
 assert(not searched:find("General Goods", 1, true), "never the title while searching")
 assert(ns.NearbyServices.Detail("arrows", vendor, "general") == "Near vendor", "a title-only match names no items")
--- The panel's queue: one Estimate per step, the cheapest of a shortlist at the end.
+-- The panel's queue first estimates every lower bound, then refines only candidates that can still win.
 local candidates = {
 	{ id = 1, map = 100, x = 0.1, y = 0.1, world = here },
 	{ id = 2, map = 100, x = 0.2, y = 0.2, world = here },
@@ -583,9 +583,10 @@ repeat
 	local beforeStep = estimateCalls
 	best, seconds, more = rank:Step()
 	steps = steps + 1
-	assert(estimateCalls == beforeStep + 1, "one Estimate per step")
+	local shouldEstimate = steps <= #candidates + 1
+	assert(estimateCalls == beforeStep + (shouldEstimate and 1 or 0), "one Estimate per unpruned step")
 until not more
-assert(steps == #candidates and best.id == 1 and seconds == 10, "the cheapest of the shortlist wins")
+assert(steps == 2 * #candidates and best.id == 1 and seconds == 10, "the cheapest of the shortlist wins")
 
 assert(
 	menuEntry(tracking.children, "Class trainer").callback() == env.MenuResponse.CloseAll,

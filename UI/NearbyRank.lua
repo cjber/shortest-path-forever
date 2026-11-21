@@ -5,9 +5,9 @@ if ns.broken then
 	return
 end
 
--- One row's shortlist ranked by the planner's own journey cost, one Estimate per Step. The panel, the tracking menu and
--- /spfnear drain it inside a path job, whose estimates pause at the frame budget. The best starts as the straight-line
--- nearest, so a row always has an NPC, and stays so when no estimate can be made. A place whose walk is still being
+-- One row's shortlist ranked by the planner's own journey cost, at most one Estimate per Step. The panel, the tracking
+-- menu and /spfnear drain it inside a path job, whose estimates pause at the frame budget. The best starts as the
+-- straight-line nearest, so a row always has an NPC, and stays so when no estimate can be made. A walk still being
 -- measured is estimated on its lower bound, so the ranking is decided (exact) once its cheapest place is not one of
 -- them: every other place is then exact or no faster.
 ---@class SPFNearbyRank
@@ -67,9 +67,9 @@ function Rank:Step()
 	if bound then
 		walk = bound
 	end
-	-- A place whose bound already loses is skipped: a best still on a bound leaves the ranking undecided, and it ranks
-	-- again once that walk lands. On a tie the measured place may still decide the row.
-	if self.seconds and least[place] > self.seconds then
+	-- Only a settled best sets a ceiling. On a tie the candidate may still decide the row.
+	local ceiling = self.exact and self.seconds or nil
+	if ceiling and least[place] > ceiling then
 		return self.best or self.candidates[1], self.seconds, at < 2 * count
 	end
 	-- On a bound the estimate skips the planner's preferences: a Hearthstone dropped for saving too little on the bound
@@ -85,7 +85,7 @@ function Rank:Step()
 		walk,
 		bound and true,
 		place,
-		self.seconds
+		ceiling
 	)
 	local exact = not bound
 	if seconds and (not self.seconds or seconds < self.seconds or seconds == self.seconds and exact) then
@@ -225,6 +225,19 @@ local function EndpointCost(job, source, target, reverse, options, places, kept,
 	return cost
 end
 
+local function Earliest(job, options)
+	local hazards = options.hazards
+	if hazards and hazards.goalZone then
+		-- The direct walk's zone charge can hide a quicker arrival that would win once a ride gets longer.
+		options.hazards = setmetatable({ goalZone = false }, { __index = hazards })
+	end
+	local bound = options.lowerBound
+	options.lowerBound = true
+	local plan = ns.Planner.Plan(options, job)
+	options.lowerBound, options.hazards = bound, hazards
+	return plan
+end
+
 -- Replan on the winning candidate's measured legs. Another ride can become cheaper when a walk grows or is ruled
 -- out, so keep the lower-bound alternatives in the graph until a plan needs no further searches.
 ---@param job SPFPathJob
@@ -247,8 +260,11 @@ local function Plan(job, options, place, walk, bound, ceiling)
 		walks[1] = { from = options.from, to = options.to, cost = walk }
 	end
 	options.walks, options.lowerBound = walks, bound
+	if bound then
+		return Earliest(job, options)
+	end
 	local plan = ns.Planner.Plan(options, job)
-	if bound or not (here and goal and plan) then
+	if not (here and goal and plan) then
 		return plan
 	end
 	local rides = false
@@ -260,9 +276,12 @@ local function Plan(job, options, place, walk, bound, ceiling)
 	end
 	local kept, places = TransitCosts(here), ns.Planner.Places(options)
 	while plan do
-		-- Measured walks only make a plan later, so one already past the ceiling cannot win.
+		-- Preferences can pick a slower route. Only the earliest possible arrival proves a loss.
 		if ceiling and plan.arrive > ceiling and #plan.pendingWalks > 0 then
-			return plan, true
+			local earliest = Earliest(job, options)
+			if earliest and earliest.arrive > ceiling then
+				return earliest, true
+			end
 		end
 		local changed = false
 		for _, leg in ipairs(plan.pendingWalks) do
@@ -276,6 +295,9 @@ local function Plan(job, options, place, walk, bound, ceiling)
 			if cost ~= nil then
 				walks[#walks + 1] = { from = leg.from, to = leg.to, cost = cost }
 				changed = true
+				if ceiling then
+					break -- Recheck the ceiling before starting another endpoint search.
+				end
 			end
 		end
 		if not changed then

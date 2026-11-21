@@ -628,7 +628,7 @@ function Queue(moved)
 		ns.NearbyServices.Cancel(kept)
 	end
 	measuring = this
-	-- One regular planner estimate per row gives a time while grouping checks the whole shortlist. On movement,
+	-- One lower-bound planner estimate per row gives a time while grouping checks the whole shortlist. On movement,
 	-- keep the last chosen NPC where it is still shortlisted and update its time from the new origin.
 	if this then
 		ranking = ns.Path.Run(function(job)
@@ -641,7 +641,7 @@ function Queue(moved)
 							break
 						end
 					end
-					local seconds = ns.EstimateIn(job, map, x, y, place.map, place.x, place.y)
+					local seconds = ns.EstimateIn(job, map, x, y, place.map, place.x, place.y, nil, true)
 					if seconds then
 						chosen[item.key], estimates[item.key] = place, seconds
 						UpdateRow(item.key)
