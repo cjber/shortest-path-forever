@@ -472,6 +472,7 @@ L["Farming tour running."] = "Ruta de recolección en curso." -- mt
 L["Farming tour paused."] = "Ruta de recolección en pausa." -- mt
 L["Farming tour stopped."] = "Ruta de recolección detenida." -- mt
 L["Farming tour waiting."] = "Ruta de recolección en espera." -- mt
+L["Or choose %s in the journey tracker menu."] = "O elige «%s» en el menú del seguimiento del viaje." -- mt
 L["Ordering recorded locations..."] = "Ordenando ubicaciones registradas..." -- mt
 L["Farming needs the GatherMate2 addon."] = "La recolección necesita el addon GatherMate2." -- mt
 L["Your current zone is unavailable."] = "Tu zona actual no está disponible." -- mt

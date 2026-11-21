@@ -479,6 +479,7 @@ L["Farming tour running."] = "채집 순회 진행 중입니다." -- mt
 L["Farming tour paused."] = "채집 순회가 일시 정지되었습니다." -- mt
 L["Farming tour stopped."] = "채집 순회가 중지되었습니다." -- mt
 L["Farming tour waiting."] = "채집 순회 대기 중입니다." -- mt
+L["Or choose %s in the journey tracker menu."] = "또는 여정 추적기 메뉴에서 ‘%s’를 선택하세요." -- mt
 L["Ordering recorded locations..."] = "기록된 위치의 순서를 정하는 중..." -- mt
 L["Farming needs the GatherMate2 addon."] = "채집하려면 GatherMate2 애드온이 필요합니다." -- mt
 L["Your current zone is unavailable."] = "현재 지역을 확인할 수 없습니다." -- mt
