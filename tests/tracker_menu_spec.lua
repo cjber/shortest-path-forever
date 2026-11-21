@@ -12,6 +12,7 @@ local env, shared = t.env, t.ns
 local function noop() end
 local journey, corpse, guided = true, false, false
 local guide, maps, cleared, hearth, resumes = 0, {}, 0, false, 0
+local options = {}
 local ns = {
 	L = shared.L,
 	core = {
@@ -75,7 +76,8 @@ local ns = {
 		maps[#maps + 1] = id
 	end,
 	SetOption = function(key, value)
-		assert(key == "tracker" and value == false)
+		assert((key == "tracker" or key == "journeyTracker") and value == false)
+		options[key] = value
 	end,
 }
 local create = env.CreateFrame
@@ -153,6 +155,7 @@ local expected = table.concat({
 	"Resume RestedXP guide",
 	"Resume Guidelime guide",
 	"Resume Dugi guide",
+	"Hide the journey tracker",
 	"Show on map",
 	"Clear journey",
 	"divider",
@@ -177,6 +180,8 @@ for _, name in ipairs({ "RestedXP", "Guidelime", "Dugi" }) do
 end
 entry(block, "Show on map").callback()
 entry(block, "Clear journey").callback()
+entry(block, "Hide the journey tracker").callback()
+assert(options.journeyTracker == false, "the journey block turns its own tracker off")
 assert(guide == 1 and resumes == 2 and maps[1] == "journey" and cleared == 1)
 corpse = true
 assert(not entry(menu("journey"), "Clear journey"), "corpse runs cannot be cleared")

@@ -69,6 +69,9 @@ read_globals = {
 	"ObjectiveTrackerFrame",
 	"ObjectiveTrackerManager",
 	"ORANGE_FONT_COLOR",
+	-- Core.lua's ns.Notice: a one-line notice on screen, in the client's yellow.
+	"UIErrorsFrame",
+	"YELLOW_FONT_COLOR",
 	"Settings",
 	"MinimalSliderWithSteppersMixin",
 	"SecondsToTime",
@@ -234,6 +237,9 @@ files["Data/RoadEdges.lua"] = { max_line_length = false }
 files["Data/Heights.lua"] = { max_line_length = false }
 files["Data/IdleSpawns.lua"] = { max_line_length = false }
 files["Data/TownAreas.lua"] = { max_line_length = false }
+files["Data/ZoneCells.lua"] = { max_line_length = false }
+files["Data/WalkZones.lua"] = { max_line_length = false }
+files["tests/fixtures/caves_cities.lua"] = { max_line_length = false } -- generated, one walk per row
 
 files["tests/companion_maps_spec.lua"] = { globals = { "C_AddOns", "GetTime" } }
 -- The client's secure delegate: map pins set their restricted button passthrough through it (#645).

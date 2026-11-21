@@ -63,6 +63,20 @@ end
 function methods:SetSize(width, height)
 	self.width, self.height = width, height
 end
+function methods:GetWidth()
+	return self.width or 0
+end
+function methods:GetHeight()
+	return self.height or 0
+end
+function methods:IsVisible()
+	return not self.hidden
+end
+-- Not laid out: the stock place has nothing of its own to measure (tests/stock_place_spec.lua covers the layout).
+function methods.GetRect() end
+function methods:IsMouseEnabled()
+	return self.mouse
+end
 function methods:SetAtlas(atlas)
 	assert(atlasSizes[atlas], "unverified atlas: " .. atlas)
 	calls.atlas = calls.atlas + 1
@@ -184,6 +198,12 @@ local env = setmetatable({
 	UIParent = {
 		GetEffectiveScale = function()
 			return 1
+		end,
+		GetWidth = function()
+			return 1366
+		end,
+		GetHeight = function()
+			return 768
 		end,
 	},
 	CreateFrame = function(_, name, _, template)
@@ -607,9 +627,6 @@ strip.scripts.OnMouseUp(strip, "LeftButton")
 assert(ns.db.compassX == 240)
 strip.scripts.OnMouseUp(strip, "RightButton")
 assert(ns.db.compassX == nil and ns.db.compassY == nil and at("TOP", "TOP", 0, -42))
-function methods:IsVisible()
-	return not self.hidden
-end
 env.IsMouseButtonDown = function()
 	return true
 end
@@ -787,9 +804,6 @@ end
 function methods:SetPropagateKeyboardInput(on)
 	assert(not combat, "SetPropagateKeyboardInput cannot be called in combat")
 	self.propagate = on
-end
-function methods:IsMouseEnabled()
-	return self.mouse
 end
 methods.GetCenter = function(self)
 	return self.atX, self.atY

@@ -34,15 +34,19 @@ ns.Planner.Plan = function(o)
 	options.feasibleOnly, options.incumbent, options.incumbentPlan = nil, nil, nil
 	return plan(o)
 end
--- Every route the search hands Journey: a route shown before the proof ends is a settled one, with its first walk
--- drawn and no better than the optimum, and at most one such route comes before the proved one.
+-- Every route the search hands Journey: the rough route from baked data may be drawn first, then the one proved route.
 local published = {}
 local start = ns.JourneySearch.Start
 ns.JourneySearch.Start = function(point, route, state, listener)
 	return start(point, route, state, function(planned, news)
-		if news == "route" and planned then
-			published[#published + 1] =
-				{ arrive = planned.arrive, provisional = planned.provisional, leg = planned.legs[1] }
+		if (news == "route" or news == "rough") and planned then
+			published[#published + 1] = {
+				rough = news == "rough" and planned.rough,
+				arrive = planned.arrive,
+				provisional = planned.provisional,
+				leg = planned.legs[1],
+				legs = planned.legs,
+			}
 		end
 		return listener(planned, news)
 	end)
@@ -87,6 +91,27 @@ local function full(o)
 	o.walks, o.exactMaps = walks, { [0] = true, [1] = true }
 	return plan(o)
 end
+-- Theramore to Feralas (#1062): the goal's search settles the walk from Theramore's flight master before the start's
+-- reaches Feralas. The route shown meanwhile walks there through that flight master, not by boat and back by air.
+do
+	local master = ns.TaxiNodes[32]
+	ns.faction, ns.water, ns.speed, ns.known = "Alliance", false, 7, { [32] = true, [26] = true }
+	driver.begin(
+		{ map = 1, x = master.x + 40, y = master.y - 20, z = master.z },
+		{ map = 1, x = -4450, y = -500, z = 0 }
+	)
+	drain()
+	assert(#published >= 1)
+	for _, route in ipairs(published) do
+		for _, leg in ipairs(route.legs) do
+			assert(leg.mode == "walk", "a route shown from Theramore to Feralas walks: " .. leg.mode)
+		end
+	end
+	published = {}
+	ns.ClearJourney()
+	print("journey_optimal_spec: Theramore to Feralas shows walks only: ok")
+end
+
 local reachable, findCost = 0, ns.Path.FindCost
 -- A probe that learns nothing and spends the whole probe budget: the endpoint searches must prove the route alone.
 local function spent(map, from, to, callback, water)
@@ -122,13 +147,13 @@ for i = 1, 30 do
 	local bounded, exact = driver.shown(), full(options)
 	assert((bounded ~= nil) == (exact ~= nil), "reachability differs for pair " .. i)
 	for at, route in ipairs(published) do
-		if route.provisional then
-			assert(at == 1, "only a first route is shown before the proved one")
-			assert(route.leg.mode ~= "walk" or route.leg.measured, "a shown route draws its first walk")
-			assert(route.arrive >= exact.arrive - 1e-5, "a shown route cannot beat the optimum")
-		end
+		-- An estimate can reach a place no walk does: the search then clears it.
+		assert(
+			not route.rough or at == 1 and (#published == 2 or not exact),
+			"a rough route is drawn first, then replaced"
+		)
+		assert(route.rough or at == #published, "the proved route is the only one followed")
 	end
-	assert(#published <= 2, "a search commits at most twice")
 	published = {}
 	if bounded then
 		reachable = reachable + 1
@@ -204,7 +229,13 @@ for _, pair in ipairs({ { 26, 39 }, { 26, 67 }, { 25, 22 }, { 6, 7 } }) do
 		local bounded, exact = driver.shown(), full(options)
 		assert(
 			bounded and exact and math.abs(bounded.arrive - exact.arrive) < 1e-5,
-			"baked endpoint bounds must preserve the full-search optimum"
+			("baked endpoint bounds must preserve the full-search optimum: %d to %d, water %s, %s against %s"):format(
+				pair[1],
+				pair[2],
+				tostring(water),
+				tostring(bounded and bounded.arrive),
+				tostring(exact and exact.arrive)
+			)
 		)
 		ns.ClearJourney()
 	end
@@ -351,7 +382,7 @@ do
 			held = function()
 				callback(ns.Path.FindManySync(map, point, targets, water))
 			end
-			return
+			return { radius = 0 }
 		end
 		return findMany(map, point, targets, callback, ...) -- multi-value: the batch's job
 	end
@@ -372,6 +403,34 @@ do
 	held()
 	drain()
 	assert(driver.shown().legs[1].mode == "teleport")
+	ns.ClearJourney()
+	-- Bound at Auberdine, a ready hearth waits on a 100 yd walk in Gadgetzan only while its walks on have not passed the
+	-- 4 s that walk leaves after the 10 s cast: further on, the landing cannot win and the walk settles without its
+	-- walks to every flight point on Kalimdor (#1154).
+	local landing
+	ns.Path.FindMany = function(map, point, targets, callback, water, reverse, progress, ...)
+		if point == ns.teleports[1] then
+			landing = { radius = 0, progress = progress }
+			return landing
+		end
+		return findMany(map, point, targets, callback, water, reverse, progress, ...) -- multi-value: the batch's job
+	end
+	local auberdine = ns.TaxiNodes[26]
+	ns.teleports[1] = { map = auberdine.map, x = auberdine.x, y = auberdine.y, spell = 8690, cast = 10000, bind = true }
+	local near = { map = gadgetzan.map, x = gadgetzan.x - 100, y = gadgetzan.y, z = gadgetzan.z }
+	driver.begin(near, gadgetzan)
+	while nextFrame do
+		local fn = nextFrame
+		nextFrame = nil
+		fn()
+	end
+	assert(landing and ns.JourneyStatus(), "a hearth that could still win waits for its bind point's walks")
+	landing.radius = 200
+	if landing.progress then
+		landing.progress({}, nil, landing)
+	end
+	drain()
+	assert(driver.shown().legs[1].mode == "walk", "the walk settles once the bind point's walks cannot beat it")
 	ns.Path.FindMany = findMany
 	ns.ClearJourney()
 	ns.teleports, ns.teleportReady, driver.env.C_Item = nil, nil, nil
@@ -434,7 +493,7 @@ print("hearth journey: a short walk past the bind point needs no hearth: ok")
 
 -- A half-hour walk gives way to boats that arrive within a tenth of its time; a clearly quicker walk does not.
 ns.faction, ns.water, ns.speed, ns.known = "Alliance", false, 7, {}
-local ironforge = { map = 0, x = -4918, y = -940 }
+local ironforge = { map = 0, x = -4918, y = -940, z = 502 }
 local silverpine = { map = 0, x = 500, y = 1000 }
 driver.begin(ironforge, silverpine)
 drain()

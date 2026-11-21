@@ -276,6 +276,9 @@ local function Navigate(key, place)
 	if not place then
 		return false
 	end
+	if ns.StopServiceRanking then
+		ns.StopServiceRanking()
+	end
 	if place.entrance then
 		return ns.NearbyEntrances.Navigate(place)
 	end
@@ -609,86 +612,41 @@ local function PlayerWorld()
 		return ns.WorldPoint(map, x, y)
 	end
 end
--- One row's shortlist ranked by the planner's own journey cost, one Estimate per Step. The panel, the tracking menu and
--- /spfnear drain it inside a path job, whose estimates pause at the frame budget. The best starts as the straight-line
--- nearest, so a row always has an NPC, and stays so when no estimate can be made.
----@class SPFNearbyRank
----@field key? string
----@field candidates SPFNearbyPlace[]
----@field estimate SPFEstimate
----@field fromMap integer
----@field fromX number
----@field fromY number
----@field at integer
----@field best? SPFNearbyPlace
----@field seconds? number
-local Rank = {}
-Rank.__index = Rank
+local Choose = ns.NearbyRank.Choose
 
-function Rank:Step()
-	local place = self.candidates[self.at]
-	if not place then
-		return self.best or self.candidates[1], self.seconds, false
-	end
-	self.at = self.at + 1
-	local seconds = self.estimate(self.fromMap, self.fromX, self.fromY, place.map, place.x, place.y)
-	if seconds and (not self.seconds or seconds < self.seconds) then
-		self.best, self.seconds = place, seconds
-	end
-	return self.best or self.candidates[1], self.seconds, self.at <= #self.candidates
-end
-
-local function NewRank(candidates, estimate, fromMap, fromX, fromY)
-	return setmetatable({
-		candidates = candidates,
-		estimate = estimate,
-		fromMap = fromMap,
-		fromX = fromX,
-		fromY = fromY,
-		at = 1,
-	}, Rank)
-end
-
--- The ranking a click started, while it runs: a later click replaces it.
----@type SPFPathJob?
-local traveling
+-- Stops the choice a click started, while it runs: a later click replaces it.
+---@type fun()?
+local stopTravel
 
 -- Go to the chosen place: the closest few by straight line, then the cheapest of those by the planner's own journey
 -- cost. A boat or flight can beat a shorter walk across the hills. Planned on the click, so opening or refreshing a
--- menu never starts a plan, and only the shortlist is planned: in a path job under the frame budget, never in the
--- clicking frame, the journey starting once the ranking lands. Returns the menu's response.
+-- menu never starts a plan, and only the shortlist is planned: in path jobs under the frame budget, never in the
+-- clicking frame, the journey starting once the choice is decided (NearbyRank). Returns the menu's response.
 local function Travel(key, world, query, tier)
-	if traveling then
-		ns.Path.Cancel(traveling)
-		traveling = nil
+	if stopTravel then
+		stopTravel()
+		stopTravel = nil
+	end
+	if ns.StopServiceRanking then
+		ns.StopServiceRanking()
 	end
 	local candidates = Shortlist(key, world, SHORTLIST, query, tier)
-	local best = candidates[1]
 	local map, x, y = PlayerUi()
 	if #candidates < 2 or not (ns.EstimateIn and map and x and y) then
-		return Pick(key, best)
+		return Pick(key, candidates[1])
 	end
-	-- A destination chosen while the ranking runs is the newer request: the ranking then starts nothing.
+	-- A destination chosen while the choice runs is the newer request: the choice then starts nothing.
 	local goal = ns.JourneyGoal()
-	local this
-	this = ns.Path.Run(function(job)
-		local rank = NewRank(candidates, function(...)
-			return ns.EstimateIn(job, ...)
-		end, map, x, y)
-		local more = true
-		while more do
-			_, _, more = rank:Step()
+	local stop
+	stop = Choose(candidates, map, x, y, function(place)
+		if stopTravel == stop then
+			stopTravel = nil
 		end
-		return rank.best or best
-	end, function(place)
-		if traveling == this then
-			traveling = nil
-			if ns.JourneyGoal() == goal then
-				Navigate(key, place)
-			end
+		if ns.JourneyGoal() == goal then
+			Navigate(key, place)
 		end
 	end)
-	traveling = this
+	stopTravel = stop
 	return MenuResponse.CloseAll
 end
 
@@ -811,7 +769,9 @@ end
 ---@field collapsed boolean
 ---@field rows SPFNearbyRow[]
 ---@alias SPFEstimate fun(...: number): number?
----@alias SPFRank fun(places: SPFNearbyPlace[], estimate: SPFEstimate, map: number, x: number, y: number): SPFNearbyRank
+-- luacheck: push ignore 631
+---@alias SPFRank fun(places: SPFNearbyPlace[], estimate: SPFEstimate, map: number, x: number, y: number, walks?: SPFWalks, pending?: SPFWalksPending): SPFNearbyRank
+-- luacheck: pop
 ---@alias SPFClosed table<string, boolean> the sections the player folded shut
 ---@alias SPFSeconds table<string, number> the panel's travel estimates, by row id
 ---@class SPFNearbyServices
@@ -825,6 +785,9 @@ end
 ---@field Sections fun(world: SPFPoint, query?: string, collapsed?: SPFClosed, seconds?: SPFSeconds): SPFNearbySection[]
 ---@field Shortlist fun(key: string, world: SPFPoint, limit: integer, query?: string, tier?: integer): SPFNearbyPlace[]
 ---@field Rank SPFRank
+---@field MeasureWalks SPFMeasureWalks
+---@field Cancel fun(job: SPFPathJob)
+---@field Holds fun(job: SPFPathJob): boolean
 ---@field Detail fun(key: string, place: SPFNearbyPlace, query?: string): string
 ---@field Goods fun(key: string, place: SPFNearbyPlace, query?: string): integer[]?
 ---@field ItemName fun(itemID: integer): string?
@@ -961,7 +924,10 @@ ns.NearbyServices = {
 	OnReady = WhenReady,
 	Sections = Sections,
 	Shortlist = Shortlist,
-	Rank = NewRank,
+	Rank = ns.NearbyRank.New,
+	MeasureWalks = ns.NearbyRank.MeasureWalks,
+	Cancel = ns.NearbyRank.Cancel,
+	Holds = ns.NearbyRank.Holds,
 	Detail = Detail,
 	Goods = Goods,
 	ItemName = function(itemID)

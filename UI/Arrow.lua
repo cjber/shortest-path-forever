@@ -62,6 +62,19 @@ local ARRIVAL_WIDTH, ARRIVAL_TITLE_LINES, ARRIVAL_LINE_LIMIT = 240, 2, 3
 ---@type SPFArrowFrame
 local frame
 local source, path, index, target, placeTarget, native
+-- suffix[i] is the walking distance from path[i] to the last bend along the bends, built when the guide's stops
+-- refresh so a moving frame reads it instead of re-walking every remaining segment (WFA-13).
+local suffix, suffixCount = {}, 0
+local function BuildSuffix()
+	suffix, suffixCount = {}, #(path or {})
+	local total = 0
+	suffix[suffixCount] = 0
+	for i = suffixCount, 2, -1 do
+		local a, b = path[i - 1], path[i]
+		total = total + math.sqrt((b.x - a.x) ^ 2 + (b.y - a.y) ^ 2)
+		suffix[i - 1] = total
+	end
+end
 local stepEnd, destination
 local revision = 0
 local renderedRevision, renderedMetres, renderedMode, renderedSecond, renderedNative
@@ -72,7 +85,16 @@ local castPrompt
 -- The stop whose area the player is in, drawn as a pin with what to do there (#627).
 ---@type SPFPoint?
 local arrival
-local ShowArrival, RefreshTravelLines
+local ShowArrival, RefreshTravelLines, NotifyLead
+-- Set while the route has a bend but nothing of ours points at it: no position to point from, or a bend on another
+-- map with no marker leading there.
+local unseen = false
+local function Unseen(value)
+	if unseen ~= value then
+		unseen = value
+		NotifyLead()
+	end
+end
 
 -- Guidance changes that are not a new journey stop or leg: a bend passed, the source walk replaced, or the
 -- guideStops setting collapsing what the arrow draws. Core/API.lua turns it into the public Subscribe notice.
@@ -181,6 +203,8 @@ local function Update(elapsed)
 		frame:SetAlpha(moving and 1 or 0)
 		frame.angle = nil
 		SetUpdating(false)
+		-- A marker that led before the position went still leads: Guide keeps it through a frame with no map (#826).
+		Unseen(not (native and NativeMarkerShown()))
 		return
 	end
 	local moved = x ~= frame.x or y ~= frame.y or map ~= frame.map or facing ~= frame.facing
@@ -221,8 +245,10 @@ local function Update(elapsed)
 		frame:SetAlpha(moving and 1 or 0)
 		frame.angle = nil
 		SetUpdating(false)
+		Unseen(not (native and markerShown))
 		return
 	end
+	Unseen(false)
 	local angle = Difference(Bearing(x, y, pointing), facing)
 	-- The arrow still points the way, and dims with the compass when that way is behind you.
 	frame.behind = ns.TurnAround.Behind(angle, frame.behind)
@@ -234,8 +260,12 @@ local function Update(elapsed)
 	Draw(frame.angle)
 	-- Direct mode measures the displayed bearing; route mode adds the remaining walking bends.
 	local distance = math.sqrt((pointing.x - x) ^ 2 + (pointing.y - y) ^ 2)
-	for i = index + 1, direct and 0 or #path do
-		distance = distance + math.sqrt((path[i].x - path[i - 1].x) ^ 2 + (path[i].y - path[i - 1].y) ^ 2)
+	if not direct then
+		-- A path that grew or shrank since the stops last refreshed gets its distances again rather than a nil.
+		if #path ~= suffixCount then
+			BuildSuffix()
+		end
+		distance = distance + (suffix[index] or 0)
 	end
 	local yards = math.floor(distance)
 	-- The time counts down every second while the distance may not move, so read it with the header's own tick. The
@@ -264,7 +294,23 @@ OnUpdate = function(_, elapsed)
 	Update(elapsed)
 end
 
+local function Placed()
+	return type(ns.db.arrowX) == "number" and type(ns.db.arrowY) == "number"
+end
+
+-- The text under the arrow and the stop's pin, wider than the frame, which the stock place keeps clear too.
+local parts
+local function Parts()
+	parts = parts or { frame.Distance, frame.Progress, frame.Lines, frame.ArrivalTitle, frame.ArrivalLines }
+	return parts
+end
+
 local function Poll()
+	-- The column grows, moves and hides as its sections change; a stock-placed arrow follows it. Not while it is being
+	-- placed: the mouse is on only then, and the drag owns the point.
+	if not Placed() and not frame:IsMouseEnabled() then
+		ns.Mover.Stock(frame, TOP, Parts())
+	end
 	-- Mouse turns and moving transports need not send a player movement event.
 	if not frame.updating then
 		Update(POLL_EVERY)
@@ -276,17 +322,17 @@ local function Wake()
 	SetUpdating(true)
 end
 
--- Where it was dragged (screen pixels from the bottom left), else the stock place under the top of the screen.
+-- Where it was dragged (screen pixels from the bottom left), else the stock place under the top of the screen, beside
+-- the quest tracker and ForeverCore's column when they reach it (Mover.Stock).
 ---@param placed Frame
 local function Anchor(placed)
-	local scale = placed:GetEffectiveScale() / UIParent:GetEffectiveScale()
-	scale = scale > 0 and scale or 1
-	placed:ClearAllPoints()
-	local x, y = ns.db.arrowX, ns.db.arrowY
-	if type(x) == "number" and type(y) == "number" then
-		placed:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x / scale, y / scale)
+	if Placed() then
+		local scale = placed:GetEffectiveScale() / UIParent:GetEffectiveScale()
+		scale = scale > 0 and scale or 1
+		placed:ClearAllPoints()
+		placed:SetPoint("CENTER", UIParent, "BOTTOMLEFT", ns.db.arrowX / scale, ns.db.arrowY / scale)
 	else
-		placed:SetPoint("TOP", UIParent, "TOP", 0, TOP / scale)
+		ns.Mover.Stock(placed, TOP, Parts(), true)
 	end
 end
 
@@ -537,6 +583,7 @@ function ns.PointArrivalPin(stop)
 			if ns.RefreshCompass then
 				ns.RefreshCompass()
 			end
+			NotifyLead()
 		end
 		return
 	end
@@ -551,6 +598,7 @@ function ns.PointArrivalPin(stop)
 	if ns.RefreshCompass then
 		ns.RefreshCompass()
 	end
+	NotifyLead()
 end
 
 -- Settings: turning the arrival pin off returns a paused guide to the old hide, at once.
@@ -589,6 +637,7 @@ function ns.RefreshGuideStops()
 	revision = revision + 1
 	local previousPath, previousTarget = path, target
 	path = source
+	BuildSuffix()
 	index = 1
 	local x, y, _, map = ns.JourneyPosition()
 	local nearest
@@ -609,6 +658,7 @@ function ns.RefreshGuideStops()
 	if path ~= previousPath or target ~= previousTarget then
 		NotifyGuidance()
 	end
+	NotifyLead()
 end
 
 -- Refresh arrow rendering without changing the canonical walk or its progress.
@@ -654,11 +704,12 @@ function ns.PointGuideArrow(points, placeBend, stop, goal)
 		return
 	end
 	if not points or ns.db.arrow == false then
-		native = nil
+		native, unseen = nil, false
 		if frame then
 			SetUpdating(false)
 			frame:SetShown(moving)
 		end
+		NotifyLead()
 		return
 	end
 	if not frame then
@@ -670,6 +721,7 @@ function ns.PointGuideArrow(points, placeBend, stop, goal)
 	frame:Show()
 	Wake()
 	Update(0)
+	NotifyLead()
 end
 
 ---@return boolean
@@ -773,10 +825,36 @@ function ns.CastPromptShown()
 	return ns.db.arrow ~= false and ns.db.castPrompt ~= false
 end
 
+-- Whether the arrow leads now: a bend it or the marker points at, a reached stop's pin or a cast to make. A journey
+-- that is still being searched has none of them. A guide addon's own arrow stands down only while this holds
+-- (Core/RestedXP.lua, Guidelime.lua), so the player always has one arrow to follow.
+---@return boolean
+function ns.ArrowLeads()
+	if not ns.db or ns.db.arrow == false then
+		return false
+	end
+	return (path ~= nil and target ~= nil and not unseen)
+		or arrival ~= nil
+		or (castTarget ~= nil and ns.CastPromptShown())
+end
+
+-- The guide bridges hook this to hand their addon's arrow back or take it over again.
+function ns.ArrowLeadChanged() end
+
+local leads = false
+NotifyLead = function()
+	local now = ns.ArrowLeads()
+	if now ~= leads then
+		leads = now
+		ns.ArrowLeadChanged()
+	end
+end
+
 -- Casting needs an action rather than a bearing, shown in the arrow's usual place.
 ---@param teleport? SPFTeleportPlace
 function ns.PointCastPrompt(teleport)
 	castTarget = teleport
+	NotifyLead()
 	if not teleport or not ns.CastPromptShown() then
 		if castPrompt then
 			castPrompt:UnregisterAllEvents()

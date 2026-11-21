@@ -50,7 +50,8 @@ GetMinimapShape = nil
 -- waypoint tooltip from C_TooltipInfo.GetMinimapMouseover on every mouseover update.
 ---@type {AddTooltipPostCall: fun(tooltipType: number, callback: fun(tooltip: GameTooltip, data: table))}
 TooltipDataProcessor = nil
--- Blizzard_UIErrorsFrame: the client's one-line errors, where a stopped addon says why it did not start.
+-- Blizzard_UIErrorsFrame: the client's one-line errors, where a stopped addon says why it did not start and
+-- ns.Notice says why a gesture did nothing.
 ---@type {AddMessage: fun(self: any, message: string, red?: number, green?: number, blue?: number, ...: any)}
 UIErrorsFrame = nil
 -- GlobalStrings: the generic "Map Pin" title the minimap gives a user waypoint.
@@ -184,6 +185,9 @@ ForeverMapMarkers = nil
 ---@field GetContextMenuParent fun(self: SPFTrackerModule): Frame
 ---@type ForeverNativeTrackerFrame
 ObjectiveTrackerFrame = nil
+-- ForeverCore's tracker column, beside the quest tracker or wherever the player dragged it; nil before it is built.
+---@type Frame?
+ForeverTrackerCompanion = nil
 ---@class SPFTrackerManager
 ---@type SPFTrackerManager
 ObjectiveTrackerManager = nil

@@ -247,7 +247,7 @@ function ns.Way(message)
 		return
 	end
 	if not ns.db.journey then
-		ns.Print(L["Journeys are off. Turn on Click the map to plan journeys in settings."])
+		ns.Notice(L["Journeys are off. Turn on Click the map to plan journeys in settings."])
 		return
 	end
 	local map, x, y, title, err = ns.ParseWay(message)

@@ -22,10 +22,12 @@
 ---@field ItemProfessions table<number, number[]> item -> the profession skill lines its goods supply, for the items a vendor sells (Data/Services.lua)
 ---@field Walks table<number, table<string, (number|false)[]>>
 ---@field WalkPlaces table<number, table<string, number[]>>
+---@field WalkZones table<number, table<string, number[]>>? each baked walk's zone shares (Data/WalkZones.lua)
 ---@field RoadCells table<number, table<number, string>>
 ---@field RoadEdges table<number, table<number, string>>
 ---@field SpawnHeights table<number, table<number, string>> spawns over or under another surface (Data/Heights.lua)
 ---@field TownAreas table<number, SPFTownArea> the client's town ground per flight master (Data/TownAreas.lua)
+---@field ZoneCells table<number, {i0: number, j0: number, columns: string[]}>? the client's zone per 64-yard square (Data/ZoneCells.lua)
 ---@field IdleSpawns table<number, table<number, string>> spawns an NPC stands still at, by creature ID (Data/IdleSpawns.lua)
 ---@field SpellTargets table<number, boolean> friendly spells whose effects target another unit (Data/SpellTargets.lua)
 ---@field HostileSpells table<number, boolean> hostile spells whose effects target another unit (Data/SpellTargets.lua)
@@ -36,6 +38,7 @@
 ---@field NearbyRoles SPFNearbyRolesAPI the class, portal and battlemaster groups (UI/NearbyRoles.lua)
 ---@field NearbyProfessions SPFNearbyProfessionsAPI the "Only my professions" shop rule (UI/NearbyProfessions.lua)
 ---@field NearbyServices SPFNearbyServices
+---@field NearbyRank SPFNearbyRankAPI the travel-time ranking and the walks it is built on (UI/NearbyRank.lua)
 ---@field NearbyGroups SPFNearbyGroups the vendor and service groups the list and the map share (UI/NearbyGroups.lua)
 ---@field TownServiceChoices SPFTownServiceChoice[] the town services' four levels (UI/TownServices.lua)
 ---@field RefreshTownServices fun() redraws the town services on the world map (UI/TownServices.lua)
@@ -338,6 +341,7 @@
 ---@field flightPathReminder? boolean
 ---@field journey? boolean
 ---@field journeyKey? string -- the modifier held to plan a journey from a map click: "shift" or "alt" (JourneyInput.lua)
+---@field journeyHint? boolean -- tooltips on map, flight and minimap pins end with the journey key's click hint (JourneyInput.lua)
 ---@field focusedQuest? boolean -- a super-tracked quest or the player's map pin starts a journey (JourneyInput.lua)
 ---@field compassTime? boolean -- the whole journey's time left under the compass distance (Compass.lua)
 ---@field arrivalSound? boolean -- the map ping when a journey the player planned reaches its goal (Alert.lua)
@@ -511,7 +515,7 @@ ShortestPathForeverPathData = nil
 ---@field estimated true
 
 ---@class SPFPlan
----@field provisional? boolean
+---@field rough? true -- a first search's estimate, drawn before its proof and never followed
 ---@field arrive number
 ---@field legs SPFLeg[]
 ---@field needsStart boolean
@@ -533,8 +537,10 @@ ShortestPathForeverPathData = nil
 ---@class SPFPlanOptions : SPFPlaceOptions
 ---@field withoutHearth? boolean
 ---@field feasibleOnly? boolean
+---@field withoutOpening? SPFLeg plan as if this step, from where it leaves, were not there
 ---@field incumbent? number
 ---@field incumbentPlan? SPFPlan
+---@field lowerBound? boolean the soonest any route could arrive, before the hearth, teleport and ride preferences
 ---@field hearthMinimumSavings? number
 ---@field teleportMinimumSavings? number
 ---@field otherFaction? boolean
@@ -567,6 +573,7 @@ ShortestPathForeverPathData = nil
 ---@field landmasses? SPFLandmass[]
 ---@field anchors? table<number, SPFAnchor>
 ---@field baked? table<number, table<string, (number|false)[]>>
+---@field bakedZones? table<number, table<string, number[]>> each baked walk's zone shares (Data/WalkZones.lua)
 ---@field exactMaps? table<number, boolean>
 ---@field walks? SPFWalkCost[]
 ---@field hazards? SPFHazards -- weights baked walks that cross a hazard (Journey/Hazards.lua)
@@ -614,6 +621,7 @@ ShortestPathForeverPathData = nil
 ---@field count? number
 
 ---@class SPFPathJob
+---@field walking? table<SPFPathJob, true> a Nearby measure's walking searches (NearbyRank.lua)
 ---@field map number
 ---@field from SPFPoint
 ---@field to? SPFPoint

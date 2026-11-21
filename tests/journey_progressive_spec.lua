@@ -1,6 +1,6 @@
--- A first search shows one usable route before its proof ends: the plan of settled walks alone, once the walk to
--- take first is drawn. The proof goes on and its optimum replaces that route once, whatever it gains. Later walks
--- are drawn only when they are the next on foot, and a cancelled or restarted search never speaks late.
+-- A first search draws its estimate at once as a rough route and follows nothing until its proof ends; the proved
+-- optimum is the one route. Later walks are drawn only when they are the next on foot, and a cancelled or restarted
+-- search never speaks late.
 local SPEED = 7
 local function at(a, b)
 	return a.map == b.map and a.x == b.x and a.y == b.y
@@ -112,104 +112,45 @@ local function finish(batch)
 	walking.finish(batch, costs)
 end
 
--- The settled walk gives the first route, shown once its first walk is drawn; the proof waits for that drawing.
+-- A first search draws its estimate at once and follows nothing until the proof ends; its optimum is the route.
 begin()
 assert(heard() == "searching" and not route)
 local start, back = half()
-assert(heard() == "" and not route, "no route before the first walk is drawn")
-assert(start.paused and back.paused, "the endpoint searches wait for the walk being drawn")
-assert(#walking.waiting(walking.finds) == 1, "only the first walk is searched")
-geometry()
-assert(heard() == "route" and via() == "A" and route.provisional, "the offer is the settled way")
-assert(#walking.waiting(walking.probes) > 0, "the proof goes on, with probes first")
-exhaust()
-assert(not start.paused, "then the endpoint search it needs")
-local first = route
-local leg = route.legs[1]
-assert(leg.measured and not leg.walkDeferred and leg.walkPoints and #leg.walkPoints >= 2)
-assert(select(2, Search.Status()) == 0 and Search.Status() > 0, "the proof is still ahead")
-local walks = #walking.finds
-for _, later in ipairs(route.legs) do
-	assert(later == leg or later.mode ~= "walk" or later.walkDeferred and not later.measured, "later walks wait")
-end
-geometry()
-assert(#walking.finds == walks, "no later walk is searched while the first is followed")
-
--- The optimum replaces the offer once, whatever it gains.
+assert(heard() == "rough" and not route, "the estimate is drawn at once, never followed")
+assert(#walking.waiting(walking.finds) == 0, "no walk is drawn before the proof")
 seconds.B = 280
+exhaust()
 finish(start)
 finish(back)
-assert(heard() == "" and via() == "A", "its first walk is drawn before it is shown")
+assert(heard() == "" and not route, "the proved route's first walk is drawn before it is shown")
 geometry()
-assert(heard() == "route" and via() == "B" and not route.provisional and route ~= first)
-assert(Search.Status() == 0, "the search is over")
+assert(heard() == "route" and via() == "B" and Search.Status() == 0, "the optimum is the route")
+local leg = route.legs[1]
+assert(leg.measured and not leg.walkDeferred and leg.walkPoints and #leg.walkPoints >= 2)
 driver.update(0.2)
 Search.Poll()
 geometry()
 assert(heard() == "" and via() == "B", "it never swaps back")
 Search.Reset()
 
--- The proof ending on the offered journey keeps it: only its times move.
-seconds.B = 500
+-- A cancelled search is never heard from again, though its rough route was drawn.
 begin()
 heard()
 start, back = half()
-geometry()
-assert(heard() == "route" and via() == "A")
-first = route
+assert(heard() == "rough")
+Search.Cancel()
 finish(start)
 finish(back)
 geometry()
-assert(heard() == "times" and route == first and not route.provisional and Search.Status() == 0)
-Search.Reset()
-
--- A proof that ends first leaves no offer: its search stops and the route is the proved one.
-seconds.B = 200
-begin()
-heard()
-start = half()
-local drawing = walking.waiting(walking.finds)[1]
-assert(drawing and start.paused)
-Search.Cancel()
-assert(drawing.cancelled and start.paused)
-walking.finish(drawing, { drawing.from, drawing.to }, yards(drawing.from, drawing.to))
 assert(heard() == "" and not route, "a cancelled search is never heard from again")
 Search.Reset()
 
+-- A restart while the rough route shows (the travel policy changed) settles once to the optimum.
+seconds.B = 200
 begin()
 heard()
 start, back = half()
-drawing = walking.waiting(walking.finds)[1]
-finish(start)
-finish(back)
-assert(drawing.cancelled, "the offer's first walk is dropped once the proof is in")
-geometry()
-assert(heard() == "route" and via() == "B" and not route.provisional and Search.Status() == 0)
-Search.Reset()
-
--- A geometry failure on the offer's first walk offers nothing; the proof still gives its route.
-begin()
-heard()
-start, back = half()
-geometry(function(job)
-	return at(job.to, enter.A)
-end)
-assert(heard() == "" and not route)
-exhaust()
-assert(not start.paused, "the proof goes on without the offer")
-finish(start)
-finish(back)
-geometry()
-assert(heard() == "route" and via() == "B")
-Search.Reset()
-
--- A restart while the offer shows (the travel policy changed) settles once to the optimum, not twice.
-begin()
-heard()
-start, back = half()
-geometry()
-assert(heard() == "route" and route.provisional)
-local shown = route
+assert(heard() == "rough")
 origin = { map = 1, x = 40, y = 10 }
 driver.move(origin)
 Search.Poll(true)
@@ -217,14 +158,13 @@ Search.Poll(true)
 local previous = start
 start = walking.batches[#walking.batches]
 assert(start ~= previous and not start.reverse and previous.cancelled)
-seconds.B = 200
 exhaust()
 finish(start)
 finish(back)
 geometry()
 local told = heard()
-assert(not told:find("searching") and select(2, told:gsub("route", "")) == 1, told)
-assert(via() == "B" and route ~= shown and not route.provisional)
+-- Nothing was followed, so the restart is a first search again: it draws its new estimate, then the one route.
+assert(told == "searching rough route" and via() == "B", told)
 geometry()
 driver.update(0.2)
 Search.Poll()
@@ -235,7 +175,7 @@ Search.Reset()
 begin()
 heard()
 start, back = half()
-geometry()
+exhaust()
 finish(start)
 finish(back)
 geometry()
@@ -257,13 +197,16 @@ assert(route == settled and progress.index == #settled.legs, "progress is kept")
 assert(last.measured and not last.walkDeferred and #last.walkPoints >= 2)
 assert(heard():find("walks") and Search.Status() == 0)
 Search.Reset()
--- A route listener can end the journey immediately, including a provisional route starting at a passage.
+-- A route listener can end the journey immediately, including a route starting at a passage.
 from = enter.A
 for _, stop in ipairs({ Search.Reset, Search.Cancel }) do
 	onRoute = stop
 	begin()
 	heard()
-	half()
+	start, back = half()
+	exhaust()
+	finish(start)
+	finish(back)
 	geometry()
 	assert(Search.Status() == 0, "a listener's cancellation leaves no endpoint searches running")
 end
@@ -296,6 +239,8 @@ for i = made + 1, #walking.batches do
 		start = batch
 	end
 end
+-- Both have settled the targets on their own node; only B, far away, is still unknown.
+back.snapped, start.snapped = true, true
 settle(back, function(target)
 	return yards(target, goal)
 end)
@@ -316,6 +261,6 @@ assert(heard() == "" and via() == "A", "a search that is over is never heard fro
 walking.bound, ns.teleports, ns.teleportReady = bound, nil, nil
 Search.Reset()
 print(
-	"journey_progressive_spec: settled walks offer one route, the optimum replaces it once, "
+	"journey_progressive_spec: the estimate is drawn first, the proved optimum is the route, "
 		.. "later walks wait, a finished search stays quiet: ok"
 )

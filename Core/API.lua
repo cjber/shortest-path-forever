@@ -352,8 +352,13 @@ end
 ---@param to SPFPoint
 ---@param key string
 ---@param job? SPFPathJob the path job asking, whose plan pauses at the frame budget; nil plans whole
-local function Answer(from, to, key, job)
+---@param walk? number|false the walk from `from` to `to` the journey's own search measured, in running yards; false
+---when it found none. Without one the walk is the planner's lower bound.
+---@param bound? boolean the soonest any route could arrive, `walk` being only a lower bound on the walk
+local function Answer(from, to, key, job, walk, bound)
 	local options, now = Options(from, to)
+	options.walks = walk ~= nil and { { from = from, to = to, cost = walk } } or nil
+	options.lowerBound = bound or nil
 	local cached = estimates[key]
 	if cached and now >= cached.at and now - cached.at < CACHE_MS then
 		if cached.seconds then
@@ -386,7 +391,7 @@ end
 -- The reason tells a caller whether asking again later can help: "combat" after combat, "loading" when the addon is
 -- still building its data, "invalid" never for bad input, "unreachable" when known flight paths or boat timings change.
 ---@return { at: number, seconds: number|false, legs?: SPFLeg[] }?, ("combat"|"invalid"|"unreachable"|"loading")?
-local function Lookup(fromMap, fromX, fromY, toMap, toX, toY, job)
+local function Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk, bound)
 	if not Ready() then
 		if InCombatLockdown() then
 			return nil, "combat"
@@ -397,7 +402,18 @@ local function Lookup(fromMap, fromX, fromY, toMap, toX, toY, job)
 	if not from or not to then
 		return nil, "invalid"
 	end
-	return Answer(from, to, string.format("%d:%.4f:%.4f:%d:%.17g:%.17g", fromMap, fromX, fromY, toMap, toX, toY), job)
+	local key = string.format(
+		"%d:%.4f:%.4f:%d:%.17g:%.17g:%s:%s",
+		fromMap,
+		fromX,
+		fromY,
+		toMap,
+		toX,
+		toY,
+		tostring(walk),
+		tostring(bound == true)
+	)
+	return Answer(from, to, key, job, walk, bound)
 end
 
 -- Itinerary.lua draws the hops between later stops with this cheap planner; no terrain searches. It keeps each
@@ -413,11 +429,15 @@ function ns.EstimateLegs(from, to, policy, job)
 end
 
 -- API.Estimate for the addon's own callers, which ask from inside a path job (ns.Path.Run): an uncached plan pauses at
--- the frame budget instead of taking the asking frame. Same answers and cache as API.Estimate.
+-- the frame budget instead of taking the asking frame. Same answers and cache as API.Estimate. walk is the walk there
+-- the journey's own search measured (UI/NearbyRank.lua), so the time is the one the journey will show. With bound,
+-- walk is only a lower bound on a walk still searched, and the answer the soonest any route could arrive.
 ---@param job SPFPathJob
+---@param walk? number|false
+---@param bound? boolean
 ---@return number?, ("combat"|"invalid"|"unreachable"|"loading")?
-function ns.EstimateIn(job, fromMap, fromX, fromY, toMap, toX, toY)
-	local entry, reason = Lookup(fromMap, fromX, fromY, toMap, toX, toY, job)
+function ns.EstimateIn(job, fromMap, fromX, fromY, toMap, toX, toY, walk, bound)
+	local entry, reason = Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk, bound)
 	if not entry then
 		return nil, reason
 	end
@@ -461,6 +481,18 @@ end
 API.EstimateWalks = ns.EstimateWalks
 API.NavVersion = ns.NavVersion
 
+-- A stop naming the NPC it reaches (Nearby services) stands on that NPC's QuestieDB spawn, which has no height: the
+-- spawn's own, when it stands over or under another surface, keeps the walk on its floor. Nearby measures its walks to
+-- the same point.
+---@param point SPFPoint
+---@return SPFPoint
+function ns.OnSpawnFloor(point)
+	if point.z == nil then
+		point.z = ns.SpawnHeight(point.map, point.x, point.y, SPAWN_REACH)
+	end
+	return point
+end
+
 local function NavigateRoute(owner, stops, policy)
 	if not Owner(owner) or not Ready() or not ns.db.journey or type(stops) ~= "table" then
 		return false
@@ -501,11 +533,9 @@ local function NavigateRoute(owner, stops, policy)
 		-- A caller's world height lets the stop pin compare its surface with the terrain under that spot.
 		if stop.z ~= nil then
 			point.z = stop.z
-		elseif point.z == nil and stop.npc ~= nil then
-			-- A stop naming the NPC it reaches (Nearby services) stands on that NPC's QuestieDB spawn, which has no
-			-- height: the spawn's own, when it stands over or under another surface, keeps the walk on its floor. A
-			-- stop naming no NPC (a TomTom or guide waypoint) may be any spot, so it keeps the cheapest surface.
-			point.z = ns.SpawnHeight(point.map, point.x, point.y, SPAWN_REACH)
+		elseif stop.npc ~= nil then
+			-- A stop naming no NPC (a TomTom or guide waypoint) may be any spot, so it keeps the cheapest surface.
+			ns.OnSpawnFloor(point)
 		end
 		-- A caller such as Adventure Guide may need the route to remain visible while the
 		-- player completes an interaction at this location. It resubmits the route after
