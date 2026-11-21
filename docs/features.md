@@ -143,7 +143,8 @@ With RestedXP, Guidelime or Dugi Guides installed, **Resume guide** in Guidance 
   when it leaves, with its crossings drawn on the map. Docks too close to tell apart at the current zoom share
   one icon, and its tooltip names each pier by where it lies, and draws its routes on the map.
   Crossings between continents curve from dock to dock on the Azeroth map; closer maps show the sailing path.
-- **On the minimap as well.** Docks, lifts, tram stations and portals appear on the minimap with the same icons
+- **On the minimap as well.** Docks, lifts, tram stations, portals and the town services ticked in the world map's
+  filter appear on the minimap with the same icons
   and tooltips, and vanish at its rim like the game's own tracking icons. The goal you are heading for is the
   exception: beyond the rim, its mark waits on the rim in its direction, a little faded. *Transport* in the minimap's tracking
   menu (or `/path`) turns them off.

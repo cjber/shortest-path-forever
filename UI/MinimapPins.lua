@@ -6,7 +6,8 @@ if ns.broken then
 end
 local L = ns.L
 
--- Docks, lifts, tram stations and portals on the minimap, with the world map's icons and tooltips. The
+-- Docks, lifts, tram stations, portals and the town services the world map shows, on the minimap, with the world
+-- map's icons and tooltips. The
 -- minimap's own tracking icons (flight masters, mailboxes) vanish at the rim rather than cling to it, and so do
 -- these.
 
@@ -19,11 +20,11 @@ local MARGIN = 100
 -- Docks this close (yards) are one place: a lift's landings share a spot and differ only in height.
 local SAME_PLACE = 20
 
-local frame, entries, ticker
+local frame, byMap, ticker
 local pins, used = {}, 0
 local lastX, lastY, lastMap, lastRadius, lastFacing, lastWidth, lastSquare, lastNear
 
--- entries = { { map, x, y, kind, cluster | portal }... }, rebuilt only when a filter changes. A cluster
+-- entries = { { map, x, y, kind, cluster | portal | service }... }, rebuilt only when a filter changes. A cluster
 -- matches the world map's (Map.lua Clusters) with x right and y down, so its tooltip names each pier alike.
 local function Entries()
 	local list, ids = {}, {}
@@ -72,12 +73,35 @@ local function Entries()
 			end
 		end
 	end
+	if ns.TownServiceMinimapEntries then
+		for _, entry in ipairs(ns.TownServiceMinimapEntries()) do
+			list[#list + 1] = entry
+		end
+	end
 	return list
 end
 
+-- The list by map, so a redraw reads only the places on the player's own map.
+local function EntriesByMap()
+	local grouped = {}
+	for _, entry in ipairs(Entries()) do
+		local list = grouped[entry.map]
+		if not list then
+			list = {}
+			grouped[entry.map] = list
+		end
+		list[#list + 1] = entry
+	end
+	return grouped
+end
+
+local NONE = {}
+
 local function Tooltip(pin)
 	local entry = pin.entry
-	if entry.portal then
+	if entry.service then
+		ns.AddTownServiceTooltip(entry.service)
+	elseif entry.portal then
 		ns.AddPortalTooltip(entry.portal)
 	else
 		ns.AddDockTooltip(entry.cluster)
@@ -156,8 +180,13 @@ local function Acquire(entry)
 		pin.entry = entry
 		pin.size = size
 		pin:SetSize(size, size)
-		ns.SetTransportIcon(pin.Texture, entry.kind, size)
-		ns.SetTransportIcon(pin.HighlightTexture, entry.kind, size)
+		if entry.service then
+			ns.PaintTownServiceIcon(pin.Texture, entry.service, size)
+			ns.PaintTownServiceIcon(pin.HighlightTexture, entry.service, size)
+		else
+			ns.SetTransportIcon(pin.Texture, entry.kind, size)
+			ns.SetTransportIcon(pin.HighlightTexture, entry.kind, size)
+		end
 	end
 	Press(pin, false)
 	pin:Show()
@@ -190,18 +219,18 @@ local function Draw()
 		return lastNear
 	end
 	lastX, lastY, lastMap, lastRadius, lastFacing, lastWidth, lastSquare = x, y, map, radius, facing, width, square
-	entries = entries or Entries()
+	byMap = byMap or EntriesByMap()
 	used = 0
 	local near = false
 	if x and radius and facing and width > SIZE then
 		local cosine, sine = math.cos(facing), math.sin(facing)
 		-- The whole icon stays inside the rim.
 		local reach = 1 - SIZE * (ns.db.minimapPinScale or 100) / 100 / width
-		for _, entry in ipairs(entries) do
-			-- Most places are a continent away; skip them before any projection.
+		for _, entry in ipairs(byMap[map] or NONE) do
+			-- Skip the places out of view before any projection.
 			local dx, dy = math.abs(entry.x - x), math.abs(entry.y - y)
-			near = near or entry.map == map and dx < radius + MARGIN and dy < radius + MARGIN
-			if entry.map == map and dx < radius and dy < radius then
+			near = near or dx < radius + MARGIN and dy < radius + MARGIN
+			if dx < radius and dy < radius then
 				local px, py = ns.Strokes.Project(entry, x, y, radius, cosine, sine)
 				local inside
 				if square then
@@ -261,7 +290,7 @@ function ns.RefreshMinimapPins()
 	if not frame then
 		return
 	end
-	entries, lastX, lastRadius = nil, nil, nil
+	byMap, lastX, lastRadius = nil, nil, nil
 	Stop()
 	frame:SetShown(ns.db.minimapPins)
 	Wake()
@@ -302,6 +331,10 @@ ns.Init(function()
 		end
 	end)
 	ns.OnTravelTick(Wake)
+	-- The service catalogue builds in the background; its pins join once it is ready.
+	if ns.NearbyServices and ns.NearbyServices.OnReady then
+		ns.NearbyServices.OnReady(ns.RefreshMinimapPins)
+	end
 	ns.ModifyMenu("MENU_MINIMAP_TRACKING", "minimap", AddTracking)
 	ns.RefreshMinimapPins()
 end)
