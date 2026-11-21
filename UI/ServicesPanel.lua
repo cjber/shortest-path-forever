@@ -39,9 +39,8 @@ local SERVICES_ATLAS = "Banker"
 local TAB_ICON = 32
 local LIST_TOP = 4 + 34 + 6
 local SHORTLIST = 5
--- Check movement each second. Refresh the catalogue and layout at their slower cadence.
-local TICK = 1
-local REFRESH_TICKS = 10
+-- The panel re-ranks every so often while it stays open, so a walk or a boat changing under the player is reflected.
+local TICK = 10
 
 local STATUS = {
 	building = L["Loading QuestieDB…"],
@@ -95,7 +94,6 @@ local chosen = {}
 local ranking
 ---@type SPFPathJob?
 local measuring
-local rankedMap
 ---@type table?
 local ticker
 local query = ""
@@ -480,23 +478,15 @@ end
 -- Rank each shown group's shortlist in path jobs, under the shared frame budget: an uncached estimate pauses at the
 -- budget and goes on next frame. A row takes its cheapest NPC once that is decided (NearbyRank), as the walks land
 -- nearest first; nothing runs once every row is decided or the panel hides (AGENTS.md).
-local function StopMeasure()
+local function StopRanking()
 	if measuring then
 		ns.NearbyServices.Cancel(measuring)
 		measuring = nil
 	end
-end
-
-local function StopRows()
 	if ranking then
 		ns.NearbyServices.Cancel(ranking)
 		ranking = nil
 	end
-end
-
-local function StopRanking()
-	StopMeasure()
-	StopRows()
 end
 -- A journey started from Nearby needs the frame budget for its own searches.
 ns.StopServiceRanking = StopRanking
@@ -511,31 +501,30 @@ local function RankRows(queue, walks, pending, map, x, y, callback)
 		local open = 0
 		for _, item in ipairs(queue) do
 			-- A row none of whose walks changed since it was last ranked ranks the same: only changed rows rank again.
-			local remaining = 0
+			local settled = 0
 			for _, place in ipairs(item.candidates) do
-				if pending and pending[place] then
-					remaining = remaining + 1
+				if walks[place] ~= nil then
+					settled = settled + 1
 				end
 			end
-			if not item.decided and item.remaining == remaining and pending then
+			if not item.decided and item.settled == settled and pending then
 				open = open + 1
 			elseif not item.decided then
-				item.remaining = remaining
+				item.settled = settled
 				local rank = ns.NearbyServices.Rank(item.candidates, estimate, map, x, y, walks, pending)
 				local place, seconds, more
 				repeat
 					place, seconds, more = rank:Step()
 				until not more
 				item.decided = rank.exact or not pending
-				if item.decided or estimates[item.key] == nil then
+				if item.decided then
 					if place then
 						chosen[item.key] = place
 					end
 					-- No time clears the one a row had from where you stood before.
 					estimates[item.key] = seconds
 					UpdateRow(item.key)
-				end
-				if not item.decided then
+				else
 					open = open + 1
 				end
 			end
@@ -550,21 +539,14 @@ local function RankRows(queue, walks, pending, map, x, y, callback)
 	ranking = this
 end
 
----@param moved? boolean
-function Queue(moved)
+function Queue()
 	if not visible then
 		return
 	end
-	StopRows()
+	StopRanking()
 	local world = ns.NearbyServices.PlayerWorld()
 	local map, x, y = ns.NearbyServices.PlayerUi()
-	if map and rankedMap ~= map then
-		estimates, chosen = {}, {}
-		rankedMap = map
-		Refresh()
-	end
 	if not (world and map and x and y and ns.EstimateIn) then
-		StopRanking()
 		return
 	end
 	local queue = {}
@@ -578,17 +560,9 @@ function Queue(moved)
 			end
 		end
 	end
-	local kept = measuring
-	if kept then
-		ns.NearbyServices.Pause(kept)
-	end
 	if #queue == 0 then
-		if moved then
-			StopMeasure()
-		end
 		return
 	end
-	measuring = nil
 	-- Every row's shortlist in one walking measure, so each row's time is the journey's.
 	local places = {}
 	for _, item in ipairs(queue) do
@@ -596,7 +570,7 @@ function Queue(moved)
 			places[#places + 1] = place
 		end
 	end
-	local this, latest, again, decided
+	local this, latest, again, sorted
 	local function Rank()
 		if ranking then
 			again = true
@@ -604,57 +578,29 @@ function Queue(moved)
 		end
 		local walks, pending = latest.walks, latest.pending
 		RankRows(queue, walks, pending, map, x, y, function(open)
-			if open == 0 then
-				decided = true
-				if measuring then
-					ns.NearbyServices.Pause(measuring)
-				end
-				-- The dungeons and raids reorder once their travel times are decided.
-				Refresh()
-			elseif again then
+			if again then
 				again = false
 				Rank()
+			elseif open == 0 and not sorted then
+				-- Every row has its travel time now: the dungeons and raids reorder by it, once. The measure runs on
+				-- to its far places, so the next tick from this spot reuses it rather than searching again.
+				sorted = true
+				Refresh()
 			end
 		end)
 	end
 	this = ns.NearbyServices.MeasureWalks(places, function(walks, pending)
-		if decided or measuring ~= this then
+		if measuring ~= this then
 			return
+		end
+		if not pending then
+			measuring = nil
 		end
 		latest = { walks = walks, pending = pending }
 		Rank()
-	end, map, x, y, kept)
-	if kept then
-		ns.NearbyServices.Cancel(kept)
-	end
-	measuring = this
-	-- One regular planner estimate per row gives a time while grouping checks the whole shortlist. On movement,
-	-- keep the last chosen NPC where it is still shortlisted and update its time from the new origin.
-	if this then
-		ranking = ns.Path.Run(function(job)
-			for _, item in ipairs(queue) do
-				if moved or estimates[item.key] == nil then
-					local place = item.candidates[1]
-					for _, candidate in ipairs(item.candidates) do
-						if candidate == chosen[item.key] then
-							place = candidate
-							break
-						end
-					end
-					local seconds = ns.EstimateIn(job, map, x, y, place.map, place.x, place.y)
-					if seconds then
-						chosen[item.key], estimates[item.key] = place, seconds
-						UpdateRow(item.key)
-					end
-				end
-			end
-		end, function()
-			ranking = nil
-			if latest then
-				again = false
-				Rank()
-			end
-		end)
+	end)
+	if this and not latest then
+		measuring = this
 	end
 end
 
@@ -769,21 +715,17 @@ ns.RefreshServiceFilters = Refresh
 local function StartTicker(shown)
 	if shown then
 		if not ticker then
-			local ticks = 0
 			ticker = C_Timer.NewTicker(TICK, function()
 				if visible then
-					ticks = ticks + 1
-					local refresh = ticks == REFRESH_TICKS
-					if refresh then
-						ticks = 0
-						Refresh()
-					end
-					-- Keep the current measure while it answers for this spot. Journey searches have priority.
-					local map = ns.NearbyServices.PlayerUi()
+					Refresh()
+					-- A measure still running finishes first, while it answers for where you stand: restarting it every
+					-- tick would rank nothing. A journey still searching has the frame budget first.
 					local searching = ns.JourneyStatus and ns.JourneyStatus()
-					local moved = map ~= rankedMap or measuring and not ns.NearbyServices.Holds(measuring)
-					if not searching and (moved or refresh and not measuring) then
-						Queue(true)
+					if
+						not searching
+						and (not (ranking or measuring) or measuring and not ns.NearbyServices.Holds(measuring))
+					then
+						Queue()
 					end
 				end
 			end)
@@ -794,11 +736,9 @@ local function StartTicker(shown)
 	end
 end
 
--- Keep the visible times during a subzone change while ranking from the new spot.
-local function Requeue(clear)
-	if clear then
-		estimates, chosen = {}, {}
-	end
+-- Re-queue after a zone change or on opening: the old straight-line and planner choices were for another place.
+local function Requeue()
+	estimates, chosen = {}, {}
 	Refresh()
 	Queue()
 end
@@ -826,9 +766,9 @@ local function Attach()
 	panel:RegisterEvent("ZONE_CHANGED")
 	panel:RegisterEvent("ZONE_CHANGED_INDOORS")
 	panel:RegisterEvent("ZONE_CHANGED_NEW_AREA")
-	panel:SetScript("OnEvent", function(_, event)
+	panel:SetScript("OnEvent", function()
 		if visible then
-			Requeue(event == "ZONE_CHANGED_NEW_AREA")
+			Requeue()
 		end
 	end)
 	-- The panel sets no show or hide script because it lives under the world map (#158); the tab module reports when
@@ -837,7 +777,7 @@ local function Attach()
 		visible = shown
 		if shown then
 			ns.NearbyServices.Request()
-			Requeue(true)
+			Requeue()
 			StartTicker(true)
 		else
 			StopRanking()

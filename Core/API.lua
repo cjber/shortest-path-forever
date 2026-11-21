@@ -348,9 +348,7 @@ end
 ---when it found none. Without one the walk is the planner's lower bound.
 ---@param bound? boolean the soonest any route could arrive, `walk` being only a lower bound on the walk
 ---@param place? SPFNearbyPlace a Nearby place, whose ride endpoint walks are measured on its NPC's floor
----@param ceiling? number seconds the place's ranking has already beaten: its walks stop being measured once its time is
----above them, and that time, only a lower bound, stays out of the cache
-local function Answer(from, to, key, job, walk, bound, place, ceiling)
+local function Answer(from, to, key, job, walk, bound, place)
 	local options, now = Options(from, to)
 	options.walks = walk ~= nil and { { from = from, to = to, cost = walk } } or nil
 	options.lowerBound = bound or nil
@@ -362,11 +360,10 @@ local function Answer(from, to, key, job, walk, bound, place, ceiling)
 		return nil, "unreachable"
 	end
 	local generation = estimates
-	local plan, partial
+	local plan
 	if place then
 		-- Only a Nearby ranking job passes a place.
-		plan, partial =
-			ns.NearbyRank.Plan(job --[[@as SPFPathJob]], options, place, walk, bound, ceiling and now + ceiling * 1000)
+		plan = ns.NearbyRank.Plan(job --[[@as SPFPathJob]], options, place, walk, bound)
 	else
 		plan = ns.Planner.Plan(options, job)
 	end
@@ -374,7 +371,7 @@ local function Answer(from, to, key, job, walk, bound, place, ceiling)
 	local entry = { at = now, seconds = seconds or false, legs = plan and plan.legs }
 	-- A plan that paused may answer for inputs another estimate has since replaced: it keeps its answer
 	-- out of the cache that replaced them.
-	if estimates == generation and not partial then
+	if estimates == generation then
 		if not estimates[key] then
 			if order[slot] then
 				estimates[order[slot]] = nil
@@ -393,7 +390,7 @@ end
 -- The reason tells a caller whether asking again later can help: "combat" after combat, "loading" when the addon is
 -- still building its data, "invalid" never for bad input, "unreachable" when known flight paths or boat timings change.
 ---@return { at: number, seconds: number|false, legs?: SPFLeg[] }?, ("combat"|"invalid"|"unreachable"|"loading")?
-local function Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk, bound, place, ceiling)
+local function Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk, bound, place)
 	if not Ready() then
 		if InCombatLockdown() then
 			return nil, "combat"
@@ -416,7 +413,7 @@ local function Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk, bound, 
 		tostring(bound == true),
 		tostring(place ~= nil)
 	)
-	return Answer(from, to, key, job, walk, bound, place, ceiling)
+	return Answer(from, to, key, job, walk, bound, place)
 end
 
 -- Itinerary.lua draws the hops between later stops with this cheap planner; no terrain searches. It keeps each
@@ -439,15 +436,13 @@ end
 ---@param walk? number|false
 ---@param bound? boolean
 ---@param place? SPFNearbyPlace refine Nearby's transit endpoint walks on the NPC's floor
----@param ceiling? number with place, the seconds to beat: above them the answer is only a lower bound
----@return number?, ("combat"|"invalid"|"unreachable"|"loading")?, SPFLeg[]?
-function ns.EstimateIn(job, fromMap, fromX, fromY, toMap, toX, toY, walk, bound, place, ceiling)
-	local entry, reason = Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk, bound, place, ceiling)
+---@return number?, ("combat"|"invalid"|"unreachable"|"loading")?
+function ns.EstimateIn(job, fromMap, fromX, fromY, toMap, toX, toY, walk, bound, place)
+	local entry, reason = Lookup(fromMap, fromX, fromY, toMap, toX, toY, job, walk, bound, place)
 	if not entry then
 		return nil, reason
 	end
-	local seconds = entry.seconds --[[@as number]]
-	return seconds, nil, entry.legs
+	return entry.seconds --[[@as number]]
 end
 
 function API.Estimate(fromMap, fromX, fromY, toMap, toX, toY)
