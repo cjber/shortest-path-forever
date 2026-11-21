@@ -18,7 +18,7 @@ optional `### For addon authors` subsection after a version's player bullets.
 - Travel, service and spell-range data follow game build 1.60.1.70959: five spells changed which units they can target, so range checks use the current lists (#1038).
 - The setting that turns journeys on and off is now called "Enable journeys", and its tooltip says that off clears your journey and stops map clicks, quests, guides and waypoints from starting one. It was labelled "Click the map to plan journeys", which read as if it only stopped map clicks (#1150).
 - Follow roads also prefers paths recorded by players in the six capitals, thanks to Fitz and Polestar (#1178).
-- Ships with the same shared code as your other Forever addons, so they keep working together.
+- Ships ForeverCore 1.16.0, the same shared code as your other Forever addons, so they keep working together.
 
 ### Fixed
 
