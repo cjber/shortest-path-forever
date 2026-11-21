@@ -12,9 +12,9 @@ In **Guidance**, turn **Show the journey tracker** off to leave the arrow, pin, 
 
 The direction arrow swings smoothly to each new bearing and rests while you stand still. **Move the arrow** and **Arrow scale** in Interface place and size it, together with the cast prompt that takes its place on a Hearthstone or teleport step. **Arrow label** chooses what shows under it: the distance, the journey's time left or both, and **Objectives under the arrow** shows or hides the stop's live objectives beneath that label. While moving the arrow or the compass, hold Shift as you drag to move it a quarter as far as the mouse, or rest the pointer on it and press the arrow keys to nudge it (ten times as far with Shift). The arrow keys walk as usual everywhere else and in combat. **Show the time left under the compass** (off by default) puts the journey's time left beside the distance to your next turn.
 
-**Route to the focused quest** in Guidance (off by default) starts a journey when you super-track a quest or place the game's own map pin, so a controller needs no map click. A guide addon's own journey is left alone while it leads.
+**Route to the focused quest** in Guidance (on by default) starts a journey when you super-track a quest or place the game's own map pin, so a controller needs no map click. A guide addon's own journey is left alone while it leads.
 
-**Keep journeys after a reload** in Guidance (off by default) starts a journey you planned yourself (a map click, `/way`, a quest or Nearby services) again after a `/reload`, or when you log back in within 30 minutes. Guides and other addons start their own again, and one that does so first wins.
+A journey you planned yourself (a map click, `/way`, a quest or Nearby services) starts again after a `/reload` or when you log back in, until it ends or you clear it. Guides and other addons start their own again, and one that does so first wins.
 
 **Arrival distance** in Guidance (15 yards by default) sets how close you must get to a journey's final destination for it to count as reached, from 5 to 50 yards. On a multi-stop route, the stops before the last keep 15 yards. On arrival a map pin you placed at that destination is cleared rather than restored, while any other pin you had before the journey comes back.
 

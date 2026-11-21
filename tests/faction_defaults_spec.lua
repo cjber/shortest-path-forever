@@ -134,4 +134,5 @@ assert(vendors.db.townServiceFood == false and vendors.db.townServiceBags == fal
 assert(vendors.db.townServiceKinds.gear == true, "a vendor kind turned on in the map's filter stays on")
 vendors.db.townServiceFood = true
 assert(loadCore(vendors.db).db.townServiceFood == true, "a vendor switch turned on after the change stays on")
+assert(loadCore({ resumeJourney = false }).db.resumeJourney == nil, "the retired keep-journeys switch leaves the save")
 print("faction_defaults_spec: defaults and saved preferences passed")

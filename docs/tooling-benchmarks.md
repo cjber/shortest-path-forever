@@ -131,7 +131,7 @@ python3 docs/benchmarks/resource-run.py resources.json python3 tools/baker/gen_n
 Use distinct output paths, three repeats and alternating version order. Add metrics only to the merged baker;
 the historical source predates that option. Keep all output and resource files outside the game installation.
 
-## In-game Lua paths, measured headlessly
+## In-game Lua paths, measured offline
 
 These timings use `luajit -joff tests/runtime_bench.lua cold`. The harness executes real addon planning and
 navigation code with client API stubs. Atomic loading of the original continent required roughly 20-26 ms in one
@@ -155,4 +155,4 @@ loads, not retaining more trees or adding pools. Python remains suitable for gen
 build and distribution work before establishing an additional benefit. Lua remains the client runtime.
 
 [Live verification](live-navigation-verification.md) remains pending for a cold cross-continent journey, landing,
-cancellation and combat recovery. Headless tests do not reproduce the client's loading cost or secure UI.
+cancellation and combat recovery. Offline specs do not reproduce the client's loading cost or secure UI.

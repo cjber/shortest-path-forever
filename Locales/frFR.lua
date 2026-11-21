@@ -118,7 +118,6 @@ L["Interface"] = "Interface" -- mt
 L["Journey"] = "Trajet" -- mt
 L["Journey  %s · %s"] = "Trajet  %s · %s" -- mt
 L["Journey to %s"] = "Trajet vers %s" -- mt
-L["Keep journeys after a reload"] = "Garder les trajets après un rechargement" -- mt
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"Garde le suivi Forever partagé là où vous l'avez placé. La poignée en haut ne le déplace plus." -- mt
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
@@ -269,8 +268,6 @@ L["With TomTom installed, a journey here follows the waypoint its arrow points t
 	"Avec TomTom installé, un trajet ici suit le point vers lequel pointe sa flèche." -- mt
 L["Your journey's next flight is drawn on the flight master's map, with its destination lit up."] =
 	"Le prochain vol de votre trajet est tracé sur la carte du maître de vol, avec sa destination en surbrillance." -- mt
-L["Your own journey starts again after a /reload, or logging back in within 30 minutes. Guides start theirs."] =
-	"Votre propre trajet reprend après un /reload, ou si vous vous reconnectez dans les 30 minutes. Les guides relancent les leurs." -- mt
 L["Your position is unavailable"] = "Votre position est indisponible" -- mt
 L["Zeppelin to %s"] = "Zeppelin pour %s" -- mt
 L["Zeppelin to %s arrives in %s"] = "Le zeppelin pour %s arrive dans %s" -- mt

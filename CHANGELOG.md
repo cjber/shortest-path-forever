@@ -10,6 +10,24 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.43.13] - 2026-11-21
+
+<!-- forever-core-sync -->
+
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
+## [1.43.12] - 2026-11-21
+
+### Changed
+
+- A journey you planned yourself now always comes back after a /reload or a relog, until it ends or you clear it. The *Keep journeys after a reload* setting and its 30-minute limit are gone (#1216)
+- Ships ForeverCore 1.16.2, the same shared code as your other Forever addons, so they keep working together.
+
+### Fixed
+
+- Follow roads now follows Dun Morogh's snowy dirt roads, such as the one from Coldridge Pass to The Grizzled Den, instead of cutting across the snow (#1218).
+- Follow roads now knows the dirt and cobbled roads of Desolace, Winterspring, Alterac, Swamp of Sorrows, Elwynn's docks, Gilneas and Orgrimmar, so routes there stay on the road. Road textures come from Polestar's reviewed list, thanks to Fitz (#1224).
+
 ## [1.43.11] - 2026-11-21
 
 ### Changed
