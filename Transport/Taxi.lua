@@ -234,11 +234,31 @@ local function SlotKnown(slot)
 	return kind == "CURRENT" or kind == "REACHABLE"
 end
 
+-- The flight paths leaving each node, built once from ns.TaxiPaths.
+local pathsFrom
+---@return table<number, number[]>
+local function PathsFrom()
+	if not pathsFrom then
+		pathsFrom = {}
+		for _, path in ipairs(ns.TaxiPaths or {}) do
+			local list = pathsFrom[path.from]
+			if not list then
+				list = {}
+				pathsFrom[path.from] = list
+			end
+			list[#list + 1] = path.to
+		end
+	end
+	return pathsFrom
+end
+
 -- At a flight master, only the classic list's slots the character knows are nodes it really has. Walk slots 1
 -- to NumTaxiNodes(), learn those SlotKnown accepts, and use the new query only to resolve each slot to its
--- nodeID. Every flight point the character has on that continent is one of those listed slots, so once the scan
--- has learned them, forget the points already known on the same continent that it left out. Nodes on other
--- continents stay, and a scan that lists nothing changes nothing.
+-- nodeID. A known point is REACHABLE only when known points link it to this flight master, so a point the
+-- character has on a separate network (Undercity's, seen from Booty Bay) is DISTANT like an undiscovered one.
+-- The scan can therefore rule out only a point one flight path from a listed one: had the character known it,
+-- the client would list it too. Forget those, keep every other saved point, and change nothing when the scan
+-- lists nothing.
 local function ScanFlightMaster()
 	local uiMap = GetTaxiMapID and GetTaxiMapID()
 	local nodes = uiMap and C_TaxiMap.GetAllTaxiNodes(uiMap) or {}
@@ -272,9 +292,16 @@ local function ScanFlightMaster()
 		end
 	end
 	if continent ~= nil then
+		local linked = {}
+		for nodeID in pairs(listed) do
+			for _, to in ipairs(PathsFrom()[nodeID] or {}) do
+				linked[to] = true
+			end
+		end
 		for nodeID in pairs(ns.charDB.taxi) do
 			local node = ns.TaxiNodes[nodeID]
-			if node and node.map == continent and not listed[nodeID] then
+			-- The list holds only this continent's slots, so it says nothing about a point elsewhere.
+			if linked[nodeID] and not listed[nodeID] and node and node.map == continent then
 				ns.charDB.taxi[nodeID] = nil
 				ns.charDB.taxiNames[nodeID] = nil
 				changed = true
