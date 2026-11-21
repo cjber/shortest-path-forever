@@ -429,7 +429,7 @@
 ---@field flightsTaken number
 ---@field portalsUsed number
 ---@field milestones table<string, number>
--- A journey's goal as Resume.lua keeps it, with the GetServerTime() it was planned.
+-- A journey's goal as Resume.lua keeps it.
 ---@class SPFKeptJourney
 ---@field map number
 ---@field x number
@@ -438,7 +438,6 @@
 ---@field label? string
 ---@field questID? number
 ---@field handins? number[] -- the quests handed in at the kept stop, validated on the way in and out (Resume.lua)
----@field at number
 -- Where the character stood when it last bound at an inn, with GetBindLocation's name then.
 ---@class SPFBindPoint : SPFPoint
 ---@field name string
