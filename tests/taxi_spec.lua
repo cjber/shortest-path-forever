@@ -215,12 +215,14 @@ ns.TaxiNodes = {
 }
 ns.TaxiNodes[101].faction, ns.TaxiNodes[103].faction = "Alliance", "Horde"
 ns.TaxiNodes[108] = { name = "Thelsamar", map = 0 }
--- 102, 104 and 107 are one flight from a listed node, so a scan that leaves them out rules them out; 108 is not.
+-- 102, 104 and 107 are one flight from a listed node, so a scan that leaves them out rules them out; 108 is not,
+-- and 106 is on another continent, whose points this continent's list never holds.
 ns.TaxiPaths = {
 	{ from = 101, to = 102 },
 	{ from = 103, to = 104 },
 	{ from = 101, to = 107 },
 	{ from = 108, to = 104 },
+	{ from = 101, to = 106 },
 }
 ns.SetJourneyRoute = function() end
 ns.JourneyChanged = function() end

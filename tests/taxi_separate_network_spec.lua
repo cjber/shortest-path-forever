@@ -96,10 +96,16 @@ local env = setmetatable({
 env._G = env
 
 -- Undercity's network and the two Stranglethorn points, plus Kargath saved by mistake.
-local names =
-	{ [11] = "Undercity", [10] = "The Sepulcher", [13] = "Tarren Mill", [18] = "Booty Bay", [20] = "Grom'gol" }
+local names = {
+	[11] = "Undercity",
+	[10] = "The Sepulcher",
+	[13] = "Tarren Mill",
+	[18] = "Booty Bay",
+	[20] = "Grom'gol",
+	[21] = "Kargath",
+}
 env.ShortestPathForeverCharDB = {
-	taxi = { [11] = true, [10] = true, [13] = true, [18] = true, [21] = true },
+	taxi = { [11] = true, [10] = true, [13] = true, [18] = true, [20] = true, [21] = true },
 	taxiNames = names,
 }
 local policyChanges = 0
@@ -120,7 +126,10 @@ assert(
 	"Undercity's network survives Booty Bay's scan: " .. table.concat(known, ",")
 )
 assert(ns.charDB.taxiNames[11] == "Undercity", "a point on the other network keeps its name")
-assert(not ns.charDB.taxiNames[21], "Kargath, one flight from Booty Bay and not listed, is forgotten")
-assert(policyChanges == 1, "the scan replans once")
+assert(not ns.KnownTaxiNodes()[21], "Kargath, one flight from Booty Bay and not listed, is forgotten")
+assert(not ns.charDB.taxiNames[21], "a forgotten point loses its saved name")
+assert(policyChanges == 1, "forgetting a point alone replans once")
+eventFrame:Run("OnEvent", "TAXIMAP_OPENED")
+assert(policyChanges == 1, "a scan that changes nothing does not replan")
 
 print("taxi separate network: a flight master forgets only points its own network rules out: ok")

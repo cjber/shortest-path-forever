@@ -299,7 +299,9 @@ local function ScanFlightMaster()
 			end
 		end
 		for nodeID in pairs(ns.charDB.taxi) do
-			if linked[nodeID] and not listed[nodeID] then
+			local node = ns.TaxiNodes[nodeID]
+			-- The list holds only this continent's slots, so it says nothing about a point elsewhere.
+			if linked[nodeID] and not listed[nodeID] and node and node.map == continent then
 				ns.charDB.taxi[nodeID] = nil
 				ns.charDB.taxiNames[nodeID] = nil
 				changed = true
