@@ -303,8 +303,15 @@ local function ClearOrphanWaypoint()
 	ns.charDB.guideWaypoint = nil
 	local point = UiMapPoint.CreateFromCoordinates(saved.uiMapID, saved.x, saved.y)
 	if SameWaypoint(C_Map.GetUserWaypoint(), point) then
-		C_Map.ClearUserWaypoint()
-		C_SuperTrack.SetSuperTrackedUserWaypoint(false)
+		local borrowed = saved.borrowed
+		local restored = borrowed
+			and C_Map.SetUserWaypoint(
+				UiMapPoint.CreateFromCoordinates(borrowed.uiMapID, borrowed.position.x, borrowed.position.y, borrowed.z)
+			)
+		if not restored then
+			C_Map.ClearUserWaypoint()
+		end
+		C_SuperTrack.SetSuperTrackedUserWaypoint(restored and saved.borrowedTracked == true or false)
 		RefreshWaypointPins()
 	end
 end
@@ -506,7 +513,7 @@ local function ClearGuideWaypoint()
 	C_Map.ClearUserWaypoint()
 	C_SuperTrack.SetSuperTrackedUserWaypoint(false)
 	guide.waypoint, guide.expectedWaypoint = nil, nil
-	guide.waypointTarget, guide.uiMap, guide.fading = nil, nil, nil
+	guide.waypointTarget, guide.uiMap, guide.fading, guide.waypointNavigation = nil, nil, nil, nil
 	ns.charDB.guideWaypoint = nil
 	RememberTracking(guide)
 	guide.writing = nil
@@ -565,9 +572,11 @@ local function GuideWaypoint(point, fading)
 		end
 		point, fading = goal, false
 	end
-	if not SamePoint(point, guide.waypointTarget) or uiMap ~= guide.uiMap or fading ~= guide.fading then
+	local navigation = WaypointUINavigation()
+	local changed = not SamePoint(point, guide.waypointTarget) or uiMap ~= guide.uiMap or fading ~= guide.fading
+	if changed or (guide.waypoint and navigation and navigation ~= guide.waypointNavigation) then
 		guide.waypointTarget, guide.uiMap = { map = point.map, x = point.x, y = point.y }, uiMap
-		guide.fading = fading
+		guide.fading, guide.waypointNavigation = fading, navigation
 		local waypoint
 		if not followsArrow then
 			local location = ns.Locate(point)
@@ -592,23 +601,38 @@ local function GuideWaypoint(point, fading)
 				end
 			end
 		end
-		local navigation = WaypointUINavigation()
 		-- These APIs may dispatch events synchronously. Only our own writes bypass ownership checks.
 		guide.writing = true
 		guide.writingWaypoint = waypoint
 		local waypointUITracking = navigation ~= nil and WaypointUITracking(navigation)
-		local handedOver = waypoint
-			and navigation
-			and HandOverToWaypointUI(navigation, guide.title, waypoint)
-			and SameWaypoint(C_Map.GetUserWaypoint(), waypoint)
-		if waypoint and (handedOver or (not waypointUITracking and C_Map.SetUserWaypoint(waypoint))) then
-			guide.waypoint, guide.expectedWaypoint = waypoint, waypoint
-			ns.charDB.guideWaypoint = { uiMapID = waypoint.uiMapID, x = waypoint.position.x, y = waypoint.position.y }
+		local expected
+		if waypoint and navigation and HandOverToWaypointUI(navigation, guide.title, waypoint) then
+			local current = C_Map.GetUserWaypoint()
+			if SameWaypoint(current, waypoint) then
+				expected = current
+			end
+		end
+		local handedOver = expected ~= nil
+		if not handedOver and changed and waypoint and not waypointUITracking and C_Map.SetUserWaypoint(waypoint) then
+			local current = C_Map.GetUserWaypoint()
+			if SameWaypoint(current, waypoint) then
+				expected = current
+			end
+		end
+		if expected then
+			guide.waypoint, guide.expectedWaypoint = expected, CopyWaypoint(expected)
+			ns.charDB.guideWaypoint = {
+				uiMapID = expected.uiMapID,
+				x = expected.position.x,
+				y = expected.position.y,
+				borrowed = CopyWaypoint(guide.previousWaypoint),
+				borrowedTracked = guide.previousTrackedWaypoint,
+			}
 			guide.hasDriven = true
 			if not handedOver then
 				C_SuperTrack.SetSuperTrackedUserWaypoint(true)
 			end
-		elseif guide.waypoint then
+		elseif changed and guide.waypoint then
 			-- Never leave a stale native marker pointing at the previous target when placement fails.
 			ClearGuideWaypoint()
 		end
@@ -730,18 +754,20 @@ end
 
 -- A teleport is cast where you stand: show the item or spell to use, with no walking arrow.
 ---@param leg SPFLeg
-function Guide.Cast(leg)
-	if not guide or guide.target == leg then
+---@param goal SPFPoint?
+function Guide.Cast(leg, goal)
+	if not guide or (guide.target == leg and SamePoint(guide.goal, goal)) then
 		return
 	end
 	local casting = guide
-	guide.points, guide.target = nil, leg
+	local keepWaypoint = goal and not MarkerFollowsArrow() and SamePoint(guide.waypointTarget, goal)
+	guide.points, guide.target, guide.goal = nil, leg, goal
 	ns.PointGuideArrow(nil)
 	if guide ~= casting or guide.target ~= leg then
 		return
 	end
 	ns.PointCastPrompt(leg.teleport)
-	if guide.waypoint then
+	if guide == casting and guide.waypoint and not keepWaypoint and OwnsWaypoint() then
 		ClearGuideWaypoint()
 	end
 end
@@ -842,17 +868,21 @@ markerEvents:RegisterEvent("SUPER_TRACKING_CHANGED")
 markerEvents:RegisterEvent("USER_WAYPOINT_UPDATED")
 
 ns.Init(function()
-	if SuperTrackedFrame and SuperTrackedFrame.Icon then
-		RefreshNativeMarker()
-	else
-		markerEvents:RegisterEvent("ADDON_LOADED")
-	end
-	markerEvents:SetScript("OnEvent", function(self, event, name)
+	markerEvents:RegisterEvent("ADDON_LOADED")
+	RefreshNativeMarker()
+	markerEvents:SetScript("OnEvent", function(_, event, name)
 		if event == "ADDON_LOADED" then
-			if name ~= "Blizzard_QuestNavigation" then
+			if
+				name == "WaypointUI"
+				and guide
+				and guide.waypointTarget
+				and guide.waypoint
+				and not InCombatLockdown()
+			then
+				GuideWaypoint(guide.waypointTarget, guide.fading)
+			elseif name ~= "Blizzard_QuestNavigation" then
 				return
 			end
-			self:UnregisterEvent("ADDON_LOADED")
 		end
 		RefreshNativeMarker()
 	end)

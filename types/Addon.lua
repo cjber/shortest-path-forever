@@ -411,9 +411,15 @@
 ---@field taxiNames? table<number, string> -- flight points by the name a flight map gave them
 ---@field taxiVersion number
 ---@field taxiScanned? boolean
----@field guideWaypoint? {uiMapID: number, x: number, y: number}
+---@field guideWaypoint? SPFGuideWaypoint
 ---@field journey? SPFKeptJourney -- the player's own journey, kept across a reload (Resume.lua)
 ---@field bind? SPFBindPoint
+---@class SPFGuideWaypoint
+---@field uiMapID number
+---@field x number
+---@field y number
+---@field borrowed? {uiMapID: number, position: {x: number, y: number}, z: number?}
+---@field borrowedTracked? boolean
 ---@class SPFProgressData
 ---@field walkedYards number
 ---@field routesCompleted number

@@ -1,8 +1,8 @@
 -- luacheck: read globals scenario ADDON
 local ForeverCore = dofile("tests/forever_core.lua")
 
-local function check(withWaypointUI)
-	scenario("step waypoint stays at the destination: " .. (withWaypointUI and "Waypoint UI" or "native"), {
+local function check(mode)
+	scenario("step waypoint stays at the destination: " .. mode, {
 		addons = ForeverCore.addons(),
 	}, function(sim)
 		local player = sim.world.player
@@ -17,7 +17,17 @@ local function check(withWaypointUI)
 			return 1429, sim.G.CreateVector2D(x / 1000, y / 1000)
 		end
 		local waypoint, tracked
-		local writes = 0
+		local writes, projections = 0, 0
+		sim.impl["C_Map.ClearUserWaypoint"] = function()
+			waypoint = nil
+		end
+		sim.impl["C_Map.GetWorldPosFromMapPos"] = function(_, position)
+			-- Waypoint UI rounds this X to 0.5, so projecting the requested X exposes a stale comparison.
+			if position.y == 0.4 and position.x == 0.50025 then
+				projections = projections + 1
+			end
+			return 0, sim.G.CreateVector2D(position.x * 1000, position.y * 1000)
+		end
 		sim.impl["C_Map.GetUserWaypoint"] = function()
 			return waypoint
 		end
@@ -41,7 +51,7 @@ local function check(withWaypointUI)
 		end
 		assert(ns and ns.db.guideStops and not ns.db.arrowDirect, "use default guidance settings")
 		local handovers = 0
-		if withWaypointUI then
+		local function loadWaypointUI()
 			local isLoaded = sim.impl["C_AddOns.IsAddOnLoaded"]
 			sim.impl["C_AddOns.IsAddOnLoaded"] = function(name)
 				return name == "WaypointUI" or isLoaded(name)
@@ -53,7 +63,11 @@ local function check(withWaypointUI)
 					NewUserNavigation = function(opts)
 						handovers = handovers + 1
 						sim.G.C_Map.SetUserWaypoint(
-							sim.G.UiMapPoint.CreateFromCoordinates(opts.mapID, opts.x / 100, opts.y / 100)
+							sim.G.UiMapPoint.CreateFromCoordinates(
+								opts.mapID,
+								math.floor(opts.x * 10) / 1000,
+								math.floor(opts.y * 10) / 1000
+							)
 						)
 						sim.G.C_SuperTrack.SetSuperTrackedUserWaypoint(true)
 						return opts
@@ -61,10 +75,13 @@ local function check(withWaypointUI)
 				},
 			}
 		end
+		if mode == "Waypoint UI" then
+			loadWaypointUI()
+		end
 		local start = { map = 0, x = 100, y = 100 }
 		local bend = { map = 0, x = 200, y = 200 }
 		local legEnd = { map = 0, x = 300, y = 200 }
-		local goal = { map = 0, x = 500, y = 400, routeTitle = "Goldshire" }
+		local goal = { map = 0, x = 500.25, y = 400, routeTitle = "Goldshire" }
 		ns.JourneyGuide.Start()
 		ns.JourneyGuide.To(legEnd, { start, bend, legEnd }, goal)
 		local function expectWaypoint(x, y)
@@ -75,22 +92,56 @@ local function check(withWaypointUI)
 				("expected waypoint at %.2f, %.2f; got %.2f, %.2f"):format(x, y, actualX, actualY)
 			)
 		end
-		expectWaypoint(0.5, 0.4)
+		local expectedX = mode == "Waypoint UI" and 0.5 or 0.50025
+		expectWaypoint(expectedX, 0.4)
 		assert(ns.GuideState() == bend and ns.ArrowLeads(), "Shortest Path's arrow leads to the bend")
+		local initialProjections = projections
 		player.worldY, player.worldX = bend.x, bend.y
 		sim:advance(0.2)
 		assert(ns.GuideState() == legEnd and ns.ArrowLeads(), "the arrow advances to the leg end")
-		expectWaypoint(0.5, 0.4)
+		expectWaypoint(expectedX, 0.4)
 		ns.JourneyGuide.To(goal, { legEnd, goal }, goal)
-		expectWaypoint(0.5, 0.4)
-		assert(writes == 1 and handovers == (withWaypointUI and 1 or 0), "the step waypoint is written once")
+		expectWaypoint(expectedX, 0.4)
+		assert(writes == 1 and handovers == (mode == "Waypoint UI" and 1 or 0), "the step waypoint is written once")
+		if mode == "Waypoint UI" then
+			assert(projections == initialProjections, "moving frames must use the exact waypoint read-back")
+		end
+		if mode == "late Waypoint UI" then
+			loadWaypointUI()
+			sim:event("ADDON_LOADED", "WaypointUI")
+			assert(writes == 2 and handovers == 1, "late Waypoint UI receives the current destination once")
+			expectedX = 0.5
+			expectWaypoint(expectedX, 0.4)
+			player.worldY = player.worldY + 1
+			sim:advance(0.2)
+			assert(writes == 2 and handovers == 1, "the handover is not repeated")
+		end
+
+		local guide = ns.JourneyGuide
+		local cast = { mode = "teleport", from = legEnd, to = start, teleport = { item = 6948 } }
+		local function waitForCast(destination)
+			local function notLanded()
+				return false
+			end
+			assert(ns.AdvanceJourneyProgress({ cast }, { index = 1 }, destination, nil, false, notLanded, guide))
+		end
+		local beforeCast = writes
+		waitForCast(goal)
+		assert(guide.Casting() and ns.ArrowLeads() and not ns.GuideState(), "the cast prompt takes over the arrow")
+		expectWaypoint(expectedX, 0.4)
+		ns.JourneyGuide.To(goal, { legEnd, goal }, goal)
+		expectWaypoint(expectedX, 0.4)
+		assert(writes == beforeCast, "walk, cast and walk share one step-end write")
 
 		local nextGoal = { map = 0, x = 600, y = 500, routeTitle = "Next step" }
+		waitForCast(nextGoal)
+		assert(waypoint == nil, "a cast for a different destination clears the old waypoint")
 		ns.JourneyGuide.To(nextGoal, { goal, nextGoal }, nextGoal)
 		expectWaypoint(0.6, 0.5)
 		sim:expectNoErrors(ADDON)
 	end)
 end
 
-check(true)
-check(false)
+check("Waypoint UI")
+check("late Waypoint UI")
+check("native")
