@@ -362,7 +362,8 @@ local function Answer(from, to, key, job, walk, bound, place)
 	local generation = estimates
 	local plan
 	if place then
-		plan = ns.NearbyRank.Plan(job, options, place, walk, bound)
+		-- Only a Nearby ranking job passes a place.
+		plan = ns.NearbyRank.Plan(job --[[@as SPFPathJob]], options, place, walk, bound)
 	else
 		plan = ns.Planner.Plan(options, job)
 	end
