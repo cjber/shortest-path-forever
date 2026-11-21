@@ -506,7 +506,8 @@ frame:SetScript("OnEvent", function(self, _, name)
 	end
 	ns.charDB = ShortestPathForeverCharDB
 	-- Older test builds saved portal indexes, which can point at a different entrance after a data refresh.
-	local avoided = ns.charDB.avoided
+	-- CHARACTER_DEFAULTS has just filled `avoided`.
+	local avoided = ns.charDB.avoided --[[@as SPFAvoidedTransport[] ]]
 	for index = #avoided, 1, -1 do
 		local entry = avoided[index]
 		if (entry.kind == "portal" or entry.kind == "passage") and type(entry.ids[1]) == "number" then
