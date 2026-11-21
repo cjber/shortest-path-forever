@@ -319,10 +319,10 @@ FinishSearch = function()
 	local estimate = EstimateKept(planned and planned.now or ns.NowMs())
 	local same = Walks.SameJourney(planned, followed, progress.index, Here())
 	local gain = estimate and planned and estimate.arrive - planned.arrive
-	-- A ride the planner preferred to a long walk is later than that walk by design, so its gain cannot argue for it
-	-- against the walk already shown.
+	-- A ride the planner preferred to a long walk, or to a walk through the goal's high-level zone, is later than that
+	-- walk by design, so its gain cannot argue for it against the walk already shown.
 	local overWalk = planned
-		and planned.preferred
+		and (planned.preferred or planned.rideNote)
 		and followed
 		and #followed.legs == 1
 		and followed.legs[1].mode == "walk"
@@ -361,6 +361,7 @@ FinishSearch = function()
 	if keep then
 		if same then
 			followed.unknownFlight, followed.unknownFlightMaps = planned.unknownFlight, planned.unknownFlightMaps
+			followed.rideNote = planned.rideNote
 		end
 		Retime(same and planned or estimate)
 		local changedWater = followed.waterMode ~= waterMode

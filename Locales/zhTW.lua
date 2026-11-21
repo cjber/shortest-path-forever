@@ -153,6 +153,10 @@ L["Only use the Hearthstone when it saves at least this much time."] =
 L["Open"] = "開啟"
 L["Open Nearby services"] = "開啟附近服務"
 L["Open the world map to see it."] = "開啟世界地圖查看。"
+L["Rides to spend less time walking through %s (level %s)"] =
+	"搭乘交通工具以減少在%s（等級%s）內步行的路程"
+L["Walk less in zones with a minimum level 4 or more above yours, even at your destination."] =
+	"盡量縮短在最低等級比你高至少4級的區域內步行的路程，即使目的地也在該區域內。"
 L["Turn the world map to %s to see it."] = "將世界地圖切換到%s查看。" -- mt
 L["This menu needs mouse and keyboard."] = "此選單需要滑鼠和鍵盤。" -- mt
 L["Other Faction's Routes"] = "另一陣營的航線"
@@ -243,8 +247,6 @@ L["Use class teleports"] = "使用職業傳送"
 L["Vendors"] = "商人"
 L["W"] = "西"
 L["Walk to %s"] = "步行前往%s"
-L["Walks go round zones whose lowest level is 4 or more above yours, but never the ones you start or end in."] =
-	"步行路線會繞開最低等級比你高 4 級或以上的區域，但不會繞開起點和終點所在的區域。"
 L["Weapons and armour"] = "武器與護甲"
 L["What's new after an update"] = "更新後的新內容"
 L["While Guide is on: your next turns, the next stop and your destination across the top of the screen."] =

@@ -504,6 +504,8 @@ local function Solve(options, cache, check, weigh)
 			})
 		end
 	end
+	-- The walk straight from the start to the goal pays the charge on the goal's high-level zone (Hazards.Profile).
+	local direct
 	for pair = 1, #topology.pairs, 2 do
 		check()
 		local from, to = topology.pairs[pair], topology.pairs[pair + 1]
@@ -517,15 +519,23 @@ local function Solve(options, cache, check, weigh)
 					yards, estimated, apart = WalkCost(options, origin, destination, walkIndex)
 				end
 				if yards then
-					Edge(first, last, {
+					local factor = 1
+					if first == start and last == goal and options.hazards and options.hazards.goalZone then
+						factor = options.hazards.Direct(origin.map, origin.x, origin.y, destination.x, destination.y)
+					end
+					local edge = {
 						mode = "walk",
-						duration = yards / speed * 1000,
+						duration = yards * factor / speed * 1000,
 						yards = yards,
 						estimated = estimated,
 						-- Zero yards join two walks unless the walk's batch knows the ends are on different nodes: an
 						-- estimate of zero is then only a lower bound on a real walk.
 						transfer = yards == 0 and not apart or nil,
-					})
+					}
+					Edge(first, last, edge)
+					if factor > 1 then
+						direct = edge
+					end
 				end
 			end
 		end
@@ -809,8 +819,14 @@ local function Solve(options, cache, check, weigh)
 				legs[#legs + 1] = leg
 			end
 		end
+		local arrive = labels.time[finishAt]
+		if #legs == 1 and labels.edge[finishAt] == direct then
+			-- The charge only weighs the choice: the walk itself takes its real time.
+			arrive = legs[1].depart + direct.yards / speed * 1000
+			legs[1].arrive = arrive
+		end
 		return {
-			arrive = labels.time[finishAt],
+			arrive = arrive,
 			legs = legs,
 			needsStart = needsStart,
 			needsGoal = needsGoal,
@@ -891,6 +907,13 @@ local function Solve(options, cache, check, weigh)
 	end
 	if planned then
 		MarkUnknownFlight(planned)
+		-- The charge decided it when walking straight there would have won on real time, by the same margin a long walk
+		-- gives a ride, but the ride won once the yards inside the goal's zone were charged.
+		local walked = direct and direct.yards / speed * 1000
+		local margin = walked and walked >= LONG_WALK and RIDE_MARGIN or 1
+		if walked and #planned.legs > 1 and walked * margin < planned.arrive - options.now then
+			planned.rideNote = ns.Hazards.RideNote(options.hazards)
+		end
 	end
 	return planned
 end

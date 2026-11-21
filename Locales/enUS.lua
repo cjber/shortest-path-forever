@@ -14,3 +14,6 @@ L["stop guiding"] = "stop guiding"
 L["guide this journey"] = "guide this journey"
 L["show it on the map"] = "show it on the map"
 L["That guide has no step to follow."] = "That guide has no step to follow."
+L["Rides to spend less time walking through %s (level %s)"] = "Rides to spend less time walking through %s (level %s)"
+L["Walk less in zones with a minimum level 4 or more above yours, even at your destination."] =
+	"Walk less in zones with a minimum level 4 or more above yours, even at your destination."

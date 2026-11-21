@@ -210,6 +210,7 @@ Credit for the addons and projects an idea came from.
 | [Polestar](https://github.com/fitzforge/polestar) by Fitz | Ideas for many features | Hearthstone learning, journeys after `/reload`, the fallback arrow, flight tooltips, instance routing, compass time, minimap rim, own map frames, the shared report window and tooling, and, for caves and cities, placing each service on its own floor, lifts as wait steps, and walking to a cave's mouth before its inside. GPL-3.0. Inspired only; no code was copied. Fitz is welcome to use our code. |
 | [AzerothGPS](https://github.com/AzerothGPS/AzerothGPS) | Caves and cities as a test target | Its per-floor Undercity guide and its cave and mine catalogue, as the places every walk must reach. Inspired only; no code or data was copied. |
 | Ding! by Yendi | Walks that keep out of zones far above your level | Inspired only; no code was copied. |
+| Travelcraft (CurseForge) | Rides that shorten walks through high-level zones | #1007. Inspired only; no code was copied. |
 | [BV Addon Suite - Routing](https://www.curseforge.com/wow/addons/bv-addon-suite-routing) | Walks that start on the floor you are standing on | Its idea of working out the player's height from the game's range checks to nearby NPCs, instead of guessing a surface. All rights reserved; inspired only, no code was copied. |
 
 Thanks also to everyone else who reported a bug or asked for a feature, here or on CurseForge.

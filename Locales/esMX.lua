@@ -157,6 +157,9 @@ L["Only use the Hearthstone when it saves at least this much time."] =
 L["Open"] = "Abrir"
 L["Open Nearby services"] = "Abrir servicios cercanos"
 L["Open the world map to see it."] = "Abre el mapa del mundo para verlo."
+L["Rides to spend less time walking through %s (level %s)"] = "Usa transporte para caminar menos por %s (nivel %s)"
+L["Walk less in zones with a minimum level 4 or more above yours, even at your destination."] =
+	"Camina menos por zonas cuyo nivel mínimo supera al tuyo en al menos 4 niveles, incluso si tu destino está allí."
 L["Turn the world map to %s to see it."] = "Cambia el mapa del mundo a %s para verlo." -- mt
 L["This menu needs mouse and keyboard."] = "Este menú necesita mouse y teclado." -- mt
 L["Other Faction's Routes"] = "Rutas de la otra facción"
@@ -249,8 +252,6 @@ L["Use class teleports"] = "Usar teletransportes de clase"
 L["Vendors"] = "Vendedores"
 L["W"] = "O"
 L["Walk to %s"] = "Caminar hasta %s"
-L["Walks go round zones whose lowest level is 4 or more above yours, but never the ones you start or end in."] =
-	"Los caminos a pie rodean las zonas cuyo nivel mínimo está 4 o más por encima del tuyo, pero nunca aquellas donde empiezas o terminas."
 L["Weapons and armour"] = "Armas y armaduras"
 L["What's new after an update"] = "Novedades tras una actualización"
 L["While Guide is on: your next turns, the next stop and your destination across the top of the screen."] =
