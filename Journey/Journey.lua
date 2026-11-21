@@ -439,10 +439,11 @@ function ns.ToggleJourneyGuide()
 	end
 end
 
-function ns.ShowJourneyMap()
+---@return number?
+function ns.JourneyMapID()
 	local place = CorpseRun() and ns.Corpse.Point() or goal
 	local location = place and ns.Locate(place)
-	ns.OpenWorldMap(location and location.uiMap)
+	return location and location.uiMap
 end
 
 -- The journey's name. `formatPlace` wraps the place this addon named inside the same locale sentence; a caller's

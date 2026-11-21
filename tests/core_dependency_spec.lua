@@ -204,14 +204,19 @@ assert(#noTabShownLines == 1, "one line in the error frame")
 
 -- Every member this addon calls is there: the addon runs, says nothing, and registers its services once: the report
 -- title and its own report lines.
-local ns, quiet, registered, attached = Load({
+local completeCore = {
 	APIKit = { Hub = function() end, NotReady = function() end },
 	TrackerSection = { Create = function() end, UpdateText = function() end },
 	TrackerLine = { SetInteractive = function() end },
 	Art = { minor = 2, Marker = function() end, Ring = function() end, Diamond = function() end },
 	QuestLogTabs = { Register = function() end, Select = function() end, SetTabShown = function() end },
 	TrackerHost = {}, -- A foreign host has no menu contract.
-})
+}
+local noOpen = Load(completeCore)
+assert(noOpen.broken == true, "a ForeverCore without the named opener stops the addon")
+completeCore.Open =
+	dofile("tests/forever_core.lua").load(setmetatable({}, { __index = _G }), "ForeverCore", { "Core/Open.lua" }).Open
+local ns, quiet, registered, attached = Load(completeCore)
 assert(quiet and #quiet == 0, "a complete ForeverCore runs the addon and says nothing")
 assert(ns.core ~= nil, "the addon keeps its ForeverCore context")
 assert(ns.Icon == TOC["X-Forever-Icon"], "the addon reads its identity icon from the TOC")

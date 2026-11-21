@@ -551,6 +551,7 @@ ShortestPathForeverPathData = nil
 ---@field incumbent? number
 ---@field incumbentPlan? SPFPlan
 ---@field lowerBound? boolean the soonest any route could arrive, before the hearth, teleport and ride preferences
+---@field endpointBounds? boolean use terrain lower bounds for unresolved start and goal walks
 ---@field hearthMinimumSavings? number
 ---@field teleportMinimumSavings? number
 ---@field otherFaction? boolean
@@ -631,7 +632,8 @@ ShortestPathForeverPathData = nil
 ---@field count? number
 
 ---@class SPFPathJob
----@field walking? table<SPFPathJob, true> a Nearby measure's walking searches (NearbyRank.lua)
+---@field walking? table<SPFPathJob, true> the walking searches owned by a Nearby job
+---@field nearbyHere? SPFPoint origin held for one Nearby ranking
 ---@field map number
 ---@field from SPFPoint
 ---@field to? SPFPoint

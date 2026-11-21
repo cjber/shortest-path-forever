@@ -37,6 +37,7 @@ return function()
 	end
 	function Path.FindMany(map, from, targets, callback, water, reverse, progress, hazards)
 		local new = job(fake.batches, map, from, callback, water, hazards)
+		new.waterWalking = water
 		new.targets, new.reverse, new.progress = targets, reverse, progress
 		new.costs, new.radius, new.revision = {}, 0, 0
 		return new
@@ -46,6 +47,9 @@ return function()
 	end
 	function Path.Resume(resumed)
 		if not resumed.done and not resumed.cancelled then
+			if resumed.paused and resumed.fn then
+				fake.runs[#fake.runs + 1] = resumed
+			end
 			resumed.paused = false
 		end
 	end
@@ -67,9 +71,12 @@ return function()
 	-- whole here, so a checkpoint never pauses it.
 	fake.runs = {}
 	function Path.Run(fn, callback)
-		local new = { fn = fn, callback = callback, cpu = 0 }
+		local new = { fn = fn, co = coroutine.create(fn), callback = callback, cpu = 0 }
 		fake.runs[#fake.runs + 1] = new
 		return new
+	end
+	function Path.Wait()
+		coroutine.yield()
 	end
 	function Path.Checkpoint() end
 	-- Runs every queued plain job, and those they queue.
@@ -77,9 +84,11 @@ return function()
 		while #fake.runs > 0 do
 			local ran = table.remove(fake.runs, 1)
 			if not ran.cancelled then
-				local a, b = ran.fn(ran)
-				ran.done = true
-				if ran.callback and not ran.cancelled then
+				local ok, a, b = coroutine.resume(ran.co, ran)
+				assert(ok, a)
+				ran.done = coroutine.status(ran.co) == "dead"
+				ran.paused = not ran.done
+				if ran.done and ran.callback and not ran.cancelled then
 					ran.callback(a, b, ran)
 				end
 			end
