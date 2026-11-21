@@ -366,7 +366,8 @@ assert(
 assert(frame.hidden or frame.alpha == 0, "native direct guidance hides the addon arrow with stop-only marks")
 ns.db.arrowDirect = false
 ns.ArrowBearingChanged()
-assert(not driver.waypoint(), "route mode with stop-only marks clears the guide waypoint immediately")
+assert(driver.waypoint(), "route mode with stop-only marks keeps a waypoint at the step destination")
+assert(not frame.hidden and frame.alpha > 0, "the route arrow leads beside the destination waypoint")
 ns.db.arrowDirect = true
 ns.ArrowBearingChanged()
 assert(driver.waypoint(), "direct mode restores native guidance immediately with stop-only marks")
@@ -400,10 +401,12 @@ env.C_Map.ClearUserWaypoint()
 env.C_SuperTrack.SetSuperTrackedUserWaypoint(false)
 env.C_SuperTrack.SetSuperTrackedQuestID(0)
 ns.db.arrowDirect = false
-local questGoal = { map = 1, x = 1200, y = 0 }
+-- The quest's area is the arrow's next bend; the step's waypoint stays on its destination beyond it (#1138).
+local questBend = { map = 1, x = 1200, y = 0 }
+local stepEnd = { map = 1, x = 1200, y = 300 }
 ns.JourneyGuide.Start()
-ns.JourneyGuide.To(questGoal, { questGoal }, questGoal)
-assert(not driver.waypoint() and frame.alpha == 1, "stop-only guidance starts with just the route arrow")
+ns.JourneyGuide.To(questBend, { questBend }, stepEnd)
+assert(frame.alpha == 1, "stop-only guidance leads the bend with the route arrow")
 local validScreenPosition = true
 env.Enum.NavigationState = { InRange = 2, Occluded = 1 }
 env.C_Navigation.GetTargetState = function()

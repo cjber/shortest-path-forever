@@ -1,12 +1,14 @@
 # Addon API
 
-Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 4`) with uiMapIDs and normalized 0-1 coordinates.
+Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 5`) with uiMapIDs and normalized 0-1 coordinates.
 Version 2 removes peer sharing and `Leaderboard`; callers must accept versions 1 and 2 and reject future versions. Check that a function exists before calling it, because an older
 addon may not have it yet. The full types are in [`types/API.lua`](../types/API.lua). On ForeverCore 1.3.2 or
 later, the API is also listed by `ForeverCore.APIKit.Addons()`.
 
 ## Minor history
 
+- Version 2, `minor = 5`: `ResumeRestedXP` now returns the standard reasons `"none"` and `"combat"`
+  (previously `"unavailable"` and `"invalid"`).
 - Version 2, `minor = 4`: adds optional world height `z` to journey goals, leg ends and guidance places.
 - Version 2, `minor = 3`: adds `EstimateWalks` and `NavVersion`.
 - Version 2, `minor = 2`: adds each journey leg's `from` and `to`, `ResumeRestedXP` and the `replan` change in
@@ -118,9 +120,9 @@ later, the API is also listed by `ForeverCore.APIKit.Addons()`.
   and `false` for any other owner, no journey, the state already asked for, or combat.
 - `ResumeRestedXP()` resumes the RestedXP guide the player follows, as *Resume guide* in Settings and in the tracker
   menu does, so a macro can call it: `/run ShortestPathForever.API.ResumeRestedXP()`. It returns `true` when a guide
-  is now followed. It returns `nil, "unavailable"` when there is no RestedXP guide to resume, because RestedXP is not
+  is now followed. It returns `nil, "none"` when there is no RestedXP guide to resume, because RestedXP is not
   running, following its guide is off, it has no current step, or the saved variables are not loaded yet, and
-  `nil, "invalid"` in combat, where guidance cannot start.
+  `nil, "combat"` when combat blocks guidance.
 - `Stats()` publishes this character's travel records in the suite's statistics shape.
 
 Use your addon's name as `owner`; starting another journey replaces ownership.
@@ -140,8 +142,8 @@ A read with nothing to answer returns `nil, reason`. `Estimate` and `EstimateDet
 nothing to answer: no current stop, or no ended journey to report. `Journey` uses `"loading"` while the saved
 variables are not loaded or the planner has no route yet, and `"none"` when there is no journey. `Guidance` adds
 `"paused"`, `"disabled"`, `"cast"` and `"unavailable"` to those two, each described above. `Stats` uses
-`"loading"` until the saved variables are loaded. `ResumeRestedXP` is an action, not a read: `nil` comes with
-`"unavailable"` when there is no guide to resume, or `"invalid"` in combat, as described above.
+`"loading"` until the saved variables are loaded. `ResumeRestedXP` returns `nil, "none"` when there is no guide
+to resume or `nil, "combat"` when combat blocks guidance.
 
 `EstimateWalks` refuses to start with `nil` and one of `"invalid"` (an owner, place, callback or option it cannot
 use, a target on another walking map, or more than 256 targets), `"combat"`, `"loading"`, or `"nodata"` when this

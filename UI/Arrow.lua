@@ -287,6 +287,10 @@ local function Update(elapsed)
 	if revision ~= updating then
 		return
 	end
+	if native and not placed then
+		-- Guide's marker led last frame and no longer does, so the read above was skipped.
+		sharedMarker = markerShown and NativeMarkerAt(pointing)
+	end
 	renderedShared = sharedMarker
 	native, shared = placed, sharedMarker
 	local markerLeads = (native or shared) and markerShown

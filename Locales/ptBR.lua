@@ -437,11 +437,11 @@ L["Off, the game's own quest markers stay beside your journey's pins, showing th
 	"Desativado, os marcadores de missão do jogo ficam ao lado dos marcadores da sua jornada, para você ver os outros lugares onde uma missão pode ser concluída." -- mt
 L["Shift"] = "Shift" -- mt
 L["Alt"] = "Alt" -- mt
-L["Click the map to plan journeys"] = "Clique no mapa para planejar jornadas" -- mt
-L["Hold your journey key and click the world map or the minimap to plan a journey there."] =
-	"Mantenha sua tecla de jornada pressionada e clique no mapa-múndi ou no minimapa para planejar uma jornada até lá." -- mt
-L["Journeys are off. Turn on Click the map to plan journeys in settings."] =
-	'As jornadas estão desativadas. Ative "Clique no mapa para planejar jornadas" nas configurações.' -- mt
+L["Enable journeys"] = "Ativar jornadas" -- mt
+L["Off clears your journey, and map clicks, quests, guides and waypoints no longer start one."] =
+	"Desativado, apaga sua jornada e cliques no mapa, missões, guias e pontos de rota não iniciam outra." -- mt
+L["Journeys are off. Turn on Enable journeys in settings."] =
+	'As jornadas estão desativadas. Ative "Ativar jornadas" nas configurações.' -- mt
 L["Key to plan a journey"] = "Tecla para planejar uma jornada" -- mt
 L["The key you hold to plan a journey from the world map or the minimap."] =
 	"A tecla que você mantém para planejar uma jornada a partir do mapa-múndi ou do minimapa." -- mt
@@ -470,6 +470,7 @@ L["Farming tour running."] = "Circuito de coleta em andamento." -- mt
 L["Farming tour paused."] = "Circuito de coleta pausado." -- mt
 L["Farming tour stopped."] = "Circuito de coleta parado." -- mt
 L["Farming tour waiting."] = "Circuito de coleta em espera." -- mt
+L["Or choose %s in the journey tracker menu."] = "Ou escolha «%s» no menu do rastreador de jornada." -- mt
 L["Ordering recorded locations..."] = "Ordenando locais registrados..." -- mt
 L["Farming needs the GatherMate2 addon."] = "A coleta precisa do addon GatherMate2." -- mt
 L["Your current zone is unavailable."] = "Sua zona atual está indisponível." -- mt

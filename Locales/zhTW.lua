@@ -432,11 +432,11 @@ L["Off, the game's own quest markers stay beside your journey's pins, showing th
 	"關閉後，遊戲自帶的任務標記會留在旅程標記旁邊，讓你看見任務還能在哪些地方完成。" -- mt
 L["Shift"] = "Shift" -- mt
 L["Alt"] = "Alt" -- mt
-L["Click the map to plan journeys"] = "點擊地圖規劃旅程" -- mt
-L["Hold your journey key and click the world map or the minimap to plan a journey there."] =
-	"按住旅程按鍵並點擊世界地圖或小地圖，即可規劃前往該處的旅程。" -- mt
-L["Journeys are off. Turn on Click the map to plan journeys in settings."] =
-	"旅程已關閉。請在設定中開啟「點擊地圖規劃旅程」。" -- mt
+L["Enable journeys"] = "啟用旅程" -- mt
+L["Off clears your journey, and map clicks, quests, guides and waypoints no longer start one."] =
+	"關閉後會清除目前旅程，點擊地圖、任務、指南和路徑點也不會再開始旅程。" -- mt
+L["Journeys are off. Turn on Enable journeys in settings."] =
+	"旅程已關閉。請在設定中開啟「啟用旅程」。" -- mt
 L["Key to plan a journey"] = "規劃旅程的按鍵" -- mt
 L["The key you hold to plan a journey from the world map or the minimap."] =
 	"在世界地圖或小地圖上規劃旅程時按住的按鍵。" -- mt
@@ -465,6 +465,7 @@ L["Farming tour running."] = "採集巡迴進行中。" -- mt
 L["Farming tour paused."] = "採集巡迴已暫停。" -- mt
 L["Farming tour stopped."] = "採集巡迴已停止。" -- mt
 L["Farming tour waiting."] = "採集巡迴等待中。" -- mt
+L["Or choose %s in the journey tracker menu."] = "也可以在旅程追蹤器選單中選擇「%s」。" -- mt
 L["Ordering recorded locations..."] = "正在排列已記錄的位置..." -- mt
 L["Farming needs the GatherMate2 addon."] = "採集需要 GatherMate2 插件。" -- mt
 L["Your current zone is unavailable."] = "無法取得你目前所在的區域。" -- mt

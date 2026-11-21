@@ -298,8 +298,8 @@ ns.Init(function()
 	Section(L["Planning"])
 	Checkbox(
 		"journey",
-		L["Click the map to plan journeys"],
-		L["Hold your journey key and click the world map or the minimap to plan a journey there."],
+		L["Enable journeys"],
+		L["Off clears your journey, and map clicks, quests, guides and waypoints no longer start one."],
 		function()
 			if not ns.db.journey then
 				ns.ClearJourney()
