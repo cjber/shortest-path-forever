@@ -78,6 +78,9 @@ local function frame(frameType, name, parent, template)
 		self.scriptHooks[event][#self.scriptHooks[event] + 1] = callback
 		self.hookScriptCalls[event] = (self.hookScriptCalls[event] or 0) + 1
 	end
+	function f:RegisterForDrag(...)
+		self.dragButtons = { ... }
+	end
 	function f:GetScript(event)
 		return self.scripts[event]
 	end
