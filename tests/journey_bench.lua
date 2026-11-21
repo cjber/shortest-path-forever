@@ -18,6 +18,7 @@ if arg[2] == "continent" then
 		},
 	}
 end
+local eplEarly
 for _, case in ipairs(cases) do
 	local driver = assert(loadfile("tests/journey_driver.lua"))(root)
 	local ns = driver.ns
@@ -73,11 +74,16 @@ for _, case in ipairs(cases) do
 		error(message)
 	end
 	local jobs, nextFrame, rounds, resets, plannerCPU = {}, nil, 0, 0, 0
-	local frames, usable, worst = 0, nil, 0
+	local frames, worst = 0, 0
+	local firstDraw, usable
 	local drawn = {}
 	local draw = ns.SetJourneyRoute
 	ns.SetJourneyRoute = function(g, r)
-		local first = r and r.legs[1]
+		if r and #r.legs > 0 then
+			firstDraw = firstDraw or frames
+		end
+		local followed = ns.JourneyPlan()
+		local first = followed and followed.legs[1]
 		if usable == nil and first and (first.mode ~= "walk" or first.measured) then
 			usable = frames
 		end
@@ -144,7 +150,8 @@ for _, case in ipairs(cases) do
 	print(
 		string.format(
 			"%s: %d searches (%d many, %d probes), %d planner calls, %d settle rounds, %d frames, "
-				.. "%.1f ms search, %.1f ms planner, %d straight resets, usable frame %s, %.3f ms worst frame, "
+				.. "%.1f ms search, %.1f ms planner, %d straight resets, first drawn frame %s, "
+				.. "first followable frame %s, %.3f ms worst frame, "
 				.. "%d client zone lookups, %.1f ms map load, %.1f MB Lua heap after it",
 			case[1],
 			#jobs,
@@ -156,6 +163,7 @@ for _, case in ipairs(cases) do
 			cpu,
 			plannerCPU,
 			resets,
+			tostring(firstDraw),
 			tostring(usable),
 			worst,
 			lookups,
@@ -163,9 +171,13 @@ for _, case in ipairs(cases) do
 			residentKB / 1024
 		)
 	)
-	assert(many == 2 and round == 1 and rounds >= 2, "one committed route")
+	assert(many == 2 and round == 1 and rounds >= 2, "one completed proof")
 	assert(resets == 0, "drawn walks cannot revert to straight lines")
 	-- Hazards.Profile asks for the zone of each of the journey's own ends (at most four); every walk reads the cells.
 	assert(lookups <= 4, lookups .. " zone lookups reach the client")
+	if case[3] == 67 then
+		eplEarly = usable ~= nil and usable <= 0.75 * frames
+	end
 	ns.ClearJourney()
 end
+assert(eplEarly ~= false, "Eastern Plaguelands must be followable before the proof settles")

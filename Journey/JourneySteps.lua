@@ -424,6 +424,9 @@ end
 ---@param formatPlace? fun(place: string): string
 ---@param loading boolean?
 function ns.StepRows(rows, plan, first, formatPlace, loading)
+	if plan.rideNote then
+		rows[#rows + 1] = { key = "ride-note", text = plan.rideNote, grey = true }
+	end
 	local _, spell = ns.JourneyWaterWalking()
 	local unsynced = ns.UnsyncedFlightPointRows(plan)
 	local reminder = ns.NewFlightPathReminderRow(plan, first)
