@@ -855,8 +855,14 @@ function ns.PaintTownServiceIcon(texture, entry, size)
 end
 
 -- The world map's tooltip for one NPC.
+---@param entry SPFTownService
 function ns.AddTownServiceTooltip(entry)
-	AddTooltip({ services = { { entry = entry } } })
+	AddTooltip({
+		services = { { entry = entry, id = entry.key, x = entry.x, y = entry.y } },
+		x = entry.x,
+		y = entry.y,
+		key = entry.key,
+	})
 end
 
 function ns.RefreshTownServices()
