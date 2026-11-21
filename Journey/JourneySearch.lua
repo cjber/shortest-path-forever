@@ -786,7 +786,9 @@ local function RefreshCosts(includeGoal, forced, replace)
 		-- ground they reach (Ground): it runs to its end rather than leaving the goal where nobody can stand.
 		needGoal = (needGoal or goalBatch.job.radius == math.huge) and not goalBatch.done
 		-- Nor does here (Direct): no route ends at this goal, so the walks from here wait for the ground it moves to.
-		if goalBatch.job.into and Direct() == false then
+		-- A goal with no ground to move to, or moved once already (Ground), keeps them: they still answer the search.
+		local moves = goalBatch.job.moved and not (grounded and SamePlace(goal, grounded.to))
+		if goalBatch.job.into and moves and Direct() == false then
 			needStart = false
 		end
 		active(startBatch, needStart)
@@ -873,8 +875,8 @@ local function RefreshCosts(includeGoal, forced, replace)
 	-- is ruled out. The search starts again toward that ground.
 	local function Ground()
 		local moved = goalBatch.done and goalBatch.job and goalBatch.job.moved
-		-- The ground is found by a flood over cluster entrances, which can name ground the walks never reach. A goal
-		-- moved once is not moved again: it has no route, and moving it onto itself restarted the search forever (#1141).
+		-- A goal moved once is not moved again: it has no route, and moving it onto itself restarted the search forever
+		-- (#1141).
 		if not moved or Direct() ~= false or (grounded and SamePlace(goal, grounded.to)) then
 			return false
 		end
