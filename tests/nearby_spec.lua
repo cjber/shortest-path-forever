@@ -878,11 +878,12 @@ do
 		routed = { map = stop.map, x = stop.x, y = stop.y, title = stop.title, npc = stop.npc }
 		return true
 	end
-	local estimates = 0
+	local estimates, destinations = 0, {}
 	local estimate = worldNs.EstimateIn
-	worldNs.EstimateIn = function(...)
+	worldNs.EstimateIn = function(job, map, x, y, toMap, toX, toY, ...)
 		estimates = estimates + 1
-		return estimate(...)
+		destinations[string.format("%d:%.17g:%.17g", toMap, toX, toY)] = true
+		return estimate(job, map, x, y, toMap, toX, toY, ...)
 	end
 	for _, file in ipairs({
 		"UI/MenuModifier.lua",
@@ -952,11 +953,15 @@ do
 	assert(estimates == 0, "building or refreshing the menu plans nothing")
 	assert(build().callback() == travelEnv.MenuResponse.CloseAll)
 	assert(routed == nil and estimates == 0, "the click plans nothing in its own frame")
-	-- The walks from where you stand are searched first, then the shortlist is planned on them.
+	-- The shortlist can be planned again as measured walks replace lower bounds.
 	driver.path.settle()
 	assert(routed.title == "Darnassus hunter trainer", "the boat's Teldrassil trainer beats the short walk to Kaerbrus")
 	assert(routed.npc == 5503, "the chosen trainer rides along as the stop's NPC id")
-	assert(estimates == 3, "only the clicked service's shortlist is planned")
+	local distinct = 0
+	for _ in pairs(destinations) do
+		distinct = distinct + 1
+	end
+	assert(distinct == 3, "only the clicked service's shortlist is planned")
 	local detail = api.EstimateDetail(1439, playerX, playerY, routed.map, routed.x, routed.y)
 	local boat = false
 	for _, leg in ipairs(detail.legs) do

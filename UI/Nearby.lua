@@ -768,8 +768,8 @@ end
 ---@field count integer
 ---@field collapsed boolean
 ---@field rows SPFNearbyRow[]
----@alias SPFEstimate fun(map: number, x: number, y: number, dst: number, dx: number, dy: number, ...: any): number?
 -- luacheck: push ignore 631
+---@alias SPFEstimate fun(fromMap: integer, fromX: number, fromY: number, toMap: integer, toX: number, toY: number, walk?: number|false, bound?: boolean, place?: SPFNearbyPlace, ceiling?: number): number?, string?, SPFLeg[]?
 ---@alias SPFRank fun(places: SPFNearbyPlace[], estimate: SPFEstimate, map: number, x: number, y: number, walks?: SPFWalks, pending?: SPFWalksPending): SPFNearbyRank
 -- luacheck: pop
 ---@alias SPFClosed table<string, boolean> the sections the player folded shut
@@ -788,6 +788,7 @@ end
 ---@field MeasureWalks SPFMeasureWalks
 ---@field Cancel fun(job: SPFPathJob)
 ---@field Holds fun(job: SPFPathJob): boolean
+---@field Pause fun(job: SPFPathJob)
 ---@field Detail fun(key: string, place: SPFNearbyPlace, query?: string): string
 ---@field Goods fun(key: string, place: SPFNearbyPlace, query?: string): integer[]?
 ---@field ItemName fun(itemID: integer): string?
@@ -928,6 +929,7 @@ ns.NearbyServices = {
 	MeasureWalks = ns.NearbyRank.MeasureWalks,
 	Cancel = ns.NearbyRank.Cancel,
 	Holds = ns.NearbyRank.Holds,
+	Pause = ns.NearbyRank.Pause,
 	Detail = Detail,
 	Goods = Goods,
 	ItemName = function(itemID)

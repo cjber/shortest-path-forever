@@ -18,6 +18,8 @@ end
 ---@field fromX number
 ---@field fromY number
 ---@field at integer
+---@field order SPFNearbyPlace[] the candidates, cheapest lower bound first once each is estimated
+---@field least table<SPFNearbyPlace, number> each candidate's lower bound
 ---@field best? SPFNearbyPlace
 ---@field seconds? number
 ---@field walks table<SPFNearbyPlace, number|false>
@@ -27,11 +29,37 @@ local Rank = {}
 Rank.__index = Rank
 
 function Rank:Step()
-	local place = self.candidates[self.at]
-	if not place then
+	local count = #self.candidates
+	local at = self.at
+	if at > 2 * count then
 		return self.best or self.candidates[1], self.seconds, false
 	end
-	self.at = self.at + 1
+	self.at = at + 1
+	-- First each place's lower bound, in the shortlist's order, then the places cheapest bound first, so a ride's endpoint
+	-- walks are measured only while it could still win. One estimate per step either way.
+	local least = self.least
+	if at <= count then
+		local place = self.candidates[at]
+		local walk = self.pending and self.pending[place] or self.walks[place]
+		least[place] = self.estimate(
+			self.fromMap,
+			self.fromX,
+			self.fromY,
+			place.map,
+			place.x,
+			place.y,
+			walk,
+			true,
+			place
+		) or math.huge
+		if at == count then
+			table.sort(self.order, function(a, b)
+				return least[a] < least[b]
+			end)
+		end
+		return self.best or self.candidates[1], self.seconds, true
+	end
+	local place = self.order[at - count]
 	-- Read before the estimate, which may pause while the measure settles this walk: the estimate is on the walk read.
 	-- A walk still searched counts at its lower bound, so a pending place is never cheaper than it could be.
 	local bound = self.pending and self.pending[place]
@@ -39,15 +67,31 @@ function Rank:Step()
 	if bound then
 		walk = bound
 	end
+	-- A place whose bound already loses is skipped: a best still on a bound leaves the ranking undecided, and it ranks
+	-- again once that walk lands. On a tie the measured place may still decide the row.
+	if self.seconds and least[place] > self.seconds then
+		return self.best or self.candidates[1], self.seconds, at < 2 * count
+	end
 	-- On a bound the estimate skips the planner's preferences: a Hearthstone dropped for saving too little on the bound
-	-- may save enough on the longer walk measured, so the preferred route is no lower bound (#1034 review).
-	local seconds =
-		self.estimate(self.fromMap, self.fromX, self.fromY, place.map, place.x, place.y, walk, bound and true, place)
+	-- may save enough on the longer walk measured, so the preferred route is no lower bound (#1034 review). Past the
+	-- best's time a ride's endpoint walks stop being measured: measuring only adds to its time.
+	local seconds = self.estimate(
+		self.fromMap,
+		self.fromX,
+		self.fromY,
+		place.map,
+		place.x,
+		place.y,
+		walk,
+		bound and true,
+		place,
+		self.seconds
+	)
 	local exact = not bound
 	if seconds and (not self.seconds or seconds < self.seconds or seconds == self.seconds and exact) then
 		self.best, self.seconds, self.exact = place, seconds, exact
 	end
-	return self.best or self.candidates[1], self.seconds, self.at <= #self.candidates
+	return self.best or self.candidates[1], self.seconds, at < 2 * count
 end
 
 ---@param walks? SPFWalks MeasureWalks' answer
@@ -62,6 +106,8 @@ local function NewRank(candidates, estimate, fromMap, fromX, fromY, walks, pendi
 		fromX = fromX,
 		fromY = fromY,
 		at = 1,
+		order = { unpack(candidates) },
+		least = {},
 	}, Rank)
 end
 
@@ -186,7 +232,9 @@ end
 ---@param place SPFNearbyPlace
 ---@param walk? number|false
 ---@param bound? boolean
-local function Plan(job, options, place, walk, bound)
+---@param ceiling? number an arrival the ranking has already beaten: a plan past it is returned unmeasured, as partial
+---@return SPFPlan?, boolean? partial
+local function Plan(job, options, place, walk, bound, ceiling)
 	job.nearbyHere = job.nearbyHere or ns.JourneySearch.Here()
 	local here, goal = job.nearbyHere, Spawn(place)
 	if here and goal then
@@ -212,6 +260,10 @@ local function Plan(job, options, place, walk, bound)
 	end
 	local kept, places = TransitCosts(here), ns.Planner.Places(options)
 	while plan do
+		-- Measured walks only make a plan later, so one already past the ceiling cannot win.
+		if ceiling and plan.arrive > ceiling and #plan.pendingWalks > 0 then
+			return plan, true
+		end
 		local changed = false
 		for _, leg in ipairs(plan.pendingWalks) do
 			local reverse = leg.from.kind ~= "start"
@@ -233,158 +285,236 @@ local function Plan(job, options, place, walk, bound)
 	end
 end
 
--- The last finished measures, one per hazard profile: the panel asks again every tick, and while you stand on the
--- same node with the same settings their walks hold.
----@type table<string, { job: SPFPathJob, water: boolean, walks: SPFWalks }>
+---@class SPFNearbyWalkBatch
+---@field job SPFPathJob
+---@field key string
+---@field water boolean
+---@field index table<SPFNearbyPlace, integer>
+---@field costs (number|false)[]
+---@field done? boolean
+---@field reason? string
+---@field publish? fun()
+
+-- Finished walks can also answer a later measure after the panel was closed.
+---@type table<string, SPFNearbyWalkBatch>
 local measured = {}
 
--- The places that walk under one hazard profile: the journey's own, which never charges the zone or town you start or
--- end in (Hazards.Profile), so each place has its own and places share a search only where theirs match.
+-- Group direct walks by the journey's hazard profile. A longer direct walk cannot beat a ride that wins on the
+-- bound. This gives up #1034's exactness only when a planner preference would choose a walk longer than the bound
+-- over a faster ride.
+---@param job SPFPathJob
 ---@param here SPFPoint
 ---@param places SPFNearbyPlace[]
----@return table<string, { hazards: SPFHazards, targets: SPFPoint[], of: SPFNearbyPlace[] }>
-local function Groups(here, places)
-	local Context = ns.PlanContext
-	local mass = Context.Landmass(here)
-	local groups, seen = {}, {}
+---@param map integer
+---@param x number
+---@param y number
+---@return table<string, { hazards: SPFHazards, targets: SPFPoint[], of: SPFNearbyPlace[] }>, SPFWalksPending
+local function Groups(job, here, places, map, x, y)
+	local mass = ns.PlanContext.Landmass(here)
+	local groups, seen, bounds = {}, {}, {}
 	for _, place in ipairs(places) do
-		-- A place on another landmass is no walk: the journey crosses by boat or flight, as its own batches assume.
 		local point = not seen[place] and Spawn(place)
 		seen[place] = true
-		if point and point.map == here.map and Context.Landmass(point) == mass then
-			local hazards = ns.Hazards.Profile(here, point, here)
-			local group = groups[hazards.key]
-			if not group then
-				group = { hazards = hazards, targets = {}, of = {} }
-				groups[hazards.key] = group
+		if point and point.map == here.map and ns.PlanContext.Landmass(point) == mass then
+			local bound = ns.Path.LowerBound(here.map, here, point)
+			local _, _, legs = ns.EstimateIn(job, map, x, y, place.map, place.x, place.y, bound, true)
+			local leg = legs and legs[1]
+			if leg and #legs == 1 and leg.mode == "walk" and leg.from.kind == "start" and leg.to.kind == "goal" then
+				local hazards = ns.Hazards.Profile(here, point, here)
+				local group = groups[hazards.key]
+				if not group then
+					group = { hazards = hazards, targets = {}, of = {} }
+					groups[hazards.key] = group
+				end
+				group.targets[#group.targets + 1] = point
+				group.of[#group.targets] = place
+				bounds[place] = bound
 			end
-			group.targets[#group.targets + 1] = point
-			group.of[#group.targets] = place
 		end
 		ns.Path.Checkpoint()
 	end
-	return groups
+	return groups, bounds
 end
 
--- The walks the journey would take from where you stand to each place: its own search, from its own start (your floor,
--- or your height band) to the spot it walks to (the NPC's own floor), under its own hazards. An estimate built on them
--- prices the direct walk as the journey does, including detours around walls (#1032). Transit endpoint walks settle
--- inside the ranking job when it finds a ride. Calls back as direct walks settle, nearest first, with running yards
--- (false where no walk was found) and, for each place still searched, a lower bound on its walk (Path.LowerBound);
--- then once more with pending nil when done. A place it cannot search is never pending, and its estimate stays the
--- planner's own. The work runs under the frame budget; Cancel stops it, as a caller does once its rankings are decided
--- rather than walk to every far place.
----@param places SPFNearbyPlace[]
----@param callback SPFWalksSettled
----@return SPFPathJob?
-local function MeasureWalks(places, callback)
+---@param batch SPFNearbyWalkBatch
+local function PauseBatch(batch)
+	batch.publish = nil
+	if not (batch.done or batch.job.done) then
+		ns.Path.Pause(batch.job)
+	end
+end
+
+-- Publish the direct walks as they settle under the frame budget. Other places use the planner's own estimate.
+-- A requeue can borrow the previous measure's batches, including frontiers paused before all costs were settled.
+---@type SPFMeasureWalks
+local function MeasureWalks(places, callback, map, x, y, kept)
 	local here = ns.JourneySearch.Here()
 	if not (here and ns.Path.HasData(here.map)) then
 		callback({})
 		return nil
 	end
 	local water = ns.JourneyWaterWalking()
-	local handle
-	handle = ns.Path.Run(function()
-		return Groups(here, places)
-	end, function(groups)
-		-- A grouping that failed measures nothing: every estimate stays the planner's own, and the callers decide.
+	local batches = kept and kept.nearbyWalks or {}
+	if kept then
+		kept.nearbyWalks = nil -- transfer ownership before the previous handle is cancelled
+	end
+	local handle = ns.Path.Run(function(job)
+		return Groups(job, here, places, map, x, y)
+	end, function(groups, bounds)
 		if not groups then
 			callback({})
 			return
 		end
-		local walks, pending, open, last = {}, {}, 1, measured
-		measured = {}
-		-- Each change goes out at once: while other groups search, what is known so far, and when the last ends, done.
+		local lastMeasured, saved = measured, {}
+		measured = saved
+		local reusable = {}
+		for batch in pairs(batches) do
+			PauseBatch(batch)
+			if batch.water == water and not batch.job.reason and ns.Path.ReuseMany(batch.job, here) then
+				reusable[batch] = true
+			else
+				ns.Path.Cancel(batch.job)
+				batches[batch] = nil
+			end
+		end
+		local walks, pending = {}, {}
 		local function Publish()
-			callback(walks, open > 0 and pending or nil)
+			callback(walks, next(pending) and pending or nil)
+		end
+		---@param batch SPFNearbyWalkBatch
+		---@param selected SPFNearbyPlace[]
+		local function Attach(batch, selected)
+			local function Read()
+				local job = batch.job
+				local costs = job.costs or batch.costs
+				local done = job.done or batch.done
+				local failed = job.reason or batch.reason
+				local changed = false
+				for _, place in ipairs(selected) do
+					local cost = costs[batch.index[place]]
+					if done or cost ~= nil then
+						if not failed then
+							walks[place] = cost or false
+						end
+						changed = changed or pending[place] ~= nil
+						pending[place] = nil
+					else
+						pending[place] = bounds[place]
+					end
+				end
+				return changed
+			end
+			Read()
+			for _, place in ipairs(selected) do
+				if pending[place] then
+					batch.publish = function()
+						if Read() then
+							Publish()
+						end
+					end
+					if batch.job.paused then
+						ns.Path.Resume(batch.job)
+					end
+					break
+				end
+			end
 		end
 		for key, group in pairs(groups) do
-			local kept = last[key]
-			local known = kept and kept.water == water and ns.Path.ReuseMany(kept.job, here)
-			for _, place in ipairs(known and group.of or {}) do
-				known = known and kept.walks[place] ~= nil
+			local last = lastMeasured[key]
+			if last and not reusable[last] and last.water == water and ns.Path.ReuseMany(last.job, here) then
+				reusable[last] = true
 			end
-			if known then
-				measured[key] = kept
-				for _, place in ipairs(group.of) do
-					walks[place] = kept.walks[place]
+			local covered = {}
+			for batch in pairs(reusable) do
+				if batch.key == key then
+					local selected = {}
+					for _, place in ipairs(group.of) do
+						if batch.index[place] and not covered[place] then
+							selected[#selected + 1], covered[place] = place, true
+						end
+					end
+					if #selected > 0 then
+						batches[batch] = true
+						if batch.done or batch.job.done then
+							saved[key] = batch
+						end
+						Attach(batch, selected)
+					end
 				end
-			else
-				open = open + 1
-				for at, place in ipairs(group.of) do
-					pending[place] = ns.Path.LowerBound(here.map, here, group.targets[at])
+			end
+			local targets, selected, index = {}, {}, {}
+			for at, place in ipairs(group.of) do
+				if not covered[place] then
+					targets[#targets + 1] = group.targets[at]
+					selected[#targets], index[place] = place, #targets
 				end
-				local job, finished
-				job = ns.Path.FindMany(
+			end
+			if #targets > 0 then
+				local batch = { key = key, water = water, index = index, costs = {} }
+				batch.job = ns.Path.FindMany(
 					here.map,
 					here,
-					group.targets,
-					function(costs, reason)
-						finished = true
-						if job then
-							handle.walking[job] = nil
+					targets,
+					function(costs, reason, job)
+						batch.costs, batch.done, batch.reason = costs, true, reason
+						if not reason and job then
+							saved[key] = batch
 						end
-						local found = {}
-						for at, place in ipairs(group.of) do
-							-- false where no walk was found; on a failed search the planner's own estimate stands.
-							if not reason then
-								found[place] = costs[at] or false
-							end
-							walks[place], pending[place] = found[place], nil
+						if batch.publish then
+							batch.publish()
 						end
-						if not reason then
-							measured[key] = { job = job, water = water, walks = found }
-						end
-						open = open - 1
-						Publish()
+						batch.publish = nil
 					end,
 					water,
 					false,
 					function(costs)
-						local settled = false
-						for at, place in ipairs(group.of) do
-							if pending[place] and costs[at] ~= nil then
-								walks[place], pending[place], settled = costs[at], nil, true
-							end
-						end
-						if settled then
-							Publish()
+						batch.costs = costs
+						if batch.publish then
+							batch.publish()
 						end
 					end,
 					group.hazards
 				)
-				-- A search that answered at once is already settled.
-				if not finished then
-					handle.walking[job] = true
-				end
+				batches[batch] = true
+				Attach(batch, selected)
 			end
 		end
-		open = open - 1
-		-- What the reused measures know goes out now; with nothing known yet, the first settled walk publishes.
-		if open == 0 or next(walks) then
-			Publish()
-		end
+		Publish()
 	end)
-	handle.walking = {}
+	handle.nearbyWalks, handle.nearbyOrigin = batches, here
 	return handle
 end
 
--- Whether a measure still running answers for where you stand: its searches start from your walking-map node, as
--- Path.ReuseMany tells. A measure not yet searching, or done searching, holds.
+-- A measure answers for its source node even after its searches finish or pause.
 ---@param handle SPFPathJob
----@return boolean
 local function Holds(handle)
-	local here = ns.JourneySearch.Here()
-	for job in pairs(handle.walking or {}) do
-		if job.sourceNode then
-			return here ~= nil and ns.Path.ReuseMany(job, here)
+	local here, origin = ns.JourneySearch.Here(), handle.nearbyOrigin
+	if not (here and origin) then
+		return false
+	end
+	for batch in pairs(handle.nearbyWalks or {}) do
+		if batch.job.sourceNode and ns.Path.ReuseMany(batch.job, here) then
+			return true
 		end
 	end
-	return true
+	local band, originalBand = here.band, origin.band
+	return here.map == origin.map
+		and here.x == origin.x
+		and here.y == origin.y
+		and here.z == origin.z
+		and (
+			band == originalBand
+			or band ~= nil and originalBand ~= nil and band.lo == originalBand.lo and band.hi == originalBand.hi
+		)
 end
 
--- Stops a measure, with the walking searches it started, or a ranking.
+---@param handle SPFPathJob
+local function Pause(handle)
+	for batch in pairs(handle.nearbyWalks or {}) do
+		PauseBatch(batch)
+	end
+end
+
 ---@param job SPFPathJob
 local function Cancel(job)
 	ns.Path.Cancel(job)
@@ -392,6 +522,12 @@ local function Cancel(job)
 		ns.Path.Cancel(walking)
 	end
 	job.walking = nil
+	for batch in pairs(job.nearbyWalks or {}) do
+		PauseBatch(batch)
+		if not (batch.done or batch.job.done) then
+			ns.Path.Cancel(batch.job)
+		end
+	end
 end
 
 -- The cheapest of one shortlist by the journey's cost, on its walks as they land: callback(place) once the ranking is
@@ -448,7 +584,7 @@ local function Choose(candidates, map, x, y, callback)
 		end
 		latest = { walks = walks, pending = pending }
 		Decide()
-	end)
+	end, map, x, y)
 	return Stop
 end
 
@@ -457,13 +593,22 @@ end
 ---@alias SPFWalksSettled fun(walks: SPFWalks, pending: SPFWalksPending?)
 ---@alias SPFChosen fun(place: SPFNearbyPlace)
 ---@alias SPFChoose fun(candidates: SPFNearbyPlace[], map: integer, x: number, y: number, callback: SPFChosen): fun()
----@alias SPFMeasureWalks fun(places: SPFNearbyPlace[], callback: SPFWalksSettled): SPFPathJob?
+---@alias SPFMeasureWalks
+---| fun(list: SPFNearbyPlace[], cb: SPFWalksSettled, m: integer, x: number, y: number, kept?: SPFPathJob): SPFPathJob?
 ---@class SPFNearbyRankAPI
 ---@field New SPFRank
 ---@field MeasureWalks SPFMeasureWalks
 ---@field Cancel fun(job: SPFPathJob)
 ---@field Holds fun(job: SPFPathJob): boolean
+---@field Pause fun(job: SPFPathJob)
 ---@field Choose SPFChoose
----@field Plan fun(job: SPFPathJob, options: SPFContextOptions, ...: any): SPFPlan?
-ns.NearbyRank =
-	{ New = NewRank, MeasureWalks = MeasureWalks, Cancel = Cancel, Holds = Holds, Choose = Choose, Plan = Plan }
+---@field Plan fun(job: SPFPathJob, options: SPFContextOptions, ...: any): SPFPlan?, boolean?
+ns.NearbyRank = {
+	New = NewRank,
+	MeasureWalks = MeasureWalks,
+	Cancel = Cancel,
+	Holds = Holds,
+	Pause = Pause,
+	Choose = Choose,
+	Plan = Plan,
+}
