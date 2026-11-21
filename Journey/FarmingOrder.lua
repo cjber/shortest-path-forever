@@ -11,8 +11,7 @@ end
 local function Point(p)
 	return type(p) == "table" and Finite(p.map) and Finite(p.x) and Finite(p.y)
 end
--- A recorded node's place on its continent's world plane, and the player's: the frame the order measures in, read
--- through the client's map API alone.
+-- The continent's world plane is the frame the order measures in.
 ---@param uiMapID number
 ---@param x number
 ---@param y number
@@ -25,16 +24,12 @@ function Order.World(uiMapID, x, y)
 	end
 end
 
+-- Use the same readable world position as guidance, dropping height for the geometric order.
 ---@return SPFPoint?
 function Order.Player()
-	local uiMap = C_Map.GetBestMapForUnit("player")
-	local position = uiMap and canaccessvalue(uiMap) and C_Map.GetPlayerMapPosition(uiMap, "player")
-	if not (position and canaccessvalue(position)) then
-		return nil
-	end
-	local x, y = position:GetXY()
-	if canaccessvalue(x) and canaccessvalue(y) and x and y then
-		return Order.World(uiMap, x, y)
+	local x, y, _, map = ns.PlayerPosition()
+	if x and y and map then
+		return { map = map, x = x, y = y }
 	end
 end
 

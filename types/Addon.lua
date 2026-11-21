@@ -64,6 +64,7 @@
 ---@field WorldPoint fun(uiMapID: integer, x: number, y: number): SPFPoint?
 ---@field FarmingCursor SPFFarmingCursorFactory
 ---@field JourneyRoutePolicy fun(): SPFRoutePolicy
+---@field APIStops SPFAPIStops the public API journey state and stop observers (Core/APIStops.lua)
 ---@field APIInput SPFAPIInput the public API's argument checks and answers (Core/APIInput.lua)
 ---@field EstimateWalks fun(owner: string, from: SPFAPIPlace, targets: SPFAPIPlace[], callback: fun(costs: (number|false)[], reason: SPFAPIWalkReason?), opts?: SPFAPIWalkOptions): cancel: fun()?, reason: SPFAPIWalkRefusal? one walking search to every target on the from point's walking map (#913)
 ---@field NavVersion fun(): string the walking data this build ships, for dropping cached walk costs

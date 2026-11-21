@@ -8,6 +8,7 @@ local Input = assert(ns.APIInput, "Core/APIInput.lua loads first")
 
 -- What a consumer driving its own route reads (API.JourneyState) and hears (API.ObserveStops): the planner's status and
 -- plan copied fresh, and the owner-scoped per-stop channel Journey.lua feeds. API.lua owns the route and passes it in.
+---@class SPFAPIStops
 local Stops = {}
 ns.APIStops = Stops
 
@@ -91,18 +92,19 @@ function Stops.Dispatch(phase, point, current)
 	if #heard == 0 then
 		return
 	end
-	local stop = ns.JourneyGoalDetails(Input.Place, point) or point.submitted
+	local projected = ns.JourneyGoalDetails(Input.Place, point)
+	local stop = projected or point.submitted
 	if not stop then
 		return
 	end
-	local title = point.label or stop.title
+	local title = point.label or (projected and projected.title) or ns.JourneyTitle(point)
 	for _, entry in ipairs(heard) do
 		if observers[entry] then
 			-- Each observer gets its own copy: one cannot change what the next one sees.
 			local seen = { map = stop.map, x = stop.x, y = stop.y, z = stop.z, title = title }
 			ns.core.SafeCall("stop observer", entry.callback, phase, watchedIndex, seen, Stops.State(current()))
 			local now = current()
-			if now ~= watched or now.index ~= watchedIndex then
+			if not now or now ~= watched or now.index ~= watchedIndex or now.points[watchedIndex] ~= point then
 				return false
 			end
 		end

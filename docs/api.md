@@ -48,7 +48,8 @@ later, the API is also listed by `ForeverCore.APIKit.Addons()`.
   “Stop 2 of 4: …”.
 - `Navigate(owner, map, x, y, title, kind)` is the one-stop form.
 
-  Both return a boolean; invalid input, combat or disabled Journeys return `false` without replacing guidance.
+  Invalid stops, combat or disabled Journeys make either call return `false` without replacing guidance. A successful
+  call returns `true`.
   `options` is optional: `{ policy = "normal" }` (the default) plans by every transport, and `{ policy = "walking" }`
   keeps every leg a walk along the walking map, with no flight, boat, portal, teleport or Hearthstone, so the route
   is walking yards between the stops. A walk that cannot be measured shows in `JourneyState().failure`. Any other
@@ -139,7 +140,7 @@ later, the API is also listed by `ForeverCore.APIKit.Addons()`.
   no read is needed to see the plan that led to an arrival. Only that owner's route and only its stop under way are
   reported. Calls are synchronous. A callback may cancel or replace the route; the arrival it was called for is then
   not processed further. An error in a callback goes to the game's error handler without stopping the journey. It returns a function that unsubscribes, safe to call twice, or `nil, "invalid"` for an
-  owner that is not a string or a callback that is not a function.
+  owner that is not a nonblank string or a callback that is not a function.
 - `Stats()` publishes this character's travel records in the suite's statistics shape.
 
 Use your addon's name as `owner`; starting another journey replaces ownership.

@@ -680,8 +680,9 @@ local function Follow(route, news)
 			ns.JourneyReplanned()
 		end
 	end
-	if ns.JourneyStopObserved then
-		ns.JourneyStopObserved("settled", goal)
+	local settled = goal
+	if (ns.JourneyStopObserved and ns.JourneyStopObserved("settled", settled) == false) or goal ~= settled then
+		return
 	end
 	UpdateProgress()
 	AnnounceUnsyncedFlightPoints()

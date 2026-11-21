@@ -46,6 +46,8 @@ equal(API.version, 2, "version 2 removes peer and leaderboard APIs")
 equal(API.minor, 5, "minor 5 adds route options and stop observers")
 for _, name in ipairs({
 	"NavigateRoute",
+	"ObserveStops",
+	"JourneyState",
 	"Navigate",
 	"Cancel",
 	"CurrentStop",

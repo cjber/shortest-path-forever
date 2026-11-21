@@ -41,6 +41,12 @@ for _, options in ipairs({
 	equal(reason, "invalid", "invalid options answer invalid")
 end
 equal(API.CurrentStop("o"), nil, "an invalid options call starts nothing")
+local inherited = setmetatable({}, {
+	__index = function()
+		error("options must only read submitted keys")
+	end,
+})
+check(API.NavigateRoute("o", { stop(1000) }, inherited), "an empty options table uses the default")
 check(API.NavigateRoute("o", { stop(1000) }, {}), "empty options")
 check(API.NavigateRoute("o", { stop(1000) }, { policy = "normal" }), "normal policy")
 check(API.NavigateRoute("o", { stop(1000), stop(2000) }, { policy = "walking" }), "walking policy")
@@ -195,5 +201,43 @@ do
 	first()
 	second()
 	API.Cancel("new")
+end
+-- A handover during settlement leaves the new owner to process its own arrival on the next driver step.
+do
+	d.move(point(0))
+	local handed
+	local unsubscribeSettled = API.ObserveStops("o", function(phase)
+		if phase == "settled" then
+			handed = API.NavigateRoute("new", { stop(1000) }, { policy = "walking" })
+		end
+	end)
+	d.path.auto = false
+	check(API.NavigateRoute("o", { stop(1000) }, { policy = "walking" }), "route to hand over at settlement")
+	d.move(point(1000))
+	d.path.auto = true
+	d.path.settle()
+	check(handed, "the settlement observer handed over the route")
+	equal(API.CurrentStop("new"), 1, "the old settlement did not arrive for the new owner")
+	d.update(1)
+	equal(API.Ended("new"), "arrived", "the new owner arrived on its own driver step")
+	unsubscribeSettled()
+end
+
+-- The submitted coordinates still identify an untitled stop when reverse projection is unavailable.
+do
+	d.move(point(0))
+	local projection = env.C_Map.GetMapPosFromWorldPos
+	env.C_Map.GetMapPosFromWorldPos = function() end
+	local observed
+	local unsubscribeFallback = API.ObserveStops("o", function(_, _, seen)
+		observed = seen
+	end)
+	check(API.NavigateRoute("o", { stop(1000) }, { policy = "walking" }), "route without reverse projection")
+	d.path.settle()
+	equal(observed.y, stop(1000).y, "fallback coordinates are those submitted")
+	check(type(observed.title) == "string" and observed.title ~= "", "fallback stop has a title")
+	unsubscribeFallback()
+	API.Cancel("o")
+	env.C_Map.GetMapPosFromWorldPos = projection
 end
 print("api_observe_spec: " .. checks .. " checks passed")

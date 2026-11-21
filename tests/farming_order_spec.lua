@@ -1,6 +1,17 @@
 -- Synthetic coordinates only. World projection deliberately has unequal axes.
-local ns = {}
-assert(loadfile("Journey/FarmingOrder.lua"))("test", ns)
+local ns = {
+	PlayerPosition = function()
+		return 23, 42, 80, 1
+	end,
+}
+local env = setmetatable({
+	C_Map = {
+		GetBestMapForUnit = function()
+			return nil
+		end,
+	},
+}, { __index = _G })
+setfenv(assert(loadfile("Journey/FarmingOrder.lua")), env)("test", ns)
 ns.FarmingOrder.World = function(map, x, y)
 	return { map = map, x = 100 * x, y = 10 * y }
 end
@@ -9,6 +20,13 @@ local function check(ok)
 	assert(ok)
 	checks = checks + 1
 end
+-- Ordering uses the journey's world position even when the client's map position is unavailable.
+local sampled = ns.FarmingOrder.Player()
+check(sampled.map == 1 and sampled.x == 23 and sampled.y == 42 and sampled.z == nil)
+ns.PlayerPosition = function()
+	return 23, 42
+end
+check(ns.FarmingOrder.Player() == nil)
 local function node(id, x, y)
 	return { uiMapID = 1, kind = "Mining", coord = id, nodeID = id, x = x, y = y, title = "synthetic" }
 end

@@ -168,7 +168,7 @@ local function RouteToWaypoint(uid, map, x, y, title, opts)
 			questIDs = questIDs,
 			tooltip = details and table.concat(details, "\n") or nil,
 		},
-	})
+	}) == true
 end
 
 local function Forget()

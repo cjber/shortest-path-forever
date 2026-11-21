@@ -628,29 +628,33 @@ local function NavigateRoute(owner, stops, policy)
 	return ns.StartJourney(points[1], policy)
 end
 
-local POLICIES = { normal = true, walking = true }
-
 -- A route's options: its travel policy, "normal" or "walking". Anything else is the caller's mistake, answered as one.
 ---@param options any
 ---@return SPFRoutePolicy?
 local function RoutePolicy(options)
+	if not canaccessvalue(options) then
+		return nil
+	end
 	if options == nil then
 		return "normal"
 	end
-	if type(options) ~= "table" or not canaccessvalue(options) then
+	if type(options) ~= "table" then
 		return nil
 	end
 	for key in pairs(options) do
-		if key ~= "policy" then
+		if not canaccessvalue(key) or key ~= "policy" then
 			return nil
 		end
 	end
-	local policy = options.policy
+	local policy = rawget(options, "policy")
+	if not canaccessvalue(policy) then
+		return nil
+	end
 	if policy == nil then
 		return "normal"
 	end
-	if type(policy) == "string" and canaccessvalue(policy) and POLICIES[policy] then
-		return policy --[[@as SPFRoutePolicy]]
+	if policy == "normal" or policy == "walking" then
+		return policy
 	end
 end
 
@@ -667,7 +671,7 @@ function API.NavigateRoute(owner, stops, options)
 end
 
 function API.Navigate(owner, map, x, y, title, kind)
-	return API.NavigateRoute(owner, { { map = map, x = x, y = y, title = title, kind = kind } })
+	return NavigateRoute(owner, { { map = map, x = x, y = y, title = title, kind = kind } }, "normal")
 end
 
 function API.CurrentStop(owner)
