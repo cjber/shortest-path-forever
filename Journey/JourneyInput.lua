@@ -43,7 +43,7 @@ function ns.JourneyKeyName(key)
 	return KEY_NAMES[key or JourneyKey()] or KEY_NAMES.shift
 end
 
--- The line a tooltip ends with on every map pin the journey key plans a journey to (#1078): the addon's flight
+-- The hint on every map pin the journey key plans a journey to (#1078): the addon's flight
 -- points, docks and portals, and the map's own pins OnPinClick takes. One producer, so the wording and the key match
 -- everywhere.
 -- Nothing while journeys are off, while the player turned the hint off (#1142; the key still plans), or under the
@@ -57,10 +57,17 @@ function ns.JourneyClickHint()
 end
 
 ---@param tooltip GameTooltip
-function ns.AddJourneyClickHint(tooltip)
+---@param minimap? boolean
+function ns.AddJourneyClickHint(tooltip, minimap)
 	local hint = ns.JourneyClickHint()
 	if hint then
 		GameTooltip_AddInstructionLine(tooltip, hint)
+		if not minimap then
+			GameTooltip_AddInstructionLine(
+				tooltip,
+				L["%s-right-click the map to mark a road or wall for a report."]:format(ns.JourneyKeyName())
+			)
+		end
 	end
 end
 
@@ -525,13 +532,19 @@ end
 local CANVAS_CLICK_PRIORITY = 1001
 
 local function OnCanvasClick(map, button)
-	if button ~= "LeftButton" or not ns.JourneyKeyDown() or ChatBoxOpen() then
+	if (button ~= "LeftButton" and button ~= "RightButton") or not ns.JourneyKeyDown() or ChatBoxOpen() then
 		return false
 	end
 	-- Past the shown map's edge (OpenMap's stitched view) the spot is on no map this addon can read. OpenMap's
 	-- own handler plans a Shift-click there through API.Navigate, on the zone under the cursor.
 	local x, y = map:GetNormalizedCursorPosition()
-	if not (x and y and x >= 0 and x <= 1 and y >= 0 and y <= 1) or JourneysOff() then
+	if not (x and y and x >= 0 and x <= 1 and y >= 0 and y <= 1) then
+		return false
+	end
+	if button == "RightButton" then
+		return ns.OpenMapReportMenu(map, map:GetMapID(), x, y)
+	end
+	if JourneysOff() then
 		return false
 	end
 	ns.JourneyToMapPoint(map:GetMapID(), x, y)
@@ -847,7 +860,7 @@ ns.Init(function()
 			then
 				return
 			end
-			ns.AddJourneyClickHint(tooltip)
+			ns.AddJourneyClickHint(tooltip, true)
 			tooltip:Show()
 		end)
 	end

@@ -85,6 +85,7 @@
 ---@field routeColor string
 ---@field journeyKey string
 ---@field arrivalDistance number
+---@field offPathTolerance number
 ---@field hearthMinimumSavings number
 ---@field teleportMinimumSavings number
 ---@field roadDetour number
@@ -299,7 +300,13 @@
 ---@field time? string -- the step's time, greyed after it
 ---@field icon? number -- a teleport's own item or spell icon, leading its line
 ---@field warning? boolean
+---@field undoAvoid? SPFAvoidedTransport
 ---@field color? colorRGBA|ForeverObjectiveTrackerColor -- the colour a text-only refresh rewrites the line in
+
+---@class SPFAvoidedTransport
+---@field kind SPFMode
+---@field ids (number|string)[] route ID, stable portal identity, or directed taxi hop IDs
+---@field name string
 
 ---@class SPFDatabase
 ---@field errors? ForeverCaughtError[] ForeverCore's shared error journal: earlier sessions' errors, for the report
@@ -308,6 +315,7 @@
 ---@field destinationPinSize? number percent, the world map journey goal pin's size (50 to 100, UI/StopPin.lua)
 ---@field arrivalPin? boolean a pin with the stop's objectives while in its area, instead of hiding the arrow
 ---@field arrivalDistance? number yards that count as arrived at a journey's final destination (Journey.lua)
+---@field offPathTolerance number yards from a measured walking path before searching again
 ---@field npcArrows? boolean arrows beside the nameplate of the NPC a Nearby services journey walks to (NpcArrows.lua)
 ---@field trackerHost? ForeverTrackerLegacySettings the old tracker table, offered to ForeverCore once
 ---@field trackerHeight? number the Journey section viewport cap in Core UI units
@@ -408,7 +416,17 @@
 ---@field taxiTimes? table<string, number> -- measured seconds per directed flight path, "from:to"
 ---@field trace? (number|string)[][]
 ---@field taxiLog? table<string, {seen: number, showsNodes: boolean, nodes: string[]}>
+---@alias SPFMapReportKind "road"|"wall"
+---@class SPFMapReportMark
+---@field kind SPFMapReportKind
+---@field map integer
+---@field x number
+---@field y number
+---@field world SPFPoint
+
 ---@class SPFCharacterDatabase
+---@field avoided? SPFAvoidedTransport[]
+---@field mapReportMarks SPFMapReportMark[]
 ---@field progress? SPFProgressData
 ---@field taxi table<number, boolean>
 ---@field taxiNames? table<number, string> -- flight points by the name a flight map gave them
@@ -495,6 +513,7 @@ ShortestPathForeverPathData = nil
 ---@field arrive number
 ---@field wait number
 ---@field estimated? boolean
+---@field portal? number
 ---@field route? number
 ---@field aboard? boolean
 ---@field boarding? SPFStop
@@ -609,6 +628,7 @@ ShortestPathForeverPathData = nil
 ---@field to number
 ---@field mode SPFMode
 ---@field duration number
+---@field portal? number
 ---@field route? number
 ---@field stop? SPFStop
 ---@field alighting? SPFStop
@@ -649,6 +669,7 @@ ShortestPathForeverPathData = nil
 ---@field cancelled? boolean
 ---@field paused? boolean
 ---@field done? boolean
+---@field onError? fun() -- settles the owning search after a job or its callback throws
 ---@field reason? string -- why a finished job found nothing, kept for a caller that missed its callback
 ---@field frames number
 ---@field cpu number

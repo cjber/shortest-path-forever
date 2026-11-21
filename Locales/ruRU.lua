@@ -52,6 +52,8 @@ L["Avoids %s (level %s)"] = "Обходит %s (уровень %s)"
 L["Bags"] = "Сумки"
 L["Bank"] = "Банк"
 L["Battlemaster"] = "Военачальник"
+L["Click to cast %s"] = "Нажмите, чтобы применить %s"
+L["Click to use %s"] = "Нажмите, чтобы использовать %s"
 L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to save it for later; class teleports are still offered."] =
 	"Путешествие может начаться с камня возвращения или «Астрального возвращения». Отключите его, чтобы сохранить на потом; классовые телепорты по-прежнему доступны."
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
@@ -164,6 +166,8 @@ L["Only use the Hearthstone when it saves at least this much time."] =
 L["Open"] = "Открыть"
 L["Open Nearby services"] = "Открыть услуги поблизости"
 L["Open the world map to see it."] = "Откройте карту мира, чтобы увидеть."
+L["The travel action will update after combat."] =
+	"Действие для путешествия обновится после боя."
 L["Rides to spend less time walking through %s (level %s)"] =
 	"Используется транспорт, чтобы меньше идти пешком через %s (уровень %s)"
 L["Walk less in zones with a minimum level 4 or more above yours, even at your destination."] =
@@ -436,6 +440,9 @@ L["The stop's live objectives under the arrow while it leads."] =
 L["The pin shown when you reach a stop keeps its own lines."] =
 	"Метка, показываемая при прибытии к остановке, сохраняет свои строки." -- mt
 L["Arrival distance"] = "Дистанция прибытия" -- mt
+L["Off-path tolerance"] = "Допуск отклонения от пути" -- mt
+L["How far you can stray from a walking path before a new one is searched."] =
+	"Насколько можно отойти от пешего пути, прежде чем будет найден новый." -- mt
 L["How close you must get to a journey's destination for it to count as reached."] =
 	"Насколько близко нужно подойти к месту назначения, чтобы путешествие считалось завершённым." -- mt
 L["Stops before the last on a multi-stop route keep 15 yards."] =
@@ -614,3 +621,40 @@ L["In the tracker while you are near a dock, lift or tram."] =
 L["Town service icons"] = "Значки городских служб" -- mt
 L["Off hides them. Otherwise one icon per town, or one per service as you zoom in."] =
 	"Если выключено, значки скрыты. Иначе один значок на город или на службу при приближении." -- mt
+L["Avoid this boat"] = "Избегать этого корабля"
+L["Avoid this zeppelin"] = "Избегать этого дирижабля"
+L["Avoid this lift"] = "Избегать этого лифта"
+L["Avoid this tram"] = "Избегать этого трамвая"
+L["Avoid this flight"] = "Избегать этого перелёта"
+L["Avoid this portal"] = "Избегать этого портала"
+L["Avoid this passage"] = "Избегать этого прохода"
+L["Undo"] = "Отменить"
+L["Allow this transport again and find a new route."] =
+	"Снова разрешить этот транспорт и найти новый маршрут."
+L["Find a new route without this transport. You can clear avoided transport in Settings."] =
+	"Найти новый маршрут без этого транспорта. Список исключений можно очистить в настройках."
+L["No route remains without %s. Right-click to undo."] =
+	"Без «%s» маршрута нет. Щёлкните правой кнопкой мыши, чтобы отменить исключение."
+L["Avoided transport"] = "Исключённый транспорт"
+L["Clear avoided transport"] = "Очистить исключения"
+L["Clear this character's avoided transport so the planner can use it again."] =
+	"Очистить список исключений персонажа, чтобы снова использовать этот транспорт при построении маршрутов."
+L["%s-right-click the map to mark a road or wall for a report."] =
+	"Удерживая %s, щёлкните правой кнопкой мыши по карте, чтобы отметить дорогу или стену для отчёта." -- mt
+L["Mark: road missing here"] = "Отметить: здесь не хватает дороги" -- mt
+L["Mark: wall here"] = "Отметить: здесь есть стена" -- mt
+L["%s-right-click the map to copy the report or clear its marks."] =
+	"Удерживая %s, щёлкните правой кнопкой мыши по карте, чтобы скопировать отчёт или удалить отметки." -- mt
+L["Save this spot in the report to help fix the walking map."] =
+	"Сохраняет это место в отчёте, чтобы помочь исправить карту пеших маршрутов." -- mt
+L["This spot has no world coordinates. Choose another spot."] =
+	"У этого места нет мировых координат. Выберите другое место." -- mt
+L["Copy road and wall report"] = "Скопировать отчёт о дорогах и стенах" -- mt
+L["Open the report so you can copy and paste it into a bug report."] =
+	"Открывает отчёт, чтобы его можно было скопировать и вставить в сообщение об ошибке." -- mt
+L["Clear marks"] = "Удалить отметки" -- mt
+L["Remove all saved road and wall marks from the map and report."] =
+	"Удаляет все сохранённые отметки дорог и стен с карты и из отчёта." -- mt
+L["Road and wall report"] = "Отчёт о дорогах и стенах" -- mt
+L["Journey start: %s"] = "Начало путешествия: %s" -- mt
+L["Journey goal: %s"] = "Цель путешествия: %s" -- mt

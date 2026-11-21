@@ -270,14 +270,17 @@ end
 -- The node on local cell lc for a link layer (0 the base surface, i the ith floor up, -1 the surface nearest
 -- height h), with its height gap for -1. The cluster must be decoded.
 local function surface(st, k, lc, layer, h, values, heights, floors)
-	local val, z, at = values or st.val[k], heights or st.z[k], floors or st.at[k]
-	local first = at[-(lc + 1)]
+	local val = values or st.val[k]
 	if layer == 0 then
 		return val[lc + 1] ~= 0 and lc or nil
-	elseif layer > 0 then
+	end
+	local at = floors or st.at[k]
+	local first = at[-(lc + 1)]
+	if layer > 0 then
 		local node = first and first + layer - 1
 		return node and at[node + 1] == lc and node or nil
 	end
+	local z = heights or st.z[k]
 	local best, gap
 	if val[lc + 1] ~= 0 then
 		best, gap = lc, abs(z[lc + 1] - h)

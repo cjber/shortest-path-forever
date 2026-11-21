@@ -150,7 +150,8 @@ function Planner.Places(options)
 			add("taxi", id, node)
 		end
 	end
-	for id, portal in ipairs(options.portals or {}) do
+	for _, id in ipairs(Keys(options.portals or {})) do
+		local portal = options.portals[id]
 		if not portal.requires and Eligible(portal, options) then
 			-- Named from the portal itself: an end inside an instance such as the Deeprun Tram has no zone to fall
 			-- back on.
@@ -334,10 +335,10 @@ local function Solve(options, cache, check, weigh)
 				portals[place.id] = index
 			end
 		end
-		for id, portal in ipairs(options.portals or {}) do
+		for id, portal in pairs(options.portals or {}) do
 			local from, to = portals[id * 2 - 1], portals[id * 2]
 			if from and to then
-				Edge(from, to, { mode = portal.kind, duration = portal.seconds * 1000 })
+				Edge(from, to, { mode = portal.kind, duration = portal.seconds * 1000, portal = id })
 			end
 		end
 		for _, path in ipairs(options.taxiPaths or {}) do
@@ -802,6 +803,7 @@ local function Solve(options, cache, check, weigh)
 				wait = labels.wait[current],
 				estimated = labels.estimated[current],
 				route = edge.route,
+				portal = edge.portal,
 				aboard = edge.aboard,
 				boarding = edge.stop,
 				alighting = edge.alighting,

@@ -121,22 +121,18 @@ pump = function()
 			-- Cancelled from inside its own resume (a plan's answer that replaced its journey): nothing more runs.
 			Grid.Release(job)
 			job.scratch, job.co = nil, nil
-			if not ok then
-				geterrorhandler()(points)
-			end
 		elseif not ok or coroutine.status(co) == "dead" then
 			Grid.Release(job)
-			if not job.targets and not job.plain then
+			if ok and not job.targets and not job.plain then
 				Spare(job.scratch)
 			end
 			job.done, job.scratch, job.co = true, nil, nil
 			if not ok then
-				geterrorhandler()(points)
-				points, cost = nil, "error"
+				cost = "error"
 			end
 			-- A pause drops the queued answer; a batch's costs are already on the job, and this keeps why.
 			job.reason = type(cost) == "string" and cost or nil
-			if not job.cancelled then
+			if ok then
 				notify(job, job.callback, points, cost)
 			end
 		elseif points == "wait" then
@@ -153,6 +149,21 @@ pump = function()
 			end
 			if job.progress then
 				notify(job, job.progress, job.costs)
+			end
+		end
+		if not ok then
+			-- A cancelled job belongs to a search already replaced: its throw is recorded, the current search runs on.
+			local failed = (job.owner or job).onError
+			if failed then
+				ns.core.RecordError("journey search job", points)
+				if not job.cancelled then
+					failed()
+				end
+			else
+				geterrorhandler()(points)
+				if not job.cancelled then
+					notify(job, job.callback, nil, "error")
+				end
 			end
 		end
 	until clock() >= finish

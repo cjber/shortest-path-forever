@@ -39,6 +39,7 @@ ns.TeleportAction = function(teleport)
 	reads = reads + 1
 	return teleport.item and "Use Hearthstone" or "Cast Teleport", 134400
 end
+driver.load("UI/CastButton.lua")
 driver.load("UI/Arrow.lua")
 
 ns.db.arrow = false

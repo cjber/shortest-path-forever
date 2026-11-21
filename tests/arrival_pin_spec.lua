@@ -102,7 +102,7 @@ env.C_Timer = {
 		fn()
 	end,
 }
-for _, file in ipairs({ "UI/Art.lua", "UI/Mover.lua", "UI/TurnAround.lua", "UI/Arrow.lua" }) do
+for _, file in ipairs({ "UI/Art.lua", "UI/Mover.lua", "UI/TurnAround.lua", "UI/CastButton.lua", "UI/Arrow.lua" }) do
 	driver.load(file)
 end
 ns.db.arrow, ns.db.arrivalPin, ns.db.guideStops = true, true, true

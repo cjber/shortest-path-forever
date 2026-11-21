@@ -2,7 +2,16 @@
 -- decodes as it always did, and the local and abstract searches charge a drop the same cost.
 local ns = {}
 local fixture = assert(loadfile("tests/nav_fixture.lua"))()
-for _, file in ipairs({ "Routing/PathGrid.lua", "Routing/Path.lua", "Routing/PathJobs.lua" }) do
+assert(loadfile("Routing/PathGrid.lua"))("ShortestPathForever", ns)
+local adjacent = ns.PathGrid.adjacent
+local remoteExpanded = false
+ns.PathGrid.adjacent = function(st, id, roads)
+	if st.map == 90 and id >= 4096 then
+		remoteExpanded = true
+	end
+	return adjacent(st, id, roads)
+end
+for _, file in ipairs({ "Routing/Path.lua", "Routing/PathJobs.lua" }) do
 	assert(loadfile(file))("ShortestPathForever", ns)
 end
 local Path, Grid = ns.Path, ns.PathGrid
@@ -429,6 +438,33 @@ local belowCost1 = select(2, Path.FindSync(50, point(10, 12, 24), point(10, 10, 
 assert(belowCost2 and belowCost1, "both formats drop an unreached goal to the surface below")
 assert(math.abs(belowCost2 - belowCost1) < 1e-9, "format 2 resolves a goal like format 1")
 assert(math.abs(belowCost2 - CS) < 1e-9, "the goal moved to the nearest reached surface")
+
+-- The transport entrance reaches a distant branch, but the closest ground is beside the isolated goal.
+-- Proving that the transport reaches the nearby entrance does not require expanding the distant branch.
+fixture.install(
+	90,
+	fixture.format2({
+		map = 90,
+		nx = 2,
+		ny = 1,
+		cell = {
+			[10] = { [10] = at(32, { flags = 15 }) },
+			[30] = { [10] = at(20) },
+			[31] = { [10] = at(20) },
+			[67] = { [10] = at(20) },
+		},
+		node = {
+			{ 31, 10, 1, out = { { 67, 10, 440, 440 } } },
+			{ 67, 10, 1 },
+		},
+	})
+)
+local isolated, _, _, grounded = Path.FindManySync(90, point(10, 10, 32), { point(31, 10, 20) }, false, true)
+assert(
+	isolated[1] == false and grounded and math.abs(grounded.x - point(30, 10).x) < 1e-9,
+	"the goal moves to the closest ground"
+)
+assert(not remoteExpanded, "nearest ground must not expand a distant outbound branch")
 
 -- A walking step is charged for the cell it enters. A reverse tree walks a stored edge the other way, so it must
 -- charge the node nearer its source: charging the predecessor instead made the same walk cost more from one end than

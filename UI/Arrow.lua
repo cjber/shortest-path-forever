@@ -82,6 +82,8 @@ local moving = false
 local OnUpdate
 ---@type SPFCastPromptFrame?
 local castPrompt
+---@type SPFTeleportPlace?
+local castTarget
 -- The stop whose area the player is in, drawn as a pin with what to do there (#627).
 ---@type SPFPoint?
 local arrival
@@ -800,6 +802,9 @@ function ns.MoveArrow(value)
 	elseif (not path and not arrival) or ns.db.arrow == false then
 		frame:Hide()
 	end
+	if castTarget then
+		ns.PointCastPrompt(castTarget)
+	end
 end
 
 -- "Arrow label": a new choice reads at once, without waiting for its second or the next bend.
@@ -823,8 +828,8 @@ function ns.SetArrowScale(value)
 		frame:SetScale((ns.db.arrowScale or 100) / 100)
 		Anchor(frame)
 	end
-	if castPrompt then
-		castPrompt:SetScale((ns.db.arrowScale or 100) / 100)
+	if castTarget then
+		ns.PointCastPrompt(castTarget)
 	end
 end
 
@@ -856,11 +861,22 @@ end
 ---@class SPFCastPromptFrame : Frame
 ---@field Icon Texture
 ---@field Action FontString
----@type SPFTeleportPlace?
-local castTarget
+-- Out of combat only: the clickable icon takes the step's action, or drops it while the prompt cannot be clicked.
+local function ApplyCastButton()
+	local teleport = castTarget
+	if not castPrompt or not teleport or teleport.partyMage or moving or not ns.CastPromptShown() then
+		ns.CastButton.Apply(nil)
+	else
+		ns.CastButton.Apply(castPrompt, teleport, (ns.db.arrowScale or 100) / 100)
+	end
+end
 
 local function RenderCastPrompt()
 	if not castPrompt or not castTarget or not ns.CastPromptShown() then
+		return
+	end
+	if ns.CastButton.Applied() and InCombatLockdown() then
+		castPrompt:RegisterEvent("PLAYER_REGEN_ENABLED")
 		return
 	end
 	-- Until the client has the item's name and icon it says "Use Unknown"; its own answer for that item redraws.
@@ -910,10 +926,20 @@ end
 function ns.PointCastPrompt(teleport)
 	castTarget = teleport
 	NotifyLead()
+	ns.CastButton.Shows(ns.CastPromptShown() and teleport or nil)
+	local locked = InCombatLockdown()
+	if locked and ns.CastButton.Applied() and castPrompt then
+		-- Keep the displayed label and icon paired with the action the button still performs.
+		castPrompt:RegisterEvent("PLAYER_REGEN_ENABLED")
+		return
+	end
 	if not teleport or not ns.CastPromptShown() then
 		if castPrompt then
 			castPrompt:UnregisterAllEvents()
 			castPrompt:Hide()
+		end
+		if not locked then
+			ApplyCastButton()
 		end
 		return
 	end
@@ -926,9 +952,6 @@ function ns.PointCastPrompt(teleport)
 		---@cast created SPFCastPromptFrame
 		castPrompt = created
 		created:SetSize(320, 70)
-		created:SetScale((ns.db.arrowScale or 100) / 100)
-		-- In the arrow's place, wherever it was dragged, and kept on screen though it is wider.
-		created:SetPoint("TOP", frame, "TOP")
 		created:SetClampedToScreen(true)
 		created:SetFrameStrata("MEDIUM")
 		created.Icon = created:CreateTexture(nil, "ARTWORK")
@@ -938,12 +961,25 @@ function ns.PointCastPrompt(teleport)
 		created.Action:SetWidth(320)
 		created:SetScript("OnEvent", function(_, event, itemID)
 			-- Item answers arrive for every item any addon asks about: only the prompt's own redraws it.
-			if event ~= "GET_ITEM_INFO_RECEIVED" or castTarget and itemID == castTarget.item then
+			if event == "PLAYER_REGEN_ENABLED" then
+				ns.PointCastPrompt(castTarget)
+			elseif event ~= "GET_ITEM_INFO_RECEIVED" or castTarget and itemID == castTarget.item then
 				RenderCastPrompt()
+				ns.CastButton.Refresh()
 			end
 		end)
 	end
+	-- In the arrow's place, wherever it was dragged, and kept on screen though it is wider.
+	castPrompt:SetScale((ns.db.arrowScale or 100) / 100)
+	castPrompt:ClearAllPoints()
+	castPrompt:SetPoint("TOP", frame, "TOP")
 	castPrompt:RegisterEvent("SPELLS_CHANGED")
 	RenderCastPrompt()
 	castPrompt:Show()
+	if locked then
+		castPrompt:RegisterEvent("PLAYER_REGEN_ENABLED")
+	else
+		castPrompt:UnregisterEvent("PLAYER_REGEN_ENABLED")
+		ApplyCastButton()
+	end
 end

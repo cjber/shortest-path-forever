@@ -91,3 +91,35 @@ assert(not pending and not loading, "the journey leaves loading")
 assert(proofs > 0, "the goal batch proves here cannot walk to the walled ground")
 assert(movedWith and not movedWith.done, "the goal moves before the walk from here has searched the landmass")
 print("ground once: settled in " .. frames .. " frames")
+
+-- The original Azshara click has a tiny inbound pocket and no route from Orgrimmar. The goal batch can rule
+-- out the direct walk while its probe is pending, before the probe exhausts the continent from the other end.
+ns.ClearJourney()
+ns.faction, ns.level = "Horde", 15
+local ORGRIMMAR = { map = 1, x = 1630, y = -4420, z = 15 }
+local AZSHARA = { map = 1, x = 2600, y = -4300 }
+local FindCost = Path.FindCost
+local originalProbe
+Path.FindCost = function(map, from, to, ...)
+	local job = FindCost(map, from, to, ...)
+	if math.abs(from.x - ORGRIMMAR.x) < 1e-6 and math.abs(to.x - AZSHARA.x) < 1e-6 then
+		originalProbe = job
+	end
+	return job
+end
+driver.begin(ORGRIMMAR, AZSHARA)
+frames = 0
+while nextFrame do
+	local fn = nextFrame
+	nextFrame = nil
+	fn()
+	driver.update(1 / 60)
+	frames = frames + 1
+	assert(frames < 20000, "the Azshara journey must settle")
+end
+assert(
+	originalProbe and originalProbe.cancelled and not originalProbe.done,
+	"the reverse proof stops the forward probe"
+)
+local route = assert(driver.shown(), "the moved goal has a route")
+assert(#route.legs == 1 and route.legs[1].mode == "walk", "the moved goal is reached on foot")

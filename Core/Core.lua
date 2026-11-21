@@ -150,6 +150,7 @@ local DEFAULTS = {
 	-- How close counts as arrived at a journey's final destination, in yards; the stops before the last on a
 	-- multi-stop route keep the fixed 15 yards.
 	arrivalDistance = 15,
+	offPathTolerance = 15,
 	metres = false,
 	-- Off by default: the compass is screen furniture a player turns on from Settings > Guidance.
 	compass = false,
@@ -164,6 +165,7 @@ local DEFAULTS = {
 	whatsNew = true,
 }
 ns.Defaults = DEFAULTS
+local CHARACTER_DEFAULTS = { avoided = {}, mapReportMarks = {} }
 -- The vendor kinds' grouped town service switches, on by default until #978 (UI/TownServices.lua).
 local VENDOR_SWITCHES = {
 	"townServiceFood",
@@ -496,6 +498,22 @@ frame:SetScript("OnEvent", function(self, _, name)
 	self:UnregisterEvent("ADDON_LOADED")
 	ShortestPathForeverDB = ShortestPathForeverDB or {}
 	ns.db = ShortestPathForeverDB
+	ShortestPathForeverCharDB = ShortestPathForeverCharDB or {}
+	for key, value in pairs(CHARACTER_DEFAULTS) do
+		if ShortestPathForeverCharDB[key] == nil then
+			ShortestPathForeverCharDB[key] = value
+		end
+	end
+	ns.charDB = ShortestPathForeverCharDB
+	-- Older test builds saved portal indexes, which can point at a different entrance after a data refresh.
+	-- CHARACTER_DEFAULTS has just filled `avoided`.
+	local avoided = ns.charDB.avoided --[[@as SPFAvoidedTransport[] ]]
+	for index = #avoided, 1, -1 do
+		local entry = avoided[index]
+		if (entry.kind == "portal" or entry.kind == "passage") and type(entry.ids[1]) == "number" then
+			table.remove(avoided, index)
+		end
+	end
 	-- `teleports` once covered the Hearthstone too, so a save that turned it off gets the Hearthstone off once.
 	-- `teleportSplit` records that this move ran: whatever the player sets afterwards stands, and a save from
 	-- before the split has no `teleports` key to move.

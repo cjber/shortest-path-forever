@@ -148,9 +148,9 @@ local env = setmetatable({
 			error("Blizzard's Settings.OpenToCategory is restricted: open settings through ForeverCore (#333)")
 		end,
 	},
-	CreateSettingsButtonInitializer = function(name, description, callback, tags, addSearchTags)
-		assert(tags == nil and addSearchTags == false, "index buttons stay out of the settings search")
-		return { kind = "button", name = name, description = description, callback = callback }
+	CreateSettingsButtonInitializer = function(name, description, callback, tooltip, addSearchTags)
+		assert(addSearchTags == false, "index buttons stay out of the settings search")
+		return { kind = "button", name = name, description = description, callback = callback, tooltip = tooltip }
 	end,
 	SlashCmdList = {},
 }, { __index = _G })
@@ -280,6 +280,7 @@ local ns = {
 		followRoads = true,
 		roadDetour = 50,
 		arrivalDistance = 15,
+		offPathTolerance = 15,
 		townServices = "off",
 		compass = false,
 		onlyMyProfessions = false,
@@ -379,6 +380,18 @@ setfenv(assert(loadfile("Journey/Hazards.lua")), env)("ShortestPathForever", ns)
 ns.Init = init
 -- The Map marks page lives in its own module, loaded before UI/Settings.lua in the TOC.
 setfenv(assert(loadfile("UI/SettingsMapMarks.lua")), env)("ShortestPathForever", ns)
+local avoided = { { kind = "boat", ids = { 9 }, name = "Test boat" } }
+local clear = 0
+ns.PlanContext = {
+	Avoided = function()
+		return avoided
+	end,
+}
+ns.ClearAvoidedTransport = function()
+	clear = clear + 1
+	avoided = {}
+end
+
 setfenv(assert(loadfile("UI/Settings.lua")), env)("ShortestPathForever", ns)
 assert(type(ns.SettingsMapMarks.Register) == "function", "the Map marks page is its own module")
 
@@ -421,6 +434,7 @@ local groups = {
 		"destinationPinSize",
 		"arrivalPin",
 		"arrivalDistance",
+		"offPathTolerance",
 		"npcArrows",
 		"tomtom",
 		"tomtomFollow",
@@ -477,7 +491,7 @@ local order = {
 }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 77, #rows)
+assert(#rows == 78, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -494,6 +508,20 @@ end
 assert(cursor == #rows, "every row belongs to a group")
 
 assert(#opened == secureCalls, "every settings open went through ForeverCore's secure opener (#333)")
+
+local clearTransport
+for _, row in ipairs(registered) do
+	if row.initializer.name == "Avoided transport" then
+		assert(row.target.name == "Guidance")
+		clearTransport = row.initializer
+	end
+end
+assert(clearTransport, "Guidance has a Clear avoided transport button")
+assert(clearTransport.description == "Clear avoided transport")
+assert(clearTransport.tooltip == "Clear this character's avoided transport so the planner can use it again.")
+-- The client calls the click with its own arguments; clearing needs none of them.
+clearTransport.callback()
+assert(clear == 1, "the button clears the avoided transport")
 
 -- The rows themselves are unchanged: keys, defaults, tooltips and callbacks.
 local function Row(key)
@@ -733,6 +761,10 @@ assert(
 	arrivalRow.tooltip:find("Stops before the last on a multi-stop route keep 15 yards", 1, true),
 	"the tooltip says only earlier stops on a multi-stop route keep 15 yards"
 )
+local offPathRow = Row("offPathTolerance")
+assert(offPathRow.kind == "slider" and offPathRow.setting.default == 15)
+assert(offPathRow.options.minValue == 15 and offPathRow.options.maxValue == 100 and offPathRow.options.step == 5)
+assert(offPathRow.options.format(40) == "40 yd")
 -- The NPC nameplate arrows are guidance furniture and start on, with the friendly-nameplate condition in the tooltip.
 assert(Row("npcArrows").setting.default == true, "nameplate arrows are on by default")
 Row("arrow").setting.onChanged()

@@ -48,6 +48,8 @@ L["Avoids %s (level %s)"] = "繞開%s（等級 %s）"
 L["Bags"] = "背包"
 L["Bank"] = "銀行"
 L["Battlemaster"] = "戰場指揮官"
+L["Click to cast %s"] = "點擊施放%s"
+L["Click to use %s"] = "點擊使用%s"
 L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to save it for later; class teleports are still offered."] =
 	"旅程可以從爐石或星界傳送開始。關閉後可留待後用；職業傳送仍然可用。"
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
@@ -153,6 +155,7 @@ L["Only use the Hearthstone when it saves at least this much time."] =
 L["Open"] = "開啟"
 L["Open Nearby services"] = "開啟附近服務"
 L["Open the world map to see it."] = "開啟世界地圖查看。"
+L["The travel action will update after combat."] = "旅行動作將在戰鬥結束後更新。"
 L["Rides to spend less time walking through %s (level %s)"] =
 	"搭乘交通工具以減少在%s（等級%s）內步行的路程"
 L["Walk less in zones with a minimum level 4 or more above yours, even at your destination."] =
@@ -408,6 +411,9 @@ L["The stop's live objectives under the arrow while it leads."] =
 L["The pin shown when you reach a stop keeps its own lines."] =
 	"到達站點時顯示的圖釘保留各自的目標文字。" -- mt
 L["Arrival distance"] = "到達距離" -- mt
+L["Off-path tolerance"] = "偏離路徑容差" -- mt
+L["How far you can stray from a walking path before a new one is searched."] =
+	"在重新搜尋路線之前，你可以偏離步行路徑多遠。" -- mt
 L["How close you must get to a journey's destination for it to count as reached."] =
 	"距離旅程目的地多近才算到達。" -- mt
 L["Stops before the last on a multi-stop route keep 15 yards."] =
@@ -570,3 +576,37 @@ L["In the tracker while you are near a dock, lift or tram."] =
 L["Town service icons"] = "城鎮服務圖示" -- mt
 L["Off hides them. Otherwise one icon per town, or one per service as you zoom in."] =
 	"關閉則隱藏。否則放大時每個城鎮一個圖示，或每項服務一個圖示。" -- mt
+L["Avoid this boat"] = "避開這艘船"
+L["Avoid this zeppelin"] = "避開這艘飛艇"
+L["Avoid this lift"] = "避開這座升降梯"
+L["Avoid this tram"] = "避開這班地鐵"
+L["Avoid this flight"] = "避開這段飛行"
+L["Avoid this portal"] = "避開這個傳送門"
+L["Avoid this passage"] = "避開這條通道"
+L["Undo"] = "復原"
+L["Allow this transport again and find a new route."] = "重新允許使用此交通方式，並尋找新路線。"
+L["Find a new route without this transport. You can clear avoided transport in Settings."] =
+	"尋找不經過此交通方式的新路線。你可以在設定中清除避用清單。"
+L["No route remains without %s. Right-click to undo."] = "避開%s後沒有可用路線。按右鍵即可復原。"
+L["Avoided transport"] = "避用的交通方式"
+L["Clear avoided transport"] = "清除避用交通方式"
+L["Clear this character's avoided transport so the planner can use it again."] =
+	"清除此角色的避用清單，讓路線規劃重新考慮這些交通方式。"
+L["%s-right-click the map to mark a road or wall for a report."] =
+	"按住 %s 並右鍵點擊地圖，將道路或牆壁標記到回報中。" -- mt
+L["Mark: road missing here"] = "標記：此處缺少道路" -- mt
+L["Mark: wall here"] = "標記：此處有牆" -- mt
+L["%s-right-click the map to copy the report or clear its marks."] =
+	"按住 %s 並右鍵點擊地圖，可複製回報或清除標記。" -- mt
+L["Save this spot in the report to help fix the walking map."] =
+	"將此位置儲存到回報中，協助修正步行路線地圖。" -- mt
+L["This spot has no world coordinates. Choose another spot."] = "此位置沒有世界座標。請選擇其他位置。" -- mt
+L["Copy road and wall report"] = "複製道路與牆壁回報" -- mt
+L["Open the report so you can copy and paste it into a bug report."] =
+	"開啟回報，以便複製並貼到錯誤回報中。" -- mt
+L["Clear marks"] = "清除標記" -- mt
+L["Remove all saved road and wall marks from the map and report."] =
+	"從地圖和回報中移除所有已儲存的道路與牆壁標記。" -- mt
+L["Road and wall report"] = "道路與牆壁回報" -- mt
+L["Journey start: %s"] = "旅程起點：%s" -- mt
+L["Journey goal: %s"] = "旅程目的地：%s" -- mt

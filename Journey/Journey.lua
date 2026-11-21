@@ -15,7 +15,7 @@ local REPLAN_DUE = REPLAN_EVERY - 0.5 -- from here Itinerary.lua leaves the fram
 local DRAW_EVERY = 0.5
 
 local goal, result
-local policyChanged
+local policyChanged, transportChanged
 local nextPoint
 local progress = { index = 1 }
 local withoutHearth = false
@@ -35,8 +35,6 @@ local driver
 local ARRIVAL = 15
 local Search, Guide = ns.JourneySearch, ns.JourneyGuide
 local RefreshTracker, StopGuide = Guide.RefreshTracker, Guide.Stop
--- Walking along a measured path from where you stood, how far off it you may stray and still be on it.
-local ON_PATH = 15
 -- A walk whose drawn line runs this many yards above or below the floor you are on (Floor.lua) is not the one you are
 -- on: it is on another floor of the same spot. The walking search's own height tolerance.
 local OTHER_FLOOR = 10
@@ -57,9 +55,10 @@ function ns.HasJourney()
 end
 
 -- The plan being followed and the step under way, whatever the tracker shows (paused or behind a corpse run).
----@return SPFPlan? plan, integer index
+-- departed: the player has boarded that step's transport.
+---@return SPFPlan? plan, integer index, boolean? departed
 function ns.JourneyPlan()
-	return result, progress.index
+	return result, progress.index, progress.departed
 end
 
 local CONTINENTS = {
@@ -156,6 +155,13 @@ function ns.TravelPolicyChanged()
 		ns.ItineraryChanged(true)
 	end
 	ns.WakeTravel()
+end
+
+-- An avoided transport (Journey/AvoidTransport.lua) changed the planner's inputs: replan, and drop a route that
+-- may use it.
+function ns.TransportAvoided()
+	transportChanged = goal ~= nil
+	ns.TravelPolicyChanged()
 end
 
 -- Whether journeys may use the Hearthstone. The saved switch, flipped from the tracker's journey menu and the map's
@@ -324,6 +330,8 @@ local journeyPolicy = "normal"
 local function EndJourney(reason)
 	Search.Reset()
 	goal, result, nextPoint = nil, nil, nil
+	transportChanged = nil
+	ns.AvoidTransport.Forget()
 	journeyPolicy = "normal"
 	withoutHearth = false
 	if ns.JourneyChanged then
@@ -484,7 +492,8 @@ function ns.JourneyInfo(formatPlace)
 	elseif loading then
 		rows[1] = { key = "searching", text = L["Finding the fastest way…"], grey = true }
 	else
-		rows[1] = { key = "unreachable", text = costError and WALK_FAILURE[costError] or L["No way there from here."] }
+		rows[1] = (costError ~= "error" and ns.AvoidTransport.Row(goal))
+			or { key = "unreachable", text = costError and WALK_FAILURE[costError] or L["No way there from here."] }
 	end
 	return title, rows, result, progress.index, loading
 end
@@ -498,8 +507,9 @@ local function SegmentHeight(a, b, t)
 end
 
 -- Where here falls on a walk: the segment ending at points[index], how far along it (t), and the yards still to walk
--- from there, or nil when here is more than reach (ON_PATH by default) off the walk. A here with a height (the floor
--- Floor.lua follows) is not on a segment drawn on another floor.
+-- from there, or nil when here is farther from the walk than reach. Measured walks share the saved tolerance for
+-- replanning, rejoining and corpse runs. Unmeasured walks rejoin at the nearest point, and arrival keeps its own
+-- distance check. A player with a known height can only match a segment on the same floor.
 -- Segment lengths of a walk, built once per points table: OnWalk runs on every progress tick for the same
 -- walk, and rebuilding them allocated a table and re-rooted every segment each time (WFA-13). Weak keys let
 -- a replaced walk's lengths go with it. The cache keeps each point's coordinates too, so a points table edited
@@ -537,6 +547,7 @@ local function OnWalk(points, here, reach)
 		end
 		walkLengths[points] = { lengths = lengths, total = total, count = #points, xs = xs, ys = ys }
 	end
+	reach = reach or ns.db.offPathTolerance
 	local walked, best, found, along, after = 0, nil, nil, nil, nil
 	for index = 2, #points do
 		local a, b = points[index - 1], points[index]
@@ -546,7 +557,7 @@ local function OnWalk(points, here, reach)
 		local height = here.z and SegmentHeight(a, b, t)
 		if
 			here.map == a.map
-			and off <= (reach or ON_PATH)
+			and off <= reach
 			and (not best or off < best)
 			and not (height and math.abs(height - here.z) > OTHER_FLOOR)
 		then
@@ -554,7 +565,7 @@ local function OnWalk(points, here, reach)
 		end
 		walked = walked + length
 	end
-	return found, along, after, total
+	return found, along, after, total, best
 end
 
 ns.OnWalk = OnWalk -- Corpse.lua trims its walk the same way.
@@ -664,6 +675,9 @@ local function Follow(route, news)
 	end
 	if news == "route" then
 		result, rough = route, nil
+		if route and not transportChanged then
+			ns.AvoidTransport.Forget()
+		end
 		progress.index, progress.departed = 1, false
 		Guide.Retarget()
 		if not result then
@@ -749,9 +763,13 @@ local function Update(self, elapsed)
 	if ns.Floor and y and map then
 		ns.Floor.Sample(map, x, y)
 	end
-	local changed = policyChanged
-	policyChanged = nil
-	Search.Poll(changed)
+	local changed, replace = policyChanged, transportChanged
+	policyChanged, transportChanged = nil, nil
+	if goal and Search.ShouldRetry(changed, map, x, y) then
+		Search.Start(goal, result, progress, Follow, replace, journeyPolicy)
+	else
+		Search.Poll(changed, replace)
+	end
 	local index = progress.index
 	UpdateProgress()
 	if nextPoint then
