@@ -42,8 +42,8 @@ With RestedXP, Guidelime or Dugi Guides installed, **Resume guide** in Guidance 
   end* off in `/path`, by the game's own waypoint marker moving along the route turn by turn. It hands your tracked
   quest back when you finish. To head for a quest, pick **Plan journey** from its right-click menu in the objective
   tracker or quest log, or click its marker on the map with your journey key held; a finished quest routes to its turn-in.
-  Walks keep away from danger. A zone whose lowest level is 4 or more above yours costs four times as much to
-  walk through and the other faction's towns and capitals six times as much, so a walk goes round them when there
+  Walks keep away from danger. A zone whose lowest level is 5 or more above yours costs more to walk through the
+  higher it is, up to six times as much at 10 levels above, and the other faction's towns and capitals six times as much, so a walk goes round them when there
   is a way, and is planned again when you level up. The zones and towns you start and end in are never avoided.
   Under the walk's step, grey lines say what it did: *Avoids Duskwood (level 18-30)*, *Crosses Wetlands (level 20-30)*
   where there is no way round, and *Hostile town: Crossroads*. Zone levels are the original game's published

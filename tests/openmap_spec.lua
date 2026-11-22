@@ -9,28 +9,15 @@ local function check(value, message)
 	assert(value, message)
 end
 
-local function Vector(x, y)
-	return {
-		GetXY = function()
-			return x, y
-		end,
-	}
-end
+-- Journey points are already in the continent's yards.
+_G.C_Map = {
+	GetWorldPosFromMapPos = function()
+		error("a journey's world yards must not be projected again")
+	end,
+}
 _G.CreateVector2D = function(x, y)
 	return { x = x, y = y }
 end
-
--- The game's world position of a map point: the fixture puts map 1 under continent 2, and map 2 under nothing.
-local worldCalls = 0
-_G.C_Map = {
-	GetWorldPosFromMapPos = function(map, position)
-		worldCalls = worldCalls + 1
-		if map == 1 then
-			return 2, Vector(position.x * 10, position.y * 20)
-		end
-		return nil
-	end,
-}
 
 local ns = {}
 assert(loadfile("UI/OpenMap.lua"))("ShortestPathForever", ns)
@@ -43,7 +30,6 @@ check(OpenMap.API() == nil, "no API")
 check(OpenMap.Stitched() == false, "not stitched")
 check(OpenMap.TopLevel() == nil, "no art level")
 check(OpenMap.Canvas({ map = 1, x = 1, y = 2 }) == nil, "no canvas placement")
-check(worldCalls == 0, "the client is not asked where anything is when OpenMap is absent")
 
 -- Version 1 has no canvas or art level, and another major is not ours to read.
 _G.OpenMapAPI = {
@@ -81,9 +67,8 @@ check(OpenMap.API() ~= nil, "version 2 is read")
 check(OpenMap.Stitched() == false, "loaded but not stitching")
 check(OpenMap.TopLevel() == nil, "no art level while not stitching")
 check(OpenMap.Canvas({ map = 1, x = 1, y = 2 }) == nil, "no canvas placement while not stitching")
-check(worldCalls == 0, "and the client is still not asked")
 
--- Stitching: the world point goes through the client's own projection to the API's canvas fractions.
+-- Stitching: OpenMap places the world point on its canvas.
 local given = {}
 _G.OpenMapAPI = {
 	major = 1,
@@ -96,14 +81,16 @@ _G.OpenMapAPI = {
 	end,
 	CanvasFromWorldPos = function(continent, x, y)
 		given[#given + 1] = { continent = continent, x = x, y = y }
-		return -0.5, 1.25
+		if continent == 1 then
+			return -0.5, 1.25
+		end
 	end,
 }
 check(OpenMap.Stitched() == true, "stitching")
 check(OpenMap.TopLevel() == 4000, "the top of the art")
 local x, y = OpenMap.Canvas({ map = 1, x = 3, y = 4 })
-check(given[1] and given[1].continent == 2, "the continent the map point is on")
-check(given[1].x == 30 and given[1].y == 80, "the world yards the client gave")
+check(given[1] and given[1].continent == 1, "the continent the world point is on")
+check(given[1].x == 3 and given[1].y == 4, "the world yards are passed through")
 check(x == -0.5 and y == 1.25, "canvas fractions past the host map are kept, so neighbours draw")
 -- A point the client cannot place, a point of the wrong shape, and one the API fails on.
 check(OpenMap.Canvas({ map = 2, x = 1, y = 1 }) == nil, "a point off the world")

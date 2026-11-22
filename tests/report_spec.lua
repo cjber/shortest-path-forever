@@ -62,7 +62,7 @@ local plan = { legs = { leg }, waterMode = false }
 local ns = {
 	core = { Report = shared.ReportFor("ShortestPathForever") },
 	db = { journey = true, avoidHighZones = true, followRoads = false, roadDetour = 50, useWaterWalking = false },
-	charDB = {},
+	charDB = { avoided = { { kind = "flight", ids = { "1:2", "2:3" }, name = "Fly to Test" } } },
 	Locate = function() end,
 	KnownFlightPointsByContinent = function()
 		return {}
@@ -111,6 +111,7 @@ contains(text, "map 0 x 3 y 4 z 0")
 contains(text, "measured false, drawn false, placeholder true, deferred true; estimated cost false")
 contains(text, "format 3, cells 67, zstep 2, steep true, climbChecked true; revision unknown")
 contains(text, "Plan water walking: false")
+contains(text, "Avoided transport: 1\n  flight 1:2, 2:3 (Fly to Test)")
 assert(not text:find("Search first route", 1, true), "no timings before a journey search has any")
 -- The client's own timings, to compare with the simulator's: wall time, frames that ran path work, and their cost.
 local status = ns.JourneyStatus

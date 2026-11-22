@@ -52,13 +52,15 @@ L["Avoids %s (level %s)"] = "Обходит %s (уровень %s)"
 L["Bags"] = "Сумки"
 L["Bank"] = "Банк"
 L["Battlemaster"] = "Военачальник"
+L["Click to cast %s"] = "Нажмите, чтобы применить %s"
+L["Click to use %s"] = "Нажмите, чтобы использовать %s"
 L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to save it for later; class teleports are still offered."] =
 	"Путешествие может начаться с камня возвращения или «Астрального возвращения». Отключите его, чтобы сохранить на потом; классовые телепорты по-прежнему доступны."
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"Маршруты, а также оценки других модификаций отсюда, могут начинаться с телепорта мага в город или заклинания «Телепортация: Лунная поляна» с учетом восстановления."
 L["Minimum teleport saving"] = "Минимальная экономия от телепорта"
-L["Short journeys no longer wait on your Hearthstone."] =
-	"Короткие маршруты больше не ждут камня возвращения." -- mt
+L["Journey stops are ordered for the whole trip."] =
+	"Остановки маршрута упорядочиваются для всего пути." -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"Использовать классовый телепорт, только если он экономит не меньше этого времени."
 L["Boat and Zeppelin Routes"] = "Маршруты кораблей и дирижаблей"
@@ -102,6 +104,7 @@ L["Flight path known"] = "Маршрут полета известен"
 L["Flights from here"] = "Полеты отсюда"
 L["Fly to %s"] = "Лететь: %s"
 L["Follow Dugi guides"] = "Следовать гайдам Dugi" -- mt
+L["Follow Zygor guides"] = "Следовать гайдам Zygor" -- mt
 L["Follow Guidelime guides"] = "Следовать руководствам Guidelime"
 L["Follow RestedXP guides"] = "Следовать руководствам RestedXP"
 L["Follow TomTom's arrow"] = "Следовать стрелке TomTom"
@@ -163,10 +166,12 @@ L["Only use the Hearthstone when it saves at least this much time."] =
 L["Open"] = "Открыть"
 L["Open Nearby services"] = "Открыть услуги поблизости"
 L["Open the world map to see it."] = "Откройте карту мира, чтобы увидеть."
+L["The travel action will update after combat."] =
+	"Действие для путешествия обновится после боя."
 L["Rides to spend less time walking through %s (level %s)"] =
 	"Используется транспорт, чтобы меньше идти пешком через %s (уровень %s)"
-L["Walk less in zones with a minimum level 4 or more above yours, even at your destination."] =
-	"Сокращает путь пешком через зоны, минимальный уровень которых выше вашего на 4 или больше, даже если цель находится там."
+L["Walk less in zones with a minimum level 5 or more above yours, and less still the higher it is, even at your destination."] =
+	"Сокращает путь пешком через зоны, минимальный уровень которых выше вашего на 5 или больше, и тем сильнее, чем он выше, даже если цель находится там." -- mt
 L["Turn the world map to %s to see it."] =
 	"Переключите карту мира на %s, чтобы увидеть." -- mt
 L["This menu needs mouse and keyboard."] = "Для этого меню нужны мышь и клавиатура." -- mt
@@ -174,6 +179,8 @@ L["Other Faction's Routes"] = "Маршруты другой фракции"
 L["Plan journey"] = "Проложить маршрут"
 L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."] =
 	"Планировать путешествия к текущему шагу гайда Dugi. Dugi сохраняет свою стрелку." -- mt
+L["Plan journeys to Zygor's current guide step, with no TomTom or bridge addon needed. Zygor keeps its own arrow."] =
+	"Планировать путешествия к текущему шагу гайда Zygor без TomTom и дополнительных аддонов. Zygor сохраняет свою стрелку." -- mt
 L["Plan journeys to Guidelime's current guide step. Guidelime's arrow steps aside while ours draws."] =
 	"Планировать путешествия к текущему шагу руководства Guidelime. Его стрелка уступает место нашей."
 L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."] =
@@ -433,6 +440,9 @@ L["The stop's live objectives under the arrow while it leads."] =
 L["The pin shown when you reach a stop keeps its own lines."] =
 	"Метка, показываемая при прибытии к остановке, сохраняет свои строки." -- mt
 L["Arrival distance"] = "Дистанция прибытия" -- mt
+L["Off-path tolerance"] = "Допуск отклонения от пути" -- mt
+L["How far you can stray from a walking path before a new one is searched."] =
+	"Насколько можно отойти от пешего пути, прежде чем будет найден новый." -- mt
 L["How close you must get to a journey's destination for it to count as reached."] =
 	"Насколько близко нужно подойти к месту назначения, чтобы путешествие считалось завершённым." -- mt
 L["Stops before the last on a multi-stop route keep 15 yards."] =
@@ -472,8 +482,12 @@ L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey
 	"На значке Questie Shift+щелчок остается за Questie; Alt+щелчок прокладывает туда маршрут при любой из двух клавиш." -- mt
 L["Show the journey key hint in tooltips"] =
 	"Показывать подсказку о клавише маршрута во всплывающих подсказках" -- mt
-L["Adds a line naming your journey key to tooltips on the world map, flight points and the minimap. Off, the key still plans journeys."] =
-	"Добавляет строку с клавишей маршрута в подсказки на карте мира, у точек полёта и на миникарте. Если выключено, клавиша всё равно прокладывает маршруты." -- mt
+L["Show the journey key hint on the minimap"] =
+	"Показывать подсказку клавиши пути на миникарте" -- mt
+L["Adds the journey key line to the minimap's tooltip over what it tracks. Off, the world map and flight point tooltips keep theirs, and the key still plans journeys."] =
+	"Добавляет строку с клавишей пути во всплывающую подсказку миникарты о том, что она отслеживает. Если выключено, подсказки карты мира и точек полёта остаются, а клавиша по-прежнему прокладывает путь." -- mt
+L["Adds a line naming your journey key to tooltips on the world map and flight points. Off, the key still plans journeys."] =
+	"Добавляет строку с названием клавиши пути во всплывающие подсказки карты мира и точек полёта. Если выключено, клавиша по-прежнему прокладывает путь." -- mt
 L["Show the Nearby services tab"] = "Показывать вкладку услуг поблизости"
 L["The tab in the world map's quest log. Off, /spfnear and the tracking menu still open it."] =
 	"Вкладка в журнале заданий на карте мира. Если выключить, /spfnear и меню отслеживания всё равно её откроют."
@@ -549,8 +563,8 @@ L["Journey stopped."] = "Путешествие остановлено." -- mt
 L["Journey stops"] = "Остановки путешествия" -- mt
 L["Ordering stops by estimated travel time..."] =
 	"Упорядочивание остановок по расчётному времени пути..." -- mt
-L["Orders the next stop by estimated travel time. You can change the order."] =
-	"Выбирает следующую остановку по расчётному времени пути. Вы можете изменить порядок." -- mt
+L["Orders the stops by estimated travel time. You can change the order."] =
+	"Упорядочивает остановки по расчётному времени пути. Вы можете изменить порядок." -- mt
 L["Place a map waypoint, then add it to this journey."] =
 	"Поставьте точку на карте, затем добавьте её в это путешествие." -- mt
 L["Remove"] = "Удалить" -- mt
@@ -611,3 +625,40 @@ L["In the tracker while you are near a dock, lift or tram."] =
 L["Town service icons"] = "Значки городских служб" -- mt
 L["Off hides them. Otherwise one icon per town, or one per service as you zoom in."] =
 	"Если выключено, значки скрыты. Иначе один значок на город или на службу при приближении." -- mt
+L["Avoid this boat"] = "Избегать этого корабля"
+L["Avoid this zeppelin"] = "Избегать этого дирижабля"
+L["Avoid this lift"] = "Избегать этого лифта"
+L["Avoid this tram"] = "Избегать этого трамвая"
+L["Avoid this flight"] = "Избегать этого перелёта"
+L["Avoid this portal"] = "Избегать этого портала"
+L["Avoid this passage"] = "Избегать этого прохода"
+L["Undo"] = "Отменить"
+L["Allow this transport again and find a new route."] =
+	"Снова разрешить этот транспорт и найти новый маршрут."
+L["Find a new route without this transport. You can clear avoided transport in Settings."] =
+	"Найти новый маршрут без этого транспорта. Список исключений можно очистить в настройках."
+L["No route remains without %s. Right-click to undo."] =
+	"Без «%s» маршрута нет. Щёлкните правой кнопкой мыши, чтобы отменить исключение."
+L["Avoided transport"] = "Исключённый транспорт"
+L["Clear avoided transport"] = "Очистить исключения"
+L["Clear this character's avoided transport so the planner can use it again."] =
+	"Очистить список исключений персонажа, чтобы снова использовать этот транспорт при построении маршрутов."
+L["%s-right-click the map to mark a road or wall for a report."] =
+	"Удерживая %s, щёлкните правой кнопкой мыши по карте, чтобы отметить дорогу или стену для отчёта." -- mt
+L["Mark: road missing here"] = "Отметить: здесь не хватает дороги" -- mt
+L["Mark: wall here"] = "Отметить: здесь есть стена" -- mt
+L["%s-right-click the map to copy the report or clear its marks."] =
+	"Удерживая %s, щёлкните правой кнопкой мыши по карте, чтобы скопировать отчёт или удалить отметки." -- mt
+L["Save this spot in the report to help fix the walking map."] =
+	"Сохраняет это место в отчёте, чтобы помочь исправить карту пеших маршрутов." -- mt
+L["This spot has no world coordinates. Choose another spot."] =
+	"У этого места нет мировых координат. Выберите другое место." -- mt
+L["Copy road and wall report"] = "Скопировать отчёт о дорогах и стенах" -- mt
+L["Open the report so you can copy and paste it into a bug report."] =
+	"Открывает отчёт, чтобы его можно было скопировать и вставить в сообщение об ошибке." -- mt
+L["Clear marks"] = "Удалить отметки" -- mt
+L["Remove all saved road and wall marks from the map and report."] =
+	"Удаляет все сохранённые отметки дорог и стен с карты и из отчёта." -- mt
+L["Road and wall report"] = "Отчёт о дорогах и стенах" -- mt
+L["Journey start: %s"] = "Начало путешествия: %s" -- mt
+L["Journey goal: %s"] = "Цель путешествия: %s" -- mt

@@ -48,12 +48,14 @@ L["Avoids %s (level %s)"] = "繞開%s（等級 %s）"
 L["Bags"] = "背包"
 L["Bank"] = "銀行"
 L["Battlemaster"] = "戰場指揮官"
+L["Click to cast %s"] = "點擊施放%s"
+L["Click to use %s"] = "點擊使用%s"
 L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to save it for later; class teleports are still offered."] =
 	"旅程可以從爐石或星界傳送開始。關閉後可留待後用；職業傳送仍然可用。"
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"旅程以及其他插件從這裡算起的估計，可以從法師的城市傳送或傳送：月光林地開始，並計入冷卻時間。"
 L["Minimum teleport saving"] = "傳送最少節省時間"
-L["Short journeys no longer wait on your Hearthstone."] = "短途旅程不再等待你的爐石。" -- mt
+L["Journey stops are ordered for the whole trip."] = "旅程站點依整段行程排序。" -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"只在職業傳送至少節省這麼多時間時使用。"
 L["Boat and Zeppelin Routes"] = "船隻與飛艇航線"
@@ -96,6 +98,7 @@ L["Flight path known"] = "已知飛行路線"
 L["Flights from here"] = "從這裡出發的航班"
 L["Fly to %s"] = "飛往%s"
 L["Follow Dugi guides"] = "跟隨 Dugi 攻略" -- mt
+L["Follow Zygor guides"] = "跟隨 Zygor 攻略" -- mt
 L["Follow Guidelime guides"] = "跟隨 Guidelime 攻略"
 L["Follow RestedXP guides"] = "跟隨RestedXP指南"
 L["Follow TomTom's arrow"] = "跟隨TomTom的箭頭"
@@ -152,16 +155,19 @@ L["Only use the Hearthstone when it saves at least this much time."] =
 L["Open"] = "開啟"
 L["Open Nearby services"] = "開啟附近服務"
 L["Open the world map to see it."] = "開啟世界地圖查看。"
+L["The travel action will update after combat."] = "旅行動作將在戰鬥結束後更新。"
 L["Rides to spend less time walking through %s (level %s)"] =
 	"搭乘交通工具以減少在%s（等級%s）內步行的路程"
-L["Walk less in zones with a minimum level 4 or more above yours, even at your destination."] =
-	"盡量縮短在最低等級比你高至少4級的區域內步行的路程，即使目的地也在該區域內。"
+L["Walk less in zones with a minimum level 5 or more above yours, and less still the higher it is, even at your destination."] =
+	"盡量縮短在最低等級比你高至少5級的區域內步行的路程，等級越高越少走，即使目的地也在該區域內。" -- mt
 L["Turn the world map to %s to see it."] = "將世界地圖切換到%s查看。" -- mt
 L["This menu needs mouse and keyboard."] = "此選單需要滑鼠和鍵盤。" -- mt
 L["Other Faction's Routes"] = "另一陣營的航線"
 L["Plan journey"] = "規劃旅程"
 L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."] =
 	"規劃前往 Dugi 攻略目前步驟的旅程。Dugi 保留自己的箭頭。" -- mt
+L["Plan journeys to Zygor's current guide step, with no TomTom or bridge addon needed. Zygor keeps its own arrow."] =
+	"規劃前往 Zygor 攻略目前步驟的旅程，無需 TomTom 或橋接插件。Zygor 保留自己的箭頭。" -- mt
 L["Plan journeys to Guidelime's current guide step. Guidelime's arrow steps aside while ours draws."] =
 	"規劃前往 Guidelime 目前攻略步驟的旅程。在我們的箭頭顯示時，Guidelime 的箭頭會讓開。"
 L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."] =
@@ -405,6 +411,9 @@ L["The stop's live objectives under the arrow while it leads."] =
 L["The pin shown when you reach a stop keeps its own lines."] =
 	"到達站點時顯示的圖釘保留各自的目標文字。" -- mt
 L["Arrival distance"] = "到達距離" -- mt
+L["Off-path tolerance"] = "偏離路徑容差" -- mt
+L["How far you can stray from a walking path before a new one is searched."] =
+	"在重新搜尋路線之前，你可以偏離步行路徑多遠。" -- mt
 L["How close you must get to a journey's destination for it to count as reached."] =
 	"距離旅程目的地多近才算到達。" -- mt
 L["Stops before the last on a multi-stop route keep 15 yards."] =
@@ -442,8 +451,11 @@ L["The key you hold to plan a journey from the world map or the minimap."] =
 L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
 	"在 Questie 圖示上，Shift 點擊仍歸 Questie 所有；Alt 點擊則可用任一按鍵規劃前往該處的旅程。" -- mt
 L["Show the journey key hint in tooltips"] = "在滑鼠提示中顯示旅程按鍵提示" -- mt
-L["Adds a line naming your journey key to tooltips on the world map, flight points and the minimap. Off, the key still plans journeys."] =
-	"在世界地圖、飛行點和小地圖的滑鼠提示中加入一行，說明你的旅程按鍵。關閉後，按鍵仍可規劃旅程。" -- mt
+L["Show the journey key hint on the minimap"] = "在小地圖上顯示旅程按鍵提示" -- mt
+L["Adds the journey key line to the minimap's tooltip over what it tracks. Off, the world map and flight point tooltips keep theirs, and the key still plans journeys."] =
+	"在小地圖所追蹤目標的提示中加入旅程按鍵一行。關閉後，世界地圖和飛行點的提示仍會保留，按鍵仍可規劃旅程。" -- mt
+L["Adds a line naming your journey key to tooltips on the world map and flight points. Off, the key still plans journeys."] =
+	"在世界地圖和飛行點的滑鼠提示中加入一行，說明你的旅程按鍵。關閉後，按鍵仍可規劃旅程。" -- mt
 L["Show the Nearby services tab"] = "顯示附近服務分頁"
 L["The tab in the world map's quest log. Off, /spfnear and the tracking menu still open it."] =
 	"世界地圖任務日誌中的分頁。關閉後，/spfnear 與追蹤選單仍可開啟它。"
@@ -507,8 +519,8 @@ L["Journey paused."] = "旅程已暫停。" -- mt
 L["Journey stopped."] = "旅程已停止。" -- mt
 L["Journey stops"] = "旅程停靠點" -- mt
 L["Ordering stops by estimated travel time..."] = "正在依預估旅行時間排列停靠點..." -- mt
-L["Orders the next stop by estimated travel time. You can change the order."] =
-	"依預估旅行時間選擇下一個停靠點。你可以變更順序。" -- mt
+L["Orders the stops by estimated travel time. You can change the order."] =
+	"依預估旅行時間排列停靠點。你可以變更順序。" -- mt
 L["Place a map waypoint, then add it to this journey."] =
 	"請先在地圖上設定路線點，再將其加入此旅程。" -- mt
 L["Remove"] = "移除" -- mt
@@ -567,3 +579,37 @@ L["In the tracker while you are near a dock, lift or tram."] =
 L["Town service icons"] = "城鎮服務圖示" -- mt
 L["Off hides them. Otherwise one icon per town, or one per service as you zoom in."] =
 	"關閉則隱藏。否則放大時每個城鎮一個圖示，或每項服務一個圖示。" -- mt
+L["Avoid this boat"] = "避開這艘船"
+L["Avoid this zeppelin"] = "避開這艘飛艇"
+L["Avoid this lift"] = "避開這座升降梯"
+L["Avoid this tram"] = "避開這班地鐵"
+L["Avoid this flight"] = "避開這段飛行"
+L["Avoid this portal"] = "避開這個傳送門"
+L["Avoid this passage"] = "避開這條通道"
+L["Undo"] = "復原"
+L["Allow this transport again and find a new route."] = "重新允許使用此交通方式，並尋找新路線。"
+L["Find a new route without this transport. You can clear avoided transport in Settings."] =
+	"尋找不經過此交通方式的新路線。你可以在設定中清除避用清單。"
+L["No route remains without %s. Right-click to undo."] = "避開%s後沒有可用路線。按右鍵即可復原。"
+L["Avoided transport"] = "避用的交通方式"
+L["Clear avoided transport"] = "清除避用交通方式"
+L["Clear this character's avoided transport so the planner can use it again."] =
+	"清除此角色的避用清單，讓路線規劃重新考慮這些交通方式。"
+L["%s-right-click the map to mark a road or wall for a report."] =
+	"按住 %s 並右鍵點擊地圖，將道路或牆壁標記到回報中。" -- mt
+L["Mark: road missing here"] = "標記：此處缺少道路" -- mt
+L["Mark: wall here"] = "標記：此處有牆" -- mt
+L["%s-right-click the map to copy the report or clear its marks."] =
+	"按住 %s 並右鍵點擊地圖，可複製回報或清除標記。" -- mt
+L["Save this spot in the report to help fix the walking map."] =
+	"將此位置儲存到回報中，協助修正步行路線地圖。" -- mt
+L["This spot has no world coordinates. Choose another spot."] = "此位置沒有世界座標。請選擇其他位置。" -- mt
+L["Copy road and wall report"] = "複製道路與牆壁回報" -- mt
+L["Open the report so you can copy and paste it into a bug report."] =
+	"開啟回報，以便複製並貼到錯誤回報中。" -- mt
+L["Clear marks"] = "清除標記" -- mt
+L["Remove all saved road and wall marks from the map and report."] =
+	"從地圖和回報中移除所有已儲存的道路與牆壁標記。" -- mt
+L["Road and wall report"] = "道路與牆壁回報" -- mt
+L["Journey start: %s"] = "旅程起點：%s" -- mt
+L["Journey goal: %s"] = "旅程目的地：%s" -- mt

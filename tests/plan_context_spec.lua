@@ -292,6 +292,94 @@ local leg = { mode = "boat", route = 9, from = from, to = to }
 assert(#Context.LegPoints(leg) == 2, "a route without frames draws its two ends")
 print("plan context: speed, options, ride, places, landmass and leg points passed")
 
+-- The same topology cache serves both searches. A saved exclusion must change its input identity.
+local across = { map = 2, x = 0, y = 0 }
+ns.Docks[2] = across
+local topology = {}
+local function crossing()
+	local given = Context.Options(from, across)
+	given.cache = topology
+	return ns.Planner.Plan(given), given.routes
+end
+local original, originalRoutes = crossing()
+assert(original and original.legs[1].route == 9, "the crossing uses boat 9")
+ns.charDB = { avoided = { { kind = "boat", ids = { 9 }, name = "Test boat" } } }
+local detour, filtered = crossing()
+assert(not detour, "the avoided boat must be removed from the plan")
+assert(
+	filtered ~= originalRoutes and select(2, crossing()) == filtered,
+	"filtered topology is stable until the list changes"
+)
+ns.charDB.avoided = {}
+assert(crossing(), "clearing the avoid list restores the crossing")
+
+-- Filter directed taxi hops without renumbering portals.
+local hop, reverse = { from = 1, to = 2 }, { from = 2, to = 1 }
+ns.TaxiPaths = { hop, reverse }
+local firstPortal = { name = "Portal to One", from = from, to = to, kind = "portal", seconds = 5 }
+local secondPortal = { name = "Portal to Two", from = from, to = across, kind = "passage", seconds = 5 }
+ns.Portals = { firstPortal, secondPortal }
+ns.charDB.avoided = {
+	{ kind = "flight", ids = { "1:2" }, name = "Flight to Two" },
+}
+local remaining = Context.Options(from, across)
+assert(#remaining.taxiPaths == 1 and remaining.taxiPaths[1] == reverse, "the reverse flight remains usable")
+local passage = ns.Planner.Plan(remaining)
+assert(passage and passage.legs[1].portal == 2, "the passage leg carries its original portal ID")
+
+-- A live journey starts with a crossing, loses its only route, then gets the same connection back on Undo.
+local journeyDriver = assert(loadfile("tests/journey_driver.lua"))()
+local journeyFixture = journeyDriver.ns
+journeyFixture.Docks = { from, across }
+journeyFixture.Routes = ns.Routes
+journeyDriver.move(from)
+journeyFixture.StartJourney(across)
+journeyDriver.path.settle()
+local firstPlan = assert(journeyFixture.JourneyPlan(), "the active journey uses the crossing")
+assert(firstPlan.legs[1].route == 9)
+journeyFixture.AvoidJourneyTransport(firstPlan.legs[1])
+journeyDriver.update(0.1)
+local _, noRoute, noPlan = journeyFixture.JourneyInfo()
+assert(not noPlan and noRoute[1].text == "No route remains without Boat to Dock. Right-click to undo.")
+journeyFixture.UndoAvoidedTransport(assert(noRoute[1].undoAvoid))
+journeyDriver.update(0.1)
+assert(journeyFixture.JourneyPlan().legs[1].route == 9, "Undo replans the journey from the player's current position")
+
+-- The ride under way cannot be avoided: the planner keeps a ride the player cannot leave, so the avoid would never
+-- take and its Undo would be lost.
+local realPlan = journeyFixture.JourneyPlan
+local underway = realPlan()
+journeyFixture.JourneyPlan = function()
+	return underway, 1, true
+end
+assert(not journeyFixture.AvoidTransport.Allowed(underway.legs[1]), "the boarded step offers no avoid")
+journeyFixture.AvoidJourneyTransport(underway.legs[1])
+assert(#journeyFixture.PlanContext.Avoided() == 0, "avoiding the boarded step saves nothing")
+journeyFixture.JourneyPlan = realPlan
+assert(journeyFixture.AvoidTransport.Allowed(underway.legs[1]), "before boarding, the step can be avoided")
+
+-- Save a real passage step, then load that save against reordered and missing portal data.
+journeyFixture.ClearJourney()
+journeyFixture.Routes = {}
+journeyFixture.Portals = { firstPortal, secondPortal }
+journeyDriver.move({ map = 1, x = 100, y = 0 })
+journeyFixture.StartJourney(across)
+journeyDriver.path.settle()
+local portalStep = assert(journeyFixture.JourneyPlan()).legs[2]
+assert(portalStep.portal == 2 and portalStep.mode == "passage")
+journeyFixture.AvoidJourneyTransport(portalStep)
+local saved = journeyFixture.PlanContext.Avoided()
+assert(#saved == 1, "avoiding the unboarded passage saves one entry")
+ns.charDB.avoided = saved
+ns.Portals = { secondPortal, firstPortal }
+remaining = Context.Options(from, across)
+assert(not remaining.portals[1] and remaining.portals[2] == firstPortal, "the saved passage follows its identity")
+ns.Portals = { firstPortal }
+assert(Context.Options(from, across).portals == ns.Portals, "a missing saved passage is inert")
+ns.charDB.avoided = { { kind = "portal", ids = { 1 }, name = "Legacy index" } }
+assert(Context.Options(from, across).portals == ns.Portals, "a legacy portal index must be inert")
+print("plan context: saved passage follows reordered data and legacy indexes are inert")
+
 -- The journey and the estimate plan from the same context. What each adds is listed here so a change to either
 -- shows up as a failure rather than as drift.
 local driver = assert(loadfile("tests/journey_driver.lua"))()

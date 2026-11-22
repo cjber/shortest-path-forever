@@ -10,6 +10,40 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.44.0] - 2026-11-22
+
+<!-- discord-image: docs/screenshots/stops.png -->
+
+- **Journey stops are ordered for the whole trip.** Starting a list of up to eight stops picks the order with the shortest estimated travel time, and longer lists improve on nearest-first by untangling crossed legs (#1197).
+
+### Added
+
+- Right-click a transport step to avoid that connection. Undo the choice if no route remains, or clear avoided transport in Settings. (#1005)
+- Hold your journey key and right-click the world map to mark missing roads or walls and copy their coordinates into a bug report (#1006).
+- **Adjust how far you can stray from a walking path before it recalculates.** Find Off-path tolerance next to Arrival distance in Guidance (#1033).
+- **Click the cast prompt's icon to travel.** When a journey step says to use the Hearthstone, a teleport item or a teleport spell, clicking its icon uses it, and the tooltip says what a click does. In combat the icon keeps its last action until combat ends (#1035).
+- Town services ticked in the world map filter also show on the minimap, with the same icons and tooltips, following the minimap marks switch and icon size. (#1220)
+- **Show the journey key hint on the minimap**, its own switch under Guidance > Journey. The minimap's tooltip is the one over every node, herb and NPC, so the line can now be turned off there while the world map and flight point hints stay on. (#1241)
+- **Follow Zygor guides** (in Guides settings, off by default) plans journeys to Zygor's current guide step on its own, with no TomTom or bridge addon. Zygor keeps its own arrow. Thanks to lumpi_lumpi on Discord for the idea (#1247).
+
+### Changed
+
+- **High-level zones cost more the higher they are.** With *Avoid zones far above my level* on, a zone five levels above you is only lightly avoided and one ten or more above you strongly, so a journey that must cross one picks the mildest (#1201).
+- **The arrow looks farther ahead on open ground.** It points towards a bend you can walk straight to, so it turns less often on clear stretches.
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
+### Fixed
+
+- If a journey search hits a Lua error, the tracker shows a failure message so you can try another destination (#1141).
+- Walking searches use less CPU, so journeys such as Stormwind's Canals to the Dwarven District finish planning sooner (#1154).
+- Nearby services show travel times sooner after a reload and update them as you move, and a row whose ride is slower than walking shows the walking time the journey takes. Thanks to PrinceOfPromise on CurseForge for the report (#1159).
+- The Nearby services panel spends fewer frames comparing walking routes to choose the nearest NPC (#1164).
+- Journeys from Orgrimmar to isolated terrain in Azshara find the closest reachable ground sooner.
+- With OpenMap's stitched map, a followed OpenMap pin is no longer covered by Shortest Path's goal pin, so Alt-click deletes it and clears the journey as it does for any other OpenMap pin, and the pin no longer shows twice (#1239, #1153).
+- The journey line over OpenMap's stitched map is placed at the right spot again.
+- **The journey menu only offers RestedXP when RestedXP is installed.** "Resume RestedXP guide" was listed even with RXPGuides disabled, where it could do nothing; it now appears only while RestedXP is loaded, the same way the Guidelime and Dugi entries already wait for their addons.
+- The class trainer journey and the Nearby class trainer list skip trainers who have nothing left to teach you, such as a starting-area trainer once you have passed their last spell, and pick the next nearest one who can. A trainer you open also teaches Shortest Path where their spells stop, and the list updates when you level up or open a trainer. Thanks to antarek on CurseForge for the report (#1245).
+
 ## [1.43.14] - 2026-11-21
 
 ### Changed

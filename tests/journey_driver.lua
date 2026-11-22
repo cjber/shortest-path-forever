@@ -1,5 +1,5 @@
 local root = ... or "."
-local ns = { db = { journey = true }, charDB = {} }
+local ns = { db = { journey = true, offPathTolerance = 15 }, charDB = {} }
 -- The harness is a mouse client: no gamepad interface, so UI/MenuModifier.lua keeps its entries in place.
 function ns.GamepadUI()
 	return false
@@ -241,6 +241,9 @@ ns.core = {
 	SafeCall = function(label, fn, ...)
 		return safe:SafeCall(label, fn, ...)
 	end,
+	RecordError = function(label, message, stack)
+		safe:RecordError(label, message, stack)
+	end,
 	CaughtErrors = function()
 		return safe:CaughtErrors()
 	end,
@@ -310,6 +313,7 @@ load("Journey/JourneySearch.lua")
 load("Journey/JourneyWalks.lua")
 load("Journey/JourneyGuide.lua")
 load("Journey/Journey.lua")
+load("Journey/AvoidTransport.lua")
 load("Journey/JourneyInput.lua")
 
 local map = {

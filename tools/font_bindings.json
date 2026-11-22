@@ -3,8 +3,8 @@
   "producers": [
     {
       "source": "UI/Tracker.lua",
-      "sha256": "59f78ba71251bda5237e5896f9ec521eb51663a0888c621304e5492508a8e1d9",
-      "review": "Read all of Tracker.lua, Tracker.xml and ForeverCore TrackerSection.Create, UpdateText and TrackerLine.SetInteractive. Confirmed pinned client Blizzard_ObjectiveTrackerModule.xml: ObjectiveTrackerModuleTemplate Header inherits ObjectiveTrackerModuleHeaderTemplate, whose Text uses ObjectiveTrackerHeaderFont. Blizzard_ObjectiveTrackerBlock.xml HeaderText uses ObjectiveTrackerLineFont; Blizzard_ObjectiveTrackerShared.xml ObjectiveTrackerLineTemplate Text uses ObjectiveTrackerLineFont, inherited without overrides by ShortestPathForeverTrackerLineTemplate. Bound every local phrase sent to section headers, block headers and rows, including Journey  %s · %s from #838. RefreshBlockText preserves these widgets. Client tracker text-size changes and optional Kaliels font overrides are outside the pinned native-font coverage. Menus, chat, tooltips and dynamic text from JourneyInfo, DockTitle, and DepartureText are excluded.",
+      "sha256": "992e88195f8a62cea24781f51d06b08e4256cf2c8f0be5f83d5a9cd58a778552",
+      "review": "Read all of Tracker.lua, Tracker.xml and ForeverCore TrackerSection.Create, UpdateText and TrackerLine.SetInteractive. Confirmed pinned client Blizzard_ObjectiveTrackerModule.xml: ObjectiveTrackerModuleTemplate Header inherits ObjectiveTrackerModuleHeaderTemplate, whose Text uses ObjectiveTrackerHeaderFont. Blizzard_ObjectiveTrackerBlock.xml HeaderText uses ObjectiveTrackerLineFont; Blizzard_ObjectiveTrackerShared.xml ObjectiveTrackerLineTemplate Text uses ObjectiveTrackerLineFont, inherited without overrides by ShortestPathForeverTrackerLineTemplate. Bound every local phrase sent to section headers, block headers and rows, including Journey  %s · %s from #838. RefreshBlockText preserves these widgets. Client tracker text-size changes and optional Kaliels font overrides are outside the pinned native-font coverage. Menus, chat, tooltips and dynamic text from JourneyInfo, DockTitle, and DepartureText are excluded. Reviewed #1005: the transport row menus use ForeverCore.ContextMenu. Its tooltips and labels establish no tracker FontObject. Re-reviewed for #1240: the only edit is a TrackerMenu RestedXP presence guard; no producer text, SetHeader, SetText or SetFont call changed.",
       "bindings": [
         {
           "font": "ObjectiveTrackerHeaderFont",
@@ -44,6 +44,18 @@
       ]
     },
     {
+      "source": "Journey/AvoidTransport.lua",
+      "sha256": "f7f93d6e9678414cee211d2f2541c4211246c3499bf4be3e56fb28ce4f797091",
+      "review": "Reviewed the avoided transport failure row from AvoidTransport.Row, which JourneyInfo returns as its first row. UI/Tracker.lua passes the row text to AddObjective using ShortestPathForeverTrackerLineTemplate, which inherits ObjectiveTrackerLineFont. Pin consumers use template-owned tooltip fonts. Rechecked tracker rendering after the search retry change. JourneyInfo selects the existing error text for a thrown search. The avoid row uses the same font and phrase when the planner finds no route after filtering.",
+      "bindings": [
+        {
+          "font": "ObjectiveTrackerLineFont",
+          "widget": "AvoidTransport.Row via JourneyInfo, Tracker.LayoutContents and RefreshTracker",
+          "phrase": "No route remains without %s. Right-click to undo."
+        }
+      ]
+    },
+    {
       "source": "UI/Tracker.xml",
       "sha256": "6a0f4065d5cb7ae5a3c59d7165eba6a0a075693f4876a3a0d326a615af2c89d9",
       "review": "Read Tracker.xml and its Tracker.lua LINE_TEMPLATE, LayoutContents and RefreshBlockText callers. ShortestPathForeverTrackerLineTemplate inherits ObjectiveTrackerLineTemplate without a font override; pinned Blizzard_ObjectiveTrackerShared.xml gives both Text and Dash ObjectiveTrackerLineFont. TrackerSection.Create passes this line template to the module; TrackerLine.SetInteractive changes mouse scripts only. XML declares no locale phrase or addon runtime text, so bindings live with the phrases in Tracker.lua. Dynamic row text and client QUEST_DASH are excluded.",
@@ -51,8 +63,8 @@
     },
     {
       "source": "UI/Settings.lua",
-      "sha256": "22ed020b0bc17f6813a88fbd0a19b589d1a6b23a3bab1fa075edcd0fe9f084a1",
-      "review": "Read Page, Checkbox, Scale, Dropdown and Saving and their registration calls. Settings rows, index buttons and option labels delegate to Blizzard secure initializers; this file creates no FontString and establishes no explicit FontObject. Minimap button text, tooltip text, chat output and helper arguments are excluded rather than assigned an assumed settings font. Reviewed #1094: the Tracker heading's Attach to quest tracker row is ForeverCore.SettingsSections.RegisterTrackerAttach, a core-owned initializer, registered only when the running core has it (an older adopted standalone does not); excluded with the other settings fonts. Reviewed #1142: the journeyHint row is one more Checkbox helper call, a Blizzard secure initializer with no FontString or FontObject of its own.",
+      "sha256": "98645e044c57eba0b4ac71bfc852e420268b22d93810c41857b1195e435e29e1",
+      "review": "Read Page, Checkbox, Scale, Dropdown and Saving and their registration calls. Settings rows, index buttons and option labels delegate to Blizzard secure initializers; this file creates no FontString and establishes no explicit FontObject. Minimap button text, tooltip text, chat output and helper arguments are excluded rather than assigned an assumed settings font. Reviewed #1094: the Tracker heading's Attach to quest tracker row is ForeverCore.SettingsSections.RegisterTrackerAttach, a core-owned initializer, registered only when the running core has it (an older adopted standalone does not); excluded with the other settings fonts. Reviewed #1142: the journeyHint row is one more Checkbox helper call, a Blizzard secure initializer with no FontString or FontObject of its own. Reviewed #1033: the Off-path tolerance row and Arrival distance share a DistanceSlider helper that registers a Blizzard secure slider initializer, with no FontString or FontObject of its own. Reviewed #1005: the Avoided transport row is one more native button initializer with plain string text and tooltip; the client owns its fonts. Reviewed #1241: the new \"Show the journey key hint on the minimap\" row is one more Checkbox helper call, like journeyHint in #1142, so it adds a Blizzard secure initializer's row and no FontString or FontObject of its own; the digest moved for the row and its shortened journeyHint description, not for a font producer.",
       "bindings": []
     },
     {
@@ -75,8 +87,8 @@
     },
     {
       "source": "UI/Arrow.lua",
-      "sha256": "b9ca1a88836f41e0d0b9aafd9af5c83025a6ef65f46c22095da2794c35cd25a5",
-      "review": "Read Create, ArrowLabel, distance updates, arrival labels, progress and cast prompt. MoverHint uses GameFontHighlightSmall and Distance uses GameFontNormal, including the formatted time-distance phrase. No later font override occurs. Dynamic objective lines, arrival titles, route titles and actions from helpers are excluded; this review does not claim coverage for their inserted text. Reviewed #1161: NativeMarkerAt and the shared-marker stand-down read C_Navigation and C_Map only; no FontString, FontObject or text change.",
+      "sha256": "a23d47971afc0fe6c8584d9a18a0fbb35f7e34b6d9f789b21632eac68db01f87",
+      "review": "Read Create, ArrowLabel, distance updates, arrival labels, progress and cast prompt. MoverHint uses GameFontHighlightSmall and Distance uses GameFontNormal, including the formatted time-distance phrase. No later font override occurs. Dynamic objective lines, arrival titles, route titles and actions from helpers are excluded; this review does not claim coverage for their inserted text. Reviewed #1161: NativeMarkerAt and the shared-marker stand-down read C_Navigation and C_Map only; no FontString, FontObject or text change. Reviewed #1035: the cast prompt's secure button moved to UI/CastButton.lua and writes only GameTooltip text; no FontString, FontObject or text change here.",
       "bindings": [
         {
           "font": "GameFontHighlightSmall",
@@ -124,13 +136,13 @@
     },
     {
       "source": "UI/JourneyStops.lua",
-      "sha256": "17314807eb4cf1336f2f4df275dd8a15a82b0bf6190fcd23b2530024f51b81c2",
+      "sha256": "4da4a3a3a158a6052067adad391793ef55e7c840551da66ba9da9737a8b63854",
       "review": "Read Text, Build and refresh: help and status are created by Text with GameFontHighlight; messages and formatted progress/order phrases reach status without font overrides. SharedButtonSmallTemplate buttons and row labels, PortraitFrameTemplate title, tooltip text and dynamic stop names are excluded because this producer does not establish their font objects.",
       "bindings": [
         {
           "font": "GameFontHighlight",
           "widget": "Build help",
-          "phrase": "Orders the next stop by estimated travel time. You can change the order."
+          "phrase": "Orders the stops by estimated travel time. You can change the order."
         },
         {
           "font": "GameFontHighlight",
@@ -388,8 +400,8 @@
     },
     {
       "source": "UI/ServicesPanel.lua",
-      "sha256": "4d2bf28fb2a2fc0d7fb31d2671631e5c07e72767d93f354cf8a7cd66eecfc109",
-      "review": "Read BuildHeader, BuildContent, CreateBetterRow, PaintBetter, Where and Refresh. headerTitle uses GameFontNormalLarge2; emptyText uses GameFontDisable for STATUS and empty/position notices; better-row Label uses GameFontHighlight for the name-zone format and subtitle uses GameFontHighlight for Where. No later font override occurs. Search instructions and tooltips are template-owned; external group/section names, service details and countdown helper output are excluded. Reviewed #1036: StopRanking now cancels through NearbyServices.Cancel; no FontString or FontObject change. Reviewed #1036: StopRanking now cancels through NearbyServices.Cancel; no FontString or FontObject change. Reviewed #1036: StopRanking now cancels through NearbyServices.Cancel; no FontString or FontObject change.",
+      "sha256": "f1f17b683209bc7810e249e82d6c26a1346fb444671ff2ed99815acd965393c5",
+      "review": "Read BuildHeader, BuildContent, CreateBetterRow, PaintBetter, Where and Refresh. headerTitle uses GameFontNormalLarge2; emptyText uses GameFontDisable for STATUS and empty/position notices; better-row Label uses GameFontHighlight for the name-zone format and subtitle uses GameFontHighlight for Where. No later font override occurs. Search instructions and tooltips are template-owned; external group/section names, service details and countdown helper output are excluded. Reviewed #1036: StopRanking now cancels through NearbyServices.Cancel; no FontString or FontObject change. Reviewed #1159: ranking, ticker and measure reuse only; no FontString or FontObject change. Reviewed the lower-bound planner estimate for provisional row times. The row uses the same text widget and font.",
       "bindings": [
         {
           "font": "GameFontNormalLarge2",

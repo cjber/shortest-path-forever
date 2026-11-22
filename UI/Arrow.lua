@@ -1,14 +1,15 @@
 ---@class SPFNamespace
 local ns = select(2, ...)
+-- rule-ignore: file-size-no-growth - the arrow and compass share the active walk and its progress
 
 if ns.broken then
 	return
 end
 local L = ns.L
 
--- Guide follows the walking path's bends, or points straight to the destination in direct mode. Journey places
--- Blizzard's native navigation marker at that target. Stop-only map marks suppress the native marker in route
--- mode, where this arrow leads the bends instead; direct mode always allows the native marker to lead.
+-- Guide follows the walking path, aiming ahead where the ground is clear. Journey places Blizzard's native
+-- navigation marker at that aim, or at the destination in direct mode. Stop-only map marks let this arrow lead
+-- the walk while the native marker stays at the step's end.
 -- This arrow is also the fallback when the marker is unavailable or the player owns tracking. Camelot omits the
 -- navigation setting, but its native super-tracked marker does work while its CVar is on.
 
@@ -23,6 +24,8 @@ local RADIUS = 36
 local ICON_SIZE, STEP_SIZE = 36, 32
 -- A bend this close counts as passed, and the arrow turns to the next one.
 local PASSED = 25
+-- A smoothed walk may have many bends. Keep guidance work independent of its length, even while moving.
+local AIM_AHEAD = 4
 -- The stock place, under the top of the screen; the cast prompt stands there too.
 local TOP = -120
 -- The stop's title and objective lines beneath the pin, wrapped and capped so they stay a summary. The arrow's own
@@ -78,10 +81,13 @@ end
 local stepEnd, destination
 local revision = 0
 local renderedRevision, renderedMetres, renderedMode, renderedSecond, renderedNative, renderedShared
+local renderedPoint
 local moving = false
 local OnUpdate
 ---@type SPFCastPromptFrame?
 local castPrompt
+---@type SPFTeleportPlace?
+local castTarget
 -- The stop whose area the player is in, drawn as a pin with what to do there (#627).
 ---@type SPFPoint?
 local arrival
@@ -161,6 +167,57 @@ end
 -- Direct bearing uses the destination on this map. Across maps, use the active leg's endpoint.
 local function Pointing(direct, map)
 	return direct and ((destination and destination.map == map and destination) or path[#path]) or target
+end
+
+-- A shortcut still has to pass the canonical bends in order and stay within the walk's replan tolerance.
+local function PassesBends(x, y, point, last)
+	local dx, dy = point.x - x, point.y - y
+	local length = dx * dx + dy * dy
+	if length == 0 then
+		return false
+	end
+	local reach = math.min(PASSED, ns.db.offPathTolerance or PASSED) ^ 2
+	local previous = 0
+	for i = index, last - 1 do
+		local bx, by = path[i].x - x, path[i].y - y
+		local t = (bx * dx + by * dy) / length
+		if t < previous or t > 1 or (bx - t * dx) ^ 2 + (by - t * dy) ^ 2 > reach then
+			return false
+		end
+		previous = t
+	end
+	return true
+end
+
+local function SightAim(x, y, map)
+	if not (x and y and map == target.map and target.z and index < #path - 1 and ns.PathGrid and ns.Floor) then
+		return nil
+	end
+	local isOutdoors = IsOutdoors
+	local outdoors = isOutdoors and isOutdoors()
+	if not (canaccessvalue(outdoors) and outdoors) then
+		return nil
+	end
+	local height = ns.Floor.Height(map, x, y)
+	local before = path[index - 1]
+	if not height or height ~= target.z or (before and (before.map ~= map or before.z and before.z ~= height)) then
+		return nil
+	end
+	-- The last point is the walk's stop or boarding point. Height changes and map changes end the window early.
+	local last = index
+	for i = index + 1, math.min(#path - 1, index + AIM_AHEAD) do
+		local point = path[i]
+		if point.map ~= map or point.z ~= height then
+			break
+		end
+		last = i
+	end
+	for i = last, index + 1, -1 do
+		local point = path[i]
+		if PassesBends(x, y, point, i) and ns.PathGrid.Sight(map, x, y, height, point) then
+			return point, i
+		end
+	end
 end
 
 local function Draw(angle)
@@ -251,11 +308,14 @@ local function Update(elapsed)
 		return
 	end
 	local moved = x ~= frame.x or y ~= frame.y or map ~= frame.map or facing ~= frame.facing
-	-- The slow poll still detects mouse turns and passive transport motion. Once settled,
-	-- identical inputs must not place a waypoint, redraw textures or walk the path again.
+	-- The slow poll detects mouse turns, passive transport motion and sight opening when terrain is decoded.
 	local markerShown = NativeMarkerShown()
 	local direct = ns.db.arrowDirect == true
-	local pointing = Pointing(direct, map)
+	ns.AdvanceGuide()
+	if revision ~= updating then
+		return
+	end
+	local pointing = (not direct and SightAim(x, y, map)) or Pointing(direct, map)
 	-- A marker Guide placed already leads; only a marker someone else drew needs reading back.
 	local sharedMarker = markerShown and not native and NativeMarkerAt(pointing)
 	local mode = ns.db.arrowLabel
@@ -263,6 +323,7 @@ local function Update(elapsed)
 	if
 		not frame.updating
 		and not moved
+		and renderedPoint == pointing
 		and renderedRevision == revision
 		and renderedMetres == ns.db.metres
 		and renderedMode == mode
@@ -273,15 +334,9 @@ local function Update(elapsed)
 		return
 	end
 	renderedRevision, renderedMetres, renderedMode, renderedSecond = revision, ns.db.metres, mode, second
-	renderedNative = markerShown
+	renderedNative, renderedPoint = markerShown, pointing
 	StepIcon()
 	frame.x, frame.y, frame.map, frame.facing = x, y, map, facing
-	ns.AdvanceGuide()
-	local nextPoint = Pointing(direct, map)
-	if nextPoint ~= pointing then
-		pointing = nextPoint
-		sharedMarker = markerShown and not native and NativeMarkerAt(pointing)
-	end
 	local placed = placeTarget and placeTarget(pointing, false)
 	-- Waypoint callbacks can stop or replace guidance synchronously.
 	if revision ~= updating then
@@ -314,7 +369,8 @@ local function Update(elapsed)
 	frame.angle = easing and (frame.angle + delta * (1 - math.exp(-EASE * elapsed))) % TURN or angle
 	Draw(frame.angle)
 	-- Direct mode measures the displayed bearing; route mode adds the remaining walking bends.
-	local distance = math.sqrt((pointing.x - x) ^ 2 + (pointing.y - y) ^ 2)
+	local measured = direct and pointing or target
+	local distance = math.sqrt((measured.x - x) ^ 2 + (measured.y - y) ^ 2)
 	if not direct then
 		-- A path that grew or shrank since the stops last refreshed gets its distances again rather than a nil.
 		if #path ~= suffixCount then
@@ -800,6 +856,9 @@ function ns.MoveArrow(value)
 	elseif (not path and not arrival) or ns.db.arrow == false then
 		frame:Hide()
 	end
+	if castTarget then
+		ns.PointCastPrompt(castTarget)
+	end
 end
 
 -- "Arrow label": a new choice reads at once, without waiting for its second or the next bend.
@@ -823,16 +882,22 @@ function ns.SetArrowScale(value)
 		frame:SetScale((ns.db.arrowScale or 100) / 100)
 		Anchor(frame)
 	end
-	if castPrompt then
-		castPrompt:SetScale((ns.db.arrowScale or 100) / 100)
+	if castTarget then
+		ns.PointCastPrompt(castTarget)
 	end
 end
 
--- Read-only targets share Guide's passed bends as the map marks them: with "Mark only where steps end" on, that is
--- the step's end, which the compass marks too, while the arrow itself follows every bend.
+-- The compass shares the arrow's clear aim when it has one. Otherwise it follows the map's choice of markers.
 function ns.GuideTargets()
 	ns.AdvanceGuide()
 	if path then
+		if ns.db.arrowDirect ~= true then
+			local x, y, _, map = ns.JourneyPosition()
+			local aim, last = SightAim(x, y, map)
+			if aim then
+				return aim, not ns.db.guideStops and path[last + 1] or nil, stepEnd, destination
+			end
+		end
 		if ns.db.guideStops then
 			return path[#path], nil, stepEnd, destination
 		end
@@ -856,11 +921,22 @@ end
 ---@class SPFCastPromptFrame : Frame
 ---@field Icon Texture
 ---@field Action FontString
----@type SPFTeleportPlace?
-local castTarget
+-- Out of combat only: the clickable icon takes the step's action, or drops it while the prompt cannot be clicked.
+local function ApplyCastButton()
+	local teleport = castTarget
+	if not castPrompt or not teleport or teleport.partyMage or moving or not ns.CastPromptShown() then
+		ns.CastButton.Apply(nil)
+	else
+		ns.CastButton.Apply(castPrompt, teleport, (ns.db.arrowScale or 100) / 100)
+	end
+end
 
 local function RenderCastPrompt()
 	if not castPrompt or not castTarget or not ns.CastPromptShown() then
+		return
+	end
+	if ns.CastButton.Applied() and InCombatLockdown() then
+		castPrompt:RegisterEvent("PLAYER_REGEN_ENABLED")
 		return
 	end
 	-- Until the client has the item's name and icon it says "Use Unknown"; its own answer for that item redraws.
@@ -910,10 +986,20 @@ end
 function ns.PointCastPrompt(teleport)
 	castTarget = teleport
 	NotifyLead()
+	ns.CastButton.Shows(ns.CastPromptShown() and teleport or nil)
+	local locked = InCombatLockdown()
+	if locked and ns.CastButton.Applied() and castPrompt then
+		-- Keep the displayed label and icon paired with the action the button still performs.
+		castPrompt:RegisterEvent("PLAYER_REGEN_ENABLED")
+		return
+	end
 	if not teleport or not ns.CastPromptShown() then
 		if castPrompt then
 			castPrompt:UnregisterAllEvents()
 			castPrompt:Hide()
+		end
+		if not locked then
+			ApplyCastButton()
 		end
 		return
 	end
@@ -926,9 +1012,6 @@ function ns.PointCastPrompt(teleport)
 		---@cast created SPFCastPromptFrame
 		castPrompt = created
 		created:SetSize(320, 70)
-		created:SetScale((ns.db.arrowScale or 100) / 100)
-		-- In the arrow's place, wherever it was dragged, and kept on screen though it is wider.
-		created:SetPoint("TOP", frame, "TOP")
 		created:SetClampedToScreen(true)
 		created:SetFrameStrata("MEDIUM")
 		created.Icon = created:CreateTexture(nil, "ARTWORK")
@@ -938,12 +1021,25 @@ function ns.PointCastPrompt(teleport)
 		created.Action:SetWidth(320)
 		created:SetScript("OnEvent", function(_, event, itemID)
 			-- Item answers arrive for every item any addon asks about: only the prompt's own redraws it.
-			if event ~= "GET_ITEM_INFO_RECEIVED" or castTarget and itemID == castTarget.item then
+			if event == "PLAYER_REGEN_ENABLED" then
+				ns.PointCastPrompt(castTarget)
+			elseif event ~= "GET_ITEM_INFO_RECEIVED" or castTarget and itemID == castTarget.item then
 				RenderCastPrompt()
+				ns.CastButton.Refresh()
 			end
 		end)
 	end
+	-- In the arrow's place, wherever it was dragged, and kept on screen though it is wider.
+	castPrompt:SetScale((ns.db.arrowScale or 100) / 100)
+	castPrompt:ClearAllPoints()
+	castPrompt:SetPoint("TOP", frame, "TOP")
 	castPrompt:RegisterEvent("SPELLS_CHANGED")
 	RenderCastPrompt()
 	castPrompt:Show()
+	if locked then
+		castPrompt:RegisterEvent("PLAYER_REGEN_ENABLED")
+	else
+		castPrompt:UnregisterEvent("PLAYER_REGEN_ENABLED")
+		ApplyCastButton()
+	end
 end

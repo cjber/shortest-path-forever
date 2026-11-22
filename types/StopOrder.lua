@@ -5,7 +5,7 @@
 ---@field status SPFStopOrderStatus
 ---@field reason? SPFAPINoRoute|"context-changed"
 ---@field points? SPFAPIStop[] copied public API records, published only when ready
----@field Step fun(self: SPFStopOrderJob, pathJob?: SPFPathJob): SPFStopOrderStatus, SPFAPIStop[]? at most one Estimate; caller must defer next Step to the next frame; loading/combat retry the pending candidate
+---@field Step fun(self: SPFStopOrderJob, pathJob?: SPFPathJob): SPFStopOrderStatus, SPFAPIStop[]? at most one Estimate; caller must defer next Step to the next frame; loading/combat retry the pending edge
 ---@field Cancel fun(self: SPFStopOrderJob) permanent, clears points and prevents further work/publication; retains last status
 ---@class SPFStopOrder
----@field Begin fun(stops: SPFAPIStop[], from: SPFAPIPlace): SPFStopOrderJob validates and snapshots 1..64 stops synchronously; directed nearest-next estimated travel time with stable input-index ties; approximate, not globally optimal
+---@field Begin fun(stops: SPFAPIStop[], from: SPFAPIPlace): SPFStopOrderJob validates and snapshots 1..64 stops synchronously; orders by directed estimated travel time: exact (Held-Karp) up to 8 stops, nearest-next improved by directed 2-opt above; stable input-index ties

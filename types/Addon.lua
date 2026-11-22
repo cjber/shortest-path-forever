@@ -17,6 +17,7 @@
 ---@field WeaponMasters table<number, number[]> NPC -> taught weapon skill lines
 ---@field ProfessionTrainers table<number, number> trainer NPC -> its profession skill line (Data/Services.lua)
 ---@field ClassTrainers table<number, number> class trainer NPC -> its class (Data/Services.lua)
+---@field ClassTrainerCaps table<number, number>? class trainer NPC -> its highest required level (Data/Services.lua)
 ---@field PortalTrainers table<number, number> portal trainer NPC -> its class (Data/Services.lua)
 ---@field Battlemasters table<number, number> battlemaster NPC -> its battleground template (Data/Services.lua)
 ---@field ItemProfessions table<number, number[]> item -> the profession skill lines its goods supply, for the items a vendor sells (Data/Services.lua)
@@ -85,6 +86,7 @@
 ---@field routeColor string
 ---@field journeyKey string
 ---@field arrivalDistance number
+---@field offPathTolerance number
 ---@field hearthMinimumSavings number
 ---@field teleportMinimumSavings number
 ---@field roadDetour number
@@ -299,15 +301,23 @@
 ---@field time? string -- the step's time, greyed after it
 ---@field icon? number -- a teleport's own item or spell icon, leading its line
 ---@field warning? boolean
+---@field undoAvoid? SPFAvoidedTransport
 ---@field color? colorRGBA|ForeverObjectiveTrackerColor -- the colour a text-only refresh rewrites the line in
 
+---@class SPFAvoidedTransport
+---@field kind SPFMode
+---@field ids (number|string)[] route ID, stable portal identity, or directed taxi hop IDs
+---@field name string
+
 ---@class SPFDatabase
+---@field classTrainerCaps? table<number, number> class trainer NPC -> its highest required level seen in the client
 ---@field errors? ForeverCaughtError[] ForeverCore's shared error journal: earlier sessions' errors, for the report
 ---@field log? ForeverDebugLogStore ForeverCore's shared debug log ring: recent lines, for the report
 ---@field destinationPin boolean an on-screen marker over the journey's destination
 ---@field destinationPinSize? number percent, the world map journey goal pin's size (50 to 100, UI/StopPin.lua)
 ---@field arrivalPin? boolean a pin with the stop's objectives while in its area, instead of hiding the arrow
 ---@field arrivalDistance? number yards that count as arrived at a journey's final destination (Journey.lua)
+---@field offPathTolerance number yards from a measured walking path before searching again
 ---@field npcArrows? boolean arrows beside the nameplate of the NPC a Nearby services journey walks to (NpcArrows.lua)
 ---@field trackerHost? ForeverTrackerLegacySettings the old tracker table, offered to ForeverCore once
 ---@field trackerHeight? number the Journey section viewport cap in Core UI units
@@ -344,7 +354,8 @@
 ---@field flightPathReminder? boolean
 ---@field journey? boolean
 ---@field journeyKey? string -- the modifier held to plan a journey from a map click: "shift" or "alt" (JourneyInput.lua)
----@field journeyHint? boolean -- tooltips on map, flight and minimap pins end with the journey key's click hint (JourneyInput.lua)
+---@field journeyHint? boolean -- world map and flight point tooltips end with the journey key's click hint (JourneyInput.lua)
+---@field minimapHint? boolean -- the minimap tooltip ends with the journey key's click hint; its own switch (#1241)
 ---@field focusedQuest? boolean -- a super-tracked quest or the player's map pin starts a journey (JourneyInput.lua)
 ---@field compassTime? boolean -- the whole journey's time left under the compass distance (Compass.lua)
 ---@field arrivalSound? boolean -- the map ping when a journey the player planned reaches its goal (Alert.lua)
@@ -352,6 +363,7 @@
 ---@field restedxpHideArrow? boolean -- Shortest Path's arrow replaces the guide's while a guide target is followed (RestedXP.lua)
 ---@field guidelime? boolean -- follow Guidelime's current guide step (Guidelime.lua)
 ---@field dugi? boolean -- follow Dugi Guides' current guide step (Dugi.lua)
+---@field zygor? boolean -- follow Zygor's current guide step without a TomTom bridge (Zygor.lua)
 ---@field tomtom? boolean -- answer third-party guides' TomTom waypoints with a journey while TomTom is absent
 ---@field tomtomFollow? boolean -- with TomTom installed, a journey follows the waypoint its arrow points to
 ---@field taxiRoute? boolean
@@ -407,7 +419,17 @@
 ---@field taxiTimes? table<string, number> -- measured seconds per directed flight path, "from:to"
 ---@field trace? (number|string)[][]
 ---@field taxiLog? table<string, {seen: number, showsNodes: boolean, nodes: string[]}>
+---@alias SPFMapReportKind "road"|"wall"
+---@class SPFMapReportMark
+---@field kind SPFMapReportKind
+---@field map integer
+---@field x number
+---@field y number
+---@field world SPFPoint
+
 ---@class SPFCharacterDatabase
+---@field avoided? SPFAvoidedTransport[]
+---@field mapReportMarks SPFMapReportMark[]
 ---@field progress? SPFProgressData
 ---@field taxi table<number, boolean>
 ---@field taxiNames? table<number, string> -- flight points by the name a flight map gave them
@@ -493,6 +515,7 @@ ShortestPathForeverPathData = nil
 ---@field arrive number
 ---@field wait number
 ---@field estimated? boolean
+---@field portal? number
 ---@field route? number
 ---@field aboard? boolean
 ---@field boarding? SPFStop
@@ -607,6 +630,7 @@ ShortestPathForeverPathData = nil
 ---@field to number
 ---@field mode SPFMode
 ---@field duration number
+---@field portal? number
 ---@field route? number
 ---@field stop? SPFStop
 ---@field alighting? SPFStop
@@ -632,6 +656,8 @@ ShortestPathForeverPathData = nil
 ---@field count? number
 
 ---@class SPFPathJob
+---@field nearbyWalks? table<SPFNearbyWalkBatch, true> batches retained by a Nearby measure
+---@field nearbyOrigin? SPFPoint where a Nearby measure started (NearbyRank.lua)
 ---@field walking? table<SPFPathJob, true> the walking searches owned by a Nearby job
 ---@field nearbyHere? SPFPoint origin held for one Nearby ranking
 ---@field map number
@@ -647,6 +673,7 @@ ShortestPathForeverPathData = nil
 ---@field cancelled? boolean
 ---@field paused? boolean
 ---@field done? boolean
+---@field onError? fun() -- settles the owning search after a job or its callback throws
 ---@field reason? string -- why a finished job found nothing, kept for a caller that missed its callback
 ---@field frames number
 ---@field cpu number

@@ -1,19 +1,39 @@
 -- Real Journey + nav data, one pump per simulated 60 Hz frame. Optional args: a baseline source directory, then
--- "continent" for the continent-wide case alone (kept out of the default set speedpatrol times).
-local root = arg[1] or "."
+-- "continent", "orgrimmar" or "stormwind" for cases kept out of the default set Speedpatrol times.
+local observer, root, mode = ...
+if type(observer) ~= "function" then
+	observer, root, mode = nil, arg[1] or ".", arg[2]
+end
 local cases = {
 	{ "Auberdine -> Tanaris", 26, 39, "Alliance" },
 	{ "Auberdine -> Eastern Plaguelands", 26, 67, "Alliance" },
 	{ "Crossroads -> Thunder Bluff", 25, 22, "Horde" },
 	{ "Ironforge -> Menethil", 6, 7, "Alliance" },
 }
-if arg[2] == "continent" then
+if mode == "continent" then
 	-- A goal search over most of Kalimdor: the Auberdine boat stays a contender until about 13.5k yards (#1074).
 	cases = {
 		{
 			"Stormwind -> Feralas",
 			{ map = 0, x = -8849, y = 647.9, z = 98 },
 			{ map = 1, x = -4450, y = 1350, z = 0 },
+			"Alliance",
+		},
+	}
+elseif mode == "orgrimmar" then
+	local from = { map = 1, x = 1630, y = -4420, z = 15 }
+	cases = {
+		{ "Orgrimmar -> Azshara 2600", from, { map = 1, x = 2600, y = -4300 }, "Horde" },
+		{ "Orgrimmar -> Azshara 3900", from, { map = 1, x = 3900, y = -4200 }, "Horde" },
+	}
+end
+local stormwind = mode == "stormwind"
+if stormwind then
+	cases = {
+		{
+			"SW Canals -> Dwarven District",
+			{ map = 0, x = -8692, y = 694.1, z = 95 },
+			{ map = 0, x = -8344.6, y = 681.9, z = 95 },
 			"Alliance",
 		},
 	}
@@ -53,6 +73,12 @@ for _, case in ipairs(cases) do
 		assert(to.name:find(toName, 1, true), "wrong benchmark destination")
 	end
 	ns.faction, ns.db.debug = case[4], true
+	if stormwind then
+		ns.teleports = {
+			{ map = 0, x = -8867.8, y = 673.4, z = 97.9, spell = 8690, item = 6948, bind = true, cast = 10000 },
+		}
+		ns.teleportReady = { ns.NowMs() }
+	end
 	-- Level 15 with high zones avoided, the default: every walk is weighed by the zones on its way. In the client each
 	-- zone the shipped cells do not cover is several C_Map calls, so the bench counts them.
 	ns.db.avoidHighZones, ns.level = true, 15
@@ -127,7 +153,7 @@ for _, case in ipairs(cases) do
 		frames = frames + 1
 		local started = os.clock()
 		fn()
-		driver.update(1 / 60)
+		driver.update(observer and 0 or 1 / 60)
 		worst = math.max(worst, (os.clock() - started) * 1000)
 		assert(frames < 20000, "journey did not settle")
 	end
@@ -171,10 +197,16 @@ for _, case in ipairs(cases) do
 			residentKB / 1024
 		)
 	)
-	assert(many == 2 and round == 1 and rounds >= 2, "one completed proof")
+	-- These clicks are on isolated ground. Moving the goal replaces both endpoint searches once.
+	local batches = mode == "orgrimmar" and 4 or stormwind and 3 or 2
+	assert(many == batches, "expected endpoint batches")
+	assert(round == 1 and rounds >= 2, "one completed proof")
 	assert(resets == 0, "drawn walks cannot revert to straight lines")
 	-- Hazards.Profile asks for the zone of each of the journey's own ends (at most four); every walk reads the cells.
 	assert(lookups <= 4, lookups .. " zone lookups reach the client")
+	if observer then
+		observer(case[1], driver.shown(), ns.JourneyPlan())
+	end
 	if case[3] == 67 then
 		eplEarly = usable ~= nil and usable <= 0.75 * frames
 	end

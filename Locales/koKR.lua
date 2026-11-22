@@ -51,13 +51,14 @@ L["Avoids %s (level %s)"] = "%s 우회 (레벨 %s)"
 L["Bags"] = "가방"
 L["Bank"] = "은행"
 L["Battlemaster"] = "전장 지휘관"
+L["Click to cast %s"] = "클릭하여 %s 시전"
+L["Click to use %s"] = "클릭하여 %s 사용"
 L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to save it for later; class teleports are still offered."] =
 	"여정은 귀환석이나 영혼의 귀환으로 시작할 수 있습니다. 나중을 위해 끄면 직업 순간이동은 계속 제공됩니다."
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"여정과 다른 애드온의 이곳 기준 예상 시간은 재사용 대기시간을 포함해 마법사의 도시 순간이동이나 순간이동: 달의 숲으로 시작할 수 있습니다."
 L["Minimum teleport saving"] = "순간이동 최소 절약 시간"
-L["Short journeys no longer wait on your Hearthstone."] =
-	"짧은 여정이 더 이상 귀환석을 기다리지 않습니다." -- mt
+L["Journey stops are ordered for the whole trip."] = "여정 경유지가 전체 여정에 맞게 정렬됩니다." -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"최소 이만큼 시간을 절약할 때만 직업 순간이동을 사용합니다."
 L["Boat and Zeppelin Routes"] = "배와 비행선 노선"
@@ -101,6 +102,7 @@ L["Flight path known"] = "알고 있는 비행 경로"
 L["Flights from here"] = "여기서 출발하는 비행"
 L["Fly to %s"] = "%s(으)로 비행"
 L["Follow Dugi guides"] = "Dugi 가이드 따르기" -- mt
+L["Follow Zygor guides"] = "Zygor 가이드 따르기" -- mt
 L["Follow Guidelime guides"] = "Guidelime 가이드 따르기"
 L["Follow RestedXP guides"] = "RestedXP 가이드 따르기"
 L["Follow TomTom's arrow"] = "TomTom 화살표 따르기"
@@ -160,16 +162,19 @@ L["Only use the Hearthstone when it saves at least this much time."] =
 L["Open"] = "열기"
 L["Open Nearby services"] = "주변 편의시설 열기"
 L["Open the world map to see it."] = "세계 지도를 열어 확인하십시오."
+L["The travel action will update after combat."] = "전투가 끝나면 이동 행동이 갱신됩니다."
 L["Rides to spend less time walking through %s (level %s)"] =
 	"이동 수단을 이용해 %s (레벨 %s)에서 걷는 구간을 줄임"
-L["Walk less in zones with a minimum level 4 or more above yours, even at your destination."] =
-	"최소 레벨이 내 레벨보다 4 이상 높은 지역에서는 걷는 구간을 줄입니다. 목적지가 그 지역에 있어도 적용됩니다."
+L["Walk less in zones with a minimum level 5 or more above yours, and less still the higher it is, even at your destination."] =
+	"최소 레벨이 내 레벨보다 5 이상 높은 지역에서는 걷는 구간을 줄이며, 더 높을수록 더 줄입니다. 목적지가 그 지역에 있어도 적용됩니다." -- mt
 L["Turn the world map to %s to see it."] = "%s 지역으로 세계 지도를 돌려 확인하십시오." -- mt
 L["This menu needs mouse and keyboard."] = "이 메뉴는 마우스와 키보드가 필요합니다." -- mt
 L["Other Faction's Routes"] = "다른 진영의 노선"
 L["Plan journey"] = "여정 계획"
 L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."] =
 	"Dugi 가이드의 현재 단계로 여정을 계획합니다. Dugi는 자체 화살표를 유지합니다." -- mt
+L["Plan journeys to Zygor's current guide step, with no TomTom or bridge addon needed. Zygor keeps its own arrow."] =
+	"TomTom이나 연결 애드온 없이 Zygor 가이드의 현재 단계로 여정을 계획합니다. Zygor는 자체 화살표를 유지합니다." -- mt
 L["Plan journeys to Guidelime's current guide step. Guidelime's arrow steps aside while ours draws."] =
 	"Guidelime의 현재 가이드 단계로 여정을 계획합니다. 우리 화살표가 그려지는 동안 Guidelime의 화살표는 물러납니다."
 L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."] =
@@ -419,6 +424,9 @@ L["The stop's live objectives under the arrow while it leads."] =
 L["The pin shown when you reach a stop keeps its own lines."] =
 	"지점에 도착했을 때 표시되는 핀은 자체 목표 줄을 유지합니다." -- mt
 L["Arrival distance"] = "도착 거리" -- mt
+L["Off-path tolerance"] = "경로 이탈 허용 거리" -- mt
+L["How far you can stray from a walking path before a new one is searched."] =
+	"새 경로를 찾기 전에 도보 경로에서 벗어날 수 있는 거리입니다." -- mt
 L["How close you must get to a journey's destination for it to count as reached."] =
 	"여정의 목적지에 얼마나 가까워져야 도착으로 칩니다." -- mt
 L["Stops before the last on a multi-stop route keep 15 yards."] =
@@ -457,8 +465,11 @@ L["The key you hold to plan a journey from the world map or the minimap."] =
 L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
 	"Questie 아이콘에서는 Shift-클릭이 Questie의 것이며, Alt-클릭은 두 키 중 어느 쪽이든 그곳까지 여정을 계획합니다." -- mt
 L["Show the journey key hint in tooltips"] = "툴팁에 여정 키 안내 표시" -- mt
-L["Adds a line naming your journey key to tooltips on the world map, flight points and the minimap. Off, the key still plans journeys."] =
-	"세계 지도, 비행 지점, 미니맵 툴팁에 여정 키를 알려 주는 줄을 추가합니다. 꺼도 키로 여정을 계속 계획할 수 있습니다." -- mt
+L["Show the journey key hint on the minimap"] = "미니맵에 여정 키 안내 표시" -- mt
+L["Adds the journey key line to the minimap's tooltip over what it tracks. Off, the world map and flight point tooltips keep theirs, and the key still plans journeys."] =
+	"미니맵이 추적하는 대상의 툴팁에 여정 키 줄을 추가합니다. 끄면 세계 지도와 비행 경로의 툴팁 안내는 그대로 남고, 키로는 여전히 여정을 계획할 수 있습니다." -- mt
+L["Adds a line naming your journey key to tooltips on the world map and flight points. Off, the key still plans journeys."] =
+	"세계 지도와 비행 경로 툴팁에 여정 키 이름을 넣은 줄을 추가합니다. 끄면 키로 여전히 여정을 계획할 수 있습니다." -- mt
 L["Show the Nearby services tab"] = "주변 편의시설 탭 표시"
 L["The tab in the world map's quest log. Off, /spfnear and the tracking menu still open it."] =
 	"세계 지도 퀘스트 로그의 탭입니다. 꺼도 /spfnear와 추적 메뉴로 계속 열 수 있습니다."
@@ -527,8 +538,8 @@ L["Journey paused."] = "여정을 일시 정지했습니다." -- mt
 L["Journey stopped."] = "여정을 중지했습니다." -- mt
 L["Journey stops"] = "여정 경유지" -- mt
 L["Ordering stops by estimated travel time..."] = "예상 이동 시간순으로 경유지 정렬 중..." -- mt
-L["Orders the next stop by estimated travel time. You can change the order."] =
-	"예상 이동 시간에 따라 다음 경유지를 선택합니다. 순서를 변경할 수 있습니다." -- mt
+L["Orders the stops by estimated travel time. You can change the order."] =
+	"예상 이동 시간에 따라 경유지 순서를 정합니다. 순서를 변경할 수 있습니다." -- mt
 L["Place a map waypoint, then add it to this journey."] =
 	"지도에 경유지를 지정한 후 이 여정에 추가하세요." -- mt
 L["Remove"] = "제거" -- mt
@@ -588,3 +599,40 @@ L["In the tracker while you are near a dock, lift or tram."] =
 L["Town service icons"] = "도시 서비스 아이콘" -- mt
 L["Off hides them. Otherwise one icon per town, or one per service as you zoom in."] =
 	"끄면 숨깁니다. 켜면 확대할 때 도시당 아이콘 하나 또는 서비스당 아이콘 하나가 표시됩니다." -- mt
+L["Avoid this boat"] = "이 배 피하기"
+L["Avoid this zeppelin"] = "이 비행선 피하기"
+L["Avoid this lift"] = "이 승강기 피하기"
+L["Avoid this tram"] = "이 지하철 피하기"
+L["Avoid this flight"] = "이 비행편 피하기"
+L["Avoid this portal"] = "이 차원문 피하기"
+L["Avoid this passage"] = "이 통로 피하기"
+L["Undo"] = "되돌리기"
+L["Allow this transport again and find a new route."] =
+	"이 교통수단을 다시 허용하고 새 경로를 찾습니다."
+L["Find a new route without this transport. You can clear avoided transport in Settings."] =
+	"이 교통수단을 제외하고 새 경로를 찾습니다. 설정에서 제외 목록을 지울 수 있습니다."
+L["No route remains without %s. Right-click to undo."] =
+	"%s 항목을 제외하면 남는 경로가 없습니다. 우클릭하여 되돌리세요."
+L["Avoided transport"] = "제외한 교통수단"
+L["Clear avoided transport"] = "제외한 교통수단 지우기"
+L["Clear this character's avoided transport so the planner can use it again."] =
+	"이 캐릭터의 제외 목록을 지워 경로를 찾을 때 해당 교통수단을 다시 이용할 수 있게 합니다."
+L["%s-right-click the map to mark a road or wall for a report."] =
+	"%s 키를 누른 채 지도를 우클릭하면 보고서에 길이나 벽을 표시할 수 있습니다." -- mt
+L["Mark: road missing here"] = "표시: 이곳에 길이 누락됨" -- mt
+L["Mark: wall here"] = "표시: 이곳에 벽이 있음" -- mt
+L["%s-right-click the map to copy the report or clear its marks."] =
+	"%s 키를 누른 채 지도를 우클릭하면 보고서를 복사하거나 표시를 지울 수 있습니다." -- mt
+L["Save this spot in the report to help fix the walking map."] =
+	"도보 경로 지도를 수정할 수 있도록 이 위치를 보고서에 저장합니다." -- mt
+L["This spot has no world coordinates. Choose another spot."] =
+	"이 위치에는 월드 좌표가 없습니다. 다른 위치를 선택하세요." -- mt
+L["Copy road and wall report"] = "길 및 벽 보고서 복사" -- mt
+L["Open the report so you can copy and paste it into a bug report."] =
+	"버그 제보에 복사해 붙여넣을 수 있도록 보고서를 엽니다." -- mt
+L["Clear marks"] = "표시 지우기" -- mt
+L["Remove all saved road and wall marks from the map and report."] =
+	"지도와 보고서에서 저장된 길 및 벽 표시를 모두 지웁니다." -- mt
+L["Road and wall report"] = "길 및 벽 보고서" -- mt
+L["Journey start: %s"] = "여정 출발지: %s" -- mt
+L["Journey goal: %s"] = "여정 목적지: %s" -- mt

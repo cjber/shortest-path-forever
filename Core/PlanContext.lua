@@ -16,26 +16,89 @@ ns.PlanContext = Context
 local lastSpeed = 7
 -- Stable identities let the planner reuse its walking topology between frames.
 local empty = {}
-local routeSource, routeFaction, unguarded
+---@return SPFAvoidedTransport[]
+function Context.Avoided()
+	return ns.charDB and ns.charDB.avoided or empty
+end
 
--- Landing guards affect boarding safety, not physical ownership. Keep landings as walking destinations.
--- Stable identities let journeys and estimates reuse topology until the route source or faction changes.
-local function Routes(faction)
-	if routeSource ~= ns.Routes or routeFaction ~= faction then
-		routeSource, routeFaction, unguarded = ns.Routes, faction, {}
-		local excluded = false
-		for id, route in pairs(ns.Routes or {}) do
-			if not route.guardedFaction or route.guardedFaction == faction then
-				unguarded[id] = route
-			else
-				excluded = true
-			end
-		end
-		if not excluded then
-			unguarded = ns.Routes
+---@param path SPFTaxiPath
+---@return string
+function Context.TaxiHopID(path)
+	return path.from .. ":" .. path.to
+end
+
+-- The planner's portal index addresses baked walks. Persist the named entrance instead.
+---@param portal SPFPortal
+---@return string
+function Context.PortalID(portal)
+	local from = portal.from
+	return ("%d:%.17g:%.17g:%s:%s"):format(from.map, from.x, from.y, portal.kind, portal.name)
+end
+
+-- Each edit replaces the saved list. Its identity versions the filtered tables, which in turn version
+-- the planner topology and the public estimate cache.
+local routeSource, taxiSource, portalSource, routeFaction, version
+local routes, taxiPaths, portals
+
+local function Transport(faction)
+	local avoided = Context.Avoided()
+	if
+		routeSource == ns.Routes
+		and taxiSource == ns.TaxiPaths
+		and portalSource == ns.Portals
+		and routeFaction == faction
+		and version == avoided
+	then
+		return routes, taxiPaths, portals
+	end
+	routeSource, taxiSource, portalSource, routeFaction, version = ns.Routes, ns.TaxiPaths, ns.Portals, faction, avoided
+	local excludedRoutes, excludedHops, excludedPortals = {}, {}, {}
+	for _, entry in ipairs(avoided) do
+		local excluded = entry.kind == "flight" and excludedHops
+			or (entry.kind == "portal" or entry.kind == "passage") and excludedPortals
+			or excludedRoutes
+		for _, id in ipairs(entry.ids) do
+			excluded[id] = true
 		end
 	end
-	return unguarded
+	routes, taxiPaths, portals = routeSource, taxiSource, portalSource
+	for id, route in pairs(routeSource or empty) do
+		-- Landing guards and avoids affect boarding. The dock remains a walking destination.
+		if excludedRoutes[id] or (route.guardedFaction and route.guardedFaction ~= faction) then
+			routes = {}
+			break
+		end
+	end
+	if routes ~= routeSource then
+		for id, route in pairs(routeSource) do
+			if not excludedRoutes[id] and (not route.guardedFaction or route.guardedFaction == faction) then
+				routes[id] = route
+			end
+		end
+	end
+	if next(excludedHops) and taxiSource then
+		taxiPaths = {}
+		for _, path in ipairs(taxiSource) do
+			if not excludedHops[Context.TaxiHopID(path)] then
+				taxiPaths[#taxiPaths + 1] = path
+			end
+		end
+	end
+	if next(excludedPortals) and portalSource then
+		local remaining, matched = {}, false
+		for id, portal in ipairs(portalSource) do
+			if excludedPortals[Context.PortalID(portal)] then
+				matched = true
+			else
+				-- Keep the original keys: baked walks address portal endpoints by these IDs.
+				remaining[id] = portal
+			end
+		end
+		if matched then
+			portals = remaining
+		end
+	end
+	return routes, taxiPaths, portals
 end
 
 -- Run speed stays meaningful while standing still. Secret combat values retain the last readable speed.
@@ -73,6 +136,10 @@ function Context.Options(from, to, policy)
 		partyPortals = ns.PartyPortalPlaces and ns.PartyPortalPlaces(from) or nil
 	end
 	local faction = UnitFactionGroup("player")
+	local useRoutes, useTaxiPaths, usePortals = empty, empty, empty
+	if not walking then
+		useRoutes, useTaxiPaths, usePortals = Transport(faction)
+	end
 	return {
 		routePolicy = walking and "walking" or nil,
 		class = select(2, UnitClass("player")),
@@ -85,11 +152,11 @@ function Context.Options(from, to, policy)
 		taxiKnown = walking and empty or ns.KnownTaxiNodes(),
 		anchors = walking and empty or ns.Timetable.Anchors(),
 		docks = walking and empty or ns.Docks,
-		routes = walking and empty or Routes(faction),
+		routes = useRoutes,
 		taxiNodes = walking and empty or ns.TaxiNodes,
-		taxiPaths = walking and empty or ns.TaxiPaths,
+		taxiPaths = useTaxiPaths,
 		taxiTimes = walking and empty or ns.TaxiTimes and ns.TaxiTimes.Snapshot(),
-		portals = walking and empty or ns.Portals,
+		portals = usePortals,
 		teleports = walking and empty or teleports,
 		teleportReady = walking and empty or ready,
 		teleportState = walking and empty or state or empty,
@@ -140,10 +207,14 @@ end
 function Context.Places(teleports, partyPortals, policy)
 	local faction = UnitFactionGroup("player")
 	local walking = policy == "walking"
+	local usePortals = empty
+	if not walking then
+		usePortals = select(3, Transport(faction))
+	end
 	return ns.Planner.Places({
 		docks = walking and empty or ns.Docks,
 		taxiNodes = walking and empty or ns.TaxiNodes,
-		portals = walking and empty or ns.Portals,
+		portals = usePortals,
 		teleports = walking and empty or teleports,
 		partyPortals = walking and empty or partyPortals,
 		faction = faction,

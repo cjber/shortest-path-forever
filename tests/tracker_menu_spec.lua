@@ -164,21 +164,33 @@ local function order(root, expected)
 	assert(locks == 1, "exactly one Lock the tracker entry")
 	assert(not entry(root, "Attach to quest tracker"), "the attach entry is gone with core 1.15.0")
 end
-local expected = table.concat({
-	"Guide me",
-	"Use Hearthstone",
-	"Resume RestedXP guide",
-	"Resume Guidelime guide",
-	"Resume Dugi guide",
-	"Hide the journey tracker",
-	"Show on map",
-	"Clear journey",
-	"divider",
-	"Lock the tracker",
-	"Tracker",
-}, ",")
+local function expectedOrder(restedXP, departures)
+	local labels = { "Guide me", "Use Hearthstone" }
+	if restedXP then
+		labels[#labels + 1] = "Resume RestedXP guide"
+	end
+	labels[#labels + 1] = "Resume Guidelime guide"
+	labels[#labels + 1] = "Resume Dugi guide"
+	labels[#labels + 1] = "Hide the journey tracker"
+	if departures then
+		labels[#labels + 1] = "Hide departures"
+	end
+	labels[#labels + 1] = "Show on map"
+	labels[#labels + 1] = "Clear journey"
+	labels[#labels + 1] = "divider"
+	labels[#labels + 1] = "Lock the tracker"
+	labels[#labels + 1] = "Tracker"
+	return table.concat(labels, ",")
+end
+local expected = expectedOrder(false)
 local block = menu("journey")
 assert(block.title == "Block title")
+order(block, expected)
+order(menu(), expected)
+assert(entry(block, "Resume RestedXP guide") == nil, "RestedXP's entry waits for RestedXP")
+env.RXP = { arrowFrame = {} }
+expected = expectedOrder(true)
+block = menu("journey")
 order(block, expected)
 order(menu(), expected)
 entry(block, "Guide me").callback()
@@ -245,7 +257,16 @@ t.setCombat(true)
 local beforeCombat = #messages
 local mapCount = #maps
 local combatOpen = entry(menu(42), "Show on map")
-assert(combatOpen:IsEnabled(), "the named action stays available to explain a refusal")
+-- ForeverCore disables a named Open built in combat and names the refusal in its tooltip.
+assert(not combatOpen:IsEnabled(), "the named action is disabled in combat")
+local combatLines = {}
+combatOpen.tooltip({
+	SetText = function() end,
+	AddLine = function(_, text)
+		combatLines[#combatLines + 1] = text
+	end,
+})
+assert(combatLines[1] == "Unavailable in combat", "its tooltip explains the refusal")
 for _, action in ipairs({ entry(block, "Show on map"), combatOpen }) do
 	local combatAccepted, combatReason = action.callback()
 	assert(combatAccepted == false and combatReason == "Unavailable in combat")
@@ -254,6 +275,102 @@ assert(#maps == mapCount, "combat never reaches the opener")
 assert(#messages == beforeCombat + 2, "Core reports combat once per click")
 assert(messages[beforeCombat + 1] == "Unavailable in combat" and messages[#messages] == "Unavailable in combat")
 print("tracker_menu_spec: contract menus and clicks passed")
+
+-- Layout the same line the tracker makes for a proved transport step.
+env.ForeverCore.ContextMenu = shared.ContextMenu
+env.OBJECTIVE_TRACKER_COLOR = { Normal = {}, NormalHighlight = {} }
+env.RED_FONT_COLOR = {}
+local line = {
+	SetScript = function(self, _, callback)
+		self.click = callback
+	end,
+}
+local setInteractive = env.ForeverCore.TrackerLine.SetInteractive
+env.ForeverCore.TrackerLine.SetInteractive = noop
+local rowBlock = {
+	id = "journey",
+	HeaderText = {
+		GetHeight = function()
+			return 12
+		end,
+		GetText = function()
+			return "Journey"
+		end,
+	},
+	SetHeader = noop,
+	AddObjective = function()
+		return line
+	end,
+}
+module.GetBlock = function()
+	return rowBlock
+end
+module.LayoutBlock = function()
+	return true
+end
+local boat = { mode = "boat", route = 9 }
+local plan = { legs = { boat } }
+ns.JourneyInfo = function()
+	return "Journey", module.blocks[1].rows, plan, 1
+end
+local entryToAvoid = { kind = "boat", ids = { 9 }, name = "Test boat" }
+local avoided
+ns.AvoidJourneyTransport = function(leg)
+	assert(leg == boat)
+	avoided = entryToAvoid
+end
+ns.UndoAvoidedTransport = function(saved)
+	assert(saved == avoided)
+	avoided = nil
+end
+local boarded = false
+ns.AvoidTransport = {
+	Allowed = function(leg)
+		return not (boarded and leg == boat)
+	end,
+}
+module.blocks = { { key = "journey", title = "Journey", rows = { { key = 1, text = "Boat" } } } }
+module:LayoutContents()
+line.click(line, "RightButton")
+local avoid = assert(entry(t.menus[#t.menus], "Avoid this boat"), "the transport row offers Avoid this boat")
+local tooltipText
+local tooltip = {
+	AddLine = function(_, text)
+		tooltipText = text
+	end,
+}
+avoid.tooltip(tooltip)
+assert(tooltipText:find("new route", 1, true) and tooltipText:find("Settings", 1, true))
+avoid.callback()
+assert(avoided == entryToAvoid)
+avoided = nil
+
+-- Once boarded, the ride cannot be avoided: the row opens the journey's own menu.
+boarded = true
+local menusBefore = #t.menus
+line.click(line, "RightButton")
+assert(
+	#t.menus == menusBefore or not entry(t.menus[#t.menus], "Avoid this boat"),
+	"the boarded step offers no Avoid this boat"
+)
+boarded = false
+avoided = entryToAvoid
+
+plan = nil
+module.blocks[1].rows =
+	{ { key = "avoided-transport", text = "No route remains without Test boat", undoAvoid = avoided } }
+module:LayoutContents()
+line.click(line, "RightButton")
+local undo = assert(entry(t.menus[#t.menus], "Undo"), "the no-route row offers Undo")
+undo.tooltip(tooltip)
+assert(tooltipText:find("again", 1, true) and tooltipText:find("new route", 1, true))
+undo.callback()
+assert(not avoided)
+ns.JourneyInfo = function()
+	return journey or nil
+end
+
+env.ForeverCore.TrackerLine.SetInteractive = setInteractive
 
 -- Reload Core against the existing column, just as another addon or an earlier UI boot leaves it.
 t.setCombat(false)

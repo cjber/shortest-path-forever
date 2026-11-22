@@ -77,9 +77,12 @@ local function TrackerMenu(target, menu)
 		local hearth = menu:Action(L["Use Hearthstone"], ns.ToggleHearthstone)
 		-- Core returns its normal description, including the checkbox state used by its renderer.
 		hearth.kind, hearth.isSelected = "checkbox", ns.HearthstoneEnabled
-		menu:Action(L["Resume RestedXP guide"], function()
-			return ns.ResumeRestedXP(), L["That guide has no step to follow."]
-		end)
+		local rxp = RXP
+		if type(rxp) == "table" and rxp.arrowFrame then
+			menu:Action(L["Resume RestedXP guide"], function()
+				return ns.ResumeRestedXP(), L["That guide has no step to follow."]
+			end)
+		end
 		if GuidelimeArrow then
 			menu:Action(L["Resume Guidelime guide"], function()
 				return ns.ResumeGuidelime(), L["That guide has no step to follow."]
@@ -297,6 +300,58 @@ local function SetPulse(line, pulsing)
 	end
 end
 
+local AVOID = {
+	boat = L["Avoid this boat"],
+	zeppelin = L["Avoid this zeppelin"],
+	lift = L["Avoid this lift"],
+	tram = L["Avoid this tram"],
+	flight = L["Avoid this flight"],
+	portal = L["Avoid this portal"],
+	passage = L["Avoid this passage"],
+}
+
+local function TransportMenu(line, row)
+	if ns.Corpse.Active() then
+		return false
+	end
+	local _, rows, plan, first = ns.JourneyInfo()
+	-- Layout is reused across replans. Resolve the currently displayed step's relative key when the menu opens.
+	local key = row.key
+	if row.undoAvoid then
+		local avoided = rows and rows[1] and rows[1].undoAvoid
+		if avoided then
+			ForeverCore.ContextMenu(line, function(_, root)
+				root:CreateButton(L["Undo"], function()
+					ns.UndoAvoidedTransport(avoided)
+				end):SetTooltip(function(tooltip)
+					tooltip:AddLine(L["Allow this transport again and find a new route."], nil, nil, nil, true)
+				end)
+			end)
+			return true
+		end
+	end
+	local leg = type(key) == "number" and plan and plan.legs[first + key - 1]
+	local label = leg and AVOID[leg.mode]
+	if
+		label
+		and leg
+		and ns.AvoidTransport.Allowed(leg)
+		and (leg.route or leg.portal or (leg.mode == "flight" and leg.hops and leg.hops[1]))
+	then
+		ForeverCore.ContextMenu(line, function(_, root)
+			root:CreateButton(label, function()
+				ns.AvoidJourneyTransport(leg)
+			end):SetTooltip(function(tooltip)
+				tooltip:AddLine(
+					L["Find a new route without this transport. You can clear avoided transport in Settings."]
+				)
+			end)
+		end)
+		return true
+	end
+	return false
+end
+
 function ModuleMixin:LayoutContents()
 	for _, entry in ipairs(self.blocks) do
 		local block = self:GetBlock(entry.key)
@@ -311,10 +366,11 @@ function ModuleMixin:LayoutContents()
 				-- Core's line takes the mouse but answers only the left button, so SPF sets its own OnMouseUp after.
 				Line.SetInteractive(line, {})
 				line:SetScript("OnMouseUp", function(_, button)
-					-- A right click on any journey line opens the journey's own menu, as its title does (Lock, Clear
-					-- journey).
 					if button == "RightButton" then
-						return self:OnBlockHeaderClick(block, button)
+						if not TransportMenu(line, row) then
+							return self:OnBlockHeaderClick(block, button)
+						end
+						return
 					end
 					if button ~= "LeftButton" or not current then
 						return

@@ -49,12 +49,14 @@ L["Avoids %s (level %s)"] = "Rodea %s (nivel %s)"
 L["Bags"] = "Bolsas"
 L["Bank"] = "Banco"
 L["Battlemaster"] = "Maestro de batalla"
+L["Click to cast %s"] = "Haz clic para lanzar %s"
+L["Click to use %s"] = "Haz clic para usar %s"
 L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to save it for later; class teleports are still offered."] =
 	"Los viajes pueden empezar con tu piedra de hogar o Retirada astral. Desactívala para guardarla para más tarde; los teletransportes de clase se siguen ofreciendo."
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"Los viajes, y las estimaciones de otros addons desde aquí, pueden empezar con un teletransporte de mago a una ciudad o Teletransporte: Claro de la Luna, contando el tiempo de reutilización."
 L["Minimum teleport saving"] = "Ahorro mínimo del teletransporte"
-L["Short journeys no longer wait on your Hearthstone."] = "Los viajes cortos ya no esperan a tu piedra de hogar." -- mt
+L["Journey stops are ordered for the whole trip."] = "Las paradas del viaje se ordenan para todo el trayecto." -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"Usar un teletransporte de clase solo si ahorra al menos este tiempo."
 L["Boat and Zeppelin Routes"] = "Rutas de barcos y zepelines"
@@ -97,6 +99,7 @@ L["Flight path known"] = "Ruta de vuelo conocida"
 L["Flights from here"] = "Vuelos desde aquí"
 L["Fly to %s"] = "Volar a %s"
 L["Follow Dugi guides"] = "Seguir guías de Dugi" -- mt
+L["Follow Zygor guides"] = "Seguir guías de Zygor" -- mt
 L["Follow Guidelime guides"] = "Seguir guías de Guidelime"
 L["Follow RestedXP guides"] = "Seguir guías de RestedXP"
 L["Follow TomTom's arrow"] = "Seguir la flecha de TomTom"
@@ -155,15 +158,18 @@ L["Only use the Hearthstone when it saves at least this much time."] =
 L["Open"] = "Abrir"
 L["Open Nearby services"] = "Abrir servicios cercanos"
 L["Open the world map to see it."] = "Abre el mapa del mundo para verlo."
+L["The travel action will update after combat."] = "La acción de viaje se actualizará después del combate."
 L["Rides to spend less time walking through %s (level %s)"] = "Usa transporte para caminar menos por %s (nivel %s)"
-L["Walk less in zones with a minimum level 4 or more above yours, even at your destination."] =
-	"Camina menos por zonas cuyo nivel mínimo supera al tuyo en al menos 4 niveles, incluso si tu destino está allí."
+L["Walk less in zones with a minimum level 5 or more above yours, and less still the higher it is, even at your destination."] =
+	"Camina menos por zonas cuyo nivel mínimo supera al tuyo en al menos 5 niveles, y aún menos cuanto más alto sea, incluso si tu destino está allí." -- mt
 L["Turn the world map to %s to see it."] = "Gira el mapa del mundo hacia %s para verlo." -- mt
 L["This menu needs mouse and keyboard."] = "Este menú necesita ratón y teclado." -- mt
 L["Other Faction's Routes"] = "Rutas de la otra facción"
 L["Plan journey"] = "Planear viaje"
 L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."] =
 	"Planear viajes al paso actual de la guía de Dugi. Dugi conserva su propia flecha." -- mt
+L["Plan journeys to Zygor's current guide step, with no TomTom or bridge addon needed. Zygor keeps its own arrow."] =
+	"Planear viajes al paso actual de la guía de Zygor, sin TomTom ni addon puente. Zygor conserva su propia flecha." -- mt
 L["Plan journeys to Guidelime's current guide step. Guidelime's arrow steps aside while ours draws."] =
 	"Planear viajes al paso actual de la guía de Guidelime. Su flecha se aparta mientras se dibuja la nuestra."
 L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."] =
@@ -410,6 +416,9 @@ L["The stop's live objectives under the arrow while it leads."] =
 L["The pin shown when you reach a stop keeps its own lines."] =
 	"La marca que se muestra al llegar a una parada conserva sus propias líneas." -- mt
 L["Arrival distance"] = "Distancia de llegada" -- mt
+L["Off-path tolerance"] = "Tolerancia fuera de la ruta" -- mt
+L["How far you can stray from a walking path before a new one is searched."] =
+	"Hasta dónde puedes desviarte de un camino a pie antes de que se busque uno nuevo." -- mt
 L["How close you must get to a journey's destination for it to count as reached."] =
 	"A qué distancia de la parada final debes llegar para que el trayecto cuente como terminado." -- mt
 L["Stops before the last on a multi-stop route keep 15 yards."] =
@@ -447,8 +456,11 @@ L["The key you hold to plan a journey from the world map or the minimap."] =
 L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
 	"Sobre un icono de Questie, el clic con Mayús sigue siendo de Questie; Alt+clic planea allí el viaje con cualquiera de las dos teclas." -- mt
 L["Show the journey key hint in tooltips"] = "Mostrar la pista de la tecla de viaje en las descripciones emergentes" -- mt
-L["Adds a line naming your journey key to tooltips on the world map, flight points and the minimap. Off, the key still plans journeys."] =
-	"Añade una línea con tu tecla de viaje a las descripciones del mapa del mundo, los puntos de vuelo y el minimapa. Desactivada, la tecla sigue planeando viajes." -- mt
+L["Show the journey key hint on the minimap"] = "Mostrar la indicación de la tecla de viaje en el minimapa" -- mt
+L["Adds the journey key line to the minimap's tooltip over what it tracks. Off, the world map and flight point tooltips keep theirs, and the key still plans journeys."] =
+	"Añade la línea de la tecla de viaje a la descripción del minimapa sobre lo que rastrea. Desactivado, las descripciones del mapa del mundo y de los puntos de vuelo mantienen la suya, y la tecla sigue planificando viajes." -- mt
+L["Adds a line naming your journey key to tooltips on the world map and flight points. Off, the key still plans journeys."] =
+	"Añade una línea que nombra tu tecla de viaje a las descripciones del mapa del mundo y de los puntos de vuelo. Desactivado, la tecla sigue planificando viajes." -- mt
 L["Show the Nearby services tab"] = "Mostrar pestaña de servicios cercanos"
 L["The tab in the world map's quest log. Off, /spfnear and the tracking menu still open it."] =
 	"La pestaña en el registro de misiones del mapa del mundo. Desactivada, /spfnear y el menú de seguimiento siguen abriéndola."
@@ -517,8 +529,8 @@ L["Journey paused."] = "Viaje en pausa." -- mt
 L["Journey stopped."] = "Viaje detenido." -- mt
 L["Journey stops"] = "Paradas del viaje" -- mt
 L["Ordering stops by estimated travel time..."] = "Ordenando las paradas por tiempo de viaje estimado..." -- mt
-L["Orders the next stop by estimated travel time. You can change the order."] =
-	"Elige la siguiente parada según el tiempo de viaje estimado. Puedes cambiar el orden." -- mt
+L["Orders the stops by estimated travel time. You can change the order."] =
+	"Ordena las paradas según el tiempo de viaje estimado. Puedes cambiar el orden." -- mt
 L["Place a map waypoint, then add it to this journey."] = "Coloca un punto de ruta en el mapa y añádelo a este viaje." -- mt
 L["Remove"] = "Eliminar" -- mt
 L["Stop %d of %d."] = "Parada %d de %d." -- mt
@@ -576,3 +588,39 @@ L["In the tracker while you are near a dock, lift or tram."] =
 L["Town service icons"] = "Iconos de servicios de la ciudad" -- mt
 L["Off hides them. Otherwise one icon per town, or one per service as you zoom in."] =
 	"Desactivado los oculta. Si no, un icono por ciudad o por servicio al acercar." -- mt
+L["Avoid this boat"] = "Evitar este barco"
+L["Avoid this zeppelin"] = "Evitar este zepelín"
+L["Avoid this lift"] = "Evitar este ascensor"
+L["Avoid this tram"] = "Evitar este tranvía"
+L["Avoid this flight"] = "Evitar este vuelo"
+L["Avoid this portal"] = "Evitar este portal"
+L["Avoid this passage"] = "Evitar este paso"
+L["Undo"] = "Deshacer"
+L["Allow this transport again and find a new route."] = "Volver a permitir este transporte y buscar otra ruta."
+L["Find a new route without this transport. You can clear avoided transport in Settings."] =
+	"Busca otra ruta sin este transporte. Puedes borrar la lista de transportes evitados en Ajustes."
+L["No route remains without %s. Right-click to undo."] =
+	"No queda ninguna ruta sin %s. Haz clic derecho para deshacerlo."
+L["Avoided transport"] = "Transportes evitados"
+L["Clear avoided transport"] = "Borrar transportes evitados"
+L["Clear this character's avoided transport so the planner can use it again."] =
+	"Borra la lista de este personaje para que el planificador pueda volver a usar esos transportes."
+L["%s-right-click the map to mark a road or wall for a report."] =
+	"Haz clic derecho en el mapa con %s para marcar un camino o un muro para un informe." -- mt
+L["Mark: road missing here"] = "Marcar: falta un camino aquí" -- mt
+L["Mark: wall here"] = "Marcar: hay un muro aquí" -- mt
+L["%s-right-click the map to copy the report or clear its marks."] =
+	"Haz clic derecho en el mapa con %s para copiar el informe o borrar sus marcas." -- mt
+L["Save this spot in the report to help fix the walking map."] =
+	"Guarda este punto en el informe para ayudar a corregir el mapa de rutas a pie." -- mt
+L["This spot has no world coordinates. Choose another spot."] =
+	"Este punto no tiene coordenadas del mundo. Elige otro punto." -- mt
+L["Copy road and wall report"] = "Copiar informe de caminos y muros" -- mt
+L["Open the report so you can copy and paste it into a bug report."] =
+	"Abre el informe para que puedas copiarlo y pegarlo en un informe de error." -- mt
+L["Clear marks"] = "Borrar marcas" -- mt
+L["Remove all saved road and wall marks from the map and report."] =
+	"Elimina del mapa y del informe todas las marcas guardadas de caminos y muros." -- mt
+L["Road and wall report"] = "Informe de caminos y muros" -- mt
+L["Journey start: %s"] = "Inicio del viaje: %s" -- mt
+L["Journey goal: %s"] = "Destino del viaje: %s" -- mt

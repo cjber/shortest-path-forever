@@ -54,6 +54,10 @@ local function Stocked(teleport)
 	return true
 end
 
+-- The global cooldown every cast puts every teleport on; real teleport cooldowns are minutes. A cooldown no longer
+-- than this is the global cooldown, not this teleport's, so it is not a teleport cooldown at all.
+local GCD = 1.5
+
 -- Seconds of cooldown left and the GetTime() it ends at, or nil while the client keeps it secret.
 ---@param teleport SPFTeleport
 ---@return number?, number?
@@ -72,6 +76,10 @@ local function Cooldown(teleport)
 	end
 	if start and duration and start > 0 then
 		local deadline = start + duration
+		-- Ended already, or only the global cooldown a cast put it on: no cooldown of its own.
+		if deadline <= GetTime() or duration <= GCD then
+			return 0, 0
+		end
 		return math.max(0, deadline - GetTime()), deadline
 	end
 	return 0, 0

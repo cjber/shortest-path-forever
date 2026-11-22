@@ -72,6 +72,7 @@ end
 driver.load("UI/Art.lua")
 driver.load("UI/Mover.lua")
 driver.load("UI/TurnAround.lua")
+driver.load("UI/CastButton.lua")
 driver.load("UI/Arrow.lua")
 
 -- Clearing or disabling guidance must also work before the lazy arrow frame exists.

@@ -12,8 +12,21 @@ local L = ns.L
 -- cost. The zones and towns the journey starts and ends in are never avoided, though a hostile town there is still
 -- named, and the walk straight to a goal inside a high-level zone pays for its yards in it (#1007).
 local ROAD_DETOUR_MAX = 200
-local LEVEL_GAP = 4 -- a zone whose lowest level is this many above yours is avoided
-local ZONE_COST, TOWN_COST = 4, 6
+local LEVEL_GAP, LEVEL_CAP = 4, 10
+local ZONE_CAP, TOWN_COST = 6, 6
+
+-- A linear rise gives each level above the gap the same weight. The cap bounds the penalty for an unavoidable
+-- crossing while making a much higher-level zone substantially more expensive than a marginal one. It also bounds
+-- the search: a walking search settles every yard cheaper than its targets, so a 10x zone around a 1x one floods
+-- the cheap ground; 6x keeps the journey bench's search time at the old flat 4x's and plans the same routes.
+local function ZoneFactor(low, level)
+	local gap = low - level
+	if gap <= LEVEL_GAP then
+		return nil
+	end
+	return 1 + (ZONE_CAP - 1) * (math.min(gap, LEVEL_CAP) - LEVEL_GAP) / (LEVEL_CAP - LEVEL_GAP)
+end
+
 -- A hostile town: around one of the other faction's flight masters with none of your own this near (a town both
 -- sides share, like Booty Bay, has both). Its ground is the client's own town area around that flight master, where
 -- Data/TownAreas.lua has one (the terrain the client calls Southshore), and a circle around it where it has not. A
@@ -442,35 +455,33 @@ function Hazards.Profile(from, goal, here, landing)
 		end
 	end
 	local zones, boxes, cities, ids = {}, {}, {}, {}
+	local goalCharge, goalFactor = nil, 1
 	for id, zone in pairs(ns.Zones) do
 		local factor
 		if zone.city then
 			factor = faction and zone.city ~= faction and TOWN_COST
 			cities[id] = factor and true or nil
-		elseif ns.db.avoidHighZones and zone.low >= level + LEVEL_GAP then
-			factor = ZONE_COST
+		elseif ns.db.avoidHighZones then
+			factor = ZoneFactor(zone.low, level)
 		end
-		if factor and not exempt[id] then
-			zones[id] = factor
-			boxes[#boxes + 1] = zone
-			ids[#ids + 1] = id
+		if factor then
+			if not exempt[id] then
+				zones[id] = factor
+				boxes[#boxes + 1] = zone
+				ids[#ids + 1] = id
+			elseif id == goalZone and not zone.city and not leaving[id] then
+				-- Only the direct walk pays to enter the goal's zone. Walks to a departure or out of the zone
+				-- stay exempt, so a ride can shorten exposure and an escape can take the quickest way (#1007, #895).
+				goalCharge, goalFactor = id, factor
+			end
 		end
-	end
-	-- Every route to a goal inside a high-level zone must enter it, so walks to and from departures stay exempt there
-	-- and a ride landing nearer the goal needs no reward. Only the walk straight from the start to the goal pays for
-	-- its yards inside, so a long walk through it loses to a ride that shortens it (#1007). Starting inside it, the
-	-- walk is the escape and pays nothing (#895).
-	local goalCharge
-	local high = goalZone and ns.Zones[goalZone]
-	if high and not high.city and not leaving[goalZone] and ns.db.avoidHighZones and high.low >= level + LEVEL_GAP then
-		goalCharge = goalZone
 	end
 	table.sort(ids)
 	for _, id in ipairs(ids) do
-		keys[#keys + 1] = id
+		keys[#keys + 1] = id .. "=" .. zones[id]
 	end
 	if goalCharge then
-		keys[#keys + 1] = "goal" .. goalCharge
+		keys[#keys + 1] = "goal" .. goalCharge .. "=" .. goalFactor
 	end
 	local towns, active, charged = {}, {}, {}
 	local areas = ns.TownAreas or {}
@@ -611,10 +622,10 @@ function Hazards.Profile(from, goal, here, landing)
 			return 1
 		end
 		local length = math.sqrt(Distance2(ax, ay, bx, by))
-		return 1 + ZoneShare(goalCharge, map, ax, ay, bx, by, length) * (ZONE_COST - 1)
+		return 1 + ZoneShare(goalCharge, map, ax, ay, bx, by, length) * (goalFactor - 1)
 	end
 	return {
-		-- What is avoided, not why: a level-up that crosses no zone's threshold keeps every search.
+		-- Profiles with the same costs share cached searches across levels.
 		key = (faction or "") .. ":" .. table.concat(keys, ",") .. (roadFactor and ":roads:" .. roadFactor or ""),
 		Point = Point,
 		Charged = Charged,
@@ -734,7 +745,7 @@ ns.Init(function()
 	events:RegisterEvent("PLAYER_LEVEL_UP")
 	events:SetScript("OnEvent", function(_, _, level)
 		levelSeen = level
-		-- A zone you have grown into is no longer avoided: plan again.
+		-- A level-up can lower the costs of high-level zones.
 		if ns.db.avoidHighZones and ns.HasJourney() then
 			ns.TravelPolicyChanged()
 		end

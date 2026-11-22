@@ -84,12 +84,12 @@ local Hazards = ns.Hazards
 do
 	local west, east = { map = 1, x = -900, y = 0 }, { map = 1, x = -100, y = 0 }
 	local profile = Hazards.Profile(west, east)
-	-- At level 10 the zone whose lowest level is 18 is avoided; 13 is fewer than four above, so it is not.
-	assert(profile.zones[200] == 4 and not profile.zones[300] and not profile.zones[100], "levels four or more above")
+	near(profile.zones[200], 13 / 3, "zone eight levels above the player")
+	assert(not profile.zones[300] and not profile.zones[100], "below the gap is free")
 	assert(profile.zones[400] == 6, "the other faction's capital")
 	-- One hostile town: the Horde flight master with no Alliance one beside it. Your own side's are never towns.
 	assert(#profile.towns == 1 and profile.towns[1].id == 1, "a shared town is no hostile town")
-	near(profile.Point(1, 500, 0), 4, "inside the avoided zone")
+	near(profile.Point(1, 500, 0), 13 / 3, "inside the avoided zone")
 	near(profile.Point(1, 1500, 0), 1, "a zone not far enough above")
 	near(profile.Point(1, -500, 450), 6, "inside a hostile town")
 	near(profile.Point(1, -500, -500), 1, "a shared town")
@@ -104,7 +104,7 @@ do
 	assert(not profile.Charged(1, -900, -900, -800, -800), "a box in the zone the journey keeps")
 	-- A straight walk half in the avoided zone weighs about half way between 1 and its factor.
 	local half = profile.Segment(1, -500, 0, 500, 0)
-	assert(half > 2.3 and half < 2.7, half)
+	assert(half > 2.5 and half < 2.85, half)
 	near(profile.Segment(1, -900, -900, -800, -900), 1, "a walk near no hazard")
 	assert(
 		profile.ConnectorWalk({ map = 1, x = -700, y = 0 }, { map = 1, x = -600, y = 0 }),
@@ -156,16 +156,45 @@ do
 	profile = Hazards.Profile(west, east)
 	assert(profile.key ~= exemptKey, "the exemptions are part of the costs")
 
-	-- Level 14 grows into the 18 zone's reach; the setting off avoids no zone, though towns stay.
+	-- A level-up that changes a zone's graded factor invalidates the cache key; one that changes no factor keeps it.
 	level = 11
-	local eleven = Hazards.Profile(west, east).key
+	local eleven = Hazards.Profile(west, east)
 	level = 12
-	assert(Hazards.Profile(west, east).key == eleven, "a level-up that crosses no threshold keeps every search")
+	local twelve = Hazards.Profile(west, east)
+	assert(twelve.zones[200] < eleven.zones[200], "closer to the zone's level lowers its cost")
+	assert(twelve.key ~= eleven.key, "a changed zone factor invalidates cached searches")
 	level = 14
-	assert(Hazards.Profile(west, east).zones[200], "18 is still four above 14")
+	local fourteen = Hazards.Profile(west, east)
+	local atGap = fourteen.Point(1, 500, 0)
+	near(atGap, 1, "four levels above starts at the base cost")
+	assert(atGap < twelve.zones[200], "four levels above costs less than six levels above")
 	level = 15
 	local grown = Hazards.Profile(west, east)
-	assert(not grown.zones[200] and grown.key ~= profile.key, "18 is three above 15")
+	near(grown.Point(1, 500, 0), 1, "three levels above costs nothing extra")
+	assert(grown.key == fourteen.key, "at and below the gap the cost is the same")
+	level = 16
+	assert(Hazards.Profile(west, east).key == grown.key, "a level-up that changes no zone factor keeps every search")
+	level = 8
+	local plus10 = Hazards.Profile(west, east)
+	level = 6
+	local plus12 = Hazards.Profile(west, east)
+	level = 4
+	local plus14 = Hazards.Profile(west, east)
+	assert(plus12.zones[200] > 4, "twelve levels above is well above the old flat cost")
+	near(plus12.zones[200], 6, "the ceiling is 6x: a higher one floods the walking search")
+	assert(atGap < plus12.zones[200], "a zone 4 levels above costs less than one 12 levels above")
+	assert(plus10.zones[200] == plus12.zones[200], "the cap starts at ten levels above")
+	assert(plus14.zones[200] == plus12.zones[200], "factor caps once deep in skull range")
+	-- Direct walk into a high-level goal zone uses the same graded factor.
+	level = 13
+	local mildDirect = Hazards.Profile(west, { map = 1, x = 500, y = 0 })
+	level = 6
+	local deadlyDirect = Hazards.Profile(west, { map = 1, x = 500, y = 0 })
+	assert(
+		mildDirect.Direct(1, -500, 0, 500, 0) < deadlyDirect.Direct(1, -500, 0, 500, 0),
+		"direct walk into a +5 goal zone costs less than into a +12 goal zone"
+	)
+	assert(mildDirect.key ~= deadlyDirect.key, "different goal-zone factors produce distinct cache keys")
 	level = 10
 	ns.db.avoidHighZones = false
 	local off = Hazards.Profile(west, east)
@@ -710,6 +739,93 @@ do
 	print("hazards: baked walks: ok")
 end
 
+-- Between two risky walks, the planner prefers the milder +5 zone over a shorter walk through a deadly +12 zone
+-- (#1201). With avoidance off, the shorter walk wins.
+do
+	local planning = {
+		L = L,
+		db = { avoidHighZones = true },
+		charDB = {},
+		Init = function() end,
+		TaxiNodes = {},
+		TaxiName = tostring,
+	}
+	assert(loadfile("Transport/Model.lua"))("ShortestPathForever", planning)
+	assert(loadfile("Routing/Savings.lua"))("ShortestPathForever", planning)
+	assert(loadfile("Routing/Planner.lua"))("ShortestPathForever", planning)
+	assert(loadfile("Routing/LegPoints.lua"))("ShortestPathForever", planning)
+	-- Start and goal are in safe zone 10. Mild zone 20 (+5) lies between the start and the north hub. Deadly zone
+	-- 30 (+12) lies between the start and the south hub. Either hub can reach the goal by an equal-time flight.
+	planning.Zones = {
+		[10] = { low = 1, high = 20, map = 1, minX = -100, minY = -2000, maxX = 6000, maxY = 2000 },
+		[20] = { low = 25, high = 30, map = 1, minX = -100, minY = 100, maxX = 100, maxY = 900 },
+		[30] = { low = 32, high = 40, map = 1, minX = -100, minY = -800, maxX = 100, maxY = -100 },
+	}
+	planning.ZoneMap = function(map, _, y)
+		if map ~= 1 then
+			return nil
+		end
+		if y >= 100 and y <= 900 then
+			return 20
+		end
+		if y <= -100 and y >= -800 then
+			return 30
+		end
+		return 10
+	end
+	local savedLevel, savedFaction = level, faction
+	level, faction = 20, "Alliance"
+	setfenv(assert(loadfile("Journey/Hazards.lua")), env)("ShortestPathForever", planning)
+	local start = { map = 1, x = 0, y = 0 }
+	local mildHub = { map = 1, x = 0, y = 1000 }
+	local deadlyHub = { map = 1, x = 0, y = -900 }
+	local goal = { map = 1, x = 5000, y = 0 }
+	local nodes = { [1] = start, [2] = mildHub, [3] = deadlyHub, [4] = goal }
+	local function choose(avoid)
+		planning.db.avoidHighZones = avoid
+		local hz = planning.Hazards.Profile(start, goal)
+		return planning.Planner.Plan({
+			from = start,
+			to = goal,
+			now = 0,
+			walkSpeed = 7,
+			faction = "Alliance",
+			taxiNodes = nodes,
+			taxiKnown = { true, true, true, true },
+			taxiPaths = {
+				{ from = 2, to = 4, seconds = 100, points = {} },
+				{ from = 3, to = 4, seconds = 100, points = {} },
+			},
+			walks = {
+				{ from = start, to = start, cost = 0 },
+				{ from = start, to = mildHub, cost = false },
+				{ from = start, to = deadlyHub, cost = false },
+				{ from = start, to = goal, cost = false },
+				{ from = goal, to = goal, cost = 0 },
+			},
+			baked = {
+				[1] = {
+					["taxi1 taxi2"] = { 1000, 1000 },
+					["taxi1 taxi3"] = { 900, 900 },
+				},
+			},
+			hazards = hz,
+		})
+	end
+	local guarded = choose(true)
+	assert(
+		guarded.legs[1].to.y == mildHub.y,
+		"prefers the milder +5 walk over the shorter +12 walk (went to y=" .. tostring(guarded.legs[1].to.y) .. ")"
+	)
+	local unguarded = choose(false)
+	assert(
+		unguarded.legs[1].to.y == deadlyHub.y,
+		"with avoidance off, the shorter real walk wins (went to y=" .. tostring(unguarded.legs[1].to.y) .. ")"
+	)
+	level, faction = savedLevel, savedFaction
+	print("hazards: graded high zones: ok")
+end
+
 -- A journey searches with the profile, shows its walk's lines under the step, and replans when the setting changes.
 do
 	local driver = assert(loadfile("tests/journey_driver.lua"))()
@@ -833,8 +949,8 @@ do
 		for _, walk in ipairs(walks) do
 			local map, a, b, baked, key = walk[1], walk[2], walk[3], walk[4], walk[5]
 			local live = hz.Segment(map, a.x, a.y, b.x, b.y)
-			-- Each share is off by at most HALF, weighed at most by a town's extra cost.
-			local bound = walk[6] * HALF * 5
+			-- Each share is off by at most HALF, weighed at most by the highest hazard extra cost.
+			local bound = walk[6] * HALF * 9
 			assert(math.abs(hz.Segment(map, a.x, a.y, b.x, b.y, baked) - live) <= bound, key .. " " .. hz.key)
 		end
 	end

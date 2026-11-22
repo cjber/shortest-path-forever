@@ -19,6 +19,8 @@ end
 
 local OpenMap = {}
 ns.OpenMapAddon = OpenMap
+-- OpenMap also submits Shift-clicks directly as "OpenMap". Only its TomTom handoff has a pin of its own.
+OpenMap.PinOwner = "OpenMap:Pin"
 
 -- The API version CanvasFromWorldPos and ArtTopLevel arrived in.
 local CANVAS_VERSION = 2
@@ -40,6 +42,25 @@ function OpenMap.Stitched()
 	return api ~= nil and api.IsStitched ~= nil and api.IsStitched() == true
 end
 
+function OpenMap.ShowsFollowedPin()
+	return ns.JourneyOwner() == OpenMap.PinOwner and OpenMap.Stitched()
+end
+
+-- At the same point, ownership can change while the journey keeps its drawn route.
+---@param refresh fun()
+function OpenMap.WatchPinOwner(refresh)
+	local followed = false
+	ShortestPathForever.API.Subscribe(function(changes)
+		if changes.stop then
+			local current = ns.JourneyOwner() == OpenMap.PinOwner
+			if current ~= followed then
+				followed = current
+				refresh()
+			end
+		end
+	end)
+end
+
 -- The frame level OpenMap's stitched art reaches, or nil when it is not stitching (or not built yet): a frame of
 -- ours at a fixed level shows over the art only above this.
 ---@return number?
@@ -51,10 +72,8 @@ function OpenMap.TopLevel()
 	return api.ArtTopLevel()
 end
 
--- A point in the game's world on the stitched map's canvas: `point` is a table with `map`, the uiMap whose yards
--- `x` and `y` are in, as Journey's points are. The result is in canvas fractions, where 0..1 is the map the map
--- frame is on and the stitched view carries on past it into the neighbouring zones. nil when OpenMap is not
--- stitching, or cannot place the point.
+-- Places a journey's world point (continent and yards) on the stitched canvas. Fractions outside 0..1
+-- reach into neighbouring zones. Returns nil when OpenMap is not stitching or cannot place the point.
 ---@param point SPFPoint
 ---@return number?, number?
 function OpenMap.Canvas(point)
@@ -66,13 +85,8 @@ function OpenMap.Canvas(point)
 	if type(map) ~= "number" or type(x) ~= "number" or type(y) ~= "number" then
 		return nil
 	end
-	local continent, world = C_Map.GetWorldPosFromMapPos(map, CreateVector2D(x, y))
-	if not (continent and world) then
-		return nil
-	end
-	x, y = world:GetXY()
 	-- The API is another addon's code: a failure there leaves this addon on its own map fractions.
-	local placed, canvasX, canvasY = pcall(api.CanvasFromWorldPos, continent, x, y)
+	local placed, canvasX, canvasY = pcall(api.CanvasFromWorldPos, map, x, y)
 	if placed and type(canvasX) == "number" and type(canvasY) == "number" then
 		return canvasX, canvasY
 	end
