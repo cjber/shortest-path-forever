@@ -13,10 +13,12 @@ local L = ns.L
 -- named, and the walk straight to a goal inside a high-level zone pays for its yards in it (#1007).
 local ROAD_DETOUR_MAX = 200
 local LEVEL_GAP, LEVEL_CAP = 4, 10
-local ZONE_CAP, TOWN_COST = 10, 6
+local ZONE_CAP, TOWN_COST = 6, 6
 
 -- A linear rise gives each level above the gap the same weight. The cap bounds the penalty for an unavoidable
--- crossing while making a much higher-level zone substantially more expensive than a marginal one.
+-- crossing while making a much higher-level zone substantially more expensive than a marginal one. It also bounds
+-- the search: a walking search settles every yard cheaper than its targets, so a 10x zone around a 1x one floods
+-- the cheap ground; 6x keeps the journey bench's search time at the old flat 4x's and plans the same routes.
 local function ZoneFactor(low, level)
 	local gap = low - level
 	if gap <= LEVEL_GAP then

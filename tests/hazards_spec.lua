@@ -84,12 +84,12 @@ local Hazards = ns.Hazards
 do
 	local west, east = { map = 1, x = -900, y = 0 }, { map = 1, x = -100, y = 0 }
 	local profile = Hazards.Profile(west, east)
-	near(profile.zones[200], 7, "zone eight levels above the player")
+	near(profile.zones[200], 13 / 3, "zone eight levels above the player")
 	assert(not profile.zones[300] and not profile.zones[100], "below the gap is free")
 	assert(profile.zones[400] == 6, "the other faction's capital")
 	-- One hostile town: the Horde flight master with no Alliance one beside it. Your own side's are never towns.
 	assert(#profile.towns == 1 and profile.towns[1].id == 1, "a shared town is no hostile town")
-	near(profile.Point(1, 500, 0), 7, "inside the avoided zone")
+	near(profile.Point(1, 500, 0), 13 / 3, "inside the avoided zone")
 	near(profile.Point(1, 1500, 0), 1, "a zone not far enough above")
 	near(profile.Point(1, -500, 450), 6, "inside a hostile town")
 	near(profile.Point(1, -500, -500), 1, "a shared town")
@@ -104,7 +104,7 @@ do
 	assert(not profile.Charged(1, -900, -900, -800, -800), "a box in the zone the journey keeps")
 	-- A straight walk half in the avoided zone weighs about half way between 1 and its factor.
 	local half = profile.Segment(1, -500, 0, 500, 0)
-	assert(half > 3.8 and half < 4.2, half)
+	assert(half > 2.5 and half < 2.85, half)
 	near(profile.Segment(1, -900, -900, -800, -900), 1, "a walk near no hazard")
 	assert(
 		profile.ConnectorWalk({ map = 1, x = -700, y = 0 }, { map = 1, x = -600, y = 0 }),
@@ -181,6 +181,7 @@ do
 	level = 4
 	local plus14 = Hazards.Profile(west, east)
 	assert(plus12.zones[200] > 4, "twelve levels above is well above the old flat cost")
+	near(plus12.zones[200], 6, "the ceiling is 6x: a higher one floods the walking search")
 	assert(atGap < plus12.zones[200], "a zone 4 levels above costs less than one 12 levels above")
 	assert(plus10.zones[200] == plus12.zones[200], "the cap starts at ten levels above")
 	assert(plus14.zones[200] == plus12.zones[200], "factor caps once deep in skull range")
