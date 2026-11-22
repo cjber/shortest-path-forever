@@ -105,9 +105,8 @@ With RestedXP, Guidelime or Dugi Guides installed, **Resume guide** in Guidance 
   walking geometry, and drawn paths stay visible during refreshes, and clearing a journey releases its search caches. Walking
   maps load in small parts as the search reaches them, and a fixed walk on another continent keeps its measured cost
   and waits to draw its detailed line until you arrive there. Your position's costs refresh when you leave
-  the path or once a minute. Repeating a destination reuses its costs; standing still or moving within the same
-  walking-map cell by at most three yards also reuses your position's costs. Walk steps name the dock, pier, lift
-  or flight master you are heading for.
+  the path or once a minute. Repeating a destination reuses its costs, and standing still also reuses your
+  position's costs. Walk steps name the dock, pier, lift or flight master you are heading for.
   ![A walking route around the terrain south of Auberdine](screenshots/darkshore.png)
 
   Walking legs follow the terrain instead of a straight line to the destination.
