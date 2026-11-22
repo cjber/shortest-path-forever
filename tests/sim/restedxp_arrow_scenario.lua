@@ -85,16 +85,13 @@ local function LoginWithRestedXP(sim)
 	return ns, rxp, API
 end
 
--- A journey's arrow waits for its proved route, which takes many frames of search. Until then RestedXP's own arrow
--- leads, so the player is never left with no arrow (#1124).
-scenario("a RestedXP step always has an arrow: RestedXP's until the route lands, then Shortest Path's", {
+-- A standalone RestedXP step keeps RestedXP's own arrow before and after the route lands: Shortest Path draws the
+-- route and plans the journey but never a second arrow (#1246).
+scenario("a RestedXP step keeps RestedXP's arrow while the route is searched and after it lands", {
 	addons = ForeverCore.addons(),
 }, function(sim)
 	local ns, rxp, API = LoginWithRestedXP(sim)
 	sim:event("ADDON_LOADED", "RXPGuides")
-	local function Ours()
-		return ns.GuideState() ~= nil
-	end
 	local function Theirs()
 		return rxp.arrowFrame:IsShown() and rxp.arrowFrame.texture:IsShown()
 	end
@@ -104,17 +101,18 @@ scenario("a RestedXP step always has an arrow: RestedXP's until the route lands,
 	for _ = 1, 4000 do
 		sim:advance(0.05)
 		assert(API.CurrentStop("RestedXP") == 1, "the guide step is a journey")
-		local ours, theirs = Ours(), Theirs()
-		assert(ours ~= theirs, ours and "two arrows at once" or "no arrow at all")
-		if ours then
+		assert(Theirs(), "RestedXP's arrow stays up")
+		assert(not ns.ArrowLeads(), "Shortest Path draws no second arrow")
+		if ns.GuideState() then
 			landed = true
 			break
 		end
 		searched = searched + 1
 	end
-	assert(searched > 0, "the route took frames to search, RestedXP's arrow leading meanwhile")
-	assert(landed, "Shortest Path's arrow took over once the route landed")
-	assert(ns.GuideState(), "and it has a bend to point at")
+	assert(searched > 0, "the route took frames to search")
+	assert(landed, "the route landed")
+	sim:advance(1)
+	assert(Theirs() and not ns.ArrowLeads(), "RestedXP's arrow still leads once the route landed")
 	sim:expectNoErrors(ADDON)
 end)
 
