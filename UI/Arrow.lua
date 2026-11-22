@@ -56,6 +56,7 @@ local ARRIVAL_WIDTH, ARRIVAL_TITLE_LINES, ARRIVAL_LINE_LIMIT = 240, 2, 3
 ---@field labelMode? string the arrowLabel setting it was built for
 ---@field angle? number the bearing drawn, easing towards the true one
 ---@field ticker? FunctionContainer
+---@field markerTicker? FunctionContainer
 ---@field updating? boolean
 ---@field idle number
 ---@field x? number
@@ -262,6 +263,23 @@ local function SetUpdating(running)
 	end
 end
 
+local MarkerPoll
+-- The marker-only poll keeps the native marker following the bends while our own frame is hidden for another arrow
+-- (#1265). The shown frame's own ticker does that job then, so only one update loop ever runs.
+local function SetMarkerPolling(running)
+	if not frame then
+		return
+	end
+	if running then
+		if not frame.markerTicker then
+			frame.markerTicker = C_Timer.NewTicker(POLL_EVERY, MarkerPoll)
+		end
+	elseif frame.markerTicker then
+		frame.markerTicker:Cancel()
+		frame.markerTicker = nil
+	end
+end
+
 -- Every frame while you move or turn and while the arrow eases; once still for a moment, only the slow poll runs.
 local function Settle(elapsed, easing, moved)
 	frame.idle = moved and 0 or frame.idle + elapsed
@@ -280,6 +298,14 @@ local function DirectionsShown()
 		and (not ns.JourneyOwner or ns.JourneyOwner() ~= "RestedXP")
 end
 
+-- When another addon draws the arrow our frame stays hidden, so its own ticker is gone and the marker-only poll takes
+-- over the journey. While our frame is shown, its ticker places the marker: only one update loop ever runs.
+local function SyncMarkerPolling()
+	SetMarkerPolling(
+		ArrowShown() and not DirectionsShown() and not moving and ((path and target) ~= nil or arrival ~= nil)
+	)
+end
+
 ---@param elapsed number seconds since the last update
 local function Update(elapsed)
 	-- Timers and already queued frame ticks outlive hiding the frame. Keep the route for the compass,
@@ -287,6 +313,7 @@ local function Update(elapsed)
 	if not ArrowShown() then
 		frame:SetShown(moving)
 		SetUpdating(false)
+		SetMarkerPolling(false)
 		return
 	end
 	local directions = DirectionsShown()
@@ -294,6 +321,8 @@ local function Update(elapsed)
 	if not directions and not moving then
 		frame:Hide()
 	end
+	-- A hidden frame cannot run its own ticker, so the marker-only poll must place the marker on every bend (#1265).
+	SyncMarkerPolling()
 	-- Arrived: the pin stands until the player leaves the stop's area, then the arrow or nothing takes over.
 	if directions and arrival then
 		if ns.StopInside and not ns.StopInside(arrival) then
@@ -431,6 +460,13 @@ end
 
 OnUpdate = function(_, elapsed)
 	Update(elapsed)
+end
+
+-- The marker-only ticker's update half: no Mover.Stock, which is pointless while our frame is hidden.
+MarkerPoll = function()
+	if not frame.updating then
+		Update(POLL_EVERY)
+	end
 end
 
 local function Placed()
@@ -719,6 +755,7 @@ function ns.PointArrivalPin(stop)
 			if frame and not (path and target) then
 				frame:SetShown(moving)
 			end
+			SyncMarkerPolling()
 			if ns.RefreshCompass then
 				ns.RefreshCompass()
 			end
@@ -846,6 +883,7 @@ function ns.PointGuideArrow(points, placeBend, stop, goal)
 		native, shared, unseen = nil, nil, false
 		if frame then
 			SetUpdating(false)
+			SetMarkerPolling(false)
 			frame:SetShown(moving)
 		end
 		NotifyLead()
@@ -889,6 +927,8 @@ function ns.MoveArrow(value)
 	elseif (not path and not arrival) or not DirectionsShown() then
 		frame:Hide()
 	end
+	-- The frame shows while it is dragged; once it hides again RestedXP's journey still needs the marker poll.
+	SyncMarkerPolling()
 	if castTarget then
 		ns.PointCastPrompt(castTarget)
 	end

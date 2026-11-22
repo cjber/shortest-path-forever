@@ -499,3 +499,56 @@ ns.PointGuideArrow(restedBends, function(point)
 end)
 assert(#restedPlacements == restedPlaced, "with directions off no waypoint is placed")
 assert(frame.hidden, "with directions off no frame is shown")
+
+-- #1265: RestedXP's journey hides our frame, whose OnHide cancels its own ticker. A marker-only poll must keep
+-- placing the native marker on every bend instead of freezing on the first one.
+owner = "RestedXP"
+ns.db.arrow = true
+local tickers = {}
+env.C_Timer = {
+	NewTicker = function(_, callback)
+		local ticker = { callback = callback, cancelled = false }
+		function ticker:Cancel()
+			self.cancelled = true
+		end
+		tickers[#tickers + 1] = ticker
+		return ticker
+	end,
+}
+driver.move({ map = 1, x = 0, y = 0, z = 0 })
+facing = 0
+local markerBends = { { map = 1, x = 0, y = 0 }, { map = 1, x = 100, y = 0 }, { map = 1, x = 200, y = 0 } }
+local markerPlaces = {}
+local function placeMarker(point)
+	markerPlaces[#markerPlaces + 1] = point
+	return false
+end
+ns.PointGuideArrow(markerBends, placeMarker)
+assert(frame.hidden, "RestedXP's own arrow leaves our frame hidden")
+assert(#markerPlaces >= 1, "the first update places the native marker")
+local markerTicker = assert(tickers[#tickers], "a marker-only ticker runs while our frame is hidden")
+assert(not markerTicker.cancelled, "and is still running")
+local placedOnce = #markerPlaces
+driver.move({ map = 1, x = 80, y = 0, z = 0 })
+markerTicker.callback()
+assert(#markerPlaces > placedOnce, "a later poll tick places the marker again as the walk reaches the next bend")
+assert(markerPlaces[#markerPlaces] == markerBends[#markerBends], "at the bend the player now walks towards")
+
+-- #881 still wins: with directions off no marker is placed, even on a tick already queued.
+local kept = #markerPlaces
+ns.db.arrow = false
+ns.PointGuideArrow(markerBends, placeMarker)
+assert(markerTicker.cancelled, "turning directions off cancels the marker poll")
+markerTicker.callback()
+assert(#markerPlaces == kept, "a queued tick with directions off places no marker")
+ns.db.arrow = true
+
+-- Clearing the journey cancels the marker poll, so no later tick places it.
+ns.PointGuideArrow(markerBends, placeMarker)
+local liveMarker = assert(tickers[#tickers], "a fresh journey starts a fresh marker poll")
+assert(not liveMarker.cancelled, "and it runs")
+local beforeClear = #markerPlaces
+ns.PointGuideArrow(nil)
+assert(liveMarker.cancelled, "clearing the journey cancels the marker poll")
+liveMarker.callback()
+assert(#markerPlaces == beforeClear, "and no later tick places the marker")
