@@ -157,8 +157,12 @@ L["Only use the Hearthstone when it saves at least this much time."] =
 L["Open"] = "開啟"
 L["Open Nearby services"] = "開啟附近服務"
 L["Open the world map to see it."] = "開啟世界地圖查看。"
-L["Plan journeys to RestedXP guide targets. RestedXP keeps its own arrow."] =
-	"規劃前往 RestedXP 指南目標的路線。RestedXP 會繼續顯示自己的箭頭。" -- mt
+L["Plan journeys to RestedXP guide targets."] = "規劃前往 RestedXP 指南目標的路線。" -- mt
+L["Choose which arrows to show when following a standalone RestedXP guide."] =
+	"選擇單獨使用 RestedXP 指南時要顯示的箭頭。" -- mt
+L["RestedXP arrow"] = "RestedXP 箭頭設定" -- mt
+L["RestedXP's arrow"] = "RestedXP 的箭頭" -- mt
+L["Shortest Path's arrow"] = "Shortest Path 的箭頭" -- mt
 L["Shortest Path pins and route lines on the world map."] = "世界地圖上的 Shortest Path 圖釘與路線。" -- mt
 L["Show Shortest Path marks"] = "顯示 Shortest Path 標記" -- mt
 L["The travel action will update after combat."] = "旅行動作將在戰鬥結束後更新。"

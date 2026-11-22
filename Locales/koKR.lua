@@ -163,8 +163,12 @@ L["Only use the Hearthstone when it saves at least this much time."] =
 L["Open"] = "열기"
 L["Open Nearby services"] = "주변 편의시설 열기"
 L["Open the world map to see it."] = "세계 지도를 열어 확인하십시오."
-L["Plan journeys to RestedXP guide targets. RestedXP keeps its own arrow."] =
-	"RestedXP 가이드 목표까지 경로를 계획합니다. RestedXP는 자체 화살표를 계속 표시합니다." -- mt
+L["Plan journeys to RestedXP guide targets."] = "RestedXP 가이드 목표까지의 경로를 계획합니다." -- mt
+L["Choose which arrows to show when following a standalone RestedXP guide."] =
+	"RestedXP 가이드를 단독으로 따라갈 때 표시할 화살표를 선택합니다." -- mt
+L["RestedXP arrow"] = "RestedXP 화살표 설정" -- mt
+L["RestedXP's arrow"] = "RestedXP 화살표" -- mt
+L["Shortest Path's arrow"] = "Shortest Path 화살표" -- mt
 L["Shortest Path pins and route lines on the world map."] =
 	"세계 지도에 표시되는 Shortest Path의 핀과 경로선입니다." -- mt
 L["Show Shortest Path marks"] = "Shortest Path 표시 보기" -- mt
