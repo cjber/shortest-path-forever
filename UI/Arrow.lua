@@ -200,7 +200,7 @@ local function SightAim(x, y, map)
 	end
 	local height = ns.Floor.Height(map, x, y)
 	local before = path[index - 1]
-	if height ~= target.z or (before and (before.map ~= map or before.z and before.z ~= height)) then
+	if not height or height ~= target.z or (before and (before.map ~= map or before.z and before.z ~= height)) then
 		return nil
 	end
 	-- The last point is the walk's stop or boarding point. Height changes and map changes end the window early.

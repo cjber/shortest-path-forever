@@ -588,28 +588,6 @@ repeat
 until not more
 assert(steps == #candidates + 2 and best.id == 1 and seconds == 10, "the ranking ends at the first losing bound")
 
-local walk, ride = candidates[1], candidates[2]
-local function rankWalkAgainstRide(walks, pending)
-	local refinements = 0
-	local choice = ns.NearbyServices.Rank({ walk, ride }, function(_, _, _, _, toX, _, cost, bound)
-		if toX == walk.x then
-			return cost
-		end
-		if not bound then
-			refinements = refinements + 1
-		end
-		return 120
-	end, 100, 0.05, 0.05, walks, pending)
-	repeat
-		local _, _, pendingSteps = choice:Step()
-	until not pendingSteps
-	return choice, refinements
-end
-local waiting, refinements = rankWalkAgainstRide({}, { [walk] = 10 })
-assert(waiting.best == walk and not waiting.exact and refinements == 0, "a cheaper pending walk defers ride refinement")
-local settled, resumed = rankWalkAgainstRide({ [walk] = 150 })
-assert(settled.best == ride and settled.exact and resumed == 1, "a slower measured walk lets the ride win")
-
 assert(
 	menuEntry(tracking.children, "Class trainer").callback() == env.MenuResponse.CloseAll,
 	"class action closes the menu"

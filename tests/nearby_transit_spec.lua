@@ -205,3 +205,31 @@ for _ = 1, 10 do
 	frame()
 end
 assert(resumed and #frames == 0, "a real parked job resumes and drains the path queue")
+
+-- A pending walk that is already cheaper defers refining a ride; a slower measured walk lets the ride win.
+do
+	local walk, ride = { map = 1, x = 0.4, y = 0.5 }, { map = 1, x = 0.6, y = 0.5 }
+	local function rankWalkAgainstRide(walks, pending)
+		local refinements = 0
+		local choice = ns.NearbyRank.New({ walk, ride }, function(_, _, _, _, toX, _, walkCost, bound)
+			if toX == walk.x then
+				return walkCost
+			end
+			if not bound then
+				refinements = refinements + 1
+			end
+			return 120
+		end, 1, 0.5, 0.5, walks, pending)
+		repeat
+			local _, _, pendingSteps = choice:Step()
+		until not pendingSteps
+		return choice, refinements
+	end
+	local waiting, refinements = rankWalkAgainstRide({}, { [walk] = 10 })
+	assert(
+		waiting.best == walk and not waiting.exact and refinements == 0,
+		"a cheaper pending walk defers ride refinement"
+	)
+	local settled, refined = rankWalkAgainstRide({ [walk] = 150 })
+	assert(settled.best == ride and settled.exact and refined == 1, "a slower measured walk lets the ride win")
+end

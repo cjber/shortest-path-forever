@@ -89,7 +89,7 @@ function Roles.ClassTrainerIDs(tweaks, anyLevel)
 end
 
 local function LearnClassTrainerCap()
-	local guid = UnitGUID("target")
+	local guid = UnitGUID("target") -- secret-ok: canaccessvalue is checked on the next line
 	if (canaccessvalue and not canaccessvalue(guid)) or type(guid) ~= "string" then
 		return
 	end

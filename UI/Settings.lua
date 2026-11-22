@@ -535,7 +535,9 @@ ns.Init(function()
 	Checkbox(
 		"avoidHighZones",
 		L["Avoid zones far above my level"],
+		-- luacheck: push ignore 631
 		L["Walk less in zones with a minimum level 5 or more above yours, and less still the higher it is, even at your destination."],
+		-- luacheck: pop
 		ns.TravelPolicyChanged
 	)
 	Checkbox(

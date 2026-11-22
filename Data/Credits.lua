@@ -160,5 +160,11 @@ ns.Credits = {
 		{ name = "Ding! by Yendi", what = "Walks that keep out of zones far above your level" },
 		{ name = "Travelcraft (CurseForge)", what = "Rides that shorten walks through high-level zones" },
 		{ name = "BV Addon Suite - Routing", what = "Walks that start on the floor you are standing on" },
+		{ name = "ReavyTools by Reavy (CurseForge)", what = "Start a Shortest Path journey from Zygor's guide" },
+		{
+			name = "Zygor's Tweaks by ScaryLarryGames (CurseForge)",
+			what = "Read the active waypoint from Zygor's arrow and follow pointer changes",
+		},
+		{ name = "Azeroth Waypoint by MorningStarGG", what = "Refresh the waypoint title when Zygor's step changes" },
 	},
 }

@@ -40,6 +40,7 @@ local expected = {
 	"restedxpHideArrow",
 	"guidelime",
 	"dugi",
+	"zygor",
 	"@RestedXP guide",
 	"@Guidelime",
 	"@Dugi Guides",
