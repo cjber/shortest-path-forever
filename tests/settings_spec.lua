@@ -445,6 +445,7 @@ local groups = {
 		"tomtom",
 		"tomtomFollow",
 		"restedxp",
+		"restedxpArrow",
 		"restedxpHideArrow",
 		"guidelime",
 		"dugi",
@@ -498,7 +499,7 @@ local order = {
 }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 80, #rows)
+assert(#rows == 81, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer

@@ -111,6 +111,7 @@ local DEFAULTS = {
 	tomtomFollow = false,
 	restedxp = true,
 	-- Adventure Guide's integrated RestedXP display may use our arrow.
+	restedxpArrow = "restedxp",
 	restedxpHideArrow = true,
 	guidelime = true,
 	-- Dugi Guides is read through an undocumented surface of a viewer it does not publish an API for, so following

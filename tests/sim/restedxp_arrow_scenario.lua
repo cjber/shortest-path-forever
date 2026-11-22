@@ -90,6 +90,10 @@ end
 scenario("a RestedXP step keeps RestedXP's arrow while the route is searched and after it lands", {
 	addons = ForeverCore.addons(),
 }, function(sim)
+	local dead = false
+	sim.impl.UnitIsDeadOrGhost = function(unit)
+		return unit == "player" and dead
+	end
 	local ns, rxp, API = LoginWithRestedXP(sim)
 	sim:event("ADDON_LOADED", "RXPGuides")
 	local function Theirs()
@@ -113,6 +117,32 @@ scenario("a RestedXP step keeps RestedXP's arrow while the route is searched and
 	assert(landed, "the route landed")
 	sim:advance(1)
 	assert(Theirs() and not ns.ArrowLeads(), "RestedXP's arrow still leads once the route landed")
+	local function SelectArrow(mode)
+		ns.db.restedxpArrow = mode
+		ns.ArrowBearingChanged()
+		ns.RefreshRestedXP()
+		sim:advance(0.5)
+	end
+	SelectArrow("shortestPath")
+	assert(ns.ArrowLeads() and not Theirs(), "the routed arrow takes over after the plan lands")
+	SelectArrow("both")
+	assert(ns.ArrowLeads() and Theirs(), "both arrows are visible in both mode")
+	SelectArrow("shortestPath")
+	dead = true
+	sim:event("PLAYER_DEAD")
+	assert(not ns.ArrowLeads() and Theirs(), "death restores RestedXP before its next update")
+	sim:event("PLAYER_ALIVE")
+	assert(not ns.ArrowLeads() and Theirs(), "releasing to the graveyard leaves RestedXP in charge")
+	for _, mode in ipairs({ "shortestPath", "both" }) do
+		SelectArrow(mode)
+		assert(not ns.ArrowLeads() and Theirs(), "RestedXP keeps the bearing when the player is dead")
+	end
+	SelectArrow("shortestPath")
+	dead = false
+	sim:event("PLAYER_UNGHOST")
+	assert(ns.ArrowLeads() and not Theirs(), "resurrection restores the selected routed arrow")
+	SelectArrow("restedxp")
+	assert(not ns.ArrowLeads() and Theirs(), "switching back restores RestedXP alone")
 	sim:expectNoErrors(ADDON)
 end)
 

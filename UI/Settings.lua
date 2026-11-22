@@ -470,11 +470,20 @@ ns.Init(function()
 			ns.RefreshTomTomFollow()
 		end
 	)
-	Checkbox(
-		"restedxp",
-		L["Follow RestedXP guides"],
-		L["Plan journeys to RestedXP guide targets. RestedXP keeps its own arrow."],
+	Checkbox("restedxp", L["Follow RestedXP guides"], L["Plan journeys to RestedXP guide targets."], function()
+		ns.RefreshRestedXP()
+	end)
+	rows.Dropdown(
+		"restedxpArrow",
+		L["RestedXP arrow"],
+		L["Choose which arrows to show when following a standalone RestedXP guide."],
+		{
+			{ key = "restedxp", label = L["RestedXP's arrow"] },
+			{ key = "shortestPath", label = L["Shortest Path's arrow"] },
+			{ key = "both", label = L["Both"] },
+		},
 		function()
+			ns.ArrowBearingChanged()
 			ns.RefreshRestedXP()
 		end
 	)

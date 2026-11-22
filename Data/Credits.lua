@@ -6,6 +6,7 @@ ns.Credits = {
 	players = {
 		{ name = "alexaroth", what = "One destination pin on OpenMap" },
 		{ name = "alexaroth", what = "Routes to the zone clicked in OpenMap" },
+		{ name = "icouldonlygetthisname", what = "Arrow choice for RestedXP journeys" },
 		{ name = "user_u3k9hweaatfhnjs0", what = "Profession trainer icons, weapon masters and service filters" },
 		{ name = "treadpool", what = "Undercity journeys leave the city by a lift" },
 		{ name = "user_g496wu46adiwjuc5", what = "Hearthstone map button respects Use Hearthstone" },
