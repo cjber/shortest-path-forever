@@ -10,6 +10,17 @@ scenario("Journey stays collapsed when the last quest is untracked", { addons = 
 	sim.world.maps[947] = { name = "Azeroth", mapType = 1 }
 	sim.world.maps[1415] = { name = "Eastern Kingdoms", parent = 947, mapType = 2 }
 	sim.world.maps[1429] = { name = "Elwynn Forest", parent = 1415, mapType = 3 }
+	sim.world.maps[1414] = { name = "Kalimdor", parent = 947, mapType = 2 }
+	sim.world.maps[1413] = { name = "The Barrens", parent = 1414, mapType = 3 }
+	sim.world.maps[1437] = { name = "Wetlands", parent = 1415, mapType = 3 }
+	-- The simulator has no world-to-zone projection. Without one both docks below are labelled "Unknown", so the
+	-- journey title only changes when the guide's gold/bronze pin happens to flip. Give each dock its own zone.
+	sim.impl["C_Map.GetMapPosFromWorldPos"] = function(continentID)
+		local zone = continentID == 0 and 1437 or (continentID == 1 and 1413 or nil)
+		if zone then
+			return zone, G.CreateVector2D(0.5, 0.5)
+		end
+	end
 	sim:login()
 	local ns
 	for _, entry in ipairs(sim.loader.addons) do
