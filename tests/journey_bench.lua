@@ -1,5 +1,5 @@
 -- Real Journey + nav data, one pump per simulated 60 Hz frame. Optional args: a baseline source directory, then
--- "continent", "orgrimmar" or "stormwind" for cases kept out of the default set Speedpatrol times.
+-- "continent", "orgrimmar", "sched" or "stormwind" for cases kept out of the default set Speedpatrol times.
 local observer, root, mode = ...
 if type(observer) ~= "function" then
 	observer, root, mode = nil, arg[1] or ".", arg[2]
@@ -19,6 +19,14 @@ if mode == "continent" then
 			{ map = 1, x = -4450, y = 1350, z = 0 },
 			"Alliance",
 		},
+	}
+elseif mode == "sched" then
+	local trade = { map = 0, x = -8849, y = 647.9, z = 98 }
+	local goldshire = { map = 0, x = -9459, y = 43 }
+	cases = {
+		{ "Stormwind -> Sentinel Hill", trade, { map = 0, x = -10628.89, y = 1036.68, z = 34.06 }, "Alliance" },
+		{ "Goldshire -> Darkshore", goldshire, { map = 1, x = 6341.38, y = 557.68, z = 16.29 }, "Alliance" },
+		{ "Goldshire -> Darkshire", goldshire, { map = 0, x = -10515.46, y = -1261.65, z = 41.34 }, "Alliance" },
 	}
 elseif mode == "orgrimmar" then
 	local from = { map = 1, x = 1630, y = -4420, z = 15 }
@@ -101,7 +109,7 @@ for _, case in ipairs(cases) do
 	end
 	local jobs, nextFrame, rounds, resets, plannerCPU = {}, nil, 0, 0, 0
 	local frames, worst = 0, 0
-	local firstDraw, usable
+	local firstDraw, firstShape, usable
 	local drawn = {}
 	local draw = ns.SetJourneyRoute
 	ns.SetJourneyRoute = function(g, r)
@@ -119,6 +127,9 @@ for _, case in ipairs(cases) do
 				if drawn[key] and #ns.Planner.LegPoints(leg, ns.Routes) == 2 then
 					resets = resets + 1
 				end
+				if leg.walkPoints and #leg.walkPoints > 2 then
+					firstShape = firstShape or frames
+				end
 				if leg.measured and #leg.walkPoints > 2 then
 					drawn[key] = true
 				end
@@ -134,7 +145,7 @@ for _, case in ipairs(cases) do
 		plannerCPU = plannerCPU + (os.clock() - started) * 1000
 		return planned
 	end
-	for _, method in ipairs({ "Find", "FindMany" }) do
+	for _, method in ipairs({ "Find", "FindCoarse", "FindMany" }) do
 		local find = ns.Path[method]
 		ns.Path[method] = function(...)
 			local job = find(...)
@@ -157,11 +168,27 @@ for _, case in ipairs(cases) do
 		worst = math.max(worst, (os.clock() - started) * 1000)
 		assert(frames < 20000, "journey did not settle")
 	end
-	local cpu, many, probes = 0, 0, 0
+	local cpu, many, probes, sketches = 0, 0, 0, 0
 	for _, job in ipairs(jobs) do
 		cpu = cpu + job.cpu
 		if job.costOnly then
 			probes = probes + 1
+			if mode == "continent" then
+				print(
+					string.format(
+						"  probe map %d (%.0f, %.0f) to (%.0f, %.0f): %.1f ms, %d expansions",
+						job.map,
+						job.from.x,
+						job.from.y,
+						job.to.x,
+						job.to.y,
+						job.cpu,
+						job.expansions or 0
+					)
+				)
+			end
+		elseif job.method == "FindCoarse" then
+			sketches = sketches + 1
 		end
 		if job.method == "FindMany" then
 			many = many + 1
@@ -175,14 +202,15 @@ for _, case in ipairs(cases) do
 	assert(driver.shown(), "expected reachable journey")
 	print(
 		string.format(
-			"%s: %d searches (%d many, %d probes), %d planner calls, %d settle rounds, %d frames, "
+			"%s: %d searches (%d many, %d probes, %d sketches), %d planner calls, %d settle rounds, %d frames, "
 				.. "%.1f ms search, %.1f ms planner, %d straight resets, first drawn frame %s, "
-				.. "first followable frame %s, %.3f ms worst frame, "
+				.. "first shaped walk frame %s, first followable frame %s, %.3f ms worst frame, "
 				.. "%d client zone lookups, %.1f ms map load, %.1f MB Lua heap after it",
 			case[1],
 			#jobs,
 			many,
 			probes,
+			sketches,
 			rounds,
 			round,
 			frames,
@@ -190,6 +218,7 @@ for _, case in ipairs(cases) do
 			plannerCPU,
 			resets,
 			tostring(firstDraw),
+			tostring(firstShape),
 			tostring(usable),
 			worst,
 			lookups,

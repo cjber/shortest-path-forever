@@ -668,6 +668,8 @@ ShortestPathForeverPathData = nil
 ---@field waterWalking? boolean
 ---@field hazards? SPFHazards
 ---@field reverse? boolean
+---@field draw? boolean prioritizes geometry and surface prefetch over cost searches
+---@field coarse? boolean sketches geometry without decoding walking grids
 ---@field costOnly? boolean
 ---@field snapGoal? boolean
 ---@field decode? number[] -- clusters a Path.Decode job decodes for Floor.lua; it searches nothing

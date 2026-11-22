@@ -88,3 +88,25 @@ local plan =
 assert(plan and plan.legs[1], "the plan landed in one frame")
 
 print("path job callback: a replan never yields across the client's C calls: ok")
+
+-- Visible work goes before an older cost-only batch. Its sketch arrives before exact refinement.
+local order = {}
+local batch = Path.FindMany(0, GOLDSHIRE, { STORMWIND_FM }, function()
+	order[#order + 1] = "batch"
+end)
+local sketch = Path.FindCoarse(0, GOLDSHIRE, STORMWIND_FM, function(points)
+	assert(points and #points > 2, "entrance graph gives the walk a shape")
+	order[#order + 1] = "sketch"
+end)
+local walk = Path.Find(0, GOLDSHIRE, STORMWIND_FM, function(points)
+	assert(points and #points > 2, "refined walk geometry")
+	order[#order + 1] = "exact"
+end)
+table.remove(frames, 1)()
+assert(
+	sketch.frames == 1 and walk.frames == 0 and batch.frames == 0,
+	"drawn walk must take the first slice before the older batch"
+)
+drain(20000)
+assert(reported == nil, tostring(reported))
+assert(table.concat(order, ",") == "sketch,exact,batch", table.concat(order, ","))

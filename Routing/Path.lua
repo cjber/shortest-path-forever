@@ -1979,6 +1979,77 @@ function Path.ReuseMany(job, point, sliced)
 	return k == job.sourceCluster and node == job.sourceNode
 end
 
+-- Polestar's entrance-graph sketch: join each endpoint to its cluster's entrances by octile distance.
+-- These joins do not test local terrain. Only the refined walk can be followed or used as a cost.
+local function findCoarse(map, from, to, waterWalking, hz)
+	local st = State(map)
+	if not st then
+		return nil, "nodata"
+	end
+	local sk, gk = locate(st, from.x, from.y), locate(st, to.x, to.y)
+	if not sk or not gk or sk == gk then
+		return nil, "cluster"
+	end
+	if hz and hz.ConnectorWalk and hz.ConnectorWalk(from, to) then
+		hz = nil
+	end
+	local function gap(ax, ay, bx, by)
+		local dx, dy = abs(ax - bx), abs(ay - by)
+		return max(dx, dy) + (SQRT2 - 1) * math.min(dx, dy)
+	end
+	local cost2 = waterWalking and 2 or 1
+	local lower = max(0, 1 - 0.5 / st.cs)
+	agen = agen + 1
+	local gen = agen
+	hn = 0
+	local function relax(id, cost, parent, remaining)
+		if astamp[id] ~= gen or cost < ag[id] then
+			ag[id], apar[id], astamp[id] = cost, parent, gen
+			push(cost + remaining * lower, id)
+		end
+	end
+	for _, id in ipairs(nodesOf(st, sk) or {}) do
+		local x, y = nodeXY(st, id)
+		relax(id, gap(from.x, from.y, x, y), START, gap(x, y, to.x, to.y))
+	end
+	while hn > 0 do
+		local u = pop()
+		if aclosed[u] ~= gen then
+			aclosed[u] = gen
+			tick()
+			if u == GOAL then
+				local hops = {}
+				local id = apar[GOAL]
+				while id ~= START do
+					hops[#hops + 1] = id
+					id = apar[id]
+				end
+				local points = { { map = map, x = from.x, y = from.y, z = from.z } }
+				for i = #hops, 1, -1 do
+					local x, y = nodeXY(st, hops[i])
+					points[#points + 1] = { map = map, x = x, y = y }
+				end
+				points[#points + 1] = { map = map, x = to.x, y = to.y, z = to.z }
+				return points
+			end
+			if floor(u / 4096) == gk then
+				local x, y = nodeXY(st, u)
+				relax(GOAL, ag[u] + gap(x, y, to.x, to.y), u, 0)
+			end
+			local adj = adjacent(st, u, false)
+			for e = 1, #adj, 3 do
+				local v = adj[e]
+				if aclosed[v] ~= gen then
+					local x, y = nodeXY(st, v)
+					local factor = hz and hazard(st, hz, u, v) or 1
+					relax(v, ag[u] + adj[e + cost2] * factor, u, gap(x, y, to.x, to.y))
+				end
+			end
+		end
+	end
+	return nil, "unreachable"
+end
+
 local function start(job)
 	if job.notify then
 		local owner = job.owner
@@ -1988,6 +2059,9 @@ local function start(job)
 		return
 	end
 	Expansions(0)
+	if job.coarse then
+		return findCoarse(job.map, job.from, job.to, job.waterWalking, job.hazards)
+	end
 	if job.targets then
 		return runMany(job.map, job.from, job.targets, job.waterWalking, job.reverse, job, job.hazards)
 	end
