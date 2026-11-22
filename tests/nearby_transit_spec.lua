@@ -108,7 +108,7 @@ end)
 drain()
 assert(route and route.legs[2].mode == "flight", "the journey flies to the far trainer")
 local trainer = candidateAt(goal.x)
-local beforeRide = #path.batches
+local beforeRide, beforeWalks = #path.probes, #path.batches
 local partial
 ns.Path.Run(function(job)
 	return ns.EstimateIn(job, 1, 0.5, 0.5, trainer.map, trainer.x, trainer.y, nil, nil, trainer, 70)
@@ -117,28 +117,67 @@ end, function(time)
 end)
 drain()
 assert(partial and partial > 70, "the first measured walk proves the ride loses")
-assert(#path.batches == beforeRide + 1, "the second endpoint is skipped once the ride cannot win")
+assert(#path.probes == beforeRide + 1, "the second endpoint is skipped once the ride cannot win")
+local departureProbe = path.probes[beforeRide + 1]
+assert(departureProbe.from.z == here.z and departureProbe.to.x == departure.x, "the shared departure is priced first")
 local seconds = nearby(trainer)
 local journeySeconds = route.arrive / 1000
 assert(math.abs(seconds - journeySeconds) < 0.001, ("Nearby %.3fs, journey %.3fs"):format(seconds, journeySeconds))
-local batches = #path.batches
--- Grouping measures only direct walks that can win. This ride only needs its two endpoint batches.
-assert(batches == beforeRide + 2, "an uncapped estimate finishes the ride whose partial result was not cached")
-assert(nearby(trainer) == seconds and #path.batches == batches, "both ride walks are reused from the same node")
+-- Grouping measures only direct walks that can win. This ride only needs its two endpoint probes.
+assert(#path.batches == beforeWalks, "single ride endpoints do not start a walking batch")
+assert(#path.probes == beforeRide + 2, "an uncapped estimate finishes the ride whose partial result was not cached")
+local landingProbe = path.probes[beforeRide + 2]
+assert(
+	landingProbe.from.x == landing.x and landingProbe.to.z == goal.z,
+	"the probe follows the landing to the NPC's floor"
+)
+assert(nearby(trainer) == seconds and #path.probes == beforeRide + 2, "both ride walks are reused from the same node")
 local footSeconds = nearby(candidateAt(35))
 assert(math.abs(footSeconds - 5) < 0.001, ("the nearby trainer takes %.3fs, expected five"):format(footSeconds))
-assert(#path.batches == batches + 1, "a walking row only measures its direct walk")
+assert(#path.batches == beforeWalks + 1, "a walking row only measures its direct walk")
 
 driver.move({ map = 1, x = 12, y = 0, z = here.z })
 local rank = rankCandidate(trainer, { [trainer] = 7058 }, function()
 	error("a cancelled ranking answered")
 end)
 path.runAll()
-local walking = path.waiting(path.batches)[1]
+local walking = path.waiting(path.probes)[1]
 assert(walking and rank.paused, "a ranking waits off the queue when its endpoint walk is outstanding")
 ns.NearbyRank.Cancel(rank)
-assert(walking.cancelled, "closing the ranking cancels its endpoint batch")
-path.costs(walking, 0)
+assert(walking.cancelled, "closing the ranking cancels its endpoint probe")
+path.finish(walking, 0)
+
+-- The lower-bound ride costs less than the direct walk. Its measured departure changes the choice.
+landing = { map = 1, x = 430, y = 0, z = 0 }
+goal = { map = 1, x = 500, y = 0, z = 8 }
+ns.TaxiNodes = { departure, landing }
+ns.SpawnHeight = function(_, x)
+	return math.abs(x - goal.x) < 1 and goal.z or 0
+end
+local endpointCost = cost
+cost = function(from, to)
+	if from.x == here.x and math.abs(to.x - goal.x) < 1 then
+		return 560
+	end
+	return endpointCost(from, to)
+end
+driver.move(here)
+route = nil
+ns.JourneySearch.Start(goal, nil, { index = 1 }, function(plan, news)
+	if news == "route" then
+		route = plan
+	end
+end)
+drain()
+assert(route and #route.legs == 1 and route.legs[1].mode == "walk", "the journey switches to the direct walk")
+local switchedSeconds = nearby(candidateAt(goal.x))
+assert(
+	math.abs(switchedSeconds - route.arrive / 1000) < 0.001,
+	("Nearby measures the direct walk after the ride loses: Nearby %.3fs, journey %.3fs"):format(
+		switchedSeconds,
+		route.arrive / 1000
+	)
+)
 
 -- The real queue must park a ranking and wake it from a FindMany callback, even for a terminal fallback.
 for _, file in ipairs({ "Routing/PathGrid.lua", "Routing/Path.lua", "Routing/PathJobs.lua" }) do

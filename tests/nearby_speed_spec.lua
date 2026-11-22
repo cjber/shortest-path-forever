@@ -181,11 +181,13 @@ services.Shortlist = function(key, world, limit)
 end
 
 local jobs = {}
-local findMany = ns.Path.FindMany
-ns.Path.FindMany = function(...)
-	local job = findMany(...)
-	jobs[#jobs + 1] = job
-	return job
+for _, method in ipairs({ "FindMany", "FindCost" }) do
+	local find = ns.Path[method]
+	ns.Path[method] = function(...)
+		local job = find(...)
+		jobs[#jobs + 1] = job
+		return job
+	end
 end
 local function pump()
 	local fn = nextFrame

@@ -1,210 +1,8 @@
 -- UI/ServicesPanel.lua against a stub quest log and client: the tab registers once with its order, selecting the tab
 -- shows the panel, a refresh keeps the ScrollFrame's offset and only a new search query scrolls back to the top.
-local created, tickers = {}, {}
+local frame, region, created, fontStrings = assert(loadfile("tests/services_panel_frames.lua"))()
+local tickers = {}
 local panel
-
-local fontStrings = {}
-
-local function region()
-	local r = { points = {}, shown = true }
-	function r:SetPoint(...)
-		self.points[#self.points + 1] = { ... }
-	end
-	function r:ClearAllPoints()
-		self.points = {}
-	end
-	function r:SetText(text)
-		self.text = text
-	end
-	function r:GetText()
-		return self.text
-	end
-	function r.SetTextColor() end
-	function r.SetJustifyH() end
-	function r.SetWordWrap() end
-	function r.SetMaxLines() end
-	function r:SetAtlas(atlas)
-		self.atlas = atlas
-	end
-	function r:SetTexture(file)
-		self.file = file
-	end
-	function r:SetSize(width, height)
-		self.width, self.height = width, height
-	end
-	function r.SetScale() end
-	function r.SetBlendMode() end
-	function r.SetAlpha() end
-	function r:SetShown(shown)
-		self.shown = shown
-	end
-	function r:Show()
-		self.shown = true
-	end
-	function r:Hide()
-		self.shown = false
-	end
-	function r:IsShown()
-		return self.shown
-	end
-	function r.SetAllPoints() end
-	function r.SetTexCoord() end
-	return r
-end
-
-local function frame(frameType, name, parent, template)
-	local f = {
-		frameType = frameType,
-		name = name,
-		parent = parent,
-		template = template,
-		scripts = {},
-		scriptHooks = {},
-		setScriptCalls = {},
-		hookScriptCalls = {},
-		points = {},
-		sized = template ~= nil,
-		shown = true,
-		width = 300,
-		height = 40,
-		events = {},
-	}
-	function f:SetScript(event, callback)
-		self.scripts[event] = callback
-		self.setScriptCalls[event] = (self.setScriptCalls[event] or 0) + 1
-	end
-	function f:HookScript(event, callback)
-		self.scriptHooks[event] = self.scriptHooks[event] or {}
-		self.scriptHooks[event][#self.scriptHooks[event] + 1] = callback
-		self.hookScriptCalls[event] = (self.hookScriptCalls[event] or 0) + 1
-	end
-	function f:RegisterForDrag(...)
-		self.dragButtons = { ... }
-	end
-	function f:GetScript(event)
-		return self.scripts[event]
-	end
-	function f:Show()
-		self.shown = true
-		if self.scripts.OnShow then
-			self.scripts.OnShow(self)
-		end
-		for _, handler in ipairs(self.scriptHooks.OnShow or {}) do
-			handler(self)
-		end
-	end
-	function f:Hide()
-		self.shown = false
-		if self.scripts.OnHide then
-			self.scripts.OnHide(self)
-		end
-		for _, handler in ipairs(self.scriptHooks.OnHide or {}) do
-			handler(self)
-		end
-	end
-	function f:SetShown(shown)
-		if shown then
-			self:Show()
-		else
-			self:Hide()
-		end
-	end
-	function f:IsShown()
-		return self.shown
-	end
-	function f:SetPoint(...)
-		self.points[#self.points + 1] = { ... }
-	end
-	function f:ClearAllPoints()
-		self.points = {}
-	end
-	function f:SetSize(width, height)
-		self.width, self.height, self.sized = width, height, true
-	end
-	function f:LockHighlight()
-		self.highlightLocked = true
-	end
-	function f:UnlockHighlight()
-		self.highlightLocked = false
-	end
-	function f:GetSize()
-		return self.width, self.height
-	end
-	function f:SetWidth(width)
-		self.width = width
-	end
-	function f:GetWidth()
-		return self.width
-	end
-	function f:SetHeight(height)
-		self.height, self.sized = height, true
-	end
-	function f:GetHeight()
-		return self.height
-	end
-	function f:SetAllPoints()
-		self.sized = true
-	end
-	function f:SetFrameLevel(level)
-		self.level = level
-	end
-	function f.GetFrameLevel()
-		return 1
-	end
-	function f:SetChecked(value)
-		self.checked = value
-	end
-	function f:GetChecked()
-		return self.checked
-	end
-	function f.EnableMouse() end
-	function f:RegisterEvent(event)
-		self.events[event] = true
-	end
-	function f.CreateTexture()
-		return region()
-	end
-	function f.CreateFontString()
-		local text = region()
-		fontStrings[#fontStrings + 1] = text
-		return text
-	end
-	if template == "SearchBoxTemplate" then
-		f.Instructions = region()
-		f.text = ""
-		function f:SetText(text)
-			self.text = text
-			if self.scripts.OnTextChanged then
-				self.scripts.OnTextChanged(self)
-			end
-			for _, handler in ipairs(self.scriptHooks.OnTextChanged or {}) do
-				handler(self)
-			end
-		end
-		function f:GetText()
-			return self.text
-		end
-		function f.SetMaxLetters() end
-	elseif template == "ScrollFrameTemplate" then
-		f.ScrollBar = frame("Slider", nil, f)
-		f.scroll = 0
-		function f:SetScrollChild(child)
-			self.child = child
-		end
-		function f:SetVerticalScroll(value)
-			self.scroll = value
-		end
-		function f:GetVerticalScroll()
-			return self.scroll
-		end
-	elseif template == "CollapseButtonTemplate" then
-		function f:UpdateCollapsedState(collapsed)
-			self.collapsed = collapsed
-		end
-	end
-	created[#created + 1] = f
-	return f
-end
 
 local function byTemplate(template)
 	for _, f in ipairs(created) do
@@ -322,6 +120,7 @@ ns.Art = {
 	CoverFrame = function() end,
 }
 local catalogueState, demandCalls, catalogueReads = "idle", 0, 0
+local sectionReads = 0
 ns.NearbyServices = {
 	Request = function()
 		demandCalls = demandCalls + 1
@@ -340,6 +139,7 @@ ns.NearbyServices = {
 		return 100, 0.1, 0.1
 	end,
 	Sections = function(_, query)
+		sectionReads = sectionReads + 1
 		local list = {}
 		for _, section in ipairs({ "vendors", "trainers", "entrances" }) do
 			local rows = {}
@@ -556,7 +356,7 @@ for _, f in ipairs(created) do
 		assert(count >= 2, "a panel frame has a height: " .. tostring(f.name or f.frameType))
 	end
 end
-assert(#tickers == 1 and tickers[1].seconds == 10, "a ten second ticker starts while shown")
+assert(#tickers == 1 and tickers[1].seconds == 1, "a one second movement ticker starts while shown")
 assert(ranking() and not panel.scripts.OnUpdate, "ranking starts while shown, as a path job")
 
 -- A refresh while open, from a zone change, leaves the player's scroll offset alone.
@@ -658,36 +458,62 @@ search:SetText("bank")
 assert(not betterRow:IsShown(), "a search with no trip hides the row")
 search:SetText("")
 
--- Every row decided on the nearest walks: the measure runs on to its far places rather than stopping, so the next
--- tick from this spot reuses its walks instead of searching from scratch again.
+-- A decided list keeps its paused measure for reuse on the next search.
 do
 	local services = ns.NearbyServices
-	local measure, rank, holds = services.MeasureWalks, services.Rank, services.Holds
-	local measured, publish, job = 0, nil, nil
-	services.MeasureWalks = function(_, callback)
+	local measure, rank, holds, pause = services.MeasureWalks, services.Rank, services.Holds, services.Pause
+	local measured, publish, job, reused = 0, nil, nil, nil
+	local bank = places.bank[1]
+	local rides = 0
+	services.MeasureWalks = function(_, callback, _, _, _, kept)
+		reused = kept
 		measured, publish, job = measured + 1, callback, { walking = {} }
 		return job
 	end
-	services.Rank = function(candidates)
+	services.Rank = function(candidates, _, _, _, _, _, pending)
+		local place = candidates[1]
+		if place ~= bank then
+			rides = rides + 1
+		end
 		return {
-			exact = true,
+			exact = place == bank and not (pending and pending[bank]),
 			Step = function()
-				return candidates[1], 31, false
+				return place, place == bank and 31 or nil, false
 			end,
 		}
 	end
 	services.Holds = function()
 		return true
 	end
+	services.Pause = function(handle)
+		handle.paused = true
+	end
 	search:SetText("bank")
 	search:SetText("")
 	assert(measured == 2 and publish, "a requeue measures")
-	publish({}, {})
+	local walks, pending = {}, { [bank] = 5 }
+	publish(walks, pending)
 	pump()
-	assert(not job.cancelled, "the measure runs on once every row is decided")
+	assert(rides == 0 and not job.paused, "the shared walks decide before independent rides")
+	pending[bank], walks[bank] = nil, 217
+	publish(walks)
+	pump()
+	assert(
+		rides > 0 and job.paused and not job.cancelled and not ranking(),
+		"a decided list pauses its measure for reuse"
+	)
+	local reads = sectionReads
+	for _ = 1, 9 do
+		tickers[1].callback()
+	end
+	assert(measured == 2 and sectionReads == reads, "movement checks keep the current measure and layout")
 	tickers[1].callback()
-	assert(measured == 2, "a tick waits on the measure still running from here")
-	services.MeasureWalks, services.Rank, services.Holds = measure, rank, holds
+	assert(measured == 2 and sectionReads == reads + 1, "the ten second layout refresh keeps the measure")
+	local paused = job
+	search:SetText("bank")
+	assert(measured == 3 and reused == paused and reused.paused, "a query hands off the paused measure")
+	ns.StopServiceRanking()
+	services.MeasureWalks, services.Rank, services.Holds, services.Pause = measure, rank, holds, pause
 	search:SetText("bank")
 	search:SetText("")
 end

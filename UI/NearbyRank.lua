@@ -41,52 +41,45 @@ function Rank:Step()
 	if at <= count then
 		local place = self.candidates[at]
 		local walk = self.pending and self.pending[place] or self.walks[place]
-		least[place] = self.estimate(
+		least[place] =
+			self.estimate(self.fromMap, self.fromX, self.fromY, place.map, place.x, place.y, walk, true, place)
+		if at == count then
+			table.sort(self.order, function(a, b)
+				return (least[a] or math.huge) < (least[b] or math.huge)
+			end)
+		end
+		return self.best or self.candidates[1], self.seconds, true
+	end
+	local place = self.order[at - count]
+	if self.seconds and (least[place] or math.huge) > self.seconds then
+		-- Every remaining bound is slower. A pending winner will rank again once its walk lands.
+		self.at = 2 * count + 1
+		return self.best, self.seconds, false
+	end
+	-- Read before the estimate, which may pause while the measure settles this walk: the estimate is on the walk read.
+	-- A walk still searched counts at its lower bound, so a pending place is never cheaper than it could be.
+	local bound = self.pending and self.pending[place]
+	-- Only a settled best sets a ceiling. On a tie the candidate may still decide the row.
+	local ceiling = self.exact and self.seconds or nil
+	-- Keep the lower-bound result while the walk is pending. A preference such as saving a Hearthstone cooldown
+	-- can change which route wins once the walk is measured, so it only applies to a settled estimate.
+	local seconds
+	if bound then
+		seconds = least[place]
+	else
+		seconds = self.estimate(
 			self.fromMap,
 			self.fromX,
 			self.fromY,
 			place.map,
 			place.x,
 			place.y,
-			walk,
-			true,
-			place
-		) or math.huge
-		if at == count then
-			table.sort(self.order, function(a, b)
-				return least[a] < least[b]
-			end)
-		end
-		return self.best or self.candidates[1], self.seconds, true
+			self.walks[place],
+			nil,
+			place,
+			ceiling
+		)
 	end
-	local place = self.order[at - count]
-	-- Read before the estimate, which may pause while the measure settles this walk: the estimate is on the walk read.
-	-- A walk still searched counts at its lower bound, so a pending place is never cheaper than it could be.
-	local bound = self.pending and self.pending[place]
-	local walk = self.walks[place]
-	if bound then
-		walk = bound
-	end
-	-- Only a settled best sets a ceiling. On a tie the candidate may still decide the row.
-	local ceiling = self.exact and self.seconds or nil
-	if ceiling and least[place] > ceiling then
-		return self.best or self.candidates[1], self.seconds, at < 2 * count
-	end
-	-- On a bound the estimate skips the planner's preferences: a Hearthstone dropped for saving too little on the bound
-	-- may save enough on the longer walk measured, so the preferred route is no lower bound (#1034 review). Past the
-	-- best's time a ride's endpoint walks stop being measured: measuring only adds to its time.
-	local seconds = self.estimate(
-		self.fromMap,
-		self.fromX,
-		self.fromY,
-		place.map,
-		place.x,
-		place.y,
-		walk,
-		bound and true,
-		place,
-		ceiling
-	)
 	local exact = not bound
 	if seconds and (not self.seconds or seconds < self.seconds or seconds == self.seconds and exact) then
 		self.best, self.seconds, self.exact = place, seconds, exact
@@ -131,96 +124,74 @@ local function Spawn(place)
 	return point
 end
 
--- Retain settled costs without retaining Dijkstra frontiers. Departures share a batch across goals with identical
--- hazards. A reverse batch belongs to its NPC, since it must start on that NPC's own floor.
----@class SPFNearbyTransitCosts
----@field here SPFPoint
----@field anchor? SPFPathJob
----@field departures table<string, SPFPathJob>
----@field landings table<SPFNearbyPlace, SPFPathJob>
----@type SPFNearbyTransitCosts?
-local transit
+---@class SPFNearbyEndpointCosts
+---@field key string
+---@field water boolean?
+---@field walks SPFWalkCost[]
 
-local function TransitCosts(here)
-	local last = transit
-	local band, previous = here.band, last and last.here.band
+-- Landing costs depend on the NPC's floor and hazard profile, so they can be reused as the player moves.
+---@type table<SPFNearbyPlace, SPFNearbyEndpointCosts>
+local landings = setmetatable({}, { __mode = "k" })
+local departures = {}
+local previousHere
+---@type table<SPFPathJob, table<SPFPoint, SPFHazards>>
+local profiles = setmetatable({}, { __mode = "k" })
+
+local function Profile(job, here, goal)
+	local byGoal = profiles[job]
+	if not byGoal then
+		byGoal = {}
+		profiles[job] = byGoal
+	end
+	local hazards = byGoal[goal] or ns.Hazards.Profile(here, goal, here)
+	byGoal[goal] = hazards
+	return hazards
+end
+
+local function DepartureCache(here)
+	local band, previous = here.band, previousHere and previousHere.band
 	local sameBand = band == previous or band and previous and band.lo == previous.lo and band.hi == previous.hi
-	if
-		not last
-		or not (sameBand and ns.JourneySearch.SamePlace(last.here, here) or ns.Path.ReuseMany(last.anchor, here, true))
-	then
-		last = { here = here, departures = {}, landings = {} }
-		transit = last
+	if not (previousHere and sameBand and ns.JourneySearch.SamePlace(previousHere, here)) then
+		departures = {}
+		previousHere = here
 	end
-	return last
+	return departures
 end
 
-local function TargetIndex(targets, target)
-	for i, point in ipairs(targets) do
-		if ns.JourneySearch.SamePlace(point, target) then
-			return i
-		end
+local function CostCache(cache, key, hazards, water)
+	local entry = cache[key]
+	if not entry or entry.key ~= hazards.key or entry.water ~= water then
+		entry = { key = hazards.key, water = water, walks = {} }
+		cache[key] = entry
 	end
+	return entry.walks
 end
 
-local function EndpointCost(job, source, target, reverse, options, places, kept, key)
+-- The planner identifies the endpoints to price. Probe just that directed walk, as the journey does.
+local function EndpointCost(job, cached, from, to, options)
 	local path = ns.Path
-	if not path.HasData(source.map) then
+	if not path.HasData(from.map) then
 		return nil
 	end
-	local cache = reverse and kept.landings or kept.departures
-	local batch = cache[key]
-	local index
-	local hazards, water = options.hazards, options.waterWalking
-	if
-		batch
-		and batch.waterWalking == water
-		and batch.hazards.key == hazards.key
-		and (reverse or path.ReuseMany(batch, source, true))
-	then
-		index = TargetIndex(batch.targets, target)
-		if index and batch.costs[index] ~= nil then
-			return batch.costs[index]
+	for _, walk in ipairs(cached) do
+		if ns.JourneySearch.SamePlace(walk.from, from) and ns.JourneySearch.SamePlace(walk.to, to) then
+			return walk.cost
 		end
 	end
-
 	local cost
-	local function Update(costs, reason, searched)
-		if job.cancelled or (not searched.done and (not costs or costs[index] == nil)) then
+	local probe = path.FindCost(from.map, from, to, function(yards, reason, searched)
+		if job.cancelled then
 			return
 		end
-		if reason ~= "nodata" and reason ~= "error" then
-			cost = costs and costs[index]
-			if cost == nil then
-				cost = false
-			end
-			if searched.valid then
-				cache[key] = searched
-				if not reverse then
-					kept.anchor = searched
-				end
-			end
+		if yards or reason == "unreachable" or reason == "offmesh" or reason == "outside" then
+			cost = yards or false
+			cached[#cached + 1] = { from = from, to = to, cost = cost }
 		end
-		path.ReleaseMany(searched)
 		job.walking[searched] = nil
 		path.Resume(job)
-	end
-
-	-- A second ranking can use another batch while this one owns its callbacks.
-	cache[key] = nil
-	if index then
-		batch.callback, batch.progress = Update, Update
-		path.Resume(batch)
-	else
-		local targets = ns.JourneySearch.EndpointTargets(source, places)
-		index = TargetIndex(targets, target)
-		if not index then
-			return nil
-		end
-		batch = path.FindMany(source.map, source, targets, Update, water, reverse, Update, hazards)
-	end
+	end, options.waterWalking, options.hazards)
 	job.walking = job.walking or {}
-	job.walking[batch] = true
+	job.walking[probe] = true
 	path.Wait()
 	return cost
 end
@@ -250,14 +221,27 @@ end
 local function Plan(job, options, place, walk, bound, ceiling)
 	job.nearbyHere = job.nearbyHere or ns.JourneySearch.Here()
 	local here, goal = job.nearbyHere, Spawn(place)
+	local walks, starts, ends = {}, nil, nil
 	if here and goal then
 		options.from, options.to = here, goal
-		options.hazards = ns.Hazards.Profile(here, goal, here)
+		local hazards = Profile(job, here, goal)
+		options.hazards = hazards
 		options.endpointBounds = true
+		local water = options.waterWalking
+		starts = CostCache(DepartureCache(here), hazards.key, hazards, water)
+		ends = CostCache(landings, place, hazards, water)
+		for _, measured in ipairs(starts) do
+			walks[#walks + 1] = measured
+		end
+		for _, measured in ipairs(ends) do
+			walks[#walks + 1] = measured
+		end
 	end
-	local walks = {}
 	if walk ~= nil then
-		walks[1] = { from = options.from, to = options.to, cost = walk }
+		walks[#walks + 1] = { from = options.from, to = options.to, cost = walk }
+	elseif here and goal and here.map == goal.map and ns.Path.HasData(here.map) then
+		walks[#walks + 1] =
+			{ from = here, to = goal, cost = ns.Path.LowerBound(here.map, here, goal), estimated = true, apart = true }
 	end
 	options.walks, options.lowerBound = walks, bound
 	if bound then
@@ -267,14 +251,6 @@ local function Plan(job, options, place, walk, bound, ceiling)
 	if not (here and goal and plan) then
 		return plan
 	end
-	local rides = false
-	for _, leg in ipairs(plan.legs) do
-		rides = rides or leg.mode ~= "walk"
-	end
-	if not rides then
-		return plan
-	end
-	local kept, places = TransitCosts(here), ns.Planner.Places(options)
 	while plan do
 		-- Preferences can pick a slower route. Only the earliest possible arrival proves a loss.
 		if ceiling and plan.arrive > ceiling and #plan.pendingWalks > 0 then
@@ -284,20 +260,15 @@ local function Plan(job, options, place, walk, bound, ceiling)
 			end
 		end
 		local changed = false
-		for _, leg in ipairs(plan.pendingWalks) do
-			local reverse = leg.from.kind ~= "start"
-			local cost
-			if reverse then
-				cost = EndpointCost(job, goal, leg.from, true, options, places, kept, place)
-			elseif leg.to.kind ~= "goal" then
-				cost = EndpointCost(job, here, leg.to, false, options, places, kept, options.hazards.key)
-			end
+		-- The planner collects walks from goal to start. Price departures first since their costs are shared.
+		for i = #plan.pendingWalks, 1, -1 do
+			local leg = plan.pendingWalks[i]
+			local cache = leg.from.kind == "start" and starts or ends
+			local cost = EndpointCost(job, cache, leg.from, leg.to, options)
 			if cost ~= nil then
 				walks[#walks + 1] = { from = leg.from, to = leg.to, cost = cost }
 				changed = true
-				if ceiling then
-					break -- Recheck the ceiling before starting another endpoint search.
-				end
+				break -- Replan before starting another endpoint search.
 			end
 		end
 		if not changed then
@@ -339,10 +310,10 @@ local function Groups(job, here, places, map, x, y)
 		seen[place] = true
 		if point and point.map == here.map and ns.PlanContext.Landmass(point) == mass then
 			local bound = ns.Path.LowerBound(here.map, here, point)
-			local _, _, legs = ns.EstimateIn(job, map, x, y, place.map, place.x, place.y, bound, true)
+			local _, _, legs = ns.EstimateIn(job, map, x, y, place.map, place.x, place.y, bound, true, place)
 			local leg = legs and legs[1]
 			if leg and #legs == 1 and leg.mode == "walk" and leg.from.kind == "start" and leg.to.kind == "goal" then
-				local hazards = ns.Hazards.Profile(here, point, here)
+				local hazards = Profile(job, here, point)
 				local group = groups[hazards.key]
 				if not group then
 					group = { hazards = hazards, targets = {}, of = {} }

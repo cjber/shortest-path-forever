@@ -510,14 +510,14 @@ local function RankRows(queue, walks, pending, map, x, y, callback)
 		end
 		local open = 0
 		for _, item in ipairs(queue) do
-			-- A row none of whose walks changed since it was last ranked ranks the same: only changed rows rank again.
+			-- Only rows whose walks have changed need another pass.
 			local remaining = 0
 			for _, place in ipairs(item.candidates) do
 				if pending and pending[place] then
 					remaining = remaining + 1
 				end
 			end
-			if not item.decided and item.remaining == remaining and pending then
+			if not item.decided and pending and item.remaining == remaining then
 				open = open + 1
 			elseif not item.decided then
 				item.remaining = remaining
@@ -526,7 +526,7 @@ local function RankRows(queue, walks, pending, map, x, y, callback)
 				repeat
 					place, seconds, more = rank:Step()
 				until not more
-				item.decided = rank.exact or not pending
+				item.decided = rank.exact or remaining == 0
 				if item.decided or estimates[item.key] == nil then
 					if place then
 						chosen[item.key] = place
@@ -589,26 +589,44 @@ function Queue(moved)
 		return
 	end
 	measuring = nil
-	-- Every row's shortlist in one walking measure, so each row's time is the journey's.
+	-- Share the direct walks across the shortlists.
 	local places = {}
 	for _, item in ipairs(queue) do
 		for _, place in ipairs(item.candidates) do
 			places[#places + 1] = place
 		end
 	end
-	local this, latest, again, decided
+	local this, latest, again, decided, walksDecided
 	local function Rank()
 		if ranking then
 			again = true
 			return
 		end
 		local walks, pending = latest.walks, latest.pending
-		RankRows(queue, walks, pending, map, x, y, function(open)
+		local ready = queue
+		if pending and not walksDecided then
+			-- Finish the rows that use the shared walk before starting independent endpoint searches.
+			ready = {}
+			for _, item in ipairs(queue) do
+				for _, place in ipairs(item.candidates) do
+					if walks[place] ~= nil or pending[place] then
+						ready[#ready + 1] = item
+						break
+					end
+				end
+			end
+		end
+		RankRows(ready, walks, pending, map, x, y, function(open)
 			if open == 0 then
-				decided = true
 				if measuring then
 					ns.NearbyServices.Pause(measuring)
 				end
+				if #ready < #queue then
+					walksDecided = true
+					Rank()
+					return
+				end
+				decided = true
 				-- The dungeons and raids reorder once their travel times are decided.
 				Refresh()
 			elseif again then

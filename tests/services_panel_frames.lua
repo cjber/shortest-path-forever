@@ -151,6 +151,7 @@ local function frame(frameType, name, parent, template)
 		return self.checked
 	end
 	function f.EnableMouse() end
+	function f.RegisterForDrag() end
 	function f:RegisterEvent(event)
 		self.events[event] = true
 	end
