@@ -138,7 +138,7 @@ ns.NearbyServices.MeasureWalks({ place }, function(walks, pending)
 	end, function(seconds)
 		listed = seconds
 	end)
-end)
+end, 1453, from.x, from.y)
 drain()
 assert(listed, "Nearby lists a time")
 assert(math.abs(listed - journey) < 1, string.format("Nearby lists %.0f s, the journey takes %.0f s", listed, journey))
@@ -156,7 +156,7 @@ end
 local again
 ns.NearbyServices.MeasureWalks({ place }, function(walks)
 	again = walks[place]
-end)
+end, 1453, from.x, from.y)
 drain()
 assert(not searched and again, "standing still reuses the walks")
 -- A setting the walks were searched under changes: the same spot needs a new search.
@@ -164,7 +164,7 @@ ns.db.followRoads = not ns.db.followRoads
 again = nil
 ns.NearbyServices.MeasureWalks({ place }, function(walks)
 	again = walks[place]
-end)
+end, 1453, from.x, from.y)
 drain()
 assert(searched and again, "a new road setting searches again")
 -- A place no walk reaches is measured as such (false), not left to the straight line: the stub search finds none.
@@ -182,7 +182,7 @@ ns.NearbyServices.MeasureWalks({ place }, function(walks, pending)
 	if not pending then
 		unreachable = walks[place]
 	end
-end)
+end, 1453, from.x, from.y)
 drain()
 assert(unreachable == false, "a place no walk reaches is measured as false")
 ns.Path.FindMany = many
@@ -197,7 +197,7 @@ end
 local answered
 ns.NearbyServices.MeasureWalks({ place }, function(walks, pending)
 	answered = not pending and next(walks) == nil
-end)
+end, 1453, from.x, from.y)
 drain()
 ns.Hazards.Profile, driver.env.geterrorhandler = profile, handler
 assert(answered, "a failed grouping answers with no walks")
@@ -206,7 +206,7 @@ local other = { map = 1453, id = 1, name = "later" }
 other.x, other.y = place.x, place.y
 local worldPoint = ns.WorldPoint
 ns.WorldPoint = function() end
-ns.NearbyServices.MeasureWalks({ other }, function() end)
+ns.NearbyServices.MeasureWalks({ other }, function() end, 1453, from.x, from.y)
 drain()
 ns.WorldPoint = worldPoint
 local later
@@ -214,9 +214,57 @@ ns.NearbyServices.MeasureWalks({ other }, function(walks, pending)
 	if not pending then
 		later = walks[other]
 	end
-end)
+end, 1453, from.x, from.y)
 drain()
 assert(later, "a projection that failed once is tried again")
+-- The lower-bound plan to Ironforge already takes transport. It never enters a walk batch.
+local ironforge = { id = 6, map = 1453, name = "Ironforge" }
+ironforge.x, ironforge.y = ui(ns.TaxiNodes[6])
+local pruned
+ns.Path.FindMany = function()
+	error("a place reached by transport must not start a terrain search")
+end
+ns.NearbyServices.MeasureWalks({ ironforge }, function(walks, pending)
+	pruned = next(walks) == nil and pending == nil
+end, 1453, from.x, from.y)
+drain()
+assert(pruned, "the Ironforge flight master is neither pending nor measured as a walk")
+ns.Path.FindMany = many
+
+-- A same-node requeue resumes an unfinished, reusable batch. The first progress notification exposes its source
+-- node before it has settled the walk, so pausing here tests the actual Path.Resume frontier.
+local paused, resumed, firstMeasure
+ns.db.followRoads, ns.db.roadDetour = true, 17
+local resume = ns.Path.Resume
+ns.Path.Resume = function(job)
+	if job.paused then
+		resumed = job
+	end
+	resume(job)
+end
+ns.Path.FindMany = function(map, start, targets, callback, water, reverse, progress, hazards)
+	assert(not paused, "the requeue starts no new FindMany")
+	return many(map, start, targets, callback, water, reverse, function(costs, reason, job)
+		progress(costs, reason, job)
+		if job.sourceNode and not paused then
+			assert(costs[1] == nil, "the walk is still pending")
+			paused = job
+			ns.NearbyServices.Pause(firstMeasure)
+		end
+	end, hazards)
+end
+firstMeasure = ns.NearbyServices.MeasureWalks({ other }, function() end, 1453, from.x, from.y)
+drain()
+assert(paused and paused.paused and ns.NearbyServices.Holds(firstMeasure), "the unfinished batch still holds")
+local replacement = ns.NearbyServices.MeasureWalks({ other }, function(walks)
+	again = walks[other]
+end, 1453, from.x, from.y, firstMeasure)
+ns.NearbyServices.Cancel(firstMeasure)
+drain()
+assert(resumed == paused and again, "the replacement resumes and reads the kept batch")
+ns.NearbyServices.Cancel(replacement)
+ns.Path.FindMany, ns.Path.Resume = many, resume
+
 -- A journey started from Nearby stops the panel's measure, whose searches would share its frame budget.
 local stopped, route = 0, driver.env.ShortestPathForever.API.NavigateRoute
 ns.StopServiceRanking = function()

@@ -653,6 +653,8 @@ ShortestPathForeverPathData = nil
 ---@field count? number
 
 ---@class SPFPathJob
+---@field nearbyWalks? table<SPFNearbyWalkBatch, true> batches retained by a Nearby measure
+---@field nearbyOrigin? SPFPoint where a Nearby measure started (NearbyRank.lua)
 ---@field walking? table<SPFPathJob, true> the walking searches owned by a Nearby job
 ---@field nearbyHere? SPFPoint origin held for one Nearby ranking
 ---@field map number
