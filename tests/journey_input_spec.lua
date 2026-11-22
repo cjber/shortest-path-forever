@@ -130,10 +130,10 @@ local env = setmetatable({
 	Menu = { ModifyMenu = Record },
 	MapCanvasMixin = { MouseAction = { Click = 3 } },
 	C_Map = {
-		GetWorldPosFromMapPos = function(_, pos)
+		GetWorldPosFromMapPos = function(uiMapID, pos)
 			return 1, {
 				GetXY = function()
-					return pos.x, pos.y
+					return pos.x + (uiMapID == 1442 and 2 or 0), pos.y
 				end,
 			}
 		end,
@@ -157,6 +157,7 @@ local env = setmetatable({
 		return { pin }
 	end,
 }, { __index = _G })
+setfenv(assert(loadfile("UI/OpenMap.lua")), env)("ShortestPathForever", ns)
 local chunk = assert(loadfile("Journey/JourneyInput.lua"))
 setfenv(chunk, env)("ShortestPathForever", ns)
 assert(handler(map, 3, "LeftButton"), "Shift-clicking a flight-master pin must start a journey")
@@ -424,7 +425,47 @@ map.GetNormalizedCursorPosition = function()
 end
 destination = nil
 assert(not canvasClick(map, "LeftButton") and destination == nil, "a click past the map's edge is left to OpenMap")
-map.GetNormalizedCursorPosition = cursor
+-- When OpenMap leaves its host map on the old zone, Blizzard clamps its cursor to that map's edge.
+-- The stitched point and its destination zone stay the same when OpenMap then switches the host map.
+local host, neighboringMap = map.GetMapID, 1442
+env.OpenMapAPI = {
+	major = 1,
+	version = 3,
+	IsStitched = function()
+		return true
+	end,
+	CursorPosition = function()
+		return 0.7, 0.6
+	end,
+	MapAt = function(u, v)
+		assert(u == 0.7 and v == 0.6)
+		return neighboringMap
+	end,
+	MapFromWorld = function(id, u, v)
+		assert(id == neighboringMap and u == 0.7 and v == 0.6)
+		return 0.3, 0.4
+	end,
+}
+map.GetNormalizedCursorPosition = function()
+	return 1, 0.5
+end
+assert(canvasClick(map, "LeftButton"), "the stitched click plans a journey with the old host")
+assert(
+	destination.map == 1 and destination.x == 2.3 and destination.y == 0.4,
+	"the plan ends at the point in view instead of the old host map's clamped edge"
+)
+map.GetMapID = function()
+	return neighboringMap
+end
+map.GetNormalizedCursorPosition = function()
+	return 0.3, 0.4
+end
+destination = nil
+assert(
+	canvasClick(map, "LeftButton") and destination.map == 1 and destination.x == 2.3 and destination.y == 0.4,
+	"loading the zone in view does not change the route's destination"
+)
+env.OpenMapAPI, map.GetMapID, map.GetNormalizedCursorPosition = nil, host, cursor
 own.marker, destination = "dock", nil
 assert(ownClick(own, "LeftButton") and destination, "Alt-clicking our own icon with Alt chosen plans a journey")
 destination = nil

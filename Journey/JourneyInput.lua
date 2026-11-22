@@ -551,19 +551,17 @@ local function OnCanvasClick(map, button)
 	if (button ~= "LeftButton" and button ~= "RightButton") or not ns.JourneyKeyDown() or ChatBoxOpen() then
 		return false
 	end
-	-- Past the shown map's edge (OpenMap's stitched view) the spot is on no map this addon can read. OpenMap's
-	-- own handler plans a Shift-click there through API.Navigate, on the zone under the cursor.
-	local x, y = map:GetNormalizedCursorPosition()
-	if not (x and y and x >= 0 and x <= 1 and y >= 0 and y <= 1) then
+	local uiMapID, x, y = ns.OpenMapAddon.CursorMapPoint(map)
+	if not (uiMapID and x and y and x >= 0 and x <= 1 and y >= 0 and y <= 1) then
 		return false
 	end
 	if button == "RightButton" then
-		return ns.OpenMapReportMenu(map, map:GetMapID(), x, y)
+		return ns.OpenMapReportMenu(map, uiMapID, x, y)
 	end
 	if JourneysOff() then
 		return false
 	end
-	ns.JourneyToMapPoint(map:GetMapID(), x, y)
+	ns.JourneyToMapPoint(uiMapID, x, y)
 	return true
 end
 

@@ -62,6 +62,28 @@ function OpenMap.ShowsWaypointAtStop(stop)
 	return u ~= nil and v ~= nil
 end
 
+-- Blizzard clamps its cursor fractions to the host map. On a stitched view the cursor can be
+-- over a different zone even when that host map stays where it was.
+---@param map SPFMapCanvas
+---@return number? uiMapID, number? x, number? y
+function OpenMap.CursorMapPoint(map)
+	local api = OpenMap.API()
+	if api and api.CursorPosition and api.MapAt and api.MapFromWorld and OpenMap.Stitched() then
+		local u, v = api.CursorPosition()
+		if u == nil or v == nil then
+			return nil
+		end
+		local uiMapID = api.MapAt(u, v)
+		if uiMapID then
+			local x, y = api.MapFromWorld(uiMapID, u, v)
+			return uiMapID, x, y
+		end
+		return nil
+	end
+	local x, y = map:GetNormalizedCursorPosition()
+	return map:GetMapID(), x, y
+end
+
 -- At the same point, ownership can change while the journey keeps its drawn route.
 ---@param refresh fun()
 function OpenMap.WatchPinOwner(refresh)
