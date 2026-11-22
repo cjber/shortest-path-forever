@@ -18,9 +18,9 @@ scenario("Journey stays collapsed when the last quest is untracked", { addons = 
 		end
 	end
 	assert(ns, "SPF loaded")
-	-- Name the goals explicitly so their titles cannot depend on simulated zone lookups or pin state.
-	local firstGoal = G.Mixin({}, ns.DockPoint(5), { label = "Menethil Harbor" })
-	local secondGoal = G.Mixin({}, ns.DockPoint(6), { label = "Theramore" })
+	-- Use named world points so the titles cannot depend on simulated zone lookups or pin state.
+	local firstGoal = { map = 0, x = -3896.5, y = -593, z = 6, label = "Menethil Harbor" }
+	local secondGoal = { map = 1, x = -4008, y = -4732.3, z = 6, label = "Theramore" }
 	sim:input(function()
 		ns.StartJourney(firstGoal)
 	end)

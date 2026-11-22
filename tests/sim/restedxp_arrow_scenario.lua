@@ -127,13 +127,20 @@ scenario("a RestedXP step keeps RestedXP's arrow while the route is searched and
 	assert(ns.ArrowLeads() and not Theirs(), "the routed arrow takes over after the plan lands")
 	SelectArrow("both")
 	assert(ns.ArrowLeads() and Theirs(), "both arrows are visible in both mode")
+	SelectArrow("shortestPath")
 	dead = true
-	assert(sim.G.UnitIsDeadOrGhost("player"), "the simulator reports player death")
+	sim:event("PLAYER_DEAD")
+	assert(not ns.ArrowLeads() and Theirs(), "death restores RestedXP before its next update")
+	sim:event("PLAYER_ALIVE")
+	assert(not ns.ArrowLeads() and Theirs(), "releasing to the graveyard leaves RestedXP in charge")
 	for _, mode in ipairs({ "shortestPath", "both" }) do
 		SelectArrow(mode)
 		assert(not ns.ArrowLeads() and Theirs(), "RestedXP keeps the bearing when the player is dead")
 	end
+	SelectArrow("shortestPath")
 	dead = false
+	sim:event("PLAYER_UNGHOST")
+	assert(ns.ArrowLeads() and not Theirs(), "resurrection restores the selected routed arrow")
 	SelectArrow("restedxp")
 	assert(not ns.ArrowLeads() and Theirs(), "switching back restores RestedXP alone")
 	sim:expectNoErrors(ADDON)
