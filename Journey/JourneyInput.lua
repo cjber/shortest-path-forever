@@ -299,7 +299,7 @@ local function PlanQuest(questID, clickedMap, isWaypoint)
 	local point = location and ns.WorldPoint(location.uiMapID, location.x, location.y)
 	if not point then
 		-- Questie.API exposes icons and update notifications, but no public coordinate lookup.
-		ns.Print(L["No location for that quest yet."])
+		ns.Notice(L["No location for that quest yet."])
 		return false
 	end
 	point.label, point.questID = location.label, questID
@@ -339,7 +339,7 @@ end
 function ns.JourneyToMapPoint(uiMapID, x, y, label)
 	local point = ns.WorldPoint(uiMapID, x, y)
 	if not (point and OnZone(ns.InstanceEntrance(point))) then
-		ns.Print(L["no journey can be planned to that spot."])
+		ns.Notice(L["no journey can be planned to that spot."])
 		return false
 	end
 	point.label = label
@@ -357,7 +357,7 @@ function ns.JourneyToUserWaypoint()
 	local waypoint = C_Map.GetUserWaypoint()
 	local position = waypoint and waypoint.position
 	if not (position and waypoint.uiMapID) then
-		ns.Print(L["no map pin is set."])
+		ns.Notice(L["no map pin is set."])
 		return false
 	end
 	return ns.JourneyToMapPoint(waypoint.uiMapID, position.x, position.y)
@@ -388,7 +388,7 @@ end
 function ns.JourneyToTrackedQuest()
 	local questID = TrackedQuestID()
 	if not questID then
-		ns.Print(L["no quest is tracked."])
+		ns.Notice(L["no quest is tracked."])
 		return false
 	end
 	return PlanQuest(questID)
@@ -575,7 +575,7 @@ local function OnMinimapClick(_, button)
 	if point then
 		ns.StartJourney(point)
 	else
-		ns.Print(L["no journey can be planned to that spot."])
+		ns.Notice(L["no journey can be planned to that spot."])
 	end
 end
 

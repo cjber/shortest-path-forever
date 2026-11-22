@@ -676,7 +676,7 @@ ns.Init(function()
 		safeCall = ns.core.SafeCall,
 	})
 	if not tracker then
-		ns.Print(L["The objective tracker is unavailable."])
+		ns.Notice(L["The objective tracker is unavailable."])
 		return
 	end
 	---@cast tracker SPFTracker

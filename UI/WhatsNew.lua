@@ -28,7 +28,7 @@ function ns.CheckWhatsNew()
 	local seen = db.seenVersion
 	db.seenVersion = version
 	if seen and seen ~= version and version == ns.WHATS_NEW_VERSION and db.whatsNew then
-		ns.Print(string.format(L["updated to %s. %s"], version, ns.WHATS_NEW))
+		ns.Notice(string.format(L["updated to %s. %s"], version, ns.WHATS_NEW))
 	end
 end
 

@@ -316,7 +316,7 @@ local gamepad, printed = false, {}
 ns.GamepadUI = function()
 	return gamepad
 end
-ns.Print = function(text)
+ns.Notice = function(text)
 	printed[#printed + 1] = text
 end
 ns.OpenWorldMap = function(uiMap)
@@ -666,7 +666,7 @@ local function fresh(questie, away, L)
 		end,
 		OpenWorldMap = ns.OpenWorldMap,
 		GamepadUI = ns.GamepadUI,
-		Print = ns.Print,
+		Notice = ns.Notice,
 		ModifyMenu = ns.ModifyMenu,
 	}, { __index = ns })
 	setfenv(assert(loadfile("UI/NearbyGroups.lua")), env)("ShortestPathForever", copy)

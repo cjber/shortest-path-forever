@@ -27,7 +27,7 @@ local ns = {
 	Init = function(fn)
 		fn()
 	end,
-	Print = function(message)
+	Notice = function(message)
 		printed[#printed + 1] = message
 	end,
 }

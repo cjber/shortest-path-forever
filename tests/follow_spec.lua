@@ -46,7 +46,7 @@ end
 ns.FollowTick = ns.FollowTick
 
 local printed = {}
-ns.Print = function(message)
+ns.Notice = function(message)
 	printed[#printed + 1] = message
 end
 

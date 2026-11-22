@@ -9,8 +9,34 @@ local L = ns.L
 -- Per-character travel journal. Distance is an estimate from same-map position samples while walking; map changes,
 -- secret positions, taxi flights, recognized rides and implausible jumps reset the baseline.
 local DISTANCE_MILESTONES, COUNT_MILESTONES = { 1000, 10000, 100000 }, { 1, 10, 50 }
+local MILESTONES = {
+	walkedYards = {
+		key = "distance",
+		message = L["You've walked %s yards."],
+	},
+	routesCompleted = {
+		key = "routes",
+		message = L["You've completed %s journeys."],
+		first = L["You've completed your first journey."],
+	},
+	transportsUsed = {
+		key = "transports",
+		message = L["You've taken %s transport rides."],
+		first = L["You've taken your first transport ride."],
+	},
+	flightsTaken = {
+		key = "flights",
+		message = L["You've taken %s flights."],
+		first = L["You've taken your first flight."],
+	},
+	portalsUsed = {
+		key = "portals",
+		message = L["You've used %s portals or passages."],
+		first = L["You've used your first portal or passage."],
+	},
+}
 local MAX_SAMPLE_GAP, MAX_SPEED = 2.5, 60
-local localStats, lastPosition, lastSample, lastRide, wasFlying, lastPortalLeg
+local lastPosition, lastSample, lastRide, wasFlying, lastPortalLeg
 
 local function Ensure()
 	if not ns.charDB then
@@ -38,16 +64,15 @@ local function Ensure()
 	end
 	-- Peer snapshots belonged to the retired Forever Leaderboards feature. Clear them once on load.
 	rawset(stats, "peers", nil)
-	localStats = stats
 	return stats
 end
 
-local function Milestone(key, value, thresholds)
+local function Milestone(stats, value, thresholds, milestone)
 	for _, threshold in ipairs(thresholds) do
-		local marker = key .. ":" .. threshold
-		if value >= threshold and not localStats.milestones[marker] then
-			localStats.milestones[marker] = GetServerTime()
-			ns.Print(string.format(L["Travel milestone reached: %s"], marker))
+		local marker = milestone.key .. ":" .. threshold
+		if value >= threshold and not stats.milestones[marker] then
+			stats.milestones[marker] = GetServerTime()
+			ns.Notice(threshold == 1 and milestone.first or milestone.message:format(BreakUpLargeNumbers(threshold)))
 		end
 	end
 end
@@ -82,19 +107,7 @@ local function Record(key, amount)
 		return
 	end
 	stats[key] = stats[key] + amount
-	if key == "walkedYards" then
-		Milestone("distance", stats[key], DISTANCE_MILESTONES)
-	else
-		local label = ({
-			routesCompleted = "routes",
-			transportsUsed = "transports",
-			flightsTaken = "flights",
-			portalsUsed = "portals",
-		})[key]
-		if label then
-			Milestone(label, stats[key], COUNT_MILESTONES)
-		end
-	end
+	Milestone(stats, stats[key], key == "walkedYards" and DISTANCE_MILESTONES or COUNT_MILESTONES, MILESTONES[key])
 end
 
 local function Position()

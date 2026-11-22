@@ -110,7 +110,7 @@ ns.ClearJourney()
 
 -- A shift-click the minimap cannot place says so, as the same click on the world map does.
 local said = {}
-ns.Print = function(message)
+ns.Notice = function(message)
 	said[#said + 1] = message
 end
 ns.MinimapPoint = function() end
@@ -132,7 +132,7 @@ assert(#said == 3)
 ns.located = nil
 assert(driver.click({ map = 1, x = 900, y = 0 }) and #said == 3 and ns.JourneyInfo(), "a click on a zone plans")
 ns.ClearJourney()
-ns.Print = function() end
+ns.Notice = function() end
 
 -- A recent ride remains observed after disembarking; a docked boat must not force a round trip.
 walking.auto = true

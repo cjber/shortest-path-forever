@@ -268,9 +268,9 @@ end
 print("baked endpoint bounds: four journeys, both water modes, exact full-search costs: ok")
 
 ns.faction, ns.water, ns.speed, ns.known = "Horde", false, 7, {}
-local printed, print_ = {}, ns.Print
-ns.Print = function(message)
-	printed[#printed + 1] = message
+local notices, notice = {}, ns.Notice
+ns.Notice = function(message)
+	notices[#notices + 1] = message
 end
 ns.db.flightPathReminder = true
 local undercity, sepulcher = ns.TaxiNodes[11], ns.TaxiNodes[10]
@@ -284,11 +284,13 @@ for _, row in ipairs((select(2, ns.JourneyInfo()))) do
 	unsynced = unsynced or row.key == "no-flight-points-0"
 end
 assert(unsynced, "a walk kept as the same journey still says a flight would be quicker")
-assert(#printed == 1 and printed[1]:find("Eastern Kingdoms", 1, true), "chat says once that a flight would be quicker")
-assert(printed[1]:find("|c", 1, true) == 1, "the chat line is coloured")
+assert(
+	#notices == 1 and notices[1]:find("Eastern Kingdoms", 1, true),
+	"the notice says once that a flight would be quicker"
+)
 driver.update(5)
 drain()
-assert(#printed == 1, "a replan of the same journey does not repeat it")
+assert(#notices == 1, "a replan of the same journey does not repeat it")
 ns.known = { [11] = true }
 ns.ClearJourney()
 driver.begin(
@@ -296,7 +298,7 @@ driver.begin(
 	{ map = 0, x = sepulcher.x + 30, y = sepulcher.y }
 )
 drain()
-assert(#printed == 1, "nothing is said once a flight point there is known")
+assert(#notices == 1, "nothing is said once a flight point there is known")
 ns.known = {}
 ns.ClearJourney()
 ns.db.flightPathReminder = false
@@ -305,9 +307,9 @@ driver.begin(
 	{ map = 0, x = sepulcher.x + 30, y = sepulcher.y }
 )
 drain()
-assert(#printed == 1, "the new flight master reminder setting silences it")
+assert(#notices == 1, "the new flight master reminder setting silences it")
 ns.ClearJourney()
-ns.Print = print_
+ns.Notice = notice
 print("unknown flight: a kept walk keeps the proof that a flight would be quicker: ok")
 
 -- The Deeprun Tram's instance has no world map, so a step there cannot fall back to a zone name.

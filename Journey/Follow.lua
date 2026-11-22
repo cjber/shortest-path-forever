@@ -144,7 +144,7 @@ function ns.StartFollowing(unit, throttle)
 	end
 	local point = ns.FollowPoint(unit)
 	if not point then
-		ns.Print(L["That player is not on a map you can see."])
+		ns.Notice(L["That player is not on a map you can see."])
 		return false
 	end
 	-- The journey was just planned to where they are, so the first refresh waits a full
@@ -202,7 +202,7 @@ function ns.FollowTick(elapsed)
 	if close and close <= ARRIVE then
 		if not following.arrived then
 			following.arrived = true
-			ns.Print(L["You have caught up with %s."]:format(Name()))
+			ns.Notice(L["You have caught up with %s."]:format(Name()))
 		end
 		return
 	end

@@ -22,7 +22,7 @@ local destination, printed
 ns.StartJourney = function(point)
 	destination = point
 end
-ns.Print = function(message)
+ns.Notice = function(message)
 	printed = message
 end
 

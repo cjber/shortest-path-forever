@@ -226,7 +226,7 @@ end
 function ns.OpenWorldMap(uiMap, hint)
 	local accepted, reason = ns.TryOpenWorldMap(uiMap, hint)
 	if reason then
-		ns.Print(reason)
+		ns.Notice(reason)
 	end
 	return accepted
 end
@@ -236,8 +236,7 @@ function ns.Print(message)
 	print(NORMAL_FONT_COLOR:WrapTextInColorCode("Shortest Path Forever:") .. " " .. message)
 end
 
--- A line for the player on screen, in the game's own message area (UIErrorsFrame) in its yellow notice colour, for a
--- gesture that did nothing: addon notices never go to chat.
+-- Show player notices in the game's yellow on-screen message area.
 ---@param message string
 function ns.Notice(message)
 	UIErrorsFrame:AddMessage(message, YELLOW_FONT_COLOR:GetRGB())

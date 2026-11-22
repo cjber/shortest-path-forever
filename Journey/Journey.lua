@@ -652,12 +652,9 @@ local function AnnounceUnsyncedFlightPoints()
 	for _, continent in ipairs(UnsyncedContinents(result)) do
 		if not announced[continent.map] then
 			announced[continent.map] = true
-			ns.Print(
-				RED_FONT_COLOR:WrapTextInColorCode(
-					string.format(
-						L["A flight would be quicker. Open a flight master's map in %s once to sync your flight points."],
-						continent.name
-					)
+			ns.Notice(
+				L["A flight would be quicker. Open a flight master's map in %s once to sync your flight points."]:format(
+					continent.name
 				)
 			)
 		end

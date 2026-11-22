@@ -730,7 +730,7 @@ local function OpenServices()
 	-- addon opens neither (#158) and leaves the game's own menus alone as well (UI/MenuModifier.lua, #645): there is
 	-- no way in to the services with a controller, and the player is told what they would need.
 	if ns.GamepadUI() then
-		ns.Print(L["This menu needs mouse and keyboard."])
+		ns.Notice(L["This menu needs mouse and keyboard."])
 		return
 	end
 	if ns.OpenWorldMap() then

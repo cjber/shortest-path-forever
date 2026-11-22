@@ -57,7 +57,7 @@ local function Record()
 	ride.announced = routeID
 	if ns.Timetable.Sighted(routeID, { epoch = fits[routeID].epoch, seen = now }) and not routine then
 		local route = ns.Routes[routeID]
-		ns.Print(string.format(L["synced the %s schedule from your ride."], route.site or KIND[route.kind]))
+		ns.Notice(string.format(L["synced the %s schedule from your ride."], route.site or KIND[route.kind]))
 	end
 end
 
