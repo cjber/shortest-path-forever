@@ -361,6 +361,7 @@
 ---@field compassTime? boolean -- the whole journey's time left under the compass distance (Compass.lua)
 ---@field arrivalSound? boolean -- the map ping when a journey the player planned reaches its goal (Alert.lua)
 ---@field restedxp? boolean -- follow RestedXP guide targets
+---@field restedxpArrow? "restedxp"|"shortestPath"|"both"
 ---@field restedxpHideArrow? boolean -- hide the guide arrow during Adventure Guide integration
 ---@field guidelime? boolean -- follow Guidelime's current guide step (Guidelime.lua)
 ---@field dugi? boolean -- follow Dugi Guides' current guide step (Dugi.lua)

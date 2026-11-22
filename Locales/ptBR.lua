@@ -157,8 +157,12 @@ L["Only use the Hearthstone when it saves at least this much time."] =
 L["Open"] = "Abrir"
 L["Open Nearby services"] = "Abrir serviços próximos"
 L["Open the world map to see it."] = "Abra o mapa-múndi para ver."
-L["Plan journeys to RestedXP guide targets. RestedXP keeps its own arrow."] =
-	"Planeja viagens até os objetivos do guia RestedXP. O RestedXP mantém sua própria seta." -- mt
+L["Plan journeys to RestedXP guide targets."] = "Planeja rotas até os objetivos do guia do RestedXP." -- mt
+L["Choose which arrows to show when following a standalone RestedXP guide."] =
+	"Escolha quais setas mostrar ao seguir um guia do RestedXP de forma independente." -- mt
+L["RestedXP arrow"] = "Seta do RestedXP" -- mt
+L["RestedXP's arrow"] = "Seta do RestedXP" -- mt
+L["Shortest Path's arrow"] = "Seta do Shortest Path" -- mt
 L["Shortest Path pins and route lines on the world map."] =
 	"Marcadores e linhas de rota do Shortest Path no mapa-múndi." -- mt
 L["Show Shortest Path marks"] = "Mostrar marcas do Shortest Path" -- mt

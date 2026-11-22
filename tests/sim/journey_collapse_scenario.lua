@@ -18,8 +18,11 @@ scenario("Journey stays collapsed when the last quest is untracked", { addons = 
 		end
 	end
 	assert(ns, "SPF loaded")
+	-- Use named world points so the titles cannot depend on simulated zone lookups or pin state.
+	local firstGoal = { map = 0, x = -3896.5, y = -593, z = 6, label = "Menethil Harbor" }
+	local secondGoal = { map = 1, x = -4008, y = -4732.3, z = 6, label = "Theramore" }
 	sim:input(function()
-		ns.StartJourney(ns.DockPoint(5))
+		ns.StartJourney(firstGoal)
 	end)
 	sim:advance(1)
 	assert(ns.JourneyGoal(), "the journey started")
@@ -58,11 +61,13 @@ scenario("Journey stays collapsed when the last quest is untracked", { addons = 
 	assert(journey.firstBlock == nil, "the collapsed Journey only displays its header")
 
 	local previousTitle = journey.blocks[1].title
+	assert(previousTitle:find(firstGoal.label, 1, true), "the tracker shows the first goal")
 	sim:input(function()
-		ns.StartJourney(ns.DockPoint(6))
+		ns.StartJourney(secondGoal)
 	end)
 	sim:advance(1)
 	assert(journey.blocks[1].title ~= previousTitle, "SPF produced a different journey while the tracker was hidden")
+	assert(journey.blocks[1].title:find(secondGoal.label, 1, true), "the tracker shows the second goal")
 	assert(journey:IsCollapsed() and journey.firstBlock == nil, "the producer refresh leaves Journey collapsed")
 
 	local column = assert(G.ForeverTrackerCompanion)
