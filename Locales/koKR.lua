@@ -635,3 +635,14 @@ L["Remove all saved road and wall marks from the map and report."] =
 L["Road and wall report"] = "길 및 벽 보고서" -- mt
 L["Journey start: %s"] = "여정 출발지: %s" -- mt
 L["Journey goal: %s"] = "여정 목적지: %s" -- mt
+L["Shows a notice the first time you log in after an update."] =
+	"업데이트 후 처음 로그인할 때 알림을 표시합니다." -- mt
+L["You've walked %s yards."] = "%s미터를 걸었습니다." -- mt
+L["You've completed %s journeys."] = "여정 %s개를 완료했습니다." -- mt
+L["You've completed your first journey."] = "첫 여정을 완료했습니다." -- mt
+L["You've taken %s transport rides."] = "이동 수단을 %s번 이용했습니다." -- mt
+L["You've taken your first transport ride."] = "이동 수단을 처음 이용했습니다." -- mt
+L["You've taken %s flights."] = "비행편을 %s번 이용했습니다." -- mt
+L["You've taken your first flight."] = "비행편을 처음 이용했습니다." -- mt
+L["You've used %s portals or passages."] = "차원문이나 통로를 %s번 이용했습니다." -- mt
+L["You've used your first portal or passage."] = "차원문이나 통로를 처음 이용했습니다." -- mt

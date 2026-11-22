@@ -630,3 +630,14 @@ L["Remove all saved road and wall marks from the map and report."] =
 L["Road and wall report"] = "Rapport sur les routes et les murs" -- mt
 L["Journey start: %s"] = "Départ du trajet : %s" -- mt
 L["Journey goal: %s"] = "Destination du trajet : %s" -- mt
+L["Shows a notice the first time you log in after an update."] =
+	"Affiche un message à votre première connexion après une mise à jour." -- mt
+L["You've walked %s yards."] = "Vous avez parcouru %s mètres à pied." -- mt
+L["You've completed %s journeys."] = "Vous avez terminé %s voyages." -- mt
+L["You've completed your first journey."] = "Vous avez terminé votre premier voyage." -- mt
+L["You've taken %s transport rides."] = "Vous avez pris les transports %s fois." -- mt
+L["You've taken your first transport ride."] = "Vous avez pris un transport pour la première fois." -- mt
+L["You've taken %s flights."] = "Vous avez pris %s vols." -- mt
+L["You've taken your first flight."] = "Vous avez pris votre premier vol." -- mt
+L["You've used %s portals or passages."] = "Vous avez emprunté %s portails ou passages." -- mt
+L["You've used your first portal or passage."] = "Vous avez emprunté un portail ou un passage pour la première fois." -- mt
