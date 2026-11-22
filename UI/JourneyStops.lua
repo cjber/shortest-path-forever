@@ -412,7 +412,7 @@ local function Build()
 		ns.Art.Icon(window:GetPortrait(), icon, 62)
 	end
 	table.insert(UISpecialFrames, "ShortestPathForeverJourneyStops")
-	local help = Text(window, L["Orders the next stop by estimated travel time. You can change the order."], -42)
+	local help = Text(window, L["Orders the stops by estimated travel time. You can change the order."], -42)
 	help:ClearAllPoints()
 	help:SetPoint("TOPLEFT", 72, -42)
 	help:SetPoint("TOPRIGHT", -16, -42)
