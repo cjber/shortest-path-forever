@@ -270,7 +270,8 @@ end
 
 local function DirectionsShown()
 	return ns.db.arrow ~= false
-		and (not ns.JourneyOwner or ns.JourneyOwner() ~= "RestedXP" or (ns.Corpse and ns.Corpse.Active()))
+		-- RestedXP keeps the bearing on its journey, dead or alive: it draws its own Corpse or Spirit Healer arrow (#1251).
+		and (not ns.JourneyOwner or ns.JourneyOwner() ~= "RestedXP")
 end
 
 ---@param elapsed number seconds since the last update

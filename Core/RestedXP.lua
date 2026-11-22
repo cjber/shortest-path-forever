@@ -27,24 +27,12 @@ local textShown
 local mouseEnabled
 local watcher = CreateFrame("Frame")
 
-local function Show()
+local function Restore()
 	if hooked and textureShown ~= nil then
 		hooked.arrowFrame.texture:SetShown(textureShown)
 		hooked.arrowFrame.text:SetShown(textShown == true)
 		hooked.arrowFrame:EnableMouse(mouseEnabled == true)
 		textureShown, textShown, mouseEnabled = nil, nil, nil
-	end
-end
-
-local HoldArrow
-
--- Standalone journeys leave the bearing to RestedXP, except on a corpse run: RestedXP then draws its own Corpse arrow
--- (RXPGuides map.lua, UnitIsGhost), and our routed corpse arrow is a second one pointing at the same body (#1251).
-local function Restore()
-	if ns.Corpse and ns.Corpse.Active() then
-		HoldArrow()
-	else
-		Show()
 	end
 end
 
@@ -125,9 +113,9 @@ end
 
 -- Only Adventure Guide's integrated frontend can hand the RestedXP arrow to Shortest Path.
 -- Standalone journeys leave the bearing to RestedXP.
-HoldArrow = function()
+local function HoldArrow()
 	if (ns.db and ns.db.restedxpHideArrow == false) or not ns.ArrowLeads() then
-		Show()
+		Restore()
 	else
 		Suppress()
 	end
@@ -298,8 +286,6 @@ end)
 hooksecurefunc(ns, "ArrowLeadChanged", function()
 	if hooked and ns.db and Integrated() then
 		HoldArrow()
-	elseif hooked and ns.db then
-		Restore()
 	end
 end)
 

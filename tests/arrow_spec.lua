@@ -463,6 +463,15 @@ ns.PointGuideArrow(points, place)
 assert(frame.hidden and not ns.ArrowLeads(), "RestedXP owns the bearing during its journey")
 ns.PointArrivalPin({ map = 1, x = 0, y = 0 })
 assert(frame.hidden, "RestedXP owns the screen arrow at a held stop")
+local corpse = ns.Corpse
+ns.Corpse = {
+	Active = function()
+		return true
+	end,
+}
+ns.PointGuideArrow(points, place)
+assert(frame.hidden and not ns.ArrowLeads(), "RestedXP's own corpse arrow leads a corpse run on its journey")
+ns.Corpse = corpse
 owner = "Zygor"
 ns.PointGuideArrow(points, place)
 assert(not frame.hidden, "Another journey restores Shortest Path's arrow")
