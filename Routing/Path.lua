@@ -1981,7 +1981,9 @@ function Path.ReuseMany(job, point, sliced)
 		return false
 	end
 	local from = job.from
-	if from.x ~= point.x or from.y ~= point.y or (from.z and point.z and abs(from.z - point.z) > ZTOL) then
+	-- Within 3 yards shares the source's tree: the offset error is under 3 yards, while an exact match made every
+	-- nearby probe a new batch (EPL 17 to 45 planner calls).
+	if (from.x - point.x) ^ 2 + (from.y - point.y) ^ 2 > 9 or (from.z and point.z and abs(from.z - point.z) > ZTOL) then
 		return false
 	end
 	-- A start inside a different height band may have been settled on another surface.
