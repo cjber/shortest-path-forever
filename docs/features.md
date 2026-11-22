@@ -26,7 +26,9 @@ With the game's gamepad interface on, Shortest Path never opens or turns the wor
 
 Click the current journey step and choose **Complete this step** to advance it. Skipping a Hearthstone leaves it out of plans for that journey. Other steps may return if your actual position still requires them.
 
-With RestedXP, Guidelime or Dugi Guides installed, **Resume guide** in Guidance or the Journey header menu resumes that guide's current target after another journey. Dugi Guides is off by default: turn on *Follow Dugi guides* in Guidance to follow it, and Dugi's own arrow stays in place. RestedXP keeps its own arrow when Shortest Path follows it directly. Adventure Guide owns the resume action when its RestedXP display is enabled; update both addons to use the integrated resume control.
+With RestedXP, Guidelime or Dugi Guides installed, **Resume guide** in Guidance or the Journey header menu resumes that guide's current target after another journey. Dugi Guides is off by default: turn on *Follow Dugi guides* in Guidance to follow it, and Dugi's own arrow stays in place.
+
+For standalone RestedXP guides, open **RestedXP arrow** in Guidance and choose **RestedXP's arrow**, **Shortest Path's arrow**, or **Both**. RestedXP keeps corpse directions in every mode. When Adventure Guide displays the RestedXP steps, **Hide RestedXP's arrow** controls whether the guide arrow hides while Shortest Path leads. Adventure Guide handles **Resume guide** for those integrated steps.
 
 ## Routes and map marks
 
