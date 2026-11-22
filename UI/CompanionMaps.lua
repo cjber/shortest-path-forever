@@ -128,8 +128,8 @@ function Maps.Scan(map)
 	return Signature()
 end
 
-function Maps.OpenWaypointShown()
-	return openWaypoint
+function Maps.OpenWaypointMarksStop(point)
+	return ns.OpenMapAddon.Stitched() and openWaypoint and ns.JourneyGuide.HasWaypointAtStop(point)
 end
 
 ---@param kind string

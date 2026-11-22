@@ -500,12 +500,6 @@ local function StopQuests(point)
 	return quests
 end
 
-local function OpenMapMarksStop(point)
-	return ns.OpenMapAddon.Stitched()
-		and ns.CompanionMaps.OpenWaypointShown()
-		and ns.JourneyGuide.HasWaypointAtStop(point)
-end
-
 -- Stops whose buttons would overlap at this zoom share one, as the map's docks do: at their middle, faded, or at the
 -- stop being guided to and at full strength when it is among them. The buttons are rebuilt only when that grouping
 -- changes, and the line redrawn around them.
@@ -523,7 +517,7 @@ function Layer:RefreshStops()
 		return
 	end
 	local first, marks = stopIndex or 1, {}
-	self.mirroredWaypoint = OpenMapMarksStop(stops and stops[first] or goal)
+	self.mirroredWaypoint = ns.CompanionMaps.OpenWaypointMarksStop(stops and stops[first] or goal)
 	for index = first, stops and #stops or 1 do
 		local point = stops and stops[index] or goal
 		local x, y = MapPosition(point, mapID)
@@ -915,7 +909,7 @@ function ns.RefreshJourneyPin()
 		return
 	end
 	local active = ns.GoalPinActive()
-	local mirrored = OpenMapMarksStop(stops and stops[stopIndex or 1] or goal)
+	local mirrored = ns.CompanionMaps.OpenWaypointMarksStop(stops and stops[stopIndex or 1] or goal)
 	if journeyPinActive == active and Layer.mirroredWaypoint == mirrored then
 		return
 	end
