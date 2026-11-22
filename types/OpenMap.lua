@@ -7,7 +7,6 @@
 ---@field version number
 ---@field IsStitched fun(): boolean
 ---@field CanvasFromWorldPos? fun(continent: number, x: number, y: number): number?, number?
----@field WorldFromMap? fun(uiMapID: number, x: number, y: number): number?, number?
 ---@field CursorPosition? fun(): number?, number?
 ---@field MapAt? fun(u: number, v: number): number?
 ---@field MapFromWorld? fun(uiMapID: number, u: number, v: number): number?, number?

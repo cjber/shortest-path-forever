@@ -815,14 +815,12 @@ end
 -- The current waypoint covers a stop only when it marks that stop's world point. A waypoint on an
 -- earlier bend still needs the separate destination pin.
 ---@param stop SPFPoint
----@return UiMapPoint?
-function Guide.WaypointAtStop(stop)
-	if guide and guide.waypoint and SamePoint(guide.waypointTarget, stop) then
-		local waypoint = C_Map.GetUserWaypoint()
-		if SameWaypoint(waypoint, guide.waypoint) then
-			return waypoint
-		end
-	end
+---@return boolean
+function Guide.HasWaypointAtStop(stop)
+	return guide ~= nil
+		and guide.waypoint ~= nil
+		and SamePoint(guide.waypointTarget, stop)
+		and SameWaypoint(C_Map.GetUserWaypoint(), guide.waypoint)
 end
 
 function Guide.Start()

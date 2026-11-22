@@ -453,7 +453,7 @@ local Layer = {}
 function Layer:RemoveAllData()
 	linePins:ReleaseAll()
 	goalPins:ReleaseAll()
-	self.stopsKey, self.stopMarks = nil, nil
+	self.stopsKey, self.stopMarks, self.mirroredWaypoint = nil, nil, false
 	-- Reconcile the game's quest pins with the stops drawn now (#472).
 	ns.RefreshQuestPins()
 end
@@ -500,6 +500,12 @@ local function StopQuests(point)
 	return quests
 end
 
+local function OpenMapMarksStop(point)
+	return ns.OpenMapAddon.Stitched()
+		and ns.CompanionMaps.OpenWaypointShown()
+		and ns.JourneyGuide.HasWaypointAtStop(point)
+end
+
 -- Stops whose buttons would overlap at this zoom share one, as the map's docks do: at their middle, faded, or at the
 -- stop being guided to and at full strength when it is among them. The buttons are rebuilt only when that grouping
 -- changes, and the line redrawn around them.
@@ -513,14 +519,15 @@ function Layer:RefreshStops()
 		or ns.OpenMapAddon.ShowsFollowedPin()
 	then
 		goalPins:ReleaseAll()
-		self.stopsKey, self.stopMarks = nil, nil
+		self.stopsKey, self.stopMarks, self.mirroredWaypoint = nil, nil, false
 		return
 	end
 	local first, marks = stopIndex or 1, {}
+	self.mirroredWaypoint = OpenMapMarksStop(stops and stops[first] or goal)
 	for index = first, stops and #stops or 1 do
 		local point = stops and stops[index] or goal
 		local x, y = MapPosition(point, mapID)
-		if OnMap(x, y) and (index ~= first or not ns.OpenMapAddon.ShowsWaypointAtStop(point)) then
+		if OnMap(x, y) and (index ~= first or not self.mirroredWaypoint) then
 			marks[#marks + 1] = {
 				x = x,
 				y = y,
@@ -901,18 +908,18 @@ function ns.SetJourneyRoute(destination, route)
 end
 
 -- Guide changes can recolour the goal pin on all surfaces, or replace it with OpenMap's waypoint on the world map.
-local journeyPinActive, mirroredWaypoint
+local journeyPinActive
 function ns.RefreshJourneyPin()
 	if not goal then
-		journeyPinActive, mirroredWaypoint = nil, nil
+		journeyPinActive = nil
 		return
 	end
 	local active = ns.GoalPinActive()
-	local mirrored = ns.OpenMapAddon.ShowsWaypointAtStop(goal)
-	if journeyPinActive == active and mirroredWaypoint == mirrored then
+	local mirrored = OpenMapMarksStop(stops and stops[stopIndex or 1] or goal)
+	if journeyPinActive == active and Layer.mirroredWaypoint == mirrored then
 		return
 	end
-	journeyPinActive, mirroredWaypoint = active, mirrored
+	journeyPinActive = active
 	if minimap then
 		local ringed = not minimap.goalEdge and goal.look ~= nil
 		local size = ringed and MINIMAP_RING or MINIMAP_GOAL

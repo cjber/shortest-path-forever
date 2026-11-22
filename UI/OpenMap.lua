@@ -8,9 +8,8 @@ end
 -- OpenMap (the seamless world map addon) offers other addons a small read-only API, OpenMapAPI: major 1, version 2
 -- and up. It says where a point in the game's world sits on the stitched map's canvas (CanvasFromWorldPos, in
 -- canvas fractions that run past 0..1 wherever the stitched view does), how high its stitched art reaches
--- (ArtTopLevel, so a frame of ours can be drawn above it), whether the map on screen is the stitched one
--- (IsStitched), and whether it can draw the guide waypoint (WorldFromMap). UI/Canvas.lua watches the canvas
--- while the map is shown, so it notices stitching start and stop without subscribing to OpenMap's callbacks.
+-- (ArtTopLevel), whether the map on screen is stitched (IsStitched), and where the cursor is on that map.
+-- UI/Canvas.lua watches the canvas while the map is shown, including when stitching starts or stops.
 --
 -- Every call is a read: nothing here writes to OpenMap, to its settings or to Blizzard's map. An OpenMap that is
 -- absent, older than version 2, or of another major version leaves every caller on its own map fractions, exactly
@@ -44,22 +43,6 @@ end
 
 function OpenMap.ShowsFollowedPin()
 	return ns.JourneyOwner() == OpenMap.PinOwner and OpenMap.Stitched()
-end
-
--- On the stitched map OpenMap redraws the native waypoint on its own canvas when it has a projection.
----@param stop SPFPoint
----@return boolean
-function OpenMap.ShowsWaypointAtStop(stop)
-	local api = OpenMap.API()
-	if not (api and api.WorldFromMap and OpenMap.Stitched()) then
-		return false
-	end
-	local waypoint = ns.JourneyGuide.WaypointAtStop(stop)
-	if not waypoint then
-		return false
-	end
-	local u, v = api.WorldFromMap(waypoint.uiMapID, waypoint.position.x, waypoint.position.y)
-	return u ~= nil and v ~= nil
 end
 
 -- Blizzard clamps its cursor fractions to the host map. On a stitched view the cursor can be
