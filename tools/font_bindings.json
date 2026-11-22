@@ -87,8 +87,8 @@
     },
     {
       "source": "UI/Arrow.lua",
-      "sha256": "b84aa1822152898184efc511842880bc329575c9ed8fde612a364f501d4c33ba",
-      "review": "Read Create, ArrowLabel, distance updates, arrival labels, progress and cast prompt. MoverHint uses GameFontHighlightSmall and Distance uses GameFontNormal, including the formatted time-distance phrase. No later font override occurs. Dynamic objective lines, arrival titles, route titles and actions from helpers are excluded; this review does not claim coverage for their inserted text. Reviewed #1161: NativeMarkerAt and the shared-marker stand-down read C_Navigation and C_Map only; no FontString, FontObject or text change. Reviewed #1035: the cast prompt's secure button moved to UI/CastButton.lua and writes only GameTooltip text; no FontString, FontObject or text change here. Reviewed RestedXP arrow ownership: direction visibility changes without changing text, font objects or bindings.",
+      "sha256": "8e4520f233ab5aa570578a35406d05159a0c9f0c79a48153a91b419fc78ab6a1",
+      "review": "Read Create, ArrowLabel, distance updates, arrival labels, progress and cast prompt. MoverHint uses GameFontHighlightSmall and Distance uses GameFontNormal, including the formatted time-distance phrase. No later font override occurs. Dynamic objective lines, arrival titles, route titles and actions from helpers are excluded; this review does not claim coverage for their inserted text. Reviewed #1161: NativeMarkerAt and the shared-marker stand-down read C_Navigation and C_Map only; no FontString, FontObject or text change. Reviewed #1035: the cast prompt's secure button moved to UI/CastButton.lua and writes only GameTooltip text; no FontString, FontObject or text change here. Reviewed RestedXP arrow ownership: direction visibility changes without changing text, font objects or bindings. Reviewed #1251: the corpse-run exception in DirectionsShown is removed; visibility only, no FontString, FontObject or text change.",
       "bindings": [
         {
           "font": "GameFontHighlightSmall",
