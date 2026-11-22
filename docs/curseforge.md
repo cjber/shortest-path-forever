@@ -1,4 +1,4 @@
-Shift-click the world map or minimap, or choose a quest. Shortest Path Forever plans your journey and guides you on both maps and in the objective tracker.
+Shortest Path Forever plans journeys from a shift-click on either map or a quest you choose, then guides you on both maps and in the objective tracker.
 
 All dependencies are included.
 
