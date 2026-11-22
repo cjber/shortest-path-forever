@@ -318,6 +318,11 @@ assert(
 )
 assert(Path.FindManySync(1, eastOffset, { eastOffset })[1] == 0, "a co-located transfer costs zero")
 
+local batch = { map = 1, from = eastOffset, sourceCluster = bk, sourceNode = bc }
+local moved = { map = 1, x = cx, y = cy, z = eastOffset.z }
+assert(not Path.ReuseMany(batch, moved), "moving within the cell invalidates its exact batch costs")
+assert(Path.ReuseMany(batch, moved, true), "the sliced query can still match a surface for a baked bound")
+
 -- The finer entrance graph finds the dry floor above the strait's water. Its explicit downward landing reaches
 -- the shore; sampling only the base water would mistake this layered walk for a swim.
 local dryStrait, dryCost = Path.FindSync(0, { x = -14961.19, y = 274.63 }, { x = -14897.51, y = 274.63 })

@@ -633,8 +633,7 @@ end
 -- point instead, which is what a goal needs, in the fifth to seventh places, and leaves the outbound ones empty: each
 -- caller walks a point one way, and on format 2 the other way is a second grid search. The surfaces themselves are
 -- returned too: a walk drawn or searched to a point ends on them, never on wherever the outbound rescue moved it.
--- A cached entrance vector starts at a node centre. Charge the connector on the surface the walk uses,
--- including the settled node when an endpoint had to move off an isolated surface.
+-- A cached entrance vector starts at a node centre. Charge the connector on the endpoint's surface.
 local function connector(st, swim, k, node, point, roadsOn, hz)
 	local C, cs = st.C, st.cs
 	local cell = cellOf(st, k, node)
@@ -662,10 +661,12 @@ local function connectPoint(st, swim, k, node, point, roadsOn, hz, inbound)
 	local ends, merged, mergedReal, via = {}, {}, {}, {}
 	for _, start in ipairs(nodes) do
 		local n, edges, reals, tree = connect(st, swim, k, start, roadsOn, hz, inbound)
-		local offset, realOffset = connector(st, swim, k, n, point, roadsOn, hz)
-		local ownOffset, ownRealOffset = offset, realOffset
-		if start ~= n then
-			ownOffset, ownRealOffset = connector(st, swim, k, start, point, roadsOn, hz)
+		local ownOffset, ownRealOffset = connector(st, swim, k, start, point, roadsOn, hz)
+		-- A rescued walk starts or ends on the replacement surface itself. The old point has no walking connector
+		-- to that surface.
+		local offset, realOffset = 0, 0
+		if start == n then
+			offset, realOffset = ownOffset, ownRealOffset
 		end
 		local entry = {
 			node = n,
@@ -1370,18 +1371,28 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 		end
 		return linked[i]
 	end
-	-- Settle co-located transfers before publishing that the remaining targets need a walk.
+	-- Local targets can settle immediately when both points use the same node. With one surface at each end and
+	-- neither one moved, all alternatives pay these connectors plus a nonnegative grid cost.
 	-- connectPoint reuses the shared heap, which still holds the source connection's frontier.
 	local heldKeys, heldValues, heldSize = hk, hv, hn
 	hk, hv, hn = {}, {}, 0
 	for i, point in ipairs(targets) do
-		if costs[i] == nil and point.x == from.x and point.y == from.y then
+		if costs[i] == nil and locate(st, point.x, point.y) == sk then
 			local target = link(i, sk)
+			local colocated = point.x == from.x and point.y == from.y
 			for _, a in ipairs(target and starts or {}) do
 				for _, b in ipairs(target and target.goals or {}) do
-					if costs[i] == nil and (reverse and b.node or a.node) == (reverse and a.own or b.own) then
-						costs[i] = 0
-						if job then
+					local start, goal = a, b
+					if reverse then
+						start, goal = b, a
+					end
+					if costs[i] == nil and start.node == goal.own then
+						if colocated then
+							costs[i] = 0
+						elseif #starts == 1 and #target.goals == 1 and goal.node == goal.own then
+							costs[i] = start.realOffset + goal.ownRealOffset
+						end
+						if job and costs[i] ~= nil then
 							job.revision = job.revision + 1
 						end
 					end
@@ -1981,7 +1992,13 @@ function Path.ReuseMany(job, point, sliced)
 		return false
 	end
 	local from = job.from
-	if from.x ~= point.x or from.y ~= point.y or (from.z and point.z and abs(from.z - point.z) > ZTOL) then
+	-- Callers that reuse exact batch costs need the same coordinates. The sliced fixed-place check
+	-- only uses the baked bound and already checks the place's coordinates within its own tolerance.
+	local dx, dy = from.x - point.x, from.y - point.y
+	if (sliced and dx * dx + dy * dy > 9) or (not sliced and (dx ~= 0 or dy ~= 0)) then
+		return false
+	end
+	if from.z and point.z and abs(from.z - point.z) > ZTOL then
 		return false
 	end
 	-- A start inside a different height band may have been settled on another surface.
