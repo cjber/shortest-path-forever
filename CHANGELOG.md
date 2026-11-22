@@ -10,6 +10,12 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.45.2] - 2026-11-22
+
+### Fixed
+
+- Flight estimates account for Frequent Flier when your character knows the perk.
+
 ## [1.45.1] - 2026-11-22
 
 ### Fixed
