@@ -325,6 +325,25 @@ do
 	changed("SPELLS_CHANGED")
 	changed("BAG_UPDATE_COOLDOWN")
 	assert(select(2, Usable(5000))[1] == 5000 + 3550000, "the hearth's own cooldown")
+	-- A cooldown that ended, and the global cooldown a cast leaves, are not this teleport's cooldown.
+	local function cooldownReads()
+		changed("BAG_UPDATE_COOLDOWN")
+		local _, readyNow, state = Usable(5000)
+		return readyNow, state
+	end
+	itemCooldowns[6948] = { 50, 600, true }
+	local itemReady, itemState = cooldownReads()
+	assert(itemReady[1] == 5000 + 550000, "a real cooldown reports the seconds left")
+	assert(itemState[1] == 650, "a real cooldown reports its deadline")
+	itemCooldowns[6948] = { 99, 1.5, true }
+	itemReady, itemState = cooldownReads()
+	assert(itemReady[1] == 5000 and itemState[1] == 0, "a global-cooldown-length cooldown is no cooldown")
+	itemCooldowns[6948] = { 50, 40, true }
+	itemReady, itemState = cooldownReads()
+	assert(itemReady[1] == 5000 and itemState[1] == 0, "a cooldown that ended is no cooldown")
+	itemCooldowns[6948] = { secret, secret, true }
+	local _, readyNow = cooldownReads()
+	assert(readyNow[1] == nil, "a secret cooldown reports nothing")
 	bindName = "Razor Hill"
 	assert(#Usable(5000) == 0, "bound elsewhere since: no bind teleport")
 	position = {}
