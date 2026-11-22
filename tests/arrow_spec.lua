@@ -453,3 +453,16 @@ assert(frame.alpha == 1, "a hidden native quest marker leaves the route arrow vi
 frame.OnHide(frame)
 ns.JourneyGuide.Stop()
 print("arrow_spec: ok")
+
+local owner
+ns.JourneyOwner = function()
+	return owner
+end
+owner = "RestedXP"
+ns.PointGuideArrow(points, place)
+assert(frame.hidden and not ns.ArrowLeads(), "RestedXP owns the bearing during its journey")
+ns.PointArrivalPin({ map = 1, x = 0, y = 0 })
+assert(frame.hidden, "RestedXP owns the screen arrow at a held stop")
+owner = "Zygor"
+ns.PointGuideArrow(points, place)
+assert(not frame.hidden, "Another journey restores Shortest Path's arrow")

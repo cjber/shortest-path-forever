@@ -63,20 +63,20 @@
     },
     {
       "source": "UI/Settings.lua",
-      "sha256": "98645e044c57eba0b4ac71bfc852e420268b22d93810c41857b1195e435e29e1",
-      "review": "Read Page, Checkbox, Scale, Dropdown and Saving and their registration calls. Settings rows, index buttons and option labels delegate to Blizzard secure initializers; this file creates no FontString and establishes no explicit FontObject. Minimap button text, tooltip text, chat output and helper arguments are excluded rather than assigned an assumed settings font. Reviewed #1094: the Tracker heading's Attach to quest tracker row is ForeverCore.SettingsSections.RegisterTrackerAttach, a core-owned initializer, registered only when the running core has it (an older adopted standalone does not); excluded with the other settings fonts. Reviewed #1142: the journeyHint row is one more Checkbox helper call, a Blizzard secure initializer with no FontString or FontObject of its own. Reviewed #1033: the Off-path tolerance row and Arrival distance share a DistanceSlider helper that registers a Blizzard secure slider initializer, with no FontString or FontObject of its own. Reviewed #1005: the Avoided transport row is one more native button initializer with plain string text and tooltip; the client owns its fonts. Reviewed #1241: the new \"Show the journey key hint on the minimap\" row is one more Checkbox helper call, like journeyHint in #1142, so it adds a Blizzard secure initializer's row and no FontString or FontObject of its own; the digest moved for the row and its shortened journeyHint description, not for a font producer.",
+      "sha256": "49ac4e2e5c129d0132f9ebf7ae4dcd3c18f1e61e2b4bb3fc923d5f38ee2a0abf",
+      "review": "Read Page, Checkbox, Scale, Dropdown and Saving and their registration calls. Settings rows, index buttons and option labels delegate to Blizzard secure initializers; this file creates no FontString and establishes no explicit FontObject. Minimap button text, tooltip text, chat output and helper arguments are excluded rather than assigned an assumed settings font. Reviewed #1094: the Tracker heading's Attach to quest tracker row is ForeverCore.SettingsSections.RegisterTrackerAttach, a core-owned initializer, registered only when the running core has it (an older adopted standalone does not); excluded with the other settings fonts. Reviewed #1142: the journeyHint row is one more Checkbox helper call, a Blizzard secure initializer with no FontString or FontObject of its own. Reviewed #1033: the Off-path tolerance row and Arrival distance share a DistanceSlider helper that registers a Blizzard secure slider initializer, with no FontString or FontObject of its own. Reviewed #1005: the Avoided transport row is one more native button initializer with plain string text and tooltip; the client owns its fonts. Reviewed #1241: the new \"Show the journey key hint on the minimap\" row is one more Checkbox helper call, like journeyHint in #1142, so it adds a Blizzard secure initializer's row and no FontString or FontObject of its own; the digest moved for the row and its shortened journeyHint description, not for a font producer. Reviewed the RestedXP tooltip updates. Blizzard settings initializers own their fonts.",
       "bindings": []
     },
     {
       "source": "UI/SettingsMapMarks.lua",
-      "sha256": "47aae122ec6f13d244b1cec4196122ad703ee4d4f44d9e49bbe86eed67541f26",
-      "review": "Read Register and every rows builder call. All phrases are helper arguments to Settings.lua builders and Blizzard settings initializers, with no explicit FontObject in this producer. Tooltip descriptions and dynamic choice labels have no coverage claim.",
+      "sha256": "a747c217f941292d99d79d6e99d0876493139c5cecd78deb7ccc707224a52b6b",
+      "review": "Read Register and every rows builder call. All phrases are helper arguments to Settings.lua builders and Blizzard settings initializers, with no explicit FontObject in this producer. Tooltip descriptions and dynamic choice labels have no coverage claim. Reviewed the new checkbox. Blizzard settings initializers own its fonts.",
       "bindings": []
     },
     {
       "source": "UI/Map.lua",
-      "sha256": "38a26f1dbc69eb8905eefe8a0554494202b0e25226a1ea6d75cb570bd960a169",
-      "review": "Read dock, service and portal pin creation and tooltip callbacks. Map.xml defines textures without label FontStrings; localized destination, landing and direction phrases flow into tooltips or helper results, as does the journey click hint (ns.AddJourneyClickHint). Tooltip fonts belong to their templates, menu fonts are not established here, and dynamic location names are excluded.",
+      "sha256": "f432676ded36adf6cf2d9604a257665ba969e4a55f919699357dcf15161536c2",
+      "review": "Read dock, service and portal pin creation and tooltip callbacks. Map.xml defines textures without label FontStrings; localized destination, landing and direction phrases flow into tooltips or helper results, as does the journey click hint (ns.AddJourneyClickHint). Tooltip fonts belong to their templates, menu fonts are not established here, and dynamic location names are excluded. Reviewed the new map filter label and visibility callback. The menu owns its fonts.",
       "bindings": []
     },
     {
@@ -87,8 +87,8 @@
     },
     {
       "source": "UI/Arrow.lua",
-      "sha256": "a23d47971afc0fe6c8584d9a18a0fbb35f7e34b6d9f789b21632eac68db01f87",
-      "review": "Read Create, ArrowLabel, distance updates, arrival labels, progress and cast prompt. MoverHint uses GameFontHighlightSmall and Distance uses GameFontNormal, including the formatted time-distance phrase. No later font override occurs. Dynamic objective lines, arrival titles, route titles and actions from helpers are excluded; this review does not claim coverage for their inserted text. Reviewed #1161: NativeMarkerAt and the shared-marker stand-down read C_Navigation and C_Map only; no FontString, FontObject or text change. Reviewed #1035: the cast prompt's secure button moved to UI/CastButton.lua and writes only GameTooltip text; no FontString, FontObject or text change here.",
+      "sha256": "b84aa1822152898184efc511842880bc329575c9ed8fde612a364f501d4c33ba",
+      "review": "Read Create, ArrowLabel, distance updates, arrival labels, progress and cast prompt. MoverHint uses GameFontHighlightSmall and Distance uses GameFontNormal, including the formatted time-distance phrase. No later font override occurs. Dynamic objective lines, arrival titles, route titles and actions from helpers are excluded; this review does not claim coverage for their inserted text. Reviewed #1161: NativeMarkerAt and the shared-marker stand-down read C_Navigation and C_Map only; no FontString, FontObject or text change. Reviewed #1035: the cast prompt's secure button moved to UI/CastButton.lua and writes only GameTooltip text; no FontString, FontObject or text change here. Reviewed RestedXP arrow ownership: direction visibility changes without changing text, font objects or bindings.",
       "bindings": [
         {
           "font": "GameFontHighlightSmall",

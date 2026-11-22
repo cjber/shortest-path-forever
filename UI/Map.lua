@@ -735,7 +735,7 @@ function ns.HideMapPins()
 end
 
 function ns.ShowMapPins()
-	MapCanvas.SetShown(WorldMapFrame, true)
+	MapCanvas.SetShown(WorldMapFrame, ns.db.worldMapMarks ~= false and not ns.mapRefreshPending)
 end
 
 function ns.RefreshMap()
@@ -766,6 +766,7 @@ local function AddFilters(_, rootDescription)
 			ns.SetOption(key, not ns.db[key])
 		end)
 	end
+	AddFilter("worldMapMarks", L["Show Shortest Path marks"])
 	AddFilter("mapFlightMasters", L["Flight Masters"])
 	AddFilter("mapRoutes", L["Boat and Zeppelin Routes"])
 	AddFilter("pins", L["Boats & Zeppelins"])
@@ -804,6 +805,7 @@ ns.Init(function()
 	dockPins = MapCanvas.Pool(WorldMapFrame, PIN_TEMPLATE, DockPin, { template = PIN_TEMPLATE, marker = "dock" })
 	portalPins =
 		MapCanvas.Pool(WorldMapFrame, PORTAL_TEMPLATE, PortalPin, { template = PORTAL_TEMPLATE, marker = "portal" })
+	ns.ShowMapPins()
 	-- The map opening, turning to another map or zooming: what the stock map asked its data providers to redraw.
 	MapCanvas.Watch(WorldMapFrame, function(_, what)
 		if what == "show" or what == "map" then

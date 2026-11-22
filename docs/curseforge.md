@@ -40,7 +40,7 @@ These images are generated previews of the Shortest Path UI.
 
 - **Plan the trip.** Combine walking, known flights, boats, zeppelins, lifts, the tram, portals and teleports. Walks go around walls, hills and water, and replan as you move. A spot inside a dungeon or raid leads to its entrance.
 - **Find anything nearby.** The Nearby services tab in the world map's quest log lists vendors by what they sell, your class trainer, profession trainers, battlemasters, portal trainers for mages, inns, banks, auction houses, flight masters, stables and repairs, and every dungeon and raid door on your continent. Each row shows the nearest one and the time to get there, and orders dungeon and raid doors by that time. Search for an item or instance, then click a row to go there; a dungeon row takes you to the door and the journey ends when you go in. Arrows mark that NPC's nameplate when you arrive. Pick a level under *Town services* in the map's filter menu and zone and city maps show the same services where they stand, each kind in its own map icon, with a market stall where kinds share a spot; click one to go there, or hide any one kind from that menu. The minimap shows ticked kinds too. Uses installed QuestieDB.
-- **Follow your guide.** RestedXP and Guidelime journeys are on by default, with no TomTom or bridge addon; without TomTom, other guides' waypoints work. Turn on *Follow Dugi guides* in Guidance to follow Dugi too, with its own arrow still visible. Adventure Guide takes over when its RestedXP display is on.
+- **Follow your guide.** RestedXP and Guidelime journeys are on by default, with no TomTom or bridge addon; without TomTom, other guides' waypoints work. Turn on *Follow Dugi guides* in Guidance to follow Dugi too, with its own arrow still visible. RestedXP keeps its own arrow when Shortest Path follows it directly. Adventure Guide takes over when its RestedXP display is on.
 - **Choose what you see.** Hide Journey steps or the direction arrow while keeping the map route. With OpenMap on, the route crosses its stitched map into the neighbouring zones. Move and scale the arrow, choose whether its label shows the distance, the time left or both, and add the time left under the compass.
 - **Complete a step.** Click the current journey step and choose *Complete this step*. Skipping a Hearthstone leaves it out for that journey; other steps return if you still need them.
 - **See departures.** Dock and flight master tooltips show destinations and times.
@@ -50,6 +50,7 @@ With the gamepad interface on, you open and turn the world map; Shortest Path wo
 
 ## Usage
 
+- Turn off **Show Shortest Path marks** in the world map filter or **Map marks** to hide the addon's world map pins and route lines.
 - `/path` opens settings under **Options → AddOns → Shortest Path Forever**. `/spfnear` opens the Nearby services tab.
 - Alt-click the world map to choose a destination over a Questie icon. Shift-click the map, minimap or a Shortest Path icon; for quests, choose **Plan journey** in the right-click menu. **Key to plan a journey** in **Guidance**: Shift or Alt.
 - In **Map marks**, scale each kind of icon, and choose whether journey stops hide the game's quest markers. Right-click a flight master icon to mark its path known or unknown.

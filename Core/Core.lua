@@ -45,6 +45,7 @@ local DEFAULTS = {
 	-- The Nearby services tab in the shared quest log column. On by default; off, another addon may take that space
 	-- and /spfnear and the tracking menu still open the services.
 	nearbyTab = true,
+	worldMapMarks = true,
 	mapRoutes = true,
 	-- The town services' level of detail: "capitals", "important", "all" or "off" (UI/TownServices.lua). Off by
 	-- default: the pins are something a player asks for from the map filter menu or Settings > Map marks.
@@ -109,7 +110,7 @@ local DEFAULTS = {
 	tomtom = true,
 	tomtomFollow = false,
 	restedxp = true,
-	-- The arrow takeover alone: keep RestedXP's arrow while still following its guide.
+	-- Adventure Guide's integrated RestedXP display may use our arrow.
 	restedxpHideArrow = true,
 	guidelime = true,
 	-- Dugi Guides is read through an undocumented surface of a viewer it does not publish an API for, so following

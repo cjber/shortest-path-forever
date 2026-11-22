@@ -40,6 +40,8 @@ L["Adventure Guide suggests"] = "Adventure Guide 제안"
 L["Alert before a boat arrives"] = "배 도착 전 알림"
 L["Alerts"] = "알림"
 L["Alliance"] = "얼라이언스"
+L["Applies when Adventure Guide displays RestedXP steps and Shortest Path provides the directions."] =
+	"Adventure Guide가 RestedXP 단계를 표시하고 Shortest Path가 길을 안내할 때 적용됩니다." -- mt
 L["Arriving at %s in %s"] = "%s 도착까지 %s"
 L["Arrow label"] = "화살표 라벨" -- mt
 L["Arrow scale"] = "화살표 크기"
@@ -162,6 +164,11 @@ L["Only use the Hearthstone when it saves at least this much time."] =
 L["Open"] = "열기"
 L["Open Nearby services"] = "주변 편의시설 열기"
 L["Open the world map to see it."] = "세계 지도를 열어 확인하십시오."
+L["Plan journeys to RestedXP guide targets. RestedXP keeps its own arrow."] =
+	"RestedXP 가이드 목표까지 경로를 계획합니다. RestedXP는 자체 화살표를 계속 표시합니다." -- mt
+L["Shortest Path pins and route lines on the world map."] =
+	"세계 지도에 표시되는 Shortest Path의 핀과 경로선입니다." -- mt
+L["Show Shortest Path marks"] = "Shortest Path 표시 보기" -- mt
 L["The travel action will update after combat."] = "전투가 끝나면 이동 행동이 갱신됩니다."
 L["Rides to spend less time walking through %s (level %s)"] =
 	"이동 수단을 이용해 %s (레벨 %s)에서 걷는 구간을 줄임"
@@ -177,8 +184,6 @@ L["Plan journeys to Zygor's current guide step, with no TomTom or bridge addon n
 	"TomTom이나 연결 애드온 없이 Zygor 가이드의 현재 단계로 여정을 계획합니다. Zygor는 자체 화살표를 유지합니다." -- mt
 L["Plan journeys to Guidelime's current guide step. Guidelime's arrow steps aside while ours draws."] =
 	"Guidelime의 현재 가이드 단계로 여정을 계획합니다. 우리 화살표가 그려지는 동안 Guidelime의 화살표는 물러납니다."
-L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."] =
-	"RestedXP 가이드 목표까지 여정을 계획하고 그 화살표를 숨깁니다. TomTom이 필요 없습니다."
 L["Play a sound when you reach the goal"] = "목적지에 도착하면 소리 재생"
 L["Play a sound with alerts"] = "알림과 함께 소리 재생"
 L["Plays even with the game in the background."] = "게임이 백그라운드에 있어도 재생합니다."
@@ -256,8 +261,6 @@ L["Tram to %s"] = "%s행 지하철"
 L["Tram to %s arrives in %s"] = "%s행 지하철 %s 후 도착"
 L["Transport"] = "교통수단"
 L["Transport icon size"] = "교통수단 아이콘 크기"
-L["Turning this off leaves RestedXP's arrow visible."] =
-	"이 옵션을 끄면 RestedXP의 화살표가 계속 표시됩니다." -- mt
 L["Use %s"] = "%s 사용"
 L["Use class teleports"] = "직업 순간이동 사용"
 L["Vendors"] = "상인"
@@ -342,8 +345,6 @@ L["Travel stats are not ready yet."] = "이동 통계가 아직 준비되지 않
 L["Party member"] = "파티원" -- mt
 L["That player is not on a map you can see."] = "그 플레이어는 볼 수 있는 지도에 없습니다." -- mt
 L["You have caught up with %s."] = "%s을(를) 따라잡았습니다." -- mt
-L["Shortest Path's own arrow replaces the guide's while a guide target is followed."] =
-	"안내 목표를 따라가는 동안 Shortest Path의 화살표가 안내의 화살표를 대신합니다." -- mt
 L["Show a pin over the destination"] = "목적지 위에 핀 표시" -- mt
 L["A marker on screen over where the journey ends, like the game's own waypoint pin."] =
 	"여정이 끝나는 곳 위에 화면 표시를 놓습니다. 게임의 경로 지점 핀과 같습니다." -- mt
