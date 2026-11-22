@@ -26,6 +26,8 @@ local AMMO = { [2] = "arrows", [3] = "bullets", [18] = "arrows" }
 local UPGRADE_ATLAS, UPGRADE_MARKUP = "bags-greenarrow", 12
 -- A vendor group's item IDs by NPC, which a search matches and a row says it sells.
 local index, vendorItems, groups, groupByKey, state = {}, {}, {}, {}, "idle"
+-- Every spawn of a class trainer of the player's class, outgrown or not: index.class is the share that can still teach.
+local classPlaces = {}
 -- Every vendor item's name, so a search matches what a vendor sells and a row can name it.
 local itemNames = {}
 -- The level a tiered group's item needs, by item ID; 0 for none.
@@ -360,6 +362,18 @@ local function GroupNPCs(key)
 	table.sort(npcs)
 	return npcs
 end
+-- Keeps only the class trainers with something left to teach at `level` (the player's when nil).
+---@param level number?
+local function FilterClass(level)
+	level = level or (UnitLevel and UnitLevel("player"))
+	local kept = {}
+	for _, place in ipairs(classPlaces) do
+		if ROLES.CanTeachClass(place.id, level) then
+			kept[#kept + 1] = place
+		end
+	end
+	index.class = kept
+end
 local function BuildGroups()
 	for _, byNpc in pairs(vendorItems) do
 		for _, items in pairs(byNpc) do
@@ -507,7 +521,7 @@ local function Assemble(read)
 			end
 			coroutine.yield()
 		end
-		local classIds = ROLES.ClassTrainerIDs(rawget(_G, "TweaksForever"))
+		local classIds = ROLES.ClassTrainerIDs(rawget(_G, "TweaksForever"), true)
 		local classID = ROLES.PlayerClass()
 		-- Every NPC the read kept, in each group its flags, its goods, its training and its role put it in.
 		for id, row in pairs(read.npcs) do
@@ -545,6 +559,8 @@ local function Assemble(read)
 			end
 			coroutine.yield()
 		end
+		classPlaces = index.class or {}
+		FilterClass()
 		groups = BuildGroups()
 	end)
 	local function Pump()
@@ -940,6 +956,21 @@ ns.NearbyServices = {
 	PlayerWorld = PlayerWorld,
 	Open = OpenServices,
 }
+-- A level-up or a trainer's newly learned cap can outgrow a class trainer: the built index re-filters its class group.
+---@param level number?
+local function RefreshClass(level)
+	if state ~= "ready" then
+		return
+	end
+	FilterClass(level)
+	local group = groupByKey.class
+	if group then
+		group.npcs = GroupNPCs("class")
+	end
+	Notify()
+end
+ROLES.OnTeachableChanged = RefreshClass
+
 ns.Init(function()
 	ns.ModifyMenu("MENU_WORLD_MAP_TRACKING", "nearby", AddTrackingEntry)
 	ns.ModifyMenu("MENU_MINIMAP_TRACKING", "nearby", AddTrackingEntry)

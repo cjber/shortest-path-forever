@@ -11,11 +11,13 @@ local L = ns.L
 -- holds them, so no title or name is matched here.
 ---@class SPFNearbyRolesAPI
 ---@field PlayerClass fun(): integer?
----@field ClassTrainerIDs fun(tweaks: table?): table<number, boolean>
+---@field ClassTrainerIDs fun(tweaks: table?, anyLevel: boolean?): table<number, boolean>
+---@field CanTeachClass fun(npc: number, level: number?): boolean
 ---@field AddClassGroup fun(Add: fun(group: SPFNearbyGroup), GroupNPCs: fun(key: string): number[])
 ---@field AddWeaponGroup fun(Add: fun(group: SPFNearbyGroup), GroupNPCs: fun(key: string): number[])
 ---@field AddPortalGroup fun(Add: fun(group: SPFNearbyGroup), GroupNPCs: fun(key: string): number[])
 ---@field AddBattlemasterGroup fun(Add: fun(group: SPFNearbyGroup), GroupNPCs: fun(key: string): number[])
+---@field OnTeachableChanged fun(level: number?)? set by UI/Nearby.lua: a level-up or learned cap may outgrow a trainer
 ---@field AddKeys fun(keys: string[], id: integer, classIDs: table<number, boolean>, classID: integer?)
 local Roles = {}
 ns.NearbyRoles = Roles
@@ -52,14 +54,16 @@ local function CanTeachClass(npc, level)
 	local cap = learned and learned[npc] or ns.ClassTrainerCaps and ns.ClassTrainerCaps[npc]
 	return type(level) ~= "number" or type(cap) ~= "number" or level <= cap
 end
+Roles.CanTeachClass = CanTeachClass
 
 -- The class trainer group: the companion addon's list, merged with the class trainers in Data/Services.lua for
--- the player's own class and level.
+-- the player's own class and level. With `anyLevel`, trainers the player has outgrown are kept too.
 ---@param tweaks table?
+---@param anyLevel boolean?
 ---@return table<number, boolean>
-function Roles.ClassTrainerIDs(tweaks)
+function Roles.ClassTrainerIDs(tweaks, anyLevel)
 	local ids = {}
-	local level = UnitLevel and UnitLevel("player")
+	local level = not anyLevel and UnitLevel and UnitLevel("player") or nil
 	if
 		tweaks
 		and tweaks.API
@@ -119,8 +123,12 @@ local function LearnClassTrainerCap()
 	end
 	if cap and npc then
 		local caps = ns.db.classTrainerCaps or {}
+		local changed = caps[npc] ~= cap
 		caps[npc] = cap
 		ns.db.classTrainerCaps = caps
+		if changed and Roles.OnTeachableChanged then
+			Roles.OnTeachableChanged()
+		end
 	end
 end
 
@@ -133,7 +141,15 @@ ns.Init(function()
 	then
 		local events = CreateFrame("Frame")
 		events:RegisterEvent("TRAINER_SHOW")
-		events:SetScript("OnEvent", LearnClassTrainerCap)
+		events:RegisterEvent("PLAYER_LEVEL_UP")
+		events:SetScript("OnEvent", function(_, event, level)
+			if event == "TRAINER_SHOW" then
+				LearnClassTrainerCap()
+			elseif Roles.OnTeachableChanged then
+				-- UnitLevel can still answer the old level during the event, so the event's own level is used.
+				Roles.OnTeachableChanged(level)
+			end
+		end)
 	end
 end)
 

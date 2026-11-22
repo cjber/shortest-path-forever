@@ -13,14 +13,16 @@ local services = {
 }
 local env = setmetatable({
 	CreateFrame = function()
-		local registered
+		local registered = {}
 		return {
 			RegisterEvent = function(_, event)
-				registered = event
+				registered[#registered + 1] = event
 			end,
 			SetScript = function(_, script, handler)
 				assert(script == "OnEvent")
-				handlers[registered] = handler
+				for _, event in ipairs(registered) do
+					handlers[event] = handler
+				end
 			end,
 		}
 	end,
