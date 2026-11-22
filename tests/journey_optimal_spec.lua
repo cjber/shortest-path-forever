@@ -34,16 +34,26 @@ ns.Planner.Plan = function(o)
 	options.feasibleOnly, options.incumbent, options.incumbentPlan = nil, nil, nil
 	return plan(o)
 end
--- Every route the search hands Journey: an estimate, a measured offer and the proved route.
+-- Record the sketch at publication time: the rough route gains walk points in place.
 local published = {}
 local start = ns.JourneySearch.Start
 ns.JourneySearch.Start = function(point, route, state, listener)
 	return start(point, route, state, function(planned, news)
 		if (news == "route" or news == "rough") and planned then
+			local sketched = false
+			if news == "rough" then
+				for _, leg in ipairs(planned.legs) do
+					if leg.mode == "walk" and leg.walkPoints then
+						sketched = true
+						break
+					end
+				end
+			end
 			published[#published + 1] = {
 				rough = news == "rough" and planned.rough,
 				arrive = planned.arrive,
 				provisional = planned.provisional,
+				sketched = sketched,
 				leg = planned.legs[1],
 				legs = planned.legs,
 			}
@@ -147,9 +157,18 @@ for i = 1, 30 do
 	local bounded, exact = driver.shown(), full(options)
 	assert((bounded ~= nil) == (exact ~= nil), "reachability differs for pair " .. i)
 	local offered = false
+	local sketched = false
 	for at, route in ipairs(published) do
 		if route.rough then
-			assert(at == 1, "the rough route is drawn first")
+			if at > 1 then
+				assert(
+					published[1].rough and not offered and not sketched and route.sketched,
+					"only one sketch may update the rough route before a followable route"
+				)
+				sketched = true
+			else
+				assert(not route.sketched, "the rough estimate is drawn before the sketch")
+			end
 		elseif route.provisional then
 			assert(not offered and (route.leg.mode == "walk" and route.leg.measured), "only one measured offer")
 			offered = true
@@ -205,10 +224,11 @@ driver.update(60)
 drain()
 assert(#batches == count, "stationary refresh must reuse both searches")
 local nearby = { map = from.map, x = from.x + 0.1, y = from.y, z = from.z }
-assert(ns.Path.ReuseMany(batches[1], nearby))
+assert(not ns.Path.ReuseMany(batches[1], nearby), "a moved source has different connector costs")
 driver.begin(nearby, destination)
 drain()
-assert(#batches == count, "sub-yard moves in the same cell should reuse start costs")
+assert(#batches == count + 1 and not batches[#batches].reverse, "a sub-yard move invalidates only the start")
+count = #batches
 nearby.x = from.x + 30
 driver.begin(nearby, destination)
 drain()
@@ -222,7 +242,7 @@ driver.begin(nearby, destination)
 drain()
 assert(#batches == count + 5, "clearing a journey releases both endpoint caches")
 ns.ClearJourney()
-print("journey cache: repeated goal, stationary refresh, same-cell movement and water invalidation: ok")
+print("journey cache: repeated goal, stationary refresh, movement and water invalidation: ok")
 
 -- Rounded baked walks may strengthen bounds at a fixed endpoint, including clicks with no height.
 -- They must never replace its exact forward/reverse cost or change the proved optimum.
