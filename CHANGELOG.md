@@ -10,6 +10,13 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.45.1] - 2026-11-22
+
+### Fixed
+
+- A corpse run while following a RestedXP guide shows one arrow, RestedXP's own, which also keeps its Spirit Healer choice. (#1251)
+- RestedXP journeys place the native waypoint on the next bend again, while RestedXP keeps its own arrow. (#1254)
+
 ## [1.45.0] - 2026-11-22
 
 <!-- discord-image: docs/screenshots/kalimdor.png -->
