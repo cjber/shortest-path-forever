@@ -224,6 +224,22 @@ local function Hook(object, method, callback)
 	end
 end
 
+-- Another route can replace Zygor's while its arrow stays put. Forget the replaced target so that, once that route
+-- ends and no journey is left, the same step starts again even though Zygor's pointer never changed.
+
+local replaced = false
+local function JourneyChanged()
+	if not ns.HasJourney() then
+		if replaced then
+			replaced = false
+			Schedule()
+		end
+	elseif targetMap and ns.JourneyOwner() ~= OWNER then
+		replaced = true
+		targetMap, targetX, targetY, targetTitle, targetQuests = nil, nil, nil, nil, nil
+	end
+end
+
 function ns.RefreshZygor()
 	local zgv = Zygor()
 	if zgv then
@@ -246,6 +262,7 @@ function ns.RefreshZygor()
 end
 
 ns.Init(function()
+	hooksecurefunc(ns, "JourneyChanged", JourneyChanged)
 	watcher:RegisterEvent("ADDON_LOADED")
 	watcher:RegisterEvent("PLAYER_LOGIN")
 	watcher:RegisterEvent("PLAYER_ENTERING_WORLD")

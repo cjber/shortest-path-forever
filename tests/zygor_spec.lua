@@ -141,6 +141,19 @@ do
 	assert(not c.ns.HasJourney(), "hiding the arrow drops its route even when the frame retains the waypoint")
 end
 
+-- Another route replaces Zygor's while its arrow stays put; Zygor's step comes back once that route ends.
+do
+	local c = Boot()
+	c.pointer:ShowArrow({ m = 1, x = 0.6, y = 0.5, title = "Goldshire" })
+	c.enable()
+	assert(c.API.NavigateRoute("Other", { { map = 1, x = 0.3, y = 0.5, title = "Elsewhere" } }), "another route starts")
+	c.frame()
+	assert(c.API.CurrentStop("Other") == 1 and not c.API.CurrentStop("Zygor"), "the other route replaces Zygor's")
+	c.API.Cancel("Other")
+	c.frame()
+	assert(c.API.CurrentStop("Zygor") == 1, "Zygor's unchanged step resumes when the other route ends")
+end
+
 do
 	local c = Boot()
 	c.pointer.ArrowFrame = "unexpected"
