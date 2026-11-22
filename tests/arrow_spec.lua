@@ -475,3 +475,27 @@ ns.Corpse = corpse
 owner = "Zygor"
 ns.PointGuideArrow(points, place)
 assert(not frame.hidden, "Another journey restores Shortest Path's arrow")
+
+-- #1254: RestedXP draws its own arrow, but the native waypoint still follows our next bend.
+owner = "RestedXP"
+ns.db.arrow = true
+local restedBends = { { map = 1, x = 0, y = 0 }, { map = 1, x = 200, y = 0 } }
+local restedPlacements = {}
+ns.PointGuideArrow(restedBends, function(point)
+	restedPlacements[#restedPlacements + 1] = point
+	return false
+end)
+assert(
+	#restedPlacements >= 1 and restedPlacements[#restedPlacements] == restedBends[#restedBends],
+	"RestedXP's journey places the native waypoint on the next bend"
+)
+assert(frame.hidden, "while RestedXP's own arrow stays the only one shown")
+-- Directions off places no waypoint and shows no frame, even on RestedXP's journey (#881).
+local restedPlaced = #restedPlacements
+ns.db.arrow = false
+ns.PointGuideArrow(restedBends, function(point)
+	restedPlacements[#restedPlacements + 1] = point
+	return false
+end)
+assert(#restedPlacements == restedPlaced, "with directions off no waypoint is placed")
+assert(frame.hidden, "with directions off no frame is shown")

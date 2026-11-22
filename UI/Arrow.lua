@@ -268,8 +268,14 @@ local function Settle(elapsed, easing, moved)
 	SetUpdating(easing or frame.idle < 0.15)
 end
 
-local function DirectionsShown()
+-- The user's own setting: whether directions may place the native marker at all.
+local function ArrowShown()
 	return ns.db.arrow ~= false
+end
+
+-- Whether our frame may draw and lead. RestedXP draws its own arrow, but the marker still follows the bend (#1254).
+local function DirectionsShown()
+	return ArrowShown()
 		-- RestedXP keeps the bearing on its journey, dead or alive: it draws its own Corpse or Spirit Healer arrow (#1251).
 		and (not ns.JourneyOwner or ns.JourneyOwner() ~= "RestedXP")
 end
@@ -278,13 +284,18 @@ end
 local function Update(elapsed)
 	-- Timers and already queued frame ticks outlive hiding the frame. Keep the route for the compass,
 	-- but never let disabled directions place the native marker again (#881).
-	if not DirectionsShown() then
+	if not ArrowShown() then
 		frame:SetShown(moving)
 		SetUpdating(false)
 		return
 	end
+	local directions = DirectionsShown()
+	-- RestedXP keeps its own arrow; our frame stays hidden while the marker is placed below (#1254).
+	if not directions and not moving then
+		frame:Hide()
+	end
 	-- Arrived: the pin stands until the player leaves the stop's area, then the arrow or nothing takes over.
-	if arrival then
+	if directions and arrival then
 		if ns.StopInside and not ns.StopInside(arrival) then
 			ns.PointArrivalPin(nil)
 			return
@@ -307,7 +318,9 @@ local function Update(elapsed)
 	if not x or not canaccessvalue(facing) then
 		-- No position to point from (an instance): nothing drawn, only the slow poll runs.
 		frame.behind = false
-		frame:SetAlpha(moving and 1 or 0)
+		if directions then
+			frame:SetAlpha(moving and 1 or 0)
+		end
 		frame.angle = nil
 		SetUpdating(false)
 		-- A marker that led before the position went still leads: Guide keeps it through a frame with no map (#826).
@@ -355,6 +368,14 @@ local function Update(elapsed)
 	end
 	renderedShared = sharedMarker
 	native, shared = placed, sharedMarker
+	if not directions then
+		-- RestedXP draws its own arrow: the native marker still follows the bend, without our frame (#1254).
+		frame.behind = false
+		frame.angle = nil
+		SetUpdating(false)
+		Unseen(not ((native or shared) and markerShown))
+		return
+	end
 	local markerLeads = (native or shared) and markerShown
 	if not (facing and map == pointing.map) or markerLeads then
 		-- The native marker leads; nothing to draw, so only the slow poll runs, moving or not.
@@ -821,7 +842,7 @@ function ns.PointGuideArrow(points, placeBend, stop, goal)
 	if revision ~= updating then
 		return
 	end
-	if not points or not DirectionsShown() then
+	if not points or not ArrowShown() then
 		native, shared, unseen = nil, nil, false
 		if frame then
 			SetUpdating(false)
@@ -836,8 +857,13 @@ function ns.PointGuideArrow(points, placeBend, stop, goal)
 	frame.Progress:SetText(goal and goal.routeTitle or "")
 	-- Each new leg reads the quest log again: only a leg or a quest event rebuilds the lines, never a frame.
 	frame.linesDirty = true
-	frame:Show()
-	Wake()
+	if DirectionsShown() then
+		frame:Show()
+		Wake()
+	else
+		-- RestedXP keeps the arrow: place the marker without showing our frame (#1254).
+		SetUpdating(false)
+	end
 	Update(0)
 	NotifyLead()
 end
