@@ -10,6 +10,25 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.45.0] - 2026-11-22
+
+<!-- discord-image: docs/screenshots/kalimdor.png -->
+
+- **The map sketches your walk while the journey plans.** The first walk appears on the world map within a few frames, and walks you can see are refined before background searches (#1196).
+
+### Added
+
+- Turn off Shortest Path's world map pins and route lines from the map filter or Map marks settings. (#1153)
+
+### Changed
+
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
+### Fixed
+
+- Walking estimates include the short distances from your position and destination to the walking grid, including time spent swimming at either end (#1243).
+- RestedXP keeps its own direction arrow while Shortest Path plans the journey to each guide step. (#1246)
+
 ## [1.44.0] - 2026-11-22
 
 <!-- discord-image: docs/screenshots/stops.png -->
