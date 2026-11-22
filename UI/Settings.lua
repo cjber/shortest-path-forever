@@ -535,7 +535,7 @@ ns.Init(function()
 	Checkbox(
 		"avoidHighZones",
 		L["Avoid zones far above my level"],
-		L["Walk less in zones with a minimum level 4 or more above yours, even at your destination."],
+		L["Walk less in zones with a minimum level 5 or more above yours, and less still the higher it is, even at your destination."],
 		ns.TravelPolicyChanged
 	)
 	Checkbox(
