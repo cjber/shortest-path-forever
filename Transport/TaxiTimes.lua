@@ -13,6 +13,7 @@ end
 
 ---@class SPFTaxiTimes
 local TaxiTimes = {}
+local Model = ns.Model
 ns.TaxiTimes = TaxiTimes
 
 -- A ride shorter than this is not a flight; longer than this is a bad reading, not a route.
@@ -282,7 +283,7 @@ end
 ---@field to number the flight point it lands at
 ---@field seconds number measured on a ride of yours, else the shipped time
 ---@field measured boolean
----@field estimated? boolean the shipped time is worked out from the path's length, not timed
+---@field estimated? boolean the default time comes from path length or is adjusted for Frequent Flier
 
 -- The direct flights from a flight point to the ones `eligible` allows: your own timings first, then the shipped,
 -- each group quickest first.
@@ -291,14 +292,16 @@ end
 ---@return SPFFlightFrom[]
 function TaxiTimes.FlightsFrom(from, eligible)
 	local flights = {}
+	local speed = Model.FlightSpeed()
 	for _, path in ipairs(byFrom[from] or {}) do
 		if eligible(path.to) then
 			local measured = TaxiTimes.Seconds(from, path.to)
+			local seconds, estimated = Model.FlightTime(path, measured, speed)
 			flights[#flights + 1] = {
 				to = path.to,
-				seconds = measured or path.seconds,
+				seconds = seconds,
 				measured = measured ~= nil,
-				estimated = not measured and path.estimated or nil,
+				estimated = estimated or nil,
 			}
 		end
 	end

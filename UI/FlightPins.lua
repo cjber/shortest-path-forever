@@ -108,7 +108,6 @@ local function AddFlights(nodeID, undiscovered)
 	for index = 1, math.min(#flights, FLIGHTS_SHOWN) do
 		local flight = flights[index]
 		local time = ns.FormatCountdown(flight.seconds * 1000)
-		-- A time worked out from the path's length, not timed by anyone, says so.
 		if flight.estimated then
 			time = string.format(L["about %s"], time)
 		end

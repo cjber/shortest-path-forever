@@ -1,6 +1,13 @@
 local ns = {}
 assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", ns)
-assert(loadfile("Transport/Model.lua"))("ShortestPathForever", ns)
+local knowsFrequentFlier = false
+local spellBook = {
+	IsSpellKnown = function(id)
+		return id == 1225490 and knowsFrequentFlier
+	end,
+}
+local model = assert(loadfile("Transport/Model.lua"))
+setfenv(model, setmetatable({ C_SpellBook = spellBook }, { __index = _G }))("ShortestPathForever", ns)
 assert(loadfile("Routing/Savings.lua"))("ShortestPathForever", ns)
 assert(loadfile("Routing/Planner.lua"))("ShortestPathForever", ns)
 assert(loadfile("Routing/LegPoints.lua"))("ShortestPathForever", ns)
@@ -286,17 +293,26 @@ flight.to = point(1, 7000)
 flight.taxiNodes = { [1] = point(1), [2] = point(1, 7000) }
 flight.taxiNodes[1].faction, flight.taxiNodes[2].faction = "Alliance", "Alliance"
 flight.taxiPaths = { { from = 1, to = 2, seconds = 10 } }
+flight.cache = {}
 local flying = only(Plan(flight), "flight")
 near(flying.arrive, 14000)
 -- Taxis leave at once: the flight master's boarding time is part of the flight, never a wait.
 near(flying.wait, 0)
 near(flying.arrive - flying.depart, 13000)
+knowsFrequentFlier = true
+flying = only(Plan(flight), "flight")
+near(flying.arrive - flying.depart, 3000 + 10000 / 1.2)
+assert(flying.estimated, "the perk-adjusted time is an estimate")
 -- A ride measured over that directed path replaces the shipped estimate and is no longer a guess.
 flight.taxiTimes = { ["1:2"] = 4 }
 flying = only(Plan(flight), "flight")
 near(flying.arrive - flying.depart, 7000)
 assert(not flying.estimated, "a measured flight is no longer estimated")
 flight.taxiTimes = nil
+knowsFrequentFlier = false
+flying = only(Plan(flight), "flight")
+near(flying.arrive - flying.depart, 13000)
+flight.cache = nil
 flight.taxiKnown = { [1] = true }
 only(Plan(flight), "walk")
 -- A flight lands only at a known point (#537), but a departure the route walks to is learned there (#868): standing

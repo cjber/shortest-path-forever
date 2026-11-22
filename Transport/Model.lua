@@ -5,11 +5,29 @@ if ns.broken then
 	return
 end
 
--- Pure timetable arithmetic, free of game APIs. Times are server milliseconds; a route's `epoch` is the
+-- Timetable arithmetic uses server milliseconds. A route's `epoch` is the
 -- server time at which its loop was at 0 ms, so its phase is (now - epoch) % period.
 ---@class SPFModel
 local Model = {}
 ns.Model = Model
+
+-- Frequent Flier is a hidden passive. Its spell data gives +20% taxi speed.
+-- Live detection and timing for a character with the perk still need confirmation (#1199).
+---@return number
+function Model.FlightSpeed()
+	return C_SpellBook and C_SpellBook.IsSpellKnown(1225490) and 1.2 or 1
+end
+
+---@param path SPFTaxiPath
+---@param measured number?
+---@param speed number
+---@return number seconds, boolean? estimated
+function Model.FlightTime(path, measured, speed)
+	if measured then
+		return measured, false
+	end
+	return path.seconds / speed, speed ~= 1 or path.estimated
+end
 
 -- Samples of one ride whose phase offsets agree this closely are one boat.
 local AGREE = 8000

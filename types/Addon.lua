@@ -617,6 +617,7 @@ ShortestPathForeverPathData = nil
 ---@field busy? SPFPathJob the path job whose plan is building this cache now (Routing/Planner.lua)
 ---@field topology? SPFTopology
 ---@class SPFTopology
+---@field flightSpeed number
 ---@field nodes SPFPlace[]
 ---@field edges SPFEdge[][]
 ---@field masses table<number, number>

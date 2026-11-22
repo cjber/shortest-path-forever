@@ -247,6 +247,10 @@ local CACHE_KEYS = {
 -- Bounded label search shares topology and heap locals; splitting adds hot-path upvalues
 local function Solve(options, cache, check, weigh)
 	local topology = cache and cache.topology
+	local flightSpeed = options.taxiPaths and #options.taxiPaths > 0 and Model.FlightSpeed() or 1
+	if topology and topology.flightSpeed ~= flightSpeed then
+		topology = nil
+	end
 	if topology then
 		for _, key in ipairs(CACHE_KEYS) do
 			local was, now = topology.options[key], options[key]
@@ -346,13 +350,14 @@ local function Solve(options, cache, check, weigh)
 			if taxis[path.from] and taxis[path.to] then
 				-- A ride this character has flown overrides the shipped estimate for that directed path.
 				local measured = options.taxiTimes and options.taxiTimes[path.from .. ":" .. path.to]
+				local seconds, estimated = Model.FlightTime(path, measured, flightSpeed)
 				Edge(taxis[path.from], taxis[path.to], {
 					mode = "flight",
 					path = path,
 					-- A class flight master flies you by gossip, straight to its landing whether you know it or not.
 					gossip = options.taxiNodes[path.from].class ~= nil or nil,
-					duration = (measured or path.seconds) * 1000,
-					estimated = not measured and path.estimated,
+					duration = seconds * 1000,
+					estimated = estimated,
 				})
 			end
 		end
@@ -428,6 +433,7 @@ local function Solve(options, cache, check, weigh)
 			saved[key] = options[key]
 		end
 		topology = {
+			flightSpeed = flightSpeed,
 			nodes = nodes,
 			edges = edges,
 			masses = masses,
