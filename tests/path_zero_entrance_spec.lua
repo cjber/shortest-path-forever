@@ -55,5 +55,5 @@ for _, reverse in ipairs({ false, true }) do
 		run()
 	end
 	assert(finished and finished[1] == 0, "both ledges are rescued to the shared entrance at zero cost")
-	assert(snapped and zeroAtSnap == 0, "shared zero-cost entrance settles before the batch is marked snapped")
+	assert(snapped and zeroAtSnap == nil, "rescued ledges are resolved by the entrance search after snapping")
 end
