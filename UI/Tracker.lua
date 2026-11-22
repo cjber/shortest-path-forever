@@ -77,9 +77,12 @@ local function TrackerMenu(target, menu)
 		local hearth = menu:Action(L["Use Hearthstone"], ns.ToggleHearthstone)
 		-- Core returns its normal description, including the checkbox state used by its renderer.
 		hearth.kind, hearth.isSelected = "checkbox", ns.HearthstoneEnabled
-		menu:Action(L["Resume RestedXP guide"], function()
-			return ns.ResumeRestedXP(), L["That guide has no step to follow."]
-		end)
+		local rxp = RXP
+		if type(rxp) == "table" and rxp.arrowFrame then
+			menu:Action(L["Resume RestedXP guide"], function()
+				return ns.ResumeRestedXP(), L["That guide has no step to follow."]
+			end)
+		end
 		if GuidelimeArrow then
 			menu:Action(L["Resume Guidelime guide"], function()
 				return ns.ResumeGuidelime(), L["That guide has no step to follow."]

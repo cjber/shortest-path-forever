@@ -164,21 +164,33 @@ local function order(root, expected)
 	assert(locks == 1, "exactly one Lock the tracker entry")
 	assert(not entry(root, "Attach to quest tracker"), "the attach entry is gone with core 1.15.0")
 end
-local expected = table.concat({
-	"Guide me",
-	"Use Hearthstone",
-	"Resume RestedXP guide",
-	"Resume Guidelime guide",
-	"Resume Dugi guide",
-	"Hide the journey tracker",
-	"Show on map",
-	"Clear journey",
-	"divider",
-	"Lock the tracker",
-	"Tracker",
-}, ",")
+local function expectedOrder(restedXP, departures)
+	local labels = { "Guide me", "Use Hearthstone" }
+	if restedXP then
+		labels[#labels + 1] = "Resume RestedXP guide"
+	end
+	labels[#labels + 1] = "Resume Guidelime guide"
+	labels[#labels + 1] = "Resume Dugi guide"
+	labels[#labels + 1] = "Hide the journey tracker"
+	if departures then
+		labels[#labels + 1] = "Hide departures"
+	end
+	labels[#labels + 1] = "Show on map"
+	labels[#labels + 1] = "Clear journey"
+	labels[#labels + 1] = "divider"
+	labels[#labels + 1] = "Lock the tracker"
+	labels[#labels + 1] = "Tracker"
+	return table.concat(labels, ",")
+end
+local expected = expectedOrder(false)
 local block = menu("journey")
 assert(block.title == "Block title")
+order(block, expected)
+order(menu(), expected)
+assert(entry(block, "Resume RestedXP guide") == nil, "RestedXP's entry waits for RestedXP")
+env.RXP = { arrowFrame = {} }
+expected = expectedOrder(true)
+block = menu("journey")
 order(block, expected)
 order(menu(), expected)
 entry(block, "Guide me").callback()
