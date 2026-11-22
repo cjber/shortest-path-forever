@@ -146,12 +146,16 @@ equal(#flights, 2, "both flights from A")
 assert(flights[1].to == 2 and flights[1].measured and flights[1].seconds == 9, "the measured flight first")
 assert(flights[2].to == 3 and not flights[2].measured and flights[2].seconds == 60, "then the shipped time")
 assert(flights[2].estimated and not flights[1].estimated, "a shipped time worked out from length says so")
+ns.TaxiPaths[2].estimated = nil
+flights = TaxiTimes.FlightsFrom(1, function()
+	return true
+end)
+assert(flights[2].estimated == nil, "a timed default without the perk has no estimate flag")
 env.C_SpellBook = {
 	IsSpellKnown = function(id)
 		return id == 1225490
 	end,
 }
-ns.TaxiPaths[2].estimated = nil
 flights = TaxiTimes.FlightsFrom(1, function()
 	return true
 end)

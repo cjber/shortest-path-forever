@@ -214,8 +214,7 @@ local function Subset(labels, first, second, target)
 	return true
 end
 
--- Only callers with immutable data tables opt in; replacing data rebuilds topology.
--- Taxi discovery is read each plan because the client mutates its known-node set in place.
+-- Replacing immutable transport data rebuilds topology. Taxi discovery is read each plan.
 local CACHE_KEYS = {
 	"docks",
 	"routes",
@@ -235,18 +234,19 @@ local CACHE_KEYS = {
 	"hazards",
 }
 
--- A plan from its caller's own frame runs to its answer there and never yields: another addon's estimate inside a
--- secure hook can ask for one, and Lua 5.1 cannot yield across that C call (#717). A plan given its path job runs
--- there instead, pausing at the shared frame budget and going on next frame; every caller of this addon's own does
--- that. A sliced plan holds options.cache while it is paused, and any other plan meanwhile builds its own graph.
+-- Synchronous plans never yield across a secure hook's C call (#717). Path jobs can pause at the frame budget.
+-- A sliced plan holds options.cache while paused, and a concurrent plan builds its own graph.
 ---@param options SPFPlanOptions
 ---@param cache table?
 ---@param check fun() reads the budget every CHECK_EVERY calls
 ---@param weigh fun() reads the budget on every call, before work that can ask the client
 ---@return SPFPlan?
--- Bounded label search shares topology and heap locals; splitting adds hot-path upvalues
 local function Solve(options, cache, check, weigh)
-	local flightSpeed = options.taxiPaths and #options.taxiPaths > 0 and Model.FlightSpeed() or 1
+	local flightSpeed = 1
+	if options.taxiPaths and #options.taxiPaths > 0 then
+		weigh()
+		flightSpeed = Model.FlightSpeed()
+	end
 	local cached = cache and cache.topology
 	local topology = cached and cached.flightSpeed == flightSpeed and cached or nil
 	if topology then
