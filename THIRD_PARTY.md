@@ -35,6 +35,7 @@ as the glossary for game terms; eight frFR lines are Brainc3ll's.
 | QuestieDB, if installed | Quest givers and objectives as route goals | QuestieDB carries no licence; nothing is copied |
 | TomTom, RestedXP Guides and Guidelime, if installed | Waypoints and guide steps, through their public APIs | Their own; nothing is copied |
 | Dugi Guides, if installed | Its current guide step, read from the viewer's own arrow tables | All rights reserved; no code, art or guide data is copied or bundled |
+| Zygor Guides, if installed | Its current waypoint, read from its pointer, and its current step's quests | All rights reserved; no code, art or guide data is copied or bundled |
 | TomTom's API, while TomTom is not installed | `Core/TomTom.lua` answers guide addons' TomTom calls, and `/way` reads its arguments as TomTom does | Our own code; only TomTom's public call names and `/way` syntax are followed |
 | Adventure Guide Forever and Tweaks Forever, if installed | The RestedXP hand-off, and class trainers for nearby services, through their public APIs | GPL-3.0-or-later |
 
@@ -215,5 +216,8 @@ Credit for the addons and projects an idea came from.
 | Ding! by Yendi | Walks that keep out of zones far above your level | Inspired only; no code was copied. |
 | Travelcraft (CurseForge) | Rides that shorten walks through high-level zones | #1007. Inspired only; no code was copied. |
 | [BV Addon Suite - Routing](https://www.curseforge.com/wow/addons/bv-addon-suite-routing) | Walks that start on the floor you are standing on | Its idea of working out the player's height from the game's range checks to nearby NPCs, instead of guessing a surface. All rights reserved; inspired only, no code was copied. |
+| ReavyTools by Reavy (CurseForge) | Start a Shortest Path journey from Zygor's guide | No licence included in the distribution. Ideas only. |
+| Zygor's Tweaks by ScaryLarryGames (CurseForge) | Read the active waypoint from Zygor's arrow and follow pointer changes | All rights reserved. Ideas only. |
+| [Azeroth Waypoint](https://www.curseforge.com/wow/addons/azerothwaypoint) by MorningStarGG | Refresh the waypoint title when Zygor's step changes | GPL-3.0. Ideas only. |
 
 Thanks also to everyone else who reported a bug or asked for a feature, here or on CurseForge.

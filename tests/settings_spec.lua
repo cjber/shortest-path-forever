@@ -188,7 +188,7 @@ env.ForeverCore = {
 }
 
 local refreshed, taxiRefreshed, policyChanged, tomtomRefreshed, guidelimeRefreshed, dugiRefreshed = 0, 0, 0, 0, 0, 0
-local nearbyTabRefreshed = 0
+local nearbyTabRefreshed, zygorRefreshed = 0, 0
 local trackerRefreshed = 0
 local compassMoving = false
 local arrowMoving, arrowScaled, arrowLabelSet = false, nil, nil
@@ -249,6 +249,9 @@ local ns = {
 	RefreshDugi = function()
 		dugiRefreshed = dugiRefreshed + 1
 	end,
+	RefreshZygor = function()
+		zygorRefreshed = zygorRefreshed + 1
+	end,
 	RefreshTomTom = function()
 		tomtomRefreshed = tomtomRefreshed + 1
 	end,
@@ -273,6 +276,7 @@ local ns = {
 		tomtomFollow = false,
 		-- Dugi is opt-in: its viewer has no published API.
 		dugi = false,
+		zygor = false,
 		compassTime = false,
 		arrivalSound = false,
 		focusedQuest = false,
@@ -443,6 +447,7 @@ local groups = {
 		"restedxpHideArrow",
 		"guidelime",
 		"dugi",
+		"zygor",
 		"avoidHighZones",
 		"followRoads",
 		"roadDetour",
@@ -492,7 +497,7 @@ local order = {
 }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 78, #rows)
+assert(#rows == 79, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -805,6 +810,10 @@ assert(Row("dugi").setting.default == false, "Dugi journeys are opt-in")
 assert(Row("dugi").tooltip:find("Dugi", 1, true), "the row names the guide it follows")
 Row("dugi").setting.onChanged()
 assert(dugiRefreshed == 1, "the Dugi row follows its setting")
+assert(Row("zygor").setting.default == false, "Zygor journeys without a bridge are opt-in")
+assert(Row("zygor").tooltip:find("Zygor", 1, true), "the row names the guide it follows")
+Row("zygor").setting.onChanged()
+assert(zygorRefreshed == 1, "the Zygor row follows its setting")
 -- Walks keep out of zones far above your level unless this is off; changing it plans the journey again.
 assert(Row("avoidHighZones").setting.default == true, "avoiding high zones is on by default")
 local policyBefore = policyChanged

@@ -115,6 +115,9 @@ local DEFAULTS = {
 	-- Dugi Guides is read through an undocumented surface of a viewer it does not publish an API for, so following
 	-- it is opt-in. It never changes Dugi's tables or hides Dugi's arrow.
 	dugi = false,
+	-- Zygor publishes no API either: its pointer's waypoint is read and its step changes are hooked, so following it
+	-- without a TomTom bridge is opt-in too. It never changes Zygor's tables or hides Zygor's arrow.
+	zygor = false,
 	taxiRoute = true,
 	teleports = true,
 	useWaterWalking = true,

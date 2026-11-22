@@ -114,10 +114,19 @@ local function QuestList(list)
 	return copy
 end
 
+-- Named mirrors identify themselves. An unnamed waypoint can come from Zygor's own TomTom connector.
+---@param uid? TomTomWaypoint
+local function FromZygor(uid)
+	local author = uid and uid.from
+	if not canaccessvalue(author) then
+		return false
+	end
+	return author == "Zygor"
+		or ((author == nil or author == "" or author == "?") and ns.ZygorUsesTomTom and ns.ZygorUsesTomTom())
+end
+
 -- The quests a TomTom waypoint stands for: recorded when it was created, else the caller's own options. Questie names
--- its quest inside the tracker call that sets the waypoint, and Zygor's step names its goals' quests; neither is read
--- from a title. Zygor's step is attached only to a waypoint that names no other author, so Questie's and other guides'
--- waypoints keep their own quest or none.
+-- its quest inside the tracker call that sets the waypoint. Zygor's step names its goals' quests.
 ---@param uid? TomTomWaypoint
 ---@param opts? table
 ---@return integer? questID, integer[]? questIDs, string[]? details
@@ -136,10 +145,8 @@ local function WaypointQuests(uid, opts)
 		end
 	end
 	questID = questID or questieQuest
-	local author = type(uid) == "table" and uid.from or nil
-	local fromZygor = type(uid) ~= "table" or author == nil or author == "" or author == "?"
-	if not questID and not questIDs and fromZygor and ns.ZygorStop then
-		questIDs, details = ns.ZygorStop()
+	if not questID and not questIDs and ns.ZygorStop and FromZygor(uid) then
+		questIDs, details = ns.ZygorStop(true)
 	end
 	if type(uid) == "table" then
 		recorded[uid] = { questID = questID, questIDs = questIDs, details = details }
@@ -157,6 +164,9 @@ end
 ---@param opts? table
 ---@return boolean
 local function RouteToWaypoint(uid, map, x, y, title, opts)
+	if ns.ZygorFollows and ns.ZygorFollows(map, x, y) and FromZygor(uid) then
+		return true
+	end
 	local questID, questIDs, details = WaypointQuests(uid, opts)
 	return API.NavigateRoute(OWNER, {
 		{
@@ -510,6 +520,20 @@ local restored
 local arrowWaypoint
 local watcher = CreateFrame("Frame")
 local guideArrow, muted = false, false
+
+-- The direct follower leaves an accepted TomTom route in charge of the same guide point.
+function ns.TomTomFollowsZygor(map, x, y)
+	local uid = current or following
+	return uid ~= nil
+		and canaccessvalue(uid[1])
+		and canaccessvalue(uid[2])
+		and canaccessvalue(uid[3])
+		and uid[1] == map
+		and uid[2] == x
+		and uid[3] == y
+		and API.CurrentStop(OWNER) ~= nil
+		and FromZygor(uid)
+end
 
 -- Keep TomTom's OnUpdate running: it advances the waypoint queue even while our route supplies the direction.
 local function SyncArrow()

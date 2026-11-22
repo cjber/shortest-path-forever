@@ -504,6 +504,14 @@ ns.Init(function()
 			ns.RefreshDugi()
 		end
 	)
+	Checkbox(
+		"zygor",
+		L["Follow Zygor guides"],
+		L["Plan journeys to Zygor's current guide step, with no TomTom or bridge addon needed. Zygor keeps its own arrow."],
+		function()
+			ns.RefreshZygor()
+		end
+	)
 	Settings.RegisterInitializer(
 		page,
 		Secure(CreateSettingsButtonInitializer)(L["RestedXP guide"], L["Resume guide"], function()
