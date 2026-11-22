@@ -10,6 +10,12 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.45.4] - 2026-11-22
+
+### Added
+
+- Choose the routed Shortest Path arrow, the RestedXP arrow, or both for standalone RestedXP guides in Guidance. Thanks to icouldonlygetthisname for the idea.
+
 ## [1.45.3] - 2026-11-22
 
 ### Fixed
