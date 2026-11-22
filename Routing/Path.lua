@@ -639,7 +639,7 @@ local function connector(st, swim, k, node, point, roadsOn, hz)
 	local cell = cellOf(st, k, node)
 	local x = st.x0 + (floor(k / st.ny) * C + floor(cell / C) + 0.5) * cs
 	local y = st.y0 + (k % st.ny * C + cell % C + 0.5) * cs
-	local real = sqrt((point.x - x) ^ 2 + (point.y - y) ^ 2) * (st.val[k][node + 1] == 2 and swim or 1)
+	local real = sqrt((point.x - x) ^ 2 + (point.y - y) ^ 2) * ((st.val[k] or grid(st, k))[node + 1] == 2 and swim or 1)
 	local choice = real
 	if roadsOn then
 		local roads = Grid.roads(st, k)
