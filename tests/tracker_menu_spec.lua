@@ -257,7 +257,16 @@ t.setCombat(true)
 local beforeCombat = #messages
 local mapCount = #maps
 local combatOpen = entry(menu(42), "Show on map")
-assert(combatOpen:IsEnabled(), "the named action stays available to explain a refusal")
+-- ForeverCore disables a named Open built in combat and names the refusal in its tooltip.
+assert(not combatOpen:IsEnabled(), "the named action is disabled in combat")
+local combatLines = {}
+combatOpen.tooltip({
+	SetText = function() end,
+	AddLine = function(_, text)
+		combatLines[#combatLines + 1] = text
+	end,
+})
+assert(combatLines[1] == "Unavailable in combat", "its tooltip explains the refusal")
 for _, action in ipairs({ entry(block, "Show on map"), combatOpen }) do
 	local combatAccepted, combatReason = action.callback()
 	assert(combatAccepted == false and combatReason == "Unavailable in combat")
