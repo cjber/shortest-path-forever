@@ -177,6 +177,11 @@ read_globals[#read_globals + 1] = "OpenMapAPI"
 -- UI/NpcArrows.lua: the nameplate the NPC a Nearby services journey walks to carries, and the unit's own GUID.
 read_globals[#read_globals + 1] = "C_NamePlate"
 read_globals[#read_globals + 1] = "UnitGUID"
+-- UI/NearbyRoles.lua: the open trainer window's list, read to learn the highest level a class trainer teaches (#1245).
+read_globals[#read_globals + 1] = "GetNumTrainerServices"
+read_globals[#read_globals + 1] = "GetTrainerServiceInfo"
+read_globals[#read_globals + 1] = "GetTrainerServiceLevelReq"
+read_globals[#read_globals + 1] = "GetTrainerServiceTypeFilter"
 
 read_globals[#read_globals + 1] = "IsPlayerMoving"
 read_globals[#read_globals + 1] = "InCombatLockdown"

@@ -17,6 +17,7 @@
 ---@field WeaponMasters table<number, number[]> NPC -> taught weapon skill lines
 ---@field ProfessionTrainers table<number, number> trainer NPC -> its profession skill line (Data/Services.lua)
 ---@field ClassTrainers table<number, number> class trainer NPC -> its class (Data/Services.lua)
+---@field ClassTrainerCaps table<number, number>? class trainer NPC -> its highest required level (Data/Services.lua)
 ---@field PortalTrainers table<number, number> portal trainer NPC -> its class (Data/Services.lua)
 ---@field Battlemasters table<number, number> battlemaster NPC -> its battleground template (Data/Services.lua)
 ---@field ItemProfessions table<number, number[]> item -> the profession skill lines its goods supply, for the items a vendor sells (Data/Services.lua)
@@ -309,6 +310,7 @@
 ---@field name string
 
 ---@class SPFDatabase
+---@field classTrainerCaps? table<number, number> class trainer NPC -> its highest required level seen in the client
 ---@field errors? ForeverCaughtError[] ForeverCore's shared error journal: earlier sessions' errors, for the report
 ---@field log? ForeverDebugLogStore ForeverCore's shared debug log ring: recent lines, for the report
 ---@field destinationPin boolean an on-screen marker over the journey's destination
