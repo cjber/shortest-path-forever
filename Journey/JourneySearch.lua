@@ -955,7 +955,30 @@ local function RefreshCosts(includeGoal, forced, replace)
 				-- An estimate whose zero walks left no legs would read as arrival, so it waits for the proof.
 				if not followed and search.initial and not search.rough and #preview.legs > 0 then
 					search.rough = true
-					publish(Rough(preview), "rough")
+					local rough = Rough(preview)
+					publish(rough, "rough")
+					if not stale() then
+						for _, leg in ipairs(rough.legs) do
+							if leg.mode == "walk" then
+								local sketch = ns.Path.FindCoarse(
+									leg.from.map,
+									leg.from,
+									leg.to,
+									function(points, _, finished)
+										probeJobs[finished] = nil
+										if points and not stale() and not followed then
+											leg.walkPoints = points
+											publish(rough, "rough")
+										end
+									end,
+									waterMode,
+									hazards
+								)
+								probeJobs[sketch] = true
+								break
+							end
+						end
+					end
 					if stale() then
 						return
 					end

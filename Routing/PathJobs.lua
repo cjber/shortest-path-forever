@@ -13,7 +13,7 @@ local Grid, Search = ns.PathGrid, ns.PathSearch
 local clock, Deadline, Expansions = Grid.clock, Grid.Deadline, Grid.Expansions
 local start, scratch, Spare = Search.start, Search.scratch, Search.Spare
 
--- Round-robin slices share one frame budget, including callbacks that replan from newly settled costs.
+-- Callbacks and plans go first, then visible work, then cost searches. Each group rotates within the frame.
 local queue = {}
 local scheduled, pumped = false, false
 local pump, combatWait
@@ -97,7 +97,17 @@ pump = function()
 	local began = clock()
 	local finish = began + Path.budget
 	repeat
-		local job = table.remove(queue, 1)
+		local index = 1
+		local first = queue[1]
+		if first and not first.front and not first.draw then
+			for i = 2, #queue do
+				if queue[i].draw then
+					index = i
+					break
+				end
+			end
+		end
+		local job = table.remove(queue, index)
 		if not job then
 			break
 		end
@@ -211,6 +221,7 @@ end
 ---@return SPFPathJob
 function Path.Find(map, from, to, callback, waterWalking, hazards, snapGoal)
 	return enqueue({
+		draw = true,
 		map = map,
 		from = from,
 		to = to,
@@ -218,6 +229,27 @@ function Path.Find(map, from, to, callback, waterWalking, hazards, snapGoal)
 		waterWalking = waterWalking,
 		hazards = hazards,
 		callback = callback,
+	})
+end
+
+-- Approximate map geometry from the entrance graph, under the same budget as the exact walk.
+---@param map number
+---@param from SPFPoint
+---@param to SPFPoint
+---@param callback fun(points: SPFWalkPoints?, reason: string?, job: SPFPathJob)
+---@param waterWalking? boolean
+---@param hazards? SPFHazards
+---@return SPFPathJob
+function Path.FindCoarse(map, from, to, callback, waterWalking, hazards)
+	return enqueue({
+		draw = true,
+		coarse = true,
+		map = map,
+		from = from,
+		to = to,
+		callback = callback,
+		waterWalking = waterWalking,
+		hazards = hazards,
 	})
 end
 
@@ -232,7 +264,7 @@ end
 ---@return SPFPathJob
 function Path.FindCost(map, from, to, callback, waterWalking, hazards)
 	local job = Path.Find(map, from, to, callback, waterWalking, hazards)
-	job.costOnly = true
+	job.costOnly, job.draw = true, nil
 	return job
 end
 
@@ -251,7 +283,7 @@ end
 ---@param callback fun(points: nil, reason: string?, job: SPFPathJob)
 ---@return SPFPathJob
 function Path.Decode(map, clusters, callback)
-	local job = enqueue({ map = map, decode = clusters, callback = callback })
+	local job = enqueue({ map = map, decode = clusters, callback = callback, draw = true })
 	job.co = coroutine.create(decode)
 	return job
 end
