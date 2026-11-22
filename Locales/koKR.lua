@@ -103,6 +103,7 @@ L["Flight path known"] = "알고 있는 비행 경로"
 L["Flights from here"] = "여기서 출발하는 비행"
 L["Fly to %s"] = "%s(으)로 비행"
 L["Follow Dugi guides"] = "Dugi 가이드 따르기" -- mt
+L["Follow Zygor guides"] = "Zygor 가이드 따르기" -- mt
 L["Follow Guidelime guides"] = "Guidelime 가이드 따르기"
 L["Follow RestedXP guides"] = "RestedXP 가이드 따르기"
 L["Follow TomTom's arrow"] = "TomTom 화살표 따르기"
@@ -165,14 +166,16 @@ L["Open the world map to see it."] = "세계 지도를 열어 확인하십시오
 L["The travel action will update after combat."] = "전투가 끝나면 이동 행동이 갱신됩니다."
 L["Rides to spend less time walking through %s (level %s)"] =
 	"이동 수단을 이용해 %s (레벨 %s)에서 걷는 구간을 줄임"
-L["Walk less in zones with a minimum level 4 or more above yours, even at your destination."] =
-	"최소 레벨이 내 레벨보다 4 이상 높은 지역에서는 걷는 구간을 줄입니다. 목적지가 그 지역에 있어도 적용됩니다."
+L["Walk less in zones with a minimum level 5 or more above yours, and less still the higher it is, even at your destination."] =
+	"최소 레벨이 내 레벨보다 5 이상 높은 지역에서는 걷는 구간을 줄이며, 더 높을수록 더 줄입니다. 목적지가 그 지역에 있어도 적용됩니다." -- mt
 L["Turn the world map to %s to see it."] = "%s 지역으로 세계 지도를 돌려 확인하십시오." -- mt
 L["This menu needs mouse and keyboard."] = "이 메뉴는 마우스와 키보드가 필요합니다." -- mt
 L["Other Faction's Routes"] = "다른 진영의 노선"
 L["Plan journey"] = "여정 계획"
 L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."] =
 	"Dugi 가이드의 현재 단계로 여정을 계획합니다. Dugi는 자체 화살표를 유지합니다." -- mt
+L["Plan journeys to Zygor's current guide step, with no TomTom or bridge addon needed. Zygor keeps its own arrow."] =
+	"TomTom이나 연결 애드온 없이 Zygor 가이드의 현재 단계로 여정을 계획합니다. Zygor는 자체 화살표를 유지합니다." -- mt
 L["Plan journeys to Guidelime's current guide step. Guidelime's arrow steps aside while ours draws."] =
 	"Guidelime의 현재 가이드 단계로 여정을 계획합니다. 우리 화살표가 그려지는 동안 Guidelime의 화살표는 물러납니다."
 L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."] =
@@ -536,8 +539,8 @@ L["Journey paused."] = "여정을 일시 정지했습니다." -- mt
 L["Journey stopped."] = "여정을 중지했습니다." -- mt
 L["Journey stops"] = "여정 경유지" -- mt
 L["Ordering stops by estimated travel time..."] = "예상 이동 시간순으로 경유지 정렬 중..." -- mt
-L["Orders the next stop by estimated travel time. You can change the order."] =
-	"예상 이동 시간에 따라 다음 경유지를 선택합니다. 순서를 변경할 수 있습니다." -- mt
+L["Orders the stops by estimated travel time. You can change the order."] =
+	"예상 이동 시간에 따라 경유지 순서를 정합니다. 순서를 변경할 수 있습니다." -- mt
 L["Place a map waypoint, then add it to this journey."] =
 	"지도에 경유지를 지정한 후 이 여정에 추가하세요." -- mt
 L["Remove"] = "제거" -- mt

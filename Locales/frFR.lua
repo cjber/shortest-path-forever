@@ -101,6 +101,7 @@ L["Flight path known"] = "Trajet aérien connu" -- mt
 L["Flights from here"] = "Vols depuis ici" -- mt
 L["Fly to %s"] = "Voler vers %s" -- mt
 L["Follow Dugi guides"] = "Suivre les guides Dugi" -- mt
+L["Follow Zygor guides"] = "Suivre les guides Zygor" -- mt
 L["Follow Guidelime guides"] = "Suivre les guides Guidelime" -- mt
 L["Follow RestedXP guides"] = "Suivre les guides RestedXP" -- mt
 L["Follow TomTom's arrow"] = "Suivre la flèche de TomTom" -- mt
@@ -162,14 +163,16 @@ L["Open the world map to see it."] = "Ouvrez la carte du monde pour le voir." --
 L["The travel action will update after combat."] = "L’action de voyage sera mise à jour après le combat." -- mt
 L["Rides to spend less time walking through %s (level %s)"] =
 	"Prend un transport pour moins marcher dans %s (niveau %s)" -- mt
-L["Walk less in zones with a minimum level 4 or more above yours, even at your destination."] =
-	"Réduit les trajets à pied dans les zones dont le niveau minimum dépasse le vôtre d’au moins 4, même si votre destination s’y trouve." -- mt
+L["Walk less in zones with a minimum level 5 or more above yours, and less still the higher it is, even at your destination."] =
+	"Réduit les trajets à pied dans les zones dont le niveau minimum dépasse le vôtre d’au moins 5, d’autant plus qu’il est élevé, même si votre destination s’y trouve." -- mt
 L["Turn the world map to %s to see it."] = "Tournez la carte du monde vers %s pour le voir." -- mt
 L["This menu needs mouse and keyboard."] = "Ce menu nécessite la souris et le clavier." -- mt
 L["Other Faction's Routes"] = "Routes de l'autre faction" -- mt
 L["Plan journey"] = "Planifier un trajet" -- mt
 L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."] =
 	"Planifier des trajets vers l'étape actuelle du guide Dugi. Dugi conserve sa propre flèche." -- mt
+L["Plan journeys to Zygor's current guide step, with no TomTom or bridge addon needed. Zygor keeps its own arrow."] =
+	"Planifier des trajets vers l'étape actuelle du guide Zygor, sans TomTom ni addon passerelle. Zygor conserve sa propre flèche." -- mt
 L["Plan journeys to Guidelime's current guide step. Guidelime's arrow steps aside while ours draws."] =
 	"Planifier des trajets vers l'étape actuelle du guide Guidelime. Sa flèche s'efface pendant que la nôtre s'affiche." -- mt
 L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."] =
@@ -532,8 +535,8 @@ L["Journey paused."] = "Trajet en pause." -- mt
 L["Journey stopped."] = "Trajet arrêté." -- mt
 L["Journey stops"] = "Étapes du trajet" -- mt
 L["Ordering stops by estimated travel time..."] = "Classement des étapes selon le temps de trajet estimé..." -- mt
-L["Orders the next stop by estimated travel time. You can change the order."] =
-	"Choisit la prochaine étape selon le temps de trajet estimé. Vous pouvez modifier l’ordre." -- mt
+L["Orders the stops by estimated travel time. You can change the order."] =
+	"Ordonne les étapes selon le temps de trajet estimé. Vous pouvez modifier l’ordre." -- mt
 L["Place a map waypoint, then add it to this journey."] = "Placez un point sur la carte, puis ajoutez-le à ce trajet." -- mt
 L["Remove"] = "Retirer" -- mt
 L["Stop %d of %d."] = "Étape %d sur %d." -- mt

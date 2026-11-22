@@ -63,7 +63,7 @@
     },
     {
       "source": "UI/Settings.lua",
-      "sha256": "e97c583fdbad4b747f0fb623ebe3629074978ea6ea85c9dc3392f8507c2a0381",
+      "sha256": "0510685b44d38a6044dbf6ccc2e5c8cc5723533daa8173aa0f3e2b797b534114",
       "review": "Read Page, Checkbox, Scale, Dropdown and Saving and their registration calls. Settings rows, index buttons and option labels delegate to Blizzard secure initializers; this file creates no FontString and establishes no explicit FontObject. Minimap button text, tooltip text, chat output and helper arguments are excluded rather than assigned an assumed settings font. Reviewed #1094: the Tracker heading's Attach to quest tracker row is ForeverCore.SettingsSections.RegisterTrackerAttach, a core-owned initializer, registered only when the running core has it (an older adopted standalone does not); excluded with the other settings fonts. Reviewed #1142: the journeyHint row is one more Checkbox helper call, a Blizzard secure initializer with no FontString or FontObject of its own. Reviewed #1033: the Off-path tolerance row and Arrival distance share a DistanceSlider helper that registers a Blizzard secure slider initializer, with no FontString or FontObject of its own. Reviewed #1005: the Avoided transport row is one more native button initializer with plain string text and tooltip; the client owns its fonts. Reviewed #1241: the new \"Show the journey key hint on the minimap\" row is one more Checkbox helper call, like journeyHint in #1142, so it adds a Blizzard secure initializer's row and no FontString or FontObject of its own; the digest moved for the row and its shortened journeyHint description, not for a font producer.",
       "bindings": []
     },
@@ -87,7 +87,7 @@
     },
     {
       "source": "UI/Arrow.lua",
-      "sha256": "9e5948281ee4c7d11064158e4230528b3fc7e36f89d7fc118f01bca2e683b9cd",
+      "sha256": "0998c417c7089576d13148e86687674df9c24a564be1f9d7edde6cf94c0e9c52",
       "review": "Read Create, ArrowLabel, distance updates, arrival labels, progress and cast prompt. MoverHint uses GameFontHighlightSmall and Distance uses GameFontNormal, including the formatted time-distance phrase. No later font override occurs. Dynamic objective lines, arrival titles, route titles and actions from helpers are excluded; this review does not claim coverage for their inserted text. Reviewed #1161: NativeMarkerAt and the shared-marker stand-down read C_Navigation and C_Map only; no FontString, FontObject or text change. Reviewed #1035: the cast prompt's secure button moved to UI/CastButton.lua and writes only GameTooltip text; no FontString, FontObject or text change here.",
       "bindings": [
         {
@@ -136,7 +136,7 @@
     },
     {
       "source": "UI/JourneyStops.lua",
-      "sha256": "17314807eb4cf1336f2f4df275dd8a15a82b0bf6190fcd23b2530024f51b81c2",
+      "sha256": "4da4a3a3a158a6052067adad391793ef55e7c840551da66ba9da9737a8b63854",
       "review": "Read Text, Build and refresh: help and status are created by Text with GameFontHighlight; messages and formatted progress/order phrases reach status without font overrides. SharedButtonSmallTemplate buttons and row labels, PortraitFrameTemplate title, tooltip text and dynamic stop names are excluded because this producer does not establish their font objects.",
       "bindings": [
         {
@@ -400,7 +400,7 @@
     },
     {
       "source": "UI/ServicesPanel.lua",
-      "sha256": "388f8f421ccac616a36fe7b3686132253f39197bd3fbea22b5a04dde9a830fa5",
+      "sha256": "f1f17b683209bc7810e249e82d6c26a1346fb444671ff2ed99815acd965393c5",
       "review": "Read BuildHeader, BuildContent, CreateBetterRow, PaintBetter, Where and Refresh. headerTitle uses GameFontNormalLarge2; emptyText uses GameFontDisable for STATUS and empty/position notices; better-row Label uses GameFontHighlight for the name-zone format and subtitle uses GameFontHighlight for Where. No later font override occurs. Search instructions and tooltips are template-owned; external group/section names, service details and countdown helper output are excluded. Reviewed #1036: StopRanking now cancels through NearbyServices.Cancel; no FontString or FontObject change. Reviewed #1159: ranking, ticker and measure reuse only; no FontString or FontObject change. Reviewed the lower-bound planner estimate for provisional row times. The row uses the same text widget and font.",
       "bindings": [
         {

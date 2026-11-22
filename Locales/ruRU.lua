@@ -104,6 +104,7 @@ L["Flight path known"] = "Маршрут полета известен"
 L["Flights from here"] = "Полеты отсюда"
 L["Fly to %s"] = "Лететь: %s"
 L["Follow Dugi guides"] = "Следовать гайдам Dugi" -- mt
+L["Follow Zygor guides"] = "Следовать гайдам Zygor" -- mt
 L["Follow Guidelime guides"] = "Следовать руководствам Guidelime"
 L["Follow RestedXP guides"] = "Следовать руководствам RestedXP"
 L["Follow TomTom's arrow"] = "Следовать стрелке TomTom"
@@ -169,8 +170,8 @@ L["The travel action will update after combat."] =
 	"Действие для путешествия обновится после боя."
 L["Rides to spend less time walking through %s (level %s)"] =
 	"Используется транспорт, чтобы меньше идти пешком через %s (уровень %s)"
-L["Walk less in zones with a minimum level 4 or more above yours, even at your destination."] =
-	"Сокращает путь пешком через зоны, минимальный уровень которых выше вашего на 4 или больше, даже если цель находится там."
+L["Walk less in zones with a minimum level 5 or more above yours, and less still the higher it is, even at your destination."] =
+	"Сокращает путь пешком через зоны, минимальный уровень которых выше вашего на 5 или больше, и тем сильнее, чем он выше, даже если цель находится там." -- mt
 L["Turn the world map to %s to see it."] =
 	"Переключите карту мира на %s, чтобы увидеть." -- mt
 L["This menu needs mouse and keyboard."] = "Для этого меню нужны мышь и клавиатура." -- mt
@@ -178,6 +179,8 @@ L["Other Faction's Routes"] = "Маршруты другой фракции"
 L["Plan journey"] = "Проложить маршрут"
 L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."] =
 	"Планировать путешествия к текущему шагу гайда Dugi. Dugi сохраняет свою стрелку." -- mt
+L["Plan journeys to Zygor's current guide step, with no TomTom or bridge addon needed. Zygor keeps its own arrow."] =
+	"Планировать путешествия к текущему шагу гайда Zygor без TomTom и дополнительных аддонов. Zygor сохраняет свою стрелку." -- mt
 L["Plan journeys to Guidelime's current guide step. Guidelime's arrow steps aside while ours draws."] =
 	"Планировать путешествия к текущему шагу руководства Guidelime. Его стрелка уступает место нашей."
 L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."] =
@@ -560,8 +563,8 @@ L["Journey stopped."] = "Путешествие остановлено." -- mt
 L["Journey stops"] = "Остановки путешествия" -- mt
 L["Ordering stops by estimated travel time..."] =
 	"Упорядочивание остановок по расчётному времени пути..." -- mt
-L["Orders the next stop by estimated travel time. You can change the order."] =
-	"Выбирает следующую остановку по расчётному времени пути. Вы можете изменить порядок." -- mt
+L["Orders the stops by estimated travel time. You can change the order."] =
+	"Упорядочивает остановки по расчётному времени пути. Вы можете изменить порядок." -- mt
 L["Place a map waypoint, then add it to this journey."] =
 	"Поставьте точку на карте, затем добавьте её в это путешествие." -- mt
 L["Remove"] = "Удалить" -- mt

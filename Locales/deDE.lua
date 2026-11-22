@@ -98,6 +98,7 @@ L["Flight path known"] = "Flugroute bekannt"
 L["Flights from here"] = "Flüge von hier"
 L["Fly to %s"] = "Nach %s fliegen"
 L["Follow Dugi guides"] = "Dugi-Leitfäden folgen" -- mt
+L["Follow Zygor guides"] = "Zygor-Leitfäden folgen" -- mt
 L["Follow Guidelime guides"] = "Guidelime-Leitfäden folgen"
 L["Follow RestedXP guides"] = "RestedXP-Leitfäden folgen"
 L["Follow TomTom's arrow"] = "Dem Pfeil von TomTom folgen"
@@ -158,14 +159,16 @@ L["Open the world map to see it."] = "Öffnet die Weltkarte, um es zu sehen."
 L["The travel action will update after combat."] = "Die Reiseaktion wird nach dem Kampf aktualisiert."
 L["Rides to spend less time walking through %s (level %s)"] =
 	"Nutzt ein Transportmittel für einen kürzeren Fußweg durch %s (Stufe %s)"
-L["Walk less in zones with a minimum level 4 or more above yours, even at your destination."] =
-	"Verkürzt Fußwege durch Gebiete, deren Mindeststufe mindestens 4 über deiner liegt, auch wenn dein Ziel dort liegt."
+L["Walk less in zones with a minimum level 5 or more above yours, and less still the higher it is, even at your destination."] =
+	"Verkürzt Fußwege durch Gebiete, deren Mindeststufe mindestens 5 über deiner liegt, und umso mehr, je höher sie ist, auch wenn dein Ziel dort liegt." -- mt
 L["Turn the world map to %s to see it."] = "Dreht die Weltkarte auf %s, um es zu sehen." -- mt
 L["This menu needs mouse and keyboard."] = "Dieses Menü braucht Maus und Tastatur." -- mt
 L["Other Faction's Routes"] = "Routen der anderen Fraktion"
 L["Plan journey"] = "Reise planen"
 L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."] =
 	"Reisen zum aktuellen Schritt des Dugi-Leitfadens planen. Dugi behält seinen eigenen Pfeil." -- mt
+L["Plan journeys to Zygor's current guide step, with no TomTom or bridge addon needed. Zygor keeps its own arrow."] =
+	"Reisen zum aktuellen Schritt des Zygor-Leitfadens planen, ohne TomTom oder Zusatz-Addon. Zygor behält seinen eigenen Pfeil." -- mt
 L["Plan journeys to Guidelime's current guide step. Guidelime's arrow steps aside while ours draws."] =
 	"Reisen zum aktuellen Schritt des Guidelime-Leitfadens planen. Der Pfeil von Guidelime weicht, solange unserer gezeichnet wird."
 L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."] =
@@ -524,8 +527,8 @@ L["Journey paused."] = "Reise pausiert." -- mt
 L["Journey stopped."] = "Reise gestoppt." -- mt
 L["Journey stops"] = "Reisehalte" -- mt
 L["Ordering stops by estimated travel time..."] = "Halte werden nach geschätzter Reisezeit geordnet..." -- mt
-L["Orders the next stop by estimated travel time. You can change the order."] =
-	"Ordnet den nächsten Halt nach geschätzter Reisezeit. Du kannst die Reihenfolge ändern." -- mt
+L["Orders the stops by estimated travel time. You can change the order."] =
+	"Ordnet die Halte nach geschätzter Reisezeit. Du kannst die Reihenfolge ändern." -- mt
 L["Place a map waypoint, then add it to this journey."] =
 	"Setze einen Kartenwegpunkt und füge ihn dann dieser Reise hinzu." -- mt
 L["Remove"] = "Entfernen" -- mt

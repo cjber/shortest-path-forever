@@ -98,6 +98,7 @@ L["Flight path known"] = "已知飛行路線"
 L["Flights from here"] = "從這裡出發的航班"
 L["Fly to %s"] = "飛往%s"
 L["Follow Dugi guides"] = "跟隨 Dugi 攻略" -- mt
+L["Follow Zygor guides"] = "跟隨 Zygor 攻略" -- mt
 L["Follow Guidelime guides"] = "跟隨 Guidelime 攻略"
 L["Follow RestedXP guides"] = "跟隨RestedXP指南"
 L["Follow TomTom's arrow"] = "跟隨TomTom的箭頭"
@@ -157,14 +158,16 @@ L["Open the world map to see it."] = "開啟世界地圖查看。"
 L["The travel action will update after combat."] = "旅行動作將在戰鬥結束後更新。"
 L["Rides to spend less time walking through %s (level %s)"] =
 	"搭乘交通工具以減少在%s（等級%s）內步行的路程"
-L["Walk less in zones with a minimum level 4 or more above yours, even at your destination."] =
-	"盡量縮短在最低等級比你高至少4級的區域內步行的路程，即使目的地也在該區域內。"
+L["Walk less in zones with a minimum level 5 or more above yours, and less still the higher it is, even at your destination."] =
+	"盡量縮短在最低等級比你高至少5級的區域內步行的路程，等級越高越少走，即使目的地也在該區域內。" -- mt
 L["Turn the world map to %s to see it."] = "將世界地圖切換到%s查看。" -- mt
 L["This menu needs mouse and keyboard."] = "此選單需要滑鼠和鍵盤。" -- mt
 L["Other Faction's Routes"] = "另一陣營的航線"
 L["Plan journey"] = "規劃旅程"
 L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."] =
 	"規劃前往 Dugi 攻略目前步驟的旅程。Dugi 保留自己的箭頭。" -- mt
+L["Plan journeys to Zygor's current guide step, with no TomTom or bridge addon needed. Zygor keeps its own arrow."] =
+	"規劃前往 Zygor 攻略目前步驟的旅程，無需 TomTom 或橋接插件。Zygor 保留自己的箭頭。" -- mt
 L["Plan journeys to Guidelime's current guide step. Guidelime's arrow steps aside while ours draws."] =
 	"規劃前往 Guidelime 目前攻略步驟的旅程。在我們的箭頭顯示時，Guidelime 的箭頭會讓開。"
 L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."] =
@@ -516,8 +519,8 @@ L["Journey paused."] = "旅程已暫停。" -- mt
 L["Journey stopped."] = "旅程已停止。" -- mt
 L["Journey stops"] = "旅程停靠點" -- mt
 L["Ordering stops by estimated travel time..."] = "正在依預估旅行時間排列停靠點..." -- mt
-L["Orders the next stop by estimated travel time. You can change the order."] =
-	"依預估旅行時間選擇下一個停靠點。你可以變更順序。" -- mt
+L["Orders the stops by estimated travel time. You can change the order."] =
+	"依預估旅行時間排列停靠點。你可以變更順序。" -- mt
 L["Place a map waypoint, then add it to this journey."] =
 	"請先在地圖上設定路線點，再將其加入此旅程。" -- mt
 L["Remove"] = "移除" -- mt
