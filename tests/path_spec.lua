@@ -296,6 +296,28 @@ for i = 2, #bay do
 end
 assert(bayTime <= bayCost, ("the drawn walk is no slower than its route: %.1f against %.1f"):format(bayTime, bayCost))
 
+-- Distinct points on one water node must pay both connectors even when the grid walk is empty.
+local bayGrid = ns.PathGrid
+local bayState = bayGrid.State(1)
+local bk, bc = bayGrid.locate(bayState, BAY_EAST.x, BAY_EAST.y)
+local cx = bayState.x0 + (math.floor(bk / bayState.ny) * bayState.C + math.floor(bc / bayState.C) + 0.5) * bayState.cs
+local cy = bayState.y0 + (bk % bayState.ny * bayState.C + bc % bayState.C + 0.5) * bayState.cs
+local eastOffset = { x = cx - 1, y = cy, z = bayState.z[bk][bc + 1] }
+local westOffset = { x = cx + 2, y = cy, z = eastOffset.z }
+local _, withinCell = Path.FindSync(1, eastOffset, westOffset)
+assert(withinCell == 3 * swim, ("both water connectors cost %.1f, got %.1f"):format(3 * swim, withinCell))
+westOffset.x = cx + 3
+local _, shifted = Path.FindSync(1, eastOffset, westOffset)
+assert(shifted == 4 * swim, "a new offset in the same cell changes the cached path cost")
+local _, walking = Path.FindSync(1, eastOffset, westOffset, true)
+assert(walking == 4, "water walking charges the connectors at running speed")
+assert(Path.FindManySync(1, eastOffset, { westOffset })[1] == shifted, "forward batch counts both connectors")
+assert(
+	Path.FindManySync(1, westOffset, { eastOffset }, false, true)[1] == shifted,
+	"reverse batch counts both connectors"
+)
+assert(Path.FindManySync(1, eastOffset, { eastOffset })[1] == 0, "a co-located transfer costs zero")
+
 -- The finer entrance graph finds the dry floor above the strait's water. Its explicit downward landing reaches
 -- the shore; sampling only the base water would mistake this layered walk for a swim.
 local dryStrait, dryCost = Path.FindSync(0, { x = -14961.19, y = 274.63 }, { x = -14897.51, y = 274.63 })
