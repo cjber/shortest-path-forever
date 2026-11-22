@@ -627,6 +627,9 @@ assert(root.onClick == nil, "a block with no quest id adds no entry")
 
 -- EQOT-style replacement: no parentModule, but the block still sits under ObjectiveTrackerFrame.
 local trackerFrame = {
+	IsCollapsed = function()
+		return false
+	end,
 	GetParent = function()
 		return nil
 	end,
