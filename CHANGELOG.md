@@ -14,6 +14,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 <!-- discord-image: docs/screenshots/stops.png -->
 
+- **Journey stops are ordered for the whole trip.** Starting a list of up to eight stops picks the order with the shortest estimated travel time, and longer lists improve on nearest-first by untangling crossed legs (#1197).
+
 ### Added
 
 - Right-click a transport step to avoid that connection. Undo the choice if no route remains, or clear avoided transport in Settings. (#1005)
@@ -26,7 +28,6 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 ### Changed
 
-- **Journey stops are ordered for the whole trip.** Starting a list of up to eight stops picks the order with the shortest estimated travel time, and longer lists improve on nearest-first by untangling crossed legs (#1197).
 - **High-level zones cost more the higher they are.** With *Avoid zones far above my level* on, a zone five levels above you is only lightly avoided and one ten or more above you strongly, so a journey that must cross one picks the mildest (#1201).
 - **The arrow looks farther ahead on open ground.** It points towards a bend you can walk straight to, so it turns less often on clear stretches.
 - Ships with the same shared code as your other Forever addons, so they keep working together.
