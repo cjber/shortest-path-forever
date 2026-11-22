@@ -87,7 +87,7 @@
     },
     {
       "source": "UI/Arrow.lua",
-      "sha256": "15e0bac9a27c49ea03a24d51b308351dfff9fd1ec81e352a97cddd7ce5b3030a",
+      "sha256": "5490b12796fdf1adf9973daaeb8779aa887b9c4e36b3611bc238563ff63222ed",
       "review": "Read Create, ArrowLabel, distance updates, arrival labels, progress and cast prompt. MoverHint uses GameFontHighlightSmall and Distance uses GameFontNormal, including the formatted time-distance phrase. No later font override occurs. Dynamic objective lines, arrival titles, route titles and actions from helpers are excluded; this review does not claim coverage for their inserted text. Reviewed #1161: NativeMarkerAt and the shared-marker stand-down read C_Navigation and C_Map only; no FontString, FontObject or text change. Reviewed #1035: the cast prompt's secure button moved to UI/CastButton.lua and writes only GameTooltip text; no FontString, FontObject or text change here. Reviewed RestedXP arrow ownership: direction visibility changes without changing text, font objects or bindings. Reviewed #1251: the corpse-run exception in DirectionsShown is removed; visibility only, no FontString, FontObject or text change. Reviewed #1254: ArrowShown is split out of DirectionsShown, and the hidden-for-RestedXP path now places the native marker without drawing the frame; visibility and marker placement only, no FontString, FontObject or text change.",
       "bindings": [
         {
