@@ -10,6 +10,15 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.45.3] - 2026-11-22
+
+### Fixed
+
+- Travel milestones now show readable on-screen messages. Ride sync, catch-up, and other addon notices also appear on screen.
+- With RestedXP guiding, the game's navigation marker now follows every bend instead of stopping at the first one.
+- OpenMap shows one destination pin when its waypoint marks the current stop, thanks to alexaroth for the report.
+- Routes started on OpenMap go to the spot you clicked even with Load the zone in view off, thanks to alexaroth for the report.
+
 ## [1.45.2] - 2026-11-22
 
 ### Fixed
