@@ -182,6 +182,8 @@ read_globals[#read_globals + 1] = "GetNumTrainerServices"
 read_globals[#read_globals + 1] = "GetTrainerServiceInfo"
 read_globals[#read_globals + 1] = "GetTrainerServiceLevelReq"
 read_globals[#read_globals + 1] = "GetTrainerServiceTypeFilter"
+-- UI/Arrow.lua: whether the player is outdoors, before the arrow aims past a bend on clear ground (#1202).
+read_globals[#read_globals + 1] = "IsOutdoors"
 
 read_globals[#read_globals + 1] = "IsPlayerMoving"
 read_globals[#read_globals + 1] = "InCombatLockdown"
