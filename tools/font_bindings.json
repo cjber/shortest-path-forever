@@ -400,8 +400,8 @@
     },
     {
       "source": "UI/ServicesPanel.lua",
-      "sha256": "5063f55a56958f1a92e82c87fb901bd3918a11e58a5563ac9ad6d875b5ad2abe",
-      "review": "Read BuildHeader, BuildContent, CreateBetterRow, PaintBetter, Where and Refresh. headerTitle uses GameFontNormalLarge2; emptyText uses GameFontDisable for STATUS and empty/position notices; better-row Label uses GameFontHighlight for the name-zone format and subtitle uses GameFontHighlight for Where. No later font override occurs. Search instructions and tooltips are template-owned; external group/section names, service details and countdown helper output are excluded. Reviewed #1036: StopRanking now cancels through NearbyServices.Cancel; no FontString or FontObject change. Reviewed #1159: ranking, ticker and measure reuse only; no FontString or FontObject change.",
+      "sha256": "388f8f421ccac616a36fe7b3686132253f39197bd3fbea22b5a04dde9a830fa5",
+      "review": "Read BuildHeader, BuildContent, CreateBetterRow, PaintBetter, Where and Refresh. headerTitle uses GameFontNormalLarge2; emptyText uses GameFontDisable for STATUS and empty/position notices; better-row Label uses GameFontHighlight for the name-zone format and subtitle uses GameFontHighlight for Where. No later font override occurs. Search instructions and tooltips are template-owned; external group/section names, service details and countdown helper output are excluded. Reviewed #1036: StopRanking now cancels through NearbyServices.Cancel; no FontString or FontObject change. Reviewed #1159: ranking, ticker and measure reuse only; no FontString or FontObject change. Reviewed the lower-bound planner estimate for provisional row times. The row uses the same text widget and font.",
       "bindings": [
         {
           "font": "GameFontNormalLarge2",
