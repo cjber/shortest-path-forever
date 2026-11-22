@@ -506,8 +506,12 @@ end
 function Layer:RefreshStops()
 	local map = WorldMapFrame
 	local mapID = map:GetMapID()
-	-- The game's own tombstone marks your corpse.
-	if not (mapID and map:IsVisible() and ns.db.journey and goal) or goal.corpse then
+	-- The game's tombstone and OpenMap's followed waypoint already mark their own goals.
+	if
+		not (mapID and map:IsVisible() and ns.db.journey and goal)
+		or goal.corpse
+		or ns.OpenMapAddon.ShowsFollowedPin()
+	then
 		goalPins:ReleaseAll()
 		self.stopsKey, self.stopMarks = nil, nil
 		return
@@ -845,13 +849,13 @@ function ns.RefreshRouteLines()
 	end
 end
 
--- The Destination pin size slider changed: the goal pins are grouped by their size, so the map takes them back and
--- sets them again, without replanning the journey.
-function ns.RefreshDestinationPinSize()
+local function RefreshShownMap()
 	if provider and WorldMapFrame:IsShown() then
 		provider:RefreshAllData()
 	end
 end
+-- Rebuild the pins at the new size without replanning.
+ns.RefreshDestinationPinSize = RefreshShownMap
 
 ---@param destination SPFPoint?
 ---@param route SPFPlan?
@@ -928,6 +932,7 @@ ns.Init(function()
 	goalPins =
 		MapCanvas.Pool(WorldMapFrame, GOAL_TEMPLATE, ns.GoalPinMixin, { template = GOAL_TEMPLATE, marker = "stop" })
 	provider = Layer
+	ns.OpenMapAddon.WatchPinOwner(RefreshShownMap)
 	MapCanvas.Watch(WorldMapFrame, function(_, what)
 		if what == "show" or what == "map" then
 			provider:RefreshAllData()

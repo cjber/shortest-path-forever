@@ -344,7 +344,8 @@ setting off removes the global and clears any journey it started.
 
 With TomTom installed, *Follow TomTom's arrow* (off by default) works the other way round: Shortest Path hooks
 TomTom's own `SetCrazyArrow`, `RemoveWaypoint` and `ClearWaypoint` with `hooksecurefunc` on TomTom's table and plans a
-journey, owned by `"TomTom"`, to each waypoint the arrow takes. At login, once the world is up, it follows the
+journey, owned by `"TomTom"`, to each waypoint the arrow takes. A waypoint OpenMap placed is owned by
+`"OpenMap:Pin"` instead, and OpenMap's stitched map then shows OpenMap's own pin in place of Shortest Path's goal pin. At login, once the world is up, it follows the
 waypoint TomTom's arrow was restored to, unless a journey is already under way. Removing that waypoint, including
 through TomTom's *Remove all waypoints* or `/way reset all`, cancels the journey. TomTom's corpse arrow is not
 followed: the corpse run does that job and keeps the journey you were on.

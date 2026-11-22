@@ -14,6 +14,12 @@ end
 local OWNER = "TomTom"
 local API = ShortestPathForever.API
 
+---@param uid? TomTomWaypoint
+local function WaypointOwner(uid)
+	local author = uid and uid.from
+	return canaccessvalue(author) and author == "OpenMap" and ns.OpenMapAddon.PinOwner or OWNER
+end
+
 ---@param value any
 local function Number(value)
 	return canaccessvalue(value) and type(value) == "number" and value == value and math.abs(value) < math.huge
@@ -168,7 +174,7 @@ local function RouteToWaypoint(uid, map, x, y, title, opts)
 		return true
 	end
 	local questID, questIDs, details = WaypointQuests(uid, opts)
-	return API.NavigateRoute(OWNER, {
+	return API.NavigateRoute(WaypointOwner(uid), {
 		{
 			map = map,
 			x = x,
@@ -191,7 +197,13 @@ end
 ---@param b TomTomWaypoint?
 ---@return boolean
 local function Same(a, b)
-	return type(a) == "table" and b ~= nil and a[1] == b[1] and a[2] == b[2] and a[3] == b[3] and a.title == b.title
+	return type(a) == "table"
+		and b ~= nil
+		and a[1] == b[1]
+		and a[2] == b[2]
+		and a[3] == b[3]
+		and a.title == b.title
+		and WaypointOwner(a) == WaypointOwner(b)
 end
 
 -- Both the waypoint and the journey start together: a refused journey leaves no waypoint for a guide to remove.
@@ -290,7 +302,7 @@ function shim.RemoveWaypoint(_, waypoint)
 		return false
 	end
 	if API then
-		API.Cancel(OWNER)
+		API.Cancel(WaypointOwner(current))
 	end
 	current = nil
 	Forget()
@@ -471,8 +483,9 @@ local function StandDown()
 		return
 	end
 	active = false
-	if API and API.CurrentStop(OWNER) then
-		API.Cancel(OWNER)
+	local owner = WaypointOwner(current)
+	if API and API.CurrentStop(owner) then
+		API.Cancel(owner)
 	end
 	current = nil
 	Forget()
@@ -503,7 +516,7 @@ end
 -- picks, or the closest one left after another is removed), and ClearWaypoint whenever one goes: RemoveWaypoint
 -- calls it, and so do "Remove all waypoints", /way reset all and a profile change, which never call RemoveWaypoint.
 -- All are hooked on TomTom's own table, never a Blizzard object. The shim above has stood down by then, so the
--- journey has the same owner.
+-- journey keeps the same owner for each waypoint source.
 ---@type TomTom?
 local hooked
 -- The waypoint the journey follows, and one that waits for combat to end.
@@ -550,7 +563,7 @@ local function SyncArrow()
 		following
 		and not hijacked
 		and following == arrowWaypoint
-		and API.CurrentStop(OWNER)
+		and API.CurrentStop(WaypointOwner(following))
 		and guideArrow
 		and ns.db.arrow ~= false
 		and not UnitIsDeadOrGhost("player")
@@ -586,7 +599,7 @@ local function Follow(uid)
 	if PolestarSetting("nav.followTomTom") and PolestarSetting("nav.spfHandoff") then
 		return
 	end
-	if uid == following and API.CurrentStop(OWNER) then
+	if uid == following and API.CurrentStop(WaypointOwner(uid)) then
 		return
 	end
 	if InCombatLockdown() then
@@ -613,7 +626,7 @@ local function Unfollow(uid)
 	end
 	if uid ~= nil and uid == following then
 		following = nil
-		API.Cancel(OWNER)
+		API.Cancel(WaypointOwner(uid))
 	end
 end
 
@@ -704,7 +717,7 @@ end
 
 -- A journey that ends, or is replaced by the player or another addon, leaves no waypoint behind.
 hooksecurefunc(ns, "JourneyChanged", function()
-	if not API.CurrentStop(OWNER) then
+	if not API.CurrentStop(WaypointOwner(current or following)) then
 		following = nil
 		if active then
 			current = nil
