@@ -520,7 +520,7 @@ function Layer:RefreshStops()
 	for index = first, stops and #stops or 1 do
 		local point = stops and stops[index] or goal
 		local x, y = MapPosition(point, mapID)
-		if OnMap(x, y) then
+		if OnMap(x, y) and (index ~= first or not ns.OpenMapAddon.ShowsWaypointAtStop(point)) then
 			marks[#marks + 1] = {
 				x = x,
 				y = y,
@@ -900,20 +900,19 @@ function ns.SetJourneyRoute(destination, route)
 	end
 end
 
--- Guide starts, stops, pauses or yields: the goal pin's gold/bronze state changes with it, on the map, the minimap
--- and the on-screen destination pin. Keeping this here means the journey module only asks for it, without reaching
--- into the painters. A change while the state stays the same costs one comparison.
-local journeyPinActive
+-- Guide changes can recolour the goal pin on all surfaces, or replace it with OpenMap's waypoint on the world map.
+local journeyPinActive, mirroredWaypoint
 function ns.RefreshJourneyPin()
 	if not goal then
-		journeyPinActive = nil
+		journeyPinActive, mirroredWaypoint = nil, nil
 		return
 	end
 	local active = ns.GoalPinActive()
-	if journeyPinActive == active then
+	local mirrored = ns.OpenMapAddon.ShowsWaypointAtStop(goal)
+	if journeyPinActive == active and mirroredWaypoint == mirrored then
 		return
 	end
-	journeyPinActive = active
+	journeyPinActive, mirroredWaypoint = active, mirrored
 	if minimap then
 		local ringed = not minimap.goalEdge and goal.look ~= nil
 		local size = ringed and MINIMAP_RING or MINIMAP_GOAL

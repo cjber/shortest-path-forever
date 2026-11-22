@@ -812,6 +812,19 @@ function ns.JourneyPinTracked()
 		and (ns.db.guideStops or (guide.waypoint ~= nil and C_SuperTrack.IsSuperTrackingUserWaypoint()))
 end
 
+-- The current waypoint covers a stop only when it marks that stop's world point. A waypoint on an
+-- earlier bend still needs the separate destination pin.
+---@param stop SPFPoint
+---@return UiMapPoint?
+function Guide.WaypointAtStop(stop)
+	if guide and guide.waypoint and SamePoint(guide.waypointTarget, stop) then
+		local waypoint = C_Map.GetUserWaypoint()
+		if SameWaypoint(waypoint, guide.waypoint) then
+			return waypoint
+		end
+	end
+end
+
 function Guide.Start()
 	ClearOrphanWaypoint()
 	settled = nil

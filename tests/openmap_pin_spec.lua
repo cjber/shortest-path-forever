@@ -10,12 +10,15 @@ for _, part in ipairs({ "tests/ui_client.lua", "tests/ui_map.lua" }) do
 end
 
 assert(loadstring(table.concat(source) .. [[
-local stitched = true
+local stitched, mirrorsWaypoint = true, false
 _G.OpenMapAPI = {
 	major = 1,
 	version = 2,
 	IsStitched = function()
 		return stitched
+	end,
+	WorldFromMap = function(_, x, y)
+		if mirrorsWaypoint then return x, y end
 	end,
 	CanvasFromWorldPos = function(continent, x, y)
 		local _, position = C_Map.GetMapPosFromWorldPos(continent, CreateVector2D(x, y), mapID)
@@ -83,10 +86,18 @@ runPending()
 checkGoalPin("A map click forwarded by OpenMap")
 
 assert(TomTom:AddWaypoint(mapID, x, y, { title = title, from = "OpenMap" }))
+mirrorsWaypoint = true
 cursorX, cursorY = x, y
 assert(clickHandlers[1](WorldMapFrame, "LeftButton"))
 settle()
-checkGoalPin("An SPF map click")
+assert(waypoint and supertracked, "Guide places the native waypoint OpenMap mirrors")
+assert(goals:GetNumActive() == 0, "OpenMap's mirrored waypoint is the only marker at the guided stop")
+stitched = false
+mapTick()
+checkGoalPin("An SPF map click on the regular map")
+stitched = true
+mapTick()
+assert(goals:GetNumActive() == 0, "Returning to the stitched map removes the duplicate")
 
 assert(TomTom:AddWaypoint(mapID, x, y, { title = title, from = "OpenMap" }))
 ns.db.tomtom = false

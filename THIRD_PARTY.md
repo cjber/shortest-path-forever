@@ -65,6 +65,7 @@ Credit for the reports and requests behind the addon.
 
 | Who | What | Notes |
 |---|---|---|
+| alexaroth | One destination pin on OpenMap | Discord; #1267 |
 | user\_u3k9hweaatfhnjs0 | Profession trainer icons, weapon masters and service filters | CurseForge comment 8734926, thread 8731864; #952 |
 | treadpool | Undercity journeys leave the city by a lift | CurseForge thread 8729181; #923 |
 | user\_g496wu46adiwjuc5 | Hearthstone map button respects Use Hearthstone | CurseForge thread 8732965; #951 |
