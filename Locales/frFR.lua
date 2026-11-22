@@ -57,7 +57,7 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"Les trajets, et les estimations d'autres addons depuis ici, peuvent commencer par une téléportation de mage vers une ville ou Téléportation : Reflet-de-Lune, temps de recharge compris." -- mt
 L["Minimum teleport saving"] = "Gain minimum de la téléportation" -- mt
-L["Hide the journey key hint in tooltips."] = "Masquez l'indication de la touche de trajet dans les infobulles." -- mt
+L["Short journeys no longer wait on your Hearthstone."] = "Les trajets courts n'attendent plus votre pierre de foyer." -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"N'utiliser une téléportation de classe que si elle fait gagner au moins ce temps." -- mt
 L["Boat and Zeppelin Routes"] = "Routes des bateaux et zeppelins" -- mt
@@ -120,7 +120,6 @@ L["Interface"] = "Interface" -- mt
 L["Journey"] = "Trajet" -- mt
 L["Journey  %s · %s"] = "Trajet  %s · %s" -- mt
 L["Journey to %s"] = "Trajet vers %s" -- mt
-L["Keep journeys after a reload"] = "Garder les trajets après un rechargement" -- mt
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"Garde le suivi Forever partagé là où vous l'avez placé. La poignée en haut ne le déplace plus." -- mt
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
@@ -272,8 +271,6 @@ L["With TomTom installed, a journey here follows the waypoint its arrow points t
 	"Avec TomTom installé, un trajet ici suit le point vers lequel pointe sa flèche." -- mt
 L["Your journey's next flight is drawn on the flight master's map, with its destination lit up."] =
 	"Le prochain vol de votre trajet est tracé sur la carte du maître de vol, avec sa destination en surbrillance." -- mt
-L["Your own journey starts again after a /reload, or logging back in within 30 minutes. Guides start theirs."] =
-	"Votre propre trajet reprend après un /reload, ou si vous vous reconnectez dans les 30 minutes. Les guides relancent les leurs." -- mt
 L["Your position is unavailable"] = "Votre position est indisponible" -- mt
 L["Zeppelin to %s"] = "Zeppelin pour %s" -- mt
 L["Zeppelin to %s arrives in %s"] = "Le zeppelin pour %s arrive dans %s" -- mt

@@ -58,7 +58,8 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"여정과 다른 애드온의 이곳 기준 예상 시간은 재사용 대기시간을 포함해 마법사의 도시 순간이동이나 순간이동: 달의 숲으로 시작할 수 있습니다."
 L["Minimum teleport saving"] = "순간이동 최소 절약 시간"
-L["Hide the journey key hint in tooltips."] = "툴팁에서 여정 키 안내를 숨길 수 있습니다." -- mt
+L["Short journeys no longer wait on your Hearthstone."] =
+	"짧은 여정이 더 이상 귀환석을 기다리지 않습니다." -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"최소 이만큼 시간을 절약할 때만 직업 순간이동을 사용합니다."
 L["Boat and Zeppelin Routes"] = "배와 비행선 노선"
@@ -121,7 +122,6 @@ L["Interface"] = "인터페이스"
 L["Journey"] = "여정"
 L["Journey  %s · %s"] = "여정  %s · %s"
 L["Journey to %s"] = "%s(으)로 가는 여정"
-L["Keep journeys after a reload"] = "재시작 후 여정 유지"
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"공유 Forever 추적기를 놓은 자리에 유지합니다. 위쪽 손잡이로 더 이상 끌 수 없습니다."
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
@@ -275,8 +275,6 @@ L["With TomTom installed, a journey here follows the waypoint its arrow points t
 	"TomTom이 설치되어 있으면 여기서 여정은 그 화살표가 가리키는 웨이포인트를 따라갑니다."
 L["Your journey's next flight is drawn on the flight master's map, with its destination lit up."] =
 	"여정의 다음 비행이 비행 조련사 지도에 그려지고 목적지가 강조됩니다."
-L["Your own journey starts again after a /reload, or logging back in within 30 minutes. Guides start theirs."] =
-	"내 여정은 /reload 후나 30분 안에 다시 접속하면 다시 시작됩니다. 가이드는 각자의 여정을 시작합니다."
 L["Your position is unavailable"] = "위치를 알 수 없습니다"
 L["Zeppelin to %s"] = "%s행 비행선"
 L["Zeppelin to %s arrives in %s"] = "%s행 비행선 %s 후 도착"

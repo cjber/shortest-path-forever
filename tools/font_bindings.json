@@ -63,7 +63,7 @@
     },
     {
       "source": "UI/Settings.lua",
-      "sha256": "634ed3a0cd6f42573c349d3c15b04ccd53bba3831ea4492d5c4b079837a0f7fa",
+      "sha256": "bbcb2a58723c59fbb2d78c70fecdc3b6ba1ea24e31744fad1801d1c6b011aa24",
       "review": "Read Page, Checkbox, Scale, Dropdown and Saving and their registration calls. Settings rows, index buttons and option labels delegate to Blizzard secure initializers; this file creates no FontString and establishes no explicit FontObject. Minimap button text, tooltip text, chat output and helper arguments are excluded rather than assigned an assumed settings font. Reviewed #1094: the Tracker heading's Attach to quest tracker row is ForeverCore.SettingsSections.RegisterTrackerAttach, a core-owned initializer, registered only when the running core has it (an older adopted standalone does not); excluded with the other settings fonts. Reviewed #1142: the journeyHint row is one more Checkbox helper call, a Blizzard secure initializer with no FontString or FontObject of its own. Reviewed #1033: the Off-path tolerance row and Arrival distance share a DistanceSlider helper that registers a Blizzard secure slider initializer, with no FontString or FontObject of its own. Reviewed #1005: the Avoided transport row is one more native button initializer with plain string text and tooltip; the client owns its fonts.",
       "bindings": []
     },

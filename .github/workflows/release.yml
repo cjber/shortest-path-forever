@@ -16,7 +16,7 @@ on:
         required: false
         type: string
       skip_visual_proof:
-        description: Accept a full CI run whose only failed job is visual-proof (a maintainer's waiver; the headless smoke still applies)
+        description: Accept a full CI run whose only failed job is visual-proof (a maintainer's waiver; the release smoke still applies)
         required: false
         type: boolean
         default: false

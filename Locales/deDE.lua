@@ -55,7 +55,7 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"Reisen, und die Schätzungen anderer Addons von hier, können mit dem Stadtteleport eines Magiers oder Teleportieren: Mondlichtung beginnen, Abklingzeit eingerechnet."
 L["Minimum teleport saving"] = "Mindestersparnis durch Teleport"
-L["Hide the journey key hint in tooltips."] = "Der Reisetasten-Hinweis in Tooltips lässt sich ausblenden." -- mt
+L["Short journeys no longer wait on your Hearthstone."] = "Kurze Reisen warten nicht mehr auf Euren Ruhestein." -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"Einen Klassenteleport nur nutzen, wenn er mindestens so viel Zeit spart."
 L["Boat and Zeppelin Routes"] = "Schiffs- und Zeppelinrouten"
@@ -116,7 +116,6 @@ L["Interface"] = "Interface"
 L["Journey"] = "Reise"
 L["Journey  %s · %s"] = "Reise  %s · %s"
 L["Journey to %s"] = "Reise nach %s"
-L["Keep journeys after a reload"] = "Reisen nach /reload behalten"
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"Hält die gemeinsame Forever-Verfolgung dort, wo Ihr sie hingelegt habt. Der Griff oben zieht sie nicht mehr."
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
@@ -267,8 +266,6 @@ L["With TomTom installed, a journey here follows the waypoint its arrow points t
 	"Ist TomTom installiert, folgt eine Reise hier dem Wegpunkt, auf den sein Pfeil zeigt."
 L["Your journey's next flight is drawn on the flight master's map, with its destination lit up."] =
 	"Der nächste Flug Eurer Reise wird auf der Karte des Flugmeisters gezeichnet, mit hervorgehobenem Ziel."
-L["Your own journey starts again after a /reload, or logging back in within 30 minutes. Guides start theirs."] =
-	"Eure eigene Reise startet nach einem /reload erneut, oder wenn Ihr Euch innerhalb von 30 Minuten wieder einloggt. Leitfäden starten ihre eigenen."
 L["Your position is unavailable"] = "Eure Position ist nicht verfügbar"
 L["Zeppelin to %s"] = "Zeppelin nach %s"
 L["Zeppelin to %s arrives in %s"] = "Zeppelin nach %s kommt in %s an"

@@ -5,13 +5,12 @@ if ns.broken then
 	return
 end
 
--- With "Keep journeys after a reload" on, a journey you planned yourself (a map or minimap click, /way, a quest,
+-- A journey you planned yourself (a map or minimap click, /way, a quest,
 -- Nearby services) survives a /reload or logging back in: its goal is kept in charDB.journey and started again once
 -- the world is up and combat is over. Addons that own their journeys (Adventure Guide, TomTom's arrow, RestedXP,
 -- Polestar through the API) start theirs again themselves and go first: any journey started by then wins and the
--- kept one is dropped. Kept for half an hour after the reload or logout.
+-- kept one is dropped. It is kept until it ends or you clear it.
 
-local KEEP = 30 * 60
 -- Seconds after the loading screen, so owners and TomTom's restored arrow can start theirs first.
 local SETTLE = 2
 -- Nearby services starts its journeys through the API under this addon's own name: those are the player's too.
@@ -65,7 +64,7 @@ local function Keep(point)
 		return
 	end
 	local owner = ns.JourneyOwner()
-	if not (point and ns.db.resumeJourney and (owner == nil or owner == OWN)) then
+	if not (point and (owner == nil or owner == OWN)) then
 		ns.charDB.journey = nil
 		return
 	end
@@ -78,26 +77,19 @@ local function Keep(point)
 		label = canaccessvalue(label) and type(label) == "string" and label or nil,
 		questID = point.questID,
 		handins = Handins(point.handins),
-		at = GetServerTime(),
 	}
 end
 
 hooksecurefunc(ns, "JourneyChanged", Keep) -- taint-ok: ns is this addon's own namespace table.
 
--- Settings.lua: the setting changed; turned on, the journey under way is kept straight away.
-function ns.KeepJourneyChanged()
-	Keep(ns.db.resumeJourney and ns.JourneyGoal() or nil)
-end
-
 local frame
 
--- The one attempt is over: only the logout stamp is left to listen for.
+-- The one attempt is over.
 local function Done()
 	frame:UnregisterAllEvents()
-	frame:RegisterEvent("PLAYER_LOGOUT")
 end
 
--- Starts the kept journey, or forgets it when it is too old, turned off, or another journey is under way.
+-- Starts the kept journey, or forgets it when Journeys are off or another journey is under way.
 local function Resume()
 	local resume = kept
 	if not (resume and settled) or InCombatLockdown() then
@@ -108,8 +100,7 @@ local function Resume()
 	if ns.charDB.journey == resume then
 		ns.charDB.journey = nil
 	end
-	local age = GetServerTime() - (Finite(resume.at) or 0)
-	if not (ns.db.resumeJourney and ns.db.journey) or ns.JourneyGoal() or age < 0 or age > KEEP then
+	if not ns.db.journey or ns.JourneyGoal() then
 		return
 	end
 	local map, x, y = Finite(resume.map), Finite(resume.x), Finite(resume.y)
@@ -131,15 +122,8 @@ end
 ns.Init(function()
 	frame = CreateFrame("Frame")
 	frame:RegisterEvent("PLAYER_ENTERING_WORLD")
-	frame:RegisterEvent("PLAYER_LOGOUT")
 	frame:SetScript("OnEvent", function(_, event)
-		if event == "PLAYER_LOGOUT" then
-			-- Half an hour from leaving, not from planning: a long journey survives its reload.
-			local journey = ns.charDB and ns.charDB.journey
-			if type(journey) == "table" then
-				journey.at = GetServerTime()
-			end
-		elseif event == "PLAYER_REGEN_ENABLED" then
+		if event == "PLAYER_REGEN_ENABLED" then
 			Resume()
 		elseif not entered then
 			-- Only the loading screen that ends a login or reload: later ones keep the journey running anyway.

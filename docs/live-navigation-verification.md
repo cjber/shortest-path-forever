@@ -27,6 +27,6 @@ Record the observed route, character travel options, client build, addon version
 Save `/path perf` output before and after landing. Its CPU and memory figures describe the main addon, decoded terrain included.
 Capture errors or blocked-action messages verbatim. If a result fails, include the shortest reproducible sequence.
 
-These checks are pending. Headless tests cover retained-route arrival, cancellation, on-demand terrain decoding,
+These checks are pending. Offline specs cover retained-route arrival, cancellation, on-demand terrain decoding,
 combat suspension and performance-memory accounting, but do not establish live loading or secure UI behaviour.
-Repository instructions prohibit agents from driving the client, so completion requires a human client run.
+Completion requires a manual in-game run.

@@ -55,7 +55,7 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"旅程以及其他插件從這裡算起的估計，可以從法師的城市傳送或傳送：月光林地開始，並計入冷卻時間。"
 L["Minimum teleport saving"] = "傳送最少節省時間"
-L["Hide the journey key hint in tooltips."] = "可在滑鼠提示中隱藏旅程按鍵提示。" -- mt
+L["Short journeys no longer wait on your Hearthstone."] = "短途旅程不再等待你的爐石。" -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"只在職業傳送至少節省這麼多時間時使用。"
 L["Boat and Zeppelin Routes"] = "船隻與飛艇航線"
@@ -116,7 +116,6 @@ L["Interface"] = "介面"
 L["Journey"] = "旅程"
 L["Journey  %s · %s"] = "旅程  %s · %s"
 L["Journey to %s"] = "前往%s的旅程"
-L["Keep journeys after a reload"] = "重載後保留旅程"
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"將共用的 Forever 追蹤器保持在您放置的位置。頂部的拖曳握把不再移動它。"
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
@@ -264,8 +263,6 @@ L["With TomTom installed, a journey here follows the waypoint its arrow points t
 	"安裝TomTom後，這裡的旅程會跟隨其箭頭指向的路徑點。"
 L["Your journey's next flight is drawn on the flight master's map, with its destination lit up."] =
 	"旅程的下一段航班會畫在飛行管理員的地圖上，並醒目顯示其目的地。"
-L["Your own journey starts again after a /reload, or logging back in within 30 minutes. Guides start theirs."] =
-	"你自己的旅程會在/reload後或30分鐘內重新登入時重新開始。指南會開始各自的旅程。"
 L["Your position is unavailable"] = "無法取得你的位置"
 L["Zeppelin to %s"] = "前往%s的飛艇"
 L["Zeppelin to %s arrives in %s"] = "前往%s的飛艇將在%s後抵達"
