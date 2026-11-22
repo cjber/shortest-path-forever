@@ -67,6 +67,21 @@ watcher:OnEvent("ADDON_LOADED", "RXPGuides")
 driver.path.settle()
 assert(API.CurrentStop("RestedXP") == 1, "late-loaded guide starts a journey")
 assert(frame.texture.shown and frame.text.shown, "A standalone RestedXP journey leaves its own arrow visible")
+-- #1251: on a corpse run RestedXP draws its own Corpse arrow; ours, routed, leads alone until you are back.
+local ghost = true
+ns.Corpse = {
+	Active = function()
+		return ghost
+	end,
+}
+rxp.UpdateMap()
+assert(not frame.texture.shown and not frame.text.shown, "a corpse run hides RestedXP's Corpse arrow behind ours")
+ns.ArrowLeadChanged()
+assert(not frame.texture.shown, "our corpse arrow keeps leading")
+ghost = false
+ns.ArrowLeadChanged()
+assert(frame.texture.shown and frame.text.shown, "back alive, RestedXP's arrow returns")
+ns.Corpse = nil
 assert(frame.mouse == true, "the guide arrow still takes clicks")
 
 -- The active step's quests reach the stop. A step that kills and then turns in keeps the live objectives; a step that
