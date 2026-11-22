@@ -452,8 +452,11 @@ L["The key you hold to plan a journey from the world map or the minimap."] =
 L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
 	"Auf einem Questie-Symbol bleibt Shift-Klick bei Questie; Alt-Klick plant dort mit beiden Tasten die Reise." -- mt
 L["Show the journey key hint in tooltips"] = "Hinweis zur Reisetaste in Tooltips anzeigen" -- mt
-L["Adds a line naming your journey key to tooltips on the world map, flight points and the minimap. Off, the key still plans journeys."] =
-	"Fügt Tooltips auf der Weltkarte, an Flugpunkten und auf der Minikarte eine Zeile mit deiner Reisetaste hinzu. Ist die Option aus, plant die Taste weiterhin Reisen." -- mt
+L["Show the journey key hint on the minimap"] = "Hinweis zur Reisetaste auf der Minikarte anzeigen" -- mt
+L["Adds the journey key line to the minimap's tooltip over what it tracks. Off, the world map and flight point tooltips keep theirs, and the key still plans journeys."] =
+	"Fügt die Zeile mit der Reisetaste dem Tooltip der Minikarte über dem hinzu, was sie verfolgt. Ist die Option aus, behalten Weltkarte und Flugpunkte ihre Hinweise, und die Taste plant weiterhin Reisen." -- mt
+L["Adds a line naming your journey key to tooltips on the world map and flight points. Off, the key still plans journeys."] =
+	"Fügt den Tooltips auf der Weltkarte und an Flugpunkten eine Zeile mit deiner Reisetaste hinzu. Ist die Option aus, plant die Taste weiterhin Reisen." -- mt
 L["Show the Nearby services tab"] = "Tab für Dienste in der Nähe anzeigen"
 L["The tab in the world map's quest log. Off, /spfnear and the tracking menu still open it."] =
 	"Der Tab im Questlog der Weltkarte. Aus öffnen /spfnear und das Verfolgungsmenü ihn weiterhin."

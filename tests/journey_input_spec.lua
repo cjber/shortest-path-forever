@@ -308,6 +308,23 @@ do
 	minimapTooltipPost(env.GameTooltip)
 	assert(not env.GameTooltip.lines[2], "nothing on the minimap while journeys are off")
 	ns.db.journey = true
+	-- The minimap's line has its own switch (#1241): over every ore, herb and NPC it doubles the tooltip's height.
+	ns.db.minimapHint = false
+	env.GameTooltip.lines = { "Copper Vein" }
+	minimapTooltipPost(env.GameTooltip)
+	assert(not env.GameTooltip.lines[2], "nothing on the minimap once its own hint is off (#1241)")
+	assert(ns.JourneyClickHint() == hint, "and the world map and flight point hints stay")
+	assert(ns.MinimapClickHint() == nil, "the minimap's is gone")
+	ns.db.minimapHint = true
+	env.GameTooltip.lines = { "Copper Vein" }
+	minimapTooltipPost(env.GameTooltip)
+	assert(env.GameTooltip.lines[2] == hint, "back with its box ticked (#1241)")
+	ns.db.journeyHint = false
+	assert(ns.MinimapClickHint() == nil, "the shared hint still switches the minimap's off too")
+	ns.db.journeyHint = true
+	env.GameTooltip.lines = { "Copper Vein" }
+	minimapTooltipPost(env.GameTooltip)
+	assert(env.GameTooltip.lines[2] == hint, "and back on")
 	shown = false
 	assert(not tooltipFor(poi.GetOwner()).lines[1], "nothing while the world map is closed")
 	shown = true

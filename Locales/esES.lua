@@ -453,8 +453,11 @@ L["The key you hold to plan a journey from the world map or the minimap."] =
 L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
 	"Sobre un icono de Questie, el clic con Mayús sigue siendo de Questie; Alt+clic planea allí el viaje con cualquiera de las dos teclas." -- mt
 L["Show the journey key hint in tooltips"] = "Mostrar la pista de la tecla de viaje en las descripciones emergentes" -- mt
-L["Adds a line naming your journey key to tooltips on the world map, flight points and the minimap. Off, the key still plans journeys."] =
-	"Añade una línea con tu tecla de viaje a las descripciones del mapa del mundo, los puntos de vuelo y el minimapa. Desactivada, la tecla sigue planeando viajes." -- mt
+L["Show the journey key hint on the minimap"] = "Mostrar la indicación de la tecla de viaje en el minimapa" -- mt
+L["Adds the journey key line to the minimap's tooltip over what it tracks. Off, the world map and flight point tooltips keep theirs, and the key still plans journeys."] =
+	"Añade la línea de la tecla de viaje a la descripción del minimapa sobre lo que rastrea. Desactivado, las descripciones del mapa del mundo y de los puntos de vuelo mantienen la suya, y la tecla sigue planificando viajes." -- mt
+L["Adds a line naming your journey key to tooltips on the world map and flight points. Off, the key still plans journeys."] =
+	"Añade una línea que nombra tu tecla de viaje a las descripciones del mapa del mundo y de los puntos de vuelo. Desactivado, la tecla sigue planificando viajes." -- mt
 L["Show the Nearby services tab"] = "Mostrar pestaña de servicios cercanos"
 L["The tab in the world map's quest log. Off, /spfnear and the tracking menu still open it."] =
 	"La pestaña en el registro de misiones del mapa del mundo. Desactivada, /spfnear y el menú de seguimiento siguen abriéndola."

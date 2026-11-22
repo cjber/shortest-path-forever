@@ -347,7 +347,14 @@ ns.Init(function()
 		"journeyHint",
 		L["Show the journey key hint in tooltips"],
 		-- luacheck: push ignore 631
-		L["Adds a line naming your journey key to tooltips on the world map, flight points and the minimap. Off, the key still plans journeys."]
+		L["Adds a line naming your journey key to tooltips on the world map and flight points. Off, the key still plans journeys."]
+		-- luacheck: pop
+	)
+	Checkbox(
+		"minimapHint",
+		L["Show the journey key hint on the minimap"],
+		-- luacheck: push ignore 631
+		L["Adds the journey key line to the minimap's tooltip over what it tracks. Off, the world map and flight point tooltips keep theirs, and the key still plans journeys."]
 		-- luacheck: pop
 	)
 	Checkbox(

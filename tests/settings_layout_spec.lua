@@ -24,6 +24,7 @@ local expected = {
 	"journey",
 	"journeyKey",
 	"journeyHint",
+	"minimapHint",
 	"focusedQuest",
 	"#Destination",
 	"destinationPin",

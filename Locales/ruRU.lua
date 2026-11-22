@@ -479,8 +479,12 @@ L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey
 	"На значке Questie Shift+щелчок остается за Questie; Alt+щелчок прокладывает туда маршрут при любой из двух клавиш." -- mt
 L["Show the journey key hint in tooltips"] =
 	"Показывать подсказку о клавише маршрута во всплывающих подсказках" -- mt
-L["Adds a line naming your journey key to tooltips on the world map, flight points and the minimap. Off, the key still plans journeys."] =
-	"Добавляет строку с клавишей маршрута в подсказки на карте мира, у точек полёта и на миникарте. Если выключено, клавиша всё равно прокладывает маршруты." -- mt
+L["Show the journey key hint on the minimap"] =
+	"Показывать подсказку клавиши пути на миникарте" -- mt
+L["Adds the journey key line to the minimap's tooltip over what it tracks. Off, the world map and flight point tooltips keep theirs, and the key still plans journeys."] =
+	"Добавляет строку с клавишей пути во всплывающую подсказку миникарты о том, что она отслеживает. Если выключено, подсказки карты мира и точек полёта остаются, а клавиша по-прежнему прокладывает путь." -- mt
+L["Adds a line naming your journey key to tooltips on the world map and flight points. Off, the key still plans journeys."] =
+	"Добавляет строку с названием клавиши пути во всплывающие подсказки карты мира и точек полёта. Если выключено, клавиша по-прежнему прокладывает путь." -- mt
 L["Show the Nearby services tab"] = "Показывать вкладку услуг поблизости"
 L["The tab in the world map's quest log. Off, /spfnear and the tracking menu still open it."] =
 	"Вкладка в журнале заданий на карте мира. Если выключить, /spfnear и меню отслеживания всё равно её откроют."

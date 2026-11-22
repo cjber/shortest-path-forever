@@ -463,8 +463,11 @@ L["The key you hold to plan a journey from the world map or the minimap."] =
 L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
 	"Questie 아이콘에서는 Shift-클릭이 Questie의 것이며, Alt-클릭은 두 키 중 어느 쪽이든 그곳까지 여정을 계획합니다." -- mt
 L["Show the journey key hint in tooltips"] = "툴팁에 여정 키 안내 표시" -- mt
-L["Adds a line naming your journey key to tooltips on the world map, flight points and the minimap. Off, the key still plans journeys."] =
-	"세계 지도, 비행 지점, 미니맵 툴팁에 여정 키를 알려 주는 줄을 추가합니다. 꺼도 키로 여정을 계속 계획할 수 있습니다." -- mt
+L["Show the journey key hint on the minimap"] = "미니맵에 여정 키 안내 표시" -- mt
+L["Adds the journey key line to the minimap's tooltip over what it tracks. Off, the world map and flight point tooltips keep theirs, and the key still plans journeys."] =
+	"미니맵이 추적하는 대상의 툴팁에 여정 키 줄을 추가합니다. 끄면 세계 지도와 비행 경로의 툴팁 안내는 그대로 남고, 키로는 여전히 여정을 계획할 수 있습니다." -- mt
+L["Adds a line naming your journey key to tooltips on the world map and flight points. Off, the key still plans journeys."] =
+	"세계 지도와 비행 경로 툴팁에 여정 키 이름을 넣은 줄을 추가합니다. 끄면 키로 여전히 여정을 계획할 수 있습니다." -- mt
 L["Show the Nearby services tab"] = "주변 편의시설 탭 표시"
 L["The tab in the world map's quest log. Off, /spfnear and the tracking menu still open it."] =
 	"세계 지도 퀘스트 로그의 탭입니다. 꺼도 /spfnear와 추적 메뉴로 계속 열 수 있습니다."

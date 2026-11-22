@@ -429,6 +429,7 @@ local groups = {
 		"journey",
 		"journeyKey",
 		"journeyHint",
+		"minimapHint",
 		"focusedQuest",
 		"destinationPin",
 		"destinationPinSize",

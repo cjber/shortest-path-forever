@@ -448,8 +448,11 @@ L["The key you hold to plan a journey from the world map or the minimap."] =
 L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
 	"在 Questie 圖示上，Shift 點擊仍歸 Questie 所有；Alt 點擊則可用任一按鍵規劃前往該處的旅程。" -- mt
 L["Show the journey key hint in tooltips"] = "在滑鼠提示中顯示旅程按鍵提示" -- mt
-L["Adds a line naming your journey key to tooltips on the world map, flight points and the minimap. Off, the key still plans journeys."] =
-	"在世界地圖、飛行點和小地圖的滑鼠提示中加入一行，說明你的旅程按鍵。關閉後，按鍵仍可規劃旅程。" -- mt
+L["Show the journey key hint on the minimap"] = "在小地圖上顯示旅程按鍵提示" -- mt
+L["Adds the journey key line to the minimap's tooltip over what it tracks. Off, the world map and flight point tooltips keep theirs, and the key still plans journeys."] =
+	"在小地圖所追蹤目標的提示中加入旅程按鍵一行。關閉後，世界地圖和飛行點的提示仍會保留，按鍵仍可規劃旅程。" -- mt
+L["Adds a line naming your journey key to tooltips on the world map and flight points. Off, the key still plans journeys."] =
+	"在世界地圖和飛行點的滑鼠提示中加入一行，說明你的旅程按鍵。關閉後，按鍵仍可規劃旅程。" -- mt
 L["Show the Nearby services tab"] = "顯示附近服務分頁"
 L["The tab in the world map's quest log. Off, /spfnear and the tracking menu still open it."] =
 	"世界地圖任務日誌中的分頁。關閉後，/spfnear 與追蹤選單仍可開啟它。"
