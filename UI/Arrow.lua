@@ -291,11 +291,15 @@ local function ArrowShown()
 	return ns.db.arrow ~= false
 end
 
--- Whether our frame may draw and lead. RestedXP draws its own arrow, but the marker still follows the bend (#1254).
+-- RestedXP keeps corpse guidance. For a living player, the marker follows the bend in every arrow mode.
 local function DirectionsShown()
+	local mode = ns.db.restedxpArrow
 	return ArrowShown()
-		-- RestedXP keeps the bearing on its journey, dead or alive: it draws its own Corpse or Spirit Healer arrow (#1251).
-		and (not ns.JourneyOwner or ns.JourneyOwner() ~= "RestedXP")
+		and (
+			not ns.JourneyOwner
+			or ns.JourneyOwner() ~= "RestedXP"
+			or ((mode == "shortestPath" or mode == "both") and not UnitIsDeadOrGhost("player"))
+		)
 end
 
 -- When another addon draws the arrow our frame stays hidden, so its own ticker is gone and the marker-only poll takes
@@ -840,8 +844,12 @@ end
 -- Refresh arrow rendering without changing the canonical walk or its progress.
 function ns.ArrowBearingChanged()
 	if frame then
+		if DirectionsShown() and ((path and target) or arrival) then
+			frame:Show()
+		end
 		Wake()
 		Update(0)
+		NotifyLead()
 	end
 	if ns.RefreshCompass then
 		ns.RefreshCompass()

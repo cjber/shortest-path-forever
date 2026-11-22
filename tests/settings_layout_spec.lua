@@ -37,6 +37,7 @@ local expected = {
 	"tomtom",
 	"tomtomFollow",
 	"restedxp",
+	"restedxpArrow",
 	"restedxpHideArrow",
 	"guidelime",
 	"dugi",

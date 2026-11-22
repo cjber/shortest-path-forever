@@ -111,19 +111,23 @@ local function Suppress()
 	frame:EnableMouse(false)
 end
 
--- Only Adventure Guide's integrated frontend can hand the RestedXP arrow to Shortest Path.
--- Standalone journeys leave the bearing to RestedXP.
-local function HoldArrow()
-	if (ns.db and ns.db.restedxpHideArrow == false) or not ns.ArrowLeads() then
-		Restore()
-	else
-		Suppress()
-	end
-end
-
 local function Integrated()
 	local frontend = AdventureGuideForever and AdventureGuideForever.API
 	return frontend ~= nil and type(frontend.RestedXPIntegrated) == "function" and frontend.RestedXPIntegrated() == true
+end
+
+local function HoldArrow()
+	local hide
+	if Integrated() then
+		hide = ns.db.restedxpHideArrow ~= false
+	else
+		hide = ns.db.restedxpArrow == "shortestPath" and ns.JourneyOwner() == OWNER and not UnitIsDeadOrGhost("player")
+	end
+	if hide and ns.ArrowLeads() then
+		Suppress()
+	else
+		Restore()
+	end
 end
 
 local function Sync()
@@ -234,7 +238,7 @@ local function Sync()
 			end
 		end
 	end
-	Restore()
+	HoldArrow()
 end
 
 -- Let the player hand control back after pausing a guide, without waiting for its next native update. Returns whether
@@ -284,7 +288,7 @@ end)
 
 -- Our arrow began or stopped leading: a route landed, a stop was reached or left, the arrow was switched off.
 hooksecurefunc(ns, "ArrowLeadChanged", function()
-	if hooked and ns.db and Integrated() then
+	if hooked and ns.db then
 		HoldArrow()
 	end
 end)
