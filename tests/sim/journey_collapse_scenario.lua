@@ -25,6 +25,7 @@ scenario("Journey stays collapsed when the last quest is untracked", { addons = 
 	assert(ns.JourneyGoal(), "the journey started")
 
 	local tracker = sim:openObjectiveTracker()
+	-- The sim has no quest-watch data. Stand in for the quest module inside the real native container.
 	local questList = G.CreateFrame("Frame", nil, tracker)
 	questList.uiOrder, questList.leftMargin = 1, 0
 	questList.SetContainer = function() end
@@ -55,6 +56,14 @@ scenario("Journey stays collapsed when the last quest is untracked", { addons = 
 	assert(not tracker:IsShown(), "the last untrack hid the native tracker")
 	assert(journey:IsCollapsed(), "Journey stays collapsed after the native tracker hides")
 	assert(journey.firstBlock == nil, "the collapsed Journey only displays its header")
+
+	local previousTitle = journey.blocks[1].title
+	sim:input(function()
+		ns.StartJourney(ns.DockPoint(6))
+	end)
+	sim:advance(1)
+	assert(journey.blocks[1].title ~= previousTitle, "SPF produced a different journey while the tracker was hidden")
+	assert(journey:IsCollapsed() and journey.firstBlock == nil, "the producer refresh leaves Journey collapsed")
 
 	local column = assert(G.ForeverTrackerCompanion)
 	column:MarkDirty()
