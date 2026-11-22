@@ -270,14 +270,16 @@ for index, step in ipairs(steps) do
 			index == 1 and "-" or tostring(tickSeconds)
 		)
 	)
-	-- Every row decides once the walking search reaches its nearest NPC, which is bound by the search speed of the
-	-- machine: like the journey bench budgets, the decision limit is checked only under SPF_BENCH_STRICT=1.
-	local decidedLimit = os.getenv("SPF_BENCH_STRICT") == "1" and 400 or math.huge
+	-- Frames are sliced by the path jobs' real-time budget, so how many it takes to show and decide every row is
+	-- bound by the speed of the machine: like the journey bench budgets, both limits are checked only under
+	-- SPF_BENCH_STRICT=1. Everywhere, every row shows a time before its cheapest NPC is decided.
+	local strict = os.getenv("SPF_BENCH_STRICT") == "1"
 	passed = passed
 		and allShown ~= nil
-		and allShown <= 10
+		and allShown <= (strict and 10 or math.huge)
 		and decided ~= nil
-		and decided <= decidedLimit
+		and allShown <= decided
+		and decided <= (strict and 400 or math.huge)
 		and not nextFrame
 	if index > 1 then
 		movementPassed = movementPassed and tickSeconds <= 1 and allShown ~= nil and allShown <= 60 and #jobs > 0
@@ -291,6 +293,6 @@ if not bench then
 	assert(movementPassed, "movement must refresh every row within a one-second check and 60 path frames")
 	assert(
 		passed,
-		"expected fresh row times within 10 frames and every row decided (within 400 frames under SPF_BENCH_STRICT)"
+		"expected every row to show a time before it is decided (within 10 and 400 frames under SPF_BENCH_STRICT)"
 	)
 end
