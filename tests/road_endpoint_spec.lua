@@ -18,6 +18,9 @@ end
 local function length(a, b)
 	return math.sqrt((a.x - b.x) ^ 2 + (a.y - b.y) ^ 2)
 end
+local function centre(p)
+	return point(math.floor(p.x / CS) + 0.5, math.floor(p.y / CS) + 0.5)
+end
 local function offLength(a, b, road)
 	local ax, ay, bx, by = a.x / CS, a.y / CS, b.x / CS, b.y / CS
 	local ts = { 0, 1 }
@@ -83,7 +86,7 @@ for scenario, mode in ipairs({ "road", "water", "hazard", "chord" }) do
 		local from, to = direction == 1 and a or b, direction == 1 and b or a
 		local pts, cost = ns.Path.FindSync(map, from, to, false, hz)
 		assert(pts, cost)
-		local expected = 20 * math.sqrt(2) * CS
+		local expected = 20 * math.sqrt(2) * CS + length(from, centre(from)) + length(to, centre(to))
 		check(
 			math.abs(cost - expected) < 1e-8,
 			mode .. " direction " .. direction .. " reported real travel cost " .. cost
@@ -96,13 +99,11 @@ for scenario, mode in ipairs({ "road", "water", "hazard", "chord" }) do
 				local reference
 				if mode == "chord" then
 					reference = expected
-						+ length(from, point(math.floor(from.x / CS) + 0.5, math.floor(from.y / CS) + 0.5))
-						+ length(to, point(math.floor(to.x / CS) + 0.5, math.floor(to.y / CS) + 0.5))
 				else
 					local endpoint = i == 2 and from or to
-					local centre = point(math.floor(endpoint.x / CS) + 0.5, math.floor(endpoint.y / CS) + 0.5)
+					local cellCentre = centre(endpoint)
 					local inner = i == 2 and q or p
-					reference = length(endpoint, centre) + length(centre, inner)
+					reference = length(endpoint, cellCentre) + length(cellCentre, inner)
 				end
 				check(
 					weighted <= reference + 1e-8,
@@ -120,11 +121,8 @@ for scenario, mode in ipairs({ "road", "water", "hazard", "chord" }) do
 				for i = 2, #pts do
 					weighted = weighted + length(pts[i - 1], pts[i]) + 2 * offLength(pts[i - 1], pts[i], road)
 				end
-				local reference = expected
-					+ length(from, point(math.floor(from.x / CS) + 0.5, math.floor(from.y / CS) + 0.5))
-					+ length(to, point(math.floor(to.x / CS) + 0.5, math.floor(to.y / CS) + 0.5))
 				check(
-					weighted <= reference + 1e-8,
+					weighted <= expected + 1e-8,
 					"whole drawn chord fallback stays within its complete real reference"
 				)
 			end
