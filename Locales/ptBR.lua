@@ -151,8 +151,6 @@ L["Not discovered"] = "Não descoberto"
 L["On board to %s"] = "A bordo para %s"
 L["On the world map and in Nearby services."] = "No mapa-múndi e nos serviços próximos."
 L["On the world map."] = "No mapa-múndi."
-L["One line in chat the first time you log in after an update."] =
-	"Uma linha no bate-papo na primeira vez que você entra após uma atualização."
 L["Only my professions"] = "Apenas minhas profissões"
 L["Only use the Hearthstone when it saves at least this much time."] =
 	"Usar a pedra de regresso só quando ela economizar pelo menos este tempo."
@@ -332,7 +330,6 @@ L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d
 	"Diário de viagem local — aprox. %d jardas caminhadas; %d jornadas; %d transportes; %d voos; %d trechos de portal."
 L["Record travel stats"] = "Registrar estatísticas de viagem"
 L["Time left"] = "Tempo restante" -- mt
-L["Travel milestone reached: %s"] = "Marco de viagem alcançado: %s"
 L["Travel stats are not ready yet."] = "As estatísticas de viagem ainda não estão prontas."
 L["Party member"] = "Membro do grupo" -- mt
 L["That player is not on a map you can see."] = "Esse jogador não está num mapa que você possa ver." -- mt

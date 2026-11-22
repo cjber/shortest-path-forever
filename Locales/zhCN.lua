@@ -151,7 +151,6 @@ L["Not discovered"] = "未发现"
 L["On board to %s"] = "乘坐前往%s"
 L["On the world map and in Nearby services."] = "在世界地图和附近服务中生效。"
 L["On the world map."] = "显示在世界地图上。"
-L["One line in chat the first time you log in after an update."] = "更新后首次登录时在聊天中显示一行。"
 L["Only my professions"] = "仅我的职业"
 L["Only use the Hearthstone when it saves at least this much time."] =
 	"只在炉石至少节省这么多时间时使用。"
@@ -329,7 +328,6 @@ L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d
 	"本地旅行日志 — 步行约%d码；%d次旅程；%d次交通；%d次飞行；%d段传送门。"
 L["Record travel stats"] = "记录旅行统计"
 L["Time left"] = "剩余时间" -- mt
-L["Travel milestone reached: %s"] = "达成旅行里程碑：%s"
 L["Travel stats are not ready yet."] = "旅行统计尚未准备好。"
 L["Party member"] = "队员" -- mt
 L["That player is not on a map you can see."] = "该玩家不在你能看到的地图上。" -- mt

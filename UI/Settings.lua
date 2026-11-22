@@ -857,7 +857,7 @@ ns.Init(function()
 	Checkbox(
 		"whatsNew",
 		L["What's new after an update"],
-		L["One line in chat the first time you log in after an update."]
+		L["Shows a notice the first time you log in after an update."]
 	)
 
 	Settings.RegisterAddOnCategory(category)
