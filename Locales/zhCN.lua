@@ -37,6 +37,8 @@ L["Adventure Guide suggests"] = "Adventure Guide推荐"
 L["Alert before a boat arrives"] = "船只到达前提醒"
 L["Alerts"] = "提醒"
 L["Alliance"] = "联盟"
+L["Applies when Adventure Guide displays RestedXP steps and Shortest Path provides the directions."] =
+	"当 Adventure Guide 显示 RestedXP 步骤且 Shortest Path 提供导航时生效。" -- mt
 L["Arriving at %s in %s"] = "到达%s还需%s"
 L["Arrow label"] = "箭头标签" -- mt
 L["Arrow scale"] = "箭头大小"
@@ -155,6 +157,10 @@ L["Only use the Hearthstone when it saves at least this much time."] =
 L["Open"] = "打开"
 L["Open Nearby services"] = "打开附近服务"
 L["Open the world map to see it."] = "打开世界地图查看。"
+L["Plan journeys to RestedXP guide targets. RestedXP keeps its own arrow."] =
+	"规划前往 RestedXP 指南目标的路线。RestedXP 继续显示自己的箭头。" -- mt
+L["Shortest Path pins and route lines on the world map."] = "世界地图上的 Shortest Path 图钉和路线。" -- mt
+L["Show Shortest Path marks"] = "显示 Shortest Path 标记" -- mt
 L["The travel action will update after combat."] = "旅行操作将在战斗结束后更新。"
 L["Rides to spend less time walking through %s (level %s)"] =
 	"搭乘交通工具以减少在%s（等级%s）内步行的路程"
@@ -170,8 +176,6 @@ L["Plan journeys to Zygor's current guide step, with no TomTom or bridge addon n
 	"规划前往 Zygor 攻略当前步骤的旅程，无需 TomTom 或桥接插件。Zygor 保留自己的箭头。" -- mt
 L["Plan journeys to Guidelime's current guide step. Guidelime's arrow steps aside while ours draws."] =
 	"规划前往 Guidelime 当前攻略步骤的旅程。在我们的箭头显示时，Guidelime 的箭头会移开。"
-L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."] =
-	"规划前往RestedXP指南目标的旅程并隐藏其箭头。无需TomTom。"
 L["Play a sound when you reach the goal"] = "到达目标时播放声音"
 L["Play a sound with alerts"] = "提醒时播放声音"
 L["Plays even with the game in the background."] = "游戏在后台时也会播放。"
@@ -246,7 +250,6 @@ L["Tram to %s"] = "前往%s的地铁"
 L["Tram to %s arrives in %s"] = "前往%s的地铁将在%s后到达"
 L["Transport"] = "交通"
 L["Transport icon size"] = "交通图标大小"
-L["Turning this off leaves RestedXP's arrow visible."] = "关闭此选项后，RestedXP 的箭头仍会显示。" -- mt
 L["Use %s"] = "使用%s"
 L["Use class teleports"] = "使用职业传送"
 L["Vendors"] = "商人"
@@ -330,8 +333,6 @@ L["Travel stats are not ready yet."] = "旅行统计尚未准备好。"
 L["Party member"] = "队员" -- mt
 L["That player is not on a map you can see."] = "该玩家不在你能看到的地图上。" -- mt
 L["You have caught up with %s."] = "你已追上%s。" -- mt
-L["Shortest Path's own arrow replaces the guide's while a guide target is followed."] =
-	"在追踪指南目标时，Shortest Path 自己的箭头会取代指南的箭头。" -- mt
 L["Show a pin over the destination"] = "在目的地显示图钉" -- mt
 L["A marker on screen over where the journey ends, like the game's own waypoint pin."] =
 	"在旅程终点上方显示屏幕标记，类似游戏自带的路径点图钉。" -- mt

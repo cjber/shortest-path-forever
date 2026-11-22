@@ -473,7 +473,7 @@ ns.Init(function()
 	Checkbox(
 		"restedxp",
 		L["Follow RestedXP guides"],
-		L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."],
+		L["Plan journeys to RestedXP guide targets. RestedXP keeps its own arrow."],
 		function()
 			ns.RefreshRestedXP()
 		end
@@ -481,9 +481,7 @@ ns.Init(function()
 	Checkbox(
 		"restedxpHideArrow",
 		L["Hide RestedXP's arrow"],
-		L["Shortest Path's own arrow replaces the guide's while a guide target is followed."]
-			.. " "
-			.. L["Turning this off leaves RestedXP's arrow visible."],
+		L["Applies when Adventure Guide displays RestedXP steps and Shortest Path provides the directions."],
 		function()
 			ns.RefreshRestedXP()
 		end

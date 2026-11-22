@@ -111,8 +111,8 @@ local function Suppress()
 	frame:EnableMouse(false)
 end
 
--- The arrow takeover alone: a player may keep RestedXP's arrow while still following its guide. RestedXP's arrow
--- stands down only while ours leads (UI/Arrow.lua): a journey still searching for its route has no arrow to show yet.
+-- Only Adventure Guide's integrated frontend can hand the RestedXP arrow to Shortest Path.
+-- Standalone journeys leave the bearing to RestedXP.
 local function HoldArrow()
 	if (ns.db and ns.db.restedxpHideArrow == false) or not ns.ArrowLeads() then
 		Restore()
@@ -233,11 +233,8 @@ local function Sync()
 				ns.SetStopQuests(OWNER, index, quests, actions)
 			end
 		end
-		-- RestedXP owns the arrow when Shortest Path is not drawing one of its own.
-		HoldArrow()
-	else
-		Restore()
 	end
+	Restore()
 end
 
 -- Let the player hand control back after pausing a guide, without waiting for its next native update. Returns whether
@@ -287,7 +284,7 @@ end)
 
 -- Our arrow began or stopped leading: a route landed, a stop was reached or left, the arrow was switched off.
 hooksecurefunc(ns, "ArrowLeadChanged", function()
-	if hooked and ns.db and (API.CurrentStop(OWNER) or Integrated()) then
+	if hooked and ns.db and Integrated() then
 		HoldArrow()
 	end
 end)

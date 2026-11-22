@@ -19,6 +19,12 @@ function MapMarks.Register(rows)
 	rows.Page(L["Map marks"])
 	rows.Section(L["Map icons"])
 	rows.Checkbox(
+		"worldMapMarks",
+		L["Show Shortest Path marks"],
+		L["Shortest Path pins and route lines on the world map."],
+		ns.ShowMapPins
+	)
+	rows.Checkbox(
 		"mapRoutes",
 		L["Show routes on the world map"],
 		L["Boat and zeppelin routes, drawn while you point at a dock."],

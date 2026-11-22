@@ -41,6 +41,17 @@ end
 assert(TomTom:AddWaypoint(mapID, x, y, { title = title, from = "TomTom/way" }))
 settle()
 local prior = checkGoalPin("A TomTom waypoint")
+ns.SetOption("worldMapMarks", false)
+assert(not prior:IsVisible(), "Turning off world map marks hides the active goal pin")
+assert(not lines.active[1]:IsVisible(), "Turning off world map marks hides the route overlay")
+assert(ns.HasJourney(), "Hiding world map marks keeps the journey active")
+fireEvent("PLAYER_REGEN_DISABLED")
+ns.SetOption("worldMapMarks", true)
+assert(not prior:IsVisible(), "Enabling world map marks in combat leaves them hidden")
+fireEvent("PLAYER_REGEN_ENABLED")
+checkGoalPin("World map marks enabled again")
+prior = goals.active[1]
+
 
 local openPin = assert(TomTom:AddWaypoint(mapID, x, y, { title = title, from = "OpenMap" }))
 runPending()

@@ -41,6 +41,8 @@ L["Adventure Guide suggests"] = "Adventure Guide предлагает"
 L["Alert before a boat arrives"] = "Оповещать о прибытии корабля"
 L["Alerts"] = "Оповещения"
 L["Alliance"] = "Альянс"
+L["Applies when Adventure Guide displays RestedXP steps and Shortest Path provides the directions."] =
+	"Действует, когда Adventure Guide показывает шаги RestedXP, а Shortest Path указывает путь." -- mt
 L["Arriving at %s in %s"] = "Прибытие: %s через %s"
 L["Arrow label"] = "Подпись стрелки" -- mt
 L["Arrow scale"] = "Размер стрелки"
@@ -166,6 +168,11 @@ L["Only use the Hearthstone when it saves at least this much time."] =
 L["Open"] = "Открыть"
 L["Open Nearby services"] = "Открыть услуги поблизости"
 L["Open the world map to see it."] = "Откройте карту мира, чтобы увидеть."
+L["Plan journeys to RestedXP guide targets. RestedXP keeps its own arrow."] =
+	"Планирует путь к целям руководства RestedXP. RestedXP сохраняет свою стрелку." -- mt
+L["Shortest Path pins and route lines on the world map."] =
+	"Метки и линии маршрута Shortest Path на карте мира." -- mt
+L["Show Shortest Path marks"] = "Показывать отметки Shortest Path" -- mt
 L["The travel action will update after combat."] =
 	"Действие для путешествия обновится после боя."
 L["Rides to spend less time walking through %s (level %s)"] =
@@ -183,8 +190,6 @@ L["Plan journeys to Zygor's current guide step, with no TomTom or bridge addon n
 	"Планировать путешествия к текущему шагу гайда Zygor без TomTom и дополнительных аддонов. Zygor сохраняет свою стрелку." -- mt
 L["Plan journeys to Guidelime's current guide step. Guidelime's arrow steps aside while ours draws."] =
 	"Планировать путешествия к текущему шагу руководства Guidelime. Его стрелка уступает место нашей."
-L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."] =
-	"Прокладывать маршруты к целям руководств RestedXP и скрывать его стрелку. TomTom не нужен."
 L["Play a sound when you reach the goal"] = "Звук по прибытии к цели"
 L["Play a sound with alerts"] = "Звук при оповещениях"
 L["Plays even with the game in the background."] = "Звучит, даже когда игра в фоне."
@@ -265,8 +270,6 @@ L["Tram to %s"] = "Поезд: %s"
 L["Tram to %s arrives in %s"] = "Поезд (%s) прибудет через %s"
 L["Transport"] = "Транспорт"
 L["Transport icon size"] = "Размер значков транспорта"
-L["Turning this off leaves RestedXP's arrow visible."] =
-	"Если отключить эту опцию, стрелка RestedXP останется видимой." -- mt
 L["Use %s"] = "Использовать: %s"
 L["Use class teleports"] = "Использовать классовые телепорты"
 L["Vendors"] = "Торговцы"
@@ -355,8 +358,6 @@ L["Party member"] = "Участник группы" -- mt
 L["That player is not on a map you can see."] =
 	"Этот игрок не на карте, которую вы видите." -- mt
 L["You have caught up with %s."] = "Вы догнали %s." -- mt
-L["Shortest Path's own arrow replaces the guide's while a guide target is followed."] =
-	"Собственная стрелка Shortest Path заменяет стрелку руководства, пока цель руководства отслеживается." -- mt
 L["Show a pin over the destination"] = "Показывать метку над пунктом назначения" -- mt
 L["A marker on screen over where the journey ends, like the game's own waypoint pin."] =
 	"Метка на экране над концом маршрута, как игровая метка путевой точки." -- mt

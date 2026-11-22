@@ -38,6 +38,8 @@ L["Adventure Guide suggests"] = "Adventure Guide sugiere"
 L["Alert before a boat arrives"] = "Avisar antes de que llegue un barco"
 L["Alerts"] = "Avisos"
 L["Alliance"] = "Alianza"
+L["Applies when Adventure Guide displays RestedXP steps and Shortest Path provides the directions."] =
+	"Se aplica cuando Adventure Guide muestra los pasos de RestedXP y Shortest Path indica el camino." -- mt
 L["Arriving at %s in %s"] = "Llegada a %s en %s"
 L["Arrow label"] = "Etiqueta de la flecha" -- mt
 L["Arrow scale"] = "Tamaño de la flecha"
@@ -158,6 +160,11 @@ L["Only use the Hearthstone when it saves at least this much time."] =
 L["Open"] = "Abrir"
 L["Open Nearby services"] = "Abrir servicios cercanos"
 L["Open the world map to see it."] = "Abre el mapa del mundo para verlo."
+L["Plan journeys to RestedXP guide targets. RestedXP keeps its own arrow."] =
+	"Planea viajes a los objetivos de la guía de RestedXP. RestedXP conserva su propia flecha." -- mt
+L["Shortest Path pins and route lines on the world map."] =
+	"Marcadores y líneas de ruta de Shortest Path en el mapa del mundo." -- mt
+L["Show Shortest Path marks"] = "Mostrar marcas de Shortest Path" -- mt
 L["The travel action will update after combat."] = "La acción de viaje se actualizará después del combate."
 L["Rides to spend less time walking through %s (level %s)"] = "Usa transporte para caminar menos por %s (nivel %s)"
 L["Walk less in zones with a minimum level 5 or more above yours, and less still the higher it is, even at your destination."] =
@@ -172,8 +179,6 @@ L["Plan journeys to Zygor's current guide step, with no TomTom or bridge addon n
 	"Planear viajes al paso actual de la guía de Zygor, sin TomTom ni addon puente. Zygor conserva su propia flecha." -- mt
 L["Plan journeys to Guidelime's current guide step. Guidelime's arrow steps aside while ours draws."] =
 	"Planear viajes al paso actual de la guía de Guidelime. Su flecha se aparta mientras se dibuja la nuestra."
-L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."] =
-	"Planear viajes a los objetivos de las guías de RestedXP y ocultar su flecha. No hace falta TomTom."
 L["Play a sound when you reach the goal"] = "Sonido al llegar al destino"
 L["Play a sound with alerts"] = "Sonido con los avisos"
 L["Plays even with the game in the background."] = "Suena incluso con el juego en segundo plano."
@@ -250,7 +255,6 @@ L["Tram to %s"] = "Tranvía a %s"
 L["Tram to %s arrives in %s"] = "El tranvía a %s llega en %s"
 L["Transport"] = "Transporte"
 L["Transport icon size"] = "Tamaño de iconos de transporte"
-L["Turning this off leaves RestedXP's arrow visible."] = "Si lo desactivas, la flecha de RestedXP permanece visible." -- mt
 L["Use %s"] = "Usar %s"
 L["Use class teleports"] = "Usar teletransportes de clase"
 L["Vendors"] = "Vendedores"
@@ -334,8 +338,6 @@ L["Travel stats are not ready yet."] = "Las estadísticas de viaje aún no está
 L["Party member"] = "Miembro del grupo" -- mt
 L["That player is not on a map you can see."] = "Ese jugador no está en un mapa que puedas ver." -- mt
 L["You have caught up with %s."] = "Has alcanzado a %s." -- mt
-L["Shortest Path's own arrow replaces the guide's while a guide target is followed."] =
-	"La flecha propia de Shortest Path sustituye a la de la guía mientras se sigue un objetivo de la guía." -- mt
 L["Show a pin over the destination"] = "Mostrar una marca sobre el destino" -- mt
 L["A marker on screen over where the journey ends, like the game's own waypoint pin."] =
 	"Una marca en pantalla sobre donde termina el viaje, como el alfiler de punto de ruta del juego." -- mt

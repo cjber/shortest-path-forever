@@ -268,11 +268,17 @@ local function Settle(elapsed, easing, moved)
 	SetUpdating(easing or frame.idle < 0.15)
 end
 
+local function DirectionsShown()
+	return ns.db.arrow ~= false
+		and (not ns.JourneyOwner or ns.JourneyOwner() ~= "RestedXP" or (ns.Corpse and ns.Corpse.Active()))
+end
+
 ---@param elapsed number seconds since the last update
 local function Update(elapsed)
 	-- Timers and already queued frame ticks outlive hiding the frame. Keep the route for the compass,
 	-- but never let disabled directions place the native marker again (#881).
-	if ns.db.arrow == false then
+	if not DirectionsShown() then
+		frame:SetShown(moving)
 		SetUpdating(false)
 		return
 	end
@@ -683,7 +689,7 @@ end
 -- Journey calls this when the player reaches a held stop's area, and with nil when it leaves or the stop changes.
 ---@param stop SPFPoint?
 function ns.PointArrivalPin(stop)
-	if stop and ns.db and (ns.db.arrivalPin == false or ns.db.arrow == false) then
+	if stop and ns.db and (ns.db.arrivalPin == false or not DirectionsShown()) then
 		stop = nil
 	end
 	if not stop then
@@ -814,7 +820,7 @@ function ns.PointGuideArrow(points, placeBend, stop, goal)
 	if revision ~= updating then
 		return
 	end
-	if not points or ns.db.arrow == false then
+	if not points or not DirectionsShown() then
 		native, shared, unseen = nil, nil, false
 		if frame then
 			SetUpdating(false)
@@ -853,7 +859,7 @@ function ns.MoveArrow(value)
 	if moving then
 		frame:SetAlpha(1)
 		frame:Show()
-	elseif (not path and not arrival) or ns.db.arrow == false then
+	elseif (not path and not arrival) or not DirectionsShown() then
 		frame:Hide()
 	end
 	if castTarget then
@@ -964,8 +970,7 @@ function ns.ArrowLeads()
 	if not ns.db or ns.db.arrow == false then
 		return false
 	end
-	return (path ~= nil and target ~= nil and not unseen)
-		or arrival ~= nil
+	return (DirectionsShown() and ((path ~= nil and target ~= nil and not unseen) or arrival ~= nil))
 		or (castTarget ~= nil and ns.CastPromptShown())
 end
 

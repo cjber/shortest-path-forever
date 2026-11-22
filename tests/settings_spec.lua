@@ -404,6 +404,7 @@ assert(type(ns.SettingsMapMarks.Register) == "function", "the Map marks page is 
 -- every row keeps its key, default, tooltip and callback.
 local groups = {
 	["Map marks"] = {
+		"worldMapMarks",
 		"mapRoutes",
 		"otherFaction",
 		"pins",
@@ -497,7 +498,7 @@ local order = {
 }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 79, #rows)
+assert(#rows == 80, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
