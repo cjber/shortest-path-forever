@@ -190,6 +190,23 @@ do
 	order(fixture(9, reversals), greedy, "two-opt keeps nearest-next on a tie")
 	reversals[2][1] = 1
 	order(fixture(9, reversals), "2,1,3,4,5,6,7,8,9", "two-opt takes a shorter directed reversal")
+	order(
+		fixture(2, { [0] = { [1] = 1, [2] = 2 }, [2] = { [1] = 1 } }),
+		"2,1",
+		"two stops take the other order when nearest-next strands one"
+	)
+	local stranded = {
+		[0] = { [1] = 1, [2] = 2 },
+		[1] = { [2] = 1, [3] = 2 },
+		[2] = { [3] = 1 },
+		[3] = { [4] = 1 },
+		[4] = { [5] = 1 },
+		[5] = { [6] = 1 },
+		[6] = { [7] = 1, [8] = 2 },
+		[7] = { [9] = 1 },
+		[8] = { [7] = 1 },
+	}
+	order(fixture(9, stranded), "1,2,3,4,5,6,8,7,9", "nine stops find a complete route after a nearest-next dead end")
 	API.Estimate = estimate
 end
 

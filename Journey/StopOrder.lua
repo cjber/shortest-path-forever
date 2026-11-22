@@ -189,6 +189,47 @@ local function Exact(cost, count, nearest)
 	return order
 end
 
+-- Depth-first search for any complete order, cheapest leg first, for when nearest-next strands a stop.
+-- Finding one is the Hamiltonian path problem, exponential in the worst case, so the search gives up as
+-- unreachable after count^2 dead ends; by then it has asked for at most every directed estimate once.
+---@param cost SPFStopOrderCost
+---@param count integer
+---@return integer[]?
+local function Any(cost, count)
+	local order, seen, budget = {}, {}, count * count
+	local function Visit(from, depth)
+		if depth > count then
+			return true
+		end
+		local options = {}
+		for to = 1, count do
+			local time = not seen[to] and cost(from, to)
+			if time then
+				options[#options + 1] = { to = to, time = time }
+			end
+		end
+		table.sort(options, function(a, b)
+			return a.time < b.time or (a.time == b.time and a.to < b.to)
+		end)
+		for _, option in ipairs(options) do
+			seen[option.to], order[depth] = true, option.to
+			if Visit(option.to, depth + 1) then
+				return true
+			end
+			seen[option.to], order[depth] = nil, nil
+			budget = budget - 1
+			if budget <= 0 then
+				return false
+			end
+			if budget % count == 0 then
+				coroutine.yield() -- spread a long search over several steps
+			end
+		end
+		return false
+	end
+	return Visit(0, 1) and order or nil
+end
+
 -- Find the best 2-opt reversal. In a directed matrix every internal leg
 -- changes direction, so compare the reversed interior as well as the ends.
 ---@param cost SPFStopOrderCost
@@ -256,12 +297,13 @@ local function SolveOrder(count)
 		return time or nil
 	end
 	local order = Nearest(Cost, count)
-	if count <= 2 then
+	if order and count <= 2 then
 		return order
 	end
 	if count <= EXACT_LIMIT then
 		return Exact(Cost, count, order)
 	end
+	order = order or Any(Cost, count)
 	while order do
 		local improved = Improve(Cost, order)
 		if not improved then
