@@ -24,6 +24,8 @@ local SINKS = {
 	'GameTooltip_Add%a*Line%(%s*[%w_]+,%s*"([^"]*)"',
 	'Print%(%s*"([^"]*)"',
 	'Print%(%s*string%.format%(%s*"([^"]*)"',
+	'Notice%(%s*"([^"]*)"',
+	'Notice%(%s*string%.format%(%s*"([^"]*)"',
 	-- UI/Settings.lua's rows and UI/Map.lua's filter menu: a saved-variable key, then the label.
 	'Checkbox%(%s*"[%w_]+",%s*"([^"]*)"',
 	'AddFilter%(%s*"[%w_]+",%s*"([^"]*)"',
