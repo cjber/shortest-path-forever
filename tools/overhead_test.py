@@ -62,29 +62,29 @@ class OverheadTest(unittest.TestCase):
 
     def test_building_interior(self):
         sampler = self.build(0, 7)
-        self.assertEqual(sampler.above(-2, -2, 0), (7, "structure"))
-        self.assertIsNone(sampler.above(-20, -20, 0))
+        self.assertEqual(list(sampler.above(-2, -2, 0)), [(7, "structure")])
+        self.assertEqual(list(sampler.above(-20, -20, 0)), [])
 
     def test_ground_matches_source(self):
         sampler = self.build(0, 7)
-        self.assertEqual(sampler.above(-2, -2, -0.1), (7, "structure"))
-        self.assertIsNone(sampler.above(-20, -20, -0.1))
-        self.assertEqual(sampler.above(-20, -20, -1, water=True), (0, "terrain"))
+        self.assertEqual(list(sampler.above(-2, -2, -0.1)), [(7, "structure")])
+        self.assertEqual(list(sampler.above(-20, -20, -0.1)), [])
+        self.assertEqual(list(sampler.above(-20, -20, -1, water=True)), [(0, "terrain")])
 
     def test_overlapping_floor_faces_do_not_hide_the_ceiling(self):
         sampler = self.build(0, 0.001, 7)
-        self.assertEqual(sampler.above(-2, -2, 0), (7, "structure"))
+        self.assertEqual(list(sampler.above(-2, -2, 0)), [(7, "structure")])
 
     def test_stacked_floors(self):
         sampler = self.build(0, 7, 14)
-        self.assertEqual(sampler.above(-2, -2, 0), (7, "structure"))
-        self.assertEqual(sampler.above(-2, -2, 7), (14, "structure"))
-        self.assertIsNone(sampler.above(-2, -2, 14))
+        self.assertEqual(list(sampler.above(-2, -2, 0)), [(7, "structure")])
+        self.assertEqual(list(sampler.above(-2, -2, 7)), [(14, "structure")])
+        self.assertEqual(list(sampler.above(-2, -2, 14)), [])
 
     @unittest.skipUnless(os.environ.get("NAV_MAPS"), "set NAV_MAPS to the extracted 71037 maps")
     def test_trade_district_building(self):
         sampler = ClusterSurfaces(os.environ["NAV_MAPS"], 0, 48, 30, 128)
-        height, kind = sampler.above(-8894, 611, 95)
+        ((height, kind),) = sampler.above(-8894, 611, 95)
         self.assertEqual(kind, "structure")
         self.assertAlmostEqual(height, 101.56, delta=0.01)
 
@@ -96,8 +96,10 @@ class OverheadTest(unittest.TestCase):
         ]:
             with self.subTest(x=x, y=y):
                 sampler = ClusterSurfaces(os.environ["NAV_MAPS"], 0, row, col, 128)
-                height, kind = sampler.above(x, y, z)
-                self.assertEqual(kind, "terrain")
+                records = {kind: height for height, kind in sampler.above(x, y, z)}
+                height = records["terrain"]
+                self.assertIn("structure", records)
+                self.assertLess(records["structure"], height)
                 self.assertAlmostEqual(height, upper, delta=0.15)
 
 

@@ -37,9 +37,13 @@ function ns.DecodePathCeilings(text)
 		delta, pos = readUnsigned(text, pos)
 		value, pos = readUnsigned(text, pos)
 		key = key + delta
-		ceilings[key] = value
+		ceilings[2 * key + value % 2] = floor(value / 2)
 	end
 	return ceilings
+end
+
+local function decodeHeight(height)
+	return (height % 2 == 0 and height / 2 or -(height + 1) / 2) / 8
 end
 
 ---@param ceilings table<number, number>
@@ -47,12 +51,15 @@ end
 ---@param layer number
 ---@return number? height
 ---@return "terrain"|"structure"|nil kind
+---@return number? structureHeight if terrain and structure both cover the layer
 function ns.PathCeilingAt(ceilings, cell, layer)
-	local record = ceilings[cell * 64 + layer]
-	if not record then
-		return nil
+	local key = 2 * (cell * 64 + layer)
+	local terrain, structure = ceilings[key], ceilings[key + 1]
+	if terrain then
+		return decodeHeight(terrain), "terrain", structure and decodeHeight(structure)
 	end
-	local height = floor(record / 2)
-	local eighths = height % 2 == 0 and height / 2 or -(height + 1) / 2
-	return eighths / 8, record % 2 == 0 and "terrain" or "structure"
+	if structure then
+		return decodeHeight(structure), "structure"
+	end
+	return nil
 end

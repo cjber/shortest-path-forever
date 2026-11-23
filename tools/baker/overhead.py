@@ -184,8 +184,7 @@ class ClusterSurfaces:
             if floors:
                 floor_z = min(floors, key=lambda height: abs(height - floor_z)) + RECAST_CELL_HEIGHT
         if terrain is not None and terrain > floor_z:
-            # Cave WMOs can have a ceiling mesh under the ADT. The terrain is the surface
-            # a cave runs below, even when the collision ceiling is nearer the path.
-            return terrain, "terrain"
+            yield terrain, "terrain"
         ceiling = min((height for height, _ in structures if height > floor_z), default=None)
-        return (ceiling, "structure") if ceiling is not None else None
+        if ceiling is not None:
+            yield ceiling, "structure"

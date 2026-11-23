@@ -53,4 +53,6 @@ assert(Grid.ceiling(46, high, high, 8) == 10, "packed ceiling data is available 
 
 local height, kind = ns.PathCeilingAt(ns.DecodePathCeilings("Bf"), 0, 0)
 assert(height == -1 and kind == "structure", "negative world heights are representable")
+local terrain, terrainKind, structure = ns.PathCeilingAt(ns.DecodePathCeilings("BkrEAP"), 0, 0)
+assert(terrain == 139.125 and terrainKind == "terrain" and structure == -0.5, "both sources survive on one floor")
 print("nav_ceiling_spec: ok")

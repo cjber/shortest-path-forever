@@ -1723,6 +1723,7 @@ end
 ---@param z number
 ---@return number? height
 ---@return "terrain"|"structure"|nil kind
+---@return number? structureHeight if terrain and structure both cover the layer
 local function ceiling(map, x, y, z)
 	local st = states[map]
 	if not st or not st.D.ceiling then

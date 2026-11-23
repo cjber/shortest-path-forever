@@ -170,13 +170,14 @@ def encode_ceilings(surfaces):
         symbols.append(B64[value])
 
     previous = -1
-    for (cell, layer), (upper_z, kind) in sorted(surfaces.items()):
+    for (cell, layer), records in sorted(surfaces.items()):
         node = cell * 64 + layer
-        write(node - previous)
-        z = round(upper_z * 8)
-        signed = 2 * z if z >= 0 else -2 * z - 1
-        write(2 * signed + {"terrain": 0, "structure": 1}[kind])
-        previous = node
+        for upper_z, kind in records:
+            write(node - previous)
+            z = round(upper_z * 8)
+            signed = 2 * z if z >= 0 else -2 * z - 1
+            write(2 * signed + {"terrain": 0, "structure": 1}[kind])
+            previous = node
     return "".join(symbols)
 
 
@@ -976,9 +977,9 @@ def rasterize_tile(rc):
         overhead = {}
         for local, cell_surfaces in enumerate(cells):
             for layer, (z, value, (_, (x, y))) in enumerate(cell_surfaces or ()):
-                upper = source.above(x, y, z, water=value == 2)
-                if upper is not None:
-                    overhead[local, layer] = upper
+                records = tuple(source.above(x, y, z, water=value == 2))
+                if records:
+                    overhead[local, layer] = records
         ceilings = encode_ceilings(overhead)
     return rc, vals, zs, floors, links, masks, terrain, pockets, ceilings
 
@@ -2182,6 +2183,11 @@ def encode_directed_floors(k, lnode):
 def main():
     global SOURCE, LINKS, LINKED_OF
     args, provenance = arguments(Path(MM))
+    if provenance:
+        vmaps = Path(MAPS).parent / "vmaps"
+        map_name = f"{args.map:04d}"
+        if not MAPS or not Path(MAPS).is_dir() or not (vmaps / map_name / f"{map_name}.vmtree").is_file():
+            raise ValueError("A native bake requires NAV_MAPS and its sibling VMAP extraction")
     SOURCE = source_label(provenance)
     started = time.perf_counter()
     phases = {}
