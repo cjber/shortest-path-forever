@@ -317,9 +317,12 @@ clears(strokes, MINIMAP / 2, -MINIMAP / 2 + 0.4 * MINIMAP / 2, 8, 1, "minimap")
 for i = 1, strokes.n do
 	check(strokes.alpha[i] == 1, "the minimap route stays at full strength")
 end
-local width, under, count = strokes.width[1], strokes.under[1], strokes.n
+local width, under, defaultCount = strokes.width[1], strokes.under[1], strokes.n
 Strokes.Minimap(strokes, approach, minimapView(player, { goal = first, walkScale = 1 }))
-check(strokes.n == count and strokes.width[1] == width and strokes.under[1] == under, "100% matches the old size")
+check(
+	strokes.n == defaultCount and strokes.width[1] == width and strokes.under[1] == under,
+	"100% matches the old size"
+)
 local sx, sy = Strokes.Minimap(strokes, approach, minimapView(player, { goal = first, walkScale = 0.5 }))
 check(sx == gx and sy == gy, "smaller breadcrumbs leave the goal in the same place")
 check(strokes.width[1] == width / 2 and strokes.under[1] == under / 2, "the whole breadcrumb shrinks")
