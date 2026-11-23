@@ -45,6 +45,26 @@ function OpenMap.ShowsFollowedPin()
 	return ns.JourneyOwner() == OpenMap.PinOwner and OpenMap.Stitched()
 end
 
+-- Whether the cursor is off the host map's rectangle, the canvas. Unknown, and so false, while there is no canvas
+-- or it is not laid out yet. The rectangle, not IsMouseOver: that is false under any frame drawn over the canvas,
+-- a tooltip or menu on the map among them, while the cursor is still on the map.
+---@param map SPFMapCanvas
+---@return boolean
+local function OffCanvas(map)
+	local canvas = map:GetCanvas()
+	if not canvas then
+		return false
+	end
+	local left, bottom, width, height = canvas:GetRect()
+	if not (left and bottom and width and height) then
+		return false
+	end
+	local scale = canvas:GetEffectiveScale()
+	local x, y = GetCursorPosition()
+	x, y = x / scale - left, y / scale - bottom
+	return x < 0 or x > width or y < 0 or y > height
+end
+
 -- Blizzard clamps its cursor fractions to the host map. On a stitched view the cursor can be
 -- over a different zone even when that host map stays where it was.
 ---@param map SPFMapCanvas
@@ -61,6 +81,11 @@ function OpenMap.CursorMapPoint(map)
 			local x, y = api.MapFromWorld(uiMapID, u, v)
 			return uiMapID, x, y
 		end
+		return nil
+	end
+	-- Without OpenMap's cursor the clamp still applies: past the host map's edge, where another addon has scrolled the
+	-- view beyond it, the cursor reads as a spot on that edge. A cursor off the canvas is on no map this addon can read.
+	if OffCanvas(map) then
 		return nil
 	end
 	local x, y = map:GetNormalizedCursorPosition()

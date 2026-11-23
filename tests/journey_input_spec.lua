@@ -1,12 +1,40 @@
 local handler, destination, mouseEvent, ownClick, canvasClick, canvasPriority, minimapClick
 local questTrackerMenu, questMapLogMenu
 local alt, overMap, shown = false, true, true
+-- The map's canvas, the shown map's rectangle: 1000 by 700 at 100, 50 in its own space, which is twice the screen's.
+-- Past its edge Blizzard's cursor position is clamped onto that edge
+-- (MapCanvasScrollControllerMixin:NormalizeUIPosition), so only the rectangle tells.
+local ON_MAP, PAST_EDGE = { 700, 450 }, { 2300, 800 }
+local pointer, covered = ON_MAP, false
+local canvasRect = { 100, 50, 1000, 700 }
+local canvas = {
+	GetRect = function()
+		return unpack(canvasRect)
+	end,
+	GetEffectiveScale = function()
+		return 2
+	end,
+	-- The client's own test is frame-level: false under any frame drawn over the canvas (a tooltip, a menu), even
+	-- while the cursor is on the map.
+	IsMouseOver = function()
+		local left, bottom, width, height = unpack(canvasRect)
+		if not left or covered then
+			return false
+		end
+		local x, y = pointer[1] / 2 - left, pointer[2] / 2 - bottom
+		return x >= 0 and x <= width and y >= 0 and y <= height
+	end,
+}
 local map = {
 	GetMapID = function()
 		return 1440
 	end,
+	-- Where ON_MAP is on the map.
 	GetNormalizedCursorPosition = function()
 		return 0.25, 0.75
+	end,
+	GetCanvas = function()
+		return canvas
 	end,
 }
 local pin = {
@@ -155,6 +183,10 @@ local env = setmetatable({
 	end,
 	GetMouseFoci = function()
 		return { pin }
+	end,
+	-- The cursor in screen pixels.
+	GetCursorPosition = function()
+		return pointer[1], pointer[2]
 	end,
 }, { __index = _G })
 setfenv(assert(loadfile("UI/OpenMap.lua")), env)("ShortestPathForever", ns)
@@ -400,6 +432,9 @@ alt = true
 assert(canvasClick(map, "RightButton"), "the journey-key right-click opens the map report menu")
 assert(reportClick[1] == map and reportClick[2] == 1440 and reportClick[3] == 0.25 and reportClick[4] == 0.75)
 assert(not destination, "report clicks never start a journey")
+pointer, reportClick = PAST_EDGE, nil
+assert(canvasClick(map, "RightButton") == false and not reportClick, "no report menu past the map's edge")
+pointer = ON_MAP
 local reportHint = { lines = {} }
 ns.AddJourneyClickHint(reportHint)
 assert(
@@ -419,12 +454,36 @@ assert(canvasClick(map, "LeftButton") and destination, "Alt-clicking the map wit
 assert(destination.x == 0.25 and destination.y == 0.75, "the map click keeps its spot")
 -- OpenMap's handler zooms in on every Alt-click at priority 1000, so ours must ask first (#1076).
 assert(canvasPriority and canvasPriority > 1000, "the journey key's canvas click runs before OpenMap's")
+-- A tooltip, menu or dropdown drawn over the map hides the canvas from IsMouseOver, but the cursor is still on the
+-- map: the click is the map's, as it was before the edge check.
+covered, destination = true, nil
+assert(canvasClick(map, "LeftButton") and destination, "a click on the map under a frame drawn over it still plans")
+assert(destination.x == 0.25 and destination.y == 0.75, "that click keeps its spot")
+covered = false
+-- With no canvas, or one not laid out yet, nothing says the cursor is off the map: Blizzard's own spot stands.
+local getCanvas = map.GetCanvas
+map.GetCanvas, destination = function() end, nil
+assert(
+	canvasClick(map, "LeftButton") and destination.x == 0.25 and destination.y == 0.75,
+	"a map with no canvas keeps Blizzard's spot"
+)
+map.GetCanvas, canvasRect, destination = getCanvas, {}, nil
+assert(
+	canvasClick(map, "LeftButton") and destination.x == 0.25 and destination.y == 0.75,
+	"a canvas not laid out yet keeps Blizzard's spot"
+)
+canvasRect = { 100, 50, 1000, 700 }
+-- A map addon that draws the neighbouring zones can scroll the view past the shown map's edge. There Blizzard's
+-- cursor is clamped onto that edge and the canvas is not under it: without OpenMap's own cursor, the spot is unknown.
 local cursor = map.GetNormalizedCursorPosition
 map.GetNormalizedCursorPosition = function()
-	return 1.4, 0.5
+	return 1, 0.5
 end
-destination = nil
-assert(not canvasClick(map, "LeftButton") and destination == nil, "a click past the map's edge is left to OpenMap")
+pointer, destination = PAST_EDGE, nil
+assert(
+	not canvasClick(map, "LeftButton") and destination == nil,
+	"a click past the map's edge plans nothing there: it is left to the addon that scrolled the view"
+)
 -- When OpenMap leaves its host map on the old zone, Blizzard clamps its cursor to that map's edge.
 -- The stitched point and its destination zone stay the same when OpenMap then switches the host map.
 local host, neighboringMap = map.GetMapID, 1442
@@ -446,9 +505,7 @@ env.OpenMapAPI = {
 		return 0.3, 0.4
 	end,
 }
-map.GetNormalizedCursorPosition = function()
-	return 1, 0.5
-end
+-- The cursor is still off the old host's canvas, but OpenMap's own cursor places it.
 assert(canvasClick(map, "LeftButton"), "the stitched click plans a journey with the old host")
 assert(
 	destination.map == 1 and destination.x == 2.3 and destination.y == 0.4,
@@ -460,7 +517,7 @@ end
 map.GetNormalizedCursorPosition = function()
 	return 0.3, 0.4
 end
-destination = nil
+pointer, destination = ON_MAP, nil
 assert(
 	canvasClick(map, "LeftButton") and destination.map == 1 and destination.x == 2.3 and destination.y == 0.4,
 	"loading the zone in view does not change the route's destination"
