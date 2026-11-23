@@ -1110,9 +1110,10 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 	local goalOK, goalTime =
 		clearEnd(st, P, n, to, false, P.w[n] - (P.w[n - 1] or 0) > 0, limitOver(P, n, n), nil, true)
 	local snappedGoal = false
-	if job.snapGoal then
+	-- With a known goal floor, a failed directed connector must end on the reachable approach.
+	if job.snapGoal or (st.fmt >= 4 and to.z ~= nil and not goalOK) then
 		local _, _, _, goalNode = own(st, to)
-		snappedGoal = not goalOK or not goalNode
+		snappedGoal = (goalNode ~= nil and not goalOK) or (job.snapGoal == true and goalNode == nil)
 	end
 	-- P.t is the refined walk's real running-yard prefix, independent of reported/cached search cost.
 	local chordBudget = startOK and goalOK and startTime + P.t[n] - P.t[1] + goalTime
@@ -1121,7 +1122,9 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 	local startLength, startField, goalLength, goalField = 0, 0, 0, 0
 	if P.distance and P.field then
 		startLength, startField = Grid.roadDistance(st, sx, sy, P.x[1] + 0.5, P.y[1] + 0.5)
-		goalLength, goalField = Grid.roadDistance(st, P.x[n] + 0.5, P.y[n] + 0.5, gx, gy)
+		if not snappedGoal then
+			goalLength, goalField = Grid.roadDistance(st, P.x[n] + 0.5, P.y[n] + 0.5, gx, gy)
+		end
 		local length = startLength + P.distance[n] + goalLength
 		P.fieldShare = length > 0 and (startField + P.field[n] + goalField) / length or 0
 	end
