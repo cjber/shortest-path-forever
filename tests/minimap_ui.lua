@@ -204,12 +204,20 @@ ns.JourneyPosition = journeyPosition
 local previous = transportTimers[#transportTimers]
 ns.RefreshMinimapPins()
 assert(previous.cancelled and polling() == 1, "refresh replaces the owned timer")
+local beforeCombat = #shown()
+assert(beforeCombat > 0, "the minimap shows its pins before combat")
 combat = true
 fireEvent("PLAYER_REGEN_DISABLED")
 assert(polling() == 0, "combat cancels polling")
+assert(#shown() == beforeCombat, "combat keeps the minimap pins on screen")
+-- A refresh in combat queues instead of drawing, and the ticker stays stopped.
+ns.RefreshMinimapPins()
+frame(1)
+assert(polling() == 0 and #shown() == beforeCombat, "combat queues the minimap refresh")
 combat = false
 fireEvent("PLAYER_REGEN_ENABLED")
-assert(polling() == 1, "combat end resumes nearby polling")
+assert(polling() == 1, "combat end resumes nearby polling once")
+assert(#shown() == beforeCombat, "combat end keeps the minimap pins shown")
 ns.HideMinimapPins()
 assert(polling() == 0 and #shown() == 0, "hide cancels polling")
 -- View events wake the same poller after it has stopped.

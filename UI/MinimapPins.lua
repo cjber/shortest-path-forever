@@ -272,6 +272,10 @@ local function Update()
 end
 
 local function Wake()
+	-- Combat freezes the pins already drawn; restarting here would draw again (#1302).
+	if InCombatLockdown() then
+		return
+	end
 	if frame:IsVisible() and ns.db.minimapPins and Draw() and not ticker then
 		ticker = C_Timer.NewTicker(INTERVAL, Update)
 	end
@@ -290,10 +294,20 @@ function ns.RefreshMinimapPins()
 	if not frame then
 		return
 	end
+	-- Combat keeps the last drawn pins; the queued map refresh redraws once it ends (#1302).
+	if InCombatLockdown() then
+		ns.QueueMapRefresh()
+		return
+	end
 	byMap, lastX, lastRadius = nil, nil, nil
 	Stop()
-	frame:SetShown(ns.db.minimapPins)
-	Wake()
+	if ns.db.minimapPins then
+		frame:SetShown(true)
+		Wake()
+	else
+		frame:SetShown(false)
+		ns.HideMinimapPins()
+	end
 end
 
 -- Minimap tracking (Blizzard_Minimap Mainline/Minimap.lua MiniMapTrackingButtonMixin:OnLoad) tags its menu
@@ -323,6 +337,7 @@ ns.Init(function()
 	frame:RegisterEvent("MINIMAP_UPDATE_ZOOM")
 	frame:RegisterEvent("PLAYER_REGEN_DISABLED")
 	frame:RegisterEvent("PLAYER_REGEN_ENABLED")
+	-- Combat stops the ticker and leaves the pins as drawn; a free-running ticker would redraw them (#1302).
 	frame:SetScript("OnEvent", function(_, event)
 		if event == "PLAYER_REGEN_DISABLED" then
 			Stop()

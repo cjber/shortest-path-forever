@@ -729,13 +729,22 @@ function Portals:RefreshAllData()
 	end
 end
 
--- Combat hides every pin of the addon's on the world map, and the minimap's, until it ends.
+-- Hides every pin of the addon's on the world map.
 function ns.HideMapPins()
 	MapCanvas.SetShown(WorldMapFrame, false)
 end
 
 function ns.ShowMapPins()
-	MapCanvas.SetShown(WorldMapFrame, ns.db.worldMapMarks ~= false and not ns.mapRefreshPending)
+	-- Combat keeps the last drawn pins; the queued refresh applies the change when it ends (#1302).
+	if InCombatLockdown() then
+		ns.QueueMapRefresh()
+		return
+	end
+	if ns.db.worldMapMarks == false or ns.mapRefreshPending then
+		ns.HideMapPins()
+	else
+		MapCanvas.SetShown(WorldMapFrame, true)
+	end
 end
 
 function ns.RefreshMap()
@@ -790,9 +799,8 @@ ns.Init(function()
 	-- The event, not InCombatLockdown(): lockdown starts only after PLAYER_REGEN_DISABLED is delivered (#1151).
 	combat:SetScript("OnEvent", function(_, event)
 		if event == "PLAYER_REGEN_DISABLED" then
+			-- Freeze the last drawn route and pins through combat (#1302); the refresh runs when it ends.
 			ns.mapRefreshPending = true
-			ns.HideMapPins()
-			ns.HideMinimapPins()
 		elseif ns.mapRefreshPending then
 			ns.mapRefreshPending = nil
 			ns.RefreshMap()
