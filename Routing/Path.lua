@@ -1124,7 +1124,7 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 			P.t[n] - P.t[j] + goalTime
 		)
 	end
-	local keep, startDetour, goalDetour = smooth(st, P, {
+	local keep, startDetour, goalDetour, links = smooth(st, P, {
 		sx = sx,
 		sy = sy,
 		gx = gx,
@@ -1154,17 +1154,17 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 	local points = { { map = map, x = from.x, y = from.y, z = from.z } }
 	for i = 2, #drawn - 1 do
 		local j = drawn[i]
-		points[#points + 1] = {
-			map = map,
-			x = x0 + (P.x[j] + 0.5) * cs,
-			y = y0 + (P.y[j] + 0.5) * cs,
-			z = P.z[j],
-		}
+		points[#points + 1] = { map = map, x = x0 + (P.x[j] + 0.5) * cs, y = y0 + (P.y[j] + 0.5) * cs, z = P.z[j] }
 	end
 	-- A steering caller needs a walkable end even when the requested point has no clear final segment.
 	points[#points + 1] = snappedGoal
 			and { map = map, x = x0 + (P.x[n] + 0.5) * cs, y = y0 + (P.y[n] + 0.5) * cs, z = P.z[n] }
 		or { map = map, x = to.x, y = to.y, z = to.z }
+	-- A jump marks the departure of a drop or teleport so line readers skip that segment.
+	-- The pull keeps both ends of a link, so only consecutive points span one.
+	for i = 2, #drawn do
+		points[i - 1].jump = links[drawn[i]] > links[drawn[i - 1]] and 1 or nil
+	end
 	local wetYards = 0
 	for i = 2, #points do
 		local p, q = drawn[i - 1], drawn[i]

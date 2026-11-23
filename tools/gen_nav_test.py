@@ -3,12 +3,15 @@ import pickle
 import unittest
 from array import array
 from collections import defaultdict
-from contextlib import contextmanager
 from unittest.mock import patch
 
 from tools.baker import gen_nav
-from tools.baker.gen_nav import decode_road_runs, drop_cost, pick_surface, walkable
+from tools.baker.gen_nav import decode_road_runs, drop_cost, pick_floor, pick_surface, walkable
 from tools.baker.geometry import centroid, clip_convex, height, plane
+
+# Include the graph cases in the existing gen_nav_test unittest entry point.
+from tools.gen_nav_graph_test import ClusterCrossingTest as ClusterCrossingTest
+from tools.gen_nav_graph_test import GraphLegalityTest as GraphLegalityTest
 
 
 class WalkableTest(unittest.TestCase):
@@ -55,6 +58,47 @@ class PickSurfaceTest(unittest.TestCase):
         layers = {0: [(10.0, 1, (0, (0.0, 0.0))), (20.0, 1, (1, (0.0, 0.0)))]}
         self.assertEqual(pick_surface(layers, polys, [(0, 0, 0)], 0.5, 0.5, 20.2), (0, 1))
         self.assertEqual(pick_surface(layers, polys, [(0, 0, 0)], 0.5, 0.5, 9.8), (0, 0))
+
+
+def square(x0, y0, side, z):
+    """A square poly from (x0, y0) at height z."""
+    pts = [(x0, y0, z), (x0 + side, y0, z), (x0 + side, y0 + side, z), (x0, y0 + side, z)]
+    c = tuple(sum(p[a] for p in pts) / len(pts) for a in range(3))
+    return {"pts": [(p[0], p[1]) for p in pts], "plane": plane(pts, c), "steep": False}
+
+
+def one_cell(_x, _y):
+    return [(0, 0, 0)]
+
+
+class PickFloorTest(unittest.TestCase):
+    def test_a_trigger_above_its_floor_finds_the_floor_under_it(self):
+        # Stormwind's Sanctum trigger 702 floats 3.9 yards over the basement floor, past pick_surface's CLIMB; the
+        # tower room 115 yards up is no floor of it.
+        polys = {0: flat(29.6), 1: flat(148.6)}
+        layers = {0: [(29.6, 1, (0, (0.0, 0.0))), (148.6, 1, (1, (0.0, 0.0)))]}
+        self.assertIsNone(pick_surface(layers, polys, [(0, 0, 0)], 0.5, 0.5, 33.5))
+        self.assertEqual(pick_floor(layers, polys, one_cell, 0.5, 0.5, 33.5, 7.0), (0, 0))
+        self.assertEqual(pick_floor(layers, polys, one_cell, 0.5, 0.5, 151.6, 7.0), (0, 1))
+        self.assertIsNone(pick_floor(layers, polys, one_cell, 0.5, 0.5, 40.0, 7.0))
+
+    def test_the_floor_is_any_poly_under_the_trigger_not_only_the_layer_anchor(self):
+        # The basement layer's anchor lies 1.8 yards from trigger 702; another poly of that floor lies under it.
+        polys = {0: square(3.0, -1.0, 2.0, 29.6), 1: square(-0.5, -1.0, 2.0, 29.8), 2: flat(148.6)}
+        layers = {0: [(29.6, 1, (0, (4.0, 0.5))), (148.6, 1, (2, (0.0, 0.0)))], 1: [(29.7, 1, (1, (0.5, 0.5)))]}
+        self.assertEqual(pick_floor(layers, polys, lambda x, y: [(0, 0, 0), (1, 1, 0)], 0.5, 0.5, 33.5, 7.0), (0, 0))
+
+    def test_a_trigger_over_a_hole_finds_the_floor_around_it(self):
+        # Trigger 704's centre floats over the tower portal, where the navmesh has a hole; the floor beside it, inside
+        # the trigger's radius, is its floor, in the cell of the floor's nearest point.
+        polys = {0: square(4.0, -2.0, 4.0, 148.7), 1: square(-2.0, -2.0, 1.0, 30.0)}
+        layers = {0: [(30.0, 1, (1, (0.0, 0.0)))], 1: [(148.7, 1, (0, (5.0, 0.0)))]}
+
+        def around(x, _y):
+            return [(1 if x >= 4.0 else 0, 0, 0)]
+
+        self.assertEqual(pick_floor(layers, polys, around, 0.0, 0.0, 151.6, 7.0), (1, 0))
+        self.assertIsNone(pick_floor(layers, polys, around, 0.0, 0.0, 151.6, 3.0))
 
 
 class RasterizeLayersTest(unittest.TestCase):
@@ -117,6 +161,20 @@ class RasterizeLayersTest(unittest.TestCase):
         self.assertEqual(sorted(z for z, _, _ in layers[0]), [10.0, 30.0])
         self.assertEqual(layers[0][0][0], 10.0)  # the centre's surface stays the base
 
+    def test_a_tunnel_under_water_stays_a_floor(self):
+        # The ruins' water lies far above the Apothecarium ramp with solid ground between: the patch leaves the ramp
+        # ground, so it stays a layer under the water rather than being dropped as a lake bed (#1015).
+        water = dict(self.surface(0.0, 8.0, 33.0), water=True)
+        layers = self.layers({0: water, 1: self.surface(0.0, 8.0, -77.0)}, {}, {})
+        self.assertEqual(sorted(z for z, _, _ in layers[0]), [-77.0, 33.0])
+
+    def test_ground_wins_over_a_steep_face_within_a_step(self):
+        # A steep sliver two yards above a ledge is not the cell's surface: as the base it left the ledge's ground no
+        # way out, since steep ground is only walked down (#1015, Lord Melenas).
+        polys = {0: self.surface(0.0, 8.0, 10.0), 1: self.surface(0.0, 8.0, 12.0, steep=True)}
+        layers = self.layers(polys, {}, {})
+        self.assertEqual([(z, v) for z, v, _ in layers[0]], [(10.0, 1)])
+
     def test_steep_ground_is_never_the_same_layer_as_the_ground_it_leads_to(self):
         # A face from 50 to 61.6 degrees is walked down and never across, so joining it to the flat ground beside it
         # inside one cell must not lose the level it leads up to.
@@ -147,7 +205,7 @@ class DiagonalTest(unittest.TestCase):
             patch.object(gen_nav, "rasterize_layers", lambda polys, adj, portal, bounds: layers),
             patch.object(gen_nav, "read_tile", lambda rc: ([], [], [], [])),
         ):
-            _, _, _, _, links, own, _ = gen_nav.rasterize_tile((0, 0))
+            _, _, _, _, links, own, _, _ = gen_nav.rasterize_tile((0, 0))
         free = [(i, 20.0, j, 10.0, "free"), (j, 10.0, i, 20.0, "free")]
         self.assertEqual(sorted(links), sorted(free), "the walk climbs back up, which no bit can say (#1101)")
         self.assertNotIn(i * 4 + 2, own, "a bit would read the climb with the downhill-only rule")
@@ -201,7 +259,7 @@ class SteepStepTest(unittest.TestCase):
             patch.object(gen_nav, "rasterize_layers", lambda polys, adj, portal, bounds: layers),
             patch.object(gen_nav, "read_tile", lambda rc: ([], [], [], [])),
         ):
-            _, _, _, _, links, own, _ = gen_nav.rasterize_tile((0, 0))
+            _, _, _, _, links, own, _, _ = gen_nav.rasterize_tile((0, 0))
         return links, own
 
     def face(self, x0, x1, z0, z1, steep):
@@ -298,7 +356,7 @@ class SteepStepTest(unittest.TestCase):
             patch.object(gen_nav, "rasterize_layers", lambda polys, adj, portal, bounds: layers),
             patch.object(gen_nav, "read_tile", lambda rc: ([], [], [], [])),
         ):
-            _, _, _, _, links, own, _ = gen_nav.rasterize_tile((0, 0))
+            _, _, _, _, links, own, _, _ = gen_nav.rasterize_tile((0, 0))
         free = [(i, 20.0, j, 10.0, "free"), (j, 10.0, i, 20.0, "free")]
         self.assertEqual(sorted(links), sorted(free), "both walked directions survive the downhill-only rule")
         self.assertIn(i * 4, own, "the bit is cut: the records carry the pair")
@@ -317,270 +375,6 @@ class SteepStepTest(unittest.TestCase):
         low, high = 20.0, 20.0 + rise
         self.assertFalse(gen_nav.steep_step(low, 0, high, 0), "the player cannot climb a 52 degree face")
         self.assertTrue(gen_nav.steep_step(high, 0, low, 0), "the player walks a 52 degree face down")
-
-
-class ClusterCrossingTest(unittest.TestCase):
-    def test_a_step_and_a_drop_over_one_pair_keep_the_step(self):
-        # A drop and an ordinary step can cross the same cluster border between the same two cells. Their crossing
-        # tuples differ only in the cost (a float against None), which used to make the sort raise.
-        c = gen_nav.CELLS
-        grid = bytearray([1]) * (2 * c * c)
-        u = (c - 1) * c + 10  # last column of cluster 0
-        w = c * c + 10  # first column of cluster 1, the step's own crossing
-        links = defaultdict(dict)
-        links[u][w] = 12.0
-        with (
-            patch.object(gen_nav, "CELLS", c),
-            patch.object(gen_nav, "NX", 2),
-            patch.object(gen_nav, "NY", 1),
-            patch.object(gen_nav, "GW", 2 * c),
-            patch.object(gen_nav, "GH", c),
-            patch.object(gen_nav, "LINKS", links),
-            patch.object(gen_nav, "BASE_Z", array("f", [0.0]) * len(grid)),
-            patch.object(gen_nav, "LINKED_OF", defaultdict(list, {0: [u]})),
-            patch.object(gen_nav, "FLOOR_CELL", array("i")),
-        ):
-            _, edges = gen_nav.grid_hpa(grid, set())
-        self.assertIn((u, w), edges)
-        self.assertEqual(edges[(u, w)], edges[(w, u)], "the step keeps both directions")
-
-
-class GraphLegalityTest(unittest.TestCase):
-    """The abstract graph walks by exactly the rule the emitted grid decodes, so it cannot take a step the grid
-    refuses or miss one it allows. A step's height rule is the stored height, never a raw one."""
-
-    @contextmanager
-    def world(self, heights, cuts=(), links=None, nx=1, ny=1):
-        c = gen_nav.CELLS
-        gw, gh = nx * c, ny * c
-        grid = bytearray(gw * gh)
-        base = array("f", [0.0] * (gw * gh))
-        for cell, (value, z) in heights.items():
-            grid[cell], base[cell] = value, z
-        line = defaultdict(dict)
-        for u, v, cost in links or ():
-            line[u][v] = cost
-        with (
-            patch.object(gen_nav, "CELLS", c),
-            patch.object(gen_nav, "GW", gw),
-            patch.object(gen_nav, "GH", gh),
-            patch.object(gen_nav, "NX", nx),
-            patch.object(gen_nav, "NY", ny),
-            patch.object(gen_nav, "BASE_Z", base),
-            patch.object(gen_nav, "FLOOR_CELL", array("i")),
-            patch.object(gen_nav, "FLOOR_VAL", bytearray()),
-            patch.object(gen_nav, "FLOOR_LAYER", bytearray()),
-            patch.object(gen_nav, "FLOOR_Z", array("f")),
-            patch.object(gen_nav, "FLOORS_OF", defaultdict(list)),
-            patch.object(gen_nav, "FLOORS_AT", {}),
-            patch.object(gen_nav, "LINKS", line),
-            patch.object(gen_nav, "LINKED_OF", defaultdict(list)),
-        ):
-            for node in line:
-                gen_nav.LINKED_OF[gen_nav.cluster_of_cell(node)].append(node)
-            yield grid, (lambda gx, gy: grid[gx * gen_nav.GH + gy])
-
-    def steps(self, heights, cell, cuts=(), links=None):
-        c = gen_nav.CELLS
-        with self.world(heights, cuts, links) as (grid, g):
-            return dict(gen_nav.moves(g, grid, set(cuts), cell, (0, c - 1, 0, c - 1)))
-
-    def crossings(self, heights, cuts=(), links=None, ny=1):
-        with self.world(heights, cuts, links, nx=2, ny=ny) as (grid, g):
-            return gen_nav.grid_hpa(grid, set(cuts))[1], g, grid
-
-    def test_separate_doorways_in_the_same_components_keep_their_entrances(self):
-        # Each side joins the two doors behind the wall. Grouping by whole-cluster component alone kept only
-        # one door, so a short walk through the other took the long way round (Ironforge, #910).
-        c = gen_nav.CELLS
-        for transpose in (False, True):
-            with self.subTest(transpose=transpose):
-                nx, ny = (1, 2) if transpose else (2, 1)
-
-                def cell(x, y, ny=ny, transpose=transpose):
-                    return y * ny * c + x if transpose else x * ny * c + y
-
-                heights = {
-                    cell(x, y): (1, 0.0)
-                    for x in range(c - 2, c + 2)
-                    for y in range(10, 21)
-                    if x in (c - 2, c + 1) or y in (10, 20)
-                }
-                with self.world(heights, nx=nx, ny=ny) as (grid, _):
-                    edges = gen_nav.grid_hpa(grid, set())[1]
-                for y in (10, 20):
-                    u, v = cell(c - 1, y), cell(c, y)
-                    self.assertIn((u, v), edges)
-                    self.assertIn((v, u), edges)
-
-    def test_separate_floor_doorways_keep_each_layers_entrances(self):
-        c = gen_nav.CELLS
-        cells = {x * c + y for x in range(c - 2, c + 2) for y in range(10, 21) if x in (c - 2, c + 1) or y in (10, 20)}
-        # Two disconnected storeys occupy the same cells. Each storey's two doors belong to the same pair of
-        # cluster components, but neither the other door nor the other storey may replace one of its entrances.
-        with self.world({cell: (1, 0.0) for cell in cells}, nx=2) as (grid, _):
-            floors = {}
-            for cell in sorted(cells):
-                for layer, z in enumerate((30, 60), 1):
-                    node = len(grid) + len(gen_nav.FLOOR_CELL)
-                    floors[cell, layer] = node
-                    gen_nav.FLOOR_CELL.append(cell)
-                    gen_nav.FLOOR_VAL.append(1)
-                    gen_nav.FLOOR_Z.append(z)
-                    gen_nav.FLOOR_LAYER.append(layer)
-                    gen_nav.FLOORS_OF[gen_nav.cluster_of_cell(node)].append(node)
-                    gen_nav.FLOORS_AT.setdefault(cell, []).append(node)
-            for (cell, layer), node in floors.items():
-                x, y = divmod(cell, c)
-                for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
-                    other = floors.get(((x + dx) * c + y + dy, layer))
-                    if other is not None:
-                        gen_nav.LINKS[node][other] = None
-                gen_nav.LINKED_OF[gen_nav.cluster_of_cell(node)].append(node)
-            edges = gen_nav.grid_hpa(grid, set())[1]
-            for layer in (1, 2):
-                for y in (10, 20):
-                    u, v = floors[(c - 1) * c + y, layer], floors[c * c + y, layer]
-                    self.assertIn((u, v), edges)
-                    self.assertIn((v, u), edges)
-
-    def test_a_bridge_over_the_ground_keeps_its_own_entrance(self):
-        # A bridge crosses the border over open ground, joined to it only at its far ends, so both share one pair of
-        # cluster components and their crossings sit side by side along the border. Read as one run, its entrance
-        # landed on the ground and a walk off the bridge went down and back up round its ends (Thunder Bluff).
-        c = gen_nav.CELLS
-        cells = {x * c + y for x in range(c - 2, c + 2) for y in range(10, 21)}
-        with self.world({cell: (1, 0.0) for cell in cells}, nx=2) as (grid, _):
-            bridge = {}
-            for x in range(c - 2, c + 2):
-                for y in range(10, 14):
-                    node = len(grid) + len(gen_nav.FLOOR_CELL)
-                    bridge[x, y] = node
-                    gen_nav.FLOOR_CELL.append(x * c + y)
-                    gen_nav.FLOOR_VAL.append(1)
-                    gen_nav.FLOOR_Z.append(30)
-                    gen_nav.FLOOR_LAYER.append(1)
-                    gen_nav.FLOORS_OF[gen_nav.cluster_of_cell(node)].append(node)
-                    gen_nav.FLOORS_AT.setdefault(x * c + y, []).append(node)
-            for (x, y), node in bridge.items():
-                for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
-                    other = bridge.get((x + dx, y + dy))
-                    if other is not None:
-                        gen_nav.LINKS[node][other] = None
-            for x in (c - 2, c + 1):
-                gen_nav.LINKS[bridge[x, 10]][x * c + 10] = None
-                gen_nav.LINKS[x * c + 10][bridge[x, 10]] = None
-            for node in gen_nav.LINKS:
-                gen_nav.LINKED_OF[gen_nav.cluster_of_cell(node)].append(node)
-            edges = gen_nav.grid_hpa(grid, set())[1]
-            on_bridge = set(bridge.values())
-            for side in (0, 1):
-                crossing = [
-                    (u, v)
-                    for u, v in edges
-                    if {u, v} <= on_bridge and gen_nav.cluster_of_cell(u) == side != gen_nav.cluster_of_cell(v)
-                ]
-                self.assertTrue(crossing, f"the bridge keeps an entrance out of cluster {side}")
-
-    def test_clusters_that_meet_at_a_corner_keep_the_crossings_between_them(self):
-        # Four clusters; the only walkable cells are the two corner cells of clusters 0 and 3, which touch diagonally.
-        # The runtime walks the bake's explicit diagonal between them, and a drop record may land across the corner,
-        # so the graph needs an entrance there or HPA* calls the route unreachable.
-        c = gen_nav.CELLS
-        u, w = (c - 1) * 2 * c + c - 1, c * 2 * c + c
-        edges, _, _ = self.crossings({u: (1, 0.0), w: (1, 0.0)}, cuts={u * 4 + 2}, ny=2)
-        self.assertIn((u, w), edges)
-        self.assertIn((w, u), edges)
-        edges, _, _ = self.crossings({u: (1, 10.0), w: (1, 0.0)}, links=[(u, w, 12.0)], ny=2)
-        self.assertIn((u, w), edges, "the drop lands across the corner")
-        self.assertNotIn((w, u), edges)
-
-    def test_a_steep_step_uses_the_stored_heights_the_decoder_reads(self):
-        # 20.4 and 20.0 yards are both stored as 20, so the decoder walks the step both ways and the graph must too.
-        # The removed shadow compared the raw heights and wrote only the downhill direction.
-        c = gen_nav.CELLS
-        a, b = 10 * c + 10, 11 * c + 10
-        self.assertIn(b, self.steps({a: (3, 20.4), b: (1, 20.0)}, a))
-        self.assertIn(a, self.steps({a: (3, 20.4), b: (1, 20.0)}, b))
-
-    def test_a_steep_step_between_different_stored_heights_goes_down_only(self):
-        c = gen_nav.CELLS
-        a, b = 10 * c + 10, 11 * c + 10
-        self.assertIn(b, self.steps({a: (3, 20.4), b: (1, 18.0)}, a))  # 18 <= 20: downhill
-        self.assertNotIn(a, self.steps({a: (3, 20.4), b: (1, 18.0)}, b))  # 20 > 18: not uphill
-
-    def test_an_open_step_on_ordinary_ground_is_walked_both_ways_whatever_its_rise(self):
-        # Stairs rise ten yards in one cell, steeper than 50 degrees, in steps the client climbs. The bake leaves a
-        # step open only where the navmesh walks it, so its stored heights must not close it again (#1011).
-        c = gen_nav.CELLS
-        a, b = 10 * c + 10, 11 * c + 10
-        self.assertIn(b, self.steps({a: (1, 10.0), b: (1, 20.0)}, a))
-        self.assertIn(a, self.steps({a: (1, 10.0), b: (1, 20.0)}, b))
-        u, v = (c - 1) * c + 10, c * c + 10
-        edges, _, _ = self.crossings({u: (1, 10.0), v: (1, 20.0)})
-        self.assertIn((u, v), edges)
-        self.assertIn((v, u), edges)
-
-    def test_a_cliff_is_refused_by_its_cut_not_its_heights(self):
-        # linked() finds no navmesh walk up a cliff, so the bake cuts the step; the grid and the graph honour the cut.
-        c = gen_nav.CELLS
-        a, b = 10 * c + 10, 11 * c + 10
-        self.assertNotIn(b, self.steps({a: (1, 10.0), b: (1, 30.0)}, a, cuts={a * 4}))
-        self.assertNotIn(a, self.steps({a: (1, 10.0), b: (1, 30.0)}, b, cuts={a * 4}))
-        u, v = (c - 1) * c + 10, c * c + 10
-        edges, _, _ = self.crossings({u: (1, 10.0), v: (1, 30.0)}, cuts={u * 4})
-        self.assertNotIn((u, v), edges)
-        self.assertNotIn((v, u), edges)
-
-    def test_a_two_way_record_with_a_steep_end_is_one_way(self):
-        # The bake writes a steep pair both ways as a record so the decoder can decide its direction by stored height;
-        # the graph must apply that rule to the record, or it climbs a face the grid refuses.
-        c = gen_nav.CELLS
-        a, b = 10 * c + 10, 10 * c + 11
-        links = [(a, b, None), (b, a, None)]
-        self.assertIn(b, self.steps({a: (1, 20.4), b: (3, 18.0)}, a, links=links))  # 18 <= 20: downhill
-        self.assertNotIn(a, self.steps({a: (1, 20.4), b: (3, 18.0)}, b, links=links))  # 20 > 18: not uphill
-
-    def test_a_runtime_walkable_cluster_crossing_is_in_the_graph(self):
-        c = gen_nav.CELLS
-        u, w = (c - 1) * c + 10, c * c + 10  # the last column of cluster 0 and the first of cluster 1
-        edges, _, _ = self.crossings({u: (3, 20.4), w: (1, 20.0)})
-        self.assertIn((u, w), edges, "equal stored heights: the crossing is walkable both ways")
-        self.assertIn((w, u), edges)
-        self.assertEqual(edges[(u, w)], edges[(w, u)])
-
-    def test_a_steep_cluster_crossing_keeps_its_downhill_direction(self):
-        c = gen_nav.CELLS
-        u, w = (c - 1) * c + 10, c * c + 10
-        edges, _, _ = self.crossings({u: (3, 20.4), w: (1, 18.0)})
-        self.assertIn((u, w), edges)
-        self.assertNotIn((w, u), edges, "the graph must not climb a steep crossing")
-
-    def test_a_one_way_record_crossing_keeps_its_direction(self):
-        # A pair the navmesh joins one way only is cut and written as its own record: the reverse step is not open,
-        # so the graph must not write it.
-        c = gen_nav.CELLS
-        u, w = (c - 1) * c + 10, c * c + 10
-        edges, _, _ = self.crossings({u: (1, 20.0), w: (1, 20.0)}, cuts={u * 4}, links=[(u, w, None)])
-        self.assertIn((u, w), edges)
-        self.assertNotIn((w, u), edges)
-
-    def test_a_one_way_step_does_not_hide_the_crossing_it_cannot_reach(self):
-        # A steep step splits the border run: the low cell walks down from the high shelf but not back up. The old
-        # fill reached every cell here from one seed, so the whole run was one group and the chunk kept its middle
-        # entrance, on the high shelf, which the low cell can never reach; HPA* then called a route the grid walks
-        # unreachable. Entrances are grouped by the strongly connected parts they leave and enter, so the low cell
-        # keeps a crossing of its own.
-        c = gen_nav.CELLS
-        shelf = [8, 10, 11, 12, 13]  # the high border cells, joined behind the low one
-        low = (c - 1) * c + 9
-        heights = {(c - 1) * c + t: (3, 20.0) for t in shelf}
-        heights.update({(c - 2) * c + t: (3, 20.0) for t in (8, 9, 10)})
-        heights[low] = (1, 18.0)
-        heights.update({c * c + i * c + j: (1, 18.0) for i in range(c) for j in range(c)})
-        edges, _, _ = self.crossings(heights)
-        self.assertIn((low, c * c + 9), edges, "the low side keeps a crossing of its own")
-        self.assertIn((c * c + 9, low), edges, "and the grid walks it back")
 
 
 class AssembleFloorsTest(unittest.TestCase):
@@ -637,28 +431,99 @@ class AssembleFloorsTest(unittest.TestCase):
 
 
 class ReachableTest(unittest.TestCase):
-    def components(self, spots):
+    def components(self, spots, joins=(), drops=(), tiles=None, minimum=1):
         # A street and, 40 yards under it, sealed ground with no way between them, as under Stormwind.
         def square(z):
             return [(-8800.0, 800.0, z), (-8790.0, 800.0, z), (-8790.0, 810.0, z), (-8800.0, 810.0, z)]
 
         polys = [(0, square(100.0), False, False), (1, square(60.0), False, False)]
+        tiles = tiles or {(48, 30): (polys, list(drops))}
         with (
-            patch.object(gen_nav, "TILES", {(48, 30): "tile"}),
+            patch.object(gen_nav, "TILES", dict.fromkeys(tiles, "tile")),
             patch.object(gen_nav, "BASE", {}),
             patch.object(gen_nav, "SIZE", array("i")),
-            patch.object(gen_nav, "read_tile", lambda rc: (polys, [], [], [])),
+            patch.object(gen_nav, "MIN_COMPONENT", minimum),
+            patch.object(gen_nav, "read_tile", lambda rc: (tiles[rc][0], [], [], tiles[rc][1])),
         ):
-            gen_nav.components(spots)
+            gen_nav.components(spots, joins)
             return list(gen_nav.SIZE)
 
     def test_ground_no_fixed_place_stands_on_is_dropped(self):
         self.assertEqual(self.components([(-8795.0, 805.0, 101.0)]), [1, 0])
         self.assertEqual(self.components([(-8795.0, 815.0, 58.0)]), [0, 1])
 
+    def test_a_hop_joins_the_ground_it_lands_on(self):
+        # A teleport from the street down to the sealed ground keeps that ground, as one component with the street.
+        hop = ((-8795.0, 805.0, 101.0), 7.0, (-8795.0, 805.0, 60.0))
+        self.assertEqual(self.components([(-8795.0, 805.0, 101.0)], [hop]), [2, 2])
+
+    def test_a_drop_keeps_the_ground_it_lands_on_and_never_its_ledge(self):
+        drop = ((-8795.0, 805.0, 100.0), (-8795.0, 805.0, 60.0))
+        self.assertEqual(self.components([(-8795.0, 805.0, 101.0)], drops=[drop]), [1, 1])
+        self.assertEqual(self.components([(-8795.0, 805.0, 58.0)], drops=[drop]), [0, 1])
+
+    def test_a_drop_keeps_a_speck_only_a_place_would_lose(self):
+        # Under a minimum of 2 polys the one-poly pit is a speck: no place keeps it, a drop from kept ground does, and
+        # whether the walk leaves it is then the grid's question, even with a place on it.
+        def half(n, z, upper):
+            corner = (-8790.0, 800.0, z) if upper else (-8800.0, 810.0, z)
+            return (n, [(-8800.0, 800.0, z), corner, (-8790.0, 810.0, z)], False, False)
+
+        polys = [half(0, 100.0, True), half(1, 100.0, False), half(2, 60.0, True)]
+        drop = ((-8792.0, 802.0, 100.0), (-8792.0, 802.0, 60.0))
+        street, pit = (-8795.0, 803.0, 101.0), (-8792.0, 802.0, 61.0)
+        for drops, spots, want in (
+            ([], [street], [2, 2, 0]),
+            ([drop], [street], [2, 2, 1]),
+            ([drop], [street, pit], [2, 2, 1]),
+        ):
+            with (
+                patch.object(gen_nav, "TILES", {(48, 30): "tile"}),
+                patch.object(gen_nav, "BASE", {}),
+                patch.object(gen_nav, "SIZE", array("i")),
+                patch.object(gen_nav, "POCKET", {}),
+                patch.object(gen_nav, "MIN_COMPONENT", 2),
+                patch.object(gen_nav, "read_tile", lambda rc, d=drops: (polys, [(0, 1, None, None)], [], d)),
+            ):
+                gen_nav.components(spots)
+                self.assertEqual(list(gen_nav.SIZE), want)
+                self.assertEqual(list(gen_nav.POCKET), [2] if drops else [])
+
+    def test_a_drop_landing_in_a_tile_read_before_its_ledge_counts(self):
+        # The ledge's tile (48, 30) sorts after the landing's tile (47, 30), which is read first.
+        lower = [(0, [(-8270.0, 800.0, 60.0), (-8260.0, 800.0, 60.0), (-8260.0, 810.0, 60.0)], False, False)]
+        upper = [(0, [(-8800.0, 800.0, 100.0), (-8790.0, 800.0, 100.0), (-8790.0, 810.0, 100.0)], False, False)]
+        drop = ((-8792.0, 802.0, 100.0), (-8262.0, 802.0, 60.0))
+        tiles = {(47, 30): (lower, []), (48, 30): (upper, [drop])}
+        self.assertEqual(self.components([(-8792.0, 802.0, 101.0)], tiles=tiles), [1, 1])
+
     def test_tiles_without_a_fixed_place_are_refused(self):
         with self.assertRaises(SystemExit):
             self.components([(0.0, 0.0, 0.0)])
+
+
+class TrappedTest(unittest.TestCase):
+    """A pocket a drop alone reaches is kept only where the grid walks out of it, as the router would."""
+
+    def trapped(self, ground, pocket, links=()):
+        heights = dict.fromkeys(ground, (1, 0.0))
+        with GraphLegalityTest.world(self, heights, links=links) as (grid, _):
+            return gen_nav.trapped(grid, set(), pocket)
+
+    def test_a_pocket_with_no_step_out_is_trapped_and_one_a_step_leaves_is_not(self):
+        # Kept ground at cells 0 and 1; pocket 7 (cell 1 + GH) steps onto it, pocket 8 (cell 10) has no neighbour.
+        gh = gen_nav.CELLS
+        drops = [(0, 10, 5.0), (1, 1 + gh, 5.0)]
+        self.assertEqual(self.trapped([0, 1, 1 + gh, 10], {1 + gh: 7, 10: 8}, drops), {8})
+
+    def test_a_pocket_left_through_another_pocket_is_not_trapped(self):
+        # Pocket 8 at cell 10 drops into pocket 7 at cell 20, which steps out onto kept ground at cell 21.
+        drops = [(0, 10, 5.0), (10, 20, 5.0)]
+        self.assertEqual(self.trapped([0, 10, 20, 21], {10: 8, 20: 7}, drops), set())
+
+    def test_a_pocket_whose_only_way_out_is_up_a_drop_is_trapped(self):
+        # VALLEY: the drop in is one way, so standing in the pit holds no step back to the ledge.
+        self.assertEqual(self.trapped([0, 10, 11], {10: 7, 11: 7}, [(0, 10, 5.0)]), {7})
 
 
 class EmitDeltaTest(unittest.TestCase):
@@ -815,7 +680,7 @@ class LinkedPortalBoxTest(unittest.TestCase):
             patch.object(gen_nav, "rasterize_layers", lambda polys, adj, portal, bounds: layers),
             patch.object(gen_nav, "read_tile", lambda rc: ([], [], [], [])),
         ):
-            _, _, _, _, links, own, _ = gen_nav.rasterize_tile((0, 0))
+            _, _, _, _, links, own, _, _ = gen_nav.rasterize_tile((0, 0))
         self.assertIn(i * 4, own, "the ordinary two-way step is cut")
         uphill = [link for link in links if link[:4] == (i, 0.0, j, 8.0)]
         self.assertEqual(uphill, [], "no uphill link borrows the remote portal height")
@@ -846,13 +711,9 @@ class LinkedPortalBoxTest(unittest.TestCase):
             patch.object(gen_nav, "rasterize_layers", lambda polys, adj, portal, bounds: layers),
             patch.object(gen_nav, "read_tile", lambda rc: ([], [], [], [])),
         ):
-            _, _, _, _, links, own, _ = gen_nav.rasterize_tile((0, 0))
+            _, _, _, _, links, own, _, _ = gen_nav.rasterize_tile((0, 0))
         self.assertEqual(links, [], "no step is written across the doorway")
         self.assertIn(i * 4 + 1, own, "the +y step between the facing cells is cut")
-
-
-if __name__ == "__main__":
-    unittest.main()
 
 
 class SliverTest(unittest.TestCase):
@@ -878,3 +739,7 @@ class SliverTest(unittest.TestCase):
         p = {"plane": plane(self.PTS, c), "zs": (331.0, 333.0)}
         for x, y in ((-7549.0, -1350.2523148148148), (-7565.847040024495, -1355.2023423371702)):
             self.assertTrue(331.0 <= height(p, x, y) <= 333.0)
+
+
+if __name__ == "__main__":
+    unittest.main()

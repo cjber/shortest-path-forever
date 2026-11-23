@@ -37,6 +37,7 @@ for _, file in ipairs({
 	"Routing/Path.lua",
 	"Routing/PathJobs.lua",
 	"Routing/Savings.lua",
+	"Routing/PlanBounds.lua",
 	"Routing/Planner.lua",
 	"Routing/LegPoints.lua",
 	"Routing/QuestDestination.lua",

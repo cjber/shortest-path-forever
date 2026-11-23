@@ -699,6 +699,7 @@ do
 	assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", planning)
 	assert(loadfile("Transport/Model.lua"))("ShortestPathForever", planning)
 	assert(loadfile("Routing/Savings.lua"))("ShortestPathForever", planning)
+	assert(loadfile("Routing/PlanBounds.lua"))("ShortestPathForever", planning)
 	assert(loadfile("Routing/Planner.lua"))("ShortestPathForever", planning)
 	assert(loadfile("Routing/LegPoints.lua"))("ShortestPathForever", planning)
 	local nodes = { [1] = { map = 1, x = 0, y = 0 }, [2] = { map = 1, x = 2000, y = 0 } }
@@ -752,6 +753,7 @@ do
 	}
 	assert(loadfile("Transport/Model.lua"))("ShortestPathForever", planning)
 	assert(loadfile("Routing/Savings.lua"))("ShortestPathForever", planning)
+	assert(loadfile("Routing/PlanBounds.lua"))("ShortestPathForever", planning)
 	assert(loadfile("Routing/Planner.lua"))("ShortestPathForever", planning)
 	assert(loadfile("Routing/LegPoints.lua"))("ShortestPathForever", planning)
 	-- Start and goal are in safe zone 10. Mild zone 20 (+5) lies between the start and the north hub. Deadly zone

@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from gen_transit import LIFT_GUARDS, lift_guard_factions, taxis
+from gen_transit import LIFT_GUARDS, hops, lift_guard_factions, location, taxis
 
 
 class LiftGuardTest(unittest.TestCase):
@@ -29,6 +29,25 @@ class LiftGuardTest(unittest.TestCase):
         self.factions[104] = {"FriendGroup": "0", "EnemyGroup": "0"}
         with self.assertRaisesRegex(ValueError, "unambiguous"):
             lift_guard_factions(self.templates, self.spawns, self.factions)
+
+
+class HopTest(unittest.TestCase):
+    def test_a_same_map_teleport_within_reach_is_a_hop(self):
+        def trigger(map_id, x):
+            return {"ContinentID": str(map_id), "Pos_0": str(x), "Pos_1": "0", "Pos_2": "33.5", "Radius": "7"}
+
+        triggers = {702: trigger(0, 0), 704: trigger(0, 0), 1103: trigger(0, 0), 2: trigger(0, 0), 542: trigger(1, 0)}
+        teleports = {
+            702: location(0, (20.0, 0.0, 148.6)),  # the Sanctum: one walking place
+            704: location(0, (30.5, 0.0, 29.6)),  # beyond one baked link
+            1103: location(0, (9000.0, 0.0, 260.0)),  # across the continent: a journey, not a hop
+            2: location(36, (0.0, 0.0, 0.0)),  # into an instance
+            542: location(1, (10.0, 0.0, 0.0)),  # a named public portal stays a portal
+        }
+        self.assertEqual(
+            hops(triggers, teleports),
+            [(702, {"from": location(0, (0.0, 0.0, 33.5)), "radius": 7.0, "to": teleports[702]})],
+        )
 
 
 class TaxiVisibilityTest(unittest.TestCase):

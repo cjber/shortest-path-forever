@@ -73,6 +73,7 @@ for _, file in ipairs({
 	"Transport/Model.lua",
 	"Transport/Timetable.lua",
 	"Routing/Savings.lua",
+	"Routing/PlanBounds.lua",
 	"Routing/Planner.lua",
 	"Routing/LegPoints.lua",
 	"Core/PlanContext.lua",

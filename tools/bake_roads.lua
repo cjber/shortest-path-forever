@@ -17,6 +17,7 @@ local function BakeMap(map)
 		"Routing/PathGrid.lua",
 		"Routing/Path.lua",
 		"Routing/PathJobs.lua",
+		"Routing/PlanBounds.lua",
 		"Routing/Planner.lua",
 		"Routing/LegPoints.lua",
 	}) do

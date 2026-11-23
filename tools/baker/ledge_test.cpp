@@ -35,7 +35,7 @@ struct Field
     chf.ch = 0.5f;
     chf.bmin[0] = chf.bmin[1] = chf.bmin[2] = 0;
     chf.bmax[0] = width * chf.cs;
-    chf.bmax[1] = 50;
+    chf.bmax[1] = 200;
     chf.bmax[2] = height * chf.cs;
     chf.cells = cells.data();
   }
@@ -50,7 +50,7 @@ struct Field
   void add(int x, int z, float bottom, float top, unsigned char area) {
     rcCompactSpan span{};
     span.y = (unsigned short)std::lround(bottom / chf.ch);
-    span.h = (unsigned char)std::lround((top - bottom) / chf.ch);
+    span.h = (unsigned char)std::min(0xffL, std::lround((top - bottom) / chf.ch)); // compaction clamps as well
     for (int dir = 0; dir < 4; ++dir)
       rcSetCon(span, dir, RC_NOT_CONNECTED);
     rcCompactCell &cell = cells[x + z * chf.width];
@@ -63,6 +63,11 @@ struct Field
   // a walkable floor and the 1.5 yards of clearance the player needs above it
   void surface(int x, int z, float height, unsigned char area = NAV_AREA_GROUND) {
     add(x, z, height, height + 1.5f, area);
+  }
+
+  // a floor whose free space rises to `ceiling`, the underside of the next solid up (a roof, or a liquid's voxels)
+  void floor(int x, int z, float height, float ceiling, unsigned char area = NAV_AREA_GROUND) {
+    add(x, z, height, ceiling, area);
   }
 
   // solid only: a wall the compact field keeps as a null-area span
@@ -212,18 +217,44 @@ int main() {
   steep.linkAll();
   expect("a steep face is no ledge", steep.drops().empty(), true);
 
-  // a canal: its bed lies under the water surface, a quay stands above it in the same column
+  // a canal: its bed lies under the water surface, a quay stands above it in the same column; the liquid's voxels
+  // are the solid just under its surface
   Field canal(2, 1);
-  canal.surface(0, 0, 5);
-  canal.surface(0, 0, 15, NAV_AREA_WATER);
+  canal.floor(0, 0, 5, 14.5f);
+  canal.floor(0, 0, 15, 19, NAV_AREA_WATER);
   canal.surface(0, 0, 20);
-  canal.surface(1, 0, 6, NAV_AREA_GROUND_STEEP);
+  canal.floor(1, 0, 6, 14.5f, NAV_AREA_GROUND_STEEP);
   canal.surface(1, 0, 15, NAV_AREA_WATER);
   canal.markBeds();
   expect("ground under water is a bed", canal.areas[0] == NAV_AREA_UNDER_LIQUID, true);
   expect("the water surface stays water", canal.areas[1] == NAV_AREA_WATER, true);
   expect("ground above the water stays ground", canal.areas[2] == NAV_AREA_GROUND, true);
   expect("steep ground under water is a bed", canal.areas[3] == NAV_AREA_UNDER_LIQUID, true);
+
+  // Undercity (heights raised 100 yards, the field starts at 0): a city floor under a roof, the ruins' ground on the roof, and the ruins' water above both
+  Field city(3, 1);
+  city.floor(0, 0, 40, 60);
+  city.floor(0, 0, 140, 147.5f);
+  city.surface(0, 0, 148, NAV_AREA_WATER);
+  city.floor(1, 0, 40, 60);
+  city.floor(1, 0, 120, 132.5f, NAV_AREA_GROUND_STEEP); // the roof is steep, so not walkable ground on top
+  city.surface(1, 0, 133, NAV_AREA_WATER);
+  // a sealed floor whose roof is not walkable: the next walkable span up is the water, but a roof lies between
+  city.floor(2, 0, 40, 60);
+  city.surface(2, 0, 133, NAV_AREA_WATER);
+  city.markBeds();
+  expect("a floor under a roof under water stays ground", city.areas[0] == NAV_AREA_GROUND, true);
+  expect("the ground the water reaches is a bed", city.areas[1] == NAV_AREA_UNDER_LIQUID, true);
+  expect("a floor under a roofed column stays ground", city.areas[3] == NAV_AREA_GROUND, true);
+  expect("steep ground the water reaches is a bed", city.areas[4] == NAV_AREA_UNDER_LIQUID, true);
+  expect("a floor with an unwalkable roof under water stays ground", city.areas[6] == NAV_AREA_GROUND, true);
+
+  // the sea floor under deep water: more free space than a span can record still reaches the surface
+  Field sea(1, 1);
+  sea.floor(0, 0, 10, 159);
+  sea.surface(0, 0, 160, NAV_AREA_WATER);
+  sea.markBeds();
+  expect("a floor under deep water is a bed", sea.areas[0] == NAV_AREA_UNDER_LIQUID, true);
 
   // a ledge over a pool lands in the water, never on the bed below it
   Field pool(16, 6);

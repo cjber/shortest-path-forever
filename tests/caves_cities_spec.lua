@@ -41,6 +41,14 @@ local function key(...)
 	return table.concat({ ... }, " ")
 end
 
+-- On build 1.60.1.71037 these three upper lift centers have no static navmesh within the fixture's interaction
+-- range. The grid can still walk to the boarding lip. Check that approach even without a raw route reference.
+local offMeshLiftCenter = {
+	[key(0, 1596.2, 291.8, 55.7)] = true, -- west
+	[key(0, 1595.3, 188.6, 55.7)] = true, -- east
+	[key(0, 1544.2, 240.8, 55.7)] = true, -- south
+}
+
 for map, flat in pairs(fixture.spawns) do
 	for i = 1, #flat, 3 do
 		local x, y, z = flat[i], flat[i + 1], flat[i + 2]
@@ -76,16 +84,21 @@ for _, w in ipairs(fixture.walks) do
 	local kind
 	if not points then
 		kind = reference and "no-walk" or nil
-	elseif not reference then
+	elseif
+		not reference
+		and not (offMeshLiftCenter[key(map, w[3], w[4], w[5])] or offMeshLiftCenter[key(map, w[6], w[7], w[8])])
+	then
 		kind = "no-reference"
 	else
 		local f = follow.check(map, points, from.z, to.z)
-		local st = ns.PathGrid.State(map)
-		local slack = offset(st, from.x, from.y) + offset(st, to.x, to.y) + w[10]
 		if f then
 			kind = f.kind
-		elseif cost < reference - slack or cost > reference * OCTILE + slack then
-			kind = "cost"
+		elseif reference then
+			local st = ns.PathGrid.State(map)
+			local slack = offset(st, from.x, from.y) + offset(st, to.x, to.y) + w[10]
+			if cost < reference - slack or cost > reference * OCTILE + slack then
+				kind = "cost"
+			end
 		end
 	end
 	if kind then

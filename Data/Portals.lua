@@ -7,9 +7,9 @@ local _, ns = ...
 
 -- Loading-screen allowance: 5 s. Only these public transitions are included.
 -- Excludes GM/test 1103/1104 and dungeon/raid triggers (Blizzard's own map shows those entrances).
--- Excludes Stormwind's Wizard's Sanctum 702/704: a hop up and down one tower, 12 yd apart on the map,
--- that never shortens a flat route and would stack two pins. Also the unused vault 107/109 (map 35), the
--- Leap of Faith fall 943, and PvP barracks 2527-2534, which have no AreaTrigger in this build.
+-- Hops within one walking place (Stormwind's Wizard's Sanctum 702/704) are ns.Hops below, not portals.
+-- Also excludes the unused vault 107/109 (map 35), the Leap of Faith fall 943, and PvP barracks
+-- 2527-2534, which have no AreaTrigger in this build.
 -- Skyborne Dalaran -> Stormwind: manually mapped Alliance-only portal; the return portal was removed.
 -- https://wow-travelcraft.com/guide.html (Alliance portal; Horde Skyborne has no Dalaran portal).
 
@@ -170,4 +170,24 @@ ns.Entrances = {
 	[509] = { name = "Ruins of Ahn'Qiraj", map = 1, x = -8114.46, y = 1526.37, zones = { 1451 } },
 	[531] = { name = "Ahn'Qiraj Temple", map = 1, x = -8111.72, y = 1526.79, zones = { 1451 } },
 	[533] = { name = "Naxxramas", map = 0, x = 3133.15, y = -3730.29, z = 138.659, zones = { 1422, 1423 } },
+}
+
+-- Hops: same-map teleports landing within 30 yd on a walking continent (AreaTrigger source and
+-- radius, classic-db areatrigger_teleport landing). gen_nav bakes each as a one-way link between the floors
+-- it joins; the planner reads them only through the baked nav.
+
+-- stylua: ignore
+ns.Hops = {
+	-- Source: AreaTrigger 702 -> classic-db areatrigger_teleport 702.
+	{
+		from = { map = 0, x = -9023.26, y = 892.398, z = 33.51 },
+		radius = 7,
+		to = { map = 0, x = -9014.94, y = 873.326, z = 148.616 },
+	},
+	-- Source: AreaTrigger 704 -> classic-db areatrigger_teleport 704.
+	{
+		from = { map = 0, x = -9020.09, y = 880.502, z = 151.576 },
+		radius = 7,
+		to = { map = 0, x = -9017.46, y = 885.901, z = 29.621 },
+	},
 }

@@ -427,8 +427,9 @@ do
 	assert(banded[2].z > today[2].z, "and above the ground, not on it")
 
 	-- A band that holds one floor only starts the walk on that floor.
-	local tight = assert(Path.FindSync(0, { x = HERE.x, y = HERE.y, band = { lo = 148, hi = 156 } }, GOAL))
-	assert(tight[2].z == 152, "the Keep's floor within it: " .. tostring(tight[2].z))
+	local keep = { lo = 148, hi = 156 }
+	local tight = assert(Path.FindSync(0, { x = HERE.x, y = HERE.y, band = keep }, GOAL))
+	assert(Band.Holds(keep, tight[2].z), "the Keep's floor within it: " .. tostring(tight[2].z))
 
 	-- A band that fits no surface is no measurement: the surfaces are all still there to start from.
 	local other = assert(Path.FindSync(0, { x = HERE.x, y = HERE.y, band = { lo = 10, hi = 20 } }, GOAL))

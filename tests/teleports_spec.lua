@@ -25,6 +25,7 @@ assert(not bySpell[23442], "the Everlook ripper is not a personal teleport")
 -- The planner: a teleport is an edge from where you stand, its remaining cooldown a wait.
 assert(loadfile("Transport/Model.lua"))("ShortestPathForever", ns)
 assert(loadfile("Routing/Savings.lua"))("ShortestPathForever", ns)
+assert(loadfile("Routing/PlanBounds.lua"))("ShortestPathForever", ns)
 assert(loadfile("Routing/Planner.lua"))("ShortestPathForever", ns)
 assert(loadfile("Routing/LegPoints.lua"))("ShortestPathForever", ns)
 local Plan = ns.Planner.Plan

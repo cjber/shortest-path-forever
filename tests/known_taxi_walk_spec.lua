@@ -7,6 +7,7 @@ assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", ns)
 for _, file in ipairs({
 	"Transport/Model.lua",
 	"Routing/Savings.lua",
+	"Routing/PlanBounds.lua",
 	"Routing/Planner.lua",
 	"Routing/LegPoints.lua",
 	"Data/Routes.lua",

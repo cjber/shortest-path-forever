@@ -9,6 +9,7 @@ local spellBook = {
 local model = assert(loadfile("Transport/Model.lua"))
 setfenv(model, setmetatable({ C_SpellBook = spellBook }, { __index = _G }))("ShortestPathForever", ns)
 assert(loadfile("Routing/Savings.lua"))("ShortestPathForever", ns)
+assert(loadfile("Routing/PlanBounds.lua"))("ShortestPathForever", ns)
 assert(loadfile("Routing/Planner.lua"))("ShortestPathForever", ns)
 assert(loadfile("Routing/LegPoints.lua"))("ShortestPathForever", ns)
 assert(loadfile("Routing/QuestDestination.lua"))("ShortestPathForever", ns)

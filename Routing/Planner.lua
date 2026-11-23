@@ -101,26 +101,41 @@ end
 -- options.baked holds walks searched ahead of time between fixed places, per map; options.waterWalking picks
 -- which of their two costs applies. They were searched without hazards, so options.hazards weights one by the hazards
 -- on the straight way between its ends, as the walking search would weight the yards it walks inside them.
-local function BakedCost(options, a, b, weigh)
-	local ka, kb = a.bakedKey, b.bakedKey
-	local baked = ka and kb and options.baked and options.baked[a.map]
-	local key = baked and (ka < kb and ka .. " " .. kb or kb .. " " .. ka)
-	local pair = key and baked[key]
-	if pair then
-		local mode = options.waterWalking and 2 or 1
-		local yards = pair[mode + (ka > kb and pair[3] ~= nil and 2 or 0)]
-		local reverse = pair[mode + (ka < kb and pair[3] ~= nil and 2 or 0)]
-		local hazards = options.hazards
-		if hazards and (yards or reverse) then
-			weigh() -- a walk with no baked zone shares samples the zone map along its way
-			-- A map's baked shares cover every baked walk on it; one it leaves out crosses nothing charged.
-			local shares = options.bakedZones and options.bakedZones[a.map]
-			local factor = hazards.Segment(a.map, a.x, a.y, b.x, b.y, shares and (shares[key] or NO_SHARES))
-			yards, reverse = yards and yards * factor, reverse and reverse * factor
+-- Each map's baked walks indexed by both ends, built once per table: joining the two keys for every pair of places
+-- made strings by the thousand on each cold topology. A baked table is immutable, as the topology cache already
+-- assumes of every table in CACHE_KEYS: new walks come as a new table (Data/Walks.lua is generated), never an edit.
+local byEnds = setmetatable({}, { __mode = "k" })
+local function BakedPairs(baked)
+	local index = byEnds[baked]
+	if not index then
+		index = {}
+		for key, pair in pairs(baked) do
+			local ka, kb = key:match("^(%S+) (%S+)$")
+			index[ka] = index[ka] or {}
+			index[kb] = index[kb] or {}
+			index[ka][kb], index[kb][ka] = pair, pair
 		end
-		return true, yards, reverse
+		byEnds[baked] = index
 	end
-	return false
+	return index
+end
+
+---@return number? yards, number? reverse the walk from a to b and back, each nil where none was found
+local function BakedCost(options, a, b, pair, weigh)
+	local ka, kb = a.bakedKey, b.bakedKey
+	local mode = options.waterWalking and 2 or 1
+	local yards = pair[mode + (ka > kb and pair[3] ~= nil and 2 or 0)]
+	local reverse = pair[mode + (ka < kb and pair[3] ~= nil and 2 or 0)]
+	local hazards = options.hazards
+	if hazards and (yards or reverse) then
+		weigh() -- a walk with no baked zone shares samples the zone map along its way
+		-- A map's baked shares cover every baked walk on it; one it leaves out crosses nothing charged.
+		local shares = options.bakedZones and options.bakedZones[a.map]
+		local key = ka < kb and ka .. " " .. kb or kb .. " " .. ka
+		local factor = hazards.Segment(a.map, a.x, a.y, b.x, b.y, shares and (shares[key] or NO_SHARES))
+		yards, reverse = yards and yards * factor, reverse and reverse * factor
+	end
+	return yards, reverse
 end
 
 -- The same fixed places feed the planner and endpoint batches. Keeping their identities here
@@ -275,13 +290,17 @@ local function Solve(options, cache, check, weigh)
 			end
 		end
 		-- The graph is the same for every run speed; only a walking edge's duration scales. Rewriting the
-		-- cached edges keeps a speed change from rebuilding the topology its identity did not depend on.
-		for _, adjacent in ipairs(edges) do
-			for _, edge in ipairs(adjacent) do
-				if edge.yards and edge.mode == "walk" then
-					edge.duration = edge.yards / speed * 1000
+		-- cached edges keeps a speed change from rebuilding the topology its identity did not depend on; a plan at
+		-- the speed the edges already hold leaves them be.
+		if topology.speed ~= speed then
+			for _, adjacent in ipairs(edges) do
+				for _, edge in ipairs(adjacent) do
+					if edge.yards and edge.mode == "walk" then
+						edge.duration = edge.yards / speed * 1000
+					end
 				end
 			end
+			topology.speed = speed
 		end
 	end
 	local walkIndex = {}
@@ -379,44 +398,48 @@ local function Solve(options, cache, check, weigh)
 			end
 		end
 		-- Fixed baked edges and the remaining dynamic pairs share one topology build.
-		local pairs, groups = {}, {}
+		local pairs, groups, slot = {}, {}, {}
 		for index = 3, #nodes do
 			local map, mass = nodes[index].map, masses[index] or 0
 			groups[map] = groups[map] or {}
 			local group = groups[map][mass] or {}
 			groups[map][mass] = group
 			group[#group + 1] = index
+			slot[index] = #group
 		end
+		local baked = options.baked or {}
 		for from = 1, #nodes do
 			local endpoint = from <= 2
-			local targets = endpoint and nodes or groups[nodes[from].map][masses[from] or 0]
-			for index = endpoint and from + 1 or 1, #targets do
+			local origin = nodes[from]
+			local targets = endpoint and nodes or groups[origin.map][masses[from] or 0]
+			-- This place's baked walks, looked up once for all the places it pairs with.
+			local walks = not endpoint and origin.bakedKey and baked[origin.map]
+			local ends = walks and BakedPairs(walks)[origin.bakedKey]
+			-- A group lists its nodes in order, so the places after this one are the pairs it has not met yet.
+			for index = endpoint and from + 1 or slot[from] + 1, #targets do
 				-- a baked pair weighs the hazards on its way, so each pair counts
 				check()
 				local to = endpoint and index or targets[index]
-				if endpoint then
+				local pair = ends and ends[nodes[to].bakedKey]
+				if endpoint or not pair then
 					pairs[#pairs + 1], pairs[#pairs + 2] = from, to
-				elseif to > from then
-					local baked, yards, reverse = BakedCost(options, nodes[from], nodes[to], weigh)
-					if not baked then
-						pairs[#pairs + 1], pairs[#pairs + 2] = from, to
-					else
-						if yards then
-							Edge(from, to, {
-								mode = "walk",
-								duration = yards / speed * 1000,
-								yards = yards,
-								transfer = yards == 0 or nil,
-							})
+				else
+					local yards, reverse = BakedCost(options, origin, nodes[to], pair, weigh)
+					if yards then
+						-- Four fields in the constructor fill its table exactly; a field set afterwards grows it again, so
+						-- only a zero-yard walk, the rare transfer, pays for a fifth.
+						local edge = { to = to, mode = "walk", duration = yards / speed * 1000, yards = yards }
+						if yards == 0 then
+							edge.transfer = true
 						end
-						if reverse then
-							Edge(to, from, {
-								mode = "walk",
-								duration = reverse / speed * 1000,
-								yards = reverse,
-								transfer = reverse == 0 or nil,
-							})
+						Edge(from, to, edge)
+					end
+					if reverse then
+						local back = { to = from, mode = "walk", duration = reverse / speed * 1000, yards = reverse }
+						if reverse == 0 then
+							back.transfer = true
 						end
+						Edge(to, from, back)
 					end
 				end
 			end
@@ -440,6 +463,7 @@ local function Solve(options, cache, check, weigh)
 			counts = counts,
 			options = saved,
 			pairs = pairs,
+			speed = speed,
 		}
 		if cache then
 			cache.topology = topology
@@ -555,43 +579,10 @@ local function Solve(options, cache, check, weigh)
 	-- A fourth copy of the nodes marks the one unknown flight point this route walked up to and learned in person.
 	-- Only that departure may then fly: every landing and connecting point still comes from the known set.
 	local FLIGHT, WALKED, LEARNED = count, count * 2, count * 3
-	-- Ignoring arrival modes and revisits gives an admissible remaining-time bound. It keeps the extra
-	-- labels needed for correctness from exploring unrelated routes before reaching the destination.
-	local backward, lower, done = {}, { [goal] = 0 }, {}
 	---@type table<number, SPFAnchor>?
 	local anchors = options.anchors
-	for from, adjacent in ipairs(edges) do
-		check()
-		for _, edge in ipairs(adjacent) do
-			local duration = edge.duration
-			if edge.route and not edge.aboard and not (anchors and anchors[edge.route]) then
-				duration = duration + options.routes[edge.route].period / 2
-			end
-			backward[edge.to] = backward[edge.to] or {}
-			local list = backward[edge.to]
-			list[#list + 1], list[#list + 2] = from, duration
-		end
-	end
-	for _ = 1, count do
-		check()
-		local current, best
-		for node, cost in pairs(lower) do
-			if not done[node] and (not best or cost < best) then
-				current, best = node, cost
-			end
-		end
-		if not current then
-			break
-		end
-		done[current] = true
-		local adjacent = backward[current] or {}
-		for i = 1, #adjacent, 2 do
-			local node, cost = adjacent[i], best + adjacent[i + 1]
-			if not lower[node] or cost < lower[node] then
-				lower[node] = cost
-			end
-		end
-	end
+	-- Ignoring arrival modes and revisits gives an admissible remaining-time bound (Routing/PlanBounds.lua).
+	local lower = ns.PlanBounds.Lower(topology, edges, goal, options, check)
 	local function NewLabels()
 		return {
 			node = {},

@@ -640,4 +640,59 @@ format1Floor.floor =
 fixture.install(58, format1Floor)
 assert(Path.FindSync(58, point(5, 11, 20), point(5, 10, 40)), "a format 1 floor carries no steep rule")
 
+-- A drawn line keeps a drop's ledge and landing as consecutive points and marks the ledge, even when the drop is
+-- the whole walk: a chord from the ledge to the landing would be drawn as a slope the walk never stands on.
+do
+	local pts = assert(Path.FindSync(42, point(40, 40, 20 + FALL), point(41, 40, 20)))
+	local jumps = 0
+	for i = 1, #pts - 1 do
+		if pts[i].jump then
+			jumps = jumps + 1
+			assert(pts[i].z == 20 + FALL and pts[i + 1].z == 20, "the jump runs from the ledge to the landing")
+			assert(math.floor(pts[i].x / CS) == 40 and math.floor(pts[i + 1].x / CS) == 41, "one cell apart")
+		end
+	end
+	assert(jumps == 1, "the ledge is marked: " .. jumps)
+	assert(not pts[#pts].jump, "the landing does not start a jump")
+end
+
+-- A drop of more than a cell is a link only: the base step that moves one cell says nothing about a landing two
+-- cells away, so it must not report one.
+do
+	fixture.install(
+		91,
+		fixture.format2({
+			map = 91,
+			nx = 1,
+			ny = 1,
+			cell = { [10] = { [10] = at(32) }, [11] = { [10] = at(32) }, [12] = { [10] = at(20) } },
+			link = { { 10, 10, 2, 0, DROP } },
+			node = { { 10, 10, 1 } },
+		})
+	)
+	local wide = Grid.State(91)
+	local ks, ls, cs = {}, {}, {}
+	local count = Grid.neighbours(wide, 0, 10 * 67 + 10, 10, 10, 2, 0, true, ks, ls, cs)
+	assert(count == 1 and cs[1] == DROP, "only the drop lands two cells on: " .. count)
+end
+
+-- A line leaving a dry floor over water for a cell with no surface walks the floor: the stretch is charged as the
+-- surface it is on, not the base water beneath.
+do
+	fixture.install(
+		92,
+		fixture.format2({
+			map = 92,
+			nx = 1,
+			ny = 1,
+			cell = { [10] = { [10] = { z = 0, water = true } } },
+			floor = { { 10, 10, 30, 1, 0 } },
+			node = { { 10, 10, 1 } },
+		})
+	)
+	local pier = Grid.State(92)
+	local _, ok, time = Grid.toward(pier, { swim = 3 }, 0, 67 * 67, 10.5, 10.5, 11.5, 10.5, true, nil, nil, true)
+	assert(ok and math.abs(time - CS) < 1e-9, ("half a cell of floor, half of bare ground: %.3f"):format(time or -1))
+end
+
 print("path_direction_spec: ok")
