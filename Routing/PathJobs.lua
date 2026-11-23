@@ -207,7 +207,8 @@ end
 
 -- Search coroutine-sliced over frames between two { x, y, z } points (z optional: it picks the floor to start or end
 -- on). callback(points, cost, job) or callback(nil, reason, job): points are { map, x, y, z } from the start to the
--- goal, with points.wet the drawn yards over water. Cost is the abstract route's real running yards, not the
+-- goal, or to the reachable approach when a directed step to a known goal floor is blocked.
+-- points.wet is the drawn yards over water. Cost is the abstract route's real running yards, not the
 -- smoothed polyline length; a swum grid yard counts as the data's swim (so routes keep out of water) unless
 -- waterWalking, when water is ground. Hazards (Journey/Hazards.lua) affect which route is selected, not this cost.
 -- reason is "nodata", "outside", "offmesh", "unreachable" or "error". Returns a Cancel handle.
