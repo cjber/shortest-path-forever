@@ -55,4 +55,30 @@ local height, kind = ns.PathCeilingAt(ns.DecodePathCeilings("Bf"), 0, 0)
 assert(height == -1 and kind == "structure", "negative world heights are representable")
 local terrain, terrainKind, structure = ns.PathCeilingAt(ns.DecodePathCeilings("BkrEAP"), 0, 0)
 assert(terrain == 139.125 and terrainKind == "terrain" and structure == -0.5, "both sources survive on one floor")
+-- Load the shipped bundle through its XML and compression path.
+assert(loadfile("tools/load_nav.lua"))(0, ".", nil, true)
+local eastern = assert(Grid.State(0))
+local function cover(x, y, z)
+	local cluster = assert(Grid.locate(eastern, x, y))
+	assert(Grid.grid(eastern, cluster))
+	return Grid.ceiling(0, x, y, z)
+end
+
+for _, cave in ipairs({
+	{ -9086.57, -545.27, 62 }, -- Jasperlode Mine
+	{ -11331.34, 1564.18, 28 }, -- Deadmines tunnel
+}) do
+	local above, source, ceiling = cover(cave[1], cave[2], cave[3])
+	assert(
+		above and source == "terrain" and ceiling and cave[3] < ceiling and ceiling < above,
+		"a cave has both kinds of cover"
+	)
+end
+
+local lower, lowerKind = cover(-8894, 611, 76)
+local upper, upperKind = cover(-8894, 611, 96)
+assert(
+	lower and upper and lowerKind == "structure" and upperKind == "structure" and lower < upper,
+	"stacked floors have distinct cover"
+)
 print("nav_ceiling_spec: ok")
