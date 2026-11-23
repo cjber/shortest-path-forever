@@ -376,9 +376,8 @@ local side, boxed = reach(true)
 check(round > 5 and rim <= MINIMAP / 2 - DOT / 2 - RIM, "every rim inside the round face")
 check(boxed > round and side <= MINIMAP / 2 - DOT / 2 - RIM, "a square face shows its corners too")
 local smallRim = reach(false, 0.5)
-local largeRim = reach(false, 2)
-check(smallRim >= largeRim, "resizing the breadcrumbs adjusts the clip margin")
-check(largeRim <= MINIMAP / 2 - DOT - RIM * 2, "the larger rim still fits on the face")
+check(smallRim >= rim, "shrinking the breadcrumbs adjusts the clip margin")
+check(smallRim <= MINIMAP / 2 - DOT / 4 - RIM / 2, "the reduced rim stays inside the face")
 -- Another continent's points, a jump and a portal draw nothing there.
 local elsewhere = { point(0.1, 0.5), point(0.2, 0.5), point(0.3, 0.5), point(0.2, 0.5, 9) }
 elsewhere[1].jump = 1

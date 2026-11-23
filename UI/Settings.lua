@@ -137,7 +137,7 @@ ns.Init(function()
 		Settings.RegisterInitializer(page, Secure(Settings.CreateCheckboxInitializer)(setting, nil, tooltip))
 		settings[key] = setting
 	end
-	local function Scale(key, name, tooltip, refresh, minimum, step)
+	local function Scale(key, name, tooltip, refresh, minimum, step, maximum)
 		local setting = Settings.RegisterAddOnSetting(
 			page,
 			"ShortestPathForever_" .. key,
@@ -149,7 +149,7 @@ ns.Init(function()
 		)
 		setting:SetValueChangedCallback(refresh)
 		settings[key] = setting
-		local options = Secure(Settings.CreateSliderOptions)(minimum or 25, 200, step or 5)
+		local options = Secure(Settings.CreateSliderOptions)(minimum or 25, maximum or 200, step or 5)
 		Label(options, function(value)
 			return value .. "%"
 		end)

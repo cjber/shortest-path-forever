@@ -137,7 +137,10 @@ function MapMarks.Register(rows)
 		"minimapRouteScale",
 		L["Minimap walking route size"],
 		L["Sizes the walking dots on the minimap."],
-		ns.RefreshRouteLines
+		ns.RefreshRouteLines,
+		25,
+		5,
+		100
 	)
 	rows.Checkbox(
 		"laterLegs",

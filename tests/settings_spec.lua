@@ -643,7 +643,11 @@ assert(
 local minimapRouteSlider = Row("minimapRouteScale")
 assert(minimapRouteSlider.kind == "slider" and minimapRouteSlider.setting.default == 100)
 assert(minimapRouteSlider.setting.variable == "ShortestPathForever_minimapRouteScale")
-assert(minimapRouteSlider.options.minValue < 100 and minimapRouteSlider.options.format(50) == "50%")
+assert(
+	minimapRouteSlider.options.minValue == 25
+		and minimapRouteSlider.options.maxValue == 100
+		and minimapRouteSlider.options.format(50) == "50%"
+)
 local routeRefreshes = routeLinesRefreshed
 minimapRouteSlider.setting.onChanged(nil, 50)
 assert(routeLinesRefreshed == routeRefreshes + 1, "changing the size redraws the walking route")

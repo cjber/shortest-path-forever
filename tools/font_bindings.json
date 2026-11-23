@@ -63,13 +63,13 @@
     },
     {
       "source": "UI/Settings.lua",
-      "sha256": "6fc39d6212f1e5dd7af5526207089bc953a34869c8ccc01faef26ec7ce25cff6",
+      "sha256": "31ef91706c108e148a6af6d39ce1416e8edbc9e91eabe009fb55ca44e8602852",
       "review": "Read Page, Checkbox, Scale, Dropdown and Saving and their registration calls. Settings rows, index buttons and option labels delegate to Blizzard secure initializers; this file creates no FontString and establishes no explicit FontObject. Minimap button text, tooltip text, chat output and helper arguments are excluded rather than assigned an assumed settings font. Reviewed #1094: the Tracker heading's Attach to quest tracker row is ForeverCore.SettingsSections.RegisterTrackerAttach, a core-owned initializer, registered only when the running core has it (an older adopted standalone does not); excluded with the other settings fonts. Reviewed #1142: the journeyHint row is one more Checkbox helper call, a Blizzard secure initializer with no FontString or FontObject of its own. Reviewed #1033: the Off-path tolerance row and Arrival distance share a DistanceSlider helper that registers a Blizzard secure slider initializer, with no FontString or FontObject of its own. Reviewed #1005: the Avoided transport row is one more native button initializer with plain string text and tooltip; the client owns its fonts. Reviewed #1241: the new \"Show the journey key hint on the minimap\" row is one more Checkbox helper call, like journeyHint in #1142, so it adds a Blizzard secure initializer's row and no FontString or FontObject of its own; the digest moved for the row and its shortened journeyHint description, not for a font producer. Reviewed the RestedXP tooltip updates. Blizzard settings initializers own their fonts. Reviewed #1261: the update notice description still goes through the Blizzard Checkbox initializer, which owns its font. The RestedXP arrow dropdown uses the existing Blizzard initializer and its fonts.",
       "bindings": []
     },
     {
       "source": "UI/SettingsMapMarks.lua",
-      "sha256": "0be7ba2c748db3a47101713ef30b38e2976267c1a34f0b00c3a462b941ad1bd6",
+      "sha256": "670d20bee140d4aba1de9a3082339996ab3f7ea13b7e2a1937332b4f20bf4a70",
       "review": "Read Register and every rows builder call. All phrases are helper arguments to Settings.lua builders and Blizzard settings initializers, with no explicit FontObject in this producer. Tooltip descriptions and dynamic choice labels have no coverage claim. The minimap walking route size uses the existing Scale builder, whose Blizzard slider initializer owns its fonts.",
       "bindings": []
     },

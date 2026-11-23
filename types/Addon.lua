@@ -132,7 +132,7 @@
 ---@field Page fun(name: string)
 ---@field Section fun(name: string)
 ---@field Checkbox fun(key: string, name: string, tooltip?: string, onChanged?: fun(setting: SPFSetting?, value: boolean|number|string?))
----@field Scale fun(key: string, name: string, tooltip: string|nil, refresh: fun(), minimum?: number, step?: number)
+---@field Scale fun(key: string, name: string, tooltip: string|nil, refresh: fun(), minimum?: number, step?: number, maximum?: number)
 ---@field Dropdown fun(key: string, name: string, tooltip: string|nil, choices: SPFSettingsChoice[], onChanged?: fun(setting: SPFSetting?, value: boolean|number|string?))
 
 --- A settings page that lives in its own module: it opens its page and adds its rows through the shared builders.

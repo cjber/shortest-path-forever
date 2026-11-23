@@ -193,7 +193,7 @@ for _, size in ipairs({ false, "bad", 0 / 0 }) do
  ns.RefreshRouteLines()
  assert(mini.lines[1].thickness == minimapThickness, "invalid saved sizes fall back to the default")
 end
-for _, size in ipairs({ { 0, 0.25 }, { 300, 2 } }) do
+for _, size in ipairs({ { 0, 0.25 }, { 300, 1 } }) do
  ns.db.minimapRouteScale = size[1]
  ns.RefreshRouteLines()
  assert(mini.lines[1].thickness == minimapThickness * size[2], "saved sizes stay within the slider range")
