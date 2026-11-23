@@ -90,7 +90,7 @@ directed.links[0][land + 1] = nil
 directed.fmt = 4
 directed.moves[0][land + 1] = 1
 assert(G.toward(directed, {}, 0, land, 10.5, 10.9, 11.5, 10.9, false, nil, nil, true))
-directed.links[0].narrow = { [land * 512] = true }
+directed.links[0].clearance = { [land * 64] = 2 ^ 8 }
 assert(G.toward(directed, {}, 0, land, 10.5, 10.5, 11.5, 10.5, false, nil, nil, true))
 assert(
 	not G.toward(directed, {}, 0, land, 10.5, 10.9, 11.5, 10.9, false, nil, nil, true),
@@ -119,7 +119,7 @@ local pathPoints = {
 	w = { 0, 0, 0, 0 },
 }
 assert(#G.smooth(turn, pathPoints) == 2, "wide dry steps permit smoothing on shallow chords")
-turn.links[0].narrow = { [land * 512] = true }
+turn.links[0].clearance = { [land * 64] = 2 ^ 8 }
 assert(#G.smooth(turn, pathPoints) == 3, "a narrow step requires a chord on the certified line")
 
 -- Bare continuation is dry and off-road, including its final interval, while the road cell it leaves is charged as

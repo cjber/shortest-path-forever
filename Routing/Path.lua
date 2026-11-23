@@ -148,16 +148,36 @@ local function factorOf(st, hz)
 end
 
 local opposite = Grid.OPPOSITE
-local function directedBaseSteps(m, C, u, ux, uy, reverse, visit)
+local outgoing, hasDirection = {}, {}
+for mask = 0, 255 do
+	local steps, directions = {}, {}
 	for d = 0, 7 do
-		local dx, dy = DX[d], DY[d]
-		local x, y = ux + dx, uy + dy
-		if x >= 0 and x < C and y >= 0 and y < C then
-			local v = u + dx * C + dy
-			local mask = m[(reverse and v or u) + 1]
-			local bit = 2 ^ (reverse and opposite[d] or d)
-			if floor(mask / bit) % 2 == 1 then
-				visit(v, d < 4 and 1 or SQRT2)
+		if floor(mask / 2 ^ d) % 2 == 1 then
+			steps[#steps + 1], directions[d] = d, true
+		end
+	end
+	outgoing[mask], hasDirection[mask] = steps, directions
+end
+local function directedBaseSteps(m, C, u, ux, uy, reverse, visit)
+	if reverse then
+		for d = 0, 7 do
+			local dx, dy = DX[d], DY[d]
+			local x, y = ux + dx, uy + dy
+			if x >= 0 and x < C and y >= 0 and y < C then
+				local v = u + dx * C + dy
+				if hasDirection[m[v + 1]][opposite[d]] then
+					visit(v, d < 4 and 1 or SQRT2)
+				end
+			end
+		end
+	else
+		local steps = outgoing[m[u + 1]]
+		for i = 1, #steps do
+			local d = steps[i]
+			local dx, dy = DX[d], DY[d]
+			local x, y = ux + dx, uy + dy
+			if x >= 0 and x < C and y >= 0 and y < C then
+				visit(u + dx * C + dy, d < 4 and 1 or SQRT2)
 			end
 		end
 	end

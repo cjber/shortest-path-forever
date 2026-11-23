@@ -112,7 +112,7 @@ for _, map in ipairs({ 44, 45 }) do
 end
 local st = assert(Grid.State(46))
 assert(Grid.grid(st, 0))
-assert(st.links[0].narrow[4 * 64 + 1], "narrow clearance survives floor decoding")
+assert(st.links[0].clearance[1] == 2 ^ 12, "narrow clearance survives floor decoding")
 local ks, nodes, costs = {}, {}, {}
 assert(Grid.neighbours(st, 0, 0, 0, 0, 1, 1, false, ks, nodes, costs) == 2)
 assert(nodes[1] == 3 and nodes[2] == 4, "a sparse override preserves both landings")

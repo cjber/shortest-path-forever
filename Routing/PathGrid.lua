@@ -317,7 +317,7 @@ for _, layer in ipairs({ -1, 1 }) do
 		end,
 	})
 end
-for d = 0, 7 do
+for d = 0, 15 do
 	directionBits[d] = 2 ^ d
 end
 local stepLinks = linkSets[-1]
@@ -634,6 +634,8 @@ local function decodeLinks(st, k, val, z, at, links, s, pos, masks, last, lpos)
 	end
 	if fmt >= 4 and at_drop <= #s then
 		local node, records = 0, 0
+		local clearance = {}
+		links.clearance = clearance
 		while at_drop <= #s do
 			if records % 64 == 0 then
 				slice()
@@ -646,9 +648,8 @@ local function decodeLinks(st, k, val, z, at, links, s, pos, masks, last, lpos)
 			end
 			node = node + delta
 			local code = num(s, at_drop, 2)
-			local list = code >= 512 and "narrow" or "dryBlocked"
-			links[list] = links[list] or {}
-			links[list][node * 512 + code % 512] = true
+			local key = node * 64 + code % 64
+			clearance[key] = (clearance[key] or 0) + directionBits[floor(code / 64)]
 			at_drop = at_drop + 2
 		end
 	end
@@ -915,7 +916,7 @@ local function gridSize(val, at, links, back)
 	end
 	for node, link in pairs(links) do
 		bytes = bytes + 128 + #link * 32
-		if node == "dryBlocked" or node == "narrow" then
+		if node == "clearance" then
 			for _ in pairs(link) do
 				bytes = bytes + 64
 			end
@@ -1948,8 +1949,13 @@ end
 -- index 1, and the count is returned. One step can land on several surfaces (a stair beside the drop off its side),
 -- and a caller following a walk keeps them all: the first alone can be another floor than the walk's (#1015). With
 -- outC, each landing's cost goes there too: 0 for a walked step, a drop's whole yards otherwise.
-local function dryBlocked(links, key, offCentre)
-	return (links.dryBlocked and links.dryBlocked[key]) or (offCentre and links.narrow and links.narrow[key])
+local function dryBlocked(links, node, direction, layer, offCentre)
+	local bits = links.clearance and links.clearance[node * 64 + layer]
+	return bits
+		and (
+			floor(bits / directionBits[direction]) % 2 == 1
+			or (offCentre and floor(bits / directionBits[direction + 8]) % 2 == 1)
+		)
 end
 
 local function neighbours(st, k, node, gx, gy, dx, dy, water, outK, outN, outC, offCentre)
@@ -1970,7 +1976,7 @@ local function neighbours(st, k, node, gx, gy, dx, dy, water, outK, outN, outC, 
 			if val and bits and floor(bits / directionBits[d]) % 2 == 1 then
 				open = water
 					or (
-						not dryBlocked(st.links[k], node * 512 + d * 64, offCentre)
+						not dryBlocked(st.links[k], node, d, 0, offCentre)
 						and val[node + 1] ~= 2
 						and value(st, tx, ty) ~= 2
 					)
@@ -2040,7 +2046,7 @@ local function neighbours(st, k, node, gx, gy, dx, dy, water, outK, outN, outC, 
 				local v = surface(st, tk, tlc, layer, h)
 				local cost = floor(entry / 16384) % 8192
 				local d = cost == 0
-					and (links.dryBlocked or (offCentre and links.narrow))
+					and links.clearance
 					and abs(dx) <= 1
 					and abs(dy) <= 1
 					and DIRECTION[(dx + 1) * 3 + dy + 1]
@@ -2048,11 +2054,7 @@ local function neighbours(st, k, node, gx, gy, dx, dy, water, outK, outN, outC, 
 					v
 					and (
 						water
-						or (
-							not (d and dryBlocked(links, node * 512 + d * 64 + layer, offCentre))
-							and here ~= 2
-							and vt[v + 1] ~= 2
-						)
+						or (not (d and dryBlocked(links, node, d, layer, offCentre)) and here ~= 2 and vt[v + 1] ~= 2)
 					)
 				then
 					local distance = math.sqrt((entry % 16 - 8) ^ 2 + (floor(entry / 16) % 16 - 8) ^ 2) * st.cs
