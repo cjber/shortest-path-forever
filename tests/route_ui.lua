@@ -188,6 +188,18 @@ assert(not mini.Goal.hidden and mini.Goal:GetWidth() == goalWidth, "the minimap 
 ns.db.minimapRouteScale = nil
 ns.RefreshRouteLines()
 assert(mini.lines[1].thickness == minimapThickness, "an older save without the setting uses the default")
+for _, size in ipairs({ false, "bad", 0 / 0 }) do
+ ns.db.minimapRouteScale = size
+ ns.RefreshRouteLines()
+ assert(mini.lines[1].thickness == minimapThickness, "invalid saved sizes fall back to the default")
+end
+for _, size in ipairs({ { 0, 0.25 }, { 300, 2 } }) do
+ ns.db.minimapRouteScale = size[1]
+ ns.RefreshRouteLines()
+ assert(mini.lines[1].thickness == minimapThickness * size[2], "saved sizes stay within the slider range")
+end
+ns.db.minimapRouteScale = nil
+ns.RefreshRouteLines()
 -- Each surface's walking line has its own switch. Off draws no dots there; the other surface keeps its own, and
 -- the goal ring stays, so only the line goes.
 local function linesOn(owner)

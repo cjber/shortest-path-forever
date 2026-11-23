@@ -69,8 +69,8 @@
     },
     {
       "source": "UI/SettingsMapMarks.lua",
-      "sha256": "a747c217f941292d99d79d6e99d0876493139c5cecd78deb7ccc707224a52b6b",
-      "review": "Read Register and every rows builder call. All phrases are helper arguments to Settings.lua builders and Blizzard settings initializers, with no explicit FontObject in this producer. Tooltip descriptions and dynamic choice labels have no coverage claim. Reviewed the new checkbox. Blizzard settings initializers own its fonts.",
+      "sha256": "0be7ba2c748db3a47101713ef30b38e2976267c1a34f0b00c3a462b941ad1bd6",
+      "review": "Read Register and every rows builder call. All phrases are helper arguments to Settings.lua builders and Blizzard settings initializers, with no explicit FontObject in this producer. Tooltip descriptions and dynamic choice labels have no coverage claim. The minimap walking route size uses the existing Scale builder, whose Blizzard slider initializer owns its fonts.",
       "bindings": []
     },
     {
