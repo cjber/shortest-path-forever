@@ -72,9 +72,9 @@ assert(#printed == 1, "a maintenance release prints nothing new")
 assert(db.seenVersion == Bump(shippedVersion))
 
 -- The setting off: quiet, and the version still moves on.
-version, db.whatsNew = "v" .. Bump(Bump(shippedVersion)), false
-login(db)
-assert(#printed == 1 and db.seenVersion == Bump(Bump(shippedVersion)))
+version = "v" .. shippedVersion
+db = login({ whatsNew = false, seenVersion = "1.4.0" })
+assert(#printed == 1 and db.seenVersion == shippedVersion)
 
 -- A checkout reads the packager's keyword, not a version: quiet, and nothing stored.
 version = "@" .. "project-version@"
