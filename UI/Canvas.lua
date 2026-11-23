@@ -168,6 +168,9 @@ end
 
 ---@param pin SPFCanvasPin?
 local function SetHovered(pin)
+	if pin and pin.view and pin.view.frozen then
+		pin = nil
+	end
 	if hovered == pin then
 		return
 	end
@@ -227,7 +230,7 @@ local function PinAtCursor(view)
 	return best
 end
 
-local Hide
+local Hide, ShowFrozen
 
 ---@param view SPFCanvasView
 local function Update(view)
@@ -245,6 +248,9 @@ local function Update(view)
 	local scaled = scale ~= view.scale or zoom ~= view.zoom or pinScale ~= view.pinScale
 	view.mapID, view.width, view.height, view.scale, view.zoom, view.pinScale, view.stitched =
 		mapID, width, height, scale, zoom, pinScale, stitched
+	if view.frozen then
+		ShowFrozen(view)
+	end
 	if first then
 		view.shown = true
 		view.gamepad = ns.GamepadUI()
@@ -395,20 +401,61 @@ function Canvas.Update(map)
 	end
 end
 
--- The addon's pins on this map: shown, or hidden in combat.
+---@param view SPFCanvasView
+function ShowFrozen(view)
+	local frozen = view.frozen
+	view.layer:SetShown(view.frozenShown ~= false and view.mapID == frozen.mapID and view.stitched == frozen.stitched)
+end
+
+---@param view SPFCanvasView
+local function LetGo(view)
+	if hovered and hovered.view == view then
+		SetHovered(nil)
+	end
+	if pressed and pressed.view == view then
+		pressed:SetPressed(false)
+		pressed = nil
+	end
+end
+
+-- The addon's pins on this map: shown, or hidden by the Show Shortest Path marks switch.
 ---@param map SPFMapCanvas
 ---@param shown boolean
 function Canvas.SetShown(map, shown)
 	local view = views[map]
 	if view then
-		if not shown and hovered and hovered.view == view then
-			SetHovered(nil)
+		if not shown then
+			LetGo(view)
 		end
-		if not shown and pressed and pressed.view == view then
-			pressed:SetPressed(false)
-			pressed = nil
+		view.frozenShown = shown
+		if view.frozen then
+			ShowFrozen(view)
+		else
+			view.layer:SetShown(shown)
 		end
-		view.layer:SetShown(shown)
+	end
+end
+
+-- Combat freezes the pins as last drawn (#1302): no layer can redraw them in lockdown, and a hover or click on one
+-- reaches waypoint, super-track and highlight calls that wait for combat to end. Frozen, they take no hover or
+-- click, and show only over the map they were drawn for: another map, or OpenMap's stitched view turned on or off,
+-- would place them wrongly.
+---@param map SPFMapCanvas
+---@param frozen boolean
+function Canvas.SetFrozen(map, frozen)
+	local view = views[map]
+	if not view then
+		return
+	end
+	if frozen then
+		LetGo(view)
+		if view.frozenShown == nil then
+			view.frozenShown = view.layer:IsShown()
+		end
+		view.frozen = { mapID = view.mapID, stitched = view.stitched }
+	else
+		view.frozen = nil
+		view.layer:SetShown(view.frozenShown ~= false)
 	end
 end
 

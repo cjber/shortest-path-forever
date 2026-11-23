@@ -236,6 +236,11 @@ function ns.RefreshHearthPin()
 	if not hearthPins then
 		return
 	end
+	-- Pins are not acquired in combat; leaving it redraws the map (ns.RefreshMap).
+	if InCombatLockdown() then
+		ns.QueueMapRefresh()
+		return
+	end
 	-- The map, the journey or the bind point changed: the next hover makes a fresh comparison.
 	comparison = nil
 	hearthPins:ReleaseAll()

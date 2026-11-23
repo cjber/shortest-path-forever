@@ -747,6 +747,13 @@ function ns.RefreshMap()
 		if ns.RefreshTownServices then
 			ns.RefreshTownServices()
 		end
+		-- The layers that redraw only on the map's own show and turn, which combat may have queued.
+		if ns.RefreshHearthPin then
+			ns.RefreshHearthPin()
+		end
+		if ns.RefreshMapReport then
+			ns.RefreshMapReport()
+		end
 	end
 	ns.RefreshMinimapPins()
 end
@@ -784,15 +791,20 @@ ns.Init(function()
 	combat:RegisterEvent("PLAYER_REGEN_DISABLED")
 	-- The event, not InCombatLockdown(): lockdown starts only after PLAYER_REGEN_DISABLED is delivered (#1151).
 	-- The world map keeps the route last drawn through combat (#1302): every refresh in combat only queues, so the
-	-- line and pins stay as they were, and leaving combat redraws them once. The minimap's nearby-service pins sit
-	-- where they were around the player, which goes stale as soon as the player moves, so they hide until then.
+	-- line and pins stay as they were, frozen (Canvas.SetFrozen), and leaving combat redraws them once. The minimap's
+	-- nearby-service pins sit where they were around the player, which goes stale as soon as the player moves, so
+	-- they hide until then.
 	combat:SetScript("OnEvent", function(_, event)
 		if event == "PLAYER_REGEN_DISABLED" then
 			ns.mapRefreshPending = true
+			MapCanvas.SetFrozen(WorldMapFrame, true)
 			ns.HideMinimapPins()
-		elseif ns.mapRefreshPending then
-			ns.mapRefreshPending = nil
-			ns.RefreshMap()
+		else
+			MapCanvas.SetFrozen(WorldMapFrame, false)
+			if ns.mapRefreshPending then
+				ns.mapRefreshPending = nil
+				ns.RefreshMap()
+			end
 		end
 	end)
 	function ns.QueueMapRefresh()
