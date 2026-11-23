@@ -20,7 +20,7 @@ end
 for _, map in ipairs({ 0, 1 }) do
 	assert(loadfile("tools/load_nav.lua"))(map)
 end
-local Path = ns.Path
+local Path, Grid = ns.Path, ns.PathGrid
 Path.cacheKB = math.huge
 local follow = assert(loadfile("tests/walk_follow.lua"))().new(ns)
 local fixture = assert(loadfile("tests/fixtures/caves_cities.lua"))()
@@ -34,6 +34,33 @@ local function offset(st, x, y)
 	local cx = st.x0 + (floor((x - st.x0) / st.cs) + 0.5) * st.cs
 	local cy = st.y0 + (floor((y - st.y0) / st.cs) + 0.5) * st.cs
 	return sqrt((x - cx) ^ 2 + (y - cy) ^ 2)
+end
+
+-- A marked drop can cost fewer running yards than the distance between its drawn cell centers.
+-- Credit that measured difference when checking the horizontal lower bound. Interior points name exact nodes.
+local function dropCredit(st, points)
+	local credit = 0
+	local ks, nodes, costs = {}, {}, {}
+	for i = 2, #points - 2 do
+		local a, b = points[i], points[i + 1]
+		if a.jump then
+			local ak, ac = Grid.locate(st, a.x, a.y)
+			local bk, bc = Grid.locate(st, b.x, b.y)
+			local an = Grid.standing(st, ak, ac, a.z)
+			local bn = Grid.standing(st, bk, bc, b.z)
+			local gx, gy = floor((a.x - st.x0) / st.cs), floor((a.y - st.y0) / st.cs)
+			local dx, dy = floor((b.x - st.x0) / st.cs) - gx, floor((b.y - st.y0) / st.cs) - gy
+			local charge = math.huge
+			for j = 1, Grid.neighbours(st, ak, an, gx, gy, dx, dy, true, ks, nodes, costs) do
+				if ks[j] == bk and nodes[j] == bn and costs[j] > 0 then
+					charge = math.min(charge, costs[j])
+				end
+			end
+			assert(charge < math.huge, "marked drop has no matching link")
+			credit = credit + math.max(0, sqrt(dx * dx + dy * dy) * st.cs - charge)
+		end
+	end
+	return credit
 end
 
 local failed = {} -- key -> kind
@@ -94,9 +121,9 @@ for _, w in ipairs(fixture.walks) do
 		if f then
 			kind = f.kind
 		elseif reference then
-			local st = ns.PathGrid.State(map)
+			local st = Grid.State(map)
 			local slack = offset(st, from.x, from.y) + offset(st, to.x, to.y) + w[10]
-			if cost < reference - slack or cost > reference * OCTILE + slack then
+			if cost + dropCredit(st, points) < reference - slack or cost > reference * OCTILE + slack then
 				kind = "cost"
 			end
 		end

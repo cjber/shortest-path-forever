@@ -1,4 +1,3 @@
-import math
 import pickle
 import unittest
 from array import array
@@ -8,10 +7,12 @@ from unittest.mock import patch
 from tools.baker import gen_nav
 from tools.baker.gen_nav import decode_road_runs, drop_cost, pick_floor, pick_surface, walkable
 from tools.baker.geometry import centroid, clip_convex, height, plane
+from tools.ceiling_encoding_test import CeilingEncodingTest as CeilingEncodingTest
 
-# Include the graph cases in the existing gen_nav_test unittest entry point.
+# Include graph and overhead cases in the existing gen_nav_test unittest entry point.
 from tools.gen_nav_graph_test import ClusterCrossingTest as ClusterCrossingTest
 from tools.gen_nav_graph_test import GraphLegalityTest as GraphLegalityTest
+from tools.overhead_test import OverheadTest as OverheadTest
 
 
 class WalkableTest(unittest.TestCase):
@@ -41,7 +42,7 @@ def flat(z):
     """A square covering the fixture's points at height z, with the plane gen_nav's layer matching uses."""
     pts = [(-1.0, -1.0, z), (20.0, -1.0, z), (20.0, 20.0, z), (-1.0, 20.0, z)]
     c = tuple(sum(p[a] for p in pts) / len(pts) for a in range(3))
-    return {"pts": [(p[0], p[1]) for p in pts], "plane": plane(pts, c), "steep": False}
+    return {"pts": [(p[0], p[1]) for p in pts], "plane": plane(pts, c), "steep": False, "water": False}
 
 
 class PickSurfaceTest(unittest.TestCase):
@@ -184,13 +185,12 @@ class RasterizeLayersTest(unittest.TestCase):
 
 
 class DiagonalTest(unittest.TestCase):
-    def test_a_steep_diagonal_opens_the_symmetric_flag(self):
-        # Steep ground is a value, not a direction in the file: the diagonal bit stays open and the decoder walks it
-        # downhill only, from the two stored heights.
+    def test_diagonal_uses_a_directed_mask_without_a_detour(self):
+        # The walk takes both directions, despite differing stored heights and missing corner cells.
         c = gen_nav.CELLS
         i, j = 10 * c + 10, 11 * c + 11
-        polys = {1: {**flat(10.0), "steep": True}}
-        layers = {i: [(20.0, 3, (1, (0.0, 0.0)))], j: [(10.0, 1, (1, (0.0, 0.0)))]}
+        polys = {1: {**flat(10.0), "pts": [(70, 70), (100, 70), (100, 100), (70, 100)], "steep": True}}
+        layers = {i: [(20.0, 1, (1, (0.0, 0.0)))], j: [(10.0, 1, (1, (0.0, 0.0)))]}
         with (
             patch.object(gen_nav, "TILES", {(0, 0): "tile"}),
             patch.object(gen_nav, "NX", 1),
@@ -205,14 +205,13 @@ class DiagonalTest(unittest.TestCase):
             patch.object(gen_nav, "rasterize_layers", lambda polys, adj, portal, bounds: layers),
             patch.object(gen_nav, "read_tile", lambda rc: ([], [], [], [])),
         ):
-            _, _, _, _, links, own, _, _ = gen_nav.rasterize_tile((0, 0))
-        free = [(i, 20.0, j, 10.0, "free"), (j, 10.0, i, 20.0, "free")]
-        self.assertEqual(sorted(links), sorted(free), "the walk climbs back up, which no bit can say (#1101)")
-        self.assertNotIn(i * 4 + 2, own, "a bit would read the climb with the downhill-only rule")
+            _, vals, _, _, links, own, _, _, _ = gen_nav.rasterize_tile((0, 0))
+        self.assertEqual(vals[i], 1)
+        self.assertEqual(links, [(i, 0, j, 0, gen_nav.NARROW_STEP), (j, 0, i, 0, gen_nav.NARROW_STEP)])
+        self.assertEqual((own[i], own[j]), (16, 128))
 
     def test_a_ground_diagonal_across_a_cluster_edge_keeps_both_directions(self):
-        # A -y diagonal on ground is a pair of records. Each tile writes the records whose source it holds, so the
-        # pair must be looked at from both sides of the edge, or the reverse is lost and the crossing is one-way.
+        # Each tile owns the outgoing bit for its source cell.
         c = gen_nav.CELLS
         polys = {1: {**flat(10.0), "pts": [(-1e4, -1e4), (1e4, -1e4), (1e4, 1e4), (-1e4, 1e4)]}}
         for nx, ny, (ix, iy), (jx, jy) in ((2, 1, (c - 1, 10), (c, 9)), (1, 2, (10, c), (11, c - 1))):
@@ -220,7 +219,7 @@ class DiagonalTest(unittest.TestCase):
             i, j = ix * gh + iy, jx * gh + jy
             layers = {i: [(10.0, 1, (1, (0.0, 0.0)))], j: [(10.0, 1, (1, (0.0, 0.0)))]}
             tiles = {(31 - x, 31 - y): "tile" for x in range(nx) for y in range(ny)}
-            links = []
+            masks = {}
             with (
                 patch.object(gen_nav, "TILES", tiles),
                 patch.object(gen_nav, "NX", nx),
@@ -236,14 +235,14 @@ class DiagonalTest(unittest.TestCase):
                 patch.object(gen_nav, "read_tile", lambda rc: ([], [], [], [])),
             ):
                 for rc in tiles:
-                    links += gen_nav.rasterize_tile(rc)[4]
-            both = [(i, 10.0, j, 10.0, "free"), (j, 10.0, i, 10.0, "free")]
-            self.assertEqual(sorted(links), sorted(both), f"each direction once, edge {'x' if nx > 1 else 'y'}")
+                    masks[gen_nav.cluster_of_tile(*rc)] = gen_nav.rasterize_tile(rc)[5]
+            self.assertEqual(masks[ix // c * ny + iy // c][ix % c * c + iy % c], 32)
+            self.assertEqual(masks[jx // c * ny + jy // c][jx % c * c + jy % c], 64)
 
 
 class SteepStepTest(unittest.TestCase):
     def tile(self, polys, adj, portal, layers):
-        """What one tile emits for this navmesh and these layers: (links, own)."""
+        """What one tile emits for this navmesh: base values, floors, links and cuts."""
         c = gen_nav.CELLS
         with (
             patch.object(gen_nav, "TILES", {(0, 0): "tile"}),
@@ -259,43 +258,91 @@ class SteepStepTest(unittest.TestCase):
             patch.object(gen_nav, "rasterize_layers", lambda polys, adj, portal, bounds: layers),
             patch.object(gen_nav, "read_tile", lambda rc: ([], [], [], [])),
         ):
-            _, _, _, _, links, own, _, _ = gen_nav.rasterize_tile((0, 0))
-        return links, own
+            _, vals, _, floors, links, own, _, _, _ = gen_nav.rasterize_tile((0, 0))
+        return vals, floors, links, own
 
-    def face(self, x0, x1, z0, z1, steep):
+    def face(self, x0, x1, z0, z1, steep, y=0):
         """A strip rising from z0 at x0 to z1 at x1, 8 yards deep, with the plane the bake reads heights from."""
-        pts = [(x0, 0.0, z0), (x1, 0.0, z1), (x1, 8.0, z1), (x0, 8.0, z0)]
+        pts = [(x0, y, z0), (x1, y, z1), (x1, y + 8, z1), (x0, y + 8, z0)]
         c = tuple(sum(p[a] for p in pts) / len(pts) for a in range(3))
         return {"pts": [(p[0], p[1]) for p in pts], "plane": plane(pts, c), "c": c, "steep": steep,
                 "water": False, "size": 1}  # fmt: skip
 
-    def test_a_steep_step_the_walk_climbs_is_taken_as_written(self):
-        # The steep floor's anchor is the face's top edge, where the navmesh walk steps up a 2 yard lip onto the
-        # ground above. The decoder's stored-height rule refuses that step off steep ground: a bit would lose that
-        # direction, so each walked direction is a record taken as written (#1101).
+    def test_dry_corridor_checks_the_whole_doorway(self):
+        c, cs = gen_nav.CELLS, gen_nav.CS
+        i, j = 10 * c + 10, 11 * c + 10
+        ax, bx = 10 * cs, 11 * cs
+        seam = ((bx, ax + 0.4 * cs), (bx, ax + 0.6 * cs))
+        a, b = (ax + cs / 2, ax + cs / 2), (bx + cs / 2, ax + cs / 2)
+        polys = {0: self.face(ax, bx, 0, 0, False, y=ax), 1: self.face(bx, bx + cs, 0, 0, False, y=ax)}
+        polys[0]["pts"] = [(ax, ax), (bx, ax), (bx, bx), (ax, bx)]
+        polys[1]["pts"] = [(bx, ax), (bx + cs, ax), (bx + cs, bx), (bx, bx)]
+        layers = {i: [(0, 1, (0, a))], j: [(0, 1, (1, b))]}
+        adj = {0: {1}, 1: {0}}
+        _, _, narrow, _ = self.tile(polys, adj, {(0, 1): seam, (1, 0): seam}, layers)
+        self.assertEqual(narrow, [(i, 0, j, 0, "narrow"), (j, 0, i, 0, "narrow")])
+        wide = ((bx, ax), (bx, bx))
+        _, _, unrestricted, _ = self.tile(polys, adj, {(0, 1): wide, (1, 0): wide}, layers)
+        self.assertEqual(unrestricted, [])
+
+    def test_floor_steps_keep_the_exact_landing_layer(self):
+        # Two destinations have the same height, but only layer 1 meets the source face.
         c = gen_nav.CELLS
         i, j = 10 * c + 10, 11 * c + 10
         cs = gen_nav.CS
         polys = {
-            0: self.face(i * cs, (i % c + 1) * cs, 236.0, 244.0, False),  # the cell's own ground
-            1: self.face(i * cs, (i % c + 1) * cs, 240.0, 248.0, True),  # the face above it
-            2: self.face(j * cs, (j % c + 1) * cs, 250.0, 250.0, False),
-            3: self.face(j * cs, (j % c + 1) * cs, 250.0, 250.0, False),  # the ground it leads up to
+            0: self.face(10 * cs, 11 * cs, 236.0, 244.0, False, y=10 * cs),  # the cell's own ground
+            1: self.face(10 * cs, 11 * cs, 240.0, 248.0, True, y=10 * cs),  # the face above it
+            2: self.face(11 * cs, 12 * cs, 250.0, 250.0, False, y=10 * cs),
+            3: self.face(11 * cs, 12 * cs, 250.0, 250.0, False, y=10 * cs),  # the ground it leads up to
         }
+        y = 10 * cs
+        polys[2]["pts"] = [(11 * cs, y), (12 * cs, y), (12 * cs, y + 1), (11 * cs, y + 1)]
+        polys[3]["pts"] = [(11 * cs, y + 1), (12 * cs, y + 1), (12 * cs, y + 8), (11 * cs, y + 8)]
         layers = {
-            i: [(236.0, 1, (0, (i * cs + 2.0, 2.0))), (248.0, 3, (1, (11 * cs, 2.0)))],
-            j: [(250.0, 1, (2, (j * cs + 2.0, 2.0))), (250.0, 1, (3, (j * cs + 2.0, 2.0)))],
+            i: [(236.0, 1, (0, (10 * cs + 2.0, 10 * cs + 2.0))), (248.0, 1, (1, (11 * cs, 10 * cs + 2.0)))],
+            j: [(250.0, 1, (2, (11 * cs + 2.0, 10 * cs + 0.5))), (250.0, 1, (3, (11 * cs + 2.0, 10 * cs + 2.0)))],
         }
         ends = ((11 * cs, 10 * cs), (11 * cs, 11 * cs))
-        links, _ = self.tile(polys, {1: {3}, 3: {1}}, {(1, 3): ends, (3, 1): ends[::-1]}, layers)
-        for edge in [(i, 248.0, j, 250.0, "free"), (j, 250.0, i, 248.0, "free")]:
-            self.assertIn(edge, links, f"each walked direction is its own record: {edge}")
-        self.assertNotIn((i, 248.0, j, 250.0, None), links, "and none rides a bit")
+        _, floors, links, _ = self.tile(polys, {1: {3}, 3: {1}}, {(1, 3): ends, (3, 1): ends[::-1]}, layers)
+        self.assertIn((i, [(1, 248.0)]), floors)
+        self.assertEqual(set(links), {(i, 1, j, 1, gen_nav.WET_STEP), (j, 1, i, 1, gen_nav.NARROW_STEP)})
+
+    def test_step_between_two_dry_cells_can_require_water(self):
+        c, cs = gen_nav.CELLS, gen_nav.CS
+        i, j = 10 * c, 11 * c
+        polys = {
+            0: self.face(10 * cs, 10.5 * cs, 0.0, 0.0, False),
+            1: {**self.face(10.5 * cs, 11.5 * cs, 0.0, 0.0, False), "water": True},
+            2: self.face(11.5 * cs, 12 * cs, 0.0, 0.0, False),
+        }
+        layers = {i: [(0.0, 1, (0, (10 * cs + 1, 1)))], j: [(0.0, 1, (2, (12 * cs - 1, 1)))]}
+        left, right = ((10.5 * cs, 0), (10.5 * cs, 8)), ((11.5 * cs, 0), (11.5 * cs, 8))
+        portals = {(0, 1): left, (1, 0): left, (1, 2): right, (2, 1): right}
+        _, _, links, masks = self.tile(polys, {0: {1}, 1: {0, 2}, 2: {1}}, portals, layers)
+        self.assertEqual((masks[i], masks[j]), (1, 2))
+        self.assertEqual(set(links), {(i, 0, j, 0, gen_nav.WET_STEP), (j, 0, i, 0, gen_nav.WET_STEP)})
+
+    def test_dry_detour_does_not_clear_the_straight_step(self):
+        c, cs = gen_nav.CELLS, gen_nav.CS
+        i, j = 10 * c, 11 * c
+        left, right = 10.5 * cs, 11.5 * cs
+        polys = {
+            0: self.face(10 * cs, left, 0, 0, False),
+            1: self.face(left, right, 0, 0, False),
+            2: self.face(right, 12 * cs, 0, 0, False),
+        }
+        polys[1]["pts"] = [(left, 4), (right, 4), (right, 8), (left, 8)]
+        layers = {i: [(0, 1, (0, (10 * cs + 1, 2)))], j: [(0, 1, (2, (12 * cs - 1, 2)))]}
+        a, b = ((left, 4), (left, 8)), ((right, 4), (right, 8))
+        portals = {(0, 1): a, (1, 0): a, (1, 2): b, (2, 1): b}
+        _, _, links, masks = self.tile(polys, {0: {1}, 1: {0, 2}, 2: {1}}, portals, layers)
+        self.assertEqual((masks[i], masks[j]), (1, 2))
+        self.assertEqual(set(links), {(i, 0, j, 0, gen_nav.WET_STEP), (j, 0, i, 0, gen_nav.WET_STEP)})
 
     def test_ground_beside_a_steep_face_does_not_climb_it(self):
         # A flat cell shares an edge with the foot of a steep face whose anchor stands 6.75 yards up it. The walk
-        # comes down the face onto the ground and cannot climb it, so the pair rides the downhill-only bit and no
-        # record climbs it as written: a shortcut for neighbouring polys did, up the mountain outside Ironforge (#1011).
+        # comes down the face onto the ground and cannot climb it, so only the downhill outgoing bit is set.
         c = gen_nav.CELLS
         i, j = 10 * c + 10, 11 * c + 10
         cs = gen_nav.CS
@@ -312,69 +359,12 @@ class SteepStepTest(unittest.TestCase):
         }
         a, b = (x0 + 4.0, y0 + 4.0), (x1 + 6.0, y0 + 4.0)
         zb = height(polys[1], *b)
-        layers = {i: [(437.0, 1, (0, a))], j: [(zb, 3, (1, b))]}
+        layers = {i: [(437.0, 1, (0, a))], j: [(zb, 1, (1, b))]}
         ends = ((x1, y0), (x1, y1))
-        links, own = self.tile(polys, {0: {1}, 1: {0}}, {(0, 1): ends, (1, 0): ends[::-1]}, layers)
-        self.assertNotIn((i, 437.0, j, zb, "free"), links, "the face is never climbed as written")
-        self.assertNotIn(i * 4, own, "the downhill-only bit carries the pair")
-
-    def test_a_one_way_step_the_heights_refuse_rides_one_bit(self):
-        # The walk takes the face down and refuses the climb; the stored heights refuse it too, and the far end is
-        # steep, so one symmetric bit carries the pair. This is what keeps a continent of steep ground from costing
-        # a record per step.
-        self.assertTrue(gen_nav.pair_carries_bit(20.4, 0, 18.0, 0, True, False, True))
-        self.assertFalse(gen_nav.pair_carries_bit(20.4, 0, 18.0, 0, False, True, True), "that is the climb")
-        self.assertTrue(gen_nav.pair_carries_bit(18.0, 0, 20.4, 0, False, True, True), "the descent is the taken one")
-
-    def test_a_refusal_the_runtime_cannot_check_keeps_its_record(self):
-        # Ordinary ground has no steep test, so a bit would walk the pair both ways: a one-way wall the heights do
-        # not explain must stay its own record, and a pair the walk joins neither way is no step.
-        self.assertFalse(gen_nav.pair_carries_bit(20.0, 0, 18.0, 0, False, True, False))
-        self.assertFalse(gen_nav.pair_carries_bit(20.4, 0, 18.0, 0, False, True, True), "heights allow the descent")
-        self.assertFalse(gen_nav.pair_carries_bit(20.0, 0, 18.0, 0, False, False, True), "no walk, no step")
-
-    def test_a_pair_the_walk_joins_both_ways_always_rides_a_bit(self):
-        self.assertTrue(gen_nav.pair_carries_bit(20.0, 0, 30.0, 0, True, True, False))
-        self.assertTrue(gen_nav.pair_carries_bit(20.0, 1, 20.0, 0, True, True, True))
-
-    def test_a_steep_orthogonal_pair_the_walk_climbs_is_taken_as_written(self):
-        c = gen_nav.CELLS
-        i, j = 10 * c + 10, 11 * c + 10
-        polys = {1: {**flat(10.0), "steep": True}}
-        layers = {i: [(20.0, 3, (1, (0.0, 0.0)))], j: [(10.0, 1, (1, (0.0, 0.0)))]}
-        with (
-            patch.object(gen_nav, "TILES", {(0, 0): "tile"}),
-            patch.object(gen_nav, "NX", 1),
-            patch.object(gen_nav, "NY", 1),
-            patch.object(gen_nav, "CX0", 31),
-            patch.object(gen_nav, "CY0", 31),
-            patch.object(gen_nav, "GW", c),
-            patch.object(gen_nav, "GH", c),
-            patch.object(gen_nav, "X0", 0.0),
-            patch.object(gen_nav, "Y0", 0.0),
-            patch.object(gen_nav, "load_window", lambda window: (polys, {}, {})),
-            patch.object(gen_nav, "rasterize_layers", lambda polys, adj, portal, bounds: layers),
-            patch.object(gen_nav, "read_tile", lambda rc: ([], [], [], [])),
-        ):
-            _, _, _, _, links, own, _, _ = gen_nav.rasterize_tile((0, 0))
-        free = [(i, 20.0, j, 10.0, "free"), (j, 10.0, i, 20.0, "free")]
-        self.assertEqual(sorted(links), sorted(free), "both walked directions survive the downhill-only rule")
-        self.assertIn(i * 4, own, "the bit is cut: the records carry the pair")
-
-    def test_steep_step_uses_the_stored_heights(self):
-        # Base heights are stored on the 2-yard grid; a floor is stored at whole yards, like gen_nav.stored_z.
-        self.assertTrue(gen_nav.steep_step(20.4, 0, 18.0, 0))
-        self.assertFalse(gen_nav.steep_step(18.0, 0, 20.4, 0))
-        self.assertTrue(gen_nav.steep_step(20.4, 0, 20.4, 0), "equal stored heights pass both ways")
-        self.assertFalse(gen_nav.steep_step(20.4, 1, 21.0, 1), "a floor uses whole yards")
-
-    def test_a_52_degree_face_is_walked_down_only(self):
-        # One 8 yard cell of a 52 degree face rises CS * tan 52, inside the bake's steep band: the player walks it
-        # down and cannot climb it. The comparison is between the stored heights, as the decoder reads them.
-        rise = gen_nav.CS * math.tan(math.radians(52))
-        low, high = 20.0, 20.0 + rise
-        self.assertFalse(gen_nav.steep_step(low, 0, high, 0), "the player cannot climb a 52 degree face")
-        self.assertTrue(gen_nav.steep_step(high, 0, low, 0), "the player walks a 52 degree face down")
+        vals, _, links, own = self.tile(polys, {0: {1}, 1: {0}}, {(0, 1): ends, (1, 0): ends[::-1]}, layers)
+        self.assertEqual(vals[j], 1)
+        self.assertEqual(links, [(j, 0, i, 0, gen_nav.NARROW_STEP)])
+        self.assertEqual((own[i], own[j]), (0, 2))
 
 
 class AssembleFloorsTest(unittest.TestCase):
@@ -680,11 +670,9 @@ class LinkedPortalBoxTest(unittest.TestCase):
             patch.object(gen_nav, "rasterize_layers", lambda polys, adj, portal, bounds: layers),
             patch.object(gen_nav, "read_tile", lambda rc: ([], [], [], [])),
         ):
-            _, _, _, _, links, own, _, _ = gen_nav.rasterize_tile((0, 0))
-        self.assertIn(i * 4, own, "the ordinary two-way step is cut")
-        uphill = [link for link in links if link[:4] == (i, 0.0, j, 8.0)]
-        self.assertEqual(uphill, [], "no uphill link borrows the remote portal height")
-        self.assertIn((j, 8.0, i, 0.0, "free"), links, "the downhill direction remains walkable")
+            _, _, _, _, links, own, _, _, _ = gen_nav.rasterize_tile((0, 0))
+        self.assertEqual(links, [(j, 0, i, 0, gen_nav.WET_STEP)])
+        self.assertEqual((own[i], own[j]), (0, 2), "only the downhill direction remains walkable")
 
     def test_a_shared_edge_outside_the_cells_does_not_link_them(self):
         # Two surfaces whose polygons meet only at a doorway far outside the two cells: the old early return counted
@@ -711,9 +699,9 @@ class LinkedPortalBoxTest(unittest.TestCase):
             patch.object(gen_nav, "rasterize_layers", lambda polys, adj, portal, bounds: layers),
             patch.object(gen_nav, "read_tile", lambda rc: ([], [], [], [])),
         ):
-            _, _, _, _, links, own, _, _ = gen_nav.rasterize_tile((0, 0))
+            _, _, _, _, links, own, _, _, _ = gen_nav.rasterize_tile((0, 0))
         self.assertEqual(links, [], "no step is written across the doorway")
-        self.assertIn(i * 4 + 1, own, "the +y step between the facing cells is cut")
+        self.assertEqual((own[i], own[j]), (0, 0), "the facing cells cannot cross between them")
 
 
 class SliverTest(unittest.TestCase):

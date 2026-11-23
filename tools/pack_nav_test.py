@@ -6,6 +6,7 @@ import zlib
 from pathlib import Path
 
 from tools.pack_nav import BLOCK_BYTES, read_map, read_packed, write_bundle
+from tools.pack_nav_clearance import pack_clearance, restore_clearance, write_records
 
 
 class NavigationPackingTest(unittest.TestCase):
@@ -24,6 +25,28 @@ class NavigationPackingTest(unittest.TestCase):
         (directory / "ShortestPathForever_Nav0.toc").write_text("## LoadOnDemand: 1\n\nNav0.lua\n")
         return path
 
+    def test_indexed_graph_keeps_arbitrary_bytes(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            src = self.source(root)
+            graph = bytes(range(256)) * 65
+            encoded = base64.b64encode(graph).decode("ascii").rstrip("=")
+            source = src.read_text().replace('"AAA"', f'"{encoded}"')
+            source = source.replace("\tcells = 67,", "\tcells = 67,\n\tgraphFormat = 1,")
+            src.write_text(source)
+            _, before, *_ = read_map(src, 0)
+            write_bundle(root, [src])
+            _, after, *_ = read_packed(root / "Nav/Nav0.lua", 0)
+            self.assertEqual(before, after)
+            part = (root / "Nav/Nav0_1.lua").read_text()
+
+            def inflate(field):
+                row = next(line for line in part.splitlines() if line.startswith(f"data.packed.{field}[1]"))
+                return b"".join(zlib.decompress(base64.b64decode(block)) for block in re.findall(r'"([^"]+)"', row))
+
+            self.assertEqual(inflate("graph"), graph)
+            self.assertEqual(inflate("grid"), b"ABCD" * 9000)
+
     def test_bundle_preserves_data_and_is_stable(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -39,6 +62,40 @@ class NavigationPackingTest(unittest.TestCase):
             first = {p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()}
             write_bundle(root, [bundled])
             self.assertEqual(first, {p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()})
+
+    def test_ceiling_field_survives_packing(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            path = self.source(root)
+            path.write_text(path.read_text()[:-2] + '\tceiling = {\n\t\t[1] = "BkrE",\n\t},\n}\n')
+            write_bundle(root, [path])
+            _, fields, *_ = read_packed(root / "Nav/Nav0.lua", 0)
+            self.assertEqual(fields.get("ceiling"), {1: "BkrE"})
+
+    def test_format_four_packs_clearance_and_restores_raw_records(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            path = self.source(root)
+            floor = "A" * 12 + "AAAAIABAB"
+            source = path.read_text().replace('"GGG"', f'"{floor}"')
+            source = source.replace("\tcells = 67,", "\tcells = 2,\n\tformat = 4,\n\tfloorFormat = 1,")
+            path.write_text(source)
+            write_bundle(root, [path])
+            bundled = root / "Nav/Nav0.lua"
+            row = next(
+                line for line in (root / "Nav/Nav0_1.lua").read_text().splitlines() if "data.packed.floor" in line
+            )
+            packed = b"".join(zlib.decompress(base64.b64decode(block)) for block in re.findall(r'"([^"]+)"', row))
+            self.assertEqual(packed[:13], b"A" * 12 + b"!")
+            self.assertEqual(read_packed(bundled, 0)[1]["floor"], {2: floor})
+
+    def test_layer_planes_restore_each_target_layers_wet_and_narrow_bits(self):
+        prefix = b"A" * 12
+        raw = prefix + write_records([(0, 1, 0), (1, 2, 1), (1, 11, 2), (3, 8, 1)])
+        sparse, planes = pack_clearance(raw, 2)
+        self.assertTrue(planes.startswith(prefix + b"~"))
+        self.assertEqual(restore_clearance(planes, 2), raw)
+        self.assertEqual(restore_clearance(sparse, 2), raw)
 
     def test_replacing_one_map_preserves_other_maps(self):
         with tempfile.TemporaryDirectory() as temporary:

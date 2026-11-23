@@ -144,21 +144,14 @@ landing may lie in the next tile; the heightfield border bounds how far out it c
 floor surfaces, and the generator charges the walk plus free fall's time at the client's gravity (19.2911 yd/s²) run
 at 7 yd/s. `tools/baker/check_drops.py` compiles and exercises that helper alongside `check_hazards.py`.
 
-Maps are written in format 3. A step both ways take is one bit in a floor's step mask, and the node stores the layer
-each set direction lands on, so the decoder resolves the pair the bake linked rather than a surface merely near its
-height. A step one way takes because one end is steep rides the same bit: the decoder's stored-height test refuses the
-climb, so a ledge is dropped off but never climbed and steep ground is never walked up. Only a step one way takes for
-a reason the decoder cannot decide for itself (a wall, ground it cannot pass) or one with a cost of its own is a
-record. The file stores each single link once, from the node that leaves it: a step's [node, direction, layer], or a
-drop's [node, x, y, layer, cost in whole yards]. Floors, record nodes and cells are written as deltas, so a cluster's
-list of surfaces and its records cost a fraction of the absolute indices they used to. An offset of (0, 0) is a link
-within one cell, so a drop from a ledge to a distinct floor of the same cell is stored too, and the generator maps a
-drop to the surfaces its endpoints lie on (the poly's own height, not the nearest cell anchor), linking the ledge to
-the landing's floor or, when that floor is rasterized in a neighbouring cell, to that cell's matching layer. The tile
-graph keeps one record per edge from the node that leaves it as well, and the decoder builds every node's
-predecessors from those records. `Routing/PathGrid.lua` still decodes format 2, whose floor step bits it resolves by
-height, and format 1, which every map shipped before format 2 uses and which keeps its symmetric links and
-height-matched floor steps.
+Maps are written in format 4. Base cells and floors store outgoing masks in eight directions. Diagonals come
+from the navmesh walk, and each direction that reaches a floor stores the exact set of layers it reaches.
+Base-to-base masks share runs through a per-cluster palette. The floor field groups its landing sets after the
+headers so zlib can compress them together. Slope is part of the navmesh walk, so the map needs no steep flag
+or per-step height test. Dry refinement checks sparse annotations for steps that require water between
+dry endpoints. Drops store [node, x, y, layer, cost in whole yards]. An offset of (0, 0) lets a drop
+land on another layer of the same cell. The tile graph stores directed edges and their costs. The runtime
+continues to decode formats 1 through 3.
 
 The generator emits raw base64 cluster fields. `pack_nav.py --root <addon root> NavN.lua...` compresses them
 with zlib into blocks that expand to at most 16 KiB and bundles them under `Nav/`, each Lua file at most
@@ -185,6 +178,18 @@ python3 tools/baker/terrain_field.py --root . --maps-dir /path/to/extract/maps -
 
 This rewrites only the `terrain` field, leaving graph, grid, height and floor byte-identical. `tools/baker/terrain.py`
 reads the pinned extractor's format (flat, float, uint16 and uint8 heights, and holes).
+
+The packer compacts the format 4 clearance tail without changing the raw bake. After the floor and drop
+records, `!` introduces two byte planes for layer-zero landings, one for blocked directions and one for
+centre-line-only directions. Each byte is one source node's mask. The remaining records keep their
+original encoding. Unpacking for a graph refresh restores all clearance records in bake order.
+
+Format 4 stores cover at each walkable layer's anchor. The baker records the ADT surface and the nearest
+overhead collision surface from WMO or doodad geometry in the extraction's sibling `vmaps/` directory.
+A layer can have both kinds of cover, such as a cave with a WMO ceiling under the terrain. Both heights
+are quantized to one eighth of a yard. For a decoded cell, `PathGrid.ceiling` returns the terrain height
+and source when terrain covers the layer, with a third return value for the structure height when present.
+When only a structure covers the layer, it returns the structure height and source.
 
 Boat and zeppelin walking endpoints are generated from nearby dry boarding surfaces in the bundled map. Transport coordinates remain the boat or airship position for timetable calculations.
 

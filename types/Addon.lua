@@ -484,6 +484,8 @@ ShortestPathForeverCharDB = nil
 ---@field swim number
 ---@field zstep number
 ---@field format? number 2 for a step mask plus one-way link records; 1 (absent) for symmetric links
+---@field floorFormat? number encoding version for floor landing sets
+---@field graphFormat? number encoding version for graph fields
 ---@field baseDegreeWidth? number base64 symbols per base-edge prefix count; absent means all edges are base
 ---@field degreeWidth? number base64 symbols per graph degree; absent for the original one-symbol maps
 ---@field steep? boolean graph cells spend flag 8 on steep ground; a step with a steep end goes downhill only
@@ -492,6 +494,7 @@ ShortestPathForeverCharDB = nil
 ---@field graph string[]
 ---@field height string[]
 ---@field floor string[]
+---@field ceiling? string[] cluster overhead surfaces and their source kinds
 ---@field counts? table<string, number> generated entry counts for repacking integrity
 ---@field packed? table<string, table<number, string[]>> compressed blocks indexed by field and cluster
 ---@type table<number, SPFNavData>

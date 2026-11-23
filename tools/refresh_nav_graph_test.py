@@ -1,3 +1,4 @@
+import base64
 import json
 import sys
 import unittest
@@ -9,7 +10,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from refresh_nav_graph import COMPATIBILITY, collision_compatible, decode, nav  # noqa: E402
+from refresh_nav_graph import COMPATIBILITY, collision_compatible, decode, graph_nodes, nav  # noqa: E402
 
 
 class StoredGridTest(unittest.TestCase):
@@ -22,6 +23,17 @@ class StoredGridTest(unittest.TestCase):
         self.assertTrue(collision_compatible(current, current))
         self.assertFalse(collision_compatible("unlisted", current))
 
+    def test_inspection_resolves_indexed_entrances_to_floor_nodes(self):
+        raw = nav.encode_graph(4, [(5, 1, 6, 0, 0), (15, 0, 2, 0, 0)], [[], []])
+        text = base64.b64encode(raw).decode("ascii").rstrip("=")
+        with (
+            patch.object(nav, "CELLS", 4),
+            patch.object(nav, "NY", 1),
+            patch.object(nav, "GH", 4),
+            patch.object(nav, "FLOORS_AT", {21: [32]}),
+        ):
+            self.assertEqual(graph_nodes({"graph": {2: text}}, indexed=True), {1: {31, 32}})
+
     def test_missing_metadata_and_older_formats_are_rejected(self):
         fields = {name: {} for name in ("graph", "grid", "height", "floor", "terrain")}
         with self.assertRaisesRegex(ValueError, "Missing navigation metadata"):
@@ -29,7 +41,13 @@ class StoredGridTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "requires format 3"):
             decode("\tformat = 2,", fields, 0)
 
-    def test_encoded_geometry_restores_every_directed_step_and_stored_cost(self):
+    def test_format_3_restores_every_directed_step_and_stored_cost(self):
+        self.assert_round_trip(3)
+
+    def test_format_4_restores_every_directed_step_and_stored_cost(self):
+        self.assert_round_trip(4)
+
+    def assert_round_trip(self, fmt):
         state = {
             "MAP": 0,
             "CELLS": 4,
@@ -51,6 +69,8 @@ class StoredGridTest(unittest.TestCase):
             "LINKS": defaultdict(dict),
             "LINKED_OF": defaultdict(list),
             "TERRAIN": {},
+            "WET_STEPS": defaultdict(set),
+            "NARROW_STEPS": defaultdict(set),
             "ROAD_CELLS": {},
         }
         with ExitStack() as stack:
@@ -62,7 +82,7 @@ class StoredGridTest(unittest.TestCase):
             nav.BASE_Z[7], nav.BASE_Z[8], nav.BASE_Z[31] = 12, 6, 300
             # Two layers on both sides of the border, a same-cluster bit, a one-way floor step, and a directed drop.
             nav.assemble_floors(
-                [(cell, [(1, 31), (3, 61)]) for cell in (8, 12, 16)],
+                [(cell, [(1, 31), (3, 61)]) for cell in (8, 12, 16)] + [(9, [(1, 30)])],
                 [
                     (8, 31, 12, 31, None),
                     (12, 31, 8, 31, None),
@@ -73,6 +93,18 @@ class StoredGridTest(unittest.TestCase):
                     (12, 3, 16, 3, None),
                 ],
             )
+            if fmt == 4:
+                nav.LINKS[8][nav.FLOORS_AT[9][0]] = None
+                nav.LINKS[8][9] = None
+                nav.LINKS[nav.FLOORS_AT[9][0]][10] = None
+                nav.LINKED_OF[0].extend((8, nav.FLOORS_AT[9][0]))
+                grid[7] = 1
+                cuts = bytearray(32)
+                cuts[9], cuts[12] = 16, 1
+                nav.FLOOR_VAL = bytearray(1 if v == 3 else v for v in nav.FLOOR_VAL)
+                nav.LINKS[12][nav.FLOORS_AT[16][-1]] = None
+                nav.NARROW_STEPS[0].add((8, nav.FLOORS_AT[9][0]))
+                nav.WET_STEPS[0].update({(12, 16), (12, nav.FLOORS_AT[16][-1])})
             fields = {
                 name: {key + 1: text for key, text in entries.items()}
                 for name, entries in zip(
@@ -83,7 +115,7 @@ class StoredGridTest(unittest.TestCase):
                 "\n".join(
                     f"\t{name} = {value},"
                     for name, value in (
-                        ("format", 3),
+                        ("format", fmt),
                         ("cells", 4),
                         ("nx", 2),
                         ("ny", 1),
@@ -94,6 +126,7 @@ class StoredGridTest(unittest.TestCase):
                     )
                 )
                 + "\n\tsteep = true,"
+                + ("\n\tfloorFormat = 1," if fmt == 4 else "")
             )
 
             def adjacency(grid, cuts):

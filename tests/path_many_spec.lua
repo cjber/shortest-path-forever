@@ -11,42 +11,26 @@ local Path = ns.Path
 -- Verify the shipped graph, not just the generator. A format 1 graph is symmetric; a format 2 one is directed, since a
 -- steep step is downhill only and a drop is never climbed, so a reverse edge may be absent. Every edge keeps the
 -- price order that stays true either way: a swim yard never costs less than walking on water over the same step.
-local alphabet, digits = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", {}
-for i = 1, #alphabet do
-	digits[alphabet:byte(i)] = i - 1
-end
-local function number(s, at, width)
-	local n = 0
-	for i = at, at + width - 1 do
-		n = n * 64 + digits[s:byte(i)]
-	end
-	return n
-end
+local Grid = ns.PathGrid
 for _, map in ipairs({ 0, 1, 2991 }) do
-	local data, edges, count = ShortestPathForeverPathData[map], {}, 0
-	for cluster, chunks in pairs(data.graph) do
-		local s, k = chunks, cluster - 1
-		local n = number(s, 1, 2)
-		local width = data.degreeWidth or 1
-		local stride = 6 + width + (data.baseDegreeWidth or 0)
-		local at = 3 + n * stride
-		for i = 0, n - 1 do
-			local id = k * 4096 + i
-			edges[id] = {}
-			for _ = 1, number(s, 3 + i * stride + 6, width) do
-				local offset = number(s, at, 1)
-				local other = k + (math.floor(offset / 3) - 1) * data.ny + offset % 3 - 1
-				local target = other * 4096 + number(s, at + 1, 2)
-				edges[id][target] = s:sub(at + 3, at + 6)
-				at, count = at + 7, count + 1
-			end
-		end
-	end
-	for from, adjacent in pairs(edges) do
-		for to, costs in pairs(adjacent) do
-			assert(number(costs, 1, 2) >= number(costs, 3, 2), "an edge's swim cost is below its water-walking cost")
-			if (data.format or 1) < 2 then
-				assert(edges[to] and edges[to][from] == costs, "asymmetric format 1 graph edge")
+	local state, count = Grid.State(map), 0
+	for cluster in pairs(state.D.graph) do
+		for _, from in ipairs(Grid.nodesOf(state, cluster - 1)) do
+			local edges = Grid.adjacent(state, from)
+			for i = 1, #edges, 3 do
+				local to, swim, walk = edges[i], edges[i + 1], edges[i + 2]
+				assert(swim >= walk, "an edge's swim cost is below its water-walking cost")
+				if state.fmt < 2 then
+					local reverse, symmetric = Grid.adjacent(state, to), false
+					for j = 1, #reverse, 3 do
+						if reverse[j] == from and reverse[j + 1] == swim and reverse[j + 2] == walk then
+							symmetric = true
+							break
+						end
+					end
+					assert(symmetric, "asymmetric format 1 graph edge")
+				end
+				count = count + 1
 			end
 		end
 	end

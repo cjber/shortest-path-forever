@@ -111,6 +111,15 @@ class TerrainEncodingTest(unittest.TestCase):
         self.assertEqual(floor_heights(""), {})
         self.assertEqual(floor_heights("AABAAABBgQAAAAA"), {0: [16]})
 
+    def test_implicit_floor_headers_retain_each_layers_height(self):
+        self.assertEqual(floor_heights("AACBBgQAAABgUAB", format=4), {1: [16, 20]})
+
+    def test_symmetric_floor_headers_skip_their_landing_layers(self):
+        self.assertEqual(floor_heights("AACBBgQABAABgUAA", format=3), {1: [16, 20]})
+
+    def test_directed_grid_values_read_palette_and_literal_cells(self):
+        self.assertEqual(decode_base("CEAAAABvEAB", "cX", 2, format=4), [5, None, 5, None])
+
     def test_base_heights_decode_from_the_walking_fields(self):
         self.assertEqual(decode_base("QA", "c", 2), [5, None, None, None])
         self.assertEqual(decode_base("Q", "", 1), [None])

@@ -195,8 +195,7 @@ end
 -- runs through that cell. Walking in from the flight master at a run's pace per travel tick, with each decode one
 -- frame behind, the street is followed, and a walk from it climbs straight to the roost.
 local SW_FM = { x = -8832.77, y = 478.62, z = 109.6 } -- Data/Taxi.lua node 2
-local GAP = { x = -8851, y = 589 } -- the street at z 95 over the ground, z 74
-local ON_STREET = { x = -8838, y = 580, z = 97 }
+local GAP = { x = -8851, y = 589, z = 95 } -- the street at z 95 over the ground, z 74
 local function surfaces(p)
 	Path.FindSync(0, { x = p.x, y = p.y }, { x = p.x + 1, y = p.y + 1 })
 	local st = Grid.State(0)
@@ -213,10 +212,9 @@ local function surfaces(p)
 	end
 	return out
 end
-local function walkIn(stop)
+local function walkIn()
 	Floor.Forget()
-	local line = assert(Path.FindSync(0, SW_FM, ON_STREET))
-	line[#line + 1] = stop or GAP
+	local line = assert(Path.FindSync(0, SW_FM, GAP))
 	for i = 2, #line do
 		local a, b = line[i - 1], line[i]
 		local steps = math.max(1, math.ceil(math.sqrt((b.x - a.x) ^ 2 + (b.y - a.y) ^ 2) / 7))

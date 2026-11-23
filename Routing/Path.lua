@@ -147,6 +147,42 @@ local function factorOf(st, hz)
 	end
 end
 
+local opposite = Grid.OPPOSITE
+local outgoing, hasDirection = {}, {}
+for mask = 0, 255 do
+	local steps, directions = {}, {}
+	for d = 0, 7 do
+		if floor(mask / 2 ^ d) % 2 == 1 then
+			steps[#steps + 1], directions[d] = d, true
+		end
+	end
+	outgoing[mask], hasDirection[mask] = steps, directions
+end
+local function directedBaseSteps(m, C, u, ux, uy, reverse, visit)
+	if reverse then
+		for d = 0, 7 do
+			local dx, dy = DX[d], DY[d]
+			local x, y = ux + dx, uy + dy
+			if x >= 0 and x < C and y >= 0 and y < C then
+				local v = u + dx * C + dy
+				if hasDirection[m[v + 1]][opposite[d]] then
+					visit(v, d < 4 and 1 or SQRT2)
+				end
+			end
+		end
+	else
+		local steps = outgoing[m[u + 1]]
+		for i = 1, #steps do
+			local d = steps[i]
+			local dx, dy = DX[d], DY[d]
+			local x, y = ux + dx, uy + dy
+			if x >= 0 and x < C and y >= 0 and y < C then
+				visit(u + dx * C + dy, d < 4 and 1 or SQRT2)
+			end
+		end
+	end
+end
+
 -- Grid search inside one cluster, entering water costing swim times its length. tree holds g/parent keyed by
 -- node + 1. With goal set it is A*, otherwise Dijkstra that stops once every node in targets (a set of nodes) is
 -- settled.
@@ -269,7 +305,9 @@ local function search(st, k, swim, source, tree, goal, targets, left, roads, hz,
 			end
 			local cell = u < N and u or at[i]
 			gu, ru, ux, uy = g[i], r[i], floor(cell / C), cell % C
-			if u < N then
+			if u < N and fmt >= 4 then
+				directedBaseSteps(m, C, u, ux, uy, reverse, relax)
+			elseif u < N then
 				local mi = m[i] % 16
 				local px, mx = mi % 2 == 1, ux > 0 and m[i - C] % 2 == 1
 				local py, my = mi % 4 >= 2, uy > 0 and m[i - 1] % 4 >= 2
@@ -1072,9 +1110,10 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 	local goalOK, goalTime =
 		clearEnd(st, P, n, to, false, P.w[n] - (P.w[n - 1] or 0) > 0, limitOver(P, n, n), nil, true)
 	local snappedGoal = false
-	if job.snapGoal then
+	-- With a known goal floor, a failed directed connector must end on the reachable approach.
+	if job.snapGoal or (st.fmt >= 4 and to.z ~= nil and not goalOK) then
 		local _, _, _, goalNode = own(st, to)
-		snappedGoal = not goalOK or not goalNode
+		snappedGoal = (goalNode ~= nil and not goalOK) or (job.snapGoal == true and goalNode == nil)
 	end
 	-- P.t is the refined walk's real running-yard prefix, independent of reported/cached search cost.
 	local chordBudget = startOK and goalOK and startTime + P.t[n] - P.t[1] + goalTime
@@ -1083,7 +1122,9 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 	local startLength, startField, goalLength, goalField = 0, 0, 0, 0
 	if P.distance and P.field then
 		startLength, startField = Grid.roadDistance(st, sx, sy, P.x[1] + 0.5, P.y[1] + 0.5)
-		goalLength, goalField = Grid.roadDistance(st, P.x[n] + 0.5, P.y[n] + 0.5, gx, gy)
+		if not snappedGoal then
+			goalLength, goalField = Grid.roadDistance(st, P.x[n] + 0.5, P.y[n] + 0.5, gx, gy)
+		end
 		local length = startLength + P.distance[n] + goalLength
 		P.fieldShare = length > 0 and (startField + P.field[n] + goalField) / length or 0
 	end
@@ -1702,10 +1743,17 @@ local function bakeEdges(st, k, road)
 		flat[size - 3], flat[size - 2], flat[size - 1], flat[size] =
 			v, step, wet, 1 + (OFFROAD - 1) * (1 - (road[v] or road[base] or 0))
 	end
+	local from
+	local function addBase(v, length)
+		add(from, v, length)
+	end
 	for node = 0, top - 1 do
 		head[node + 1] = size + 1
 		local i = node + 1
-		if node < N then
+		if node < N and fmt >= 4 then
+			from = node
+			directedBaseSteps(m, C, node, floor(node / C), node % C, false, addBase)
+		elseif node < N then
 			local mi = m[i] % 16
 			local ux, uy = floor(node / C), node % C
 			if val[i] ~= 0 then

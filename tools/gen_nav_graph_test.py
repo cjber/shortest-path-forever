@@ -70,6 +70,33 @@ class GraphLegalityTest(unittest.TestCase):
                 gen_nav.LINKED_OF[gen_nav.cluster_of_cell(node)].append(node)
             yield grid, (lambda gx, gy: grid[gx * gen_nav.GH + gy])
 
+    def test_border_drop_and_swim_step_keep_the_cheapest_cost_per_mode(self):
+        c = gen_nav.CELLS
+        u, v = (c - 1) * c + 10, c * c + 10
+        for directed in (False, True):
+            with (
+                self.subTest(directed=directed),
+                self.world({u: (1, 0), v: (2, 0)}, links=[(u, v, 12)], nx=2) as (grid, _),
+            ):
+                cuts = bytearray(len(grid)) if directed else set()
+                if directed:
+                    cuts[u] = 1
+                _, edges = gen_nav.grid_entrances(grid, cuts)
+                self.assertEqual(edges[(u, v)], (12, gen_nav.CS))
+
+    def test_indexed_graph_cannot_exceed_cluster_id_stride(self):
+        row = (0, 0, 0, 0, 0)
+        self.assertTrue(gen_nav.encode_graph(4, [row] * 4096, [[]] * 4096))
+        with self.assertRaisesRegex(ValueError, "4096"):
+            gen_nav.encode_graph(4, [row] * 4097, [[]] * 4097)
+
+    def test_directed_floors_reject_layer_63(self):
+        with self.world({0: (1, 0)}):
+            gen_nav.assemble_floors([(0, [(1, 0)] * 62)], [], directed=True)
+        with self.world({0: (1, 0)}):
+            with self.assertRaisesRegex(ValueError, "layer 63"):
+                gen_nav.assemble_floors([(0, [(1, 0)] * 63)], [], directed=True)
+
     def steps(self, heights, cell, cuts=(), links=None):
         c = gen_nav.CELLS
         with self.world(heights, cuts, links) as (grid, g):
