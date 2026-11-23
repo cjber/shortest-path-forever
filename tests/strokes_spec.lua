@@ -361,9 +361,9 @@ check(nearest < SPACING, "dots up to the corpse")
 -- Strokes are clipped to the minimap's face: a circle, or a square where another addon says so.
 local through =
 	{ { mode = "walk", points = { point(-2, 2.5), point(2, -1.5) } }, { mode = "portal", points = { player } } }
-local function reach(square, walkScale)
+local function reach(square)
 	local farthest, count = 0, 0
-	Strokes.Minimap(strokes, through, minimapView(player, { square = square, walkScale = walkScale }))
+	Strokes.Minimap(strokes, through, minimapView(player, { square = square }))
 	for _, centre in ipairs(dots(strokes)) do
 		local x, y = centre[1] - MINIMAP / 2, centre[2] + MINIMAP / 2
 		farthest, count =
@@ -375,9 +375,14 @@ local rim, round = reach(false)
 local side, boxed = reach(true)
 check(round > 5 and rim <= MINIMAP / 2 - DOT / 2 - RIM, "every rim inside the round face")
 check(boxed > round and side <= MINIMAP / 2 - DOT / 2 - RIM, "a square face shows its corners too")
-local smallRim = reach(false, 0.5)
-check(smallRim >= rim, "shrinking the breadcrumbs adjusts the clip margin")
-check(smallRim <= MINIMAP / 2 - DOT / 4 - RIM / 2, "the reduced rim stays inside the face")
+-- The first dot's centre is just inside the smaller clip boundary but outside the default one.
+local nearRim = {
+	{ mode = "walk", points = { point(player.x + 66 / MINIMAP, player.y), point(player.x + 0.5, player.y) } },
+}
+Strokes.Minimap(strokes, nearRim, minimapView(player))
+check(strokes.n == 0, "a default breadcrumb starts too close to the rim")
+Strokes.Minimap(strokes, nearRim, minimapView(player, { walkScale = 0.5 }))
+check(strokes.n == 1, "the smaller breadcrumb fits inside the rim")
 -- Another continent's points, a jump and a portal draw nothing there.
 local elsewhere = { point(0.1, 0.5), point(0.2, 0.5), point(0.3, 0.5), point(0.2, 0.5, 9) }
 elsewhere[1].jump = 1
