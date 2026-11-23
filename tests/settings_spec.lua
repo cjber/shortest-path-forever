@@ -270,6 +270,7 @@ local ns = {
 		teleportMinimumSavings = 0,
 		compassScale = 100,
 		arrowScale = 100,
+		minimapRouteScale = 100,
 		arrowLabel = "distance",
 		compassBackground = 0,
 		trackerHeight = 200,
@@ -422,6 +423,7 @@ local groups = {
 		"routeColor",
 		"mapLine",
 		"minimapLine",
+		"minimapRouteScale",
 		"laterLegs",
 	},
 	Guidance = {
@@ -499,7 +501,7 @@ local order = {
 }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 81, #rows)
+assert(#rows == 82, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -638,6 +640,13 @@ assert(
 		and Row("minimapLine").tooltip:find("still guide you", 1, true),
 	"the tooltips say the guidance stays when the line is off"
 )
+local minimapRouteSlider = Row("minimapRouteScale")
+assert(minimapRouteSlider.kind == "slider" and minimapRouteSlider.setting.default == 100)
+assert(minimapRouteSlider.setting.variable == "ShortestPathForever_minimapRouteScale")
+assert(minimapRouteSlider.options.minValue < 100 and minimapRouteSlider.options.format(50) == "50%")
+local routeRefreshes = routeLinesRefreshed
+minimapRouteSlider.setting.onChanged(nil, 50)
+assert(routeLinesRefreshed == routeRefreshes + 1, "changing the size redraws the walking route")
 -- The faded legs after the current stop are a drawing choice of their own, on by default, beside the line switches.
 local laterLegs = Row("laterLegs")
 assert(laterLegs.kind == "checkbox" and laterLegs.setting.default == true, "later stops' legs start on")

@@ -317,6 +317,13 @@ clears(strokes, MINIMAP / 2, -MINIMAP / 2 + 0.4 * MINIMAP / 2, 8, 1, "minimap")
 for i = 1, strokes.n do
 	check(strokes.alpha[i] == 1, "the minimap route stays at full strength")
 end
+local width, under, count = strokes.width[1], strokes.under[1], strokes.n
+Strokes.Minimap(strokes, approach, minimapView(player, { goal = first, walkScale = 1 }))
+check(strokes.n == count and strokes.width[1] == width and strokes.under[1] == under, "100% matches the old size")
+local sx, sy = Strokes.Minimap(strokes, approach, minimapView(player, { goal = first, walkScale = 0.5 }))
+check(sx == gx and sy == gy, "smaller breadcrumbs leave the goal in the same place")
+check(strokes.width[1] == width / 2 and strokes.under[1] == under / 2, "the whole breadcrumb shrinks")
+check(close(length(strokes, 1), width / 2), "breadcrumbs shrink along the path as well as across it")
 -- A goal off the minimap: its mark waits on the rim in its direction, its ring inside the face.
 local far = point(1.4, 0.5)
 local ex, ey, edge =
@@ -351,9 +358,9 @@ check(nearest < SPACING, "dots up to the corpse")
 -- Strokes are clipped to the minimap's face: a circle, or a square where another addon says so.
 local through =
 	{ { mode = "walk", points = { point(-2, 2.5), point(2, -1.5) } }, { mode = "portal", points = { player } } }
-local function reach(square)
+local function reach(square, walkScale)
 	local farthest, count = 0, 0
-	Strokes.Minimap(strokes, through, minimapView(player, { square = square }))
+	Strokes.Minimap(strokes, through, minimapView(player, { square = square, walkScale = walkScale }))
 	for _, centre in ipairs(dots(strokes)) do
 		local x, y = centre[1] - MINIMAP / 2, centre[2] + MINIMAP / 2
 		farthest, count =
@@ -365,6 +372,10 @@ local rim, round = reach(false)
 local side, boxed = reach(true)
 check(round > 5 and rim <= MINIMAP / 2 - DOT / 2 - RIM, "every rim inside the round face")
 check(boxed > round and side <= MINIMAP / 2 - DOT / 2 - RIM, "a square face shows its corners too")
+local smallRim = reach(false, 0.5)
+local largeRim = reach(false, 2)
+check(smallRim >= largeRim, "resizing the breadcrumbs adjusts the clip margin")
+check(largeRim <= MINIMAP / 2 - DOT - RIM * 2, "the larger rim still fits on the face")
 -- Another continent's points, a jump and a portal draw nothing there.
 local elsewhere = { point(0.1, 0.5), point(0.2, 0.5), point(0.3, 0.5), point(0.2, 0.5, 9) }
 elsewhere[1].jump = 1
