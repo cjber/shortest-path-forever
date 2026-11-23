@@ -34,16 +34,26 @@ ns.Planner.Plan = function(o)
 	options.feasibleOnly, options.incumbent, options.incumbentPlan = nil, nil, nil
 	return plan(o)
 end
--- Every route the search hands Journey: an estimate, a measured offer and the proved route.
+-- Record the sketch at publication time: the rough route gains walk points in place.
 local published = {}
 local start = ns.JourneySearch.Start
 ns.JourneySearch.Start = function(point, route, state, listener)
 	return start(point, route, state, function(planned, news)
 		if (news == "route" or news == "rough") and planned then
+			local sketched = false
+			if news == "rough" then
+				for _, leg in ipairs(planned.legs) do
+					if leg.mode == "walk" and leg.walkPoints then
+						sketched = true
+						break
+					end
+				end
+			end
 			published[#published + 1] = {
 				rough = news == "rough" and planned.rough,
 				arrive = planned.arrive,
 				provisional = planned.provisional,
+				sketched = sketched,
 				leg = planned.legs[1],
 				legs = planned.legs,
 			}
@@ -147,9 +157,18 @@ for i = 1, 30 do
 	local bounded, exact = driver.shown(), full(options)
 	assert((bounded ~= nil) == (exact ~= nil), "reachability differs for pair " .. i)
 	local offered = false
+	local sketched = false
 	for at, route in ipairs(published) do
 		if route.rough then
-			assert(at == 1, "the rough route is drawn first")
+			if at > 1 then
+				assert(
+					published[1].rough and not offered and not sketched and route.sketched,
+					"only one sketch may update the rough route before a followable route"
+				)
+				sketched = true
+			else
+				assert(not route.sketched, "the rough estimate is drawn before the sketch")
+			end
 		elseif route.provisional then
 			assert(not offered and (route.leg.mode == "walk" and route.leg.measured), "only one measured offer")
 			offered = true
@@ -205,10 +224,11 @@ driver.update(60)
 drain()
 assert(#batches == count, "stationary refresh must reuse both searches")
 local nearby = { map = from.map, x = from.x + 0.1, y = from.y, z = from.z }
-assert(ns.Path.ReuseMany(batches[1], nearby))
+assert(not ns.Path.ReuseMany(batches[1], nearby), "a moved source has different connector costs")
 driver.begin(nearby, destination)
 drain()
-assert(#batches == count, "sub-yard moves in the same cell should reuse start costs")
+assert(#batches == count + 1 and not batches[#batches].reverse, "a sub-yard move invalidates only the start")
+count = #batches
 nearby.x = from.x + 30
 driver.begin(nearby, destination)
 drain()
@@ -222,7 +242,7 @@ driver.begin(nearby, destination)
 drain()
 assert(#batches == count + 5, "clearing a journey releases both endpoint caches")
 ns.ClearJourney()
-print("journey cache: repeated goal, stationary refresh, same-cell movement and water invalidation: ok")
+print("journey cache: repeated goal, stationary refresh, movement and water invalidation: ok")
 
 -- Rounded baked walks may strengthen bounds at a fixed endpoint, including clicks with no height.
 -- They must never replace its exact forward/reverse cost or change the proved optimum.
@@ -248,9 +268,9 @@ end
 print("baked endpoint bounds: four journeys, both water modes, exact full-search costs: ok")
 
 ns.faction, ns.water, ns.speed, ns.known = "Horde", false, 7, {}
-local printed, print_ = {}, ns.Print
-ns.Print = function(message)
-	printed[#printed + 1] = message
+local notices, notice = {}, ns.Notice
+ns.Notice = function(message)
+	notices[#notices + 1] = message
 end
 ns.db.flightPathReminder = true
 local undercity, sepulcher = ns.TaxiNodes[11], ns.TaxiNodes[10]
@@ -264,11 +284,13 @@ for _, row in ipairs((select(2, ns.JourneyInfo()))) do
 	unsynced = unsynced or row.key == "no-flight-points-0"
 end
 assert(unsynced, "a walk kept as the same journey still says a flight would be quicker")
-assert(#printed == 1 and printed[1]:find("Eastern Kingdoms", 1, true), "chat says once that a flight would be quicker")
-assert(printed[1]:find("|c", 1, true) == 1, "the chat line is coloured")
+assert(
+	#notices == 1 and notices[1]:find("Eastern Kingdoms", 1, true),
+	"the notice says once that a flight would be quicker"
+)
 driver.update(5)
 drain()
-assert(#printed == 1, "a replan of the same journey does not repeat it")
+assert(#notices == 1, "a replan of the same journey does not repeat it")
 ns.known = { [11] = true }
 ns.ClearJourney()
 driver.begin(
@@ -276,7 +298,7 @@ driver.begin(
 	{ map = 0, x = sepulcher.x + 30, y = sepulcher.y }
 )
 drain()
-assert(#printed == 1, "nothing is said once a flight point there is known")
+assert(#notices == 1, "nothing is said once a flight point there is known")
 ns.known = {}
 ns.ClearJourney()
 ns.db.flightPathReminder = false
@@ -285,9 +307,9 @@ driver.begin(
 	{ map = 0, x = sepulcher.x + 30, y = sepulcher.y }
 )
 drain()
-assert(#printed == 1, "the new flight master reminder setting silences it")
+assert(#notices == 1, "the new flight master reminder setting silences it")
 ns.ClearJourney()
-ns.Print = print_
+ns.Notice = notice
 print("unknown flight: a kept walk keeps the proof that a flight would be quicker: ok")
 
 -- The Deeprun Tram's instance has no world map, so a step there cannot fall back to a zone name.

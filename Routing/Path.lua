@@ -49,10 +49,11 @@ local function push(k, v)
 	local i = hn
 	while i > 1 do
 		local p = floor(i / 2)
-		if hk[p] <= k then
+		local parent = hk[p]
+		if parent <= k then
 			break
 		end
-		hk[i], hv[i] = hk[p], hv[p]
+		hk[i], hv[i] = parent, hv[p]
 		i = p
 	end
 	hk[i], hv[i] = k, v
@@ -62,19 +63,24 @@ local function pop()
 	local top = hv[1]
 	local k, v = hk[hn], hv[hn]
 	hn = hn - 1
+	local size = hn
 	local i = 1
 	while true do
 		local c = i * 2
-		if c > hn then
+		if c > size then
 			break
 		end
-		if c < hn and hk[c + 1] < hk[c] then
-			c = c + 1
+		local child = hk[c]
+		if c < size then
+			local right = hk[c + 1]
+			if right < child then
+				c, child = c + 1, right
+			end
 		end
-		if hk[c] >= k then
+		if child >= k then
 			break
 		end
-		hk[i], hv[i] = hk[c], hv[c]
+		hk[i], hv[i] = child, hv[c]
 		i = c
 	end
 	hk[i], hv[i] = k, v
@@ -174,7 +180,7 @@ local function search(st, k, swim, source, tree, goal, targets, left, roads, hz,
 	-- A paused search retains these arrays even if another job evicts its cluster.
 	local m, z, at, links = st.moves[k], st.z[k], st.at[k], st.links[k]
 	local fmt, back = st.fmt, reverse and st.linksIn[k]
-	local steep = st.steep
+	local steep, bakedClimb = st.steep, fmt >= 3
 	local C, cs = st.C, st.cs
 	local N = C * C
 	local g, r, par, stamp, closed = tree.g, tree.r, tree.par, tree.stamp, tree.closed
@@ -182,6 +188,7 @@ local function search(st, k, swim, source, tree, goal, targets, left, roads, hz,
 	local offroad = hz and hz.roadFactor or OFFROAD
 	-- No road record means unpainted ground; it does not switch the preference off.
 	local roadsOn = hz and hz.roads and offroad ~= 1
+	local roadExtra = offroad - 1
 	tree.gen = tree.gen + 1
 	local gen = tree.gen
 	tree.k = k
@@ -194,38 +201,55 @@ local function search(st, k, swim, source, tree, goal, targets, left, roads, hz,
 	g[source + 1], r[source + 1], par[source + 1], stamp[source + 1] = 0, 0, -1, gen
 	push(0, source)
 
-	---@type number, number, number, number, number
-	local u, ux, uy, gu, ru
+	---@type number, number, number, number, number, number
+	local u, ux, uy, gu, ru, ui
 	local function relax(v, length, override, free)
+		local i = v + 1
+		local previous = stamp[i] == gen and g[i]
+		-- Every edge adds a nonnegative cost. This also rejects most back edges before testing their terrain.
+		if previous and previous <= gu then
+			return
+		end
 		-- Forward walks u -> v; a reverse tree walks the stored edge the other way, v -> u, into the source. A step
 		-- the bake's walk decided is taken as written.
 		if steep and not free then
-			local distance = (length or 1) * cs
-			if reverse then
-				if not steep(val, z, v, val, z, u, distance) then
+			if bakedClimb then
+				-- Format 3's steepGround check only needs heights when either surface is flagged.
+				if val[ui] == 3 or val[i] == 3 then
+					local from, to = z[ui], z[i]
+					if (reverse and from > to) or (not reverse and to > from) then
+						return
+					end
+				end
+			elseif reverse then
+				if not steep(val, z, v, val, z, u, (length or 1) * cs) then
 					return
 				end
-			elseif not steep(val, z, u, val, z, v, distance) then
+			elseif not steep(val, z, u, val, z, v, (length or 1) * cs) then
 				return
 			end
 		end
-		local i = v + 1
 		-- A step is charged for the cell it enters, whichever way the tree walks it: water, Follow roads and a
 		-- hazard profile's weight are all properties of that cell.
 		local entered = reverse and u or v
 		local step = override or length * cs * (val[entered + 1] == 2 and swim or 1)
-		local base = entered < N and entered or at[entered + 1]
-		local choice = roadsOn and step * (1 + (offroad - 1) * (1 - (roads and roads[base] or 0))) or step
-		if factor then
-			local f = factor[base]
-			if not f then
-				f = cellFactor(st, hz, k, base)
-				factor[base] = f
+		local choice = step
+		if roadsOn or factor then
+			local base = entered < N and entered or at[entered + 1]
+			if roadsOn then
+				choice = step * (1 + roadExtra * (1 - (roads and (roads[entered] or roads[base]) or 0)))
 			end
-			choice = choice * f
+			if factor then
+				local f = factor[base]
+				if not f then
+					f = cellFactor(st, hz, k, base)
+					factor[base] = f
+				end
+				choice = choice * f
+			end
 		end
 		local gv = gu + choice
-		if stamp[i] ~= gen or gv < g[i] then
+		if not previous or gv < previous then
 			g[i], r[i], par[i], stamp[i] = gv, ru + step, u, gen
 			local h = 0
 			if goal then
@@ -245,7 +269,8 @@ local function search(st, k, swim, source, tree, goal, targets, left, roads, hz,
 
 	while hn > 0 do
 		u = pop()
-		local i = u + 1
+		ui = u + 1
+		local i = ui
 		if closed[i] ~= gen then
 			closed[i] = gen
 			tick()
@@ -626,23 +651,62 @@ end
 -- point instead, which is what a goal needs, in the fifth to seventh places, and leaves the outbound ones empty: each
 -- caller walks a point one way, and on format 2 the other way is a second grid search. The surfaces themselves are
 -- returned too: a walk drawn or searched to a point ends on them, never on wherever the outbound rescue moved it.
+-- A cached entrance vector starts at a node centre. Charge the connector on the endpoint's surface.
+local function connector(st, swim, k, node, point, roadsOn, hz)
+	local C, cs = st.C, st.cs
+	local cell = cellOf(st, k, node)
+	local x = st.x0 + (floor(k / st.ny) * C + floor(cell / C) + 0.5) * cs
+	local y = st.y0 + (k % st.ny * C + cell % C + 0.5) * cs
+	local real = sqrt((point.x - x) ^ 2 + (point.y - y) ^ 2) * ((st.val[k] or grid(st, k))[node + 1] == 2 and swim or 1)
+	local choice = real
+	if roadsOn then
+		local roads = Grid.roads(st, k)
+		choice = choice * (1 + ((hz.roadFactor or OFFROAD) - 1) * (1 - (roads and (roads[node] or roads[cell]) or 0)))
+	end
+	if hz then
+		local cells = cellFactors(st, hz, k)
+		if cells then
+			local factor = cells[cell] or cellFactor(st, hz, k, cell)
+			cells[cell] = factor
+			choice = choice * factor
+		end
+	end
+	return choice, real
+end
+
 local function connectPoint(st, swim, k, node, point, roadsOn, hz, inbound)
 	local nodes = surfaces(st, k, node, point)
 	local ends, merged, mergedReal, via = {}, {}, {}, {}
 	for _, start in ipairs(nodes) do
 		local n, edges, reals, tree = connect(st, swim, k, start, roadsOn, hz, inbound)
-		local entry = { node = n, tree = tree, own = start }
+		local ownOffset, ownRealOffset = connector(st, swim, k, start, point, roadsOn, hz)
+		-- A rescued walk starts or ends on the replacement surface itself. The old point has no walking connector
+		-- to that surface.
+		local offset, realOffset = 0, 0
+		if start == n then
+			offset, realOffset = ownOffset, ownRealOffset
+		end
+		local entry = {
+			node = n,
+			tree = tree,
+			own = start,
+			offset = offset,
+			realOffset = realOffset,
+			ownOffset = ownOffset,
+			ownRealOffset = ownRealOffset,
+		}
 		ends[#ends + 1] = entry
 		for id, cost in pairs(edges) do
+			cost = cost + offset
 			if not merged[id] or cost < merged[id] then
-				merged[id], mergedReal[id], via[id] = cost, reals[id], entry
+				merged[id], mergedReal[id], via[id] = cost, reals[id] + realOffset, entry
 			end
 		end
 	end
 	if inbound then
-		return ends, {}, {}, {}, merged, mergedReal, via, nodes
+		return ends, {}, {}, {}, merged, mergedReal, via
 	end
-	return ends, merged, mergedReal, via, {}, {}, {}, nodes
+	return ends, merged, mergedReal, via, {}, {}, {}
 end
 -- A point's position in global cells, and the node it stands on in its own cell: within ZTOL of its height, or the
 -- base surface when it has none.
@@ -730,7 +794,8 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 	-- A start at a known height on a surface the goal can stand on walks nowhere: a map click on a flight master is
 	-- probed from that flight master. The search below answers 0 for it too, after connecting both ends to their
 	-- cluster, which is most of a probe's time (#1080).
-	if costOnly and from.z and sk == gk then
+	local coLocated = from.x == to.x and from.y == to.y
+	if costOnly and coLocated and from.z and sk == gk then
 		for _, n in ipairs(surfaces(st, gk, gc, to)) do
 			if n == sc then
 				return 0
@@ -745,7 +810,7 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 	local starts, source, sourceReal, sourceVia = connectPoint(st, swim, sk, sc, from, roadsOn, hz)
 	-- The goal's costs are the walks into it, so a ledge drop is not climbed to reach it. A local walk to it ends on
 	-- the surfaces it stands on, not on wherever the outbound rescue moved it.
-	local _, _, _, _, target, targetReal, targetVia, goalOwn = connectPoint(st, swim, gk, gc, to, roadsOn, hz, true)
+	local goals, _, _, _, target, targetReal, targetVia = connectPoint(st, swim, gk, gc, to, roadsOn, hz, true)
 	local key = table.concat({
 		sk,
 		sc,
@@ -762,18 +827,21 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 	local cached = st.paths[key]
 	local hops, cost, directFrom, directTo
 	local x0, y0, cs = st.x0, st.y0, st.cs
-	if cached then
+	if cached and cached.sx == from.x and cached.sy == from.y and cached.gx == to.x and cached.gy == to.y then
 		hops, cost, directFrom, directTo = cached.hops, cached.cost, cached.directFrom, cached.directTo
 	else
 		local direct, directReal
 		if sk == gk then
 			local roadSet = roadsOn and Grid.roads(st, sk)
 			for _, a in ipairs(starts) do
-				for _, b in ipairs(goalOwn) do
-					if search(st, sk, swim, a.node, S, b, nil, nil, roadSet, hz) then
-						local gv, rv = S.g[b + 1], S.r[b + 1]
+				for _, b in ipairs(goals) do
+					if search(st, sk, swim, a.node, S, b.own, nil, nil, roadSet, hz) then
+						local gv, rv = S.g[b.own + 1], S.r[b.own + 1]
+						if not (coLocated and a.node == b.own) then
+							gv, rv = gv + a.offset + b.ownOffset, rv + a.realOffset + b.ownRealOffset
+						end
 						if not direct or gv < direct then
-							direct, directReal, directFrom, directTo = gv, rv, a.node, b
+							direct, directReal, directFrom, directTo = gv, rv, a.node, b.own
 						end
 					end
 				end
@@ -889,7 +957,16 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 		if (st.pathCount or 0) >= 16 then
 			st.paths, st.pathCount = {}, 0
 		end
-		st.paths[key] = { hops = hops, cost = cost, directFrom = directFrom, directTo = directTo }
+		st.paths[key] = {
+			hops = hops,
+			cost = cost,
+			directFrom = directFrom,
+			directTo = directTo,
+			sx = from.x,
+			sy = from.y,
+			gx = to.x,
+			gy = to.y,
+		}
 		st.pathCount = (st.pathCount or 0) + 1
 	end
 	if costOnly then
@@ -943,8 +1020,7 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 		local length = sqrt(dx * dx + dy * dy)
 		P.t[n + 1] = (P.t[n] or 0) + length * st.cs * (wet and swim or 1)
 		if P.r and P.distance and P.field then
-			local roadSet = Grid.roads(st, k)
-			local outside = (not roadSet or not roadSet[cell]) and 1 or 0
+			local outside = Grid.roadNode(st, k, node) == 0 and 1 or 0
 			P.r[n + 1] = (P.r[n] or 0) + outside
 			local field = 0
 			if n > 0 then
@@ -1013,6 +1089,11 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 	local startOK, startTime = clearEnd(st, P, 1, from, true, P.w[1] > 0, limitOver(P, 1, 1), nil, true)
 	local goalOK, goalTime =
 		clearEnd(st, P, n, to, false, P.w[n] - (P.w[n - 1] or 0) > 0, limitOver(P, n, n), nil, true)
+	local snappedGoal = false
+	if job.snapGoal then
+		local _, _, _, goalNode = own(st, to)
+		snappedGoal = not goalOK or not goalNode
+	end
 	-- P.t is the refined walk's real running-yard prefix, independent of reported/cached search cost.
 	local chordBudget = startOK and goalOK and startTime + P.t[n] - P.t[1] + goalTime
 	local sx, sy = (from.x - x0) / cs, (from.y - y0) / cs
@@ -1061,13 +1142,13 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 			P.t[n] - P.t[j] + goalTime
 		)
 	end
-	local keep, startDetour, goalDetour = smooth(st, P, {
+	local keep, startDetour, goalDetour, links = smooth(st, P, {
 		sx = sx,
 		sy = sy,
 		gx = gx,
 		gy = gy,
 		start = startOK and startClear,
-		goal = goalOK and goalClear,
+		goal = not snappedGoal and goalOK and goalClear,
 		chord = function()
 			return chordBudget
 				and roadClear(sx, sy, gx, gy, 1, n, startLength + goalLength, startField + goalField)
@@ -1077,28 +1158,31 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 	-- The pull chose whether each end is drawn through its end entry's centre: a start or goal segment that is not
 	-- clear detours that way, so the rest of the line holds as it was pulled.
 	local drawn = { 1 }
-	if startDetour then
+	if startDetour and not (snappedGoal and n == 1) then
 		drawn[#drawn + 1] = 1
 	end
 	for i = 2, #keep - 1 do
 		drawn[#drawn + 1] = keep[i]
 	end
 	-- Both ends on one node already pass through its centre once the start has detoured.
-	if goalDetour and not (startDetour and n == 1) then
+	if goalDetour and not snappedGoal and not (startDetour and n == 1) then
 		drawn[#drawn + 1] = n
 	end
 	drawn[#drawn + 1] = n
 	local points = { { map = map, x = from.x, y = from.y, z = from.z } }
 	for i = 2, #drawn - 1 do
 		local j = drawn[i]
-		points[#points + 1] = {
-			map = map,
-			x = x0 + (P.x[j] + 0.5) * cs,
-			y = y0 + (P.y[j] + 0.5) * cs,
-			z = P.z[j],
-		}
+		points[#points + 1] = { map = map, x = x0 + (P.x[j] + 0.5) * cs, y = y0 + (P.y[j] + 0.5) * cs, z = P.z[j] }
 	end
-	points[#points + 1] = { map = map, x = to.x, y = to.y, z = to.z }
+	-- A steering caller needs a walkable end even when the requested point has no clear final segment.
+	points[#points + 1] = snappedGoal
+			and { map = map, x = x0 + (P.x[n] + 0.5) * cs, y = y0 + (P.y[n] + 0.5) * cs, z = P.z[n] }
+		or { map = map, x = to.x, y = to.y, z = to.z }
+	-- A jump marks the departure of a drop or teleport so line readers skip that segment.
+	-- The pull keeps both ends of a link, so only consecutive points span one.
+	for i = 2, #drawn do
+		points[i - 1].jump = links[drawn[i]] > links[drawn[i - 1]] and 1 or nil
+	end
 	local wetYards = 0
 	for i = 2, #points do
 		local p, q = drawn[i - 1], drawn[i]
@@ -1114,9 +1198,9 @@ end
 
 -- A goal no walk reaches from any place on its landmass moves to the nearest node those places do reach. In game such
 -- a spot is a plateau ringed by faces past the player's slope and step limits, which nobody can walk onto (#1113): the
--- closest a player can stand is the honest end of the route. reach holds the entrances the places walk to; clusters
+-- closest a player can stand is the honest end of the route. Test whether the places reach each entrance; clusters
 -- are tried nearest first until one starts farther away than the best node found.
-local function nearestGround(st, swim, gk, gnode, reach)
+local function nearestGround(st, swim, gk, gnode, reachable)
 	-- its own tree: a search can yield, and another job's search would overwrite a shared one meanwhile
 	local tree = Tree()
 	local C, cs, ny = st.C, st.cs, st.ny
@@ -1155,8 +1239,8 @@ local function nearestGround(st, swim, gk, gnode, reach)
 					local val = grid(st, k)
 					local seen = {}
 					for _, id in ipairs(val and nodesOf(st, k) or {}) do
-						local e = reach[id] and entrance(st, id)
-						if e and not seen[e] then
+						local e = entrance(st, id)
+						if e and not seen[e] and reachable(id) then
 							search(st, k, swim, e, tree, nil, nil, nil, nil, nil, false)
 							-- the search may have yielded: read the cluster's heights and cells after it
 							grid(st, k)
@@ -1180,6 +1264,69 @@ local function nearestGround(st, swim, gk, gnode, reach)
 		end
 	end
 	return bx and { map = st.map, x = st.x0 + (bx + 0.5) * cs, y = st.y0 + (by + 0.5) * cs, z = bz }
+end
+
+-- Walk backwards from a candidate entrance until a transport place can walk to one of its predecessors.
+-- Link places only in clusters the reverse search visits. Exhausting the frontier proves the entrance unreachable.
+local function groundReachability(st, swim, targets, roads)
+	local places, seeds = {}, {}
+	for _, point in ipairs(targets) do
+		local k = locate(st, point.x, point.y)
+		if k then
+			if not places[k] then
+				places[k] = {}
+			end
+			table.insert(places[k], point)
+		end
+	end
+	if not next(places) then
+		return nil
+	end
+	local verdict = {}
+	return function(id)
+		if verdict[id] ~= nil then
+			return verdict[id]
+		end
+		local parent, queue, head = { [id] = id }, { id }, 1
+		while queue[head] do
+			local u = queue[head]
+			head = head + 1
+			local k = floor(u / 4096)
+			local list = places[k]
+			if list then
+				places[k] = nil
+				for _, point in ipairs(list) do
+					local _, node = pointNode(st, point)
+					if node then
+						local _, ends = connectPoint(st, swim, k, node, point, false, nil, false)
+						for seed in pairs(ends) do
+							seeds[seed] = true
+						end
+					end
+				end
+			end
+			if seeds[u] or verdict[u] then
+				while u ~= id do
+					verdict[u], u = true, parent[u]
+				end
+				verdict[id] = true
+				return true
+			end
+			local edges = preceding(st, u, roads)
+			for i = 1, #edges, 3 do
+				local v = edges[i]
+				if not parent[v] and verdict[v] ~= false and climbNodes(st, v, u) then
+					parent[v] = u
+					queue[#queue + 1] = v
+				end
+			end
+			tick()
+		end
+		for u in pairs(parent) do
+			verdict[u] = false
+		end
+		return false
+	end
 end
 
 -- Lazy terminal-node connections let nearby targets settle without first searching every faraway endpoint.
@@ -1242,45 +1389,30 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 		end
 		return linked[i]
 	end
-	-- A target on the source's own node is a transfer. Settle its zero before any other search, so a batch paused early
-	-- still tells a transfer from a walk: once job.snapped is set, every unsettled target is a real walk away.
+	-- Local targets can settle immediately when both points use the same node. With one surface at each end and
+	-- neither one moved, all alternatives pay these connectors plus a nonnegative grid cost.
 	-- connectPoint reuses the shared heap, which still holds the source connection's frontier.
 	local heldKeys, heldValues, heldSize = hk, hv, hn
 	hk, hv, hn = {}, {}, 0
 	for i, point in ipairs(targets) do
 		if costs[i] == nil and locate(st, point.x, point.y) == sk then
 			local target = link(i, sk)
+			local colocated = point.x == from.x and point.y == from.y
 			for _, a in ipairs(target and starts or {}) do
 				for _, b in ipairs(target and target.goals or {}) do
-					if costs[i] == nil and (reverse and b.node or a.node) == (reverse and a.own or b.own) then
-						costs[i] = 0
-						if job then
+					local start, goal = a, b
+					if reverse then
+						start, goal = b, a
+					end
+					if costs[i] == nil and start.node == goal.own then
+						if colocated then
+							costs[i] = 0
+						elseif #starts == 1 and #target.goals == 1 and goal.node == goal.own then
+							costs[i] = start.realOffset + goal.ownRealOffset
+						end
+						if job and costs[i] ~= nil then
 							job.revision = job.revision + 1
 						end
-					end
-				end
-			end
-		end
-	end
-	-- Both ends rescued onto one entrance at no cost are a transfer too, even from different clusters. Only a source
-	-- with such an entrance needs the check, and only targets in that entrance's own cluster can share it: a point
-	-- connects to its own cluster's entrances, and an entrance id names its cluster. The rest stay unlinked until the
-	-- search reaches them.
-	local zeros, zeroClusters = {}, {}
-	for id, cost in pairs((reverse and sourceIn) or source) do
-		if cost == 0 then
-			zeros[id], zeroClusters[floor(id / 4096)] = true, true
-		end
-	end
-	if next(zeros) then
-		for i, point in ipairs(targets) do
-			local k = costs[i] == nil and locate(st, point.x, point.y)
-			local target = k and zeroClusters[k] and link(i, k)
-			for id, cost in pairs(target and target.ends or {}) do
-				if costs[i] == nil and cost == 0 and zeros[id] then
-					costs[i] = 0
-					if job then
-						job.revision = job.revision + 1
 					end
 				end
 			end
@@ -1353,10 +1485,11 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 					for _, b in ipairs(goals) do
 						-- Both trees search outward from their endpoint; a reverse batch walks to the source. A local
 						-- walk ends on the surface the point stands on, never on where the outbound rescue moved it.
-						local first, last, tree = a.node, b.own, a.tree
+						local start, goal = a, b
 						if reverse then
-							first, last, tree = b.node, a.own, b.tree
+							start, goal = b, a
 						end
+						local first, last, tree = start.node, goal.own, start.tree
 						local cost, realCost
 						if first == last then
 							cost, realCost = 0, 0
@@ -1367,8 +1500,12 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 						then
 							cost, realCost = trees.R.g[last + 1], trees.R.r[last + 1]
 						end
-						if cost and (not direct[i] or cost < direct[i]) then
-							direct[i], directReal[i] = cost, realCost
+						if cost then
+							cost, realCost =
+								cost + start.offset + goal.ownOffset, realCost + start.realOffset + goal.ownRealOffset
+							if not direct[i] or cost < direct[i] then
+								direct[i], directReal[i] = cost, realCost
+							end
 						end
 					end
 				end
@@ -1475,67 +1612,12 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 				job.into, job.revision = closed, job.revision + 1
 			end
 		end
-		-- Every entrance the targets walk to. Entrance-graph components join ground that is only walked downhill, so
-		-- sharing one proves nothing: the walk is followed edge by edge, as the forward search would.
-		-- The flood takes a cluster's entrances together, so each cluster's graph is decoded about once.
-		local reach, pending, clusterQueue = {}, {}, {}
-		local function add(id)
-			if not reach[id] then
-				reach[id] = true
-				local k = floor(id / 4096)
-				if not pending[k] then
-					pending[k], clusterQueue[#clusterQueue + 1] = {}, k
-				end
-				pending[k][#pending[k] + 1] = id
-			end
-		end
-		local head = 1
-		local function drain()
-			while clusterQueue[head] do
-				local k = clusterQueue[head]
-				head = head + 1
-				local list = pending[k]
-				pending[k] = nil
-				nodesOf(st, k)
-				local i = 1
-				while list[i] do
-					local u = list[i]
-					i = i + 1
-					-- the edges the walks themselves take, or the flood names ground they never reach (#1149)
-					local adj = adjacent(st, u, roadsOn == true)
-					for e = 1, #adj, 3 do
-						local v = adj[e]
-						if not reach[v] and climbNodes(st, u, v) then
-							if floor(v / 4096) == k then
-								reach[v], list[#list + 1] = true, v
-							else
-								add(v)
-							end
-						end
-					end
-					tick()
-				end
-			end
-		end
 		local keys, values, size = hk, hv, hn
 		hk, hv, hn = {}, {}, 0
-		for _, point in ipairs(targets) do
-			-- A target walks only to its own cluster's entrances: once the flood holds them all, it adds nothing. The walk
-			-- is measured without the batch's hazards, which weigh a walk but never stop one.
-			local k, node = pointNode(st, point)
-			local covered = true
-			for _, id in ipairs(node and nodesOf(st, k) or {}) do
-				covered = covered and reach[id]
-			end
-			if node and not covered then
-				local _, ends = connectPoint(st, swim, k, node, point, false, nil, false)
-				for id in pairs(ends) do
-					add(id)
-				end
-				drain()
-			end
+		local reachable = groundReachability(st, swim, targets, roadsOn == true)
+		if reachable then
+			moved = nearestGround(st, swim, sk, sc, reachable)
 		end
-		moved = head > 1 and nearestGround(st, swim, sk, sc, reach) or nil
 		hk, hv, hn = keys, values, size
 		if job then
 			job.moved = moved
@@ -1636,7 +1718,7 @@ local function bakeEdges(st, k, road)
 		local base = v < N and v or at[i]
 		size = size + 4
 		flat[size - 3], flat[size - 2], flat[size - 1], flat[size] =
-			v, step, wet, 1 + (OFFROAD - 1) * (1 - (road[base] or 0))
+			v, step, wet, 1 + (OFFROAD - 1) * (1 - (road[v] or road[base] or 0))
 	end
 	local from
 	local function addBase(v, length)
@@ -1869,15 +1951,10 @@ function Path.BakeRoadEdges(map)
 							q1, q2, q3, q4 = 63, 0, 63, 0
 						end
 					else
-						-- A cluster with no road cells answers false however its neighbour decodes, so the grid of a
-						-- cross-cluster edge's far end is only read when that cluster paints roads.
-						local coverage = 0
-						local other = Grid.roads(st, floor(v / 4096))
-						if other then
-							-- A landing that the neighbour's grid cannot place is no road, as before.
-							local cell = metadata(st, v)
-							coverage = cell ~= nil and nodeAt(v) ~= nil and other[cell] or 0
-						end
+						local otherK = floor(v / 4096)
+						local other = Grid.roads(st, otherK)
+						local landing = other and nodeAt(v)
+						local coverage = landing and Grid.roadNode(st, otherK, landing) or 0
 						if c1 == 0 then
 							q1, q2 = 63, 0
 						else
@@ -1940,7 +2017,13 @@ function Path.ReuseMany(job, point, sliced)
 		return false
 	end
 	local from = job.from
-	if (from.x - point.x) ^ 2 + (from.y - point.y) ^ 2 > 9 or (from.z and point.z and abs(from.z - point.z) > ZTOL) then
+	-- Callers that reuse exact batch costs need the same coordinates. The sliced fixed-place check
+	-- only uses the baked bound and already checks the place's coordinates within its own tolerance.
+	local dx, dy = from.x - point.x, from.y - point.y
+	if (sliced and dx * dx + dy * dy > 9) or (not sliced and (dx ~= 0 or dy ~= 0)) then
+		return false
+	end
+	if from.z and point.z and abs(from.z - point.z) > ZTOL then
 		return false
 	end
 	-- A start inside a different height band may have been settled on another surface.
@@ -1969,6 +2052,77 @@ function Path.ReuseMany(job, point, sliced)
 	return k == job.sourceCluster and node == job.sourceNode
 end
 
+-- Polestar's entrance-graph sketch: join each endpoint to its cluster's entrances by octile distance.
+-- These joins do not test local terrain. Only the refined walk can be followed or used as a cost.
+local function findCoarse(map, from, to, waterWalking, hz)
+	local st = State(map)
+	if not st then
+		return nil, "nodata"
+	end
+	local sk, gk = locate(st, from.x, from.y), locate(st, to.x, to.y)
+	if not sk or not gk or sk == gk then
+		return nil, "cluster"
+	end
+	if hz and hz.ConnectorWalk and hz.ConnectorWalk(from, to) then
+		hz = nil
+	end
+	local function gap(ax, ay, bx, by)
+		local dx, dy = abs(ax - bx), abs(ay - by)
+		return max(dx, dy) + (SQRT2 - 1) * math.min(dx, dy)
+	end
+	local cost2 = waterWalking and 2 or 1
+	local lower = max(0, 1 - 0.5 / st.cs)
+	agen = agen + 1
+	local gen = agen
+	hn = 0
+	local function relax(id, cost, parent, remaining)
+		if astamp[id] ~= gen or cost < ag[id] then
+			ag[id], apar[id], astamp[id] = cost, parent, gen
+			push(cost + remaining * lower, id)
+		end
+	end
+	for _, id in ipairs(nodesOf(st, sk) or {}) do
+		local x, y = nodeXY(st, id)
+		relax(id, gap(from.x, from.y, x, y), START, gap(x, y, to.x, to.y))
+	end
+	while hn > 0 do
+		local u = pop()
+		if aclosed[u] ~= gen then
+			aclosed[u] = gen
+			tick()
+			if u == GOAL then
+				local hops = {}
+				local id = apar[GOAL]
+				while id ~= START do
+					hops[#hops + 1] = id
+					id = apar[id]
+				end
+				local points = { { map = map, x = from.x, y = from.y, z = from.z } }
+				for i = #hops, 1, -1 do
+					local x, y = nodeXY(st, hops[i])
+					points[#points + 1] = { map = map, x = x, y = y }
+				end
+				points[#points + 1] = { map = map, x = to.x, y = to.y, z = to.z }
+				return points
+			end
+			if floor(u / 4096) == gk then
+				local x, y = nodeXY(st, u)
+				relax(GOAL, ag[u] + gap(x, y, to.x, to.y), u, 0)
+			end
+			local adj = adjacent(st, u, false)
+			for e = 1, #adj, 3 do
+				local v = adj[e]
+				if aclosed[v] ~= gen then
+					local x, y = nodeXY(st, v)
+					local factor = hz and hazard(st, hz, u, v) or 1
+					relax(v, ag[u] + adj[e + cost2] * factor, u, gap(x, y, to.x, to.y))
+				end
+			end
+		end
+	end
+	return nil, "unreachable"
+end
+
 local function start(job)
 	if job.notify then
 		local owner = job.owner
@@ -1978,6 +2132,9 @@ local function start(job)
 		return
 	end
 	Expansions(0)
+	if job.coarse then
+		return findCoarse(job.map, job.from, job.to, job.waterWalking, job.hazards)
+	end
 	if job.targets then
 		return runMany(job.map, job.from, job.targets, job.waterWalking, job.reverse, job, job.hazards)
 	end

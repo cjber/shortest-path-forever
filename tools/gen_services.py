@@ -348,6 +348,47 @@ def class_trainers(creatures):
     return dict(sorted(result.items()))
 
 
+def class_trainer_caps(creatures, classes, trainer_rows, template_rows, spell_rows):
+    """Class trainer NPC -> the highest level required by its direct or template trainer spells."""
+    spells = {int(row["Id"]): row for row in spell_rows}
+
+    def spell_level(spell_id):
+        spell = spells.get(spell_id)
+        return int(spell["SpellLevel"]) if spell is not None else None
+
+    def requirement(row):
+        if level := int(row["reqlevel"]):
+            return level
+        spell = spells.get(int(row["spell"]))
+        if spell is None:
+            return None
+        # The trainer may cast a wrapper spell whose effect teaches the spell that requires the level.
+        learned = [
+            spell_level(int(spell[f"EffectTriggerSpell{index}"]))
+            for index in (1, 2, 3)
+            if int(spell[f"Effect{index}"]) == LEARN_SPELL
+        ]
+        if None in learned:
+            return None
+        return max(learned, default=int(spell["SpellLevel"]))
+
+    def requirements(rows):
+        by_entry = defaultdict(list)
+        for row in rows:
+            by_entry[int(row["entry"])].append(requirement(row))
+        return by_entry
+
+    trainers, templates = requirements(trainer_rows), requirements(template_rows)
+    caps = {}
+    for creature in creatures:
+        npc = int(creature["Entry"])
+        if npc in classes:
+            levels = trainers[npc] + templates[int(creature["TrainerTemplateId"])]
+            if levels and None not in levels:
+                caps[npc] = max(levels)
+    return dict(sorted(caps.items()))
+
+
 def portal_trainers(creatures, trainer_rows, template_rows, spell_rows, teleport_spells):
     """A mage class trainer whose every taught spell opens or lands at a destination: the client's portal trainers."""
     spells = {int(row["Id"]): row for row in spell_rows}
@@ -479,7 +520,9 @@ def main():
     weapons = weapon_masters(
         creatures, trainers, templates, db["spell_template"], tables["SkillLineAbility"], categories
     )
-    classes = dict(sorted({**class_trainers(creatures), **FOREVER_CLASS_TRAINERS}.items()))
+    classes = class_trainers(creatures)
+    class_caps = class_trainer_caps(creatures, classes, trainers, templates, db["spell_template"])
+    classes = dict(sorted({**classes, **FOREVER_CLASS_TRAINERS}.items()))
     teleports = {int(row["id"]) for row in db["spell_target_position"]}
     portals = portal_trainers(creatures, trainers, templates, db["spell_template"], teleports)
     battlemasters_by_npc = battlemasters(creatures, db["battlemaster_entry"])
@@ -498,6 +541,7 @@ def main():
         "-- ProfessionIcons: [skill line] = SkillLine.SpellIconFileID, the client's square profession icon.",
         "-- WeaponMasters: [npc] = weapon skill lines (CategoryID 6) taught by classic-db trainer spells.",
         "-- ClassTrainers: [npc] = TrainerClass of a TrainerType 0 trainer; TrainerClass 0 is not a class.",
+        "-- ClassTrainerCaps: [npc] = highest spell level a classic-db class trainer requires, where known.",
         "-- PortalTrainers: [npc] = class of a mage trainer whose every taught spell opens or lands at a destination.",
         "-- Battlemasters: [npc] = battleground template, from classic-db battlemaster_entry.",
         "-- ItemProfessions: [item] = the profession skill lines its goods supply, from a recipe's RequiredSkill and",
@@ -511,6 +555,7 @@ def main():
     lines += assignment("ns.ProfessionIcons", render(icons))
     lines += assignment("ns.WeaponMasters", render_lists(weapons))
     lines += assignment("ns.ClassTrainers", render(classes))
+    lines += assignment("ns.ClassTrainerCaps", render(class_caps))
     lines += assignment("ns.PortalTrainers", render(portals))
     lines += assignment("ns.Battlemasters", render(battlemasters_by_npc))
     lines += assignment("ns.ItemProfessions", render_lists(supplies))

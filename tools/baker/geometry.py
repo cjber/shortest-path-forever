@@ -109,19 +109,29 @@ def seg_in_box(a, b, box):
     return clip_segment(a, b, box) is not None
 
 
-def poly_distance2(px, py, pts):
-    """Distance from a point to a convex polygon in the horizontal plane: zero inside its outline, else to its
-    nearest edge."""
+def nearest_point2(px, py, pts):
+    """The point of a convex polygon nearest a point in the horizontal plane: the point itself inside its outline,
+    else the nearest point of its edges."""
     if point_in_convex(px, py, pts):
-        return 0.0
-    best = math.inf
+        return px, py
+    best, near = math.inf, None
     for i in range(len(pts)):
         (ax, ay), (bx, by) = pts[i], pts[(i + 1) % len(pts)]
         dx, dy = bx - ax, by - ay
         length = dx * dx + dy * dy
         t = 0.0 if length == 0 else max(0.0, min(1.0, ((px - ax) * dx + (py - ay) * dy) / length))
-        best = min(best, math.hypot(px - (ax + t * dx), py - (ay + t * dy)))
-    return best
+        q = (ax + t * dx, ay + t * dy)
+        d = math.hypot(px - q[0], py - q[1])
+        if d < best:
+            best, near = d, q
+    return near
+
+
+def poly_distance2(px, py, pts):
+    """Distance from a point to a convex polygon in the horizontal plane: zero inside its outline, else to its
+    nearest edge."""
+    qx, qy = nearest_point2(px, py, pts)
+    return math.hypot(px - qx, py - qy)
 
 
 def poly_distance(point, pts):

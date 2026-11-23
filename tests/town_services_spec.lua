@@ -102,6 +102,8 @@ C_Map.GetMapInfo = function(id)
 end
 ns.db.journey = true
 ns.db.townServices = "all"
+-- The minimap's own layer demands the catalogue too (tests/minimap_services_spec.lua); here only the map does.
+ns.db.minimapPins = false
 -- Repair and the vendors start hidden; the other services start shown, including for a saved table that predates the
 -- switches (#978).
 check(ns.db.townServiceRepair == false, "a repairer is hidden by default")

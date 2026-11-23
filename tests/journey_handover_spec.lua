@@ -11,7 +11,6 @@ driver.load("Core/APIInput.lua")
 driver.load("Core/APIStops.lua")
 driver.load("Core/API.lua")
 driver.load("Journey/Itinerary.lua")
-driver.load("Core/Zygor.lua")
 
 -- The client's TomTom, installed and enabled as the AddOns folder orders it (Shortest Path loads first).
 local timers, created = {}, {}
@@ -79,6 +78,7 @@ env.C_Map.ClearUserWaypoint = function(...)
 	return clearWaypoint(...)
 end
 
+driver.load("Core/Zygor.lua")
 driver.load("Core/TomTom.lua")
 local API = env.ShortestPathForever.API
 local tomtom = Fake.New(nil)

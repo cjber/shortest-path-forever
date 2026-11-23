@@ -81,6 +81,14 @@ class WalkTest(unittest.TestCase):
         self.assertEqual(self.ref.locate((5, -20, 0)), "s")  # 10 yd off the mesh
         self.assertIsNone(self.ref.locate((5, -40, 0)))  # 30 yd off the mesh
 
+    def test_a_drop_end_is_the_nearest_poly_not_the_floor_under_it(self):
+        # A ledge point half a yard off its poly's outline, twenty yards above a floor whose outline holds it.
+        ref = mesh(
+            {"floor": (square(0, 10, 0, 10, lambda x, y: -20.0), False), "ledge": (square(0, 4.5, 0, 10), False)}, {}
+        )
+        self.assertEqual(ref.locate((5, 5, 0)), "floor")
+        self.assertEqual(ref.nearest((5, 5, 0)), "ledge")
+
     def test_ends_off_the_mesh_have_no_walk(self):
         self.assertIsNone(self.ref.walk((5, -40, 0), (15, 9, 9)))
         self.assertIsNone(self.ref.walk((100000, 100000, 0), (100100, 100100, 0)))

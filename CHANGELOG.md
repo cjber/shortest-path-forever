@@ -10,7 +10,125 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.45.4] - 2026-11-22
+
+### Added
+
+- Choose the routed Shortest Path arrow, the RestedXP arrow, or both for standalone RestedXP guides in Guidance. Thanks to icouldonlygetthisname for the idea.
+
+## [1.45.3] - 2026-11-22
+
+### Fixed
+
+- Travel milestones now show readable on-screen messages. Ride sync, catch-up, and other addon notices also appear on screen.
+- With RestedXP guiding, the game's navigation marker now follows every bend instead of stopping at the first one.
+- OpenMap shows one destination pin when its waypoint marks the current stop, thanks to alexaroth for the report.
+- Routes started on OpenMap go to the spot you clicked even with Load the zone in view off, thanks to alexaroth for the report.
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
+## [1.45.2] - 2026-11-22
+
+### Fixed
+
+- Flight estimates account for Frequent Flier when your character knows the perk.
+
+## [1.45.1] - 2026-11-22
+
+### Fixed
+
+- A corpse run while following a RestedXP guide shows one arrow, RestedXP's own, which also keeps its Spirit Healer choice. (#1251)
+- RestedXP journeys place the native waypoint on the next bend again, while RestedXP keeps its own arrow. (#1254)
+
+## [1.45.0] - 2026-11-22
+
+<!-- discord-image: docs/screenshots/kalimdor.png -->
+
+- **The map sketches your walk while the journey plans.** The first walk appears on the world map within a few frames, and walks you can see are refined before background searches (#1196).
+
+### Added
+
+- Turn off Shortest Path's world map pins and route lines from the map filter or Map marks settings. (#1153)
+
+### Changed
+
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
+### Fixed
+
+- Walking estimates include the short distances from your position and destination to the walking grid, including time spent swimming at either end (#1243).
+- RestedXP keeps its own direction arrow while Shortest Path plans the journey to each guide step. (#1246)
+
+## [1.44.0] - 2026-11-22
+
+<!-- discord-image: docs/screenshots/stops.png -->
+
+- **Journey stops are ordered for the whole trip.** Starting a list of up to eight stops picks the order with the shortest estimated travel time, and longer lists improve on nearest-first by untangling crossed legs (#1197).
+
+### Added
+
+- Right-click a transport step to avoid that connection. Undo the choice if no route remains, or clear avoided transport in Settings. (#1005)
+- Hold your journey key and right-click the world map to mark missing roads or walls and copy their coordinates into a bug report (#1006).
+- **Adjust how far you can stray from a walking path before it recalculates.** Find Off-path tolerance next to Arrival distance in Guidance (#1033).
+- **Click the cast prompt's icon to travel.** When a journey step says to use the Hearthstone, a teleport item or a teleport spell, clicking its icon uses it, and the tooltip says what a click does. In combat the icon keeps its last action until combat ends (#1035).
+- Town services ticked in the world map filter also show on the minimap, with the same icons and tooltips, following the minimap marks switch and icon size. (#1220)
+- **Show the journey key hint on the minimap**, its own switch under Guidance > Journey. The minimap's tooltip is the one over every node, herb and NPC, so the line can now be turned off there while the world map and flight point hints stay on. (#1241)
+- **Follow Zygor guides** (in Guides settings, off by default) plans journeys to Zygor's current guide step on its own, with no TomTom or bridge addon. Zygor keeps its own arrow. Thanks to lumpi_lumpi on Discord for the idea (#1247).
+
+### Changed
+
+- **High-level zones cost more the higher they are.** With *Avoid zones far above my level* on, a zone five levels above you is only lightly avoided and one ten or more above you strongly, so a journey that must cross one picks the mildest (#1201).
+- **The arrow looks farther ahead on open ground.** It points towards a bend you can walk straight to, so it turns less often on clear stretches.
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
+### Fixed
+
+- If a journey search hits a Lua error, the tracker shows a failure message so you can try another destination (#1141).
+- Walking searches use less CPU, so journeys such as Stormwind's Canals to the Dwarven District finish planning sooner (#1154).
+- Nearby services show travel times sooner after a reload and update them as you move, and a row whose ride is slower than walking shows the walking time the journey takes. Thanks to PrinceOfPromise on CurseForge for the report (#1159).
+- The Nearby services panel spends fewer frames comparing walking routes to choose the nearest NPC (#1164).
+- Journeys from Orgrimmar to isolated terrain in Azshara find the closest reachable ground sooner.
+- With OpenMap's stitched map, a followed OpenMap pin is no longer covered by Shortest Path's goal pin, so Alt-click deletes it and clears the journey as it does for any other OpenMap pin, and the pin no longer shows twice (#1239, #1153).
+- The journey line over OpenMap's stitched map is placed at the right spot again.
+- **The journey menu only offers RestedXP when RestedXP is installed.** "Resume RestedXP guide" was listed even with RXPGuides disabled, where it could do nothing; it now appears only while RestedXP is loaded, the same way the Guidelime and Dugi entries already wait for their addons.
+- The class trainer journey and the Nearby class trainer list skip trainers who have nothing left to teach you, such as a starting-area trainer once you have passed their last spell, and pick the next nearest one who can. A trainer you open also teaches Shortest Path where their spells stop, and the list updates when you level up or open a trainer. Thanks to antarek on CurseForge for the report (#1245).
+
+## [1.43.14] - 2026-11-21
+
+### Changed
+
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
+## [1.43.13] - 2026-11-21
+
+<!-- forever-core-sync -->
+
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
+### Fixed
+
+- Opening the game's settings no longer shows a blocked action error naming Shortest Path Forever. Browsing or searching the settings could leave the Social page's Discord button blocked and blamed on this addon. Its tracker, arrow and compass options now run apart from the rest of the panel (#1219).
+
+## [1.43.12] - 2026-11-21
+
+### Changed
+
+- A journey you planned yourself now always comes back after a /reload or a relog, until it ends or you clear it. The *Keep journeys after a reload* setting and its 30-minute limit are gone (#1216)
+- Ships ForeverCore 1.16.2, the same shared code as your other Forever addons, so they keep working together.
+
+### Fixed
+
+- Follow roads now follows Dun Morogh's snowy dirt roads, such as the one from Coldridge Pass to The Grizzled Den, instead of cutting across the snow (#1218).
+- Follow roads now knows the dirt and cobbled roads of Desolace, Winterspring, Alterac, Swamp of Sorrows, Elwynn's docks, Gilneas and Orgrimmar, so routes there stay on the road. Road textures come from Polestar's reviewed list, thanks to Fitz (#1224).
+
 ## [1.43.11] - 2026-11-21
+
+### Changed
+
+- Journeys can choose a ride to shorten the walk through a high-level zone, even when your destination is there. The tracker tells you why it chose the ride. Thanks to Travelcraft on CurseForge for the idea (#1007).
+- Travel, service and spell-range data follow game build 1.60.1.70959: five spells changed which units they can target, so range checks use the current lists (#1038).
+- The setting that turns journeys on and off is now called "Enable journeys", and its tooltip says that off clears your journey and stops map clicks, quests, guides and waypoints from starting one. It was labelled "Click the map to plan journeys", which read as if it only stopped map clicks (#1150).
+- Follow roads also prefers paths recorded by players in the six capitals, thanks to Fitz and Polestar (#1178).
+- Ships ForeverCore 1.16.0, the same shared code as your other Forever addons, so they keep working together.
 
 ### Fixed
 
@@ -19,9 +137,26 @@ optional `### For addon authors` subsection after a version's player bullets.
 - Walks from the Hinterlands to Western Plaguelands take the direct path between the zones (#1063).
 - Walking up a ramp in the Undercity, the route follows the floor you are on (#1099).
 - A small rise in the Searing Gorge cave no longer blocks the walk through it (#1101).
-- Routes follow roads more closely where a road is only partly painted on the map (#972).
-- A short journey with your Hearthstone ready, such as across Stormwind, no longer sits on "Finding the fastest way..." while the planner measures the walks on from your bind point to every flight point on the continent. It now waits only until those walks are long enough that the Hearthstone cannot win (#1154).
+- Routes follow roads more closely, through bends and gaps and where a road is only partly painted on the map (#891, #972).
+- **Short journeys no longer wait on your Hearthstone.** A short journey with your Hearthstone ready, such as across Stormwind, no longer sits on "Finding the fastest way..." while the planner measures the walks on from your bind point to every flight point on the continent. It now waits only until those walks are long enough that the Hearthstone cannot win (#1154).
 - Opening a flight master no longer forgets flight points on a network it does not link to. As Horde, Booty Bay's flight master forgot every Undercity point you had learned (#1165).
+- Nearby service times include the terrain detours to and from flights and boats, so they agree with the journey from where you stand (#1036).
+- A long walk now gives way only to a route that mostly rides. Before, a short flight away from your goal followed by a long walk back could replace a direct walk and arrive later, as on foot from Orgrimmar to central Azshara (#1102).
+- When the quickest ride still leaves most of the way on foot, a slightly later ride that carries you most of the way is now offered in its place (#1104).
+- Destination tooltips now point to Clear journey in the journey tracker menu when another map pin covers the destination (#1105).
+- With "Mark only where steps end" enabled, your waypoint stays at the current step's destination, including with Waypoint UI. Shortest Path's arrow still guides you around each turn (#1138).
+- A destination no one can walk to, such as a plateau ringed by cliffs, now moves to the nearest ground you can reach without first searching every walk from where you stand (#1149).
+- Shortest Path's world map icons now hide when combat starts and come back when it ends, as the minimap's already did (#1151).
+- You can now start a journey by clicking in the corners of a square minimap, thanks to lukehmu (#1152).
+- When Adventure Guide focuses a quest at the next turn, the game's marker guides you without a second arrow beside your character (#1161).
+- Show on map in the tracker tells you when combat prevents it from opening the map (#965).
+- Long journeys can now give walking directions while the addon is still checking for a faster route (#997).
+
+### For addon authors
+
+- Walking routes, stop observers and journey state in API 2.6: `NavigateRoute(owner, stops, options)` takes `options.policy`, `"normal"` (the default) or `"walking"`, which keeps every leg a walk along the walking map; bad options answer `nil, "invalid"`. `ObserveStops(owner, callback)` calls `callback(phase, index, stop, state)` for that owner's running route, inside the planner's own step, with phase `"arrived"` or `"settled"`. `JourneyState()` reads whether the journey is busy, pending, settling, failed or blocked by combat or a corpse run, and every leg's mode, measured walk and walk error. The farming tour now drives Shortest Path only through this API, so a gathering addon can do the same.
+- `ResumeRestedXP()` returns `nil, "none"` when there is no guide to resume and `nil, "combat"` when combat blocks guidance (#1148).
+- `WalkPath`, in API 2.7, finds a walking path and passes its waypoints and distance to your callback, for an addon's own guidance, thanks to Chulf58 for the idea (#1026).
 
 ## [1.43.10] - 2026-11-20
 

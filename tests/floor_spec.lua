@@ -53,8 +53,8 @@ local LIFT_TOP = { x = 1596.15, y = 291.8, z = 55.718 } -- Data/Transports.lua d
 local UNDER_HALL = { x = 1604, y = 219 }
 
 -- Walk the drawn line from a to b, sampling every five yards (or spacing) as the journey's frame would; check is
--- called at each sample with the point, the line's height there and the tracked height. A vertical segment is a drop
--- off a ledge: the client shows the fall while you are in the air.
+-- called at each sample with the point, the line's height there and the tracked height.
+-- A segment that starts with a jump falls off a ledge: the client shows the fall while you are in the air.
 local function walk(from, to, check, spacing)
 	local points = assert(Path.FindSync(0, from, to))
 	for i = 2, #points do
@@ -64,7 +64,7 @@ local function walk(from, to, check, spacing)
 			local t = j / steps
 			local x, y = a.x + t * (b.x - a.x), a.y + t * (b.y - a.y)
 			local z = a.z and b.z and a.z + t * (b.z - a.z) or b.z or a.z
-			falling = a.x == b.x and a.y == b.y and a.z and b.z and b.z < a.z or false
+			falling = a.jump or false
 			Floor.Sample(0, x, y)
 			drain()
 			Floor.Sample(0, x, y)
@@ -109,6 +109,26 @@ for _, ends in ipairs({ { FM, MAGIC }, { MAGIC, FM } }) do
 	-- next, and a ledge left behind is held REACH cells: about 170 yd on the rebaked map.
 	assert(settled and settled < 180, "the floor settles soon: " .. tostring(settled))
 	assert(wrong == 0, "the tracked floor is the line's floor: " .. wrong)
+end
+
+-- The walk from the flight master falls off the walkway into the canal. The pulled line keeps the ledge and the
+-- landing, one step apart, and no segment of it slopes across the fall: the walk stands at the ledge's height until
+-- the drop, then at the landing's.
+do
+	local points = assert(Path.FindSync(0, FM, MAGIC))
+	local st = Grid.State(0)
+	local drops = 0
+	for i = 2, #points do
+		local a, b = points[i - 1], points[i]
+		if a.jump then
+			drops = drops + 1
+			local step = math.max(math.abs(b.x - a.x), math.abs(b.y - a.y)) / st.cs
+			assert(step <= 1 + 1e-6, ("the ledge and its landing are one step apart: %.2f cells"):format(step))
+			assert(a.z - b.z > 10, ("the landing is below the ledge: %s to %s"):format(a.z, b.z))
+		end
+	end
+	assert(drops > 0, "the walk from the flight master drops off the walkway")
+	assert(points[2].z > -45, "the line runs level to the ledge before it drops: " .. tostring(points[2].z))
 end
 
 -- Walked under the hall from the flight master, a walk up to the lift's top starts in the city; without a height it

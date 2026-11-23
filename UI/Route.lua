@@ -453,7 +453,7 @@ local Layer = {}
 function Layer:RemoveAllData()
 	linePins:ReleaseAll()
 	goalPins:ReleaseAll()
-	self.stopsKey, self.stopMarks = nil, nil
+	self.stopsKey, self.stopMarks, self.mirroredWaypoint = nil, nil, false
 	-- Reconcile the game's quest pins with the stops drawn now (#472).
 	ns.RefreshQuestPins()
 end
@@ -506,17 +506,22 @@ end
 function Layer:RefreshStops()
 	local map = WorldMapFrame
 	local mapID = map:GetMapID()
-	-- The game's own tombstone marks your corpse.
-	if not (mapID and map:IsVisible() and ns.db.journey and goal) or goal.corpse then
+	-- The game's tombstone and OpenMap's followed waypoint already mark their own goals.
+	if
+		not (mapID and map:IsVisible() and ns.db.journey and goal)
+		or goal.corpse
+		or ns.OpenMapAddon.ShowsFollowedPin()
+	then
 		goalPins:ReleaseAll()
-		self.stopsKey, self.stopMarks = nil, nil
+		self.stopsKey, self.stopMarks, self.mirroredWaypoint = nil, nil, false
 		return
 	end
 	local first, marks = stopIndex or 1, {}
+	self.mirroredWaypoint = ns.CompanionMaps.OpenWaypointMarksStop(stops and stops[first] or goal)
 	for index = first, stops and #stops or 1 do
 		local point = stops and stops[index] or goal
 		local x, y = MapPosition(point, mapID)
-		if OnMap(x, y) then
+		if OnMap(x, y) and (index ~= first or not self.mirroredWaypoint) then
 			marks[#marks + 1] = {
 				x = x,
 				y = y,
@@ -845,13 +850,13 @@ function ns.RefreshRouteLines()
 	end
 end
 
--- The Destination pin size slider changed: the goal pins are grouped by their size, so the map takes them back and
--- sets them again, without replanning the journey.
-function ns.RefreshDestinationPinSize()
+local function RefreshShownMap()
 	if provider and WorldMapFrame:IsShown() then
 		provider:RefreshAllData()
 	end
 end
+-- Rebuild the pins at the new size without replanning.
+ns.RefreshDestinationPinSize = RefreshShownMap
 
 ---@param destination SPFPoint?
 ---@param route SPFPlan?
@@ -896,9 +901,7 @@ function ns.SetJourneyRoute(destination, route)
 	end
 end
 
--- Guide starts, stops, pauses or yields: the goal pin's gold/bronze state changes with it, on the map, the minimap
--- and the on-screen destination pin. Keeping this here means the journey module only asks for it, without reaching
--- into the painters. A change while the state stays the same costs one comparison.
+-- Guide changes can recolour the goal pin on all surfaces, or replace it with OpenMap's waypoint on the world map.
 local journeyPinActive
 function ns.RefreshJourneyPin()
 	if not goal then
@@ -906,7 +909,8 @@ function ns.RefreshJourneyPin()
 		return
 	end
 	local active = ns.GoalPinActive()
-	if journeyPinActive == active then
+	local mirrored = ns.CompanionMaps.OpenWaypointMarksStop(stops and stops[stopIndex or 1] or goal)
+	if journeyPinActive == active and Layer.mirroredWaypoint == mirrored then
 		return
 	end
 	journeyPinActive = active
@@ -928,6 +932,7 @@ ns.Init(function()
 	goalPins =
 		MapCanvas.Pool(WorldMapFrame, GOAL_TEMPLATE, ns.GoalPinMixin, { template = GOAL_TEMPLATE, marker = "stop" })
 	provider = Layer
+	ns.OpenMapAddon.WatchPinOwner(RefreshShownMap)
 	MapCanvas.Watch(WorldMapFrame, function(_, what)
 		if what == "show" or what == "map" then
 			provider:RefreshAllData()

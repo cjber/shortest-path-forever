@@ -72,6 +72,7 @@ read_globals = {
 	-- Core.lua's ns.Notice: a one-line notice on screen, in the client's yellow.
 	"UIErrorsFrame",
 	"YELLOW_FONT_COLOR",
+	"BreakUpLargeNumbers",
 	"Settings",
 	"MinimalSliderWithSteppersMixin",
 	"SecondsToTime",
@@ -144,6 +145,8 @@ read_globals[#read_globals + 1] = "POIButtonUtil"
 read_globals[#read_globals + 1] = "debugprofilestop"
 read_globals[#read_globals + 1] = "ShortestPathForeverPathData"
 read_globals[#read_globals + 1] = "C_AddOns"
+-- Core/Report.lua: the client build in copied map reports.
+read_globals[#read_globals + 1] = "GetBuildInfo"
 -- Whether a value the client may hold secret can be read: checked across Core, Journey, Transport and UI.
 read_globals[#read_globals + 1] = "canaccessvalue"
 -- JourneyGuide.lua: picks out the map's own waypoint data provider, and names its pin rather than the client's
@@ -175,6 +178,13 @@ read_globals[#read_globals + 1] = "OpenMapAPI"
 -- UI/NpcArrows.lua: the nameplate the NPC a Nearby services journey walks to carries, and the unit's own GUID.
 read_globals[#read_globals + 1] = "C_NamePlate"
 read_globals[#read_globals + 1] = "UnitGUID"
+-- UI/NearbyRoles.lua: the open trainer window's list, read to learn the highest level a class trainer teaches (#1245).
+read_globals[#read_globals + 1] = "GetNumTrainerServices"
+read_globals[#read_globals + 1] = "GetTrainerServiceInfo"
+read_globals[#read_globals + 1] = "GetTrainerServiceLevelReq"
+read_globals[#read_globals + 1] = "GetTrainerServiceTypeFilter"
+-- UI/Arrow.lua: whether the player is outdoors, before the arrow aims past a bend on clear ground (#1202).
+read_globals[#read_globals + 1] = "IsOutdoors"
 
 read_globals[#read_globals + 1] = "IsPlayerMoving"
 read_globals[#read_globals + 1] = "InCombatLockdown"
@@ -234,6 +244,7 @@ files["Locales/*.lua"] = { max_line_length = false }
 -- Generated road data carries long encoded strings; the producers decide their line length.
 files["Data/RoadCells.lua"] = { max_line_length = false }
 files["Data/RoadEdges.lua"] = { max_line_length = false }
+files["tools/RoadTrails.lua"] = { max_line_length = false }
 files["Data/Heights.lua"] = { max_line_length = false }
 files["Data/IdleSpawns.lua"] = { max_line_length = false }
 files["Data/TownAreas.lua"] = { max_line_length = false }

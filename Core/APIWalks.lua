@@ -6,27 +6,17 @@ if ns.broken then
 end
 local Input = assert(ns.APIInput, "Core/APIInput.lua loads first")
 
--- #913: walking costs for another addon's own route, over the same walking maps the journey plans with. The search is
--- Routing/PathJobs.lua's FindMany, so it shares the path queue's frame budget and its wait for combat; this file owns
--- only the public argument checks, one batch per owner, and the data's identity.
+-- Walking costs and paths for other addons, over the same data journeys use. The path queue owns frame scheduling
+-- and the wait for combat. Each public search keeps its own requests by owner.
 
 -- The most places one estimate may ask for. The searches share one frontier, so this bounds an answer rather than a
 -- frame's work, which the path queue's own budget already does.
 local MAX_TARGETS = 256
 
--- The searches other addons started, one per owner: a new batch from the same owner replaces the one still running,
--- as a new journey replaces a journey. A cancelled search never calls back.
----@type table<string, {job: SPFPathJob?, cancel: fun()}>
-local searches = {}
-
----@param owner string
-local function Abandon(owner)
-	local entry = searches[owner]
-	if entry then
-		searches[owner] = nil
-		entry.cancel()
-	end
-end
+---@type table<string, fun()>
+local estimates = {}
+---@type table<string, fun()>
+local paths = {}
 
 -- The walking data a cost is measured against. A release ships its navigation maps and baked walks in the zip, so
 -- the build's own version names them, and every new build can change a cost. An unpackaged checkout has no version
@@ -61,20 +51,22 @@ end
 ---@param water boolean
 local function Find(owner, from, targets, callback, water)
 	local count = #targets
-	Abandon(owner)
+	local previous = estimates[owner]
+	if previous then
+		previous()
+	end
 	local job
 	local function cancel()
-		local entry = searches[owner]
-		if entry and entry.job == job then
-			searches[owner] = nil
+		if estimates[owner] == cancel then
+			estimates[owner] = nil
+			ns.Path.Cancel(job)
 		end
-		ns.Path.Cancel(job)
 	end
-	job = ns.Path.FindMany(from.map, from, targets, function(costs, reason, finished)
-		local entry = searches[owner]
-		if entry and entry.job == finished then
-			searches[owner] = nil
+	job = ns.Path.FindMany(from.map, from, targets, function(costs, reason)
+		if estimates[owner] ~= cancel then
+			return
 		end
+		estimates[owner] = nil
 		local answer = {}
 		for index = 1, count do
 			local cost = costs and costs[index]
@@ -82,8 +74,61 @@ local function Find(owner, from, targets, callback, water)
 		end
 		ns.core.SafeCall("API walk estimate", callback, answer, reason)
 	end, water, false, nil, nil)
-	searches[owner] = { job = job, cancel = cancel }
+	estimates[owner] = cancel
 	return cancel
+end
+
+---@param owner any
+---@param from any
+---@param callback any
+---@param opts any
+---@return SPFPoint?
+local function StartPoint(owner, from, callback, opts)
+	if
+		not Input.Owner(owner)
+		or type(from) ~= "table"
+		or type(callback) ~= "function"
+		or (opts ~= nil and type(opts) ~= "table")
+	then
+		return nil
+	end
+	local water = opts and opts.waterWalking
+	if water ~= nil and type(water) ~= "boolean" then
+		return nil
+	end
+	return Input.Point(from.map, from.x, from.y)
+end
+
+---@param target any
+---@param map number
+---@return SPFPoint?
+local function TargetPoint(target, map)
+	if type(target) == "table" then
+		local point = Input.Point(target.map, target.x, target.y)
+		if point and point.map == map then
+			return point
+		end
+	end
+	return nil
+end
+
+---@param map number
+---@param opts? SPFAPIWalkOptions
+---@return boolean?, SPFAPIWalkRefusal?
+local function ReadyWater(map, opts)
+	if not Input.Loaded() then
+		return Input.Loading()
+	end
+	if InCombatLockdown() then
+		return nil, "combat"
+	end
+	if not ns.Path.HasData(map) then
+		return nil, "nodata"
+	end
+	if opts and opts.waterWalking ~= nil then
+		return opts.waterWalking
+	end
+	return ns.JourneyWaterWalking and (ns.JourneyWaterWalking()) or false
 end
 
 -- One walking search from `from` to every target on its map, all in uiMapIDs and 0-1 fractions. Returns a function
@@ -95,17 +140,8 @@ end
 ---@param opts? SPFAPIWalkOptions
 ---@return fun()? cancel, SPFAPIWalkRefusal? reason
 function ns.EstimateWalks(owner, from, targets, callback, opts)
-	if
-		not Input.Owner(owner)
-		or type(from) ~= "table"
-		or type(targets) ~= "table"
-		or type(callback) ~= "function"
-		or (opts ~= nil and type(opts) ~= "table")
-	then
-		return nil, "invalid"
-	end
-	local water = opts and opts.waterWalking
-	if water ~= nil and type(water) ~= "boolean" then
+	local start = StartPoint(owner, from, callback, opts)
+	if not start or type(targets) ~= "table" then
 		return nil, "invalid"
 	end
 	local count = #targets
@@ -117,35 +153,73 @@ function ns.EstimateWalks(owner, from, targets, callback, opts)
 			return nil, "invalid"
 		end
 	end
-	local start = Input.Point(from.map, from.x, from.y)
-	if not start then
-		return nil, "invalid"
-	end
 	local places = {}
 	for index = 1, count do
-		local target = targets[index]
-		if type(target) ~= "table" then
-			return nil, "invalid"
-		end
-		-- A target may use a zone or a continent map of the same landmass: the walking search runs on the world map
-		-- both places project to, and nowhere else.
-		local point = Input.Point(target.map, target.x, target.y)
-		if not point or point.map ~= start.map then
+		local point = TargetPoint(targets[index], start.map)
+		if not point then
 			return nil, "invalid"
 		end
 		places[index] = point
 	end
-	if not Input.Loaded() then
-		return Input.Loading()
-	end
-	if InCombatLockdown() then
-		return nil, "combat"
-	end
-	if not ns.Path.HasData(start.map) then
-		return nil, "nodata"
-	end
+	local water, reason = ReadyWater(start.map, opts)
 	if water == nil then
-		water = ns.JourneyWaterWalking and (ns.JourneyWaterWalking()) or false
+		return nil, reason
 	end
 	return Find(owner, start, places, callback, water)
+end
+
+---@param owner string
+---@param from SPFAPIPlace
+---@param to SPFAPIPlace
+---@param callback fun(path: SPFAPIWalkPath?, reason: SPFAPIWalkReason?)
+---@param opts? SPFAPIWalkOptions
+---@return fun()? cancel, SPFAPIWalkRefusal? reason
+function ns.WalkPath(owner, from, to, callback, opts)
+	local start = StartPoint(owner, from, callback, opts)
+	local goal = start and TargetPoint(to, start.map)
+	if not start or not goal then
+		return nil, "invalid"
+	end
+	local water, reason = ReadyWater(start.map, opts)
+	if water == nil then
+		return nil, reason
+	end
+	local previous = paths[owner]
+	if previous then
+		previous()
+	end
+	local job
+	local function cancel()
+		if paths[owner] == cancel then
+			paths[owner] = nil
+			ns.Path.Cancel(job)
+		end
+	end
+	job = ns.Path.Find(start.map, start, goal, function(points, cost)
+		if paths[owner] ~= cancel then
+			return
+		end
+		paths[owner] = nil
+		if not points or type(cost) ~= "number" then
+			ns.core.SafeCall("API walk path", callback, nil, type(cost) == "string" and cost or "error")
+			return
+		end
+		local waypoints = {}
+		for index, point in ipairs(points) do
+			local place = Input.Place(point)
+			if not place then
+				ns.core.SafeCall("API walk path", callback, nil, "outside")
+				return
+			end
+			place.z = nil
+			waypoints[index] = place
+		end
+		ns.core.SafeCall(
+			"API walk path",
+			callback,
+			{ waypoints = waypoints, yards = cost, navVersion = ns.NavVersion() }
+		)
+	end, water, nil, true)
+	paths[owner] = cancel
+	return cancel
 end

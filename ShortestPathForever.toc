@@ -9,7 +9,7 @@
 ## X-Website: https://github.com/cjber/shortest-path-forever
 ## X-Donate: https://github.com/sponsors/cjber
 ## X-Curse-Project-ID: 1708599
-## X-Forever-Core: v1.15.8
+## X-Forever-Core: v1.17.1
 ## SavedVariables: ShortestPathForeverDB
 ## SavedVariablesPerCharacter: ShortestPathForeverCharDB
 ## X-Forever-Core-Embed: 1
@@ -49,6 +49,7 @@ Data\SpellTargets.lua
 Data\Credits.lua
 Transport\Model.lua
 Routing\Savings.lua
+Routing\PlanBounds.lua
 Routing\Planner.lua
 Routing\LegPoints.lua
 Routing\QuestDestination.lua
@@ -77,6 +78,7 @@ UI\AdventureSuggestions.lua
 UI\OpenMap.lua
 UI\CompanionMaps.lua
 UI\Canvas.lua
+UI\MapReport.lua
 UI\Map.lua
 UI\TownServices.lua
 UI\FlightPins.lua
@@ -86,6 +88,7 @@ UI\Tracker.xml
 UI\Tracker.lua
 UI\Mover.lua
 UI\TurnAround.lua
+UI\CastButton.lua
 UI\Arrow.lua
 UI\Compass.lua
 Nav\Nav.xml
@@ -100,6 +103,7 @@ Journey\JourneySearch.lua
 Journey\JourneyWalks.lua
 Journey\JourneyGuide.lua
 Journey\Journey.lua
+Journey\AvoidTransport.lua
 Journey\JourneyInput.lua
 Journey\Follow.lua
 Journey\Corpse.lua

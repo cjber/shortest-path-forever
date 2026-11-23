@@ -13,6 +13,9 @@ it, so a data refresh that moves the pin never leaves this file behind. The addo
 | [CMaNGOS classic-db](https://github.com/cmangos/classic-db) | Portal and teleport destinations, transport spawns and periods, trainer NPCs and spells, vendor inventories, and the heights of NPC and quest object spawns in `Data/*.lua` | `DB_REV` in `tools/gen_transit.py` (`tools/gen_services.py` and `tools/gen_heights.py` import it) | GPL-3.0 |
 | [CMaNGOS mangos-classic](https://github.com/cmangos/mangos-classic) | The transport timetable model and flight speed, reimplemented in `tools/gen_routes.py` and `tools/gen_transit.py` | Cited by source file in those scripts; no code copied | GPL-2.0-or-later |
 | [InFlight](https://github.com/LudiusMaximus/InFlight) | Recorded flight durations in `Data/Taxi.lua` | `INFLIGHT_REV` in `tools/gen_transit.py` | MIT |
+| [Polestar](https://github.com/fitzforge/polestar) by Fitz | Player-recorded capital trails in `addon/Polestar_Nav/Trails/Trails.lua`, used with permission to generate `tools/RoadTrails.lua` and bake node coverage in `Data/RoadEdges.lua` | `POLESTAR_REV` in `tools/gen_roads.py`: `6f27c95cba66f8be6b6687b3a62afc3dbfa17cae` | GPL-3.0-or-later |
+| [Polestar](https://github.com/fitzforge/polestar) by Fitz | Reviewed road texture list in `data/road-textures.json`, used with permission as the road textures in `tools/gen_roads.py` | `data/road-textures.json` at build 1.60.1.70425 | GPL-3.0-or-later |
+| [Polestar](https://github.com/fitzforge/polestar) by Fitz | Drawn search priority and entrance-graph walking sketches adapted with permission from `Polestar_Nav/Routing/PathJobs.lua` and `Polestar_Nav/Routing/Path.lua` | Polestar_Nav 0.4.1.1 (CurseForge file 1744437) | GPL-3.0-or-later |
 | Local client terrain, baked with TrinityCore's tools and the player's collision limits from benilla-re | The walkable cells, their steep down-only ground, steps and ledge drops in `Nav/*.lua` (`tools/baker/README.md`) | `TRINITY_REV` in `tools/baker/bake.sh` and the client build baked | Derived data, GPL-3.0-or-later; Blizzard's EULA applies to the client files |
 
 No embedded libraries ship. `media/` is this addon's own: the icon is drawn in `media/icon.svg`, the feathered
@@ -33,6 +36,7 @@ as the glossary for game terms; eight frFR lines are Brainc3ll's.
 | QuestieDB, if installed | Quest givers and objectives as route goals | QuestieDB carries no licence; nothing is copied |
 | TomTom, RestedXP Guides and Guidelime, if installed | Waypoints and guide steps, through their public APIs | Their own; nothing is copied |
 | Dugi Guides, if installed | Its current guide step, read from the viewer's own arrow tables | All rights reserved; no code, art or guide data is copied or bundled |
+| Zygor Guides, if installed | Its current waypoint, read from its pointer, and its current step's quests | All rights reserved; no code, art or guide data is copied or bundled |
 | TomTom's API, while TomTom is not installed | `Core/TomTom.lua` answers guide addons' TomTom calls, and `/way` reads its arguments as TomTom does | Our own code; only TomTom's public call names and `/way` syntax are followed |
 | Adventure Guide Forever and Tweaks Forever, if installed | The RestedXP hand-off, and class trainers for nearby services, through their public APIs | GPL-3.0-or-later |
 
@@ -61,6 +65,9 @@ Credit for the reports and requests behind the addon.
 
 | Who | What | Notes |
 |---|---|---|
+| alexaroth | One destination pin on OpenMap | Discord; #1267 |
+| alexaroth | Routes to the zone clicked in OpenMap | Discord; #1268 |
+| icouldonlygetthisname | Arrow choice for RestedXP journeys | GitHub, #1265 |
 | user\_u3k9hweaatfhnjs0 | Profession trainer icons, weapon masters and service filters | CurseForge comment 8734926, thread 8731864; #952 |
 | treadpool | Undercity journeys leave the city by a lift | CurseForge thread 8729181; #923 |
 | user\_g496wu46adiwjuc5 | Hearthstone map button respects Use Hearthstone | CurseForge thread 8732965; #951 |
@@ -71,6 +78,7 @@ Credit for the reports and requests behind the addon.
 | Hatemost | Resume the RestedXP guide from a macro | CurseForge thread 8697686; #786 |
 | JaidyEU | Resume the RestedXP guide from a macro | CurseForge thread 8722510; #786 |
 | [Chulf58](https://github.com/Chulf58) | Walking times between places for other addons | GitHub; #913 |
+| [Chulf58](https://github.com/Chulf58) | Walking paths for other addons to guide along | GitHub; #1026 |
 | [embiem](https://github.com/embiem) | Separate Hearthstone and class teleport switches | GitHub; #775 |
 | [InfamousMunky](https://github.com/InfamousMunky) | The Hearthstone switch outside settings | GitHub; cjber/adventure-guide-forever#707 |
 | A player | Journeys avoid opposing-faction guarded lifts | CurseForge thread 8726893, #911 |
@@ -212,5 +220,8 @@ Credit for the addons and projects an idea came from.
 | Ding! by Yendi | Walks that keep out of zones far above your level | Inspired only; no code was copied. |
 | Travelcraft (CurseForge) | Rides that shorten walks through high-level zones | #1007. Inspired only; no code was copied. |
 | [BV Addon Suite - Routing](https://www.curseforge.com/wow/addons/bv-addon-suite-routing) | Walks that start on the floor you are standing on | Its idea of working out the player's height from the game's range checks to nearby NPCs, instead of guessing a surface. All rights reserved; inspired only, no code was copied. |
+| ReavyTools by Reavy (CurseForge) | Start a Shortest Path journey from Zygor's guide | No licence included in the distribution. Ideas only. |
+| Zygor's Tweaks by ScaryLarryGames (CurseForge) | Read the active waypoint from Zygor's arrow and follow pointer changes | All rights reserved. Ideas only. |
+| [Azeroth Waypoint](https://www.curseforge.com/wow/addons/azerothwaypoint) by MorningStarGG | Refresh the waypoint title when Zygor's step changes | GPL-3.0. Ideas only. |
 
 Thanks also to everyone else who reported a bug or asked for a feature, here or on CurseForge.

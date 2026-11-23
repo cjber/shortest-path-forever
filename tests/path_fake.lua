@@ -30,6 +30,10 @@ return function()
 		new.to = to
 		return new
 	end
+	function Path.FindCoarse()
+		return {}
+	end
+
 	function Path.FindCost(map, from, to, callback, water, hazards)
 		local new = job(fake.probes, map, from, callback, water, hazards)
 		new.to, new.costOnly = to, true

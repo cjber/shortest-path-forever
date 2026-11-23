@@ -38,6 +38,7 @@ PLANNER = (
     "Transport/Model.lua",
     "Routing/PathGrid.lua",
     "Routing/Path.lua",
+    "Routing/PlanBounds.lua",
     "Routing/Planner.lua",
     "Routing/LegPoints.lua",
     "UI/FlightLines.lua",

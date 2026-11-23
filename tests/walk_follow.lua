@@ -98,17 +98,27 @@ function F.new(ns)
 			end
 	end
 
-	-- The surfaces one move (mx, my) reaches from nodes at (x, y), a change of layer within the cell allowed first.
-	local function move(st, nodes, x, y, mx, my)
-		local mid, addMid = collector()
-		local found, add = collector()
+	-- nodes and every surface of their cell (x, y) its in-cell links reach, followed as far as they go: the router
+	-- chains them, as a floor that drops to the base and the base to a lower floor.
+	local function within(st, nodes, x, y)
+		local all, add = collector()
 		for _, s in ipairs(nodes) do
-			addMid(st, s.k, s.node)
-			targets(st, s.k, s.node, x, y, 0, 0, function(k, n)
-				addMid(st, k, n)
-			end)
+			add(st, s.k, s.node)
 		end
-		for _, s in ipairs(mid) do
+		local i = 1
+		while all[i] do
+			targets(st, all[i].k, all[i].node, x, y, 0, 0, function(k, n)
+				add(st, k, n)
+			end)
+			i = i + 1
+		end
+		return all
+	end
+
+	-- The surfaces one move (mx, my) reaches from nodes at (x, y), changes of layer within the cell allowed first.
+	local function move(st, nodes, x, y, mx, my)
+		local found, add = collector()
+		for _, s in ipairs(within(st, nodes, x, y)) do
 			targets(st, s.k, s.node, x, y, mx, my, function(k, n)
 				add(st, k, n)
 			end)
@@ -231,14 +241,8 @@ function F.new(ns)
 			cur, cx, cy = nxt, ex, ey
 			if P[i][3] then
 				local m = near(cur, P[i][3], 1)
-				if #m == 0 then -- a drop or a link to another surface of the same cell
-					local more, add = collector()
-					for _, s in ipairs(cur) do
-						targets(st, s.k, s.node, ex, ey, 0, 0, function(k, nd)
-							add(st, k, nd)
-						end)
-					end
-					m = near(more, P[i][3], 1)
+				if #m == 0 then -- drops or links to other surfaces of the same cell
+					m = near(within(st, cur, ex, ey), P[i][3], 1)
 				end
 				if #m == 0 then
 					return { kind = "vertex-level", seg = i, x = points[i].x, y = points[i].y, have = heights(cur) }

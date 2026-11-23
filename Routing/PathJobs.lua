@@ -13,7 +13,7 @@ local Grid, Search = ns.PathGrid, ns.PathSearch
 local clock, Deadline, Expansions = Grid.clock, Grid.Deadline, Grid.Expansions
 local start, scratch, Spare = Search.start, Search.scratch, Search.Spare
 
--- Round-robin slices share one frame budget, including callbacks that replan from newly settled costs.
+-- Callbacks and plans go first, then visible work, then cost searches. Each group rotates within the frame.
 local queue = {}
 local scheduled, pumped = false, false
 local pump, combatWait
@@ -97,7 +97,17 @@ pump = function()
 	local began = clock()
 	local finish = began + Path.budget
 	repeat
-		local job = table.remove(queue, 1)
+		local index = 1
+		local first = queue[1]
+		if first and not first.front and not first.draw then
+			for i = 2, #queue do
+				if queue[i].draw then
+					index = i
+					break
+				end
+			end
+		end
+		local job = table.remove(queue, index)
 		if not job then
 			break
 		end
@@ -121,22 +131,18 @@ pump = function()
 			-- Cancelled from inside its own resume (a plan's answer that replaced its journey): nothing more runs.
 			Grid.Release(job)
 			job.scratch, job.co = nil, nil
-			if not ok then
-				geterrorhandler()(points)
-			end
 		elseif not ok or coroutine.status(co) == "dead" then
 			Grid.Release(job)
-			if not job.targets and not job.plain then
+			if ok and not job.targets and not job.plain then
 				Spare(job.scratch)
 			end
 			job.done, job.scratch, job.co = true, nil, nil
 			if not ok then
-				geterrorhandler()(points)
-				points, cost = nil, "error"
+				cost = "error"
 			end
 			-- A pause drops the queued answer; a batch's costs are already on the job, and this keeps why.
 			job.reason = type(cost) == "string" and cost or nil
-			if not job.cancelled then
+			if ok then
 				notify(job, job.callback, points, cost)
 			end
 		elseif points == "wait" then
@@ -153,6 +159,21 @@ pump = function()
 			end
 			if job.progress then
 				notify(job, job.progress, job.costs)
+			end
+		end
+		if not ok then
+			-- A cancelled job belongs to a search already replaced: its throw is recorded, the current search runs on.
+			local failed = (job.owner or job).onError
+			if failed then
+				ns.core.RecordError("journey search job", points)
+				if not job.cancelled then
+					failed()
+				end
+			else
+				geterrorhandler()(points)
+				if not job.cancelled then
+					notify(job, job.callback, nil, "error")
+				end
 			end
 		end
 	until clock() >= finish
@@ -196,15 +217,39 @@ end
 ---@param callback fun(points: SPFWalkPoints?, cost: number|string, job: SPFPathJob)
 ---@param waterWalking? boolean
 ---@param hazards? SPFHazards
+---@param snapGoal? boolean End at the final walking node when the requested goal cannot be reached directly.
 ---@return SPFPathJob
-function Path.Find(map, from, to, callback, waterWalking, hazards)
+function Path.Find(map, from, to, callback, waterWalking, hazards, snapGoal)
 	return enqueue({
+		draw = true,
 		map = map,
 		from = from,
 		to = to,
+		snapGoal = snapGoal,
 		waterWalking = waterWalking,
 		hazards = hazards,
 		callback = callback,
+	})
+end
+
+-- Approximate map geometry from the entrance graph, under the same budget as the exact walk.
+---@param map number
+---@param from SPFPoint
+---@param to SPFPoint
+---@param callback fun(points: SPFWalkPoints?, reason: string?, job: SPFPathJob)
+---@param waterWalking? boolean
+---@param hazards? SPFHazards
+---@return SPFPathJob
+function Path.FindCoarse(map, from, to, callback, waterWalking, hazards)
+	return enqueue({
+		draw = true,
+		coarse = true,
+		map = map,
+		from = from,
+		to = to,
+		callback = callback,
+		waterWalking = waterWalking,
+		hazards = hazards,
 	})
 end
 
@@ -219,7 +264,7 @@ end
 ---@return SPFPathJob
 function Path.FindCost(map, from, to, callback, waterWalking, hazards)
 	local job = Path.Find(map, from, to, callback, waterWalking, hazards)
-	job.costOnly = true
+	job.costOnly, job.draw = true, nil
 	return job
 end
 
@@ -238,7 +283,7 @@ end
 ---@param callback fun(points: nil, reason: string?, job: SPFPathJob)
 ---@return SPFPathJob
 function Path.Decode(map, clusters, callback)
-	local job = enqueue({ map = map, decode = clusters, callback = callback })
+	local job = enqueue({ map = map, decode = clusters, callback = callback, draw = true })
 	job.co = coroutine.create(decode)
 	return job
 end

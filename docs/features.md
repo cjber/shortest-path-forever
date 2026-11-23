@@ -6,15 +6,15 @@ The detail behind each feature in the [README](../README.md).
 
 Alt-click the world map to place a destination directly over a Questie icon. Shift-click remains available on the map, minimap and Shortest Path icons. **Key to plan a journey** in Guidance chooses Shift or Alt: with Alt, that one key works everywhere, Questie icons included, and Shift no longer plans a journey.
 
-In **Map marks**, scale transport, flight master and minimap icons separately from 25% to 200%. Right-click a flight master icon to mark its path as known or unknown; opening a flight master's map also syncs paths reported by the client. **Show the Nearby services tab** takes the tab out of the world map's quest log when another addon needs that space; `/spfnear` and the tracking menu still open the services.
+Turn off **Show Shortest Path marks** in **Map marks** or in the world map filter to hide the addon's world map pins and route lines. Journeys continue, including minimap guidance. In **Map marks**, scale transport, flight master and minimap icons separately from 25% to 200%. Right-click a flight master icon to mark its path as known or unknown; opening a flight master's map also syncs paths reported by the client. **Show the Nearby services tab** takes the tab out of the world map's quest log when another addon needs that space; `/spfnear` and the tracking menu still open the services.
 
 In **Guidance**, turn **Show the journey tracker** off to leave the arrow, pin, map line and minimap route without a journey block in the tracker; **Interface**'s **Show direction arrow** turns the arrow off too. Choose yards or metres, resize the tracker and compass, and give the compass a background. Turn off **Attach to quest tracker** in Guidance, or in the right-click menu of the tracker's "Journey to …" line (out of combat), to drag the Forever column by its heading.
 
 The direction arrow swings smoothly to each new bearing and rests while you stand still. **Move the arrow** and **Arrow scale** in Interface place and size it, together with the cast prompt that takes its place on a Hearthstone or teleport step. **Arrow label** chooses what shows under it: the distance, the journey's time left or both, and **Objectives under the arrow** shows or hides the stop's live objectives beneath that label. While moving the arrow or the compass, hold Shift as you drag to move it a quarter as far as the mouse, or rest the pointer on it and press the arrow keys to nudge it (ten times as far with Shift). The arrow keys walk as usual everywhere else and in combat. **Show the time left under the compass** (off by default) puts the journey's time left beside the distance to your next turn.
 
-**Route to the focused quest** in Guidance (off by default) starts a journey when you super-track a quest or place the game's own map pin, so a controller needs no map click. A guide addon's own journey is left alone while it leads.
+**Route to the focused quest** in Guidance (on by default) starts a journey when you super-track a quest or place the game's own map pin, so a controller needs no map click. A guide addon's own journey is left alone while it leads.
 
-**Keep journeys after a reload** in Guidance (off by default) starts a journey you planned yourself (a map click, `/way`, a quest or Nearby services) again after a `/reload`, or when you log back in within 30 minutes. Guides and other addons start their own again, and one that does so first wins.
+A journey you planned yourself (a map click, `/way`, a quest or Nearby services) starts again after a `/reload` or when you log back in, until it ends or you clear it. Guides and other addons start their own again, and one that does so first wins.
 
 **Arrival distance** in Guidance (15 yards by default) sets how close you must get to a journey's final destination for it to count as reached, from 5 to 50 yards. On a multi-stop route, the stops before the last keep 15 yards. On arrival a map pin you placed at that destination is cleared rather than restored, while any other pin you had before the journey comes back.
 
@@ -26,7 +26,9 @@ With the game's gamepad interface on, Shortest Path never opens or turns the wor
 
 Click the current journey step and choose **Complete this step** to advance it. Skipping a Hearthstone leaves it out of plans for that journey. Other steps may return if your actual position still requires them.
 
-With RestedXP, Guidelime or Dugi Guides installed, **Resume guide** in Guidance or the Journey header menu resumes that guide's current target after another journey. Dugi Guides is off by default: turn on *Follow Dugi guides* in Guidance to follow it, and Dugi's own arrow stays in place. Adventure Guide owns this action when its RestedXP display is enabled; update both addons to use the integrated resume control.
+With RestedXP, Guidelime or Dugi Guides installed, **Resume guide** in Guidance or the Journey header menu resumes that guide's current target after another journey. Dugi Guides is off by default: turn on *Follow Dugi guides* in Guidance to follow it, and Dugi's own arrow stays in place.
+
+For standalone RestedXP guides, open **RestedXP arrow** in Guidance and choose **RestedXP's arrow**, **Shortest Path's arrow**, or **Both**. RestedXP keeps corpse directions in every mode. When Adventure Guide displays the RestedXP steps, **Hide RestedXP's arrow** controls whether the guide arrow hides while Shortest Path leads. Adventure Guide handles **Resume guide** for those integrated steps.
 
 ## Routes and map marks
 
@@ -42,8 +44,8 @@ With RestedXP, Guidelime or Dugi Guides installed, **Resume guide** in Guidance 
   end* off in `/path`, by the game's own waypoint marker moving along the route turn by turn. It hands your tracked
   quest back when you finish. To head for a quest, pick **Plan journey** from its right-click menu in the objective
   tracker or quest log, or click its marker on the map with your journey key held; a finished quest routes to its turn-in.
-  Walks keep away from danger. A zone whose lowest level is 4 or more above yours costs four times as much to
-  walk through and the other faction's towns and capitals six times as much, so a walk goes round them when there
+  Walks keep away from danger. A zone whose lowest level is 5 or more above yours costs more to walk through the
+  higher it is, up to six times as much at 10 levels above, and the other faction's towns and capitals six times as much, so a walk goes round them when there
   is a way, and is planned again when you level up. The zones and towns you start and end in are never avoided.
   Under the walk's step, grey lines say what it did: *Avoids Duskwood (level 18-30)*, *Crosses Wetlands (level 20-30)*
   where there is no way round, and *Hostile town: Crossroads*. Zone levels are the original game's published
@@ -105,9 +107,8 @@ With RestedXP, Guidelime or Dugi Guides installed, **Resume guide** in Guidance 
   walking geometry, and drawn paths stay visible during refreshes, and clearing a journey releases its search caches. Walking
   maps load in small parts as the search reaches them, and a fixed walk on another continent keeps its measured cost
   and waits to draw its detailed line until you arrive there. Your position's costs refresh when you leave
-  the path or once a minute. Repeating a destination reuses its costs; standing still or moving within the same
-  walking-map cell by at most three yards also reuses your position's costs. Walk steps name the dock, pier, lift
-  or flight master you are heading for.
+  the path or once a minute. Repeating a destination reuses its costs, and standing still also reuses your
+  position's costs. Walk steps name the dock, pier, lift or flight master you are heading for.
   ![A walking route around the terrain south of Auberdine](screenshots/darkshore.png)
 
   Walking legs follow the terrain instead of a straight line to the destination.
@@ -143,7 +144,8 @@ With RestedXP, Guidelime or Dugi Guides installed, **Resume guide** in Guidance 
   when it leaves, with its crossings drawn on the map. Docks too close to tell apart at the current zoom share
   one icon, and its tooltip names each pier by where it lies, and draws its routes on the map.
   Crossings between continents curve from dock to dock on the Azeroth map; closer maps show the sailing path.
-- **On the minimap as well.** Docks, lifts, tram stations and portals appear on the minimap with the same icons
+- **On the minimap as well.** Docks, lifts, tram stations, portals and the town services ticked in the world map's
+  filter appear on the minimap with the same icons
   and tooltips, and vanish at its rim like the game's own tracking icons. The goal you are heading for is the
   exception: beyond the rim, its mark waits on the rim in its direction, a little faded. *Transport* in the minimap's tracking
   menu (or `/path`) turns them off.

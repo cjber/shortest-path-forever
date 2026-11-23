@@ -42,7 +42,7 @@ local function AddSuggestions(root, api)
 				local started, accepted = ns.core.SafeCall("Adventure Guide start", api.StartSuggestion, id)
 				-- Its route changed since the menu opened, or RestedXP waits out combat.
 				if started and not accepted then
-					ns.Print(L["Adventure Guide couldn't start that just now. Choose it again from its guide."])
+					ns.Notice(L["Adventure Guide couldn't start that just now. Choose it again from its guide."])
 				end
 			end)
 		end

@@ -10,6 +10,7 @@ for _, file in ipairs({
 	"Data/Portals.lua",
 	"Data/Walks.lua",
 	"Routing/Savings.lua",
+	"Routing/PlanBounds.lua",
 	"Routing/Planner.lua",
 	"Routing/LegPoints.lua",
 }) do

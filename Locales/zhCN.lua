@@ -37,6 +37,8 @@ L["Adventure Guide suggests"] = "Adventure Guide推荐"
 L["Alert before a boat arrives"] = "船只到达前提醒"
 L["Alerts"] = "提醒"
 L["Alliance"] = "联盟"
+L["Applies when Adventure Guide displays RestedXP steps and Shortest Path provides the directions."] =
+	"当 Adventure Guide 显示 RestedXP 步骤且 Shortest Path 提供导航时生效。" -- mt
 L["Arriving at %s in %s"] = "到达%s还需%s"
 L["Arrow label"] = "箭头标签" -- mt
 L["Arrow scale"] = "箭头大小"
@@ -48,12 +50,15 @@ L["Avoids %s (level %s)"] = "绕开%s（等级 %s）"
 L["Bags"] = "背包"
 L["Bank"] = "银行"
 L["Battlemaster"] = "战场指挥官"
+L["Click to cast %s"] = "点击施放%s"
+L["Click to use %s"] = "点击使用%s"
 L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to save it for later; class teleports are still offered."] =
 	"旅程可以从炉石或星界传送开始。关闭后可留待后用；职业传送仍然可用。"
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"旅程以及其他插件从这里算起的估计，可以从法师的城市传送或传送：月光林地开始，并计入冷却时间。"
 L["Minimum teleport saving"] = "传送最少节省时间"
-L["Hide the journey key hint in tooltips."] = "可在鼠标提示中隐藏旅程按键提示。" -- mt
+L["The map sketches your walk while the journey plans."] =
+	"规划旅程时，地图会先勾勒出你的步行路线。" -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"只在职业传送至少节省这么多时间时使用。"
 L["Boat and Zeppelin Routes"] = "船只和飞艇航线"
@@ -96,6 +101,7 @@ L["Flight path known"] = "已知飞行路线"
 L["Flights from here"] = "从这里出发的航班"
 L["Fly to %s"] = "飞往%s"
 L["Follow Dugi guides"] = "跟随 Dugi 攻略" -- mt
+L["Follow Zygor guides"] = "跟随 Zygor 攻略" -- mt
 L["Follow Guidelime guides"] = "跟随 Guidelime 攻略"
 L["Follow RestedXP guides"] = "跟随RestedXP指南"
 L["Follow TomTom's arrow"] = "跟随TomTom的箭头"
@@ -114,7 +120,6 @@ L["Interface"] = "界面"
 L["Journey"] = "旅程"
 L["Journey  %s · %s"] = "旅程  %s · %s"
 L["Journey to %s"] = "前往%s的旅程"
-L["Keep journeys after a reload"] = "重载后保留旅程"
 L["Keeps the shared Forever tracker where you put it. The grip at its top no longer drags it."] =
 	"将共享的 Forever 追踪器保持在您放置的位置。顶部的拖拽手柄不再移动它。"
 L["Label distances in metres, as the game's metric-language clients do. The numbers stay the game's own."] =
@@ -146,27 +151,35 @@ L["Not discovered"] = "未发现"
 L["On board to %s"] = "乘坐前往%s"
 L["On the world map and in Nearby services."] = "在世界地图和附近服务中生效。"
 L["On the world map."] = "显示在世界地图上。"
-L["One line in chat the first time you log in after an update."] = "更新后首次登录时在聊天中显示一行。"
 L["Only my professions"] = "仅我的职业"
 L["Only use the Hearthstone when it saves at least this much time."] =
 	"只在炉石至少节省这么多时间时使用。"
 L["Open"] = "打开"
 L["Open Nearby services"] = "打开附近服务"
 L["Open the world map to see it."] = "打开世界地图查看。"
+L["Plan journeys to RestedXP guide targets."] = "规划前往 RestedXP 指南目标的路线。" -- mt
+L["Choose which arrows to show when following a standalone RestedXP guide."] =
+	"选择单独使用 RestedXP 指南时要显示的箭头。" -- mt
+L["RestedXP arrow"] = "RestedXP 箭头设置" -- mt
+L["RestedXP's arrow"] = "RestedXP 的箭头" -- mt
+L["Shortest Path's arrow"] = "Shortest Path 的箭头" -- mt
+L["Shortest Path pins and route lines on the world map."] = "世界地图上的 Shortest Path 图钉和路线。" -- mt
+L["Show Shortest Path marks"] = "显示 Shortest Path 标记" -- mt
+L["The travel action will update after combat."] = "旅行操作将在战斗结束后更新。"
 L["Rides to spend less time walking through %s (level %s)"] =
 	"搭乘交通工具以减少在%s（等级%s）内步行的路程"
-L["Walk less in zones with a minimum level 4 or more above yours, even at your destination."] =
-	"尽量缩短在最低等级比你高至少4级的区域内步行的路程，即使目的地也在该区域内。"
+L["Walk less in zones with a minimum level 5 or more above yours, and less still the higher it is, even at your destination."] =
+	"尽量缩短在最低等级比你高至少5级的区域内步行的路程，等级越高越少走，即使目的地也在该区域内。" -- mt
 L["Turn the world map to %s to see it."] = "将世界地图切换到%s查看。" -- mt
 L["This menu needs mouse and keyboard."] = "此菜单需要鼠标和键盘。" -- mt
 L["Other Faction's Routes"] = "另一阵营的航线"
 L["Plan journey"] = "规划旅程"
 L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."] =
 	"规划前往 Dugi 攻略当前步骤的旅程。Dugi 保留自己的箭头。" -- mt
+L["Plan journeys to Zygor's current guide step, with no TomTom or bridge addon needed. Zygor keeps its own arrow."] =
+	"规划前往 Zygor 攻略当前步骤的旅程，无需 TomTom 或桥接插件。Zygor 保留自己的箭头。" -- mt
 L["Plan journeys to Guidelime's current guide step. Guidelime's arrow steps aside while ours draws."] =
 	"规划前往 Guidelime 当前攻略步骤的旅程。在我们的箭头显示时，Guidelime 的箭头会移开。"
-L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."] =
-	"规划前往RestedXP指南目标的旅程并隐藏其箭头。无需TomTom。"
 L["Play a sound when you reach the goal"] = "到达目标时播放声音"
 L["Play a sound with alerts"] = "提醒时播放声音"
 L["Plays even with the game in the background."] = "游戏在后台时也会播放。"
@@ -241,7 +254,6 @@ L["Tram to %s"] = "前往%s的地铁"
 L["Tram to %s arrives in %s"] = "前往%s的地铁将在%s后到达"
 L["Transport"] = "交通"
 L["Transport icon size"] = "交通图标大小"
-L["Turning this off leaves RestedXP's arrow visible."] = "关闭此选项后，RestedXP 的箭头仍会显示。" -- mt
 L["Use %s"] = "使用%s"
 L["Use class teleports"] = "使用职业传送"
 L["Vendors"] = "商人"
@@ -261,8 +273,6 @@ L["With TomTom installed, a journey here follows the waypoint its arrow points t
 	"安装TomTom后，这里的旅程会跟随其箭头指向的路径点。"
 L["Your journey's next flight is drawn on the flight master's map, with its destination lit up."] =
 	"旅程的下一段航班会画在飞行管理员的地图上，并高亮其目的地。"
-L["Your own journey starts again after a /reload, or logging back in within 30 minutes. Guides start theirs."] =
-	"你自己的旅程会在/reload后或30分钟内重新登录时重新开始。指南会开始各自的旅程。"
 L["Your position is unavailable"] = "无法获取你的位置"
 L["Zeppelin to %s"] = "前往%s的飞艇"
 L["Zeppelin to %s arrives in %s"] = "前往%s的飞艇将在%s后到达"
@@ -322,13 +332,10 @@ L["Local travel journal — approx. %d yd walked; %d journeys; %d transports; %d
 	"本地旅行日志 — 步行约%d码；%d次旅程；%d次交通；%d次飞行；%d段传送门。"
 L["Record travel stats"] = "记录旅行统计"
 L["Time left"] = "剩余时间" -- mt
-L["Travel milestone reached: %s"] = "达成旅行里程碑：%s"
 L["Travel stats are not ready yet."] = "旅行统计尚未准备好。"
 L["Party member"] = "队员" -- mt
 L["That player is not on a map you can see."] = "该玩家不在你能看到的地图上。" -- mt
 L["You have caught up with %s."] = "你已追上%s。" -- mt
-L["Shortest Path's own arrow replaces the guide's while a guide target is followed."] =
-	"在追踪指南目标时，Shortest Path 自己的箭头会取代指南的箭头。" -- mt
 L["Show a pin over the destination"] = "在目的地显示图钉" -- mt
 L["A marker on screen over where the journey ends, like the game's own waypoint pin."] =
 	"在旅程终点上方显示屏幕标记，类似游戏自带的路径点图钉。" -- mt
@@ -408,6 +415,9 @@ L["The stop's live objectives under the arrow while it leads."] =
 L["The pin shown when you reach a stop keeps its own lines."] =
 	"到达站点时显示的图钉保留各自的目标文字。" -- mt
 L["Arrival distance"] = "到达距离" -- mt
+L["Off-path tolerance"] = "偏离路径容差" -- mt
+L["How far you can stray from a walking path before a new one is searched."] =
+	"在重新搜索路线之前，你可以偏离步行路径多远。" -- mt
 L["How close you must get to a journey's destination for it to count as reached."] =
 	"距离旅程目的地多近才算到达。" -- mt
 L["Stops before the last on a multi-stop route keep 15 yards."] =
@@ -445,8 +455,11 @@ L["The key you hold to plan a journey from the world map or the minimap."] =
 L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
 	"在 Questie 图标上，Shift 点击仍归 Questie 所有；Alt 点击则可用任一按键规划前往该处的旅程。" -- mt
 L["Show the journey key hint in tooltips"] = "在鼠标提示中显示旅程按键提示" -- mt
-L["Adds a line naming your journey key to tooltips on the world map, flight points and the minimap. Off, the key still plans journeys."] =
-	"在世界地图、飞行点和小地图的鼠标提示中添加一行，说明你的旅程按键。关闭后，按键仍可规划旅程。" -- mt
+L["Show the journey key hint on the minimap"] = "在小地图上显示旅程按键提示" -- mt
+L["Adds the journey key line to the minimap's tooltip over what it tracks. Off, the world map and flight point tooltips keep theirs, and the key still plans journeys."] =
+	"在小地图所追踪目标的提示中加入旅程按键一行。关闭后，世界地图和飞行点的提示仍会保留，按键仍可规划旅程。" -- mt
+L["Adds a line naming your journey key to tooltips on the world map and flight points. Off, the key still plans journeys."] =
+	"在世界地图和飞行点的鼠标提示中加入一行，说明你的旅程按键。关闭后，按键仍可规划旅程。" -- mt
 L["Show the Nearby services tab"] = "显示附近服务标签"
 L["The tab in the world map's quest log. Off, /spfnear and the tracking menu still open it."] =
 	"世界地图任务日志中的标签。关闭后，/spfnear 和追踪菜单仍可打开它。"
@@ -510,8 +523,8 @@ L["Journey paused."] = "旅程已暂停。" -- mt
 L["Journey stopped."] = "旅程已停止。" -- mt
 L["Journey stops"] = "旅程停靠点" -- mt
 L["Ordering stops by estimated travel time..."] = "正在按预计旅行时间排列停靠点..." -- mt
-L["Orders the next stop by estimated travel time. You can change the order."] =
-	"按预计旅行时间选择下一个停靠点。你可以更改顺序。" -- mt
+L["Orders the stops by estimated travel time. You can change the order."] =
+	"按预计旅行时间排列停靠点。你可以更改顺序。" -- mt
 L["Place a map waypoint, then add it to this journey."] =
 	"请先在地图上设置路点，再将其添加到此旅程。" -- mt
 L["Remove"] = "移除" -- mt
@@ -570,3 +583,47 @@ L["In the tracker while you are near a dock, lift or tram."] =
 L["Town service icons"] = "城镇服务图标" -- mt
 L["Off hides them. Otherwise one icon per town, or one per service as you zoom in."] =
 	"关闭则隐藏。否则放大时每个城镇一个图标，或每项服务一个图标。" -- mt
+L["Avoid this boat"] = "避开这艘船"
+L["Avoid this zeppelin"] = "避开这艘飞艇"
+L["Avoid this lift"] = "避开这部升降梯"
+L["Avoid this tram"] = "避开这趟地铁"
+L["Avoid this flight"] = "避开这趟飞行"
+L["Avoid this portal"] = "避开这个传送门"
+L["Avoid this passage"] = "避开这条通道"
+L["Undo"] = "撤销"
+L["Allow this transport again and find a new route."] = "重新允许使用此交通方式，并寻找新路线。"
+L["Find a new route without this transport. You can clear avoided transport in Settings."] =
+	"寻找不经过此交通方式的新路线。你可以在设置中清除避用列表。"
+L["No route remains without %s. Right-click to undo."] = "避开%s后没有可用路线。右键点击可撤销。"
+L["Avoided transport"] = "避用的交通方式"
+L["Clear avoided transport"] = "清除避用交通方式"
+L["Clear this character's avoided transport so the planner can use it again."] =
+	"清除此角色的避用列表，让路线规划重新考虑这些交通方式。"
+L["%s-right-click the map to mark a road or wall for a report."] =
+	"按住 %s 并右键点击地图，将道路或墙壁标记到报告中。" -- mt
+L["Mark: road missing here"] = "标记：此处缺少道路" -- mt
+L["Mark: wall here"] = "标记：此处有墙" -- mt
+L["%s-right-click the map to copy the report or clear its marks."] =
+	"按住 %s 并右键点击地图，可复制报告或清除标记。" -- mt
+L["Save this spot in the report to help fix the walking map."] =
+	"将此位置保存到报告中，帮助修正步行路线地图。" -- mt
+L["This spot has no world coordinates. Choose another spot."] = "此位置没有世界坐标。请选择另一处。" -- mt
+L["Copy road and wall report"] = "复制道路和墙壁报告" -- mt
+L["Open the report so you can copy and paste it into a bug report."] =
+	"打开报告，以便复制并粘贴到错误报告中。" -- mt
+L["Clear marks"] = "清除标记" -- mt
+L["Remove all saved road and wall marks from the map and report."] =
+	"从地图和报告中移除所有已保存的道路和墙壁标记。" -- mt
+L["Road and wall report"] = "道路和墙壁报告" -- mt
+L["Journey start: %s"] = "旅程起点：%s" -- mt
+L["Journey goal: %s"] = "旅程目的地：%s" -- mt
+L["Shows a notice the first time you log in after an update."] = "更新后首次登录时显示提示。" -- mt
+L["You've walked %s yards."] = "你已步行 %s 码。" -- mt
+L["You've completed %s journeys."] = "你已完成 %s 段旅程。" -- mt
+L["You've completed your first journey."] = "你已完成第一段旅程。" -- mt
+L["You've taken %s transport rides."] = "你已乘坐交通工具 %s 次。" -- mt
+L["You've taken your first transport ride."] = "你已首次乘坐交通工具。" -- mt
+L["You've taken %s flights."] = "你已搭乘飞行航线 %s 次。" -- mt
+L["You've taken your first flight."] = "你已首次搭乘飞行航线。" -- mt
+L["You've used %s portals or passages."] = "你已使用传送门或通道 %s 次。" -- mt
+L["You've used your first portal or passage."] = "你已首次使用传送门或通道。" -- mt

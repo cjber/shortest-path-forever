@@ -72,9 +72,16 @@ local env = setmetatable({
 			chat[#chat + 1] = message
 		end,
 	},
-	print = function(text)
-		printed[#printed + 1] = text
-	end,
+	UIErrorsFrame = {
+		AddMessage = function(_, text)
+			printed[#printed + 1] = text
+		end,
+	},
+	YELLOW_FONT_COLOR = {
+		GetRGB = function()
+			return 1, 1, 0
+		end,
+	},
 }, { __index = _G })
 local ForeverCore = dofile("tests/forever_core.lua")
 ForeverCore.load(env, "ForeverCore")

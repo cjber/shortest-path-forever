@@ -27,6 +27,13 @@ local function Label(options, callback)
 	local formatter = Secure(GenerateClosure)(securecallfunction, callback)
 	Secure(options.SetLabelFormatter)(options, MinimalSliderWithSteppersMixin.Label.Right, formatter)
 end
+-- A proxy setting's getter and setter are our code, which the list calls while it builds a row and the search calls
+-- over every layout. Called directly they leave Blizzard's execution tainted for the rows after ours, such as Social's
+-- Discord button, whose protected IsUserOAuthed prereq is then blocked and blamed on us (#1219). A native closure over
+-- securecallfunction runs them isolated, as Label does for formatters.
+local function Isolated(callback)
+	return Secure(GenerateClosure)(securecallfunction, callback)
+end
 local settings = {}
 
 -- Change an option from anywhere and keep the settings panel in step.
@@ -79,6 +86,18 @@ end
 -- Rows go in through Settings.RegisterInitializer, which inserts them from Blizzard's secure delegate.
 -- Settings.CreateCheckbox inserts from our code instead, and the settings search reads every layout, so that
 -- tainted it: a restricted button in the results (Social's Discord Sign In) was then blocked and blamed on us.
+local function Proxy(page, variable, variableType, name, default, getValue, setValue)
+	return Settings.RegisterProxySetting(
+		page,
+		variable,
+		variableType,
+		name,
+		default,
+		Isolated(getValue),
+		Isolated(setValue)
+	)
+end
+
 ns.Init(function()
 	category = Settings.RegisterVerticalLayoutCategory("Shortest Path Forever")
 
@@ -213,7 +232,7 @@ ns.Init(function()
 	end
 	-- Lock keeps the detached column where it is: the grip ignores drag while it is on. Off by default, and safe to
 	-- toggle in combat, since it only writes the saved switch.
-	local lock = Settings.RegisterProxySetting(
+	local lock = Proxy(
 		page,
 		"ShortestPathForever_trackerLocked",
 		Settings.VarType.Boolean,
@@ -235,7 +254,7 @@ ns.Init(function()
 		)
 	)
 	if host and host.GetScale and host.SetScale then
-		local scale = Settings.RegisterProxySetting(
+		local scale = Proxy(
 			page,
 			"ShortestPathForever_trackerScale",
 			Settings.VarType.Number,
@@ -287,14 +306,6 @@ ns.Init(function()
 			L["Limits the Journey section to this height; longer journeys scroll inside it."]
 		)
 	)
-	Checkbox(
-		"resumeJourney",
-		L["Keep journeys after a reload"],
-		L["Your own journey starts again after a /reload, or logging back in within 30 minutes. Guides start theirs."],
-		function()
-			ns.KeepJourneyChanged()
-		end
-	)
 	Section(L["Planning"])
 	Checkbox(
 		"journey",
@@ -336,7 +347,14 @@ ns.Init(function()
 		"journeyHint",
 		L["Show the journey key hint in tooltips"],
 		-- luacheck: push ignore 631
-		L["Adds a line naming your journey key to tooltips on the world map, flight points and the minimap. Off, the key still plans journeys."]
+		L["Adds a line naming your journey key to tooltips on the world map and flight points. Off, the key still plans journeys."]
+		-- luacheck: pop
+	)
+	Checkbox(
+		"minimapHint",
+		L["Show the journey key hint on the minimap"],
+		-- luacheck: push ignore 631
+		L["Adds the journey key line to the minimap's tooltip over what it tracks. Off, the world map and flight point tooltips keep theirs, and the key still plans journeys."]
 		-- luacheck: pop
 	)
 	Checkbox(
@@ -392,29 +410,38 @@ ns.Init(function()
 			.. L["It returns to the arrow when you leave the area or the stop changes."],
 		ns.ArrivalPinChanged
 	)
-	local arrivalDistance = Settings.RegisterAddOnSetting(
-		page,
-		"ShortestPathForever_arrivalDistance",
-		"arrivalDistance",
-		ns.db,
-		Settings.VarType.Number,
-		L["Arrival distance"],
-		ns.Defaults.arrivalDistance
-	)
-	settings.arrivalDistance = arrivalDistance
-	local arrivalOptions = Secure(Settings.CreateSliderOptions)(5, 50, 5)
-	Label(arrivalOptions, function(value)
-		return ns.FormatDistance(value)
-	end)
-	Settings.RegisterInitializer(
-		page,
-		Secure(Settings.CreateSliderInitializer)(
-			arrivalDistance,
-			arrivalOptions,
-			L["How close you must get to a journey's destination for it to count as reached."]
-				.. " "
-				.. L["Stops before the last on a multi-stop route keep 15 yards."]
+	local function DistanceSlider(key, name, tooltip, minimum, maximum)
+		local setting = Settings.RegisterAddOnSetting(
+			page,
+			"ShortestPathForever_" .. key,
+			key,
+			ns.db,
+			Settings.VarType.Number,
+			name,
+			ns.Defaults[key]
 		)
+		settings[key] = setting
+		local options = Secure(Settings.CreateSliderOptions)(minimum, maximum, 5)
+		Label(options, function(value)
+			return ns.FormatDistance(value)
+		end)
+		Settings.RegisterInitializer(page, Secure(Settings.CreateSliderInitializer)(setting, options, tooltip))
+	end
+	DistanceSlider(
+		"arrivalDistance",
+		L["Arrival distance"],
+		L["How close you must get to a journey's destination for it to count as reached."]
+			.. " "
+			.. L["Stops before the last on a multi-stop route keep 15 yards."],
+		5,
+		50
+	)
+	DistanceSlider(
+		"offPathTolerance",
+		L["Off-path tolerance"],
+		L["How far you can stray from a walking path before a new one is searched."],
+		15,
+		100
 	)
 	Checkbox(
 		"npcArrows",
@@ -443,20 +470,27 @@ ns.Init(function()
 			ns.RefreshTomTomFollow()
 		end
 	)
-	Checkbox(
-		"restedxp",
-		L["Follow RestedXP guides"],
-		L["Plan journeys to RestedXP guide targets and hide its arrow. No TomTom needed."],
+	Checkbox("restedxp", L["Follow RestedXP guides"], L["Plan journeys to RestedXP guide targets."], function()
+		ns.RefreshRestedXP()
+	end)
+	rows.Dropdown(
+		"restedxpArrow",
+		L["RestedXP arrow"],
+		L["Choose which arrows to show when following a standalone RestedXP guide."],
+		{
+			{ key = "restedxp", label = L["RestedXP's arrow"] },
+			{ key = "shortestPath", label = L["Shortest Path's arrow"] },
+			{ key = "both", label = L["Both"] },
+		},
 		function()
+			ns.ArrowBearingChanged()
 			ns.RefreshRestedXP()
 		end
 	)
 	Checkbox(
 		"restedxpHideArrow",
 		L["Hide RestedXP's arrow"],
-		L["Shortest Path's own arrow replaces the guide's while a guide target is followed."]
-			.. " "
-			.. L["Turning this off leaves RestedXP's arrow visible."],
+		L["Applies when Adventure Guide displays RestedXP steps and Shortest Path provides the directions."],
 		function()
 			ns.RefreshRestedXP()
 		end
@@ -475,6 +509,14 @@ ns.Init(function()
 		L["Plan journeys to Dugi's current guide step. Dugi keeps its own arrow."],
 		function()
 			ns.RefreshDugi()
+		end
+	)
+	Checkbox(
+		"zygor",
+		L["Follow Zygor guides"],
+		L["Plan journeys to Zygor's current guide step, with no TomTom or bridge addon needed. Zygor keeps its own arrow."],
+		function()
+			ns.RefreshZygor()
 		end
 	)
 	Settings.RegisterInitializer(
@@ -500,7 +542,9 @@ ns.Init(function()
 	Checkbox(
 		"avoidHighZones",
 		L["Avoid zones far above my level"],
-		L["Walk less in zones with a minimum level 4 or more above yours, even at your destination."],
+		-- luacheck: push ignore 631
+		L["Walk less in zones with a minimum level 5 or more above yours, and less still the higher it is, even at your destination."],
+		-- luacheck: pop
 		ns.TravelPolicyChanged
 	)
 	Checkbox(
@@ -539,6 +583,17 @@ ns.Init(function()
 		L["Use Water Walking and Levitate"],
 		L["Use Water Walking or Levitate when available. When off, routes use swimming times and may still cross water."],
 		ns.TravelPolicyChanged
+	)
+	-- Plain strings and a plain click, as the client's button initializer takes them; /path report lists the entries.
+	Settings.RegisterInitializer(
+		page,
+		Secure(CreateSettingsButtonInitializer)(
+			L["Avoided transport"],
+			L["Clear avoided transport"],
+			ns.ClearAvoidedTransport,
+			L["Clear this character's avoided transport so the planner can use it again."],
+			false
+		)
 	)
 	Checkbox(
 		"useHearthstone",
@@ -642,7 +697,7 @@ ns.Init(function()
 	Settings.RegisterInitializer(
 		page,
 		Secure(Settings.CreateCheckboxInitializer)(
-			Settings.RegisterProxySetting(
+			Proxy(
 				page,
 				"ShortestPathForever_arrowMove",
 				Settings.VarType.Boolean,
@@ -725,7 +780,7 @@ ns.Init(function()
 	Settings.RegisterInitializer(
 		page,
 		Secure(Settings.CreateCheckboxInitializer)(
-			Settings.RegisterProxySetting(
+			Proxy(
 				page,
 				"ShortestPathForever_compassMove",
 				Settings.VarType.Boolean,
@@ -811,7 +866,7 @@ ns.Init(function()
 	Checkbox(
 		"whatsNew",
 		L["What's new after an update"],
-		L["One line in chat the first time you log in after an update."]
+		L["Shows a notice the first time you log in after an update."]
 	)
 
 	Settings.RegisterAddOnCategory(category)

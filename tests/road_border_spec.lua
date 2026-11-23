@@ -20,11 +20,11 @@ for k, road in pairs(spec.road) do
 	st.road[k] = road
 end
 Grid.smooth = function(_, P)
-	local indices = {}
+	local indices, links = {}, {}
 	for i = 1, #P.x do
-		indices[i] = i
+		indices[i], links[i] = i, 0
 	end
-	return indices
+	return indices, false, false, links
 end
 local plainReads, roadReads = 0, 0
 for _, name in ipairs({ "adjacent", "preceding" }) do

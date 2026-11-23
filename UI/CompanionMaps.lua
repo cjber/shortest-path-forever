@@ -19,7 +19,7 @@ ns.CompanionMaps = Maps
 
 ---@type {kind: string, x: number, y: number, key: string}[]
 local pins = {}
-local signature, nextScan = "", 0
+local signature, nextScan, openWaypoint = "", 0, false
 -- The string Scan returns, built only when the pins or the journey it stands for change: UI/Canvas.lua reads it every
 -- frame the map is shown, and joining a fresh string there is work done once a frame for nothing (WFA-13, #784).
 local key, keySignature, keyPlan, keyCurrent
@@ -57,6 +57,10 @@ Visit = function(child, recursive)
 				) and "portal")
 			or nil
 	elseif scan.open and child.u and child.v and child.look then
+		-- OpenMap uses this look only for its waypoint and a visible saved pin following that waypoint.
+		if child.look.atlas == "Waypoint-MapPin-Tracked" then
+			scan.openWaypoint = true
+		end
 		kind = child.node and "flight" or (child.kind == "boat" or child.kind == "zeppelin") and child.kind or nil
 	end
 	if kind then
@@ -93,13 +97,13 @@ function Maps.Scan(map)
 	nextScan = now + 0.25
 	scan.lea = C_AddOns.IsAddOnLoaded("Leatrix_Maps")
 	scan.open = C_AddOns.IsAddOnLoaded("OpenMap") and ns.OpenMapAddon.Stitched()
-	if not scan.lea and not scan.open and #pins == 0 then
+	if not scan.lea and not scan.open and not openWaypoint and #pins == 0 then
 		return Signature()
 	end
 	local canvas = map:GetCanvas()
 	scan.canvas, scan.width, scan.height = canvas, canvas:GetWidth(), canvas:GetHeight()
 	scan.left, scan.top = canvas:GetLeft(), canvas:GetTop()
-	scan.used, scan.changed = 0, false
+	scan.used, scan.changed, scan.openWaypoint = 0, false, false
 	local previous = #pins
 	if scan.lea then
 		Children(false, canvas:GetChildren())
@@ -110,7 +114,8 @@ function Maps.Scan(map)
 	for index = scan.used + 1, previous do
 		pins[index] = nil
 	end
-	if scan.changed or scan.used ~= previous then
+	if scan.changed or scan.used ~= previous or scan.openWaypoint ~= openWaypoint then
+		openWaypoint = scan.openWaypoint
 		for index, pin in ipairs(pins) do
 			keys[index] = pin.key
 		end
@@ -118,9 +123,13 @@ function Maps.Scan(map)
 			keys[index] = nil
 		end
 		table.sort(keys)
-		signature = table.concat(keys, ";")
+		signature = table.concat(keys, ";") .. (openWaypoint and ";waypoint" or "")
 	end
 	return Signature()
+end
+
+function Maps.OpenWaypointMarksStop(point)
+	return ns.OpenMapAddon.Stitched() and openWaypoint and ns.JourneyGuide.HasWaypointAtStop(point)
 end
 
 ---@param kind string

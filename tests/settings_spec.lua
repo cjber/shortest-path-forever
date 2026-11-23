@@ -148,15 +148,16 @@ local env = setmetatable({
 			error("Blizzard's Settings.OpenToCategory is restricted: open settings through ForeverCore (#333)")
 		end,
 	},
-	CreateSettingsButtonInitializer = function(name, description, callback, tags, addSearchTags)
-		assert(tags == nil and addSearchTags == false, "index buttons stay out of the settings search")
-		return { kind = "button", name = name, description = description, callback = callback }
+	CreateSettingsButtonInitializer = function(name, description, callback, tooltip, addSearchTags)
+		assert(addSearchTags == false, "index buttons stay out of the settings search")
+		return { kind = "button", name = name, description = description, callback = callback, tooltip = tooltip }
 	end,
 	SlashCmdList = {},
 }, { __index = _G })
 -- ForeverCore's secure settings opener runs the client's restricted C_SettingsUtil.OpenSettingsPanel through
 -- securecallfunction, and records what it opened.
 local secureCalls = 0
+local isolatedCalls = 0
 env.InCombatLockdown = function()
 	return false
 end
@@ -164,6 +165,7 @@ env.securecallfunction = function(fn, ...)
 	if fn == env.C_SettingsUtil.OpenSettingsPanel then
 		secureCalls = secureCalls + 1
 	end
+	isolatedCalls = isolatedCalls + 1
 	return fn(...)
 end
 env.C_SettingsUtil = {
@@ -186,7 +188,7 @@ env.ForeverCore = {
 }
 
 local refreshed, taxiRefreshed, policyChanged, tomtomRefreshed, guidelimeRefreshed, dugiRefreshed = 0, 0, 0, 0, 0, 0
-local nearbyTabRefreshed = 0
+local nearbyTabRefreshed, zygorRefreshed = 0, 0
 local trackerRefreshed = 0
 local compassMoving = false
 local arrowMoving, arrowScaled, arrowLabelSet = false, nil, nil
@@ -247,6 +249,9 @@ local ns = {
 	RefreshDugi = function()
 		dugiRefreshed = dugiRefreshed + 1
 	end,
+	RefreshZygor = function()
+		zygorRefreshed = zygorRefreshed + 1
+	end,
 	RefreshTomTom = function()
 		tomtomRefreshed = tomtomRefreshed + 1
 	end,
@@ -271,15 +276,16 @@ local ns = {
 		tomtomFollow = false,
 		-- Dugi is opt-in: its viewer has no published API.
 		dugi = false,
+		zygor = false,
 		compassTime = false,
 		arrivalSound = false,
-		resumeJourney = false,
 		focusedQuest = false,
 		journeyKey = "shift",
 		routeColor = "gold",
 		followRoads = true,
 		roadDetour = 50,
 		arrivalDistance = 15,
+		offPathTolerance = 15,
 		townServices = "off",
 		compass = false,
 		onlyMyProfessions = false,
@@ -379,6 +385,18 @@ setfenv(assert(loadfile("Journey/Hazards.lua")), env)("ShortestPathForever", ns)
 ns.Init = init
 -- The Map marks page lives in its own module, loaded before UI/Settings.lua in the TOC.
 setfenv(assert(loadfile("UI/SettingsMapMarks.lua")), env)("ShortestPathForever", ns)
+local avoided = { { kind = "boat", ids = { 9 }, name = "Test boat" } }
+local clear = 0
+ns.PlanContext = {
+	Avoided = function()
+		return avoided
+	end,
+}
+ns.ClearAvoidedTransport = function()
+	clear = clear + 1
+	avoided = {}
+end
+
 setfenv(assert(loadfile("UI/Settings.lua")), env)("ShortestPathForever", ns)
 assert(type(ns.SettingsMapMarks.Register) == "function", "the Map marks page is its own module")
 
@@ -386,6 +404,7 @@ assert(type(ns.SettingsMapMarks.Register) == "function", "the Map marks page is 
 -- every row keeps its key, default, tooltip and callback.
 local groups = {
 	["Map marks"] = {
+		"worldMapMarks",
 		"mapRoutes",
 		"otherFaction",
 		"pins",
@@ -412,22 +431,25 @@ local groups = {
 		"trackerLocked",
 		"trackerScale",
 		"trackerHeight",
-		"resumeJourney",
 		"journey",
 		"journeyKey",
 		"journeyHint",
+		"minimapHint",
 		"focusedQuest",
 		"destinationPin",
 		"destinationPinSize",
 		"arrivalPin",
 		"arrivalDistance",
+		"offPathTolerance",
 		"npcArrows",
 		"tomtom",
 		"tomtomFollow",
 		"restedxp",
+		"restedxpArrow",
 		"restedxpHideArrow",
 		"guidelime",
 		"dugi",
+		"zygor",
 		"avoidHighZones",
 		"followRoads",
 		"roadDetour",
@@ -477,7 +499,7 @@ local order = {
 }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 77, #rows)
+assert(#rows == 81, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -494,6 +516,20 @@ end
 assert(cursor == #rows, "every row belongs to a group")
 
 assert(#opened == secureCalls, "every settings open went through ForeverCore's secure opener (#333)")
+
+local clearTransport
+for _, row in ipairs(registered) do
+	if row.initializer.name == "Avoided transport" then
+		assert(row.target.name == "Guidance")
+		clearTransport = row.initializer
+	end
+end
+assert(clearTransport, "Guidance has a Clear avoided transport button")
+assert(clearTransport.description == "Clear avoided transport")
+assert(clearTransport.tooltip == "Clear this character's avoided transport so the planner can use it again.")
+-- The client calls the click with its own arguments; clearing needs none of them.
+clearTransport.callback()
+assert(clear == 1, "the button clears the avoided transport")
 
 -- The rows themselves are unchanged: keys, defaults, tooltips and callbacks.
 local function Row(key)
@@ -733,6 +769,10 @@ assert(
 	arrivalRow.tooltip:find("Stops before the last on a multi-stop route keep 15 yards", 1, true),
 	"the tooltip says only earlier stops on a multi-stop route keep 15 yards"
 )
+local offPathRow = Row("offPathTolerance")
+assert(offPathRow.kind == "slider" and offPathRow.setting.default == 15)
+assert(offPathRow.options.minValue == 15 and offPathRow.options.maxValue == 100 and offPathRow.options.step == 5)
+assert(offPathRow.options.format(40) == "40 yd")
 -- The NPC nameplate arrows are guidance furniture and start on, with the friendly-nameplate condition in the tooltip.
 assert(Row("npcArrows").setting.default == true, "nameplate arrows are on by default")
 Row("arrow").setting.onChanged()
@@ -772,6 +812,10 @@ assert(Row("dugi").setting.default == false, "Dugi journeys are opt-in")
 assert(Row("dugi").tooltip:find("Dugi", 1, true), "the row names the guide it follows")
 Row("dugi").setting.onChanged()
 assert(dugiRefreshed == 1, "the Dugi row follows its setting")
+assert(Row("zygor").setting.default == false, "Zygor journeys without a bridge are opt-in")
+assert(Row("zygor").tooltip:find("Zygor", 1, true), "the row names the guide it follows")
+Row("zygor").setting.onChanged()
+assert(zygorRefreshed == 1, "the Zygor row follows its setting")
 -- Walks keep out of zones far above your level unless this is off; changing it plans the journey again.
 assert(Row("avoidHighZones").setting.default == true, "avoiding high zones is on by default")
 local policyBefore = policyChanged
@@ -790,14 +834,6 @@ assert(Row("tomtomFollow").tooltip:find("TomTom", 1, true), "the row names the a
 Row("tomtomFollow").setting.onChanged()
 assert(tomtomFollowRefreshed == 1, "the follower follows its setting")
 assert(Row("arrivalSound").setting.default == false, "the arrival sound is off by default")
--- Keeping your own journey across a reload is opt-in; turning it off forgets the one kept.
-assert(Row("resumeJourney").setting.default == false, "keeping journeys after a reload is off by default")
-local keepChanged = 0
-ns.KeepJourneyChanged = function()
-	keepChanged = keepChanged + 1
-end
-Row("resumeJourney").setting.onChanged()
-assert(keepChanged == 1, "the kept journey follows its setting")
 -- /path report shows the report, its lines run through SafeCall; lines that fail still show the rest.
 local shownReport
 ns.core.SafeCall = function(_, fn, ...)
@@ -876,6 +912,12 @@ assert(
 arrowObjectiveRow.setting.onChanged()
 assert(arrowObjectivesChanged == 1, "the switch redraws the arrow's lines at once")
 local arrowMover = Row("arrowMove").setting
+-- A proxy row's getter and setter are our code called from the list build and the settings search; they run through
+-- securecallfunction so they leave Blizzard's execution secure for Social's rows after ours (#1219).
+local beforeIsolated = isolatedCalls
+arrowMover:GetValue()
+arrowMover:SetValue(false)
+assert(isolatedCalls == beforeIsolated + 2, "the proxy row's getter and setter run isolated")
 arrowMover:SetValue(true)
 assert(arrowMoving == true and arrowMover:GetValue() == true, "the row lets the arrow be dragged")
 arrowMover:SetValue(false)

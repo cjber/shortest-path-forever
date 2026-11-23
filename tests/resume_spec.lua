@@ -50,20 +50,13 @@ driver.fire("PLAYER_ENTERING_WORLD")
 runTimers()
 ns.serverTime = 1000
 
--- Off by default: nothing is kept.
-ns.db.resumeJourney = false
-driver.begin({ map = 1, x = 0, y = 0 }, { map = 1, x = 2000, y = 0 })
-assert(ns.HasJourney() and ns.charDB.journey == nil, "the setting off keeps nothing")
-ns.ClearJourney()
-
--- On: the player's own journey is kept with its goal and when it was planned.
-ns.db.resumeJourney = true
+-- The player's own journey is kept with its goal and when it was planned.
 driver.begin({ map = 1, x = 0, y = 0 }, { map = 1, x = 2000, y = 0 })
 local kept = ns.charDB.journey
 local function near(a, b)
 	return math.abs(a - b) < 1e-6
 end
-assert(kept and kept.map == 1 and near(kept.x, 2000) and near(kept.y, 0) and kept.at == 1000, "the goal is kept")
+assert(kept and kept.map == 1 and near(kept.x, 2000) and near(kept.y, 0), "the goal is kept")
 ns.ClearJourney()
 assert(ns.charDB.journey == nil, "an ended journey is forgotten")
 
@@ -81,7 +74,7 @@ ns.ClearJourney()
 local function keep(fields)
 	ns.charDB.journey = fields
 end
-keep({ map = 1, x = 2000, y = 0, label = "Goldshire", at = 1000 })
+keep({ map = 1, x = 2000, y = 0, label = "Goldshire" })
 ns.serverTime = 1000 + 60
 reload()
 driver.fire("PLAYER_ENTERING_WORLD")
@@ -91,35 +84,29 @@ runTimers()
 assert(ns.HasJourney(), "the journey starts again")
 assert(ns.JourneyInfo() == "Journey to Goldshire", "with its name")
 local again = ns.charDB.journey
-assert(again and near(again.x, 2000) and again.at == 1060, "and is kept again as a new journey")
+assert(again and near(again.x, 2000), "and is kept again as a new journey")
 driver.fire("PLAYER_ENTERING_WORLD")
 assert(waits() == 0, "a later loading screen is not a reload")
 ns.ClearJourney()
 
 -- Too old, turned off, Journeys off, or another journey first: forgotten, never started.
 local function resumes(setup)
-	keep({ map = 1, x = 2000, y = 0, at = ns.serverTime })
+	keep({ map = 1, x = 2000, y = 0 })
 	setup()
 	reload()
 	driver.fire("PLAYER_ENTERING_WORLD")
 	runTimers()
 	local started = ns.HasJourney()
 	ns.ClearJourney()
-	ns.db.resumeJourney, ns.db.journey = true, true
+	ns.db.journey = true
 	return started
 end
-assert(not resumes(function()
-	ns.serverTime = ns.serverTime + 31 * 60
-end), "half an hour old is too old")
 assert(
 	resumes(function()
-		ns.charDB.journey.at = ns.serverTime - 29 * 60
+		ns.serverTime = ns.serverTime + 3 * 24 * 60 * 60
 	end),
-	"a relog within half an hour"
+	"a journey days old still starts again"
 )
-assert(not resumes(function()
-	ns.db.resumeJourney = false
-end), "the setting off")
 assert(not resumes(function()
 	ns.db.journey = false
 end), "Journeys off")
@@ -127,7 +114,7 @@ assert(not resumes(function()
 	ns.charDB.journey.x = "far"
 end), "a damaged entry")
 do
-	keep({ map = 1, x = 2000, y = 0, label = "Kept", at = ns.serverTime })
+	keep({ map = 1, x = 2000, y = 0, label = "Kept" })
 	reload()
 	driver.fire("PLAYER_ENTERING_WORLD")
 	ns.StartJourney({ map = 1, x = 500, y = 0, label = "Elsewhere" })
@@ -137,7 +124,7 @@ do
 	ns.ClearJourney()
 end
 do
-	keep({ map = 1, x = 2000, y = 0, label = "Kept", at = ns.serverTime })
+	keep({ map = 1, x = 2000, y = 0, label = "Kept" })
 	reload()
 	driver.fire("PLAYER_ENTERING_WORLD")
 	assert(API.Navigate("AGF", 1, 0.6, 0.5, "Guide step"))
@@ -165,31 +152,16 @@ runTimers()
 assert(ns.HasJourney() and ns.JourneyGoal().handins[1] == 21, "the hand-ins are resumed with the journey")
 ns.ClearJourney()
 -- A damaged hand-in list is dropped, not resumed.
-keep({ map = 1, x = 2000, y = 0, at = ns.serverTime, handins = { 21, "22" } })
+keep({ map = 1, x = 2000, y = 0, handins = { 21, "22" } })
 reload()
 driver.fire("PLAYER_ENTERING_WORLD")
 runTimers()
 assert(ns.HasJourney() and ns.JourneyGoal().handins == nil, "a damaged hand-in list is dropped")
 ns.ClearJourney()
 
--- Turned on during a journey: that journey is kept straight away.
-ns.db.resumeJourney = false
-driver.begin({ map = 1, x = 0, y = 0 }, { map = 1, x = 2000, y = 0 })
-assert(ns.charDB.journey == nil)
-ns.db.resumeJourney = true
-ns.KeepJourneyChanged()
-assert(ns.charDB.journey and near(ns.charDB.journey.x, 2000), "turning it on keeps the journey under way")
-ns.db.resumeJourney = false
-ns.KeepJourneyChanged()
-assert(ns.charDB.journey == nil, "turning it off forgets it")
-ns.db.resumeJourney = true
-ns.ClearJourney()
-
--- Half an hour from the reload or logout, not from planning: a long journey survives.
+-- A long journey survives its reload however long ago it was planned.
 driver.begin({ map = 1, x = 0, y = 0 }, { map = 1, x = 2000, y = 0 })
 ns.serverTime = ns.serverTime + 45 * 60
-driver.fire("PLAYER_LOGOUT")
-assert(ns.charDB.journey.at == ns.serverTime, "the logout restamps it")
 local saved = ns.charDB.journey
 ns.ClearJourney()
 ns.charDB.journey = saved
@@ -201,7 +173,7 @@ assert(ns.HasJourney(), "a journey planned 45 minutes ago starts again after its
 ns.ClearJourney()
 
 -- A journey started and ended while the owners have their moment: the kept one is not brought back.
-keep({ map = 1, x = 2000, y = 0, at = ns.serverTime })
+keep({ map = 1, x = 2000, y = 0 })
 reload()
 driver.fire("PLAYER_ENTERING_WORLD")
 ns.StartJourney({ map = 1, x = 500, y = 0, label = "Brief" })
@@ -215,7 +187,7 @@ assert(not resumes(function()
 end), "an infinite coordinate")
 
 -- In combat it waits for combat to end.
-keep({ map = 1, x = 2000, y = 0, at = ns.serverTime })
+keep({ map = 1, x = 2000, y = 0 })
 reload()
 driver.fire("PLAYER_ENTERING_WORLD")
 combat = true
@@ -226,7 +198,7 @@ driver.fire("PLAYER_REGEN_ENABLED")
 assert(ns.HasJourney(), "and started once it ends")
 ns.ClearJourney()
 -- Combat ending before the owners' moment is over still waits for it.
-keep({ map = 1, x = 2000, y = 0, at = ns.serverTime })
+keep({ map = 1, x = 2000, y = 0 })
 reload()
 driver.fire("PLAYER_ENTERING_WORLD")
 driver.fire("PLAYER_REGEN_ENABLED")

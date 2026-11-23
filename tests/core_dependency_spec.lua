@@ -73,7 +73,7 @@ local function Addons()
 	}
 end
 
-local function Load(foreverCore)
+local function Load(foreverCore, characterDB)
 	local lines, registered, attached, frames = {}, nil, nil, {}
 	local function frame()
 		local f = {}
@@ -87,6 +87,7 @@ local function Load(foreverCore)
 	end
 	local env = setmetatable({
 		ForeverCore = foreverCore,
+		ShortestPathForeverCharDB = characterDB,
 		C_AddOns = Addons(),
 		UnitName = function()
 			return "Player"
@@ -216,7 +217,21 @@ local noOpen = Load(completeCore)
 assert(noOpen.broken == true, "a ForeverCore without the named opener stops the addon")
 completeCore.Open =
 	dofile("tests/forever_core.lua").load(setmetatable({}, { __index = _G }), "ForeverCore", { "Core/Open.lua" }).Open
-local ns, quiet, registered, attached = Load(completeCore)
+local boatAvoid = { kind = "boat", ids = { 9 }, name = "Boat" }
+local stableAvoid = { kind = "portal", ids = { "1:0:0:portal:Portal" }, name = "Portal" }
+local ns, quiet, registered, attached = Load(completeCore, {
+	avoided = {
+		{ kind = "portal", ids = { 1 }, name = "Old portal" },
+		boatAvoid,
+		{ kind = "passage", ids = { 2 }, name = "Old passage" },
+		stableAvoid,
+	},
+})
+local avoided = ns.charDB.avoided
+assert(
+	#avoided == 2 and avoided[1] == boatAvoid and avoided[2] == stableAvoid,
+	"only legacy portal indexes are dropped"
+)
 assert(quiet and #quiet == 0, "a complete ForeverCore runs the addon and says nothing")
 assert(ns.core ~= nil, "the addon keeps its ForeverCore context")
 assert(ns.Icon == TOC["X-Forever-Icon"], "the addon reads its identity icon from the TOC")

@@ -18,7 +18,7 @@ ns.PIN_INACTIVE_FILE = "Interface\\AddOns\\ShortestPathForever\\media\\PinInacti
 local Art = {}
 ns.Art = Art
 
--- The addon's own zeppelin art (media/Zeppelin.tga): the client has no zeppelin icon (docs/asset-registry.md).
+-- The addon's own zeppelin art (media/Zeppelin.tga): no client zeppelin icon (ForeverCore docs/asset-registry.md).
 Art.ZEPPELIN_FILE = "Interface\\AddOns\\ShortestPathForever\\media\\Zeppelin"
 
 -- The addon's own town services group pin (media/TownGroup.tga): a market stall for the pin that stands for more than

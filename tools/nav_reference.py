@@ -88,7 +88,7 @@ class Reference:
             if rc in gen_nav.TILES:
                 drops += self._tile(rc, border)
         for start, end in drops:
-            a, b = self.locate(start), self.locate(end)
+            a, b = self.nearest(start), self.nearest(end)
             if a and b and a != b:
                 self.drops.setdefault(a, []).append((b, start, end))
         for key, es in border.items():
@@ -152,6 +152,20 @@ class Reference:
         if best is None or best[0] > 50 + 24:
             return None
         return best[1]
+
+    def nearest(self, point):
+        """The poly nearest a point in 3D within 24 yd, as gen_nav ties a drop's ledge and landing. A drop's ledge lies
+        on the edge of its poly, often just off the simplified outline, so locate()'s preference for a containing
+        poly put the Apothecarium's ledge on the floor twenty yards under it, a way out the navmesh has not (#1015)."""
+        x, y, _ = point
+        near = {
+            k
+            for dx in range(-3, 4)
+            for dy in range(-3, 4)
+            for k in self.cells.get((int(x // 8) + dx, int(y // 8) + dy), ())
+        }
+        best = min(((poly_distance(point, self.polys[k]["pts"]), k) for k in sorted(near)), default=None)
+        return best[1] if best and best[0] <= 24 else None
 
     def walk(self, a, b):
         """The reference walk from point a to point b, (x, y, z) each, or None when the navmesh has none."""

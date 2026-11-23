@@ -45,6 +45,7 @@ local DEFAULTS = {
 	-- The Nearby services tab in the shared quest log column. On by default; off, another addon may take that space
 	-- and /spfnear and the tracking menu still open the services.
 	nearbyTab = true,
+	worldMapMarks = true,
 	mapRoutes = true,
 	-- The town services' level of detail: "capitals", "important", "all" or "off" (UI/TownServices.lua). Off by
 	-- default: the pins are something a player asks for from the map filter menu or Settings > Map marks.
@@ -91,8 +92,11 @@ local DEFAULTS = {
 	journey = true,
 	-- The key held while clicking a map to plan a journey: "shift", the long-standing gesture, or "alt".
 	journeyKey = "shift",
-	-- The "Shift-click to plan a journey here" line on map, flight point and minimap tooltips (#1142).
+	-- The "Shift-click to plan a journey here" line on map and flight point tooltips (#1142).
 	journeyHint = true,
+	-- The same line on the minimap's tooltip, which every ore, herb and NPC hover shows, so it can be turned off
+	-- on its own (#1241). On: the minimap hint follows journeyHint.
+	minimapHint = true,
 	-- Off by default: a journey starts when the player super-tracks a quest or places a map pin, so a controller
 	-- needs no map click and a plain map pin changes what it does.
 	focusedQuest = false,
@@ -103,16 +107,19 @@ local DEFAULTS = {
 	destinationPinSize = 100,
 	-- Bouncing arrows beside the nameplate of the NPC a Nearby services journey walks to.
 	npcArrows = true,
-	resumeJourney = false,
 	tomtom = true,
 	tomtomFollow = false,
 	restedxp = true,
-	-- The arrow takeover alone: keep RestedXP's arrow while still following its guide.
+	-- Adventure Guide's integrated RestedXP display may use our arrow.
+	restedxpArrow = "restedxp",
 	restedxpHideArrow = true,
 	guidelime = true,
 	-- Dugi Guides is read through an undocumented surface of a viewer it does not publish an API for, so following
 	-- it is opt-in. It never changes Dugi's tables or hides Dugi's arrow.
 	dugi = false,
+	-- Zygor publishes no API either: its pointer's waypoint is read and its step changes are hooked, so following it
+	-- without a TomTom bridge is opt-in too. It never changes Zygor's tables or hides Zygor's arrow.
+	zygor = false,
 	taxiRoute = true,
 	teleports = true,
 	useWaterWalking = true,
@@ -150,6 +157,7 @@ local DEFAULTS = {
 	-- How close counts as arrived at a journey's final destination, in yards; the stops before the last on a
 	-- multi-stop route keep the fixed 15 yards.
 	arrivalDistance = 15,
+	offPathTolerance = 15,
 	metres = false,
 	-- Off by default: the compass is screen furniture a player turns on from Settings > Guidance.
 	compass = false,
@@ -164,6 +172,7 @@ local DEFAULTS = {
 	whatsNew = true,
 }
 ns.Defaults = DEFAULTS
+local CHARACTER_DEFAULTS = { avoided = {}, mapReportMarks = {} }
 -- The vendor kinds' grouped town service switches, on by default until #978 (UI/TownServices.lua).
 local VENDOR_SWITCHES = {
 	"townServiceFood",
@@ -218,7 +227,7 @@ end
 function ns.OpenWorldMap(uiMap, hint)
 	local accepted, reason = ns.TryOpenWorldMap(uiMap, hint)
 	if reason then
-		ns.Print(reason)
+		ns.Notice(reason)
 	end
 	return accepted
 end
@@ -228,8 +237,7 @@ function ns.Print(message)
 	print(NORMAL_FONT_COLOR:WrapTextInColorCode("Shortest Path Forever:") .. " " .. message)
 end
 
--- A line for the player on screen, in the game's own message area (UIErrorsFrame) in its yellow notice colour, for a
--- gesture that did nothing: addon notices never go to chat.
+-- Show player notices in the game's yellow on-screen message area.
 ---@param message string
 function ns.Notice(message)
 	UIErrorsFrame:AddMessage(message, YELLOW_FONT_COLOR:GetRGB())
@@ -496,6 +504,22 @@ frame:SetScript("OnEvent", function(self, _, name)
 	self:UnregisterEvent("ADDON_LOADED")
 	ShortestPathForeverDB = ShortestPathForeverDB or {}
 	ns.db = ShortestPathForeverDB
+	ShortestPathForeverCharDB = ShortestPathForeverCharDB or {}
+	for key, value in pairs(CHARACTER_DEFAULTS) do
+		if ShortestPathForeverCharDB[key] == nil then
+			ShortestPathForeverCharDB[key] = value
+		end
+	end
+	ns.charDB = ShortestPathForeverCharDB
+	-- Older test builds saved portal indexes, which can point at a different entrance after a data refresh.
+	-- CHARACTER_DEFAULTS has just filled `avoided`.
+	local avoided = ns.charDB.avoided --[[@as SPFAvoidedTransport[] ]]
+	for index = #avoided, 1, -1 do
+		local entry = avoided[index]
+		if (entry.kind == "portal" or entry.kind == "passage") and type(entry.ids[1]) == "number" then
+			table.remove(avoided, index)
+		end
+	end
 	-- `teleports` once covered the Hearthstone too, so a save that turned it off gets the Hearthstone off once.
 	-- `teleportSplit` records that this move ran: whatever the player sets afterwards stands, and a save from
 	-- before the split has no `teleports` key to move.
@@ -505,6 +529,8 @@ frame:SetScript("OnEvent", function(self, _, name)
 		end
 		ns.db.teleportSplit = 1
 	end
+	-- Keep journeys after a reload is no longer a setting: your own journey always comes back (#1216).
+	rawset(ns.db, "resumeJourney", nil)
 	-- Town services, the vendor kinds and the compass were on by default and are off now (#978, #982). The fill below
 	-- writes every missing default into the save, so a save from before holds the old default whether or not the player
 	-- chose it; a value that differs from the old default is the only one the save proves was chosen, and it stands.

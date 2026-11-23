@@ -130,10 +130,10 @@ local env = setmetatable({
 	Menu = { ModifyMenu = Record },
 	MapCanvasMixin = { MouseAction = { Click = 3 } },
 	C_Map = {
-		GetWorldPosFromMapPos = function(_, pos)
+		GetWorldPosFromMapPos = function(uiMapID, pos)
 			return 1, {
 				GetXY = function()
-					return pos.x, pos.y
+					return pos.x + (uiMapID == 1442 and 2 or 0), pos.y
 				end,
 			}
 		end,
@@ -157,6 +157,7 @@ local env = setmetatable({
 		return { pin }
 	end,
 }, { __index = _G })
+setfenv(assert(loadfile("UI/OpenMap.lua")), env)("ShortestPathForever", ns)
 local chunk = assert(loadfile("Journey/JourneyInput.lua"))
 setfenv(chunk, env)("ShortestPathForever", ns)
 assert(handler(map, 3, "LeftButton"), "Shift-clicking a flight-master pin must start a journey")
@@ -308,6 +309,23 @@ do
 	minimapTooltipPost(env.GameTooltip)
 	assert(not env.GameTooltip.lines[2], "nothing on the minimap while journeys are off")
 	ns.db.journey = true
+	-- The minimap's line has its own switch (#1241): over every ore, herb and NPC it doubles the tooltip's height.
+	ns.db.minimapHint = false
+	env.GameTooltip.lines = { "Copper Vein" }
+	minimapTooltipPost(env.GameTooltip)
+	assert(not env.GameTooltip.lines[2], "nothing on the minimap once its own hint is off (#1241)")
+	assert(ns.JourneyClickHint() == hint, "and the world map and flight point hints stay")
+	assert(ns.MinimapClickHint() == nil, "the minimap's is gone")
+	ns.db.minimapHint = true
+	env.GameTooltip.lines = { "Copper Vein" }
+	minimapTooltipPost(env.GameTooltip)
+	assert(env.GameTooltip.lines[2] == hint, "back with its box ticked (#1241)")
+	ns.db.journeyHint = false
+	assert(ns.MinimapClickHint() == nil, "the shared hint still switches the minimap's off too")
+	ns.db.journeyHint = true
+	env.GameTooltip.lines = { "Copper Vein" }
+	minimapTooltipPost(env.GameTooltip)
+	assert(env.GameTooltip.lines[2] == hint, "and back on")
 	shown = false
 	assert(not tooltipFor(poi.GetOwner()).lines[1], "nothing while the world map is closed")
 	shown = true
@@ -371,6 +389,25 @@ assert(ns.JourneyKeyDown() and ns.JourneyKeyName() == "Shift", "an unknown saved
 ns.db.journeyKey, alt = "alt", true
 assert(ns.JourneyKeyDown() and ns.JourneyKeyName() == "Alt", "Alt can be the journey key")
 
+local reportClick
+ns.OpenMapReportMenu = function(clickedMap, mapID, x, y)
+	reportClick = { clickedMap, mapID, x, y }
+	return true
+end
+shift, alt, destination = false, false, nil
+assert(canvasClick(map, "RightButton") == false and not reportClick, "plain right-click still zooms out")
+alt = true
+assert(canvasClick(map, "RightButton"), "the journey-key right-click opens the map report menu")
+assert(reportClick[1] == map and reportClick[2] == 1440 and reportClick[3] == 0.25 and reportClick[4] == 0.75)
+assert(not destination, "report clicks never start a journey")
+local reportHint = { lines = {} }
+ns.AddJourneyClickHint(reportHint)
+assert(
+	reportHint.lines[2] == "Alt-right-click the map to mark a road or wall for a report.",
+	"the map hint explains the report gesture with the chosen key"
+)
+ns.OpenMapReportMenu = nil
+
 -- The world map: a pin, the canvas, and our own icons all follow the chosen key.
 pin.pinTemplate, pin.poiInfo = "FlightPointPinTemplate", { nodeID = 26, name = "Astranaar" }
 pin.GetGlobalPosition = nil
@@ -388,7 +425,47 @@ map.GetNormalizedCursorPosition = function()
 end
 destination = nil
 assert(not canvasClick(map, "LeftButton") and destination == nil, "a click past the map's edge is left to OpenMap")
-map.GetNormalizedCursorPosition = cursor
+-- When OpenMap leaves its host map on the old zone, Blizzard clamps its cursor to that map's edge.
+-- The stitched point and its destination zone stay the same when OpenMap then switches the host map.
+local host, neighboringMap = map.GetMapID, 1442
+env.OpenMapAPI = {
+	major = 1,
+	version = 3,
+	IsStitched = function()
+		return true
+	end,
+	CursorPosition = function()
+		return 0.7, 0.6
+	end,
+	MapAt = function(u, v)
+		assert(u == 0.7 and v == 0.6)
+		return neighboringMap
+	end,
+	MapFromWorld = function(id, u, v)
+		assert(id == neighboringMap and u == 0.7 and v == 0.6)
+		return 0.3, 0.4
+	end,
+}
+map.GetNormalizedCursorPosition = function()
+	return 1, 0.5
+end
+assert(canvasClick(map, "LeftButton"), "the stitched click plans a journey with the old host")
+assert(
+	destination.map == 1 and destination.x == 2.3 and destination.y == 0.4,
+	"the plan ends at the point in view instead of the old host map's clamped edge"
+)
+map.GetMapID = function()
+	return neighboringMap
+end
+map.GetNormalizedCursorPosition = function()
+	return 0.3, 0.4
+end
+destination = nil
+assert(
+	canvasClick(map, "LeftButton") and destination.map == 1 and destination.x == 2.3 and destination.y == 0.4,
+	"loading the zone in view does not change the route's destination"
+)
+env.OpenMapAPI, map.GetMapID, map.GetNormalizedCursorPosition = nil, host, cursor
 own.marker, destination = "dock", nil
 assert(ownClick(own, "LeftButton") and destination, "Alt-clicking our own icon with Alt chosen plans a journey")
 destination = nil
@@ -591,6 +668,9 @@ assert(root.onClick == nil, "a block with no quest id adds no entry")
 
 -- EQOT-style replacement: no parentModule, but the block still sits under ObjectiveTrackerFrame.
 local trackerFrame = {
+	IsCollapsed = function()
+		return false
+	end,
 	GetParent = function()
 		return nil
 	end,

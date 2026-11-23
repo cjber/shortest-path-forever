@@ -44,14 +44,15 @@ for _, wet in ipairs({ false, true }) do
 	near(walking, 0.4 * CS)
 end
 
--- Destination-surface intervals differ by direction at a land/water boundary. The terminal tail is charged too.
+-- Across a land/water boundary each part is charged as the surface it crosses, the terminal tail too, so the
+-- connector costs the same both ways: 0.8 of a cell walked and 0.5 swum.
 local st = install({ [10] = { [10] = { z = 20 } }, [11] = { [10] = { z = 20, water = true } } })
 local land, water = 10 * C + 10, 11 * C + 10
 local k, n, forward = G.toward(st, { swim = 3 }, 0, land, 10.2, 10.5, 11.5, 10.5, true, nil, nil, true)
 assert(k == 0 and n == water)
-near(forward, 1.3 * CS * 3)
+near(forward, (0.8 + 0.5 * 3) * CS)
 local _, _, backward = G.toward(st, { swim = 3 }, 0, water, 11.5, 10.5, 10.2, 10.5, true, nil, nil, true)
-near(backward, 1.3 * CS)
+near(backward, (0.8 + 0.5 * 3) * CS)
 local _, _, walking = G.toward(st, { swim = 1 }, 0, land, 10.2, 10.5, 11.5, 10.5, true, nil, nil, true)
 near(walking, 1.3 * CS)
 assert(not G.toward(st, { swim = 3 }, 0, land, 10.2, 10.5, 11.5, 10.5, false, nil, nil, true))
@@ -66,14 +67,15 @@ local _, _, reference =
 	G.toward(st, { swim = 3, roadFactor = 3 }, 0, land, 10.2, 10.5, 11.5, 10.5, true, nil, nil, true)
 near(reference, forward)
 
--- Multi-cell floor traversal follows its links and charges the reached wet layer, not the dry base below it.
+-- Multi-cell floor traversal follows its links and charges each layer it crosses: the dry floor, then the reached
+-- wet layer, not the dry base below it.
 local layered = install({ [10] = { [10] = { z = 0 } }, [11] = { [10] = { z = 0 } } }, {
 	{ 10, 10, 30, 1, 1 },
 	{ 11, 10, 30, 2, 2 },
 })
 local lk, ln, elapsed = G.toward(layered, { swim = 3 }, 0, C * C, 10.2, 10.5, 11.5, 10.5, true, nil, nil, true)
 assert(lk == 0 and ln == C * C + 1)
-near(elapsed, 1.3 * CS * 3)
+near(elapsed, (0.8 + 0.5 * 3) * CS)
 
 -- A one-way connector cannot become a reverse reference, even when a surface exists at each end.
 local directed = install(
@@ -120,7 +122,8 @@ assert(#G.smooth(turn, pathPoints) == 2, "wide dry steps permit smoothing on sha
 turn.links[0].narrow = { [land * 512] = true }
 assert(#G.smooth(turn, pathPoints) == 3, "a narrow step requires a chord on the certified line")
 
--- Bare continuation is dry and off-road, including its final interval. A closed cell with any surface is blocked.
+-- Bare continuation is dry and off-road, including its final interval, while the road cell it leaves is charged as
+-- road. A closed cell with any surface is blocked.
 local bare, bareMap = install({ [10] = { [10] = { z = 20 } } })
 bare.road[0] = { [land] = 1 }
 local bk, bn, bt = G.toward(bare, { roadFactor = 3 }, 0, land, 10.5, 10.5, 12.2, 10.5, false, nil, nil, true)
@@ -129,7 +132,7 @@ near(bt, 1.7 * CS)
 local _, accepted = G.toward(bare, { roadFactor = 3 }, 0, land, 10.5, 10.5, 12.2, 10.5, false, nil, bt + 1e-10)
 assert(accepted == false, "bare cells must not borrow the last road surface")
 local _, _, charged = G.toward(bare, { roadFactor = 3 }, 0, land, 10.5, 10.5, 12.2, 10.5, false, nil, bt * 3 + 1e-10)
-near(charged, bt * 3)
+near(charged, (0.5 + 1.2 * 3) * CS)
 local blocked = install({ [10] = { [10] = { z = 20, flags = 1 } }, [11] = { [10] = { z = 40 } } })
 local ck, cn, ct = G.toward(blocked, {}, 0, land, 10.5, 10.5, 11.5, 10.5, false, nil, nil, true)
 assert(ck == nil and cn == false and ct == nil)
@@ -137,11 +140,14 @@ assert(ck == nil and cn == false and ct == nil)
 -- Whole Path n=1: measured endpoint connectors permit the direct chord without adding centres.
 local _, singleMap = install({ [10] = { [10] = { z = 20 } } })
 local pts, cost = Path.FindSync(singleMap, point(10.1, 10.5), point(10.9, 10.5))
-assert(pts and #pts == 2 and cost == 0, "one-node path keeps its direct chord and reported cost")
+assert(pts and #pts == 2, "one-node path keeps its direct chord")
+near(cost, 0.8 * CS)
 -- A snapped bare start has no directed on-mesh reference. Keep the selected centre and the valid fallback.
 local snapped, snappedCost = Path.FindSync(bareMap, point(11.1, 10.5), point(10.1, 10.5))
-assert(snapped and #snapped == 3 and snappedCost == 0)
+assert(snapped and #snapped == 3)
+near(snappedCost, CS)
 near(snapped[2].x, 10.5 * CS)
 local reverse, reverseCost = Path.FindSync(bareMap, point(10.1, 10.5), point(11.1, 10.5))
-assert(reverse and reverseCost == 0)
+assert(reverse)
+near(reverseCost, CS)
 print("path_connector_spec: ok")

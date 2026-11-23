@@ -167,6 +167,20 @@ local function embeddedFailure(own)
 	end
 	return phrase("%s could not start. Reinstall %s to fix this.", own, own)
 end
+-- Whether the ForeverCore at `index` is older than the version this addon's TOC asks for. A TOC that names no
+-- requirement, or a core whose Version the client will not report, is not evidence of an old core.
+local function behindCore(index)
+	local required = trimmed(safe("GetAddOnMetadata", addonName, "X-Forever-Core"))
+	local served = trimmed(safe("GetAddOnMetadata", index, "Version"))
+	local a, b, c
+	if type(required) == "string" then
+		a, b, c = required:match("^v(%d+)%.(%d+)%.(%d+)$")
+	end
+	if not a or type(served) ~= "string" or not served:match("^v?%d+%.%d+%.%d+$") then
+		return false
+	end
+	return outdated("v" .. served:gsub("^v", ""), { tonumber(a), tonumber(b), tonumber(c) }) == true
+end
 -- The line for an addon that relies on a separately installed ForeverCore.
 local function standaloneFailure(own)
 	local core = installed()
@@ -193,6 +207,11 @@ local function standaloneFailure(own)
 			local joined = #found == 2 and table.concat(found, " and ")
 				or (table.concat(found, ", ", 1, #found - 1) .. " and " .. found[#found])
 			text = phrase("%s: %s are out of date. Update them to fix this.", own, joined)
+		elseif behindCore(core) then
+			-- The installed core is genuinely older than the version this build asks for in its TOC, so updating
+			-- ForeverCore is the only fix: telling the player to reinstall this addon reinstalls the same build and the
+			-- same warning (cjber/skillup-forever#953).
+			text = phrase("%s: %s is out of date. Update it to fix this.", own, "ForeverCore")
 		else
 			text = phrase("%s could not start. Reinstall %s to fix this.", own, own)
 		end
@@ -211,6 +230,45 @@ function ns.OnFilesLoaded(callback)
 		return
 	end
 	_G.EventUtil.ContinueOnAddOnLoaded(addonName, callback)
+end
+-- Whether a loading event has already fired this session. The package's runner marks files it ran at activation,
+-- which is at PLAYER_LOGIN or after it, so the login is past for them even while that event is still being
+-- dispatched; the loader records the other two as it sees them.
+local function fired(event)
+	if event == "PLAYER_LOGIN" then
+		return ns.ForeverCoreHostDeferred == true or (type(_G.IsLoggedIn) == "function" and _G.IsLoggedIn() == true)
+	end
+	local loader = rawget(_G, "ForeverCoreLoader")
+	return type(loader) == "table" and type(loader.Seen) == "function" and loader.Seen(event) == true
+end
+-- Calls back once every named event has fired this session, waiting only for the ones still to come. A file uses
+-- this, never EventUtil.ContinueAfterAllEvents: in a package that carries ForeverCore the files run at login or
+-- later, after PLAYER_LOGIN and perhaps VARIABLES_LOADED or the world entry, and the client's wait never calls back
+-- for an event that fired before it was asked (cjber/forever-core#980). Asked while the runner runs the files, the
+-- wait starts after the last file, so a callback with nothing left to wait for never runs inside the file that asked.
+---@param callback fun()
+---@param ... string event names
+function ns.AfterEvents(callback, ...)
+	local events = { ... }
+	local function wait()
+		local pending = {}
+		for _, event in ipairs(events) do
+			if not fired(event) then
+				pending[#pending + 1] = event
+			end
+		end
+		if #pending == 0 then
+			callback()
+		else
+			_G.EventUtil.ContinueAfterAllEvents(callback, unpack(pending))
+		end
+	end
+	local queue = ns.ForeverCoreHostAfter
+	if type(queue) == "table" then
+		queue[#queue + 1] = wait
+		return
+	end
+	wait()
 end
 ---@param ready boolean
 ---@param slash? { key: string, [integer]: string } the addon's slash words and their SlashCmdList key

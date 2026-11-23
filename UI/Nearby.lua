@@ -26,29 +26,29 @@ local AMMO = { [2] = "arrows", [3] = "bullets", [18] = "arrows" }
 local UPGRADE_ATLAS, UPGRADE_MARKUP = "bags-greenarrow", 12
 -- A vendor group's item IDs by NPC, which a search matches and a row says it sells.
 local index, vendorItems, groups, groupByKey, state = {}, {}, {}, {}, "idle"
+-- Every spawn of a class trainer of the player's class, outgrown or not: index.class is the share that can still teach.
+local classPlaces = {}
 -- Every vendor item's name, so a search matches what a vendor sells and a row can name it.
 local itemNames = {}
 -- The level a tiered group's item needs, by item ID; 0 for none.
 local itemLevels = {}
 -- Each tiered group's best tier by NPC for one player level, since the level last asked.
 local tierLevel, tierCache = nil, {}
--- Callers waiting for the index, so an open panel fills as soon as the read finishes, or says why it could not.
+-- Callers that follow the index, so an open panel or layer fills as soon as the read finishes, or says why it could
+-- not. They stay subscribed: Questie's late ready callback has the database read again, and each new index is news.
 local waiting = {}
 
 ---@param fn fun()
 local function WhenReady(fn)
+	waiting[#waiting + 1] = fn
 	if state == "ready" then
 		fn()
-	else
-		waiting[#waiting + 1] = fn
 	end
 end
 
--- Tells those callers the index is ready, or that it never will be.
+-- Tells those callers the index is ready (again), or that it never will be.
 local function Notify()
-	local callers = waiting
-	waiting = {}
-	for _, fn in ipairs(callers) do
+	for _, fn in ipairs({ unpack(waiting) }) do
 		fn()
 	end
 end
@@ -362,6 +362,18 @@ local function GroupNPCs(key)
 	table.sort(npcs)
 	return npcs
 end
+-- Keeps only the class trainers with something left to teach at `level` (the player's when nil).
+---@param level number?
+local function FilterClass(level)
+	level = level or (UnitLevel and UnitLevel("player"))
+	local kept = {}
+	for _, place in ipairs(classPlaces) do
+		if ROLES.CanTeachClass(place.id, level) then
+			kept[#kept + 1] = place
+		end
+	end
+	index.class = kept
+end
 local function BuildGroups()
 	for _, byNpc in pairs(vendorItems) do
 		for _, items in pairs(byNpc) do
@@ -509,7 +521,7 @@ local function Assemble(read)
 			end
 			coroutine.yield()
 		end
-		local classIds = ROLES.ClassTrainerIDs(rawget(_G, "TweaksForever"))
+		local classIds = ROLES.ClassTrainerIDs(rawget(_G, "TweaksForever"), true)
 		local classID = ROLES.PlayerClass()
 		-- Every NPC the read kept, in each group its flags, its goods, its training and its role put it in.
 		for id, row in pairs(read.npcs) do
@@ -547,6 +559,8 @@ local function Assemble(read)
 			end
 			coroutine.yield()
 		end
+		classPlaces = index.class or {}
+		FilterClass()
 		groups = BuildGroups()
 	end)
 	local function Pump()
@@ -716,7 +730,7 @@ local function OpenServices()
 	-- addon opens neither (#158) and leaves the game's own menus alone as well (UI/MenuModifier.lua, #645): there is
 	-- no way in to the services with a controller, and the player is told what they would need.
 	if ns.GamepadUI() then
-		ns.Print(L["This menu needs mouse and keyboard."])
+		ns.Notice(L["This menu needs mouse and keyboard."])
 		return
 	end
 	if ns.OpenWorldMap() then
@@ -768,8 +782,8 @@ end
 ---@field count integer
 ---@field collapsed boolean
 ---@field rows SPFNearbyRow[]
----@alias SPFEstimate fun(map: number, x: number, y: number, dst: number, dx: number, dy: number, ...: any): number?
 -- luacheck: push ignore 631
+---@alias SPFEstimate fun(fromMap: integer, fromX: number, fromY: number, toMap: integer, toX: number, toY: number, walk?: number|false, bound?: boolean, place?: SPFNearbyPlace, ceiling?: number): number?, string?, SPFLeg[]?
 ---@alias SPFRank fun(places: SPFNearbyPlace[], estimate: SPFEstimate, map: number, x: number, y: number, walks?: SPFWalks, pending?: SPFWalksPending): SPFNearbyRank
 -- luacheck: pop
 ---@alias SPFClosed table<string, boolean> the sections the player folded shut
@@ -781,13 +795,14 @@ end
 ---@field Items fun(key: string, npc: number): integer[]?
 ---@field Request fun() starts the catalogue once, when a consumer needs it
 ---@field State fun(): string
----@field OnReady fun(fn: fun())
+---@field OnReady fun(fn: fun()) runs fn now when ready, and after every later index build
 ---@field Sections fun(world: SPFPoint, query?: string, collapsed?: SPFClosed, seconds?: SPFSeconds): SPFNearbySection[]
 ---@field Shortlist fun(key: string, world: SPFPoint, limit: integer, query?: string, tier?: integer): SPFNearbyPlace[]
 ---@field Rank SPFRank
 ---@field MeasureWalks SPFMeasureWalks
 ---@field Cancel fun(job: SPFPathJob)
 ---@field Holds fun(job: SPFPathJob): boolean
+---@field Pause fun(job: SPFPathJob)
 ---@field Detail fun(key: string, place: SPFNearbyPlace, query?: string): string
 ---@field Goods fun(key: string, place: SPFNearbyPlace, query?: string): integer[]?
 ---@field ItemName fun(itemID: integer): string?
@@ -928,6 +943,7 @@ ns.NearbyServices = {
 	MeasureWalks = ns.NearbyRank.MeasureWalks,
 	Cancel = ns.NearbyRank.Cancel,
 	Holds = ns.NearbyRank.Holds,
+	Pause = ns.NearbyRank.Pause,
 	Detail = Detail,
 	Goods = Goods,
 	ItemName = function(itemID)
@@ -940,6 +956,21 @@ ns.NearbyServices = {
 	PlayerWorld = PlayerWorld,
 	Open = OpenServices,
 }
+-- A level-up or a trainer's newly learned cap can outgrow a class trainer: the built index re-filters its class group.
+---@param level number?
+local function RefreshClass(level)
+	if state ~= "ready" then
+		return
+	end
+	FilterClass(level)
+	local group = groupByKey.class
+	if group then
+		group.npcs = GroupNPCs("class")
+	end
+	Notify()
+end
+ROLES.OnTeachableChanged = RefreshClass
+
 ns.Init(function()
 	ns.ModifyMenu("MENU_WORLD_MAP_TRACKING", "nearby", AddTrackingEntry)
 	ns.ModifyMenu("MENU_MINIMAP_TRACKING", "nearby", AddTrackingEntry)

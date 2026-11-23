@@ -25,6 +25,7 @@ ns.Mover = { Attach = function() end, Stock = function() end }
 ns.TeleportAction = function()
 	return "Use Hearthstone", 134414
 end
+driver.load("UI/CastButton.lua")
 driver.load("UI/Arrow.lua")
 
 ns.db.castPrompt = false

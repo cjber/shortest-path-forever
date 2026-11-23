@@ -6,6 +6,7 @@ local ns = {}
 assert(loadfile("Locales/enUS.lua"))("ShortestPathForever", ns)
 assert(loadfile("Transport/Model.lua"))("ShortestPathForever", ns)
 assert(loadfile("Routing/Savings.lua"))("ShortestPathForever", ns)
+assert(loadfile("Routing/PlanBounds.lua"))("ShortestPathForever", ns)
 assert(loadfile("Routing/Planner.lua"))("ShortestPathForever", ns)
 assert(loadfile("Routing/LegPoints.lua"))("ShortestPathForever", ns)
 assert(loadfile("Routing/QuestDestination.lua"))("ShortestPathForever", ns)
@@ -22,7 +23,7 @@ local destination, printed
 ns.StartJourney = function(point)
 	destination = point
 end
-ns.Print = function(message)
+ns.Notice = function(message)
 	printed = message
 end
 

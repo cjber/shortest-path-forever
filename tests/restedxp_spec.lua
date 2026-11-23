@@ -66,8 +66,8 @@ rxp.activeWaypoints = { frame.element }
 watcher:OnEvent("ADDON_LOADED", "RXPGuides")
 driver.path.settle()
 assert(API.CurrentStop("RestedXP") == 1, "late-loaded guide starts a journey")
-assert(not frame.texture.shown and not frame.text.shown, "the guide arrow becomes invisible")
-assert(frame.mouse == false, "the invisible arrow does not intercept clicks")
+assert(frame.texture.shown and frame.text.shown, "A standalone RestedXP journey leaves its own arrow visible")
+assert(frame.mouse == true, "the guide arrow still takes clicks")
 
 -- The active step's quests reach the stop. A step that kills and then turns in keeps the live objectives; a step that
 -- only turns in says so, with the client's quest name.
@@ -91,7 +91,7 @@ assert(API.CurrentStop("RestedXP") == 1, "the journey keeps running without our 
 ns.db.arrow = true
 rxp.UpdateMap()
 driver.path.settle()
-assert(not frame.texture.shown, "Shortest Path suppresses RestedXP's arrow again")
+assert(frame.texture.shown, "RestedXP keeps its arrow when Shortest Path's arrow setting is on")
 assert(rxp.settings.profile.disableArrow == nil, "guide settings stay untouched")
 ns.db.restedxpHideArrow = false
 ns.RefreshRestedXP()
@@ -100,9 +100,9 @@ assert(frame.texture.shown and frame.text.shown, "turning the takeover off leave
 assert(frame.mouse == true, "the visible guide arrow still takes clicks")
 ns.db.restedxpHideArrow = true
 ns.RefreshRestedXP()
-assert(not frame.texture.shown and not frame.text.shown, "turning the takeover back on hides the guide arrow")
-assert(frame.mouse == false, "the hidden guide arrow takes no clicks")
-assert(API.CurrentStop("RestedXP") == 1, "hiding the arrow again keeps the journey running")
+assert(frame.texture.shown and frame.text.shown, "the Adventure Guide setting leaves the standalone arrow visible")
+assert(frame.mouse == true, "the guide arrow still takes clicks")
+assert(API.CurrentStop("RestedXP") == 1, "the journey keeps following the guide")
 local starts = 0
 local start = ns.StartJourney
 ns.StartJourney = function(...)
@@ -195,7 +195,7 @@ frame.wrongContinent = true
 rxp.UpdateGotoSteps()
 assert(API.CurrentStop("RestedXP") == 1, "cross-continent guide targets still plan travel")
 rxp.ResetArrowPosition()
-assert(not frame.texture.shown, "resetting the arrow keeps delegated guidance")
+assert(frame.texture.shown, "resetting the arrow keeps it with RestedXP")
 rxp.activeWaypoints = {}
 rxp.UpdateGotoSteps()
 assert(not API.CurrentStop("RestedXP"), "empty waypoints clear stale cross-continent targets")

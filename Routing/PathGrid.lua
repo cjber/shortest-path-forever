@@ -270,14 +270,17 @@ end
 -- The node on local cell lc for a link layer (0 the base surface, i the ith floor up, -1 the surface nearest
 -- height h), with its height gap for -1. The cluster must be decoded.
 local function surface(st, k, lc, layer, h, values, heights, floors)
-	local val, z, at = values or st.val[k], heights or st.z[k], floors or st.at[k]
-	local first = at[-(lc + 1)]
+	local val = values or st.val[k]
 	if layer == 0 then
 		return val[lc + 1] ~= 0 and lc or nil
-	elseif layer > 0 then
+	end
+	local at = floors or st.at[k]
+	local first = at[-(lc + 1)]
+	if layer > 0 then
 		local node = first and first + layer - 1
 		return node and at[node + 1] == lc and node or nil
 	end
+	local z = heights or st.z[k]
 	local best, gap
 	if val[lc + 1] ~= 0 then
 		best, gap = lc, abs(z[lc + 1] - h)
@@ -1479,12 +1482,14 @@ local function preceding(st, id, roads)
 	return lists[id] or noEdges
 end
 
--- Road cells of cluster k (RoadCells.lua), decoded once: a set of local cell -> coverage, or false when it has none.
+-- Road coverage of cluster k (RoadCells.lua), decoded once by local node, or false when it has none.
 -- Only read while Follow roads is on.
 local function decodeRoads(st, k)
 	local list = ns.RoadCells and ns.RoadCells[st.map]
-	local s = list and list[k + 1]
-	if not s then
+	local nodes = ns.RoadNodeCoverage and ns.RoadNodeCoverage[st.map]
+	local overrides = nodes and nodes[k + 1] or ""
+	local s = list and list[k + 1] or ""
+	if s == "" and overrides == "" then
 		return false
 	end
 	local set, lc, pos = {}, 0, 1
@@ -1501,6 +1506,9 @@ local function decodeRoads(st, k)
 			lc = lc + run
 		end
 	end
+	for i = 1, #overrides, 4 do
+		set[num(overrides, i, 3)] = B64[byte(overrides, i + 3)] / 63
+	end
 	return set
 end
 
@@ -1513,11 +1521,15 @@ local function roads(st, k)
 	return set or nil
 end
 
--- Painted road coverage of this node's base cell, zero without paint.
+-- Trail coverage belongs to a node. Painted coverage applies to every floor of the cell.
 local function roadNode(st, k, node)
 	local set = roads(st, k)
 	if not set then
 		return 0
+	end
+	local coverage = set[node]
+	if coverage ~= nil then
+		return coverage
 	end
 	local cell = cellOf(st, k, node)
 	return cell ~= nil and set[cell] or 0
@@ -1539,7 +1551,7 @@ local function roadDistance(st, ax, ay, bx, by)
 		tick()
 		local nextAt = min(nextX, nextY, 1)
 		local set = x >= 0 and x < st.GX and y >= 0 and y < st.GY and roads(st, floor(x / C) * st.ny + floor(y / C))
-		if not set or not set[(x % C) * C + y % C] then
+		if not set or (set[(x % C) * C + y % C] or 0) == 0 then
 			off = off + nextAt - at
 		end
 		if nextX == nextAt then
@@ -1912,8 +1924,8 @@ local function neighbours(st, k, node, gx, gy, dx, dy, water, outK, outN, outC, 
 	local count = 0
 	local C = st.C
 	local tk, tlc = floor(tx / C) * st.ny + floor(ty / C), (tx % C) * C + ty % C
-	-- A zero-offset move can only be an explicit drop between layers, never an ordinary base step.
-	if node < C * C and (dx ~= 0 or dy ~= 0) then
+	-- An ordinary base step moves one cell: a zero offset, or one of more than a cell, can only be a link.
+	if node < C * C and (dx ~= 0 or dy ~= 0) and abs(dx) <= 1 and abs(dy) <= 1 then
 		local open
 		if st.fmt >= 4 and abs(dx) <= 1 and abs(dy) <= 1 then
 			local val = grid(st, k)
@@ -2150,8 +2162,10 @@ local function sight(st, P, a, b, water, road, limit, budget, roadFactor)
 						-- A pulled segment that leaves the road is charged the off-road preference too: a straight cut
 						-- across a field must not beat the road bend the walk took just because its own time is shorter
 						-- (#891).
-						local ratio = roadFactor and (1 + (roadFactor - 1) * (1 - roadNode(st, nk, nn))) or 1
-						spent = pace(swim, spent, (next2 - at) * span, grid(st, nk)[nn + 1] == 2, budget, ratio)
+						-- The stretch up to this crossing lies in the cell being left, so it is charged as that node.
+						local lk, ln = fk[i], fn[i]
+						local ratio = roadFactor and (1 + (roadFactor - 1) * (1 - roadNode(st, lk, ln))) or 1
+						spent = pace(swim, spent, (next2 - at) * span, grid(st, lk)[ln + 1] == 2, budget, ratio)
 					end
 					if spent then
 						reached = admit(gk, gn, gs, reached, nk, nn, spent)
@@ -2195,6 +2209,20 @@ local function bare(st, gx, gy)
 	return not at or at[-((gx % C) * C + gy % C + 1)] == nil
 end
 
+-- A single dry surface in a cluster the search or floor follower already decoded.
+local function dryCell(st, x, y)
+	if x < 0 or x >= st.GX or y < 0 or y >= st.GY then
+		return nil
+	end
+	local C = st.C
+	local k, node = floor(x / C) * st.ny + floor(y / C), (x % C) * C + y % C
+	local val = st.val[k]
+	if val and val[node + 1] == 1 and not st.at[k][-node - 1] then
+		return k, node
+	end
+end
+local sightCosts = {}
+
 -- A drawn line's end segments run off cell centres: from an endpoint itself, or to one. Walk the cells such a
 -- segment really crosses, from node of cluster k at the fractional global cell position (fx, fy) to (tx, ty),
 -- following the surface as sight does and, with a limit, refusing a cell a hazard profile charges more than the walk
@@ -2211,8 +2239,9 @@ end
 ---@param real boolean? -- measure real travel time without road preference
 ---@param wk number? -- the cluster and node wanted in the end's cell
 ---@param wn number?
+---@param sightOnly? boolean -- test only decoded single-surface ground, without slicing
 ---@return number|nil, number|boolean, number? -- reached surface or bare status, and complete connector time
-local function toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget, real, wk, wn)
+local function toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget, real, wk, wn, sightOnly)
 	local factor = limit and P.factor
 	local roadFactor = not real and budget and P.roadFactor
 	local swim = P.swim or st.swim
@@ -2227,6 +2256,7 @@ local function toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget, real
 	local span, at = sqrt(dx * dx + dy * dy) * st.cs, 0.0
 	local f = frontier(P)
 	local fk, fn, fs, gk, gn, gs, bk, bn = f[1], f[2], f[3], f[4], f[5], f[6], f[7], f[8]
+	local costs = sightOnly and sightCosts or nil
 	fk[1], fn[1], fs[1] = k, node, 0.0
 	local count = 1
 	-- Once every surface's step is closed, the time of the line running on over cells with none.
@@ -2235,7 +2265,9 @@ local function toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget, real
 		if x == ex and y == ey then
 			break
 		end
-		tick()
+		if not sightOnly then
+			tick()
+		end
 		local mx, my = 0, 0
 		local reached = nextX < nextY and nextX or nextY -- equal through a corner
 		if abs(nextX - nextY) < 1e-9 then -- through a corner
@@ -2253,6 +2285,16 @@ local function toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget, real
 			my = 0
 		end
 		if mx ~= 0 or my ~= 0 then
+			-- neighbours can read both side cells of a diagonal. Prove all its inputs are already decoded.
+			if
+				sightOnly
+				and (
+					not dryCell(st, x + mx, y + my)
+					or mx ~= 0 and my ~= 0 and (not dryCell(st, x + mx, y) or not dryCell(st, x, y + my))
+				)
+			then
+				return nil, false
+			end
 			if reached > 1 then
 				reached = 1
 			end
@@ -2261,15 +2303,18 @@ local function toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget, real
 				and st.fmt >= 4
 				and (abs(dx * my - dy * mx) >= 1e-9 or abs((fx - x - 0.5) * my - (fy - y - 0.5) * mx) >= 1e-9)
 			local landed, kept = false, 0
+			-- The stretch up to this crossing lies in the cell being left, so it is charged as that cell.
+			local stretch = (reached - at) * span
 			if not closed then
 				for i = 1, count do
-					for j = 1, neighbours(st, fk[i], fn[i], x, y, mx, my, water, bk, bn, nil, offCentre) do
+					local lk, ln = fk[i], fn[i]
+					for j = 1, neighbours(st, lk, ln, x, y, mx, my, water, bk, bn, costs, offCentre) do
 						landed = true
 						local nk, nn = bk[j], bn[j]
-						if not factor or factor(nk, nn) <= limit then
-							local ratio = roadFactor and (1 + (roadFactor - 1) * (1 - roadNode(st, nk, nn))) or 1
-							local wet = grid(st, nk)[nn + 1] == 2
-							local paced = pace(swim, fs[i], (reached - at) * span, wet, budget, ratio)
+						if (not costs or costs[j] == 0) and (not factor or factor(nk, nn) <= limit) then
+							local ratio = roadFactor and (1 + (roadFactor - 1) * (1 - roadNode(st, lk, ln))) or 1
+							local wet = grid(st, lk)[ln + 1] == 2
+							local paced = pace(swim, fs[i], stretch, wet, budget, ratio)
 							if paced then
 								kept = admit(gk, gn, gs, kept, nk, nn, paced)
 							end
@@ -2279,22 +2324,32 @@ local function toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget, real
 				if landed and kept == 0 then
 					return nil, false
 				end
+				if sightOnly and not landed then
+					return nil, false
+				end
 				if landed then
 					fk, fn, fs, gk, gn, gs, count = gk, gn, gs, fk, fn, fs, kept
 				else
-					closed = fs[1]
-					for i = 2, count do
-						closed = min(closed, fs[i])
+					-- No surface steps on: the line leaves the frontier's own surfaces, each charged as itself.
+					for i = 1, count do
+						local ratio = roadFactor and (1 + (roadFactor - 1) * (1 - roadNode(st, fk[i], fn[i]))) or 1
+						local paced = pace(swim, fs[i], stretch, grid(st, fk[i])[fn[i] + 1] == 2, budget, ratio)
+						if paced and (not closed or paced < closed) then
+							closed = paced
+						end
 					end
+					if not closed then
+						return nil, false
+					end
+				end
+			else -- a cell with no surface, walked as dry ground off any road
+				closed = pace(swim, closed, stretch, false, budget, roadFactor or 1)
+				if not closed then
+					return nil, false
 				end
 			end
 			x, y = x + mx, y + my
 			if not landed then
-				local paced = pace(swim, closed, (reached - at) * span, value(st, x, y) == 2, budget, roadFactor or 1)
-				if not paced then
-					return nil, false
-				end
-				closed = paced
 				if not bare(st, x, y) then
 					return nil, false
 				end
@@ -2337,6 +2392,35 @@ local function toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget, real
 	return fk[best], fn[best], bestTime
 end
 
+-- A guidance read spends at most sixteen cell crossings per line, even when a smoothed segment spans a zone.
+local SIGHT_CROSSINGS = 16
+local sightPoints = {}
+---@param map number
+---@param x number
+---@param y number
+---@param height number
+---@param point SPFPoint
+---@return boolean
+local function clearSight(map, x, y, height, point)
+	local st = states[map]
+	if not st or point.map ~= map or point.z ~= height then
+		return false
+	end
+	local fx, fy = (x - st.x0) / st.cs, (y - st.y0) / st.cs
+	local tx, ty = (point.x - st.x0) / st.cs, (point.y - st.y0) / st.cs
+	local ax, ay, bx, by = floor(fx), floor(fy), floor(tx), floor(ty)
+	if abs(bx - ax) + abs(by - ay) > SIGHT_CROSSINGS then
+		return false
+	end
+	local k, node = dryCell(st, ax, ay)
+	local tk, tn = dryCell(st, bx, by)
+	if not (k and node and tk and tn and st.z[k][node + 1] == height and st.z[tk][tn + 1] == height) then
+		return false
+	end
+	local reached, surfaceNode = toward(st, sightPoints, k, node, fx, fy, tx, ty, false, nil, nil, true, tk, tn, true)
+	return reached == tk and surfaceNode == tn
+end
+
 -- The largest factor a hazard profile charges over path entries first..last, keeping the highest limit already seen:
 -- a pulled segment may cross no cell charged more than the walk it replaces. Maxima only ever grow as an anchor's
 -- candidates advance, so a running one replaces a prefix sum, which cannot answer a range's maximum.
@@ -2368,10 +2452,32 @@ end
 ---@return number[] keep -- the entries kept
 ---@return boolean startVia -- the line runs from the start through its end entry's centre, not straight from the point
 ---@return boolean goalVia -- the same at the goal
+---@return number[] links -- links[i]: how many of the walk's first i entries are reached by a link alone
 local function smooth(st, P, ends)
 	local PX, PY, PW, PR, PT = P.x, P.y, P.w, P.r, P.t
 	local factor = P.factor
 	local n = #PX
+	-- A step the walk can only take by a link (a fall off a ledge, or a teleport) changes height with no ground between:
+	-- the player walks level to the ledge or trigger and is then at the landing. So the line keeps both ends and no
+	-- pulled segment crosses one (a chord over it would be drawn as a slope the walk never stands on). D[i]: the links
+	-- among the walk's first i steps.
+	local D, PK, PN = { 0 }, P.k, P.n
+	local dk, dn, dc = {}, {}, {}
+	for i = 2, n do
+		local ak, an, bk, bn = PK[i - 1], PN[i - 1], PK[i], PN[i]
+		local gx, gy = PX[i - 1], PY[i - 1]
+		local fell, walked = false, false
+		for j = 1, neighbours(st, ak, an, gx, gy, PX[i] - gx, PY[i] - gy, true, dk, dn, dc) do
+			if dk[j] == bk and dn[j] == bn then
+				if dc[j] > 0 then
+					fell = true
+				else
+					walked = true
+				end
+			end
+		end
+		D[i] = D[i - 1] + ((fell and not walked) and 1 or 0)
+	end
 	local keep = { 1 }
 	for i = 2, n - 1 do
 		if
@@ -2379,6 +2485,8 @@ local function smooth(st, P, ends)
 			or PY[i + 1] - PY[i] ~= PY[i] - PY[i - 1]
 			or PW[i + 1] ~= PW[i]
 			or (PR and PR[i + 1] - PR[i] ~= PR[i] - PR[i - 1])
+			or D[i + 1] ~= D[i]
+			or D[i] ~= D[i - 1]
 		then
 			keep[#keep + 1] = i
 		end
@@ -2408,6 +2516,10 @@ local function smooth(st, P, ends)
 	local function clear(a, b)
 		slice() -- a long walk measures many segments; each is one sight, and a sight may already slice to decode
 		local p, q = at[a] or 1, at[b] or n
+		-- No pulled segment spans a drop; the drop's own step joins its consecutive ledge and landing unchecked.
+		if D[q] > D[p] then
+			return false
+		end
 		-- A segment from or to an end point is the one drawn from the point itself, so the end's own check is the whole
 		-- check; between entries the line runs centre to centre.
 		if not at[a] and not at[b] then
@@ -2479,13 +2591,53 @@ local function smooth(st, P, ends)
 		b = from[b]
 	end
 	local out = { 1 }
+	local function append(last)
+		local first = out[#out]
+		local dx, dy = PX[last] - PX[first], PY[last] - PY[first]
+		local steps = last - first
+		-- Only restore grades along the chord actually drawn, including its real endpoints.
+		local ax, ay = PX[first] + 0.5, PY[first] + 0.5
+		local bx, by = PX[last] + 0.5, PY[last] + 0.5
+		if first == 1 and not startVia then
+			ax, ay = E.sx, E.sy
+		end
+		if last == n and not goalVia then
+			bx, by = E.gx, E.gy
+		end
+		if steps > 1 and max(abs(dx), abs(dy)) == steps then
+			local x, y = dx / steps, dy / steps
+			local straight = true
+			for j = first + 1, last - 1 do
+				local cx, cy = PX[j] + 0.5, PY[j] + 0.5
+				if
+					PX[j] ~= PX[first] + x * (j - first)
+					or PY[j] ~= PY[first] + y * (j - first)
+					-- Endpoint coordinates have been converted from world yards to cells.
+					or abs((cx - ax) * (by - ay) - (cy - ay) * (bx - ax)) > 1e-9
+				then
+					straight = false
+					break
+				end
+			end
+			if straight then
+				-- Nav stores base heights in two-yard steps and upper floors in whole yards.
+				local z = P.z
+				for j = first + 1, last - 1 do
+					if z[j] - z[j - 1] ~= z[j + 1] - z[j] then
+						out[#out + 1] = j
+					end
+				end
+			end
+		end
+		out[#out + 1] = last
+	end
 	for i = #corners, 1, -1 do
-		out[#out + 1] = corners[i]
+		append(corners[i])
 	end
 	if n > 1 then
-		out[#out + 1] = n
+		append(n)
 	end
-	return out, startVia, goalVia
+	return out, startVia, goalVia, D
 end
 
 -- The clusters around the player that Floor.lua follows the player's floor on, by map. Idle keeps them decoded; the
@@ -2726,11 +2878,13 @@ ns.PathGrid = {
 	ground = ground,
 	snap = snap,
 	roads = roads,
+	roadNode = roadNode,
 	roadDistance = roadDistance,
 	roadClear = roadClear,
 	roadEdges = roadEdges,
 	roadEdgesIn = roadEdgesIn,
 	smooth = smooth,
+	Sight = clearSight,
 	climbNodes = climbNodes,
 	peak = peak,
 	toward = toward,

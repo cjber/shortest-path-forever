@@ -1,19 +1,47 @@
 -- Real Journey + nav data, one pump per simulated 60 Hz frame. Optional args: a baseline source directory, then
--- "continent" for the continent-wide case alone (kept out of the default set speedpatrol times).
-local root = arg[1] or "."
+-- "continent", "orgrimmar", "sched" or "stormwind" for cases kept out of the default set Speedpatrol times.
+local observer, root, mode = ...
+if type(observer) ~= "function" then
+	observer, root, mode = nil, arg[1] or ".", arg[2]
+end
 local cases = {
 	{ "Auberdine -> Tanaris", 26, 39, "Alliance" },
 	{ "Auberdine -> Eastern Plaguelands", 26, 67, "Alliance" },
 	{ "Crossroads -> Thunder Bluff", 25, 22, "Horde" },
 	{ "Ironforge -> Menethil", 6, 7, "Alliance" },
 }
-if arg[2] == "continent" then
+if mode == "continent" then
 	-- A goal search over most of Kalimdor: the Auberdine boat stays a contender until about 13.5k yards (#1074).
 	cases = {
 		{
 			"Stormwind -> Feralas",
 			{ map = 0, x = -8849, y = 647.9, z = 98 },
 			{ map = 1, x = -4450, y = 1350, z = 0 },
+			"Alliance",
+		},
+	}
+elseif mode == "sched" then
+	local trade = { map = 0, x = -8849, y = 647.9, z = 98 }
+	local goldshire = { map = 0, x = -9459, y = 43 }
+	cases = {
+		{ "Stormwind -> Sentinel Hill", trade, { map = 0, x = -10628.89, y = 1036.68, z = 34.06 }, "Alliance" },
+		{ "Goldshire -> Darkshore", goldshire, { map = 1, x = 6341.38, y = 557.68, z = 16.29 }, "Alliance" },
+		{ "Goldshire -> Darkshire", goldshire, { map = 0, x = -10515.46, y = -1261.65, z = 41.34 }, "Alliance" },
+	}
+elseif mode == "orgrimmar" then
+	local from = { map = 1, x = 1630, y = -4420, z = 15 }
+	cases = {
+		{ "Orgrimmar -> Azshara 2600", from, { map = 1, x = 2600, y = -4300 }, "Horde" },
+		{ "Orgrimmar -> Azshara 3900", from, { map = 1, x = 3900, y = -4200 }, "Horde" },
+	}
+end
+local stormwind = mode == "stormwind"
+if stormwind then
+	cases = {
+		{
+			"SW Canals -> Dwarven District",
+			{ map = 0, x = -8692, y = 694.1, z = 95 },
+			{ map = 0, x = -8344.6, y = 681.9, z = 95 },
 			"Alliance",
 		},
 	}
@@ -53,6 +81,12 @@ for _, case in ipairs(cases) do
 		assert(to.name:find(toName, 1, true), "wrong benchmark destination")
 	end
 	ns.faction, ns.db.debug = case[4], true
+	if stormwind then
+		ns.teleports = {
+			{ map = 0, x = -8867.8, y = 673.4, z = 97.9, spell = 8690, item = 6948, bind = true, cast = 10000 },
+		}
+		ns.teleportReady = { ns.NowMs() }
+	end
 	-- Level 15 with high zones avoided, the default: every walk is weighed by the zones on its way. In the client each
 	-- zone the shipped cells do not cover is several C_Map calls, so the bench counts them.
 	ns.db.avoidHighZones, ns.level = true, 15
@@ -75,7 +109,7 @@ for _, case in ipairs(cases) do
 	end
 	local jobs, nextFrame, rounds, resets, plannerCPU = {}, nil, 0, 0, 0
 	local frames, worst = 0, 0
-	local firstDraw, usable
+	local firstDraw, firstShape, usable
 	local drawn = {}
 	local draw = ns.SetJourneyRoute
 	ns.SetJourneyRoute = function(g, r)
@@ -93,6 +127,9 @@ for _, case in ipairs(cases) do
 				if drawn[key] and #ns.Planner.LegPoints(leg, ns.Routes) == 2 then
 					resets = resets + 1
 				end
+				if leg.walkPoints and #leg.walkPoints > 2 then
+					firstShape = firstShape or frames
+				end
 				if leg.measured and #leg.walkPoints > 2 then
 					drawn[key] = true
 				end
@@ -108,7 +145,7 @@ for _, case in ipairs(cases) do
 		plannerCPU = plannerCPU + (os.clock() - started) * 1000
 		return planned
 	end
-	for _, method in ipairs({ "Find", "FindMany" }) do
+	for _, method in ipairs({ "Find", "FindCoarse", "FindMany" }) do
 		local find = ns.Path[method]
 		ns.Path[method] = function(...)
 			local job = find(...)
@@ -127,15 +164,31 @@ for _, case in ipairs(cases) do
 		frames = frames + 1
 		local started = os.clock()
 		fn()
-		driver.update(1 / 60)
+		driver.update(observer and 0 or 1 / 60)
 		worst = math.max(worst, (os.clock() - started) * 1000)
 		assert(frames < 20000, "journey did not settle")
 	end
-	local cpu, many, probes = 0, 0, 0
+	local cpu, many, probes, sketches = 0, 0, 0, 0
 	for _, job in ipairs(jobs) do
 		cpu = cpu + job.cpu
 		if job.costOnly then
 			probes = probes + 1
+			if mode == "continent" then
+				print(
+					string.format(
+						"  probe map %d (%.0f, %.0f) to (%.0f, %.0f): %.1f ms, %d expansions",
+						job.map,
+						job.from.x,
+						job.from.y,
+						job.to.x,
+						job.to.y,
+						job.cpu,
+						job.expansions or 0
+					)
+				)
+			end
+		elseif job.method == "FindCoarse" then
+			sketches = sketches + 1
 		end
 		if job.method == "FindMany" then
 			many = many + 1
@@ -149,14 +202,15 @@ for _, case in ipairs(cases) do
 	assert(driver.shown(), "expected reachable journey")
 	print(
 		string.format(
-			"%s: %d searches (%d many, %d probes), %d planner calls, %d settle rounds, %d frames, "
+			"%s: %d searches (%d many, %d probes, %d sketches), %d planner calls, %d settle rounds, %d frames, "
 				.. "%.1f ms search, %.1f ms planner, %d straight resets, first drawn frame %s, "
-				.. "first followable frame %s, %.3f ms worst frame, "
+				.. "first shaped walk frame %s, first followable frame %s, %.3f ms worst frame, "
 				.. "%d client zone lookups, %.1f ms map load, %.1f MB Lua heap after it",
 			case[1],
 			#jobs,
 			many,
 			probes,
+			sketches,
 			rounds,
 			round,
 			frames,
@@ -164,6 +218,7 @@ for _, case in ipairs(cases) do
 			plannerCPU,
 			resets,
 			tostring(firstDraw),
+			tostring(firstShape),
 			tostring(usable),
 			worst,
 			lookups,
@@ -171,10 +226,16 @@ for _, case in ipairs(cases) do
 			residentKB / 1024
 		)
 	)
-	assert(many == 2 and round == 1 and rounds >= 2, "one completed proof")
+	-- These clicks are on isolated ground. Moving the goal replaces both endpoint searches once.
+	local batches = mode == "orgrimmar" and 4 or stormwind and 3 or 2
+	assert(many == batches, "expected endpoint batches")
+	assert(round == 1 and rounds >= 2, "one completed proof")
 	assert(resets == 0, "drawn walks cannot revert to straight lines")
 	-- Hazards.Profile asks for the zone of each of the journey's own ends (at most four); every walk reads the cells.
 	assert(lookups <= 4, lookups .. " zone lookups reach the client")
+	if observer then
+		observer(case[1], driver.shown(), ns.JourneyPlan())
+	end
 	if case[3] == 67 then
 		eplEarly = usable ~= nil and usable <= 0.75 * frames
 	end

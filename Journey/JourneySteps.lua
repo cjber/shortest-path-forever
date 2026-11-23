@@ -185,6 +185,7 @@ function ns.JourneyProgressChanged(goal, result, progress, inside)
 		and last.active == active
 		and last.paused == paused
 		and last.reach == ns.db.arrivalDistance
+		and last.offPathTolerance == ns.db.offPathTolerance
 		and last.hold == goal.hold
 		and last.goalX == goal.x
 		and last.goalY == goal.y
@@ -199,6 +200,7 @@ function ns.JourneyProgressChanged(goal, result, progress, inside)
 	last.x, last.y, last.map, last.height = x, y, map, height
 	last.riding, last.flying, last.inside = riding, flying, inside
 	last.active, last.paused, last.reach = active, paused, ns.db.arrivalDistance
+	last.offPathTolerance = ns.db.offPathTolerance
 	last.hold, last.goalX, last.goalY, last.goalZ = goal.hold, goal.x, goal.y, goal.z
 	last.radius, last.shapes, last.questIDs = goal.radius, goal.shapes, goal.questIDs
 	last.nextStop, last.walk = nextStop, leg and leg.walkPoints

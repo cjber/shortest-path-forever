@@ -1,6 +1,6 @@
-Shortest Path Forever plans a journey when you shift-click the world map or minimap, or choose a quest. It gives directions in the objective tracker and on both maps.
+Shortest Path Forever plans journeys from a shift-click on either map or a quest you choose, then guides you on both maps and in the objective tracker.
 
-Everything it needs comes inside the download.
+All dependencies are included.
 
 Free, with nothing locked behind it. If it saves you time, you can [sponsor me on GitHub](https://github.com/sponsors/cjber), which takes no fees, or [buy me a coffee on Ko-fi](https://ko-fi.com/cjber). For help and each day's release notes, [join me on Discord](https://discord.gg/FpHugGxRJY).
 
@@ -8,6 +8,7 @@ Free, with nothing locked behind it. If it saves you time, you can [sponsor me o
 
 **Known limitations**
 
+- Flight times with Frequent Flier are estimated until players confirm them.
 - Walking maps are built ahead of time, so patched terrain can route wrongly until an update.
 - The game names your bind point but not where it is, so the Hearthstone counts once you bind or hearth with the addon on.
 - A boat, lift or tram shows "no sighting yet" until you have ridden that route once, because the game holds no timetables.
@@ -16,15 +17,15 @@ Free, with nothing locked behind it. If it saves you time, you can [sponsor me o
 
 ![A route settling, the departure countdown and compass](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/demo.gif)
 
-The route settles, the next boat counts down and the compass turns with you.
+The route settles, the boat countdown starts and the compass turns with you.
 
 ![Journey steps with time and distance remaining](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/tracker.png)
 
-The tracker shows the trip one step at a time.
+The tracker shows each step in order.
 
 ![Route and waypoint on the minimap](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/minimap.png)
 
-Walking breadcrumbs and the native waypoint lead to the next step.
+Walking breadcrumbs and the native waypoint guide each step.
 
 ![The Nearby services tab in the world map's quest log](https://raw.githubusercontent.com/cjber/shortest-path-forever/main/docs/screenshots/services.png)
 
@@ -39,9 +40,9 @@ These images are generated previews of the Shortest Path UI.
 ## Features
 
 - **Plan the trip.** Combine walking, known flights, boats, zeppelins, lifts, the tram, portals and teleports. Walks go around walls, hills and water, and replan as you move. A spot inside a dungeon or raid leads to its entrance.
-- **Find anything nearby.** The Nearby services tab in the world map's quest log lists vendors by what they sell, your class trainer, profession trainers, battlemasters, portal trainers for mages, inns, banks, auction houses, flight masters, stables and repairs, and every dungeon and raid door on your continent. Each row shows the nearest one and the time to get there, and orders dungeon and raid doors by that time. Search for an item or instance, then click a row to go there; a dungeon row takes you to the door and the journey ends when you go in. Arrows mark that NPC's nameplate when you arrive. Pick a level under *Town services* in the map's filter menu and zone and city maps show the same services where they stand, each kind in its own map icon, with a market stall only where different kinds truly share a spot; click one to go there, or hide any one kind from that menu. Uses installed QuestieDB.
-- **Follow your guide.** RestedXP and Guidelime journeys are on by default, with no TomTom or bridge addon; without TomTom, other guides' waypoints work. Turn on *Follow Dugi guides* in Guidance to follow Dugi too, with its own arrow still visible. Adventure Guide takes over when its RestedXP display is on.
-- **Choose what you see.** Hide Journey steps or the direction arrow while keeping the map route. With OpenMap on, the route crosses its stitched map into the neighbouring zones. Move and scale the arrow, choose whether its label shows the distance, the time left or both, and add the time left under the compass.
+- **Find anything nearby.** The Nearby services tab in the world map's quest log lists vendors by what they sell, your class trainer, profession trainers, battlemasters, portal trainers for mages, inns, banks, auction houses, flight masters, stables and repairs, and every dungeon and raid door on your continent. Each row shows the nearest one and the time to get there, and orders dungeon and raid doors by that time. Search for an item or instance, then click a row to go there; a dungeon row takes you to the door and the journey ends when you go in. Arrows mark that NPC's nameplate when you arrive. Pick a level under *Town services* in the map's filter menu and zone and city maps show the same services where they stand, each kind in its own map icon, with a market stall where kinds share a spot; click one to go there, or hide any one kind from that menu. Uses installed QuestieDB.
+- **Follow your guide.** RestedXP and Guidelime journeys are on by default, with no TomTom or bridge addon; without TomTom, other guides' waypoints work. Turn on *Follow Dugi guides* in Guidance to follow Dugi too, with its own arrow still visible. RestedXP keeps its own arrow. Adventure Guide takes over when its RestedXP display is on.
+- **Choose what you see.** Hide Journey steps, the arrow, or all map marks (*Show Shortest Path marks*). With OpenMap on, the route crosses its stitched map into the neighbouring zones. Move and scale the arrow, choose whether its label shows the distance, the time left or both, and add the time left under the compass.
 - **Complete a step.** Click the current journey step and choose *Complete this step*. Skipping a Hearthstone leaves it out for that journey; other steps return if you still need them.
 - **See departures.** Dock and flight master tooltips show destinations and times.
 - **Travel prompts.** Hearthstone and teleport steps show what to cast. A sound and taskbar flash warn before a boat arrives, and an optional ping marks your arrival. A red corpse route guides ghosts back to their bodies.
@@ -54,7 +55,7 @@ With the gamepad interface on, you open and turn the world map; Shortest Path wo
 - Alt-click the world map to choose a destination over a Questie icon. Shift-click the map, minimap or a Shortest Path icon; for quests, choose **Plan journey** in the right-click menu. **Key to plan a journey** in **Guidance**: Shift or Alt.
 - In **Map marks**, scale each kind of icon, and choose whether journey stops hide the game's quest markers. Right-click a flight master icon to mark its path known or unknown.
 - In **Interface**, choose what shows, metres, sizes and a compass background. While moving the arrow or compass, Shift-drag or use the arrow keys for fine placement.
-- The shared Forever column sits left of the game's quest tracker. Drag a heading to move it; right-click a heading for **Lock the tracker** to stop dragging. **Resume guide** returns to RestedXP, Guidelime or Dugi Guides; **Keep journeys after a reload** restarts yours.
+- The shared Forever column sits left of the game's quest tracker. Drag a heading to move it; right-click a heading for **Lock the tracker** to stop dragging. **Resume guide** returns to RestedXP, Guidelime or Dugi Guides; your journey survives a reload.
 - `/way [zone] x y [title]` plans a journey, or `/path way` when another addon owns `/way`. **Follow TomTom's arrow** in Guidance follows TomTom.
 
 For a bug report, paste `/path report`. It includes errors from earlier sessions, and `/forever debug` keeps a detailed log for the session. `/path issue` shows a filled-in GitHub issue link, selected for copying, for a bug or feature request.
@@ -86,9 +87,11 @@ For help, ideas and each day's release notes, join [cjber's Workshop on Discord]
 
 Installed together, the others send Shortest Path their destinations. Pick an Adventure Guide journey, one of its suggestions in a quest menu or a RestedXP, Guidelime or Dugi Guides step, or click a trainer or vendor in a SkillUp route to travel to the nearest one. Click a Legacy dungeon or raid pin, or a dungeon or raid entrance Tweaks adds to the map, to travel there. Journey steps share one tracker column with the Adventure Guide, SkillUp and Legacy sections, beside the game's quest tracker.
 
+Capital trails come from Fitz's [Polestar](https://github.com/fitzforge/polestar), used with permission.
+
 <!-- forever-credits:start -->
 
-Thanks to Alex21xx, Maggew, MacieGx, Stiandresius, user_lsqt69ps7bgb5p7e, The___Fast, Joster91, GenericP, cotijelucie, vladsnz, user_sggieekz05hc7uxt, kindguydev, ubrider, Drusangus, user_u3k9hweaatfhnjs0, treadpool, user_g496wu46adiwjuc5, emmiehbun, VolomonBeddarm, zhega, catubba, Hatemost, JaidyEU, Chulf58, embiem, InfamousMunky, A player, kaelr1, Enel3008, azure463, AsimRamay, nookie909, Zerhathos, jakerist, cobalt_44, Xeteskian, DaFrozenMage, user_zbqhuuoypkkr46x1, Fitz, TRDeadbeat, tallsmartman, Sol_Deus, Zavian, Osipanda, Nightwind416, wfournier, cidolfus27, o0saw0o, Merlinqt, team_Brigade, phear, Testvonfarkle, rydoc, deathmvp1, saikoso, Ragnarok11B, Brainc3ll, Mouchoir, z1ck, Oxds, sean16981, aryaxo, Exo_NA, legortiz, JohnChrin, wheelbarrel00, lkshrk, HeartOfD2, rml9ty, hwalflor, chris-chrysos, Quantity-4, Bolton_wow, Aldericdevir, joaocjesus, jakerist (Grayburn), borick7318, sampconrad, jixxor, Gaafah, _spada, macwire, scraak, overspark, TeeRKee, Speaker1264, SuubzTV, Fel7, Kragmars, spidersylar, Acem, tgkGate, user_efwsfml273dlvfm5, IronmanBG, vcatalin, sdtom, Bervath, Blast22, hervad, caghanpekin-prog, Zwaffelmagic, CptShooter, user_10oietw0rdrgk4le, cwebbx, lone_viking1921, Nivlemoth_Nathrezim, Lůca [Luutsa], esc_return, MrOxiMoron, Zhiroc, Crypa7, ghuff07, nimri82, cmartin303, lukehmu and everyone who reported a bug or asked for a feature.
+Thanks to Alex21xx, Maggew, MacieGx, Stiandresius, alexaroth, Chulf58, user_lsqt69ps7bgb5p7e, The___Fast, Joster91, GenericP, cotijelucie, vladsnz, user_sggieekz05hc7uxt, kindguydev, ubrider, Drusangus, icouldonlygetthisname, user_u3k9hweaatfhnjs0, treadpool, user_g496wu46adiwjuc5, emmiehbun, VolomonBeddarm, zhega, catubba, Hatemost, JaidyEU, embiem, InfamousMunky, A player, kaelr1, Enel3008, azure463, AsimRamay, nookie909, Zerhathos, jakerist, cobalt_44, Xeteskian, DaFrozenMage, user_zbqhuuoypkkr46x1, Fitz, TRDeadbeat, tallsmartman, Sol_Deus, Zavian, Osipanda, Nightwind416, wfournier, cidolfus27, o0saw0o, Merlinqt, team_Brigade, phear, Testvonfarkle, rydoc, deathmvp1, saikoso, Ragnarok11B, Brainc3ll, Mouchoir, z1ck, Oxds, sean16981, aryaxo, Exo_NA, legortiz, JohnChrin, wheelbarrel00, lkshrk, HeartOfD2, rml9ty, hwalflor, chris-chrysos, Quantity-4, Bolton_wow, Aldericdevir, joaocjesus, jakerist (Grayburn), borick7318, sampconrad, jixxor, Gaafah, _spada, macwire, scraak, overspark, TeeRKee, Speaker1264, SuubzTV, Fel7, Kragmars, spidersylar, Acem, tgkGate, user_efwsfml273dlvfm5, IronmanBG, vcatalin, sdtom, Bervath, Blast22, hervad, caghanpekin-prog, Zwaffelmagic, CptShooter, user_10oietw0rdrgk4le, cwebbx, lone_viking1921, Nivlemoth_Nathrezim, Lůca [Luutsa], esc_return, MrOxiMoron, Zhiroc, Crypa7, ghuff07, nimri82, cmartin303, lukehmu and everyone who reported a bug or asked for a feature.
 
 <!-- forever-credits:end -->
 

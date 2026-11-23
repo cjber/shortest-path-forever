@@ -11,11 +11,13 @@ local L = ns.L
 -- holds them, so no title or name is matched here.
 ---@class SPFNearbyRolesAPI
 ---@field PlayerClass fun(): integer?
----@field ClassTrainerIDs fun(tweaks: table?): table<number, boolean>
+---@field ClassTrainerIDs fun(tweaks: table?, anyLevel: boolean?): table<number, boolean>
+---@field CanTeachClass fun(npc: number, level: number?): boolean
 ---@field AddClassGroup fun(Add: fun(group: SPFNearbyGroup), GroupNPCs: fun(key: string): number[])
 ---@field AddWeaponGroup fun(Add: fun(group: SPFNearbyGroup), GroupNPCs: fun(key: string): number[])
 ---@field AddPortalGroup fun(Add: fun(group: SPFNearbyGroup), GroupNPCs: fun(key: string): number[])
 ---@field AddBattlemasterGroup fun(Add: fun(group: SPFNearbyGroup), GroupNPCs: fun(key: string): number[])
+---@field OnTeachableChanged fun(level: number?)? set by UI/Nearby.lua: a level-up or learned cap may outgrow a trainer
 ---@field AddKeys fun(keys: string[], id: integer, classIDs: table<number, boolean>, classID: integer?)
 local Roles = {}
 ns.NearbyRoles = Roles
@@ -43,12 +45,25 @@ local function HasPortalTrainers()
 	return false
 end
 
+-- A live cap takes precedence over the shipped data. Above a known cap the trainer is outgrown.
+---@param npc number
+---@param level number?
+---@return boolean
+local function CanTeachClass(npc, level)
+	local learned = ns.db and ns.db.classTrainerCaps
+	local cap = learned and learned[npc] or ns.ClassTrainerCaps and ns.ClassTrainerCaps[npc]
+	return type(level) ~= "number" or type(cap) ~= "number" or level <= cap
+end
+Roles.CanTeachClass = CanTeachClass
+
 -- The class trainer group: the companion addon's list, merged with the class trainers in Data/Services.lua for
--- the player's own class.
+-- the player's own class and level. With `anyLevel`, trainers the player has outgrown are kept too.
 ---@param tweaks table?
+---@param anyLevel boolean?
 ---@return table<number, boolean>
-function Roles.ClassTrainerIDs(tweaks)
+function Roles.ClassTrainerIDs(tweaks, anyLevel)
 	local ids = {}
+	local level = not anyLevel and UnitLevel and UnitLevel("player") or nil
 	if
 		tweaks
 		and tweaks.API
@@ -57,19 +72,86 @@ function Roles.ClassTrainerIDs(tweaks)
 		and tweaks.API.Trainers
 	then
 		for _, trainer in ipairs(tweaks.API.Trainers()) do
-			ids[trainer.npc] = true
+			if CanTeachClass(trainer.npc, level) then
+				ids[trainer.npc] = true
+			end
 		end
 	end
 	local classID = PlayerClass()
 	if classID then
 		for npc, class in pairs(ns.ClassTrainers or {}) do
-			if class == classID then
+			if class == classID and CanTeachClass(npc, level) then
 				ids[npc] = true
 			end
 		end
 	end
 	return ids
 end
+
+local function LearnClassTrainerCap()
+	local guid = UnitGUID("target") -- secret-ok: canaccessvalue is checked on the next line
+	if (canaccessvalue and not canaccessvalue(guid)) or type(guid) ~= "string" then
+		return
+	end
+	-- The NPC entry is the GUID's sixth field, before the spawn identifier.
+	local npc = tonumber(guid:match("^Creature%-[^-]+%-[^-]+%-[^-]+%-[^-]+%-(%d+)%-%x+$"))
+	local class = npc and ns.ClassTrainers and ns.ClassTrainers[npc]
+	if not (class and class == PlayerClass() and ns.db) then
+		return
+	end
+	-- A hidden service can have the highest requirement. Read only a complete list and leave the filters alone.
+	if
+		not (
+			GetTrainerServiceTypeFilter("available")
+			and GetTrainerServiceTypeFilter("unavailable")
+			and GetTrainerServiceTypeFilter("used")
+		)
+	then
+		return
+	end
+
+	local cap
+	for index = 1, GetNumTrainerServices() do
+		local name, _, category = GetTrainerServiceInfo(index)
+		if category ~= "header" then
+			local level = GetTrainerServiceLevelReq(index)
+			if not name or name == "" or type(level) ~= "number" then
+				return
+			end
+			cap = math.max(cap or 0, level)
+		end
+	end
+	if cap and npc then
+		local caps = ns.db.classTrainerCaps or {}
+		local changed = caps[npc] ~= cap
+		caps[npc] = cap
+		ns.db.classTrainerCaps = caps
+		if changed and Roles.OnTeachableChanged then
+			Roles.OnTeachableChanged()
+		end
+	end
+end
+
+ns.Init(function()
+	if
+		GetNumTrainerServices
+		and GetTrainerServiceInfo
+		and GetTrainerServiceLevelReq
+		and GetTrainerServiceTypeFilter
+	then
+		local events = CreateFrame("Frame")
+		events:RegisterEvent("TRAINER_SHOW")
+		events:RegisterEvent("PLAYER_LEVEL_UP")
+		events:SetScript("OnEvent", function(_, event, level)
+			if event == "TRAINER_SHOW" then
+				LearnClassTrainerCap()
+			elseif Roles.OnTeachableChanged then
+				-- UnitLevel can still answer the old level during the event, so the event's own level is used.
+				Roles.OnTeachableChanged(level)
+			end
+		end)
+	end
+end)
 
 -- The class trainer group, always offered.
 ---@param Add fun(group: SPFNearbyGroup)

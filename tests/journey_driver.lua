@@ -1,5 +1,5 @@
 local root = ... or "."
-local ns = { db = { journey = true }, charDB = {} }
+local ns = { db = { journey = true, offPathTolerance = 15 }, charDB = {} }
 -- The harness is a mouse client: no gamepad interface, so UI/MenuModifier.lua keeps its entries in place.
 function ns.GamepadUI()
 	return false
@@ -241,6 +241,9 @@ ns.core = {
 	SafeCall = function(label, fn, ...)
 		return safe:SafeCall(label, fn, ...)
 	end,
+	RecordError = function(label, message, stack)
+		safe:RecordError(label, message, stack)
+	end,
 	CaughtErrors = function()
 		return safe:CaughtErrors()
 	end,
@@ -294,6 +297,7 @@ end
 local path = assert(loadfile(root .. "/tests/path_fake.lua"))()()
 ns.Path = path.Path
 load("Core/Objectives.lua")
+load("UI/OpenMap.lua")
 load("Transport/Model.lua")
 load("Core/Distance.lua")
 -- The real timetable, with no sightings until a spec records one.
@@ -301,6 +305,7 @@ load("Transport/Timetable.lua")
 load("Transport/TaxiTimes.lua")
 load("Core/PlanContext.lua")
 load("Routing/Savings.lua")
+load("Routing/PlanBounds.lua")
 load("Routing/Planner.lua")
 load("Routing/LegPoints.lua")
 load("Routing/QuestDestination.lua")
@@ -310,6 +315,7 @@ load("Journey/JourneySearch.lua")
 load("Journey/JourneyWalks.lua")
 load("Journey/JourneyGuide.lua")
 load("Journey/Journey.lua")
+load("Journey/AvoidTransport.lua")
 load("Journey/JourneyInput.lua")
 
 local map = {

@@ -80,6 +80,8 @@ def sha256(path: Path) -> str:
 def stage_commands(args, map_id: int) -> dict[str, list[str]]:
     """Every stage's argv with the machine-specific paths as tokens, so the recipe is stable across checkouts."""
     threads = "$THREADS"
+    # Small cells (0.27 yd): the eroded agent radius stays 0.53 yd, but a wall now costs a doorway 0.27 yd of
+    # rasterized width instead of 0.53, so doorways about 2 yd wide (Ironforge's shops and inn) stay open.
     return {
         "mapextractor": [
             "mapextractor", "-i", "$WOW", "-o", "$RUN", "-p", args.product, "-l", LOCALE, "-e", "3", "-f", "0",
@@ -90,7 +92,7 @@ def stage_commands(args, map_id: int) -> dict[str, list[str]]:
         "vmap4assembler": ["vmap4assembler", "--threads", threads, "$RUN/Buildings", "$RUN/vmaps"],
         "mmaps_generator": [
             "mmaps_generator", "--input", "$RUN", "--output", "$OUT", "--threads", threads,
-            "--skipJunkMaps", "false", "--bigBaseUnit", "true", str(map_id),
+            "--skipJunkMaps", "false", "--bigBaseUnit", "false", str(map_id),
         ],
     }  # fmt: skip
 

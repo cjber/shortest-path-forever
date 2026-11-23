@@ -43,7 +43,7 @@ function ns.JourneyKeyName(key)
 	return KEY_NAMES[key or JourneyKey()] or KEY_NAMES.shift
 end
 
--- The line a tooltip ends with on every map pin the journey key plans a journey to (#1078): the addon's flight
+-- The hint on every map pin the journey key plans a journey to (#1078): the addon's flight
 -- points, docks and portals, and the map's own pins OnPinClick takes. One producer, so the wording and the key match
 -- everywhere.
 -- Nothing while journeys are off, while the player turned the hint off (#1142; the key still plans), or under the
@@ -56,11 +56,34 @@ function ns.JourneyClickHint()
 	return string.format(L["%s-click to plan a journey here"], ns.JourneyKeyName())
 end
 
+-- The minimap carries the same line, but it is the tooltip over every node, herb and NPC the player hovers, so it
+-- has its own switch (#1241): off, the map and flight-point hints stay and the minimap's goes. On, it follows
+-- journeyHint with everything else.
+---@return string?
+function ns.MinimapClickHint()
+	if ns.db and ns.db.minimapHint == false then
+		return nil
+	end
+	return ns.JourneyClickHint()
+end
+
 ---@param tooltip GameTooltip
-function ns.AddJourneyClickHint(tooltip)
-	local hint = ns.JourneyClickHint()
+---@param minimap? boolean
+function ns.AddJourneyClickHint(tooltip, minimap)
+	local hint
+	if minimap then
+		hint = ns.MinimapClickHint()
+	else
+		hint = ns.JourneyClickHint()
+	end
 	if hint then
 		GameTooltip_AddInstructionLine(tooltip, hint)
+		if not minimap then
+			GameTooltip_AddInstructionLine(
+				tooltip,
+				L["%s-right-click the map to mark a road or wall for a report."]:format(ns.JourneyKeyName())
+			)
+		end
 	end
 end
 
@@ -276,7 +299,7 @@ local function PlanQuest(questID, clickedMap, isWaypoint)
 	local point = location and ns.WorldPoint(location.uiMapID, location.x, location.y)
 	if not point then
 		-- Questie.API exposes icons and update notifications, but no public coordinate lookup.
-		ns.Print(L["No location for that quest yet."])
+		ns.Notice(L["No location for that quest yet."])
 		return false
 	end
 	point.label, point.questID = location.label, questID
@@ -300,7 +323,7 @@ local function OnZone(point)
 end
 
 -- A modified click inserts a link into an open chat box; leave that click to Blizzard's own handlers.
--- Both globals may be absent (older builds, the headless harness); guard the call so a missing
+-- Both globals may be absent (older builds, the offline spec harness); guard the call so a missing
 -- one never errors inside a click handler.
 local function ChatBoxOpen()
 	local active = (ChatFrameUtil and ChatFrameUtil.GetActiveWindow) or ChatEdit_GetActiveWindow
@@ -316,7 +339,7 @@ end
 function ns.JourneyToMapPoint(uiMapID, x, y, label)
 	local point = ns.WorldPoint(uiMapID, x, y)
 	if not (point and OnZone(ns.InstanceEntrance(point))) then
-		ns.Print(L["no journey can be planned to that spot."])
+		ns.Notice(L["no journey can be planned to that spot."])
 		return false
 	end
 	point.label = label
@@ -334,7 +357,7 @@ function ns.JourneyToUserWaypoint()
 	local waypoint = C_Map.GetUserWaypoint()
 	local position = waypoint and waypoint.position
 	if not (position and waypoint.uiMapID) then
-		ns.Print(L["no map pin is set."])
+		ns.Notice(L["no map pin is set."])
 		return false
 	end
 	return ns.JourneyToMapPoint(waypoint.uiMapID, position.x, position.y)
@@ -365,7 +388,7 @@ end
 function ns.JourneyToTrackedQuest()
 	local questID = TrackedQuestID()
 	if not questID then
-		ns.Print(L["no quest is tracked."])
+		ns.Notice(L["no quest is tracked."])
 		return false
 	end
 	return PlanQuest(questID)
@@ -525,16 +548,20 @@ end
 local CANVAS_CLICK_PRIORITY = 1001
 
 local function OnCanvasClick(map, button)
-	if button ~= "LeftButton" or not ns.JourneyKeyDown() or ChatBoxOpen() then
+	if (button ~= "LeftButton" and button ~= "RightButton") or not ns.JourneyKeyDown() or ChatBoxOpen() then
 		return false
 	end
-	-- Past the shown map's edge (OpenMap's stitched view) the spot is on no map this addon can read. OpenMap's
-	-- own handler plans a Shift-click there through API.Navigate, on the zone under the cursor.
-	local x, y = map:GetNormalizedCursorPosition()
-	if not (x and y and x >= 0 and x <= 1 and y >= 0 and y <= 1) or JourneysOff() then
+	local uiMapID, x, y = ns.OpenMapAddon.CursorMapPoint(map)
+	if not (uiMapID and x and y and x >= 0 and x <= 1 and y >= 0 and y <= 1) then
 		return false
 	end
-	ns.JourneyToMapPoint(map:GetMapID(), x, y)
+	if button == "RightButton" then
+		return ns.OpenMapReportMenu(map, uiMapID, x, y)
+	end
+	if JourneysOff() then
+		return false
+	end
+	ns.JourneyToMapPoint(uiMapID, x, y)
 	return true
 end
 
@@ -546,7 +573,7 @@ local function OnMinimapClick(_, button)
 	if point then
 		ns.StartJourney(point)
 	else
-		ns.Print(L["no journey can be planned to that spot."])
+		ns.Notice(L["no journey can be planned to that spot."])
 	end
 end
 
@@ -843,11 +870,11 @@ ns.Init(function()
 				tooltip ~= GameTooltip
 				or tooltip:IsForbidden()
 				or tooltip:NumLines() == 0
-				or not ns.JourneyClickHint()
+				or not ns.MinimapClickHint()
 			then
 				return
 			end
-			ns.AddJourneyClickHint(tooltip)
+			ns.AddJourneyClickHint(tooltip, true)
 			tooltip:Show()
 		end)
 	end

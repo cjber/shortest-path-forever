@@ -29,7 +29,8 @@ INFLIGHT_URL = f"https://raw.githubusercontent.com/LudiusMaximus/InFlight/{INFLI
 # CMaNGOS mangos-classic src/game/MotionGenerators/PathMovementGenerator.cpp: TAXI_FLIGHT_SPEED.
 TAXI_SPEED = 32.0
 TAXI_POINT_ERROR = 20.0  # World yards; retain bends, without shipping every spline control point.
-LIFTS = {11898, 11899, 4170, 4171, 47296, 47297, 20649, 20652, 20655}
+STEP = 2.0  # The client's step height in yards: a player walks between surfaces this close in height.
+LIFTS = {11898, 11899, 4170, 4171, 47296, 47297, 20649, 20652, 20655, 80023, 149045, 149046}
 TRAMS = {176080, 176081, 176082, 176083, 176084, 176085}
 # Curated landing/approach witnesses, not a proximity classifier or physical lift ownership.
 # Exact classic-db creature GUIDs at DB_REV: Great Lift's upper approach, Freewind's lower approach,
@@ -55,6 +56,9 @@ RESTRICTED_NODES = {84, 85, 86, 87}
 CLASS_NODES = {62: "DRUID", 63: "DRUID"}
 # Continents with walking maps: the only places a route can continue from.
 MAPS = (0, 1, 2991)
+# A hop's landing is at most this far across the map from its trigger: gen_nav bakes a hop as one link whose landing
+# must lie within DROP_COLUMNS (4) of its 7.96-yard cells, and 30 yd never spans more than 4 cells.
+HOP_REACH = 30
 # SpellEffect.Effect TELEPORT_UNITS (the classic number, and the number this client uses) and its destinations:
 # ImplicitTarget DEST_HOME (the bind point) and DEST_DB (the server's spell_target_position row).
 TELEPORT_EFFECTS = {5, 252}
@@ -175,14 +179,13 @@ def classicdb(refresh=False, offline=False):
             elif line.startswith("INSERT INTO `areatrigger_teleport` VALUES "):
                 for match in tuples.finditer(line):
                     row = next(csv.reader([match[1]], quotechar="'", escapechar="\\"))
-                    if int(row[0]) in PORTAL_NAMES:
-                        teleports[int(row[0])] = location(int(row[6]), map(float, row[7:10]))
+                    teleports[int(row[0])] = location(int(row[6]), map(float, row[7:10]))
                     instances[int(row[0])] = int(row[6])
             elif line.startswith("INSERT INTO `spell_target_position` VALUES "):
                 for match in tuples.finditer(line):
                     row = match[1].split(",")
                     positions[int(row[0])] = location(int(row[1]), map(float, row[2:5]))
-    if set(spawns) != LIFTS | TRAMS or set(teleports) != set(PORTAL_NAMES) or not positions or not instances:
+    if set(spawns) != LIFTS | TRAMS or not set(PORTAL_NAMES) <= set(teleports) or not positions or not instances:
         raise ValueError("classic-db: missing expected transport spawn, public passage, spell position or trigger")
     return spawns, teleports, positions, instances
 
@@ -265,9 +268,14 @@ def animation_tracks(rows, spawns):
             tracks[int(row["TransportID"])].append((int(row["TimeIndex"]), point(row)))
     for template, track in tracks.items():
         track.sort()
-        if len({t for t, _ in track}) != len(track) or math.dist(track[0][1], track[-1][1]) > 0.01:
+        if len({t for t, _ in track}) != len(track) or math.dist(track[0][1], track[-1][1]) > HOLD:
             raise ValueError(f"animation {template}: timestamps overlap or loop does not close")
     return tracks
+
+
+# A car that drifts less than this from where it stopped is holding at the landing, the same tolerance a loop closes
+# within: the east scaffold car creeps 0.009 yd over its five-second stop at the bottom.
+HOLD = 0.01
 
 
 def world_track(track, spawn):
@@ -277,11 +285,37 @@ def world_track(track, spawn):
     frames = []
     for time, (x, y, z) in track:
         pos = (spawn["pos"][0] + x, spawn["pos"][1] - y, spawn["pos"][2] + z)
-        if frames and math.dist(frames[-1]["pos"], pos) < 0.001:
+        if frames and math.dist(frames[-1]["pos"], pos) < HOLD:
             frames[-1]["depart"] = time
         else:
             frames.append({"arrive": time, "depart": time, "pos": pos, "map": spawn["map"]})
     return frames
+
+
+def ride_fit(cars, period, speed):
+    """How many 1 Hz sightings identify a ride: at most five over four seconds, fewer when a ride is shorter.
+
+    A sighting counts only while the car moves at `speed` or faster, so the shortest ride's fast time bounds the
+    samples a player can see on every ride: UC's whole ride is 3.5 s, Gnomeregan's drop 4.3 s.
+    """
+    shortest = math.inf
+    for car in cars:
+        start = next(i for i, f in enumerate(car) if f["depart"] > f["arrive"])
+        origin, fast = car[start]["dock"], 0
+        for k in range(len(car)):
+            a, b = car[(start + k) % len(car)], car[(start + k + 1) % len(car)]
+            # A ride ends at another floor; a car resettling on its own landing is still waiting there.
+            if a["depart"] > a["arrive"] and a["dock"] != origin:
+                shortest, origin, fast = min(shortest, fast), a["dock"], 0
+            time = (b["arrive"] - a["depart"]) % period
+            if time and math.dist(a["pos"], b["pos"]) * 1000 / time >= speed:
+                fast += time
+        if origin != car[start]["dock"]:
+            shortest = min(shortest, fast)
+    samples = min(5, int(shortest // 1000)) if shortest < math.inf else 0
+    # A car slower than `speed` (the scaffold lifts climb at about 4 yd/s, slower than a player runs) cannot be told
+    # from a player walking by, so it gets no fit and is never sighted.
+    return {"samples": samples, "span": (samples - 1) * 1000, "speed": speed} if samples >= 2 else None
 
 
 def transports(animation, spawns, triggers, guarded_factions):
@@ -296,22 +330,35 @@ def transports(animation, spawns, triggers, guarded_factions):
         (206491, "Undercity, west lift", [(20649, 44892)]),
         (206521, "Undercity, east lift", [(20652, 44962)]),
         (206551, "Undercity, south lift", [(20655, 44901)]),
+        (800231, "Gnomeregan lift", [(80023, 9450)]),
+        (1490451, "Searing Gorge, west scaffold lift", [(149045, 6945)]),
+        (1490461, "Searing Gorge, east scaffold lift", [(149046, 6946)]),
     ]
-    for index, (route_id, site, cars) in enumerate(sites):
+    next_dock = 1001
+    for route_id, site, cars in sites:
         car_frames = []
         for template, guid in cars:
             spawn = next(s for s in spawns[template] if s["guid"] == guid)
             frames = world_track(tracks[template], spawn)
             car_frames.append((template, frames))
-        landings = [f for _, frames in car_frames for f in frames if f["depart"] > f["arrive"]]
-        middle = (min(f["pos"][2] for f in landings) + max(f["pos"][2] for f in landings)) / 2
-        for top, name in ((True, "Top"), (False, "Bottom")):
-            members = [f for f in landings if (f["pos"][2] > middle) == top]
-            dock_id = 1001 + index * 2 + (0 if top else 1)
+        landings = sorted(
+            (f for _, frames in car_frames for f in frames if f["depart"] > f["arrive"]), key=lambda f: -f["pos"][2]
+        )
+        # A landing is a floor the car dwells at. Dwells within the player's 2-yard step of the floor above are the
+        # same floor: the scaffold cars settle a yard or so apart on one landing.
+        levels = []
+        for frame in landings:
+            if levels and levels[-1][-1]["pos"][2] - frame["pos"][2] <= STEP:
+                levels[-1].append(frame)
+            else:
+                levels.append([frame])
+        for level, members in enumerate(levels):
+            name = "Top" if level == 0 else "Bottom" if level == len(levels) - 1 else f"Level {len(levels) - level}"
             pos = tuple(sum(f["pos"][axis] for f in members) / len(members) for axis in range(3))
-            docks[dock_id] = {**location(members[0]["map"], pos), "site": site, "name": name}
+            docks[next_dock] = {**location(members[0]["map"], pos), "site": site, "name": name}
             for frame in members:
-                frame["dock"] = dock_id
+                frame["dock"] = next_dock
+            next_dock += 1
         periods = {tracks[template][-1][0] for template, _ in car_frames}
         # TB pairs differ by 33 ms per cycle: separate cars preserve each period and fitted epoch.
         groups = [[car] for car in car_frames] if len(periods) > 1 else [car_frames]
@@ -322,17 +369,14 @@ def transports(animation, spawns, triggers, guarded_factions):
             for _, car in group:
                 car[-1]["jump"] = 1
                 frames.extend(car)
-            # UC's entire ride is 3.5 s; TB is slower than the Great Lift during its cruise.
-            fit = (
-                {"samples": 3, "span": 2000, "speed": 8}
-                if template in (20649, 20652, 20655)
-                else {"samples": 5, "span": 4000, "speed": 6 if template in (4170, 4171, 47296, 47297) else 8}
-            )
+            # TB is slower than the Great Lift during its cruise.
+            speed = 6 if template in (4170, 4171, 47296, 47297) else 8
+            fit = ride_fit([car for _, car in group], tracks[template][-1][0], speed)
             routes[key] = {
                 "kind": "lift",
                 "site": site,
                 "period": tracks[template][-1][0],
-                "fit": fit,
+                **({"fit": fit} if fit else {}),
                 "stops": stops_of(frames, tracks[template][-1][0]),
                 "frames": frames,
             }
@@ -595,6 +639,22 @@ def portals(triggers, teleports):
     ]
 
 
+def hops(triggers, teleports):
+    """Teleports that move a player within one walking place, such as Stormwind's Wizard's Sanctum basement and its
+    tower room: a trigger on a walking continent whose landing is on the same map within HOP_REACH yards. They are
+    no journey of their own, so they are not portals; gen_nav bakes each one as a one-way link between the floors
+    it joins, which keeps ground reached only through it (the Sanctum's trainers) and lets a walk take it."""
+    found = []
+    for key, to in sorted(teleports.items()):
+        row = triggers.get(key)
+        if not row or key in PORTAL_NAMES or int(row["ContinentID"]) != to["map"] or to["map"] not in MAPS:
+            continue
+        x, y, z = point(row)
+        if math.hypot(to["x"] - x, to["y"] - y) <= HOP_REACH:
+            found.append((key, {"from": location(to["map"], (x, y, z)), "radius": float(row["Radius"]), "to": to}))
+    return found
+
+
 def zones_of(assignments, door):
     """The outdoor zone maps whose UiMapAssignment region holds a door, leaving out the world and continent maps
     (no area) and indoor (WMO) assignments. Zone regions are rectangles and overlap, so a door may sit in several."""
@@ -811,6 +871,7 @@ def main():
     nodes, paths = taxis(tables["TaxiNodes"], tables["TaxiPath"], tables["TaxiPathNode"], durations)
     islands = landmasses(tables["UiMapAssignment"], {int(r["ID"]): r for r in tables["Map"]})
     passages = portals(triggers, teleports)
+    walks = hops(triggers, teleports)
     instance_maps = {int(r["ID"]): r for r in tables["Map"]}
     doors = entrances(triggers, instance_triggers, instance_maps, tables["UiMapAssignment"])
     transport_lines = transport_output(docks, routes)
@@ -840,9 +901,9 @@ def main():
     portal_lines += [
         "-- Loading-screen allowance: 5 s. Only these public transitions are included.",
         "-- Excludes GM/test 1103/1104 and dungeon/raid triggers (Blizzard's own map shows those entrances).",
-        "-- Excludes Stormwind's Wizard's Sanctum 702/704: a hop up and down one tower, 12 yd apart on the map,",
-        "-- that never shortens a flat route and would stack two pins. Also the unused vault 107/109 (map 35), the",
-        "-- Leap of Faith fall 943, and PvP barracks 2527-2534, which have no AreaTrigger in this build.",
+        "-- Hops within one walking place (Stormwind's Wizard's Sanctum 702/704) are ns.Hops below, not portals.",
+        "-- Also excludes the unused vault 107/109 (map 35), the Leap of Faith fall 943, and PvP barracks",
+        "-- 2527-2534, which have no AreaTrigger in this build.",
         "-- Skyborne Dalaran -> Stormwind: manually mapped Alliance-only portal; the return portal was removed.",
         "-- https://wow-travelcraft.com/guide.html (Alliance portal; Horde Skyborne has no Dalaran portal).",
         "",
@@ -864,6 +925,18 @@ def main():
         "",
     ]
     portal_lines += assignment("ns.Entrances", doors)
+    portal_lines += [
+        f"-- Hops: same-map teleports landing within {HOP_REACH} yd on a walking continent (AreaTrigger source and",
+        "-- radius, classic-db areatrigger_teleport landing). gen_nav bakes each as a one-way link between the floors",
+        "-- it joins; the planner reads them only through the baked nav.",
+        "",
+        "-- stylua: ignore",
+        "ns.Hops = {",
+    ]
+    for trigger, hop in walks:
+        portal_lines += [f"\t-- Source: AreaTrigger {trigger} -> classic-db areatrigger_teleport {trigger}."]
+        portal_lines += ["\t" + render(hop, 1) + ","]
+    portal_lines += ["}", ""]
     zone_rows, unranged = zones(tables["UiMap"], tables["UiMapAssignment"], tables["AreaTable"])
     zone_lines = [
         "-- Generated by tools/gen_transit.py — do not edit.",

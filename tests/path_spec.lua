@@ -65,6 +65,23 @@ end
 -- A rooftop endpoint moves to the street below instead of failing.
 assert(Path.FindSync(0, { x = -9010, y = 870 }, STORMWIND_FM))
 
+-- An addon steering to that rooftop needs the walkable end of the route. The estimate still prices the same walk.
+local rooftop = { x = -9010, y = 870 }
+local steered, steeredYards, estimatedYards
+Path.Find(0, STORMWIND_FM, rooftop, function(points, cost)
+	steered, steeredYards = points, cost
+end, false, nil, true)
+Path.FindMany(0, STORMWIND_FM, { rooftop }, function(costs)
+	estimatedYards = costs[1]
+end)
+drain()
+assert(steered and #steered > 1 and steeredYards == estimatedYards, "steering uses the estimated running yards")
+assert(steered[1].x == STORMWIND_FM.x and steered[1].y == STORMWIND_FM.y, "steering starts at the requested point")
+local endpoint = steered[#steered]
+assert(dist(endpoint.x, endpoint.y, rooftop.x, rooftop.y) > 0, "steering ends off the unreachable rooftop")
+local legacy = assert(Path.FindSync(0, STORMWIND_FM, rooftop))
+assert(legacy[#legacy].x == rooftop.x and legacy[#legacy].y == rooftop.y, "journey paths retain their requested end")
+
 local none, why = Path.FindSync(0, { x = 0, y = 6000 }, GOLDSHIRE)
 assert(none == nil and why == "outside", why)
 none, why = Path.FindSync(1, { x = 0, y = 0 }, { x = 1, y = 1 })
@@ -277,7 +294,93 @@ for i = 2, #bay do
 		assert(wet == 0, "the beach between the two ends is dry")
 	end
 end
-assert(bayTime <= bayCost, ("the drawn walk is no slower than its route: %.1f against %.1f"):format(bayTime, bayCost))
+-- The route's cost is the grid's: each end point counts as its own cell. The drawn line starts and ends at the points
+-- themselves, so it also walks (or swims) from each point to its cell's centre, which the cost leaves out.
+local function cellOffset(map, p)
+	local Grid, st = ns.PathGrid, ns.PathGrid.State(map)
+	local gx, gy = (p.x - st.x0) / st.cs, (p.y - st.y0) / st.cs
+	local yards = math.sqrt((gx - math.floor(gx) - 0.5) ^ 2 + (gy - math.floor(gy) - 0.5) ^ 2) * st.cs
+	local k, lc = Grid.locate(st, p.x, p.y)
+	return Grid.grid(st, k)[lc + 1] == 2 and yards * st.swim or yards
+end
+local endOffsets = cellOffset(1, BAY_EAST) + cellOffset(1, BAY_WEST)
+assert(
+	bayTime <= bayCost + endOffsets,
+	("the drawn walk is no slower than its route: %.1f against %.1f and %.1f to the cell centres"):format(
+		bayTime,
+		bayCost,
+		endOffsets
+	)
+)
+
+-- A drawn segment is charged for each cell it crosses as that cell: half a dry cell and half a wet one is half a
+-- walk and half a swim, either way across the shore, never a whole swim or a whole walk.
+do
+	local Grid, st = ns.PathGrid, ns.PathGrid.State(1)
+	local shore
+	for gx = 2394, 2412 do
+		for gy = 1205, 1220 do
+			local k, lc = Grid.locate(st, st.x0 + (gx + 0.5) * st.cs, st.y0 + (gy + 0.5) * st.cs)
+			local k2, lc2 = Grid.locate(st, st.x0 + (gx + 1.5) * st.cs, st.y0 + (gy + 0.5) * st.cs)
+			local a, b = Grid.grid(st, k)[lc + 1], Grid.grid(st, k2)[lc2 + 1]
+			if not shore and a ~= b and (a == 1 or a == 2) and (b == 1 or b == 2) then
+				local P = { swim = st.swim }
+				local tk, tn, time = Grid.toward(
+					st,
+					P,
+					k,
+					lc,
+					gx + 0.5,
+					gy + 0.5,
+					gx + 1.5,
+					gy + 0.5,
+					true,
+					nil,
+					math.huge,
+					true,
+					k2,
+					lc2
+				)
+				if tk == k2 and tn == lc2 then
+					shore = time
+				end
+			end
+		end
+	end
+	local half = st.cs / 2
+	assert(shore, "a shore step is found on the bay")
+	assert(
+		math.abs(shore - (half + half * st.swim)) < 1e-6,
+		("a shore cell is half a walk, half a swim: %.3f"):format(shore)
+	)
+end
+
+-- Distinct points on one water node must pay both connectors even when the grid walk is empty.
+local bayGrid = ns.PathGrid
+local bayState = bayGrid.State(1)
+local bk, bc = bayGrid.locate(bayState, BAY_EAST.x, BAY_EAST.y)
+local cx = bayState.x0 + (math.floor(bk / bayState.ny) * bayState.C + math.floor(bc / bayState.C) + 0.5) * bayState.cs
+local cy = bayState.y0 + (bk % bayState.ny * bayState.C + bc % bayState.C + 0.5) * bayState.cs
+local eastOffset = { x = cx - 1, y = cy, z = bayState.z[bk][bc + 1] }
+local westOffset = { x = cx + 2, y = cy, z = eastOffset.z }
+local _, withinCell = Path.FindSync(1, eastOffset, westOffset)
+assert(withinCell == 3 * swim, ("both water connectors cost %.1f, got %.1f"):format(3 * swim, withinCell))
+westOffset.x = cx + 3
+local _, shifted = Path.FindSync(1, eastOffset, westOffset)
+assert(shifted == 4 * swim, "a new offset in the same cell changes the cached path cost")
+local _, walking = Path.FindSync(1, eastOffset, westOffset, true)
+assert(walking == 4, "water walking charges the connectors at running speed")
+assert(Path.FindManySync(1, eastOffset, { westOffset })[1] == shifted, "forward batch counts both connectors")
+assert(
+	Path.FindManySync(1, westOffset, { eastOffset }, false, true)[1] == shifted,
+	"reverse batch counts both connectors"
+)
+assert(Path.FindManySync(1, eastOffset, { eastOffset })[1] == 0, "a co-located transfer costs zero")
+
+local batch = { map = 1, from = eastOffset, sourceCluster = bk, sourceNode = bc }
+local moved = { map = 1, x = cx, y = cy, z = eastOffset.z }
+assert(not Path.ReuseMany(batch, moved), "moving within the cell invalidates its exact batch costs")
+assert(Path.ReuseMany(batch, moved, true), "the sliced query can still match a surface for a baked bound")
 
 -- The finer entrance graph finds the dry floor above the strait's water. Its explicit downward landing reaches
 -- the shore; sampling only the base water would mistake this layered walk for a swim.
@@ -288,7 +391,10 @@ local floorK, floorCell = StraitGrid.locate(straitState, -14969.154228856, 282.5
 local floorValues = StraitGrid.grid(straitState, floorK)
 local floorNode = StraitGrid.surface(straitState, floorK, floorCell, 1, 14)
 assert(floorValues[floorCell + 1] == 2 and floorNode and floorValues[floorNode + 1] == 1)
-assert(straitState.z[floorK][floorNode + 1] == 14, "the dry floor is above the base water")
+assert(
+	straitState.z[floorK][floorNode + 1] > straitState.z[floorK][floorCell + 1] + 10,
+	"the dry floor is above the base water"
+)
 
 -- Nearby, a walk that really swims is still pulled straight across the water its own entries swam. The row holds the
 -- water entrance on the cluster border at x -14933, so the swim's route is the straight one.
@@ -310,16 +416,16 @@ assert(pts and len < 350, len)
 for i = 2, #pts - 1 do
 	assert(pts[i].z > 85, "walks the canal bed")
 end
--- The bed under it is sealed ground no player can stand on (#602). The 50 to 61.6 degree band (#639) keeps the
--- slide into it as a down-only step, so a point at the bed's height starts on the bed until walks begin from the
--- player's measured floor (#737); it must not climb back into the streets, and a street point still walks out by
--- the gate.
+-- The 50 to 61.6 degree band (#639) keeps the slide into the bed under it as a down-only step, so a point at the
+-- bed's height starts on the bed until walks begin from the player's measured floor (#737). Ground a drop reaches is
+-- kept with its way out, so the walk follows the bed west and leaves it only by the gate, never climbing back into
+-- the streets; a street point still walks out by the gate.
 local BED = { x = TRADE_STREET.x, y = TRADE_STREET.y, z = 74 }
 local street = Path.FindSync(0, TRADE_STREET, GOLDSHIRE)
 assert(passes(street, -8520, 960) > 100 and passes(Path.FindSync(0, BED, GOLDSHIRE), -8520, 960) > 100, "goes round")
 pts = Path.FindSync(0, BED, { x = -9068, y = 417 })
 for i = 2, #pts - 1 do
-	assert(pts[i].z < 85, "climbs out of the bed into the streets")
+	assert(pts[i].z < 85 or pts[i].x < -9050, "climbs out of the bed into the streets")
 end
 -- A zeppelin dock stands at its transport's height: Grom'gol's tower platform, not the beach below it.
 assert(loadfile("Data/Routes.lua"))("ShortestPathForever", ns)

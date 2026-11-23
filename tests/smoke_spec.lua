@@ -1,10 +1,10 @@
 -- Run from the repository root: luajit tests/smoke_spec.lua
--- The whole interactive surface, headless: every saved setting driven through its own value-changed callback and
+-- The whole interactive surface, offline: every saved setting driven through its own value-changed callback and
 -- through ns.SetOption, the compass, the tracker's headers and context menus, the world
 -- map's pins and their Ends menu, the planning paths, and the settings index with its subpages, across
 -- representative profiles. Every action asserts no Lua error was added, and a crash is reported as
 -- "<profile> <screen/frame/setting> <verb>: <error>", attributable to the setting, frame or screen that raised it.
--- What it cannot reach is the live client a /reload runs against: the native tracker host and the flight map's
+-- What it cannot reach is the real client a /reload runs against: the native tracker host and the flight map's
 -- real buttons are checked by ForeverCore's own specs and taxi_spec.lua.
 local dir = arg[0]:match("^(.*)/") or "tests"
 

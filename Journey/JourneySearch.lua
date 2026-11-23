@@ -116,18 +116,26 @@ local function CancelPaths()
 	probeJobs, replanning = {}, nil
 end
 
--- How much of the chosen walk is still ahead of here, from 0 to 1, or nil when here is off it.
-local function RemainingShare(leg, here)
-	local found, _, after, total = ns.OnWalk(leg.walkPoints, here)
-	if found and total > 0 then
-		return after / total
+-- Both a path job and its queued callbacks can fail after the search has yielded.
+function Search.JobFailed()
+	if not goal then
+		return
 	end
+	local listener = publish
+	Search.Reset()
+	-- A thrown landing walk would stay pending for every later journey; the graph may be half-built.
+	Walks.ClearLandings()
+	plannerCache = {}
+	costError = "error"
+	ns.core.SafeCall("journey search failure", listener, nil, "route")
 end
 
--- The rest of the chosen walk in its own running yards, so water keeps its search weight.
-local function Remaining(leg, here)
-	local share = RemainingShare(leg, here)
-	return share and (leg.walkCost or leg.yards) * share
+-- Rejoin the walk at the projected point, then price its remaining share in running yards so water keeps its weight.
+local function Remaining(leg, here, basis)
+	local found, _, after, total, rejoin = ns.OnWalk(leg.walkPoints, here)
+	if found and total > 0 then
+		return rejoin + basis * (after / total)
+	end
 end
 
 -- The measured walks from where the batch started, moved to here, and back from the goal, with the rest of the walk
@@ -153,7 +161,7 @@ local function MeasuredWalks(here)
 		and followed.hazards == (hazards and hazards.key)
 		and leg.mode == "walk"
 		and leg.measured
-		and Remaining(leg, here)
+		and Remaining(leg, here, leg.walkCost or leg.yards)
 	if rest then
 		walks[#walks + 1] = { from = here, to = leg.to, cost = rest }
 	end
@@ -213,12 +221,10 @@ local function EstimateKept(now)
 			end
 			local basis = entry and entry.cost or leg.walkCost or yards
 			if index == progress.index and leg.measured then
-				-- A share of the basis, never divided by the walk's own cost, which a measured walk may put at 0.
-				local share = RemainingShare(leg, here)
-				if not share then
+				yards = Remaining(leg, here, basis)
+				if not yards then
 					return nil
 				end
-				yards = basis * share
 			else
 				yards = basis
 			end
@@ -523,14 +529,14 @@ end
 -- One search owns the callbacks' shared revision, preview and probe budget across resumes
 ---@param includeGoal boolean?
 ---@param forced boolean?
----@param replace boolean? the destination moved, so the plan under way leads somewhere else
+---@param replace boolean? the followed route is no longer valid
 local function RefreshCosts(includeGoal, forced, replace)
 	local here = Here()
 	if not (here and goal) then
 		return
 	end
 	CancelPaths()
-	search = { initial = not followed, forced = forced, replace = replace }
+	search = { initial = not followed, forced = forced, replace = replace or (search and search.replace) }
 	local owner = search
 	local version = pathVersion
 	local options = Context.Options(here, goal, routePolicy)
@@ -552,6 +558,7 @@ local function RefreshCosts(includeGoal, forced, replace)
 			or batch.faction ~= faction
 			or batch.teleports ~= teleports
 			or batch.partyPortals ~= partyPortals
+			or batch.portals ~= options.portals
 			or batch.hazards ~= hazardKey
 		then
 			return false
@@ -578,6 +585,7 @@ local function RefreshCosts(includeGoal, forced, replace)
 			faction = faction,
 			teleports = teleports,
 			partyPortals = partyPortals,
+			portals = options.portals,
 			hazards = hazardKey,
 			costs = {},
 		}
@@ -712,6 +720,7 @@ local function RefreshCosts(includeGoal, forced, replace)
 		end
 	end
 	local consider, request
+	local ruleOutDirect
 	-- Asks again once a bind point's walks have gone far enough that it cannot beat the plan (LandingPending). One
 	-- function per search, so each consider moves its radius rather than adding a listener.
 	local function landed()
@@ -803,6 +812,9 @@ local function RefreshCosts(includeGoal, forced, replace)
 			active(goalBatch, unsnapped[goalBatch] or false)
 			return
 		end
+		if ruleOutDirect then
+			return
+		end
 		-- Short A* cost probes let easy routes prove themselves before expanding a wide frontier. Bound
 		-- their total work, then let shared Dijkstras settle harder alternatives. Finish an active probe:
 		-- abandoning it near completion would make the batch repeat its work.
@@ -829,14 +841,28 @@ local function RefreshCosts(includeGoal, forced, replace)
 				end
 				planned.preview, search.candidate = true, planned
 				active(startBatch, false)
-				active(goalBatch, false)
+				local only = #probes == 1 and probes[1]
+				local direct = only and only.batch == startBatch and SamePlace(only.leg.to, goal) and not goalBatch.done
+				if direct then
+					for _, cost in pairs(goalBatch.costs) do
+						if cost then
+							direct = false
+							break
+						end
+					end
+				end
+				-- A reverse frontier may prove the direct walk impossible before its forward probe does.
+				active(goalBatch, direct)
 				local left = #probes
 				for _, probe in ipairs(probes) do
 					local leg, batch = probe.leg, probe.batch
-					local probeJob = ns.Path.FindCost(leg.from.map, leg.from, leg.to, function(cost, reason, finished)
+					local function answer(cost, reason, finished)
 						probeJobs[finished] = nil
 						if version ~= pathVersion then
 							return
+						end
+						if direct then
+							ruleOutDirect = nil
 						end
 						if cost or reason == "unreachable" or reason == "offmesh" or reason == "outside" then
 							batch.probes = batch.probes or {}
@@ -847,8 +873,15 @@ local function RefreshCosts(includeGoal, forced, replace)
 						if left == 0 then
 							request(true)
 						end
-					end, waterMode, hazards)
-					probeJobs[probeJob] = true
+					end
+					local probeJob = ns.Path.FindCost(leg.from.map, leg.from, leg.to, answer, waterMode, hazards)
+					probeJobs[probeJob], probeJob.onError = true, Search.JobFailed
+					if direct then
+						ruleOutDirect = function()
+							ns.Path.Cancel(probeJob)
+							answer(nil, "unreachable", probeJob)
+						end
+					end
 				end
 				return
 			end
@@ -922,7 +955,30 @@ local function RefreshCosts(includeGoal, forced, replace)
 				-- An estimate whose zero walks left no legs would read as arrival, so it waits for the proof.
 				if not followed and search.initial and not search.rough and #preview.legs > 0 then
 					search.rough = true
-					publish(Rough(preview), "rough")
+					local rough = Rough(preview)
+					publish(rough, "rough")
+					if not stale() then
+						for _, leg in ipairs(rough.legs) do
+							if leg.mode == "walk" then
+								local sketch = ns.Path.FindCoarse(
+									leg.from.map,
+									leg.from,
+									leg.to,
+									function(points, _, finished)
+										probeJobs[finished] = nil
+										if points and not stale() and not followed then
+											leg.walkPoints = points
+											publish(rough, "rough")
+										end
+									end,
+									waterMode,
+									hazards
+								)
+								probeJobs[sketch] = true
+								break
+							end
+						end
+					end
 					if stale() then
 						return
 					end
@@ -939,7 +995,7 @@ local function RefreshCosts(includeGoal, forced, replace)
 	local function schedule()
 		if not considering and not stale() then
 			considering = ns.Path.Run(work)
-			probeJobs[considering] = true
+			probeJobs[considering], considering.onError = true, Search.JobFailed
 		end
 	end
 	request = function(final)
@@ -989,10 +1045,15 @@ local function RefreshCosts(includeGoal, forced, replace)
 				return
 			end
 			settle(batch, costs, reason, job)
+			if batch == goalBatch and ruleOutDirect and ns.Path.WalksInto(job, startBatch.point) == false then
+				ruleOutDirect()
+			end
 			if Ground() then
 				return
 			end
-			request(batch.done)
+			if batch ~= goalBatch or not ruleOutDirect then
+				request(batch.done)
+			end
 		end
 		local job = batch.job
 		if job then
@@ -1017,6 +1078,7 @@ local function RefreshCosts(includeGoal, forced, replace)
 				hazards
 			)
 		end
+		batch.job.onError = Search.JobFailed
 	end
 	attach(startBatch)
 	attach(goalBatch)
@@ -1087,6 +1149,13 @@ end
 -- there: neither may be charged for the character to escape (#895).
 local origin, hereZone, landingZone
 local avoided
+
+---@param point SPFPoint
+---@return SPFPoint?
+function Search.Origin(point)
+	return goal == point and origin or nil
+end
+
 local function WalkLanding()
 	local leg = followed and progress and followed.legs[progress.index]
 	if leg and leg.mode ~= "walk" then
@@ -1121,7 +1190,8 @@ end
 ---@param listener fun(route: SPFPlan?, news: SPFSearchNews)
 ---@param replace? boolean the route being replaced leads somewhere else, so the next plan takes over
 ---@param policy? SPFRoutePolicy
-function Search.Start(point, route, state, listener, replace, policy)
+local function Start(point, route, state, listener, replace, policy)
+	goal, publish, costError = point, listener, nil
 	policy = policy or "normal"
 	if policy ~= routePolicy then
 		Search.Clear(false, policy)
@@ -1147,7 +1217,8 @@ end
 -- Once per driver frame with a readable position: restarts a search whose inputs changed or whose callbacks waited
 -- for a position.
 ---@param changed? boolean the travel policy changed since the last frame
-function Search.Poll(changed)
+---@param replace? boolean the followed route may use transport that was just avoided
+local function Poll(changed, replace)
 	local x, y, _, map = ns.JourneyPosition()
 	local zone = x and y and map and ns.Hazards.ZoneAt(map, x, y)
 	local landing = WalkLanding()
@@ -1155,7 +1226,7 @@ function Search.Poll(changed)
 	if changed or zone ~= hereZone or landZone ~= landingZone then
 		-- A setting, your level or a zone you stand in or land in changed what to avoid, from where you stand now.
 		Avoid()
-		RefreshCosts(true, true)
+		RefreshCosts(true, true, replace)
 	end
 	-- No batch has started, or a callback waited for a readable position.
 	local stale = not startAt or costsWaiting
@@ -1177,7 +1248,7 @@ end
 ---@param flying boolean? on a taxi
 ---@param changedRide boolean either changed since the last frame
 ---@param changedSpeed boolean the run speed changed since the last plan
-function Search.Replan(riding, flying, changedRide, changedSpeed)
+local function Replan(riding, flying, changedRide, changedSpeed)
 	local mode = ns.JourneyWaterWalking()
 	local options = Context.Options(Here() or goal, goal, routePolicy)
 	local partyPortals = options.partyPortals
@@ -1192,7 +1263,7 @@ function Search.Replan(riding, flying, changedRide, changedSpeed)
 	then
 		-- A new bind point, teleport or party mage: measure the walks on from where it lands.
 		RefreshCosts(true, false)
-	elseif pendingCosts == 0 and Walks.Pending() == 0 then
+	elseif pendingCosts == 0 and Walks.Pending() == 0 and not (search and search.replace) then
 		local here = Here()
 		local leg = followed and followed.legs[progress.index]
 		local off = here and leg and leg.mode == "walk" and leg.measured and not ns.OnWalk(leg.walkPoints, here)
@@ -1248,8 +1319,44 @@ function Search.Replan(riding, flying, changedRide, changedSpeed)
 				end
 			end)
 			replanning = this
-			probeJobs[this] = true
+			probeJobs[this], this.onError = true, Search.JobFailed
 		end
+	end
+end
+
+-- Frame entry points cannot yield. The planner and path callbacks use the coroutine boundary instead.
+local function Checked(fn, ...)
+	if not ns.core.SafeCall("journey search", fn, ...) then
+		Search.JobFailed()
+	end
+end
+
+function Search.Start(point, route, state, listener, replace, policy)
+	Checked(Start, point, route, state, listener, replace, policy)
+end
+
+-- A thrown search cleared its goal. Stay stopped until the policy or the player's zone changes.
+function Search.ShouldRetry(changed, map, x, y)
+	return goal == nil
+		and costError == "error"
+		and (changed or (map and y and ns.Hazards.ZoneAt(map, x, y) ~= hereZone))
+end
+
+function Search.Poll(changed, replace)
+	if not goal then
+		return
+	end
+	-- The unchanged poll allocates nothing. Enter the journal only after a throw.
+	local ok, message = pcall(Poll, changed, replace)
+	if not ok then
+		ns.core.RecordError("journey search poll", message)
+		Search.JobFailed()
+	end
+end
+
+function Search.Replan(riding, flying, changedRide, changedSpeed)
+	if goal then
+		Checked(Replan, riding, flying, changedRide, changedSpeed)
 	end
 end
 

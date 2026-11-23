@@ -1,7 +1,8 @@
 -- Prints, as JSON, the fixed places on one map where a player stands at a known height: flight masters, boat docks
 -- and lift ends, portal ends and class teleport landings. gen_nav.py keeps the walking ground that holds one of them.
--- usage (from the repository root): luajit tools/baker/places.lua <map>
-local map = assert(tonumber(arg[1]), "usage: luajit tools/baker/places.lua <map>")
+-- With "hops", prints the map's hops instead (ns.Hops) as [trigger x, y, z, radius, landing x, y, z].
+-- usage (from the repository root): luajit tools/baker/places.lua <map> [hops]
+local map = assert(tonumber(arg[1]), "usage: luajit tools/baker/places.lua <map> [hops]")
 local ns = {}
 for _, file in ipairs({
 	"Data/Routes.lua",
@@ -13,6 +14,24 @@ for _, file in ipairs({
 	assert(loadfile(file))("ShortestPathForever", ns)
 end
 local out = {}
+if arg[2] == "hops" then
+	for _, hop in ipairs(ns.Hops) do
+		local from, to = hop.from, hop.to
+		if from.map == map then
+			out[#out + 1] = ("[%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g]"):format(
+				from.x,
+				from.y,
+				from.z,
+				hop.radius,
+				to.x,
+				to.y,
+				to.z
+			)
+		end
+	end
+	print("[" .. table.concat(out, ",") .. "]")
+	return
+end
 local function Add(point)
 	-- A place without a height cannot say which of the floors at its spot it stands on.
 	if point and point.map == map and point.z then

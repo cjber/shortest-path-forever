@@ -7,6 +7,7 @@ local driver = assert(loadfile("tests/journey_driver.lua"))()
 local ns, env, checks = driver.ns, driver.env, 0
 driver.load("UI/Looks.lua")
 driver.load("Core/APIInput.lua")
+driver.load("Core/APIWalks.lua")
 driver.load("Core/APIStops.lua")
 driver.load("Core/API.lua")
 driver.load("Journey/Itinerary.lua")
@@ -41,12 +42,13 @@ local function last()
 	return heard[#heard] or {}
 end
 
--- What is there to call: version 2, minor 6, and every function the hand-off checks before calling it.
+-- What is there to call: version 2, minor 7, and every function the hand-off checks before calling it.
 equal(API.version, 2, "version 2 removes peer and leaderboard APIs")
-equal(API.minor, 6, "minor 6 adds route options and stop observers")
+equal(API.minor, 7, "minor 7 adds WalkPath")
 for _, name in ipairs({
 	"NavigateRoute",
 	"ObserveStops",
+	"WalkPath",
 	"JourneyState",
 	"Navigate",
 	"Cancel",

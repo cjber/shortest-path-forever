@@ -36,13 +36,13 @@ local function step(job)
 	return status
 end
 local function finish(job)
-	for _ = 1, 2080 do
+	for _ = 1, 8192 do
 		step(job)
 		if job.status ~= "working" then
 			return job
 		end
 	end
-	error("ordering did not finish within the API capacity's 2080 estimates")
+	error("ordering did not finish within 8192 steps")
 end
 local function invalid(stops, origin)
 	local job = begin(stops, origin)
@@ -94,6 +94,122 @@ end
 invalid({ setmetatable(point(0.51), { __index = from }) })
 invalid({ { map = 1, x = 0.51, y = 0.5, questIDs = { [2] = 7 } } })
 invalid({ { map = 1, x = 0.51, y = 0.5, shapes = { point(0.51) } } })
+
+do
+	local near, across, far = point(0.51), point(0.48), point(0.56)
+	local function total(order)
+		local origin, seconds = from, 0
+		for _, stop in ipairs(order) do
+			seconds = seconds + assert(API.Estimate(origin.map, origin.x, origin.y, stop.map, stop.x, stop.y))
+			origin = stop
+		end
+		return seconds
+	end
+	local result = begin({ near, across, far })
+	for _ = 1, 9 do
+		ns.Path.Run(function(pathJob)
+			result:Step(pathJob)
+		end)
+		driver.path.runAll()
+	end
+	equal(result.status, "ready", "three-stop route settles")
+	equal(total(result.points) < total({ near, across, far }), true, "shorter than nearest-next leaving far last")
+	equal(result.points[1].x, across.x, "visit the opposite side before crossing to the far stop")
+end
+
+-- Feed sparse directed costs through the Estimate interface, including unreachable reverse legs.
+do
+	local estimate = API.Estimate
+	local function fixture(count, costs)
+		local stops = {}
+		for id = 1, count do
+			stops[id] = point(0.5 + id / 64, 1, tostring(id))
+		end
+		API.Estimate = function(_, fromX, _, _, toX)
+			local origin, target = (fromX - 0.5) * 64, (toX - 0.5) * 64
+			local seconds = costs[origin] and costs[origin][target]
+			if not seconds then
+				return nil, "unreachable"
+			end
+			return seconds
+		end
+		return finish(begin(stops))
+	end
+	local function order(result, expected, label)
+		equal(result.status, "ready", label .. " settles")
+		local titles = {}
+		for i, stop in ipairs(result.points) do
+			titles[i] = stop.title
+		end
+		equal(table.concat(titles, ","), expected, label)
+	end
+	local costs = {
+		[0] = { [1] = 1, [2] = 2 },
+		[1] = { [2] = 1, [4] = 1 },
+		[2] = { [3] = 1 },
+		[3] = { [1] = 1, [4] = 20 },
+	}
+	order(
+		fixture(2, {
+			[0] = { [1] = 1, [2] = 2 },
+			[1] = { [2] = 10 },
+			[2] = { [1] = 1 },
+		}),
+		"1,2",
+		"two-stop drafts keep the nearest-next choice"
+	)
+	for id = 4, 7 do
+		costs[id] = { [id + 1] = 1 }
+	end
+	order(fixture(8, costs), "2,3,1,4,5,6,7,8", "exact eight-stop order needs more than a reversal")
+	costs[3][4] = nil
+	order(fixture(8, costs), "2,3,1,4,5,6,7,8", "exact search finds a complete route after a nearest-next dead end")
+	order(
+		fixture(3, {
+			[0] = { [1] = 4, [2] = 1 },
+			[1] = { [2] = 1, [3] = 5 },
+			[2] = { [1] = 2, [3] = 3 },
+		}),
+		"2,1,3",
+		"exact search keeps nearest-next on a tie"
+	)
+
+	local reversals = {
+		[0] = { [1] = 1, [2] = 2 },
+		[1] = { [2] = 3, [3] = 4 },
+		[2] = { [3] = 10 },
+	}
+	for id = 3, 8 do
+		reversals[id] = { [id + 1] = 1 }
+	end
+	local greedy = "1,2,3,4,5,6,7,8,9"
+	order(fixture(9, reversals), greedy, "two-opt preserves a route with an unreachable reverse edge")
+	reversals[2][1] = 9
+	order(fixture(9, reversals), greedy, "two-opt rejects a reversal made worse by its internal edge")
+	reversals[2][1] = 8
+	order(fixture(9, reversals), greedy, "two-opt keeps nearest-next on a tie")
+	reversals[2][1] = 1
+	order(fixture(9, reversals), "2,1,3,4,5,6,7,8,9", "two-opt takes a shorter directed reversal")
+	order(
+		fixture(2, { [0] = { [1] = 1, [2] = 2 }, [2] = { [1] = 1 } }),
+		"2,1",
+		"two stops take the other order when nearest-next strands one"
+	)
+	local stranded = {
+		[0] = { [1] = 1, [2] = 2 },
+		[1] = { [2] = 1, [3] = 2 },
+		[2] = { [3] = 1 },
+		[3] = { [4] = 1 },
+		[4] = { [5] = 1 },
+		[5] = { [6] = 1 },
+		[6] = { [7] = 1, [8] = 2 },
+		[7] = { [9] = 1 },
+		[8] = { [7] = 1 },
+	}
+	order(fixture(9, stranded), "1,2,3,4,5,6,8,7,9", "nine stops find a complete route after a nearest-next dead end")
+	API.Estimate = estimate
+end
+
 local many = {}
 for index = 1, 65 do
 	many[index] = point(0.5 + index / 10000)
@@ -104,7 +220,7 @@ local before = calls
 local capacity = finish(begin(many))
 equal(capacity.status, "ready", "64 stops accepted")
 equal(#capacity.points, 64, "all stops retained")
-equal(calls - before, 2080, "64-stop worst case spread across 2080 steps")
+equal(calls - before, 2143, "64 ordered stops reuse nearest-next estimates and check 63 reverse edges")
 local one = finish(begin({ point(0.5) }))
 equal(one.status, "ready", "one stop and zero-time estimate valid")
 equal(#one.points, 1, "single destination")

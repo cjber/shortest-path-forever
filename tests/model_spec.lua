@@ -116,9 +116,10 @@ local function animatedPosition(frames, phase)
 end
 
 -- Every car, both directions: one ride sampled at 1 Hz must identify its route and epoch. This includes
--- the 3.5-second UC ride across phase zero, the TB periods, and both tracks of counterweighted pairs.
+-- the 3.5-second UC ride across phase zero, the TB periods, and both tracks of counterweighted pairs. A lift
+-- with no fit (the Searing Gorge scaffolds climb slower than a player runs) is never sighted.
 for routeID, route in pairs(Routes) do
-	if route.kind == "lift" or route.kind == "tram" then
+	if route.kind == "tram" or (route.kind == "lift" and route.fit) then
 		local tracks, track = {}, {}
 		for index, frame in ipairs(route.frames) do
 			track[#track + 1] = frame

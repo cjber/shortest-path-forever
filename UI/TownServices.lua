@@ -822,9 +822,55 @@ end
 
 -- Redraws the town services, as the map's own layers redraw after a zoom, a setting or combat.
 -- The Nearby services rows' checkboxes say whether their pins show, so they repaint with the layer.
+-- The minimap's layer (UI/MinimapPins.lua) shows these same services: every one the world map's filters and town
+-- level would draw, at its NPC's world position, one pin each. Empty while the catalogue is off or still loading;
+-- MinimapPins rebuilds when it becomes ready (OnReady) and whenever a filter changes (RefreshTownServices).
+---@return table[]
+function ns.TownServiceMinimapEntries()
+	local list = {}
+	local level = ns.db and ns.db.townServices or "off"
+	local nearby = ns.NearbyServices
+	if level == "off" or not nearby then
+		return list
+	end
+	nearby.Request()
+	if nearby.State() ~= "ready" then
+		return list
+	end
+	if nearby.Index() ~= sourceIndex then
+		Build()
+	end
+	for _, entry in ipairs(entries) do
+		if Shown(entry, level) and Primary(entry) then
+			list[#list + 1] =
+				{ map = entry.world.map, x = entry.world.x, y = entry.world.y, kind = "service", service = entry }
+		end
+	end
+	return list
+end
+
+-- A service pin's art: the client's map icon for the NPC's most useful service, as on the world map.
+function ns.PaintTownServiceIcon(texture, entry, size)
+	Art.Fit(texture, Primary(entry --[[@as table]]).tracking, size, size)
+end
+
+-- The world map's tooltip for one NPC.
+---@param entry SPFTownService
+function ns.AddTownServiceTooltip(entry)
+	AddTooltip({
+		services = { { entry = entry, id = entry.key, x = entry.x, y = entry.y } },
+		x = entry.x,
+		y = entry.y,
+		key = entry.key,
+	})
+end
+
 function ns.RefreshTownServices()
 	if servicePins then
 		Services:RefreshAllData()
+	end
+	if ns.RefreshMinimapPins then
+		ns.RefreshMinimapPins()
 	end
 	if ns.RefreshServiceFilters then
 		ns.RefreshServiceFilters()

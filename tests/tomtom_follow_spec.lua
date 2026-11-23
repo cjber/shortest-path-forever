@@ -19,7 +19,6 @@ local function Boot(follow)
 	driver.load("Core/APIStops.lua")
 	driver.load("Core/API.lua")
 	driver.load("Journey/Itinerary.lua")
-	driver.load("Core/Zygor.lua")
 	local client = { combat = false, timers = {} }
 	local arrow = { alpha = 0.7, mouse = true }
 	function arrow:SetAlpha(value)
@@ -78,6 +77,7 @@ local function Boot(follow)
 		created[#created + 1] = frame
 		return frame
 	end
+	driver.load("Core/Zygor.lua")
 	driver.load("Core/TomTom.lua")
 	client.driver, client.ns, client.env, client.watcher = driver, ns, env, created[#created]
 	client.API = env.ShortestPathForever.API

@@ -2,7 +2,16 @@
 -- decodes as it always did, and the local and abstract searches charge a drop the same cost.
 local ns = {}
 local fixture = assert(loadfile("tests/nav_fixture.lua"))()
-for _, file in ipairs({ "Routing/PathGrid.lua", "Routing/Path.lua", "Routing/PathJobs.lua" }) do
+assert(loadfile("Routing/PathGrid.lua"))("ShortestPathForever", ns)
+local adjacent = ns.PathGrid.adjacent
+local remoteExpanded = false
+ns.PathGrid.adjacent = function(st, id, roads)
+	if st.map == 90 and id >= 4096 then
+		remoteExpanded = true
+	end
+	return adjacent(st, id, roads)
+end
+for _, file in ipairs({ "Routing/Path.lua", "Routing/PathJobs.lua" }) do
 	assert(loadfile(file))("ShortestPathForever", ns)
 end
 local Path, Grid = ns.Path, ns.PathGrid
@@ -430,6 +439,33 @@ assert(belowCost2 and belowCost1, "both formats drop an unreached goal to the su
 assert(math.abs(belowCost2 - belowCost1) < 1e-9, "format 2 resolves a goal like format 1")
 assert(math.abs(belowCost2 - CS) < 1e-9, "the goal moved to the nearest reached surface")
 
+-- The transport entrance reaches a distant branch, but the closest ground is beside the isolated goal.
+-- Proving that the transport reaches the nearby entrance does not require expanding the distant branch.
+fixture.install(
+	90,
+	fixture.format2({
+		map = 90,
+		nx = 2,
+		ny = 1,
+		cell = {
+			[10] = { [10] = at(32, { flags = 15 }) },
+			[30] = { [10] = at(20) },
+			[31] = { [10] = at(20) },
+			[67] = { [10] = at(20) },
+		},
+		node = {
+			{ 31, 10, 1, out = { { 67, 10, 440, 440 } } },
+			{ 67, 10, 1 },
+		},
+	})
+)
+local isolated, _, _, grounded = Path.FindManySync(90, point(10, 10, 32), { point(31, 10, 20) }, false, true)
+assert(
+	isolated[1] == false and grounded and math.abs(grounded.x - point(30, 10).x) < 1e-9,
+	"the goal moves to the closest ground"
+)
+assert(not remoteExpanded, "nearest ground must not expand a distant outbound branch")
+
 -- A walking step is charged for the cell it enters. A reverse tree walks a stored edge the other way, so it must
 -- charge the node nearer its source: charging the predecessor instead made the same walk cost more from one end than
 -- the other whenever the two ends differed in water. The goal is reached from its cluster's entrance at (10, 10),
@@ -603,5 +639,60 @@ format1Floor.floor =
 	{ [1] = b64(1, 3) .. b64(5 * 67 + 10, 3) .. b64(1, 1) .. b64(3, 1) .. b64(40 + 2048, 2) .. b64(4, 2) .. b64(0, 3) }
 fixture.install(58, format1Floor)
 assert(Path.FindSync(58, point(5, 11, 20), point(5, 10, 40)), "a format 1 floor carries no steep rule")
+
+-- A drawn line keeps a drop's ledge and landing as consecutive points and marks the ledge, even when the drop is
+-- the whole walk: a chord from the ledge to the landing would be drawn as a slope the walk never stands on.
+do
+	local pts = assert(Path.FindSync(42, point(40, 40, 20 + FALL), point(41, 40, 20)))
+	local jumps = 0
+	for i = 1, #pts - 1 do
+		if pts[i].jump then
+			jumps = jumps + 1
+			assert(pts[i].z == 20 + FALL and pts[i + 1].z == 20, "the jump runs from the ledge to the landing")
+			assert(math.floor(pts[i].x / CS) == 40 and math.floor(pts[i + 1].x / CS) == 41, "one cell apart")
+		end
+	end
+	assert(jumps == 1, "the ledge is marked: " .. jumps)
+	assert(not pts[#pts].jump, "the landing does not start a jump")
+end
+
+-- A drop of more than a cell is a link only: the base step that moves one cell says nothing about a landing two
+-- cells away, so it must not report one.
+do
+	fixture.install(
+		91,
+		fixture.format2({
+			map = 91,
+			nx = 1,
+			ny = 1,
+			cell = { [10] = { [10] = at(32) }, [11] = { [10] = at(32) }, [12] = { [10] = at(20) } },
+			link = { { 10, 10, 2, 0, DROP } },
+			node = { { 10, 10, 1 } },
+		})
+	)
+	local wide = Grid.State(91)
+	local ks, ls, cs = {}, {}, {}
+	local count = Grid.neighbours(wide, 0, 10 * 67 + 10, 10, 10, 2, 0, true, ks, ls, cs)
+	assert(count == 1 and cs[1] == DROP, "only the drop lands two cells on: " .. count)
+end
+
+-- A line leaving a dry floor over water for a cell with no surface walks the floor: the stretch is charged as the
+-- surface it is on, not the base water beneath.
+do
+	fixture.install(
+		92,
+		fixture.format2({
+			map = 92,
+			nx = 1,
+			ny = 1,
+			cell = { [10] = { [10] = { z = 0, water = true } } },
+			floor = { { 10, 10, 30, 1, 0 } },
+			node = { { 10, 10, 1 } },
+		})
+	)
+	local pier = Grid.State(92)
+	local _, ok, time = Grid.toward(pier, { swim = 3 }, 0, 67 * 67, 10.5, 10.5, 11.5, 10.5, true, nil, nil, true)
+	assert(ok and math.abs(time - CS) < 1e-9, ("half a cell of floor, half of bare ground: %.3f"):format(time or -1))
+end
 
 print("path_direction_spec: ok")

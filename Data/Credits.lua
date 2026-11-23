@@ -4,6 +4,9 @@ local _, ns = ...
 
 ns.Credits = {
 	players = {
+		{ name = "alexaroth", what = "One destination pin on OpenMap" },
+		{ name = "alexaroth", what = "Routes to the zone clicked in OpenMap" },
+		{ name = "icouldonlygetthisname", what = "Arrow choice for RestedXP journeys" },
 		{ name = "user_u3k9hweaatfhnjs0", what = "Profession trainer icons, weapon masters and service filters" },
 		{ name = "treadpool", what = "Undercity journeys leave the city by a lift" },
 		{ name = "user_g496wu46adiwjuc5", what = "Hearthstone map button respects Use Hearthstone" },
@@ -17,6 +20,7 @@ ns.Credits = {
 		{ name = "Hatemost", what = "Resume the RestedXP guide from a macro" },
 		{ name = "JaidyEU", what = "Resume the RestedXP guide from a macro" },
 		{ name = "Chulf58", what = "Walking times between places for other addons" },
+		{ name = "Chulf58", what = "Walking paths for other addons to guide along" },
 		{ name = "embiem", what = "Separate Hearthstone and class teleport switches" },
 		{ name = "InfamousMunky", what = "The Hearthstone switch outside settings" },
 		{ name = "A player", what = "Journeys avoid opposing-faction guarded lifts" },
@@ -159,5 +163,11 @@ ns.Credits = {
 		{ name = "Ding! by Yendi", what = "Walks that keep out of zones far above your level" },
 		{ name = "Travelcraft (CurseForge)", what = "Rides that shorten walks through high-level zones" },
 		{ name = "BV Addon Suite - Routing", what = "Walks that start on the floor you are standing on" },
+		{ name = "ReavyTools by Reavy (CurseForge)", what = "Start a Shortest Path journey from Zygor's guide" },
+		{
+			name = "Zygor's Tweaks by ScaryLarryGames (CurseForge)",
+			what = "Read the active waypoint from Zygor's arrow and follow pointer changes",
+		},
+		{ name = "Azeroth Waypoint by MorningStarGG", what = "Refresh the waypoint title when Zygor's step changes" },
 	},
 }

@@ -111,19 +111,27 @@ local function Suppress()
 	frame:EnableMouse(false)
 end
 
--- The arrow takeover alone: a player may keep RestedXP's arrow while still following its guide. RestedXP's arrow
--- stands down only while ours leads (UI/Arrow.lua): a journey still searching for its route has no arrow to show yet.
-local function HoldArrow()
-	if (ns.db and ns.db.restedxpHideArrow == false) or not ns.ArrowLeads() then
-		Restore()
-	else
-		Suppress()
-	end
-end
-
 local function Integrated()
 	local frontend = AdventureGuideForever and AdventureGuideForever.API
 	return frontend ~= nil and type(frontend.RestedXPIntegrated) == "function" and frontend.RestedXPIntegrated() == true
+end
+
+local function OwnsJourney()
+	return ns.JourneyOwner and ns.JourneyOwner() == OWNER
+end
+
+local function HoldArrow()
+	local hide
+	if Integrated() then
+		hide = ns.db.restedxpHideArrow ~= false
+	else
+		hide = ns.db.restedxpArrow == "shortestPath" and OwnsJourney() and not UnitIsDeadOrGhost("player")
+	end
+	if hide and ns.ArrowLeads() then
+		Suppress()
+	else
+		Restore()
+	end
 end
 
 local function Sync()
@@ -233,11 +241,8 @@ local function Sync()
 				ns.SetStopQuests(OWNER, index, quests, actions)
 			end
 		end
-		-- RestedXP owns the arrow when Shortest Path is not drawing one of its own.
-		HoldArrow()
-	else
-		Restore()
 	end
+	HoldArrow()
 end
 
 -- Let the player hand control back after pausing a guide, without waiting for its next native update. Returns whether
@@ -265,6 +270,9 @@ function ns.RefreshRestedXP()
 		and type(rxp.UpdateGotoSteps) == "function"
 	then
 		hooked = rxp
+		watcher:RegisterEvent("PLAYER_DEAD")
+		watcher:RegisterEvent("PLAYER_ALIVE")
+		watcher:RegisterEvent("PLAYER_UNGHOST")
 		hooksecurefunc(rxp, "UpdateMap", Sync) -- taint-ok: RestedXP owns this addon table.
 		hooksecurefunc(rxp, "UpdateGotoSteps", Sync) -- taint-ok: RestedXP owns this addon table.
 		if type(rxp.ResetArrowPosition) == "function" then
@@ -287,7 +295,7 @@ end)
 
 -- Our arrow began or stopped leading: a route landed, a stop was reached or left, the arrow was switched off.
 hooksecurefunc(ns, "ArrowLeadChanged", function()
-	if hooked and ns.db and (API.CurrentStop(OWNER) or Integrated()) then
+	if hooked and ns.db then
 		HoldArrow()
 	end
 end)
@@ -298,8 +306,13 @@ ns.Init(function()
 		if event == "PLAYER_REGEN_ENABLED" then
 			self:UnregisterEvent(event)
 			Sync()
-		elseif name == "RXPGuides" then
-			ns.RefreshRestedXP()
+		elseif event == "ADDON_LOADED" then
+			if name == "RXPGuides" then
+				ns.RefreshRestedXP()
+			end
+		elseif OwnsJourney() then
+			ns.ArrowBearingChanged()
+			HoldArrow()
 		end
 	end)
 	ns.RefreshRestedXP()
