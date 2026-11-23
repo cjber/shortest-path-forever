@@ -251,7 +251,7 @@ local function Update(view)
 	view.mapID, view.width, view.height, view.scale, view.zoom, view.pinScale, view.stitched =
 		mapID, width, height, scale, zoom, pinScale, stitched
 	if view.frozen then
-		ShowFrozen(view)
+		ShowFrozen(view, view.frozen)
 	end
 	if first then
 		view.shown = true
@@ -404,8 +404,8 @@ function Canvas.Update(map)
 end
 
 ---@param view SPFCanvasView
-function ShowFrozen(view)
-	local frozen = view.frozen
+---@param frozen { mapID?: number, stitched?: boolean }
+function ShowFrozen(view, frozen)
 	view.layer:SetShown(view.frozenShown ~= false and view.mapID == frozen.mapID and view.stitched == frozen.stitched)
 end
 
@@ -431,7 +431,7 @@ function Canvas.SetShown(map, shown)
 		end
 		view.frozenShown = shown
 		if view.frozen then
-			ShowFrozen(view)
+			ShowFrozen(view, view.frozen)
 		else
 			view.layer:SetShown(shown)
 		end
