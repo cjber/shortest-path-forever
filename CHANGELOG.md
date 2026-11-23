@@ -10,11 +10,23 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
-## [1.45.4] - 2026-11-22
+## [1.45.4] - 2026-11-23
 
 ### Added
 
 - Choose the routed Shortest Path arrow, the RestedXP arrow, or both for standalone RestedXP guides in Guidance. Thanks to icouldonlygetthisname for the idea.
+
+### Changed
+
+- Walking routes respect the direction of one-way paths. (#1264)
+- A route to a known floor ends on the reachable approach if the final step is blocked. (#1264)
+
+### Fixed
+
+- **Walks reach Undercity's Royal Quarter, War Quarter and Apothecarium.** Their floors were taken for the bed of the water above the city, so walks to the people there stopped short or led the wrong way. (#1015)
+- **Walks use the Gnomeregan lift and the Searing Gorge scaffold lifts.** Walks to the ground below them, such as Gnomeregan's entrance and the Cauldron's lower levels, now ride the lift. (#1015)
+- **Walking lines skip drops and teleports.** The line stops at the ledge or portal and resumes at the landing. (#1015)
+- **Walks reach ground you can only drop down to.** The Caverns of Time floor and other ground reached only by dropping off a ledge was missing from the walking maps, so the player was placed on the ground far above it. (#1211)
 
 ## [1.45.3] - 2026-11-22
 
