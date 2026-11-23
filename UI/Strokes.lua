@@ -79,7 +79,7 @@ local minX, maxX, minY, maxY = 0, 1, 0, 1
 ---@field height number
 ---@field scale number
 ---@field square boolean?
----@field walkScale number?
+---@field walkSize number? breadcrumb size as a percent
 ---@field goal SPFPoint?
 ---@field goalRadius number -- the goal mark's radius on the minimap
 ---@field colors table<SPFMode, colorRGBA>
@@ -479,8 +479,11 @@ local Project = Strokes.Project
 ---@return number? x, number? y, boolean? edge the goal is off the minimap and its mark waits on the rim
 function Strokes.Minimap(buffer, paths, view)
 	Begin(buffer, view.scale)
-	local walkScale = view.walkScale or 1
-	dot, dotRim = dot * walkScale, dotRim * walkScale
+	local walkSize = view.walkSize
+	if type(walkSize) == "number" and walkSize == walkSize then
+		local walkScale = math.max(25, math.min(100, walkSize)) / 100
+		dot, dotRim = dot * walkScale, dotRim * walkScale
+	end
 	local x, y, map, radius, facing = view.x, view.y, view.map, view.radius, view.facing
 	local square, goal = view.square, view.goal
 	width, height = view.width, view.height

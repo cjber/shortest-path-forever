@@ -318,12 +318,12 @@ for i = 1, strokes.n do
 	check(strokes.alpha[i] == 1, "the minimap route stays at full strength")
 end
 local width, under, defaultCount = strokes.width[1], strokes.under[1], strokes.n
-Strokes.Minimap(strokes, approach, minimapView(player, { goal = first, walkScale = 1 }))
+Strokes.Minimap(strokes, approach, minimapView(player, { goal = first, walkSize = 100 }))
 check(
 	strokes.n == defaultCount and strokes.width[1] == width and strokes.under[1] == under,
 	"100% matches the old size"
 )
-local sx, sy = Strokes.Minimap(strokes, approach, minimapView(player, { goal = first, walkScale = 0.5 }))
+local sx, sy = Strokes.Minimap(strokes, approach, minimapView(player, { goal = first, walkSize = 50 }))
 check(sx == gx and sy == gy, "smaller breadcrumbs leave the goal in the same place")
 check(strokes.width[1] == width / 2 and strokes.under[1] == under / 2, "the whole breadcrumb shrinks")
 check(close(length(strokes, 1), width / 2), "breadcrumbs shrink along the path as well as across it")
@@ -381,7 +381,7 @@ local nearRim = {
 }
 Strokes.Minimap(strokes, nearRim, minimapView(player))
 check(strokes.n == 0, "a default breadcrumb starts too close to the rim")
-Strokes.Minimap(strokes, nearRim, minimapView(player, { walkScale = 0.5 }))
+Strokes.Minimap(strokes, nearRim, minimapView(player, { walkSize = 50 }))
 check(strokes.n == 1, "the smaller breadcrumb fits inside the rim")
 -- Another continent's points, a jump and a portal draw nothing there.
 local elsewhere = { point(0.1, 0.5), point(0.2, 0.5), point(0.3, 0.5), point(0.2, 0.5, 9) }
