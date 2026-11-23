@@ -9,8 +9,10 @@ from pathlib import Path
 
 try:
     from tools.forever_tools.fsio import atomic_write, publish
+    from tools.pack_nav_clearance import pack_clearance, restore_clearance
 except ModuleNotFoundError:
     from forever_tools.fsio import atomic_write, publish
+    from pack_nav_clearance import pack_clearance, restore_clearance
 
 ENTRY = re.compile(r'\t\t\[(\d+)\] = \{\n((?:\t\t\t"[A-Za-z0-9+/]*",\n)+)\t\t\},')
 SECTION = re.compile(r"^\t(\w+) = \{\n(.*?)^\t\},\n", re.MULTILINE | re.DOTALL)
@@ -97,9 +99,16 @@ def indexed_graph(source):
     return re.search(r"^\tgraphFormat = 1,$", source, re.MULTILINE) is not None
 
 
+def clearance_cells(source):
+    if "\tformat = 4," in source and "\tfloorFormat = 1," in source:
+        return int(re.search(r"^\tcells = (\d+),$", source, re.MULTILINE)[1])
+    return None
+
+
 def read_packed(path, map_id):
     source = path.read_text()
     binary_graph = indexed_graph(source)
+    cells = clearance_cells(source)
     fields = {field: {} for field in FIELDS}
     for part in sorted(path.parent.glob(f"Nav{map_id}_*.lua")):
         content = part.read_text()
@@ -113,6 +122,8 @@ def read_packed(path, map_id):
             raw = b"".join(zlib.decompress(base64.b64decode(value, validate=True)) for value in values)
             if field == "graph" and binary_graph:
                 raw = base64.b64encode(raw).rstrip(b"=")
+            if field == "floor" and cells:
+                raw = restore_clearance(raw, cells)
             fields[field][key] = raw.decode("ascii")
     counts = dict((field, int(count)) for field, count in re.findall(rf"({FIELD_PATTERN}) = (\d+)", source))
     if counts != {field: len(entries) for field, entries in fields.items() if field in counts}:
@@ -180,6 +191,7 @@ def write_bundle(root, sources, limit=PART_BYTES, extra=None):
             + f"---@type SPFNavData\nlocal data = ShortestPathForeverPathData[{map_id}]\n-- stylua: ignore start\n"
         )
         binary_graph = indexed_graph(source)
+        cells = clearance_cells(source)
         part, content = 1, header
         for key in sorted(set().union(*(values.keys() for values in fields.values()))):
             for field in FIELDS:
@@ -188,6 +200,8 @@ def write_bundle(root, sources, limit=PART_BYTES, extra=None):
                 raw = fields[field][key].encode("ascii")
                 if field == "graph" and binary_graph:
                     raw = base64.b64decode(raw + b"=" * (-len(raw) % 4), validate=True)
+                if field == "floor" and cells:
+                    raw = pack_clearance(raw, cells)
                 blocks = [
                     base64.b64encode(zlib.compress(raw[offset : offset + BLOCK_BYTES], 9)).decode("ascii")
                     for offset in range(0, len(raw), BLOCK_BYTES)

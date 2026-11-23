@@ -179,6 +179,11 @@ python3 tools/baker/terrain_field.py --root . --maps-dir /path/to/extract/maps -
 This rewrites only the `terrain` field, leaving graph, grid, height and floor byte-identical. `tools/baker/terrain.py`
 reads the pinned extractor's format (flat, float, uint16 and uint8 heights, and holes).
 
+The packer compacts the format 4 clearance tail without changing the raw bake. After the floor and drop
+records, `!` introduces two byte planes for layer-zero landings, one for blocked directions and one for
+centre-line-only directions. Each byte is one source node's mask. The remaining records keep their
+original encoding. Unpacking for a graph refresh restores all clearance records in bake order.
+
 Format 4 stores cover at each walkable layer's anchor. The baker records the ADT surface and the nearest
 overhead collision surface from WMO or doodad geometry in the extraction's sibling `vmaps/` directory.
 A layer can have both kinds of cover, such as a cave with a WMO ceiling under the terrain. Both heights

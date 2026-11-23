@@ -71,6 +71,23 @@ class NavigationPackingTest(unittest.TestCase):
             _, fields, *_ = read_packed(root / "Nav/Nav0.lua", 0)
             self.assertEqual(fields.get("ceiling"), {1: "BkrE"})
 
+    def test_format_four_packs_clearance_and_restores_raw_records(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            path = self.source(root)
+            floor = "A" * 12 + "AAAAIABAB"
+            source = path.read_text().replace('"GGG"', f'"{floor}"')
+            source = source.replace("\tcells = 67,", "\tcells = 2,\n\tformat = 4,\n\tfloorFormat = 1,")
+            path.write_text(source)
+            write_bundle(root, [path])
+            bundled = root / "Nav/Nav0.lua"
+            row = next(
+                line for line in (root / "Nav/Nav0_1.lua").read_text().splitlines() if "data.packed.floor" in line
+            )
+            packed = b"".join(zlib.decompress(base64.b64decode(block)) for block in re.findall(r'"([^"]+)"', row))
+            self.assertEqual(packed[:13], b"A" * 12 + b"!")
+            self.assertEqual(read_packed(bundled, 0)[1]["floor"], {2: floor})
+
     def test_replacing_one_map_preserves_other_maps(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

@@ -72,6 +72,13 @@ override.floor = {
 	enc(1, 3) .. header(3, 0) .. enc(1, 3) .. enc(0, 1) .. enc(16, 2) .. enc(2, 3) .. "BD" .. enc(0, 3) .. "AMB",
 }
 maps[46] = override
+local packedClearance = {}
+for key, value in pairs(override) do
+	packedClearance[key] = value
+end
+local prefix = override.floor[1]:sub(1, -4)
+packedClearance.floor = { prefix .. "!" .. string.char(16) .. string.rep("\000", 9) .. "AMB" }
+maps[47] = packedClearance
 _G.ShortestPathForeverPathData = maps
 local ns = {}
 assert(loadfile("Routing/PathGrid.lua"))("ShortestPathForever", ns)
@@ -116,4 +123,9 @@ assert(st.links[0].clearance[1] == 2 ^ 12, "narrow clearance survives floor deco
 local ks, nodes, costs = {}, {}, {}
 assert(Grid.neighbours(st, 0, 0, 0, 0, 1, 1, false, ks, nodes, costs) == 2)
 assert(nodes[1] == 3 and nodes[2] == 4, "a sparse override preserves both landings")
+local packed = assert(Grid.State(47))
+assert(Grid.grid(packed, 0))
+assert(Grid.neighbours(packed, 0, 0, 0, 0, 1, 1, false, ks, nodes, costs) == 1)
+assert(nodes[1] == 4, "the packed dry restriction only blocks its specified layer")
+assert(Grid.neighbours(packed, 0, 0, 0, 0, 1, 1, true, ks, nodes, costs) == 2)
 print("nav_directed_spec: ok")
