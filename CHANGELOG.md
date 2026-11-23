@@ -10,6 +10,13 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.45.5] - 2026-11-23
+
+### Fixed
+
+- With "Show direction arrow" off, TomTom's arrow no longer appears in its place while a journey follows its waypoint, so a route can show on the map and minimap with no arrow on screen. The setting's tooltip now says the route stays on the map and minimap when it is off.
+- Shift-clicking the world map past the edge of the zone it shows, where another map addon draws the land beyond, no longer plans a journey to that zone's edge. Shortest Path leaves that click to the map addon.
+
 ## [1.45.4] - 2026-11-23
 
 ### Added
