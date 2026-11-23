@@ -170,14 +170,14 @@ for _, pool in pairs(poolsByKey) do
 end
 combat = true
 fireEvent("PLAYER_REGEN_DISABLED")
-assert(not ns.Canvas.Watch(WorldMapFrame).layer:IsShown(), "combat hides the addon's map pins")
+assert(ns.Canvas.Watch(WorldMapFrame).layer:IsShown(), "combat keeps the addon's map pins as last drawn (#1302)")
 ns.RefreshMap()
 ns.RefreshMinimapPins()
 refreshMap()
 assert(combatAcquires == 0, "combat map refresh must defer pin creation")
 combat = false
 fireEvent("PLAYER_REGEN_ENABLED")
-assert(ns.Canvas.Watch(WorldMapFrame).layer:IsShown(), "deferred map refresh must restore hidden pins after combat")
+assert(ns.Canvas.Watch(WorldMapFrame).layer:IsShown(), "the map pins stay shown after combat")
 assert(active[template][1]:IsVisible(), "the docks are back")
 for _, pool in pairs(poolsByKey) do
 	pool.Acquire = nil

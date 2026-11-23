@@ -5,6 +5,7 @@ local function Constant(value)
 	end
 end
 
+_G.InCombatLockdown = Constant(false)
 local mapID, goal, plan, origin = 1440
 local map = {
 	GetMapID = function()

@@ -47,7 +47,7 @@ assert(not lines.active[1]:IsVisible(), "Turning off world map marks hides the r
 assert(ns.HasJourney(), "Hiding world map marks keeps the journey active")
 fireEvent("PLAYER_REGEN_DISABLED")
 ns.SetOption("worldMapMarks", true)
-assert(not prior:IsVisible(), "Enabling world map marks in combat leaves them hidden")
+assert(prior:IsVisible(), "Enabling world map marks in combat shows the route last drawn (#1302)")
 fireEvent("PLAYER_REGEN_ENABLED")
 checkGoalPin("World map marks enabled again")
 prior = goals.active[1]
