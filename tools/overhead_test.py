@@ -84,9 +84,11 @@ class OverheadTest(unittest.TestCase):
     @unittest.skipUnless(os.environ.get("NAV_MAPS"), "set NAV_MAPS to the extracted 71037 maps")
     def test_trade_district_building(self):
         sampler = ClusterSurfaces(os.environ["NAV_MAPS"], 0, 48, 30, 128)
-        ((height, kind),) = sampler.above(-8894, 611, 95)
-        self.assertEqual(kind, "structure")
-        self.assertAlmostEqual(height, 101.56, delta=0.01)
+        for floor, ceiling in [(76, 95.26), (96, 101.56)]:
+            with self.subTest(floor=floor):
+                ((height, kind),) = sampler.above(-8894, 611, floor)
+                self.assertEqual(kind, "structure")
+                self.assertAlmostEqual(height, ceiling, delta=0.01)
 
     @unittest.skipUnless(os.environ.get("NAV_MAPS"), "set NAV_MAPS to the extracted 71037 maps")
     def test_cave_witnesses(self):
