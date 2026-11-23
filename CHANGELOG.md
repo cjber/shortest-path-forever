@@ -15,6 +15,8 @@ optional `### For addon authors` subsection after a version's player bullets.
 ### Added
 
 - Choose the routed Shortest Path arrow, the RestedXP arrow, or both for standalone RestedXP guides in Guidance. Thanks to icouldonlygetthisname for the idea.
+- Walking routes turn blue underneath terrain, with deeper stretches shown in a stronger blue. A slightly larger breadcrumb marks the entrance, and the arrow and tracker show when to descend.
+- Change the size of the walking dots on the minimap under Map marks. Thanks to Nedula for the idea.
 
 ### Changed
 
