@@ -142,6 +142,13 @@ def nav_map_id(path):
     return int(match[1])
 
 
+def compress_blocks(raw):
+    return [
+        base64.b64encode(zlib.compress(raw[offset : offset + BLOCK_BYTES], 9)).decode("ascii")
+        for offset in range(0, max(len(raw), 1), BLOCK_BYTES)
+    ]
+
+
 def write_bundle(root, sources, limit=PART_BYTES, extra=None):
     # Validate every source before publishing or deleting the previous layout.
     sources = list(sources)
@@ -201,13 +208,12 @@ def write_bundle(root, sources, limit=PART_BYTES, extra=None):
                 if field == "graph" and binary_graph:
                     raw = base64.b64decode(raw + b"=" * (-len(raw) % 4), validate=True)
                 if field == "floor" and cells:
-                    raw = pack_clearance(raw, cells)
-                blocks = [
-                    base64.b64encode(zlib.compress(raw[offset : offset + BLOCK_BYTES], 9)).decode("ascii")
-                    for offset in range(0, len(raw), BLOCK_BYTES)
-                ]
-                if not blocks:
-                    blocks = [base64.b64encode(zlib.compress(b"", 9)).decode("ascii")]
+                    blocks = min(
+                        map(compress_blocks, pack_clearance(raw, cells)),
+                        key=lambda candidate: sum(len(block) + 4 for block in candidate),
+                    )
+                else:
+                    blocks = compress_blocks(raw)
                 line = f"data.packed.{field}[{key}] = {{" + ", ".join(f'"{block}"' for block in blocks) + "}\n"
                 if len((header + line).encode()) + 32 > limit:
                     raise ValueError(f"Map {map_id} cluster {key} exceeds the navigation file limit")

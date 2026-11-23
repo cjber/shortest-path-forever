@@ -632,6 +632,14 @@ local function decodeLinks(st, k, val, z, at, links, s, pos, masks, last, lpos)
 		)
 		at_drop = at_drop + 8
 	end
+	if fmt >= 4 and byte(s, at_drop) == 126 then -- packed clearance planes, including upper landings
+		local planes = { stride = last, masks = string.sub(s, at_drop + 1) }
+		for p = 1, #planes.masks, 2 * last + 1 do
+			planes[byte(planes.masks, p)] = p + 1
+		end
+		links.clearancePlanes = planes
+		return back
+	end
 	if fmt >= 4 and byte(s, at_drop) == 33 then -- packed floor clearance sentinel
 		links.clearanceWet = string.sub(s, at_drop + 1, at_drop + last)
 		links.clearanceNarrow = string.sub(s, at_drop + last + 1, at_drop + 2 * last)
@@ -920,7 +928,12 @@ local function gridSize(val, at, links, back)
 		bytes = bytes + 64
 	end
 	for node, link in pairs(links) do
-		if type(link) == "string" then
+		if node == "clearancePlanes" then
+			bytes = bytes + 128 + #link.masks
+			for _ in pairs(link) do
+				bytes = bytes + 32
+			end
+		elseif type(link) == "string" then
 			bytes = bytes + 64 + #link
 		else
 			bytes = bytes + 128 + #link * 32
@@ -1986,6 +1999,16 @@ end
 -- and a caller following a walk keeps them all: the first alone can be another floor than the walk's (#1015). With
 -- outC, each landing's cost goes there too: 0 for a walked step, a drop's whole yards otherwise.
 local function dryBlocked(links, node, direction, layer, offCentre)
+	if links.clearancePlanes then
+		local planes = links.clearancePlanes
+		local offset = planes[layer]
+		if not offset then
+			return false
+		end
+		local bit = directionBits[direction]
+		return floor(byte(planes.masks, offset + node) / bit) % 2 == 1
+			or (offCentre and floor(byte(planes.masks, offset + node + planes.stride) / bit) % 2 == 1)
+	end
 	if layer == 0 and links.clearanceWet then
 		local bit = directionBits[direction]
 		return floor(byte(links.clearanceWet, node + 1) / bit) % 2 == 1
@@ -2087,7 +2110,7 @@ local function neighbours(st, k, node, gx, gy, dx, dy, water, outK, outN, outC, 
 				local v = surface(st, tk, tlc, layer, h)
 				local cost = floor(entry / 16384) % 8192
 				local d = cost == 0
-					and (links.clearance or links.clearanceWet)
+					and (links.clearance or links.clearanceWet or links.clearancePlanes)
 					and abs(dx) <= 1
 					and abs(dy) <= 1
 					and DIRECTION[(dx + 1) * 3 + dy + 1]

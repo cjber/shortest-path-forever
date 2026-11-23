@@ -25,7 +25,6 @@
 	<Script file="Nav0_23.lua"/>
 	<Script file="Nav0_24.lua"/>
 	<Script file="Nav0_25.lua"/>
-	<Script file="Nav0_26.lua"/>
 	<Script file="Nav1.lua"/>
 	<Script file="Nav1_1.lua"/>
 	<Script file="Nav1_2.lua"/>
@@ -58,8 +57,6 @@
 	<Script file="Nav1_29.lua"/>
 	<Script file="Nav1_30.lua"/>
 	<Script file="Nav1_31.lua"/>
-	<Script file="Nav1_32.lua"/>
-	<Script file="Nav1_33.lua"/>
 	<Script file="Nav2991.lua"/>
 	<Script file="Nav2991_1.lua"/>
 </Ui>

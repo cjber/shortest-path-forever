@@ -79,6 +79,26 @@ end
 local prefix = override.floor[1]:sub(1, -4)
 packedClearance.floor = { prefix .. "!" .. string.char(16) .. string.rep("\000", 9) .. "AMB" }
 maps[47] = packedClearance
+local layerPlanes = {}
+for key, value in pairs(override) do
+	layerPlanes[key] = value
+end
+-- Layer zero needs water. Layer one allows dry travel only on the centre line.
+local zeros = string.rep("\000", 4)
+layerPlanes.floor = {
+	prefix
+		.. "~"
+		.. string.char(0, 16)
+		.. zeros
+		.. "\000"
+		.. zeros
+		.. string.char(1)
+		.. "\000"
+		.. zeros
+		.. string.char(16)
+		.. zeros,
+}
+maps[48] = layerPlanes
 _G.ShortestPathForeverPathData = maps
 local ns = {}
 assert(loadfile("Routing/PathGrid.lua"))("ShortestPathForever", ns)
@@ -128,4 +148,9 @@ assert(Grid.grid(packed, 0))
 assert(Grid.neighbours(packed, 0, 0, 0, 0, 1, 1, false, ks, nodes, costs) == 1)
 assert(nodes[1] == 4, "the packed dry restriction only blocks its specified layer")
 assert(Grid.neighbours(packed, 0, 0, 0, 0, 1, 1, true, ks, nodes, costs) == 2)
+local planes = assert(Grid.State(48))
+assert(Grid.grid(planes, 0))
+assert(Grid.neighbours(planes, 0, 0, 0, 0, 1, 1, false, ks, nodes, costs) == 1 and nodes[1] == 4)
+assert(Grid.neighbours(planes, 0, 0, 0, 0, 1, 1, false, ks, nodes, costs, true) == 0)
+assert(Grid.neighbours(planes, 0, 0, 0, 0, 1, 1, true, ks, nodes, costs) == 2)
 print("nav_directed_spec: ok")

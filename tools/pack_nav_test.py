@@ -6,6 +6,7 @@ import zlib
 from pathlib import Path
 
 from tools.pack_nav import BLOCK_BYTES, read_map, read_packed, write_bundle
+from tools.pack_nav_clearance import pack_clearance, restore_clearance, write_records
 
 
 class NavigationPackingTest(unittest.TestCase):
@@ -87,6 +88,14 @@ class NavigationPackingTest(unittest.TestCase):
             packed = b"".join(zlib.decompress(base64.b64decode(block)) for block in re.findall(r'"([^"]+)"', row))
             self.assertEqual(packed[:13], b"A" * 12 + b"!")
             self.assertEqual(read_packed(bundled, 0)[1]["floor"], {2: floor})
+
+    def test_layer_planes_restore_each_target_layers_wet_and_narrow_bits(self):
+        prefix = b"A" * 12
+        raw = prefix + write_records([(0, 1, 0), (1, 2, 1), (1, 11, 2), (3, 8, 1)])
+        sparse, planes = pack_clearance(raw, 2)
+        self.assertTrue(planes.startswith(prefix + b"~"))
+        self.assertEqual(restore_clearance(planes, 2), raw)
+        self.assertEqual(restore_clearance(sparse, 2), raw)
 
     def test_replacing_one_map_preserves_other_maps(self):
         with tempfile.TemporaryDirectory() as temporary:

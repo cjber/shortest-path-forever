@@ -6,6 +6,7 @@ ALPHABET = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 SYMBOLS = bytes.maketrans(ALPHABET, bytes(range(64)))
 MOVES = ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1))
 MARKER = b"!"
+LAYER_PLANES = b"~"
 
 
 class Reader:
@@ -76,10 +77,12 @@ def write_records(records):
 
 
 def pack_clearance(raw, cells):
+    """Yield equivalent packed layouts for the zlib producer to compare."""
     reader = Reader(raw)
     offset, nodes = clearance_offset(reader, cells)
     if offset == len(raw):
-        return raw
+        yield raw
+        return
     wet, narrow, upper = bytearray(nodes), bytearray(nodes), []
     for node, direction, layer in reader.restrictions():
         if layer:
@@ -88,17 +91,37 @@ def pack_clearance(raw, cells):
             narrow[node] |= 1 << (direction - 8)
         else:
             wet[node] |= 1 << direction
-    return raw[:offset] + MARKER + wet + narrow + write_records(upper)
+    prefix = raw[:offset]
+    yield prefix + MARKER + wet + narrow + write_records(upper)
+    if upper:
+        # Keep wet/narrow masks contiguous so the reader can address them by layer and node.
+        layers = {0: wet + narrow}
+        for node, direction, layer in upper:
+            plane = layers.get(layer)
+            if plane is None:
+                plane = layers[layer] = bytearray(2 * nodes)
+            slot = node + (nodes if direction >= 8 else 0)
+            plane[slot] |= 1 << (direction % 8)
+        yield prefix + LAYER_PLANES + b"".join(bytes([layer]) + plane for layer, plane in sorted(layers.items()))
 
 
 def restore_clearance(raw, cells):
-    prefix, marker, suffix = raw.partition(MARKER)
+    # Search the ASCII baker prefix only. The masks themselves can contain either marker.
+    offset = min((pos for marker in (MARKER, LAYER_PLANES) if (pos := raw.find(marker)) >= 0), default=len(raw))
+    prefix, marker, suffix = raw[:offset], raw[offset : offset + 1], raw[offset + 1 :]
     if not marker:
         return raw
     nodes = cells * cells + Reader(prefix).take(3)
-    records = list(Reader(suffix[2 * nodes :]).restrictions())
-    for flag, plane in ((0, suffix[:nodes]), (8, suffix[nodes : 2 * nodes])):
-        for node, mask in enumerate(plane):
-            if mask:
-                records.extend((node, direction + flag, 0) for direction in range(8) if mask & (1 << direction))
+    if marker == LAYER_PLANES:
+        stride = 1 + 2 * nodes
+        layers = ((suffix[pos], suffix[pos + 1 : pos + stride]) for pos in range(0, len(suffix), stride))
+        records = []
+    else:
+        layers = ((0, suffix[: 2 * nodes]),)
+        records = list(Reader(suffix[2 * nodes :]).restrictions())
+    for layer, masks in layers:
+        for flag, plane in ((0, masks[:nodes]), (8, masks[nodes:])):
+            for node, mask in enumerate(plane):
+                if mask:
+                    records.extend((node, direction + flag, layer) for direction in range(8) if mask & (1 << direction))
     return prefix + write_records(sorted(records))
