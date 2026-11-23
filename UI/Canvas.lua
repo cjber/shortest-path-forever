@@ -68,6 +68,8 @@ local CURSOR_REACH = 12
 ---@field height number
 ---@field scale number
 ---@field zoom number
+---@field frozen? { mapID?: number, stitched?: boolean } the map the pins were drawn for, while combat freezes them
+---@field frozenShown? boolean whether the pins show by the marks switch, kept while frozen
 ---@field pinScale number
 ---@field stitched boolean
 ---@field companionLayers? string
