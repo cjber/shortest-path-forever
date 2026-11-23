@@ -582,7 +582,7 @@ local function Create()
 	frame.Lines:SetWidth(ARRIVAL_WIDTH)
 	frame.Lines:SetJustifyH("CENTER")
 	frame.Lines:SetWordWrap(true)
-	frame.Lines:SetMaxLines(ARRIVAL_LINE_LIMIT + 1)
+	frame.Lines:SetMaxLines(ARRIVAL_LINE_LIMIT)
 	frame.Lines:Hide()
 	frame.ArrivalTitle = frame:CreateFontString(nil, "BACKGROUND", "GameFontNormal")
 	frame.ArrivalTitle:SetPoint("TOP", frame.Icon, "BOTTOM", 0, -8)
@@ -716,7 +716,10 @@ RefreshTravelLines = function(goal, x, y, map)
 		frame.linesFor, frame.linesDirty, frame.linesOff = goal, nil, off
 		frame.travelObjectives = off and "" or Joined(ns.StopObjectiveLines and ns.StopObjectiveLines(goal) or nil)
 	end
-	frame.linesInstruction = instruction
+	if frame.linesInstruction ~= instruction then
+		frame.linesInstruction = instruction
+		frame.Lines:SetMaxLines(ARRIVAL_LINE_LIMIT + (instruction and 1 or 0))
+	end
 	local text = frame.travelObjectives or ""
 	if instruction then
 		text = text ~= "" and instruction .. "\n" .. text or instruction
