@@ -682,3 +682,4 @@ L["Walks reach Undercity's Royal Quarter, War Quarter and Apothecarium."] =
 L["Minimap walking route size"] = "Размер пешего маршрута на мини-карте" -- mt
 L["Sizes the walking dots on the minimap."] =
 	"Меняет размер точек пешего маршрута на мини-карте." -- mt
+L["Descend underground"] = "Спуститесь под землю" -- mt

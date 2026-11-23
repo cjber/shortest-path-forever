@@ -38,7 +38,7 @@ local SQRT2 = math.sqrt(2)
 local START, GOAL = -1, -2
 local ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
-local floor, sqrt, huge, max, abs = math.floor, math.sqrt, math.huge, math.max, math.abs
+local floor, sqrt, huge, max, min, abs = math.floor, math.sqrt, math.huge, math.max, math.min, math.abs
 local yield = coroutine.yield
 
 -- Binary min-heap on parallel arrays, reset per search.
@@ -746,8 +746,13 @@ end
 local function clearEnd(st, P, j, point, outbound, water, limit, budget, real)
 	local fx, fy, k, node = own(st, point)
 	local cx, cy = P.x[j] + 0.5, P.y[j] + 0.5
+	local keepCover = not real and P.depth ~= nil
+	if keepCover and node and (Grid.terrainDepth(st, k, node) ~= nil) ~= (P.depth[j] ~= nil) then
+		return false
+	end
 	if outbound and node then
-		local tk, tn, time = toward(st, P, k, node, fx, fy, cx, cy, water, limit, budget, real, P.k[j], P.n[j])
+		local tk, tn, time =
+			toward(st, P, k, node, fx, fy, cx, cy, water, limit, budget, real, P.k[j], P.n[j], nil, keepCover)
 		return tk == P.k[j] and tn == P.n[j], time
 	end
 	-- With no start surface this reverse legality check cannot establish a directed outbound reference.
@@ -755,7 +760,8 @@ local function clearEnd(st, P, j, point, outbound, water, limit, budget, real)
 	if outbound and real then
 		return false
 	end
-	local tk, tn, time = toward(st, P, P.k[j], P.n[j], cx, cy, fx, fy, water, limit, budget, real, k, node)
+	local tk, tn, time =
+		toward(st, P, P.k[j], P.n[j], cx, cy, fx, fy, water, limit, budget, real, k, node, nil, keepCover)
 	if not tk then
 		return tn == true, time
 	end
@@ -770,8 +776,11 @@ local function clearChord(st, P, from, to, water, limit, budget)
 	if not node then
 		return false
 	end
+	if P.depth and (Grid.terrainDepth(st, k, node) ~= nil) ~= (P.depth[1] ~= nil) then
+		return false
+	end
 	local tx, ty, gk, goal = own(st, to)
-	local tk, tn = toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget, nil, gk, goal)
+	local tk, tn = toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget, nil, gk, goal, nil, P.depth ~= nil)
 	if not tk then -- a goal with no surface in its cell, reached across cells with none, as clearEnd allows
 		return tn == true
 	end
@@ -1106,6 +1115,14 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 	-- Points carry the height of the surface they stand on; the returned cost uses real walking/swimming time, with
 	-- hazards affecting only the route chosen. points.wet is the yards over water, which call for Water Walking.
 	local n = #P.x
+	if st.D.ceiling and ns.PathCeilingAt then
+		local depth = {}
+		for i = 1, n do
+			depth[i] = Grid.terrainDepth(st, P.k[i], P.n[i])
+			tick()
+		end
+		P.depth = depth
+	end
 	local startOK, startTime = clearEnd(st, P, 1, from, true, P.w[1] > 0, limitOver(P, 1, 1), nil, true)
 	local goalOK, goalTime =
 		clearEnd(st, P, n, to, false, P.w[n] - (P.w[n - 1] or 0) > 0, limitOver(P, n, n), nil, true)
@@ -1205,6 +1222,38 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 	-- The pull keeps both ends of a link, so only consecutive points span one.
 	for i = 2, #drawn do
 		points[i - 1].jump = links[drawn[i]] > links[drawn[i - 1]] and 1 or nil
+	end
+	if P.depth then
+		for i, j in ipairs(drawn) do
+			local point = points[i]
+			local cellX, cellY = floor((point.x - x0) / cs), floor((point.y - y0) / cs)
+			-- The endpoint can be off the grid and join the nearest cell. Only mark the cell the point is on.
+			if cellX == P.x[j] and cellY == P.y[j] then
+				point.depth = P.depth[j]
+			end
+		end
+		for i = 2, #points do
+			local a, b = points[i - 1], points[i]
+			if not a.jump and (a.depth == nil) ~= (b.depth == nil) then
+				local covered = drawn[b.depth and i or i - 1]
+				local cellX, cellY = P.x[covered], P.y[covered]
+				local ax, ay = (a.x - x0) / cs, (a.y - y0) / cs
+				local bx, by = (b.x - x0) / cs, (b.y - y0) / cs
+				local dx, dy = bx - ax, by - ay
+				local cutX, cutY
+				if floor(ax) ~= floor(bx) then
+					cutX = (cellX + ((dx > 0) ~= (b.depth ~= nil) and 1 or 0) - ax) / dx
+				end
+				if floor(ay) ~= floor(by) then
+					cutY = (cellY + ((dy > 0) ~= (b.depth ~= nil) and 1 or 0) - ay) / dy
+				end
+				-- At a corner, enter the covered cell after both crossings and leave it at the first.
+				local cut = cutX and cutY and (b.depth and max(cutX, cutY) or min(cutX, cutY)) or cutX or cutY
+				if cut then
+					a.depthCut = max(0, min(1, cut))
+				end
+			end
+		end
 	end
 	local wetYards = 0
 	for i = 2, #points do

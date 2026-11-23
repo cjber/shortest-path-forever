@@ -475,4 +475,51 @@ do
 	end
 end
 
+-- Under terrain, the same scheduled dots get depth color and one larger dot at the baked mouth.
+do
+	local makeColor = _G.CreateColor
+	_G.CreateColor = function(r, g, b)
+		return { r = r, g = g, b = b }
+	end
+	local route = {
+		mode = "walk",
+		points = {
+			{ map = 0, x = 0.1, y = 0.55, depthCut = 0.75 },
+			{ map = 0, x = 0.4, y = 0.55, depth = 5 },
+			{ map = 0, x = 0.6, y = 0.55, depth = 90, depthCut = 0.25 },
+			{ map = 0, x = 0.9, y = 0.55 },
+		},
+	}
+	local caveStrokes = Strokes.New()
+	local function Inspect(size, alpha)
+		local larger, surface, shallow, deep = 0, 0
+		for i = 1, caveStrokes.n do
+			if caveStrokes.color[i] == colors.walk then
+				surface = surface + 1
+				check(caveStrokes.width[i] == size, "surface dots keep their size")
+			else
+				shallow = shallow or caveStrokes.color[i].r
+				deep = caveStrokes.color[i].r
+				check(caveStrokes.alpha[i] == alpha, "cave color uses the normal route opacity")
+				if caveStrokes.width[i] > size then
+					larger = larger + 1
+				end
+			end
+		end
+		check(larger == 1 and surface > 0 and deep < shallow, "one mouth dot and stronger blue at depth")
+	end
+	Strokes.Map(caveStrokes, { route }, mapView({ current = 0 }))
+	Inspect(DOT, LATER)
+	local n = caveStrokes.n
+	local a, b = route.points[2], route.points[3]
+	local aDepth, bDepth = a.depth, b.depth
+	a.depth, b.depth = nil, nil
+	Strokes.Map(caveStrokes, { route }, mapView({ current = 0 }))
+	check(caveStrokes.n == n, "the entrance enlarges a scheduled dot without adding another")
+	a.depth, b.depth = aDepth, bDepth
+	Strokes.Minimap(caveStrokes, { route }, minimapView(point(0.5, 0.4), { walkSize = 50 }))
+	Inspect(DOT / 2, 1)
+	_G.CreateColor = makeColor
+end
+
 print(string.format("strokes_spec: %d checks ok", checks))

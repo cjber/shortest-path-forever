@@ -1766,6 +1766,22 @@ local function standing(st, k, lc, h)
 	return surface(st, k, lc, -1, h)
 end
 
+-- Decode overhead data only for a cluster the path already holds.
+local function ceilingForNode(st, k, node)
+	if not (st.D.ceiling and st.val[k] and ns.PathCeilingAt) then
+		return nil
+	end
+	local cell = cellOf(st, k, node)
+	local layer = node == cell and 0 or node - st.at[k][-(cell + 1)] + 1
+	local entries = st.ceiling[k]
+	if not entries then
+		local data = Quiet(unpackField, st.D, "ceiling", k + 1)
+		entries = data and Quiet(ns.DecodePathCeilings, data) or {}
+		st.ceiling[k] = entries
+	end
+	return ns.PathCeilingAt(entries, cell, layer)
+end
+
 -- Read the overhead surface of the nearest walkable layer in an already decoded cell.
 ---@param map number
 ---@param x number
@@ -1784,17 +1800,22 @@ local function ceiling(map, x, y, z)
 		return nil
 	end
 	local node = surface(st, k, lc, -1, z)
-	if not node then
-		return nil
+	if node then
+		return ceilingForNode(st, k, node)
 	end
-	local layer = node == lc and 0 or node - st.at[k][-(lc + 1)] + 1
-	local entries = st.ceiling[k]
-	if not entries then
-		local s = Quiet(unpackField, st.D, "ceiling", k + 1)
-		entries = s and Quiet(ns.DecodePathCeilings, s) or {}
-		st.ceiling[k] = entries
+	return nil
+end
+
+---@return number? depth
+local function terrainDepth(st, k, node)
+	local height, kind = ceilingForNode(st, k, node)
+	if height and kind == "terrain" then
+		local depth = height - st.z[k][node + 1]
+		if depth > 0 then
+			return depth
+		end
 	end
-	return ns.PathCeilingAt(entries, lc, layer)
+	return nil
 end
 
 -- How a point at height z stands against its cell's ground: "up" above it, "down" below it, nil on it. The point
@@ -2185,6 +2206,7 @@ end
 ---@field x number[] -- global cell x of each entry
 ---@field y number[] -- global cell y of each entry
 ---@field z number[] -- surface height captured during refinement
+---@field depth number[]? -- positive terrain cover for each entry on a map that records ceilings
 ---@field w number[] -- water entries up to each entry
 ---@field t number[] -- walking time up to each entry, in running yards
 ---@field k number[] -- cluster of each entry
@@ -2223,6 +2245,7 @@ end
 ---@param budget number?
 ---@return boolean
 local function sight(st, P, a, b, water, road, limit, budget, roadFactor)
+	local underground = P.depth and P.depth[a] ~= nil
 	local factor = limit and P.factor
 	local swim = P.swim or st.swim
 	local ax, ay, bx, by = P.x[a], P.y[a], P.x[b], P.y[b]
@@ -2258,7 +2281,11 @@ local function sight(st, P, a, b, water, road, limit, budget, roadFactor)
 		for i = 1, count do
 			for j = 1, neighbours(st, fk[i], fn[i], x, y, mx, my, water, bk, bn, nil, offCentre) do
 				local nk, nn = bk[j], bn[j]
-				if not (road and roadNode(st, nk, nn) == 0) and not (factor and factor(nk, nn) > limit) then
+				if
+					not (road and roadNode(st, nk, nn) == 0)
+					and not (factor and factor(nk, nn) > limit)
+					and (not P.depth or (terrainDepth(st, nk, nn) ~= nil) == underground)
+				then
 					local spent = fs[i]
 					if budget then
 						-- A pulled segment that leaves the road is charged the off-road preference too: a straight cut
@@ -2342,8 +2369,10 @@ local sightCosts = {}
 ---@param wk number? -- the cluster and node wanted in the end's cell
 ---@param wn number?
 ---@param sightOnly? boolean -- test only decoded single-surface ground, without slicing
+---@param keepCover? boolean -- drawing only: do not take a shortcut across a different kind of cover
 ---@return number|nil, number|boolean, number? -- reached surface or bare status, and complete connector time
-local function toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget, real, wk, wn, sightOnly)
+local function toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget, real, wk, wn, sightOnly, keepCover)
+	local underground = keepCover and terrainDepth(st, k, node) ~= nil
 	local factor = limit and P.factor
 	local roadFactor = not real and budget and P.roadFactor
 	local swim = P.swim or st.swim
@@ -2413,7 +2442,11 @@ local function toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget, real
 					for j = 1, neighbours(st, lk, ln, x, y, mx, my, water, bk, bn, costs, offCentre) do
 						landed = true
 						local nk, nn = bk[j], bn[j]
-						if (not costs or costs[j] == 0) and (not factor or factor(nk, nn) <= limit) then
+						if
+							(not costs or costs[j] == 0)
+							and (not factor or factor(nk, nn) <= limit)
+							and (not keepCover or (terrainDepth(st, nk, nn) ~= nil) == underground)
+						then
 							local ratio = roadFactor and (1 + (roadFactor - 1) * (1 - roadNode(st, lk, ln))) or 1
 							local wet = grid(st, lk)[ln + 1] == 2
 							local paced = pace(swim, fs[i], stretch, wet, budget, ratio)
@@ -2564,6 +2597,7 @@ local function smooth(st, P, ends)
 	-- pulled segment crosses one (a chord over it would be drawn as a slope the walk never stands on). D[i]: the links
 	-- among the walk's first i steps.
 	local D, PK, PN = { 0 }, P.k, P.n
+	local depth, boundary = P.depth, { 0 }
 	local dk, dn, dc = {}, {}, {}
 	for i = 2, n do
 		local ak, an, bk, bn = PK[i - 1], PN[i - 1], PK[i], PN[i]
@@ -2579,6 +2613,8 @@ local function smooth(st, P, ends)
 			end
 		end
 		D[i] = D[i - 1] + ((fell and not walked) and 1 or 0)
+		local crosses = depth and ((depth[i] == nil) ~= (depth[i - 1] == nil))
+		boundary[i] = boundary[i - 1] + (crosses and 1 or 0)
 	end
 	local keep = { 1 }
 	for i = 2, n - 1 do
@@ -2589,6 +2625,7 @@ local function smooth(st, P, ends)
 			or (PR and PR[i + 1] - PR[i] ~= PR[i] - PR[i - 1])
 			or D[i + 1] ~= D[i]
 			or D[i] ~= D[i - 1]
+			or boundary[i + 1] ~= boundary[i - 1]
 		then
 			keep[#keep + 1] = i
 		end
@@ -2619,7 +2656,7 @@ local function smooth(st, P, ends)
 		slice() -- a long walk measures many segments; each is one sight, and a sight may already slice to decode
 		local p, q = at[a] or 1, at[b] or n
 		-- No pulled segment spans a drop; the drop's own step joins its consecutive ledge and landing unchecked.
-		if D[q] > D[p] then
+		if D[q] > D[p] or boundary[q] > boundary[p] then
 			return false
 		end
 		-- A segment from or to an end point is the one drawn from the point itself, so the end's own check is the whole
@@ -2979,6 +3016,7 @@ ns.PathGrid = {
 	standing = standing,
 	ground = ground,
 	ceiling = ceiling,
+	terrainDepth = terrainDepth,
 	snap = snap,
 	roads = roads,
 	roadNode = roadNode,

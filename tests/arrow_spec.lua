@@ -29,6 +29,11 @@ env.CreateFrame = function(...)
 			fontString.sets = (fontString.sets or 0) + 1
 			return setText(fontString, value)
 		end
+		local setMaxLines = text.SetMaxLines
+		text.SetMaxLines = function(fontString, count)
+			fontString.maxLines = count
+			return setMaxLines(fontString, count)
+		end
 		return text
 	end
 	frame.GetEffectiveScale = function(self)
@@ -452,7 +457,6 @@ ns.ArrowBearingChanged()
 assert(frame.alpha == 1, "a hidden native quest marker leaves the route arrow visible")
 frame.OnHide(frame)
 ns.JourneyGuide.Stop()
-print("arrow_spec: ok")
 
 local owner
 ns.JourneyOwner = function()
@@ -552,3 +556,27 @@ ns.PointGuideArrow(nil)
 assert(liveMarker.cancelled, "clearing the journey cancels the marker poll")
 liveMarker.callback()
 assert(#markerPlaces == beforeClear, "and no later tick places the marker")
+
+-- A mouth on the current journey shows one instruction independently of quest objectives.
+owner = nil
+local cave = {
+	{ map = 1, x = 0, y = 0, depthCut = 0.75 },
+	{ map = 1, x = 20, y = 0, depth = 25 },
+	{ map = 1, x = 40, y = 0, depth = 40 },
+}
+ns.db.arrowObjectives = false
+driver.move({ map = 1, x = 0, y = 0, z = 0 })
+ns.PointGuideArrow(cave, place)
+assert(frame.Lines.text == "Descend underground", "the entrance has one line even with objectives off")
+assert(frame.Lines.maxLines == 4, "the cave cue gets a line beyond the three objective lines")
+driver.move({ map = 1, x = 13, y = 0, z = 0 })
+assert(not ns.AdvanceGuide(), "being near the next bend cannot pass the entrance early")
+assert(ns.GuideInstruction() == "Descend underground", "the cue stays up to the actual mouth")
+driver.move({ map = 1, x = 16, y = 0, z = 0 })
+assert(ns.AdvanceGuide(), "crossing the mouth advances guidance")
+ns.RefreshArrowLines()
+assert(not ns.GuideInstruction() and not frame.Lines:IsShown(), "the cue clears after crossing")
+assert(frame.Lines.maxLines == 3, "ordinary travel returns to the three-line cap")
+ns.PointGuideArrow(points, place)
+assert(not ns.GuideInstruction(), "rerouting to a surface path clears the cue")
+print("arrow_spec: ok")

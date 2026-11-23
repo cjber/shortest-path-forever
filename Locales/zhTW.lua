@@ -629,3 +629,4 @@ L["Walks reach Undercity's Royal Quarter, War Quarter and Apothecarium."] =
 	"步行路線可抵達幽暗城的皇家區、軍事區和鍊金房。" -- mt
 L["Minimap walking route size"] = "小地圖步行路線大小" -- mt
 L["Sizes the walking dots on the minimap."] = "調整小地圖上步行路線圓點的大小。" -- mt
+L["Descend underground"] = "下到地下" -- mt

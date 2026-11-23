@@ -3,8 +3,8 @@
   "producers": [
     {
       "source": "UI/Tracker.lua",
-      "sha256": "a9fe76bb8b5da3d22473e316eb7ce38ac61f8d763d0b80be7553fb08ac3402aa",
-      "review": "Read all of Tracker.lua, Tracker.xml and ForeverCore TrackerSection.Create, UpdateText and TrackerLine.SetInteractive. Confirmed pinned client Blizzard_ObjectiveTrackerModule.xml: ObjectiveTrackerModuleTemplate Header inherits ObjectiveTrackerModuleHeaderTemplate, whose Text uses ObjectiveTrackerHeaderFont. Blizzard_ObjectiveTrackerBlock.xml HeaderText uses ObjectiveTrackerLineFont; Blizzard_ObjectiveTrackerShared.xml ObjectiveTrackerLineTemplate Text uses ObjectiveTrackerLineFont, inherited without overrides by ShortestPathForeverTrackerLineTemplate. Bound every local phrase sent to section headers, block headers and rows, including Journey  %s · %s from #838. RefreshBlockText preserves these widgets. Client tracker text-size changes and optional Kaliels font overrides are outside the pinned native-font coverage. Menus, chat, tooltips and dynamic text from JourneyInfo, DockTitle, and DepartureText are excluded. Reviewed #1005: the transport row menus use ForeverCore.ContextMenu. Its tooltips and labels establish no tracker FontObject. Re-reviewed for #1240: the only edit is a TrackerMenu RestedXP presence guard; no producer text, SetHeader, SetText or SetFont call changed. Reviewed #1261: the unavailable-tracker message uses the client's on-screen notice area. It never writes to a tracker widget.",
+      "sha256": "097dd3341d9e473d10fcff878839795011e3c559fa708aabde37a20739064ccd",
+      "review": "Read all of Tracker.lua, Tracker.xml and ForeverCore TrackerSection.Create, UpdateText and TrackerLine.SetInteractive. Confirmed pinned client Blizzard_ObjectiveTrackerModule.xml: ObjectiveTrackerModuleTemplate Header inherits ObjectiveTrackerModuleHeaderTemplate, whose Text uses ObjectiveTrackerHeaderFont. Blizzard_ObjectiveTrackerBlock.xml HeaderText uses ObjectiveTrackerLineFont; Blizzard_ObjectiveTrackerShared.xml ObjectiveTrackerLineTemplate Text uses ObjectiveTrackerLineFont, inherited without overrides by ShortestPathForeverTrackerLineTemplate. Bound every local phrase sent to section headers, block headers and rows, including Journey  %s · %s from #838. RefreshBlockText preserves these widgets. Client tracker text-size changes and optional Kaliels font overrides are outside the pinned native-font coverage. Menus, chat, tooltips and dynamic text from JourneyInfo, DockTitle, and DepartureText are excluded. Reviewed #1005: the transport row menus use ForeverCore.ContextMenu. Its tooltips and labels establish no tracker FontObject. Re-reviewed for #1240: the only edit is a TrackerMenu RestedXP presence guard; no producer text, SetHeader, SetText or SetFont call changed. Reviewed #1261: the unavailable-tracker message uses the client's on-screen notice area. It never writes to a tracker widget. Reviewed #1263: RefreshTracker appends the active walk instruction to the current leg text via the same tracker line.",
       "bindings": [
         {
           "font": "ObjectiveTrackerHeaderFont",
@@ -40,6 +40,11 @@
           "font": "ObjectiveTrackerLineFont",
           "widget": "RideRows line.Text via ShortestPathForeverTrackerLineTemplate",
           "phrase": "arrives %s"
+        },
+        {
+          "font": "ObjectiveTrackerLineFont",
+          "widget": "RefreshTracker current walk row via ShortestPathForeverTrackerLineTemplate",
+          "phrase": "Descend underground"
         }
       ]
     },
@@ -87,8 +92,8 @@
     },
     {
       "source": "UI/Arrow.lua",
-      "sha256": "197b6d585d6cb5eed869eb6094ebc030a98f35822fad784b9f0679a400aa0188",
-      "review": "Read Create, ArrowLabel, distance updates, arrival labels, progress and cast prompt. MoverHint uses GameFontHighlightSmall and Distance uses GameFontNormal, including the formatted time-distance phrase. No later font override occurs. Dynamic objective lines, arrival titles, route titles and actions from helpers are excluded; this review does not claim coverage for their inserted text. Reviewed #1161: NativeMarkerAt and the shared-marker stand-down read C_Navigation and C_Map only; no FontString, FontObject or text change. Reviewed #1035: the cast prompt's secure button moved to UI/CastButton.lua and writes only GameTooltip text; no FontString, FontObject or text change here. Reviewed RestedXP arrow ownership: direction visibility changes without changing text, font objects or bindings. Reviewed #1251: the corpse-run exception in DirectionsShown is removed; visibility only, no FontString, FontObject or text change. Reviewed #1254: ArrowShown is split out of DirectionsShown, and the hidden-for-RestedXP path now places the native marker without drawing the frame; visibility and marker placement only, no FontString, FontObject or text change. The RestedXP arrow mode controls visibility and leaves the existing font bindings in place.",
+      "sha256": "eb722966776f2fd2a2e92019cac5c7572feab47dc8b1092855314f2b633e6413",
+      "review": "Read Create, ArrowLabel, distance updates, arrival labels, progress and cast prompt. MoverHint uses GameFontHighlightSmall and Distance uses GameFontNormal, including the formatted time-distance phrase. No later font override occurs. Dynamic objective lines, arrival titles, route titles and actions from helpers are excluded; this review does not claim coverage for their inserted text. Reviewed #1161: NativeMarkerAt and the shared-marker stand-down read C_Navigation and C_Map only; no FontString, FontObject or text change. Reviewed #1035: the cast prompt's secure button moved to UI/CastButton.lua and writes only GameTooltip text; no FontString, FontObject or text change here. Reviewed RestedXP arrow ownership: direction visibility changes without changing text, font objects or bindings. Reviewed #1251: the corpse-run exception in DirectionsShown is removed; visibility only, no FontString, FontObject or text change. Reviewed #1254: ArrowShown is split out of DirectionsShown, and the hidden-for-RestedXP path now places the native marker without drawing the frame; visibility and marker placement only, no FontString, FontObject or text change. The RestedXP arrow mode controls visibility and leaves the existing font bindings in place. Reviewed #1263: GuideInstruction is displayed by RefreshTravelLines on frame.Lines using GameFontHighlightSmall. The travel widget adds a fourth line only while the cave instruction is visible. The font and text binding stay the same.",
       "bindings": [
         {
           "font": "GameFontHighlightSmall",
@@ -99,6 +104,11 @@
           "font": "GameFontNormal",
           "widget": "ArrowLabel via frame.Distance",
           "phrase": "%s · %s"
+        },
+        {
+          "font": "GameFontHighlightSmall",
+          "widget": "RefreshTravelLines via frame.Lines",
+          "phrase": "Descend underground"
         }
       ]
     },
