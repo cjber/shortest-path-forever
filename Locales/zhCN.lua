@@ -57,8 +57,6 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"旅程以及其他插件从这里算起的估计，可以从法师的城市传送或传送：月光林地开始，并计入冷却时间。"
 L["Minimum teleport saving"] = "传送最少节省时间"
-L["The map sketches your walk while the journey plans."] =
-	"规划旅程时，地图会先勾勒出你的步行路线。" -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"只在职业传送至少节省这么多时间时使用。"
 L["Boat and Zeppelin Routes"] = "船只和飞艇航线"
@@ -627,3 +625,5 @@ L["You've taken %s flights."] = "你已搭乘飞行航线 %s 次。" -- mt
 L["You've taken your first flight."] = "你已首次搭乘飞行航线。" -- mt
 L["You've used %s portals or passages."] = "你已使用传送门或通道 %s 次。" -- mt
 L["You've used your first portal or passage."] = "你已首次使用传送门或通道。" -- mt
+L["Walks reach Undercity's Royal Quarter, War Quarter and Apothecarium."] =
+	"步行路线可到达幽暗城的皇家区、军事区和炼金房。" -- mt

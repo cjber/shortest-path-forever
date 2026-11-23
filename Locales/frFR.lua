@@ -59,8 +59,6 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"Les trajets, et les estimations d'autres addons depuis ici, peuvent commencer par une téléportation de mage vers une ville ou Téléportation : Reflet-de-Lune, temps de recharge compris." -- mt
 L["Minimum teleport saving"] = "Gain minimum de la téléportation" -- mt
-L["The map sketches your walk while the journey plans."] =
-	"La carte esquisse votre trajet à pied pendant la planification du voyage." -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"N'utiliser une téléportation de classe que si elle fait gagner au moins ce temps." -- mt
 L["Boat and Zeppelin Routes"] = "Routes des bateaux et zeppelins" -- mt
@@ -645,3 +643,5 @@ L["You've taken %s flights."] = "Vous avez pris %s vols." -- mt
 L["You've taken your first flight."] = "Vous avez pris votre premier vol." -- mt
 L["You've used %s portals or passages."] = "Vous avez emprunté %s portails ou passages." -- mt
 L["You've used your first portal or passage."] = "Vous avez emprunté un portail ou un passage pour la première fois." -- mt
+L["Walks reach Undercity's Royal Quarter, War Quarter and Apothecarium."] =
+	"Les itinéraires à pied atteignent le quartier royal, le quartier de la Guerre et l’Apothicarium de Fossoyeuse." -- mt
