@@ -62,6 +62,15 @@ class NavigationPackingTest(unittest.TestCase):
             write_bundle(root, [bundled])
             self.assertEqual(first, {p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()})
 
+    def test_ceiling_field_survives_packing(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            path = self.source(root)
+            path.write_text(path.read_text()[:-2] + '\tceiling = {\n\t\t[1] = "BkrE",\n\t},\n}\n')
+            write_bundle(root, [path])
+            _, fields, *_ = read_packed(root / "Nav/Nav0.lua", 0)
+            self.assertEqual(fields.get("ceiling"), {1: "BkrE"})
+
     def test_replacing_one_map_preserves_other_maps(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

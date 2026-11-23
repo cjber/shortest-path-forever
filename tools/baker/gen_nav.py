@@ -54,6 +54,7 @@ from baker.geometry import (
 )  # noqa: E402
 from baker.inputs import arguments, generator_digest, source_label  # noqa: E402
 from baker.measure import record, tile_hashes  # noqa: E402
+from baker.overhead import ClusterSurfaces  # noqa: E402
 from baker.terrain import encode_sparse as encode_terrain  # noqa: E402
 from baker.terrain import sample_cluster  # noqa: E402
 from baker.tiles import load_tile  # noqa: E402
@@ -124,6 +125,7 @@ FLOORS_OF = defaultdict(list)  # cluster -> its floor nodes, by (cell, height)
 LINKED_OF = defaultdict(list)  # cluster -> its nodes with LINKS, sorted
 FLOORS_AT = {}  # cell -> its floor nodes, lowest first
 TERRAIN = {}  # cluster -> its terrain field (tools/baker/terrain.py)
+CEILINGS = {}  # cluster -> encoded overhead surfaces
 KINDS = defaultdict(int)  # how the encoded links came out: step bits, one-way records, drops
 ROAD_CELLS = {}  # global cell -> road coverage (0 to 1) from Data/RoadCells.lua, as the runtime charges it
 
@@ -155,6 +157,27 @@ def configure(map_id, rows=None, cols=None):
 def enc(v, width):
     assert 0 <= v < 64**width, (v, width)
     return "".join(B64[(v >> (6 * (width - 1 - i))) & 63] for i in range(width))
+
+
+def encode_ceilings(surfaces):
+    """Encode sorted local cell/layer deltas and absolute ceiling heights at 1/8 yd, each with a source bit."""
+    symbols = []
+
+    def write(value):
+        while value >= 32:
+            symbols.append(B64[32 + value % 32])
+            value //= 32
+        symbols.append(B64[value])
+
+    previous = -1
+    for (cell, layer), (upper_z, kind) in sorted(surfaces.items()):
+        node = cell * 64 + layer
+        write(node - previous)
+        z = round(upper_z * 8)
+        signed = 2 * z if z >= 0 else -2 * z - 1
+        write(2 * signed + {"terrain": 0, "structure": 1}[kind])
+        previous = node
+    return "".join(symbols)
 
 
 def cluster_of_tile(rr, cc):
@@ -790,8 +813,6 @@ def rasterize_tile(rc):
     tx0, tx1, ty0, ty1 = cluster_box(k)
     ax0, ax1 = max(0, tx0 - LAYER_MARGIN), min(GW - 1, tx1 + LAYER_MARGIN)
     ay0, ay1 = max(0, ty0 - LAYER_MARGIN), min(GH - 1, ty1 + LAYER_MARGIN)
-    sx0, sx1 = max(0, tx0 - DROP_COLUMNS), min(GW - 1, tx1 + DROP_COLUMNS)
-    sy0, sy1 = max(0, ty0 - DROP_COLUMNS), min(GH - 1, ty1 + DROP_COLUMNS)
     layers = rasterize_layers(polys, adj, portal, (ax0, ax1, ay0, ay1))
 
     def linked(i, la, j, lb):
@@ -949,7 +970,17 @@ def rasterize_tile(rc):
         for z, _, (pa, _) in layers.get(i, ())
         if polys[pa].get("pocket") is not None
     ]
-    return rc, vals, zs, floors, links, masks, terrain, pockets
+    ceilings = ""
+    if MAPS:
+        source = ClusterSurfaces(MAPS, MAP, rr, cc, CELLS)
+        overhead = {}
+        for local, cell_surfaces in enumerate(cells):
+            for layer, (z, value, (_, (x, y))) in enumerate(cell_surfaces or ()):
+                upper = source.above(x, y, z, water=value == 2)
+                if upper is not None:
+                    overhead[local, layer] = upper
+        ceilings = encode_ceilings(overhead)
+    return rc, vals, zs, floors, links, masks, terrain, pockets, ceilings
 
 
 def step_ok(grid, cuts, ux, uy, vx, vy):
@@ -1095,7 +1126,7 @@ def reset_floors():
     """Empty what assemble_floors fills, so the grid can be assembled again after a tile is rasterized afresh."""
     for a in (FLOOR_CELL, FLOOR_VAL, FLOOR_Z, FLOOR_LAYER):
         del a[:]
-    for d in (LINKS, FREE, FLOORS_OF, LINKED_OF, FLOORS_AT):
+    for d in (LINKS, FREE, FLOORS_OF, LINKED_OF, FLOORS_AT, WET_STEPS, NARROW_STEPS):
         d.clear()
 
 
@@ -1696,6 +1727,9 @@ def emit(nodes, edges, grid, masks, out, name):
             for line in wrap("floor[k + 1]: " + " ".join(cast(str, encode_directed_floors.__doc__).split()), 110)
         ),
         *terrain_header(),
+        "-- ceiling[k + 1]: cell * 64 + layer deltas, starting at -1, then zigzag height times two plus kind.",
+        "--   Heights are in eighths of a yard, kind 0 is terrain and kind 1 is structure. Each integer uses",
+        "--   little-endian 5-bit groups with bit 5 marking continuation.",
         "ShortestPathForeverPathData = ShortestPathForeverPathData or {}",
         "",
         "---@type SPFNavData",
@@ -1718,6 +1752,7 @@ def emit(nodes, edges, grid, masks, out, name):
         ("height", heights),
         ("floor", floors),
         ("terrain", terrains),
+        ("ceiling", {k: field for k, field in CEILINGS.items() if field}),
     ):
         lines.append(f"\t{key} = {{")
         for k in sorted(table):
@@ -2156,6 +2191,7 @@ def main():
     out = args.out or f"Nav{map_id}.lua"
     configure(map_id, args.rows, args.cols)
     TERRAIN.clear()
+    CEILINGS.clear()
     print(
         f"map {map_id}: {len(TILES)} tiles, rows {ROWS.start}-{ROWS.stop - 1}, cols {COLS.start}-{COLS.stop - 1}, "
         f"grid {GW}x{GH}",
@@ -2175,7 +2211,7 @@ def main():
 
     def raster(todo):
         with multiprocessing.get_context("fork").Pool(jobs) as pool:  # workers inherit the pass-1 globals
-            for n, (rc, vals, zs, tf, tl, tile_masks, terrain, pockets) in enumerate(
+            for n, (rc, vals, zs, tf, tl, tile_masks, terrain, pockets, ceilings) in enumerate(
                 pool.imap(rasterize_tile, todo, chunksize=2)
             ):
                 kx, ky = divmod(cluster_of_tile(*rc), NY)
@@ -2188,6 +2224,7 @@ def main():
                         BASE_Z[row + j] = 0.0 if z is None else z
                 if terrain is not None:
                     TERRAIN[cluster_of_tile(*rc)] = terrain
+                CEILINGS[cluster_of_tile(*rc)] = ceilings
                 links = RawLinks()
                 links.extend(tl)
                 tiles[rc] = (tf, links, pockets)
@@ -2196,7 +2233,9 @@ def main():
 
     def assemble():
         reset_floors()
-        assemble_floors([f for t in tiles.values() for f in t[0]], (x for t in tiles.values() for x in t[1]), directed=True)
+        assemble_floors(
+            [f for t in tiles.values() for f in t[0]], (x for t in tiles.values() for x in t[1]), directed=True
+        )
 
     raster(order)
     while True:

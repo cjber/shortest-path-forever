@@ -494,6 +494,7 @@ ShortestPathForeverCharDB = nil
 ---@field graph string[]
 ---@field height string[]
 ---@field floor string[]
+---@field ceiling? string[] cluster overhead surfaces and their source kinds
 ---@field counts? table<string, number> generated entry counts for repacking integrity
 ---@field packed? table<string, table<number, string[]>> compressed blocks indexed by field and cluster
 ---@type table<number, SPFNavData>

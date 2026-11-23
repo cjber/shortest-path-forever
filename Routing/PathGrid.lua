@@ -218,6 +218,7 @@ local function State(map)
 			val = {}, -- [k] = node values (node + 1), false when the cluster has no data
 			moves = {}, -- [k][lc + 1] = outgoing mask in format 4, open moves and step flags in older formats
 			z = {}, -- [k][node + 1] = height of a walkable node
+			ceiling = {},
 			terrain = {}, -- [k][cell + 1] = the cell's ground layer, or false when it has floors over no terrain
 			at = {}, -- [k][node + 1] = a floor's local cell; [k][-(lc + 1)] = the cell's first floor node
 			links = {}, -- [k][node + 1] = { link, ... } steps besides the base grid's
@@ -930,7 +931,10 @@ local function evict(st, oldest)
 	decodedKB, decodedCount = decodedKB - st.sizes[oldest], decodedCount - 1
 	st.sizes[oldest], st.used[oldest] = nil, nil
 	st.val[oldest], st.moves[oldest], st.z[oldest], st.at[oldest], st.links[oldest] = nil, nil, nil, nil, nil
-	st.terrain[oldest] = nil
+	st.terrain[oldest], st.ceiling[oldest] = nil, nil
+	if st.D.packed and st.D.ceiling then
+		st.D.ceiling[oldest + 1] = nil
+	end
 	st.linksIn[oldest], st.road[oldest], st.roadEdges[oldest], st.roadIn[oldest] = nil, nil, nil, nil
 	st.decoded = st.decoded - 1
 end
@@ -1709,6 +1713,36 @@ local function standing(st, k, lc, h)
 		return val[lc + 1] ~= 0 and lc or nil, 0
 	end
 	return surface(st, k, lc, -1, h)
+end
+
+-- Read the overhead surface of the nearest walkable layer in an already decoded cell.
+---@param map number
+---@param x number
+---@param y number
+---@param z number
+---@return number? height
+---@return "terrain"|"structure"|nil kind
+local function ceiling(map, x, y, z)
+	local st = states[map]
+	if not st or not st.D.ceiling then
+		return nil
+	end
+	local k, lc = locate(st, x, y)
+	if not k or not st.val[k] then
+		return nil
+	end
+	local node = surface(st, k, lc, -1, z)
+	if not node then
+		return nil
+	end
+	local layer = node == lc and 0 or node - st.at[k][-(lc + 1)] + 1
+	local entries = st.ceiling[k]
+	if not entries then
+		local s = Quiet(unpackField, st.D, "ceiling", k + 1)
+		entries = s and Quiet(ns.DecodePathCeilings, s) or {}
+		st.ceiling[k] = entries
+	end
+	return ns.PathCeilingAt(entries, lc, layer)
 end
 
 -- How a point at height z stands against its cell's ground: "up" above it, "down" below it, nil on it. The point
@@ -2876,6 +2910,7 @@ ns.PathGrid = {
 	locate = locate,
 	standing = standing,
 	ground = ground,
+	ceiling = ceiling,
 	snap = snap,
 	roads = roads,
 	roadNode = roadNode,
