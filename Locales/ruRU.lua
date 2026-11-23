@@ -61,8 +61,6 @@ L["Journeys can start with your Hearthstone or Astral Recall. Turn it off to sav
 L["Journeys, and other addons' estimates from here, can start with a mage's city teleport or Teleport: Moonglade, cooldown counted."] =
 	"Маршруты, а также оценки других модификаций отсюда, могут начинаться с телепорта мага в город или заклинания «Телепортация: Лунная поляна» с учетом восстановления."
 L["Minimum teleport saving"] = "Минимальная экономия от телепорта"
-L["The map sketches your walk while the journey plans."] =
-	"Карта набрасывает ваш пеший путь, пока планируется маршрут." -- mt
 L["Only use a class teleport when it saves at least this much time."] =
 	"Использовать классовый телепорт, только если он экономит не меньше этого времени."
 L["Boat and Zeppelin Routes"] = "Маршруты кораблей и дирижаблей"
@@ -679,3 +677,5 @@ L["You've used %s portals or passages."] =
 	"Вы воспользовались порталами или переходами %s раз." -- mt
 L["You've used your first portal or passage."] =
 	"Вы впервые воспользовались порталом или переходом." -- mt
+L["Walks reach Undercity's Royal Quarter, War Quarter and Apothecarium."] =
+	"Пешие маршруты ведут в Королевский квартал, Военный квартал и Аптекарский квартал Подгорода." -- mt
