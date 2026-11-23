@@ -679,3 +679,6 @@ L["You've used your first portal or passage."] =
 	"Вы впервые воспользовались порталом или переходом." -- mt
 L["Walks reach Undercity's Royal Quarter, War Quarter and Apothecarium."] =
 	"Пешие маршруты ведут в Королевский квартал, Военный квартал и Аптекарский квартал Подгорода." -- mt
+L["Minimap walking route size"] = "Размер пешего маршрута на мини-карте" -- mt
+L["Sizes the walking dots on the minimap."] =
+	"Меняет размер точек пешего маршрута на мини-карте." -- mt

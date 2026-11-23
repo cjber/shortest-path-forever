@@ -93,6 +93,7 @@
 ---@field roadDetour number
 ---@field destinationPinSize number
 ---@field arrowScale number
+---@field minimapRouteScale number
 ---@field arrowDirect boolean
 ---@field arrowLabel string
 ---@field compassScale number
@@ -131,7 +132,7 @@
 ---@field Page fun(name: string)
 ---@field Section fun(name: string)
 ---@field Checkbox fun(key: string, name: string, tooltip?: string, onChanged?: fun(setting: SPFSetting?, value: boolean|number|string?))
----@field Scale fun(key: string, name: string, tooltip: string|nil, refresh: fun(), minimum?: number, step?: number)
+---@field Scale fun(key: string, name: string, tooltip: string|nil, refresh: fun(), minimum?: number, step?: number, maximum?: number)
 ---@field Dropdown fun(key: string, name: string, tooltip: string|nil, choices: SPFSettingsChoice[], onChanged?: fun(setting: SPFSetting?, value: boolean|number|string?))
 
 --- A settings page that lives in its own module: it opens its page and adds its rows through the shared builders.
@@ -398,6 +399,7 @@
 ---@field routeColor? string the walking route line's preset (Route.lua)
 ---@field mapLine? boolean the walking line draws on the world map (Route.lua)
 ---@field minimapLine? boolean the walking line draws on the minimap (Route.lua)
+---@field minimapRouteScale? number walking breadcrumb size as a percent
 ---@field laterLegs? boolean the world map draws the faded legs after the current stop (Route.lua)
 ---@field hideQuestPins? boolean the game's own quest markers give way to a journey's stops (QuestPins.lua)
 ---@field journeyTracker? boolean

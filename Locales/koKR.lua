@@ -650,3 +650,6 @@ L["You've used %s portals or passages."] = "차원문이나 통로를 %s번 이�
 L["You've used your first portal or passage."] = "차원문이나 통로를 처음 이용했습니다." -- mt
 L["Walks reach Undercity's Royal Quarter, War Quarter and Apothecarium."] =
 	"도보 경로로 언더시티의 왕실 지구, 전쟁 지구, 연금술 실험실에 갈 수 있습니다." -- mt
+L["Minimap walking route size"] = "미니맵 도보 경로 크기" -- mt
+L["Sizes the walking dots on the minimap."] =
+	"미니맵에 표시되는 도보 경로 점의 크기를 조절합니다." -- mt

@@ -65,6 +65,7 @@ Credit for the reports and requests behind the addon.
 
 | Who | What | Notes |
 |---|---|---|
+| Nedula | Minimap walking route size | CurseForge thread 8778371; #1281 |
 | alexaroth | One destination pin on OpenMap | Discord; #1267 |
 | alexaroth | Routes to the zone clicked in OpenMap | Discord; #1268 |
 | icouldonlygetthisname | Arrow choice for RestedXP journeys | GitHub, #1265 |

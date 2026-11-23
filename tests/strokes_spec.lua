@@ -317,6 +317,16 @@ clears(strokes, MINIMAP / 2, -MINIMAP / 2 + 0.4 * MINIMAP / 2, 8, 1, "minimap")
 for i = 1, strokes.n do
 	check(strokes.alpha[i] == 1, "the minimap route stays at full strength")
 end
+local width, under, defaultCount = strokes.width[1], strokes.under[1], strokes.n
+Strokes.Minimap(strokes, approach, minimapView(player, { goal = first, walkSize = 100 }))
+check(
+	strokes.n == defaultCount and strokes.width[1] == width and strokes.under[1] == under,
+	"100% matches the old size"
+)
+local sx, sy = Strokes.Minimap(strokes, approach, minimapView(player, { goal = first, walkSize = 50 }))
+check(sx == gx and sy == gy, "smaller breadcrumbs leave the goal in the same place")
+check(strokes.width[1] == width / 2 and strokes.under[1] == under / 2, "the whole breadcrumb shrinks")
+check(close(length(strokes, 1), width / 2), "breadcrumbs shrink along the path as well as across it")
 -- A goal off the minimap: its mark waits on the rim in its direction, its ring inside the face.
 local far = point(1.4, 0.5)
 local ex, ey, edge =
@@ -365,6 +375,14 @@ local rim, round = reach(false)
 local side, boxed = reach(true)
 check(round > 5 and rim <= MINIMAP / 2 - DOT / 2 - RIM, "every rim inside the round face")
 check(boxed > round and side <= MINIMAP / 2 - DOT / 2 - RIM, "a square face shows its corners too")
+-- The first dot's centre is just inside the smaller clip boundary but outside the default one.
+local nearRim = {
+	{ mode = "walk", points = { point(player.x + 66 / MINIMAP, player.y), point(player.x + 0.5, player.y) } },
+}
+Strokes.Minimap(strokes, nearRim, minimapView(player))
+check(strokes.n == 0, "a default breadcrumb starts too close to the rim")
+Strokes.Minimap(strokes, nearRim, minimapView(player, { walkSize = 50 }))
+check(strokes.n == 1, "the smaller breadcrumb fits inside the rim")
 -- Another continent's points, a jump and a portal draw nothing there.
 local elsewhere = { point(0.1, 0.5), point(0.2, 0.5), point(0.3, 0.5), point(0.2, 0.5, 9) }
 elsewhere[1].jump = 1

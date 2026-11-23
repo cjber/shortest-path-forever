@@ -645,3 +645,5 @@ L["You've used %s portals or passages."] = "Vous avez emprunté %s portails ou p
 L["You've used your first portal or passage."] = "Vous avez emprunté un portail ou un passage pour la première fois." -- mt
 L["Walks reach Undercity's Royal Quarter, War Quarter and Apothecarium."] =
 	"Les itinéraires à pied atteignent le quartier royal, le quartier de la Guerre et l’Apothicarium de Fossoyeuse." -- mt
+L["Minimap walking route size"] = "Taille de l’itinéraire à pied sur la minicarte" -- mt
+L["Sizes the walking dots on the minimap."] = "Règle la taille des points de l’itinéraire à pied sur la minicarte." -- mt

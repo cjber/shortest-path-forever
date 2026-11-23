@@ -79,6 +79,7 @@ local DEFAULTS = {
 	-- The walking line on each surface can be turned off without touching the journey's other guidance.
 	mapLine = true,
 	minimapLine = true,
+	minimapRouteScale = 100,
 	-- The faded legs after the stop being guided to stay on by default; a fresh route shows the whole journey.
 	laterLegs = true,
 	-- On, the game's own quest markers give way to a journey's stop pins (UI/QuestPins.lua); off, every marker stays.

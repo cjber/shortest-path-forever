@@ -79,6 +79,7 @@ local minX, maxX, minY, maxY = 0, 1, 0, 1
 ---@field height number
 ---@field scale number
 ---@field square boolean?
+---@field walkSize number? breadcrumb size as a percent
 ---@field goal SPFPoint?
 ---@field goalRadius number -- the goal mark's radius on the minimap
 ---@field colors table<SPFMode, colorRGBA>
@@ -90,8 +91,8 @@ ns.Strokes = Strokes
 -- One drawing at a time: the buffer being filled and the pen's state.
 ---@type SPFStrokes
 local out
----@type number, number, number, number, number, number
-local scale, width, height, dot, spacing, walked
+---@type number, number, number, number, number, number, number
+local scale, width, height, dot, dotRim, spacing, walked
 ---@type number, number, number?
 local fade, later, route
 -- Stop marks as x, y and reach, flat; near holds those the segment in hand passes.
@@ -127,7 +128,7 @@ local function Begin(buffer, viewScale, small, stitched)
 	wide = stitched == true
 	minX, maxX = wide and -math.huge or 0, wide and math.huge or 1
 	minY, maxY = minX, maxX
-	dot, spacing = small and SMALL_DOT or DOT, small and SMALL_SPACING or SPACING
+	dot, dotRim, spacing = small and SMALL_DOT or DOT, RIM, small and SMALL_SPACING or SPACING
 	walked, fade, later, route, circleCount = 0, 1, 1, nil, 0
 end
 
@@ -142,11 +143,11 @@ local function Stroke(x1, y1, x2, y2, color, isDot)
 	local ux, uy = 0, 0
 	if isDot then
 		local length = math.sqrt((x2 - x1) ^ 2 + (y2 - y1) ^ 2)
-		ux, uy = (x2 - x1) / length * RIM / scale, (y2 - y1) / length * RIM / scale
+		ux, uy = (x2 - x1) / length * dotRim / scale, (y2 - y1) / length * dotRim / scale
 	end
 	out.x1[n], out.y1[n], out.x2[n], out.y2[n], out.ux[n], out.uy[n] = x1, y1, x2, y2, ux, uy
 	out.width[n] = (isDot and dot or THICKNESS) / scale
-	out.under[n] = (isDot and dot + RIM * 2 or UNDER_THICKNESS) / scale
+	out.under[n] = (isDot and dot + dotRim * 2 or UNDER_THICKNESS) / scale
 	out.alpha[n], out.color[n], out.dot[n], out.route[n] = fade * later, color, isDot or false, route
 end
 
@@ -200,7 +201,7 @@ end
 
 -- A stop mark the dots leave a gap around: its radius plus what leaves STOP_GAP on screen past a dot's rim.
 local function Circle(x, y, radius)
-	Avoid(x, y, radius + (STOP_GAP + dot / 2 + RIM) / scale)
+	Avoid(x, y, radius + (STOP_GAP + dot / 2 + dotRim) / scale)
 end
 
 -- Clip before subdividing: even continent-sized walks need only the visible breadcrumbs. Dots sit at every SPACING
@@ -240,7 +241,7 @@ end
 -- A line between two map fractions, clipped to the map and the view. Over OpenMap's stitched map the view runs past
 -- the host map into its neighbours, so the map does not clip there.
 local function Line(x1, y1, x2, y2, color, dashed)
-	local reach = dot / 2 + RIM
+	local reach = dot / 2 + dotRim
 	local mx = dashed and reach / scale / width or 0
 	local my = dashed and reach / scale / height or 0
 	---@type number?, number?
@@ -478,6 +479,11 @@ local Project = Strokes.Project
 ---@return number? x, number? y, boolean? edge the goal is off the minimap and its mark waits on the rim
 function Strokes.Minimap(buffer, paths, view)
 	Begin(buffer, view.scale)
+	local walkSize = view.walkSize
+	if type(walkSize) == "number" and walkSize == walkSize then
+		local walkScale = math.max(25, math.min(100, walkSize)) / 100
+		dot, dotRim = dot * walkScale, dotRim * walkScale
+	end
 	local x, y, map, radius, facing = view.x, view.y, view.map, view.radius, view.facing
 	local square, goal = view.square, view.goal
 	width, height = view.width, view.height
@@ -504,7 +510,9 @@ function Strokes.Minimap(buffer, paths, view)
 			Circle((markX + 1) * width / 2, (markY - 1) * height / 2, view.goalRadius)
 		end
 	end
-	local inset = 1 - border / math.min(width, height)
+	local shortestSide = math.min(width, height)
+	local inset = 1 - border / shortestSide
+	local walkInset = inset - (dot + dotRim * 2) / scale / shortestSide
 	for _, path in ipairs(paths) do
 		walked = 0
 		fade = path.placeholder and 0.45 or 1
@@ -517,7 +525,7 @@ function Strokes.Minimap(buffer, paths, view)
 				if a.map == map and b.map == map and not a.jump then
 					local ax, ay = Project(a, x, y, radius, cosine, sine)
 					local bx, by = Project(b, x, y, radius, cosine, sine)
-					local within = walk and inset - (dot + RIM * 2) / scale / math.min(width, height) or inset
+					local within = walk and walkInset or inset
 					local low, high = ClipMinimap(ax, ay, bx - ax, by - ay, within, square)
 					Segment(
 						(ax + 1) * width / 2,

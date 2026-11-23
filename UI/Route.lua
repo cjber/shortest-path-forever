@@ -695,6 +695,7 @@ local function DrawMinimap(self)
 	local view = minimapView
 	view.x, view.y, view.map, view.radius, view.facing = x, y, map, radius, facing
 	view.width, view.height, view.scale, view.square = width, height, scale, square
+	view.walkSize = ns.db.minimapRouteScale
 	-- A goal with a known mark wears the wider ring (ns.SetJourneyRoute).
 	view.goal, view.goalRadius = goal, (goal and goal.look and MINIMAP_RING or MINIMAP_GOAL) / 2
 	local linePaths = paths

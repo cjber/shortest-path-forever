@@ -178,6 +178,28 @@ local pin, mini = active[lineTemplate][1], ShortestPathForeverMinimapRoute
 painted(pin, "world map")
 painted(mini, "minimap")
 assert(pin.used > 0 and mini.used > 0)
+local mapThickness, minimapThickness, goalWidth = pin.lines[1].thickness, mini.lines[1].thickness, mini.Goal:GetWidth()
+ns.db.minimapRouteScale = 50
+ns.RefreshRouteLines()
+pin = active[lineTemplate][1]
+assert(mini.lines[1].thickness == minimapThickness / 2, "changing size repaints the minimap breadcrumbs")
+assert(pin.lines[1].thickness == mapThickness, "the world map's breadcrumbs keep their size")
+assert(not mini.Goal.hidden and mini.Goal:GetWidth() == goalWidth, "the minimap goal keeps its size")
+ns.db.minimapRouteScale = nil
+ns.RefreshRouteLines()
+assert(mini.lines[1].thickness == minimapThickness, "an older save without the setting uses the default")
+for _, size in ipairs({ false, "bad", 0 / 0 }) do
+ ns.db.minimapRouteScale = size
+ ns.RefreshRouteLines()
+ assert(mini.lines[1].thickness == minimapThickness, "invalid saved sizes fall back to the default")
+end
+for _, size in ipairs({ { 0, 0.25 }, { 300, 1 } }) do
+ ns.db.minimapRouteScale = size[1]
+ ns.RefreshRouteLines()
+ assert(mini.lines[1].thickness == minimapThickness * size[2], "saved sizes stay within the slider range")
+end
+ns.db.minimapRouteScale = nil
+ns.RefreshRouteLines()
 -- Each surface's walking line has its own switch. Off draws no dots there; the other surface keeps its own, and
 -- the goal ring stays, so only the line goes.
 local function linesOn(owner)

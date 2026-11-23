@@ -4,6 +4,7 @@ local _, ns = ...
 
 ns.Credits = {
 	players = {
+		{ name = "Nedula", what = "Minimap walking route size" },
 		{ name = "alexaroth", what = "One destination pin on OpenMap" },
 		{ name = "alexaroth", what = "Routes to the zone clicked in OpenMap" },
 		{ name = "icouldonlygetthisname", what = "Arrow choice for RestedXP journeys" },

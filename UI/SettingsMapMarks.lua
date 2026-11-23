@@ -133,6 +133,15 @@ function MapMarks.Register(rows)
 		L["Draws the walking route on the minimap. With it off, the destination pin, arrow and tracker still guide you."],
 		ns.RefreshRouteLines
 	)
+	rows.Scale(
+		"minimapRouteScale",
+		L["Minimap walking route size"],
+		L["Sizes the walking dots on the minimap."],
+		ns.RefreshRouteLines,
+		25,
+		5,
+		100
+	)
 	rows.Checkbox(
 		"laterLegs",
 		L["Line to later stops"],
