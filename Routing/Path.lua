@@ -1106,6 +1106,14 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 	-- Points carry the height of the surface they stand on; the returned cost uses real walking/swimming time, with
 	-- hazards affecting only the route chosen. points.wet is the yards over water, which call for Water Walking.
 	local n = #P.x
+	if st.D.ceiling then
+		local depth = {}
+		for i = 1, n do
+			depth[i] = Grid.terrainDepth(st, P.k[i], P.n[i])
+			tick()
+		end
+		P.depth = depth
+	end
 	local startOK, startTime = clearEnd(st, P, 1, from, true, P.w[1] > 0, limitOver(P, 1, 1), nil, true)
 	local goalOK, goalTime =
 		clearEnd(st, P, n, to, false, P.w[n] - (P.w[n - 1] or 0) > 0, limitOver(P, n, n), nil, true)
@@ -1205,6 +1213,11 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 	-- The pull keeps both ends of a link, so only consecutive points span one.
 	for i = 2, #drawn do
 		points[i - 1].jump = links[drawn[i]] > links[drawn[i - 1]] and 1 or nil
+	end
+	if P.depth then
+		for i, j in ipairs(drawn) do
+			points[i].depth = P.depth[j]
+		end
 	end
 	local wetYards = 0
 	for i = 2, #points do

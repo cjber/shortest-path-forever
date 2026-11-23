@@ -22,6 +22,8 @@ ns.LaterAlpha = LATER_ALPHA
 -- Breadcrumbs stop short of each stop's mark, so the way runs up to a stop rather than under it: a dot is left out when
 -- its rim would come within STOP_GAP of the mark, on screen, at either end of a leg.
 local STOP_GAP = 2
+local DEPTH_SHADES = 16
+local depthColors = {}
 -- The minimap's player arrow is the game's own 16-unit arrow, centred on the player: the route begins outside its
 -- radius, so the arrow still shows which way the player faces (#583).
 local PLAYER_ARROW = 8
@@ -206,7 +208,7 @@ end
 
 -- Clip before subdividing: even continent-sized walks need only the visible breadcrumbs. Dots sit at every SPACING
 -- along the whole walk, walked carrying the distance across segment joins so bends never bunch them.
-local function Segment(x1, y1, x2, y2, low, high, color, dashed)
+local function Segment(x1, y1, x2, y2, low, high, color, dashed, aDepth, bDepth)
 	local dx, dy = x2 - x1, y2 - y1
 	local length = math.sqrt(dx * dx + dy * dy) * scale
 	if length == 0 then
@@ -233,14 +235,28 @@ local function Segment(x1, y1, x2, y2, low, high, color, dashed)
 	for distance = first, high * length - 0.001, spacing do
 		local t = distance / length
 		if count == 0 or Clear(count, x1 + t * dx, y1 + t * dy) then
-			Stroke(x1 + (t - half) * dx, y1 + (t - half) * dy, x1 + (t + half) * dx, y1 + (t + half) * dy, color, true)
+			local depth = aDepth and bDepth and aDepth + t * (bDepth - aDepth) or (t < 0.5 and aDepth or nil)
+			if not depth and t >= 0.5 then
+				depth = bDepth
+			end
+			local ink = color
+			if depth then
+				-- Quantize only the color. The surface data decides which dots are underground.
+				local shade = math.floor(depth / (depth + 20) * DEPTH_SHADES)
+				if not depthColors[shade] then
+					local strength = shade / DEPTH_SHADES
+					depthColors[shade] = CreateColor(0.62 - 0.38 * strength, 0.86 - 0.24 * strength, 1)
+				end
+				ink = depthColors[shade]
+			end
+			Stroke(x1 + (t - half) * dx, y1 + (t - half) * dy, x1 + (t + half) * dx, y1 + (t + half) * dy, ink, true)
 		end
 	end
 end
 
 -- A line between two map fractions, clipped to the map and the view. Over OpenMap's stitched map the view runs past
 -- the host map into its neighbours, so the map does not clip there.
-local function Line(x1, y1, x2, y2, color, dashed)
+local function Line(x1, y1, x2, y2, color, dashed, aDepth, bDepth)
 	local reach = dot / 2 + dotRim
 	local mx = dashed and reach / scale / width or 0
 	local my = dashed and reach / scale / height or 0
@@ -249,7 +265,7 @@ local function Line(x1, y1, x2, y2, color, dashed)
 	if low then
 		low, high = ClipAxis(y1, y2 - y1, low, high, minY + my, maxY - my)
 	end
-	Segment(x1 * width, -y1 * height, x2 * width, -y2 * height, low, high, color, dashed)
+	Segment(x1 * width, -y1 * height, x2 * width, -y2 * height, low, high, color, dashed, aDepth, bDepth)
 end
 
 -- A small cross where a hop with no line of its own (a portal, a preview across the sea) leaves or lands.
@@ -431,7 +447,7 @@ function Strokes.Map(buffer, paths, view)
 							Mark(x, y, color)
 						end
 					elseif px and x then
-						Line(px, py, x, y, color, path.mode == "walk")
+						Line(px, py, x, y, color, path.mode == "walk", previous.depth, point.depth)
 					end
 				end
 				previous, px, py = point, x, y
@@ -535,7 +551,9 @@ function Strokes.Minimap(buffer, paths, view)
 						low,
 						high,
 						color,
-						walk
+						walk,
+						a.depth,
+						b.depth
 					)
 				end
 			end
