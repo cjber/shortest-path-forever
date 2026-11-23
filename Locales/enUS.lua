@@ -58,3 +58,4 @@ L["Journey goal: %s"] = "Journey goal: %s"
 L["Rides to spend less time walking through %s (level %s)"] = "Rides to spend less time walking through %s (level %s)"
 L["Walk less in zones with a minimum level 4 or more above yours, even at your destination."] =
 	"Walk less in zones with a minimum level 4 or more above yours, even at your destination."
+L["Descend underground"] = "Descend underground"

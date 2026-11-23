@@ -24,6 +24,7 @@ local function TrackerHeight(value)
 end
 ---@class SPFTracker : SPFTrackerModule
 ---@field journeyTracker? boolean
+---@field guideInstruction? string
 ---@field metres? boolean
 ---@field riding? number|false
 ---@field second number
@@ -550,6 +551,7 @@ local function RefreshTracker(dockID, yards)
 	end
 	local riding = ns.db.tracker and ns.CurrentRide()
 	local journey = ns.HasJourney() and ns.db.journeyTracker ~= false
+	local instruction = journey and ns.GuideInstruction and ns.GuideInstruction() or nil
 	local second = (dockID or riding or journey) and math.floor(GetTime()) or 0
 	-- Compare scalar render inputs before allocating blocks or formatting rows. Unrelated tracker
 	-- layouts can replay the saved blocks; they never need to query timetables or rebuild the model.
@@ -562,6 +564,7 @@ local function RefreshTracker(dockID, yards)
 		and module.tracker == ns.db.tracker
 		and module.otherFaction == ns.db.otherFaction
 		and module.journeyTracker == ns.db.journeyTracker
+		and module.guideInstruction == instruction
 		and module.metres == ns.db.metres
 	then
 		return
@@ -570,6 +573,7 @@ local function RefreshTracker(dockID, yards)
 	module.journeyVersion, module.sightingVersion = ns.journeyVersion, ns.Timetable.Version()
 	module.tracker, module.otherFaction = ns.db.tracker, ns.db.otherFaction
 	module.journeyTracker, module.metres = ns.db.journeyTracker, ns.db.metres
+	module.guideInstruction = instruction
 	if dockID then
 		rows, kind = DockRows(dockID)
 		-- A dock whose every route is hidden (another faction's, with those routes off) has nothing to list, and a
@@ -595,6 +599,9 @@ local function RefreshTracker(dockID, yards)
 		for _, row in ipairs(journeyRows or {}) do
 			if row.mode then
 				row.text = LegText(row)
+			end
+			if instruction and row.current and row.mode == "walk" then
+				row.text = row.text .. "\n" .. instruction
 			end
 		end
 		blocks[#blocks + 1] = { key = "journey", title = JourneyTitle(journeyTitle), rows = journeyRows }

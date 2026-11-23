@@ -42,7 +42,9 @@ local ARRIVAL_WIDTH, ARRIVAL_TITLE_LINES, ARRIVAL_LINE_LIMIT = 240, 2, 3
 ---@field ArrivalLines FontString
 ---@field linesFor? SPFPoint the goal the travel lines were built from
 ---@field linesDirty? boolean the next draw reads the quest log again
----@field linesOff? boolean the travel lines are cleared by the switch
+---@field linesOff? boolean the travel objectives are disabled
+---@field linesInstruction? string the last walk instruction drawn
+---@field travelObjectives? string the travelling objective text read from the quest log
 ---@field arrivalFor? SPFPoint the stop the arrival lines were built from
 ---@field arrivalText? string the arrival lines already joined for the pin
 ---@field arrival? boolean the arrived stop's pin and lines show, with the arrow and distance hidden
@@ -190,6 +192,16 @@ local function PassesBends(x, y, point, last)
 	return true
 end
 
+-- Cave entry is a boundary on the active walking segment. Proximity to the bend alone can pass it too early.
+local function BeforeCave(a, b, x, y, map)
+	if not (a and b and a.map == map and b.map == map and not a.jump and not a.depth and b.depth) then
+		return false
+	end
+	local dx, dy = b.x - a.x, b.y - a.y
+	local along = (x - a.x) * dx + (y - a.y) * dy
+	return along < (a.depthCut or 0.5) * (dx * dx + dy * dy)
+end
+
 local function SightAim(x, y, map)
 	if not (x and y and map == target.map and target.z and index < #path - 1 and ns.PathGrid and ns.Floor) then
 		return nil
@@ -201,6 +213,9 @@ local function SightAim(x, y, map)
 	end
 	local height = ns.Floor.Height(map, x, y)
 	local before = path[index - 1]
+	if BeforeCave(before, target, x, y, map) then
+		return nil
+	end
 	if not height or height ~= target.z or (before and (before.map ~= map or before.z and before.z ~= height)) then
 		return nil
 	end
@@ -208,7 +223,7 @@ local function SightAim(x, y, map)
 	local last = index
 	for i = index + 1, math.min(#path - 1, index + AIM_AHEAD) do
 		local point = path[i]
-		if point.map ~= map or point.z ~= height then
+		if point.map ~= map or point.z ~= height or (point.depth == nil) ~= (target.depth == nil) then
 			break
 		end
 		last = i
@@ -458,7 +473,7 @@ local function Update(elapsed)
 			frame.Distance:SetText(text)
 		end
 	end
-	RefreshTravelLines(destination)
+	RefreshTravelLines(destination, x, y, map)
 	Settle(elapsed, easing, moved)
 end
 
@@ -567,7 +582,7 @@ local function Create()
 	frame.Lines:SetWidth(ARRIVAL_WIDTH)
 	frame.Lines:SetJustifyH("CENTER")
 	frame.Lines:SetWordWrap(true)
-	frame.Lines:SetMaxLines(ARRIVAL_LINE_LIMIT)
+	frame.Lines:SetMaxLines(ARRIVAL_LINE_LIMIT + 1)
 	frame.Lines:Hide()
 	frame.ArrivalTitle = frame:CreateFontString(nil, "BACKGROUND", "GameFontNormal")
 	frame.ArrivalTitle:SetPoint("TOP", frame.Icon, "BOTTOM", 0, -8)
@@ -662,28 +677,50 @@ ShowArrival = function(stop)
 	frame.ArrivalLines:SetShown(text ~= "")
 end
 
--- The same lines under the distance while the arrow leads, read again only when the goal or the quest log changes.
+-- Share the next walking instruction with the tracker without rereading the walking map.
+---@param x? number
+---@param y? number
+---@param map? number
+---@return string?
+function ns.GuideInstruction(x, y, map)
+	local before = index and path and path[index - 1]
+	if not (before and target and not before.depth and target.depth) then
+		return nil
+	end
+	if not x then
+		local currentX, currentY, _, currentMap = ns.JourneyPosition()
+		x, y, map = currentX, currentY, currentMap
+	end
+	if x and y and BeforeCave(before, target, x, y, map) then
+		return L["Descend underground"]
+	end
+	return nil
+end
+
+-- Read quest text only when its goal or settings change. A walk instruction is independent of quest objectives.
 ---@param goal SPFPoint?
-RefreshTravelLines = function(goal)
+---@param x? number
+---@param y? number
+---@param map? number
+RefreshTravelLines = function(goal, x, y, map)
 	if not frame then
 		return
 	end
-	-- The switch hides the stop's objectives under the arrow without touching the arrival pin's own lines.
-	if ns.db.arrowObjectives == false then
-		frame.linesFor, frame.linesDirty = nil, nil
-		if not frame.linesOff then
-			frame.linesOff = true
-			frame.Lines:SetText("")
-			frame.Lines:Hide()
-		end
+	local instruction = ns.GuideInstruction(x, y, map)
+	local off = ns.db.arrowObjectives == false
+	local changed = frame.linesFor ~= goal or frame.linesDirty or frame.linesOff ~= off
+	if not changed and frame.linesInstruction == instruction then
 		return
 	end
-	frame.linesOff = nil
-	if frame.linesFor == goal and not frame.linesDirty then
-		return
+	if changed then
+		frame.linesFor, frame.linesDirty, frame.linesOff = goal, nil, off
+		frame.travelObjectives = off and "" or Joined(ns.StopObjectiveLines and ns.StopObjectiveLines(goal) or nil)
 	end
-	frame.linesFor, frame.linesDirty = goal, nil
-	local text = Joined(ns.StopObjectiveLines and ns.StopObjectiveLines(goal) or nil)
+	frame.linesInstruction = instruction
+	local text = frame.travelObjectives or ""
+	if instruction then
+		text = text ~= "" and instruction .. "\n" .. text or instruction
+	end
 	if frame.Lines:GetText() ~= text then
 		frame.Lines:SetText(text)
 	end
@@ -801,7 +838,12 @@ function ns.AdvanceGuide()
 		return false
 	end
 	local advanced = false
-	while index < #path and map == target.map and (target.x - x) ^ 2 + (target.y - y) ^ 2 <= PASSED ^ 2 do
+	while
+		index < #path
+		and map == target.map
+		and (target.x - x) ^ 2 + (target.y - y) ^ 2 <= PASSED ^ 2
+		and not BeforeCave(path[index - 1], target, x, y, map)
+	do
 		index = index + 1
 		target = path[index]
 		advanced = true

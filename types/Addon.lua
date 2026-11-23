@@ -148,6 +148,7 @@
 ---@field z? number
 ---@field band? SPFBand -- the heights the player may be standing at, when a walk starts from where they stand (Band.lua)
 ---@field depth? number -- yards below terrain on this walk node
+---@field depthCut? number -- fraction of the outgoing walk segment where terrain cover changes
 ---@field jump? number
 ---@field label? string
 ---@field details? string[] -- a stop's own detail lines, in the caller's order (API.lua)

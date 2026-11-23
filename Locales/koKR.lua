@@ -653,3 +653,4 @@ L["Walks reach Undercity's Royal Quarter, War Quarter and Apothecarium."] =
 L["Minimap walking route size"] = "미니맵 도보 경로 크기" -- mt
 L["Sizes the walking dots on the minimap."] =
 	"미니맵에 표시되는 도보 경로 점의 크기를 조절합니다." -- mt
+L["Descend underground"] = "지하로 내려가세요" -- mt

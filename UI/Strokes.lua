@@ -22,7 +22,7 @@ ns.LaterAlpha = LATER_ALPHA
 -- Breadcrumbs stop short of each stop's mark, so the way runs up to a stop rather than under it: a dot is left out when
 -- its rim would come within STOP_GAP of the mark, on screen, at either end of a leg.
 local STOP_GAP = 2
-local DEPTH_SHADES = 16
+local ENTRANCE_SCALE, DEPTH_SHADES = 1.35, 16
 local depthColors = {}
 -- The minimap's player arrow is the game's own 16-unit arrow, centred on the player: the route begins outside its
 -- radius, so the arrow still shows which way the player faces (#583).
@@ -97,6 +97,8 @@ local out
 local scale, width, height, dot, dotRim, spacing, walked
 ---@type number, number, number?
 local fade, later, route
+-- Walk distance of the cave mouth, until its first regular breadcrumb has been considered.
+local entranceDistance
 -- Stop marks as x, y and reach, flat; near holds those the segment in hand passes.
 ---@type number[], number, number[]
 local circles, circleCount, near = {}, 0, {}
@@ -134,7 +136,7 @@ local function Begin(buffer, viewScale, small, stitched)
 	walked, fade, later, route, circleCount = 0, 1, 1, nil, 0
 end
 
-local function Stroke(x1, y1, x2, y2, color, isDot)
+local function Stroke(x1, y1, x2, y2, color, isDot, dotSize)
 	local n = out.n
 	if n >= LIMIT then
 		return
@@ -148,8 +150,8 @@ local function Stroke(x1, y1, x2, y2, color, isDot)
 		ux, uy = (x2 - x1) / length * dotRim / scale, (y2 - y1) / length * dotRim / scale
 	end
 	out.x1[n], out.y1[n], out.x2[n], out.y2[n], out.ux[n], out.uy[n] = x1, y1, x2, y2, ux, uy
-	out.width[n] = (isDot and dot or THICKNESS) / scale
-	out.under[n] = (isDot and dot + dotRim * 2 or UNDER_THICKNESS) / scale
+	out.width[n] = (isDot and (dotSize or dot) or THICKNESS) / scale
+	out.under[n] = (isDot and (dotSize or dot) + dotRim * 2 or UNDER_THICKNESS) / scale
 	out.alpha[n], out.color[n], out.dot[n], out.route[n] = fade * later, color, isDot or false, route
 end
 
@@ -202,20 +204,30 @@ local function Avoid(x, y, reach)
 end
 
 -- A stop mark the dots leave a gap around: its radius plus what leaves STOP_GAP on screen past a dot's rim.
+local function EntranceClear(x, y, extra)
+	for i = 1, circleCount, 3 do
+		local dx, dy = x - circles[i], y - circles[i + 1]
+		if dx * dx + dy * dy < (circles[i + 2] + extra) ^ 2 then
+			return false
+		end
+	end
+	return true
+end
+
 local function Circle(x, y, radius)
 	Avoid(x, y, radius + (STOP_GAP + dot / 2 + dotRim) / scale)
 end
 
 -- Clip before subdividing: even continent-sized walks need only the visible breadcrumbs. Dots sit at every SPACING
 -- along the whole walk, walked carrying the distance across segment joins so bends never bunch them.
-local function Segment(x1, y1, x2, y2, low, high, color, dashed, aDepth, bDepth)
+local function Segment(x1, y1, x2, y2, low, high, color, dashed, a, b, entranceLow, entranceHigh)
 	local dx, dy = x2 - x1, y2 - y1
 	local length = math.sqrt(dx * dx + dy * dy) * scale
 	if length == 0 then
 		return
 	end
 	if not dashed then
-		walked = 0
+		walked, entranceDistance = 0, nil
 		if low then
 			Stroke(x1 + low * dx, y1 + low * dy, x1 + high * dx, y1 + high * dy, color)
 		end
@@ -223,6 +235,10 @@ local function Segment(x1, y1, x2, y2, low, high, color, dashed, aDepth, bDepth)
 	end
 	local start = walked
 	walked = start + length
+	local aDepth, bDepth, cut = a and a.depth, b and b.depth, a and a.depthCut or 0.5
+	if not aDepth then
+		entranceDistance = bDepth and (start + length * cut) or nil
+	end
 	if not low then
 		return
 	end
@@ -235,8 +251,10 @@ local function Segment(x1, y1, x2, y2, low, high, color, dashed, aDepth, bDepth)
 	for distance = first, high * length - 0.001, spacing do
 		local t = distance / length
 		if count == 0 or Clear(count, x1 + t * dx, y1 + t * dy) then
-			local depth = aDepth and bDepth and aDepth + t * (bDepth - aDepth) or (t < 0.5 and aDepth or nil)
-			if not depth and t >= 0.5 then
+			local depth = aDepth
+			if aDepth and bDepth then
+				depth = aDepth + t * (bDepth - aDepth)
+			elseif t >= cut then
 				depth = bDepth
 			end
 			local ink = color
@@ -249,14 +267,36 @@ local function Segment(x1, y1, x2, y2, low, high, color, dashed, aDepth, bDepth)
 				end
 				ink = depthColors[shade]
 			end
-			Stroke(x1 + (t - half) * dx, y1 + (t - half) * dy, x1 + (t + half) * dx, y1 + (t + half) * dy, ink, true)
+			local size, radius = dot, half
+			if depth and entranceDistance and start + distance >= entranceDistance then
+				local extra = dot * (ENTRANCE_SCALE - 1) / 2 / scale
+				if
+					start + distance < entranceDistance + spacing
+					and entranceLow
+					and t >= entranceLow
+					and t <= entranceHigh
+					and EntranceClear(x1 + t * dx, y1 + t * dy, extra)
+				then
+					size, radius = dot * ENTRANCE_SCALE, half * ENTRANCE_SCALE
+				end
+				entranceDistance = nil
+			end
+			Stroke(
+				x1 + (t - radius) * dx,
+				y1 + (t - radius) * dy,
+				x1 + (t + radius) * dx,
+				y1 + (t + radius) * dy,
+				ink,
+				true,
+				size
+			)
 		end
 	end
 end
 
 -- A line between two map fractions, clipped to the map and the view. Over OpenMap's stitched map the view runs past
 -- the host map into its neighbours, so the map does not clip there.
-local function Line(x1, y1, x2, y2, color, dashed, aDepth, bDepth)
+local function Line(x1, y1, x2, y2, color, dashed, a, b)
 	local reach = dot / 2 + dotRim
 	local mx = dashed and reach / scale / width or 0
 	local my = dashed and reach / scale / height or 0
@@ -265,7 +305,29 @@ local function Line(x1, y1, x2, y2, color, dashed, aDepth, bDepth)
 	if low then
 		low, high = ClipAxis(y1, y2 - y1, low, high, minY + my, maxY - my)
 	end
-	Segment(x1 * width, -y1 * height, x2 * width, -y2 * height, low, high, color, dashed, aDepth, bDepth)
+	local entranceLow, entranceHigh
+	if dashed and b and ((b.depth and not a.depth) or (a.depth and entranceDistance)) then
+		local extra = (dot * ENTRANCE_SCALE / 2 + dotRim) / scale
+		entranceLow, entranceHigh = ClipAxis(x1, x2 - x1, 0, 1, minX + extra / width, maxX - extra / width)
+		if entranceLow then
+			entranceLow, entranceHigh =
+				ClipAxis(y1, y2 - y1, entranceLow, entranceHigh, minY + extra / height, maxY - extra / height)
+		end
+	end
+	Segment(
+		x1 * width,
+		-y1 * height,
+		x2 * width,
+		-y2 * height,
+		low,
+		high,
+		color,
+		dashed,
+		a,
+		b,
+		entranceLow,
+		entranceHigh
+	)
 end
 
 -- A small cross where a hop with no line of its own (a portal, a preview across the sea) leaves or lands.
@@ -404,7 +466,7 @@ function Strokes.Map(buffer, paths, view)
 		if view.highlight and path.stop and view.highlight[path.stop] then
 			later = 1
 		end
-		walked = 0
+		walked, entranceDistance = 0, nil
 		local previous, px, py
 		local points = ns.FlightLinePoints(path)
 		local crossing = OverviewCrossing(view, path, color)
@@ -440,6 +502,7 @@ function Strokes.Map(buffer, paths, view)
 							Line(px, py, x, y, color, true)
 						end
 					elseif previous.jump or previous.map ~= point.map then
+						entranceDistance = nil
 						if path.mode == "boat" or path.mode == "zeppelin" then
 							Bridge(view, path.points, index, px, py, x, y, color)
 						else
@@ -447,7 +510,9 @@ function Strokes.Map(buffer, paths, view)
 							Mark(x, y, color)
 						end
 					elseif px and x then
-						Line(px, py, x, y, color, path.mode == "walk", previous.depth, point.depth)
+						Line(px, py, x, y, color, path.mode == "walk", previous, point)
+					else
+						entranceDistance = nil
 					end
 				end
 				previous, px, py = point, x, y
@@ -530,7 +595,7 @@ function Strokes.Minimap(buffer, paths, view)
 	local inset = 1 - border / shortestSide
 	local walkInset = inset - (dot + dotRim * 2) / scale / shortestSide
 	for _, path in ipairs(paths) do
-		walked = 0
+		walked, entranceDistance = 0, nil
 		fade = path.placeholder and 0.45 or 1
 		if path.mode ~= "portal" and path.mode ~= "passage" then
 			local points = ns.FlightLinePoints(path)
@@ -543,6 +608,11 @@ function Strokes.Minimap(buffer, paths, view)
 					local bx, by = Project(b, x, y, radius, cosine, sine)
 					local within = walk and walkInset or inset
 					local low, high = ClipMinimap(ax, ay, bx - ax, by - ay, within, square)
+					local entranceLow, entranceHigh
+					if walk and ((b.depth and not a.depth) or (a.depth and entranceDistance)) then
+						local extra = dot * (ENTRANCE_SCALE - 1) / scale / shortestSide
+						entranceLow, entranceHigh = ClipMinimap(ax, ay, bx - ax, by - ay, within - extra, square)
+					end
 					Segment(
 						(ax + 1) * width / 2,
 						(ay - 1) * height / 2,
@@ -552,9 +622,13 @@ function Strokes.Minimap(buffer, paths, view)
 						high,
 						color,
 						walk,
-						a.depth,
-						b.depth
+						a,
+						b,
+						entranceLow,
+						entranceHigh
 					)
+				else
+					entranceDistance = nil
 				end
 			end
 		end

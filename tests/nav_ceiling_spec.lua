@@ -81,4 +81,31 @@ assert(
 	lower and upper and lowerKind == "structure" and upperKind == "structure" and lower < upper,
 	"stacked floors have distinct cover"
 )
+-- The actual Jasperlode and Deadmines walks carry the depth that the decoded cells supplied.
+for _, file in ipairs({ "Path", "PathJobs" }) do
+	assert(loadfile("Routing/" .. file .. ".lua"))("ShortestPathForever", ns)
+end
+for _, walk in ipairs({
+	{ -9106.57, -9046.57, -545.27, 62, 60.03980235126 },
+	{ -11351.34, -11331.34, 1564.18, 28, 20.000119944837 },
+}) do
+	local points, cost = ns.Path.FindSync(0, { x = walk[1], y = walk[3], z = walk[4] }, {
+		x = walk[2],
+		y = walk[3],
+		z = walk[4],
+	})
+	assert(points and math.abs(cost - walk[5]) < 1e-6, "cave cover changes neither the chosen walk nor its cost")
+	assert(not points[1].depth, "the approach starts above ground")
+	local entrances = 0
+	for i = 2, #points do
+		if points[i].depth and not points[i - 1].depth then
+			entrances = entrances + 1
+			assert(points[i - 1].depthCut, "the baked mouth has a position on the drawn segment")
+		end
+	end
+	assert(entrances == 1, "the approach has one terrain-cover entrance")
+	if walk[1] == -9106.57 then
+		assert(not points[#points].depth, "a walk across Jasperlode returns to uncovered ground")
+	end
+end
 print("nav_ceiling_spec: ok")

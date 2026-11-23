@@ -2245,6 +2245,7 @@ end
 ---@param budget number?
 ---@return boolean
 local function sight(st, P, a, b, water, road, limit, budget, roadFactor)
+	local underground = P.depth and P.depth[a] ~= nil
 	local factor = limit and P.factor
 	local swim = P.swim or st.swim
 	local ax, ay, bx, by = P.x[a], P.y[a], P.x[b], P.y[b]
@@ -2280,7 +2281,11 @@ local function sight(st, P, a, b, water, road, limit, budget, roadFactor)
 		for i = 1, count do
 			for j = 1, neighbours(st, fk[i], fn[i], x, y, mx, my, water, bk, bn, nil, offCentre) do
 				local nk, nn = bk[j], bn[j]
-				if not (road and roadNode(st, nk, nn) == 0) and not (factor and factor(nk, nn) > limit) then
+				if
+					not (road and roadNode(st, nk, nn) == 0)
+					and not (factor and factor(nk, nn) > limit)
+					and (not P.depth or (terrainDepth(st, nk, nn) ~= nil) == underground)
+				then
 					local spent = fs[i]
 					if budget then
 						-- A pulled segment that leaves the road is charged the off-road preference too: a straight cut
@@ -2364,8 +2369,10 @@ local sightCosts = {}
 ---@param wk number? -- the cluster and node wanted in the end's cell
 ---@param wn number?
 ---@param sightOnly? boolean -- test only decoded single-surface ground, without slicing
+---@param keepCover? boolean -- drawing only: do not take a shortcut across a different kind of cover
 ---@return number|nil, number|boolean, number? -- reached surface or bare status, and complete connector time
-local function toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget, real, wk, wn, sightOnly)
+local function toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget, real, wk, wn, sightOnly, keepCover)
+	local underground = keepCover and terrainDepth(st, k, node) ~= nil
 	local factor = limit and P.factor
 	local roadFactor = not real and budget and P.roadFactor
 	local swim = P.swim or st.swim
@@ -2435,7 +2442,11 @@ local function toward(st, P, k, node, fx, fy, tx, ty, water, limit, budget, real
 					for j = 1, neighbours(st, lk, ln, x, y, mx, my, water, bk, bn, costs, offCentre) do
 						landed = true
 						local nk, nn = bk[j], bn[j]
-						if (not costs or costs[j] == 0) and (not factor or factor(nk, nn) <= limit) then
+						if
+							(not costs or costs[j] == 0)
+							and (not factor or factor(nk, nn) <= limit)
+							and (not keepCover or (terrainDepth(st, nk, nn) ~= nil) == underground)
+						then
 							local ratio = roadFactor and (1 + (roadFactor - 1) * (1 - roadNode(st, lk, ln))) or 1
 							local wet = grid(st, lk)[ln + 1] == 2
 							local paced = pace(swim, fs[i], stretch, wet, budget, ratio)

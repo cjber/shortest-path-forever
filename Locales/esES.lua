@@ -641,3 +641,4 @@ L["Walks reach Undercity's Royal Quarter, War Quarter and Apothecarium."] =
 	"Las rutas a pie llegan al Barrio Real, al Barrio de la Guerra y al Apothecarium de Entrañas." -- mt
 L["Minimap walking route size"] = "Tamaño de la ruta a pie en el minimapa" -- mt
 L["Sizes the walking dots on the minimap."] = "Ajusta el tamaño de los puntos de la ruta a pie en el minimapa." -- mt
+L["Descend underground"] = "Desciende al subsuelo" -- mt
