@@ -179,6 +179,12 @@ python3 tools/baker/terrain_field.py --root . --maps-dir /path/to/extract/maps -
 This rewrites only the `terrain` field, leaving graph, grid, height and floor byte-identical. `tools/baker/terrain.py`
 reads the pinned extractor's format (flat, float, uint16 and uint8 heights, and holes).
 
+Format 4 also stores an optional ceiling field for each walkable layer with cover. At the layer's anchor,
+the baker reads the ADT height and the solid WMO or doodad meshes from the extraction's sibling `vmaps/`
+directory. If terrain lies above the floor, it supplies the height over the route even inside a cave WMO.
+Otherwise the nearest structure above the floor supplies the height. The stored value retains its source
+kind and is quantized to one eighth of a yard. `PathGrid.ceiling` reads it on demand for a decoded cell.
+
 Boat and zeppelin walking endpoints are generated from nearby dry boarding surfaces in the bundled map. Transport coordinates remain the boat or airship position for timetable calculations.
 
 After intentionally replacing shipped terrain, regenerate boarding endpoints and fixed-place walking costs from the repository root:

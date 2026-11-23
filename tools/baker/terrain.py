@@ -243,11 +243,24 @@ def decode_sparse(text, base, cells, step=2):
     return values
 
 
-def floor_heights(text):
+def floor_heights(text, *, format=2):
     """The local cells that hold a floor, and each one's floor heights lowest first, from gen_nav's floor field."""
     if not text:
         return {}
     cells, position = {}, 3
+    if format >= 3:
+        cell = 0
+        for _ in range(_number(text, 0, 3)):
+            delta = _number(text, position, 1)
+            position += 1
+            if delta == 63:
+                delta += _number(text, position, 3)
+                position += 3
+            cell += delta
+            cells.setdefault(cell, []).append(_number(text, position + 1, 2) - 2048)
+            # Format 3 interleaves one landing layer per set direction. Format 4 stores landings separately.
+            position += 5 + (_number(text, position + 3, 2).bit_count() if format == 3 else 0)
+        return cells
     for _ in range(_number(text, 0, 3)):
         cell, count = _number(text, position, 3), B64.index(text[position + 3])
         position += 4
@@ -259,30 +272,43 @@ def floor_heights(text):
     return cells
 
 
-def decode_values(grid, cells):
+def decode_values(grid, cells, *, format=2):
     """gen_nav's grid cell values from its grid field (0 blocked, 1 ground, 2 water)."""
     values, value = [], 0
-    for symbol in grid:
-        index = B64.index(symbol)
-        if index < 48:
-            value = index // 16
-            values.append(value)
-        else:
+    position = 0
+    palette = []
+    if format >= 4:
+        count = _number(grid, position, 1)
+        position = 1 + 2 * count
+        palette = [_number(grid, 1 + 2 * i, 2) // 256 for i in range(count)]
+    while position < len(grid):
+        index = _number(grid, position, 1)
+        position += 1
+        if index >= 48:
             values.extend([value] * (index - 47))
+            continue
+        if format < 4:
+            value = index // 16
+        elif index == 47:
+            value = _number(grid, position, 2) // 256
+            position += 2
+        else:
+            value = palette[index]
+        values.append(value)
     if len(values) > cells * cells:
         raise ValueError("Grid field holds more cells than the cluster")
     values.extend([0] * (cells * cells - len(values)))
     return values
 
 
-def decode_base(grid, height, cells):
+def decode_base(grid, height, cells, *, format=2):
     """Base surface heights in zstep units from gen_nav's grid and height fields, None where there is no surface.
 
-    The grid field is value * 16 + flags per cell, with a symbol >= 48 repeating the previous cell; the height
-    field encodes only the cells whose value is not zero (gen_nav's encode_heights), as symbols 0-46 adding -23..23,
+    The height field encodes only the cells whose value is not zero (gen_nav's encode_heights), as symbols
+    0-46 adding -23..23,
     47 followed by an absolute value + 2048 in two symbols, and a symbol >= 48 repeating the previous difference.
     """
-    present = [value != 0 for value in decode_values(grid, cells)]
+    present = [value != 0 for value in decode_values(grid, cells, format=format)]
     heights = [None] * (cells * cells)
     if not height:
         return heights

@@ -25,8 +25,7 @@ from baker.terrain import (  # noqa: E402
 )
 from pack_nav import read_packed, write_bundle  # noqa: E402
 
-ZQ = 2  # the same step as BASE_Z (tools/baker/gen_nav.py)
-LAYOUT = re.compile(r"^\t(nx|ny|cx0|cy0|cells) = (-?\d+),", re.MULTILINE)
+LAYOUT = re.compile(r"^\t(nx|ny|cx0|cy0|cells|format|zstep) = (-?\d+),", re.MULTILINE)
 
 
 def layout(source):
@@ -34,10 +33,12 @@ def layout(source):
     missing = {"nx", "ny", "cx0", "cy0", "cells"} - values.keys()
     if missing:
         raise ValueError(f"Bundle has no map layout: {sorted(missing)}")
+    values.setdefault("format", 2)
+    values.setdefault("zstep", 2)
     return values
 
 
-def terrain(entry, maps_dir, map_id, cells, cx0, cy0, ny):
+def terrain(entry, maps_dir, map_id, cells, cx0, cy0, ny, format, zstep):
     """Every cluster the bundle draws terrain for, keyed as the packed fields are (cluster + 1), and its exceptions."""
     fields, exceptions = {}, 0
     for key in sorted(entry["grid"]):
@@ -46,9 +47,9 @@ def terrain(entry, maps_dir, map_id, cells, cx0, cy0, ny):
         if not (0 <= row < 64 and 0 <= col < 64):
             continue
         grid, height = entry["grid"][key], entry["height"].get(key, "")
-        base = decode_base(grid, height, cells)
-        floors = floor_heights(entry.get("floor", {}).get(key, ""))
-        text = encode_sparse(sample_cluster(maps_dir, map_id, row, col, cells, ZQ), base, cells, floors)
+        base = decode_base(grid, height, cells, format=format)
+        floors = floor_heights(entry.get("floor", {}).get(key, ""), format=format)
+        text = encode_sparse(sample_cluster(maps_dir, map_id, row, col, cells, zstep), base, cells, floors, zstep)
         if text:
             fields[key] = text
             exceptions += len(decode_sparse(text, base, cells))
@@ -75,9 +76,7 @@ def main():
         source, fields, _, _ = read_packed(path, map_id)
         values = layout(source)
         fields["terrain"].clear()  # this run owns the field; a cluster that no longer needs exceptions loses them
-        fields, exceptions = terrain(
-            fields, args.maps_dir, map_id, values["cells"], values["cx0"], values["cy0"], values["ny"]
-        )
+        fields, exceptions = terrain(fields, args.maps_dir, map_id, **{k: v for k, v in values.items() if k != "nx"})
         extra[map_id] = {"terrain": fields}
         sources.append(path)
         print(

@@ -11,6 +11,10 @@ VMAP_MAGIC = b"VMAP_4.E"
 MOD_HAS_BOUND = 1
 MOD_PATH_ONLY = 4
 
+# TileConfig::CELL_HEIGHT in trinitycore-nav.patch. Recast requires three of these
+# voxels of clearance for a walkable span, so a hit within one is part of its floor.
+RECAST_CELL_HEIGHT = 0.5
+
 
 class Reader:
     def __init__(self, path):
@@ -150,7 +154,13 @@ class ClusterSurfaces:
         return math.floor((x - self.x0) * self.cells / TILE), math.floor((y - self.y0) * self.cells / TILE)
 
     def terrain_at(self, x, y):
-        return self.terrain.height((self.east - x) / TILE, (self.north - y) / TILE) if self.terrain else None
+        if not self.terrain:
+            return None
+        # A narrow floor anchor may lie on its tile's low border. The height reader wraps a fraction of 1.
+        edge = math.nextafter(1.0, 0.0)
+        u = min(edge, (self.east - x) / TILE)
+        v = min(edge, (self.north - y) / TILE)
+        return self.terrain.height(u, v)
 
     def structure_at(self, x, y):
         """Projected triangle intersections at the anchor, with their orientation."""
@@ -171,7 +181,8 @@ class ClusterSurfaces:
             floors = [height for height, upward in structures if upward]
             if terrain is not None:
                 floors.append(terrain)
-            floor_z = min(floors, key=lambda height: abs(height - floor_z), default=floor_z)
+            if floors:
+                floor_z = min(floors, key=lambda height: abs(height - floor_z)) + RECAST_CELL_HEIGHT
         if terrain is not None and terrain > floor_z:
             # Cave WMOs can have a ceiling mesh under the ADT. The terrain is the surface
             # a cave runs below, even when the collision ceiling is nearer the path.

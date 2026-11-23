@@ -55,6 +55,11 @@ class OverheadTest(unittest.TestCase):
         (self.vmaps / "0000/0000_32_32.vmtile").write_bytes(b"VMAP_4.E" + pack("<I", 1) + spawn + name)
         return ClusterSurfaces(self.maps, 0, 32, 32, 128)
 
+    def test_terrain_sample_at_the_owned_low_edge_does_not_wrap(self):
+        sampler = self.build(0)
+        sampler.terrain.height = lambda u, v: int(u * 128) % 128 + int(v * 128) % 128
+        self.assertEqual(sampler.terrain_at(sampler.x0, sampler.y0), 254)
+
     def test_building_interior(self):
         sampler = self.build(0, 7)
         self.assertEqual(sampler.above(-2, -2, 0), (7, "structure"))
@@ -66,11 +71,22 @@ class OverheadTest(unittest.TestCase):
         self.assertIsNone(sampler.above(-20, -20, -0.1))
         self.assertEqual(sampler.above(-20, -20, -1, water=True), (0, "terrain"))
 
+    def test_overlapping_floor_faces_do_not_hide_the_ceiling(self):
+        sampler = self.build(0, 0.001, 7)
+        self.assertEqual(sampler.above(-2, -2, 0), (7, "structure"))
+
     def test_stacked_floors(self):
         sampler = self.build(0, 7, 14)
         self.assertEqual(sampler.above(-2, -2, 0), (7, "structure"))
         self.assertEqual(sampler.above(-2, -2, 7), (14, "structure"))
         self.assertIsNone(sampler.above(-2, -2, 14))
+
+    @unittest.skipUnless(os.environ.get("NAV_MAPS"), "set NAV_MAPS to the extracted 71037 maps")
+    def test_trade_district_building(self):
+        sampler = ClusterSurfaces(os.environ["NAV_MAPS"], 0, 48, 30, 128)
+        height, kind = sampler.above(-8894, 611, 95)
+        self.assertEqual(kind, "structure")
+        self.assertAlmostEqual(height, 101.56, delta=0.01)
 
     @unittest.skipUnless(os.environ.get("NAV_MAPS"), "set NAV_MAPS to the extracted 71037 maps")
     def test_cave_witnesses(self):

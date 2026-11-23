@@ -1160,7 +1160,8 @@ local function indexedEdges(st, k, s, rows, row, roads, out, wanted)
 		walk, walking = varint(s, walking)
 		swim, swimming = varint(s, swimming)
 		if wanted == nil or offset == wanted then
-			local destCluster, distance = k
+			local destCluster = k
+			local distance
 			target = signed(target)
 			if offset == 4 then
 				target = target + localTarget
@@ -1728,7 +1729,7 @@ local function ceiling(map, x, y, z)
 		return nil
 	end
 	local k, lc = locate(st, x, y)
-	if not k or not st.val[k] then
+	if not k or not lc or not st.val[k] then
 		return nil
 	end
 	local node = surface(st, k, lc, -1, z)
@@ -1965,7 +1966,7 @@ local function neighbours(st, k, node, gx, gy, dx, dy, water, outK, outN, outC, 
 			local val = grid(st, k)
 			local d = DIRECTION[(dx + 1) * 3 + dy + 1]
 			local bits = d and val and st.moves[k][node + 1]
-			if bits and floor(bits / directionBits[d]) % 2 == 1 then
+			if val and bits and floor(bits / directionBits[d]) % 2 == 1 then
 				open = water
 					or (
 						not dryBlocked(st.links[k], node * 512 + d * 64, offCentre)
