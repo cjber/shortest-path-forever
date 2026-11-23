@@ -1093,6 +1093,22 @@ local function signed(value)
 	return value % 2 == 0 and half or -half - 1
 end
 
+-- Most residuals occupy one byte. Read those directly, leaving the general
+-- varint reader for values that continue into the next byte.
+local signedByte = {}
+for value = 0, 127 do
+	signedByte[value] = signed(value)
+end
+
+local function signedVarint(s, pos)
+	local value = byte(s, pos)
+	if value < 128 then
+		return signedByte[value], pos + 1
+	end
+	value, pos = varint(s, pos)
+	return signed(value), pos
+end
+
 local function perimeterCell(place, C)
 	if place < C then
 		return place
@@ -1165,14 +1181,13 @@ local function indexedEdges(st, k, s, rows, row, roads, out, wanted)
 			localTarget, previous = ordinal, nil
 		end
 		local offset = byte(s, offsets + e)
-		local target, walk, swim
-		target, targets = varint(s, targets)
-		walk, walking = varint(s, walking)
-		swim, swimming = varint(s, swimming)
 		if wanted == nil or offset == wanted then
+			local target, walk, swim
+			target, targets = signedVarint(s, targets)
+			walk, walking = signedVarint(s, walking)
+			swim, swimming = signedVarint(s, swimming)
 			local destCluster = k
 			local distance
-			target = signed(target)
 			if offset == 4 then
 				target = target + localTarget
 				localTarget = target
@@ -1187,9 +1202,21 @@ local function indexedEdges(st, k, s, rows, row, roads, out, wanted)
 				destCluster = k + dx * st.ny + dy
 				distance = dx ~= 0 and dy ~= 0 and GRAPH_DIAGONAL or 1
 			end
-			walk = floor(distance * cs + 0.5) + signed(walk)
-			out[used + 1], out[used + 2], out[used + 3] = destCluster * 4096 + target, walk + signed(swim), walk
+			walk = floor(distance * cs + 0.5) + walk
+			out[used + 1], out[used + 2], out[used + 3] = destCluster * 4096 + target, walk + swim, walk
 			used = used + 3
+		else
+			-- A reverse build only needs edges into one cluster. The other
+			-- clusters have independent target deltas and need only be skipped.
+			repeat
+				targets = targets + 1
+			until byte(s, targets - 1) < 128
+			repeat
+				walking = walking + 1
+			until byte(s, walking - 1) < 128
+			repeat
+				swimming = swimming + 1
+			until byte(s, swimming - 1) < 128
 		end
 	end
 	return used
