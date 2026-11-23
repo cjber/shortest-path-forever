@@ -216,8 +216,8 @@ L["Show portals"] = "Portale zeigen"
 L["Show routes on the world map"] = "Routen auf der Weltkarte zeigen"
 L["Show the compass"] = "Kompass zeigen"
 L["Show the flight to take"] = "Zu nehmenden Flug zeigen"
-L["Show the next direction and the game's navigation marker."] =
-	"Die nächste Richtung und die Navigationsmarkierung des Spiels zeigen."
+L["Show the next direction and the game's navigation marker. When off, only the route on the map and minimap stays."] =
+	"Die nächste Richtung und die Navigationsmarkierung des Spiels zeigen. Wenn aus, bleibt nur die Route auf Karte und Minikarte."
 L["Show the time left under the compass"] = "Restzeit unter dem Kompass zeigen"
 L["Show the way to your corpse"] = "Weg zu Eurem Leichnam zeigen"
 L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =

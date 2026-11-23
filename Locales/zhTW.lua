@@ -214,7 +214,8 @@ L["Show portals"] = "顯示傳送門"
 L["Show routes on the world map"] = "在世界地圖上顯示航線"
 L["Show the compass"] = "顯示羅盤"
 L["Show the flight to take"] = "顯示要搭乘的航班"
-L["Show the next direction and the game's navigation marker."] = "顯示下一個方向和遊戲的導航標記。"
+L["Show the next direction and the game's navigation marker. When off, only the route on the map and minimap stays."] =
+	"顯示下一個方向和遊戲的導航標記。關閉時，只保留地圖和小地圖上的路線。"
 L["Show the time left under the compass"] = "在羅盤下顯示剩餘時間"
 L["Show the way to your corpse"] = "顯示前往屍體的路"
 L["Shows over the nameplate of the NPC a Nearby services journey walks to."] =

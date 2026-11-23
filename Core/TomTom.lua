@@ -559,13 +559,14 @@ local function SyncArrow()
 	if empty then
 		arrowWaypoint = nil
 	end
+	-- Two states mute TomTom's arrow: our own arrow draws over the waypoint (guideArrow), or the player turned our
+	-- arrow off while this journey still owns the waypoint. Turning it off clears our guide points, not the journey.
 	if
 		following
 		and not hijacked
 		and following == arrowWaypoint
 		and API.CurrentStop(WaypointOwner(following))
-		and guideArrow
-		and ns.db.arrow ~= false
+		and (guideArrow or ns.db.arrow == false)
 		and not UnitIsDeadOrGhost("player")
 	then
 		muted = true
