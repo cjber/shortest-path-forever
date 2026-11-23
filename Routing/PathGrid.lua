@@ -1771,7 +1771,7 @@ local function ceilingForNode(st, k, node)
 	if not (st.D.ceiling and st.val[k] and ns.PathCeilingAt) then
 		return nil
 	end
-	local cell = node < st.C * st.C and node or st.at[k][node + 1]
+	local cell = cellOf(st, k, node)
 	local layer = node == cell and 0 or node - st.at[k][-(cell + 1)] + 1
 	local entries = st.ceiling[k]
 	if not entries then
