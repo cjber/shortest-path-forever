@@ -1315,6 +1315,12 @@ def proof_problems(
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--base", default="origin/main")
+    parser.add_argument(
+        "--not-required",
+        action="store_true",
+        help="report 'not required' and pass without a proof; the workflow sets it from the "
+        "'visual-proof: not-required' label, which a person applies on purpose, never an agent",
+    )
     parser.add_argument("--digests", action="store_true", help="print the source and packaged runtime digests")
     parser.add_argument(
         "--compare",
@@ -1336,6 +1342,9 @@ def main() -> int:
     )
     args = parser.parse_args()
     root = Path(".")
+    if args.not_required:
+        print("visual proof: not required (waived by the 'visual-proof: not-required' label)")
+        return 0
     if args.compare_package:
         try:
             package_comparison = compare_package(root, Path(args.compare_package), core=args.core)
