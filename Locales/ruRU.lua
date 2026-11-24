@@ -479,8 +479,6 @@ L["Journeys are off. Turn on Enable journeys in settings."] =
 L["Key to plan a journey"] = "Клавиша для планирования маршрута" -- mt
 L["The key you hold to plan a journey from the world map or the minimap."] =
 	"Клавиша, которую вы удерживаете, чтобы проложить маршрут с карты мира или мини-карты." -- mt
-L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
-	"На значке Questie Shift+щелчок остается за Questie; Alt+щелчок прокладывает туда маршрут при любой из двух клавиш." -- mt
 L["Show the journey key hint in tooltips"] =
 	"Показывать подсказку о клавише маршрута во всплывающих подсказках" -- mt
 L["Show the journey key hint on the minimap"] =

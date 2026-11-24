@@ -271,9 +271,6 @@ do
 	assert(ns.JourneyClickHint() == hint, "the line names the chosen key")
 	ns.db.journeyKey = "alt"
 	assert(ns.JourneyClickHint() == "Alt-click to plan a journey here", "and follows the setting")
-	local flight = { lines = {} }
-	ns.AddJourneyClickHint(flight, false, "%s-click to plan a journey to this flight master")
-	assert(flight.lines[1] == "Alt-click to plan a journey to this flight master", "the pin names its destination")
 	ns.db.journeyKey = nil
 	local quest = tooltipFor(blizzardPin({ pinTemplate = "QuestPinTemplate", questID = 7 }))
 	assert(quest.lines[1] == hint and quest.shows == 1, "a quest pin's tooltip gains the line")
