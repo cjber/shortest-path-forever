@@ -162,9 +162,34 @@ end
 ---@field signature? string
 ---@field force? boolean
 local Flights = {}
+---@type {x: number, y: number, info: table, pin: SPFCanvasPin?}[]
+local stitchedPins = {}
 
 function Flights.RemoveAllData()
 	flightPins:ReleaseAll()
+	stitchedPins = {}
+end
+
+-- The world points and taxi metadata stay valid as the view moves on the same host map.
+-- Keep pins that are still in view so a pan does not interrupt their mouse interaction.
+local function UpdateStitchedPins(map)
+	local left, right, top, bottom = ns.Canvas.ViewRect(map)
+	for _, entry in ipairs(stitchedPins) do
+		local visible = left
+			and right
+			and top
+			and bottom
+			and entry.x >= left
+			and entry.x <= right
+			and entry.y >= top
+			and entry.y <= bottom
+		if visible and not entry.pin then
+			entry.pin = flightPins:Acquire(entry.info)
+		elseif not visible and entry.pin then
+			flightPins:Release(entry.pin)
+			entry.pin = nil
+		end
+	end
 end
 
 function Flights:RefreshAllData()
@@ -180,10 +205,6 @@ function Flights:RefreshAllData()
 		return
 	end
 	local stitched = ns.OpenMapAddon.Stitched()
-	local left, right, top, bottom
-	if stitched then
-		left, right, top, bottom = ns.Canvas.ViewRect(map)
-	end
 	local signature = ns.CompanionMaps.Scan(map)
 		.. ":"
 		.. mapID
@@ -193,18 +214,12 @@ function Flights:RefreshAllData()
 		.. tostring(ns.db.otherFaction)
 		.. ":"
 		.. tostring(ns.db.flightPinScale)
-	if stitched then
-		signature = signature
-			.. ":stitched:"
-			.. tostring(left)
-			.. ":"
-			.. tostring(right)
-			.. ":"
-			.. tostring(top)
-			.. ":"
-			.. tostring(bottom)
-	end
+		.. ":"
+		.. tostring(stitched)
 	if self.signature == signature and not self.force then
+		if stitched then
+			UpdateStitchedPins(map)
+		end
 		return
 	end
 	self.force = nil
@@ -220,14 +235,12 @@ function Flights:RefreshAllData()
 			end
 		end
 	end
+	Query(mapID)
 	-- The game's own provider is left on the map. Where it draws flight points itself, those nodes are its own.
 	local nativeShown = {}
-	if not stitched then
-		Query(mapID)
-		if C_TaxiMap.ShouldMapShowTaxiNodes and C_TaxiMap.ShouldMapShowTaxiNodes(mapID) then
-			for id in pairs(reported) do
-				nativeShown[id] = true
-			end
+	if C_TaxiMap.ShouldMapShowTaxiNodes and C_TaxiMap.ShouldMapShowTaxiNodes(mapID) then
+		for id in pairs(reported) do
+			nativeShown[id] = true
 		end
 	end
 	for id, node in pairs(ns.TaxiNodes) do
@@ -236,10 +249,8 @@ function Flights:RefreshAllData()
 		if stitched then
 			-- The visible rectangle can extend beyond the host map and include another continent.
 			x, y = ns.OpenMapAddon.Canvas(node)
-			if x and y and left and right and top and bottom and (x < left or x > right or y < top or y > bottom) then
-				x, y = nil, nil
-			end
-		elseif location and ns.IsDockMap(location, mapID) then
+		end
+		if not x and location and ns.IsDockMap(location, mapID) then
 			x, y = ns.MapPinPosition(node, mapID)
 		end
 		-- A class flight master is drawn only for its class, which always has it: it has no discovery.
@@ -263,9 +274,16 @@ function Flights:RefreshAllData()
 				info.textureKit = native.textureKit ~= "" and native.textureKit or nil
 			end
 			if ShouldShowTaxiNode(faction, info) and not ns.CompanionMaps.Suppresses("flight", x, y, "taxi", id) then
-				flightPins:Acquire(info)
+				if stitched then
+					stitchedPins[#stitchedPins + 1] = { x = x, y = y, info = info }
+				else
+					flightPins:Acquire(info)
+				end
 			end
 		end
+	end
+	if stitched then
+		UpdateStitchedPins(map)
 	end
 end
 
