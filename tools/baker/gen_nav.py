@@ -57,7 +57,7 @@ from baker.measure import record, tile_hashes  # noqa: E402
 from baker.overhead import ClusterSurfaces  # noqa: E402
 from baker.terrain import encode_sparse as encode_terrain  # noqa: E402
 from baker.terrain import sample_cluster  # noqa: E402
-from baker.tiles import load_tile, subtile_links  # noqa: E402
+from baker.tiles import PLAYER_STEP, load_tile, subtile_links  # noqa: E402
 from forever_tools.fsio import atomic_write  # noqa: E402
 
 MM = os.environ.get("NAV_MM", "mm")
@@ -185,11 +185,12 @@ def cluster_of_tile(rr, cc):
     return ((31 - rr) - CX0) * NY + ((31 - cc) - CY0)
 
 
-def places(map_id):
-    """The map's fixed places with a height, as (x, y, z): players arrive there, so their ground is reached."""
-    run = subprocess.run(
-        ["luajit", "tools/baker/places.lua", str(map_id)], cwd=ROOT, check=True, capture_output=True, text=True
-    )
+def places(map_id, lifts=False):
+    """The map's fixed places with a height, or only its lift stops, as (x, y, z)."""
+    command = ["luajit", "tools/baker/places.lua", str(map_id)]
+    if lifts:
+        command.append("lifts")
+    run = subprocess.run(command, cwd=ROOT, check=True, capture_output=True, text=True)
     return [tuple(p) for p in json.loads(run.stdout)]
 
 
@@ -319,15 +320,18 @@ def gid(rc, i):
     return ORD[rc] << 16 | i
 
 
-def components(spots, joins=()):
+def components(spots, joins=(), lift_stops=()):
     """Pass 1: union-find over every walkable poly of the map; SIZE records each poly's component size, or 0 for a
     component not kept. A place stands on its nearest walkable poly in its own or a neighbouring tile, whatever that
     poly's component. joins are hops, (trigger, radius, landing): the polys a hop's two ends stand on are one
     component, as the hop's link joins them. A drop (the local bake's off-mesh connection) leads from the poly nearest
     its ledge to the poly nearest its landing, in the landing's tile, so ground entered only by dropping in, such as
-    the Caverns of Time floor, is kept with the ground above it (#1211)."""
+    the Caverns of Time floor, is kept with the ground above it (#1211). A supported lift stop also keeps its assigned
+    dry landing even when the landing is a small component."""
     global SIZE
     spots = list(spots) + [h[0] for h in joins] + [h[2] for h in joins]
+    lift_stops = set(lift_stops)
+    approaches = {n: (math.inf, -1) for n, point in enumerate(spots) if point in lift_stops}
     arcs = []  # one-way drops as (dense id of the ledge poly, dense id of the landing poly)
     landing = defaultdict(list)  # tile -> drops landing in it, as (ledge dense id, landing point)
     parent = array("i")
@@ -395,15 +399,25 @@ def components(spots, joins=()):
         for i, j, _, _ in links:
             parent[find(loc[i])] = find(loc[j])
         for n in near.get(rc, ()):
-            for i, pts, _, _ in polys:
+            point = spots[n]
+            x, y, z = point
+            for i, pts, water, steep in polys:
                 # the gap to the poly's bounding box never exceeds the distance to the poly
-                gap = max(
-                    max(min(p[a] for p in pts) - spots[n][a], spots[n][a] - max(p[a] for p in pts)) for a in (0, 1, 2)
-                )
-                if gap < stand[n][0]:
-                    d = poly_distance(spots[n], pts)
-                    if d < stand[n][0]:
-                        stand[n] = (d, loc[i])
+                gap = max(max(min(p[a] for p in pts) - point[a], point[a] - max(p[a] for p in pts)) for a in range(3))
+                lip_candidate = n in approaches and not (water or steep) and gap <= min(CS, approaches[n][0])
+                if gap >= stand[n][0] and not lip_candidate:
+                    continue
+                d = poly_distance(point, pts)
+                if d < stand[n][0]:
+                    stand[n] = (d, loc[i])
+                # The animation's stop is at the car origin. The lip can be in the next walking cell, but a player
+                # must be able to step across. Reject dry ground beyond a cell or the player's step height.
+                if not lip_candidate or d > CS or d >= approaches[n][0]:
+                    continue
+                px, py = nearest_point2(x, y, [p[:2] for p in pts])
+                center = tuple(sum(p[axis] for p in pts) / len(pts) for axis in range(3))
+                if abs(height({"plane": plane(pts, center)}, px, py) - z) <= PLAYER_STEP:
+                    approaches[n] = (d, loc[i])
         for key, i, lo, hi, z in edges:
             g = gid(rc, i)
             dense[g] = loc[i]
@@ -424,9 +438,10 @@ def components(spots, joins=()):
     reached = {find(x) for _, x in stand if x >= 0}
     if not reached:
         sys.exit(f"no fixed place of map {MAP} stands on the selected tiles, so none of their ground is reachable")
-    # A place keeps its component unless that is a speck; ground a drop reaches from kept ground is walked to, however
-    # small, and drops are followed one way only, so a ledge or roof that drops onto the ground is not kept by it.
+    # A place keeps its component unless that is a speck. A lift carries a player to its boarding lip even when the
+    # landing is small, and a drop reaches only its landing, so a roof that drops to the ground is not kept by it.
     placed = {r for r in reached if size[r] >= MIN_COMPONENT}
+    placed.update(find(x) for _, x in approaches.values() if x >= 0)
     kept = set(placed)
     down = defaultdict(set)
     for a, b in arcs:
@@ -2208,7 +2223,7 @@ def main():
     inputs = tile_hashes(TILES.values()) if args.metrics else {}
     code = tile_hashes(Path(__file__).parent.glob("*.py")) if args.metrics else {}
     HOPS[:] = hops(map_id)
-    components(places(map_id), HOPS)
+    components(places(map_id), HOPS, places(map_id, lifts=True))
     phases["components"] = time.perf_counter() - checkpoint
     checkpoint = time.perf_counter()
     grid, masks = bytearray(GW * GH), bytearray(GW * GH)
