@@ -548,6 +548,11 @@ end
 local CANVAS_CLICK_PRIORITY = 1001
 
 local function OnCanvasClick(map, button)
+	if button == "RightButton" and ns.JourneyGuide and ns.JourneyGuide.ClearHoveredWaypointJourney then
+		if ns.JourneyGuide.ClearHoveredWaypointJourney() then
+			return true
+		end
+	end
 	if (button ~= "LeftButton" and button ~= "RightButton") or not ns.JourneyKeyDown() or ChatBoxOpen() then
 		return false
 	end
