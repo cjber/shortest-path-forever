@@ -824,6 +824,9 @@ ns.Init(function()
 			-- Docks merge or split as the zoom changes.
 			Docks:RefreshAllData()
 		end
+		if ns.OpenMapAddon.Stitched() and (what == "scale" or what == "size" or what == "moved") then
+			ns.RefreshFlightPins()
+		end
 		-- A ping marks a place on the map it was set for: turning to another map or closing it leaves it.
 		local ping = Docks.ping
 		if ping and (what == "hide" or (what == "map" and WorldMapFrame:GetMapID() ~= Docks.pingMap)) then

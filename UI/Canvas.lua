@@ -74,7 +74,9 @@ local CURSOR_REACH = 12
 ---@field stitched boolean
 ---@field companionLayers? string
 ---@field viewLeft? number -- the map's view, to hear of a drag
+---@field viewRight? number
 ---@field viewTop? number
+---@field viewBottom? number
 ---@field gamepad boolean
 ---@field listeners fun(view: SPFCanvasView, what: string)[]
 ---@field pools table<string, SPFCanvasPool>
@@ -279,9 +281,9 @@ local function Update(view)
 		end
 	end
 	-- A drag moves the view without changing any of the above. A size or zoom redraws with the new view already.
-	local viewLeft, viewTop = Canvas.ViewRect(view.map)
-	if viewLeft ~= view.viewLeft or viewTop ~= view.viewTop then
-		view.viewLeft, view.viewTop = viewLeft, viewTop
+	local left, right, top, bottom = Canvas.ViewRect(view.map)
+	if left ~= view.viewLeft or right ~= view.viewRight or top ~= view.viewTop or bottom ~= view.viewBottom then
+		view.viewLeft, view.viewRight, view.viewTop, view.viewBottom = left, right, top, bottom
 		if not (first or changedMap or stitchedChanged or companionsChanged or sized or scaled) then
 			Fire(view, "moved")
 		end
