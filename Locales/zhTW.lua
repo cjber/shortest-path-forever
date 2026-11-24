@@ -451,8 +451,6 @@ L["Journeys are off. Turn on Enable journeys in settings."] =
 L["Key to plan a journey"] = "規劃旅程的按鍵" -- mt
 L["The key you hold to plan a journey from the world map or the minimap."] =
 	"在世界地圖或小地圖上規劃旅程時按住的按鍵。" -- mt
-L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
-	"在 Questie 圖示上，Shift 點擊仍歸 Questie 所有；Alt 點擊則可用任一按鍵規劃前往該處的旅程。" -- mt
 L["Show the journey key hint in tooltips"] = "在滑鼠提示中顯示旅程按鍵提示" -- mt
 L["Show the journey key hint on the minimap"] = "在小地圖上顯示旅程按鍵提示" -- mt
 L["Adds the journey key line to the minimap's tooltip over what it tracks. Off, the world map and flight point tooltips keep theirs, and the key still plans journeys."] =

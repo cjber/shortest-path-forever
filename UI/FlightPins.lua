@@ -127,7 +127,10 @@ function FlightPin:OnMouseEnter()
 		GameTooltip_AddNormalLine(GameTooltip, L["Not discovered"])
 	end
 	AddFlights(self.poiInfo.nodeID, self.poiInfo.isUndiscovered)
-	ns.AddJourneyClickHint(GameTooltip)
+	local hint = not self:ShouldMouseButtonBePassthrough("LeftButton")
+			and L["%s-click to plan a journey to this flight master"]
+		or nil
+	ns.AddJourneyClickHint(GameTooltip, false, hint)
 	GameTooltip:Show()
 end
 
