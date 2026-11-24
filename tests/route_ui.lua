@@ -19,6 +19,18 @@ local flightPin = ns.Canvas.Pools(WorldMapFrame).ShortestPathForeverFlightPinTem
  faction = Enum.FlightPathFaction.Alliance, atlasName = "taxinode_alliance",
 })
 assert(flightPin.startScale == 0.5 and flightPin.endScale == 0.6, "flight icons use the selected scale")
+ns.db.journeyKey = "alt"
+flightPin:OnMouseEnter()
+assert(table.concat(tip, "\n"):find("Alt-click to plan a journey here", 1, true),
+ "on the continent map, the flight icon passes clicks through to the map")
+flightPin:OnMouseLeave()
+mapID = 30
+flightPin:OnMouseEnter()
+assert(table.concat(tip, "\n"):find("Alt-click to plan a journey to this flight master", 1, true),
+ "the flight master tooltip names the selected key and the destination")
+flightPin:OnMouseLeave()
+ns.db.journeyKey = "shift"
+mapID = 1414
 clickPin(flightPin, "RightButton")
 local knownToggle = assert(context["Flight path known"], "right-click opens the flight ownership menu")
 local wasKnown = knownToggle.get() == true

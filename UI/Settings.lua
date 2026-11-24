@@ -340,7 +340,7 @@ ns.Init(function()
 			Secure(GenerateClosure)(journeyKeyOptions.GetData, journeyKeyOptions),
 			L["The key you hold to plan a journey from the world map or the minimap."]
 				.. " "
-				.. L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."]
+				.. L["Alt-click a Questie quest-start icon to plan a journey to the quest giver, whichever key you choose here."]
 		)
 	)
 	Checkbox(

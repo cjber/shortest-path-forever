@@ -454,8 +454,6 @@ L["Journeys are off. Turn on Enable journeys in settings."] =
 L["Key to plan a journey"] = "Taste zum Planen einer Reise" -- mt
 L["The key you hold to plan a journey from the world map or the minimap."] =
 	"Die Taste, die du hältst, um von der Weltkarte oder der Minikarte aus eine Reise zu planen." -- mt
-L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
-	"Auf einem Questie-Symbol bleibt Shift-Klick bei Questie; Alt-Klick plant dort mit beiden Tasten die Reise." -- mt
 L["Show the journey key hint in tooltips"] = "Hinweis zur Reisetaste in Tooltips anzeigen" -- mt
 L["Show the journey key hint on the minimap"] = "Hinweis zur Reisetaste auf der Minikarte anzeigen" -- mt
 L["Adds the journey key line to the minimap's tooltip over what it tracks. Off, the world map and flight point tooltips keep theirs, and the key still plans journeys."] =

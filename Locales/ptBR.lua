@@ -454,8 +454,6 @@ L["Journeys are off. Turn on Enable journeys in settings."] =
 L["Key to plan a journey"] = "Tecla para planejar uma jornada" -- mt
 L["The key you hold to plan a journey from the world map or the minimap."] =
 	"A tecla que você mantém para planejar uma jornada a partir do mapa-múndi ou do minimapa." -- mt
-L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
-	"Sobre um ícone do Questie, o Shift+clique continua sendo do Questie; o Alt+clique planeja a jornada até lá com qualquer uma das teclas." -- mt
 L["Show the journey key hint in tooltips"] = "Mostrar a dica da tecla de jornada nas dicas de ferramenta" -- mt
 L["Show the journey key hint on the minimap"] = "Mostrar a dica da tecla de jornada no minimapa" -- mt
 L["Adds the journey key line to the minimap's tooltip over what it tracks. Off, the world map and flight point tooltips keep theirs, and the key still plans journeys."] =
