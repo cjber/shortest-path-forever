@@ -375,7 +375,7 @@ L["The walking line on the world map and the minimap."] = "Die Fußlinie auf der
 L["Line on the world map"] = "Linie auf der Weltkarte" -- mt
 L["Draws the walking route on the world map. With it off, the destination pin, arrow and tracker still guide you."] =
 	"Zeichnet die Fußroute auf der Weltkarte. Ist sie aus, führen Zielmarkierung, Pfeil und Verfolgung Euch weiterhin." -- mt
-L["Line on the minimap"] = "Linie auf der Minikarte" -- mt
+L["Show minimap trail"] = "Route auf der Minikarte anzeigen" -- mt
 L["Draws the walking route on the minimap. With it off, the destination pin, arrow and tracker still guide you."] =
 	"Zeichnet die Fußroute auf der Minikarte. Ist sie aus, führen Zielmarkierung, Pfeil und Verfolgung Euch weiterhin." -- mt
 L["Line to later stops"] = "Linie zu späteren Stopps" -- mt

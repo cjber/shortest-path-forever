@@ -384,7 +384,7 @@ L["The walking line on the world map and the minimap."] =
 L["Line on the world map"] = "세계 지도 선" -- mt
 L["Draws the walking route on the world map. With it off, the destination pin, arrow and tracker still guide you."] =
 	"세계 지도에 도보 경로를 그립니다. 끄면 목적지 표식, 화살표, 추적기가 계속 안내합니다." -- mt
-L["Line on the minimap"] = "미니맵 선" -- mt
+L["Show minimap trail"] = "미니맵 경로 표시" -- mt
 L["Draws the walking route on the minimap. With it off, the destination pin, arrow and tracker still guide you."] =
 	"미니맵에 도보 경로를 그립니다. 끄면 목적지 표식, 화살표, 추적기가 계속 안내합니다." -- mt
 L["Line to later stops"] = "이후 지점까지의 선" -- mt

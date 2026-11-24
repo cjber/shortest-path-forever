@@ -129,7 +129,7 @@ function MapMarks.Register(rows)
 	)
 	rows.Checkbox(
 		"minimapLine",
-		L["Line on the minimap"],
+		L["Show minimap trail"],
 		L["Draws the walking route on the minimap. With it off, the destination pin, arrow and tracker still guide you."],
 		ns.RefreshRouteLines
 	)
