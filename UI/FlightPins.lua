@@ -179,6 +179,11 @@ function Flights:RefreshAllData()
 		self.signature = nil
 		return
 	end
+	local stitched = ns.OpenMapAddon.Stitched()
+	local left, right, top, bottom
+	if stitched then
+		left, right, top, bottom = ns.Canvas.ViewRect(map)
+	end
 	local signature = ns.CompanionMaps.Scan(map)
 		.. ":"
 		.. mapID
@@ -188,6 +193,17 @@ function Flights:RefreshAllData()
 		.. tostring(ns.db.otherFaction)
 		.. ":"
 		.. tostring(ns.db.flightPinScale)
+	if stitched then
+		signature = signature
+			.. ":stitched:"
+			.. tostring(left)
+			.. ":"
+			.. tostring(right)
+			.. ":"
+			.. tostring(top)
+			.. ":"
+			.. tostring(bottom)
+	end
 	if self.signature == signature and not self.force then
 		return
 	end
@@ -204,26 +220,30 @@ function Flights:RefreshAllData()
 			end
 		end
 	end
-	Query(mapID)
 	-- The game's own provider is left on the map. Where it draws flight points itself, those nodes are its own.
 	local nativeShown = {}
-	if C_TaxiMap.ShouldMapShowTaxiNodes and C_TaxiMap.ShouldMapShowTaxiNodes(mapID) then
-		for id in pairs(reported) do
-			nativeShown[id] = true
+	if not stitched then
+		Query(mapID)
+		if C_TaxiMap.ShouldMapShowTaxiNodes and C_TaxiMap.ShouldMapShowTaxiNodes(mapID) then
+			for id in pairs(reported) do
+				nativeShown[id] = true
+			end
 		end
 	end
 	for id, node in pairs(ns.TaxiNodes) do
 		local location = ns.Locate(node)
-		local x, y = ns.MapPinPosition(node, mapID)
+		local x, y
+		if stitched then
+			-- The visible rectangle can extend beyond the host map and include another continent.
+			x, y = ns.OpenMapAddon.Canvas(node)
+			if x and y and left and right and top and bottom and (x < left or x > right or y < top or y > bottom) then
+				x, y = nil, nil
+			end
+		elseif location and ns.IsDockMap(location, mapID) then
+			x, y = ns.MapPinPosition(node, mapID)
+		end
 		-- A class flight master is drawn only for its class, which always has it: it has no discovery.
-		if
-			x
-			and y
-			and location
-			and ns.IsDockMap(location, mapID)
-			and not nativeShown[id]
-			and (not node.class or node.class == class)
-		then
+		if x and y and location and not nativeShown[id] and (not node.class or node.class == class) then
 			Query(location.uiMap)
 			local unknown = known ~= nil and not known[id] and not node.class
 			local native = reported[id]

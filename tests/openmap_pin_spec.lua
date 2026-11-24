@@ -23,6 +23,42 @@ _G.OpenMapAPI = {
 	end,
 }
 posX, posY, posMap = 0, 0, 1
+
+-- The host stays on a Kalimdor zone as OpenMap pans over both continents.
+local normalProjection = OpenMapAPI.CanvasFromWorldPos
+local taxiNodes = ns.TaxiNodes
+local hostMap = mapID
+mapID = 14
+ns.TaxiNodes = {
+	[1] = { map = 1, x = 0, y = 0, name = "Kalimdor" },
+	[2] = { map = 0, x = 0, y = 0, name = "Eastern Kingdoms" },
+}
+OpenMapAPI.CanvasFromWorldPos = function(continent)
+	return continent == 1 and 0.5 or 1.5, 0.5
+end
+ns.db.mapFlightMasters = true
+setMapShown(true)
+local flights = ns.Canvas.Pools(WorldMapFrame).ShortestPathForeverFlightPinTemplate
+viewRect = { left = -0.25, right = 2, top = 0, bottom = 1 }
+mapTick()
+assert(flights:GetNumActive() == 2, "The stitched view shows flights on both continents")
+viewRect = { left = 1, right = 2.25, top = 0, bottom = 1 }
+mapTick()
+assert(flights:GetNumActive() == 1, "Panning updates flight pins with the same host map")
+local flight = flights.active[1]
+local flightX, flightY = flight:GetPosition()
+assert(flight.poiInfo.nodeID == 2 and flightX == 1.5 and flightY == 0.5, "The pin uses OpenMap's canvas position")
+stitched = false
+mapTick()
+assert(flights:GetNumActive() == 1 and flights.active[1].poiInfo.nodeID == 1, "The regular map shows its zone's pin")
+
+setMapShown(false)
+ns.db.mapFlightMasters = false
+ns.TaxiNodes = taxiNodes
+mapID = hostMap
+viewRect = { left = 0, right = 1, top = 0, bottom = 1 }
+stitched = true
+OpenMapAPI.CanvasFromWorldPos = normalProjection
 setMapShown(true)
 
 local goals = ns.Canvas.Pools(WorldMapFrame).ShortestPathForeverGoalPinTemplate
