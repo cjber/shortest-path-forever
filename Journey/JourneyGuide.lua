@@ -258,6 +258,29 @@ local function NameWaypointTooltip(tooltip, fromWaypointPin)
 	tooltip:Show()
 end
 
+-- Whether a saved map pin stands at the journey's destination: arriving there clears the pin rather than restoring it.
+---@param waypoint table
+---@param point SPFPoint?
+---@return boolean
+local function PinAtGoal(waypoint, point)
+	local location = point and ns.Locate(point)
+	if not (waypoint and location) then
+		return false
+	end
+	return SameWaypoint(waypoint, UiMapPoint.CreateFromCoordinates(location.uiMap, location.x, location.y))
+end
+
+-- A player pin at the destination and the guide's current marker both represent the journey.
+local function IsJourneyWaypoint()
+	local goal = ns.JourneyGoal()
+	if not goal then
+		return false
+	end
+	local waypoint = C_Map.GetUserWaypoint()
+	return waypoint ~= nil
+		and ((guide and SameWaypoint(waypoint, guide.writingWaypoint or guide.waypoint)) or PinAtGoal(waypoint, goal))
+end
+
 local waypointProviders = {}
 -- Pins the world map's provider recreates on refresh; each one gets the tooltip hook once.
 local hookedPins = setmetatable({}, { __mode = "k" })
@@ -269,13 +292,29 @@ local function HideGuideWaypointPin(provider)
 	if provider.pin then
 		if not hookedPins[provider.pin] then
 			hookedPins[provider.pin] = true
-			provider.pin:HookScript("OnEnter", function()
+			provider.pin:HookScript("OnEnter", function(pin)
 				NameWaypointTooltip(GameTooltip, true)
+				if Usable(GameTooltip) and GameTooltip:IsOwned(pin) and IsJourneyWaypoint() then
+					GameTooltip_AddNormalLine(GameTooltip, ns.L["Right-click to clear"])
+					GameTooltip:Show()
+				end
 			end)
 		end
 		local owned = guide and (guide.writingWaypoint or guide.waypoint)
 		provider.pin:SetShown(not (owned and SameWaypoint(C_Map.GetUserWaypoint(), owned)))
 	end
+end
+
+-- The stock waypoint passes right clicks through to the canvas.
+function Guide.ClearHoveredWaypointJourney()
+	for _, provider in ipairs(waypointProviders) do
+		local pin = provider.pin
+		if pin and pin:IsShown() and pin:IsMouseOver() and IsJourneyWaypoint() then
+			ns.ClearJourney()
+			return true
+		end
+	end
+	return false
 end
 
 local refreshPending = false
@@ -336,18 +375,6 @@ local function SameTracking(state)
 	return state.expectedQuest == quest
 		and state.expectedTrackedWaypoint == waypoint
 		and state.expectedTrackingType == kind
-end
-
--- Whether a saved map pin stands at the journey's destination: arriving there clears the pin rather than restoring it.
----@param waypoint table
----@param point SPFPoint?
----@return boolean
-local function PinAtGoal(waypoint, point)
-	local location = point and ns.Locate(point)
-	if not (waypoint and location) then
-		return false
-	end
-	return SameWaypoint(waypoint, UiMapPoint.CreateFromCoordinates(location.uiMap, location.x, location.y))
 end
 
 -- Tracking Guide itself wrote and the client has not reported yet: the pin it restored when it stopped, and the

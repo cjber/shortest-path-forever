@@ -89,6 +89,37 @@ local function check(name, beforeLogin, body)
 	end
 end
 
+check(
+	"right-click on the native waypoint clears its journey",
+	"",
+	[[
+-- The native pin passes RightButton to the canvas. An unrelated player pin must keep the usual map action.
+start()
+local manualPin = UiMapPoint.CreateFromCoordinates(1414, 0.7, 0.8)
+C_Map.SetUserWaypoint(manualPin)
+pin(true)
+waypointProvider.pin.IsMouseOver = function() return true end
+shiftDown = false
+assert(not clickHandlers[1](map, "RightButton") and ns.HasJourney())
+
+-- A player waypoint at the journey's destination can stand in for the addon's own journey pin.
+C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(mapID, cursorX, cursorY))
+pin(true)
+waypointProvider.pin.IsMouseOver = function() return true end
+local reported = false
+ns.OpenMapReportMenu = function(clickedMap, uiMapID, x, y)
+ reported = clickedMap == map and uiMapID == mapID and x == cursorX and y == cursorY
+ return true
+end
+shiftDown, modifierDown = true, true
+assert(clickHandlers[1](map, "RightButton") and reported, "Shift-right-click opens the map report")
+assert(ns.HasJourney(), "opening the report keeps the journey")
+shiftDown, modifierDown = false, false
+assert(clickHandlers[1](map, "RightButton"), "consume the right click before the map zooms out")
+assert(not ns.HasJourney(), "clear the journey in one click")
+]]
+)
+
 local orphan = [[
 ShortestPathForeverCharDB = {guideWaypoint={uiMapID=1414,x=0.4,y=0.3}}
 waypoint = UiMapPoint.CreateFromCoordinates(1414, 0.4, 0.3)

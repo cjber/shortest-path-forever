@@ -634,7 +634,7 @@ for _, key in ipairs({ "mapLine", "minimapLine" }) do
 	assert(routeLinesRefreshed == before + 1, key .. " repaints both surfaces at once")
 end
 assert(Row("mapLine").setting.name == "Line on the world map", "the world map switch names its surface")
-assert(Row("minimapLine").setting.name == "Line on the minimap", "the minimap switch names its surface")
+assert(Row("minimapLine").setting.name == "Show minimap trail", "the minimap switch names its surface")
 assert(
 	Row("mapLine").tooltip:find("still guide you", 1, true)
 		and Row("minimapLine").tooltip:find("still guide you", 1, true),
