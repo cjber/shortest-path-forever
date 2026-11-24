@@ -262,3 +262,138 @@ scenario("RestedXP walk hints stay faded on both maps while the route is searche
 	assert(not (seen.Map.brightHint or seen.Minimap.brightHint), "the replan never drew a full-strength hint")
 	sim:expectNoErrors(ADDON)
 end)
+
+-- Turning a quest in moves RestedXP to its next step: the routed arrow the player chose leads that step too (#1311).
+scenario("the routed arrow leads the next RestedXP step after a turn-in", {
+	addons = ForeverCore.addons(),
+}, function(sim)
+	local inside = {}
+	sim.impl["C_Minimap.IsInsideQuestBlob"] = function(questID)
+		return inside[questID] == true
+	end
+	-- The client's one user waypoint and its super-tracking, which RestedXP writes as a step begins.
+	local waypoint, trackingWaypoint, trackedQuest
+	sim.impl["C_Map.GetUserWaypoint"] = function()
+		return waypoint
+	end
+	sim.impl["C_Map.SetUserWaypoint"] = function(point)
+		waypoint = point
+		sim.world.waypoint = { map = point.uiMapID, x = point.position.x, y = point.position.y }
+		return true
+	end
+	sim.impl["C_Map.ClearUserWaypoint"] = function()
+		waypoint = nil
+		sim.world.waypoint = nil
+	end
+	sim.impl["C_SuperTrack.IsSuperTrackingUserWaypoint"] = function()
+		return trackingWaypoint == true
+	end
+	sim.impl["C_SuperTrack.SetSuperTrackedUserWaypoint"] = function(value)
+		trackingWaypoint = value
+		if value then
+			trackedQuest = 0
+		end
+	end
+	sim.impl["C_SuperTrack.GetSuperTrackedQuestID"] = function()
+		return trackedQuest or 0
+	end
+	-- A quest selected on top of a tracked waypoint leaves that waypoint super-tracked (see SameTracking).
+	sim.impl["C_SuperTrack.SetSuperTrackedQuestID"] = function(questID)
+		trackedQuest = questID
+	end
+	local ns, rxp, API = LoginWithRestedXP(sim)
+	ns.db.restedxpArrow = "shortestPath"
+	-- The player's own pin from before the journey, which the journey's end puts back.
+	sim:runAs("RXPGuides", "C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(1429, 0.3, 0.3))")
+	local turnin = rxp.activeWaypoints[1]
+	turnin.questId, turnin.tag = 54, "turnin"
+	sim:event("ADDON_LOADED", "RXPGuides")
+	local function Theirs()
+		return rxp.arrowFrame:IsShown() and rxp.arrowFrame.texture:IsShown()
+	end
+	local function WaitFor(check)
+		for _ = 1, 4000 do
+			sim:advance(0.05)
+			if check() then
+				return true
+			end
+		end
+		return false
+	end
+	assert(
+		WaitFor(function()
+			return ns.ArrowLeads() and not Theirs()
+		end),
+		"the routed arrow leads the first step"
+	)
+	-- At the quest giver: the held stop's quest area holds the player, and the arrival pin stands.
+	inside[54] = true
+	assert(
+		WaitFor(function()
+			return ns.ArrivalStop() ~= nil
+		end),
+		"the arrival pin stands at the quest giver"
+	)
+	assert(ns.ArrowLeads() and not Theirs(), "the arrival pin leads at the quest giver")
+	-- The turn-in: RestedXP finishes the step and moves its waypoint to the next one.
+	local step = { active = true }
+	local nextStep = {
+		zone = ELWYNN,
+		x = 48,
+		y = 42,
+		title = "Northshire",
+		arrow = true,
+		step = step,
+		questId = 55,
+		tag = "complete",
+	}
+	-- RestedXP's waypoint element in that step, which pins its own spot on the player's map as the step begins.
+	local pin = { zone = ELWYNN, zx = 0.5, zy = 0.4, step = step }
+	step.elements = { nextStep, pin }
+	sim:input(function()
+		inside[54] = nil
+		turnin.step.active = false
+		turnin.completed = true
+		rxp.UpdateMap()
+		rxp.activeWaypoints = { nextStep }
+		rxp.RXPFrame = { activeSteps = { step } }
+		rxp.UpdateGotoSteps()
+	end)
+	-- The route to the next step lands, and the guide marks it with its own pin.
+	assert(
+		WaitFor(function()
+			return waypoint ~= nil and trackingWaypoint and ns.ArrowLeads() and not Theirs()
+		end),
+		"the routed arrow and our pin lead the next step"
+	)
+	-- RestedXP's waypoint element pins the step and records the pin as its own, then RestedXP focuses the step's quest.
+	sim:runAs("RXPGuides", "C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(1429, 0.5, 0.4))")
+	sim:runAs("RXPGuides", "C_SuperTrack.SetSuperTrackedUserWaypoint(true)")
+	pin.waypointSet = true
+	local theirPin = waypoint
+	sim:event("USER_WAYPOINT_UPDATED")
+	sim:event("SUPER_TRACKING_CHANGED")
+	sim:runAs("RXPGuides", "C_SuperTrack.SetSuperTrackedQuestID(55)")
+	sim:event("SUPER_TRACKING_CHANGED")
+	assert(
+		WaitFor(function()
+			return ns.GuideState() ~= nil and ns.ArrowLeads() and not Theirs()
+		end),
+		"the routed arrow leads the next step and RestedXP's stays hidden"
+	)
+	-- Guidance goes on: as the player walks, our pin replaces RestedXP's, and the journey's end puts back the
+	-- player's own pin from before the journey, not RestedXP's.
+	sim.world.player.worldX = sim.world.player.worldX + 8
+	assert(
+		WaitFor(function()
+			return waypoint ~= nil and waypoint.position.x ~= theirPin.position.x and trackingWaypoint
+		end),
+		"the guide marks the step with its own pin again"
+	)
+	sim:input(function()
+		API.Cancel("RestedXP")
+	end)
+	local mine = sim.impl["C_Map.GetUserWaypoint"]()
+	assert(mine and mine.position.x == 0.3 and mine.position.y == 0.3, "the journey's end puts back the player's pin")
+	sim:expectNoErrors(ADDON)
+end)
