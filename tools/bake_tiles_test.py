@@ -3,10 +3,32 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from tools.baker.tiles import load_tile
+from tools.baker.tiles import SUBTILE_WIDTH, load_tile, subtile_links
 
 
 class BakeTileTest(unittest.TestCase):
+    def test_overlapping_subtile_edges_form_a_portal(self):
+        x = 2069.333251953125  # The Tirisfal ramp's subtile seam in the raw 71037 tile.
+        shared = (x, 273.333251953125, 81.12545776367188)
+        a = (12548, (x, 267.1999206542969, 81.62545776367188), shared)
+        b = (12778, shared, (x, 266.9332580566406, 81.62545776367188))
+        start, end = a[1][:2], shared[:2]
+        self.assertEqual(
+            list(subtile_links([a, b])),
+            [(12778, 12548, end, start), (12548, 12778, start, end)],
+        )
+
+    def test_subtile_edges_need_overlap_opposite_sides_and_walkable_height(self):
+        for x, edges in (
+            (SUBTILE_WIDTH, [(0, 2, 10.0), (2, 4, 10.0)]),
+            (SUBTILE_WIDTH, [(0, 3, 10.0), (1, 4, 10.0)]),
+            (SUBTILE_WIDTH, [(0, 3, 10.0), (4, 1, 13.0)]),
+            (SUBTILE_WIDTH / 2, [(0, 3, 10.0), (4, 1, 10.0)]),
+        ):
+            with self.subTest(x=x, edges=edges):
+                raw = [(i, (x, a, z), (x, b, z)) for i, (a, b, z) in enumerate(edges)]
+                self.assertEqual(list(subtile_links(raw)), [])
+
     def test_reads_detour_polygon_and_rejects_incomplete_tiles(self):
         header = struct.pack("<4s14i10f", b"VAND", 7, 0, 0, 0, 0, 1, 3, *([0] * 7), *([0.0] * 10))
         vertices = struct.pack("<9f", 10, 20, 30, 11, 20, 30, 10, 20, 31)

@@ -57,7 +57,7 @@ from baker.measure import record, tile_hashes  # noqa: E402
 from baker.overhead import ClusterSurfaces  # noqa: E402
 from baker.terrain import encode_sparse as encode_terrain  # noqa: E402
 from baker.terrain import sample_cluster  # noqa: E402
-from baker.tiles import load_tile  # noqa: E402
+from baker.tiles import load_tile, subtile_links  # noqa: E402
 from forever_tools.fsio import atomic_write  # noqa: E402
 
 MM = os.environ.get("NAV_MM", "mm")
@@ -271,7 +271,7 @@ def read_tile(rc):
     ok = [bool(walkable(pts_of[i], flags, area, typ)) for i, (_, _, flags, area, typ) in enumerate(tile_polys)]
     # Detour holds (west, up, north); a connection's ends are in the same frame as the vertices
     drops = [((pos[2], pos[0], pos[1]), (pos[5], pos[3], pos[4])) for pos, _, _, _ in connections]
-    polys, links, border = [], [], []
+    polys, links, border, open_edges = [], [], [], []
     for i, (_pv, pn, _flags, area, _typ) in enumerate(tile_polys):
         if not ok[i]:
             continue
@@ -279,9 +279,10 @@ def read_tile(rc):
         polys.append((i, pts, area in (AREA_WATER, AREA_OCEAN), area == AREA_GROUND_STEEP))
         n = len(pts)
         for e, nb in enumerate(pn):
-            if nb == 0:
-                continue
             p1, p2 = pts[e], pts[(e + 1) % n]
+            if nb == 0:
+                open_edges.append((i, p1, p2))
+                continue
             if nb & 0x8000:  # tile-border edge; detour side 0/4 is an x (= world Y) border
                 side = nb & 0xFF
                 if side in (0, 4):
@@ -291,6 +292,7 @@ def read_tile(rc):
                 border.append((key, i, lo, hi, (p1[2] + p2[2]) / 2))
             elif ok[nb - 1]:
                 links.append((i, nb - 1, p1[:2], p2[:2]))
+    links.extend(subtile_links(open_edges))
     return polys, links, border, drops
 
 
