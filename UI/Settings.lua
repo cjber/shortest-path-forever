@@ -688,7 +688,7 @@ ns.Init(function()
 	Checkbox(
 		"arrow",
 		L["Show direction arrow"],
-		L["Show the next direction and the game's navigation marker."],
+		L["Show the next direction and the game's navigation marker. When off, only the route on the map and minimap stays."],
 		function()
 			ns.JourneyGuide.ArrowChanged()
 			ns.WakeTravel()

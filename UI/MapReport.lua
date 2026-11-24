@@ -66,6 +66,11 @@ local pins
 
 ---@param mapID integer?
 local function Draw(mapID)
+	-- Pins are not acquired in combat; leaving it redraws the map (ns.RefreshMap).
+	if InCombatLockdown() then
+		ns.QueueMapRefresh()
+		return
+	end
 	pins:ReleaseAll()
 	for _, mark in ipairs(ns.charDB.mapReportMarks) do
 		if mark.map == mapID then
@@ -128,6 +133,12 @@ function ns.OpenMapReportMenu(map, mapID, x, y)
 		end
 	end)
 	return true
+end
+
+function ns.RefreshMapReport()
+	if pins then
+		Draw(WorldMapFrame:GetMapID())
+	end
 end
 
 ns.Init(function()

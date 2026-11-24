@@ -13,6 +13,9 @@
 ---@field x? number
 ---@field y? number
 ---@field title? string
+---@field waypointSet? boolean whether a waypoint element's step set the player's user waypoint
+---@field zx? number that waypoint's position, as RestedXP read it back from the client
+---@field zy? number
 ---@field step? {
 ---	arrowtext: string?,
 ---	title: string?,
@@ -32,6 +35,7 @@
 ---@field settings? {profile: {showEnabled: boolean?}}
 ---@field activeWaypoints? SPFRestedXPElement[]
 ---@field currentGuide? table
+---@field RXPFrame? {activeSteps: {elements: SPFRestedXPElement[]?}[]?}
 ---@field hideArrow? boolean
 ---@field ResetArrowPosition? fun()
 ---@field UpdateMap fun(resetPins: boolean?)
