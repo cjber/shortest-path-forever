@@ -48,12 +48,13 @@ end
 -- everywhere.
 -- Nothing while journeys are off, while the player turned the hint off (#1142; the key still plans), or under the
 -- gamepad interface, whose map cursor has no key to hold.
+---@param format? string localized hint with a placeholder for the journey key
 ---@return string?
-function ns.JourneyClickHint()
+function ns.JourneyClickHint(format)
 	if not (ns.db and ns.db.journey) or ns.db.journeyHint == false or ns.GamepadUI() then
 		return nil
 	end
-	return string.format(L["%s-click to plan a journey here"], ns.JourneyKeyName())
+	return string.format(format or L["%s-click to plan a journey here"], ns.JourneyKeyName())
 end
 
 -- The minimap carries the same line, but it is the tooltip over every node, herb and NPC the player hovers, so it
@@ -69,12 +70,13 @@ end
 
 ---@param tooltip GameTooltip
 ---@param minimap? boolean
-function ns.AddJourneyClickHint(tooltip, minimap)
+---@param format? string localized world map hint
+function ns.AddJourneyClickHint(tooltip, minimap, format)
 	local hint
 	if minimap then
 		hint = ns.MinimapClickHint()
 	else
-		hint = ns.JourneyClickHint()
+		hint = ns.JourneyClickHint(format)
 	end
 	if hint then
 		GameTooltip_AddInstructionLine(tooltip, hint)

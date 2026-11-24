@@ -678,7 +678,10 @@ assert(
 	"Shift and Alt are listed in that order"
 )
 assert(journeyKeys[1].text == "Shift" and journeyKeys[2].text == "Alt", "each key is named")
-assert(journeyKey.tooltip:find("Questie", 1, true), "the tooltip says what Questie keeps")
+assert(
+	journeyKey.tooltip:find("Alt-click a Questie quest-start icon to plan a journey to the quest giver", 1, true),
+	"the tooltip names the Questie quest-start gesture and destination"
+)
 assert(Row("journey").setting.name == "Enable journeys", "the journey switch does not name a key")
 -- Route to the focused quest is opt-in: a plain map pin changes what it does, so it starts off.
 local focused = Row("focusedQuest")
