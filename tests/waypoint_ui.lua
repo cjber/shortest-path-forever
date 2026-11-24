@@ -106,6 +106,15 @@ assert(not clickHandlers[1](map, "RightButton") and ns.HasJourney())
 C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(mapID, cursorX, cursorY))
 pin(true)
 waypointProvider.pin.IsMouseOver = function() return true end
+local reported = false
+ns.OpenMapReportMenu = function(clickedMap, uiMapID, x, y)
+ reported = clickedMap == map and uiMapID == mapID and x == cursorX and y == cursorY
+ return true
+end
+shiftDown, modifierDown = true, true
+assert(clickHandlers[1](map, "RightButton") and reported, "Shift-right-click opens the map report")
+assert(ns.HasJourney(), "opening the report keeps the journey")
+shiftDown, modifierDown = false, false
 assert(clickHandlers[1](map, "RightButton"), "consume the right click before the map zooms out")
 assert(not ns.HasJourney(), "clear the journey in one click")
 ]]
