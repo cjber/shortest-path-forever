@@ -500,14 +500,19 @@ local function OwnsWaypoint()
 		return true
 	end
 	if not SameWaypoint(C_Map.GetUserWaypoint(), guide.expectedWaypoint) then
+		-- The journey's own guide addon pinning its step is no choice of the player's (#1311). Keep guiding, with that
+		-- pin as the one on the map now; pause, cast and the pin from before the journey stay as they were. Our pin is
+		-- gone, so the caller must not clear one: the next write puts ours back.
+		if ns.OwnerWroteWaypoint and ns.OwnerWroteWaypoint() then
+			guide.expectedWaypoint = C_Map.GetUserWaypoint()
+			guide.waypoint, guide.waypointTarget, guide.uiMap, guide.fading, guide.waypointNavigation =
+				nil, nil, nil, nil, nil
+			ns.charDB.guideWaypoint = nil
+			RememberTracking(guide)
+			return false
+		end
 		-- A manual replacement or removal ends guidance; never reclaim the player's waypoint.
 		StopGuide()
-		-- The journey's own guide addon pinning its step is no choice of the player's (#1311): a new guide leads on from
-		-- that pin, as one started now would, and puts it back when the journey ends. The caller's guide is gone either
-		-- way, so it must not go on to clear the pin the new one holds; the next steer points the new one.
-		if ns.OwnerWroteWaypoint and ns.OwnerWroteWaypoint() then
-			Guide.Start()
-		end
 		return false
 	end
 	return true
