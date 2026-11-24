@@ -176,6 +176,11 @@ class RasterizeLayersTest(unittest.TestCase):
         layers = self.layers(polys, {}, {})
         self.assertEqual([(z, v) for z, v, _ in layers[0]], [(10.0, 1)])
 
+    def test_off_centre_ground_wins_over_a_nearby_steep_face(self):
+        polys = {0: self.surface(0.0, 4.5, 11.0, steep=True), 1: self.surface(4.5, 8.0, 10.0)}
+        layers = self.layers(polys, {}, {})
+        self.assertEqual([(z, pid) for z, _, (pid, _) in layers[0]], [(10.0, 1)])
+
     def test_steep_ground_is_never_the_same_layer_as_the_ground_it_leads_to(self):
         # A face from 50 to 61.6 degrees is walked down and never across, so joining it to the flat ground beside it
         # inside one cell must not lose the level it leads up to.

@@ -520,6 +520,17 @@ def rasterize_layers(polys, adj, portal, bounds):
         gx, gy = int((x - X0) // CS), int((y - Y0) // CS)
         return gx * GH + gy if ax0 <= gx <= ax1 and ay0 <= gy <= ay1 else -1
 
+    def sample(i, pid, point):
+        p = polys[pid]
+        z = height(p, *point)
+        candidates = surf[i]
+        ground = not (p["steep"] or p["water"])
+        # Keep ordinary ground beside a steep sample so the layer selection can rank both.
+        if not any(
+            abs(h - z) < CLIMB and (not ground or not polys[other]["steep"]) for _, h, _, other, _, _ in candidates
+        ):
+            candidates.append((p["size"], z, 2 if p["water"] else 1, pid, point, bool(candidates)))
+
     for pid in sorted(polys):
         p = polys[pid]
         v = 2 if p["water"] else 1
@@ -545,7 +556,7 @@ def rasterize_layers(polys, adj, portal, bounds):
     # These surfaces anchor on the sampled point of that line, since the cell centre may lie off the mesh, and take the
     # poly's own height there. The centroid's height is the poly's height somewhere else: on a ramp it misplaced a cell
     # by several yards, and the step beside it read as a climb past 50 degrees, so the Dun Algaz tunnel walked one way
-    # only (#1011). Only the first passage through an empty cell may become its base; later ones can only add a floor.
+    # only (#1011). The first passage through an empty cell supplies its base candidate.
     for u in sorted(adj):
         for w in sorted(adj[u]):
             if w <= u:
@@ -553,18 +564,16 @@ def rasterize_layers(polys, adj, portal, bounds):
             pu, pw = polys[u], polys[w]
             e1, e2 = portal[(u, w)]
             mid = ((e1[0] + e2[0]) / 2, (e1[1] + e2[1]) / 2)
-            for a, b, p, pid in ((pu["c"], mid, pu, u), (mid, pw["c"], pw, w)):
+            for a, b, pid in ((pu["c"], mid, u), (mid, pw["c"], w)):
                 steps = int(math.dist(a[:2], b[:2]) / (CS / 4)) + 1
                 for t in range(steps + 1):
                     q = (a[0] + (b[0] - a[0]) * t / steps, a[1] + (b[1] - a[1]) * t / steps)
                     i = at(*q)
-                    z = height(p, *q)
-                    if i >= 0 and not any(abs(s[1] - z) < CLIMB for s in surf[i]):
-                        surf[i].append((p["size"], z, 2 if p["water"] else 1, pid, q, bool(surf[i])))
+                    if i >= 0:
+                        sample(i, pid, q)
     # A poly covering part of a cell but not its centre is still ground the player stands on in that cell: a stall or
     # a lamp post on a street's cell centre must not leave the cell only the ground under the city (#1046). It anchors
-    # on the centroid of its part inside the cell and only adds a floor, never the base, so a cell's base and its
-    # empty cells stay as the centre sample decides.
+    # on the centroid of its part inside the cell. It can replace a nearby steep layer or add a floor.
     stood = {i for i, ss in surf.items() if ss}
     for pid in sorted(polys):
         p = polys[pid]
@@ -576,11 +585,8 @@ def rasterize_layers(polys, adj, portal, bounds):
                     continue
                 x0, y0 = X0 + gx * CS, Y0 + gy * CS
                 c = centroid(clip_convex(p["pts"], (x0, x0 + CS, y0, y0 + CS)))
-                if c is None:
-                    continue
-                z = height(p, *c)
-                if not any(abs(s[1] - z) < CLIMB for s in surf[i]):
-                    surf[i].append((p["size"], z, 2 if p["water"] else 1, pid, c, True))
+                if c is not None:
+                    sample(i, pid, c)
 
     def pieces(ss, i):
         """The piece of surface each of the cell's candidates stands on, as a group number."""
@@ -609,6 +615,15 @@ def rasterize_layers(polys, adj, portal, bounds):
         # it shut in the ledge Lord Melenas stands on, two yards under a steep sliver of its rock (#1015).
         rank = [(s[0], not polys[s[3]]["steep"], s[1]) for s in ss]
         base = max((n for n, s in enumerate(ss) if not s[5]), key=rank.__getitem__)
+        size, z, _, pid, _, _ = ss[base]
+        if polys[pid]["steep"]:
+            # Ground within one layer can replace the selected steep base at the same component rank.
+            ground = (
+                n
+                for n, s in enumerate(ss)
+                if s[0] == size and s[2] == 1 and not polys[s[3]]["steep"] and abs(s[1] - z) < CLIMB
+            )
+            base = max(ground, key=rank.__getitem__, default=base)
         chosen, taken = [base], {piece[base]}
         # Lake and sea beds never reach here: the TrinityCore patch bakes ground the water reaches as area 7, which
         # walkable() refuses. Ground further down, behind solid ground, is a tunnel or a cellar and stays: the
