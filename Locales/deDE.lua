@@ -641,3 +641,6 @@ L["Walks reach Undercity's Royal Quarter, War Quarter and Apothecarium."] =
 L["Minimap walking route size"] = "Größe der Laufroute auf der Minikarte" -- mt
 L["Sizes the walking dots on the minimap."] = "Ändert die Größe der Punkte der Laufroute auf der Minikarte." -- mt
 L["Descend underground"] = "Steigt in den Untergrund hinab" -- mt
+L["%s-click to plan a journey to this flight master"] = "%s-Klick plant eine Reise zu diesem Flugmeister" -- mt
+L["Alt-click a Questie quest-start icon to plan a journey to the quest giver, whichever key you choose here."] =
+	"Alt-Klick auf ein Questie-Questsymbol plant eine Reise zum Questgeber, egal welche Taste Ihr hier wählt." -- mt
