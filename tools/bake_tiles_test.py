@@ -19,14 +19,16 @@ class BakeTileTest(unittest.TestCase):
         )
 
     def test_subtile_edges_need_overlap_opposite_sides_and_walkable_height(self):
-        for x, edges in (
-            (SUBTILE_WIDTH, [(0, 2, 10.0), (2, 4, 10.0)]),
-            (SUBTILE_WIDTH, [(0, 3, 10.0), (1, 4, 10.0)]),
-            (SUBTILE_WIDTH, [(0, 3, 10.0), (4, 1, 13.0)]),
-            (SUBTILE_WIDTH / 2, [(0, 3, 10.0), (4, 1, 10.0)]),
+        for x, a, b in (
+            (SUBTILE_WIDTH, (0, 10, 2, 10), (4, 10, 2, 10)),  # Touching without overlap.
+            (SUBTILE_WIDTH, (0, 10, 3, 10), (0, 10, 4, 10)),  # Same side.
+            (SUBTILE_WIDTH, (0, 10, 3, 10), (4, 14, 0, 10)),  # Too high at the far end.
+            (SUBTILE_WIDTH, (0, 10, 3, 10), (4, 11, 0, 11)),  # Stacked floors.
+            (SUBTILE_WIDTH, (0, 10, 0.001, 10), (4, 10, 0, 10)),  # Numerical sliver.
+            (SUBTILE_WIDTH + 0.1, (0, 10, 3, 10), (4, 10, 0, 10)),  # Off the seam.
         ):
-            with self.subTest(x=x, edges=edges):
-                raw = [(i, (x, a, z), (x, b, z)) for i, (a, b, z) in enumerate(edges)]
+            with self.subTest(x=x, a=a, b=b):
+                raw = [(i, (x, y0, z0), (x, y1, z1)) for i, (y0, z0, y1, z1) in enumerate((a, b))]
                 self.assertEqual(list(subtile_links(raw)), [])
 
     def test_reads_detour_polygon_and_rejects_incomplete_tiles(self):

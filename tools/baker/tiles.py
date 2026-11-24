@@ -4,18 +4,19 @@ import struct
 from collections import defaultdict
 from pathlib import Path
 
-# TileBuilder builds 25 Recast subtiles per 1600/3-yard ADT edge, with up to 80 voxels per subtile.
+# TileBuilder builds 25 Recast subtiles per 1600/3-yard ADT edge.
 SUBTILES_PER_ADT = 25
 SUBTILE_WIDTH = (1600 / 3) / SUBTILES_PER_ADT
-SUBTILE_VOXELS = 80
 PLAYER_STEP = 2.0
+# Account for float32 rounding of the ADT origin and voxel offset across the full 64-tile map.
+SEAM_ROUNDING = 2**-22 * (SUBTILE_WIDTH * SUBTILES_PER_ADT * 32)
 
 
 def subtile_links(edges):
     """Recover portals between unmatched, oppositely wound edges on an internal Recast subtile seam.
 
     Recast simplifies each subtile's contour independently. The merge only links edges with two matching
-    vertices, so even a long shared segment can vanish if one contour starts a voxel before the other.
+    vertices. A shared 3D vertex identifies the same floor when the other endpoint differs.
     """
     seams = defaultdict(lambda: ([], []))
     for poly, start, end in edges:
@@ -24,32 +25,30 @@ def subtile_links(edges):
             line = start[axis]
             if end[axis] != line or start[other] == end[other]:
                 continue
-            voxel = round(line / SUBTILE_WIDTH * SUBTILE_VOXELS)
-            seam, remainder = divmod(voxel, SUBTILE_VOXELS)
-            if remainder or seam % SUBTILES_PER_ADT == 0:
+            seam = round(line / SUBTILE_WIDTH)
+            if seam % SUBTILES_PER_ADT == 0 or abs(line - seam * SUBTILE_WIDTH) > SEAM_ROUNDING:
                 continue
             ascending = start[other] < end[other]
             a, b = (start, end) if ascending else (end, start)
-            seams[axis, line][ascending].append((a[other], b[other], a[2], b[2], poly))
+            seams[axis, a, True][ascending].append((poly, b))
+            seams[axis, b, False][ascending].append((poly, a))
 
-    def height(edge, along):
-        lo, hi, zlo, zhi, _ = edge
-        return zlo + (zhi - zlo) * (along - lo) / (hi - lo)
-
-    for (axis, line), (descending, ascending) in seams.items():
-        ascending.sort()
-        for a in descending:
-            for b in ascending:
-                if b[0] >= a[1]:
-                    break
-                lo, hi = max(a[0], b[0]), min(a[1], b[1])
-                if lo >= hi or a[4] == b[4]:
+    for (axis, shared, lower), (descending, ascending) in seams.items():
+        other = 1 - axis
+        for a, p in descending:
+            for b, q in ascending:
+                if a == b or p[:2] == q[:2]:
                     continue
-                if any(abs(height(a, along) - height(b, along)) > PLAYER_STEP for along in (lo, hi)):
+                p_width, q_width = abs(p[other] - shared[other]), abs(q[other] - shared[other])
+                width = min(p_width, q_width)
+                # Edge endpoints lie on the voxel grid. Discard numerical slivers, which cannot span a voxel.
+                slope_delta = abs((p[2] - shared[2]) / p_width - (q[2] - shared[2]) / q_width)
+                if width <= SEAM_ROUNDING or width * slope_delta > PLAYER_STEP:
                     continue
-                start, end = ((line, lo), (line, hi)) if axis == 0 else ((lo, line), (hi, line))
-                yield a[4], b[4], end, start
-                yield b[4], a[4], start, end
+                far = p if p_width <= q_width else q
+                start, end = (far[:2], shared[:2]) if lower else (shared[:2], far[:2])
+                yield a, b, start, end
+                yield b, a, end, start
 
 
 def load_tile(path):
