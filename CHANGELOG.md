@@ -16,6 +16,15 @@ optional `### For addon authors` subsection after a version's player bullets.
 
 - Ships with the same shared code as your other Forever addons, so they keep working together.
 
+### Changed
+
+- Find the minimap trail toggle under Show minimap trail in Map Marks. Turn it off to uncover minimap icons while keeping the arrow and world-map route.
+
+### Fixed
+
+- The journey key setting explains how to route to a Questie quest giver with Alt-click. On zone maps, Shortest Path's flight master tooltips show how to make that flight master your destination. Thanks, Zhiroc.
+- Right-click the journey waypoint on the world map to clear the journey in one click.
+
 ## [1.45.6] - 2026-11-24
 
 ### Changed
