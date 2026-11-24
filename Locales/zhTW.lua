@@ -629,3 +629,6 @@ L["Walks reach Undercity's Royal Quarter, War Quarter and Apothecarium."] =
 L["Minimap walking route size"] = "小地圖步行路線大小" -- mt
 L["Sizes the walking dots on the minimap."] = "調整小地圖上步行路線圓點的大小。" -- mt
 L["Descend underground"] = "下到地下" -- mt
+L["%s-click to plan a journey to this flight master"] = "%s-點擊以規劃前往此飛行管理員的旅程" -- mt
+L["Alt-click a Questie quest-start icon to plan a journey to the quest giver, whichever key you choose here."] =
+	"無論此處選擇哪個按鍵，Alt-點擊 Questie 任務起點圖示都會規劃前往任務發布者的旅程。" -- mt

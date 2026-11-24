@@ -681,3 +681,7 @@ L["Minimap walking route size"] = "Размер пешего маршрута н
 L["Sizes the walking dots on the minimap."] =
 	"Меняет размер точек пешего маршрута на мини-карте." -- mt
 L["Descend underground"] = "Спуститесь под землю" -- mt
+L["%s-click to plan a journey to this flight master"] =
+	"%s-щелчок: проложить путь к этому распорядителю полетов" -- mt
+L["Alt-click a Questie quest-start icon to plan a journey to the quest giver, whichever key you choose here."] =
+	"Alt-щелчок по значку начала задания Questie прокладывает путь к тому, кто выдает задание, какую бы клавишу вы здесь ни выбрали." -- mt

@@ -652,3 +652,7 @@ L["Minimap walking route size"] = "미니맵 도보 경로 크기" -- mt
 L["Sizes the walking dots on the minimap."] =
 	"미니맵에 표시되는 도보 경로 점의 크기를 조절합니다." -- mt
 L["Descend underground"] = "지하로 내려가세요" -- mt
+L["%s-click to plan a journey to this flight master"] =
+	"%s-클릭하여 이 비행 조련사까지 여정을 계획합니다" -- mt
+L["Alt-click a Questie quest-start icon to plan a journey to the quest giver, whichever key you choose here."] =
+	"Questie 퀘스트 시작 아이콘을 Alt-클릭하면 여기서 고른 키와 상관없이 퀘스트 제공자까지 여정을 계획합니다." -- mt

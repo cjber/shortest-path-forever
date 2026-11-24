@@ -152,6 +152,7 @@ ns.Credits = {
 		{ name = "esc_return", what = "Arrow follows the walk with only step ends marked" },
 		{ name = "MrOxiMoron", what = "The game's quest markers can stay on the map during a journey" },
 		{ name = "Zhiroc", what = "A choice of key for planning a journey from a map click" },
+		{ name = "Zhiroc", what = "Clarify how map clicks choose quest givers and flight masters as destinations" },
 		{ name = "Crypa7", what = "Walk to a new flight master before flying" },
 		{ name = "ghuff07", what = "Dugi Guides can lead the journey" },
 		{ name = "nimri82", what = "The public guidance point for RestedXP-Navigator" },
