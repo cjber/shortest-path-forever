@@ -10,6 +10,17 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.45.6] - 2026-11-24
+
+### Changed
+
+- The route and pins on the world map stay as last drawn through combat instead of hiding, and update once combat ends. In combat they take no clicks and show only on the map they were drawn for. Nearby-service pins on the minimap still hide in combat, as they would sit where you were.
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
+### Fixed
+
+- With Shortest Path's arrow chosen for RestedXP, the routed arrow keeps leading after a quest turn-in. RestedXP marking its next step on the map no longer counts as you placing your own pin, which had stopped the guide and brought RestedXP's arrow back.
+
 ## [1.45.5] - 2026-11-23
 
 ### Fixed
