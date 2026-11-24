@@ -44,16 +44,24 @@ function FlightPin:UpdateSuperTracked()
 	return tracked
 end
 
-function FlightPin:OnAcquired(info)
-	self.poiInfo = info
+local function FlightArt(info)
 	local atlas = info.textureKit and info.textureKit .. "-" .. info.atlasName or info.atlasName
 	local art = ns.Art.Info(atlas)
-	local width, height = art and art.width or PIN_SIZE, art and art.height or PIN_SIZE
+	return atlas, art and art.width or PIN_SIZE, art and art.height or PIN_SIZE
+end
+
+local function FlightScaleLimits()
+	local scale = (ns.db.flightPinScale or 100) / 100
+	return math.max(scale, 0.01), math.max(scale * 1.2, 0.01)
+end
+
+function FlightPin:OnAcquired(info)
+	self.poiInfo = info
+	local atlas, width, height = FlightArt(info)
 	self:SetSize(width, height)
 	ns.Art.Fit(self.Texture, atlas, width, height)
 	ns.Art.Fit(self.HighlightTexture, atlas, width, height)
-	local scale = (ns.db.flightPinScale or 100) / 100
-	self:SetScalingLimits(1, scale, scale * 1.2)
+	self:SetScalingLimits(1, FlightScaleLimits())
 	self:SetPosition(info.position:GetXY())
 	self:UpdateSuperTracked()
 end
@@ -160,9 +168,10 @@ end
 
 ---@class SPFFlightLayer
 ---@field signature? string
+---@field companions? string
 ---@field force? boolean
 local Flights = {}
----@type {x: number, y: number, info: table, pin: SPFCanvasPin?}[]
+---@type {x: number, y: number, width: number, height: number, info: table, suppressed?: boolean, pin: SPFCanvasPin?}[]
 local stitchedPins = {}
 
 function Flights.RemoveAllData()
@@ -172,17 +181,29 @@ end
 
 -- The world points and taxi metadata stay valid as the view moves on the same host map.
 -- Keep pins that are still in view so a pan does not interrupt their mouse interaction.
-local function UpdateStitchedPins(map)
+function Flights:UpdateStitchedPins(map, companions)
+	local suppressionChanged = self.companions ~= companions
+	self.companions = companions
 	local left, right, top, bottom = ns.Canvas.ViewRect(map)
+	local view = flightPins.view
+	local startScale, endScale = FlightScaleLimits()
+	-- Pin:ApplyScale keeps the icon screen-sized as the map zooms. Convert that size to canvas fractions.
+	local scale = Lerp(startScale, endScale, view.zoom) * view.pinScale / view.scale
+	local halfX = view.width > 0 and scale / (2 * view.width) or 0
+	local halfY = view.height > 0 and scale / (2 * view.height) or 0
 	for _, entry in ipairs(stitchedPins) do
-		local visible = left
+		if suppressionChanged then
+			entry.suppressed = ns.CompanionMaps.Suppresses("flight", entry.x, entry.y, "taxi", entry.info.nodeID)
+		end
+		local visible = not entry.suppressed
+			and left
 			and right
 			and top
 			and bottom
-			and entry.x >= left
-			and entry.x <= right
-			and entry.y >= top
-			and entry.y <= bottom
+			and entry.x + entry.width * halfX >= left
+			and entry.x - entry.width * halfX <= right
+			and entry.y + entry.height * halfY >= top
+			and entry.y - entry.height * halfY <= bottom
 		if visible and not entry.pin then
 			entry.pin = flightPins:Acquire(entry.info)
 		elseif not visible and entry.pin then
@@ -205,9 +226,11 @@ function Flights:RefreshAllData()
 		return
 	end
 	local stitched = ns.OpenMapAddon.Stitched()
-	local signature = ns.CompanionMaps.Scan(map)
+	local companions = ns.CompanionMaps.Scan(map)
+	local faction = UnitFactionGroup("player")
+	local signature = mapID
 		.. ":"
-		.. mapID
+		.. tostring(faction)
 		.. ":"
 		.. tostring(ns.db.mapFlightMasters)
 		.. ":"
@@ -216,16 +239,23 @@ function Flights:RefreshAllData()
 		.. tostring(ns.db.flightPinScale)
 		.. ":"
 		.. tostring(stitched)
+	if stitched then
+		local view = flightPins.view
+		signature = signature .. ":" .. view.width .. ":" .. view.height .. ":" .. view.pinScale
+	else
+		signature = signature .. ":" .. companions
+	end
 	if self.signature == signature and not self.force then
 		if stitched then
-			UpdateStitchedPins(map)
+			self:UpdateStitchedPins(map, companions)
 		end
 		return
 	end
 	self.force = nil
 	self:RemoveAllData()
 	self.signature = signature
-	local known, faction, class = ns.KnownTaxiNodes(), UnitFactionGroup("player"), select(2, UnitClass("player"))
+	self.companions = nil
+	local known, class = ns.KnownTaxiNodes(), select(2, UnitClass("player"))
 	local queried, reported = {}, {}
 	local function Query(id)
 		if id and not queried[id] then
@@ -273,17 +303,18 @@ function Flights:RefreshAllData()
 				info.atlasName = native.atlasName
 				info.textureKit = native.textureKit ~= "" and native.textureKit or nil
 			end
-			if ShouldShowTaxiNode(faction, info) and not ns.CompanionMaps.Suppresses("flight", x, y, "taxi", id) then
+			if ShouldShowTaxiNode(faction, info) then
 				if stitched then
-					stitchedPins[#stitchedPins + 1] = { x = x, y = y, info = info }
-				else
+					local _, width, height = FlightArt(info)
+					stitchedPins[#stitchedPins + 1] = { x = x, y = y, width = width, height = height, info = info }
+				elseif not ns.CompanionMaps.Suppresses("flight", x, y, "taxi", id) then
 					flightPins:Acquire(info)
 				end
 			end
 		end
 	end
 	if stitched then
-		UpdateStitchedPins(map)
+		self:UpdateStitchedPins(map, companions)
 	end
 end
 

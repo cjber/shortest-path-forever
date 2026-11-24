@@ -29,12 +29,26 @@ local normalProjection = OpenMapAPI.CanvasFromWorldPos
 local taxiNodes = ns.TaxiNodes
 local hostMap = mapID
 local flightMasters = ns.db.mapFlightMasters
+local scan, suppresses = ns.CompanionMaps.Scan, ns.CompanionMaps.Suppresses
+local queryTaxi = C_TaxiMap.GetTaxiNodesForMap
+local queries, projections, companionVisible = 0, 0, false
+function C_TaxiMap.GetTaxiNodesForMap(id)
+	queries = queries + 1
+	return queryTaxi(id)
+end
+function ns.CompanionMaps.Scan()
+	return tostring(companionVisible)
+end
+function ns.CompanionMaps.Suppresses(kind, _, _, _, id)
+	return companionVisible and kind == "flight" and id == 1
+end
 mapID = 14
 ns.TaxiNodes = {
 	[1] = { map = 1, x = 0, y = 0, name = "Kalimdor" },
 	[2] = { map = 0, x = 0, y = 0, name = "Eastern Kingdoms" },
 }
 OpenMapAPI.CanvasFromWorldPos = function(continent)
+	projections = projections + 1
 	return continent == 1 and 0.5 or 1.5, 0.5
 end
 ns.db.mapFlightMasters = true
@@ -45,6 +59,19 @@ mapTick()
 assert(flights:GetNumActive() == 2, "The stitched view shows flights on both continents")
 local easternPin = flights.active[1].poiInfo.nodeID == 2 and flights.active[1] or flights.active[2]
 easternPin:SetPressed(true)
+local initialQueries, initialProjections = queries, projections
+local hostZoom = zoom
+companionVisible = true
+zoom = 0.5
+mapTick()
+assert(flights:GetNumActive() == 1 and flights.active[1] == easternPin and easternPin.pressed,
+	"Showing a companion flight pin preserves the unaffected pressed pin")
+companionVisible = false
+zoom = hostZoom
+mapTick()
+assert(flights:GetNumActive() == 2 and easternPin.pressed, "Hiding the companion pin restores the SPF flight pin")
+assert(queries == initialQueries and projections == initialProjections,
+	"Companion changes reuse taxi queries and world projections")
 viewRect = { left = 1, right = 2.25, top = 0, bottom = 1 }
 mapTick()
 assert(flights:GetNumActive() == 1, "Panning updates flight pins with the same host map")
@@ -52,6 +79,13 @@ local flight = flights.active[1]
 local flightX, flightY = flight:GetPosition()
 assert(flight == easternPin and easternPin.pressed, "Panning preserves a visible flight pin and its press")
 assert(flight.poiInfo.nodeID == 2 and flightX == 1.5 and flightY == 0.5, "The pin uses OpenMap's canvas position")
+local halfWidth = easternPin:GetWidth() * easternPin:GetScale() / (2 * canvas:GetWidth())
+viewRect.left = flightX + halfWidth / 2
+mapTick()
+assert(flights:GetNumActive() == 1 and flights.active[1] == easternPin, "A partly visible flight icon stays drawn")
+viewRect.left = flightX + halfWidth * 2
+mapTick()
+assert(flights:GetNumActive() == 0, "A flight icon fully outside the view is removed")
 stitched = false
 mapTick()
 assert(flights:GetNumActive() == 1 and flights.active[1].poiInfo.nodeID == 1, "The regular map shows its zone's pin")
@@ -63,6 +97,8 @@ mapID = hostMap
 viewRect = { left = 0, right = 1, top = 0, bottom = 1 }
 stitched = true
 OpenMapAPI.CanvasFromWorldPos = normalProjection
+ns.CompanionMaps.Scan, ns.CompanionMaps.Suppresses = scan, suppresses
+C_TaxiMap.GetTaxiNodesForMap = queryTaxi
 setMapShown(true)
 
 local goals = ns.Canvas.Pools(WorldMapFrame).ShortestPathForeverGoalPinTemplate
