@@ -10,6 +10,12 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.45.8] - 2026-11-25
+
+### Fixed
+
+- Flight master pins now appear across OpenMap's stitched view even when "Load the zone in view" is off.
+
 ## [1.45.7] - 2026-11-24
 
 <!-- forever-core-sync -->
