@@ -80,7 +80,7 @@
     },
     {
       "source": "UI/Map.lua",
-      "sha256": "89710771652e0444a626d93755a5f5910711c29a4c35a191e049b7ed02cc519e",
+      "sha256": "8e5bdbc5c4f4517f613fbd569d4b493e33812cb5e91774c41f7589c98a3a3e22",
       "review": "Read dock, service and portal pin creation and tooltip callbacks. Map.xml defines textures without label FontStrings; localized destination, landing and direction phrases flow into tooltips or helper results, as does the journey click hint (ns.AddJourneyClickHint). Tooltip fonts belong to their templates, menu fonts are not established here, and dynamic location names are excluded. Reviewed the new map filter label and visibility callback. The menu owns its fonts. Reviewed the combat freeze: it sets no text.",
       "bindings": []
     },
