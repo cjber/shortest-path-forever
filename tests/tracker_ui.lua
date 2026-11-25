@@ -94,11 +94,15 @@ assert(
 -- #1335) leaves the section's lines inheriting that size. The section sets the game's own smallest size instead.
 do
  _G.ObjectiveTrackerFont12, _G.ObjectiveTrackerFont14, _G.ObjectiveTrackerFontSize = {}, {}, 1
+ block.HeaderText.fontSize = 1
  tracker:LayoutContents()
  local first, second = block:GetExistingLine(1), block:GetExistingLine(2)
  for name, text in pairs({ header = block.HeaderText, line = first.Text, dash = first.Dash, flight = second.Text }) do
   assert(select(2, text:GetFont()) >= 12, name .. " keeps a readable size beside a font-shrinking addon")
  end
+ local total = 0
+ for key in pairs(block.lines) do total = total + block.lines[key]:GetHeight() end
+ assert(block.height == total, "the block's height follows its re-measured lines: " .. block.height .. " vs " .. total)
  _G.ObjectiveTrackerFontSize = nil
  tracker:LayoutContents()
  line = block:GetExistingLine(1)

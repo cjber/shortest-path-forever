@@ -529,7 +529,7 @@ _G.CreateFrame = function(_, name, parent, template)
 						template = template,
 						used = true,
 						GetHeight = function(self)
-							return self.height or 12
+							return self.height
 						end,
 						SetHeight = function(self, height)
 							self.height = height
@@ -539,6 +539,10 @@ _G.CreateFrame = function(_, name, parent, template)
 					line.Dash:SetText(_G.QUEST_DASH)
 					line.Text:SetText(text)
 					line.Text.colorStyle = color
+					-- The game sizes a new line from its text's font.
+					line.height = line.Text.fontSize
+					-- Blizzard's AddObjective adds the new line's height to the block's.
+					self.height = self.height + line:GetHeight()
 					self.lines[key] = line
 					return line
 				end
@@ -548,6 +552,8 @@ _G.CreateFrame = function(_, name, parent, template)
 				self.liveBlocks[id] = b
 			end
 			b.used = true
+			-- Each layout pass starts the block's height over, as the game's does.
+			b.height = 0
 			return b
 		end
 		function f:GetExistingBlock(id)
