@@ -384,11 +384,13 @@ do
 			return f
 		end
 		d.load("UI/Looks.lua")
-		d.load("UI/Art.lua")
-		d.load("UI/Mover.lua")
-		d.load("UI/TurnAround.lua")
-		d.load("UI/CastButton.lua")
-		d.load("UI/Arrow.lua")
+		if opts.withArrow ~= false then
+			d.load("UI/Art.lua")
+			d.load("UI/Mover.lua")
+			d.load("UI/TurnAround.lua")
+			d.load("UI/CastButton.lua")
+			d.load("UI/Arrow.lua")
+		end
 		-- Capture the arrow frame lazily when UI/Arrow.lua creates it.
 		local arrowCreate = e.CreateFrame
 		local watcherFrame
@@ -429,6 +431,15 @@ do
 		e.InCombatLockdown = function()
 			return false
 		end
+		e.C_Item = e.C_Item
+			or {
+				GetItemNameByID = function()
+					return "Hearthstone"
+				end,
+				GetItemIconByID = function()
+					return 134414
+				end,
+			}
 		e.UnitName = function()
 			return "Tester"
 		end
@@ -719,6 +730,30 @@ do
 		equal(c.API.CurrentStop("TomTom"), 1, "followed foreign waypoint is active")
 		c.ns.ClearJourney()
 
+		-- Guide.Pause and Guide.Cast with a nearby foreign TomTom waypoint must not start a new journey under
+		-- tomtomFollow when our own waypoint is removed.
+		navCalls = 0
+		c.driver.begin({ map = 1, x = 0, y = 0 }, { map = 1, x = 0, y = -5000 })
+		local pausedUid = c.tomtom.Arrow()
+		equal(pausedUid ~= foreign, true, "journey owns TomTom before Pause")
+		c.ns.JourneyGuide.Pause()
+		equal(c.tomtom:IsValidWaypoint(pausedUid), false, "Pause removes our waypoint")
+		equal(c.tomtom:IsValidWaypoint(foreign), true, "Pause keeps the foreign waypoint")
+		equal(navCalls, 0, "Pause with a nearby foreign waypoint starts no new journey under tomtomFollow")
+		equal(c.ns.JourneyGuide.Paused(), true, "journey stays paused rather than replaced by foreign waypoint")
+		c.ns.ClearJourney()
+
+		navCalls = 0
+		c.driver.begin({ map = 1, x = 0, y = 0 }, { map = 1, x = 0, y = -5000 })
+		local castUid = c.tomtom.Arrow()
+		equal(castUid ~= foreign, true, "journey owns TomTom before Cast")
+		c.ns.JourneyGuide.Cast({ mode = "teleport", teleport = { item = 6948 } }, c.ns.JourneyGoal())
+		equal(c.tomtom:IsValidWaypoint(castUid), false, "Cast removes our waypoint")
+		equal(c.tomtom:IsValidWaypoint(foreign), true, "Cast keeps the foreign waypoint")
+		equal(navCalls, 0, "Cast with a nearby foreign waypoint starts no new journey under tomtomFollow")
+		equal(c.ns.JourneyGuide.Casting(), true, "journey stays in Cast phase rather than replaced by foreign waypoint")
+		c.ns.ClearJourney()
+
 		-- Step advance where TomTom's RemoveWaypoint synchronously points at a foreign waypoint must not start a
 		-- foreign journey or leave TomTom pointing away from the new step.
 		navCalls = 0
@@ -849,6 +884,89 @@ do
 		equal(c.arrowFrame().hidden, false, "native arrow returns immediately after external removal")
 		c.tomtom.AddWaypoint = origAdd
 		c.ns.ClearJourney()
+	end
+
+	-- 11. TomTom's floating arrow disabled in TomTom's profile (profile.arrow.enable == false) must not drive TomTom
+	-- or suppress our native arrow and game navigation marker (defect A).
+	do
+		local c = BootArrow({ tomtomArrow = true })
+		local adds = 0
+		local origAdd = c.tomtom.AddWaypoint
+		function c.tomtom:AddWaypoint(...)
+			adds = adds + 1
+			return origAdd(self, ...)
+		end
+		c.tomtom.profile.arrow = { enable = false }
+		c.driver.begin({ map = 1, x = 0, y = 0 }, { map = 1, x = 0, y = -5000 })
+		equal(adds, 0, "when TomTom's floating arrow is disabled, AddWaypoint is never called")
+		equal(c.ns.TomTomArrowActive(), false, "TomTomArrowActive is false when TomTom's arrow is disabled")
+		equal(
+			c.arrowFrame() ~= nil and c.arrowFrame().hidden == false,
+			true,
+			"native arrow stays visible when TomTom's arrow is disabled"
+		)
+		local wp, tracked = c.driver.waypoint()
+		equal(type(wp), "table", "native game waypoint is placed when TomTom's arrow is disabled")
+		equal(tracked, true, "native game marker is super-tracked when TomTom's arrow is disabled")
+		equal(c.ns.ArrowLeads(), true, "ArrowLeads stays true via our native arrow")
+
+		-- Re-enabling TomTom's floating arrow mid-journey hands over to TomTom, and disabling it again restores ours.
+		c.tomtom.profile.arrow.enable = true
+		c.tomtom:ShowHideCrazyArrow()
+		local driven = c.tomtom.Arrow()
+		equal(adds, 1, "enabling TomTom's arrow mid-journey adds our TomTom waypoint once")
+		equal(type(driven), "table", "enabling TomTom's arrow mid-journey sets our TomTom waypoint")
+		equal(c.ns.TomTomArrowActive(), true, "TomTomArrowActive becomes true once TomTom's arrow is enabled")
+		equal(c.arrowFrame().hidden, true, "native arrow hides once TomTom's arrow is enabled")
+		c.tomtom.profile.arrow.enable = false
+		c.tomtom:ShowHideCrazyArrow()
+		equal(c.tomtom:IsValidWaypoint(driven), false, "disabling TomTom's arrow mid-journey removes our waypoint")
+		equal(c.ns.TomTomArrowActive(), false, "TomTomArrowActive drops to false when TomTom's arrow is disabled")
+		equal(c.arrowFrame().hidden, false, "native arrow returns immediately when TomTom's arrow is disabled")
+		c.ns.ClearJourney()
+	end
+
+	-- 12. PointGuideArrow syncs TomTom in one place with no flag that an error inside PointGuideArrow could strand
+	-- (defect B).
+	do
+		local c = BootArrow({ tomtomArrow = true })
+		c.driver.move({ map = 1, x = 0, y = 0 })
+		local goal1 = { map = 1, x = 0, y = -5000, label = "First" }
+		local goal2 = { map = 1, x = 0, y = -10000, label = "Second" }
+		local origArrowLeads = c.ns.ArrowLeads
+		local throwOnce = true
+		c.ns.ArrowLeads = function(...)
+			if throwOnce then
+				throwOnce = false
+				error("boom after SyncTomTomGuide")
+			end
+			return origArrowLeads(...)
+		end
+		local ok = pcall(c.ns.PointGuideArrow, { { map = 1, x = 0, y = 0 }, goal1 }, nil, goal1, goal1)
+		c.ns.ArrowLeads = origArrowLeads
+		equal(ok, false, "simulated error after SyncTomTomGuide propagates out of PointGuideArrow")
+		c.ns.PointGuideArrow({ { map = 1, x = 0, y = 0 }, goal2 }, nil, goal2, goal2)
+		local after = c.tomtom.Arrow()
+		equal(
+			type(after) == "table" and after.title == "Second",
+			true,
+			"next PointGuideArrow still syncs TomTom cleanly after an earlier error"
+		)
+		c.ns.PointGuideArrow(nil)
+		equal(c.tomtom:IsValidWaypoint(after), false, "clearing PointGuideArrow removes the waypoint cleanly")
+
+		-- Without UI/Arrow.lua loaded, a direct SyncTomTomGuide call never strands a flag that skips the next
+		-- PointGuideArrow hook sync.
+		local m = BootArrow({ tomtomArrow = true, withArrow = false })
+		m.ns.SyncTomTomGuide(nil)
+		local targetGoal = { map = 1, x = 0, y = -5000, label = "AfterSync" }
+		m.ns.PointGuideArrow({ { map = 1, x = 0, y = 0 }, targetGoal }, nil, targetGoal, targetGoal)
+		local synced = m.tomtom.Arrow()
+		equal(
+			type(synced) == "table" and synced.title == "AfterSync",
+			true,
+			"PointGuideArrow hook syncs without a stranding flag"
+		)
 	end
 end
 

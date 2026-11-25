@@ -23,6 +23,7 @@
 ---@field corpse? boolean -- TomTom's own corpse waypoint (TomTom_Corpse.lua)
 
 ---@class TomTom
+---@field profile? { arrow?: { enable?: boolean } } -- TomTom's active profile settings
 ---@field waypoints table<integer, table<string, TomTomWaypoint>> -- by map, then by key; this shim keeps one at a time
 ---@field AddWaypoint fun(self: TomTom, map: integer, x: number, y: number, opts?: TomTomWaypointOptions): TomTomWaypoint? -- uiMapID and 0-1 coordinates
 ---@field AddMFWaypoint fun(self: TomTom, map: integer, floor: number?, x: number, y: number, opts?: TomTomWaypointOptions): TomTomWaypoint? -- the map and the same 0-1 point

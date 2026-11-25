@@ -728,7 +728,12 @@ function ns.RefreshTomTomFollow()
 			end)
 		end
 		if type(tomtom.ShowHideCrazyArrow) == "function" then
-			hooksecurefunc(tomtom, "ShowHideCrazyArrow", SyncArrow) -- taint-ok: TomTom owns this addon table.
+			hooksecurefunc(tomtom, "ShowHideCrazyArrow", function() -- taint-ok: TomTom owns this addon table.
+				if ns.OnTomTomArrowVisibilityChanged then
+					ns.OnTomTomArrowVisibilityChanged()
+				end
+				SyncArrow()
+			end)
 		end
 		if type(tomtom.HijackCrazyArrow) == "function" then
 			hooksecurefunc(tomtom, "HijackCrazyArrow", SyncArrow) -- taint-ok: TomTom owns this addon table.

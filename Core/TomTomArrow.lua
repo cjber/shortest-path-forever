@@ -18,7 +18,7 @@ local repointing = false
 local removing = false
 local suppressingReplacement = false
 local notifyingArrow = false
-local syncedFromArrow = false
+local syncingVisibility = false
 -- True only while TomTom actually holds our active step target (either our own waypoint or a repointed foreign one).
 local driven = false
 ---@type TomTomWaypoint?
@@ -50,14 +50,24 @@ local function SamePoint(a, b)
 	return a == b or (a ~= nil and b ~= nil and a.map == b.map and a.x == b.x and a.y == b.y)
 end
 
--- Whether settings and TomTom allow driving TomTom's arrow (real TomTom loaded, opt-in on, arrow not off).
+-- Whether TomTom's own floating Crazy Arrow is enabled in its active profile.
+---@param tomtom TomTom
+---@return boolean
+local function TomTomCrazyArrowEnabled(tomtom)
+	local profile = type(tomtom.profile) == "table" and tomtom.profile or nil
+	local arrow = profile and type(profile.arrow) == "table" and profile.arrow or nil
+	return not (arrow and arrow.enable == false)
+end
+
+-- Whether settings and TomTom allow driving TomTom's arrow (real TomTom loaded with its floating arrow enabled,
+-- opt-in setting on, and our direction arrow setting not off).
 ---@return boolean
 local function TomTomArrowEnabled()
-	return ns.db ~= nil
-		and ns.db.tomtomArrow == true
-		and ns.db.arrow ~= false
-		and ns.RealTomTom ~= nil
-		and ns.RealTomTom() ~= nil
+	if not (ns.db and ns.db.tomtomArrow == true and ns.db.arrow ~= false) then
+		return false
+	end
+	local tomtom = ns.RealTomTom and ns.RealTomTom()
+	return tomtom ~= nil and TomTomCrazyArrowEnabled(tomtom)
 end
 
 -- Whether Shortest Path actually owns TomTom's arrow right now. Returns false if projecting or adding the waypoint
@@ -355,19 +365,37 @@ local function SyncDriven(notifyArrow)
 	end
 end
 
--- Called by UI/Arrow.lua inside PointGuideArrow before checking ArrowShown, so actual TomTom ownership is settled
--- before our native arrow or Blizzard's marker is shown or hidden.
+-- Called by UI/Arrow.lua inside PointGuideArrow before checking ArrowShown (or by the fallback PointGuideArrow hook
+-- when UI/Arrow.lua is not loaded), so actual TomTom ownership is settled in exactly one place.
 ---@param points SPFWalkPoints?
 ---@param stop SPFPlace?
 ---@param goal SPFPoint?
 function ns.SyncTomTomGuide(points, stop, goal)
-	syncedFromArrow = true
 	if points and #points > 0 then
 		activePoints, activeStop, activeGoal = points, stop, goal
 	else
 		activePoints, activeStop, activeGoal = nil, nil, nil
 	end
 	SyncDriven(false)
+end
+
+-- Called from TomTom's ShowHideCrazyArrow hook when the player toggles TomTom's floating arrow setting mid-journey.
+function ns.OnTomTomArrowVisibilityChanged()
+	if syncingVisibility or adding or repointing or removing then
+		return
+	end
+	syncingVisibility = true
+	local wasDriven = driven
+	SyncDriven(true)
+	if wasDriven ~= driven and ns.JourneyGuide and ns.JourneyGuide.Active and ns.JourneyGuide.Active() then
+		if ns.JourneyGuide.ArrowChanged then
+			ns.JourneyGuide.ArrowChanged()
+		end
+		if ns.WakeTravel then
+			ns.WakeTravel()
+		end
+	end
+	syncingVisibility = false
 end
 
 -- Settings checkbox and late TomTom load both call this.
@@ -399,22 +427,17 @@ function ns.RefreshTomTomArrow()
 end
 
 ns.Init(function()
-	hooksecurefunc(
-		ns,
-		"PointGuideArrow",
-		function(points, _, stop, goal) -- taint-ok: Shortest Path owns this addon table.
-			if syncedFromArrow then
-				syncedFromArrow = false
-				return
+	-- When UI/Arrow.lua is loaded (defining ns.GuideState), its PointGuideArrow calls ns.SyncTomTomGuide directly
+	-- before ArrowShown; only hook PointGuideArrow in minimal harnesses that omit UI/Arrow.lua.
+	if type(ns.GuideState) ~= "function" then
+		hooksecurefunc(
+			ns,
+			"PointGuideArrow",
+			function(points, _, stop, goal) -- taint-ok: Shortest Path owns this addon table.
+				ns.SyncTomTomGuide(points, stop, goal)
 			end
-			if points and #points > 0 then
-				activePoints, activeStop, activeGoal = points, stop, goal
-			else
-				activePoints, activeStop, activeGoal = nil, nil, nil
-			end
-			SyncDriven(false)
-		end
-	)
+		)
+	end
 	if type(ns.GuideGuidanceChanged) == "function" then
 		hooksecurefunc(ns, "GuideGuidanceChanged", function() -- taint-ok: Shortest Path owns this addon table.
 			if activePoints and ns.GuideState then
