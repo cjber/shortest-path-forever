@@ -904,6 +904,15 @@ end
 
 -- Refresh arrow rendering without changing the canonical walk or its progress.
 function ns.ArrowBearingChanged()
+	if not frame and DirectionsShown() and ((path and target) or arrival) then
+		Create()
+		if arrival then
+			ShowArrival(arrival)
+		else
+			frame.Progress:SetText(destination and destination.routeTitle or "")
+			frame.linesDirty = true
+		end
+	end
 	if frame then
 		if DirectionsShown() and ((path and target) or arrival) then
 			frame:Show()
@@ -947,6 +956,12 @@ function ns.PointGuideArrow(points, placeBend, stop, goal)
 	end
 	if revision ~= updating then
 		return
+	end
+	if ns.SyncTomTomGuide then
+		ns.SyncTomTomGuide(points, stop, goal)
+		if revision ~= updating then
+			return
+		end
 	end
 	if not points or not ArrowShown() then
 		native, shared, unseen = nil, nil, false

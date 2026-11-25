@@ -729,17 +729,16 @@ function Guide.To(node, points, goal, leg)
 		guide.pausedGoal = nil
 		RefreshTracker()
 	end
-	if (ns.db.arrow == false or (ns.TomTomArrowActive and ns.TomTomArrowActive())) and guide.waypoint then
-		if not OwnsWaypoint() then
-			return
-		end
-		ClearGuideWaypoint()
-	end
 	guide.points = points
 	guide.target = node
 	GuideTitle(goal)
 	local point = node.kind == "dock" and ns.DockPoint(node.id) or node
 	ns.PointGuideArrow(points or { point }, GuideWaypoint, node, goal)
+	if (ns.db.arrow == false or (ns.TomTomArrowActive and ns.TomTomArrowActive())) and guide and guide.waypoint then
+		if OwnsWaypoint() then
+			ClearGuideWaypoint()
+		end
+	end
 end
 
 -- Keep the owner's stop while it waits for quest progress, without directions to a place already reached. The arrow

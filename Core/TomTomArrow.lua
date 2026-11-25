@@ -15,8 +15,20 @@ end
 local ownWaypoints = setmetatable({}, { __mode = "k" })
 local adding = false
 local repointing = false
+local removing = false
+local suppressingReplacement = false
+local notifyingArrow = false
+local syncedFromArrow = false
+-- True only while TomTom actually holds our active step target (either our own waypoint or a repointed foreign one).
+local driven = false
 ---@type TomTomWaypoint?
 local currentUid
+---@type TomTomWaypoint?
+local drivenForeign
+-- When a TomTom implementation lacks ClearCrazyArrowPoint and leaves our removed waypoint on its arrow until the next
+-- ArrowUpdate, that exact removed table identifies the one automatic replacement to suppress.
+---@type TomTomWaypoint?
+local replacedArrowUid
 local currentMap, currentX, currentY, currentTitle
 ---@type SPFWalkPoints?
 local activePoints
@@ -38,10 +50,9 @@ local function SamePoint(a, b)
 	return a == b or (a ~= nil and b ~= nil and a.map == b.map and a.x == b.x and a.y == b.y)
 end
 
--- Whether Shortest Path is driving TomTom's arrow right now: real TomTom loaded, opt-in setting on, and our
--- direction arrow setting is not off (#1301).
+-- Whether settings and TomTom allow driving TomTom's arrow (real TomTom loaded, opt-in on, arrow not off).
 ---@return boolean
-function ns.TomTomArrowActive()
+local function TomTomArrowEnabled()
 	return ns.db ~= nil
 		and ns.db.tomtomArrow == true
 		and ns.db.arrow ~= false
@@ -49,40 +60,107 @@ function ns.TomTomArrowActive()
 		and ns.RealTomTom() ~= nil
 end
 
--- Recognised strictly by the waypoint table we created (or while repointing at an existing foreign waypoint).
+-- Whether Shortest Path actually owns TomTom's arrow right now. Returns false if projecting or adding the waypoint
+-- failed, so UI/Arrow.lua and JourneyGuide.lua fall back to our own arrow and native marker.
+---@return boolean
+function ns.TomTomArrowActive()
+	return driven and TomTomArrowEnabled()
+end
+
+-- Recognised strictly by the waypoint table we created, or while suppressing TomTom's automatic arrow update caused
+-- by our own waypoint removal or repointing.
 ---@param uid any
 ---@return boolean
 function ns.IsOwnTomTomWaypoint(uid)
-	return repointing or (type(uid) == "table" and ownWaypoints[uid] == true)
+	return removing or repointing or suppressingReplacement or (type(uid) == "table" and ownWaypoints[uid] == true)
 end
 
--- TomTom calls SetCrazyArrow synchronously inside AddWaypoint before returning the waypoint table.
+local function NotifyDrivenChanged()
+	if ns.SyncTomTomArrow then
+		ns.SyncTomTomArrow()
+	end
+	if not notifyingArrow and ns.ArrowBearingChanged then
+		notifyingArrow = true
+		ns.ArrowBearingChanged()
+		notifyingArrow = false
+	end
+end
+
+-- TomTom calls SetCrazyArrow synchronously inside AddWaypoint before returning the waypoint table, and may also
+-- replace a removed own waypoint with the closest remaining foreign waypoint on its next update.
 ---@param uid any
 function ns.OnTomTomCrazyArrow(uid)
 	if adding and type(uid) == "table" then
 		ownWaypoints[uid] = true
+		return
 	end
+	if replacedArrowUid ~= nil then
+		local previousArrow = ns.TomTomArrowWaypoint and ns.TomTomArrowWaypoint()
+		local tomtom = ns.RealTomTom and ns.RealTomTom()
+		local existing = type(uid) == "table"
+			and tomtom ~= nil
+			and (type(tomtom.IsValidWaypoint) ~= "function" or tomtom:IsValidWaypoint(uid))
+		if previousArrow == replacedArrowUid and existing then
+			suppressingReplacement = true
+		end
+		replacedArrowUid = nil
+	end
+end
+
+function ns.AfterTomTomCrazyArrow()
+	suppressingReplacement = false
 end
 
 ---@param uid any
 function ns.OnTomTomWaypointRemoved(uid)
-	if uid ~= nil and uid == currentUid then
-		currentUid = nil
+	if uid == nil then
+		return
+	end
+	if uid == currentUid or uid == drivenForeign then
+		if uid == currentUid then
+			currentUid = nil
+		end
+		if uid == drivenForeign then
+			drivenForeign = nil
+		end
 		currentMap, currentX, currentY, currentTitle = nil, nil, nil, nil
+		local wasDriven = driven
+		driven = false
+		if wasDriven and not removing then
+			NotifyDrivenChanged()
+		end
+	end
+end
+
+---@param tomtom TomTom?
+---@param uid TomTomWaypoint?
+---@param clearArrow boolean
+local function RemoveOwnWaypoint(tomtom, uid, clearArrow)
+	if not (tomtom and uid and type(tomtom.RemoveWaypoint) == "function") then
+		return
+	end
+	local wasOnArrow = clearArrow and ns.TomTomArrowWaypoint ~= nil and ns.TomTomArrowWaypoint() == uid
+	removing = true
+	ns.core.SafeCall("TomTom arrow remove", tomtom.RemoveWaypoint, tomtom, uid)
+	if wasOnArrow and ns.TomTomArrowWaypoint() == uid and type(tomtom.ClearCrazyArrowPoint) == "function" then
+		ns.core.SafeCall("TomTom arrow clear", tomtom.ClearCrazyArrowPoint, tomtom, false)
+	end
+	removing = false
+	if wasOnArrow and ns.TomTomArrowWaypoint() == uid then
+		replacedArrowUid = uid
 	end
 end
 
 local function ClearDriven()
 	local uid = currentUid
 	currentUid = nil
+	drivenForeign = nil
+	driven = false
 	currentMap, currentX, currentY, currentTitle = nil, nil, nil, nil
 	if not uid then
 		return
 	end
-	local tomtom = ns.RealTomTom and ns.RealTomTom()
-	if tomtom and type(tomtom.RemoveWaypoint) == "function" then
-		ns.core.SafeCall("TomTom arrow remove", tomtom.RemoveWaypoint, tomtom, uid)
-	end
+	RemoveOwnWaypoint(ns.RealTomTom and ns.RealTomTom() or nil, uid, true)
 end
 
 ---@param point SPFPoint?
@@ -161,33 +239,49 @@ local function CurrentTarget()
 	return point, stop, goal
 end
 
-local function SyncDriven()
-	if not ns.TomTomArrowActive() then
+---@param notifyArrow? boolean
+local function SyncDriven(notifyArrow)
+	local wasDriven = driven
+	if not TomTomArrowEnabled() then
 		ClearDriven()
+		if notifyArrow and wasDriven ~= driven then
+			NotifyDrivenChanged()
+		end
 		return
 	end
 	local point, stop, goal = CurrentTarget()
 	if not point then
 		ClearDriven()
+		if notifyArrow and wasDriven ~= driven then
+			NotifyDrivenChanged()
+		end
 		return
 	end
 	local uiMap, x, y = ProjectPoint(point)
 	if not (uiMap and x and y) then
 		ClearDriven()
+		if notifyArrow and wasDriven ~= driven then
+			NotifyDrivenChanged()
+		end
 		return
 	end
 	local title = StepTitle(stop, goal)
 	local tomtom = ns.RealTomTom()
 	if not tomtom then
 		ClearDriven()
+		if notifyArrow and wasDriven ~= driven then
+			NotifyDrivenChanged()
+		end
 		return
 	end
 	if
-		currentMap == uiMap
+		driven
+		and currentMap == uiMap
 		and currentX == x
 		and currentY == y
 		and currentTitle == title
 		and (not currentUid or type(tomtom.IsValidWaypoint) ~= "function" or tomtom:IsValidWaypoint(currentUid))
+		and (not drivenForeign or type(tomtom.IsValidWaypoint) ~= "function" or tomtom:IsValidWaypoint(drivenForeign))
 	then
 		return
 	end
@@ -196,16 +290,29 @@ local function SyncDriven()
 		-- A foreign waypoint already sits at this exact map, point and title: point at it without claiming or
 		-- overwriting it, so clearing our journey never removes the player's or another addon's waypoint.
 		ClearDriven()
-		currentMap, currentX, currentY, currentTitle = uiMap, x, y, title
 		if type(tomtom.SetCrazyArrow) == "function" then
 			repointing = true
-			ns.core.SafeCall("TomTom arrow point", tomtom.SetCrazyArrow, tomtom, preexisting, 15, preexisting.title)
+			local ok =
+				ns.core.SafeCall("TomTom arrow point", tomtom.SetCrazyArrow, tomtom, preexisting, 15, preexisting.title)
 			repointing = false
+			if ok then
+				driven = true
+				drivenForeign = preexisting
+				currentMap, currentX, currentY, currentTitle = uiMap, x, y, title
+			end
+		end
+		if notifyArrow and wasDriven ~= driven then
+			NotifyDrivenChanged()
 		end
 		return
 	end
 	if preexisting and preexisting == currentUid then
+		driven = true
+		drivenForeign = nil
 		currentMap, currentX, currentY, currentTitle = uiMap, x, y, title
+		if notifyArrow and wasDriven ~= driven then
+			NotifyDrivenChanged()
+		end
 		return
 	end
 	local previous = currentUid
@@ -224,13 +331,43 @@ local function SyncDriven()
 	if ok and type(uid) == "table" and uid ~= preexisting then
 		ownWaypoints[uid] = true
 		currentUid = uid
+		drivenForeign = nil
+		driven = true
+		replacedArrowUid = nil
 		currentMap, currentX, currentY, currentTitle = uiMap, x, y, title
 		if previous and previous ~= uid then
-			ns.core.SafeCall("TomTom arrow remove", tomtom.RemoveWaypoint, tomtom, previous)
+			RemoveOwnWaypoint(tomtom, previous, false)
+			if
+				ns.TomTomArrowWaypoint
+				and ns.TomTomArrowWaypoint() ~= uid
+				and type(tomtom.SetCrazyArrow) == "function"
+			then
+				repointing = true
+				ns.core.SafeCall("TomTom arrow point", tomtom.SetCrazyArrow, tomtom, uid, 15, title)
+				repointing = false
+			end
 		end
-	elseif previous then
+	else
 		ClearDriven()
 	end
+	if notifyArrow and wasDriven ~= driven then
+		NotifyDrivenChanged()
+	end
+end
+
+-- Called by UI/Arrow.lua inside PointGuideArrow before checking ArrowShown, so actual TomTom ownership is settled
+-- before our native arrow or Blizzard's marker is shown or hidden.
+---@param points SPFWalkPoints?
+---@param stop SPFPlace?
+---@param goal SPFPoint?
+function ns.SyncTomTomGuide(points, stop, goal)
+	syncedFromArrow = true
+	if points and #points > 0 then
+		activePoints, activeStop, activeGoal = points, stop, goal
+	else
+		activePoints, activeStop, activeGoal = nil, nil, nil
+	end
+	SyncDriven(false)
 end
 
 -- Settings checkbox and late TomTom load both call this.
@@ -238,16 +375,18 @@ function ns.RefreshTomTomArrow()
 	if ns.RealTomTom and ns.RealTomTom() and ns.RefreshTomTomFollow then
 		ns.RefreshTomTomFollow()
 	end
-	if ns.TomTomArrowActive() then
-		SyncDriven()
+	if TomTomArrowEnabled() then
+		SyncDriven(false)
 	else
 		ClearDriven()
 	end
 	if ns.SyncTomTomArrow then
 		ns.SyncTomTomArrow()
 	end
-	if ns.ArrowBearingChanged then
+	if not notifyingArrow and ns.ArrowBearingChanged then
+		notifyingArrow = true
 		ns.ArrowBearingChanged()
+		notifyingArrow = false
 	end
 	if ns.JourneyGuide and ns.JourneyGuide.Active and ns.JourneyGuide.Active() then
 		if ns.JourneyGuide.ArrowChanged then
@@ -264,12 +403,16 @@ ns.Init(function()
 		ns,
 		"PointGuideArrow",
 		function(points, _, stop, goal) -- taint-ok: Shortest Path owns this addon table.
+			if syncedFromArrow then
+				syncedFromArrow = false
+				return
+			end
 			if points and #points > 0 then
 				activePoints, activeStop, activeGoal = points, stop, goal
 			else
 				activePoints, activeStop, activeGoal = nil, nil, nil
 			end
-			SyncDriven()
+			SyncDriven(false)
 		end
 	)
 	if type(ns.GuideGuidanceChanged) == "function" then
@@ -277,17 +420,21 @@ ns.Init(function()
 			if activePoints and ns.GuideState then
 				local _, source = ns.GuideState()
 				if source == activePoints then
-					SyncDriven()
+					SyncDriven(true)
 				end
 			end
 		end)
 	end
 	if type(ns.ArrowBearingChanged) == "function" then
-		hooksecurefunc(ns, "ArrowBearingChanged", SyncDriven) -- taint-ok: Shortest Path owns this addon table.
+		hooksecurefunc(ns, "ArrowBearingChanged", function() -- taint-ok: Shortest Path owns this addon table.
+			if not notifyingArrow then
+				SyncDriven(true)
+			end
+		end)
 	end
 	if ns.JourneyGuide and type(ns.JourneyGuide.ArrowChanged) == "function" then
 		hooksecurefunc(ns.JourneyGuide, "ArrowChanged", function() -- taint-ok: Shortest Path owns this addon table.
-			SyncDriven()
+			SyncDriven(true)
 			if ns.SyncTomTomArrow then
 				ns.SyncTomTomArrow()
 			end

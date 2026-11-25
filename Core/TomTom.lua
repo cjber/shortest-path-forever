@@ -566,15 +566,15 @@ end
 
 -- Keep TomTom's OnUpdate running: it advances the waypoint queue even while our route supplies the direction.
 local function SyncArrow()
+	local empty = hooked and hooked.IsCrazyArrowEmpty and hooked:IsCrazyArrowEmpty()
+	if empty then
+		arrowWaypoint = nil
+	end
 	local frame = TomTomCrazyArrow
 	if not frame or not hooked or not hooked.ShowHideCrazyArrow then
 		return
 	end
-	local empty = hooked.IsCrazyArrowEmpty and hooked:IsCrazyArrowEmpty()
 	local hijacked = hooked.CrazyArrowIsHijacked and hooked:CrazyArrowIsHijacked()
-	if empty then
-		arrowWaypoint = nil
-	end
 	-- Two states mute TomTom's arrow: our own arrow draws over the waypoint (guideArrow), or the player turned our
 	-- arrow off while this journey still owns the waypoint. Turning it off clears our guide points, not the journey.
 	-- When Shortest Path drives TomTom's own arrow (tomtomArrow on, arrow on), keep TomTom's arrow visible.
@@ -600,6 +600,14 @@ local function SyncArrow()
 	end
 end
 ns.SyncTomTomArrow = SyncArrow
+
+---@return TomTomWaypoint?
+function ns.TomTomArrowWaypoint()
+	if hooked and hooked.IsCrazyArrowEmpty and hooked:IsCrazyArrowEmpty() then
+		arrowWaypoint = nil
+	end
+	return arrowWaypoint
+end
 
 ---@param uid any
 local function Follow(uid)
@@ -705,6 +713,9 @@ function ns.RefreshTomTomFollow()
 				WaypointQuests(arrowWaypoint, nil)
 			end
 			Follow(uid)
+			if ns.AfterTomTomCrazyArrow then
+				ns.AfterTomTomCrazyArrow()
+			end
 			SyncArrow()
 		end)
 		if type(tomtom.AddWaypoint) == "function" then
