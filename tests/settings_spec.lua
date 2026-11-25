@@ -496,13 +496,7 @@ local groups = {
 		"whatsNew",
 	},
 }
-local order = {
-	"Guidance",
-	"Map marks",
-	"Party mage portals",
-	"Alerts",
-	"Interface",
-}
+local order = { "Guidance", "Map marks", "Party mage portals", "Alerts", "Interface" }
 
 assert(#buttons == #order, "one index button per group")
 assert(#rows == 84, #rows)
