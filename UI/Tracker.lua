@@ -353,24 +353,45 @@ local function TransportMenu(line, row)
 	return false
 end
 
--- The section's text inherits ObjectiveTrackerLineFont and ObjectiveTrackerHeaderFont, the two shared objects the
--- game points at ObjectiveTrackerFont12 to 20 (14 to 22 for the header) from Edit Mode's text size. A tracker
--- replacement can rewrite them for its own lines (EllesmereUI sets both to 1 px, #1335), and the section then reads
--- as 1 px beside nothing. ObjectiveTrackerManager:SetTextSize refuses anything under 12, so a smaller face is never
--- the player's choice: those fall back to the stock object at the game's own minimum.
-local MIN_LINE_SIZE, HEADER_EXTRA_SIZE = 12, 2
+-- The section's text inherits ObjectiveTrackerLineFont (block headers, lines) and ObjectiveTrackerHeaderFont (the
+-- section header): shared objects the game points at ObjectiveTrackerFont12 to 20 (14 to 22 for the header) from
+-- Edit Mode's text size. A tracker replacement can rewrite them for its own lines (EllesmereUI sets both to 1 px,
+-- #1335), and the section then reads as 1 px beside nothing. ObjectiveTrackerManager:SetTextSize refuses anything
+-- under 12, so a smaller face is never the player's choice: that text falls back to the stock object at the game's
+-- own minimum, and goes back to the shared one once the addon stops shrinking it.
+local LINE_FONT, LINE_STOCK, LINE_MINIMUM = "ObjectiveTrackerLineFont", "ObjectiveTrackerFont12", 12
+local HEADER_FONT, HEADER_STOCK, HEADER_MINIMUM = "ObjectiveTrackerHeaderFont", "ObjectiveTrackerFont14", 14
+
+-- The text this addon moved onto a stock object, so a player's own font choice is never taken back.
+---@type table<FontString, boolean>
+local stocked = setmetatable({}, { __mode = "k" })
 
 ---@param text FontString?
----@param stock string
+---@param shared string the font object the game gives this text
+---@param stock string the game's smallest size for it
 ---@param minimum number
----@return boolean changed
-local function ReadableFont(text, stock, minimum)
+---@return boolean changed whether the text's size may have moved
+local function ReadableFont(text, shared, stock, minimum)
 	if not text then
+		return false
+	end
+	if stocked[text] then
+		local face = _G[shared] --[[@as Font?]]
+		local size = face and select(2, face:GetFont())
+		if type(size) == "number" and size >= minimum then
+			text:SetFontObject(shared)
+			stocked[text] = nil
+			return true
+		end
 		return false
 	end
 	local size = select(2, text:GetFont())
 	if type(size) == "number" and size < minimum and _G[stock] then
 		text:SetFontObject(stock)
+		-- The stock object carries no alignment: the shared one gives text its left and top edge.
+		text:SetJustifyH("LEFT")
+		text:SetJustifyV("TOP")
+		stocked[text] = true
 		return true
 	end
 	return false
@@ -380,17 +401,13 @@ function ModuleMixin:LayoutContents()
 	for _, entry in ipairs(self.blocks) do
 		local block = self:GetBlock(entry.key)
 		-- The header is measured as it is set, so its font is settled first.
-		ReadableFont(
-			block.HeaderText,
-			"ObjectiveTrackerFont" .. MIN_LINE_SIZE + HEADER_EXTRA_SIZE,
-			MIN_LINE_SIZE + HEADER_EXTRA_SIZE
-		)
+		ReadableFont(block.HeaderText, LINE_FONT, LINE_STOCK, LINE_MINIMUM)
 		block:SetHeader(entry.title)
 		block.headerHeight = block.HeaderText:GetHeight()
 		for _, row in ipairs(entry.rows) do
 			local line = block:AddObjective(row.key, row.text, nil, true, nil, RowColor(row))
-			local text = ReadableFont(line.Text, "ObjectiveTrackerFont" .. MIN_LINE_SIZE, MIN_LINE_SIZE)
-			if ReadableFont(line.Dash, "ObjectiveTrackerFont" .. MIN_LINE_SIZE, MIN_LINE_SIZE) or text then
+			local text = ReadableFont(line.Text, LINE_FONT, LINE_STOCK, LINE_MINIMUM)
+			if ReadableFont(line.Dash, LINE_FONT, LINE_STOCK, LINE_MINIMUM) or text then
 				-- The game sized the line at the small font: size it again, and the block with it.
 				local height = line.Text:GetStringHeight()
 				block.height = block.height - line:GetHeight() + height
@@ -666,6 +683,7 @@ local function RefreshTracker(dockID, yards)
 		end
 	end
 	module.blocks = blocks
+	ReadableFont(module.Header.Text, HEADER_FONT, HEADER_STOCK, HEADER_MINIMUM)
 	if header ~= module.headerText then
 		module.headerText = header
 		module:SetHeader(header)

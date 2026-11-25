@@ -153,7 +153,17 @@ local function font()
 		return self.fontFile, self.fontSize, ""
 	end
 	function f:SetFontObject(name)
-		self.fontSize = tonumber(tostring(name):match("%d+")) or self.fontSize
+		-- A spec's own font object carries its size; the stock ObjectiveTrackerFont<N> names carry theirs.
+		local object = rawget(_G, name)
+		self.fontSize = type(object) == "table" and object.size
+			or tonumber(tostring(name):match("%d+"))
+			or self.fontSize
+	end
+	function f:SetJustifyH(value)
+		self.justifyH = value
+	end
+	function f:SetJustifyV(value)
+		self.justifyV = value
 	end
 	function f:GetStringHeight()
 		return self.fontSize

@@ -332,51 +332,6 @@ local function RefreshWaypointPins()
 	end)
 end
 
-local function ClearOrphanWaypoint()
-	local saved = ns.charDB.guideWaypoint
-	if guide or not saved then
-		return
-	end
-	-- The guide does not survive a reload (Resume.lua may start the journey again, with a new guide), but the client
-	-- saves user waypoints independently of this addon.
-	ns.charDB.guideWaypoint = nil
-	local point = UiMapPoint.CreateFromCoordinates(saved.uiMapID, saved.x, saved.y)
-	if SameWaypoint(C_Map.GetUserWaypoint(), point) then
-		local borrowed = saved.borrowed
-		local restored = borrowed
-			and C_Map.SetUserWaypoint(
-				UiMapPoint.CreateFromCoordinates(borrowed.uiMapID, borrowed.position.x, borrowed.position.y, borrowed.z)
-			)
-		if not restored then
-			C_Map.ClearUserWaypoint()
-		end
-		C_SuperTrack.SetSuperTrackedUserWaypoint(restored and saved.borrowedTracked == true or false)
-		RefreshWaypointPins()
-	end
-end
-
-local function RememberTracking(state)
-	state.expectedQuest = C_SuperTrack.GetSuperTrackedQuestID()
-	state.expectedTrackedWaypoint = C_SuperTrack.IsSuperTrackingUserWaypoint()
-	state.expectedTrackingType = C_SuperTrack.GetHighestPrioritySuperTrackingType()
-end
-
-local function SameTracking(state)
-	local quest = C_SuperTrack.GetSuperTrackedQuestID()
-	local waypoint = C_SuperTrack.IsSuperTrackingUserWaypoint()
-	local kind = C_SuperTrack.GetHighestPrioritySuperTrackingType()
-	-- Another addon may select the quest whose area the player walks into (Adventure Guide's focus, RestedXP pointing
-	-- at a quest of its own now and then) while the guide's waypoint stays the super-tracked destination. The priority
-	-- type only says which icon the client draws this moment, not who owns navigation, so a selection on top of our
-	-- waypoint is not a takeover: our waypoint is still the one super-tracked and still leads.
-	if state.expectedTrackedWaypoint and waypoint then
-		return true
-	end
-	return state.expectedQuest == quest
-		and state.expectedTrackedWaypoint == waypoint
-		and state.expectedTrackingType == kind
-end
-
 -- Tracking Guide itself wrote and the client has not reported yet: the pin it restored when it stopped, and the
 -- quest and waypoint it handed back. Auto-routing (JourneyInput.lua) reads these so none of them counts as the
 -- player focusing a quest or placing a pin.
@@ -417,6 +372,55 @@ local function Settled(waypoint, tracking)
 	if not (settled.waypointPending or settled.trackingPending) then
 		settled = nil
 	end
+end
+
+local function ClearOrphanWaypoint()
+	local saved = ns.charDB.guideWaypoint
+	if guide or not saved then
+		return
+	end
+	-- The guide does not survive a reload (Resume.lua may start the journey again, with a new guide), but the client
+	-- saves user waypoints independently of this addon.
+	ns.charDB.guideWaypoint = nil
+	local point = UiMapPoint.CreateFromCoordinates(saved.uiMapID, saved.x, saved.y)
+	if SameWaypoint(C_Map.GetUserWaypoint(), point) then
+		local borrowed = saved.borrowed
+		-- The player's earlier pin coming back is this addon's write, not a new pin to plan to (#1336).
+		stopping = true
+		local restored = borrowed
+			and C_Map.SetUserWaypoint(
+				UiMapPoint.CreateFromCoordinates(borrowed.uiMapID, borrowed.position.x, borrowed.position.y, borrowed.z)
+			)
+		if not restored then
+			C_Map.ClearUserWaypoint()
+		end
+		C_SuperTrack.SetSuperTrackedUserWaypoint(restored and saved.borrowedTracked == true or false)
+		stopping = nil
+		Settled(true, true)
+		RefreshWaypointPins()
+	end
+end
+
+local function RememberTracking(state)
+	state.expectedQuest = C_SuperTrack.GetSuperTrackedQuestID()
+	state.expectedTrackedWaypoint = C_SuperTrack.IsSuperTrackingUserWaypoint()
+	state.expectedTrackingType = C_SuperTrack.GetHighestPrioritySuperTrackingType()
+end
+
+local function SameTracking(state)
+	local quest = C_SuperTrack.GetSuperTrackedQuestID()
+	local waypoint = C_SuperTrack.IsSuperTrackingUserWaypoint()
+	local kind = C_SuperTrack.GetHighestPrioritySuperTrackingType()
+	-- Another addon may select the quest whose area the player walks into (Adventure Guide's focus, RestedXP pointing
+	-- at a quest of its own now and then) while the guide's waypoint stays the super-tracked destination. The priority
+	-- type only says which icon the client draws this moment, not who owns navigation, so a selection on top of our
+	-- waypoint is not a takeover: our waypoint is still the one super-tracked and still leads.
+	if state.expectedTrackedWaypoint and waypoint then
+		return true
+	end
+	return state.expectedQuest == quest
+		and state.expectedTrackedWaypoint == waypoint
+		and state.expectedTrackingType == kind
 end
 
 local function SettledChanged(event)

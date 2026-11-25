@@ -91,21 +91,38 @@ assert(
  "the place is gold and no number leads: " .. flightLine
 )
 -- A tracker replacement that shrinks ObjectiveTrackerLineFont and ObjectiveTrackerHeaderFont to 1 px (EllesmereUI,
--- #1335) leaves the section's lines inheriting that size. The section sets the game's own smallest size instead.
+-- #1335) leaves the section's text inheriting that size. The section sets the game's own smallest size instead, and
+-- gives the shared object back once the addon stops shrinking it.
 do
- _G.ObjectiveTrackerFont12, _G.ObjectiveTrackerFont14, _G.ObjectiveTrackerFontSize = {}, {}, 1
- block.HeaderText.fontSize = 1
+ local function face(size)
+  return { size = size, GetFont = function(self) return "", self.size, "" end }
+ end
+ _G.ObjectiveTrackerFont12, _G.ObjectiveTrackerFont14 = face(12), face(14)
+ _G.ObjectiveTrackerLineFont, _G.ObjectiveTrackerHeaderFont = face(1), face(1)
+ _G.ObjectiveTrackerFontSize = 1
+ block.HeaderText.fontSize, tracker.Header.Text.fontSize = 1, 1
  tracker:LayoutContents()
+ ns.journeyVersion = ns.journeyVersion + 1
+ ns.RefreshTracker()
  local first, second = block:GetExistingLine(1), block:GetExistingLine(2)
- for name, text in pairs({ header = block.HeaderText, line = first.Text, dash = first.Dash, flight = second.Text }) do
-  assert(select(2, text:GetFont()) >= 12, name .. " keeps a readable size beside a font-shrinking addon")
+ local minimum = { section = 14 }
+ for name, text in pairs({ header = block.HeaderText, section = tracker.Header.Text, line = first.Text,
+  dash = first.Dash, flight = second.Text }) do
+  assert(select(2, text:GetFont()) >= (minimum[name] or 12), name .. " keeps a readable size beside a shrinking addon")
+  assert(text.justifyH == "LEFT" and text.justifyV == "TOP", name .. " keeps the shared font's alignment")
  end
  local total = 0
  for key in pairs(block.lines) do total = total + block.lines[key]:GetHeight() end
  assert(block.height == total, "the block's height follows its re-measured lines: " .. block.height .. " vs " .. total)
- _G.ObjectiveTrackerFontSize = nil
+ -- The addon stops: the shared objects are readable again and the text follows them.
+ _G.ObjectiveTrackerLineFont.size, _G.ObjectiveTrackerHeaderFont.size, _G.ObjectiveTrackerFontSize = 16, 18, nil
  tracker:LayoutContents()
+ ns.journeyVersion = ns.journeyVersion + 1
+ ns.RefreshTracker()
  line = block:GetExistingLine(1)
+ assert(select(2, block.HeaderText:GetFont()) == 16, "the block header is back on the shared font")
+ assert(select(2, tracker.Header.Text:GetFont()) == 18, "the section header is back on the shared font")
+ _G.ObjectiveTrackerFont12, _G.ObjectiveTrackerFont14, _G.ObjectiveTrackerLineFont, _G.ObjectiveTrackerHeaderFont = nil
 end
 -- Every journey line answers a right click with the journey's own menu (Lock, Clear journey), as its title does.
 do
