@@ -113,9 +113,7 @@ floors, drops underwater floors, and stores directed costs for ordinary swimming
 Ground a player cannot reach is removed over the supplied crop or map: every disconnected component that holds
 none of the map's fixed places with a height (flight masters, docks and lift ends, portal ends and teleport landings,
 read from `Data/` by `places.lua`), such as the sealed terrain under Stormwind, and small components such as
-rooftops. A dry boarding lip within a walking cell and a step of a lift stop is kept regardless of component size.
-Inside each ADT, overlapping open edges at Recast's subtile seams become portals when both ends are within a
-player step. A crop holding no fixed place is refused, and a crop has different global pruning from a continent;
+rooftops. A crop holding no such place is refused, and a crop has different global pruning from a continent;
 compare identical bounds when measuring.
 
 The bake uses the player's own collision limits, not a server creature's:
@@ -128,8 +126,8 @@ The bake uses the player's own collision limits, not a server creature's:
 | Agent clearance | `walkableHeight` 3 x 0.5 = 1.5 yd | close to the 1.6 yd the older 0.533 yd voxel reached; a player is not a tall creature |
 | Falling | `NAV_DROP_REACH` 14.57 yd | fall damage starts here (TrinityCore `Player::HandleFall` at the pinned commit) |
 
-The horizontal cell is 0.2667 yd to preserve narrow doorways at the same 0.5333-yard agent radius. The vertical cell
-is 0.5 yd so the player's 2-yard step is four vertical cells. The nav patch also corrects Recast's span merge in
+The horizontal cell stays 0.5333 yd so terrain is sampled as before; the vertical cell is 0.5 yd because 2.0 yards is
+not a whole number of 0.5333 ones. The nav patch also corrects Recast's span merge in
 `dep/recastnavigation`: a merged span keeps the area of the surface on top, so a low unwalkable face rasterized under a
 stair tread no longer turns the tread unwalkable and cuts the stair (the Undercity stairs were cut this way). Ground
 below the top liquid surface of its own voxel column is a bed nobody stands on: the patched `TileBuilder` gives it
