@@ -125,7 +125,9 @@ assert(
 	"Blizzard's stock icon was never overwritten"
 )
 
--- A waypoint the player places and super-tracks is not the guide's, so it keeps the stock icon.
+-- A waypoint the player places and super-tracks is not the guide's, so it keeps the stock icon. (With journeys on it
+-- would start one and wear our pin as the journey's goal, #1336.)
+ns.db.journey = false
 env.C_Map.SetUserWaypoint(env.UiMapPoint.CreateFromCoordinates(1, 0.2, 0.3))
 env.C_SuperTrack.SetSuperTrackedUserWaypoint(true)
 driver.update(0)

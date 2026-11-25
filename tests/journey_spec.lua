@@ -304,13 +304,13 @@ for _, destination in ipairs({ { map = 1, x = 6400, y = 100 }, { map = 0, x = 22
 	end
 	drain()
 	assert(searches == 4 and addon.IsJourneyGuided())
-	-- Player ownership still wins after removing per-frame ownership polling.
+	-- Player ownership still wins after removing per-frame ownership polling: the player's pin replaces the guide's.
 	live.env.C_SuperTrack.SetSuperTrackedQuestID(99)
 	frame()
 	local manual = live.env.UiMapPoint.CreateFromCoordinates(1, 0.2, 0.3)
 	live.env.C_Map.SetUserWaypoint(manual)
 	frame()
-	assert(not addon.IsJourneyGuided() and live.waypoint() == manual)
+	assert(live.waypoint() == manual, "the player's pin stays, and is now the journey's goal (#1336)")
 	addon.ClearJourney()
 	-- A fresh engine ensures the recovery test cannot pass using an already settled endpoint cache.
 	live.load("Routing/PathGrid.lua")

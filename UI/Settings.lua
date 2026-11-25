@@ -361,7 +361,7 @@ ns.Init(function()
 		"focusedQuest",
 		L["Route to the focused quest"],
 		-- luacheck: push ignore 631
-		L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no map click. A guide addon's own journey is left alone."]
+		L["Starts a journey when you super-track a quest or a flight point, so a controller needs no map click. A guide addon's own journey is left alone."]
 		-- luacheck: pop
 	)
 	Section(L["Destination"])

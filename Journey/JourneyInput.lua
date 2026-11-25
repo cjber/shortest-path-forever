@@ -396,8 +396,10 @@ function ns.JourneyToTrackedQuest()
 	return PlanQuest(questID)
 end
 
--- Route to the focused quest: an opt-in journey from the quest the client is super-tracking, or from the map pin
--- the player placed, so a controller needs no map click. A guide's own journey is left alone: its focus changes
+-- Route to the focused quest: an opt-in journey (db.focusedQuest) from the quest or flight point the client is
+-- super-tracking, so a controller needs no map click. The map pin the player placed always plans one: Ctrl-click,
+-- the map's pin button, /mappin and a chat link all end in the client's user waypoint, the one thing every way of
+-- placing it shares (#1336). A guide's own journey is left alone: its focus changes
 -- are its steps, not the player's choice. Journey.lua calls these after Guide.TrackingChanged, so a guide the
 -- player took over has already yielded.
 ---@type number?
@@ -533,13 +535,7 @@ function ns.FocusedTrackingChanged(event)
 	local waypoint = UserWaypoint()
 	local changed = not (guide and guide.SameWaypoint and guide.SameWaypoint(waypoint, focusedWaypoint))
 	focusedWaypoint = waypoint
-	if
-		owned
-		or not changed
-		or not waypoint
-		or not (ns.db and ns.db.focusedQuest and ns.db.journey)
-		or GoalIsWaypoint(waypoint)
-	then
+	if owned or not changed or not waypoint or not (ns.db and ns.db.journey) or GoalIsWaypoint(waypoint) then
 		return
 	end
 	ns.JourneyToUserWaypoint()

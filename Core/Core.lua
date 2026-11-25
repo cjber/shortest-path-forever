@@ -98,8 +98,8 @@ local DEFAULTS = {
 	-- The same line on the minimap's tooltip, which every ore, herb and NPC hover shows, so it can be turned off
 	-- on its own (#1241). On: the minimap hint follows journeyHint.
 	minimapHint = true,
-	-- Off by default: a journey starts when the player super-tracks a quest or places a map pin, so a controller
-	-- needs no map click and a plain map pin changes what it does.
+	-- Off by default: a journey starts when the player super-tracks a quest or a flight point, so a controller
+	-- needs no map click. A map pin the player places always starts one.
 	focusedQuest = false,
 	-- An on-screen marker over the destination, like the client's own waypoint pin. Off by default: it is
 	-- new screen furniture, and a player asks for it from Settings > Guidance.

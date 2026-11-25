@@ -234,8 +234,6 @@ L["Sizes boat, lift, tram and portal icons on the world map."] =
 L["Sizes flight master icons on the world map."] = "Tamaño de los iconos de maestros de vuelo en el mapa del mundo."
 L["Sizes transport icons on the minimap."] = "Tamaño de los iconos de transporte en el minimapa."
 L["Stable master"] = "Maestro de establos"
-L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no map click. A guide addon's own journey is left alone."] =
-	"Inicia un viaje al enfocar una misión o colocar el marcador del mapa del juego, así que un mando no necesita clic en el mapa. El viaje propio de un complemento de guía no se toca."
 L["Stop %d of %d"] = "Parada %d de %d" -- mt
 L["Stop %d of %d: %s"] = "Parada %d de %d: %s"
 L["Teleport to %s"] = "Teletransporte a %s"

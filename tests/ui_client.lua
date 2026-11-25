@@ -144,6 +144,20 @@ local function font()
 	function f:GetHeight()
 		return 12
 	end
+	-- The face the client resolves: the stock 12, or the shared object's size a spec set, or a font object's own.
+	f.fontSize = rawget(_G, "ObjectiveTrackerFontSize") or 12
+	function f:SetFont(file, size)
+		self.fontFile, self.fontSize = file, size
+	end
+	function f:GetFont()
+		return self.fontFile, self.fontSize, ""
+	end
+	function f:SetFontObject(name)
+		self.fontSize = tonumber(tostring(name):match("%d+")) or self.fontSize
+	end
+	function f:GetStringHeight()
+		return self.fontSize
+	end
 	function f:CreateAnimationGroup()
 		return animationGroup(self)
 	end
@@ -486,7 +500,7 @@ _G.CreateFrame = function(_, name, parent, template)
 		function f:GetBlock(id)
 			local b = self.liveBlocks[id]
 			if not b then
-				b = { id = id, HeaderText = font(), lines = {}, parentModule = self }
+				b = { id = id, HeaderText = font(), lines = {}, parentModule = self, height = 0 }
 				function b:SetHeader(text)
 					self.HeaderText:SetText(text)
 				end
@@ -514,8 +528,11 @@ _G.CreateFrame = function(_, name, parent, template)
 						Dash = font(),
 						template = template,
 						used = true,
-						GetHeight = function()
-							return 12
+						GetHeight = function(self)
+							return self.height or 12
+						end,
+						SetHeight = function(self, height)
+							self.height = height
 						end,
 					}
 					-- The stock line keeps its dash text hidden or shown with the line; the line's text hangs after it.

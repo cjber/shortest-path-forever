@@ -353,13 +353,49 @@ local function TransportMenu(line, row)
 	return false
 end
 
+-- The section's text inherits ObjectiveTrackerLineFont and ObjectiveTrackerHeaderFont, the two shared objects the
+-- game points at ObjectiveTrackerFont12 to 20 (14 to 22 for the header) from Edit Mode's text size. A tracker
+-- replacement can rewrite them for its own lines (EllesmereUI sets both to 1 px, #1335), and the section then reads
+-- as 1 px beside nothing. ObjectiveTrackerManager:SetTextSize refuses anything under 12, so a smaller face is never
+-- the player's choice: those fall back to the stock object at the game's own minimum.
+local MIN_LINE_SIZE, HEADER_EXTRA_SIZE = 12, 2
+
+---@param text FontString?
+---@param stock string
+---@param minimum number
+---@return boolean changed
+local function ReadableFont(text, stock, minimum)
+	if not text then
+		return false
+	end
+	local size = select(2, text:GetFont())
+	if type(size) == "number" and size < minimum and _G[stock] then
+		text:SetFontObject(stock)
+		return true
+	end
+	return false
+end
+
 function ModuleMixin:LayoutContents()
 	for _, entry in ipairs(self.blocks) do
 		local block = self:GetBlock(entry.key)
+		-- The header is measured as it is set, so its font is settled first.
+		ReadableFont(
+			block.HeaderText,
+			"ObjectiveTrackerFont" .. MIN_LINE_SIZE + HEADER_EXTRA_SIZE,
+			MIN_LINE_SIZE + HEADER_EXTRA_SIZE
+		)
 		block:SetHeader(entry.title)
 		block.headerHeight = block.HeaderText:GetHeight()
 		for _, row in ipairs(entry.rows) do
 			local line = block:AddObjective(row.key, row.text, nil, true, nil, RowColor(row))
+			local text = ReadableFont(line.Text, "ObjectiveTrackerFont" .. MIN_LINE_SIZE, MIN_LINE_SIZE)
+			if ReadableFont(line.Dash, "ObjectiveTrackerFont" .. MIN_LINE_SIZE, MIN_LINE_SIZE) or text then
+				-- The game sized the line at the small font: size it again, and the block with it.
+				local height = line.Text:GetStringHeight()
+				block.height = block.height - line:GetHeight() + height
+				line:SetHeight(height)
+			end
 			SetLineMark(line, RowMark(row))
 			SetPulse(line, row.warning == true)
 			if entry.key == "journey" then
