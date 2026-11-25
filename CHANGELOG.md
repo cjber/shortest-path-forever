@@ -17,6 +17,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 - Quick Nearby services button on the world map: Left-click the button in the map's top-right corner to open the Nearby services panel, or right-click it for a menu with a checkbox per service to toggle map pins straight from the map. You can hide the button or the quest log tab separately under **Settings -> Map marks**; thanks to xh43k for the idea.
 - Use TomTom's arrow in Guidance points TomTom's arrow at each journey step and hides Shortest Path's arrow and the game's navigation marker while it leads. Off by default. Thanks, forleong.
 
+### Changed
+
+- Updated the shared ForeverCore code to 1.17.3.
+
 ### Fixed
 
 - Deleting a map pin ends the journey it planned.
