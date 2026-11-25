@@ -332,7 +332,7 @@ local function RefreshWaypointPins()
 	end)
 end
 
--- What Guide itself wrote (incl. the player's pin it restores) and the client has not reported yet; auto-routing skips it.
+-- What Guide wrote (incl. the player's restored pin) and the client has not reported yet; auto-routing skips it.
 ---@class SPFGuideSettled
 ---@field waypoint table?
 ---@field waypointPending boolean?
