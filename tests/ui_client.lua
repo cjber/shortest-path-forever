@@ -434,7 +434,11 @@ local STOCK = {
 		frame.Dash = frame:CreateFontString()
 	end,
 }
-_G.ChatFontNormal = { GetFont = function() return "", 12, "" end }
+_G.ChatFontNormal = {
+	GetFont = function()
+		return "", 12, ""
+	end,
+}
 _G.CreateFont = function(name)
 	local object = { size = 12 }
 	function object:SetFont(_, size)
