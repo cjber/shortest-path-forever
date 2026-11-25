@@ -434,6 +434,19 @@ local STOCK = {
 		frame.Dash = frame:CreateFontString()
 	end,
 }
+_G.ChatFontNormal = {
+	GetFont = function()
+		return "", 12, ""
+	end,
+}
+_G.CreateFont = function(name)
+	local object = { size = 12 }
+	function object:SetFont(_, size)
+		self.size = size
+	end
+	_G[name] = object
+	return object
+end
 _G.CreateFrame = function(_, name, parent, template)
 	local f = stubframe()
 	f.name, f.parent, f.template = name, parent, template
@@ -504,6 +517,7 @@ _G.CreateFrame = function(_, name, parent, template)
 			return #self.layoutOrder > 0 and 25 + #self.layoutOrder * 40 or 0
 		end
 		f.Header.Text = font()
+		f.Header.Text.fontSize = 14 -- the section header's stock size
 		function f:SetHeader(text)
 			self.Header.Text:SetText(text)
 		end

@@ -39,6 +39,8 @@ read_globals = {
 	"C_Map",
 	"C_Texture",
 	"C_Timer",
+	"ChatFontNormal",
+	"CreateFont",
 	"CreateFrame",
 	"CreateFromMixins",
 	"CreateVector2D",

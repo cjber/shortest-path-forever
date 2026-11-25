@@ -75,6 +75,14 @@ assert(ns.JourneyGoal() == same, "focusing the same quest again does not replan 
 -- A new focus replaces it.
 focus(103)
 assert(goalQuest() == 103, "a newly focused quest takes the journey")
+focus(0)
+assert(not ns.HasJourney(), "clearing quest focus ends the journey it started")
+
+focus(103)
+assert(ns.JourneyToTrackedQuest(), "the binding can start a manual journey to the same quest")
+local manual = ns.JourneyGoal()
+focus(0)
+assert(ns.JourneyGoal() == manual, "clearing focus preserves a manually restarted quest journey")
 ns.ClearJourney()
 
 -- A guide's own journey leads: its focus changes are its steps, not the player's choice.

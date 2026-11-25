@@ -404,6 +404,8 @@ end
 -- player took over has already yielded.
 ---@type number?
 local focusedQuest
+---@type SPFPoint?
+local focusedQuestGoal
 ---@type table?
 local focusedWaypoint
 -- The flight point a left click on the map super-tracks (UI/FlightPins.lua): the same choice of destination (#1079).
@@ -506,30 +508,27 @@ function ns.FocusedTrackingChanged(event)
 		local questID, node = SuperTrackedQuest(), SuperTrackedNode()
 		local changed, nodeChanged = questID ~= focusedQuest, node ~= focusedNode
 		focusedQuest, focusedNode = questID, node
-		if
-			nodeChanged
-			and node
-			and not owned
-			and ns.db
-			and ns.db.focusedQuest
-			and ns.db.journey
-			and not GuideLeads()
-			and not GoalIsNode(node)
-		then
+		local previousGoal = focusedQuestGoal
+		if changed then
+			focusedQuestGoal = nil
+		end
+		if owned or not (ns.db and ns.db.focusedQuest and ns.db.journey) or GuideLeads() then
+			return
+		end
+		if nodeChanged and node and not GoalIsNode(node) then
 			JourneyToNode(node)
 			return
 		end
-		if
-			owned
-			or not changed
-			or not questID
-			or not (ns.db and ns.db.focusedQuest and ns.db.journey)
-			or GuideLeads()
-			or GoalIsQuest(questID)
-		then
+		if not changed then
 			return
 		end
-		ns.JourneyToTrackedQuest()
+		if questID then
+			if not GoalIsQuest(questID) and PlanQuest(questID) then
+				focusedQuestGoal = ns.JourneyGoal()
+			end
+		elseif previousGoal and ns.JourneyGoal() == previousGoal then
+			ns.ClearJourney()
+		end
 		return
 	end
 	local waypoint = UserWaypoint()
