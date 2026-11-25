@@ -67,10 +67,11 @@ advance(2)
 assert(activeTickers() == 2 and activeTickers(1) == 1 and activeTickers(0.1) == 1
  and tracker.blocks[1].key == "dock1", "nearby dock owns one travel clock and one minimap poller")
 local block = tracker:GetExistingBlock("dock1")
-local line = block:GetExistingLine(241)
+local rowKey = tracker.blocks[1].rows[1].key
+local line = block:GetExistingLine(rowKey)
 local text, marks = line.Text:GetText(), dirty
 advance(3)
-assert(line == block:GetExistingLine(241) and line.Text:GetText() ~= text)
+assert(line == block:GetExistingLine(rowKey) and line.Text:GetText() ~= text)
 assert(dirty == marks, "countdown ticks must update text without layout")
 line.Text.GetHeight = function() return 24 end
 advance(2)
