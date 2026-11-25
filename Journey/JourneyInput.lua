@@ -399,15 +399,17 @@ end
 -- Route to the focused quest: an opt-in journey (db.focusedQuest) from the quest or flight point the client is
 -- super-tracking, so a controller needs no map click. The map pin the player placed always plans one: Ctrl-click,
 -- the map's pin button, /mappin and a chat link all end in the client's user waypoint, the one thing every way of
--- placing it shares (#1336). A guide's own journey is left alone: its focus changes
--- are its steps, not the player's choice. Journey.lua calls these after Guide.TrackingChanged, so a guide the
--- player took over has already yielded.
+-- placing it shares (#1336). Removing that pin ends the journey it planned (#1348). A guide's own journey is left
+-- alone: its focus changes are its steps, not the player's choice. Journey.lua calls these after Guide.TrackingChanged,
+-- so a guide the player took over has already yielded.
 ---@type number?
 local focusedQuest
 ---@type SPFPoint?
 local focusedQuestGoal
 ---@type table?
 local focusedWaypoint
+---@type SPFPoint?
+local focusedWaypointGoal
 -- The flight point a left click on the map super-tracks (UI/FlightPins.lua): the same choice of destination (#1079).
 ---@type number?
 local focusedNode
@@ -534,10 +536,25 @@ function ns.FocusedTrackingChanged(event)
 	local waypoint = UserWaypoint()
 	local changed = not (guide and guide.SameWaypoint and guide.SameWaypoint(waypoint, focusedWaypoint))
 	focusedWaypoint = waypoint
-	if owned or not changed or not waypoint or not (ns.db and ns.db.journey) or GoalIsWaypoint(waypoint) then
+	if owned or not changed then
 		return
 	end
-	ns.JourneyToUserWaypoint()
+	local previousGoal = focusedWaypointGoal
+	focusedWaypointGoal = nil
+	if not (ns.db and ns.db.journey) then
+		return
+	end
+	if waypoint then
+		if GoalIsWaypoint(waypoint) then
+			if previousGoal and ns.JourneyGoal() == previousGoal then
+				focusedWaypointGoal = previousGoal
+			end
+		elseif ns.JourneyToUserWaypoint() then
+			focusedWaypointGoal = ns.JourneyGoal()
+		end
+	elseif previousGoal and not GuideLeads() and ns.JourneyGoal() == previousGoal then
+		ns.ClearJourney()
+	end
 end
 
 -- The journey key is this addon's gesture, so its canvas handler asks first. Higher priorities run first, and
