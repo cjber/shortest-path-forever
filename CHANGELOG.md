@@ -10,6 +10,18 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.45.11] - 2026-11-25
+
+### Added
+
+- Quick Nearby services button on the world map: Left-click the button in the map's top-right corner to open the Nearby services panel, or right-click it for a menu with a checkbox per service to toggle map pins straight from the map. You can hide the button or the quest log tab separately under **Settings -> Map marks**; thanks to xh43k for the idea.
+- Use TomTom's arrow in Guidance points TomTom's arrow at each journey step and hides Shortest Path's arrow and the game's navigation marker while it leads. Off by default. Thanks, forleong.
+
+### Fixed
+
+- Deleting a map pin ends the journey it planned.
+- RestedXP guidance now recovers its route and direction arrow after a target bounces during combat, after handing ownership away from RestedXP, and when switching to Shortest Path's arrow while already standing in a held step's area.
+
 ## [1.45.10] - 2026-11-25
 
 ### Fixed
