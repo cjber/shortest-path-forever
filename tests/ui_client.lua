@@ -144,6 +144,30 @@ local function font()
 	function f:GetHeight()
 		return 12
 	end
+	-- The face the client resolves: the stock 12, or the shared object's size a spec set, or a font object's own.
+	f.fontSize = rawget(_G, "ObjectiveTrackerFontSize") or 12
+	function f:SetFont(file, size)
+		self.fontFile, self.fontSize = file, size
+	end
+	function f:GetFont()
+		return self.fontFile, self.fontSize, ""
+	end
+	function f:SetFontObject(name)
+		-- A spec's own font object carries its size; the stock ObjectiveTrackerFont<N> names carry theirs.
+		local object = rawget(_G, name)
+		self.fontSize = type(object) == "table" and object.size
+			or tonumber(tostring(name):match("%d+"))
+			or self.fontSize
+	end
+	function f:SetJustifyH(value)
+		self.justifyH = value
+	end
+	function f:SetJustifyV(value)
+		self.justifyV = value
+	end
+	function f:GetStringHeight()
+		return self.fontSize
+	end
 	function f:CreateAnimationGroup()
 		return animationGroup(self)
 	end
@@ -486,7 +510,7 @@ _G.CreateFrame = function(_, name, parent, template)
 		function f:GetBlock(id)
 			local b = self.liveBlocks[id]
 			if not b then
-				b = { id = id, HeaderText = font(), lines = {}, parentModule = self }
+				b = { id = id, HeaderText = font(), lines = {}, parentModule = self, height = 0 }
 				function b:SetHeader(text)
 					self.HeaderText:SetText(text)
 				end
@@ -514,14 +538,21 @@ _G.CreateFrame = function(_, name, parent, template)
 						Dash = font(),
 						template = template,
 						used = true,
-						GetHeight = function()
-							return 12
+						GetHeight = function(self)
+							return self.height
+						end,
+						SetHeight = function(self, height)
+							self.height = height
 						end,
 					}
 					-- The stock line keeps its dash text hidden or shown with the line; the line's text hangs after it.
 					line.Dash:SetText(_G.QUEST_DASH)
 					line.Text:SetText(text)
 					line.Text.colorStyle = color
+					-- The game sizes a new line from its text's font.
+					line.height = line.Text.fontSize
+					-- Blizzard's AddObjective adds the new line's height to the block's.
+					self.height = self.height + line:GetHeight()
 					self.lines[key] = line
 					return line
 				end
@@ -531,6 +562,8 @@ _G.CreateFrame = function(_, name, parent, template)
 				self.liveBlocks[id] = b
 			end
 			b.used = true
+			-- Each layout pass starts the block's height over, as the game's does.
+			b.height = 0
 			return b
 		end
 		function f:GetExistingBlock(id)

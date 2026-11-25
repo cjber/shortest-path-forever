@@ -87,7 +87,14 @@ focus(104)
 assert(not ns.HasJourney(), "a quest focused while a guide leads its journey starts nothing")
 owner = nil
 
--- The player's own map pin starts a journey with the setting on.
+-- The player's own map pin starts a journey whatever the setting says: Ctrl-click, the pin button and chat links
+-- all end in the client's user waypoint (#1336).
+ns.db.focusedQuest = false
+pin(1, 0.4, 0.6)
+assert(ns.HasJourney(), "a map pin starts a journey with the setting off")
+ns.ClearJourney()
+clearPin()
+ns.db.focusedQuest = true
 pin(1, 0.4, 0.6)
 local goal = ns.JourneyGoal()
 assert(goal and goal.map == 1 and goal.x < -4999 and goal.y > 4999, "the player's pin starts a journey")
@@ -99,9 +106,8 @@ ns.ClearJourney()
 -- A guide's own waypoint write is not the player's pin. The guide's pin and the pin it restores when it stops
 -- both leave the journey alone.
 clearPin()
-ns.db.focusedQuest = false
 pin(1, 0.2, 0.1)
-ns.db.focusedQuest = true
+ns.ClearJourney()
 local placeBend
 ns.PointGuideArrow = function(_, callback)
 	placeBend = callback

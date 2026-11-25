@@ -332,6 +332,45 @@ local function RefreshWaypointPins()
 	end)
 end
 
+-- What Guide wrote (incl. the player's restored pin) and the client has not reported yet; auto-routing skips it.
+---@class SPFGuideSettled
+---@field waypoint table?
+---@field waypointPending boolean?
+---@field quest number?
+---@field tracked boolean?
+---@field kind Enum.SuperTrackingType?
+---@field trackingPending boolean?
+
+---@type SPFGuideSettled?
+local settled
+local stopping
+
+---@param waypoint table?
+---@return table?
+local function CopyWaypoint(waypoint)
+	if waypoint then
+		local position = waypoint.position
+		return { uiMapID = waypoint.uiMapID, position = { x = position.x, y = position.y }, z = waypoint.z }
+	end
+end
+
+-- Record what Guide left behind after its final writes, for the deferred events those writes raise.
+---@param waypoint boolean whether it wrote the user waypoint
+---@param tracking boolean whether it wrote the super-tracked state
+local function Settled(waypoint, tracking)
+	settled = {
+		waypoint = waypoint and CopyWaypoint(C_Map.GetUserWaypoint()) or nil,
+		waypointPending = waypoint or nil,
+		quest = C_SuperTrack.GetSuperTrackedQuestID(),
+		tracked = C_SuperTrack.IsSuperTrackingUserWaypoint(),
+		kind = C_SuperTrack.GetHighestPrioritySuperTrackingType(),
+		trackingPending = tracking or nil,
+	}
+	if not (settled.waypointPending or settled.trackingPending) then
+		settled = nil
+	end
+end
+
 local function ClearOrphanWaypoint()
 	local saved = ns.charDB.guideWaypoint
 	if guide or not saved then
@@ -343,6 +382,7 @@ local function ClearOrphanWaypoint()
 	local point = UiMapPoint.CreateFromCoordinates(saved.uiMapID, saved.x, saved.y)
 	if SameWaypoint(C_Map.GetUserWaypoint(), point) then
 		local borrowed = saved.borrowed
+		stopping = true
 		local restored = borrowed
 			and C_Map.SetUserWaypoint(
 				UiMapPoint.CreateFromCoordinates(borrowed.uiMapID, borrowed.position.x, borrowed.position.y, borrowed.z)
@@ -351,6 +391,8 @@ local function ClearOrphanWaypoint()
 			C_Map.ClearUserWaypoint()
 		end
 		C_SuperTrack.SetSuperTrackedUserWaypoint(restored and saved.borrowedTracked == true or false)
+		stopping = nil
+		Settled(true, true)
 		RefreshWaypointPins()
 	end
 end
@@ -375,48 +417,6 @@ local function SameTracking(state)
 	return state.expectedQuest == quest
 		and state.expectedTrackedWaypoint == waypoint
 		and state.expectedTrackingType == kind
-end
-
--- Tracking Guide itself wrote and the client has not reported yet: the pin it restored when it stopped, and the
--- quest and waypoint it handed back. Auto-routing (JourneyInput.lua) reads these so none of them counts as the
--- player focusing a quest or placing a pin.
----@class SPFGuideSettled
----@field waypoint table?
----@field waypointPending boolean?
----@field quest number?
----@field tracked boolean?
----@field kind Enum.SuperTrackingType?
----@field trackingPending boolean?
-
----@type SPFGuideSettled?
-local settled
-local stopping
-
----@param waypoint table?
----@return table?
-local function CopyWaypoint(waypoint)
-	if not waypoint then
-		return nil
-	end
-	local position = waypoint.position
-	return { uiMapID = waypoint.uiMapID, position = { x = position.x, y = position.y }, z = waypoint.z }
-end
-
--- Record what Guide left behind after its final writes, for the deferred events those writes raise.
----@param waypoint boolean whether it wrote the user waypoint
----@param tracking boolean whether it wrote the super-tracked state
-local function Settled(waypoint, tracking)
-	settled = {
-		waypoint = waypoint and CopyWaypoint(C_Map.GetUserWaypoint()) or nil,
-		waypointPending = waypoint or nil,
-		quest = C_SuperTrack.GetSuperTrackedQuestID(),
-		tracked = C_SuperTrack.IsSuperTrackingUserWaypoint(),
-		kind = C_SuperTrack.GetHighestPrioritySuperTrackingType(),
-		trackingPending = tracking or nil,
-	}
-	if not (settled.waypointPending or settled.trackingPending) then
-		settled = nil
-	end
 end
 
 local function SettledChanged(event)

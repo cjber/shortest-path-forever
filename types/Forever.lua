@@ -164,6 +164,7 @@ ForeverMapMarkers = nil
 ---@field parentModule SPFTrackerModule
 ---@field isHighlighted boolean
 ---@field used boolean
+---@field height number
 ---@field SetHeader fun(self: SPFTrackerBlock, text: string)
 ---@field AddObjective fun(self: SPFTrackerBlock, id: number|string, text: string, template?: string, wrap?: boolean, dashStyle?: number, color?: ColorMixin): SPFTrackerLine
 ---@field GetExistingLine fun(self: SPFTrackerBlock, id: number|string): SPFTrackerLine?
