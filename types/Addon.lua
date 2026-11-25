@@ -46,6 +46,10 @@
 ---@field TownServiceChoices SPFTownServiceChoice[] the town services' four levels (UI/TownServices.lua)
 ---@field RefreshTownServices fun() redraws the town services on the world map (UI/TownServices.lua)
 ---@field RefreshNearbyTab fun() shows or hides the Nearby services tab as the setting says (UI/ServicesPanel.lua)
+---@field ServiceOnMap fun(group: SPFNearbyGroup): boolean? whether a service's pins show on the map (UI/ServicesPanel.lua)
+---@field SetServiceOnMap fun(group: SPFNearbyGroup, shown: boolean) switches a service's pins on the map (UI/ServicesPanel.lua)
+---@field RefreshMapButton fun() shows or hides the Nearby services map button as the setting says (UI/MapButton.lua)
+---@field nearbyMapButton? SPFMapButton the Nearby services quick button on the world map (UI/MapButton.lua)
 ---@field NearbyEntrances SPFNearbyEntrancesAPI the dungeons and raids in the Nearby services list (UI/NearbyEntrances.lua)
 ---@field SettingsMapMarks SPFSettingsMapMarks the Map marks settings page (UI/SettingsMapMarks.lua)
 ---@field core ForeverCoreAddon the addon's own ForeverCore services: journal, log, report and map canvas
@@ -337,6 +341,7 @@
 ---@field worldMapMarks? boolean
 ---@field mapFlightMasters? boolean
 ---@field nearbyTab? boolean the Nearby services tab in the quest log column; false hides it
+---@field nearbyMapButton? boolean the Nearby services button on the world map; false hides it
 ---@field mapRoutes? boolean
 ---@field townServices? string the town services' level of detail: "capitals", "important", "all" or "off" (TownServices.lua)
 ---@field townServiceInnkeeper? boolean whether innkeeper pins show (TownServices.lua)
@@ -376,6 +381,7 @@
 ---@field zygor? boolean -- follow Zygor's current guide step without a TomTom bridge (Zygor.lua)
 ---@field tomtom? boolean -- answer third-party guides' TomTom waypoints with a journey while TomTom is absent
 ---@field tomtomFollow? boolean -- with TomTom installed, a journey follows the waypoint its arrow points to
+---@field tomtomArrow? boolean -- with TomTom installed, point TomTom's arrow at each journey step
 ---@field taxiRoute? boolean
 ---@field useWaterWalking? boolean
 ---@field townServiceKinds? table<string, boolean>

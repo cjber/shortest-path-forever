@@ -60,3 +60,11 @@ L["Walk less in zones with a minimum level 4 or more above yours, even at your d
 	"Walk less in zones with a minimum level 4 or more above yours, even at your destination."
 L["Descend underground"] = "Descend underground"
 L["Show minimap trail"] = "Show minimap trail"
+L["Show the Nearby services map button"] = "Show the Nearby services map button"
+L["A button on the world map. Left-click toggles Nearby services; right-click chooses which services show on the map."] =
+	"A button on the world map. Left-click toggles Nearby services; right-click chooses which services show on the map."
+L["Left-click to toggle Nearby services."] = "Left-click to toggle Nearby services."
+L["Right-click to choose map services."] = "Right-click to choose map services."
+L["Use TomTom's arrow"] = "Use TomTom's arrow"
+L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
+	"With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."

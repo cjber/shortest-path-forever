@@ -580,7 +580,7 @@ local function MarkerLeads()
 end
 
 local function GuideWaypoint(point, fading)
-	if not guide then
+	if not guide or (ns.TomTomArrowActive and ns.TomTomArrowActive()) then
 		return false
 	end
 	-- The bend callback can run before deferred notifications of a player's waypoint or tracking change.
@@ -729,7 +729,7 @@ function Guide.To(node, points, goal, leg)
 		guide.pausedGoal = nil
 		RefreshTracker()
 	end
-	if ns.db.arrow == false and guide.waypoint then
+	if (ns.db.arrow == false or (ns.TomTomArrowActive and ns.TomTomArrowActive())) and guide.waypoint then
 		if not OwnsWaypoint() then
 			return
 		end

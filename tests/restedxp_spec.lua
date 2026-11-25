@@ -132,6 +132,31 @@ combat = false
 watcher:OnEvent("PLAYER_REGEN_ENABLED")
 driver.path.settle()
 assert(starts == 1 and API.CurrentStop("RestedXP") == 1, "combat end uses the latest target")
+-- A target that changes during combat cancels the stale journey; if it moves back to the original spot before combat
+-- ends, ending combat must still restart the journey rather than treating the cancelled target as unchanged (#1349).
+starts = 0
+combat = true
+frame.element.x = 75
+rxp.UpdateGotoSteps()
+assert(not API.CurrentStop("RestedXP"), "a target change during combat cancels the old journey")
+frame.element.x = 70
+rxp.UpdateGotoSteps()
+combat = false
+watcher:OnEvent("PLAYER_REGEN_ENABLED")
+driver.path.settle()
+assert(
+	starts == 1 and API.CurrentStop("RestedXP") == 1,
+	"returning to the pre-combat target before combat ends still restarts the cancelled journey"
+)
+-- A manual cancellation before combat is still respected when the target never moved during combat.
+API.Cancel("RestedXP")
+starts = 0
+combat = true
+rxp.UpdateGotoSteps()
+combat = false
+watcher:OnEvent("PLAYER_REGEN_ENABLED")
+driver.path.settle()
+assert(starts == 0 and not API.CurrentStop("RestedXP"), "combat does not undo a manual cancel on an unchanged target")
 API.Navigate("Other", 1, 0.6, 0.5, "Player destination")
 rxp.UpdateGotoSteps()
 assert(API.CurrentStop("Other") == 1, "same target does not take over another journey")

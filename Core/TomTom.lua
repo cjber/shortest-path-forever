@@ -458,6 +458,22 @@ local function Installed()
 	return ns.TomTomEnabled()
 end
 
+-- Real TomTom in the global, never our own shim or Polestar's stand-in.
+---@return TomTom?
+function ns.RealTomTom()
+	local tomtom = TomTom
+	if
+		tomtom
+		and tomtom ~= shim
+		and not PolestarStandIn(tomtom)
+		and type(tomtom.AddWaypoint) == "function"
+		and type(tomtom.RemoveWaypoint) == "function"
+	then
+		return tomtom
+	end
+	return nil
+end
+
 -- Whether Polestar would put its stand-in in the global now: it answers waypoints and is not handing its target to
 -- Shortest Path, which it does through the API instead.
 ---@return boolean
@@ -561,8 +577,11 @@ local function SyncArrow()
 	end
 	-- Two states mute TomTom's arrow: our own arrow draws over the waypoint (guideArrow), or the player turned our
 	-- arrow off while this journey still owns the waypoint. Turning it off clears our guide points, not the journey.
+	-- When Shortest Path drives TomTom's own arrow (tomtomArrow on, arrow on), keep TomTom's arrow visible.
+	local driveTomTom = ns.TomTomArrowActive and ns.TomTomArrowActive()
 	if
-		following
+		not driveTomTom
+		and following
 		and not hijacked
 		and following == arrowWaypoint
 		and API.CurrentStop(WaypointOwner(following))
@@ -580,12 +599,17 @@ local function SyncArrow()
 		frame:Hide()
 	end
 end
+ns.SyncTomTomArrow = SyncArrow
 
 ---@param uid any
 local function Follow(uid)
 	-- TomTom's corpse arrow is left to the corpse run (Journey/Corpse.lua), which keeps the journey you were on.
 	-- Polestar's own target, which it copies into TomTom (from = "Polestar"), is Polestar's to guide or hand over.
+	-- Waypoints Shortest Path itself added to drive TomTom's arrow are recognised by table identity and ignored.
 	if type(uid) ~= "table" or uid.corpse or uid.from == "Polestar" then
+		return
+	end
+	if ns.IsOwnTomTomWaypoint and ns.IsOwnTomTomWaypoint(uid) then
 		return
 	end
 	if not live then
@@ -656,6 +680,7 @@ local function WaypointAt(tomtom, map, x, y, title)
 		end
 	end
 end
+ns.TomTomWaypointAt = WaypointAt
 
 -- The settings checkbox, TomTom loading and the addon's own load all call this.
 function ns.RefreshTomTomFollow()
@@ -670,10 +695,13 @@ function ns.RefreshTomTomFollow()
 	then
 		hooked = tomtom
 		hooksecurefunc(tomtom, "SetCrazyArrow", function(_, uid) -- taint-ok: TomTom owns this addon table.
+			if ns.OnTomTomCrazyArrow then
+				ns.OnTomTomCrazyArrow(uid)
+			end
 			arrowWaypoint = type(uid) == "table" and uid or nil
 			-- TomTom sets the arrow from inside AddWaypoint, so this is still inside the caller's own call: Questie's
 			-- quest is noted and Zygor's step is current. Record it for the journey Follow starts below.
-			if arrowWaypoint then
+			if arrowWaypoint and not (ns.IsOwnTomTomWaypoint and ns.IsOwnTomTomWaypoint(arrowWaypoint)) then
 				WaypointQuests(arrowWaypoint, nil)
 			end
 			Follow(uid)
@@ -683,7 +711,7 @@ function ns.RefreshTomTomFollow()
 			-- Also covers a waypoint TomTom already held, which its AddWaypoint returns without setting the arrow again.
 			hooksecurefunc(tomtom, "AddWaypoint", function(self, map, x, y, opts) -- taint-ok: TomTom owns this table.
 				local uid = WaypointAt(self, map, x, y, type(opts) == "table" and opts.title or nil)
-				if uid and not recorded[uid] then
+				if uid and not recorded[uid] and not (ns.IsOwnTomTomWaypoint and ns.IsOwnTomTomWaypoint(uid)) then
 					WaypointQuests(uid, opts)
 				end
 			end)
@@ -701,10 +729,16 @@ function ns.RefreshTomTomFollow()
 			hooksecurefunc(tomtom, "ClearCrazyArrowPoint", SyncArrow) -- taint-ok: TomTom owns this addon table.
 		end
 		hooksecurefunc(tomtom, "RemoveWaypoint", function(_, uid) -- taint-ok: TomTom owns this addon table.
+			if ns.OnTomTomWaypointRemoved then
+				ns.OnTomTomWaypointRemoved(uid)
+			end
 			Unfollow(uid)
 		end)
 		if type(tomtom.ClearWaypoint) == "function" then
 			hooksecurefunc(tomtom, "ClearWaypoint", function(_, uid) -- taint-ok: TomTom owns this addon table.
+				if ns.OnTomTomWaypointRemoved then
+					ns.OnTomTomWaypointRemoved(uid)
+				end
 				Unfollow(uid)
 			end)
 		end
@@ -799,6 +833,9 @@ ns.Init(function()
 			StandDown()
 			self:UnregisterEvent("ADDON_LOADED")
 			ns.RefreshTomTomFollow()
+			if ns.RefreshTomTomArrow then
+				ns.RefreshTomTomArrow()
+			end
 		end
 	end)
 	HookQuestie()

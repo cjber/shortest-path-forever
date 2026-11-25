@@ -303,7 +303,7 @@ end
 
 -- The user's own setting: whether directions may place the native marker at all.
 local function ArrowShown()
-	return ns.db.arrow ~= false
+	return ns.db.arrow ~= false and not (ns.TomTomArrowActive and ns.TomTomArrowActive())
 end
 
 -- RestedXP keeps corpse guidance. For a living player, the marker follows the bend in every arrow mode.
@@ -1091,6 +1091,7 @@ function ns.ArrowLeads()
 		return false
 	end
 	return (DirectionsShown() and ((path ~= nil and target ~= nil and not unseen) or arrival ~= nil))
+		or (ns.TomTomArrowActive and ns.TomTomArrowActive() and path ~= nil and target ~= nil)
 		or (castTarget ~= nil and ns.CastPromptShown())
 end
 

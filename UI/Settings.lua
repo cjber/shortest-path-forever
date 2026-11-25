@@ -470,6 +470,14 @@ ns.Init(function()
 			ns.RefreshTomTomFollow()
 		end
 	)
+	Checkbox(
+		"tomtomArrow",
+		L["Use TomTom's arrow"],
+		L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."],
+		function()
+			ns.RefreshTomTomArrow()
+		end
+	)
 	Checkbox("restedxp", L["Follow RestedXP guides"], L["Plan journeys to RestedXP guide targets."], function()
 		ns.RefreshRestedXP()
 	end)

@@ -164,6 +164,7 @@ local function SetOnMap(group, shown)
 		ns.SetTownServiceGroupShown(group, shown)
 	end
 end
+ns.ServiceOnMap, ns.SetServiceOnMap = OnMap, SetOnMap
 
 ---@param row SPFServicesRow
 local function PaintRow(row)
