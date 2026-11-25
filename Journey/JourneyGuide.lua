@@ -332,9 +332,7 @@ local function RefreshWaypointPins()
 	end)
 end
 
--- Tracking Guide itself wrote and the client has not reported yet: the pin it restored when it stopped, and the
--- quest and waypoint it handed back. Auto-routing (JourneyInput.lua) reads these so none of them counts as the
--- player focusing a quest or placing a pin.
+-- What Guide itself wrote and the client has not reported yet; auto-routing (JourneyInput.lua) skips it.
 ---@class SPFGuideSettled
 ---@field waypoint table?
 ---@field waypointPending boolean?
@@ -350,11 +348,9 @@ local stopping
 ---@param waypoint table?
 ---@return table?
 local function CopyWaypoint(waypoint)
-	if not waypoint then
-		return nil
-	end
-	local position = waypoint.position
-	return { uiMapID = waypoint.uiMapID, position = { x = position.x, y = position.y }, z = waypoint.z }
+	local position = waypoint and waypoint.position
+	return position and { uiMapID = waypoint.uiMapID, position = { x = position.x, y = position.y }, z = waypoint.z }
+		or nil
 end
 
 -- Record what Guide left behind after its final writes, for the deferred events those writes raise.
