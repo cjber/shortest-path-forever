@@ -10,6 +10,13 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.45.9] - 2026-11-25
+
+### Fixed
+
+- The Shortest Path tracker section stays readable beside a tracker addon that shrinks Blizzard's objective tracker fonts, such as EllesmereUI's Quest Tracker, which had set its text to 1 px.
+- A map pin placed with Ctrl-click, the map's pin button or a chat link now plans a journey without turning on "Route to the focused quest", also with OpenMap's "Ctrl-click drops a pin" off.
+
 ## [1.45.8] - 2026-11-25
 
 ### Fixed
