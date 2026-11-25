@@ -536,9 +536,7 @@ local function Solve(options, cache, check, weigh)
 			})
 		end
 	end
-	-- Every walk into the goal pays the charge on the goal's high-level zone for its own share of it (Hazards.Profile),
-	-- so a ride wins only by shortening that walk: flying back to where the walk already starts saves nothing (#1300).
-	-- `direct` is the charged walk straight from the start, which the ride note compares against.
+	-- The walk straight from the start to the goal pays the charge on the goal's high-level zone (Hazards.Profile).
 	local direct
 	for pair = 1, #topology.pairs, 2 do
 		check()
@@ -554,7 +552,7 @@ local function Solve(options, cache, check, weigh)
 				end
 				if yards then
 					local factor = 1
-					if last == goal and options.hazards and options.hazards.goalZone then
+					if first == start and last == goal and options.hazards and options.hazards.goalZone then
 						factor = options.hazards.Direct(origin.map, origin.x, origin.y, destination.x, destination.y)
 					end
 					local edge = {
@@ -568,10 +566,7 @@ local function Solve(options, cache, check, weigh)
 					}
 					Edge(first, last, edge)
 					if factor > 1 then
-						edge.charge = edge.duration - yards / speed * 1000
-						if first == start then
-							direct = edge
-						end
+						direct = edge
 					end
 				end
 			end
@@ -847,14 +842,12 @@ local function Solve(options, cache, check, weigh)
 			end
 		end
 		local arrive, charged = labels.time[finishAt], nil
-		local final = labels.edge[finishAt]
-		local charge = final and final.charge
-		if charge and legs[#legs] then
-			-- The charge only weighs the choice: the walk into the goal takes its real time. A later search bounded by
-			-- this plan compares charged labels, so it is bounded by the charged arrival.
+		if #legs == 1 and labels.edge[finishAt] == direct then
+			-- The charge only weighs the choice: the walk itself takes its real time. A later search bounded by this plan
+			-- compares charged labels, so it is bounded by the charged arrival.
 			charged = arrive
-			arrive = arrive - charge
-			legs[#legs].arrive = arrive
+			arrive = legs[1].depart + direct.yards / speed * 1000
+			legs[1].arrive = arrive
 		end
 		return {
 			arrive = arrive,

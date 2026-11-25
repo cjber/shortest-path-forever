@@ -777,8 +777,7 @@ local function RefreshCosts(includeGoal, forced, replace)
 		if stale() then
 			return
 		end
-		-- Plans are compared on the arrival they were chosen by, charged for the goal's high-level zone where it is.
-		local bound = feasible and (feasible.charged or feasible.arrive)
+		local bound = feasible and feasible.arrive
 		local function best()
 			return Plan(false, feasible, job)
 		end
@@ -786,7 +785,7 @@ local function RefreshCosts(includeGoal, forced, replace)
 		local previewed = preview
 			and not startBatch.reason
 			and not goalBatch.reason
-			and not (bound and (preview.charged or preview.arrive) >= bound)
+			and not (bound and preview.arrive >= bound)
 		local planned = previewed and preview or best()
 		preview = nil
 		if stale() then

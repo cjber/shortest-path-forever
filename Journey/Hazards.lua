@@ -46,9 +46,9 @@ local KEEP = 50000
 ---@field Near fun(map: number, minX: number, minY: number, maxX: number, maxY: number): boolean -- a town in the box
 ---@field TransportNear fun(map: number, x: number, y: number): boolean -- a dock or flight master within 200 yards
 ---@field ConnectorWalk fun(from: SPFPoint, to: SPFPoint): boolean -- a short walk next to a dock or flight master
--- The factor on a walk into the goal: its share of the goal's high-level zone, charged.
+-- The factor on the walk straight from the start to the goal.
 ---@field Direct fun(map: number, ax: number, ay: number, bx: number, by: number): number
----@field goalZone? number -- the goal's high-level zone, charged on every walk into the goal
+---@field goalZone? number -- the goal's high-level zone, charged on the walk straight there
 -- The mean factor along it; shares are its baked Hazards.Shares, when it has them.
 ---@field Segment fun(map: number, ax: number, ay: number, bx: number, by: number, shares: number[]?): number
 ---@field roads? true -- Follow roads is on: walks prefer road cells (Path.lua)
@@ -470,9 +470,8 @@ function Hazards.Profile(from, goal, here, landing)
 				boxes[#boxes + 1] = zone
 				ids[#ids + 1] = id
 			elseif id == goalZone and not zone.city and not leaving[id] then
-				-- Only a walk into the goal pays to enter the goal's zone, each for its own share, so a ride wins only by
-				-- shortening that walk (#1300). Walks to a departure or out of the zone stay exempt, so an escape can
-				-- take the quickest way (#1007, #895).
+				-- Only the direct walk pays to enter the goal's zone. Walks to a departure or out of the zone
+				-- stay exempt, so a ride can shorten exposure and an escape can take the quickest way (#1007, #895).
 				goalCharge, goalFactor = id, factor
 			end
 		end
@@ -617,7 +616,7 @@ function Hazards.Profile(from, goal, here, landing)
 		detour = 50
 	end
 	local roadFactor = ns.db.followRoads and (1 + math.max(0, math.min(ROAD_DETOUR_MAX, detour)) / 100) or nil
-	-- The factor on a walk into the goal: 1 unless the goal's high-level zone is charged.
+	-- The factor on the walk straight from the start to the goal: 1 unless the goal's high-level zone is charged.
 	local function Direct(map, ax, ay, bx, by)
 		if not goalCharge then
 			return 1
