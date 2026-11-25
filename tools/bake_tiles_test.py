@@ -3,10 +3,34 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from tools.baker.tiles import load_tile
+from tools.baker.tiles import SUBTILE_WIDTH, load_tile, subtile_links
 
 
 class BakeTileTest(unittest.TestCase):
+    def test_overlapping_subtile_edges_form_a_portal(self):
+        x = 2069.333251953125  # The Tirisfal ramp's subtile seam in the raw 71037 tile.
+        shared = (x, 273.333251953125, 81.12545776367188)
+        a = (12548, (x, 267.1999206542969, 81.62545776367188), shared)
+        b = (12778, shared, (x, 266.9332580566406, 81.62545776367188))
+        start, end = a[1][:2], shared[:2]
+        self.assertEqual(
+            list(subtile_links([a, b])),
+            [(12778, 12548, end, start), (12548, 12778, start, end)],
+        )
+
+    def test_subtile_edges_need_overlap_opposite_sides_and_walkable_height(self):
+        for x, a, b in (
+            (SUBTILE_WIDTH, (0, 10, 2, 10), (4, 10, 2, 10)),  # Touching without overlap.
+            (SUBTILE_WIDTH, (0, 10, 3, 10), (0, 10, 4, 10)),  # Same side.
+            (SUBTILE_WIDTH, (0, 10, 3, 10), (4, 14, 0, 10)),  # Too high at the far end.
+            (SUBTILE_WIDTH, (0, 10, 3, 10), (4, 11, 0, 11)),  # Stacked floors.
+            (SUBTILE_WIDTH, (0, 10, 0.001, 10), (4, 10, 0, 10)),  # Numerical sliver.
+            (SUBTILE_WIDTH + 0.1, (0, 10, 3, 10), (4, 10, 0, 10)),  # Off the seam.
+        ):
+            with self.subTest(x=x, a=a, b=b):
+                raw = [(i, (x, y0, z0), (x, y1, z1)) for i, (y0, z0, y1, z1) in enumerate((a, b))]
+                self.assertEqual(list(subtile_links(raw)), [])
+
     def test_reads_detour_polygon_and_rejects_incomplete_tiles(self):
         header = struct.pack("<4s14i10f", b"VAND", 7, 0, 0, 0, 0, 1, 3, *([0] * 7), *([0.0] * 10))
         vertices = struct.pack("<9f", 10, 20, 30, 11, 20, 30, 10, 20, 31)

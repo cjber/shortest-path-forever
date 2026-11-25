@@ -57,7 +57,7 @@ from baker.measure import record, tile_hashes  # noqa: E402
 from baker.overhead import ClusterSurfaces  # noqa: E402
 from baker.terrain import encode_sparse as encode_terrain  # noqa: E402
 from baker.terrain import sample_cluster  # noqa: E402
-from baker.tiles import load_tile  # noqa: E402
+from baker.tiles import PLAYER_STEP, load_tile, subtile_links  # noqa: E402
 from forever_tools.fsio import atomic_write  # noqa: E402
 
 MM = os.environ.get("NAV_MM", "mm")
@@ -185,11 +185,12 @@ def cluster_of_tile(rr, cc):
     return ((31 - rr) - CX0) * NY + ((31 - cc) - CY0)
 
 
-def places(map_id):
-    """The map's fixed places with a height, as (x, y, z): players arrive there, so their ground is reached."""
-    run = subprocess.run(
-        ["luajit", "tools/baker/places.lua", str(map_id)], cwd=ROOT, check=True, capture_output=True, text=True
-    )
+def places(map_id, lifts=False):
+    """The map's fixed places with a height, or only its lift stops, as (x, y, z)."""
+    command = ["luajit", "tools/baker/places.lua", str(map_id)]
+    if lifts:
+        command.append("lifts")
+    run = subprocess.run(command, cwd=ROOT, check=True, capture_output=True, text=True)
     return [tuple(p) for p in json.loads(run.stdout)]
 
 
@@ -271,7 +272,7 @@ def read_tile(rc):
     ok = [bool(walkable(pts_of[i], flags, area, typ)) for i, (_, _, flags, area, typ) in enumerate(tile_polys)]
     # Detour holds (west, up, north); a connection's ends are in the same frame as the vertices
     drops = [((pos[2], pos[0], pos[1]), (pos[5], pos[3], pos[4])) for pos, _, _, _ in connections]
-    polys, links, border = [], [], []
+    polys, links, border, open_edges = [], [], [], []
     for i, (_pv, pn, _flags, area, _typ) in enumerate(tile_polys):
         if not ok[i]:
             continue
@@ -279,9 +280,10 @@ def read_tile(rc):
         polys.append((i, pts, area in (AREA_WATER, AREA_OCEAN), area == AREA_GROUND_STEEP))
         n = len(pts)
         for e, nb in enumerate(pn):
-            if nb == 0:
-                continue
             p1, p2 = pts[e], pts[(e + 1) % n]
+            if nb == 0:
+                open_edges.append((i, p1, p2))
+                continue
             if nb & 0x8000:  # tile-border edge; detour side 0/4 is an x (= world Y) border
                 side = nb & 0xFF
                 if side in (0, 4):
@@ -291,6 +293,7 @@ def read_tile(rc):
                 border.append((key, i, lo, hi, (p1[2] + p2[2]) / 2))
             elif ok[nb - 1]:
                 links.append((i, nb - 1, p1[:2], p2[:2]))
+    links.extend(subtile_links(open_edges))
     return polys, links, border, drops
 
 
@@ -317,15 +320,18 @@ def gid(rc, i):
     return ORD[rc] << 16 | i
 
 
-def components(spots, joins=()):
+def components(spots, joins=(), lift_stops=()):
     """Pass 1: union-find over every walkable poly of the map; SIZE records each poly's component size, or 0 for a
     component not kept. A place stands on its nearest walkable poly in its own or a neighbouring tile, whatever that
     poly's component. joins are hops, (trigger, radius, landing): the polys a hop's two ends stand on are one
     component, as the hop's link joins them. A drop (the local bake's off-mesh connection) leads from the poly nearest
     its ledge to the poly nearest its landing, in the landing's tile, so ground entered only by dropping in, such as
-    the Caverns of Time floor, is kept with the ground above it (#1211)."""
+    the Caverns of Time floor, is kept with the ground above it (#1211). A supported lift stop also keeps its assigned
+    dry landing even when the landing is a small component."""
     global SIZE
     spots = list(spots) + [h[0] for h in joins] + [h[2] for h in joins]
+    lift_stops = set(lift_stops)
+    approaches = {n: (math.inf, -1) for n, point in enumerate(spots) if point in lift_stops}
     arcs = []  # one-way drops as (dense id of the ledge poly, dense id of the landing poly)
     landing = defaultdict(list)  # tile -> drops landing in it, as (ledge dense id, landing point)
     parent = array("i")
@@ -393,15 +399,25 @@ def components(spots, joins=()):
         for i, j, _, _ in links:
             parent[find(loc[i])] = find(loc[j])
         for n in near.get(rc, ()):
-            for i, pts, _, _ in polys:
+            point = spots[n]
+            x, y, z = point
+            for i, pts, water, steep in polys:
                 # the gap to the poly's bounding box never exceeds the distance to the poly
-                gap = max(
-                    max(min(p[a] for p in pts) - spots[n][a], spots[n][a] - max(p[a] for p in pts)) for a in (0, 1, 2)
-                )
-                if gap < stand[n][0]:
-                    d = poly_distance(spots[n], pts)
-                    if d < stand[n][0]:
-                        stand[n] = (d, loc[i])
+                gap = max(max(min(p[a] for p in pts) - point[a], point[a] - max(p[a] for p in pts)) for a in range(3))
+                lip_candidate = n in approaches and not (water or steep) and gap <= min(CS, approaches[n][0])
+                if gap >= stand[n][0] and not lip_candidate:
+                    continue
+                d = poly_distance(point, pts)
+                if d < stand[n][0]:
+                    stand[n] = (d, loc[i])
+                # The animation's stop is at the car origin. The lip can be in the next walking cell, but a player
+                # must be able to step across. Reject dry ground beyond a cell or the player's step height.
+                if not lip_candidate or d > CS or d >= approaches[n][0]:
+                    continue
+                px, py = nearest_point2(x, y, [p[:2] for p in pts])
+                center = tuple(sum(p[axis] for p in pts) / len(pts) for axis in range(3))
+                if abs(height({"plane": plane(pts, center)}, px, py) - z) <= PLAYER_STEP:
+                    approaches[n] = (d, loc[i])
         for key, i, lo, hi, z in edges:
             g = gid(rc, i)
             dense[g] = loc[i]
@@ -422,9 +438,10 @@ def components(spots, joins=()):
     reached = {find(x) for _, x in stand if x >= 0}
     if not reached:
         sys.exit(f"no fixed place of map {MAP} stands on the selected tiles, so none of their ground is reachable")
-    # A place keeps its component unless that is a speck; ground a drop reaches from kept ground is walked to, however
-    # small, and drops are followed one way only, so a ledge or roof that drops onto the ground is not kept by it.
+    # A place keeps its component unless that is a speck. A lift carries a player to its boarding lip even when the
+    # landing is small, and a drop reaches only its landing, so a roof that drops to the ground is not kept by it.
     placed = {r for r in reached if size[r] >= MIN_COMPONENT}
+    placed.update(find(x) for _, x in approaches.values() if x >= 0)
     kept = set(placed)
     down = defaultdict(set)
     for a, b in arcs:
@@ -503,6 +520,17 @@ def rasterize_layers(polys, adj, portal, bounds):
         gx, gy = int((x - X0) // CS), int((y - Y0) // CS)
         return gx * GH + gy if ax0 <= gx <= ax1 and ay0 <= gy <= ay1 else -1
 
+    def sample(i, pid, point):
+        p = polys[pid]
+        z = height(p, *point)
+        candidates = surf[i]
+        ground = not (p["steep"] or p["water"])
+        # Keep ordinary ground beside a steep sample so the layer selection can rank both.
+        if not any(
+            abs(h - z) < CLIMB and (not ground or not polys[other]["steep"]) for _, h, _, other, _, _ in candidates
+        ):
+            candidates.append((p["size"], z, 2 if p["water"] else 1, pid, point, bool(candidates)))
+
     for pid in sorted(polys):
         p = polys[pid]
         v = 2 if p["water"] else 1
@@ -528,7 +556,7 @@ def rasterize_layers(polys, adj, portal, bounds):
     # These surfaces anchor on the sampled point of that line, since the cell centre may lie off the mesh, and take the
     # poly's own height there. The centroid's height is the poly's height somewhere else: on a ramp it misplaced a cell
     # by several yards, and the step beside it read as a climb past 50 degrees, so the Dun Algaz tunnel walked one way
-    # only (#1011). Only the first passage through an empty cell may become its base; later ones can only add a floor.
+    # only (#1011). The first passage through an empty cell supplies its base candidate.
     for u in sorted(adj):
         for w in sorted(adj[u]):
             if w <= u:
@@ -536,18 +564,16 @@ def rasterize_layers(polys, adj, portal, bounds):
             pu, pw = polys[u], polys[w]
             e1, e2 = portal[(u, w)]
             mid = ((e1[0] + e2[0]) / 2, (e1[1] + e2[1]) / 2)
-            for a, b, p, pid in ((pu["c"], mid, pu, u), (mid, pw["c"], pw, w)):
+            for a, b, pid in ((pu["c"], mid, u), (mid, pw["c"], w)):
                 steps = int(math.dist(a[:2], b[:2]) / (CS / 4)) + 1
                 for t in range(steps + 1):
                     q = (a[0] + (b[0] - a[0]) * t / steps, a[1] + (b[1] - a[1]) * t / steps)
                     i = at(*q)
-                    z = height(p, *q)
-                    if i >= 0 and not any(abs(s[1] - z) < CLIMB for s in surf[i]):
-                        surf[i].append((p["size"], z, 2 if p["water"] else 1, pid, q, bool(surf[i])))
+                    if i >= 0:
+                        sample(i, pid, q)
     # A poly covering part of a cell but not its centre is still ground the player stands on in that cell: a stall or
     # a lamp post on a street's cell centre must not leave the cell only the ground under the city (#1046). It anchors
-    # on the centroid of its part inside the cell and only adds a floor, never the base, so a cell's base and its
-    # empty cells stay as the centre sample decides.
+    # on the centroid of its part inside the cell. It can replace a nearby steep layer or add a floor.
     stood = {i for i, ss in surf.items() if ss}
     for pid in sorted(polys):
         p = polys[pid]
@@ -559,11 +585,8 @@ def rasterize_layers(polys, adj, portal, bounds):
                     continue
                 x0, y0 = X0 + gx * CS, Y0 + gy * CS
                 c = centroid(clip_convex(p["pts"], (x0, x0 + CS, y0, y0 + CS)))
-                if c is None:
-                    continue
-                z = height(p, *c)
-                if not any(abs(s[1] - z) < CLIMB for s in surf[i]):
-                    surf[i].append((p["size"], z, 2 if p["water"] else 1, pid, c, True))
+                if c is not None:
+                    sample(i, pid, c)
 
     def pieces(ss, i):
         """The piece of surface each of the cell's candidates stands on, as a group number."""
@@ -592,6 +615,15 @@ def rasterize_layers(polys, adj, portal, bounds):
         # it shut in the ledge Lord Melenas stands on, two yards under a steep sliver of its rock (#1015).
         rank = [(s[0], not polys[s[3]]["steep"], s[1]) for s in ss]
         base = max((n for n, s in enumerate(ss) if not s[5]), key=rank.__getitem__)
+        size, z, _, pid, _, _ = ss[base]
+        if polys[pid]["steep"]:
+            # Ground within one layer can replace the selected steep base at the same component rank.
+            ground = (
+                n
+                for n, s in enumerate(ss)
+                if s[0] == size and s[2] == 1 and not polys[s[3]]["steep"] and abs(s[1] - z) < CLIMB
+            )
+            base = max(ground, key=rank.__getitem__, default=base)
         chosen, taken = [base], {piece[base]}
         # Lake and sea beds never reach here: the TrinityCore patch bakes ground the water reaches as area 7, which
         # walkable() refuses. Ground further down, behind solid ground, is a tunnel or a cellar and stays: the
@@ -2206,7 +2238,7 @@ def main():
     inputs = tile_hashes(TILES.values()) if args.metrics else {}
     code = tile_hashes(Path(__file__).parent.glob("*.py")) if args.metrics else {}
     HOPS[:] = hops(map_id)
-    components(places(map_id), HOPS)
+    components(places(map_id), HOPS, places(map_id, lifts=True))
     phases["components"] = time.perf_counter() - checkpoint
     checkpoint = time.perf_counter()
     grid, masks = bytearray(GW * GH), bytearray(GW * GH)
