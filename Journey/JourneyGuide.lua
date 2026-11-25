@@ -332,7 +332,7 @@ local function RefreshWaypointPins()
 	end)
 end
 
--- What Guide itself wrote and the client has not reported yet; auto-routing (JourneyInput.lua) skips it.
+-- What Guide itself wrote (incl. the player's pin it restores) and the client has not reported yet; auto-routing skips it.
 ---@class SPFGuideSettled
 ---@field waypoint table?
 ---@field waypointPending boolean?
@@ -348,9 +348,10 @@ local stopping
 ---@param waypoint table?
 ---@return table?
 local function CopyWaypoint(waypoint)
-	local position = waypoint and waypoint.position
-	return position and { uiMapID = waypoint.uiMapID, position = { x = position.x, y = position.y }, z = waypoint.z }
-		or nil
+	if waypoint then
+		local position = waypoint.position
+		return { uiMapID = waypoint.uiMapID, position = { x = position.x, y = position.y }, z = waypoint.z }
+	end
 end
 
 -- Record what Guide left behind after its final writes, for the deferred events those writes raise.
@@ -381,7 +382,6 @@ local function ClearOrphanWaypoint()
 	local point = UiMapPoint.CreateFromCoordinates(saved.uiMapID, saved.x, saved.y)
 	if SameWaypoint(C_Map.GetUserWaypoint(), point) then
 		local borrowed = saved.borrowed
-		-- The player's earlier pin coming back is this addon's write, not a new pin to plan to (#1336).
 		stopping = true
 		local restored = borrowed
 			and C_Map.SetUserWaypoint(
