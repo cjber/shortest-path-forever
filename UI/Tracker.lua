@@ -353,45 +353,43 @@ local function TransportMenu(line, row)
 	return false
 end
 
--- The section's text inherits ObjectiveTrackerLineFont (block headers, lines) and ObjectiveTrackerHeaderFont (the
--- section header): shared objects the game points at ObjectiveTrackerFont12 to 20 (14 to 22 for the header) from
--- Edit Mode's text size. A tracker replacement can rewrite them for its own lines (EllesmereUI sets both to 1 px,
--- #1335), and the section then reads as 1 px beside nothing. ObjectiveTrackerManager:SetTextSize refuses anything
--- under 12, so a smaller face is never the player's choice: that text falls back to the stock object at the game's
--- own minimum, and goes back to the shared one once the addon stops shrinking it.
-local LINE_FONT, LINE_STOCK, LINE_MINIMUM = "ObjectiveTrackerLineFont", "ObjectiveTrackerFont12", 12
-local HEADER_FONT, HEADER_STOCK, HEADER_MINIMUM = "ObjectiveTrackerHeaderFont", "ObjectiveTrackerFont14", 14
+-- Edit Mode sizes the shared tracker fonts. An addon can shrink both those fonts and their stock sources to
+-- 1 px, so SPF keeps its own fallbacks at the game's minimum sizes, using the locale-aware chat font face.
+-- Text follows the shared font again once it is readable.
+local LINE_FONT, LINE_FALLBACK, LINE_MINIMUM = "ObjectiveTrackerLineFont", "ShortestPathForeverLineFont", 12
+local HEADER_FONT, HEADER_FALLBACK, HEADER_MINIMUM = "ObjectiveTrackerHeaderFont", "ShortestPathForeverHeaderFont", 14
 
--- The text this addon moved onto a stock object, so a player's own font choice is never taken back.
 ---@type table<FontString, boolean>
-local stocked = setmetatable({}, { __mode = "k" })
+local usingFallback = setmetatable({}, { __mode = "k" })
 
 ---@param text FontString?
 ---@param shared string the font object the game gives this text
----@param stock string the game's smallest size for it
+---@param fallback string the addon's fallback font name
 ---@param minimum number
 ---@return boolean changed whether the text's size may have moved
-local function ReadableFont(text, shared, stock, minimum)
+local function ReadableFont(text, shared, fallback, minimum)
 	if not text then
 		return false
 	end
-	if stocked[text] then
+	if usingFallback[text] then
 		local face = _G[shared] --[[@as Font?]]
 		local size = face and select(2, face:GetFont())
 		if type(size) == "number" and size >= minimum then
 			text:SetFontObject(shared)
-			stocked[text] = nil
+			usingFallback[text] = nil
 			return true
 		end
-		return false
 	end
 	local size = select(2, text:GetFont())
-	if type(size) == "number" and size < minimum and _G[stock] then
-		text:SetFontObject(stock)
-		-- The stock object carries no alignment: the shared one gives text its left and top edge.
+	if type(size) == "number" and size < minimum then
+		if not _G[fallback] then
+			local file, _, flags = ChatFontNormal:GetFont()
+			CreateFont(fallback):SetFont(file, minimum, flags)
+		end
+		text:SetFontObject(fallback)
 		text:SetJustifyH("LEFT")
 		text:SetJustifyV("TOP")
-		stocked[text] = true
+		usingFallback[text] = true
 		return true
 	end
 	return false
@@ -401,13 +399,13 @@ function ModuleMixin:LayoutContents()
 	for _, entry in ipairs(self.blocks) do
 		local block = self:GetBlock(entry.key)
 		-- The header is measured as it is set, so its font is settled first.
-		ReadableFont(block.HeaderText, LINE_FONT, LINE_STOCK, LINE_MINIMUM)
+		ReadableFont(block.HeaderText, LINE_FONT, LINE_FALLBACK, LINE_MINIMUM)
 		block:SetHeader(entry.title)
 		block.headerHeight = block.HeaderText:GetHeight()
 		for _, row in ipairs(entry.rows) do
 			local line = block:AddObjective(row.key, row.text, nil, true, nil, RowColor(row))
-			local text = ReadableFont(line.Text, LINE_FONT, LINE_STOCK, LINE_MINIMUM)
-			if ReadableFont(line.Dash, LINE_FONT, LINE_STOCK, LINE_MINIMUM) or text then
+			local text = ReadableFont(line.Text, LINE_FONT, LINE_FALLBACK, LINE_MINIMUM)
+			if ReadableFont(line.Dash, LINE_FONT, LINE_FALLBACK, LINE_MINIMUM) or text then
 				-- The game sized the line at the small font: size it again, and the block with it.
 				local height = line.Text:GetStringHeight()
 				block.height = block.height - line:GetHeight() + height
@@ -460,7 +458,9 @@ local function DockRows(dockID)
 	local departures = ns.Timetable.ByDestination(dockID)
 	local rows = {}
 	for _, departure in ipairs(departures) do
-		rows[#rows + 1] = { key = departure.route, text = DepartureText(departure) }
+		-- A circuit can visit this dock twice and serve a different destination each time.
+		local destination = table.concat(departure.to, ",")
+		rows[#rows + 1] = { key = destination, text = DepartureText(departure) }
 	end
 	return rows, departures[1] and departures[1].kind
 end
@@ -575,17 +575,24 @@ local function RefreshBlockText(blocks)
 		end
 	end
 	Section.UpdateText(module, blocks)
+	local fontChanged = false
 	-- The mark in the dash column is SPF's own row art, not the line's text, so it follows a mode change here too.
 	for _, entry in ipairs(blocks) do
 		local block = module:GetExistingBlock(entry.key)
 		if block and block.used then
+			fontChanged = ReadableFont(block.HeaderText, LINE_FONT, LINE_FALLBACK, LINE_MINIMUM) or fontChanged
 			for _, row in ipairs(entry.rows) do
 				local line = block:GetExistingLine(row.key)
 				if line and line.used then
+					fontChanged = ReadableFont(line.Text, LINE_FONT, LINE_FALLBACK, LINE_MINIMUM) or fontChanged
+					fontChanged = ReadableFont(line.Dash, LINE_FONT, LINE_FALLBACK, LINE_MINIMUM) or fontChanged
 					SetLineMark(line, RowMark(row))
 				end
 			end
 		end
+	end
+	if fontChanged and not module:IsDirty() then
+		module:MarkDirty()
 	end
 end
 
@@ -683,18 +690,18 @@ local function RefreshTracker(dockID, yards)
 		end
 	end
 	module.blocks = blocks
-	ReadableFont(module.Header.Text, HEADER_FONT, HEADER_STOCK, HEADER_MINIMUM)
 	if header ~= module.headerText then
 		module.headerText = header
 		module:SetHeader(header)
 	end
+	local headerFontChanged = ReadableFont(module.Header.Text, HEADER_FONT, HEADER_FALLBACK, HEADER_MINIMUM)
 	if loading then
 		-- The stock header's font string has a fixed width; anchor beside its text, not that box's edge.
 		module.Spinner:SetPoint("LEFT", module.Header.Text, "LEFT", module.Header.Text:GetStringWidth() + 6, 0)
 	end
 	module.Spinner:SetShown(loading == true)
 	ns.RefreshJourneyPulse(loading == true)
-	if changed then
+	if changed or headerFontChanged then
 		module:MarkDirty()
 		return
 	end

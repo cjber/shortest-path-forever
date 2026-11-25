@@ -47,6 +47,27 @@ for _, side in ipairs({ "Alliance", "Horde" }) do
 	end
 end
 assert(empty > 0, "some docks serve only one faction")
+-- A circuit can leave the same dock more than once, with a different destination for each visit.
+local dockID = next(ns.Docks)
+local toFirst = next(ns.Docks, dockID)
+local toSecond = next(ns.Docks, toFirst)
+ns.NearestDock = function()
+	return dockID, 0
+end
+ns.Timetable.ByDestination = function()
+	return {
+		{ route = 1, kind = "boat", to = { toFirst }, known = false },
+		{ route = 1, kind = "boat", to = { toSecond }, known = false },
+	}
+end
+T = T + 1
+ns.RefreshTracker()
+local entry = assert(tracker.blocks[1])
+local block = assert(tracker:GetExistingBlock(entry.key))
+local first = assert(block:GetExistingLine(entry.rows[1].key))
+local second = assert(block:GetExistingLine(entry.rows[2].key))
+assert(first ~= second, "two destinations on the same route must lay out as distinct lines")
+
 assert(#errors == 0, table.concat(errors, "\n"))
 print(
 	string.format("tracker_docks_ui: %d dock states, %d with nothing shown, no empty section ok", checked, empty)

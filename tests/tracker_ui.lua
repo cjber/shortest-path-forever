@@ -91,13 +91,20 @@ assert(
  "the place is gold and no number leads: " .. flightLine
 )
 -- A tracker replacement that shrinks ObjectiveTrackerLineFont and ObjectiveTrackerHeaderFont to 1 px (EllesmereUI,
--- #1335) leaves the section's text inheriting that size. The section sets the game's own smallest size instead, and
+-- #1335) leaves the section's text inheriting that size. The section sets its own fallback fonts instead, and
 -- gives the shared object back once the addon stops shrinking it.
 do
  local function face(size)
   return { size = size, GetFont = function(self) return "", self.size, "" end }
  end
- _G.ObjectiveTrackerFont12, _G.ObjectiveTrackerFont14 = face(12), face(14)
+ _G.ChatFontNormal = face(12)
+ _G.CreateFont = function(name)
+  local object = face(nil)
+  function object:SetFont(_, size) self.size = size end
+  _G[name] = object
+  return object
+ end
+ _G.ObjectiveTrackerFont12, _G.ObjectiveTrackerFont14 = face(1), face(1)
  _G.ObjectiveTrackerLineFont, _G.ObjectiveTrackerHeaderFont = face(1), face(1)
  _G.ObjectiveTrackerFontSize = 1
  block.HeaderText.fontSize, tracker.Header.Text.fontSize = 1, 1
@@ -114,6 +121,15 @@ do
  local total = 0
  for key in pairs(block.lines) do total = total + block.lines[key]:GetHeight() end
  assert(block.height == total, "the block's height follows its re-measured lines: " .. block.height .. " vs " .. total)
+ -- Text that shrinks on an existing block is repaired on a countdown tick and requests a new layout.
+ block.HeaderText.fontSize, first.Text.fontSize, first.Dash.fontSize = 1, 1, 1
+ local previousDirty = dirty
+ tick()
+ first = block:GetExistingLine(1)
+ assert(dirty == previousDirty + 1, "repairing existing fonts invalidates row heights")
+ assert(select(2, block.HeaderText:GetFont()) >= 12, "the refreshed block header stays readable")
+ assert(select(2, first.Text:GetFont()) >= 12, "the refreshed line stays readable")
+ assert(select(2, first.Dash:GetFont()) >= 12, "the refreshed dash stays readable")
  -- The addon stops: the shared objects are readable again and the text follows them.
  _G.ObjectiveTrackerLineFont.size, _G.ObjectiveTrackerHeaderFont.size, _G.ObjectiveTrackerFontSize = 16, 18, nil
  tracker:LayoutContents()
