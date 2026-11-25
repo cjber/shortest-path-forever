@@ -81,6 +81,7 @@ UI\Canvas.lua
 UI\MapReport.lua
 UI\Map.lua
 UI\TownServices.lua
+UI\MapButton.lua
 UI\FlightPins.lua
 UI\Looks.lua
 UI\MinimapPins.lua
@@ -135,6 +136,7 @@ Journey\StopOrder.lua
 UI\JourneyStops.lua
 Core\Zygor.lua
 Core\TomTom.lua
+Core\TomTomArrow.lua
 Core\Way.lua
 Core\RestedXP.lua
 Core\Guidelime.lua

@@ -227,8 +227,7 @@ local function Sync()
 	local key = Key(map, x, y)
 	if InCombatLockdown() then
 		if key ~= target then
-			API.Cancel(OWNER)
-			Restore()
+			Clear()
 		end
 		watcher:RegisterEvent("PLAYER_REGEN_ENABLED")
 		return

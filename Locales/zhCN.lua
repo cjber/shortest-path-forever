@@ -632,3 +632,11 @@ L["Descend underground"] = "下到地下" -- mt
 L["%s-click to plan a journey to this flight master"] = "%s-点击以规划前往此飞行管理员的旅程" -- mt
 L["Alt-click a Questie quest-start icon to plan a journey to the quest giver, whichever key you choose here."] =
 	"无论此处选择哪个按键，Alt-点击 Questie 任务起点图标都会规划前往任务发布者的旅程。" -- mt
+L["Show the Nearby services map button"] = "显示附近服务地图按钮" -- mt
+L["A button on the world map. Left-click opens Nearby services; right-click chooses which services show on the map."] =
+	"世界地图上的按钮。左键点击打开附近服务，右键点击选择地图上显示的服务。" -- mt
+L["Left-click to open Nearby services."] = "左键点击打开附近服务。" -- mt
+L["Right-click to choose map services."] = "右键点击选择地图服务。" -- mt
+L["Use TomTom's arrow"] = "使用 TomTom 的箭头" -- mt
+L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
+	"安装 TomTom 时，用 TomTom 的箭头指向每一步，替代本插件箭头和游戏标记。" -- mt

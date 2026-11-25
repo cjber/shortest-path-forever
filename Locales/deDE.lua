@@ -644,3 +644,11 @@ L["Descend underground"] = "Steigt in den Untergrund hinab" -- mt
 L["%s-click to plan a journey to this flight master"] = "%s-Klick plant eine Reise zu diesem Flugmeister" -- mt
 L["Alt-click a Questie quest-start icon to plan a journey to the quest giver, whichever key you choose here."] =
 	"Alt-Klick auf ein Questie-Questsymbol plant eine Reise zum Questgeber, egal welche Taste Ihr hier wählt." -- mt
+L["Show the Nearby services map button"] = "Kartenknopf für Dienste in der Nähe anzeigen" -- mt
+L["A button on the world map. Left-click opens Nearby services; right-click chooses which services show on the map."] =
+	"Ein Knopf auf der Weltkarte. Linksklick öffnet Dienste in der Nähe; Rechtsklick wählt, welche Dienste auf der Karte erscheinen." -- mt
+L["Left-click to open Nearby services."] = "Linksklick, um Dienste in der Nähe zu öffnen." -- mt
+L["Right-click to choose map services."] = "Rechtsklick, um Dienste auf der Karte zu wählen." -- mt
+L["Use TomTom's arrow"] = "TomTom-Pfeil verwenden" -- mt
+L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
+	"Wenn TomTom installiert ist, richtet sich der TomTom-Pfeil auf jeden Schritt statt unseres Pfeils und der Spielmarkierung." -- mt

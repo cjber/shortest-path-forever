@@ -275,6 +275,7 @@ local ns = {
 		compassBackground = 0,
 		trackerHeight = 200,
 		tomtomFollow = false,
+		tomtomArrow = false,
 		-- Dugi is opt-in: its viewer has no published API.
 		dugi = false,
 		zygor = false,
@@ -305,6 +306,7 @@ local ns = {
 	RefreshNearbyTab = function()
 		nearbyTabRefreshed = nearbyTabRefreshed + 1
 	end,
+	RefreshMapButton = function() end,
 	RefreshQuestPins = function()
 		questPinsRefreshed = questPinsRefreshed + 1
 	end,
@@ -418,6 +420,7 @@ local groups = {
 		"flightPinScale",
 		"minimapPinScale",
 		"nearbyTab",
+		"nearbyMapButton",
 		"townServices",
 		"onlyMyProfessions",
 		"routeColor",
@@ -446,6 +449,7 @@ local groups = {
 		"npcArrows",
 		"tomtom",
 		"tomtomFollow",
+		"tomtomArrow",
 		"restedxp",
 		"restedxpArrow",
 		"restedxpHideArrow",
@@ -492,16 +496,10 @@ local groups = {
 		"whatsNew",
 	},
 }
-local order = {
-	"Guidance",
-	"Map marks",
-	"Party mage portals",
-	"Alerts",
-	"Interface",
-}
+local order = { "Guidance", "Map marks", "Party mage portals", "Alerts", "Interface" }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 82, #rows)
+assert(#rows == 84, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer

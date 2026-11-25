@@ -84,7 +84,7 @@ end
 local stepEnd, destination
 local revision = 0
 local renderedRevision, renderedMetres, renderedMode, renderedSecond, renderedNative, renderedShared
-local renderedPoint
+local renderedPoint, renderedDirections
 local moving = false
 local OnUpdate
 ---@type SPFCastPromptFrame?
@@ -303,7 +303,7 @@ end
 
 -- The user's own setting: whether directions may place the native marker at all.
 local function ArrowShown()
-	return ns.db.arrow ~= false
+	return ns.db.arrow ~= false and not (ns.TomTomArrowActive and ns.TomTomArrowActive())
 end
 
 -- RestedXP keeps corpse guidance. For a living player, the marker follows the bend in every arrow mode.
@@ -333,31 +333,39 @@ local function Update(elapsed)
 		frame:SetShown(moving)
 		SetUpdating(false)
 		SetMarkerPolling(false)
+		NotifyLead()
 		return
 	end
 	local directions = DirectionsShown()
 	-- RestedXP keeps its own arrow; our frame stays hidden while the marker is placed below (#1254).
 	if not directions and not moving then
 		frame:Hide()
+	elseif directions and ((path and target) ~= nil or arrival ~= nil) and not frame:IsShown() then
+		frame:Show()
 	end
 	-- A hidden frame cannot run its own ticker, so the marker-only poll must place the marker on every bend (#1265).
 	SyncMarkerPolling()
 	-- Arrived: the pin stands until the player leaves the stop's area, then the arrow or nothing takes over.
-	if directions and arrival then
+	if arrival then
 		if ns.StopInside and not ns.StopInside(arrival) then
 			ns.PointArrivalPin(nil)
 			return
 		end
-		frame.behind = false
-		frame:SetAlpha(1)
-		frame.angle = nil
-		SetUpdating(false)
-		return
+		if directions then
+			ShowArrival(arrival)
+			frame.behind = false
+			frame:SetAlpha(1)
+			frame.angle = nil
+			SetUpdating(false)
+			NotifyLead()
+			return
+		end
 	end
 	-- The client may already have queued this tick when another callback stopped guidance.
 	if not path or not target then
 		frame.behind = false
 		SetUpdating(false)
+		NotifyLead()
 		return
 	end
 	local updating = revision
@@ -392,6 +400,7 @@ local function Update(elapsed)
 		not frame.updating
 		and not moved
 		and renderedPoint == pointing
+		and renderedDirections == directions
 		and renderedRevision == revision
 		and renderedMetres == ns.db.metres
 		and renderedMode == mode
@@ -402,7 +411,7 @@ local function Update(elapsed)
 		return
 	end
 	renderedRevision, renderedMetres, renderedMode, renderedSecond = revision, ns.db.metres, mode, second
-	renderedNative, renderedPoint = markerShown, pointing
+	renderedNative, renderedPoint, renderedDirections = markerShown, pointing, directions
 	StepIcon()
 	frame.x, frame.y, frame.map, frame.facing = x, y, map, facing
 	local placed = placeTarget and placeTarget(pointing, false)
@@ -422,6 +431,7 @@ local function Update(elapsed)
 		frame.angle = nil
 		SetUpdating(false)
 		Unseen(not ((native or shared) and markerShown))
+		NotifyLead()
 		return
 	end
 	local markerLeads = (native or shared) and markerShown
@@ -432,9 +442,11 @@ local function Update(elapsed)
 		frame.angle = nil
 		SetUpdating(false)
 		Unseen(not markerLeads)
+		NotifyLead()
 		return
 	end
 	Unseen(false)
+	NotifyLead()
 	local angle = Difference(Bearing(x, y, pointing), facing)
 	-- The arrow still points the way, and dims with the compass when that way is behind you.
 	frame.behind = ns.TurnAround.Behind(angle, frame.behind)
@@ -791,7 +803,7 @@ end
 -- Journey calls this when the player reaches a held stop's area, and with nil when it leaves or the stop changes.
 ---@param stop SPFPoint?
 function ns.PointArrivalPin(stop)
-	if stop and ns.db and (ns.db.arrivalPin == false or not DirectionsShown()) then
+	if stop and ns.db and (ns.db.arrivalPin == false or not ArrowShown()) then
 		stop = nil
 	end
 	if not stop then
@@ -811,9 +823,13 @@ function ns.PointArrivalPin(stop)
 	if not frame then
 		Create()
 	end
-	ShowArrival(stop)
-	frame:Show()
-	Wake()
+	if DirectionsShown() then
+		ShowArrival(stop)
+		frame:Show()
+		Wake()
+	else
+		SetUpdating(false)
+	end
 	Update(0)
 	if ns.RefreshCompass then
 		ns.RefreshCompass()
@@ -888,6 +904,15 @@ end
 
 -- Refresh arrow rendering without changing the canonical walk or its progress.
 function ns.ArrowBearingChanged()
+	if not frame and DirectionsShown() and ((path and target) or arrival) then
+		Create()
+		if arrival then
+			ShowArrival(arrival)
+		else
+			frame.Progress:SetText(destination and destination.routeTitle or "")
+			frame.linesDirty = true
+		end
+	end
 	if frame then
 		if DirectionsShown() and ((path and target) or arrival) then
 			frame:Show()
@@ -931,6 +956,12 @@ function ns.PointGuideArrow(points, placeBend, stop, goal)
 	end
 	if revision ~= updating then
 		return
+	end
+	if ns.SyncTomTomGuide then
+		ns.SyncTomTomGuide(points, stop, goal)
+		if revision ~= updating then
+			return
+		end
 	end
 	if not points or not ArrowShown() then
 		native, shared, unseen = nil, nil, false
@@ -1091,6 +1122,7 @@ function ns.ArrowLeads()
 		return false
 	end
 	return (DirectionsShown() and ((path ~= nil and target ~= nil and not unseen) or arrival ~= nil))
+		or (ns.TomTomArrowActive and ns.TomTomArrowActive() and path ~= nil and target ~= nil)
 		or (castTarget ~= nil and ns.CastPromptShown())
 end
 

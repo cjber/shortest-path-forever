@@ -557,6 +557,57 @@ assert(liveMarker.cancelled, "clearing the journey cancels the marker poll")
 liveMarker.callback()
 assert(#markerPlaces == beforeClear, "and no later tick places the marker")
 
+-- #1349: if DirectionsShown flips true while our frame is hidden and the marker poll runs (for example, an ownership
+-- handover from RestedXP to another owner, or resurrection on a poll tick), Update must show our frame and notify
+-- ArrowLeadChanged rather than cancelling the marker poll while leaving the frame hidden.
+local leadNotices = 0
+local origLeadChanged = ns.ArrowLeadChanged
+ns.ArrowLeadChanged = function(...)
+	leadNotices = leadNotices + 1
+	return origLeadChanged(...)
+end
+owner = "RestedXP"
+ns.db.restedxpArrow = "restedxp"
+ns.PointGuideArrow(markerBends, placeMarker)
+assert(frame.hidden and not ns.ArrowLeads(), "RestedXP mode starts with our frame hidden")
+local handoverTicker = assert(tickers[#tickers], "marker poll runs while hidden")
+assert(not handoverTicker.cancelled, "marker poll is active")
+leadNotices = 0
+owner = nil
+handoverTicker.callback()
+assert(handoverTicker.cancelled, "marker poll stops once our frame takes over")
+assert(not frame.hidden, "our frame shows when directions become active on a marker poll tick")
+assert(ns.ArrowLeads() and leadNotices >= 1, "and ArrowLeadChanged notifies listeners")
+
+-- #1349: arriving at a held RestedXP stop in RestedXP arrow mode keeps our frame hidden, but remembers the arrival so
+-- switching to Shortest Path's arrow while still inside the stop shows the arrival pin and takes the lead.
+owner = "RestedXP"
+ns.db.restedxpArrow = "restedxp"
+ns.db.arrivalPin = true
+ns.PointGuideArrow(nil)
+local heldStop = { map = 1, x = 0, y = 0, hold = true, label = "Quest giver" }
+local insideHeld = true
+local origStopInside = ns.StopInside
+ns.StopInside = function(stop)
+	return stop == heldStop and insideHeld
+end
+ns.PointArrivalPin(heldStop)
+assert(frame.hidden and not ns.ArrowLeads(), "RestedXP arrow mode keeps our arrival pin hidden")
+leadNotices = 0
+ns.db.restedxpArrow = "shortestPath"
+ns.ArrowBearingChanged()
+assert(not frame.hidden and frame.arrival, "switching to Shortest Path's arrow at a held stop shows the arrival pin")
+assert(ns.ArrowLeads() and leadNotices >= 1, "and hands the arrow lead over so RestedXP's arrow can step aside")
+ns.db.restedxpArrow = "restedxp"
+ns.ArrowBearingChanged()
+assert(frame.hidden and not ns.ArrowLeads(), "switching back to RestedXP's arrow hides the arrival pin again")
+insideHeld = false
+tickers[#tickers].callback()
+assert(not ns.ArrivalStop(), "leaving the stop while RestedXP leads still clears the remembered arrival")
+ns.StopInside = origStopInside
+ns.ArrowLeadChanged = origLeadChanged
+ns.PointGuideArrow(nil)
+
 -- A mouth on the current journey shows one instruction independently of quest objectives.
 owner = nil
 local cave = {

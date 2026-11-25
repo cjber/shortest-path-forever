@@ -89,6 +89,14 @@ function MapMarks.Register(rows)
 		L["The tab in the world map's quest log. Off, /spfnear and the tracking menu still open it."],
 		ns.RefreshNearbyTab
 	)
+	rows.Checkbox(
+		"nearbyMapButton",
+		L["Show the Nearby services map button"],
+		-- luacheck: push ignore 631
+		L["A button on the world map. Left-click opens Nearby services; right-click chooses which services show on the map."],
+		-- luacheck: pop
+		ns.RefreshMapButton
+	)
 	rows.Dropdown(
 		"townServices",
 		L["Town service icons"],
