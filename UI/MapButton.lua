@@ -9,7 +9,7 @@ local Art = ns.Art
 local Canvas = ns.Canvas
 
 -- Quick map button for Nearby services (#1342): sits in the world map's top-right column as our own frame
--- (Canvas.FrameUnder, never AddOverlayFrame, #158). Left-click toggles the Nearby services panel; right-click opens
+-- (Canvas.FrameUnder, never AddOverlayFrame, #158). Left-click opens the Nearby services panel; right-click opens
 -- a checkbox menu bound to the same per-service map filters the panel uses.
 local BUTTON_SIZE = 32
 local ICON_SIZE = 22
@@ -92,21 +92,6 @@ end
 local function SetPressed(button, down)
 	Art.Fit(button.Background, down and DOWN_ATLAS or UP_ATLAS, BUTTON_SIZE, BUTTON_SIZE)
 	Canvas.Press(button, button.pressRegions, down)
-end
-
-local function TogglePanel()
-	if ns.GamepadUI() then
-		ns.Notice(L["This menu needs mouse and keyboard."])
-		return
-	end
-	local tabs = ForeverCore.QuestLogTabs
-	local questLog = rawget(_G, "QuestMapFrame")
-	if tabs.Selected and tabs.Selected() == "services" and (not questLog or questLog:IsShown()) then
-		tabs.ShowQuests()
-		return
-	end
-	ns.NearbyServices.Request()
-	tabs.Select("services")
 end
 
 ---@param _ Region
@@ -216,7 +201,7 @@ ns.Init(function()
 	end)
 	button:SetScript("OnClick", function(self, mouseButton)
 		if mouseButton == "LeftButton" then
-			TogglePanel()
+			ns.NearbyServices.Open()
 		elseif mouseButton == "RightButton" then
 			OpenMenu(self --[[@as SPFMapButton]])
 		end
@@ -227,7 +212,7 @@ ns.Init(function()
 		end
 		GameTooltip:SetOwner(self, "ANCHOR_LEFT")
 		GameTooltip_SetTitle(GameTooltip, L["Nearby services"])
-		GameTooltip_AddInstructionLine(GameTooltip, L["Left-click to toggle Nearby services."])
+		GameTooltip_AddInstructionLine(GameTooltip, L["Left-click to open Nearby services."])
 		GameTooltip_AddInstructionLine(GameTooltip, L["Right-click to choose map services."])
 		GameTooltip:Show()
 	end)

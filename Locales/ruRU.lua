@@ -687,10 +687,9 @@ L["Alt-click a Questie quest-start icon to plan a journey to the quest giver, wh
 	"Alt-щелчок по значку начала задания Questie прокладывает путь к тому, кто выдает задание, какую бы клавишу вы здесь ни выбрали." -- mt
 L["Show the Nearby services map button"] =
 	"Показать кнопку «Услуги поблизости» на карте" -- mt
-L["A button on the world map. Left-click toggles Nearby services; right-click chooses which services show on the map."] =
-	"Кнопка на карте мира. ЛКМ открывает или закрывает «Услуги поблизости»; ПКМ выбирает услуги для отображения на карте." -- mt
-L["Left-click to toggle Nearby services."] =
-	"ЛКМ, чтобы открыть или закрыть «Услуги поблизости»." -- mt
+L["A button on the world map. Left-click opens Nearby services; right-click chooses which services show on the map."] =
+	"Кнопка на карте мира. ЛКМ открывает «Услуги поблизости»; ПКМ выбирает услуги для отображения на карте." -- mt
+L["Left-click to open Nearby services."] = "ЛКМ, чтобы открыть «Услуги поблизости»." -- mt
 L["Right-click to choose map services."] = "ПКМ, чтобы выбрать услуги на карте." -- mt
 L["Use TomTom's arrow"] = "Использовать стрелку TomTom" -- mt
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =

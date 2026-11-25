@@ -1,5 +1,5 @@
 -- Nearby services quick map button (#1342): drawn through UI/Canvas.lua on our own frame (never AddOverlayFrame),
--- native art through UI/Art.lua, left-click toggles Nearby services, right-click opens a scrollable checkbox menu
+-- native art through UI/Art.lua, left-click opens Nearby services, right-click opens a scrollable checkbox menu
 -- bound to the same service filter settings as the Nearby services panel.
 local source = ""
 for _, part in ipairs({ "tests/ui_client.lua", "tests/ui_map.lua" }) do
@@ -57,7 +57,7 @@ button.scripts.OnEnter(button)
 assert(GameTooltip:IsShown() and GameTooltip:IsOwned(button), "hover shows tooltip owned by button")
 local joined = table.concat(tip, "\n")
 assert(joined:find("Nearby services", 1, true), "tooltip titles Nearby services")
-assert(joined:find("Left-click to toggle Nearby services.", 1, true), "tooltip documents left-click")
+assert(joined:find("Left-click to open Nearby services.", 1, true), "tooltip documents left-click")
 assert(joined:find("Right-click to choose map services.", 1, true), "tooltip documents right-click")
 button.scripts.OnLeave(button)
 assert(not GameTooltip:IsShown(), "leave hides tooltip")
@@ -69,18 +69,21 @@ setMapShown(false)
 assert(not GameTooltip:IsShown(), "map hide clears button tooltip")
 setMapShown(true)
 
--- Left-click opens/toggles the Nearby services panel through ForeverCore.QuestLogTabs.
-local selectedKey, selectCalls, showQuestsCalls, requestCalls = nil, 0, 0, 0
+-- Left-click opens Nearby services through ns.NearbyServices.Open (the shared entry used by /spfnear and the tracking
+-- menu) and never calls ForeverCore.QuestLogTabs.ShowQuests or Selected directly.
+local openCalls, showQuestsCalls, selectedCalls = 0, 0, 0
 local savedTabs = _G.ForeverCore.QuestLogTabs
 _G.ForeverCore.QuestLogTabs = {
-	Selected = function() return selectedKey end,
-	Select = function(key)
-		selectedKey = key
-		selectCalls = selectCalls + 1
+	Selected = function()
+		selectedCalls = selectedCalls + 1
+		return "services"
+	end,
+	Select = function()
+		error("MapButton must open via ns.NearbyServices.Open, not QuestLogTabs.Select directly")
 	end,
 	ShowQuests = function()
-		selectedKey = nil
 		showQuestsCalls = showQuestsCalls + 1
+		error("MapButton must never call QuestLogTabs.ShowQuests")
 	end,
 }
 local groups = {
@@ -94,11 +97,13 @@ local groups = {
 local place = { id = 1, name = "NPC", map = 14, x = 0.5, y = 0.5, world = { map = 1, x = 0, y = 0 } }
 local index = { arrows = { place }, food = { place }, class = { place }, bank = { place }, flight = { place } }
 local state = "ready"
+local realOpen = assert(ns.NearbyServices.Open, "ns.NearbyServices.Open is defined")
 ns.NearbyServices = {
-	Request = function() requestCalls = requestCalls + 1 end,
+	Request = function() end,
 	State = function() return state end,
 	Index = function() return index end,
 	Groups = function() return groups end,
+	Open = function() openCalls = openCalls + 1 end,
 }
 local mapInfo = C_Map.GetMapInfo
 C_Map.GetMapInfo = function(id)
@@ -108,11 +113,12 @@ C_Map.GetMapInfo = function(id)
 end
 
 button.scripts.OnClick(button, "LeftButton")
-assert(selectedKey == "services" and selectCalls == 1 and requestCalls == 1, "first left-click selects services panel")
+assert(openCalls == 1 and showQuestsCalls == 0 and selectedCalls == 0, "left-click opens via ns.NearbyServices.Open")
 button.scripts.OnClick(button, "LeftButton")
-assert(selectedKey == nil and showQuestsCalls == 1, "second left-click toggles panel closed back to quests")
-button.scripts.OnClick(button, "LeftButton")
-assert(selectedKey == "services" and selectCalls == 2, "third left-click opens services panel again")
+assert(
+	openCalls == 2 and showQuestsCalls == 0 and selectedCalls == 0,
+	"second left-click still opens without ShowQuests"
+)
 
 -- Right-click opens ForeverCore.ContextMenu with scrolling, section headings, checkboxes per service, and town levels.
 local function captureMenu()
@@ -245,13 +251,13 @@ local notices = {}
 local savedNotice = ns.Notice
 ns.GamepadUI = function() return true end
 ns.Notice = function(msg) notices[#notices + 1] = msg end
-local beforeSelect = selectCalls
+ns.NearbyServices.Open = realOpen
 local openedInGamepad = false
 local savedCM = _G.ForeverCore.ContextMenu
 _G.ForeverCore.ContextMenu = function() openedInGamepad = true end
 button.scripts.OnClick(button, "LeftButton")
 button.scripts.OnClick(button, "RightButton")
-assert(selectCalls == beforeSelect and not openedInGamepad, "gamepad clicks neither switch tabs nor open menus")
+assert(not openedInGamepad, "gamepad right-click does not open menus")
 assert(#notices == 2 and notices[1] == "This menu needs mouse and keyboard.", "gamepad clicks tell the player")
 _G.ForeverCore.ContextMenu = savedCM
 ns.GamepadUI, ns.Notice = savedGamepad, savedNotice

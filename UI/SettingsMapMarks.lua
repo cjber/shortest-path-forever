@@ -93,7 +93,7 @@ function MapMarks.Register(rows)
 		"nearbyMapButton",
 		L["Show the Nearby services map button"],
 		-- luacheck: push ignore 631
-		L["A button on the world map. Left-click toggles Nearby services; right-click chooses which services show on the map."],
+		L["A button on the world map. Left-click opens Nearby services; right-click chooses which services show on the map."],
 		-- luacheck: pop
 		ns.RefreshMapButton
 	)

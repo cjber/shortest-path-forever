@@ -1,10 +1,10 @@
 -- luacheck: read globals scenario ADDON
 local ForeverCore = dofile("tests/forever_core.lua")
 -- Nearby services quick map button (#1342): sits on the world map without touching Blizzard's map tables, left-click
--- toggles the Nearby services panel, right-click opens ForeverCore.ContextMenu with one checkbox per service kind
--- bound to the same settings the panel uses, and survives combat and the gamepad interface with zero taint.
+-- opens the Nearby services panel via ns.NearbyServices.Open, right-click opens ForeverCore.ContextMenu with one
+-- checkbox per service kind bound to the same settings the panel uses, and survives combat and gamepad with zero taint.
 scenario(
-	"Nearby services map button toggles the panel, filters pins via right-click menu, and stays taint-free",
+	"Nearby services map button opens the panel, filters pins via right-click menu, and stays taint-free",
 	{ addons = ForeverCore.addons() },
 	function(sim)
 		local G = sim.G
@@ -90,7 +90,22 @@ scenario(
 		sim:advance(0.1)
 		sim:leave()
 
-		-- Left-click opens and toggles the Nearby services panel.
+		-- Under gamepad interface, left-click and right-click neither select the panel nor open a context menu.
+		sim:setGamepad(true)
+		sim:gamepadNavigate()
+		sim:input(function()
+			button:GetScript("OnClick")(button, "LeftButton")
+			button:GetScript("OnClick")(button, "RightButton")
+		end)
+		sim:advance(0.1)
+		assert(G.ForeverCore.QuestLogTabs.Selected() == nil, "gamepad left-click does not select Nearby services")
+		assert(
+			not (G.ForeverCoreContextMenu and G.ForeverCoreContextMenu:IsShown()),
+			"gamepad right-click does not open context menu"
+		)
+		sim:setGamepad(false)
+
+		-- Left-click opens the Nearby services panel through ns.NearbyServices.Open without calling ShowQuests.
 		sim:input(function()
 			button:GetScript("OnClick")(button, "LeftButton")
 		end)
@@ -100,7 +115,7 @@ scenario(
 			button:GetScript("OnClick")(button, "LeftButton")
 		end)
 		sim:advance(0.1)
-		assert(G.ForeverCore.QuestLogTabs.Selected() == nil, "second left-click toggles panel back to quests")
+		assert(G.ForeverCore.QuestLogTabs.Selected() == "services", "second left-click keeps Nearby services open")
 
 		-- Right-click opens ForeverCore.ContextMenu and ticking Arrows turns town services on with its pin.
 		sim:input(function()
@@ -141,20 +156,13 @@ scenario(
 		end)
 		assert(button:IsShown(), "turning on nearbyMapButton restores the button")
 
-		-- Combat and gamepad interface stay clean and taint-free.
+		-- Combat and gamepad navigation after opening stay clean and taint-free.
 		sim:enterCombat()
 		sim:advance(0.2)
 		sim:leaveCombat()
 		sim:advance(0.2)
 		sim:setGamepad(true)
 		sim:gamepadNavigate()
-		sim:input(function()
-			button:GetScript("OnClick")(button, "LeftButton")
-			button:GetScript("OnClick")(button, "RightButton")
-		end)
-		sim:advance(0.1)
-		assert(G.ForeverCore.QuestLogTabs.Selected() == nil, "gamepad left-click does not switch tabs")
-		assert(not popup:IsShown(), "gamepad right-click does not open context menu")
 		sim:setGamepad(false)
 		sim:closeWorldMap()
 		sim:expectNoErrors(ADDON)

@@ -45,7 +45,7 @@ local DEFAULTS = {
 	-- The Nearby services tab in the shared quest log column. On by default; off, another addon may take that space
 	-- and /spfnear and the tracking menu still open the services.
 	nearbyTab = true,
-	-- The Nearby services button on the world map: left-click toggles the panel, right-click toggles map services.
+	-- The Nearby services button on the world map: left-click opens the panel, right-click toggles map services.
 	nearbyMapButton = true,
 	worldMapMarks = true,
 	mapRoutes = true,

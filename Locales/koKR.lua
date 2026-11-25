@@ -657,9 +657,9 @@ L["%s-click to plan a journey to this flight master"] =
 L["Alt-click a Questie quest-start icon to plan a journey to the quest giver, whichever key you choose here."] =
 	"Questie 퀘스트 시작 아이콘을 Alt-클릭하면 여기서 고른 키와 상관없이 퀘스트 제공자까지 여정을 계획합니다." -- mt
 L["Show the Nearby services map button"] = "주변 편의시설 지도 버튼 표시" -- mt
-L["A button on the world map. Left-click toggles Nearby services; right-click chooses which services show on the map."] =
-	"세계 지도의 버튼입니다. 좌클릭으로 주변 편의시설을 열거나 닫고, 우클릭으로 지도에 표시할 편의시설을 고릅니다." -- mt
-L["Left-click to toggle Nearby services."] = "좌클릭으로 주변 편의시설을 열거나 닫습니다." -- mt
+L["A button on the world map. Left-click opens Nearby services; right-click chooses which services show on the map."] =
+	"세계 지도의 버튼입니다. 좌클릭으로 주변 편의시설을 열고, 우클릭으로 지도에 표시할 편의시설을 고릅니다." -- mt
+L["Left-click to open Nearby services."] = "좌클릭으로 주변 편의시설을 엽니다." -- mt
 L["Right-click to choose map services."] = "우클릭으로 지도 편의시설을 고릅니다." -- mt
 L["Use TomTom's arrow"] = "TomTom 화살표 사용" -- mt
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
