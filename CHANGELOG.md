@@ -10,6 +10,14 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.45.10] - 2026-11-25
+
+### Fixed
+
+- The tracker shows both departures when the same transport leaves a dock for different destinations.
+- Clearing focus on a quest ends the journey started by Route to the focused quest.
+- Journey and departure tracker text stays readable when EllesmereUI shrinks the default tracker fonts.
+
 ## [1.45.9] - 2026-11-25
 
 ### Fixed
