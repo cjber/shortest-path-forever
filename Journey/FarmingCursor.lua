@@ -49,7 +49,7 @@ function Cursor.new(driver)
 				return
 			end
 			cursor.pending = nil
-			if reason ~= "arrived" then
+			if reason ~= "arrived" and reason ~= "skipped" then
 				invalidate(reason)
 				return
 			end

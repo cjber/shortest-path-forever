@@ -63,84 +63,6 @@ function ns.JourneyPlan()
 	return result, progress.index, progress.departed
 end
 
-local CONTINENTS = {
-	{ map = 0, uiMap = 1415, name = L["Eastern Kingdoms"] },
-	{ map = 1, uiMap = 1414, name = L["Kalimdor"] },
-}
-local continentsNamed = false
-local NONE = {}
-
-local function Continents()
-	if not continentsNamed then
-		continentsNamed = true
-		for _, continent in ipairs(CONTINENTS) do
-			local info = C_Map.GetMapInfo(continent.uiMap)
-			if info and info.name and info.name ~= "" then
-				continent.name = info.name
-			end
-		end
-	end
-	return CONTINENTS
-end
-
-local function KnownCounts()
-	local counts = {}
-	for nodeID in pairs(ns.KnownTaxiNodes()) do
-		local node = ns.TaxiNodes[nodeID]
-		if node then
-			counts[node.map] = (counts[node.map] or 0) + 1
-		end
-	end
-	return counts
-end
-
----@return {map: number, name: string, known: integer}[]
-function ns.KnownFlightPointsByContinent()
-	local counts, continents = KnownCounts(), {}
-	for _, continent in ipairs(Continents()) do
-		continents[#continents + 1] = { map = continent.map, name = continent.name, known = counts[continent.map] or 0 }
-	end
-	return continents
-end
-
----@param plan SPFPlan
----@return {map: number, name: string}[]
-local function UnsyncedContinents(plan)
-	local maps = plan.unknownFlightMaps
-	if not maps then
-		return NONE
-	end
-	local counts, unsynced = KnownCounts(), NONE
-	for _, continent in ipairs(Continents()) do
-		if maps[continent.map] and not counts[continent.map] then
-			unsynced = unsynced == NONE and {} or unsynced
-			unsynced[#unsynced + 1] = continent
-		end
-	end
-	return unsynced
-end
-
----@param plan SPFPlan
----@return SPFRow[]
-function ns.UnsyncedFlightPointRows(plan)
-	local unsynced = UnsyncedContinents(plan)
-	if unsynced == NONE then
-		return NONE
-	end
-	local rows = {}
-	for _, continent in ipairs(unsynced) do
-		rows[#rows + 1] = {
-			key = "no-flight-points-" .. continent.map,
-			text = string.format(
-				L["No flight points learned in %s: open a flight master's map once to sync them."],
-				continent.name
-			),
-			warning = true,
-		}
-	end
-	return rows
-end
-
 -- Where the journey goes, also while it waits behind a corpse run; nil with no journey.
 ---@return SPFPoint?
 function ns.JourneyGoal()
@@ -328,7 +250,7 @@ end
 ---@type SPFRoutePolicy
 local journeyPolicy = "normal"
 
----@param reason "arrived"|"cleared"
+---@param reason "arrived"|"cleared"|"skipped"
 local function EndJourney(reason)
 	Search.Reset()
 	goal, result, nextPoint = nil, nil, nil
@@ -354,6 +276,14 @@ function ns.ClearJourney()
 	EndJourney("cleared")
 end
 
+---@param reason "arrived"|"skipped"
+local function AdvanceStop(reason)
+	nextPoint = ns.NextJourneyStop and ns.NextJourneyStop(goal)
+	if not nextPoint then
+		EndJourney(reason)
+	end
+end
+
 -- Completion may run inside a planner callback. Start at most one next stop on the driver's next step,
 -- after that callback unwinds; coincident stops must never recurse through the whole route in one frame.
 local function Arrive()
@@ -365,10 +295,7 @@ local function Arrive()
 			return
 		end
 	end
-	nextPoint = ns.NextJourneyStop and ns.NextJourneyStop(goal)
-	if not nextPoint then
-		EndJourney("arrived")
-	end
+	AdvanceStop("arrived")
 end
 
 local function UpdateProgress()
@@ -608,12 +535,32 @@ local function Refresh()
 	RefreshTracker()
 end
 
+---@return boolean
+function ns.IsFarmingJourney()
+	return ns.Farming ~= nil and ns.JourneyOwner ~= nil and ns.Farming.Owns(ns.JourneyOwner())
+end
+
+local function CanSkip()
+	return goal ~= nil and result ~= nil and not (replacingGoal or nextPoint or CorpseRun() or InCombatLockdown())
+end
+
+-- Pass a farming tour's stop without having reached it. The driver plans the next one on its next update.
+---@param expectedGoal SPFPoint the stop the menu was opened on
+---@return boolean
+function ns.SkipJourneyStop(expectedGoal)
+	if not (CanSkip() and goal == expectedGoal and ns.IsFarmingJourney()) then
+		return false
+	end
+	AdvanceStop("skipped")
+	return true
+end
+
 -- Advance only the current leg. A refused Hearthstone stays out of this journey's later plans,
 -- which still start at the player's actual position.
 ---@param index integer?
 ---@return boolean
 function ns.SkipJourneyStep(index)
-	if not goal or not result or replacingGoal or CorpseRun() or InCombatLockdown() then
+	if not CanSkip() then
 		return false
 	end
 	local current = progress.index
@@ -622,6 +569,10 @@ function ns.SkipJourneyStep(index)
 	end
 	if not result.legs[current] then
 		return false
+	end
+	-- Completing a farming stop's last leg by hand is no arrival: the tour accepts it only as a skip.
+	if current == #result.legs and ns.IsFarmingJourney() then
+		return ns.SkipJourneyStop(goal)
 	end
 	if result.legs[current].teleport and result.legs[current].teleport.bind then
 		withoutHearth = true
@@ -642,27 +593,6 @@ function ns.SkipJourneyStep(index)
 end
 
 local SamePlace = Search.SamePlace
-
-local announcedGoal, announced = nil, {}
-
-local function AnnounceUnsyncedFlightPoints()
-	if not (result and result.unknownFlightMaps and goal and ns.db.flightPathReminder) then
-		return
-	end
-	if announcedGoal ~= goal then
-		announcedGoal, announced = goal, {}
-	end
-	for _, continent in ipairs(UnsyncedContinents(result)) do
-		if not announced[continent.map] then
-			announced[continent.map] = true
-			ns.Notice(
-				L["A flight would be quicker. Open a flight master's map in %s once to sync your flight points."]:format(
-					continent.name
-				)
-			)
-		end
-	end
-end
 
 -- Everything the search changes about what to follow arrives here, possibly while it is being started or stepped.
 ---@param route SPFPlan?
@@ -703,7 +633,7 @@ local function Follow(route, news)
 		return
 	end
 	UpdateProgress()
-	AnnounceUnsyncedFlightPoints()
+	ns.AnnounceUnsyncedFlightPoints(result, goal)
 	if news == "times" then
 		if drawn and result then
 			drawn.now, drawn.arrive = result.now, result.arrive

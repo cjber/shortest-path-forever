@@ -61,7 +61,7 @@
 ---@field ReportTitle string the localized title shown by the shared report window
 ---@field Icon string the one client icon every in-game identity surface draws, read from the TOC
 ---@field NearbyQuestie SPFNearbyQuestie the QuestieDB read behind the Nearby list (UI/NearbyQuestie.lua)
----@field ProgressJourneyChanged? fun(point: SPFPoint?, reason?: "arrived"|"cleared")
+---@field ProgressJourneyChanged? fun(point: SPFPoint?, reason?: "arrived"|"cleared"|"skipped")
 ---@field JourneyKeys string[] the modifier keys a journey click can wait for: "shift" and "alt" (JourneyInput.lua)
 ---@field JourneyKeyDown fun(): boolean whether the chosen journey key is held (JourneyInput.lua)
 ---@field JourneyKeyName fun(key?: string): string what the chosen key, or the one named, is called (JourneyInput.lua)

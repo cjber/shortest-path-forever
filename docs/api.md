@@ -1,6 +1,6 @@
 # Addon API
 
-Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 10`) with uiMapIDs and normalized 0-1 coordinates.
+Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 11`) with uiMapIDs and normalized 0-1 coordinates.
 Version 2 removes peer sharing and `Leaderboard`; callers must accept versions 1 and 2 and reject future versions. Check that a function exists before calling it, because an older
 addon may not have it yet. The full types are in [`types/API.lua`](../types/API.lua). On ForeverCore 1.3.2 or
 later, the API is also listed by `ForeverCore.APIKit.Addons()`.
@@ -18,6 +18,7 @@ the addon can use it once it shows the requested map.
 
 ## Minor history
 
+- Version 2, `minor = 11` adds the `"skipped"` result of `Ended`.
 - Version 2, `minor = 10` adds `SetArrowShown` and `NavigateRoute`'s `fadeLaterLegs` option.
 - Version 2, `minor = 9` adds `SuspendMapPins` and `ResumeMapPins`.
 - Version 2, `minor = 8` adds `NavigateRoute`'s `stopMarkers` option.
@@ -122,8 +123,9 @@ the addon can use it once it shows the requested map.
   not have, or an owner that does not own the route returns `false`.
 - `Active()` says whether any journey is guiding, yours or another addon's.
 - `Ended(owner)` says why that owner's last journey ended: `"arrived"` after its last stop, `"cleared"` by the
-  player (or by turning Journeys off), `"replaced"` by another addon's or the player's journey, or `"cancelled"`
-  by the owner's own `Cancel`; its second return is the `GetTime()` it ended. While the journey runs, before the
+  player (or by turning Journeys off), `"replaced"` by another addon's or the player's journey, `"cancelled"`
+  by the owner's own `Cancel`, or `"skipped"` after skipping a farming batch's last stop. The second return is
+  the `GetTime()` it ended. While the journey runs, before the
   owner's first, and after a reload it returns `nil` and a reason: `"loading"` while the addon is still building
   its data, `"none"` when there is no ended journey to report. `Subscribe` says when to read it again.
 - `Subscribe(callback)` calls `callback(changes)` on the frame after guidance changes, at most once per burst of

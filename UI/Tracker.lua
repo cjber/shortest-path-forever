@@ -423,25 +423,39 @@ function ModuleMixin:LayoutContents()
 				-- Core's line takes the mouse but answers only the left button, so SPF sets its own OnMouseUp after.
 				Line.SetInteractive(line, {})
 				line:SetScript("OnMouseUp", function(_, button)
+					local farming = current and ns.IsFarmingJourney()
 					if button == "RightButton" then
-						if not TransportMenu(line, row) then
+						if TransportMenu(line, row) then
+							return
+						end
+						if not farming then
 							return self:OnBlockHeaderClick(block, button)
 						end
+					elseif button ~= "LeftButton" then
 						return
 					end
-					if button ~= "LeftButton" or not current then
+					if not current then
 						return
 					end
 					-- A row's key counts from the step under way, so the step is the one under way when the menu
 					-- opens; SkipJourneyStep refuses it if the journey has moved on before the click.
 					local _, _, plan, index = ns.JourneyInfo()
-					if not plan then
+					local goal = ns.JourneyGoal()
+					if not (plan and goal) then
 						return
 					end
 					ForeverCore.ContextMenu(line, function(_, root)
-						root:CreateButton(L["Complete this step"], function()
-							ns.SkipJourneyStep(index)
-						end)
+						-- On a farming tour's last leg, completing the step and skipping the stop are one action.
+						if not (farming and index == #plan.legs) then
+							root:CreateButton(L["Complete this step"], function()
+								ns.SkipJourneyStep(index)
+							end)
+						end
+						if farming then
+							root:CreateButton(L["Skip this stop"], function()
+								ns.SkipJourneyStop(goal)
+							end)
+						end
 					end)
 				end)
 			else

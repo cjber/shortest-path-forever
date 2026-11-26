@@ -106,6 +106,7 @@ Journey\JourneySearch.lua
 Journey\JourneyWalks.lua
 Journey\JourneyGuide.lua
 Journey\JourneyGuidance.lua
+Journey\FlightSync.lua
 Journey\Journey.lua
 Journey\AvoidTransport.lua
 Journey\JourneyInput.lua

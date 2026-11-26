@@ -113,7 +113,57 @@ local function scenario(final)
 	c:Stop()
 	flush()
 	d.move({ map = 1, x = 0, y = 0 })
+	assert(c:Start({ node(1000), node(2000) }))
+	d.path.settle()
+	flush()
+	d.move({ map = 1, x = 1000, y = 0 })
+	d.update(0.1)
+	flush()
+	d.path.settle()
+	flush()
+	assert(api.CurrentStop(ns.JourneyOwner()) == 2)
+	assert(ns.SkipJourneyStep(1))
+	flush()
+	state, reason = c:Status()
+	assert(state == "running" and select(4, c:Status()) == 1, tostring(state) .. ":" .. tostring(reason))
+	c:Stop()
+	flush()
+	d.move({ map = 1, x = 0, y = 0 })
 	d.path.auto = true
+	local batchNodes = {}
+	for i = 1, 65 do
+		batchNodes[i] = node(1000 + i)
+	end
+	assert(c:Start(batchNodes))
+	local batchOwner = ns.JourneyOwner()
+	for i = 1, 64 do
+		d.path.settle()
+		flush()
+		assert(api.CurrentStop(batchOwner) == i)
+		local skippedGoal = ns.JourneyGoal()
+		if i == 1 then
+			-- Skipping a stop bypasses every leg in its plan.
+			local legs = assert(ns.JourneyPlan()).legs
+			legs[2] = legs[1]
+		end
+		assert(ns.SkipJourneyStop(skippedGoal))
+		assert(not ns.SkipJourneyStop(skippedGoal), "a second click cannot skip a pending stop")
+		d.update(0.1)
+		if i < 64 then
+			assert(not ns.SkipJourneyStop(skippedGoal), "an old menu cannot skip a new stop")
+		end
+	end
+	assert(api.Ended(batchOwner) == "skipped")
+	flush()
+	assert(c:Status() == "running" and select(3, c:Status()) == 65)
+	flush()
+	d.path.settle()
+	flush()
+	assert(ns.SkipJourneyStop(ns.JourneyGoal()), "a single-stop batch can be skipped")
+	flush()
+	assert(c:Status() == "running" and select(4, c:Status()) == 1)
+	c:Stop()
+	flush()
 	local finish = d.path.finish
 	d.path.finish = function(job, found, detail)
 		if job.to and not job.costOnly then
@@ -130,6 +180,4 @@ local function scenario(final)
 end
 scenario(1010)
 scenario(2000)
-print(
-	"PASS: native nearby/distant completion, atomic late-batch validation, corpse and stale proof, unmeasured proximity"
-)
+print("PASS: farming arrival proof, stale callbacks, and skips across legs, batches and cycles")

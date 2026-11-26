@@ -657,3 +657,4 @@ L["With TomTom installed, point TomTom's arrow at each step instead of our arrow
 	"Con TomTom instalado, apunta la flecha de TomTom a cada paso en lugar de nuestra flecha y el marcador del juego." -- mt
 L["Walking routes can now be dotted or solid."] = "Las rutas a pie ahora pueden ser discontinuas o continuas." -- mt
 L["Mailbox"] = "Buzón" -- mt
+L["Skip this stop"] = "Omitir esta parada" -- mt
