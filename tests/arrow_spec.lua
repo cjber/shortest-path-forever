@@ -87,6 +87,24 @@ ns.db.arrow = false
 ns.PointGuideArrow({ { map = 1, x = 200, y = 0 } })
 assert(frame == nil, "initial disabled guidance must not create an arrow")
 ns.db.arrow = true
+-- A companion that kept the arrow off moves to a hold mid-leg: the marker poll starts with our frame hidden (#1308).
+driver.load("Core/APIInput.lua")
+local held = 0
+env.C_Timer = {
+	NewTicker = function()
+		return { Cancel = function() end }
+	end,
+}
+ns.db.arrow = false
+ns.PointGuideArrow({ { map = 1, x = 0, y = 0 }, { map = 1, x = 200, y = 0 } }, function()
+	held = held + 1
+end)
+ns.db.arrow = true
+assert(ns.SetArrowShown("Queston", false))
+assert(held > 0 and frame.hidden, "a hold taken before any arrow was drawn still places the marker")
+ns.PointGuideArrow(nil)
+assert(ns.SetArrowShown("Queston", true))
+env.C_Timer = nil
 local points = { { map = 1, x = 0, y = 0 }, { map = 1, x = 200, y = 0 } }
 local placed = 0
 local function place()
@@ -610,9 +628,6 @@ ns.PointGuideArrow(nil)
 
 -- #1308: a companion with its own arrow hides our frame on any journey, the player's own included. The marker poll
 -- keeps placing the native marker, and the lead stays ours, so a guide addon's arrow stays down beside the companion's.
-if not ns.APIInput then
-	driver.load("Core/APIInput.lua")
-end
 owner = nil
 ns.db.arrivalPin = true
 driver.move({ map = 1, x = 0, y = 0, z = 0 })

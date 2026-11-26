@@ -407,6 +407,8 @@ assert(laterPin.Texture.alpha == ns.LaterAlpha and laterPin.Button.alpha == ns.L
 assert(laterLine.lines[laterLine.used].alpha == ns.LaterAlpha, "and the leg fades again")
 api.Cancel("Test")
 
+assert(api.SetArrowShown("Test", false) and api.SetArrowShown("Test", true), "the arrow switch is published")
+
 -- fadeLaterLegs = false draws a loop's whole way at full strength, and follows each resubmit of the route (#1388).
 local loop = { stops[1], { map = 1414, x = 0.53, y = 0.49, title = "Second" } }
 local longer = { loop[1], { map = 1414, x = 0.55, y = 0.5, title = "Moved" } }

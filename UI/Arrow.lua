@@ -913,7 +913,8 @@ end
 
 -- Refresh arrow rendering without changing the canonical walk or its progress.
 function ns.ArrowBearingChanged()
-	if not frame and DirectionsShown() and ((path and target) or arrival) then
+	-- The frame also runs the marker-only poll, so it is made even while another arrow keeps it hidden.
+	if not frame and ArrowShown() and ((path and target) or arrival) then
 		Create()
 		if arrival then
 			ShowArrival(arrival)
