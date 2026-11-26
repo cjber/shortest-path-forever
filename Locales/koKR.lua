@@ -379,6 +379,9 @@ L["Travel to my tracked quest"] = "내가 추적 중인 퀘스트로 이동"
 L["no map pin is set."] = "지도 핀이 없습니다."
 L["no quest is tracked."] = "추적 중인 퀘스트가 없습니다."
 L["Walking route colour"] = "도보 경로 색상"
+L["Line style"] = "선 스타일" -- mt
+L["Dotted"] = "점선" -- mt
+L["Solid"] = "실선" -- mt
 L["The walking line on the world map and the minimap."] =
 	"세계 지도와 미니맵에 표시되는 도보 경로입니다."
 L["Line on the world map"] = "세계 지도 선" -- mt

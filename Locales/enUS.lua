@@ -60,6 +60,9 @@ L["Walk less in zones with a minimum level 4 or more above yours, even at your d
 	"Walk less in zones with a minimum level 4 or more above yours, even at your destination."
 L["Descend underground"] = "Descend underground"
 L["Show minimap trail"] = "Show minimap trail"
+L["Line style"] = "Line style"
+L["Dotted"] = "Dotted"
+L["Solid"] = "Solid"
 L["Show the Nearby services map button"] = "Show the Nearby services map button"
 L["A button on the world map. Left-click opens Nearby services; right-click chooses which services show on the map."] =
 	"A button on the world map. Left-click opens Nearby services; right-click chooses which services show on the map."

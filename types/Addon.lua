@@ -89,6 +89,7 @@
 ---@class SPFDefaults: table<string, boolean|number|string>
 ---@field townServices string
 ---@field routeColor string
+---@field routeStyle string
 ---@field journeyKey string
 ---@field arrivalDistance number
 ---@field offPathTolerance number
@@ -407,6 +408,7 @@
 ---@field flightPinScale? number
 ---@field minimapPinScale? number
 ---@field routeColor? string the walking route line's preset (Route.lua)
+---@field routeStyle? string the walking route line style, dotted or solid (Strokes.lua)
 ---@field mapLine? boolean the walking line draws on the world map (Route.lua)
 ---@field minimapLine? boolean the walking line draws on the minimap (Route.lua)
 ---@field minimapRouteScale? number walking breadcrumb size as a percent

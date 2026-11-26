@@ -894,8 +894,20 @@ function Guide.TrackingChanged(event)
 		-- Waypoint UI's own write or tracking change: keep steering and never treat it as the player taking over.
 		return
 	end
+	local clearPlayerJourney =
+		event == "USER_WAYPOINT_UPDATED"
+		and guide.hasDriven
+		and not guide.yielded
+		and guide.goal
+		and (guide.goal.questID ~= nil or #(guide.goal.questIDs or {}) > 0)
+		and C_Map.GetUserWaypoint() == nil
+		and (not ns.JourneyOwner or ns.JourneyOwner() == nil)
 	if not OwnsWaypoint() then
-		RefreshTracker()
+		if clearPlayerJourney and ns.ClearJourney then
+			ns.ClearJourney()
+		else
+			RefreshTracker()
+		end
 	elseif event == "SUPER_TRACKING_CHANGED" and not SameTracking(guide) then
 		YieldGuide()
 	end

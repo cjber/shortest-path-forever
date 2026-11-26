@@ -394,6 +394,9 @@ L["Travel to my tracked quest"] = "Отправиться к отслежива�
 L["no map pin is set."] = "метка на карте не установлена."
 L["no quest is tracked."] = "нет отслеживаемого задания."
 L["Walking route colour"] = "Цвет пешего маршрута"
+L["Line style"] = "Стиль линии" -- mt
+L["Dotted"] = "Пунктирная" -- mt
+L["Solid"] = "Сплошная" -- mt
 L["The walking line on the world map and the minimap."] =
 	"Пешая линия на карте мира и миникарте."
 L["Line on the world map"] = "Линия на карте мира" -- mt

@@ -103,6 +103,12 @@ local entranceDistance
 ---@type number[], number, number[]
 local circles, circleCount, near = {}, 0, {}
 
+-- Walking geometry defaults to breadcrumbs. Solid mode keeps the same route and stop gaps, but emits continuous
+-- segments for both the world map and the minimap.
+local function WalkingRouteDotted()
+	return not (ns.db and ns.db.routeStyle == "solid")
+end
+
 ---@return SPFStrokes
 function Strokes.New()
 	return {
@@ -510,7 +516,7 @@ function Strokes.Map(buffer, paths, view)
 							Mark(x, y, color)
 						end
 					elseif px and x then
-						Line(px, py, x, y, color, path.mode == "walk", previous, point)
+						Line(px, py, x, y, color, path.mode == "walk" and WalkingRouteDotted(), previous, point)
 					else
 						entranceDistance = nil
 					end
@@ -593,7 +599,8 @@ function Strokes.Minimap(buffer, paths, view)
 	end
 	local shortestSide = math.min(width, height)
 	local inset = 1 - border / shortestSide
-	local walkInset = inset - (dot + dotRim * 2) / scale / shortestSide
+	local dotted = WalkingRouteDotted()
+	local walkInset = dotted and inset - (dot + dotRim * 2) / scale / shortestSide or inset
 	for _, path in ipairs(paths) do
 		walked, entranceDistance = 0, nil
 		fade = path.placeholder and 0.45 or 1
@@ -606,10 +613,10 @@ function Strokes.Minimap(buffer, paths, view)
 				if a.map == map and b.map == map and not a.jump then
 					local ax, ay = Project(a, x, y, radius, cosine, sine)
 					local bx, by = Project(b, x, y, radius, cosine, sine)
-					local within = walk and walkInset or inset
+					local within = dotted and walk and walkInset or inset
 					local low, high = ClipMinimap(ax, ay, bx - ax, by - ay, within, square)
 					local entranceLow, entranceHigh
-					if walk and ((b.depth and not a.depth) or (a.depth and entranceDistance)) then
+					if dotted and walk and ((b.depth and not a.depth) or (a.depth and entranceDistance)) then
 						local extra = dot * (ENTRANCE_SCALE - 1) / scale / shortestSide
 						entranceLow, entranceHigh = ClipMinimap(ax, ay, bx - ax, by - ay, within - extra, square)
 					end
@@ -621,7 +628,7 @@ function Strokes.Minimap(buffer, paths, view)
 						low,
 						high,
 						color,
-						walk,
+						walk and dotted,
 						a,
 						b,
 						entranceLow,
