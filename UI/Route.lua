@@ -521,7 +521,6 @@ function Layer:RefreshStops()
 	for index = first, stops and #stops or 1 do
 		local point = stops and stops[index] or goal
 		local x, y = MapPosition(point, mapID)
-		-- A door standing in for an instance stop keeps the caller's stop on .stop.
 		if not (point.stop or point).unmarked and OnMap(x, y) and (index ~= first or not self.mirroredWaypoint) then
 			marks[#marks + 1] = {
 				x = x,

@@ -657,33 +657,19 @@ end
 ---@param options any
 ---@return SPFRoutePolicy?, boolean?
 local function RouteOptions(options)
-	if not canaccessvalue(options) then
+	if not canaccessvalue(options) or (options ~= nil and type(options) ~= "table") then
 		return nil
 	end
-	if options == nil then
-		return "normal", true
-	end
-	if type(options) ~= "table" then
-		return nil
-	end
-	for key in pairs(options) do
-		if not canaccessvalue(key) or (key ~= "policy" and key ~= "stopMarkers") then
+	local chosen = { policy = "normal", stopMarkers = true }
+	for key, value in pairs(options or {}) do
+		if not (canaccessvalue(key) and chosen[key] ~= nil and canaccessvalue(value)) then
 			return nil
 		end
+		chosen[key] = value
 	end
-	local policy, markers = rawget(options, "policy"), rawget(options, "stopMarkers")
-	if not (canaccessvalue(policy) and canaccessvalue(markers)) then
-		return nil
-	end
-	if markers == nil then
-		markers = true
-	elseif type(markers) ~= "boolean" then
-		return nil
-	end
-	if policy == nil then
-		return "normal", markers
-	end
-	if policy == "normal" or policy == "walking" then
+	local policy = chosen.policy --[[@as SPFRoutePolicy]]
+	local markers = chosen.stopMarkers
+	if (policy == "normal" or policy == "walking") and type(markers) == "boolean" then
 		return policy, markers
 	end
 end
