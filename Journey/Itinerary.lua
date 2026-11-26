@@ -380,6 +380,10 @@ function ns.ResubmitRoute(route, points)
 	if not old or old.map ~= points[moved].map then
 		return nil
 	end
+	-- The pins' switch belongs to the whole submission, whichever stop moved.
+	for index, point in ipairs(points) do
+		previous[index].unmarked = point.unmarked
+	end
 	previous[moved] = points[moved]
 	if moved == route.index then
 		return ns.RetargetJourney(points[moved]) == true

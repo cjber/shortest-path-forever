@@ -615,6 +615,7 @@ local function NavigateRoute(owner, stops, policy, markers)
 		goal = goal and (goal.stop or goal)
 		local stop = points[1]
 		if goal and goal.map == stop.map and goal.x == stop.x and goal.y == stop.y then
+			local redraw = goal.unmarked ~= stop.unmarked
 			goal.unmarked = stop.unmarked
 			if route then
 				ended[route.owner] = { reason = "replaced", at = GetTime() }
@@ -623,6 +624,9 @@ local function NavigateRoute(owner, stops, policy, markers)
 			-- Keep the tracked stop's identity so journey events still match it after the handover.
 			route = { owner = owner, points = { goal }, index = 1, policy = policy }
 			Settle()
+			if redraw and ns.RefreshRouteLines then
+				ns.RefreshRouteLines()
+			end
 			return true
 		end
 	end
