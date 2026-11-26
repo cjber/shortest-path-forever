@@ -19,7 +19,7 @@ local flightPins
 ---@field Texture Texture
 ---@field HighlightTexture Texture
 ---@field SuperTrackMarker Texture
----@field poiInfo {nodeID: number, name: string, isUndiscovered: boolean, atlasName: string, textureKit?: string}
+---@field poiInfo {nodeID: number, name: string, discovery?: SPFTaxiDiscovery, isUndiscovered?: boolean, atlasName: string, textureKit?: string}
 local FlightPin = CreateFromMixins(ns.Canvas.PinMixin)
 
 function FlightPin:OnLoad()
@@ -131,10 +131,12 @@ end
 function FlightPin:OnMouseEnter()
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 	GameTooltip_SetTitle(GameTooltip, self.poiInfo.name)
-	if self.poiInfo.isUndiscovered then
+	if self.poiInfo.discovery == "undiscovered" then
 		GameTooltip_AddNormalLine(GameTooltip, L["Not discovered"])
+	elseif self.poiInfo.discovery == "unconfirmed" then
+		GameTooltip_AddNormalLine(GameTooltip, L["Discovery not confirmed"])
 	end
-	AddFlights(self.poiInfo.nodeID, self.poiInfo.isUndiscovered)
+	AddFlights(self.poiInfo.nodeID, self.poiInfo.discovery == "undiscovered")
 	local hint = not self:ShouldMouseButtonBePassthrough("LeftButton")
 			and L["%s-click to plan a journey to this flight master"]
 		or nil
@@ -255,7 +257,7 @@ function Flights:RefreshAllData()
 	self:RemoveAllData()
 	self.signature = signature
 	self.companions = nil
-	local known, class = ns.KnownTaxiNodes(), select(2, UnitClass("player"))
+	local class = select(2, UnitClass("player"))
 	local queried, reported = {}, {}
 	local function Query(id)
 		if id and not queried[id] then
@@ -286,20 +288,28 @@ function Flights:RefreshAllData()
 		-- A class flight master is drawn only for its class, which always has it: it has no discovery.
 		if x and y and location and not nativeShown[id] and (not node.class or node.class == class) then
 			Query(location.uiMap)
-			local unknown = known ~= nil and not known[id] and not node.class
 			local native = reported[id]
+			local discovery = ns.TaxiDiscovery(id, native)
 			-- The API's nodeID is the TaxiNodes DB2 key, also used by Taxi.lua; no name/position guessing. Its name is
 			-- the client's own; its position is on whichever map was asked, so the shipped world point places the pin.
 			local info = {
 				nodeID = id,
 				name = native and native.name ~= "" and native.name or ns.TaxiName(id),
 				position = CreateVector2D(x, y),
-				isUndiscovered = unknown,
+				discovery = discovery,
+				isUndiscovered = discovery == "undiscovered",
 				faction = Enum.FlightPathFaction[node.faction or "Neutral"],
 				-- Native fallback atlases from UiTextureAtlasMember, build 1.60.1.69913.
-				atlasName = unknown and "taxinode_undiscovered" or "taxinode_" .. (node.faction or "Neutral"):lower(),
+				atlasName = discovery == "undiscovered" and "taxinode_undiscovered"
+					or discovery == "unconfirmed" and "taxinode_neutral"
+					or "taxinode_" .. (node.faction or "Neutral"):lower(),
 			}
-			if native and native.isUndiscovered == unknown and native.atlasName ~= "" then
+			if
+				native
+				and type(native.isUndiscovered) == "boolean"
+				and native.isUndiscovered == info.isUndiscovered
+				and native.atlasName ~= ""
+			then
 				info.atlasName = native.atlasName
 				info.textureKit = native.textureKit ~= "" and native.textureKit or nil
 			end

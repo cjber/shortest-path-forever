@@ -152,6 +152,7 @@ L["No location for that quest yet."] = "이 퀘스트의 위치가 아직 없습
 L["No services nearby."] = "주변에 편의시설이 없습니다."
 L["No way there from here."] = "여기서 그곳까지 가는 길이 없습니다."
 L["Not discovered"] = "발견하지 않음"
+L["Discovery not confirmed"] = "발견 여부 확인 안 됨"
 L["On board to %s"] = "%s행 탑승 중"
 L["On the world map and in Nearby services."] = "세계 지도와 주변 편의시설에서 적용됩니다."
 L["On the world map."] = "세계 지도에 표시합니다."

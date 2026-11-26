@@ -148,6 +148,7 @@ L["No location for that quest yet."] = "Aún no hay ubicación para esa misión.
 L["No services nearby."] = "No hay servicios cercanos."
 L["No way there from here."] = "No hay camino desde aquí."
 L["Not discovered"] = "Sin descubrir"
+L["Discovery not confirmed"] = "Descubrimiento no confirmado"
 L["On board to %s"] = "A bordo hacia %s"
 L["On the world map and in Nearby services."] = "En el mapa del mundo y en los servicios cercanos."
 L["On the world map."] = "En el mapa del mundo."

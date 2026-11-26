@@ -10,6 +10,8 @@ local L = setmetatable({}, {
 })
 ns.L = L
 
+L["Discovery not confirmed"] = "Discovery not confirmed"
+
 L["stop guiding"] = "stop guiding"
 L["guide this journey"] = "guide this journey"
 L["show it on the map"] = "show it on the map"

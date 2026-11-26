@@ -155,6 +155,7 @@ L["No location for that quest yet."] = "Для этого задания пок�
 L["No services nearby."] = "Поблизости нет услуг."
 L["No way there from here."] = "Отсюда туда нет пути."
 L["Not discovered"] = "Не открыто"
+L["Discovery not confirmed"] = "Открытие не подтверждено"
 L["On board to %s"] = "На борту: %s"
 L["On the world map and in Nearby services."] = "На карте мира и в услугах поблизости."
 L["On the world map."] = "На карте мира."
