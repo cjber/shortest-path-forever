@@ -440,10 +440,10 @@ function ModuleMixin:LayoutContents()
 					-- A row's key counts from the step under way, so the step is the one under way when the menu
 					-- opens; SkipJourneyStep refuses it if the journey has moved on before the click.
 					local _, _, plan, index = ns.JourneyInfo()
-					if not plan then
+					local goal = ns.JourneyGoal()
+					if not (plan and goal) then
 						return
 					end
-					local goal = ns.JourneyGoal()
 					ForeverCore.ContextMenu(line, function(_, root)
 						-- On a farming tour's last leg, completing the step and skipping the stop are one action.
 						if not (farming and index == #plan.legs) then
