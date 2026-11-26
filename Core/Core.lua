@@ -556,6 +556,16 @@ frame:SetScript("OnEvent", function(self, _, name)
 		end
 		ns.db.quietDefaults = 1
 	end
+	-- Before `restedxpArrow`, "Hide RestedXP's arrow" decided who drew the arrow for a standalone RestedXP guide: ours
+	-- led and RestedXP's hid, or both stayed when the box was off. The fill below wrote "restedxp" into every save
+	-- since, so a save holding it never chose it. `restedxpHideArrow` exists in every older save and in no new one
+	-- before the fill, so it marks them; `restedxpArrowMoved` records that this ran once (#1349).
+	if ns.db.restedxpArrowMoved == nil then
+		if ns.db.restedxpHideArrow ~= nil and (ns.db.restedxpArrow == nil or ns.db.restedxpArrow == "restedxp") then
+			ns.db.restedxpArrow = ns.db.restedxpHideArrow == false and "both" or "shortestPath"
+		end
+		ns.db.restedxpArrowMoved = 1
+	end
 	for key, value in pairs(DEFAULTS) do
 		if ns.db[key] == nil then
 			ns.db[key] = value
