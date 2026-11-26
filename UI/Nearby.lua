@@ -5,7 +5,7 @@ if ns.broken then
 	return
 end
 local L = ns.L
--- The groups' labels and icons, and the service flags, live in UI/NearbyGroups.lua so the world map's town services
+-- The groups' labels and icons, and the service kinds, live in UI/NearbyGroups.lua so the world map's town services
 -- draw the same ones.
 local GROUPS = ns.NearbyGroups
 local ROLES = ns.NearbyRoles
@@ -282,8 +282,8 @@ local function Navigate(key, place)
 	if place.entrance then
 		return ns.NearbyEntrances.Navigate(place)
 	end
-	-- The stop carries the NPC id, so the nameplate arrows can point at the NPC the journey walks to.
-	local stop = { map = place.map, x = place.x, y = place.y, title = place.name, kind = Kind(key), npc = place.id }
+	-- NPC stops carry their NPC id, so nameplate arrows can point at the NPC the journey walks to.
+	local stop = { map = place.map, x = place.x, y = place.y, title = place.name, kind = Kind(key), npc = place.npc }
 	return ShortestPathForever.API.NavigateRoute("Shortest Path Forever", { stop })
 end
 -- A service button's response: one that starts a journey closes every menu, one that cannot keeps the menu open.
@@ -330,20 +330,6 @@ local function VendorKeys(itemID, class, subClass)
 		keys[#keys + 1] = "drink"
 	end
 	return keys
-end
--- An item one NPC sells, in each group the item puts them in.
-local function AddVendorItem(key, npc, itemID)
-	local byNpc = vendorItems[key]
-	if not byNpc then
-		byNpc = {}
-		vendorItems[key] = byNpc
-	end
-	local items = byNpc[npc]
-	if not items then
-		items = {}
-		byNpc[npc] = items
-	end
-	items[#items + 1] = itemID
 end
 -- A profession group's label is the client's localised name for its skill line, as the Professions book shows it.
 local function ProfessionName(skill)
@@ -493,109 +479,48 @@ end
 -- names as taught by an NPC this addon's own trainer list does not hold.
 local KEEP_FLAGS = {}
 for _, service in ipairs(SERVICES) do
-	KEEP_FLAGS[#KEEP_FLAGS + 1] = service.flag
+	if service.flag then
+		KEEP_FLAGS[#KEEP_FLAGS + 1] = service.flag
+	end
 end
 KEEP_FLAGS[#KEEP_FLAGS + 1] = "TRAINER"
 
 -- The index, from QuestieDB's rows: the vendor groups, the level tiers, and every service NPC's spawns, a slice a
 -- frame. The rows are read in UI/NearbyQuestie.lua, which checks what QuestieDB answers.
----@param read SPFNearbyQuestieRead
-local function Assemble(read)
-	itemNames, itemLevels, index, vendorItems, groups = {}, {}, {}, {}, {}
+local function Finish(newNames, newLevels, newIndex, newVendorItems)
+	itemNames, itemLevels, index, vendorItems = newNames, newLevels, newIndex, newVendorItems
 	tierLevel, tierCache = nil, {}
-	state = "building"
-	local co = coroutine.create(function()
-		-- Every item QuestieDB says a vendor sells, with what this list groups it by.
-		for itemID, item in pairs(read.items) do
-			itemNames[itemID] = item.name
-			local keys = VendorKeys(itemID, item.class, item.subClass)
-			for _, npc in ipairs(item.vendors) do
-				for _, key in ipairs(keys) do
-					AddVendorItem(key, npc, itemID)
-				end
-			end
-			for _, key in ipairs(keys) do
-				if TIERED[key] then
-					itemLevels[itemID] = item.level or 0
-				end
-			end
-			coroutine.yield()
-		end
-		local classIds = ROLES.ClassTrainerIDs(rawget(_G, "TweaksForever"), true)
-		local classID = ROLES.PlayerClass()
-		-- Every NPC the read kept, in each group its flags, its goods, its training and its role put it in.
-		for id, row in pairs(read.npcs) do
-			local keys = {}
-			for _, service in ipairs(SERVICES) do
-				local flag = read.flags[service.flag]
-				if type(flag) == "number" and bit.band(row.flags, flag) ~= 0 then
-					keys[#keys + 1] = service.key
-				end
-			end
-			for _, group in ipairs(VENDOR_GROUPS) do
-				if vendorItems[group.key] and vendorItems[group.key][id] then
-					keys[#keys + 1] = group.key
-				end
-			end
-			ROLES.AddKeys(keys, id, classIds, classID)
-			local skill = ns.ProfessionTrainers and ns.ProfessionTrainers[id]
-			if skill then
-				keys[#keys + 1] = "profession:" .. skill
-			end
-			if #keys > 0 then
-				for _, spawn in ipairs(row.spawns) do
-					local map, x, y = spawn[1], spawn[2], spawn[3]
-					local world = ns.WorldPoint(map, x, y)
-					if world then
-						local place =
-							{ id = id, name = row.name, title = row.title, map = map, x = x, y = y, world = world }
-						for _, key in ipairs(keys) do
-							index[key] = index[key] or {}
-							index[key][#index[key] + 1] = place
-						end
-					end
-					coroutine.yield()
-				end
-			end
-			coroutine.yield()
-		end
-		classPlaces = index.class or {}
-		FilterClass()
-		groups = BuildGroups()
-	end)
-	local function Pump()
-		-- A large saved read takes only a few milliseconds of CPU, but waiting for Path.Busy can starve it
-		-- for the whole login replan. Give the index its existing 1 ms slice independently of the planner's
-		-- own frame budget, so both make progress without changing either budget.
-		if InCombatLockdown() then
-			C_Timer.After(0.1, Pump)
-			return
-		end
-		local finish = debugprofilestop() + 1
-		repeat
-			local ok, err = coroutine.resume(co)
-			if not ok then
-				state = "failed"
-				geterrorhandler()(err)
-				Notify()
-				return
-			end
-			if coroutine.status(co) == "dead" then
-				state = "ready"
-				Notify()
-				return
-			end
-		until debugprofilestop() >= finish
-		C_Timer.After(0, Pump)
-	end
-	C_Timer.After(0, Pump)
+	classPlaces = index.class or {}
+	FilterClass()
+	groups = BuildGroups()
+	state = "ready"
+	Notify()
+end
+
+local function Failed(err)
+	state = "failed"
+	geterrorhandler()(err)
+	Notify()
 end
 
 -- QuestieDB's answer: the index is assembled from the read, or the list says why there is none.
 ---@param read SPFNearbyQuestieRead?
 ---@param outcome string
 local function Read(read, outcome)
-	if read and ns.core.SafeCall("nearby services index", Assemble, read) then
+	if read then
+		itemNames, itemLevels, index, vendorItems, groups = {}, {}, {}, {}, {}
+		tierLevel, tierCache = nil, {}
+	end
+	if
+		read
+		and ns.core.SafeCall("nearby services index", ns.NearbyIndex.Assemble, read, {
+			Tiered = TIERED,
+			VendorGroups = VENDOR_GROUPS,
+			Services = SERVICES,
+			Roles = ROLES,
+			VendorKeys = VendorKeys,
+		}, Finish, Failed)
+	then
 		return
 	end
 	state = (read and "failed") or outcome
@@ -814,6 +739,7 @@ end
 ---@field Open fun()
 ---@class SPFNearbyPlace
 ---@field id integer
+---@field npc? integer the NPC this place reaches; static services have no NPC
 ---@field name string
 ---@field title? string
 ---@field map integer

@@ -375,6 +375,9 @@ L["Travel to my tracked quest"] = "Voyager vers ma quête suivie"
 L["no map pin is set."] = "aucun repère de carte n'est placé."
 L["no quest is tracked."] = "aucune quête n'est suivie."
 L["Walking route colour"] = "Couleur de l'itinéraire à pied"
+L["Line style"] = "Style de ligne" -- mt
+L["Dotted"] = "Pointillé" -- mt
+L["Solid"] = "Plein" -- mt
 L["The walking line on the world map and the minimap."] = "La ligne à pied sur la carte du monde et la minicarte."
 L["Line on the world map"] = "Ligne sur la carte du monde" -- mt
 L["Draws the walking route on the world map. With it off, the destination pin, arrow and tracker still guide you."] =
@@ -657,3 +660,4 @@ L["With TomTom installed, point TomTom's arrow at each step instead of our arrow
 	"Avec TomTom installé, pointe la flèche de TomTom vers chaque étape au lieu de notre flèche et du marqueur du jeu." -- mt
 L["A guide step on another continent keeps the old route on screen while the new one plans."] =
 	"Une étape de guide sur un autre continent garde l’ancien itinéraire affiché pendant le calcul du nouveau." -- mt
+L["Mailbox"] = "Boîte aux lettres" -- mt

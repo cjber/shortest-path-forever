@@ -221,6 +221,8 @@ local function Load(options)
 	end
 	setfenv(assert(loadfile("Locales/enUS.lua")), env)("ShortestPathForever", ns)
 	setfenv(assert(loadfile("Data/Services.lua")), env)("ShortestPathForever", ns)
+	-- This fixture exercises Questie reads, not static mailbox placement.
+	ns.Mailboxes = {}
 	setfenv(assert(loadfile("UI/MenuModifier.lua")), env)("ShortestPathForever", ns)
 	setfenv(assert(loadfile("UI/NearbyGroups.lua")), env)("ShortestPathForever", ns)
 	setfenv(assert(loadfile("UI/NearbyQuestie.lua")), env)("ShortestPathForever", ns)
@@ -228,6 +230,7 @@ local function Load(options)
 	setfenv(assert(loadfile("UI/NearbyRoles.lua")), env)("ShortestPathForever", ns)
 	setfenv(assert(loadfile("UI/NearbyProfessions.lua")), env)("ShortestPathForever", ns)
 	setfenv(assert(loadfile("UI/NearbyRank.lua")), env)("ShortestPathForever", ns)
+	setfenv(assert(loadfile("UI/NearbyIndex.lua")), env)("ShortestPathForever", ns)
 	setfenv(assert(loadfile("UI/Nearby.lua")), env)("ShortestPathForever", ns)
 	local requests = 0
 	local read = ns.NearbyQuestie.Read

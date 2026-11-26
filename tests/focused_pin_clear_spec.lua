@@ -48,6 +48,15 @@ end
 driver.fire("PLAYER_LOGIN")
 ns.db.focusedQuest = false
 
+-- A quest route's guide marker is also the user waypoint OpenMap mirrors. Clearing that borrowed marker must end the
+-- quest route even though no player pin planned it (#1366).
+local questGoal = { map = 1, x = 900, y = 0, z = 0, questID = 77, questIDs = { 77 } }
+assert(ns.StartJourney(questGoal), "a quest route starts a journey")
+driver.update(0)
+assert(env.C_Map.GetUserWaypoint(), "the quest route has a guide waypoint for OpenMap to mirror")
+clearPin()
+assert(not ns.HasJourney(), "clearing the borrowed guide waypoint ends the quest route")
+
 -- Placing a map pin starts a journey (even with focusedQuest off); deleting that pin ends the route (#1348).
 ns.db.guideStops = true
 pin(1, 0.4, 0.6)

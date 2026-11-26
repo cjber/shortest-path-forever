@@ -379,6 +379,9 @@ L["Travel to my tracked quest"] = "내가 추적 중인 퀘스트로 이동"
 L["no map pin is set."] = "지도 핀이 없습니다."
 L["no quest is tracked."] = "추적 중인 퀘스트가 없습니다."
 L["Walking route colour"] = "도보 경로 색상"
+L["Line style"] = "선 스타일" -- mt
+L["Dotted"] = "점선" -- mt
+L["Solid"] = "실선" -- mt
 L["The walking line on the world map and the minimap."] =
 	"세계 지도와 미니맵에 표시되는 도보 경로입니다."
 L["Line on the world map"] = "세계 지도 선" -- mt
@@ -664,3 +667,4 @@ L["With TomTom installed, point TomTom's arrow at each step instead of our arrow
 	"TomTom이 설치되어 있으면 자체 화살표와 게임 표시 대신 TomTom 화살표로 각 단계를 가리킵니다." -- mt
 L["A guide step on another continent keeps the old route on screen while the new one plans."] =
 	"다른 대륙의 가이드 단계는 새 경로를 계획하는 동안 이전 경로를 화면에 유지합니다." -- mt
+L["Mailbox"] = "우체통" -- mt

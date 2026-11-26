@@ -348,6 +348,7 @@ env.EventUtil = {
 }
 setfenv(assert(loadfile("Locales/enUS.lua")), env)("ShortestPathForever", ns)
 setfenv(assert(loadfile("Data/Services.lua")), env)("ShortestPathForever", ns)
+ns.Mailboxes = {}
 -- The fixture class trainers for the player's class, beside the companion addon's own list.
 ns.ClassTrainers = { [7] = 1 }
 for _, file in ipairs({
@@ -358,6 +359,7 @@ for _, file in ipairs({
 	"UI/NearbyRoles.lua",
 	"UI/NearbyProfessions.lua",
 	"UI/NearbyRank.lua",
+	"UI/NearbyIndex.lua",
 	"UI/Nearby.lua",
 }) do
 	setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)
@@ -642,7 +644,7 @@ env.SlashCmdList.SPFNEAR("repair")
 assert(navigated[#navigated][5] == "Neutral repairs")
 
 -- A fresh copy of the menu over another QuestieDB, read to the end, then opened here or on another continent.
-local function fresh(questie, away, L)
+local function fresh(questie, away, L, mailboxes)
 	local elsewhere = false
 	env.LibQuestieDB = questie
 	local starts = {}
@@ -658,11 +660,20 @@ local function fresh(questie, away, L)
 		ClassTrainers = ns.ClassTrainers,
 		PortalTrainers = ns.PortalTrainers,
 		Battlemasters = ns.Battlemasters,
+		Mailboxes = mailboxes or {},
 		Init = function(fn)
 			starts[#starts + 1] = fn
 		end,
 		WorldPoint = function(_, x, y)
 			return { map = elsewhere and 2 or 1, x = x * 1000, y = y * 1000 }
+		end,
+		-- Static places are continent yards; the zone map under one answers map 100 and a 0-1 position.
+		ZoneMap = function(_, x, y)
+			return 100, {
+				GetXY = function()
+					return x / 1000, y / 1000
+				end,
+			}
 		end,
 		OpenWorldMap = ns.OpenWorldMap,
 		GamepadUI = ns.GamepadUI,
@@ -671,6 +682,7 @@ local function fresh(questie, away, L)
 	}, { __index = ns })
 	setfenv(assert(loadfile("UI/NearbyGroups.lua")), env)("ShortestPathForever", copy)
 	setfenv(assert(loadfile("UI/NearbyQuestie.lua")), env)("ShortestPathForever", copy)
+	setfenv(assert(loadfile("UI/NearbyIndex.lua")), env)("ShortestPathForever", copy)
 	setfenv(assert(loadfile("UI/Nearby.lua")), env)("ShortestPathForever", copy)
 	for _, fn in ipairs(starts) do
 		fn()
@@ -687,6 +699,23 @@ local function fresh(questie, away, L)
 	end
 	return copy
 end
+local mailboxCopy = fresh(lib, false, nil, { { id = 9001, map = 0, x = 250, y = 750 } })
+local mailboxGroups = mailboxCopy.NearbyServices.Groups()
+local mailboxGroup
+for _, item in ipairs(mailboxGroups) do
+	if item.key == "mailbox" then
+		mailboxGroup = item
+	end
+end
+assert(mailboxGroup.key == "mailbox" and mailboxGroup.label == "Mailbox", "mailboxes are a Nearby service group")
+assert(
+	mailboxCopy.NearbyServices.Index().mailbox[1].id == 9001
+		and mailboxCopy.NearbyServices.Index().mailbox[1].name == "Mailbox"
+		and mailboxCopy.NearbyServices.Index().mailbox[1].npc == nil
+		and mailboxCopy.NearbyServices.Index().mailbox[1].map == 100
+		and mailboxCopy.NearbyServices.Index().mailbox[1].x == 0.25,
+	"mailbox spawns become static Nearby places without an NPC target"
+)
 -- A zone QuestieDB has nothing for: every group, the services too, reads as unavailable here.
 local away = fresh(lib, true)
 assert(away.NearbyServices.State() == "ready")
@@ -712,41 +741,7 @@ assert(
 		and menuEntries[1].text == "Nearby services"
 		and menuEntries[1].children[2].text == "Nearby services need the QuestieDB addon."
 )
-local broken = setmetatable({}, { __index = lib })
-for _, private in ipairs({
-	{ areaIdToUiMapId = { [10] = 100 }, subZoneToParentZone = "return {[11]=10}" },
-	{ areaIdToUiMapId = "return {[10]=100}", subZoneToParentZone = "return {" },
-	{ areaIdToUiMapId = "error('gone')", subZoneToParentZone = "return {[11]=10}" },
-}) do
-	broken.Support = {
-		Get = function()
-			return { private = private }
-		end,
-	}
-	assert(fresh(broken).NearbyServices.State() == "failed")
-	assert(
-		#menuEntries == 1
-			and menuEntries[1].text == "Nearby services"
-			and menuEntries[1].children[2].text == "Nearby services could not read QuestieDB."
-	)
-end
 env.LibQuestieDB = lib
--- Under the gamepad interface the services menu never opens the world map or a menu itself, even over a map the game
--- opened: the game's own menus carry none of our entries there (#645), so the player is told it needs mouse and
--- keyboard.
-gamepad = true
-local opens, entries = mapOpens, menuEntries
-env.SlashCmdList.SPFNEAR("")
-assert(mapOpens == opens and menuEntries == entries, "no map or menu opened by us under the gamepad interface")
-env.WorldMapFrame = {
-	IsShown = function()
-		return true
-	end,
-}
-env.SlashCmdList.SPFNEAR("")
-assert(mapOpens == opens and menuEntries == entries, "over an open map no menu of ours opens either")
-assert(printed[#printed]:find("mouse and keyboard", 1, true), "it says what the services need")
-gamepad, env.WorldMapFrame = false, nil
 -- The planner's own travel cost chooses between the shortlist: an Alliance hunter in Auberdine takes the Teldrassil
 -- boat to Darnassus rather than walk to Kaerbrus, though Kaerbrus is the closest by straight line.
 do
@@ -894,6 +889,7 @@ do
 		"UI/NearbyRoles.lua",
 		"UI/NearbyProfessions.lua",
 		"UI/NearbyRank.lua",
+		"UI/NearbyIndex.lua",
 		"UI/Nearby.lua",
 	}) do
 		driver.load(file)
@@ -980,7 +976,20 @@ do
 	worldNs.JourneyGoal = journeyGoal
 	assert(routed == nil, "a destination set during the ranking is kept")
 end
-print(
-	"nearby: installed QuestieDB contract, sliced loading, faction/class/profession grouping, "
-		.. "real map-menu callbacks, UI-coordinate dispatch and travel-cost choice: ok"
-)
+return {
+	env = env,
+	getMapOpens = function()
+		return mapOpens
+	end,
+	getMenuEntries = function()
+		return menuEntries
+	end,
+	getPrinted = function()
+		return printed
+	end,
+	fresh = fresh,
+	lib = lib,
+	setGamepad = function(value)
+		gamepad = value
+	end,
+}

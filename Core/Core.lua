@@ -59,6 +59,7 @@ local DEFAULTS = {
 	townServiceStable = true,
 	townServiceRepair = false,
 	townServiceBank = true,
+	townServiceMailbox = true,
 	townServiceAuction = true,
 	townServiceTransmog = true,
 	townServiceBattlemaster = true,
@@ -78,6 +79,8 @@ local DEFAULTS = {
 	minimapPinScale = 100,
 	-- The walking route line's preset: gold, the client's own marker colour.
 	routeColor = "gold",
+	-- Dotted breadcrumbs stay the default; solid connects the walking route on both map surfaces.
+	routeStyle = "dotted",
 	-- The walking line on each surface can be turned off without touching the journey's other guidance.
 	mapLine = true,
 	minimapLine = true,

@@ -394,6 +394,9 @@ L["Travel to my tracked quest"] = "Отправиться к отслежива�
 L["no map pin is set."] = "метка на карте не установлена."
 L["no quest is tracked."] = "нет отслеживаемого задания."
 L["Walking route colour"] = "Цвет пешего маршрута"
+L["Line style"] = "Стиль линии" -- mt
+L["Dotted"] = "Пунктирная" -- mt
+L["Solid"] = "Сплошная" -- mt
 L["The walking line on the world map and the minimap."] =
 	"Пешая линия на карте мира и миникарте."
 L["Line on the world map"] = "Линия на карте мира" -- mt
@@ -694,3 +697,4 @@ L["With TomTom installed, point TomTom's arrow at each step instead of our arrow
 	"Если установлен TomTom, направляет стрелку TomTom на каждый шаг вместо нашей стрелки и игрового маркера." -- mt
 L["A guide step on another continent keeps the old route on screen while the new one plans."] =
 	"Шаг руководства на другом континенте сохраняет старый маршрут на экране, пока планируется новый." -- mt
+L["Mailbox"] = "Почтовый ящик" -- mt

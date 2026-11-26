@@ -284,6 +284,7 @@ local ns = {
 		focusedQuest = false,
 		journeyKey = "shift",
 		routeColor = "gold",
+		routeStyle = "dotted",
 		followRoads = true,
 		roadDetour = 50,
 		arrivalDistance = 15,
@@ -424,6 +425,7 @@ local groups = {
 		"townServices",
 		"onlyMyProfessions",
 		"routeColor",
+		"routeStyle",
 		"mapLine",
 		"minimapLine",
 		"minimapRouteScale",
@@ -499,7 +501,7 @@ local groups = {
 local order = { "Guidance", "Map marks", "Party mage portals", "Alerts", "Interface" }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 84, #rows)
+assert(#rows == 85, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -595,6 +597,15 @@ assert(#choices == 5 and choices[1].value == "gold", "gold leads the presets")
 assert(choices[2].text == "White" and choices[5].value == "magenta", "every preset has a label and a key")
 routeColor.setting.onChanged(nil, "cyan")
 assert(routeColour == "cyan", "choosing a preset repaints the walking line")
+local routeStyle = Row("routeStyle")
+assert(routeStyle.kind == "dropdown" and routeStyle.setting.default == "dotted", "the route stays dotted by default")
+assert(routeStyle.setting.variable == "ShortestPathForever_routeStyle", "the line style is saved")
+local styles = routeStyle.getData()
+assert(#styles == 2 and styles[1].value == "dotted" and styles[2].value == "solid", "both line styles are listed")
+assert(styles[1].text == "Dotted" and styles[2].text == "Solid", "the line styles have labels")
+local styleRefreshes = routeLinesRefreshed
+routeStyle.setting.onChanged(nil, "solid")
+assert(routeLinesRefreshed == styleRefreshes + 1, "choosing a line style repaints both surfaces")
 -- Town services are a level of detail: capitals first, then important services, all towns, and off, the default.
 local towns = Row("townServices")
 assert(towns.kind == "dropdown" and towns.setting.default == "off", "town services start off")
@@ -966,27 +977,6 @@ assert(trackerState.locked == true and lock:GetValue(), "locking writes the shar
 lock:SetValue(false)
 assert(trackerState.locked == false and not lock:GetValue(), "unlocking writes them back")
 
-local waterWalking = Row("useWaterWalking")
-assert(waterWalking.kind == "checkbox", "water walking uses a native Settings checkbox initializer")
-assert(waterWalking.setting.default == true, "water walking stays enabled by default")
-assert(waterWalking.setting.category.name == "Guidance", "water walking belongs to Guidance")
-assert(waterWalking.tooltip:find("may still cross water", 1, true), "the tooltip does not promise a dry route")
-local policies = policyChanged
-waterWalking.setting:SetValue(false)
-waterWalking.setting:SetValue(true)
-assert(policyChanged == policies + 2, "both checkbox transitions invalidate travel policy")
-
-local roadDetour = Row("roadDetour")
-assert(roadDetour.kind == "slider" and roadDetour.setting.default == 50, "the road allowance preserves 50%")
-assert(roadDetour.setting.variable == "ShortestPathForever_roadDetour", "the allowance is saved")
-assert(roadDetour.setting.category.name == "Guidance", "the allowance belongs beside Follow roads")
-assert(roadDetour.options.minValue == 0 and roadDetour.options.maxValue == 200 and roadDetour.options.step == 25)
-assert(roadDetour.options.format(0) == "0%" and roadDetour.options.format(200) == "200%")
-assert(roadDetour.tooltip:find("not a limit on the whole walk", 1, true), "the preference is no hard detour cap")
-local roadPolicies = policyChanged
-roadDetour.setting:SetValue(200)
-assert(policyChanged == roadPolicies + 1, "changing the allowance replans the current journey")
-
 -- tests/settings_layout_spec.lua reuses this harness for the heading order and the reduced clients.
 return {
 	env = env,
@@ -995,4 +985,7 @@ return {
 	buttons = buttons,
 	settings = settings,
 	registered = registered,
+	getPolicyChanged = function()
+		return policyChanged
+	end,
 }

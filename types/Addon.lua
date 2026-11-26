@@ -17,6 +17,7 @@
 ---@field ProfessionIcons table<number, integer> profession skill line -> client icon file ID
 ---@field WeaponMasters table<number, number[]> NPC -> taught weapon skill lines
 ---@field ProfessionTrainers table<number, number> trainer NPC -> its profession skill line (Data/Services.lua)
+---@field Mailboxes {id: integer, map: integer, x: number, y: number}[] mailbox spawns in continent world yards (Data/Services.lua)
 ---@field ClassTrainers table<number, number> class trainer NPC -> its class (Data/Services.lua)
 ---@field ClassTrainerCaps table<number, number>? class trainer NPC -> its highest required level (Data/Services.lua)
 ---@field PortalTrainers table<number, number> portal trainer NPC -> its class (Data/Services.lua)
@@ -42,6 +43,7 @@
 ---@field NearbyProfessions SPFNearbyProfessionsAPI the "Only my professions" shop rule (UI/NearbyProfessions.lua)
 ---@field NearbyServices SPFNearbyServices
 ---@field NearbyRank SPFNearbyRankAPI the travel-time ranking and the walks it is built on (UI/NearbyRank.lua)
+---@field NearbyIndex SPFNearbyIndexAPI the sliced QuestieDB index producer (UI/NearbyIndex.lua)
 ---@field NearbyGroups SPFNearbyGroups the vendor and service groups the list and the map share (UI/NearbyGroups.lua)
 ---@field TownServiceChoices SPFTownServiceChoice[] the town services' four levels (UI/TownServices.lua)
 ---@field RefreshTownServices fun() redraws the town services on the world map (UI/TownServices.lua)
@@ -89,6 +91,7 @@
 ---@class SPFDefaults: table<string, boolean|number|string>
 ---@field townServices string
 ---@field routeColor string
+---@field routeStyle string
 ---@field journeyKey string
 ---@field arrivalDistance number
 ---@field offPathTolerance number
@@ -111,7 +114,7 @@
 ---@field tracking string the client's minimap tracking atlas the world map's pins wear for the group
 ---@class SPFServiceGroup
 ---@field key string
----@field flag string the QuestieDB NPC flag that puts an NPC in the group
+---@field flag? string the QuestieDB NPC flag that puts an NPC in the group
 ---@field label string
 ---@field icon string the client's own tracking atlas
 ---@field tracking string the client's minimap tracking atlas the world map's pins wear for the group
@@ -349,6 +352,7 @@
 ---@field townServiceStable? boolean whether stable master pins show
 ---@field townServiceRepair? boolean whether repair pins show; off by default
 ---@field townServiceBank? boolean whether bank pins show
+---@field townServiceMailbox? boolean whether mailbox pins show
 ---@field townServiceTransmog? boolean whether transmogrifier pins show
 ---@field townServiceAuction? boolean whether auction house pins show
 ---@field townServiceBattlemaster? boolean whether battlemaster pins show
@@ -407,6 +411,7 @@
 ---@field flightPinScale? number
 ---@field minimapPinScale? number
 ---@field routeColor? string the walking route line's preset (Route.lua)
+---@field routeStyle? string the walking route line style, dotted or solid (Strokes.lua)
 ---@field mapLine? boolean the walking line draws on the world map (Route.lua)
 ---@field minimapLine? boolean the walking line draws on the minimap (Route.lua)
 ---@field minimapRouteScale? number walking breadcrumb size as a percent

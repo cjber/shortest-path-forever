@@ -369,6 +369,9 @@ L["Travel to my tracked quest"] = "前往我追踪的任务"
 L["no map pin is set."] = "尚未设置地图标记。"
 L["no quest is tracked."] = "没有追踪中的任务。"
 L["Walking route colour"] = "步行路线颜色"
+L["Line style"] = "线条样式" -- mt
+L["Dotted"] = "点线" -- mt
+L["Solid"] = "实线" -- mt
 L["The walking line on the world map and the minimap."] = "世界地图和小地图上的步行路线。"
 L["Line on the world map"] = "世界地图上的路线" -- mt
 L["Draws the walking route on the world map. With it off, the destination pin, arrow and tracker still guide you."] =
@@ -640,3 +643,4 @@ L["With TomTom installed, point TomTom's arrow at each step instead of our arrow
 	"安装 TomTom 时，用 TomTom 的箭头指向每一步，替代本插件箭头和游戏标记。" -- mt
 L["A guide step on another continent keeps the old route on screen while the new one plans."] =
 	"另一块大陆上的指南步骤会在规划新路线时保留旧路线显示。" -- mt
+L["Mailbox"] = "邮箱" -- mt

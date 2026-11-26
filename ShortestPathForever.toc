@@ -65,6 +65,7 @@ UI\NearbyEntrances.lua
 UI\NearbyRoles.lua
 UI\NearbyProfessions.lua
 UI\NearbyRank.lua
+UI\NearbyIndex.lua
 UI\Nearby.lua
 Transport\Observer.lua
 UI\Map.xml
@@ -104,6 +105,7 @@ Journey\Hazards.lua
 Journey\JourneySearch.lua
 Journey\JourneyWalks.lua
 Journey\JourneyGuide.lua
+Journey\JourneyGuidance.lua
 Journey\Journey.lua
 Journey\AvoidTransport.lua
 Journey\JourneyInput.lua
