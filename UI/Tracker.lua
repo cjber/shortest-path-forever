@@ -386,12 +386,10 @@ local function ReadableFont(text, shared, fallback, minimum)
 			local file, _, flags = ChatFontNormal:GetFont()
 			local object = CreateFont(fallback)
 			object:SetFont(file, minimum, flags)
-			-- A font made by CreateFont has no shadow, and the objective fonts' own shadow went with the addon that
-			-- shrank them: take the chat font's, which keeps the text readable on any background (#1357).
-			local x, y = ChatFontNormal:GetShadowOffset()
-			local r, g, b, a = ChatFontNormal:GetShadowColor()
-			object:SetShadowOffset(x or 1, y or -1)
-			object:SetShadowColor(r or 0, g or 0, b or 0, a or 1)
+			-- A font made by CreateFont has no shadow, and the objective fonts' own went with the addon that shrank
+			-- them: give it the game's tracker shadow, which keeps the text readable on any background (#1357).
+			object:SetShadowOffset(1, -1)
+			object:SetShadowColor(0, 0, 0, 1)
 		end
 		text:SetFontObject(fallback)
 		text:SetJustifyH("LEFT")

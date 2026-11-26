@@ -102,7 +102,6 @@ do
    SetShadowColor = function(self, _, _, _, a) self.shadowA = a end }
  end
  _G.ChatFontNormal = face(12)
- _G.ChatFontNormal.shadowX, _G.ChatFontNormal.shadowY, _G.ChatFontNormal.shadowA = 1, -1, 1
  _G.CreateFont = function(name)
   local object = face(nil)
   function object:SetFont(_, size) self.size = size end
