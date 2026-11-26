@@ -641,6 +641,5 @@ L["Right-click to choose map services."] = "右鍵點擊選擇地圖服務。" -
 L["Use TomTom's arrow"] = "使用 TomTom 的箭頭" -- mt
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
 	"安裝 TomTom 時，用 TomTom 的箭頭指向每一步，替代本插件箭頭與遊戲標記。" -- mt
-L["A guide step on another continent keeps the old route on screen while the new one plans."] =
-	"另一塊大陸上的指南步驟會在規劃新路線時保留舊路線顯示。" -- mt
+L["Walking routes can now be dotted or solid."] = "步行路線現在可以顯示為點線或實線。" -- mt
 L["Mailbox"] = "郵箱" -- mt

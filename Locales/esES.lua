@@ -652,6 +652,5 @@ L["Right-click to choose map services."] = "Clic derecho para elegir los servici
 L["Use TomTom's arrow"] = "Usar la flecha de TomTom" -- mt
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
 	"Con TomTom instalado, apunta la flecha de TomTom a cada paso en lugar de nuestra flecha y el marcador del juego." -- mt
-L["A guide step on another continent keeps the old route on screen while the new one plans."] =
-	"Un paso de guía en otro continente mantiene la ruta anterior en pantalla mientras se planea la nueva." -- mt
+L["Walking routes can now be dotted or solid."] = "Las rutas a pie ahora pueden ser discontinuas o continuas." -- mt
 L["Mailbox"] = "Buzón" -- mt

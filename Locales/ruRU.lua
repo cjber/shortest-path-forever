@@ -695,6 +695,6 @@ L["Right-click to choose map services."] = "ПКМ, чтобы выбрать у
 L["Use TomTom's arrow"] = "Использовать стрелку TomTom" -- mt
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
 	"Если установлен TomTom, направляет стрелку TomTom на каждый шаг вместо нашей стрелки и игрового маркера." -- mt
-L["A guide step on another continent keeps the old route on screen while the new one plans."] =
-	"Шаг руководства на другом континенте сохраняет старый маршрут на экране, пока планируется новый." -- mt
+L["Walking routes can now be dotted or solid."] =
+	"Пешие маршруты теперь могут быть пунктирными или сплошными." -- mt
 L["Mailbox"] = "Почтовый ящик" -- mt

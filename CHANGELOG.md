@@ -10,6 +10,25 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.46.0] - 2026-11-26
+
+<!-- discord-image: docs/screenshots/darkshore.png -->
+
+### Added
+
+- **Walking routes can now be dotted or solid.** In Settings > Map marks > Walking route, choose Line style. Dotted remains the default.
+- **Mailboxes are now a Nearby service.** Find the nearest mailbox and show mailbox icons on the world map. (#1368, #1373)
+- Other addons can hide Shortest Path's world map pins while they show their own, keeping the route line, and bring them back afterwards. Gathering Guide Forever uses this for its calm map.
+
+### Changed
+
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
+### Fixed
+
+- **Clearing an OpenMap quest marker now clears the journey.** OpenMap and Shortest Path Forever now treat the guide marker as one destination, so clearing it does not leave the quest route running behind it.
+- **Road and wall report marks show over explored ground.** On the world map they were drawn under the explored-area art. (#1383)
+
 ## [1.45.13] - 2026-11-26
 
 ### Changed
