@@ -18,6 +18,10 @@ optional `### For addon authors` subsection after a version's player bullets.
 - Changing the road detour allowance away from 50% no longer re-searches every cluster for every expanded entrance: the custom interior walk is only priced when the popped entrance can actually leave its cluster, so routes keep the same detour choices at a fraction of the planning time (#1355).
 - The tracker text keeps its shadow beside a quest tracker that shrinks the game's objective fonts (EllesmereUI's), so it stays readable on any background (#1357).
 
+### For addon authors
+
+- `NavigateRoute` takes `{ stopMarkers = false }` to draw a journey's route line on the world map without a pin at each stop, for addons that mark their own places; the stop text in the tracker stays (#1362).
+
 ## [1.45.11] - 2026-11-25
 
 ### Added
