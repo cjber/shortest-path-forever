@@ -438,7 +438,42 @@ api.Cancel("Test")
 assert(api.NavigateRoute("Test", stops))
 settle()
 assert(#active[goalTemplate] == #stops, "the next journey draws its stop pins again")
+
+-- The same owner flips the switch on the route under way: unchanged stops, then one stop moved.
+assert(api.NavigateRoute("Test", stops, { stopMarkers = false }))
+settle()
+assert(#(active[goalTemplate] or {}) == 0, "a resubmit takes the pins off")
+local movedStops = { stops[1], stops[2], stops[3], { map = 1414, x = 0.58, y = 0.51, title = "Moved" } }
+assert(api.NavigateRoute("Test", movedStops))
+settle()
+assert(#active[goalTemplate] == #movedStops, "a resubmit moving one stop pins every stop again")
+assert(api.NavigateRoute("Test", stops, { stopMarkers = false }))
+settle()
+assert(#(active[goalTemplate] or {}) == 0, "a resubmit moving one stop takes every pin off")
 api.Cancel("Test")
+
+-- Handing a one-stop journey to another owner applies that owner's switch at once.
+local one = { stops[1] }
+assert(api.NavigateRoute("Test", one))
+settle()
+assert(#active[goalTemplate] == 1)
+assert(api.NavigateRoute("Other", one, { stopMarkers = false }))
+assert(#(active[goalTemplate] or {}) == 0, "the handover takes the pin off")
+assert(api.NavigateRoute("Test", one))
+assert(#active[goalTemplate] == 1, "the handover back pins the stop")
+api.Cancel("Test")
+
+-- A door standing in for an instance stop keeps the caller's switch.
+local entrance = ns.InstanceEntrance
+ns.InstanceEntrance = function(point)
+ return { map = point.map, x = point.x, y = point.y, label = point.label, stop = point }
+end
+assert(api.NavigateRoute("Test", one, { stopMarkers = false }))
+settle()
+assert(ns.JourneyGoal().stop, "the journey goes to the door")
+assert(#(active[goalTemplate] or {}) == 0, "no pin at the door without markers")
+api.Cancel("Test")
+ns.InstanceEntrance = entrance
 assert(#errors == 0, table.concat(errors, "\n"))
 print(string.format("api_ui: numbered pins, preview lines, progress, pooling, completion/cancel: ok; "..
  "64 stops start %.3f ms / redraw %.3f mean %.3f worst ms", startMS, drawCPU/30, drawWorst))

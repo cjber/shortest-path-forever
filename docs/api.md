@@ -83,8 +83,8 @@ the addon can use it once it shows the requested map.
   same owner or another one submits again.
   A route whose only stop is the place the journey already goes to hands the journey over rather than starting it
   again: `CurrentStop` answers for the new owner, the previous owner's `Ended` reads `"replaced"`, and the stop, the
-  progress, the arrow and the drawn route stay exactly as they are. A route with several stops is a different
-  itinerary, and still replaces the journey.
+  progress, the arrow and the drawn route stay exactly as they are, except that the new `stopMarkers` value applies.
+  A route with several stops is a different itinerary, and still replaces the journey.
   Titles are optional, as is `tooltip`, a destination detail shown on the stop pin's tooltip and under the arrival
   pin while the player stands in a held stop's area. It is never used as the arrow label; each newline in it starts a
   line of its own, and a line an earlier stop on the same pin already shows is not repeated. Optional `z` is the
