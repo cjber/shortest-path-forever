@@ -194,7 +194,10 @@ do
 	ns.ResumeJourney()
 	assert(ns.JourneyPlan() == retained, "resurrection keeps the displayed route until the replacement settles")
 	driver.update(0.1)
-	assert(goal() and goal().label == "New stop", "reaching the superseded route's end after resurrection cannot arrive")
+	assert(
+		goal() and goal().label == "New stop",
+		"reaching the superseded route's end after resurrection cannot arrive"
+	)
 	driver.path.auto = true
 	driver.path.settle()
 	assert(endsAt(planned(), TWO), "the resumed replacement reaches the new stop")
