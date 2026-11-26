@@ -646,8 +646,6 @@ L["You've taken %s flights."] = "비행편을 %s번 이용했습니다." -- mt
 L["You've taken your first flight."] = "비행편을 처음 이용했습니다." -- mt
 L["You've used %s portals or passages."] = "차원문이나 통로를 %s번 이용했습니다." -- mt
 L["You've used your first portal or passage."] = "차원문이나 통로를 처음 이용했습니다." -- mt
-L["Walks reach Undercity's Royal Quarter, War Quarter and Apothecarium."] =
-	"도보 경로로 언더시티의 왕실 지구, 전쟁 지구, 연금술 실험실에 갈 수 있습니다." -- mt
 L["Minimap walking route size"] = "미니맵 도보 경로 크기" -- mt
 L["Sizes the walking dots on the minimap."] =
 	"미니맵에 표시되는 도보 경로 점의 크기를 조절합니다." -- mt
@@ -664,3 +662,5 @@ L["Right-click to choose map services."] = "우클릭으로 지도 편의시설�
 L["Use TomTom's arrow"] = "TomTom 화살표 사용" -- mt
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
 	"TomTom이 설치되어 있으면 자체 화살표와 게임 표시 대신 TomTom 화살표로 각 단계를 가리킵니다." -- mt
+L["A guide step on another continent keeps the old route on screen while the new one plans."] =
+	"다른 대륙의 가이드 단계는 새 경로를 계획하는 동안 이전 경로를 화면에 유지합니다." -- mt

@@ -675,8 +675,6 @@ L["You've used %s portals or passages."] =
 	"Вы воспользовались порталами или переходами %s раз." -- mt
 L["You've used your first portal or passage."] =
 	"Вы впервые воспользовались порталом или переходом." -- mt
-L["Walks reach Undercity's Royal Quarter, War Quarter and Apothecarium."] =
-	"Пешие маршруты ведут в Королевский квартал, Военный квартал и Аптекарский квартал Подгорода." -- mt
 L["Minimap walking route size"] = "Размер пешего маршрута на мини-карте" -- mt
 L["Sizes the walking dots on the minimap."] =
 	"Меняет размер точек пешего маршрута на мини-карте." -- mt
@@ -694,3 +692,5 @@ L["Right-click to choose map services."] = "ПКМ, чтобы выбрать у
 L["Use TomTom's arrow"] = "Использовать стрелку TomTom" -- mt
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
 	"Если установлен TomTom, направляет стрелку TomTom на каждый шаг вместо нашей стрелки и игрового маркера." -- mt
+L["A guide step on another continent keeps the old route on screen while the new one plans."] =
+	"Шаг руководства на другом континенте сохраняет старый маршрут на экране, пока планируется новый." -- mt

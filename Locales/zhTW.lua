@@ -624,8 +624,6 @@ L["You've taken %s flights."] = "你已搭乘飛行路線 %s 次。" -- mt
 L["You've taken your first flight."] = "你已首次搭乘飛行路線。" -- mt
 L["You've used %s portals or passages."] = "你已使用傳送門或通道 %s 次。" -- mt
 L["You've used your first portal or passage."] = "你已首次使用傳送門或通道。" -- mt
-L["Walks reach Undercity's Royal Quarter, War Quarter and Apothecarium."] =
-	"步行路線可抵達幽暗城的皇家區、軍事區和鍊金房。" -- mt
 L["Minimap walking route size"] = "小地圖步行路線大小" -- mt
 L["Sizes the walking dots on the minimap."] = "調整小地圖上步行路線圓點的大小。" -- mt
 L["Descend underground"] = "下到地下" -- mt
@@ -640,3 +638,5 @@ L["Right-click to choose map services."] = "右鍵點擊選擇地圖服務。" -
 L["Use TomTom's arrow"] = "使用 TomTom 的箭頭" -- mt
 L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
 	"安裝 TomTom 時，用 TomTom 的箭頭指向每一步，替代本插件箭頭與遊戲標記。" -- mt
+L["A guide step on another continent keeps the old route on screen while the new one plans."] =
+	"另一塊大陸上的指南步驟會在規劃新路線時保留舊路線顯示。" -- mt

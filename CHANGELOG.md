@@ -10,6 +10,20 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.45.13] - 2026-11-26
+
+### Changed
+
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
+### Fixed
+
+- **A guide step on another continent keeps the old route on screen while the new one plans.** The arrow and the route stay until the replacement is ready, so there is no gap. (#1321)
+- **A guide can change its objective without skipping the rest of the itinerary.** Objectives that share a dungeon entrance still advance to the next stop when you enter. If you die while a new route is being planned, the old route cannot complete the new objective. Boarding a flight keeps the current route until you land. (#1321)
+- **Asking for the destination you already have no longer restarts the route search.** The search in progress finishes instead of beginning again. (#1330)
+- **The tracker says it is still searching while it waits for your position.** Nearby destinations no longer look like there is no route. (#1358)
+- **TomTom's arrow follows the route through RestedXP steps.** It now comes back at login, on each RestedXP step change and after you set a TomTom waypoint of your own, which stays available without interrupting the route's arrow. (#1360)
+
 ## [1.45.12] - 2026-11-26
 
 ### Fixed
