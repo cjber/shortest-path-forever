@@ -234,27 +234,6 @@ local function SlotKnown(slot)
 	return kind == "CURRENT" or kind == "REACHABLE"
 end
 
----@alias SPFTaxiDiscovery "discovered"|"undiscovered"|"unconfirmed"
-
--- A map node's explicit discovery flag is the client's answer. DISTANT has no discovery meaning by itself: it also
--- describes a known point on another network. SPF's saved set is positive evidence from an earlier flight-master scan,
--- but its absence is not evidence that the character has not discovered the point.
----@param nodeID number
----@param clientNode? {isUndiscovered?: boolean}
----@return SPFTaxiDiscovery
-function ns.TaxiDiscovery(nodeID, clientNode)
-	if clientNode and type(clientNode.isUndiscovered) == "boolean" then
-		return clientNode.isUndiscovered and "undiscovered" or "discovered"
-	end
-	if ns.TaxiNodes[nodeID] and ns.TaxiNodes[nodeID].class then
-		return "discovered"
-	end
-	if ns.charDB and ns.charDB.taxi and ns.charDB.taxi[nodeID] then
-		return "discovered"
-	end
-	return "unconfirmed"
-end
-
 -- The flight paths leaving each node, built once from ns.TaxiPaths.
 local pathsFrom
 ---@return table<number, number[]>

@@ -24,17 +24,6 @@ flightPin:OnMouseEnter()
 assert(table.concat(tip, "\n"):find("Alt-click to plan a journey here", 1, true),
  "on the continent map, the flight icon passes clicks through to the map")
 flightPin:OnMouseLeave()
-local unconfirmed = ns.Canvas.Pools(WorldMapFrame).ShortestPathForeverFlightPinTemplate:Acquire({
- nodeID = 32, name = "Stormwind", position = CreateVector2D(0.5, 0.5), discovery = "unconfirmed",
- faction = Enum.FlightPathFaction.Alliance, atlasName = "taxinode_neutral",
-})
-assert(unconfirmed.Texture.atlas == "taxinode_neutral", "an unconfirmed flight point uses distinct neutral art")
-unconfirmed:OnMouseEnter()
-local unconfirmedTip = table.concat(tip, "\n")
-assert(unconfirmedTip:find("Discovery not confirmed", 1, true), "an unconfirmed flight point explains the missing evidence")
-assert(not unconfirmedTip:find("Not discovered", 1, true), "an unconfirmed flight point does not claim it is undiscovered")
-unconfirmed:OnMouseLeave()
-ns.Canvas.Pools(WorldMapFrame).ShortestPathForeverFlightPinTemplate:Release(unconfirmed)
 mapID = 30
 flightPin:OnMouseEnter()
 assert(table.concat(tip, "\n"):find("Alt-click to plan a journey to this flight master", 1, true),

@@ -125,15 +125,4 @@ for _, nodeID in ipairs({ 5, 12, 14, 16, 19, 43, 45, 66, 67, 71, 74, 3276 }) do
 	assert(not ns.charDB.taxiNames[nodeID], "a DISTANT slot keeps its name out of the list: " .. nodeID)
 end
 
-assert(
-	ns.TaxiDiscovery(19, { isUndiscovered = true }) == "undiscovered",
-	"an explicit client undiscovered flag is authoritative"
-)
-assert(
-	ns.TaxiDiscovery(19, { isUndiscovered = false }) == "discovered",
-	"an explicit client known flag is authoritative"
-)
-assert(ns.TaxiDiscovery(19, {}) == "unconfirmed", "a DISTANT point without a client flag is not called undiscovered")
-assert(ns.TaxiDiscovery(2, {}) == "discovered", "a point SPF observed as known stays discovered without a client flag")
-
 print("taxi known client: the recorded Stormwind scan keeps only CURRENT and REACHABLE points: ok")
