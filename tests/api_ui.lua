@@ -407,6 +407,30 @@ assert(laterPin.Texture.alpha == ns.LaterAlpha and laterPin.Button.alpha == ns.L
 assert(laterLine.lines[laterLine.used].alpha == ns.LaterAlpha, "and the leg fades again")
 api.Cancel("Test")
 
+assert(api.SetArrowShown("Test", false) and api.SetArrowShown("Test", true), "the arrow switch is published")
+
+-- fadeLaterLegs = false draws a loop's whole way at full strength, and follows each resubmit of the route (#1388).
+local loop = { stops[1], { map = 1414, x = 0.53, y = 0.49, title = "Second" } }
+local longer = { loop[1], { map = 1414, x = 0.55, y = 0.5, title = "Moved" } }
+local function lastAlpha()
+ local drawn = active[lineTemplate][1]
+ assert(drawn.used > 0, "the route line is drawn")
+ return drawn.lines[drawn.used].alpha
+end
+for _, case in ipairs({
+ { loop, false, "a new route" },
+ { loop, true, "the same stops sent again" },
+ { loop, false, "the same stops asking for full strength" },
+ { longer, true, "a resubmit moving one stop" },
+ { longer, false, "a resubmit moving no stop" },
+}) do
+ assert(api.NavigateRoute("Test", case[1], { fadeLaterLegs = case[2] }))
+ settle()
+ assert(lastAlpha() == (case[2] and ns.LaterAlpha or 1), case[3])
+end
+assert(active[goalTemplate][2].Texture.alpha == ns.LaterAlpha, "stop pins keep their own look")
+api.Cancel("Test")
+
 -- Above 25 the numbered art runs out: stop 30 keeps the map's button and its font number, dimmer as a later stop.
 local lots = {}
 for i = 1, 30 do

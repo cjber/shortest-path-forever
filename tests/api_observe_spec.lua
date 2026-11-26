@@ -37,6 +37,7 @@ for _, options in ipairs({
 	{ policy = "walking", x = 1 },
 	{ stopMarkers = "no" },
 	{ stopMarkers = 0 },
+	{ fadeLaterLegs = "no" },
 }) do
 	local ok, reason = API.NavigateRoute("o", { stop(1000) }, options)
 	equal(ok, nil, "invalid options answer nil")
@@ -60,6 +61,10 @@ check(API.NavigateRoute("o", { stop(1000), stop(2000) }, { stopMarkers = true, p
 check(not ns.JourneyGoal().unmarked, "markers true pins the stops")
 check(API.NavigateRoute("o", { stop(1000), stop(2000) }), "default markers")
 check(not ns.JourneyGoal().unmarked, "the default pins the stops")
+check(API.NavigateRoute("o", { stop(1000), stop(2000) }, { fadeLaterLegs = false }), "later legs unfaded")
+check(ns.JourneyGoal().unfaded, "fadeLaterLegs false marks the route")
+check(API.NavigateRoute("o", { stop(1000), stop(2000) }), "default fade")
+check(not ns.JourneyGoal().unfaded, "the default fades later legs")
 check(API.Cancel("o"), "cancel")
 d.path.settle()
 

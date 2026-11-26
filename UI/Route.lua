@@ -345,8 +345,8 @@ function RoutePin:Draw()
 	mapView.small = info and info.mapType <= Enum.UIMapType.Continent
 	mapView.stitched = ns.OpenMapAddon.Stitched()
 	mapView.marks = journey and provider and provider.stopMarks or nil
-	-- The journey's own paths come first; the later hops Itinerary.lua adds after them recede.
-	mapView.current = journey and #paths or math.huge
+	-- The journey's own paths come first; Itinerary.lua's later hops recede, unless NavigateRoute asked for full strength.
+	mapView.current = journey and not (goal and (goal.stop or goal).unfaded) and #paths or math.huge
 	mapView.highlight = journey and hoveredStops or nil
 	-- A journey's dots run every few pixels whatever the zoom: only those near the view are drawn. Lines of other
 	-- pins (RouteTransports.lua) are short and do not follow the view.

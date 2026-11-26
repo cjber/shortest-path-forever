@@ -306,8 +306,11 @@ local function ArrowShown()
 	return ns.db.arrow ~= false and not (ns.TomTomArrowActive and ns.TomTomArrowActive())
 end
 
+-- Owners drawing their own arrow (API.SetArrowShown). Memory only, so a reload clears them.
+local companions = {}
+
 -- RestedXP keeps corpse guidance. For a living player, the marker follows the bend in every arrow mode.
-local function DirectionsShown()
+local function ArrowOurs()
 	local mode = ns.db.restedxpArrow
 	return ArrowShown()
 		and (
@@ -315,6 +318,11 @@ local function DirectionsShown()
 			or ns.JourneyOwner() ~= "RestedXP"
 			or ((mode == "shortestPath" or mode == "both") and not UnitIsDeadOrGhost("player"))
 		)
+end
+
+-- Our frame draws the directions unless a companion's arrow stands in for it; the marker follows either way.
+local function DirectionsShown()
+	return ArrowOurs() and next(companions) == nil
 end
 
 -- When another addon draws the arrow our frame stays hidden, so its own ticker is gone and the marker-only poll takes
@@ -426,11 +434,12 @@ local function Update(elapsed)
 	renderedShared = sharedMarker
 	native, shared = placed, sharedMarker
 	if not directions then
-		-- RestedXP draws its own arrow: the native marker still follows the bend, without our frame (#1254).
+		-- Another arrow draws: the native marker still follows the bend, without our frame (#1254, #1308). A
+		-- companion's arrow stands where ours would, so it can point at a bend on this map that has no marker.
 		frame.behind = false
 		frame.angle = nil
 		SetUpdating(false)
-		Unseen(not ((native or shared) and markerShown))
+		Unseen(not (((native or shared) and markerShown) or (facing and map == pointing.map)))
 		NotifyLead()
 		return
 	end
@@ -904,7 +913,8 @@ end
 
 -- Refresh arrow rendering without changing the canonical walk or its progress.
 function ns.ArrowBearingChanged()
-	if not frame and DirectionsShown() and ((path and target) or arrival) then
+	-- The frame also runs the marker-only poll, so it is made even while another arrow keeps it hidden.
+	if not frame and ArrowShown() and ((path and target) or arrival) then
 		Create()
 		if arrival then
 			ShowArrival(arrival)
@@ -1121,9 +1131,25 @@ function ns.ArrowLeads()
 	if not ns.db or ns.db.arrow == false then
 		return false
 	end
-	return (DirectionsShown() and ((path ~= nil and target ~= nil and not unseen) or arrival ~= nil))
+	return (ArrowOurs() and ((path ~= nil and target ~= nil and not unseen) or arrival ~= nil))
 		or (ns.TomTomArrowActive and ns.TomTomArrowActive() and path ~= nil and target ~= nil)
 		or (castTarget ~= nil and ns.CastPromptShown())
+end
+
+-- ShortestPathForever.API.SetArrowShown (docs/api.md), published by Core/API.lua. The companion's arrow counts as
+-- ours for ns.ArrowLeads, so a guide addon's arrow stays down beside it.
+---@param owner string
+---@param shown boolean
+---@return boolean?, ForeverCoreAPIInvalid?
+function ns.SetArrowShown(owner, shown)
+	if not (ns.APIInput.Owner(owner) and canaccessvalue(shown) and type(shown) == "boolean") then
+		return ForeverCore.APIKit.Invalid()
+	end
+	companions[owner] = not shown or nil
+	if ns.db then
+		ns.ArrowBearingChanged()
+	end
+	return true
 end
 
 -- The guide bridges hook this to hand their addon's arrow back or take it over again.
