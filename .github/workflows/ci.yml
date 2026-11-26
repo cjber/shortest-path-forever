@@ -48,7 +48,7 @@ jobs:
           persist-credentials: false
       # Every tool version lives in this checkout's tools/toolchain.json, which the action reads and installs and
       # verifies each pin from.
-      - uses: cjber/forever-core/.github/actions/toolchain@2596f68e68f9a727496a19f3f801c8a7039357d2 # main
+      - uses: cjber/forever-core/.github/actions/toolchain@bf018c8b0703221fb9d65773c4fb0b3b4b98b5db # main
         id: toolchain
         with:
           tools: lua stylua
@@ -122,7 +122,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: cjber/forever-core/.github/actions/toolchain@2596f68e68f9a727496a19f3f801c8a7039357d2 # main
+      - uses: cjber/forever-core/.github/actions/toolchain@bf018c8b0703221fb9d65773c4fb0b3b4b98b5db # main
         with:
           tools: lua
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -159,7 +159,7 @@ jobs:
           path: forever-core
           persist-credentials: false
       # tools/check_locales.py parses each translation with LuaJIT.
-      - uses: cjber/forever-core/.github/actions/toolchain@2596f68e68f9a727496a19f3f801c8a7039357d2 # main
+      - uses: cjber/forever-core/.github/actions/toolchain@bf018c8b0703221fb9d65773c4fb0b3b4b98b5db # main
         id: toolchain
         with:
           tools: lua luals
@@ -174,7 +174,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: cjber/forever-core/.github/actions/toolchain@2596f68e68f9a727496a19f3f801c8a7039357d2 # main
+      - uses: cjber/forever-core/.github/actions/toolchain@bf018c8b0703221fb9d65773c4fb0b3b4b98b5db # main
         with:
           tools: gitleaks
       - name: gitleaks
@@ -248,7 +248,7 @@ jobs:
           ref: ${{ steps.forever-core-ref.outputs.ref }}
           path: forever-core
           persist-credentials: false
-      - uses: cjber/forever-core/.github/actions/toolchain@2596f68e68f9a727496a19f3f801c8a7039357d2 # main
+      - uses: cjber/forever-core/.github/actions/toolchain@bf018c8b0703221fb9d65773c4fb0b3b4b98b5db # main
         with:
           tools: lua
       # .pkgmeta's manual changelog, which the release fills with the version's entry.

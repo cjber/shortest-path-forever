@@ -40,7 +40,7 @@ jobs:
           persist-credentials: false
       # Every tool version lives in this checkout's tools/toolchain.json, which the action reads and installs and
       # verifies each pin from.
-      - uses: cjber/forever-core/.github/actions/toolchain@2596f68e68f9a727496a19f3f801c8a7039357d2 # main
+      - uses: cjber/forever-core/.github/actions/toolchain@bf018c8b0703221fb9d65773c4fb0b3b4b98b5db # main
         with:
           tools: lua
       - uses: agent-labs-dev/speedpatrol@b1ec94d21e309f964ea25cbd66e0a16ac71e3d3a # v0

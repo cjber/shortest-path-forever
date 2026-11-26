@@ -52,7 +52,7 @@ jobs:
       # verifies each pin from.
       - name: Install the Lua toolchain
         if: steps.pins.outputs.changed == 'true'
-        uses: cjber/forever-core/.github/actions/toolchain@2596f68e68f9a727496a19f3f801c8a7039357d2 # main
+        uses: cjber/forever-core/.github/actions/toolchain@bf018c8b0703221fb9d65773c4fb0b3b4b98b5db # main
         with:
           tools: lua stylua
       - name: Regenerate
