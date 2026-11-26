@@ -235,7 +235,7 @@ function ns.JourneyStops()
 end
 
 ---@class SPFPublicAPI
-local API = { version = 2, minor = 8 }
+local API = { version = 2, minor = 9 }
 
 local function Differs(a, b)
 	for key, value in pairs(a) do
@@ -487,10 +487,11 @@ end
 API.EstimateWalks = ns.EstimateWalks
 API.WalkPath = ns.WalkPath
 API.NavVersion = ns.NavVersion
+API.SuspendMapPins = ns.SuspendMapPins
+API.ResumeMapPins = ns.ResumeMapPins
 
--- A stop naming the NPC it reaches (Nearby services) stands on that NPC's QuestieDB spawn, which has no height: the
--- spawn's own, when it stands over or under another surface, keeps the walk on its floor. Nearby measures its walks to
--- the same point.
+-- A stop naming the NPC it reaches (Nearby services) takes the height of that NPC's QuestieDB spawn when it stands over
+-- or under another surface, keeping the walk on its floor. Nearby measures its walks to the same point.
 ---@param point SPFPoint
 ---@return SPFPoint
 function ns.OnSpawnFloor(point)

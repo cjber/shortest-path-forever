@@ -171,7 +171,7 @@
 
 ---@class SPFPublicAPI
 ---@field version integer -- 2 removes peer sharing and Leaderboard; callers accept 1 or 2 and reject future versions
----@field minor integer -- 8 adds NavigateRoute's stopMarkers option; 7 adds WalkPath; 6 adds NavigateRoute's options, ObserveStops and JourneyState; 5 standardizes ResumeRestedXP reasons; 4 adds optional z on returned places; 3 adds EstimateWalks and NavVersion; 2 adds each journey leg's from and to, ResumeRestedXP and the replan change; 1 adds Guidance and the guidance change; version 1 minor 3 added Journey, Pause, Resume, SkipLeg, Stats and the leg change
+---@field minor integer -- 9 adds SuspendMapPins and ResumeMapPins; 8 adds NavigateRoute's stopMarkers option; 7 adds WalkPath; 6 adds NavigateRoute's options, ObserveStops and JourneyState; 5 standardizes ResumeRestedXP reasons; 4 adds optional z on returned places; 3 adds EstimateWalks and NavVersion; 2 adds each journey leg's from and to, ResumeRestedXP and the replan change; 1 adds Guidance and the guidance change; version 1 minor 3 added Journey, Pause, Resume, SkipLeg, Stats and the leg change
 ---@field Estimate fun(fromMap: integer, fromX: number, fromY: number, toMap: integer, toX: number, toY: number): seconds: number?, reason: SPFAPINoRoute? -- travel seconds; nil comes with the reason
 ---@field Navigate fun(owner: string, map: integer, x: number, y: number, title?: string, kind?: SPFAPIStopKind): boolean -- starts/replaces guidance outside combat when journeys are enabled
 ---@field NavigateRoute fun(owner: string, stops: SPFAPIStop[], options?: SPFAPIRouteOptions): ok: boolean?, reason: ForeverCoreAPIInvalid? -- starts/replaces guidance through 1-64 stops in order; false leaves the current journey intact; nil and "invalid" for bad options
@@ -192,6 +192,8 @@
 ---@field WalkPath fun(owner: string, from: SPFAPIPlace, to: SPFAPIPlace, callback: fun(path: SPFAPIWalkPath?, reason: SPFAPIWalkReason?), opts?: SPFAPIWalkOptions): cancel: fun()?, reason: SPFAPIWalkRefusal?
 ---@field NavVersion fun(): string -- the walking data this build ships; drop cached walk costs when it changes
 ---@field Active fun(): boolean -- true while any journey is guiding, whoever started it
+---@field SuspendMapPins fun(owner: string): ok: boolean?, reason: ForeverCoreAPIInvalid? -- hides the world map's pins, the journey's line and stops apart, until that owner resumes
+---@field ResumeMapPins fun(owner: string): ok: boolean?, reason: ForeverCoreAPIInvalid?
 ---@field Ended fun(owner: string): reason: (SPFAPIEnded|SPFAPINotReady)?, at: (number|SPFAPINotReady)? -- why owner's last journey ended and its GetTime(), or nil and why there is none
 ---@field Subscribe fun(callback: fun(changes: SPFAPIChanges)): unsubscribe: fun() -- calls back at most once per burst of journey changes, the next frame; errors go to the game's error handler
 

@@ -929,9 +929,9 @@ function ns.RefreshJourneyPin()
 end
 
 ns.Init(function()
-	linePins = MapCanvas.Pool(WorldMapFrame, LINE_TEMPLATE, RoutePin)
-	goalPins =
-		MapCanvas.Pool(WorldMapFrame, GOAL_TEMPLATE, ns.GoalPinMixin, { template = GOAL_TEMPLATE, marker = "stop" })
+	linePins = MapCanvas.Pool(WorldMapFrame, LINE_TEMPLATE, RoutePin, { journey = true })
+	local goalOptions = { template = GOAL_TEMPLATE, marker = "stop", journey = true }
+	goalPins = MapCanvas.Pool(WorldMapFrame, GOAL_TEMPLATE, ns.GoalPinMixin, goalOptions)
 	provider = Layer
 	ns.OpenMapAddon.WatchPinOwner(RefreshShownMap)
 	MapCanvas.Watch(WorldMapFrame, function(_, what)

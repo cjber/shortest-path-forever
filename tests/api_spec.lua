@@ -597,7 +597,7 @@ end
 -- Subscribe: one call per burst of guidance changes, on the next frame, each subscriber isolated from the others.
 do
 	equal(API.version, 2, "version 2 removes peer and leaderboard APIs")
-	equal(API.minor, 8, "minor 8 adds NavigateRoute stopMarkers")
+	equal(API.minor, 9, "minor 9 adds SuspendMapPins and ResumeMapPins")
 	equal(pcall(API.Subscribe, "callback"), false, "a callback must be a function")
 	local timers, route =
 		{}, {
