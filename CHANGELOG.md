@@ -10,6 +10,18 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.45.12] - 2026-11-26
+
+### Fixed
+
+- A save from before the RestedXP arrow setting gets its old arrow behaviour back for standalone RestedXP guides: ours leads and RestedXP's hides, or both stay when you had kept RestedXP's arrow. The new default had overwritten it for every existing player. If you had deliberately picked "RestedXP's arrow" under 1.45.x, it is reset once by this and you can choose it again in the settings (#1349).
+- Changing the road detour allowance away from 50% no longer re-searches every cluster for every expanded entrance: the custom interior walk is only priced when the popped entrance can actually leave its cluster, so routes keep the same detour choices at a fraction of the planning time (#1355).
+- The tracker text keeps its shadow beside a quest tracker that shrinks the game's objective fonts (EllesmereUI's), so it stays readable on any background (#1357).
+
+### For addon authors
+
+- `NavigateRoute` takes `{ stopMarkers = false }` to draw a journey's route line on the world map without a pin at each stop, for addons that mark their own places; the stop text in the tracker stays (#1362).
+
 ## [1.45.11] - 2026-11-25
 
 ### Added
