@@ -136,13 +136,15 @@ assert(API.CurrentStop("Guide") == 1, "the journey is still the guide's")
 echo:UnregisterAllEvents()
 
 -- A player picking a quest of their own ends the guide's waypoint. When the guide then moves to another objective,
--- that destination is a guide instruction, not the player's: the guide leads again instead of leaving no marker.
+-- the held route must leave the quest tracked until the new plan can lead to the new objective.
 env.C_SuperTrack.SetSuperTrackedQuestID(999)
 driver.update(0)
 assert(driver.waypoint() == nil and not ns.JourneyPinTracked(), "the player's quest selection takes the marker")
 assert(API.NavigateRoute("Guide", { stop(ONE_MAP, "Objective One") }))
-assert(ns.JourneyPinTracked(), "the guide leads again for the objective it moved to")
-assert(driver.waypoint() ~= nil, "with its waypoint written afresh")
+assert(driver.waypoint() == nil and not ns.JourneyPinTracked(), "the held route does not reclaim the marker")
+assert(env.C_SuperTrack.GetSuperTrackedQuestID() == 999, "the quest stays tracked while the new objective plans")
 driver.path.settle()
+assert(ns.JourneyPinTracked(), "the guide leads again once the replacement plan is ready")
+assert(driver.waypoint() ~= nil and endsAt(planned(), ONE), "the new plan has a waypoint")
 
 print("journey retarget: a guide re-pointing at its stop keeps the journey")
