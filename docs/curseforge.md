@@ -41,12 +41,11 @@ These images are generated previews of the Shortest Path UI.
 
 - **Plan the trip.** Combine walking, known flights, boats, zeppelins, lifts, the tram, portals and teleports. Walks go around walls, hills and water, and replan as you move. A spot inside a dungeon or raid leads to its entrance.
 - **Find anything nearby.** The Nearby services tab (and the world map's quick button) lists vendors by what they sell, your class trainer, profession trainers, battlemasters, portal trainers for mages, inns, banks, auction houses, flight masters, stables, repairs, and dungeon and raid doors on your continent with travel times. Search and click a row to go there; arrows mark that NPC's nameplate on arrival. Right-click the map button, or use *Town services* in the map filter, to toggle each service kind on zone and city maps; click a pin to travel there. Uses installed QuestieDB.
-- **Follow your guide.** RestedXP and Guidelime journeys are on by default, with no TomTom or bridge addon; without TomTom, other guides' waypoints work. Turn on *Follow Dugi guides* in Guidance to follow Dugi too, with its own arrow still visible. RestedXP keeps its own arrow. Adventure Guide takes over when its RestedXP display is on.
+- **Follow your guide.** RestedXP and Guidelime journeys are on by default, with no TomTom or bridge addon; without TomTom, other guides' waypoints work. Turn on *Follow Dugi guides* in Guidance to follow Dugi too. RestedXP and Dugi keep their own arrows. Adventure Guide takes over when its RestedXP display is on.
 - **Choose what you see.** Hide Journey steps, the arrow, or all map marks (*Show Shortest Path marks*). With OpenMap on, the route crosses its stitched map into the neighbouring zones. Move and scale the arrow, choose whether its label shows the distance, the time left or both, and add the time left under the compass.
-- **Complete a step.** Click the current journey step and choose *Complete this step*. Skipping a Hearthstone leaves it out for that journey; other steps return if you still need them.
-- **Skip a farming stop.** Click or right-click the current journey step and choose *Skip this stop* to pass a recorded node and continue the tour.
+- **Complete a step.** Click the current journey step and choose *Complete this step*, or *Skip this stop* on a farming tour. Skipping a Hearthstone leaves it out for that journey; other steps return if you still need them.
 - **See departures.** Dock and flight master tooltips show destinations and times.
-- **Travel prompts.** Hearthstone and teleport steps show what to cast. A sound and taskbar flash warn before a boat arrives, and an optional ping marks your arrival. A red corpse route guides ghosts back to their bodies.
+- **Travel prompts.** Hearthstone and teleport steps show what to cast. A sound and taskbar flash warn before a boat arrives; an optional ping marks arrival. A red route leads ghosts to their bodies.
 
 With the gamepad interface on, you open and turn the world map; Shortest Path won't, and its right-click menus need mouse and keyboard.
 
