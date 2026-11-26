@@ -160,10 +160,13 @@ L["Choose which arrows to show when following a standalone RestedXP guide."] =
 	"Wählt die Pfeile aus, die beim Folgen eines eigenständigen RestedXP-Guides angezeigt werden." -- mt
 L["RestedXP arrow"] = "RestedXP-Pfeil" -- mt
 L["RestedXP's arrow"] = "Pfeil von RestedXP" -- mt
+L["Route to your map pin"] = "Reise zur eigenen Kartenmarkierung"
 L["Shortest Path's arrow"] = "Pfeil von Shortest Path" -- mt
 L["Shortest Path pins and route lines on the world map."] =
 	"Markierungen und Routenlinien von Shortest Path auf der Weltkarte." -- mt
 L["Show Shortest Path marks"] = "Shortest-Path-Markierungen anzeigen" -- mt
+L["Starts a journey when you place the game's map pin. The journey key still works when this is off."] =
+	"Startet eine Reise, wenn du die Kartenmarkierung des Spiels setzt. Die Reisetaste funktioniert auch bei deaktivierter Option."
 L["The travel action will update after combat."] = "Die Reiseaktion wird nach dem Kampf aktualisiert."
 L["Rides to spend less time walking through %s (level %s)"] =
 	"Nutzt ein Transportmittel für einen kürzeren Fußweg durch %s (Stufe %s)"

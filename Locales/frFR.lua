@@ -164,10 +164,13 @@ L["Choose which arrows to show when following a standalone RestedXP guide."] =
 	"Choisissez les flèches à afficher lorsque vous suivez un guide RestedXP autonome." -- mt
 L["RestedXP arrow"] = "Flèche RestedXP" -- mt
 L["RestedXP's arrow"] = "Flèche de RestedXP" -- mt
+L["Route to your map pin"] = "Voyager vers votre repère de carte" -- mt
 L["Shortest Path's arrow"] = "Flèche de Shortest Path" -- mt
 L["Shortest Path pins and route lines on the world map."] =
 	"Repères et tracés de Shortest Path sur la carte du monde." -- mt
 L["Show Shortest Path marks"] = "Afficher les repères de Shortest Path" -- mt
+L["Starts a journey when you place the game's map pin. The journey key still works when this is off."] =
+	"Lance un trajet quand vous placez le repère de carte du jeu. La touche de trajet fonctionne aussi lorsque cette option est désactivée." -- mt
 L["The travel action will update after combat."] = "L’action de voyage sera mise à jour après le combat." -- mt
 L["Rides to spend less time walking through %s (level %s)"] =
 	"Prend un transport pour moins marcher dans %s (niveau %s)" -- mt

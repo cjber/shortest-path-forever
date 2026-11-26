@@ -104,8 +104,10 @@ local DEFAULTS = {
 	-- on its own (#1241). On: the minimap hint follows journeyHint.
 	minimapHint = true,
 	-- Off by default: a journey starts when the player super-tracks a quest or a flight point, so a controller
-	-- needs no map click. A map pin the player places always starts one.
+	-- needs no map click.
 	focusedQuest = false,
+	-- A map pin the player places starts a journey (#1336). Off leaves pins to the player (#1391).
+	mapPinRoutes = true,
 	-- An on-screen marker over the destination, like the client's own waypoint pin. Off by default: it is
 	-- new screen furniture, and a player asks for it from Settings > Guidance.
 	destinationPin = false,

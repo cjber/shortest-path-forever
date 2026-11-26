@@ -564,10 +564,9 @@ function ns.TomTomFollowsZygor(map, x, y)
 		and FromZygor(uid)
 end
 
--- Keep TomTom's OnUpdate running: it advances the waypoint queue even while our route supplies the direction.
+-- An empty arrow stays shown: TomTom's OnUpdate may still be advancing to the next waypoint, and hides it itself.
 local function SyncArrow()
-	local empty = hooked and hooked.IsCrazyArrowEmpty and hooked:IsCrazyArrowEmpty()
-	if empty then
+	if hooked and hooked.IsCrazyArrowEmpty and hooked:IsCrazyArrowEmpty() then
 		arrowWaypoint = nil
 	end
 	local frame = TomTomCrazyArrow
@@ -594,9 +593,6 @@ local function SyncArrow()
 	elseif muted then
 		muted = false
 		hooked:ShowHideCrazyArrow()
-	end
-	if empty and not hijacked then
-		frame:Hide()
 	end
 end
 ns.SyncTomTomArrow = SyncArrow

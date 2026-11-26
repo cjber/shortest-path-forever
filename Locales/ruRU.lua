@@ -170,10 +170,13 @@ L["Choose which arrows to show when following a standalone RestedXP guide."] =
 	"Выберите, какие стрелки показывать, если руководство RestedXP используется отдельно." -- mt
 L["RestedXP arrow"] = "Стрелка RestedXP" -- mt
 L["RestedXP's arrow"] = "Стрелка RestedXP" -- mt
+L["Route to your map pin"] = "Маршрут к вашей метке на карте"
 L["Shortest Path's arrow"] = "Стрелка Shortest Path" -- mt
 L["Shortest Path pins and route lines on the world map."] =
 	"Метки и линии маршрута Shortest Path на карте мира." -- mt
 L["Show Shortest Path marks"] = "Показывать отметки Shortest Path" -- mt
+L["Starts a journey when you place the game's map pin. The journey key still works when this is off."] =
+	"Начинает путешествие, когда вы ставите игровую метку на карте. Клавиша путешествия работает и при выключенной настройке."
 L["The travel action will update after combat."] =
 	"Действие для путешествия обновится после боя."
 L["Rides to spend less time walking through %s (level %s)"] =

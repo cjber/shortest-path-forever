@@ -160,9 +160,12 @@ L["Choose which arrows to show when following a standalone RestedXP guide."] =
 	"選擇單獨使用 RestedXP 指南時要顯示的箭頭。" -- mt
 L["RestedXP arrow"] = "RestedXP 箭頭設定" -- mt
 L["RestedXP's arrow"] = "RestedXP 的箭頭" -- mt
+L["Route to your map pin"] = "前往你的地圖標記"
 L["Shortest Path's arrow"] = "Shortest Path 的箭頭" -- mt
 L["Shortest Path pins and route lines on the world map."] = "世界地圖上的 Shortest Path 圖釘與路線。" -- mt
 L["Show Shortest Path marks"] = "顯示 Shortest Path 標記" -- mt
+L["Starts a journey when you place the game's map pin. The journey key still works when this is off."] =
+	"放置遊戲的地圖標記時開始旅程。關閉此選項後仍可使用旅程按鍵。"
 L["The travel action will update after combat."] = "旅行動作將在戰鬥結束後更新。"
 L["Rides to spend less time walking through %s (level %s)"] =
 	"搭乘交通工具以減少在%s（等級%s）內步行的路程"

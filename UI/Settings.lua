@@ -364,6 +364,13 @@ ns.Init(function()
 		L["Starts a journey when you super-track a quest or a flight point, so a controller needs no map click. A guide addon's own journey is left alone."]
 		-- luacheck: pop
 	)
+	Checkbox(
+		"mapPinRoutes",
+		L["Route to your map pin"],
+		-- luacheck: push ignore 631
+		L["Starts a journey when you place the game's map pin. The journey key still works when this is off."]
+		-- luacheck: pop
+	)
 	Section(L["Destination"])
 	Checkbox(
 		"destinationPin",

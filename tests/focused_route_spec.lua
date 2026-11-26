@@ -95,13 +95,27 @@ focus(104)
 assert(not ns.HasJourney(), "a quest focused while a guide leads its journey starts nothing")
 owner = nil
 
--- The player's own map pin starts a journey whatever the setting says: Ctrl-click, the pin button and chat links
--- all end in the client's user waypoint (#1336).
+-- The player's own map pin starts a journey with quest focus routing off: Ctrl-click, the pin button and chat
+-- links all end in the client's user waypoint (#1336).
 ns.db.focusedQuest = false
 pin(1, 0.4, 0.6)
-assert(ns.HasJourney(), "a map pin starts a journey with the setting off")
+assert(ns.HasJourney(), "a map pin starts a journey with quest focus routing off")
 ns.ClearJourney()
 clearPin()
+
+-- Its own switch turns that off: the pin stays and the journey key still plans (#1391).
+ns.db.mapPinRoutes = false
+pin(1, 0.4, 0.6)
+assert(not ns.HasJourney(), "a map pin starts no journey with its switch off")
+assert(env.C_Map.GetUserWaypoint(), "the player's pin stays in place")
+env.IsShiftKeyDown = function()
+	return true
+end
+assert(driver.click({ map = 1, x = 2500, y = -2500 }), "Shift-click still plans")
+assert(ns.HasJourney(), "Shift-click starts a journey with pin routing off")
+ns.ClearJourney()
+clearPin()
+ns.db.mapPinRoutes = true
 ns.db.focusedQuest = true
 pin(1, 0.4, 0.6)
 local goal = ns.JourneyGoal()
@@ -109,7 +123,10 @@ assert(goal and goal.map == 1 and goal.x < -4999 and goal.y > 4999, "the player'
 local pinned = ns.JourneyGoal()
 pin(1, 0.4, 0.6)
 assert(ns.JourneyGoal() == pinned, "the same pin again does not replan the journey")
-ns.ClearJourney()
+ns.db.mapPinRoutes = false
+clearPin()
+assert(not ns.HasJourney(), "clearing the pin ends the journey it started, even after the switch goes off")
+ns.db.mapPinRoutes = true
 
 -- A guide's own waypoint write is not the player's pin. The guide's pin and the pin it restores when it stops
 -- both leave the journey alone.

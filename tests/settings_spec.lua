@@ -282,6 +282,7 @@ local ns = {
 		compassTime = false,
 		arrivalSound = false,
 		focusedQuest = false,
+		mapPinRoutes = true,
 		journeyKey = "shift",
 		routeColor = "gold",
 		routeStyle = "dotted",
@@ -443,6 +444,7 @@ local groups = {
 		"journeyHint",
 		"minimapHint",
 		"focusedQuest",
+		"mapPinRoutes",
 		"destinationPin",
 		"destinationPinSize",
 		"arrivalPin",
@@ -501,7 +503,7 @@ local groups = {
 local order = { "Guidance", "Map marks", "Party mage portals", "Alerts", "Interface" }
 
 assert(#buttons == #order, "one index button per group")
-assert(#rows == 85, #rows)
+assert(#rows == 86, #rows)
 local cursor = 0
 for index, name in ipairs(order) do
 	local button = buttons[index].initializer
@@ -692,7 +694,8 @@ assert(
 	"the tooltip names the Questie quest-start gesture and destination"
 )
 assert(Row("journey").setting.name == "Enable journeys", "the journey switch does not name a key")
--- Route to the focused quest is opt-in: focusing a quest or flight point plans a journey on its own. A pin always does.
+-- Route to the focused quest is opt-in: focusing a quest or flight point plans a journey on its own. A pin has its
+-- own switch.
 local focused = Row("focusedQuest")
 assert(focused.kind == "checkbox" and focused.setting.default == false, "focused routing is off by default")
 assert(focused.setting.variable == "ShortestPathForever_focusedQuest", "the switch is saved")
@@ -701,6 +704,9 @@ assert(
 	focused.tooltip:find("flight point", 1, true) and focused.tooltip:find("map click", 1, true),
 	"the tooltip says a flight point counts and a controller needs no map click"
 )
+local mapPin = Row("mapPinRoutes")
+assert(mapPin.kind == "checkbox" and mapPin.setting.default == true, "map pin routing is on by default")
+assert(mapPin.setting.name == "Route to your map pin", "the switch names the map pin")
 -- The journey's own block has its switch in Guidance, on by default, and turning it off redraws the tracker.
 local journeySteps = Row("journeyTracker")
 assert(
