@@ -690,6 +690,13 @@ local function WaypointAt(tomtom, map, x, y, title)
 end
 ns.TomTomWaypointAt = WaypointAt
 
+local function ArrowSelectionChanged()
+	if ns.QueueTomTomArrowRefresh then
+		ns.QueueTomTomArrowRefresh()
+	end
+	SyncArrow()
+end
+
 -- The settings checkbox, TomTom loading and the addon's own load all call this.
 function ns.RefreshTomTomFollow()
 	local tomtom = TomTom
@@ -716,7 +723,7 @@ function ns.RefreshTomTomFollow()
 			if ns.AfterTomTomCrazyArrow then
 				ns.AfterTomTomCrazyArrow()
 			end
-			SyncArrow()
+			ArrowSelectionChanged()
 		end)
 		if type(tomtom.AddWaypoint) == "function" then
 			-- Also covers a waypoint TomTom already held, which its AddWaypoint returns without setting the arrow again.
@@ -739,16 +746,17 @@ function ns.RefreshTomTomFollow()
 			hooksecurefunc(tomtom, "HijackCrazyArrow", SyncArrow) -- taint-ok: TomTom owns this addon table.
 		end
 		if type(tomtom.ReleaseCrazyArrow) == "function" then
-			hooksecurefunc(tomtom, "ReleaseCrazyArrow", SyncArrow) -- taint-ok: TomTom owns this addon table.
+			hooksecurefunc(tomtom, "ReleaseCrazyArrow", ArrowSelectionChanged) -- taint-ok: TomTom owns this addon table.
 		end
 		if type(tomtom.ClearCrazyArrowPoint) == "function" then
-			hooksecurefunc(tomtom, "ClearCrazyArrowPoint", SyncArrow) -- taint-ok: TomTom owns this addon table.
+			hooksecurefunc(tomtom, "ClearCrazyArrowPoint", ArrowSelectionChanged) -- taint-ok: TomTom owns this addon table.
 		end
 		hooksecurefunc(tomtom, "RemoveWaypoint", function(_, uid) -- taint-ok: TomTom owns this addon table.
 			if ns.OnTomTomWaypointRemoved then
 				ns.OnTomTomWaypointRemoved(uid)
 			end
 			Unfollow(uid)
+			ArrowSelectionChanged()
 		end)
 		if type(tomtom.ClearWaypoint) == "function" then
 			hooksecurefunc(tomtom, "ClearWaypoint", function(_, uid) -- taint-ok: TomTom owns this addon table.
@@ -756,6 +764,7 @@ function ns.RefreshTomTomFollow()
 					ns.OnTomTomWaypointRemoved(uid)
 				end
 				Unfollow(uid)
+				ArrowSelectionChanged()
 			end)
 		end
 	end

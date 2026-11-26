@@ -355,7 +355,8 @@ do
 	local Fake = assert(loadfile("tests/tomtom_fake.lua"))()
 
 	---@param opts { tomtomArrow?: boolean, tomtomFollow?: boolean, arrow?: boolean, installed?: boolean }
-	local function BootArrow(opts)
+	---@param restoredGuide? boolean
+	local function BootArrow(opts, restoredGuide)
 		local d = assert(loadfile("tests/journey_driver.lua"))()
 		local n, e = d.ns, d.env
 		local arrowFrame
@@ -495,10 +496,48 @@ do
 			tomtomWatcher:OnEvent("ADDON_LOADED", "TomTom")
 			fake:Enable()
 		end
-		tomtomWatcher:OnEvent("PLAYER_ENTERING_WORLD")
-		for _, fn in ipairs(timers) do
-			fn()
+		local function RunTimers()
+			local due = timers
+			timers = {}
+			for _, fn in ipairs(due) do
+				fn()
+			end
 		end
+		if restoredGuide then
+			local function Region()
+				return {
+					IsShown = function()
+						return true
+					end,
+					Hide = function() end,
+					SetShown = function() end,
+				}
+			end
+			local element = { zone = 1, x = 60, y = 50, title = "RXP Step 1", arrow = true, step = { active = true } }
+			e.RXP = {
+				arrowFrame = { element = element, texture = Region(), text = Region() },
+				settings = { profile = { showEnabled = true } },
+				currentGuide = {},
+				activeWaypoints = { element },
+				UpdateMap = function() end,
+				UpdateGotoSteps = function() end,
+			}
+			n.db.restedxp = true
+			local position = n.JourneyPosition
+			n.JourneyPosition = function() end
+			local create = e.CreateFrame
+			e.CreateFrame = function(...)
+				watcherFrame = arrowCreate(...)
+				return watcherFrame
+			end
+			d.load("Core/RestedXP.lua")
+			e.CreateFrame = create
+			n.JourneyPosition = position
+			d.move({ map = 1, x = 0, y = 0 })
+			watcherFrame:OnEvent("PLAYER_ENTERING_WORLD")
+		end
+		tomtomWatcher:OnEvent("PLAYER_ENTERING_WORLD")
+		RunTimers()
 		return {
 			driver = d,
 			ns = n,
@@ -506,10 +545,60 @@ do
 			API = e.ShortestPathForever.API,
 			tomtom = fake,
 			crazy = crazy,
+			runTimers = RunTimers,
 			arrowFrame = function()
 				return arrowFrame
 			end,
 		}
+	end
+
+	-- #1360: a guide already has its step before the player's position becomes available at login.
+	do
+		local c = BootArrow({ tomtomArrow = true }, true)
+		c.driver.path.settle()
+		equal(c.API.CurrentStop("RestedXP"), 1, "login retries the restored guide without a manual waypoint change")
+		equal(c.ns.TomTomArrowActive(), true, "TomTom leads the restored guide after login")
+		equal(c.crazy.hidden, false, "the restored guide's TomTom arrow is visible")
+	end
+
+	-- The bridge deduplicates against the same TomTom waypoint and later removes that shared table on step advance.
+	do
+		local c = BootArrow({ tomtomArrow = true })
+		local start = { map = 1, x = 0, y = 0 }
+		local firstStop = { map = 1, x = 0, y = -2500, label = "RXP Step 1" }
+		local stop = { map = 1, x = 0, y = -5000, label = "RXP Step 2" }
+		c.driver.move(start)
+		c.ns.PointGuideArrow({ start, firstStop }, nil, firstStop)
+		c.ns.PointGuideArrow({ start, stop }, nil, stop)
+		local nextStep = c.tomtom.Arrow()
+		local bridge = c.tomtom:AddWaypoint(nextStep[1], nextStep[2], nextStep[3], {
+			title = nextStep.title,
+			persistent = false,
+			crazy = false,
+		})
+		equal(bridge, nextStep, "the bridge shares the selected waypoint through TomTom deduplication")
+		c.tomtom:RemoveWaypoint(bridge)
+		c.tomtom:ArrowUpdate()
+		c.runTimers()
+		equal(c.ns.TomTomArrowActive(), true, "TomTom resumes the current step after bridge removal")
+		equal(c.tomtom.Arrow().title, "RXP Step 2", "the recovered arrow points at the current step")
+		equal(c.tomtom:IsValidWaypoint(c.tomtom.Arrow()), true, "the recovered waypoint is registered")
+	end
+
+	-- TomTom autoqueues a manual waypoint even with TomTom following turned off.
+	do
+		local c = BootArrow({ tomtomArrow = true })
+		c.driver.begin({ map = 1, x = 0, y = 0 }, { map = 1, x = 0, y = -5000 })
+		local ours = c.tomtom.Arrow()
+		local manual = c.tomtom:Way(1, 10, 20, "Manual waypoint")
+		equal(c.ns.TomTomArrowActive(), false, "ownership reflects the externally selected waypoint")
+		c.runTimers()
+		equal(c.tomtom.Arrow(), ours, "a manual waypoint does not displace the active Shortest Path target")
+		equal(c.tomtom:IsValidWaypoint(manual), true, "the manual waypoint stays registered")
+		c.ns.ClearJourney()
+		c.tomtom:SetCrazyArrow(manual, 15, manual.title)
+		c.runTimers()
+		equal(c.tomtom.Arrow(), manual, "TomTom keeps the manual selection after the journey ends")
 	end
 
 	-- 1. Set on journey start, hides our arrow and game navigation marker, moves with bends and steps, removed on clear.
@@ -606,6 +695,7 @@ do
 		local foreignSame = { ours[1], ours[2], ours[3], title = ours.title }
 		c.tomtom:SetCrazyArrow(foreignSame, 15, foreignSame.title)
 		c.driver.path.settle()
+		c.runTimers()
 		equal(navCalls, 1, "a distinct foreign table with the same title and coordinates is followed")
 		equal(c.API.CurrentStop("TomTom"), 1, "foreign waypoint started a followed journey")
 		equal(c.crazy.alpha, 0.7, "TomTom's Crazy Arrow stays visible while tomtomArrow drives it")
