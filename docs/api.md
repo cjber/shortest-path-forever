@@ -1,6 +1,6 @@
 # Addon API
 
-Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 8`) with uiMapIDs and normalized 0-1 coordinates.
+Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 9`) with uiMapIDs and normalized 0-1 coordinates.
 Version 2 removes peer sharing and `Leaderboard`; callers must accept versions 1 and 2 and reject future versions. Check that a function exists before calling it, because an older
 addon may not have it yet. The full types are in [`types/API.lua`](../types/API.lua). On ForeverCore 1.3.2 or
 later, the API is also listed by `ForeverCore.APIKit.Addons()`.
@@ -18,6 +18,7 @@ the addon can use it once it shows the requested map.
 
 ## Minor history
 
+- Version 2, `minor = 9` adds `SuspendMapPins` and `ResumeMapPins`.
 - Version 2, `minor = 8` adds `NavigateRoute`'s `stopMarkers` option.
 - Version 2, `minor = 7` adds `WalkPath`.
 - Version 2, `minor = 6`: adds `NavigateRoute`'s `options` (`policy`), `ObserveStops` and `JourneyState`.
@@ -171,6 +172,12 @@ the addon can use it once it shows the requested map.
 
 Use your addon's name as `owner`; starting another journey replaces ownership.
 
+- `SuspendMapPins(owner)` hides the world map pins Shortest Path draws apart from the journey under way: docks,
+  portals, flight points, nearby services, the hearth and the rest stay off the map while the route line and its stop
+  pins stay, and `ResumeMapPins(owner)` releases that owner. Several owners may hold at once and the pins return
+  when the last has resumed. The hold lasts the session and is never saved, so a reload clears it. The minimap and the
+  map button are unaffected. Both return `true`, or `nil` and `"invalid"` for an owner that is not a non-blank string.
+
 ## Not ready
 
 A read with nothing to answer returns `nil, reason`. `Estimate` and `EstimateDetail` use:
@@ -284,12 +291,13 @@ measured walks, and none of `pending`, `settling`, `preview` or `failure`.
 ## World map markers
 
 Shortest Path draws its world map pins on frames of its own, so `WorldMapFrame:EnumeratePinsByTemplate` doesn't find
-them. The Forever addons share one global table instead, `ForeverMapMarkers`, which holds one function per addon,
-under its folder name. `ForeverMapMarkers.ShortestPathForever(map)` takes the map frame (`WorldMapFrame`) and returns a
-new array of `{x, y, kind}`. These are the pins shown on `map:GetMapID()`, as 0–1 fractions. `kind` is `"dock"`,
-`"portal"`, `"flight"` or `"stop"`. The array is empty while the map is closed, in combat, and for a map Shortest Path
-doesn't draw on. To add your own, publish a copy of the table with your function in it rather than writing into a
-table another addon made. Read the global each time, since a later addon replaces it:
+them. The Forever addons share one global table instead, `ForeverMapMarkers`, which holds one function per addon, under
+its folder name. `ForeverMapMarkers.ShortestPathForever(map)` takes the map frame (`WorldMapFrame`) and returns a new
+array of `{x, y, kind}`. These are the pins shown on `map:GetMapID()`, as 0–1 fractions. `kind` is `"dock"`,
+`"portal"`, `"flight"` or `"stop"`. Pins held back by `SuspendMapPins` are left out. The array is empty while the map
+is closed, in combat, and for a map Shortest Path doesn't draw on. To add your own, publish a copy of the table with
+your function in it rather than writing into a table another addon made. Read the global each time, since a later addon
+replaces it:
 
 ```lua
 local markers = {}
