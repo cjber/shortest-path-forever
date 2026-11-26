@@ -551,7 +551,7 @@ def main():
     )
     supplies = vendor_item_professions(db["npc_vendor"], item_professions)
     lines = header(
-        "DB2 item, spell and skill-line tables; classic-db creature, gameobject, trainer, battlemaster, vendor and spell tables."
+        "DB2 item, spell, skill-line tables; classic-db creature, object, trainer, battlemaster, vendor, spell tables."
     )
     lines += [
         "-- Food: items whose use spell has a MOD_REGEN aura (84); Drink: MOD_POWER_REGEN (85), one TRIGGER_SPELL",

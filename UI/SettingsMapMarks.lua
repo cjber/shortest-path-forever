@@ -129,16 +129,10 @@ function MapMarks.Register(rows)
 			ns.SetRouteColor(type(value) == "string" and value or nil)
 		end
 	)
-	rows.Dropdown(
-		"routeStyle",
-		L["Line style"],
-		L["The walking line on the world map and the minimap."],
-		{
-			{ key = "dotted", label = L["Dotted"] },
-			{ key = "solid", label = L["Solid"] },
-		},
-		ns.RefreshRouteLines
-	)
+	rows.Dropdown("routeStyle", L["Line style"], L["The walking line on the world map and the minimap."], {
+		{ key = "dotted", label = L["Dotted"] },
+		{ key = "solid", label = L["Solid"] },
+	}, ns.RefreshRouteLines)
 	rows.Checkbox(
 		"mapLine",
 		L["Line on the world map"],

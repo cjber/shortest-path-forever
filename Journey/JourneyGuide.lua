@@ -894,8 +894,7 @@ function Guide.TrackingChanged(event)
 		-- Waypoint UI's own write or tracking change: keep steering and never treat it as the player taking over.
 		return
 	end
-	local clearPlayerJourney =
-		event == "USER_WAYPOINT_UPDATED"
+	local clearPlayerJourney = event == "USER_WAYPOINT_UPDATED"
 		and guide.hasDriven
 		and not guide.yielded
 		and guide.goal

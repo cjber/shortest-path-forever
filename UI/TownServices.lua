@@ -20,7 +20,8 @@ local TEMPLATE = "ShortestPathForeverServicePinTemplate"
 local PIN_SIZE = 20
 -- The groups that make a town worth showing under "Capitals and important services": every trainer, the profession
 -- supplies (fishing, cooking and first aid included), books and recipes, the bank, the flight master and the inn.
-local IMPORTANT = { innkeeper = true, flight = true, bank = true, mailbox = true, trade = true, reagents = true, books = true }
+local IMPORTANT =
+	{ innkeeper = true, flight = true, bank = true, mailbox = true, trade = true, reagents = true, books = true }
 -- A town's service icon: the most useful thing the NPC offers, by section and then by the list's own order.
 local RANK = { services = 1, trainers = 2, vendors = 3 }
 
