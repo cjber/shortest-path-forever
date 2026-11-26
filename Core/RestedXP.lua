@@ -323,8 +323,13 @@ end)
 
 ns.Init(function()
 	watcher:RegisterEvent("ADDON_LOADED")
+	watcher:RegisterEvent("PLAYER_ENTERING_WORLD")
 	watcher:SetScript("OnEvent", function(self, event, name)
-		if event == "PLAYER_REGEN_ENABLED" then
+		if event == "PLAYER_ENTERING_WORLD" then
+			self:UnregisterEvent(event)
+			-- The restored guide can publish its first step before the player has a world position.
+			C_Timer.After(0, Sync)
+		elseif event == "PLAYER_REGEN_ENABLED" then
 			self:UnregisterEvent(event)
 			Sync()
 		elseif event == "ADDON_LOADED" then

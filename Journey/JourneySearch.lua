@@ -405,6 +405,12 @@ FinishSearch = function()
 	if search.replace then
 		keep = false
 	end
+	if not keep and followed and (UnitOnTaxi("player") or search.replace and planned == followed) then
+		-- Boarding can happen while the candidate is planning or its walks are being drawn.
+		-- Search again from the landing instead of committing to a route from before the flight.
+		costsWaiting = true
+		return
+	end
 	if not keep and planned and not planned.prepared then
 		PrepareWalks(planned)
 		if Walks.Pending() > 0 then
@@ -531,12 +537,14 @@ end
 ---@param forced boolean?
 ---@param replace boolean? the followed route is no longer valid
 local function RefreshCosts(includeGoal, forced, replace)
-	local here = Here()
-	if not (here and goal) then
-		return
-	end
 	CancelPaths()
 	search = { initial = not followed, forced = forced, replace = replace or (search and search.replace) }
+	local here = Here()
+	if not (here and goal) or (search.replace and followed and UnitOnTaxi("player")) then
+		costsWaiting = true
+		return
+	end
+	costsWaiting = nil
 	local owner = search
 	local version = pathVersion
 	local options = Context.Options(here, goal, routePolicy)
@@ -1230,13 +1238,12 @@ local function Poll(changed, replace)
 	end
 	-- No batch has started, or a callback waited for a readable position.
 	local stale = not startAt or costsWaiting
-	costsWaiting = nil
 	-- A journey started where no position could be read takes its hazards from the first one that can.
 	if not avoided then
 		Avoid()
 	end
 	-- Search callbacks may finish while position is unavailable; resume from readable endpoints.
-	if stale then
+	if stale and not (followed and UnitOnTaxi("player")) then
 		RefreshCosts(true, true)
 	end
 end

@@ -364,6 +364,39 @@ assert(ns.IsJourneyGuided(), "guidance is kept, not stopped and started")
 assert(API.CurrentStop("RestedXP") == 1, "the guide still owns the journey")
 driver.path.settle()
 assert(driver.shown() and driver.shown() ~= held, "the new plan replaces the drawn route once")
+-- A guide can also move its current stop across continents.
+local prior = assert(ns.JourneyPlan())
+ns.Portals = {
+	{
+		name = "Passage",
+		kind = "portal",
+		from = { map = 1, x = 200, y = 0 },
+		to = { map = 2, x = 200, y = 0 },
+		seconds = 5,
+	},
+}
+frame.element.zone = 2
+rxp.UpdateGotoSteps()
+assert(ns.JourneyGoal().map == 2, "the new continent is the active target")
+assert(ns.JourneyPlan() == prior and ns.IsJourneyGuided(), "the old guidance remains while crossing maps")
+assert(not ns.SkipJourneyStep(), "a retained leg cannot complete the new stop")
+driver.path.settle()
+local cross = assert(ns.JourneyPlan(), "the new journey has a route")
+assert(cross ~= prior and cross.legs[#cross.legs].to.map == 2, "the cross-continent plan takes over")
+local onTaxi = true
+local unitOnTaxi = env.UnitOnTaxi
+env.UnitOnTaxi = function()
+	return onTaxi
+end
+frame.element.zone = 1
+rxp.UpdateGotoSteps()
+driver.update(0.1)
+assert(ns.JourneyPlan() == cross, "a taxi in flight retains its route while the guide moves the target")
+onTaxi = false
+driver.update(0.1)
+local landed = assert(ns.JourneyPlan(), "a replacement is ready after landing")
+assert(landed ~= cross and landed.legs[#landed.legs].to.map == 1, "landing resumes planning for the new target")
+env.UnitOnTaxi = unitOnTaxi
 ns.StartJourney = restartJourney
 
 API.NavigateRoute = navigate

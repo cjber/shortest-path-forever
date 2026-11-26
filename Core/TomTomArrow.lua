@@ -19,7 +19,8 @@ local removing = false
 local suppressingReplacement = false
 local notifyingArrow = false
 local syncingVisibility = false
--- True only while TomTom actually holds our active step target (either our own waypoint or a repointed foreign one).
+local refreshQueued = false
+-- Whether selecting the current route target succeeded. TomTom can change the selection independently.
 local driven = false
 ---@type TomTomWaypoint?
 local currentUid
@@ -74,7 +75,8 @@ end
 -- failed, so UI/Arrow.lua and JourneyGuide.lua fall back to our own arrow and native marker.
 ---@return boolean
 function ns.TomTomArrowActive()
-	return driven and TomTomArrowEnabled()
+	local uid = currentUid or drivenForeign
+	return driven and TomTomArrowEnabled() and ns.TomTomArrowWaypoint() == uid
 end
 
 -- Recognised strictly by the waypoint table we created, or while suppressing TomTom's automatic arrow update caused
@@ -249,9 +251,25 @@ local function CurrentTarget()
 	return point, stop, goal
 end
 
+---@param tomtom TomTom
+---@param uid TomTomWaypoint
+local function PointArrow(tomtom, uid)
+	if ns.TomTomArrowWaypoint() == uid then
+		return true
+	end
+	if type(tomtom.SetCrazyArrow) ~= "function" then
+		return false
+	end
+	repointing = true
+	local ok = ns.core.SafeCall("TomTom arrow point", tomtom.SetCrazyArrow, tomtom, uid, 15, uid.title)
+	repointing = false
+	return ok and ns.TomTomArrowWaypoint() == uid
+end
+
 ---@param notifyArrow? boolean
 local function SyncDriven(notifyArrow)
 	local wasDriven = driven
+	local wasSelected = ns.TomTomArrowWaypoint() == (currentUid or drivenForeign)
 	if not TomTomArrowEnabled() then
 		ClearDriven()
 		if notifyArrow and wasDriven ~= driven then
@@ -286,6 +304,7 @@ local function SyncDriven(notifyArrow)
 	end
 	if
 		driven
+		and wasSelected
 		and currentMap == uiMap
 		and currentX == x
 		and currentY == y
@@ -296,31 +315,19 @@ local function SyncDriven(notifyArrow)
 		return
 	end
 	local preexisting = ns.TomTomWaypointAt and ns.TomTomWaypointAt(tomtom, uiMap, x, y, title)
-	if preexisting and not ownWaypoints[preexisting] then
-		-- A foreign waypoint already sits at this exact map, point and title: point at it without claiming or
-		-- overwriting it, so clearing our journey never removes the player's or another addon's waypoint.
-		ClearDriven()
-		if type(tomtom.SetCrazyArrow) == "function" then
-			repointing = true
-			local ok =
-				ns.core.SafeCall("TomTom arrow point", tomtom.SetCrazyArrow, tomtom, preexisting, 15, preexisting.title)
-			repointing = false
-			if ok then
-				driven = true
+	if preexisting then
+		-- TomTom deduplicates on map, point and title. A matching foreign waypoint can be selected but stays foreign.
+		if preexisting ~= currentUid then
+			ClearDriven()
+			if ownWaypoints[preexisting] then
+				currentUid = preexisting
+			else
 				drivenForeign = preexisting
-				currentMap, currentX, currentY, currentTitle = uiMap, x, y, title
 			end
 		end
-		if notifyArrow and wasDriven ~= driven then
-			NotifyDrivenChanged()
-		end
-		return
-	end
-	if preexisting and preexisting == currentUid then
-		driven = true
-		drivenForeign = nil
+		driven = PointArrow(tomtom, preexisting)
 		currentMap, currentX, currentY, currentTitle = uiMap, x, y, title
-		if notifyArrow and wasDriven ~= driven then
+		if notifyArrow and (wasDriven ~= driven or (driven and not wasSelected)) then
 			NotifyDrivenChanged()
 		end
 		return
@@ -338,31 +345,50 @@ local function SyncDriven(notifyArrow)
 		cleardistance = 0,
 	})
 	adding = false
-	if ok and type(uid) == "table" and uid ~= preexisting then
+	if ok and type(uid) == "table" then
 		ownWaypoints[uid] = true
 		currentUid = uid
 		drivenForeign = nil
-		driven = true
 		replacedArrowUid = nil
 		currentMap, currentX, currentY, currentTitle = uiMap, x, y, title
 		if previous and previous ~= uid then
 			RemoveOwnWaypoint(tomtom, previous, false)
-			if
-				ns.TomTomArrowWaypoint
-				and ns.TomTomArrowWaypoint() ~= uid
-				and type(tomtom.SetCrazyArrow) == "function"
-			then
-				repointing = true
-				ns.core.SafeCall("TomTom arrow point", tomtom.SetCrazyArrow, tomtom, uid, 15, title)
-				repointing = false
-			end
 		end
+		driven = PointArrow(tomtom, uid)
 	else
 		ClearDriven()
 	end
-	if notifyArrow and wasDriven ~= driven then
+	if notifyArrow and (wasDriven ~= driven or (driven and not wasSelected)) then
 		NotifyDrivenChanged()
 	end
+end
+
+-- SetCrazyArrow can run inside AddWaypoint, and ClearWaypoint inside RemoveWaypoint or ReloadWaypoints.
+-- Recheck after those calls finish changing TomTom's waypoint tables.
+function ns.QueueTomTomArrowRefresh()
+	if
+		refreshQueued
+		or adding
+		or repointing
+		or removing
+		or not activePoints
+		or not TomTomArrowEnabled()
+		or ns.TomTomArrowActive()
+	then
+		return
+	end
+	refreshQueued = true
+	C_Timer.After(0, function()
+		refreshQueued = false
+		local selected = ns.TomTomArrowWaypoint()
+		local tomtom = ns.RealTomTom()
+		if
+			(selected and selected.corpse) or (tomtom and tomtom.CrazyArrowIsHijacked and tomtom:CrazyArrowIsHijacked())
+		then
+			return
+		end
+		SyncDriven(true)
+	end)
 end
 
 -- Called by UI/Arrow.lua inside PointGuideArrow before checking ArrowShown (or by the fallback PointGuideArrow hook

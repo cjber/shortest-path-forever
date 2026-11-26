@@ -133,16 +133,105 @@ assert(starts == startsBefore, "an arrow re-pointed at the journey's own stop st
 assert(searches == searchesBefore, "and searches nothing")
 assert(ns.IsJourneyGuided() and driver.waypoint(), "guidance survives the echo")
 assert(API.CurrentStop("Guide") == 1, "the journey is still the guide's")
-echo:UnregisterAllEvents()
+echo:SetScript("OnEvent", nil)
 
 -- A player picking a quest of their own ends the guide's waypoint. When the guide then moves to another objective,
--- that destination is a guide instruction, not the player's: the guide leads again instead of leaving no marker.
+-- the held route must leave the quest tracked until the new plan can lead to the new objective.
 env.C_SuperTrack.SetSuperTrackedQuestID(999)
 driver.update(0)
 assert(driver.waypoint() == nil and not ns.JourneyPinTracked(), "the player's quest selection takes the marker")
 assert(API.NavigateRoute("Guide", { stop(ONE_MAP, "Objective One") }))
-assert(ns.JourneyPinTracked(), "the guide leads again for the objective it moved to")
-assert(driver.waypoint() ~= nil, "with its waypoint written afresh")
+assert(driver.waypoint() == nil and not ns.JourneyPinTracked(), "the held route does not reclaim the marker")
+assert(env.C_SuperTrack.GetSuperTrackedQuestID() == 999, "the quest stays tracked while the new objective plans")
 driver.path.settle()
+assert(ns.JourneyPinTracked(), "the guide leads again once the replacement plan is ready")
+assert(driver.waypoint() ~= nil and endsAt(planned(), ONE), "the new plan has a waypoint")
 
-print("journey retarget: a guide re-pointing at its stop keeps the journey")
+do
+	ns.ClearJourney()
+	local instance = 33
+	ns.Entrances = { [instance] = { map = 1, x = ONE.x, y = ONE.y, name = "Test Dungeon" } }
+	local inside = false
+	env.GetInstanceInfo = function()
+		return nil, nil, nil, nil, nil, nil, nil, inside and instance or nil
+	end
+	env.GetRealZoneText = function()
+		return "Test Dungeon"
+	end
+	local first = { map = instance, x = 0.4, y = 0.5, title = "First objective" }
+	local moved = { map = instance, x = 0.42, y = 0.5, title = "Moved objective" }
+	local nextStop = stop(TWO_MAP, "Next stop")
+	assert(API.NavigateRoute("Guide", { first, nextStop }))
+	driver.path.settle()
+	local doorPlan, searchCount = ns.JourneyPlan(), searches
+	assert(API.NavigateRoute("Guide", { moved, nextStop }))
+	assert(goal().stop.label == moved.title, "the shared door represents the replacement objective")
+	assert(ns.JourneyPlan() == doorPlan and searches == searchCount, "the shared door keeps its settled route")
+	inside = true
+	driver.fire("PLAYER_ENTERING_WORLD")
+	driver.update(0.1)
+	assert(API.CurrentStop("Guide") == 2, "entering the dungeon advances to the next stop")
+end
+
+do
+	ns.ClearJourney()
+	driver.move({ map = 1, x = 0, y = 0, z = 0 })
+	assert(API.NavigateRoute("Guide", { stop(ONE_MAP, "Old stop") }))
+	driver.path.settle()
+	local retained = ns.JourneyPlan()
+	assert(API.NavigateRoute("Guide", { stop(TWO_MAP, "New stop") }))
+
+	local dead = true
+	ns.Corpse = {
+		Active = function()
+			return dead
+		end,
+	}
+	ns.SuspendJourney()
+	driver.move(ONE)
+	driver.path.auto = false
+	dead = false
+	ns.ResumeJourney()
+	assert(ns.JourneyPlan() == retained, "resurrection keeps the displayed route until the replacement settles")
+	driver.update(0.1)
+	assert(goal() and goal().label == "New stop", "reaching the superseded route's end after resurrection cannot arrive")
+	driver.path.auto = true
+	driver.path.settle()
+	assert(endsAt(planned(), TWO), "the resumed replacement reaches the new stop")
+end
+
+do
+	ns.ClearJourney()
+	driver.move({ map = 1, x = 0, y = 0, z = 0 })
+	assert(API.NavigateRoute("Guide", { stop(ONE_MAP, "Old stop") }))
+	driver.path.settle()
+	local retained = ns.JourneyPlan()
+	local path = driver.path
+	local find = path.Path.Find
+	path.Path.Find = function(...)
+		path.auto = false
+		return find(...)
+	end
+	assert(API.NavigateRoute("Guide", { stop(TWO_MAP, "New stop") }))
+	path.settle()
+	path.Path.Find = find
+	assert(#path.waiting(path.finds) > 0 and ns.JourneyPlan() == retained, "replacement walk geometry is pending")
+
+	local flying = true
+	env.UnitOnTaxi = function()
+		return flying
+	end
+	path.auto = true
+	path.settle()
+	assert(ns.JourneyPlan() == retained, "a replacement walk cannot take over after taxi boarding")
+	driver.update(0.1)
+	assert(ns.JourneyPlan() == retained, "the replacement continues to wait in flight")
+	flying = false
+	local landing = { map = 1, x = 500, y = 0, z = 0 }
+	driver.move(landing)
+	driver.update(0.1)
+	local legs = planned()
+	assert(endsAt(legs, TWO) and legs[1].from.x == landing.x, "the replacement starts at the taxi landing")
+end
+
+print("journey retarget: guide updates preserve stop identity and the followed route")
