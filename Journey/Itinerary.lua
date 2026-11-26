@@ -307,6 +307,7 @@ local function CopyWords(into, from)
 		or into.routeTitle ~= from.routeTitle
 		or into.number ~= from.number
 		or into.unmarked ~= from.unmarked
+		or into.unfaded ~= from.unfaded
 		or not SameList(into.details, from.details)
 		or not SameList(into.questIDs, from.questIDs)
 		or not SameList(into.handins, from.handins)
@@ -327,6 +328,7 @@ local function CopyWords(into, from)
 	into.routeTitle = from.routeTitle
 	into.number = from.number
 	into.unmarked = from.unmarked
+	into.unfaded = from.unfaded
 	return changed
 end
 
@@ -376,9 +378,9 @@ function ns.ResubmitRoute(route, points)
 	if not old or (moved ~= route.index and old.map ~= points[moved].map) then
 		return nil
 	end
-	-- The pins' switch belongs to the whole submission, whichever stop moved.
+	-- The pins' and the lines' switches belong to the whole submission, whichever stop moved.
 	for index, point in ipairs(points) do
-		previous[index].unmarked = point.unmarked
+		previous[index].unmarked, previous[index].unfaded = point.unmarked, point.unfaded
 	end
 	previous[moved] = points[moved]
 	if moved == route.index then

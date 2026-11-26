@@ -1,6 +1,6 @@
 # Addon API
 
-Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 9`) with uiMapIDs and normalized 0-1 coordinates.
+Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 10`) with uiMapIDs and normalized 0-1 coordinates.
 Version 2 removes peer sharing and `Leaderboard`; callers must accept versions 1 and 2 and reject future versions. Check that a function exists before calling it, because an older
 addon may not have it yet. The full types are in [`types/API.lua`](../types/API.lua). On ForeverCore 1.3.2 or
 later, the API is also listed by `ForeverCore.APIKit.Addons()`.
@@ -18,6 +18,7 @@ the addon can use it once it shows the requested map.
 
 ## Minor history
 
+- Version 2, `minor = 10` adds `SetArrowShown` and `NavigateRoute`'s `fadeLaterLegs` option.
 - Version 2, `minor = 9` adds `SuspendMapPins` and `ResumeMapPins`.
 - Version 2, `minor = 8` adds `NavigateRoute`'s `stopMarkers` option.
 - Version 2, `minor = 7` adds `WalkPath`.
@@ -79,7 +80,10 @@ the addon can use it once it shows the requested map.
   is walking yards between the stops. A walk that cannot be measured shows in `JourneyState().failure`.
   `{ stopMarkers = false }` draws the route line on the world map without a pin at any stop, for a caller that marks its
   own places; the default is `true`, and the tracker and arrow still read "Stop 2 of 4: ...". It belongs to that
-  journey and ends with it. Any other options table, key, policy or non-boolean `stopMarkers` answers
+  journey and ends with it.
+  `{ fadeLaterLegs = false }` draws the world map's legs past the current stop at full strength, for a loop whose
+  whole shape matters; the default is `true`. Stop pins keep their own look, and it too belongs to that journey.
+  Any other options table, key, policy or non-boolean switch answers
   `nil, "invalid"` and changes nothing. A route keeps its policy until the
   same owner or another one submits again.
   A route whose only stop is the place the journey already goes to hands the journey over rather than starting it
@@ -172,6 +176,13 @@ the addon can use it once it shows the requested map.
 
 Use your addon's name as `owner`; starting another journey replaces ownership.
 
+- `SetArrowShown(owner, false)` hides the arrow's frame, with its arrival pin, for an addon that draws its own
+  arrow. It covers every journey, the player's included. Shortest Path keeps owning the user waypoint, so the game's
+  marker follows each bend, and `Guidance` answers as before. A guide addon's arrow stays hidden wherever Shortest
+  Path's would have kept it hidden. `SetArrowShown(owner, true)` releases that owner's hold, and the frame returns
+  once no owner holds it. A hold lasts until released or the next reload, so ask again after each login. The cast
+  prompt still shows, and with the player's *Show arrow* setting off there is neither frame nor marker. It returns
+  `true`, or `nil, "invalid"` for a blank owner or a non-boolean `shown`.
 - `SuspendMapPins(owner)` hides the world map pins Shortest Path draws apart from the journey under way: docks,
   portals, flight points, nearby services, the hearth and the rest stay off the map while the route line and its stop
   pins stay, and `ResumeMapPins(owner)` releases that owner. Several owners may hold at once and the pins return
