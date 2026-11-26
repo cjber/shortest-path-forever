@@ -44,7 +44,7 @@ end
 
 -- What is there to call: version 2, minor 10, and every function the hand-off checks before calling it.
 equal(API.version, 2, "version 2 removes peer and leaderboard APIs")
-equal(API.minor, 10, "minor 10 adds SetArrowShown and fadeLaterLegs")
+equal(API.minor, 11, "minor 11 adds the skipped result of Ended")
 for _, name in ipairs({
 	"NavigateRoute",
 	"ObserveStops",

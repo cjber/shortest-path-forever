@@ -235,7 +235,7 @@ function ns.JourneyStops()
 end
 
 ---@class SPFPublicAPI
-local API = { version = 2, minor = 10 }
+local API = { version = 2, minor = 11 }
 
 local function Differs(a, b)
 	for key, value in pairs(a) do
