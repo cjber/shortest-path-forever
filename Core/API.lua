@@ -655,34 +655,12 @@ local function NavigateRoute(owner, stops, policy, markers, fade)
 	return ns.StartJourney(points[1], policy)
 end
 
--- A route's options: its travel policy, "normal" or "walking", whether its stops draw pins on the world map, and
--- whether the legs past the current stop draw faded. Anything else is the caller's mistake, answered as one.
----@param options any
----@return SPFRoutePolicy?, boolean?, boolean?
-local function RouteOptions(options)
-	if not canaccessvalue(options) or (options ~= nil and type(options) ~= "table") then
-		return nil
-	end
-	local chosen = { policy = "normal", stopMarkers = true, fadeLaterLegs = true }
-	for key, value in pairs(options or {}) do
-		if not (canaccessvalue(key) and chosen[key] ~= nil and canaccessvalue(value)) then
-			return nil
-		end
-		chosen[key] = value
-	end
-	local policy = chosen.policy --[[@as SPFRoutePolicy]]
-	local markers, fade = chosen.stopMarkers, chosen.fadeLaterLegs
-	if (policy == "normal" or policy == "walking") and type(markers) == "boolean" and type(fade) == "boolean" then
-		return policy, markers, fade
-	end
-end
-
 ---@param owner string
 ---@param stops SPFAPIStop[]
 ---@param options? SPFAPIRouteOptions
 ---@return boolean|nil, ForeverCoreAPIInvalid?
 function API.NavigateRoute(owner, stops, options)
-	local policy, markers, fade = RouteOptions(options)
+	local policy, markers, fade = Input.RouteOptions(options)
 	if not policy then
 		return APIKit.Invalid()
 	end
