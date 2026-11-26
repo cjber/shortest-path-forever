@@ -10,6 +10,24 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.47.0] - 2026-11-26
+
+<!-- discord-image: docs/screenshots/darkshore.png -->
+
+### Added
+
+- Addons with their own arrow can hide Shortest Path's while the game's waypoint marker keeps following your route.
+- Route to your map pin in Guidance, on by default: turn it off to keep the game's map pin without starting a journey. Shift- and Alt-click still plan journeys. Thanks to xh43k for the report. (#1391)
+
+### Fixed
+
+- With the RestedXP TomTom bridge, TomTom's arrow stays through RestedXP guide steps and waypoints you set in TomTom: during those guides the bridge keeps TomTom's arrow and Shortest Path's own arrow shows the route. Thanks to forleong for the report. (#1390)
+
+### For addon authors
+
+- `SetArrowShown(owner, shown)` (API minor 10) hides or returns the arrow's frame; the waypoint stays Shortest Path's. (#1308)
+- `NavigateRoute` takes `fadeLaterLegs = false` to draw a loop's later legs at full strength on the world map. (#1388)
+
 ## [1.46.0] - 2026-11-26
 
 <!-- discord-image: docs/screenshots/darkshore.png -->
