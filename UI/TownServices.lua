@@ -20,7 +20,8 @@ local TEMPLATE = "ShortestPathForeverServicePinTemplate"
 local PIN_SIZE = 20
 -- The groups that make a town worth showing under "Capitals and important services": every trainer, the profession
 -- supplies (fishing, cooking and first aid included), books and recipes, the bank, the flight master and the inn.
-local IMPORTANT = { innkeeper = true, flight = true, bank = true, trade = true, reagents = true, books = true }
+local IMPORTANT =
+	{ innkeeper = true, flight = true, bank = true, mailbox = true, trade = true, reagents = true, books = true }
 -- A town's service icon: the most useful thing the NPC offers, by section and then by the list's own order.
 local RANK = { services = 1, trainers = 2, vendors = 3 }
 
@@ -38,6 +39,7 @@ local FILTERS = {
 	{ option = "townServiceStable", label = L["Stable master"], groups = { stable = true } },
 	{ option = "townServiceRepair", label = L["Repair"], groups = { repair = true } },
 	{ option = "townServiceBank", label = L["Bank"], groups = { bank = true } },
+	{ option = "townServiceMailbox", label = L["Mailbox"], groups = { mailbox = true } },
 	{ option = "townServiceTransmog", label = L["Transmogrifier"], groups = { transmog = true } },
 	{ option = "townServiceAuction", label = L["Auction house"], groups = { auction = true } },
 	{ option = "townServiceBattlemaster", label = L["Battlemaster"], groups = { battlemaster = true } },
@@ -91,7 +93,7 @@ local function GroupShown(group)
 end
 ns.TownServiceGroupShown = GroupShown
 
--- Whether the group's NPCs are on the map: its own choice, under a town services layer that is on.
+-- Whether the group's places are on the map: its own choice, under a town services layer that is on.
 ---@param group SPFNearbyGroup
 ---@return boolean
 function ns.TownServiceOnMap(group)
@@ -136,15 +138,16 @@ ns.TownServiceChoices = {
 }
 
 ---@class SPFTownService
----@field id integer the NPC's id
----@field key string the NPC and map, which a re-read of the database can change
+---@field id integer the NPC or static place id
+---@field npc? integer the NPC this service reaches; static services have no NPC
+---@field key string the place and map, which a re-read of the database can change
 ---@field name string
 ---@field title? string
----@field world SPFPoint the spawn nearest the middle of the NPC's route on that map
+---@field world SPFPoint the spawn on that map
 ---@field map integer the zone map the spawn is on
 ---@field x number the chosen spawn's map fraction
 ---@field y number the chosen spawn's map fraction
----@field groups SPFNearbyGroup[] what the NPC offers, in the list's order
+---@field groups SPFNearbyGroup[] what the place offers, in the list's order
 ---@field capitalUiMap? integer the capital the NPC stands in
 
 ---@class SPFTownServicePoint
@@ -319,6 +322,7 @@ local function Build()
 				if not entry then
 					entry = {
 						id = place.id,
+						npc = place.npc,
 						key = key,
 						name = place.name,
 						title = place.title,

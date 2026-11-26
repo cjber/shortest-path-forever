@@ -332,6 +332,45 @@ local function RefreshWaypointPins()
 	end)
 end
 
+-- What Guide wrote (incl. the player's restored pin) and the client has not reported yet; auto-routing skips it.
+---@class SPFGuideSettled
+---@field waypoint table?
+---@field waypointPending boolean?
+---@field quest number?
+---@field tracked boolean?
+---@field kind Enum.SuperTrackingType?
+---@field trackingPending boolean?
+
+---@type SPFGuideSettled?
+local settled
+local stopping
+
+---@param waypoint table?
+---@return table?
+local function CopyWaypoint(waypoint)
+	if waypoint then
+		local position = waypoint.position
+		return { uiMapID = waypoint.uiMapID, position = { x = position.x, y = position.y }, z = waypoint.z }
+	end
+end
+
+-- Record what Guide left behind after its final writes, for the deferred events those writes raise.
+---@param waypoint boolean whether it wrote the user waypoint
+---@param tracking boolean whether it wrote the super-tracked state
+local function Settled(waypoint, tracking)
+	settled = {
+		waypoint = waypoint and CopyWaypoint(C_Map.GetUserWaypoint()) or nil,
+		waypointPending = waypoint or nil,
+		quest = C_SuperTrack.GetSuperTrackedQuestID(),
+		tracked = C_SuperTrack.IsSuperTrackingUserWaypoint(),
+		kind = C_SuperTrack.GetHighestPrioritySuperTrackingType(),
+		trackingPending = tracking or nil,
+	}
+	if not (settled.waypointPending or settled.trackingPending) then
+		settled = nil
+	end
+end
+
 local function ClearOrphanWaypoint()
 	local saved = ns.charDB.guideWaypoint
 	if guide or not saved then
@@ -343,6 +382,7 @@ local function ClearOrphanWaypoint()
 	local point = UiMapPoint.CreateFromCoordinates(saved.uiMapID, saved.x, saved.y)
 	if SameWaypoint(C_Map.GetUserWaypoint(), point) then
 		local borrowed = saved.borrowed
+		stopping = true
 		local restored = borrowed
 			and C_Map.SetUserWaypoint(
 				UiMapPoint.CreateFromCoordinates(borrowed.uiMapID, borrowed.position.x, borrowed.position.y, borrowed.z)
@@ -351,6 +391,8 @@ local function ClearOrphanWaypoint()
 			C_Map.ClearUserWaypoint()
 		end
 		C_SuperTrack.SetSuperTrackedUserWaypoint(restored and saved.borrowedTracked == true or false)
+		stopping = nil
+		Settled(true, true)
 		RefreshWaypointPins()
 	end
 end
@@ -375,48 +417,6 @@ local function SameTracking(state)
 	return state.expectedQuest == quest
 		and state.expectedTrackedWaypoint == waypoint
 		and state.expectedTrackingType == kind
-end
-
--- Tracking Guide itself wrote and the client has not reported yet: the pin it restored when it stopped, and the
--- quest and waypoint it handed back. Auto-routing (JourneyInput.lua) reads these so none of them counts as the
--- player focusing a quest or placing a pin.
----@class SPFGuideSettled
----@field waypoint table?
----@field waypointPending boolean?
----@field quest number?
----@field tracked boolean?
----@field kind Enum.SuperTrackingType?
----@field trackingPending boolean?
-
----@type SPFGuideSettled?
-local settled
-local stopping
-
----@param waypoint table?
----@return table?
-local function CopyWaypoint(waypoint)
-	if not waypoint then
-		return nil
-	end
-	local position = waypoint.position
-	return { uiMapID = waypoint.uiMapID, position = { x = position.x, y = position.y }, z = waypoint.z }
-end
-
--- Record what Guide left behind after its final writes, for the deferred events those writes raise.
----@param waypoint boolean whether it wrote the user waypoint
----@param tracking boolean whether it wrote the super-tracked state
-local function Settled(waypoint, tracking)
-	settled = {
-		waypoint = waypoint and CopyWaypoint(C_Map.GetUserWaypoint()) or nil,
-		waypointPending = waypoint or nil,
-		quest = C_SuperTrack.GetSuperTrackedQuestID(),
-		tracked = C_SuperTrack.IsSuperTrackingUserWaypoint(),
-		kind = C_SuperTrack.GetHighestPrioritySuperTrackingType(),
-		trackingPending = tracking or nil,
-	}
-	if not (settled.waypointPending or settled.trackingPending) then
-		settled = nil
-	end
 end
 
 local function SettledChanged(event)
@@ -580,7 +580,7 @@ local function MarkerLeads()
 end
 
 local function GuideWaypoint(point, fading)
-	if not guide then
+	if not guide or (ns.TomTomArrowActive and ns.TomTomArrowActive()) then
 		return false
 	end
 	-- The bend callback can run before deferred notifications of a player's waypoint or tracking change.
@@ -729,17 +729,16 @@ function Guide.To(node, points, goal, leg)
 		guide.pausedGoal = nil
 		RefreshTracker()
 	end
-	if ns.db.arrow == false and guide.waypoint then
-		if not OwnsWaypoint() then
-			return
-		end
-		ClearGuideWaypoint()
-	end
 	guide.points = points
 	guide.target = node
 	GuideTitle(goal)
 	local point = node.kind == "dock" and ns.DockPoint(node.id) or node
 	ns.PointGuideArrow(points or { point }, GuideWaypoint, node, goal)
+	if (ns.db.arrow == false or (ns.TomTomArrowActive and ns.TomTomArrowActive())) and guide and guide.waypoint then
+		if OwnsWaypoint() then
+			ClearGuideWaypoint()
+		end
+	end
 end
 
 -- Keep the owner's stop while it waits for quest progress, without directions to a place already reached. The arrow
@@ -895,8 +894,19 @@ function Guide.TrackingChanged(event)
 		-- Waypoint UI's own write or tracking change: keep steering and never treat it as the player taking over.
 		return
 	end
+	local clearPlayerJourney = event == "USER_WAYPOINT_UPDATED"
+		and guide.hasDriven
+		and not guide.yielded
+		and guide.goal
+		and (guide.goal.questID ~= nil or #(guide.goal.questIDs or {}) > 0)
+		and C_Map.GetUserWaypoint() == nil
+		and (not ns.JourneyOwner or ns.JourneyOwner() == nil)
 	if not OwnsWaypoint() then
-		RefreshTracker()
+		if clearPlayerJourney and ns.ClearJourney then
+			ns.ClearJourney()
+		else
+			RefreshTracker()
+		end
 	elseif event == "SUPER_TRACKING_CHANGED" and not SameTracking(guide) then
 		YieldGuide()
 	end
@@ -953,63 +963,3 @@ ns.Init(function()
 		end)
 	end
 end)
-
--- Copy the active guide for companion navigators through the public API's map projection.
----@param project fun(point: SPFPoint): SPFAPIPlace?
----@return SPFAPIGuidance?, SPFAPIGuidanceReason?
-function ns.JourneyGuidance(project)
-	-- A corpse run borrows guidance while the journey setting waits, so it still has a point to give.
-	local corpse = ns.Corpse ~= nil and ns.Corpse.Active()
-	if ns.db.journey == false and not corpse then
-		return nil, "disabled"
-	end
-	if Guide and Guide.Paused() then
-		return nil, "paused"
-	end
-	if Guide and Guide.Casting() then
-		return nil, "cast"
-	end
-	local target, source, index
-	if ns.GuideState then
-		target, source, index = ns.GuideState()
-	end
-	if not (target and source and index) then
-		-- A first plan still being searched has no point to give yet, exactly as the tracker shows a spinner.
-		local _, _, _, loading = ns.JourneyStatus()
-		if loading then
-			return nil, "loading"
-		end
-		if ns.HasJourney and ns.HasJourney() then
-			return nil, "paused"
-		end
-		return nil, "none"
-	end
-	local waypoints = {}
-	for at = 1, #source do
-		local place = project(source[at])
-		if not place then
-			return nil, "unavailable"
-		end
-		waypoints[at] = place
-	end
-	local point = project(target)
-	if not (point and index >= 1 and index <= #waypoints) then
-		return nil, "unavailable"
-	end
-	-- A corpse run is the guidance under way while it lasts, and reports itself as the player's own, as Journey does.
-	local owner = ns.JourneyOwner()
-	local leg
-	if ns.Corpse and ns.Corpse.Active() then
-		leg, owner = select(4, ns.Corpse.Info()) or 1, nil
-	else
-		local _, current = ns.JourneyPlan()
-		leg = current or 1
-	end
-	return {
-		owner = owner,
-		leg = leg,
-		point = point,
-		waypoints = waypoints,
-		index = index,
-	}
-end

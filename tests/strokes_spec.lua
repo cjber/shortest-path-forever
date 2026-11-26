@@ -157,6 +157,14 @@ check(close(dots(strokes)[2][1] - dots(strokes)[1][1], SMALL_SPACING), "and a sm
 Strokes.Map(strokes, { { mode = "walk", points = { point(0.1, 0.5), point(0.11, 0.5) } } }, mapView())
 check(strokes.n == 2, "the buffer is reused")
 
+-- The saved style changes the walking producer for both surfaces, while the default above remains dotted.
+ns.db = { routeStyle = "solid" }
+Strokes.Map(strokes, { bend }, mapView())
+check(strokes.n == 2 and not strokes.dot[1] and not strokes.dot[2], "solid world-map walking lines are continuous")
+Strokes.Minimap(strokes, { bend }, minimapView(point(0.2, 0.5)))
+check(strokes.n == 2 and not strokes.dot[1] and not strokes.dot[2], "solid minimap walking lines are continuous")
+ns.db = nil
+
 -- Every other mode is a solid line in its colour, inside a darker outline two pixels wider.
 Strokes.Map(strokes, { { mode = "lift", points = bend.points, route = 7 } }, mapView())
 check(strokes.n == 2 and not strokes.dot[1] and strokes.color[1] == "lift", "one line per segment")

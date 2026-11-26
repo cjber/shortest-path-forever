@@ -72,6 +72,7 @@ local SERVICES = {
 		icon = "poi-transmogrifier",
 		tracking = "poi-transmogrifier",
 	},
+	{ key = "mailbox", label = L["Mailbox"], icon = "Mailbox", tracking = "Mailbox" },
 }
 
 -- The trainers' map art, by group key: the class trainer's book, the weapon master's sword and the battlemaster's

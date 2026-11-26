@@ -248,8 +248,8 @@ L["Sizes flight master icons on the world map."] =
 L["Sizes transport icons on the minimap."] =
 	"Размер значков транспорта на мини-карте."
 L["Stable master"] = "Хозяин стойл"
-L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no map click. A guide addon's own journey is left alone."] =
-	"Начинает маршрут, когда вы выбираете задание или ставите метку на карте игры, так что геймпаду не нужен щелчок по карте. Маршрут аддона-гида не затрагивается."
+L["Starts a journey when you super-track a quest or a flight point, so a controller needs no map click. A guide addon's own journey is left alone."] =
+	"Начинает маршрут, когда вы выбираете задание или пункт полёта, так что геймпаду не нужен щелчок по карте. Маршрут аддона-гида не затрагивается."
 L["Stop %d of %d"] = "Остановка %d из %d" -- mt
 L["Stop %d of %d: %s"] = "Остановка %d из %d: %s"
 L["Teleport to %s"] = "Телепорт: %s"
@@ -394,6 +394,9 @@ L["Travel to my tracked quest"] = "Отправиться к отслежива�
 L["no map pin is set."] = "метка на карте не установлена."
 L["no quest is tracked."] = "нет отслеживаемого задания."
 L["Walking route colour"] = "Цвет пешего маршрута"
+L["Line style"] = "Стиль линии" -- mt
+L["Dotted"] = "Пунктирная" -- mt
+L["Solid"] = "Сплошная" -- mt
 L["The walking line on the world map and the minimap."] =
 	"Пешая линия на карте мира и миникарте."
 L["Line on the world map"] = "Линия на карте мира" -- mt
@@ -479,8 +482,6 @@ L["Journeys are off. Turn on Enable journeys in settings."] =
 L["Key to plan a journey"] = "Клавиша для планирования маршрута" -- mt
 L["The key you hold to plan a journey from the world map or the minimap."] =
 	"Клавиша, которую вы удерживаете, чтобы проложить маршрут с карты мира или мини-карты." -- mt
-L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
-	"На значке Questie Shift+щелчок остается за Questie; Alt+щелчок прокладывает туда маршрут при любой из двух клавиш." -- mt
 L["Show the journey key hint in tooltips"] =
 	"Показывать подсказку о клавише маршрута во всплывающих подсказках" -- mt
 L["Show the journey key hint on the minimap"] =
@@ -677,9 +678,23 @@ L["You've used %s portals or passages."] =
 	"Вы воспользовались порталами или переходами %s раз." -- mt
 L["You've used your first portal or passage."] =
 	"Вы впервые воспользовались порталом или переходом." -- mt
-L["Walks reach Undercity's Royal Quarter, War Quarter and Apothecarium."] =
-	"Пешие маршруты ведут в Королевский квартал, Военный квартал и Аптекарский квартал Подгорода." -- mt
 L["Minimap walking route size"] = "Размер пешего маршрута на мини-карте" -- mt
 L["Sizes the walking dots on the minimap."] =
 	"Меняет размер точек пешего маршрута на мини-карте." -- mt
 L["Descend underground"] = "Спуститесь под землю" -- mt
+L["%s-click to plan a journey to this flight master"] =
+	"%s-щелчок: проложить путь к этому распорядителю полетов" -- mt
+L["Alt-click a Questie quest-start icon to plan a journey to the quest giver, whichever key you choose here."] =
+	"Alt-щелчок по значку начала задания Questie прокладывает путь к тому, кто выдает задание, какую бы клавишу вы здесь ни выбрали." -- mt
+L["Show the Nearby services map button"] =
+	"Показать кнопку «Услуги поблизости» на карте" -- mt
+L["A button on the world map. Left-click opens Nearby services; right-click chooses which services show on the map."] =
+	"Кнопка на карте мира. ЛКМ открывает «Услуги поблизости»; ПКМ выбирает услуги для отображения на карте." -- mt
+L["Left-click to open Nearby services."] = "ЛКМ, чтобы открыть «Услуги поблизости»." -- mt
+L["Right-click to choose map services."] = "ПКМ, чтобы выбрать услуги на карте." -- mt
+L["Use TomTom's arrow"] = "Использовать стрелку TomTom" -- mt
+L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
+	"Если установлен TomTom, направляет стрелку TomTom на каждый шаг вместо нашей стрелки и игрового маркера." -- mt
+L["A guide step on another continent keeps the old route on screen while the new one plans."] =
+	"Шаг руководства на другом континенте сохраняет старый маршрут на экране, пока планируется новый." -- mt
+L["Mailbox"] = "Почтовый ящик" -- mt

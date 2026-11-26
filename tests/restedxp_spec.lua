@@ -132,6 +132,31 @@ combat = false
 watcher:OnEvent("PLAYER_REGEN_ENABLED")
 driver.path.settle()
 assert(starts == 1 and API.CurrentStop("RestedXP") == 1, "combat end uses the latest target")
+-- A target that changes during combat cancels the stale journey; if it moves back to the original spot before combat
+-- ends, ending combat must still restart the journey rather than treating the cancelled target as unchanged (#1349).
+starts = 0
+combat = true
+frame.element.x = 75
+rxp.UpdateGotoSteps()
+assert(not API.CurrentStop("RestedXP"), "a target change during combat cancels the old journey")
+frame.element.x = 70
+rxp.UpdateGotoSteps()
+combat = false
+watcher:OnEvent("PLAYER_REGEN_ENABLED")
+driver.path.settle()
+assert(
+	starts == 1 and API.CurrentStop("RestedXP") == 1,
+	"returning to the pre-combat target before combat ends still restarts the cancelled journey"
+)
+-- A manual cancellation before combat is still respected when the target never moved during combat.
+API.Cancel("RestedXP")
+starts = 0
+combat = true
+rxp.UpdateGotoSteps()
+combat = false
+watcher:OnEvent("PLAYER_REGEN_ENABLED")
+driver.path.settle()
+assert(starts == 0 and not API.CurrentStop("RestedXP"), "combat does not undo a manual cancel on an unchanged target")
 API.Navigate("Other", 1, 0.6, 0.5, "Player destination")
 rxp.UpdateGotoSteps()
 assert(API.CurrentStop("Other") == 1, "same target does not take over another journey")
@@ -339,6 +364,39 @@ assert(ns.IsJourneyGuided(), "guidance is kept, not stopped and started")
 assert(API.CurrentStop("RestedXP") == 1, "the guide still owns the journey")
 driver.path.settle()
 assert(driver.shown() and driver.shown() ~= held, "the new plan replaces the drawn route once")
+-- A guide can also move its current stop across continents.
+local prior = assert(ns.JourneyPlan())
+ns.Portals = {
+	{
+		name = "Passage",
+		kind = "portal",
+		from = { map = 1, x = 200, y = 0 },
+		to = { map = 2, x = 200, y = 0 },
+		seconds = 5,
+	},
+}
+frame.element.zone = 2
+rxp.UpdateGotoSteps()
+assert(ns.JourneyGoal().map == 2, "the new continent is the active target")
+assert(ns.JourneyPlan() == prior and ns.IsJourneyGuided(), "the old guidance remains while crossing maps")
+assert(not ns.SkipJourneyStep(), "a retained leg cannot complete the new stop")
+driver.path.settle()
+local cross = assert(ns.JourneyPlan(), "the new journey has a route")
+assert(cross ~= prior and cross.legs[#cross.legs].to.map == 2, "the cross-continent plan takes over")
+local onTaxi = true
+local unitOnTaxi = env.UnitOnTaxi
+env.UnitOnTaxi = function()
+	return onTaxi
+end
+frame.element.zone = 1
+rxp.UpdateGotoSteps()
+driver.update(0.1)
+assert(ns.JourneyPlan() == cross, "a taxi in flight retains its route while the guide moves the target")
+onTaxi = false
+driver.update(0.1)
+local landed = assert(ns.JourneyPlan(), "a replacement is ready after landing")
+assert(landed ~= cross and landed.legs[#landed.legs].to.map == 1, "landing resumes planning for the new target")
+env.UnitOnTaxi = unitOnTaxi
 ns.StartJourney = restartJourney
 
 API.NavigateRoute = navigate

@@ -95,6 +95,8 @@ function GameTooltip_AddColoredDoubleLine(tooltip, left, right, leftColor, right
 ---@field GetCanvasZoomPercent fun(self: WorldMapFrame): number
 ---@field GetGlobalPinScale fun(self: WorldMapFrame): number
 ---@field ScrollContainer Frame
+---@field GetCanvasContainer? fun(self: WorldMapFrame): Frame?
+---@field overlayFrames? Frame[] -- read only, to stack below other top-right map buttons (UI/MapButton.lua)
 ---@field dataProviders table<SPFMapProvider, boolean> -- read only, to find the waypoint provider (JourneyGuide.lua)
 ---@field GetViewRect fun(self: WorldMapFrame): {left: number, right: number, top: number, bottom: number}
 ---@field GetNormalizedCursorPosition fun(self: WorldMapFrame): number, number
@@ -164,6 +166,7 @@ ForeverMapMarkers = nil
 ---@field parentModule SPFTrackerModule
 ---@field isHighlighted boolean
 ---@field used boolean
+---@field height number
 ---@field SetHeader fun(self: SPFTrackerBlock, text: string)
 ---@field AddObjective fun(self: SPFTrackerBlock, id: number|string, text: string, template?: string, wrap?: boolean, dashStyle?: number, color?: ColorMixin): SPFTrackerLine
 ---@field GetExistingLine fun(self: SPFTrackerBlock, id: number|string): SPFTrackerLine?

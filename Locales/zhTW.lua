@@ -231,8 +231,8 @@ L["Sizes boat, lift, tram and portal icons on the world map."] =
 L["Sizes flight master icons on the world map."] = "調整世界地圖上飛行管理員圖示的大小。"
 L["Sizes transport icons on the minimap."] = "調整小地圖上交通圖示的大小。"
 L["Stable master"] = "獸欄管理員"
-L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no map click. A guide addon's own journey is left alone."] =
-	"當您聚焦任務或放置遊戲地圖標記時開始旅程，因此控制器無需 地圖點擊。指南插件的自有旅程不受影響。"
+L["Starts a journey when you super-track a quest or a flight point, so a controller needs no map click. A guide addon's own journey is left alone."] =
+	"當您聚焦任務或飛行點時開始旅程，因此控制器無需 地圖點擊。指南插件的自有旅程不受影響。"
 L["Stop %d of %d"] = "第%d站，共%d站" -- mt
 L["Stop %d of %d: %s"] = "第%d站，共%d站：%s"
 L["Teleport to %s"] = "傳送到%s"
@@ -369,6 +369,9 @@ L["Travel to my tracked quest"] = "前往我追蹤的任務"
 L["no map pin is set."] = "尚未設定地圖標記。"
 L["no quest is tracked."] = "沒有追蹤中的任務。"
 L["Walking route colour"] = "步行路線顏色"
+L["Line style"] = "線條樣式" -- mt
+L["Dotted"] = "點線" -- mt
+L["Solid"] = "實線" -- mt
 L["The walking line on the world map and the minimap."] = "世界地圖和小地圖上的步行路線。"
 L["Line on the world map"] = "世界地圖上的路線" -- mt
 L["Draws the walking route on the world map. With it off, the destination pin, arrow and tracker still guide you."] =
@@ -451,8 +454,6 @@ L["Journeys are off. Turn on Enable journeys in settings."] =
 L["Key to plan a journey"] = "規劃旅程的按鍵" -- mt
 L["The key you hold to plan a journey from the world map or the minimap."] =
 	"在世界地圖或小地圖上規劃旅程時按住的按鍵。" -- mt
-L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
-	"在 Questie 圖示上，Shift 點擊仍歸 Questie 所有；Alt 點擊則可用任一按鍵規劃前往該處的旅程。" -- mt
 L["Show the journey key hint in tooltips"] = "在滑鼠提示中顯示旅程按鍵提示" -- mt
 L["Show the journey key hint on the minimap"] = "在小地圖上顯示旅程按鍵提示" -- mt
 L["Adds the journey key line to the minimap's tooltip over what it tracks. Off, the world map and flight point tooltips keep theirs, and the key still plans journeys."] =
@@ -626,8 +627,20 @@ L["You've taken %s flights."] = "你已搭乘飛行路線 %s 次。" -- mt
 L["You've taken your first flight."] = "你已首次搭乘飛行路線。" -- mt
 L["You've used %s portals or passages."] = "你已使用傳送門或通道 %s 次。" -- mt
 L["You've used your first portal or passage."] = "你已首次使用傳送門或通道。" -- mt
-L["Walks reach Undercity's Royal Quarter, War Quarter and Apothecarium."] =
-	"步行路線可抵達幽暗城的皇家區、軍事區和鍊金房。" -- mt
 L["Minimap walking route size"] = "小地圖步行路線大小" -- mt
 L["Sizes the walking dots on the minimap."] = "調整小地圖上步行路線圓點的大小。" -- mt
 L["Descend underground"] = "下到地下" -- mt
+L["%s-click to plan a journey to this flight master"] = "%s-點擊以規劃前往此飛行管理員的旅程" -- mt
+L["Alt-click a Questie quest-start icon to plan a journey to the quest giver, whichever key you choose here."] =
+	"無論此處選擇哪個按鍵，Alt-點擊 Questie 任務起點圖示都會規劃前往任務發布者的旅程。" -- mt
+L["Show the Nearby services map button"] = "顯示附近服務地圖按鈕" -- mt
+L["A button on the world map. Left-click opens Nearby services; right-click chooses which services show on the map."] =
+	"世界地圖上的按鈕。左鍵點擊開啟附近服務，右鍵點擊選擇地圖上顯示的服務。" -- mt
+L["Left-click to open Nearby services."] = "左鍵點擊開啟附近服務。" -- mt
+L["Right-click to choose map services."] = "右鍵點擊選擇地圖服務。" -- mt
+L["Use TomTom's arrow"] = "使用 TomTom 的箭頭" -- mt
+L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
+	"安裝 TomTom 時，用 TomTom 的箭頭指向每一步，替代本插件箭頭與遊戲標記。" -- mt
+L["A guide step on another continent keeps the old route on screen while the new one plans."] =
+	"另一塊大陸上的指南步驟會在規劃新路線時保留舊路線顯示。" -- mt
+L["Mailbox"] = "郵箱" -- mt

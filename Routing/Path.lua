@@ -944,7 +944,14 @@ local function run(map, from, to, waterWalking, costOnly, hz, job)
 				local ratios = roadsOn and Grid.roadEdges(st, u) or nil
 				local custom, customReal
 				if roadsOn and offroad ~= OFFROAD then
-					custom, customReal = customRoadEdges(st, swim, u, hz)
+					local ku = floor(u / 4096)
+					for e = 1, #adj, 3 do
+						local v = adj[e]
+						if aclosed[v] ~= gen and floor(v / 4096) == ku then
+							custom, customReal = customRoadEdges(st, swim, u, hz)
+							break
+						end
+					end
 				end
 				for e = 1, #adj, 3 do
 					local v = adj[e]
@@ -1632,7 +1639,13 @@ local function runMany(map, from, targets, waterWalking, reverse, job, hz)
 					or nil
 				local custom, customReal
 				if roadsOn and offroad ~= OFFROAD then
-					custom, customReal = customRoadEdges(st, swim, u, hz, reverse)
+					for e = 1, #adj, 3 do
+						local v = adj[e]
+						if not closed[v] and floor(v / 4096) == k then
+							custom, customReal = customRoadEdges(st, swim, u, hz, reverse)
+							break
+						end
+					end
 				end
 				for e = 1, #adj, 3 do
 					local v = adj[e]

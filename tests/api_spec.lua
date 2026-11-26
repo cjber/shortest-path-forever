@@ -569,27 +569,24 @@ do
 	equal(API.CurrentStop("AGF"), 2, "and arrives")
 	API.Cancel("AGF")
 
-	-- Resent after a frame in which the walking searches finished but the pause dropped their queued answers.
+	-- Resending is a no-op for the search, even if both endpoint answers are still queued.
 	local fake = driver.path
 	driver.move({ map = 1, x = 0, y = 0 })
 	fake.auto = false
 	local before = #fake.batches
+	local starts, startSearch = 0, ns.JourneySearch.Start
+	ns.JourneySearch.Start = function(...)
+		starts = starts + 1
+		return startSearch(...)
+	end
 	equal(API.NavigateRoute("AGF", resend), true, "a route")
 	equal(#fake.batches, before + 2, "both endpoints searched")
-	-- The start's search measured its walks; the goal's found no walking map there, which is no walk at all.
-	local startJob, goalJob = fake.batches[before + 1], fake.batches[before + 2]
-	startJob.done, startJob.valid = true, true
-	for i, target in ipairs(startJob.targets) do
-		startJob.costs[i] = math.sqrt((target.x - startJob.from.x) ^ 2 + (target.y - startJob.from.y) ^ 2)
-	end
-	goalJob.done, goalJob.reason = true, "nodata"
-	for i = 1, #goalJob.targets do
-		goalJob.costs[i] = false
-	end
 	equal(API.NavigateRoute("AGF", resend), true, "resent with the answers unread")
+	ns.JourneySearch.Start = startSearch
+	equal(starts, 1, "the original search stays active")
 	fake.auto = true
 	driver.update(0.1)
-	equal(ns.JourneyStatus(), false, "the answers are read from the finished searches")
+	equal(ns.JourneyStatus(), false, "the original search consumes the endpoint answers")
 	equal(#fake.batches, before + 2, "without searching again")
 	driver.move({ map = 1, x = 0, y = -100 })
 	driver.update(0.1)
@@ -600,7 +597,7 @@ end
 -- Subscribe: one call per burst of guidance changes, on the next frame, each subscriber isolated from the others.
 do
 	equal(API.version, 2, "version 2 removes peer and leaderboard APIs")
-	equal(API.minor, 7, "minor 7 adds WalkPath")
+	equal(API.minor, 9, "minor 9 adds SuspendMapPins and ResumeMapPins")
 	equal(pcall(API.Subscribe, "callback"), false, "a callback must be a function")
 	local timers, route =
 		{}, {

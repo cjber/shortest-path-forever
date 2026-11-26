@@ -45,6 +45,8 @@ local DEFAULTS = {
 	-- The Nearby services tab in the shared quest log column. On by default; off, another addon may take that space
 	-- and /spfnear and the tracking menu still open the services.
 	nearbyTab = true,
+	-- The Nearby services button on the world map: left-click opens the panel, right-click toggles map services.
+	nearbyMapButton = true,
 	worldMapMarks = true,
 	mapRoutes = true,
 	-- The town services' level of detail: "capitals", "important", "all" or "off" (UI/TownServices.lua). Off by
@@ -57,6 +59,7 @@ local DEFAULTS = {
 	townServiceStable = true,
 	townServiceRepair = false,
 	townServiceBank = true,
+	townServiceMailbox = true,
 	townServiceAuction = true,
 	townServiceTransmog = true,
 	townServiceBattlemaster = true,
@@ -76,6 +79,8 @@ local DEFAULTS = {
 	minimapPinScale = 100,
 	-- The walking route line's preset: gold, the client's own marker colour.
 	routeColor = "gold",
+	-- Dotted breadcrumbs stay the default; solid connects the walking route on both map surfaces.
+	routeStyle = "dotted",
 	-- The walking line on each surface can be turned off without touching the journey's other guidance.
 	mapLine = true,
 	minimapLine = true,
@@ -98,8 +103,8 @@ local DEFAULTS = {
 	-- The same line on the minimap's tooltip, which every ore, herb and NPC hover shows, so it can be turned off
 	-- on its own (#1241). On: the minimap hint follows journeyHint.
 	minimapHint = true,
-	-- Off by default: a journey starts when the player super-tracks a quest or places a map pin, so a controller
-	-- needs no map click and a plain map pin changes what it does.
+	-- Off by default: a journey starts when the player super-tracks a quest or a flight point, so a controller
+	-- needs no map click. A map pin the player places always starts one.
 	focusedQuest = false,
 	-- An on-screen marker over the destination, like the client's own waypoint pin. Off by default: it is
 	-- new screen furniture, and a player asks for it from Settings > Guidance.
@@ -110,6 +115,7 @@ local DEFAULTS = {
 	npcArrows = true,
 	tomtom = true,
 	tomtomFollow = false,
+	tomtomArrow = false,
 	restedxp = true,
 	-- Adventure Guide's integrated RestedXP display may use our arrow.
 	restedxpArrow = "restedxp",
@@ -552,6 +558,16 @@ frame:SetScript("OnEvent", function(self, _, name)
 			end
 		end
 		ns.db.quietDefaults = 1
+	end
+	-- Before `restedxpArrow`, "Hide RestedXP's arrow" decided who drew the arrow for a standalone RestedXP guide: ours
+	-- led and RestedXP's hid, or both stayed when the box was off. The fill below wrote "restedxp" into every save
+	-- since, so a save holding it never chose it. `restedxpHideArrow` exists in every older save and in no new one
+	-- before the fill, so it marks them; `restedxpArrowMoved` records that this ran once (#1349).
+	if ns.db.restedxpArrowMoved == nil then
+		if ns.db.restedxpHideArrow ~= nil and (ns.db.restedxpArrow == nil or ns.db.restedxpArrow == "restedxp") then
+			ns.db.restedxpArrow = ns.db.restedxpHideArrow == false and "both" or "shortestPath"
+		end
+		ns.db.restedxpArrowMoved = 1
 	end
 	for key, value in pairs(DEFAULTS) do
 		if ns.db[key] == nil then

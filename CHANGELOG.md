@@ -10,11 +10,83 @@ Each version's entry is also its release notes on GitHub, CurseForge and Wago. O
 verbatim rather than rewritten as the addon moves. API changes other addons' authors need go under an
 optional `### For addon authors` subsection after a version's player bullets.
 
+## [1.45.13] - 2026-11-26
+
+### Changed
+
+- Ships with the same shared code as your other Forever addons, so they keep working together.
+
+### Fixed
+
+- **A guide step on another continent keeps the old route on screen while the new one plans.** The arrow and the route stay until the replacement is ready, so there is no gap. (#1321)
+- **A guide can change its objective without skipping the rest of the itinerary.** Objectives that share a dungeon entrance still advance to the next stop when you enter. If you die while a new route is being planned, the old route cannot complete the new objective. Boarding a flight keeps the current route until you land. (#1321)
+- **Asking for the destination you already have no longer restarts the route search.** The search in progress finishes instead of beginning again. (#1330)
+- **The tracker says it is still searching while it waits for your position.** Nearby destinations no longer look like there is no route. (#1358)
+- **TomTom's arrow follows the route through RestedXP steps.** It now comes back at login, on each RestedXP step change and after you set a TomTom waypoint of your own, which stays available without interrupting the route's arrow. (#1360)
+
+## [1.45.12] - 2026-11-26
+
+### Fixed
+
+- A save from before the RestedXP arrow setting gets its old arrow behaviour back for standalone RestedXP guides: ours leads and RestedXP's hides, or both stay when you had kept RestedXP's arrow. The new default had overwritten it for every existing player. If you had deliberately picked "RestedXP's arrow" under 1.45.x, it is reset once by this and you can choose it again in the settings (#1349).
+- Changing the road detour allowance away from 50% no longer re-searches every cluster for every expanded entrance: the custom interior walk is only priced when the popped entrance can actually leave its cluster, so routes keep the same detour choices at a fraction of the planning time (#1355).
+- The tracker text keeps its shadow beside a quest tracker that shrinks the game's objective fonts (EllesmereUI's), so it stays readable on any background (#1357).
+
+### For addon authors
+
+- `NavigateRoute` takes `{ stopMarkers = false }` to draw a journey's route line on the world map without a pin at each stop, for addons that mark their own places; the stop text in the tracker stays (#1362).
+
+## [1.45.11] - 2026-11-25
+
+### Added
+
+- Quick Nearby services button on the world map: Left-click the button in the map's top-right corner to open the Nearby services panel, or right-click it for a menu with a checkbox per service to toggle map pins straight from the map. You can hide the button or the quest log tab separately under **Settings -> Map marks**; thanks to xh43k for the idea.
+- Use TomTom's arrow in Guidance points TomTom's arrow at each journey step and hides Shortest Path's arrow and the game's navigation marker while it leads. Off by default. Thanks, forleong.
+
+### Changed
+
+- Updated the shared ForeverCore code to 1.17.3.
+
+### Fixed
+
+- Deleting a map pin ends the journey it planned.
+- RestedXP guidance now recovers its route and direction arrow after a target bounces during combat, after handing ownership away from RestedXP, and when switching to Shortest Path's arrow while already standing in a held step's area.
+
+## [1.45.10] - 2026-11-25
+
+### Fixed
+
+- The tracker shows both departures when the same transport leaves a dock for different destinations.
+- Clearing focus on a quest ends the journey started by Route to the focused quest.
+- Journey and departure tracker text stays readable when EllesmereUI shrinks the default tracker fonts.
+
+## [1.45.9] - 2026-11-25
+
+### Fixed
+
+- The Shortest Path tracker section stays readable beside a tracker addon that shrinks Blizzard's objective tracker fonts, such as EllesmereUI's Quest Tracker, which had set its text to 1 px.
+- A map pin placed with Ctrl-click, the map's pin button or a chat link now plans a journey without turning on "Route to the focused quest", also with OpenMap's "Ctrl-click drops a pin" off.
+
+## [1.45.8] - 2026-11-25
+
+### Fixed
+
+- Flight master pins now appear across OpenMap's stitched view even when "Load the zone in view" is off.
+
 ## [1.45.7] - 2026-11-24
 
 <!-- forever-core-sync -->
 
 - Ships with the same shared code as your other Forever addons, so they keep working together.
+
+### Changed
+
+- Find the minimap trail toggle under Show minimap trail in Map Marks. Turn it off to uncover minimap icons while keeping the arrow and world-map route.
+
+### Fixed
+
+- The journey key setting explains how to route to a Questie quest giver with Alt-click. On zone maps, Shortest Path's flight master tooltips show how to make that flight master your destination. Thanks, Zhiroc.
+- Right-click the journey waypoint on the world map to clear the journey in one click.
 
 ## [1.45.6] - 2026-11-24
 

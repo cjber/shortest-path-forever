@@ -15,6 +15,8 @@ local REPLAN_DUE = REPLAN_EVERY - 0.5 -- from here Itinerary.lua leaves the fram
 local DRAW_EVERY = 0.5
 
 local goal, result
+-- The held route can guide while its replacement plans, but it cannot complete the new stop.
+local replacingGoal = false
 local policyChanged, transportChanged
 local nextPoint
 local progress = { index = 1 }
@@ -330,6 +332,7 @@ local journeyPolicy = "normal"
 local function EndJourney(reason)
 	Search.Reset()
 	goal, result, nextPoint = nil, nil, nil
+	replacingGoal = false
 	transportChanged = nil
 	ns.AvoidTransport.Forget()
 	journeyPolicy = "normal"
@@ -369,7 +372,7 @@ local function Arrive()
 end
 
 local function UpdateProgress()
-	if not (goal and result) or nextPoint or CorpseRun() then
+	if not (goal and result) or replacingGoal or nextPoint or CorpseRun() then
 		return
 	end
 	local inside = goal.hold and ns.StopInside(goal)
@@ -610,7 +613,7 @@ end
 ---@param index integer?
 ---@return boolean
 function ns.SkipJourneyStep(index)
-	if not goal or not result or CorpseRun() or InCombatLockdown() then
+	if not goal or not result or replacingGoal or CorpseRun() or InCombatLockdown() then
 		return false
 	end
 	local current = progress.index
@@ -672,6 +675,7 @@ local function Follow(route, news)
 	end
 	if news == "route" then
 		result, rough = route, nil
+		replacingGoal = false
 		if route and not transportChanged then
 			ns.AvoidTransport.Forget()
 		end
@@ -732,7 +736,7 @@ local function Update(self, elapsed)
 			if ns.AdvanceGuide then
 				ns.AdvanceGuide()
 			end
-			if goal and ns.StopInside(goal) then
+			if goal and not replacingGoal and ns.StopInside(goal) then
 				Guide.Pause()
 			end
 		end
@@ -831,15 +835,6 @@ function ns.ResumeJourney()
 	RefreshTracker()
 end
 
--- An owner sent the destination the journey already has; only the stop's words may have changed. A first search
--- still owing its answer is asked to read what it has, as sending the same route again always did, but nothing of the
--- journey is restarted.
-function ns.RefreshJourneySearch()
-	if goal and not result and not CorpseRun() and Search.Status() > 0 then
-		Search.Start(goal, result, progress, Follow, nil, journeyPolicy)
-	end
-end
-
 -- An owner moved the destination of a journey it already owns (a guide's next objective in the area, or the same
 -- waypoint re-pointed). The owner, the stop and the progress stay, and so does the route already drawn, until the
 -- search for the new place settles: tearing all of it down and starting again flashed the arrow, the line and the
@@ -847,20 +842,25 @@ end
 ---@param point SPFPoint
 ---@return boolean
 function ns.RetargetJourney(point)
-	if CorpseRun() or not goal or point.map ~= goal.map then
+	if CorpseRun() or not goal then
 		return ns.StartJourney(point, journeyPolicy)
 	end
-	if Search.SamePlace(goal, point) then
-		ns.RefreshJourneySearch()
-		return true
-	end
+	point = ns.InstanceEntrance(point)
+	local same = SamePlace(goal, point)
 	goal, nextPoint = point, nil
-	withoutHearth = false
+	if not same then
+		replacingGoal = result ~= nil
+		withoutHearth = false
+	end
 	if ns.JourneyChanged then
 		ns.JourneyChanged(point)
 	end
 	-- The hops after this stop start from where it now is.
 	ns.ItineraryChanged()
+	if same then
+		Refresh()
+		return true
+	end
 	driver.elapsed, driver.progressElapsed = 0, 0
 	if not InCombatLockdown() then
 		driver:Show()
@@ -889,6 +889,7 @@ function ns.StartJourney(point, policy)
 		-- Queued behind the corpse run, which ResumeJourney plans from where you come back to life.
 		if not (goal and SamePlace(goal, point) and journeyPolicy == policy) then
 			result = nil
+			replacingGoal = false
 			withoutHearth = false
 			Search.Clear(false, policy)
 			progress.index, progress.departed = 1, false
@@ -902,9 +903,10 @@ function ns.StartJourney(point, policy)
 		return true
 	end
 	local previous = Search.Clear(goal and SamePlace(goal, point), policy) and result
+	replacingGoal = previous and replacingGoal or false
 	journeyPolicy = policy
 	withoutHearth = false
-	if previous then
+	if previous and not replacingGoal then
 		for _, leg in ipairs(previous.legs) do
 			if leg.to.kind == "goal" then
 				leg.to.label = point.label
@@ -926,7 +928,7 @@ function ns.StartJourney(point, policy)
 		driver:Show()
 	end
 	ns.WakeTravel()
-	Search.Start(goal, result, progress, Follow, nil, journeyPolicy)
+	Search.Start(goal, result, progress, Follow, replacingGoal, journeyPolicy)
 	-- Every journey starts guided; the tracker header turns it off.
 	if goal then
 		StartGuide()

@@ -48,12 +48,13 @@ end
 -- everywhere.
 -- Nothing while journeys are off, while the player turned the hint off (#1142; the key still plans), or under the
 -- gamepad interface, whose map cursor has no key to hold.
+---@param format? string localized hint with a placeholder for the journey key
 ---@return string?
-function ns.JourneyClickHint()
+function ns.JourneyClickHint(format)
 	if not (ns.db and ns.db.journey) or ns.db.journeyHint == false or ns.GamepadUI() then
 		return nil
 	end
-	return string.format(L["%s-click to plan a journey here"], ns.JourneyKeyName())
+	return string.format(format or L["%s-click to plan a journey here"], ns.JourneyKeyName())
 end
 
 -- The minimap carries the same line, but it is the tooltip over every node, herb and NPC the player hovers, so it
@@ -69,12 +70,13 @@ end
 
 ---@param tooltip GameTooltip
 ---@param minimap? boolean
-function ns.AddJourneyClickHint(tooltip, minimap)
+---@param format? string localized world map hint
+function ns.AddJourneyClickHint(tooltip, minimap, format)
 	local hint
 	if minimap then
 		hint = ns.MinimapClickHint()
 	else
-		hint = ns.JourneyClickHint()
+		hint = ns.JourneyClickHint(format)
 	end
 	if hint then
 		GameTooltip_AddInstructionLine(tooltip, hint)
@@ -394,14 +396,20 @@ function ns.JourneyToTrackedQuest()
 	return PlanQuest(questID)
 end
 
--- Route to the focused quest: an opt-in journey from the quest the client is super-tracking, or from the map pin
--- the player placed, so a controller needs no map click. A guide's own journey is left alone: its focus changes
--- are its steps, not the player's choice. Journey.lua calls these after Guide.TrackingChanged, so a guide the
--- player took over has already yielded.
+-- Route to the focused quest: an opt-in journey (db.focusedQuest) from the quest or flight point the client is
+-- super-tracking, so a controller needs no map click. The map pin the player placed always plans one: Ctrl-click,
+-- the map's pin button, /mappin and a chat link all end in the client's user waypoint, the one thing every way of
+-- placing it shares (#1336). Removing that pin ends the journey it planned (#1348). A guide's own journey is left
+-- alone: its focus changes are its steps, not the player's choice. Journey.lua calls these after Guide.TrackingChanged,
+-- so a guide the player took over has already yielded.
 ---@type number?
 local focusedQuest
+---@type SPFPoint?
+local focusedQuestGoal
 ---@type table?
 local focusedWaypoint
+---@type SPFPoint?
+local focusedWaypointGoal
 -- The flight point a left click on the map super-tracks (UI/FlightPins.lua): the same choice of destination (#1079).
 ---@type number?
 local focusedNode
@@ -502,45 +510,51 @@ function ns.FocusedTrackingChanged(event)
 		local questID, node = SuperTrackedQuest(), SuperTrackedNode()
 		local changed, nodeChanged = questID ~= focusedQuest, node ~= focusedNode
 		focusedQuest, focusedNode = questID, node
-		if
-			nodeChanged
-			and node
-			and not owned
-			and ns.db
-			and ns.db.focusedQuest
-			and ns.db.journey
-			and not GuideLeads()
-			and not GoalIsNode(node)
-		then
+		local previousGoal = focusedQuestGoal
+		if changed then
+			focusedQuestGoal = nil
+		end
+		if owned or not (ns.db and ns.db.focusedQuest and ns.db.journey) or GuideLeads() then
+			return
+		end
+		if nodeChanged and node and not GoalIsNode(node) then
 			JourneyToNode(node)
 			return
 		end
-		if
-			owned
-			or not changed
-			or not questID
-			or not (ns.db and ns.db.focusedQuest and ns.db.journey)
-			or GuideLeads()
-			or GoalIsQuest(questID)
-		then
+		if not changed then
 			return
 		end
-		ns.JourneyToTrackedQuest()
+		if questID then
+			if not GoalIsQuest(questID) and PlanQuest(questID) then
+				focusedQuestGoal = ns.JourneyGoal()
+			end
+		elseif previousGoal and ns.JourneyGoal() == previousGoal then
+			ns.ClearJourney()
+		end
 		return
 	end
 	local waypoint = UserWaypoint()
 	local changed = not (guide and guide.SameWaypoint and guide.SameWaypoint(waypoint, focusedWaypoint))
 	focusedWaypoint = waypoint
-	if
-		owned
-		or not changed
-		or not waypoint
-		or not (ns.db and ns.db.focusedQuest and ns.db.journey)
-		or GoalIsWaypoint(waypoint)
-	then
+	if owned or not changed then
 		return
 	end
-	ns.JourneyToUserWaypoint()
+	local previousGoal = focusedWaypointGoal
+	focusedWaypointGoal = nil
+	if not (ns.db and ns.db.journey) then
+		return
+	end
+	if waypoint then
+		if GoalIsWaypoint(waypoint) then
+			if previousGoal and ns.JourneyGoal() == previousGoal then
+				focusedWaypointGoal = previousGoal
+			end
+		elseif ns.JourneyToUserWaypoint() then
+			focusedWaypointGoal = ns.JourneyGoal()
+		end
+	elseif previousGoal and not GuideLeads() and ns.JourneyGoal() == previousGoal then
+		ns.ClearJourney()
+	end
 end
 
 -- The journey key is this addon's gesture, so its canvas handler asks first. Higher priorities run first, and

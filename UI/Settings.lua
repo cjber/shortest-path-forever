@@ -340,7 +340,7 @@ ns.Init(function()
 			Secure(GenerateClosure)(journeyKeyOptions.GetData, journeyKeyOptions),
 			L["The key you hold to plan a journey from the world map or the minimap."]
 				.. " "
-				.. L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."]
+				.. L["Alt-click a Questie quest-start icon to plan a journey to the quest giver, whichever key you choose here."]
 		)
 	)
 	Checkbox(
@@ -361,7 +361,7 @@ ns.Init(function()
 		"focusedQuest",
 		L["Route to the focused quest"],
 		-- luacheck: push ignore 631
-		L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no map click. A guide addon's own journey is left alone."]
+		L["Starts a journey when you super-track a quest or a flight point, so a controller needs no map click. A guide addon's own journey is left alone."]
 		-- luacheck: pop
 	)
 	Section(L["Destination"])
@@ -468,6 +468,14 @@ ns.Init(function()
 		L["With TomTom installed, a journey here follows the waypoint its arrow points to."],
 		function()
 			ns.RefreshTomTomFollow()
+		end
+	)
+	Checkbox(
+		"tomtomArrow",
+		L["Use TomTom's arrow"],
+		L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."],
+		function()
+			ns.RefreshTomTomArrow()
 		end
 	)
 	Checkbox("restedxp", L["Follow RestedXP guides"], L["Plan journeys to RestedXP guide targets."], function()

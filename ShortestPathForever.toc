@@ -9,7 +9,7 @@
 ## X-Website: https://github.com/cjber/shortest-path-forever
 ## X-Donate: https://github.com/sponsors/cjber
 ## X-Curse-Project-ID: 1708599
-## X-Forever-Core: v1.17.2
+## X-Forever-Core: v1.17.4
 ## SavedVariables: ShortestPathForeverDB
 ## SavedVariablesPerCharacter: ShortestPathForeverCharDB
 ## X-Forever-Core-Embed: 1
@@ -65,6 +65,7 @@ UI\NearbyEntrances.lua
 UI\NearbyRoles.lua
 UI\NearbyProfessions.lua
 UI\NearbyRank.lua
+UI\NearbyIndex.lua
 UI\Nearby.lua
 Transport\Observer.lua
 UI\Map.xml
@@ -81,6 +82,7 @@ UI\Canvas.lua
 UI\MapReport.lua
 UI\Map.lua
 UI\TownServices.lua
+UI\MapButton.lua
 UI\FlightPins.lua
 UI\Looks.lua
 UI\MinimapPins.lua
@@ -103,6 +105,7 @@ Journey\Hazards.lua
 Journey\JourneySearch.lua
 Journey\JourneyWalks.lua
 Journey\JourneyGuide.lua
+Journey\JourneyGuidance.lua
 Journey\Journey.lua
 Journey\AvoidTransport.lua
 Journey\JourneyInput.lua
@@ -135,6 +138,7 @@ Journey\StopOrder.lua
 UI\JourneyStops.lua
 Core\Zygor.lua
 Core\TomTom.lua
+Core\TomTomArrow.lua
 Core\Way.lua
 Core\RestedXP.lua
 Core\Guidelime.lua

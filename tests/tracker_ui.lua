@@ -90,6 +90,64 @@ assert(
  flightLine:find("Fly to [gold]Place 2[/gold]", 1, true) == 1 and not flightLine:find("^%d+%."),
  "the place is gold and no number leads: " .. flightLine
 )
+-- A tracker replacement that shrinks ObjectiveTrackerLineFont and ObjectiveTrackerHeaderFont to 1 px (EllesmereUI,
+-- #1335) leaves the section's text inheriting that size. The section sets its own fallback fonts instead, and
+-- gives the shared object back once the addon stops shrinking it.
+do
+ local function face(size)
+  return { size = size, GetFont = function(self) return "", self.size, "" end,
+   GetShadowOffset = function(self) return self.shadowX, self.shadowY end,
+   GetShadowColor = function(self) return 0, 0, 0, self.shadowA end,
+   SetShadowOffset = function(self, x, y) self.shadowX, self.shadowY = x, y end,
+   SetShadowColor = function(self, _, _, _, a) self.shadowA = a end }
+ end
+ _G.ChatFontNormal = face(12)
+ _G.CreateFont = function(name)
+  local object = face(nil)
+  function object:SetFont(_, size) self.size = size end
+  _G[name] = object
+  return object
+ end
+ _G.ObjectiveTrackerFont12, _G.ObjectiveTrackerFont14 = face(1), face(1)
+ _G.ObjectiveTrackerLineFont, _G.ObjectiveTrackerHeaderFont = face(1), face(1)
+ _G.ObjectiveTrackerFontSize = 1
+ block.HeaderText.fontSize, tracker.Header.Text.fontSize = 1, 1
+ tracker:LayoutContents()
+ ns.journeyVersion = ns.journeyVersion + 1
+ ns.RefreshTracker()
+ local first, second = block:GetExistingLine(1), block:GetExistingLine(2)
+ local minimum = { section = 14 }
+ for name, text in pairs({ header = block.HeaderText, section = tracker.Header.Text, line = first.Text,
+  dash = first.Dash, flight = second.Text }) do
+  assert(select(2, text:GetFont()) >= (minimum[name] or 12), name .. " keeps a readable size beside a shrinking addon")
+  assert(text.justifyH == "LEFT" and text.justifyV == "TOP", name .. " keeps the shared font's alignment")
+ end
+ for _, name in ipairs({ "ShortestPathForeverLineFont", "ShortestPathForeverHeaderFont" }) do
+  local x, y = _G[name]:GetShadowOffset()
+  assert(x == 1 and y == -1 and select(4, _G[name]:GetShadowColor()) == 1, name .. " keeps a text shadow (#1357)")
+ end
+ local total = 0
+ for key in pairs(block.lines) do total = total + block.lines[key]:GetHeight() end
+ assert(block.height == total, "the block's height follows its re-measured lines: " .. block.height .. " vs " .. total)
+ -- Text that shrinks on an existing block is repaired on a countdown tick and requests a new layout.
+ block.HeaderText.fontSize, first.Text.fontSize, first.Dash.fontSize = 1, 1, 1
+ local previousDirty = dirty
+ tick()
+ first = block:GetExistingLine(1)
+ assert(dirty == previousDirty + 1, "repairing existing fonts invalidates row heights")
+ assert(select(2, block.HeaderText:GetFont()) >= 12, "the refreshed block header stays readable")
+ assert(select(2, first.Text:GetFont()) >= 12, "the refreshed line stays readable")
+ assert(select(2, first.Dash:GetFont()) >= 12, "the refreshed dash stays readable")
+ -- The addon stops: the shared objects are readable again and the text follows them.
+ _G.ObjectiveTrackerLineFont.size, _G.ObjectiveTrackerHeaderFont.size, _G.ObjectiveTrackerFontSize = 16, 18, nil
+ tracker:LayoutContents()
+ ns.journeyVersion = ns.journeyVersion + 1
+ ns.RefreshTracker()
+ line = block:GetExistingLine(1)
+ assert(select(2, block.HeaderText:GetFont()) == 16, "the block header is back on the shared font")
+ assert(select(2, tracker.Header.Text:GetFont()) == 18, "the section header is back on the shared font")
+ _G.ObjectiveTrackerFont12, _G.ObjectiveTrackerFont14, _G.ObjectiveTrackerLineFont, _G.ObjectiveTrackerHeaderFont = nil
+end
 -- Every journey line answers a right click with the journey's own menu (Lock, Clear journey), as its title does.
 do
  local opened = {}

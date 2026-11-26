@@ -306,6 +306,7 @@ local function CopyWords(into, from)
 		or into.routeCount ~= from.routeCount
 		or into.routeTitle ~= from.routeTitle
 		or into.number ~= from.number
+		or into.unmarked ~= from.unmarked
 		or not SameList(into.details, from.details)
 		or not SameList(into.questIDs, from.questIDs)
 		or not SameList(into.handins, from.handins)
@@ -325,6 +326,7 @@ local function CopyWords(into, from)
 	into.routeCount = from.routeCount
 	into.routeTitle = from.routeTitle
 	into.number = from.number
+	into.unmarked = from.unmarked
 	return changed
 end
 
@@ -365,18 +367,18 @@ function ns.ResubmitRoute(route, points)
 				ns.RefreshArrowLines()
 			end
 		end
-		if ns.RefreshJourneySearch then
-			ns.RefreshJourneySearch()
-		end
 		return true
 	end
 	if movedCount > 1 or not moved then
 		return nil
 	end
 	local old = previous[moved]
-	-- Another map is a different journey: the route drawn for the old one says nothing about the new.
-	if not old or old.map ~= points[moved].map then
+	if not old or (moved ~= route.index and old.map ~= points[moved].map) then
 		return nil
+	end
+	-- The pins' switch belongs to the whole submission, whichever stop moved.
+	for index, point in ipairs(points) do
+		previous[index].unmarked = point.unmarked
 	end
 	previous[moved] = points[moved]
 	if moved == route.index then

@@ -93,14 +93,8 @@ check(
 	"right-click on the native waypoint clears its journey",
 	"",
 	[[
--- The native pin passes RightButton to the canvas. An unrelated player pin must keep the usual map action.
+-- The native pin passes RightButton to the canvas.
 start()
-local manualPin = UiMapPoint.CreateFromCoordinates(1414, 0.7, 0.8)
-C_Map.SetUserWaypoint(manualPin)
-pin(true)
-waypointProvider.pin.IsMouseOver = function() return true end
-shiftDown = false
-assert(not clickHandlers[1](map, "RightButton") and ns.HasJourney())
 
 -- A player waypoint at the journey's destination can stand in for the addon's own journey pin.
 C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(mapID, cursorX, cursorY))
@@ -133,6 +127,22 @@ assert(not waypoint and not supertracked, "login must clear Guide's persisted wa
 assert(not ns.charDB.guideWaypoint)
 start() record() ns.ClearJourney()
 assert(not waypoint and not supertracked, "a new journey must not restore the orphan")
+]]
+)
+
+-- The player's earlier pin comes back at login: that is the addon giving it back, not a pin to plan to (#1336).
+local borrowedOrphan = [[
+ShortestPathForeverCharDB = {guideWaypoint={uiMapID=1414,x=0.4,y=0.3,
+ borrowed={uiMapID=1414,position={x=0.6,y=0.6}}}}
+waypoint = UiMapPoint.CreateFromCoordinates(1414, 0.4, 0.3)
+supertracked = true
+]]
+check(
+	"reload restores the player's pin without planning to it",
+	borrowedOrphan,
+	[[
+assert(waypoint and waypoint.position.x == 0.6, "login gives the player's earlier pin back")
+assert(not ns.JourneyGoal() and not ns.IsJourneyGuided(), "giving a pin back starts no journey")
 ]]
 )
 
@@ -353,7 +363,8 @@ check(
 manual() start()
 local replacement = UiMapPoint.CreateFromCoordinates(1414, 0.2, 0.1)
 C_Map.SetUserWaypoint(replacement)
-assert(not ns.IsJourneyGuided() and waypoint == replacement and not ns.charDB.guideWaypoint)
+-- A pin the player places is routed: the new pin is the journey's destination (#1336).
+assert(ns.IsJourneyGuided() and waypoint == replacement and ns.JourneyGoal())
 pin(true)
 ns.ClearJourney()
 assert(waypoint == replacement)
@@ -375,7 +386,7 @@ posX, posY = 100, 100
 arrowFrame.scripts.OnUpdate(arrowFrame, 0.1)
 assert(waypoint == replacement, "a bend update must not overwrite a pending manual replacement")
 fireEvent("USER_WAYPOINT_UPDATED")
-assert(not ns.IsJourneyGuided() and not ns.charDB.guideWaypoint)
+assert(ns.IsJourneyGuided() and ns.JourneyGoal(), "the replacement pin is routed")
 pin(true)
 ns.ClearJourney()
 assert(waypoint == replacement)
@@ -656,14 +667,13 @@ errors = {}
 ns.ClearJourney()
 ]])
 
-check("a player-made waypoint change ends guidance with Waypoint UI loaded", "", wpu .. [[
+check("a player-made waypoint change is routed with Waypoint UI loaded", "", wpu .. [[
 navTracking = false
 start()
 assert(waypoint and waypointCalls > 0, "Waypoint UI loaded but not tracking: we own the waypoint")
 local replacement = UiMapPoint.CreateFromCoordinates(1414, 0.2, 0.1)
 C_Map.SetUserWaypoint(replacement)
-assert(not ns.IsJourneyGuided(), "a player-made waypoint change still ends guidance")
-assert(not ns.charDB.guideWaypoint)
+assert(ns.JourneyGoal(), "a player-made waypoint becomes the destination")
 ns.ClearJourney()
 ]])
 

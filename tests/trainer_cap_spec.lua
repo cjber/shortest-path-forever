@@ -95,6 +95,7 @@ for _, file in ipairs({
 	"UI/NearbyRoles.lua",
 	"UI/NearbyProfessions.lua",
 	"UI/NearbyRank.lua",
+	"UI/NearbyIndex.lua",
 	"UI/Nearby.lua",
 }) do
 	setfenv(assert(loadfile(file)), env)("ShortestPathForever", ns)

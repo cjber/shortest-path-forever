@@ -31,7 +31,8 @@ end
 -- inside UIParentPanelManager's hide, before it clears the gamepad binding stack, and this addon's taint blocks
 -- SetPreferredGamepadInteractTarget (#158). The manager calls its callbacks isolated from the hide, as the gamepad's
 -- FrameControlsManager listens for the same two.
--- The pins live on a layer under that frame, so combat can hide them all at once.
+-- The pins live on a layer under that frame, so combat can hide them all at once. Every pool but the journey's own
+-- draws on a second frame under the layer, so another addon's hold (ns.SuspendMapPins) hides those marks together.
 --
 -- Pins are plain frames that take the mouse with OnEnter and OnLeave only: the gamepad interface reads a frame with a
 -- click script (OnClick, OnMouseDown, OnMouseUp) as a button of the window it scans. A click is the press and release
@@ -62,6 +63,7 @@ local CURSOR_REACH = 12
 ---@field canvas Frame
 ---@field host Frame
 ---@field layer Frame
+---@field marks Frame under the layer: the pins a hold hides, every pool's but the journey's
 ---@field shown boolean
 ---@field mapID? number
 ---@field width number
@@ -74,7 +76,9 @@ local CURSOR_REACH = 12
 ---@field stitched boolean
 ---@field companionLayers? string
 ---@field viewLeft? number -- the map's view, to hear of a drag
+---@field viewRight? number
 ---@field viewTop? number
+---@field viewBottom? number
 ---@field gamepad boolean
 ---@field listeners fun(view: SPFCanvasView, what: string)[]
 ---@field pools table<string, SPFCanvasPool>
@@ -83,6 +87,9 @@ View.__index = View
 
 ---@type table<SPFMapCanvas, SPFCanvasView>
 local views = {}
+-- Owners holding the marks back (ShortestPathForever.API.SuspendMapPins). Memory only, so a reload clears them.
+---@type table<string, true>
+local holds = {}
 ---@type SPFCanvasPin?, SPFCanvasPin?, string?
 local hovered, pressed, pressedButton
 -- Whether the gamepad's map cursor, not the mouse, is hovering `hovered`.
@@ -279,9 +286,9 @@ local function Update(view)
 		end
 	end
 	-- A drag moves the view without changing any of the above. A size or zoom redraws with the new view already.
-	local viewLeft, viewTop = Canvas.ViewRect(view.map)
-	if viewLeft ~= view.viewLeft or viewTop ~= view.viewTop then
-		view.viewLeft, view.viewTop = viewLeft, viewTop
+	local left, right, top, bottom = Canvas.ViewRect(view.map)
+	if left ~= view.viewLeft or right ~= view.viewRight or top ~= view.viewTop or bottom ~= view.viewBottom then
+		view.viewLeft, view.viewRight, view.viewTop, view.viewBottom = left, right, top, bottom
 		if not (first or changedMap or stitchedChanged or companionsChanged or sized or scaled) then
 			Fire(view, "moved")
 		end
@@ -384,7 +391,11 @@ function Canvas.Watch(map, listener)
 		local layer = FrameUnder("Frame", host)
 		layer:SetAllPoints(host)
 		layer:EnableMouse(false)
-		view.host, view.layer = host, layer
+		local marks = FrameUnder("Frame", layer)
+		marks:SetAllPoints(layer)
+		marks:EnableMouse(false)
+		marks:SetShown(next(holds) == nil)
+		view.host, view.layer, view.marks = host, layer, marks
 		views[map] = view
 		WatchPanelHides()
 	end
@@ -437,6 +448,28 @@ function Canvas.SetShown(map, shown)
 		end
 	end
 end
+
+-- ShortestPathForever.API.SuspendMapPins and ResumeMapPins (docs/api.md), published by Core/API.lua: every map's marks
+-- hide while any owner holds them, and the journey's pools stay.
+---@param held boolean
+---@return fun(owner: string): boolean?, ForeverCoreAPIInvalid?
+local function MarkHold(held)
+	return function(owner)
+		if not ns.APIInput.Owner(owner) then
+			return ForeverCore.APIKit.Invalid()
+		end
+		holds[owner] = held or nil
+		local shown = next(holds) == nil
+		for _, view in pairs(views) do
+			if not shown then
+				LetGo(view)
+			end
+			view.marks:SetShown(shown)
+		end
+		return true
+	end
+end
+ns.SuspendMapPins, ns.ResumeMapPins = MarkHold(true), MarkHold(false)
 
 -- Combat freezes the pins as last drawn (#1302): no layer can redraw them in lockdown, and a hover or click on one
 -- reaches waypoint, super-track and highlight calls that wait for combat to end. Frozen, they take no hover or
@@ -617,6 +650,7 @@ end
 ---@field frameType string
 ---@field template? string
 ---@field marker? string
+---@field parent Frame the view's layer for a journey pool, else its marks
 ---@field active SPFCanvasPin[]
 ---@field free SPFCanvasPin[]
 local Pool = {}
@@ -661,7 +695,7 @@ end
 function Pool:Acquire(...)
 	local pin = table.remove(self.free)
 	if not pin then
-		pin = FrameUnder(self.frameType, self.view.layer, self.template) --[[@as SPFCanvasPin]]
+		pin = FrameUnder(self.frameType, self.parent, self.template) --[[@as SPFCanvasPin]]
 		Mixin(pin, self.mixin)
 		pin.view, pin.pool, pin.marker = self.view, self, self.marker
 		pin:OnLoad()
@@ -739,11 +773,12 @@ end
 
 -- A pool of pins on `map`'s view, under `key`. The pins are frames of `frameType` (a Frame by default) from
 -- `template`, wearing `mixin`, which builds on Canvas.PinMixin. A pool with a `marker` kind lists its pins for the
--- other Forever addons (ForeverMapMarkers, below).
+-- other Forever addons (ForeverMapMarkers, below). A `journey` pool draws the journey under way and stays through a
+-- hold (ns.SuspendMapPins).
 ---@param map SPFMapCanvas
 ---@param key string
 ---@param mixin table
----@param options? {frameType?: string, template?: string, marker?: string}
+---@param options? {frameType?: string, template?: string, marker?: string, journey?: boolean}
 ---@return SPFCanvasPool
 function Canvas.Pool(map, key, mixin, options)
 	local view = Canvas.Watch(map)
@@ -756,6 +791,7 @@ function Canvas.Pool(map, key, mixin, options)
 			frameType = options.frameType or "Frame",
 			template = options.template,
 			marker = options.marker,
+			parent = options.journey and view.layer or view.marks,
 			active = {},
 			free = {},
 		}, Pool)
@@ -851,7 +887,7 @@ markers.ShortestPathForever = function(map)
 		return list
 	end
 	for _, pool in pairs(view.pools) do
-		if pool.marker then
+		if pool.marker and pool.parent:IsShown() then
 			for pin in pool:EnumerateActive() do
 				local x, y = pin:GetPosition()
 				if x and pin:IsShown() then

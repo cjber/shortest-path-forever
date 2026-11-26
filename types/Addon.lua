@@ -17,6 +17,7 @@
 ---@field ProfessionIcons table<number, integer> profession skill line -> client icon file ID
 ---@field WeaponMasters table<number, number[]> NPC -> taught weapon skill lines
 ---@field ProfessionTrainers table<number, number> trainer NPC -> its profession skill line (Data/Services.lua)
+---@field Mailboxes {id: integer, map: integer, x: number, y: number}[] mailbox spawns in continent world yards (Data/Services.lua)
 ---@field ClassTrainers table<number, number> class trainer NPC -> its class (Data/Services.lua)
 ---@field ClassTrainerCaps table<number, number>? class trainer NPC -> its highest required level (Data/Services.lua)
 ---@field PortalTrainers table<number, number> portal trainer NPC -> its class (Data/Services.lua)
@@ -42,10 +43,15 @@
 ---@field NearbyProfessions SPFNearbyProfessionsAPI the "Only my professions" shop rule (UI/NearbyProfessions.lua)
 ---@field NearbyServices SPFNearbyServices
 ---@field NearbyRank SPFNearbyRankAPI the travel-time ranking and the walks it is built on (UI/NearbyRank.lua)
+---@field NearbyIndex SPFNearbyIndexAPI the sliced QuestieDB index producer (UI/NearbyIndex.lua)
 ---@field NearbyGroups SPFNearbyGroups the vendor and service groups the list and the map share (UI/NearbyGroups.lua)
 ---@field TownServiceChoices SPFTownServiceChoice[] the town services' four levels (UI/TownServices.lua)
 ---@field RefreshTownServices fun() redraws the town services on the world map (UI/TownServices.lua)
 ---@field RefreshNearbyTab fun() shows or hides the Nearby services tab as the setting says (UI/ServicesPanel.lua)
+---@field ServiceOnMap fun(group: SPFNearbyGroup): boolean? whether a service's pins show on the map (UI/ServicesPanel.lua)
+---@field SetServiceOnMap fun(group: SPFNearbyGroup, shown: boolean) switches a service's pins on the map (UI/ServicesPanel.lua)
+---@field RefreshMapButton fun() shows or hides the Nearby services map button as the setting says (UI/MapButton.lua)
+---@field nearbyMapButton? SPFMapButton the Nearby services quick button on the world map (UI/MapButton.lua)
 ---@field NearbyEntrances SPFNearbyEntrancesAPI the dungeons and raids in the Nearby services list (UI/NearbyEntrances.lua)
 ---@field SettingsMapMarks SPFSettingsMapMarks the Map marks settings page (UI/SettingsMapMarks.lua)
 ---@field core ForeverCoreAddon the addon's own ForeverCore services: journal, log, report and map canvas
@@ -85,6 +91,7 @@
 ---@class SPFDefaults: table<string, boolean|number|string>
 ---@field townServices string
 ---@field routeColor string
+---@field routeStyle string
 ---@field journeyKey string
 ---@field arrivalDistance number
 ---@field offPathTolerance number
@@ -107,7 +114,7 @@
 ---@field tracking string the client's minimap tracking atlas the world map's pins wear for the group
 ---@class SPFServiceGroup
 ---@field key string
----@field flag string the QuestieDB NPC flag that puts an NPC in the group
+---@field flag? string the QuestieDB NPC flag that puts an NPC in the group
 ---@field label string
 ---@field icon string the client's own tracking atlas
 ---@field tracking string the client's minimap tracking atlas the world map's pins wear for the group
@@ -158,6 +165,7 @@
 ---@field routeCount? integer -- stops in a multi-stop routeTitle (API.lua)
 ---@field stopLabel? string -- what to do at a multi-stop stop, without its count (API.lua)
 ---@field number? integer -- the stop's place in a multi-stop itinerary (API.lua)
+---@field unmarked? boolean -- draws no stop pin on the world map: the route's stopMarkers option was false (API.lua)
 ---@field hold? boolean -- remain visible at the destination until the caller submits an updated route
 ---@field radius? number -- yards around a held stop where travel cues pause; finite and nonnegative
 ---@field shapes? SPFAreaShape[] -- objective areas the stop stands for, in world coordinates
@@ -337,12 +345,14 @@
 ---@field worldMapMarks? boolean
 ---@field mapFlightMasters? boolean
 ---@field nearbyTab? boolean the Nearby services tab in the quest log column; false hides it
+---@field nearbyMapButton? boolean the Nearby services button on the world map; false hides it
 ---@field mapRoutes? boolean
 ---@field townServices? string the town services' level of detail: "capitals", "important", "all" or "off" (TownServices.lua)
 ---@field townServiceInnkeeper? boolean whether innkeeper pins show (TownServices.lua)
 ---@field townServiceStable? boolean whether stable master pins show
 ---@field townServiceRepair? boolean whether repair pins show; off by default
 ---@field townServiceBank? boolean whether bank pins show
+---@field townServiceMailbox? boolean whether mailbox pins show
 ---@field townServiceTransmog? boolean whether transmogrifier pins show
 ---@field townServiceAuction? boolean whether auction house pins show
 ---@field townServiceBattlemaster? boolean whether battlemaster pins show
@@ -365,17 +375,19 @@
 ---@field journeyKey? string -- the modifier held to plan a journey from a map click: "shift" or "alt" (JourneyInput.lua)
 ---@field journeyHint? boolean -- world map and flight point tooltips end with the journey key's click hint (JourneyInput.lua)
 ---@field minimapHint? boolean -- the minimap tooltip ends with the journey key's click hint; its own switch (#1241)
----@field focusedQuest? boolean -- a super-tracked quest or the player's map pin starts a journey (JourneyInput.lua)
+---@field focusedQuest? boolean -- a super-tracked quest or flight point starts a journey (JourneyInput.lua)
 ---@field compassTime? boolean -- the whole journey's time left under the compass distance (Compass.lua)
 ---@field arrivalSound? boolean -- the map ping when a journey the player planned reaches its goal (Alert.lua)
 ---@field restedxp? boolean -- follow RestedXP guide targets
 ---@field restedxpArrow? "restedxp"|"shortestPath"|"both"
 ---@field restedxpHideArrow? boolean -- hide the guide arrow during Adventure Guide integration
+---@field restedxpArrowMoved? integer -- set once the pre-mode hide-arrow choice moved into restedxpArrow
 ---@field guidelime? boolean -- follow Guidelime's current guide step (Guidelime.lua)
 ---@field dugi? boolean -- follow Dugi Guides' current guide step (Dugi.lua)
 ---@field zygor? boolean -- follow Zygor's current guide step without a TomTom bridge (Zygor.lua)
 ---@field tomtom? boolean -- answer third-party guides' TomTom waypoints with a journey while TomTom is absent
 ---@field tomtomFollow? boolean -- with TomTom installed, a journey follows the waypoint its arrow points to
+---@field tomtomArrow? boolean -- with TomTom installed, point TomTom's arrow at each journey step
 ---@field taxiRoute? boolean
 ---@field useWaterWalking? boolean
 ---@field townServiceKinds? table<string, boolean>
@@ -399,6 +411,7 @@
 ---@field flightPinScale? number
 ---@field minimapPinScale? number
 ---@field routeColor? string the walking route line's preset (Route.lua)
+---@field routeStyle? string the walking route line style, dotted or solid (Strokes.lua)
 ---@field mapLine? boolean the walking line draws on the world map (Route.lua)
 ---@field minimapLine? boolean the walking line draws on the minimap (Route.lua)
 ---@field minimapRouteScale? number walking breadcrumb size as a percent

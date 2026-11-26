@@ -353,13 +353,69 @@ local function TransportMenu(line, row)
 	return false
 end
 
+-- Edit Mode sizes the shared tracker fonts. An addon can shrink both those fonts and their stock sources to
+-- 1 px, so SPF keeps its own fallbacks at the game's minimum sizes, using the locale-aware chat font face.
+-- Text follows the shared font again once it is readable.
+local LINE_FONT, LINE_FALLBACK, LINE_MINIMUM = "ObjectiveTrackerLineFont", "ShortestPathForeverLineFont", 12
+local HEADER_FONT, HEADER_FALLBACK, HEADER_MINIMUM = "ObjectiveTrackerHeaderFont", "ShortestPathForeverHeaderFont", 14
+
+---@type table<FontString, boolean>
+local usingFallback = setmetatable({}, { __mode = "k" })
+
+---@param text FontString?
+---@param shared string the font object the game gives this text
+---@param fallback string the addon's fallback font name
+---@param minimum number
+---@return boolean changed whether the text's size may have moved
+local function ReadableFont(text, shared, fallback, minimum)
+	if not text then
+		return false
+	end
+	if usingFallback[text] then
+		local face = _G[shared] --[[@as Font?]]
+		local size = face and select(2, face:GetFont())
+		if type(size) == "number" and size >= minimum then
+			text:SetFontObject(shared)
+			usingFallback[text] = nil
+			return true
+		end
+	end
+	local size = select(2, text:GetFont())
+	if type(size) == "number" and size < minimum then
+		if not _G[fallback] then
+			local file, _, flags = ChatFontNormal:GetFont()
+			local object = CreateFont(fallback)
+			object:SetFont(file, minimum, flags)
+			-- A font made by CreateFont has no shadow, and the objective fonts' own went with the addon that shrank
+			-- them: give it the game's tracker shadow, which keeps the text readable on any background (#1357).
+			object:SetShadowOffset(1, -1)
+			object:SetShadowColor(0, 0, 0, 1)
+		end
+		text:SetFontObject(fallback)
+		text:SetJustifyH("LEFT")
+		text:SetJustifyV("TOP")
+		usingFallback[text] = true
+		return true
+	end
+	return false
+end
+
 function ModuleMixin:LayoutContents()
 	for _, entry in ipairs(self.blocks) do
 		local block = self:GetBlock(entry.key)
+		-- The header is measured as it is set, so its font is settled first.
+		ReadableFont(block.HeaderText, LINE_FONT, LINE_FALLBACK, LINE_MINIMUM)
 		block:SetHeader(entry.title)
 		block.headerHeight = block.HeaderText:GetHeight()
 		for _, row in ipairs(entry.rows) do
 			local line = block:AddObjective(row.key, row.text, nil, true, nil, RowColor(row))
+			local text = ReadableFont(line.Text, LINE_FONT, LINE_FALLBACK, LINE_MINIMUM)
+			if ReadableFont(line.Dash, LINE_FONT, LINE_FALLBACK, LINE_MINIMUM) or text then
+				-- The game sized the line at the small font: size it again, and the block with it.
+				local height = line.Text:GetStringHeight()
+				block.height = block.height - line:GetHeight() + height
+				line:SetHeight(height)
+			end
 			SetLineMark(line, RowMark(row))
 			SetPulse(line, row.warning == true)
 			if entry.key == "journey" then
@@ -407,7 +463,9 @@ local function DockRows(dockID)
 	local departures = ns.Timetable.ByDestination(dockID)
 	local rows = {}
 	for _, departure in ipairs(departures) do
-		rows[#rows + 1] = { key = departure.route, text = DepartureText(departure) }
+		-- A circuit can visit this dock twice and serve a different destination each time.
+		local destination = table.concat(departure.to, ",")
+		rows[#rows + 1] = { key = destination, text = DepartureText(departure) }
 	end
 	return rows, departures[1] and departures[1].kind
 end
@@ -522,17 +580,24 @@ local function RefreshBlockText(blocks)
 		end
 	end
 	Section.UpdateText(module, blocks)
+	local fontChanged = false
 	-- The mark in the dash column is SPF's own row art, not the line's text, so it follows a mode change here too.
 	for _, entry in ipairs(blocks) do
 		local block = module:GetExistingBlock(entry.key)
 		if block and block.used then
+			fontChanged = ReadableFont(block.HeaderText, LINE_FONT, LINE_FALLBACK, LINE_MINIMUM) or fontChanged
 			for _, row in ipairs(entry.rows) do
 				local line = block:GetExistingLine(row.key)
 				if line and line.used then
+					fontChanged = ReadableFont(line.Text, LINE_FONT, LINE_FALLBACK, LINE_MINIMUM) or fontChanged
+					fontChanged = ReadableFont(line.Dash, LINE_FONT, LINE_FALLBACK, LINE_MINIMUM) or fontChanged
 					SetLineMark(line, RowMark(row))
 				end
 			end
 		end
+	end
+	if fontChanged and not module:IsDirty() then
+		module:MarkDirty()
 	end
 end
 
@@ -634,13 +699,14 @@ local function RefreshTracker(dockID, yards)
 		module.headerText = header
 		module:SetHeader(header)
 	end
+	local headerFontChanged = ReadableFont(module.Header.Text, HEADER_FONT, HEADER_FALLBACK, HEADER_MINIMUM)
 	if loading then
 		-- The stock header's font string has a fixed width; anchor beside its text, not that box's edge.
 		module.Spinner:SetPoint("LEFT", module.Header.Text, "LEFT", module.Header.Text:GetStringWidth() + 6, 0)
 	end
 	module.Spinner:SetShown(loading == true)
 	ns.RefreshJourneyPulse(loading == true)
-	if changed then
+	if changed or headerFontChanged then
 		module:MarkDirty()
 		return
 	end

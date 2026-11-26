@@ -36,6 +36,7 @@ local expected = {
 	"#Guides",
 	"tomtom",
 	"tomtomFollow",
+	"tomtomArrow",
 	"restedxp",
 	"restedxpArrow",
 	"restedxpHideArrow",
@@ -70,6 +71,24 @@ for _, entry in ipairs(registered) do
 	end
 end
 assert(table.concat(actual, ",") == table.concat(expected, ","), "Guidance headings and controls stay in order")
+
+-- Driving TomTom's arrow is opt-in and sits right after Follow TomTom's arrow under Guidance.
+local tomtomArrowRefreshed = 0
+ns.RefreshTomTomArrow = function()
+	tomtomArrowRefreshed = tomtomArrowRefreshed + 1
+end
+local tomtomArrowRow
+for _, entry in ipairs(rows) do
+	if entry.initializer.setting.key == "tomtomArrow" then
+		tomtomArrowRow = entry.initializer
+		break
+	end
+end
+assert(tomtomArrowRow and tomtomArrowRow.setting.default == false, "driving TomTom's arrow is off by default")
+assert(tomtomArrowRow.setting.name == "Use TomTom's arrow", "the row is labelled Use TomTom's arrow")
+assert(tomtomArrowRow.tooltip:find("TomTom", 1, true), "the row names TomTom")
+tomtomArrowRow.setting.onChanged()
+assert(tomtomArrowRefreshed == 1, "the TomTom arrow setting calls its refresh")
 
 -- Rebuild with an older core: all controls still register and retain their declarations, except the shared attach
 -- row, which only a core with RegisterTrackerAttach provides.
@@ -125,4 +144,15 @@ for _, button in ipairs(buttons) do
 	expectedPages[button.initializer.name] = nil
 end
 assert(next(expectedPages) == nil, "no settings page is missing without secure delegates")
+local nearbyButton
+for _, entry in ipairs(rows) do
+	if entry.initializer.setting.key == "nearbyMapButton" then
+		nearbyButton = entry.initializer
+	end
+end
+assert(nearbyButton and nearbyButton.kind == "checkbox" and nearbyButton.setting.default == true)
+assert(nearbyButton.setting.variable == "ShortestPathForever_nearbyMapButton")
+assert(nearbyButton.setting.name == "Show the Nearby services map button")
+assert(nearbyButton.tooltip:find("Left-click", 1, true) and nearbyButton.tooltip:find("right-click", 1, true))
+assert(nearbyButton.setting.onChanged == ns.RefreshMapButton)
 print("settings layout: ok")

@@ -232,8 +232,8 @@ L["Sizes boat, lift, tram and portal icons on the world map."] =
 L["Sizes flight master icons on the world map."] = "Tamanho dos ícones de mestre de voo no mapa-múndi."
 L["Sizes transport icons on the minimap."] = "Tamanho dos ícones de transporte no minimapa."
 L["Stable master"] = "Mestre de estábulo"
-L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no map click. A guide addon's own journey is left alone."] =
-	"Inicia uma jornada quando você foca uma missão ou coloca o marcador do mapa do jogo, então um controle não precisa de clique no mapa. A jornada de um addon de guia não é alterada."
+L["Starts a journey when you super-track a quest or a flight point, so a controller needs no map click. A guide addon's own journey is left alone."] =
+	"Inicia uma jornada quando você foca uma missão ou um ponto de voo, então um controle não precisa de clique no mapa. A jornada de um addon de guia não é alterada."
 L["Stop %d of %d"] = "Parada %d de %d" -- mt
 L["Stop %d of %d: %s"] = "Parada %d de %d: %s"
 L["Teleport to %s"] = "Teleporte para %s"
@@ -370,6 +370,9 @@ L["Travel to my tracked quest"] = "Viajar até minha missão rastreada"
 L["no map pin is set."] = "nenhum marcador no mapa foi definido."
 L["no quest is tracked."] = "nenhuma missão está sendo rastreada."
 L["Walking route colour"] = "Cor da rota a pé"
+L["Line style"] = "Estilo da linha" -- mt
+L["Dotted"] = "Pontilhada" -- mt
+L["Solid"] = "Sólida" -- mt
 L["The walking line on the world map and the minimap."] = "A linha a pé no mapa-múndi e no minimapa."
 L["Line on the world map"] = "Linha no mapa-múndi" -- mt
 L["Draws the walking route on the world map. With it off, the destination pin, arrow and tracker still guide you."] =
@@ -454,8 +457,6 @@ L["Journeys are off. Turn on Enable journeys in settings."] =
 L["Key to plan a journey"] = "Tecla para planejar uma jornada" -- mt
 L["The key you hold to plan a journey from the world map or the minimap."] =
 	"A tecla que você mantém para planejar uma jornada a partir do mapa-múndi ou do minimapa." -- mt
-L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
-	"Sobre um ícone do Questie, o Shift+clique continua sendo do Questie; o Alt+clique planeja a jornada até lá com qualquer uma das teclas." -- mt
 L["Show the journey key hint in tooltips"] = "Mostrar a dica da tecla de jornada nas dicas de ferramenta" -- mt
 L["Show the journey key hint on the minimap"] = "Mostrar a dica da tecla de jornada no minimapa" -- mt
 L["Adds the journey key line to the minimap's tooltip over what it tracks. Off, the world map and flight point tooltips keep theirs, and the key still plans journeys."] =
@@ -637,8 +638,20 @@ L["You've taken %s flights."] = "Você pegou %s voos." -- mt
 L["You've taken your first flight."] = "Você pegou seu primeiro voo." -- mt
 L["You've used %s portals or passages."] = "Você usou %s portais ou passagens." -- mt
 L["You've used your first portal or passage."] = "Você usou um portal ou uma passagem pela primeira vez." -- mt
-L["Walks reach Undercity's Royal Quarter, War Quarter and Apothecarium."] =
-	"As rotas a pé chegam ao Distrito Real, ao Distrito Bélico e ao Boticário da Cidade Baixa." -- mt
 L["Minimap walking route size"] = "Tamanho da rota a pé no minimapa" -- mt
 L["Sizes the walking dots on the minimap."] = "Ajusta o tamanho dos pontos da rota a pé no minimapa." -- mt
 L["Descend underground"] = "Desça para o subsolo" -- mt
+L["%s-click to plan a journey to this flight master"] = "%s-clique para planejar uma jornada até este mestre de voo" -- mt
+L["Alt-click a Questie quest-start icon to plan a journey to the quest giver, whichever key you choose here."] =
+	"Alt-clique em um ícone de início de missão do Questie para planejar uma jornada até quem dá a missão, seja qual for a tecla escolhida aqui." -- mt
+L["Show the Nearby services map button"] = "Mostrar botão de Serviços próximos no mapa" -- mt
+L["A button on the world map. Left-click opens Nearby services; right-click chooses which services show on the map."] =
+	"Um botão no mapa-múndi. Clique esquerdo abre Serviços próximos; clique direito escolhe quais serviços aparecem no mapa." -- mt
+L["Left-click to open Nearby services."] = "Clique esquerdo para abrir Serviços próximos." -- mt
+L["Right-click to choose map services."] = "Clique direito para escolher os serviços do mapa." -- mt
+L["Use TomTom's arrow"] = "Usar a seta do TomTom" -- mt
+L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
+	"Com o TomTom instalado, aponta a seta do TomTom para cada etapa em vez da nossa seta e do marcador do jogo." -- mt
+L["A guide step on another continent keeps the old route on screen while the new one plans."] =
+	"Uma etapa de guia em outro continente mantém a rota antiga na tela enquanto a nova é planejada." -- mt
+L["Mailbox"] = "Caixa de correio" -- mt

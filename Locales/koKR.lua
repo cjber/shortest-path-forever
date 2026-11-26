@@ -240,8 +240,8 @@ L["Sizes flight master icons on the world map."] =
 	"세계 지도의 비행 조련사 아이콘 크기를 조절합니다."
 L["Sizes transport icons on the minimap."] = "미니맵의 교통수단 아이콘 크기를 조절합니다."
 L["Stable master"] = "야수 관리인"
-L["Starts a journey when you super-track a quest or place the game's map pin, so a controller needs no map click. A guide addon's own journey is left alone."] =
-	"퀘스트를 집중하거나 게임의 지도 핀을 놓으면 여정을 시작하므로 컨트롤러에서 지도 클릭이 필요 없습니다. 가이드 애드온의 자체 여정은 그대로 둡니다."
+L["Starts a journey when you super-track a quest or a flight point, so a controller needs no map click. A guide addon's own journey is left alone."] =
+	"퀘스트나 비행 지점을 집중하면 여정을 시작하므로 컨트롤러에서 지도 클릭이 필요 없습니다. 가이드 애드온의 자체 여정은 그대로 둡니다."
 L["Stop %d of %d"] = "정거장 %d/%d" -- mt
 L["Stop %d of %d: %s"] = "정거장 %d/%d: %s"
 L["Teleport to %s"] = "%s(으)로 순간이동"
@@ -379,6 +379,9 @@ L["Travel to my tracked quest"] = "내가 추적 중인 퀘스트로 이동"
 L["no map pin is set."] = "지도 핀이 없습니다."
 L["no quest is tracked."] = "추적 중인 퀘스트가 없습니다."
 L["Walking route colour"] = "도보 경로 색상"
+L["Line style"] = "선 스타일" -- mt
+L["Dotted"] = "점선" -- mt
+L["Solid"] = "실선" -- mt
 L["The walking line on the world map and the minimap."] =
 	"세계 지도와 미니맵에 표시되는 도보 경로입니다."
 L["Line on the world map"] = "세계 지도 선" -- mt
@@ -463,8 +466,6 @@ L["Journeys are off. Turn on Enable journeys in settings."] =
 L["Key to plan a journey"] = "여정 계획 키" -- mt
 L["The key you hold to plan a journey from the world map or the minimap."] =
 	"세계 지도나 미니맵에서 여정을 계획하려면 누르고 있는 키입니다." -- mt
-L["Over a Questie icon, Shift-click stays Questie's; Alt-click plans the journey there with either key."] =
-	"Questie 아이콘에서는 Shift-클릭이 Questie의 것이며, Alt-클릭은 두 키 중 어느 쪽이든 그곳까지 여정을 계획합니다." -- mt
 L["Show the journey key hint in tooltips"] = "툴팁에 여정 키 안내 표시" -- mt
 L["Show the journey key hint on the minimap"] = "미니맵에 여정 키 안내 표시" -- mt
 L["Adds the journey key line to the minimap's tooltip over what it tracks. Off, the world map and flight point tooltips keep theirs, and the key still plans journeys."] =
@@ -648,9 +649,22 @@ L["You've taken %s flights."] = "비행편을 %s번 이용했습니다." -- mt
 L["You've taken your first flight."] = "비행편을 처음 이용했습니다." -- mt
 L["You've used %s portals or passages."] = "차원문이나 통로를 %s번 이용했습니다." -- mt
 L["You've used your first portal or passage."] = "차원문이나 통로를 처음 이용했습니다." -- mt
-L["Walks reach Undercity's Royal Quarter, War Quarter and Apothecarium."] =
-	"도보 경로로 언더시티의 왕실 지구, 전쟁 지구, 연금술 실험실에 갈 수 있습니다." -- mt
 L["Minimap walking route size"] = "미니맵 도보 경로 크기" -- mt
 L["Sizes the walking dots on the minimap."] =
 	"미니맵에 표시되는 도보 경로 점의 크기를 조절합니다." -- mt
 L["Descend underground"] = "지하로 내려가세요" -- mt
+L["%s-click to plan a journey to this flight master"] =
+	"%s-클릭하여 이 비행 조련사까지 여정을 계획합니다" -- mt
+L["Alt-click a Questie quest-start icon to plan a journey to the quest giver, whichever key you choose here."] =
+	"Questie 퀘스트 시작 아이콘을 Alt-클릭하면 여기서 고른 키와 상관없이 퀘스트 제공자까지 여정을 계획합니다." -- mt
+L["Show the Nearby services map button"] = "주변 편의시설 지도 버튼 표시" -- mt
+L["A button on the world map. Left-click opens Nearby services; right-click chooses which services show on the map."] =
+	"세계 지도의 버튼입니다. 좌클릭으로 주변 편의시설을 열고, 우클릭으로 지도에 표시할 편의시설을 고릅니다." -- mt
+L["Left-click to open Nearby services."] = "좌클릭으로 주변 편의시설을 엽니다." -- mt
+L["Right-click to choose map services."] = "우클릭으로 지도 편의시설을 고릅니다." -- mt
+L["Use TomTom's arrow"] = "TomTom 화살표 사용" -- mt
+L["With TomTom installed, point TomTom's arrow at each step instead of our arrow and the game's marker."] =
+	"TomTom이 설치되어 있으면 자체 화살표와 게임 표시 대신 TomTom 화살표로 각 단계를 가리킵니다." -- mt
+L["A guide step on another continent keeps the old route on screen while the new one plans."] =
+	"다른 대륙의 가이드 단계는 새 경로를 계획하는 동안 이전 경로를 화면에 유지합니다." -- mt
+L["Mailbox"] = "우체통" -- mt

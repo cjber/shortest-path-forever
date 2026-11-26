@@ -290,6 +290,9 @@ env.ForeverCore.TrackerLine.SetInteractive = noop
 local rowBlock = {
 	id = "journey",
 	HeaderText = {
+		GetFont = function()
+			return "Fonts\\FRIZQT__.TTF", 14, ""
+		end,
 		GetHeight = function()
 			return 12
 		end,
