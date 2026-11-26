@@ -367,17 +367,13 @@ function ns.ResubmitRoute(route, points)
 				ns.RefreshArrowLines()
 			end
 		end
-		if ns.RefreshJourneySearch then
-			ns.RefreshJourneySearch()
-		end
 		return true
 	end
 	if movedCount > 1 or not moved then
 		return nil
 	end
 	local old = previous[moved]
-	-- Another map is a different journey: the route drawn for the old one says nothing about the new.
-	if not old or old.map ~= points[moved].map then
+	if not old or (moved ~= route.index and old.map ~= points[moved].map) then
 		return nil
 	end
 	-- The pins' switch belongs to the whole submission, whichever stop moved.

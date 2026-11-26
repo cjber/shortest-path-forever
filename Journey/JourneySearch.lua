@@ -365,6 +365,11 @@ FinishSearch = function()
 		return
 	end
 	local planned, forced = search.candidate, search.forced
+	if search.replace and planned and planned == followed then
+		-- A taxi took off during the search. Its retained route is not the answer for the new stop.
+		costsWaiting = true
+		return
+	end
 	local estimate = EstimateKept(planned and planned.now or ns.NowMs())
 	local same = Walks.SameJourney(planned, followed, progress.index, Here())
 	local gain = estimate and planned and estimate.arrive - planned.arrive
@@ -531,12 +536,14 @@ end
 ---@param forced boolean?
 ---@param replace boolean? the followed route is no longer valid
 local function RefreshCosts(includeGoal, forced, replace)
-	local here = Here()
-	if not (here and goal) then
-		return
-	end
 	CancelPaths()
 	search = { initial = not followed, forced = forced, replace = replace or (search and search.replace) }
+	local here = Here()
+	if not (here and goal) or (search.replace and followed and UnitOnTaxi("player")) then
+		costsWaiting = true
+		return
+	end
+	costsWaiting = nil
 	local owner = search
 	local version = pathVersion
 	local options = Context.Options(here, goal, routePolicy)
@@ -1230,13 +1237,12 @@ local function Poll(changed, replace)
 	end
 	-- No batch has started, or a callback waited for a readable position.
 	local stale = not startAt or costsWaiting
-	costsWaiting = nil
 	-- A journey started where no position could be read takes its hazards from the first one that can.
 	if not avoided then
 		Avoid()
 	end
 	-- Search callbacks may finish while position is unavailable; resume from readable endpoints.
-	if stale then
+	if stale and not (search and search.replace and followed and UnitOnTaxi("player")) then
 		RefreshCosts(true, true)
 	end
 end
