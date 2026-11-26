@@ -365,11 +365,6 @@ FinishSearch = function()
 		return
 	end
 	local planned, forced = search.candidate, search.forced
-	if search.replace and planned and planned == followed then
-		-- A taxi took off during the search. Its retained route is not the answer for the new stop.
-		costsWaiting = true
-		return
-	end
 	local estimate = EstimateKept(planned and planned.now or ns.NowMs())
 	local same = Walks.SameJourney(planned, followed, progress.index, Here())
 	local gain = estimate and planned and estimate.arrive - planned.arrive
@@ -409,6 +404,12 @@ FinishSearch = function()
 	end
 	if search.replace then
 		keep = false
+	end
+	if not keep and followed and (UnitOnTaxi("player") or search.replace and planned == followed) then
+		-- Boarding can happen while the candidate is planning or its walks are being drawn.
+		-- Search again from the landing instead of committing to a route from before the flight.
+		costsWaiting = true
+		return
 	end
 	if not keep and planned and not planned.prepared then
 		PrepareWalks(planned)
@@ -1242,7 +1243,7 @@ local function Poll(changed, replace)
 		Avoid()
 	end
 	-- Search callbacks may finish while position is unavailable; resume from readable endpoints.
-	if stale and not (search and search.replace and followed and UnitOnTaxi("player")) then
+	if stale and not (followed and UnitOnTaxi("player")) then
 		RefreshCosts(true, true)
 	end
 end

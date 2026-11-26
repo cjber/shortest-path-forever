@@ -846,17 +846,21 @@ function ns.RetargetJourney(point)
 		return ns.StartJourney(point, journeyPolicy)
 	end
 	point = ns.InstanceEntrance(point)
-	if Search.SamePlace(goal, point) then
-		return true
-	end
+	local same = SamePlace(goal, point)
 	goal, nextPoint = point, nil
-	replacingGoal = result ~= nil
-	withoutHearth = false
+	if not same then
+		replacingGoal = result ~= nil
+		withoutHearth = false
+	end
 	if ns.JourneyChanged then
 		ns.JourneyChanged(point)
 	end
 	-- The hops after this stop start from where it now is.
 	ns.ItineraryChanged()
+	if same then
+		Refresh()
+		return true
+	end
 	driver.elapsed, driver.progressElapsed = 0, 0
 	if not InCombatLockdown() then
 		driver:Show()
@@ -881,11 +885,11 @@ end
 function ns.StartJourney(point, policy)
 	policy = policy or "normal"
 	point = ns.InstanceEntrance(point)
-	replacingGoal = false
 	if CorpseRun() then
 		-- Queued behind the corpse run, which ResumeJourney plans from where you come back to life.
 		if not (goal and SamePlace(goal, point) and journeyPolicy == policy) then
 			result = nil
+			replacingGoal = false
 			withoutHearth = false
 			Search.Clear(false, policy)
 			progress.index, progress.departed = 1, false
@@ -899,9 +903,10 @@ function ns.StartJourney(point, policy)
 		return true
 	end
 	local previous = Search.Clear(goal and SamePlace(goal, point), policy) and result
+	replacingGoal = previous and replacingGoal or false
 	journeyPolicy = policy
 	withoutHearth = false
-	if previous then
+	if previous and not replacingGoal then
 		for _, leg in ipairs(previous.legs) do
 			if leg.to.kind == "goal" then
 				leg.to.label = point.label
@@ -923,7 +928,7 @@ function ns.StartJourney(point, policy)
 		driver:Show()
 	end
 	ns.WakeTravel()
-	Search.Start(goal, result, progress, Follow, nil, journeyPolicy)
+	Search.Start(goal, result, progress, Follow, replacingGoal, journeyPolicy)
 	-- Every journey starts guided; the tracker header turns it off.
 	if goal then
 		StartGuide()

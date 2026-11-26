@@ -345,7 +345,7 @@ local function SyncDriven(notifyArrow)
 		cleardistance = 0,
 	})
 	adding = false
-	if ok and type(uid) == "table" and uid ~= preexisting then
+	if ok and type(uid) == "table" then
 		ownWaypoints[uid] = true
 		currentUid = uid
 		drivenForeign = nil
