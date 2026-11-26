@@ -426,6 +426,19 @@ assert(thirtieth.Number.text == "30", "above 25 the map's button keeps the font 
 assert(thirtieth.Button.atlas == "UI-QuestPoi-QuestNumber" and thirtieth.Button.alpha == ns.LaterAlpha)
 assert(thirtieth.Disc.alpha == nil)
 api.Cancel("Test")
+
+-- stopMarkers = false draws the line alone: no stop pin on the map, the stop text stays, and the next journey is marked
+-- again unless it asks the same.
+assert(api.NavigateRoute("Test", stops, { stopMarkers = false }))
+settle()
+assert(#(active[goalTemplate] or {}) == 0, "no stop pin on the map without markers")
+assert(#active[lineTemplate] == 1 and active[lineTemplate][1].used > 0, "the route line is still drawn")
+assert(ns.JourneyInfo() == string.format("Stop 1 of 4: %s", stops[1].title), "the stop text stays")
+api.Cancel("Test")
+assert(api.NavigateRoute("Test", stops))
+settle()
+assert(#active[goalTemplate] == #stops, "the next journey draws its stop pins again")
+api.Cancel("Test")
 assert(#errors == 0, table.concat(errors, "\n"))
 print(string.format("api_ui: numbered pins, preview lines, progress, pooling, completion/cancel: ok; "..
  "64 stops start %.3f ms / redraw %.3f mean %.3f worst ms", startMS, drawCPU/30, drawWorst))

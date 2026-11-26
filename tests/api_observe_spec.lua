@@ -35,6 +35,8 @@ for _, options in ipairs({
 	{ policy = 7 },
 	{ speed = 1 },
 	{ policy = "walking", x = 1 },
+	{ stopMarkers = "no" },
+	{ stopMarkers = 0 },
 }) do
 	local ok, reason = API.NavigateRoute("o", { stop(1000) }, options)
 	equal(ok, nil, "invalid options answer nil")
@@ -52,6 +54,12 @@ check(API.NavigateRoute("o", { stop(1000) }, { policy = "normal" }), "normal pol
 check(API.NavigateRoute("o", { stop(1000), stop(2000) }, { policy = "walking" }), "walking policy")
 equal(API.JourneyState().policy, "walking", "the state names the route's policy")
 equal(API.NavigateRoute("o", { { map = 0 } }, { policy = "walking" }), false, "a bad stop is still false")
+check(API.NavigateRoute("o", { stop(1000), stop(2000) }, { stopMarkers = false }), "markers false")
+check(ns.JourneyGoal().unmarked, "markers false leaves the stops unpinned")
+check(API.NavigateRoute("o", { stop(1000), stop(2000) }, { stopMarkers = true, policy = "walking" }), "markers true")
+check(not ns.JourneyGoal().unmarked, "markers true pins the stops")
+check(API.NavigateRoute("o", { stop(1000), stop(2000) }), "default markers")
+check(not ns.JourneyGoal().unmarked, "the default pins the stops")
 check(API.Cancel("o"), "cancel")
 d.path.settle()
 

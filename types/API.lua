@@ -97,6 +97,7 @@
 --- The options NavigateRoute takes.
 ---@class SPFAPIRouteOptions
 ---@field policy? "normal"|"walking" -- "normal" (the default) plans by every transport; "walking" keeps every leg a walk along the walking map
+---@field stopMarkers? boolean -- true (the default) draws each stop's pin on the world map; false draws the route line alone, for this journey only
 
 --- A stop a route observer is told about, as a fresh copy.
 ---@class SPFAPIObservedStop
@@ -170,7 +171,7 @@
 
 ---@class SPFPublicAPI
 ---@field version integer -- 2 removes peer sharing and Leaderboard; callers accept 1 or 2 and reject future versions
----@field minor integer -- 7 adds WalkPath; 6 adds NavigateRoute's options, ObserveStops and JourneyState; 5 standardizes ResumeRestedXP reasons; 4 adds optional z on returned places; 3 adds EstimateWalks and NavVersion; 2 adds each journey leg's from and to, ResumeRestedXP and the replan change; 1 adds Guidance and the guidance change; version 1 minor 3 added Journey, Pause, Resume, SkipLeg, Stats and the leg change
+---@field minor integer -- 8 adds NavigateRoute's stopMarkers option; 7 adds WalkPath; 6 adds NavigateRoute's options, ObserveStops and JourneyState; 5 standardizes ResumeRestedXP reasons; 4 adds optional z on returned places; 3 adds EstimateWalks and NavVersion; 2 adds each journey leg's from and to, ResumeRestedXP and the replan change; 1 adds Guidance and the guidance change; version 1 minor 3 added Journey, Pause, Resume, SkipLeg, Stats and the leg change
 ---@field Estimate fun(fromMap: integer, fromX: number, fromY: number, toMap: integer, toX: number, toY: number): seconds: number?, reason: SPFAPINoRoute? -- travel seconds; nil comes with the reason
 ---@field Navigate fun(owner: string, map: integer, x: number, y: number, title?: string, kind?: SPFAPIStopKind): boolean -- starts/replaces guidance outside combat when journeys are enabled
 ---@field NavigateRoute fun(owner: string, stops: SPFAPIStop[], options?: SPFAPIRouteOptions): ok: boolean?, reason: ForeverCoreAPIInvalid? -- starts/replaces guidance through 1-64 stops in order; false leaves the current journey intact; nil and "invalid" for bad options

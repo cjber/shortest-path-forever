@@ -1,6 +1,6 @@
 # Addon API
 
-Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 7`) with uiMapIDs and normalized 0-1 coordinates.
+Addons can use `ShortestPathForever.API` (`version = 2`, `minor = 8`) with uiMapIDs and normalized 0-1 coordinates.
 Version 2 removes peer sharing and `Leaderboard`; callers must accept versions 1 and 2 and reject future versions. Check that a function exists before calling it, because an older
 addon may not have it yet. The full types are in [`types/API.lua`](../types/API.lua). On ForeverCore 1.3.2 or
 later, the API is also listed by `ForeverCore.APIKit.Addons()`.
@@ -18,6 +18,7 @@ the addon can use it once it shows the requested map.
 
 ## Minor history
 
+- Version 2, `minor = 8` adds `NavigateRoute`'s `stopMarkers` option.
 - Version 2, `minor = 7` adds `WalkPath`.
 - Version 2, `minor = 6`: adds `NavigateRoute`'s `options` (`policy`), `ObserveStops` and `JourneyState`.
 - Version 2, `minor = 5`: `ResumeRestedXP` now returns the standard reasons `"none"` and `"combat"`
@@ -74,8 +75,11 @@ the addon can use it once it shows the requested map.
   call returns `true`.
   `options` is optional: `{ policy = "normal" }` (the default) plans by every transport, and `{ policy = "walking" }`
   keeps every leg a walk along the walking map, with no flight, boat, portal, teleport or Hearthstone, so the route
-  is walking yards between the stops. A walk that cannot be measured shows in `JourneyState().failure`. Any other
-  options table, key or policy answers `nil, "invalid"` and changes nothing. A route keeps its policy until the
+  is walking yards between the stops. A walk that cannot be measured shows in `JourneyState().failure`.
+  `{ stopMarkers = false }` draws the route line on the world map without a pin at any stop, for a caller that marks its
+  own places; the default is `true`, and the tracker and arrow still read "Stop 2 of 4: ...". It belongs to that
+  journey and ends with it. Any other options table, key, policy or non-boolean `stopMarkers` answers
+  `nil, "invalid"` and changes nothing. A route keeps its policy until the
   same owner or another one submits again.
   A route whose only stop is the place the journey already goes to hands the journey over rather than starting it
   again: `CurrentStop` answers for the new owner, the previous owner's `Ended` reads `"replaced"`, and the stop, the

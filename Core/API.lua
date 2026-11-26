@@ -235,7 +235,7 @@ function ns.JourneyStops()
 end
 
 ---@class SPFPublicAPI
-local API = { version = 2, minor = 7 }
+local API = { version = 2, minor = 8 }
 
 local function Differs(a, b)
 	for key, value in pairs(a) do
@@ -500,7 +500,7 @@ function ns.OnSpawnFloor(point)
 	return point
 end
 
-local function NavigateRoute(owner, stops, policy)
+local function NavigateRoute(owner, stops, policy, markers)
 	if not Owner(owner) or not Ready() or not ns.db.journey or type(stops) ~= "table" then
 		return false
 	end
@@ -584,6 +584,8 @@ local function NavigateRoute(owner, stops, policy)
 		-- An unknown kind is dropped, not refused: a caller written for a later vocabulary still gets its route.
 		point.look = ns.StopKind(stop.kind)
 		point.number = index
+		-- A caller drawing its own places asks for the line alone: no stop pin on the world map (UI/Route.lua).
+		point.unmarked = not markers or nil
 		if count > 1 then
 			local location = not point.label and ns.Locate(point)
 			-- What to do there, apart from the count the tooltip gives its own line (UI/StopPin.lua).
@@ -613,6 +615,7 @@ local function NavigateRoute(owner, stops, policy)
 		goal = goal and (goal.stop or goal)
 		local stop = points[1]
 		if goal and goal.map == stop.map and goal.x == stop.x and goal.y == stop.y then
+			goal.unmarked = stop.unmarked
 			if route then
 				ended[route.owner] = { reason = "replaced", at = GetTime() }
 			end
@@ -645,33 +648,39 @@ local function NavigateRoute(owner, stops, policy)
 	return ns.StartJourney(points[1], policy)
 end
 
--- A route's options: its travel policy, "normal" or "walking". Anything else is the caller's mistake, answered as one.
+-- A route's options: its travel policy, "normal" or "walking", and whether its stops draw pins on the world map.
+-- Anything else is the caller's mistake, answered as one.
 ---@param options any
----@return SPFRoutePolicy?
-local function RoutePolicy(options)
+---@return SPFRoutePolicy?, boolean?
+local function RouteOptions(options)
 	if not canaccessvalue(options) then
 		return nil
 	end
 	if options == nil then
-		return "normal"
+		return "normal", true
 	end
 	if type(options) ~= "table" then
 		return nil
 	end
 	for key in pairs(options) do
-		if not canaccessvalue(key) or key ~= "policy" then
+		if not canaccessvalue(key) or (key ~= "policy" and key ~= "stopMarkers") then
 			return nil
 		end
 	end
-	local policy = rawget(options, "policy")
-	if not canaccessvalue(policy) then
+	local policy, markers = rawget(options, "policy"), rawget(options, "stopMarkers")
+	if not (canaccessvalue(policy) and canaccessvalue(markers)) then
+		return nil
+	end
+	if markers == nil then
+		markers = true
+	elseif type(markers) ~= "boolean" then
 		return nil
 	end
 	if policy == nil then
-		return "normal"
+		return "normal", markers
 	end
 	if policy == "normal" or policy == "walking" then
-		return policy
+		return policy, markers
 	end
 end
 
@@ -680,15 +689,15 @@ end
 ---@param options? SPFAPIRouteOptions
 ---@return boolean|nil, ForeverCoreAPIInvalid?
 function API.NavigateRoute(owner, stops, options)
-	local policy = RoutePolicy(options)
+	local policy, markers = RouteOptions(options)
 	if not policy then
 		return APIKit.Invalid()
 	end
-	return NavigateRoute(owner, stops, policy)
+	return NavigateRoute(owner, stops, policy, markers)
 end
 
 function API.Navigate(owner, map, x, y, title, kind)
-	return NavigateRoute(owner, { { map = map, x = x, y = y, title = title, kind = kind } }, "normal")
+	return NavigateRoute(owner, { { map = map, x = x, y = y, title = title, kind = kind } }, "normal", true)
 end
 
 function API.CurrentStop(owner)

@@ -521,7 +521,7 @@ function Layer:RefreshStops()
 	for index = first, stops and #stops or 1 do
 		local point = stops and stops[index] or goal
 		local x, y = MapPosition(point, mapID)
-		if OnMap(x, y) and (index ~= first or not self.mirroredWaypoint) then
+		if not point.unmarked and OnMap(x, y) and (index ~= first or not self.mirroredWaypoint) then
 			marks[#marks + 1] = {
 				x = x,
 				y = y,

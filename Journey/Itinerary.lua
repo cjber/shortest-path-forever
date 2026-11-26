@@ -306,6 +306,7 @@ local function CopyWords(into, from)
 		or into.routeCount ~= from.routeCount
 		or into.routeTitle ~= from.routeTitle
 		or into.number ~= from.number
+		or into.unmarked ~= from.unmarked
 		or not SameList(into.details, from.details)
 		or not SameList(into.questIDs, from.questIDs)
 		or not SameList(into.handins, from.handins)
@@ -325,6 +326,7 @@ local function CopyWords(into, from)
 	into.routeCount = from.routeCount
 	into.routeTitle = from.routeTitle
 	into.number = from.number
+	into.unmarked = from.unmarked
 	return changed
 end
 
